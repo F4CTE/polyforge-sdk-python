@@ -500,8 +500,7 @@ test.describe('Backtesting — Full Workflow Coverage', () => {
         }
     });
 
-    test.skip('navigate history pagination next page', async ({ page }) => {
-        // TODO: pagination next page doesn't change entries — needs backend investigation
+    test('navigate history pagination next page', async ({ page }) => {
         const backtestPage = new BacktestPage(page);
         await backtestPage.goto();
 

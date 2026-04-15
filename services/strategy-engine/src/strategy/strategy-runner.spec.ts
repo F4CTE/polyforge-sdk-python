@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { StrategyRunner } from "./strategy-runner";
 import type { OrderIntent } from "../blocks/block.types";
 
@@ -60,10 +60,6 @@ function makeState(patch: Record<string, unknown> = {}) {
     clear: vi.fn().mockResolvedValue(undefined),
     getPriceAge: vi.fn().mockResolvedValue(0), // fresh by default
   } as any;
-}
-
-function freshPrice() {
-  return JSON.stringify({ price: 0.6, timestamp: Date.now() });
 }
 
 // ─── Factory ──────────────────────────────────────────────────────────────────

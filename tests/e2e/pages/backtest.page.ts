@@ -167,7 +167,8 @@ export class BacktestPage {
         } else {
             await this.paginationPrev.click();
         }
-        // Wait for table content to update after page change
+        // Wait for the network to settle so the new page's rows are rendered
+        await this.page.waitForLoadState('networkidle', { timeout: 8_000 }).catch(() => {});
         await this.historyRows.first().waitFor({ state: 'attached', timeout: 5_000 }).catch(() => {});
     }
 }

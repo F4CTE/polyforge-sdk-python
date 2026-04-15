@@ -79,6 +79,8 @@ export class WhatsAppWebhookController {
     reply.status(200).send("EVENT_RECEIVED");
 
     // Process asynchronously
-    await this.whatsapp.handleIncoming(request.body);
+    await this.whatsapp.handleIncoming(
+      request.body as Record<string, unknown> | null | undefined,
+    );
   }
 }

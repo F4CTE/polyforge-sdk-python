@@ -1,19 +1,18 @@
-import {
-  LogicBlockEvaluator,
-  LogicBlockResult,
-  EvalContext,
-} from "./block.types";
+import { LogicBlockEvaluator, LogicBlockResult } from "./block.types";
 import { safeEvaluate } from "../common/safe-evaluate";
 
 // ─── IF / THEN / ELSE ──────────────────────────────────────────────────────
 
 export const IfThenElseBlock: LogicBlockEvaluator = {
   evaluate(block, inputs, ctx): LogicBlockResult {
-    const condition = String(
+    const rawCondition =
       block.condition ??
-        (block.params as Record<string, unknown>)?.condition ??
-        "",
-    );
+      (block.params as Record<string, unknown> | undefined)?.condition ??
+      "";
+    const condition =
+      typeof rawCondition === "string" || typeof rawCondition === "number"
+        ? String(rawCondition)
+        : "";
     if (!condition.trim()) {
       return { value: false, activeOutput: "false" };
     }
@@ -68,7 +67,7 @@ export const NotGateBlock: LogicBlockEvaluator = {
 // ─── Delay Block ────────────────────────────────────────────────────────────
 
 export const DelayBlock: LogicBlockEvaluator = {
-  evaluate(block, inputs, ctx): LogicBlockResult {
+  evaluate(block, inputs, _ctx): LogicBlockResult {
     const seconds = Number(
       block.seconds ?? (block.params as Record<string, unknown>)?.seconds ?? 0,
     );

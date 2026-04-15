@@ -51,8 +51,8 @@ export class AlertsService implements OnModuleInit {
         const raw = priceValues[i];
         if (raw) {
           try {
-            const parsed = JSON.parse(raw);
-            const price = parseFloat(parsed.price ?? parsed ?? "0");
+            const parsed = JSON.parse(raw) as { price?: string };
+            const price = parseFloat(parsed.price ?? "0");
             if (!isNaN(price)) priceMap.set(id, price);
           } catch {
             // no-op
@@ -125,7 +125,7 @@ export class AlertsService implements OnModuleInit {
       data: {
         userId,
         tokenId: dto.tokenId,
-        direction: dto.direction as any,
+        direction: dto.direction,
         price: dto.price,
         persistent: dto.persistent ?? false,
       },

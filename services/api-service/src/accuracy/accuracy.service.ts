@@ -1,5 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { PrismaService } from "@polyforge/shared-db";
+import { ResolutionStatus } from "@prisma/client";
 
 @Injectable()
 export class AccuracyService {
@@ -9,7 +10,7 @@ export class AccuracyService {
     const positions = await this.prisma.position.findMany({
       where: {
         userId,
-        resolutionStatus: "RESOLVED" as any,
+        resolutionStatus: ResolutionStatus.RESOLVED,
       },
     });
 

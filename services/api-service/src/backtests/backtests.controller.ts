@@ -21,6 +21,7 @@ import { IsOptional, IsString } from "class-validator";
 import { BacktestsService } from "./backtests.service";
 import { CreateBacktestDto } from "./dto/create-backtest.dto";
 import { PaginationDto } from "../common/dto/pagination.dto";
+import { JwtPayload } from "@polyforge/shared-types";
 
 class BacktestQueryDto extends PaginationDto {
   @IsOptional()
@@ -40,7 +41,7 @@ export class BacktestsController {
   constructor(private readonly backtests: BacktestsService) {}
 
   @Get()
-  list(@CurrentUser() user: any, @Query() query: BacktestQueryDto) {
+  list(@CurrentUser() user: JwtPayload, @Query() query: BacktestQueryDto) {
     return this.backtests.list(user.sub, query);
   }
 
@@ -48,7 +49,7 @@ export class BacktestsController {
   @HttpCode(HttpStatus.CREATED)
   @UseGuards(ApiKeyScopeGuard)
   @RequireScopes("WRITE")
-  create(@CurrentUser() user: any, @Body() dto: CreateBacktestDto) {
+  create(@CurrentUser() user: JwtPayload, @Body() dto: CreateBacktestDto) {
     return this.backtests.create(user.sub, dto);
   }
 
@@ -56,17 +57,23 @@ export class BacktestsController {
   @HttpCode(HttpStatus.OK)
   @UseGuards(ApiKeyScopeGuard)
   @RequireScopes("WRITE")
-  quick(@CurrentUser() user: any, @Body() dto: CreateBacktestDto) {
+  quick(@CurrentUser() user: JwtPayload, @Body() dto: CreateBacktestDto) {
     return this.backtests.create(user.sub, { ...dto, quickMode: true });
   }
 
   @Get(":id")
-  findOne(@Param("id", ParseUUIDPipe) id: string, @CurrentUser() user: any) {
+  findOne(
+    @Param("id", ParseUUIDPipe) id: string,
+    @CurrentUser() user: JwtPayload,
+  ) {
     return this.backtests.findOne(id, user.sub);
   }
 
   @Get(":id/orders")
-  findOrders(@Param("id", ParseUUIDPipe) id: string, @CurrentUser() user: any) {
+  findOrders(
+    @Param("id", ParseUUIDPipe) id: string,
+    @CurrentUser() user: JwtPayload,
+  ) {
     return this.backtests.findOrders(id, user.sub);
   }
 }

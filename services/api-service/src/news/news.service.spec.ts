@@ -290,7 +290,7 @@ describe("NewsIngestionService", () => {
       prisma.newsArticle.findUnique.mockResolvedValue({ id: "existing" });
 
       // Access the private method via the ingestion flow
-      const count = await ingestion
+      await ingestion
         .ingestFeed("https://feeds.example.com/rss")
         .catch(() => 0);
 

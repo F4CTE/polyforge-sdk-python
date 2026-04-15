@@ -7,6 +7,12 @@ import { PrismaService } from "@polyforge/shared-db";
 import { RedisService } from "@polyforge/shared-redis";
 import { randomUUID } from "crypto";
 import { ProvideLiquidityDto } from "./dto/provide-liquidity.dto";
+import {
+  OrderSide,
+  OrderType,
+  OrderStatus,
+  OrderOutcome,
+} from "@prisma/client";
 
 @Injectable()
 export class LpService {
@@ -84,12 +90,12 @@ export class LpService {
         strategyId: null,
         marketId: dto.marketId,
         tokenId: yesToken.id,
-        side: "BUY" as any,
-        outcome: "YES",
+        side: OrderSide.BUY,
+        outcome: OrderOutcome.YES,
         size: buySize,
         price: String(buyPrice),
-        orderType: "GTC" as any,
-        status: "PENDING" as any,
+        orderType: OrderType.GTC,
+        status: OrderStatus.PENDING,
       },
     });
 
@@ -123,12 +129,12 @@ export class LpService {
         strategyId: null,
         marketId: dto.marketId,
         tokenId: sellTokenId,
-        side: "SELL" as any,
-        outcome: "YES",
+        side: OrderSide.SELL,
+        outcome: OrderOutcome.YES,
         size: sellSize,
         price: String(sellPrice),
-        orderType: "GTC" as any,
-        status: "PENDING" as any,
+        orderType: OrderType.GTC,
+        status: OrderStatus.PENDING,
       },
     });
 

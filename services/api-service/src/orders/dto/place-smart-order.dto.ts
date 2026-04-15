@@ -37,21 +37,30 @@ export class PlaceSmartOrderDto {
   // ── TWAP / DCA ──────────────────────────────────────────────────────────
 
   /** Number of equal slices to split the order into (TWAP/DCA) */
-  @ValidateIf((o) => o.type === "TWAP" || o.type === "DCA")
+  @ValidateIf(
+    (o: PlaceSmartOrderDto) =>
+      o.type === SmartOrderTypeDto.TWAP || o.type === SmartOrderTypeDto.DCA,
+  )
   @IsInt()
   @Min(2)
   @Max(100)
   slices?: number;
 
   /** Minutes between each slice execution */
-  @ValidateIf((o) => o.type === "TWAP" || o.type === "DCA")
+  @ValidateIf(
+    (o: PlaceSmartOrderDto) =>
+      o.type === SmartOrderTypeDto.TWAP || o.type === SmartOrderTypeDto.DCA,
+  )
   @IsInt()
   @Min(1)
   @Max(10080) // 1 week max
   intervalMinutes?: number;
 
   /** Limit price for each slice (optional — uses market price if omitted) */
-  @ValidateIf((o) => o.type === "TWAP" || o.type === "DCA")
+  @ValidateIf(
+    (o: PlaceSmartOrderDto) =>
+      o.type === SmartOrderTypeDto.TWAP || o.type === SmartOrderTypeDto.DCA,
+  )
   @IsOptional()
   @IsNumber()
   @Min(0.001)
@@ -61,21 +70,21 @@ export class PlaceSmartOrderDto {
   // ── BRACKET ─────────────────────────────────────────────────────────────
 
   /** Entry limit price for the bracket order */
-  @ValidateIf((o) => o.type === "BRACKET")
+  @ValidateIf((o: PlaceSmartOrderDto) => o.type === SmartOrderTypeDto.BRACKET)
   @IsNumber()
   @Min(0.001)
   @Max(0.999)
   entryPrice?: number;
 
   /** Take-profit price (must be higher than entry for BUY) */
-  @ValidateIf((o) => o.type === "BRACKET")
+  @ValidateIf((o: PlaceSmartOrderDto) => o.type === SmartOrderTypeDto.BRACKET)
   @IsNumber()
   @Min(0.001)
   @Max(0.999)
   takeProfitPrice?: number;
 
   /** Stop-loss price (must be lower than entry for BUY) */
-  @ValidateIf((o) => o.type === "BRACKET")
+  @ValidateIf((o: PlaceSmartOrderDto) => o.type === SmartOrderTypeDto.BRACKET)
   @IsNumber()
   @Min(0.001)
   @Max(0.999)
@@ -84,14 +93,14 @@ export class PlaceSmartOrderDto {
   // ── OCO ─────────────────────────────────────────────────────────────────
 
   /** First leg price */
-  @ValidateIf((o) => o.type === "OCO")
+  @ValidateIf((o: PlaceSmartOrderDto) => o.type === SmartOrderTypeDto.OCO)
   @IsNumber()
   @Min(0.001)
   @Max(0.999)
   priceA?: number;
 
   /** Second leg price */
-  @ValidateIf((o) => o.type === "OCO")
+  @ValidateIf((o: PlaceSmartOrderDto) => o.type === SmartOrderTypeDto.OCO)
   @IsNumber()
   @Min(0.001)
   @Max(0.999)

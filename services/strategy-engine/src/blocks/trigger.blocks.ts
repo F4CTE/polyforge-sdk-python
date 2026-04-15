@@ -1,13 +1,14 @@
-import { BlockEvaluator, BlockResult, EvalContext } from "./block.types";
-import { RedisService } from "@polyforge/shared-redis";
-import { PrismaService } from "@polyforge/shared-db";
+import { BlockEvaluator, BlockResult } from "./block.types";
+
+type BlockParams = Record<string, string | number | undefined>;
 
 // ─── EVENT TRIGGERS ───────────────────────────────────────────────────────────
 
 // new_bet_opens — fires when a new market opens in a series
 export const NewBetOpensBlock: BlockEvaluator = {
   async evaluate(block, ctx, _redis, prisma): Promise<BlockResult> {
-    const seriesSlug = (block["params"] as any)?.seriesSlug;
+    const params = (block["params"] as BlockParams) ?? {};
+    const seriesSlug = String(params.seriesSlug ?? "");
     if (!seriesSlug)
       return { fired: false, reason: "no seriesSlug configured" };
 
@@ -25,8 +26,10 @@ export const NewBetOpensBlock: BlockEvaluator = {
 
 // price_crosses_up — fires when price crosses threshold upward
 export const PriceCrossesUpBlock: BlockEvaluator = {
-  async evaluate(block, ctx, redis, _prisma): Promise<BlockResult> {
-    const { tokenId, threshold } = (block["params"] as any) ?? {};
+  async evaluate(block, _ctx, redis, _prisma): Promise<BlockResult> {
+    const params = (block["params"] as BlockParams) ?? {};
+    const tokenId = String(params.tokenId ?? "");
+    const threshold = params.threshold;
     if (!tokenId || threshold === undefined)
       return { fired: false, reason: "invalid config" };
 
@@ -39,7 +42,7 @@ export const PriceCrossesUpBlock: BlockEvaluator = {
 
     if (!current) return { fired: false, reason: "no price data" };
 
-    const thresh = parseFloat(threshold);
+    const thresh = parseFloat(String(threshold));
     const prevPrice = prev?.price ?? current.price;
     const fired = prevPrice < thresh && current.price >= thresh;
 
@@ -55,8 +58,10 @@ export const PriceCrossesUpBlock: BlockEvaluator = {
 
 // price_crosses_down — fires when price crosses threshold downward
 export const PriceCrossesDownBlock: BlockEvaluator = {
-  async evaluate(block, ctx, redis, _prisma): Promise<BlockResult> {
-    const { tokenId, threshold } = (block["params"] as any) ?? {};
+  async evaluate(block, _ctx, redis, _prisma): Promise<BlockResult> {
+    const params = (block["params"] as BlockParams) ?? {};
+    const tokenId = String(params.tokenId ?? "");
+    const threshold = params.threshold;
     if (!tokenId || threshold === undefined)
       return { fired: false, reason: "invalid config" };
 
@@ -69,7 +74,7 @@ export const PriceCrossesDownBlock: BlockEvaluator = {
 
     if (!current) return { fired: false, reason: "no price data" };
 
-    const thresh = parseFloat(threshold);
+    const thresh = parseFloat(String(threshold));
     const prevPrice = prev?.price ?? current.price;
     const fired = prevPrice > thresh && current.price <= thresh;
 
@@ -86,7 +91,9 @@ export const PriceCrossesDownBlock: BlockEvaluator = {
 // time_before_close — fires N minutes before market closes
 export const TimeBeforeCloseBlock: BlockEvaluator = {
   async evaluate(block, ctx, _redis, prisma): Promise<BlockResult> {
-    const { minutesBefore, marketId } = (block["params"] as any) ?? {};
+    const params = (block["params"] as BlockParams) ?? {};
+    const marketId = String(params.marketId ?? "");
+    const minutesBefore = params.minutesBefore;
     if (!marketId || minutesBefore === undefined)
       return { fired: false, reason: "invalid config" };
 
@@ -94,7 +101,7 @@ export const TimeBeforeCloseBlock: BlockEvaluator = {
     if (!market?.endDate) return { fired: false, reason: "no market endDate" };
 
     const msBeforeClose = market.endDate.getTime() - ctx.now;
-    const targetMs = parseInt(minutesBefore, 10) * 60_000;
+    const targetMs = parseInt(String(minutesBefore), 10) * 60_000;
     // Fire in the window [targetMs, targetMs + 60s)
     const fired =
       msBeforeClose >= 0 &&
@@ -110,25 +117,27 @@ export const TimeBeforeCloseBlock: BlockEvaluator = {
 
 // win_streak — fires after N consecutive wins
 export const WinStreakBlock: BlockEvaluator = {
-  async evaluate(block, ctx, _redis, _prisma): Promise<BlockResult> {
-    const count = parseInt((block["params"] as any)?.count ?? "3", 10);
+  evaluate(block, ctx, _redis, _prisma): Promise<BlockResult> {
+    const params = (block["params"] as BlockParams) ?? {};
+    const count = parseInt(String(params.count ?? "3"), 10);
     const fired = ctx.state.consecutiveWin >= count;
-    return {
+    return Promise.resolve({
       fired,
       reason: `${ctx.state.consecutiveWin} consecutive wins (need ${count})`,
-    };
+    });
   },
 };
 
 // loss_streak — fires after N consecutive losses
 export const LossStreakBlock: BlockEvaluator = {
-  async evaluate(block, ctx, _redis, _prisma): Promise<BlockResult> {
-    const count = parseInt((block["params"] as any)?.count ?? "3", 10);
+  evaluate(block, ctx, _redis, _prisma): Promise<BlockResult> {
+    const params = (block["params"] as BlockParams) ?? {};
+    const count = parseInt(String(params.count ?? "3"), 10);
     const fired = ctx.state.consecutiveLoss >= count;
-    return {
+    return Promise.resolve({
       fired,
       reason: `${ctx.state.consecutiveLoss} consecutive losses (need ${count})`,
-    };
+    });
   },
 };
 
@@ -137,7 +146,9 @@ export const LossStreakBlock: BlockEvaluator = {
 // price_above_tick — true if price > threshold at current tick
 export const PriceAboveTickBlock: BlockEvaluator = {
   async evaluate(block, _ctx, redis, _prisma): Promise<BlockResult> {
-    const { tokenId, price: threshold } = (block["params"] as any) ?? {};
+    const params = (block["params"] as BlockParams) ?? {};
+    const tokenId = String(params.tokenId ?? "");
+    const threshold = String(params.price ?? "0");
     const data = await redis.getJson<{ price: number }>(
       `cache:price:${tokenId}`,
     );
@@ -150,7 +161,9 @@ export const PriceAboveTickBlock: BlockEvaluator = {
 // price_below_tick — true if price < threshold at current tick
 export const PriceBelowTickBlock: BlockEvaluator = {
   async evaluate(block, _ctx, redis, _prisma): Promise<BlockResult> {
-    const { tokenId, price: threshold } = (block["params"] as any) ?? {};
+    const params = (block["params"] as BlockParams) ?? {};
+    const tokenId = String(params.tokenId ?? "");
+    const threshold = String(params.price ?? "0");
     const data = await redis.getJson<{ price: number }>(
       `cache:price:${tokenId}`,
     );
@@ -163,13 +176,15 @@ export const PriceBelowTickBlock: BlockEvaluator = {
 // spread_below_tick — true if spread < threshold
 export const SpreadBelowTickBlock: BlockEvaluator = {
   async evaluate(block, _ctx, redis, _prisma): Promise<BlockResult> {
-    const { tokenId, minSpread } = (block["params"] as any) ?? {};
+    const params = (block["params"] as BlockParams) ?? {};
+    const tokenId = String(params.tokenId ?? "");
+    const minSpread = String(params.minSpread ?? "0.05");
     const book = await redis.getJson<{ spread: string }>(
       `cache:book:${tokenId}`,
     );
     if (!book) return { fired: false, reason: "no book data" };
     const spread = parseFloat(book.spread);
-    const fired = spread < parseFloat(minSpread ?? "0.05");
+    const fired = spread < parseFloat(minSpread);
     return { fired, reason: `spread ${spread} < ${minSpread}: ${fired}` };
   },
 };
@@ -177,7 +192,9 @@ export const SpreadBelowTickBlock: BlockEvaluator = {
 // volume_rate_tick — true if order book volume rate >= minRate (sum of top-5 bid sizes)
 export const VolumeRateTickBlock: BlockEvaluator = {
   async evaluate(block, _ctx, redis, _prisma): Promise<BlockResult> {
-    const { tokenId, minRate } = (block["params"] as any) ?? {};
+    const params = (block["params"] as BlockParams) ?? {};
+    const tokenId = String(params.tokenId ?? "");
+    const minRate = String(params.minRate ?? "100");
     const book = await redis.getJson<{ bids: Array<{ size: string }> }>(
       `cache:book:${tokenId}`,
     );
@@ -185,7 +202,7 @@ export const VolumeRateTickBlock: BlockEvaluator = {
     const volume = book.bids
       .slice(0, 5)
       .reduce((s, b) => s + parseFloat(b.size), 0);
-    const fired = volume >= parseFloat(minRate ?? "100");
+    const fired = volume >= parseFloat(minRate);
     return {
       fired,
       reason: `top-5 bid volume ${volume.toFixed(2)} vs ${minRate}`,
@@ -196,7 +213,10 @@ export const VolumeRateTickBlock: BlockEvaluator = {
 // price_momentum_tick — true if price moved >= threshold in direction over last 5 prices
 export const PriceMomentumTickBlock: BlockEvaluator = {
   async evaluate(block, _ctx, redis, _prisma): Promise<BlockResult> {
-    const { tokenId, direction, threshold } = (block["params"] as any) ?? {};
+    const params = (block["params"] as BlockParams) ?? {};
+    const tokenId = String(params.tokenId ?? "");
+    const direction = String(params.direction ?? "");
+    const threshold = String(params.threshold ?? "0.01");
     const current = await redis.getJson<{ price: number }>(
       `cache:price:${tokenId}`,
     );
@@ -207,7 +227,7 @@ export const PriceMomentumTickBlock: BlockEvaluator = {
       return { fired: false, reason: "insufficient price history" };
 
     const delta = current.price - prev.price;
-    const thresh = parseFloat(threshold ?? "0.01");
+    const thresh = parseFloat(threshold);
 
     let fired = false;
     if (direction === "up") fired = delta >= thresh;
@@ -223,7 +243,10 @@ export const PriceMomentumTickBlock: BlockEvaluator = {
 // rsi_threshold_tick — simple RSI approximation using stored price history
 export const RsiThresholdTickBlock: BlockEvaluator = {
   async evaluate(block, _ctx, redis, _prisma): Promise<BlockResult> {
-    const { tokenId, level, direction } = (block["params"] as any) ?? {};
+    const params = (block["params"] as BlockParams) ?? {};
+    const tokenId = String(params.tokenId ?? "");
+    const level = String(params.level ?? "70");
+    const direction = String(params.direction ?? "");
 
     // Read last 14 prices from Redis list (set by market-data-service, best-effort)
     const client = redis.getClient();
@@ -245,7 +268,7 @@ export const RsiThresholdTickBlock: BlockEvaluator = {
     const rs = avgLoss === 0 ? 100 : avgGain / avgLoss;
     const rsi = 100 - 100 / (1 + rs);
 
-    const threshold = parseFloat(level ?? "70");
+    const threshold = parseFloat(level);
     let fired = false;
     if (direction === "above") fired = rsi > threshold;
     if (direction === "below") fired = rsi < threshold;
@@ -259,7 +282,7 @@ export const RsiThresholdTickBlock: BlockEvaluator = {
 
 // every_tick — always fires
 export const EveryTickBlock: BlockEvaluator = {
-  async evaluate(_block, _ctx, _redis, _prisma): Promise<BlockResult> {
-    return { fired: true, reason: "every_tick" };
+  evaluate(_block, _ctx, _redis, _prisma): Promise<BlockResult> {
+    return Promise.resolve({ fired: true, reason: "every_tick" });
   },
 };

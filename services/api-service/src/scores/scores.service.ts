@@ -1,5 +1,6 @@
 import { Injectable, Logger, NotFoundException } from "@nestjs/common";
 import { PrismaService } from "@polyforge/shared-db";
+import { type TraderScore } from "@prisma/client";
 
 @Injectable()
 export class ScoresService {
@@ -66,7 +67,7 @@ export class ScoresService {
       displayName: s.user.displayName,
       avatarUrl: s.user.avatarUrl,
       score: s.score,
-      winRate: s.winRate.toString(),
+      winRate: String(s.winRate),
       totalTrades: s.totalTrades,
     }));
   }
@@ -89,34 +90,34 @@ export class ScoresService {
 
   // ─── Helpers ───────────────────────────────────────────────────────────────
 
-  private buildBreakdown(score: any) {
+  private buildBreakdown(score: TraderScore) {
     return {
       score: score.score,
       components: {
         winRate: {
-          value: score.winRate.toString(),
+          value: String(score.winRate),
           weight: 0.25,
-          weighted: parseFloat(score.winRate.toString()) * 0.25,
+          weighted: parseFloat(String(score.winRate)) * 0.25,
         },
         sharpe: {
-          value: score.sharpeRatio.toString(),
+          value: String(score.sharpeRatio),
           weight: 0.2,
-          weighted: parseFloat(score.sharpeRatio.toString()) * 0.2,
+          weighted: parseFloat(String(score.sharpeRatio)) * 0.2,
         },
         profitFactor: {
-          value: score.profitFactor.toString(),
+          value: String(score.profitFactor),
           weight: 0.15,
-          weighted: parseFloat(score.profitFactor.toString()) * 0.15,
+          weighted: parseFloat(String(score.profitFactor)) * 0.15,
         },
         consistency: {
-          value: score.consistency.toString(),
+          value: String(score.consistency),
           weight: 0.15,
-          weighted: parseFloat(score.consistency.toString()) * 0.15,
+          weighted: parseFloat(String(score.consistency)) * 0.15,
         },
         avgReturn: {
-          value: score.avgReturn.toString(),
+          value: String(score.avgReturn),
           weight: 0.1,
-          weighted: parseFloat(score.avgReturn.toString()) * 0.1,
+          weighted: parseFloat(String(score.avgReturn)) * 0.1,
         },
         tradeVolume: {
           value: score.totalTrades,
@@ -124,9 +125,9 @@ export class ScoresService {
           weighted: score.totalTrades * 0.1,
         },
         drawdown: {
-          value: score.maxDrawdown.toString(),
+          value: String(score.maxDrawdown),
           weight: 0.05,
-          weighted: parseFloat(score.maxDrawdown.toString()) * 0.05,
+          weighted: parseFloat(String(score.maxDrawdown)) * 0.05,
         },
       },
       totalTrades: score.totalTrades,

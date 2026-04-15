@@ -18,6 +18,12 @@ import { ClosePositionDto } from "./dto/close-position.dto";
 import { PlaceOrderDto } from "./dto/place-order.dto";
 import { RedeemPositionDto } from "./dto/redeem-position.dto";
 import { randomUUID } from "crypto";
+import {
+  OrderSide,
+  OrderType,
+  OrderStatus,
+  ResolutionStatus,
+} from "@prisma/client";
 
 export interface OrderQueryDto extends PaginationDto {
   status?: string;
@@ -43,7 +49,7 @@ export class OrdersService {
     const { page, limit, status, strategyId, marketId, from, to } = query;
     const skip = (page - 1) * limit;
 
-    const where: any = { userId };
+    const where: Record<string, unknown> = { userId };
     if (status) {
       const statuses = status
         .split(",")
@@ -54,9 +60,10 @@ export class OrdersService {
     if (strategyId) where.strategyId = strategyId;
     if (marketId) where.marketId = marketId;
     if (from || to) {
-      where.createdAt = {};
-      if (from) where.createdAt.gte = new Date(from);
-      if (to) where.createdAt.lte = new Date(to);
+      const createdAt: Record<string, Date> = {};
+      if (from) createdAt.gte = new Date(from);
+      if (to) createdAt.lte = new Date(to);
+      where.createdAt = createdAt;
     }
 
     const [orders, total] = await Promise.all([
@@ -105,7 +112,7 @@ export class OrdersService {
       where: {
         userId,
         tokenId: dto.tokenId,
-        resolutionStatus: "UNRESOLVED" as any,
+        resolutionStatus: ResolutionStatus.UNRESOLVED,
       },
     });
     if (!position) {
@@ -142,12 +149,12 @@ export class OrdersService {
         strategyId: null,
         marketId: position.marketId,
         tokenId: dto.tokenId,
-        side: "SELL" as any,
+        side: OrderSide.SELL,
         outcome: position.outcome,
         size: size,
         price: "0.01",
-        orderType: "FOK" as any,
-        status: "PENDING" as any,
+        orderType: OrderType.FOK,
+        status: OrderStatus.PENDING,
       },
     });
 
@@ -174,7 +181,7 @@ export class OrdersService {
     }
 
     // Find the resolved position
-    const where: any = { userId };
+    const where: Record<string, string> = { userId };
     if (dto.positionId) where.id = dto.positionId;
     if (dto.marketId) where.marketId = dto.marketId;
 
@@ -206,7 +213,7 @@ export class OrdersService {
     // Update position status to REDEEMED
     await this.prisma.position.update({
       where: { id: position.id },
-      data: { resolutionStatus: "REDEEMED" as any },
+      data: { resolutionStatus: "REDEEMED" as ResolutionStatus },
     });
 
     return { positionId: position.id, intentId, status: "REDEEMED" };
@@ -363,12 +370,12 @@ export class OrdersService {
         strategyId: null,
         marketId: token.marketId,
         tokenId: dto.tokenId,
-        side: dto.side as any,
+        side: dto.side as OrderSide,
         outcome: dto.outcome,
         size: String(dto.size),
         price: String(dto.price),
-        orderType: (dto.orderType || "GTC") as any,
-        status: "PENDING" as any,
+        orderType: (dto.orderType || "GTC") as OrderType,
+        status: OrderStatus.PENDING,
       },
     });
 
@@ -388,11 +395,11 @@ export class OrdersService {
         `"${o.marketId}"`,
         o.side,
         o.outcome ?? "",
-        o.size?.toString() ?? "",
-        o.price?.toString() ?? "",
+        o.size != null ? String(o.size) : "",
+        o.price != null ? String(o.price) : "",
         o.orderType,
         o.status,
-        o.fillPrice?.toString() ?? "",
+        o.fillPrice != null ? String(o.fillPrice) : "",
         o.createdAt.toISOString(),
       ].join(","),
     );
@@ -417,7 +424,7 @@ export class OrdersService {
     // Update status to CANCELLED
     await this.prisma.order.update({
       where: { id: orderId },
-      data: { status: "CANCELLED" as any },
+      data: { status: OrderStatus.CANCELLED },
     });
 
     // If order has a CLOB ID, publish cancel to stream

@@ -19,6 +19,7 @@ import {
 } from "@polyforge/shared-auth";
 import { WebhooksService } from "./webhooks.service";
 import { CreateWebhookDto } from "./dto/create-webhook.dto";
+import { JwtPayload } from "@polyforge/shared-types";
 
 @ApiTags("webhooks")
 @ApiBearerAuth("jwt")
@@ -31,12 +32,12 @@ export class WebhooksController {
   @HttpCode(HttpStatus.CREATED)
   @UseGuards(ApiKeyScopeGuard)
   @RequireScopes("WRITE")
-  create(@CurrentUser() user: any, @Body() dto: CreateWebhookDto) {
+  create(@CurrentUser() user: JwtPayload, @Body() dto: CreateWebhookDto) {
     return this.webhooks.create(user.sub, dto);
   }
 
   @Get()
-  list(@CurrentUser() user: any) {
+  list(@CurrentUser() user: JwtPayload) {
     return this.webhooks.list(user.sub);
   }
 
@@ -44,14 +45,20 @@ export class WebhooksController {
   @HttpCode(HttpStatus.NO_CONTENT)
   @UseGuards(ApiKeyScopeGuard)
   @RequireScopes("WRITE")
-  remove(@Param("id", ParseUUIDPipe) id: string, @CurrentUser() user: any) {
+  remove(
+    @Param("id", ParseUUIDPipe) id: string,
+    @CurrentUser() user: JwtPayload,
+  ) {
     return this.webhooks.remove(id, user.sub);
   }
 
   @Post(":id/test")
   @UseGuards(ApiKeyScopeGuard)
   @RequireScopes("WRITE")
-  test(@Param("id", ParseUUIDPipe) id: string, @CurrentUser() user: any) {
+  test(
+    @Param("id", ParseUUIDPipe) id: string,
+    @CurrentUser() user: JwtPayload,
+  ) {
     return this.webhooks.test(id, user.sub);
   }
 }

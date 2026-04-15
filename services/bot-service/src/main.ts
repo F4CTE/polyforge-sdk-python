@@ -52,7 +52,7 @@ async function bootstrap() {
   );
 
   // Security headers via helmet (restrictive CSP — API-only, no HTML served)
-  await app.register(helmet as any, {
+  await app.register(helmet as Parameters<typeof app.register>[0], {
     contentSecurityPolicy: {
       directives: {
         defaultSrc: ["'none'"],

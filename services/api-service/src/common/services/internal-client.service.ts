@@ -36,7 +36,7 @@ export class InternalClientService {
       method: "POST",
       headers: { Authorization: `Bearer ${token}` },
       signal: AbortSignal.timeout(10_000),
-    } as any);
+    } as RequestInit);
     return res;
   }
 
@@ -51,7 +51,7 @@ export class InternalClientService {
       method: "DELETE",
       headers: { Authorization: `Bearer ${token}` },
       signal: AbortSignal.timeout(10_000),
-    } as any);
+    } as RequestInit);
     return res;
   }
 
@@ -65,7 +65,7 @@ export class InternalClientService {
     const res = await fetch(url, {
       headers: { Authorization: `Bearer ${token}` },
       signal: AbortSignal.timeout(10_000),
-    } as any);
+    } as RequestInit);
     return res;
   }
 }

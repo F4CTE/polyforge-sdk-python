@@ -7,7 +7,7 @@ import {
 import { Cron } from "@nestjs/schedule";
 import { PrismaService } from "@polyforge/shared-db";
 import { RedisService } from "@polyforge/shared-redis";
-import { Prisma } from "@prisma/client";
+import { Prisma, OrderSide, OrderOutcome } from "@prisma/client";
 
 const STREAM = "stream:events";
 const GROUP = "whale-detector";
@@ -41,8 +41,9 @@ export class WhaleDetectorService implements OnModuleInit, OnModuleDestroy {
       await this.redis
         .getClient()
         .xgroup("CREATE", STREAM, GROUP, "$", "MKSTREAM");
-    } catch (err: any) {
-      if (!err.message?.includes("BUSYGROUP")) throw err;
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      if (!msg.includes("BUSYGROUP")) throw err;
     }
   }
 
@@ -85,9 +86,10 @@ export class WhaleDetectorService implements OnModuleInit, OnModuleDestroy {
             await this.redis.getClient().xack(STREAM, GROUP, id);
           }
         }
-      } catch (err: any) {
+      } catch (err: unknown) {
         if (this.running) {
-          this.logger.error("Whale detector consume error", err?.message);
+          const msg = err instanceof Error ? err.message : String(err);
+          this.logger.error("Whale detector consume error", msg);
           await new Promise((r) => setTimeout(r, 1000));
         }
       }
@@ -125,10 +127,13 @@ export class WhaleDetectorService implements OnModuleInit, OnModuleDestroy {
         walletAddress,
         marketId: event.marketId ?? "",
         tokenId: event.tokenId ?? "",
-        side: event.side as any,
-        outcome: event.outcome as any,
+        side: event.side as OrderSide,
+        outcome: event.outcome as OrderOutcome,
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
         size: new Prisma.Decimal(size),
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
         price: new Prisma.Decimal(price),
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
         notional: new Prisma.Decimal(notional),
         txHash: event.txHash ?? null,
       },
@@ -139,11 +144,13 @@ export class WhaleDetectorService implements OnModuleInit, OnModuleDestroy {
       where: { walletAddress },
       create: {
         walletAddress,
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
         totalVolume: new Prisma.Decimal(notional),
         tradeCount: 1,
         lastTradeAt: new Date(),
       },
       update: {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
         totalVolume: { increment: new Prisma.Decimal(notional) },
         tradeCount: { increment: 1 },
         lastTradeAt: new Date(),
@@ -198,7 +205,7 @@ export class WhaleDetectorService implements OnModuleInit, OnModuleDestroy {
         where: { closed: true },
         select: { id: true },
       });
-      const closedMarketIds = new Set(closedMarkets.map((m) => m.id));
+      const _closedMarketIds = new Set(closedMarkets.map((m) => m.id));
 
       // Batch update all profiles in a transaction
       await this.prisma.$transaction(
@@ -206,6 +213,7 @@ export class WhaleDetectorService implements OnModuleInit, OnModuleDestroy {
           this.prisma.whaleProfile.update({
             where: { walletAddress: agg.walletAddress },
             data: {
+              // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
               totalVolume: agg._sum.notional ?? 0,
               tradeCount: agg._count,
             },
@@ -214,8 +222,9 @@ export class WhaleDetectorService implements OnModuleInit, OnModuleDestroy {
       );
 
       this.logger.log(`Aggregated ${aggregations.length} whale profiles`);
-    } catch (err: any) {
-      this.logger.error("Whale profile aggregation failed", err?.message);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      this.logger.error("Whale profile aggregation failed", msg);
     }
   }
 }

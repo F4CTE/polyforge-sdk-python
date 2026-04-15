@@ -19,6 +19,7 @@ export class WhalesService {
     const where: Prisma.WhaleAlertWhereInput = {};
 
     if (query.minSize) {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
       where.notional = { gte: new Prisma.Decimal(query.minSize) };
     }
     if (query.marketId) {
@@ -103,10 +104,11 @@ export class WhalesService {
 
     const stats = profile
       ? {
-          totalVolume: profile.totalVolume?.toString() ?? "0",
-          totalPnl: profile.totalPnl?.toString() ?? "0",
+          totalVolume:
+            profile.totalVolume != null ? String(profile.totalVolume) : "0",
+          totalPnl: profile.totalPnl != null ? String(profile.totalPnl) : "0",
           tradeCount: profile.tradeCount ?? 0,
-          winRate: profile.winRate?.toString() ?? "0",
+          winRate: profile.winRate != null ? String(profile.winRate) : "0",
         }
       : null;
 
@@ -115,8 +117,8 @@ export class WhalesService {
       marketName: a.market?.title ?? "Unknown Market",
       side: a.side,
       outcome: a.outcome,
-      size: a.size?.toString() ?? "0",
-      price: a.price?.toString() ?? "0",
+      size: a.size != null ? String(a.size) : "0",
+      price: a.price != null ? String(a.price) : "0",
       timestamp: a.detectedAt.toISOString(),
     }));
 

@@ -35,6 +35,7 @@ import { PlaceOrderDto } from "./dto/place-order.dto";
 import { RedeemPositionDto } from "./dto/redeem-position.dto";
 import { GeoBlockGuard } from "../common/guards/geo.guard";
 import { PaginationDto } from "../common/dto/pagination.dto";
+import { JwtPayload } from "@polyforge/shared-types";
 
 class OrderQueryDto extends PaginationDto {
   @IsOptional()
@@ -88,7 +89,7 @@ export class OrdersController {
   constructor(private readonly orders: OrdersService) {}
 
   @Get()
-  list(@CurrentUser() user: any, @Query() query: OrderQueryDto) {
+  list(@CurrentUser() user: JwtPayload, @Query() query: OrderQueryDto) {
     return this.orders.list(user.sub, query);
   }
 
@@ -102,7 +103,10 @@ export class OrdersController {
   @HttpCode(HttpStatus.ACCEPTED)
   @UseGuards(ApiKeyScopeGuard, GeoBlockGuard)
   @RequireScopes("TRADE")
-  closePosition(@CurrentUser() user: any, @Body() dto: ClosePositionDto) {
+  closePosition(
+    @CurrentUser() user: JwtPayload,
+    @Body() dto: ClosePositionDto,
+  ) {
     return this.orders.closePosition(user.sub, dto);
   }
 
@@ -110,7 +114,10 @@ export class OrdersController {
   @HttpCode(HttpStatus.OK)
   @UseGuards(ApiKeyScopeGuard, GeoBlockGuard)
   @RequireScopes("TRADE")
-  redeemPosition(@CurrentUser() user: any, @Body() dto: RedeemPositionDto) {
+  redeemPosition(
+    @CurrentUser() user: JwtPayload,
+    @Body() dto: RedeemPositionDto,
+  ) {
     return this.orders.redeemPosition(user.sub, dto);
   }
 
@@ -125,7 +132,10 @@ export class OrdersController {
   @HttpCode(HttpStatus.OK)
   @UseGuards(ApiKeyScopeGuard, GeoBlockGuard)
   @RequireScopes("TRADE")
-  splitPosition(@CurrentUser() user: any, @Body() dto: SplitPositionDto) {
+  splitPosition(
+    @CurrentUser() user: JwtPayload,
+    @Body() dto: SplitPositionDto,
+  ) {
     return this.orders.splitPosition(user.sub, dto);
   }
 
@@ -140,7 +150,10 @@ export class OrdersController {
   @HttpCode(HttpStatus.OK)
   @UseGuards(ApiKeyScopeGuard, GeoBlockGuard)
   @RequireScopes("TRADE")
-  mergePosition(@CurrentUser() user: any, @Body() dto: MergePositionDto) {
+  mergePosition(
+    @CurrentUser() user: JwtPayload,
+    @Body() dto: MergePositionDto,
+  ) {
     return this.orders.mergePosition(user.sub, dto);
   }
 
@@ -171,7 +184,7 @@ export class OrdersController {
   @Get("export/csv")
   @UseGuards(ApiKeyScopeGuard)
   @RequireScopes("READ")
-  async exportCsv(@CurrentUser() user: any, @Res() res: Response) {
+  async exportCsv(@CurrentUser() user: JwtPayload, @Res() res: Response) {
     const csv = await this.orders.exportCsv(user.sub);
     res.header("Content-Type", "text/csv");
     res.header("Content-Disposition", 'attachment; filename="orders.csv"');

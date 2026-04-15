@@ -1,6 +1,6 @@
 import { Injectable, Logger, NotFoundException } from "@nestjs/common";
 import { PrismaService } from "@polyforge/shared-db";
-import { Prisma } from "@prisma/client";
+import { Prisma, NewsSentiment } from "@prisma/client";
 import { NewsArticleQueryDto, NewsSignalQueryDto } from "./dto/news-query.dto";
 
 @Injectable()
@@ -22,7 +22,7 @@ export class NewsService {
       where.source = query.source;
     }
     if (query.sentiment) {
-      where.sentiment = query.sentiment as any;
+      where.sentiment = query.sentiment as NewsSentiment;
     }
 
     const [data, total] = await Promise.all([

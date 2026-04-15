@@ -13,6 +13,7 @@ import { Throttle } from "@nestjs/throttler";
 import { JwtAuthGuard, CurrentUser } from "@polyforge/shared-auth";
 import { WhalesService } from "./whales.service";
 import { WhaleFeedQueryDto, WhaleTopQueryDto } from "./dto/whale-query.dto";
+import { JwtPayload } from "@polyforge/shared-types";
 
 @ApiTags("whales")
 @ApiBearerAuth("jwt")
@@ -44,24 +45,27 @@ export class WhalesController {
   }
 
   @Get("following")
-  getFollowing(@CurrentUser() user: any) {
+  getFollowing(@CurrentUser() user: JwtPayload) {
     return this.whales.getFollowing(user.sub);
   }
 
   @Get(":address")
-  getProfile(@CurrentUser() user: any, @Param("address") address: string) {
+  getProfile(
+    @CurrentUser() user: JwtPayload,
+    @Param("address") address: string,
+  ) {
     return this.whales.getProfile(address, user?.sub);
   }
 
   @Post(":address/follow")
   @HttpCode(HttpStatus.OK)
-  follow(@CurrentUser() user: any, @Param("address") address: string) {
+  follow(@CurrentUser() user: JwtPayload, @Param("address") address: string) {
     return this.whales.toggleFollow(user.sub, address);
   }
 
   @Post(":address/unfollow")
   @HttpCode(HttpStatus.OK)
-  unfollow(@CurrentUser() user: any, @Param("address") address: string) {
+  unfollow(@CurrentUser() user: JwtPayload, @Param("address") address: string) {
     return this.whales.toggleFollow(user.sub, address);
   }
 }

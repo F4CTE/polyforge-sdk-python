@@ -5,7 +5,7 @@ import {
   BadRequestException,
 } from "@nestjs/common";
 import { PrismaService } from "@polyforge/shared-db";
-import { StrategyStatus } from ".prisma/client";
+import { StrategyStatus, StrategyVisibility } from ".prisma/client";
 import * as bcrypt from "bcrypt";
 
 @Injectable()
@@ -94,7 +94,7 @@ export class ProfileService {
         this.prisma.strategy.count({
           where: {
             userId: user.id,
-            visibility: "PUBLIC" as any,
+            visibility: StrategyVisibility.PUBLIC,
             status: { not: StrategyStatus.ARCHIVED },
           },
         }),

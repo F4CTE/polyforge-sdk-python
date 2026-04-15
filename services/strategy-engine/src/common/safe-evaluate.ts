@@ -21,7 +21,7 @@ const dangerousFunctions = [
 ];
 
 dangerousFunctions.forEach((fn) => {
-  delete (limitedMath as any)[fn];
+  delete (limitedMath as unknown as Record<string, unknown>)[fn];
 });
 
 /**

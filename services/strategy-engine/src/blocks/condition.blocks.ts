@@ -1,11 +1,13 @@
-import { BlockEvaluator, BlockResult, EvalContext } from "./block.types";
-import { RedisService } from "@polyforge/shared-redis";
-import { PrismaService } from "@polyforge/shared-db";
+import { BlockEvaluator, BlockResult } from "./block.types";
+
+type BlockParams = Record<string, string | number | undefined>;
 
 // min_liquidity — passes if total bid liquidity >= minUsdc
 export const MinLiquidityBlock: BlockEvaluator = {
   async evaluate(block, _ctx, redis, _prisma): Promise<BlockResult> {
-    const { tokenId, minUsdc } = (block["params"] as any) ?? {};
+    const params = (block["params"] as BlockParams) ?? {};
+    const tokenId = String(params.tokenId ?? "");
+    const minUsdc = String(params.minUsdc ?? "100");
     const book = await redis.getJson<{
       bids: Array<{ price: string; size: string }>;
     }>(`cache:book:${tokenId}`);
@@ -15,7 +17,7 @@ export const MinLiquidityBlock: BlockEvaluator = {
       (sum, b) => sum + parseFloat(b.price) * parseFloat(b.size),
       0,
     );
-    const min = parseFloat(minUsdc ?? "100");
+    const min = parseFloat(minUsdc);
     const fired = liquidity >= min;
     return {
       fired,
@@ -27,8 +29,10 @@ export const MinLiquidityBlock: BlockEvaluator = {
 // max_position — passes if current position value < maxUsdc
 export const MaxPositionBlock: BlockEvaluator = {
   async evaluate(block, ctx, redis, prisma): Promise<BlockResult> {
-    const { tokenId, maxUsdc } = (block["params"] as any) ?? {};
-    const max = parseFloat(maxUsdc ?? "0");
+    const params = (block["params"] as BlockParams) ?? {};
+    const tokenId = String(params.tokenId ?? "");
+    const maxUsdc = String(params.maxUsdc ?? "0");
+    const max = parseFloat(maxUsdc);
 
     const position = await prisma.position.findUnique({
       where: { userId_tokenId: { userId: ctx.userId, tokenId } },
@@ -36,8 +40,8 @@ export const MaxPositionBlock: BlockEvaluator = {
     if (!position) return { fired: true, reason: "no existing position" };
 
     const value =
-      parseFloat(position.size.toString()) *
-      parseFloat(position.currentPrice.toString());
+      parseFloat(String(position.size)) *
+      parseFloat(String(position.currentPrice));
     const fired = value < max;
     return { fired, reason: `position $${value.toFixed(2)} < max $${max}` };
   },
@@ -45,39 +49,51 @@ export const MaxPositionBlock: BlockEvaluator = {
 
 // max_bets_per_day — passes if betsToday < max
 export const MaxBetsPerDayBlock: BlockEvaluator = {
-  async evaluate(block, ctx, _redis, _prisma): Promise<BlockResult> {
-    const max = parseInt((block["params"] as any)?.max ?? "10", 10);
+  evaluate(block, ctx, _redis, _prisma): Promise<BlockResult> {
+    const params = (block["params"] as BlockParams) ?? {};
+    const max = parseInt(String(params.max ?? "10"), 10);
     const fired = ctx.state.betsToday < max;
-    return { fired, reason: `betsToday ${ctx.state.betsToday} < ${max}` };
+    return Promise.resolve({
+      fired,
+      reason: `betsToday ${ctx.state.betsToday} < ${max}`,
+    });
   },
 };
 
 // daily_loss_limit — passes if daily loss < maxLossUsdc
 export const DailyLossLimitBlock: BlockEvaluator = {
-  async evaluate(block, ctx, _redis, _prisma): Promise<BlockResult> {
-    const maxLoss = parseFloat((block["params"] as any)?.maxLossUsdc ?? "0");
+  evaluate(block, ctx, _redis, _prisma): Promise<BlockResult> {
+    const params = (block["params"] as BlockParams) ?? {};
+    const maxLoss = parseFloat(String(params.maxLossUsdc ?? "0"));
     const fired = ctx.state.dailyPnl > -maxLoss;
-    return { fired, reason: `dailyPnl ${ctx.state.dailyPnl} > -${maxLoss}` };
+    return Promise.resolve({
+      fired,
+      reason: `dailyPnl ${ctx.state.dailyPnl} > -${maxLoss}`,
+    });
   },
 };
 
 // cooldown_after_trade — passes if enough time since last trade
 export const CooldownAfterTradeBlock: BlockEvaluator = {
-  async evaluate(block, ctx, _redis, _prisma): Promise<BlockResult> {
-    const cooldownMs = parseInt(
-      (block["params"] as any)?.cooldownMs ?? "0",
-      10,
-    );
+  evaluate(block, ctx, _redis, _prisma): Promise<BlockResult> {
+    const params = (block["params"] as BlockParams) ?? {};
+    const cooldownMs = parseInt(String(params.cooldownMs ?? "0"), 10);
     const elapsed = ctx.now - ctx.state.lastTradeAt;
     const fired = elapsed >= cooldownMs || ctx.state.lastTradeAt === 0;
-    return { fired, reason: `elapsed ${elapsed}ms (need ${cooldownMs}ms)` };
+    return Promise.resolve({
+      fired,
+      reason: `elapsed ${elapsed}ms (need ${cooldownMs}ms)`,
+    });
   },
 };
 
 // price_in_range — passes if price is between min and max
 export const PriceInRangeBlock: BlockEvaluator = {
   async evaluate(block, _ctx, redis, _prisma): Promise<BlockResult> {
-    const { tokenId, min, max } = (block["params"] as any) ?? {};
+    const params = (block["params"] as BlockParams) ?? {};
+    const tokenId = String(params.tokenId ?? "");
+    const min = String(params.min ?? "0");
+    const max = String(params.max ?? "1");
     const data = await redis.getJson<{ price: number }>(
       `cache:price:${tokenId}`,
     );
@@ -94,30 +110,33 @@ export const PriceInRangeBlock: BlockEvaluator = {
 
 // no_reentry — passes if this token hasn't been traded today
 export const NoReentryBlock: BlockEvaluator = {
-  async evaluate(block, ctx, _redis, _prisma): Promise<BlockResult> {
-    const tokenId = (block["params"] as any)?.tokenId;
-    if (!tokenId) return { fired: true, reason: "no tokenId configured" };
+  evaluate(block, ctx, _redis, _prisma): Promise<BlockResult> {
+    const params = (block["params"] as BlockParams) ?? {};
+    const tokenId = String(params.tokenId ?? "");
+    if (!tokenId)
+      return Promise.resolve({ fired: true, reason: "no tokenId configured" });
 
     const traded = ctx.state.tradedTokensToday.includes(tokenId);
-    return {
+    return Promise.resolve({
       fired: !traded,
       reason: traded
         ? `already traded ${tokenId} today`
         : `${tokenId} not traded today`,
-    };
+    });
   },
 };
 
 // no_existing_position — passes if no open position on this token
 export const NoExistingPositionBlock: BlockEvaluator = {
   async evaluate(block, ctx, _redis, prisma): Promise<BlockResult> {
-    const tokenId = (block["params"] as any)?.tokenId;
+    const params = (block["params"] as BlockParams) ?? {};
+    const tokenId = String(params.tokenId ?? "");
     if (!tokenId) return { fired: true, reason: "no tokenId configured" };
 
     const position = await prisma.position.findUnique({
       where: { userId_tokenId: { userId: ctx.userId, tokenId } },
     });
-    const hasPosition = !!position && parseFloat(position.size.toString()) > 0;
+    const hasPosition = !!position && parseFloat(String(position.size)) > 0;
     return {
       fired: !hasPosition,
       reason: hasPosition ? `existing position on ${tokenId}` : "no position",
@@ -127,21 +146,23 @@ export const NoExistingPositionBlock: BlockEvaluator = {
 
 // time_window — passes if current time (UTC) is within window
 export const TimeWindowBlock: BlockEvaluator = {
-  async evaluate(block, ctx, _redis, _prisma): Promise<BlockResult> {
-    const { startHH, startMM, endHH, endMM } = (block["params"] as any) ?? {};
+  evaluate(block, ctx, _redis, _prisma): Promise<BlockResult> {
+    const params = (block["params"] as BlockParams) ?? {};
+    const startHH = String(params.startHH ?? "0");
+    const startMM = String(params.startMM ?? "0");
+    const endHH = String(params.endHH ?? "23");
+    const endMM = String(params.endMM ?? "59");
     const now = new Date(ctx.now);
     const currentMins = now.getUTCHours() * 60 + now.getUTCMinutes();
-    const startMins =
-      parseInt(startHH ?? "0", 10) * 60 + parseInt(startMM ?? "0", 10);
-    const endMins =
-      parseInt(endHH ?? "23", 10) * 60 + parseInt(endMM ?? "59", 10);
+    const startMins = parseInt(startHH, 10) * 60 + parseInt(startMM, 10);
+    const endMins = parseInt(endHH, 10) * 60 + parseInt(endMM, 10);
 
     const fired = currentMins >= startMins && currentMins <= endMins;
     const fmt = (h: number, m: number) =>
       `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
-    return {
+    return Promise.resolve({
       fired,
       reason: `current ${fmt(now.getUTCHours(), now.getUTCMinutes())} UTC in [${fmt(parseInt(startHH), parseInt(startMM))}, ${fmt(parseInt(endHH), parseInt(endMM))}]: ${fired}`,
-    };
+    });
   },
 };

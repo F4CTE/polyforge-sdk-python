@@ -8,6 +8,7 @@ import { RedisService } from "@polyforge/shared-redis";
 import { CreateTicketDto } from "./dto/create-ticket.dto";
 import { CreateMessageDto } from "./dto/create-message.dto";
 import { paginate } from "../common/dto/pagination.dto";
+import { TicketCategory, TicketPriority } from "@prisma/client";
 
 @Injectable()
 export class TicketsService {
@@ -22,8 +23,8 @@ export class TicketsService {
         data: {
           userId,
           subject: dto.subject,
-          category: (dto.category as any) ?? "GENERAL",
-          priority: (dto.priority as any) ?? "MEDIUM",
+          category: (dto.category ?? TicketCategory.GENERAL) as TicketCategory,
+          priority: (dto.priority ?? TicketPriority.MEDIUM) as TicketPriority,
           status: "OPEN",
         },
       });

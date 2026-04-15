@@ -5,8 +5,10 @@ import {
   EvalContext,
   OrderIntent,
 } from "./block.types";
-import { RedisService } from "@polyforge/shared-redis";
 import { PrismaService } from "@polyforge/shared-db";
+
+type BlockParams = Record<string, string | number | undefined>;
+type OrderType = "GTC" | "FOK" | "GTD" | "FAK";
 
 // Helper: resolve market/token info
 async function resolveMarket(
@@ -29,7 +31,7 @@ function makeIntent(
   side: "BUY" | "SELL",
   size: string,
   price: string,
-  orderType: "GTC" | "FOK" | "GTD" | "FAK",
+  orderType: OrderType,
 ): OrderIntent {
   // SECURITY: Validate financial parameters before generating order intents
   const sizeNum = parseFloat(size);
@@ -58,10 +60,19 @@ function makeIntent(
   };
 }
 
+function toOrderType(val: string | number | undefined): OrderType {
+  const s = String(val ?? "GTC");
+  if (s === "FOK" || s === "GTD" || s === "FAK") return s;
+  return "GTC";
+}
+
 // ─── buy_yes ──────────────────────────────────────────────────────────────────
 export const BuyYesAction: ActionEvaluator = {
   async execute(block, ctx, redis, prisma): Promise<ActionResult> {
-    const { tokenId, size, orderType } = (block["params"] as any) ?? {};
+    const params = (block["params"] as BlockParams) ?? {};
+    const tokenId = String(params.tokenId ?? "");
+    const size = String(params.size ?? "0");
+    const orderType = toOrderType(params.orderType);
     const resolved = await resolveMarket(tokenId, prisma);
     if (!resolved) return { intents: [] };
 
@@ -78,9 +89,9 @@ export const BuyYesAction: ActionEvaluator = {
           resolved.marketId,
           "YES",
           "BUY",
-          String(size),
+          size,
           price,
-          orderType ?? "GTC",
+          orderType,
         ),
       ],
     };
@@ -90,7 +101,10 @@ export const BuyYesAction: ActionEvaluator = {
 // ─── buy_no ───────────────────────────────────────────────────────────────────
 export const BuyNoAction: ActionEvaluator = {
   async execute(block, ctx, redis, prisma): Promise<ActionResult> {
-    const { tokenId, size, orderType } = (block["params"] as any) ?? {};
+    const params = (block["params"] as BlockParams) ?? {};
+    const tokenId = String(params.tokenId ?? "");
+    const size = String(params.size ?? "0");
+    const orderType = toOrderType(params.orderType);
     // For NO token: find the paired NO token
     const noToken = await prisma.token.findFirst({
       where: {
@@ -114,9 +128,9 @@ export const BuyNoAction: ActionEvaluator = {
           noToken.marketId,
           "NO",
           "BUY",
-          String(size),
+          size,
           price,
-          orderType ?? "GTC",
+          orderType,
         ),
       ],
     };
@@ -126,15 +140,17 @@ export const BuyNoAction: ActionEvaluator = {
 // ─── set_stop_loss ────────────────────────────────────────────────────────────
 export const SetStopLossAction: ActionEvaluator = {
   async execute(block, ctx, _redis, prisma): Promise<ActionResult> {
-    const { tokenId, pct } = (block["params"] as any) ?? {};
+    const params = (block["params"] as BlockParams) ?? {};
+    const tokenId = String(params.tokenId ?? "");
+    const pct = String(params.pct ?? "0.1");
     const position = await prisma.position.findUnique({
       where: { userId_tokenId: { userId: ctx.userId, tokenId } },
     });
-    if (!position || parseFloat(position.size.toString()) === 0)
+    if (!position || parseFloat(String(position.size)) === 0)
       return { intents: [] };
 
     const stopPrice =
-      parseFloat(position.avgPrice.toString()) * (1 - parseFloat(pct ?? "0.1"));
+      parseFloat(String(position.avgPrice)) * (1 - parseFloat(pct));
     const resolved = await resolveMarket(tokenId, prisma);
     if (!resolved) return { intents: [] };
 
@@ -146,7 +162,7 @@ export const SetStopLossAction: ActionEvaluator = {
           resolved.marketId,
           resolved.outcome,
           "SELL",
-          position.size.toString(),
+          String(position.size),
           String(stopPrice.toFixed(4)),
           "GTC",
         ),
@@ -158,15 +174,17 @@ export const SetStopLossAction: ActionEvaluator = {
 // ─── take_profit ──────────────────────────────────────────────────────────────
 export const TakeProfitAction: ActionEvaluator = {
   async execute(block, ctx, _redis, prisma): Promise<ActionResult> {
-    const { tokenId, pct } = (block["params"] as any) ?? {};
+    const params = (block["params"] as BlockParams) ?? {};
+    const tokenId = String(params.tokenId ?? "");
+    const pct = String(params.pct ?? "0.1");
     const position = await prisma.position.findUnique({
       where: { userId_tokenId: { userId: ctx.userId, tokenId } },
     });
-    if (!position || parseFloat(position.size.toString()) === 0)
+    if (!position || parseFloat(String(position.size)) === 0)
       return { intents: [] };
 
     const tpPrice =
-      parseFloat(position.avgPrice.toString()) * (1 + parseFloat(pct ?? "0.1"));
+      parseFloat(String(position.avgPrice)) * (1 + parseFloat(pct));
     const resolved = await resolveMarket(tokenId, prisma);
     if (!resolved) return { intents: [] };
 
@@ -178,7 +196,7 @@ export const TakeProfitAction: ActionEvaluator = {
           resolved.marketId,
           resolved.outcome,
           "SELL",
-          position.size.toString(),
+          String(position.size),
           String(Math.min(tpPrice, 0.99).toFixed(4)),
           "GTC",
         ),
@@ -190,8 +208,10 @@ export const TakeProfitAction: ActionEvaluator = {
 // ─── scale_in ─────────────────────────────────────────────────────────────────
 export const ScaleInAction: ActionEvaluator = {
   async execute(block, ctx, redis, prisma): Promise<ActionResult> {
-    const { tokenId, additionalSize, orderType } =
-      (block["params"] as any) ?? {};
+    const params = (block["params"] as BlockParams) ?? {};
+    const tokenId = String(params.tokenId ?? "");
+    const additionalSize = String(params.additionalSize ?? "0");
+    const orderType = toOrderType(params.orderType);
     const resolved = await resolveMarket(tokenId, prisma);
     if (!resolved) return { intents: [] };
 
@@ -208,9 +228,9 @@ export const ScaleInAction: ActionEvaluator = {
           resolved.marketId,
           resolved.outcome,
           "BUY",
-          String(additionalSize),
+          additionalSize,
           price,
-          orderType ?? "GTC",
+          orderType,
         ),
       ],
     };
@@ -220,7 +240,10 @@ export const ScaleInAction: ActionEvaluator = {
 // ─── scale_out ────────────────────────────────────────────────────────────────
 export const ScaleOutAction: ActionEvaluator = {
   async execute(block, ctx, redis, prisma): Promise<ActionResult> {
-    const { tokenId, reduceBySize, orderType } = (block["params"] as any) ?? {};
+    const params = (block["params"] as BlockParams) ?? {};
+    const tokenId = String(params.tokenId ?? "");
+    const reduceBySize = String(params.reduceBySize ?? "0");
+    const orderType = toOrderType(params.orderType);
     const resolved = await resolveMarket(tokenId, prisma);
     if (!resolved) return { intents: [] };
 
@@ -237,9 +260,9 @@ export const ScaleOutAction: ActionEvaluator = {
           resolved.marketId,
           resolved.outcome,
           "SELL",
-          String(reduceBySize),
+          reduceBySize,
           price,
-          orderType ?? "GTC",
+          orderType,
         ),
       ],
     };
@@ -252,15 +275,16 @@ export const ScaleOutAction: ActionEvaluator = {
 // calls the CLOB bulk-cancel endpoint (DELETE /cancel-all or
 // DELETE /cancel-orders?market=X) instead of placing an order.
 export const CancelAllOrdersAction: ActionEvaluator = {
-  async execute(block, ctx, _redis, _prisma): Promise<ActionResult> {
-    const { marketId } = (block["params"] as any) ?? {};
-    return {
+  execute(block, ctx, _redis, _prisma): Promise<ActionResult> {
+    const params = (block["params"] as BlockParams) ?? {};
+    const marketId = String(params.marketId ?? "");
+    return Promise.resolve({
       intents: [
         {
           intentId: uuidv4(),
           userId: ctx.userId,
           strategyId: ctx.strategyId,
-          marketId: marketId ?? "",
+          marketId,
           tokenId: "__cancel_all__",
           side: "SELL",
           outcome: "YES",
@@ -269,14 +293,14 @@ export const CancelAllOrdersAction: ActionEvaluator = {
           orderType: "GTC",
         },
       ],
-    };
+    });
   },
 };
 
 // ─── skip_bet — no-op, just logs ───────────────────────────────────────────────
 export const SkipBetAction: ActionEvaluator = {
-  async execute(_block, _ctx, _redis, _prisma): Promise<ActionResult> {
-    return { intents: [] };
+  execute(_block, _ctx, _redis, _prisma): Promise<ActionResult> {
+    return Promise.resolve({ intents: [] });
   },
 };
 
@@ -287,7 +311,9 @@ export const SkipBetAction: ActionEvaluator = {
 // that the runner intercepts and delegates to the registry service.
 export const RunStrategyAction: ActionEvaluator = {
   async execute(block, ctx, _redis, prisma): Promise<ActionResult> {
-    const { strategyId, mode } = (block["params"] as any) ?? {};
+    const params = (block["params"] as BlockParams) ?? {};
+    const strategyId = String(params.strategyId ?? "");
+    const mode = String(params.mode ?? "");
     if (!strategyId || !mode) return { intents: [] };
 
     // Self-reference check

@@ -15,6 +15,7 @@ import { ApiTags, ApiBearerAuth } from "@nestjs/swagger";
 import { Throttle } from "@nestjs/throttler";
 import { IsOptional, IsString, IsNumberString } from "class-validator";
 import { JwtAuthGuard, CurrentUser } from "@polyforge/shared-auth";
+import { JwtPayload } from "@polyforge/shared-types";
 import {
   MarketplaceService,
   CreateListingDto,
@@ -49,12 +50,12 @@ export class MarketplaceController {
   }
 
   @Get("my/listings")
-  myListings(@CurrentUser() user: any) {
+  myListings(@CurrentUser() user: JwtPayload) {
     return this.marketplace.myListings(user.sub);
   }
 
   @Get("my/purchases")
-  myPurchases(@CurrentUser() user: any) {
+  myPurchases(@CurrentUser() user: JwtPayload) {
     return this.marketplace.myPurchases(user.sub);
   }
 
@@ -73,13 +74,16 @@ export class MarketplaceController {
     },
   })
   @HttpCode(HttpStatus.CREATED)
-  createListing(@CurrentUser() user: any, @Body() dto: CreateListingDto) {
+  createListing(
+    @CurrentUser() user: JwtPayload,
+    @Body() dto: CreateListingDto,
+  ) {
     return this.marketplace.createListing(user.sub, dto);
   }
 
   @Patch(":id")
   updateListing(
-    @CurrentUser() user: any,
+    @CurrentUser() user: JwtPayload,
     @Param("id", ParseUUIDPipe) id: string,
     @Body() dto: UpdateListingDto,
   ) {
@@ -96,14 +100,17 @@ export class MarketplaceController {
     },
   })
   @HttpCode(HttpStatus.CREATED)
-  purchase(@CurrentUser() user: any, @Param("id", ParseUUIDPipe) id: string) {
+  purchase(
+    @CurrentUser() user: JwtPayload,
+    @Param("id", ParseUUIDPipe) id: string,
+  ) {
     return this.marketplace.purchase(user.sub, id);
   }
 
   @Post(":id/rate")
   @HttpCode(HttpStatus.OK)
   rate(
-    @CurrentUser() user: any,
+    @CurrentUser() user: JwtPayload,
     @Param("id", ParseUUIDPipe) id: string,
     @Body() dto: RateListingDto,
   ) {

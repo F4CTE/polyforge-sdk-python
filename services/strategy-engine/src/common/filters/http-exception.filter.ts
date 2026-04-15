@@ -27,19 +27,31 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     // R4-04: In production, mask error details for 500+ responses to prevent information leakage
     const isProduction = process.env.NODE_ENV === "production";
 
+    const httpResponse =
+      exception instanceof HttpException
+        ? (exception.getResponse() as Record<string, unknown>)
+        : null;
+
     const message =
       status >= 500 && isProduction
         ? "Internal server error"
-        : exception instanceof HttpException
-          ? ((exception.getResponse() as any).message ?? exception.message)
+        : httpResponse != null
+          ? typeof httpResponse.message === "string"
+            ? httpResponse.message
+            : exception instanceof HttpException
+              ? exception.message
+              : "Internal server error"
           : "Internal server error";
 
     const code =
       status >= 500 && isProduction
         ? "INTERNAL_SERVER_ERROR"
-        : exception instanceof HttpException
-          ? ((exception.getResponse() as any).code ??
-            exception.constructor.name.toUpperCase())
+        : httpResponse != null
+          ? typeof httpResponse.code === "string"
+            ? httpResponse.code
+            : exception instanceof HttpException
+              ? exception.constructor.name.toUpperCase()
+              : "INTERNAL_SERVER_ERROR"
           : "INTERNAL_SERVER_ERROR";
 
     if (status >= 500) {

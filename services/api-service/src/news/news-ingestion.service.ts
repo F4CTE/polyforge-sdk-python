@@ -54,8 +54,9 @@ export class NewsIngestionService implements OnModuleInit {
     for (const feedUrl of this.feeds) {
       try {
         await this.ingestFeed(feedUrl);
-      } catch (err: any) {
-        this.logger.error(`Failed to ingest feed ${feedUrl}: ${err?.message}`);
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : String(err);
+        this.logger.error(`Failed to ingest feed ${feedUrl}: ${msg}`);
       }
     }
   }
@@ -116,9 +117,10 @@ export class NewsIngestionService implements OnModuleInit {
         for (const article of recentArticles) {
           this.signalGenerator
             ?.generateSignals?.(article)
-            ?.catch((err: any) => {
+            ?.catch((err: unknown) => {
+              const msg = err instanceof Error ? err.message : String(err);
               this.logger.error(
-                `Signal generation failed for article ${article.id}: ${err?.message}`,
+                `Signal generation failed for article ${article.id}: ${msg}`,
               );
             });
         }
@@ -151,8 +153,9 @@ export class NewsIngestionService implements OnModuleInit {
         if (article) {
           articles.push(article);
         }
-      } catch (err: any) {
-        this.logger.warn(`Failed to parse RSS item: ${err?.message}`);
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : String(err);
+        this.logger.warn(`Failed to parse RSS item: ${msg}`);
       }
     }
 
@@ -166,8 +169,9 @@ export class NewsIngestionService implements OnModuleInit {
           if (article) {
             articles.push(article);
           }
-        } catch (err: any) {
-          this.logger.warn(`Failed to parse Atom entry: ${err?.message}`);
+        } catch (err: unknown) {
+          const msg = err instanceof Error ? err.message : String(err);
+          this.logger.warn(`Failed to parse Atom entry: ${msg}`);
         }
       }
     }
@@ -298,9 +302,10 @@ export class NewsIngestionService implements OnModuleInit {
     });
 
     // Queue for signal generation (fire-and-forget)
-    this.signalGenerator.generateSignals(created).catch((err) => {
+    this.signalGenerator.generateSignals(created).catch((err: unknown) => {
+      const msg = err instanceof Error ? err.message : String(err);
       this.logger.error(
-        `Signal generation failed for article ${created.id}: ${err?.message}`,
+        `Signal generation failed for article ${created.id}: ${msg}`,
       );
     });
 

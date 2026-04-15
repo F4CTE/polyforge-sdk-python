@@ -19,6 +19,7 @@ import {
 } from "@polyforge/shared-auth";
 import { AlertsService } from "./alerts.service";
 import { CreateAlertDto } from "./dto/create-alert.dto";
+import { JwtPayload } from "@polyforge/shared-types";
 
 @ApiTags("alerts")
 @ApiBearerAuth("jwt")
@@ -28,7 +29,7 @@ export class AlertsController {
   constructor(private readonly alerts: AlertsService) {}
 
   @Get()
-  list(@CurrentUser() user: any) {
+  list(@CurrentUser() user: JwtPayload) {
     return this.alerts.list(user.sub);
   }
 
@@ -36,7 +37,7 @@ export class AlertsController {
   @HttpCode(HttpStatus.CREATED)
   @UseGuards(ApiKeyScopeGuard)
   @RequireScopes("WRITE")
-  create(@CurrentUser() user: any, @Body() dto: CreateAlertDto) {
+  create(@CurrentUser() user: JwtPayload, @Body() dto: CreateAlertDto) {
     return this.alerts.create(user.sub, dto);
   }
 
@@ -44,7 +45,10 @@ export class AlertsController {
   @HttpCode(HttpStatus.NO_CONTENT)
   @UseGuards(ApiKeyScopeGuard)
   @RequireScopes("WRITE")
-  remove(@Param("id", ParseUUIDPipe) id: string, @CurrentUser() user: any) {
+  remove(
+    @Param("id", ParseUUIDPipe) id: string,
+    @CurrentUser() user: JwtPayload,
+  ) {
     return this.alerts.remove(id, user.sub);
   }
 }

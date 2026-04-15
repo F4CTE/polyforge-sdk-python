@@ -1,14 +1,4 @@
-import {
-  Injectable,
-  Logger,
-  OnModuleInit,
-  Controller,
-  Get,
-  Post,
-  Query,
-  Req,
-  Res,
-} from "@nestjs/common";
+import { Injectable, Logger, OnModuleInit, Controller } from "@nestjs/common";
 import crypto from "node:crypto";
 import { CommandsService } from "./commands.service";
 import { LinkingService } from "./linking.service";
@@ -81,29 +71,39 @@ export class WhatsAppService implements OnModuleInit {
 
   // ─── Incoming message handler (POST) ───────────────────────────────────────
 
-  async handleIncoming(body: any): Promise<void> {
-    if (!this.enabled) return;
+  async handleIncoming(
+    body: Record<string, unknown> | null | undefined,
+  ): Promise<void> {
+    if (!this.enabled || !body) return;
 
-    const entries = body?.entry ?? [];
+    const entries =
+      (body["entry"] as Record<string, unknown>[] | undefined) ?? [];
     for (const entry of entries) {
-      const changes = entry?.changes ?? [];
+      const changes =
+        (entry["changes"] as Record<string, unknown>[] | undefined) ?? [];
       for (const change of changes) {
-        const value = change?.value;
-        if (!value?.messages) continue;
+        const value = change["value"] as Record<string, unknown> | undefined;
+        if (!value?.["messages"]) continue;
 
-        for (const message of value.messages) {
-          if (message.type !== "text") continue;
+        for (const message of value["messages"] as Record<string, unknown>[]) {
+          if (message["type"] !== "text") continue;
 
-          const from = String(message.from); // sender phone number
-          const text = String(message.text?.body ?? "").trim();
+          const from = (message["from"] as string) ?? ""; // sender phone number
+          const textField = message["text"] as
+            | Record<string, unknown>
+            | undefined;
+          const text = (
+            (textField?.["body"] as string | undefined) ?? ""
+          ).trim();
 
           if (!text.startsWith("/")) continue;
 
           try {
             const reply = await this.dispatch(from, text);
             await this.send(from, reply);
-          } catch (err: any) {
-            this.logger.error(`WhatsApp command error: ${err?.message}`);
+          } catch (err: unknown) {
+            const errMsg = err instanceof Error ? err.message : String(err);
+            this.logger.error(`WhatsApp command error: ${errMsg}`);
             await this.send(from, "⚠️ An error occurred. Please try again.");
           }
         }
@@ -134,8 +134,9 @@ export class WhatsAppService implements OnModuleInit {
       if (!res.ok) {
         this.logger.warn(`WhatsApp send failed ${res.status}`);
       }
-    } catch (err: any) {
-      this.logger.error(`WhatsApp send error: ${err?.message}`);
+    } catch (err: unknown) {
+      const errMsg = err instanceof Error ? err.message : String(err);
+      this.logger.error(`WhatsApp send error: ${errMsg}`);
     }
   }
 
@@ -240,8 +241,9 @@ export class WhatsAppService implements OnModuleInit {
       if (!res.ok) {
         this.logger.warn(`WhatsApp template send failed ${res.status}`);
       }
-    } catch (err: any) {
-      this.logger.error(`WhatsApp template send error: ${err?.message}`);
+    } catch (err: unknown) {
+      const errMsg = err instanceof Error ? err.message : String(err);
+      this.logger.error(`WhatsApp template send error: ${errMsg}`);
     }
   }
 
@@ -252,20 +254,26 @@ export class WhatsAppService implements OnModuleInit {
    * Useful for testing and external consumers.
    */
   static parseWebhookMessages(
-    body: any,
+    body: Record<string, unknown> | null | undefined,
   ): Array<{ from: string; text: string }> {
     const result: Array<{ from: string; text: string }> = [];
-    const entries = body?.entry ?? [];
+    if (!body) return result;
+    const entries =
+      (body["entry"] as Record<string, unknown>[] | undefined) ?? [];
     for (const entry of entries) {
-      const changes = entry?.changes ?? [];
+      const changes =
+        (entry["changes"] as Record<string, unknown>[] | undefined) ?? [];
       for (const change of changes) {
-        const value = change?.value;
-        if (!value?.messages) continue;
-        for (const message of value.messages) {
-          if (message.type !== "text") continue;
+        const value = change["value"] as Record<string, unknown> | undefined;
+        if (!value?.["messages"]) continue;
+        for (const message of value["messages"] as Record<string, unknown>[]) {
+          if (message["type"] !== "text") continue;
+          const textField = message["text"] as
+            | Record<string, unknown>
+            | undefined;
           result.push({
-            from: String(message.from),
-            text: String(message.text?.body ?? ""),
+            from: (message["from"] as string) ?? "",
+            text: (textField?.["body"] as string | undefined) ?? "",
           });
         }
       }

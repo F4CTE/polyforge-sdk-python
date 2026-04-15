@@ -1,5 +1,8 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import { ActionsService, ActionsSchema } from "./actions.service";
+import {
+  ActionsService,
+  ActionsSchema as _ActionsSchema,
+} from "./actions.service";
 
 describe("ActionsService", () => {
   let service: ActionsService;

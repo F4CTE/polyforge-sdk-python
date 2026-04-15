@@ -1,6 +1,6 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { PrismaService } from "@polyforge/shared-db";
-import { StrategyStatus } from ".prisma/client";
+import { StrategyStatus, ResolutionStatus } from ".prisma/client";
 import { LlmService } from "../news/llm.service";
 
 export interface QueryResult {
@@ -292,9 +292,10 @@ export class AiService {
             data: result.data,
             summary: result.summary,
           };
-        } catch (err: any) {
+        } catch (err: unknown) {
+          const errMsg = err instanceof Error ? err.message : String(err);
           this.logger.error(
-            `AI query handler failed for intent ${intent}: ${err?.message}`,
+            `AI query handler failed for intent ${intent}: ${errMsg}`,
           );
           return {
             query: queryText,
@@ -304,7 +305,7 @@ export class AiService {
             summary:
               process.env.NODE_ENV === "production"
                 ? "Sorry, I encountered an error processing your request. Please try again."
-                : `Sorry, I encountered an error processing your request: ${err?.message}`,
+                : `Sorry, I encountered an error processing your request: ${errMsg}`,
           };
         }
       }
@@ -320,10 +321,15 @@ export class AiService {
     };
   }
 
-  async portfolioReview(userId: string): Promise<any> {
+  async portfolioReview(userId: string): Promise<{
+    summary: string;
+    riskLevel: string;
+    suggestions: Array<{ type: string; priority: string; description: string }>;
+    generatedAt: string;
+  }> {
     const [positions, orders] = await Promise.all([
       this.prisma.position.findMany({
-        where: { userId, resolutionStatus: "UNRESOLVED" as any },
+        where: { userId, resolutionStatus: ResolutionStatus.UNRESOLVED },
         take: 20,
       }),
       this.prisma.order.findMany({
@@ -375,27 +381,36 @@ ${positionSummary || "No open positions"}
 Return ONLY a JSON object with this structure (no markdown, no explanation):
 {"summary":"2-3 sentence overview","riskLevel":"low|medium|high","suggestions":[{"type":"rebalance|hedge|reduce|opportunity","priority":"high|medium|low","description":"actionable suggestion"}]}`;
 
-    let parsed: any = null;
+    type ParsedReview = {
+      summary?: string;
+      riskLevel?: string;
+      suggestions?: Array<{
+        type: string;
+        priority: string;
+        description: string;
+      }>;
+    };
+    let parsed: ParsedReview | null = null;
     try {
       const raw = await this.llm.analyze(prompt);
       const match = raw.match(/\{[\s\S]*\}/);
-      if (match) parsed = JSON.parse(match[0]);
+      if (match) parsed = JSON.parse(match[0]) as ParsedReview;
     } catch {
       // fall through to fallback
     }
 
+    const summary =
+      parsed?.summary ??
+      `You have ${positions.length} open positions. Unrealized P&L: $${totalUnrealized.toFixed(2)}.`;
+    const riskLevel =
+      parsed?.riskLevel ??
+      (positions.length > 5 ? "high" : positions.length > 2 ? "medium" : "low");
+    const suggestions = parsed?.suggestions ?? [];
+
     return {
-      summary:
-        parsed?.summary ??
-        `You have ${positions.length} open positions. Unrealized P&L: $${totalUnrealized.toFixed(2)}.`,
-      riskLevel:
-        parsed?.riskLevel ??
-        (positions.length > 5
-          ? "high"
-          : positions.length > 2
-            ? "medium"
-            : "low"),
-      suggestions: parsed?.suggestions ?? [],
+      summary,
+      riskLevel,
+      suggestions,
       generatedAt: new Date().toISOString(),
     };
   }

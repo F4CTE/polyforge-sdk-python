@@ -62,7 +62,7 @@ export class DrawdownCircuitBreakerService {
     );
 
     // Sum realizedPnl from orders filled in the lookback window
-    const result = await this.prisma.$queryRaw<Array<{ total_pnl: string }>>`
+    const _result = await this.prisma.$queryRaw<Array<{ total_pnl: string }>>`
       SELECT COALESCE(SUM(fill_size * (fill_price - avg_price)), 0)::text AS total_pnl
       FROM "orders" o
       JOIN "positions" p ON p.user_id = o.user_id AND p.token_id = o.token_id

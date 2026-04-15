@@ -50,14 +50,21 @@ export class CopyService {
       user: { connect: { id: userId } },
       targetWallet: dto.targetWallet,
       mode: dto.mode ?? "PERCENTAGE",
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
       ...(dto.sizeValue && { sizeValue: new Prisma.Decimal(dto.sizeValue) }),
+
       ...(dto.maxExposure && {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
         maxExposure: new Prisma.Decimal(dto.maxExposure),
       }),
+
       ...(dto.maxDailyLoss && {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
         maxDailyLoss: new Prisma.Decimal(dto.maxDailyLoss),
       }),
+
       ...(dto.priceOffset && {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
         priceOffset: new Prisma.Decimal(dto.priceOffset),
       }),
     };
@@ -114,15 +121,19 @@ export class CopyService {
   // ─── Update ──────────────────────────────────────────────────────────────────
 
   async update(id: string, userId: string, dto: UpdateCopyDto) {
-    const config = await this.findOwnedConfig(id, userId);
+    await this.findOwnedConfig(id, userId);
 
     const data: Prisma.CopyConfigUpdateInput = {};
     if (dto.mode) data.mode = dto.mode;
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
     if (dto.sizeValue) data.sizeValue = new Prisma.Decimal(dto.sizeValue);
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
     if (dto.maxExposure) data.maxExposure = new Prisma.Decimal(dto.maxExposure);
     if (dto.maxDailyLoss)
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
       data.maxDailyLoss = new Prisma.Decimal(dto.maxDailyLoss);
     if (dto.priceOffset !== undefined)
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
       data.priceOffset = new Prisma.Decimal(dto.priceOffset);
 
     return this.prisma.copyConfig.update({ where: { id }, data });

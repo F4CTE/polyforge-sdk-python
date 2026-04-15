@@ -56,11 +56,11 @@ export class GeoBlockGuard implements CanActivate {
   }
 
   canActivate(context: ExecutionContext): boolean {
-    const request = context.switchToHttp().getRequest();
-    const country = (
-      request.headers["x-country-code"] as string
-    )?.toUpperCase();
-    const region = (request.headers["x-region-code"] as string)?.toUpperCase();
+    const request = context
+      .switchToHttp()
+      .getRequest<{ headers: Record<string, string> }>();
+    const country = request.headers["x-country-code"]?.toUpperCase();
+    const region = request.headers["x-region-code"]?.toUpperCase();
 
     // SECURITY: In production, deny requests without geo headers (may be bypassing gateway)
     if (!country) {

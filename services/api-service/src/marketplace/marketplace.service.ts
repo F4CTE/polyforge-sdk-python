@@ -6,6 +6,7 @@ import {
 } from "@nestjs/common";
 import { PrismaService } from "@polyforge/shared-db";
 import { randomUUID } from "crypto";
+import { Prisma, StrategyStatus } from "@prisma/client";
 
 export class CreateListingDto {
   strategyId!: string;
@@ -53,7 +54,7 @@ export class MarketplaceService {
               ? { priceUsdc: "desc" as const }
               : { createdAt: "desc" as const };
 
-    const where: any = {
+    const where: Prisma.MarketplaceListingWhereInput = {
       status: "ACTIVE",
       ...(tag ? { tags: { has: tag } } : {}),
     };
@@ -186,7 +187,7 @@ export class MarketplaceService {
           : {}),
         ...(dto.priceUsdc !== undefined ? { priceUsdc: dto.priceUsdc } : {}),
         ...(dto.tags !== undefined ? { tags: dto.tags } : {}),
-        ...(dto.status !== undefined ? { status: dto.status as any } : {}),
+        ...(dto.status !== undefined ? { status: dto.status } : {}),
       },
     });
   }
@@ -244,12 +245,12 @@ export class MarketplaceService {
         userId: buyerId,
         name: `${sourceStrategy.name} (fork)`,
         description: sourceStrategy.description,
-        triggers: sourceStrategy.triggers as any,
-        conditions: sourceStrategy.conditions as any,
-        actions: sourceStrategy.actions as any,
-        safety: sourceStrategy.safety as any,
+        triggers: sourceStrategy.triggers as Prisma.InputJsonValue,
+        conditions: sourceStrategy.conditions as Prisma.InputJsonValue,
+        actions: sourceStrategy.actions as Prisma.InputJsonValue,
+        safety: sourceStrategy.safety as Prisma.InputJsonValue,
         tags: sourceStrategy.tags,
-        status: "IDLE" as any,
+        status: StrategyStatus.IDLE,
         forkedFromId: listing.strategyId,
         forkedFromUserId: listing.sellerId,
       },

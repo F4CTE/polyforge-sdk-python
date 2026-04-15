@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { PrismaService } from "@polyforge/shared-db";
+import { type BacktestRun, type BacktestOrder } from "@prisma/client";
 import { RedisService } from "@polyforge/shared-redis";
 import {
   paginate,
@@ -27,7 +28,7 @@ export class BacktestsService {
     const { page, limit, strategyId, status } = query;
     const skip = (page - 1) * limit;
 
-    const where: any = { userId };
+    const where: Record<string, unknown> = { userId };
     if (strategyId) where.strategyId = strategyId;
     if (status) where.status = status;
 
@@ -44,7 +45,8 @@ export class BacktestsService {
       this.prisma.backtestRun.count({ where }),
     ]);
 
-    const mapped = runs.map((r: any) => ({
+    type RunWithStrategy = BacktestRun & { strategy: { name: string } | null };
+    const mapped = (runs as RunWithStrategy[]).map((r) => ({
       ...r,
       strategyName: r.strategy?.name ?? null,
       strategy: undefined,
@@ -75,7 +77,7 @@ export class BacktestsService {
         dateRangeEnd: dto.dateRangeEnd
           ? new Date(dto.dateRangeEnd)
           : new Date(),
-        status: "QUEUED" as any,
+        status: "QUEUED",
       },
     });
 
@@ -128,13 +130,13 @@ export class BacktestsService {
         simulatedAt: true,
       },
     });
-    return orders.map((o: any) => ({
+    return (orders as BacktestOrder[]).map((o) => ({
       ...o,
-      size: o.size.toString(),
-      price: o.price.toString(),
-      fillPrice: o.fillPrice?.toString() ?? null,
-      pnl: o.pnl?.toString() ?? null,
-      equityCurve: o.equityCurve.toString(),
+      size: String(o.size),
+      price: String(o.price),
+      fillPrice: o.fillPrice != null ? String(o.fillPrice) : null,
+      pnl: o.pnl != null ? String(o.pnl) : null,
+      equityCurve: String(o.equityCurve),
     }));
   }
 }

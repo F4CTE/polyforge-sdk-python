@@ -39,15 +39,14 @@ export class WatchlistService {
         update: {},
       });
       return item;
-    } catch (e: any) {
-      if (
-        e instanceof Prisma.PrismaClientKnownRequestError &&
-        e.code === "P2003"
-      ) {
-        throw new NotFoundException({
-          code: "MARKET_NOT_FOUND",
-          message: "Market not found",
-        });
+    } catch (e: unknown) {
+      if (e instanceof Prisma.PrismaClientKnownRequestError) {
+        if ((e as { code?: string }).code === "P2003") {
+          throw new NotFoundException({
+            code: "MARKET_NOT_FOUND",
+            message: "Market not found",
+          });
+        }
       }
       throw e;
     }

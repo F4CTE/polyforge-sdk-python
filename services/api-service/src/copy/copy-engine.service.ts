@@ -6,7 +6,12 @@ import {
 } from "@nestjs/common";
 import { PrismaService } from "@polyforge/shared-db";
 import { RedisService } from "@polyforge/shared-redis";
-import { Prisma } from "@prisma/client";
+import {
+  type CopyConfig,
+  Prisma,
+  OrderSide,
+  OrderOutcome,
+} from "@prisma/client";
 
 const STREAM = "stream:events";
 const ORDER_STREAM = "stream:orders";
@@ -40,8 +45,9 @@ export class CopyEngineService implements OnModuleInit, OnModuleDestroy {
       await this.redis
         .getClient()
         .xgroup("CREATE", STREAM, GROUP, "$", "MKSTREAM");
-    } catch (err: any) {
-      if (!err.message?.includes("BUSYGROUP")) throw err;
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      if (!msg.includes("BUSYGROUP")) throw err;
     }
   }
 
@@ -77,9 +83,10 @@ export class CopyEngineService implements OnModuleInit, OnModuleDestroy {
             await this.redis.getClient().xack(STREAM, GROUP, id);
           }
         }
-      } catch (err: any) {
+      } catch (err: unknown) {
         if (this.running) {
-          this.logger.error("Copy engine consume error", err?.message);
+          const msg = err instanceof Error ? err.message : String(err);
+          this.logger.error("Copy engine consume error", msg);
           await new Promise((r) => setTimeout(r, 1000));
         }
       }
@@ -120,10 +127,9 @@ export class CopyEngineService implements OnModuleInit, OnModuleDestroy {
     for (const config of configs) {
       try {
         await this.processCopyForConfig(config, event, sourceSize, sourcePrice);
-      } catch (err: any) {
-        this.logger.error(
-          `Copy failed for config ${config.id}: ${err?.message}`,
-        );
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : String(err);
+        this.logger.error(`Copy failed for config ${config.id}: ${msg}`);
 
         // Emit failure notification (H-03: don't expose internal error messages)
         await this.redis.xadd(STREAM, {
@@ -139,14 +145,14 @@ export class CopyEngineService implements OnModuleInit, OnModuleDestroy {
   }
 
   async processCopyForConfig(
-    config: any,
+    config: CopyConfig,
     event: Record<string, string>,
     sourceSize: number,
     sourcePrice: number,
   ) {
     // 1. Check daily loss limit (H-02: use Redis atomic operations to prevent race condition)
     const notional = sourceSize * sourcePrice;
-    const maxDailyLoss = parseFloat(config.maxDailyLoss.toString());
+    const maxDailyLoss = parseFloat(String(config.maxDailyLoss));
     const dailyKey = `copy:${config.id}:daily_loss`;
     const client = this.redis.getClient();
     const newLoss = await client.incrbyfloat(dailyKey, notional);
@@ -161,7 +167,7 @@ export class CopyEngineService implements OnModuleInit, OnModuleDestroy {
 
     // 2. Check max exposure
     const currentExposure = await this.getCurrentExposure(config.id);
-    const maxExposure = parseFloat(config.maxExposure.toString());
+    const maxExposure = parseFloat(String(config.maxExposure));
     if (currentExposure >= maxExposure) {
       this.logger.warn(
         `Config ${config.id} at max exposure (${currentExposure} >= ${maxExposure})`,
@@ -172,14 +178,14 @@ export class CopyEngineService implements OnModuleInit, OnModuleDestroy {
     // 3. Calculate copy size based on mode
     const copiedSize = this.calculateCopySize(
       config.mode,
-      parseFloat(config.sizeValue.toString()),
+      parseFloat(String(config.sizeValue)),
       sourceSize,
     );
 
     if (copiedSize <= 0) return;
 
     // 4. Apply price offset
-    const priceOffset = parseFloat(config.priceOffset.toString());
+    const priceOffset = parseFloat(String(config.priceOffset));
     const copiedPrice = this.applyPriceOffset(sourcePrice, priceOffset);
 
     // 5. Create CopyTrade record
@@ -190,11 +196,15 @@ export class CopyEngineService implements OnModuleInit, OnModuleDestroy {
         sourceTxHash: event.txHash ?? null,
         marketId: event.marketId ?? "",
         tokenId: event.tokenId ?? "",
-        side: event.side as any,
-        outcome: event.outcome as any,
+        side: event.side as OrderSide,
+        outcome: event.outcome as OrderOutcome,
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
         sourceSize: new Prisma.Decimal(sourceSize),
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
         sourcePrice: new Prisma.Decimal(sourcePrice),
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
         copiedSize: new Prisma.Decimal(copiedSize),
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
         copiedPrice: new Prisma.Decimal(copiedPrice),
         status: "PENDING",
       },
@@ -287,10 +297,7 @@ export class CopyEngineService implements OnModuleInit, OnModuleDestroy {
       select: { pnl: true },
     });
 
-    const total = trades.reduce(
-      (acc, t) => acc + parseFloat(t.pnl!.toString()),
-      0,
-    );
+    const total = trades.reduce((acc, t) => acc + parseFloat(String(t.pnl)), 0);
 
     // Cache for 5 minutes
     await this.redis.set(`copy:${configId}:daily_pnl`, total.toString(), 300);
@@ -313,7 +320,7 @@ export class CopyEngineService implements OnModuleInit, OnModuleDestroy {
     });
 
     const total = pendingTrades.reduce(
-      (acc, t) => acc + parseFloat(t.copiedSize.toString()),
+      (acc, t) => acc + parseFloat(String(t.copiedSize)),
       0,
     );
 

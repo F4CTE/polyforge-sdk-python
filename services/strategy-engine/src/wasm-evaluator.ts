@@ -6,9 +6,19 @@ const logger = new Logger("WasmEvaluator");
 // Load WASM engine — MANDATORY, no fallback
 const _require = createRequire(__filename);
 
+interface WasmEngineModule {
+  evaluateTick(
+    safety: unknown[],
+    triggers: unknown[],
+    conditions: unknown[],
+    actions: unknown[],
+    context: unknown,
+  ): WasmEvalResult;
+}
+
 const wasmEngine = (() => {
   try {
-    const engine = _require("@polyforge/engine");
+    const engine = _require("@polyforge/engine") as WasmEngineModule;
     logger.log("WASM strategy engine loaded — sandboxed evaluation active");
     return engine;
   } catch (err: unknown) {

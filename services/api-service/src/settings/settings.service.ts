@@ -25,15 +25,18 @@ export class SettingsService {
   }
 
   async updateProfile(userId: string, dto: UpdateProfileDto): Promise<any> {
-    const data: any = {};
-    if (dto.displayName !== undefined) data.displayName = dto.displayName;
-    if (dto.bio !== undefined) data.bio = dto.bio;
-    if (dto.avatarUrl !== undefined) data.avatarUrl = dto.avatarUrl;
-    if (dto.twitterHandle !== undefined) data.twitterHandle = dto.twitterHandle;
-
     return this.prisma.user.update({
       where: { id: userId },
-      data,
+      data: {
+        ...(dto.displayName !== undefined
+          ? { displayName: dto.displayName }
+          : {}),
+        ...(dto.bio !== undefined ? { bio: dto.bio } : {}),
+        ...(dto.avatarUrl !== undefined ? { avatarUrl: dto.avatarUrl } : {}),
+        ...(dto.twitterHandle !== undefined
+          ? { twitterHandle: dto.twitterHandle }
+          : {}),
+      },
       select: {
         id: true,
         username: true,

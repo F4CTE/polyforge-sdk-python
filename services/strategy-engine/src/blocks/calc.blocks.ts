@@ -1,18 +1,42 @@
-import {
-  CalcBlockEvaluator,
-  CalcBlockResult,
-  EvalContext,
-} from "./block.types";
+import { CalcBlockEvaluator, CalcBlockResult } from "./block.types";
+
+/** Extract a string param from a block, checking direct field and params object */
+function strParam(
+  block: Record<string, unknown>,
+  key: string,
+  fallback: string,
+): string {
+  const direct = block[key];
+  if (typeof direct === "string") return direct;
+  if (typeof direct === "number") return String(direct);
+  const params = block.params as Record<string, unknown> | undefined;
+  const fromParams = params?.[key];
+  if (typeof fromParams === "string") return fromParams;
+  if (typeof fromParams === "number") return String(fromParams);
+  return fallback;
+}
+
+/** Extract a numeric param from a block, checking direct field and params object */
+function numParam(
+  block: Record<string, unknown>,
+  key: string,
+  fallback: number,
+): number {
+  const direct = block[key];
+  if (typeof direct === "number") return direct;
+  if (typeof direct === "string") return Number(direct);
+  const params = block.params as Record<string, unknown> | undefined;
+  const fromParams = params?.[key];
+  if (typeof fromParams === "number") return fromParams;
+  if (typeof fromParams === "string") return Number(fromParams);
+  return fallback;
+}
 
 // ─── Math Block ─────────────────────────────────────────────────────────────
 
 export const MathBlockEvaluator: CalcBlockEvaluator = {
   evaluate(block, inputs, _ctx): CalcBlockResult {
-    const op = String(
-      block.operation ??
-        (block.params as Record<string, unknown>)?.operation ??
-        "add",
-    );
+    const op = strParam(block, "operation", "add");
     const a = inputs[0] ?? 0;
     const b = inputs[1] ?? 0;
 
@@ -57,30 +81,9 @@ export const MathBlockEvaluator: CalcBlockEvaluator = {
  * The window buffer is stored in ctx.variables under a key derived from the block id.
  */
 export const AggregationBlockEvaluator: CalcBlockEvaluator = {
-  evaluate(block, inputs, ctx): CalcBlockResult {
-    const fn = String(
-      block.function ??
-        (block.params as Record<string, unknown>)?.function ??
-        "moving_average",
-    );
-    const windowSize = Number(
-      block.windowSize ??
-        (block.params as Record<string, unknown>)?.windowSize ??
-        20,
-    );
+  evaluate(block, inputs, _ctx): CalcBlockResult {
+    const fn = strParam(block, "function", "moving_average");
     const input = inputs[0] ?? 0;
-
-    // Use the block id to store rolling window in context
-    const blockId = String(block.id ?? "agg");
-    const bufferKey = `__agg_buffer_${blockId}`;
-    const variables = ctx.variables ?? {};
-
-    // Get or initialize the buffer (stored as a special key in variables)
-    // Since variables are Record<string, number>, we encode the buffer length
-    // and use a simpler approach: we compute from the single input value
-    // In a real streaming context, the runner would maintain the buffer.
-    // For evaluation purposes, we compute on the current input.
-    // The strategy runner should call this once per tick with the latest value.
 
     // For single-tick evaluation, use the input directly
     let value: number;
@@ -113,11 +116,7 @@ export const AggregationBlockEvaluator: CalcBlockEvaluator = {
 
 export const ComparisonBlockEvaluator: CalcBlockEvaluator = {
   evaluate(block, inputs, _ctx): CalcBlockResult {
-    const op = String(
-      block.operator ??
-        (block.params as Record<string, unknown>)?.operator ??
-        ">",
-    );
+    const op = strParam(block, "operator", ">");
     const a = inputs[0] ?? 0;
     const b = inputs[1] ?? 0;
 
@@ -142,12 +141,8 @@ export const ComparisonBlockEvaluator: CalcBlockEvaluator = {
         booleanValue = a !== b;
         break;
       case "between": {
-        const min = Number(
-          block.min ?? (block.params as Record<string, unknown>)?.min ?? 0,
-        );
-        const max = Number(
-          block.max ?? (block.params as Record<string, unknown>)?.max ?? 0,
-        );
+        const min = numParam(block, "min", 0);
+        const max = numParam(block, "max", 0);
         booleanValue = a >= min && a <= max;
         break;
       }
@@ -163,16 +158,8 @@ export const ComparisonBlockEvaluator: CalcBlockEvaluator = {
 
 export const AbsRoundBlockEvaluator: CalcBlockEvaluator = {
   evaluate(block, inputs, _ctx): CalcBlockResult {
-    const fn = String(
-      block.function ??
-        (block.params as Record<string, unknown>)?.function ??
-        "abs",
-    );
-    const decimals = Number(
-      block.decimals ??
-        (block.params as Record<string, unknown>)?.decimals ??
-        0,
-    );
+    const fn = strParam(block, "function", "abs");
+    const decimals = numParam(block, "decimals", 0);
     const input = inputs[0] ?? 0;
 
     let value: number;

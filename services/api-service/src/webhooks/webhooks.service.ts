@@ -173,10 +173,9 @@ export class WebhooksService {
 
       // Fire and forget — don't await sequentially in production,
       // but keep simple for now
-      this.deliver(wh.url, wh.secret, payload).catch((err) => {
-        this.logger.warn(
-          `Webhook delivery failed for ${wh.id}: ${err?.message}`,
-        );
+      this.deliver(wh.url, wh.secret, payload).catch((err: unknown) => {
+        const msg = err instanceof Error ? err.message : String(err);
+        this.logger.warn(`Webhook delivery failed for ${wh.id}: ${msg}`);
       });
     }
   }
@@ -241,7 +240,7 @@ export class WebhooksService {
       }
 
       return { success: true, statusCode: res.status };
-    } catch (err: any) {
+    } catch {
       // Retry once on network error
       try {
         const retry = await fetch(url, {
@@ -255,8 +254,10 @@ export class WebhooksService {
           signal: AbortSignal.timeout(5000),
         });
         return { success: retry.ok, statusCode: retry.status };
-      } catch (retryErr: any) {
-        return { success: false, error: retryErr?.message ?? "Network error" };
+      } catch (retryErr: unknown) {
+        const msg =
+          retryErr instanceof Error ? retryErr.message : "Network error";
+        return { success: false, error: msg };
       }
     }
   }

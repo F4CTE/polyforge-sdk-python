@@ -40,7 +40,9 @@ export class MarketsService implements OnModuleInit {
     }
   }
 
-  async list(query: MarketQueryDto): Promise<PaginatedResponse<any>> {
+  async list(
+    query: MarketQueryDto,
+  ): Promise<PaginatedResponse<Record<string, unknown>>> {
     // Build cache key from query params
     const cacheKey = `cache:markets:list:${JSON.stringify(query)}`;
 
@@ -48,6 +50,7 @@ export class MarketsService implements OnModuleInit {
     const cached = await this.redis.get(cacheKey);
     if (cached) {
       try {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-return
         return JSON.parse(cached);
       } catch {
         // no-op
@@ -57,7 +60,7 @@ export class MarketsService implements OnModuleInit {
     const { page, limit, search, category, closed, sort } = query;
     const skip = (page - 1) * limit;
 
-    const where: any = {};
+    const where: Record<string, unknown> = {};
     if (search) {
       where.OR = [
         { title: { contains: search, mode: "insensitive" } },
@@ -66,13 +69,6 @@ export class MarketsService implements OnModuleInit {
     }
     if (category) where.category = { equals: category, mode: "insensitive" };
     if (closed !== undefined) where.closed = closed;
-
-    const orderBy: any =
-      sort === "endDate" || sort === "closing_soon"
-        ? { endDate: "asc" }
-        : sort === "firstSeenAt" || sort === "newest"
-          ? { firstSeenAt: "desc" }
-          : { volume24h: "desc" }; // liquidity falls back to volume (liquidity is on Token, not Market)
 
     // Cache count separately with longer TTL (counts are expensive on 20K+ rows)
     const countCacheKey = `cache:markets:count:${JSON.stringify({ search, category, closed })}`;
@@ -99,6 +95,7 @@ export class MarketsService implements OnModuleInit {
 
     // Single raw SQL query — Prisma ORM adds ~5-15s overhead on resource-limited hosts
     // Validate sort parameter against whitelist to prevent SQL injection
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
     const orderCol = Prisma.raw(
       (this.allowedSortColumns.get(sort ?? "volume") ||
         this.allowedSortColumns.get("volume"))!,
@@ -109,22 +106,31 @@ export class MarketsService implements OnModuleInit {
     if (search) {
       const pattern = `%${search}%`;
       conditions.push(
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-call
         Prisma.sql`(m.title ILIKE ${pattern} OR m."seriesSlug" ILIKE ${pattern})`,
       );
     }
     if (category) {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-call
       conditions.push(Prisma.sql`LOWER(m.category) = LOWER(${category})`);
     }
     if (closed !== undefined) {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-call
       conditions.push(Prisma.sql`m.closed = ${closed}`);
     }
 
-    const whereClause =
-      conditions.length > 0
-        ? Prisma.sql`WHERE ${Prisma.join(conditions, " AND ")}`
-        : Prisma.empty;
+    // Prisma namespace resolution issue — these calls are safe
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+    let whereClause: Prisma.Sql = Prisma.empty;
+    if (conditions.length > 0) {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
+      const joined = Prisma.join(conditions, " AND ");
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
+      whereClause = Prisma.sql`WHERE ${joined}`;
+    }
 
-    const rows: any[] = await this.prisma.$queryRaw(
+    const rows: Record<string, unknown>[] = await this.prisma.$queryRaw(
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-call
       Prisma.sql`
       SELECT
         m.id, m.slug, m.title, m.description, m.category, m.image,
@@ -216,7 +222,15 @@ export class MarketsService implements OnModuleInit {
           ? "1 day"
           : "1 hour";
 
-    const rows: any[] = await this.prisma.$queryRaw`
+    type PriceRow = {
+      time: Date;
+      open: string | null;
+      high: string | null;
+      low: string | null;
+      close: string | null;
+      volume: string | null;
+    };
+    const rows: PriceRow[] = await this.prisma.$queryRaw`
             SELECT
                 time_bucket(${bucket}::interval, time) AS time,
                 first(open, time) AS open,
@@ -258,7 +272,14 @@ export class MarketsService implements OnModuleInit {
     return result;
   }
 
-  async orderBook(tokenId: string): Promise<any> {
+  async orderBook(tokenId: string): Promise<{
+    tokenId: string;
+    bids: unknown[];
+    asks: unknown[];
+    spread: string;
+    midpoint: string;
+    timestamp: number;
+  }> {
     const raw = await this.redis.get(`cache:book:${tokenId}`);
     if (!raw) {
       return {
@@ -271,16 +292,23 @@ export class MarketsService implements OnModuleInit {
       };
     }
 
-    const book = JSON.parse(raw);
+    const book = JSON.parse(raw) as {
+      bids?: Array<{ price?: string }>;
+      asks?: Array<{ price?: string }>;
+      timestamp?: number;
+    };
     const bestBid = book.bids?.[0]?.price ?? 0;
     const bestAsk = book.asks?.[0]?.price ?? 0;
     const spread =
       bestAsk && bestBid
-        ? (parseFloat(bestAsk) - parseFloat(bestBid)).toFixed(4)
+        ? (parseFloat(String(bestAsk)) - parseFloat(String(bestBid))).toFixed(4)
         : "0";
     const midpoint =
       bestAsk && bestBid
-        ? ((parseFloat(bestAsk) + parseFloat(bestBid)) / 2).toFixed(4)
+        ? (
+            (parseFloat(String(bestAsk)) + parseFloat(String(bestBid))) /
+            2
+          ).toFixed(4)
         : "0";
 
     return {

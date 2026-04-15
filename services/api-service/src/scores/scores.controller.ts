@@ -8,6 +8,7 @@ import {
 import { ApiTags, ApiBearerAuth } from "@nestjs/swagger";
 import { JwtAuthGuard, CurrentUser } from "@polyforge/shared-auth";
 import { ScoresService } from "./scores.service";
+import { JwtPayload } from "@polyforge/shared-types";
 
 @ApiTags("scores")
 @ApiBearerAuth("jwt")
@@ -17,7 +18,7 @@ export class ScoresController {
   constructor(private readonly scores: ScoresService) {}
 
   @Get("me")
-  getMyScore(@CurrentUser() user: any) {
+  getMyScore(@CurrentUser() user: JwtPayload) {
     return this.scores.getMyScore(user.sub);
   }
 
@@ -27,7 +28,7 @@ export class ScoresController {
   }
 
   @Get("me/badges")
-  getMyBadges(@CurrentUser() user: any) {
+  getMyBadges(@CurrentUser() user: JwtPayload) {
     return this.scores.getMyBadges(user.sub);
   }
 

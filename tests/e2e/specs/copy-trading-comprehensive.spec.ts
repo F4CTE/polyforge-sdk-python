@@ -268,10 +268,11 @@ test.describe('Copy Trading — Full Workflow Coverage', () => {
         // Select PERCENTAGE mode
         await copySetupPage.selectMode('PERCENTAGE');
 
-        // The percentage card should have active styling (pf-cyan)
+        // The selected card gets bg-accent/10 border-accent/30 on the button itself;
+        // text-accent-text is applied to child icon/label elements, not the button root.
         const percentBtn = page.locator('button', { hasText: 'Percentage' });
         const classes = await percentBtn.getAttribute('class') ?? '';
-        expect(classes).toContain('pf-cyan');
+        expect(classes).toMatch(/border-accent/);
     });
 
     test('select fixed mode in step 1', async ({ page }) => {
@@ -284,10 +285,10 @@ test.describe('Copy Trading — Full Workflow Coverage', () => {
         // Select FIXED mode
         await copySetupPage.selectMode('FIXED');
 
-        // The fixed card should have active styling
+        // The selected card gets border-accent/30 on the button itself
         const fixedBtn = page.locator('button', { hasText: 'Fixed Amount' });
         const classes = await fixedBtn.getAttribute('class') ?? '';
-        expect(classes).toContain('pf-cyan');
+        expect(classes).toMatch(/border-accent/);
     });
 
     test('select mirror mode in step 1', async ({ page }) => {
@@ -300,10 +301,10 @@ test.describe('Copy Trading — Full Workflow Coverage', () => {
         // Select MIRROR mode
         await copySetupPage.selectMode('MIRROR');
 
-        // The mirror card should have active styling
+        // The selected card gets border-accent/30 on the button itself
         const mirrorBtn = page.locator('button', { hasText: 'Mirror (1:1)' });
         const classes = await mirrorBtn.getAttribute('class') ?? '';
-        expect(classes).toContain('pf-cyan');
+        expect(classes).toMatch(/border-accent/);
     });
 
     test('advance from step 1 to step 2 (Size)', async ({ page }) => {

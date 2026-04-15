@@ -4,6 +4,7 @@ import { JwtAuthGuard, CurrentUser } from "@polyforge/shared-auth";
 import { IsOptional, IsIn, IsString } from "class-validator";
 import { DiscoverService } from "./discover.service";
 import { PaginationDto } from "../common/dto/pagination.dto";
+import { JwtPayload } from "@polyforge/shared-types";
 
 class DiscoverQueryDto extends PaginationDto {
   @IsOptional()
@@ -33,7 +34,10 @@ export class DiscoverController {
   constructor(private readonly discover: DiscoverService) {}
 
   @Get("discover")
-  getDiscover(@CurrentUser() user: any, @Query() query: DiscoverQueryDto) {
+  getDiscover(
+    @CurrentUser() user: JwtPayload,
+    @Query() query: DiscoverQueryDto,
+  ) {
     return this.discover.discover(user.sub, query);
   }
 

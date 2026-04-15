@@ -5,6 +5,7 @@ import { ApiTags, ApiBearerAuth } from "@nestjs/swagger";
 import { JwtAuthGuard, CurrentUser } from "@polyforge/shared-auth";
 import { IsOptional, IsIn, IsString } from "class-validator";
 import { PortfolioService } from "./portfolio.service";
+import { JwtPayload } from "@polyforge/shared-types";
 
 class PnlQueryDto {
   @IsOptional()
@@ -24,12 +25,12 @@ export class PortfolioController {
   constructor(private readonly portfolio: PortfolioService) {}
 
   @Get()
-  getPortfolio(@CurrentUser() user: any) {
+  getPortfolio(@CurrentUser() user: JwtPayload) {
     return this.portfolio.getPortfolio(user.sub);
   }
 
   @Get("pnl")
-  getPnl(@CurrentUser() user: any, @Query() query: PnlQueryDto) {
+  getPnl(@CurrentUser() user: JwtPayload, @Query() query: PnlQueryDto) {
     return this.portfolio.getPnl(
       user.sub,
       query.period ?? "30d",
@@ -38,7 +39,7 @@ export class PortfolioController {
   }
 
   @Get("export/csv")
-  async exportCsv(@CurrentUser() user: any, @Res() res: Response) {
+  async exportCsv(@CurrentUser() user: JwtPayload, @Res() res: Response) {
     const csv = await this.portfolio.exportCsv(user.sub);
     res.header("Content-Type", "text/csv");
     res.header("Content-Disposition", 'attachment; filename="portfolio.csv"');

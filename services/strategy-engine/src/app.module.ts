@@ -7,8 +7,6 @@ import { LoggerModule } from "@polyforge/logger";
 import { StrategyModule } from "./strategy/strategy.module";
 import { InternalModule } from "./internal/internal.module";
 import { HealthController } from "./health/health.controller";
-import { StrategyRegistryService } from "./strategy/strategy-registry.service";
-
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),

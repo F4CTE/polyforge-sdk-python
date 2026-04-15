@@ -32,7 +32,10 @@ export class StateService {
     const raw = await this.redis.get(this.key(strategyId));
     if (!raw) return { ...DEFAULT_STATE };
     try {
-      return { ...DEFAULT_STATE, ...JSON.parse(raw) };
+      return {
+        ...DEFAULT_STATE,
+        ...(JSON.parse(raw) as Partial<StrategyState>),
+      };
     } catch {
       return { ...DEFAULT_STATE };
     }

@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi, afterEach } from "vitest";
+import { describe, it, expect, vi, afterEach } from "vitest";
 import { LlmService } from "./llm.service";
 
 // ─── Suite ──────────────────────────────────────────────────────────────────
@@ -46,9 +46,9 @@ describe("LlmService", () => {
 
   describe("analyze with OpenAI fallback", () => {
     it("falls back to OpenAI when Claude fails", async () => {
-      let callCount = 0;
+      let _callCount = 0;
       const fetchMock = vi.fn().mockImplementation((url: string) => {
-        callCount++;
+        _callCount++;
         if (url.includes("anthropic.com")) {
           return Promise.resolve({
             ok: false,
@@ -113,14 +113,12 @@ describe("LlmService", () => {
 
       await service.analyze("first call");
       const callsAfterFirst = configGet.mock.calls.filter(
-        (c) =>
-          c[0] === "ANTHROPIC_API_KEY" || c[0] === "OPENAI_API_KEY",
+        (c) => c[0] === "ANTHROPIC_API_KEY" || c[0] === "OPENAI_API_KEY",
       ).length;
 
       await service.analyze("second call");
       const callsAfterSecond = configGet.mock.calls.filter(
-        (c) =>
-          c[0] === "ANTHROPIC_API_KEY" || c[0] === "OPENAI_API_KEY",
+        (c) => c[0] === "ANTHROPIC_API_KEY" || c[0] === "OPENAI_API_KEY",
       ).length;
 
       // Each analyze() call should read keys from ConfigService

@@ -9,6 +9,7 @@ import {
 } from "@polyforge/shared-auth";
 import { AiService } from "./ai.service";
 import { AiQueryDto } from "./dto/ai-query.dto";
+import { JwtPayload } from "@polyforge/shared-types";
 
 @ApiTags("ai")
 @ApiBearerAuth("jwt")
@@ -24,7 +25,7 @@ export class AiController {
       ttl: 60000,
     },
   })
-  query(@CurrentUser() user: any, @Body() dto: AiQueryDto) {
+  query(@CurrentUser() user: JwtPayload, @Body() dto: AiQueryDto) {
     return this.ai.query(user.sub, dto.query);
   }
 
@@ -37,7 +38,7 @@ export class AiController {
   })
   @UseGuards(ApiKeyScopeGuard)
   @RequireScopes("READ")
-  portfolioReview(@CurrentUser() user: any) {
+  portfolioReview(@CurrentUser() user: JwtPayload) {
     return this.ai.portfolioReview(user.sub);
   }
 }

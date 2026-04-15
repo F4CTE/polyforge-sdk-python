@@ -17,6 +17,7 @@ import { JwtAuthGuard, CurrentUser } from "@polyforge/shared-auth";
 import { TicketsService } from "./tickets.service";
 import { CreateTicketDto } from "./dto/create-ticket.dto";
 import { CreateMessageDto } from "./dto/create-message.dto";
+import { JwtPayload } from "@polyforge/shared-types";
 
 @ApiTags("tickets")
 @ApiBearerAuth("jwt")
@@ -27,13 +28,13 @@ export class TicketsController {
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  create(@CurrentUser() user: any, @Body() dto: CreateTicketDto) {
+  create(@CurrentUser() user: JwtPayload, @Body() dto: CreateTicketDto) {
     return this.tickets.create(user.sub, user.username, dto);
   }
 
   @Get()
   list(
-    @CurrentUser() user: any,
+    @CurrentUser() user: JwtPayload,
     @Query("page", new DefaultValuePipe(1), ParseIntPipe) page: number,
     @Query("limit", new DefaultValuePipe(20), ParseIntPipe) limit: number,
   ) {
@@ -41,7 +42,10 @@ export class TicketsController {
   }
 
   @Get(":id")
-  getOne(@Param("id", ParseUUIDPipe) id: string, @CurrentUser() user: any) {
+  getOne(
+    @Param("id", ParseUUIDPipe) id: string,
+    @CurrentUser() user: JwtPayload,
+  ) {
     return this.tickets.getOne(id, user.sub);
   }
 
@@ -49,7 +53,7 @@ export class TicketsController {
   @HttpCode(HttpStatus.CREATED)
   addMessage(
     @Param("id", ParseUUIDPipe) id: string,
-    @CurrentUser() user: any,
+    @CurrentUser() user: JwtPayload,
     @Body() dto: CreateMessageDto,
   ) {
     return this.tickets.addMessage(id, user.sub, user.username, dto);

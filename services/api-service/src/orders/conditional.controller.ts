@@ -16,10 +16,18 @@ import {
 } from "@nestjs/common";
 import { ApiTags, ApiBearerAuth } from "@nestjs/swagger";
 import { JwtAuthGuard, CurrentUser } from "@polyforge/shared-auth";
-import { IsOptional, IsString, IsIn } from "class-validator";
+import { IsOptional, IsIn } from "class-validator";
 import { PrismaService } from "@polyforge/shared-db";
+import {
+  Prisma,
+  ConditionalOrderType,
+  ConditionalOrderStatus,
+  OrderSide,
+  OrderOutcome,
+} from "@prisma/client";
 import { PaginationDto, paginate } from "../common/dto/pagination.dto";
 import { CreateConditionalOrderDto } from "./dto/create-conditional-order.dto";
+import { JwtPayload } from "@polyforge/shared-types";
 
 class ConditionalOrderQueryDto extends PaginationDto {
   @IsOptional()
@@ -41,7 +49,7 @@ export class ConditionalController {
   @Post()
   @HttpCode(HttpStatus.CREATED)
   async create(
-    @CurrentUser() user: any,
+    @CurrentUser() user: JwtPayload,
     @Body() dto: CreateConditionalOrderDto,
   ) {
     // H-01: Enforce per-user cap on pending conditional orders
@@ -60,9 +68,9 @@ export class ConditionalController {
         userId: user.sub,
         marketId: dto.marketId,
         tokenId: dto.tokenId,
-        type: dto.type as any,
-        side: dto.side as any,
-        outcome: dto.outcome as any,
+        type: dto.type as ConditionalOrderType,
+        side: dto.side as OrderSide,
+        outcome: dto.outcome as OrderOutcome,
         size: dto.size,
         triggerPrice: dto.triggerPrice,
         limitPrice: dto.limitPrice ?? null,
@@ -76,15 +84,15 @@ export class ConditionalController {
 
   @Get()
   async list(
-    @CurrentUser() user: any,
+    @CurrentUser() user: JwtPayload,
     @Query() query: ConditionalOrderQueryDto,
   ) {
     const { page, limit, status, type } = query;
     const skip = (page - 1) * limit;
 
-    const where: any = { userId: user.sub };
-    if (status) where.status = status;
-    if (type) where.type = type;
+    const where: Prisma.ConditionalOrderWhereInput = { userId: user.sub };
+    if (status) where.status = { equals: status as ConditionalOrderStatus };
+    if (type) where.type = { equals: type as ConditionalOrderType };
 
     const [orders, total] = await Promise.all([
       this.prisma.conditionalOrder.findMany({
@@ -101,7 +109,7 @@ export class ConditionalController {
 
   @Get(":id")
   async detail(
-    @CurrentUser() user: any,
+    @CurrentUser() user: JwtPayload,
     @Param("id", ParseUUIDPipe) id: string,
   ) {
     const order = await this.prisma.conditionalOrder.findUnique({
@@ -128,7 +136,7 @@ export class ConditionalController {
   @Delete(":id")
   @HttpCode(HttpStatus.OK)
   async cancel(
-    @CurrentUser() user: any,
+    @CurrentUser() user: JwtPayload,
     @Param("id", ParseUUIDPipe) id: string,
   ) {
     const order = await this.prisma.conditionalOrder.findUnique({

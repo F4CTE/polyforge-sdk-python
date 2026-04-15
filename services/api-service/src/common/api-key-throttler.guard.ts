@@ -3,16 +3,18 @@ import { ThrottlerGuard } from "@nestjs/throttler";
 
 @Injectable()
 export class ApiKeyThrottlerGuard extends ThrottlerGuard {
-  protected async getTracker(req: Record<string, any>): Promise<string> {
+  protected override getTracker(req: Record<string, unknown>): Promise<string> {
     // For API key requests, track by key ID
-    if (req.apiKeyMeta?.keyId) {
-      return `apikey:${req.apiKeyMeta.keyId}`;
+    const apiKeyMeta = req["apiKeyMeta"] as { keyId?: string } | undefined;
+    if (apiKeyMeta?.keyId) {
+      return Promise.resolve(`apikey:${apiKeyMeta.keyId}`);
     }
     // For authenticated users, track by user ID (each user gets their own bucket)
-    if (req.user?.sub) {
-      return `user:${req.user.sub}`;
+    const user = req["user"] as { sub?: string } | undefined;
+    if (user?.sub) {
+      return Promise.resolve(`user:${user.sub}`);
     }
     // Fallback to IP for unauthenticated requests
-    return req.ip;
+    return Promise.resolve((req["ip"] as string | undefined) ?? "");
   }
 }

@@ -16,6 +16,7 @@ import {
 } from "@polyforge/shared-auth";
 import { LpService } from "./lp.service";
 import { ProvideLiquidityDto } from "./dto/provide-liquidity.dto";
+import { JwtPayload } from "@polyforge/shared-types";
 
 @ApiTags("lp")
 @ApiBearerAuth("jwt")
@@ -34,7 +35,10 @@ export class LpController {
   })
   @UseGuards(ApiKeyScopeGuard)
   @RequireScopes("TRADE")
-  provideLiquidity(@CurrentUser() user: any, @Body() dto: ProvideLiquidityDto) {
+  provideLiquidity(
+    @CurrentUser() user: JwtPayload,
+    @Body() dto: ProvideLiquidityDto,
+  ) {
     return this.lp.provideLiquidity(user.sub, dto);
   }
 }

@@ -72,9 +72,10 @@ export class SignalGeneratorService {
     let rawResponse: string;
     try {
       rawResponse = await this.llm.analyze(prompt);
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
       this.logger.error(
-        `LLM analysis failed for article ${article.id}: ${err?.message}`,
+        `LLM analysis failed for article ${article.id}: ${msg}`,
       );
       return;
     }
@@ -132,9 +133,10 @@ export class SignalGeneratorService {
             `High-confidence signal (${signal.confidence}%) generated for market ${signal.marketId}`,
           );
         }
-      } catch (err: any) {
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : String(err);
         this.logger.error(
-          `Failed to create signal for market ${signal.marketId}: ${err?.message}`,
+          `Failed to create signal for market ${signal.marketId}: ${msg}`,
         );
       }
     }
@@ -187,29 +189,40 @@ IMPORTANT: Respond ONLY with the JSON array, no other text.`;
         jsonStr = codeBlockMatch[1].trim();
       }
 
-      const parsed = JSON.parse(jsonStr);
+      const parsed: unknown = JSON.parse(jsonStr);
       if (!Array.isArray(parsed)) return [];
 
-      return parsed
+      type RawSignal = {
+        marketId: string;
+        direction: "BUY" | "SELL";
+        outcome: "YES" | "NO";
+        confidence: number;
+        reasoning?: string;
+      };
+      return (parsed as unknown[])
         .filter(
-          (s: any) =>
-            s &&
-            typeof s.marketId === "string" &&
-            (s.direction === "BUY" || s.direction === "SELL") &&
-            (s.outcome === "YES" || s.outcome === "NO") &&
-            typeof s.confidence === "number" &&
-            s.confidence >= 1 &&
-            s.confidence <= 100,
+          (s): s is RawSignal =>
+            s !== null &&
+            typeof s === "object" &&
+            typeof (s as Record<string, unknown>).marketId === "string" &&
+            ((s as Record<string, unknown>).direction === "BUY" ||
+              (s as Record<string, unknown>).direction === "SELL") &&
+            ((s as Record<string, unknown>).outcome === "YES" ||
+              (s as Record<string, unknown>).outcome === "NO") &&
+            typeof (s as Record<string, unknown>).confidence === "number" &&
+            ((s as Record<string, unknown>).confidence as number) >= 1 &&
+            ((s as Record<string, unknown>).confidence as number) <= 100,
         )
-        .map((s: any) => ({
+        .map((s) => ({
           marketId: s.marketId,
           direction: s.direction,
           outcome: s.outcome,
           confidence: Math.round(s.confidence),
-          reasoning: String(s.reasoning ?? ""),
+          reasoning: s.reasoning ?? "",
         }));
-    } catch (err: any) {
-      this.logger.warn(`Failed to parse LLM response: ${err?.message}`);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      this.logger.warn(`Failed to parse LLM response: ${msg}`);
       return [];
     }
   }

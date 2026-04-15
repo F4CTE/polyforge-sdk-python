@@ -11,6 +11,7 @@ import { UpdateProfileDto } from "./dto/update-profile.dto";
 import { UpdatePasswordDto } from "./dto/update-password.dto";
 import { UpdateNotificationsDto } from "./dto/update-notifications.dto";
 import { UpdateRiskSettingsDto } from "./dto/update-risk-settings.dto";
+import { JwtPayload } from "@polyforge/shared-types";
 
 @ApiTags("settings")
 @ApiBearerAuth("jwt")
@@ -22,12 +23,15 @@ export class SettingsController {
   @Patch("profile")
   @UseGuards(ApiKeyScopeGuard)
   @RequireScopes("WRITE")
-  updateProfile(@CurrentUser() user: any, @Body() dto: UpdateProfileDto) {
+  updateProfile(
+    @CurrentUser() user: JwtPayload,
+    @Body() dto: UpdateProfileDto,
+  ) {
     return this.settings.updateProfile(user.sub, dto);
   }
 
   @Get("notifications")
-  getNotifications(@CurrentUser() user: any) {
+  getNotifications(@CurrentUser() user: JwtPayload) {
     return this.settings.getNotifications(user.sub);
   }
 
@@ -35,7 +39,7 @@ export class SettingsController {
   @UseGuards(ApiKeyScopeGuard)
   @RequireScopes("WRITE")
   updateNotifications(
-    @CurrentUser() user: any,
+    @CurrentUser() user: JwtPayload,
     @Body() dto: UpdateNotificationsDto,
   ) {
     return this.settings.updateNotifications(user.sub, dto);
@@ -44,17 +48,20 @@ export class SettingsController {
   @Patch("password")
   @UseGuards(ApiKeyScopeGuard)
   @RequireScopes("WRITE")
-  updatePassword(@CurrentUser() user: any, @Body() dto: UpdatePasswordDto) {
+  updatePassword(
+    @CurrentUser() user: JwtPayload,
+    @Body() dto: UpdatePasswordDto,
+  ) {
     return this.settings.updatePassword(user.sub, dto);
   }
 
   @Get("gas")
-  getGasUsage(@CurrentUser() user: any) {
+  getGasUsage(@CurrentUser() user: JwtPayload) {
     return this.settings.getGasUsage(user.sub);
   }
 
   @Get("risk")
-  getRiskSettings(@CurrentUser() user: any) {
+  getRiskSettings(@CurrentUser() user: JwtPayload) {
     return this.settings.getRiskSettings(user.sub);
   }
 
@@ -62,7 +69,7 @@ export class SettingsController {
   @UseGuards(ApiKeyScopeGuard)
   @RequireScopes("WRITE")
   updateRiskSettings(
-    @CurrentUser() user: any,
+    @CurrentUser() user: JwtPayload,
     @Body() dto: UpdateRiskSettingsDto,
   ) {
     return this.settings.updateRiskSettings(user.sub, dto);
@@ -71,7 +78,7 @@ export class SettingsController {
   @Post("risk/reset")
   @UseGuards(ApiKeyScopeGuard)
   @RequireScopes("WRITE")
-  resetCircuitBreaker(@CurrentUser() user: any) {
+  resetCircuitBreaker(@CurrentUser() user: JwtPayload) {
     return this.settings.resetCircuitBreaker(user.sub);
   }
 }

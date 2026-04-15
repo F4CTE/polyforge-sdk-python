@@ -1,6 +1,7 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { JwtService } from "@nestjs/jwt";
+import { OrderStatus, ResolutionStatus, StrategyStatus } from "@prisma/client";
 import { PrismaService } from "@polyforge/shared-db";
 import { RedisService } from "@polyforge/shared-redis";
 import { randomUUID } from "crypto";
@@ -120,7 +121,9 @@ export class CommandsService {
     const strategies = await this.prisma.strategy.findMany({
       where: {
         userId,
-        status: { in: ["RUNNING", "PAUSED", "PAPER"] as any[] },
+        status: {
+          in: ["RUNNING", "PAUSED", "PAPER"] as unknown as StrategyStatus[],
+        },
       },
       select: { name: true, status: true },
     });
@@ -150,7 +153,7 @@ export class CommandsService {
       where: {
         userId,
         name: { contains: name, mode: "insensitive" },
-        status: { not: "ARCHIVED" as any },
+        status: { not: "ARCHIVED" as unknown as StrategyStatus },
       },
       select: { id: true, name: true, status: true },
     });
@@ -182,8 +185,9 @@ export class CommandsService {
         );
         return `⚠️ Strategy "${strategy.name}" could not be ${action}ped (engine error ${res.status}).`;
       }
-    } catch (err: any) {
-      this.logger.error(`Engine ${action} failed: ${err?.message}`);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      this.logger.error(`Engine ${action} failed: ${message}`);
       return `⚠️ Could not reach strategy engine. Try again shortly.`;
     }
 
@@ -214,7 +218,7 @@ export class CommandsService {
         where: {
           userId,
           name: { contains: strategyName, mode: "insensitive" },
-          status: { not: "ARCHIVED" as any },
+          status: { not: "ARCHIVED" as unknown as StrategyStatus },
         },
         select: { id: true, name: true },
       });
@@ -264,7 +268,10 @@ export class CommandsService {
 
   private async positions(userId: string): Promise<string> {
     const positions = await this.prisma.position.findMany({
-      where: { userId, resolutionStatus: "UNRESOLVED" as any },
+      where: {
+        userId,
+        resolutionStatus: "UNRESOLVED" as unknown as ResolutionStatus,
+      },
       select: {
         tokenId: true,
         outcome: true,
@@ -290,7 +297,7 @@ export class CommandsService {
       this.redis.get(`paper:${userId}:pnl`),
       this.prisma.paperPosition.count({ where: { userId } }),
       this.prisma.paperOrder.count({
-        where: { userId, status: "CONFIRMED" as any },
+        where: { userId, status: "CONFIRMED" as unknown as OrderStatus },
       }),
     ]);
 
@@ -334,24 +341,38 @@ export class CommandsService {
         return "⚠️ Could not fetch whale data. Try again shortly.";
       }
 
-      const data: any = await res.json();
-      const trades: any[] = data.trades ?? data ?? [];
+      const data = (await res.json()) as Record<string, unknown>;
+      const tradesRaw: unknown = (data as { trades?: unknown }).trades ?? data;
+      const trades: Record<string, unknown>[] = Array.isArray(tradesRaw)
+        ? (tradesRaw as Record<string, unknown>[])
+        : [];
 
       if (trades.length === 0) {
         return "🐋 No whale trades in the last 24h.";
       }
 
-      const lines = trades.slice(0, 5).map((t: any, i: number) => {
-        const addr = String(t.wallet ?? t.address ?? "unknown").slice(0, 8);
-        const side = t.side ?? "BUY";
-        const size = Number(t.sizeUsdc ?? t.size ?? 0).toFixed(0);
-        const market = String(t.market ?? t.tokenId ?? "").slice(0, 20);
-        return `${i + 1}. ${addr}… ${side} $${size} on ${market}`;
-      });
+      const lines = trades
+        .slice(0, 5)
+        .map((t: Record<string, unknown>, i: number) => {
+          const addr = (
+            (t["wallet"] as string | undefined) ??
+            (t["address"] as string | undefined) ??
+            "unknown"
+          ).slice(0, 8);
+          const side = (t["side"] as string | undefined) ?? "BUY";
+          const size = Number(t["sizeUsdc"] ?? t["size"] ?? 0).toFixed(0);
+          const market = (
+            (t["market"] as string | undefined) ??
+            (t["tokenId"] as string | undefined) ??
+            ""
+          ).slice(0, 20);
+          return `${i + 1}. ${addr}… ${side} $${size} on ${market}`;
+        });
 
       return `🐋 Top whale trades (24h):\n\n${lines.join("\n")}`;
-    } catch (err: any) {
-      this.logger.error(`/whales failed: ${err?.message}`);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      this.logger.error(`/whales failed: ${message}`);
       return "⚠️ Could not fetch whale data. Try again shortly.";
     }
   }
@@ -377,20 +398,25 @@ export class CommandsService {
         return "⚠️ Could not fetch whale profile. Try again shortly.";
       }
 
-      const w: any = await res.json();
-      const vol = Number(w.totalVolume ?? 0).toFixed(0);
-      const pnl = Number(w.totalPnl ?? 0);
+      const w = (await res.json()) as Record<string, unknown>;
+      const vol = Number(w["totalVolume"] ?? 0).toFixed(0);
+      const pnl = Number(w["totalPnl"] ?? 0);
       const pnlStr = `${pnl >= 0 ? "+" : ""}${pnl.toFixed(2)}`;
-      const trades = Number(w.tradeCount ?? 0);
+      const trades = Number(w["tradeCount"] ?? 0);
 
+      const wAddr = ((w["address"] as string | undefined) ?? address).slice(
+        0,
+        10,
+      );
       return [
-        `🐋 Whale: ${String(w.address ?? address).slice(0, 10)}…`,
+        `🐋 Whale: ${wAddr}…`,
         `Volume:  $${vol}`,
         `P&L:     ${pnlStr} USDC`,
         `Trades:  ${trades}`,
       ].join("\n");
-    } catch (err: any) {
-      this.logger.error(`/whale failed: ${err?.message}`);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      this.logger.error(`/whale failed: ${message}`);
       return "⚠️ Could not fetch whale profile. Try again shortly.";
     }
   }
@@ -409,24 +435,36 @@ export class CommandsService {
         return "⚠️ Could not fetch copy configs. Try again shortly.";
       }
 
-      const data: any = await res.json();
-      const configs: any[] = data.configs ?? data ?? [];
+      const data = (await res.json()) as Record<string, unknown>;
+      const configsRaw: unknown =
+        (data as { configs?: unknown }).configs ?? data;
+      const configs: Record<string, unknown>[] = Array.isArray(configsRaw)
+        ? (configsRaw as Record<string, unknown>[])
+        : [];
 
       if (configs.length === 0) {
         return "📋 No active copy configs. Use /copy <wallet> to start one.";
       }
 
-      const lines = configs.map((c: any) => {
-        const wallet = String(c.targetWallet ?? c.wallet ?? "").slice(0, 10);
-        const status = c.status ?? "ACTIVE";
-        const mode = c.mode ?? "PERCENTAGE";
-        const pct = c.percentage != null ? `${c.percentage}%` : "";
+      const lines = configs.map((c: Record<string, unknown>) => {
+        const wallet = (
+          (c["targetWallet"] as string | undefined) ??
+          (c["wallet"] as string | undefined) ??
+          ""
+        ).slice(0, 10);
+        const status = (c["status"] as string | undefined) ?? "ACTIVE";
+        const mode = (c["mode"] as string | undefined) ?? "PERCENTAGE";
+        const pct =
+          c["percentage"] != null
+            ? `${c["percentage"] as string | number}%`
+            : "";
         return `• ${wallet}… [${status}] ${mode} ${pct}`;
       });
 
       return `📋 Copy configs (${configs.length}):\n\n${lines.join("\n")}`;
-    } catch (err: any) {
-      this.logger.error(`/copies failed: ${err?.message}`);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      this.logger.error(`/copies failed: ${message}`);
       return "⚠️ Could not fetch copy configs. Try again shortly.";
     }
   }
@@ -459,18 +497,19 @@ export class CommandsService {
         return "⚠️ Could not create copy config. Try again shortly.";
       }
 
-      const data: any = await res.json();
+      const data = (await res.json()) as Record<string, unknown>;
       return [
         "✅ Copy config created!",
         `Target: ${wallet.slice(0, 10)}…`,
         `Mode:   PERCENTAGE (10%)`,
         `Max:    $500 exposure`,
-        data.id ? `ID:     ${data.id}` : "",
+        data["id"] ? `ID:     ${data["id"] as string}` : "",
       ]
         .filter(Boolean)
         .join("\n");
-    } catch (err: any) {
-      this.logger.error(`/copy failed: ${err?.message}`);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      this.logger.error(`/copy failed: ${message}`);
       return "⚠️ Could not create copy config. Try again shortly.";
     }
   }
@@ -501,8 +540,9 @@ export class CommandsService {
       }
 
       return `✅ Copy config "${configId}" stopped.`;
-    } catch (err: any) {
-      this.logger.error(`/stopcopy failed: ${err?.message}`);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      this.logger.error(`/stopcopy failed: ${message}`);
       return "⚠️ Could not stop copy config. Try again shortly.";
     }
   }
@@ -521,23 +561,37 @@ export class CommandsService {
         return "⚠️ Could not fetch signals. Try again shortly.";
       }
 
-      const data: any = await res.json();
-      const signals: any[] = data.signals ?? data ?? [];
+      const data = (await res.json()) as Record<string, unknown>;
+      const signalsRaw: unknown =
+        (data as { signals?: unknown }).signals ?? data;
+      const signals: Record<string, unknown>[] = Array.isArray(signalsRaw)
+        ? (signalsRaw as Record<string, unknown>[])
+        : [];
 
       if (signals.length === 0) {
         return "📡 No high-confidence signals right now.";
       }
 
-      const lines = signals.slice(0, 5).map((s: any, i: number) => {
-        const market = String(s.market ?? s.title ?? "").slice(0, 30);
-        const direction = s.direction ?? s.signal ?? "—";
-        const conf = (Number(s.confidence ?? 0) * 100).toFixed(0);
-        return `${i + 1}. ${market}\n   ${direction} (${conf}% confidence)`;
-      });
+      const lines = signals
+        .slice(0, 5)
+        .map((s: Record<string, unknown>, i: number) => {
+          const market = (
+            (s["market"] as string | undefined) ??
+            (s["title"] as string | undefined) ??
+            ""
+          ).slice(0, 30);
+          const direction =
+            (s["direction"] as string | undefined) ??
+            (s["signal"] as string | undefined) ??
+            "—";
+          const conf = (Number(s["confidence"] ?? 0) * 100).toFixed(0);
+          return `${i + 1}. ${market}\n   ${direction} (${conf}% confidence)`;
+        });
 
       return `📡 Top AI signals:\n\n${lines.join("\n\n")}`;
-    } catch (err: any) {
-      this.logger.error(`/signals failed: ${err?.message}`);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      this.logger.error(`/signals failed: ${message}`);
       return "⚠️ Could not fetch signals. Try again shortly.";
     }
   }
@@ -555,23 +609,37 @@ export class CommandsService {
         return "⚠️ Could not fetch news. Try again shortly.";
       }
 
-      const data: any = await res.json();
-      const articles: any[] = data.articles ?? data ?? [];
+      const data = (await res.json()) as Record<string, unknown>;
+      const articlesRaw: unknown =
+        (data as { articles?: unknown }).articles ?? data;
+      const articles: Record<string, unknown>[] = Array.isArray(articlesRaw)
+        ? (articlesRaw as Record<string, unknown>[])
+        : [];
 
       if (articles.length === 0) {
         return "📰 No recent news articles.";
       }
 
-      const lines = articles.slice(0, 3).map((a: any, i: number) => {
-        const title = String(a.title ?? "Untitled").slice(0, 50);
-        const signalCount = Number(a.signalCount ?? a.signals?.length ?? 0);
-        const source = a.source ?? "";
-        return `${i + 1}. ${title}\n   ${source ? source + " · " : ""}${signalCount} signal${signalCount !== 1 ? "s" : ""}`;
-      });
+      const lines = articles
+        .slice(0, 3)
+        .map((a: Record<string, unknown>, i: number) => {
+          const title = (
+            (a["title"] as string | undefined) ?? "Untitled"
+          ).slice(0, 50);
+          const signalsArr = Array.isArray(a["signals"])
+            ? (a["signals"] as unknown[])
+            : [];
+          const signalCount = Number(
+            (a["signalCount"] as number | undefined) ?? signalsArr.length ?? 0,
+          );
+          const source = (a["source"] as string | undefined) ?? "";
+          return `${i + 1}. ${title}\n   ${source ? source + " · " : ""}${signalCount} signal${signalCount !== 1 ? "s" : ""}`;
+        });
 
       return `📰 Latest news:\n\n${lines.join("\n\n")}`;
-    } catch (err: any) {
-      this.logger.error(`/news failed: ${err?.message}`);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      this.logger.error(`/news failed: ${message}`);
       return "⚠️ Could not fetch news. Try again shortly.";
     }
   }
@@ -630,17 +698,18 @@ export class CommandsService {
         return `⚠️ Could not set ${label.toLowerCase()}. Try again shortly.`;
       }
 
-      const data: any = await res.json();
+      const data = (await res.json()) as Record<string, unknown>;
       return [
         `✅ ${label} set!`,
         `Market:  ${market}`,
         `Trigger: $${price.toFixed(3)}`,
-        data.id ? `ID:      ${data.id}` : "",
+        data["id"] ? `ID:      ${data["id"] as string}` : "",
       ]
         .filter(Boolean)
         .join("\n");
-    } catch (err: any) {
-      this.logger.error(`${cmd} failed: ${err?.message}`);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      this.logger.error(`${cmd} failed: ${message}`);
       return `⚠️ Could not set ${label.toLowerCase()}. Try again shortly.`;
     }
   }

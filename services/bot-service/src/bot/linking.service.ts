@@ -1,6 +1,7 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { JwtService } from "@nestjs/jwt";
+import { BotChannel } from "@prisma/client";
 import { PrismaService } from "@polyforge/shared-db";
 import { RedisService } from "@polyforge/shared-redis";
 import { createHash, randomUUID } from "crypto";
@@ -28,7 +29,11 @@ export class LinkingService {
     chatId: string,
   ): Promise<string | null> {
     const conn = await this.prisma.botConnection.findFirst({
-      where: { channel: channel as any, chatId, active: true },
+      where: {
+        channel: channel as unknown as BotChannel,
+        chatId,
+        active: true,
+      },
       select: { userId: true },
     });
     return conn?.userId ?? null;
@@ -45,7 +50,11 @@ export class LinkingService {
   ): Promise<string> {
     // Already linked?
     const existing = await this.prisma.botConnection.findFirst({
-      where: { channel: channel as any, chatId, active: true },
+      where: {
+        channel: channel as unknown as BotChannel,
+        chatId,
+        active: true,
+      },
     });
     if (existing) {
       return "✅ This account is already linked. Use /disconnect to unlink first.";
@@ -74,14 +83,14 @@ export class LinkingService {
 
     // Upsert BotConnection (deactivate any previous connection for this user+channel)
     await this.prisma.botConnection.updateMany({
-      where: { userId, channel: channel as any },
+      where: { userId, channel: channel as unknown as BotChannel },
       data: { active: false },
     });
 
     await this.prisma.botConnection.create({
       data: {
         userId,
-        channel: channel as any,
+        channel: channel as unknown as BotChannel,
         chatId,
         tokenHash,
         active: true,
@@ -97,7 +106,11 @@ export class LinkingService {
    */
   async disconnect(channel: BotChannelType, chatId: string): Promise<string> {
     const result = await this.prisma.botConnection.updateMany({
-      where: { channel: channel as any, chatId, active: true },
+      where: {
+        channel: channel as unknown as BotChannel,
+        chatId,
+        active: true,
+      },
       data: { active: false },
     });
 

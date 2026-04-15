@@ -4,6 +4,7 @@ import {
   OnModuleInit,
   OnModuleDestroy,
 } from "@nestjs/common";
+import type { Client as DiscordClient, Message, DMChannel } from "discord.js";
 import { CommandsService } from "./commands.service";
 import { LinkingService } from "./linking.service";
 
@@ -20,7 +21,8 @@ const TOKEN = process.env.DISCORD_BOT_TOKEN ?? "dev-disabled";
 export class DiscordService implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(DiscordService.name);
   private readonly enabled = TOKEN !== "dev-disabled" && TOKEN.length > 0;
-  private client: any = null; // discord.js Client — lazy-imported
+  // discord.js Client — lazy-imported at runtime to avoid module load cost
+  private client: DiscordClient | null = null;
 
   constructor(
     private readonly commands: CommandsService,
@@ -43,38 +45,44 @@ export class DiscordService implements OnModuleInit, OnModuleDestroy {
           GatewayIntentBits.MessageContent,
         ],
       });
+      const client = this.client;
 
-      this.client.on(Events.MessageCreate, async (message: any) => {
+      client.on(Events.MessageCreate, (message: Message): void => {
         // Ignore bot messages and non-command messages
         if (message.author.bot) return;
         const text = String(message.content ?? "").trim();
         if (!text.startsWith("/")) return;
 
         // For DMs, channelId == the DM channel ID — what we store and send to
-        const channelId = message.channel.id;
-        const isDm = message.channel.type === 1; // ChannelType.DM
+        const channelId = message.channelId;
+        const isDm = message.channel.isDMBased();
 
         if (!isDm) {
           // Only accept commands in DMs for now
           return;
         }
 
-        try {
-          const reply = await this.dispatchDiscord(channelId, text);
-          await message.reply(reply);
-        } catch (err: any) {
-          this.logger.error(`Discord command error: ${err?.message}`);
-          await message.reply("⚠️ An error occurred. Please try again.");
-        }
+        const handleMessage = async (): Promise<void> => {
+          try {
+            const reply = await this.dispatchDiscord(channelId, text);
+            await message.reply(reply);
+          } catch (err: unknown) {
+            const errMsg = err instanceof Error ? err.message : String(err);
+            this.logger.error(`Discord command error: ${errMsg}`);
+            await message.reply("⚠️ An error occurred. Please try again.");
+          }
+        };
+        void handleMessage();
       });
 
-      this.client.once(Events.ClientReady, (c: any) => {
+      client.once(Events.ClientReady, (c: DiscordClient<true>) => {
         this.logger.log(`Discord bot ready as ${c.user.tag}`);
       });
 
-      await this.client.login(TOKEN);
-    } catch (err: any) {
-      this.logger.error(`Discord bot failed to start: ${err?.message}`);
+      await client.login(TOKEN);
+    } catch (err: unknown) {
+      const errMsg = err instanceof Error ? err.message : String(err);
+      this.logger.error(`Discord bot failed to start: ${errMsg}`);
     }
   }
 
@@ -94,9 +102,11 @@ export class DiscordService implements OnModuleInit, OnModuleDestroy {
     if (!this.enabled || !this.client) return;
     try {
       const channel = await this.client.channels.fetch(channelId);
-      await channel.send(content);
-    } catch (err: any) {
-      this.logger.error(`Discord send failed: ${err?.message}`);
+      if (!channel) return;
+      await (channel as DMChannel).send(content);
+    } catch (err: unknown) {
+      const errMsg = err instanceof Error ? err.message : String(err);
+      this.logger.error(`Discord send failed: ${errMsg}`);
     }
   }
 

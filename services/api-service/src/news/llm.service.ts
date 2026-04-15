@@ -29,9 +29,10 @@ export class LlmService {
     if (claudeApiKey) {
       try {
         return await this.callClaude(prompt, claudeApiKey);
-      } catch (err: any) {
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : String(err);
         this.logger.warn(
-          `Claude API call failed, falling back to OpenAI: ${err?.message}`,
+          `Claude API call failed, falling back to OpenAI: ${msg}`,
         );
       }
     }
@@ -39,8 +40,9 @@ export class LlmService {
     if (openaiApiKey) {
       try {
         return await this.callOpenAI(prompt, openaiApiKey);
-      } catch (err: any) {
-        this.logger.error(`OpenAI API call also failed: ${err?.message}`);
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : String(err);
+        this.logger.error(`OpenAI API call also failed: ${msg}`);
         throw new Error("All LLM providers failed", { cause: err });
       }
     }

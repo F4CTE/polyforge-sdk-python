@@ -2,6 +2,7 @@ import { Injectable, Logger } from "@nestjs/common";
 import { Interval, Cron } from "@nestjs/schedule";
 import { PrismaService } from "@polyforge/shared-db";
 import { RedisService } from "@polyforge/shared-redis";
+import { type ConditionalOrder } from "@prisma/client";
 import { randomUUID } from "crypto";
 
 const STREAM_ORDERS = "stream:orders";
@@ -103,7 +104,10 @@ export class ConditionalEvaluatorService {
     }
   }
 
-  async handleTrailingStop(order: any, currentPrice: number): Promise<void> {
+  async handleTrailingStop(
+    order: ConditionalOrder,
+    currentPrice: number,
+  ): Promise<void> {
     const trailingPct = parseFloat(String(order.trailingPct));
     const currentPeak = order.peakPrice
       ? parseFloat(String(order.peakPrice))
@@ -135,7 +139,10 @@ export class ConditionalEvaluatorService {
     }
   }
 
-  async handlePegged(order: any, currentPrice: number): Promise<void> {
+  async handlePegged(
+    order: ConditionalOrder,
+    currentPrice: number,
+  ): Promise<void> {
     const offset = parseFloat(String(order.triggerPrice));
     const newLimitPrice = Math.max(0.01, Math.min(0.99, currentPrice + offset));
 
@@ -155,7 +162,7 @@ export class ConditionalEvaluatorService {
     });
   }
 
-  async triggerOrder(order: any): Promise<void> {
+  async triggerOrder(order: ConditionalOrder): Promise<void> {
     const intentId = randomUUID();
 
     // Publish OrderIntent to stream:orders

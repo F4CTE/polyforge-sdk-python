@@ -7,6 +7,7 @@ import { ValidationPipe, RequestMethod } from "@nestjs/common";
 import { Logger } from "nestjs-pino";
 import { WsAdapter } from "@nestjs/platform-ws";
 import { SwaggerModule, DocumentBuilder } from "@nestjs/swagger";
+import type { FastifyRequest, FastifyReply } from "fastify";
 import * as fs from "fs";
 import * as path from "path";
 import fastifyCookie from "@fastify/cookie";
@@ -16,6 +17,8 @@ import helmet from "@fastify/helmet";
 import { AppModule } from "./app.module";
 import { GlobalExceptionFilter } from "./common/filters/http-exception.filter";
 import { rejectPlaceholderSecrets } from "@polyforge/shared-auth";
+
+type FastifyPlugin = Parameters<NestFastifyApplication["register"]>[0];
 
 const PORT = parseInt(process.env.PORT ?? "3002", 10);
 
@@ -76,16 +79,18 @@ async function bootstrap() {
     { bufferLogs: true },
   );
 
-  await app.register(fastifyCookie as any);
+  await app.register(fastifyCookie as FastifyPlugin);
 
   // Response compression (brotli preferred, gzip fallback)
-  await app.register(compress as any, { encodings: ["gzip", "deflate"] });
+  await app.register(compress as FastifyPlugin, {
+    encodings: ["gzip", "deflate"],
+  });
 
   // ETag support for conditional requests (304 Not Modified)
-  await app.register(etag as any);
+  await app.register(etag as FastifyPlugin);
 
   // Security headers via helmet (restrictive CSP — API-only, no HTML served)
-  await app.register(helmet as any, {
+  await app.register(helmet as FastifyPlugin, {
     contentSecurityPolicy: {
       directives: {
         defaultSrc: ["'none'"],
@@ -197,12 +202,15 @@ async function bootstrap() {
 
   // Gate all Swagger/OpenAPI docs behind the dedicated ENABLE_SWAGGER flag
   if (enableSwagger) {
-    fastify.get("/api/v1/docs/openapi.json", (_req: any, reply: any) => {
-      reply.type("application/json").send(document);
-    });
+    fastify.get(
+      "/api/v1/docs/openapi.json",
+      (_req: FastifyRequest, reply: FastifyReply) => {
+        void reply.type("application/json").send(document);
+      },
+    );
 
-    fastify.get("/api/v1/docs", (_req: any, reply: any) => {
-      reply.type("text/html").send(`<!DOCTYPE html>
+    fastify.get("/api/v1/docs", (_req: FastifyRequest, reply: FastifyReply) => {
+      void reply.type("text/html").send(`<!DOCTYPE html>
 <html><head><title>Polyforge API</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.32.1/swagger-ui.css" integrity="sha384-F7uqyyVZgBbuOv+8gNy6ZGJB8Rf12CczPWm130Pxrau0cyZlj1Dl18cDOWpQSrGh" crossorigin="anonymous">
 </head><body>

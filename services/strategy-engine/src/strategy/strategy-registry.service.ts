@@ -9,8 +9,14 @@ import {
 import { StrategyStatus } from ".prisma/client";
 import { PrismaService } from "@polyforge/shared-db";
 import { RedisService } from "@polyforge/shared-redis";
-import { SubStrategyMode } from "@polyforge/shared-types";
-import { StrategyRunner, StrategyRunnerStatus } from "./strategy-runner";
+import { SubStrategyMode, StrategyVariable } from "@polyforge/shared-types";
+import {
+  StrategyRunner,
+  StrategyRunnerStatus,
+  Block,
+  LogicBlock,
+  LogicConnection,
+} from "./strategy-runner";
 import { StateService } from "../state/state.service";
 import { OrderIntent } from "../blocks/block.types";
 
@@ -30,21 +36,43 @@ const PAPER_ORDER_STREAM = "stream:paper_orders";
  *
  * Legacy strategies with no connections return all blocks unchanged.
  */
+/** Extract typed arrays from the strategy canvas JSON */
+function extractCanvasFields(canvas: Record<string, unknown> | null): {
+  variables: StrategyVariable[];
+  logicBlocks: LogicBlock[];
+  logicConnections: LogicConnection[];
+  calcBlocks: Block[];
+} {
+  const c = canvas ?? {};
+  return {
+    variables: Array.isArray(c.variables)
+      ? (c.variables as StrategyVariable[])
+      : [],
+    logicBlocks: Array.isArray(c.logicBlocks)
+      ? (c.logicBlocks as LogicBlock[])
+      : [],
+    logicConnections: Array.isArray(c.connections)
+      ? (c.connections as LogicConnection[])
+      : [],
+    calcBlocks: Array.isArray(c.calcBlocks) ? (c.calcBlocks as Block[]) : [],
+  };
+}
+
 function filterByConnections(
-  triggers: any[],
-  conditions: any[],
-  actions: any[],
-  connections: any[],
-): { triggers: any[]; conditions: any[]; actions: any[] } {
+  triggers: Block[],
+  conditions: Block[],
+  actions: Block[],
+  connections: LogicConnection[],
+): { triggers: Block[]; conditions: Block[]; actions: Block[] } {
   if (!connections || connections.length === 0) {
     return { triggers, conditions, actions };
   }
-  const sources = new Set<string>(connections.map((c: any) => c.source));
-  const targets = new Set<string>(connections.map((c: any) => c.target));
+  const sources = new Set<string>(connections.map((c) => c.source));
+  const targets = new Set<string>(connections.map((c) => c.target));
   return {
-    triggers: triggers.filter((b: any) => sources.has(b.id)),
+    triggers: triggers.filter((b) => sources.has(b.id)),
     conditions, // unwired = global gate, wired = same; always include all conditions
-    actions: actions.filter((b: any) => targets.has(b.id)),
+    actions: actions.filter((b) => targets.has(b.id)),
   };
 }
 
@@ -90,24 +118,23 @@ export class StrategyRegistryService implements OnApplicationBootstrap {
           const stream = isPaper ? PAPER_ORDER_STREAM : ORDER_STREAM;
 
           const canvas = strategy.canvas as Record<string, unknown> | null;
-          const variables = Array.isArray((canvas as any)?.variables)
-            ? (canvas as any).variables
-            : [];
-
-          const logicBlocks = Array.isArray((canvas as any)?.logicBlocks)
-            ? (canvas as any).logicBlocks
-            : [];
-          const logicConnections = Array.isArray((canvas as any)?.connections)
-            ? (canvas as any).connections
-            : [];
-          const calcBlocks = Array.isArray((canvas as any)?.calcBlocks)
-            ? (canvas as any).calcBlocks
-            : ((strategy as any).calcBlocks ?? []);
+          const {
+            variables,
+            logicBlocks,
+            logicConnections,
+            calcBlocks: canvasCalcBlocks,
+          } = extractCanvasFields(canvas);
+          const calcBlocks =
+            canvasCalcBlocks.length > 0
+              ? canvasCalcBlocks
+              : (((strategy as Record<string, unknown>).calcBlocks as
+                  | Block[]
+                  | undefined) ?? []);
 
           const wired = filterByConnections(
-            (strategy.triggers as any[]) ?? [],
-            (strategy.conditions as any[]) ?? [],
-            (strategy.actions as any[]) ?? [],
+            (strategy.triggers as Block[] | null) ?? [],
+            (strategy.conditions as Block[] | null) ?? [],
+            (strategy.actions as Block[] | null) ?? [],
             logicConnections,
           );
           const runner = new StrategyRunner(
@@ -115,10 +142,10 @@ export class StrategyRegistryService implements OnApplicationBootstrap {
             strategy.userId,
             strategy.execMode,
             strategy.tickMs ?? 1000,
-            wired.triggers,
-            wired.conditions,
-            wired.actions,
-            (strategy.safety as any[]) ?? [],
+            wired.triggers as unknown as Block[],
+            wired.conditions as unknown as Block[],
+            wired.actions as unknown as Block[],
+            ((strategy.safety as Block[] | null) ?? []) as unknown as Block[],
             variables,
             this.redis,
             this.prisma,
@@ -174,23 +201,23 @@ export class StrategyRegistryService implements OnApplicationBootstrap {
 
     // Extract variables from canvas (if defined by the strategy builder)
     const canvas = strategy.canvas as Record<string, unknown> | null;
-    const variables = Array.isArray((canvas as any)?.variables)
-      ? (canvas as any).variables
-      : [];
-    const logicBlocks = Array.isArray((canvas as any)?.logicBlocks)
-      ? (canvas as any).logicBlocks
-      : [];
-    const logicConnections = Array.isArray((canvas as any)?.connections)
-      ? (canvas as any).connections
-      : [];
-    const calcBlocks = Array.isArray((canvas as any)?.calcBlocks)
-      ? (canvas as any).calcBlocks
-      : ((strategy as any).calcBlocks ?? []);
+    const {
+      variables,
+      logicBlocks,
+      logicConnections,
+      calcBlocks: canvasCalcBlocks2,
+    } = extractCanvasFields(canvas);
+    const calcBlocks =
+      canvasCalcBlocks2.length > 0
+        ? canvasCalcBlocks2
+        : (((strategy as Record<string, unknown>).calcBlocks as
+            | Block[]
+            | undefined) ?? []);
 
     const wired = filterByConnections(
-      (strategy.triggers as any[]) ?? [],
-      (strategy.conditions as any[]) ?? [],
-      (strategy.actions as any[]) ?? [],
+      (strategy.triggers as Block[] | null) ?? [],
+      (strategy.conditions as Block[] | null) ?? [],
+      (strategy.actions as Block[] | null) ?? [],
       logicConnections,
     );
     const runner = new StrategyRunner(
@@ -198,10 +225,10 @@ export class StrategyRegistryService implements OnApplicationBootstrap {
       strategy.userId,
       strategy.execMode,
       strategy.tickMs ?? 1000,
-      wired.triggers,
-      wired.conditions,
-      wired.actions,
-      (strategy.safety as any[]) ?? [],
+      wired.triggers as unknown as Block[],
+      wired.conditions as unknown as Block[],
+      wired.actions as unknown as Block[],
+      ((strategy.safety as Block[] | null) ?? []) as unknown as Block[],
       variables,
       this.redis,
       this.prisma,
@@ -309,7 +336,7 @@ export class StrategyRegistryService implements OnApplicationBootstrap {
   }
 
   /** Forward price events only to strategies subscribed to this token */
-  async onPriceEvent(tokenId: string, price: number) {
+  onPriceEvent(tokenId: string, price: number): void {
     const subscribers = this.tokenSubscribers.get(tokenId);
     if (!subscribers || subscribers.size === 0) return;
     for (const strategyId of subscribers) {
@@ -417,23 +444,23 @@ export class StrategyRegistryService implements OnApplicationBootstrap {
     const newStatus = isPaper ? StrategyStatus.PAPER : StrategyStatus.RUNNING;
 
     const canvas = child.canvas as Record<string, unknown> | null;
-    const variables = Array.isArray((canvas as any)?.variables)
-      ? (canvas as any).variables
-      : [];
-    const logicBlocks = Array.isArray((canvas as any)?.logicBlocks)
-      ? (canvas as any).logicBlocks
-      : [];
-    const logicConnections = Array.isArray((canvas as any)?.connections)
-      ? (canvas as any).connections
-      : [];
-    const calcBlocks = Array.isArray((canvas as any)?.calcBlocks)
-      ? (canvas as any).calcBlocks
-      : ((child as any).calcBlocks ?? []);
+    const {
+      variables,
+      logicBlocks,
+      logicConnections,
+      calcBlocks: canvasCalcBlocks3,
+    } = extractCanvasFields(canvas);
+    const calcBlocks =
+      canvasCalcBlocks3.length > 0
+        ? canvasCalcBlocks3
+        : (((child as Record<string, unknown>).calcBlocks as
+            | Block[]
+            | undefined) ?? []);
 
     const wiredChild = filterByConnections(
-      (child.triggers as any[]) ?? [],
-      (child.conditions as any[]) ?? [],
-      (child.actions as any[]) ?? [],
+      (child.triggers as Block[] | null) ?? [],
+      (child.conditions as Block[] | null) ?? [],
+      (child.actions as Block[] | null) ?? [],
       logicConnections,
     );
     const runner = new StrategyRunner(
@@ -441,10 +468,10 @@ export class StrategyRegistryService implements OnApplicationBootstrap {
       child.userId,
       child.execMode,
       child.tickMs ?? 1000,
-      wiredChild.triggers,
-      wiredChild.conditions,
-      wiredChild.actions,
-      (child.safety as any[]) ?? [],
+      wiredChild.triggers as unknown as Block[],
+      wiredChild.conditions as unknown as Block[],
+      wiredChild.actions as unknown as Block[],
+      ((child.safety as Block[] | null) ?? []) as unknown as Block[],
       variables,
       this.redis,
       this.prisma,
@@ -550,15 +577,16 @@ export class StrategyRegistryService implements OnApplicationBootstrap {
     }
   }
 
-  private async onRunnerStatusChange(
+  private onRunnerStatusChange(
     strategyId: string,
-    userId: string,
+    _userId: string,
     status: StrategyRunnerStatus,
-    reason?: string,
-  ) {
+    _reason?: string,
+  ): Promise<void> {
     if (status === "STOPPED") {
       this.runners.delete(strategyId);
     }
+    return Promise.resolve();
   }
 
   private async emitEvent(

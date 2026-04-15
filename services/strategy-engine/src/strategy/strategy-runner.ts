@@ -1,10 +1,9 @@
 import { Logger } from "@nestjs/common";
-import { v4 as uuidv4 } from "uuid";
 import { StrategyStatus } from ".prisma/client";
 import { PrismaService } from "@polyforge/shared-db";
 import { RedisService } from "@polyforge/shared-redis";
 import { StrategyVariable, SubStrategyMode } from "@polyforge/shared-types";
-import { EvalContext, OrderIntent, DelayedAction } from "../blocks/block.types";
+import { EvalContext, OrderIntent } from "../blocks/block.types";
 import {
   SAFETY_REGISTRY,
   TRIGGER_REGISTRY,
@@ -22,17 +21,17 @@ const STALE_PRICE_MS = 5_000;
 
 export type StrategyRunnerStatus = "RUNNING" | "PAUSED" | "STOPPED";
 
-interface Block {
+export interface Block {
   id: string;
   type: string;
   params?: Record<string, unknown>;
 }
 
-interface LogicBlock extends Block {
+export interface LogicBlock extends Block {
   outputs?: string[];
 }
 
-interface LogicConnection {
+export interface LogicConnection {
   source: string;
   sourceHandle?: string;
   target: string;
@@ -148,7 +147,7 @@ export class StrategyRunner {
   }
 
   /** Called on price events from market-data-service (EVENT/HYBRID mode) */
-  async onPriceEvent(tokenId: string, price: number) {
+  async onPriceEvent(_tokenId: string, _price: number) {
     if (this.execMode === "EVENT" || this.execMode === "HYBRID") {
       await this.tick();
     }
@@ -224,7 +223,11 @@ export class StrategyRunner {
         const inputB = Number(resolvedBlock.params?.inputB ?? 0);
         const inputs = [inputA, inputB];
 
-        const result = evaluator.evaluate(resolvedBlock as any, inputs, ctx);
+        const result = evaluator.evaluate(
+          resolvedBlock as Record<string, unknown>,
+          inputs,
+          ctx,
+        );
 
         // Store the result in context variables so other blocks can reference it
         ctx.variables = ctx.variables ?? {};
@@ -271,7 +274,7 @@ export class StrategyRunner {
         params: resolveParams(block.params ?? {}, ctx.variables ?? {}),
       };
       const result = await evaluator.evaluate(
-        resolvedBlock as any,
+        resolvedBlock as Record<string, unknown>,
         ctx,
         this.redis,
         this.prisma,
@@ -301,7 +304,7 @@ export class StrategyRunner {
         params: resolveParams(block.params ?? {}, ctx.variables ?? {}),
       };
       const result = await evaluator.evaluate(
-        resolvedBlock as any,
+        resolvedBlock as Record<string, unknown>,
         ctx,
         this.redis,
         this.prisma,
@@ -323,7 +326,7 @@ export class StrategyRunner {
         params: resolveParams(block.params ?? {}, ctx.variables ?? {}),
       };
       const result = await evaluator.evaluate(
-        resolvedBlock as any,
+        resolvedBlock as Record<string, unknown>,
         ctx,
         this.redis,
         this.prisma,
@@ -357,7 +360,7 @@ export class StrategyRunner {
         params: resolveParams(block.params ?? {}, ctx.variables ?? {}),
       };
       const result = await evaluator.execute(
-        resolvedBlock as any,
+        resolvedBlock as Record<string, unknown>,
         ctx,
         this.redis,
         this.prisma,
@@ -517,7 +520,7 @@ export class StrategyRunner {
   private scheduleDelayedAction(
     blockId: string,
     seconds: number,
-    value: boolean,
+    _value: boolean,
   ) {
     // Clear any existing timer for this block
     const existing = this.delayedActions.get(blockId);
@@ -538,7 +541,7 @@ export class StrategyRunner {
     if (this._cachedTokenIds) return this._cachedTokenIds;
     const ids = new Set<string>();
     for (const block of [...this.triggers, ...this.actions]) {
-      const params = (block as any).params;
+      const params = block.params;
       if (params?.tokenId && typeof params.tokenId === "string")
         ids.add(params.tokenId);
     }
@@ -564,7 +567,7 @@ export class StrategyRunner {
       const raw = values[i];
       if (!raw) return tokenIds[i];
       try {
-        const { timestamp } = JSON.parse(raw);
+        const { timestamp } = JSON.parse(raw) as { timestamp: number };
         if (now - timestamp > STALE_PRICE_MS) return tokenIds[i];
       } catch {
         return tokenIds[i];

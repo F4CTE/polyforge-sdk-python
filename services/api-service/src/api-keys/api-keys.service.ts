@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { PrismaService } from "@polyforge/shared-db";
+import { ApiKeyScope } from "@prisma/client";
 import { randomBytes, createHash } from "crypto";
 
 @Injectable()
@@ -33,7 +34,7 @@ export class ApiKeysService {
         name: dto.name.slice(0, 100),
         prefix,
         tokenHash,
-        scopes: (dto.scopes ?? ["READ"]) as any,
+        scopes: (dto.scopes ?? ["READ"]) as ApiKeyScope[],
       },
       select: {
         id: true,

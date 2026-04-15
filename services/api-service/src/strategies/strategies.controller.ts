@@ -34,6 +34,7 @@ import { StrategyQueryDto } from "./dto/strategy-query.dto";
 import { ImportStrategyDto } from "./dto/import-strategy.dto";
 import { CreateFromDescriptionDto } from "./dto/create-from-description.dto";
 import { PaginationDto } from "../common/dto/pagination.dto";
+import { JwtPayload } from "@polyforge/shared-types";
 
 @ApiTags("strategies")
 @ApiBearerAuth("jwt")
@@ -51,7 +52,7 @@ export class StrategiesController {
   }
 
   @Get()
-  list(@CurrentUser() user: any, @Query() query: StrategyQueryDto) {
+  list(@CurrentUser() user: JwtPayload, @Query() query: StrategyQueryDto) {
     return this.strategies.list(user.sub, query);
   }
 
@@ -60,7 +61,7 @@ export class StrategiesController {
   @UseGuards(ApiKeyScopeGuard)
   @RequireScopes("WRITE")
   createFromDescription(
-    @CurrentUser() user: any,
+    @CurrentUser() user: JwtPayload,
     @Body() dto: CreateFromDescriptionDto,
   ) {
     return this.strategies.createFromDescription(user.sub, dto);
@@ -70,12 +71,15 @@ export class StrategiesController {
   @HttpCode(HttpStatus.CREATED)
   @UseGuards(ApiKeyScopeGuard)
   @RequireScopes("WRITE")
-  create(@CurrentUser() user: any, @Body() dto: CreateStrategyDto) {
+  create(@CurrentUser() user: JwtPayload, @Body() dto: CreateStrategyDto) {
     return this.strategies.create(user.sub, dto);
   }
 
   @Get(":id")
-  findOne(@Param("id", ParseUUIDPipe) id: string, @CurrentUser() user: any) {
+  findOne(
+    @Param("id", ParseUUIDPipe) id: string,
+    @CurrentUser() user: JwtPayload,
+  ) {
     return this.strategies.findOne(id, user.sub);
   }
 
@@ -84,7 +88,7 @@ export class StrategiesController {
   @RequireScopes("WRITE")
   update(
     @Param("id", ParseUUIDPipe) id: string,
-    @CurrentUser() user: any,
+    @CurrentUser() user: JwtPayload,
     @Body() dto: UpdateStrategyDto,
   ) {
     return this.strategies.update(id, user.sub, dto);
@@ -94,14 +98,17 @@ export class StrategiesController {
   @HttpCode(HttpStatus.NO_CONTENT)
   @UseGuards(ApiKeyScopeGuard)
   @RequireScopes("WRITE")
-  remove(@Param("id", ParseUUIDPipe) id: string, @CurrentUser() user: any) {
+  remove(
+    @Param("id", ParseUUIDPipe) id: string,
+    @CurrentUser() user: JwtPayload,
+  ) {
     return this.strategies.remove(id, user.sub);
   }
 
   @Get(":id/event-log")
   listEventLog(
     @Param("id", ParseUUIDPipe) id: string,
-    @CurrentUser() user: any,
+    @CurrentUser() user: JwtPayload,
     @Query("limit") limitRaw?: string,
   ) {
     const limit = limitRaw ? Math.min(parseInt(limitRaw, 10) || 50, 200) : 50;
@@ -120,13 +127,13 @@ export class StrategiesController {
   @RequireScopes("READ")
   async streamEvents(
     @Param("id", ParseUUIDPipe) id: string,
-    @CurrentUser() user: any,
+    @CurrentUser() user: JwtPayload,
     @Res() res: Response,
   ): Promise<void> {
     // Verify the strategy exists and belongs to this user (throws 404/403 otherwise)
     await this.strategies.findOne(id, user.sub);
 
-    const raw = (res as any).raw as import("http").ServerResponse;
+    const raw = (res as unknown as { raw: import("http").ServerResponse }).raw;
 
     raw.statusCode = 200;
     raw.setHeader("Content-Type", "text/event-stream");
@@ -149,7 +156,7 @@ export class StrategiesController {
       raw.write(": heartbeat\n\n");
     }, 15000);
 
-    (raw as any).on("close", () => {
+    raw.on("close", () => {
       clearInterval(heartbeat);
       unsub();
     });
@@ -158,7 +165,7 @@ export class StrategiesController {
   @Get(":id/export")
   async exportStrategy(
     @Param("id", ParseUUIDPipe) id: string,
-    @CurrentUser() user: any,
+    @CurrentUser() user: JwtPayload,
     @Res() res: Response,
   ) {
     const { payload, filename } = await this.strategies.exportStrategy(
@@ -172,7 +179,10 @@ export class StrategiesController {
 
   @Post("import")
   @HttpCode(HttpStatus.CREATED)
-  importStrategy(@CurrentUser() user: any, @Body() dto: ImportStrategyDto) {
+  importStrategy(
+    @CurrentUser() user: JwtPayload,
+    @Body() dto: ImportStrategyDto,
+  ) {
     return this.strategies.importStrategy(dto, user.sub);
   }
 
@@ -181,7 +191,7 @@ export class StrategiesController {
   @RequireScopes("TRADE")
   start(
     @Param("id", ParseUUIDPipe) id: string,
-    @CurrentUser() user: any,
+    @CurrentUser() user: JwtPayload,
     @Body() dto: StartStrategyDto,
   ) {
     return this.strategies.start(id, user.sub, dto);
@@ -190,32 +200,47 @@ export class StrategiesController {
   @Post(":id/stop")
   @UseGuards(ApiKeyScopeGuard)
   @RequireScopes("TRADE")
-  stop(@Param("id", ParseUUIDPipe) id: string, @CurrentUser() user: any) {
+  stop(
+    @Param("id", ParseUUIDPipe) id: string,
+    @CurrentUser() user: JwtPayload,
+  ) {
     return this.strategies.stop(id, user.sub);
   }
 
   @Post(":id/pause")
   @UseGuards(ApiKeyScopeGuard)
   @RequireScopes("TRADE")
-  pause(@Param("id", ParseUUIDPipe) id: string, @CurrentUser() user: any) {
+  pause(
+    @Param("id", ParseUUIDPipe) id: string,
+    @CurrentUser() user: JwtPayload,
+  ) {
     return this.strategies.pause(id, user.sub);
   }
 
   @Post(":id/resume")
   @UseGuards(ApiKeyScopeGuard)
   @RequireScopes("TRADE")
-  resume(@Param("id", ParseUUIDPipe) id: string, @CurrentUser() user: any) {
+  resume(
+    @Param("id", ParseUUIDPipe) id: string,
+    @CurrentUser() user: JwtPayload,
+  ) {
     return this.strategies.resume(id, user.sub);
   }
 
   @Post(":id/fork")
   @HttpCode(HttpStatus.CREATED)
-  fork(@Param("id", ParseUUIDPipe) id: string, @CurrentUser() user: any) {
+  fork(
+    @Param("id", ParseUUIDPipe) id: string,
+    @CurrentUser() user: JwtPayload,
+  ) {
     return this.strategies.fork(id, user.sub);
   }
 
   @Post(":id/like")
-  like(@Param("id", ParseUUIDPipe) id: string, @CurrentUser() user: any) {
+  like(
+    @Param("id", ParseUUIDPipe) id: string,
+    @CurrentUser() user: JwtPayload,
+  ) {
     return this.strategies.like(id, user.sub);
   }
 
@@ -231,7 +256,7 @@ export class StrategiesController {
   @HttpCode(HttpStatus.CREATED)
   addComment(
     @Param("id", ParseUUIDPipe) id: string,
-    @CurrentUser() user: any,
+    @CurrentUser() user: JwtPayload,
     @Body() dto: CreateCommentDto,
   ) {
     return this.strategies.addComment(id, user.sub, dto);
@@ -242,7 +267,7 @@ export class StrategiesController {
   deleteComment(
     @Param("strategyId", ParseUUIDPipe) strategyId: string,
     @Param("commentId", ParseUUIDPipe) commentId: string,
-    @CurrentUser() user: any,
+    @CurrentUser() user: JwtPayload,
   ) {
     return this.strategies.deleteComment(strategyId, commentId, user.sub);
   }
@@ -250,7 +275,7 @@ export class StrategiesController {
   @Get(":id/children")
   listChildren(
     @Param("id", ParseUUIDPipe) id: string,
-    @CurrentUser() user: any,
+    @CurrentUser() user: JwtPayload,
   ) {
     return this.strategies.listChildren(id, user.sub);
   }
@@ -259,7 +284,7 @@ export class StrategiesController {
   @HttpCode(HttpStatus.CREATED)
   report(
     @Param("id", ParseUUIDPipe) id: string,
-    @CurrentUser() user: any,
+    @CurrentUser() user: JwtPayload,
     @Body() dto: ReportStrategyDto,
   ) {
     return this.strategies.report(id, user.sub, dto);
@@ -268,7 +293,7 @@ export class StrategiesController {
   @Get(":id/versions")
   listVersions(
     @Param("id", ParseUUIDPipe) id: string,
-    @CurrentUser() user: any,
+    @CurrentUser() user: JwtPayload,
   ) {
     return this.strategies.listVersions(id, user.sub);
   }
@@ -280,7 +305,7 @@ export class StrategiesController {
   rollback(
     @Param("id", ParseUUIDPipe) id: string,
     @Param("versionId", ParseUUIDPipe) versionId: string,
-    @CurrentUser() user: any,
+    @CurrentUser() user: JwtPayload,
   ) {
     return this.strategies.rollbackToVersion(id, versionId, user.sub);
   }

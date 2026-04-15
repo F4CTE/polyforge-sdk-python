@@ -20,6 +20,7 @@ import {
 import { GeoBlockGuard } from "../common/guards/geo.guard";
 import { SmartOrderService } from "./smart-order.service";
 import { PlaceSmartOrderDto } from "./dto/place-smart-order.dto";
+import { JwtPayload } from "@polyforge/shared-types";
 
 @ApiTags("smart-orders")
 @ApiBearerAuth("jwt")
@@ -29,7 +30,7 @@ export class SmartOrderController {
   constructor(private readonly smart: SmartOrderService) {}
 
   @Get()
-  list(@CurrentUser() user: any) {
+  list(@CurrentUser() user: JwtPayload) {
     return this.smart.list(user.sub);
   }
 
@@ -43,13 +44,13 @@ export class SmartOrderController {
   @HttpCode(HttpStatus.ACCEPTED)
   @UseGuards(ApiKeyScopeGuard, GeoBlockGuard)
   @RequireScopes("TRADE")
-  create(@CurrentUser() user: any, @Body() dto: PlaceSmartOrderDto) {
+  create(@CurrentUser() user: JwtPayload, @Body() dto: PlaceSmartOrderDto) {
     return this.smart.create(user.sub, dto);
   }
 
   @Delete(":id")
   @HttpCode(HttpStatus.OK)
-  cancel(@CurrentUser() user: any, @Param("id") id: string) {
+  cancel(@CurrentUser() user: JwtPayload, @Param("id") id: string) {
     return this.smart.cancel(user.sub, id);
   }
 }

@@ -26,7 +26,7 @@ export class InternalAuthGuard implements CanActivate {
     }
 
     const token = auth.slice(7);
-    let payload: any;
+    let payload: Record<string, unknown>;
 
     try {
       payload = this.jwt.verify(token, {
@@ -37,14 +37,15 @@ export class InternalAuthGuard implements CanActivate {
       throw new UnauthorizedException("Invalid service token");
     }
 
-    if (!payload.jti || this.seenJtis.has(payload.jti)) {
+    const jti = typeof payload.jti === "string" ? payload.jti : undefined;
+    if (!jti || this.seenJtis.has(jti)) {
       throw new UnauthorizedException("Token already used or missing jti");
     }
-    this.seenJtis.add(payload.jti);
+    this.seenJtis.add(jti);
 
     if (this.seenJtis.size > 1000) {
       const [first] = this.seenJtis;
-      this.seenJtis.delete(first);
+      if (first !== undefined) this.seenJtis.delete(first);
     }
 
     return true;

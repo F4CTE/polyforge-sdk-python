@@ -12,6 +12,7 @@ import { JwtAuthGuard, CurrentUser } from "@polyforge/shared-auth";
 import { ProfileService } from "./profile.service";
 import { UpdateProfileDto } from "./dto/update-profile.dto";
 import { ChangePasswordDto } from "./dto/change-password.dto";
+import { JwtPayload } from "@polyforge/shared-types";
 
 @ApiTags("profile")
 @ApiBearerAuth("jwt")
@@ -21,30 +22,42 @@ export class ProfileController {
   constructor(private readonly profile: ProfileService) {}
 
   @Patch("me")
-  updateMyProfile(@CurrentUser() user: any, @Body() dto: UpdateProfileDto) {
+  updateMyProfile(
+    @CurrentUser() user: JwtPayload,
+    @Body() dto: UpdateProfileDto,
+  ) {
     return this.profile.updateProfile(user.sub, dto);
   }
 
   @Post("password")
-  changePassword(@CurrentUser() user: any, @Body() dto: ChangePasswordDto) {
+  changePassword(
+    @CurrentUser() user: JwtPayload,
+    @Body() dto: ChangePasswordDto,
+  ) {
     return this.profile.changePassword(user.sub, dto);
   }
 
   @Patch("notifications")
   updateNotifications(
-    @CurrentUser() user: any,
+    @CurrentUser() user: JwtPayload,
     @Body() dto: Record<string, boolean>,
   ) {
     return this.profile.updateNotifications(user.sub, dto);
   }
 
   @Get(":username")
-  getProfile(@Param("username") username: string, @CurrentUser() user: any) {
+  getProfile(
+    @Param("username") username: string,
+    @CurrentUser() user: JwtPayload,
+  ) {
     return this.profile.getProfile(username, user?.sub);
   }
 
   @Post(":username/follow")
-  toggleFollow(@Param("username") username: string, @CurrentUser() user: any) {
+  toggleFollow(
+    @Param("username") username: string,
+    @CurrentUser() user: JwtPayload,
+  ) {
     return this.profile.toggleFollow(username, user.sub);
   }
 }

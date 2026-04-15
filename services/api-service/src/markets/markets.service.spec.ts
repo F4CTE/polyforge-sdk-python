@@ -47,7 +47,7 @@ function sqlText(call: unknown[]): string {
   const arg = call[0] as { strings?: readonly string[] };
   if (arg?.strings) return arg.strings.join("?");
   // Fallback for plain string calls (shouldn't happen after migration)
-  return String(arg);
+  return typeof arg === "string" ? arg : JSON.stringify(arg);
 }
 
 // ─── Suite ───────────────────────────────────────────────────────────────────

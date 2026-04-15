@@ -4,7 +4,6 @@ import {
   IsIn,
   IsArray,
   IsInt,
-  IsBoolean,
   Min,
   Max,
   MaxLength,

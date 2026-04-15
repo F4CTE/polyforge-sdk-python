@@ -2,6 +2,7 @@ import { Injectable } from "@nestjs/common";
 import { PrismaService } from "@polyforge/shared-db";
 import { RedisService } from "@polyforge/shared-redis";
 import { paginate, PaginatedResponse } from "../common/dto/pagination.dto";
+import { ResolutionStatus } from "@prisma/client";
 
 export interface DiscoverQueryDto {
   sort?: string;
@@ -32,7 +33,7 @@ export class DiscoverService {
     const limit = Math.min(query.limit ?? 20, 50);
     const skip = (page - 1) * limit;
 
-    const where: any = {
+    const where: Record<string, unknown> = {
       visibility: { in: ["PUBLIC", "UNLISTED"] },
       status: { not: "ARCHIVED" },
       ...(query.search
@@ -117,6 +118,7 @@ export class DiscoverService {
     // Check Redis cache first (60s TTL)
     const cacheKey = `cache:leaderboard:${period}:${page}:${limit}`;
     const cached = await this.redis.get(cacheKey);
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     if (cached) return JSON.parse(cached);
 
     // Sum realized P&L from pnl_snapshots table grouped by user
@@ -143,13 +145,19 @@ export class DiscoverService {
 
     const rows = snapshots.map((s) => ({
       userId: s.userId,
-      pnl: s._sum.realizedPnl?.toString() ?? "0",
+      pnl: s._sum.realizedPnl != null ? String(s._sum.realizedPnl) : "0",
       tradeCount: 0,
     }));
 
     // Enrich with trade counts and user profiles in parallel
     const userIds = rows.map((r) => r.userId);
-    let userMap: Record<string, any> = {};
+    type UserInfo = {
+      id: string;
+      username: string | null;
+      displayName: string | null;
+      avatarUrl: string | null;
+    };
+    let userMap: Record<string, UserInfo> = {};
     const winRateMap: Record<string, string> = {};
     if (userIds.length > 0) {
       const [tradeCounts, users, resolvedPositions] = await Promise.all([
@@ -170,7 +178,7 @@ export class DiscoverService {
         this.prisma.position.findMany({
           where: {
             userId: { in: userIds },
-            resolutionStatus: "RESOLVED" as any,
+            resolutionStatus: "RESOLVED" as ResolutionStatus,
           },
           select: { userId: true, realizedPnl: true },
         }),

@@ -6,7 +6,16 @@ import {
 } from "@nestjs/common";
 import { Interval } from "@nestjs/schedule";
 import { randomUUID } from "crypto";
-import { Prisma } from "@prisma/client";
+import {
+  Prisma,
+  type SmartOrder,
+  SmartOrderType,
+  SmartOrderStatus,
+  OrderSide,
+  OrderOutcome,
+  OrderType,
+  OrderStatus,
+} from "@prisma/client";
 import { PrismaService } from "@polyforge/shared-db";
 import { RedisService } from "@polyforge/shared-redis";
 import {
@@ -63,12 +72,12 @@ export class SmartOrderService {
     const smart = await this.prisma.smartOrder.create({
       data: {
         userId,
-        type: dto.type as any,
-        status: "PENDING" as any,
+        type: dto.type as SmartOrderType,
+        status: SmartOrderStatus.PENDING,
         marketId: token.marketId,
         tokenId: dto.tokenId,
-        outcome: dto.outcome as any,
-        side: dto.side as any,
+        outcome: dto.outcome as OrderOutcome,
+        side: dto.side as OrderSide,
         totalSize: dto.totalSize,
         config: config as Prisma.InputJsonValue,
         slicesTotal,
@@ -114,7 +123,7 @@ export class SmartOrderService {
     const pendingChildren = await this.prisma.order.findMany({
       where: {
         smartOrderId,
-        status: { in: ["PENDING" as any, "SUBMITTED" as any] },
+        status: { in: [OrderStatus.PENDING, OrderStatus.SUBMITTED] },
       },
     });
     for (const child of pendingChildren) {
@@ -127,7 +136,7 @@ export class SmartOrderService {
 
     await this.prisma.smartOrder.update({
       where: { id: smartOrderId },
-      data: { status: "CANCELLED" as any, completedAt: new Date() },
+      data: { status: SmartOrderStatus.CANCELLED, completedAt: new Date() },
     });
     return { cancelled: true };
   }
@@ -161,8 +170,8 @@ export class SmartOrderService {
     const now = new Date();
     const due = await this.prisma.smartOrder.findMany({
       where: {
-        status: { in: ["PENDING" as any, "ACTIVE" as any] },
-        type: { in: ["TWAP" as any, "DCA" as any] },
+        status: { in: [SmartOrderStatus.PENDING, SmartOrderStatus.ACTIVE] },
+        type: { in: [SmartOrderType.TWAP, SmartOrderType.DCA] },
         nextExecuteAt: { lte: now },
       },
       take: 50,
@@ -181,19 +190,22 @@ export class SmartOrderService {
 
   // ── Internal helpers ─────────────────────────────────────────────────────
 
-  private async executeNextSlice(smart: {
-    id: string;
-    userId: string;
-    marketId: string;
-    tokenId: string;
-    outcome: any;
-    side: any;
-    totalSize: any;
-    config: any;
-    slicesFilled: number;
-    slicesTotal: number;
-  }) {
-    const config = smart.config as Record<string, unknown>;
+  private async executeNextSlice(
+    smart: Pick<
+      SmartOrder,
+      | "id"
+      | "userId"
+      | "marketId"
+      | "tokenId"
+      | "outcome"
+      | "side"
+      | "totalSize"
+      | "config"
+      | "slicesFilled"
+      | "slicesTotal"
+    >,
+  ) {
+    const config = smart.config as Record<string, string | number | null>;
     const intervalMs = parseInt(String(config.intervalMinutes ?? 1)) * 60_000;
     const sliceSize = parseFloat(String(smart.totalSize)) / smart.slicesTotal;
     const limitPrice = config.limitPrice
@@ -226,8 +238,8 @@ export class SmartOrderService {
         outcome: smart.outcome,
         size: sliceSize.toFixed(6),
         price: limitPrice > 0 ? limitPrice.toFixed(6) : "0",
-        orderType: (limitPrice > 0 ? "GTC" : "FOK") as any,
-        status: "PENDING" as any,
+        orderType: limitPrice > 0 ? OrderType.GTC : OrderType.FOK,
+        status: OrderStatus.PENDING,
       },
     });
 
@@ -237,7 +249,7 @@ export class SmartOrderService {
     await this.prisma.smartOrder.update({
       where: { id: smart.id },
       data: {
-        status: done ? ("COMPLETED" as any) : ("ACTIVE" as any),
+        status: done ? SmartOrderStatus.COMPLETED : SmartOrderStatus.ACTIVE,
         slicesFilled: nextFilled,
         nextExecuteAt: done ? null : new Date(Date.now() + intervalMs),
         completedAt: done ? new Date() : null,
@@ -288,19 +300,19 @@ export class SmartOrderService {
           smartOrderId,
           marketId,
           tokenId: dto.tokenId,
-          side: leg.side as any,
-          outcome: dto.outcome as any,
+          side: leg.side as OrderSide,
+          outcome: dto.outcome as OrderOutcome,
           size: String(dto.totalSize),
           price: leg.price.toFixed(6),
-          orderType: "GTC" as any,
-          status: "PENDING" as any,
+          orderType: OrderType.GTC,
+          status: OrderStatus.PENDING,
         },
       });
     }
 
     await this.prisma.smartOrder.update({
       where: { id: smartOrderId },
-      data: { status: "ACTIVE" as any, slicesFilled: 0 },
+      data: { status: SmartOrderStatus.ACTIVE, slicesFilled: 0 },
     });
   }
 
@@ -336,19 +348,19 @@ export class SmartOrderService {
           smartOrderId,
           marketId,
           tokenId: dto.tokenId,
-          side: dto.side as any,
-          outcome: dto.outcome as any,
+          side: dto.side as OrderSide,
+          outcome: dto.outcome as OrderOutcome,
           size: String(dto.totalSize),
           price: price.toFixed(6),
-          orderType: "GTC" as any,
-          status: "PENDING" as any,
+          orderType: OrderType.GTC,
+          status: OrderStatus.PENDING,
         },
       });
     }
 
     await this.prisma.smartOrder.update({
       where: { id: smartOrderId },
-      data: { status: "ACTIVE" as any },
+      data: { status: SmartOrderStatus.ACTIVE },
     });
   }
 

@@ -4,6 +4,7 @@ import { ConfigService } from "@nestjs/config";
 import { PrismaService } from "@polyforge/shared-db";
 import { RedisService } from "@polyforge/shared-redis";
 import { EventsGateway } from "../gateway/events.gateway";
+import { ResolutionStatus } from "@prisma/client";
 
 @Injectable()
 export class PositionReconcilerService {
@@ -20,7 +21,7 @@ export class PositionReconcilerService {
   async reconcile(): Promise<void> {
     // Only reconcile users who actually have unresolved positions
     const usersWithPositions = await this.prisma.position.findMany({
-      where: { resolutionStatus: "UNRESOLVED" as any },
+      where: { resolutionStatus: ResolutionStatus.UNRESOLVED },
       select: { userId: true },
       distinct: ["userId"],
     });
@@ -78,7 +79,7 @@ export class PositionReconcilerService {
     }>;
 
     const localPositions = await this.prisma.position.findMany({
-      where: { userId, resolutionStatus: "UNRESOLVED" as any },
+      where: { userId, resolutionStatus: ResolutionStatus.UNRESOLVED },
     });
 
     for (const polyPos of polyPositions) {
@@ -99,14 +100,14 @@ export class PositionReconcilerService {
             currentPrice: "0",
             unrealizedPnl: "0",
             realizedPnl: polyPos.realizedPnl ?? "0",
-            resolutionStatus: "UNRESOLVED" as any,
+            resolutionStatus: ResolutionStatus.UNRESOLVED,
           },
         });
       } else if (local && parseFloat(polyPos.size) === 0) {
         this.logger.warn(`Stale local position ${local.id}, marking resolved`);
         await this.prisma.position.update({
           where: { id: local.id },
-          data: { resolutionStatus: "RESOLVED" as any, size: 0 },
+          data: { resolutionStatus: ResolutionStatus.RESOLVED, size: 0 },
         });
         // Notify user via WebSocket
         this.gateway.pushNotification(userId, {

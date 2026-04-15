@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { CopyService } from "./copy.service";
 import { CopyEngineService } from "./copy-engine.service";
-import { Prisma } from "@prisma/client";
+import { Prisma, type CopyConfig } from "@prisma/client";
 
 // ─── Mock PrismaService ─────────────────────────────────────────────────────
 
@@ -336,7 +336,12 @@ describe("CopyEngineService", () => {
         price: "0.5",
       };
 
-      await engine.processCopyForConfig(config, event, 5000, 0.5);
+      await engine.processCopyForConfig(
+        config as unknown as CopyConfig,
+        event,
+        5000,
+        0.5,
+      );
 
       // Should NOT have created a trade
       expect(prisma.copyTrade.create).not.toHaveBeenCalled();
@@ -371,7 +376,12 @@ describe("CopyEngineService", () => {
         price: "0.5",
       };
 
-      await engine.processCopyForConfig(config, event, 5000, 0.5);
+      await engine.processCopyForConfig(
+        config as unknown as CopyConfig,
+        event,
+        5000,
+        0.5,
+      );
 
       // Should NOT have created a trade
       expect(prisma.copyTrade.create).not.toHaveBeenCalled();
@@ -415,7 +425,12 @@ describe("CopyEngineService", () => {
         price: "0.5",
       };
 
-      await engine.processCopyForConfig(config, event, 5000, 0.5);
+      await engine.processCopyForConfig(
+        config as unknown as CopyConfig,
+        event,
+        5000,
+        0.5,
+      );
 
       expect(prisma.copyTrade.create).toHaveBeenCalledWith({
         data: expect.objectContaining({
@@ -508,7 +523,7 @@ describe("CopyEngineService", () => {
       redis.xadd.mockResolvedValue("ok");
 
       await engine.processCopyForConfig(
-        config,
+        config as unknown as CopyConfig,
         {
           walletAddress: "0xwhale",
           marketId: "mkt-1",

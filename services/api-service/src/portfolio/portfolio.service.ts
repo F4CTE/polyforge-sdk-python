@@ -1,6 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import { PrismaService } from "@polyforge/shared-db";
 import { RedisService } from "@polyforge/shared-redis";
+import { ResolutionStatus } from "@prisma/client";
 
 @Injectable()
 export class PortfolioService {
@@ -12,7 +13,7 @@ export class PortfolioService {
   async getPortfolio(userId: string): Promise<any> {
     // Positions: no `closed` field — use resolutionStatus
     const positions = await this.prisma.position.findMany({
-      where: { userId, resolutionStatus: "UNRESOLVED" as any },
+      where: { userId, resolutionStatus: ResolutionStatus.UNRESOLVED },
     });
 
     let totalUnrealizedPnl = 0;
@@ -38,9 +39,10 @@ export class PortfolioService {
     const priceMap = new Map<string, number>();
     positions.forEach((pos, i) => {
       const raw = priceValues[i];
+      const priceData = raw ? (JSON.parse(raw) as { price?: string }) : null;
       priceMap.set(
         pos.tokenId,
-        raw ? parseFloat(JSON.parse(raw).price ?? "0") : 0,
+        priceData ? parseFloat(priceData.price ?? "0") : 0,
       );
     });
 
@@ -86,10 +88,10 @@ export class PortfolioService {
       [
         `"${p.marketId}"`,
         p.outcome ?? "",
-        p.size?.toString() ?? "",
-        p.avgPrice?.toString() ?? "",
-        p.unrealizedPnl?.toString() ?? "",
-        p.realizedPnl?.toString() ?? "",
+        p.size != null ? String(p.size) : "",
+        p.avgPrice != null ? String(p.avgPrice) : "",
+        p.unrealizedPnl != null ? String(p.unrealizedPnl) : "",
+        p.realizedPnl != null ? String(p.realizedPnl) : "",
         p.resolutionStatus ?? "",
         p.updatedAt.toISOString(),
       ].join(","),
@@ -114,8 +116,9 @@ export class PortfolioService {
               ? new Date(0)
               : new Date(Date.now() - 30 * 86400_000);
 
+      type PnlSnapshot = { time: Date; pnl: string | null };
       // Use DATE_TRUNC as fallback when TimescaleDB time_bucket is unavailable
-      const snapshots: any[] = strategyId
+      const snapshots: PnlSnapshot[] = strategyId
         ? await this.prisma.$queryRaw`
                   SELECT
                       DATE_TRUNC('day', time) AS time,
@@ -140,14 +143,14 @@ export class PortfolioService {
       if (!snapshots || snapshots.length === 0) return emptyResult;
 
       const totalPnl = snapshots.reduce(
-        (acc, s) => acc + parseFloat(String(s.pnl ?? 0)),
+        (acc, s) => acc + parseFloat(s.pnl ?? "0"),
         0,
       );
 
       return {
         snapshots: snapshots.map((s) => ({
           time: s.time,
-          pnl: String(s.pnl ?? "0"),
+          pnl: s.pnl ?? "0",
         })),
         totalPnl: totalPnl.toFixed(2),
         winRate: "0",

@@ -68,7 +68,13 @@ export class TelegramService implements OnModuleInit, OnModuleDestroy {
           continue;
         }
 
-        const data: any = await res.json();
+        type TelegramUpdate = {
+          update_id: number;
+          message?: { text?: string; chat: { id: number | string } };
+        };
+        type TelegramResponse = { ok: boolean; result?: TelegramUpdate[] };
+
+        const data = (await res.json()) as TelegramResponse;
         if (!data.ok) continue;
 
         for (const update of data.result ?? []) {
@@ -84,14 +90,16 @@ export class TelegramService implements OnModuleInit, OnModuleDestroy {
           try {
             const reply = await this.dispatch(chatId, text);
             await this.send(chatId, reply);
-          } catch (err: any) {
-            this.logger.error(`Telegram command error: ${err?.message}`);
+          } catch (err: unknown) {
+            const errMsg = err instanceof Error ? err.message : String(err);
+            this.logger.error(`Telegram command error: ${errMsg}`);
             await this.send(chatId, "⚠️ An error occurred. Please try again.");
           }
         }
-      } catch (err: any) {
+      } catch (err: unknown) {
         if (this.running) {
-          this.logger.error(`Poll error: ${err?.message}`);
+          const errMsg = err instanceof Error ? err.message : String(err);
+          this.logger.error(`Poll error: ${errMsg}`);
           await this.sleep(3000);
         }
       }

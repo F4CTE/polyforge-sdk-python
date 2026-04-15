@@ -45,46 +45,49 @@ export class EventsService implements OnModuleInit, OnModuleDestroy {
 
   private async ensureGroup() {
     try {
-      await (this.redis as any).client.xgroup(
-        "CREATE",
-        STREAM,
-        GROUP,
-        "$",
-        "MKSTREAM",
-      );
-    } catch (err: any) {
-      if (!err.message?.includes("BUSYGROUP")) throw err;
+      await this.redis
+        .getClient()
+        .xgroup("CREATE", STREAM, GROUP, "$", "MKSTREAM");
+    } catch (err: unknown) {
+      if (!(err instanceof Error) || !err.message.includes("BUSYGROUP"))
+        throw err;
     }
   }
 
   private async consumeLoop() {
     while (this.running) {
       try {
-        const results = await (this.redis as any).client.xreadgroup(
-          "GROUP",
-          GROUP,
-          CONSUMER,
-          "COUNT",
-          "100",
-          "BLOCK",
-          "2000",
-          "STREAMS",
-          STREAM,
-          ">",
-        );
+        const results = await this.redis
+          .getClient()
+          .xreadgroup(
+            "GROUP",
+            GROUP,
+            CONSUMER,
+            "COUNT",
+            "100",
+            "BLOCK",
+            "2000",
+            "STREAMS",
+            STREAM,
+            ">",
+          );
 
         if (!results) continue;
 
-        for (const [, messages] of results) {
+        for (const [, messages] of results as [
+          string,
+          [string, string[]][],
+        ][]) {
           for (const [id, fields] of messages) {
             const event = this.parseFields(fields);
             this.dispatch(event);
-            await (this.redis as any).client.xack(STREAM, GROUP, id);
+            await this.redis.getClient().xack(STREAM, GROUP, id);
           }
         }
-      } catch (err: any) {
+      } catch (err: unknown) {
         if (this.running) {
-          this.logger.error("stream:events consume error", err?.message);
+          const errMsg = err instanceof Error ? err.message : String(err);
+          this.logger.error("stream:events consume error", errMsg);
           await new Promise((r) => setTimeout(r, 1000));
         }
       }

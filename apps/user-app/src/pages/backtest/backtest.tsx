@@ -103,7 +103,7 @@ export function Component() {
   const loadHistory = useCallback(async (p: number) => {
     setLoading(true);
     try {
-      const res = await fetch(`/api/v1/backtests?page=${p}&limit=20`, { credentials: 'include' });
+      const res = await fetch(`/api/v1/backtests?page=${p}&limit=20`, { credentials: 'include', cache: 'no-store' });
       if (res.ok) {
         const data: BacktestsResponse = await res.json();
         setRuns(data.data);

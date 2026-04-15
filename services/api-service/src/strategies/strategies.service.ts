@@ -659,7 +659,7 @@ export class StrategiesService {
         tickMs: strategy.tickMs,
         visibility: strategy.visibility,
         tags: strategy.tags ?? [],
-        variables: (strategy as any).variables ?? [],
+        variables: (strategy as Record<string, unknown>).variables ?? [],
         blocks: {
           safety: strategy.safety ?? [],
           triggers: strategy.triggers ?? [],
@@ -885,13 +885,13 @@ export class StrategiesService {
       name?: string;
       description?: string;
       execMode?: string;
-      safety?: any[];
-      triggers?: any[];
-      conditions?: any[];
-      actions?: any[];
+      safety?: Array<{ type?: string }>;
+      triggers?: Array<{ type?: string }>;
+      conditions?: Array<{ type?: string }>;
+      actions?: Array<{ type?: string }>;
     };
     try {
-      parsed = JSON.parse(jsonStr);
+      parsed = JSON.parse(jsonStr) as typeof parsed;
     } catch {
       throw new UnprocessableEntityException({
         code: "LLM_PARSE_ERROR",
@@ -968,15 +968,15 @@ export class StrategiesService {
       "ABS_ROUND",
     ]);
 
-    const allBlocks = [
+    const allBlocks: Array<{ type?: string }> = [
       ...(parsed.safety ?? []),
       ...(parsed.triggers ?? []),
       ...(parsed.conditions ?? []),
       ...(parsed.actions ?? []),
     ];
     const invalidTypes = allBlocks
-      .filter((b: any) => b?.type && !KNOWN.has(b.type))
-      .map((b: any) => b.type);
+      .filter((b) => b?.type && !KNOWN.has(b.type))
+      .map((b) => b.type);
 
     if (invalidTypes.length > 0) {
       throw new UnprocessableEntityException({
@@ -1028,10 +1028,10 @@ export class StrategiesService {
     await this.prisma.strategy.update({
       where: { id: strategyId },
       data: {
-        triggers: version.triggers as any,
-        conditions: version.conditions as any,
-        actions: version.actions as any,
-        safety: version.safety as any,
+        triggers: version.triggers as unknown as Prisma.InputJsonValue,
+        conditions: version.conditions as unknown as Prisma.InputJsonValue,
+        actions: version.actions as unknown as Prisma.InputJsonValue,
+        safety: version.safety as unknown as Prisma.InputJsonValue,
       },
     });
     return { message: "Rolled back successfully", version: version.version };

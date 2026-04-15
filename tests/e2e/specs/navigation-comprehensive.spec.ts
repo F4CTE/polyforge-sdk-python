@@ -247,16 +247,16 @@ test.describe('Navigation — Full Workflow Coverage', () => {
         const themeToggle = page.locator('[data-tour="theme-toggle"]');
 
         if (await themeToggle.isVisible({ timeout: 2000 }).catch(() => false)) {
-            // Get initial theme
+            // Theme is tracked via data-theme="dark"|"light" attribute (not a CSS class)
             const htmlEl = page.locator('html').first();
-            const initialClass = await htmlEl.getAttribute('class');
-            const isDark = initialClass?.includes('dark');
+            const initialTheme = await htmlEl.getAttribute('data-theme');
+            const isDark = initialTheme === 'dark';
 
             await themeToggle.click();
 
             // Check theme changed
-            const newClass = await htmlEl.getAttribute('class');
-            const isNowDark = newClass?.includes('dark');
+            const newTheme = await htmlEl.getAttribute('data-theme');
+            const isNowDark = newTheme === 'dark';
             expect(isNowDark).not.toBe(isDark);
         }
     });
@@ -266,14 +266,14 @@ test.describe('Navigation — Full Workflow Coverage', () => {
         const themeToggle = page.locator('[data-tour="theme-toggle"]');
 
         if (await themeToggle.isVisible({ timeout: 2000 }).catch(() => false)) {
-            // Ensure dark mode is ON
-            const initialClass = await htmlEl.getAttribute('class');
-            if (!initialClass?.includes('dark')) {
+            // Ensure dark mode is ON — theme uses data-theme attribute
+            const initialTheme = await htmlEl.getAttribute('data-theme');
+            if (initialTheme !== 'dark') {
                 await themeToggle.click();
             }
 
-            const darkModeClass = await htmlEl.getAttribute('class');
-            expect(darkModeClass?.includes('dark')).toBe(true);
+            const darkModeTheme = await htmlEl.getAttribute('data-theme');
+            expect(darkModeTheme).toBe('dark');
 
             // Navigate to another page
             const sidebar = page.locator('[aria-label="Main navigation"], nav').first();
@@ -282,8 +282,8 @@ test.describe('Navigation — Full Workflow Coverage', () => {
             await expect(page).toHaveURL(/\/strategies/);
 
             // Check dark mode still applied
-            const newClass = await htmlEl.getAttribute('class');
-            expect(newClass?.includes('dark')).toBe(true);
+            const newTheme = await htmlEl.getAttribute('data-theme');
+            expect(newTheme).toBe('dark');
         }
     });
 

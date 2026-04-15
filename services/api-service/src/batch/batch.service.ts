@@ -81,7 +81,7 @@ export class BatchService {
 
     try {
       const res = await fetch(url, init);
-      let body: any;
+      let body: unknown = null;
       try {
         body = await res.json();
       } catch {
