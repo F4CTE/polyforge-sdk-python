@@ -7,6 +7,10 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased] — 2026-04-15
 
+### Security
+- **Fail-fast secrets in docker-compose** — replaced `${VAR:-weakdefault}` with `${VAR:?error}` for all credential env vars (POSTGRES_PASSWORD, POSTGRES_ADMIN_PASSWORD, REDIS_PASSWORD, POLY_BUILDER_*) so Docker Compose fails immediately if .env is missing instead of silently using weak defaults (#614)
+- **Added `.env.dev` template** — convenience file with pre-filled dev passwords that developers can `cp .env.dev .env` for quick local setup
+
 ### Changed (Design System)
 - **Linear-inspired token system** — rewrote `globals.css` with new CSS custom properties (`--bg-app`, `--bg-surface`, `--text-primary`, `--accent-default`, `--gain`, `--loss`) per design charter §12; old `--color-pf-*` tokens aliased for backwards compat (#604)
 - **Geist font** — installed Geist variable font (sans + mono) replacing Inter/JetBrains Mono per charter §2; added `@font-face` declarations with woff2 variable fonts (#605)

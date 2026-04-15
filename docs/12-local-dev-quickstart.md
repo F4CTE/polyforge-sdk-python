@@ -36,10 +36,10 @@ pnpm --filter "./packages/**" build
 ### 2. Configure environment
 
 ```bash
-cp .env.example .env
+cp .env.dev .env
 ```
 
-Defaults work out of the box. No changes needed for local dev.
+Dev-safe defaults work out of the box. See `.env.example` for the full variable reference.
 
 ### 3. Start the stack
 

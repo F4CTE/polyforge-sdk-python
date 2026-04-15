@@ -49,10 +49,14 @@ The second command compiles all shared packages to `dist/`. Run it once after `p
 ## 3. Configure Environment
 
 ```bash
+# Quick start (dev-safe passwords pre-filled):
+cp .env.dev .env
+
+# Or start from the full template (requires filling in credentials):
 cp .env.example .env
 ```
 
-The defaults work out of the box for local dev — no changes needed. All values point to local Docker services.
+The `.env.dev` file has dev-safe defaults that work out of the box for local development. The `.env.example` file documents every variable and is the reference for production setup.
 
 ---
 
