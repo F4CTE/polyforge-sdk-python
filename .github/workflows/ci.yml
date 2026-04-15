@@ -211,18 +211,23 @@ jobs:
             echo "=== 1. Pull latest code ==="
             git fetch origin
 
+            # Use detached HEAD in all cases to avoid "branch already used by
+            # worktree" errors when another worktree (e.g. PolyForge-Dev) has
+            # the same branch checked out. Detaching bypasses the branch-lock
+            # constraint — we only need the files, not the branch reference.
+            #
             # For pull_request events, COMMIT_SHA is a synthetic merge commit
             # that only exists in GitHub's refs/pull/N/merge — not in any real
-            # branch. Use the PR branch name (HEAD_REF) instead.
+            # branch. Use the PR branch tip via origin/HEAD_REF instead.
             # For push events, HEAD_REF is empty and COMMIT_SHA is a real
             # commit on the pushed branch.
             if [ -n "$HEAD_REF" ]; then
-              echo "PR detected — checking out branch: $HEAD_REF"
-              git checkout "$HEAD_REF" --force
-              git reset --hard "origin/$HEAD_REF"
+              echo "PR detected — detaching to tip of origin/$HEAD_REF"
+              git fetch origin "$HEAD_REF"
+              git checkout --detach "origin/$HEAD_REF"
             else
-              echo "Push detected — checking out SHA: $COMMIT_SHA"
-              git checkout "$COMMIT_SHA" --force
+              echo "Push detected — detaching to SHA: $COMMIT_SHA"
+              git checkout --detach "$COMMIT_SHA"
             fi
 
             # Source env vars for Prisma + Docker — credentials must come from .env,
