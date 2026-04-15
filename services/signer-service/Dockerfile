@@ -46,6 +46,8 @@ COPY packages/shared-redis/    ./packages/shared-redis/
 COPY packages/shared-types/    ./packages/shared-types/
 COPY packages/logger/          ./packages/logger/
 COPY packages/shared-auth/     ./packages/shared-auth/
+COPY packages/polyforge-crypto-native/index.js   ./packages/polyforge-crypto-native/
+COPY packages/polyforge-crypto-native/index.d.ts ./packages/polyforge-crypto-native/
 COPY services/signer-service/  ./services/signer-service/
 COPY prisma/                   ./prisma/
 

@@ -20,3 +20,51 @@ export declare function sha256Hash(input: string): string
 export declare function hmacSha256Sign(message: string, secret: string): string
 export declare function hmacSha256Verify(message: string, secret: string, expectedHex: string): boolean
 export declare function randomBytesHex(length: number): string
+/**
+ * Compute a Keccak-256 hash of the input bytes.
+ * This is the hash function used by Ethereum (different from NIST SHA3-256).
+ */
+export declare function keccak256(input: Buffer): Buffer
+/**
+ * Derive an Ethereum address (20 bytes) from a secp256k1 private key (32 bytes).
+ *
+ * Algorithm: privateKey → uncompressed public key (64 bytes, strip 04 prefix)
+ * → keccak256 → take last 20 bytes.
+ *
+ * SECURITY: The private key bytes are held in a `Zeroizing` wrapper and are
+ * wiped from Rust memory as soon as this function returns.
+ */
+export declare function privateKeyToEthAddress(privateKey: Buffer): Buffer
+/**
+ * Derive an Ethereum address from a private key supplied as the ASCII bytes of
+ * a "0x"-prefixed hex string (e.g. the bytes of `"0xabcd..."`).
+ *
+ * This variant is used when the key is stored as a hex-encoded Buffer so the
+ * raw 32-byte key material never needs to be decoded in JavaScript — all hex
+ * decoding happens in Rust memory with zeroization on completion.
+ */
+export declare function privateKeyHexBytesToEthAddress(privateKeyHexBytes: Buffer): Buffer
+/**
+ * Sign a 32-byte digest where the private key is provided as the ASCII bytes
+ * of a "0x"-prefixed hex string (e.g. the bytes of `"0xabcd..."`).
+ *
+ * This variant is used when the key is stored as a hex-encoded Buffer so the
+ * raw 32-byte key material never needs to be decoded in JavaScript — all hex
+ * decoding and ECDSA signing happen in Rust memory with full zeroization.
+ *
+ * Returns 65 bytes: [r (32) | s (32) | v (1)] (Ethereum recovery format).
+ */
+export declare function signSecp256K1HexKey(privateKeyHexBytes: Buffer, digest: Buffer): Buffer
+/**
+ * Sign a 32-byte digest using secp256k1 ECDSA (Ethereum-compatible).
+ *
+ * - `private_key`: exactly 32 bytes; zeroized in Rust memory after use.
+ * - `digest`: exactly 32 bytes (the pre-hashed message, e.g. an EIP-712 hash).
+ *
+ * Returns 65 bytes: [r (32) | s (32) | v (1)], where v is 27 or 28
+ * (Ethereum-style recovery ID with the +27 offset applied).
+ *
+ * SECURITY: The private key bytes are held in a `Zeroizing` wrapper and are
+ * wiped from Rust memory as soon as this function returns.
+ */
+export declare function signSecp256K1(privateKey: Buffer, digest: Buffer): Buffer

@@ -251,8 +251,12 @@ export class SigningService implements OnModuleInit {
       passphrase: builderPassphrase,
     } = this.getBuilderCredentials();
 
-    // Convert Buffers to strings only at the external API boundary.
-    // The Buffer originals are zeroed by the caller's finally block.
+    // SECURITY: ClobClient requires string credentials. Buffer.toString() creates
+    // immutable JS strings that persist in V8 heap until GC — we cannot wipe them.
+    // Mitigation: convert once, pass immediately, null out client after use.
+    // TODO: Move EIP-712 signing into polyforge-crypto-native (Rust NAPI) so
+    // private keys never materialize as JS strings. See #548.
+    const walletAddress = creds.safeAddress ?? creds.apiKey.toString("utf8");
     const client = new ClobClient(
       this.clobApiUrl,
       this.chainId,
@@ -273,9 +277,7 @@ export class SigningService implements OnModuleInit {
     );
 
     // Fetch nonce from Polymarket relayer (cached 30s in Redis)
-    const nonce = await this.fetchNonce(
-      creds.safeAddress ?? creds.apiKey.toString("utf8"),
-    );
+    const nonce = await this.fetchNonce(walletAddress);
 
     // Fetch fee rate from Polymarket (cached 5min in Redis)
     const feeRateBps = await this.fetchFeeRate(params.tokenId);
@@ -460,11 +462,12 @@ export class SigningService implements OnModuleInit {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { ClobClient } = require("@polymarket/clob-client");
 
-    // Convert Buffers to strings at the external API boundary.
-    // NOTE: JS strings are immutable — the string copies passed to ClobClient
-    // will persist in V8 heap until GC. This is an inherent JS limitation.
-    // Credentials are returned so callers zero them in a finally block,
-    // ensuring Buffers are wiped even if the API call throws.
+    // SECURITY: ClobClient requires string credentials. Buffer.toString() creates
+    // immutable JS strings that persist in V8 heap until GC — we cannot wipe them.
+    // Callers MUST: (1) use the client for a single operation then discard it,
+    // (2) zero creds in a finally block via zeroCredentials().
+    // TODO: Move signing into polyforge-crypto-native (Rust NAPI) so private keys
+    // never materialize as JS strings. See #548.
     const client = new ClobClient(
       this.clobApiUrl,
       this.chainId,

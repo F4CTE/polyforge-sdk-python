@@ -310,7 +310,7 @@ if (!nativeBinding) {
   throw new Error(`Failed to load native binding`)
 }
 
-const { generateDek, encryptAes256Gcm, decryptAes256Gcm, wrapDek, unwrapDek, sha256Hash, hmacSha256Sign, hmacSha256Verify, randomBytesHex } = nativeBinding
+const { generateDek, encryptAes256Gcm, decryptAes256Gcm, wrapDek, unwrapDek, sha256Hash, hmacSha256Sign, hmacSha256Verify, randomBytesHex, keccak256, privateKeyToEthAddress, privateKeyHexBytesToEthAddress, signSecp256K1HexKey, signSecp256K1 } = nativeBinding
 
 module.exports.generateDek = generateDek
 module.exports.encryptAes256Gcm = encryptAes256Gcm
@@ -321,3 +321,8 @@ module.exports.sha256Hash = sha256Hash
 module.exports.hmacSha256Sign = hmacSha256Sign
 module.exports.hmacSha256Verify = hmacSha256Verify
 module.exports.randomBytesHex = randomBytesHex
+module.exports.keccak256 = keccak256
+module.exports.privateKeyToEthAddress = privateKeyToEthAddress
+module.exports.privateKeyHexBytesToEthAddress = privateKeyHexBytesToEthAddress
+module.exports.signSecp256K1HexKey = signSecp256K1HexKey
+module.exports.signSecp256K1 = signSecp256K1
