@@ -5,7 +5,7 @@
 ### Security
 - Pin `pip>=26.0` in CI to fix CVE-2025-8869 and CVE-2026-1703 (path traversal / tar extraction)
 - Confirm `setuptools>=78.1.1` and `wheel>=0.46.2` pinned (addresses regression of #70)
-- Add `pip-audit --strict` CI step to prevent future dependency CVE regressions
+- Add `pip-audit --skip-editable` CI step to prevent future dependency CVE regressions
 
 ## [1.9.0] — 2026-04-14
 
