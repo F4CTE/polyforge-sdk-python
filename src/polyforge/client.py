@@ -415,6 +415,11 @@ class PolyforgeClient:
             return None
         return resp.json()
 
+    def _get_text(self, path: str, *, params: dict[str, Any] | None = None) -> str:
+        resp = self._client.get(path, params=_strip_none(params or {}))
+        _raise_for_status(resp)
+        return resp.text
+
     # -- Markets --
 
     def list_markets(
@@ -797,6 +802,16 @@ class PolyforgeClient:
 
     def get_score(self) -> TraderScore:
         return _parse(TraderScore, self._get("/api/v1/scores/me"))
+
+    # -- CSV Exports --
+
+    def export_orders_csv(self) -> str:
+        """Download order history as CSV text."""
+        return self._get_text("/api/v1/orders/export/csv")
+
+    def export_portfolio_csv(self) -> str:
+        """Download portfolio as CSV text."""
+        return self._get_text("/api/v1/portfolio/export/csv")
 
     # -- Direct Trading --
 
@@ -1475,6 +1490,11 @@ class AsyncPolyforgeClient:
             return None
         return resp.json()
 
+    async def _get_text(self, path: str, *, params: dict[str, Any] | None = None) -> str:
+        resp = await self._client.get(path, params=_strip_none(params or {}))
+        _raise_for_status(resp)
+        return resp.text
+
     # -- Markets --
 
     async def list_markets(
@@ -1832,6 +1852,16 @@ class AsyncPolyforgeClient:
 
     async def get_score(self) -> TraderScore:
         return _parse(TraderScore, await self._get("/api/v1/scores/me"))
+
+    # -- CSV Exports --
+
+    async def export_orders_csv(self) -> str:
+        """Download order history as CSV text."""
+        return await self._get_text("/api/v1/orders/export/csv")
+
+    async def export_portfolio_csv(self) -> str:
+        """Download portfolio as CSV text."""
+        return await self._get_text("/api/v1/portfolio/export/csv")
 
     # -- Direct Trading --
 

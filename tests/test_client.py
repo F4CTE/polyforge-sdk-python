@@ -2233,3 +2233,43 @@ class TestBacktestMethods:
         source = inspect.getsource(PolyforgeClient.get_backtest_orders)
         assert "_encode_path" in source
         assert "/orders" in source
+
+    # -- CSV Export --
+
+    def test_sync_export_orders_csv_exists(self):
+        assert callable(getattr(PolyforgeClient, "export_orders_csv", None))
+
+    def test_sync_export_portfolio_csv_exists(self):
+        assert callable(getattr(PolyforgeClient, "export_portfolio_csv", None))
+
+    def test_async_export_orders_csv_exists(self):
+        assert callable(getattr(AsyncPolyforgeClient, "export_orders_csv", None))
+
+    def test_async_export_portfolio_csv_exists(self):
+        assert callable(getattr(AsyncPolyforgeClient, "export_portfolio_csv", None))
+
+    def test_sync_export_orders_csv_uses_correct_path(self):
+        import inspect
+        source = inspect.getsource(PolyforgeClient.export_orders_csv)
+        assert "/api/v1/orders/export/csv" in source
+
+    def test_sync_export_portfolio_csv_uses_correct_path(self):
+        import inspect
+        source = inspect.getsource(PolyforgeClient.export_portfolio_csv)
+        assert "/api/v1/portfolio/export/csv" in source
+
+    def test_sync_export_orders_csv_returns_str(self):
+        import inspect
+        sig = inspect.signature(PolyforgeClient.export_orders_csv)
+        assert sig.return_annotation in (str, "str")
+
+    def test_sync_export_portfolio_csv_returns_str(self):
+        import inspect
+        sig = inspect.signature(PolyforgeClient.export_portfolio_csv)
+        assert sig.return_annotation in (str, "str")
+
+    def test_sync_get_text_helper_exists(self):
+        assert callable(getattr(PolyforgeClient, "_get_text", None))
+
+    def test_async_get_text_helper_exists(self):
+        assert callable(getattr(AsyncPolyforgeClient, "_get_text", None))
