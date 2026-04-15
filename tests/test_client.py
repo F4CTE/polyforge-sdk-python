@@ -1616,15 +1616,13 @@ class TestGetPriceHistory:
     """Tests for get_price_history() method (#51)."""
 
     def test_get_price_history_accepts_all_params(self):
-        """get_price_history() signature must accept token_id, resolution, from_date, to_date, limit."""
+        """get_price_history() signature must accept token_id, period, limit."""
         import inspect
 
         sig = inspect.signature(PolyforgeClient.get_price_history)
         param_names = set(sig.parameters.keys())
         assert "token_id" in param_names, "get_price_history() missing 'token_id' parameter"
-        assert "resolution" in param_names, "get_price_history() missing 'resolution' parameter"
-        assert "from_date" in param_names, "get_price_history() missing 'from_date' parameter"
-        assert "to_date" in param_names, "get_price_history() missing 'to_date' parameter"
+        assert "period" in param_names, "get_price_history() missing 'period' parameter"
         assert "limit" in param_names, "get_price_history() missing 'limit' parameter"
 
     def test_async_get_price_history_accepts_all_params(self):
@@ -1634,9 +1632,7 @@ class TestGetPriceHistory:
         sig = inspect.signature(AsyncPolyforgeClient.get_price_history)
         param_names = set(sig.parameters.keys())
         assert "token_id" in param_names
-        assert "resolution" in param_names
-        assert "from_date" in param_names
-        assert "to_date" in param_names
+        assert "period" in param_names
         assert "limit" in param_names
 
     def test_get_price_history_uses_correct_path(self):
@@ -1648,13 +1644,11 @@ class TestGetPriceHistory:
         assert "/api/v1/markets/" in source
 
     def test_get_price_history_passes_query_params(self):
-        """get_price_history() must pass resolution, from, to, limit as query params."""
+        """get_price_history() must pass period, limit as query params."""
         import inspect
 
         source = inspect.getsource(PolyforgeClient.get_price_history)
-        assert '"resolution"' in source or "'resolution'" in source
-        assert '"from"' in source or "'from'" in source
-        assert '"to"' in source or "'to'" in source
+        assert '"period"' in source or "'period'" in source
         assert '"limit"' in source or "'limit'" in source
 
     def test_get_price_history_uses_path_encoding(self):
