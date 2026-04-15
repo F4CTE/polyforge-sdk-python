@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.9.3] — 2026-04-15
+
+### Added
+- `export_orders_csv()` — download order history as CSV text via `GET /api/v1/orders/export/csv` (closes #117)
+- `export_portfolio_csv()` — download portfolio as CSV text via `GET /api/v1/portfolio/export/csv` (closes #117)
+- Both methods available on `PolyforgeClient` (sync) and `AsyncPolyforgeClient` (async)
+
 ## [1.9.2] — 2026-04-15
 
 ### Fixed
