@@ -1,6 +1,8 @@
 # Polyforge
 
-> **Build status:** [`STATUS.md`](./STATUS.md)
+[![CI](https://github.com/F4CTE/PolyForge/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/F4CTE/PolyForge/actions/workflows/ci.yml)
+
+> **Build status:** [`STATUS.md`](./STATUS.md) · **Ops:** [`docs/ops/07-self-hosted-runner.md`](./docs/ops/07-self-hosted-runner.md)
 
 Strategy automation platform for [Polymarket](https://polymarket.com) — users build automated trading strategies using a drag-and-drop block interface, backtest them against historical data, paper trade in simulation, and deploy live strategies that trade on their behalf. Includes an in-app support ticket system for user-to-admin communication with auto-reminders and real-time notifications.
 

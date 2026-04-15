@@ -1,146 +1,233 @@
-# Self-Hosted GitHub Actions Runner
+# Self-Hosted GitHub Actions Runners
 
-PolyForge CI runs on a local self-hosted runner to avoid GitHub Actions minute
-limits. Jobs 1-6 (lint, typecheck, test, build, E2E, audit) run locally; deploy
-stays on GitHub-hosted `ubuntu-latest`.
+PolyForge CI runs on 15 self-hosted runners hosted on `polyforge-lab` — the
+on-premise Linux server. All runners are registered as systemd services and start
+automatically on boot.
 
-## Prerequisites
+---
 
-- **Windows 11** with Docker Desktop running
-- **Node.js 24+** and **pnpm 9+** installed globally
-- **Git** configured with push access to `F4CTE/PolyForge`
-- **GitHub PAT** with `repo` scope (classic) or `administration:write` (fine-grained)
+## Runner Inventory
 
-## Initial Setup
+| Runner Group | Repo | Count | Systemd service pattern |
+|---|---|---|---|
+| PolyForge main | `F4CTE/PolyForge` | 3 | `actions.runner.F4CTE-PolyForge.polyforge-lab*.service` |
+| polyforge-mcp | `F4CTE/polyforge-mcp` | 3 | `actions.runner.F4CTE-polyforge-mcp.polyforge-lab*.service` |
+| polyforge-sdk-ts | `F4CTE/polyforge-sdk-ts` | 3 | `actions.runner.F4CTE-polyforge-sdk-ts.polyforge-lab*.service` |
+| polyforge-sdk-python | `F4CTE/polyforge-sdk-python` | 3 | `actions.runner.F4CTE-polyforge-sdk-python.polyforge-lab*.service` |
+| polyforge-sdk-rust | `F4CTE/polyforge-sdk-rust` | 3 | `actions.runner.F4CTE-polyforge-sdk-rust.polyforge-lab*.service` |
 
-```powershell
-# Generate a PAT at https://github.com/settings/tokens
-# Required scope: repo (classic) or administration:write (fine-grained on F4CTE/PolyForge)
+**Runner directories:** `/home/f4cte/actions-runner*` (15 directories total)
 
-cd C:\Users\User\Documents\polyForge
-.\scripts\setup-runner.ps1 -Token ghp_YOUR_TOKEN_HERE
+---
+
+## Host Machine
+
+| Property | Value |
+|---|---|
+| Hostname | `polyforge-lab` |
+| OS | Ubuntu Linux |
+| User | `f4cte` |
+| GPU | NVIDIA RTX 3080 (NVIDIA Container Toolkit installed) |
+| Docker | Full stack via `docker-compose.infra.yml` |
+| Runner binary | v2.333.1 (auto-updates via GitHub) |
+
+---
+
+## Runner Status
+
+```bash
+# Check all runner services at once
+systemctl list-units --type=service | grep "actions.runner"
+
+# Check a specific runner
+systemctl status "actions.runner.F4CTE-PolyForge.polyforge-lab.service"
+
+# Check if all 15 are active
+systemctl list-units --type=service | grep "actions.runner" | grep -c "active running"
 ```
 
-This will:
-1. Download the GitHub Actions runner v2.323.0
-2. Register it as `polyforge-local` with labels `self-hosted,windows,x64,polyforge`
-3. Install and start it as a Windows service
+---
 
 ## Runner Management
 
-```powershell
-# Check status
-.\scripts\runner-ctl.ps1 status
+```bash
+# Start a runner
+sudo systemctl start "actions.runner.F4CTE-PolyForge.polyforge-lab.service"
 
-# Start / stop / restart
-.\scripts\runner-ctl.ps1 start
-.\scripts\runner-ctl.ps1 stop
-.\scripts\runner-ctl.ps1 restart
+# Stop a runner
+sudo systemctl stop "actions.runner.F4CTE-PolyForge.polyforge-lab.service"
 
-# View latest logs
-.\scripts\runner-ctl.ps1 logs
+# Restart a runner (use after runner binary updates)
+sudo systemctl restart "actions.runner.F4CTE-PolyForge.polyforge-lab.service"
 
-# Clean up old work dirs + Docker cache (run weekly)
-.\scripts\runner-ctl.ps1 cleanup
+# View logs
+journalctl -u "actions.runner.F4CTE-PolyForge.polyforge-lab.service" -n 50 -f
+
+# Restart all PolyForge runners
+for i in "" "-2" "-3"; do
+  sudo systemctl restart "actions.runner.F4CTE-PolyForge.polyforge-lab${i}.service"
+done
 ```
 
-## How It Works
+---
 
-The CI workflow (`.github/workflows/ci.yml`) uses `runs-on: [self-hosted, polyforge]`
-for all non-deploy jobs. The runner picks up jobs from GitHub's queue and executes
-them using your local Node.js, pnpm, and Docker.
+## CI Pipeline Structure
 
-### What runs locally vs GitHub-hosted
+The PolyForge CI workflow (`.github/workflows/ci.yml`) uses `runs-on: [self-hosted, linux]`:
 
-| Job | Runner | Why |
-|-----|--------|-----|
-| Lint | self-hosted | No external deps |
-| Typecheck | self-hosted | No external deps |
-| Test | self-hosted | No external deps |
-| Build | self-hosted | No external deps |
-| E2E | self-hosted | Docker cache persists locally (huge speedup) |
-| Audit | self-hosted | No external deps |
-| Deploy | ubuntu-latest | Needs AWS secrets + SSH to EC2 |
+| Job | Runner | Notes |
+|---|---|---|
+| Lint | self-hosted | pnpm cache warm — ~5s install |
+| Typecheck | self-hosted | pnpm cache warm |
+| Test | self-hosted | pnpm cache warm; unit tests with mocked infra |
+| Build | self-hosted | pnpm cache + Docker build cache via local registry |
+| Deploy to Dev | self-hosted | SSH to `polyforge-lab` → Docker rebuild → health check |
+| E2E | self-hosted | Playwright against Docker services on `polyforge-lab` |
+| Deploy to Production | self-hosted | Requires `workflow_dispatch` on main + `production` environment approval |
 
-### Performance comparison
+### Concurrency
 
-| Metric | GitHub-hosted | Self-hosted |
-|--------|--------------|-------------|
-| pnpm install | ~45s (cold) | ~5s (warm cache) |
-| Docker build (E2E) | ~15min (cold layers) | ~3min (cached layers) |
-| Full CI pipeline | ~25-35min | ~8-12min |
-| Monthly cost | 2000-3000 min limit | Unlimited (your electricity) |
+- **Per-branch concurrency**: a push to the same branch cancels its previous run (all jobs)
+- **Deploy serialization**: `deploy-polyforge-lab` concurrency group serializes Deploy to Dev + E2E — only one branch deploys at a time (no cancel, queues instead)
 
-## Disk Space
+---
 
-The runner stores work in `C:\actions-runner\_work`. This grows over time.
+## Docker Cache Setup
 
-- Run `.\scripts\runner-ctl.ps1 cleanup` weekly to remove stale dirs and prune Docker
-- The cleanup script removes work dirs older than 7 days and runs `docker system prune`
-- Keep at least 50GB free for Docker image builds (E2E builds ~18 images)
+The runners use two local Docker registries to avoid Docker Hub rate limits:
+
+| Registry | Port | Purpose |
+|---|---|---|
+| `polyforge-docker-cache` | 5001 | Pull-through proxy for Docker Hub base images |
+| `polyforge-buildcache-registry` | 5002 | BuildKit layer cache (push/pull) |
+
+To reconfigure (e.g. after OS reinstall):
+
+```
+GitHub → Actions → Runner Setup — Docker Cache → Run workflow
+```
+
+This re-creates both registries and warms the cache with the base images used by `docker-compose.infra.yml`.
+
+---
+
+## Adding a New Runner
+
+To register an additional runner for `F4CTE/PolyForge`:
+
+```bash
+# 1. Download runner binary (check latest at https://github.com/actions/runner/releases)
+mkdir ~/actions-runner-4 && cd ~/actions-runner-4
+curl -o actions-runner-linux-x64.tar.gz -L \
+  https://github.com/actions/runner/releases/download/v2.333.1/actions-runner-linux-x64-2.333.1.tar.gz
+tar xzf ./actions-runner-linux-x64.tar.gz
+
+# 2. Get a registration token from GitHub
+# GitHub → F4CTE/PolyForge → Settings → Actions → Runners → New self-hosted runner → token
+
+# 3. Configure and register
+./config.sh --url https://github.com/F4CTE/PolyForge \
+            --token <TOKEN> \
+            --name polyforge-lab-4 \
+            --labels self-hosted,linux \
+            --unattended
+
+# 4. Install as systemd service
+sudo ./svc.sh install
+sudo ./svc.sh start
+```
+
+---
+
+## Disk Space Maintenance
+
+Runner work directories accumulate in `~/actions-runner*/_work/`. Run weekly:
+
+```bash
+# Prune Docker build cache and stopped containers (safe to run anytime)
+docker system prune -f
+
+# Remove stale work dirs older than 7 days
+find /home/f4cte/actions-runner*/_work -maxdepth 2 -type d -mtime +7 -exec rm -rf {} + 2>/dev/null || true
+
+# Check disk usage
+df -h /
+du -sh /home/f4cte/actions-runner*/_work 2>/dev/null | sort -h
+```
+
+Keep at least **50 GB free** for Docker image builds (the full service set builds ~18 images totalling ~12 GB).
+
+---
 
 ## Troubleshooting
 
-### Runner shows as offline in GitHub
-
-1. Check Docker Desktop is running
-2. Run `.\scripts\runner-ctl.ps1 status` — service must be `Running`
-3. If stopped: `.\scripts\runner-ctl.ps1 start`
-4. Check logs: `.\scripts\runner-ctl.ps1 logs`
-
-### E2E fails with port conflicts
-
-The E2E job starts Docker Compose on ports 80, 3001-3011, 5432, 5434, 6379.
-If you're running the dev stack locally, stop it first:
+### Runner shows offline in GitHub
 
 ```bash
-docker compose -f docker-compose.infra.yml down
+# Check service status
+systemctl status "actions.runner.F4CTE-PolyForge.polyforge-lab.service"
+
+# Check for errors in logs
+journalctl -u "actions.runner.F4CTE-PolyForge.polyforge-lab.service" -n 100 | grep -i error
+
+# Restart the service
+sudo systemctl restart "actions.runner.F4CTE-PolyForge.polyforge-lab.service"
+```
+
+### Deploy to Dev fails with port conflicts
+
+The deploy spins up Docker services on ports 80, 3001-3011, 5432, 5434, 6379.
+If a previous deploy left services running in a bad state:
+
+```bash
+docker compose -f ~/PolyForge/docker-compose.infra.yml down --remove-orphans
 ```
 
 ### Jobs queue indefinitely
 
-If your machine is off or the runner service is stopped, jobs will queue until the
-runner comes back online. Jobs time out after 6 hours by default.
+If all 3 runners for a repo are busy, jobs queue until one becomes free. Under normal
+load this resolves in minutes. If queued for >30 min:
 
-To unblock immediately: temporarily change `runs-on` back to `ubuntu-latest` and push.
+1. Check `docker ps` — a previous E2E run may be stuck
+2. Check `journalctl -u "actions.runner.F4CTE-PolyForge.polyforge-lab.service" -n 50`
+3. If a job is stuck, cancel it on GitHub and restart the affected runner
 
-### Updating the runner
+### Runner binary auto-update fails
 
-GitHub auto-updates the runner binary. If you need to force an update:
+GitHub auto-updates the runner binary. If an update fails and the runner crashes:
 
-```powershell
-.\scripts\runner-ctl.ps1 stop
-cd C:\actions-runner
-# Re-run setup with a fresh token
-.\scripts\setup-runner.ps1 -Token ghp_NEW_TOKEN
-```
-
-## CI Secrets (E2E Job)
-
-The E2E job requires encryption keys and JWT secrets. These are stored as GitHub
-Actions Encrypted Secrets — never hardcode them in the workflow file (CWE-321).
-
-| Secret name | Purpose |
-|-------------|---------|
-| `CI_MASTER_ENCRYPTION_KEY` | 256-bit AES KEK for E2E wallet encryption |
-| `CI_TOTP_ENCRYPTION_KEY` | 256-bit AES key for E2E TOTP encryption |
-| `CI_INTERNAL_JWT_SECRET` | JWT signing for internal service-to-service auth |
-| `CI_USER_JWT_SECRET` | JWT signing for user auth |
-| `CI_ADMIN_JWT_SECRET` | JWT signing for admin auth |
-| `CI_BOT_JWT_SECRET` | JWT signing for bot auth |
-
-Generate CI-only values (not shared with production):
 ```bash
-openssl rand -hex 32  # for encryption keys
-openssl rand -base64 32  # for JWT secrets
+# Check which binary version is running
+ls ~/actions-runner/bin.*/
+# Manually re-run the update
+cd ~/actions-runner && ./config.sh --version
 ```
 
-Add via: Settings → Secrets and variables → Actions → New repository secret.
+---
 
 ## Security Notes
 
-- The runner executes code from PRs. For public repos, restrict to `push` events only.
-- Since PolyForge is private, PR jobs are safe.
-- The runner service runs as your Windows user — it has access to your filesystem.
-- Never store production secrets on the runner machine (use GitHub Secrets for deploy).
-- The PAT used for registration is consumed once and not stored.
+- Runners execute code from PRs. `F4CTE/PolyForge` is **private** so this is safe.
+- SDK repos (`polyforge-sdk-*`, `polyforge-mcp`) are **public** — their workflows use `ubuntu-latest` (GitHub-hosted) intentionally to avoid running untrusted PR code on `polyforge-lab`.
+- Never store production secrets on the runner machine. Use GitHub Encrypted Secrets for deploy credentials.
+- The runners run as the `f4cte` user. They have access to the local Docker daemon and the `~/PolyForge` working directory.
+
+---
+
+## CI Secrets Required
+
+| Secret | Purpose |
+|---|---|
+| `LAB_HOST` | polyforge-lab hostname/IP for SSH deploy |
+| `LAB_SSH_KEY` | ED25519 private key for `f4cte@polyforge-lab` |
+| `DOCKERHUB_USERNAME` | Docker Hub credentials for pull-through proxy |
+| `DOCKERHUB_TOKEN` | Docker Hub token for pull-through proxy |
+| `AWS_ACCESS_KEY_ID` | Production deploy (workflow_dispatch only) |
+| `AWS_SECRET_ACCESS_KEY` | Production deploy |
+| `AWS_REGION` | Production deploy |
+| `AWS_ACCOUNT_ID` | Production deploy |
+| `EC2_HOST` | Production EC2 host |
+| `EC2_SSH_KEY` | Production EC2 SSH key |
+| `DIRECT_DATABASE_URL` | Production DB connection (migrations) |
+
+Add via: **GitHub → F4CTE/PolyForge → Settings → Secrets and variables → Actions**.
