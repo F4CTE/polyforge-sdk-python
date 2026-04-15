@@ -23,7 +23,7 @@ export function App() {
         theme={isDark ? 'dark' : 'light'}
         position="top-right"
         toastOptions={{
-          className: 'bg-pf-elevated border border-pf-border text-pf-text',
+          className: 'bg-elevated border border-default text-primary',
         }}
       />
     </>

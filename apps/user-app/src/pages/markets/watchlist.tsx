@@ -175,8 +175,8 @@ function hasTriggeredAlert(alerts: WatchlistAlert[]) {
 function PriceBadge({ price, variant }: { price: number; variant: 'yes' | 'no' }) {
   const base =
     variant === 'yes'
-      ? 'bg-pf-success/10 text-pf-success border-pf-success/20'
-      : 'bg-pf-danger/10 text-pf-danger border-pf-danger/20';
+      ? 'bg-gain/10 text-gain border-gain/20'
+      : 'bg-loss/10 text-loss border-loss/20';
   return (
     <span
       className={`inline-flex items-center px-2 py-1 rounded-pf-sm border text-xs font-semibold tabular-nums ${base}`}
@@ -191,7 +191,7 @@ function ChangeBadge({ change }: { change: number }) {
   return (
     <span
       className={`inline-flex items-center gap-1 text-xs font-medium tabular-nums ${
-        positive ? 'text-pf-success' : 'text-pf-danger'
+        positive ? 'text-gain' : 'text-loss'
       }`}
     >
       {positive ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
@@ -211,17 +211,17 @@ function AlertBell({ alerts, loading, onClick, active }: AlertBellProps) {
   const count = alerts ? activeAlertCount(alerts) : 0;
   const triggered = alerts ? hasTriggeredAlert(alerts) : false;
 
-  let iconColor = 'text-pf-text-muted hover:text-pf-text-secondary';
+  let iconColor = 'text-tertiary hover:text-secondary';
   let Icon = Bell;
 
   if (active) {
-    iconColor = 'text-pf-cyan-400';
+    iconColor = 'text-accent-text';
     Icon = BellRing;
   } else if (triggered) {
-    iconColor = 'text-pf-warning';
+    iconColor = 'text-warning';
     Icon = BellRing;
   } else if (count > 0) {
-    iconColor = 'text-pf-cyan-400';
+    iconColor = 'text-accent-text';
     Icon = BellRing;
   }
 
@@ -233,13 +233,13 @@ function AlertBell({ alerts, loading, onClick, active }: AlertBellProps) {
       disabled={loading}
       aria-label="Manage price alerts"
       aria-pressed={active}
-      className={`relative inline-flex items-center justify-center w-7 h-7 rounded-pf-sm transition-colors duration-pf-fast focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 ${iconColor} ${
-        active ? 'bg-pf-cyan-400/10' : 'hover:bg-pf-surface'
+      className={`relative inline-flex items-center justify-center w-7 h-7 rounded-pf-sm transition-colors duration-pf-fast focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 ${iconColor} ${
+        active ? 'bg-accent-text/10' : 'hover:bg-surface'
       } ${loading ? 'opacity-50 cursor-wait' : ''}`}
     >
       <Icon className="w-4 h-4" />
       {count > 0 && !active && (
-        <span className="absolute -top-1 -right-1 flex items-center justify-center w-4 h-4 rounded-pf-full bg-pf-cyan-500 text-pf-micro font-bold text-pf-text-contrast leading-none">
+        <span className="absolute -top-1 -right-1 flex items-center justify-center w-4 h-4 rounded-pf-full bg-accent text-pf-micro font-bold text-inverse leading-none">
           {count > 9 ? '9+' : count}
         </span>
       )}
@@ -457,12 +457,12 @@ export function Component() {
   const SortIcon = ({ col }: { col: keyof WatchlistMarket }) =>
     sortKey === col ? (
       sortDir === 'desc' ? (
-        <ChevronDown className="w-3 h-3 ml-1 inline-block text-pf-cyan-400" />
+        <ChevronDown className="w-3 h-3 ml-1 inline-block text-accent-text" />
       ) : (
-        <ChevronUp className="w-3 h-3 ml-1 inline-block text-pf-cyan-400" />
+        <ChevronUp className="w-3 h-3 ml-1 inline-block text-accent-text" />
       )
     ) : (
-      <ChevronDown className="w-3 h-3 ml-1 inline-block text-pf-text-muted opacity-40" />
+      <ChevronDown className="w-3 h-3 ml-1 inline-block text-tertiary opacity-40" />
     );
 
   // ---- Column count for colSpan --------------------------------------------
@@ -471,18 +471,18 @@ export function Component() {
 
   // ---- Render --------------------------------------------------------------
   return (
-    <div className="min-h-screen bg-pf-surface animate-fade-in">
+    <div className="min-h-screen bg-surface animate-fade-in">
       {/* ------------------------------------------------------------------ */}
       {/* Header                                                               */}
       {/* ------------------------------------------------------------------ */}
-      <div className="border-b border-pf-border bg-pf-elevated px-6 py-5">
+      <div className="border-b border-default bg-elevated px-6 py-5">
         <div className="max-w-screen-xl mx-auto flex items-center justify-between gap-4 flex-wrap">
           <div>
-            <h1 className="text-xl font-semibold text-pf-text flex items-center gap-2">
-              <Star className="w-5 h-5 text-pf-cyan-400" aria-hidden="true" />
+            <h1 className="text-xl font-semibold text-primary flex items-center gap-2">
+              <Star className="w-5 h-5 text-accent-text" aria-hidden="true" />
               Watchlist
             </h1>
-            <p className="text-sm text-pf-text-muted mt-1">
+            <p className="text-sm text-tertiary mt-1">
               {displayedMarkets.length} market{displayedMarkets.length !== 1 ? 's' : ''} tracked
             </p>
           </div>
@@ -494,10 +494,10 @@ export function Component() {
                 key={cat}
                 variant="ghost"
                 onClick={() => setFilterCategory(cat)}
-                className={`px-3 py-1 text-xs font-medium rounded-pf-sm border transition-colors duration-pf-fast focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 ${
+                className={`px-3 py-1 text-xs font-medium rounded-pf-sm border transition-colors duration-pf-fast focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 ${
                   filterCategory === cat
-                    ? 'bg-pf-cyan-500 text-pf-text-contrast border-pf-cyan-500'
-                    : 'bg-transparent text-pf-text-secondary border-pf-border hover:border-pf-border-strong hover:text-pf-text'
+                    ? 'bg-accent text-inverse border-accent'
+                    : 'bg-transparent text-secondary border-default hover:border-strong hover:text-primary'
                 }`}
               >
                 {cat}
@@ -512,14 +512,14 @@ export function Component() {
       {/* ------------------------------------------------------------------ */}
       {displayedMarkets.length === 0 && (
         <div className="max-w-screen-xl mx-auto px-6 py-24 flex flex-col items-center gap-4 text-center">
-          <Star className="w-12 h-12 text-pf-text-muted opacity-30" aria-hidden="true" />
-          <p className="text-pf-text-secondary text-lg font-medium">No markets in your watchlist</p>
-          <p className="text-pf-text-muted text-sm max-w-xs">
+          <Star className="w-12 h-12 text-tertiary opacity-30" aria-hidden="true" />
+          <p className="text-secondary text-lg font-medium">No markets in your watchlist</p>
+          <p className="text-tertiary text-sm max-w-xs">
             Browse markets and tap the star icon to add them here for quick access.
           </p>
           <Button
             onClick={() => navigate('/markets')}
-            className="mt-2 px-4 py-2 bg-pf-cyan-500 text-pf-text-contrast text-sm font-semibold rounded-pf hover:brightness-110 transition-all duration-pf-fast focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40"
+            className="mt-2 px-4 py-2 bg-accent text-inverse text-sm font-semibold rounded-pf hover:brightness-110 transition-all duration-pf-fast focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
           >
             Browse Markets
           </Button>
@@ -534,23 +534,23 @@ export function Component() {
           <table className="w-full border-collapse text-sm" aria-label="Watchlist markets">
             {/* Head */}
             <thead>
-              <tr className="border-b border-pf-border">
+              <tr className="border-b border-default">
                 {/* Star */}
                 <th className="w-8 pb-2" aria-label="Remove from watchlist" />
 
                 {/* Market */}
-                <th className="text-left pb-2 pr-4 text-xs font-medium text-pf-text-muted uppercase tracking-wider">
+                <th className="text-left pb-2 pr-4 text-xs font-medium text-tertiary uppercase tracking-wider">
                   Market
                 </th>
 
                 {/* Category */}
-                <th className="text-left pb-2 pr-4 text-xs font-medium text-pf-text-muted uppercase tracking-wider hidden md:table-cell">
+                <th className="text-left pb-2 pr-4 text-xs font-medium text-tertiary uppercase tracking-wider hidden md:table-cell">
                   Category
                 </th>
 
                 {/* YES */}
                 <th
-                  className="text-right pb-2 pr-4 text-xs font-medium text-pf-text-muted uppercase tracking-wider cursor-pointer select-none whitespace-nowrap"
+                  className="text-right pb-2 pr-4 text-xs font-medium text-tertiary uppercase tracking-wider cursor-pointer select-none whitespace-nowrap"
                   onClick={() => handleSort('yesPrice')}
                   aria-sort={sortKey === 'yesPrice' ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none'}
                 >
@@ -559,7 +559,7 @@ export function Component() {
 
                 {/* NO */}
                 <th
-                  className="text-right pb-2 pr-4 text-xs font-medium text-pf-text-muted uppercase tracking-wider cursor-pointer select-none whitespace-nowrap"
+                  className="text-right pb-2 pr-4 text-xs font-medium text-tertiary uppercase tracking-wider cursor-pointer select-none whitespace-nowrap"
                   onClick={() => handleSort('noPrice')}
                   aria-sort={sortKey === 'noPrice' ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none'}
                 >
@@ -568,7 +568,7 @@ export function Component() {
 
                 {/* 24h */}
                 <th
-                  className="text-right pb-2 pr-4 text-xs font-medium text-pf-text-muted uppercase tracking-wider cursor-pointer select-none whitespace-nowrap hidden sm:table-cell"
+                  className="text-right pb-2 pr-4 text-xs font-medium text-tertiary uppercase tracking-wider cursor-pointer select-none whitespace-nowrap hidden sm:table-cell"
                   onClick={() => handleSort('change24h')}
                   aria-sort={sortKey === 'change24h' ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none'}
                 >
@@ -577,7 +577,7 @@ export function Component() {
 
                 {/* Volume */}
                 <th
-                  className="text-right pb-2 pr-4 text-xs font-medium text-pf-text-muted uppercase tracking-wider cursor-pointer select-none whitespace-nowrap hidden lg:table-cell"
+                  className="text-right pb-2 pr-4 text-xs font-medium text-tertiary uppercase tracking-wider cursor-pointer select-none whitespace-nowrap hidden lg:table-cell"
                   onClick={() => handleSort('volume24h')}
                   aria-sort={sortKey === 'volume24h' ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none'}
                 >
@@ -586,7 +586,7 @@ export function Component() {
 
                 {/* Liquidity */}
                 <th
-                  className="text-right pb-2 pr-4 text-xs font-medium text-pf-text-muted uppercase tracking-wider cursor-pointer select-none whitespace-nowrap hidden xl:table-cell"
+                  className="text-right pb-2 pr-4 text-xs font-medium text-tertiary uppercase tracking-wider cursor-pointer select-none whitespace-nowrap hidden xl:table-cell"
                   onClick={() => handleSort('liquidity')}
                   aria-sort={sortKey === 'liquidity' ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none'}
                 >
@@ -594,19 +594,19 @@ export function Component() {
                 </th>
 
                 {/* Alerts — v6.29.0 */}
-                <th className="w-10 pb-2 text-center text-xs font-medium text-pf-text-muted uppercase tracking-wider">
+                <th className="w-10 pb-2 text-center text-xs font-medium text-tertiary uppercase tracking-wider">
                   <Bell className="w-4 h-4 inline-block" aria-hidden="true" />
                   <span className="sr-only">Alerts</span>
                 </th>
 
                 {/* Trade */}
-                <th className="w-20 pb-2 text-right text-xs font-medium text-pf-text-muted uppercase tracking-wider">
+                <th className="w-20 pb-2 text-right text-xs font-medium text-tertiary uppercase tracking-wider">
                   Trade
                 </th>
               </tr>
             </thead>
 
-            <tbody className="divide-y divide-pf-border/40">
+            <tbody className="divide-y divide-default/40">
               {displayedMarkets.map((market) => {
                 const isQuickOrderOpen = expandedQuickOrder === market.id;
                 const isAlertsOpen = expandedAlerts === market.id;
@@ -623,8 +623,8 @@ export function Component() {
                       key={market.id}
                       className={`group transition-colors duration-pf-fast ${
                         isQuickOrderOpen || isAlertsOpen
-                          ? 'bg-pf-elevated'
-                          : 'hover:bg-pf-elevated/60'
+                          ? 'bg-elevated'
+                          : 'hover:bg-elevated/60'
                       }`}
                     >
                       {/* Star / remove */}
@@ -634,7 +634,7 @@ export function Component() {
                           size="icon-sm"
                           onClick={() => handleRemoveStar(market.id)}
                           aria-label={`Remove ${market.title} from watchlist`}
-                          className="text-pf-cyan-400 hover:text-pf-warning transition-colors duration-pf-fast focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 rounded-pf-sm"
+                          className="text-accent-text hover:text-warning transition-colors duration-pf-fast focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 rounded-pf-sm"
                         >
                           <Star className="w-4 h-4 fill-current" />
                         </Button>
@@ -646,11 +646,11 @@ export function Component() {
                           <Button
                             variant="ghost"
                             onClick={() => navigate(`/markets/${market.slug}`)}
-                            className="text-left text-pf-text font-medium hover:text-pf-cyan-400 transition-colors duration-pf-fast focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 rounded-pf-sm leading-snug max-w-xs"
+                            className="text-left text-primary font-medium hover:text-accent-text transition-colors duration-pf-fast focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 rounded-pf-sm leading-snug max-w-xs"
                           >
                             {market.title}
                           </Button>
-                          <span className="flex items-center gap-1 text-xs text-pf-text-muted">
+                          <span className="flex items-center gap-1 text-xs text-tertiary">
                             <Clock className="w-3 h-3" aria-hidden="true" />
                             Expires {formatDate(market.expiryDate)}
                           </span>
@@ -659,7 +659,7 @@ export function Component() {
 
                       {/* Category */}
                       <td className="py-3 pr-4 hidden md:table-cell">
-                        <span className="px-2 py-1 rounded-pf-sm bg-pf-surface border border-pf-border text-xs text-pf-text-secondary">
+                        <span className="px-2 py-1 rounded-pf-sm bg-surface border border-default text-xs text-secondary">
                           {market.category}
                         </span>
                       </td>
@@ -680,12 +680,12 @@ export function Component() {
                       </td>
 
                       {/* Volume */}
-                      <td className="py-3 pr-4 text-right text-pf-text-secondary tabular-nums hidden lg:table-cell">
+                      <td className="py-3 pr-4 text-right text-secondary tabular-nums hidden lg:table-cell">
                         {formatDollar(market.volume24h)}
                       </td>
 
                       {/* Liquidity */}
-                      <td className="py-3 pr-4 text-right text-pf-text-secondary tabular-nums hidden xl:table-cell">
+                      <td className="py-3 pr-4 text-right text-secondary tabular-nums hidden xl:table-cell">
                         {formatDollar(market.liquidity)}
                       </td>
 
@@ -706,10 +706,10 @@ export function Component() {
                           onClick={() => openQuickOrder(market.id)}
                           aria-pressed={isQuickOrderOpen}
                           aria-label={`Quick order for ${market.title}`}
-                          className={`inline-flex items-center gap-1 px-3 py-2 rounded-pf text-xs font-semibold transition-all duration-pf-fast focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 ${
+                          className={`inline-flex items-center gap-1 px-3 py-2 rounded-pf text-xs font-semibold transition-all duration-pf-fast focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 ${
                             isQuickOrderOpen
-                              ? 'bg-pf-cyan-500/20 text-pf-cyan-400 border border-pf-cyan-500/40'
-                              : 'bg-pf-elevated border border-pf-border text-pf-text-secondary hover:border-pf-cyan-500/60 hover:text-pf-cyan-400'
+                              ? 'bg-accent/20 text-accent-text border border-accent/40'
+                              : 'bg-elevated border border-default text-secondary hover:border-accent/60 hover:text-accent-text'
                           }`}
                         >
                           <Zap className="w-3 h-3" aria-hidden="true" />
@@ -722,15 +722,15 @@ export function Component() {
                     {/* Inline quick-order panel (v6.28.0)                       */}
                     {/* -------------------------------------------------------- */}
                     {isQuickOrderOpen && qo && (
-                      <tr key={`${market.id}-quickorder`} className="bg-pf-elevated">
+                      <tr key={`${market.id}-quickorder`} className="bg-elevated">
                         <td colSpan={TOTAL_COLS} className="px-4 pb-4 pt-0">
-                          <div className="border border-pf-border rounded-pf-lg p-4 bg-pf-surface">
+                          <div className="border border-default rounded-pf-lg p-4 bg-surface">
                             {/* Panel header */}
                             <div className="flex items-center justify-between mb-4">
                               <div className="flex items-center gap-2">
-                                <Zap className="w-4 h-4 text-pf-cyan-400" aria-hidden="true" />
-                                <span className="text-sm font-semibold text-pf-text">Quick Order</span>
-                                <span className="text-xs text-pf-text-muted truncate max-w-xs hidden sm:block">
+                                <Zap className="w-4 h-4 text-accent-text" aria-hidden="true" />
+                                <span className="text-sm font-semibold text-primary">Quick Order</span>
+                                <span className="text-xs text-tertiary truncate max-w-xs hidden sm:block">
                                   — {market.title}
                                 </span>
                               </div>
@@ -739,7 +739,7 @@ export function Component() {
                                 size="icon"
                                 onClick={() => setExpandedQuickOrder(null)}
                                 aria-label="Close quick order panel"
-                                className="text-pf-text-muted hover:text-pf-text transition-colors duration-pf-fast focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 rounded-pf-sm"
+                                className="text-tertiary hover:text-primary transition-colors duration-pf-fast focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 rounded-pf-sm"
                               >
                                 <X className="w-4 h-4" />
                               </Button>
@@ -748,9 +748,9 @@ export function Component() {
                             <div className="flex flex-wrap items-end gap-4">
                               {/* Outcome toggle */}
                               <div className="flex flex-col gap-1">
-                                <label className="text-xs text-pf-text-muted font-medium">Outcome</label>
+                                <label className="text-xs text-tertiary font-medium">Outcome</label>
                                 <div
-                                  className="flex rounded-pf border border-pf-border overflow-hidden"
+                                  className="flex rounded-pf border border-default overflow-hidden"
                                   role="group"
                                   aria-label="Select outcome"
                                 >
@@ -760,12 +760,12 @@ export function Component() {
                                       variant="ghost"
                                       onClick={() => updateQuickOrder(market.id, { outcome: o })}
                                       aria-pressed={qo.outcome === o}
-                                      className={`px-4 py-2 text-sm font-semibold transition-colors duration-pf-fast focus-visible:outline-none focus-visible:ring-inset focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 ${
+                                      className={`px-4 py-2 text-sm font-semibold transition-colors duration-pf-fast focus-visible:outline-none focus-visible:ring-inset focus-visible:ring-2 focus-visible:ring-accent/40 ${
                                         qo.outcome === o
                                           ? o === 'YES'
-                                            ? 'bg-pf-success text-pf-text'
-                                            : 'bg-pf-danger text-pf-text'
-                                          : 'bg-pf-elevated text-pf-text-secondary hover:text-pf-text'
+                                            ? 'bg-gain text-primary'
+                                            : 'bg-loss text-primary'
+                                          : 'bg-elevated text-secondary hover:text-primary'
                                       }`}
                                     >
                                       {o}
@@ -776,8 +776,8 @@ export function Component() {
 
                               {/* Amount */}
                               <div className="flex flex-col gap-1">
-                                <label className="text-xs text-pf-text-muted font-medium">Amount (USDC)</label>
-                                <div className="flex items-center gap-1 border border-pf-border rounded-pf bg-pf-elevated px-1">
+                                <label className="text-xs text-tertiary font-medium">Amount (USDC)</label>
+                                <div className="flex items-center gap-1 border border-default rounded-pf bg-elevated px-1">
                                   <Button
                                     variant="ghost"
                                     size="icon-sm"
@@ -785,7 +785,7 @@ export function Component() {
                                       updateQuickOrder(market.id, { amount: Math.max(1, qo.amount - 10) })
                                     }
                                     aria-label="Decrease amount"
-                                    className="p-1 text-pf-text-muted hover:text-pf-text transition-colors duration-pf-fast focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 rounded-pf-sm"
+                                    className="p-1 text-tertiary hover:text-primary transition-colors duration-pf-fast focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 rounded-pf-sm"
                                   >
                                     <Minus className="w-4 h-4" />
                                   </Button>
@@ -800,7 +800,7 @@ export function Component() {
                                       })
                                     }
                                     aria-label="Order amount in USDC"
-                                    className="w-16 text-center bg-transparent text-pf-text text-sm font-semibold tabular-nums py-2 focus-visible:outline-none"
+                                    className="w-16 text-center bg-transparent text-primary text-sm font-semibold tabular-nums py-2 focus-visible:outline-none"
                                   />
                                   <Button
                                     variant="ghost"
@@ -809,7 +809,7 @@ export function Component() {
                                       updateQuickOrder(market.id, { amount: qo.amount + 10 })
                                     }
                                     aria-label="Increase amount"
-                                    className="p-1 text-pf-text-muted hover:text-pf-text transition-colors duration-pf-fast focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 rounded-pf-sm"
+                                    className="p-1 text-tertiary hover:text-primary transition-colors duration-pf-fast focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 rounded-pf-sm"
                                   >
                                     <Plus className="w-4 h-4" />
                                   </Button>
@@ -823,10 +823,10 @@ export function Component() {
                                     key={preset}
                                     variant="ghost"
                                     onClick={() => updateQuickOrder(market.id, { amount: preset })}
-                                    className={`px-2 py-2 text-xs font-medium rounded-pf-sm border transition-colors duration-pf-fast focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 ${
+                                    className={`px-2 py-2 text-xs font-medium rounded-pf-sm border transition-colors duration-pf-fast focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 ${
                                       qo.amount === preset
-                                        ? 'bg-pf-cyan-500/20 border-pf-cyan-500/40 text-pf-cyan-400'
-                                        : 'bg-transparent border-pf-border text-pf-text-muted hover:text-pf-text hover:border-pf-border-strong'
+                                        ? 'bg-accent/20 border-accent/40 text-accent-text'
+                                        : 'bg-transparent border-default text-tertiary hover:text-primary hover:border-strong'
                                     }`}
                                   >
                                     ${preset}
@@ -835,16 +835,16 @@ export function Component() {
                               </div>
 
                               {/* Expected shares / price info */}
-                              <div className="flex flex-col gap-1 text-xs text-pf-text-muted ml-auto hidden sm:flex">
+                              <div className="flex flex-col gap-1 text-xs text-tertiary ml-auto hidden sm:flex">
                                 <span>
                                   Price:{' '}
-                                  <strong className="text-pf-text">
+                                  <strong className="text-primary">
                                     {formatPrice(qo.outcome === 'YES' ? market.yesPrice : market.noPrice)}
                                   </strong>
                                 </span>
                                 <span>
                                   Est. shares:{' '}
-                                  <strong className="text-pf-text tabular-nums">
+                                  <strong className="text-primary tabular-nums">
                                     {(
                                       qo.amount /
                                       (qo.outcome === 'YES' ? market.yesPrice : market.noPrice)
@@ -857,7 +857,7 @@ export function Component() {
                               <Button
                                 onClick={() => submitQuickOrder(market)}
                                 disabled={qo.submitting}
-                                className="px-5 py-2 bg-pf-cyan-500 text-pf-text-contrast text-sm font-semibold rounded-pf hover:brightness-110 disabled:opacity-50 disabled:cursor-wait transition-all duration-pf-fast focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 whitespace-nowrap"
+                                className="px-5 py-2 bg-accent text-inverse text-sm font-semibold rounded-pf hover:brightness-110 disabled:opacity-50 disabled:cursor-wait transition-all duration-pf-fast focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 whitespace-nowrap"
                               >
                                 {qo.submitting ? 'Placing…' : `Buy ${qo.outcome}`}
                               </Button>
@@ -866,7 +866,7 @@ export function Component() {
                               <Button
                                 variant="ghost"
                                 onClick={() => navigate(`/markets/${market.slug}`)}
-                                className="inline-flex items-center gap-1 text-xs text-pf-text-muted hover:text-pf-cyan-400 transition-colors duration-pf-fast focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 rounded-pf-sm"
+                                className="inline-flex items-center gap-1 text-xs text-tertiary hover:text-accent-text transition-colors duration-pf-fast focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 rounded-pf-sm"
                               >
                                 <ExternalLink className="w-3 h-3" />
                                 Full detail
@@ -881,15 +881,15 @@ export function Component() {
                     {/* Inline alerts panel (v6.29.0)                            */}
                     {/* -------------------------------------------------------- */}
                     {isAlertsOpen && (
-                      <tr key={`${market.id}-alerts`} className="bg-pf-elevated">
+                      <tr key={`${market.id}-alerts`} className="bg-elevated">
                         <td colSpan={TOTAL_COLS} className="px-4 pb-4 pt-0">
-                          <div className="border border-pf-border rounded-pf-lg p-4 bg-pf-surface">
+                          <div className="border border-default rounded-pf-lg p-4 bg-surface">
                             {/* Panel header */}
                             <div className="flex items-center justify-between mb-4">
                               <div className="flex items-center gap-2">
-                                <Bell className="w-4 h-4 text-pf-cyan-400" aria-hidden="true" />
-                                <span className="text-sm font-semibold text-pf-text">Price Alerts</span>
-                                <span className="text-xs text-pf-text-muted truncate max-w-xs hidden sm:block">
+                                <Bell className="w-4 h-4 text-accent-text" aria-hidden="true" />
+                                <span className="text-sm font-semibold text-primary">Price Alerts</span>
+                                <span className="text-xs text-tertiary truncate max-w-xs hidden sm:block">
                                   — {market.title}
                                 </span>
                               </div>
@@ -898,7 +898,7 @@ export function Component() {
                                 size="icon"
                                 onClick={() => setExpandedAlerts(null)}
                                 aria-label="Close price alerts panel"
-                                className="text-pf-text-muted hover:text-pf-text transition-colors duration-pf-fast focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 rounded-pf-sm"
+                                className="text-tertiary hover:text-primary transition-colors duration-pf-fast focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 rounded-pf-sm"
                               >
                                 <X className="w-4 h-4" />
                               </Button>
@@ -906,15 +906,15 @@ export function Component() {
 
                             {/* ---- Create new alert form ---- */}
                             <div className="mb-4">
-                              <p className="text-xs font-medium text-pf-text-muted mb-2 uppercase tracking-wider">
+                              <p className="text-xs font-medium text-tertiary mb-2 uppercase tracking-wider">
                                 Set new alert
                               </p>
                               <div className="flex flex-wrap items-end gap-3">
                                 {/* Outcome toggle */}
                                 <div className="flex flex-col gap-1">
-                                  <label className="text-xs text-pf-text-muted">Outcome</label>
+                                  <label className="text-xs text-tertiary">Outcome</label>
                                   <div
-                                    className="flex rounded-pf border border-pf-border overflow-hidden"
+                                    className="flex rounded-pf border border-default overflow-hidden"
                                     role="group"
                                     aria-label="Alert outcome"
                                   >
@@ -924,12 +924,12 @@ export function Component() {
                                         variant="ghost"
                                         onClick={() => setAlertOutcome(o)}
                                         aria-pressed={alertOutcome === o}
-                                        className={`px-4 py-2 text-sm font-semibold transition-colors duration-pf-fast focus-visible:outline-none focus-visible:ring-inset focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 ${
+                                        className={`px-4 py-2 text-sm font-semibold transition-colors duration-pf-fast focus-visible:outline-none focus-visible:ring-inset focus-visible:ring-2 focus-visible:ring-accent/40 ${
                                           alertOutcome === o
                                             ? o === 'YES'
-                                              ? 'bg-pf-success text-pf-text'
-                                              : 'bg-pf-danger text-pf-text'
-                                            : 'bg-pf-elevated text-pf-text-secondary hover:text-pf-text'
+                                              ? 'bg-gain text-primary'
+                                              : 'bg-loss text-primary'
+                                            : 'bg-elevated text-secondary hover:text-primary'
                                         }`}
                                       >
                                         {o}
@@ -940,9 +940,9 @@ export function Component() {
 
                                 {/* Condition toggle */}
                                 <div className="flex flex-col gap-1">
-                                  <label className="text-xs text-pf-text-muted">Condition</label>
+                                  <label className="text-xs text-tertiary">Condition</label>
                                   <div
-                                    className="flex rounded-pf border border-pf-border overflow-hidden"
+                                    className="flex rounded-pf border border-default overflow-hidden"
                                     role="group"
                                     aria-label="Alert condition"
                                   >
@@ -952,10 +952,10 @@ export function Component() {
                                         variant="ghost"
                                         onClick={() => setAlertCondition(c)}
                                         aria-pressed={alertCondition === c}
-                                        className={`px-3 py-2 text-sm font-medium transition-colors duration-pf-fast capitalize focus-visible:outline-none focus-visible:ring-inset focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 ${
+                                        className={`px-3 py-2 text-sm font-medium transition-colors duration-pf-fast capitalize focus-visible:outline-none focus-visible:ring-inset focus-visible:ring-2 focus-visible:ring-accent/40 ${
                                           alertCondition === c
-                                            ? 'bg-pf-cyan-500/20 text-pf-cyan-400 border-r border-pf-cyan-500/30'
-                                            : 'bg-pf-elevated text-pf-text-secondary hover:text-pf-text'
+                                            ? 'bg-accent/20 text-accent-text border-r border-accent/30'
+                                            : 'bg-elevated text-secondary hover:text-primary'
                                         }`}
                                       >
                                         {c}
@@ -968,7 +968,7 @@ export function Component() {
                                 <div className="flex flex-col gap-1">
                                   <label
                                     htmlFor={`alert-threshold-${market.id}`}
-                                    className="text-xs text-pf-text-muted"
+                                    className="text-xs text-tertiary"
                                   >
                                     Threshold (0–1)
                                   </label>
@@ -980,21 +980,21 @@ export function Component() {
                                     step={0.01}
                                     value={alertThreshold}
                                     onChange={(e) => setAlertThreshold(Number(e.target.value))}
-                                    className="w-24 px-3 py-2 bg-pf-elevated border border-pf-border rounded-pf text-sm text-pf-text tabular-nums focus-visible:outline-none focus-visible:border-pf-cyan-500/60 focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 transition-colors duration-pf-fast"
+                                    className="w-24 px-3 py-2 bg-elevated border border-default rounded-pf text-sm text-primary tabular-nums focus-visible:outline-none focus-visible:border-accent/60 focus-visible:ring-2 focus-visible:ring-accent/40 transition-colors duration-pf-fast"
                                   />
                                 </div>
 
                                 {/* Current price hint */}
-                                <div className="flex flex-col gap-1 text-xs text-pf-text-muted pb-1 hidden sm:flex">
+                                <div className="flex flex-col gap-1 text-xs text-tertiary pb-1 hidden sm:flex">
                                   <span>
                                     Current YES:{' '}
-                                    <strong className="text-pf-success tabular-nums">
+                                    <strong className="text-gain tabular-nums">
                                       {market.yesPrice.toFixed(2)}
                                     </strong>
                                   </span>
                                   <span>
                                     Current NO:{' '}
-                                    <strong className="text-pf-danger tabular-nums">
+                                    <strong className="text-loss tabular-nums">
                                       {market.noPrice.toFixed(2)}
                                     </strong>
                                   </span>
@@ -1004,7 +1004,7 @@ export function Component() {
                                 <Button
                                   onClick={() => handleAddAlert(market.id)}
                                   disabled={addingAlert}
-                                  className="inline-flex items-center gap-2 px-4 py-2 bg-pf-cyan-500 text-pf-text-contrast text-sm font-semibold rounded-pf hover:brightness-110 disabled:opacity-50 disabled:cursor-wait transition-all duration-pf-fast focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 whitespace-nowrap"
+                                  className="inline-flex items-center gap-2 px-4 py-2 bg-accent text-inverse text-sm font-semibold rounded-pf hover:brightness-110 disabled:opacity-50 disabled:cursor-wait transition-all duration-pf-fast focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 whitespace-nowrap"
                                 >
                                   <Plus className="w-4 h-4" aria-hidden="true" />
                                   {addingAlert ? 'Adding…' : 'Add Alert'}
@@ -1013,11 +1013,11 @@ export function Component() {
                             </div>
 
                             {/* Divider */}
-                            <div className="border-t border-pf-border/60 my-3" />
+                            <div className="border-t border-default/60 my-3" />
 
                             {/* ---- Active alerts list ---- */}
                             <div>
-                              <p className="text-xs font-medium text-pf-text-muted mb-2 uppercase tracking-wider">
+                              <p className="text-xs font-medium text-tertiary mb-2 uppercase tracking-wider">
                                 Active alerts
                               </p>
 
@@ -1027,7 +1027,7 @@ export function Component() {
                                   {[1, 2].map((i) => (
                                     <div
                                       key={i}
-                                      className="h-8 rounded-pf bg-pf-elevated animate-shimmer"
+                                      className="h-8 rounded-pf bg-elevated animate-shimmer"
                                       aria-hidden="true"
                                     />
                                   ))}
@@ -1036,7 +1036,7 @@ export function Component() {
 
                               {/* Empty */}
                               {!alertsLoading && (!marketAlerts || marketAlerts.length === 0) && (
-                                <div className="flex items-center gap-2 py-3 text-sm text-pf-text-muted">
+                                <div className="flex items-center gap-2 py-3 text-sm text-tertiary">
                                   <BellOff className="w-4 h-4 opacity-50" aria-hidden="true" />
                                   No alerts for this market
                                 </div>
@@ -1050,42 +1050,42 @@ export function Component() {
                                       key={alert.id}
                                       className={`flex items-center justify-between gap-3 px-3 py-2 rounded-pf border text-sm ${
                                         alert.triggered
-                                          ? 'border-pf-warning/30 bg-pf-warning/5'
-                                          : 'border-pf-border bg-pf-elevated'
+                                          ? 'border-warning/30 bg-warning/5'
+                                          : 'border-default bg-elevated'
                                       }`}
                                     >
                                       <div className="flex items-center gap-2 min-w-0">
                                         {/* Status dot */}
                                         {alert.triggered ? (
                                           <AlertCircle
-                                            className="w-4 h-4 text-pf-warning flex-shrink-0"
+                                            className="w-4 h-4 text-warning flex-shrink-0"
                                             aria-hidden="true"
                                           />
                                         ) : (
                                           <span
-                                            className="w-2 h-2 rounded-pf-full bg-pf-success flex-shrink-0 animate-pulse-dot"
+                                            className="w-2 h-2 rounded-pf-full bg-gain flex-shrink-0 animate-pulse-dot"
                                             aria-hidden="true"
                                           />
                                         )}
 
                                         {/* Alert description */}
-                                        <span className="text-pf-text truncate">
+                                        <span className="text-primary truncate">
                                           <span
                                             className={`font-semibold ${
-                                              alert.outcome === 'YES' ? 'text-pf-success' : 'text-pf-danger'
+                                              alert.outcome === 'YES' ? 'text-gain' : 'text-loss'
                                             }`}
                                           >
                                             {alert.outcome}
                                           </span>{' '}
                                           {alert.condition}{' '}
-                                          <span className="font-semibold tabular-nums text-pf-text">
+                                          <span className="font-semibold tabular-nums text-primary">
                                             {formatThreshold(alert.threshold)}
                                           </span>
                                         </span>
 
                                         {/* Triggered badge */}
                                         {alert.triggered && (
-                                          <span className="flex-shrink-0 px-2 py-1 rounded-pf-sm bg-pf-warning/15 border border-pf-warning/30 text-xs font-medium text-pf-warning">
+                                          <span className="flex-shrink-0 px-2 py-1 rounded-pf-sm bg-warning/15 border border-warning/30 text-xs font-medium text-warning">
                                             Triggered
                                           </span>
                                         )}
@@ -1098,7 +1098,7 @@ export function Component() {
                                         onClick={() => handleDeleteAlert(market.id, alert.id)}
                                         disabled={deletingAlertId === alert.id}
                                         aria-label={`Delete alert: ${alert.outcome} ${alert.condition} ${alert.threshold}`}
-                                        className="flex-shrink-0 p-1 rounded-pf-sm text-pf-text-muted hover:text-pf-danger transition-colors duration-pf-fast disabled:opacity-40 disabled:cursor-wait focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40"
+                                        className="flex-shrink-0 p-1 rounded-pf-sm text-tertiary hover:text-loss transition-colors duration-pf-fast disabled:opacity-40 disabled:cursor-wait focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
                                       >
                                         <Trash2 className="w-4 h-4" />
                                       </Button>
@@ -1109,11 +1109,11 @@ export function Component() {
                             </div>
 
                             {/* Footer link to full market detail */}
-                            <div className="mt-3 pt-3 border-t border-pf-border/40">
+                            <div className="mt-3 pt-3 border-t border-default/40">
                               <Button
                                 variant="ghost"
                                 onClick={() => navigate(`/markets/${market.slug}`)}
-                                className="inline-flex items-center gap-1 text-xs text-pf-text-muted hover:text-pf-cyan-400 transition-colors duration-pf-fast focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 rounded-pf-sm"
+                                className="inline-flex items-center gap-1 text-xs text-tertiary hover:text-accent-text transition-colors duration-pf-fast focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 rounded-pf-sm"
                               >
                                 <BarChart2 className="w-3 h-3" aria-hidden="true" />
                                 View full market &amp; alerts
@@ -1136,24 +1136,24 @@ export function Component() {
       {/* Footer stats bar                                                     */}
       {/* ------------------------------------------------------------------ */}
       {displayedMarkets.length > 0 && (
-        <div className="border-t border-pf-border bg-pf-elevated px-6 py-3 mt-4">
-          <div className="max-w-screen-xl mx-auto flex items-center gap-6 flex-wrap text-xs text-pf-text-muted">
+        <div className="border-t border-default bg-elevated px-6 py-3 mt-4">
+          <div className="max-w-screen-xl mx-auto flex items-center gap-6 flex-wrap text-xs text-tertiary">
             <span>
-              <strong className="text-pf-text">{displayedMarkets.length}</strong> markets
+              <strong className="text-primary">{displayedMarkets.length}</strong> markets
             </span>
             <span>
               Total volume 24h:{' '}
-              <strong className="text-pf-text tabular-nums">
+              <strong className="text-primary tabular-nums">
                 {formatDollar(displayedMarkets.reduce((s, m) => s + m.volume24h, 0))}
               </strong>
             </span>
             <span>
               Total liquidity:{' '}
-              <strong className="text-pf-text tabular-nums">
+              <strong className="text-primary tabular-nums">
                 {formatDollar(displayedMarkets.reduce((s, m) => s + m.liquidity, 0))}
               </strong>
             </span>
-            <span className="ml-auto text-pf-text-muted/60">
+            <span className="ml-auto text-tertiary/60">
               Prices refresh every 30 s
             </span>
           </div>

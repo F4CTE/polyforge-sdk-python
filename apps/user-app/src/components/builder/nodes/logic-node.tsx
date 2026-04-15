@@ -25,11 +25,11 @@ const LOGIC_SYMBOLS: Record<string, string> = {
 };
 
 const LOGIC_COLORS: Record<string, string> = {
-  IF_THEN_ELSE: 'var(--color-pf-warning)', // amber
-  AND_GATE: 'var(--color-pf-info)',     // blue
-  OR_GATE: 'var(--color-pf-info)',      // blue
-  NOT_GATE: 'var(--color-pf-info)',     // blue
-  DELAY: 'var(--color-pf-text-muted)', // gray
+  IF_THEN_ELSE: 'var(--warning)', // amber
+  AND_GATE: 'var(--info)',     // blue
+  OR_GATE: 'var(--info)',      // blue
+  NOT_GATE: 'var(--info)',     // blue
+  DELAY: 'var(--text-tertiary)', // gray
 };
 
 /** Number of input handles per logic type */
@@ -63,7 +63,7 @@ function LogicNodeInner({ id, data }: NodeProps<LogicNode>) {
     [id, updateNodeConfig],
   );
 
-  const color = LOGIC_COLORS[d.type] ?? 'var(--color-pf-info)';
+  const color = LOGIC_COLORS[d.type] ?? 'var(--info)';
   const symbol = LOGIC_SYMBOLS[d.type] ?? d.type;
   const icon = LOGIC_ICONS[d.type];
   const inputCount = INPUT_COUNTS[d.type] ?? 1;
@@ -79,7 +79,7 @@ function LogicNodeInner({ id, data }: NodeProps<LogicNode>) {
           type="target"
           position={Position.Left}
           id="input"
-          className="!w-3 !h-3 !bg-pf-elevated !border-2 !rounded-pf-full builder-handle"
+          className="!w-3 !h-3 !bg-elevated !border-2 !rounded-pf-full builder-handle"
           style={{ '--node-color': color } as React.CSSProperties}
         />
       )}
@@ -89,14 +89,14 @@ function LogicNodeInner({ id, data }: NodeProps<LogicNode>) {
             type="target"
             position={Position.Left}
             id="input-a"
-            className="!w-3 !h-3 !bg-pf-elevated !border-2 !rounded-pf-full builder-handle builder-handle--top"
+            className="!w-3 !h-3 !bg-elevated !border-2 !rounded-pf-full builder-handle builder-handle--top"
             style={{ '--node-color': color } as React.CSSProperties}
           />
           <Handle
             type="target"
             position={Position.Left}
             id="input-b"
-            className="!w-3 !h-3 !bg-pf-elevated !border-2 !rounded-pf-full builder-handle builder-handle--bottom"
+            className="!w-3 !h-3 !bg-elevated !border-2 !rounded-pf-full builder-handle builder-handle--bottom"
             style={{ '--node-color': color } as React.CSSProperties}
           />
         </>
@@ -118,7 +118,7 @@ function LogicNodeInner({ id, data }: NodeProps<LogicNode>) {
           <button
             type="button"
             onClick={onDelete}
-            className="p-1 rounded hover:bg-pf-text/20 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-text/50"
+            className="p-1 rounded hover:bg-primary/20 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
             aria-label="Remove block"
             title="Remove block"
           >
@@ -131,7 +131,7 @@ function LogicNodeInner({ id, data }: NodeProps<LogicNode>) {
           <div className="px-3 py-2 space-y-2">
             {d.fields.map((field) => (
               <div key={field.key}>
-                <label htmlFor={`${id}-${field.key}`} className="block text-pf-caption font-medium text-pf-text-muted mb-1 uppercase tracking-wider">
+                <label htmlFor={`${id}-${field.key}`} className="block text-pf-caption font-medium text-tertiary mb-1 uppercase tracking-wider">
                   {field.label}
                 </label>
                 <input
@@ -141,10 +141,10 @@ function LogicNodeInner({ id, data }: NodeProps<LogicNode>) {
                   value={d.config[field.key] ?? ''}
                   onChange={(e) => onFieldChange(field.key, e.target.value)}
                   aria-label={field.label}
-                  className={`w-full px-2 py-1 text-xs bg-pf-surface border border-pf-border-subtle rounded-pf-sm placeholder:text-pf-text-muted/50 focus-visible:outline-none focus-visible:border-pf-cyan-500/50 transition-colors ${
+                  className={`w-full px-2 py-1 text-xs bg-surface border border-subtle rounded-pf-sm placeholder:text-tertiary/50 focus-visible:outline-none focus-visible:border-accent/50 transition-colors ${
                     (d.config[field.key] ?? '').startsWith('$')
                       ? 'text-pf-purple-400 font-mono'
-                      : 'text-pf-text'
+                      : 'text-primary'
                   }`}
                 />
               </div>
@@ -155,7 +155,7 @@ function LogicNodeInner({ id, data }: NodeProps<LogicNode>) {
         {/* No fields message for gates */}
         {d.fields.length === 0 && isCompact && (
           <div className="px-3 py-2">
-            <span className="text-pf-caption text-pf-text-muted italic">
+            <span className="text-pf-caption text-tertiary italic">
               {d.type === 'AND_GATE' && 'True if all inputs are true'}
               {d.type === 'OR_GATE' && 'True if any input is true'}
               {d.type === 'NOT_GATE' && 'Inverts input'}
@@ -167,11 +167,11 @@ function LogicNodeInner({ id, data }: NodeProps<LogicNode>) {
         {d.type === 'IF_THEN_ELSE' && d.config.condition && (
           <div className="px-3 pb-2">
             <div className="flex items-center gap-2 text-pf-caption">
-              <span className="px-2 py-1 rounded-pf-full bg-pf-success/20 text-pf-success font-medium">
+              <span className="px-2 py-1 rounded-pf-full bg-gain/20 text-gain font-medium">
                 TRUE
               </span>
-              <span className="text-pf-text-muted">/</span>
-              <span className="px-2 py-1 rounded-pf-full bg-pf-danger/20 text-pf-danger font-medium">
+              <span className="text-tertiary">/</span>
+              <span className="px-2 py-1 rounded-pf-full bg-loss/20 text-loss font-medium">
                 FALSE
               </span>
             </div>
@@ -181,7 +181,7 @@ function LogicNodeInner({ id, data }: NodeProps<LogicNode>) {
         {/* Delay preview */}
         {d.type === 'DELAY' && d.config.seconds && (
           <div className="px-3 pb-2">
-            <span className="text-pf-caption text-pf-text-muted">
+            <span className="text-pf-caption text-tertiary">
               Wait {d.config.seconds}s
             </span>
           </div>
@@ -196,15 +196,15 @@ function LogicNodeInner({ id, data }: NodeProps<LogicNode>) {
             type="source"
             position={Position.Right}
             id="true-out"
-            className="!w-3 !h-3 !bg-pf-elevated !border-2 !rounded-pf-full builder-handle builder-handle--top"
-            style={{ '--node-color': 'var(--color-pf-success)' } as React.CSSProperties}
+            className="!w-3 !h-3 !bg-elevated !border-2 !rounded-pf-full builder-handle builder-handle--top"
+            style={{ '--node-color': 'var(--gain)' } as React.CSSProperties}
           />
           <Handle
             type="source"
             position={Position.Right}
             id="false-out"
-            className="!w-3 !h-3 !bg-pf-elevated !border-2 !rounded-pf-full builder-handle builder-handle--bottom"
-            style={{ '--node-color': 'var(--color-pf-danger)' } as React.CSSProperties}
+            className="!w-3 !h-3 !bg-elevated !border-2 !rounded-pf-full builder-handle builder-handle--bottom"
+            style={{ '--node-color': 'var(--loss)' } as React.CSSProperties}
           />
         </>
       ) : (
@@ -212,7 +212,7 @@ function LogicNodeInner({ id, data }: NodeProps<LogicNode>) {
           type="source"
           position={Position.Right}
           id="output"
-          className="!w-3 !h-3 !bg-pf-elevated !border-2 !rounded-pf-full builder-handle"
+          className="!w-3 !h-3 !bg-elevated !border-2 !rounded-pf-full builder-handle"
           style={{ '--node-color': color } as React.CSSProperties}
         />
       )}

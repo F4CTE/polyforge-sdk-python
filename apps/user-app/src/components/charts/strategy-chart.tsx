@@ -167,16 +167,16 @@ export function StrategyChart({ tokenId, label, trades, dateFrom, dateTo, live =
   const gradId = `cg-${tokenId.slice(0, 8)}`;
 
   return (
-    <div className="rounded-pf-sm bg-pf-elevated border border-pf-border overflow-hidden">
+    <div className="rounded-pf-sm bg-elevated border border-default overflow-hidden">
       {/* Header */}
-      <div className="flex items-center justify-between px-3 py-2 border-b border-pf-border">
-        <span className="text-pf-caption font-medium text-pf-text-secondary uppercase tracking-wider truncate max-w-[70%]">
+      <div className="flex items-center justify-between px-3 py-2 border-b border-default">
+        <span className="text-pf-caption font-medium text-secondary uppercase tracking-wider truncate max-w-[70%]">
           {label}
         </span>
         {!loading && !error && allCandles.length > 0 && (
-          <span className="text-pf-caption font-mono text-pf-text-muted">
+          <span className="text-pf-caption font-mono text-tertiary">
             {(candles.at(-1) ?? allCandles.at(-1))?.close.toFixed(3)}
-            {live && <span className="ml-1 text-pf-cyan-400 animate-pulse">●</span>}
+            {live && <span className="ml-1 text-accent-text animate-pulse">●</span>}
           </span>
         )}
       </div>
@@ -185,17 +185,17 @@ export function StrategyChart({ tokenId, label, trades, dateFrom, dateTo, live =
       <div className="h-[140px] w-full">
         {loading && (
           <div className="h-full flex items-center justify-center">
-            <Loader2 className="size-4 animate-spin text-pf-cyan-400 opacity-60" />
+            <Loader2 className="size-4 animate-spin text-accent-text opacity-60" />
           </div>
         )}
         {!loading && error && (
-          <div className="h-full flex flex-col items-center justify-center gap-1 text-pf-text-muted">
+          <div className="h-full flex flex-col items-center justify-center gap-1 text-tertiary">
             <AlertTriangle className="size-4 opacity-40" />
             <span className="text-pf-caption">{error}</span>
           </div>
         )}
         {!loading && !error && allCandles.length === 0 && (
-          <div className="h-full flex flex-col items-center justify-center gap-1 text-pf-text-muted">
+          <div className="h-full flex flex-col items-center justify-center gap-1 text-tertiary">
             <TrendingUp className="size-4 opacity-20" />
             <span className="text-pf-caption">No price data</span>
           </div>
@@ -282,16 +282,16 @@ export function StrategyChart({ tokenId, label, trades, dateFrom, dateTo, live =
 
       {/* Legend — only if there are trade markers */}
       {trades.length > 0 && !loading && !error && allCandles.length > 0 && (
-        <div className="flex items-center gap-3 px-3 py-1 border-t border-pf-border">
+        <div className="flex items-center gap-3 px-3 py-1 border-t border-default">
           {buyDots.length > 0 && (
-            <span className="flex items-center gap-1 text-pf-micro text-pf-text-muted">
-              <span className="size-2 rounded-pf-full bg-pf-success inline-block" />
+            <span className="flex items-center gap-1 text-pf-micro text-tertiary">
+              <span className="size-2 rounded-pf-full bg-gain inline-block" />
               {visibleBuyDots.length}/{buyDots.length} BUY
             </span>
           )}
           {sellDots.length > 0 && (
-            <span className="flex items-center gap-1 text-pf-micro text-pf-text-muted">
-              <span className="size-2 rounded-pf-full bg-pf-danger inline-block" />
+            <span className="flex items-center gap-1 text-pf-micro text-tertiary">
+              <span className="size-2 rounded-pf-full bg-loss inline-block" />
               {visibleSellDots.length}/{sellDots.length} SELL
             </span>
           )}

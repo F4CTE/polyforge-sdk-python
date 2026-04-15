@@ -3,28 +3,28 @@
 
 /* ─── React Flow CSS variable theming (must come AFTER react-flow styles) ─ */
 .dark .react-flow {
-  --xy-background-color: var(--color-pf-base);
-  --xy-node-background-color: var(--color-pf-elevated);
-  --xy-node-border-color: var(--color-pf-border);
-  --xy-node-color: var(--color-pf-text);
-  --xy-edge-stroke: var(--color-pf-border-strong);
-  --xy-minimap-background-color: var(--color-pf-surface);
-  --xy-minimap-node-background-color: var(--color-pf-cyan-500);
-  --xy-controls-button-background-color: var(--color-pf-elevated);
-  --xy-controls-button-border-color: var(--color-pf-border);
-  --xy-controls-button-color: var(--color-pf-text);
+  --xy-background-color: var(--bg-app);
+  --xy-node-background-color: var(--bg-elevated);
+  --xy-node-border-color: var(--border-subtle);
+  --xy-node-color: var(--text-primary);
+  --xy-edge-stroke: var(--border-strong);
+  --xy-minimap-background-color: var(--bg-surface);
+  --xy-minimap-node-background-color: var(--accent-default);
+  --xy-controls-button-background-color: var(--bg-elevated);
+  --xy-controls-button-border-color: var(--border-subtle);
+  --xy-controls-button-color: var(--text-primary);
 }
 
 .light .react-flow {
-  --xy-background-color: var(--color-pf-elevated);
-  --xy-node-background-color: var(--color-pf-elevated);
-  --xy-node-border-color: var(--color-pf-border);
-  --xy-node-color: var(--color-pf-text);
-  --xy-edge-stroke: var(--color-pf-border-strong);
-  --xy-minimap-background-color: var(--color-pf-surface);
-  --xy-controls-button-background-color: var(--color-pf-elevated);
-  --xy-controls-button-border-color: var(--color-pf-border);
-  --xy-controls-button-color: var(--color-pf-text);
+  --xy-background-color: var(--bg-elevated);
+  --xy-node-background-color: var(--bg-elevated);
+  --xy-node-border-color: var(--border-subtle);
+  --xy-node-color: var(--text-primary);
+  --xy-edge-stroke: var(--border-strong);
+  --xy-minimap-background-color: var(--bg-surface);
+  --xy-controls-button-background-color: var(--bg-elevated);
+  --xy-controls-button-border-color: var(--border-subtle);
+  --xy-controls-button-color: var(--text-primary);
 }
 /* Block node override — React Flow default styles set white bg */
 .react-flow__node {
@@ -35,7 +35,7 @@
 }
 /* Edge styling */
 .react-flow__edge-path {
-  stroke: var(--color-pf-cyan-500) !important;
+  stroke: var(--accent-default) !important;
   stroke-width: 2 !important;
 }
 .react-flow__edge.animated .react-flow__edge-path {
@@ -43,7 +43,7 @@
 }
 /* Selection */
 .react-flow__node.selected > div {
-  outline: 2px solid var(--color-pf-cyan-500);
+  outline: 2px solid var(--accent-default);
   outline-offset: 2px;
   border-radius: var(--radius-pf-md);
 }
@@ -51,7 +51,7 @@
 /* ─── Minimap polish ─────────────────────────────────────────────────────── */
 .react-flow__minimap {
   border-radius: 12px !important;
-  border: 1px solid var(--color-pf-border) !important;
+  border: 1px solid var(--border-subtle) !important;
   box-shadow: 0 4px 24px color-mix(in srgb, black 25%, transparent), 0 0 0 1px color-mix(in srgb, white 4%, transparent) !important;
   overflow: hidden !important;
   backdrop-filter: blur(12px) !important;
@@ -62,17 +62,17 @@
   opacity: 1;
 }
 .dark .react-flow__minimap {
-  background: color-mix(in srgb, var(--color-pf-base) 80%, transparent) !important;
+  background: color-mix(in srgb, var(--bg-app) 80%, transparent) !important;
 }
 .light .react-flow__minimap {
-  background: color-mix(in srgb, var(--color-pf-base) 85%, transparent) !important;
+  background: color-mix(in srgb, var(--bg-app) 85%, transparent) !important;
   box-shadow: 0 4px 16px color-mix(in srgb, black 8%, transparent), 0 0 0 1px color-mix(in srgb, black 5%, transparent) !important;
 }
 /* Minimap viewport mask (the draggable rectangle) */
 .react-flow__minimap-mask {
-  fill: var(--color-pf-cyan-500) !important;
+  fill: var(--accent-default) !important;
   fill-opacity: 0.08 !important;
-  stroke: var(--color-pf-cyan-500) !important;
+  stroke: var(--accent-default) !important;
   stroke-width: 1.5 !important;
   stroke-opacity: 0.5 !important;
   rx: 4 !important;
@@ -81,27 +81,27 @@
 /* ─── Controls polish ────────────────────────────────────────────────────── */
 .react-flow__controls {
   border-radius: 10px !important;
-  border: 1px solid var(--color-pf-border) !important;
+  border: 1px solid var(--border-subtle) !important;
   box-shadow: 0 4px 16px color-mix(in srgb, black 20%, transparent) !important;
   overflow: hidden !important;
 }
 .react-flow__controls-button {
   width: 32px !important;
   height: 32px !important;
-  border-bottom: 1px solid var(--color-pf-border) !important;
+  border-bottom: 1px solid var(--border-subtle) !important;
   transition: background var(--transition-duration-pf-fast) ease !important;
 }
 .react-flow__controls-button:last-child {
   border-bottom: none !important;
 }
 .dark .react-flow__controls-button:hover {
-  background: var(--color-pf-surface) !important;
+  background: var(--bg-surface) !important;
 }
 .light .react-flow__controls-button:hover {
-  background: var(--color-pf-surface) !important;
+  background: var(--bg-surface) !important;
 }
 .react-flow__controls-button:focus-visible {
-  outline: 2px solid var(--color-pf-cyan-500) !important;
+  outline: 2px solid var(--accent-default) !important;
   outline-offset: -2px !important;
 }
 
@@ -112,7 +112,7 @@
 
 /* ─── Auth background ────────────────────────────────────────────────── */
 .auth-bg-gradient {
-  background: radial-gradient(ellipse at 50% 0%, color-mix(in srgb, var(--color-pf-cyan-500) 10%, transparent) 0%, transparent 50%), radial-gradient(ellipse at 80% 100%, color-mix(in srgb, var(--color-pf-cyan-500) 5%, transparent) 0%, transparent 40%);
+  background: radial-gradient(ellipse at 50% 0%, color-mix(in srgb, var(--accent-default) 10%, transparent) 0%, transparent 50%), radial-gradient(ellipse at 80% 100%, color-mix(in srgb, var(--accent-default) 5%, transparent) 0%, transparent 40%);
 }
 
 @keyframes float {
@@ -133,11 +133,11 @@
 
 /* Base card shared by all builder nodes — set --node-color on the element */
 .builder-node-card {
-  background-color: var(--color-pf-elevated);
+  background-color: var(--bg-elevated);
   border-width: 1px;
   border-style: solid;
   border-color: color-mix(in srgb, var(--node-color) 38%, transparent);
-  color: var(--color-pf-text);
+  color: var(--text-primary);
 }
 .builder-node-card--executing {
   border-width: 1.5px;
@@ -154,7 +154,7 @@
 /* Solid header variant (calc, logic, variable) */
 .builder-node-header--solid {
   background-color: var(--node-color);
-  color: var(--color-pf-text);
+  color: var(--text-primary);
 }
 
 /* Handle border picks up --node-color */
@@ -186,8 +186,8 @@
 /* Setup-needed glow on the card */
 .builder-node-card--setup-needed {
   box-shadow:
-    0 0 0 1px color-mix(in srgb, var(--color-pf-danger) 18%, transparent),
-    0 0 14px color-mix(in srgb, var(--color-pf-danger) 12%, transparent);
+    0 0 0 1px color-mix(in srgb, var(--loss) 18%, transparent),
+    0 0 14px color-mix(in srgb, var(--loss) 12%, transparent);
 }
 
 /* ─── Ambient & builder duration tokens (§9 documented exceptions) ──── */
@@ -210,24 +210,24 @@
 
 /* ─── Strategy canvas animations ─────────────────────────────────────── */
 @keyframes blockPulse {
-  0%, 100% { box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-pf-cyan-500) 18%, transparent), 0 0 8px color-mix(in srgb, var(--color-pf-cyan-500) 10%, transparent); }
-  50%       { box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-pf-cyan-500) 42%, transparent), 0 0 22px color-mix(in srgb, var(--color-pf-cyan-500) 22%, transparent); }
+  0%, 100% { box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent-default) 18%, transparent), 0 0 8px color-mix(in srgb, var(--accent-default) 10%, transparent); }
+  50%       { box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent-default) 42%, transparent), 0 0 22px color-mix(in srgb, var(--accent-default) 22%, transparent); }
 }
 @keyframes blockFired {
-  0%   { box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-pf-cyan-500) 90%, transparent), 0 0 40px color-mix(in srgb, var(--color-pf-cyan-500) 55%, transparent); transform: scale(1.025); }
-  55%  { box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-pf-cyan-500) 50%, transparent), 0 0 18px color-mix(in srgb, var(--color-pf-cyan-500) 28%, transparent); transform: scale(1.005); }
-  100% { box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-pf-cyan-500) 18%, transparent), 0 0 8px color-mix(in srgb, var(--color-pf-cyan-500) 10%, transparent); transform: scale(1); }
+  0%   { box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent-default) 90%, transparent), 0 0 40px color-mix(in srgb, var(--accent-default) 55%, transparent); transform: scale(1.025); }
+  55%  { box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent-default) 50%, transparent), 0 0 18px color-mix(in srgb, var(--accent-default) 28%, transparent); transform: scale(1.005); }
+  100% { box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent-default) 18%, transparent), 0 0 8px color-mix(in srgb, var(--accent-default) 10%, transparent); transform: scale(1); }
 }
 @keyframes safetyPulse {
-  0%, 100% { box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-pf-danger) 15%, transparent), 0 0 6px color-mix(in srgb, var(--color-pf-danger) 8%, transparent); }
-  50%       { box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-pf-danger) 35%, transparent), 0 0 16px color-mix(in srgb, var(--color-pf-danger) 18%, transparent); }
+  0%, 100% { box-shadow: 0 0 0 1px color-mix(in srgb, var(--loss) 15%, transparent), 0 0 6px color-mix(in srgb, var(--loss) 8%, transparent); }
+  50%       { box-shadow: 0 0 0 2px color-mix(in srgb, var(--loss) 35%, transparent), 0 0 16px color-mix(in srgb, var(--loss) 18%, transparent); }
 }
 
 /* ─── Tooltip tour highlight ─────────────────────────────────────────── */
 .tour-highlight {
   position: relative;
   z-index: 9999 !important;
-  box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-pf-cyan-500) 30%, transparent), 0 0 20px color-mix(in srgb, var(--color-pf-cyan-500) 10%, transparent) !important;
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent-default) 30%, transparent), 0 0 20px color-mix(in srgb, var(--accent-default) 10%, transparent) !important;
   border-radius: 8px;
 }
 

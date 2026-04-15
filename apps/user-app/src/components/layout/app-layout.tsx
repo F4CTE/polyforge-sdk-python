@@ -79,9 +79,9 @@ export function AppLayout() {
   }, []);
 
   return (
-    <div className="flex h-screen bg-pf-base text-pf-text overflow-hidden">
+    <div className="flex h-screen bg-app text-primary overflow-hidden">
       {/* Skip to main content */}
-      <a href="#main-content" className="sr-only focus-visible:not-sr-only focus-visible:absolute focus-visible:z-[100] focus-visible:top-2 focus-visible:left-2 focus-visible:px-4 focus-visible:py-2 focus-visible:bg-pf-cyan-500 focus-visible:text-pf-text-contrast focus-visible:rounded-pf focus-visible:text-sm focus-visible:font-medium">
+      <a href="#main-content" className="sr-only focus-visible:not-sr-only focus-visible:absolute focus-visible:z-[100] focus-visible:top-2 focus-visible:left-2 focus-visible:px-4 focus-visible:py-2 focus-visible:bg-accent focus-visible:text-inverse focus-visible:rounded-pf focus-visible:text-sm focus-visible:font-medium">
         Skip to main content
       </a>
       {/* Desktop sidebar */}
@@ -92,7 +92,7 @@ export function AppLayout() {
       {/* Mobile sidebar overlay */}
       {mobileOpen && (
         <div className="fixed inset-0 z-40 md:hidden" role="dialog" aria-modal="true" aria-label="Navigation menu">
-          <div className="absolute inset-0 bg-pf-backdrop-light" onClick={() => setMobileOpen(false)} aria-hidden="true" />
+          <div className="absolute inset-0 bg-black/50" onClick={() => setMobileOpen(false)} aria-hidden="true" />
           <div className="relative z-50 h-full w-60">
             <Sidebar collapsed={false} onToggle={() => setMobileOpen(false)} />
           </div>
@@ -104,7 +104,7 @@ export function AppLayout() {
           <button
             type="button"
             onClick={() => setMobileOpen(true)}
-            className="min-h-[44px] min-w-[44px] flex items-center justify-center ml-2 rounded-pf-sm text-pf-text-muted hover:bg-pf-elevated hover:text-pf-text active:bg-pf-surface transition-colors md:hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40"
+            className="min-h-[44px] min-w-[44px] flex items-center justify-center ml-2 rounded-pf-sm text-tertiary hover:bg-elevated hover:text-primary active:bg-surface transition-colors md:hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
             aria-label="Open navigation menu"
           >
             <Menu size={20} />

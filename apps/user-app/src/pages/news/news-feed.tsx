@@ -74,31 +74,31 @@ const SENTIMENT_TABS: { label: string; value: SentimentFilter }[] = [
 
 function sourceColor(source: string): string {
   const map: Record<string, string> = {
-    Reuters: 'bg-pf-info/15 text-pf-info border-pf-info/30',
-    CNN: 'bg-pf-danger/15 text-pf-danger border-pf-danger/30',
-    CoinGecko: 'bg-pf-warning/15 text-pf-warning border-pf-warning/30',
+    Reuters: 'bg-info/15 text-info border-info/30',
+    CNN: 'bg-loss/15 text-loss border-loss/30',
+    CoinGecko: 'bg-warning/15 text-warning border-warning/30',
     Bloomberg: 'bg-pf-purple-500/15 text-pf-purple-500 border-pf-purple-500/30',
-    'AP News': 'bg-pf-cyan-500/15 text-pf-cyan-500 border-pf-cyan-500/30',
+    'AP News': 'bg-accent/15 text-accent border-accent/30',
   };
-  return map[source] ?? 'bg-pf-overlay text-pf-text-muted border-pf-border';
+  return map[source] ?? 'bg-overlay text-tertiary border-default';
 }
 
 function sentimentColor(s: Sentiment): string {
-  if (s === 'POSITIVE') return 'bg-pf-success/15 text-pf-success';
-  if (s === 'NEGATIVE') return 'bg-pf-danger/15 text-pf-danger';
-  return 'bg-pf-overlay text-pf-text-muted';
+  if (s === 'POSITIVE') return 'bg-gain/15 text-gain';
+  if (s === 'NEGATIVE') return 'bg-loss/15 text-loss';
+  return 'bg-overlay text-tertiary';
 }
 
 function confidenceColor(c: number): string {
-  if (c > 70) return 'bg-pf-success';
-  if (c >= 40) return 'bg-pf-warning';
-  return 'bg-pf-danger';
+  if (c > 70) return 'bg-gain';
+  if (c >= 40) return 'bg-warning';
+  return 'bg-loss';
 }
 
 function confidenceBarBg(c: number): string {
-  if (c > 70) return 'bg-pf-success/15';
-  if (c >= 40) return 'bg-pf-warning/15';
-  return 'bg-pf-danger/15';
+  if (c > 70) return 'bg-gain/15';
+  if (c >= 40) return 'bg-warning/15';
+  return 'bg-loss/15';
 }
 
 function timeAgo(ts: string): string {
@@ -117,25 +117,25 @@ function timeAgo(ts: string): string {
 
 function ArticleSkeleton() {
   return (
-    <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4 space-y-3 animate-shimmer">
+    <div className="bg-elevated border border-default rounded-pf-lg p-4 space-y-3 animate-shimmer">
       <div className="flex items-center gap-2">
-        <div className="h-5 w-16 bg-pf-overlay rounded-pf-full" />
-        <div className="h-5 w-16 bg-pf-overlay rounded-pf-full" />
-        <div className="ml-auto h-3 w-16 bg-pf-overlay rounded" />
+        <div className="h-5 w-16 bg-overlay rounded-pf-full" />
+        <div className="h-5 w-16 bg-overlay rounded-pf-full" />
+        <div className="ml-auto h-3 w-16 bg-overlay rounded" />
       </div>
-      <div className="h-4 bg-pf-overlay rounded w-[85%]" />
-      <div className="h-3 bg-pf-overlay rounded w-[70%]" />
-      <div className="h-3 bg-pf-overlay rounded w-[50%]" />
+      <div className="h-4 bg-overlay rounded w-[85%]" />
+      <div className="h-3 bg-overlay rounded w-[70%]" />
+      <div className="h-3 bg-overlay rounded w-[50%]" />
     </div>
   );
 }
 
 function SignalSkeleton() {
   return (
-    <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-3 space-y-2 animate-shimmer">
-      <div className="h-4 bg-pf-overlay rounded w-[60%]" />
-      <div className="h-3 bg-pf-overlay rounded w-[40%]" />
-      <div className="h-2 bg-pf-overlay rounded w-full" />
+    <div className="bg-elevated border border-default rounded-pf-lg p-3 space-y-2 animate-shimmer">
+      <div className="h-4 bg-overlay rounded w-[60%]" />
+      <div className="h-3 bg-overlay rounded w-[40%]" />
+      <div className="h-2 bg-overlay rounded w-full" />
     </div>
   );
 }
@@ -249,31 +249,31 @@ export function Component() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <Newspaper className="size-6 text-pf-cyan-400" aria-hidden="true" />
-          <h1 className="text-2xl font-semibold text-pf-text">AI News &amp; Signals</h1>
+          <Newspaper className="size-6 text-accent-text" aria-hidden="true" />
+          <h1 className="text-2xl font-semibold text-primary">AI News &amp; Signals</h1>
         </div>
-        <span className="text-sm text-pf-text-muted">{loading ? '...' : total} articles</span>
+        <span className="text-sm text-tertiary">{loading ? '...' : total} articles</span>
       </div>
 
       {/* Filters */}
       <div className="flex flex-wrap items-center gap-3">
         {/* Market search filter */}
         <div className="relative">
-          <div className="flex items-center gap-2 px-3 py-2 rounded-pf-sm border border-pf-border bg-pf-elevated focus-within:border-pf-cyan-500/50 transition-colors">
-            <Search className="size-3 text-pf-text-muted shrink-0" aria-hidden="true" />
+          <div className="flex items-center gap-2 px-3 py-2 rounded-pf-sm border border-default bg-elevated focus-within:border-accent/50 transition-colors">
+            <Search className="size-3 text-tertiary shrink-0" aria-hidden="true" />
             <Input
               type="text"
               value={marketSearch}
               onChange={e => setMarketSearch(e.target.value)}
               placeholder="Search markets..."
               aria-label="Search markets to filter news"
-              className="text-xs bg-transparent text-pf-text-secondary placeholder:text-pf-text-muted outline-none w-36"
+              className="text-xs bg-transparent text-secondary placeholder:text-tertiary outline-none w-36"
             />
           </div>
 
           {/* Dropdown */}
           {marketSearchResults.length > 0 && !marketId && (
-            <div className="absolute z-20 left-0 mt-1 w-72 bg-pf-elevated border border-pf-border rounded-pf-sm shadow-pf-lg overflow-hidden">
+            <div className="absolute z-20 left-0 mt-1 w-72 bg-elevated border border-default rounded-pf-sm shadow-pf-lg overflow-hidden">
               {marketSearchResults.map(m => (
                 <Button
                   key={m.id}
@@ -286,10 +286,10 @@ export function Component() {
                     setMarketSearchResults([]);
                     setPage(1);
                   }}
-                  className="w-full flex flex-col items-start px-3 py-2 hover:bg-pf-surface transition-colors text-left"
+                  className="w-full flex flex-col items-start px-3 py-2 hover:bg-surface transition-colors text-left"
                 >
-                  <span className="text-pf-caption font-mono text-pf-text-muted">{m.slug}</span>
-                  <span className="text-xs text-pf-text truncate w-full">
+                  <span className="text-pf-caption font-mono text-tertiary">{m.slug}</span>
+                  <span className="text-xs text-primary truncate w-full">
                     {m.question.length > 60 ? m.question.slice(0, 60) + '…' : m.question}
                   </span>
                 </Button>
@@ -300,14 +300,14 @@ export function Component() {
 
         {/* Active market filter chip */}
         {marketId && (
-          <span className="inline-flex items-center gap-2 px-3 py-2 rounded-pf-full text-xs font-medium bg-pf-cyan-500/15 text-pf-cyan-400 border border-pf-cyan-500/30">
+          <span className="inline-flex items-center gap-2 px-3 py-2 rounded-pf-full text-xs font-medium bg-accent/15 text-accent-text border border-accent/30">
             {selectedMarketName}
             <Button
               type="button"
               variant="ghost"
               aria-label="Clear market filter"
               onClick={() => { setMarketId(null); setSelectedMarketName(''); setPage(1); }}
-              className="hover:text-pf-cyan-300 transition-colors"
+              className="hover:text-accent-text transition-colors"
             >
               <X className="size-3" />
             </Button>
@@ -319,7 +319,7 @@ export function Component() {
           value={source}
           onChange={e => changeSource(e.target.value)}
           aria-label="Filter by news source"
-          className="px-3 py-2 rounded-pf-sm text-xs bg-pf-elevated text-pf-text-secondary border border-pf-border hover:border-pf-border-strong transition-colors"
+          className="px-3 py-2 rounded-pf-sm text-xs bg-elevated text-secondary border border-default hover:border-strong transition-colors"
         >
           {SOURCES.map(s => (
             <option key={s} value={s}>{s}</option>
@@ -336,8 +336,8 @@ export function Component() {
               onClick={() => changeSentiment(tab.value)}
               className={`px-3 py-2 rounded-pf-full text-xs font-medium whitespace-nowrap border transition-colors ${
                 sentiment === tab.value
-                  ? 'bg-pf-cyan-500/15 text-pf-cyan-400 border-pf-cyan-500/30'
-                  : 'bg-pf-elevated text-pf-text-secondary border-pf-border hover:border-pf-border-strong'
+                  ? 'bg-accent/15 text-accent-text border-accent/30'
+                  : 'bg-elevated text-secondary border-default hover:border-strong'
               }`}
             >
               {tab.label}
@@ -347,7 +347,7 @@ export function Component() {
 
         {/* Min confidence slider */}
         <div className="flex items-center gap-3 ml-auto">
-          <label htmlFor="min-confidence" className="text-xs text-pf-text-muted">Min Confidence:</label>
+          <label htmlFor="min-confidence" className="text-xs text-tertiary">Min Confidence:</label>
           <input
             id="min-confidence"
             type="range"
@@ -356,9 +356,9 @@ export function Component() {
             step={5}
             value={minConfidence}
             onChange={e => { setMinConfidence(Number(e.target.value)); setPage(1); }}
-            className="w-24 accent-pf-cyan-500"
+            className="w-24 accent-accent"
           />
-          <span className="text-xs font-mono text-pf-text-secondary w-8 text-right">{minConfidence}%</span>
+          <span className="text-xs font-mono text-secondary w-8 text-right">{minConfidence}%</span>
         </div>
       </div>
 
@@ -372,9 +372,9 @@ export function Component() {
             </div>
           ) : articles.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20 text-center">
-              <Newspaper className="size-10 text-pf-text-muted mb-4" />
-              <p className="text-pf-text font-medium">No news articles found</p>
-              <p className="text-sm text-pf-text-muted mt-1">Adjust filters or check back later.</p>
+              <Newspaper className="size-10 text-tertiary mb-4" />
+              <p className="text-primary font-medium">No news articles found</p>
+              <p className="text-sm text-tertiary mt-1">Adjust filters or check back later.</p>
             </div>
           ) : (
             <div className={`space-y-4 ${loading ? 'opacity-60' : ''}`}>
@@ -385,7 +385,7 @@ export function Component() {
                   <div
                     key={article.id}
                     data-testid="news-card"
-                    className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4 transition-all duration-pf-normal hover:border-pf-border-strong hover:shadow-pf-sm"
+                    className="bg-elevated border border-default rounded-pf-lg p-4 transition-all duration-pf-normal hover:border-strong hover:shadow-pf-sm"
                   >
                     {/* Top row: badges + time */}
                     <div className="flex items-center gap-2 mb-2">
@@ -397,17 +397,17 @@ export function Component() {
                       </span>
                       <span
                         data-testid="sentiment-indicator"
-                        className={`sr-only ${article.sentiment === 'POSITIVE' ? 'text-pf-success' : article.sentiment === 'NEGATIVE' ? 'text-pf-danger' : 'text-pf-text-muted'}`}
+                        className={`sr-only ${article.sentiment === 'POSITIVE' ? 'text-gain' : article.sentiment === 'NEGATIVE' ? 'text-loss' : 'text-tertiary'}`}
                         aria-hidden="true"
                       >
                         {article.sentiment}
                       </span>
                       {signals.length > 0 && (
-                        <span className="px-2 py-1 rounded-pf-full text-pf-label font-medium bg-pf-cyan-500/15 text-pf-cyan-400">
+                        <span className="px-2 py-1 rounded-pf-full text-pf-label font-medium bg-accent/15 text-accent-text">
                           {signals.length} signal{signals.length !== 1 ? 's' : ''}
                         </span>
                       )}
-                      <span className="ml-auto text-pf-label text-pf-text-muted">{timeAgo(article.publishedAt)}</span>
+                      <span className="ml-auto text-pf-label text-tertiary">{timeAgo(article.publishedAt)}</span>
                     </div>
 
                     {/* Title */}
@@ -416,14 +416,14 @@ export function Component() {
                       target="_blank"
                       rel="noopener noreferrer"
                       data-testid="news-title"
-                      className="text-sm font-medium text-pf-text hover:text-pf-cyan-400 transition-colors inline-flex items-center gap-2"
+                      className="text-sm font-medium text-primary hover:text-accent-text transition-colors inline-flex items-center gap-2"
                     >
                       {article.title}
                       <ExternalLink className="size-3 shrink-0 opacity-50" />
                     </a>
 
                     {/* Summary */}
-                    <p data-testid="news-summary" className="text-xs text-pf-text-secondary mt-2 line-clamp-2 leading-relaxed">
+                    <p data-testid="news-summary" className="text-xs text-secondary mt-2 line-clamp-2 leading-relaxed">
                       {article.summary}
                     </p>
                     <span data-testid="news-timestamp" className="sr-only">{article.publishedAt}</span>
@@ -435,23 +435,23 @@ export function Component() {
                           type="button"
                           variant="ghost"
                           onClick={() => setExpandedId(expanded ? null : article.id)}
-                          className="flex items-center gap-1 mt-3 text-xs text-pf-cyan-400 hover:text-pf-cyan-300 transition-colors"
+                          className="flex items-center gap-1 mt-3 text-xs text-accent-text hover:text-accent-text transition-colors"
                         >
                           {expanded ? <ChevronUp className="size-4" /> : <ChevronDown className="size-4" />}
                           {expanded ? 'Hide signals' : `Show ${signals.length} signal${signals.length !== 1 ? 's' : ''}`}
                         </Button>
 
                         {expanded && (
-                          <div className="mt-3 space-y-2 border-t border-pf-border-subtle pt-3">
+                          <div className="mt-3 space-y-2 border-t border-subtle pt-3">
                             {signals.map(signal => (
                               <div
                                 key={signal.id}
                                 data-testid="trading-signal"
-                                className="flex items-center gap-3 px-3 py-2 rounded-pf-sm bg-pf-surface border border-pf-border-subtle"
+                                className="flex items-center gap-3 px-3 py-2 rounded-pf-sm bg-surface border border-subtle"
                               >
                                 {/* Direction arrow */}
                                 <div data-testid="signal-type" className={`flex items-center gap-1 text-xs font-semibold ${
-                                  signal.direction === 'BUY' ? 'text-pf-success' : 'text-pf-danger'
+                                  signal.direction === 'BUY' ? 'text-gain' : 'text-loss'
                                 }`}>
                                   {signal.direction === 'BUY'
                                     ? <ArrowUpRight className="size-4" />
@@ -461,11 +461,11 @@ export function Component() {
                                 </div>
 
                                 {/* Market name */}
-                                <span className="text-xs text-pf-text truncate flex-1">{signal.marketName}</span>
+                                <span className="text-xs text-primary truncate flex-1">{signal.marketName}</span>
 
                                 {/* Outcome */}
                                 <span className={`px-2 py-1 rounded text-pf-caption font-semibold ${
-                                  signal.outcome === 'YES' ? 'bg-pf-success/15 text-pf-success' : 'bg-pf-danger/15 text-pf-danger'
+                                  signal.outcome === 'YES' ? 'bg-gain/15 text-gain' : 'bg-loss/15 text-loss'
                                 }`}>
                                   {signal.outcome}
                                 </span>
@@ -478,13 +478,13 @@ export function Component() {
                                       style={{ width: `${signal.confidence}%` }}
                                     />
                                   </div>
-                                  <span className="text-pf-caption font-mono text-pf-text-muted w-7 text-right">{signal.confidence}%</span>
+                                  <span className="text-pf-caption font-mono text-tertiary w-7 text-right">{signal.confidence}%</span>
                                 </div>
 
                                 {/* Trade button */}
                                 <Link
                                   to={`/markets/${signal.marketId}`}
-                                  className="px-2 py-1 rounded-pf-sm text-pf-label font-medium border border-pf-cyan-500/30 text-pf-cyan-400 hover:bg-pf-cyan-500/10 transition-colors"
+                                  className="px-2 py-1 rounded-pf-sm text-pf-label font-medium border border-accent/30 text-accent-text hover:bg-accent/10 transition-colors"
                                 >
                                   Trade
                                 </Link>
@@ -499,7 +499,7 @@ export function Component() {
                     <div className="flex items-center justify-end mt-2">
                       <Link
                         to={`/news/${article.id}`}
-                        className="text-pf-label text-pf-text-muted hover:text-pf-cyan-400 transition-colors"
+                        className="text-pf-label text-tertiary hover:text-accent-text transition-colors"
                       >
                         View details &rarr;
                       </Link>
@@ -520,11 +520,11 @@ export function Component() {
                 onClick={() => setPage(p => Math.max(1, p - 1))}
                 disabled={page === 1}
                 aria-label="Previous page"
-                className="p-2 rounded-pf text-pf-text-secondary hover:text-pf-text hover:bg-pf-elevated disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                className="p-2 rounded-pf text-secondary hover:text-primary hover:bg-elevated disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
               >
                 <ChevronLeft className="size-4" />
               </Button>
-              <span data-testid="page-indicator" className="text-sm font-mono text-pf-text-secondary" aria-live="polite">{page} / {totalPages}</span>
+              <span data-testid="page-indicator" className="text-sm font-mono text-secondary" aria-live="polite">{page} / {totalPages}</span>
               <Button
                 type="button"
                 variant="ghost"
@@ -532,7 +532,7 @@ export function Component() {
                 onClick={() => setPage(p => Math.min(totalPages, p + 1))}
                 disabled={page === totalPages}
                 aria-label="Next page"
-                className="p-2 rounded-pf text-pf-text-secondary hover:text-pf-text hover:bg-pf-elevated disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                className="p-2 rounded-pf text-secondary hover:text-primary hover:bg-elevated disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
               >
                 <ChevronRight className="size-4" />
               </Button>
@@ -543,8 +543,8 @@ export function Component() {
         {/* Right column: Top Signals sidebar (1/3) — hidden when empty */}
         {(loadingSignals || topSignals.length > 0) && (
         <div className="space-y-4">
-          <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4">
-            <h2 className="text-sm font-medium text-pf-text mb-4">Top Signals</h2>
+          <div className="bg-elevated border border-default rounded-pf-lg p-4">
+            <h2 className="text-sm font-medium text-primary mb-4">Top Signals</h2>
 
             {loadingSignals && topSignals.length === 0 ? (
               <div className="space-y-3">
@@ -557,17 +557,17 @@ export function Component() {
                     key={signal.id}
                     className={`rounded-pf-sm border p-3 transition-all duration-pf-normal ${
                       signal.confidence > 80
-                        ? 'border-pf-cyan-500/30 shadow-pf-glow-cyan'
-                        : 'border-pf-border-subtle'
+                        ? 'border-accent/30 shadow-pf-glow-cyan'
+                        : 'border-subtle'
                     }`}
                   >
                     {/* Market + direction */}
                     <div className="flex items-center gap-2 mb-2">
-                      <span className="text-xs text-pf-text font-medium truncate flex-1">
+                      <span className="text-xs text-primary font-medium truncate flex-1">
                         {signal.marketName}
                       </span>
                       <span className={`flex items-center gap-1 text-xs font-semibold ${
-                        signal.direction === 'BUY' ? 'text-pf-success' : 'text-pf-danger'
+                        signal.direction === 'BUY' ? 'text-gain' : 'text-loss'
                       }`}>
                         {signal.direction === 'BUY'
                           ? <><ArrowUpRight className="size-3" /> BUY</>
@@ -584,16 +584,16 @@ export function Component() {
                           style={{ width: `${signal.confidence}%` }}
                         />
                       </div>
-                      <span className="text-pf-caption font-mono text-pf-text-muted w-7 text-right">{signal.confidence}%</span>
+                      <span className="text-pf-caption font-mono text-tertiary w-7 text-right">{signal.confidence}%</span>
                     </div>
 
                     {/* Reasoning */}
-                    <p className="text-pf-label text-pf-text-muted line-clamp-1 mb-2">{signal.reasoning}</p>
+                    <p className="text-pf-label text-tertiary line-clamp-1 mb-2">{signal.reasoning}</p>
 
                     {/* Trade button */}
                     <Link
                       to={`/markets/${signal.marketId}`}
-                      className="inline-flex items-center gap-1 px-3 py-1 rounded-pf-sm text-pf-label font-medium border border-pf-cyan-500/30 text-pf-cyan-400 hover:bg-pf-cyan-500/10 transition-colors"
+                      className="inline-flex items-center gap-1 px-3 py-1 rounded-pf-sm text-pf-label font-medium border border-accent/30 text-accent-text hover:bg-accent/10 transition-colors"
                     >
                       Trade
                     </Link>

@@ -77,10 +77,10 @@ const CHANGELOG: ChangelogEntry[] = [
 
 function tagCls(tag: ChangelogEntry['tag']): string {
   switch (tag) {
-    case 'Breaking':    return 'bg-pf-danger/10 text-pf-danger';
-    case 'Feature':     return 'bg-pf-info/10 text-pf-info';
-    case 'Improvement': return 'bg-pf-success/10 text-pf-success';
-    case 'Fix':         return 'bg-pf-warning/10 text-pf-warning';
+    case 'Breaking':    return 'bg-loss/10 text-loss';
+    case 'Feature':     return 'bg-info/10 text-info';
+    case 'Improvement': return 'bg-gain/10 text-gain';
+    case 'Fix':         return 'bg-warning/10 text-warning';
   }
 }
 
@@ -109,23 +109,23 @@ export function renderContent({
         title="Getting Started"
         subtitle="Three steps to make your first API call against the Polyforge REST API."
       />
-      <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4 flex flex-wrap items-center justify-between gap-4">
+      <div className="bg-elevated border border-default rounded-pf-lg p-4 flex flex-wrap items-center justify-between gap-4">
         <div>
-          <p className="text-xs text-pf-text-muted uppercase tracking-wider mb-1">Base URL</p>
-          <code className="text-sm font-mono text-pf-cyan-400">https://api.polyforge.app/api/v1</code>
+          <p className="text-xs text-tertiary uppercase tracking-wider mb-1">Base URL</p>
+          <code className="text-sm font-mono text-accent-text">https://api.polyforge.app/api/v1</code>
         </div>
         <div className="flex gap-2">
-          <span className="inline-flex items-center text-pf-label font-medium px-2 py-1 rounded-pf-full bg-pf-overlay text-pf-text-secondary">REST · JSON</span>
-          <span className="inline-flex items-center text-pf-label font-medium px-2 py-1 rounded-pf-full bg-pf-overlay text-pf-text-secondary">TLS 1.2+</span>
+          <span className="inline-flex items-center text-pf-label font-medium px-2 py-1 rounded-pf-full bg-overlay text-secondary">REST · JSON</span>
+          <span className="inline-flex items-center text-pf-label font-medium px-2 py-1 rounded-pf-full bg-overlay text-secondary">TLS 1.2+</span>
         </div>
       </div>
       <div className="space-y-3">
         {[
           {
             step: '1', title: 'Create an API key', body: (
-              <p className="text-sm text-pf-text-secondary">
-                Go to <Link to="/settings" className="text-pf-cyan-400 hover:text-pf-cyan-300 underline underline-offset-2">Settings → API Keys</Link> and
-                click <strong className="text-pf-text">Create Key</strong>. Choose the scopes you need
+              <p className="text-sm text-secondary">
+                Go to <Link to="/settings" className="text-accent-text hover:text-accent-text underline underline-offset-2">Settings → API Keys</Link> and
+                click <strong className="text-primary">Create Key</strong>. Choose the scopes you need
                 (<InlineCode>READ</InlineCode> / <InlineCode>WRITE</InlineCode> / <InlineCode>TRADE</InlineCode>) and
                 copy the key — it is shown only once.
               </p>
@@ -148,10 +148,10 @@ export function renderContent({
             ),
           },
         ].map(({ step, title, body }) => (
-          <div key={step} className="flex gap-4 p-4 bg-pf-elevated border border-pf-border rounded-pf-lg">
-            <span className="shrink-0 w-6 h-6 rounded-pf-full bg-pf-cyan-500/20 text-pf-cyan-400 text-xs font-bold flex items-center justify-center">{step}</span>
+          <div key={step} className="flex gap-4 p-4 bg-elevated border border-default rounded-pf-lg">
+            <span className="shrink-0 w-6 h-6 rounded-pf-full bg-accent/20 text-accent-text text-xs font-bold flex items-center justify-center">{step}</span>
             <div className="flex-1 space-y-3">
-              <p className="text-sm font-medium text-pf-text">{title}</p>
+              <p className="text-sm font-medium text-primary">{title}</p>
               {body}
             </div>
           </div>
@@ -175,16 +175,16 @@ export function renderContent({
             { scope: 'WRITE', cls: SCOPE_CLS.WRITE, desc: 'Create/update strategies, alerts, webhooks, and run backtests.' },
             { scope: 'TRADE', cls: SCOPE_CLS.TRADE, desc: 'Place and cancel orders, start/stop strategies, manage copy trading.' },
           ] as { scope: string; cls: string; desc: string }[]).map(s => (
-            <div key={s.scope} className="flex items-start gap-3 p-3 bg-pf-elevated border border-pf-border rounded-pf-lg hover:border-pf-border-strong transition-all duration-pf-normal">
+            <div key={s.scope} className="flex items-start gap-3 p-3 bg-elevated border border-default rounded-pf-lg hover:border-strong transition-all duration-pf-normal">
               <Badge text={s.scope} cls={s.cls} />
-              <p className="text-xs text-pf-text-secondary leading-relaxed pt-1">{s.desc}</p>
+              <p className="text-xs text-secondary leading-relaxed pt-1">{s.desc}</p>
             </div>
           ))}
         </div>
       </Sub>
       <Sub title="API Key lifecycle">
-        <p className="text-sm text-pf-text-secondary leading-relaxed">
-          Keys are prefixed <InlineCode>pf_</InlineCode>. The full key is shown <strong className="text-pf-text">once</strong> at
+        <p className="text-sm text-secondary leading-relaxed">
+          Keys are prefixed <InlineCode>pf_</InlineCode>. The full key is shown <strong className="text-primary">once</strong> at
           creation — store it securely. Up to 10 active keys per account. Revoke via{' '}
           <InlineCode>DELETE /api/v1/api-keys/:id</InlineCode> or from the Settings page.
         </p>
@@ -201,26 +201,26 @@ export function renderContent({
       />
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {([
-          { label: 'TypeScript', install: 'npm install @polyforge/sdk', cls: 'text-pf-info', code: `import { PolyforgeClient } from '@polyforge/sdk';\nconst client = new PolyforgeClient({ apiKey: 'pf_...' });` },
-          { label: 'Python',     install: 'pip install polyforge',       cls: 'text-pf-success', code: `from polyforge import PolyforgeClient\nclient = PolyforgeClient(api_key='pf_...')` },
-          { label: 'Rust',       install: 'cargo add polyforge tokio',   cls: 'text-pf-warning', code: `use polyforge::PolyforgeClient;\nlet client = PolyforgeClient::new("pf_...");` },
+          { label: 'TypeScript', install: 'npm install @polyforge/sdk', cls: 'text-info', code: `import { PolyforgeClient } from '@polyforge/sdk';\nconst client = new PolyforgeClient({ apiKey: 'pf_...' });` },
+          { label: 'Python',     install: 'pip install polyforge',       cls: 'text-gain', code: `from polyforge import PolyforgeClient\nclient = PolyforgeClient(api_key='pf_...')` },
+          { label: 'Rust',       install: 'cargo add polyforge tokio',   cls: 'text-warning', code: `use polyforge::PolyforgeClient;\nlet client = PolyforgeClient::new("pf_...");` },
         ]).map(s => (
-          <div key={s.label} className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4 space-y-3 hover:border-pf-border-strong transition-all duration-pf-normal">
+          <div key={s.label} className="bg-elevated border border-default rounded-pf-lg p-4 space-y-3 hover:border-strong transition-all duration-pf-normal">
             <p className={`text-sm font-semibold ${s.cls}`}>{s.label}</p>
             <Code code={s.install} />
             <Code code={s.code} />
           </div>
         ))}
       </div>
-      <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4 space-y-3 hover:border-pf-border-strong transition-all duration-pf-normal">
+      <div className="bg-elevated border border-default rounded-pf-lg p-4 space-y-3 hover:border-strong transition-all duration-pf-normal">
         <div className="flex items-center gap-2">
           <p className="text-sm font-semibold text-pf-purple-300">MCP Server</p>
           <Badge text="Claude · Cursor · Windsurf · Zed" cls="bg-pf-purple-500/10 text-pf-purple-400" />
         </div>
         <Code code={'npx @polyforge/mcp-server'} lang="curl" />
-        <p className="text-xs text-pf-text-secondary">
+        <p className="text-xs text-secondary">
           23 tools covering markets, strategies, orders, and live events.{' '}
-          <Button variant="link" type="button" onClick={() => navigate('mcp-server')} className="text-pf-cyan-400 hover:text-pf-cyan-300 underline underline-offset-2 cursor-pointer">
+          <Button variant="link" type="button" onClick={() => navigate('mcp-server')} className="text-accent-text hover:text-accent-text underline underline-offset-2 cursor-pointer">
             Setup guide →
           </Button>
         </p>
@@ -233,14 +233,14 @@ export function renderContent({
     <div className="space-y-6">
       <PageTitle title="Changelog" subtitle="API version history and breaking changes." />
       {CHANGELOG.map(entry => (
-        <div key={entry.date} className="border border-pf-border rounded-pf-lg overflow-hidden">
-          <div className="flex items-center gap-3 px-4 py-3 bg-pf-surface border-b border-pf-border">
-            <span className="text-sm font-semibold text-pf-text">{entry.date}</span>
+        <div key={entry.date} className="border border-default rounded-pf-lg overflow-hidden">
+          <div className="flex items-center gap-3 px-4 py-3 bg-surface border-b border-default">
+            <span className="text-sm font-semibold text-primary">{entry.date}</span>
             <Badge text={entry.tag} cls={tagCls(entry.tag)} />
           </div>
           <div className="px-4 py-4 space-y-2">
             {entry.items.map((item, i) => (
-              <p key={i} className="text-sm text-pf-text-secondary">• {item}</p>
+              <p key={i} className="text-sm text-secondary">• {item}</p>
             ))}
           </div>
         </div>
@@ -279,15 +279,15 @@ export function renderContent({
         <Code code={`// Send after connection opens\n{ "event": "subscribe", "data": { "strategyId": "strat-uuid" } }`} lang="ts" />
       </Sub>
       <Sub title="Inbound event types">
-        <div className="border border-pf-border rounded-pf-lg overflow-hidden">
+        <div className="border border-default rounded-pf-lg overflow-hidden">
           <table className="w-full text-sm" aria-label="Inbound event types">
             <thead>
-              <tr className="bg-pf-surface text-left text-xs text-pf-text-secondary uppercase tracking-wider border-b border-pf-border">
+              <tr className="bg-surface text-left text-xs text-secondary uppercase tracking-wider border-b border-default">
                 <th scope="col" className="px-4 py-3 font-medium">Event</th>
                 <th scope="col" className="px-4 py-3 font-medium">Payload</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-pf-border-subtle">
+            <tbody className="divide-y divide-subtle">
               {[
                 ['ORDER_FILLED',       '{ orderId, marketId, side, outcome, size, price, strategyId? }'],
                 ['ORDER_CANCELLED',    '{ orderId }'],
@@ -299,9 +299,9 @@ export function renderContent({
                 ['PRICE_ALERT',        '{ alertId, marketId, tokenId, price }'],
                 ['NOTIFICATION',       '{ type, title, message }'],
               ].map(([ev, payload]) => (
-                <tr key={ev} className="group hover:bg-pf-elevated/50 transition-colors">
-                  <td className="px-4 py-3 font-mono text-pf-cyan-400 text-xs">{ev}</td>
-                  <td className="px-4 py-3 font-mono text-pf-text-secondary text-xs">{payload}</td>
+                <tr key={ev} className="group hover:bg-elevated/50 transition-colors">
+                  <td className="px-4 py-3 font-mono text-accent-text text-xs">{ev}</td>
+                  <td className="px-4 py-3 font-mono text-secondary text-xs">{payload}</td>
                 </tr>
               ))}
             </tbody>
@@ -320,11 +320,11 @@ export function renderContent({
       />
       <Sub title="Endpoint">
         <Code code={'GET /api/v1/strategies/:id/events\nAuthorization: Bearer pf_live_...\nAccept: text/event-stream'} lang="curl" />
-        <p className="text-xs text-pf-text-muted mt-2">Scope: <strong className="text-pf-text-secondary">READ</strong> · Heartbeat comment every 15 s</p>
+        <p className="text-xs text-tertiary mt-2">Scope: <strong className="text-secondary">READ</strong> · Heartbeat comment every 15 s</p>
       </Sub>
       <Sub title="Event shape">
         <Code code={`{\n  "type": "ORDER_FILLED",\n  "strategyId": "uuid",\n  "data": { "orderId": "...", "price": 0.62 },\n  "timestamp": 1711720000000\n}`} lang="ts" />
-        <p className="text-xs text-pf-text-muted mt-2">First event is always <InlineCode>{'{"type":"CONNECTED","strategyId":"...","timestamp":...}'}</InlineCode></p>
+        <p className="text-xs text-tertiary mt-2">First event is always <InlineCode>{'{"type":"CONNECTED","strategyId":"...","timestamp":...}'}</InlineCode></p>
       </Sub>
       <Sub title="SDK usage">
         <LangTabs lang={lang} setLang={setLang} available={['ts', 'py', 'rust']} />
@@ -345,7 +345,7 @@ export function renderContent({
       />
       <Sub title="Signature format">
         <Code code={'X-Polyforge-Signature: sha256=<hex-digest>'} lang="curl" />
-        <p className="text-xs text-pf-text-muted mt-2">
+        <p className="text-xs text-tertiary mt-2">
           Computed as <InlineCode>HMAC-SHA256(raw body bytes, webhookSecret)</InlineCode>.
         </p>
       </Sub>
@@ -373,30 +373,30 @@ export function renderContent({
         title="Rate Limits"
         subtitle="120 requests per minute per API key. Exceeding the limit returns 429 with a Retry-After header."
       />
-      <div className="border border-pf-border rounded-pf-lg overflow-hidden">
+      <div className="border border-default rounded-pf-lg overflow-hidden">
         <table className="w-full text-sm" aria-label="Rate limit headers">
           <thead>
-            <tr className="bg-pf-surface text-left text-xs text-pf-text-secondary uppercase tracking-wider border-b border-pf-border">
+            <tr className="bg-surface text-left text-xs text-secondary uppercase tracking-wider border-b border-default">
               <th scope="col" className="px-4 py-3 font-medium">Header</th>
               <th scope="col" className="px-4 py-3 font-medium">Value</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-pf-border-subtle">
+          <tbody className="divide-y divide-subtle">
             {[
               ['X-RateLimit-Limit',     'Maximum requests per window (120)'],
               ['X-RateLimit-Remaining', 'Requests remaining in the current window'],
               ['X-RateLimit-Reset',     'Unix timestamp when the window resets'],
               ['Retry-After',           'Seconds to wait (only on 429 responses)'],
             ].map(([h, v]) => (
-              <tr key={h} className="group hover:bg-pf-elevated/50 transition-colors">
-                <td className="px-4 py-3 font-mono text-pf-cyan-400 text-xs">{h}</td>
-                <td className="px-4 py-3 text-pf-text-secondary text-xs">{v}</td>
+              <tr key={h} className="group hover:bg-elevated/50 transition-colors">
+                <td className="px-4 py-3 font-mono text-accent-text text-xs">{h}</td>
+                <td className="px-4 py-3 text-secondary text-xs">{v}</td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
-      <p className="text-xs text-pf-text-muted bg-pf-elevated border border-pf-border rounded-pf px-3 py-3">
+      <p className="text-xs text-tertiary bg-elevated border border-default rounded-pf px-3 py-3">
         Auth endpoints (register, forgot-password) have tighter per-IP limits.
         The SSE endpoint does not count toward the rate limit while the connection is held open.
       </p>
@@ -414,15 +414,15 @@ export function renderContent({
         <Code code={`{\n  "statusCode": 422,\n  "code": "STRATEGY_IS_RUNNING",\n  "message": "Stop the strategy before editing its blocks",\n  "field": null,\n  "requestId": "req_5f3a1e"\n}`} lang="ts" />
       </Sub>
       <Sub title="HTTP status codes">
-        <div className="border border-pf-border rounded-pf-lg overflow-hidden">
+        <div className="border border-default rounded-pf-lg overflow-hidden">
           <table className="w-full text-sm" aria-label="HTTP status codes">
             <thead>
-              <tr className="bg-pf-surface text-left text-xs text-pf-text-secondary uppercase tracking-wider border-b border-pf-border">
+              <tr className="bg-surface text-left text-xs text-secondary uppercase tracking-wider border-b border-default">
                 <th scope="col" className="px-4 py-3 font-medium w-16">Code</th>
                 <th scope="col" className="px-4 py-3 font-medium">Meaning</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-pf-border-subtle">
+            <tbody className="divide-y divide-subtle">
               {[
                 [400, 'Bad Request — invalid parameters or malformed body'],
                 [401, 'Unauthorized — missing, invalid, or expired API key'],
@@ -433,9 +433,9 @@ export function renderContent({
                 [429, 'Too Many Requests — rate limit exceeded; see Retry-After'],
                 [500, 'Server Error — unexpected error; include requestId when reporting'],
               ].map(([code, meaning]) => (
-                <tr key={code} className="group hover:bg-pf-elevated/50 transition-colors">
-                  <td className="px-4 py-3 font-mono text-pf-text text-xs font-medium">{code}</td>
-                  <td className="px-4 py-3 text-pf-text-secondary text-xs">{meaning}</td>
+                <tr key={code} className="group hover:bg-elevated/50 transition-colors">
+                  <td className="px-4 py-3 font-mono text-primary text-xs font-medium">{code}</td>
+                  <td className="px-4 py-3 text-secondary text-xs">{meaning}</td>
                 </tr>
               ))}
             </tbody>

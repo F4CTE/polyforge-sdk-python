@@ -89,9 +89,9 @@ export function Component() {
       <div className="animate-fade-in space-y-6" role="status" aria-label="Loading cache statistics">
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="bg-pf-elevated border border-pf-border rounded-pf-lg p-5 space-y-3">
-              <div className="h-3 bg-pf-base rounded w-20 animate-pulse" />
-              <div className="h-6 bg-pf-base rounded w-16 animate-pulse" />
+            <div key={i} className="bg-elevated border border-default rounded-pf-lg p-5 space-y-3">
+              <div className="h-3 bg-app rounded w-20 animate-pulse" />
+              <div className="h-6 bg-app rounded w-16 animate-pulse" />
             </div>
           ))}
         </div>
@@ -102,12 +102,12 @@ export function Component() {
   return (
     <div className="animate-fade-in space-y-6">
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-1 bg-pf-surface border border-pf-border rounded-pf-sm p-1">
+        <div className="flex items-center gap-1 bg-surface border border-default rounded-pf-sm p-1">
           <Button
             type="button"
             variant="ghost"
             onClick={() => setTab('cache')}
-            className={`px-3 py-2 text-sm rounded transition-colors ${tab === 'cache' ? 'bg-pf-elevated text-pf-text font-medium' : 'text-pf-text-secondary hover:text-pf-text'}`}
+            className={`px-3 py-2 text-sm rounded transition-colors ${tab === 'cache' ? 'bg-elevated text-primary font-medium' : 'text-secondary hover:text-primary'}`}
           >
             Cache
           </Button>
@@ -115,7 +115,7 @@ export function Component() {
             type="button"
             variant="ghost"
             onClick={() => setTab('streams')}
-            className={`px-3 py-2 text-sm rounded transition-colors ${tab === 'streams' ? 'bg-pf-elevated text-pf-text font-medium' : 'text-pf-text-secondary hover:text-pf-text'}`}
+            className={`px-3 py-2 text-sm rounded transition-colors ${tab === 'streams' ? 'bg-elevated text-primary font-medium' : 'text-secondary hover:text-primary'}`}
           >
             Streams
           </Button>
@@ -124,7 +124,7 @@ export function Component() {
           type="button"
           variant="ghost"
           onClick={tab === 'cache' ? loadStats : loadStreams}
-          className="flex items-center gap-2 px-3 py-2 text-sm rounded-pf-sm border border-pf-border text-pf-text-secondary hover:bg-pf-elevated transition-colors"
+          className="flex items-center gap-2 px-3 py-2 text-sm rounded-pf-sm border border-default text-secondary hover:bg-elevated transition-colors"
           aria-label="Refresh"
         >
           <RefreshCw size={14} aria-hidden="true" />
@@ -137,31 +137,31 @@ export function Component() {
         <>
           {stats && (
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4">
-                <div className="text-xs text-pf-text-tertiary mb-1">Hit Rate</div>
-                <div className="text-2xl font-bold text-pf-text">
+              <div className="bg-elevated border border-default rounded-pf-lg p-4">
+                <div className="text-xs text-tertiary mb-1">Hit Rate</div>
+                <div className="text-2xl font-bold text-primary">
                   {((stats.hitRate ?? 0) * 100).toFixed(1)}%
                 </div>
               </div>
-              <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4">
-                <div className="text-xs text-pf-text-tertiary mb-1">Total Keys</div>
-                <div className="text-2xl font-bold text-pf-text">
+              <div className="bg-elevated border border-default rounded-pf-lg p-4">
+                <div className="text-xs text-tertiary mb-1">Total Keys</div>
+                <div className="text-2xl font-bold text-primary">
                   {(stats.keyCount ?? 0).toLocaleString()}
                 </div>
               </div>
-              <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4">
-                <div className="text-xs text-pf-text-tertiary mb-1">Memory Usage</div>
-                <div className="text-2xl font-bold text-pf-text">
+              <div className="bg-elevated border border-default rounded-pf-lg p-4">
+                <div className="text-xs text-tertiary mb-1">Memory Usage</div>
+                <div className="text-2xl font-bold text-primary">
                   {(stats.memoryUsageMb ?? 0).toFixed(1)} MB
                 </div>
               </div>
             </div>
           )}
 
-          <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-5">
+          <div className="bg-elevated border border-default rounded-pf-lg p-5">
             <div className="flex items-center gap-2 mb-4">
-              <Trash2 size={16} className="text-pf-warning" aria-hidden="true" />
-              <h3 className="text-sm font-semibold text-pf-text">Flush by Pattern</h3>
+              <Trash2 size={16} className="text-warning" aria-hidden="true" />
+              <h3 className="text-sm font-semibold text-primary">Flush by Pattern</h3>
             </div>
             <div className="flex gap-3">
               <label htmlFor="cache-pattern" className="sr-only">Cache key pattern</label>
@@ -171,14 +171,14 @@ export function Component() {
                 value={pattern}
                 onChange={(e) => setPattern(e.target.value)}
                 placeholder="e.g. user:*, strategy:abc*"
-                className="flex-1 px-3 py-2 text-sm rounded-pf-sm border border-pf-border bg-pf-base text-pf-text placeholder:text-pf-text-tertiary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pf-cyan-500 font-mono"
+                className="flex-1 px-3 py-2 text-sm rounded-pf-sm border border-default bg-app text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent font-mono"
               />
               <Button
                 type="button"
                 variant="danger"
                 onClick={handleFlush}
                 disabled={flushing || !pattern.trim()}
-                className="px-4 py-2 text-sm rounded-pf-sm bg-pf-warning text-pf-text hover:bg-pf-warning/80 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="px-4 py-2 text-sm rounded-pf-sm bg-warning text-primary hover:bg-warning/80 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 {flushing ? 'Flushing...' : 'Flush'}
               </Button>
@@ -186,27 +186,27 @@ export function Component() {
           </div>
 
           {stats && stats.patterns && stats.patterns.length > 0 && (
-            <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-5">
+            <div className="bg-elevated border border-default rounded-pf-lg p-5">
               <div className="flex items-center gap-2 mb-4">
-                <Database size={16} className="text-pf-cyan-500" aria-hidden="true" />
-                <h3 className="text-sm font-semibold text-pf-text">Cache Patterns</h3>
+                <Database size={16} className="text-accent" aria-hidden="true" />
+                <h3 className="text-sm font-semibold text-primary">Cache Patterns</h3>
               </div>
               <div className="overflow-x-auto">
                 <table className="w-full text-sm" aria-label="Cache entries">
                   <caption className="sr-only">Cache patterns</caption>
                   <thead>
-                    <tr className="border-b border-pf-border">
-                      <th scope="col" className="text-left px-3 py-2 text-xs font-medium text-pf-text-tertiary uppercase">Pattern</th>
-                      <th scope="col" className="text-right px-3 py-2 text-xs font-medium text-pf-text-tertiary uppercase">Keys</th>
-                      <th scope="col" className="text-right px-3 py-2 text-xs font-medium text-pf-text-tertiary uppercase">Hit Rate</th>
+                    <tr className="border-b border-default">
+                      <th scope="col" className="text-left px-3 py-2 text-xs font-medium text-tertiary uppercase">Pattern</th>
+                      <th scope="col" className="text-right px-3 py-2 text-xs font-medium text-tertiary uppercase">Keys</th>
+                      <th scope="col" className="text-right px-3 py-2 text-xs font-medium text-tertiary uppercase">Hit Rate</th>
                     </tr>
                   </thead>
                   <tbody>
                     {stats.patterns.map((p) => (
-                      <tr key={p.pattern} className="border-b border-pf-border last:border-0">
-                        <td className="px-3 py-3 font-mono text-xs text-pf-text">{p.pattern}</td>
-                        <td className="px-3 py-3 text-right text-pf-text-secondary">{p.keyCount.toLocaleString()}</td>
-                        <td className="px-3 py-3 text-right text-pf-text-secondary">{(p.hitRate * 100).toFixed(1)}%</td>
+                      <tr key={p.pattern} className="border-b border-default last:border-0">
+                        <td className="px-3 py-3 font-mono text-xs text-primary">{p.pattern}</td>
+                        <td className="px-3 py-3 text-right text-secondary">{p.keyCount.toLocaleString()}</td>
+                        <td className="px-3 py-3 text-right text-secondary">{(p.hitRate * 100).toFixed(1)}%</td>
                       </tr>
                     ))}
                   </tbody>
@@ -223,27 +223,27 @@ export function Component() {
           {loadingStreams ? (
             <div className="space-y-3">
               {Array.from({ length: 4 }).map((_, i) => (
-                <div key={i} className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4 animate-pulse h-20" />
+                <div key={i} className="bg-elevated border border-default rounded-pf-lg p-4 animate-pulse h-20" />
               ))}
             </div>
           ) : streams ? (
             <div className="space-y-3">
               {streams.map((s) => (
-                <div key={s.name} className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4">
+                <div key={s.name} className="bg-elevated border border-default rounded-pf-lg p-4">
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-2">
                       {s.error
-                        ? <AlertCircle size={14} className="text-pf-warning" />
-                        : <Activity size={14} className="text-pf-success" />
+                        ? <AlertCircle size={14} className="text-warning" />
+                        : <Activity size={14} className="text-gain" />
                       }
-                      <span className="font-mono text-sm text-pf-text">{s.name}</span>
+                      <span className="font-mono text-sm text-primary">{s.name}</span>
                     </div>
                     <div className="flex items-center gap-3">
-                      <span className="text-xs text-pf-text-muted">
+                      <span className="text-xs text-tertiary">
                         {s.error ? 'stream empty or not found' : `${s.length.toLocaleString()} entries`}
                       </span>
                       <span className={`px-2 py-1 rounded-pf-full text-pf-caption font-medium ${
-                        s.error ? 'bg-pf-warning/10 text-pf-warning' : 'bg-pf-success/10 text-pf-success'
+                        s.error ? 'bg-warning/10 text-warning' : 'bg-gain/10 text-gain'
                       }`}>
                         {s.error ? 'empty' : 'active'}
                       </span>
@@ -252,11 +252,11 @@ export function Component() {
                   {!s.error && s.groups.length > 0 && (
                     <div className="grid grid-cols-3 gap-2">
                       {s.groups.map((g, gi) => (
-                        <div key={gi} className="bg-pf-base border border-pf-border rounded-pf-sm p-3">
-                          <p className="font-mono text-pf-label text-pf-text truncate">{String(g.name)}</p>
+                        <div key={gi} className="bg-app border border-default rounded-pf-sm p-3">
+                          <p className="font-mono text-pf-label text-primary truncate">{String(g.name)}</p>
                           <div className="flex items-center gap-3 mt-1">
-                            <span className="text-pf-caption text-pf-text-muted">{g.consumers} consumer{g.consumers !== 1 ? 's' : ''}</span>
-                            <span className={`text-pf-caption font-medium ${g.pending > 0 ? 'text-pf-warning' : 'text-pf-success'}`}>
+                            <span className="text-pf-caption text-tertiary">{g.consumers} consumer{g.consumers !== 1 ? 's' : ''}</span>
+                            <span className={`text-pf-caption font-medium ${g.pending > 0 ? 'text-warning' : 'text-gain'}`}>
                               {g.pending} pending
                             </span>
                           </div>
@@ -265,7 +265,7 @@ export function Component() {
                     </div>
                   )}
                   {!s.error && s.groups.length === 0 && (
-                    <p className="text-xs text-pf-text-muted">No consumer groups</p>
+                    <p className="text-xs text-tertiary">No consumer groups</p>
                   )}
                 </div>
               ))}

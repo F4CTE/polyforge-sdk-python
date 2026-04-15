@@ -27,8 +27,8 @@ function truncateAddress(addr: string): string {
 
 function pnlColor(pnl: string): string {
   const v = parseFloat(pnl);
-  if (isNaN(v)) return 'text-pf-text-secondary';
-  return v >= 0 ? 'text-pf-success' : 'text-pf-danger';
+  if (isNaN(v)) return 'text-secondary';
+  return v >= 0 ? 'text-gain' : 'text-loss';
 }
 
 function pnlSign(pnl: string): string {
@@ -89,15 +89,15 @@ export function Component() {
   return (
     <div className="animate-fade-in p-6 max-w-5xl mx-auto space-y-6">
       {/* Back link */}
-      <Link to="/whales" className="flex items-center gap-2 text-sm text-pf-text-secondary hover:text-pf-cyan-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 rounded-pf-sm transition-colors">
+      <Link to="/whales" className="flex items-center gap-2 text-sm text-secondary hover:text-accent-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 rounded-pf-sm transition-colors">
         <ArrowLeft className="size-4" aria-hidden="true" /> Back to feed
       </Link>
 
       {/* Header */}
       <div className="flex items-center gap-3">
-        <Fish className="size-6 text-pf-cyan-400" aria-hidden="true" />
-        <h1 className="text-2xl font-semibold text-pf-text">Following</h1>
-        {!loading && <span className="text-sm text-pf-text-muted">{wallets.length} wallets</span>}
+        <Fish className="size-6 text-accent-text" aria-hidden="true" />
+        <h1 className="text-2xl font-semibold text-primary">Following</h1>
+        {!loading && <span className="text-sm text-tertiary">{wallets.length} wallets</span>}
       </div>
 
       {/* List */}
@@ -107,12 +107,12 @@ export function Component() {
         </div>
       ) : wallets.length === 0 ? (
         <div data-testid="empty-state" className="flex flex-col items-center justify-center py-20 text-center">
-          <Fish className="size-10 text-pf-text-muted mb-4" aria-hidden="true" />
-          <p className="text-pf-text font-medium">You're not following any whales yet</p>
-          <p className="text-sm text-pf-text-muted mt-1">Follow whales from the feed to track their trades.</p>
+          <Fish className="size-10 text-tertiary mb-4" aria-hidden="true" />
+          <p className="text-primary font-medium">You're not following any whales yet</p>
+          <p className="text-sm text-tertiary mt-1">Follow whales from the feed to track their trades.</p>
           <Link
             to="/whales"
-            className="mt-4 px-4 py-2 rounded-pf-sm text-sm bg-pf-elevated border border-pf-border text-pf-text hover:border-pf-border-strong transition-colors"
+            className="mt-4 px-4 py-2 rounded-pf-sm text-sm bg-elevated border border-default text-primary hover:border-strong transition-colors"
           >
             Go to Whale Feed
           </Link>
@@ -123,12 +123,12 @@ export function Component() {
             <div
               key={wallet.walletAddress}
               data-testid="whale-feed-item"
-              className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4 transition-all duration-pf-normal hover:border-pf-border-strong hover:shadow-pf-sm"
+              className="bg-elevated border border-default rounded-pf-lg p-4 transition-all duration-pf-normal hover:border-strong hover:shadow-pf-sm"
             >
               <div className="flex items-center justify-between mb-3">
                 <Link
                   to={`/whales/${wallet.walletAddress}`}
-                  className="font-mono text-sm text-pf-text hover:text-pf-cyan-400 transition-colors"
+                  className="font-mono text-sm text-primary hover:text-accent-text transition-colors"
                 >
                   {truncateAddress(wallet.walletAddress)}
                 </Link>
@@ -137,17 +137,17 @@ export function Component() {
                   variant="danger"
                   onClick={() => unfollow(wallet.walletAddress)}
                   data-testid={`unfollow-${wallet.walletAddress}`}
-                  className="flex items-center gap-2 px-3 py-2 rounded-pf-sm text-xs font-medium border border-pf-danger/30 text-pf-danger hover:bg-pf-danger/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-danger/40 transition-colors"
+                  className="flex items-center gap-2 px-3 py-2 rounded-pf-sm text-xs font-medium border border-loss/30 text-loss hover:bg-loss/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-loss/40 transition-colors"
                   aria-label={`Unfollow wallet ${truncateAddress(wallet.walletAddress)}`}
                 >
                   <UserMinus className="size-4" /> Unfollow
                 </Button>
               </div>
 
-              <div data-testid="whale-stats" className="flex items-center gap-4 text-xs text-pf-text-secondary">
-                <span>Volume: <span className="font-mono text-pf-text">{wallet.profile?.totalVolume ?? wallet.totalVolume ?? '—'}</span></span>
+              <div data-testid="whale-stats" className="flex items-center gap-4 text-xs text-secondary">
+                <span>Volume: <span className="font-mono text-primary">{wallet.profile?.totalVolume ?? wallet.totalVolume ?? '—'}</span></span>
                 <span>P&L: <span className={`font-mono ${pnlColor(wallet.profile?.totalPnl ?? wallet.totalPnl ?? '0')}`}>{pnlSign(wallet.profile?.totalPnl ?? wallet.totalPnl ?? '0')}</span></span>
-                <span>Trades: <span className="font-mono text-pf-text">{wallet.profile?.tradeCount ?? wallet.tradeCount ?? 0}</span></span>
+                <span>Trades: <span className="font-mono text-primary">{wallet.profile?.tradeCount ?? wallet.tradeCount ?? 0}</span></span>
               </div>
             </div>
           ))}

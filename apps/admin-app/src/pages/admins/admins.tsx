@@ -124,8 +124,8 @@ export function Component() {
   if (!isSuperAdmin) {
     return (
       <div className="text-center py-12">
-        <ShieldCheck size={48} className="mx-auto text-pf-text-tertiary mb-4" aria-hidden="true" />
-        <p className="text-pf-text-secondary">Super Admin access required</p>
+        <ShieldCheck size={48} className="mx-auto text-tertiary mb-4" aria-hidden="true" />
+        <p className="text-secondary">Super Admin access required</p>
       </div>
     );
   }
@@ -136,12 +136,12 @@ export function Component() {
   return (
     <div className="animate-fade-in space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold text-pf-text">Admin Accounts</h2>
+        <h2 className="text-lg font-semibold text-primary">Admin Accounts</h2>
         <Button
           type="button"
           variant="default"
           onClick={openAdd}
-          className="flex items-center gap-2 px-3 py-2 text-sm font-semibold rounded-pf-sm bg-pf-cyan-500 text-pf-text-contrast hover:bg-pf-cyan-400 transition-colors"
+          className="flex items-center gap-2 px-3 py-2 text-sm font-semibold rounded-pf-sm bg-accent text-inverse hover:bg-accent-text transition-colors"
         >
           <Plus size={14} aria-hidden="true" />
           Add Admin
@@ -149,17 +149,17 @@ export function Component() {
       </div>
 
       {/* Table */}
-      <div className="bg-pf-elevated border border-pf-border rounded-pf-lg overflow-hidden">
+      <div className="bg-elevated border border-default rounded-pf-lg overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm" aria-label="Admin accounts">
             <caption className="sr-only">Admin accounts</caption>
             <thead>
-              <tr className="border-b border-pf-border">
-                <th scope="col" className="text-left px-4 py-3 text-xs font-medium text-pf-text-tertiary uppercase tracking-wider">Name</th>
-                <th scope="col" className="text-left px-4 py-3 text-xs font-medium text-pf-text-tertiary uppercase tracking-wider">Email</th>
-                <th scope="col" className="text-left px-4 py-3 text-xs font-medium text-pf-text-tertiary uppercase tracking-wider">Role</th>
-                <th scope="col" className="text-left px-4 py-3 text-xs font-medium text-pf-text-tertiary uppercase tracking-wider">Created</th>
-                <th scope="col" className="text-right px-4 py-3 text-xs font-medium text-pf-text-tertiary uppercase tracking-wider">Actions</th>
+              <tr className="border-b border-default">
+                <th scope="col" className="text-left px-4 py-3 text-xs font-medium text-tertiary uppercase tracking-wider">Name</th>
+                <th scope="col" className="text-left px-4 py-3 text-xs font-medium text-tertiary uppercase tracking-wider">Email</th>
+                <th scope="col" className="text-left px-4 py-3 text-xs font-medium text-tertiary uppercase tracking-wider">Role</th>
+                <th scope="col" className="text-left px-4 py-3 text-xs font-medium text-tertiary uppercase tracking-wider">Created</th>
+                <th scope="col" className="text-right px-4 py-3 text-xs font-medium text-tertiary uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -168,7 +168,7 @@ export function Component() {
                   <tr key={i}>
                     {Array.from({ length: 5 }).map((_, j) => (
                       <td key={j} className="px-4 py-3">
-                        <div className="h-4 bg-pf-surface rounded animate-pulse" />
+                        <div className="h-4 bg-surface rounded animate-pulse" />
                       </td>
                     ))}
                   </tr>
@@ -176,28 +176,28 @@ export function Component() {
               ) : admins.length === 0 ? (
                 <tr>
                   <td colSpan={5} className="text-center py-12">
-                    <ShieldCheck className="mx-auto mb-3 text-pf-text-tertiary opacity-40" size={40} aria-hidden="true" />
-                    <p className="text-pf-text-secondary font-medium">No admins found</p>
-                    <p className="text-pf-text-tertiary text-xs mt-1">Add an admin account to get started</p>
+                    <ShieldCheck className="mx-auto mb-3 text-tertiary opacity-40" size={40} aria-hidden="true" />
+                    <p className="text-secondary font-medium">No admins found</p>
+                    <p className="text-tertiary text-xs mt-1">Add an admin account to get started</p>
                   </td>
                 </tr>
               ) : (
                 admins.map((a) => (
-                  <tr key={a.id} className="border-b border-pf-border last:border-0 hover:bg-pf-base transition-colors">
-                    <td className="px-4 py-3 font-medium text-pf-text">{a.displayName}</td>
-                    <td className="px-4 py-3 text-pf-text-secondary">{a.email}</td>
+                  <tr key={a.id} className="border-b border-default last:border-0 hover:bg-app transition-colors">
+                    <td className="px-4 py-3 font-medium text-primary">{a.displayName}</td>
+                    <td className="px-4 py-3 text-secondary">{a.email}</td>
                     <td className="px-4 py-3">
                       <span className={`px-2 py-1 rounded-pf-full text-xs font-medium ${
                         a.role === 'SUPER_ADMIN'
-                          ? 'text-pf-warning bg-pf-warning/10'
+                          ? 'text-warning bg-warning/10'
                           : a.role === 'ADMIN'
-                            ? 'text-pf-info bg-pf-info/10'
-                            : 'text-pf-text-secondary bg-pf-elevated'
+                            ? 'text-info bg-info/10'
+                            : 'text-secondary bg-elevated'
                       }`}>
                         {roleLabel(a.role)}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-pf-text-tertiary">{formatDate(a.createdAt ?? "")}</td>
+                    <td className="px-4 py-3 text-tertiary">{formatDate(a.createdAt ?? "")}</td>
                     <td className="px-4 py-3 text-right">
                       <div className="flex items-center justify-end gap-1">
                         <Button
@@ -205,7 +205,7 @@ export function Component() {
                           variant="ghost"
                           size="icon-sm"
                           onClick={() => openEdit(a)}
-                          className="p-2 rounded hover:bg-pf-base text-pf-text-tertiary hover:text-pf-text cursor-pointer transition-colors"
+                          className="p-2 rounded hover:bg-app text-tertiary hover:text-primary cursor-pointer transition-colors"
                           aria-label="Edit admin"
                           title="Edit admin"
                         >
@@ -220,7 +220,7 @@ export function Component() {
                               setDeleteConfirmId(a.id);
                               setDeletePassword('');
                             }}
-                            className="p-2 rounded hover:bg-pf-danger/10 text-pf-text-tertiary hover:text-pf-danger cursor-pointer transition-colors"
+                            className="p-2 rounded hover:bg-loss/10 text-tertiary hover:text-loss cursor-pointer transition-colors"
                             aria-label="Deactivate admin"
                             title="Deactivate admin"
                           >
@@ -239,10 +239,10 @@ export function Component() {
 
       {/* Add/Edit Dialog */}
       {dialogMode && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-pf-backdrop-light" role="dialog" aria-modal="true" aria-labelledby="admin-dialog-title">
-          <div className="animate-scale-in bg-pf-elevated border border-pf-border rounded-pf-lg p-6 w-full max-w-md mx-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" role="dialog" aria-modal="true" aria-labelledby="admin-dialog-title">
+          <div className="animate-scale-in bg-elevated border border-default rounded-pf-lg p-6 w-full max-w-md mx-4">
             <div className="flex items-center justify-between mb-4">
-              <h3 id="admin-dialog-title" className="text-base font-semibold text-pf-text">
+              <h3 id="admin-dialog-title" className="text-base font-semibold text-primary">
                 {dialogMode === 'add' ? 'Add Admin' : 'Edit Admin'}
               </h3>
               <Button
@@ -250,7 +250,7 @@ export function Component() {
                 variant="ghost"
                 size="icon-sm"
                 onClick={closeDialog}
-                className="p-1 rounded hover:bg-pf-base text-pf-text-tertiary"
+                className="p-1 rounded hover:bg-app text-tertiary"
                 aria-label="Close dialog"
               >
                 <X size={18} />
@@ -259,30 +259,30 @@ export function Component() {
             <form onSubmit={handleSubmit} noValidate className="space-y-4">
               {dialogMode === 'add' && (
                 <div>
-                  <label htmlFor="admin-email" className="block text-xs font-medium text-pf-text-secondary mb-1">Email</label>
+                  <label htmlFor="admin-email" className="block text-xs font-medium text-secondary mb-1">Email</label>
                   <Input
                     id="admin-email"
                     type="email"
                     value={form.email}
                     onChange={(e) => setForm({ ...form, email: e.target.value })}
                     required
-                    className="w-full px-3 py-2 text-sm rounded-pf-sm border border-pf-border bg-pf-base text-pf-text focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pf-cyan-500"
+                    className="w-full px-3 py-2 text-sm rounded-pf-sm border border-default bg-app text-primary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent"
                   />
                 </div>
               )}
               <div>
-                <label htmlFor="admin-display-name" className="block text-xs font-medium text-pf-text-secondary mb-1">Display Name</label>
+                <label htmlFor="admin-display-name" className="block text-xs font-medium text-secondary mb-1">Display Name</label>
                 <Input
                   id="admin-display-name"
                   type="text"
                   value={form.displayName}
                   onChange={(e) => setForm({ ...form, displayName: e.target.value })}
                   required
-                  className="w-full px-3 py-2 text-sm rounded-pf-sm border border-pf-border bg-pf-base text-pf-text focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pf-cyan-500"
+                  className="w-full px-3 py-2 text-sm rounded-pf-sm border border-default bg-app text-primary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent"
                 />
               </div>
               <div>
-                <label htmlFor="admin-password" className="block text-xs font-medium text-pf-text-secondary mb-1">
+                <label htmlFor="admin-password" className="block text-xs font-medium text-secondary mb-1">
                   Password{dialogMode === 'edit' ? ' (leave blank to keep)' : ''}
                 </label>
                 <Input
@@ -291,16 +291,16 @@ export function Component() {
                   value={form.password}
                   onChange={(e) => setForm({ ...form, password: e.target.value })}
                   required={dialogMode === 'add'}
-                  className="w-full px-3 py-2 text-sm rounded-pf-sm border border-pf-border bg-pf-base text-pf-text focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pf-cyan-500"
+                  className="w-full px-3 py-2 text-sm rounded-pf-sm border border-default bg-app text-primary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent"
                 />
               </div>
               <div>
-                <label htmlFor="admin-role" className="block text-xs font-medium text-pf-text-secondary mb-1">Role</label>
+                <label htmlFor="admin-role" className="block text-xs font-medium text-secondary mb-1">Role</label>
                 <Select
                   id="admin-role"
                   value={form.role}
                   onChange={(e) => setForm({ ...form, role: e.target.value })}
-                  className="w-full px-3 py-2 text-sm rounded-pf-sm border border-pf-border bg-pf-base text-pf-text focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pf-cyan-500"
+                  className="w-full px-3 py-2 text-sm rounded-pf-sm border border-default bg-app text-primary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent"
                 >
                   <option value="VIEWER">Viewer</option>
                   <option value="ADMIN">Admin</option>
@@ -312,7 +312,7 @@ export function Component() {
                   type="submit"
                   variant="default"
                   disabled={submitting}
-                  className="flex-1 py-2 text-sm font-semibold rounded-pf-sm bg-pf-cyan-500 text-pf-text-contrast hover:bg-pf-cyan-400 disabled:opacity-50 transition-colors"
+                  className="flex-1 py-2 text-sm font-semibold rounded-pf-sm bg-accent text-inverse hover:bg-accent-text disabled:opacity-50 transition-colors"
                 >
                   {submitting ? 'Saving...' : dialogMode === 'add' ? 'Create Admin' : 'Save Changes'}
                 </Button>
@@ -320,7 +320,7 @@ export function Component() {
                   type="button"
                   variant="secondary"
                   onClick={closeDialog}
-                  className="px-4 py-2 text-sm rounded-pf-sm border border-pf-border text-pf-text-secondary hover:bg-pf-base transition-colors"
+                  className="px-4 py-2 text-sm rounded-pf-sm border border-default text-secondary hover:bg-app transition-colors"
                 >
                   Cancel
                 </Button>
@@ -332,12 +332,12 @@ export function Component() {
 
       {/* Delete Confirmation Dialog */}
       {deleteConfirmId && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-pf-backdrop-light" role="dialog" aria-modal="true" aria-labelledby="deactivate-dialog-title">
-          <div className="animate-scale-in bg-pf-elevated border border-pf-border rounded-pf-lg p-6 w-full max-w-sm mx-4">
-            <h3 id="deactivate-dialog-title" className="text-base font-semibold text-pf-text mb-2">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" role="dialog" aria-modal="true" aria-labelledby="deactivate-dialog-title">
+          <div className="animate-scale-in bg-elevated border border-default rounded-pf-lg p-6 w-full max-w-sm mx-4">
+            <h3 id="deactivate-dialog-title" className="text-base font-semibold text-primary mb-2">
               Deactivate Admin
             </h3>
-            <p className="text-sm text-pf-text-secondary mb-4">
+            <p className="text-sm text-secondary mb-4">
               Enter your password to confirm this action.
             </p>
             <label htmlFor="deactivate-password" className="sr-only">Your password</label>
@@ -347,7 +347,7 @@ export function Component() {
               value={deletePassword}
               onChange={(e) => setDeletePassword(e.target.value)}
               placeholder="Your password"
-              className="w-full px-3 py-2 text-sm rounded-pf-sm border border-pf-border bg-pf-base text-pf-text focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pf-danger mb-4"
+              className="w-full px-3 py-2 text-sm rounded-pf-sm border border-default bg-app text-primary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-loss mb-4"
             />
             <div className="flex gap-3">
               <Button
@@ -363,7 +363,7 @@ export function Component() {
                 type="button"
                 variant="secondary"
                 onClick={() => setDeleteConfirmId(null)}
-                className="px-4 py-2 text-sm rounded-pf-sm border border-pf-border text-pf-text-secondary hover:bg-pf-base transition-colors"
+                className="px-4 py-2 text-sm rounded-pf-sm border border-default text-secondary hover:bg-app transition-colors"
               >
                 Cancel
               </Button>

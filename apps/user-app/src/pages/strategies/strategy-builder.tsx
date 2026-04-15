@@ -52,11 +52,11 @@ interface StrategyTemplate {
 }
 
 const SECTION_COLORS_STATIC: Record<string, string> = {
-  safety: 'var(--color-pf-danger)',
-  triggers: 'var(--color-pf-warning)',
-  conditions: 'var(--color-pf-info)',
-  actions: 'var(--color-pf-success)',
-  logic: 'var(--color-pf-info)',
+  safety: 'var(--loss)',
+  triggers: 'var(--warning)',
+  conditions: 'var(--info)',
+  actions: 'var(--gain)',
+  logic: 'var(--info)',
 };
 
 const STRATEGY_TEMPLATES: StrategyTemplate[] = [
@@ -518,7 +518,7 @@ const STRATEGY_TEMPLATES: StrategyTemplate[] = [
         type: 'AND_GATE',
         label: 'AND',
         section: 'logic',
-        color: 'var(--color-pf-info)',
+        color: 'var(--info)',
         config: {},
         fields: [],
         position: { x: 1050, y: 200 },
@@ -672,7 +672,7 @@ const STRATEGY_TEMPLATES: StrategyTemplate[] = [
         type: 'AND_GATE',
         label: 'AND',
         section: 'logic',
-        color: 'var(--color-pf-info)',
+        color: 'var(--info)',
         config: {},
         fields: [],
         position: { x: 1050, y: 200 },
@@ -782,18 +782,18 @@ function DifficultyDots({ difficulty }: { difficulty: TemplateDifficulty }) {
           className={`inline-block size-2 rounded-pf-full ${
             i <= filled
               ? difficulty === 'beginner'
-                ? 'bg-pf-success'
+                ? 'bg-gain'
                 : difficulty === 'intermediate'
-                ? 'bg-pf-warning'
-                : 'bg-pf-danger'
-              : 'bg-pf-border'
+                ? 'bg-warning'
+                : 'bg-loss'
+              : 'bg-default'
           }`}
         />
       ))}
       <span className={`ml-1 text-pf-caption capitalize ${
-        difficulty === 'beginner' ? 'text-pf-success' :
-        difficulty === 'intermediate' ? 'text-pf-warning' :
-        'text-pf-danger'
+        difficulty === 'beginner' ? 'text-gain' :
+        difficulty === 'intermediate' ? 'text-warning' :
+        'text-loss'
       }`}>{difficulty}</span>
     </span>
   );
@@ -1139,8 +1139,8 @@ export function Component() {
   if (wizardStep === 'template' && isNewStrategy) {
     return (
       <div className="max-w-2xl mx-auto py-8 px-4">
-        <h1 className="text-xl font-bold text-pf-text mb-1">New Strategy</h1>
-        <p className="text-sm text-pf-text-secondary mb-6">Choose a starting point</p>
+        <h1 className="text-xl font-bold text-primary mb-1">New Strategy</h1>
+        <p className="text-sm text-secondary mb-6">Choose a starting point</p>
         <div className="grid grid-cols-1 gap-3">
           {TEMPLATES.map(t => (
             <Button
@@ -1161,19 +1161,19 @@ export function Component() {
               <span className="text-2xl">{t.icon}</span>
               <div className="flex-1">
                 <div className="flex items-center gap-2">
-                  <span className="text-sm font-semibold text-pf-text group-hover:text-pf-cyan-400 transition-colors">{t.name}</span>
+                  <span className="text-sm font-semibold text-primary group-hover:text-accent-text transition-colors">{t.name}</span>
                   {t.trigger && (
-                    <span className="text-pf-caption px-2 py-1 rounded bg-pf-surface-elevated border border-pf-border text-pf-text-muted">{t.trigger}</span>
+                    <span className="text-pf-caption px-2 py-1 rounded bg-surface-elevated border border-default text-tertiary">{t.trigger}</span>
                   )}
                   <span className={`text-pf-caption px-2 py-1 rounded border ${
-                    t.difficulty === 'Beginner' ? 'bg-pf-success/10 border-pf-success/30 text-pf-success' :
-                    t.difficulty === 'Intermediate' ? 'bg-pf-warning/10 border-pf-warning/30 text-pf-warning' :
-                    'bg-pf-danger/10 border-pf-danger/30 text-pf-danger'
+                    t.difficulty === 'Beginner' ? 'bg-gain/10 border-gain/30 text-gain' :
+                    t.difficulty === 'Intermediate' ? 'bg-warning/10 border-warning/30 text-warning' :
+                    'bg-loss/10 border-loss/30 text-loss'
                   }`}>{t.difficulty}</span>
                 </div>
-                <p className="text-xs text-pf-text-muted mt-1">{t.description}</p>
+                <p className="text-xs text-tertiary mt-1">{t.description}</p>
               </div>
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-pf-text-muted group-hover:text-pf-cyan-400 flex-shrink-0 transition-colors"><polyline points="9 18 15 12 9 6"/></svg>
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-tertiary group-hover:text-accent-text flex-shrink-0 transition-colors"><polyline points="9 18 15 12 9 6"/></svg>
             </Button>
           ))}
         </div>
@@ -1186,7 +1186,7 @@ export function Component() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-full">
-        <div className="flex flex-col items-center gap-3 text-pf-text-muted">
+        <div className="flex flex-col items-center gap-3 text-tertiary">
           <Loader2 className="size-6 animate-spin" />
           <span className="text-sm">Loading strategy...</span>
         </div>
@@ -1197,21 +1197,21 @@ export function Component() {
   return (
     <div className="relative flex flex-col h-full overflow-hidden">
       {/* ─── Top bar ──────────────────────────────────────────────────────── */}
-      <div className="flex items-center gap-3 px-4 py-3 border-b border-pf-border-subtle bg-pf-elevated/50 shrink-0">
+      <div className="flex items-center gap-3 px-4 py-3 border-b border-subtle bg-elevated/50 shrink-0">
         <Link
           to="/strategies"
-          className="flex items-center gap-2 text-xs text-pf-text-secondary hover:text-pf-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 rounded-pf-sm transition-colors"
+          className="flex items-center gap-2 text-xs text-secondary hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 rounded-pf-sm transition-colors"
         >
           <ArrowLeft className="size-3" aria-hidden="true" />
           Strategies
         </Link>
 
-        <div className="w-px h-4 bg-pf-border-subtle" />
+        <div className="w-px h-4 bg-subtle" />
 
         {editingName ? (
           <Input
             aria-label="Strategy name"
-            className="flex-1 min-w-0 bg-transparent border-b border-pf-cyan-500 rounded-none text-lg font-semibold"
+            className="flex-1 min-w-0 bg-transparent border-b border-accent rounded-none text-lg font-semibold"
             value={name}
             onChange={(e) => setName(e.target.value)}
             onBlur={() => setEditingName(false)}
@@ -1280,7 +1280,7 @@ export function Component() {
             <LayoutTemplate className="size-4" />
           </Button>
 
-          <div className="w-px h-4 bg-pf-border-subtle" />
+          <div className="w-px h-4 bg-subtle" />
 
           {/* Undo */}
           <Button
@@ -1308,7 +1308,7 @@ export function Component() {
             <RotateCw className="size-4" />
           </Button>
 
-          <div className="w-px h-4 bg-pf-border-subtle" />
+          <div className="w-px h-4 bg-subtle" />
 
           <Button
             type="button"
@@ -1329,7 +1329,7 @@ export function Component() {
 
           <Link
             to="/strategies"
-            className="px-3 py-2 text-xs text-pf-text-secondary hover:text-pf-text rounded-pf-sm hover:bg-pf-overlay transition-colors"
+            className="px-3 py-2 text-xs text-secondary hover:text-primary rounded-pf-sm hover:bg-overlay transition-colors"
           >
             Cancel
           </Link>
@@ -1355,19 +1355,19 @@ export function Component() {
       {/* ─── Template Library Panel ─────────────────────────────────────── */}
       {showTemplates && (
         <div
-          className="absolute inset-0 z-50 flex flex-col bg-pf-surface/95 backdrop-blur-sm"
+          className="absolute inset-0 z-50 flex flex-col bg-surface/95 backdrop-blur-sm"
           role="dialog"
           aria-modal="true"
           aria-label="Strategy Template Library"
         >
           {/* Panel header */}
-          <div className="flex items-center justify-between px-6 py-4 border-b border-pf-border bg-pf-elevated shrink-0">
+          <div className="flex items-center justify-between px-6 py-4 border-b border-default bg-elevated shrink-0">
             <div>
-              <h2 className="text-base font-semibold text-pf-text flex items-center gap-2">
-                <LayoutTemplate className="size-4 text-pf-cyan-400" aria-hidden="true" />
+              <h2 className="text-base font-semibold text-primary flex items-center gap-2">
+                <LayoutTemplate className="size-4 text-accent-text" aria-hidden="true" />
                 Strategy Templates
               </h2>
-              <p className="text-xs text-pf-text-muted mt-1">Start faster with a pre-built strategy</p>
+              <p className="text-xs text-tertiary mt-1">Start faster with a pre-built strategy</p>
             </div>
             <Button
               type="button"
@@ -1381,7 +1381,7 @@ export function Component() {
           </div>
 
           {/* Category filter tabs */}
-          <div className="flex items-center gap-2 px-6 py-3 border-b border-pf-border-subtle bg-pf-elevated/50 shrink-0 overflow-x-auto">
+          <div className="flex items-center gap-2 px-6 py-3 border-b border-subtle bg-elevated/50 shrink-0 overflow-x-auto">
             {(['all', 'momentum', 'mean-reversion', 'event-based', 'sentiment'] as const).map((cat) => (
               <Button
                 key={cat}
@@ -1407,41 +1407,41 @@ export function Component() {
                 .map((template) => (
                   <div
                     key={template.id}
-                    className="flex flex-col bg-pf-elevated border border-pf-border rounded-pf-lg p-4 hover:border-pf-border-strong transition-colors"
+                    className="flex flex-col bg-elevated border border-default rounded-pf-lg p-4 hover:border-strong transition-colors"
                   >
                     {/* Card header */}
                     <div className="flex items-start gap-3 mb-3">
                       <span className="text-2xl leading-none mt-1 shrink-0" aria-hidden="true">{template.emoji}</span>
                       <div className="flex-1 min-w-0">
-                        <h3 className="text-sm font-semibold text-pf-text truncate">{template.name}</h3>
+                        <h3 className="text-sm font-semibold text-primary truncate">{template.name}</h3>
                         <DifficultyDots difficulty={template.difficulty} />
                       </div>
                     </div>
 
                     {/* Win rate badge */}
                     <div className="flex items-center gap-2 mb-3">
-                      <span className="inline-flex items-center gap-1 px-2 py-1 rounded-pf-full bg-pf-surface border border-pf-border text-pf-caption text-pf-text-muted">
-                        <Zap className="size-3 text-pf-warning" aria-hidden="true" />
+                      <span className="inline-flex items-center gap-1 px-2 py-1 rounded-pf-full bg-surface border border-default text-pf-caption text-tertiary">
+                        <Zap className="size-3 text-warning" aria-hidden="true" />
                         Win rate: {template.estimatedWinRate}
                       </span>
-                      <span className="inline-flex items-center gap-1 px-2 py-1 rounded-pf-full bg-pf-surface border border-pf-border text-pf-caption text-pf-text-muted capitalize">
+                      <span className="inline-flex items-center gap-1 px-2 py-1 rounded-pf-full bg-surface border border-default text-pf-caption text-tertiary capitalize">
                         {TEMPLATE_CATEGORY_ICONS[template.category]}
                         <span>{TEMPLATE_CATEGORY_LABELS[template.category]}</span>
                       </span>
                     </div>
 
                     {/* Description */}
-                    <p className="text-xs text-pf-text-muted leading-relaxed flex-1 mb-4">{template.description}</p>
+                    <p className="text-xs text-tertiary leading-relaxed flex-1 mb-4">{template.description}</p>
 
                     {/* Block count summary */}
-                    <div className="text-pf-caption text-pf-text-muted mb-3">
+                    <div className="text-pf-caption text-tertiary mb-3">
                       {template.blocks.length} block{template.blocks.length !== 1 ? 's' : ''} &middot; {template.edges.length} connection{template.edges.length !== 1 ? 's' : ''}
                     </div>
 
                     {/* Confirmation inline or use button */}
                     {confirmTemplate?.id === template.id ? (
-                      <div className="bg-pf-warning/8 border border-pf-warning/25 rounded-pf p-3">
-                        <p className="text-pf-label text-pf-warning mb-2 font-medium">This will replace your current canvas. Continue?</p>
+                      <div className="bg-warning/8 border border-warning/25 rounded-pf p-3">
+                        <p className="text-pf-label text-warning mb-2 font-medium">This will replace your current canvas. Continue?</p>
                         <div className="flex items-center gap-2">
                           <Button
                             type="button"
@@ -1481,8 +1481,8 @@ export function Component() {
             {/* Empty state */}
             {STRATEGY_TEMPLATES.filter((t) => templateCategory === 'all' || t.category === templateCategory).length === 0 && (
               <div className="flex flex-col items-center justify-center py-16 text-center">
-                <LayoutTemplate className="size-8 text-pf-text-muted mb-3 opacity-40" />
-                <p className="text-sm text-pf-text-muted">No templates in this category yet.</p>
+                <LayoutTemplate className="size-8 text-tertiary mb-3 opacity-40" />
+                <p className="text-sm text-tertiary">No templates in this category yet.</p>
               </div>
             )}
           </div>
@@ -1506,8 +1506,8 @@ export function Component() {
                 <div
                   className={`absolute top-2 left-1/2 -translate-x-1/2 z-30 flex items-center gap-3 px-3 py-2 rounded-pf-full text-xs font-medium pointer-events-none border ${
                     canvasIssues.misconfigured > 0
-                      ? 'bg-pf-danger/10 border-pf-danger/25 text-pf-danger'
-                      : 'bg-pf-warning/10 border-pf-warning/25 text-pf-warning'
+                      ? 'bg-loss/10 border-loss/25 text-loss'
+                      : 'bg-warning/10 border-warning/25 text-warning'
                   }`}
                   role="status"
                 >
@@ -1529,8 +1529,8 @@ export function Component() {
               <StrategyCanvas />
               <BuilderTutorial forceVisible={showTutorial} onDismiss={() => setShowTutorial(false)} />
               {dragOver && (
-                <div className="absolute inset-0 z-50 flex items-center justify-center bg-pf-surface/80 backdrop-blur-sm border-2 border-dashed border-pf-cyan-500 rounded-pf-lg pointer-events-none">
-                  <div className="flex flex-col items-center gap-2 text-pf-cyan-400">
+                <div className="absolute inset-0 z-50 flex items-center justify-center bg-surface/80 backdrop-blur-sm border-2 border-dashed border-accent rounded-pf-lg pointer-events-none">
+                  <div className="flex flex-col items-center gap-2 text-accent-text">
                     <Upload className="size-8" />
                     <span className="text-sm font-medium">Drop .polyforge file to import</span>
                   </div>
@@ -1540,29 +1540,29 @@ export function Component() {
 
             {/* Quick test results overlay */}
             {quickResult && (
-              <div className="absolute bottom-4 left-4 z-40 bg-pf-elevated border border-pf-border rounded-pf-lg p-4 shadow-pf-lg max-w-xs">
+              <div className="absolute bottom-4 left-4 z-40 bg-elevated border border-default rounded-pf-lg p-4 shadow-pf-lg max-w-xs">
                 <div className="flex items-center justify-between mb-3">
-                  <span className="text-xs font-semibold text-pf-text uppercase tracking-wider">Quick Test Results</span>
+                  <span className="text-xs font-semibold text-primary uppercase tracking-wider">Quick Test Results</span>
                   <Button type="button" variant="ghost" size="icon-sm" onClick={() => setQuickResult(null)} aria-label="Close quick test results"><X className="size-3" /></Button>
                 </div>
                 <div className="grid grid-cols-2 gap-2 text-xs">
-                  <div className="bg-pf-surface rounded-pf p-2">
-                    <span className="text-pf-text-secondary block">P&L</span>
-                    <span className={`font-mono font-semibold ${parseFloat(String(quickResult.totalPnl ?? '0')) >= 0 ? 'text-pf-success' : 'text-pf-danger'}`}>
+                  <div className="bg-surface rounded-pf p-2">
+                    <span className="text-secondary block">P&L</span>
+                    <span className={`font-mono font-semibold ${parseFloat(String(quickResult.totalPnl ?? '0')) >= 0 ? 'text-gain' : 'text-loss'}`}>
                       {parseFloat(String(quickResult.totalPnl ?? '0')) >= 0 ? '+' : ''}{String(quickResult.totalPnl)}
                     </span>
                   </div>
-                  <div className="bg-pf-surface rounded-pf p-2">
-                    <span className="text-pf-text-secondary block">Win Rate</span>
-                    <span className="font-mono font-semibold text-pf-text">{String(quickResult.winRate)}%</span>
+                  <div className="bg-surface rounded-pf p-2">
+                    <span className="text-secondary block">Win Rate</span>
+                    <span className="font-mono font-semibold text-primary">{String(quickResult.winRate)}%</span>
                   </div>
-                  <div className="bg-pf-surface rounded-pf p-2">
-                    <span className="text-pf-text-secondary block">Orders</span>
-                    <span className="font-mono font-semibold text-pf-text">{String(quickResult.totalOrders)}</span>
+                  <div className="bg-surface rounded-pf p-2">
+                    <span className="text-secondary block">Orders</span>
+                    <span className="font-mono font-semibold text-primary">{String(quickResult.totalOrders)}</span>
                   </div>
-                  <div className="bg-pf-surface rounded-pf p-2">
-                    <span className="text-pf-text-secondary block">Filled</span>
-                    <span className="font-mono font-semibold text-pf-text">{String(quickResult.filledOrders)}</span>
+                  <div className="bg-surface rounded-pf p-2">
+                    <span className="text-secondary block">Filled</span>
+                    <span className="font-mono font-semibold text-primary">{String(quickResult.filledOrders)}</span>
                   </div>
                 </div>
               </div>
@@ -1572,7 +1572,7 @@ export function Component() {
             <div className={`transition-all duration-pf-normal overflow-hidden ${panelOpen ? 'w-80' : 'w-0'}`}>
               <BlockPalette open={panelOpen} onClose={() => setPanelOpen(false)} />
               {/* Market Picker */}
-              <div className="border-t border-pf-border mt-2 pt-2">
+              <div className="border-t border-default mt-2 pt-2">
                 <Button
                   type="button"
                   variant="ghost"
@@ -1580,15 +1580,15 @@ export function Component() {
                   onClick={() => setMarketPickerOpen(p => !p)}
                   className="w-full flex items-center gap-2 justify-start"
                 >
-                  <Target className="size-4 text-pf-cyan-400" aria-hidden="true" />
+                  <Target className="size-4 text-accent-text" aria-hidden="true" />
                   Pinned Market
-                  {pinnedMarket && <span className="ml-auto text-pf-caption bg-pf-cyan-500/15 text-pf-cyan-400 px-2 py-1 rounded-pf-full truncate max-w-[90px]">{pinnedMarket.title.slice(0, 20)}{pinnedMarket.title.length > 20 ? '…' : ''}</span>}
+                  {pinnedMarket && <span className="ml-auto text-pf-caption bg-accent/15 text-accent-text px-2 py-1 rounded-pf-full truncate max-w-[90px]">{pinnedMarket.title.slice(0, 20)}{pinnedMarket.title.length > 20 ? '…' : ''}</span>}
                 </Button>
                 {marketPickerOpen && (
                   <div className="px-2 pb-2 space-y-2">
                     {pinnedMarket ? (
-                      <div className="flex items-center gap-2 bg-pf-elevated border border-pf-cyan-500/25 rounded-pf p-2">
-                        <span className="text-pf-label text-pf-text flex-1 truncate">{pinnedMarket.title}</span>
+                      <div className="flex items-center gap-2 bg-elevated border border-accent/25 rounded-pf p-2">
+                        <span className="text-pf-label text-primary flex-1 truncate">{pinnedMarket.title}</span>
                         <Button
                           type="button"
                           variant="ghost"

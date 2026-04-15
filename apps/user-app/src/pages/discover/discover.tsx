@@ -303,48 +303,48 @@ export function Component() {
     <div className="animate-fade-in p-6 max-w-7xl mx-auto space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold text-pf-text">Discover</h1>
-        {!loading && <span className="text-sm text-pf-text-muted">{total} strategies</span>}
+        <h1 className="text-2xl font-semibold text-primary">Discover</h1>
+        {!loading && <span className="text-sm text-tertiary">{total} strategies</span>}
       </div>
 
       {/* Featured Strategies */}
       {featuredListings.length > 0 && (
         <section aria-label="Featured Strategies">
           <div className="flex items-center gap-2 mb-3">
-            <Star className="size-4 text-pf-warning fill-pf-warning" aria-hidden="true" />
-            <span className="text-base font-semibold text-pf-text">Featured</span>
-            <Award className="size-4 text-pf-warning ml-1" aria-hidden="true" />
-            <span className="text-xs text-pf-text-muted ml-1">Hand-picked by the PolyForge team</span>
+            <Star className="size-4 text-warning fill-warning" aria-hidden="true" />
+            <span className="text-base font-semibold text-primary">Featured</span>
+            <Award className="size-4 text-warning ml-1" aria-hidden="true" />
+            <span className="text-xs text-tertiary ml-1">Hand-picked by the PolyForge team</span>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {featuredListings.map(f => (
               <Link
                 key={f.id}
                 to={`/marketplace/${f.id}`}
-                className="group block bg-pf-elevated border border-pf-warning/40 rounded-pf-lg p-4 transition-all duration-pf-normal hover:border-pf-warning/60 hover:shadow-pf-sm hover:-translate-y-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40"
+                className="group block bg-elevated border border-warning/40 rounded-pf-lg p-4 transition-all duration-pf-normal hover:border-warning/60 hover:shadow-pf-sm hover:-translate-y-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
               >
                 {/* FEATURED badge + seller */}
                 <div className="flex items-center gap-2 mb-3">
-                  <span className="bg-pf-warning/15 text-pf-warning text-pf-caption font-bold px-2 py-1 rounded">
+                  <span className="bg-warning/15 text-warning text-pf-caption font-bold px-2 py-1 rounded">
                     FEATURED
                   </span>
-                  <span className="text-xs text-pf-text-secondary ml-auto truncate">
+                  <span className="text-xs text-secondary ml-auto truncate">
                     {f.seller.displayName ?? f.seller.username}
                   </span>
                 </div>
 
                 {/* Title */}
-                <div className="text-sm font-semibold text-pf-text group-hover:text-pf-warning transition-colors mb-1 truncate">
+                <div className="text-sm font-semibold text-primary group-hover:text-warning transition-colors mb-1 truncate">
                   {f.title}
                 </div>
 
                 {/* Description */}
                 {f.description && (
-                  <div className="text-xs text-pf-text-muted line-clamp-2 mb-3">{f.description}</div>
+                  <div className="text-xs text-tertiary line-clamp-2 mb-3">{f.description}</div>
                 )}
 
                 {/* Stats row */}
-                <div className="flex flex-wrap gap-2 text-pf-label text-pf-text-secondary mb-3">
+                <div className="flex flex-wrap gap-2 text-pf-label text-secondary mb-3">
                   {f.winRate != null && (
                     <span className="flex items-center gap-1">
                       <TrendingUp className="size-3" aria-hidden="true" />
@@ -354,19 +354,19 @@ export function Component() {
                   {f.tradeCount != null && (
                     <span>{f.tradeCount} trades</span>
                   )}
-                  <span className="ml-auto font-semibold text-pf-text">
+                  <span className="ml-auto font-semibold text-primary">
                     {Number(f.priceUsdc) === 0 ? 'Free' : `$${Number(f.priceUsdc).toFixed(2)}`}
                   </span>
                 </div>
 
                 {/* Separator */}
-                <div className="border-t border-pf-border-subtle my-2" />
+                <div className="border-t border-subtle my-2" />
 
                 {/* Footer: forks / likes + CTA */}
-                <div className="flex items-center gap-3 text-xs text-pf-text-muted">
+                <div className="flex items-center gap-3 text-xs text-tertiary">
                   <span className="flex items-center gap-1"><GitFork className="size-3" aria-hidden="true" /> {f.forkCount}</span>
                   <span className="flex items-center gap-1"><Heart className="size-3" aria-hidden="true" /> {f.likeCount}</span>
-                  <span className="ml-auto border border-pf-cyan-500/40 text-pf-cyan-400 text-pf-caption font-medium px-2 py-1 rounded hover:bg-pf-cyan-500/10 transition-colors">
+                  <span className="ml-auto border border-accent/40 text-accent-text text-pf-caption font-medium px-2 py-1 rounded hover:bg-accent/10 transition-colors">
                     View Strategy
                   </span>
                 </div>
@@ -374,7 +374,7 @@ export function Component() {
             ))}
           </div>
           {/* Separator before main grid */}
-          <div className="border-t border-pf-border mt-6" />
+          <div className="border-t border-default mt-6" />
         </section>
       )}
 
@@ -382,11 +382,11 @@ export function Component() {
       {collections.length > 0 && (
         <section aria-label="Strategy Collections">
           <div className="flex items-center gap-2 mb-3">
-            <Library className="size-4 text-pf-cyan-400" aria-hidden="true" />
-            <span className="text-base font-semibold text-pf-text">Collections</span>
+            <Library className="size-4 text-accent-text" aria-hidden="true" />
+            <span className="text-base font-semibold text-primary">Collections</span>
             <Link
               to="/collections"
-              className="ml-auto text-xs text-pf-cyan-400 hover:text-pf-cyan-300 transition-colors flex items-center gap-1"
+              className="ml-auto text-xs text-accent-text hover:text-accent-text transition-colors flex items-center gap-1"
             >
               View all <ChevronRight className="size-3" aria-hidden="true" />
             </Link>
@@ -398,11 +398,11 @@ export function Component() {
                 type="button"
                 variant="ghost"
                 onClick={() => navigate(`/collections/${col.id}`)}
-                className="bg-pf-elevated border border-pf-border rounded-pf-full px-3 py-2 text-sm flex items-center gap-2 whitespace-nowrap hover:border-pf-border-strong cursor-pointer transition-colors shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40"
+                className="bg-elevated border border-default rounded-pf-full px-3 py-2 text-sm flex items-center gap-2 whitespace-nowrap hover:border-strong cursor-pointer transition-colors shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
               >
                 <span role="img" aria-label={col.title}>{col.emoji}</span>
-                <span className="text-pf-text font-medium">{col.title}</span>
-                <span className="text-pf-text-muted text-xs">{col.listingCount} strategies</span>
+                <span className="text-primary font-medium">{col.title}</span>
+                <span className="text-tertiary text-xs">{col.listingCount} strategies</span>
               </Button>
             ))}
           </div>
@@ -413,26 +413,26 @@ export function Component() {
       <div className="flex gap-2">
         {/* Search */}
         <div className="relative flex-1">
-          <svg className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-pf-text-muted" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" /></svg>
+          <svg className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-tertiary" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" /></svg>
           <Input
             type="text"
             placeholder="Search strategies..."
             aria-label="Search strategies"
             value={searchQuery}
             onChange={e => { setSearchQuery(e.target.value); setPage(1); }}
-            className="w-full pl-10 pr-4 py-3 rounded-pf-sm text-sm bg-pf-elevated text-pf-text border border-pf-border hover:border-pf-border-strong focus-visible:border-pf-cyan-500/50 focus-visible:outline-none transition-colors placeholder:text-pf-text-muted"
+            className="w-full pl-10 pr-4 py-3 rounded-pf-sm text-sm bg-elevated text-primary border border-default hover:border-strong focus-visible:border-accent/50 focus-visible:outline-none transition-colors placeholder:text-tertiary"
           />
         </div>
         {/* Tag filter */}
         <div className="relative">
-          <Tag className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-pf-text-muted" aria-hidden="true" />
+          <Tag className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-tertiary" aria-hidden="true" />
           <Input
             type="text"
             placeholder="Filter by tag..."
             aria-label="Filter by tag"
             value={tagFilter}
             onChange={e => setTagFilter(e.target.value)}
-            className="pl-8 pr-3 py-3 rounded-pf-sm text-sm bg-pf-elevated text-pf-text border border-pf-border hover:border-pf-border-strong focus-visible:border-pf-cyan-500/50 focus-visible:outline-none transition-colors placeholder:text-pf-text-muted w-36"
+            className="pl-8 pr-3 py-3 rounded-pf-sm text-sm bg-elevated text-primary border border-default hover:border-strong focus-visible:border-accent/50 focus-visible:outline-none transition-colors placeholder:text-tertiary w-36"
           />
         </div>
       </div>
@@ -449,8 +449,8 @@ export function Component() {
             onClick={() => changeSort(opt.value)}
             className={`px-3 py-2 rounded-pf-full text-xs font-medium whitespace-nowrap border transition-colors ${
               sort === opt.value
-                ? 'bg-pf-cyan-500/15 text-pf-cyan-400 border-pf-cyan-500/30'
-                : 'bg-pf-elevated text-pf-text-secondary border-pf-border hover:border-pf-border-strong'
+                ? 'bg-accent/15 text-accent-text border-accent/30'
+                : 'bg-elevated text-secondary border-default hover:border-strong'
             }`}
           >
             {opt.label}
@@ -468,8 +468,8 @@ export function Component() {
             onClick={() => changeCategory(cat.value)}
             className={`px-3 py-1 rounded-pf-full text-xs font-medium border transition-colors whitespace-nowrap ${
               category === cat.value
-                ? 'bg-pf-cyan-500/15 text-pf-cyan-400 border-pf-cyan-500/30'
-                : 'bg-pf-elevated text-pf-text-secondary border-pf-border hover:border-pf-border-strong'
+                ? 'bg-accent/15 text-accent-text border-accent/30'
+                : 'bg-elevated text-secondary border-default hover:border-strong'
             }`}
           >
             {cat.label}
@@ -484,9 +484,9 @@ export function Component() {
         </div>
       ) : strategies.length === 0 ? (
         <div data-testid="empty-state" className="flex flex-col items-center justify-center py-20 text-center" role="status">
-          <Compass className="size-10 text-pf-text-muted mb-4" aria-hidden="true" />
-          <p className="text-pf-text font-medium">No strategies found</p>
-          <p className="text-sm text-pf-text-muted mt-1">Be the first to publish a public strategy.</p>
+          <Compass className="size-10 text-tertiary mb-4" aria-hidden="true" />
+          <p className="text-primary font-medium">No strategies found</p>
+          <p className="text-sm text-tertiary mt-1">Be the first to publish a public strategy.</p>
         </div>
       ) : (
         <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 stagger-children ${loading ? 'opacity-60' : ''}`}>
@@ -500,14 +500,14 @@ export function Component() {
                 key={s.id}
                 data-testid="strategy-card"
                 to={`/strategies/${s.id}`}
-                className="group block bg-pf-elevated border border-pf-border rounded-pf-lg p-4 transition-all duration-pf-normal hover:border-pf-border-strong hover:shadow-pf-sm hover:-translate-y-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40"
+                className="group block bg-elevated border border-default rounded-pf-lg p-4 transition-all duration-pf-normal hover:border-strong hover:shadow-pf-sm hover:-translate-y-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
               >
                 {/* Author row */}
                 <div className="flex items-center gap-2 mb-3">
                   {s.author.avatarUrl ? (
                     <img src={s.author.avatarUrl} alt={`${s.author.displayName ?? s.author.username} avatar`} className="size-7 rounded-pf-full object-cover" width={28} height={28} loading="lazy" />
                   ) : (
-                    <div className="size-7 rounded-pf-full bg-pf-cyan-500/15 border border-pf-cyan-500/25 flex items-center justify-center text-pf-caption font-bold text-pf-cyan-400">
+                    <div className="size-7 rounded-pf-full bg-accent/15 border border-accent/25 flex items-center justify-center text-pf-caption font-bold text-accent-text">
                       {authorInitials(s)}
                     </div>
                   )}
@@ -515,31 +515,31 @@ export function Component() {
                     data-testid="strategy-author"
                     href={`/profile/${s.author.username}`}
                     onClick={e => { e.stopPropagation(); }}
-                    className="text-xs text-pf-text-secondary hover:text-pf-cyan-400 transition-colors"
+                    className="text-xs text-secondary hover:text-accent-text transition-colors"
                   >
                     {s.author.displayName ?? s.author.username}
                   </a>
                   {s.author.score != null && s.author.score > 0 && (
                     <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-pf-full text-pf-caption font-mono font-bold border ${
-                      s.author.score >= 70 ? 'text-pf-success bg-pf-success/10 border-pf-success/20' :
-                      s.author.score >= 40 ? 'text-pf-warning bg-pf-warning/10 border-pf-warning/20' :
-                      'text-pf-danger bg-pf-danger/10 border-pf-danger/20'
+                      s.author.score >= 70 ? 'text-gain bg-gain/10 border-gain/20' :
+                      s.author.score >= 40 ? 'text-warning bg-warning/10 border-warning/20' :
+                      'text-loss bg-loss/10 border-loss/20'
                     }`}>
                       <TrendingUp className="size-3" />
                       {s.author.score}
                     </span>
                   )}
-                  <span data-testid="strategy-status" className="ml-auto text-pf-caption px-2 py-1 rounded bg-pf-overlay text-pf-text-muted">
+                  <span data-testid="strategy-status" className="ml-auto text-pf-caption px-2 py-1 rounded bg-overlay text-tertiary">
                     {execLabel(s.execMode)}
                   </span>
                 </div>
 
                 {/* Name + description */}
-                <div data-testid="strategy-name" className="text-sm font-medium text-pf-text group-hover:text-pf-cyan-400 transition-colors mb-1">
+                <div data-testid="strategy-name" className="text-sm font-medium text-primary group-hover:text-accent-text transition-colors mb-1">
                   {s.name}
                 </div>
                 {s.description && (
-                  <div data-testid="strategy-description" className="text-xs text-pf-text-muted line-clamp-2 mb-3">{s.description}</div>
+                  <div data-testid="strategy-description" className="text-xs text-tertiary line-clamp-2 mb-3">{s.description}</div>
                 )}
 
                 {/* Tags */}
@@ -547,13 +547,13 @@ export function Component() {
                   <div className="flex flex-wrap gap-1 mb-3">
                     {s.tags.slice(0, 4).map(tag => (
                       <span key={tag} className={`px-2 py-1 rounded-pf-full text-pf-caption font-medium ${
-                        tag === 'momentum' ? 'bg-pf-warning/15 text-pf-warning' :
-                        tag === 'political' ? 'bg-pf-info/15 text-pf-info' :
-                        tag === 'yes-bias' ? 'bg-pf-success/15 text-pf-success' :
+                        tag === 'momentum' ? 'bg-warning/15 text-warning' :
+                        tag === 'political' ? 'bg-info/15 text-info' :
+                        tag === 'yes-bias' ? 'bg-gain/15 text-gain' :
                         tag === 'defensive' ? 'bg-pf-purple-500/15 text-pf-purple-400' :
-                        tag === 'scalping' ? 'bg-pf-danger/15 text-pf-danger' :
+                        tag === 'scalping' ? 'bg-loss/15 text-loss' :
                         tag === 'high-freq' ? 'bg-pf-purple-300/15 text-pf-purple-300' :
-                        'bg-pf-overlay text-pf-text-muted'
+                        'bg-overlay text-tertiary'
                       }`}>
                         {tag}
                       </span>
@@ -562,10 +562,10 @@ export function Component() {
                 )}
 
                 {/* Separator */}
-                <div className="border-t border-pf-border-subtle my-2" />
+                <div className="border-t border-subtle my-2" />
 
                 {/* Footer stats */}
-                <div className="flex items-center gap-3 text-sm text-pf-text-muted pt-1">
+                <div className="flex items-center gap-3 text-sm text-tertiary pt-1">
                   {/* Like button */}
                   <Button
                     type="button"
@@ -577,8 +577,8 @@ export function Component() {
                     onClick={e => handleLike(e, s.id)}
                     className={`flex items-center gap-1 transition-colors disabled:opacity-50 ${
                       isLiked
-                        ? 'text-pf-danger hover:text-pf-danger/70'
-                        : 'hover:text-pf-danger'
+                        ? 'text-loss hover:text-loss/70'
+                        : 'hover:text-loss'
                     }`}
                   >
                     <Heart
@@ -589,7 +589,7 @@ export function Component() {
                     {likeCount}
                   </Button>
                   <span data-testid="strategy-forks" className="flex items-center gap-1"><GitFork className="size-4" aria-hidden="true" /> {s.forkCount}</span>
-                  <span className="ml-auto text-pf-label text-pf-text-muted">&bull;</span>
+                  <span className="ml-auto text-pf-label text-tertiary">&bull;</span>
                   <span className="font-mono text-pf-label">{formatDate(s.createdAt)}</span>
                 </div>
               </Link>
@@ -608,11 +608,11 @@ export function Component() {
             onClick={() => setPage(p => Math.max(1, p - 1))}
             disabled={page === 1}
             aria-label="Previous page"
-            className="p-2 rounded-pf text-pf-text-secondary hover:text-pf-text hover:bg-pf-elevated disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+            className="p-2 rounded-pf text-secondary hover:text-primary hover:bg-elevated disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
           >
             <ChevronLeft className="size-4" />
           </Button>
-          <span data-testid="page-indicator" className="text-sm font-mono text-pf-text-secondary" aria-live="polite">Page {page} of {totalPages}</span>
+          <span data-testid="page-indicator" className="text-sm font-mono text-secondary" aria-live="polite">Page {page} of {totalPages}</span>
           <Button
             type="button"
             variant="ghost"
@@ -620,7 +620,7 @@ export function Component() {
             onClick={() => setPage(p => Math.min(totalPages, p + 1))}
             disabled={page === totalPages}
             aria-label="Next page"
-            className="p-2 rounded-pf text-pf-text-secondary hover:text-pf-text hover:bg-pf-elevated disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+            className="p-2 rounded-pf text-secondary hover:text-primary hover:bg-elevated disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
           >
             <ChevronRight className="size-4" />
           </Button>

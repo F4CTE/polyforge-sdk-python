@@ -71,22 +71,22 @@ function formatDuration(bt: BacktestRow): string {
 function statusBadgeClass(status: BacktestRow['status']): string {
   switch (status) {
     case 'PENDING':
-      return 'text-pf-text-secondary bg-pf-elevated';
+      return 'text-secondary bg-elevated';
     case 'RUNNING':
-      return 'text-pf-cyan-400 bg-pf-cyan-500/10';
+      return 'text-accent-text bg-accent/10';
     case 'COMPLETED':
-      return 'text-pf-success bg-pf-success/10';
+      return 'text-gain bg-gain/10';
     case 'FAILED':
-      return 'text-pf-danger bg-pf-danger/10';
+      return 'text-loss bg-loss/10';
     case 'CANCELLED':
-      return 'text-pf-text-secondary bg-pf-elevated';
+      return 'text-secondary bg-elevated';
     default:
-      return 'text-pf-text-secondary bg-pf-elevated';
+      return 'text-secondary bg-elevated';
   }
 }
 
 function pnlClass(pnl: string): string {
-  return parseFloat(pnl) >= 0 ? 'text-pf-success' : 'text-pf-danger';
+  return parseFloat(pnl) >= 0 ? 'text-gain' : 'text-loss';
 }
 
 function pnlPrefix(pnl: string): string {
@@ -223,15 +223,15 @@ export function Component() {
     <div className="animate-fade-in space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between gap-4 flex-wrap">
-        <h2 className="text-lg font-semibold text-pf-text flex items-center gap-2">
+        <h2 className="text-lg font-semibold text-primary flex items-center gap-2">
           Backtests
-          <span className="text-sm font-normal text-pf-text-tertiary px-2 py-1 bg-pf-elevated border border-pf-border rounded-pf-full">
+          <span className="text-sm font-normal text-tertiary px-2 py-1 bg-elevated border border-default rounded-pf-full">
             {total}
           </span>
         </h2>
         <div className="flex items-center gap-2">
           {/* Auto-refresh toggle */}
-          <label className="flex items-center gap-2 text-xs text-pf-text-secondary cursor-pointer select-none">
+          <label className="flex items-center gap-2 text-xs text-secondary cursor-pointer select-none">
             <span className="relative inline-block w-8 h-4">
               <input
                 type="checkbox"
@@ -240,12 +240,12 @@ export function Component() {
                 onChange={(e) => setAutoRefresh(e.target.checked)}
                 aria-label="Toggle auto-refresh"
               />
-              <span className="block w-full h-full rounded-pf-full bg-pf-border peer-checked:bg-pf-cyan-500 transition-colors" />
-              <span className="absolute top-1 left-1 w-3 h-3 rounded-pf-full bg-pf-text transition-transform peer-checked:translate-x-4" />
+              <span className="block w-full h-full rounded-pf-full bg-default peer-checked:bg-accent transition-colors" />
+              <span className="absolute top-1 left-1 w-3 h-3 rounded-pf-full bg-primary transition-transform peer-checked:translate-x-4" />
             </span>
             Auto-refresh
             {refreshing && (
-              <Loader2 size={12} className="animate-spin text-pf-cyan-400" aria-hidden="true" />
+              <Loader2 size={12} className="animate-spin text-accent-text" aria-hidden="true" />
             )}
           </label>
 
@@ -256,7 +256,7 @@ export function Component() {
             onClick={() => load({ silent: true })}
             disabled={loading || refreshing}
             aria-label="Refresh backtests"
-            className="flex items-center gap-2 px-3 py-2 text-xs rounded-pf-sm bg-pf-elevated border border-pf-border text-pf-text-secondary hover:text-pf-text hover:border-pf-cyan-500/50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="flex items-center gap-2 px-3 py-2 text-xs rounded-pf-sm bg-elevated border border-default text-secondary hover:text-primary hover:border-accent/50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             <RefreshCw
               size={12}
@@ -278,16 +278,16 @@ export function Component() {
         ].map(({ label, value, highlight, danger }) => (
           <div
             key={label}
-            className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4"
+            className="bg-elevated border border-default rounded-pf-lg p-4"
           >
-            <p className="text-xs text-pf-text-tertiary mb-1">{label}</p>
+            <p className="text-xs text-tertiary mb-1">{label}</p>
             <p
               className={`text-2xl font-bold ${
                 danger
-                  ? 'text-pf-danger'
+                  ? 'text-loss'
                   : highlight
-                  ? 'text-pf-cyan-400'
-                  : 'text-pf-text'
+                  ? 'text-accent-text'
+                  : 'text-primary'
               }`}
             >
               {value}
@@ -299,7 +299,7 @@ export function Component() {
       {/* Filter controls */}
       <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
         {/* Status tabs */}
-        <div className="flex items-center gap-1 bg-pf-elevated border border-pf-border rounded-pf-sm p-1 flex-wrap">
+        <div className="flex items-center gap-1 bg-elevated border border-default rounded-pf-sm p-1 flex-wrap">
           {STATUS_TABS.map(({ label, value }) => (
             <Button
               key={value}
@@ -308,8 +308,8 @@ export function Component() {
               onClick={() => handleStatusTab(value)}
               className={`px-3 py-1 text-xs rounded transition-colors ${
                 statusFilter === value
-                  ? 'bg-pf-cyan-500/20 text-pf-cyan-400 font-medium'
-                  : 'text-pf-text-tertiary hover:text-pf-text'
+                  ? 'bg-accent/20 text-accent-text font-medium'
+                  : 'text-tertiary hover:text-primary'
               }`}
             >
               {label}
@@ -325,12 +325,12 @@ export function Component() {
             onChange={(e) => setUsernameInput(e.target.value)}
             placeholder="Filter by username..."
             aria-label="Filter by username"
-            className="h-8 px-3 rounded-pf-sm bg-pf-elevated border border-pf-border text-xs text-pf-text placeholder:text-pf-text-tertiary focus-visible:outline-none focus-visible:border-pf-cyan-500 transition-colors w-48"
+            className="h-8 px-3 rounded-pf-sm bg-elevated border border-default text-xs text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:border-accent transition-colors w-48"
           />
           <Button
             type="submit"
             variant="default"
-            className="h-8 px-3 rounded-pf-sm bg-pf-cyan-500/10 border border-pf-cyan-500/30 text-xs text-pf-cyan-400 hover:bg-pf-cyan-500/20 transition-colors"
+            className="h-8 px-3 rounded-pf-sm bg-accent/10 border border-accent/30 text-xs text-accent-text hover:bg-accent/20 transition-colors"
           >
             Search
           </Button>
@@ -343,7 +343,7 @@ export function Component() {
                 setUsernameInput('');
                 setPage(1);
               }}
-              className="h-8 px-3 rounded-pf-sm bg-pf-elevated border border-pf-border text-xs text-pf-text-secondary hover:text-pf-text transition-colors"
+              className="h-8 px-3 rounded-pf-sm bg-elevated border border-default text-xs text-secondary hover:text-primary transition-colors"
             >
               Clear
             </Button>
@@ -352,37 +352,37 @@ export function Component() {
       </div>
 
       {/* Table */}
-      <div className="bg-pf-elevated border border-pf-border rounded-pf-lg overflow-hidden">
+      <div className="bg-elevated border border-default rounded-pf-lg overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm" aria-label="Backtest results">
             <caption className="sr-only">Backtest runs</caption>
             <thead>
-              <tr className="border-b border-pf-border">
-                <th scope="col" className="text-left px-4 py-3 text-xs font-medium text-pf-text-tertiary uppercase tracking-wider">
+              <tr className="border-b border-default">
+                <th scope="col" className="text-left px-4 py-3 text-xs font-medium text-tertiary uppercase tracking-wider">
                   Started At
                 </th>
-                <th scope="col" className="text-left px-4 py-3 text-xs font-medium text-pf-text-tertiary uppercase tracking-wider">
+                <th scope="col" className="text-left px-4 py-3 text-xs font-medium text-tertiary uppercase tracking-wider">
                   User
                 </th>
-                <th scope="col" className="text-left px-4 py-3 text-xs font-medium text-pf-text-tertiary uppercase tracking-wider">
+                <th scope="col" className="text-left px-4 py-3 text-xs font-medium text-tertiary uppercase tracking-wider">
                   Strategy
                 </th>
-                <th scope="col" className="text-left px-4 py-3 text-xs font-medium text-pf-text-tertiary uppercase tracking-wider">
+                <th scope="col" className="text-left px-4 py-3 text-xs font-medium text-tertiary uppercase tracking-wider">
                   Status
                 </th>
-                <th scope="col" className="text-left px-4 py-3 text-xs font-medium text-pf-text-tertiary uppercase tracking-wider">
+                <th scope="col" className="text-left px-4 py-3 text-xs font-medium text-tertiary uppercase tracking-wider">
                   Duration
                 </th>
-                <th scope="col" className="text-right px-4 py-3 text-xs font-medium text-pf-text-tertiary uppercase tracking-wider">
+                <th scope="col" className="text-right px-4 py-3 text-xs font-medium text-tertiary uppercase tracking-wider">
                   Trades
                 </th>
-                <th scope="col" className="text-right px-4 py-3 text-xs font-medium text-pf-text-tertiary uppercase tracking-wider">
+                <th scope="col" className="text-right px-4 py-3 text-xs font-medium text-tertiary uppercase tracking-wider">
                   Win Rate
                 </th>
-                <th scope="col" className="text-right px-4 py-3 text-xs font-medium text-pf-text-tertiary uppercase tracking-wider">
+                <th scope="col" className="text-right px-4 py-3 text-xs font-medium text-tertiary uppercase tracking-wider">
                   P&amp;L
                 </th>
-                <th scope="col" className="text-right px-4 py-3 text-xs font-medium text-pf-text-tertiary uppercase tracking-wider">
+                <th scope="col" className="text-right px-4 py-3 text-xs font-medium text-tertiary uppercase tracking-wider">
                   Actions
                 </th>
               </tr>
@@ -390,10 +390,10 @@ export function Component() {
             <tbody>
               {loading ? (
                 Array.from({ length: 10 }).map((_, i) => (
-                  <tr key={i} className="border-b border-pf-border last:border-0">
+                  <tr key={i} className="border-b border-default last:border-0">
                     {Array.from({ length: colCount }).map((_, j) => (
                       <td key={j} className="px-4 py-3">
-                        <div className="h-4 bg-pf-surface rounded animate-pulse" />
+                        <div className="h-4 bg-surface rounded animate-pulse" />
                       </td>
                     ))}
                   </tr>
@@ -402,12 +402,12 @@ export function Component() {
                 <tr>
                   <td colSpan={colCount} className="text-center py-16">
                     <FlaskConical
-                      className="mx-auto mb-3 text-pf-text-tertiary opacity-40"
+                      className="mx-auto mb-3 text-tertiary opacity-40"
                       size={40}
                       aria-hidden="true"
                     />
-                    <p className="text-pf-text-secondary font-medium">No backtests found</p>
-                    <p className="text-pf-text-tertiary text-xs mt-1">
+                    <p className="text-secondary font-medium">No backtests found</p>
+                    <p className="text-tertiary text-xs mt-1">
                       {statusFilter !== 'ALL' || usernameFilter
                         ? 'Try adjusting your filters'
                         : 'Backtest runs will appear here'}
@@ -424,14 +424,14 @@ export function Component() {
                   return (
                     <tr
                       key={bt.id}
-                      className={`border-b border-pf-border last:border-0 transition-colors ${
+                      className={`border-b border-default last:border-0 transition-colors ${
                         isRunning
-                          ? 'bg-pf-cyan-500/5 hover:bg-pf-cyan-500/10'
-                          : 'hover:bg-pf-base'
+                          ? 'bg-accent/5 hover:bg-accent/10'
+                          : 'hover:bg-app'
                       }`}
                     >
                       {/* Started At */}
-                      <td className="px-4 py-3 text-pf-text-tertiary text-xs whitespace-nowrap">
+                      <td className="px-4 py-3 text-tertiary text-xs whitespace-nowrap">
                         {bt.createdAt ? formatDateTime(bt.createdAt) : '—'}
                       </td>
 
@@ -440,19 +440,19 @@ export function Component() {
                         {bt.userId ? (
                           <Link
                             to={`/users/${bt.userId}`}
-                            className="text-pf-cyan-400 hover:text-pf-cyan-300 transition-colors text-xs"
+                            className="text-accent-text hover:text-accent-text transition-colors text-xs"
                           >
                             @{bt.username || bt.userId.slice(0, 8)}
                           </Link>
                         ) : (
-                          <span className="text-pf-text-secondary text-xs">
+                          <span className="text-secondary text-xs">
                             @{bt.username || '—'}
                           </span>
                         )}
                       </td>
 
                       {/* Strategy */}
-                      <td className="px-4 py-3 text-pf-text-secondary text-xs max-w-pf-col-sm truncate" title={bt.strategyName}>
+                      <td className="px-4 py-3 text-secondary text-xs max-w-pf-col-sm truncate" title={bt.strategyName}>
                         {bt.strategyName || '—'}
                       </td>
 
@@ -463,7 +463,7 @@ export function Component() {
                         >
                           {isRunning && (
                             <span
-                              className="w-2 h-2 rounded-pf-full bg-pf-cyan-400 animate-pulse"
+                              className="w-2 h-2 rounded-pf-full bg-accent-text animate-pulse"
                               aria-hidden="true"
                             />
                           )}
@@ -472,21 +472,21 @@ export function Component() {
                       </td>
 
                       {/* Duration */}
-                      <td className="px-4 py-3 text-pf-text-secondary text-xs whitespace-nowrap">
+                      <td className="px-4 py-3 text-secondary text-xs whitespace-nowrap">
                         {formatDuration(bt)}
                       </td>
 
                       {/* Trades */}
-                      <td className="px-4 py-3 text-right text-pf-text-secondary text-xs">
+                      <td className="px-4 py-3 text-right text-secondary text-xs">
                         {isCompleted && bt.totalTrades != null ? bt.totalTrades : '—'}
                       </td>
 
                       {/* Win Rate */}
                       <td className="px-4 py-3 text-right text-xs">
                         {isCompleted && bt.winRate != null ? (
-                          <span className="text-pf-text">{bt.winRate}%</span>
+                          <span className="text-primary">{bt.winRate}%</span>
                         ) : (
-                          <span className="text-pf-text-tertiary">—</span>
+                          <span className="text-tertiary">—</span>
                         )}
                       </td>
 
@@ -498,7 +498,7 @@ export function Component() {
                           </span>
                         ) : isFailed && bt.errorMessage ? (
                           <span
-                            className="text-pf-danger truncate max-w-pf-col-xs inline-block"
+                            className="text-loss truncate max-w-pf-col-xs inline-block"
                             title={bt.errorMessage}
                           >
                             {bt.errorMessage.length > 30
@@ -506,7 +506,7 @@ export function Component() {
                               : bt.errorMessage}
                           </span>
                         ) : (
-                          <span className="text-pf-text-tertiary">—</span>
+                          <span className="text-tertiary">—</span>
                         )}
                       </td>
 
@@ -519,7 +519,7 @@ export function Component() {
                             onClick={() => handleCancel(bt)}
                             disabled={cancelling[bt.id]}
                             aria-label={`Cancel backtest ${bt.id.slice(0, 8)}`}
-                            className="inline-flex items-center gap-1 px-2 py-1 text-xs rounded border border-pf-danger/40 text-pf-danger hover:bg-pf-danger/10 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                            className="inline-flex items-center gap-1 px-2 py-1 text-xs rounded border border-loss/40 text-loss hover:bg-loss/10 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                           >
                             {cancelling[bt.id] ? (
                               <Loader2 size={11} className="animate-spin" aria-hidden="true" />
@@ -540,8 +540,8 @@ export function Component() {
 
         {/* Pagination */}
         {totalPages > 1 && (
-          <div className="flex items-center justify-between px-4 py-3 border-t border-pf-border">
-            <span className="text-xs text-pf-text-tertiary">
+          <div className="flex items-center justify-between px-4 py-3 border-t border-default">
+            <span className="text-xs text-tertiary">
               Page {page} of {totalPages}
             </span>
             <div className="flex items-center gap-2">
@@ -552,7 +552,7 @@ export function Component() {
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                 disabled={page === 1}
                 aria-label="Previous page"
-                className="p-2 rounded hover:bg-pf-base text-pf-text-secondary disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                className="p-2 rounded hover:bg-app text-secondary disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
               >
                 <ChevronLeft size={16} />
               </Button>
@@ -563,7 +563,7 @@ export function Component() {
                 onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                 disabled={page === totalPages}
                 aria-label="Next page"
-                className="p-2 rounded hover:bg-pf-base text-pf-text-secondary disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                className="p-2 rounded hover:bg-app text-secondary disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
               >
                 <ChevronRight size={16} />
               </Button>

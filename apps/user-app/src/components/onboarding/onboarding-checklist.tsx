@@ -122,12 +122,12 @@ export function OnboardingChecklist() {
   }
 
   return (
-    <div data-testid="onboarding-checklist" role="region" aria-label="Getting started checklist" className="fixed bottom-4 right-4 z-50 w-80 bg-pf-elevated border border-pf-border rounded-pf-lg shadow-pf-2xl animate-fade-in">
+    <div data-testid="onboarding-checklist" role="region" aria-label="Getting started checklist" className="fixed bottom-4 right-4 z-50 w-80 bg-elevated border border-default rounded-pf-lg shadow-pf-2xl animate-fade-in">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-pf-border-subtle">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-subtle">
         <div className="flex items-center gap-2">
-          <span className="text-sm font-semibold text-pf-text">Getting Started</span>
-          <span className="text-pf-caption px-2 py-1 rounded-pf-full bg-pf-cyan-500/15 text-pf-cyan-400 font-medium">
+          <span className="text-sm font-semibold text-primary">Getting Started</span>
+          <span className="text-pf-caption px-2 py-1 rounded-pf-full bg-accent/15 text-accent-text font-medium">
             {completedCount}/{CHECKLIST_ITEMS.length}
           </span>
         </div>
@@ -135,7 +135,7 @@ export function OnboardingChecklist() {
           <button
             type="button"
             onClick={() => setCollapsed(!collapsed)}
-            className="p-1 rounded hover:bg-pf-overlay transition-colors active:scale-95 text-pf-text-muted hover:text-pf-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/50"
+            className="p-1 rounded hover:bg-overlay transition-colors active:scale-95 text-tertiary hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50"
             aria-label={collapsed ? 'Expand checklist' : 'Collapse checklist'}
           >
             {collapsed ? <ChevronUp className="size-4" /> : <ChevronDown className="size-4" />}
@@ -143,7 +143,7 @@ export function OnboardingChecklist() {
           <button
             type="button"
             onClick={handleDismiss}
-            className="p-1 rounded hover:bg-pf-overlay transition-colors active:scale-95 text-pf-text-muted hover:text-pf-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/50"
+            className="p-1 rounded hover:bg-overlay transition-colors active:scale-95 text-tertiary hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50"
             aria-label="Dismiss checklist"
           >
             <X className="size-4" />
@@ -153,9 +153,9 @@ export function OnboardingChecklist() {
 
       {/* Progress bar */}
       <div className="px-4 pt-2">
-        <div className="w-full h-2 bg-pf-overlay rounded-pf-full overflow-hidden" role="progressbar" aria-valuenow={completedCount} aria-valuemin={0} aria-valuemax={CHECKLIST_ITEMS.length} aria-label={`${completedCount} of ${CHECKLIST_ITEMS.length} steps completed`}>
+        <div className="w-full h-2 bg-overlay rounded-pf-full overflow-hidden" role="progressbar" aria-valuenow={completedCount} aria-valuemin={0} aria-valuemax={CHECKLIST_ITEMS.length} aria-label={`${completedCount} of ${CHECKLIST_ITEMS.length} steps completed`}>
           <div
-            className="h-full bg-pf-cyan-500 rounded-pf-full transition-all duration-pf-slow"
+            className="h-full bg-accent rounded-pf-full transition-all duration-pf-slow"
             style={{ width: `${(completedCount / CHECKLIST_ITEMS.length) * 100}%` }}
           />
         </div>
@@ -173,29 +173,29 @@ export function OnboardingChecklist() {
               <button
                 type="button"
                 onClick={() => toggleItem(item.key)}
-                className="mt-1 shrink-0 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 rounded-pf-full"
+                className="mt-1 shrink-0 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 rounded-pf-full"
                 aria-label={`Mark "${item.label}" as ${completed[item.key] ? 'incomplete' : 'complete'}`}
               >
                 {completed[item.key] ? (
-                  <CheckCircle2 className="size-4 text-pf-success" />
+                  <CheckCircle2 className="size-4 text-gain" />
                 ) : (
-                  <Circle className="size-4 text-pf-text-muted group-hover:text-pf-cyan-400 transition-colors" />
+                  <Circle className="size-4 text-tertiary group-hover:text-accent-text transition-colors" />
                 )}
               </button>
               <div className="flex-1 min-w-0">
                 <button
                   type="button"
                   onClick={() => handleNavigate(item.route)}
-                  className={`text-sm text-left font-medium transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 rounded-pf-sm ${
+                  className={`text-sm text-left font-medium transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 rounded-pf-sm ${
                     completed[item.key]
-                      ? 'text-pf-text-muted line-through'
-                      : 'text-pf-text hover:text-pf-cyan-400'
+                      ? 'text-tertiary line-through'
+                      : 'text-primary hover:text-accent-text'
                   }`}
                 >
                   {item.label}
                 </button>
                 {!completed[item.key] && (
-                  <p className="text-xs text-pf-text-secondary mt-1 leading-relaxed">{item.description}</p>
+                  <p className="text-xs text-secondary mt-1 leading-relaxed">{item.description}</p>
                 )}
               </div>
             </div>
@@ -205,14 +205,14 @@ export function OnboardingChecklist() {
 
       {/* Footer — "Take a tour" link */}
       {!collapsed && (
-        <div className="px-4 py-3 border-t border-pf-border-subtle">
+        <div className="px-4 py-3 border-t border-subtle">
           <button
             type="button"
             onClick={() => {
               const event = new CustomEvent('polyforge:start-tour');
               window.dispatchEvent(event);
             }}
-            className="text-xs text-pf-cyan-400 hover:text-pf-cyan-300 cursor-pointer transition-colors font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 rounded-pf-sm"
+            className="text-xs text-accent-text hover:text-accent-text cursor-pointer transition-colors font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 rounded-pf-sm"
           >
             Take a tour of the platform
           </button>
@@ -222,7 +222,7 @@ export function OnboardingChecklist() {
       {/* All done message */}
       {allDone && (
         <div className="px-4 py-3 text-center">
-          <p className="text-sm text-pf-success font-medium">All done! You're ready to trade.</p>
+          <p className="text-sm text-gain font-medium">All done! You're ready to trade.</p>
         </div>
       )}
     </div>

@@ -136,9 +136,9 @@ interface ToggleSwitchProps {
 function ToggleSwitch({ checked, onChange, danger, disabled, label }: ToggleSwitchProps) {
   const trackClass = checked
     ? danger
-      ? 'bg-pf-danger'
-      : 'bg-pf-cyan-500'
-    : 'bg-pf-border-strong';
+      ? 'bg-loss'
+      : 'bg-accent'
+    : 'bg-strong';
 
   return (
     <button
@@ -152,12 +152,12 @@ function ToggleSwitch({ checked, onChange, danger, disabled, label }: ToggleSwit
         'relative inline-flex h-6 w-11 shrink-0 items-center rounded-pf-full transition-colors duration-pf-normal',
         trackClass,
         disabled ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer',
-        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40',
+        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40',
       ].join(' ')}
     >
       <span
         className={[
-          'inline-block h-4 w-4 rounded-pf-full bg-pf-text shadow transition-transform duration-pf-normal',
+          'inline-block h-4 w-4 rounded-pf-full bg-primary shadow transition-transform duration-pf-normal',
           checked ? 'translate-x-6' : 'translate-x-1',
         ].join(' ')}
       />
@@ -184,9 +184,9 @@ function SliderInput({ value, min, max, onChange, label, unit }: SliderInputProp
         value={value}
         aria-label={label}
         onChange={(e) => onChange(Number(e.target.value))}
-        className="flex-1 h-2 rounded-pf-full accent-pf-cyan-500 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40"
+        className="flex-1 h-2 rounded-pf-full accent-accent cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
       />
-      <span className="w-14 text-right text-sm font-medium text-pf-text tabular-nums">
+      <span className="w-14 text-right text-sm font-medium text-primary tabular-nums">
         {value}
         {unit}
       </span>
@@ -208,7 +208,7 @@ interface NumberFieldProps {
 function NumberField({ value, min, max, step = 1, onChange, label, prefix, suffix }: NumberFieldProps) {
   return (
     <div className="flex items-center gap-2">
-      {prefix && <span className="text-pf-text-muted text-sm">{prefix}</span>}
+      {prefix && <span className="text-tertiary text-sm">{prefix}</span>}
       <input
         type="number"
         min={min}
@@ -218,13 +218,13 @@ function NumberField({ value, min, max, step = 1, onChange, label, prefix, suffi
         aria-label={label}
         onChange={(e) => onChange(Number(e.target.value))}
         className={[
-          'w-28 rounded-pf-sm border border-pf-border bg-pf-surface px-3 py-2',
-          'text-sm text-pf-text tabular-nums',
-          'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40',
-          'placeholder:text-pf-text-muted',
+          'w-28 rounded-pf-sm border border-default bg-surface px-3 py-2',
+          'text-sm text-primary tabular-nums',
+          'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40',
+          'placeholder:text-tertiary',
         ].join(' ')}
       />
-      {suffix && <span className="text-pf-text-muted text-sm">{suffix}</span>}
+      {suffix && <span className="text-tertiary text-sm">{suffix}</span>}
     </div>
   );
 }
@@ -236,8 +236,8 @@ interface SectionCardProps {
 
 function SectionCard({ title, children }: SectionCardProps) {
   return (
-    <section className="rounded-pf-lg border border-pf-border bg-pf-elevated p-6 space-y-5">
-      <h2 className="text-base font-semibold text-pf-text">{title}</h2>
+    <section className="rounded-pf-lg border border-default bg-elevated p-6 space-y-5">
+      <h2 className="text-base font-semibold text-primary">{title}</h2>
       {children}
     </section>
   );
@@ -253,9 +253,9 @@ function FieldRow({ label, description, children }: FieldRowProps) {
   return (
     <div className="flex items-center justify-between gap-4 min-h-10">
       <div className="min-w-0">
-        <p className="text-sm font-medium text-pf-text leading-tight">{label}</p>
+        <p className="text-sm font-medium text-primary leading-tight">{label}</p>
         {description && (
-          <p className="text-xs text-pf-text-muted mt-1 leading-tight">{description}</p>
+          <p className="text-xs text-tertiary mt-1 leading-tight">{description}</p>
         )}
       </div>
       <div className="shrink-0">{children}</div>
@@ -269,12 +269,12 @@ function FieldRow({ label, description, children }: FieldRowProps) {
 
 function ConfigSkeleton() {
   const shimmerCard = (rows: number) => (
-    <div className="rounded-pf-lg border border-pf-border bg-pf-elevated p-6 space-y-5 animate-shimmer">
-      <div className="h-4 w-40 rounded-pf-sm bg-pf-border" />
+    <div className="rounded-pf-lg border border-default bg-elevated p-6 space-y-5 animate-shimmer">
+      <div className="h-4 w-40 rounded-pf-sm bg-default" />
       {Array.from({ length: rows }).map((_, i) => (
         <div key={i} className="flex items-center justify-between gap-4">
-          <div className="h-3 w-48 rounded-pf-sm bg-pf-border" />
-          <div className="h-6 w-20 rounded-pf-sm bg-pf-border" />
+          <div className="h-3 w-48 rounded-pf-sm bg-default" />
+          <div className="h-6 w-20 rounded-pf-sm bg-default" />
         </div>
       ))}
     </div>
@@ -305,15 +305,15 @@ function MaintenanceConfirmBox({ onConfirm, onCancel }: MaintenanceConfirmProps)
     <div
       role="alertdialog"
       aria-labelledby="maintenance-confirm-heading"
-      className="mt-3 rounded-pf-lg border border-pf-warning/40 bg-pf-warning/10 p-4 space-y-3"
+      className="mt-3 rounded-pf-lg border border-warning/40 bg-warning/10 p-4 space-y-3"
     >
       <div className="flex items-start gap-2">
-        <AlertTriangle className="mt-1 h-4 w-4 shrink-0 text-pf-warning" aria-hidden />
+        <AlertTriangle className="mt-1 h-4 w-4 shrink-0 text-warning" aria-hidden />
         <div>
-          <p id="maintenance-confirm-heading" className="text-sm font-semibold text-pf-warning">
+          <p id="maintenance-confirm-heading" className="text-sm font-semibold text-warning">
             Enable maintenance mode?
           </p>
-          <p className="text-xs text-pf-text-secondary mt-1">
+          <p className="text-xs text-secondary mt-1">
             This will pause all trading activity across the platform immediately. Users will see a
             maintenance page until you turn this off.
           </p>
@@ -324,7 +324,7 @@ function MaintenanceConfirmBox({ onConfirm, onCancel }: MaintenanceConfirmProps)
           type="button"
           variant="secondary"
           onClick={onCancel}
-          className="rounded-pf-sm px-3 py-2 text-xs font-medium text-pf-text-secondary border border-pf-border hover:border-pf-border-strong transition-colors"
+          className="rounded-pf-sm px-3 py-2 text-xs font-medium text-secondary border border-default hover:border-strong transition-colors"
         >
           Cancel
         </Button>
@@ -474,20 +474,20 @@ export function Component() {
   // ---------------------------------------------------------------------------
 
   return (
-    <div className="min-h-screen bg-pf-surface animate-fade-in">
+    <div className="min-h-screen bg-surface animate-fade-in">
       <div className="mx-auto max-w-3xl px-4 py-8 space-y-6">
 
         {/* Header */}
         <div className="flex items-start justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-pf-lg bg-pf-elevated border border-pf-border">
-              <Settings2 className="h-5 w-5 text-pf-cyan-400" aria-hidden />
+            <div className="flex h-10 w-10 items-center justify-center rounded-pf-lg bg-elevated border border-default">
+              <Settings2 className="h-5 w-5 text-accent-text" aria-hidden />
             </div>
             <div>
-              <h1 className="text-xl font-bold text-pf-text leading-tight">Platform Config</h1>
-              <p className="text-xs text-pf-text-muted mt-1">
+              <h1 className="text-xl font-bold text-primary leading-tight">Platform Config</h1>
+              <p className="text-xs text-tertiary mt-1">
                 Last saved:{' '}
-                <span className="text-pf-text-secondary">{lastSavedDisplay}</span>
+                <span className="text-secondary">{lastSavedDisplay}</span>
               </p>
             </div>
           </div>
@@ -500,8 +500,8 @@ export function Component() {
             className={[
               'inline-flex items-center gap-2 rounded-pf px-4 py-2 text-sm font-semibold transition-all',
               dirty && !saving
-                ? 'bg-pf-cyan-500 text-pf-text-contrast hover:bg-pf-cyan-400 transition-colors duration-pf-fast cursor-pointer'
-                : 'bg-pf-elevated border border-pf-border text-pf-text-muted cursor-not-allowed opacity-50',
+                ? 'bg-accent text-inverse hover:bg-accent-text transition-colors duration-pf-fast cursor-pointer'
+                : 'bg-elevated border border-default text-tertiary cursor-not-allowed opacity-50',
             ].join(' ')}
           >
             <Save className="h-4 w-4" aria-hidden />
@@ -513,7 +513,7 @@ export function Component() {
         {dirty && (
           <div
             role="status"
-            className="flex items-center gap-2 rounded-pf-sm border border-pf-warning/40 bg-pf-warning/10 px-4 py-3 text-sm text-pf-warning"
+            className="flex items-center gap-2 rounded-pf-sm border border-warning/40 bg-warning/10 px-4 py-3 text-sm text-warning"
           >
             <AlertTriangle className="h-4 w-4 shrink-0" aria-hidden />
             <span>
@@ -683,7 +683,7 @@ export function Component() {
 
                 {/* Maintenance active warning */}
                 {config.riskControls.maintenanceMode && !showMaintenanceConfirm && (
-                  <div className="mt-3 flex items-center gap-2 rounded-pf-sm border border-pf-danger/40 bg-pf-danger/10 px-3 py-2 text-sm text-pf-danger">
+                  <div className="mt-3 flex items-center gap-2 rounded-pf-sm border border-loss/40 bg-loss/10 px-3 py-2 text-sm text-loss">
                     <AlertTriangle className="h-4 w-4 shrink-0" aria-hidden />
                     <span>Platform is in maintenance mode — all trading is paused.</span>
                   </div>
@@ -753,18 +753,18 @@ export function Component() {
                       className={[
                         'relative flex items-center justify-between gap-3 rounded-pf-lg border px-4 py-3 transition-colors',
                         enabled
-                          ? 'border-pf-border bg-pf-surface'
-                          : 'border-pf-border-subtle bg-pf-surface/50',
+                          ? 'border-default bg-surface'
+                          : 'border-subtle bg-surface/50',
                       ].join(' ')}
                     >
                       <div className="flex items-center gap-2 min-w-0">
                         {!enabled && (
                           <Lock
-                            className="h-4 w-4 shrink-0 text-pf-text-muted"
+                            className="h-4 w-4 shrink-0 text-tertiary"
                             aria-hidden
                           />
                         )}
-                        <span className="text-sm font-medium text-pf-text truncate">{label}</span>
+                        <span className="text-sm font-medium text-primary truncate">{label}</span>
                       </div>
 
                       <div className="flex items-center gap-2 shrink-0">
@@ -772,8 +772,8 @@ export function Component() {
                           className={[
                             'inline-flex items-center gap-1 rounded-pf-full px-2 py-1 text-xs font-medium',
                             enabled
-                              ? 'bg-pf-success/15 text-pf-success'
-                              : 'bg-pf-border/30 text-pf-text-muted',
+                              ? 'bg-gain/15 text-gain'
+                              : 'bg-default/30 text-tertiary',
                           ].join(' ')}
                         >
                           {enabled && <Check className="h-3 w-3" aria-hidden />}

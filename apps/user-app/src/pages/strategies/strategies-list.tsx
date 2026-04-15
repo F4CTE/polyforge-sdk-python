@@ -90,28 +90,28 @@ interface StrategyPerfData {
 
 /* ─── Constants ──────────────────────────────────────────────────────── */
 
-const COMPARE_COLORS = ['var(--color-pf-cyan-500)', 'var(--color-pf-purple-500)', 'var(--color-pf-gold-500)', 'var(--color-pf-success)'];
+const COMPARE_COLORS = ['var(--accent-default)', 'var(--color-pf-purple-500)', 'var(--color-pf-gold-500)', 'var(--gain)'];
 
 /* ─── Helpers ────────────────────────────────────────────────────────── */
 
 function statusGradient(status: StrategyStatus): string {
   switch (status) {
-    case 'RUNNING':  return 'var(--color-pf-cyan-500)';
+    case 'RUNNING':  return 'var(--accent-default)';
     case 'PAPER':    return 'var(--color-pf-purple-500)';
-    case 'PAUSED':   return 'var(--color-pf-warning)';
-    case 'ERROR':    return 'var(--color-pf-danger)';
+    case 'PAUSED':   return 'var(--warning)';
+    case 'ERROR':    return 'var(--loss)';
     case 'IDLE':
-    default:         return 'var(--color-pf-border)';
+    default:         return 'var(--border-subtle)';
   }
 }
 
 const STATUS_STYLES: Record<StrategyStatus, { dot: string; bg: string; text: string }> = {
-  RUNNING:  { dot: 'bg-pf-cyan-500',   bg: 'bg-pf-cyan-500/10',   text: 'text-pf-cyan-500' },
+  RUNNING:  { dot: 'bg-accent',   bg: 'bg-accent/10',   text: 'text-accent' },
   PAPER:    { dot: 'bg-pf-purple-500', bg: 'bg-pf-purple-500/10', text: 'text-pf-purple-500' },
-  PAUSED:   { dot: 'bg-pf-warning',   bg: 'bg-pf-warning/10',   text: 'text-pf-warning' },
-  IDLE:     { dot: 'bg-pf-text-muted',    bg: 'bg-pf-overlay',    text: 'text-pf-text-muted' },
-  ERROR:    { dot: 'bg-pf-danger',     bg: 'bg-pf-danger/10',     text: 'text-pf-danger' },
-  ARCHIVED: { dot: 'bg-pf-text-muted',    bg: 'bg-pf-overlay',    text: 'text-pf-text-muted' },
+  PAUSED:   { dot: 'bg-warning',   bg: 'bg-warning/10',   text: 'text-warning' },
+  IDLE:     { dot: 'bg-tertiary',    bg: 'bg-overlay',    text: 'text-tertiary' },
+  ERROR:    { dot: 'bg-loss',     bg: 'bg-loss/10',     text: 'text-loss' },
+  ARCHIVED: { dot: 'bg-tertiary',    bg: 'bg-overlay',    text: 'text-tertiary' },
 };
 
 const FILTERS: { label: string; value: FilterStatus }[] = [
@@ -190,8 +190,8 @@ function ComparisonPanel({ perfData, loading, onBack }: ComparisonPanelProps) {
     const worst = higherIsBetter ? Math.min(...defined) : Math.max(...defined);
     const v = values[idx];
     if (v === undefined) return '';
-    if (v === best) return 'bg-pf-success/10 text-pf-success font-medium';
-    if (v === worst) return 'bg-pf-danger/10 text-pf-danger font-medium';
+    if (v === best) return 'bg-gain/10 text-gain font-medium';
+    if (v === worst) return 'bg-loss/10 text-loss font-medium';
     return '';
   }
 
@@ -209,17 +209,17 @@ function ComparisonPanel({ perfData, loading, onBack }: ComparisonPanelProps) {
     return (
       <div className="space-y-6">
         {/* Back button skeleton */}
-        <div className="h-8 w-32 bg-pf-overlay rounded animate-shimmer" />
+        <div className="h-8 w-32 bg-overlay rounded animate-shimmer" />
         {/* Chart skeleton */}
-        <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-5">
-          <div className="h-4 w-40 bg-pf-overlay rounded mb-4 animate-shimmer" />
-          <div className="h-56 bg-pf-overlay rounded animate-shimmer" />
+        <div className="bg-elevated border border-default rounded-pf-lg p-5">
+          <div className="h-4 w-40 bg-overlay rounded mb-4 animate-shimmer" />
+          <div className="h-56 bg-overlay rounded animate-shimmer" />
         </div>
         {/* Table skeleton */}
-        <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-5 space-y-3">
-          <div className="h-4 w-32 bg-pf-overlay rounded animate-shimmer" />
+        <div className="bg-elevated border border-default rounded-pf-lg p-5 space-y-3">
+          <div className="h-4 w-32 bg-overlay rounded animate-shimmer" />
           {[1, 2, 3, 4, 5].map((i) => (
-            <div key={i} className="h-8 bg-pf-overlay rounded animate-shimmer" />
+            <div key={i} className="h-8 bg-overlay rounded animate-shimmer" />
           ))}
         </div>
       </div>
@@ -239,32 +239,32 @@ function ComparisonPanel({ perfData, loading, onBack }: ComparisonPanelProps) {
         type="button"
         variant="ghost"
         onClick={onBack}
-        className="flex items-center gap-2 text-sm text-pf-text-secondary hover:text-pf-text transition-colors"
+        className="flex items-center gap-2 text-sm text-secondary hover:text-primary transition-colors"
       >
         <ChevronLeft className="size-4" aria-hidden="true" />
         Back to Strategies
       </Button>
 
       {/* P&L Line Chart */}
-      <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-5">
-        <h2 className="text-sm font-semibold text-pf-text mb-4">P&L Performance</h2>
+      <div className="bg-elevated border border-default rounded-pf-lg p-5">
+        <h2 className="text-sm font-semibold text-primary mb-4">P&L Performance</h2>
         {chartData.length === 0 ? (
-          <div className="flex items-center justify-center h-56 text-pf-text-muted text-sm">
+          <div className="flex items-center justify-center h-56 text-tertiary text-sm">
             No P&L history available
           </div>
         ) : (
           <ResponsiveContainer width="100%" height={240}>
             <LineChart data={chartData} margin={{ top: 4, right: 16, left: 0, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="var(--color-pf-border)" />
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--border-subtle)" />
               <XAxis
                 dataKey="date"
                 tick={chartAxisTick}
-                axisLine={{ stroke: 'var(--color-pf-border)' }}
+                axisLine={{ stroke: 'var(--border-subtle)' }}
                 tickLine={false}
               />
               <YAxis
                 tick={chartAxisTick}
-                axisLine={{ stroke: 'var(--color-pf-border)' }}
+                axisLine={{ stroke: 'var(--border-subtle)' }}
                 tickLine={false}
                 tickFormatter={(v: number) => `$${v}`}
               />
@@ -278,7 +278,7 @@ function ComparisonPanel({ perfData, loading, onBack }: ComparisonPanelProps) {
               <Legend
                 formatter={(value: string) => {
                   const strategy = perfData.find((s) => s.strategyId === value);
-                  return <span className="text-pf-text-secondary text-xs">{strategy?.name ?? value}</span>;
+                  return <span className="text-secondary text-xs">{strategy?.name ?? value}</span>;
                 }}
               />
               {perfData.map((s) => (
@@ -298,29 +298,29 @@ function ComparisonPanel({ perfData, loading, onBack }: ComparisonPanelProps) {
       </div>
 
       {/* Stats Table */}
-      <div className="bg-pf-elevated border border-pf-border rounded-pf-lg overflow-hidden">
+      <div className="bg-elevated border border-default rounded-pf-lg overflow-hidden">
         <div className="p-5 pb-3">
-          <h2 className="text-sm font-semibold text-pf-text">Performance Metrics</h2>
+          <h2 className="text-sm font-semibold text-primary">Performance Metrics</h2>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm" aria-label="Strategy performance metrics">
             <thead>
-              <tr className="border-t border-pf-border">
-                <th className="text-left px-5 py-3 text-pf-text-muted font-medium text-xs w-36">Metric</th>
+              <tr className="border-t border-default">
+                <th className="text-left px-5 py-3 text-tertiary font-medium text-xs w-36">Metric</th>
                 {perfData.map((s) => (
                   <th key={s.strategyId} className="text-left px-5 py-3 font-medium text-xs">
                     <span className="flex items-center gap-2">
                       <span className="inline-block w-3 h-3 rounded-pf-full shrink-0" style={{ background: s.color }} aria-hidden="true" />
-                      <span className="text-pf-text truncate max-w-[120px]">{s.name}</span>
+                      <span className="text-primary truncate max-w-[120px]">{s.name}</span>
                     </span>
                   </th>
                 ))}
               </tr>
             </thead>
-            <tbody className="divide-y divide-pf-border">
+            <tbody className="divide-y divide-default">
               {/* Total P&L */}
               <tr>
-                <td className="px-5 py-3 text-pf-text-muted text-xs">Total P&L</td>
+                <td className="px-5 py-3 text-tertiary text-xs">Total P&L</td>
                 {perfData.map((s, i) => (
                   <td key={s.strategyId} className={`px-5 py-3 font-mono text-xs rounded-sm ${bestWorstClass(totalPnlNums, i, true)}`}>
                     {s.stats.totalPnl}
@@ -329,7 +329,7 @@ function ComparisonPanel({ perfData, loading, onBack }: ComparisonPanelProps) {
               </tr>
               {/* Win Rate */}
               <tr>
-                <td className="px-5 py-3 text-pf-text-muted text-xs">Win Rate</td>
+                <td className="px-5 py-3 text-tertiary text-xs">Win Rate</td>
                 {perfData.map((s, i) => (
                   <td key={s.strategyId} className={`px-5 py-3 font-mono text-xs ${bestWorstClass(winRates, i, true)}`}>
                     {s.stats.winRate}%
@@ -338,7 +338,7 @@ function ComparisonPanel({ perfData, loading, onBack }: ComparisonPanelProps) {
               </tr>
               {/* Max Drawdown */}
               <tr>
-                <td className="px-5 py-3 text-pf-text-muted text-xs">Max Drawdown</td>
+                <td className="px-5 py-3 text-tertiary text-xs">Max Drawdown</td>
                 {perfData.map((s, i) => (
                   <td key={s.strategyId} className={`px-5 py-3 font-mono text-xs ${bestWorstClass(drawdowns, i, true)}`}>
                     {s.stats.maxDrawdown}
@@ -347,7 +347,7 @@ function ComparisonPanel({ perfData, loading, onBack }: ComparisonPanelProps) {
               </tr>
               {/* Trade Count */}
               <tr>
-                <td className="px-5 py-3 text-pf-text-muted text-xs">Trade Count</td>
+                <td className="px-5 py-3 text-tertiary text-xs">Trade Count</td>
                 {perfData.map((s, i) => (
                   <td key={s.strategyId} className={`px-5 py-3 font-mono text-xs ${bestWorstClass(tradeCounts, i, true)}`}>
                     {s.stats.tradeCount}
@@ -356,7 +356,7 @@ function ComparisonPanel({ perfData, loading, onBack }: ComparisonPanelProps) {
               </tr>
               {/* Sharpe Ratio */}
               <tr>
-                <td className="px-5 py-3 text-pf-text-muted text-xs">Sharpe Ratio</td>
+                <td className="px-5 py-3 text-tertiary text-xs">Sharpe Ratio</td>
                 {perfData.map((s, i) => (
                   <td key={s.strategyId} className={`px-5 py-3 font-mono text-xs ${bestWorstClass(sharpes, i, true)}`}>
                     {s.stats.sharpeRatio !== undefined ? s.stats.sharpeRatio.toFixed(2) : '—'}
@@ -583,7 +583,7 @@ export function Component() {
     <div className="animate-fade-in p-6 max-w-7xl mx-auto space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold text-pf-text">My Strategies</h1>
+        <h1 className="text-2xl font-semibold text-primary">My Strategies</h1>
         <div className="flex items-center gap-2">
           {/* Compare toggle */}
           {!compareMode ? (
@@ -591,7 +591,7 @@ export function Component() {
               type="button"
               variant="secondary"
               onClick={enterCompareMode}
-              className="flex items-center gap-2 px-4 py-3 rounded-pf bg-pf-elevated border border-pf-border text-sm text-pf-text-secondary font-medium hover:border-pf-border-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 transition-colors"
+              className="flex items-center gap-2 px-4 py-3 rounded-pf bg-elevated border border-default text-sm text-secondary font-medium hover:border-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 transition-colors"
             >
               <GitCompare className="size-4" aria-hidden="true" /> Compare
             </Button>
@@ -600,7 +600,7 @@ export function Component() {
               type="button"
               variant="ghost"
               onClick={exitCompareMode}
-              className="flex items-center gap-2 px-4 py-3 rounded-pf bg-pf-cyan-500/10 border border-pf-cyan-500/30 text-sm text-pf-cyan-400 font-medium hover:bg-pf-cyan-500/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 transition-colors"
+              className="flex items-center gap-2 px-4 py-3 rounded-pf bg-accent/10 border border-accent/30 text-sm text-accent-text font-medium hover:bg-accent/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 transition-colors"
             >
               <X className="size-4" aria-hidden="true" /> Exit Compare
             </Button>
@@ -609,13 +609,13 @@ export function Component() {
             type="button"
             variant="secondary"
             onClick={handleImport}
-            className="flex items-center gap-2 px-4 py-3 rounded-pf bg-pf-elevated border border-pf-border text-sm text-pf-text-secondary font-medium hover:border-pf-border-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 transition-colors"
+            className="flex items-center gap-2 px-4 py-3 rounded-pf bg-elevated border border-default text-sm text-secondary font-medium hover:border-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 transition-colors"
           >
             <Upload className="size-4" aria-hidden="true" /> Import Strategy
           </Button>
           <Link
             to="/strategies/new"
-            className="flex items-center gap-2 px-4 py-3 rounded-pf bg-pf-cyan-500 text-pf-text-contrast text-sm font-medium hover:bg-pf-cyan-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 transition-colors"
+            className="flex items-center gap-2 px-4 py-3 rounded-pf bg-accent text-inverse text-sm font-medium hover:bg-accent-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 transition-colors"
           >
             <Plus className="size-4" aria-hidden="true" /> New Strategy
           </Link>
@@ -633,8 +633,8 @@ export function Component() {
               onClick={() => onFilterChange(f.value)}
               className={`px-3 py-2 text-sm rounded-pf-full border transition-colors ${
                 filter === f.value
-                  ? 'bg-pf-cyan-500/10 border-pf-cyan-500/30 text-pf-cyan-400'
-                  : 'border-pf-border text-pf-text-secondary hover:text-pf-text'
+                  ? 'bg-accent/10 border-accent/30 text-accent-text'
+                  : 'border-default text-secondary hover:text-primary'
               }`}
             >
               {f.label}
@@ -662,12 +662,12 @@ export function Component() {
       {/* Empty state */}
       {!showComparison && !loading && strategies.length === 0 && (
         <div className="flex flex-col items-center justify-center py-20 text-center" role="status">
-          <Code2 className="size-10 text-pf-text-muted mb-4" aria-hidden="true" />
-          <p className="text-pf-text font-medium">No strategies yet</p>
-          <p className="text-sm text-pf-text-muted mt-1">Create your first strategy to start trading.</p>
+          <Code2 className="size-10 text-tertiary mb-4" aria-hidden="true" />
+          <p className="text-primary font-medium">No strategies yet</p>
+          <p className="text-sm text-tertiary mt-1">Create your first strategy to start trading.</p>
           <Link
             to="/strategies/new"
-            className="mt-4 flex items-center gap-2 px-4 py-3 rounded-pf bg-pf-cyan-500 text-pf-text-contrast text-sm font-medium hover:bg-pf-cyan-400 transition-colors"
+            className="mt-4 flex items-center gap-2 px-4 py-3 rounded-pf bg-accent text-inverse text-sm font-medium hover:bg-accent-text transition-colors"
           >
             <Plus className="size-4" aria-hidden="true" /> New Strategy
           </Link>
@@ -714,10 +714,10 @@ export function Component() {
                 role={compareMode ? 'checkbox' : 'link'}
                 aria-checked={compareMode ? isSelected : undefined}
                 className={[
-                  'group bg-pf-elevated border rounded-pf-lg p-5 cursor-pointer transition-all duration-pf-normal overflow-hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40',
+                  'group bg-elevated border rounded-pf-lg p-5 cursor-pointer transition-all duration-pf-normal overflow-hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40',
                   compareMode && isSelected
-                    ? 'border-pf-cyan-500/50 shadow-pf-ring-cyan'
-                    : 'border-pf-border hover:border-pf-border-strong hover:shadow-pf-sm hover:-translate-y-1',
+                    ? 'border-accent/50 shadow-pf-ring-cyan'
+                    : 'border-default hover:border-strong hover:shadow-pf-sm hover:-translate-y-1',
                   compareMode && isMaxed
                     ? 'opacity-50 pointer-events-none'
                     : '',
@@ -743,18 +743,18 @@ export function Component() {
                         'w-5 h-5 rounded border-2 flex items-center justify-center transition-all',
                         isSelected
                           ? 'border-transparent'
-                          : 'border-pf-border bg-pf-overlay hover:border-pf-cyan-500/60',
+                          : 'border-default bg-overlay hover:border-accent/60',
                       ].join(' ')}
                       style={isSelected ? { background: chipColor, borderColor: chipColor } : {}}
                     >
-                      {isSelected && <Check className="size-3 text-pf-text" aria-hidden="true" />}
+                      {isSelected && <Check className="size-3 text-primary" aria-hidden="true" />}
                     </Button>
                   </div>
                 )}
 
                 {/* Name + status */}
                 <div className={`flex items-start justify-between gap-3 mb-2 ${compareMode ? 'pl-7' : ''}`}>
-                  <h3 className="text-sm font-medium text-pf-text leading-snug line-clamp-1 group-hover:text-pf-cyan-400 transition-colors">
+                  <h3 className="text-sm font-medium text-primary leading-snug line-clamp-1 group-hover:text-accent-text transition-colors">
                     {strategy.name}
                   </h3>
                   <span data-testid="status-badge" className={`inline-flex items-center gap-2 px-2 py-1 rounded-pf-full text-pf-label font-medium shrink-0 ${statusStyle.bg} ${statusStyle.text}`}>
@@ -770,11 +770,11 @@ export function Component() {
                       ? 'bg-pf-purple-500/10 text-pf-purple-500'
                       : strategy.execMode === 'HYBRID'
                         ? 'bg-pf-purple-500/10 text-pf-purple-500'
-                        : 'bg-pf-cyan-500/10 text-pf-cyan-400'
+                        : 'bg-accent/10 text-accent-text'
                   }`}>
                     {execLabel(strategy)}
                   </span>
-                  <span className="inline-flex items-center px-2 py-1 rounded-pf-full bg-pf-overlay text-pf-text-muted text-pf-label font-medium">
+                  <span className="inline-flex items-center px-2 py-1 rounded-pf-full bg-overlay text-tertiary text-pf-label font-medium">
                     {blocksCount(strategy)} blocks
                   </span>
                   {strategy.tags.length > 0 && (
@@ -782,8 +782,8 @@ export function Component() {
                       strategy.tags[0].toLowerCase() === 'momentum'
                         ? 'bg-pf-gold-500/10 text-pf-gold-500'
                         : strategy.tags[0].toLowerCase() === 'defensive'
-                          ? 'bg-pf-info/10 text-pf-info'
-                          : 'bg-pf-overlay text-pf-text-muted'
+                          ? 'bg-info/10 text-info'
+                          : 'bg-overlay text-tertiary'
                     }`}>
                       {strategy.tags[0]}
                     </span>
@@ -795,7 +795,7 @@ export function Component() {
 
                 {/* Description */}
                 {strategy.description && (
-                  <p className="text-xs text-pf-text-secondary line-clamp-2 mb-3">
+                  <p className="text-xs text-secondary line-clamp-2 mb-3">
                     {strategy.description}
                   </p>
                 )}
@@ -803,7 +803,7 @@ export function Component() {
                 {/* P&L */}
                 {pnl !== null && (
                   <div className="mb-3">
-                    <span className={`font-mono text-sm font-medium ${pnl >= 0 ? 'text-pf-success' : 'text-pf-danger'}`}>
+                    <span className={`font-mono text-sm font-medium ${pnl >= 0 ? 'text-gain' : 'text-loss'}`}>
                       {formatPnl(pnl)}
                     </span>
                   </div>
@@ -812,10 +812,10 @@ export function Component() {
                 {/* Footer: date + actions (hidden in compare mode to reduce noise) */}
                 {!compareMode && (
                   <div
-                    className="flex items-center justify-between pt-3 border-t border-pf-border-subtle"
+                    className="flex items-center justify-between pt-3 border-t border-subtle"
                     onClick={(e) => e.stopPropagation()}
                   >
-                    <span className="font-mono text-pf-label text-pf-text-muted">
+                    <span className="font-mono text-pf-label text-tertiary">
                       {formatDate(strategy.updatedAt)}
                     </span>
                     <div className="flex items-center gap-1">
@@ -826,7 +826,7 @@ export function Component() {
                             variant="ghost"
                             onClick={(e) => { e.stopPropagation(); doAction(strategy.id, 'start', { mode: 'live' }); }}
                             disabled={busy}
-                            className="flex items-center gap-1 px-2 py-1 rounded-pf-sm bg-pf-cyan-500/10 text-pf-cyan-400 text-pf-label font-medium hover:bg-pf-cyan-500/20 disabled:opacity-40 transition-colors"
+                            className="flex items-center gap-1 px-2 py-1 rounded-pf-sm bg-accent/10 text-accent-text text-pf-label font-medium hover:bg-accent/20 disabled:opacity-40 transition-colors"
                             title="Start strategy (Live)"
                             aria-label="Start strategy in live mode"
                           >
@@ -837,7 +837,7 @@ export function Component() {
                             variant="ghost"
                             onClick={(e) => { e.stopPropagation(); doAction(strategy.id, 'start', { mode: 'paper' }); }}
                             disabled={busy}
-                            className="flex items-center gap-1 px-2 py-1 rounded-pf-sm bg-pf-overlay text-pf-text-secondary text-pf-label font-medium hover:bg-pf-border-subtle disabled:opacity-40 transition-colors"
+                            className="flex items-center gap-1 px-2 py-1 rounded-pf-sm bg-overlay text-secondary text-pf-label font-medium hover:bg-subtle disabled:opacity-40 transition-colors"
                             title="Start strategy (Paper)"
                             aria-label="Start strategy in paper mode"
                           >
@@ -916,7 +916,7 @@ export function Component() {
                       <Link
                         to={`/strategies/${strategy.id}/edit`}
                         onClick={(e) => e.stopPropagation()}
-                        className="p-2 rounded-pf-sm text-pf-text-secondary hover:text-pf-text hover:bg-pf-overlay transition-colors"
+                        className="p-2 rounded-pf-sm text-secondary hover:text-primary hover:bg-overlay transition-colors"
                         aria-label="Edit strategy"
                         title="Edit strategy"
                       >
@@ -928,8 +928,8 @@ export function Component() {
 
                 {/* Compare mode footer — show date only */}
                 {compareMode && (
-                  <div className="pt-3 border-t border-pf-border-subtle">
-                    <span className="font-mono text-pf-label text-pf-text-muted">
+                  <div className="pt-3 border-t border-subtle">
+                    <span className="font-mono text-pf-label text-tertiary">
                       {formatDate(strategy.updatedAt)}
                     </span>
                   </div>
@@ -943,12 +943,12 @@ export function Component() {
       {/* Sticky bottom compare bar */}
       {compareMode && !showComparison && selectedIds.length >= 2 && (
         <div
-          className="fixed bottom-0 left-0 right-0 z-40 border-t border-pf-border bg-pf-surface/95 backdrop-blur-sm px-4 py-3"
+          className="fixed bottom-0 left-0 right-0 z-40 border-t border-default bg-surface/95 backdrop-blur-sm px-4 py-3"
           role="region"
           aria-label="Compare selection bar"
         >
           <div className="max-w-7xl mx-auto flex items-center gap-3 flex-wrap">
-            <span className="text-sm font-medium text-pf-text shrink-0">
+            <span className="text-sm font-medium text-primary shrink-0">
               Comparing {selectedIds.length} {selectedIds.length === 1 ? 'strategy' : 'strategies'}
             </span>
 
@@ -960,7 +960,7 @@ export function Component() {
                 return (
                   <span
                     key={id}
-                    className="inline-flex items-center gap-1 pl-2 pr-1 py-1 rounded-pf-full text-pf-label font-medium text-pf-text bg-pf-overlay border border-pf-border"
+                    className="inline-flex items-center gap-1 pl-2 pr-1 py-1 rounded-pf-full text-pf-label font-medium text-primary bg-overlay border border-default"
                   >
                     <span
                       className="inline-block w-2 h-2 rounded-pf-full shrink-0"
@@ -973,7 +973,7 @@ export function Component() {
                       variant="ghost"
                       aria-label={`Remove ${s.name} from comparison`}
                       onClick={() => toggleSelect(id)}
-                      className="ml-1 text-pf-text-muted hover:text-pf-text transition-colors"
+                      className="ml-1 text-tertiary hover:text-primary transition-colors"
                     >
                       <X className="size-3" />
                     </Button>
@@ -988,14 +988,14 @@ export function Component() {
                 type="button"
                 variant="secondary"
                 onClick={() => setSelectedIds([])}
-                className="text-sm text-pf-text-secondary hover:text-pf-text transition-colors px-3 py-2 rounded-pf border border-pf-border hover:border-pf-border-strong"
+                className="text-sm text-secondary hover:text-primary transition-colors px-3 py-2 rounded-pf border border-default hover:border-strong"
               >
                 Clear
               </Button>
               <Button
                 type="button"
                 onClick={openComparison}
-                className="flex items-center gap-2 text-sm font-medium px-4 py-2 rounded-pf bg-pf-cyan-500 text-pf-text-contrast hover:bg-pf-cyan-400 transition-colors"
+                className="flex items-center gap-2 text-sm font-medium px-4 py-2 rounded-pf bg-accent text-inverse hover:bg-accent-text transition-colors"
               >
                 <GitCompare className="size-4" aria-hidden="true" />
                 View Comparison

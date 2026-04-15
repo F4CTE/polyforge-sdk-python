@@ -48,8 +48,8 @@ function formatDate(d: string): string {
 
 function pnlColor(pnl: string): string {
   const v = parseFloat(pnl);
-  if (isNaN(v)) return 'text-pf-text-secondary';
-  return v >= 0 ? 'text-pf-success' : 'text-pf-danger';
+  if (isNaN(v)) return 'text-secondary';
+  return v >= 0 ? 'text-gain' : 'text-loss';
 }
 
 function pnlSign(pnl: string): string {
@@ -76,7 +76,7 @@ function Sparkline({ data }: { data: number[] }) {
         strokeWidth="2"
         strokeLinejoin="round"
         points={points}
-        className="text-pf-cyan-400"
+        className="text-accent-text"
       />
     </svg>
   );
@@ -87,19 +87,19 @@ function Sparkline({ data }: { data: number[] }) {
 function ProfileSkeleton() {
   return (
     <div className="animate-fade-in p-6 max-w-5xl mx-auto space-y-6">
-      <div className="h-4 bg-pf-overlay rounded w-20 animate-pulse" />
-      <div className="h-6 bg-pf-overlay rounded w-[300px] animate-pulse" />
+      <div className="h-4 bg-overlay rounded w-20 animate-pulse" />
+      <div className="h-6 bg-overlay rounded w-[300px] animate-pulse" />
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {Array.from({ length: 4 }, (_, i) => (
-          <div key={i} className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4 space-y-2 animate-shimmer">
-            <div className="h-3 bg-pf-overlay rounded w-[60%]" />
-            <div className="h-5 bg-pf-overlay rounded w-[80%]" />
+          <div key={i} className="bg-elevated border border-default rounded-pf-lg p-4 space-y-2 animate-shimmer">
+            <div className="h-3 bg-overlay rounded w-[60%]" />
+            <div className="h-5 bg-overlay rounded w-[80%]" />
           </div>
         ))}
       </div>
-      <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4 animate-shimmer">
+      <div className="bg-elevated border border-default rounded-pf-lg p-4 animate-shimmer">
         {Array.from({ length: 5 }, (_, i) => (
-          <div key={i} className="h-3 bg-pf-overlay rounded w-full mb-3" />
+          <div key={i} className="h-3 bg-overlay rounded w-full mb-3" />
         ))}
       </div>
     </div>
@@ -156,13 +156,13 @@ export function Component() {
   if (notFound) {
     return (
       <div className="animate-fade-in p-6 max-w-5xl mx-auto">
-        <Link to="/whales" className="flex items-center gap-2 text-sm text-pf-text-secondary hover:text-pf-cyan-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 rounded-pf-sm transition-colors mb-6">
+        <Link to="/whales" className="flex items-center gap-2 text-sm text-secondary hover:text-accent-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 rounded-pf-sm transition-colors mb-6">
           <ArrowLeft className="size-4" /> Back to feed
         </Link>
         <div className="flex flex-col items-center justify-center py-20 text-center">
-          <Fish className="size-10 text-pf-text-muted mb-4" aria-hidden="true" />
-          <p className="text-pf-text font-medium">Wallet not found</p>
-          <p className="text-sm text-pf-text-muted mt-1">No whale activity recorded for this address.</p>
+          <Fish className="size-10 text-tertiary mb-4" aria-hidden="true" />
+          <p className="text-primary font-medium">Wallet not found</p>
+          <p className="text-sm text-tertiary mt-1">No whale activity recorded for this address.</p>
         </div>
       </div>
     );
@@ -171,13 +171,13 @@ export function Component() {
   if (error || !profile) {
     return (
       <div className="animate-fade-in p-6 max-w-5xl mx-auto">
-        <Link to="/whales" className="flex items-center gap-2 text-sm text-pf-text-secondary hover:text-pf-cyan-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 rounded-pf-sm transition-colors mb-6">
+        <Link to="/whales" className="flex items-center gap-2 text-sm text-secondary hover:text-accent-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 rounded-pf-sm transition-colors mb-6">
           <ArrowLeft className="size-4" /> Back to feed
         </Link>
         <div className="flex flex-col items-center justify-center py-20 text-center">
-          <AlertCircle className="size-10 text-pf-danger mb-4" />
-          <p className="text-pf-text font-medium">Something went wrong</p>
-          <p className="text-sm text-pf-text-muted mt-1">Failed to load whale profile. Please try again.</p>
+          <AlertCircle className="size-10 text-loss mb-4" />
+          <p className="text-primary font-medium">Something went wrong</p>
+          <p className="text-sm text-tertiary mt-1">Failed to load whale profile. Please try again.</p>
           <Button type="button" variant="secondary" onClick={load} className="mt-4">
             Retry
           </Button>
@@ -190,13 +190,13 @@ export function Component() {
   if (!stats) {
     return (
       <div className="animate-fade-in p-6 max-w-5xl mx-auto">
-        <Link to="/whales" className="flex items-center gap-2 text-sm text-pf-text-secondary hover:text-pf-cyan-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 rounded-pf-sm transition-colors mb-6">
+        <Link to="/whales" className="flex items-center gap-2 text-sm text-secondary hover:text-accent-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 rounded-pf-sm transition-colors mb-6">
           <ArrowLeft className="size-4" /> Back to feed
         </Link>
         <div className="flex flex-col items-center justify-center py-20 text-center">
-          <Fish className="size-10 text-pf-text-muted mb-4" aria-hidden="true" />
-          <p className="text-pf-text font-medium">No stats available</p>
-          <p className="text-sm text-pf-text-muted mt-1">This whale has no recorded activity yet.</p>
+          <Fish className="size-10 text-tertiary mb-4" aria-hidden="true" />
+          <p className="text-primary font-medium">No stats available</p>
+          <p className="text-sm text-tertiary mt-1">This whale has no recorded activity yet.</p>
         </div>
       </div>
     );
@@ -205,19 +205,19 @@ export function Component() {
   return (
     <div className="animate-fade-in p-6 max-w-5xl mx-auto space-y-6">
       {/* Back link */}
-      <Link to="/whales" className="flex items-center gap-2 text-sm text-pf-text-secondary hover:text-pf-cyan-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 rounded-pf-sm transition-colors">
+      <Link to="/whales" className="flex items-center gap-2 text-sm text-secondary hover:text-accent-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 rounded-pf-sm transition-colors">
         <ArrowLeft className="size-4" /> Back to feed
       </Link>
 
       {/* Address + actions */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          <div className="size-10 rounded-pf-full bg-pf-cyan-500/15 border border-pf-cyan-500/25 flex items-center justify-center">
-            <Fish className="size-5 text-pf-cyan-400" aria-hidden="true" />
+          <div className="size-10 rounded-pf-full bg-accent/15 border border-accent/25 flex items-center justify-center">
+            <Fish className="size-5 text-accent-text" aria-hidden="true" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <span className="font-mono text-sm text-pf-text break-all">{address}</span>
+              <span className="font-mono text-sm text-primary break-all">{address}</span>
               <Button
                 type="button"
                 variant="ghost"
@@ -243,7 +243,7 @@ export function Component() {
           </Button>
           <Link
             to={`/copy/new?wallet=${address}`}
-            className="flex items-center gap-2 px-4 py-2 rounded-pf-sm text-sm font-medium border border-pf-success/30 text-pf-success hover:bg-pf-success/10 transition-colors"
+            className="flex items-center gap-2 px-4 py-2 rounded-pf-sm text-sm font-medium border border-gain/30 text-gain hover:bg-gain/10 transition-colors"
           >
             <Copy className="size-4" /> Copy This Whale
           </Link>
@@ -252,27 +252,27 @@ export function Component() {
 
       {/* Stats cards */}
       <div data-testid="whale-stats" className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4">
-          <div className="text-xs text-pf-text-secondary mb-1">Total Volume</div>
-          <div data-testid="whale-total-volume" className="text-lg font-mono font-semibold text-pf-text">{stats.totalVolume}</div>
+        <div className="bg-elevated border border-default rounded-pf-lg p-4">
+          <div className="text-xs text-secondary mb-1">Total Volume</div>
+          <div data-testid="whale-total-volume" className="text-lg font-mono font-semibold text-primary">{stats.totalVolume}</div>
         </div>
-        <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4">
-          <div className="text-xs text-pf-text-secondary mb-1">Total P&L</div>
+        <div className="bg-elevated border border-default rounded-pf-lg p-4">
+          <div className="text-xs text-secondary mb-1">Total P&L</div>
           <div className={`text-lg font-mono font-semibold ${pnlColor(stats.totalPnl)}`}>
             {pnlSign(stats.totalPnl)}
           </div>
         </div>
-        <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4">
-          <div className="text-xs text-pf-text-secondary mb-1">Trade Count</div>
-          <div className="text-lg font-mono font-semibold text-pf-text">{stats.tradeCount}</div>
+        <div className="bg-elevated border border-default rounded-pf-lg p-4">
+          <div className="text-xs text-secondary mb-1">Trade Count</div>
+          <div className="text-lg font-mono font-semibold text-primary">{stats.tradeCount}</div>
         </div>
-        <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4">
-          <div className="text-xs text-pf-text-secondary mb-1">Win Rate</div>
-          <div data-testid="whale-win-rate" className="text-lg font-mono font-semibold text-pf-text">{stats.winRate}%</div>
+        <div className="bg-elevated border border-default rounded-pf-lg p-4">
+          <div className="text-xs text-secondary mb-1">Win Rate</div>
+          <div data-testid="whale-win-rate" className="text-lg font-mono font-semibold text-primary">{stats.winRate}%</div>
         </div>
-        <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4">
-          <div className="text-xs text-pf-text-secondary mb-1">Favorite Market</div>
-          <div data-testid="whale-favorite-markets" className="text-sm font-mono font-semibold text-pf-text truncate">
+        <div className="bg-elevated border border-default rounded-pf-lg p-4">
+          <div className="text-xs text-secondary mb-1">Favorite Market</div>
+          <div data-testid="whale-favorite-markets" className="text-sm font-mono font-semibold text-primary truncate">
             {recentTrades.length > 0 ? recentTrades[0].marketName : '—'}
           </div>
         </div>
@@ -280,21 +280,21 @@ export function Component() {
 
       {/* Activity sparkline */}
       {sparkline.length > 0 && (
-        <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4">
-          <div className="text-xs text-pf-text-secondary mb-3">Activity (last 30 days)</div>
+        <div className="bg-elevated border border-default rounded-pf-lg p-4">
+          <div className="text-xs text-secondary mb-3">Activity (last 30 days)</div>
           <Sparkline data={sparkline} />
         </div>
       )}
 
       {/* Recent trades table */}
-      <div data-testid="trading-history" className="bg-pf-elevated border border-pf-border rounded-pf-lg overflow-hidden">
-        <div className="px-4 py-3 border-b border-pf-border">
-          <h2 className="text-sm font-medium text-pf-text">Recent Trades</h2>
+      <div data-testid="trading-history" className="bg-elevated border border-default rounded-pf-lg overflow-hidden">
+        <div className="px-4 py-3 border-b border-default">
+          <h2 className="text-sm font-medium text-primary">Recent Trades</h2>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm" aria-label="Recent whale trades">
             <thead>
-              <tr className="bg-pf-surface text-left text-xs text-pf-text-secondary uppercase tracking-wider">
+              <tr className="bg-surface text-left text-xs text-secondary uppercase tracking-wider">
                 <th scope="col" className="px-4 py-3 font-medium">Market</th>
                 <th scope="col" className="px-4 py-3 font-medium">Side</th>
                 <th scope="col" className="px-4 py-3 font-medium">Outcome</th>
@@ -303,36 +303,36 @@ export function Component() {
                 <th scope="col" className="px-4 py-3 font-medium text-right">Date</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-pf-border-subtle">
+            <tbody className="divide-y divide-subtle">
               {recentTrades.length === 0 ? (
                 <tr>
                   <td colSpan={6}>
                     <div className="flex flex-col items-center justify-center py-12 text-center">
-                      <p className="text-sm text-pf-text-muted">No trades recorded yet.</p>
+                      <p className="text-sm text-tertiary">No trades recorded yet.</p>
                     </div>
                   </td>
                 </tr>
               ) : (
                 recentTrades.map(trade => (
-                  <tr key={trade.id} className="hover:bg-pf-surface/50 transition-colors">
-                    <td className="px-4 py-3 text-pf-text max-w-[200px] truncate">{trade.marketName}</td>
+                  <tr key={trade.id} className="hover:bg-surface/50 transition-colors">
+                    <td className="px-4 py-3 text-primary max-w-[200px] truncate">{trade.marketName}</td>
                     <td className="px-4 py-3">
                       <span className={`px-2 py-1 rounded text-pf-label font-semibold ${
-                        trade.side === 'BUY' ? 'bg-pf-success/15 text-pf-success' : 'bg-pf-danger/15 text-pf-danger'
+                        trade.side === 'BUY' ? 'bg-gain/15 text-gain' : 'bg-loss/15 text-loss'
                       }`}>
                         {trade.side}
                       </span>
                     </td>
                     <td className="px-4 py-3">
                       <span className={`px-2 py-1 rounded text-pf-label font-semibold ${
-                        trade.outcome === 'YES' ? 'bg-pf-success/15 text-pf-success' : 'bg-pf-danger/15 text-pf-danger'
+                        trade.outcome === 'YES' ? 'bg-gain/15 text-gain' : 'bg-loss/15 text-loss'
                       }`}>
                         {trade.outcome}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-right font-mono text-pf-text-secondary">{trade.size}</td>
-                    <td className="px-4 py-3 text-right font-mono text-pf-text-secondary">{trade.price}</td>
-                    <td className="px-4 py-3 text-right font-mono text-pf-text-secondary text-xs">{formatDate(trade.timestamp)}</td>
+                    <td className="px-4 py-3 text-right font-mono text-secondary">{trade.size}</td>
+                    <td className="px-4 py-3 text-right font-mono text-secondary">{trade.price}</td>
+                    <td className="px-4 py-3 text-right font-mono text-secondary text-xs">{formatDate(trade.timestamp)}</td>
                   </tr>
                 ))
               )}

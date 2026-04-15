@@ -54,9 +54,9 @@ export function StrategyCanvas() {
       ...e,
       style: {
         ...e.style,
-        stroke: 'color-mix(in srgb, var(--color-pf-cyan-500) 75%, transparent)',
+        stroke: 'color-mix(in srgb, var(--accent-default) 75%, transparent)',
         strokeWidth: 2,
-        filter: 'drop-shadow(0 0 4px color-mix(in srgb, var(--color-pf-cyan-500) 45%, transparent))',
+        filter: 'drop-shadow(0 0 4px color-mix(in srgb, var(--accent-default) 45%, transparent))',
       },
     }));
   }, [edges, isExecuting]);
@@ -150,14 +150,14 @@ export function StrategyCanvas() {
           position="bottom-right"
           className="!w-[180px] !h-[120px]"
           maskColor={isDark
-            ? 'color-mix(in srgb, var(--color-pf-base) 60%, transparent)'
-            : 'color-mix(in srgb, var(--color-pf-base) 60%, transparent)'}
+            ? 'color-mix(in srgb, var(--bg-app) 60%, transparent)'
+            : 'color-mix(in srgb, var(--bg-app) 60%, transparent)'}
           nodeColor={(node) => {
             if (node.type === 'variableNode') return 'var(--color-pf-purple-500)';
-            if (node.type === 'logicNode') return 'var(--color-pf-info)';
-            if (node.type === 'calcNode') return 'var(--color-pf-success)';
+            if (node.type === 'logicNode') return 'var(--info)';
+            if (node.type === 'calcNode') return 'var(--gain)';
             const data = node.data as BlockNodeData;
-            return data?.color ?? 'var(--color-pf-cyan-400)';
+            return data?.color ?? 'var(--accent-text)';
           }}
           nodeStrokeWidth={2}
           nodeStrokeColor="transparent"
@@ -170,9 +170,9 @@ export function StrategyCanvas() {
       {isEmpty && (
         <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none z-10">
           <div className="flex flex-col items-center gap-3 text-center">
-            <div className="w-16 h-16 rounded-pf-full bg-pf-surface border border-pf-border flex items-center justify-center">
+            <div className="w-16 h-16 rounded-pf-full bg-surface border border-default flex items-center justify-center">
               <svg
-                className="size-8 text-pf-text-muted dark:opacity-40 opacity-60"
+                className="size-8 text-tertiary dark:opacity-40 opacity-60"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -186,10 +186,10 @@ export function StrategyCanvas() {
                 />
               </svg>
             </div>
-            <p className="text-sm text-pf-text-secondary font-medium">
+            <p className="text-sm text-secondary font-medium">
               Drag a block from the panel to get started
             </p>
-            <p className="text-xs text-pf-text-muted">
+            <p className="text-xs text-tertiary">
               Or click a block in the panel to add it
             </p>
           </div>

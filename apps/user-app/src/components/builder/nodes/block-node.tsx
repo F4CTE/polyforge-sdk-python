@@ -120,14 +120,14 @@ function BlockNodeInner({ id, data }: NodeProps<BlockNode>) {
   // ── Border & animation logic ──────────────────────────────────────────────
   // Priority: fired > executing > inactive > setup-needed > normal
   const borderColor = hasFired
-    ? 'color-mix(in srgb, var(--color-pf-cyan-500) 90%, transparent)'
+    ? 'color-mix(in srgb, var(--accent-default) 90%, transparent)'
     : isExecuting
     ? `color-mix(in srgb, ${d.color} 38%, transparent)`
     : isInactive
-    ? 'color-mix(in srgb, var(--color-pf-warning) 27%, transparent)'
+    ? 'color-mix(in srgb, var(--warning) 27%, transparent)'
     : showSetupBadge
-    ? 'color-mix(in srgb, var(--color-pf-danger) 33%, transparent)'
-    : 'var(--color-pf-border)';
+    ? 'color-mix(in srgb, var(--loss) 33%, transparent)'
+    : 'var(--border-subtle)';
 
   // Pulse animation speed varies by section to convey different "rhythms":
   // triggers scan rapidly, safety beats slowly like a heartbeat
@@ -151,8 +151,8 @@ function BlockNodeInner({ id, data }: NodeProps<BlockNode>) {
   /** Render a select field for strategy picker or mode picker */
   function renderSelectField(field: { key: string; label: string; placeholder: string; options?: string[] }) {
     const isEmpty = emptyFieldKeys.has(field.key);
-    const selectClass = `w-full px-2 py-1 text-xs bg-pf-surface border rounded-pf-sm text-pf-text focus-visible:outline-none focus-visible:border-pf-cyan-500/50 transition-colors ${
-      isEmpty ? 'border-pf-danger/40 bg-pf-danger/5' : 'border-pf-border-subtle'
+    const selectClass = `w-full px-2 py-1 text-xs bg-surface border rounded-pf-sm text-primary focus-visible:outline-none focus-visible:border-accent/50 transition-colors ${
+      isEmpty ? 'border-loss/40 bg-loss/5' : 'border-subtle'
     }`;
 
     if (field.key === 'strategyId' && isRunStrategy) {
@@ -197,7 +197,7 @@ function BlockNodeInner({ id, data }: NodeProps<BlockNode>) {
         <Handle
           type="target"
           position={Position.Left}
-          className="!w-3 !h-3 !bg-pf-elevated !border-2 !rounded-pf-full builder-handle"
+          className="!w-3 !h-3 !bg-elevated !border-2 !rounded-pf-full builder-handle"
           style={{ '--node-color': d.color } as React.CSSProperties}
         />
       )}
@@ -207,7 +207,7 @@ function BlockNodeInner({ id, data }: NodeProps<BlockNode>) {
         {isGlobal && (
           <div
             className="builder-badge absolute -top-5 left-1/2 -translate-x-1/2 flex items-center gap-1 px-2 py-1 rounded-pf-full text-pf-micro font-semibold whitespace-nowrap z-10 pointer-events-none"
-            style={{ '--badge-color': 'var(--color-pf-cyan-500)' } as React.CSSProperties}
+            style={{ '--badge-color': 'var(--accent-default)' } as React.CSSProperties}
             title={isSafety ? 'Safety block — always enforced globally on every tick' : 'Condition block — no connections, acts as a global gate for all execution paths. Wire it to scope it to a specific path.'}
           >
             <Globe className="size-3" />
@@ -231,7 +231,7 @@ function BlockNodeInner({ id, data }: NodeProps<BlockNode>) {
         {showSetupBadge && (
           <div
             className="builder-badge absolute -top-5 left-1/2 -translate-x-1/2 flex items-center gap-1 px-2 py-1 rounded-pf-full text-pf-micro font-semibold whitespace-nowrap z-10 pointer-events-none"
-            style={{ '--badge-color': 'var(--color-pf-danger)' } as React.CSSProperties}
+            style={{ '--badge-color': 'var(--loss)' } as React.CSSProperties}
             title={`${emptyFieldKeys.size} required field${emptyFieldKeys.size !== 1 ? 's' : ''} not filled in`}
           >
             <AlertTriangle className="size-3" />
@@ -252,16 +252,16 @@ function BlockNodeInner({ id, data }: NodeProps<BlockNode>) {
             className="builder-node-header flex items-center gap-2 px-3 py-2"
             style={{ '--node-color': d.color } as React.CSSProperties}
           >
-            <GripVertical className="size-3 text-pf-text-muted cursor-grab" />
-            <span className="text-pf-text-secondary">{SECTION_ICONS[d.section]}</span>
-            <span className="text-xs font-medium text-pf-text flex-1 truncate">
+            <GripVertical className="size-3 text-tertiary cursor-grab" />
+            <span className="text-secondary">{SECTION_ICONS[d.section]}</span>
+            <span className="text-xs font-medium text-primary flex-1 truncate">
               {d.label}
             </span>
             {/* Misconfiguration indicator in header — visible even when badge is suppressed */}
             {isMisconfigured && !showSetupBadge && (
               <span title={`${emptyFieldKeys.size} field${emptyFieldKeys.size !== 1 ? 's' : ''} need configuration`}>
                 <AlertTriangle
-                  className="size-3 shrink-0 text-pf-danger opacity-60"
+                  className="size-3 shrink-0 text-loss opacity-60"
                   aria-hidden="true"
                 />
               </span>
@@ -269,7 +269,7 @@ function BlockNodeInner({ id, data }: NodeProps<BlockNode>) {
             <button
               type="button"
               onClick={onDelete}
-              className="p-1 rounded hover:bg-pf-danger/20 active:bg-pf-danger/30 text-pf-text-muted hover:text-pf-danger transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/50"
+              className="p-1 rounded hover:bg-loss/20 active:bg-loss/30 text-tertiary hover:text-loss transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50"
               aria-label="Remove block"
               title="Remove block"
             >
@@ -294,31 +294,31 @@ function BlockNodeInner({ id, data }: NodeProps<BlockNode>) {
                         type="target"
                         position={Position.Left}
                         id={field.key}
-                        className="!w-2 !h-2 !bg-pf-elevated !border-2 !rounded-pf-full builder-handle"
+                        className="!w-2 !h-2 !bg-elevated !border-2 !rounded-pf-full builder-handle"
                         style={{
                           '--node-color': 'var(--color-pf-purple-500)',
                           top: `${handleTop}px`,
                         } as React.CSSProperties}
                       />
                     )}
-                    <label className={`flex items-center gap-1 text-pf-caption font-medium mb-1 uppercase tracking-wider ${isEmpty ? 'text-pf-danger/80' : 'text-pf-text-muted'}`}>
+                    <label className={`flex items-center gap-1 text-pf-caption font-medium mb-1 uppercase tracking-wider ${isEmpty ? 'text-loss/80' : 'text-tertiary'}`}>
                       {field.wireable && (
                         <Link2
-                          className={`size-3 shrink-0 ${isWired ? 'text-pf-purple-500 opacity-100' : 'text-pf-text-muted opacity-50'}`}
+                          className={`size-3 shrink-0 ${isWired ? 'text-pf-purple-500 opacity-100' : 'text-tertiary opacity-50'}`}
                           aria-label="This field can receive a value from a Variable or Calc node"
                         />
                       )}
                       {field.label}
-                      {isEmpty && <span className="text-pf-danger/80 normal-case tracking-normal font-normal">— required</span>}
+                      {isEmpty && <span className="text-loss/80 normal-case tracking-normal font-normal">— required</span>}
                     </label>
                     {field.type === 'market_slot' ? (
                       <select
                         value={d.config[field.key] ?? ''}
                         onChange={(e) => onFieldChange(field.key, e.target.value)}
                         aria-label={field.label}
-                        className={`w-full h-7 px-2 rounded text-xs text-pf-text focus-visible:outline-none transition-colors ${
+                        className={`w-full h-7 px-2 rounded text-xs text-primary focus-visible:outline-none transition-colors ${
                           isEmpty
-                            ? 'bg-pf-danger/8 border border-pf-danger/40 focus-visible:border-pf-danger/60'
+                            ? 'bg-loss/8 border border-loss/40 focus-visible:border-loss/60'
                             : 'bg-[var(--block-color)]/10 border border-[var(--block-color)]/20 focus-visible:border-[var(--block-color)]/50'
                         }`}
                       >
@@ -347,14 +347,14 @@ function BlockNodeInner({ id, data }: NodeProps<BlockNode>) {
                           value={d.config[field.key] ?? ''}
                           onChange={(e) => onFieldChange(field.key, e.target.value)}
                           aria-label={field.label}
-                          className={`w-full px-2 py-1 text-xs bg-pf-surface border rounded-pf-sm placeholder:text-pf-text-muted/50 focus-visible:outline-none transition-colors ${
+                          className={`w-full px-2 py-1 text-xs bg-surface border rounded-pf-sm placeholder:text-tertiary/50 focus-visible:outline-none transition-colors ${
                             isEmpty
-                              ? 'border-pf-danger/40 bg-pf-danger/5 focus-visible:border-pf-danger/60'
-                              : 'border-pf-border-subtle focus-visible:border-pf-cyan-500/50'
+                              ? 'border-loss/40 bg-loss/5 focus-visible:border-loss/60'
+                              : 'border-subtle focus-visible:border-accent/50'
                           } ${
                             (d.config[field.key] ?? '').startsWith('$')
                               ? 'text-pf-purple-500 font-mono'
-                              : 'text-pf-text'
+                              : 'text-primary'
                           }`}
                         />
                         {(d.config[field.key] ?? '').startsWith('$') && (
@@ -376,7 +376,7 @@ function BlockNodeInner({ id, data }: NodeProps<BlockNode>) {
           {/* No fields message */}
           {d.fields.length === 0 && (
             <div className="px-3 py-2">
-              <span className="text-pf-caption text-pf-text-muted italic">No configuration needed</span>
+              <span className="text-pf-caption text-tertiary italic">No configuration needed</span>
             </div>
           )}
         </div>
@@ -387,7 +387,7 @@ function BlockNodeInner({ id, data }: NodeProps<BlockNode>) {
         <Handle
           type="source"
           position={Position.Right}
-          className="!w-3 !h-3 !bg-pf-elevated !border-2 !rounded-pf-full builder-handle"
+          className="!w-3 !h-3 !bg-elevated !border-2 !rounded-pf-full builder-handle"
           style={{ '--node-color': d.color } as React.CSSProperties}
         />
       )}

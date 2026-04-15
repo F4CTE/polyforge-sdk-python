@@ -189,26 +189,26 @@ interface LiveEvent {
 /* ─── Helpers ────────────────────────────────────────────────────────── */
 
 const STATUS_STYLES: Record<StrategyStatus, { dot: string; bg: string; text: string }> = {
-  RUNNING:  { dot: 'bg-pf-success', bg: 'bg-pf-success/10', text: 'text-pf-success' },
-  PAPER:    { dot: 'bg-pf-cyan-400',    bg: 'bg-pf-cyan-500/10',    text: 'text-pf-cyan-400' },
-  PAUSED:   { dot: 'bg-pf-warning',   bg: 'bg-pf-warning/10',   text: 'text-pf-warning' },
-  IDLE:     { dot: 'bg-pf-text-muted',    bg: 'bg-pf-overlay',    text: 'text-pf-text-muted' },
-  ERROR:    { dot: 'bg-pf-danger',     bg: 'bg-pf-danger/10',     text: 'text-pf-danger' },
-  ARCHIVED: { dot: 'bg-pf-text-muted',    bg: 'bg-pf-overlay',    text: 'text-pf-text-muted' },
+  RUNNING:  { dot: 'bg-gain', bg: 'bg-gain/10', text: 'text-gain' },
+  PAPER:    { dot: 'bg-accent-text',    bg: 'bg-accent/10',    text: 'text-accent-text' },
+  PAUSED:   { dot: 'bg-warning',   bg: 'bg-warning/10',   text: 'text-warning' },
+  IDLE:     { dot: 'bg-tertiary',    bg: 'bg-overlay',    text: 'text-tertiary' },
+  ERROR:    { dot: 'bg-loss',     bg: 'bg-loss/10',     text: 'text-loss' },
+  ARCHIVED: { dot: 'bg-tertiary',    bg: 'bg-overlay',    text: 'text-tertiary' },
 };
 
 const LOG_COLORS: Record<LiveLogEntry['severity'], string> = {
-  success: 'text-pf-success',
-  info: 'text-pf-cyan-400',
-  warning: 'text-pf-warning',
-  error: 'text-pf-danger',
+  success: 'text-gain',
+  info: 'text-accent-text',
+  warning: 'text-warning',
+  error: 'text-loss',
 };
 
 const LOG_DOT_COLORS: Record<LiveLogEntry['severity'], string> = {
-  success: 'bg-pf-success',
-  info: 'bg-pf-cyan-400',
-  warning: 'bg-pf-warning',
-  error: 'bg-pf-danger',
+  success: 'bg-gain',
+  info: 'bg-accent-text',
+  warning: 'bg-warning',
+  error: 'bg-loss',
 };
 
 function blockLabel(type: string): string {
@@ -252,10 +252,10 @@ const SECTION_ICONS: Record<string, React.ReactNode> = {
 };
 
 const SECTION_STYLES: Record<string, string> = {
-  safety: 'bg-pf-warning/10 text-pf-warning border-pf-warning/20',
-  trigger: 'bg-pf-cyan-500/10 text-pf-cyan-400 border-pf-cyan-500/20',
+  safety: 'bg-warning/10 text-warning border-warning/20',
+  trigger: 'bg-accent/10 text-accent-text border-accent/20',
   condition: 'bg-pf-purple-500/10 text-pf-purple-500 border-pf-purple-500/20',
-  action: 'bg-pf-success/10 text-pf-success border-pf-success/20',
+  action: 'bg-gain/10 text-gain border-gain/20',
 };
 
 const ALERT_TYPE_LABELS: Record<StrategyAlertType, string> = {
@@ -884,7 +884,7 @@ export function Component() {
       {/* Back */}
       <Link
         to="/strategies"
-        className="inline-flex items-center gap-2 text-sm text-pf-text-secondary hover:text-pf-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 rounded-pf-sm transition-colors"
+        className="inline-flex items-center gap-2 text-sm text-secondary hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 rounded-pf-sm transition-colors"
       >
         <ArrowLeft className="size-4" aria-hidden="true" /> Strategies
       </Link>
@@ -892,21 +892,21 @@ export function Component() {
       {/* Loading */}
       {loading && (
         <div className="animate-pulse space-y-4">
-          <div className="h-7 bg-pf-overlay rounded w-[40%]" />
-          <div className="h-4 bg-pf-overlay rounded w-[60%]" />
+          <div className="h-7 bg-overlay rounded w-[40%]" />
+          <div className="h-4 bg-overlay rounded w-[60%]" />
         </div>
       )}
 
       {/* Not found */}
       {!loading && notFound && (
         <div className="flex flex-col items-center justify-center py-20 text-center">
-          <p className="text-pf-text font-medium text-lg">Strategy not found</p>
-          <p className="text-sm text-pf-text-muted mt-1">This strategy may have been deleted or the link is invalid.</p>
+          <p className="text-primary font-medium text-lg">Strategy not found</p>
+          <p className="text-sm text-tertiary mt-1">This strategy may have been deleted or the link is invalid.</p>
           <Button
             type="button"
             variant="secondary"
             onClick={() => navigate('/strategies')}
-            className="mt-4 px-4 py-2 rounded-pf bg-pf-elevated border border-pf-border text-sm text-pf-text hover:border-pf-border-strong transition-colors"
+            className="mt-4 px-4 py-2 rounded-pf bg-elevated border border-default text-sm text-primary hover:border-strong transition-colors"
           >
             Back to Strategies
           </Button>
@@ -916,12 +916,12 @@ export function Component() {
       {/* Error */}
       {!loading && loadError && (
         <div className="flex flex-col items-center justify-center py-20 text-center">
-          <p className="text-pf-text font-medium">{loadError}</p>
+          <p className="text-primary font-medium">{loadError}</p>
           <Button
             type="button"
             variant="secondary"
             onClick={() => navigate('/strategies')}
-            className="mt-4 px-4 py-2 rounded-pf bg-pf-elevated border border-pf-border text-sm text-pf-text hover:border-pf-border-strong transition-colors"
+            className="mt-4 px-4 py-2 rounded-pf bg-elevated border border-default text-sm text-primary hover:border-strong transition-colors"
           >
             Back to Strategies
           </Button>
@@ -935,14 +935,14 @@ export function Component() {
           <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
             <div>
               <div className="flex items-center gap-3 mb-2">
-                <h1 className="text-2xl font-semibold text-pf-text">{strategy.name}</h1>
+                <h1 className="text-2xl font-semibold text-primary">{strategy.name}</h1>
                 <span data-testid="status-badge" className={`inline-flex items-center gap-2 px-3 py-1 rounded-pf-full text-xs font-medium ${statusStyle.bg} ${statusStyle.text}`}>
                   <span className={`w-2 h-2 rounded-pf-full ${statusStyle.dot} ${isActive(status) ? 'animate-pulse-dot' : ''}`} />
                   {status}
                 </span>
               </div>
               {strategy.description && (
-                <p className="text-sm text-pf-text-secondary">{strategy.description}</p>
+                <p className="text-sm text-secondary">{strategy.description}</p>
               )}
             </div>
 
@@ -954,7 +954,7 @@ export function Component() {
                     type="button"
                     onClick={() => doAction('start', { mode: 'live' })}
                     disabled={actionLoading}
-                    className="flex items-center gap-2 px-3 py-2 rounded-pf bg-pf-cyan-500 text-pf-text-contrast text-sm font-medium hover:bg-pf-cyan-400 disabled:opacity-40 transition-colors"
+                    className="flex items-center gap-2 px-3 py-2 rounded-pf bg-accent text-inverse text-sm font-medium hover:bg-accent-text disabled:opacity-40 transition-colors"
                   >
                     <Zap className="size-4" /> Start Live
                   </Button>
@@ -963,7 +963,7 @@ export function Component() {
                     variant="secondary"
                     onClick={() => doAction('start', { mode: 'paper' })}
                     disabled={actionLoading}
-                    className="flex items-center gap-2 px-3 py-2 rounded-pf bg-pf-elevated border border-pf-border text-sm text-pf-text-secondary hover:border-pf-border-strong disabled:opacity-40 transition-colors"
+                    className="flex items-center gap-2 px-3 py-2 rounded-pf bg-elevated border border-default text-sm text-secondary hover:border-strong disabled:opacity-40 transition-colors"
                   >
                     <FileText className="size-4" /> Start Paper
                   </Button>
@@ -976,7 +976,7 @@ export function Component() {
                     variant="secondary"
                     onClick={() => doAction('pause')}
                     disabled={actionLoading}
-                    className="flex items-center gap-2 px-3 py-2 rounded-pf bg-pf-elevated border border-pf-border text-sm text-pf-text-secondary hover:border-pf-border-strong disabled:opacity-40 transition-colors"
+                    className="flex items-center gap-2 px-3 py-2 rounded-pf bg-elevated border border-default text-sm text-secondary hover:border-strong disabled:opacity-40 transition-colors"
                   >
                     <Pause className="size-4" /> Pause
                   </Button>
@@ -985,7 +985,7 @@ export function Component() {
                     variant="danger"
                     onClick={() => doAction('stop')}
                     disabled={actionLoading}
-                    className="flex items-center gap-2 px-3 py-2 rounded-pf text-pf-danger hover:bg-pf-danger/10 disabled:opacity-40 transition-colors text-sm"
+                    className="flex items-center gap-2 px-3 py-2 rounded-pf text-loss hover:bg-loss/10 disabled:opacity-40 transition-colors text-sm"
                   >
                     <Square className="size-4" /> Stop
                   </Button>
@@ -997,7 +997,7 @@ export function Component() {
                     type="button"
                     onClick={() => doAction('resume')}
                     disabled={actionLoading}
-                    className="flex items-center gap-2 px-3 py-2 rounded-pf bg-pf-cyan-500 text-pf-text-contrast text-sm font-medium hover:bg-pf-cyan-400 disabled:opacity-40 transition-colors"
+                    className="flex items-center gap-2 px-3 py-2 rounded-pf bg-accent text-inverse text-sm font-medium hover:bg-accent-text disabled:opacity-40 transition-colors"
                   >
                     <Play className="size-4" /> Resume
                   </Button>
@@ -1006,7 +1006,7 @@ export function Component() {
                     variant="danger"
                     onClick={() => doAction('stop')}
                     disabled={actionLoading}
-                    className="flex items-center gap-2 px-3 py-2 rounded-pf text-pf-danger hover:bg-pf-danger/10 disabled:opacity-40 transition-colors text-sm"
+                    className="flex items-center gap-2 px-3 py-2 rounded-pf text-loss hover:bg-loss/10 disabled:opacity-40 transition-colors text-sm"
                   >
                     <Square className="size-4" /> Stop
                   </Button>
@@ -1014,7 +1014,7 @@ export function Component() {
               )}
               <Link
                 to={`/strategies/${strategy.id}/edit`}
-                className="p-2 rounded-pf bg-pf-elevated border border-pf-border text-pf-text-secondary hover:border-pf-border-strong transition-colors"
+                className="p-2 rounded-pf bg-elevated border border-default text-secondary hover:border-strong transition-colors"
                 aria-label="Edit strategy"
                 title="Edit strategy"
               >
@@ -1025,7 +1025,7 @@ export function Component() {
                 variant="ghost"
                 size="icon"
                 onClick={handleExport}
-                className="p-2 rounded-pf bg-pf-elevated border border-pf-border text-pf-text-secondary hover:border-pf-border-strong transition-colors"
+                className="p-2 rounded-pf bg-elevated border border-default text-secondary hover:border-strong transition-colors"
                 aria-label="Export strategy"
                 title="Export strategy"
               >
@@ -1035,7 +1035,7 @@ export function Component() {
                 type="button"
                 variant="secondary"
                 onClick={() => exportStrategyJson(strategy)}
-                className="flex items-center gap-2 px-3 py-2 rounded-pf bg-pf-elevated border border-pf-border text-sm text-pf-text-secondary hover:border-pf-border-strong transition-colors"
+                className="flex items-center gap-2 px-3 py-2 rounded-pf bg-elevated border border-default text-sm text-secondary hover:border-strong transition-colors"
                 aria-label="Export strategy as JSON"
                 title="Export JSON"
               >
@@ -1046,25 +1046,25 @@ export function Component() {
                 variant="ghost"
                 size="icon"
                 onClick={() => copyStrategyJson(strategy)}
-                className="p-2 rounded-pf bg-pf-elevated border border-pf-border text-pf-text-secondary hover:border-pf-border-strong transition-colors"
+                className="p-2 rounded-pf bg-elevated border border-default text-secondary hover:border-strong transition-colors"
                 aria-label="Copy strategy JSON to clipboard"
                 title="Copy JSON"
               >
-                {copyJsonDone ? <Check className="size-4 text-pf-success" /> : <Copy className="size-4" />}
+                {copyJsonDone ? <Check className="size-4 text-gain" /> : <Copy className="size-4" />}
               </Button>
               <Button
                 type="button"
                 variant="ghost"
                 size="icon"
                 onClick={openAlertsPanel}
-                className={`relative p-2 rounded-pf border transition-colors ${showAlertsPanel ? 'bg-pf-warning/10 border-pf-warning/40 text-pf-warning' : 'bg-pf-elevated border-pf-border text-pf-text-secondary hover:border-pf-border-strong'}`}
+                className={`relative p-2 rounded-pf border transition-colors ${showAlertsPanel ? 'bg-warning/10 border-warning/40 text-warning' : 'bg-elevated border-default text-secondary hover:border-strong'}`}
                 aria-label="Performance alerts"
                 aria-expanded={showAlertsPanel}
                 title="Performance Alerts"
               >
                 <Bell className="size-4" />
                 {strategyAlerts.length > 0 && (
-                  <span className="absolute -top-1 -right-1 flex items-center justify-center w-4 h-4 rounded-pf-full bg-pf-warning text-pf-text-contrast text-pf-micro font-bold leading-none">
+                  <span className="absolute -top-1 -right-1 flex items-center justify-center w-4 h-4 rounded-pf-full bg-warning text-inverse text-pf-micro font-bold leading-none">
                     {strategyAlerts.length > 9 ? '9+' : strategyAlerts.length}
                   </span>
                 )}
@@ -1074,7 +1074,7 @@ export function Component() {
                 variant="ghost"
                 size="icon"
                 onClick={openSharePanel}
-                className={`p-2 rounded-pf border transition-colors ${showSharePanel ? 'bg-pf-cyan-500/10 border-pf-cyan-500/40 text-pf-cyan-400' : 'bg-pf-elevated border-pf-border text-pf-text-secondary hover:border-pf-border-strong'}`}
+                className={`p-2 rounded-pf border transition-colors ${showSharePanel ? 'bg-accent/10 border-accent/40 text-accent-text' : 'bg-elevated border-default text-secondary hover:border-strong'}`}
                 aria-label="Share strategy"
                 aria-expanded={showSharePanel}
                 title="Share"
@@ -1086,7 +1086,7 @@ export function Component() {
                 variant="ghost"
                 size="icon"
                 onClick={() => { setListTitle(strategy.name); setShowListing((v) => !v); }}
-                className="p-2 rounded-pf bg-pf-elevated border border-pf-border text-pf-text-secondary hover:border-pf-border-strong hover:text-pf-cyan-400 transition-colors"
+                className="p-2 rounded-pf bg-elevated border border-default text-secondary hover:border-strong hover:text-accent-text transition-colors"
                 aria-label="List on Marketplace"
                 title="List on Marketplace"
               >
@@ -1097,40 +1097,40 @@ export function Component() {
 
           {/* Marketplace listing form */}
           {showListing && (
-            <div className="bg-pf-elevated border border-pf-cyan-500/30 rounded-pf-lg p-4 space-y-3">
+            <div className="bg-elevated border border-accent/30 rounded-pf-lg p-4 space-y-3">
               <div className="flex items-center justify-between">
-                <span className="text-sm font-semibold text-pf-text flex items-center gap-2">
-                  <Store className="size-4 text-pf-cyan-400" />
+                <span className="text-sm font-semibold text-primary flex items-center gap-2">
+                  <Store className="size-4 text-accent-text" />
                   List on Marketplace
                 </span>
-                <Button type="button" variant="ghost" onClick={() => setShowListing(false)} className="text-pf-text-muted hover:text-pf-text transition-colors">
+                <Button type="button" variant="ghost" onClick={() => setShowListing(false)} className="text-tertiary hover:text-primary transition-colors">
                   <X className="size-4" />
                 </Button>
               </div>
               <div className="space-y-2">
                 <div>
-                  <label className="block text-xs font-medium text-pf-text-secondary mb-1">Listing Title *</label>
+                  <label className="block text-xs font-medium text-secondary mb-1">Listing Title *</label>
                   <Input
                     type="text"
                     value={listTitle}
                     onChange={(e) => setListTitle(e.target.value)}
                     placeholder="Strategy name for the marketplace"
-                    className="w-full h-9 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text placeholder:text-pf-text-muted focus-visible:outline-none focus-visible:border-pf-cyan-500/50"
+                    className="w-full h-9 px-3 rounded-pf bg-surface border border-default text-sm text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:border-accent/50"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-pf-text-secondary mb-1">Description</label>
+                  <label className="block text-xs font-medium text-secondary mb-1">Description</label>
                   <Textarea
                     value={listDesc}
                     onChange={(e) => setListDesc(e.target.value)}
                     rows={2}
                     placeholder="Describe your strategy's edge..."
-                    className="w-full px-3 py-2 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text placeholder:text-pf-text-muted focus-visible:outline-none focus-visible:border-pf-cyan-500/50 resize-none"
+                    className="w-full px-3 py-2 rounded-pf bg-surface border border-default text-sm text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:border-accent/50 resize-none"
                   />
                 </div>
                 <div className="flex gap-2">
                   <div className="flex-1">
-                    <label className="block text-xs font-medium text-pf-text-secondary mb-1">Price (USDC)</label>
+                    <label className="block text-xs font-medium text-secondary mb-1">Price (USDC)</label>
                     <Input
                       type="number"
                       min="0"
@@ -1138,18 +1138,18 @@ export function Component() {
                       value={listPrice}
                       onChange={(e) => setListPrice(e.target.value)}
                       placeholder="0"
-                      className="w-full h-9 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm font-mono text-pf-text focus-visible:outline-none focus-visible:border-pf-cyan-500/50"
+                      className="w-full h-9 px-3 rounded-pf bg-surface border border-default text-sm font-mono text-primary focus-visible:outline-none focus-visible:border-accent/50"
                     />
-                    <p className="text-pf-caption text-pf-text-muted mt-1">0 = Free</p>
+                    <p className="text-pf-caption text-tertiary mt-1">0 = Free</p>
                   </div>
                   <div className="flex-1">
-                    <label className="block text-xs font-medium text-pf-text-secondary mb-1">Tags (comma-separated)</label>
+                    <label className="block text-xs font-medium text-secondary mb-1">Tags (comma-separated)</label>
                     <Input
                       type="text"
                       value={listTags}
                       onChange={(e) => setListTags(e.target.value)}
                       placeholder="momentum, political"
-                      className="w-full h-9 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text placeholder:text-pf-text-muted focus-visible:outline-none focus-visible:border-pf-cyan-500/50"
+                      className="w-full h-9 px-3 rounded-pf bg-surface border border-default text-sm text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:border-accent/50"
                     />
                   </div>
                 </div>
@@ -1158,7 +1158,7 @@ export function Component() {
                 type="button"
                 onClick={submitListing}
                 disabled={listSubmitting || !listTitle}
-                className="w-full py-3 rounded-pf bg-pf-cyan-500 text-pf-text-contrast text-sm font-semibold hover:bg-pf-cyan-400 disabled:opacity-40 transition-colors"
+                className="w-full py-3 rounded-pf bg-accent text-inverse text-sm font-semibold hover:bg-accent-text disabled:opacity-40 transition-colors"
               >
                 {listSubmitting ? 'Publishing...' : 'Publish to Marketplace'}
               </Button>
@@ -1167,18 +1167,18 @@ export function Component() {
 
           {/* Share Panel */}
           {showSharePanel && (
-            <div className="bg-pf-elevated border border-pf-cyan-500/30 rounded-pf-lg p-4 space-y-4">
+            <div className="bg-elevated border border-accent/30 rounded-pf-lg p-4 space-y-4">
               {/* Panel header */}
               <div className="flex items-center justify-between">
-                <span className="text-sm font-semibold text-pf-text flex items-center gap-2">
-                  <Share2 className="size-4 text-pf-cyan-400" />
+                <span className="text-sm font-semibold text-primary flex items-center gap-2">
+                  <Share2 className="size-4 text-accent-text" />
                   Share Strategy
                 </span>
                 <Button
                   type="button"
                   variant="ghost"
                   onClick={() => setShowSharePanel(false)}
-                  className="text-pf-text-muted hover:text-pf-text transition-colors"
+                  className="text-tertiary hover:text-primary transition-colors"
                   aria-label="Close share panel"
                 >
                   <X className="size-4" />
@@ -1187,13 +1187,13 @@ export function Component() {
 
               {/* Public link row */}
               <div>
-                <p className="text-xs font-medium text-pf-text-secondary mb-2">Public link</p>
+                <p className="text-xs font-medium text-secondary mb-2">Public link</p>
                 <div className="flex items-center gap-2">
-                  <div className="flex-1 h-9 flex items-center px-3 rounded-pf bg-pf-surface border border-pf-border overflow-hidden">
+                  <div className="flex-1 h-9 flex items-center px-3 rounded-pf bg-surface border border-default overflow-hidden">
                     {loadingShare ? (
-                      <span className="text-xs text-pf-text-muted animate-pulse">Generating link...</span>
+                      <span className="text-xs text-tertiary animate-pulse">Generating link...</span>
                     ) : (
-                      <span className="text-xs font-mono text-pf-text-secondary truncate">
+                      <span className="text-xs font-mono text-secondary truncate">
                         {shareUrl ?? '—'}
                       </span>
                     )}
@@ -1203,9 +1203,9 @@ export function Component() {
                     variant="secondary"
                     onClick={copyShareUrl}
                     disabled={!shareUrl || loadingShare}
-                    className="flex items-center gap-2 px-3 h-9 rounded-pf bg-pf-surface border border-pf-border text-xs text-pf-text-secondary hover:border-pf-border-strong disabled:opacity-40 transition-colors shrink-0"
+                    className="flex items-center gap-2 px-3 h-9 rounded-pf bg-surface border border-default text-xs text-secondary hover:border-strong disabled:opacity-40 transition-colors shrink-0"
                   >
-                    {copying ? <Check className="size-4 text-pf-success" /> : <Copy className="size-4" />}
+                    {copying ? <Check className="size-4 text-gain" /> : <Copy className="size-4" />}
                     {copying ? 'Copied!' : 'Copy'}
                   </Button>
                 </div>
@@ -1213,7 +1213,7 @@ export function Component() {
 
               {/* Share actions */}
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-xs text-pf-text-muted">Share on:</span>
+                <span className="text-xs text-tertiary">Share on:</span>
                 <Button
                   type="button"
                   variant="secondary"
@@ -1227,7 +1227,7 @@ export function Component() {
                       'noopener,noreferrer',
                     );
                   }}
-                  className="flex items-center gap-2 px-3 py-2 rounded-pf bg-pf-surface border border-pf-border text-xs text-pf-text-secondary hover:border-pf-border-strong hover:text-pf-text disabled:opacity-40 transition-colors"
+                  className="flex items-center gap-2 px-3 py-2 rounded-pf bg-surface border border-default text-xs text-secondary hover:border-strong hover:text-primary disabled:opacity-40 transition-colors"
                 >
                   <span className="font-bold text-sm leading-none">𝕏</span>
                   Twitter
@@ -1237,61 +1237,61 @@ export function Component() {
                   variant="secondary"
                   onClick={copyShareUrl}
                   disabled={!shareUrl || loadingShare}
-                  className="flex items-center gap-2 px-3 py-2 rounded-pf bg-pf-surface border border-pf-border text-xs text-pf-text-secondary hover:border-pf-border-strong hover:text-pf-text disabled:opacity-40 transition-colors"
+                  className="flex items-center gap-2 px-3 py-2 rounded-pf bg-surface border border-default text-xs text-secondary hover:border-strong hover:text-primary disabled:opacity-40 transition-colors"
                 >
-                  {copying ? <Check className="size-4 text-pf-success" /> : <Copy className="size-4" />}
+                  {copying ? <Check className="size-4 text-gain" /> : <Copy className="size-4" />}
                   Copy link
                 </Button>
               </div>
 
               {/* Preview card */}
               <div>
-                <p className="text-xs font-medium text-pf-text-secondary mb-2">Preview card</p>
-                <div className="border border-pf-border rounded-pf bg-pf-surface p-3 space-y-2">
+                <p className="text-xs font-medium text-secondary mb-2">Preview card</p>
+                <div className="border border-default rounded-pf bg-surface p-3 space-y-2">
                   <div className="flex items-center gap-2">
-                    <TrendingUp className="size-4 text-pf-cyan-400 shrink-0" />
-                    <span className="text-sm font-semibold text-pf-text truncate">{strategy.name}</span>
+                    <TrendingUp className="size-4 text-accent-text shrink-0" />
+                    <span className="text-sm font-semibold text-primary truncate">{strategy.name}</span>
                   </div>
-                  <p className="text-xs text-pf-text-muted">
+                  <p className="text-xs text-tertiary">
                     by @{strategy.id.slice(0, 8)}
                   </p>
-                  <div className="flex items-center gap-4 py-2 border-t border-b border-pf-border-subtle">
+                  <div className="flex items-center gap-4 py-2 border-t border-b border-subtle">
                     {stratPnl && parseFloat(stratPnl.winRate) > 0 && (
                       <div className="text-center">
-                        <p className="text-pf-caption text-pf-text-muted">Win Rate</p>
-                        <p className="text-xs font-mono font-semibold text-pf-cyan-400">
+                        <p className="text-pf-caption text-tertiary">Win Rate</p>
+                        <p className="text-xs font-mono font-semibold text-accent-text">
                           {(parseFloat(stratPnl.winRate) * 100).toFixed(0)}%
                         </p>
                       </div>
                     )}
                     {(strategy.totalPnl ?? null) !== null && (
                       <div className="text-center">
-                        <p className="text-pf-caption text-pf-text-muted">P&amp;L</p>
-                        <p className={`text-xs font-mono font-semibold ${(strategy.totalPnl ?? 0) >= 0 ? 'text-pf-success' : 'text-pf-danger'}`}>
+                        <p className="text-pf-caption text-tertiary">P&amp;L</p>
+                        <p className={`text-xs font-mono font-semibold ${(strategy.totalPnl ?? 0) >= 0 ? 'text-gain' : 'text-loss'}`}>
                           {formatPnl(strategy.totalPnl ?? 0)}
                         </p>
                       </div>
                     )}
                     {recentOrderCount !== null && (
                       <div className="text-center">
-                        <p className="text-pf-caption text-pf-text-muted">Trades</p>
-                        <p className="text-xs font-mono font-semibold text-pf-text">{recentOrderCount}</p>
+                        <p className="text-pf-caption text-tertiary">Trades</p>
+                        <p className="text-xs font-mono font-semibold text-primary">{recentOrderCount}</p>
                       </div>
                     )}
                   </div>
-                  <p className="text-pf-caption text-pf-text-muted">PolyForge · polyforge.io</p>
+                  <p className="text-pf-caption text-tertiary">PolyForge · polyforge.io</p>
                 </div>
               </div>
 
               {/* Visibility toggle */}
-              <div className="flex items-center gap-3 pt-1 border-t border-pf-border-subtle">
+              <div className="flex items-center gap-3 pt-1 border-t border-subtle">
                 <div className="flex items-center gap-2">
                   {strategy.visibility === 'public' ? (
-                    <Globe className="size-4 text-pf-success" />
+                    <Globe className="size-4 text-gain" />
                   ) : (
-                    <Lock className="size-4 text-pf-text-muted" />
+                    <Lock className="size-4 text-tertiary" />
                   )}
-                  <span className="text-xs text-pf-text-secondary">
+                  <span className="text-xs text-secondary">
                     {strategy.visibility === 'public' ? 'Public' : 'Private'}
                   </span>
                 </div>
@@ -1302,8 +1302,8 @@ export function Component() {
                   disabled={togglingVisibility}
                   className={`ml-auto flex items-center gap-2 px-3 py-2 rounded-pf text-xs font-medium transition-colors disabled:opacity-40 ${
                     strategy.visibility === 'public'
-                      ? 'bg-pf-surface border border-pf-border text-pf-text-secondary hover:border-pf-border-strong'
-                      : 'bg-pf-cyan-500 text-pf-text-contrast hover:bg-pf-cyan-400'
+                      ? 'bg-surface border border-default text-secondary hover:border-strong'
+                      : 'bg-accent text-inverse hover:bg-accent-text'
                   }`}
                 >
                   {togglingVisibility
@@ -1318,24 +1318,24 @@ export function Component() {
 
           {/* Alerts Panel */}
           {showAlertsPanel && (
-            <div className="bg-pf-elevated border border-pf-warning/30 rounded-pf-lg p-4 space-y-4">
+            <div className="bg-elevated border border-warning/30 rounded-pf-lg p-4 space-y-4">
               {/* Panel header */}
               <div className="flex items-center justify-between">
-                <span className="text-sm font-semibold text-pf-text flex items-center gap-2">
-                  <Bell className="size-4 text-pf-warning" />
+                <span className="text-sm font-semibold text-primary flex items-center gap-2">
+                  <Bell className="size-4 text-warning" />
                   Performance Alerts
                 </span>
                 <Button
                   type="button"
                   variant="ghost"
                   onClick={() => { setShowAlertsPanel(false); setShowAlertForm(false); setEditingAlert(null); }}
-                  className="text-pf-text-muted hover:text-pf-text transition-colors"
+                  className="text-tertiary hover:text-primary transition-colors"
                   aria-label="Close alerts panel"
                 >
                   <X className="size-4" />
                 </Button>
               </div>
-              <p className="text-xs text-pf-text-muted -mt-2">Get notified when your strategy hits key thresholds.</p>
+              <p className="text-xs text-tertiary -mt-2">Get notified when your strategy hits key thresholds.</p>
 
               {/* Add Alert button */}
               {!showAlertForm && (
@@ -1343,7 +1343,7 @@ export function Component() {
                   type="button"
                   variant="ghost"
                   onClick={() => openAlertForm()}
-                  className="flex items-center gap-2 px-3 py-2 rounded-pf bg-pf-surface border border-pf-border text-xs text-pf-text-secondary hover:border-pf-warning/50 hover:text-pf-warning transition-colors"
+                  className="flex items-center gap-2 px-3 py-2 rounded-pf bg-surface border border-default text-xs text-secondary hover:border-warning/50 hover:text-warning transition-colors"
                 >
                   <BellPlus className="size-4" />
                   Add Alert
@@ -1352,14 +1352,14 @@ export function Component() {
 
               {/* Inline form */}
               {showAlertForm && (
-                <div className="rounded-pf border border-pf-border bg-pf-surface p-3 space-y-3">
-                  <p className="text-xs font-semibold text-pf-text">
+                <div className="rounded-pf border border-default bg-surface p-3 space-y-3">
+                  <p className="text-xs font-semibold text-primary">
                     {editingAlert ? 'Edit Alert' : 'New Alert'}
                   </p>
                   <div className="space-y-2">
                     {/* Alert type */}
                     <div>
-                      <label className="block text-xs font-medium text-pf-text-secondary mb-1">Alert type</label>
+                      <label className="block text-xs font-medium text-secondary mb-1">Alert type</label>
                       <Select
                         value={alertType}
                         onChange={(e) => {
@@ -1368,7 +1368,7 @@ export function Component() {
                           if (t === 'strategy_offline') setAlertThreshold('');
                         }}
                         disabled={!!editingAlert}
-                        className="w-full h-9 px-3 rounded-pf bg-pf-elevated border border-pf-border text-sm text-pf-text focus-visible:outline-none focus-visible:border-pf-warning/50 disabled:opacity-60"
+                        className="w-full h-9 px-3 rounded-pf bg-elevated border border-default text-sm text-primary focus-visible:outline-none focus-visible:border-warning/50 disabled:opacity-60"
                       >
                         {ALERT_TYPES_ORDERED.map((t) => (
                           <option key={t} value={t}>{ALERT_TYPE_LABELS[t]}</option>
@@ -1379,7 +1379,7 @@ export function Component() {
                     {/* Threshold — hidden for strategy_offline */}
                     {alertType !== 'strategy_offline' && (
                       <div>
-                        <label className="block text-xs font-medium text-pf-text-secondary mb-1">Threshold</label>
+                        <label className="block text-xs font-medium text-secondary mb-1">Threshold</label>
                         <Input
                           type="number"
                           value={alertThreshold}
@@ -1387,34 +1387,34 @@ export function Component() {
                           placeholder="e.g. 50"
                           min="0"
                           step="any"
-                          className="w-full h-9 px-3 rounded-pf bg-pf-elevated border border-pf-border text-sm font-mono text-pf-text placeholder:text-pf-text-muted focus-visible:outline-none focus-visible:border-pf-warning/50"
+                          className="w-full h-9 px-3 rounded-pf bg-elevated border border-default text-sm font-mono text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:border-warning/50"
                         />
                       </div>
                     )}
 
                     {/* Notify via */}
                     <div>
-                      <label className="block text-xs font-medium text-pf-text-secondary mb-2">Notify via</label>
+                      <label className="block text-xs font-medium text-secondary mb-2">Notify via</label>
                       <div className="flex items-center gap-4">
                         <label className="flex items-center gap-2 cursor-pointer select-none">
                           <input
                             type="checkbox"
                             checked={alertEmail}
                             onChange={(e) => setAlertEmail(e.target.checked)}
-                            className="w-4 h-4 accent-pf-warning rounded"
+                            className="w-4 h-4 accent-warning rounded"
                           />
-                          <Mail className="size-4 text-pf-text-secondary" />
-                          <span className="text-xs text-pf-text-secondary">Email</span>
+                          <Mail className="size-4 text-secondary" />
+                          <span className="text-xs text-secondary">Email</span>
                         </label>
                         <label className="flex items-center gap-2 cursor-pointer select-none">
                           <input
                             type="checkbox"
                             checked={alertPush}
                             onChange={(e) => setAlertPush(e.target.checked)}
-                            className="w-4 h-4 accent-pf-warning rounded"
+                            className="w-4 h-4 accent-warning rounded"
                           />
-                          <Bell className="size-4 text-pf-text-secondary" />
-                          <span className="text-xs text-pf-text-secondary">Push</span>
+                          <Bell className="size-4 text-secondary" />
+                          <span className="text-xs text-secondary">Push</span>
                         </label>
                       </div>
                     </div>
@@ -1426,7 +1426,7 @@ export function Component() {
                       type="button"
                       onClick={saveAlert}
                       disabled={alertFormSaving}
-                      className="flex items-center gap-2 px-3 py-2 rounded-pf bg-pf-warning text-pf-text-contrast text-xs font-semibold hover:opacity-90 disabled:opacity-40 transition-opacity"
+                      className="flex items-center gap-2 px-3 py-2 rounded-pf bg-warning text-inverse text-xs font-semibold hover:opacity-90 disabled:opacity-40 transition-opacity"
                     >
                       {alertFormSaving ? 'Saving...' : 'Save Alert'}
                     </Button>
@@ -1435,7 +1435,7 @@ export function Component() {
                       variant="secondary"
                       onClick={cancelAlertForm}
                       disabled={alertFormSaving}
-                      className="px-3 py-2 rounded-pf border border-pf-border text-xs text-pf-text-secondary hover:border-pf-border-strong disabled:opacity-40 transition-colors"
+                      className="px-3 py-2 rounded-pf border border-default text-xs text-secondary hover:border-strong disabled:opacity-40 transition-colors"
                     >
                       Cancel
                     </Button>
@@ -1447,21 +1447,21 @@ export function Component() {
               {loadingAlerts ? (
                 <div className="space-y-2">
                   {[1, 2].map((i) => (
-                    <div key={i} className="h-10 rounded-pf bg-pf-surface border border-pf-border animate-pulse" />
+                    <div key={i} className="h-10 rounded-pf bg-surface border border-default animate-pulse" />
                   ))}
                 </div>
               ) : strategyAlerts.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-8 text-center gap-2">
-                  <Bell className="size-7 text-pf-text-muted opacity-30" aria-hidden="true" />
-                  <p className="text-sm text-pf-text-secondary">No alerts configured</p>
-                  <p className="text-xs text-pf-text-muted">Add an alert to get notified about strategy performance.</p>
+                  <Bell className="size-7 text-tertiary opacity-30" aria-hidden="true" />
+                  <p className="text-sm text-secondary">No alerts configured</p>
+                  <p className="text-xs text-tertiary">Add an alert to get notified about strategy performance.</p>
                 </div>
               ) : (
                 <div className="space-y-2">
                   {strategyAlerts.map((alert) => (
                     <div
                       key={alert.id}
-                      className={`flex items-center gap-3 px-3 py-3 rounded-pf border transition-colors ${alert.enabled ? 'border-pf-border bg-pf-surface' : 'border-pf-border-subtle bg-pf-surface/50 opacity-60'}`}
+                      className={`flex items-center gap-3 px-3 py-3 rounded-pf border transition-colors ${alert.enabled ? 'border-default bg-surface' : 'border-subtle bg-surface/50 opacity-60'}`}
                     >
                       {/* Enabled toggle */}
                       <Button
@@ -1469,30 +1469,30 @@ export function Component() {
                         variant="ghost"
                         onClick={() => toggleAlertEnabled(alert)}
                         aria-label={alert.enabled ? 'Disable alert' : 'Enable alert'}
-                        className={`shrink-0 w-8 h-5 rounded-pf-full border transition-colors relative ${alert.enabled ? 'bg-pf-warning/20 border-pf-warning/40' : 'bg-pf-overlay border-pf-border'}`}
+                        className={`shrink-0 w-8 h-5 rounded-pf-full border transition-colors relative ${alert.enabled ? 'bg-warning/20 border-warning/40' : 'bg-overlay border-default'}`}
                       >
-                        <span className={`absolute top-1 w-3 h-3 rounded-pf-full transition-all ${alert.enabled ? 'left-4 bg-pf-warning' : 'left-1 bg-pf-text-muted'}`} />
+                        <span className={`absolute top-1 w-3 h-3 rounded-pf-full transition-all ${alert.enabled ? 'left-4 bg-warning' : 'left-1 bg-tertiary'}`} />
                       </Button>
 
                       {/* Label + threshold */}
                       <div className="flex-1 min-w-0">
-                        <span className="text-xs font-medium text-pf-text">
+                        <span className="text-xs font-medium text-primary">
                           {ALERT_TYPE_LABELS[alert.type]}
                         </span>
                         {alert.type !== 'strategy_offline' && (
-                          <span className="ml-2 text-xs font-mono text-pf-text-secondary">{alert.threshold}</span>
+                          <span className="ml-2 text-xs font-mono text-secondary">{alert.threshold}</span>
                         )}
                       </div>
 
                       {/* Channel icons */}
                       <div className="flex items-center gap-2 shrink-0">
-                        {alert.notifyEmail && <Mail className="size-4 text-pf-text-muted" aria-label="Email notifications" />}
-                        {alert.notifyPush && <Bell className="size-4 text-pf-text-muted" aria-label="Push notifications" />}
+                        {alert.notifyEmail && <Mail className="size-4 text-tertiary" aria-label="Email notifications" />}
+                        {alert.notifyPush && <Bell className="size-4 text-tertiary" aria-label="Push notifications" />}
                       </div>
 
                       {/* Triggered badge */}
                       {alert.triggeredAt && (
-                        <span className="shrink-0 inline-flex items-center gap-1 px-2 py-1 rounded-pf-full bg-pf-warning/15 text-pf-warning text-pf-caption font-semibold">
+                        <span className="shrink-0 inline-flex items-center gap-1 px-2 py-1 rounded-pf-full bg-warning/15 text-warning text-pf-caption font-semibold">
                           <AlertTriangle className="size-3" aria-hidden="true" />
                           Triggered
                         </span>
@@ -1535,17 +1535,17 @@ export function Component() {
             <span className={`px-3 py-1 rounded-pf-full text-xs font-medium ${
               strategy.execMode === 'TICK' || strategy.execMode === 'HYBRID'
                 ? 'bg-pf-purple-500/10 text-pf-purple-500'
-                : 'bg-pf-cyan-500/10 text-pf-cyan-400'
+                : 'bg-accent/10 text-accent-text'
             }`}>
               {execLabel(strategy)}
             </span>
-            <span className="px-3 py-1 rounded-pf-full bg-pf-overlay text-pf-text-secondary text-xs font-medium">
+            <span className="px-3 py-1 rounded-pf-full bg-overlay text-secondary text-xs font-medium">
               v{strategy.version}
             </span>
-            <span className="px-3 py-1 rounded-pf-full bg-pf-overlay text-pf-text-secondary text-xs font-medium">
+            <span className="px-3 py-1 rounded-pf-full bg-overlay text-secondary text-xs font-medium">
               {strategy.visibility.toLowerCase()}
             </span>
-            <span className="px-3 py-1 rounded-pf-full bg-pf-overlay text-pf-text-secondary text-xs font-medium">
+            <span className="px-3 py-1 rounded-pf-full bg-overlay text-secondary text-xs font-medium">
               {totalBlocks} blocks
             </span>
             {strategy.tags.map((tag) => (
@@ -1553,13 +1553,13 @@ export function Component() {
                 tag.toLowerCase() === 'momentum'
                   ? 'bg-pf-gold-500/10 text-pf-gold-500'
                   : tag.toLowerCase() === 'defensive'
-                    ? 'bg-pf-info/10 text-pf-info'
-                    : 'bg-pf-cyan-500/10 text-pf-cyan-400'
+                    ? 'bg-info/10 text-info'
+                    : 'bg-accent/10 text-accent-text'
               }`}>
                 {tag}
               </span>
             ))}
-            <span className="px-3 py-1 rounded-pf-full text-pf-text-muted text-xs ml-auto">
+            <span className="px-3 py-1 rounded-pf-full text-tertiary text-xs ml-auto">
               Updated {formatDate(strategy.updatedAt)}
             </span>
           </div>
@@ -1567,16 +1567,16 @@ export function Component() {
           {/* Strategy P&L summary */}
           {stratPnl && parseFloat(stratPnl.totalPnl) !== 0 && (
             <div className="flex items-center gap-3 flex-wrap">
-              <div className="flex items-center gap-2 px-3 py-2 rounded-pf bg-pf-elevated border border-pf-border">
-                <span className="text-xs text-pf-text-muted">Strategy P&L</span>
-                <span className={`text-sm font-mono font-semibold ${parseFloat(stratPnl.totalPnl) >= 0 ? 'text-pf-success' : 'text-pf-danger'}`}>
+              <div className="flex items-center gap-2 px-3 py-2 rounded-pf bg-elevated border border-default">
+                <span className="text-xs text-tertiary">Strategy P&L</span>
+                <span className={`text-sm font-mono font-semibold ${parseFloat(stratPnl.totalPnl) >= 0 ? 'text-gain' : 'text-loss'}`}>
                   {parseFloat(stratPnl.totalPnl) >= 0 ? '+' : ''}${parseFloat(stratPnl.totalPnl).toFixed(2)}
                 </span>
               </div>
               {parseFloat(stratPnl.winRate) > 0 && (
-                <div className="flex items-center gap-2 px-3 py-2 rounded-pf bg-pf-elevated border border-pf-border">
-                  <span className="text-xs text-pf-text-muted">Win Rate</span>
-                  <span className="text-sm font-mono font-semibold text-pf-cyan-400">
+                <div className="flex items-center gap-2 px-3 py-2 rounded-pf bg-elevated border border-default">
+                  <span className="text-xs text-tertiary">Win Rate</span>
+                  <span className="text-sm font-mono font-semibold text-accent-text">
                     {(parseFloat(stratPnl.winRate) * 100).toFixed(1)}%
                   </span>
                 </div>
@@ -1586,12 +1586,12 @@ export function Component() {
 
           {/* Parent strategy link */}
           {parentStrategy && (
-            <div className="flex items-center gap-2 px-3 py-2 bg-pf-elevated border border-pf-border rounded-pf-lg">
-              <GitBranch className="size-4 text-pf-text-muted" />
-              <span className="text-xs text-pf-text-muted">Part of:</span>
+            <div className="flex items-center gap-2 px-3 py-2 bg-elevated border border-default rounded-pf-lg">
+              <GitBranch className="size-4 text-tertiary" />
+              <span className="text-xs text-tertiary">Part of:</span>
               <Link
                 to={`/strategies/${parentStrategy.id}`}
-                className="text-xs text-pf-cyan-400 hover:underline font-medium"
+                className="text-xs text-accent-text hover:underline font-medium"
               >
                 {parentStrategy.name}
               </Link>
@@ -1600,11 +1600,11 @@ export function Component() {
 
           {/* Sub-Strategies */}
           {childStrategies.length > 0 && (
-            <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4">
-              <h2 className="text-sm font-medium text-pf-text mb-3 flex items-center gap-2">
+            <div className="bg-elevated border border-default rounded-pf-lg p-4">
+              <h2 className="text-sm font-medium text-primary mb-3 flex items-center gap-2">
                 <GitBranch className="size-4" />
                 Sub-Strategies
-                <span className="text-xs text-pf-text-muted">({childStrategies.length})</span>
+                <span className="text-xs text-tertiary">({childStrategies.length})</span>
               </h2>
               <div className="space-y-2">
                 {childStrategies.map((child) => {
@@ -1613,9 +1613,9 @@ export function Component() {
                     <Link
                       key={child.id}
                       to={`/strategies/${child.id}`}
-                      className="flex items-center justify-between px-3 py-2 rounded-pf-sm border border-pf-border-subtle hover:border-pf-border-strong transition-colors"
+                      className="flex items-center justify-between px-3 py-2 rounded-pf-sm border border-subtle hover:border-strong transition-colors"
                     >
-                      <span className="text-xs text-pf-text font-medium">{child.name}</span>
+                      <span className="text-xs text-primary font-medium">{child.name}</span>
                       <span
                         className={`inline-flex items-center gap-2 px-2 py-1 rounded-pf-full text-pf-caption font-medium ${childStyle.bg} ${childStyle.text}`}
                       >
@@ -1632,33 +1632,33 @@ export function Component() {
           {/* Health stats row */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             {pnl !== null && (
-              <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4">
-                <span className="text-xs text-pf-text-muted block mb-1">Total P&L</span>
-                <span className={`font-mono text-xl font-semibold ${pnl >= 0 ? 'text-pf-success' : 'text-pf-danger'}`}>
+              <div className="bg-elevated border border-default rounded-pf-lg p-4">
+                <span className="text-xs text-tertiary block mb-1">Total P&L</span>
+                <span className={`font-mono text-xl font-semibold ${pnl >= 0 ? 'text-gain' : 'text-loss'}`}>
                   {formatPnl(pnl)}
                 </span>
               </div>
             )}
-            <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4">
-              <span className="text-xs text-pf-text-muted block mb-1">Blocks</span>
-              <span className="font-mono text-xl font-semibold text-pf-text">{totalBlocks}</span>
+            <div className="bg-elevated border border-default rounded-pf-lg p-4">
+              <span className="text-xs text-tertiary block mb-1">Blocks</span>
+              <span className="font-mono text-xl font-semibold text-primary">{totalBlocks}</span>
             </div>
-            <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4">
-              <span className="text-xs text-pf-text-muted block mb-1">Recent Orders</span>
-              <span className="font-mono text-xl font-semibold text-pf-text">
+            <div className="bg-elevated border border-default rounded-pf-lg p-4">
+              <span className="text-xs text-tertiary block mb-1">Recent Orders</span>
+              <span className="font-mono text-xl font-semibold text-primary">
                 {recentOrderCount !== null ? recentOrderCount : '—'}
               </span>
             </div>
-            <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4">
-              <span className="text-xs text-pf-text-muted block mb-1">Last Order</span>
-              <span className="font-mono text-sm font-semibold text-pf-text">
+            <div className="bg-elevated border border-default rounded-pf-lg p-4">
+              <span className="text-xs text-tertiary block mb-1">Last Order</span>
+              <span className="font-mono text-sm font-semibold text-primary">
                 {lastOrderAt ? new Date(lastOrderAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '—'}
               </span>
             </div>
           </div>
 
           {/* Detail tab bar */}
-          <div className="flex items-center gap-1 border-b border-pf-border-subtle pb-1">
+          <div className="flex items-center gap-1 border-b border-subtle pb-1">
             <Button
               type="button"
               variant={detailTab === 'overview' ? 'default' : 'ghost'}
@@ -1701,7 +1701,7 @@ export function Component() {
               className="flex items-center gap-2"
             >
               {detailTab === 'live' && wsConnected
-                ? <span className="w-2 h-2 rounded-pf-full bg-pf-success animate-pulse" />
+                ? <span className="w-2 h-2 rounded-pf-full bg-gain animate-pulse" />
                 : <Wifi className="size-3" />}
               Live
             </Button>
@@ -1710,7 +1710,7 @@ export function Component() {
           {/* Body grid */}
           {detailTab === 'overview' && <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
             {/* Blocks summary */}
-            <div className="lg:col-span-3 bg-pf-elevated border border-pf-border rounded-pf-lg p-5 space-y-5">
+            <div className="lg:col-span-3 bg-elevated border border-default rounded-pf-lg p-5 space-y-5">
               {(
                 [
                   { key: 'safety', title: 'Safety', blocks: strategy.safety },
@@ -1722,7 +1722,7 @@ export function Component() {
                 .filter(({ blocks }) => blocks.length > 0)
                 .map(({ key, title, blocks }) => (
                   <div key={key}>
-                    <h3 className="text-xs font-medium text-pf-text-secondary uppercase tracking-wider mb-2">
+                    <h3 className="text-xs font-medium text-secondary uppercase tracking-wider mb-2">
                       {title}
                     </h3>
                     <div className="flex flex-wrap gap-2">
@@ -1741,10 +1741,10 @@ export function Component() {
 
               {totalBlocks === 0 && (
                 <div className="flex flex-col items-center py-8 text-center">
-                  <p className="text-sm text-pf-text-muted mb-3">No blocks configured.</p>
+                  <p className="text-sm text-tertiary mb-3">No blocks configured.</p>
                   <Link
                     to={`/strategies/${strategy.id}/edit`}
-                    className="flex items-center gap-2 px-3 py-2 rounded-pf bg-pf-surface border border-pf-border text-xs text-pf-text-secondary hover:border-pf-border-strong transition-colors"
+                    className="flex items-center gap-2 px-3 py-2 rounded-pf bg-surface border border-default text-xs text-secondary hover:border-strong transition-colors"
                   >
                     <Pencil className="size-3" /> Edit Strategy
                   </Link>
@@ -1753,12 +1753,12 @@ export function Component() {
             </div>
 
             {/* Live events */}
-            <div className="lg:col-span-2 bg-pf-elevated border border-pf-border rounded-pf-lg overflow-hidden">
-              <div className="flex items-center justify-between px-4 py-3 border-b border-pf-border-subtle">
-                <span className="text-sm font-medium text-pf-text">Live Events</span>
+            <div className="lg:col-span-2 bg-elevated border border-default rounded-pf-lg overflow-hidden">
+              <div className="flex items-center justify-between px-4 py-3 border-b border-subtle">
+                <span className="text-sm font-medium text-primary">Live Events</span>
                 {isActive(status) && (
-                  <span className="flex items-center gap-2 text-xs text-pf-cyan-400">
-                    <span className="w-2 h-2 rounded-pf-full bg-pf-cyan-400 animate-pulse-dot" />
+                  <span className="flex items-center gap-2 text-xs text-accent-text">
+                    <span className="w-2 h-2 rounded-pf-full bg-accent-text animate-pulse-dot" />
                     Live
                   </span>
                 )}
@@ -1766,15 +1766,15 @@ export function Component() {
 
               <div className="p-4 max-h-80 overflow-y-auto">
                 {liveLog.length === 0 ? (
-                  <div className="py-8 text-center text-sm text-pf-text-muted space-y-2">
+                  <div className="py-8 text-center text-sm text-tertiary space-y-2">
                     <p>{isActive(status) ? 'Strategy is running.' : 'Start the strategy to generate events.'}</p>
-                    <p className="text-xs">Check the <a href={`/orders?strategy=${strategy?.id}`} className="text-pf-cyan-400 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 rounded-pf-sm">Orders</a> page for trade activity.</p>
+                    <p className="text-xs">Check the <a href={`/orders?strategy=${strategy?.id}`} className="text-accent-text hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 rounded-pf-sm">Orders</a> page for trade activity.</p>
                   </div>
                 ) : (
                   <div className="space-y-2">
                     {liveLog.map((entry, i) => (
                       <div key={i} className="flex items-start gap-2 text-xs">
-                        <span className="font-mono text-pf-text-muted shrink-0 w-16">
+                        <span className="font-mono text-tertiary shrink-0 w-16">
                           {formatTime(entry.time)}
                         </span>
                         <span className={`w-2 h-2 rounded-pf-full mt-2 shrink-0 ${LOG_DOT_COLORS[entry.severity]}`} />
@@ -1790,30 +1790,30 @@ export function Component() {
           {detailTab === 'log' && (
             <div className="mt-4">
               {loadingLog ? (
-                <p className="text-sm text-pf-text-muted">Loading log...</p>
+                <p className="text-sm text-tertiary">Loading log...</p>
               ) : execLog.length === 0 ? (
-                <div className="text-center py-8 text-pf-text-muted text-sm">
+                <div className="text-center py-8 text-tertiary text-sm">
                   <p>No execution events yet.</p>
                   <p className="text-xs mt-1">Events appear when the strategy runs.</p>
                 </div>
               ) : (
                 <ul className="space-y-2">
                   {execLog.map(ev => (
-                    <li key={ev.id} className="flex items-start gap-3 rounded-pf bg-pf-surface px-3 py-2 border border-pf-border-subtle">
+                    <li key={ev.id} className="flex items-start gap-3 rounded-pf bg-surface px-3 py-2 border border-subtle">
                       <span className={`mt-1 flex-shrink-0 h-2 w-2 rounded-pf-full ${
-                        ev.eventType === 'ERROR' ? 'bg-pf-danger' :
-                        ev.eventType === 'ORDER_PLACED' ? 'bg-pf-success' :
-                        ev.eventType === 'TRIGGERED' ? 'bg-pf-cyan-400' : 'bg-pf-text-muted'
+                        ev.eventType === 'ERROR' ? 'bg-loss' :
+                        ev.eventType === 'ORDER_PLACED' ? 'bg-gain' :
+                        ev.eventType === 'TRIGGERED' ? 'bg-accent-text' : 'bg-tertiary'
                       }`} />
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between gap-2">
-                          <span className="text-xs font-medium text-pf-text">{ev.eventType}</span>
-                          <span className="text-pf-caption text-pf-text-muted flex-shrink-0">
+                          <span className="text-xs font-medium text-primary">{ev.eventType}</span>
+                          <span className="text-pf-caption text-tertiary flex-shrink-0">
                             {new Date(ev.createdAt).toLocaleString()}
                           </span>
                         </div>
                         {ev.payload && Object.keys(ev.payload).length > 0 && (
-                          <p className="text-pf-label text-pf-text-secondary mt-1 font-mono truncate">
+                          <p className="text-pf-label text-secondary mt-1 font-mono truncate">
                             {JSON.stringify(ev.payload).slice(0, 120)}
                           </p>
                         )}
@@ -1830,60 +1830,60 @@ export function Component() {
               {executionsLoading ? (
                 <div className="space-y-2">
                   {Array.from({ length: 5 }).map((_, i) => (
-                    <div key={i} className="flex items-center gap-3 px-3 py-3 rounded-pf bg-pf-surface border border-pf-border-subtle">
-                      <div className="h-3 bg-pf-overlay rounded animate-pulse w-24" />
-                      <div className="h-3 bg-pf-overlay rounded animate-pulse w-12" />
-                      <div className="h-3 bg-pf-overlay rounded animate-pulse w-10" />
-                      <div className="h-3 bg-pf-overlay rounded animate-pulse w-16" />
-                      <div className="h-3 bg-pf-overlay rounded animate-pulse w-16" />
-                      <div className="h-3 bg-pf-overlay rounded animate-pulse w-16" />
-                      <div className="h-3 bg-pf-overlay rounded animate-pulse w-20 ml-auto" />
+                    <div key={i} className="flex items-center gap-3 px-3 py-3 rounded-pf bg-surface border border-subtle">
+                      <div className="h-3 bg-overlay rounded animate-pulse w-24" />
+                      <div className="h-3 bg-overlay rounded animate-pulse w-12" />
+                      <div className="h-3 bg-overlay rounded animate-pulse w-10" />
+                      <div className="h-3 bg-overlay rounded animate-pulse w-16" />
+                      <div className="h-3 bg-overlay rounded animate-pulse w-16" />
+                      <div className="h-3 bg-overlay rounded animate-pulse w-16" />
+                      <div className="h-3 bg-overlay rounded animate-pulse w-20 ml-auto" />
                     </div>
                   ))}
                 </div>
               ) : executions.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-16 text-center text-pf-text-muted gap-3">
+                <div className="flex flex-col items-center justify-center py-16 text-center text-tertiary gap-3">
                   <ClipboardList className="size-8 opacity-40" aria-hidden="true" />
-                  <p className="text-sm font-medium text-pf-text">No executions yet</p>
-                  <p className="text-xs text-pf-text-muted">Orders placed by this strategy will appear here</p>
+                  <p className="text-sm font-medium text-primary">No executions yet</p>
+                  <p className="text-xs text-tertiary">Orders placed by this strategy will appear here</p>
                 </div>
               ) : (
                 <>
-                  <div className="overflow-x-auto rounded-pf border border-pf-border">
+                  <div className="overflow-x-auto rounded-pf border border-default">
                     <table className="w-full text-xs" aria-label="Strategy trade history">
                       <thead>
-                        <tr className="border-b border-pf-border bg-pf-surface">
-                          <th className="px-3 py-3 text-left font-medium text-pf-text-muted">Date</th>
-                          <th className="px-3 py-3 text-left font-medium text-pf-text-muted">Side</th>
-                          <th className="px-3 py-3 text-left font-medium text-pf-text-muted">Outcome</th>
-                          <th className="px-3 py-3 text-right font-medium text-pf-text-muted">Size</th>
-                          <th className="px-3 py-3 text-right font-medium text-pf-text-muted">Price</th>
-                          <th className="px-3 py-3 text-right font-medium text-pf-text-muted">Fill</th>
-                          <th className="px-3 py-3 text-left font-medium text-pf-text-muted">Status</th>
+                        <tr className="border-b border-default bg-surface">
+                          <th className="px-3 py-3 text-left font-medium text-tertiary">Date</th>
+                          <th className="px-3 py-3 text-left font-medium text-tertiary">Side</th>
+                          <th className="px-3 py-3 text-left font-medium text-tertiary">Outcome</th>
+                          <th className="px-3 py-3 text-right font-medium text-tertiary">Size</th>
+                          <th className="px-3 py-3 text-right font-medium text-tertiary">Price</th>
+                          <th className="px-3 py-3 text-right font-medium text-tertiary">Fill</th>
+                          <th className="px-3 py-3 text-left font-medium text-tertiary">Status</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-pf-border-subtle">
+                      <tbody className="divide-y divide-subtle">
                         {executions.map((ex) => {
                           const statusBadge =
-                            ex.status === 'PENDING'   ? 'bg-pf-warning/10 text-pf-warning' :
-                            ex.status === 'CONFIRMED' ? 'bg-pf-success/10 text-pf-success' :
-                            ex.status === 'CANCELLED' ? 'bg-pf-overlay text-pf-text-muted' :
-                            ex.status === 'FAILED'    ? 'bg-pf-danger/10 text-pf-danger' :
-                            'bg-pf-overlay text-pf-text-muted';
+                            ex.status === 'PENDING'   ? 'bg-warning/10 text-warning' :
+                            ex.status === 'CONFIRMED' ? 'bg-gain/10 text-gain' :
+                            ex.status === 'CANCELLED' ? 'bg-overlay text-tertiary' :
+                            ex.status === 'FAILED'    ? 'bg-loss/10 text-loss' :
+                            'bg-overlay text-tertiary';
                           return (
-                            <tr key={ex.id} className="hover:bg-pf-surface/50 transition-colors">
-                              <td className="px-3 py-3 font-mono text-pf-text-secondary whitespace-nowrap">
+                            <tr key={ex.id} className="hover:bg-surface/50 transition-colors">
+                              <td className="px-3 py-3 font-mono text-secondary whitespace-nowrap">
                                 {new Date(ex.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                               </td>
                               <td className="px-3 py-3">
-                                <span className={`font-semibold ${ex.side === 'BUY' ? 'text-pf-success' : 'text-pf-danger'}`}>
+                                <span className={`font-semibold ${ex.side === 'BUY' ? 'text-gain' : 'text-loss'}`}>
                                   {ex.side}
                                 </span>
                               </td>
-                              <td className="px-3 py-3 text-pf-text font-mono">{ex.outcome}</td>
-                              <td className="px-3 py-3 text-right font-mono text-pf-text">{ex.size}</td>
-                              <td className="px-3 py-3 text-right font-mono text-pf-text">{ex.price}</td>
-                              <td className="px-3 py-3 text-right font-mono text-pf-text-secondary">
+                              <td className="px-3 py-3 text-primary font-mono">{ex.outcome}</td>
+                              <td className="px-3 py-3 text-right font-mono text-primary">{ex.size}</td>
+                              <td className="px-3 py-3 text-right font-mono text-primary">{ex.price}</td>
+                              <td className="px-3 py-3 text-right font-mono text-secondary">
                                 {ex.fillSize ?? '—'}
                                 {ex.fillPrice ? ` @ ${ex.fillPrice}` : ''}
                               </td>
@@ -1910,7 +1910,7 @@ export function Component() {
                       >
                         <ChevronLeft className="size-4" />
                       </Button>
-                      <span className="text-xs text-pf-text-muted">
+                      <span className="text-xs text-tertiary">
                         {executionsPage} / {executionsTotalPages}
                       </span>
                       <Button
@@ -1934,10 +1934,10 @@ export function Component() {
             <div className="mt-4">
               {/* Panel header */}
               <div className="flex items-center gap-2 mb-4">
-                <GitBranch className="size-4 text-pf-text-muted" aria-hidden="true" />
-                <h2 className="text-sm font-semibold text-pf-text">Version History</h2>
+                <GitBranch className="size-4 text-tertiary" aria-hidden="true" />
+                <h2 className="text-sm font-semibold text-primary">Version History</h2>
                 {versions.length > 0 && (
-                  <span className="ml-auto text-xs text-pf-text-muted">
+                  <span className="ml-auto text-xs text-tertiary">
                     {versions.length} snapshot{versions.length !== 1 ? 's' : ''}
                   </span>
                 )}
@@ -1945,23 +1945,23 @@ export function Component() {
 
               {/* Loading skeleton */}
               {loadingVersions && (
-                <div className="space-y-0 rounded-pf border border-pf-border overflow-hidden">
+                <div className="space-y-0 rounded-pf border border-default overflow-hidden">
                   {[1, 2, 3].map((i) => (
-                    <div key={i} className="flex items-start gap-4 px-5 py-4 border-b border-pf-border-subtle last:border-0 bg-pf-elevated animate-pulse">
+                    <div key={i} className="flex items-start gap-4 px-5 py-4 border-b border-subtle last:border-0 bg-elevated animate-pulse">
                       <div className="flex flex-col items-center gap-1 shrink-0 pt-1">
-                        <div className="size-3 rounded-pf-full bg-pf-overlay" />
-                        {i < 3 && <div className="w-px h-10 bg-pf-overlay" />}
+                        <div className="size-3 rounded-pf-full bg-overlay" />
+                        {i < 3 && <div className="w-px h-10 bg-overlay" />}
                       </div>
                       <div className="flex-1 space-y-2 pb-1">
                         <div className="flex items-center gap-3">
-                          <div className="h-5 w-10 bg-pf-overlay rounded-pf-sm" />
-                          <div className="h-3 w-24 bg-pf-overlay rounded" />
-                          <div className="h-3 w-16 bg-pf-overlay rounded ml-auto" />
+                          <div className="h-5 w-10 bg-overlay rounded-pf-sm" />
+                          <div className="h-3 w-24 bg-overlay rounded" />
+                          <div className="h-3 w-16 bg-overlay rounded ml-auto" />
                         </div>
-                        <div className="h-3 w-40 bg-pf-overlay rounded" />
+                        <div className="h-3 w-40 bg-overlay rounded" />
                         <div className="flex gap-2">
-                          <div className="h-4 w-14 bg-pf-overlay rounded-pf-full" />
-                          <div className="h-4 w-14 bg-pf-overlay rounded-pf-full" />
+                          <div className="h-4 w-14 bg-overlay rounded-pf-full" />
+                          <div className="h-4 w-14 bg-overlay rounded-pf-full" />
                         </div>
                       </div>
                     </div>
@@ -1972,15 +1972,15 @@ export function Component() {
               {/* Empty state */}
               {!loadingVersions && versions.length === 0 && (
                 <div className="flex flex-col items-center justify-center py-16 text-center gap-3">
-                  <Clock className="size-8 text-pf-text-muted opacity-40" aria-hidden="true" />
-                  <p className="text-sm font-medium text-pf-text">No version history yet</p>
-                  <p className="text-xs text-pf-text-muted">Save the strategy to create a snapshot</p>
+                  <Clock className="size-8 text-tertiary opacity-40" aria-hidden="true" />
+                  <p className="text-sm font-medium text-primary">No version history yet</p>
+                  <p className="text-xs text-tertiary">Save the strategy to create a snapshot</p>
                 </div>
               )}
 
               {/* Timeline list */}
               {!loadingVersions && versions.length > 0 && (
-                <div className="rounded-pf border border-pf-border overflow-hidden bg-pf-elevated">
+                <div className="rounded-pf border border-default overflow-hidden bg-elevated">
                   {versions.map((v, idx) => {
                     const isCurrent = idx === 0;
                     const isRestoring = rollingBack === v.id;
@@ -1988,7 +1988,7 @@ export function Component() {
                     return (
                       <div
                         key={v.id}
-                        className={`relative flex items-start gap-4 px-5 py-4 border-b border-pf-border-subtle last:border-0 transition-colors ${isSelected ? 'bg-pf-cyan-500/5' : 'hover:bg-pf-surface/40'}`}
+                        className={`relative flex items-start gap-4 px-5 py-4 border-b border-subtle last:border-0 transition-colors ${isSelected ? 'bg-accent/5' : 'hover:bg-surface/40'}`}
                         onClick={() => setSelectedVersion(isSelected ? null : v)}
                         role="button"
                         tabIndex={0}
@@ -1998,9 +1998,9 @@ export function Component() {
                       >
                         {/* Timeline spine */}
                         <div className="flex flex-col items-center shrink-0 pt-1" aria-hidden="true">
-                          <span className={`size-3 rounded-pf-full border-2 ${isCurrent ? 'border-pf-cyan-400 bg-pf-cyan-400' : 'border-pf-border-strong bg-pf-surface'}`} />
+                          <span className={`size-3 rounded-pf-full border-2 ${isCurrent ? 'border-accent-text bg-accent-text' : 'border-strong bg-surface'}`} />
                           {idx < versions.length - 1 && (
-                            <span className="w-px flex-1 min-h-[2rem] bg-pf-border-subtle mt-1" />
+                            <span className="w-px flex-1 min-h-[2rem] bg-subtle mt-1" />
                           )}
                         </div>
 
@@ -2008,46 +2008,46 @@ export function Component() {
                         <div className="flex-1 min-w-0 space-y-2">
                           {/* Top row: badge + date + current pill */}
                           <div className="flex items-center gap-2 flex-wrap">
-                            <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-pf-sm text-xs font-bold tabular-nums ${isCurrent ? 'bg-pf-cyan-500/15 text-pf-cyan-400' : 'bg-pf-overlay text-pf-text-muted'}`}>
+                            <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-pf-sm text-xs font-bold tabular-nums ${isCurrent ? 'bg-accent/15 text-accent-text' : 'bg-overlay text-tertiary'}`}>
                               {v.label}
                             </span>
                             {isCurrent && (
-                              <span className="inline-flex items-center gap-1 px-2 py-1 rounded-pf-full bg-pf-success/10 text-pf-success text-pf-caption font-semibold uppercase tracking-wide">
+                              <span className="inline-flex items-center gap-1 px-2 py-1 rounded-pf-full bg-gain/10 text-gain text-pf-caption font-semibold uppercase tracking-wide">
                                 current
                               </span>
                             )}
-                            <span className="text-xs text-pf-text-muted">{formatDate(v.createdAt)}</span>
-                            <span className="text-pf-caption text-pf-text-muted ml-auto">by {v.author}</span>
+                            <span className="text-xs text-tertiary">{formatDate(v.createdAt)}</span>
+                            <span className="text-pf-caption text-tertiary ml-auto">by {v.author}</span>
                           </div>
 
                           {/* Change note */}
                           {v.changeNote && (
-                            <p className="text-xs italic text-pf-text-secondary leading-relaxed">
+                            <p className="text-xs italic text-secondary leading-relaxed">
                               "{v.changeNote}"
                             </p>
                           )}
 
                           {/* Block count + change chips */}
                           <div className="flex items-center gap-2 flex-wrap">
-                            <span className="text-pf-label text-pf-text-muted">
+                            <span className="text-pf-label text-tertiary">
                               {v.blockCount} block{v.blockCount !== 1 ? 's' : ''}
                             </span>
                             {v.changes && (
                               <>
                                 {v.changes.added > 0 && (
-                                  <span className="inline-flex items-center gap-1 px-2 py-1 rounded-pf-full bg-pf-success/15 text-pf-success text-pf-caption font-semibold">
+                                  <span className="inline-flex items-center gap-1 px-2 py-1 rounded-pf-full bg-gain/15 text-gain text-pf-caption font-semibold">
                                     <Plus className="size-3" aria-hidden="true" />
                                     {v.changes.added} added
                                   </span>
                                 )}
                                 {v.changes.removed > 0 && (
-                                  <span className="inline-flex items-center gap-1 px-2 py-1 rounded-pf-full bg-pf-danger/15 text-pf-danger text-pf-caption font-semibold">
+                                  <span className="inline-flex items-center gap-1 px-2 py-1 rounded-pf-full bg-loss/15 text-loss text-pf-caption font-semibold">
                                     <Minus className="size-3" aria-hidden="true" />
                                     {v.changes.removed} removed
                                   </span>
                                 )}
                                 {v.changes.modified > 0 && (
-                                  <span className="inline-flex items-center gap-1 px-2 py-1 rounded-pf-full bg-pf-warning/15 text-pf-warning text-pf-caption font-semibold">
+                                  <span className="inline-flex items-center gap-1 px-2 py-1 rounded-pf-full bg-warning/15 text-warning text-pf-caption font-semibold">
                                     <Edit2 className="size-3" aria-hidden="true" />
                                     {v.changes.modified} modified
                                   </span>
@@ -2122,14 +2122,14 @@ export function Component() {
               {/* Header */}
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <span className="text-sm font-semibold text-pf-text">Live Execution Feed</span>
+                  <span className="text-sm font-semibold text-primary">Live Execution Feed</span>
                   {wsConnected ? (
-                    <span className="flex items-center gap-2 text-xs text-pf-success font-medium">
-                      <span className="animate-pulse bg-pf-success rounded-pf-full w-2 h-2" />
+                    <span className="flex items-center gap-2 text-xs text-gain font-medium">
+                      <span className="animate-pulse bg-gain rounded-pf-full w-2 h-2" />
                       LIVE
                     </span>
                   ) : (
-                    <span className="flex items-center gap-2 text-xs text-pf-text-muted">
+                    <span className="flex items-center gap-2 text-xs text-tertiary">
                       <WifiOff className="size-3" />
                       Disconnected
                     </span>
@@ -2149,7 +2149,7 @@ export function Component() {
 
               {/* Not running banner */}
               {strategy.status !== 'RUNNING' && strategy.status !== 'PAPER' && (
-                <div className="flex items-center gap-2 px-4 py-3 rounded-pf bg-pf-warning/10 border border-pf-warning/20 text-pf-warning text-xs">
+                <div className="flex items-center gap-2 px-4 py-3 rounded-pf bg-warning/10 border border-warning/20 text-warning text-xs">
                   <AlertTriangle className="size-4 flex-shrink-0" />
                   Strategy is not running — no live events
                 </div>
@@ -2157,19 +2157,19 @@ export function Component() {
 
               {/* Events list */}
               {liveEvents.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-16 text-center text-pf-text-muted gap-3">
+                <div className="flex flex-col items-center justify-center py-16 text-center text-tertiary gap-3">
                   <Wifi className="size-8 opacity-30" />
-                  <p className="text-sm font-medium text-pf-text">Waiting for executions...</p>
-                  <p className="text-xs text-pf-text-muted">The feed will populate as your strategy trades.</p>
+                  <p className="text-sm font-medium text-primary">Waiting for executions...</p>
+                  <p className="text-xs text-tertiary">The feed will populate as your strategy trades.</p>
                 </div>
               ) : (
-                <div className="rounded-pf border border-pf-border bg-pf-elevated divide-y divide-pf-border-subtle">
+                <div className="rounded-pf border border-default bg-elevated divide-y divide-subtle">
                   {liveEvents.map((ev) => {
                     const iconProps =
-                      ev.type === 'ORDER_PLACED'   ? { Icon: ArrowUpRight,  color: 'text-pf-cyan-400' } :
-                      ev.type === 'ORDER_FILLED'   ? { Icon: CheckCircle2,  color: 'text-pf-success'  } :
-                      ev.type === 'ORDER_REJECTED' ? { Icon: XCircle,       color: 'text-pf-danger'   } :
-                                                     { Icon: AlertTriangle, color: 'text-pf-warning'  };
+                      ev.type === 'ORDER_PLACED'   ? { Icon: ArrowUpRight,  color: 'text-accent-text' } :
+                      ev.type === 'ORDER_FILLED'   ? { Icon: CheckCircle2,  color: 'text-gain'  } :
+                      ev.type === 'ORDER_REJECTED' ? { Icon: XCircle,       color: 'text-loss'   } :
+                                                     { Icon: AlertTriangle, color: 'text-warning'  };
                     const { Icon, color } = iconProps;
                     return (
                       <div key={ev.id} className="flex items-start gap-3 py-3 px-4 animate-fade-in last:border-0">
@@ -2177,24 +2177,24 @@ export function Component() {
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center justify-between gap-2 mb-1">
                             <span className={`text-xs font-bold ${color}`}>{ev.type.replace(/_/g, ' ')}</span>
-                            <span className="text-pf-caption text-pf-text-muted flex-shrink-0">{relativeDate(ev.timestamp)}</span>
+                            <span className="text-pf-caption text-tertiary flex-shrink-0">{relativeDate(ev.timestamp)}</span>
                           </div>
                           {ev.type === 'STRATEGY_ERROR' ? (
-                            <p className="text-xs text-pf-danger truncate">{ev.data.errorMessage ?? 'Unknown error'}</p>
+                            <p className="text-xs text-loss truncate">{ev.data.errorMessage ?? 'Unknown error'}</p>
                           ) : (
-                            <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-pf-label text-pf-text-secondary">
+                            <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-pf-label text-secondary">
                               {ev.data.marketQuestion && (
-                                <span className="truncate max-w-[200px] text-pf-text-muted" title={ev.data.marketQuestion}>
+                                <span className="truncate max-w-[200px] text-tertiary" title={ev.data.marketQuestion}>
                                   {ev.data.marketQuestion}
                                 </span>
                               )}
                               {ev.data.side && (
-                                <span className={`font-semibold ${ev.data.side === 'BUY' ? 'text-pf-success' : 'text-pf-danger'}`}>
+                                <span className={`font-semibold ${ev.data.side === 'BUY' ? 'text-gain' : 'text-loss'}`}>
                                   {ev.data.side}
                                 </span>
                               )}
                               {ev.data.outcome && (
-                                <span className="font-mono text-pf-text">{ev.data.outcome}</span>
+                                <span className="font-mono text-primary">{ev.data.outcome}</span>
                               )}
                               {ev.data.size !== undefined && (
                                 <span className="font-mono">sz {ev.data.size}</span>
@@ -2273,8 +2273,8 @@ function StarRow({
             <Star
               className={`size-4 transition-colors ${
                 filled
-                  ? 'text-pf-warning fill-pf-warning'
-                  : 'text-pf-text-muted fill-none'
+                  ? 'text-warning fill-warning'
+                  : 'text-tertiary fill-none'
               }`}
             />
           </Button>
@@ -2366,9 +2366,9 @@ function ReviewsSection({ listingId }: { listingId: string }) {
   const maxStarCount = Math.max(...starCounts.map((s) => s.count), 1);
 
   return (
-    <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-5 space-y-6">
-      <h2 className="text-base font-semibold text-pf-text flex items-center gap-2">
-        <Star className="size-4 text-pf-warning fill-pf-warning" />
+    <div className="bg-elevated border border-default rounded-pf-lg p-5 space-y-6">
+      <h2 className="text-base font-semibold text-primary flex items-center gap-2">
+        <Star className="size-4 text-warning fill-warning" />
         Reviews &amp; Ratings
       </h2>
 
@@ -2377,11 +2377,11 @@ function ReviewsSection({ listingId }: { listingId: string }) {
         <div className="flex flex-col sm:flex-row gap-6">
           {/* Average */}
           <div className="flex flex-col items-center justify-center min-w-[100px]">
-            <span className="text-4xl font-bold text-pf-text font-mono">
+            <span className="text-4xl font-bold text-primary font-mono">
               {avgRating.toFixed(1)}
             </span>
             <StarRow rating={Math.round(avgRating)} />
-            <span className="text-xs text-pf-text-muted mt-1">
+            <span className="text-xs text-tertiary mt-1">
               {state.total} review{state.total !== 1 ? 's' : ''}
             </span>
           </div>
@@ -2390,15 +2390,15 @@ function ReviewsSection({ listingId }: { listingId: string }) {
           <div className="flex-1 space-y-2">
             {starCounts.map(({ star, count }) => (
               <div key={star} className="flex items-center gap-2">
-                <span className="text-xs text-pf-text-muted w-4 text-right shrink-0">{star}</span>
-                <Star className="size-3 text-pf-warning fill-pf-warning shrink-0" />
-                <div className="flex-1 h-2 bg-pf-surface rounded-pf-full overflow-hidden">
+                <span className="text-xs text-tertiary w-4 text-right shrink-0">{star}</span>
+                <Star className="size-3 text-warning fill-warning shrink-0" />
+                <div className="flex-1 h-2 bg-surface rounded-pf-full overflow-hidden">
                   <div
-                    className="h-full bg-pf-warning rounded-pf-full transition-all duration-pf-slow"
+                    className="h-full bg-warning rounded-pf-full transition-all duration-pf-slow"
                     style={{ width: `${(count / maxStarCount) * 100}%` }}
                   />
                 </div>
-                <span className="text-xs text-pf-text-muted w-6 text-right shrink-0">{count}</span>
+                <span className="text-xs text-tertiary w-6 text-right shrink-0">{count}</span>
               </div>
             ))}
           </div>
@@ -2406,8 +2406,8 @@ function ReviewsSection({ listingId }: { listingId: string }) {
       )}
 
       {/* Write a Review */}
-      <div className="border border-pf-border rounded-pf-lg p-4 space-y-3 bg-pf-surface">
-        <p className="text-sm font-medium text-pf-text">Write a Review</p>
+      <div className="border border-default rounded-pf-lg p-4 space-y-3 bg-surface">
+        <p className="text-sm font-medium text-primary">Write a Review</p>
 
         {/* Star selector */}
         <div className="flex items-center gap-2">
@@ -2421,7 +2421,7 @@ function ReviewsSection({ listingId }: { listingId: string }) {
             }
           />
           {state.submitRating > 0 && (
-            <span className="text-xs text-pf-text-muted">
+            <span className="text-xs text-tertiary">
               {['', 'Poor', 'Fair', 'Good', 'Very Good', 'Excellent'][state.submitRating]}
             </span>
           )}
@@ -2439,7 +2439,7 @@ function ReviewsSection({ listingId }: { listingId: string }) {
           className="w-full resize-none"
         />
         <div className="flex items-center justify-between">
-          <span className="text-pf-caption text-pf-text-muted">
+          <span className="text-pf-caption text-tertiary">
             {state.submitComment.length}/500
           </span>
           <Button
@@ -2460,19 +2460,19 @@ function ReviewsSection({ listingId }: { listingId: string }) {
         <div className="space-y-3">
           {[1, 2, 3].map((i) => (
             <div key={i} className="flex gap-3 animate-pulse">
-              <div className="size-8 rounded-pf-full bg-pf-overlay shrink-0" />
+              <div className="size-8 rounded-pf-full bg-overlay shrink-0" />
               <div className="flex-1 space-y-2">
-                <div className="h-3 bg-pf-overlay rounded w-[30%]" />
-                <div className="h-3 bg-pf-overlay rounded w-[80%]" />
-                <div className="h-3 bg-pf-overlay rounded w-[60%]" />
+                <div className="h-3 bg-overlay rounded w-[30%]" />
+                <div className="h-3 bg-overlay rounded w-[80%]" />
+                <div className="h-3 bg-overlay rounded w-[60%]" />
               </div>
             </div>
           ))}
         </div>
       ) : state.data.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-10 text-center">
-          <Star className="size-8 text-pf-text-muted mb-2 opacity-40" />
-          <p className="text-sm text-pf-text-secondary">Be the first to review this strategy</p>
+          <Star className="size-8 text-tertiary mb-2 opacity-40" />
+          <p className="text-sm text-secondary">Be the first to review this strategy</p>
         </div>
       ) : (
         <div className="space-y-4">
@@ -2483,7 +2483,7 @@ function ReviewsSection({ listingId }: { listingId: string }) {
             return (
               <div
                 key={review.id}
-                className="flex gap-3 pb-4 border-b border-pf-border last:border-b-0 last:pb-0"
+                className="flex gap-3 pb-4 border-b border-default last:border-b-0 last:pb-0"
               >
                 {/* Avatar */}
                 {review.author.avatarUrl ? (
@@ -2496,7 +2496,7 @@ function ReviewsSection({ listingId }: { listingId: string }) {
                     loading="lazy"
                   />
                 ) : (
-                  <div className="size-8 rounded-pf-full bg-pf-cyan-500/15 border border-pf-cyan-500/25 flex items-center justify-center text-pf-caption font-bold text-pf-cyan-400 shrink-0">
+                  <div className="size-8 rounded-pf-full bg-accent/15 border border-accent/25 flex items-center justify-center text-pf-caption font-bold text-accent-text shrink-0">
                     {initials}
                   </div>
                 )}
@@ -2504,18 +2504,18 @@ function ReviewsSection({ listingId }: { listingId: string }) {
                 {/* Content */}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap mb-1">
-                    <span className="text-sm font-medium text-pf-text">
+                    <span className="text-sm font-medium text-primary">
                       {review.author.displayName ?? review.author.username}
                     </span>
-                    <span className="text-xs text-pf-text-muted">
+                    <span className="text-xs text-tertiary">
                       @{review.author.username}
                     </span>
-                    <span className="text-xs text-pf-text-muted ml-auto shrink-0">
+                    <span className="text-xs text-tertiary ml-auto shrink-0">
                       {relativeDate(review.createdAt)}
                     </span>
                   </div>
                   <StarRow rating={review.rating} />
-                  <p className="text-sm text-pf-text-secondary mt-2 leading-relaxed">
+                  <p className="text-sm text-secondary mt-2 leading-relaxed">
                     {review.comment}
                   </p>
                 </div>
@@ -2538,7 +2538,7 @@ function ReviewsSection({ listingId }: { listingId: string }) {
           >
             <ChevronLeft className="size-4" />
           </Button>
-          <span className="text-sm font-mono text-pf-text-secondary">
+          <span className="text-sm font-mono text-secondary">
             Page {state.page} of {state.totalPages}
           </span>
           <Button
@@ -2555,7 +2555,7 @@ function ReviewsSection({ listingId }: { listingId: string }) {
       )}
 
       {/* Risk disclaimer — compliance (CLAUDE.md hard rule) */}
-      <p className="text-xs text-pf-text-muted mt-4 italic">
+      <p className="text-xs text-tertiary mt-4 italic">
         Past performance does not guarantee future results. Trading on prediction markets involves risk of loss.
       </p>
     </div>

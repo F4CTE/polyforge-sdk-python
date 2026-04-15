@@ -109,33 +109,33 @@ export function Component() {
     }
   }
 
-  const inputClass = 'w-full pl-10 pr-4 py-3 bg-pf-base border border-pf-border rounded-pf text-pf-text placeholder:text-pf-text-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 focus-visible:border-pf-cyan-500 transition-colors';
+  const inputClass = 'w-full pl-10 pr-4 py-3 bg-app border border-default rounded-pf text-primary placeholder:text-tertiary/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 focus-visible:border-accent transition-colors';
 
   return (
     <main
-      className="min-h-screen flex items-center justify-center p-4 py-8 relative bg-pf-base"
+      className="min-h-screen flex items-center justify-center p-4 py-8 relative bg-app"
     >
       <AuthBackground />
       <div className="w-full max-w-md relative z-10">
         {/* Logo centered above card */}
         <div className="text-center mb-8">
-          <div className="text-pf-cyan-500 inline-block">
+          <div className="text-accent inline-block">
             <svg width="64" height="64" viewBox="0 0 24 24" fill="none" aria-hidden="true">
               <path d="M12 2L20.66 7V17L12 22L3.34 17V7L12 2Z" stroke="currentColor" strokeWidth="1.2" fill="none" opacity="0.4"/>
               <path d="M13 5L7.5 13H11L10 19L16.5 11H13L13 5Z" fill="currentColor"/>
             </svg>
           </div>
-          <h1 className="text-2xl font-semibold mt-4 bg-gradient-to-r from-pf-cyan-400 to-pf-cyan-300 bg-clip-text text-transparent">
+          <h1 className="text-2xl font-semibold mt-4 bg-gradient-to-r from-accent-text to-accent-text bg-clip-text text-transparent">
             Create your account
           </h1>
-          <p className="text-pf-text-muted text-sm mt-1">Start trading on autopilot</p>
+          <p className="text-tertiary text-sm mt-1">Start trading on autopilot</p>
         </div>
 
         {/* Card */}
-        <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-8 shadow-pf-lg">
+        <div className="bg-elevated border border-default rounded-pf-lg p-8 shadow-pf-lg">
 
           {error && (
-            <div role="alert" className="flex items-center gap-2 bg-pf-danger/10 border border-pf-danger/20 text-pf-danger rounded-pf px-4 py-3 mb-4 text-sm">
+            <div role="alert" className="flex items-center gap-2 bg-loss/10 border border-loss/20 text-loss rounded-pf px-4 py-3 mb-4 text-sm">
               <AlertCircle className="size-4 shrink-0" />
               <span>{error}</span>
             </div>
@@ -144,9 +144,9 @@ export function Component() {
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Email */}
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-pf-text mb-2">Email</label>
+              <label htmlFor="email" className="block text-sm font-medium text-primary mb-2">Email</label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-pf-text-muted" />
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-tertiary" />
                 <Input
                   id="email"
                   type="email"
@@ -161,14 +161,14 @@ export function Component() {
                   className={inputClass}
                 />
               </div>
-              {fieldError('email') && <p id="register-email-error" role="alert" className="mt-1 text-xs text-pf-danger">{fieldError('email')}</p>}
+              {fieldError('email') && <p id="register-email-error" role="alert" className="mt-1 text-xs text-loss">{fieldError('email')}</p>}
             </div>
 
             {/* Username */}
             <div>
-              <label htmlFor="username" className="block text-sm font-medium text-pf-text mb-2">Username</label>
+              <label htmlFor="username" className="block text-sm font-medium text-primary mb-2">Username</label>
               <div className="relative">
-                <User className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-pf-text-muted" />
+                <User className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-tertiary" />
                 <Input
                   id="username"
                   type="text"
@@ -182,14 +182,14 @@ export function Component() {
                   className={inputClass}
                 />
               </div>
-              {fieldError('username') && <p id="register-username-error" role="alert" className="mt-1 text-xs text-pf-danger">{fieldError('username')}</p>}
+              {fieldError('username') && <p id="register-username-error" role="alert" className="mt-1 text-xs text-loss">{fieldError('username')}</p>}
             </div>
 
             {/* Password */}
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-pf-text mb-2">Password</label>
+              <label htmlFor="password" className="block text-sm font-medium text-primary mb-2">Password</label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-pf-text-muted" />
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-tertiary" />
                 <Input
                   id="password"
                   type={showPassword ? 'text' : 'password'}
@@ -202,26 +202,26 @@ export function Component() {
                   aria-describedby={fieldError('password') ? 'register-password-error' : 'register-password-requirements'}
                   className={inputClass}
                 />
-                <Button type="button" variant="ghost" size="icon-sm" onClick={() => setShowPassword(!showPassword)} aria-label={showPassword ? 'Hide password' : 'Show password'} className="absolute right-3 top-1/2 -translate-y-1/2 text-pf-text-muted hover:text-pf-text transition-colors">
+                <Button type="button" variant="ghost" size="icon-sm" onClick={() => setShowPassword(!showPassword)} aria-label={showPassword ? 'Hide password' : 'Show password'} className="absolute right-3 top-1/2 -translate-y-1/2 text-tertiary hover:text-primary transition-colors">
                   {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
                 </Button>
               </div>
-              {fieldError('password') && <p id="register-password-error" role="alert" className="mt-1 text-xs text-pf-danger">{fieldError('password')}</p>}
+              {fieldError('password') && <p id="register-password-error" role="alert" className="mt-1 text-xs text-loss">{fieldError('password')}</p>}
               {touched.password && password && (
                 <ul id="register-password-requirements" className="mt-2 text-xs space-y-1 list-disc list-inside" aria-label="Password requirements">
-                  <li className={password.length >= 8 ? 'text-pf-success' : 'text-pf-text-muted'}>Minimum 8 characters</li>
-                  <li className={/[A-Z]/.test(password) ? 'text-pf-success' : 'text-pf-text-muted'}>One uppercase letter</li>
-                  <li className={/[a-z]/.test(password) ? 'text-pf-success' : 'text-pf-text-muted'}>One lowercase letter</li>
-                  <li className={/\d/.test(password) ? 'text-pf-success' : 'text-pf-text-muted'}>One number</li>
+                  <li className={password.length >= 8 ? 'text-gain' : 'text-tertiary'}>Minimum 8 characters</li>
+                  <li className={/[A-Z]/.test(password) ? 'text-gain' : 'text-tertiary'}>One uppercase letter</li>
+                  <li className={/[a-z]/.test(password) ? 'text-gain' : 'text-tertiary'}>One lowercase letter</li>
+                  <li className={/\d/.test(password) ? 'text-gain' : 'text-tertiary'}>One number</li>
                 </ul>
               )}
             </div>
 
             {/* Confirm Password */}
             <div>
-              <label htmlFor="confirmPassword" className="block text-sm font-medium text-pf-text mb-2">Confirm password</label>
+              <label htmlFor="confirmPassword" className="block text-sm font-medium text-primary mb-2">Confirm password</label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-pf-text-muted" />
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-tertiary" />
                 <Input
                   id="confirmPassword"
                   type={showConfirmPassword ? 'text' : 'password'}
@@ -234,19 +234,19 @@ export function Component() {
                   aria-describedby={fieldError('confirmPassword') ? 'register-confirm-password-error' : undefined}
                   className={inputClass}
                 />
-                <Button type="button" variant="ghost" size="icon-sm" onClick={() => setShowConfirmPassword(!showConfirmPassword)} aria-label={showConfirmPassword ? 'Hide password' : 'Show password'} className="absolute right-3 top-1/2 -translate-y-1/2 text-pf-text-muted hover:text-pf-text transition-colors">
+                <Button type="button" variant="ghost" size="icon-sm" onClick={() => setShowConfirmPassword(!showConfirmPassword)} aria-label={showConfirmPassword ? 'Hide password' : 'Show password'} className="absolute right-3 top-1/2 -translate-y-1/2 text-tertiary hover:text-primary transition-colors">
                   {showConfirmPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
                 </Button>
               </div>
-              {fieldError('confirmPassword') && <p id="register-confirm-password-error" role="alert" className="mt-1 text-xs text-pf-danger">{fieldError('confirmPassword')}</p>}
+              {fieldError('confirmPassword') && <p id="register-confirm-password-error" role="alert" className="mt-1 text-xs text-loss">{fieldError('confirmPassword')}</p>}
             </div>
 
             {/* Invite Code */}
             {(showInvite || inviteCode) && (
               <div>
-                <label htmlFor="inviteCode" className="block text-sm font-medium text-pf-text mb-2">Invite code</label>
+                <label htmlFor="inviteCode" className="block text-sm font-medium text-primary mb-2">Invite code</label>
                 <div className="relative">
-                  <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-pf-text-muted" />
+                  <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-tertiary" />
                   <Input
                     id="inviteCode"
                     type="text"
@@ -268,25 +268,25 @@ export function Component() {
                 onChange={(e) => { setTosAccepted(e.target.checked); setTouched((t) => ({ ...t, tos: true })); }}
                 aria-invalid={!!fieldError('tos')}
                 aria-describedby={fieldError('tos') ? 'register-tos-error' : undefined}
-                className="mt-1 size-5 rounded border-pf-border bg-pf-base accent-pf-cyan-500 cursor-pointer"
+                className="mt-1 size-5 rounded border-default bg-app accent-accent cursor-pointer"
               />
-              <label htmlFor="tos" className="text-sm text-pf-text leading-relaxed cursor-pointer">
+              <label htmlFor="tos" className="text-sm text-primary leading-relaxed cursor-pointer">
                 I agree to the{' '}
-                <a href="/terms" target="_blank" rel="noopener noreferrer" className="text-pf-cyan-500 hover:text-pf-cyan-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 rounded-pf-sm transition-colors">
+                <a href="/terms" target="_blank" rel="noopener noreferrer" className="text-accent hover:text-accent-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 rounded-pf-sm transition-colors">
                   Terms of Service
                 </a>{' '}
                 and{' '}
-                <a href="/privacy" target="_blank" rel="noopener noreferrer" className="text-pf-cyan-500 hover:text-pf-cyan-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 rounded-pf-sm transition-colors">
+                <a href="/privacy" target="_blank" rel="noopener noreferrer" className="text-accent hover:text-accent-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 rounded-pf-sm transition-colors">
                   Privacy Policy
                 </a>
               </label>
             </div>
-            {fieldError('tos') && <p id="register-tos-error" role="alert" className="text-xs text-pf-danger -mt-2">{fieldError('tos')}</p>}
+            {fieldError('tos') && <p id="register-tos-error" role="alert" className="text-xs text-loss -mt-2">{fieldError('tos')}</p>}
 
             <Button
               type="submit"
               disabled={loading}
-              className="w-full py-3 bg-pf-cyan-500 text-pf-text-contrast font-semibold rounded-pf hover:bg-pf-cyan-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="w-full py-3 bg-accent text-inverse font-semibold rounded-pf hover:bg-accent-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               {loading ? 'Creating account...' : 'Create account'}
             </Button>
@@ -295,9 +295,9 @@ export function Component() {
         </div>
 
         {/* Links below card */}
-        <p className="text-center text-sm text-pf-text-muted mt-6">
+        <p className="text-center text-sm text-tertiary mt-6">
           Already have an account?{' '}
-          <Link to="/login" className="text-pf-cyan-400 hover:text-pf-cyan-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 rounded-pf-sm transition-colors">
+          <Link to="/login" className="text-accent-text hover:text-accent-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 rounded-pf-sm transition-colors">
             Sign in
           </Link>
         </p>

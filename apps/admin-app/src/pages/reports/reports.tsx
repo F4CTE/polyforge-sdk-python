@@ -65,7 +65,7 @@ function StarDisplay({ rating }: { rating: number }) {
       {Array.from({ length: 5 }).map((_, i) => (
         <span
           key={i}
-          className={i < rating ? 'text-pf-warning' : 'text-pf-text-muted'}
+          className={i < rating ? 'text-warning' : 'text-tertiary'}
           aria-hidden
         >
           {i < rating ? '★' : '☆'}
@@ -85,19 +85,19 @@ const STATUS_BADGE: Record<
 > = {
   pending: {
     label: 'Pending',
-    className: 'bg-pf-warning/15 text-pf-warning border border-pf-warning/30',
+    className: 'bg-warning/15 text-warning border border-warning/30',
   },
   approved: {
     label: 'Approved',
-    className: 'bg-pf-success/15 text-pf-success border border-pf-success/30',
+    className: 'bg-gain/15 text-gain border border-gain/30',
   },
   rejected: {
     label: 'Rejected',
-    className: 'bg-pf-border/20 text-pf-text-muted border border-pf-border',
+    className: 'bg-default/20 text-tertiary border border-default',
   },
   flagged: {
     label: 'Flagged',
-    className: 'bg-pf-danger/15 text-pf-danger border border-pf-danger/30',
+    className: 'bg-loss/15 text-loss border border-loss/30',
   },
 };
 
@@ -120,10 +120,10 @@ function StatusBadge({ status }: { status: ReviewStatus }) {
 // ---------------------------------------------------------------------------
 
 const CARD_BORDER: Record<ReviewStatus, string> = {
-  pending: 'border-pf-warning/30',
-  approved: 'border-pf-success/30',
-  rejected: 'border-pf-border opacity-60',
-  flagged: 'border-pf-danger/30',
+  pending: 'border-warning/30',
+  approved: 'border-gain/30',
+  rejected: 'border-default opacity-60',
+  flagged: 'border-loss/30',
 };
 
 // ---------------------------------------------------------------------------
@@ -186,7 +186,7 @@ function ReviewCard({ review, onAction }: ReviewCardProps) {
   return (
     <article
       className={[
-        'rounded-pf-lg border bg-pf-elevated p-5 space-y-3 transition-opacity',
+        'rounded-pf-lg border bg-elevated p-5 space-y-3 transition-opacity',
         CARD_BORDER[review.status],
         busy ? 'opacity-70 pointer-events-none' : '',
       ].join(' ')}
@@ -194,15 +194,15 @@ function ReviewCard({ review, onAction }: ReviewCardProps) {
       {/* Top row: rating, strategy, author, time */}
       <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
         <StarDisplay rating={review.rating} />
-        <span className="text-xs text-pf-text-muted">({review.rating}/5)</span>
-        <span className="text-sm font-medium text-pf-text">
+        <span className="text-xs text-tertiary">({review.rating}/5)</span>
+        <span className="text-sm font-medium text-primary">
           Strategy:{' '}
-          <span className="text-pf-cyan-400">&ldquo;{review.strategyName}&rdquo;</span>
+          <span className="text-accent-text">&ldquo;{review.strategyName}&rdquo;</span>
         </span>
-        <span className="text-xs text-pf-text-muted">
+        <span className="text-xs text-tertiary">
           @{review.authorUsername}
         </span>
-        <span className="ml-auto text-xs text-pf-text-muted tabular-nums">
+        <span className="ml-auto text-xs text-tertiary tabular-nums">
           {formatRelativeTime(review.createdAt)}
         </span>
       </div>
@@ -212,21 +212,21 @@ function ReviewCard({ review, onAction }: ReviewCardProps) {
         <StatusBadge status={review.status} />
 
         {review.verifiedPurchase && (
-          <span className="inline-flex items-center gap-1 rounded-pf-full border border-pf-success/30 bg-pf-success/10 px-2 py-1 text-xs font-medium text-pf-success">
+          <span className="inline-flex items-center gap-1 rounded-pf-full border border-gain/30 bg-gain/10 px-2 py-1 text-xs font-medium text-gain">
             <Check className="h-3 w-3" aria-hidden />
             Verified Purchase
           </span>
         )}
 
         {review.reportCount > 0 && (
-          <span className="inline-flex items-center gap-1 rounded-pf-full border border-pf-danger/30 bg-pf-danger/10 px-2 py-1 text-xs font-medium text-pf-danger">
+          <span className="inline-flex items-center gap-1 rounded-pf-full border border-loss/30 bg-loss/10 px-2 py-1 text-xs font-medium text-loss">
             <AlertTriangle className="h-3 w-3" aria-hidden />
             {review.reportCount} {review.reportCount === 1 ? 'report' : 'reports'}
           </span>
         )}
 
         {review.status === 'flagged' && review.flagReason && (
-          <span className="text-xs text-pf-text-muted italic">
+          <span className="text-xs text-tertiary italic">
             Reason: {review.flagReason}
           </span>
         )}
@@ -235,9 +235,9 @@ function ReviewCard({ review, onAction }: ReviewCardProps) {
       {/* Review content */}
       <div className="space-y-1">
         {review.title && (
-          <p className="text-sm font-semibold text-pf-text">&ldquo;{review.title}&rdquo;</p>
+          <p className="text-sm font-semibold text-primary">&ldquo;{review.title}&rdquo;</p>
         )}
-        <p className="text-sm text-pf-text-secondary leading-relaxed">{review.body}</p>
+        <p className="text-sm text-secondary leading-relaxed">{review.body}</p>
       </div>
 
       {/* Action buttons */}
@@ -250,8 +250,8 @@ function ReviewCard({ review, onAction }: ReviewCardProps) {
           className={[
             'inline-flex items-center gap-2 rounded-pf-sm border px-3 py-2 text-xs font-medium transition-colors',
             review.status === 'approved'
-              ? 'border-pf-success/40 bg-pf-success/10 text-pf-success'
-              : 'border-pf-border bg-pf-surface text-pf-text-secondary hover:border-pf-success/40 hover:text-pf-success',
+              ? 'border-gain/40 bg-gain/10 text-gain'
+              : 'border-default bg-surface text-secondary hover:border-gain/40 hover:text-gain',
           ].join(' ')}
           aria-pressed={review.status === 'approved'}
         >
@@ -267,8 +267,8 @@ function ReviewCard({ review, onAction }: ReviewCardProps) {
           className={[
             'inline-flex items-center gap-2 rounded-pf-sm border px-3 py-2 text-xs font-medium transition-colors',
             review.status === 'rejected'
-              ? 'border-pf-border/60 bg-pf-border/10 text-pf-text-muted'
-              : 'border-pf-border bg-pf-surface text-pf-text-secondary hover:border-pf-danger/40 hover:text-pf-danger',
+              ? 'border-default/60 bg-default/10 text-tertiary'
+              : 'border-default bg-surface text-secondary hover:border-loss/40 hover:text-loss',
           ].join(' ')}
           aria-pressed={review.status === 'rejected'}
         >
@@ -284,8 +284,8 @@ function ReviewCard({ review, onAction }: ReviewCardProps) {
           className={[
             'inline-flex items-center gap-2 rounded-pf-sm border px-3 py-2 text-xs font-medium transition-colors',
             review.status === 'flagged' || flagging
-              ? 'border-pf-danger/40 bg-pf-danger/10 text-pf-danger'
-              : 'border-pf-border bg-pf-surface text-pf-text-secondary hover:border-pf-danger/40 hover:text-pf-danger',
+              ? 'border-loss/40 bg-loss/10 text-loss'
+              : 'border-default bg-surface text-secondary hover:border-loss/40 hover:text-loss',
           ].join(' ')}
           aria-pressed={flagging}
           aria-expanded={flagging}
@@ -299,9 +299,9 @@ function ReviewCard({ review, onAction }: ReviewCardProps) {
           target="_blank"
           rel="noopener noreferrer"
           className={[
-            'ml-auto inline-flex items-center gap-2 rounded-pf-sm border border-pf-border px-3 py-2 text-xs font-medium text-pf-text-secondary',
-            'hover:text-pf-cyan-400 hover:border-pf-cyan-400/40 transition-colors',
-            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40',
+            'ml-auto inline-flex items-center gap-2 rounded-pf-sm border border-default px-3 py-2 text-xs font-medium text-secondary',
+            'hover:text-accent-text hover:border-accent-text/40 transition-colors',
+            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40',
           ].join(' ')}
         >
           <ExternalLink className="h-4 w-4" aria-hidden />
@@ -311,10 +311,10 @@ function ReviewCard({ review, onAction }: ReviewCardProps) {
 
       {/* Inline flag reason textarea */}
       {flagging && (
-        <div className="space-y-2 rounded-pf-sm border border-pf-danger/30 bg-pf-danger/5 p-3">
+        <div className="space-y-2 rounded-pf-sm border border-loss/30 bg-loss/5 p-3">
           <label
             htmlFor={`flag-reason-${review.id}`}
-            className="block text-xs font-medium text-pf-danger"
+            className="block text-xs font-medium text-loss"
           >
             Flag reason <span aria-hidden>*</span>
           </label>
@@ -326,9 +326,9 @@ function ReviewCard({ review, onAction }: ReviewCardProps) {
             rows={3}
             placeholder="Describe the policy violation or reason for flagging…"
             className={[
-              'w-full resize-y rounded-pf-sm border border-pf-border bg-pf-surface px-3 py-2',
-              'text-xs text-pf-text placeholder:text-pf-text-muted',
-              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40',
+              'w-full resize-y rounded-pf-sm border border-default bg-surface px-3 py-2',
+              'text-xs text-primary placeholder:text-tertiary',
+              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40',
             ].join(' ')}
           />
           <div className="flex items-center gap-2 justify-end">
@@ -336,7 +336,7 @@ function ReviewCard({ review, onAction }: ReviewCardProps) {
               type="button"
               variant="secondary"
               onClick={() => { setFlagging(false); setFlagReason(''); }}
-              className="rounded-pf-sm border border-pf-border px-3 py-2 text-xs font-medium text-pf-text-secondary hover:border-pf-border-strong transition-colors"
+              className="rounded-pf-sm border border-default px-3 py-2 text-xs font-medium text-secondary hover:border-strong transition-colors"
             >
               Cancel
             </Button>
@@ -349,7 +349,7 @@ function ReviewCard({ review, onAction }: ReviewCardProps) {
                 'inline-flex items-center gap-2 px-3 py-2 text-xs font-semibold transition-all',
                 flagReason.trim()
                   ? ''
-                  : 'bg-pf-elevated border border-pf-border text-pf-text-muted cursor-not-allowed opacity-50',
+                  : 'bg-elevated border border-default text-tertiary cursor-not-allowed opacity-50',
               ].join(' ')}
             >
               <Flag className="h-3 w-3" aria-hidden />
@@ -368,26 +368,26 @@ function ReviewCard({ review, onAction }: ReviewCardProps) {
 
 function ReviewCardSkeleton() {
   return (
-    <div className="rounded-pf-lg border border-pf-border bg-pf-elevated p-5 space-y-3 animate-shimmer">
+    <div className="rounded-pf-lg border border-default bg-elevated p-5 space-y-3 animate-shimmer">
       <div className="flex items-center gap-3">
-        <div className="h-4 w-24 rounded-pf-sm bg-pf-border" />
-        <div className="h-4 w-40 rounded-pf-sm bg-pf-border" />
-        <div className="ml-auto h-3 w-16 rounded-pf-sm bg-pf-border" />
+        <div className="h-4 w-24 rounded-pf-sm bg-default" />
+        <div className="h-4 w-40 rounded-pf-sm bg-default" />
+        <div className="ml-auto h-3 w-16 rounded-pf-sm bg-default" />
       </div>
       <div className="flex gap-2">
-        <div className="h-5 w-16 rounded-pf-full bg-pf-border" />
-        <div className="h-5 w-24 rounded-pf-full bg-pf-border" />
+        <div className="h-5 w-16 rounded-pf-full bg-default" />
+        <div className="h-5 w-24 rounded-pf-full bg-default" />
       </div>
       <div className="space-y-2">
-        <div className="h-4 w-3/4 rounded-pf-sm bg-pf-border" />
-        <div className="h-3 w-full rounded-pf-sm bg-pf-border" />
-        <div className="h-3 w-5/6 rounded-pf-sm bg-pf-border" />
+        <div className="h-4 w-3/4 rounded-pf-sm bg-default" />
+        <div className="h-3 w-full rounded-pf-sm bg-default" />
+        <div className="h-3 w-5/6 rounded-pf-sm bg-default" />
       </div>
       <div className="flex gap-2 pt-1">
-        <div className="h-7 w-20 rounded-pf-sm bg-pf-border" />
-        <div className="h-7 w-20 rounded-pf-sm bg-pf-border" />
-        <div className="h-7 w-16 rounded-pf-sm bg-pf-border" />
-        <div className="ml-auto h-7 w-28 rounded-pf-sm bg-pf-border" />
+        <div className="h-7 w-20 rounded-pf-sm bg-default" />
+        <div className="h-7 w-20 rounded-pf-sm bg-default" />
+        <div className="h-7 w-16 rounded-pf-sm bg-default" />
+        <div className="ml-auto h-7 w-28 rounded-pf-sm bg-default" />
       </div>
     </div>
   );
@@ -413,14 +413,14 @@ interface StatTileProps {
 
 function StatTile({ label, value, accent, danger }: StatTileProps) {
   const valueClass = danger
-    ? 'text-pf-danger'
+    ? 'text-loss'
     : accent
-      ? 'text-pf-warning'
-      : 'text-pf-text';
+      ? 'text-warning'
+      : 'text-primary';
 
   return (
-    <div className="rounded-pf-lg border border-pf-border bg-pf-elevated px-4 py-3 space-y-1">
-      <p className="text-pf-label font-semibold uppercase tracking-wider text-pf-text-muted">
+    <div className="rounded-pf-lg border border-default bg-elevated px-4 py-3 space-y-1">
+      <p className="text-pf-label font-semibold uppercase tracking-wider text-tertiary">
         {label}
       </p>
       <p className={['text-2xl font-bold tabular-nums', valueClass].join(' ')}>{value}</p>
@@ -434,12 +434,12 @@ function StatTile({ label, value, accent, danger }: StatTileProps) {
 
 function EmptyState({ status }: { status: ReviewStatus }) {
   return (
-    <div className="flex flex-col items-center justify-center gap-3 rounded-pf-lg border border-pf-border bg-pf-elevated py-16 text-center">
-      <MessageSquare className="h-10 w-10 text-pf-text-muted" aria-hidden />
-      <p className="text-sm font-medium text-pf-text-secondary">
+    <div className="flex flex-col items-center justify-center gap-3 rounded-pf-lg border border-default bg-elevated py-16 text-center">
+      <MessageSquare className="h-10 w-10 text-tertiary" aria-hidden />
+      <p className="text-sm font-medium text-secondary">
         No {status} reviews
       </p>
-      <p className="text-xs text-pf-text-muted max-w-xs">
+      <p className="text-xs text-tertiary max-w-xs">
         {status === 'pending'
           ? 'All reviews have been moderated.'
           : `There are currently no ${status} reviews to display.`}
@@ -613,8 +613,8 @@ function ReviewsTab() {
               className={[
                 'rounded-pf-sm px-3 py-2 text-xs font-medium transition-colors',
                 status === tab.value
-                  ? 'bg-pf-elevated border border-pf-border text-pf-text'
-                  : 'text-pf-text-secondary hover:text-pf-text hover:bg-pf-elevated/50',
+                  ? 'bg-elevated border border-default text-primary'
+                  : 'text-secondary hover:text-primary hover:bg-elevated/50',
               ].join(' ')}
             >
               {tab.label}
@@ -630,8 +630,8 @@ function ReviewsTab() {
             onChange={(e) => setMinReports(Number(e.target.value) as MinReports)}
             aria-label="Minimum report count filter"
             className={[
-              'rounded-pf-sm border border-pf-border bg-pf-surface px-3 py-2 text-xs text-pf-text',
-              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40',
+              'rounded-pf-sm border border-default bg-surface px-3 py-2 text-xs text-primary',
+              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40',
             ].join(' ')}
           >
             {MIN_REPORTS_OPTIONS.map((opt) => (
@@ -644,7 +644,7 @@ function ReviewsTab() {
           {/* Search */}
           <div className="relative flex-1 min-w-pf-input-min-sm max-w-xs">
             <Search
-              className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-pf-text-muted"
+              className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-tertiary"
               aria-hidden
             />
             <Input
@@ -654,15 +654,15 @@ function ReviewsTab() {
               placeholder="Search strategy or author…"
               aria-label="Search reviews by strategy name or author"
               className={[
-                'w-full rounded-pf-sm border border-pf-border bg-pf-surface py-2 pl-8 pr-3 text-xs text-pf-text',
-                'placeholder:text-pf-text-muted',
-                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40',
+                'w-full rounded-pf-sm border border-default bg-surface py-2 pl-8 pr-3 text-xs text-primary',
+                'placeholder:text-tertiary',
+                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40',
               ].join(' ')}
             />
           </div>
 
           {total > 0 && (
-            <span className="ml-auto text-xs text-pf-text-muted tabular-nums">
+            <span className="ml-auto text-xs text-tertiary tabular-nums">
               {total} result{total !== 1 ? 's' : ''}
             </span>
           )}
@@ -694,8 +694,8 @@ function ReviewsTab() {
             className={[
               'rounded-pf px-5 py-2 text-sm font-medium transition-all',
               loadingMore
-                ? 'bg-pf-elevated border border-pf-border text-pf-text-muted cursor-not-allowed'
-                : 'bg-pf-elevated border border-pf-border text-pf-text-secondary hover:text-pf-text hover:border-pf-border-strong',
+                ? 'bg-elevated border border-default text-tertiary cursor-not-allowed'
+                : 'bg-elevated border border-default text-secondary hover:text-primary hover:border-strong',
             ].join(' ')}
           >
             {loadingMore ? 'Loading…' : `Load more (${total - reviews.length} remaining)`}
@@ -734,19 +734,19 @@ export function Component() {
   const [activeTab, setActiveTab] = useState<TabId>('reviews');
 
   return (
-    <div className="min-h-screen bg-pf-surface animate-fade-in">
+    <div className="min-h-screen bg-surface animate-fade-in">
       <div className="mx-auto max-w-4xl px-4 py-8 space-y-6">
 
         {/* Page header */}
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-pf-lg bg-pf-elevated border border-pf-border">
-            <MessageSquare className="h-5 w-5 text-pf-cyan-400" aria-hidden />
+          <div className="flex h-10 w-10 items-center justify-center rounded-pf-lg bg-elevated border border-default">
+            <MessageSquare className="h-5 w-5 text-accent-text" aria-hidden />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-pf-text leading-tight">
+            <h1 className="text-xl font-bold text-primary leading-tight">
               Content Moderation
             </h1>
-            <p className="text-xs text-pf-text-muted mt-1">
+            <p className="text-xs text-tertiary mt-1">
               Moderate strategy marketplace reviews and ratings
             </p>
           </div>
@@ -756,7 +756,7 @@ export function Component() {
         <div
           role="tablist"
           aria-label="Moderation sections"
-          className="flex gap-1 border-b border-pf-border"
+          className="flex gap-1 border-b border-default"
         >
           {TABS.map((tab) => (
             <Button
@@ -771,8 +771,8 @@ export function Component() {
               className={[
                 'inline-flex items-center gap-2 px-4 py-3 text-sm font-medium transition-colors -mb-px border-b-2 rounded-t-pf-sm',
                 activeTab === tab.id
-                  ? 'border-pf-cyan-400 text-pf-text'
-                  : 'border-transparent text-pf-text-secondary hover:text-pf-text hover:border-pf-border',
+                  ? 'border-accent-text text-primary'
+                  : 'border-transparent text-secondary hover:text-primary hover:border-default',
               ].join(' ')}
             >
               {tab.icon}

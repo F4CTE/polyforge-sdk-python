@@ -8,7 +8,7 @@ type CalcNode = Node<CalcNodeData, 'calcNode'>;
 
 // ─── Type-specific config ───────────────────────────────────────────────────
 
-const CALC_COLOR = 'var(--color-pf-success)';
+const CALC_COLOR = 'var(--gain)';
 
 const CALC_ICONS: Record<string, React.ReactNode> = {
   MATH: <Calculator className="size-3" />,
@@ -178,7 +178,7 @@ function CalcNodeInner({ id, data }: NodeProps<CalcNode>) {
           type="target"
           position={Position.Left}
           id="input"
-          className="!w-3 !h-3 !bg-pf-elevated !border-2 !rounded-pf-full builder-handle"
+          className="!w-3 !h-3 !bg-elevated !border-2 !rounded-pf-full builder-handle"
           style={{ '--node-color': CALC_COLOR } as React.CSSProperties}
         />
       )}
@@ -188,14 +188,14 @@ function CalcNodeInner({ id, data }: NodeProps<CalcNode>) {
             type="target"
             position={Position.Left}
             id="input-a"
-            className="!w-3 !h-3 !bg-pf-elevated !border-2 !rounded-pf-full builder-handle builder-handle--top"
+            className="!w-3 !h-3 !bg-elevated !border-2 !rounded-pf-full builder-handle builder-handle--top"
             style={{ '--node-color': CALC_COLOR } as React.CSSProperties}
           />
           <Handle
             type="target"
             position={Position.Left}
             id="input-b"
-            className="!w-3 !h-3 !bg-pf-elevated !border-2 !rounded-pf-full builder-handle builder-handle--bottom"
+            className="!w-3 !h-3 !bg-elevated !border-2 !rounded-pf-full builder-handle builder-handle--bottom"
             style={{ '--node-color': CALC_COLOR } as React.CSSProperties}
           />
         </>
@@ -216,7 +216,7 @@ function CalcNodeInner({ id, data }: NodeProps<CalcNode>) {
           <button
             type="button"
             onClick={onDelete}
-            className="p-1 rounded hover:bg-pf-text/20 active:bg-pf-text/30 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-text/50"
+            className="p-1 rounded hover:bg-primary/20 active:bg-primary/30 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
             aria-label="Remove block"
             title="Remove block"
           >
@@ -228,7 +228,7 @@ function CalcNodeInner({ id, data }: NodeProps<CalcNode>) {
         <div className="px-3 py-2 space-y-2">
           {dropdownOptions && (
             <div>
-              <label htmlFor={`${id}-${dropdownOptions.key}`} className="block text-pf-caption font-medium text-pf-text-muted mb-1 uppercase tracking-wider">
+              <label htmlFor={`${id}-${dropdownOptions.key}`} className="block text-pf-caption font-medium text-tertiary mb-1 uppercase tracking-wider">
                 {d.type === 'MATH' ? 'Operation' : d.type === 'COMPARISON' ? 'Operator' : 'Function'}
               </label>
               <select
@@ -236,7 +236,7 @@ function CalcNodeInner({ id, data }: NodeProps<CalcNode>) {
                 value={d.config[dropdownOptions.key] ?? dropdownOptions.options[0]?.value ?? ''}
                 onChange={(e) => onFieldChange(dropdownOptions.key, e.target.value)}
                 aria-label={d.type === 'MATH' ? 'Operation' : d.type === 'COMPARISON' ? 'Operator' : 'Function'}
-                className="w-full px-2 py-1 text-xs bg-pf-surface border border-pf-border-subtle rounded-pf-sm text-pf-text focus-visible:outline-none focus-visible:border-pf-success/50 transition-colors"
+                className="w-full px-2 py-1 text-xs bg-surface border border-subtle rounded-pf-sm text-primary focus-visible:outline-none focus-visible:border-gain/50 transition-colors"
               >
                 {dropdownOptions.options.map((opt) => (
                   <option key={opt.value} value={opt.value}>
@@ -250,7 +250,7 @@ function CalcNodeInner({ id, data }: NodeProps<CalcNode>) {
           {/* Window size for aggregation */}
           {showWindowField && (
             <div>
-              <label htmlFor={`${id}-windowSize`} className="block text-pf-caption font-medium text-pf-text-muted mb-1 uppercase tracking-wider">
+              <label htmlFor={`${id}-windowSize`} className="block text-pf-caption font-medium text-tertiary mb-1 uppercase tracking-wider">
                 Window (N ticks)
               </label>
               <input
@@ -260,7 +260,7 @@ function CalcNodeInner({ id, data }: NodeProps<CalcNode>) {
                 value={d.config.windowSize ?? ''}
                 onChange={(e) => onFieldChange('windowSize', e.target.value)}
                 aria-label="Window size"
-                className="w-full px-2 py-1 text-xs bg-pf-surface border border-pf-border-subtle rounded-pf-sm text-pf-text placeholder:text-pf-text-muted/50 focus-visible:outline-none focus-visible:border-pf-success/50 transition-colors"
+                className="w-full px-2 py-1 text-xs bg-surface border border-subtle rounded-pf-sm text-primary placeholder:text-tertiary/50 focus-visible:outline-none focus-visible:border-gain/50 transition-colors"
               />
             </div>
           )}
@@ -269,7 +269,7 @@ function CalcNodeInner({ id, data }: NodeProps<CalcNode>) {
           {showBetweenFields && (
             <>
               <div>
-                <label htmlFor={`${id}-min`} className="block text-pf-caption font-medium text-pf-text-muted mb-1 uppercase tracking-wider">
+                <label htmlFor={`${id}-min`} className="block text-pf-caption font-medium text-tertiary mb-1 uppercase tracking-wider">
                   Min
                 </label>
                 <input
@@ -279,11 +279,11 @@ function CalcNodeInner({ id, data }: NodeProps<CalcNode>) {
                   value={d.config.min ?? ''}
                   onChange={(e) => onFieldChange('min', e.target.value)}
                   aria-label="Minimum value"
-                  className="w-full px-2 py-1 text-xs bg-pf-surface border border-pf-border-subtle rounded-pf-sm text-pf-text placeholder:text-pf-text-muted/50 focus-visible:outline-none focus-visible:border-pf-success/50 transition-colors"
+                  className="w-full px-2 py-1 text-xs bg-surface border border-subtle rounded-pf-sm text-primary placeholder:text-tertiary/50 focus-visible:outline-none focus-visible:border-gain/50 transition-colors"
                 />
               </div>
               <div>
-                <label htmlFor={`${id}-max`} className="block text-pf-caption font-medium text-pf-text-muted mb-1 uppercase tracking-wider">
+                <label htmlFor={`${id}-max`} className="block text-pf-caption font-medium text-tertiary mb-1 uppercase tracking-wider">
                   Max
                 </label>
                 <input
@@ -293,7 +293,7 @@ function CalcNodeInner({ id, data }: NodeProps<CalcNode>) {
                   value={d.config.max ?? ''}
                   onChange={(e) => onFieldChange('max', e.target.value)}
                   aria-label="Maximum value"
-                  className="w-full px-2 py-1 text-xs bg-pf-surface border border-pf-border-subtle rounded-pf-sm text-pf-text placeholder:text-pf-text-muted/50 focus-visible:outline-none focus-visible:border-pf-success/50 transition-colors"
+                  className="w-full px-2 py-1 text-xs bg-surface border border-subtle rounded-pf-sm text-primary placeholder:text-tertiary/50 focus-visible:outline-none focus-visible:border-gain/50 transition-colors"
                 />
               </div>
             </>
@@ -302,7 +302,7 @@ function CalcNodeInner({ id, data }: NodeProps<CalcNode>) {
           {/* Decimals field for abs/round */}
           {showDecimalsField && (
             <div>
-              <label htmlFor={`${id}-decimals`} className="block text-pf-caption font-medium text-pf-text-muted mb-1 uppercase tracking-wider">
+              <label htmlFor={`${id}-decimals`} className="block text-pf-caption font-medium text-tertiary mb-1 uppercase tracking-wider">
                 Decimals
               </label>
               <input
@@ -312,19 +312,19 @@ function CalcNodeInner({ id, data }: NodeProps<CalcNode>) {
                 value={d.config.decimals ?? ''}
                 onChange={(e) => onFieldChange('decimals', e.target.value)}
                 aria-label="Decimal places"
-                className="w-full px-2 py-1 text-xs bg-pf-surface border border-pf-border-subtle rounded-pf-sm text-pf-text placeholder:text-pf-text-muted/50 focus-visible:outline-none focus-visible:border-pf-success/50 transition-colors"
+                className="w-full px-2 py-1 text-xs bg-surface border border-subtle rounded-pf-sm text-primary placeholder:text-tertiary/50 focus-visible:outline-none focus-visible:border-gain/50 transition-colors"
               />
             </div>
           )}
 
           {/* Input handle labels */}
           {inputCount === 2 && (
-            <div className="flex items-center gap-2 text-pf-caption text-pf-text-muted">
-              <span className="px-2 py-1 rounded-pf-full bg-pf-success/20 text-pf-success font-medium">
+            <div className="flex items-center gap-2 text-pf-caption text-tertiary">
+              <span className="px-2 py-1 rounded-pf-full bg-gain/20 text-gain font-medium">
                 A
               </span>
               <span>/</span>
-              <span className="px-2 py-1 rounded-pf-full bg-pf-success/20 text-pf-success font-medium">
+              <span className="px-2 py-1 rounded-pf-full bg-gain/20 text-gain font-medium">
                 B
               </span>
             </div>
@@ -337,7 +337,7 @@ function CalcNodeInner({ id, data }: NodeProps<CalcNode>) {
         type="source"
         position={Position.Right}
         id="output"
-        className="!w-3 !h-3 !bg-pf-elevated !border-2 !rounded-pf-full builder-handle"
+        className="!w-3 !h-3 !bg-elevated !border-2 !rounded-pf-full builder-handle"
         style={{ '--node-color': CALC_COLOR } as React.CSSProperties}
       />
     </>

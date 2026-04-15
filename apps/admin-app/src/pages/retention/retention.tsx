@@ -44,12 +44,12 @@ interface CohortRow {
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function retentionColor(pct: number): string {
-  if (pct >= 80) return 'bg-pf-success text-pf-text';
-  if (pct >= 60) return 'bg-pf-success/60 text-pf-success';
-  if (pct >= 40) return 'bg-pf-success/30 text-pf-text';
-  if (pct >= 20) return 'bg-pf-warning/30 text-pf-text';
-  if (pct > 0) return 'bg-pf-danger/20 text-pf-text-muted';
-  return 'bg-pf-overlay text-pf-text-muted';
+  if (pct >= 80) return 'bg-gain text-primary';
+  if (pct >= 60) return 'bg-gain/60 text-gain';
+  if (pct >= 40) return 'bg-gain/30 text-primary';
+  if (pct >= 20) return 'bg-warning/30 text-primary';
+  if (pct > 0) return 'bg-loss/20 text-tertiary';
+  return 'bg-overlay text-tertiary';
 }
 
 function formatDate(dateStr: string): string {
@@ -69,29 +69,29 @@ function fmtPct(n: number): string {
 
 function CardSkeleton() {
   return (
-    <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4 animate-pulse">
-      <div className="h-3 bg-pf-base rounded w-24 mb-3" />
-      <div className="h-7 bg-pf-base rounded w-16" />
+    <div className="bg-elevated border border-default rounded-pf-lg p-4 animate-pulse">
+      <div className="h-3 bg-app rounded w-24 mb-3" />
+      <div className="h-7 bg-app rounded w-16" />
     </div>
   );
 }
 
 function ChartSkeleton() {
   return (
-    <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-5 animate-pulse">
-      <div className="h-4 bg-pf-base rounded w-32 mb-4" />
-      <div className="h-pf-chart-sm bg-pf-base rounded" />
+    <div className="bg-elevated border border-default rounded-pf-lg p-5 animate-pulse">
+      <div className="h-4 bg-app rounded w-32 mb-4" />
+      <div className="h-pf-chart-sm bg-app rounded" />
     </div>
   );
 }
 
 function TableSkeleton() {
   return (
-    <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-5 animate-pulse">
-      <div className="h-4 bg-pf-base rounded w-40 mb-4" />
+    <div className="bg-elevated border border-default rounded-pf-lg p-5 animate-pulse">
+      <div className="h-4 bg-app rounded w-40 mb-4" />
       <div className="space-y-2">
         {[1, 2, 3, 4].map((i) => (
-          <div key={i} className="h-9 bg-pf-base rounded" />
+          <div key={i} className="h-9 bg-app rounded" />
         ))}
       </div>
     </div>
@@ -114,21 +114,21 @@ interface CustomTooltipProps {
 
 // Map series names back to design token classes (Recharts resolves CSS vars to hex)
 const SERIES_BG_CLASS: Record<string, string> = {
-  'New Users': 'bg-pf-cyan-500',
+  'New Users': 'bg-accent',
   'Returning Users': 'bg-pf-purple-500',
-  'DAU': 'bg-pf-warning',
+  'DAU': 'bg-warning',
 };
 
 function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
   if (!active || !payload?.length) return null;
   return (
-    <div className="bg-pf-elevated border border-pf-border rounded-pf-sm p-3 text-xs shadow-pf-lg">
-      <p className="font-semibold text-pf-text mb-2">{label}</p>
+    <div className="bg-elevated border border-default rounded-pf-sm p-3 text-xs shadow-pf-lg">
+      <p className="font-semibold text-primary mb-2">{label}</p>
       {payload.map((entry) => (
         <div key={entry.name} className="flex items-center gap-2 mb-1">
-          <span className={`w-2 h-2 rounded-pf-full shrink-0 ${SERIES_BG_CLASS[entry.name] ?? 'bg-pf-text-muted'}`} />
-          <span className="text-pf-text-secondary">{entry.name}:</span>
-          <span className="text-pf-text font-medium">{fmt(entry.value)}</span>
+          <span className={`w-2 h-2 rounded-pf-full shrink-0 ${SERIES_BG_CLASS[entry.name] ?? 'bg-tertiary'}`} />
+          <span className="text-secondary">{entry.name}:</span>
+          <span className="text-primary font-medium">{fmt(entry.value)}</span>
         </div>
       ))}
     </div>
@@ -228,15 +228,15 @@ export function Component() {
   // ── DAU/WAU ratio color ───────────────────────────────────────────────────────
 
   function dauWauColor(ratio: number): string {
-    if (ratio > 0.3) return 'text-pf-success';
-    if (ratio >= 0.2) return 'text-pf-warning';
-    return 'text-pf-danger';
+    if (ratio > 0.3) return 'text-gain';
+    if (ratio >= 0.2) return 'text-warning';
+    return 'text-loss';
   }
 
   function churnColor(rate: number): string {
-    if (rate > 0.05) return 'text-pf-danger';
-    if (rate >= 0.02) return 'text-pf-warning';
-    return 'text-pf-success';
+    if (rate > 0.05) return 'text-loss';
+    if (rate >= 0.02) return 'text-warning';
+    return 'text-gain';
   }
 
   // ── Stat cards definition ─────────────────────────────────────────────────────
@@ -245,8 +245,8 @@ export function Component() {
     {
       label: 'DAU',
       value: fmt(overview?.dau ?? 0),
-      color: 'text-pf-info',
-      bg: 'bg-pf-info/10',
+      color: 'text-info',
+      bg: 'bg-info/10',
     },
     {
       label: 'WAU',
@@ -257,8 +257,8 @@ export function Component() {
     {
       label: 'MAU',
       value: fmt(overview?.mau ?? 0),
-      color: 'text-pf-cyan-500',
-      bg: 'bg-pf-cyan-500/10',
+      color: 'text-accent',
+      bg: 'bg-accent/10',
     },
   ];
 
@@ -266,23 +266,23 @@ export function Component() {
     {
       label: 'DAU/WAU Ratio',
       value: overview ? fmtPct(overview.dauWauRatio) : '—',
-      color: overview ? dauWauColor(overview.dauWauRatio) : 'text-pf-text',
-      bg: 'bg-pf-base',
-      valueClass: overview ? dauWauColor(overview.dauWauRatio) : 'text-pf-text',
+      color: overview ? dauWauColor(overview.dauWauRatio) : 'text-primary',
+      bg: 'bg-app',
+      valueClass: overview ? dauWauColor(overview.dauWauRatio) : 'text-primary',
     },
     {
       label: 'New Users (7d)',
       value: fmt(overview?.newUsersWeek ?? 0),
-      color: 'text-pf-success',
-      bg: 'bg-pf-success/10',
+      color: 'text-gain',
+      bg: 'bg-gain/10',
       valueClass: undefined,
     },
     {
       label: 'Churn Rate (30d)',
       value: overview ? fmtPct(overview.churnRate) : '—',
-      color: overview ? churnColor(overview.churnRate) : 'text-pf-text',
-      bg: 'bg-pf-base',
-      valueClass: overview ? churnColor(overview.churnRate) : 'text-pf-text',
+      color: overview ? churnColor(overview.churnRate) : 'text-primary',
+      bg: 'bg-app',
+      valueClass: overview ? churnColor(overview.churnRate) : 'text-primary',
     },
   ];
 
@@ -294,19 +294,19 @@ export function Component() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="p-2 rounded-pf-sm bg-pf-cyan-500/10">
-            <Users size={20} className="text-pf-cyan-500" aria-hidden="true" />
+          <div className="p-2 rounded-pf-sm bg-accent/10">
+            <Users size={20} className="text-accent" aria-hidden="true" />
           </div>
           <div>
-            <h1 className="text-lg font-semibold text-pf-text">User Retention</h1>
-            <p className="text-xs text-pf-text-tertiary">DAU, WAU, MAU and cohort analysis</p>
+            <h1 className="text-lg font-semibold text-primary">User Retention</h1>
+            <p className="text-xs text-tertiary">DAU, WAU, MAU and cohort analysis</p>
           </div>
         </div>
         <Button
           type="button"
           variant="ghost"
           onClick={handleRefresh}
-          className="flex items-center gap-2 px-3 py-2 rounded-pf-sm border border-pf-border text-sm text-pf-text-secondary hover:text-pf-text hover:bg-pf-elevated transition-colors"
+          className="flex items-center gap-2 px-3 py-2 rounded-pf-sm border border-default text-sm text-secondary hover:text-primary hover:bg-elevated transition-colors"
           aria-label="Refresh retention data"
         >
           <RefreshCw size={14} aria-hidden="true" />
@@ -325,13 +325,13 @@ export function Component() {
           </div>
         </div>
       ) : overviewError ? (
-        <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-6 text-center">
-          <p className="text-sm text-pf-text-secondary">Overview data unavailable</p>
+        <div className="bg-elevated border border-default rounded-pf-lg p-6 text-center">
+          <p className="text-sm text-secondary">Overview data unavailable</p>
           <Button
             type="button"
             variant="ghost"
             onClick={loadOverviewAndCohorts}
-            className="text-pf-cyan-400 hover:text-pf-cyan-300 text-xs mt-2"
+            className="text-accent-text hover:text-accent-text text-xs mt-2"
           >
             Retry
           </Button>
@@ -341,28 +341,28 @@ export function Component() {
           {/* Row 1: DAU | WAU | MAU */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 stagger-children">
             {row1.map((card) => (
-              <div key={card.label} className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4">
+              <div key={card.label} className="bg-elevated border border-default rounded-pf-lg p-4">
                 <div className="flex items-center justify-between mb-3">
-                  <span className="text-xs font-medium text-pf-text-secondary">{card.label}</span>
+                  <span className="text-xs font-medium text-secondary">{card.label}</span>
                   <div className={`p-2 rounded-pf-sm ${card.bg}`}>
                     <TrendingUp size={16} className={card.color} aria-hidden="true" />
                   </div>
                 </div>
-                <div className="text-2xl font-bold text-pf-text">{card.value}</div>
+                <div className="text-2xl font-bold text-primary">{card.value}</div>
               </div>
             ))}
           </div>
           {/* Row 2: DAU/WAU Ratio | New Users (7d) | Churn Rate */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 stagger-children">
             {row2.map((card) => (
-              <div key={card.label} className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4">
+              <div key={card.label} className="bg-elevated border border-default rounded-pf-lg p-4">
                 <div className="flex items-center justify-between mb-3">
-                  <span className="text-xs font-medium text-pf-text-secondary">{card.label}</span>
+                  <span className="text-xs font-medium text-secondary">{card.label}</span>
                   <div className={`p-2 rounded-pf-sm ${card.bg}`}>
                     <TrendingUp size={16} className={card.color} aria-hidden="true" />
                   </div>
                 </div>
-                <div className={`text-2xl font-bold ${card.valueClass ?? 'text-pf-text'}`}>
+                <div className={`text-2xl font-bold ${card.valueClass ?? 'text-primary'}`}>
                   {card.value}
                 </div>
               </div>
@@ -375,29 +375,29 @@ export function Component() {
       {loadingTrend ? (
         <ChartSkeleton />
       ) : trendError ? (
-        <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-5">
+        <div className="bg-elevated border border-default rounded-pf-lg p-5">
           <div className="flex items-center gap-2 mb-4">
-            <TrendingUp size={16} className="text-pf-text-tertiary" aria-hidden="true" />
-            <h2 className="text-sm font-semibold text-pf-text">DAU Trend</h2>
+            <TrendingUp size={16} className="text-tertiary" aria-hidden="true" />
+            <h2 className="text-sm font-semibold text-primary">DAU Trend</h2>
           </div>
           <div className="text-center py-8">
-            <p className="text-sm text-pf-text-secondary">Trend data unavailable</p>
+            <p className="text-sm text-secondary">Trend data unavailable</p>
             <Button
               type="button"
               variant="ghost"
               onClick={() => loadTrend(trendDays)}
-              className="text-pf-cyan-400 hover:text-pf-cyan-300 text-xs mt-2"
+              className="text-accent-text hover:text-accent-text text-xs mt-2"
             >
               Retry
             </Button>
           </div>
         </div>
       ) : (
-        <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-5">
+        <div className="bg-elevated border border-default rounded-pf-lg p-5">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
-              <TrendingUp size={16} className="text-pf-cyan-500" aria-hidden="true" />
-              <h2 className="text-sm font-semibold text-pf-text">DAU Trend</h2>
+              <TrendingUp size={16} className="text-accent" aria-hidden="true" />
+              <h2 className="text-sm font-semibold text-primary">DAU Trend</h2>
             </div>
             {/* Period selector chips */}
             <div className="flex items-center gap-1" role="group" aria-label="Select trend period">
@@ -409,8 +409,8 @@ export function Component() {
                   onClick={() => setTrendDays(opt.value)}
                   className={`px-3 py-1 rounded-pf-sm text-xs font-medium transition-colors ${
                     trendDays === opt.value
-                      ? 'bg-pf-cyan-500/20 text-pf-cyan-500 border border-pf-cyan-500/40'
-                      : 'border border-pf-border text-pf-text-secondary hover:text-pf-text hover:bg-pf-base'
+                      ? 'bg-accent/20 text-accent border border-accent/40'
+                      : 'border border-default text-secondary hover:text-primary hover:bg-app'
                   }`}
                   aria-pressed={trendDays === opt.value}
                 >
@@ -424,13 +424,13 @@ export function Component() {
               <XAxis
                 dataKey="date"
                 tickFormatter={formatDate}
-                tick={{ fontSize: 10, fill: 'var(--color-pf-text-tertiary)' }}
+                tick={{ fontSize: 10, fill: 'var(--text-tertiary)' }}
                 tickLine={false}
                 axisLine={false}
                 interval="preserveStartEnd"
               />
               <YAxis
-                tick={{ fontSize: 10, fill: 'var(--color-pf-text-tertiary)' }}
+                tick={{ fontSize: 10, fill: 'var(--text-tertiary)' }}
                 tickLine={false}
                 axisLine={false}
                 tickFormatter={(v: number) => v >= 1000 ? `${(v / 1000).toFixed(0)}k` : String(v)}
@@ -445,7 +445,7 @@ export function Component() {
                 dataKey="newUsers"
                 name="New Users"
                 stackId="dau"
-                fill="var(--color-pf-cyan-500)"
+                fill="var(--accent-default)"
                 radius={[0, 0, 0, 0]}
               />
               <Bar
@@ -459,7 +459,7 @@ export function Component() {
                 dataKey="dau"
                 name="DAU"
                 type="monotone"
-                stroke="var(--color-pf-warning)"
+                stroke="var(--warning)"
                 strokeWidth={1.5}
                 dot={false}
               />
@@ -472,58 +472,58 @@ export function Component() {
       {loadingCohorts ? (
         <TableSkeleton />
       ) : cohortsError ? (
-        <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-5">
+        <div className="bg-elevated border border-default rounded-pf-lg p-5">
           <div className="flex items-center gap-2 mb-4">
-            <Users size={16} className="text-pf-text-tertiary" aria-hidden="true" />
-            <h2 className="text-sm font-semibold text-pf-text">Cohort Retention</h2>
+            <Users size={16} className="text-tertiary" aria-hidden="true" />
+            <h2 className="text-sm font-semibold text-primary">Cohort Retention</h2>
           </div>
           <div className="text-center py-8">
-            <p className="text-sm text-pf-text-secondary">Cohort data unavailable</p>
+            <p className="text-sm text-secondary">Cohort data unavailable</p>
             <Button
               type="button"
               variant="ghost"
               onClick={loadOverviewAndCohorts}
-              className="text-pf-cyan-400 hover:text-pf-cyan-300 text-xs mt-2"
+              className="text-accent-text hover:text-accent-text text-xs mt-2"
             >
               Retry
             </Button>
           </div>
         </div>
       ) : (
-        <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-5">
+        <div className="bg-elevated border border-default rounded-pf-lg p-5">
           <div className="flex items-center gap-2 mb-4">
-            <Users size={16} className="text-pf-cyan-500" aria-hidden="true" />
-            <h2 className="text-sm font-semibold text-pf-text">Cohort Retention</h2>
-            <span className="text-xs text-pf-text-tertiary ml-1">(last 6 months)</span>
+            <Users size={16} className="text-accent" aria-hidden="true" />
+            <h2 className="text-sm font-semibold text-primary">Cohort Retention</h2>
+            <span className="text-xs text-tertiary ml-1">(last 6 months)</span>
           </div>
           {cohorts.length === 0 ? (
-            <p className="text-sm text-pf-text-secondary py-4">No cohort data available.</p>
+            <p className="text-sm text-secondary py-4">No cohort data available.</p>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-xs">
                 <caption className="sr-only">Cohort retention table</caption>
                 <thead>
-                  <tr className="text-left border-b border-pf-border">
-                    <th scope="col" className="pb-2 pr-4 font-medium text-pf-text-tertiary uppercase tracking-wider whitespace-nowrap">
+                  <tr className="text-left border-b border-default">
+                    <th scope="col" className="pb-2 pr-4 font-medium text-tertiary uppercase tracking-wider whitespace-nowrap">
                       Cohort
                     </th>
                     {COHORT_WEEKS.map((w) => (
                       <th
                         key={w}
                         scope="col"
-                        className="pb-2 px-1 font-medium text-pf-text-tertiary uppercase tracking-wider text-center whitespace-nowrap"
+                        className="pb-2 px-1 font-medium text-tertiary uppercase tracking-wider text-center whitespace-nowrap"
                       >
                         {w}
                       </th>
                     ))}
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-pf-border">
+                <tbody className="divide-y divide-default">
                   {cohorts.map((row) => (
                     <tr key={row.cohort}>
                       <td className="py-2 pr-4 whitespace-nowrap">
-                        <div className="font-medium text-pf-text">{row.cohort}</div>
-                        <div className="text-pf-label text-pf-text-tertiary">{fmt(row.size)} users</div>
+                        <div className="font-medium text-primary">{row.cohort}</div>
+                        <div className="text-pf-label text-tertiary">{fmt(row.size)} users</div>
                       </td>
                       {COHORT_WEEKS.map((_, colIdx) => {
                         const pct = row.retention[colIdx] ?? 0;

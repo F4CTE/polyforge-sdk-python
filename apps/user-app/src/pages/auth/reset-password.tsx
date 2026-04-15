@@ -55,13 +55,13 @@ export function Component() {
 
   return (
     <main
-      className="min-h-screen flex items-center justify-center p-4 relative bg-pf-base"
+      className="min-h-screen flex items-center justify-center p-4 relative bg-app"
     >
       <AuthBackground />
       <div className="w-full max-w-md relative z-10">
         {/* Logo */}
         <div className="text-center mb-8">
-          <div className="text-pf-cyan-500 inline-block">
+          <div className="text-accent inline-block">
             <svg width="64" height="64" viewBox="0 0 24 24" fill="none" aria-hidden="true">
               <path d="M12 2L20.66 7V17L12 22L3.34 17V7L12 2Z" stroke="currentColor" strokeWidth="1.2" fill="none" opacity="0.4"/>
               <path d="M13 5L7.5 13H11L10 19L16.5 11H13L13 5Z" fill="currentColor"/>
@@ -70,14 +70,14 @@ export function Component() {
         </div>
 
         {/* Card */}
-        <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-8 shadow-pf-lg">
+        <div className="bg-elevated border border-default rounded-pf-lg p-8 shadow-pf-lg">
           {!done ? (
             <>
-              <h1 className="text-xl font-semibold text-pf-text mb-1">Set new password</h1>
-              <p className="text-sm text-pf-text-muted mb-6">Choose a strong password.</p>
+              <h1 className="text-xl font-semibold text-primary mb-1">Set new password</h1>
+              <p className="text-sm text-tertiary mb-6">Choose a strong password.</p>
 
               {error && (
-                <div role="alert" className="flex items-center gap-2 bg-pf-danger/10 border border-pf-danger/20 text-pf-danger rounded-pf px-4 py-3 mb-4 text-sm">
+                <div role="alert" className="flex items-center gap-2 bg-loss/10 border border-loss/20 text-loss rounded-pf px-4 py-3 mb-4 text-sm">
                   <AlertCircle className="size-4 shrink-0" />
                   <span>{error}</span>
                 </div>
@@ -86,9 +86,9 @@ export function Component() {
               <form onSubmit={handleSubmit} className="space-y-4">
                 {/* New password */}
                 <div>
-                  <label htmlFor="password" className="block text-sm font-medium text-pf-text mb-2">New password</label>
+                  <label htmlFor="password" className="block text-sm font-medium text-primary mb-2">New password</label>
                   <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-pf-text-muted" />
+                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-tertiary" />
                     <Input
                       id="password"
                       type="password"
@@ -100,17 +100,17 @@ export function Component() {
                       placeholder="At least 8 characters"
                       aria-invalid={!!passwordError}
                       aria-describedby={passwordError ? 'reset-password-error' : undefined}
-                      className="w-full pl-10 pr-4 py-3 bg-pf-base border border-pf-border rounded-pf text-pf-text placeholder:text-pf-text-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 focus-visible:border-pf-cyan-500 transition-colors"
+                      className="w-full pl-10 pr-4 py-3 bg-app border border-default rounded-pf text-primary placeholder:text-tertiary/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 focus-visible:border-accent transition-colors"
                     />
                   </div>
-                  {passwordError && <p id="reset-password-error" role="alert" className="mt-1 text-xs text-pf-danger">{passwordError}</p>}
+                  {passwordError && <p id="reset-password-error" role="alert" className="mt-1 text-xs text-loss">{passwordError}</p>}
                 </div>
 
                 {/* Confirm password */}
                 <div>
-                  <label htmlFor="confirm" className="block text-sm font-medium text-pf-text mb-2">Confirm password</label>
+                  <label htmlFor="confirm" className="block text-sm font-medium text-primary mb-2">Confirm password</label>
                   <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-pf-text-muted" />
+                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-tertiary" />
                     <Input
                       id="confirm"
                       type="password"
@@ -121,16 +121,16 @@ export function Component() {
                       placeholder="Repeat password"
                       aria-invalid={!!confirmError}
                       aria-describedby={confirmError ? 'reset-confirm-error' : undefined}
-                      className="w-full pl-10 pr-4 py-3 bg-pf-base border border-pf-border rounded-pf text-pf-text placeholder:text-pf-text-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 focus-visible:border-pf-cyan-500 transition-colors"
+                      className="w-full pl-10 pr-4 py-3 bg-app border border-default rounded-pf text-primary placeholder:text-tertiary/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 focus-visible:border-accent transition-colors"
                     />
                   </div>
-                  {confirmError && <p id="reset-confirm-error" role="alert" className="mt-1 text-xs text-pf-danger">{confirmError}</p>}
+                  {confirmError && <p id="reset-confirm-error" role="alert" className="mt-1 text-xs text-loss">{confirmError}</p>}
                 </div>
 
                 <Button
                   type="submit"
                   disabled={loading || !token}
-                  className="w-full py-3 bg-pf-cyan-500 text-pf-text-contrast font-semibold rounded-pf hover:bg-pf-cyan-400 disabled:opacity-50 disabled:cursor-not-allowed transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 focus-visible:ring-offset-2 focus-visible:ring-offset-pf-elevated"
+                  className="w-full py-3 bg-accent text-inverse font-semibold rounded-pf hover:bg-accent-text disabled:opacity-50 disabled:cursor-not-allowed transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 focus-visible:ring-offset-2 focus-visible:ring-offset-pf-elevated"
                 >
                   {loading ? 'Resetting...' : 'Reset password'}
                 </Button>
@@ -138,14 +138,14 @@ export function Component() {
             </>
           ) : (
             <div className="text-center">
-              <div className="size-16 rounded-pf-full bg-pf-success/10 flex items-center justify-center mx-auto mb-4">
-                <Check className="size-8 text-pf-success" />
+              <div className="size-16 rounded-pf-full bg-gain/10 flex items-center justify-center mx-auto mb-4">
+                <Check className="size-8 text-gain" />
               </div>
-              <h1 className="text-xl font-semibold text-pf-text mb-2">Password reset</h1>
-              <p className="text-sm text-pf-text-muted mb-6">You can now sign in with your new password.</p>
+              <h1 className="text-xl font-semibold text-primary mb-2">Password reset</h1>
+              <p className="text-sm text-tertiary mb-6">You can now sign in with your new password.</p>
               <Link
                 to="/login"
-                className="inline-block px-6 py-3 bg-pf-cyan-500 text-pf-text-contrast font-semibold rounded-pf hover:bg-pf-cyan-400 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/50 focus-visible:ring-offset-2 focus-visible:ring-offset-pf-elevated"
+                className="inline-block px-6 py-3 bg-accent text-inverse font-semibold rounded-pf hover:bg-accent-text transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 focus-visible:ring-offset-2 focus-visible:ring-offset-pf-elevated"
               >
                 Sign in
               </Link>

@@ -178,15 +178,15 @@ export function Component() {
       {/* Back link */}
       <Link
         to="/copy"
-        className="flex items-center gap-2 text-sm text-pf-text-secondary hover:text-pf-cyan-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 rounded-pf-sm transition-colors"
+        className="flex items-center gap-2 text-sm text-secondary hover:text-accent-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 rounded-pf-sm transition-colors"
       >
         <ArrowLeft className="size-4" /> Back to Copy Trading
       </Link>
 
       {/* Title */}
       <div className="flex items-center gap-3">
-        <Copy className="size-6 text-pf-cyan-400" aria-hidden="true" />
-        <h1 className="text-2xl font-semibold text-pf-text">New Copy Config</h1>
+        <Copy className="size-6 text-accent-text" aria-hidden="true" />
+        <h1 className="text-2xl font-semibold text-primary">New Copy Config</h1>
       </div>
 
       {/* Step indicators */}
@@ -200,30 +200,30 @@ export function Component() {
               disabled={i > step}
               className={`flex items-center gap-2 px-3 py-2 rounded-pf-full text-xs font-medium border transition-colors ${
                 i === step
-                  ? 'bg-pf-cyan-500/10 border-pf-cyan-500/30 text-pf-cyan-400'
+                  ? 'bg-accent/10 border-accent/30 text-accent-text'
                   : i < step
-                    ? 'bg-pf-success/10 border-pf-success/30 text-pf-success cursor-pointer'
-                    : 'border-pf-border text-pf-text-muted'
+                    ? 'bg-gain/10 border-gain/30 text-gain cursor-pointer'
+                    : 'border-default text-tertiary'
               }`}
             >
-              <span className="size-5 rounded-pf-full bg-pf-overlay flex items-center justify-center text-pf-caption font-bold">
+              <span className="size-5 rounded-pf-full bg-overlay flex items-center justify-center text-pf-caption font-bold">
                 {i + 1}
               </span>
               {label}
             </Button>
             {i < STEPS.length - 1 && (
-              <ChevronRight className="size-3 text-pf-text-muted shrink-0" />
+              <ChevronRight className="size-3 text-tertiary shrink-0" />
             )}
           </div>
         ))}
       </div>
 
       {/* Step content */}
-      <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-6 space-y-5">
+      <div className="bg-elevated border border-default rounded-pf-lg p-6 space-y-5">
         {/* Step 1: Target Wallet */}
         {step === 0 && (
           <>
-            <h2 className="text-sm font-medium text-pf-text">Target Wallet Address</h2>
+            <h2 className="text-sm font-medium text-primary">Target Wallet Address</h2>
             <Input
               id="target-wallet"
               type="text"
@@ -231,14 +231,14 @@ export function Component() {
               aria-label="Target wallet address"
               value={targetWallet}
               onChange={(e) => setTargetWallet(e.target.value)}
-              className="w-full px-4 py-3 rounded-pf-sm text-sm bg-pf-surface text-pf-text border border-pf-border hover:border-pf-border-strong focus-visible:border-pf-cyan-500/50 focus-visible:outline-none transition-colors placeholder:text-pf-text-muted font-mono"
+              className="w-full px-4 py-3 rounded-pf-sm text-sm bg-surface text-primary border border-default hover:border-strong focus-visible:border-accent/50 focus-visible:outline-none transition-colors placeholder:text-tertiary font-mono"
             />
             {followedWhales.length > 0 && (
               <div>
-                <p className="text-xs text-pf-text-secondary mb-2">Or select from followed whales:</p>
+                <p className="text-xs text-secondary mb-2">Or select from followed whales:</p>
                 <div className="flex flex-wrap gap-2">
                   {loadingWhales ? (
-                    <div className="h-8 w-32 bg-pf-overlay rounded-pf-sm animate-pulse" />
+                    <div className="h-8 w-32 bg-overlay rounded-pf-sm animate-pulse" />
                   ) : (
                     followedWhales.map((w) => (
                       <Button
@@ -248,8 +248,8 @@ export function Component() {
                         onClick={() => setTargetWallet(w.walletAddress)}
                         className={`flex items-center gap-2 px-3 py-2 rounded-pf-sm text-xs font-mono border transition-colors ${
                           targetWallet === w.walletAddress
-                            ? 'bg-pf-cyan-500/10 border-pf-cyan-500/30 text-pf-cyan-400'
-                            : 'border-pf-border text-pf-text-secondary hover:border-pf-border-strong hover:text-pf-text'
+                            ? 'bg-accent/10 border-accent/30 text-accent-text'
+                            : 'border-default text-secondary hover:border-strong hover:text-primary'
                         }`}
                       >
                         {truncateAddress(w.walletAddress)}
@@ -265,7 +265,7 @@ export function Component() {
         {/* Step 2: Copy Mode */}
         {step === 1 && (
           <>
-            <h2 className="text-sm font-medium text-pf-text">Copy Mode</h2>
+            <h2 className="text-sm font-medium text-primary">Copy Mode</h2>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               {MODE_OPTIONS.map((opt) => {
                 const Icon = opt.icon;
@@ -278,21 +278,21 @@ export function Component() {
                     onClick={() => setMode(opt.value)}
                     className={`flex flex-col items-start gap-2 p-4 rounded-pf-lg border text-left transition-all duration-pf-fast ${
                       selected
-                        ? 'bg-pf-cyan-500/10 border-pf-cyan-500/30 shadow-pf-sm'
-                        : 'border-pf-border hover:border-pf-border-strong'
+                        ? 'bg-accent/10 border-accent/30 shadow-pf-sm'
+                        : 'border-default hover:border-strong'
                     }`}
                   >
                     <Icon
-                      className={`size-5 ${selected ? 'text-pf-cyan-400' : 'text-pf-text-muted'}`}
+                      className={`size-5 ${selected ? 'text-accent-text' : 'text-tertiary'}`}
                     />
                     <span
                       className={`text-sm font-medium ${
-                        selected ? 'text-pf-cyan-400' : 'text-pf-text'
+                        selected ? 'text-accent-text' : 'text-primary'
                       }`}
                     >
                       {opt.label}
                     </span>
-                    <span className="text-pf-label text-pf-text-secondary leading-snug">
+                    <span className="text-pf-label text-secondary leading-snug">
                       {opt.description}
                     </span>
                   </Button>
@@ -305,23 +305,23 @@ export function Component() {
         {/* Step 3: Size */}
         {step === 2 && (
           <>
-            <h2 className="text-sm font-medium text-pf-text">
+            <h2 className="text-sm font-medium text-primary">
               {mode === 'MIRROR' ? 'Mirror Mode' : mode === 'PERCENTAGE' ? 'Trade Size (%)' : 'Fixed Amount ($)'}
             </h2>
             {mode === 'MIRROR' ? (
-              <p className="text-sm text-pf-text-secondary">
+              <p className="text-sm text-secondary">
                 In mirror mode, every trade is copied at the exact same size (1:1). Make sure you have
                 sufficient balance to cover the trades.
               </p>
             ) : (
               <div className="space-y-3">
                 {/* Size mode toggle */}
-                <div className="flex rounded-pf border border-pf-border overflow-hidden w-fit mb-2">
+                <div className="flex rounded-pf border border-default overflow-hidden w-fit mb-2">
                   <Button
                     type="button"
                     variant="ghost"
                     onClick={() => setSizeMode('fixed')}
-                    className={`px-3 py-2 text-xs transition-colors ${sizeMode === 'fixed' ? 'bg-pf-cyan-500/15 text-pf-cyan-400' : 'text-pf-text-secondary hover:text-pf-text'}`}
+                    className={`px-3 py-2 text-xs transition-colors ${sizeMode === 'fixed' ? 'bg-accent/15 text-accent-text' : 'text-secondary hover:text-primary'}`}
                   >
                     Fixed $
                   </Button>
@@ -329,7 +329,7 @@ export function Component() {
                     type="button"
                     variant="ghost"
                     onClick={() => setSizeMode('percent')}
-                    className={`px-3 py-2 text-xs border-l border-pf-border transition-colors ${sizeMode === 'percent' ? 'bg-pf-cyan-500/15 text-pf-cyan-400' : 'text-pf-text-secondary hover:text-pf-text'}`}
+                    className={`px-3 py-2 text-xs border-l border-default transition-colors ${sizeMode === 'percent' ? 'bg-accent/15 text-accent-text' : 'text-secondary hover:text-primary'}`}
                   >
                     % of Whale
                   </Button>
@@ -346,11 +346,11 @@ export function Component() {
                         value={sizePercent}
                         onChange={(e) => setSizePercent(parseInt(e.target.value))}
                         aria-label="Copy percentage of whale trade size"
-                        className="flex-1 h-2 rounded-pf-full bg-pf-border accent-pf-cyan-500"
+                        className="flex-1 h-2 rounded-pf-full bg-default accent-accent"
                       />
-                      <span className="text-sm font-mono text-pf-cyan-400 w-12 text-right">{sizePercent}%</span>
+                      <span className="text-sm font-mono text-accent-text w-12 text-right">{sizePercent}%</span>
                     </div>
-                    <p className="text-pf-caption text-pf-text-muted mt-1">
+                    <p className="text-pf-caption text-tertiary mt-1">
                       Copy {sizePercent}% of each whale trade size
                     </p>
                   </div>
@@ -364,7 +364,7 @@ export function Component() {
                       step={mode === 'PERCENTAGE' ? 1 : 10}
                       value={sizeValue}
                       onChange={(e) => setSizeValue(Number(e.target.value))}
-                      className="w-full accent-[var(--color-pf-cyan-500)]"
+                      className="w-full accent-[var(--accent-default)]"
                     />
                     <div className="flex items-center gap-3">
                       <Input
@@ -372,9 +372,9 @@ export function Component() {
                         min={0}
                         value={sizeValue}
                         onChange={(e) => setSizeValue(Number(e.target.value))}
-                        className="w-32 px-3 py-2 rounded-pf-sm text-sm bg-pf-surface text-pf-text border border-pf-border focus-visible:border-pf-cyan-500/50 focus-visible:outline-none font-mono"
+                        className="w-32 px-3 py-2 rounded-pf-sm text-sm bg-surface text-primary border border-default focus-visible:border-accent/50 focus-visible:outline-none font-mono"
                       />
-                      <span className="text-sm text-pf-text-secondary">
+                      <span className="text-sm text-secondary">
                         {mode === 'PERCENTAGE' ? '%' : 'USD'}
                       </span>
                     </div>
@@ -383,7 +383,7 @@ export function Component() {
 
                 {/* Max per trade cap — always visible */}
                 <div className="mt-3">
-                  <label className="block text-xs font-medium text-pf-text-secondary mb-1">
+                  <label className="block text-xs font-medium text-secondary mb-1">
                     Max per Trade (USDC cap)
                   </label>
                   <Input
@@ -393,9 +393,9 @@ export function Component() {
                     value={maxPerTrade}
                     onChange={(e) => setMaxPerTrade(parseInt(e.target.value) || 0)}
                     placeholder="500"
-                    className="w-full h-10 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm font-mono text-pf-text placeholder:text-pf-text-muted focus-visible:outline-none focus-visible:border-pf-cyan-500/50"
+                    className="w-full h-10 px-3 rounded-pf bg-surface border border-default text-sm font-mono text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:border-accent/50"
                   />
-                  <p className="text-pf-caption text-pf-text-muted mt-1">Never copy more than this per single trade</p>
+                  <p className="text-pf-caption text-tertiary mt-1">Never copy more than this per single trade</p>
                 </div>
               </div>
             )}
@@ -405,11 +405,11 @@ export function Component() {
         {/* Step 4: Risk Controls */}
         {step === 3 && (
           <>
-            <h2 className="text-sm font-medium text-pf-text">Risk Controls</h2>
+            <h2 className="text-sm font-medium text-primary">Risk Controls</h2>
             <div className="space-y-5">
               {/* Max Exposure */}
               <div className="space-y-2">
-                <label htmlFor="copy-max-exposure" className="text-xs text-pf-text-secondary">Max Exposure ($)</label>
+                <label htmlFor="copy-max-exposure" className="text-xs text-secondary">Max Exposure ($)</label>
                 <input
                   type="range"
                   aria-label="Max exposure"
@@ -418,7 +418,7 @@ export function Component() {
                   step={100}
                   value={maxExposure}
                   onChange={(e) => setMaxExposure(Number(e.target.value))}
-                  className="w-full accent-[var(--color-pf-cyan-500)]"
+                  className="w-full accent-[var(--accent-default)]"
                 />
                 <div className="flex items-center gap-3">
                   <Input
@@ -427,15 +427,15 @@ export function Component() {
                     min={0}
                     value={maxExposure}
                     onChange={(e) => setMaxExposure(Number(e.target.value))}
-                    className="w-32 px-3 py-2 rounded-pf-sm text-sm bg-pf-surface text-pf-text border border-pf-border focus-visible:border-pf-cyan-500/50 focus-visible:outline-none font-mono"
+                    className="w-32 px-3 py-2 rounded-pf-sm text-sm bg-surface text-primary border border-default focus-visible:border-accent/50 focus-visible:outline-none font-mono"
                   />
-                  <span className="text-sm text-pf-text-secondary">USD</span>
+                  <span className="text-sm text-secondary">USD</span>
                 </div>
               </div>
 
               {/* Max Daily Loss */}
               <div className="space-y-2">
-                <label htmlFor="copy-max-daily-loss" className="text-xs text-pf-text-secondary">Max Daily Loss ($)</label>
+                <label htmlFor="copy-max-daily-loss" className="text-xs text-secondary">Max Daily Loss ($)</label>
                 <input
                   type="range"
                   aria-label="Max daily loss"
@@ -444,7 +444,7 @@ export function Component() {
                   step={10}
                   value={maxDailyLoss}
                   onChange={(e) => setMaxDailyLoss(Number(e.target.value))}
-                  className="w-full accent-[var(--color-pf-cyan-500)]"
+                  className="w-full accent-[var(--accent-default)]"
                 />
                 <div className="flex items-center gap-3">
                   <Input
@@ -453,15 +453,15 @@ export function Component() {
                     min={0}
                     value={maxDailyLoss}
                     onChange={(e) => setMaxDailyLoss(Number(e.target.value))}
-                    className="w-32 px-3 py-2 rounded-pf-sm text-sm bg-pf-surface text-pf-text border border-pf-border focus-visible:border-pf-cyan-500/50 focus-visible:outline-none font-mono"
+                    className="w-32 px-3 py-2 rounded-pf-sm text-sm bg-surface text-primary border border-default focus-visible:border-accent/50 focus-visible:outline-none font-mono"
                   />
-                  <span className="text-sm text-pf-text-secondary">USD</span>
+                  <span className="text-sm text-secondary">USD</span>
                 </div>
               </div>
 
               {/* Price Offset */}
               <div className="space-y-2">
-                <label htmlFor="copy-price-offset" className="text-xs text-pf-text-secondary">Price Offset (%)</label>
+                <label htmlFor="copy-price-offset" className="text-xs text-secondary">Price Offset (%)</label>
                 <input
                   type="range"
                   aria-label="Price offset"
@@ -470,7 +470,7 @@ export function Component() {
                   step={0.1}
                   value={priceOffset}
                   onChange={(e) => setPriceOffset(Number(e.target.value))}
-                  className="w-full accent-[var(--color-pf-cyan-500)]"
+                  className="w-full accent-[var(--accent-default)]"
                 />
                 <div className="flex items-center gap-3">
                   <Input
@@ -481,9 +481,9 @@ export function Component() {
                     step={0.1}
                     value={priceOffset}
                     onChange={(e) => setPriceOffset(Number(e.target.value))}
-                    className="w-32 px-3 py-2 rounded-pf-sm text-sm bg-pf-surface text-pf-text border border-pf-border focus-visible:border-pf-cyan-500/50 focus-visible:outline-none font-mono"
+                    className="w-32 px-3 py-2 rounded-pf-sm text-sm bg-surface text-primary border border-default focus-visible:border-accent/50 focus-visible:outline-none font-mono"
                   />
-                  <span className="text-sm text-pf-text-secondary">%</span>
+                  <span className="text-sm text-secondary">%</span>
                 </div>
               </div>
             </div>
@@ -493,41 +493,41 @@ export function Component() {
         {/* Step 5: Review */}
         {step === 4 && (
           <>
-            <h2 className="text-sm font-medium text-pf-text">Review Configuration</h2>
+            <h2 className="text-sm font-medium text-primary">Review Configuration</h2>
             <div className="space-y-3">
-              <div className="py-2 border-b border-pf-border-subtle">
+              <div className="py-2 border-b border-subtle">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs text-pf-text-secondary">Target Wallet</span>
-                  <span className="font-mono text-sm text-pf-text">{truncateAddress(targetWallet)}</span>
+                  <span className="text-xs text-secondary">Target Wallet</span>
+                  <span className="font-mono text-sm text-primary">{truncateAddress(targetWallet)}</span>
                 </div>
                 {validationErrors.wallet && (
-                  <p className="text-xs text-pf-danger mt-1">{validationErrors.wallet}</p>
+                  <p className="text-xs text-loss mt-1">{validationErrors.wallet}</p>
                 )}
               </div>
-              <div className="flex items-center justify-between py-2 border-b border-pf-border-subtle">
-                <span className="text-xs text-pf-text-secondary">Mode</span>
-                <span className="text-sm text-pf-text">{mode}</span>
+              <div className="flex items-center justify-between py-2 border-b border-subtle">
+                <span className="text-xs text-secondary">Mode</span>
+                <span className="text-sm text-primary">{mode}</span>
               </div>
-              <div className="py-2 border-b border-pf-border-subtle">
+              <div className="py-2 border-b border-subtle">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs text-pf-text-secondary">Trade Size</span>
-                  <span className="text-sm font-mono text-pf-text">{sizeLabel()}</span>
+                  <span className="text-xs text-secondary">Trade Size</span>
+                  <span className="text-sm font-mono text-primary">{sizeLabel()}</span>
                 </div>
                 {validationErrors.size && (
-                  <p className="text-xs text-pf-danger mt-1">{validationErrors.size}</p>
+                  <p className="text-xs text-loss mt-1">{validationErrors.size}</p>
                 )}
               </div>
-              <div className="flex items-center justify-between py-2 border-b border-pf-border-subtle">
-                <span className="text-xs text-pf-text-secondary">Max Exposure</span>
-                <span className="text-sm font-mono text-pf-text">${maxExposure.toLocaleString()}</span>
+              <div className="flex items-center justify-between py-2 border-b border-subtle">
+                <span className="text-xs text-secondary">Max Exposure</span>
+                <span className="text-sm font-mono text-primary">${maxExposure.toLocaleString()}</span>
               </div>
-              <div className="flex items-center justify-between py-2 border-b border-pf-border-subtle">
-                <span className="text-xs text-pf-text-secondary">Max Daily Loss</span>
-                <span className="text-sm font-mono text-pf-text">${maxDailyLoss.toLocaleString()}</span>
+              <div className="flex items-center justify-between py-2 border-b border-subtle">
+                <span className="text-xs text-secondary">Max Daily Loss</span>
+                <span className="text-sm font-mono text-primary">${maxDailyLoss.toLocaleString()}</span>
               </div>
               <div className="flex items-center justify-between py-2">
-                <span className="text-xs text-pf-text-secondary">Price Offset</span>
-                <span className="text-sm font-mono text-pf-text">{priceOffset > 0 ? '+' : ''}{priceOffset}%</span>
+                <span className="text-xs text-secondary">Price Offset</span>
+                <span className="text-sm font-mono text-primary">{priceOffset > 0 ? '+' : ''}{priceOffset}%</span>
               </div>
             </div>
           </>
@@ -541,7 +541,7 @@ export function Component() {
           variant="ghost"
           onClick={prevStep}
           disabled={step === 0}
-          className="flex items-center gap-2 px-4 py-3 rounded-pf text-sm text-pf-text-secondary hover:text-pf-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+          className="flex items-center gap-2 px-4 py-3 rounded-pf text-sm text-secondary hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
         >
           <ChevronLeft className="size-4" /> Back
         </Button>
@@ -550,7 +550,7 @@ export function Component() {
             type="button"
             onClick={nextStep}
             disabled={!canAdvance()}
-            className="flex items-center gap-2 px-4 py-3 rounded-pf bg-pf-cyan-500 text-pf-text-contrast text-sm font-medium hover:bg-pf-cyan-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+            className="flex items-center gap-2 px-4 py-3 rounded-pf bg-accent text-inverse text-sm font-medium hover:bg-accent-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
           >
             Next <ChevronRight className="size-4" />
           </Button>
@@ -559,7 +559,7 @@ export function Component() {
             type="button"
             onClick={handleSubmit}
             disabled={submitting || !isFormValid}
-            className="flex items-center gap-2 px-5 py-3 rounded-pf bg-pf-cyan-500 text-pf-text-contrast text-sm font-medium hover:bg-pf-cyan-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 disabled:opacity-40 transition-colors"
+            className="flex items-center gap-2 px-5 py-3 rounded-pf bg-accent text-inverse text-sm font-medium hover:bg-accent-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 disabled:opacity-40 transition-colors"
           >
             <Rocket className="size-4" />
             {submitting ? 'Starting...' : 'Start Copying'}

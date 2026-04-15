@@ -45,16 +45,16 @@ interface BacktestsResponse {
 /* ─── Helpers ────────────────────────────────────────────────────────── */
 
 const STATUS_STYLES: Record<BacktestStatus, { text: string; bg: string }> = {
-  QUEUED:    { text: 'text-pf-text-muted', bg: 'bg-pf-overlay' },
-  RUNNING:   { text: 'text-pf-cyan-400', bg: 'bg-pf-cyan-500/10' },
-  COMPLETED: { text: 'text-pf-success', bg: 'bg-pf-success/10' },
-  FAILED:    { text: 'text-pf-danger', bg: 'bg-pf-danger/10' },
-  CANCELLED: { text: 'text-pf-text-muted', bg: 'bg-pf-overlay' },
+  QUEUED:    { text: 'text-tertiary', bg: 'bg-overlay' },
+  RUNNING:   { text: 'text-accent-text', bg: 'bg-accent/10' },
+  COMPLETED: { text: 'text-gain', bg: 'bg-gain/10' },
+  FAILED:    { text: 'text-loss', bg: 'bg-loss/10' },
+  CANCELLED: { text: 'text-tertiary', bg: 'bg-overlay' },
 };
 
 function pnlColor(val: string | null): string {
-  if (!val) return 'text-pf-text-muted';
-  return parseFloat(val) >= 0 ? 'text-pf-success' : 'text-pf-danger';
+  if (!val) return 'text-tertiary';
+  return parseFloat(val) >= 0 ? 'text-gain' : 'text-loss';
 }
 
 function pnlSign(val: string | null): string {
@@ -243,50 +243,50 @@ export function Component() {
     <div className="animate-fade-in p-6 max-w-7xl mx-auto space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold text-pf-text">Backtest</h1>
-        {!loading && <span className="text-sm text-pf-text-muted">{total} runs</span>}
+        <h1 className="text-2xl font-semibold text-primary">Backtest</h1>
+        {!loading && <span className="text-sm text-tertiary">{total} runs</span>}
       </div>
 
       {/* New run panel */}
-      <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-5">
+      <div className="bg-elevated border border-default rounded-pf-lg p-5">
         <div className="flex items-center gap-2 mb-4">
-          <Play className="size-4 text-pf-cyan-400" />
-          <span className="text-sm font-medium text-pf-text">New Backtest</span>
+          <Play className="size-4 text-accent-text" />
+          <span className="text-sm font-medium text-primary">New Backtest</span>
         </div>
         <div className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <div>
-              <label htmlFor="backtest-strategy" className="text-xs text-pf-text-secondary uppercase tracking-wider mb-2 block">Strategy</label>
+              <label htmlFor="backtest-strategy" className="text-xs text-secondary uppercase tracking-wider mb-2 block">Strategy</label>
               <Select
                 id="backtest-strategy"
                 value={selectedStratId}
                 onChange={e => setSelectedStratId(e.target.value)}
-                className="w-full h-9 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text focus-visible:outline-none focus-visible:border-pf-cyan-500/50"
+                className="w-full h-9 px-3 rounded-pf bg-surface border border-default text-sm text-primary focus-visible:outline-none focus-visible:border-accent/50"
               >
                 <option value="">Select strategy</option>
                 {strategies.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
               </Select>
             </div>
             <div>
-              <label htmlFor="backtest-start" className="text-xs text-pf-text-secondary uppercase tracking-wider mb-2 block">Start Date</label>
+              <label htmlFor="backtest-start" className="text-xs text-secondary uppercase tracking-wider mb-2 block">Start Date</label>
               <input
                 id="backtest-start"
                 type="date"
                 lang="en"
                 value={dateStart}
                 onChange={e => setDateStart(e.target.value)}
-                className="w-full h-9 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text focus-visible:outline-none focus-visible:border-pf-cyan-500/50"
+                className="w-full h-9 px-3 rounded-pf bg-surface border border-default text-sm text-primary focus-visible:outline-none focus-visible:border-accent/50"
               />
             </div>
             <div>
-              <label htmlFor="backtest-end" className="text-xs text-pf-text-secondary uppercase tracking-wider mb-2 block">End Date</label>
+              <label htmlFor="backtest-end" className="text-xs text-secondary uppercase tracking-wider mb-2 block">End Date</label>
               <input
                 id="backtest-end"
                 type="date"
                 lang="en"
                 value={dateEnd}
                 onChange={e => setDateEnd(e.target.value)}
-                className="w-full h-9 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text focus-visible:outline-none focus-visible:border-pf-cyan-500/50"
+                className="w-full h-9 px-3 rounded-pf bg-surface border border-default text-sm text-primary focus-visible:outline-none focus-visible:border-accent/50"
               />
             </div>
             <div className="flex items-end">
@@ -294,7 +294,7 @@ export function Component() {
                 type="button"
                 onClick={submit}
                 disabled={!canSubmit}
-                className="w-full h-9 rounded-pf bg-pf-cyan-500 text-pf-text-contrast text-sm font-medium hover:bg-pf-cyan-400 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+                className="w-full h-9 rounded-pf bg-accent text-inverse text-sm font-medium hover:bg-accent-text disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
               >
                 {submitting ? <Loader2 className="size-4 animate-spin" /> : <Play className="size-4" />}
                 Run Backtest
@@ -304,10 +304,10 @@ export function Component() {
 
           {marketSlots.length > 0 && (
             <div className="space-y-3">
-              <span className="text-xs text-pf-text-secondary font-medium uppercase tracking-wider" id="market-bindings-label">Market Bindings</span>
+              <span className="text-xs text-secondary font-medium uppercase tracking-wider" id="market-bindings-label">Market Bindings</span>
               {marketSlots.map(slot => (
                 <div key={slot.slot} className="space-y-1">
-                  <label htmlFor={`market-binding-${slot.slot}`} className="text-xs text-pf-text-muted">{slot.label || slot.slot}</label>
+                  <label htmlFor={`market-binding-${slot.slot}`} className="text-xs text-tertiary">{slot.label || slot.slot}</label>
                   <div className="relative">
                     <Input
                       id={`market-binding-${slot.slot}`}
@@ -318,14 +318,14 @@ export function Component() {
                         searchMarkets(slot.slot, e.target.value);
                       }}
                       placeholder="Search markets..."
-                      className="w-full h-9 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text placeholder:text-pf-text-muted focus-visible:outline-none focus-visible:border-pf-cyan-500/50 transition-colors"
+                      className="w-full h-9 px-3 rounded-pf bg-surface border border-default text-sm text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:border-accent/50 transition-colors"
                     />
                     {marketBindings[slot.slot] && (
-                      <span className="absolute right-2 top-1/2 -translate-y-1/2 text-pf-caption text-pf-cyan-400 font-mono">bound</span>
+                      <span className="absolute right-2 top-1/2 -translate-y-1/2 text-pf-caption text-accent-text font-mono">bound</span>
                     )}
                   </div>
                   {(marketResults[slot.slot] ?? []).length > 0 && (
-                    <div className="bg-pf-elevated border border-pf-border rounded-pf max-h-40 overflow-y-auto">
+                    <div className="bg-elevated border border-default rounded-pf max-h-40 overflow-y-auto">
                       {marketResults[slot.slot].map((m) => (
                         <Button
                           type="button"
@@ -336,7 +336,7 @@ export function Component() {
                             setMarketSearch(prev => ({ ...prev, [slot.slot]: m.title ?? m.question ?? '' }));
                             setMarketResults(prev => ({ ...prev, [slot.slot]: [] }));
                           }}
-                          className="w-full text-left px-3 py-2 text-xs text-pf-text hover:bg-pf-surface cursor-pointer transition-colors border-b border-pf-border-subtle last:border-b-0"
+                          className="w-full text-left px-3 py-2 text-xs text-primary hover:bg-surface cursor-pointer transition-colors border-b border-subtle last:border-b-0"
                         >
                           {m.title ?? m.question}
                         </Button>
@@ -352,13 +352,13 @@ export function Component() {
 
       {/* Selected run detail */}
       {selectedRun && (
-        <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-5">
+        <div className="bg-elevated border border-default rounded-pf-lg p-5">
           <div className="flex items-start justify-between mb-4">
             <div>
-              <div className="text-sm font-medium text-pf-text">{selectedRun.strategyName ?? 'Unnamed Strategy'}</div>
-              <div className="text-xs font-mono text-pf-text-muted mt-1">{dateRangeLabel(selectedRun)}</div>
+              <div className="text-sm font-medium text-primary">{selectedRun.strategyName ?? 'Unnamed Strategy'}</div>
+              <div className="text-xs font-mono text-tertiary mt-1">{dateRangeLabel(selectedRun)}</div>
             </div>
-            <Button type="button" variant="ghost" size="icon" onClick={() => setSelectedRun(null)} aria-label="Close run details" className="text-pf-text-muted hover:text-pf-text transition-colors">
+            <Button type="button" variant="ghost" size="icon" onClick={() => setSelectedRun(null)} aria-label="Close run details" className="text-tertiary hover:text-primary transition-colors">
               <X className="size-4" />
             </Button>
           </div>
@@ -366,13 +366,13 @@ export function Component() {
           {(selectedRun.status === 'RUNNING' || selectedRun.status === 'QUEUED') && (
             <div>
               <div className="flex items-center justify-between mb-2">
-                <span className="text-xs text-pf-text-muted">
+                <span className="text-xs text-tertiary">
                   {selectedRun.status === 'QUEUED' ? 'Waiting in queue...' : 'Running...'}
                 </span>
-                <span className="text-xs font-mono text-pf-cyan-400">{selectedRun.progress}%</span>
+                <span className="text-xs font-mono text-accent-text">{selectedRun.progress}%</span>
               </div>
-              <div className="h-2 bg-pf-overlay rounded-pf-full overflow-hidden">
-                <div className="h-full bg-pf-cyan-500 rounded-pf-full transition-all" style={{ width: `${selectedRun.progress}%` }} />
+              <div className="h-2 bg-overlay rounded-pf-full overflow-hidden">
+                <div className="h-full bg-accent rounded-pf-full transition-all" style={{ width: `${selectedRun.progress}%` }} />
               </div>
             </div>
           )}
@@ -381,30 +381,30 @@ export function Component() {
             <>
               {/* Simulated results badge — compliance (CLAUDE.md hard rule) */}
               <div className="flex items-center gap-2 mb-2">
-                <span className="text-xs font-medium bg-pf-warning/10 text-pf-warning px-2 py-0.5 rounded-pf-sm">Simulated</span>
-                <span className="text-xs text-pf-text-muted">Results based on historical data replay</span>
+                <span className="text-xs font-medium bg-warning/10 text-warning px-2 py-0.5 rounded-pf-sm">Simulated</span>
+                <span className="text-xs text-tertiary">Results based on historical data replay</span>
               </div>
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                <div className="bg-pf-surface rounded-pf p-3">
-                  <span className="text-xs text-pf-text-muted block">Total P&L</span>
+                <div className="bg-surface rounded-pf p-3">
+                  <span className="text-xs text-tertiary block">Total P&L</span>
                   <span data-testid="result-pnl" className={`text-lg font-mono font-semibold ${pnlColor(selectedRun.totalPnl)}`}>
                     {pnlSign(selectedRun.totalPnl)}
                   </span>
                 </div>
-                <div className="bg-pf-surface rounded-pf p-3">
-                  <span className="text-xs text-pf-text-muted block">Win Rate</span>
-                  <span className="text-lg font-mono font-semibold text-pf-text">{winRatePct(selectedRun.winRate)}</span>
+                <div className="bg-surface rounded-pf p-3">
+                  <span className="text-xs text-tertiary block">Win Rate</span>
+                  <span className="text-lg font-mono font-semibold text-primary">{winRatePct(selectedRun.winRate)}</span>
                 </div>
-                <div className="bg-pf-surface rounded-pf p-3">
-                  <span className="text-xs text-pf-text-muted block">Orders Placed</span>
-                  <span className="text-lg font-mono font-semibold text-pf-text">{selectedRun.totalOrders ?? '\u2014'}</span>
+                <div className="bg-surface rounded-pf p-3">
+                  <span className="text-xs text-tertiary block">Orders Placed</span>
+                  <span className="text-lg font-mono font-semibold text-primary">{selectedRun.totalOrders ?? '\u2014'}</span>
                 </div>
-                <div className="bg-pf-surface rounded-pf p-3">
-                  <span className="text-xs text-pf-text-muted block">Orders Filled</span>
-                  <span className="text-lg font-mono font-semibold text-pf-text">{selectedRun.filledOrders ?? '\u2014'}</span>
+                <div className="bg-surface rounded-pf p-3">
+                  <span className="text-xs text-tertiary block">Orders Filled</span>
+                  <span className="text-lg font-mono font-semibold text-primary">{selectedRun.filledOrders ?? '\u2014'}</span>
                 </div>
                 {selectedRun.hasDataGaps && (
-                  <div className="col-span-full flex items-center gap-2 px-3 py-2 rounded-pf bg-pf-warning/10 text-pf-warning text-xs">
+                  <div className="col-span-full flex items-center gap-2 px-3 py-2 rounded-pf bg-warning/10 text-warning text-xs">
                     <AlertTriangle className="size-4 shrink-0" />
                     Results may be affected by data gaps in the selected date range.
                   </div>
@@ -412,37 +412,37 @@ export function Component() {
               </div>
               {equityData.length > 1 && (
                 <div className="mt-4">
-                  <div className="text-xs text-pf-text-muted mb-2 font-medium">Equity Curve</div>
+                  <div className="text-xs text-tertiary mb-2 font-medium">Equity Curve</div>
                   <div className="h-40">
                     <ResponsiveContainer width="100%" height="100%">
                       <AreaChart data={equityData.map(p => ({ time: new Date(p.simulatedAt).toLocaleDateString(), value: parseFloat(p.equityCurve) }))}>
                         <defs>
                           <linearGradient id="btGrad" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="0%" stopColor="var(--color-pf-cyan-400)" stopOpacity={0.2} />
-                            <stop offset="100%" stopColor="var(--color-pf-cyan-400)" stopOpacity={0} />
+                            <stop offset="0%" stopColor="var(--accent-text)" stopOpacity={0.2} />
+                            <stop offset="100%" stopColor="var(--accent-text)" stopOpacity={0} />
                           </linearGradient>
                         </defs>
                         <XAxis dataKey="time" tick={chartAxisTick} tickLine={false} axisLine={false} interval="preserveStartEnd" />
                         <YAxis tick={chartAxisTick} tickLine={false} axisLine={false} width={45} tickFormatter={(v: number) => `$${v.toFixed(0)}`} />
                         <Tooltip formatter={(v: number) => [`$${v.toFixed(2)}`, 'P&L']} contentStyle={chartTooltipContentStyle} />
-                        <Area type="monotone" dataKey="value" stroke="var(--color-pf-cyan-400)" strokeWidth={1.5} fill="url(#btGrad)" dot={false} />
+                        <Area type="monotone" dataKey="value" stroke="var(--accent-text)" strokeWidth={1.5} fill="url(#btGrad)" dot={false} />
                       </AreaChart>
                     </ResponsiveContainer>
                   </div>
                 </div>
               )}
               {loadingEquity && (
-                <div className="mt-4 h-40 bg-pf-overlay rounded-pf animate-pulse" />
+                <div className="mt-4 h-40 bg-overlay rounded-pf animate-pulse" />
               )}
               {/* Simulated performance disclaimer — compliance (CLAUDE.md hard rule) */}
-              <p className="text-xs text-pf-text-muted mt-4 italic">
+              <p className="text-xs text-tertiary mt-4 italic">
                 Simulated performance based on historical data. Past results do not guarantee future performance. Trading involves risk of loss.
               </p>
             </>
           )}
 
           {selectedRun.status === 'FAILED' && (
-            <div className="flex items-center gap-2 px-3 py-2 rounded-pf bg-pf-danger/10 text-pf-danger text-sm">
+            <div className="flex items-center gap-2 px-3 py-2 rounded-pf bg-loss/10 text-loss text-sm">
               <XCircle className="size-4 shrink-0" />
               {selectedRun.error ?? 'Backtest failed.'}
             </div>
@@ -451,15 +451,15 @@ export function Component() {
       )}
 
       {/* History table */}
-      <div className="bg-pf-elevated border border-pf-border rounded-pf-lg overflow-hidden">
+      <div className="bg-elevated border border-default rounded-pf-lg overflow-hidden">
         <div className="px-4 pt-4 pb-2">
           <div className="flex items-center justify-between mb-3">
-            <h2 className="text-base font-semibold text-pf-text">Backtest History</h2>
+            <h2 className="text-base font-semibold text-primary">Backtest History</h2>
             <Button
               type="button"
               variant="ghost"
               onClick={() => { setCompareMode(!compareMode); setCompareA(null); setCompareB(null); }}
-              className={`text-xs px-3 py-2 rounded-pf border transition-colors ${compareMode ? 'bg-pf-cyan-500/15 border-pf-cyan-500/30 text-pf-cyan-400' : 'border-pf-border text-pf-text-secondary hover:text-pf-text'}`}
+              className={`text-xs px-3 py-2 rounded-pf border transition-colors ${compareMode ? 'bg-accent/15 border-accent/30 text-accent-text' : 'border-default text-secondary hover:text-primary'}`}
             >
               {compareMode ? 'Exit Compare' : 'Compare Runs'}
             </Button>
@@ -468,7 +468,7 @@ export function Component() {
         <div className="overflow-x-auto">
           <table className="w-full text-sm" aria-label="Backtest history">
             <thead>
-              <tr className="bg-pf-surface text-left text-xs text-pf-text-secondary uppercase tracking-wider">
+              <tr className="bg-surface text-left text-xs text-secondary uppercase tracking-wider">
                 <th scope="col" className="px-4 py-3 font-medium">Strategy</th>
                 <th scope="col" className="px-4 py-3 font-medium">Date Range</th>
                 <th scope="col" className="px-4 py-3 font-medium">Status</th>
@@ -476,15 +476,15 @@ export function Component() {
                 <th scope="col" className="px-4 py-3 font-medium text-right">P&L</th>
                 <th scope="col" className="px-4 py-3 font-medium text-right">Win Rate</th>
                 <th scope="col" className="px-4 py-3 font-medium text-right">Created</th>
-                {compareMode && <th scope="col" className="px-3 py-2 text-right text-xs font-medium text-pf-text-muted">Compare</th>}
+                {compareMode && <th scope="col" className="px-3 py-2 text-right text-xs font-medium text-tertiary">Compare</th>}
               </tr>
             </thead>
-            <tbody className="divide-y divide-pf-border-subtle">
+            <tbody className="divide-y divide-subtle">
               {loading ? (
                 Array.from({ length: 5 }, (_, i) => (
                   <tr key={i}>
                     {Array.from({ length: compareMode ? 8 : 7 }, (_, j) => (
-                      <td key={j} className="px-4 py-3"><div className="h-3 bg-pf-overlay rounded animate-pulse" /></td>
+                      <td key={j} className="px-4 py-3"><div className="h-3 bg-overlay rounded animate-pulse" /></td>
                     ))}
                   </tr>
                 ))
@@ -492,9 +492,9 @@ export function Component() {
                 <tr>
                   <td colSpan={compareMode ? 8 : 7}>
                     <div className="flex flex-col items-center justify-center py-16 text-center">
-                      <History className="size-10 text-pf-text-muted mb-3" />
-                      <p className="text-sm font-medium text-pf-text">No backtest runs yet</p>
-                      <p className="text-xs text-pf-text-muted mt-1">Select a strategy and date range above, then click Run Backtest.</p>
+                      <History className="size-10 text-tertiary mb-3" />
+                      <p className="text-sm font-medium text-primary">No backtest runs yet</p>
+                      <p className="text-xs text-tertiary mt-1">Select a strategy and date range above, then click Run Backtest.</p>
                     </div>
                   </td>
                 </tr>
@@ -510,19 +510,19 @@ export function Component() {
                       onClick={() => selectRun(run)}
                       onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') selectRun(run); }}
                       aria-label={run.strategyName ?? strategies.find(s => s.id === run.strategyId)?.name ?? 'Backtest run'}
-                      className={`hover:bg-pf-surface/50 transition-colors cursor-pointer ${
-                        selectedRun?.id === run.id ? 'bg-pf-cyan-500/5' : ''
+                      className={`hover:bg-surface/50 transition-colors cursor-pointer ${
+                        selectedRun?.id === run.id ? 'bg-accent/5' : ''
                       }`}
                     >
                       <td className="px-4 py-3">
-                        <span className="text-pf-body-sm font-medium text-pf-text">
+                        <span className="text-pf-body-sm font-medium text-primary">
                           {run.strategyName
                             ?? strategies.find(s => s.id === run.strategyId)?.name
                             ?? (run.strategyId ? `${run.strategyId.slice(0, 8)}...` : '\u2014')}
                         </span>
                       </td>
                       <td className="px-4 py-3">
-                        <span className="font-mono text-pf-label text-pf-text-muted">{dateRangeLabel(run)}</span>
+                        <span className="font-mono text-pf-label text-tertiary">{dateRangeLabel(run)}</span>
                       </td>
                       <td className="px-4 py-3">
                         <span className={`inline-flex px-2 py-1 rounded text-xs font-medium ${ss.bg} ${ss.text}`}>
@@ -532,25 +532,25 @@ export function Component() {
                       <td className="px-4 py-3">
                         {run.status === 'RUNNING' ? (
                           <div className="flex items-center gap-2">
-                            <div className="flex-1 h-2 bg-pf-overlay rounded-pf-full overflow-hidden">
-                              <div className="h-full bg-pf-cyan-500 rounded-pf-full" style={{ width: `${run.progress}%` }} />
+                            <div className="flex-1 h-2 bg-overlay rounded-pf-full overflow-hidden">
+                              <div className="h-full bg-accent rounded-pf-full" style={{ width: `${run.progress}%` }} />
                             </div>
-                            <span className="font-mono text-pf-label text-pf-cyan-400">{run.progress}%</span>
+                            <span className="font-mono text-pf-label text-accent-text">{run.progress}%</span>
                           </div>
                         ) : run.status === 'COMPLETED' ? (
-                          <span className="font-mono text-pf-label text-pf-success">100%</span>
+                          <span className="font-mono text-pf-label text-gain">100%</span>
                         ) : (
-                          <span className="text-pf-text-muted">\u2014</span>
+                          <span className="text-tertiary">\u2014</span>
                         )}
                       </td>
                       <td className={`px-4 py-3 text-right font-mono ${pnlColor(run.totalPnl)}`}>
                         {pnlSign(run.totalPnl)}
                       </td>
-                      <td className="px-4 py-3 text-right font-mono text-pf-text-secondary">
+                      <td className="px-4 py-3 text-right font-mono text-secondary">
                         {winRatePct(run.winRate)}
                       </td>
                       <td className="px-4 py-3 text-right">
-                        <span className="font-mono text-pf-label text-pf-text-muted">{formatShortDate(run.createdAt)}</span>
+                        <span className="font-mono text-pf-label text-tertiary">{formatShortDate(run.createdAt)}</span>
                       </td>
                       {compareMode && (
                         <td className="px-3 py-2 text-right" onClick={e => e.stopPropagation()}>
@@ -559,13 +559,13 @@ export function Component() {
                               type="button"
                               variant="ghost"
                               onClick={() => setCompareA(run.id === compareA ? null : run.id)}
-                              className={`text-pf-caption px-2 py-1 rounded border transition-colors ${compareA === run.id ? 'bg-pf-info/20 border-pf-info/40 text-pf-info' : 'border-pf-border text-pf-text-muted hover:text-pf-text'}`}
+                              className={`text-pf-caption px-2 py-1 rounded border transition-colors ${compareA === run.id ? 'bg-info/20 border-info/40 text-info' : 'border-default text-tertiary hover:text-primary'}`}
                             >A</Button>
                             <Button
                               type="button"
                               variant="ghost"
                               onClick={() => setCompareB(run.id === compareB ? null : run.id)}
-                              className={`text-pf-caption px-2 py-1 rounded border transition-colors ${compareB === run.id ? 'bg-pf-purple-500/20 border-pf-purple-500/40 text-pf-purple-400' : 'border-pf-border text-pf-text-muted hover:text-pf-text'}`}
+                              className={`text-pf-caption px-2 py-1 rounded border transition-colors ${compareB === run.id ? 'bg-pf-purple-500/20 border-pf-purple-500/40 text-pf-purple-400' : 'border-default text-tertiary hover:text-primary'}`}
                             >B</Button>
                           </div>
                         </td>
@@ -581,8 +581,8 @@ export function Component() {
 
       {/* Compare panel */}
       {compareMode && compareA && compareB && (
-        <div className="mt-6 rounded-pf border border-pf-cyan-500/30 bg-pf-surface p-4">
-          <h3 className="text-sm font-semibold text-pf-text mb-4">Comparison</h3>
+        <div className="mt-6 rounded-pf border border-accent/30 bg-surface p-4">
+          <h3 className="text-sm font-semibold text-primary mb-4">Comparison</h3>
           {(() => {
             const runA = runs.find((r: BacktestRun) => r.id === compareA);
             const runB = runs.find((r: BacktestRun) => r.id === compareB);
@@ -601,25 +601,25 @@ export function Component() {
             return (
               <>
                 {winner && (
-                  <div className="mb-3 text-xs text-pf-text-secondary">
-                    Run <span className={`font-semibold ${winner === 'A' ? 'text-pf-info' : 'text-pf-purple-400'}`}>{winner}</span> outperforms by <span className="font-mono text-pf-success">{Math.abs(pnlA - pnlB).toFixed(2)}</span>
+                  <div className="mb-3 text-xs text-secondary">
+                    Run <span className={`font-semibold ${winner === 'A' ? 'text-info' : 'text-pf-purple-400'}`}>{winner}</span> outperforms by <span className="font-mono text-gain">{Math.abs(pnlA - pnlB).toFixed(2)}</span>
                   </div>
                 )}
                 <div className="overflow-x-auto">
                   <table className="w-full text-xs" aria-label="Backtest results">
                     <thead>
-                      <tr className="border-b border-pf-border">
-                        <th className="text-left py-2 pr-4 font-medium text-pf-text-muted">Metric</th>
-                        <th className="text-center py-2 px-4 font-medium text-pf-info">Run A</th>
+                      <tr className="border-b border-default">
+                        <th className="text-left py-2 pr-4 font-medium text-tertiary">Metric</th>
+                        <th className="text-center py-2 px-4 font-medium text-info">Run A</th>
                         <th className="text-center py-2 px-4 font-medium text-pf-purple-400">Run B</th>
                       </tr>
                     </thead>
                     <tbody>
                       {metrics.map(m => (
-                        <tr key={m.label} className="border-b border-pf-border-subtle last:border-0">
-                          <td className="py-2 pr-4 text-pf-text-muted">{m.label}</td>
-                          <td className={`py-2 px-4 text-center font-mono ${m.isNumeric && pnlA > pnlB ? 'text-pf-success font-semibold' : 'text-pf-text'}`}>{m.a}</td>
-                          <td className={`py-2 px-4 text-center font-mono ${m.isNumeric && pnlB > pnlA ? 'text-pf-success font-semibold' : 'text-pf-text'}`}>{m.b}</td>
+                        <tr key={m.label} className="border-b border-subtle last:border-0">
+                          <td className="py-2 pr-4 text-tertiary">{m.label}</td>
+                          <td className={`py-2 px-4 text-center font-mono ${m.isNumeric && pnlA > pnlB ? 'text-gain font-semibold' : 'text-primary'}`}>{m.a}</td>
+                          <td className={`py-2 px-4 text-center font-mono ${m.isNumeric && pnlB > pnlA ? 'text-gain font-semibold' : 'text-primary'}`}>{m.b}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -641,11 +641,11 @@ export function Component() {
             onClick={() => setPage(p => Math.max(1, p - 1))}
             disabled={page === 1}
             aria-label="Previous page"
-            className="p-2 rounded-pf text-pf-text-secondary hover:text-pf-text hover:bg-pf-elevated disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+            className="p-2 rounded-pf text-secondary hover:text-primary hover:bg-elevated disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
           >
             <ChevronLeft className="size-4" />
           </Button>
-          <span className="text-sm font-mono text-pf-text-secondary" aria-live="polite">Page {page} of {totalPages}</span>
+          <span className="text-sm font-mono text-secondary" aria-live="polite">Page {page} of {totalPages}</span>
           <Button
             type="button"
             variant="ghost"
@@ -653,7 +653,7 @@ export function Component() {
             onClick={() => setPage(p => Math.min(totalPages, p + 1))}
             disabled={page === totalPages}
             aria-label="Next page"
-            className="p-2 rounded-pf text-pf-text-secondary hover:text-pf-text hover:bg-pf-elevated disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+            className="p-2 rounded-pf text-secondary hover:text-primary hover:bg-elevated disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
           >
             <ChevronRight className="size-4" />
           </Button>

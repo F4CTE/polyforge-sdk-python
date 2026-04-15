@@ -76,38 +76,38 @@ function TryItPanel({ ep }: { ep: EndpointDef }) {
   const statusCls =
     responseStatus != null
       ? responseStatus < 300
-        ? 'bg-pf-success/10 text-pf-success'
+        ? 'bg-gain/10 text-gain'
         : responseStatus < 500
-        ? 'bg-pf-warning/10 text-pf-warning'
-        : 'bg-pf-danger/10 text-pf-danger'
+        ? 'bg-warning/10 text-warning'
+        : 'bg-loss/10 text-loss'
       : '';
 
   return (
-    <div className="border border-pf-border rounded-pf-lg p-4 space-y-3 bg-pf-elevated">
-      <p className="text-xs font-medium text-pf-text-muted uppercase tracking-wider">Try it out</p>
+    <div className="border border-default rounded-pf-lg p-4 space-y-3 bg-elevated">
+      <p className="text-xs font-medium text-tertiary uppercase tracking-wider">Try it out</p>
 
       {/* API key */}
       <div className="space-y-1">
-        <label className="text-xs text-pf-text-muted">API Key</label>
+        <label className="text-xs text-tertiary">API Key</label>
         <Input
           type="password"
           value={apiKey}
           onChange={e => setApiKey(e.target.value)}
           placeholder="pf_live_your_key..."
-          className="w-full bg-pf-base border border-pf-border rounded-pf-sm px-3 py-2 text-xs text-pf-text placeholder:text-pf-text-muted focus-visible:outline-none focus-visible:border-pf-cyan-500 focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 font-mono"
+          className="w-full bg-app border border-default rounded-pf-sm px-3 py-2 text-xs text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-accent/40 font-mono"
         />
       </div>
 
       {/* Path params */}
       {paramNames.map(name => (
         <div key={name} className="space-y-1">
-          <label className="text-xs text-pf-text-muted font-mono">:{name}</label>
+          <label className="text-xs text-tertiary font-mono">:{name}</label>
           <Input
             type="text"
             value={pathParams[name] ?? ''}
             onChange={e => setPathParams(prev => ({ ...prev, [name]: e.target.value }))}
             placeholder={name}
-            className="w-full bg-pf-base border border-pf-border rounded-pf-sm px-3 py-2 text-xs text-pf-text placeholder:text-pf-text-muted focus-visible:outline-none focus-visible:border-pf-cyan-500 focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 font-mono"
+            className="w-full bg-app border border-default rounded-pf-sm px-3 py-2 text-xs text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-accent/40 font-mono"
           />
         </div>
       ))}
@@ -115,12 +115,12 @@ function TryItPanel({ ep }: { ep: EndpointDef }) {
       {/* Request body */}
       {['POST', 'PATCH'].includes(ep.method) && (
         <div className="space-y-1">
-          <label className="text-xs text-pf-text-muted">Request Body (JSON)</label>
+          <label className="text-xs text-tertiary">Request Body (JSON)</label>
           <Textarea
             value={body}
             onChange={e => setBody(e.target.value)}
             rows={5}
-            className="w-full bg-pf-base border border-pf-border rounded-pf-sm px-3 py-2 text-xs text-pf-text font-mono focus-visible:outline-none focus-visible:border-pf-cyan-500 focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 resize-y"
+            className="w-full bg-app border border-default rounded-pf-sm px-3 py-2 text-xs text-primary font-mono focus-visible:outline-none focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-accent/40 resize-y"
           />
         </div>
       )}
@@ -129,13 +129,13 @@ function TryItPanel({ ep }: { ep: EndpointDef }) {
         type="button"
         onClick={handleSend}
         disabled={loading}
-        className="flex items-center gap-2 px-4 py-2 rounded-pf-sm bg-pf-cyan-500 text-pf-text-contrast text-xs font-semibold hover:bg-pf-cyan-400 transition-colors disabled:opacity-50 cursor-pointer"
+        className="flex items-center gap-2 px-4 py-2 rounded-pf-sm bg-accent text-inverse text-xs font-semibold hover:bg-accent-text transition-colors disabled:opacity-50 cursor-pointer"
       >
         <Play size={11} /> {loading ? 'Sending…' : 'Send'}
       </Button>
 
       {error && (
-        <p className="text-xs text-pf-danger bg-pf-danger/10 border border-pf-danger/20 rounded-pf px-3 py-2">
+        <p className="text-xs text-loss bg-loss/10 border border-loss/20 rounded-pf px-3 py-2">
           {error}
         </p>
       )}
@@ -143,14 +143,14 @@ function TryItPanel({ ep }: { ep: EndpointDef }) {
       {responseStatus != null && (
         <div className="space-y-2">
           <div className="flex items-center gap-2">
-            <span className="text-xs text-pf-text-muted">Status</span>
+            <span className="text-xs text-tertiary">Status</span>
             <Badge text={String(responseStatus)} cls={statusCls} />
           </div>
           <Code code={responseText || '(empty response)'} lang="ts" />
         </div>
       )}
 
-      <p className="text-pf-caption text-pf-text-muted">
+      <p className="text-pf-caption text-tertiary">
         Requests go directly to api.polyforge.app from your browser.
       </p>
     </div>
@@ -176,36 +176,36 @@ export function EndpointCard({ ep, lang, setLang, forceOpen }: EndpointCardProps
 
   return (
     <div
-      className={`border border-pf-border border-l-[3px] ${METHOD_BORDER[ep.method]} rounded-pf-lg overflow-hidden transition-all duration-pf-normal ${isOpen ? '' : 'hover:border-pf-border-strong'}`}
+      className={`border border-default border-l-[3px] ${METHOD_BORDER[ep.method]} rounded-pf-lg overflow-hidden transition-all duration-pf-normal ${isOpen ? '' : 'hover:border-strong'}`}
     >
       <Button
         type="button"
         variant="ghost"
         onClick={() => setOpen(o => !o)}
-        className="w-full flex items-center gap-3 px-4 py-3 bg-pf-elevated hover:bg-pf-elevated/80 text-left transition-colors duration-pf-normal cursor-pointer"
+        className="w-full flex items-center gap-3 px-4 py-3 bg-elevated hover:bg-elevated/80 text-left transition-colors duration-pf-normal cursor-pointer"
         aria-expanded={isOpen}
       >
         <Badge text={ep.method} cls={METHOD_CLS[ep.method]} />
-        <code className="flex-1 text-xs font-mono text-pf-text">{ep.path}</code>
-        <span className="hidden sm:block text-xs text-pf-text-muted mr-2 truncate max-w-48">
+        <code className="flex-1 text-xs font-mono text-primary">{ep.path}</code>
+        <span className="hidden sm:block text-xs text-tertiary mr-2 truncate max-w-48">
           {ep.summary}
         </span>
         {ep.status === 'beta' && (
-          <Badge text="beta" cls="bg-pf-warning/10 text-pf-warning" />
+          <Badge text="beta" cls="bg-warning/10 text-warning" />
         )}
         {ep.status === 'deprecated' && (
-          <Badge text="deprecated" cls="bg-pf-danger/10 text-pf-danger" />
+          <Badge text="deprecated" cls="bg-loss/10 text-loss" />
         )}
         <Badge text={ep.scope} cls={`${SCOPE_CLS[ep.scope]} hidden sm:inline-flex`} />
         {isOpen
-          ? <ChevronDown className="size-4 text-pf-text-muted shrink-0" />
-          : <ChevronRight className="size-4 text-pf-text-muted shrink-0" />
+          ? <ChevronDown className="size-4 text-tertiary shrink-0" />
+          : <ChevronRight className="size-4 text-tertiary shrink-0" />
         }
       </Button>
 
       {isOpen && (
-        <div className="border-t border-pf-border bg-pf-base px-4 py-5 space-y-5">
-          <p className="text-sm text-pf-text-secondary leading-relaxed">
+        <div className="border-t border-default bg-app px-4 py-5 space-y-5">
+          <p className="text-sm text-secondary leading-relaxed">
             {ep.description ?? ep.summary}
           </p>
 
@@ -222,7 +222,7 @@ export function EndpointCard({ ep, lang, setLang, forceOpen }: EndpointCardProps
           )}
 
           {ep.responseNote && (
-            <p className="text-xs text-pf-text-muted bg-pf-elevated border border-pf-border rounded-pf px-3 py-3">
+            <p className="text-xs text-tertiary bg-elevated border border-default rounded-pf px-3 py-3">
               {ep.responseNote}
             </p>
           )}
@@ -245,7 +245,7 @@ export function EndpointCard({ ep, lang, setLang, forceOpen }: EndpointCardProps
             type="button"
             variant="ghost"
             onClick={() => setTryItOpen(v => !v)}
-            className="text-xs text-pf-cyan-400 hover:text-pf-cyan-300 flex items-center gap-2"
+            className="text-xs text-accent-text hover:text-accent-text flex items-center gap-2"
           >
             <Play size={12} /> {tryItOpen ? 'Close' : 'Try it out'}
           </Button>

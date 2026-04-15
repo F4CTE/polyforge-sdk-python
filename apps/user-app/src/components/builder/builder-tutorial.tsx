@@ -17,11 +17,11 @@ const STEPS: TutorialStep[] = [
     title: 'Building Strategies',
     content: (
       <div className="space-y-3">
-        <p className="text-sm text-pf-text-secondary leading-relaxed">
-          Strategies are built by connecting <strong className="text-pf-text">blocks</strong> — each representing a piece of trading logic. Blocks are wired together to define execution flow.
+        <p className="text-sm text-secondary leading-relaxed">
+          Strategies are built by connecting <strong className="text-primary">blocks</strong> — each representing a piece of trading logic. Blocks are wired together to define execution flow.
         </p>
-        <p className="text-sm text-pf-text-secondary leading-relaxed">
-          Drag blocks from the palette onto the canvas, then connect them by dragging from the <span className="inline-block size-2 rounded-pf-full bg-pf-cyan-400 mr-2" aria-hidden="true" /> handles on each block.
+        <p className="text-sm text-secondary leading-relaxed">
+          Drag blocks from the palette onto the canvas, then connect them by dragging from the <span className="inline-block size-2 rounded-pf-full bg-accent-text mr-2" aria-hidden="true" /> handles on each block.
         </p>
       </div>
     ),
@@ -30,14 +30,14 @@ const STEPS: TutorialStep[] = [
     title: 'Safety Blocks — Always Active',
     content: (
       <div className="space-y-3">
-        <div className="flex items-center gap-2 px-3 py-2 rounded-pf-md bg-pf-danger/[0.13] border border-pf-danger/[0.27]">
-          <Shield className="size-4 shrink-0 text-pf-danger" />
-          <span className="text-sm font-medium text-pf-danger">Safety</span>
+        <div className="flex items-center gap-2 px-3 py-2 rounded-pf-md bg-loss/[0.13] border border-loss/[0.27]">
+          <Shield className="size-4 shrink-0 text-loss" />
+          <span className="text-sm font-medium text-loss">Safety</span>
         </div>
-        <p className="text-sm text-pf-text-secondary leading-relaxed">
-          Safety blocks are <strong className="text-pf-text">always enforced globally</strong> — they protect every execution path, every tick. They have no connection handles because they can't be scoped.
+        <p className="text-sm text-secondary leading-relaxed">
+          Safety blocks are <strong className="text-primary">always enforced globally</strong> — they protect every execution path, every tick. They have no connection handles because they can't be scoped.
         </p>
-        <p className="text-sm text-pf-text-secondary leading-relaxed">
+        <p className="text-sm text-secondary leading-relaxed">
           Examples: <em>Daily Loss Limit</em>, <em>Max Open Positions</em>. Add them and they're active — no wiring needed.
         </p>
       </div>
@@ -47,16 +47,16 @@ const STEPS: TutorialStep[] = [
     title: 'Trigger Blocks — Must Be Wired',
     content: (
       <div className="space-y-3">
-        <div className="flex items-center gap-2 px-3 py-2 rounded-pf-md bg-pf-warning/[0.13] border border-pf-warning/[0.27]">
-          <Zap className="size-4 shrink-0 text-pf-warning" />
-          <span className="text-sm font-medium text-pf-warning">Trigger</span>
+        <div className="flex items-center gap-2 px-3 py-2 rounded-pf-md bg-warning/[0.13] border border-warning/[0.27]">
+          <Zap className="size-4 shrink-0 text-warning" />
+          <span className="text-sm font-medium text-warning">Trigger</span>
         </div>
-        <p className="text-sm text-pf-text-secondary leading-relaxed">
-          Triggers detect when something happens (e.g. price crosses a threshold). They only fire if they have an <strong className="text-pf-text">outgoing connection</strong> — the wire tells the engine where to route execution.
+        <p className="text-sm text-secondary leading-relaxed">
+          Triggers detect when something happens (e.g. price crosses a threshold). They only fire if they have an <strong className="text-primary">outgoing connection</strong> — the wire tells the engine where to route execution.
         </p>
-        <div className="flex items-center gap-2 p-2 rounded-pf text-xs bg-pf-warning/[0.07]">
-          <Unlink className="size-3 shrink-0 text-pf-warning" />
-          <span className="text-pf-warning">Unwired triggers show a &ldquo;Not wired&rdquo; badge and are dimmed — they won&rsquo;t execute.</span>
+        <div className="flex items-center gap-2 p-2 rounded-pf text-xs bg-warning/[0.07]">
+          <Unlink className="size-3 shrink-0 text-warning" />
+          <span className="text-warning">Unwired triggers show a &ldquo;Not wired&rdquo; badge and are dimmed — they won&rsquo;t execute.</span>
         </div>
       </div>
     ),
@@ -65,21 +65,21 @@ const STEPS: TutorialStep[] = [
     title: 'Condition Blocks — Global or Scoped',
     content: (
       <div className="space-y-3">
-        <div className="flex items-center gap-2 px-3 py-2 rounded-pf-md bg-pf-cyan-500/[0.13] border border-pf-cyan-500/[0.27]">
-          <Filter className="size-4 shrink-0 text-pf-cyan-500" />
-          <span className="text-sm font-medium text-pf-cyan-500">Condition</span>
+        <div className="flex items-center gap-2 px-3 py-2 rounded-pf-md bg-accent/[0.13] border border-accent/[0.27]">
+          <Filter className="size-4 shrink-0 text-accent" />
+          <span className="text-sm font-medium text-accent">Condition</span>
         </div>
-        <p className="text-sm text-pf-text-secondary leading-relaxed">
+        <p className="text-sm text-secondary leading-relaxed">
           Conditions are gates — they let execution through only when their rule passes.
         </p>
-        <ul className="space-y-2 text-sm text-pf-text-secondary">
+        <ul className="space-y-2 text-sm text-secondary">
           <li className="flex items-start gap-2">
-            <Globe className="size-3 mt-1 shrink-0 text-pf-cyan-500" />
-            <span><strong className="text-pf-text">Unwired:</strong> acts as a <em>global gate</em> — all execution paths must pass it.</span>
+            <Globe className="size-3 mt-1 shrink-0 text-accent" />
+            <span><strong className="text-primary">Unwired:</strong> acts as a <em>global gate</em> — all execution paths must pass it.</span>
           </li>
           <li className="flex items-start gap-2">
-            <ChevronRight className="size-3 mt-1 shrink-0 text-pf-text-muted" />
-            <span><strong className="text-pf-text">Wired:</strong> only gates the specific trigger → action path it's connected to.</span>
+            <ChevronRight className="size-3 mt-1 shrink-0 text-tertiary" />
+            <span><strong className="text-primary">Wired:</strong> only gates the specific trigger → action path it's connected to.</span>
           </li>
         </ul>
       </div>
@@ -89,16 +89,16 @@ const STEPS: TutorialStep[] = [
     title: 'Action Blocks — Must Be Wired',
     content: (
       <div className="space-y-3">
-        <div className="flex items-center gap-2 px-3 py-2 rounded-pf-md bg-pf-success/[0.13] border border-pf-success/[0.27]">
-          <Play className="size-4 shrink-0 text-pf-success" />
-          <span className="text-sm font-medium text-pf-success">Action</span>
+        <div className="flex items-center gap-2 px-3 py-2 rounded-pf-md bg-gain/[0.13] border border-gain/[0.27]">
+          <Play className="size-4 shrink-0 text-gain" />
+          <span className="text-sm font-medium text-gain">Action</span>
         </div>
-        <p className="text-sm text-pf-text-secondary leading-relaxed">
-          Actions execute trades — buy, sell, close positions, run sub-strategies. They only execute if they have an <strong className="text-pf-text">incoming connection</strong> from a trigger or condition.
+        <p className="text-sm text-secondary leading-relaxed">
+          Actions execute trades — buy, sell, close positions, run sub-strategies. They only execute if they have an <strong className="text-primary">incoming connection</strong> from a trigger or condition.
         </p>
-        <div className="flex items-center gap-2 p-2 rounded-pf text-xs bg-pf-warning/[0.07]">
-          <Unlink className="size-3 shrink-0 text-pf-warning" />
-          <span className="text-pf-warning">Unwired actions are dimmed and won&rsquo;t execute — they need upstream context.</span>
+        <div className="flex items-center gap-2 p-2 rounded-pf text-xs bg-warning/[0.07]">
+          <Unlink className="size-3 shrink-0 text-warning" />
+          <span className="text-warning">Unwired actions are dimmed and won&rsquo;t execute — they need upstream context.</span>
         </div>
       </div>
     ),
@@ -107,14 +107,14 @@ const STEPS: TutorialStep[] = [
     title: 'Market Slots',
     content: (
       <div className="space-y-3">
-        <p className="text-sm text-pf-text-secondary leading-relaxed">
-          Many blocks have a <strong className="text-pf-text">Market Slot</strong> field (<code className="text-pf-purple-500 font-mono text-xs">$MARKET_A</code> … <code className="text-pf-purple-500 font-mono text-xs">$MARKET_E</code>). These are placeholders — you bind them to real markets when you start the strategy.
+        <p className="text-sm text-secondary leading-relaxed">
+          Many blocks have a <strong className="text-primary">Market Slot</strong> field (<code className="text-pf-purple-500 font-mono text-xs">$MARKET_A</code> … <code className="text-pf-purple-500 font-mono text-xs">$MARKET_E</code>). These are placeholders — you bind them to real markets when you start the strategy.
         </p>
-        <p className="text-sm text-pf-text-secondary leading-relaxed">
+        <p className="text-sm text-secondary leading-relaxed">
           This lets a single strategy template trade across different markets without rebuilding the block graph.
         </p>
-        <p className="text-sm text-pf-text-secondary leading-relaxed">
-          Fields that start with <code className="text-pf-purple-500 font-mono text-xs">$</code> are <strong className="text-pf-text">variables</strong> — shown in purple with a <em>var</em> badge.
+        <p className="text-sm text-secondary leading-relaxed">
+          Fields that start with <code className="text-pf-purple-500 font-mono text-xs">$</code> are <strong className="text-primary">variables</strong> — shown in purple with a <em>var</em> badge.
         </p>
       </div>
     ),
@@ -162,17 +162,17 @@ export function BuilderTutorial({ forceVisible, onDismiss }: BuilderTutorialProp
     <div
       role="dialog"
       aria-label="Strategy builder tutorial"
-      className="absolute bottom-4 left-4 z-40 w-80 bg-pf-elevated border border-pf-border rounded-pf-lg shadow-pf-lg flex flex-col overflow-hidden"
+      className="absolute bottom-4 left-4 z-40 w-80 bg-elevated border border-default rounded-pf-lg shadow-pf-lg flex flex-col overflow-hidden"
     >
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-pf-border-subtle">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-subtle">
         <div className="flex items-center gap-2">
-          <span className="text-sm font-semibold text-pf-text">{current.title}</span>
+          <span className="text-sm font-semibold text-primary">{current.title}</span>
         </div>
         <button
           type="button"
           onClick={dismiss}
-          className="p-1 rounded hover:bg-pf-overlay transition-colors text-pf-text-muted hover:text-pf-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/50"
+          className="p-1 rounded hover:bg-overlay transition-colors text-tertiary hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50"
           aria-label="Dismiss tutorial"
           title="Don't show again"
         >
@@ -186,7 +186,7 @@ export function BuilderTutorial({ forceVisible, onDismiss }: BuilderTutorialProp
       </div>
 
       {/* Footer */}
-      <div className="flex items-center justify-between px-4 py-3 border-t border-pf-border-subtle">
+      <div className="flex items-center justify-between px-4 py-3 border-t border-subtle">
         {/* Step dots */}
         <div className="flex items-center gap-1">
           {STEPS.map((_, i) => (
@@ -197,7 +197,7 @@ export function BuilderTutorial({ forceVisible, onDismiss }: BuilderTutorialProp
               aria-label={`Go to step ${i + 1}`}
               aria-current={i === step ? 'step' : undefined}
               className={`rounded-pf-full transition-all focus-visible:outline-none h-2 ${
-                i === step ? 'w-4 bg-pf-cyan-500' : 'w-2 bg-pf-border'
+                i === step ? 'w-4 bg-accent' : 'w-2 bg-default'
               }`}
             />
           ))}
@@ -209,7 +209,7 @@ export function BuilderTutorial({ forceVisible, onDismiss }: BuilderTutorialProp
             <button
               type="button"
               onClick={() => setStep((s) => s - 1)}
-              className="flex items-center gap-1 px-3 py-2 rounded-pf text-xs font-medium text-pf-text-secondary hover:text-pf-text bg-pf-surface border border-pf-border hover:border-pf-border-strong transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/50"
+              className="flex items-center gap-1 px-3 py-2 rounded-pf text-xs font-medium text-secondary hover:text-primary bg-surface border border-default hover:border-strong transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50"
             >
               <ChevronLeft className="size-3" />
               Back
@@ -219,7 +219,7 @@ export function BuilderTutorial({ forceVisible, onDismiss }: BuilderTutorialProp
             <button
               type="button"
               onClick={dismiss}
-              className="px-3 py-2 rounded-pf text-xs font-medium text-pf-text-muted hover:text-pf-text-secondary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/50"
+              className="px-3 py-2 rounded-pf text-xs font-medium text-tertiary hover:text-secondary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50"
             >
               Skip
             </button>
@@ -227,7 +227,7 @@ export function BuilderTutorial({ forceVisible, onDismiss }: BuilderTutorialProp
           <button
             type="button"
             onClick={isLast ? dismiss : () => setStep((s) => s + 1)}
-            className="flex items-center gap-1 px-3 py-2 rounded-pf text-xs font-medium bg-pf-cyan-500 text-pf-text-contrast hover:bg-pf-cyan-400 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/50"
+            className="flex items-center gap-1 px-3 py-2 rounded-pf text-xs font-medium bg-accent text-inverse hover:bg-accent-text transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50"
           >
             {isLast ? 'Got it' : 'Next'}
             {!isLast && <ChevronRight className="size-3" />}

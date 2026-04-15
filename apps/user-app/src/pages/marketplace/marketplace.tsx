@@ -29,22 +29,22 @@ type SortOption = 'newest' | 'popular' | 'rating' | 'price_asc' | 'price_desc';
 /* ─── Helpers ────────────────────────────────────────────────────────── */
 
 function StarRating({ rating, count }: { rating: string | null; count: number }) {
-  if (!rating || count === 0) return <span className="text-xs text-pf-text-muted">No reviews</span>;
+  if (!rating || count === 0) return <span className="text-xs text-tertiary">No reviews</span>;
   const n = parseFloat(rating);
   return (
     <span className="flex items-center gap-1">
-      <Star className="size-3 fill-pf-warning text-pf-warning" />
-      <span className="text-xs text-pf-text font-medium">{n.toFixed(1)}</span>
-      <span className="text-xs text-pf-text-muted">({count})</span>
+      <Star className="size-3 fill-warning text-warning" />
+      <span className="text-xs text-primary font-medium">{n.toFixed(1)}</span>
+      <span className="text-xs text-tertiary">({count})</span>
     </span>
   );
 }
 
 function PriceTag({ price }: { price: string }) {
   const n = parseFloat(price);
-  if (n === 0) return <span className="text-pf-success font-semibold text-sm">Free</span>;
+  if (n === 0) return <span className="text-gain font-semibold text-sm">Free</span>;
   return (
-    <span className="font-mono text-sm text-pf-text font-semibold">${n.toFixed(2)}</span>
+    <span className="font-mono text-sm text-primary font-semibold">${n.toFixed(2)}</span>
   );
 }
 
@@ -124,11 +124,11 @@ export function Component() {
       {/* Header */}
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold text-pf-text flex items-center gap-2">
-            <Store className="size-6 text-pf-cyan-400" />
+          <h1 className="text-2xl font-semibold text-primary flex items-center gap-2">
+            <Store className="size-6 text-accent-text" />
             Strategy Marketplace
           </h1>
-          <p className="text-sm text-pf-text-secondary mt-1">
+          <p className="text-sm text-secondary mt-1">
             Buy proven trading strategies from top forecasters — get a private fork you can customize.
           </p>
         </div>
@@ -136,7 +136,7 @@ export function Component() {
           type="button"
           onClick={load}
           disabled={loading}
-          className="flex items-center gap-2 px-3 py-2 rounded-pf bg-pf-elevated border border-pf-border text-sm text-pf-text-secondary hover:text-pf-text hover:border-pf-border-strong transition-colors disabled:opacity-50"
+          className="flex items-center gap-2 px-3 py-2 rounded-pf bg-elevated border border-default text-sm text-secondary hover:text-primary hover:border-strong transition-colors disabled:opacity-50"
         >
           {loading ? <Loader2 className="size-4 animate-spin" /> : <RefreshCw className="size-4" />}
           Refresh
@@ -144,7 +144,7 @@ export function Component() {
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 border-b border-pf-border">
+      <div className="flex gap-1 border-b border-default">
         {(['browse', 'my-purchases'] as const).map((t) => (
           <Button
             key={t}
@@ -153,8 +153,8 @@ export function Component() {
             onClick={() => setTab(t)}
             className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors -mb-px ${
               tab === t
-                ? 'border-pf-cyan-500 text-pf-cyan-400'
-                : 'border-transparent text-pf-text-secondary hover:text-pf-text'
+                ? 'border-accent text-accent-text'
+                : 'border-transparent text-secondary hover:text-primary'
             }`}
           >
             {t === 'browse' ? 'Browse' : 'My Purchases'}
@@ -170,19 +170,19 @@ export function Component() {
           <div className="flex flex-wrap items-center gap-3">
             {/* Search */}
             <div className="relative flex-1 min-w-[200px] max-w-xs">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-pf-text-muted pointer-events-none" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-tertiary pointer-events-none" />
               <Input
                 type="text"
                 placeholder="Search strategies…"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="w-full pl-9 pr-3 py-2 bg-pf-surface border border-pf-border rounded-pf text-sm text-pf-text placeholder-pf-text-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/30"
+                className="w-full pl-9 pr-3 py-2 bg-surface border border-default rounded-pf text-sm text-primary placeholder-tertiary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/30"
               />
             </div>
 
             {/* Sort */}
             <div className="flex items-center gap-2">
-              <Filter className="size-4 text-pf-text-muted" />
+              <Filter className="size-4 text-tertiary" />
               <div className="flex gap-1">
                 {(Object.keys(SORT_LABELS) as SortOption[]).map((s) => (
                   <Button
@@ -192,8 +192,8 @@ export function Component() {
                     onClick={() => setSort(s)}
                     className={`px-3 py-1 rounded-pf-full text-xs font-medium border transition-colors ${
                       sort === s
-                        ? 'bg-pf-cyan-500/15 text-pf-cyan-400 border-pf-cyan-500/30'
-                        : 'bg-pf-elevated text-pf-text-secondary border-pf-border hover:border-pf-border-strong'
+                        ? 'bg-accent/15 text-accent-text border-accent/30'
+                        : 'bg-elevated text-secondary border-default hover:border-strong'
                     }`}
                   >
                     {SORT_LABELS[s]}
@@ -202,7 +202,7 @@ export function Component() {
               </div>
             </div>
 
-            <span className="ml-auto text-xs text-pf-text-muted">
+            <span className="ml-auto text-xs text-tertiary">
               {loading ? 'Loading…' : `${total} listing${total !== 1 ? 's' : ''}`}
             </span>
           </div>
@@ -211,14 +211,14 @@ export function Component() {
           {loading ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {[1, 2, 3, 4, 5, 6].map((i) => (
-                <div key={i} className="h-52 bg-pf-elevated border border-pf-border rounded-pf-lg animate-pulse" />
+                <div key={i} className="h-52 bg-elevated border border-default rounded-pf-lg animate-pulse" />
               ))}
             </div>
           ) : filtered.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20 text-center">
-              <AlertTriangle className="size-10 text-pf-text-muted mb-3" />
-              <p className="text-pf-text-secondary text-sm">No listings found.</p>
-              <p className="text-pf-text-muted text-xs mt-1">
+              <AlertTriangle className="size-10 text-tertiary mb-3" />
+              <p className="text-secondary text-sm">No listings found.</p>
+              <p className="text-tertiary text-xs mt-1">
                 Try a different filter or check back later.
               </p>
             </div>
@@ -252,15 +252,15 @@ function ListingCard({
   onPurchase: () => void;
 }) {
   return (
-    <div className="flex flex-col bg-pf-elevated border border-pf-border rounded-pf-lg p-4 hover:border-pf-border-strong transition-colors">
+    <div className="flex flex-col bg-elevated border border-default rounded-pf-lg p-4 hover:border-strong transition-colors">
       {/* Title + seller */}
       <div className="flex-1 space-y-2 min-w-0">
-        <p className="text-sm font-semibold text-pf-text line-clamp-2">{listing.title}</p>
-        <p className="text-xs text-pf-text-muted">
-          by <span className="text-pf-text-secondary">{listing.seller.name}</span>
+        <p className="text-sm font-semibold text-primary line-clamp-2">{listing.title}</p>
+        <p className="text-xs text-tertiary">
+          by <span className="text-secondary">{listing.seller.name}</span>
         </p>
         {listing.description && (
-          <p className="text-xs text-pf-text-secondary line-clamp-2 leading-relaxed">
+          <p className="text-xs text-secondary line-clamp-2 leading-relaxed">
             {listing.description}
           </p>
         )}
@@ -272,7 +272,7 @@ function ListingCard({
           {listing.tags.slice(0, 4).map((t) => (
             <span
               key={t}
-              className="px-2 py-1 bg-pf-surface border border-pf-border rounded text-pf-caption text-pf-text-muted"
+              className="px-2 py-1 bg-surface border border-default rounded text-pf-caption text-tertiary"
             >
               {t}
             </span>
@@ -281,26 +281,26 @@ function ListingCard({
       )}
 
       {/* Stats row */}
-      <div className="flex items-center gap-4 mt-3 pt-3 border-t border-pf-border/50">
+      <div className="flex items-center gap-4 mt-3 pt-3 border-t border-default/50">
         <StarRating rating={listing.avgRating} count={listing.ratingCount} />
-        <span className="flex items-center gap-1 text-xs text-pf-text-muted">
+        <span className="flex items-center gap-1 text-xs text-tertiary">
           <GitFork className="size-3" />
           {listing.forkCount}
         </span>
-        <span className="flex items-center gap-1 text-xs text-pf-text-muted ml-auto">
+        <span className="flex items-center gap-1 text-xs text-tertiary ml-auto">
           <ShoppingCart className="size-3" />
           {listing.purchaseCount}
         </span>
       </div>
 
       {/* Price + action */}
-      <div className="flex items-center justify-between mt-3 pt-3 border-t border-pf-border/50">
+      <div className="flex items-center justify-between mt-3 pt-3 border-t border-default/50">
         <PriceTag price={listing.priceUsdc} />
         <Button
           type="button"
           onClick={onPurchase}
           disabled={purchasing}
-          className="flex items-center gap-2 px-3 py-2 rounded-pf bg-pf-cyan-500 text-pf-text-contrast text-xs font-medium hover:bg-pf-cyan-400 disabled:opacity-50 transition-colors"
+          className="flex items-center gap-2 px-3 py-2 rounded-pf bg-accent text-inverse text-xs font-medium hover:bg-accent-text disabled:opacity-50 transition-colors"
         >
           {purchasing ? (
             <Loader2 className="size-3 animate-spin" />
@@ -346,7 +346,7 @@ function MyPurchases() {
     return (
       <div className="space-y-2">
         {[1, 2, 3].map((i) => (
-          <div key={i} className="h-16 bg-pf-elevated border border-pf-border rounded-pf-lg animate-pulse" />
+          <div key={i} className="h-16 bg-elevated border border-default rounded-pf-lg animate-pulse" />
         ))}
       </div>
     );
@@ -355,9 +355,9 @@ function MyPurchases() {
   if (purchases.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-center">
-        <ShoppingCart className="size-10 text-pf-text-muted mb-3" />
-        <p className="text-pf-text-secondary text-sm">No purchases yet.</p>
-        <p className="text-pf-text-muted text-xs mt-1">Browse the marketplace to find strategies.</p>
+        <ShoppingCart className="size-10 text-tertiary mb-3" />
+        <p className="text-secondary text-sm">No purchases yet.</p>
+        <p className="text-tertiary text-xs mt-1">Browse the marketplace to find strategies.</p>
       </div>
     );
   }
@@ -367,15 +367,15 @@ function MyPurchases() {
       {purchases.map((p) => (
         <div
           key={p.id}
-          className="flex items-center justify-between px-4 py-3 bg-pf-elevated border border-pf-border rounded-pf-lg"
+          className="flex items-center justify-between px-4 py-3 bg-elevated border border-default rounded-pf-lg"
         >
           <div>
-            <p className="text-sm text-pf-text font-medium">{p.listing.title}</p>
-            <p className="text-xs text-pf-text-muted">
+            <p className="text-sm text-primary font-medium">{p.listing.title}</p>
+            <p className="text-xs text-tertiary">
               by {p.listing.seller.name} · {new Date(p.createdAt).toLocaleDateString()}
             </p>
           </div>
-          <span className="font-mono text-sm text-pf-text">
+          <span className="font-mono text-sm text-primary">
             {parseFloat(p.priceUsdc) === 0 ? 'Free' : `$${parseFloat(p.priceUsdc).toFixed(2)}`}
           </span>
         </div>

@@ -58,8 +58,8 @@ const MIN_TRADES_OPTIONS: { label: string; value: number }[] = [
 
 function pnlColor(pnl: string): string {
   const v = parseFloat(pnl);
-  if (isNaN(v)) return 'text-pf-text-secondary';
-  return v >= 0 ? 'text-pf-success' : 'text-pf-danger';
+  if (isNaN(v)) return 'text-secondary';
+  return v >= 0 ? 'text-gain' : 'text-loss';
 }
 
 function pnlSign(pnl: string): string {
@@ -71,16 +71,16 @@ function pnlSign(pnl: string): string {
 
 function rankMedal(rank: number): React.ReactNode {
   if (rank === 1) return <Trophy data-testid="medal-badge" data-medal="gold" className="size-4 text-pf-gold-400" aria-label="Gold medal" />;
-  if (rank === 2) return <Trophy data-testid="medal-badge" data-medal="silver" className="size-4 text-pf-text-secondary" aria-label="Silver medal" />;
+  if (rank === 2) return <Trophy data-testid="medal-badge" data-medal="silver" className="size-4 text-secondary" aria-label="Silver medal" />;
   if (rank === 3) return <Trophy data-testid="medal-badge" data-medal="bronze" className="size-4 text-pf-gold-600" aria-label="Bronze medal" />;
   return null;
 }
 
 function rankColor(rank: number): string {
-  if (rank === 1) return 'text-pf-warning'; /* gold */
-  if (rank === 2) return 'text-pf-text-secondary';
+  if (rank === 1) return 'text-warning'; /* gold */
+  if (rank === 2) return 'text-secondary';
   if (rank === 3) return 'text-pf-gold-600';
-  return 'text-pf-text-muted';
+  return 'text-tertiary';
 }
 
 function userInitials(e: LeaderboardEntry): string {
@@ -102,7 +102,7 @@ function MiniSparkline({ data }: { data: number[] }) {
       <polyline
         points={pts}
         fill="none"
-        stroke={isUp ? 'var(--color-pf-success)' : 'var(--color-pf-danger)'}
+        stroke={isUp ? 'var(--gain)' : 'var(--loss)'}
         strokeWidth={1.5}
         strokeLinejoin="round"
         strokeLinecap="round"
@@ -167,8 +167,8 @@ export function Component() {
     <div className="animate-fade-in p-6 max-w-7xl mx-auto space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold text-pf-text">Leaderboard</h1>
-        {!loading && <span className="text-sm text-pf-text-muted">{total} traders</span>}
+        <h1 className="text-2xl font-semibold text-primary">Leaderboard</h1>
+        {!loading && <span className="text-sm text-tertiary">{total} traders</span>}
       </div>
 
       {/* Period tabs */}
@@ -183,8 +183,8 @@ export function Component() {
             onClick={() => changePeriod(p.value)}
             className={`px-3 py-2 rounded-pf-full text-xs font-medium whitespace-nowrap border transition-colors ${
               period === p.value
-                ? 'bg-pf-cyan-500/15 text-pf-cyan-400 border-pf-cyan-500/30'
-                : 'bg-pf-elevated text-pf-text-secondary border-pf-border hover:border-pf-border-strong'
+                ? 'bg-accent/15 text-accent-text border-accent/30'
+                : 'bg-elevated text-secondary border-default hover:border-strong'
             }`}
           >
             {p.label}
@@ -202,8 +202,8 @@ export function Component() {
             onClick={() => changeCategory(cat.value)}
             className={`px-3 py-2 rounded-pf-full text-xs font-medium whitespace-nowrap border transition-colors ${
               category === cat.value
-                ? 'bg-pf-cyan-500/15 text-pf-cyan-400 border-pf-cyan-500/30'
-                : 'bg-pf-elevated text-pf-text-secondary border-pf-border hover:border-pf-border-strong'
+                ? 'bg-accent/15 text-accent-text border-accent/30'
+                : 'bg-elevated text-secondary border-default hover:border-strong'
             }`}
           >
             {cat.label}
@@ -216,7 +216,7 @@ export function Component() {
         <Select
           value={String(minTrades)}
           onChange={e => changeMinTrades(Number(e.target.value))}
-          className="bg-pf-elevated border border-pf-border rounded-pf text-xs text-pf-text-secondary px-2 py-2"
+          className="bg-elevated border border-default rounded-pf text-xs text-secondary px-2 py-2"
           aria-label="Minimum trades filter"
         >
           {MIN_TRADES_OPTIONS.map(opt => (
@@ -226,11 +226,11 @@ export function Component() {
       </div>
 
       {/* Table */}
-      <div data-testid="leaderboard-table" className="bg-pf-elevated border border-pf-border rounded-pf-lg overflow-hidden">
+      <div data-testid="leaderboard-table" className="bg-elevated border border-default rounded-pf-lg overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm" aria-label="Leaderboard rankings">
             <thead>
-              <tr className="bg-pf-surface text-left text-xs text-pf-text-secondary uppercase tracking-wider">
+              <tr className="bg-surface text-left text-xs text-secondary uppercase tracking-wider">
                 <th scope="col" data-testid="column-rank" className="px-4 py-3 font-medium text-right w-16">Rank</th>
                 <th scope="col" data-testid="column-trader" className="px-4 py-3 font-medium">Trader</th>
                 <th scope="col" data-testid="column-score" className="px-4 py-3 font-medium text-right hidden sm:table-cell">Score</th>
@@ -240,12 +240,12 @@ export function Component() {
                 <th scope="col" data-testid="column-trades" className="px-4 py-3 font-medium text-right">Trades</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-pf-border-subtle">
+            <tbody className="divide-y divide-subtle">
               {loading && entries.length === 0 ? (
                 Array.from({ length: 10 }, (_, i) => (
                   <tr key={i}>
                     {Array.from({ length: 7 }, (_, j) => (
-                      <td key={j} className="px-4 py-3"><div className="h-3 bg-pf-overlay rounded animate-pulse" /></td>
+                      <td key={j} className="px-4 py-3"><div className="h-3 bg-overlay rounded animate-pulse" /></td>
                     ))}
                   </tr>
                 ))
@@ -253,15 +253,15 @@ export function Component() {
                 <tr>
                   <td colSpan={7}>
                     <div className="flex flex-col items-center justify-center py-16 text-center">
-                      <Trophy className="size-10 text-pf-text-muted mb-3" />
-                      <p className="text-sm font-medium text-pf-text">No leaderboard data yet</p>
-                      <p className="text-xs text-pf-text-muted mt-1">Rankings will appear once traders have resolved positions.</p>
+                      <Trophy className="size-10 text-tertiary mb-3" />
+                      <p className="text-sm font-medium text-primary">No leaderboard data yet</p>
+                      <p className="text-xs text-tertiary mt-1">Rankings will appear once traders have resolved positions.</p>
                     </div>
                   </td>
                 </tr>
               ) : (
                 entries.map(entry => (
-                  <tr key={entry.userId} data-testid="trader-row" data-username={entry.username} className="hover:bg-pf-surface/50 transition-colors">
+                  <tr key={entry.userId} data-testid="trader-row" data-username={entry.username} className="hover:bg-surface/50 transition-colors">
                     <td className="px-4 py-3 text-right">
                       <div data-testid="trader-rank" className={`${rankColor(entry.rank)}`}>
                         {rankMedal(entry.rank) !== null ? (
@@ -273,25 +273,25 @@ export function Component() {
                     </td>
                     <td data-testid="trader-name" className="px-4 py-3">
                       <div className="flex items-center gap-2">
-                      <Link to={`/profile/${entry.username}`} data-testid={`trader-${entry.username}`} className="flex items-center gap-3 hover:text-pf-cyan-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 transition-colors">
+                      <Link to={`/profile/${entry.username}`} data-testid={`trader-${entry.username}`} className="flex items-center gap-3 hover:text-accent-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 transition-colors">
                         {entry.avatarUrl ? (
                           <img src={entry.avatarUrl} alt={`${entry.displayName ?? entry.username} avatar`} className="size-8 rounded-pf-full object-cover" width={32} height={32} loading="lazy" />
                         ) : (
-                          <div className="size-8 rounded-pf-full bg-pf-surface flex items-center justify-center text-pf-label font-semibold text-pf-cyan-400">
+                          <div className="size-8 rounded-pf-full bg-surface flex items-center justify-center text-pf-label font-semibold text-accent-text">
                             {userInitials(entry)}
                           </div>
                         )}
                         <div>
-                          <div className="text-sm font-medium text-pf-text">{entry.displayName ?? entry.username}</div>
+                          <div className="text-sm font-medium text-primary">{entry.displayName ?? entry.username}</div>
                           {entry.displayName && (
-                            <div className="text-xs text-pf-text-muted">@{entry.username}</div>
+                            <div className="text-xs text-tertiary">@{entry.username}</div>
                           )}
                         </div>
                       </Link>
                       <Link
                         to={`/copy/new?address=${encodeURIComponent(entry.username)}`}
                         title="Copy trade this trader"
-                        className="shrink-0 text-pf-caption px-2 py-1 rounded border border-pf-cyan-500/30 bg-pf-cyan-500/8 text-pf-cyan-400 hover:bg-pf-cyan-500/20 transition-colors font-medium"
+                        className="shrink-0 text-pf-caption px-2 py-1 rounded border border-accent/30 bg-accent/8 text-accent-text hover:bg-accent/20 transition-colors font-medium"
                       >
                         Copy Trade
                       </Link>
@@ -300,22 +300,22 @@ export function Component() {
                     <td data-testid="trader-score" className="px-4 py-3 text-right hidden sm:table-cell">
                       {entry.score != null ? (
                         <span className={`inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-mono font-bold ${
-                          entry.score >= 80 ? 'text-pf-success bg-pf-success/10' :
-                          entry.score >= 60 ? 'text-pf-cyan-400 bg-pf-cyan-500/10' :
-                          entry.score >= 40 ? 'text-pf-warning bg-pf-warning/10' :
-                          'text-pf-danger bg-pf-danger/10'
+                          entry.score >= 80 ? 'text-gain bg-gain/10' :
+                          entry.score >= 60 ? 'text-accent-text bg-accent/10' :
+                          entry.score >= 40 ? 'text-warning bg-warning/10' :
+                          'text-loss bg-loss/10'
                         }`}>
                           <TrendingUp className="size-3" />
                           {entry.score}
                         </span>
                       ) : (
-                        <span className="text-xs text-pf-text-muted">&mdash;</span>
+                        <span className="text-xs text-tertiary">&mdash;</span>
                       )}
                     </td>
                     <td data-testid="trader-pnl" className={`px-4 py-3 text-right font-mono ${pnlColor(entry.pnl)}`}>
                       {pnlSign(entry.pnl)}
                     </td>
-                    <td className="px-4 py-3 text-right font-mono text-pf-text-secondary hidden sm:table-cell">
+                    <td className="px-4 py-3 text-right font-mono text-secondary hidden sm:table-cell">
                       {entry.winRate}%
                     </td>
                     <td className="px-4 py-3 text-right hidden sm:table-cell">
@@ -324,10 +324,10 @@ export function Component() {
                           <MiniSparkline data={entry.pnlHistory} />
                         </div>
                       ) : (
-                        <span className="text-xs text-pf-text-muted">&mdash;</span>
+                        <span className="text-xs text-tertiary">&mdash;</span>
                       )}
                     </td>
-                    <td className="px-4 py-3 text-right font-mono text-pf-text-secondary">
+                    <td className="px-4 py-3 text-right font-mono text-secondary">
                       {entry.tradeCount}
                     </td>
                   </tr>
@@ -348,11 +348,11 @@ export function Component() {
             onClick={() => setPage(p => Math.max(1, p - 1))}
             disabled={page === 1}
             aria-label="Previous page"
-            className="p-2 rounded-pf text-pf-text-secondary hover:text-pf-text hover:bg-pf-elevated disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+            className="p-2 rounded-pf text-secondary hover:text-primary hover:bg-elevated disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
           >
             <ChevronLeft className="size-4" />
           </Button>
-          <span data-testid="page-indicator" className="text-sm font-mono text-pf-text-secondary" aria-live="polite">{page} / {totalPages}</span>
+          <span data-testid="page-indicator" className="text-sm font-mono text-secondary" aria-live="polite">{page} / {totalPages}</span>
           <Button
             type="button"
             variant="ghost"
@@ -360,7 +360,7 @@ export function Component() {
             onClick={() => setPage(p => Math.min(totalPages, p + 1))}
             disabled={page === totalPages}
             aria-label="Next page"
-            className="p-2 rounded-pf text-pf-text-secondary hover:text-pf-text hover:bg-pf-elevated disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+            className="p-2 rounded-pf text-secondary hover:text-primary hover:bg-elevated disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
           >
             <ChevronRight className="size-4" />
           </Button>

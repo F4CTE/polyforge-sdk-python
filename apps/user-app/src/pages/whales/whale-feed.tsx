@@ -194,17 +194,17 @@ export function Component() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <Fish className="size-6 text-pf-cyan-400" aria-hidden="true" />
-          <h1 className="text-2xl font-semibold text-pf-text">Whale Tracker</h1>
+          <Fish className="size-6 text-accent-text" aria-hidden="true" />
+          <h1 className="text-2xl font-semibold text-primary">Whale Tracker</h1>
         </div>
         <div className="flex items-center gap-3">
           <Link
             to="/whales/following"
-            className="text-xs font-medium text-pf-text hover:text-pf-cyan-400 transition-colors"
+            className="text-xs font-medium text-primary hover:text-accent-text transition-colors"
           >
             Following
           </Link>
-          {!loading && <span className="text-sm font-medium text-pf-text-secondary">{total} trades</span>}
+          {!loading && <span className="text-sm font-medium text-secondary">{total} trades</span>}
         </div>
       </div>
 
@@ -220,8 +220,8 @@ export function Component() {
               onClick={() => changeMinSize(s.value)}
               className={`px-3 py-2 rounded-pf-full text-xs font-medium whitespace-nowrap border transition-colors ${
                 minSize === s.value
-                  ? 'bg-pf-cyan-500/15 text-pf-cyan-400 border-pf-cyan-500/30'
-                  : 'bg-pf-elevated text-pf-text-secondary border-pf-border hover:border-pf-border-strong'
+                  ? 'bg-accent/15 text-accent-text border-accent/30'
+                  : 'bg-elevated text-secondary border-default hover:border-strong'
               }`}
             >
               {s.label}
@@ -234,7 +234,7 @@ export function Component() {
           value={category}
           onChange={e => changeCategory(e.target.value)}
           aria-label="Filter by category"
-          className="px-3 py-2 rounded-pf-sm text-xs bg-pf-elevated text-pf-text-secondary border border-pf-border hover:border-pf-border-strong transition-colors"
+          className="px-3 py-2 rounded-pf-sm text-xs bg-elevated text-secondary border border-default hover:border-strong transition-colors"
         >
           <option value="">All Categories</option>
           <option value="crypto">Crypto</option>
@@ -246,14 +246,14 @@ export function Component() {
 
         {/* Wallet search */}
         <div className="relative flex-1 min-w-[200px] max-w-xs">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-pf-text-muted" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-tertiary" />
           <Input
             type="text"
             placeholder="Search wallet..."
             aria-label="Search wallet address"
             value={walletSearch}
             onChange={e => { setWalletSearch(e.target.value); setPage(1); }}
-            className="w-full pl-8 pr-3 py-2 rounded-pf-sm text-xs bg-pf-elevated text-pf-text border border-pf-border hover:border-pf-border-strong focus-visible:border-pf-cyan-500/50 focus-visible:outline-none transition-colors placeholder:text-pf-text-muted"
+            className="w-full pl-8 pr-3 py-2 rounded-pf-sm text-xs bg-elevated text-primary border border-default hover:border-strong focus-visible:border-accent/50 focus-visible:outline-none transition-colors placeholder:text-tertiary"
           />
         </div>
       </div>
@@ -265,9 +265,9 @@ export function Component() {
         </div>
       ) : trades.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-center">
-          <Fish className="size-10 text-pf-text-muted mb-4" />
-          <p className="text-pf-text font-medium">No whale trades detected yet</p>
-          <p className="text-sm text-pf-text-muted mt-1 max-w-sm">
+          <Fish className="size-10 text-tertiary mb-4" />
+          <p className="text-primary font-medium">No whale trades detected yet</p>
+          <p className="text-sm text-tertiary mt-1 max-w-sm">
             When large trades happen on Polymarket, they'll appear here. Follow wallets to track specific traders.
           </p>
         </div>
@@ -277,7 +277,7 @@ export function Component() {
             <div
               key={trade.id}
               data-testid="whale-feed-item"
-              className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4 transition-all duration-pf-normal hover:border-pf-border-strong hover:shadow-pf-sm"
+              className="bg-elevated border border-default rounded-pf-lg p-4 transition-all duration-pf-normal hover:border-strong hover:shadow-pf-sm"
             >
               {/* Top row: wallet + time */}
               <div className="flex items-center justify-between mb-3">
@@ -285,7 +285,7 @@ export function Component() {
                   <Link
                     to={`/whales/${trade.walletAddress}`}
                     data-testid={`whale-${trade.walletAddress}`}
-                    className="font-mono text-sm text-pf-text hover:text-pf-cyan-400 transition-colors"
+                    className="font-mono text-sm text-primary hover:text-accent-text transition-colors"
                   >
                     <span data-testid="whale-address">{truncateAddress(trade.walletAddress)}</span>
                   </Link>
@@ -293,20 +293,20 @@ export function Component() {
                     type="button"
                     variant="ghost"
                     onClick={() => copyToClipboard(trade.walletAddress)}
-                    className="text-pf-text-muted hover:text-pf-text transition-colors"
+                    className="text-tertiary hover:text-primary transition-colors"
                     title="Copy address"
                     aria-label="Copy wallet address"
                   >
                     <Copy className="size-4" />
                   </Button>
                 </div>
-                <span data-testid="transaction-timestamp" className="text-pf-label text-pf-text-muted">{timeAgo(trade.timestamp)}</span>
+                <span data-testid="transaction-timestamp" className="text-pf-label text-tertiary">{timeAgo(trade.timestamp)}</span>
               </div>
 
               {/* Market name + category */}
               <div className="flex items-center gap-2 mb-3">
-                <span data-testid="transaction-market" className="text-sm text-pf-text font-medium truncate">{trade.marketName}</span>
-                <span className="px-2 py-1 rounded-pf-full text-pf-caption bg-pf-overlay text-pf-text-muted shrink-0">
+                <span data-testid="transaction-market" className="text-sm text-primary font-medium truncate">{trade.marketName}</span>
+                <span className="px-2 py-1 rounded-pf-full text-pf-caption bg-overlay text-tertiary shrink-0">
                   {trade.marketCategory}
                 </span>
               </div>
@@ -315,29 +315,29 @@ export function Component() {
               <div className="flex items-center gap-2 mb-3">
                 <span data-testid="transaction-side" className={`px-2 py-1 rounded text-pf-label font-semibold ${
                   trade.side === 'BUY'
-                    ? 'bg-pf-success/15 text-pf-success'
-                    : 'bg-pf-danger/15 text-pf-danger'
+                    ? 'bg-gain/15 text-gain'
+                    : 'bg-loss/15 text-loss'
                 }`}>
                   {trade.side}
                 </span>
                 <span className={`px-2 py-1 rounded text-pf-label font-semibold ${
                   trade.outcome === 'YES'
-                    ? 'bg-pf-success/15 text-pf-success'
-                    : 'bg-pf-danger/15 text-pf-danger'
+                    ? 'bg-gain/15 text-gain'
+                    : 'bg-loss/15 text-loss'
                 }`}>
                   {trade.outcome}
                 </span>
               </div>
 
               {/* Size / Price / Notional */}
-              <div className="flex items-center gap-4 text-xs text-pf-text-secondary mb-3">
-                <span data-testid="transaction-amount">Size: <span className="font-mono text-pf-text">{fmtUsd(trade.size)}</span></span>
-                <span>Price: <span className="font-mono text-pf-text">{fmtPrice(trade.price)}</span></span>
-                <span>Notional: <span className="font-mono text-pf-text font-semibold">{fmtUsd(trade.notional)}</span></span>
+              <div className="flex items-center gap-4 text-xs text-secondary mb-3">
+                <span data-testid="transaction-amount">Size: <span className="font-mono text-primary">{fmtUsd(trade.size)}</span></span>
+                <span>Price: <span className="font-mono text-primary">{fmtPrice(trade.price)}</span></span>
+                <span>Notional: <span className="font-mono text-primary font-semibold">{fmtUsd(trade.notional)}</span></span>
               </div>
 
               {/* Separator */}
-              <div className="border-t border-pf-border-subtle my-2" />
+              <div className="border-t border-subtle my-2" />
 
               {/* Action buttons */}
               <div className="flex items-center gap-2 pt-1">
@@ -348,8 +348,8 @@ export function Component() {
                   onClick={() => toggleFollow(trade.walletAddress)}
                   className={`flex items-center gap-2 px-3 py-2 rounded-pf-sm text-xs font-medium border cursor-pointer transition-colors ${
                     followingSet.has(trade.walletAddress)
-                      ? 'bg-pf-cyan-500/15 text-pf-cyan-400 border-pf-cyan-500/30'
-                      : 'text-pf-cyan-400 border-pf-cyan-500/30 hover:bg-pf-cyan-500/10'
+                      ? 'bg-accent/15 text-accent-text border-accent/30'
+                      : 'text-accent-text border-accent/30 hover:bg-accent/10'
                   }`}
                 >
                   {followingSet.has(trade.walletAddress) ? (
@@ -360,7 +360,7 @@ export function Component() {
                 </Button>
                 <Link
                   to={`/copy/new?wallet=${trade.walletAddress}`}
-                  className="flex items-center gap-2 px-3 py-2 rounded-pf-sm text-xs font-medium border border-pf-success/30 text-pf-success hover:bg-pf-success/10 transition-colors"
+                  className="flex items-center gap-2 px-3 py-2 rounded-pf-sm text-xs font-medium border border-gain/30 text-gain hover:bg-gain/10 transition-colors"
                 >
                   <Copy className="size-4" /> Copy
                 </Link>
@@ -380,11 +380,11 @@ export function Component() {
             onClick={() => setPage(p => Math.max(1, p - 1))}
             disabled={page === 1}
             aria-label="Previous page"
-            className="p-2 rounded-pf text-pf-text-secondary hover:text-pf-text hover:bg-pf-elevated disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+            className="p-2 rounded-pf text-secondary hover:text-primary hover:bg-elevated disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
           >
             <ChevronLeft className="size-4" />
           </Button>
-          <span data-testid="page-indicator" className="text-sm font-mono text-pf-text-secondary" aria-live="polite">{page} / {totalPages}</span>
+          <span data-testid="page-indicator" className="text-sm font-mono text-secondary" aria-live="polite">{page} / {totalPages}</span>
           <Button
             type="button"
             variant="ghost"
@@ -392,7 +392,7 @@ export function Component() {
             onClick={() => setPage(p => Math.min(totalPages, p + 1))}
             disabled={page === totalPages}
             aria-label="Next page"
-            className="p-2 rounded-pf text-pf-text-secondary hover:text-pf-text hover:bg-pf-elevated disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+            className="p-2 rounded-pf text-secondary hover:text-primary hover:bg-elevated disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
           >
             <ChevronRight className="size-4" />
           </Button>

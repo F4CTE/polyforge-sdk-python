@@ -205,27 +205,27 @@ const PERIODS: { label: string; value: Period }[] = [
 ];
 
 const CATEGORY_COLORS: Record<string, string> = {
-  Politics: 'var(--color-pf-cyan-500)',
-  Sports: 'var(--color-pf-success)',
+  Politics: 'var(--accent-default)',
+  Sports: 'var(--gain)',
   Crypto: 'var(--color-pf-gold-500)',
   Finance: 'var(--color-pf-purple-500)',
-  Entertainment: 'var(--color-pf-danger)',
-  Science: 'var(--color-pf-info)',
-  Other: 'var(--color-pf-text-muted)',
+  Entertainment: 'var(--loss)',
+  Science: 'var(--info)',
+  Other: 'var(--text-tertiary)',
 };
 
 function pnlColor(val: string): string {
   const n = parseFloat(val);
-  if (n > 0) return 'text-pf-success';
-  if (n < 0) return 'text-pf-danger';
-  return 'text-pf-text-muted';
+  if (n > 0) return 'text-gain';
+  if (n < 0) return 'text-loss';
+  return 'text-tertiary';
 }
 
 function pnlBorderColor(val: string): string {
   const n = parseFloat(val);
-  if (n > 0) return 'border-l-pf-success';
-  if (n < 0) return 'border-l-pf-danger';
-  return 'border-l-pf-text-muted';
+  if (n > 0) return 'border-l-gain';
+  if (n < 0) return 'border-l-loss';
+  return 'border-l-tertiary';
 }
 
 function formatPnl(val: string): string {
@@ -252,13 +252,13 @@ function CategoryBadge({ category }: { category?: string | null }) {
   if (!category) return null;
   const colors: Record<string, string> = {
     crypto: 'bg-pf-gold-500/15 text-pf-gold-500 border-pf-gold-500/30',
-    politics: 'bg-pf-info/15 text-pf-info border-pf-info/30',
-    sports: 'bg-pf-success/15 text-pf-success border-pf-success/30',
+    politics: 'bg-info/15 text-info border-info/30',
+    sports: 'bg-gain/15 text-gain border-gain/30',
     entertainment: 'bg-pf-purple-500/15 text-pf-purple-400 border-pf-purple-500/30',
-    science: 'bg-pf-cyan-500/15 text-pf-cyan-400 border-pf-cyan-500/30',
+    science: 'bg-accent/15 text-accent-text border-accent/30',
   };
   const key = category.toLowerCase();
-  const cls = colors[key] ?? 'bg-pf-surface text-pf-text-muted border-pf-border';
+  const cls = colors[key] ?? 'bg-surface text-tertiary border-default';
   return (
     <span className={`inline-flex items-center px-2 py-1 rounded text-pf-caption font-medium border ${cls}`}>
       {category}
@@ -276,7 +276,7 @@ function TableSkeleton() {
   return (
     <div className="space-y-2 p-4">
       {[1, 2, 3].map(i => (
-        <div key={i} className="h-10 bg-pf-overlay rounded animate-pulse" />
+        <div key={i} className="h-10 bg-overlay rounded animate-pulse" />
       ))}
     </div>
   );
@@ -288,15 +288,15 @@ const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Se
 const DAY_LABELS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
 function dayColor(pnl: number): string {
-  if (pnl === 0) return 'bg-pf-overlay';
+  if (pnl === 0) return 'bg-overlay';
   if (pnl > 0) {
-    if (pnl > 100) return 'bg-pf-success';
-    if (pnl > 25) return 'bg-pf-success/60';
-    return 'bg-pf-success/25';
+    if (pnl > 100) return 'bg-gain';
+    if (pnl > 25) return 'bg-gain/60';
+    return 'bg-gain/25';
   } else {
-    if (pnl < -100) return 'bg-pf-danger';
-    if (pnl < -25) return 'bg-pf-danger/60';
-    return 'bg-pf-danger/25';
+    if (pnl < -100) return 'bg-loss';
+    if (pnl < -25) return 'bg-loss/60';
+    return 'bg-loss/25';
   }
 }
 
@@ -380,7 +380,7 @@ function HeatmapGrid({ data }: { data: DailyHeatmapEntry[] }) {
           <div className="flex flex-col justify-start pt-5 gap-1 shrink-0">
             {DAY_LABELS.map(label => (
               <div key={label} className="h-3 flex items-center">
-                <span className="text-pf-micro text-pf-text-muted w-6 text-right pr-1 leading-none">{label}</span>
+                <span className="text-pf-micro text-tertiary w-6 text-right pr-1 leading-none">{label}</span>
               </div>
             ))}
           </div>
@@ -389,7 +389,7 @@ function HeatmapGrid({ data }: { data: DailyHeatmapEntry[] }) {
           {months.map((month, mi) => (
             <div key={`${month.label}-${mi}`} className="flex flex-col gap-1">
               {/* Month label */}
-              <div className="text-pf-caption text-pf-text-muted mb-1 leading-none">{month.label}</div>
+              <div className="text-pf-caption text-tertiary mb-1 leading-none">{month.label}</div>
               {/* Week columns rendered as rows of days */}
               <div className="flex gap-1">
                 {month.weeks.map((week, wi) => (
@@ -416,19 +416,19 @@ function HeatmapGrid({ data }: { data: DailyHeatmapEntry[] }) {
       {/* Summary row */}
       {data.length > 0 && (
         <div className="flex flex-wrap gap-x-4 gap-y-1 mt-3 text-xs">
-          <span className="text-pf-success"><span className="font-mono">{profitDays}</span> profit day{profitDays !== 1 ? 's' : ''}</span>
-          <span className="text-pf-text-muted">|</span>
-          <span className="text-pf-danger"><span className="font-mono">{lossDays}</span> loss day{lossDays !== 1 ? 's' : ''}</span>
+          <span className="text-gain"><span className="font-mono">{profitDays}</span> profit day{profitDays !== 1 ? 's' : ''}</span>
+          <span className="text-tertiary">|</span>
+          <span className="text-loss"><span className="font-mono">{lossDays}</span> loss day{lossDays !== 1 ? 's' : ''}</span>
           {hasBest && (
             <>
-              <span className="text-pf-text-muted">|</span>
-              <span className="text-pf-success">Best: <span className="font-mono">+${bestDay.toFixed(2)}</span></span>
+              <span className="text-tertiary">|</span>
+              <span className="text-gain">Best: <span className="font-mono">+${bestDay.toFixed(2)}</span></span>
             </>
           )}
           {hasWorst && (
             <>
-              <span className="text-pf-text-muted">|</span>
-              <span className="text-pf-danger">Worst: <span className="font-mono">-${Math.abs(worstDay).toFixed(2)}</span></span>
+              <span className="text-tertiary">|</span>
+              <span className="text-loss">Worst: <span className="font-mono">-${Math.abs(worstDay).toFixed(2)}</span></span>
             </>
           )}
         </div>
@@ -436,15 +436,15 @@ function HeatmapGrid({ data }: { data: DailyHeatmapEntry[] }) {
 
       {/* Legend */}
       <div className="flex items-center gap-2 mt-3">
-        <span className="text-pf-caption text-pf-text-muted">Less</span>
-        <div className="w-3 h-3 rounded-sm bg-pf-overlay" title="No activity" />
-        <div className="w-3 h-3 rounded-sm bg-pf-danger" title="Loss > $100" />
-        <div className="w-3 h-3 rounded-sm bg-pf-danger/60" title="Loss $25–$100" />
-        <div className="w-3 h-3 rounded-sm bg-pf-danger/25" title="Loss < $25" />
-        <div className="w-3 h-3 rounded-sm bg-pf-success/25" title="Profit < $25" />
-        <div className="w-3 h-3 rounded-sm bg-pf-success/60" title="Profit $25–$100" />
-        <div className="w-3 h-3 rounded-sm bg-pf-success" title="Profit > $100" />
-        <span className="text-pf-caption text-pf-text-muted">More</span>
+        <span className="text-pf-caption text-tertiary">Less</span>
+        <div className="w-3 h-3 rounded-sm bg-overlay" title="No activity" />
+        <div className="w-3 h-3 rounded-sm bg-loss" title="Loss > $100" />
+        <div className="w-3 h-3 rounded-sm bg-loss/60" title="Loss $25–$100" />
+        <div className="w-3 h-3 rounded-sm bg-loss/25" title="Loss < $25" />
+        <div className="w-3 h-3 rounded-sm bg-gain/25" title="Profit < $25" />
+        <div className="w-3 h-3 rounded-sm bg-gain/60" title="Profit $25–$100" />
+        <div className="w-3 h-3 rounded-sm bg-gain" title="Profit > $100" />
+        <span className="text-pf-caption text-tertiary">More</span>
       </div>
     </div>
   );
@@ -1029,8 +1029,8 @@ export function Component() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <h1 className="text-2xl font-semibold text-pf-text">Portfolio</h1>
-          <span className="inline-flex items-center gap-1 px-2 py-1 rounded-pf-full bg-pf-success/10 text-pf-success text-xs font-medium border border-pf-success/20" title="Gas fees are sponsored — you pay zero network fees">
+          <h1 className="text-2xl font-semibold text-primary">Portfolio</h1>
+          <span className="inline-flex items-center gap-1 px-2 py-1 rounded-pf-full bg-gain/10 text-gain text-xs font-medium border border-gain/20" title="Gas fees are sponsored — you pay zero network fees">
             <Fuel className="size-3" />
             Gasless
           </span>
@@ -1040,13 +1040,13 @@ export function Component() {
           <div className="flex items-center gap-1" title={wsConnected ? 'WebSocket connected — live prices active' : 'WebSocket offline'}>
             {wsConnected ? (
               <span className="relative flex size-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-pf-full bg-pf-success opacity-60" />
-                <span className="relative inline-flex rounded-pf-full size-2 bg-pf-success" />
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-pf-full bg-gain opacity-60" />
+                <span className="relative inline-flex rounded-pf-full size-2 bg-gain" />
               </span>
             ) : (
-              <span className="inline-flex rounded-pf-full size-2 bg-pf-text-muted" />
+              <span className="inline-flex rounded-pf-full size-2 bg-tertiary" />
             )}
-            <span className={`text-pf-caption font-medium ${wsConnected ? 'text-pf-success' : 'text-pf-text-muted'}`}>
+            <span className={`text-pf-caption font-medium ${wsConnected ? 'text-gain' : 'text-tertiary'}`}>
               {wsConnected ? 'Live' : 'Offline'}
             </span>
           </div>
@@ -1060,7 +1060,7 @@ export function Component() {
             <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
             Export CSV
           </Button>
-          <div className="flex bg-pf-surface rounded-pf border border-pf-border-subtle" role="tablist" aria-label="Portfolio mode">
+          <div className="flex bg-surface rounded-pf border border-subtle" role="tablist" aria-label="Portfolio mode">
             <Button
               type="button"
               variant={tab === 'live' ? 'default' : 'ghost'}
@@ -1100,14 +1100,14 @@ export function Component() {
 
         const fmtPnl = (n: number) => `${n >= 0 ? '+' : ''}$${Math.abs(n).toFixed(2)}`;
         const fmtPct = (n: number) => `(${n >= 0 ? '+' : ''}${n.toFixed(1)}%)`;
-        const colorClass = (n: number) => n >= 0 ? 'text-pf-success' : 'text-pf-danger';
+        const colorClass = (n: number) => n >= 0 ? 'text-gain' : 'text-loss';
 
         return (
           <div
             className={`flex flex-wrap items-center gap-x-5 gap-y-2 px-4 py-3 rounded-pf-lg border transition-colors ${
               pnlFlashing
-                ? 'bg-pf-elevated/80 border-pf-border-hover'
-                : 'bg-pf-elevated border-pf-border'
+                ? 'bg-elevated/80 border-default'
+                : 'bg-elevated border-default'
             }`}
             aria-live="polite"
             aria-label="Live portfolio P&L"
@@ -1117,26 +1117,26 @@ export function Component() {
               {wsConnected ? (
                 <>
                   <span className="relative flex size-2">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-pf-full bg-pf-success opacity-60" />
-                    <span className="relative inline-flex rounded-pf-full size-2 bg-pf-success" />
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-pf-full bg-gain opacity-60" />
+                    <span className="relative inline-flex rounded-pf-full size-2 bg-gain" />
                   </span>
-                  <span className="text-xs font-medium text-pf-success">Live</span>
-                  <Wifi className="size-3 text-pf-success" />
+                  <span className="text-xs font-medium text-gain">Live</span>
+                  <Wifi className="size-3 text-gain" />
                 </>
               ) : (
                 <>
-                  <span className="inline-flex rounded-pf-full size-2 bg-pf-text-muted" />
-                  <span className="text-xs font-medium text-pf-text-muted">Offline</span>
-                  <WifiOff className="size-3 text-pf-text-muted" />
+                  <span className="inline-flex rounded-pf-full size-2 bg-tertiary" />
+                  <span className="text-xs font-medium text-tertiary">Offline</span>
+                  <WifiOff className="size-3 text-tertiary" />
                 </>
               )}
             </div>
 
-            <span className="w-px h-4 bg-pf-border shrink-0 hidden sm:block" />
+            <span className="w-px h-4 bg-default shrink-0 hidden sm:block" />
 
             {/* Total P&L */}
             <div className="flex items-baseline gap-2 shrink-0">
-              <span className="text-xs text-pf-text-secondary">Total P&L</span>
+              <span className="text-xs text-secondary">Total P&L</span>
               <span className={`text-sm font-mono font-semibold ${colorClass(totalPnlNum)}`}>
                 {fmtPnl(totalPnlNum)}
               </span>
@@ -1146,15 +1146,15 @@ export function Component() {
                 </span>
               )}
               {totalPnlNum >= 0
-                ? <TrendingUp className="size-3 text-pf-success" />
-                : <TrendingDown className="size-3 text-pf-danger" />}
+                ? <TrendingUp className="size-3 text-gain" />
+                : <TrendingDown className="size-3 text-loss" />}
             </div>
 
             {dayPnlNum != null && (
               <>
-                <span className="w-px h-4 bg-pf-border shrink-0 hidden sm:block" />
+                <span className="w-px h-4 bg-default shrink-0 hidden sm:block" />
                 <div className="flex items-baseline gap-2 shrink-0">
-                  <span className="text-xs text-pf-text-secondary">Today</span>
+                  <span className="text-xs text-secondary">Today</span>
                   <span className={`text-sm font-mono font-semibold ${colorClass(dayPnlNum)}`}>
                     {fmtPnl(dayPnlNum)}
                   </span>
@@ -1167,11 +1167,11 @@ export function Component() {
               </>
             )}
 
-            <span className="w-px h-4 bg-pf-border shrink-0 hidden sm:block" />
+            <span className="w-px h-4 bg-default shrink-0 hidden sm:block" />
 
             {/* Unrealised P&L */}
             <div className="flex items-baseline gap-2 shrink-0">
-              <span className="text-xs text-pf-text-secondary">Unrealised</span>
+              <span className="text-xs text-secondary">Unrealised</span>
               <span className={`text-sm font-mono font-semibold ${colorClass(unrealisedNum)}`}>
                 {fmtPnl(unrealisedNum)}
               </span>
@@ -1182,17 +1182,17 @@ export function Component() {
 
       {/* Circuit Breaker Banner */}
       {circuitBreakerTripped && (
-        <div className="flex items-start gap-3 p-4 rounded-pf-lg bg-pf-danger/10 border border-pf-danger/30">
-          <ShieldAlert className="size-5 text-pf-danger shrink-0 mt-1" />
+        <div className="flex items-start gap-3 p-4 rounded-pf-lg bg-loss/10 border border-loss/30">
+          <ShieldAlert className="size-5 text-loss shrink-0 mt-1" />
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-pf-danger">Circuit Breaker Active</p>
-            <p className="text-xs text-pf-text-secondary mt-1">
+            <p className="text-sm font-semibold text-loss">Circuit Breaker Active</p>
+            <p className="text-xs text-secondary mt-1">
               All strategies have been paused due to drawdown exceeding your risk threshold.
               {circuitBreakerTrippedAt && (
                 <span> Triggered {new Date(circuitBreakerTrippedAt).toLocaleString()}.</span>
               )}
               {' '}
-              <a href="/settings?tab=risk" className="underline text-pf-danger hover:text-pf-danger/80">Reset in Settings &rarr;</a>
+              <a href="/settings?tab=risk" className="underline text-loss hover:text-loss/80">Reset in Settings &rarr;</a>
             </p>
           </div>
         </div>
@@ -1207,41 +1207,41 @@ export function Component() {
               [1, 2, 3, 4].map(i => <PortfolioCardSkeleton key={i} />)
             ) : portfolio ? (
               <>
-                <div className={`bg-pf-elevated border border-pf-border rounded-pf-lg p-4 border-l-4 ${pnlBorderColor(portfolio.totalUnrealizedPnl)}`}>
-                  <span className="text-xs text-pf-text-secondary uppercase tracking-wider">Unrealized P&L</span>
+                <div className={`bg-elevated border border-default rounded-pf-lg p-4 border-l-4 ${pnlBorderColor(portfolio.totalUnrealizedPnl)}`}>
+                  <span className="text-xs text-secondary uppercase tracking-wider">Unrealized P&L</span>
                   <span data-testid="stat-pnl" className={`block mt-1 text-xl font-mono font-semibold ${pnlColor(portfolio.totalUnrealizedPnl)}`}>
                     {formatPnl(portfolio.totalUnrealizedPnl)}
                   </span>
                 </div>
-                <div className={`bg-pf-elevated border border-pf-border rounded-pf-lg p-4 border-l-4 ${pnlBorderColor(portfolio.totalRealizedPnl)}`}>
-                  <span className="text-xs text-pf-text-secondary uppercase tracking-wider">Realized P&L</span>
+                <div className={`bg-elevated border border-default rounded-pf-lg p-4 border-l-4 ${pnlBorderColor(portfolio.totalRealizedPnl)}`}>
+                  <span className="text-xs text-secondary uppercase tracking-wider">Realized P&L</span>
                   <span data-testid="stat-return" className={`block mt-1 text-xl font-mono font-semibold ${pnlColor(portfolio.totalRealizedPnl)}`}>
                     {formatPnl(portfolio.totalRealizedPnl)}
                   </span>
                 </div>
-                <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4 border-l-4 border-l-pf-cyan-500">
-                  <span className="text-xs text-pf-text-secondary uppercase tracking-wider">Win Rate</span>
-                  <span data-testid="stat-win-rate" className="block mt-1 text-xl font-mono font-semibold text-pf-cyan-400">
+                <div className="bg-elevated border border-default rounded-pf-lg p-4 border-l-4 border-l-pf-cyan-500">
+                  <span className="text-xs text-secondary uppercase tracking-wider">Win Rate</span>
+                  <span data-testid="stat-win-rate" className="block mt-1 text-xl font-mono font-semibold text-accent-text">
                     {parseFloat(pnl?.winRate ?? '0') === 0 && (portfolio?.positions ?? []).length > 0
                       ? '—'
                       : winRatePct(pnl?.winRate ?? '0')}
                   </span>
                   {parseFloat(pnl?.winRate ?? '0') === 0 && (portfolio?.positions ?? []).length > 0 && (
-                    <span className="text-pf-caption text-pf-text-muted mt-1 block">No resolved trades yet</span>
+                    <span className="text-pf-caption text-tertiary mt-1 block">No resolved trades yet</span>
                   )}
                 </div>
-                <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4 border-l-4 border-l-pf-text">
-                  <span className="text-xs text-pf-text-secondary uppercase tracking-wider">Open Positions</span>
-                  <span className="block mt-1 text-xl font-mono font-semibold text-pf-text">
+                <div className="bg-elevated border border-default rounded-pf-lg p-4 border-l-4 border-l-pf-text">
+                  <span className="text-xs text-secondary uppercase tracking-wider">Open Positions</span>
+                  <span className="block mt-1 text-xl font-mono font-semibold text-primary">
                     {portfolio.positions.length}
                   </span>
                 </div>
               </>
             ) : (
-              <div className="col-span-full bg-pf-elevated border border-pf-danger/20 rounded-pf-lg p-6 text-center">
-                <AlertTriangle className="mx-auto mb-3 text-pf-danger opacity-60" size={32} />
-                <p className="text-sm font-medium text-pf-text mb-1">Failed to load portfolio</p>
-                <p className="text-xs text-pf-text-muted mb-4">Something went wrong while fetching your data.</p>
+              <div className="col-span-full bg-elevated border border-loss/20 rounded-pf-lg p-6 text-center">
+                <AlertTriangle className="mx-auto mb-3 text-loss opacity-60" size={32} />
+                <p className="text-sm font-medium text-primary mb-1">Failed to load portfolio</p>
+                <p className="text-xs text-tertiary mb-4">Something went wrong while fetching your data.</p>
                 <Button type="button" variant="default" onClick={loadPortfolio}>
                   Retry
                 </Button>
@@ -1250,12 +1250,12 @@ export function Component() {
           </div>
 
           {/* ─── Tax Report ─── */}
-          <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4">
+          <div className="bg-elevated border border-default rounded-pf-lg p-4">
             {/* Header */}
             <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
               <div className="flex items-center gap-2">
-                <Receipt className="size-4 text-pf-cyan-400" />
-                <span className="text-sm font-semibold text-pf-text">Tax Report</span>
+                <Receipt className="size-4 text-accent-text" />
+                <span className="text-sm font-semibold text-primary">Tax Report</span>
               </div>
               <div className="flex items-center gap-2 flex-wrap">
                 <Select
@@ -1284,42 +1284,42 @@ export function Component() {
             {/* Summary cards */}
             {loadingTax ? (
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
-                {[1, 2, 3, 4].map(i => <div key={i} className="h-16 bg-pf-overlay rounded-pf-lg animate-pulse" />)}
+                {[1, 2, 3, 4].map(i => <div key={i} className="h-16 bg-overlay rounded-pf-lg animate-pulse" />)}
               </div>
             ) : taxSummary ? (
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
                 {/* Net Realized Gain/Loss */}
-                <div className={`bg-pf-surface border border-pf-border rounded-pf-lg p-3 border-l-4 ${taxSummary.netGain >= 0 ? 'border-l-pf-success' : 'border-l-pf-danger'}`}>
-                  <span className="text-pf-caption text-pf-text-secondary uppercase tracking-wider block mb-1">Net Realized Gain/Loss</span>
-                  <span className={`text-lg font-mono font-semibold ${taxSummary.netGain >= 0 ? 'text-pf-success' : 'text-pf-danger'}`}>
+                <div className={`bg-surface border border-default rounded-pf-lg p-3 border-l-4 ${taxSummary.netGain >= 0 ? 'border-l-pf-success' : 'border-l-pf-danger'}`}>
+                  <span className="text-pf-caption text-secondary uppercase tracking-wider block mb-1">Net Realized Gain/Loss</span>
+                  <span className={`text-lg font-mono font-semibold ${taxSummary.netGain >= 0 ? 'text-gain' : 'text-loss'}`}>
                     {taxSummary.netGain >= 0 ? '+' : ''}{taxSummary.netGain.toFixed(2)} USDC
                   </span>
                 </div>
                 {/* Short-term Gains */}
-                <div className="bg-pf-surface border border-pf-border rounded-pf-lg p-3">
-                  <span className="text-pf-caption text-pf-text-secondary uppercase tracking-wider block mb-1">Short-term Gains</span>
-                  <span className={`text-lg font-mono font-semibold ${taxSummary.shortTermGain >= 0 ? 'text-pf-success' : 'text-pf-danger'}`}>
+                <div className="bg-surface border border-default rounded-pf-lg p-3">
+                  <span className="text-pf-caption text-secondary uppercase tracking-wider block mb-1">Short-term Gains</span>
+                  <span className={`text-lg font-mono font-semibold ${taxSummary.shortTermGain >= 0 ? 'text-gain' : 'text-loss'}`}>
                     {taxSummary.shortTermGain >= 0 ? '+' : ''}{taxSummary.shortTermGain.toFixed(2)} USDC
                   </span>
                 </div>
                 {/* Long-term Gains */}
-                <div className="bg-pf-surface border border-pf-border rounded-pf-lg p-3">
-                  <span className="text-pf-caption text-pf-text-secondary uppercase tracking-wider block mb-1">Long-term Gains</span>
-                  <span className={`text-lg font-mono font-semibold ${taxSummary.longTermGain >= 0 ? 'text-pf-success' : 'text-pf-danger'}`}>
+                <div className="bg-surface border border-default rounded-pf-lg p-3">
+                  <span className="text-pf-caption text-secondary uppercase tracking-wider block mb-1">Long-term Gains</span>
+                  <span className={`text-lg font-mono font-semibold ${taxSummary.longTermGain >= 0 ? 'text-gain' : 'text-loss'}`}>
                     {taxSummary.longTermGain >= 0 ? '+' : ''}{taxSummary.longTermGain.toFixed(2)} USDC
                   </span>
                 </div>
                 {/* Total Trades */}
-                <div className="bg-pf-surface border border-pf-border rounded-pf-lg p-3">
-                  <span className="text-pf-caption text-pf-text-secondary uppercase tracking-wider block mb-1">Total Trades</span>
-                  <span className="text-lg font-mono font-semibold text-pf-text">{taxSummary.tradeCount}</span>
+                <div className="bg-surface border border-default rounded-pf-lg p-3">
+                  <span className="text-pf-caption text-secondary uppercase tracking-wider block mb-1">Total Trades</span>
+                  <span className="text-lg font-mono font-semibold text-primary">{taxSummary.tradeCount}</span>
                 </div>
               </div>
             ) : !loadingTax && (
               <div className="flex flex-col items-center justify-center py-8 text-center mb-4">
-                <FileText className="size-8 text-pf-text-muted mb-2" />
-                <p className="text-sm font-medium text-pf-text">No tax data for {taxYear}</p>
-                <p className="text-xs text-pf-text-muted mt-1">Closed trades will appear here once available.</p>
+                <FileText className="size-8 text-tertiary mb-2" />
+                <p className="text-sm font-medium text-primary">No tax data for {taxYear}</p>
+                <p className="text-xs text-tertiary mt-1">Closed trades will appear here once available.</p>
               </div>
             )}
 
@@ -1330,26 +1330,26 @@ export function Component() {
               const showToggle = taxData.length > 10;
               return (
                 <div className="mb-3">
-                  <div className="overflow-x-auto rounded-pf border border-pf-border-subtle">
+                  <div className="overflow-x-auto rounded-pf border border-subtle">
                     <table className="w-full text-xs" aria-label="Capital gains and losses">
                       <thead>
-                        <tr className="border-b border-pf-border-subtle bg-pf-overlay">
-                          <th className="px-3 py-2 text-left text-pf-text-secondary font-medium">Close Date</th>
-                          <th className="px-3 py-2 text-left text-pf-text-secondary font-medium">Market</th>
-                          <th className="px-3 py-2 text-right text-pf-text-secondary font-medium">Gain/Loss</th>
-                          <th className="px-3 py-2 text-center text-pf-text-secondary font-medium">Term</th>
+                        <tr className="border-b border-subtle bg-overlay">
+                          <th className="px-3 py-2 text-left text-secondary font-medium">Close Date</th>
+                          <th className="px-3 py-2 text-left text-secondary font-medium">Market</th>
+                          <th className="px-3 py-2 text-right text-secondary font-medium">Gain/Loss</th>
+                          <th className="px-3 py-2 text-center text-secondary font-medium">Term</th>
                         </tr>
                       </thead>
                       <tbody>
                         {(taxExpanded ? sorted : preview).map(entry => (
-                          <tr key={entry.id} className="border-b border-pf-border-subtle last:border-0 hover:bg-pf-overlay/50 transition-colors">
-                            <td className="px-3 py-2 font-mono text-pf-text-secondary whitespace-nowrap">{entry.closeDate}</td>
-                            <td className="px-3 py-2 text-pf-text max-w-[200px] truncate" title={entry.marketQuestion}>{entry.marketQuestion}</td>
-                            <td className={`px-3 py-2 text-right font-mono font-medium whitespace-nowrap ${entry.realizedGain >= 0 ? 'text-pf-success' : 'text-pf-danger'}`}>
+                          <tr key={entry.id} className="border-b border-subtle last:border-0 hover:bg-overlay/50 transition-colors">
+                            <td className="px-3 py-2 font-mono text-secondary whitespace-nowrap">{entry.closeDate}</td>
+                            <td className="px-3 py-2 text-primary max-w-[200px] truncate" title={entry.marketQuestion}>{entry.marketQuestion}</td>
+                            <td className={`px-3 py-2 text-right font-mono font-medium whitespace-nowrap ${entry.realizedGain >= 0 ? 'text-gain' : 'text-loss'}`}>
                               {entry.realizedGain >= 0 ? '+' : ''}{entry.realizedGain.toFixed(2)}
                             </td>
                             <td className="px-3 py-2 text-center">
-                              <span className={`inline-flex items-center px-2 py-1 rounded text-pf-caption font-medium border ${entry.type === 'SHORT_TERM' ? 'bg-pf-gold-500/10 text-pf-gold-500 border-pf-gold-500/25' : 'bg-pf-success/10 text-pf-success border-pf-success/25'}`}>
+                              <span className={`inline-flex items-center px-2 py-1 rounded text-pf-caption font-medium border ${entry.type === 'SHORT_TERM' ? 'bg-pf-gold-500/10 text-pf-gold-500 border-pf-gold-500/25' : 'bg-gain/10 text-gain border-gain/25'}`}>
                                 {entry.type === 'SHORT_TERM' ? 'Short' : 'Long'}
                               </span>
                             </td>
@@ -1378,7 +1378,7 @@ export function Component() {
             })()}
 
             {/* Disclaimer */}
-            <p className="text-pf-caption text-pf-text-muted mt-1">
+            <p className="text-pf-caption text-tertiary mt-1">
               This report is for informational purposes only. Consult a tax professional for advice.
             </p>
           </div>
@@ -1439,12 +1439,12 @@ export function Component() {
             const activeGoal = goals[activeGoalIdx] ?? goals[0] ?? null;
 
             return (
-              <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4">
+              <div className="bg-elevated border border-default rounded-pf-lg p-4">
                 {/* Header */}
                 <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
                   <div className="flex items-center gap-2">
-                    <Target className="size-4 text-pf-cyan-400" />
-                    <span className="text-sm font-semibold text-pf-text">Goal Tracker</span>
+                    <Target className="size-4 text-accent-text" />
+                    <span className="text-sm font-semibold text-primary">Goal Tracker</span>
                   </div>
                   <div className="flex items-center gap-2">
                     {goals.length < 3 && !showGoalForm && (
@@ -1482,9 +1482,9 @@ export function Component() {
 
                 {/* Inline form */}
                 {showGoalForm && (
-                  <div className="bg-pf-surface border border-pf-border rounded-pf-lg p-4 mb-4 space-y-3">
+                  <div className="bg-surface border border-default rounded-pf-lg p-4 mb-4 space-y-3">
                     <div>
-                      <label className="text-xs text-pf-text-secondary block mb-1">Goal name</label>
+                      <label className="text-xs text-secondary block mb-1">Goal name</label>
                       <Input
                         type="text"
                         placeholder="e.g. October target"
@@ -1494,9 +1494,9 @@ export function Component() {
                       />
                     </div>
                     <div>
-                      <label className="text-xs text-pf-text-secondary block mb-1">Target amount (USDC profit)</label>
+                      <label className="text-xs text-secondary block mb-1">Target amount (USDC profit)</label>
                       <div className="relative">
-                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-pf-text-muted">$</span>
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-tertiary">$</span>
                         <Input
                           type="number"
                           min="0"
@@ -1509,7 +1509,7 @@ export function Component() {
                       </div>
                     </div>
                     <div>
-                      <label className="text-xs text-pf-text-secondary block mb-1">Deadline</label>
+                      <label className="text-xs text-secondary block mb-1">Deadline</label>
                       <Input
                         type="date"
                         value={newGoalDeadline}
@@ -1559,10 +1559,10 @@ export function Component() {
                   const paceFraction = totalDays > 0 ? daysElapsed / totalDays : 1;
                   const onTrack = paceFraction >= (progress / 100) * 0.9;
                   const barColor = earned < 0
-                    ? 'bg-pf-danger'
+                    ? 'bg-loss'
                     : onTrack
-                      ? 'bg-pf-success'
-                      : 'bg-pf-warning';
+                      ? 'bg-gain'
+                      : 'bg-warning';
 
                   const endLabel = (() => {
                     const d = new Date(activeGoal.endDate + 'T00:00:00');
@@ -1578,8 +1578,8 @@ export function Component() {
                       {/* Goal header row */}
                       <div className="flex items-start justify-between mb-3">
                         <div>
-                          <p className="text-sm font-medium text-pf-text">{activeGoal.label}</p>
-                          <p className="text-xs text-pf-text-muted flex items-center gap-1 mt-1">
+                          <p className="text-sm font-medium text-primary">{activeGoal.label}</p>
+                          <p className="text-xs text-tertiary flex items-center gap-1 mt-1">
                             <CalendarDays className="size-3" />
                             Ends {endLabel}
                           </p>
@@ -1608,24 +1608,24 @@ export function Component() {
 
                       {/* Achievement banner */}
                       {isAchieved && (
-                        <div className="flex items-center gap-2 bg-pf-success/10 border border-pf-success/30 rounded-pf p-3 mb-3">
-                          <Trophy className="size-4 text-pf-success shrink-0" />
-                          <span className="text-sm font-semibold text-pf-success">Goal achieved!</span>
+                        <div className="flex items-center gap-2 bg-gain/10 border border-gain/30 rounded-pf p-3 mb-3">
+                          <Trophy className="size-4 text-gain shrink-0" />
+                          <span className="text-sm font-semibold text-gain">Goal achieved!</span>
                         </div>
                       )}
 
                       {/* Earned / target */}
                       <div className="mb-2">
-                        <span className={`text-2xl font-mono font-bold ${earned >= 0 ? 'text-pf-success' : 'text-pf-danger'}`}>
+                        <span className={`text-2xl font-mono font-bold ${earned >= 0 ? 'text-gain' : 'text-loss'}`}>
                           {earned >= 0 ? '+' : ''}{earned.toFixed(2)}
                         </span>
-                        <span className="text-sm text-pf-text-muted font-mono ml-1">
+                        <span className="text-sm text-tertiary font-mono ml-1">
                           earned of ${activeGoal.targetAmount.toFixed(2)} target
                         </span>
                       </div>
 
                       {/* Progress bar */}
-                      <div className="h-2 rounded-pf-full bg-pf-surface overflow-hidden mb-3">
+                      <div className="h-2 rounded-pf-full bg-surface overflow-hidden mb-3">
                         <div
                           className={`h-2 rounded-pf-full transition-all duration-pf-slow ${barColor}`}
                           style={{ width: `${progress}%` }}
@@ -1635,18 +1635,18 @@ export function Component() {
                       {/* Footer stats */}
                       <div className="flex items-center justify-between text-xs flex-wrap gap-y-1">
                         {isExpired ? (
-                          <span className="text-pf-danger font-medium">Goal expired</span>
+                          <span className="text-loss font-medium">Goal expired</span>
                         ) : (
-                          <span className="text-pf-text-muted">{daysRemaining} day{daysRemaining !== 1 ? 's' : ''} remaining</span>
+                          <span className="text-tertiary">{daysRemaining} day{daysRemaining !== 1 ? 's' : ''} remaining</span>
                         )}
                         {!isAchieved && dailyRunRate !== null && !isExpired && (
-                          <span className={`font-mono ${dailyRunRate > 0 ? 'text-pf-text-secondary' : 'text-pf-success'}`}>
+                          <span className={`font-mono ${dailyRunRate > 0 ? 'text-secondary' : 'text-gain'}`}>
                             {dailyRunRate > 0
                               ? `Need $${dailyRunRate.toFixed(2)}/day to hit target`
                               : 'On track — no daily minimum needed'}
                           </span>
                         )}
-                        <span className={`font-mono font-semibold ${onTrack ? 'text-pf-success' : 'text-pf-warning'}`}>
+                        <span className={`font-mono font-semibold ${onTrack ? 'text-gain' : 'text-warning'}`}>
                           {progress.toFixed(1)}%
                         </span>
                       </div>
@@ -1657,9 +1657,9 @@ export function Component() {
                 {/* Empty state */}
                 {!showGoalForm && goals.length === 0 && (
                   <div className="flex flex-col items-center justify-center py-8 text-center">
-                    <Target className="size-8 text-pf-text-muted mb-2" />
-                    <p className="text-sm font-medium text-pf-text">No goals set</p>
-                    <p className="text-xs text-pf-text-muted mt-1">Set a profit target to track your progress.</p>
+                    <Target className="size-8 text-tertiary mb-2" />
+                    <p className="text-sm font-medium text-primary">No goals set</p>
+                    <p className="text-xs text-tertiary mt-1">Set a profit target to track your progress.</p>
                   </div>
                 )}
               </div>
@@ -1667,16 +1667,16 @@ export function Component() {
           })()}
 
           {/* ─── Share Performance ─── */}
-          <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4">
+          <div className="bg-elevated border border-default rounded-pf-lg p-4">
             <div className="flex items-center gap-2 mb-4">
-              <Share2 className="size-4 text-pf-cyan-400" />
-              <span className="text-sm font-semibold text-pf-text">Share Performance</span>
+              <Share2 className="size-4 text-accent-text" />
+              <span className="text-sm font-semibold text-primary">Share Performance</span>
             </div>
 
             {/* Preview card */}
             <div
               id="share-card"
-              className="bg-gradient-to-br from-pf-surface to-pf-elevated border border-pf-cyan-500/30 rounded-pf-lg p-5 mb-4"
+              className="bg-gradient-to-br from-surface to-elevated border border-accent/30 rounded-pf-lg p-5 mb-4"
             >
               {/* Top row: logo + username */}
               <div className="flex items-center justify-between mb-5">
@@ -1687,47 +1687,47 @@ export function Component() {
                       stroke="currentColor"
                       strokeWidth="1.5"
                       strokeLinejoin="round"
-                      className="text-pf-cyan-400"
+                      className="text-accent-text"
                     />
                     <path
                       d="M12 6L18 9.5V16.5L12 20L6 16.5V9.5L12 6Z"
                       fill="currentColor"
-                      className="text-pf-cyan-500/20"
+                      className="text-accent/20"
                     />
                   </svg>
-                  <span className="text-sm font-bold text-pf-text tracking-wide">PolyForge</span>
+                  <span className="text-sm font-bold text-primary tracking-wide">PolyForge</span>
                 </div>
                 {username && (
-                  <span className="text-xs font-mono text-pf-text-muted">@{username}</span>
+                  <span className="text-xs font-mono text-tertiary">@{username}</span>
                 )}
               </div>
 
               {/* Stats row */}
               <div className="grid grid-cols-3 gap-4 mb-5">
                 <div className="text-center">
-                  <p className="text-pf-caption text-pf-text-muted uppercase tracking-wider mb-1">Total P&L</p>
+                  <p className="text-pf-caption text-tertiary uppercase tracking-wider mb-1">Total P&L</p>
                   <p className={`text-lg font-mono font-bold ${pnlColor(pnl?.totalPnl ?? '0')}`}>
                     {formatPnl(pnl?.totalPnl ?? '0')}
                   </p>
                 </div>
-                <div className="text-center border-x border-pf-border-subtle">
-                  <p className="text-pf-caption text-pf-text-muted uppercase tracking-wider mb-1">Win Rate</p>
-                  <p className="text-lg font-mono font-bold text-pf-cyan-400">
+                <div className="text-center border-x border-subtle">
+                  <p className="text-pf-caption text-tertiary uppercase tracking-wider mb-1">Win Rate</p>
+                  <p className="text-lg font-mono font-bold text-accent-text">
                     {winRatePct(pnl?.winRate ?? '0')}
                   </p>
                 </div>
                 <div className="text-center">
-                  <p className="text-pf-caption text-pf-text-muted uppercase tracking-wider mb-1">Edge Score</p>
-                  <p className="text-lg font-mono font-bold text-pf-text">
+                  <p className="text-pf-caption text-tertiary uppercase tracking-wider mb-1">Edge Score</p>
+                  <p className="text-lg font-mono font-bold text-primary">
                     {edgeScore != null ? edgeScore : '—'}
                   </p>
                 </div>
               </div>
 
               {/* Tagline + footer */}
-              <div className="border-t border-pf-border-subtle pt-3 flex items-end justify-between">
-                <p className="text-xs text-pf-text-secondary italic">"Trading smarter on Polymarket"</p>
-                <p className="text-pf-caption font-mono text-pf-text-muted">polyforge.io</p>
+              <div className="border-t border-subtle pt-3 flex items-end justify-between">
+                <p className="text-xs text-secondary italic">"Trading smarter on Polymarket"</p>
+                <p className="text-pf-caption font-mono text-tertiary">polyforge.io</p>
               </div>
             </div>
 
@@ -1741,7 +1741,7 @@ export function Component() {
                 className="flex items-center gap-2"
               >
                 {linkCopied ? (
-                  <Check className="size-4 text-pf-success" />
+                  <Check className="size-4 text-gain" />
                 ) : (
                   <Copy className="size-4" />
                 )}
@@ -1780,51 +1780,51 @@ export function Component() {
               ? Math.min(100, (Math.abs(Math.min(0, totalPnl)) / limit) * 100)
               : 0;
             const progressColor = progress >= 80
-              ? 'bg-pf-danger'
+              ? 'bg-loss'
               : progress >= 50
-                ? 'bg-pf-warning'
-                : 'bg-pf-success';
+                ? 'bg-warning'
+                : 'bg-gain';
             const limitHit = progress >= 100;
             const remaining = limit != null ? limit - Math.abs(Math.min(0, totalPnl)) : 0;
             return (
-              <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4">
+              <div className="bg-elevated border border-default rounded-pf-lg p-4">
                 {/* Header */}
                 <div className="flex items-center gap-2 mb-3">
-                  <Shield className="size-4 text-pf-text-muted" />
-                  <span className="text-sm font-medium text-pf-text">Today's P&L</span>
+                  <Shield className="size-4 text-tertiary" />
+                  <span className="text-sm font-medium text-primary">Today's P&L</span>
                 </div>
 
                 {loadingDailyPnl ? (
                   <div className="space-y-2">
-                    <div className="h-8 bg-pf-overlay rounded animate-pulse w-32" />
-                    <div className="h-3 bg-pf-overlay rounded animate-pulse w-full" />
-                    <div className="h-3 bg-pf-overlay rounded animate-pulse w-2/3" />
+                    <div className="h-8 bg-overlay rounded animate-pulse w-32" />
+                    <div className="h-3 bg-overlay rounded animate-pulse w-full" />
+                    <div className="h-3 bg-overlay rounded animate-pulse w-2/3" />
                   </div>
                 ) : (
                   <>
                     {/* Large P&L number */}
-                    <p className={`text-3xl font-mono font-semibold mb-3 ${totalPnl >= 0 ? 'text-pf-success' : 'text-pf-danger'}`}>
+                    <p className={`text-3xl font-mono font-semibold mb-3 ${totalPnl >= 0 ? 'text-gain' : 'text-loss'}`}>
                       {totalPnl >= 0 ? '+' : ''}{totalPnl.toFixed(2)} USDC
                     </p>
 
                     {/* Limit hit banner */}
                     {limitHit && (
-                      <div className="flex items-center gap-2 p-3 rounded-pf bg-pf-danger/10 border border-pf-danger/30 mb-3">
-                        <AlertTriangle className="size-4 text-pf-danger shrink-0" />
-                        <p className="text-xs font-medium text-pf-danger">Daily loss limit reached — trading paused</p>
+                      <div className="flex items-center gap-2 p-3 rounded-pf bg-loss/10 border border-loss/30 mb-3">
+                        <AlertTriangle className="size-4 text-loss shrink-0" />
+                        <p className="text-xs font-medium text-loss">Daily loss limit reached — trading paused</p>
                       </div>
                     )}
 
                     {/* Progress bar (only if limit is configured and enabled) */}
                     {limit != null && (
                       <div className="space-y-2">
-                        <div className="bg-pf-surface rounded-pf-full h-2 overflow-hidden">
+                        <div className="bg-surface rounded-pf-full h-2 overflow-hidden">
                           <div
                             className={`h-full rounded-pf-full transition-all ${progressColor}`}
                             style={{ width: `${progress}%` }}
                           />
                         </div>
-                        <div className="flex items-center justify-between text-pf-caption text-pf-text-muted">
+                        <div className="flex items-center justify-between text-pf-caption text-tertiary">
                           <span className="flex items-center gap-1">
                             <TrendingDown className="size-3" />
                             Loss limit: ${limit.toFixed(2)}
@@ -1836,9 +1836,9 @@ export function Component() {
 
                     {/* No limit set — offer link */}
                     {limit == null && (
-                      <p className="text-xs text-pf-text-muted">
+                      <p className="text-xs text-tertiary">
                         No daily loss limit set.{' '}
-                        <a href="/settings?tab=risk" className="underline text-pf-cyan-400 hover:text-pf-cyan-300">
+                        <a href="/settings?tab=risk" className="underline text-accent-text hover:text-accent-text">
                           Set a loss limit
                         </a>
                       </p>
@@ -1850,9 +1850,9 @@ export function Component() {
           })()}
 
           {/* P&L Chart */}
-          <div data-testid="pnl-chart" className="bg-pf-elevated border border-pf-border rounded-pf-lg">
-            <div className="flex items-center justify-between px-4 py-3 border-b border-pf-border-subtle">
-              <span className="text-sm font-medium text-pf-text">P&L Over Time</span>
+          <div data-testid="pnl-chart" className="bg-elevated border border-default rounded-pf-lg">
+            <div className="flex items-center justify-between px-4 py-3 border-b border-subtle">
+              <span className="text-sm font-medium text-primary">P&L Over Time</span>
               <div className="flex gap-1">
                 {PERIODS.map(p => (
                   <Button
@@ -1869,7 +1869,7 @@ export function Component() {
               </div>
             </div>
             {loadingChart ? (
-              <div className="h-64 animate-pulse bg-pf-overlay m-4 rounded" />
+              <div className="h-64 animate-pulse bg-overlay m-4 rounded" />
             ) : chartData.length > 0 ? (
               <div className="h-64 px-2 py-4">
                 <ResponsiveContainer width="100%" height="100%">
@@ -1902,31 +1902,31 @@ export function Component() {
               </div>
             ) : (
               <div className="flex flex-col items-center justify-center py-16 text-center">
-                <BarChart3 className="size-10 text-pf-text-muted mb-3" />
-                <p className="text-sm font-medium text-pf-text">No P&L data yet</p>
-                <p className="text-xs text-pf-text-muted mt-1">P&L data will appear once your strategies generate trades.</p>
+                <BarChart3 className="size-10 text-tertiary mb-3" />
+                <p className="text-sm font-medium text-primary">No P&L data yet</p>
+                <p className="text-xs text-tertiary mt-1">P&L data will appear once your strategies generate trades.</p>
               </div>
             )}
           </div>
 
           {/* Positions table */}
-          <div data-testid="positions-table" className="bg-pf-elevated border border-pf-border rounded-pf-lg">
-            <div className="px-4 py-3 border-b border-pf-border-subtle">
-              <span className="text-sm font-medium text-pf-text">Open Positions</span>
+          <div data-testid="positions-table" className="bg-elevated border border-default rounded-pf-lg">
+            <div className="px-4 py-3 border-b border-subtle">
+              <span className="text-sm font-medium text-primary">Open Positions</span>
             </div>
             {loadingPortfolio ? (
               <TableSkeleton />
             ) : (portfolio?.positions ?? []).length === 0 ? (
               <div className="flex flex-col items-center justify-center py-16 text-center">
-                <Wallet className="size-10 text-pf-text-muted mb-3" />
-                <p className="text-sm font-medium text-pf-text">No open positions</p>
-                <p className="text-xs text-pf-text-muted mt-1">Start a strategy to build positions.</p>
+                <Wallet className="size-10 text-tertiary mb-3" />
+                <p className="text-sm font-medium text-primary">No open positions</p>
+                <p className="text-xs text-tertiary mt-1">Start a strategy to build positions.</p>
               </div>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm" aria-label="Open positions">
                   <thead>
-                    <tr className="bg-pf-surface text-left text-xs text-pf-text-secondary uppercase tracking-wider">
+                    <tr className="bg-surface text-left text-xs text-secondary uppercase tracking-wider">
                       <th scope="col" className="px-4 py-3 font-medium">Market</th>
                       <th scope="col" className="px-4 py-3 font-medium">Side</th>
                       <th scope="col" className="px-4 py-3 font-medium text-right">Size</th>
@@ -1937,7 +1937,7 @@ export function Component() {
                       <th scope="col" className="px-4 py-3 font-medium"><span className="sr-only">Actions</span></th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-pf-border-subtle">
+                  <tbody className="divide-y divide-subtle">
                     {portfolio!.positions.map(pos => {
                       const isExpanded = expandedId === pos.id;
                       const isClosing = closingId === pos.id;
@@ -1967,25 +1967,25 @@ export function Component() {
                         <>
                           <tr
                             key={pos.id}
-                            className="hover:bg-pf-surface/50 transition-colors cursor-pointer"
+                            className="hover:bg-surface/50 transition-colors cursor-pointer"
                             onClick={() => setExpandedId(isExpanded ? null : pos.id)}
                           >
                             <td className="px-4 py-3 max-w-[200px]">
                               <div className="flex items-center gap-2">
                                 {isExpanded
-                                  ? <ChevronUp className="size-3 text-pf-text-muted shrink-0" />
-                                  : <ChevronDown className="size-3 text-pf-text-muted shrink-0" />}
-                                <span className="text-pf-text line-clamp-1" title={pos.marketTitle}>{pos.marketTitle}</span>
+                                  ? <ChevronUp className="size-3 text-tertiary shrink-0" />
+                                  : <ChevronDown className="size-3 text-tertiary shrink-0" />}
+                                <span className="text-primary line-clamp-1" title={pos.marketTitle}>{pos.marketTitle}</span>
                               </div>
                               <div className="flex items-center gap-1 mt-1 flex-wrap">
                                 <CategoryBadge category={(pos as any).marketCategory} />
                                 {hasRule && rule.stopLoss != null && (
-                                  <span className="inline-flex items-center px-2 py-1 rounded text-pf-caption font-mono font-medium bg-pf-danger/10 text-pf-danger border border-pf-danger/20">
+                                  <span className="inline-flex items-center px-2 py-1 rounded text-pf-caption font-mono font-medium bg-loss/10 text-loss border border-loss/20">
                                     SL: {rule.stopLoss.toFixed(2)}
                                   </span>
                                 )}
                                 {hasRule && rule.takeProfit != null && (
-                                  <span className="inline-flex items-center px-2 py-1 rounded text-pf-caption font-mono font-medium bg-pf-success/10 text-pf-success border border-pf-success/20">
+                                  <span className="inline-flex items-center px-2 py-1 rounded text-pf-caption font-mono font-medium bg-gain/10 text-gain border border-gain/20">
                                     TP: {rule.takeProfit.toFixed(2)}
                                   </span>
                                 )}
@@ -1993,15 +1993,15 @@ export function Component() {
                             </td>
                             <td className="px-4 py-3">
                               <span className={`inline-flex px-2 py-1 rounded text-xs font-medium ${
-                                pos.side === 'BUY' ? 'bg-pf-success/10 text-pf-success' : 'bg-pf-danger/10 text-pf-danger'
+                                pos.side === 'BUY' ? 'bg-gain/10 text-gain' : 'bg-loss/10 text-loss'
                               }`}>
                                 {pos.side}
                               </span>
                             </td>
-                            <td className="px-4 py-3 text-right font-mono text-pf-text">
+                            <td className="px-4 py-3 text-right font-mono text-primary">
                               {parseFloat(pos.size).toLocaleString()}
                             </td>
-                            <td className="px-4 py-3 text-right font-mono text-pf-text">
+                            <td className="px-4 py-3 text-right font-mono text-primary">
                               {parseFloat(pos.avgEntryPrice).toFixed(3)}
                             </td>
                             <td className="px-4 py-3 text-right font-mono">
@@ -2014,7 +2014,7 @@ export function Component() {
                                 const flash = flashingPrices[pos.id];
 
                                 if (displayPrice == null) {
-                                  return <span className="text-pf-text-muted">&mdash;</span>;
+                                  return <span className="text-tertiary">&mdash;</span>;
                                 }
 
                                 if (livePrice != null && flash != null) {
@@ -2022,8 +2022,8 @@ export function Component() {
                                   return (
                                     <span className={`inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-mono font-medium transition-colors ${
                                       isUp
-                                        ? 'bg-pf-success/10 text-pf-success'
-                                        : 'bg-pf-danger/10 text-pf-danger'
+                                        ? 'bg-gain/10 text-gain'
+                                        : 'bg-loss/10 text-loss'
                                     }`}>
                                       {isUp
                                         ? <TrendingUp className="size-3" />
@@ -2038,7 +2038,7 @@ export function Component() {
                                   const isUp = livePrice >= prevStatic;
                                   return (
                                     <span className={`inline-flex items-center gap-1 text-xs font-mono font-medium ${
-                                      isUp ? 'text-pf-success' : 'text-pf-danger'
+                                      isUp ? 'text-gain' : 'text-loss'
                                     }`}>
                                       {isUp
                                         ? <TrendingUp className="size-3" />
@@ -2048,7 +2048,7 @@ export function Component() {
                                   );
                                 }
 
-                                return <span className="text-pf-cyan-400">${displayPrice.toFixed(3)}</span>;
+                                return <span className="text-accent-text">${displayPrice.toFixed(3)}</span>;
                               })()}
                             </td>
                             <td className={`px-4 py-3 text-right font-mono ${pnlColor(pos.unrealizedPnl)}`}>
@@ -2058,8 +2058,8 @@ export function Component() {
                               <span
                                 className={`inline-flex px-2 py-1 rounded text-xs font-medium ${
                                   pos.resolutionStatus === 'UNRESOLVED'
-                                    ? 'bg-pf-cyan-500/10 text-pf-cyan-400'
-                                    : 'bg-pf-overlay text-pf-text-muted'
+                                    ? 'bg-accent/10 text-accent-text'
+                                    : 'bg-overlay text-tertiary'
                                 }`}
                                 {...(pos.resolutionStatus === 'UNRESOLVED' ? { title: 'Market has not yet resolved — position is still active' } : {})}
                               >
@@ -2077,7 +2077,7 @@ export function Component() {
                                     aria-label={isTriggered ? 'Rule triggered' : hasRule ? 'Edit auto-close rule' : 'Set auto-close'}
                                     onClick={e => { e.stopPropagation(); openAutoClosePanel(pos.id); }}
                                   >
-                                    <SlidersHorizontal className={`size-4 ${isTriggered ? 'text-pf-success' : hasRule ? 'text-pf-cyan-400' : ''}`} />
+                                    <SlidersHorizontal className={`size-4 ${isTriggered ? 'text-gain' : hasRule ? 'text-accent-text' : ''}`} />
                                   </Button>
                                 )}
                                 {pos.resolutionStatus === 'UNRESOLVED' && (
@@ -2112,15 +2112,15 @@ export function Component() {
                           {isAutoCloseExpanded && (
                             <tr key={`${pos.id}-autoclose`}>
                               <td colSpan={8}>
-                                <div className="px-4 py-4 bg-pf-surface border-t border-pf-border-subtle animate-fade-in">
+                                <div className="px-4 py-4 bg-surface border-t border-subtle animate-fade-in">
                                   {/* Panel header */}
                                   <div className="flex items-center justify-between mb-4">
                                     <div className="flex items-center gap-2">
-                                      <SlidersHorizontal className="size-4 text-pf-cyan-400" />
-                                      <span className="text-sm font-semibold text-pf-text">
+                                      <SlidersHorizontal className="size-4 text-accent-text" />
+                                      <span className="text-sm font-semibold text-primary">
                                         Auto-Close Rules
                                       </span>
-                                      <span className="text-xs text-pf-text-muted truncate max-w-[200px]" title={pos.marketTitle}>
+                                      <span className="text-xs text-tertiary truncate max-w-[200px]" title={pos.marketTitle}>
                                         — {pos.marketTitle}
                                       </span>
                                     </div>
@@ -2137,8 +2137,8 @@ export function Component() {
 
                                   {acLoading[pos.id] ? (
                                     <div className="flex items-center gap-2 py-4">
-                                      <Loader2 className="size-4 animate-spin text-pf-text-muted" />
-                                      <span className="text-sm text-pf-text-muted">Loading rule…</span>
+                                      <Loader2 className="size-4 animate-spin text-tertiary" />
+                                      <span className="text-sm text-tertiary">Loading rule…</span>
                                     </div>
                                   ) : (
                                     <div className="space-y-4">
@@ -2153,13 +2153,13 @@ export function Component() {
                                               setAcSlEnabled(prev => ({ ...prev, [pos.id]: e.target.checked }));
                                             }}
                                             onClick={e => e.stopPropagation()}
-                                            className="rounded border-pf-border accent-pf-cyan-400"
+                                            className="rounded border-default accent-accent-text"
                                           />
-                                          <span className="text-sm font-medium text-pf-text">Stop Loss</span>
+                                          <span className="text-sm font-medium text-primary">Stop Loss</span>
                                         </label>
                                         {(acSlEnabled[pos.id] ?? false) && (
                                           <div className="ml-6 space-y-1">
-                                            <p className="text-xs text-pf-text-secondary">Sell if YES price drops below:</p>
+                                            <p className="text-xs text-secondary">Sell if YES price drops below:</p>
                                             <div className="flex items-center gap-2">
                                               <Input
                                                 type="number"
@@ -2172,10 +2172,10 @@ export function Component() {
                                                 onClick={e => e.stopPropagation()}
                                                 className="w-28 font-mono"
                                               />
-                                              <span className="text-xs text-pf-text-muted">(0.01 – 0.99)</span>
+                                              <span className="text-xs text-tertiary">(0.01 – 0.99)</span>
                                             </div>
                                             {currentPrice > 0 && (
-                                              <p className="text-xs text-pf-text-muted">Current price: <span className="font-mono text-pf-cyan-400">{currentPrice.toFixed(3)}</span></p>
+                                              <p className="text-xs text-tertiary">Current price: <span className="font-mono text-accent-text">{currentPrice.toFixed(3)}</span></p>
                                             )}
                                           </div>
                                         )}
@@ -2192,13 +2192,13 @@ export function Component() {
                                               setAcTpEnabled(prev => ({ ...prev, [pos.id]: e.target.checked }));
                                             }}
                                             onClick={e => e.stopPropagation()}
-                                            className="rounded border-pf-border accent-pf-cyan-400"
+                                            className="rounded border-default accent-accent-text"
                                           />
-                                          <span className="text-sm font-medium text-pf-text">Take Profit</span>
+                                          <span className="text-sm font-medium text-primary">Take Profit</span>
                                         </label>
                                         {(acTpEnabled[pos.id] ?? false) && (
                                           <div className="ml-6 space-y-1">
-                                            <p className="text-xs text-pf-text-secondary">Sell if YES price rises above:</p>
+                                            <p className="text-xs text-secondary">Sell if YES price rises above:</p>
                                             <div className="flex items-center gap-2">
                                               <Input
                                                 type="number"
@@ -2211,10 +2211,10 @@ export function Component() {
                                                 onClick={e => e.stopPropagation()}
                                                 className="w-28 font-mono"
                                               />
-                                              <span className="text-xs text-pf-text-muted">(0.01 – 0.99)</span>
+                                              <span className="text-xs text-tertiary">(0.01 – 0.99)</span>
                                             </div>
                                             {currentPrice > 0 && (
-                                              <p className="text-xs text-pf-text-muted">Current price: <span className="font-mono text-pf-cyan-400">{currentPrice.toFixed(3)}</span></p>
+                                              <p className="text-xs text-tertiary">Current price: <span className="font-mono text-accent-text">{currentPrice.toFixed(3)}</span></p>
                                             )}
                                           </div>
                                         )}
@@ -2222,7 +2222,7 @@ export function Component() {
 
                                       {/* Quantity */}
                                       <div className="space-y-2">
-                                        <p className="text-sm font-medium text-pf-text">Quantity</p>
+                                        <p className="text-sm font-medium text-primary">Quantity</p>
                                         <div className="flex items-center gap-3 ml-0">
                                           <label className="flex items-center gap-2 cursor-pointer select-none">
                                             <input
@@ -2231,9 +2231,9 @@ export function Component() {
                                               checked={acQuantityAll[pos.id] ?? true}
                                               onChange={e => { e.stopPropagation(); setAcQuantityAll(prev => ({ ...prev, [pos.id]: true })); }}
                                               onClick={e => e.stopPropagation()}
-                                              className="accent-pf-cyan-400"
+                                              className="accent-accent-text"
                                             />
-                                            <span className="text-sm text-pf-text">All shares</span>
+                                            <span className="text-sm text-primary">All shares</span>
                                           </label>
                                           <label className="flex items-center gap-2 cursor-pointer select-none">
                                             <input
@@ -2242,9 +2242,9 @@ export function Component() {
                                               checked={!(acQuantityAll[pos.id] ?? true)}
                                               onChange={e => { e.stopPropagation(); setAcQuantityAll(prev => ({ ...prev, [pos.id]: false })); }}
                                               onClick={e => e.stopPropagation()}
-                                              className="accent-pf-cyan-400"
+                                              className="accent-accent-text"
                                             />
-                                            <span className="text-sm text-pf-text">Partial</span>
+                                            <span className="text-sm text-primary">Partial</span>
                                           </label>
                                           {!(acQuantityAll[pos.id] ?? true) && (
                                             <Input
@@ -2263,9 +2263,9 @@ export function Component() {
 
                                       {/* Error */}
                                       {acErrors[pos.id] && (
-                                        <div className="flex items-center gap-2 px-3 py-2 rounded-pf bg-pf-danger/10 border border-pf-danger/25">
-                                          <AlertTriangle className="size-4 text-pf-danger shrink-0" />
-                                          <p className="text-xs text-pf-danger">{acErrors[pos.id]}</p>
+                                        <div className="flex items-center gap-2 px-3 py-2 rounded-pf bg-loss/10 border border-loss/25">
+                                          <AlertTriangle className="size-4 text-loss shrink-0" />
+                                          <p className="text-xs text-loss">{acErrors[pos.id]}</p>
                                         </div>
                                       )}
 
@@ -2297,8 +2297,8 @@ export function Component() {
 
                                       {/* Disclaimer */}
                                       <div className="flex items-start gap-2 pt-1">
-                                        <AlertTriangle className="size-4 text-pf-text-muted shrink-0 mt-1" />
-                                        <p className="text-xs text-pf-text-muted">Rules execute as market orders on Polymarket</p>
+                                        <AlertTriangle className="size-4 text-tertiary shrink-0 mt-1" />
+                                        <p className="text-xs text-tertiary">Rules execute as market orders on Polymarket</p>
                                       </div>
                                     </div>
                                   )}
@@ -2309,44 +2309,44 @@ export function Component() {
                           {isExpanded && (
                             <tr key={`${pos.id}-detail`}>
                               <td colSpan={8}>
-                                <div className="px-4 py-3 bg-pf-surface/50 border-t border-pf-border-subtle animate-fade-in">
+                                <div className="px-4 py-3 bg-surface/50 border-t border-subtle animate-fade-in">
                                   <div className="flex flex-wrap items-start gap-6">
                                     {/* P&L prominent display */}
                                     <div className="flex flex-col">
-                                      <span className="text-pf-caption text-pf-text-muted uppercase tracking-wider mb-1">Unrealized P&L</span>
-                                      <span className={`text-2xl font-mono font-bold ${pnlNum >= 0 ? 'text-pf-success' : 'text-pf-danger'}`}>
+                                      <span className="text-pf-caption text-tertiary uppercase tracking-wider mb-1">Unrealized P&L</span>
+                                      <span className={`text-2xl font-mono font-bold ${pnlNum >= 0 ? 'text-gain' : 'text-loss'}`}>
                                         {formatPnl(pos.unrealizedPnl)}
                                       </span>
-                                      <span className="text-pf-caption text-pf-text-muted mt-1 italic">Unrealized P&L updates are estimated</span>
+                                      <span className="text-pf-caption text-tertiary mt-1 italic">Unrealized P&L updates are estimated</span>
                                     </div>
 
                                     {/* Detail stats */}
                                     <div className="flex flex-wrap gap-4 text-xs">
                                       <div>
-                                        <p className="text-pf-text-muted mb-1">Entry Price</p>
-                                        <p className="font-mono text-pf-text">{entryPrice.toFixed(3)}</p>
+                                        <p className="text-tertiary mb-1">Entry Price</p>
+                                        <p className="font-mono text-primary">{entryPrice.toFixed(3)}</p>
                                       </div>
                                       <div>
-                                        <p className="text-pf-text-muted mb-1">Current Price</p>
-                                        <p className="font-mono text-pf-cyan-400">
+                                        <p className="text-tertiary mb-1">Current Price</p>
+                                        <p className="font-mono text-accent-text">
                                           {currentPrice > 0 ? currentPrice.toFixed(3) : '—'}
                                         </p>
                                       </div>
                                       {timeHeld && (
                                         <div>
-                                          <p className="text-pf-text-muted mb-1 flex items-center gap-1">
+                                          <p className="text-tertiary mb-1 flex items-center gap-1">
                                             <Clock className="size-3" /> Time Held
                                           </p>
-                                          <p className="font-mono text-pf-text">{timeHeld}</p>
+                                          <p className="font-mono text-primary">{timeHeld}</p>
                                         </div>
                                       )}
                                       <div>
-                                        <p className="text-pf-text-muted mb-1">Max Gain</p>
-                                        <p className="font-mono text-pf-success">+${maxGain}</p>
+                                        <p className="text-tertiary mb-1">Max Gain</p>
+                                        <p className="font-mono text-gain">+${maxGain}</p>
                                       </div>
                                       <div>
-                                        <p className="text-pf-text-muted mb-1">Max Loss</p>
-                                        <p className="font-mono text-pf-danger">-${maxLoss}</p>
+                                        <p className="text-tertiary mb-1">Max Loss</p>
+                                        <p className="font-mono text-loss">-${maxLoss}</p>
                                       </div>
                                     </div>
                                   </div>
@@ -2370,14 +2370,14 @@ export function Component() {
             if (resolved.length === 0) return null;
             return (
               <section className="mt-6">
-                <h2 className="text-base font-semibold text-pf-text mb-3">Resolved Positions</h2>
-                <div className="rounded-pf border border-pf-border overflow-hidden">
+                <h2 className="text-base font-semibold text-primary mb-3">Resolved Positions</h2>
+                <div className="rounded-pf border border-default overflow-hidden">
                   <table className="w-full text-sm" aria-label="Resolved positions">
                     <thead>
-                      <tr className="border-b border-pf-border bg-pf-surface-elevated">
-                        <th className="text-left px-4 py-3 text-xs font-medium text-pf-text-muted">Market</th>
-                        <th className="text-right px-4 py-3 text-xs font-medium text-pf-text-muted">Outcome</th>
-                        <th className="text-right px-4 py-3 text-xs font-medium text-pf-text-muted">Realized P&L</th>
+                      <tr className="border-b border-default bg-surface-elevated">
+                        <th className="text-left px-4 py-3 text-xs font-medium text-tertiary">Market</th>
+                        <th className="text-right px-4 py-3 text-xs font-medium text-tertiary">Outcome</th>
+                        <th className="text-right px-4 py-3 text-xs font-medium text-tertiary">Realized P&L</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -2385,10 +2385,10 @@ export function Component() {
                         const pnl = parseFloat(pos.realizedPnl ?? pos.unrealizedPnl ?? '0');
                         const isWin = pnl > 0;
                         return (
-                          <tr key={i} className="border-b border-pf-border-subtle last:border-0">
-                            <td className="px-4 py-3 text-pf-text text-xs">{pos.market?.title ?? pos.marketTitle ?? pos.marketId}</td>
-                            <td className="px-4 py-3 text-right text-xs font-mono text-pf-text-secondary">{pos.outcome ?? '-'}</td>
-                            <td className={`px-4 py-3 text-right text-xs font-mono font-semibold ${isWin ? 'text-pf-success' : 'text-pf-danger'}`}>
+                          <tr key={i} className="border-b border-subtle last:border-0">
+                            <td className="px-4 py-3 text-primary text-xs">{pos.market?.title ?? pos.marketTitle ?? pos.marketId}</td>
+                            <td className="px-4 py-3 text-right text-xs font-mono text-secondary">{pos.outcome ?? '-'}</td>
+                            <td className={`px-4 py-3 text-right text-xs font-mono font-semibold ${isWin ? 'text-gain' : 'text-loss'}`}>
                               {isWin ? '+' : ''}{pnl.toFixed(2)}
                             </td>
                           </tr>
@@ -2403,17 +2403,17 @@ export function Component() {
 
           {/* P&L Breakdown — Realized vs Unrealized */}
           {portfolio && (
-            <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4">
-              <p className="text-xs text-pf-text-secondary uppercase tracking-wider mb-3">P&L Breakdown</p>
+            <div className="bg-elevated border border-default rounded-pf-lg p-4">
+              <p className="text-xs text-secondary uppercase tracking-wider mb-3">P&L Breakdown</p>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <p className="text-xs text-pf-text-muted mb-1">Realized P&L</p>
+                  <p className="text-xs text-tertiary mb-1">Realized P&L</p>
                   <span className={`text-xl font-mono font-semibold ${pnlColor(portfolio.totalRealizedPnl)}`}>
                     {formatPnl(portfolio.totalRealizedPnl)}
                   </span>
                 </div>
                 <div>
-                  <p className="text-xs text-pf-text-muted mb-1">Unrealized P&L</p>
+                  <p className="text-xs text-tertiary mb-1">Unrealized P&L</p>
                   <span className={`text-xl font-mono font-semibold ${pnlColor(portfolio.totalUnrealizedPnl)}`}>
                     {formatPnl(portfolio.totalUnrealizedPnl)}
                   </span>
@@ -2450,19 +2450,19 @@ export function Component() {
               const { name, value } = payload[0].payload;
               const pct = ((value / totalAllocation) * 100).toFixed(1);
               return (
-                <div className="bg-pf-surface border border-pf-border rounded-pf px-3 py-2 text-xs font-mono shadow-pf">
-                  <p className="text-pf-text font-medium">{name}</p>
-                  <p className="text-pf-text-secondary">${value.toLocaleString(undefined, { maximumFractionDigits: 2 })} ({pct}%)</p>
+                <div className="bg-surface border border-default rounded-pf px-3 py-2 text-xs font-mono shadow-pf">
+                  <p className="text-primary font-medium">{name}</p>
+                  <p className="text-secondary">${value.toLocaleString(undefined, { maximumFractionDigits: 2 })} ({pct}%)</p>
                 </div>
               );
             };
 
             return (
-              <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4">
+              <div className="bg-elevated border border-default rounded-pf-lg p-4">
                 {/* Section header */}
                 <div className="flex items-center gap-2 mb-4">
-                  <PieChart className="size-4 text-pf-text-muted" />
-                  <span className="text-sm font-medium text-pf-text">Position Allocation</span>
+                  <PieChart className="size-4 text-tertiary" />
+                  <span className="text-sm font-medium text-primary">Position Allocation</span>
                 </div>
 
                 {/* Donut + legend */}
@@ -2501,11 +2501,11 @@ export function Component() {
                       return (
                         <div key={entry.name} className="flex items-center gap-2">
                           <span className="size-3 rounded-pf-full shrink-0" style={{ backgroundColor: color }} />
-                          <span className="flex-1 text-sm text-pf-text capitalize truncate">{entry.name}</span>
-                          <span className="text-xs font-mono text-pf-text-secondary shrink-0">
+                          <span className="flex-1 text-sm text-primary capitalize truncate">{entry.name}</span>
+                          <span className="text-xs font-mono text-secondary shrink-0">
                             ${entry.value.toLocaleString(undefined, { maximumFractionDigits: 2 })}
                           </span>
-                          <span className="text-xs font-mono text-pf-text-muted w-12 text-right shrink-0">{pct}%</span>
+                          <span className="text-xs font-mono text-tertiary w-12 text-right shrink-0">{pct}%</span>
                         </div>
                       );
                     })}
@@ -2514,11 +2514,11 @@ export function Component() {
 
                 {/* Largest Positions table */}
                 <div className="mt-5">
-                  <p className="text-xs text-pf-text-secondary uppercase tracking-wider mb-2">Largest Positions</p>
+                  <p className="text-xs text-secondary uppercase tracking-wider mb-2">Largest Positions</p>
                   <div className="overflow-x-auto">
                     <table className="w-full text-xs" aria-label="Largest positions">
                       <thead>
-                        <tr className="text-left text-pf-text-muted border-b border-pf-border-subtle">
+                        <tr className="text-left text-tertiary border-b border-subtle">
                           <th className="pb-2 font-medium pr-3">Market</th>
                           <th className="pb-2 font-medium pr-3">Category</th>
                           <th className="pb-2 font-medium pr-3">Side</th>
@@ -2528,7 +2528,7 @@ export function Component() {
                           <th className="pb-2 font-medium text-right">Unreal. P&L</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-pf-border-subtle">
+                      <tbody className="divide-y divide-subtle">
                         {topPositions.map((pos) => {
                           const category = (pos as any).marketCategory ?? pos.market?.category ?? null;
                           const categoryNorm = category
@@ -2538,35 +2538,35 @@ export function Component() {
                             ? CATEGORY_COLORS[categoryNorm] ?? CATEGORY_COLORS.Other
                             : CATEGORY_COLORS.Other;
                           return (
-                            <tr key={pos.id} className="hover:bg-pf-surface/40 transition-colors">
+                            <tr key={pos.id} className="hover:bg-surface/40 transition-colors">
                               <td className="py-2 pr-3 max-w-[140px]">
-                                <span className="truncate block text-pf-text" title={pos.marketTitle}>{pos.marketTitle}</span>
+                                <span className="truncate block text-primary" title={pos.marketTitle}>{pos.marketTitle}</span>
                               </td>
                               <td className="py-2 pr-3">
                                 {categoryNorm ? (
                                   <span className="inline-flex items-center gap-1">
                                     <span className="size-2 rounded-pf-full" style={{ backgroundColor: dotColor }} />
-                                    <span className="text-pf-text-secondary">{categoryNorm}</span>
+                                    <span className="text-secondary">{categoryNorm}</span>
                                   </span>
                                 ) : (
-                                  <span className="text-pf-text-muted">—</span>
+                                  <span className="text-tertiary">—</span>
                                 )}
                               </td>
                               <td className="py-2 pr-3">
                                 <span className={`inline-flex px-2 py-1 rounded font-medium ${
-                                  pos.side === 'BUY' ? 'bg-pf-success/10 text-pf-success' : 'bg-pf-danger/10 text-pf-danger'
+                                  pos.side === 'BUY' ? 'bg-gain/10 text-gain' : 'bg-loss/10 text-loss'
                                 }`}>
                                   {pos.side}
                                 </span>
                               </td>
-                              <td className="py-2 pr-3 text-pf-text-secondary font-mono">{pos.outcome ?? '—'}</td>
-                              <td className="py-2 pr-3 text-right font-mono text-pf-text">
+                              <td className="py-2 pr-3 text-secondary font-mono">{pos.outcome ?? '—'}</td>
+                              <td className="py-2 pr-3 text-right font-mono text-primary">
                                 {parseFloat(pos.size).toLocaleString(undefined, { maximumFractionDigits: 2 })}
                               </td>
-                              <td className="py-2 pr-3 text-right font-mono text-pf-cyan-400">
+                              <td className="py-2 pr-3 text-right font-mono text-accent-text">
                                 {pos.currentPrice && parseFloat(pos.currentPrice) > 0
                                   ? `$${parseFloat(pos.currentPrice).toFixed(3)}`
-                                  : <span className="text-pf-text-muted">—</span>}
+                                  : <span className="text-tertiary">—</span>}
                               </td>
                               <td className={`py-2 text-right font-mono font-medium ${pnlColor(pos.unrealizedPnl)}`}>
                                 {formatPnl(pos.unrealizedPnl)}
@@ -2604,57 +2604,57 @@ export function Component() {
                 label: 'Sharpe Ratio',
                 tooltip: 'Risk-adjusted return (higher is better)',
                 value: sharpe != null
-                  ? <span className={sharpe >= 1 ? 'text-pf-success' : sharpe >= 0 ? 'text-pf-text' : 'text-pf-danger'}>{sharpe.toFixed(2)}</span>
-                  : <span className="text-pf-text-muted">—</span>,
+                  ? <span className={sharpe >= 1 ? 'text-gain' : sharpe >= 0 ? 'text-primary' : 'text-loss'}>{sharpe.toFixed(2)}</span>
+                  : <span className="text-tertiary">—</span>,
               },
               {
                 label: 'Max Drawdown',
                 value: maxDrawdown != null
-                  ? <span className="text-pf-danger">-${Math.abs(maxDrawdown).toFixed(2)}</span>
-                  : <span className="text-pf-text-muted">—</span>,
+                  ? <span className="text-loss">-${Math.abs(maxDrawdown).toFixed(2)}</span>
+                  : <span className="text-tertiary">—</span>,
               },
               {
                 label: 'Longest Win Streak',
                 value: winStreak != null
-                  ? <span className="text-pf-success">{winStreak} trade{winStreak !== 1 ? 's' : ''}</span>
-                  : <span className="text-pf-text-muted">—</span>,
+                  ? <span className="text-gain">{winStreak} trade{winStreak !== 1 ? 's' : ''}</span>
+                  : <span className="text-tertiary">—</span>,
               },
               {
                 label: 'Longest Loss Streak',
                 value: lossStreak != null
-                  ? <span className="text-pf-danger">{lossStreak} trade{lossStreak !== 1 ? 's' : ''}</span>
-                  : <span className="text-pf-text-muted">—</span>,
+                  ? <span className="text-loss">{lossStreak} trade{lossStreak !== 1 ? 's' : ''}</span>
+                  : <span className="text-tertiary">—</span>,
               },
               {
                 label: 'Avg Hold Time',
                 value: avgHold != null
-                  ? <span className="text-pf-text">{avgHold.toFixed(1)} days</span>
-                  : <span className="text-pf-text-muted">—</span>,
+                  ? <span className="text-primary">{avgHold.toFixed(1)} days</span>
+                  : <span className="text-tertiary">—</span>,
               },
               {
                 label: 'Best Single Trade',
                 value: bestTrade != null
-                  ? <span className="text-pf-success">+${bestTrade.toFixed(2)}</span>
-                  : <span className="text-pf-text-muted">—</span>,
+                  ? <span className="text-gain">+${bestTrade.toFixed(2)}</span>
+                  : <span className="text-tertiary">—</span>,
               },
             ];
 
             return (
-              <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4">
+              <div className="bg-elevated border border-default rounded-pf-lg p-4">
                 <div className="flex items-center gap-2 mb-4">
-                  <TrendingUp className="size-4 text-pf-text-muted" />
-                  <span className="text-sm font-medium text-pf-text">Advanced Statistics</span>
+                  <TrendingUp className="size-4 text-tertiary" />
+                  <span className="text-sm font-medium text-primary">Advanced Statistics</span>
                 </div>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                   {statItems.map((item) => (
-                    <div key={item.label} className="bg-pf-surface rounded-pf p-3">
+                    <div key={item.label} className="bg-surface rounded-pf p-3">
                       <p
-                        className="text-xs text-pf-text-muted uppercase tracking-wider mb-1"
+                        className="text-xs text-tertiary uppercase tracking-wider mb-1"
                         title={item.tooltip}
                       >
                         {item.label}
                         {item.tooltip && (
-                          <span className="ml-1 text-pf-text-muted cursor-help" title={item.tooltip}>ⓘ</span>
+                          <span className="ml-1 text-tertiary cursor-help" title={item.tooltip}>ⓘ</span>
                         )}
                       </p>
                       <div className="text-lg font-mono font-bold leading-tight">{item.value}</div>
@@ -2666,15 +2666,15 @@ export function Component() {
           })()}
 
           {/* ─── Daily Returns Heatmap ─── */}
-          <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4">
+          <div className="bg-elevated border border-default rounded-pf-lg p-4">
             <div className="flex items-center gap-2 mb-4">
-              <CalendarDays className="size-4 text-pf-text-muted" />
-              <span className="text-sm font-medium text-pf-text">Daily Returns (12 months)</span>
+              <CalendarDays className="size-4 text-tertiary" />
+              <span className="text-sm font-medium text-primary">Daily Returns (12 months)</span>
             </div>
             {loadingHeatmap ? (
-              <div className="h-32 bg-pf-overlay rounded animate-pulse" />
+              <div className="h-32 bg-overlay rounded animate-pulse" />
             ) : heatmapData.length === 0 ? (
-              <p className="text-sm text-pf-text-muted">No trading data yet</p>
+              <p className="text-sm text-tertiary">No trading data yet</p>
             ) : (
               <HeatmapGrid data={heatmapData} />
             )}
@@ -2686,11 +2686,11 @@ export function Component() {
             const RISK_OUTCOMES: Array<'YES' | 'NO'> = ['YES', 'NO'];
 
             function riskCellBg(ratio: number): string {
-              if (ratio === 0) return 'bg-pf-overlay/20';
-              if (ratio <= 0.25) return 'bg-pf-cyan-500/10';
-              if (ratio <= 0.50) return 'bg-pf-cyan-500/25';
-              if (ratio <= 0.75) return 'bg-pf-cyan-500/45';
-              return 'bg-pf-cyan-500/70';
+              if (ratio === 0) return 'bg-overlay/20';
+              if (ratio <= 0.25) return 'bg-accent/10';
+              if (ratio <= 0.50) return 'bg-accent/25';
+              if (ratio <= 0.75) return 'bg-accent/45';
+              return 'bg-accent/70';
             }
 
             function formatCellValue(v: number): string {
@@ -2700,23 +2700,23 @@ export function Component() {
 
             if (loadingRiskHeatmap) {
               return (
-                <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4">
+                <div className="bg-elevated border border-default rounded-pf-lg p-4">
                   <div className="flex items-center gap-2 mb-4">
-                    <ShieldAlert className="size-4 text-pf-cyan-400" />
-                    <span className="text-sm font-semibold text-pf-text">Risk Concentration</span>
+                    <ShieldAlert className="size-4 text-accent-text" />
+                    <span className="text-sm font-semibold text-primary">Risk Concentration</span>
                   </div>
                   {/* 2×6 skeleton grid */}
                   <div className="grid gap-2" style={{ gridTemplateColumns: 'auto repeat(6, 1fr)' }}>
                     {/* header row spacer */}
                     <div />
                     {RISK_CATEGORIES.map(c => (
-                      <div key={c} className="h-4 bg-pf-overlay rounded animate-pulse" />
+                      <div key={c} className="h-4 bg-overlay rounded animate-pulse" />
                     ))}
                     {RISK_OUTCOMES.map(o => (
                       <>
-                        <div key={`lbl-${o}`} className="h-12 w-8 bg-pf-overlay rounded animate-pulse" />
+                        <div key={`lbl-${o}`} className="h-12 w-8 bg-overlay rounded animate-pulse" />
                         {RISK_CATEGORIES.map(c => (
-                          <div key={`${o}-${c}`} className="h-12 bg-pf-overlay rounded animate-pulse" />
+                          <div key={`${o}-${c}`} className="h-12 bg-overlay rounded animate-pulse" />
                         ))}
                       </>
                     ))}
@@ -2728,15 +2728,15 @@ export function Component() {
             // Empty state — no positions
             if (!riskHeatmap || riskHeatmap.cells.length === 0) {
               return (
-                <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4">
+                <div className="bg-elevated border border-default rounded-pf-lg p-4">
                   <div className="flex items-center gap-2 mb-4">
-                    <ShieldAlert className="size-4 text-pf-cyan-400" />
-                    <span className="text-sm font-semibold text-pf-text">Risk Concentration</span>
+                    <ShieldAlert className="size-4 text-accent-text" />
+                    <span className="text-sm font-semibold text-primary">Risk Concentration</span>
                   </div>
                   <div className="flex flex-col items-center justify-center py-10 text-center">
-                    <ShieldCheck className="size-8 text-pf-text-muted mb-2" />
-                    <p className="text-sm font-medium text-pf-text">No open positions — nothing to analyse</p>
-                    <p className="text-xs text-pf-text-muted mt-1">Open some positions to see your risk concentration.</p>
+                    <ShieldCheck className="size-8 text-tertiary mb-2" />
+                    <p className="text-sm font-medium text-primary">No open positions — nothing to analyse</p>
+                    <p className="text-xs text-tertiary mt-1">Open some positions to see your risk concentration.</p>
                   </div>
                 </div>
               );
@@ -2763,14 +2763,14 @@ export function Component() {
             const highConcentrationCells = cells.filter(c => totalValue > 0 && c.totalValue / totalValue > 0.3);
 
             return (
-              <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4">
+              <div className="bg-elevated border border-default rounded-pf-lg p-4">
                 {/* Header */}
                 <div className="flex items-start justify-between mb-1 flex-wrap gap-2">
                   <div className="flex items-center gap-2">
-                    <ShieldAlert className="size-4 text-pf-cyan-400" />
+                    <ShieldAlert className="size-4 text-accent-text" />
                     <div>
-                      <span className="text-sm font-semibold text-pf-text">Risk Concentration</span>
-                      <p className="text-pf-label text-pf-text-muted mt-1">Exposure by category and outcome</p>
+                      <span className="text-sm font-semibold text-primary">Risk Concentration</span>
+                      <p className="text-pf-label text-tertiary mt-1">Exposure by category and outcome</p>
                     </div>
                   </div>
                 </div>
@@ -2781,9 +2781,9 @@ export function Component() {
                   return (
                     <div
                       key={`warn-${c.category}-${c.outcome}`}
-                      className="flex items-center gap-2 mt-3 px-3 py-2 rounded-pf bg-pf-warning/10 border border-pf-warning/30"
+                      className="flex items-center gap-2 mt-3 px-3 py-2 rounded-pf bg-warning/10 border border-warning/30"
                     >
-                      <AlertTriangle className="size-4 text-pf-warning shrink-0" />
+                      <AlertTriangle className="size-4 text-warning shrink-0" />
                       <p className="text-xs text-pf-gold-300">
                         High concentration in{' '}
                         <span className="font-semibold capitalize">{c.category}</span>{' '}
@@ -2803,7 +2803,7 @@ export function Component() {
                     {/* Column headers */}
                     <div />
                     {RISK_CATEGORIES.map(cat => (
-                      <div key={cat} className="text-center text-pf-label font-medium text-pf-text-secondary pb-1 capitalize">
+                      <div key={cat} className="text-center text-pf-label font-medium text-secondary pb-1 capitalize">
                         {cat}
                       </div>
                     ))}
@@ -2818,8 +2818,8 @@ export function Component() {
                         >
                           <span className={`text-xs font-semibold px-2 py-1 rounded ${
                             outcome === 'YES'
-                              ? 'text-pf-success bg-pf-success/10'
-                              : 'text-pf-danger bg-pf-danger/10'
+                              ? 'text-gain bg-gain/10'
+                              : 'text-loss bg-loss/10'
                           }`}>
                             {outcome}
                           </span>
@@ -2836,9 +2836,9 @@ export function Component() {
                             return (
                               <div
                                 key={`${outcome}-${cat}`}
-                                className={`${bgClass} rounded-pf border border-pf-border-subtle flex items-center justify-center h-14`}
+                                className={`${bgClass} rounded-pf border border-subtle flex items-center justify-center h-14`}
                               >
-                                <span className="text-pf-text-muted text-sm">—</span>
+                                <span className="text-tertiary text-sm">—</span>
                               </div>
                             );
                           }
@@ -2854,16 +2854,16 @@ export function Component() {
                             <div
                               key={`${outcome}-${cat}`}
                               title={tooltipText}
-                              className={`${bgClass} rounded-pf border border-pf-border-subtle h-14 relative p-2 cursor-default transition-opacity hover:opacity-80`}
+                              className={`${bgClass} rounded-pf border border-subtle h-14 relative p-2 cursor-default transition-opacity hover:opacity-80`}
                             >
                               {/* Dollar value */}
-                              <p className="text-pf-text font-mono text-xs leading-tight">{formatCellValue(cell.totalValue)}</p>
+                              <p className="text-primary font-mono text-xs leading-tight">{formatCellValue(cell.totalValue)}</p>
                               {/* Position count */}
-                              <p className="text-pf-text-muted text-pf-caption leading-tight mt-1">{cell.positionCount} pos</p>
+                              <p className="text-tertiary text-pf-caption leading-tight mt-1">{cell.positionCount} pos</p>
                               {/* P&L badge bottom-right */}
                               <span
                                 className={`absolute bottom-1 right-2 text-pf-micro font-mono font-semibold ${
-                                  cell.pnl > 0 ? 'text-pf-success' : cell.pnl < 0 ? 'text-pf-danger' : 'text-pf-text-muted'
+                                  cell.pnl > 0 ? 'text-gain' : cell.pnl < 0 ? 'text-loss' : 'text-tertiary'
                                 }`}
                               >
                                 {cell.pnl >= 0 ? '+' : ''}{cell.pnl.toFixed(2)}
@@ -2882,19 +2882,19 @@ export function Component() {
                     className="grid gap-2 min-w-max"
                     style={{ gridTemplateColumns: `60px repeat(${RISK_CATEGORIES.length}, minmax(88px, 1fr))` }}
                   >
-                    <div className="text-pf-caption text-pf-text-muted flex items-center justify-center">Total</div>
+                    <div className="text-pf-caption text-tertiary flex items-center justify-center">Total</div>
                     {RISK_CATEGORIES.map((cat, i) => {
                       const colTotal = colTotals[i];
                       const pct = totalValue > 0 ? (colTotal / totalValue) * 100 : 0;
                       return (
                         <div key={cat} className="flex flex-col gap-1">
-                          <div className="h-2 rounded-pf-full bg-pf-surface overflow-hidden">
+                          <div className="h-2 rounded-pf-full bg-surface overflow-hidden">
                             <div
-                              className="h-full rounded-pf-full bg-pf-cyan-500/50 transition-all"
+                              className="h-full rounded-pf-full bg-accent/50 transition-all"
                               style={{ width: `${(colTotal / maxColTotal) * 100}%` }}
                             />
                           </div>
-                          <p className="text-pf-caption text-pf-text-muted font-mono text-center">
+                          <p className="text-pf-caption text-tertiary font-mono text-center">
                             {colTotal > 0 ? `${pct.toFixed(1)}%` : '—'}
                           </p>
                         </div>
@@ -2905,13 +2905,13 @@ export function Component() {
 
                 {/* Legend */}
                 <div className="flex items-center gap-2 mt-4 flex-wrap">
-                  <span className="text-pf-caption text-pf-text-muted">Low</span>
-                  <div className="w-5 h-3 rounded-sm bg-pf-overlay/20 border border-pf-border-subtle" />
-                  <div className="w-5 h-3 rounded-sm bg-pf-cyan-500/10 border border-pf-border-subtle" />
-                  <div className="w-5 h-3 rounded-sm bg-pf-cyan-500/25 border border-pf-border-subtle" />
-                  <div className="w-5 h-3 rounded-sm bg-pf-cyan-500/45 border border-pf-border-subtle" />
-                  <div className="w-5 h-3 rounded-sm bg-pf-cyan-500/70 border border-pf-border-subtle" />
-                  <span className="text-pf-caption text-pf-text-muted">High</span>
+                  <span className="text-pf-caption text-tertiary">Low</span>
+                  <div className="w-5 h-3 rounded-sm bg-overlay/20 border border-subtle" />
+                  <div className="w-5 h-3 rounded-sm bg-accent/10 border border-subtle" />
+                  <div className="w-5 h-3 rounded-sm bg-accent/25 border border-subtle" />
+                  <div className="w-5 h-3 rounded-sm bg-accent/45 border border-subtle" />
+                  <div className="w-5 h-3 rounded-sm bg-accent/70 border border-subtle" />
+                  <span className="text-pf-caption text-tertiary">High</span>
                 </div>
               </div>
             );
@@ -2930,9 +2930,9 @@ export function Component() {
 
             function PriorityBadge({ priority }: { priority: RebalanceSuggestion['priority'] }) {
               const cls =
-                priority === 'high' ? 'bg-pf-danger/10 text-pf-danger' :
-                priority === 'medium' ? 'bg-pf-warning/10 text-pf-warning' :
-                'bg-pf-success/10 text-pf-success';
+                priority === 'high' ? 'bg-loss/10 text-loss' :
+                priority === 'medium' ? 'bg-warning/10 text-warning' :
+                'bg-gain/10 text-gain';
               const label = priority === 'high' ? 'High' : priority === 'medium' ? 'Medium' : 'Low';
               return (
                 <span className={`inline-flex items-center px-2 py-1 rounded text-pf-caption font-semibold uppercase tracking-wide ${cls}`}>
@@ -2943,13 +2943,13 @@ export function Component() {
 
             function CurrentTargetBar({ currentPct, targetPct }: { currentPct: number; targetPct: number }) {
               const barColor =
-                currentPct > targetPct * 1.5 ? 'bg-pf-danger' :
-                currentPct > targetPct ? 'bg-pf-warning' :
-                'bg-pf-success';
+                currentPct > targetPct * 1.5 ? 'bg-loss' :
+                currentPct > targetPct ? 'bg-warning' :
+                'bg-gain';
               const clampedCurrent = Math.min(currentPct, 100);
               const targetPos = Math.min(targetPct, 100);
               return (
-                <div className="relative h-2 rounded-pf-full bg-pf-surface overflow-visible mt-1">
+                <div className="relative h-2 rounded-pf-full bg-surface overflow-visible mt-1">
                   {/* filled bar */}
                   <div
                     className={`absolute inset-y-0 left-0 rounded-pf-full ${barColor} transition-all`}
@@ -2957,7 +2957,7 @@ export function Component() {
                   />
                   {/* target marker */}
                   <div
-                    className="absolute top-1/2 -translate-y-1/2 w-1 h-3 bg-pf-text rounded-pf-full"
+                    className="absolute top-1/2 -translate-y-1/2 w-1 h-3 bg-primary rounded-pf-full"
                     style={{ left: `${targetPos}%` }}
                     title={`Target: ${targetPct}%`}
                   />
@@ -2967,14 +2967,14 @@ export function Component() {
 
             if (loadingSuggestions) {
               return (
-                <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4">
+                <div className="bg-elevated border border-default rounded-pf-lg p-4">
                   <div className="flex items-center gap-2 mb-4">
-                    <Lightbulb className="size-4 text-pf-warning" />
-                    <span className="text-sm font-semibold text-pf-text">Rebalancing Suggestions</span>
+                    <Lightbulb className="size-4 text-warning" />
+                    <span className="text-sm font-semibold text-primary">Rebalancing Suggestions</span>
                   </div>
                   <div className="space-y-3">
                     {[0, 1].map(i => (
-                      <div key={i} className="h-20 bg-pf-overlay rounded-pf animate-pulse" />
+                      <div key={i} className="h-20 bg-overlay rounded-pf animate-pulse" />
                     ))}
                   </div>
                 </div>
@@ -2982,13 +2982,13 @@ export function Component() {
             }
 
             return (
-              <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4">
+              <div className="bg-elevated border border-default rounded-pf-lg p-4">
                 {/* Header */}
                 <div className="flex items-center gap-2 mb-4">
-                  <Lightbulb className="size-4 text-pf-warning" />
-                  <span className="text-sm font-semibold text-pf-text">Rebalancing Suggestions</span>
+                  <Lightbulb className="size-4 text-warning" />
+                  <span className="text-sm font-semibold text-primary">Rebalancing Suggestions</span>
                   {visibleSuggestions.length > 0 && (
-                    <span className="inline-flex items-center justify-center min-w-4 h-4 px-1 rounded-pf-full bg-pf-warning/15 text-pf-warning text-pf-caption font-semibold">
+                    <span className="inline-flex items-center justify-center min-w-4 h-4 px-1 rounded-pf-full bg-warning/15 text-warning text-pf-caption font-semibold">
                       {visibleSuggestions.length}
                     </span>
                   )}
@@ -2996,29 +2996,29 @@ export function Component() {
 
                 {visibleSuggestions.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-8 text-center">
-                    <CheckCircle2 className="size-8 text-pf-success mb-2" />
-                    <p className="text-sm font-medium text-pf-text">Your portfolio looks well balanced</p>
-                    <p className="text-xs text-pf-text-muted mt-1">No rebalancing actions are needed right now.</p>
+                    <CheckCircle2 className="size-8 text-gain mb-2" />
+                    <p className="text-sm font-medium text-primary">Your portfolio looks well balanced</p>
+                    <p className="text-xs text-tertiary mt-1">No rebalancing actions are needed right now.</p>
                   </div>
                 ) : (
                   <div className="space-y-3">
                     {visibleSuggestions.map(s => (
                       <div
                         key={s.id}
-                        className="rounded-pf border border-pf-border bg-pf-surface p-3"
+                        className="rounded-pf border border-default bg-surface p-3"
                       >
                         {/* Card header row */}
                         <div className="flex items-start justify-between gap-2">
                           <div className="flex items-center gap-2 min-w-0">
                             <PriorityBadge priority={s.priority} />
                             <span className={`
-                              ${s.priority === 'high' ? 'text-pf-danger' :
-                                s.priority === 'medium' ? 'text-pf-warning' :
-                                'text-pf-text-secondary'}
+                              ${s.priority === 'high' ? 'text-loss' :
+                                s.priority === 'medium' ? 'text-warning' :
+                                'text-secondary'}
                             `}>
                               <SuggestionTypeIcon type={s.type} />
                             </span>
-                            <p className="text-sm font-medium text-pf-text truncate">{s.title}</p>
+                            <p className="text-sm font-medium text-primary truncate">{s.title}</p>
                           </div>
                           <Button
                             type="button"
@@ -3033,21 +3033,21 @@ export function Component() {
                         </div>
 
                         {/* Description */}
-                        <p className="text-xs text-pf-text-muted mt-2 leading-relaxed">{s.description}</p>
+                        <p className="text-xs text-tertiary mt-2 leading-relaxed">{s.description}</p>
 
                         {/* Current → Target bar */}
                         <div className="mt-3">
-                          <div className="flex items-center justify-between text-pf-label text-pf-text-secondary mb-1">
-                            <span>Current: <span className="font-mono font-semibold text-pf-text">{s.currentPct}%</span></span>
-                            <span className="text-pf-text-muted">→</span>
-                            <span>Target: <span className="font-mono font-semibold text-pf-text">{s.targetPct}%</span></span>
+                          <div className="flex items-center justify-between text-pf-label text-secondary mb-1">
+                            <span>Current: <span className="font-mono font-semibold text-primary">{s.currentPct}%</span></span>
+                            <span className="text-tertiary">→</span>
+                            <span>Target: <span className="font-mono font-semibold text-primary">{s.targetPct}%</span></span>
                           </div>
                           <CurrentTargetBar currentPct={s.currentPct} targetPct={s.targetPct} />
                         </div>
 
                         {/* Estimated impact */}
-                        <p className="text-pf-label text-pf-text-muted mt-2">
-                          <span className="text-pf-text-secondary font-medium">Impact: </span>
+                        <p className="text-pf-label text-tertiary mt-2">
+                          <span className="text-secondary font-medium">Impact: </span>
                           {s.estimatedImpact}
                         </p>
                       </div>
@@ -3082,22 +3082,22 @@ export function Component() {
             const entries = Object.entries(byCategory).sort((a, b) => b[1].exposure - a[1].exposure);
             const totalExposure = entries.reduce((sum, [, v]) => sum + v.exposure, 0) || 1;
             return (
-              <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4">
-                <p className="text-xs text-pf-text-secondary uppercase tracking-wider mb-3">Category Exposure</p>
+              <div className="bg-elevated border border-default rounded-pf-lg p-4">
+                <p className="text-xs text-secondary uppercase tracking-wider mb-3">Category Exposure</p>
                 <div className="space-y-3">
                   {entries.map(([category, { count, exposure }]) => {
                     const barPct = Math.round((exposure / totalExposure) * 100);
                     return (
                       <div key={category}>
                         <div className="flex items-center justify-between mb-1">
-                          <span className="text-sm text-pf-text capitalize">{category}</span>
-                          <span className="text-xs text-pf-text-muted font-mono">
+                          <span className="text-sm text-primary capitalize">{category}</span>
+                          <span className="text-xs text-tertiary font-mono">
                             {exposure.toLocaleString(undefined, { maximumFractionDigits: 0 })} shares &middot; {count} position{count !== 1 ? 's' : ''}
                           </span>
                         </div>
-                        <div className="h-2 rounded-pf-full bg-pf-surface overflow-hidden">
+                        <div className="h-2 rounded-pf-full bg-surface overflow-hidden">
                           <div
-                            className="h-2 rounded-pf-full bg-pf-cyan-500/60"
+                            className="h-2 rounded-pf-full bg-accent/60"
                             style={{ width: `${barPct}%` }}
                           />
                         </div>
@@ -3120,22 +3120,22 @@ export function Component() {
             }, {});
             const sorted = Object.values(byMarket).sort((a, b) => Math.abs(b.pnl) - Math.abs(a.pnl));
             return (
-              <div className="bg-pf-elevated border border-pf-border rounded-pf-lg">
-                <div className="flex items-center gap-2 px-4 py-3 border-b border-pf-border-subtle">
-                  <PieChart className="size-4 text-pf-text-muted" />
-                  <span className="text-sm font-medium text-pf-text">Exposure by Market</span>
+              <div className="bg-elevated border border-default rounded-pf-lg">
+                <div className="flex items-center gap-2 px-4 py-3 border-b border-subtle">
+                  <PieChart className="size-4 text-tertiary" />
+                  <span className="text-sm font-medium text-primary">Exposure by Market</span>
                 </div>
-                <div className="divide-y divide-pf-border-subtle">
+                <div className="divide-y divide-subtle">
                   {sorted.map((m) => {
                     const maxAbs = Math.max(...sorted.map(x => Math.abs(x.pnl)), 1);
                     const barPct = Math.round((Math.abs(m.pnl) / maxAbs) * 100);
                     return (
                       <div key={m.title} className="flex items-center gap-3 px-4 py-3">
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm text-pf-text truncate" title={m.title}>{m.title}</p>
-                          <div className="mt-1 h-2 rounded-pf-full bg-pf-surface overflow-hidden">
+                          <p className="text-sm text-primary truncate" title={m.title}>{m.title}</p>
+                          <div className="mt-1 h-2 rounded-pf-full bg-surface overflow-hidden">
                             <div
-                              className={`h-full rounded-pf-full ${m.pnl >= 0 ? 'bg-pf-success/60' : 'bg-pf-danger/60'}`}
+                              className={`h-full rounded-pf-full ${m.pnl >= 0 ? 'bg-gain/60' : 'bg-loss/60'}`}
                               style={{ width: `${barPct}%` }}
                             />
                           </div>
@@ -3144,7 +3144,7 @@ export function Component() {
                           <span className={`text-xs font-mono font-medium ${pnlColor(String(m.pnl))}`}>
                             {formatPnl(String(m.pnl))}
                           </span>
-                          <p className="text-pf-caption text-pf-text-muted">{m.count} position{m.count !== 1 ? 's' : ''}</p>
+                          <p className="text-pf-caption text-tertiary">{m.count} position{m.count !== 1 ? 's' : ''}</p>
                         </div>
                       </div>
                     );
@@ -3170,21 +3170,21 @@ export function Component() {
             <>
               {/* Paper summary */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4">
-                  <span className="text-xs text-pf-text-secondary uppercase tracking-wider">Paper P&L</span>
+                <div className="bg-elevated border border-default rounded-pf-lg p-4">
+                  <span className="text-xs text-secondary uppercase tracking-wider">Paper P&L</span>
                   <span className={`block mt-1 text-xl font-mono font-semibold ${pnlColor(paper.pnl)}`}>
                     {formatPnl(paper.pnl)}
                   </span>
                 </div>
-                <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4">
-                  <span className="text-xs text-pf-text-secondary uppercase tracking-wider">Positions</span>
-                  <span className="block mt-1 text-xl font-mono font-semibold text-pf-text">{paper.positions.length}</span>
+                <div className="bg-elevated border border-default rounded-pf-lg p-4">
+                  <span className="text-xs text-secondary uppercase tracking-wider">Positions</span>
+                  <span className="block mt-1 text-xl font-mono font-semibold text-primary">{paper.positions.length}</span>
                 </div>
-                <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4">
-                  <span className="text-xs text-pf-text-secondary uppercase tracking-wider">Total Orders</span>
-                  <span className="block mt-1 text-xl font-mono font-semibold text-pf-text">{paper.orderCount}</span>
+                <div className="bg-elevated border border-default rounded-pf-lg p-4">
+                  <span className="text-xs text-secondary uppercase tracking-wider">Total Orders</span>
+                  <span className="block mt-1 text-xl font-mono font-semibold text-primary">{paper.orderCount}</span>
                 </div>
-                <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4 flex items-end justify-end">
+                <div className="bg-elevated border border-default rounded-pf-lg p-4 flex items-end justify-end">
                   <Button
                     type="button"
                     variant="danger"
@@ -3197,13 +3197,13 @@ export function Component() {
                     Reset Paper Account
                   </Button>
                   {showResetConfirm && (
-                    <div role="presentation" className="fixed inset-0 z-50 flex items-center justify-center bg-pf-backdrop-light" onClick={() => setShowResetConfirm(false)} onKeyDown={(e) => { if (e.key === 'Escape') setShowResetConfirm(false); }}>
-                      <div role="dialog" aria-modal="true" aria-labelledby="reset-dialog-title" className="bg-pf-elevated border border-pf-border rounded-pf-lg p-6 max-w-sm mx-4 shadow-pf-lg" onClick={(e) => e.stopPropagation()}>
+                    <div role="presentation" className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => setShowResetConfirm(false)} onKeyDown={(e) => { if (e.key === 'Escape') setShowResetConfirm(false); }}>
+                      <div role="dialog" aria-modal="true" aria-labelledby="reset-dialog-title" className="bg-elevated border border-default rounded-pf-lg p-6 max-w-sm mx-4 shadow-pf-lg" onClick={(e) => e.stopPropagation()}>
                         <div className="flex items-center gap-2 mb-3">
-                          <AlertTriangle className="size-5 text-pf-danger" />
-                          <h2 id="reset-dialog-title" className="text-sm font-semibold text-pf-text">Reset Paper Account</h2>
+                          <AlertTriangle className="size-5 text-loss" />
+                          <h2 id="reset-dialog-title" className="text-sm font-semibold text-primary">Reset Paper Account</h2>
                         </div>
-                        <p className="text-sm text-pf-text-secondary mb-4">This will delete all paper positions and orders. This cannot be undone.</p>
+                        <p className="text-sm text-secondary mb-4">This will delete all paper positions and orders. This cannot be undone.</p>
                         <div className="flex justify-end gap-2">
                           <Button type="button" variant="ghost" size="sm" onClick={() => setShowResetConfirm(false)}>Cancel</Button>
                           <Button type="button" variant="danger" size="sm" onClick={resetPaper}>Reset</Button>
@@ -3216,42 +3216,42 @@ export function Component() {
 
               {/* Paper positions */}
               {paper.positions.length === 0 ? (
-                <div className="bg-pf-elevated border border-pf-border rounded-pf-lg">
+                <div className="bg-elevated border border-default rounded-pf-lg">
                   <div className="flex flex-col items-center justify-center py-16 text-center">
-                    <Wallet className="size-10 text-pf-text-muted mb-3" />
-                    <p className="text-sm font-medium text-pf-text">No paper positions</p>
-                    <p className="text-xs text-pf-text-muted mt-1">Start a strategy in Paper mode to simulate trades.</p>
+                    <Wallet className="size-10 text-tertiary mb-3" />
+                    <p className="text-sm font-medium text-primary">No paper positions</p>
+                    <p className="text-xs text-tertiary mt-1">Start a strategy in Paper mode to simulate trades.</p>
                   </div>
                 </div>
               ) : (
-                <div className="bg-pf-elevated border border-pf-border rounded-pf-lg">
-                  <div className="px-4 py-3 border-b border-pf-border-subtle">
-                    <span className="text-sm font-medium text-pf-text">Paper Positions</span>
+                <div className="bg-elevated border border-default rounded-pf-lg">
+                  <div className="px-4 py-3 border-b border-subtle">
+                    <span className="text-sm font-medium text-primary">Paper Positions</span>
                   </div>
                   <div className="overflow-x-auto">
                     <table className="w-full text-sm" aria-label="Paper positions">
                       <thead>
-                        <tr className="bg-pf-surface text-left text-xs text-pf-text-secondary uppercase tracking-wider">
+                        <tr className="bg-surface text-left text-xs text-secondary uppercase tracking-wider">
                           <th scope="col" className="px-4 py-3 font-medium">Token</th>
                           <th scope="col" className="px-4 py-3 font-medium">Side</th>
                           <th scope="col" className="px-4 py-3 font-medium text-right">Size</th>
                           <th scope="col" className="px-4 py-3 font-medium text-right">Unreal. P&L</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-pf-border-subtle">
+                      <tbody className="divide-y divide-subtle">
                         {paper.positions.map(pos => (
-                          <tr key={pos.tokenId} className="hover:bg-pf-surface/50 transition-colors">
+                          <tr key={pos.tokenId} className="hover:bg-surface/50 transition-colors">
                             <td className="px-4 py-3">
-                              <span className="text-pf-text" title={pos.tokenId}>{formatTokenId(pos.tokenId)}</span>
+                              <span className="text-primary" title={pos.tokenId}>{formatTokenId(pos.tokenId)}</span>
                             </td>
                             <td className="px-4 py-3">
                               <span className={`inline-flex px-2 py-1 rounded text-xs font-medium ${
-                                pos.side === 'BUY' ? 'bg-pf-success/10 text-pf-success' : 'bg-pf-danger/10 text-pf-danger'
+                                pos.side === 'BUY' ? 'bg-gain/10 text-gain' : 'bg-loss/10 text-loss'
                               }`}>
                                 {pos.side}
                               </span>
                             </td>
-                            <td className="px-4 py-3 text-right font-mono text-pf-text">
+                            <td className="px-4 py-3 text-right font-mono text-primary">
                               {parseFloat(pos.size).toLocaleString()}
                             </td>
                             <td className={`px-4 py-3 text-right font-mono ${pnlColor(pos.unrealizedPnl)}`}>
@@ -3270,7 +3270,7 @@ export function Component() {
       )}
 
       {/* Risk disclaimer — compliance (CLAUDE.md hard rule) */}
-      <p className="text-xs text-pf-text-muted mt-4 italic">
+      <p className="text-xs text-tertiary mt-4 italic">
         Past performance does not guarantee future results. Trading on prediction markets involves risk of loss.
       </p>
     </div>

@@ -36,13 +36,13 @@ interface Listing {
 
 function ListingSkeleton() {
   return (
-    <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4 space-y-3 animate-shimmer">
-      <div className="h-4 bg-pf-overlay rounded w-[60%]" />
-      <div className="h-3 bg-pf-overlay rounded w-[90%]" />
-      <div className="h-3 bg-pf-overlay rounded w-[75%]" />
+    <div className="bg-elevated border border-default rounded-pf-lg p-4 space-y-3 animate-shimmer">
+      <div className="h-4 bg-overlay rounded w-[60%]" />
+      <div className="h-3 bg-overlay rounded w-[90%]" />
+      <div className="h-3 bg-overlay rounded w-[75%]" />
       <div className="flex gap-2 mt-2">
-        <div className="h-7 flex-1 bg-pf-overlay rounded" />
-        <div className="h-7 flex-1 bg-pf-overlay rounded" />
+        <div className="h-7 flex-1 bg-overlay rounded" />
+        <div className="h-7 flex-1 bg-overlay rounded" />
       </div>
     </div>
   );
@@ -84,7 +84,7 @@ export function Component() {
       {/* Back link */}
       <Link
         to="/collections"
-        className="inline-flex items-center gap-2 text-sm text-pf-text-secondary hover:text-pf-text transition-colors"
+        className="inline-flex items-center gap-2 text-sm text-secondary hover:text-primary transition-colors"
       >
         <ChevronLeft className="size-4" aria-hidden="true" />
         All Collections
@@ -94,10 +94,10 @@ export function Component() {
       {loading ? (
         <div className="space-y-3 animate-shimmer">
           <div className="flex items-center gap-4">
-            <div className="size-14 bg-pf-overlay rounded-xl" />
+            <div className="size-14 bg-overlay rounded-xl" />
             <div className="space-y-2 flex-1">
-              <div className="h-6 bg-pf-overlay rounded w-[40%]" />
-              <div className="h-4 bg-pf-overlay rounded w-[60%]" />
+              <div className="h-6 bg-overlay rounded w-[40%]" />
+              <div className="h-4 bg-overlay rounded w-[60%]" />
             </div>
           </div>
         </div>
@@ -107,9 +107,9 @@ export function Component() {
             {collection.emoji}
           </span>
           <div>
-            <h1 className="text-2xl font-bold text-pf-text">{collection.title}</h1>
-            <p className="text-sm text-pf-text-muted mt-1 max-w-prose">{collection.description}</p>
-            <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-pf-text-secondary mt-3">
+            <h1 className="text-2xl font-bold text-primary">{collection.title}</h1>
+            <p className="text-sm text-tertiary mt-1 max-w-prose">{collection.description}</p>
+            <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-secondary mt-3">
               <span className="flex items-center gap-1">
                 <Library className="size-4" aria-hidden="true" />
                 {collection.listingCount} strategies
@@ -124,9 +124,9 @@ export function Component() {
         </div>
       ) : (
         <div className="flex flex-col items-center justify-center py-20 text-center" role="status">
-          <Library className="size-10 text-pf-text-muted mb-4" aria-hidden="true" />
-          <p className="text-pf-text font-medium">Collection not found</p>
-          <Link to="/collections" className="text-sm text-pf-cyan-400 hover:text-pf-cyan-300 mt-2">
+          <Library className="size-10 text-tertiary mb-4" aria-hidden="true" />
+          <p className="text-primary font-medium">Collection not found</p>
+          <Link to="/collections" className="text-sm text-accent-text hover:text-accent-text mt-2">
             Back to all collections
           </Link>
         </div>
@@ -135,7 +135,7 @@ export function Component() {
       {/* Strategy grid */}
       {(loading || listings.length > 0) && (
         <>
-          <div className="border-t border-pf-border" />
+          <div className="border-t border-default" />
           {loading ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {Array.from({ length: 6 }, (_, i) => <ListingSkeleton key={i} />)}
@@ -145,31 +145,31 @@ export function Component() {
               {listings.map(listing => (
                 <div
                   key={listing.id}
-                  className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4 hover:border-pf-border-strong hover:shadow-pf-sm hover:-translate-y-1 transition-all duration-pf-normal flex flex-col"
+                  className="bg-elevated border border-default rounded-pf-lg p-4 hover:border-strong hover:shadow-pf-sm hover:-translate-y-1 transition-all duration-pf-normal flex flex-col"
                 >
                   {/* Seller */}
                   <div className="flex items-center gap-2 mb-2">
-                    <div className="size-6 rounded-pf-full bg-pf-cyan-500/15 border border-pf-cyan-500/25 flex items-center justify-center text-pf-caption font-bold text-pf-cyan-400">
+                    <div className="size-6 rounded-pf-full bg-accent/15 border border-accent/25 flex items-center justify-center text-pf-caption font-bold text-accent-text">
                       {(listing.seller.displayName ?? listing.seller.username).slice(0, 2).toUpperCase()}
                     </div>
-                    <span className="text-xs text-pf-text-secondary truncate">
+                    <span className="text-xs text-secondary truncate">
                       {listing.seller.displayName ?? listing.seller.username}
                     </span>
-                    <span className="ml-auto text-sm font-semibold text-pf-text">
+                    <span className="ml-auto text-sm font-semibold text-primary">
                       {Number(listing.priceUsdc) === 0 ? 'Free' : `$${Number(listing.priceUsdc).toFixed(2)}`}
                     </span>
                   </div>
 
                   {/* Title */}
-                  <div className="text-sm font-semibold text-pf-text mb-1 truncate">{listing.title}</div>
+                  <div className="text-sm font-semibold text-primary mb-1 truncate">{listing.title}</div>
 
                   {/* Description */}
                   {listing.description && (
-                    <div className="text-xs text-pf-text-muted line-clamp-2 mb-3">{listing.description}</div>
+                    <div className="text-xs text-tertiary line-clamp-2 mb-3">{listing.description}</div>
                   )}
 
                   {/* Stats */}
-                  <div className="flex flex-wrap gap-2 text-pf-label text-pf-text-secondary mb-3">
+                  <div className="flex flex-wrap gap-2 text-pf-label text-secondary mb-3">
                     {listing.winRate != null && <span>{listing.winRate}% win</span>}
                     {listing.tradeCount != null && <span>{listing.tradeCount} trades</span>}
                     <span className="flex items-center gap-1 ml-auto">
@@ -184,13 +184,13 @@ export function Component() {
                   <div className="flex gap-2 mt-auto">
                     <Link
                       to={`/marketplace/${listing.id}`}
-                      className="flex-1 text-center py-2 rounded-pf-sm text-xs font-medium border border-pf-border text-pf-text-secondary hover:border-pf-border-strong hover:text-pf-text transition-colors"
+                      className="flex-1 text-center py-2 rounded-pf-sm text-xs font-medium border border-default text-secondary hover:border-strong hover:text-primary transition-colors"
                     >
                       View
                     </Link>
                     <Link
                       to={`/marketplace/${listing.id}?action=fork`}
-                      className="flex-1 text-center py-2 rounded-pf-sm text-xs font-medium border border-pf-cyan-500/40 text-pf-cyan-400 hover:bg-pf-cyan-500/10 transition-colors flex items-center justify-center gap-1"
+                      className="flex-1 text-center py-2 rounded-pf-sm text-xs font-medium border border-accent/40 text-accent-text hover:bg-accent/10 transition-colors flex items-center justify-center gap-1"
                     >
                       <GitFork className="size-3" aria-hidden="true" /> Fork
                     </Link>
@@ -204,8 +204,8 @@ export function Component() {
 
       {!loading && collection && listings.length === 0 && (
         <div className="flex flex-col items-center justify-center py-16 text-center" role="status">
-          <Library className="size-9 text-pf-text-muted mb-3" aria-hidden="true" />
-          <p className="text-pf-text font-medium">No strategies in this collection yet</p>
+          <Library className="size-9 text-tertiary mb-3" aria-hidden="true" />
+          <p className="text-primary font-medium">No strategies in this collection yet</p>
         </div>
       )}
     </div>

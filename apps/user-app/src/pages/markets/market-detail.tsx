@@ -201,7 +201,7 @@ function bookDepth(entries: OrderBookEntry[], index: number): number {
 
 function depthColor(pct: number, side: 'ask' | 'bid'): string {
   // pct is 0-100 — use design tokens with opacity via color-mix
-  const token = side === 'ask' ? 'var(--color-pf-danger)' : 'var(--color-pf-success)';
+  const token = side === 'ask' ? 'var(--loss)' : 'var(--gain)';
   if (pct > 66) return `color-mix(in srgb, ${token} 35%, transparent)`;
   if (pct > 33) return `color-mix(in srgb, ${token} 20%, transparent)`;
   return `color-mix(in srgb, ${token} 10%, transparent)`;
@@ -261,9 +261,9 @@ function formatDepthSize(v: number): string {
 function DetailSkeleton() {
   return (
     <div className="animate-pulse space-y-6">
-      <div className="h-7 bg-pf-overlay rounded w-[60%]" />
-      <div className="h-4 bg-pf-overlay rounded w-[40%]" />
-      <div className="h-4 bg-pf-overlay rounded w-[80%]" />
+      <div className="h-7 bg-overlay rounded w-[60%]" />
+      <div className="h-4 bg-overlay rounded w-[40%]" />
+      <div className="h-4 bg-overlay rounded w-[80%]" />
     </div>
   );
 }
@@ -812,7 +812,7 @@ export function Component() {
       {/* Back */}
       <Link
         to="/markets"
-        className="inline-flex items-center gap-2 text-sm text-pf-text-secondary hover:text-pf-text transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 rounded-pf-sm"
+        className="inline-flex items-center gap-2 text-sm text-secondary hover:text-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 rounded-pf-sm"
       >
         <ArrowLeft className="size-4" aria-hidden="true" /> Markets
       </Link>
@@ -821,14 +821,14 @@ export function Component() {
 
       {!loadingMarket && !market && (
         <div className="flex flex-col items-center justify-center py-20 text-center">
-          <p className="text-pf-text font-medium text-lg">Market not found</p>
-          <p className="text-sm text-pf-text-muted mt-1">
+          <p className="text-primary font-medium text-lg">Market not found</p>
+          <p className="text-sm text-tertiary mt-1">
             This market may have been removed or the link is incorrect.
           </p>
           <Button
             type="button"
             onClick={() => navigate('/markets')}
-            className="mt-4 px-4 py-2 rounded-pf bg-pf-elevated border border-pf-border text-sm text-pf-text hover:border-pf-border-strong transition-colors"
+            className="mt-4 px-4 py-2 rounded-pf bg-elevated border border-default text-sm text-primary hover:border-strong transition-colors"
           >
             Back to Markets
           </Button>
@@ -841,22 +841,22 @@ export function Component() {
           <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 flex-wrap">
             <div className="space-y-2">
               <div className="flex items-center gap-2">
-                <span className="px-2 py-1 rounded-pf-full bg-pf-cyan-500/15 text-pf-cyan-400 text-xs font-medium">
+                <span className="px-2 py-1 rounded-pf-full bg-accent/15 text-accent-text text-xs font-medium">
                   {market.category}
                 </span>
                 {days >= 0 && days <= 7 && (
-                  <span className="px-2 py-1 rounded-pf-full bg-pf-warning/15 text-pf-warning text-xs font-medium">
+                  <span className="px-2 py-1 rounded-pf-full bg-warning/15 text-warning text-xs font-medium">
                     Closing soon
                   </span>
                 )}
               </div>
-              <h1 className="text-2xl font-semibold text-pf-text leading-snug">
+              <h1 className="text-2xl font-semibold text-primary leading-snug">
                 {market.title}
               </h1>
-              <p className="text-sm text-pf-text-secondary">
+              <p className="text-sm text-secondary">
                 Closes {formatDate(market.endDate)}
                 {days > 0 && (
-                  <span className="text-pf-text-muted"> &middot; {days} days remaining</span>
+                  <span className="text-tertiary"> &middot; {days} days remaining</span>
                 )}
               </p>
             </div>
@@ -864,9 +864,9 @@ export function Component() {
             {/* Price pills + TP/SL + Run Strategy */}
             <div className="flex items-center gap-3 flex-wrap sm:flex-shrink-0">
               <div className="flex gap-2">
-                <div className="flex flex-col items-center px-4 py-2 rounded-pf-md bg-pf-success/10 border border-pf-success/20">
-                  <span className="text-pf-caption uppercase tracking-wide text-pf-success/70">YES</span>
-                  <span className="text-lg font-mono font-semibold text-pf-success">
+                <div className="flex flex-col items-center px-4 py-2 rounded-pf-md bg-gain/10 border border-gain/20">
+                  <span className="text-pf-caption uppercase tracking-wide text-gain/70">YES</span>
+                  <span className="text-lg font-mono font-semibold text-gain">
                     {yesPrice ?? '\u2014'}
                   </span>
                   <div className="flex gap-1 mt-1">
@@ -875,7 +875,7 @@ export function Component() {
                       variant="ghost"
                       onClick={() => openConditional('TAKE_PROFIT', 'YES')}
                       aria-label="Set take profit for YES"
-                      className="px-2 py-1 rounded text-pf-micro font-medium bg-pf-success/20 text-pf-success hover:bg-pf-success/30 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/50"
+                      className="px-2 py-1 rounded text-pf-micro font-medium bg-gain/20 text-gain hover:bg-gain/30 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50"
                     >
                       TP
                     </Button>
@@ -884,15 +884,15 @@ export function Component() {
                       variant="ghost"
                       onClick={() => openConditional('STOP_LOSS', 'YES')}
                       aria-label="Set stop loss for YES"
-                      className="px-2 py-1 rounded text-pf-micro font-medium bg-pf-danger/20 text-pf-danger hover:bg-pf-danger/30 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/50"
+                      className="px-2 py-1 rounded text-pf-micro font-medium bg-loss/20 text-loss hover:bg-loss/30 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50"
                     >
                       SL
                     </Button>
                   </div>
                 </div>
-                <div className="flex flex-col items-center px-4 py-2 rounded-pf-md bg-pf-danger/10 border border-pf-danger/20">
-                  <span className="text-pf-caption uppercase tracking-wide text-pf-danger/70">NO</span>
-                  <span className="text-lg font-mono font-semibold text-pf-danger">
+                <div className="flex flex-col items-center px-4 py-2 rounded-pf-md bg-loss/10 border border-loss/20">
+                  <span className="text-pf-caption uppercase tracking-wide text-loss/70">NO</span>
+                  <span className="text-lg font-mono font-semibold text-loss">
                     {noPrice ?? '\u2014'}
                   </span>
                   <div className="flex gap-1 mt-1">
@@ -901,7 +901,7 @@ export function Component() {
                       variant="ghost"
                       onClick={() => openConditional('TAKE_PROFIT', 'NO')}
                       aria-label="Set take profit for NO"
-                      className="px-2 py-1 rounded text-pf-micro font-medium bg-pf-success/20 text-pf-success hover:bg-pf-success/30 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/50"
+                      className="px-2 py-1 rounded text-pf-micro font-medium bg-gain/20 text-gain hover:bg-gain/30 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50"
                     >
                       TP
                     </Button>
@@ -910,7 +910,7 @@ export function Component() {
                       variant="ghost"
                       onClick={() => openConditional('STOP_LOSS', 'NO')}
                       aria-label="Set stop loss for NO"
-                      className="px-2 py-1 rounded text-pf-micro font-medium bg-pf-danger/20 text-pf-danger hover:bg-pf-danger/30 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/50"
+                      className="px-2 py-1 rounded text-pf-micro font-medium bg-loss/20 text-loss hover:bg-loss/30 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50"
                     >
                       SL
                     </Button>
@@ -921,7 +921,7 @@ export function Component() {
                 type="button"
                 variant="success"
                 onClick={() => setShowRunStrategy(true)}
-                className="flex items-center gap-2 px-4 py-3 rounded-pf bg-pf-success text-pf-text text-sm font-medium hover:opacity-90 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-success/50 focus-visible:ring-offset-2 focus-visible:ring-offset-pf-base"
+                className="flex items-center gap-2 px-4 py-3 rounded-pf bg-gain text-primary text-sm font-medium hover:opacity-90 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gain/50 focus-visible:ring-offset-2 focus-visible:ring-offset-pf-base"
               >
                 <Play className="size-4" /> Run Strategy
               </Button>
@@ -931,33 +931,33 @@ export function Component() {
           {/* Stats bar */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {[
-              { icon: <BarChart3 className="size-4 text-pf-text-muted" />, label: '24h Volume', value: formatVolume(market.volume24h) },
-              { icon: <Droplets className="size-4 text-pf-text-muted" />, label: 'Liquidity', value: totalLiquidity(market.tokens) },
-              { icon: <Clock className="size-4 text-pf-text-muted" />, label: 'End Date', value: formatDate(market.endDate) },
+              { icon: <BarChart3 className="size-4 text-tertiary" />, label: '24h Volume', value: formatVolume(market.volume24h) },
+              { icon: <Droplets className="size-4 text-tertiary" />, label: 'Liquidity', value: totalLiquidity(market.tokens) },
+              { icon: <Clock className="size-4 text-tertiary" />, label: 'End Date', value: formatDate(market.endDate) },
             ].map((stat) => (
-              <div key={stat.label} className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4">
+              <div key={stat.label} className="bg-elevated border border-default rounded-pf-lg p-4">
                 <div className="flex items-center gap-2 mb-1">
                   {stat.icon}
-                  <span className="text-xs text-pf-text-muted">{stat.label}</span>
+                  <span className="text-xs text-tertiary">{stat.label}</span>
                 </div>
-                <span className="text-sm font-mono font-medium text-pf-text">{stat.value}</span>
+                <span className="text-sm font-mono font-medium text-primary">{stat.value}</span>
               </div>
             ))}
           </div>
 
           {/* Price History Chart */}
-          <div className="bg-pf-elevated border border-pf-border rounded-pf-lg overflow-hidden">
+          <div className="bg-elevated border border-default rounded-pf-lg overflow-hidden">
             {/* Header row */}
-            <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 border-b border-pf-border">
+            <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 border-b border-default">
               <div className="flex items-center gap-3">
-                <span className="text-sm font-medium text-pf-text">Price History</span>
+                <span className="text-sm font-medium text-primary">Price History</span>
                 {yesPrice && (
-                  <span className="px-2 py-1 rounded-pf-full bg-pf-success/10 border border-pf-success/20 text-pf-label font-mono text-pf-success">
+                  <span className="px-2 py-1 rounded-pf-full bg-gain/10 border border-gain/20 text-pf-label font-mono text-gain">
                     YES {yesPrice}
                   </span>
                 )}
                 {noPrice && (
-                  <span className="px-2 py-1 rounded-pf-full bg-pf-danger/10 border border-pf-danger/20 text-pf-label font-mono text-pf-danger">
+                  <span className="px-2 py-1 rounded-pf-full bg-loss/10 border border-loss/20 text-pf-label font-mono text-loss">
                     NO {noPrice}
                   </span>
                 )}
@@ -971,10 +971,10 @@ export function Component() {
                     key={p}
                     onClick={() => setHistoryPeriod(p)}
                     aria-pressed={historyPeriod === p}
-                    className={`px-3 py-1 rounded-pf-sm text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/50 ${
+                    className={`px-3 py-1 rounded-pf-sm text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 ${
                       historyPeriod === p
-                        ? 'bg-pf-cyan-500/15 text-pf-cyan-400'
-                        : 'bg-pf-elevated text-pf-text-muted hover:text-pf-text-secondary'
+                        ? 'bg-accent/15 text-accent-text'
+                        : 'bg-elevated text-tertiary hover:text-secondary'
                     }`}
                   >
                     {p === 'allTime' ? 'All' : p}
@@ -987,10 +987,10 @@ export function Component() {
             <div className="px-4 py-3">
               {loadingHistory ? (
                 <div className="h-52 flex items-center justify-center">
-                  <div className="h-full w-full bg-pf-overlay rounded-pf animate-pulse" />
+                  <div className="h-full w-full bg-overlay rounded-pf animate-pulse" />
                 </div>
               ) : historyData.length === 0 ? (
-                <div className="h-52 flex flex-col items-center justify-center text-pf-text-muted text-sm">
+                <div className="h-52 flex flex-col items-center justify-center text-tertiary text-sm">
                   <TrendingUp className="size-8 opacity-20 mb-2" />
                   No price history available
                 </div>
@@ -1035,12 +1035,12 @@ export function Component() {
                         const no = payload.find((p) => p.dataKey === 'noPrice')?.value as number | undefined;
                         const vol = payload.find((p) => p.dataKey === 'volume')?.value as number | undefined;
                         return (
-                          <div className="bg-pf-surface border border-pf-border rounded px-3 py-2 text-xs">
-                            <p className="text-pf-text-secondary mb-1">{label}</p>
-                            {yes !== undefined && <p className="text-pf-cyan-400">YES: {Math.round(yes * 100)}¢</p>}
-                            {no !== undefined && <p className="text-pf-text-muted">NO: {Math.round(no * 100)}¢</p>}
+                          <div className="bg-surface border border-default rounded px-3 py-2 text-xs">
+                            <p className="text-secondary mb-1">{label}</p>
+                            {yes !== undefined && <p className="text-accent-text">YES: {Math.round(yes * 100)}¢</p>}
+                            {no !== undefined && <p className="text-tertiary">NO: {Math.round(no * 100)}¢</p>}
                             {vol !== undefined && (
-                              <p className="text-pf-text-secondary mt-1">
+                              <p className="text-secondary mt-1">
                                 Vol: ${vol >= 1000 ? `${(vol / 1000).toFixed(1)}K` : vol.toFixed(0)}
                               </p>
                             )}
@@ -1087,9 +1087,9 @@ export function Component() {
           {/* Chart + Order Book */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
             {/* Chart */}
-            <div className="lg:col-span-2 bg-pf-elevated border border-pf-border rounded-pf-lg p-4">
+            <div className="lg:col-span-2 bg-elevated border border-default rounded-pf-lg p-4">
               <div className="flex items-center justify-between mb-4">
-                <span className="text-sm font-medium text-pf-text">Price History &mdash; YES</span>
+                <span className="text-sm font-medium text-primary">Price History &mdash; YES</span>
                 <div className="flex gap-1">
                   {(['1m', '1h', '1d'] as Resolution[]).map((r) => (
                     <Button
@@ -1098,10 +1098,10 @@ export function Component() {
                       key={r}
                       onClick={() => onResolutionChange(r)}
                       aria-pressed={resolution === r}
-                      className={`px-3 py-1 rounded-pf-sm text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/50 ${
+                      className={`px-3 py-1 rounded-pf-sm text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 ${
                         resolution === r
-                          ? 'bg-pf-cyan-500/15 text-pf-cyan-400'
-                          : 'text-pf-text-muted hover:text-pf-text-secondary'
+                          ? 'bg-accent/15 text-accent-text'
+                          : 'text-tertiary hover:text-secondary'
                       }`}
                     >
                       {r}
@@ -1112,7 +1112,7 @@ export function Component() {
 
               <div className="h-72">
                 {loadingChart ? (
-                  <div className="h-full bg-pf-overlay rounded-pf animate-pulse" />
+                  <div className="h-full bg-overlay rounded-pf animate-pulse" />
                 ) : chartData.length > 0 ? (
                   <ResponsiveContainer width="100%" height="100%">
                     <AreaChart data={chartData}>
@@ -1155,7 +1155,7 @@ export function Component() {
                     </AreaChart>
                   </ResponsiveContainer>
                 ) : (
-                  <div className="h-full flex flex-col items-center justify-center text-pf-text-muted text-sm">
+                  <div className="h-full flex flex-col items-center justify-center text-tertiary text-sm">
                     <TrendingUp className="size-8 opacity-20 mb-2" />
                     No price data available for this resolution
                     <Button
@@ -1165,7 +1165,7 @@ export function Component() {
                         const yesToken = (market?.tokens ?? []).find((t) => t.outcome?.toUpperCase() === 'YES');
                         if (yesToken) loadChart(yesToken.id, resolution);
                       }}
-                      className="mt-2 px-3 py-1 rounded-pf text-xs bg-pf-overlay hover:bg-pf-border transition-colors"
+                      className="mt-2 px-3 py-1 rounded-pf text-xs bg-overlay hover:bg-default transition-colors"
                     >
                       Retry
                     </Button>
@@ -1177,26 +1177,26 @@ export function Component() {
             {/* Right column: Order Book + Trade Panel */}
             <div className="space-y-4">
             {/* Order Book */}
-            <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4">
+            <div className="bg-elevated border border-default rounded-pf-lg p-4">
               <div className="flex items-center justify-between mb-3">
-                <span className="text-sm font-medium text-pf-text">Order Book</span>
+                <span className="text-sm font-medium text-primary">Order Book</span>
                 <div className="flex items-center gap-2">
                   {orderBook && (
-                    <span className="font-mono text-pf-label text-pf-text-muted">
+                    <span className="font-mono text-pf-label text-tertiary">
                       spread {orderBook.spread}
                     </span>
                   )}
                   {/* Table / Chart toggle */}
-                  <div className="flex rounded-pf-sm overflow-hidden border border-pf-border" role="group" aria-label="Order book view">
+                  <div className="flex rounded-pf-sm overflow-hidden border border-default" role="group" aria-label="Order book view">
                     <Button
                       type="button"
                       variant="ghost"
                       onClick={() => setOrderBookView('table')}
                       aria-pressed={orderBookView === 'table'}
-                      className={`px-2 py-1 text-pf-label font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/50 ${
+                      className={`px-2 py-1 text-pf-label font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 ${
                         orderBookView === 'table'
-                          ? 'bg-pf-cyan-500/15 text-pf-cyan-400'
-                          : 'bg-transparent text-pf-text-muted hover:text-pf-text-secondary'
+                          ? 'bg-accent/15 text-accent-text'
+                          : 'bg-transparent text-tertiary hover:text-secondary'
                       }`}
                     >
                       Table
@@ -1206,10 +1206,10 @@ export function Component() {
                       variant="ghost"
                       onClick={() => setOrderBookView('chart')}
                       aria-pressed={orderBookView === 'chart'}
-                      className={`px-2 py-1 text-pf-label font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/50 border-l border-pf-border ${
+                      className={`px-2 py-1 text-pf-label font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 border-l border-default ${
                         orderBookView === 'chart'
-                          ? 'bg-pf-cyan-500/15 text-pf-cyan-400'
-                          : 'bg-transparent text-pf-text-muted hover:text-pf-text-secondary'
+                          ? 'bg-accent/15 text-accent-text'
+                          : 'bg-transparent text-tertiary hover:text-secondary'
                       }`}
                     >
                       Chart
@@ -1223,7 +1223,7 @@ export function Component() {
                       const yesToken = (market?.tokens ?? []).find((t) => t.outcome === 'YES');
                       if (yesToken) loadBook(yesToken.id);
                     }}
-                    className="p-1 rounded text-pf-text-muted hover:text-pf-text hover:bg-pf-overlay transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/50"
+                    className="p-1 rounded text-tertiary hover:text-primary hover:bg-overlay transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50"
                     aria-label="Refresh order book"
                     title="Refresh book"
                   >
@@ -1242,10 +1242,10 @@ export function Component() {
                 return (
                   <div className="mb-3">
                     <div className="flex h-2 rounded-pf-full overflow-hidden">
-                      <div className="bg-pf-success/50" style={{ width: `${bidPct}%` }} title={`Bids: ${bidPct.toFixed(0)}%`} />
-                      <div className="bg-pf-danger/50 flex-1" title={`Asks: ${askPct.toFixed(0)}%`} />
+                      <div className="bg-gain/50" style={{ width: `${bidPct}%` }} title={`Bids: ${bidPct.toFixed(0)}%`} />
+                      <div className="bg-loss/50 flex-1" title={`Asks: ${askPct.toFixed(0)}%`} />
                     </div>
-                    <div className="flex justify-between text-pf-caption text-pf-text-muted mt-1">
+                    <div className="flex justify-between text-pf-caption text-tertiary mt-1">
                       <span>Bid {bidPct.toFixed(0)}%</span>
                       <span>Ask {askPct.toFixed(0)}%</span>
                     </div>
@@ -1256,7 +1256,7 @@ export function Component() {
               {loadingBook ? (
                 <div className="space-y-2">
                   {Array.from({ length: 5 }, (_, i) => (
-                    <div key={i} className="h-6 bg-pf-overlay rounded animate-pulse" />
+                    <div key={i} className="h-6 bg-overlay rounded animate-pulse" />
                   ))}
                 </div>
               ) : orderBook ? (
@@ -1274,16 +1274,16 @@ export function Component() {
                               className="absolute inset-y-0 right-0 rounded-sm"
                               style={{ width: `${bookDepth(orderBook.asks.slice(0, 8), arr.length - 1 - idx)}%`, backgroundColor: depthColor(bookDepth(orderBook.asks.slice(0, 8), arr.length - 1 - idx), 'ask') }}
                             />
-                            <span className="relative font-mono text-pf-danger w-16">{ask.price}</span>
-                            <span className="relative font-mono text-pf-text-muted ml-auto">{ask.size}</span>
+                            <span className="relative font-mono text-loss w-16">{ask.price}</span>
+                            <span className="relative font-mono text-tertiary ml-auto">{ask.size}</span>
                           </div>
                         ))}
                     </div>
 
                     {/* Midpoint */}
-                    <div className="flex items-center gap-2 px-2 py-2 border-y border-pf-border-subtle my-1">
-                      <span className="font-mono text-sm text-pf-text font-medium">{orderBook.midpoint}</span>
-                      <span className="text-pf-label text-pf-text-muted">mid</span>
+                    <div className="flex items-center gap-2 px-2 py-2 border-y border-subtle my-1">
+                      <span className="font-mono text-sm text-primary font-medium">{orderBook.midpoint}</span>
+                      <span className="text-pf-label text-tertiary">mid</span>
                     </div>
 
                     {/* Bids */}
@@ -1294,8 +1294,8 @@ export function Component() {
                             className="absolute inset-y-0 right-0 rounded-sm"
                             style={{ width: `${bookDepth(orderBook.bids.slice(0, 8), idx)}%`, backgroundColor: depthColor(bookDepth(orderBook.bids.slice(0, 8), idx), 'bid') }}
                           />
-                          <span className="relative font-mono text-pf-success w-16">{bid.price}</span>
-                          <span className="relative font-mono text-pf-text-muted ml-auto">{bid.size}</span>
+                          <span className="relative font-mono text-gain w-16">{bid.price}</span>
+                          <span className="relative font-mono text-tertiary ml-auto">{bid.size}</span>
                         </div>
                       ))}
                     </div>
@@ -1308,7 +1308,7 @@ export function Component() {
                     const isEmpty = orderBook.bids.length === 0 && orderBook.asks.length === 0;
                     if (isEmpty) {
                       return (
-                        <div className="h-52 bg-pf-overlay rounded-pf animate-pulse" />
+                        <div className="h-52 bg-overlay rounded-pf animate-pulse" />
                       );
                     }
                     return (
@@ -1320,12 +1320,12 @@ export function Component() {
                           >
                             <defs>
                               <linearGradient id="bidDepthGrad" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="0%" stopColor="var(--color-pf-success)" stopOpacity={0.25} />
-                                <stop offset="100%" stopColor="var(--color-pf-success)" stopOpacity={0.05} />
+                                <stop offset="0%" stopColor="var(--gain)" stopOpacity={0.25} />
+                                <stop offset="100%" stopColor="var(--gain)" stopOpacity={0.05} />
                               </linearGradient>
                               <linearGradient id="askDepthGrad" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="0%" stopColor="var(--color-pf-danger)" stopOpacity={0.25} />
-                                <stop offset="100%" stopColor="var(--color-pf-danger)" stopOpacity={0.05} />
+                                <stop offset="0%" stopColor="var(--loss)" stopOpacity={0.25} />
+                                <stop offset="100%" stopColor="var(--loss)" stopOpacity={0.05} />
                               </linearGradient>
                             </defs>
                             <XAxis
@@ -1359,22 +1359,22 @@ export function Component() {
                                   ? (bestAskPrice - bestBidPrice).toFixed(4)
                                   : null;
                                 return (
-                                  <div className="bg-pf-surface border border-pf-border rounded px-3 py-2 text-xs shadow-pf-md">
-                                    <p className="text-pf-text-secondary mb-1 font-mono">
+                                  <div className="bg-surface border border-default rounded px-3 py-2 text-xs shadow-pf-md">
+                                    <p className="text-secondary mb-1 font-mono">
                                       Price: {d.price.toFixed(4)}
                                     </p>
                                     {d.bidCumSize !== null && (
-                                      <p className="text-pf-success">
+                                      <p className="text-gain">
                                         Bid depth: {formatDepthSize(d.bidCumSize)} USDC
                                       </p>
                                     )}
                                     {d.askCumSize !== null && (
-                                      <p className="text-pf-danger">
+                                      <p className="text-loss">
                                         Ask depth: {formatDepthSize(d.askCumSize)} USDC
                                       </p>
                                     )}
                                     {spread !== null && Math.abs(d.price - midPrice) < 0.01 && (
-                                      <p className="text-pf-text-muted mt-1">
+                                      <p className="text-tertiary mt-1">
                                         Spread: {spread}
                                       </p>
                                     )}
@@ -1386,24 +1386,24 @@ export function Component() {
                             <Area
                               type="stepAfter"
                               dataKey="bidCumSize"
-                              stroke="var(--color-pf-success)"
+                              stroke="var(--gain)"
                               strokeWidth={1.5}
                               fill="url(#bidDepthGrad)"
                               dot={false}
                               connectNulls={false}
-                              activeDot={{ r: 3, fill: 'var(--color-pf-success)', stroke: 'none' }}
+                              activeDot={{ r: 3, fill: 'var(--gain)', stroke: 'none' }}
                               isAnimationActive={false}
                             />
                             {/* Ask area */}
                             <Area
                               type="stepBefore"
                               dataKey="askCumSize"
-                              stroke="var(--color-pf-danger)"
+                              stroke="var(--loss)"
                               strokeWidth={1.5}
                               fill="url(#askDepthGrad)"
                               dot={false}
                               connectNulls={false}
-                              activeDot={{ r: 3, fill: 'var(--color-pf-danger)', stroke: 'none' }}
+                              activeDot={{ r: 3, fill: 'var(--loss)', stroke: 'none' }}
                               isAnimationActive={false}
                             />
                             {/* Mid-price reference line */}
@@ -1426,16 +1426,16 @@ export function Component() {
                         {/* Legend */}
                         <div className="flex items-center justify-center gap-4 mt-1">
                           <div className="flex items-center gap-1">
-                            <span className="inline-block size-2 rounded-pf-full bg-pf-success" aria-hidden="true" />
-                            <span className="text-pf-caption text-pf-text-muted">Bids</span>
+                            <span className="inline-block size-2 rounded-pf-full bg-gain" aria-hidden="true" />
+                            <span className="text-pf-caption text-tertiary">Bids</span>
                           </div>
                           <div className="flex items-center gap-1">
-                            <span className="inline-block size-2 rounded-pf-full bg-pf-danger" aria-hidden="true" />
-                            <span className="text-pf-caption text-pf-text-muted">Asks</span>
+                            <span className="inline-block size-2 rounded-pf-full bg-loss" aria-hidden="true" />
+                            <span className="text-pf-caption text-tertiary">Asks</span>
                           </div>
                           <div className="flex items-center gap-1">
-                            <span className="inline-block w-3 border-t border-dashed border-pf-text-secondary" aria-hidden="true" />
-                            <span className="text-pf-caption text-pf-text-muted">Mid</span>
+                            <span className="inline-block w-3 border-t border-dashed border-secondary" aria-hidden="true" />
+                            <span className="text-pf-caption text-tertiary">Mid</span>
                           </div>
                         </div>
                       </div>
@@ -1443,23 +1443,23 @@ export function Component() {
                   })()
                 )
               ) : (
-                <div className="py-8 text-center text-sm text-pf-text-muted">No book data</div>
+                <div className="py-8 text-center text-sm text-tertiary">No book data</div>
               )}
             </div>
 
             {/* Trade Panel */}
-            <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4">
-              <span className="text-sm font-medium text-pf-text">Trade</span>
+            <div className="bg-elevated border border-default rounded-pf-lg p-4">
+              <span className="text-sm font-medium text-primary">Trade</span>
 
               {/* Wallet not connected — prompt user */}
               {!isWalletConnected && (
-                <div className="mt-3 flex flex-col items-center gap-2 py-5 px-3 rounded-pf bg-pf-overlay border border-pf-border text-center">
-                  <svg className="size-8 text-pf-text-muted" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 3H8L2 7h20l-6-4z"/><circle cx="16" cy="14" r="1" fill="currentColor" stroke="none"/></svg>
-                  <p className="text-sm font-medium text-pf-text">Connect your wallet to trade</p>
-                  <p className="text-xs text-pf-text-muted">Link your Polymarket account to place orders</p>
+                <div className="mt-3 flex flex-col items-center gap-2 py-5 px-3 rounded-pf bg-overlay border border-default text-center">
+                  <svg className="size-8 text-tertiary" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 3H8L2 7h20l-6-4z"/><circle cx="16" cy="14" r="1" fill="currentColor" stroke="none"/></svg>
+                  <p className="text-sm font-medium text-primary">Connect your wallet to trade</p>
+                  <p className="text-xs text-tertiary">Link your Polymarket account to place orders</p>
                   <Link
                     to="/settings/trading-account"
-                    className="mt-1 px-4 py-2 rounded-pf bg-pf-cyan-500 text-pf-text-contrast text-xs font-semibold hover:bg-pf-cyan-400 transition-colors"
+                    className="mt-1 px-4 py-2 rounded-pf bg-accent text-inverse text-xs font-semibold hover:bg-accent-text transition-colors"
                   >
                     Connect Wallet
                   </Link>
@@ -1484,9 +1484,9 @@ export function Component() {
                     className={`flex-1 py-2 rounded-pf-sm text-xs font-semibold transition-colors ${
                       tradeOutcome === o
                         ? o === 'YES'
-                          ? 'bg-pf-success/10 text-pf-success border border-pf-success/30'
-                          : 'bg-pf-danger/10 text-pf-danger border border-pf-danger/30'
-                        : 'bg-pf-surface text-pf-text-muted border border-pf-border hover:border-pf-border-strong'
+                          ? 'bg-gain/10 text-gain border border-gain/30'
+                          : 'bg-loss/10 text-loss border border-loss/30'
+                        : 'bg-surface text-tertiary border border-default hover:border-strong'
                     }`}
                   >
                     {o}
@@ -1505,9 +1505,9 @@ export function Component() {
                     className={`flex-1 py-2 rounded-pf-sm text-xs font-semibold transition-colors ${
                       tradeSide === s
                         ? s === 'BUY'
-                          ? 'bg-pf-cyan-500/10 text-pf-cyan-400 border border-pf-cyan-500/30'
-                          : 'bg-pf-danger/10 text-pf-danger border border-pf-danger/30'
-                        : 'bg-pf-surface text-pf-text-muted border border-pf-border hover:border-pf-border-strong'
+                          ? 'bg-accent/10 text-accent-text border border-accent/30'
+                          : 'bg-loss/10 text-loss border border-loss/30'
+                        : 'bg-surface text-tertiary border border-default hover:border-strong'
                     }`}
                   >
                     {s}
@@ -1517,7 +1517,7 @@ export function Component() {
 
               {/* Price input */}
               <div className="mt-3">
-                <label htmlFor="trade-price" className="block text-xs font-medium text-pf-text-secondary mb-1">Price</label>
+                <label htmlFor="trade-price" className="block text-xs font-medium text-secondary mb-1">Price</label>
                 <Input
                   id="trade-price"
                   type="number"
@@ -1528,7 +1528,7 @@ export function Component() {
                   onChange={(e) => setTradePrice(e.target.value)}
                   disabled={isMarketOrder}
                   placeholder="0.65"
-                  className="w-full h-11 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm font-mono text-pf-text placeholder:text-pf-text-muted focus-visible:outline-none focus-visible:border-pf-cyan-500/50 disabled:opacity-40"
+                  className="w-full h-11 px-3 rounded-pf bg-surface border border-default text-sm font-mono text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:border-accent/50 disabled:opacity-40"
                 />
               </div>
 
@@ -1538,15 +1538,15 @@ export function Component() {
                   type="checkbox"
                   checked={isMarketOrder}
                   onChange={(e) => setIsMarketOrder(e.target.checked)}
-                  className="rounded border-pf-border bg-pf-surface text-pf-cyan-500 focus-visible:ring-pf-cyan-500/30"
+                  className="rounded border-default bg-surface text-accent focus-visible:ring-accent/30"
                 />
-                <span className="text-xs text-pf-text-secondary">Market Order</span>
+                <span className="text-xs text-secondary">Market Order</span>
               </label>
 
               {/* Kelly Position Sizer */}
               <div className="mt-3">
-                <label className="block text-xs font-medium text-pf-text-secondary mb-1">
-                  Kelly Sizer <span className="text-pf-text-muted">(optional)</span>
+                <label className="block text-xs font-medium text-secondary mb-1">
+                  Kelly Sizer <span className="text-tertiary">(optional)</span>
                 </label>
                 <div className="flex items-center gap-2">
                   <input
@@ -1569,17 +1569,17 @@ export function Component() {
                       const suggested = Math.round(f * (portfolioBalance || 1000));
                       setTradeAmount(String(Math.min(suggested, portfolioBalance || 1000)));
                     }}
-                    className="flex-1 h-2 rounded-pf-full bg-pf-border accent-pf-cyan-500"
+                    className="flex-1 h-2 rounded-pf-full bg-default accent-accent"
                   />
-                  <span className="text-xs font-mono text-pf-cyan-400 w-8 text-right">{kellyConfidence}%</span>
+                  <span className="text-xs font-mono text-accent-text w-8 text-right">{kellyConfidence}%</span>
                 </div>
-                <p className="text-pf-caption text-pf-text-muted mt-1">
+                <p className="text-pf-caption text-tertiary mt-1">
                   Drag to set your confidence &rarr; Kelly suggests a size
                 </p>
               </div>
 
               <div className="mt-3">
-                <label htmlFor="trade-amount" className="block text-xs font-medium text-pf-text-secondary mb-1">Amount</label>
+                <label htmlFor="trade-amount" className="block text-xs font-medium text-secondary mb-1">Amount</label>
                 <div className="relative">
                   <Input
                     id="trade-amount"
@@ -1589,26 +1589,26 @@ export function Component() {
                     value={tradeAmount}
                     onChange={(e) => setTradeAmount(e.target.value)}
                     placeholder="10"
-                    className="w-full h-11 px-3 pr-14 rounded-pf bg-pf-surface border border-pf-border text-sm font-mono text-pf-text placeholder:text-pf-text-muted focus-visible:outline-none focus-visible:border-pf-cyan-500/50"
+                    className="w-full h-11 px-3 pr-14 rounded-pf bg-surface border border-default text-sm font-mono text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:border-accent/50"
                   />
-                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-pf-text-muted">USDC</span>
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-tertiary">USDC</span>
                 </div>
               </div>
 
               {/* Estimated values */}
               {parseFloat(tradeAmount || '0') > 0 && estPrice > 0 && (
-                <div className="mt-3 space-y-1 bg-pf-surface rounded-pf-sm p-3 border border-pf-border-subtle">
+                <div className="mt-3 space-y-1 bg-surface rounded-pf-sm p-3 border border-subtle">
                   <div className="flex justify-between text-xs">
-                    <span className="text-pf-text-muted">Est. Shares</span>
-                    <span className="font-mono text-pf-text">{estShares.toFixed(2)}</span>
+                    <span className="text-tertiary">Est. Shares</span>
+                    <span className="font-mono text-primary">{estShares.toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between text-xs">
-                    <span className="text-pf-text-muted">Cost</span>
-                    <span className="font-mono text-pf-text">${estCost.toFixed(2)}</span>
+                    <span className="text-tertiary">Cost</span>
+                    <span className="font-mono text-primary">${estCost.toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between text-xs">
-                    <span className="text-pf-text-muted">Potential Payout</span>
-                    <span className="font-mono text-pf-success">${estPayout.toFixed(2)}</span>
+                    <span className="text-tertiary">Potential Payout</span>
+                    <span className="font-mono text-gain">${estPayout.toFixed(2)}</span>
                   </div>
                 </div>
               )}
@@ -1618,10 +1618,10 @@ export function Component() {
                 type="button"
                 onClick={placeOrder}
                 disabled={placingOrder || !tradeAmount || parseFloat(tradeAmount || '0') <= 0 || (!isMarketOrder && (!tradePrice || parseFloat(tradePrice || '0') <= 0))}
-                className={`w-full mt-3 py-3 min-h-[44px] rounded-pf text-sm font-semibold text-pf-text transition-opacity disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/50 ${
+                className={`w-full mt-3 py-3 min-h-[44px] rounded-pf text-sm font-semibold text-primary transition-opacity disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 ${
                   tradeSide === 'BUY'
-                    ? 'bg-pf-cyan-500 hover:bg-pf-cyan-600'
-                    : 'bg-pf-danger hover:bg-pf-danger/90'
+                    ? 'bg-accent hover:bg-accent-hover'
+                    : 'bg-loss hover:bg-loss/90'
                 }`}
               >
                 {placingOrder ? 'Placing...' : `Place ${tradeSide} ${tradeOutcome} Order`}
@@ -1629,38 +1629,38 @@ export function Component() {
 
               {/* Success / Error messages */}
               {tradeSuccess && (
-                <p className="mt-2 text-xs text-pf-success">{tradeSuccess}</p>
+                <p className="mt-2 text-xs text-gain">{tradeSuccess}</p>
               )}
               {tradeError && (
-                <p className="mt-2 text-xs text-pf-danger">{tradeError}</p>
+                <p className="mt-2 text-xs text-loss">{tradeError}</p>
               )}
 
               {/* My Open Orders */}
-              <div className="mt-4 pt-3 border-t border-pf-border-subtle">
-                <span className="text-xs font-medium text-pf-text-secondary">My Open Orders</span>
+              <div className="mt-4 pt-3 border-t border-subtle">
+                <span className="text-xs font-medium text-secondary">My Open Orders</span>
                 {loadingMyOrders ? (
                   <div className="mt-2 space-y-1">
                     {Array.from({ length: 2 }, (_, i) => (
-                      <div key={i} className="h-6 bg-pf-overlay rounded animate-pulse" />
+                      <div key={i} className="h-6 bg-overlay rounded animate-pulse" />
                     ))}
                   </div>
                 ) : myOrders.length === 0 ? (
-                  <p className="mt-2 text-xs text-pf-text-muted">No open orders</p>
+                  <p className="mt-2 text-xs text-tertiary">No open orders</p>
                 ) : (
                   <div className="mt-2 space-y-1">
                     {myOrders.map((order) => (
                       <div
                         key={order.id}
-                        className="flex items-center justify-between gap-2 px-2 py-2 rounded-pf-sm bg-pf-surface border border-pf-border-subtle text-xs"
+                        className="flex items-center justify-between gap-2 px-2 py-2 rounded-pf-sm bg-surface border border-subtle text-xs"
                       >
                         <div className="flex items-center gap-2 min-w-0">
-                          <span className={`font-semibold ${order.side === 'BUY' ? 'text-pf-cyan-400' : 'text-pf-danger'}`}>
+                          <span className={`font-semibold ${order.side === 'BUY' ? 'text-accent-text' : 'text-loss'}`}>
                             {order.side}
                           </span>
-                          <span className={`font-medium ${order.outcome === 'YES' ? 'text-pf-success' : 'text-pf-danger'}`}>
+                          <span className={`font-medium ${order.outcome === 'YES' ? 'text-gain' : 'text-loss'}`}>
                             {order.outcome}
                           </span>
-                          <span className="font-mono text-pf-text-muted truncate">
+                          <span className="font-mono text-tertiary truncate">
                             {order.size}@{order.price}
                           </span>
                         </div>
@@ -1669,7 +1669,7 @@ export function Component() {
                           variant="ghost"
                           size="icon-sm"
                           onClick={() => cancelMyOrder(order.id)}
-                          className="shrink-0 p-1 rounded text-pf-text-muted hover:text-pf-danger transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/50"
+                          className="shrink-0 p-1 rounded text-tertiary hover:text-loss transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50"
                           title="Cancel order"
                           aria-label="Cancel order"
                         >
@@ -1685,16 +1685,16 @@ export function Component() {
             </div>
 
             {/* Provide Liquidity */}
-            <div className="bg-pf-elevated border border-pf-border rounded-pf-lg overflow-hidden">
+            <div className="bg-elevated border border-default rounded-pf-lg overflow-hidden">
               <Button
                 type="button"
                 variant="ghost"
                 onClick={() => setLpExpanded((v) => !v)}
-                className="w-full flex items-center justify-between px-4 py-3 text-sm font-medium text-pf-text hover:bg-pf-surface/50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 focus-visible:rounded-pf"
+                className="w-full flex items-center justify-between px-4 py-3 text-sm font-medium text-primary hover:bg-surface/50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 focus-visible:rounded-pf"
                 aria-expanded={lpExpanded}
               >
                 <div className="flex items-center gap-2">
-                  <Droplets className="size-4 text-pf-text-muted" aria-hidden="true" />
+                  <Droplets className="size-4 text-tertiary" aria-hidden="true" />
                   Provide Liquidity
                 </div>
                 <svg
@@ -1707,7 +1707,7 @@ export function Component() {
                   strokeWidth="2"
                   strokeLinecap="round"
                   strokeLinejoin="round"
-                  className={`text-pf-text-muted transition-transform duration-pf-normal ${lpExpanded ? 'rotate-180' : ''}`}
+                  className={`text-tertiary transition-transform duration-pf-normal ${lpExpanded ? 'rotate-180' : ''}`}
                   aria-hidden="true"
                 >
                   <polyline points="6 9 12 15 18 9" />
@@ -1715,17 +1715,17 @@ export function Component() {
               </Button>
 
               {lpExpanded && (
-                <div className="px-4 pb-4 space-y-3 border-t border-pf-border-subtle pt-3">
+                <div className="px-4 pb-4 space-y-3 border-t border-subtle pt-3">
                   {/* Token selector */}
                   <div>
-                    <label htmlFor="lp-token" className="block text-xs font-medium text-pf-text-secondary mb-1">
+                    <label htmlFor="lp-token" className="block text-xs font-medium text-secondary mb-1">
                       Token
                     </label>
                     <Select
                       id="lp-token"
                       value={lpTokenId}
                       onChange={(e) => setLpTokenId(e.target.value)}
-                      className="w-full h-9 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text focus-visible:outline-none focus-visible:border-pf-cyan-500/50"
+                      className="w-full h-9 px-3 rounded-pf bg-surface border border-default text-sm text-primary focus-visible:outline-none focus-visible:border-accent/50"
                     >
                       {(market?.tokens ?? []).map((t) => (
                         <option key={t.id} value={t.id}>
@@ -1737,7 +1737,7 @@ export function Component() {
 
                   {/* Spread input */}
                   <div>
-                    <label htmlFor="lp-spread" className="block text-xs font-medium text-pf-text-secondary mb-1">
+                    <label htmlFor="lp-spread" className="block text-xs font-medium text-secondary mb-1">
                       Spread
                     </label>
                     <Input
@@ -1749,13 +1749,13 @@ export function Component() {
                       value={lpSpread}
                       onChange={(e) => setLpSpread(e.target.value)}
                       placeholder="0.02"
-                      className="w-full h-9 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm font-mono text-pf-text placeholder:text-pf-text-muted focus-visible:outline-none focus-visible:border-pf-cyan-500/50"
+                      className="w-full h-9 px-3 rounded-pf bg-surface border border-default text-sm font-mono text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:border-accent/50"
                     />
                   </div>
 
                   {/* Size input */}
                   <div>
-                    <label htmlFor="lp-size" className="block text-xs font-medium text-pf-text-secondary mb-1">
+                    <label htmlFor="lp-size" className="block text-xs font-medium text-secondary mb-1">
                       Size (USDC)
                     </label>
                     <Input
@@ -1766,19 +1766,19 @@ export function Component() {
                       value={lpSize}
                       onChange={(e) => setLpSize(e.target.value)}
                       placeholder="10"
-                      className="w-full h-9 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm font-mono text-pf-text placeholder:text-pf-text-muted focus-visible:outline-none focus-visible:border-pf-cyan-500/50"
+                      className="w-full h-9 px-3 rounded-pf bg-surface border border-default text-sm font-mono text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:border-accent/50"
                     />
                   </div>
 
                   {lpError && (
-                    <p className="text-xs text-pf-danger">{lpError}</p>
+                    <p className="text-xs text-loss">{lpError}</p>
                   )}
 
                   <Button
                     type="button"
                     onClick={submitLp}
                     disabled={lpSubmitting || !lpTokenId || !lpSpread || !lpSize}
-                    className="w-full py-3 rounded-pf bg-pf-cyan-500/15 border border-pf-cyan-500/30 text-sm font-semibold text-pf-cyan-400 hover:bg-pf-cyan-500/25 disabled:opacity-40 disabled:cursor-not-allowed transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/50"
+                    className="w-full py-3 rounded-pf bg-accent/15 border border-accent/30 text-sm font-semibold text-accent-text hover:bg-accent/25 disabled:opacity-40 disabled:cursor-not-allowed transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50"
                   >
                     {lpSubmitting ? 'Submitting...' : 'Submit'}
                   </Button>
@@ -1787,25 +1787,25 @@ export function Component() {
             </div>
 
             {/* Community Sentiment */}
-            <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4">
+            <div className="bg-elevated border border-default rounded-pf-lg p-4">
               {/* Header */}
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
-                  <Users className="size-4 text-pf-text-muted" aria-hidden="true" />
-                  <span className="text-sm font-medium text-pf-text">Community Sentiment</span>
+                  <Users className="size-4 text-tertiary" aria-hidden="true" />
+                  <span className="text-sm font-medium text-primary">Community Sentiment</span>
                 </div>
                 {sentiment && sentiment.totalVotes > 0 && (
-                  <span className="text-pf-label text-pf-text-muted">{sentiment.totalVotes} votes</span>
+                  <span className="text-pf-label text-tertiary">{sentiment.totalVotes} votes</span>
                 )}
               </div>
 
               {/* Loading skeleton */}
               {loadingSentiment ? (
                 <div className="space-y-3">
-                  <div className="h-4 bg-pf-overlay rounded-pf-full animate-pulse" />
+                  <div className="h-4 bg-overlay rounded-pf-full animate-pulse" />
                   <div className="flex gap-2">
-                    <div className="flex-1 h-10 bg-pf-overlay rounded-pf animate-pulse" />
-                    <div className="flex-1 h-10 bg-pf-overlay rounded-pf animate-pulse" />
+                    <div className="flex-1 h-10 bg-overlay rounded-pf animate-pulse" />
+                    <div className="flex-1 h-10 bg-overlay rounded-pf animate-pulse" />
                   </div>
                 </div>
               ) : (
@@ -1815,21 +1815,21 @@ export function Component() {
                     <div className="mb-3">
                       {/* Labels + bar */}
                       <div className="flex items-center justify-between text-xs mb-1">
-                        <span className="font-semibold text-pf-success">YES {sentiment.yesPercent}%</span>
-                        <span className="font-semibold text-pf-danger">{sentiment.noPercent}% NO</span>
+                        <span className="font-semibold text-gain">YES {sentiment.yesPercent}%</span>
+                        <span className="font-semibold text-loss">{sentiment.noPercent}% NO</span>
                       </div>
                       <div className="h-4 rounded-pf-full overflow-hidden flex">
                         <div
-                          className="bg-pf-success transition-all duration-pf-slow ease-out"
+                          className="bg-gain transition-all duration-pf-slow ease-out"
                           style={{ width: `${sentiment.yesPercent}%` }}
                           title={`YES ${sentiment.yesPercent}%`}
                         />
                         <div
-                          className="bg-pf-danger flex-1 transition-all duration-pf-slow ease-out"
+                          className="bg-loss flex-1 transition-all duration-pf-slow ease-out"
                           title={`NO ${sentiment.noPercent}%`}
                         />
                       </div>
-                      <p className="text-pf-label text-pf-text-muted mt-2 text-center">
+                      <p className="text-pf-label text-tertiary mt-2 text-center">
                         {sentiment.yesPercent > 55
                           ? 'Community leans YES'
                           : sentiment.noPercent > 55
@@ -1838,22 +1838,22 @@ export function Component() {
                       </p>
                     </div>
                   ) : (
-                    <p className="text-xs text-pf-text-muted text-center py-2 mb-3">
+                    <p className="text-xs text-tertiary text-center py-2 mb-3">
                       Be the first to share your prediction
                     </p>
                   )}
 
                   {/* Already voted — show their vote + edit link */}
                   {sentiment?.userVote && !editingVote ? (
-                    <div className="rounded-pf bg-pf-surface border border-pf-border-subtle p-3 flex items-center justify-between gap-2">
+                    <div className="rounded-pf bg-surface border border-subtle p-3 flex items-center justify-between gap-2">
                       <div className="flex items-center gap-2">
                         {sentiment.userVote.direction === 'YES'
-                          ? <ThumbsUp className="size-4 text-pf-success" />
-                          : <ThumbsDown className="size-4 text-pf-danger" />
+                          ? <ThumbsUp className="size-4 text-gain" />
+                          : <ThumbsDown className="size-4 text-loss" />
                         }
-                        <span className="text-xs text-pf-text-secondary">
+                        <span className="text-xs text-secondary">
                           Your vote:{' '}
-                          <span className={sentiment.userVote.direction === 'YES' ? 'text-pf-success font-semibold' : 'text-pf-danger font-semibold'}>
+                          <span className={sentiment.userVote.direction === 'YES' ? 'text-gain font-semibold' : 'text-loss font-semibold'}>
                             {sentiment.userVote.direction}
                           </span>
                           {' '}({sentiment.userVote.confidence}% confident)
@@ -1867,7 +1867,7 @@ export function Component() {
                           setConfidence(sentiment.userVote!.confidence);
                           setEditingVote(true);
                         }}
-                        className="flex items-center gap-1 text-pf-label text-pf-text-muted hover:text-pf-cyan-400 transition-colors"
+                        className="flex items-center gap-1 text-pf-label text-tertiary hover:text-accent-text transition-colors"
                       >
                         <Edit2 className="size-3" /> Edit
                       </Button>
@@ -1875,7 +1875,7 @@ export function Component() {
                   ) : (
                     /* Vote form */
                     <div className="space-y-3">
-                      <p className="text-xs font-medium text-pf-text-secondary">What's your read?</p>
+                      <p className="text-xs font-medium text-secondary">What's your read?</p>
 
                       {/* YES / NO toggle */}
                       <div className="flex gap-2">
@@ -1883,10 +1883,10 @@ export function Component() {
                           type="button"
                           variant="ghost"
                           onClick={() => setSelectedDir('YES')}
-                          className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-pf border text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-success/40 ${
+                          className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-pf border text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gain/40 ${
                             selectedDir === 'YES'
-                              ? 'bg-pf-success/15 border-pf-success text-pf-success'
-                              : 'border-pf-success text-pf-success hover:bg-pf-success/10'
+                              ? 'bg-gain/15 border-gain text-gain'
+                              : 'border-gain text-gain hover:bg-gain/10'
                           }`}
                         >
                           <ThumbsUp className="size-4" /> YES
@@ -1895,10 +1895,10 @@ export function Component() {
                           type="button"
                           variant="ghost"
                           onClick={() => setSelectedDir('NO')}
-                          className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-pf border text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-danger/40 ${
+                          className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-pf border text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-loss/40 ${
                             selectedDir === 'NO'
-                              ? 'bg-pf-danger/15 border-pf-danger text-pf-danger'
-                              : 'border-pf-danger text-pf-danger hover:bg-pf-danger/10'
+                              ? 'bg-loss/15 border-loss text-loss'
+                              : 'border-loss text-loss hover:bg-loss/10'
                           }`}
                         >
                           <ThumbsDown className="size-4" /> NO
@@ -1909,8 +1909,8 @@ export function Component() {
                       {selectedDir && (
                         <div>
                           <div className="flex items-center justify-between text-xs mb-1">
-                            <span className="text-pf-text-secondary font-medium">How confident?</span>
-                            <span className="font-mono text-pf-cyan-400">{confidence}% confident</span>
+                            <span className="text-secondary font-medium">How confident?</span>
+                            <span className="font-mono text-accent-text">{confidence}% confident</span>
                           </div>
                           <input
                             type="range"
@@ -1919,9 +1919,9 @@ export function Component() {
                             step={1}
                             value={confidence}
                             onChange={(e) => setConfidence(parseInt(e.target.value))}
-                            className="w-full h-2 rounded-pf-full bg-pf-border accent-pf-cyan-500"
+                            className="w-full h-2 rounded-pf-full bg-default accent-accent"
                           />
-                          <p className="text-pf-caption text-pf-text-muted mt-1">
+                          <p className="text-pf-caption text-tertiary mt-1">
                             {confidence <= 64 ? 'Just a guess' : confidence <= 79 ? 'Fairly confident' : 'Very confident'}
                           </p>
                         </div>
@@ -1932,7 +1932,7 @@ export function Component() {
                         type="button"
                         disabled={!selectedDir || voting}
                         onClick={submitVote}
-                        className="w-full py-3 rounded-pf bg-pf-cyan-500/15 border border-pf-cyan-500/30 text-sm font-semibold text-pf-cyan-400 hover:bg-pf-cyan-500/25 disabled:opacity-40 disabled:cursor-not-allowed transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/50"
+                        className="w-full py-3 rounded-pf bg-accent/15 border border-accent/30 text-sm font-semibold text-accent-text hover:bg-accent/25 disabled:opacity-40 disabled:cursor-not-allowed transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50"
                       >
                         {voting ? 'Submitting...' : 'Submit Vote'}
                       </Button>
@@ -1943,12 +1943,12 @@ export function Component() {
             </div>
 
             {/* Price Alerts Widget */}
-            <div className="bg-pf-elevated border border-pf-border rounded-pf-lg overflow-hidden">
+            <div className="bg-elevated border border-default rounded-pf-lg overflow-hidden">
               {/* Header */}
-              <div className="flex items-center justify-between px-4 py-3 border-b border-pf-border">
+              <div className="flex items-center justify-between px-4 py-3 border-b border-default">
                 <div className="flex items-center gap-2">
-                  <Bell className="size-4 text-pf-text-muted" aria-hidden="true" />
-                  <span className="text-sm font-medium text-pf-text">Price Alerts</span>
+                  <Bell className="size-4 text-tertiary" aria-hidden="true" />
+                  <span className="text-sm font-medium text-primary">Price Alerts</span>
                 </div>
                 <Button
                   type="button"
@@ -1956,7 +1956,7 @@ export function Component() {
                   onClick={() => setShowAlertForm((v) => !v)}
                   aria-expanded={showAlertForm}
                   aria-label={showAlertForm ? 'Cancel new alert' : 'Add price alert'}
-                  className="flex items-center gap-1 px-3 py-1 rounded-pf-sm text-xs font-medium bg-pf-cyan-500/10 border border-pf-cyan-500/25 text-pf-cyan-400 hover:bg-pf-cyan-500/20 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/50"
+                  className="flex items-center gap-1 px-3 py-1 rounded-pf-sm text-xs font-medium bg-accent/10 border border-accent/25 text-accent-text hover:bg-accent/20 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50"
                 >
                   {showAlertForm ? (
                     <X className="size-3" />
@@ -1968,10 +1968,10 @@ export function Component() {
 
               {/* Inline form */}
               {showAlertForm && (
-                <div className="px-4 pt-3 pb-2 border-b border-pf-border-subtle space-y-3">
+                <div className="px-4 pt-3 pb-2 border-b border-subtle space-y-3">
                   {/* Outcome toggle */}
                   <div>
-                    <p className="text-xs font-medium text-pf-text-secondary mb-2">Outcome</p>
+                    <p className="text-xs font-medium text-secondary mb-2">Outcome</p>
                     <div className="flex gap-2">
                       {(['YES', 'NO'] as const).map((o) => (
                         <Button
@@ -1979,12 +1979,12 @@ export function Component() {
                           variant="ghost"
                           key={o}
                           onClick={() => setAlertOutcome(o)}
-                          className={`flex-1 py-2 rounded-pf-sm text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 ${
+                          className={`flex-1 py-2 rounded-pf-sm text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 ${
                             alertOutcome === o
                               ? o === 'YES'
-                                ? 'bg-pf-success/10 text-pf-success border border-pf-success/30'
-                                : 'bg-pf-danger/10 text-pf-danger border border-pf-danger/30'
-                              : 'bg-pf-surface text-pf-text-muted border border-pf-border hover:border-pf-border-strong'
+                                ? 'bg-gain/10 text-gain border border-gain/30'
+                                : 'bg-loss/10 text-loss border border-loss/30'
+                              : 'bg-surface text-tertiary border border-default hover:border-strong'
                           }`}
                         >
                           {o}
@@ -1995,7 +1995,7 @@ export function Component() {
 
                   {/* Condition toggle */}
                   <div>
-                    <p className="text-xs font-medium text-pf-text-secondary mb-2">Condition</p>
+                    <p className="text-xs font-medium text-secondary mb-2">Condition</p>
                     <div className="flex gap-2">
                       {(['above', 'below'] as const).map((c) => (
                         <Button
@@ -2003,10 +2003,10 @@ export function Component() {
                           variant="ghost"
                           key={c}
                           onClick={() => setAlertCondition(c)}
-                          className={`flex-1 py-2 rounded-pf-sm text-xs font-semibold capitalize transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 ${
+                          className={`flex-1 py-2 rounded-pf-sm text-xs font-semibold capitalize transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 ${
                             alertCondition === c
-                              ? 'bg-pf-cyan-500/10 text-pf-cyan-400 border border-pf-cyan-500/30'
-                              : 'bg-pf-surface text-pf-text-muted border border-pf-border hover:border-pf-border-strong'
+                              ? 'bg-accent/10 text-accent-text border border-accent/30'
+                              : 'bg-surface text-tertiary border border-default hover:border-strong'
                           }`}
                         >
                           {c}
@@ -2018,8 +2018,8 @@ export function Component() {
                   {/* Threshold slider */}
                   <div>
                     <div className="flex items-center justify-between mb-2">
-                      <p className="text-xs font-medium text-pf-text-secondary">Threshold</p>
-                      <span className="font-mono text-xs text-pf-cyan-400">{alertThreshold.toFixed(2)}</span>
+                      <p className="text-xs font-medium text-secondary">Threshold</p>
+                      <span className="font-mono text-xs text-accent-text">{alertThreshold.toFixed(2)}</span>
                     </div>
                     <input
                       type="range"
@@ -2029,9 +2029,9 @@ export function Component() {
                       value={alertThreshold}
                       onChange={(e) => setAlertThreshold(parseFloat(e.target.value))}
                       aria-label="Alert threshold"
-                      className="w-full h-2 rounded-pf-full bg-pf-border accent-pf-cyan-500"
+                      className="w-full h-2 rounded-pf-full bg-default accent-accent"
                     />
-                    <div className="flex justify-between text-pf-caption text-pf-text-muted mt-1">
+                    <div className="flex justify-between text-pf-caption text-tertiary mt-1">
                       <span>0.01</span>
                       <span>0.99</span>
                     </div>
@@ -2043,7 +2043,7 @@ export function Component() {
                       type="button"
                       variant="secondary"
                       onClick={() => setShowAlertForm(false)}
-                      className="flex-1 py-2 rounded-pf-sm text-xs text-pf-text-secondary hover:text-pf-text border border-pf-border hover:border-pf-border-strong transition-colors"
+                      className="flex-1 py-2 rounded-pf-sm text-xs text-secondary hover:text-primary border border-default hover:border-strong transition-colors"
                     >
                       Cancel
                     </Button>
@@ -2080,7 +2080,7 @@ export function Component() {
                           setSavingAlert(false);
                         }
                       }}
-                      className="flex-1 py-2 rounded-pf-sm text-xs font-semibold bg-pf-cyan-500/15 border border-pf-cyan-500/30 text-pf-cyan-400 hover:bg-pf-cyan-500/25 disabled:opacity-40 disabled:cursor-not-allowed transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/50"
+                      className="flex-1 py-2 rounded-pf-sm text-xs font-semibold bg-accent/15 border border-accent/30 text-accent-text hover:bg-accent/25 disabled:opacity-40 disabled:cursor-not-allowed transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50"
                     >
                       {savingAlert ? 'Saving...' : 'Save Alert'}
                     </Button>
@@ -2093,18 +2093,18 @@ export function Component() {
                 {loadingAlerts ? (
                   <div className="space-y-2">
                     {Array.from({ length: 2 }, (_, i) => (
-                      <div key={i} className="h-8 bg-pf-overlay rounded-pf-sm animate-pulse" />
+                      <div key={i} className="h-8 bg-overlay rounded-pf-sm animate-pulse" />
                     ))}
                   </div>
                 ) : alerts.length === 0 ? (
                   <div className="flex flex-col items-center py-4 text-center">
-                    <Bell className="size-6 text-pf-text-muted opacity-30 mb-2" aria-hidden="true" />
-                    <p className="text-xs text-pf-text-muted">No alerts set</p>
+                    <Bell className="size-6 text-tertiary opacity-30 mb-2" aria-hidden="true" />
+                    <p className="text-xs text-tertiary">No alerts set</p>
                     <Button
                       type="button"
                       variant="ghost"
                       onClick={() => setShowAlertForm(true)}
-                      className="mt-2 text-pf-label text-pf-cyan-400 hover:text-pf-cyan-300 transition-colors"
+                      className="mt-2 text-pf-label text-accent-text hover:text-accent-text transition-colors"
                     >
                       Add your first alert
                     </Button>
@@ -2114,19 +2114,19 @@ export function Component() {
                     {alerts.map((alert) => (
                       <li
                         key={alert.id}
-                        className="flex items-center justify-between gap-2 px-3 py-2 rounded-pf-sm bg-pf-surface border border-pf-border-subtle text-xs"
+                        className="flex items-center justify-between gap-2 px-3 py-2 rounded-pf-sm bg-surface border border-subtle text-xs"
                       >
                         <div className="flex items-center gap-2 min-w-0">
                           {/* Outcome dot */}
                           <span
-                            className={`size-2 rounded-pf-full shrink-0 ${alert.outcome === 'YES' ? 'bg-pf-success' : 'bg-pf-danger'}`}
+                            className={`size-2 rounded-pf-full shrink-0 ${alert.outcome === 'YES' ? 'bg-gain' : 'bg-loss'}`}
                             aria-hidden="true"
                           />
-                          <span className="font-mono text-pf-text truncate">
+                          <span className="font-mono text-primary truncate">
                             {alert.outcome} {alert.condition} {alert.threshold.toFixed(2)}
                           </span>
                           {alert.triggered && (
-                            <span className="shrink-0 px-2 py-1 rounded-pf-full text-pf-caption font-medium bg-pf-warning/15 text-pf-warning border border-pf-warning/20">
+                            <span className="shrink-0 px-2 py-1 rounded-pf-full text-pf-caption font-medium bg-warning/15 text-warning border border-warning/20">
                               Triggered
                             </span>
                           )}
@@ -2152,7 +2152,7 @@ export function Component() {
                               toast.error('Failed to remove alert');
                             }
                           }}
-                          className="shrink-0 p-1 rounded text-pf-text-muted hover:text-pf-danger transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/50"
+                          className="shrink-0 p-1 rounded text-tertiary hover:text-loss transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50"
                         >
                           <Trash2 className="size-3" />
                         </Button>
@@ -2166,16 +2166,16 @@ export function Component() {
           </div>
 
           {/* Strategies on this market */}
-          <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-6">
-            <h2 className="text-sm font-medium text-pf-text mb-4">Strategies on This Market</h2>
+          <div className="bg-elevated border border-default rounded-pf-lg p-6">
+            <h2 className="text-sm font-medium text-primary mb-4">Strategies on This Market</h2>
             <div className="flex flex-col items-center py-6 text-center">
-              <Zap className="size-6 text-pf-text-muted mb-2" />
-              <p className="text-sm text-pf-text-muted">No strategies running on this market yet.</p>
+              <Zap className="size-6 text-tertiary mb-2" />
+              <p className="text-sm text-tertiary">No strategies running on this market yet.</p>
               <Button
                 type="button"
                 variant="secondary"
                 onClick={() => setShowRunStrategy(true)}
-                className="mt-3 inline-flex items-center gap-2 px-3 py-2 rounded-pf bg-pf-surface border border-pf-border text-xs text-pf-text-secondary hover:border-pf-border-strong transition-colors"
+                className="mt-3 inline-flex items-center gap-2 px-3 py-2 rounded-pf bg-surface border border-default text-xs text-secondary hover:border-strong transition-colors"
               >
                 <Play className="size-3" /> Run Strategy
               </Button>
@@ -2183,72 +2183,72 @@ export function Component() {
           </div>
 
           {/* Related News */}
-          <div className="bg-pf-elevated border border-pf-border rounded-pf-lg overflow-hidden">
+          <div className="bg-elevated border border-default rounded-pf-lg overflow-hidden">
             <div className="flex items-center justify-between px-6 py-4">
               <div className="flex items-center gap-2">
-                <Newspaper className="size-4 text-pf-text-muted" aria-hidden="true" />
-                <h2 className="text-sm font-medium text-pf-text">Related News</h2>
+                <Newspaper className="size-4 text-tertiary" aria-hidden="true" />
+                <h2 className="text-sm font-medium text-primary">Related News</h2>
               </div>
               <Link
                 to={`/news?market=${id}`}
-                className="text-pf-label text-pf-text-muted hover:text-pf-cyan-400 transition-colors"
+                className="text-pf-label text-tertiary hover:text-accent-text transition-colors"
               >
                 See all &rarr;
               </Link>
             </div>
 
             {loadingNewsArticles ? (
-              <div className="divide-y divide-pf-border">
+              <div className="divide-y divide-default">
                 {Array.from({ length: 3 }, (_, i) => (
                   <div key={i} className="flex items-center gap-3 px-6 py-3 animate-pulse">
-                    <div className="size-2 rounded-pf-full bg-pf-overlay shrink-0" />
+                    <div className="size-2 rounded-pf-full bg-overlay shrink-0" />
                     <div className="flex-1 space-y-2">
-                      <div className="h-3 bg-pf-overlay rounded w-[80%]" />
-                      <div className="h-3 bg-pf-overlay rounded w-[50%]" />
+                      <div className="h-3 bg-overlay rounded w-[80%]" />
+                      <div className="h-3 bg-overlay rounded w-[50%]" />
                     </div>
                   </div>
                 ))}
               </div>
             ) : relatedNewsArticles.length === 0 ? (
-              <p className="px-6 py-5 text-xs text-pf-text-muted text-center">No related news found</p>
+              <p className="px-6 py-5 text-xs text-tertiary text-center">No related news found</p>
             ) : (
-              <div className="divide-y divide-pf-border">
+              <div className="divide-y divide-default">
                 {relatedNewsArticles.map(article => (
                   <a
                     key={article.id}
                     href={article.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-3 px-6 py-3 hover:bg-pf-surface transition-colors"
+                    className="flex items-center gap-3 px-6 py-3 hover:bg-surface transition-colors"
                   >
                     {/* Sentiment dot */}
                     <span
                       className={`size-2 rounded-pf-full shrink-0 ${
                         article.sentiment === 'POSITIVE'
-                          ? 'bg-pf-success'
+                          ? 'bg-gain'
                           : article.sentiment === 'NEGATIVE'
-                            ? 'bg-pf-danger'
-                            : 'bg-pf-text-muted'
+                            ? 'bg-loss'
+                            : 'bg-tertiary'
                       }`}
                       aria-label={article.sentiment}
                     />
 
                     {/* Title + meta */}
                     <div className="flex-1 min-w-0">
-                      <p className="text-xs text-pf-text truncate leading-snug">{article.title}</p>
-                      <p className="text-pf-label text-pf-text-muted mt-1">
+                      <p className="text-xs text-primary truncate leading-snug">{article.title}</p>
+                      <p className="text-pf-label text-tertiary mt-1">
                         {article.source} &middot; {new Date(article.publishedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                       </p>
                     </div>
 
                     {/* Signal count badge */}
                     {(article.signals?.length ?? 0) > 0 && (
-                      <span className="shrink-0 px-2 py-1 rounded-pf-full text-pf-caption font-medium bg-pf-cyan-500/15 text-pf-cyan-400">
+                      <span className="shrink-0 px-2 py-1 rounded-pf-full text-pf-caption font-medium bg-accent/15 text-accent-text">
                         {article.signals!.length} signal{article.signals!.length !== 1 ? 's' : ''}
                       </span>
                     )}
 
-                    <ExternalLink className="size-3 shrink-0 text-pf-text-muted opacity-50" aria-hidden="true" />
+                    <ExternalLink className="size-3 shrink-0 text-tertiary opacity-50" aria-hidden="true" />
                   </a>
                 ))}
               </div>
@@ -2257,18 +2257,18 @@ export function Component() {
 
           {/* Description */}
           {market.description && (
-            <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-6">
-              <h2 className="text-sm font-medium text-pf-text mb-2">About</h2>
-              <p className="text-sm text-pf-text-secondary leading-relaxed">{market.description}</p>
+            <div className="bg-elevated border border-default rounded-pf-lg p-6">
+              <h2 className="text-sm font-medium text-primary mb-2">About</h2>
+              <p className="text-sm text-secondary leading-relaxed">{market.description}</p>
             </div>
           )}
 
           {/* Conditional Order Dialog (TP/SL) */}
           {showConditional && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-pf-backdrop backdrop-blur-sm" role="dialog" aria-modal="true" aria-label="Set Conditional Order">
-              <div className="animate-scale-in bg-pf-elevated border border-pf-border rounded-pf-lg w-full max-w-sm p-6 shadow-pf-lg">
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" role="dialog" aria-modal="true" aria-label="Set Conditional Order">
+              <div className="animate-scale-in bg-elevated border border-default rounded-pf-lg w-full max-w-sm p-6 shadow-pf-lg">
                 <div className="flex items-center justify-between mb-5">
-                  <h2 className="text-base font-semibold text-pf-text">
+                  <h2 className="text-base font-semibold text-primary">
                     {condType === 'TAKE_PROFIT' ? 'Set Take Profit' : 'Set Stop Loss'} &mdash; {condOutcome}
                   </h2>
                   <Button
@@ -2277,14 +2277,14 @@ export function Component() {
                     size="icon"
                     onClick={() => setShowConditional(false)}
                     aria-label="Close dialog"
-                    className="p-1 rounded text-pf-text-muted hover:text-pf-text transition-colors"
+                    className="p-1 rounded text-tertiary hover:text-primary transition-colors"
                   >
                     <X className="size-4" />
                   </Button>
                 </div>
                 <div className="space-y-4">
                   <div>
-                    <label htmlFor="cond-trigger-price-dialog" className="block text-xs font-medium text-pf-text-secondary mb-2">Trigger Price</label>
+                    <label htmlFor="cond-trigger-price-dialog" className="block text-xs font-medium text-secondary mb-2">Trigger Price</label>
                     <Input
                       id="cond-trigger-price-dialog"
                       type="number"
@@ -2294,11 +2294,11 @@ export function Component() {
                       value={condTriggerPrice}
                       onChange={(e) => setCondTriggerPrice(e.target.value)}
                       placeholder="e.g. 0.75"
-                      className="w-full h-10 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text placeholder:text-pf-text-muted focus-visible:outline-none focus-visible:border-pf-cyan-500/50"
+                      className="w-full h-10 px-3 rounded-pf bg-surface border border-default text-sm text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:border-accent/50"
                     />
                   </div>
                   <div>
-                    <label htmlFor="cond-size-dialog" className="block text-xs font-medium text-pf-text-secondary mb-2">Size (shares)</label>
+                    <label htmlFor="cond-size-dialog" className="block text-xs font-medium text-secondary mb-2">Size (shares)</label>
                     <Input
                       id="cond-size-dialog"
                       type="number"
@@ -2307,15 +2307,15 @@ export function Component() {
                       value={condSize}
                       onChange={(e) => setCondSize(e.target.value)}
                       placeholder="e.g. 100"
-                      className="w-full h-10 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text placeholder:text-pf-text-muted focus-visible:outline-none focus-visible:border-pf-cyan-500/50"
+                      className="w-full h-10 px-3 rounded-pf bg-surface border border-default text-sm text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:border-accent/50"
                     />
                   </div>
-                  <div className="flex gap-2 justify-end pt-3 border-t border-pf-border-subtle">
+                  <div className="flex gap-2 justify-end pt-3 border-t border-subtle">
                     <Button
                       type="button"
                       variant="secondary"
                       onClick={() => setShowConditional(false)}
-                      className="px-4 py-2 text-sm text-pf-text-secondary hover:text-pf-text transition-colors"
+                      className="px-4 py-2 text-sm text-secondary hover:text-primary transition-colors"
                     >
                       Cancel
                     </Button>
@@ -2324,8 +2324,8 @@ export function Component() {
                       variant={condType === 'TAKE_PROFIT' ? 'success' : 'danger'}
                       onClick={submitConditional}
                       disabled={!condSize || !condTriggerPrice || condSubmitting}
-                      className={`flex items-center gap-2 px-4 py-2 rounded-pf text-pf-text text-sm font-medium hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed transition-opacity ${
-                        condType === 'TAKE_PROFIT' ? 'bg-pf-success' : 'bg-pf-danger'
+                      className={`flex items-center gap-2 px-4 py-2 rounded-pf text-primary text-sm font-medium hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed transition-opacity ${
+                        condType === 'TAKE_PROFIT' ? 'bg-gain' : 'bg-loss'
                       }`}
                     >
                       {condType === 'TAKE_PROFIT' ? 'Set TP' : 'Set SL'}
@@ -2338,17 +2338,17 @@ export function Component() {
 
           {/* Run Strategy Dialog */}
           {showRunStrategy && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-pf-backdrop backdrop-blur-sm" role="dialog" aria-modal="true" aria-label="Run Strategy">
-              <div className="animate-scale-in bg-pf-elevated border border-pf-border rounded-pf-lg w-full max-w-md p-6 shadow-pf-lg">
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" role="dialog" aria-modal="true" aria-label="Run Strategy">
+              <div className="animate-scale-in bg-elevated border border-default rounded-pf-lg w-full max-w-md p-6 shadow-pf-lg">
                 <div className="flex items-center justify-between mb-5">
-                  <h2 className="text-base font-semibold text-pf-text">Run Strategy on This Market</h2>
+                  <h2 className="text-base font-semibold text-primary">Run Strategy on This Market</h2>
                   <Button
                     type="button"
                     variant="ghost"
                     size="icon"
                     onClick={() => setShowRunStrategy(false)}
                     aria-label="Close dialog"
-                    className="p-1 rounded text-pf-text-muted hover:text-pf-text transition-colors"
+                    className="p-1 rounded text-tertiary hover:text-primary transition-colors"
                   >
                     <X className="size-4" />
                   </Button>
@@ -2356,14 +2356,14 @@ export function Component() {
 
                 <div className="space-y-4">
                   <div>
-                    <label htmlFor="run-strategy-select" className="block text-xs font-medium text-pf-text-secondary mb-2">
+                    <label htmlFor="run-strategy-select" className="block text-xs font-medium text-secondary mb-2">
                       Select Strategy
                     </label>
                     <Select
                       id="run-strategy-select"
                       value={selectedStrategyId}
                       onChange={(e) => setSelectedStrategyId(e.target.value)}
-                      className="w-full h-10 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text focus-visible:outline-none focus-visible:border-pf-cyan-500/50"
+                      className="w-full h-10 px-3 rounded-pf bg-surface border border-default text-sm text-primary focus-visible:outline-none focus-visible:border-accent/50"
                     >
                       <option value="">Choose a strategy...</option>
                       {strategyOptions.map((s) => (
@@ -2372,22 +2372,22 @@ export function Component() {
                     </Select>
                   </div>
 
-                  <div className="text-center text-xs text-pf-text-muted">or</div>
+                  <div className="text-center text-xs text-tertiary">or</div>
 
                   <Link
                     to="/strategies/new"
                     onClick={() => setShowRunStrategy(false)}
-                    className="flex items-center justify-center gap-2 w-full h-10 rounded-pf border border-pf-border text-sm text-pf-text-secondary hover:border-pf-border-strong transition-colors"
+                    className="flex items-center justify-center gap-2 w-full h-10 rounded-pf border border-default text-sm text-secondary hover:border-strong transition-colors"
                   >
                     <Plus className="size-4" /> Create New Strategy
                   </Link>
 
-                  <div className="flex gap-2 justify-end pt-3 border-t border-pf-border-subtle">
+                  <div className="flex gap-2 justify-end pt-3 border-t border-subtle">
                     <Button
                       type="button"
                       variant="secondary"
                       onClick={() => setShowRunStrategy(false)}
-                      className="px-4 py-2 text-sm text-pf-text-secondary hover:text-pf-text transition-colors"
+                      className="px-4 py-2 text-sm text-secondary hover:text-primary transition-colors"
                     >
                       Cancel
                     </Button>
@@ -2396,7 +2396,7 @@ export function Component() {
                       variant="success"
                       onClick={onStartStrategy}
                       disabled={!selectedStrategyId}
-                      className="flex items-center gap-2 px-4 py-2 rounded-pf bg-pf-success text-pf-text text-sm font-medium hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed transition-opacity"
+                      className="flex items-center gap-2 px-4 py-2 rounded-pf bg-gain text-primary text-sm font-medium hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed transition-opacity"
                     >
                       <Play className="size-4" /> Start Strategy
                     </Button>

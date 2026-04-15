@@ -123,7 +123,7 @@ function toEnhanced(item: FeedItem): FeedItemEnhanced {
 function Initials({ actor }: { actor: FeedActor }) {
   const label = (actor.displayName ?? actor.username).slice(0, 2).toUpperCase();
   return (
-    <div className="size-9 rounded-pf-full bg-pf-surface flex items-center justify-center text-sm font-bold text-pf-cyan-400 shrink-0">
+    <div className="size-9 rounded-pf-full bg-surface flex items-center justify-center text-sm font-bold text-accent-text shrink-0">
       {label}
     </div>
   );
@@ -131,7 +131,7 @@ function Initials({ actor }: { actor: FeedActor }) {
 
 function CommentAvatar({ initials }: { initials: string }) {
   return (
-    <div className="size-7 rounded-pf-full bg-pf-elevated border border-pf-border flex items-center justify-center text-pf-caption font-bold text-pf-text-secondary shrink-0">
+    <div className="size-7 rounded-pf-full bg-elevated border border-default flex items-center justify-center text-pf-caption font-bold text-secondary shrink-0">
       {initials.slice(0, 2).toUpperCase()}
     </div>
   );
@@ -141,12 +141,12 @@ function CommentAvatar({ initials }: { initials: string }) {
 
 function SkeletonRow() {
   return (
-    <div className="flex items-start gap-3 px-4 py-4 border-b border-pf-border-subtle last:border-b-0">
-      <div className="size-9 rounded-pf-full bg-pf-overlay animate-pulse shrink-0" />
+    <div className="flex items-start gap-3 px-4 py-4 border-b border-subtle last:border-b-0">
+      <div className="size-9 rounded-pf-full bg-overlay animate-pulse shrink-0" />
       <div className="flex-1 space-y-2">
-        <div className="h-3 w-32 bg-pf-overlay rounded animate-pulse" />
-        <div className="h-3 w-64 bg-pf-overlay rounded animate-pulse" />
-        <div className="h-3 w-16 bg-pf-overlay rounded animate-pulse" />
+        <div className="h-3 w-32 bg-overlay rounded animate-pulse" />
+        <div className="h-3 w-64 bg-overlay rounded animate-pulse" />
+        <div className="h-3 w-16 bg-overlay rounded animate-pulse" />
       </div>
     </div>
   );
@@ -155,10 +155,10 @@ function SkeletonRow() {
 function CommentSkeletonRow() {
   return (
     <div className="flex items-start gap-3 animate-pulse">
-      <div className="size-7 rounded-pf-full bg-pf-overlay shrink-0" />
+      <div className="size-7 rounded-pf-full bg-overlay shrink-0" />
       <div className="flex-1 space-y-2">
-        <div className="h-3 w-24 bg-pf-overlay rounded" />
-        <div className="h-3 w-48 bg-pf-overlay rounded" />
+        <div className="h-3 w-24 bg-overlay rounded" />
+        <div className="h-3 w-48 bg-overlay rounded" />
       </div>
     </div>
   );
@@ -188,7 +188,7 @@ function EmojiPicker({
   return (
     <div
       ref={ref}
-      className="flex items-center gap-1 px-2 py-2 bg-pf-surface border border-pf-border rounded-pf shadow-pf-lg z-10"
+      className="flex items-center gap-1 px-2 py-2 bg-surface border border-default rounded-pf shadow-pf-lg z-10"
       role="toolbar"
       aria-label="Pick a reaction"
     >
@@ -198,7 +198,7 @@ function EmojiPicker({
           type="button"
           variant="ghost"
           onClick={() => { onSelect(emoji); onClose(); }}
-          className="text-base leading-none p-1 rounded hover:bg-pf-elevated transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40"
+          className="text-base leading-none p-1 rounded hover:bg-elevated transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
           aria-label={`React with ${emoji}`}
         >
           {emoji}
@@ -245,10 +245,10 @@ function CommentSection({
   const remaining = commentCount - comments.length;
 
   return (
-    <div className="mt-3 pt-3 border-t border-pf-border-subtle space-y-3">
+    <div className="mt-3 pt-3 border-t border-subtle space-y-3">
       {/* Header */}
-      <div className="flex items-center gap-2 text-xs font-medium text-pf-text-secondary">
-        <MessageCircle className="size-4 text-pf-cyan-400" aria-hidden="true" />
+      <div className="flex items-center gap-2 text-xs font-medium text-secondary">
+        <MessageCircle className="size-4 text-accent-text" aria-hidden="true" />
         <span>Comments ({commentCount})</span>
       </div>
 
@@ -268,16 +268,16 @@ function CommentSection({
               <CommentAvatar initials={comment.authorInitials} />
               <div className="flex-1 min-w-0">
                 <div className="flex items-baseline gap-2 flex-wrap">
-                  <span className="text-xs font-semibold text-pf-text">@{comment.authorUsername}</span>
+                  <span className="text-xs font-semibold text-primary">@{comment.authorUsername}</span>
                   <time
-                    className="text-pf-caption text-pf-text-muted"
+                    className="text-pf-caption text-tertiary"
                     dateTime={comment.createdAt}
                     title={new Date(comment.createdAt).toLocaleString()}
                   >
                     {relativeTime(comment.createdAt)}
                   </time>
                 </div>
-                <p className="text-xs text-pf-text-secondary mt-1 leading-relaxed break-words">
+                <p className="text-xs text-secondary mt-1 leading-relaxed break-words">
                   {comment.body}
                 </p>
                 <Button
@@ -285,10 +285,10 @@ function CommentSection({
                   variant="ghost"
                   onClick={() => onLikeComment(comment.id)}
                   aria-label={comment.userLiked ? 'Unlike comment' : 'Like comment'}
-                  className={`mt-1 flex items-center gap-1 text-pf-caption rounded px-1 py-1 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 ${
+                  className={`mt-1 flex items-center gap-1 text-pf-caption rounded px-1 py-1 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 ${
                     comment.userLiked
-                      ? 'text-pf-cyan-400 bg-pf-cyan-500/10'
-                      : 'text-pf-text-muted hover:text-pf-text-secondary'
+                      ? 'text-accent-text bg-accent/10'
+                      : 'text-tertiary hover:text-secondary'
                   }`}
                 >
                   👍 {comment.likeCount}
@@ -305,7 +305,7 @@ function CommentSection({
           type="button"
           variant="ghost"
           onClick={onLoadMore}
-          className="flex items-center gap-1 text-xs text-pf-cyan-400 hover:text-pf-cyan-300 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40"
+          className="flex items-center gap-1 text-xs text-accent-text hover:text-accent-text transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
           aria-label={`Load ${remaining} more comment${remaining !== 1 ? 's' : ''}`}
         >
           <ChevronDown className="size-4" aria-hidden="true" />
@@ -323,14 +323,14 @@ function CommentSection({
           onKeyDown={handleKeyDown}
           placeholder="Add a comment..."
           aria-label={`Add a comment to post ${itemId}`}
-          className="flex-1 min-w-0 bg-pf-surface border border-pf-border rounded-pf px-3 py-2 text-xs text-pf-text placeholder:text-pf-text-muted focus-visible:outline-none focus-visible:border-pf-cyan-500/60 focus-visible:ring-1 focus-visible:ring-pf-cyan-500/30 transition-colors"
+          className="flex-1 min-w-0 bg-surface border border-default rounded-pf px-3 py-2 text-xs text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:border-accent/60 focus-visible:ring-1 focus-visible:ring-accent/30 transition-colors"
         />
         <Button
           type="button"
           onClick={onSubmit}
           disabled={!commentInput.trim()}
           aria-label="Post comment"
-          className="flex items-center gap-1 px-3 py-2 rounded-pf bg-pf-cyan-500/15 text-pf-cyan-400 border border-pf-cyan-500/30 hover:bg-pf-cyan-500/25 disabled:opacity-40 disabled:cursor-not-allowed text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 shrink-0"
+          className="flex items-center gap-1 px-3 py-2 rounded-pf bg-accent/15 text-accent-text border border-accent/30 hover:bg-accent/25 disabled:opacity-40 disabled:cursor-not-allowed text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 shrink-0"
         >
           <Send className="size-3" aria-hidden="true" />
           Post
@@ -643,15 +643,15 @@ export function Component() {
     <div className="p-6 max-w-2xl mx-auto space-y-6">
       {/* Page header */}
       <div className="flex items-center gap-3">
-        <Users className="size-5 text-pf-cyan-400 shrink-0" aria-hidden="true" />
-        <h1 className="text-2xl font-semibold text-pf-text">Following Feed</h1>
+        <Users className="size-5 text-accent-text shrink-0" aria-hidden="true" />
+        <h1 className="text-2xl font-semibold text-primary">Following Feed</h1>
         {!loading && total > 0 && (
-          <span className="ml-auto text-xs text-pf-text-muted">{total.toLocaleString()} item{total !== 1 ? 's' : ''}</span>
+          <span className="ml-auto text-xs text-tertiary">{total.toLocaleString()} item{total !== 1 ? 's' : ''}</span>
         )}
       </div>
 
       {/* Feed card */}
-      <div className="bg-pf-elevated border border-pf-border rounded-pf-lg overflow-hidden">
+      <div className="bg-elevated border border-default rounded-pf-lg overflow-hidden">
         {loading ? (
           <>
             <SkeletonRow />
@@ -663,16 +663,16 @@ export function Component() {
         ) : items.length === 0 ? (
           /* Empty states */
           <div className="flex flex-col items-center justify-center py-16 px-6 text-center">
-            <Users className="size-10 text-pf-text-muted mb-3" aria-hidden="true" />
+            <Users className="size-10 text-tertiary mb-3" aria-hidden="true" />
             {hasFollows === false ? (
               <>
-                <p className="text-sm font-medium text-pf-text mb-1">You're not following anyone yet</p>
-                <p className="text-xs text-pf-text-muted mb-4">
+                <p className="text-sm font-medium text-primary mb-1">You're not following anyone yet</p>
+                <p className="text-xs text-tertiary mb-4">
                   Follow traders to see their activity here.
                 </p>
                 <Link
                   to="/leaderboard"
-                  className="flex items-center gap-2 px-4 py-2 rounded-pf bg-pf-cyan-500/15 text-pf-cyan-400 border border-pf-cyan-500/30 hover:bg-pf-cyan-500/25 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40"
+                  className="flex items-center gap-2 px-4 py-2 rounded-pf bg-accent/15 text-accent-text border border-accent/30 hover:bg-accent/25 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
                 >
                   <Trophy className="size-4" aria-hidden="true" />
                   Discover traders on the Leaderboard
@@ -680,8 +680,8 @@ export function Component() {
               </>
             ) : (
               <>
-                <p className="text-sm font-medium text-pf-text mb-1">No recent activity</p>
-                <p className="text-xs text-pf-text-muted">
+                <p className="text-sm font-medium text-primary mb-1">No recent activity</p>
+                <p className="text-xs text-tertiary">
                   No recent activity from traders you follow.
                 </p>
               </>
@@ -689,7 +689,7 @@ export function Component() {
           </div>
         ) : (
           /* Feed timeline */
-          <ul className="divide-y divide-pf-border-subtle" role="list">
+          <ul className="divide-y divide-subtle" role="list">
             {items.map(item => {
               const actor = item.actor;
               const displayName = actor.displayName ?? actor.username;
@@ -700,14 +700,14 @@ export function Component() {
               const activeReactions = item.reactions.filter(r => r.count > 0);
 
               return (
-                <li key={item.id} className="px-4 py-4 hover:bg-pf-surface/40 transition-colors">
+                <li key={item.id} className="px-4 py-4 hover:bg-surface/40 transition-colors">
                   {/* Top row: avatar + content */}
                   <div className="flex items-start gap-3">
                     {/* Avatar */}
                     <Link
                       to={`/profile/${actor.username}`}
                       aria-label={`View ${displayName}'s profile`}
-                      className="shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 rounded-pf-full"
+                      className="shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 rounded-pf-full"
                     >
                       {actor.avatarUrl ? (
                         <img
@@ -725,17 +725,17 @@ export function Component() {
                       <div className="flex items-baseline gap-2 flex-wrap">
                         <Link
                           to={`/profile/${actor.username}`}
-                          className="text-sm font-semibold text-pf-text hover:text-pf-cyan-400 transition-colors focus-visible:outline-none focus-visible:underline"
+                          className="text-sm font-semibold text-primary hover:text-accent-text transition-colors focus-visible:outline-none focus-visible:underline"
                         >
                           {displayName}
                         </Link>
-                        <span className="text-xs text-pf-text-muted">@{actor.username}</span>
+                        <span className="text-xs text-tertiary">@{actor.username}</span>
                       </div>
-                      <p className="text-xs text-pf-text-secondary mt-1 leading-relaxed">
+                      <p className="text-xs text-secondary mt-1 leading-relaxed">
                         {activityDescription(item)}
                       </p>
                       <time
-                        className="text-pf-caption text-pf-text-muted mt-1 block"
+                        className="text-pf-caption text-tertiary mt-1 block"
                         dateTime={item.createdAt}
                         title={new Date(item.createdAt).toLocaleString()}
                       >
@@ -754,10 +754,10 @@ export function Component() {
                         onClick={() => handleReact(item.id, r.emoji)}
                         aria-pressed={r.userReacted}
                         aria-label={`${r.emoji} ${r.count} reaction${r.count !== 1 ? 's' : ''}${r.userReacted ? ', you reacted' : ''}`}
-                        className={`flex items-center gap-1 px-2 py-1 rounded-pf-full border text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 ${
+                        className={`flex items-center gap-1 px-2 py-1 rounded-pf-full border text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 ${
                           r.userReacted
-                            ? 'bg-pf-cyan-500/15 border-pf-cyan-500/40 text-pf-cyan-400'
-                            : 'bg-pf-elevated border-pf-border text-pf-text-secondary hover:border-pf-border-strong hover:text-pf-text'
+                            ? 'bg-accent/15 border-accent/40 text-accent-text'
+                            : 'bg-elevated border-default text-secondary hover:border-strong hover:text-primary'
                         }`}
                       >
                         <span aria-hidden="true">{r.emoji}</span>
@@ -779,7 +779,7 @@ export function Component() {
                           onClick={() => setPickerOpen(item.id)}
                           aria-label="Add reaction"
                           aria-expanded={false}
-                          className="flex items-center gap-1 px-2 py-1 rounded-pf-full border border-pf-border text-xs text-pf-text-muted hover:border-pf-border-strong hover:text-pf-text-secondary bg-pf-elevated transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40"
+                          className="flex items-center gap-1 px-2 py-1 rounded-pf-full border border-default text-xs text-tertiary hover:border-strong hover:text-secondary bg-elevated transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
                         >
                           <span aria-hidden="true">+</span>
                           React
@@ -796,10 +796,10 @@ export function Component() {
                       onClick={() => handleToggleComments(item.id, item.commentsLoaded)}
                       aria-expanded={isExpanded}
                       aria-controls={`comments-${item.id}`}
-                      className={`flex items-center gap-2 text-xs transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 rounded ${
+                      className={`flex items-center gap-2 text-xs transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 rounded ${
                         isExpanded
-                          ? 'text-pf-cyan-400'
-                          : 'text-pf-text-muted hover:text-pf-text-secondary'
+                          ? 'text-accent-text'
+                          : 'text-tertiary hover:text-secondary'
                       }`}
                     >
                       <MessageCircle className="size-4" aria-hidden="true" />
@@ -810,12 +810,12 @@ export function Component() {
                       type="button"
                       variant="ghost"
                       onClick={() => handleShare(item.id)}
-                      className="flex items-center gap-2 text-xs text-pf-text-muted hover:text-pf-text-secondary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 rounded"
+                      className="flex items-center gap-2 text-xs text-tertiary hover:text-secondary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 rounded"
                     >
                       <Share2 className="size-4" aria-hidden="true" />
                       Share to profile
                       {item.shareCount > 0 && (
-                        <span className="text-pf-text-muted">({item.shareCount})</span>
+                        <span className="text-tertiary">({item.shareCount})</span>
                       )}
                     </Button>
                   </div>
@@ -853,12 +853,12 @@ export function Component() {
             onClick={handlePrev}
             disabled={page <= 1}
             aria-label="Previous page"
-            className="flex items-center gap-2 px-3 py-2 rounded-pf text-xs font-medium text-pf-text-secondary border border-pf-border hover:border-pf-border-strong hover:text-pf-text disabled:opacity-40 disabled:cursor-not-allowed transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40"
+            className="flex items-center gap-2 px-3 py-2 rounded-pf text-xs font-medium text-secondary border border-default hover:border-strong hover:text-primary disabled:opacity-40 disabled:cursor-not-allowed transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
           >
             <ChevronLeft className="size-4" aria-hidden="true" />
             Previous
           </Button>
-          <span className="text-xs text-pf-text-muted">
+          <span className="text-xs text-tertiary">
             Page {page} of {totalPages}
           </span>
           <Button
@@ -867,7 +867,7 @@ export function Component() {
             onClick={handleNext}
             disabled={page >= totalPages}
             aria-label="Next page"
-            className="flex items-center gap-2 px-3 py-2 rounded-pf text-xs font-medium text-pf-text-secondary border border-pf-border hover:border-pf-border-strong hover:text-pf-text disabled:opacity-40 disabled:cursor-not-allowed transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40"
+            className="flex items-center gap-2 px-3 py-2 rounded-pf text-xs font-medium text-secondary border border-default hover:border-strong hover:text-primary disabled:opacity-40 disabled:cursor-not-allowed transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
           >
             Next
             <ChevronRight className="size-4" aria-hidden="true" />

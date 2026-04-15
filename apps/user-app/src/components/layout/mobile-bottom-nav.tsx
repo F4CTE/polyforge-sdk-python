@@ -28,7 +28,7 @@ export function MobileBottomNav() {
   return (
     <nav
       aria-label="Mobile navigation"
-      className="fixed bottom-0 left-0 right-0 z-50 sm:hidden bg-pf-surface border-t border-pf-border flex items-stretch h-16 pb-safe-area"
+      className="fixed bottom-0 left-0 right-0 z-50 sm:hidden bg-surface border-t border-default flex items-stretch h-16 pb-safe-area"
     >
       {navItems.map((item) => (
         <NavLink
@@ -37,8 +37,8 @@ export function MobileBottomNav() {
           className={({ isActive }) =>
             `flex-1 flex flex-col items-center justify-center gap-1 text-pf-caption font-medium transition-colors duration-pf-fast -mt-px ${
               isActive
-                ? 'text-pf-cyan-400 border-t-2 border-pf-cyan-500'
-                : 'text-pf-text-muted hover:text-pf-text-secondary border-t-2 border-transparent'
+                ? 'text-accent-text border-t-2 border-accent'
+                : 'text-tertiary hover:text-secondary border-t-2 border-transparent'
             }`
           }
           aria-label={item.label}

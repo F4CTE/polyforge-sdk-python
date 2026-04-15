@@ -93,15 +93,15 @@ function getOverallStatus(data: HealthResponse): 'ok' | 'degraded' | 'down' {
 function StatusBadge({ status }: { status: 'UP' | 'DOWN' | 'DEGRADED' | 'UNKNOWN' }) {
   if (status === 'UP') {
     return (
-      <span className="flex items-center gap-2 text-pf-success text-xs font-medium">
-        <span className="animate-pulse bg-pf-success rounded-pf-full w-2 h-2 shrink-0" />
+      <span className="flex items-center gap-2 text-gain text-xs font-medium">
+        <span className="animate-pulse bg-gain rounded-pf-full w-2 h-2 shrink-0" />
         UP
       </span>
     );
   }
   if (status === 'DOWN') {
     return (
-      <span className="flex items-center gap-2 text-pf-danger text-xs font-medium">
+      <span className="flex items-center gap-2 text-loss text-xs font-medium">
         <XCircle size={14} className="shrink-0" />
         DOWN
       </span>
@@ -109,15 +109,15 @@ function StatusBadge({ status }: { status: 'UP' | 'DOWN' | 'DEGRADED' | 'UNKNOWN
   }
   if (status === 'DEGRADED') {
     return (
-      <span className="flex items-center gap-2 text-pf-warning text-xs font-medium">
+      <span className="flex items-center gap-2 text-warning text-xs font-medium">
         <AlertTriangle size={14} className="shrink-0" />
         DEGRADED
       </span>
     );
   }
   return (
-    <span className="flex items-center gap-2 text-pf-text-tertiary text-xs font-medium">
-      <span className="bg-pf-text-tertiary rounded-pf-full w-2 h-2 shrink-0" />
+    <span className="flex items-center gap-2 text-tertiary text-xs font-medium">
+      <span className="bg-tertiary rounded-pf-full w-2 h-2 shrink-0" />
       UNKNOWN
     </span>
   );
@@ -126,19 +126,19 @@ function StatusBadge({ status }: { status: 'UP' | 'DOWN' | 'DEGRADED' | 'UNKNOWN
 function ServiceCard({ service }: { service: ServiceHealth }) {
   const borderColor =
     service.status === 'UP'
-      ? 'border-pf-success/30'
+      ? 'border-gain/30'
       : service.status === 'DOWN'
-        ? 'border-pf-danger/30'
+        ? 'border-loss/30'
         : service.status === 'DEGRADED'
-          ? 'border-pf-warning/30'
-          : 'border-pf-border';
+          ? 'border-warning/30'
+          : 'border-default';
 
   return (
-    <div className={`bg-pf-surface rounded-pf border ${borderColor} p-4 flex flex-col gap-3`}>
+    <div className={`bg-surface rounded-pf border ${borderColor} p-4 flex flex-col gap-3`}>
       <div className="flex items-start justify-between gap-2">
         <div className="flex items-center gap-2 min-w-0">
-          <Server size={15} className="text-pf-text-secondary shrink-0" />
-          <span className="text-sm font-medium text-pf-text truncate">
+          <Server size={15} className="text-secondary shrink-0" />
+          <span className="text-sm font-medium text-primary truncate">
             {formatServiceName(service.name)}
           </span>
         </div>
@@ -147,25 +147,25 @@ function ServiceCard({ service }: { service: ServiceHealth }) {
 
       <div className="grid grid-cols-2 gap-2 text-xs">
         <div>
-          <span className="text-pf-text-tertiary">Latency</span>
-          <div className="text-pf-text font-medium mt-1">
+          <span className="text-tertiary">Latency</span>
+          <div className="text-primary font-medium mt-1">
             {service.latencyMs !== null ? `${service.latencyMs}ms` : '—'}
           </div>
         </div>
         <div>
-          <span className="text-pf-text-tertiary">Uptime</span>
-          <div className="text-pf-text font-medium mt-1">
+          <span className="text-tertiary">Uptime</span>
+          <div className="text-primary font-medium mt-1">
             {formatUptime(service.uptime)}
           </div>
         </div>
       </div>
 
       {service.version && (
-        <div className="text-pf-caption text-pf-text-tertiary">v{service.version}</div>
+        <div className="text-pf-caption text-tertiary">v{service.version}</div>
       )}
 
       {(service.status === 'DOWN' || service.status === 'DEGRADED') && service.errorMessage && (
-        <div className="text-pf-label text-pf-danger leading-snug">{service.errorMessage}</div>
+        <div className="text-pf-label text-loss leading-snug">{service.errorMessage}</div>
       )}
     </div>
   );
@@ -177,34 +177,34 @@ function DbCard({ db }: { db: DbHealth }) {
     : 0;
 
   const connBarColor =
-    connPct >= 90 ? 'bg-pf-danger' : connPct >= 70 ? 'bg-pf-warning' : 'bg-pf-success';
+    connPct >= 90 ? 'bg-loss' : connPct >= 70 ? 'bg-warning' : 'bg-gain';
 
   return (
-    <div className="bg-pf-surface rounded-pf border border-pf-border p-5 flex flex-col gap-4">
+    <div className="bg-surface rounded-pf border border-default p-5 flex flex-col gap-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Database size={16} className="text-pf-text-secondary" />
-          <span className="text-sm font-semibold text-pf-text">Database</span>
+          <Database size={16} className="text-secondary" />
+          <span className="text-sm font-semibold text-primary">Database</span>
         </div>
         <StatusBadge status={db.status} />
       </div>
 
       <div className="grid grid-cols-2 gap-3 text-xs">
         <div>
-          <span className="text-pf-text-tertiary">Latency</span>
-          <div className="text-pf-text font-medium mt-1">
+          <span className="text-tertiary">Latency</span>
+          <div className="text-primary font-medium mt-1">
             {db.latencyMs !== null ? `${db.latencyMs}ms` : '—'}
           </div>
         </div>
         <div>
-          <span className="text-pf-text-tertiary">Migrations Pending</span>
+          <span className="text-tertiary">Migrations Pending</span>
           <div className="mt-1">
             {db.pendingMigrations > 0 ? (
-              <span className="inline-flex items-center px-2 py-1 rounded text-pf-caption font-bold bg-pf-danger/15 text-pf-danger">
+              <span className="inline-flex items-center px-2 py-1 rounded text-pf-caption font-bold bg-loss/15 text-loss">
                 {db.pendingMigrations}
               </span>
             ) : (
-              <span className="text-pf-success font-medium">0</span>
+              <span className="text-gain font-medium">0</span>
             )}
           </div>
         </div>
@@ -212,18 +212,18 @@ function DbCard({ db }: { db: DbHealth }) {
 
       <div>
         <div className="flex items-center justify-between text-xs mb-2">
-          <span className="text-pf-text-tertiary">Connections</span>
-          <span className="text-pf-text font-medium">
+          <span className="text-tertiary">Connections</span>
+          <span className="text-primary font-medium">
             {db.activeConnections} / {db.maxConnections}
           </span>
         </div>
-        <div className="h-2 bg-pf-elevated rounded-pf-full overflow-hidden">
+        <div className="h-2 bg-elevated rounded-pf-full overflow-hidden">
           <div
             className={`h-full rounded-pf-full transition-all duration-pf-slow ${connBarColor}`}
             style={{ width: `${connPct}%` }}
           />
         </div>
-        <div className="text-pf-caption text-pf-text-tertiary mt-1">{connPct}% utilized</div>
+        <div className="text-pf-caption text-tertiary mt-1">{connPct}% utilized</div>
       </div>
     </div>
   );
@@ -231,25 +231,25 @@ function DbCard({ db }: { db: DbHealth }) {
 
 function RedisCard({ db }: { db: DbHealth }) {
   return (
-    <div className="bg-pf-surface rounded-pf border border-pf-border p-5 flex flex-col gap-4">
+    <div className="bg-surface rounded-pf border border-default p-5 flex flex-col gap-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Database size={16} className="text-pf-text-secondary" />
-          <span className="text-sm font-semibold text-pf-text">Redis</span>
+          <Database size={16} className="text-secondary" />
+          <span className="text-sm font-semibold text-primary">Redis</span>
         </div>
         <StatusBadge status={db.redisStatus} />
       </div>
 
       <div className="grid grid-cols-2 gap-3 text-xs">
         <div>
-          <span className="text-pf-text-tertiary">Latency</span>
-          <div className="text-pf-text font-medium mt-1">
+          <span className="text-tertiary">Latency</span>
+          <div className="text-primary font-medium mt-1">
             {db.redisLatencyMs !== null ? `${db.redisLatencyMs}ms` : '—'}
           </div>
         </div>
         <div>
-          <span className="text-pf-text-tertiary">Memory</span>
-          <div className="text-pf-text font-medium mt-1">
+          <span className="text-tertiary">Memory</span>
+          <div className="text-primary font-medium mt-1">
             {db.redisMemoryMb !== null ? `${db.redisMemoryMb.toFixed(1)} MB` : '—'}
           </div>
         </div>
@@ -261,10 +261,10 @@ function RedisCard({ db }: { db: DbHealth }) {
 function QueueDepthCell({ depth }: { depth: number }) {
   const colorClass =
     depth > 1000
-      ? 'text-pf-danger bg-pf-danger/10'
+      ? 'text-loss bg-loss/10'
       : depth >= 100
-        ? 'text-pf-warning bg-pf-warning/10'
-        : 'text-pf-success bg-pf-success/10';
+        ? 'text-warning bg-warning/10'
+        : 'text-gain bg-gain/10';
 
   return (
     <span className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium ${colorClass}`}>
@@ -310,17 +310,17 @@ export function Component() {
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-3">
-          <Activity size={22} className="text-pf-cyan-500 shrink-0" />
+          <Activity size={22} className="text-accent shrink-0" />
           <div>
-            <h1 className="text-xl font-semibold text-pf-text">System Health</h1>
+            <h1 className="text-xl font-semibold text-primary">System Health</h1>
             {lastUpdated && (
-              <p className="text-xs text-pf-text-tertiary mt-1">
+              <p className="text-xs text-tertiary mt-1">
                 Last updated {lastUpdated.toLocaleTimeString()}
               </p>
             )}
           </div>
           {refreshing && (
-            <Loader2 size={16} className="animate-spin text-pf-text-tertiary shrink-0" />
+            <Loader2 size={16} className="animate-spin text-tertiary shrink-0" />
           )}
         </div>
         <Button
@@ -328,7 +328,7 @@ export function Component() {
           variant="default"
           onClick={() => fetchHealth(true)}
           disabled={refreshing}
-          className="flex items-center gap-2 px-3 py-2 rounded-pf-sm border border-pf-border bg-pf-surface text-sm text-pf-text hover:bg-pf-elevated transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className="flex items-center gap-2 px-3 py-2 rounded-pf-sm border border-default bg-surface text-sm text-primary hover:bg-elevated transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <RefreshCw size={14} className={refreshing ? 'animate-spin' : ''} />
           Refresh Now
@@ -337,7 +337,7 @@ export function Component() {
 
       {/* Error state */}
       {error && !data && (
-        <div className="flex items-center gap-3 px-4 py-3 rounded-pf border border-pf-danger/30 bg-pf-danger/10 text-pf-danger text-sm">
+        <div className="flex items-center gap-3 px-4 py-3 rounded-pf border border-loss/30 bg-loss/10 text-loss text-sm">
           <XCircle size={16} className="shrink-0" />
           {error}
         </div>
@@ -347,7 +347,7 @@ export function Component() {
       {loading && !data && (
         <div className="grid grid-cols-2 md:grid-cols-2 xl:grid-cols-4 gap-4">
           {Array.from({ length: 8 }).map((_, i) => (
-            <div key={i} className="bg-pf-surface rounded-pf border border-pf-border p-4 h-32 animate-pulse" />
+            <div key={i} className="bg-surface rounded-pf border border-default p-4 h-32 animate-pulse" />
           ))}
         </div>
       )}
@@ -356,19 +356,19 @@ export function Component() {
         <>
           {/* Overall status banner */}
           {overallStatus === 'ok' && (
-            <div className="flex items-center gap-3 px-4 py-3 rounded-pf border border-pf-success/30 bg-pf-success/10 text-pf-success text-sm font-medium">
+            <div className="flex items-center gap-3 px-4 py-3 rounded-pf border border-gain/30 bg-gain/10 text-gain text-sm font-medium">
               <CheckCircle2 size={16} className="shrink-0" />
               All systems operational
             </div>
           )}
           {overallStatus === 'degraded' && (
-            <div className="flex items-center gap-3 px-4 py-3 rounded-pf border border-pf-warning/30 bg-pf-warning/10 text-pf-warning text-sm font-medium">
+            <div className="flex items-center gap-3 px-4 py-3 rounded-pf border border-warning/30 bg-warning/10 text-warning text-sm font-medium">
               <AlertTriangle size={16} className="shrink-0" />
               Degraded performance detected
             </div>
           )}
           {overallStatus === 'down' && (
-            <div className="flex items-center gap-3 px-4 py-3 rounded-pf border border-pf-danger/30 bg-pf-danger/10 text-pf-danger text-sm font-medium">
+            <div className="flex items-center gap-3 px-4 py-3 rounded-pf border border-loss/30 bg-loss/10 text-loss text-sm font-medium">
               <XCircle size={16} className="shrink-0" />
               System outage detected
             </div>
@@ -376,7 +376,7 @@ export function Component() {
 
           {/* Section 1: Services */}
           <section>
-            <h2 className="text-sm font-semibold text-pf-text-secondary uppercase tracking-wider mb-3">
+            <h2 className="text-sm font-semibold text-secondary uppercase tracking-wider mb-3">
               Services
             </h2>
             <div className="grid grid-cols-2 md:grid-cols-2 xl:grid-cols-4 gap-4">
@@ -389,26 +389,26 @@ export function Component() {
           {/* Section 2: Redis Streams */}
           {data.queues.length > 0 && (
             <section>
-              <h2 className="text-sm font-semibold text-pf-text-secondary uppercase tracking-wider mb-3">
+              <h2 className="text-sm font-semibold text-secondary uppercase tracking-wider mb-3">
                 Redis Streams
               </h2>
-              <div className="bg-pf-surface rounded-pf border border-pf-border overflow-hidden">
+              <div className="bg-surface rounded-pf border border-default overflow-hidden">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="border-b border-pf-border bg-pf-elevated">
-                      <th className="text-left px-4 py-3 text-xs font-semibold text-pf-text-secondary uppercase tracking-wider">
+                    <tr className="border-b border-default bg-elevated">
+                      <th className="text-left px-4 py-3 text-xs font-semibold text-secondary uppercase tracking-wider">
                         Stream Name
                       </th>
-                      <th className="text-left px-4 py-3 text-xs font-semibold text-pf-text-secondary uppercase tracking-wider">
+                      <th className="text-left px-4 py-3 text-xs font-semibold text-secondary uppercase tracking-wider">
                         Depth
                       </th>
-                      <th className="text-left px-4 py-3 text-xs font-semibold text-pf-text-secondary uppercase tracking-wider hidden sm:table-cell">
+                      <th className="text-left px-4 py-3 text-xs font-semibold text-secondary uppercase tracking-wider hidden sm:table-cell">
                         Processed / min
                       </th>
-                      <th className="text-left px-4 py-3 text-xs font-semibold text-pf-text-secondary uppercase tracking-wider hidden sm:table-cell">
+                      <th className="text-left px-4 py-3 text-xs font-semibold text-secondary uppercase tracking-wider hidden sm:table-cell">
                         Consumers
                       </th>
-                      <th className="text-left px-4 py-3 text-xs font-semibold text-pf-text-secondary uppercase tracking-wider hidden md:table-cell">
+                      <th className="text-left px-4 py-3 text-xs font-semibold text-secondary uppercase tracking-wider hidden md:table-cell">
                         Oldest Message
                       </th>
                     </tr>
@@ -417,21 +417,21 @@ export function Component() {
                     {data.queues.map((queue, idx) => (
                       <tr
                         key={queue.name}
-                        className={`border-b border-pf-border last:border-0 ${idx % 2 === 1 ? 'bg-pf-elevated/30' : ''}`}
+                        className={`border-b border-default last:border-0 ${idx % 2 === 1 ? 'bg-elevated/30' : ''}`}
                       >
-                        <td className="px-4 py-3 font-mono text-xs text-pf-text">
+                        <td className="px-4 py-3 font-mono text-xs text-primary">
                           {queue.name}
                         </td>
                         <td className="px-4 py-3">
                           <QueueDepthCell depth={queue.depth} />
                         </td>
-                        <td className="px-4 py-3 text-pf-text text-xs hidden sm:table-cell">
+                        <td className="px-4 py-3 text-primary text-xs hidden sm:table-cell">
                           {queue.processedPerMin.toLocaleString()}
                         </td>
-                        <td className="px-4 py-3 text-pf-text text-xs hidden sm:table-cell">
+                        <td className="px-4 py-3 text-primary text-xs hidden sm:table-cell">
                           {queue.consumerCount}
                         </td>
-                        <td className="px-4 py-3 text-pf-text-secondary text-xs hidden md:table-cell">
+                        <td className="px-4 py-3 text-secondary text-xs hidden md:table-cell">
                           {formatAge(queue.oldestMessageAge)}
                         </td>
                       </tr>
@@ -444,7 +444,7 @@ export function Component() {
 
           {/* Section 3: Database & Redis */}
           <section>
-            <h2 className="text-sm font-semibold text-pf-text-secondary uppercase tracking-wider mb-3">
+            <h2 className="text-sm font-semibold text-secondary uppercase tracking-wider mb-3">
               Infrastructure
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -455,10 +455,10 @@ export function Component() {
 
           {/* Section 4: 24h Uptime Summary */}
           <section>
-            <h2 className="text-sm font-semibold text-pf-text-secondary uppercase tracking-wider mb-3">
+            <h2 className="text-sm font-semibold text-secondary uppercase tracking-wider mb-3">
               24h Uptime Summary
             </h2>
-            <div className="bg-pf-surface rounded-pf border border-pf-border divide-y divide-pf-border">
+            <div className="bg-surface rounded-pf border border-default divide-y divide-default">
               {data.services.map((service) => {
                 const uptimePct =
                   service.uptime !== null
@@ -473,25 +473,25 @@ export function Component() {
                       <span
                         className={`w-2 h-2 rounded-pf-full shrink-0 ${
                           service.status === 'UP'
-                            ? 'bg-pf-success'
+                            ? 'bg-gain'
                             : service.status === 'DOWN'
-                              ? 'bg-pf-danger'
+                              ? 'bg-loss'
                               : service.status === 'DEGRADED'
-                                ? 'bg-pf-warning'
-                                : 'bg-pf-text-tertiary'
+                                ? 'bg-warning'
+                                : 'bg-tertiary'
                         }`}
                       />
-                      <span className="text-sm text-pf-text">
+                      <span className="text-sm text-primary">
                         {formatServiceName(service.name)}
                       </span>
                     </div>
                     <span
                       className={`text-sm font-medium ${
                         uptimePct !== null && parseFloat(uptimePct) >= 99.9
-                          ? 'text-pf-success'
+                          ? 'text-gain'
                           : uptimePct !== null && parseFloat(uptimePct) >= 95
-                            ? 'text-pf-warning'
-                            : 'text-pf-danger'
+                            ? 'text-warning'
+                            : 'text-loss'
                       }`}
                     >
                       {uptimePct !== null ? `${uptimePct}% uptime` : 'N/A'}

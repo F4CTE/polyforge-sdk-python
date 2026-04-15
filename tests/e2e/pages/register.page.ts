@@ -25,8 +25,8 @@ export class RegisterPage {
         // Standard HTML checkbox with id="tos"
         this.tosCheckbox     = page.locator('#tos');
         this.submit          = page.locator('button', { hasText: 'Create account' });
-        // Error alert: styled div with AlertCircle icon
-        this.error           = page.locator('.bg-pf-danger\\/10');
+        // Error alert: styled div with AlertCircle icon (token migration: bg-pf-danger → bg-loss)
+        this.error           = page.locator('div[role="alert"].bg-loss\\/10');
     }
 
     async goto(): Promise<void> {

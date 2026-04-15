@@ -27,16 +27,16 @@ interface Opportunity {
 
 function marginColor(pct: string): string {
   const n = parseFloat(pct);
-  if (n >= 5) return 'text-pf-success';
-  if (n >= 2) return 'text-pf-warning';
-  return 'text-pf-text-muted';
+  if (n >= 5) return 'text-gain';
+  if (n >= 2) return 'text-warning';
+  return 'text-tertiary';
 }
 
 function marginBg(pct: string): string {
   const n = parseFloat(pct);
-  if (n >= 5) return 'bg-pf-success/10 border-pf-success/20';
-  if (n >= 2) return 'bg-pf-warning/10 border-pf-warning/20';
-  return 'bg-pf-surface border-pf-border';
+  if (n >= 5) return 'bg-gain/10 border-gain/20';
+  if (n >= 2) return 'bg-warning/10 border-warning/20';
+  return 'bg-surface border-default';
 }
 
 function formatDate(iso: string | null): string {
@@ -118,11 +118,11 @@ export function Component() {
       {/* Header */}
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold text-pf-text flex items-center gap-2">
-            <TrendingDown className="size-6 text-pf-success" />
+          <h1 className="text-2xl font-semibold text-primary flex items-center gap-2">
+            <TrendingDown className="size-6 text-gain" />
             Merge Arbitrage Scanner
           </h1>
-          <p className="text-sm text-pf-text-secondary mt-1">
+          <p className="text-sm text-secondary mt-1">
             Markets where YES + NO prices sum to less than $1.00 — buy both tokens and lock in
             risk-free profit on resolution.
           </p>
@@ -131,7 +131,7 @@ export function Component() {
           type="button"
           onClick={load}
           disabled={loading}
-          className="flex items-center gap-2 px-3 py-2 rounded-pf bg-pf-elevated border border-pf-border text-sm text-pf-text-secondary hover:text-pf-text hover:border-pf-border-strong transition-colors disabled:opacity-50"
+          className="flex items-center gap-2 px-3 py-2 rounded-pf bg-elevated border border-default text-sm text-secondary hover:text-primary hover:border-strong transition-colors disabled:opacity-50"
         >
           {loading ? <Loader2 className="size-4 animate-spin" /> : <RefreshCw className="size-4" />}
           Refresh
@@ -139,20 +139,20 @@ export function Component() {
       </div>
 
       {/* How it works */}
-      <div className="flex items-start gap-3 p-4 rounded-pf-lg bg-pf-surface border border-pf-border">
-        <Info className="size-4 text-pf-cyan-400 shrink-0 mt-1" />
-        <p className="text-xs text-pf-text-secondary leading-relaxed">
-          <span className="text-pf-text font-medium">How merge arbitrage works: </span>
+      <div className="flex items-start gap-3 p-4 rounded-pf-lg bg-surface border border-default">
+        <Info className="size-4 text-accent-text shrink-0 mt-1" />
+        <p className="text-xs text-secondary leading-relaxed">
+          <span className="text-primary font-medium">How merge arbitrage works: </span>
           In a binary market, YES + NO = $1.00 at resolution. If the live prices sum to less than $1.00,
           you can buy both tokens at a discount and receive $1.00 back regardless of the outcome.
-          Profit = <span className="font-mono text-pf-success">$1.00 − (YES price + NO price)</span> per share,
+          Profit = <span className="font-mono text-gain">$1.00 − (YES price + NO price)</span> per share,
           minus CLOB trading fees (~0.5–1%).
         </p>
       </div>
 
       {/* Filter */}
       <div className="flex items-center gap-4">
-        <span className="text-xs text-pf-text-secondary whitespace-nowrap">Min margin:</span>
+        <span className="text-xs text-secondary whitespace-nowrap">Min margin:</span>
         {[0.5, 1, 2, 5].map(v => (
           <Button
             key={v}
@@ -161,14 +161,14 @@ export function Component() {
             onClick={() => setMinMargin(v)}
             className={`px-3 py-1 rounded-pf-full text-xs font-medium border transition-colors ${
               minMargin === v
-                ? 'bg-pf-cyan-500/15 text-pf-cyan-400 border-pf-cyan-500/30'
-                : 'bg-pf-elevated text-pf-text-secondary border-pf-border hover:border-pf-border-strong'
+                ? 'bg-accent/15 text-accent-text border-accent/30'
+                : 'bg-elevated text-secondary border-default hover:border-strong'
             }`}
           >
             {v}%+
           </Button>
         ))}
-        <span className="ml-auto text-xs text-pf-text-muted">
+        <span className="ml-auto text-xs text-tertiary">
           {loading ? 'Scanning…' : `${opportunities.length} opportunit${opportunities.length !== 1 ? 'ies' : 'y'} found`}
         </span>
       </div>
@@ -177,58 +177,58 @@ export function Component() {
       {loading ? (
         <div className="space-y-2">
           {[1, 2, 3, 4, 5].map(i => (
-            <div key={i} className="h-16 bg-pf-elevated border border-pf-border rounded-pf-lg animate-pulse" />
+            <div key={i} className="h-16 bg-elevated border border-default rounded-pf-lg animate-pulse" />
           ))}
         </div>
       ) : opportunities.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-center">
-          <AlertTriangle className="size-10 text-pf-text-muted mb-3" />
-          <p className="text-pf-text-secondary text-sm">No arbitrage opportunities at the {minMargin}%+ threshold right now.</p>
-          <p className="text-pf-text-muted text-xs mt-1">Markets are efficiently priced. Lower the threshold or check back shortly.</p>
+          <AlertTriangle className="size-10 text-tertiary mb-3" />
+          <p className="text-secondary text-sm">No arbitrage opportunities at the {minMargin}%+ threshold right now.</p>
+          <p className="text-tertiary text-xs mt-1">Markets are efficiently priced. Lower the threshold or check back shortly.</p>
         </div>
       ) : (
-        <div className="bg-pf-elevated border border-pf-border rounded-pf-lg overflow-hidden">
+        <div className="bg-elevated border border-default rounded-pf-lg overflow-hidden">
           {/* Header row */}
-          <div className="grid grid-cols-[1fr_auto_auto_auto_auto_auto] gap-4 px-4 py-2 border-b border-pf-border bg-pf-surface">
-            <span className="text-pf-caption font-medium text-pf-text-muted uppercase tracking-wider">Market</span>
-            <span className="text-pf-caption font-medium text-pf-text-muted uppercase tracking-wider text-right">YES</span>
-            <span className="text-pf-caption font-medium text-pf-text-muted uppercase tracking-wider text-right">NO</span>
-            <span className="text-pf-caption font-medium text-pf-text-muted uppercase tracking-wider text-right">Sum</span>
-            <span className="text-pf-caption font-medium text-pf-text-muted uppercase tracking-wider text-right">Margin</span>
-            <span className="text-pf-caption font-medium text-pf-text-muted uppercase tracking-wider text-right">Action</span>
+          <div className="grid grid-cols-[1fr_auto_auto_auto_auto_auto] gap-4 px-4 py-2 border-b border-default bg-surface">
+            <span className="text-pf-caption font-medium text-tertiary uppercase tracking-wider">Market</span>
+            <span className="text-pf-caption font-medium text-tertiary uppercase tracking-wider text-right">YES</span>
+            <span className="text-pf-caption font-medium text-tertiary uppercase tracking-wider text-right">NO</span>
+            <span className="text-pf-caption font-medium text-tertiary uppercase tracking-wider text-right">Sum</span>
+            <span className="text-pf-caption font-medium text-tertiary uppercase tracking-wider text-right">Margin</span>
+            <span className="text-pf-caption font-medium text-tertiary uppercase tracking-wider text-right">Action</span>
           </div>
 
           {opportunities.map((opp) => (
             <div
               key={opp.marketId}
-              className="grid grid-cols-[1fr_auto_auto_auto_auto_auto] gap-4 items-center px-4 py-3 border-b border-pf-border/50 last:border-b-0 hover:bg-pf-surface/50 transition-colors"
+              className="grid grid-cols-[1fr_auto_auto_auto_auto_auto] gap-4 items-center px-4 py-3 border-b border-default/50 last:border-b-0 hover:bg-surface/50 transition-colors"
             >
               {/* Market */}
               <div className="min-w-0">
                 <Link
                   to={`/markets/${opp.marketId}`}
-                  className="text-sm text-pf-text hover:text-pf-cyan-400 transition-colors line-clamp-1"
+                  className="text-sm text-primary hover:text-accent-text transition-colors line-clamp-1"
                 >
                   {opp.marketTitle}
                 </Link>
                 <div className="flex items-center gap-2 mt-1">
                   {opp.category && (
-                    <span className="text-pf-caption text-pf-text-muted">{opp.category}</span>
+                    <span className="text-pf-caption text-tertiary">{opp.category}</span>
                   )}
                   {opp.endDate && (
-                    <span className="text-pf-caption text-pf-text-muted">· Closes {formatDate(opp.endDate)}</span>
+                    <span className="text-pf-caption text-tertiary">· Closes {formatDate(opp.endDate)}</span>
                   )}
                 </div>
               </div>
 
               {/* YES */}
-              <span className="font-mono text-sm text-pf-text text-right">${opp.yesPrice}</span>
+              <span className="font-mono text-sm text-primary text-right">${opp.yesPrice}</span>
 
               {/* NO */}
-              <span className="font-mono text-sm text-pf-text text-right">${opp.noPrice}</span>
+              <span className="font-mono text-sm text-primary text-right">${opp.noPrice}</span>
 
               {/* Sum */}
-              <span className="font-mono text-sm text-pf-text-muted text-right">${opp.sum}</span>
+              <span className="font-mono text-sm text-tertiary text-right">${opp.sum}</span>
 
               {/* Margin */}
               <span className={`font-mono text-sm font-semibold text-right ${marginColor(opp.marginPct)}`}>
@@ -241,7 +241,7 @@ export function Component() {
                 variant="success"
                 onClick={() => executeArbitrage(opp)}
                 disabled={executing === opp.marketId}
-                className="flex items-center gap-2 px-3 py-2 rounded-pf bg-pf-success text-pf-text-contrast text-xs font-medium hover:bg-pf-success/80 disabled:opacity-50 transition-colors whitespace-nowrap"
+                className="flex items-center gap-2 px-3 py-2 rounded-pf bg-gain text-inverse text-xs font-medium hover:bg-gain/80 disabled:opacity-50 transition-colors whitespace-nowrap"
               >
                 {executing === opp.marketId
                   ? <Loader2 className="size-3 animate-spin" />
@@ -254,7 +254,7 @@ export function Component() {
         </div>
       )}
 
-      <p className="text-pf-caption text-pf-text-muted text-center">
+      <p className="text-pf-caption text-tertiary text-center">
         Prices from live Redis cache (10 s TTL). Always verify on-chain before executing large positions.
         Arbitrage profit is not guaranteed if prices move between quote and fill.
       </p>

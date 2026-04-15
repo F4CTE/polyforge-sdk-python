@@ -96,15 +96,15 @@ export function Component() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <Link to="/settings" className="p-2 rounded-pf text-pf-text-muted hover:text-pf-text hover:bg-pf-elevated focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 transition-colors" aria-label="Back to settings">
+          <Link to="/settings" className="p-2 rounded-pf text-tertiary hover:text-primary hover:bg-elevated focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 transition-colors" aria-label="Back to settings">
             <ArrowLeft className="size-4" aria-hidden="true" />
           </Link>
-          <h1 className="text-2xl font-semibold text-pf-text">Trading Account</h1>
+          <h1 className="text-2xl font-semibold text-primary">Trading Account</h1>
         </div>
         <span data-testid="trading-status" className={`flex items-center gap-2 px-3 py-2 rounded-pf-full text-xs font-medium border ${
           isConnected
-            ? 'bg-pf-success/10 text-pf-success border-pf-success/20'
-            : 'bg-pf-overlay text-pf-text-muted border-pf-border'
+            ? 'bg-gain/10 text-gain border-gain/20'
+            : 'bg-overlay text-tertiary border-default'
         }`}>
           {isConnected ? <CheckCircle className="size-4" /> : <XCircle className="size-4" />}
           {isConnected ? 'Connected' : 'Not Connected'}
@@ -112,11 +112,11 @@ export function Component() {
       </div>
 
       {/* Credentials panel */}
-      <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-6 space-y-5">
+      <div className="bg-elevated border border-default rounded-pf-lg p-6 space-y-5">
         {isConnected ? (
           <>
-            <h2 className="text-sm font-semibold text-pf-text uppercase tracking-wider">Polymarket Credentials</h2>
-            <p className="text-sm text-pf-text-secondary">
+            <h2 className="text-sm font-semibold text-primary uppercase tracking-wider">Polymarket Credentials</h2>
+            <p className="text-sm text-secondary">
               Your Polymarket account is connected. You can disconnect it at any time -- your strategies will stop trading until you reconnect.
             </p>
             <Button type="button" variant="danger" onClick={deleteCredentials} disabled={deleting} className="flex items-center gap-2">
@@ -126,13 +126,13 @@ export function Component() {
           </>
         ) : (
           <>
-            <h2 className="text-sm font-semibold text-pf-text uppercase tracking-wider">Import Polymarket Credentials</h2>
-            <p className="text-sm text-pf-text-secondary">
+            <h2 className="text-sm font-semibold text-primary uppercase tracking-wider">Import Polymarket Credentials</h2>
+            <p className="text-sm text-secondary">
               Enter your Polymarket API credentials to enable live trading. These are encrypted at rest.
             </p>
             <div>
-              <label htmlFor="trading-private-key" className="text-xs text-pf-text-secondary mb-2 block">
-                Private Key <span className="text-pf-danger">*</span>
+              <label htmlFor="trading-private-key" className="text-xs text-secondary mb-2 block">
+                Private Key <span className="text-loss">*</span>
               </label>
               <div className="relative">
                 <Input id="trading-private-key" type={showPrivateKey ? 'text' : 'password'} value={privateKey} onChange={e => setPrivateKey(e.target.value)} placeholder="0x..." aria-required="true" className="w-full pr-10 font-mono" />
@@ -142,14 +142,14 @@ export function Component() {
               </div>
             </div>
             <div>
-              <label htmlFor="trading-api-key" className="text-xs text-pf-text-secondary mb-2 block">
-                API Key <span className="text-pf-danger">*</span>
+              <label htmlFor="trading-api-key" className="text-xs text-secondary mb-2 block">
+                API Key <span className="text-loss">*</span>
               </label>
               <Input id="trading-api-key" type="text" value={apiKey} onChange={e => setApiKey(e.target.value)} placeholder="API Key" aria-required="true" className="w-full" />
             </div>
             <div>
-              <label htmlFor="trading-api-secret" className="text-xs text-pf-text-secondary mb-2 block">
-                API Secret <span className="text-pf-danger">*</span>
+              <label htmlFor="trading-api-secret" className="text-xs text-secondary mb-2 block">
+                API Secret <span className="text-loss">*</span>
               </label>
               <div className="relative">
                 <Input id="trading-api-secret" type={showApiSecret ? 'text' : 'password'} value={apiSecret} onChange={e => setApiSecret(e.target.value)} placeholder="API Secret" aria-required="true" className="w-full pr-10" />
@@ -159,8 +159,8 @@ export function Component() {
               </div>
             </div>
             <div>
-              <label htmlFor="trading-api-passphrase" className="text-xs text-pf-text-secondary mb-2 block">
-                API Passphrase <span className="text-pf-danger">*</span>
+              <label htmlFor="trading-api-passphrase" className="text-xs text-secondary mb-2 block">
+                API Passphrase <span className="text-loss">*</span>
               </label>
               <div className="relative">
                 <Input id="trading-api-passphrase" type={showPassphrase ? 'text' : 'password'} value={apiPassphrase} onChange={e => setApiPassphrase(e.target.value)} placeholder="Passphrase" aria-required="true" className="w-full pr-10" />
@@ -170,8 +170,8 @@ export function Component() {
               </div>
             </div>
             <div>
-              <label htmlFor="trading-safe-address" className="text-xs text-pf-text-secondary mb-2 block">
-                Safe Address <span className="text-pf-text-muted text-pf-caption">(optional)</span>
+              <label htmlFor="trading-safe-address" className="text-xs text-secondary mb-2 block">
+                Safe Address <span className="text-tertiary text-pf-caption">(optional)</span>
               </label>
               <Input id="trading-safe-address" type="text" value={safeAddress} onChange={e => setSafeAddress(e.target.value)} placeholder="0x..." className="w-full font-mono" />
             </div>
@@ -184,22 +184,22 @@ export function Component() {
       </div>
 
       {/* Bot link code */}
-      <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-6 space-y-4">
-        <h2 className="text-sm font-semibold text-pf-text uppercase tracking-wider">Bot Link Code</h2>
-        <p className="text-sm text-pf-text-secondary">
+      <div className="bg-elevated border border-default rounded-pf-lg p-6 space-y-4">
+        <h2 className="text-sm font-semibold text-primary uppercase tracking-wider">Bot Link Code</h2>
+        <p className="text-sm text-secondary">
           Generate a one-time code to link the PolyForge Telegram bot to your account. The code expires after 10 minutes.
         </p>
 
         {botCode && (
-          <div className="flex items-center gap-3 bg-pf-surface rounded-pf p-3 border border-pf-border">
-            <code className="flex-1 font-mono text-lg text-pf-text tracking-wider">{botCode}</code>
+          <div className="flex items-center gap-3 bg-surface rounded-pf p-3 border border-default">
+            <code className="flex-1 font-mono text-lg text-primary tracking-wider">{botCode}</code>
             <Button type="button" variant="ghost" size="icon-sm" onClick={copyBotCode} aria-label="Copy bot code">
               <Copy className="size-4" />
             </Button>
           </div>
         )}
         {botCodeExpiry && (
-          <p className="text-xs text-pf-text-muted">Expires: <span className="font-mono">{botCodeExpiry}</span></p>
+          <p className="text-xs text-tertiary">Expires: <span className="font-mono">{botCodeExpiry}</span></p>
         )}
 
         <Button type="button" variant="secondary" onClick={generateBotCode} disabled={botCodeLoading} className="flex items-center gap-2">

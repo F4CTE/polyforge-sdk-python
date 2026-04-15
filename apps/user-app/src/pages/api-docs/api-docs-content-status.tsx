@@ -43,22 +43,22 @@ function formatTimestamp(iso: string): string {
 
 function StatusDot({ ok }: { ok: boolean }) {
   return (
-    <span className={`inline-flex size-2 rounded-pf-full shrink-0 ${ok ? 'bg-pf-success' : 'bg-pf-danger'}`} />
+    <span className={`inline-flex size-2 rounded-pf-full shrink-0 ${ok ? 'bg-gain' : 'bg-loss'}`} />
   );
 }
 
 function ServiceCard({ svc }: { svc: ServiceEntry }) {
   return (
-    <div className="flex items-center justify-between px-4 py-3 bg-pf-elevated border border-pf-border rounded-pf-lg hover:border-pf-border-strong transition-colors">
+    <div className="flex items-center justify-between px-4 py-3 bg-elevated border border-default rounded-pf-lg hover:border-strong transition-colors">
       <div className="flex items-center gap-3">
         <StatusDot ok={svc.ok} />
-        <span className="text-sm text-pf-text">{svc.label}</span>
+        <span className="text-sm text-primary">{svc.label}</span>
       </div>
       <div className="flex items-center gap-3">
         {svc.latencyMs !== null && (
-          <span className="text-xs text-pf-text-muted font-mono">{svc.latencyMs}ms</span>
+          <span className="text-xs text-tertiary font-mono">{svc.latencyMs}ms</span>
         )}
-        <span className={`text-xs font-medium ${svc.ok ? 'text-pf-success' : 'text-pf-danger'}`}>
+        <span className={`text-xs font-medium ${svc.ok ? 'text-gain' : 'text-loss'}`}>
           {svc.ok ? 'Operational' : 'Down'}
         </span>
       </div>
@@ -114,19 +114,19 @@ export function StatusSection() {
       {!loading && !error && data && (
         <div className={`flex items-center justify-between px-4 py-3 rounded-pf-lg border ${
           allOk
-            ? 'bg-pf-success/5 border-pf-success/20'
-            : 'bg-pf-danger/5 border-pf-danger/20'
+            ? 'bg-gain/5 border-gain/20'
+            : 'bg-loss/5 border-loss/20'
         }`}>
           <div className="flex items-center gap-3">
             {allOk
-              ? <CheckCircle2 className="size-4 text-pf-success" />
-              : <AlertCircle  className="size-4 text-pf-danger" />
+              ? <CheckCircle2 className="size-4 text-gain" />
+              : <AlertCircle  className="size-4 text-loss" />
             }
-            <span className={`text-sm font-semibold ${allOk ? 'text-pf-success' : 'text-pf-danger'}`}>
+            <span className={`text-sm font-semibold ${allOk ? 'text-gain' : 'text-loss'}`}>
               {allOk ? 'All systems operational' : `${totalCount - totalOk} service${totalCount - totalOk !== 1 ? 's' : ''} degraded`}
             </span>
           </div>
-          <div className="flex items-center gap-4 text-xs text-pf-text-muted">
+          <div className="flex items-center gap-4 text-xs text-tertiary">
             <span className="flex items-center gap-1">
               <Clock className="size-3" />
               Uptime {formatUptime(data.uptime)}
@@ -137,16 +137,16 @@ export function StatusSection() {
       )}
 
       {loading && (
-        <div className="flex items-center justify-center h-32 text-pf-text-muted">
+        <div className="flex items-center justify-center h-32 text-tertiary">
           <RefreshCw className="size-4 animate-spin mr-2 opacity-50" />
           <span className="text-sm">Checking services…</span>
         </div>
       )}
 
       {!loading && error && (
-        <div className="flex items-center gap-2 px-4 py-3 bg-pf-danger/5 border border-pf-danger/20 rounded-pf-lg">
-          <XCircle className="size-4 text-pf-danger shrink-0" />
-          <span className="text-sm text-pf-danger">{error}</span>
+        <div className="flex items-center gap-2 px-4 py-3 bg-loss/5 border border-loss/20 rounded-pf-lg">
+          <XCircle className="size-4 text-loss shrink-0" />
+          <span className="text-sm text-loss">{error}</span>
         </div>
       )}
 
@@ -160,7 +160,7 @@ export function StatusSection() {
       )}
 
       {/* Footer */}
-      <div className="flex items-center justify-between text-xs text-pf-text-muted pt-1">
+      <div className="flex items-center justify-between text-xs text-tertiary pt-1">
         <span>
           {lastChecked ? `Last checked ${formatTimestamp(lastChecked.toISOString())}` : ''}
         </span>
@@ -169,7 +169,7 @@ export function StatusSection() {
           variant="ghost"
           onClick={() => fetchStatus(true)}
           disabled={refreshing}
-          className="flex items-center gap-2 hover:text-pf-text transition-colors disabled:opacity-50 cursor-pointer"
+          className="flex items-center gap-2 hover:text-primary transition-colors disabled:opacity-50 cursor-pointer"
         >
           <RefreshCw className={`size-3 ${refreshing ? 'animate-spin' : ''}`} />
           Refresh

@@ -50,7 +50,7 @@ interface OnboardingModalProps {
 
 const STORAGE_KEY = 'pf-onboarding-complete';
 
-const ICON_CLASS = 'w-5 h-5 text-pf-cyan-400 shrink-0';
+const ICON_CLASS = 'w-5 h-5 text-accent-text shrink-0';
 
 const STEPS: Step[] = [
   {
@@ -181,8 +181,8 @@ function ProgressDots({ current }: { current: number }) {
             className={[
               'rounded-pf-full transition-all duration-pf-slow',
               isComplete || isCurrent
-                ? 'w-6 h-2 bg-pf-cyan-500'
-                : 'w-2 h-2 bg-pf-border',
+                ? 'w-6 h-2 bg-accent'
+                : 'w-2 h-2 bg-default',
             ].join(' ')}
           />
         );
@@ -196,19 +196,19 @@ function FeatureCardRow({ feature, asBullet }: { feature: FeatureCard; asBullet?
     return (
       <li className="flex items-start gap-3">
         <span className="mt-1">{feature.icon}</span>
-        <span className="text-pf-text-secondary text-sm leading-snug">{feature.title}</span>
+        <span className="text-secondary text-sm leading-snug">{feature.title}</span>
       </li>
     );
   }
 
   return (
-    <div className="flex flex-col gap-2 rounded-pf-lg border border-pf-border bg-pf-surface p-4 flex-1 min-w-0">
+    <div className="flex flex-col gap-2 rounded-pf-lg border border-default bg-surface p-4 flex-1 min-w-0">
       <div className="flex items-center gap-2">
         {feature.icon}
-        <span className="text-pf-text text-sm font-semibold">{feature.title}</span>
+        <span className="text-primary text-sm font-semibold">{feature.title}</span>
       </div>
       {feature.description && (
-        <p className="text-pf-text-muted text-xs leading-relaxed">{feature.description}</p>
+        <p className="text-tertiary text-xs leading-relaxed">{feature.description}</p>
       )}
     </div>
   );
@@ -315,7 +315,7 @@ export function OnboardingModal({ open, onClose }: OnboardingModalProps) {
     <div
       className={[
         'fixed inset-0 z-50 flex items-center justify-center p-4',
-        'backdrop-blur-sm bg-pf-backdrop',
+        'backdrop-blur-sm bg-black/60',
         'transition-opacity duration-pf-normal',
         overlayOpacity,
       ].join(' ')}
@@ -329,7 +329,7 @@ export function OnboardingModal({ open, onClose }: OnboardingModalProps) {
       <div
         className={[
           'relative w-full max-w-lg',
-          'bg-pf-elevated border border-pf-border rounded-2xl p-8',
+          'bg-elevated border border-default rounded-2xl p-8',
           'transition-all duration-pf-slow',
           cardTransform,
         ].join(' ')}
@@ -338,13 +338,13 @@ export function OnboardingModal({ open, onClose }: OnboardingModalProps) {
         {/* Top chrome: progress + skip */}
         <div className="flex items-center justify-between mb-6">
           <ProgressDots current={currentStep} />
-          <span className="text-pf-text-muted text-xs">
+          <span className="text-tertiary text-xs">
             Step {currentStep} of {TOTAL_STEPS}
           </span>
           {showSkip && (
             <button
               onClick={handleSkip}
-              className="text-pf-text-muted text-xs hover:text-pf-text transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 rounded-pf-sm px-1"
+              className="text-tertiary text-xs hover:text-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 rounded-pf-sm px-1"
               aria-label="Skip onboarding"
             >
               Skip for now
@@ -354,7 +354,7 @@ export function OnboardingModal({ open, onClose }: OnboardingModalProps) {
 
         {/* Step visual (step 1 only) */}
         {step.visual && (
-          <div className="flex justify-center mb-6 text-pf-cyan-400">
+          <div className="flex justify-center mb-6 text-accent-text">
             {step.visual}
           </div>
         )}
@@ -362,11 +362,11 @@ export function OnboardingModal({ open, onClose }: OnboardingModalProps) {
         {/* Heading */}
         <h2
           id="onboarding-heading"
-          className="text-pf-text text-xl font-bold mb-2 leading-tight"
+          className="text-primary text-xl font-bold mb-2 leading-tight"
         >
           {step.heading}
         </h2>
-        <p className="text-pf-text-secondary text-sm leading-relaxed mb-6">
+        <p className="text-secondary text-sm leading-relaxed mb-6">
           {step.subtitle}
         </p>
 
@@ -398,10 +398,10 @@ export function OnboardingModal({ open, onClose }: OnboardingModalProps) {
               onClick={handleBack}
               className={[
                 'flex items-center gap-1 px-3 py-2 rounded-pf',
-                'text-pf-text-secondary text-sm',
-                'border border-pf-border hover:border-pf-border-strong',
-                'hover:text-pf-text transition-colors',
-                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40',
+                'text-secondary text-sm',
+                'border border-default hover:border-strong',
+                'hover:text-primary transition-colors',
+                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40',
               ].join(' ')}
               aria-label="Go back"
             >
@@ -415,9 +415,9 @@ export function OnboardingModal({ open, onClose }: OnboardingModalProps) {
               <button
                 onClick={() => handleSecondary(step.secondaryPath!)}
                 className={[
-                  'text-pf-cyan-400 text-sm font-medium',
-                  'hover:text-pf-cyan-500 transition-colors',
-                  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 rounded-pf-sm px-1',
+                  'text-accent-text text-sm font-medium',
+                  'hover:text-accent transition-colors',
+                  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 rounded-pf-sm px-1',
                 ].join(' ')}
               >
                 {step.secondaryLabel}
@@ -428,9 +428,9 @@ export function OnboardingModal({ open, onClose }: OnboardingModalProps) {
               onClick={handlePrimary}
               className={[
                 'px-5 py-3 rounded-pf',
-                'bg-pf-cyan-500 text-pf-text-contrast text-sm font-semibold',
+                'bg-accent text-inverse text-sm font-semibold',
                 'hover:opacity-90 active:scale-95 transition-all',
-                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40',
+                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40',
               ].join(' ')}
             >
               {step.primaryLabel}

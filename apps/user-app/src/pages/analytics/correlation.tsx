@@ -43,23 +43,23 @@ function correlationLabel(val: number): string {
 }
 
 function correlationCellClass(val: number): string {
-  if (val >= 0.7) return 'bg-pf-success/80';
-  if (val >= 0.3) return 'bg-pf-success/35';
-  if (val <= -0.7) return 'bg-pf-danger/80';
-  if (val <= -0.3) return 'bg-pf-danger/35';
-  return 'bg-pf-overlay';
+  if (val >= 0.7) return 'bg-gain/80';
+  if (val >= 0.3) return 'bg-gain/35';
+  if (val <= -0.7) return 'bg-loss/80';
+  if (val <= -0.3) return 'bg-loss/35';
+  return 'bg-overlay';
 }
 
 function correlationTextClass(val: number): string {
-  if (val >= 0.7 || val >= 0.3) return 'text-pf-success';
-  if (val <= -0.7 || val <= -0.3) return 'text-pf-danger';
-  return 'text-pf-text-secondary';
+  if (val >= 0.7 || val >= 0.3) return 'text-gain';
+  if (val <= -0.7 || val <= -0.3) return 'text-loss';
+  return 'text-secondary';
 }
 
 function correlationBadgeClass(val: number): string {
-  if (val >= 0.3) return 'bg-pf-success/15 text-pf-success border border-pf-success/30';
-  if (val <= -0.3) return 'bg-pf-danger/15 text-pf-danger border border-pf-danger/30';
-  return 'bg-pf-overlay text-pf-text-secondary border border-pf-border';
+  if (val >= 0.3) return 'bg-gain/15 text-gain border border-gain/30';
+  if (val <= -0.3) return 'bg-loss/15 text-loss border border-loss/30';
+  return 'bg-overlay text-secondary border border-default';
 }
 
 function capitalize(s: string): string {
@@ -124,7 +124,7 @@ function deriveInsights(data: CorrelationData): Insight[] {
 /* ─── Skeleton ───────────────────────────────────────────────────────── */
 
 function Skeleton({ className }: { className?: string }) {
-  return <div className={`bg-pf-overlay rounded animate-pulse ${className ?? ''}`} />;
+  return <div className={`bg-overlay rounded animate-pulse ${className ?? ''}`} />;
 }
 
 function HeatmapSkeleton() {
@@ -276,22 +276,22 @@ export function Component() {
     <div className="animate-fade-in p-6 max-w-6xl mx-auto space-y-8">
       {/* Header */}
       <div className="flex items-start gap-3">
-        <GitMerge className="size-5 text-pf-text-muted mt-1 shrink-0" aria-hidden="true" />
+        <GitMerge className="size-5 text-tertiary mt-1 shrink-0" aria-hidden="true" />
         <div>
-          <h1 className="text-2xl font-semibold text-pf-text">Market Correlation</h1>
-          <p className="text-sm text-pf-text-muted mt-1">
+          <h1 className="text-2xl font-semibold text-primary">Market Correlation</h1>
+          <p className="text-sm text-tertiary mt-1">
             How Polymarket categories move together
           </p>
         </div>
       </div>
 
       {/* ── Section 1: Category Heatmap ────────────────────────────────── */}
-      <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-6 space-y-5">
+      <div className="bg-elevated border border-default rounded-pf-lg p-6 space-y-5">
         <div className="flex items-center gap-2">
-          <Grid3x3 className="size-4 text-pf-text-muted" aria-hidden="true" />
-          <h2 className="text-sm font-medium text-pf-text">Category Correlation Heatmap</h2>
+          <Grid3x3 className="size-4 text-tertiary" aria-hidden="true" />
+          <h2 className="text-sm font-medium text-primary">Category Correlation Heatmap</h2>
         </div>
-        <p className="text-xs text-pf-text-muted -mt-2">
+        <p className="text-xs text-tertiary -mt-2">
           Correlation coefficients between Polymarket categories. Values range from -1 (inverse) to +1 (identical movement).
         </p>
 
@@ -299,8 +299,8 @@ export function Component() {
           <HeatmapSkeleton />
         ) : categories.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 gap-2 text-center">
-            <Grid3x3 className="size-10 text-pf-text-muted opacity-30" aria-hidden="true" />
-            <p className="text-sm text-pf-text-muted">No correlation data available.</p>
+            <Grid3x3 className="size-10 text-tertiary opacity-30" aria-hidden="true" />
+            <p className="text-sm text-tertiary">No correlation data available.</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -318,7 +318,7 @@ export function Component() {
                 <div
                   key={`col-${cat}`}
                   className={`h-[72px] w-[72px] flex items-end justify-center pb-2 transition-colors duration-pf-fast ${
-                    highlightCol === j ? 'text-pf-cyan-400' : 'text-pf-text-secondary'
+                    highlightCol === j ? 'text-accent-text' : 'text-secondary'
                   }`}
                   aria-hidden="true"
                 >
@@ -338,7 +338,7 @@ export function Component() {
                   <div
                     key={`row-label-${rowCat}`}
                     className={`h-[72px] w-20 flex items-center justify-end pr-2 transition-colors duration-pf-fast ${
-                      highlightRow === i ? 'text-pf-cyan-400' : 'text-pf-text-secondary'
+                      highlightRow === i ? 'text-accent-text' : 'text-secondary'
                     }`}
                     aria-hidden="true"
                   >
@@ -356,11 +356,11 @@ export function Component() {
                       return (
                         <div
                           key={`cell-${i}-${j}`}
-                          className="h-[72px] w-[72px] rounded bg-pf-cyan-500/20 flex items-center justify-center"
+                          className="h-[72px] w-[72px] rounded bg-accent/20 flex items-center justify-center"
                           aria-label={`${capitalize(rowCat)} self-correlation`}
                           role="gridcell"
                         >
-                          <span className="text-sm font-mono text-pf-cyan-400">—</span>
+                          <span className="text-sm font-mono text-accent-text">—</span>
                         </div>
                       );
                     }
@@ -373,7 +373,7 @@ export function Component() {
                       <div
                         key={`cell-${i}-${j}`}
                         className={`h-[72px] w-[72px] rounded flex items-center justify-center cursor-default transition-all duration-pf-fast ${cellBg} ${
-                          isHighlighted ? 'ring-1 ring-pf-cyan-400/50 scale-[1.04]' : ''
+                          isHighlighted ? 'ring-1 ring-accent-text/50 scale-[1.04]' : ''
                         }`}
                         role="gridcell"
                         aria-label={`${capitalize(rowCat)} to ${capitalize(colCat)}: ${formatCorr(val)}`}
@@ -396,12 +396,12 @@ export function Component() {
         {/* Legend */}
         {!loadingMatrix && categories.length > 0 && (
           <div className="flex flex-wrap items-center gap-x-4 gap-y-2 pt-2">
-            <span className="text-pf-label text-pf-text-muted font-medium uppercase tracking-wider">Legend:</span>
-            <LegendItem bgClass="bg-pf-success/80" label="Strong positive" />
-            <LegendItem bgClass="bg-pf-success/35" label="Moderate positive" />
-            <LegendItem bgClass="bg-pf-overlay border border-pf-border" label="Neutral" />
-            <LegendItem bgClass="bg-pf-danger/35" label="Moderate negative" />
-            <LegendItem bgClass="bg-pf-danger/80" label="Strong negative" />
+            <span className="text-pf-label text-tertiary font-medium uppercase tracking-wider">Legend:</span>
+            <LegendItem bgClass="bg-gain/80" label="Strong positive" />
+            <LegendItem bgClass="bg-gain/35" label="Moderate positive" />
+            <LegendItem bgClass="bg-overlay border border-default" label="Neutral" />
+            <LegendItem bgClass="bg-loss/35" label="Moderate negative" />
+            <LegendItem bgClass="bg-loss/80" label="Strong negative" />
           </div>
         )}
       </div>
@@ -416,16 +416,16 @@ export function Component() {
       )}
 
       {/* ── Section 2: Top correlated market pairs ─────────────────────── */}
-      <div className="bg-pf-elevated border border-pf-border rounded-pf-lg overflow-hidden">
-        <div className="px-6 py-4 border-b border-pf-border">
-          <h2 className="text-sm font-medium text-pf-text">Top Correlated Market Pairs</h2>
-          <p className="text-xs text-pf-text-muted mt-1">
+      <div className="bg-elevated border border-default rounded-pf-lg overflow-hidden">
+        <div className="px-6 py-4 border-b border-default">
+          <h2 className="text-sm font-medium text-primary">Top Correlated Market Pairs</h2>
+          <p className="text-xs text-tertiary mt-1">
             Select two different categories to see the most correlated individual market pairs between them.
           </p>
         </div>
 
         {/* Category selectors */}
-        <div className="px-6 py-4 border-b border-pf-border flex flex-col sm:flex-row gap-3">
+        <div className="px-6 py-4 border-b border-default flex flex-col sm:flex-row gap-3">
           <CategorySelect
             id="category-a"
             label="Category A"
@@ -443,7 +443,7 @@ export function Component() {
             disabled={loadingMatrix}
           />
           {categoryA && categoryB && categoryA === categoryB && (
-            <div className="flex items-center gap-2 text-xs text-pf-warning self-end pb-1">
+            <div className="flex items-center gap-2 text-xs text-warning self-end pb-1">
               <Info className="size-4" aria-hidden="true" />
               Select two different categories
             </div>
@@ -453,8 +453,8 @@ export function Component() {
         {/* Pairs table / states */}
         {!categoryA || !categoryB || categoryA === categoryB ? (
           <div className="flex flex-col items-center justify-center py-16 gap-2 text-center px-6">
-            <GitMerge className="size-10 text-pf-text-muted opacity-30" aria-hidden="true" />
-            <p className="text-sm text-pf-text-muted">Select two categories to see correlated market pairs</p>
+            <GitMerge className="size-10 text-tertiary opacity-30" aria-hidden="true" />
+            <p className="text-sm text-tertiary">Select two categories to see correlated market pairs</p>
           </div>
         ) : loadingPairs ? (
           <div className="p-6">
@@ -462,26 +462,26 @@ export function Component() {
           </div>
         ) : pairs.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 gap-2 text-center px-6">
-            <p className="text-sm text-pf-text-muted">No correlated pairs found for these categories.</p>
+            <p className="text-sm text-tertiary">No correlated pairs found for these categories.</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm" aria-label="Correlated market pairs">
               <thead>
-                <tr className="bg-pf-surface text-left text-xs text-pf-text-secondary uppercase tracking-wider">
+                <tr className="bg-surface text-left text-xs text-secondary uppercase tracking-wider">
                   <th scope="col" className="px-6 py-3 font-medium">Market A</th>
                   <th scope="col" className="px-6 py-3 font-medium">Market B</th>
                   <th scope="col" className="px-6 py-3 font-medium text-right">Correlation</th>
                   <th scope="col" className="px-6 py-3 font-medium text-right">Sample</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-pf-border">
+              <tbody className="divide-y divide-default">
                 {pairs.map((pair) => (
-                  <tr key={`${pair.marketIdA}-${pair.marketIdB}`} className="hover:bg-pf-surface/50 transition-colors">
+                  <tr key={`${pair.marketIdA}-${pair.marketIdB}`} className="hover:bg-surface/50 transition-colors">
                     <td className="px-6 py-3 max-w-xs">
                       <Link
                         to={`/markets/${pair.marketIdA}`}
-                        className="text-pf-text hover:text-pf-cyan-400 transition-colors line-clamp-2 text-xs leading-relaxed"
+                        className="text-primary hover:text-accent-text transition-colors line-clamp-2 text-xs leading-relaxed"
                       >
                         {pair.titleA}
                       </Link>
@@ -489,7 +489,7 @@ export function Component() {
                     <td className="px-6 py-3 max-w-xs">
                       <Link
                         to={`/markets/${pair.marketIdB}`}
-                        className="text-pf-text hover:text-pf-cyan-400 transition-colors line-clamp-2 text-xs leading-relaxed"
+                        className="text-primary hover:text-accent-text transition-colors line-clamp-2 text-xs leading-relaxed"
                       >
                         {pair.titleB}
                       </Link>
@@ -501,7 +501,7 @@ export function Component() {
                         {formatCorr(pair.correlation)}
                       </span>
                     </td>
-                    <td className="px-6 py-3 text-right font-mono text-pf-text-secondary text-xs">
+                    <td className="px-6 py-3 text-right font-mono text-secondary text-xs">
                       {pair.sampleSize.toLocaleString()}
                     </td>
                   </tr>
@@ -516,7 +516,7 @@ export function Component() {
       {tooltip.visible && (
         <div
           ref={tooltipRef}
-          className="fixed z-50 pointer-events-none px-3 py-2 rounded-pf bg-pf-elevated border border-pf-border text-xs text-pf-text shadow-pf-lg max-w-[240px]"
+          className="fixed z-50 pointer-events-none px-3 py-2 rounded-pf bg-elevated border border-default text-xs text-primary shadow-pf-lg max-w-[240px]"
           style={{ left: tooltip.x + 12, top: tooltip.y - 40 }}
           aria-hidden="true"
         >
@@ -533,22 +533,22 @@ function LegendItem({ bgClass, label }: { bgClass: string; label: string }) {
   return (
     <div className="flex items-center gap-2">
       <div className={`size-3 rounded-sm ${bgClass}`} aria-hidden="true" />
-      <span className="text-pf-label text-pf-text-muted">{label}</span>
+      <span className="text-pf-label text-tertiary">{label}</span>
     </div>
   );
 }
 
 function InsightCard({ insight }: { insight: { icon: 'up' | 'down' | 'neutral'; text: string } }) {
   const iconMap = {
-    up: <TrendingUp className="size-4 text-pf-success shrink-0" aria-hidden="true" />,
-    down: <TrendingDown className="size-4 text-pf-cyan-400 shrink-0" aria-hidden="true" />,
-    neutral: <Info className="size-4 text-pf-text-muted shrink-0" aria-hidden="true" />,
+    up: <TrendingUp className="size-4 text-gain shrink-0" aria-hidden="true" />,
+    down: <TrendingDown className="size-4 text-accent-text shrink-0" aria-hidden="true" />,
+    neutral: <Info className="size-4 text-tertiary shrink-0" aria-hidden="true" />,
   };
 
   return (
-    <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4 flex items-start gap-3">
+    <div className="bg-elevated border border-default rounded-pf-lg p-4 flex items-start gap-3">
       {iconMap[insight.icon]}
-      <p className="text-xs text-pf-text-secondary leading-relaxed">{insight.text}</p>
+      <p className="text-xs text-secondary leading-relaxed">{insight.text}</p>
     </div>
   );
 }
@@ -575,7 +575,7 @@ function CategorySelect({
 }) {
   return (
     <div className="flex flex-col gap-1 min-w-[160px]">
-      <label htmlFor={id} className="text-xs font-medium text-pf-text-secondary">
+      <label htmlFor={id} className="text-xs font-medium text-secondary">
         {label}
       </label>
       <Select
@@ -583,7 +583,7 @@ function CategorySelect({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         disabled={disabled}
-        className="w-full appearance-none bg-pf-surface border border-pf-border rounded-pf-sm px-3 py-2 pr-8 text-sm text-pf-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-400/40 transition disabled:opacity-50 disabled:cursor-not-allowed"
+        className="w-full appearance-none bg-surface border border-default rounded-pf-sm px-3 py-2 pr-8 text-sm text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-text/40 transition disabled:opacity-50 disabled:cursor-not-allowed"
       >
         <option value="">Select category…</option>
         {options.map((opt) => (

@@ -32,23 +32,23 @@ export class ErrorBoundary extends Component<Props, State> {
   render() {
     if (this.state.hasError) {
       return (
-        <div role="alert" className="min-h-screen flex items-center justify-center bg-pf-base p-6">
+        <div role="alert" className="min-h-screen flex items-center justify-center bg-app p-6">
           <div className="max-w-md w-full text-center space-y-6">
-            <div className="mx-auto size-16 rounded-pf-full bg-pf-danger/10 flex items-center justify-center">
-              <AlertTriangle className="size-8 text-pf-danger" aria-hidden="true" />
+            <div className="mx-auto size-16 rounded-pf-full bg-loss/10 flex items-center justify-center">
+              <AlertTriangle className="size-8 text-loss" aria-hidden="true" />
             </div>
             <div>
-              <h1 className="text-xl font-semibold text-pf-text mb-2">
+              <h1 className="text-xl font-semibold text-primary mb-2">
                 Something went wrong
               </h1>
-              <p className="text-sm text-pf-text-muted">
+              <p className="text-sm text-tertiary">
                 An unexpected error occurred. Please try refreshing the page.
               </p>
             </div>
             <button
               type="button"
               onClick={this.handleReset}
-              className="inline-flex items-center gap-2 px-5 py-3 rounded-pf bg-pf-cyan-500 text-pf-text-contrast text-sm font-medium hover:bg-pf-cyan-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 transition-colors"
+              className="inline-flex items-center gap-2 px-5 py-3 rounded-pf bg-accent text-inverse text-sm font-medium hover:bg-accent-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 transition-colors"
             >
               <RefreshCw className="size-4" aria-hidden="true" />
               Try again

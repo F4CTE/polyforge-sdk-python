@@ -149,11 +149,11 @@ const CATEGORY_ICONS: Record<string, React.ReactNode> = {
 };
 
 const CATEGORY_COLORS: Record<string, { bg: string; text: string }> = {
-  Sports: { bg: 'bg-pf-info/15', text: 'text-pf-info' },
-  Crypto: { bg: 'bg-pf-warning/15', text: 'text-pf-warning' },
+  Sports: { bg: 'bg-info/15', text: 'text-info' },
+  Crypto: { bg: 'bg-warning/15', text: 'text-warning' },
   Politics: { bg: 'bg-pf-purple-500/15', text: 'text-pf-purple-400' },
-  Economics: { bg: 'bg-pf-success/15', text: 'text-pf-success' },
-  Finance: { bg: 'bg-pf-cyan-500/15', text: 'text-pf-cyan-400' },
+  Economics: { bg: 'bg-gain/15', text: 'text-gain' },
+  Finance: { bg: 'bg-accent/15', text: 'text-accent-text' },
   Technology: { bg: 'bg-pf-purple-300/15', text: 'text-pf-purple-300' },
 };
 
@@ -226,9 +226,9 @@ function MarketCardSkeleton() {
 function SentimentPill({ sentiment }: { sentiment: MarketSentiment | undefined }) {
   if (!sentiment || sentiment.signalCount === 0) return null;
   const styles: Record<MarketSentiment['direction'], string> = {
-    BULLISH: 'bg-pf-success/15 text-pf-success',
-    BEARISH: 'bg-pf-danger/15 text-pf-danger',
-    NEUTRAL: 'bg-pf-overlay text-pf-text-muted',
+    BULLISH: 'bg-gain/15 text-gain',
+    BEARISH: 'bg-loss/15 text-loss',
+    NEUTRAL: 'bg-overlay text-tertiary',
   };
   return (
     <span
@@ -262,25 +262,25 @@ const MarketCard = memo(function MarketCard({
     <Link
       to={`/markets/${market.id}`}
       data-testid="market-card"
-      className={`group block bg-pf-elevated border border-pf-border rounded-pf-lg p-4 transition-all duration-pf-normal hover:border-pf-border-strong hover:shadow-pf-sm hover:-translate-y-1 ${featured ? 'ring-1 ring-pf-cyan-500/20' : ''}`}
+      className={`group block bg-elevated border border-default rounded-pf-lg p-4 transition-all duration-pf-normal hover:border-strong hover:shadow-pf-sm hover:-translate-y-1 ${featured ? 'ring-1 ring-accent/20' : ''}`}
     >
       {/* Header */}
       <div className="flex items-start gap-3 mb-3">
         <div
-          className={`w-[52px] h-[52px] rounded-pf-md flex items-center justify-center shrink-0 ${catColor?.bg ?? 'bg-pf-overlay'}`}
+          className={`w-[52px] h-[52px] rounded-pf-md flex items-center justify-center shrink-0 ${catColor?.bg ?? 'bg-overlay'}`}
         >
-          <span className={`text-lg font-bold ${catColor?.text ?? 'text-pf-text-muted'}`}>
+          <span className={`text-lg font-bold ${catColor?.text ?? 'text-tertiary'}`}>
             {market.title.charAt(0).toUpperCase()}
           </span>
         </div>
         <div className="min-w-0 flex-1">
-          <h3 className="text-sm font-medium text-pf-text leading-snug line-clamp-2 group-hover:text-pf-cyan-400 transition-colors">
+          <h3 className="text-sm font-medium text-primary leading-snug line-clamp-2 group-hover:text-accent-text transition-colors">
             {market.title}
           </h3>
-          <div className="flex items-center gap-2 mt-1 text-xs text-pf-text-secondary">
+          <div className="flex items-center gap-2 mt-1 text-xs text-secondary">
             <span>{formatVolume(market.volume24h)} Vol</span>
             <span>&middot;</span>
-            <span className={isClosingSoon(market.endDate) ? 'text-pf-warning' : ''}>
+            <span className={isClosingSoon(market.endDate) ? 'text-warning' : ''}>
               {daysUntil(market.endDate)}
             </span>
           </div>
@@ -292,7 +292,7 @@ const MarketCard = memo(function MarketCard({
           onClick={(e) => onToggleWatch(market.id, e)}
           disabled={isWatchLoading}
           aria-label={isWatched ? 'Remove from watchlist' : 'Add to watchlist'}
-          className={`p-2 rounded-pf transition-colors ${isWatched ? 'text-pf-gold-500 hover:text-pf-gold-400' : 'text-pf-text-muted hover:text-pf-text'}`}
+          className={`p-2 rounded-pf transition-colors ${isWatched ? 'text-pf-gold-500 hover:text-pf-gold-400' : 'text-tertiary hover:text-primary'}`}
           title={isWatched ? 'Remove from watchlist' : 'Add to watchlist'}
         >
           <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill={isWatched ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -305,21 +305,21 @@ const MarketCard = memo(function MarketCard({
       {market.tokens.length <= 2 ? (
         <div className="space-y-2">
           <div>
-            <div className="h-2 bg-pf-overlay rounded-pf-full overflow-hidden">
+            <div className="h-2 bg-overlay rounded-pf-full overflow-hidden">
               <div
-                className="h-full bg-pf-cyan-500 rounded-pf-full transition-all"
+                className="h-full bg-accent rounded-pf-full transition-all"
                 style={{ width: `${yesPercent(market) ?? 50}%` }}
               />
             </div>
-            <span className="text-pf-label text-pf-text-muted mt-1 block">
+            <span className="text-pf-label text-tertiary mt-1 block">
               {yesPercent(market) !== null ? `${yesPercent(market)}% chance` : '\u2014'}
             </span>
           </div>
           <div className="grid grid-cols-2 gap-2">
-            <span className="h-9 flex items-center justify-center rounded-pf text-sm font-medium bg-pf-success/10 text-pf-success">
+            <span className="h-9 flex items-center justify-center rounded-pf text-sm font-medium bg-gain/10 text-gain">
               Yes {priceCents(market, 'YES') !== '\u2014' ? priceCents(market, 'YES') : ''}
             </span>
-            <span className="h-9 flex items-center justify-center rounded-pf text-sm font-medium bg-pf-danger/10 text-pf-danger">
+            <span className="h-9 flex items-center justify-center rounded-pf text-sm font-medium bg-loss/10 text-loss">
               No {priceCents(market, 'NO') !== '\u2014' ? priceCents(market, 'NO') : ''}
             </span>
           </div>
@@ -329,18 +329,18 @@ const MarketCard = memo(function MarketCard({
         <div className="space-y-2">
           {market.tokens.slice(0, 4).map((token) => (
             <div key={token.id} className="flex items-center gap-2 text-xs">
-              <span className="w-20 truncate text-pf-text-secondary">{token.outcome}</span>
-              <div className="flex-1 h-2 bg-pf-overlay rounded-pf-full overflow-hidden">
+              <span className="w-20 truncate text-secondary">{token.outcome}</span>
+              <div className="flex-1 h-2 bg-overlay rounded-pf-full overflow-hidden">
                 <div
-                  className="h-full bg-pf-cyan-500/60 rounded-pf-full"
+                  className="h-full bg-accent/60 rounded-pf-full"
                   style={{ width: `${tokenPercent(token)}%` }}
                 />
               </div>
-              <span className="w-8 text-right font-mono text-pf-text-muted">{tokenPercent(token)}%</span>
+              <span className="w-8 text-right font-mono text-tertiary">{tokenPercent(token)}%</span>
             </div>
           ))}
           {market.tokens.length > 4 && (
-            <span className="text-pf-label text-pf-text-muted">+{market.tokens.length - 4} more</span>
+            <span className="text-pf-label text-tertiary">+{market.tokens.length - 4} more</span>
           )}
         </div>
       )}
@@ -348,13 +348,13 @@ const MarketCard = memo(function MarketCard({
       {/* Footer */}
       {market.tokens.length > 0 && (
         <div className="flex items-center justify-between gap-1 mt-3">
-          <div className="flex items-center gap-2 text-pf-label text-pf-text-muted">
+          <div className="flex items-center gap-2 text-pf-label text-tertiary">
             <span className="flex items-center gap-1">
               <Zap className="size-3" aria-hidden="true" />
               {market.tokens.length} outcomes
             </span>
             {(market.strategyCount ?? 0) > 0 && (
-              <span className="flex items-center gap-1 text-pf-cyan-400">
+              <span className="flex items-center gap-1 text-accent-text">
                 <Cpu className="size-3" aria-hidden="true" />
                 {market.strategyCount} {market.strategyCount === 1 ? 'strategy' : 'strategies'}
               </span>
@@ -392,32 +392,32 @@ function TrendingCard({ market }: { market: Market }) {
   return (
     <Link
       to={`/markets/${market.slug || market.id}`}
-      className="group block bg-pf-elevated border border-pf-border rounded-pf-lg p-4 space-y-3 transition-all duration-pf-normal hover:border-pf-cyan-500/30 hover:shadow-pf-sm hover:-translate-y-1"
+      className="group block bg-elevated border border-default rounded-pf-lg p-4 space-y-3 transition-all duration-pf-normal hover:border-accent/30 hover:shadow-pf-sm hover:-translate-y-1"
     >
       {/* Question */}
-      <p className="text-sm font-medium text-pf-text leading-snug line-clamp-2 group-hover:text-pf-cyan-400 transition-colors">
+      <p className="text-sm font-medium text-primary leading-snug line-clamp-2 group-hover:text-accent-text transition-colors">
         {market.title}
       </p>
 
       {/* Category badge */}
       <span
-        className={`inline-flex items-center gap-1 px-2 py-1 rounded-pf-full text-pf-label font-medium ${catColor?.bg ?? 'bg-pf-overlay'} ${catColor?.text ?? 'text-pf-text-muted'}`}
+        className={`inline-flex items-center gap-1 px-2 py-1 rounded-pf-full text-pf-label font-medium ${catColor?.bg ?? 'bg-overlay'} ${catColor?.text ?? 'text-tertiary'}`}
       >
         {market.category}
       </span>
 
       {/* YES price */}
       {yesP !== null && (
-        <div className="text-2xl font-bold text-pf-cyan-400">{yesP}¢</div>
+        <div className="text-2xl font-bold text-accent-text">{yesP}¢</div>
       )}
 
       {/* Footer badges */}
       <div className="flex items-center justify-between gap-2 flex-wrap">
-        <span className="inline-flex items-center gap-1 px-2 py-1 rounded-pf-full text-xs bg-pf-warning/10 text-pf-warning">
+        <span className="inline-flex items-center gap-1 px-2 py-1 rounded-pf-full text-xs bg-warning/10 text-warning">
           <TrendingUp className="size-3" aria-hidden="true" />
           {formatVolume(market.volume24h)} vol
         </span>
-        <span className={`inline-flex items-center gap-1 text-xs font-mono ${closingSoon ? 'text-pf-danger' : 'text-pf-text-secondary'}`}>
+        <span className={`inline-flex items-center gap-1 text-xs font-mono ${closingSoon ? 'text-loss' : 'text-secondary'}`}>
           <Clock className="size-3" aria-hidden="true" />
           {closing}
         </span>
@@ -548,22 +548,22 @@ function AdvancedSearchModal({
       role="dialog"
       aria-modal="true"
       aria-label="Advanced Market Search"
-      className="fixed inset-0 z-50 flex items-start justify-center pt-12 px-4 pb-6 bg-pf-surface/80 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-start justify-center pt-12 px-4 pb-6 bg-surface/80 backdrop-blur-sm"
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
-      <div className="relative w-full max-w-2xl bg-pf-elevated border border-pf-border rounded-pf-lg shadow-pf-lg flex flex-col max-h-[calc(100vh-6rem)] overflow-hidden">
+      <div className="relative w-full max-w-2xl bg-elevated border border-default rounded-pf-lg shadow-pf-lg flex flex-col max-h-[calc(100vh-6rem)] overflow-hidden">
 
         {/* Header */}
-        <div className="flex items-center gap-3 px-5 py-4 border-b border-pf-border shrink-0">
-          <Search className="size-5 text-pf-cyan-400 shrink-0" aria-hidden="true" />
-          <h2 className="text-base font-semibold text-pf-text flex-1">Advanced Market Search</h2>
+        <div className="flex items-center gap-3 px-5 py-4 border-b border-default shrink-0">
+          <Search className="size-5 text-accent-text shrink-0" aria-hidden="true" />
+          <h2 className="text-base font-semibold text-primary flex-1">Advanced Market Search</h2>
           <Button
             type="button"
             variant="ghost"
             size="icon"
             onClick={onClose}
             aria-label="Close advanced search"
-            className="p-2 rounded-pf text-pf-text-muted hover:text-pf-text hover:bg-pf-overlay transition-colors"
+            className="p-2 rounded-pf text-tertiary hover:text-primary hover:bg-overlay transition-colors"
           >
             <X className="size-4" />
           </Button>
@@ -581,12 +581,12 @@ function AdvancedSearchModal({
             value={filters.query}
             onChange={(e) => updateFilters((prev) => ({ ...prev, query: e.target.value }))}
             onKeyDown={(e) => { if (e.key === 'Enter') runSearch(0); }}
-            className="w-full h-11 px-4 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text placeholder:text-pf-text-muted focus-visible:outline-none focus-visible:border-pf-cyan-500/50 focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 transition-colors"
+            className="w-full h-11 px-4 rounded-pf bg-surface border border-default text-sm text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:border-accent/50 focus-visible:ring-2 focus-visible:ring-accent/40 transition-colors"
           />
 
           {/* Categories */}
           <div>
-            <p className="text-xs font-medium text-pf-text-secondary uppercase tracking-wide mb-2">Categories</p>
+            <p className="text-xs font-medium text-secondary uppercase tracking-wide mb-2">Categories</p>
             <div className="flex flex-wrap gap-2">
               <Button
                 type="button"
@@ -594,8 +594,8 @@ function AdvancedSearchModal({
                 onClick={() => updateFilters((prev) => ({ ...prev, categories: [] }))}
                 className={`px-3 py-1 rounded-pf-full text-xs font-medium border transition-colors ${
                   filters.categories.length === 0
-                    ? 'bg-pf-cyan-500/15 text-pf-cyan-400 border-pf-cyan-500/30'
-                    : 'bg-pf-surface text-pf-text-secondary border-pf-border hover:border-pf-border-strong'
+                    ? 'bg-accent/15 text-accent-text border-accent/30'
+                    : 'bg-surface text-secondary border-default hover:border-strong'
                 }`}
               >
                 All
@@ -608,8 +608,8 @@ function AdvancedSearchModal({
                   onClick={() => toggleCategory(cat)}
                   className={`px-3 py-1 rounded-pf-full text-xs font-medium border transition-colors ${
                     filters.categories.includes(cat)
-                      ? 'bg-pf-cyan-500/15 text-pf-cyan-400 border-pf-cyan-500/30'
-                      : 'bg-pf-surface text-pf-text-secondary border-pf-border hover:border-pf-border-strong'
+                      ? 'bg-accent/15 text-accent-text border-accent/30'
+                      : 'bg-surface text-secondary border-default hover:border-strong'
                   }`}
                 >
                   {cat}
@@ -621,38 +621,38 @@ function AdvancedSearchModal({
           {/* End Date + YES Price Range */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {/* End date */}
-            <div className="bg-pf-surface border border-pf-border rounded-pf p-3 space-y-2">
-              <p className="text-xs font-medium text-pf-text-secondary uppercase tracking-wide">End Date</p>
+            <div className="bg-surface border border-default rounded-pf p-3 space-y-2">
+              <p className="text-xs font-medium text-secondary uppercase tracking-wide">End Date</p>
               <div className="flex items-center gap-2">
                 <div className="flex-1">
-                  <label htmlFor="end-date-from" className="block text-pf-caption text-pf-text-muted mb-1">From</label>
+                  <label htmlFor="end-date-from" className="block text-pf-caption text-tertiary mb-1">From</label>
                   <input
                     id="end-date-from"
                     type="date"
                     value={filters.endDateFrom ?? ''}
                     onChange={(e) => updateFilters((prev) => ({ ...prev, endDateFrom: e.target.value || undefined }))}
-                    className="w-full h-8 px-2 rounded-pf bg-pf-elevated border border-pf-border text-xs text-pf-text focus-visible:outline-none focus-visible:border-pf-cyan-500/50 transition-colors"
+                    className="w-full h-8 px-2 rounded-pf bg-elevated border border-default text-xs text-primary focus-visible:outline-none focus-visible:border-accent/50 transition-colors"
                   />
                 </div>
                 <div className="flex-1">
-                  <label htmlFor="end-date-to" className="block text-pf-caption text-pf-text-muted mb-1">To</label>
+                  <label htmlFor="end-date-to" className="block text-pf-caption text-tertiary mb-1">To</label>
                   <input
                     id="end-date-to"
                     type="date"
                     value={filters.endDateTo ?? ''}
                     onChange={(e) => updateFilters((prev) => ({ ...prev, endDateTo: e.target.value || undefined }))}
-                    className="w-full h-8 px-2 rounded-pf bg-pf-elevated border border-pf-border text-xs text-pf-text focus-visible:outline-none focus-visible:border-pf-cyan-500/50 transition-colors"
+                    className="w-full h-8 px-2 rounded-pf bg-elevated border border-default text-xs text-primary focus-visible:outline-none focus-visible:border-accent/50 transition-colors"
                   />
                 </div>
               </div>
             </div>
 
             {/* YES price range */}
-            <div className="bg-pf-surface border border-pf-border rounded-pf p-3 space-y-2">
-              <p className="text-xs font-medium text-pf-text-secondary uppercase tracking-wide">YES Price Range</p>
+            <div className="bg-surface border border-default rounded-pf p-3 space-y-2">
+              <p className="text-xs font-medium text-secondary uppercase tracking-wide">YES Price Range</p>
               <div className="flex items-center gap-2">
                 <div className="flex-1">
-                  <label className="block text-pf-caption text-pf-text-muted mb-1">Min</label>
+                  <label className="block text-pf-caption text-tertiary mb-1">Min</label>
                   <Input
                     type="number"
                     min={0.01}
@@ -661,12 +661,12 @@ function AdvancedSearchModal({
                     placeholder="0.01"
                     value={filters.minYesPrice ?? ''}
                     onChange={(e) => updateFilters((prev) => ({ ...prev, minYesPrice: e.target.value ? parseFloat(e.target.value) : undefined }))}
-                    className="w-full h-8 px-2 rounded-pf bg-pf-elevated border border-pf-border text-xs text-pf-text placeholder:text-pf-text-muted focus-visible:outline-none focus-visible:border-pf-cyan-500/50 transition-colors"
+                    className="w-full h-8 px-2 rounded-pf bg-elevated border border-default text-xs text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:border-accent/50 transition-colors"
                   />
                 </div>
-                <span className="text-pf-text-muted text-xs mt-4">—</span>
+                <span className="text-tertiary text-xs mt-4">—</span>
                 <div className="flex-1">
-                  <label className="block text-pf-caption text-pf-text-muted mb-1">Max</label>
+                  <label className="block text-pf-caption text-tertiary mb-1">Max</label>
                   <Input
                     type="number"
                     min={0.01}
@@ -675,12 +675,12 @@ function AdvancedSearchModal({
                     placeholder="0.99"
                     value={filters.maxYesPrice ?? ''}
                     onChange={(e) => updateFilters((prev) => ({ ...prev, maxYesPrice: e.target.value ? parseFloat(e.target.value) : undefined }))}
-                    className="w-full h-8 px-2 rounded-pf bg-pf-elevated border border-pf-border text-xs text-pf-text placeholder:text-pf-text-muted focus-visible:outline-none focus-visible:border-pf-cyan-500/50 transition-colors"
+                    className="w-full h-8 px-2 rounded-pf bg-elevated border border-default text-xs text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:border-accent/50 transition-colors"
                   />
                 </div>
               </div>
               {(filters.minYesPrice !== undefined || filters.maxYesPrice !== undefined) && (
-                <p className="text-pf-label text-pf-cyan-400 font-mono">
+                <p className="text-pf-label text-accent-text font-mono">
                   {filters.minYesPrice ?? '0.01'} — {filters.maxYesPrice ?? '0.99'}
                 </p>
               )}
@@ -689,8 +689,8 @@ function AdvancedSearchModal({
 
           {/* Volume + Liquidity */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="bg-pf-surface border border-pf-border rounded-pf p-3 space-y-2">
-              <p className="text-xs font-medium text-pf-text-secondary uppercase tracking-wide">Volume (USDC)</p>
+            <div className="bg-surface border border-default rounded-pf p-3 space-y-2">
+              <p className="text-xs font-medium text-secondary uppercase tracking-wide">Volume (USDC)</p>
               <div className="flex items-center gap-2">
                 <Input
                   type="number"
@@ -698,29 +698,29 @@ function AdvancedSearchModal({
                   placeholder="Min"
                   value={filters.minVolume ?? ''}
                   onChange={(e) => updateFilters((prev) => ({ ...prev, minVolume: e.target.value ? parseFloat(e.target.value) : undefined }))}
-                  className="flex-1 h-8 px-2 rounded-pf bg-pf-elevated border border-pf-border text-xs text-pf-text placeholder:text-pf-text-muted focus-visible:outline-none focus-visible:border-pf-cyan-500/50 transition-colors"
+                  className="flex-1 h-8 px-2 rounded-pf bg-elevated border border-default text-xs text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:border-accent/50 transition-colors"
                 />
-                <span className="text-pf-text-muted text-xs">—</span>
+                <span className="text-tertiary text-xs">—</span>
                 <Input
                   type="number"
                   min={0}
                   placeholder="Max"
                   value={filters.maxVolume ?? ''}
                   onChange={(e) => updateFilters((prev) => ({ ...prev, maxVolume: e.target.value ? parseFloat(e.target.value) : undefined }))}
-                  className="flex-1 h-8 px-2 rounded-pf bg-pf-elevated border border-pf-border text-xs text-pf-text placeholder:text-pf-text-muted focus-visible:outline-none focus-visible:border-pf-cyan-500/50 transition-colors"
+                  className="flex-1 h-8 px-2 rounded-pf bg-elevated border border-default text-xs text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:border-accent/50 transition-colors"
                 />
               </div>
             </div>
 
-            <div className="bg-pf-surface border border-pf-border rounded-pf p-3 space-y-2">
-              <p className="text-xs font-medium text-pf-text-secondary uppercase tracking-wide">Min Liquidity (USDC)</p>
+            <div className="bg-surface border border-default rounded-pf p-3 space-y-2">
+              <p className="text-xs font-medium text-secondary uppercase tracking-wide">Min Liquidity (USDC)</p>
               <Input
                 type="number"
                 min={0}
                 placeholder="e.g. 10000"
                 value={filters.minLiquidity ?? ''}
                 onChange={(e) => updateFilters((prev) => ({ ...prev, minLiquidity: e.target.value ? parseFloat(e.target.value) : undefined }))}
-                className="w-full h-8 px-2 rounded-pf bg-pf-elevated border border-pf-border text-xs text-pf-text placeholder:text-pf-text-muted focus-visible:outline-none focus-visible:border-pf-cyan-500/50 transition-colors"
+                className="w-full h-8 px-2 rounded-pf bg-elevated border border-default text-xs text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:border-accent/50 transition-colors"
               />
             </div>
           </div>
@@ -729,7 +729,7 @@ function AdvancedSearchModal({
           <div className="flex flex-wrap items-start gap-6">
             {/* Status */}
             <div>
-              <p className="text-xs font-medium text-pf-text-secondary uppercase tracking-wide mb-2">Status</p>
+              <p className="text-xs font-medium text-secondary uppercase tracking-wide mb-2">Status</p>
               <div className="flex items-center gap-2">
                 {(['active', 'closed', 'all'] as const).map((s) => (
                   <Button
@@ -740,16 +740,16 @@ function AdvancedSearchModal({
                     className={`px-3 py-1 rounded-pf-full text-xs font-medium border transition-colors capitalize ${
                       filters.status === s
                         ? s === 'active'
-                          ? 'bg-pf-success/15 text-pf-success border-pf-success/30'
+                          ? 'bg-gain/15 text-gain border-gain/30'
                           : s === 'closed'
-                          ? 'bg-pf-danger/15 text-pf-danger border-pf-danger/30'
-                          : 'bg-pf-cyan-500/15 text-pf-cyan-400 border-pf-cyan-500/30'
-                        : 'bg-pf-surface text-pf-text-secondary border-pf-border hover:border-pf-border-strong'
+                          ? 'bg-loss/15 text-loss border-loss/30'
+                          : 'bg-accent/15 text-accent-text border-accent/30'
+                        : 'bg-surface text-secondary border-default hover:border-strong'
                     }`}
                   >
                     {s === 'active' && filters.status === 'active' ? 'Active' : s.charAt(0).toUpperCase() + s.slice(1)}
                     {s === 'active' && filters.status === 'active' && (
-                      <span className="ml-1 inline-block w-2 h-2 rounded-pf-full bg-pf-success align-middle" />
+                      <span className="ml-1 inline-block w-2 h-2 rounded-pf-full bg-gain align-middle" />
                     )}
                   </Button>
                 ))}
@@ -758,7 +758,7 @@ function AdvancedSearchModal({
 
             {/* Sort */}
             <div className="flex-1 min-w-[220px]">
-              <p className="text-xs font-medium text-pf-text-secondary uppercase tracking-wide mb-2">Sort By</p>
+              <p className="text-xs font-medium text-secondary uppercase tracking-wide mb-2">Sort By</p>
               <div className="flex flex-wrap gap-2">
                 {ADVANCED_SORT_OPTIONS.map((opt) => (
                   <Button
@@ -774,8 +774,8 @@ function AdvancedSearchModal({
                     }}
                     className={`flex items-center gap-1 px-3 py-1 rounded-pf-full text-xs font-medium border transition-colors ${
                       filters.sortBy === opt.value
-                        ? 'bg-pf-cyan-500/15 text-pf-cyan-400 border-pf-cyan-500/30'
-                        : 'bg-pf-surface text-pf-text-secondary border-pf-border hover:border-pf-border-strong'
+                        ? 'bg-accent/15 text-accent-text border-accent/30'
+                        : 'bg-surface text-secondary border-default hover:border-strong'
                     }`}
                   >
                     {opt.label}
@@ -794,7 +794,7 @@ function AdvancedSearchModal({
               type="button"
               variant="secondary"
               onClick={handleReset}
-              className="px-4 py-2 rounded-pf text-sm text-pf-text-secondary hover:text-pf-text hover:bg-pf-overlay border border-pf-border hover:border-pf-border-strong transition-colors"
+              className="px-4 py-2 rounded-pf text-sm text-secondary hover:text-primary hover:bg-overlay border border-default hover:border-strong transition-colors"
             >
               Reset Filters
             </Button>
@@ -802,10 +802,10 @@ function AdvancedSearchModal({
               type="button"
               onClick={() => runSearch(0)}
               disabled={searchLoading}
-              className="flex items-center gap-2 px-5 py-2 rounded-pf bg-pf-cyan-500 hover:bg-pf-cyan-400 text-pf-bg text-sm font-semibold transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+              className="flex items-center gap-2 px-5 py-2 rounded-pf bg-accent hover:bg-accent-text text-app text-sm font-semibold transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
             >
               {searchLoading ? (
-                <span className="inline-block w-4 h-4 border-2 border-pf-bg/30 border-t-pf-bg rounded-pf-full animate-spin" aria-hidden="true" />
+                <span className="inline-block w-4 h-4 border-2 border-app/30 border-t-pf-bg rounded-pf-full animate-spin" aria-hidden="true" />
               ) : (
                 <Search className="size-4" aria-hidden="true" />
               )}
@@ -816,21 +816,21 @@ function AdvancedSearchModal({
           {/* Results */}
           {searchTotal !== null && (
             <div className="space-y-3 pt-2">
-              <div className="flex items-center gap-2 pb-1 border-b border-pf-border-subtle">
-                <p className="text-sm font-medium text-pf-text">
+              <div className="flex items-center gap-2 pb-1 border-b border-subtle">
+                <p className="text-sm font-medium text-primary">
                   Results{' '}
-                  <span className="text-pf-text-muted font-normal">({searchTotal.toLocaleString()} markets)</span>
+                  <span className="text-tertiary font-normal">({searchTotal.toLocaleString()} markets)</span>
                 </p>
               </div>
 
               {results.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-10 text-center">
-                  <Search className="size-8 text-pf-text-muted mb-3" aria-hidden="true" />
-                  <p className="text-sm text-pf-text font-medium">No markets found</p>
-                  <p className="text-xs text-pf-text-muted mt-1">Try adjusting your filters</p>
+                  <Search className="size-8 text-tertiary mb-3" aria-hidden="true" />
+                  <p className="text-sm text-primary font-medium">No markets found</p>
+                  <p className="text-xs text-tertiary mt-1">Try adjusting your filters</p>
                 </div>
               ) : (
-                <div className="divide-y divide-pf-border-subtle border border-pf-border rounded-pf overflow-hidden">
+                <div className="divide-y divide-subtle border border-default rounded-pf overflow-hidden">
                   {results.map((market) => {
                     const catColor = CATEGORY_COLORS[market.category];
                     const yesP = yesPercent(market);
@@ -840,31 +840,31 @@ function AdvancedSearchModal({
                         type="button"
                         variant="ghost"
                         onClick={() => handleResultClick(market)}
-                        className="w-full flex items-center gap-3 px-4 py-3 bg-pf-surface hover:bg-pf-elevated transition-colors text-left group"
+                        className="w-full flex items-center gap-3 px-4 py-3 bg-surface hover:bg-elevated transition-colors text-left group"
                       >
-                        <div className={`w-8 h-8 rounded-pf-sm flex items-center justify-center shrink-0 ${catColor?.bg ?? 'bg-pf-overlay'}`}>
-                          <span className={`text-xs font-bold ${catColor?.text ?? 'text-pf-text-muted'}`}>
+                        <div className={`w-8 h-8 rounded-pf-sm flex items-center justify-center shrink-0 ${catColor?.bg ?? 'bg-overlay'}`}>
+                          <span className={`text-xs font-bold ${catColor?.text ?? 'text-tertiary'}`}>
                             {market.title.charAt(0).toUpperCase()}
                           </span>
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm text-pf-text group-hover:text-pf-cyan-400 transition-colors line-clamp-1 font-medium">
+                          <p className="text-sm text-primary group-hover:text-accent-text transition-colors line-clamp-1 font-medium">
                             {market.title}
                           </p>
                           <div className="flex items-center gap-2 mt-1">
-                            <span className={`text-pf-caption px-2 py-1 rounded-pf-full ${catColor?.bg ?? 'bg-pf-overlay'} ${catColor?.text ?? 'text-pf-text-muted'}`}>
+                            <span className={`text-pf-caption px-2 py-1 rounded-pf-full ${catColor?.bg ?? 'bg-overlay'} ${catColor?.text ?? 'text-tertiary'}`}>
                               {market.category}
                             </span>
-                            <span className="text-pf-caption text-pf-text-muted">{formatVolume(market.volume24h)} vol</span>
+                            <span className="text-pf-caption text-tertiary">{formatVolume(market.volume24h)} vol</span>
                           </div>
                         </div>
                         <div className="shrink-0 text-right">
                           {yesP !== null ? (
-                            <span className="text-sm font-mono font-semibold text-pf-cyan-400">{yesP}¢</span>
+                            <span className="text-sm font-mono font-semibold text-accent-text">{yesP}¢</span>
                           ) : (
-                            <span className="text-sm text-pf-text-muted">—</span>
+                            <span className="text-sm text-tertiary">—</span>
                           )}
-                          <p className="text-pf-caption text-pf-text-muted mt-1">{daysUntil(market.endDate)}</p>
+                          <p className="text-pf-caption text-tertiary mt-1">{daysUntil(market.endDate)}</p>
                         </div>
                       </Button>
                     );
@@ -878,7 +878,7 @@ function AdvancedSearchModal({
                   variant="ghost"
                   onClick={handleLoadMore}
                   disabled={searchLoading}
-                  className="w-full py-2 text-sm text-pf-text-secondary hover:text-pf-text border border-pf-border hover:border-pf-border-strong rounded-pf transition-colors disabled:opacity-60"
+                  className="w-full py-2 text-sm text-secondary hover:text-primary border border-default hover:border-strong rounded-pf transition-colors disabled:opacity-60"
                 >
                   {searchLoading ? 'Loading...' : `Load more (${searchTotal - results.length} remaining)`}
                 </Button>
@@ -1055,9 +1055,9 @@ export function Component() {
 
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold text-pf-text">Markets</h1>
+        <h1 className="text-2xl font-semibold text-primary">Markets</h1>
         {!loading && (
-          <span className="text-sm text-pf-text-muted">{total.toLocaleString()} markets</span>
+          <span className="text-sm text-tertiary">{total.toLocaleString()} markets</span>
         )}
       </div>
 
@@ -1066,10 +1066,10 @@ export function Component() {
         <div className="space-y-3">
           <div>
             <div className="flex items-center gap-2">
-              <Flame className="size-5 text-pf-warning" aria-hidden="true" />
-              <h2 className="text-base font-semibold text-pf-text">Trending Now</h2>
+              <Flame className="size-5 text-warning" aria-hidden="true" />
+              <h2 className="text-base font-semibold text-primary">Trending Now</h2>
             </div>
-            <p className="text-xs text-pf-text-muted mt-1">Highest volume in the last 24h</p>
+            <p className="text-xs text-tertiary mt-1">Highest volume in the last 24h</p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             {trendingLoading
@@ -1079,19 +1079,19 @@ export function Component() {
         </div>
       )}
 
-      <hr className="border-pf-border-subtle" />
+      <hr className="border-subtle" />
 
       {/* Search */}
       <div className="flex items-center gap-2">
         <div className="relative flex-1">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-pf-text-muted" aria-hidden="true" />
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-tertiary" aria-hidden="true" />
           <Input
             type="text"
             placeholder="Search markets..."
             aria-label="Search markets"
             defaultValue=""
             onChange={(e) => onSearchInput(e.target.value)}
-            className="w-full h-11 pl-11 pr-4 rounded-pf-full bg-pf-elevated border border-pf-border text-sm text-pf-text placeholder:text-pf-text-muted focus-visible:outline-none focus-visible:border-pf-cyan-500/50 focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 transition-colors"
+            className="w-full h-11 pl-11 pr-4 rounded-pf-full bg-elevated border border-default text-sm text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:border-accent/50 focus-visible:ring-2 focus-visible:ring-accent/40 transition-colors"
           />
         </div>
         {/* Advanced search button */}
@@ -1103,14 +1103,14 @@ export function Component() {
           title="Advanced Search (Ctrl+F)"
           className={`relative flex items-center gap-2 h-11 px-4 rounded-pf-full border text-sm font-medium transition-colors shrink-0 ${
             countActiveFilters(advancedFilters) > 0
-              ? 'bg-pf-cyan-500/15 text-pf-cyan-400 border-pf-cyan-500/30 hover:bg-pf-cyan-500/20'
-              : 'bg-pf-elevated text-pf-text-secondary border-pf-border hover:border-pf-border-strong hover:text-pf-text'
+              ? 'bg-accent/15 text-accent-text border-accent/30 hover:bg-accent/20'
+              : 'bg-elevated text-secondary border-default hover:border-strong hover:text-primary'
           }`}
         >
           <SlidersHorizontal className="size-4" aria-hidden="true" />
           <span>Advanced</span>
           {countActiveFilters(advancedFilters) > 0 && (
-            <span className="flex items-center justify-center w-5 h-5 rounded-pf-full bg-pf-cyan-500 text-pf-bg text-pf-caption font-bold -mr-1">
+            <span className="flex items-center justify-center w-5 h-5 rounded-pf-full bg-accent text-app text-pf-caption font-bold -mr-1">
               {countActiveFilters(advancedFilters)}
             </span>
           )}
@@ -1127,8 +1127,8 @@ export function Component() {
             onClick={() => { setCategory(cat); setPage(1); }}
             className={`flex items-center gap-2 px-3 py-2 rounded-pf-full text-xs font-medium whitespace-nowrap border transition-colors ${
               category === cat
-                ? 'bg-pf-cyan-500/15 text-pf-cyan-400 border-pf-cyan-500/30'
-                : 'bg-pf-elevated text-pf-text-secondary border-pf-border hover:border-pf-border-strong'
+                ? 'bg-accent/15 text-accent-text border-accent/30'
+                : 'bg-elevated text-secondary border-default hover:border-strong'
             }`}
           >
             {CATEGORY_ICONS[cat]}
@@ -1141,19 +1141,19 @@ export function Component() {
       <div className="flex items-center justify-between">
         <div>
           {!loading && total > 0 && (
-            <span className="text-sm text-pf-text-muted">
+            <span className="text-sm text-tertiary">
               Showing {(page - 1) * 25 + 1}&ndash;{Math.min(page * 25, total)} of {total.toLocaleString()} markets
             </span>
           )}
         </div>
         <div className="flex items-center gap-3">
           {/* View toggle */}
-          <div className="flex bg-pf-surface rounded-pf border border-pf-border-subtle">
+          <div className="flex bg-surface rounded-pf border border-subtle">
             <Button
               type="button"
               variant="ghost"
               onClick={() => changeViewMode('cards')}
-              className={`p-2 rounded-pf-sm transition-colors ${viewMode === 'cards' ? 'bg-pf-elevated text-pf-text' : 'text-pf-text-muted hover:text-pf-text-secondary'}`}
+              className={`p-2 rounded-pf-sm transition-colors ${viewMode === 'cards' ? 'bg-elevated text-primary' : 'text-tertiary hover:text-secondary'}`}
               aria-label="Card view"
             >
               <Grid3X3 className="size-4" />
@@ -1162,7 +1162,7 @@ export function Component() {
               type="button"
               variant="ghost"
               onClick={() => changeViewMode('table')}
-              className={`p-2 rounded-pf-sm transition-colors ${viewMode === 'table' ? 'bg-pf-elevated text-pf-text' : 'text-pf-text-muted hover:text-pf-text-secondary'}`}
+              className={`p-2 rounded-pf-sm transition-colors ${viewMode === 'table' ? 'bg-elevated text-primary' : 'text-tertiary hover:text-secondary'}`}
               aria-label="Table view"
             >
               <List className="size-4" />
@@ -1188,8 +1188,8 @@ export function Component() {
                 }}
                 className={`flex items-center gap-1 px-3 py-1 rounded-pf-full text-xs font-medium border transition-colors whitespace-nowrap ${
                   endDateFilter === value
-                    ? 'bg-pf-warning/15 text-pf-warning border-pf-warning/30'
-                    : 'bg-pf-elevated text-pf-text-secondary border-pf-border hover:border-pf-border-strong'
+                    ? 'bg-warning/15 text-warning border-warning/30'
+                    : 'bg-elevated text-secondary border-default hover:border-strong'
                 }`}
               >
                 <Icon className="size-3" aria-hidden="true" />
@@ -1200,12 +1200,12 @@ export function Component() {
 
           {/* Sort */}
           <div className="flex items-center gap-2">
-            <label htmlFor="sort-select" className="text-xs text-pf-text-secondary">Sort by</label>
+            <label htmlFor="sort-select" className="text-xs text-secondary">Sort by</label>
             <Select
               id="sort-select"
               value={sort}
               onChange={(e) => { setSort(e.target.value as SortOption); setPage(1); }}
-              className="h-8 px-3 rounded-pf bg-pf-elevated border border-pf-border text-xs text-pf-text focus-visible:outline-none focus-visible:border-pf-cyan-500/50"
+              className="h-8 px-3 rounded-pf bg-elevated border border-default text-xs text-primary focus-visible:outline-none focus-visible:border-accent/50"
             >
               {SORT_OPTIONS.map((o) => (
                 <option key={o.value} value={o.value}>{o.label}</option>
@@ -1232,9 +1232,9 @@ export function Component() {
         <>
           {filtered.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20 text-center" role="status">
-              <Search className="size-10 text-pf-text-muted mb-4" aria-hidden="true" />
-              <p className="text-pf-text font-medium">No markets found</p>
-              <p className="text-sm text-pf-text-muted mt-1">Try adjusting your search or filters</p>
+              <Search className="size-10 text-tertiary mb-4" aria-hidden="true" />
+              <p className="text-primary font-medium">No markets found</p>
+              <p className="text-sm text-tertiary mt-1">Try adjusting your search or filters</p>
             </div>
           ) : (
             <>
@@ -1260,15 +1260,15 @@ export function Component() {
         <>
           {filtered.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20 text-center" role="status">
-              <Search className="size-10 text-pf-text-muted mb-4" aria-hidden="true" />
-              <p className="text-pf-text font-medium">No markets found</p>
-              <p className="text-sm text-pf-text-muted mt-1">Try adjusting your search or filters</p>
+              <Search className="size-10 text-tertiary mb-4" aria-hidden="true" />
+              <p className="text-primary font-medium">No markets found</p>
+              <p className="text-sm text-tertiary mt-1">Try adjusting your search or filters</p>
             </div>
           ) : (
-            <div className="border border-pf-border rounded-pf-lg overflow-hidden">
+            <div className="border border-default rounded-pf-lg overflow-hidden">
               <table className="w-full text-sm" aria-label="Markets">
                 <thead>
-                  <tr className="bg-pf-surface text-left text-xs text-pf-text-secondary uppercase tracking-wider">
+                  <tr className="bg-surface text-left text-xs text-secondary uppercase tracking-wider">
                     <th scope="col" className="px-4 py-3 font-medium">Market</th>
                     <th scope="col" className="px-4 py-3 font-medium">Category</th>
                     <th scope="col" className="px-4 py-3 font-medium text-right">YES</th>
@@ -1278,33 +1278,33 @@ export function Component() {
                     <th scope="col" className="px-4 py-3 font-medium text-right w-10"></th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-pf-border-subtle">
+                <tbody className="divide-y divide-subtle">
                   {filtered.map((market) => {
                     const catColor = CATEGORY_COLORS[market.category];
                     return (
-                      <tr key={market.id} className="group hover:bg-pf-elevated/50 transition-colors">
+                      <tr key={market.id} className="group hover:bg-elevated/50 transition-colors">
                         <td className="px-4 py-3">
-                          <Link to={`/markets/${market.id}`} className="text-pf-text hover:text-pf-cyan-400 transition-colors line-clamp-1">
+                          <Link to={`/markets/${market.id}`} className="text-primary hover:text-accent-text transition-colors line-clamp-1">
                             {market.title}
                           </Link>
                         </td>
                         <td className="px-4 py-3">
-                          <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-pf-full text-pf-label font-medium ${catColor?.bg ?? 'bg-pf-overlay'} ${catColor?.text ?? 'text-pf-text-muted'}`}>
+                          <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-pf-full text-pf-label font-medium ${catColor?.bg ?? 'bg-overlay'} ${catColor?.text ?? 'text-tertiary'}`}>
                             {CATEGORY_ICONS[market.category]}
                             {market.category}
                           </span>
                         </td>
-                        <td className="px-4 py-3 text-right font-mono text-pf-success">
+                        <td className="px-4 py-3 text-right font-mono text-gain">
                           {priceCents(market, 'YES')}
                         </td>
-                        <td className="px-4 py-3 text-right font-mono text-pf-danger">
+                        <td className="px-4 py-3 text-right font-mono text-loss">
                           {priceCents(market, 'NO')}
                         </td>
-                        <td className="px-4 py-3 text-right font-mono text-pf-text">
+                        <td className="px-4 py-3 text-right font-mono text-primary">
                           {formatVolume(market.volume24h)}
                         </td>
                         <td className="px-4 py-3 text-right">
-                          <span className={`font-mono text-xs ${isClosingSoon(market.endDate) ? 'text-pf-warning' : 'text-pf-text-secondary'}`}>
+                          <span className={`font-mono text-xs ${isClosingSoon(market.endDate) ? 'text-warning' : 'text-secondary'}`}>
                             {daysUntil(market.endDate)}
                           </span>
                         </td>
@@ -1316,7 +1316,7 @@ export function Component() {
                             onClick={(e) => toggleWatch(market.id, e)}
                             disabled={watchlistLoading.has(market.id)}
                             aria-label={watchedIds.has(market.id) ? 'Remove from watchlist' : 'Add to watchlist'}
-                            className={`p-2 rounded-pf transition-colors ${watchedIds.has(market.id) ? 'text-pf-gold-500 hover:text-pf-gold-400' : 'text-pf-text-muted hover:text-pf-text'}`}
+                            className={`p-2 rounded-pf transition-colors ${watchedIds.has(market.id) ? 'text-pf-gold-500 hover:text-pf-gold-400' : 'text-tertiary hover:text-primary'}`}
                             title={watchedIds.has(market.id) ? 'Remove from watchlist' : 'Add to watchlist'}
                           >
                             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill={watchedIds.has(market.id) ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -1344,11 +1344,11 @@ export function Component() {
             onClick={() => setPage((p) => Math.max(1, p - 1))}
             disabled={page === 1}
             aria-label="Previous page"
-            className="p-2 rounded-pf text-pf-text-secondary hover:text-pf-text hover:bg-pf-elevated disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+            className="p-2 rounded-pf text-secondary hover:text-primary hover:bg-elevated disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
           >
             <ChevronLeft className="size-4" />
           </Button>
-          <span className="text-sm font-mono text-pf-text-secondary" aria-live="polite">
+          <span className="text-sm font-mono text-secondary" aria-live="polite">
             Page {page} of {totalPages}
           </span>
           <Button
@@ -1358,7 +1358,7 @@ export function Component() {
             onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
             disabled={page === totalPages}
             aria-label="Next page"
-            className="p-2 rounded-pf text-pf-text-secondary hover:text-pf-text hover:bg-pf-elevated disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+            className="p-2 rounded-pf text-secondary hover:text-primary hover:bg-elevated disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
           >
             <ChevronRight className="size-4" />
           </Button>

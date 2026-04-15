@@ -21,9 +21,9 @@ interface PortfolioReview {
 /* ─── Helpers ────────────────────────────────────────────────────────── */
 
 function riskPillClass(level: string): string {
-  if (level === 'low') return 'bg-pf-success/15 text-pf-success border border-pf-success/30';
-  if (level === 'medium') return 'bg-pf-warning/15 text-pf-warning border border-pf-warning/30';
-  return 'bg-pf-danger/15 text-pf-danger border border-pf-danger/30';
+  if (level === 'low') return 'bg-gain/15 text-gain border border-gain/30';
+  if (level === 'medium') return 'bg-warning/15 text-warning border border-warning/30';
+  return 'bg-loss/15 text-loss border border-loss/30';
 }
 
 function suggestionText(s: Suggestion | string): string {
@@ -50,25 +50,25 @@ function ReviewSkeleton() {
   return (
     <div className="animate-fade-in space-y-6">
       {/* Score skeleton */}
-      <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-6 space-y-3">
+      <div className="bg-elevated border border-default rounded-pf-lg p-6 space-y-3">
         <div className="flex items-center justify-between">
-          <div className="h-4 bg-pf-overlay rounded w-28 animate-pulse" />
-          <div className="h-7 bg-pf-overlay rounded-pf-full w-16 animate-pulse" />
+          <div className="h-4 bg-overlay rounded w-28 animate-pulse" />
+          <div className="h-7 bg-overlay rounded-pf-full w-16 animate-pulse" />
         </div>
         <div className="space-y-2">
-          <div className="h-3 bg-pf-overlay rounded w-full animate-pulse" />
-          <div className="h-3 bg-pf-overlay rounded w-[90%] animate-pulse" />
-          <div className="h-3 bg-pf-overlay rounded w-[75%] animate-pulse" />
-          <div className="h-3 bg-pf-overlay rounded w-[80%] animate-pulse" />
+          <div className="h-3 bg-overlay rounded w-full animate-pulse" />
+          <div className="h-3 bg-overlay rounded w-[90%] animate-pulse" />
+          <div className="h-3 bg-overlay rounded w-[75%] animate-pulse" />
+          <div className="h-3 bg-overlay rounded w-[80%] animate-pulse" />
         </div>
       </div>
       {/* Suggestions skeleton */}
-      <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-6 space-y-2">
-        <div className="h-4 bg-pf-overlay rounded w-28 animate-pulse mb-4" />
+      <div className="bg-elevated border border-default rounded-pf-lg p-6 space-y-2">
+        <div className="h-4 bg-overlay rounded w-28 animate-pulse mb-4" />
         {[0, 1, 2].map((i) => (
           <div key={i} className="flex items-start gap-2">
-            <div className="h-3 w-3 bg-pf-overlay rounded-pf-full mt-1 shrink-0 animate-pulse" />
-            <div className="h-3 bg-pf-overlay rounded flex-1 animate-pulse" />
+            <div className="h-3 w-3 bg-overlay rounded-pf-full mt-1 shrink-0 animate-pulse" />
+            <div className="h-3 bg-overlay rounded flex-1 animate-pulse" />
           </div>
         ))}
       </div>
@@ -111,14 +111,14 @@ export function Component() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Sparkles className="size-5 text-pf-text-muted" aria-hidden="true" />
-          <h1 className="text-2xl font-semibold text-pf-text">AI Portfolio Optimizer</h1>
+          <Sparkles className="size-5 text-tertiary" aria-hidden="true" />
+          <h1 className="text-2xl font-semibold text-primary">AI Portfolio Optimizer</h1>
         </div>
         <Button
           type="button"
           onClick={load}
           disabled={loading}
-          className="flex items-center gap-2 px-3 py-2 rounded-pf bg-pf-elevated border border-pf-border text-xs text-pf-text-secondary hover:border-pf-border-strong hover:text-pf-text disabled:opacity-40 disabled:cursor-not-allowed transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40"
+          className="flex items-center gap-2 px-3 py-2 rounded-pf bg-elevated border border-default text-xs text-secondary hover:border-strong hover:text-primary disabled:opacity-40 disabled:cursor-not-allowed transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
           aria-label="Refresh analysis"
         >
           <RefreshCw className={`size-4 ${loading ? 'animate-spin' : ''}`} />
@@ -129,14 +129,14 @@ export function Component() {
       {loading && <ReviewSkeleton />}
 
       {!loading && error && (
-        <div className="flex flex-col items-center justify-center py-20 text-center bg-pf-elevated border border-pf-border rounded-pf-lg">
-          <Sparkles className="size-10 text-pf-text-muted mb-4 opacity-40" aria-hidden="true" />
-          <p className="text-pf-text font-medium">Failed to load review</p>
-          <p className="text-sm text-pf-text-muted mt-1">{error}</p>
+        <div className="flex flex-col items-center justify-center py-20 text-center bg-elevated border border-default rounded-pf-lg">
+          <Sparkles className="size-10 text-tertiary mb-4 opacity-40" aria-hidden="true" />
+          <p className="text-primary font-medium">Failed to load review</p>
+          <p className="text-sm text-tertiary mt-1">{error}</p>
           <Button
             type="button"
             onClick={load}
-            className="mt-4 px-4 py-2 rounded-pf bg-pf-elevated border border-pf-border text-sm text-pf-text hover:border-pf-border-strong transition-colors"
+            className="mt-4 px-4 py-2 rounded-pf bg-elevated border border-default text-sm text-primary hover:border-strong transition-colors"
           >
             Try Again
           </Button>
@@ -146,9 +146,9 @@ export function Component() {
       {!loading && data && (
         <>
           {/* Review card */}
-          <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-6 space-y-4">
+          <div className="bg-elevated border border-default rounded-pf-lg p-6 space-y-4">
             <div className="flex items-center justify-between flex-wrap gap-2">
-              <h2 className="text-sm font-medium text-pf-text uppercase tracking-wide">Portfolio Review</h2>
+              <h2 className="text-sm font-medium text-primary uppercase tracking-wide">Portfolio Review</h2>
               <div className="flex items-center gap-2">
                 <span
                   className={`inline-flex items-center gap-1 px-3 py-1 rounded-pf-full text-xs font-semibold uppercase tracking-wide ${riskPillClass(data.riskLevel)}`}
@@ -158,11 +158,11 @@ export function Component() {
                 </span>
               </div>
             </div>
-            <p className="text-sm text-pf-text-secondary leading-relaxed whitespace-pre-wrap">
+            <p className="text-sm text-secondary leading-relaxed whitespace-pre-wrap">
               {data.summary}
             </p>
             {data.generatedAt && (
-              <p className="text-pf-label text-pf-text-muted pt-1 border-t border-pf-border-subtle">
+              <p className="text-pf-label text-tertiary pt-1 border-t border-subtle">
                 Generated {formatGeneratedAt(data.generatedAt)}
               </p>
             )}
@@ -170,13 +170,13 @@ export function Component() {
 
           {/* Suggestions */}
           {data.suggestions.length > 0 && (
-            <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-6">
-              <h2 className="text-sm font-medium text-pf-text uppercase tracking-wide mb-4">Suggestions</h2>
+            <div className="bg-elevated border border-default rounded-pf-lg p-6">
+              <h2 className="text-sm font-medium text-primary uppercase tracking-wide mb-4">Suggestions</h2>
               <ul className="space-y-3" aria-label="Portfolio suggestions">
                 {data.suggestions.map((suggestion, i) => (
-                  <li key={i} className="flex items-start gap-3 text-sm text-pf-text-secondary">
+                  <li key={i} className="flex items-start gap-3 text-sm text-secondary">
                     <span
-                      className="mt-2 size-2 rounded-pf-full bg-pf-cyan-500 shrink-0"
+                      className="mt-2 size-2 rounded-pf-full bg-accent shrink-0"
                       aria-hidden="true"
                     />
                     <span className="leading-relaxed">{suggestionText(suggestion)}</span>

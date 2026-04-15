@@ -141,7 +141,7 @@ function VariableNodeInner({ id, data }: NodeProps<VariableNodeType>) {
           <button
             type="button"
             onClick={onDelete}
-            className="p-1 rounded hover:bg-pf-text/20 active:bg-pf-text/30 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-text/50"
+            className="p-1 rounded hover:bg-primary/20 active:bg-primary/30 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
             aria-label="Remove variable"
             title="Remove variable"
           >
@@ -153,7 +153,7 @@ function VariableNodeInner({ id, data }: NodeProps<VariableNodeType>) {
         <div className="px-3 py-2 space-y-2">
           {/* Name */}
           <div>
-            <label htmlFor={`${id}-var-name`} className="block text-pf-caption font-medium text-pf-text-muted mb-1 uppercase tracking-wider">
+            <label htmlFor={`${id}-var-name`} className="block text-pf-caption font-medium text-tertiary mb-1 uppercase tracking-wider">
               Name
             </label>
             <input
@@ -163,14 +163,14 @@ function VariableNodeInner({ id, data }: NodeProps<VariableNodeType>) {
               value={data.variableName ?? ''}
               onChange={onNameChange}
               aria-describedby={!nameValid ? `${id}-name-error` : undefined}
-              className={`w-full px-2 py-1 text-xs bg-pf-surface border rounded-pf-sm text-pf-text placeholder:text-pf-text-muted/50 focus-visible:outline-none transition-colors ${
+              className={`w-full px-2 py-1 text-xs bg-surface border rounded-pf-sm text-primary placeholder:text-tertiary/50 focus-visible:outline-none transition-colors ${
                 nameValid
-                  ? 'border-pf-border-subtle focus-visible:border-pf-purple-500/50'
-                  : 'border-pf-danger/60 focus-visible:border-pf-danger'
+                  ? 'border-subtle focus-visible:border-pf-purple-500/50'
+                  : 'border-loss/60 focus-visible:border-loss'
               }`}
             />
             {!nameValid && (
-              <p id={`${id}-name-error`} className="text-pf-micro text-pf-danger mt-1">
+              <p id={`${id}-name-error`} className="text-pf-micro text-loss mt-1">
                 Letters, digits, underscores only
               </p>
             )}
@@ -178,7 +178,7 @@ function VariableNodeInner({ id, data }: NodeProps<VariableNodeType>) {
 
           {/* Expression */}
           <div>
-            <label htmlFor={`${id}-var-expr`} className="block text-pf-caption font-medium text-pf-text-muted mb-1 uppercase tracking-wider">
+            <label htmlFor={`${id}-var-expr`} className="block text-pf-caption font-medium text-tertiary mb-1 uppercase tracking-wider">
               Expression
             </label>
             <input
@@ -188,7 +188,7 @@ function VariableNodeInner({ id, data }: NodeProps<VariableNodeType>) {
               value={data.expression ?? ''}
               onChange={onExpressionChange}
               aria-label="Variable expression"
-              className="w-full px-2 py-1 text-xs bg-pf-surface border border-pf-border-subtle rounded-pf-sm text-pf-text placeholder:text-pf-text-muted/50 focus-visible:outline-none focus-visible:border-pf-purple-500/50 transition-colors font-mono"
+              className="w-full px-2 py-1 text-xs bg-surface border border-subtle rounded-pf-sm text-primary placeholder:text-tertiary/50 focus-visible:outline-none focus-visible:border-pf-purple-500/50 transition-colors font-mono"
             />
           </div>
 
@@ -205,7 +205,7 @@ function VariableNodeInner({ id, data }: NodeProps<VariableNodeType>) {
       <Handle
         type="source"
         position={Position.Right}
-        className="!w-3 !h-3 !bg-pf-elevated !border-2 !rounded-pf-full builder-handle"
+        className="!w-3 !h-3 !bg-elevated !border-2 !rounded-pf-full builder-handle"
         style={{ '--node-color': VARIABLE_COLOR } as React.CSSProperties}
       />
     </>

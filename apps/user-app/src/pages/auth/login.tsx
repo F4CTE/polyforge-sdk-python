@@ -60,29 +60,29 @@ export function Component() {
 
   return (
     <main
-      className="min-h-screen flex items-center justify-center p-4 relative bg-pf-base"
+      className="min-h-screen flex items-center justify-center p-4 relative bg-app"
     >
       <AuthBackground />
       <div className="w-full max-w-md relative z-10">
         {/* Logo centered above card */}
         <div className="text-center mb-8">
-          <div className="text-pf-cyan-500 inline-block">
+          <div className="text-accent inline-block">
             <svg width="64" height="64" viewBox="0 0 24 24" fill="none" aria-hidden="true">
               <path d="M12 2L20.66 7V17L12 22L3.34 17V7L12 2Z" stroke="currentColor" strokeWidth="1.2" fill="none" opacity="0.4"/>
               <path d="M13 5L7.5 13H11L10 19L16.5 11H13L13 5Z" fill="currentColor"/>
             </svg>
           </div>
-          <h1 className="text-2xl font-semibold mt-4 bg-gradient-to-r from-pf-cyan-400 to-pf-cyan-300 bg-clip-text text-transparent">
+          <h1 className="text-2xl font-semibold mt-4 bg-gradient-to-r from-accent-text to-accent-text bg-clip-text text-transparent">
             Welcome back
           </h1>
-          <p className="text-pf-text-muted text-sm mt-1">Sign in to your Polyforge account</p>
+          <p className="text-tertiary text-sm mt-1">Sign in to your Polyforge account</p>
         </div>
 
         {/* Card */}
-        <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-8 shadow-pf-lg">
+        <div className="bg-elevated border border-default rounded-pf-lg p-8 shadow-pf-lg">
 
           {sessionExpired && (
-            <div role="alert" className="flex items-center gap-2 bg-pf-warning/10 border border-pf-warning/20 text-pf-warning rounded-pf px-4 py-3 mb-4 text-sm">
+            <div role="alert" className="flex items-center gap-2 bg-warning/10 border border-warning/20 text-warning rounded-pf px-4 py-3 mb-4 text-sm">
               <AlertCircle className="size-4 shrink-0" />
               <span className="flex-1">Your session has expired. Please sign in again.</span>
               <Button
@@ -90,7 +90,7 @@ export function Component() {
                 variant="ghost"
                 size="icon-sm"
                 onClick={() => setSessionExpired(false)}
-                className="shrink-0 text-pf-warning hover:text-pf-warning/70 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-warning/40 rounded-pf-sm cursor-pointer"
+                className="shrink-0 text-warning hover:text-warning/70 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-warning/40 rounded-pf-sm cursor-pointer"
                 aria-label="Dismiss warning"
               >
                 <X className="size-4" />
@@ -99,7 +99,7 @@ export function Component() {
           )}
 
           {error && (
-            <div role="alert" className="flex items-center gap-2 bg-pf-danger/10 border border-pf-danger/20 text-pf-danger rounded-pf px-4 py-3 mb-4 text-sm">
+            <div role="alert" className="flex items-center gap-2 bg-loss/10 border border-loss/20 text-loss rounded-pf px-4 py-3 mb-4 text-sm">
               <AlertCircle className="size-4 shrink-0" />
               <span className="flex-1">{error}</span>
               <Button
@@ -107,7 +107,7 @@ export function Component() {
                 variant="ghost"
                 size="icon-sm"
                 onClick={() => setError('')}
-                className="shrink-0 text-pf-danger hover:text-pf-danger/70 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-danger/40 rounded-pf-sm cursor-pointer"
+                className="shrink-0 text-loss hover:text-loss/70 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-loss/40 rounded-pf-sm cursor-pointer"
                 aria-label="Dismiss error"
               >
                 <X className="size-4" />
@@ -118,9 +118,9 @@ export function Component() {
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Email */}
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-pf-text mb-2">Email</label>
+              <label htmlFor="email" className="block text-sm font-medium text-primary mb-2">Email</label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-pf-text-muted" />
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-tertiary" />
                 <Input
                   id="email"
                   type="email"
@@ -132,17 +132,17 @@ export function Component() {
                   placeholder="you@example.com"
                   aria-invalid={!!emailError}
                   aria-describedby={emailError ? 'login-email-error' : undefined}
-                  className="w-full pl-10 pr-4 py-3 bg-pf-base border border-pf-border rounded-pf text-pf-text placeholder:text-pf-text-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 focus-visible:border-pf-cyan-500 transition-colors"
+                  className="w-full pl-10 pr-4 py-3 bg-app border border-default rounded-pf text-primary placeholder:text-tertiary/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 focus-visible:border-accent transition-colors"
                 />
               </div>
-              {emailError && <p id="login-email-error" role="alert" className="mt-1 text-xs text-pf-danger">{emailError}</p>}
+              {emailError && <p id="login-email-error" role="alert" className="mt-1 text-xs text-loss">{emailError}</p>}
             </div>
 
             {/* Password */}
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-pf-text mb-2">Password</label>
+              <label htmlFor="password" className="block text-sm font-medium text-primary mb-2">Password</label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-pf-text-muted" />
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-tertiary" />
                 <Input
                   id="password"
                   type={showPassword ? 'text' : 'password'}
@@ -153,29 +153,29 @@ export function Component() {
                   placeholder="Your password"
                   aria-invalid={!!passwordError}
                   aria-describedby={passwordError ? 'login-password-error' : undefined}
-                  className="w-full pl-10 pr-10 py-3 bg-pf-base border border-pf-border rounded-pf text-pf-text placeholder:text-pf-text-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 focus-visible:border-pf-cyan-500 transition-colors"
+                  className="w-full pl-10 pr-10 py-3 bg-app border border-default rounded-pf text-primary placeholder:text-tertiary/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 focus-visible:border-accent transition-colors"
                 />
                 <Button
                   type="button"
                   variant="ghost"
                   size="icon-sm"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-pf-text-muted hover:text-pf-text transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 rounded-pf-sm"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-tertiary hover:text-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 rounded-pf-sm"
                   aria-label={showPassword ? 'Hide password' : 'Show password'}
                 >
                   {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
                 </Button>
               </div>
-              {passwordError && <p id="login-password-error" role="alert" className="mt-1 text-xs text-pf-danger">{passwordError}</p>}
+              {passwordError && <p id="login-password-error" role="alert" className="mt-1 text-xs text-loss">{passwordError}</p>}
             </div>
 
             {/* TOTP */}
             {requireTotp && (
               <div>
-                <label htmlFor="totp" className="block text-sm font-medium text-pf-text mb-1">Two-Factor Code</label>
-                <p className="text-xs text-pf-text-muted mb-2">Enter the 6-digit code from your authenticator app.</p>
+                <label htmlFor="totp" className="block text-sm font-medium text-primary mb-1">Two-Factor Code</label>
+                <p className="text-xs text-tertiary mb-2">Enter the 6-digit code from your authenticator app.</p>
                 <div className="relative">
-                  <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-pf-text-muted" />
+                  <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-tertiary" />
                   <Input
                     id="totp"
                     type="text"
@@ -187,7 +187,7 @@ export function Component() {
                     onChange={(e) => setTotp(e.target.value.replace(/\D/g, '').slice(0, 6))}
                     placeholder="000000"
                     aria-label="6-digit authentication code"
-                    className="w-full pl-10 pr-4 py-3 bg-pf-base border border-pf-border rounded-pf text-pf-text placeholder:text-pf-text-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 focus-visible:border-pf-cyan-500 tracking-pf-code font-mono transition-colors"
+                    className="w-full pl-10 pr-4 py-3 bg-app border border-default rounded-pf text-primary placeholder:text-tertiary/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 focus-visible:border-accent tracking-pf-code font-mono transition-colors"
                   />
                 </div>
               </div>
@@ -196,23 +196,23 @@ export function Component() {
             <Button
               type="submit"
               disabled={loading}
-              className="w-full py-3 bg-pf-cyan-500 text-pf-text-contrast font-semibold rounded-pf hover:bg-pf-cyan-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="w-full py-3 bg-accent text-inverse font-semibold rounded-pf hover:bg-accent-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               {loading ? 'Signing in...' : 'Sign in'}
             </Button>
           </form>
 
           <div className="mt-6 text-center text-sm">
-              <Link to="/forgot-password" className="text-pf-cyan-500 hover:text-pf-cyan-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 rounded-pf-sm transition-colors">
+              <Link to="/forgot-password" className="text-accent hover:text-accent-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 rounded-pf-sm transition-colors">
                 Forgot password?
               </Link>
           </div>
         </div>
 
         {/* Links below card */}
-        <p className="text-center text-sm text-pf-text-muted mt-6">
+        <p className="text-center text-sm text-tertiary mt-6">
           Don&apos;t have an account?{' '}
-          <Link to="/register" className="text-pf-cyan-400 hover:text-pf-cyan-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 rounded-pf-sm transition-colors">
+          <Link to="/register" className="text-accent-text hover:text-accent-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 rounded-pf-sm transition-colors">
             Create one
           </Link>
         </p>

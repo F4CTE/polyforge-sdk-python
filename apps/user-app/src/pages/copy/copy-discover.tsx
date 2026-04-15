@@ -93,17 +93,17 @@ const MAX_COMPARE = 3;
 /* ─── Helpers ────────────────────────────────────────────────────────── */
 
 function rankBadgeClass(rank: number): string {
-  if (rank === 1) return 'bg-pf-warning/20 text-pf-warning border border-pf-warning/30';
-  if (rank === 2) return 'bg-pf-text/20 text-pf-text/70 border border-pf-text/30';
-  if (rank === 3) return 'bg-pf-warning/20 text-pf-warning/80 border border-pf-warning/30';
-  return 'bg-pf-overlay text-pf-text-muted border border-pf-border';
+  if (rank === 1) return 'bg-warning/20 text-warning border border-warning/30';
+  if (rank === 2) return 'bg-primary/20 text-primary/70 border border-primary/30';
+  if (rank === 3) return 'bg-warning/20 text-warning/80 border border-warning/30';
+  return 'bg-overlay text-tertiary border border-default';
 }
 
 function scoreColor(score: number): string {
-  if (score >= 80) return 'text-pf-success';
-  if (score >= 60) return 'text-pf-cyan-400';
-  if (score >= 40) return 'text-pf-warning';
-  return 'text-pf-danger';
+  if (score >= 80) return 'text-gain';
+  if (score >= 60) return 'text-accent-text';
+  if (score >= 40) return 'text-warning';
+  return 'text-loss';
 }
 
 function pnlIsPositive(pnl: string): boolean {
@@ -209,19 +209,19 @@ function ComparisonSkeleton({ count }: { count: number }) {
         <div />
         {Array.from({ length: count }).map((_, i) => (
           <div key={i} className="flex flex-col items-center gap-2">
-            <div className="size-12 rounded-pf-full bg-pf-overlay" />
-            <div className="h-4 bg-pf-overlay rounded w-20" />
-            <div className="h-3 bg-pf-overlay rounded w-14" />
+            <div className="size-12 rounded-pf-full bg-overlay" />
+            <div className="h-4 bg-overlay rounded w-20" />
+            <div className="h-3 bg-overlay rounded w-14" />
           </div>
         ))}
       </div>
       {/* Stat rows */}
       {[1, 2, 3, 4, 5, 6, 7, 8].map((r) => (
-        <div key={r} className="grid gap-4 border-t border-pf-border-subtle pt-3"
+        <div key={r} className="grid gap-4 border-t border-subtle pt-3"
           style={{ gridTemplateColumns: `180px repeat(${count}, 1fr)` }}>
-          <div className="h-4 bg-pf-overlay rounded w-28" />
+          <div className="h-4 bg-overlay rounded w-28" />
           {Array.from({ length: count }).map((_, i) => (
-            <div key={i} className="h-4 bg-pf-overlay rounded w-16 mx-auto" />
+            <div key={i} className="h-4 bg-overlay rounded w-16 mx-auto" />
           ))}
         </div>
       ))}
@@ -235,7 +235,7 @@ function MiniSparkline({ data }: { data: number[] }) {
   const W = 48;
   const H = 24;
   if (!data || data.length < 2) {
-    return <div className="w-12 h-6 bg-pf-overlay rounded" />;
+    return <div className="w-12 h-6 bg-overlay rounded" />;
   }
   const path = buildSparklinePath(data, W, H);
   const isUp = data[data.length - 1] >= data[0];
@@ -244,7 +244,7 @@ function MiniSparkline({ data }: { data: number[] }) {
       <path
         d={path}
         fill="none"
-        stroke={isUp ? 'var(--color-pf-success)' : 'var(--color-pf-danger)'}
+        stroke={isUp ? 'var(--gain)' : 'var(--loss)'}
         strokeWidth="1.5"
         strokeLinecap="round"
         strokeLinejoin="round"
@@ -329,12 +329,12 @@ function ComparisonPanel({ data, loading, onBack }: ComparisonPanelProps) {
 
   if (loading) {
     return (
-      <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-6 space-y-4">
+      <div className="bg-elevated border border-default rounded-pf-lg p-6 space-y-4">
         <Button
           type="button"
           variant="ghost"
           onClick={onBack}
-          className="flex items-center gap-2 text-sm text-pf-text-secondary hover:text-pf-text transition-colors mb-2"
+          className="flex items-center gap-2 text-sm text-secondary hover:text-primary transition-colors mb-2"
         >
           <ChevronLeft className="size-4" />
           Back to traders
@@ -349,14 +349,14 @@ function ComparisonPanel({ data, loading, onBack }: ComparisonPanelProps) {
   const colTemplate = `180px repeat(${data.length}, 1fr)`;
 
   return (
-    <div className="bg-pf-elevated border border-pf-border rounded-pf-lg overflow-hidden">
+    <div className="bg-elevated border border-default rounded-pf-lg overflow-hidden">
       {/* Back button */}
-      <div className="px-6 pt-5 pb-3 border-b border-pf-border-subtle">
+      <div className="px-6 pt-5 pb-3 border-b border-subtle">
         <Button
           type="button"
           variant="ghost"
           onClick={onBack}
-          className="flex items-center gap-2 text-sm text-pf-text-secondary hover:text-pf-text transition-colors"
+          className="flex items-center gap-2 text-sm text-secondary hover:text-primary transition-colors"
         >
           <ChevronLeft className="size-4" />
           Back to traders
@@ -367,20 +367,20 @@ function ComparisonPanel({ data, loading, onBack }: ComparisonPanelProps) {
         {/* ── Header: avatars + names ───────────────────────────────── */}
         <div className="grid gap-4 min-w-max" style={{ gridTemplateColumns: colTemplate }}>
           <div className="flex items-end pb-1">
-            <span className="text-xs font-semibold text-pf-text-muted uppercase tracking-wider">
+            <span className="text-xs font-semibold text-tertiary uppercase tracking-wider">
               Trader
             </span>
           </div>
           {data.map((t) => (
             <div key={t.userId} className="flex flex-col items-center gap-2 text-center">
-              <div className="size-12 rounded-pf-full bg-pf-cyan-500/20 text-pf-cyan-400 flex items-center justify-center text-base font-bold select-none">
+              <div className="size-12 rounded-pf-full bg-accent/20 text-accent-text flex items-center justify-center text-base font-bold select-none">
                 {t.avatarInitials}
               </div>
               <div>
-                <p className="text-sm font-semibold text-pf-text">
+                <p className="text-sm font-semibold text-primary">
                   {t.displayName ?? t.username}
                 </p>
-                <p className="text-xs text-pf-text-muted">@{t.username}</p>
+                <p className="text-xs text-tertiary">@{t.username}</p>
               </div>
             </div>
           ))}
@@ -395,10 +395,10 @@ function ComparisonPanel({ data, loading, onBack }: ComparisonPanelProps) {
             return (
               <div
                 key={row.label}
-                className={`grid gap-4 py-3 ${ri > 0 ? 'border-t border-pf-border-subtle' : ''}`}
+                className={`grid gap-4 py-3 ${ri > 0 ? 'border-t border-subtle' : ''}`}
                 style={{ gridTemplateColumns: colTemplate }}
               >
-                <span className="text-xs text-pf-text-secondary self-center">{row.label}</span>
+                <span className="text-xs text-secondary self-center">{row.label}</span>
                 {data.map((t, ci) => {
                   const isBest = bi === ci;
                   const isWorst = wi === ci;
@@ -407,10 +407,10 @@ function ComparisonPanel({ data, loading, onBack }: ComparisonPanelProps) {
                       <span
                         className={`text-sm font-mono font-semibold px-2 py-1 rounded ${
                           isBest
-                            ? 'bg-pf-success/10 text-pf-success'
+                            ? 'bg-gain/10 text-gain'
                             : isWorst
-                            ? 'bg-pf-danger/10 text-pf-danger'
-                            : 'text-pf-text'
+                            ? 'bg-loss/10 text-loss'
+                            : 'text-primary'
                         }`}
                       >
                         {row.format(t)}
@@ -424,9 +424,9 @@ function ComparisonPanel({ data, loading, onBack }: ComparisonPanelProps) {
         </div>
 
         {/* ── Sparkline row ─────────────────────────────────────────── */}
-        <div className="border-t border-pf-border pt-4">
+        <div className="border-t border-default pt-4">
           <div className="grid gap-4 min-w-max" style={{ gridTemplateColumns: colTemplate }}>
-            <span className="text-xs text-pf-text-secondary self-center">P&L Trend</span>
+            <span className="text-xs text-secondary self-center">P&L Trend</span>
             {data.map((t) => (
               <div key={t.userId} className="flex items-center justify-center">
                 <MiniSparkline data={t.pnlHistory} />
@@ -436,15 +436,15 @@ function ComparisonPanel({ data, loading, onBack }: ComparisonPanelProps) {
         </div>
 
         {/* ── Top categories row ────────────────────────────────────── */}
-        <div className="border-t border-pf-border pt-4">
+        <div className="border-t border-default pt-4">
           <div className="grid gap-4 min-w-max" style={{ gridTemplateColumns: colTemplate }}>
-            <span className="text-xs text-pf-text-secondary self-center">Top Categories</span>
+            <span className="text-xs text-secondary self-center">Top Categories</span>
             {data.map((t) => (
               <div key={t.userId} className="flex flex-wrap justify-center gap-1">
                 {t.topCategories.slice(0, 4).map((cat) => (
                   <span
                     key={cat}
-                    className="inline-flex items-center gap-1 px-2 py-1 rounded-pf-full text-pf-label bg-pf-overlay text-pf-text-secondary border border-pf-border"
+                    className="inline-flex items-center gap-1 px-2 py-1 rounded-pf-full text-pf-label bg-overlay text-secondary border border-default"
                   >
                     {categoryEmoji(cat)} {cat}
                   </span>
@@ -455,31 +455,31 @@ function ComparisonPanel({ data, loading, onBack }: ComparisonPanelProps) {
         </div>
 
         {/* ── Recent trades ─────────────────────────────────────────── */}
-        <div className="border-t border-pf-border pt-4">
+        <div className="border-t border-default pt-4">
           <div className="grid gap-4 min-w-max" style={{ gridTemplateColumns: colTemplate }}>
-            <span className="text-xs text-pf-text-secondary self-start pt-1">Recent Trades</span>
+            <span className="text-xs text-secondary self-start pt-1">Recent Trades</span>
             {data.map((t) => (
               <div key={t.userId} className="space-y-2">
                 {t.recentTrades.slice(0, 3).map((trade, idx) => (
                   <div
                     key={idx}
-                    className="flex items-center gap-2 bg-pf-overlay rounded-pf px-3 py-2"
+                    className="flex items-center gap-2 bg-overlay rounded-pf px-3 py-2"
                   >
                     <span
                       className={`text-pf-caption font-bold px-2 py-1 rounded shrink-0 ${
                         trade.result === 'win'
-                          ? 'bg-pf-success/15 text-pf-success'
-                          : 'bg-pf-danger/15 text-pf-danger'
+                          ? 'bg-gain/15 text-gain'
+                          : 'bg-loss/15 text-loss'
                       }`}
                     >
                       {trade.result === 'win' ? 'WIN' : 'LOSS'}
                     </span>
-                    <span className="text-pf-label text-pf-text-secondary truncate flex-1 max-w-[120px]">
+                    <span className="text-pf-label text-secondary truncate flex-1 max-w-[120px]">
                       {trade.marketTitle}
                     </span>
                     <span
                       className={`text-pf-label font-mono shrink-0 ${
-                        pnlIsPositive(trade.pnl) ? 'text-pf-success' : 'text-pf-danger'
+                        pnlIsPositive(trade.pnl) ? 'text-gain' : 'text-loss'
                       }`}
                     >
                       {trade.pnl}
@@ -487,7 +487,7 @@ function ComparisonPanel({ data, loading, onBack }: ComparisonPanelProps) {
                   </div>
                 ))}
                 {t.recentTrades.length === 0 && (
-                  <p className="text-xs text-pf-text-muted text-center py-1">No recent trades</p>
+                  <p className="text-xs text-tertiary text-center py-1">No recent trades</p>
                 )}
               </div>
             ))}
@@ -495,7 +495,7 @@ function ComparisonPanel({ data, loading, onBack }: ComparisonPanelProps) {
         </div>
 
         {/* ── CTA buttons ───────────────────────────────────────────── */}
-        <div className="border-t border-pf-border pt-5">
+        <div className="border-t border-default pt-5">
           <div className="grid gap-4 min-w-max" style={{ gridTemplateColumns: colTemplate }}>
             <div />
             {data.map((t) => (
@@ -503,13 +503,13 @@ function ComparisonPanel({ data, loading, onBack }: ComparisonPanelProps) {
                 <Button
                   type="button"
                   onClick={() => navigate(`/copy/setup/${t.userId}`)}
-                  className="w-full px-4 py-2 rounded-pf text-sm font-semibold bg-pf-cyan-500 text-pf-text-contrast hover:bg-pf-cyan-400 transition-colors"
+                  className="w-full px-4 py-2 rounded-pf text-sm font-semibold bg-accent text-inverse hover:bg-accent-text transition-colors"
                 >
                   Copy @{t.username}
                 </Button>
                 <Link
                   to={`/profile/${t.username}`}
-                  className="text-xs text-pf-text-secondary hover:text-pf-text transition-colors"
+                  className="text-xs text-secondary hover:text-primary transition-colors"
                 >
                   View Profile
                 </Link>
@@ -544,10 +544,10 @@ function TraderCardItem({
 
   return (
     <div
-      className={`relative bg-pf-elevated border rounded-pf-lg p-4 hover:border-pf-border-strong transition-colors flex flex-col gap-3 ${
+      className={`relative bg-elevated border rounded-pf-lg p-4 hover:border-strong transition-colors flex flex-col gap-3 ${
         compareMode && isSelected
-          ? 'border-pf-cyan-500/50 ring-1 ring-pf-cyan-500/20'
-          : 'border-pf-border'
+          ? 'border-accent/50 ring-1 ring-accent/20'
+          : 'border-default'
       } ${compareMode && isDisabled ? 'opacity-50 pointer-events-none' : ''}`}
       role={compareMode ? 'checkbox' : undefined}
       aria-checked={compareMode ? isSelected : undefined}
@@ -560,11 +560,11 @@ function TraderCardItem({
           <div
             className={`size-5 rounded border-2 flex items-center justify-center transition-colors ${
               isSelected
-                ? 'bg-pf-cyan-500 border-pf-cyan-500'
-                : 'bg-pf-overlay border-pf-border-strong'
+                ? 'bg-accent border-accent'
+                : 'bg-overlay border-strong'
             }`}
           >
-            {isSelected && <Check className="size-3 text-pf-text-contrast" strokeWidth={3} />}
+            {isSelected && <Check className="size-3 text-inverse" strokeWidth={3} />}
           </div>
         </div>
       )}
@@ -575,18 +575,18 @@ function TraderCardItem({
           <img
             src={trader.avatarUrl}
             alt={trader.displayName ?? trader.username}
-            className="size-10 rounded-pf-full object-cover shrink-0 bg-pf-overlay"
+            className="size-10 rounded-pf-full object-cover shrink-0 bg-overlay"
           />
         ) : (
-          <div className="size-10 rounded-pf-full bg-pf-cyan-500/20 text-pf-cyan-400 flex items-center justify-center text-sm font-semibold shrink-0 select-none">
+          <div className="size-10 rounded-pf-full bg-accent/20 text-accent-text flex items-center justify-center text-sm font-semibold shrink-0 select-none">
             {initials(trader.displayName ?? trader.username)}
           </div>
         )}
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium text-pf-text truncate">
+          <p className="text-sm font-medium text-primary truncate">
             {trader.displayName ?? trader.username}
           </p>
-          <p className="text-xs text-pf-text-muted truncate">@{trader.username}</p>
+          <p className="text-xs text-tertiary truncate">@{trader.username}</p>
         </div>
         <span
           className={`inline-flex items-center gap-1 px-2 py-1 rounded-pf-full text-pf-label font-semibold shrink-0 ${rankBadgeClass(trader.rank)}`}
@@ -600,8 +600,8 @@ function TraderCardItem({
       {/* Edge Score badge */}
       {trader.score !== undefined && (
         <div className="flex items-center gap-2">
-          <TrendingUp className="size-4 text-pf-text-muted" aria-hidden="true" />
-          <span className="text-xs text-pf-text-secondary">Edge Score</span>
+          <TrendingUp className="size-4 text-tertiary" aria-hidden="true" />
+          <span className="text-xs text-secondary">Edge Score</span>
           <span className={`text-xs font-mono font-bold ${scoreColor(trader.score)}`}>
             {trader.score}
           </span>
@@ -611,41 +611,41 @@ function TraderCardItem({
       {/* Stats row */}
       <div className="flex items-center gap-4 text-xs">
         <span className="flex flex-col gap-1">
-          <span className="text-pf-text-muted">P&amp;L</span>
-          <span className={`font-mono font-semibold ${positive ? 'text-pf-success' : 'text-pf-danger'}`}>
+          <span className="text-tertiary">P&amp;L</span>
+          <span className={`font-mono font-semibold ${positive ? 'text-gain' : 'text-loss'}`}>
             {trader.pnl}
           </span>
         </span>
-        <span className="text-pf-border-strong">|</span>
+        <span className="text-strong">|</span>
         <span className="flex flex-col gap-1">
-          <span className="text-pf-text-muted">Win Rate</span>
-          <span className="font-mono text-pf-text">{trader.winRate}</span>
+          <span className="text-tertiary">Win Rate</span>
+          <span className="font-mono text-primary">{trader.winRate}</span>
         </span>
-        <span className="text-pf-border-strong">|</span>
+        <span className="text-strong">|</span>
         <span className="flex flex-col gap-1">
-          <span className="text-pf-text-muted">Trades</span>
-          <span className="font-mono text-pf-text">{trader.tradeCount}</span>
+          <span className="text-tertiary">Trades</span>
+          <span className="font-mono text-primary">{trader.tradeCount}</span>
         </span>
       </div>
 
       {/* Actions — hidden in compare mode so card click does toggling */}
       {!compareMode && (
-        <div className="flex items-center gap-2 pt-1 border-t border-pf-border-subtle">
+        <div className="flex items-center gap-2 pt-1 border-t border-subtle">
           <Link
             to={`/profile/${trader.username}`}
-            className="flex-1 text-center px-3 py-2 rounded-pf text-xs font-medium text-pf-text-secondary bg-pf-overlay hover:bg-pf-surface hover:text-pf-text transition-colors"
+            className="flex-1 text-center px-3 py-2 rounded-pf text-xs font-medium text-secondary bg-overlay hover:bg-surface hover:text-primary transition-colors"
           >
             View Profile
           </Link>
           {isCopying ? (
-            <span className="flex items-center gap-1 px-3 py-2 rounded-pf text-xs font-medium bg-pf-success/10 text-pf-success border border-pf-success/20 shrink-0">
+            <span className="flex items-center gap-1 px-3 py-2 rounded-pf text-xs font-medium bg-gain/10 text-gain border border-gain/20 shrink-0">
               Already Copying
             </span>
           ) : (
             <Button
               type="button"
               onClick={() => navigate(`/copy/new?address=${trader.username}`)}
-              className="px-3 py-2 rounded-pf text-xs font-medium bg-pf-cyan-500 text-pf-text-contrast hover:bg-pf-cyan-400 transition-colors shrink-0"
+              className="px-3 py-2 rounded-pf text-xs font-medium bg-accent text-inverse hover:bg-accent-text transition-colors shrink-0"
             >
               Copy Trade
             </Button>
@@ -809,10 +809,10 @@ export function Component() {
       {/* Header */}
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-start gap-3">
-          <Users className="size-6 text-pf-cyan-400 mt-1 shrink-0" aria-hidden="true" />
+          <Users className="size-6 text-accent-text mt-1 shrink-0" aria-hidden="true" />
           <div>
-            <h1 className="text-2xl font-semibold text-pf-text">Discover Traders</h1>
-            <p className="text-sm text-pf-text-muted mt-1">Find top performers to copy</p>
+            <h1 className="text-2xl font-semibold text-primary">Discover Traders</h1>
+            <p className="text-sm text-tertiary mt-1">Find top performers to copy</p>
           </div>
         </div>
 
@@ -822,7 +822,7 @@ export function Component() {
             type="button"
             variant="secondary"
             onClick={enterCompareMode}
-            className="flex items-center gap-2 px-3 py-2 rounded-pf text-sm font-medium border border-pf-border text-pf-text-secondary bg-pf-elevated hover:text-pf-text hover:border-pf-border-strong transition-colors shrink-0"
+            className="flex items-center gap-2 px-3 py-2 rounded-pf text-sm font-medium border border-default text-secondary bg-elevated hover:text-primary hover:border-strong transition-colors shrink-0"
           >
             <GitCompare className="size-4" />
             Compare
@@ -832,7 +832,7 @@ export function Component() {
             type="button"
             variant="ghost"
             onClick={exitCompareMode}
-            className="flex items-center gap-2 px-3 py-2 rounded-pf text-sm font-medium border border-pf-cyan-500/30 text-pf-cyan-400 bg-pf-cyan-500/10 hover:bg-pf-cyan-500/20 transition-colors shrink-0"
+            className="flex items-center gap-2 px-3 py-2 rounded-pf text-sm font-medium border border-accent/30 text-accent-text bg-accent/10 hover:bg-accent/20 transition-colors shrink-0"
           >
             <X className="size-4" />
             Exit Compare
@@ -842,7 +842,7 @@ export function Component() {
 
       {/* Compare mode hint banner */}
       {compareMode && !showComparison && (
-        <div className="flex items-center gap-2 px-4 py-3 rounded-pf bg-pf-cyan-500/8 border border-pf-cyan-500/20 text-sm text-pf-cyan-400">
+        <div className="flex items-center gap-2 px-4 py-3 rounded-pf bg-accent/8 border border-accent/20 text-sm text-accent-text">
           <GitCompare className="size-4 shrink-0" />
           Select 2–3 traders to compare side by side. Click a card to select it.
         </div>
@@ -857,7 +857,7 @@ export function Component() {
             placeholder="Search by username..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full sm:max-w-sm px-3 py-2 rounded-pf bg-pf-elevated border border-pf-border text-pf-text text-sm placeholder:text-pf-text-muted focus-visible:outline-none focus-visible:border-pf-cyan-500/50 focus-visible:ring-1 focus-visible:ring-pf-cyan-500/20 transition-colors"
+            className="w-full sm:max-w-sm px-3 py-2 rounded-pf bg-elevated border border-default text-primary text-sm placeholder:text-tertiary focus-visible:outline-none focus-visible:border-accent/50 focus-visible:ring-1 focus-visible:ring-accent/20 transition-colors"
           />
 
           {/* Category chips */}
@@ -870,8 +870,8 @@ export function Component() {
                 onClick={() => setCategory(cat)}
                 className={`px-3 py-2 text-sm rounded-pf-full border transition-colors cursor-pointer ${
                   category === cat
-                    ? 'bg-pf-cyan-500/10 border-pf-cyan-500/30 text-pf-cyan-400'
-                    : 'border-pf-border text-pf-text-secondary hover:text-pf-text'
+                    ? 'bg-accent/10 border-accent/30 text-accent-text'
+                    : 'border-default text-secondary hover:text-primary'
                 }`}
               >
                 {cat}
@@ -882,14 +882,14 @@ export function Component() {
           {/* Win Rate + Min Trades selects */}
           <div className="flex flex-wrap gap-3">
             <div className="flex items-center gap-2">
-              <label className="text-xs text-pf-text-secondary whitespace-nowrap" htmlFor="win-rate-filter">
+              <label className="text-xs text-secondary whitespace-nowrap" htmlFor="win-rate-filter">
                 Win Rate
               </label>
               <Select
                 id="win-rate-filter"
                 value={winRate}
                 onChange={(e) => setWinRate(e.target.value as WinRateFilter)}
-                className="px-3 py-2 rounded-pf bg-pf-elevated border border-pf-border text-pf-text text-sm focus-visible:outline-none focus-visible:border-pf-cyan-500/50 transition-colors cursor-pointer"
+                className="px-3 py-2 rounded-pf bg-elevated border border-default text-primary text-sm focus-visible:outline-none focus-visible:border-accent/50 transition-colors cursor-pointer"
               >
                 {WIN_RATE_OPTIONS.map((o) => (
                   <option key={o.value} value={o.value}>
@@ -900,14 +900,14 @@ export function Component() {
             </div>
 
             <div className="flex items-center gap-2">
-              <label className="text-xs text-pf-text-secondary whitespace-nowrap" htmlFor="min-trades-filter">
+              <label className="text-xs text-secondary whitespace-nowrap" htmlFor="min-trades-filter">
                 Min Trades
               </label>
               <Select
                 id="min-trades-filter"
                 value={minTrades}
                 onChange={(e) => setMinTrades(e.target.value as MinTradesFilter)}
-                className="px-3 py-2 rounded-pf bg-pf-elevated border border-pf-border text-pf-text text-sm focus-visible:outline-none focus-visible:border-pf-cyan-500/50 transition-colors cursor-pointer"
+                className="px-3 py-2 rounded-pf bg-elevated border border-default text-primary text-sm focus-visible:outline-none focus-visible:border-accent/50 transition-colors cursor-pointer"
               >
                 {MIN_TRADES_OPTIONS.map((o) => (
                   <option key={o.value} value={o.value}>
@@ -941,9 +941,9 @@ export function Component() {
       {/* Empty state */}
       {!showComparison && !loading && visibleTraders.length === 0 && (
         <div className="flex flex-col items-center justify-center py-20 text-center">
-          <Users className="size-10 text-pf-text-muted mb-4" aria-hidden="true" />
-          <p className="text-pf-text font-medium">No traders found matching your filters</p>
-          <p className="text-sm text-pf-text-muted mt-1">
+          <Users className="size-10 text-tertiary mb-4" aria-hidden="true" />
+          <p className="text-primary font-medium">No traders found matching your filters</p>
+          <p className="text-sm text-tertiary mt-1">
             Try adjusting your search or filter criteria.
           </p>
         </div>
@@ -980,11 +980,11 @@ export function Component() {
             onClick={() => onPageChange(Math.max(1, page - 1))}
             disabled={page === 1}
             aria-label="Previous page"
-            className="p-2 rounded-pf text-pf-text-secondary hover:text-pf-text hover:bg-pf-elevated disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+            className="p-2 rounded-pf text-secondary hover:text-primary hover:bg-elevated disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
           >
             <ChevronLeft className="size-4" />
           </Button>
-          <span className="text-sm font-mono text-pf-text-secondary" aria-live="polite">
+          <span className="text-sm font-mono text-secondary" aria-live="polite">
             Page {page} of {totalPages}
           </span>
           <Button
@@ -994,7 +994,7 @@ export function Component() {
             onClick={() => onPageChange(Math.min(totalPages, page + 1))}
             disabled={page === totalPages}
             aria-label="Next page"
-            className="p-2 rounded-pf text-pf-text-secondary hover:text-pf-text hover:bg-pf-elevated disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+            className="p-2 rounded-pf text-secondary hover:text-primary hover:bg-elevated disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
           >
             <ChevronRight className="size-4" />
           </Button>
@@ -1006,9 +1006,9 @@ export function Component() {
 
       {/* Sticky bottom compare bar */}
       {compareMode && selectedIds.length >= 2 && !showComparison && (
-        <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-pf-border bg-pf-surface/95 backdrop-blur-sm px-4 py-3">
+        <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-default bg-surface/95 backdrop-blur-sm px-4 py-3">
           <div className="max-w-7xl mx-auto flex items-center gap-3 flex-wrap">
-            <span className="text-sm font-medium text-pf-text-secondary shrink-0">
+            <span className="text-sm font-medium text-secondary shrink-0">
               Comparing {selectedIds.length} trader{selectedIds.length !== 1 ? 's' : ''}
             </span>
 
@@ -1017,7 +1017,7 @@ export function Component() {
               {selectedTraders.map((t) => (
                 <span
                   key={t.userId}
-                  className="inline-flex items-center gap-2 px-3 py-1 rounded-pf-full text-xs font-medium bg-pf-cyan-500/10 text-pf-cyan-400 border border-pf-cyan-500/25"
+                  className="inline-flex items-center gap-2 px-3 py-1 rounded-pf-full text-xs font-medium bg-accent/10 text-accent-text border border-accent/25"
                 >
                   @{t.username}
                   <Button
@@ -1026,7 +1026,7 @@ export function Component() {
                     size="icon-sm"
                     onClick={() => toggleSelection(t.userId)}
                     aria-label={`Remove ${t.username}`}
-                    className="text-pf-cyan-400/60 hover:text-pf-cyan-400 transition-colors"
+                    className="text-accent-text/60 hover:text-accent-text transition-colors"
                   >
                     <X className="size-3" />
                   </Button>
@@ -1040,14 +1040,14 @@ export function Component() {
                 type="button"
                 variant="secondary"
                 onClick={() => setSelectedIds([])}
-                className="px-3 py-2 rounded-pf text-sm text-pf-text-secondary hover:text-pf-text border border-pf-border hover:border-pf-border-strong bg-pf-elevated transition-colors"
+                className="px-3 py-2 rounded-pf text-sm text-secondary hover:text-primary border border-default hover:border-strong bg-elevated transition-colors"
               >
                 Clear
               </Button>
               <Button
                 type="button"
                 onClick={openComparison}
-                className="flex items-center gap-2 px-4 py-2 rounded-pf text-sm font-semibold bg-pf-cyan-500 text-pf-text-contrast hover:bg-pf-cyan-400 transition-colors"
+                className="flex items-center gap-2 px-4 py-2 rounded-pf text-sm font-semibold bg-accent text-inverse hover:bg-accent-text transition-colors"
               >
                 <GitCompare className="size-4" />
                 Compare

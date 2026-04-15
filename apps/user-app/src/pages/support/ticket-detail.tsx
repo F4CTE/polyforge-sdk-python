@@ -36,10 +36,10 @@ interface TicketDetail {
 /* ─── Helpers ────────────────────────────────────────────────────────── */
 
 const STATUS_STYLES: Record<TicketStatus, { text: string; bg: string }> = {
-  OPEN:           { text: 'text-pf-cyan-400', bg: 'bg-pf-cyan-500/10' },
-  AWAITING_USER:  { text: 'text-pf-warning', bg: 'bg-pf-warning/10' },
-  AWAITING_ADMIN: { text: 'text-pf-info', bg: 'bg-pf-info/10' },
-  CLOSED:         { text: 'text-pf-text-muted', bg: 'bg-pf-overlay' },
+  OPEN:           { text: 'text-accent-text', bg: 'bg-accent/10' },
+  AWAITING_USER:  { text: 'text-warning', bg: 'bg-warning/10' },
+  AWAITING_ADMIN: { text: 'text-info', bg: 'bg-info/10' },
+  CLOSED:         { text: 'text-tertiary', bg: 'bg-overlay' },
 };
 
 const MAX_CHARS = 5000;
@@ -127,9 +127,9 @@ export function Component() {
   if (loading) {
     return (
       <div className="p-6 max-w-3xl mx-auto space-y-4">
-        <div className="h-6 w-48 bg-pf-overlay rounded animate-pulse" />
-        <div className="h-40 bg-pf-overlay rounded-pf-lg animate-pulse" />
-        <div className="h-20 bg-pf-overlay rounded-pf-lg animate-pulse" />
+        <div className="h-6 w-48 bg-overlay rounded animate-pulse" />
+        <div className="h-40 bg-overlay rounded-pf-lg animate-pulse" />
+        <div className="h-20 bg-overlay rounded-pf-lg animate-pulse" />
       </div>
     );
   }
@@ -137,7 +137,7 @@ export function Component() {
   if (!ticket) {
     return (
       <div className="p-6 max-w-3xl mx-auto text-center py-20">
-        <p className="text-pf-text font-medium">Ticket not found</p>
+        <p className="text-primary font-medium">Ticket not found</p>
         <Button type="button" variant="link" onClick={() => navigate('/support')} className="text-sm mt-2">
           Back to support
         </Button>
@@ -162,8 +162,8 @@ export function Component() {
             <ArrowLeft className="size-4" aria-hidden="true" />
           </Button>
           <div>
-            <h1 className="text-2xl font-semibold text-pf-text">{ticket.subject}</h1>
-            <div className="flex items-center gap-3 mt-1 text-xs text-pf-text-muted">
+            <h1 className="text-2xl font-semibold text-primary">{ticket.subject}</h1>
+            <div className="flex items-center gap-3 mt-1 text-xs text-tertiary">
               <span className={`inline-flex px-2 py-1 rounded font-medium ${ss.bg} ${ss.text}`}>
                 {ticket.status.replace(/_/g, ' ')}
               </span>
@@ -176,7 +176,7 @@ export function Component() {
         {canClose && (
           showCloseConfirm ? (
             <div className="flex items-center gap-2">
-              <span className="text-xs text-pf-text-muted">Close this ticket?</span>
+              <span className="text-xs text-tertiary">Close this ticket?</span>
               <Button type="button" variant="default" size="sm" onClick={closeTicket} disabled={closing}>
                 {closing ? 'Closing...' : 'Confirm'}
               </Button>
@@ -210,22 +210,22 @@ export function Component() {
             <div
               className={`max-w-[80%] rounded-pf-lg p-4 ${
                 msg.isAdmin
-                  ? 'bg-pf-cyan-500/10 border border-pf-cyan-500/20'
-                  : 'bg-pf-elevated border border-pf-border'
+                  ? 'bg-accent/10 border border-accent/20'
+                  : 'bg-elevated border border-default'
               }`}
             >
               <div className="flex items-center gap-2 mb-2">
-                <span className={`text-xs font-medium ${msg.isAdmin ? 'text-pf-cyan-400' : 'text-pf-text'}`}>
+                <span className={`text-xs font-medium ${msg.isAdmin ? 'text-accent-text' : 'text-primary'}`}>
                   {msg.senderName}
                 </span>
                 {msg.isAdmin && (
-                  <span className="text-pf-caption px-2 py-1 rounded bg-pf-cyan-500/15 text-pf-cyan-400 font-medium">Staff</span>
+                  <span className="text-pf-caption px-2 py-1 rounded bg-accent/15 text-accent-text font-medium">Staff</span>
                 )}
-                <span className="text-pf-label text-pf-text-muted ml-auto font-mono">
+                <span className="text-pf-label text-tertiary ml-auto font-mono">
                   {formatDateTime(msg.createdAt)}
                 </span>
               </div>
-              <p className="text-sm text-pf-text-secondary whitespace-pre-wrap leading-relaxed">{msg.body}</p>
+              <p className="text-sm text-secondary whitespace-pre-wrap leading-relaxed">{msg.body}</p>
             </div>
           </div>
         ))}
@@ -233,14 +233,14 @@ export function Component() {
       </div>
 
       {/* Auto-polling indicator */}
-      <div className="flex items-center gap-2 text-pf-label text-pf-text-muted">
+      <div className="flex items-center gap-2 text-pf-label text-tertiary">
         <RefreshCw className="size-3" />
         Auto-updating every 15s
       </div>
 
       {/* Reply */}
       {ticket.status !== 'CLOSED' ? (
-        <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4">
+        <div className="bg-elevated border border-default rounded-pf-lg p-4">
           <Textarea
             value={reply}
             onChange={e => setReply(e.target.value.slice(0, MAX_CHARS))}
@@ -250,7 +250,7 @@ export function Component() {
             className="w-full resize-y"
           />
           <div className="flex items-center justify-between mt-3">
-            <span className={`text-xs font-mono ${isOverWarn ? 'text-pf-danger' : 'text-pf-text-muted'}`}>
+            <span className={`text-xs font-mono ${isOverWarn ? 'text-loss' : 'text-tertiary'}`}>
               {charCount} / {MAX_CHARS}
             </span>
             <Button
@@ -266,7 +266,7 @@ export function Component() {
           </div>
         </div>
       ) : (
-        <div className="text-center py-4 text-sm text-pf-text-muted bg-pf-elevated border border-pf-border rounded-pf-lg">
+        <div className="text-center py-4 text-sm text-tertiary bg-elevated border border-default rounded-pf-lg">
           This ticket has been closed.
         </div>
       )}

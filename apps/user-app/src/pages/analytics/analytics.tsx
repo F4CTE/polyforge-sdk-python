@@ -86,15 +86,15 @@ function formatPnl(val: string): string {
 
 function pnlTextColor(val: string): string {
   const n = parseFloat(val);
-  if (n > 0) return 'text-pf-success';
-  if (n < 0) return 'text-pf-danger';
-  return 'text-pf-text-muted';
+  if (n > 0) return 'text-gain';
+  if (n < 0) return 'text-loss';
+  return 'text-tertiary';
 }
 
 function brierColor(score: number): string {
-  if (score < 0.2) return 'text-pf-success';
-  if (score < 0.3) return 'text-pf-warning';
-  return 'text-pf-danger';
+  if (score < 0.2) return 'text-gain';
+  if (score < 0.3) return 'text-warning';
+  return 'text-loss';
 }
 
 function minutesAgo(isoString: string): string {
@@ -107,7 +107,7 @@ function minutesAgo(isoString: string): string {
 /* ─── Skeleton ───────────────────────────────────────────────────────── */
 
 function Skeleton({ className }: { className?: string }) {
-  return <div className={`bg-pf-overlay rounded animate-pulse ${className ?? ''}`} />;
+  return <div className={`bg-overlay rounded animate-pulse ${className ?? ''}`} />;
 }
 
 function PageSkeleton() {
@@ -143,14 +143,14 @@ function StatCard({
   valueClass?: string;
 }) {
   return (
-    <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-5">
-      <span className="text-xs font-medium uppercase tracking-wider text-pf-text-secondary block mb-2">
+    <div className="bg-elevated border border-default rounded-pf-lg p-5">
+      <span className="text-xs font-medium uppercase tracking-wider text-secondary block mb-2">
         {label}
       </span>
-      <span className={`text-3xl font-mono font-semibold ${valueClass ?? 'text-pf-text'}`}>
+      <span className={`text-3xl font-mono font-semibold ${valueClass ?? 'text-primary'}`}>
         {value}
       </span>
-      {sub && <p className="text-xs text-pf-text-muted mt-1">{sub}</p>}
+      {sub && <p className="text-xs text-tertiary mt-1">{sub}</p>}
     </div>
   );
 }
@@ -164,12 +164,12 @@ function ScoreRow({ label, value, max }: { label: string; value: string; max: nu
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between text-sm">
-        <span className="text-pf-text-secondary">{label}</span>
-        <span className="font-mono text-pf-text">{value}</span>
+        <span className="text-secondary">{label}</span>
+        <span className="font-mono text-primary">{value}</span>
       </div>
-      <div className="h-2 bg-pf-overlay rounded-pf-full overflow-hidden">
+      <div className="h-2 bg-overlay rounded-pf-full overflow-hidden">
         <div
-          className="h-full bg-pf-cyan-400 rounded-pf-full transition-all duration-pf-slow"
+          className="h-full bg-accent-text rounded-pf-full transition-all duration-pf-slow"
           style={{ width: `${pct}%` }}
         />
       </div>
@@ -371,8 +371,8 @@ export function Component() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div className="flex items-center gap-2">
-          <LineChartIcon className="size-5 text-pf-text-muted" aria-hidden="true" />
-          <h1 className="text-2xl font-semibold text-pf-text">Analytics</h1>
+          <LineChartIcon className="size-5 text-tertiary" aria-hidden="true" />
+          <h1 className="text-2xl font-semibold text-primary">Analytics</h1>
         </div>
 
         <div className="flex items-center gap-2">
@@ -381,7 +381,7 @@ export function Component() {
             type="button"
             onClick={exportCsv}
             disabled={exportingCsv}
-            className="flex items-center gap-2 px-3 py-2 rounded-pf bg-pf-surface border border-pf-border text-xs text-pf-text-secondary hover:text-pf-text hover:border-pf-border-hover transition-colors disabled:opacity-50"
+            className="flex items-center gap-2 px-3 py-2 rounded-pf bg-surface border border-default text-xs text-secondary hover:text-primary hover:border-default transition-colors disabled:opacity-50"
             aria-label="Export analytics as CSV"
           >
             {exportingCsv
@@ -392,7 +392,7 @@ export function Component() {
 
           {/* Period selector */}
           <div
-            className="flex items-center gap-1 bg-pf-elevated border border-pf-border rounded-pf-sm p-1"
+            className="flex items-center gap-1 bg-elevated border border-default rounded-pf-sm p-1"
             role="group"
             aria-label="Select period"
           >
@@ -402,10 +402,10 @@ export function Component() {
                 type="button"
                 variant="ghost"
                 onClick={() => setPeriod(p.value)}
-                className={`px-3 py-2 rounded text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-400/40 ${
+                className={`px-3 py-2 rounded text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-text/40 ${
                   period === p.value
-                    ? 'bg-pf-cyan-400/15 text-pf-cyan-400'
-                    : 'text-pf-text-secondary hover:text-pf-text hover:bg-pf-surface'
+                    ? 'bg-accent-text/15 text-accent-text'
+                    : 'text-secondary hover:text-primary hover:bg-surface'
                 }`}
               >
                 {p.label}
@@ -425,7 +425,7 @@ export function Component() {
         <StatCard
           label="Total P&L"
           value={pnlData ? formatPnl(totalPnlVal) : '--'}
-          valueClass={pnlData ? pnlTextColor(totalPnlVal) : 'text-pf-text-muted'}
+          valueClass={pnlData ? pnlTextColor(totalPnlVal) : 'text-tertiary'}
           sub={`${PERIODS.find((p) => p.value === period)?.label ?? ''} period`}
         />
         <StatCard
@@ -441,16 +441,16 @@ export function Component() {
       </div>
 
       {/* Row 2: P&L equity curve */}
-      <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-6">
-        <h2 className="text-sm font-medium text-pf-text mb-1">P&L Equity Curve</h2>
-        <p className="text-xs text-pf-text-muted mb-4">Cumulative profit and loss over the selected period.</p>
+      <div className="bg-elevated border border-default rounded-pf-lg p-6">
+        <h2 className="text-sm font-medium text-primary mb-1">P&L Equity Curve</h2>
+        <p className="text-xs text-tertiary mb-4">Cumulative profit and loss over the selected period.</p>
         {loadingPnl ? (
-          <div className="h-64 animate-pulse bg-pf-overlay rounded" />
+          <div className="h-64 animate-pulse bg-overlay rounded" />
         ) : chartData.length === 0 ? (
           <div className="h-64 flex flex-col items-center justify-center text-center gap-2">
-            <LineChartIcon className="size-10 text-pf-text-muted opacity-40" aria-hidden="true" />
-            <p className="text-sm text-pf-text-muted">No P&L data for this period yet.</p>
-            <p className="text-xs text-pf-text-muted">Place and resolve trades to see your equity curve.</p>
+            <LineChartIcon className="size-10 text-tertiary opacity-40" aria-hidden="true" />
+            <p className="text-sm text-tertiary">No P&L data for this period yet.</p>
+            <p className="text-xs text-tertiary">Place and resolve trades to see your equity curve.</p>
           </div>
         ) : (
           <div className="h-64">
@@ -501,21 +501,21 @@ export function Component() {
       {/* Row 3: Category table + Score breakdown */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Category Performance */}
-        <div className="bg-pf-elevated border border-pf-border rounded-pf-lg overflow-hidden">
-          <div className="px-6 py-4 border-b border-pf-border">
-            <h2 className="text-sm font-medium text-pf-text">Category Performance</h2>
-            <p className="text-xs text-pf-text-muted mt-1">Brier score by category — lower is better.</p>
+        <div className="bg-elevated border border-default rounded-pf-lg overflow-hidden">
+          <div className="px-6 py-4 border-b border-default">
+            <h2 className="text-sm font-medium text-primary">Category Performance</h2>
+            <p className="text-xs text-tertiary mt-1">Brier score by category — lower is better.</p>
           </div>
           {loadingAccuracy ? (
             <div className="p-4 space-y-2">
               {[0, 1, 2, 3].map((i) => (
-                <div key={i} className="h-10 bg-pf-overlay rounded animate-pulse" />
+                <div key={i} className="h-10 bg-overlay rounded animate-pulse" />
               ))}
             </div>
           ) : categories.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16 px-6 text-center gap-2">
-              <p className="text-sm text-pf-text-muted">No category data available yet.</p>
-              <p className="text-xs text-pf-text-muted">
+              <p className="text-sm text-tertiary">No category data available yet.</p>
+              <p className="text-xs text-tertiary">
                 Resolve predictions across categories to see breakdown here.
               </p>
             </div>
@@ -523,17 +523,17 @@ export function Component() {
             <div className="overflow-x-auto">
               <table className="w-full text-sm" aria-label="Category performance">
                 <thead>
-                  <tr className="bg-pf-surface text-left text-xs text-pf-text-secondary uppercase tracking-wider">
+                  <tr className="bg-surface text-left text-xs text-secondary uppercase tracking-wider">
                     <th scope="col" className="px-6 py-3 font-medium">Category</th>
                     <th scope="col" className="px-6 py-3 font-medium text-right">Trades</th>
                     <th scope="col" className="px-6 py-3 font-medium text-right">Brier Score</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-pf-border">
+                <tbody className="divide-y divide-default">
                   {categories.map(([cat, stat]) => (
-                    <tr key={cat} className="hover:bg-pf-surface/50 transition-colors">
-                      <td className="px-6 py-3 text-pf-text font-medium capitalize">{cat}</td>
-                      <td className="px-6 py-3 text-right font-mono text-pf-text-secondary">
+                    <tr key={cat} className="hover:bg-surface/50 transition-colors">
+                      <td className="px-6 py-3 text-primary font-medium capitalize">{cat}</td>
+                      <td className="px-6 py-3 text-right font-mono text-secondary">
                         {stat.count.toLocaleString()}
                       </td>
                       <td className="px-6 py-3 text-right font-mono">
@@ -550,17 +550,17 @@ export function Component() {
         </div>
 
         {/* Score Breakdown */}
-        <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-6">
-          <h2 className="text-sm font-medium text-pf-text mb-1">Score Breakdown</h2>
-          <p className="text-xs text-pf-text-muted mb-6">Key trading performance metrics.</p>
+        <div className="bg-elevated border border-default rounded-pf-lg p-6">
+          <h2 className="text-sm font-medium text-primary mb-1">Score Breakdown</h2>
+          <p className="text-xs text-tertiary mb-6">Key trading performance metrics.</p>
           {loadingScore ? (
             <div className="space-y-4">
               {[0, 1, 2].map((i) => <Skeleton key={i} className="h-8" />)}
             </div>
           ) : scoreData === null ? (
             <div className="flex flex-col items-center justify-center py-12 text-center gap-2">
-              <p className="text-sm text-pf-text-muted">No score data available yet.</p>
-              <p className="text-xs text-pf-text-muted">
+              <p className="text-sm text-tertiary">No score data available yet.</p>
+              <p className="text-xs text-tertiary">
                 Complete more trades to generate your score breakdown.
               </p>
             </div>
@@ -587,17 +587,17 @@ export function Component() {
       </div>
 
       {/* ─── AI Portfolio Review ────────────────────────────────────────── */}
-      <div className="bg-pf-elevated border border-pf-border rounded-pf-lg overflow-hidden">
+      <div className="bg-elevated border border-default rounded-pf-lg overflow-hidden">
         {/* Card header */}
-        <div className="px-6 py-4 border-b border-pf-border flex items-center justify-between gap-3">
+        <div className="px-6 py-4 border-b border-default flex items-center justify-between gap-3">
           <div className="flex items-center gap-2">
-            <Sparkles className="size-4 text-pf-cyan-400" aria-hidden="true" />
-            <Bot className="size-4 text-pf-cyan-400" aria-hidden="true" />
-            <h2 className="text-sm font-medium text-pf-text">AI Portfolio Review</h2>
+            <Sparkles className="size-4 text-accent-text" aria-hidden="true" />
+            <Bot className="size-4 text-accent-text" aria-hidden="true" />
+            <h2 className="text-sm font-medium text-primary">AI Portfolio Review</h2>
           </div>
           <div className="flex items-center gap-3">
             {aiReview && (
-              <span className="text-xs text-pf-text-muted">
+              <span className="text-xs text-tertiary">
                 Last updated: {minutesAgo(aiReview.generatedAt)}
               </span>
             )}
@@ -606,7 +606,7 @@ export function Component() {
               variant="ghost"
               onClick={loadAiReview}
               disabled={loadingAiReview}
-              className="flex items-center gap-2 px-3 py-2 rounded text-xs font-medium text-pf-text-secondary hover:text-pf-text hover:bg-pf-surface border border-pf-border transition-colors disabled:opacity-50"
+              className="flex items-center gap-2 px-3 py-2 rounded text-xs font-medium text-secondary hover:text-primary hover:bg-surface border border-default transition-colors disabled:opacity-50"
               aria-label="Refresh AI review"
             >
               <RefreshCw className={`size-4 ${loadingAiReview ? 'animate-spin' : ''}`} aria-hidden="true" />
@@ -635,12 +635,12 @@ export function Component() {
             </div>
           ) : aiReviewError || !aiReview ? (
             <div className="flex flex-col items-center justify-center py-10 gap-3 text-center">
-              <AlertTriangle className="size-8 text-pf-danger opacity-60" aria-hidden="true" />
-              <p className="text-sm text-pf-text-secondary">Could not load AI review.</p>
+              <AlertTriangle className="size-8 text-loss opacity-60" aria-hidden="true" />
+              <p className="text-sm text-secondary">Could not load AI review.</p>
               <Button
                 type="button"
                 onClick={loadAiReview}
-                className="px-4 py-2 rounded text-sm font-medium bg-pf-surface border border-pf-border text-pf-text-secondary hover:text-pf-text transition-colors"
+                className="px-4 py-2 rounded text-sm font-medium bg-surface border border-default text-secondary hover:text-primary transition-colors"
               >
                 Retry
               </Button>
@@ -648,22 +648,22 @@ export function Component() {
           ) : (
             <div className="space-y-6">
               {/* Review paragraph */}
-              <p className="text-sm text-pf-text-secondary leading-relaxed">{aiReview.review}</p>
+              <p className="text-sm text-secondary leading-relaxed">{aiReview.review}</p>
 
               {/* Three-column breakdown */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
                 {/* Key Insights */}
                 <div>
                   <div className="flex items-center gap-2 mb-3">
-                    <TrendingUp className="size-4 text-pf-cyan-400" aria-hidden="true" />
-                    <h3 className="text-xs font-semibold uppercase tracking-wider text-pf-cyan-400">
+                    <TrendingUp className="size-4 text-accent-text" aria-hidden="true" />
+                    <h3 className="text-xs font-semibold uppercase tracking-wider text-accent-text">
                       Key Insights
                     </h3>
                   </div>
                   <ul className="space-y-2">
                     {aiReview.keyInsights.map((item, idx) => (
-                      <li key={idx} className="flex items-start gap-2 text-xs text-pf-text-secondary">
-                        <span className="mt-2 size-2 rounded-pf-full bg-pf-cyan-400 shrink-0" aria-hidden="true" />
+                      <li key={idx} className="flex items-start gap-2 text-xs text-secondary">
+                        <span className="mt-2 size-2 rounded-pf-full bg-accent-text shrink-0" aria-hidden="true" />
                         {item}
                       </li>
                     ))}
@@ -673,15 +673,15 @@ export function Component() {
                 {/* Risk Factors */}
                 <div>
                   <div className="flex items-center gap-2 mb-3">
-                    <Shield className="size-4 text-pf-danger" aria-hidden="true" />
-                    <h3 className="text-xs font-semibold uppercase tracking-wider text-pf-danger">
+                    <Shield className="size-4 text-loss" aria-hidden="true" />
+                    <h3 className="text-xs font-semibold uppercase tracking-wider text-loss">
                       Risk Factors
                     </h3>
                   </div>
                   <ul className="space-y-2">
                     {aiReview.riskFactors.map((item, idx) => (
-                      <li key={idx} className="flex items-start gap-2 text-xs text-pf-text-secondary">
-                        <span className="mt-2 size-2 rounded-pf-full bg-pf-danger shrink-0" aria-hidden="true" />
+                      <li key={idx} className="flex items-start gap-2 text-xs text-secondary">
+                        <span className="mt-2 size-2 rounded-pf-full bg-loss shrink-0" aria-hidden="true" />
                         {item}
                       </li>
                     ))}
@@ -691,15 +691,15 @@ export function Component() {
                 {/* Opportunities */}
                 <div>
                   <div className="flex items-center gap-2 mb-3">
-                    <Sparkles className="size-4 text-pf-success" aria-hidden="true" />
-                    <h3 className="text-xs font-semibold uppercase tracking-wider text-pf-success">
+                    <Sparkles className="size-4 text-gain" aria-hidden="true" />
+                    <h3 className="text-xs font-semibold uppercase tracking-wider text-gain">
                       Opportunities
                     </h3>
                   </div>
                   <ul className="space-y-2">
                     {aiReview.opportunities.map((item, idx) => (
-                      <li key={idx} className="flex items-start gap-2 text-xs text-pf-text-secondary">
-                        <span className="mt-2 size-2 rounded-pf-full bg-pf-success shrink-0" aria-hidden="true" />
+                      <li key={idx} className="flex items-start gap-2 text-xs text-secondary">
+                        <span className="mt-2 size-2 rounded-pf-full bg-gain shrink-0" aria-hidden="true" />
                         {item}
                       </li>
                     ))}
@@ -712,10 +712,10 @@ export function Component() {
       </div>
 
       {/* ─── Ask AI ─────────────────────────────────────────────────────── */}
-      <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-6 space-y-4">
+      <div className="bg-elevated border border-default rounded-pf-lg p-6 space-y-4">
         <div className="flex items-center gap-2">
-          <Bot className="size-4 text-pf-cyan-400" aria-hidden="true" />
-          <h2 className="text-sm font-medium text-pf-text">Ask AI</h2>
+          <Bot className="size-4 text-accent-text" aria-hidden="true" />
+          <h2 className="text-sm font-medium text-primary">Ask AI</h2>
         </div>
 
         {/* Input row */}
@@ -729,7 +729,7 @@ export function Component() {
               if (e.key === 'Enter' && !loadingAiQuery) submitAiQuery();
             }}
             placeholder="Ask about your portfolio..."
-            className="flex-1 bg-pf-surface border border-pf-border rounded-pf-sm px-3 py-2 text-sm text-pf-text placeholder:text-pf-text-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-400/40 transition"
+            className="flex-1 bg-surface border border-default rounded-pf-sm px-3 py-2 text-sm text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-text/40 transition"
             disabled={loadingAiQuery}
             aria-label="Ask AI a question about your portfolio"
           />
@@ -737,7 +737,7 @@ export function Component() {
             type="button"
             onClick={submitAiQuery}
             disabled={loadingAiQuery || !aiQuery.trim()}
-            className="flex items-center gap-2 px-4 py-2 rounded-pf-sm text-sm font-medium bg-pf-cyan-400/15 text-pf-cyan-400 border border-pf-cyan-400/30 hover:bg-pf-cyan-400/25 transition-colors disabled:opacity-50"
+            className="flex items-center gap-2 px-4 py-2 rounded-pf-sm text-sm font-medium bg-accent-text/15 text-accent-text border border-accent-text/30 hover:bg-accent-text/25 transition-colors disabled:opacity-50"
             aria-label="Send question to AI"
           >
             {loadingAiQuery ? (
@@ -751,9 +751,9 @@ export function Component() {
 
         {/* AI response */}
         {aiAnswer && (
-          <div className="bg-pf-surface border border-pf-border rounded-pf-sm p-4 flex items-start gap-3">
-            <Bot className="size-4 text-pf-cyan-400 mt-1 shrink-0" aria-hidden="true" />
-            <p className="text-sm text-pf-text-secondary leading-relaxed">{aiAnswer.response}</p>
+          <div className="bg-surface border border-default rounded-pf-sm p-4 flex items-start gap-3">
+            <Bot className="size-4 text-accent-text mt-1 shrink-0" aria-hidden="true" />
+            <p className="text-sm text-secondary leading-relaxed">{aiAnswer.response}</p>
           </div>
         )}
       </div>

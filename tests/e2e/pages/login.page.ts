@@ -20,8 +20,8 @@ export class LoginPage {
         // React renders a plain <input type="password"> with id="password"
         this.password = page.locator('#password');
         this.submit   = page.locator('button', { hasText: 'Sign in' });
-        // Error alert: a div with AlertCircle icon and error text
-        this.error    = page.locator('.bg-pf-danger\\/10');
+        // Error alert: a div with AlertCircle icon and error text (token migration: bg-pf-danger → bg-loss)
+        this.error    = page.locator('div[role="alert"].bg-loss\\/10');
         // TOTP input: plain <input id="totp"> shown conditionally
         this.totpInput = page.locator('#totp');
     }

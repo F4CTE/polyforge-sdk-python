@@ -26,12 +26,12 @@ export const SECTION_META: Record<
   BlockSection,
   { label: string; color: string; icon: string }
 > = {
-  safety:     { label: 'Safety',     color: 'var(--color-pf-danger)', icon: 'shield' },
-  triggers:   { label: 'Triggers',   color: 'var(--color-pf-warning)', icon: 'zap' },
-  conditions: { label: 'Conditions', color: 'var(--color-pf-info)', icon: 'filter' },
-  actions:    { label: 'Actions',    color: 'var(--color-pf-success)', icon: 'play' },
-  logic:      { label: 'Logic',      color: 'var(--color-pf-info)', icon: 'git-branch' },
-  calc:       { label: 'Calculate', color: 'var(--color-pf-success)', icon: 'calculator' },
+  safety:     { label: 'Safety',     color: 'var(--loss)', icon: 'shield' },
+  triggers:   { label: 'Triggers',   color: 'var(--warning)', icon: 'zap' },
+  conditions: { label: 'Conditions', color: 'var(--info)', icon: 'filter' },
+  actions:    { label: 'Actions',    color: 'var(--gain)', icon: 'play' },
+  logic:      { label: 'Logic',      color: 'var(--info)', icon: 'git-branch' },
+  calc:       { label: 'Calculate', color: 'var(--gain)', icon: 'calculator' },
 };
 
 export const SECTION_COLUMNS: Record<BlockSection, number> = {

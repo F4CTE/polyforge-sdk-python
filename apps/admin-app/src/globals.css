@@ -10,8 +10,8 @@
   padding: 0.5rem 1rem;
   font-size: 0.875rem;
   font-weight: 600;
-  color: var(--color-pf-text);
-  background: var(--color-pf-cyan-500);
+  color: var(--text-primary);
+  background: var(--accent-default);
   border-radius: 0 0 0.375rem 0.375rem;
   transition: top var(--transition-duration-pf-fast);
 }
@@ -21,7 +21,7 @@
 
 /* ─── Admin login background ─────────────────────────────────────────── */
 .admin-login-bg {
-  background: radial-gradient(ellipse at 50% 0%, color-mix(in srgb, var(--color-pf-cyan-500) 6%, transparent) 0%, transparent 60%), var(--color-pf-bg);
+  background: radial-gradient(ellipse at 50% 0%, color-mix(in srgb, var(--accent-default) 6%, transparent) 0%, transparent 60%), var(--bg-app);
 }
 
 /* ─── Reduced motion ─────────────────────────────────────────────────── */

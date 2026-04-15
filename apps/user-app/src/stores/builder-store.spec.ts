@@ -333,7 +333,7 @@ describe('addNode with logic blocks', () => {
     useBuilderStore.getState().addNode(ifDef, 'logic');
 
     const node = useBuilderStore.getState().nodes[0];
-    expect(node.data.color).toBe('var(--color-pf-warning)');
+    expect(node.data.color).toBe('var(--warning)');
   });
 
   it('uses blue color for AND_GATE', () => {
@@ -341,7 +341,7 @@ describe('addNode with logic blocks', () => {
     useBuilderStore.getState().addNode(andDef, 'logic');
 
     const node = useBuilderStore.getState().nodes[0];
-    expect(node.data.color).toBe('var(--color-pf-info)');
+    expect(node.data.color).toBe('var(--info)');
   });
 
   it('uses gray color for DELAY', () => {
@@ -349,7 +349,7 @@ describe('addNode with logic blocks', () => {
     useBuilderStore.getState().addNode(delayDef, 'logic');
 
     const node = useBuilderStore.getState().nodes[0];
-    expect(node.data.color).toBe('var(--color-pf-text-muted)');
+    expect(node.data.color).toBe('var(--text-tertiary)');
   });
 });
 

@@ -36,45 +36,45 @@ export function formatDateTime(dateStr: string): string {
 
 /** Status badge color helpers */
 export function statusColor(status: string | undefined | null): string {
-  if (!status) return 'text-pf-text-secondary bg-pf-elevated';
+  if (!status) return 'text-secondary bg-elevated';
   const s = status.toUpperCase();
   const colors: Record<string, string> = {
-    HEALTHY: 'text-pf-success bg-pf-success/10',
-    RUNNING: 'text-pf-success bg-pf-success/10',
-    ACTIVE: 'text-pf-success bg-pf-success/10',
-    CONNECTED: 'text-pf-success bg-pf-success/10',
-    VERIFIED: 'text-pf-info bg-pf-info/10',
-    COMPLETED: 'text-pf-success bg-pf-success/10',
-    MATCHED: 'text-pf-success bg-pf-success/10',
-    CONFIRMED: 'text-pf-success bg-pf-success/10',
-    LIVE: 'text-pf-success bg-pf-success/10',
-    OPEN: 'text-pf-warning bg-pf-warning/10',
-    IN_PROGRESS: 'text-pf-info bg-pf-info/10',
-    PENDING: 'text-pf-warning bg-pf-warning/10',
-    QUEUED: 'text-pf-warning bg-pf-warning/10',
+    HEALTHY: 'text-gain bg-gain/10',
+    RUNNING: 'text-gain bg-gain/10',
+    ACTIVE: 'text-gain bg-gain/10',
+    CONNECTED: 'text-gain bg-gain/10',
+    VERIFIED: 'text-info bg-info/10',
+    COMPLETED: 'text-gain bg-gain/10',
+    MATCHED: 'text-gain bg-gain/10',
+    CONFIRMED: 'text-gain bg-gain/10',
+    LIVE: 'text-gain bg-gain/10',
+    OPEN: 'text-warning bg-warning/10',
+    IN_PROGRESS: 'text-info bg-info/10',
+    PENDING: 'text-warning bg-warning/10',
+    QUEUED: 'text-warning bg-warning/10',
     PAPER: 'text-pf-purple-500 bg-pf-purple-500/10',
-    PAUSED: 'text-pf-warning bg-pf-warning/10',
-    IDLE: 'text-pf-text-secondary bg-pf-elevated',
-    DEGRADED: 'text-pf-warning bg-pf-warning/10',
-    DOWN: 'text-pf-danger bg-pf-danger/10',
-    ERROR: 'text-pf-danger bg-pf-danger/10',
-    FAILED: 'text-pf-danger bg-pf-danger/10',
-    CANCELLED: 'text-pf-text-secondary bg-pf-elevated',
-    ARCHIVED: 'text-pf-text-secondary bg-pf-elevated',
-    SUSPENDED: 'text-pf-danger bg-pf-danger/10',
-    UNVERIFIED: 'text-pf-warning bg-pf-warning/10',
-    RESOLVED: 'text-pf-success bg-pf-success/10',
-    CLOSED: 'text-pf-text-secondary bg-pf-elevated',
-    REVIEWED: 'text-pf-success bg-pf-success/10',
-    DISMISSED: 'text-pf-text-secondary bg-pf-elevated',
+    PAUSED: 'text-warning bg-warning/10',
+    IDLE: 'text-secondary bg-elevated',
+    DEGRADED: 'text-warning bg-warning/10',
+    DOWN: 'text-loss bg-loss/10',
+    ERROR: 'text-loss bg-loss/10',
+    FAILED: 'text-loss bg-loss/10',
+    CANCELLED: 'text-secondary bg-elevated',
+    ARCHIVED: 'text-secondary bg-elevated',
+    SUSPENDED: 'text-loss bg-loss/10',
+    UNVERIFIED: 'text-warning bg-warning/10',
+    RESOLVED: 'text-gain bg-gain/10',
+    CLOSED: 'text-secondary bg-elevated',
+    REVIEWED: 'text-gain bg-gain/10',
+    DISMISSED: 'text-secondary bg-elevated',
   };
-  return colors[s] ?? 'text-pf-text-secondary bg-pf-elevated';
+  return colors[s] ?? 'text-secondary bg-elevated';
 }
 
 /** Priority badge color helpers */
 export const priorityColor: Record<string, string> = {
-  LOW: 'text-pf-text-secondary bg-pf-elevated',
-  MEDIUM: 'text-pf-warning bg-pf-warning/10',
+  LOW: 'text-secondary bg-elevated',
+  MEDIUM: 'text-warning bg-warning/10',
   HIGH: 'text-pf-gold-500 bg-pf-gold-500/10',
-  URGENT: 'text-pf-danger bg-pf-danger/10',
+  URGENT: 'text-loss bg-loss/10',
 };

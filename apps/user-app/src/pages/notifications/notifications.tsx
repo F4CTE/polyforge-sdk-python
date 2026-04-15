@@ -57,10 +57,10 @@ const TABS: { label: string; value: FilterTab }[] = [
 ];
 
 const SEVERITY_DOT: Record<MergedNotification['severity'], string> = {
-  info:    'bg-pf-cyan-400',
-  success: 'bg-pf-success',
-  warning: 'bg-pf-warning',
-  error:   'bg-pf-danger',
+  info:    'bg-accent-text',
+  success: 'bg-gain',
+  warning: 'bg-warning',
+  error:   'bg-loss',
 };
 
 const TRADE_KEYWORDS = ['trade', 'buy', 'sell', 'position', 'order', 'fill', 'market'];
@@ -145,16 +145,16 @@ function CategoryIcon({ category }: { category: MergedNotification['category'] }
   const cls = 'h-4 w-4 shrink-0';
   switch (category) {
     case 'trade':
-      return <TrendingUp className={`${cls} text-pf-cyan-400`} />;
+      return <TrendingUp className={`${cls} text-accent-text`} />;
     case 'system':
-      return <Settings className={`${cls} text-pf-text-secondary`} />;
+      return <Settings className={`${cls} text-secondary`} />;
     case 'alert':
-      return <Bell className={`${cls} text-pf-warning`} />;
+      return <Bell className={`${cls} text-warning`} />;
     case 'social':
-      return <Users className={`${cls} text-pf-info`} />;
+      return <Users className={`${cls} text-info`} />;
     case 'general':
     default:
-      return <Info className={`${cls} text-pf-text-muted`} />;
+      return <Info className={`${cls} text-tertiary`} />;
   }
 }
 
@@ -174,9 +174,9 @@ function NotificationCard({ item, onRead, onDelete }: NotificationCardProps) {
   return (
     <div
       className={[
-        'relative w-full flex items-start gap-3 rounded-lg border border-pf-border px-4 py-3',
+        'relative w-full flex items-start gap-3 rounded-lg border border-default px-4 py-3',
         'transition-colors group',
-        item.read ? 'bg-pf-surface' : 'bg-pf-cyan-500/5',
+        item.read ? 'bg-surface' : 'bg-accent/5',
       ].join(' ')}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
@@ -190,9 +190,9 @@ function NotificationCard({ item, onRead, onDelete }: NotificationCardProps) {
           aria-label="Delete notification"
           onClick={() => onDelete(item.id, item.source)}
           className={[
-            'absolute top-2 right-2 p-1 rounded text-pf-text-muted',
-            'hover:text-pf-danger transition-colors',
-            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-400',
+            'absolute top-2 right-2 p-1 rounded text-tertiary',
+            'hover:text-loss transition-colors',
+            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-text',
           ].join(' ')}
         >
           <X className="h-4 w-4" />
@@ -217,16 +217,16 @@ function NotificationCard({ item, onRead, onDelete }: NotificationCardProps) {
         {/* Title row with category icon */}
         <span className="flex items-center gap-2">
           <CategoryIcon category={item.category} />
-          <span className="font-medium text-pf-text-primary leading-snug truncate">
+          <span className="font-medium text-primary leading-snug truncate">
             {item.title}
           </span>
         </span>
 
-        <span className="block text-sm text-pf-text-muted mt-1 leading-relaxed">
+        <span className="block text-sm text-tertiary mt-1 leading-relaxed">
           {item.body}
         </span>
 
-        <span className="block text-xs text-pf-text-muted mt-1">
+        <span className="block text-xs text-tertiary mt-1">
           {relativeTime(item.timestamp)}
         </span>
       </Button>
@@ -234,14 +234,14 @@ function NotificationCard({ item, onRead, onDelete }: NotificationCardProps) {
       {/* Right column: unread dot + action link */}
       <span className="flex flex-col items-end gap-2 shrink-0 mt-1">
         {!item.read && (
-          <span className="block h-2 w-2 rounded-pf-full bg-pf-cyan-400" />
+          <span className="block h-2 w-2 rounded-pf-full bg-accent-text" />
         )}
         {item.actionUrl && (
           <Link
             to={item.actionUrl}
             onClick={(e) => e.stopPropagation()}
             className={[
-              'text-xs font-medium text-pf-cyan-400 hover:text-pf-cyan-300',
+              'text-xs font-medium text-accent-text hover:text-accent-text',
               'transition-colors whitespace-nowrap',
             ].join(' ')}
           >
@@ -379,8 +379,8 @@ export function Component() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-semibold text-pf-text-primary">Notifications</h1>
-          <p className="text-sm text-pf-text-muted mt-1">
+          <h1 className="text-xl font-semibold text-primary">Notifications</h1>
+          <p className="text-sm text-tertiary mt-1">
             Real-time alerts and system messages
           </p>
         </div>
@@ -395,9 +395,9 @@ export function Component() {
             disabled={refreshing}
             aria-label="Refresh notifications"
             className={[
-              'p-2 rounded text-pf-text-muted hover:text-pf-text-primary',
+              'p-2 rounded text-tertiary hover:text-primary',
               'transition-colors focus-visible:outline-none focus-visible:ring-2',
-              'focus-visible:ring-pf-cyan-400 disabled:opacity-50',
+              'focus-visible:ring-accent-text disabled:opacity-50',
             ].join(' ')}
           >
             <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
@@ -409,9 +409,9 @@ export function Component() {
             variant="ghost"
             onClick={handleMarkAllRead}
             className={[
-              'text-sm font-medium text-pf-cyan-400 hover:text-pf-cyan-300',
+              'text-sm font-medium text-accent-text hover:text-accent-text',
               'transition-colors focus-visible:outline-none focus-visible:ring-2',
-              'focus-visible:ring-pf-cyan-400 rounded px-2 py-1',
+              'focus-visible:ring-accent-text rounded px-2 py-1',
             ].join(' ')}
           >
             Mark all read
@@ -420,24 +420,24 @@ export function Component() {
       </div>
 
       {/* Stats bar */}
-      <div className="flex items-center gap-2 text-sm text-pf-text-muted">
+      <div className="flex items-center gap-2 text-sm text-tertiary">
         <span>
-          <span className="font-medium text-pf-text-primary">{unreadCount}</span> unread
+          <span className="font-medium text-primary">{unreadCount}</span> unread
         </span>
-        <span className="text-pf-border">&middot;</span>
+        <span className="text-default">&middot;</span>
         <span>
-          <span className="font-medium text-pf-text-primary">{merged.length}</span> total
+          <span className="font-medium text-primary">{merged.length}</span> total
         </span>
         {loading && (
           <>
-            <span className="text-pf-border">&middot;</span>
-            <span className="text-pf-text-muted italic">Loading…</span>
+            <span className="text-default">&middot;</span>
+            <span className="text-tertiary italic">Loading…</span>
           </>
         )}
       </div>
 
       {/* Filter tabs */}
-      <div className="flex gap-1 border-b border-pf-border">
+      <div className="flex gap-1 border-b border-default">
         {TABS.map((tab) => (
           <Button
             key={tab.value}
@@ -446,10 +446,10 @@ export function Component() {
             onClick={() => setActiveTab(tab.value)}
             className={[
               'px-3 py-2 text-sm font-medium rounded-t transition-colors',
-              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-400',
+              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-text',
               activeTab === tab.value
-                ? 'text-pf-cyan-400 border-b-2 border-pf-cyan-400 -mb-px'
-                : 'text-pf-text-muted hover:text-pf-text-primary',
+                ? 'text-accent-text border-b-2 border-accent-text -mb-px'
+                : 'text-tertiary hover:text-primary',
             ].join(' ')}
           >
             {tab.label}
@@ -459,7 +459,7 @@ export function Component() {
 
       {/* Notification list or empty state */}
       {filtered.length === 0 ? (
-        <div className="flex flex-col items-center justify-center gap-3 py-20 text-pf-text-muted">
+        <div className="flex flex-col items-center justify-center gap-3 py-20 text-tertiary">
           <Bell className="h-10 w-10 opacity-40" />
           <p className="text-base font-medium">No notifications yet</p>
           <p className="text-sm">Real-time alerts will appear here</p>
@@ -479,14 +479,14 @@ export function Component() {
 
       {/* Pagination info + load more */}
       {merged.length > 0 && (
-        <div className="flex items-center justify-between pt-2 border-t border-pf-border">
-          <p className="text-xs text-pf-text-muted">
+        <div className="flex items-center justify-between pt-2 border-t border-default">
+          <p className="text-xs text-tertiary">
             Showing{' '}
-            <span className="font-medium text-pf-text-primary">{merged.length}</span>
+            <span className="font-medium text-primary">{merged.length}</span>
             {serverTotal > 0 && (
               <>
                 {' '}of{' '}
-                <span className="font-medium text-pf-text-primary">{serverTotal}</span>
+                <span className="font-medium text-primary">{serverTotal}</span>
               </>
             )}{' '}
             notifications
@@ -499,9 +499,9 @@ export function Component() {
               onClick={handleLoadMore}
               disabled={loadingMore}
               className={[
-                'text-sm font-medium text-pf-cyan-400 hover:text-pf-cyan-300',
+                'text-sm font-medium text-accent-text hover:text-accent-text',
                 'transition-colors focus-visible:outline-none focus-visible:ring-2',
-                'focus-visible:ring-pf-cyan-400 rounded px-2 py-1',
+                'focus-visible:ring-accent-text rounded px-2 py-1',
                 'disabled:opacity-50',
               ].join(' ')}
             >

@@ -120,11 +120,11 @@ export function Component() {
       {/* Header */}
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold text-pf-text flex items-center gap-2">
-            <Layers className="size-6 text-pf-cyan-400" />
+          <h1 className="text-2xl font-semibold text-primary flex items-center gap-2">
+            <Layers className="size-6 text-accent-text" />
             Smart Orders
           </h1>
-          <p className="text-sm text-pf-text-secondary mt-1">
+          <p className="text-sm text-secondary mt-1">
             TWAP, DCA, Bracket, and OCO orders — advanced execution strategies.
           </p>
         </div>
@@ -134,7 +134,7 @@ export function Component() {
             variant="secondary"
             onClick={load}
             disabled={loading}
-            className="flex items-center gap-2 px-3 py-2 rounded-pf bg-pf-elevated border border-pf-border text-sm text-pf-text-secondary hover:text-pf-text hover:border-pf-border-strong transition-colors disabled:opacity-50"
+            className="flex items-center gap-2 px-3 py-2 rounded-pf bg-elevated border border-default text-sm text-secondary hover:text-primary hover:border-strong transition-colors disabled:opacity-50"
           >
             {loading ? <Loader2 className="size-4 animate-spin" /> : <RefreshCw className="size-4" />}
             Refresh
@@ -145,9 +145,9 @@ export function Component() {
       {/* Order types info */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         {(Object.keys(TYPE_DESC) as SmartOrderType[]).map((t) => (
-          <div key={t} className="p-3 bg-pf-surface border border-pf-border rounded-pf-lg">
-            <p className="text-xs font-semibold text-pf-text mb-1">{TYPE_LABEL[t]}</p>
-            <p className="text-pf-label text-pf-text-muted leading-relaxed">{TYPE_DESC[t]}</p>
+          <div key={t} className="p-3 bg-surface border border-default rounded-pf-lg">
+            <p className="text-xs font-semibold text-primary mb-1">{TYPE_LABEL[t]}</p>
+            <p className="text-pf-label text-tertiary leading-relaxed">{TYPE_DESC[t]}</p>
           </div>
         ))}
       </div>
@@ -156,30 +156,30 @@ export function Component() {
       {loading ? (
         <div className="space-y-2">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="h-20 bg-pf-elevated border border-pf-border rounded-pf-lg animate-pulse" />
+            <div key={i} className="h-20 bg-elevated border border-default rounded-pf-lg animate-pulse" />
           ))}
         </div>
       ) : orders.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-center">
-          <Layers className="size-10 text-pf-text-muted mb-3" />
-          <p className="text-pf-text-secondary text-sm">No smart orders yet.</p>
-          <p className="text-pf-text-muted text-xs mt-1">
+          <Layers className="size-10 text-tertiary mb-3" />
+          <p className="text-secondary text-sm">No smart orders yet.</p>
+          <p className="text-tertiary text-xs mt-1">
             Place a smart order via the{' '}
-            <Link to="/markets" className="text-pf-cyan-400 hover:underline">market detail page</Link>{' '}
+            <Link to="/markets" className="text-accent-text hover:underline">market detail page</Link>{' '}
             or API.
           </p>
         </div>
       ) : (
         <div className="space-y-2">
           {orders.map((so) => (
-            <div key={so.id} className="bg-pf-elevated border border-pf-border rounded-pf-lg overflow-hidden">
+            <div key={so.id} className="bg-elevated border border-default rounded-pf-lg overflow-hidden">
               {/* Row */}
               <div className="flex items-center gap-4 px-4 py-3">
                 <Button
                   type="button"
                   variant="ghost"
                   onClick={() => setExpanded(expanded === so.id ? null : so.id)}
-                  className="shrink-0 text-pf-text-muted hover:text-pf-text"
+                  className="shrink-0 text-tertiary hover:text-primary"
                   aria-label="Toggle details"
                 >
                   {expanded === so.id
@@ -188,16 +188,16 @@ export function Component() {
                 </Button>
 
                 {/* Type badge */}
-                <span className="shrink-0 px-2 py-1 rounded text-xs font-semibold bg-pf-surface border border-pf-border text-pf-text-secondary">
+                <span className="shrink-0 px-2 py-1 rounded text-xs font-semibold bg-surface border border-default text-secondary">
                   {TYPE_LABEL[so.type]}
                 </span>
 
                 {/* Market / token */}
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm text-pf-text font-medium truncate">
+                  <p className="text-sm text-primary font-medium truncate">
                     {so.side} {so.outcome} · {so.tokenId.slice(0, 12)}…
                   </p>
-                  <p className="text-xs text-pf-text-muted">
+                  <p className="text-xs text-tertiary">
                     Size: {parseFloat(so.totalSize).toFixed(2)} USDC
                     {(so.type === 'TWAP' || so.type === 'DCA') && (
                       <> · Slice {so.slicesFilled}/{so.slicesTotal}</>
@@ -210,7 +210,7 @@ export function Component() {
 
                 <SmartOrderStatusBadge status={so.status} />
 
-                <span className="text-xs text-pf-text-muted shrink-0">{formatDate(so.createdAt)}</span>
+                <span className="text-xs text-tertiary shrink-0">{formatDate(so.createdAt)}</span>
 
                 {['PENDING', 'ACTIVE'].includes(so.status) && (
                   <Button
@@ -218,7 +218,7 @@ export function Component() {
                     variant="danger"
                     onClick={() => cancel(so.id)}
                     disabled={cancelling === so.id}
-                    className="shrink-0 p-2 rounded-pf text-pf-danger hover:bg-pf-danger/10 disabled:opacity-50 transition-colors"
+                    className="shrink-0 p-2 rounded-pf text-loss hover:bg-loss/10 disabled:opacity-50 transition-colors"
                     aria-label="Cancel"
                     title="Cancel smart order"
                   >
@@ -231,24 +231,24 @@ export function Component() {
 
               {/* Expanded: child orders */}
               {expanded === so.id && so.orders.length > 0 && (
-                <div className="border-t border-pf-border/50 px-4 py-3 bg-pf-surface/50">
-                  <p className="text-pf-label font-medium text-pf-text-muted uppercase tracking-wider mb-2">
+                <div className="border-t border-default/50 px-4 py-3 bg-surface/50">
+                  <p className="text-pf-label font-medium text-tertiary uppercase tracking-wider mb-2">
                     Child Orders ({so.orders.length})
                   </p>
                   <div className="space-y-1">
                     {so.orders.map((child) => (
                       <div
                         key={child.id}
-                        className="flex items-center gap-4 text-xs text-pf-text-secondary"
+                        className="flex items-center gap-4 text-xs text-secondary"
                       >
-                        <span className="font-mono text-pf-text-muted truncate w-24">{child.id.slice(0, 10)}…</span>
+                        <span className="font-mono text-tertiary truncate w-24">{child.id.slice(0, 10)}…</span>
                         <span className={`font-medium ${
-                          child.status === 'MATCHED' || child.status === 'CONFIRMED' ? 'text-pf-success' :
-                          child.status === 'CANCELLED' ? 'text-pf-text-muted' :
-                          child.status === 'FAILED' ? 'text-pf-danger' : 'text-pf-text-secondary'
+                          child.status === 'MATCHED' || child.status === 'CONFIRMED' ? 'text-gain' :
+                          child.status === 'CANCELLED' ? 'text-tertiary' :
+                          child.status === 'FAILED' ? 'text-loss' : 'text-secondary'
                         }`}>{child.status}</span>
                         {child.fillSize && <span>Filled: {child.fillSize} @ {child.fillPrice}</span>}
-                        <span className="ml-auto text-pf-text-muted">{formatDate(child.createdAt)}</span>
+                        <span className="ml-auto text-tertiary">{formatDate(child.createdAt)}</span>
                       </div>
                     ))}
                   </div>

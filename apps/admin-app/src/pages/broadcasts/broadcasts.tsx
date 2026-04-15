@@ -62,29 +62,29 @@ const AUDIENCE_REACH: Record<Broadcast['targetAudience'], number> = {
 function typeBadgeClass(type: Broadcast['type']): string {
   switch (type) {
     case 'INFO':
-      return 'bg-pf-cyan-500/10 text-pf-cyan-500 border border-pf-cyan-500/20';
+      return 'bg-accent/10 text-accent border border-accent/20';
     case 'WARNING':
-      return 'bg-pf-warning/10 text-pf-warning border border-pf-warning/20';
+      return 'bg-warning/10 text-warning border border-warning/20';
     case 'SUCCESS':
-      return 'bg-pf-success/10 text-pf-success border border-pf-success/20';
+      return 'bg-gain/10 text-gain border border-gain/20';
     case 'PROMO':
-      return 'bg-pf-cyan-500/10 text-pf-cyan-500 border border-pf-cyan-500/20';
+      return 'bg-accent/10 text-accent border border-accent/20';
   }
 }
 
 function typePillClass(type: Broadcast['type'], selected: boolean): string {
   if (!selected) {
-    return 'border border-pf-border bg-pf-base text-pf-text-secondary hover:text-pf-text hover:border-pf-text-secondary transition-colors';
+    return 'border border-default bg-app text-secondary hover:text-primary hover:border-secondary transition-colors';
   }
   switch (type) {
     case 'INFO':
-      return 'border border-pf-cyan-500/40 bg-pf-cyan-500/10 text-pf-cyan-500';
+      return 'border border-accent/40 bg-accent/10 text-accent';
     case 'WARNING':
-      return 'border border-pf-warning/40 bg-pf-warning/10 text-pf-warning';
+      return 'border border-warning/40 bg-warning/10 text-warning';
     case 'SUCCESS':
-      return 'border border-pf-success/40 bg-pf-success/10 text-pf-success';
+      return 'border border-gain/40 bg-gain/10 text-gain';
     case 'PROMO':
-      return 'border border-pf-cyan-500/40 bg-pf-cyan-500/10 text-pf-cyan-500';
+      return 'border border-accent/40 bg-accent/10 text-accent';
   }
 }
 
@@ -116,9 +116,9 @@ function formatDate(iso: string): string {
 function EmptyState() {
   return (
     <div className="text-center py-16">
-      <Megaphone className="mx-auto mb-3 text-pf-text-tertiary opacity-30" size={44} aria-hidden="true" />
-      <p className="text-pf-text-secondary font-medium">No broadcasts sent yet</p>
-      <p className="text-pf-text-tertiary text-xs mt-1">Use the compose panel above to send your first broadcast</p>
+      <Megaphone className="mx-auto mb-3 text-tertiary opacity-30" size={44} aria-hidden="true" />
+      <p className="text-secondary font-medium">No broadcasts sent yet</p>
+      <p className="text-tertiary text-xs mt-1">Use the compose panel above to send your first broadcast</p>
     </div>
   );
 }
@@ -127,10 +127,10 @@ function EmptyState() {
 
 function SkeletonRow() {
   return (
-    <tr className="border-b border-pf-border">
+    <tr className="border-b border-default">
       {Array.from({ length: 7 }).map((_, i) => (
         <td key={i} className="px-3 py-3">
-          <div className="h-4 bg-pf-base rounded animate-pulse" style={{ width: `${60 + (i * 7) % 30}%` }} />
+          <div className="h-4 bg-app rounded animate-pulse" style={{ width: `${60 + (i * 7) % 30}%` }} />
         </td>
       ))}
     </tr>
@@ -227,13 +227,13 @@ export function Component() {
     <div className="animate-fade-in space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold text-pf-text">Broadcasts</h2>
+        <h2 className="text-lg font-semibold text-primary">Broadcasts</h2>
         {!composeOpen && (
           <Button
             type="button"
             variant="default"
             onClick={openCompose}
-            className="flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-pf-sm bg-pf-cyan-500 text-pf-text-contrast hover:bg-pf-cyan-400 transition-colors"
+            className="flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-pf-sm bg-accent text-inverse hover:bg-accent-text transition-colors"
           >
             <Megaphone size={15} aria-hidden="true" />
             New Broadcast
@@ -243,18 +243,18 @@ export function Component() {
 
       {/* Compose Panel */}
       {composeOpen && (
-        <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-5 space-y-4">
+        <div className="bg-elevated border border-default rounded-pf-lg p-5 space-y-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Send size={15} className="text-pf-cyan-500" aria-hidden="true" />
-              <h3 className="text-sm font-semibold text-pf-text">Compose Broadcast</h3>
+              <Send size={15} className="text-accent" aria-hidden="true" />
+              <h3 className="text-sm font-semibold text-primary">Compose Broadcast</h3>
             </div>
             <Button
               type="button"
               variant="ghost"
               size="icon-sm"
               onClick={closeCompose}
-              className="p-1 rounded hover:bg-pf-base text-pf-text-tertiary hover:text-pf-text transition-colors"
+              className="p-1 rounded hover:bg-app text-tertiary hover:text-primary transition-colors"
               aria-label="Close compose panel"
             >
               <X size={16} />
@@ -263,7 +263,7 @@ export function Component() {
 
           {/* Title */}
           <div>
-            <label htmlFor="bc-title" className="block text-xs text-pf-text-tertiary mb-1">
+            <label htmlFor="bc-title" className="block text-xs text-tertiary mb-1">
               Title
             </label>
             <Input
@@ -272,13 +272,13 @@ export function Component() {
               value={draft.title}
               onChange={(e) => handleDraftChange('title', e.target.value)}
               placeholder="e.g. Scheduled maintenance this Sunday"
-              className="w-full px-3 py-2 text-sm rounded-pf-sm border border-pf-border bg-pf-base text-pf-text placeholder:text-pf-text-tertiary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pf-cyan-500"
+              className="w-full px-3 py-2 text-sm rounded-pf-sm border border-default bg-app text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent"
             />
           </div>
 
           {/* Message */}
           <div>
-            <label htmlFor="bc-message" className="block text-xs text-pf-text-tertiary mb-1">
+            <label htmlFor="bc-message" className="block text-xs text-tertiary mb-1">
               Message
             </label>
             <Textarea
@@ -287,13 +287,13 @@ export function Component() {
               value={draft.message}
               onChange={(e) => handleDraftChange('message', e.target.value)}
               placeholder="Write your broadcast message here..."
-              className="w-full px-3 py-2 text-sm rounded-pf-sm border border-pf-border bg-pf-base text-pf-text placeholder:text-pf-text-tertiary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pf-cyan-500 resize-none"
+              className="w-full px-3 py-2 text-sm rounded-pf-sm border border-default bg-app text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent resize-none"
             />
           </div>
 
           {/* Type */}
           <div>
-            <div className="text-xs text-pf-text-tertiary mb-2">Type</div>
+            <div className="text-xs text-tertiary mb-2">Type</div>
             <div className="flex flex-wrap gap-2" role="group" aria-label="Broadcast type">
               {TYPE_OPTIONS.map((opt) => (
                 <Button
@@ -313,7 +313,7 @@ export function Component() {
 
           {/* Audience */}
           <div>
-            <div className="text-xs text-pf-text-tertiary mb-2">Target Audience</div>
+            <div className="text-xs text-tertiary mb-2">Target Audience</div>
             <div className="flex flex-wrap gap-2" role="group" aria-label="Target audience">
               {AUDIENCE_OPTIONS.map((opt) => (
                 <Button
@@ -323,8 +323,8 @@ export function Component() {
                   onClick={() => handleDraftChange('targetAudience', opt.value)}
                   className={`flex items-center gap-2 px-3 py-2 text-xs font-medium rounded-pf-full transition-colors ${
                     draft.targetAudience === opt.value
-                      ? 'border border-pf-cyan-500/40 bg-pf-cyan-500/10 text-pf-cyan-400'
-                      : 'border border-pf-border bg-pf-base text-pf-text-secondary hover:text-pf-text hover:border-pf-text-secondary'
+                      ? 'border border-accent/40 bg-accent/10 text-accent-text'
+                      : 'border border-default bg-app text-secondary hover:text-primary hover:border-secondary'
                   }`}
                   aria-pressed={draft.targetAudience === opt.value}
                 >
@@ -334,25 +334,25 @@ export function Component() {
               ))}
             </div>
             {selectedAudience && (
-              <p className="mt-2 text-pf-label text-pf-text-tertiary">{selectedAudience.description}</p>
+              <p className="mt-2 text-pf-label text-tertiary">{selectedAudience.description}</p>
             )}
           </div>
 
           {/* Reach estimate */}
-          <div className="flex items-center gap-2 text-xs text-pf-text-secondary">
-            <Users size={12} className="text-pf-cyan-500" aria-hidden="true" />
-            Estimated reach: <span className="font-semibold text-pf-text">~{estimatedReach.toLocaleString()} users</span>
+          <div className="flex items-center gap-2 text-xs text-secondary">
+            <Users size={12} className="text-accent" aria-hidden="true" />
+            Estimated reach: <span className="font-semibold text-primary">~{estimatedReach.toLocaleString()} users</span>
           </div>
 
           {/* Confirmation warning */}
           {confirmSend && (
-            <div className="rounded-pf-sm border border-pf-warning/30 bg-pf-warning/5 p-4">
+            <div className="rounded-pf-sm border border-warning/30 bg-warning/5 p-4">
               <div className="flex items-start gap-2 mb-3">
-                <AlertTriangle size={16} className="text-pf-warning shrink-0 mt-1" aria-hidden="true" />
+                <AlertTriangle size={16} className="text-warning shrink-0 mt-1" aria-hidden="true" />
                 <div>
-                  <p className="text-sm font-semibold text-pf-warning">Confirm broadcast</p>
-                  <p className="text-xs text-pf-text-secondary mt-1">
-                    You are about to send to <span className="font-semibold text-pf-text">~{estimatedReach.toLocaleString()} users</span>. This cannot be undone.
+                  <p className="text-sm font-semibold text-warning">Confirm broadcast</p>
+                  <p className="text-xs text-secondary mt-1">
+                    You are about to send to <span className="font-semibold text-primary">~{estimatedReach.toLocaleString()} users</span>. This cannot be undone.
                   </p>
                 </div>
               </div>
@@ -362,7 +362,7 @@ export function Component() {
                   variant="default"
                   onClick={handleConfirmSend}
                   disabled={sending}
-                  className="flex items-center gap-2 px-4 py-2 text-xs font-semibold rounded-pf-sm bg-pf-cyan-500 text-pf-text-contrast hover:bg-pf-cyan-400 disabled:opacity-50 transition-colors"
+                  className="flex items-center gap-2 px-4 py-2 text-xs font-semibold rounded-pf-sm bg-accent text-inverse hover:bg-accent-text disabled:opacity-50 transition-colors"
                 >
                   <Send size={12} aria-hidden="true" />
                   {sending ? 'Sending...' : 'Confirm Send'}
@@ -372,7 +372,7 @@ export function Component() {
                   variant="secondary"
                   onClick={() => setConfirmSend(false)}
                   disabled={sending}
-                  className="px-4 py-2 text-xs font-medium rounded-pf-sm border border-pf-border bg-pf-base text-pf-text-secondary hover:text-pf-text hover:border-pf-text-secondary transition-colors"
+                  className="px-4 py-2 text-xs font-medium rounded-pf-sm border border-default bg-app text-secondary hover:text-primary hover:border-secondary transition-colors"
                 >
                   Cancel
                 </Button>
@@ -387,7 +387,7 @@ export function Component() {
                 type="button"
                 variant="default"
                 onClick={handleSendClick}
-                className="flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-pf-sm bg-pf-cyan-500 text-pf-text-contrast hover:bg-pf-cyan-400 transition-colors"
+                className="flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-pf-sm bg-accent text-inverse hover:bg-accent-text transition-colors"
               >
                 <Send size={14} aria-hidden="true" />
                 Send Broadcast
@@ -396,7 +396,7 @@ export function Component() {
                 type="button"
                 variant="secondary"
                 onClick={closeCompose}
-                className="px-4 py-2 text-sm font-medium rounded-pf-sm border border-pf-border bg-pf-base text-pf-text-secondary hover:text-pf-text hover:border-pf-text-secondary transition-colors"
+                className="px-4 py-2 text-sm font-medium rounded-pf-sm border border-default bg-app text-secondary hover:text-primary hover:border-secondary transition-colors"
               >
                 Cancel
               </Button>
@@ -406,10 +406,10 @@ export function Component() {
       )}
 
       {/* Broadcast History */}
-      <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-5">
+      <div className="bg-elevated border border-default rounded-pf-lg p-5">
         <div className="flex items-center gap-2 mb-4">
-          <Megaphone size={15} className="text-pf-cyan-500" aria-hidden="true" />
-          <h3 className="text-sm font-semibold text-pf-text">Broadcast History</h3>
+          <Megaphone size={15} className="text-accent" aria-hidden="true" />
+          <h3 className="text-sm font-semibold text-primary">Broadcast History</h3>
         </div>
 
         {loading ? (
@@ -429,20 +429,20 @@ export function Component() {
             <table className="w-full text-sm" aria-label="Broadcast messages">
               <caption className="sr-only">Sent broadcasts</caption>
               <thead>
-                <tr className="border-b border-pf-border">
-                  <th scope="col" className="text-left px-3 py-2 text-xs font-medium text-pf-text-tertiary uppercase whitespace-nowrap">Title</th>
-                  <th scope="col" className="text-left px-3 py-2 text-xs font-medium text-pf-text-tertiary uppercase whitespace-nowrap">Type</th>
-                  <th scope="col" className="text-left px-3 py-2 text-xs font-medium text-pf-text-tertiary uppercase whitespace-nowrap">Audience</th>
-                  <th scope="col" className="text-right px-3 py-2 text-xs font-medium text-pf-text-tertiary uppercase whitespace-nowrap">Recipients</th>
-                  <th scope="col" className="text-left px-3 py-2 text-xs font-medium text-pf-text-tertiary uppercase whitespace-nowrap">Sent By</th>
-                  <th scope="col" className="text-left px-3 py-2 text-xs font-medium text-pf-text-tertiary uppercase whitespace-nowrap">Date</th>
+                <tr className="border-b border-default">
+                  <th scope="col" className="text-left px-3 py-2 text-xs font-medium text-tertiary uppercase whitespace-nowrap">Title</th>
+                  <th scope="col" className="text-left px-3 py-2 text-xs font-medium text-tertiary uppercase whitespace-nowrap">Type</th>
+                  <th scope="col" className="text-left px-3 py-2 text-xs font-medium text-tertiary uppercase whitespace-nowrap">Audience</th>
+                  <th scope="col" className="text-right px-3 py-2 text-xs font-medium text-tertiary uppercase whitespace-nowrap">Recipients</th>
+                  <th scope="col" className="text-left px-3 py-2 text-xs font-medium text-tertiary uppercase whitespace-nowrap">Sent By</th>
+                  <th scope="col" className="text-left px-3 py-2 text-xs font-medium text-tertiary uppercase whitespace-nowrap">Date</th>
                   <th scope="col" className="px-3 py-2"><span className="sr-only">Actions</span></th>
                 </tr>
               </thead>
               <tbody>
                 {broadcasts.map((b) => (
-                  <tr key={b.id} className="border-b border-pf-border last:border-0 hover:bg-pf-base/40 transition-colors">
-                    <td className="px-3 py-3 text-pf-text font-medium max-w-pf-col-md">
+                  <tr key={b.id} className="border-b border-default last:border-0 hover:bg-app/40 transition-colors">
+                    <td className="px-3 py-3 text-primary font-medium max-w-pf-col-md">
                       <span className="truncate block" title={b.title}>{b.title}</span>
                     </td>
                     <td className="px-3 py-3">
@@ -451,12 +451,12 @@ export function Component() {
                         {b.type}
                       </span>
                     </td>
-                    <td className="px-3 py-3 text-pf-text-secondary text-xs whitespace-nowrap">{b.targetAudience}</td>
-                    <td className="px-3 py-3 text-right text-pf-text-secondary tabular-nums">
+                    <td className="px-3 py-3 text-secondary text-xs whitespace-nowrap">{b.targetAudience}</td>
+                    <td className="px-3 py-3 text-right text-secondary tabular-nums">
                       {b.recipientCount.toLocaleString()}
                     </td>
-                    <td className="px-3 py-3 text-pf-text-secondary text-xs whitespace-nowrap">{b.sentBy}</td>
-                    <td className="px-3 py-3 text-pf-text-tertiary text-xs whitespace-nowrap">{formatDate(b.sentAt)}</td>
+                    <td className="px-3 py-3 text-secondary text-xs whitespace-nowrap">{b.sentBy}</td>
+                    <td className="px-3 py-3 text-tertiary text-xs whitespace-nowrap">{formatDate(b.sentAt)}</td>
                     <td className="px-3 py-3 text-right">
                       {deleteId === b.id ? (
                         <div className="flex items-center justify-end gap-2 text-xs">
@@ -464,7 +464,7 @@ export function Component() {
                             type="button"
                             variant="danger"
                             onClick={() => handleDelete(b.id)}
-                            className="px-2 py-1 rounded bg-pf-danger/10 text-pf-danger hover:bg-pf-danger/20 transition-colors"
+                            className="px-2 py-1 rounded bg-loss/10 text-loss hover:bg-loss/20 transition-colors"
                           >
                             Delete
                           </Button>
@@ -472,7 +472,7 @@ export function Component() {
                             type="button"
                             variant="secondary"
                             onClick={() => setDeleteId(null)}
-                            className="px-2 py-1 rounded bg-pf-elevated text-pf-text-secondary hover:bg-pf-base transition-colors"
+                            className="px-2 py-1 rounded bg-elevated text-secondary hover:bg-app transition-colors"
                           >
                             Cancel
                           </Button>
@@ -483,7 +483,7 @@ export function Component() {
                           variant="ghost"
                           size="icon-sm"
                           onClick={() => setDeleteId(b.id)}
-                          className="p-1 rounded hover:bg-pf-danger/10 text-pf-text-tertiary hover:text-pf-danger transition-colors"
+                          className="p-1 rounded hover:bg-loss/10 text-tertiary hover:text-loss transition-colors"
                           aria-label={`Delete broadcast: ${b.title}`}
                           title="Delete broadcast record"
                         >

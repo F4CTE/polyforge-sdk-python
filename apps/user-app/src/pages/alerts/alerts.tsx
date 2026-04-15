@@ -198,15 +198,15 @@ export function Component() {
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h1 className="text-xl font-bold text-pf-text">Price Alerts</h1>
-            <p className="text-sm text-pf-text-secondary mt-1">
+            <h1 className="text-xl font-bold text-primary">Price Alerts</h1>
+            <p className="text-sm text-secondary mt-1">
               {loading ? '...' : `${alerts.length} alert${alerts.length !== 1 ? 's' : ''}`}
             </p>
           </div>
           <Button
             type="button"
             onClick={() => { setFormOpen(v => !v); if (formOpen) resetForm(); }}
-            className="flex items-center gap-2 text-sm px-3 py-2 rounded-pf-sm bg-pf-cyan-500/10 text-pf-cyan-400 hover:bg-pf-cyan-500/20 transition-colors font-medium"
+            className="flex items-center gap-2 text-sm px-3 py-2 rounded-pf-sm bg-accent/10 text-accent-text hover:bg-accent/20 transition-colors font-medium"
           >
             <span className="text-base leading-none">＋</span>
             New Alert
@@ -217,11 +217,11 @@ export function Component() {
         {formOpen && (
           <form
             onSubmit={handleSubmit}
-            className="mb-6 rounded-pf border border-pf-border bg-pf-surface p-4 space-y-4 animate-fade-in"
+            className="mb-6 rounded-pf border border-default bg-surface p-4 space-y-4 animate-fade-in"
           >
             {/* Market search */}
             <div className="space-y-1" ref={searchRef}>
-              <label className="block text-xs font-medium text-pf-text-secondary uppercase tracking-wide">
+              <label className="block text-xs font-medium text-secondary uppercase tracking-wide">
                 Market
               </label>
               <div className="relative">
@@ -236,17 +236,17 @@ export function Component() {
                     }
                   }}
                   placeholder="Search markets..."
-                  className="w-full bg-pf-elevated border border-pf-border rounded-pf-sm px-3 py-2 text-sm text-pf-text placeholder:text-pf-text-muted focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pf-cyan-500/50"
+                  className="w-full bg-elevated border border-default rounded-pf-sm px-3 py-2 text-sm text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent/50"
                 />
                 {showDropdown && (
-                  <div className="absolute z-20 w-full top-full mt-1 rounded-pf border border-pf-border bg-pf-elevated shadow-pf-lg overflow-hidden">
+                  <div className="absolute z-20 w-full top-full mt-1 rounded-pf border border-default bg-elevated shadow-pf-lg overflow-hidden">
                     {searchResults.map(m => (
                       <Button
                         key={m.id}
                         type="button"
                         variant="ghost"
                         onMouseDown={() => selectMarket(m)}
-                        className="w-full text-left px-3 py-2 text-sm text-pf-text hover:bg-pf-surface transition-colors truncate"
+                        className="w-full text-left px-3 py-2 text-sm text-primary hover:bg-surface transition-colors truncate"
                       >
                         {m.title}
                       </Button>
@@ -259,7 +259,7 @@ export function Component() {
             {/* YES / NO token selector */}
             {selectedMarket && yesNoTokens.length > 0 && (
               <div className="space-y-1">
-                <label className="block text-xs font-medium text-pf-text-secondary uppercase tracking-wide">
+                <label className="block text-xs font-medium text-secondary uppercase tracking-wide">
                   Outcome
                 </label>
                 <div className="flex gap-2">
@@ -269,9 +269,9 @@ export function Component() {
                       className={`flex items-center gap-2 px-3 py-2 rounded-pf-sm border cursor-pointer text-sm transition-colors ${
                         selectedTokenId === t.id
                           ? t.outcome.toUpperCase() === 'YES'
-                            ? 'border-pf-success/50 bg-pf-success/10 text-pf-success'
-                            : 'border-pf-danger/50 bg-pf-danger/10 text-pf-danger'
-                          : 'border-pf-border text-pf-text-secondary hover:border-pf-border-hover'
+                            ? 'border-gain/50 bg-gain/10 text-gain'
+                            : 'border-loss/50 bg-loss/10 text-loss'
+                          : 'border-default text-secondary hover:border-default'
                       }`}
                     >
                       <input
@@ -296,20 +296,20 @@ export function Component() {
             {/* Direction + price row */}
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
-                <label className="block text-xs font-medium text-pf-text-secondary uppercase tracking-wide">
+                <label className="block text-xs font-medium text-secondary uppercase tracking-wide">
                   Direction
                 </label>
                 <Select
                   value={direction}
                   onChange={e => setDirection(e.target.value as 'above' | 'below')}
-                  className="w-full bg-pf-elevated border border-pf-border rounded-pf-sm px-3 py-2 text-sm text-pf-text focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pf-cyan-500/50"
+                  className="w-full bg-elevated border border-default rounded-pf-sm px-3 py-2 text-sm text-primary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent/50"
                 >
                   <option value="above">Price rises above</option>
                   <option value="below">Price falls below</option>
                 </Select>
               </div>
               <div className="space-y-1">
-                <label className="block text-xs font-medium text-pf-text-secondary uppercase tracking-wide">
+                <label className="block text-xs font-medium text-secondary uppercase tracking-wide">
                   Price threshold
                 </label>
                 <Input
@@ -319,7 +319,7 @@ export function Component() {
                   step="0.01"
                   value={price}
                   onChange={e => setPrice(e.target.value)}
-                  className="w-full bg-pf-elevated border border-pf-border rounded-pf-sm px-3 py-2 text-sm text-pf-text font-mono focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pf-cyan-500/50"
+                  className="w-full bg-elevated border border-default rounded-pf-sm px-3 py-2 text-sm text-primary font-mono focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent/50"
                 />
               </div>
             </div>
@@ -330,9 +330,9 @@ export function Component() {
                 type="checkbox"
                 checked={persistent}
                 onChange={e => setPersistent(e.target.checked)}
-                className="w-4 h-4 rounded border-pf-border accent-pf-cyan-500"
+                className="w-4 h-4 rounded border-default accent-accent"
               />
-              <span className="text-sm text-pf-text-secondary">Keep alerting after trigger</span>
+              <span className="text-sm text-secondary">Keep alerting after trigger</span>
             </label>
 
             {/* Submit */}
@@ -340,7 +340,7 @@ export function Component() {
               <Button
                 type="submit"
                 disabled={submitting || !selectedTokenId}
-                className="px-4 py-2 rounded-pf-sm bg-pf-cyan-500 text-pf-bg text-sm font-semibold hover:bg-pf-cyan-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-4 py-2 rounded-pf-sm bg-accent text-app text-sm font-semibold hover:bg-accent-text transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {submitting ? 'Creating...' : 'Create Alert'}
               </Button>
@@ -350,12 +350,12 @@ export function Component() {
 
         {/* Alerts list */}
         {loading ? (
-          <div className="text-center py-12 text-pf-text-muted text-sm">Loading alerts...</div>
+          <div className="text-center py-12 text-tertiary text-sm">Loading alerts...</div>
         ) : alerts.length === 0 ? (
           <div className="text-center py-16">
-            <Bell size={40} strokeWidth={1.25} className="text-pf-text-muted mx-auto mb-3" />
-            <p className="text-pf-text-secondary text-sm font-medium">No active alerts</p>
-            <p className="text-pf-text-muted text-xs mt-1">
+            <Bell size={40} strokeWidth={1.25} className="text-tertiary mx-auto mb-3" />
+            <p className="text-secondary text-sm font-medium">No active alerts</p>
+            <p className="text-tertiary text-xs mt-1">
               Set a price target on any market to get notified
             </p>
           </div>
@@ -375,12 +375,12 @@ export function Component() {
               return (
                 <div
                   key={alert.id}
-                  className="flex items-center gap-3 rounded-pf border border-pf-border bg-pf-surface px-3 py-3 hover:border-pf-border-hover transition-colors"
+                  className="flex items-center gap-3 rounded-pf border border-default bg-surface px-3 py-3 hover:border-default transition-colors"
                 >
                   {/* Direction arrow */}
                   <span
                     className={`text-base leading-none shrink-0 ${
-                      alert.direction === 'above' ? 'text-pf-success' : 'text-pf-danger'
+                      alert.direction === 'above' ? 'text-gain' : 'text-loss'
                     }`}
                     aria-label={alert.direction === 'above' ? 'above' : 'below'}
                   >
@@ -389,12 +389,12 @@ export function Component() {
 
                   {/* Market + price */}
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm text-pf-text font-medium truncate" title={title}>
+                    <p className="text-sm text-primary font-medium truncate" title={title}>
                       {title}
                     </p>
-                    <p className="text-xs text-pf-text-muted mt-1">
+                    <p className="text-xs text-tertiary mt-1">
                       {alert.direction === 'above' ? 'Rises above' : 'Falls below'}{' '}
-                      <span className="font-mono font-semibold text-pf-text">{priceCents}</span>
+                      <span className="font-mono font-semibold text-primary">{priceCents}</span>
                       {' · '}{created}
                     </p>
                   </div>
@@ -402,16 +402,16 @@ export function Component() {
                   {/* Badges */}
                   <div className="flex items-center gap-2 shrink-0">
                     {alert.triggered ? (
-                      <span className="text-pf-caption px-2 py-1 rounded border border-pf-warning/30 bg-pf-warning/10 text-pf-warning font-semibold">
+                      <span className="text-pf-caption px-2 py-1 rounded border border-warning/30 bg-warning/10 text-warning font-semibold">
                         Triggered
                       </span>
                     ) : (
-                      <span className="text-pf-caption px-2 py-1 rounded border border-pf-cyan-500/30 bg-pf-cyan-500/10 text-pf-cyan-400 font-semibold">
+                      <span className="text-pf-caption px-2 py-1 rounded border border-accent/30 bg-accent/10 text-accent-text font-semibold">
                         Active
                       </span>
                     )}
                     {alert.persistent && (
-                      <span className="text-pf-caption px-2 py-1 rounded border border-pf-border bg-pf-elevated text-pf-text-muted font-medium">
+                      <span className="text-pf-caption px-2 py-1 rounded border border-default bg-elevated text-tertiary font-medium">
                         Persistent
                       </span>
                     )}
@@ -423,7 +423,7 @@ export function Component() {
                     variant="ghost"
                     size="icon-sm"
                     onClick={() => deleteAlert(alert.id)}
-                    className="p-2 rounded-pf text-pf-text-muted hover:text-pf-danger transition-colors shrink-0"
+                    className="p-2 rounded-pf text-tertiary hover:text-loss transition-colors shrink-0"
                     aria-label="Delete alert"
                   >
                     <Trash2 size={14} aria-hidden="true" />

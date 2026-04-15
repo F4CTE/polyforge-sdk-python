@@ -31,17 +31,17 @@ interface Badge {
 /* ─── Helpers ────────────────────────────────────────────────────────── */
 
 function scoreColor(score: number): string {
-  if (score >= 80) return 'text-pf-success';
-  if (score >= 60) return 'text-pf-cyan-400';
-  if (score >= 40) return 'text-pf-warning';
-  return 'text-pf-danger';
+  if (score >= 80) return 'text-gain';
+  if (score >= 60) return 'text-accent-text';
+  if (score >= 40) return 'text-warning';
+  return 'text-loss';
 }
 
 function scoreBg(score: number): string {
-  if (score >= 80) return 'bg-pf-success/15 border-pf-success/25';
-  if (score >= 60) return 'bg-pf-cyan-500/15 border-pf-cyan-500/25';
-  if (score >= 40) return 'bg-pf-warning/15 border-pf-warning/25';
-  return 'bg-pf-danger/15 border-pf-danger/25';
+  if (score >= 80) return 'bg-gain/15 border-gain/25';
+  if (score >= 60) return 'bg-accent/15 border-accent/25';
+  if (score >= 40) return 'bg-warning/15 border-warning/25';
+  return 'bg-loss/15 border-loss/25';
 }
 
 const BADGE_ICONS: Record<string, React.ReactNode> = {
@@ -75,12 +75,12 @@ export function Component() {
 
   if (!user) return (
     <div className="animate-fade-in p-6 max-w-4xl mx-auto space-y-6">
-      <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-6">
+      <div className="bg-elevated border border-default rounded-pf-lg p-6">
         <div className="flex items-center gap-4 mb-4">
-          <div className="size-20 rounded-pf-full bg-pf-surface animate-pulse" />
+          <div className="size-20 rounded-pf-full bg-surface animate-pulse" />
           <div className="space-y-2 flex-1">
-            <div className="h-5 bg-pf-surface rounded w-32 animate-pulse" />
-            <div className="h-3 bg-pf-surface rounded w-24 animate-pulse" />
+            <div className="h-5 bg-surface rounded w-32 animate-pulse" />
+            <div className="h-3 bg-surface rounded w-24 animate-pulse" />
           </div>
         </div>
       </div>
@@ -94,10 +94,10 @@ export function Component() {
     <div className="p-6 max-w-2xl mx-auto space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold text-pf-text">My Profile</h1>
+        <h1 className="text-2xl font-semibold text-primary">My Profile</h1>
         <Link
           to="/settings"
-          className="flex items-center gap-2 px-3 py-2 rounded-pf bg-pf-elevated border border-pf-border text-xs font-medium text-pf-text-secondary hover:border-pf-border-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 transition-colors"
+          className="flex items-center gap-2 px-3 py-2 rounded-pf bg-elevated border border-default text-xs font-medium text-secondary hover:border-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 transition-colors"
         >
           <Settings className="size-4" aria-hidden="true" />
           Edit Profile
@@ -105,52 +105,52 @@ export function Component() {
       </div>
 
       {/* Profile card */}
-      <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-6">
+      <div className="bg-elevated border border-default rounded-pf-lg p-6">
         {/* Identity */}
         <div className="flex items-center gap-4 mb-4">
           {user.avatarUrl ? (
             <img data-testid="profile-avatar" src={user.avatarUrl} alt={`${user.displayName ?? user.username} avatar`} className="size-20 rounded-pf-full object-cover" />
           ) : (
-            <div data-testid="profile-avatar" className="size-20 rounded-pf-full bg-pf-surface flex items-center justify-center text-2xl font-bold text-pf-cyan-400">
+            <div data-testid="profile-avatar" className="size-20 rounded-pf-full bg-surface flex items-center justify-center text-2xl font-bold text-accent-text">
               {initials}
             </div>
           )}
           <div>
-            <div data-testid="profile-display-name" className="text-lg font-semibold text-pf-text">{user.displayName ?? user.username}</div>
+            <div data-testid="profile-display-name" className="text-lg font-semibold text-primary">{user.displayName ?? user.username}</div>
             {user.displayName && (
-              <div data-testid="profile-username" className="text-sm text-pf-text-muted">@{user.username}</div>
+              <div data-testid="profile-username" className="text-sm text-tertiary">@{user.username}</div>
             )}
-            <div className="text-xs font-mono text-pf-text-muted mt-1">Member since {memberSince}</div>
+            <div className="text-xs font-mono text-tertiary mt-1">Member since {memberSince}</div>
           </div>
         </div>
 
         {/* Bio */}
         {user.bio && (
-          <p data-testid="profile-bio" className="text-sm text-pf-text-secondary mb-4 leading-relaxed">{user.bio}</p>
+          <p data-testid="profile-bio" className="text-sm text-secondary mb-4 leading-relaxed">{user.bio}</p>
         )}
 
         {/* Status chips */}
         <div className="flex flex-wrap gap-2">
           <span data-testid="status-chip" className={`flex items-center gap-2 px-3 py-1 rounded-pf-full text-xs font-medium border ${
             user.emailVerified
-              ? 'bg-pf-success/10 text-pf-success border-pf-success/20'
-              : 'bg-pf-overlay text-pf-text-muted border-pf-border'
+              ? 'bg-gain/10 text-gain border-gain/20'
+              : 'bg-overlay text-tertiary border-default'
           }`}>
             <Mail className="size-3" />
             {user.emailVerified ? 'Email Verified' : 'Email Unverified'}
           </span>
           <span data-testid="status-chip" className={`flex items-center gap-2 px-3 py-1 rounded-pf-full text-xs font-medium border ${
             user.polymarketConnected
-              ? 'bg-pf-success/10 text-pf-success border-pf-success/20'
-              : 'bg-pf-overlay text-pf-text-muted border-pf-border'
+              ? 'bg-gain/10 text-gain border-gain/20'
+              : 'bg-overlay text-tertiary border-default'
           }`}>
             <Link2 className="size-3" />
             {user.polymarketConnected ? 'Polymarket Connected' : 'Not Connected'}
           </span>
           <span data-testid="status-chip" className={`flex items-center gap-2 px-3 py-1 rounded-pf-full text-xs font-medium border ${
             user.totpEnabled
-              ? 'bg-pf-success/10 text-pf-success border-pf-success/20'
-              : 'bg-pf-overlay text-pf-text-muted border-pf-border'
+              ? 'bg-gain/10 text-gain border-gain/20'
+              : 'bg-overlay text-tertiary border-default'
           }`}>
             <Shield className="size-3" />
             {user.totpEnabled ? '2FA Enabled' : '2FA Disabled'}
@@ -159,10 +159,10 @@ export function Component() {
       </div>
 
       {/* Edge Rating card */}
-      <div data-testid="edge-rating" className="bg-pf-elevated border border-pf-border rounded-pf-lg p-6">
+      <div data-testid="edge-rating" className="bg-elevated border border-default rounded-pf-lg p-6">
         <div className="flex items-center gap-2 mb-4">
-          <TrendingUp className="size-4 text-pf-cyan-400" />
-          <h2 className="text-sm font-semibold text-pf-text">Edge Rating</h2>
+          <TrendingUp className="size-4 text-accent-text" />
+          <h2 className="text-sm font-semibold text-primary">Edge Rating</h2>
         </div>
 
         {scoreData?.score ? (
@@ -176,45 +176,45 @@ export function Component() {
               </div>
               <div className="flex-1 grid grid-cols-2 gap-x-6 gap-y-1 text-xs">
                 <div className="flex justify-between">
-                  <span className="text-pf-text-muted">Win Rate</span>
-                  <span className="font-mono text-pf-text">{scoreData.score.winRate}%</span>
+                  <span className="text-tertiary">Win Rate</span>
+                  <span className="font-mono text-primary">{scoreData.score.winRate}%</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-pf-text-muted">Sharpe</span>
-                  <span className="font-mono text-pf-text">{scoreData.score.sharpeRatio}</span>
+                  <span className="text-tertiary">Sharpe</span>
+                  <span className="font-mono text-primary">{scoreData.score.sharpeRatio}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-pf-text-muted">Profit Factor</span>
-                  <span className="font-mono text-pf-text">{scoreData.score.profitFactor}</span>
+                  <span className="text-tertiary">Profit Factor</span>
+                  <span className="font-mono text-primary">{scoreData.score.profitFactor}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-pf-text-muted">Consistency</span>
-                  <span className="font-mono text-pf-text">{scoreData.score.consistency}%</span>
+                  <span className="text-tertiary">Consistency</span>
+                  <span className="font-mono text-primary">{scoreData.score.consistency}%</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-pf-text-muted">Avg Return</span>
-                  <span className="font-mono text-pf-text">{scoreData.score.avgReturn}</span>
+                  <span className="text-tertiary">Avg Return</span>
+                  <span className="font-mono text-primary">{scoreData.score.avgReturn}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-pf-text-muted">Trades</span>
-                  <span className="font-mono text-pf-text">{scoreData.score.totalTrades}</span>
+                  <span className="text-tertiary">Trades</span>
+                  <span className="font-mono text-primary">{scoreData.score.totalTrades}</span>
                 </div>
               </div>
             </div>
           </>
         ) : (
-          <p className="text-xs text-pf-text-muted">
+          <p className="text-xs text-tertiary">
             No score yet. Start trading to build your Edge Rating.
           </p>
         )}
       </div>
 
       {/* Badges card */}
-      <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-6">
+      <div className="bg-elevated border border-default rounded-pf-lg p-6">
         <div className="flex items-center gap-2 mb-4">
-          <Award className="size-4 text-pf-cyan-400" />
-          <h2 className="text-sm font-semibold text-pf-text">Badges</h2>
-          <span className="text-xs text-pf-text-muted ml-auto">{badges.length} earned</span>
+          <Award className="size-4 text-accent-text" />
+          <h2 className="text-sm font-semibold text-primary">Badges</h2>
+          <span className="text-xs text-tertiary ml-auto">{badges.length} earned</span>
         </div>
 
         {badges.length > 0 ? (
@@ -224,12 +224,12 @@ export function Component() {
                 key={badge.id}
                 data-testid="badge"
                 data-earned={badge.earnedAt}
-                className="flex items-center gap-3 px-3 py-2 rounded-pf bg-pf-surface border border-pf-border-subtle"
+                className="flex items-center gap-3 px-3 py-2 rounded-pf bg-surface border border-subtle"
               >
                 <span data-testid="badge-icon" className="text-lg">{BADGE_ICONS[badge.type] ?? <Target className="size-4" />}</span>
                 <div className="min-w-0">
-                  <div data-testid="badge-name" className="text-xs font-medium text-pf-text truncate">{badge.name}</div>
-                  <div data-testid="earned-date" className="text-pf-caption text-pf-text-muted">
+                  <div data-testid="badge-name" className="text-xs font-medium text-primary truncate">{badge.name}</div>
+                  <div data-testid="earned-date" className="text-pf-caption text-tertiary">
                     {new Date(badge.earnedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                   </div>
                 </div>
@@ -237,7 +237,7 @@ export function Component() {
             ))}
           </div>
         ) : (
-          <p className="text-xs text-pf-text-muted">
+          <p className="text-xs text-tertiary">
             No badges yet. Keep trading to unlock achievements.
           </p>
         )}
@@ -253,11 +253,11 @@ export function Component() {
           <Link
             key={link.to}
             to={link.to}
-            className="flex items-center gap-3 px-4 py-3 bg-pf-elevated border border-pf-border rounded-pf-lg hover:border-pf-border-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 transition-colors"
+            className="flex items-center gap-3 px-4 py-3 bg-elevated border border-default rounded-pf-lg hover:border-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 transition-colors"
           >
-            <span className="text-pf-text-muted">{link.icon}</span>
-            <span className="text-sm font-medium text-pf-text flex-1">{link.label}</span>
-            <ChevronRight className="size-4 text-pf-text-muted" />
+            <span className="text-tertiary">{link.icon}</span>
+            <span className="text-sm font-medium text-primary flex-1">{link.label}</span>
+            <ChevronRight className="size-4 text-tertiary" />
           </Link>
         ))}
       </div>

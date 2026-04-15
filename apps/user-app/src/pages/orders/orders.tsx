@@ -103,29 +103,29 @@ const FILTERS: { label: string; value: FilterStatus }[] = [
 ];
 
 const STATUS_STYLES: Record<OrderStatus, { text: string; bg: string }> = {
-  PENDING:   { text: 'text-pf-warning', bg: 'bg-pf-warning/10' },
-  SUBMITTED: { text: 'text-pf-cyan-400', bg: 'bg-pf-cyan-500/10' },
-  LIVE:      { text: 'text-pf-cyan-400', bg: 'bg-pf-cyan-500/10' },
-  MATCHED:   { text: 'text-pf-cyan-300', bg: 'bg-pf-cyan-500/8' },
-  CONFIRMED: { text: 'text-pf-success', bg: 'bg-pf-success/10' },
-  CANCELLED: { text: 'text-pf-text-secondary', bg: 'bg-pf-overlay' },
-  FAILED:    { text: 'text-pf-danger', bg: 'bg-pf-danger/10' },
+  PENDING:   { text: 'text-warning', bg: 'bg-warning/10' },
+  SUBMITTED: { text: 'text-accent-text', bg: 'bg-accent/10' },
+  LIVE:      { text: 'text-accent-text', bg: 'bg-accent/10' },
+  MATCHED:   { text: 'text-accent-text', bg: 'bg-accent/8' },
+  CONFIRMED: { text: 'text-gain', bg: 'bg-gain/10' },
+  CANCELLED: { text: 'text-secondary', bg: 'bg-overlay' },
+  FAILED:    { text: 'text-loss', bg: 'bg-loss/10' },
 };
 
 const CONDITIONAL_TYPE_STYLES: Record<ConditionalOrderType, { text: string; bg: string; label: string }> = {
-  TAKE_PROFIT:   { text: 'text-pf-success', bg: 'bg-pf-success/10', label: 'TP' },
-  STOP_LOSS:     { text: 'text-pf-danger', bg: 'bg-pf-danger/10', label: 'SL' },
-  TRAILING_STOP: { text: 'text-pf-warning', bg: 'bg-pf-warning/10', label: 'TRAILING' },
-  LIMIT:         { text: 'text-pf-info', bg: 'bg-pf-info/10', label: 'LIMIT' },
+  TAKE_PROFIT:   { text: 'text-gain', bg: 'bg-gain/10', label: 'TP' },
+  STOP_LOSS:     { text: 'text-loss', bg: 'bg-loss/10', label: 'SL' },
+  TRAILING_STOP: { text: 'text-warning', bg: 'bg-warning/10', label: 'TRAILING' },
+  LIMIT:         { text: 'text-info', bg: 'bg-info/10', label: 'LIMIT' },
   PEGGED:        { text: 'text-pf-purple-500', bg: 'bg-pf-purple-500/10', label: 'PEGGED' },
 };
 
 const CONDITIONAL_STATUS_STYLES: Record<ConditionalOrderStatus, { text: string; bg: string }> = {
-  PENDING:   { text: 'text-pf-warning', bg: 'bg-pf-warning/10' },
-  TRIGGERED: { text: 'text-pf-success', bg: 'bg-pf-success/10' },
-  CANCELLED: { text: 'text-pf-text-secondary', bg: 'bg-pf-overlay' },
-  EXPIRED:   { text: 'text-pf-text-muted', bg: 'bg-pf-overlay' },
-  FAILED:    { text: 'text-pf-danger', bg: 'bg-pf-danger/10' },
+  PENDING:   { text: 'text-warning', bg: 'bg-warning/10' },
+  TRIGGERED: { text: 'text-gain', bg: 'bg-gain/10' },
+  CANCELLED: { text: 'text-secondary', bg: 'bg-overlay' },
+  EXPIRED:   { text: 'text-tertiary', bg: 'bg-overlay' },
+  FAILED:    { text: 'text-loss', bg: 'bg-loss/10' },
 };
 
 /* ─── Journal Constants ──────────────────────────────────────────────── */
@@ -227,13 +227,13 @@ function InlineJournalPanel({ order, entry, onClose, onSaved, onDeleted }: Inlin
   return (
     <tr>
       <td colSpan={12} className="px-0 py-0">
-        <div className="mx-4 my-1 rounded-pf border border-pf-cyan-500/30 bg-pf-surface p-4 space-y-3">
+        <div className="mx-4 my-1 rounded-pf border border-accent/30 bg-surface p-4 space-y-3">
           {/* Header */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <BookOpen className="size-4 text-pf-cyan-400" />
-              <span className="text-sm font-medium text-pf-text">Journal Note</span>
-              {entry && <span className="text-pf-caption text-pf-text-muted">Last updated {formatDate(entry.updatedAt)}</span>}
+              <BookOpen className="size-4 text-accent-text" />
+              <span className="text-sm font-medium text-primary">Journal Note</span>
+              {entry && <span className="text-pf-caption text-tertiary">Last updated {formatDate(entry.updatedAt)}</span>}
             </div>
             <Button type="button" variant="ghost" size="icon-sm" onClick={onClose} aria-label="Close journal panel">
               <X className="size-4" />
@@ -242,20 +242,20 @@ function InlineJournalPanel({ order, entry, onClose, onSaved, onDeleted }: Inlin
 
           {/* Textarea */}
           <div>
-            <label className="block text-xs text-pf-text-secondary mb-1">How did this trade go?</label>
+            <label className="block text-xs text-secondary mb-1">How did this trade go?</label>
             <Textarea
               ref={textareaRef}
               rows={3}
               value={note}
               onChange={e => setNote(e.target.value)}
               placeholder="Record your reasoning, what you observed, or what you'd do differently..."
-              className="w-full px-3 py-2 rounded-pf bg-pf-elevated border border-pf-border text-sm text-pf-text placeholder:text-pf-text-muted focus-visible:outline-none focus-visible:border-pf-cyan-500/50 resize-none"
+              className="w-full px-3 py-2 rounded-pf bg-elevated border border-default text-sm text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:border-accent/50 resize-none"
             />
           </div>
 
           {/* Mood selector */}
           <div>
-            <span className="block text-xs text-pf-text-secondary mb-2">Mood</span>
+            <span className="block text-xs text-secondary mb-2">Mood</span>
             <div className="flex flex-wrap gap-2">
               {MOOD_KEYS.map(m => (
                 <Button
@@ -265,8 +265,8 @@ function InlineJournalPanel({ order, entry, onClose, onSaved, onDeleted }: Inlin
                   onClick={() => setMood(m)}
                   className={`inline-flex items-center gap-1 px-3 py-1 rounded-pf-full text-xs font-medium border transition-colors ${
                     mood === m
-                      ? 'bg-pf-cyan-500/15 text-pf-cyan-400 border-pf-cyan-500/40'
-                      : 'bg-pf-elevated text-pf-text-secondary border-pf-border hover:border-pf-border-strong'
+                      ? 'bg-accent/15 text-accent-text border-accent/40'
+                      : 'bg-elevated text-secondary border-default hover:border-strong'
                   }`}
                 >
                   <span>{MOOD_CONFIG[m].emoji}</span>
@@ -278,13 +278,13 @@ function InlineJournalPanel({ order, entry, onClose, onSaved, onDeleted }: Inlin
 
           {/* Tags */}
           <div>
-            <span className="block text-xs text-pf-text-secondary mb-2">Tags</span>
+            <span className="block text-xs text-secondary mb-2">Tags</span>
             <div className="flex flex-wrap items-center gap-2">
               {tags.map(t => (
                 <span key={t} className="inline-flex items-center gap-1 px-2 py-1 rounded-pf-full text-pf-label bg-pf-purple-500/10 text-pf-purple-400 border border-pf-purple-500/30">
                   <Tag className="size-3" />
                   {t}
-                  <Button type="button" variant="ghost" onClick={() => removeTag(t)} aria-label={`Remove tag ${t}`} className="hover:text-pf-danger transition-colors ml-1">
+                  <Button type="button" variant="ghost" onClick={() => removeTag(t)} aria-label={`Remove tag ${t}`} className="hover:text-loss transition-colors ml-1">
                     <X className="size-3" />
                   </Button>
                 </span>
@@ -295,20 +295,20 @@ function InlineJournalPanel({ order, entry, onClose, onSaved, onDeleted }: Inlin
                   onChange={e => setTagInput(e.target.value)}
                   onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addTag(); } }}
                   placeholder="+ add tag"
-                  className="h-6 px-2 rounded-pf-full bg-pf-elevated border border-pf-border text-pf-label text-pf-text placeholder:text-pf-text-muted focus-visible:outline-none focus-visible:border-pf-cyan-500/50 w-24"
+                  className="h-6 px-2 rounded-pf-full bg-elevated border border-default text-pf-label text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:border-accent/50 w-24"
                 />
-                <Button type="button" variant="ghost" onClick={addTag} className="text-pf-label text-pf-cyan-400 hover:text-pf-cyan-300 transition-colors">Add</Button>
+                <Button type="button" variant="ghost" onClick={addTag} className="text-pf-label text-accent-text hover:text-accent-text transition-colors">Add</Button>
               </div>
             </div>
           </div>
 
           {/* Actions */}
-          <div className="flex items-center gap-2 pt-1 border-t border-pf-border-subtle">
+          <div className="flex items-center gap-2 pt-1 border-t border-subtle">
             <Button
               type="button"
               onClick={handleSave}
               disabled={saving}
-              className="flex items-center gap-2 px-3 py-2 rounded-pf bg-pf-cyan-500 text-pf-text-contrast text-xs font-medium hover:bg-pf-cyan-400 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              className="flex items-center gap-2 px-3 py-2 rounded-pf bg-accent text-inverse text-xs font-medium hover:bg-accent-text disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
             >
               {saving ? <Loader2 className="size-3 animate-spin" /> : null}
               Save Note
@@ -319,7 +319,7 @@ function InlineJournalPanel({ order, entry, onClose, onSaved, onDeleted }: Inlin
                 variant="danger"
                 onClick={handleDelete}
                 disabled={deleting}
-                className="flex items-center gap-2 px-3 py-2 rounded-pf bg-pf-danger/10 text-pf-danger text-xs font-medium border border-pf-danger/20 hover:bg-pf-danger/20 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                className="flex items-center gap-2 px-3 py-2 rounded-pf bg-loss/10 text-loss text-xs font-medium border border-loss/20 hover:bg-loss/20 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
               >
                 {deleting ? <Loader2 className="size-3 animate-spin" /> : <Trash2 className="size-3" />}
                 Delete
@@ -344,21 +344,21 @@ interface JournalTabProps {
 function JournalEntryCard({ entry, onEdit, onDelete }: { entry: JournalEntry; onEdit: () => void; onDelete: () => void }) {
   const mood = MOOD_CONFIG[entry.mood];
   return (
-    <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4 space-y-3 hover:border-pf-border-hover transition-colors">
+    <div className="bg-elevated border border-default rounded-pf-lg p-4 space-y-3 hover:border-default transition-colors">
       {/* Top row */}
       <div className="flex items-start justify-between gap-3">
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium text-pf-text line-clamp-1">{entry.marketTitle || `Order ${entry.orderId.slice(0, 8)}`}</p>
+          <p className="text-sm font-medium text-primary line-clamp-1">{entry.marketTitle || `Order ${entry.orderId.slice(0, 8)}`}</p>
           <div className="flex items-center gap-2 mt-1 flex-wrap">
-            <span className={`inline-flex px-2 py-1 rounded text-pf-caption font-medium ${entry.side === 'BUY' ? 'bg-pf-success/10 text-pf-success' : 'bg-pf-danger/10 text-pf-danger'}`}>
+            <span className={`inline-flex px-2 py-1 rounded text-pf-caption font-medium ${entry.side === 'BUY' ? 'bg-gain/10 text-gain' : 'bg-loss/10 text-loss'}`}>
               {entry.side}
             </span>
-            <span className={`inline-flex px-2 py-1 rounded text-pf-caption font-medium ${entry.outcome === 'YES' ? 'bg-pf-success/10 text-pf-success' : 'bg-pf-danger/10 text-pf-danger'}`}>
+            <span className={`inline-flex px-2 py-1 rounded text-pf-caption font-medium ${entry.outcome === 'YES' ? 'bg-gain/10 text-gain' : 'bg-loss/10 text-loss'}`}>
               {entry.outcome}
             </span>
-            <span className="font-mono text-pf-caption text-pf-text-muted">{entry.size} @ {entry.price}</span>
+            <span className="font-mono text-pf-caption text-tertiary">{entry.size} @ {entry.price}</span>
             {entry.pnl !== undefined && (
-              <span className={`font-mono text-pf-caption font-medium ${entry.pnl >= 0 ? 'text-pf-success' : 'text-pf-danger'}`}>
+              <span className={`font-mono text-pf-caption font-medium ${entry.pnl >= 0 ? 'text-gain' : 'text-loss'}`}>
                 {entry.pnl >= 0 ? '+' : ''}{entry.pnl.toFixed(2)} PnL
               </span>
             )}
@@ -377,7 +377,7 @@ function JournalEntryCard({ entry, onEdit, onDelete }: { entry: JournalEntry; on
       {/* Mood + note */}
       <div className="flex items-start gap-2">
         <span className="text-base shrink-0" title={mood.label}>{mood.emoji}</span>
-        <p className="text-xs text-pf-text-secondary line-clamp-2 leading-relaxed">{entry.note}</p>
+        <p className="text-xs text-secondary line-clamp-2 leading-relaxed">{entry.note}</p>
       </div>
 
       {/* Tags + date */}
@@ -389,7 +389,7 @@ function JournalEntryCard({ entry, onEdit, onDelete }: { entry: JournalEntry; on
             </span>
           ))}
         </div>
-        <span className="font-mono text-pf-caption text-pf-text-muted shrink-0">{formatDate(entry.createdAt)}</span>
+        <span className="font-mono text-pf-caption text-tertiary shrink-0">{formatDate(entry.createdAt)}</span>
       </div>
     </div>
   );
@@ -417,19 +417,19 @@ function JournalTab({ entries, loading, onEdit, onDelete }: JournalTabProps) {
       {/* Search + filters */}
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-pf-text-muted pointer-events-none" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-tertiary pointer-events-none" />
           <Input
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder="Search notes or markets..."
-            className="w-full h-9 pl-8 pr-3 rounded-pf bg-pf-elevated border border-pf-border text-sm text-pf-text placeholder:text-pf-text-muted focus-visible:outline-none focus-visible:border-pf-cyan-500/50"
+            className="w-full h-9 pl-8 pr-3 rounded-pf bg-elevated border border-default text-sm text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:border-accent/50"
           />
         </div>
         {allTags.length > 0 && (
           <Select
             value={tagFilter}
             onChange={e => setTagFilter(e.target.value)}
-            className="h-9 px-2 rounded-pf bg-pf-elevated border border-pf-border text-sm text-pf-text focus-visible:outline-none focus-visible:border-pf-cyan-500/50"
+            className="h-9 px-2 rounded-pf bg-elevated border border-default text-sm text-primary focus-visible:outline-none focus-visible:border-accent/50"
           >
             <option value="">All tags</option>
             {allTags.map(t => <option key={t} value={t}>{t}</option>)}
@@ -445,8 +445,8 @@ function JournalTab({ entries, loading, onEdit, onDelete }: JournalTabProps) {
           onClick={() => setMoodFilter('ALL')}
           className={`px-3 py-1 rounded-pf-full text-xs font-medium border transition-colors ${
             moodFilter === 'ALL'
-              ? 'bg-pf-cyan-500/15 text-pf-cyan-400 border-pf-cyan-500/30'
-              : 'bg-pf-elevated text-pf-text-secondary border-pf-border hover:border-pf-border-strong'
+              ? 'bg-accent/15 text-accent-text border-accent/30'
+              : 'bg-elevated text-secondary border-default hover:border-strong'
           }`}
         >
           All moods
@@ -459,8 +459,8 @@ function JournalTab({ entries, loading, onEdit, onDelete }: JournalTabProps) {
             onClick={() => setMoodFilter(moodFilter === m ? 'ALL' : m)}
             className={`inline-flex items-center gap-1 px-3 py-1 rounded-pf-full text-xs font-medium border transition-colors ${
               moodFilter === m
-                ? 'bg-pf-cyan-500/15 text-pf-cyan-400 border-pf-cyan-500/30'
-                : 'bg-pf-elevated text-pf-text-secondary border-pf-border hover:border-pf-border-strong'
+                ? 'bg-accent/15 text-accent-text border-accent/30'
+                : 'bg-elevated text-secondary border-default hover:border-strong'
             }`}
           >
             {MOOD_CONFIG[m].emoji} {MOOD_CONFIG[m].label}
@@ -472,21 +472,21 @@ function JournalTab({ entries, loading, onEdit, onDelete }: JournalTabProps) {
       {loading ? (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {Array.from({ length: 6 }, (_, i) => (
-            <div key={i} className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4 space-y-3 animate-pulse">
-              <div className="h-3 bg-pf-overlay rounded w-3/4" />
-              <div className="h-3 bg-pf-overlay rounded w-1/2" />
-              <div className="h-8 bg-pf-overlay rounded" />
-              <div className="h-3 bg-pf-overlay rounded w-1/3" />
+            <div key={i} className="bg-elevated border border-default rounded-pf-lg p-4 space-y-3 animate-pulse">
+              <div className="h-3 bg-overlay rounded w-3/4" />
+              <div className="h-3 bg-overlay rounded w-1/2" />
+              <div className="h-8 bg-overlay rounded" />
+              <div className="h-3 bg-overlay rounded w-1/3" />
             </div>
           ))}
         </div>
       ) : filtered.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-center">
-          <BookOpen className="size-10 text-pf-text-muted mb-3" />
-          <p className="text-sm font-medium text-pf-text">
+          <BookOpen className="size-10 text-tertiary mb-3" />
+          <p className="text-sm font-medium text-primary">
             {entries.length === 0 ? 'No journal entries yet' : 'No entries match your filters'}
           </p>
-          <p className="text-xs text-pf-text-muted mt-1">
+          <p className="text-xs text-tertiary mt-1">
             {entries.length === 0
               ? 'Click the journal icon on any order to add your first note.'
               : 'Try adjusting your search or filters.'}
@@ -514,13 +514,13 @@ function CategoryBadge({ category }: { category?: string | null }) {
   if (!category) return null;
   const colors: Record<string, string> = {
     crypto: 'bg-pf-gold-500/15 text-pf-gold-500 border-pf-gold-500/30',
-    politics: 'bg-pf-info/15 text-pf-info border-pf-info/30',
-    sports: 'bg-pf-success/15 text-pf-success border-pf-success/30',
+    politics: 'bg-info/15 text-info border-info/30',
+    sports: 'bg-gain/15 text-gain border-gain/30',
     entertainment: 'bg-pf-purple-500/15 text-pf-purple-400 border-pf-purple-500/30',
-    science: 'bg-pf-cyan-500/15 text-pf-cyan-400 border-pf-cyan-500/30',
+    science: 'bg-accent/15 text-accent-text border-accent/30',
   };
   const key = category.toLowerCase();
-  const cls = colors[key] ?? 'bg-pf-surface text-pf-text-muted border-pf-border';
+  const cls = colors[key] ?? 'bg-surface text-tertiary border-default';
   return (
     <span className={`inline-flex items-center px-2 py-1 rounded text-pf-caption font-medium border ${cls}`}>
       {category}
@@ -606,10 +606,10 @@ function CreateConditionalDialog({ onClose, onCreated }: { onClose: () => void; 
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-pf-backdrop backdrop-blur-sm" role="dialog" aria-modal="true" aria-label="Create Conditional Order">
-      <div className="animate-scale-in bg-pf-elevated border border-pf-border rounded-pf-lg w-full max-w-lg p-6 shadow-pf-lg">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" role="dialog" aria-modal="true" aria-label="Create Conditional Order">
+      <div className="animate-scale-in bg-elevated border border-default rounded-pf-lg w-full max-w-lg p-6 shadow-pf-lg">
         <div className="flex items-center justify-between mb-5">
-          <h2 className="text-base font-semibold text-pf-text">Create Conditional Order</h2>
+          <h2 className="text-base font-semibold text-primary">Create Conditional Order</h2>
           <Button type="button" variant="ghost" size="icon" onClick={onClose} aria-label="Close dialog">
             <X className="size-4" />
           </Button>
@@ -617,12 +617,12 @@ function CreateConditionalDialog({ onClose, onCreated }: { onClose: () => void; 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-3">
             <div>
-              <label htmlFor="cond-market-select" className="block text-xs font-medium text-pf-text-secondary mb-1">Market</label>
+              <label htmlFor="cond-market-select" className="block text-xs font-medium text-secondary mb-1">Market</label>
               <Select id="cond-market-select" value={form.marketId} onChange={e => {
                 const mkt = positions.find(p => p.marketId === e.target.value);
                 updateField('marketId', e.target.value);
                 if (mkt) updateField('tokenId', mkt.tokenId);
-              }} required className="w-full h-9 px-2 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text focus-visible:outline-none focus-visible:border-pf-cyan-500/50">
+              }} required className="w-full h-9 px-2 rounded-pf bg-surface border border-default text-sm text-primary focus-visible:outline-none focus-visible:border-accent/50">
                 <option value="">Select from your positions...</option>
                 {positions.map(p => (
                   <option key={p.id} value={p.marketId}>
@@ -632,17 +632,17 @@ function CreateConditionalDialog({ onClose, onCreated }: { onClose: () => void; 
               </Select>
             </div>
             <div>
-              <label htmlFor="cond-token-id" className="block text-xs font-medium text-pf-text-secondary mb-1">Token</label>
+              <label htmlFor="cond-token-id" className="block text-xs font-medium text-secondary mb-1">Token</label>
               <Input id="cond-token-id" value={form.tokenId} readOnly
-                className="w-full h-9 px-3 rounded-pf bg-pf-overlay border border-pf-border text-sm text-pf-text-secondary cursor-not-allowed font-mono text-xs" />
-              <p className="text-pf-caption text-pf-text-muted mt-1">Auto-filled from selected position</p>
+                className="w-full h-9 px-3 rounded-pf bg-overlay border border-default text-sm text-secondary cursor-not-allowed font-mono text-xs" />
+              <p className="text-pf-caption text-tertiary mt-1">Auto-filled from selected position</p>
             </div>
           </div>
           <div className="grid grid-cols-3 gap-3">
             <div>
-              <label htmlFor="cond-type" className="block text-xs font-medium text-pf-text-secondary mb-1">Type</label>
+              <label htmlFor="cond-type" className="block text-xs font-medium text-secondary mb-1">Type</label>
               <Select id="cond-type" value={form.type} onChange={e => updateField('type', e.target.value)}
-                className="w-full h-9 px-2 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text focus-visible:outline-none focus-visible:border-pf-cyan-500/50">
+                className="w-full h-9 px-2 rounded-pf bg-surface border border-default text-sm text-primary focus-visible:outline-none focus-visible:border-accent/50">
                 <option value="TAKE_PROFIT">Take Profit</option>
                 <option value="STOP_LOSS">Stop Loss</option>
                 <option value="TRAILING_STOP">Trailing Stop</option>
@@ -651,17 +651,17 @@ function CreateConditionalDialog({ onClose, onCreated }: { onClose: () => void; 
               </Select>
             </div>
             <div>
-              <label htmlFor="cond-side" className="block text-xs font-medium text-pf-text-secondary mb-1">Side</label>
+              <label htmlFor="cond-side" className="block text-xs font-medium text-secondary mb-1">Side</label>
               <Select id="cond-side" value={form.side} onChange={e => updateField('side', e.target.value)}
-                className="w-full h-9 px-2 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text focus-visible:outline-none focus-visible:border-pf-cyan-500/50">
+                className="w-full h-9 px-2 rounded-pf bg-surface border border-default text-sm text-primary focus-visible:outline-none focus-visible:border-accent/50">
                 <option value="BUY">BUY</option>
                 <option value="SELL">SELL</option>
               </Select>
             </div>
             <div>
-              <label htmlFor="cond-outcome" className="block text-xs font-medium text-pf-text-secondary mb-1">Outcome</label>
+              <label htmlFor="cond-outcome" className="block text-xs font-medium text-secondary mb-1">Outcome</label>
               <Select id="cond-outcome" value={form.outcome} onChange={e => updateField('outcome', e.target.value)}
-                className="w-full h-9 px-2 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text focus-visible:outline-none focus-visible:border-pf-cyan-500/50">
+                className="w-full h-9 px-2 rounded-pf bg-surface border border-default text-sm text-primary focus-visible:outline-none focus-visible:border-accent/50">
                 <option value="YES">YES</option>
                 <option value="NO">NO</option>
               </Select>
@@ -669,37 +669,37 @@ function CreateConditionalDialog({ onClose, onCreated }: { onClose: () => void; 
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label htmlFor="cond-size" className="block text-xs font-medium text-pf-text-secondary mb-1">Size</label>
+              <label htmlFor="cond-size" className="block text-xs font-medium text-secondary mb-1">Size</label>
               <Input id="cond-size" type="number" step="any" value={form.size} onChange={e => updateField('size', e.target.value)} required
-                className="w-full h-9 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text focus-visible:outline-none focus-visible:border-pf-cyan-500/50" />
+                className="w-full h-9 px-3 rounded-pf bg-surface border border-default text-sm text-primary focus-visible:outline-none focus-visible:border-accent/50" />
             </div>
             <div>
-              <label htmlFor="cond-trigger-price" className="block text-xs font-medium text-pf-text-secondary mb-1">Trigger Price</label>
+              <label htmlFor="cond-trigger-price" className="block text-xs font-medium text-secondary mb-1">Trigger Price</label>
               <Input id="cond-trigger-price" type="number" step="any" value={form.triggerPrice} onChange={e => updateField('triggerPrice', e.target.value)} required
-                className="w-full h-9 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text focus-visible:outline-none focus-visible:border-pf-cyan-500/50" />
+                className="w-full h-9 px-3 rounded-pf bg-surface border border-default text-sm text-primary focus-visible:outline-none focus-visible:border-accent/50" />
             </div>
           </div>
           <div className="grid grid-cols-3 gap-3">
             <div>
-              <label htmlFor="cond-limit-price" className="block text-xs font-medium text-pf-text-secondary mb-1">Limit Price</label>
+              <label htmlFor="cond-limit-price" className="block text-xs font-medium text-secondary mb-1">Limit Price</label>
               <Input id="cond-limit-price" type="number" step="any" value={form.limitPrice} onChange={e => updateField('limitPrice', e.target.value)} placeholder="Optional"
-                className="w-full h-9 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text placeholder:text-pf-text-muted focus-visible:outline-none focus-visible:border-pf-cyan-500/50" />
+                className="w-full h-9 px-3 rounded-pf bg-surface border border-default text-sm text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:border-accent/50" />
             </div>
             <div>
-              <label htmlFor="cond-trailing-pct" className="block text-xs font-medium text-pf-text-secondary mb-1">Trailing %</label>
+              <label htmlFor="cond-trailing-pct" className="block text-xs font-medium text-secondary mb-1">Trailing %</label>
               <Input id="cond-trailing-pct" type="number" step="any" value={form.trailingPct} onChange={e => updateField('trailingPct', e.target.value)} placeholder="Optional"
-                className="w-full h-9 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text placeholder:text-pf-text-muted focus-visible:outline-none focus-visible:border-pf-cyan-500/50" />
+                className="w-full h-9 px-3 rounded-pf bg-surface border border-default text-sm text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:border-accent/50" />
             </div>
             <div>
-              <label htmlFor="cond-expires-at" className="block text-xs font-medium text-pf-text-secondary mb-1">Expires At</label>
+              <label htmlFor="cond-expires-at" className="block text-xs font-medium text-secondary mb-1">Expires At</label>
               <input id="cond-expires-at" type="datetime-local" lang="en" value={form.expiresAt} onChange={e => updateField('expiresAt', e.target.value)}
-                className="w-full h-9 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text focus-visible:outline-none focus-visible:border-pf-cyan-500/50" />
+                className="w-full h-9 px-3 rounded-pf bg-surface border border-default text-sm text-primary focus-visible:outline-none focus-visible:border-accent/50" />
             </div>
           </div>
-          <div className="flex gap-2 justify-end pt-3 border-t border-pf-border-subtle">
-            <Button type="button" variant="secondary" onClick={onClose} className="px-4 py-2 text-sm text-pf-text-secondary hover:text-pf-text transition-colors">Cancel</Button>
+          <div className="flex gap-2 justify-end pt-3 border-t border-subtle">
+            <Button type="button" variant="secondary" onClick={onClose} className="px-4 py-2 text-sm text-secondary hover:text-primary transition-colors">Cancel</Button>
             <Button type="submit" disabled={submitting}
-              className="flex items-center gap-2 px-4 py-2 rounded-pf bg-pf-cyan-500 text-pf-text-contrast text-sm font-medium hover:bg-pf-cyan-400 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
+              className="flex items-center gap-2 px-4 py-2 rounded-pf bg-accent text-inverse text-sm font-medium hover:bg-accent-text disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
               <Plus className="size-4" /> Create
             </Button>
           </div>
@@ -915,26 +915,26 @@ export function Component() {
     <div className="animate-fade-in p-6 max-w-7xl mx-auto space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold text-pf-text">Orders</h1>
+        <h1 className="text-2xl font-semibold text-primary">Orders</h1>
         <div className="flex items-center gap-3">
           {viewTab === 'conditional' && (
             <Button
               type="button"
               onClick={() => setShowCreateDialog(true)}
-              className="flex items-center gap-2 px-3 py-2 rounded-pf bg-pf-cyan-500/15 text-pf-cyan-400 text-xs font-medium border border-pf-cyan-500/30 hover:bg-pf-cyan-500/25 transition-colors"
+              className="flex items-center gap-2 px-3 py-2 rounded-pf bg-accent/15 text-accent-text text-xs font-medium border border-accent/30 hover:bg-accent/25 transition-colors"
             >
               <Plus className="size-3" /> New Conditional
             </Button>
           )}
           {!loading && viewTab === 'orders' && (
             <>
-              <span className="text-sm text-pf-text-muted">{total} orders</span>
+              <span className="text-sm text-tertiary">{total} orders</span>
               <Button
                 type="button"
                 variant="secondary"
                 onClick={exportCsv}
                 disabled={exportingCsv}
-                className="flex items-center gap-2 px-3 py-2 rounded-pf bg-pf-surface border border-pf-border text-xs text-pf-text-secondary hover:text-pf-text hover:border-pf-border-hover transition-colors disabled:opacity-50"
+                className="flex items-center gap-2 px-3 py-2 rounded-pf bg-surface border border-default text-xs text-secondary hover:text-primary hover:border-default transition-colors disabled:opacity-50"
               >
                 {exportingCsv
                   ? <Loader2 className="size-3 animate-spin" aria-hidden="true" />
@@ -943,15 +943,15 @@ export function Component() {
               </Button>
             </>
           )}
-          {!condLoading && viewTab === 'conditional' && <span className="text-sm text-pf-text-muted">{condTotal} conditional</span>}
+          {!condLoading && viewTab === 'conditional' && <span className="text-sm text-tertiary">{condTotal} conditional</span>}
           {viewTab === 'journal' && !journalLoading && (
-            <span className="text-sm text-pf-text-muted">{journalEntries.length} {journalEntries.length === 1 ? 'entry' : 'entries'}</span>
+            <span className="text-sm text-tertiary">{journalEntries.length} {journalEntries.length === 1 ? 'entry' : 'entries'}</span>
           )}
         </div>
       </div>
 
       {/* View tabs */}
-      <div className="flex gap-2 border-b border-pf-border-subtle pb-2" role="tablist" aria-label="Order type">
+      <div className="flex gap-2 border-b border-subtle pb-2" role="tablist" aria-label="Order type">
         <Button
           type="button"
           variant="ghost"
@@ -959,7 +959,7 @@ export function Component() {
           aria-selected={viewTab === 'orders'}
           onClick={() => setViewTab('orders')}
           className={`px-3 py-2 rounded-t text-sm font-medium transition-colors ${
-            viewTab === 'orders' ? 'text-pf-cyan-400 border-b-2 border-pf-cyan-400' : 'text-pf-text-secondary hover:text-pf-text'
+            viewTab === 'orders' ? 'text-accent-text border-b-2 border-accent-text' : 'text-secondary hover:text-primary'
           }`}
         >
           Orders
@@ -971,7 +971,7 @@ export function Component() {
           aria-selected={viewTab === 'conditional'}
           onClick={() => setViewTab('conditional')}
           className={`px-3 py-2 rounded-t text-sm font-medium transition-colors ${
-            viewTab === 'conditional' ? 'text-pf-cyan-400 border-b-2 border-pf-cyan-400' : 'text-pf-text-secondary hover:text-pf-text'
+            viewTab === 'conditional' ? 'text-accent-text border-b-2 border-accent-text' : 'text-secondary hover:text-primary'
           }`}
         >
           Conditional
@@ -983,13 +983,13 @@ export function Component() {
           aria-selected={viewTab === 'journal'}
           onClick={() => setViewTab('journal')}
           className={`inline-flex items-center gap-2 px-3 py-2 rounded-t text-sm font-medium transition-colors ${
-            viewTab === 'journal' ? 'text-pf-cyan-400 border-b-2 border-pf-cyan-400' : 'text-pf-text-secondary hover:text-pf-text'
+            viewTab === 'journal' ? 'text-accent-text border-b-2 border-accent-text' : 'text-secondary hover:text-primary'
           }`}
         >
           <BookOpen className="size-4" />
           Journal
           {Object.keys(journalByOrder).length > 0 && (
-            <span className="inline-flex items-center justify-center h-4 min-w-4 px-1 rounded-pf-full bg-pf-cyan-500/20 text-pf-cyan-400 text-pf-caption font-medium">
+            <span className="inline-flex items-center justify-center h-4 min-w-4 px-1 rounded-pf-full bg-accent/20 text-accent-text text-pf-caption font-medium">
               {Object.keys(journalByOrder).length}
             </span>
           )}
@@ -1010,8 +1010,8 @@ export function Component() {
                 onClick={() => changeFilter(f.value)}
                 className={`px-3 py-2 rounded-pf-full text-xs font-medium whitespace-nowrap border transition-colors ${
                   filter === f.value
-                    ? 'bg-pf-cyan-500/15 text-pf-cyan-400 border-pf-cyan-500/30'
-                    : 'bg-pf-elevated text-pf-text-secondary border-pf-border hover:border-pf-border-strong'
+                    ? 'bg-accent/15 text-accent-text border-accent/30'
+                    : 'bg-elevated text-secondary border-default hover:border-strong'
                 }`}
               >
                 {f.label}
@@ -1020,11 +1020,11 @@ export function Component() {
           </div>
 
           {/* Table */}
-          <div className="bg-pf-elevated border border-pf-border rounded-pf-lg overflow-hidden">
+          <div className="bg-elevated border border-default rounded-pf-lg overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full min-w-[800px] text-sm" aria-label="Orders">
                 <thead>
-                  <tr className="bg-pf-surface text-left text-xs text-pf-text-secondary uppercase tracking-wider">
+                  <tr className="bg-surface text-left text-xs text-secondary uppercase tracking-wider">
                     <th scope="col" className="px-4 py-3 font-medium w-10">#</th>
                     <th scope="col" className="px-4 py-3 font-medium">Market</th>
                     <th scope="col" className="px-4 py-3 font-medium">Side</th>
@@ -1039,12 +1039,12 @@ export function Component() {
                     <th scope="col" className="px-4 py-3 font-medium w-20"><span className="sr-only">Actions</span></th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-pf-border-subtle">
+                <tbody className="divide-y divide-subtle">
                   {loading ? (
                     Array.from({ length: 8 }, (_, i) => (
                       <tr key={i}>
                         {Array.from({ length: 12 }, (_, j) => (
-                          <td key={j} className="px-4 py-3"><div className="h-3 bg-pf-overlay rounded animate-pulse" /></td>
+                          <td key={j} className="px-4 py-3"><div className="h-3 bg-overlay rounded animate-pulse" /></td>
                         ))}
                       </tr>
                     ))
@@ -1052,9 +1052,9 @@ export function Component() {
                     <tr>
                       <td colSpan={12}>
                         <div className="flex flex-col items-center justify-center py-16 text-center">
-                          <ClipboardList className="size-10 text-pf-text-muted mb-3" />
-                          <p className="text-sm font-medium text-pf-text">No orders found</p>
-                          <p className="text-xs text-pf-text-muted mt-1">Orders placed by your strategies will appear here.</p>
+                          <ClipboardList className="size-10 text-tertiary mb-3" />
+                          <p className="text-sm font-medium text-primary">No orders found</p>
+                          <p className="text-xs text-tertiary mt-1">Orders placed by your strategies will appear here.</p>
                         </div>
                       </td>
                     </tr>
@@ -1071,37 +1071,37 @@ export function Component() {
                           tabIndex={0}
                           onClick={() => setSelectedOrder(order)}
                           onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setSelectedOrder(order); }}
-                          className={`hover:bg-pf-surface/50 transition-colors cursor-pointer ${isJournalOpen ? 'bg-pf-surface/30' : ''}`}
+                          className={`hover:bg-surface/50 transition-colors cursor-pointer ${isJournalOpen ? 'bg-surface/30' : ''}`}
                         >
                           <td className="px-4 py-3">
-                            <span className="font-mono text-pf-label text-pf-text-muted">{(page - 1) * 25 + i + 1}</span>
+                            <span className="font-mono text-pf-label text-tertiary">{(page - 1) * 25 + i + 1}</span>
                           </td>
                           <td className="px-4 py-3 max-w-[180px]">
-                            <span className="text-pf-text text-xs line-clamp-1" title={order.marketQuestion ?? order.marketId ?? ''}>
+                            <span className="text-primary text-xs line-clamp-1" title={order.marketQuestion ?? order.marketId ?? ''}>
                               {order.marketQuestion || (order.marketId?.slice(0, 12)) || '—'}
                             </span>
                             <CategoryBadge category={order.marketCategory} />
                           </td>
                           <td className="px-4 py-3">
                             <span className={`inline-flex px-2 py-1 rounded text-xs font-medium ${
-                              order.side === 'BUY' ? 'bg-pf-success/10 text-pf-success' : 'bg-pf-danger/10 text-pf-danger'
+                              order.side === 'BUY' ? 'bg-gain/10 text-gain' : 'bg-loss/10 text-loss'
                             }`}>
                               {order.side}
                             </span>
                           </td>
                           <td className="px-4 py-3">
                             <span className={`inline-flex px-2 py-1 rounded text-xs font-medium ${
-                              order.outcome === 'YES' ? 'bg-pf-success/10 text-pf-success' : 'bg-pf-danger/10 text-pf-danger'
+                              order.outcome === 'YES' ? 'bg-gain/10 text-gain' : 'bg-loss/10 text-loss'
                             }`}>
                               {order.outcome}
                             </span>
                           </td>
-                          <td className="px-4 py-3 text-right font-mono text-pf-text">{order.size}</td>
-                          <td className="px-4 py-3 text-right font-mono text-pf-text">{order.price}</td>
-                          <td className="px-4 py-3 text-right font-mono text-pf-text-secondary hidden md:table-cell">{fillRatio(order)}</td>
-                          <td className="px-4 py-3 text-right font-mono text-pf-text hidden md:table-cell">{order.fillPrice ?? '\u2014'}</td>
+                          <td className="px-4 py-3 text-right font-mono text-primary">{order.size}</td>
+                          <td className="px-4 py-3 text-right font-mono text-primary">{order.price}</td>
+                          <td className="px-4 py-3 text-right font-mono text-secondary hidden md:table-cell">{fillRatio(order)}</td>
+                          <td className="px-4 py-3 text-right font-mono text-primary hidden md:table-cell">{order.fillPrice ?? '\u2014'}</td>
                           <td className="px-4 py-3 hidden md:table-cell">
-                            <span className="font-mono text-pf-label text-pf-text-muted">{order.orderType}</span>
+                            <span className="font-mono text-pf-label text-tertiary">{order.orderType}</span>
                           </td>
                           <td className="px-4 py-3">
                             <span data-testid="status-cell" className={`inline-flex px-2 py-1 rounded text-xs font-medium ${ss.bg} ${ss.text}`}>
@@ -1109,7 +1109,7 @@ export function Component() {
                             </span>
                           </td>
                           <td className="px-4 py-3 text-right hidden sm:table-cell">
-                            <span className="font-mono text-pf-label text-pf-text-muted">{formatDate(order.createdAt)}</span>
+                            <span className="font-mono text-pf-label text-tertiary">{formatDate(order.createdAt)}</span>
                           </td>
                           <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
                             <div className="flex items-center justify-end gap-1">
@@ -1120,13 +1120,13 @@ export function Component() {
                                 onClick={() => setOpenJournalOrderId(isJournalOpen ? null : order.id)}
                                 title={hasNote ? 'Edit journal note' : 'Add journal note'}
                                 aria-label={hasNote ? 'Edit journal note' : 'Add journal note'}
-                                className={`p-1 rounded transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 ${
+                                className={`p-1 rounded transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 ${
                                   hasNote
-                                    ? 'text-pf-cyan-400 hover:text-pf-cyan-300'
-                                    : 'text-pf-text-muted hover:text-pf-cyan-400'
+                                    ? 'text-accent-text hover:text-accent-text'
+                                    : 'text-tertiary hover:text-accent-text'
                                 }`}
                               >
-                                <BookOpen className={`size-4 ${hasNote ? 'fill-pf-cyan-400/20' : ''}`} />
+                                <BookOpen className={`size-4 ${hasNote ? 'fill-accent-text/20' : ''}`} />
                               </Button>
                               {['PENDING', 'SUBMITTED', 'LIVE'].includes(order.status) && (
                                 <Button
@@ -1136,7 +1136,7 @@ export function Component() {
                                   onClick={() => cancelOrder(order.id)}
                                   title="Cancel order"
                                   aria-label="Cancel order"
-                                  className="p-1 rounded text-pf-text-muted hover:text-pf-danger transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-danger/40"
+                                  className="p-1 rounded text-tertiary hover:text-loss transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-loss/40"
                                 >
                                   <Trash2 className="size-4" />
                                 </Button>
@@ -1178,7 +1178,7 @@ export function Component() {
               >
                 <ChevronLeft className="size-4" />
               </Button>
-              <span data-testid="page-info" className="text-sm font-mono text-pf-text-secondary" aria-live="polite">Page {page} of {totalPages}</span>
+              <span data-testid="page-info" className="text-sm font-mono text-secondary" aria-live="polite">Page {page} of {totalPages}</span>
               <Button
                 type="button"
                 variant="ghost"
@@ -1197,11 +1197,11 @@ export function Component() {
       {/* ─── Conditional Orders Tab ──────────────────────────── */}
       {viewTab === 'conditional' && (
         <>
-          <div className="bg-pf-elevated border border-pf-border rounded-pf-lg overflow-hidden">
+          <div className="bg-elevated border border-default rounded-pf-lg overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-sm" aria-label="Conditional orders">
                 <thead>
-                  <tr className="bg-pf-surface text-left text-xs text-pf-text-secondary uppercase tracking-wider">
+                  <tr className="bg-surface text-left text-xs text-secondary uppercase tracking-wider">
                     <th scope="col" className="px-4 py-3 font-medium">Type</th>
                     <th scope="col" className="px-4 py-3 font-medium">Market</th>
                     <th scope="col" className="px-4 py-3 font-medium text-right">Trigger</th>
@@ -1214,12 +1214,12 @@ export function Component() {
                     <th scope="col" className="px-4 py-3 font-medium w-10"><span className="sr-only">Actions</span></th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-pf-border-subtle">
+                <tbody className="divide-y divide-subtle">
                   {condLoading ? (
                     Array.from({ length: 5 }, (_, i) => (
                       <tr key={i}>
                         {Array.from({ length: 10 }, (_, j) => (
-                          <td key={j} className="px-4 py-3"><div className="h-3 bg-pf-overlay rounded animate-pulse" /></td>
+                          <td key={j} className="px-4 py-3"><div className="h-3 bg-overlay rounded animate-pulse" /></td>
                         ))}
                       </tr>
                     ))
@@ -1227,9 +1227,9 @@ export function Component() {
                     <tr>
                       <td colSpan={10}>
                         <div className="flex flex-col items-center justify-center py-16 text-center">
-                          <ClipboardList className="size-10 text-pf-text-muted mb-3" />
-                          <p className="text-sm font-medium text-pf-text">No conditional orders</p>
-                          <p className="text-xs text-pf-text-muted mt-1">Set up take profit, stop loss, or trailing stop orders.</p>
+                          <ClipboardList className="size-10 text-tertiary mb-3" />
+                          <p className="text-sm font-medium text-primary">No conditional orders</p>
+                          <p className="text-xs text-tertiary mt-1">Set up take profit, stop loss, or trailing stop orders.</p>
                         </div>
                       </td>
                     </tr>
@@ -1238,27 +1238,27 @@ export function Component() {
                       const ts = CONDITIONAL_TYPE_STYLES[co.type] ?? CONDITIONAL_TYPE_STYLES.LIMIT;
                       const cs = CONDITIONAL_STATUS_STYLES[co.status] ?? CONDITIONAL_STATUS_STYLES.PENDING;
                       return (
-                        <tr key={co.id} data-testid="order-row" data-order-id={co.id} className="hover:bg-pf-surface/50 transition-colors">
+                        <tr key={co.id} data-testid="order-row" data-order-id={co.id} className="hover:bg-surface/50 transition-colors">
                           <td className="px-4 py-3">
                             <span className={`inline-flex px-2 py-1 rounded text-xs font-medium ${ts.bg} ${ts.text}`}>
                               {ts.label}
                             </span>
                           </td>
                           <td className="px-4 py-3">
-                            <span className="font-mono text-pf-label text-pf-text-muted">{co.marketId.slice(0, 8)}...</span>
+                            <span className="font-mono text-pf-label text-tertiary">{co.marketId.slice(0, 8)}...</span>
                           </td>
-                          <td className="px-4 py-3 text-right font-mono text-pf-text">{co.triggerPrice}</td>
-                          <td className="px-4 py-3 text-right font-mono text-pf-text">{co.size}</td>
+                          <td className="px-4 py-3 text-right font-mono text-primary">{co.triggerPrice}</td>
+                          <td className="px-4 py-3 text-right font-mono text-primary">{co.size}</td>
                           <td className="px-4 py-3">
                             <span className={`inline-flex px-2 py-1 rounded text-xs font-medium ${
-                              co.side === 'BUY' ? 'bg-pf-success/10 text-pf-success' : 'bg-pf-danger/10 text-pf-danger'
+                              co.side === 'BUY' ? 'bg-gain/10 text-gain' : 'bg-loss/10 text-loss'
                             }`}>
                               {co.side}
                             </span>
                           </td>
                           <td className="px-4 py-3">
                             <span className={`inline-flex px-2 py-1 rounded text-xs font-medium ${
-                              co.outcome === 'YES' ? 'bg-pf-success/10 text-pf-success' : 'bg-pf-danger/10 text-pf-danger'
+                              co.outcome === 'YES' ? 'bg-gain/10 text-gain' : 'bg-loss/10 text-loss'
                             }`}>
                               {co.outcome}
                             </span>
@@ -1269,12 +1269,12 @@ export function Component() {
                             </span>
                           </td>
                           <td className="px-4 py-3 text-right">
-                            <span className="font-mono text-pf-label text-pf-text-muted">
+                            <span className="font-mono text-pf-label text-tertiary">
                               {co.expiresAt ? formatDate(co.expiresAt) : '\u2014'}
                             </span>
                           </td>
                           <td className="px-4 py-3 text-right">
-                            <span className="font-mono text-pf-label text-pf-text-muted">{formatDate(co.createdAt)}</span>
+                            <span className="font-mono text-pf-label text-tertiary">{formatDate(co.createdAt)}</span>
                           </td>
                           <td className="px-4 py-3">
                             {co.status === 'PENDING' && (
@@ -1312,7 +1312,7 @@ export function Component() {
               >
                 <ChevronLeft className="size-4" />
               </Button>
-              <span className="text-sm font-mono text-pf-text-secondary" aria-live="polite">Page {condPage} of {condTotalPages}</span>
+              <span className="text-sm font-mono text-secondary" aria-live="polite">Page {condPage} of {condTotalPages}</span>
               <Button
                 type="button"
                 variant="ghost"
@@ -1346,10 +1346,10 @@ export function Component() {
       {/* Order detail dialog */}
       {selectedOrder && (
         <div className="fixed inset-0 z-50 flex items-center justify-end" role="dialog" aria-modal="true" aria-label="Order Details">
-          <div className="absolute inset-0 bg-pf-backdrop-light" onClick={() => setSelectedOrder(null)} />
-          <div className="animate-slide-right relative w-full max-w-md h-full bg-pf-surface border-l border-pf-border overflow-y-auto">
-            <div className="flex items-center justify-between px-6 py-4 border-b border-pf-border-subtle">
-              <h2 className="text-lg font-semibold text-pf-text">Order Details</h2>
+          <div className="absolute inset-0 bg-black/50" onClick={() => setSelectedOrder(null)} />
+          <div className="animate-slide-right relative w-full max-w-md h-full bg-surface border-l border-default overflow-y-auto">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-subtle">
+              <h2 className="text-lg font-semibold text-primary">Order Details</h2>
               <Button type="button" variant="ghost" size="icon" onClick={() => setSelectedOrder(null)} aria-label="Close order details">
                 <X className="size-5" />
               </Button>
@@ -1359,12 +1359,12 @@ export function Component() {
                 { label: 'Order ID', value: <span className="font-mono text-pf-label">{selectedOrder.id.slice(0, 8)}...</span> },
                 { label: 'Side', value: (
                   <span className={`inline-flex px-2 py-1 rounded text-xs font-medium ${
-                    selectedOrder.side === 'BUY' ? 'bg-pf-success/10 text-pf-success' : 'bg-pf-danger/10 text-pf-danger'
+                    selectedOrder.side === 'BUY' ? 'bg-gain/10 text-gain' : 'bg-loss/10 text-loss'
                   }`}>{selectedOrder.side}</span>
                 )},
                 { label: 'Outcome', value: (
                   <span className={`inline-flex px-2 py-1 rounded text-xs font-medium ${
-                    selectedOrder.outcome === 'YES' ? 'bg-pf-success/10 text-pf-success' : 'bg-pf-danger/10 text-pf-danger'
+                    selectedOrder.outcome === 'YES' ? 'bg-gain/10 text-gain' : 'bg-loss/10 text-loss'
                   }`}>{selectedOrder.outcome}</span>
                 )},
                 { label: 'Size', value: <span className="font-mono">{selectedOrder.size}</span> },
@@ -1378,9 +1378,9 @@ export function Component() {
                 })() },
                 { label: 'Created', value: <span className="font-mono text-xs">{formatDate(selectedOrder.placedAt ?? selectedOrder.createdAt)}</span> },
               ] as { label: string; value: React.ReactNode }[]).map(row => (
-                <div key={row.label} className="flex items-center justify-between py-2 border-b border-pf-border-subtle last:border-0">
-                  <span className="text-sm text-pf-text-secondary">{row.label}</span>
-                  <span className="text-sm text-pf-text">{row.value}</span>
+                <div key={row.label} className="flex items-center justify-between py-2 border-b border-subtle last:border-0">
+                  <span className="text-sm text-secondary">{row.label}</span>
+                  <span className="text-sm text-primary">{row.value}</span>
                 </div>
               ))}
             </div>

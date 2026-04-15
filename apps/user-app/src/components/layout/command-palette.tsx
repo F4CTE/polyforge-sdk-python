@@ -81,19 +81,19 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
 
   return (
     <div
-      className="fixed inset-0 z-[60] flex items-start justify-center pt-[10vh] bg-pf-backdrop backdrop-blur-sm"
+      className="fixed inset-0 z-[60] flex items-start justify-center pt-[10vh] bg-black/60 backdrop-blur-sm"
       onClick={onClose}
       role="dialog"
       aria-modal="true"
       aria-label="Command palette"
     >
       <div
-        className="motion-safe:animate-scale-in w-full max-w-sm sm:max-w-xl mx-4 bg-pf-elevated border border-pf-border rounded-pf-lg shadow-pf-lg overflow-hidden"
+        className="motion-safe:animate-scale-in w-full max-w-sm sm:max-w-xl mx-4 bg-elevated border border-default rounded-pf-lg shadow-pf-lg overflow-hidden"
         onClick={e => e.stopPropagation()}
       >
         {/* Search input */}
-        <div className="flex items-center gap-2 px-4 py-3 border-b border-pf-border">
-          <Search className="size-4 text-pf-text-muted shrink-0" />
+        <div className="flex items-center gap-2 px-4 py-3 border-b border-default">
+          <Search className="size-4 text-tertiary shrink-0" />
           <input
             ref={inputRef}
             type="search"
@@ -106,12 +106,12 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
             onKeyDown={handleKeyDown}
             aria-label="Search markets and strategies"
             placeholder="Search markets, strategies..."
-            className="flex-1 bg-transparent text-sm text-pf-text placeholder:text-pf-text-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 rounded"
+            className="flex-1 bg-transparent text-sm text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 rounded"
           />
-          <kbd className="hidden sm:inline-flex items-center px-2 py-1 rounded text-pf-label text-pf-text-muted border border-pf-border font-mono">
+          <kbd className="hidden sm:inline-flex items-center px-2 py-1 rounded text-pf-label text-tertiary border border-default font-mono">
             Esc
           </kbd>
-          <button type="button" onClick={onClose} className="min-w-[44px] min-h-[44px] flex items-center justify-center text-pf-text-muted hover:text-pf-text transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 rounded-pf-md" aria-label="Close command palette">
+          <button type="button" onClick={onClose} className="min-w-[44px] min-h-[44px] flex items-center justify-center text-tertiary hover:text-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 rounded-pf-md" aria-label="Close command palette">
             <X className="size-4" />
           </button>
         </div>
@@ -119,19 +119,19 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
         {/* Results */}
         <div role="listbox" id="cmd-palette-results" aria-label="Search results" className="max-h-72 overflow-y-auto">
           {loading && (
-            <div className="px-4 py-3 text-sm text-pf-text-muted motion-safe:animate-pulse">Searching...</div>
+            <div className="px-4 py-3 text-sm text-tertiary motion-safe:animate-pulse">Searching...</div>
           )}
           {!loading && !query && (
             <div className="px-4 py-8 text-center">
-              <p className="text-xs text-pf-text-muted">Type to search markets and strategies</p>
-              <p className="text-pf-label text-pf-text-muted mt-1 opacity-60">
-                <kbd className="px-1 py-1 rounded border border-pf-border font-mono text-pf-caption">↑↓</kbd> navigate ·{' '}
-                <kbd className="px-1 py-1 rounded border border-pf-border font-mono text-pf-caption">Enter</kbd> open
+              <p className="text-xs text-tertiary">Type to search markets and strategies</p>
+              <p className="text-pf-label text-tertiary mt-1 opacity-60">
+                <kbd className="px-1 py-1 rounded border border-default font-mono text-pf-caption">↑↓</kbd> navigate ·{' '}
+                <kbd className="px-1 py-1 rounded border border-default font-mono text-pf-caption">Enter</kbd> open
               </p>
             </div>
           )}
           {!loading && query && results.length === 0 && (
-            <div className="px-4 py-8 text-center text-sm text-pf-text-muted">
+            <div className="px-4 py-8 text-center text-sm text-tertiary">
               No results for &ldquo;{query}&rdquo;
             </div>
           )}
@@ -143,21 +143,21 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
               role="option"
               aria-selected={i === activeIndex}
               onClick={() => select(r)}
-              className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-pf-cyan-500/40 ${
-                i === activeIndex ? 'bg-pf-cyan-500/10' : 'hover:bg-pf-surface'
+              className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent/40 ${
+                i === activeIndex ? 'bg-accent/10' : 'hover:bg-surface'
               }`}
             >
               <span className={`p-2 rounded-pf-sm shrink-0 ${
-                r.type === 'market' ? 'bg-pf-cyan-500/10 text-pf-cyan-400' : 'bg-pf-purple-500/10 text-pf-purple-400'
+                r.type === 'market' ? 'bg-accent/10 text-accent-text' : 'bg-pf-purple-500/10 text-pf-purple-400'
               }`}>
                 {r.type === 'market' ? <BarChart3 className="size-4" /> : <Zap className="size-4" />}
               </span>
               <div className="min-w-0 flex-1">
-                <div className="text-sm text-pf-text truncate">{r.title}</div>
-                {r.sub && <div className="text-pf-label text-pf-text-muted capitalize">{r.sub}</div>}
+                <div className="text-sm text-primary truncate">{r.title}</div>
+                {r.sub && <div className="text-pf-label text-tertiary capitalize">{r.sub}</div>}
               </div>
               <span className={`text-pf-caption font-medium px-2 py-1 rounded shrink-0 ${
-                r.type === 'market' ? 'bg-pf-cyan-500/10 text-pf-cyan-400' : 'bg-pf-purple-500/10 text-pf-purple-400'
+                r.type === 'market' ? 'bg-accent/10 text-accent-text' : 'bg-pf-purple-500/10 text-pf-purple-400'
               }`}>
                 {r.type === 'market' ? 'Market' : 'Strategy'}
               </span>

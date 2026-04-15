@@ -50,64 +50,64 @@ const COHORT_DEFINITIONS = [
     id: 'power-traders',
     label: 'Power Traders',
     icon: Zap,
-    borderColor: 'border-pf-cyan-400',
-    iconColor: 'text-pf-cyan-400',
+    borderColor: 'border-accent-text',
+    iconColor: 'text-accent-text',
     description: '20+ trades/month, active in last 7d',
   },
   {
     id: 'copy-only',
     label: 'Copy-Only',
     icon: Copy,
-    borderColor: 'border-pf-warning',
-    iconColor: 'text-pf-warning',
+    borderColor: 'border-warning',
+    iconColor: 'text-warning',
     description: 'No own strategies, 1+ copy traders followed',
   },
   {
     id: 'marketplace-buyers',
     label: 'Marketplace Buyers',
     icon: ShoppingBag,
-    borderColor: 'border-pf-cyan-500',
-    iconColor: 'text-pf-cyan-500',
+    borderColor: 'border-accent',
+    iconColor: 'text-accent',
     description: 'Purchased 1+ strategies from marketplace',
   },
   {
     id: 'strategy-builders',
     label: 'Strategy Builders',
     icon: Blocks,
-    borderColor: 'border-pf-success',
-    iconColor: 'text-pf-success',
+    borderColor: 'border-gain',
+    iconColor: 'text-gain',
     description: 'Created 1+ strategies, ran 1+ backtests',
   },
   {
     id: 'dormant',
     label: 'Dormant',
     icon: Moon,
-    borderColor: 'border-pf-text-muted',
-    iconColor: 'text-pf-text-muted',
+    borderColor: 'border-tertiary',
+    iconColor: 'text-tertiary',
     description: 'No activity in 30+ days',
   },
   {
     id: 'new-users',
     label: 'New Users',
     icon: UserPlus,
-    borderColor: 'border-pf-info',
-    iconColor: 'text-pf-info',
+    borderColor: 'border-info',
+    iconColor: 'text-info',
     description: 'Registered in last 14 days',
   },
   {
     id: 'high-value',
     label: 'High Value',
     icon: Crown,
-    borderColor: 'border-pf-warning',
-    iconColor: 'text-pf-warning',
+    borderColor: 'border-warning',
+    iconColor: 'text-warning',
     description: 'Top 10% by total volume traded',
   },
   {
     id: 'at-risk',
     label: 'At Risk',
     icon: AlertTriangle,
-    borderColor: 'border-pf-danger',
-    iconColor: 'text-pf-danger',
+    borderColor: 'border-loss',
+    iconColor: 'text-loss',
     description: 'Active 30d ago, no activity in last 14d',
   },
 ] as const;
@@ -116,17 +116,17 @@ const COHORT_DEFINITIONS = [
 
 function CohortCardSkeleton() {
   return (
-    <div className="rounded-pf-lg bg-pf-elevated border border-pf-border border-l-4 border-l-pf-border p-4 space-y-3 animate-shimmer">
+    <div className="rounded-pf-lg bg-elevated border border-default border-l-4 border-l-pf-border p-4 space-y-3 animate-shimmer">
       <div className="flex items-center gap-2">
-        <div className="w-5 h-5 rounded bg-pf-overlay" />
-        <div className="h-4 w-28 rounded bg-pf-overlay" />
+        <div className="w-5 h-5 rounded bg-overlay" />
+        <div className="h-4 w-28 rounded bg-overlay" />
       </div>
-      <div className="h-3 w-full rounded bg-pf-overlay" />
-      <div className="h-8 w-20 rounded bg-pf-overlay" />
-      <div className="h-2 w-full rounded-pf-full bg-pf-overlay" />
+      <div className="h-3 w-full rounded bg-overlay" />
+      <div className="h-8 w-20 rounded bg-overlay" />
+      <div className="h-2 w-full rounded-pf-full bg-overlay" />
       <div className="flex gap-2">
-        <div className="h-7 flex-1 rounded-pf bg-pf-overlay" />
-        <div className="h-7 flex-1 rounded-pf bg-pf-overlay" />
+        <div className="h-7 flex-1 rounded-pf bg-overlay" />
+        <div className="h-7 flex-1 rounded-pf bg-overlay" />
       </div>
     </div>
   );
@@ -137,7 +137,7 @@ function TableRowSkeleton() {
     <tr>
       {Array.from({ length: 6 }).map((_, i) => (
         <td key={i} className="px-4 py-3">
-          <div className="h-4 rounded bg-pf-overlay animate-shimmer" style={{ width: `${60 + (i % 3) * 20}%` }} />
+          <div className="h-4 rounded bg-overlay animate-shimmer" style={{ width: `${60 + (i % 3) * 20}%` }} />
         </td>
       ))}
     </tr>
@@ -176,22 +176,22 @@ function BroadcastDialog({ cohortId, cohortLabel, userCount, onClose }: Broadcas
       aria-labelledby="broadcast-dialog-title"
       className="fixed inset-0 z-50 flex items-center justify-center p-4"
     >
-      <div className="absolute inset-0 bg-pf-backdrop" onClick={onClose} aria-hidden="true" />
-      <div className="relative z-10 w-full max-w-sm rounded-pf-lg bg-pf-elevated border border-pf-border p-6 space-y-4 animate-fade-in">
-        <h2 id="broadcast-dialog-title" className="text-base font-semibold text-pf-text">
+      <div className="absolute inset-0 bg-black/60" onClick={onClose} aria-hidden="true" />
+      <div className="relative z-10 w-full max-w-sm rounded-pf-lg bg-elevated border border-default p-6 space-y-4 animate-fade-in">
+        <h2 id="broadcast-dialog-title" className="text-base font-semibold text-primary">
           Send Broadcast
         </h2>
-        <p className="text-sm text-pf-text-secondary">
+        <p className="text-sm text-secondary">
           Send broadcast to{' '}
-          <span className="font-semibold text-pf-text">{userCount.toLocaleString()}</span>{' '}
-          <span className="text-pf-cyan-400">{cohortLabel}</span> users?
+          <span className="font-semibold text-primary">{userCount.toLocaleString()}</span>{' '}
+          <span className="text-accent-text">{cohortLabel}</span> users?
         </p>
         <div className="flex gap-3 justify-end pt-1">
           <Button
             type="button"
             variant="secondary"
             onClick={onClose}
-            className="px-4 py-2 rounded-pf text-sm text-pf-text-secondary hover:bg-pf-overlay border border-pf-border transition-colors"
+            className="px-4 py-2 rounded-pf text-sm text-secondary hover:bg-overlay border border-default transition-colors"
           >
             Cancel
           </Button>
@@ -200,7 +200,7 @@ function BroadcastDialog({ cohortId, cohortLabel, userCount, onClose }: Broadcas
             variant="default"
             onClick={handleConfirm}
             disabled={loading}
-            className="px-4 py-2 rounded-pf text-sm font-medium bg-pf-cyan-500 text-pf-text-contrast hover:bg-pf-cyan-400 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="px-4 py-2 rounded-pf text-sm font-medium bg-accent text-inverse hover:bg-accent-text disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             {loading ? 'Sending…' : 'Confirm'}
           </Button>
@@ -225,30 +225,30 @@ function CohortCard({ definition, stats, onViewUsers, onBroadcast }: CohortCardP
     stats.trend === 'up' ? TrendingUp : stats.trend === 'down' ? TrendingDown : Minus;
   const trendColor =
     stats.trend === 'up'
-      ? 'text-pf-success'
+      ? 'text-gain'
       : stats.trend === 'down'
-        ? 'text-pf-danger'
-        : 'text-pf-text-muted';
+        ? 'text-loss'
+        : 'text-tertiary';
 
   return (
     <article
-      className={`rounded-pf-lg bg-pf-elevated border border-pf-border border-l-4 ${definition.borderColor} p-4 flex flex-col gap-3 animate-fade-in`}
+      className={`rounded-pf-lg bg-elevated border border-default border-l-4 ${definition.borderColor} p-4 flex flex-col gap-3 animate-fade-in`}
     >
       {/* Header */}
       <div className="flex items-start gap-2">
         <Icon size={18} className={`${definition.iconColor} shrink-0 mt-1`} aria-hidden="true" />
         <div className="min-w-0">
-          <h3 className="text-sm font-semibold text-pf-text">{definition.label}</h3>
-          <p className="text-xs text-pf-text-muted mt-1 leading-snug">{definition.description}</p>
+          <h3 className="text-sm font-semibold text-primary">{definition.label}</h3>
+          <p className="text-xs text-tertiary mt-1 leading-snug">{definition.description}</p>
         </div>
       </div>
 
       {/* User Count */}
       <div className="flex items-baseline gap-2">
-        <span className="text-2xl font-bold text-pf-text tabular-nums">
+        <span className="text-2xl font-bold text-primary tabular-nums">
           {stats.userCount.toLocaleString()}
         </span>
-        <span className="text-xs text-pf-text-muted">
+        <span className="text-xs text-tertiary">
           {stats.pctOfTotal.toFixed(1)}% of total
         </span>
         <span className={`ml-auto flex items-center gap-1 text-xs font-medium ${trendColor}`}>
@@ -259,13 +259,13 @@ function CohortCard({ definition, stats, onViewUsers, onBroadcast }: CohortCardP
 
       {/* Retention Bar */}
       <div>
-        <div className="flex justify-between text-pf-label text-pf-text-muted mb-1">
+        <div className="flex justify-between text-pf-label text-tertiary mb-1">
           <span>Retention</span>
           <span>{stats.retentionRate}%</span>
         </div>
-        <div className="h-2 w-full rounded-pf-full bg-pf-overlay overflow-hidden">
+        <div className="h-2 w-full rounded-pf-full bg-overlay overflow-hidden">
           <div
-            className="h-full rounded-pf-full bg-pf-cyan-400 transition-all"
+            className="h-full rounded-pf-full bg-accent-text transition-all"
             style={{ width: `${stats.retentionRate}%` }}
             role="meter"
             aria-valuenow={stats.retentionRate}
@@ -282,7 +282,7 @@ function CohortCard({ definition, stats, onViewUsers, onBroadcast }: CohortCardP
           type="button"
           variant="ghost"
           onClick={() => onViewUsers(definition.id)}
-          className="flex-1 px-3 py-2 rounded-pf text-xs font-medium bg-pf-cyan-500/10 text-pf-cyan-400 hover:bg-pf-cyan-500/20 border border-pf-cyan-400/20 transition-colors"
+          className="flex-1 px-3 py-2 rounded-pf text-xs font-medium bg-accent/10 text-accent-text hover:bg-accent/20 border border-accent-text/20 transition-colors"
         >
           View Users
         </Button>
@@ -290,7 +290,7 @@ function CohortCard({ definition, stats, onViewUsers, onBroadcast }: CohortCardP
           type="button"
           variant="ghost"
           onClick={() => onBroadcast(definition.id)}
-          className="flex-1 px-3 py-2 rounded-pf text-xs font-medium bg-pf-overlay text-pf-text-secondary hover:text-pf-text hover:bg-pf-border border border-pf-border transition-colors"
+          className="flex-1 px-3 py-2 rounded-pf text-xs font-medium bg-overlay text-secondary hover:text-primary hover:bg-default border border-default transition-colors"
         >
           Send Broadcast
         </Button>
@@ -371,7 +371,7 @@ function DrillDown({ cohortId, onBack }: DrillDownProps) {
         type="button"
         variant="ghost"
         onClick={onBack}
-        className="inline-flex items-center gap-2 text-sm text-pf-text-secondary hover:text-pf-text transition-colors rounded-pf-sm"
+        className="inline-flex items-center gap-2 text-sm text-secondary hover:text-primary transition-colors rounded-pf-sm"
       >
         <ChevronLeft size={16} aria-hidden="true" />
         All Cohorts
@@ -385,7 +385,7 @@ function DrillDown({ cohortId, onBack }: DrillDownProps) {
             className={definition.iconColor}
             aria-hidden="true"
           />
-          <h2 className="text-lg font-semibold text-pf-text">{definition.label}</h2>
+          <h2 className="text-lg font-semibold text-primary">{definition.label}</h2>
         </div>
       )}
 
@@ -398,27 +398,27 @@ function DrillDown({ cohortId, onBack }: DrillDownProps) {
             { label: 'Avg P&L', value: stats.avgPnl },
             { label: 'Retention', value: `${stats.retentionRate}%` },
           ].map((item) => (
-            <div key={item.label} className="rounded-pf-lg bg-pf-elevated border border-pf-border px-4 py-3">
-              <div className="text-pf-label text-pf-text-muted uppercase tracking-wide">{item.label}</div>
-              <div className="text-lg font-bold text-pf-text mt-1 tabular-nums">{item.value}</div>
+            <div key={item.label} className="rounded-pf-lg bg-elevated border border-default px-4 py-3">
+              <div className="text-pf-label text-tertiary uppercase tracking-wide">{item.label}</div>
+              <div className="text-lg font-bold text-primary mt-1 tabular-nums">{item.value}</div>
             </div>
           ))}
         </div>
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="rounded-pf-lg bg-pf-elevated border border-pf-border px-4 py-3 animate-shimmer">
-              <div className="h-3 w-16 rounded bg-pf-overlay mb-2" />
-              <div className="h-6 w-20 rounded bg-pf-overlay" />
+            <div key={i} className="rounded-pf-lg bg-elevated border border-default px-4 py-3 animate-shimmer">
+              <div className="h-3 w-16 rounded bg-overlay mb-2" />
+              <div className="h-6 w-20 rounded bg-overlay" />
             </div>
           ))}
         </div>
       )}
 
       {/* Table */}
-      <div className="rounded-pf-lg bg-pf-elevated border border-pf-border overflow-hidden">
-        <div className="flex items-center justify-between px-4 py-3 border-b border-pf-border">
-          <span className="text-sm font-medium text-pf-text">
+      <div className="rounded-pf-lg bg-elevated border border-default overflow-hidden">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-default">
+          <span className="text-sm font-medium text-primary">
             {total > 0 ? `${total.toLocaleString()} users` : 'Users'}
           </span>
           <Button
@@ -426,7 +426,7 @@ function DrillDown({ cohortId, onBack }: DrillDownProps) {
             variant="ghost"
             onClick={handleExportCsv}
             disabled={users.length === 0}
-            className="inline-flex items-center gap-2 px-3 py-2 rounded-pf text-xs font-medium text-pf-text-secondary hover:text-pf-text bg-pf-overlay hover:bg-pf-border border border-pf-border transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            className="inline-flex items-center gap-2 px-3 py-2 rounded-pf text-xs font-medium text-secondary hover:text-primary bg-overlay hover:bg-default border border-default transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
           >
             <Download size={13} aria-hidden="true" />
             Export CSV
@@ -436,58 +436,58 @@ function DrillDown({ cohortId, onBack }: DrillDownProps) {
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-pf-border bg-pf-surface">
-                <th className="px-4 py-3 text-left text-pf-label font-semibold text-pf-text-muted uppercase tracking-wide">
+              <tr className="border-b border-default bg-surface">
+                <th className="px-4 py-3 text-left text-pf-label font-semibold text-tertiary uppercase tracking-wide">
                   Username
                 </th>
-                <th className="px-4 py-3 text-left text-pf-label font-semibold text-pf-text-muted uppercase tracking-wide">
+                <th className="px-4 py-3 text-left text-pf-label font-semibold text-tertiary uppercase tracking-wide">
                   Email
                 </th>
-                <th className="px-4 py-3 text-left text-pf-label font-semibold text-pf-text-muted uppercase tracking-wide">
+                <th className="px-4 py-3 text-left text-pf-label font-semibold text-tertiary uppercase tracking-wide">
                   Joined
                 </th>
-                <th className="px-4 py-3 text-left text-pf-label font-semibold text-pf-text-muted uppercase tracking-wide">
+                <th className="px-4 py-3 text-left text-pf-label font-semibold text-tertiary uppercase tracking-wide">
                   Last Active
                 </th>
-                <th className="px-4 py-3 text-right text-pf-label font-semibold text-pf-text-muted uppercase tracking-wide">
+                <th className="px-4 py-3 text-right text-pf-label font-semibold text-tertiary uppercase tracking-wide">
                   Trades
                 </th>
-                <th className="px-4 py-3 text-right text-pf-label font-semibold text-pf-text-muted uppercase tracking-wide">
+                <th className="px-4 py-3 text-right text-pf-label font-semibold text-tertiary uppercase tracking-wide">
                   Volume
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-pf-border">
+            <tbody className="divide-y divide-default">
               {loading ? (
                 Array.from({ length: 8 }).map((_, i) => <TableRowSkeleton key={i} />)
               ) : users.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-4 py-12 text-center text-sm text-pf-text-muted">
+                  <td colSpan={6} className="px-4 py-12 text-center text-sm text-tertiary">
                     No users match this segment yet
                   </td>
                 </tr>
               ) : (
                 users.map((user) => (
-                  <tr key={user.id} className="hover:bg-pf-surface transition-colors">
+                  <tr key={user.id} className="hover:bg-surface transition-colors">
                     <td className="px-4 py-3">
                       <Link
                         to={`/users/${user.id}`}
-                        className="font-medium text-pf-cyan-400 hover:text-pf-cyan-500 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 rounded-pf-sm"
+                        className="font-medium text-accent-text hover:text-accent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 rounded-pf-sm"
                       >
                         {user.username}
                       </Link>
                     </td>
-                    <td className="px-4 py-3 text-pf-text-secondary">{user.email}</td>
-                    <td className="px-4 py-3 text-pf-text-secondary tabular-nums">
+                    <td className="px-4 py-3 text-secondary">{user.email}</td>
+                    <td className="px-4 py-3 text-secondary tabular-nums">
                       {formatDate(user.joinedAt)}
                     </td>
-                    <td className="px-4 py-3 text-pf-text-secondary tabular-nums">
+                    <td className="px-4 py-3 text-secondary tabular-nums">
                       {formatDate(user.lastActiveAt)}
                     </td>
-                    <td className="px-4 py-3 text-right text-pf-text tabular-nums">
+                    <td className="px-4 py-3 text-right text-primary tabular-nums">
                       {user.tradeCount.toLocaleString()}
                     </td>
-                    <td className="px-4 py-3 text-right text-pf-text tabular-nums">
+                    <td className="px-4 py-3 text-right text-primary tabular-nums">
                       {user.totalVolume}
                     </td>
                   </tr>
@@ -499,8 +499,8 @@ function DrillDown({ cohortId, onBack }: DrillDownProps) {
 
         {/* Pagination */}
         {totalPages > 1 && (
-          <div className="flex items-center justify-between px-4 py-3 border-t border-pf-border">
-            <span className="text-xs text-pf-text-muted">
+          <div className="flex items-center justify-between px-4 py-3 border-t border-default">
+            <span className="text-xs text-tertiary">
               Page {page} of {totalPages}
             </span>
             <div className="flex gap-1">
@@ -509,7 +509,7 @@ function DrillDown({ cohortId, onBack }: DrillDownProps) {
                 variant="ghost"
                 onClick={() => handlePageChange(page - 1)}
                 disabled={page <= 1}
-                className="px-3 py-2 rounded-pf-sm text-xs text-pf-text-secondary hover:text-pf-text hover:bg-pf-overlay border border-pf-border disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                className="px-3 py-2 rounded-pf-sm text-xs text-secondary hover:text-primary hover:bg-overlay border border-default disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
               >
                 Previous
               </Button>
@@ -518,7 +518,7 @@ function DrillDown({ cohortId, onBack }: DrillDownProps) {
                 variant="ghost"
                 onClick={() => handlePageChange(page + 1)}
                 disabled={page >= totalPages}
-                className="px-3 py-2 rounded-pf-sm text-xs text-pf-text-secondary hover:text-pf-text hover:bg-pf-overlay border border-pf-border disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                className="px-3 py-2 rounded-pf-sm text-xs text-secondary hover:text-primary hover:bg-overlay border border-default disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
               >
                 Next
               </Button>
@@ -558,14 +558,14 @@ function OverviewGrid({ statsMap, loading, onViewUsers, onBroadcast }: OverviewG
           return (
             <article
               key={definition.id}
-              className={`rounded-pf-lg bg-pf-elevated border border-pf-border border-l-4 ${definition.borderColor} p-4 flex flex-col gap-3`}
+              className={`rounded-pf-lg bg-elevated border border-default border-l-4 ${definition.borderColor} p-4 flex flex-col gap-3`}
             >
               <div className="flex items-center gap-2">
                 <definition.icon size={18} className={`${definition.iconColor} shrink-0`} aria-hidden="true" />
-                <span className="text-sm font-semibold text-pf-text">{definition.label}</span>
+                <span className="text-sm font-semibold text-primary">{definition.label}</span>
               </div>
-              <p className="text-xs text-pf-text-muted">{definition.description}</p>
-              <p className="text-sm text-pf-text-muted py-4 text-center">No users match this segment yet</p>
+              <p className="text-xs text-tertiary">{definition.description}</p>
+              <p className="text-sm text-tertiary py-4 text-center">No users match this segment yet</p>
             </article>
           );
         }
@@ -619,10 +619,10 @@ export function Component() {
     <div className="p-6 space-y-6 animate-fade-in">
       {/* Page Header */}
       <div className="flex items-start gap-3">
-        <PieChart size={24} className="text-pf-cyan-400 shrink-0 mt-1" aria-hidden="true" />
+        <PieChart size={24} className="text-accent-text shrink-0 mt-1" aria-hidden="true" />
         <div>
-          <h1 className="text-xl font-bold text-pf-text">User Segmentation</h1>
-          <p className="text-sm text-pf-text-secondary mt-1">
+          <h1 className="text-xl font-bold text-primary">User Segmentation</h1>
+          <p className="text-sm text-secondary mt-1">
             Understand and act on user cohorts
           </p>
         </div>

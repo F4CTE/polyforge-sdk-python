@@ -63,22 +63,22 @@ interface TradesResponse {
 /* ─── Helpers ────────────────────────────────────────────────────────── */
 
 const STATUS_STYLES: Record<CopyStatus, { dot: string; bg: string; text: string }> = {
-  ACTIVE:  { dot: 'bg-pf-success', bg: 'bg-pf-success/10', text: 'text-pf-success' },
-  PAUSED:  { dot: 'bg-pf-warning',  bg: 'bg-pf-warning/10',  text: 'text-pf-warning' },
-  STOPPED: { dot: 'bg-pf-text-muted',   bg: 'bg-pf-text-muted/10',   text: 'text-pf-text-muted' },
+  ACTIVE:  { dot: 'bg-gain', bg: 'bg-gain/10', text: 'text-gain' },
+  PAUSED:  { dot: 'bg-warning',  bg: 'bg-warning/10',  text: 'text-warning' },
+  STOPPED: { dot: 'bg-tertiary',   bg: 'bg-tertiary/10',   text: 'text-tertiary' },
 };
 
 const MODE_STYLES: Record<CopyMode, { bg: string; text: string }> = {
-  PERCENTAGE: { bg: 'bg-pf-cyan-500/10', text: 'text-pf-cyan-400' },
+  PERCENTAGE: { bg: 'bg-accent/10', text: 'text-accent-text' },
   FIXED:      { bg: 'bg-pf-purple-500/10',  text: 'text-pf-purple-500' },
-  MIRROR:     { bg: 'bg-pf-success/10', text: 'text-pf-success' },
+  MIRROR:     { bg: 'bg-gain/10', text: 'text-gain' },
 };
 
 const TRADE_STATUS_STYLES: Record<TradeStatus, string> = {
-  FILLED:  'bg-pf-success/15 text-pf-success',
-  PARTIAL: 'bg-pf-warning/15 text-pf-warning',
-  FAILED:  'bg-pf-danger/15 text-pf-danger',
-  PENDING: 'bg-pf-text-muted/15 text-pf-text-muted',
+  FILLED:  'bg-gain/15 text-gain',
+  PARTIAL: 'bg-warning/15 text-warning',
+  FAILED:  'bg-loss/15 text-loss',
+  PENDING: 'bg-tertiary/15 text-tertiary',
 };
 
 function truncateAddress(addr: string): string {
@@ -120,19 +120,19 @@ function formatDateTime(d: string): string {
 function DetailSkeleton() {
   return (
     <div className="animate-fade-in p-6 max-w-5xl mx-auto space-y-6">
-      <div className="h-4 bg-pf-overlay rounded w-20 animate-pulse" />
-      <div className="h-6 bg-pf-overlay rounded w-[300px] animate-pulse" />
+      <div className="h-4 bg-overlay rounded w-20 animate-pulse" />
+      <div className="h-6 bg-overlay rounded w-[300px] animate-pulse" />
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {Array.from({ length: 4 }, (_, i) => (
-          <div key={i} className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4 space-y-2 animate-shimmer">
-            <div className="h-3 bg-pf-overlay rounded w-[60%]" />
-            <div className="h-5 bg-pf-overlay rounded w-[80%]" />
+          <div key={i} className="bg-elevated border border-default rounded-pf-lg p-4 space-y-2 animate-shimmer">
+            <div className="h-3 bg-overlay rounded w-[60%]" />
+            <div className="h-5 bg-overlay rounded w-[80%]" />
           </div>
         ))}
       </div>
-      <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4 animate-shimmer">
+      <div className="bg-elevated border border-default rounded-pf-lg p-4 animate-shimmer">
         {Array.from({ length: 5 }, (_, i) => (
-          <div key={i} className="h-3 bg-pf-overlay rounded w-full mb-3" />
+          <div key={i} className="h-3 bg-overlay rounded w-full mb-3" />
         ))}
       </div>
     </div>
@@ -180,18 +180,18 @@ function EditDialog({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-pf-backdrop backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="edit-config-title" onKeyDown={(e) => { if (e.key === 'Escape') onClose(); }}>
-      <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-6 w-full max-w-md space-y-5 animate-fade-in">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="edit-config-title" onKeyDown={(e) => { if (e.key === 'Escape') onClose(); }}>
+      <div className="bg-elevated border border-default rounded-pf-lg p-6 w-full max-w-md space-y-5 animate-fade-in">
         <div className="flex items-center justify-between">
-          <h2 id="edit-config-title" className="text-sm font-medium text-pf-text">Edit Config</h2>
-          <Button type="button" variant="ghost" size="icon" onClick={onClose} aria-label="Close edit config" className="text-pf-text-muted hover:text-pf-text transition-colors">
+          <h2 id="edit-config-title" className="text-sm font-medium text-primary">Edit Config</h2>
+          <Button type="button" variant="ghost" size="icon" onClick={onClose} aria-label="Close edit config" className="text-tertiary hover:text-primary transition-colors">
             <X className="size-4" />
           </Button>
         </div>
 
         {config.mode !== 'MIRROR' && (
           <div className="space-y-2">
-            <label htmlFor="edit-size-value" className="text-xs text-pf-text-secondary">
+            <label htmlFor="edit-size-value" className="text-xs text-secondary">
               {config.mode === 'PERCENTAGE' ? 'Size (%)' : 'Fixed Amount ($)'}
             </label>
             <Input
@@ -200,37 +200,37 @@ function EditDialog({
               min={0}
               value={sizeValue}
               onChange={(e) => setSizeValue(Number(e.target.value))}
-              className="w-full px-3 py-2 rounded-pf-sm text-sm bg-pf-surface text-pf-text border border-pf-border focus-visible:border-pf-cyan-500/50 focus-visible:outline-none font-mono"
+              className="w-full px-3 py-2 rounded-pf-sm text-sm bg-surface text-primary border border-default focus-visible:border-accent/50 focus-visible:outline-none font-mono"
             />
           </div>
         )}
 
         <div className="space-y-2">
-          <label htmlFor="edit-max-exposure" className="text-xs text-pf-text-secondary">Max Exposure ($)</label>
+          <label htmlFor="edit-max-exposure" className="text-xs text-secondary">Max Exposure ($)</label>
           <Input
             id="edit-max-exposure"
             type="number"
             min={0}
             value={maxExposure}
             onChange={(e) => setMaxExposure(Number(e.target.value))}
-            className="w-full px-3 py-2 rounded-pf-sm text-sm bg-pf-surface text-pf-text border border-pf-border focus-visible:border-pf-cyan-500/50 focus-visible:outline-none font-mono"
+            className="w-full px-3 py-2 rounded-pf-sm text-sm bg-surface text-primary border border-default focus-visible:border-accent/50 focus-visible:outline-none font-mono"
           />
         </div>
 
         <div className="space-y-2">
-          <label htmlFor="edit-max-daily-loss" className="text-xs text-pf-text-secondary">Max Daily Loss ($)</label>
+          <label htmlFor="edit-max-daily-loss" className="text-xs text-secondary">Max Daily Loss ($)</label>
           <Input
             id="edit-max-daily-loss"
             type="number"
             min={0}
             value={maxDailyLoss}
             onChange={(e) => setMaxDailyLoss(Number(e.target.value))}
-            className="w-full px-3 py-2 rounded-pf-sm text-sm bg-pf-surface text-pf-text border border-pf-border focus-visible:border-pf-cyan-500/50 focus-visible:outline-none font-mono"
+            className="w-full px-3 py-2 rounded-pf-sm text-sm bg-surface text-primary border border-default focus-visible:border-accent/50 focus-visible:outline-none font-mono"
           />
         </div>
 
         <div className="space-y-2">
-          <label htmlFor="edit-price-offset" className="text-xs text-pf-text-secondary">Price Offset (%)</label>
+          <label htmlFor="edit-price-offset" className="text-xs text-secondary">Price Offset (%)</label>
           <Input
             id="edit-price-offset"
             type="number"
@@ -239,7 +239,7 @@ function EditDialog({
             step={0.1}
             value={priceOffset}
             onChange={(e) => setPriceOffset(Number(e.target.value))}
-            className="w-full px-3 py-2 rounded-pf-sm text-sm bg-pf-surface text-pf-text border border-pf-border focus-visible:border-pf-cyan-500/50 focus-visible:outline-none font-mono"
+            className="w-full px-3 py-2 rounded-pf-sm text-sm bg-surface text-primary border border-default focus-visible:border-accent/50 focus-visible:outline-none font-mono"
           />
         </div>
 
@@ -248,7 +248,7 @@ function EditDialog({
             type="button"
             variant="secondary"
             onClick={onClose}
-            className="px-4 py-2 rounded-pf-sm text-sm text-pf-text-secondary hover:text-pf-text border border-pf-border hover:border-pf-border-strong transition-colors"
+            className="px-4 py-2 rounded-pf-sm text-sm text-secondary hover:text-primary border border-default hover:border-strong transition-colors"
           >
             Cancel
           </Button>
@@ -256,7 +256,7 @@ function EditDialog({
             type="button"
             onClick={handleSave}
             disabled={saving}
-            className="flex items-center gap-2 px-4 py-2 rounded-pf-sm text-sm bg-pf-cyan-500 text-pf-text-contrast font-medium hover:bg-pf-cyan-400 disabled:opacity-40 transition-colors"
+            className="flex items-center gap-2 px-4 py-2 rounded-pf-sm text-sm bg-accent text-inverse font-medium hover:bg-accent-text disabled:opacity-40 transition-colors"
           >
             <Check className="size-4" />
             {saving ? 'Saving...' : 'Save'}
@@ -350,13 +350,13 @@ export function Component() {
   if (notFound) {
     return (
       <div className="animate-fade-in p-6 max-w-5xl mx-auto">
-        <Link to="/copy" className="flex items-center gap-2 text-sm text-pf-text-secondary hover:text-pf-cyan-400 transition-colors mb-6">
+        <Link to="/copy" className="flex items-center gap-2 text-sm text-secondary hover:text-accent-text transition-colors mb-6">
           <ArrowLeft className="size-4" /> Back to Copy Trading
         </Link>
         <div className="flex flex-col items-center justify-center py-20 text-center">
-          <Copy className="size-10 text-pf-text-muted mb-4" />
-          <p className="text-pf-text font-medium">Config not found</p>
-          <p className="text-sm text-pf-text-muted mt-1">This copy config does not exist or has been removed.</p>
+          <Copy className="size-10 text-tertiary mb-4" />
+          <p className="text-primary font-medium">Config not found</p>
+          <p className="text-sm text-tertiary mt-1">This copy config does not exist or has been removed.</p>
         </div>
       </div>
     );
@@ -365,14 +365,14 @@ export function Component() {
   if (error || !config) {
     return (
       <div className="animate-fade-in p-6 max-w-5xl mx-auto">
-        <Link to="/copy" className="flex items-center gap-2 text-sm text-pf-text-secondary hover:text-pf-cyan-400 transition-colors mb-6">
+        <Link to="/copy" className="flex items-center gap-2 text-sm text-secondary hover:text-accent-text transition-colors mb-6">
           <ArrowLeft className="size-4" /> Back to Copy Trading
         </Link>
         <div className="flex flex-col items-center justify-center py-20 text-center">
-          <AlertCircle className="size-10 text-pf-danger mb-4" />
-          <p className="text-pf-text font-medium">Something went wrong</p>
-          <p className="text-sm text-pf-text-muted mt-1">Failed to load copy config. Please try again.</p>
-          <Button type="button" onClick={loadConfig} className="mt-4 px-4 py-2 rounded-pf-sm text-sm bg-pf-elevated border border-pf-border text-pf-text hover:border-pf-border-strong transition-colors">
+          <AlertCircle className="size-10 text-loss mb-4" />
+          <p className="text-primary font-medium">Something went wrong</p>
+          <p className="text-sm text-tertiary mt-1">Failed to load copy config. Please try again.</p>
+          <Button type="button" onClick={loadConfig} className="mt-4 px-4 py-2 rounded-pf-sm text-sm bg-elevated border border-default text-primary hover:border-strong transition-colors">
             Retry
           </Button>
         </div>
@@ -386,25 +386,25 @@ export function Component() {
   return (
     <div className="animate-fade-in p-6 max-w-5xl mx-auto space-y-6">
       {/* Back link */}
-      <Link to="/copy" className="flex items-center gap-2 text-sm text-pf-text-secondary hover:text-pf-cyan-400 transition-colors">
+      <Link to="/copy" className="flex items-center gap-2 text-sm text-secondary hover:text-accent-text transition-colors">
         <ArrowLeft className="size-4" /> Back to Copy Trading
       </Link>
 
       {/* Config header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          <div className="size-10 rounded-pf-full bg-pf-cyan-500/15 border border-pf-cyan-500/25 flex items-center justify-center">
-            <Copy className="size-5 text-pf-cyan-400" />
+          <div className="size-10 rounded-pf-full bg-accent/15 border border-accent/25 flex items-center justify-center">
+            <Copy className="size-5 text-accent-text" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <span className="font-mono text-sm text-pf-text">{truncateAddress(config.targetWallet)}</span>
+              <span className="font-mono text-sm text-primary">{truncateAddress(config.targetWallet)}</span>
               <Button
                 type="button"
                 variant="ghost"
                 size="icon-sm"
                 onClick={() => copyToClipboard(config.targetWallet)}
-                className="text-pf-text-muted hover:text-pf-text transition-colors shrink-0"
+                className="text-tertiary hover:text-primary transition-colors shrink-0"
                 title="Copy address"
                 aria-label="Copy wallet address"
               >
@@ -429,7 +429,7 @@ export function Component() {
             type="button"
             variant="secondary"
             onClick={() => setShowEdit(true)}
-            className="flex items-center gap-2 px-4 py-2 rounded-pf-sm text-sm font-medium border border-pf-border text-pf-text-secondary hover:border-pf-border-strong hover:text-pf-text transition-colors"
+            className="flex items-center gap-2 px-4 py-2 rounded-pf-sm text-sm font-medium border border-default text-secondary hover:border-strong hover:text-primary transition-colors"
           >
             <Pencil className="size-4" /> Edit
           </Button>
@@ -439,7 +439,7 @@ export function Component() {
               variant="ghost"
               onClick={() => doAction('pause')}
               disabled={actionLoading}
-              className="flex items-center gap-2 px-4 py-2 rounded-pf-sm text-sm font-medium border border-pf-warning/30 text-pf-warning hover:bg-pf-warning/10 disabled:opacity-40 transition-colors"
+              className="flex items-center gap-2 px-4 py-2 rounded-pf-sm text-sm font-medium border border-warning/30 text-warning hover:bg-warning/10 disabled:opacity-40 transition-colors"
             >
               <Pause className="size-4" /> Pause
             </Button>
@@ -450,7 +450,7 @@ export function Component() {
               variant="ghost"
               onClick={() => doAction('resume')}
               disabled={actionLoading}
-              className="flex items-center gap-2 px-4 py-2 rounded-pf-sm text-sm font-medium border border-pf-cyan-500/30 text-pf-cyan-400 hover:bg-pf-cyan-500/10 disabled:opacity-40 transition-colors"
+              className="flex items-center gap-2 px-4 py-2 rounded-pf-sm text-sm font-medium border border-accent/30 text-accent-text hover:bg-accent/10 disabled:opacity-40 transition-colors"
             >
               <Play className="size-4" /> Resume
             </Button>
@@ -461,7 +461,7 @@ export function Component() {
               variant="danger"
               onClick={() => doAction('stop')}
               disabled={actionLoading}
-              className="flex items-center gap-2 px-4 py-2 rounded-pf-sm text-sm font-medium border border-pf-danger/30 text-pf-danger hover:bg-pf-danger/10 disabled:opacity-40 transition-colors"
+              className="flex items-center gap-2 px-4 py-2 rounded-pf-sm text-sm font-medium border border-loss/30 text-loss hover:bg-loss/10 disabled:opacity-40 transition-colors"
             >
               <Square className="size-4" /> Stop
             </Button>
@@ -471,61 +471,61 @@ export function Component() {
 
       {/* Stats cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4">
-          <div className="text-xs text-pf-text-secondary mb-1">Total P&L</div>
-          <div className={`text-lg font-mono font-semibold ${config.totalPnl >= 0 ? 'text-pf-success' : 'text-pf-danger'}`}>
+        <div className="bg-elevated border border-default rounded-pf-lg p-4">
+          <div className="text-xs text-secondary mb-1">Total P&L</div>
+          <div className={`text-lg font-mono font-semibold ${config.totalPnl >= 0 ? 'text-gain' : 'text-loss'}`}>
             {formatPnl(config.totalPnl)}
           </div>
         </div>
-        <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4">
-          <div className="text-xs text-pf-text-secondary mb-1">Total Trades</div>
-          <div className="text-lg font-mono font-semibold text-pf-text">{config.totalCopiedTrades}</div>
+        <div className="bg-elevated border border-default rounded-pf-lg p-4">
+          <div className="text-xs text-secondary mb-1">Total Trades</div>
+          <div className="text-lg font-mono font-semibold text-primary">{config.totalCopiedTrades}</div>
         </div>
-        <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4">
-          <div className="text-xs text-pf-text-secondary mb-1">Win Rate</div>
-          <div className="text-lg font-mono font-semibold text-pf-text">{config.winRate}%</div>
+        <div className="bg-elevated border border-default rounded-pf-lg p-4">
+          <div className="text-xs text-secondary mb-1">Win Rate</div>
+          <div className="text-lg font-mono font-semibold text-primary">{config.winRate}%</div>
         </div>
-        <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4">
-          <div className="text-xs text-pf-text-secondary mb-1">Avg Size</div>
-          <div className="text-lg font-mono font-semibold text-pf-text">${config.avgSize.toFixed(2)}</div>
+        <div className="bg-elevated border border-default rounded-pf-lg p-4">
+          <div className="text-xs text-secondary mb-1">Avg Size</div>
+          <div className="text-lg font-mono font-semibold text-primary">${config.avgSize.toFixed(2)}</div>
         </div>
       </div>
 
       {/* Risk settings */}
-      <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4">
-        <div className="text-xs text-pf-text-secondary mb-3 uppercase tracking-wider font-medium">Risk Settings</div>
+      <div className="bg-elevated border border-default rounded-pf-lg p-4">
+        <div className="text-xs text-secondary mb-3 uppercase tracking-wider font-medium">Risk Settings</div>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div>
-            <span className="text-xs text-pf-text-muted">Max Exposure</span>
-            <p className="font-mono text-sm text-pf-text">${config.maxExposure.toLocaleString()}</p>
+            <span className="text-xs text-tertiary">Max Exposure</span>
+            <p className="font-mono text-sm text-primary">${config.maxExposure.toLocaleString()}</p>
           </div>
           <div>
-            <span className="text-xs text-pf-text-muted">Max Daily Loss</span>
-            <p className="font-mono text-sm text-pf-text">${config.maxDailyLoss.toLocaleString()}</p>
+            <span className="text-xs text-tertiary">Max Daily Loss</span>
+            <p className="font-mono text-sm text-primary">${config.maxDailyLoss.toLocaleString()}</p>
           </div>
           <div>
-            <span className="text-xs text-pf-text-muted">Price Offset</span>
-            <p className="font-mono text-sm text-pf-text">{config.priceOffset > 0 ? '+' : ''}{config.priceOffset}%</p>
+            <span className="text-xs text-tertiary">Price Offset</span>
+            <p className="font-mono text-sm text-primary">{config.priceOffset > 0 ? '+' : ''}{config.priceOffset}%</p>
           </div>
         </div>
       </div>
 
       {/* Trade history table */}
-      <div className="bg-pf-elevated border border-pf-border rounded-pf-lg overflow-hidden">
-        <div className="px-4 py-3 border-b border-pf-border">
-          <h2 className="text-sm font-medium text-pf-text">Trade History</h2>
+      <div className="bg-elevated border border-default rounded-pf-lg overflow-hidden">
+        <div className="px-4 py-3 border-b border-default">
+          <h2 className="text-sm font-medium text-primary">Trade History</h2>
         </div>
         {tradesLoading && trades.length === 0 ? (
           <div className="p-4 space-y-3 animate-shimmer">
             {Array.from({ length: 5 }, (_, i) => (
-              <div key={i} className="h-3 bg-pf-overlay rounded w-full" />
+              <div key={i} className="h-3 bg-overlay rounded w-full" />
             ))}
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm" aria-label="Trade history">
               <thead>
-                <tr className="bg-pf-surface text-left text-xs text-pf-text-secondary uppercase tracking-wider">
+                <tr className="bg-surface text-left text-xs text-secondary uppercase tracking-wider">
                   <th scope="col" className="px-4 py-3 font-medium">Market</th>
                   <th scope="col" className="px-4 py-3 font-medium">Side</th>
                   <th scope="col" className="px-4 py-3 font-medium">Outcome</th>
@@ -537,38 +537,38 @@ export function Component() {
                   <th scope="col" className="px-4 py-3 font-medium text-right">Date</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-pf-border-subtle">
+              <tbody className="divide-y divide-subtle">
                 {trades.length === 0 ? (
                   <tr>
                     <td colSpan={9}>
                       <div className="flex flex-col items-center justify-center py-12 text-center">
-                        <p className="text-sm text-pf-text-muted">No copied trades yet.</p>
+                        <p className="text-sm text-tertiary">No copied trades yet.</p>
                       </div>
                     </td>
                   </tr>
                 ) : (
                   trades.map((trade) => (
-                    <tr key={trade.id} className="hover:bg-pf-surface/50 transition-colors">
-                      <td className="px-4 py-3 text-pf-text max-w-[180px] truncate">{trade.market}</td>
+                    <tr key={trade.id} className="hover:bg-surface/50 transition-colors">
+                      <td className="px-4 py-3 text-primary max-w-[180px] truncate">{trade.market}</td>
                       <td className="px-4 py-3">
                         <span className={`px-2 py-1 rounded text-pf-label font-semibold ${
-                          trade.side === 'BUY' ? 'bg-pf-success/15 text-pf-success' : 'bg-pf-danger/15 text-pf-danger'
+                          trade.side === 'BUY' ? 'bg-gain/15 text-gain' : 'bg-loss/15 text-loss'
                         }`}>
                           {trade.side}
                         </span>
                       </td>
                       <td className="px-4 py-3">
                         <span className={`px-2 py-1 rounded text-pf-label font-semibold ${
-                          trade.outcome === 'YES' ? 'bg-pf-success/15 text-pf-success' : 'bg-pf-danger/15 text-pf-danger'
+                          trade.outcome === 'YES' ? 'bg-gain/15 text-gain' : 'bg-loss/15 text-loss'
                         }`}>
                           {trade.outcome}
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-right font-mono text-pf-text-secondary">{trade.sourceSize}</td>
-                      <td className="px-4 py-3 text-right font-mono text-pf-text-secondary">{trade.copiedSize}</td>
-                      <td className="px-4 py-3 text-right font-mono text-pf-text-secondary">{trade.price}</td>
+                      <td className="px-4 py-3 text-right font-mono text-secondary">{trade.sourceSize}</td>
+                      <td className="px-4 py-3 text-right font-mono text-secondary">{trade.copiedSize}</td>
+                      <td className="px-4 py-3 text-right font-mono text-secondary">{trade.price}</td>
                       <td className="px-4 py-3 text-right">
-                        <span className={`font-mono font-medium ${trade.pnl >= 0 ? 'text-pf-success' : 'text-pf-danger'}`}>
+                        <span className={`font-mono font-medium ${trade.pnl >= 0 ? 'text-gain' : 'text-loss'}`}>
                           {formatPnl(trade.pnl)}
                         </span>
                       </td>
@@ -577,7 +577,7 @@ export function Component() {
                           {trade.status}
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-right font-mono text-pf-text-secondary text-xs">{formatDateTime(trade.timestamp)}</td>
+                      <td className="px-4 py-3 text-right font-mono text-secondary text-xs">{formatDateTime(trade.timestamp)}</td>
                     </tr>
                   ))
                 )}
@@ -597,11 +597,11 @@ export function Component() {
             onClick={() => setTradePage((p) => Math.max(1, p - 1))}
             disabled={tradePage === 1}
             aria-label="Previous page"
-            className="p-2 rounded-pf text-pf-text-secondary hover:text-pf-text hover:bg-pf-elevated disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+            className="p-2 rounded-pf text-secondary hover:text-primary hover:bg-elevated disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
           >
             <ChevronLeft className="size-4" />
           </Button>
-          <span className="text-sm font-mono text-pf-text-secondary" aria-live="polite">
+          <span className="text-sm font-mono text-secondary" aria-live="polite">
             Page {tradePage} of {tradeTotalPages}
           </span>
           <Button
@@ -611,7 +611,7 @@ export function Component() {
             onClick={() => setTradePage((p) => Math.min(tradeTotalPages, p + 1))}
             disabled={tradePage === tradeTotalPages}
             aria-label="Next page"
-            className="p-2 rounded-pf text-pf-text-secondary hover:text-pf-text hover:bg-pf-elevated disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+            className="p-2 rounded-pf text-secondary hover:text-primary hover:bg-elevated disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
           >
             <ChevronRight className="size-4" />
           </Button>

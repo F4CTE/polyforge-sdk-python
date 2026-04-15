@@ -123,14 +123,14 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
     <aside
       data-tour="sidebar"
       aria-label="Main navigation"
-      className={`flex flex-col h-full bg-pf-elevated border-r border-pf-border transition-all duration-pf-normal ${collapsed ? 'w-16 min-w-16' : 'w-60 min-w-60'}`}
+      className={`flex flex-col h-full bg-elevated border-r border-default transition-all duration-pf-normal ${collapsed ? 'w-16 min-w-16' : 'w-60 min-w-60'}`}
     >
       {/* Logo */}
-      <div className="flex items-center gap-3 px-4 h-14 border-b border-pf-border">
+      <div className="flex items-center gap-3 px-4 h-14 border-b border-default">
         <Link to="/markets" className="flex items-center gap-3 min-w-0">
-          <PolyforgeLogomark size={28} className="shrink-0 text-pf-cyan-500" />
+          <PolyforgeLogomark size={28} className="shrink-0 text-accent" />
           {!collapsed && (
-            <span className="text-pf-text font-semibold text-base tracking-tight">
+            <span className="text-primary font-semibold text-base tracking-tight">
               Polyforge
             </span>
           )}
@@ -142,7 +142,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
         {navSections.map((section) => (
           <div key={section.title}>
             {!collapsed && (
-              <div className="px-2 mb-1 text-pf-label font-semibold uppercase tracking-wider text-pf-text-secondary">
+              <div className="px-2 mb-1 text-pf-label font-semibold uppercase tracking-wider text-secondary">
                 {section.title}
               </div>
             )}
@@ -153,10 +153,10 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
                   to={item.route}
                   title={collapsed ? item.label : undefined}
                   className={({ isActive }) =>
-                    `flex items-center gap-3 px-2 py-2 rounded-pf-sm text-sm transition-colors duration-pf-fast focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 focus-visible:rounded-lg ${
+                    `flex items-center gap-3 px-2 py-2 rounded-pf-sm text-sm transition-colors duration-pf-fast focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 focus-visible:rounded-lg ${
                       isActive
-                        ? 'bg-pf-cyan-500/10 text-pf-cyan-400'
-                        : 'text-pf-text-secondary hover:bg-pf-surface hover:text-pf-text'
+                        ? 'bg-accent/10 text-accent-text'
+                        : 'text-secondary hover:bg-surface hover:text-primary'
                     }`
                   }
                 >
@@ -170,29 +170,29 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
       </nav>
 
       {/* Bottom collapse + settings */}
-      <div className="border-t border-pf-border px-2 py-2 space-y-1">
+      <div className="border-t border-default px-2 py-2 space-y-1">
         {/* Edge Rating */}
         {myScore !== null && (
           <Link
             to="/profile/me"
             data-tour="edge-rating"
-            className="flex items-center gap-3 px-2 py-2 rounded-pf-sm text-sm transition-colors duration-pf-fast text-pf-text-secondary hover:bg-pf-surface hover:text-pf-text"
+            className="flex items-center gap-3 px-2 py-2 rounded-pf-sm text-sm transition-colors duration-pf-fast text-secondary hover:bg-surface hover:text-primary"
             title={collapsed ? `Edge Rating: ${myScore}` : undefined}
           >
             <TrendingUp size={18} className={`shrink-0 ${
-              myScore >= 80 ? 'text-pf-success' :
-              myScore >= 60 ? 'text-pf-cyan-400' :
-              myScore >= 40 ? 'text-pf-warning' :
-              'text-pf-danger'
+              myScore >= 80 ? 'text-gain' :
+              myScore >= 60 ? 'text-accent-text' :
+              myScore >= 40 ? 'text-warning' :
+              'text-loss'
             }`} />
             {!collapsed && (
               <span className="flex items-center gap-2">
                 <span>Edge Rating</span>
                 <span className={`font-mono font-bold text-xs ${
-                  myScore >= 80 ? 'text-pf-success' :
-                  myScore >= 60 ? 'text-pf-cyan-400' :
-                  myScore >= 40 ? 'text-pf-warning' :
-                  'text-pf-danger'
+                  myScore >= 80 ? 'text-gain' :
+                  myScore >= 60 ? 'text-accent-text' :
+                  myScore >= 40 ? 'text-warning' :
+                  'text-loss'
                 }`}>{myScore}</span>
               </span>
             )}
@@ -201,7 +201,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
         <button
           type="button"
           onClick={onToggle}
-          className="flex items-center gap-3 px-2 py-2 rounded-pf-sm text-sm transition-colors duration-pf-fast text-pf-text-secondary hover:bg-pf-surface hover:text-pf-text w-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 focus-visible:rounded-lg"
+          className="flex items-center gap-3 px-2 py-2 rounded-pf-sm text-sm transition-colors duration-pf-fast text-secondary hover:bg-surface hover:text-primary w-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 focus-visible:rounded-lg"
           aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
         >
           {collapsed ? (
@@ -214,10 +214,10 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
           to="/settings"
           title={collapsed ? 'Settings' : undefined}
           className={({ isActive }) =>
-            `flex items-center gap-3 px-2 py-2 rounded-pf-sm text-sm transition-colors duration-pf-fast focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 focus-visible:rounded-lg ${
+            `flex items-center gap-3 px-2 py-2 rounded-pf-sm text-sm transition-colors duration-pf-fast focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 focus-visible:rounded-lg ${
               isActive
-                ? 'bg-pf-cyan-500/10 text-pf-cyan-400'
-                : 'text-pf-text-secondary hover:bg-pf-surface hover:text-pf-text'
+                ? 'bg-accent/10 text-accent-text'
+                : 'text-secondary hover:bg-surface hover:text-primary'
             }`
           }
         >

@@ -18,13 +18,13 @@ import { Badge, METHOD_CLS, type Lang } from './api-docs-primitives';
 function PublicHeader() {
   const { isDark, toggle } = useThemeStore();
   return (
-    <header className="shrink-0 flex items-center justify-between px-5 h-[57px] border-b border-pf-border bg-pf-surface">
+    <header className="shrink-0 flex items-center justify-between px-5 h-[57px] border-b border-default bg-surface">
       <Link to="/" className="flex items-center gap-3">
-        <span className="text-sm font-bold tracking-tight text-pf-text">
-          <span className="text-pf-cyan-400">Poly</span>forge
+        <span className="text-sm font-bold tracking-tight text-primary">
+          <span className="text-accent-text">Poly</span>forge
         </span>
-        <span className="text-pf-border-strong text-sm font-light select-none">/</span>
-        <span className="text-xs font-medium text-pf-text-secondary">API Reference</span>
+        <span className="text-strong text-sm font-light select-none">/</span>
+        <span className="text-xs font-medium text-secondary">API Reference</span>
       </Link>
       <div className="flex items-center gap-2">
         <Button
@@ -33,19 +33,19 @@ function PublicHeader() {
           size="icon"
           onClick={toggle}
           aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
-          className="min-w-[36px] min-h-[36px] flex items-center justify-center rounded-pf text-pf-text-muted hover:text-pf-text hover:bg-pf-overlay transition-colors cursor-pointer"
+          className="min-w-[36px] min-h-[36px] flex items-center justify-center rounded-pf text-tertiary hover:text-primary hover:bg-overlay transition-colors cursor-pointer"
         >
           {isDark ? <Sun size={15} /> : <Moon size={15} />}
         </Button>
         <Link
           to="/login"
-          className="text-sm font-medium text-pf-text-secondary hover:text-pf-text transition-colors px-3 py-2"
+          className="text-sm font-medium text-secondary hover:text-primary transition-colors px-3 py-2"
         >
           Sign in
         </Link>
         <Link
           to="/register"
-          className="text-sm font-semibold px-4 py-2 rounded-pf bg-pf-cyan-500 text-pf-text-contrast hover:bg-pf-cyan-400 transition-colors duration-pf-fast"
+          className="text-sm font-semibold px-4 py-2 rounded-pf bg-accent text-inverse hover:bg-accent-text transition-colors duration-pf-fast"
         >
           Sign up free
         </Link>
@@ -66,7 +66,7 @@ function OnThisPage({ sectionId, onSelect }: TocProps) {
   if (!section) return null;
   return (
     <div className="hidden xl:flex flex-col w-48 shrink-0 pl-6 pt-6 gap-1">
-      <p className="text-pf-caption font-semibold text-pf-text-muted uppercase tracking-wider mb-2">
+      <p className="text-pf-caption font-semibold text-tertiary uppercase tracking-wider mb-2">
         On this page
       </p>
       {section.eps.map(ep => (
@@ -75,7 +75,7 @@ function OnThisPage({ sectionId, onSelect }: TocProps) {
           variant="ghost"
           key={`${ep.method}-${ep.path}`}
           onClick={() => onSelect(`${ep.method}-${ep.path}`)}
-          className="text-xs text-pf-text-muted hover:text-pf-text py-1 cursor-pointer text-left flex items-center gap-2 truncate"
+          className="text-xs text-tertiary hover:text-primary py-1 cursor-pointer text-left flex items-center gap-2 truncate"
         >
           <Badge text={ep.method} cls={`${METHOD_CLS[ep.method]} shrink-0`} />
           <span className="truncate">{ep.summary}</span>
@@ -121,11 +121,11 @@ export function Component() {
       {mobileSidebarOpen && (
         <div className="fixed inset-0 z-50 lg:hidden">
           <div
-            className="absolute inset-0 bg-pf-backdrop-light"
+            className="absolute inset-0 bg-black/50"
             onClick={() => setMobileSidebarOpen(false)}
             aria-hidden="true"
           />
-          <div className="relative z-50 h-full w-72 bg-pf-surface">
+          <div className="relative z-50 h-full w-72 bg-surface">
             <DocsSidebar
               activeId={activeId}
               onNavigate={id => { navigate(id); setMobileSidebarOpen(false); }}
@@ -140,18 +140,18 @@ export function Component() {
       </div>
 
       {/* Content area */}
-      <div ref={contentRef} className="flex flex-1 min-w-0 overflow-y-auto bg-pf-base flex-col">
+      <div ref={contentRef} className="flex flex-1 min-w-0 overflow-y-auto bg-app flex-col">
         {/* Breadcrumb bar */}
         <nav
           aria-label="Breadcrumb"
-          className="sticky top-0 z-10 flex items-center gap-2 px-6 h-11 bg-pf-surface/80 backdrop-blur-sm border-b border-pf-border text-xs text-pf-text-muted shrink-0"
+          className="sticky top-0 z-10 flex items-center gap-2 px-6 h-11 bg-surface/80 backdrop-blur-sm border-b border-default text-xs text-tertiary shrink-0"
         >
           {/* Mobile docs menu button — visible only below lg */}
           <Button
             type="button"
             variant="ghost"
             onClick={() => setMobileSidebarOpen(true)}
-            className="lg:hidden flex items-center gap-2 mr-2 text-pf-text-muted hover:text-pf-text transition-colors cursor-pointer"
+            className="lg:hidden flex items-center gap-2 mr-2 text-tertiary hover:text-primary transition-colors cursor-pointer"
             aria-label="Open docs navigation"
           >
             <BookOpen size={16} />
@@ -165,7 +165,7 @@ export function Component() {
               <ChevronRight className="size-3 shrink-0" />
             </>
           )}
-          <span className="text-pf-text-secondary">{currentLabel}</span>
+          <span className="text-secondary">{currentLabel}</span>
         </nav>
 
         {/* Main content + optional TOC */}
@@ -184,7 +184,7 @@ export function Component() {
   /* ── Authenticated layout ── */
   if (user) {
     return (
-      <div className="flex h-screen bg-pf-base text-pf-text overflow-hidden animate-fade-in">
+      <div className="flex h-screen bg-app text-primary overflow-hidden animate-fade-in">
         {/* App sidebar */}
         <div className={`hidden md:block overflow-hidden transition-[width,min-width] duration-pf-normal ${sidebarCollapsed ? 'w-16 min-w-16' : 'w-60 min-w-60'}`}>
           <Sidebar collapsed={sidebarCollapsed} onToggle={toggleSidebar} />
@@ -192,7 +192,7 @@ export function Component() {
         {/* Mobile app sidebar overlay */}
         {mobileOpen && (
           <div className="fixed inset-0 z-40 md:hidden" role="dialog" aria-modal="true" aria-label="Navigation menu">
-            <div className="absolute inset-0 bg-pf-backdrop-light" onClick={() => setMobileOpen(false)} aria-hidden="true" />
+            <div className="absolute inset-0 bg-black/50" onClick={() => setMobileOpen(false)} aria-hidden="true" />
             <div className="relative z-50 h-full w-60">
               <Sidebar collapsed={false} onToggle={() => setMobileOpen(false)} />
             </div>
@@ -205,7 +205,7 @@ export function Component() {
               variant="ghost"
               size="icon"
               onClick={() => setMobileOpen(true)}
-              className="min-h-[44px] min-w-[44px] flex items-center justify-center ml-2 rounded-pf-sm text-pf-text-muted hover:bg-pf-elevated hover:text-pf-text transition-colors md:hidden"
+              className="min-h-[44px] min-w-[44px] flex items-center justify-center ml-2 rounded-pf-sm text-tertiary hover:bg-elevated hover:text-primary transition-colors md:hidden"
               aria-label="Open navigation menu"
             >
               <Menu size={20} />
@@ -222,7 +222,7 @@ export function Component() {
 
   /* ── Public layout ── */
   return (
-    <div className="flex flex-col h-screen bg-pf-base text-pf-text overflow-hidden animate-fade-in">
+    <div className="flex flex-col h-screen bg-app text-primary overflow-hidden animate-fade-in">
       <PublicHeader />
       <div className="flex flex-1 min-h-0 overflow-hidden">
         {docsPanel}

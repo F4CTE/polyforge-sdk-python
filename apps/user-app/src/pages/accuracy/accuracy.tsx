@@ -40,7 +40,7 @@ interface AccuracyData {
 /* ─── Skeleton ───────────────────────────────────────────────────────── */
 
 function Skeleton({ className }: { className?: string }) {
-  return <div className={`bg-pf-overlay rounded animate-pulse ${className ?? ''}`} />;
+  return <div className={`bg-overlay rounded animate-pulse ${className ?? ''}`} />;
 }
 
 function PageSkeleton() {
@@ -72,9 +72,9 @@ function StatCard({
   const [showTip, setShowTip] = useState(false);
 
   return (
-    <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-5 relative">
+    <div className="bg-elevated border border-default rounded-pf-lg p-5 relative">
       <div className="flex items-center gap-2 mb-2">
-        <span className="text-xs font-medium uppercase tracking-wider text-pf-text-secondary">{label}</span>
+        <span className="text-xs font-medium uppercase tracking-wider text-secondary">{label}</span>
         {tooltip && (
           <Button
             type="button"
@@ -85,16 +85,16 @@ function StatCard({
             onFocus={() => setShowTip(true)}
             onBlur={() => setShowTip(false)}
             aria-label={`Info: ${label}`}
-            className="text-pf-text-muted hover:text-pf-text-secondary transition-colors focus-visible:outline-none"
+            className="text-tertiary hover:text-secondary transition-colors focus-visible:outline-none"
           >
             <Info className="size-4" />
           </Button>
         )}
       </div>
-      <span className="text-3xl font-mono font-semibold text-pf-text">{value}</span>
-      {sub && <p className="text-xs text-pf-text-muted mt-1">{sub}</p>}
+      <span className="text-3xl font-mono font-semibold text-primary">{value}</span>
+      {sub && <p className="text-xs text-tertiary mt-1">{sub}</p>}
       {showTip && tooltip && (
-        <div className="absolute top-full left-0 z-20 mt-2 w-56 rounded-pf-sm bg-pf-elevated border border-pf-border shadow-pf-lg p-3 text-xs text-pf-text-secondary leading-relaxed">
+        <div className="absolute top-full left-0 z-20 mt-2 w-56 rounded-pf-sm bg-elevated border border-default shadow-pf-lg p-3 text-xs text-secondary leading-relaxed">
           {tooltip}
         </div>
       )}
@@ -147,9 +147,9 @@ export function Component() {
     return (
       <div className="animate-fade-in p-6 max-w-5xl mx-auto">
         <div className="flex flex-col items-center justify-center py-20 text-center">
-          <Target className="size-10 text-pf-text-muted mb-4" aria-hidden="true" />
-          <p className="text-pf-text font-medium">Failed to load accuracy data</p>
-          <p className="text-sm text-pf-text-muted mt-1">{error}</p>
+          <Target className="size-10 text-tertiary mb-4" aria-hidden="true" />
+          <p className="text-primary font-medium">Failed to load accuracy data</p>
+          <p className="text-sm text-tertiary mt-1">{error}</p>
         </div>
       </div>
     );
@@ -160,13 +160,13 @@ export function Component() {
     return (
       <div className="animate-fade-in p-6 max-w-5xl mx-auto">
         <div className="flex items-center gap-2 mb-6">
-          <Target className="size-5 text-pf-text-muted" aria-hidden="true" />
-          <h1 className="text-2xl font-semibold text-pf-text">Accuracy</h1>
+          <Target className="size-5 text-tertiary" aria-hidden="true" />
+          <h1 className="text-2xl font-semibold text-primary">Accuracy</h1>
         </div>
-        <div className="flex flex-col items-center justify-center py-24 text-center bg-pf-elevated border border-pf-border rounded-pf-lg">
-          <Target className="size-12 text-pf-text-muted mb-4 opacity-40" aria-hidden="true" />
-          <p className="text-pf-text font-medium text-lg">No predictions yet</p>
-          <p className="text-sm text-pf-text-muted mt-1 max-w-xs">
+        <div className="flex flex-col items-center justify-center py-24 text-center bg-elevated border border-default rounded-pf-lg">
+          <Target className="size-12 text-tertiary mb-4 opacity-40" aria-hidden="true" />
+          <p className="text-primary font-medium text-lg">No predictions yet</p>
+          <p className="text-sm text-tertiary mt-1 max-w-xs">
             Once you place and resolve predictions, your accuracy metrics will appear here.
           </p>
         </div>
@@ -186,8 +186,8 @@ export function Component() {
     <div className="animate-fade-in p-6 max-w-5xl mx-auto space-y-6">
       {/* Header */}
       <div className="flex items-center gap-2">
-        <Target className="size-5 text-pf-text-muted" aria-hidden="true" />
-        <h1 className="text-2xl font-semibold text-pf-text">Accuracy</h1>
+        <Target className="size-5 text-tertiary" aria-hidden="true" />
+        <h1 className="text-2xl font-semibold text-primary">Accuracy</h1>
       </div>
 
       {/* Stats */}
@@ -210,13 +210,13 @@ export function Component() {
       </div>
 
       {/* Calibration Chart */}
-      <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-6">
-        <h2 className="text-sm font-medium text-pf-text mb-1">Calibration Curve</h2>
-        <p className="text-xs text-pf-text-muted mb-4">
+      <div className="bg-elevated border border-default rounded-pf-lg p-6">
+        <h2 className="text-sm font-medium text-primary mb-1">Calibration Curve</h2>
+        <p className="text-xs text-tertiary mb-4">
           Points close to the diagonal line indicate well-calibrated predictions.
         </p>
         {data.calibration.length === 0 ? (
-          <div className="h-48 flex items-center justify-center text-sm text-pf-text-muted">
+          <div className="h-48 flex items-center justify-center text-sm text-tertiary">
             Not enough data to display calibration curve.
           </div>
         ) : (
@@ -284,33 +284,33 @@ export function Component() {
 
       {/* Category Breakdown */}
       {categories.length > 0 && (
-        <div className="bg-pf-elevated border border-pf-border rounded-pf-lg overflow-hidden">
-          <div className="px-6 py-4 border-b border-pf-border-subtle">
-            <h2 className="text-sm font-medium text-pf-text">Breakdown by Category</h2>
+        <div className="bg-elevated border border-default rounded-pf-lg overflow-hidden">
+          <div className="px-6 py-4 border-b border-subtle">
+            <h2 className="text-sm font-medium text-primary">Breakdown by Category</h2>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm" aria-label="Accuracy by category">
               <thead>
-                <tr className="bg-pf-surface text-left text-xs text-pf-text-secondary uppercase tracking-wider">
+                <tr className="bg-surface text-left text-xs text-secondary uppercase tracking-wider">
                   <th scope="col" className="px-6 py-3 font-medium">Category</th>
                   <th scope="col" className="px-6 py-3 font-medium text-right">Predictions</th>
                   <th scope="col" className="px-6 py-3 font-medium text-right">Brier Score</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-pf-border-subtle">
+              <tbody className="divide-y divide-subtle">
                 {categories.map(([cat, stat]) => (
-                  <tr key={cat} className="hover:bg-pf-surface/50 transition-colors">
-                    <td className="px-6 py-3 text-pf-text font-medium">{cat}</td>
-                    <td className="px-6 py-3 text-right font-mono text-pf-text-secondary">
+                  <tr key={cat} className="hover:bg-surface/50 transition-colors">
+                    <td className="px-6 py-3 text-primary font-medium">{cat}</td>
+                    <td className="px-6 py-3 text-right font-mono text-secondary">
                       {stat.count.toLocaleString()}
                     </td>
                     <td className="px-6 py-3 text-right font-mono">
                       <span className={`${
                         stat.brierScore <= 0.1
-                          ? 'text-pf-success'
+                          ? 'text-gain'
                           : stat.brierScore <= 0.2
-                          ? 'text-pf-warning'
-                          : 'text-pf-danger'
+                          ? 'text-warning'
+                          : 'text-loss'
                       }`}>
                         {stat.brierScore.toFixed(3)}
                       </span>

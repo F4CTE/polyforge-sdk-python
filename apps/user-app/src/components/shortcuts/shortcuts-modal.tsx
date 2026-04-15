@@ -69,26 +69,26 @@ export function ShortcutsModal({ open, onClose }: ShortcutsModalProps) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-pf-backdrop backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
       aria-modal="true"
       role="dialog"
       aria-label="Keyboard Shortcuts"
       onClick={onClose}
     >
       <div
-        className="animate-fade-in bg-pf-surface border border-pf-border rounded-pf-lg w-full max-w-2xl max-h-[80vh] overflow-y-auto mx-4"
+        className="animate-fade-in bg-surface border border-default rounded-pf-lg w-full max-w-2xl max-h-[80vh] overflow-y-auto mx-4"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-pf-border">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-default">
           <div className="flex items-center gap-2">
-            <Keyboard size={18} className="text-pf-text-secondary" />
-            <h2 className="text-base font-semibold text-pf-text">Keyboard Shortcuts</h2>
+            <Keyboard size={18} className="text-secondary" />
+            <h2 className="text-base font-semibold text-primary">Keyboard Shortcuts</h2>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="min-h-[36px] min-w-[36px] flex items-center justify-center rounded-pf-sm text-pf-text-secondary hover:bg-pf-elevated hover:text-pf-text transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40"
+            className="min-h-[36px] min-w-[36px] flex items-center justify-center rounded-pf-sm text-secondary hover:bg-elevated hover:text-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
             aria-label="Close shortcuts modal"
           >
             <X size={16} />
@@ -99,7 +99,7 @@ export function ShortcutsModal({ open, onClose }: ShortcutsModalProps) {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-6">
           {SHORTCUT_GROUPS.map((group) => (
             <div key={group.title}>
-              <h3 className="text-xs font-bold text-pf-text-muted uppercase tracking-wide mb-3">
+              <h3 className="text-xs font-bold text-tertiary uppercase tracking-wide mb-3">
                 {group.title}
               </h3>
               <ul className="space-y-2">
@@ -108,16 +108,16 @@ export function ShortcutsModal({ open, onClose }: ShortcutsModalProps) {
                     <span className="flex items-center gap-1 flex-shrink-0">
                       {shortcut.keys.map((key, ki) => (
                         <span key={ki} className="flex items-center gap-1">
-                          <kbd className="inline-flex items-center px-2 py-1 rounded bg-pf-elevated border border-pf-border text-xs font-mono text-pf-text">
+                          <kbd className="inline-flex items-center px-2 py-1 rounded bg-elevated border border-default text-xs font-mono text-primary">
                             {key}
                           </kbd>
                           {ki < shortcut.keys.length - 1 && (
-                            <span className="text-xs text-pf-text-muted">+</span>
+                            <span className="text-xs text-tertiary">+</span>
                           )}
                         </span>
                       ))}
                     </span>
-                    <span className="text-sm text-pf-text-secondary text-right">
+                    <span className="text-sm text-secondary text-right">
                       {shortcut.description}
                     </span>
                   </li>

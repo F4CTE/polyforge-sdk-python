@@ -63,8 +63,8 @@ const INITIAL_LIVE: LiveState = {
 /* ─── Helpers ────────────────────────────────────────────────────────── */
 
 function pnlColor(val: string | null): string {
-  if (!val) return 'text-pf-text-muted';
-  return parseFloat(val) >= 0 ? 'text-pf-success' : 'text-pf-danger';
+  if (!val) return 'text-tertiary';
+  return parseFloat(val) >= 0 ? 'text-gain' : 'text-loss';
 }
 
 function pnlSign(val: string | null): string {
@@ -409,10 +409,10 @@ export function ExecutionPanel({ strategyId, expanded, onToggle, activeTab, onTa
   const isLiveActive = live.status === 'RUNNING' || live.status === 'PAUSED' || live.status === 'STARTING' || live.status === 'STOPPING';
 
   return (
-    <div className="flex flex-col border-t border-pf-border bg-pf-elevated shrink-0">
+    <div className="flex flex-col border-t border-default bg-elevated shrink-0">
       {/* ─── Header / toggle bar ──────────────────────────────────── */}
       <div
-        className="flex items-center justify-between px-4 py-2 cursor-pointer hover:bg-pf-surface/50 transition-colors select-none"
+        className="flex items-center justify-between px-4 py-2 cursor-pointer hover:bg-surface/50 transition-colors select-none"
         onClick={onToggle}
         role="button"
         tabIndex={0}
@@ -425,14 +425,14 @@ export function ExecutionPanel({ strategyId, expanded, onToggle, activeTab, onTa
               onClick={(e) => { e.stopPropagation(); onTabChange('backtest'); if (!expanded) onToggle(); }}
               className={`px-3 py-1 rounded-pf-sm text-xs font-medium transition-colors ${
                 activeTab === 'backtest'
-                  ? 'bg-pf-cyan-500/10 text-pf-cyan-400'
-                  : 'text-pf-text-muted hover:text-pf-text-secondary'
+                  ? 'bg-accent/10 text-accent-text'
+                  : 'text-tertiary hover:text-secondary'
               }`}
             >
               <FlaskConical className="size-3 inline mr-1" />
               Backtest
               {isBacktestActive && (
-                <span className="ml-2 inline-flex size-2 rounded-pf-full bg-pf-cyan-400 animate-pulse" />
+                <span className="ml-2 inline-flex size-2 rounded-pf-full bg-accent-text animate-pulse" />
               )}
             </button>
             <button
@@ -440,15 +440,15 @@ export function ExecutionPanel({ strategyId, expanded, onToggle, activeTab, onTa
               onClick={(e) => { e.stopPropagation(); onTabChange('live'); if (!expanded) onToggle(); }}
               className={`px-3 py-1 rounded-pf-sm text-xs font-medium transition-colors ${
                 activeTab === 'live'
-                  ? 'bg-pf-cyan-500/10 text-pf-cyan-400'
-                  : 'text-pf-text-muted hover:text-pf-text-secondary'
+                  ? 'bg-accent/10 text-accent-text'
+                  : 'text-tertiary hover:text-secondary'
               }`}
             >
               <Radio className="size-3 inline mr-1" />
               Live
               {isLiveActive && (
                 <span className={`ml-2 inline-flex size-2 rounded-pf-full animate-pulse ${
-                  live.status === 'PAUSED' ? 'bg-pf-warning' : 'bg-pf-success'
+                  live.status === 'PAUSED' ? 'bg-warning' : 'bg-gain'
                 }`} />
               )}
             </button>
@@ -456,7 +456,7 @@ export function ExecutionPanel({ strategyId, expanded, onToggle, activeTab, onTa
 
           {/* Mini status in header */}
           {!expanded && bt.status === 'RUNNING' && (
-            <span className="text-pf-label font-mono text-pf-cyan-400">
+            <span className="text-pf-label font-mono text-accent-text">
               Backtest {bt.progress}%
             </span>
           )}
@@ -466,12 +466,12 @@ export function ExecutionPanel({ strategyId, expanded, onToggle, activeTab, onTa
             </span>
           )}
           {!expanded && isLiveActive && (
-            <span className={`text-pf-label font-mono ${live.status === 'RUNNING' ? 'text-pf-success' : 'text-pf-warning'}`}>
+            <span className={`text-pf-label font-mono ${live.status === 'RUNNING' ? 'text-gain' : 'text-warning'}`}>
               {live.mode} {live.status}
             </span>
           )}
         </div>
-        {expanded ? <ChevronDown className="size-4 text-pf-text-muted" /> : <ChevronUp className="size-4 text-pf-text-muted" />}
+        {expanded ? <ChevronDown className="size-4 text-tertiary" /> : <ChevronUp className="size-4 text-tertiary" />}
       </div>
 
       {/* ─── Panel content ────────────────────────────────────────── */}
@@ -553,7 +553,7 @@ function BacktestTab({
         {/* Form row */}
         <div className="flex items-end gap-3 flex-wrap">
           <div className="flex-1 min-w-[140px]">
-            <label htmlFor="ep-start-date" className="text-pf-caption text-pf-text-secondary uppercase tracking-wider mb-1 block">Start Date</label>
+            <label htmlFor="ep-start-date" className="text-pf-caption text-secondary uppercase tracking-wider mb-1 block">Start Date</label>
             <input
               id="ep-start-date"
               type="date"
@@ -561,11 +561,11 @@ function BacktestTab({
               value={dateStart}
               onChange={e => setDateStart(e.target.value)}
               aria-label="Start date"
-              className="w-full h-8 px-3 rounded-pf-sm bg-pf-surface border border-pf-border text-xs text-pf-text focus-visible:outline-none focus-visible:border-pf-cyan-500/50"
+              className="w-full h-8 px-3 rounded-pf-sm bg-surface border border-default text-xs text-primary focus-visible:outline-none focus-visible:border-accent/50"
             />
           </div>
           <div className="flex-1 min-w-[140px]">
-            <label htmlFor="ep-end-date" className="text-pf-caption text-pf-text-secondary uppercase tracking-wider mb-1 block">End Date</label>
+            <label htmlFor="ep-end-date" className="text-pf-caption text-secondary uppercase tracking-wider mb-1 block">End Date</label>
             <input
               id="ep-end-date"
               type="date"
@@ -573,14 +573,14 @@ function BacktestTab({
               value={dateEnd}
               onChange={e => setDateEnd(e.target.value)}
               aria-label="End date"
-              className="w-full h-8 px-3 rounded-pf-sm bg-pf-surface border border-pf-border text-xs text-pf-text focus-visible:outline-none focus-visible:border-pf-cyan-500/50"
+              className="w-full h-8 px-3 rounded-pf-sm bg-surface border border-default text-xs text-primary focus-visible:outline-none focus-visible:border-accent/50"
             />
           </div>
           <button
             type="button"
             onClick={onSubmit}
             disabled={submitting || !strategyId || !dateStart || !dateEnd}
-            className="h-8 px-4 rounded-pf-sm bg-pf-cyan-500 text-pf-text-contrast text-xs font-medium hover:bg-pf-cyan-400 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2 shrink-0"
+            className="h-8 px-4 rounded-pf-sm bg-accent text-inverse text-xs font-medium hover:bg-accent-text disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2 shrink-0"
           >
             {submitting ? <Loader2 className="size-3 animate-spin" /> : <Play className="size-3" />}
             Run Backtest
@@ -609,16 +609,16 @@ function BacktestTab({
       <div className="pt-2 space-y-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Loader2 className="size-4 animate-spin text-pf-cyan-400" />
-            <span className="text-xs text-pf-text-secondary">
+            <Loader2 className="size-4 animate-spin text-accent-text" />
+            <span className="text-xs text-secondary">
               {bt.status === 'QUEUED' ? 'Waiting in queue...' : 'Running backtest...'}
             </span>
           </div>
-          <span className="text-xs font-mono text-pf-cyan-400">{bt.progress}%</span>
+          <span className="text-xs font-mono text-accent-text">{bt.progress}%</span>
         </div>
-        <div className="h-2 bg-pf-surface rounded-pf-full overflow-hidden" role="progressbar" aria-valuenow={bt.progress} aria-valuemin={0} aria-valuemax={100} aria-label="Backtest progress">
+        <div className="h-2 bg-surface rounded-pf-full overflow-hidden" role="progressbar" aria-valuenow={bt.progress} aria-valuemin={0} aria-valuemax={100} aria-label="Backtest progress">
           <div
-            className="h-full bg-gradient-to-r from-pf-cyan-500 to-pf-cyan-400 rounded-pf-full transition-all duration-pf-slow ease-out"
+            className="h-full bg-gradient-to-r from-accent to-accent-text rounded-pf-full transition-all duration-pf-slow ease-out"
             style={{ width: `${bt.progress}%` }}
           />
         </div>
@@ -630,13 +630,13 @@ function BacktestTab({
     return (
       <div className="pt-2 space-y-3">
         <div className="flex items-center justify-between">
-          <span className="text-xs font-medium text-pf-success flex items-center gap-2">
+          <span className="text-xs font-medium text-gain flex items-center gap-2">
             <BarChart3 className="size-3" /> Backtest Complete
           </span>
           <button
             type="button"
             onClick={onReset}
-            className="text-pf-caption text-pf-text-muted hover:text-pf-text-secondary flex items-center gap-1 transition-colors"
+            className="text-pf-caption text-tertiary hover:text-secondary flex items-center gap-1 transition-colors"
           >
             <RotateCcw className="size-3" /> New Run
           </button>
@@ -648,37 +648,37 @@ function BacktestTab({
           <MetricCard
             label="Win Rate"
             value={bt.winRate ? `${(parseFloat(bt.winRate) * 100).toFixed(1)}%` : '\u2014'}
-            color="text-pf-text"
+            color="text-primary"
             icon={<Target className="size-3" />}
           />
           <MetricCard
             label="Max Drawdown"
             value={bt.maxDrawdown ? pnlSign(bt.maxDrawdown) : '\u2014'}
-            color="text-pf-danger"
+            color="text-loss"
             icon={<TrendingDown className="size-3" />}
           />
           <MetricCard
             label="Sharpe"
             value={bt.sharpeRatio ? parseFloat(bt.sharpeRatio).toFixed(2) : '\u2014'}
-            color="text-pf-text"
+            color="text-primary"
             icon={<Activity className="size-3" />}
           />
           <MetricCard
             label="Orders"
             value={bt.totalOrders != null ? String(bt.totalOrders) : '\u2014'}
-            color="text-pf-text"
+            color="text-primary"
             icon={<BarChart3 className="size-3" />}
           />
           <MetricCard
             label="Filled"
             value={bt.filledOrders != null ? String(bt.filledOrders) : '\u2014'}
-            color="text-pf-text"
+            color="text-primary"
             icon={<BarChart3 className="size-3" />}
           />
         </div>
 
         {bt.hasDataGaps && (
-          <div className="flex items-center gap-2 px-3 py-2 rounded-pf-sm bg-pf-warning/10 text-pf-warning text-pf-label">
+          <div className="flex items-center gap-2 px-3 py-2 rounded-pf-sm bg-warning/10 text-warning text-pf-label">
             <AlertTriangle className="size-3 shrink-0" />
             Results may be affected by data gaps in the selected date range.
           </div>
@@ -701,14 +701,14 @@ function BacktestTab({
   // FAILED
   return (
     <div className="pt-2 space-y-3">
-      <div className="flex items-center gap-2 px-3 py-2 rounded-pf-sm bg-pf-danger/10 text-pf-danger text-xs">
+      <div className="flex items-center gap-2 px-3 py-2 rounded-pf-sm bg-loss/10 text-loss text-xs">
         <XCircle className="size-4 shrink-0" />
         {bt.error ?? 'Backtest failed'}
       </div>
       <button
         type="button"
         onClick={onReset}
-        className="text-pf-caption text-pf-text-muted hover:text-pf-text-secondary flex items-center gap-1 transition-colors"
+        className="text-pf-caption text-tertiary hover:text-secondary flex items-center gap-1 transition-colors"
       >
         <RotateCcw className="size-3" /> Try Again
       </button>
@@ -762,7 +762,7 @@ function LiveTab({
             type="button"
             onClick={() => onStart('PAPER')}
             disabled={!strategyId}
-            className="flex-1 h-8 rounded-pf-sm bg-pf-elevated border border-pf-border text-xs font-medium text-pf-text hover:border-pf-cyan-500/50 disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
+            className="flex-1 h-8 rounded-pf-sm bg-elevated border border-default text-xs font-medium text-primary hover:border-accent/50 disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
           >
             <Play className="size-3" />
             Paper Trade
@@ -771,14 +771,14 @@ function LiveTab({
             type="button"
             onClick={() => onStart('LIVE')}
             disabled={!strategyId}
-            className="flex-1 h-8 rounded-pf-sm bg-pf-success/10 border border-pf-success/30 text-xs font-medium text-pf-success hover:bg-pf-success/20 disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
+            className="flex-1 h-8 rounded-pf-sm bg-gain/10 border border-gain/30 text-xs font-medium text-gain hover:bg-gain/20 disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
           >
             <Play className="size-3" />
             Live Trade
           </button>
         </div>
 
-        <p className="text-pf-caption text-pf-text-muted leading-relaxed">
+        <p className="text-pf-caption text-tertiary leading-relaxed">
           Paper mode simulates trades without real funds. Live mode places real orders on Polymarket.
         </p>
       </div>
@@ -788,8 +788,8 @@ function LiveTab({
   if (live.status === 'STARTING' || live.status === 'STOPPING') {
     return (
       <div className="flex items-center justify-center gap-2 py-6">
-        <Loader2 className="size-4 animate-spin text-pf-cyan-400" />
-        <span className="text-xs text-pf-text-secondary">
+        <Loader2 className="size-4 animate-spin text-accent-text" />
+        <span className="text-xs text-secondary">
           {live.status === 'STARTING' ? 'Starting strategy...' : 'Stopping strategy...'}
         </span>
       </div>
@@ -803,14 +803,14 @@ function LiveTab({
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <span className={`inline-flex size-2 rounded-pf-full ${
-            live.status === 'RUNNING' ? 'bg-pf-success animate-pulse' :
-            live.status === 'PAUSED' ? 'bg-pf-warning' : 'bg-pf-danger'
+            live.status === 'RUNNING' ? 'bg-gain animate-pulse' :
+            live.status === 'PAUSED' ? 'bg-warning' : 'bg-loss'
           }`} />
-          <span className="text-xs font-medium text-pf-text">
+          <span className="text-xs font-medium text-primary">
             {live.mode === 'PAPER' ? 'Paper' : 'Live'} — {live.status}
           </span>
           {live.lastTick && (
-            <span className="text-pf-caption text-pf-text-muted flex items-center gap-1">
+            <span className="text-pf-caption text-tertiary flex items-center gap-1">
               <Clock className="size-3" />
               {new Date(live.lastTick).toLocaleTimeString()}
             </span>
@@ -821,7 +821,7 @@ function LiveTab({
             <button
               type="button"
               onClick={onPause}
-              className="p-2 rounded-pf-sm text-pf-text-muted hover:text-pf-warning hover:bg-pf-warning/10 cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40"
+              className="p-2 rounded-pf-sm text-tertiary hover:text-warning hover:bg-warning/10 cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
               title="Pause"
               aria-label="Pause execution"
             >
@@ -832,7 +832,7 @@ function LiveTab({
             <button
               type="button"
               onClick={onResume}
-              className="p-2 rounded-pf-sm text-pf-text-muted hover:text-pf-success hover:bg-pf-success/10 cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40"
+              className="p-2 rounded-pf-sm text-tertiary hover:text-gain hover:bg-gain/10 cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
               title="Resume"
               aria-label="Resume execution"
             >
@@ -842,7 +842,7 @@ function LiveTab({
           <button
             type="button"
             onClick={onStop}
-            className="p-2 rounded-pf-sm text-pf-text-muted hover:text-pf-danger hover:bg-pf-danger/10 cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40"
+            className="p-2 rounded-pf-sm text-tertiary hover:text-loss hover:bg-loss/10 cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
             title="Stop"
             aria-label="Stop execution"
           >
@@ -852,7 +852,7 @@ function LiveTab({
       </div>
 
       {live.error && (
-        <div className="flex items-center gap-2 px-3 py-2 rounded-pf-sm bg-pf-danger/10 text-pf-danger text-pf-label">
+        <div className="flex items-center gap-2 px-3 py-2 rounded-pf-sm bg-loss/10 text-loss text-pf-label">
           <XCircle className="size-3 shrink-0" />
           {live.error}
         </div>
@@ -862,8 +862,8 @@ function LiveTab({
       <div className="grid grid-cols-4 gap-2">
         <MetricCard label="Session P&L" value={pnlSign(live.sessionPnl)} color={pnlColor(live.sessionPnl)} icon={<TrendingUp className="size-3" />} />
         <MetricCard label="Total P&L" value={pnlSign(live.totalPnl)} color={pnlColor(live.totalPnl)} icon={<BarChart3 className="size-3" />} />
-        <MetricCard label="Placed" value={String(live.ordersPlaced)} color="text-pf-text" icon={<Target className="size-3" />} />
-        <MetricCard label="Filled" value={String(live.ordersFilled)} color="text-pf-text" icon={<Activity className="size-3" />} />
+        <MetricCard label="Placed" value={String(live.ordersPlaced)} color="text-primary" icon={<Target className="size-3" />} />
+        <MetricCard label="Filled" value={String(live.ordersFilled)} color="text-primary" icon={<Activity className="size-3" />} />
       </div>
 
       {/* Price charts with trade markers — live polling enabled */}
@@ -879,11 +879,11 @@ function LiveTab({
       {/* Recent trades */}
       {live.recentTrades.length > 0 && (
         <div>
-          <span className="text-pf-caption text-pf-text-secondary uppercase tracking-wider mb-2 block">Recent Trades</span>
-          <div className="bg-pf-surface rounded-pf-sm overflow-hidden max-h-[120px] overflow-y-auto">
+          <span className="text-pf-caption text-secondary uppercase tracking-wider mb-2 block">Recent Trades</span>
+          <div className="bg-surface rounded-pf-sm overflow-hidden max-h-[120px] overflow-y-auto">
             <table className="w-full text-pf-label" aria-label="Trade history">
               <thead>
-                <tr className="text-pf-text-muted text-left">
+                <tr className="text-tertiary text-left">
                   <th scope="col" className="px-2 py-1 font-medium">Time</th>
                   <th scope="col" className="px-2 py-1 font-medium">Side</th>
                   <th scope="col" className="px-2 py-1 font-medium text-right">Price</th>
@@ -891,13 +891,13 @@ function LiveTab({
                   <th scope="col" className="px-2 py-1 font-medium text-right">P&L</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-pf-border-subtle">
+              <tbody className="divide-y divide-subtle">
                 {live.recentTrades.slice(0, 10).map((t, i) => (
-                  <tr key={i} className="text-pf-text">
-                    <td className="px-2 py-1 font-mono text-pf-text-muted">
+                  <tr key={i} className="text-primary">
+                    <td className="px-2 py-1 font-mono text-tertiary">
                       {new Date(t.time).toLocaleTimeString()}
                     </td>
-                    <td className={`px-2 py-1 font-medium ${t.side === 'BUY' ? 'text-pf-success' : 'text-pf-danger'}`}>
+                    <td className={`px-2 py-1 font-medium ${t.side === 'BUY' ? 'text-gain' : 'text-loss'}`}>
                       {t.side}
                     </td>
                     <td className="px-2 py-1 text-right font-mono">{t.price}</td>
@@ -920,8 +920,8 @@ function LiveTab({
 
 function MetricCard({ label, value, color, icon }: { label: string; value: string; color: string; icon: React.ReactNode }) {
   return (
-    <div className="bg-pf-surface rounded-pf-sm p-2">
-      <span className="text-pf-caption text-pf-text-muted flex items-center gap-1">{icon}{label}</span>
+    <div className="bg-surface rounded-pf-sm p-2">
+      <span className="text-pf-caption text-tertiary flex items-center gap-1">{icon}{label}</span>
       <span className={`text-sm font-mono font-semibold ${color} block mt-1`}>{value}</span>
     </div>
   );
@@ -942,13 +942,13 @@ function MarketBindingsSection({
 }) {
   return (
     <div className="space-y-2">
-      <span className="text-pf-caption text-pf-text-secondary uppercase tracking-wider flex items-center gap-1">
+      <span className="text-pf-caption text-secondary uppercase tracking-wider flex items-center gap-1">
         <Search className="size-3" /> Market Bindings
       </span>
       <div className="flex flex-wrap gap-2">
         {marketSlots.map(slot => (
           <div key={slot.slot} className="flex-1 min-w-[200px] relative">
-            <label htmlFor={`ep-market-${slot.slot}`} className="text-pf-caption text-pf-text-muted mb-1 block">{slot.label || slot.slot}</label>
+            <label htmlFor={`ep-market-${slot.slot}`} className="text-pf-caption text-tertiary mb-1 block">{slot.label || slot.slot}</label>
             <input
               id={`ep-market-${slot.slot}`}
               type="text"
@@ -958,13 +958,13 @@ function MarketBindingsSection({
                 searchMarkets(slot.slot, e.target.value);
               }}
               placeholder="Search markets..."
-              className="w-full h-7 px-2 rounded-pf-sm bg-pf-surface border border-pf-border text-pf-label text-pf-text placeholder:text-pf-text-muted focus-visible:outline-none focus-visible:border-pf-cyan-500/50 transition-colors"
+              className="w-full h-7 px-2 rounded-pf-sm bg-surface border border-default text-pf-label text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:border-accent/50 transition-colors"
             />
             {marketBindings[slot.slot] && (
-              <span className="absolute right-2 top-[22px] text-pf-micro text-pf-cyan-400 font-mono">bound</span>
+              <span className="absolute right-2 top-[22px] text-pf-micro text-accent-text font-mono">bound</span>
             )}
             {(marketResults[slot.slot] ?? []).length > 0 && (
-              <div className="absolute z-50 w-full mt-1 bg-pf-elevated border border-pf-border rounded-pf-sm max-h-32 overflow-y-auto shadow-pf-lg">
+              <div className="absolute z-50 w-full mt-1 bg-elevated border border-default rounded-pf-sm max-h-32 overflow-y-auto shadow-pf-lg">
                 {marketResults[slot.slot].map((m) => (
                   <button
                     type="button"
@@ -974,7 +974,7 @@ function MarketBindingsSection({
                       setMarketSearch(prev => ({ ...prev, [slot.slot]: (m.title ?? m.question) as string }));
                       setMarketResults(prev => ({ ...prev, [slot.slot]: [] }));
                     }}
-                    className="w-full text-left px-2 py-2 text-pf-label text-pf-text hover:bg-pf-surface transition-colors border-b border-pf-border-subtle last:border-b-0"
+                    className="w-full text-left px-2 py-2 text-pf-label text-primary hover:bg-surface transition-colors border-b border-subtle last:border-b-0"
                   >
                     {(m.title ?? m.question) as string}
                   </button>

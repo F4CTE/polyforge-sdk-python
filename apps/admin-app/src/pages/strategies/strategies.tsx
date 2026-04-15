@@ -80,34 +80,34 @@ export function Component() {
 
   return (
     <div className="animate-fade-in space-y-6">
-      <h2 className="text-lg font-semibold text-pf-text">
-        Strategies <span className="text-sm font-normal text-pf-text-tertiary">({total})</span>
+      <h2 className="text-lg font-semibold text-primary">
+        Strategies <span className="text-sm font-normal text-tertiary">({total})</span>
       </h2>
 
       {error && (
         <div className="text-center py-12">
-          <AlertCircle className="mx-auto mb-3 text-pf-text-tertiary" size={40} aria-hidden="true" />
-          <p className="text-pf-text-secondary mb-4">Failed to load data</p>
-          <Button type="button" variant="ghost" onClick={load} className="text-pf-cyan-400 hover:text-pf-cyan-300 text-sm">
+          <AlertCircle className="mx-auto mb-3 text-tertiary" size={40} aria-hidden="true" />
+          <p className="text-secondary mb-4">Failed to load data</p>
+          <Button type="button" variant="ghost" onClick={load} className="text-accent-text hover:text-accent-text text-sm">
             Try again
           </Button>
         </div>
       )}
 
-      <div className="bg-pf-elevated border border-pf-border rounded-pf-lg overflow-hidden">
+      <div className="bg-elevated border border-default rounded-pf-lg overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <caption className="sr-only">Trading strategies</caption>
             <thead>
-              <tr className="border-b border-pf-border">
-                <th scope="col" className="text-left px-4 py-3 text-xs font-medium text-pf-text-tertiary uppercase tracking-wider">Name</th>
-                <th scope="col" className="text-left px-4 py-3 text-xs font-medium text-pf-text-tertiary uppercase tracking-wider">Owner</th>
-                <th scope="col" className="text-left px-4 py-3 text-xs font-medium text-pf-text-tertiary uppercase tracking-wider">Status</th>
-                <th scope="col" className="text-left px-4 py-3 text-xs font-medium text-pf-text-tertiary uppercase tracking-wider">Exec Mode</th>
-                <th scope="col" className="text-left px-4 py-3 text-xs font-medium text-pf-text-tertiary uppercase tracking-wider">Visibility</th>
-                <th scope="col" className="text-left px-4 py-3 text-xs font-medium text-pf-text-tertiary uppercase tracking-wider">Created</th>
-                <th scope="col" className="text-center px-4 py-3 text-xs font-medium text-pf-text-tertiary uppercase tracking-wider">Featured</th>
-                <th scope="col" className="text-right px-4 py-3 text-xs font-medium text-pf-text-tertiary uppercase tracking-wider">Actions</th>
+              <tr className="border-b border-default">
+                <th scope="col" className="text-left px-4 py-3 text-xs font-medium text-tertiary uppercase tracking-wider">Name</th>
+                <th scope="col" className="text-left px-4 py-3 text-xs font-medium text-tertiary uppercase tracking-wider">Owner</th>
+                <th scope="col" className="text-left px-4 py-3 text-xs font-medium text-tertiary uppercase tracking-wider">Status</th>
+                <th scope="col" className="text-left px-4 py-3 text-xs font-medium text-tertiary uppercase tracking-wider">Exec Mode</th>
+                <th scope="col" className="text-left px-4 py-3 text-xs font-medium text-tertiary uppercase tracking-wider">Visibility</th>
+                <th scope="col" className="text-left px-4 py-3 text-xs font-medium text-tertiary uppercase tracking-wider">Created</th>
+                <th scope="col" className="text-center px-4 py-3 text-xs font-medium text-tertiary uppercase tracking-wider">Featured</th>
+                <th scope="col" className="text-right px-4 py-3 text-xs font-medium text-tertiary uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -116,7 +116,7 @@ export function Component() {
                   <tr key={i}>
                     {Array.from({ length: 8 }).map((_, j) => (
                       <td key={j} className="px-4 py-3">
-                        <div className="h-4 bg-pf-surface rounded animate-pulse" />
+                        <div className="h-4 bg-surface rounded animate-pulse" />
                       </td>
                     ))}
                   </tr>
@@ -124,24 +124,24 @@ export function Component() {
               ) : strategies.length === 0 ? (
                 <tr>
                   <td colSpan={8} className="text-center py-12">
-                    <Zap className="mx-auto mb-3 text-pf-text-tertiary opacity-40" size={40} aria-hidden="true" />
-                    <p className="text-pf-text-secondary font-medium">No strategies found</p>
-                    <p className="text-pf-text-tertiary text-xs mt-1">User strategies will appear here</p>
+                    <Zap className="mx-auto mb-3 text-tertiary opacity-40" size={40} aria-hidden="true" />
+                    <p className="text-secondary font-medium">No strategies found</p>
+                    <p className="text-tertiary text-xs mt-1">User strategies will appear here</p>
                   </td>
                 </tr>
               ) : (
                 strategies.map((s) => (
-                  <tr key={s.id} className="border-b border-pf-border last:border-0 hover:bg-pf-base transition-colors">
-                    <td className="px-4 py-3 font-medium text-pf-text">{s.name}</td>
-                    <td className="px-4 py-3 text-pf-text-secondary">{(s as any).user?.username ?? s.username ?? ''}</td>
+                  <tr key={s.id} className="border-b border-default last:border-0 hover:bg-app transition-colors">
+                    <td className="px-4 py-3 font-medium text-primary">{s.name}</td>
+                    <td className="px-4 py-3 text-secondary">{(s as any).user?.username ?? s.username ?? ''}</td>
                     <td className="px-4 py-3">
                       <span className={`px-2 py-1 rounded-pf-full text-xs font-medium ${statusColor(s.status)}`}>
                         {s.status}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-pf-text-secondary capitalize">{s.execMode}</td>
-                    <td className="px-4 py-3 text-pf-text-secondary">{s.visibility}</td>
-                    <td className="px-4 py-3 text-pf-text-tertiary">{formatDate(s.createdAt)}</td>
+                    <td className="px-4 py-3 text-secondary capitalize">{s.execMode}</td>
+                    <td className="px-4 py-3 text-secondary">{s.visibility}</td>
+                    <td className="px-4 py-3 text-tertiary">{formatDate(s.createdAt)}</td>
                     <td className="px-4 py-3 text-center">
                       <Button
                         type="button"
@@ -150,12 +150,12 @@ export function Component() {
                         onClick={() => handleToggleFeatured(s.id, !!s.featured)}
                         aria-label={s.featured ? `Remove featured from ${s.name}` : `Feature strategy ${s.name}`}
                         aria-pressed={!!s.featured}
-                        className="inline-flex items-center justify-center p-1 rounded transition-colors hover:bg-pf-base"
+                        className="inline-flex items-center justify-center p-1 rounded transition-colors hover:bg-app"
                       >
                         <Star
                           size={16}
                           aria-hidden="true"
-                          className={s.featured ? 'text-pf-warning fill-pf-warning' : 'text-pf-text-muted'}
+                          className={s.featured ? 'text-warning fill-warning' : 'text-tertiary'}
                         />
                       </Button>
                     </td>
@@ -165,7 +165,7 @@ export function Component() {
                           variant="danger"
                           onClick={() => handleForceStop(s.id)}
                           aria-label={`Force stop strategy ${s.name}`}
-                          className="inline-flex items-center gap-1 px-2 py-1 text-xs rounded bg-pf-danger/10 text-pf-danger hover:bg-pf-danger/20 cursor-pointer transition-colors"
+                          className="inline-flex items-center gap-1 px-2 py-1 text-xs rounded bg-loss/10 text-loss hover:bg-loss/20 cursor-pointer transition-colors"
                         >
                           <Square size={12} aria-hidden="true" />
                           Force Stop
@@ -180,8 +180,8 @@ export function Component() {
         </div>
 
         {totalPages > 1 && (
-          <div className="flex items-center justify-between px-4 py-3 border-t border-pf-border">
-            <span className="text-xs text-pf-text-tertiary">Page {page} of {totalPages}</span>
+          <div className="flex items-center justify-between px-4 py-3 border-t border-default">
+            <span className="text-xs text-tertiary">Page {page} of {totalPages}</span>
             <div className="flex items-center gap-2">
               <Button type="button" variant="ghost" size="icon-sm" onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1} aria-label="Previous page">
                 <ChevronLeft size={16} />

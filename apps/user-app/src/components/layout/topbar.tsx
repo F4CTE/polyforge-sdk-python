@@ -59,14 +59,14 @@ export function Topbar() {
   const unread = unreadCount();
 
   return (
-    <header className="flex items-center h-14 px-4 border-b border-pf-border bg-pf-surface">
+    <header className="flex items-center h-14 px-4 border-b border-default bg-surface">
       <div className="flex-1" />
 
       {/* Keyboard shortcuts button */}
       <button
         type="button"
         onClick={() => window.dispatchEvent(new CustomEvent('open-shortcuts'))}
-        className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-pf-sm text-pf-text-secondary hover:bg-pf-elevated hover:text-pf-text active:bg-pf-surface transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40"
+        className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-pf-sm text-secondary hover:bg-elevated hover:text-primary active:bg-surface transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
         aria-label="Keyboard shortcuts"
         title="Keyboard shortcuts (?)"
       >
@@ -78,7 +78,7 @@ export function Topbar() {
         type="button"
         data-tour="theme-toggle"
         onClick={toggleTheme}
-        className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-pf-sm text-pf-text-secondary hover:bg-pf-elevated hover:text-pf-text active:bg-pf-surface transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40"
+        className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-pf-sm text-secondary hover:bg-elevated hover:text-primary active:bg-surface transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
         aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
       >
         {isDark ? <Sun size={18} /> : <Moon size={18} />}
@@ -89,37 +89,37 @@ export function Topbar() {
         <button
           type="button"
           onClick={() => setNotifOpen((v) => !v)}
-          className="relative min-h-[44px] min-w-[44px] flex items-center justify-center rounded-pf-sm text-pf-text-secondary hover:bg-pf-elevated hover:text-pf-text active:bg-pf-surface transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40"
+          className="relative min-h-[44px] min-w-[44px] flex items-center justify-center rounded-pf-sm text-secondary hover:bg-elevated hover:text-primary active:bg-surface transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
           aria-label="Notifications"
           aria-expanded={notifOpen}
           aria-haspopup="dialog"
         >
           <Bell size={18} />
           {unread > 0 && (
-            <span className="absolute top-1 right-1 flex items-center justify-center min-w-[16px] h-4 px-1 text-pf-caption font-bold text-pf-text bg-pf-danger rounded-pf-full" aria-label={`${unread} unread notifications`}>
+            <span className="absolute top-1 right-1 flex items-center justify-center min-w-[16px] h-4 px-1 text-pf-caption font-bold text-primary bg-loss rounded-pf-full" aria-label={`${unread} unread notifications`}>
               {unread > 9 ? '9+' : unread}
             </span>
           )}
           {/* WebSocket active indicator */}
-          <span className="absolute bottom-1 right-1 w-2 h-2 rounded-pf-full bg-pf-success animate-pulse-dot" aria-hidden="true" />
+          <span className="absolute bottom-1 right-1 w-2 h-2 rounded-pf-full bg-gain animate-pulse-dot" aria-hidden="true" />
           <span className="sr-only">Connected</span>
         </button>
 
         {notifOpen && (
-          <div role="dialog" aria-label="Notifications" className="animate-slide-up absolute right-0 top-12 w-80 bg-pf-elevated border border-pf-border rounded-pf shadow-pf-xl z-50">
-            <div className="flex items-center justify-between px-4 py-3 border-b border-pf-border">
-              <strong className="text-sm text-pf-text">Notifications</strong>
+          <div role="dialog" aria-label="Notifications" className="animate-slide-up absolute right-0 top-12 w-80 bg-elevated border border-default rounded-pf shadow-pf-xl z-50">
+            <div className="flex items-center justify-between px-4 py-3 border-b border-default">
+              <strong className="text-sm text-primary">Notifications</strong>
               <button
                 type="button"
                 onClick={markAllRead}
-                className="text-xs text-pf-cyan-400 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 rounded-pf-sm"
+                className="text-xs text-accent-text hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 rounded-pf-sm"
               >
                 Mark all read
               </button>
             </div>
             <div className="max-h-80 overflow-y-auto">
               {notifications.length === 0 ? (
-                <p className="text-center text-pf-text-muted text-sm py-6">
+                <p className="text-center text-tertiary text-sm py-6">
                   No notifications
                 </p>
               ) : (
@@ -128,30 +128,30 @@ export function Topbar() {
                     type="button"
                     key={n.id}
                     onClick={() => markRead(n.id)}
-                    className={`w-full flex items-start gap-3 px-4 py-3 cursor-pointer hover:bg-pf-surface transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-pf-cyan-500/40 ${
-                      !n.read ? 'bg-pf-cyan-500/5' : ''
+                    className={`w-full flex items-start gap-3 px-4 py-3 cursor-pointer hover:bg-surface transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent/40 ${
+                      !n.read ? 'bg-accent/5' : ''
                     }`}
                     aria-label={`${n.read ? '' : 'Unread: '}${n.title}`}
                   >
                     <span
                       className={`mt-2 w-2 h-2 rounded-pf-full shrink-0 ${
                         n.severity === 'error'
-                          ? 'bg-pf-danger'
+                          ? 'bg-loss'
                           : n.severity === 'warning'
-                            ? 'bg-pf-warning'
+                            ? 'bg-warning'
                             : n.severity === 'success'
-                              ? 'bg-pf-success'
-                              : 'bg-pf-cyan-500'
+                              ? 'bg-gain'
+                              : 'bg-accent'
                       }`}
                     />
                     <div className="min-w-0 flex-1">
-                      <strong className="text-sm text-pf-text block truncate">
+                      <strong className="text-sm text-primary block truncate">
                         {n.title}
                       </strong>
-                      <p className="text-xs text-pf-text-muted truncate">
+                      <p className="text-xs text-tertiary truncate">
                         {n.body}
                       </p>
-                      <span className="text-pf-caption text-pf-text-muted/70" title={new Date(n.timestamp).toLocaleString()}>
+                      <span className="text-pf-caption text-tertiary/70" title={new Date(n.timestamp).toLocaleString()}>
                         {timeAgo(n.timestamp)}
                       </span>
                     </div>
@@ -165,7 +165,7 @@ export function Topbar() {
                 setNotifOpen(false);
                 navigate('/settings');
               }}
-              className="block w-full text-center text-xs text-pf-cyan-400 py-3 border-t border-pf-border hover:bg-pf-surface transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-pf-cyan-500/40"
+              className="block w-full text-center text-xs text-accent-text py-3 border-t border-default hover:bg-surface transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent/40"
             >
               Manage notification preferences
             </button>
@@ -179,22 +179,22 @@ export function Topbar() {
           type="button"
           data-testid="user-menu-btn"
           onClick={() => setMenuOpen((v) => !v)}
-          className="flex items-center gap-2 p-1 rounded-pf-sm hover:bg-pf-elevated active:bg-pf-surface transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40"
+          className="flex items-center gap-2 p-1 rounded-pf-sm hover:bg-elevated active:bg-surface transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
           aria-label="User menu"
           aria-expanded={menuOpen}
           aria-haspopup="menu"
         >
-          <div className="w-8 h-8 rounded-pf-full bg-pf-cyan-500/20 text-pf-cyan-400 flex items-center justify-center text-xs font-semibold">
+          <div className="w-8 h-8 rounded-pf-full bg-accent/20 text-accent-text flex items-center justify-center text-xs font-semibold">
             {initials}
           </div>
-          <span className="text-sm text-pf-text hidden sm:inline">
+          <span className="text-sm text-primary hidden sm:inline">
             {displayName}
           </span>
-          <ChevronDown size={14} className="text-pf-text-secondary" />
+          <ChevronDown size={14} className="text-secondary" />
         </button>
 
         {menuOpen && (
-          <div role="menu" className="animate-slide-up absolute right-0 top-12 w-48 bg-pf-elevated border border-pf-border rounded-pf shadow-pf-xl z-50 py-1">
+          <div role="menu" className="animate-slide-up absolute right-0 top-12 w-48 bg-elevated border border-default rounded-pf shadow-pf-xl z-50 py-1">
             <button
               type="button"
               role="menuitem"
@@ -202,7 +202,7 @@ export function Topbar() {
                 setMenuOpen(false);
                 navigate('/profile/me');
               }}
-              className="flex items-center gap-2 w-full px-4 py-2 text-sm text-pf-text hover:bg-pf-surface transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-pf-cyan-500/40"
+              className="flex items-center gap-2 w-full px-4 py-2 text-sm text-primary hover:bg-surface transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent/40"
             >
               <User size={16} />
               Profile
@@ -214,17 +214,17 @@ export function Topbar() {
                 setMenuOpen(false);
                 navigate('/settings');
               }}
-              className="flex items-center gap-2 w-full px-4 py-2 text-sm text-pf-text hover:bg-pf-surface transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-pf-cyan-500/40"
+              className="flex items-center gap-2 w-full px-4 py-2 text-sm text-primary hover:bg-surface transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent/40"
             >
               <Settings size={16} />
               Settings
             </button>
-            <div className="border-t border-pf-border my-1" role="separator" />
+            <div className="border-t border-default my-1" role="separator" />
             <button
               type="button"
               role="menuitem"
               onClick={logout}
-              className="flex items-center gap-2 w-full px-4 py-2 text-sm text-pf-danger hover:bg-pf-surface transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-pf-cyan-500/40"
+              className="flex items-center gap-2 w-full px-4 py-2 text-sm text-loss hover:bg-surface transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent/40"
             >
               <LogOut size={16} />
               Sign out

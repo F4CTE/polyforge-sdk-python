@@ -69,19 +69,19 @@ interface MarketplaceStats {
 // ─── Constants ───────────────────────────────────────────────────────────────
 
 const SOURCE_COLORS: Record<SourceKey, string> = {
-  marketplace_listings: 'var(--color-pf-cyan-400)',
-  copy_fees: 'var(--color-pf-success)',
+  marketplace_listings: 'var(--accent-text)',
+  copy_fees: 'var(--gain)',
   strategy_sales: 'var(--color-pf-purple-500)',
   subscription: 'var(--color-pf-gold-500)',
-  other: 'var(--color-pf-text-muted)',
+  other: 'var(--text-tertiary)',
 };
 
 const SOURCE_BG: Record<SourceKey, string> = {
-  marketplace_listings: 'bg-pf-cyan-400/10',
-  copy_fees: 'bg-pf-success/10',
+  marketplace_listings: 'bg-accent-text/10',
+  copy_fees: 'bg-gain/10',
   strategy_sales: 'bg-pf-purple-500/10',
   subscription: 'bg-pf-gold-500/10',
-  other: 'bg-pf-text-muted/10',
+  other: 'bg-tertiary/10',
 };
 
 const PERIODS: { label: string; value: Period }[] = [
@@ -129,11 +129,11 @@ function MonthlyTooltip({ active, payload, label }: MonthlyTooltipProps) {
   const fees = payload.find(p => p.name === 'Fees')?.value ?? 0;
   const purchases = payload.find(p => p.name === 'Purchases')?.value ?? 0;
   return (
-    <div className="bg-pf-surface border border-pf-border rounded px-3 py-2 text-xs">
-      <div className="font-semibold text-pf-text mb-1">{label}</div>
-      <div className="text-pf-text-secondary">Revenue: <span className="text-pf-text font-mono">{fmtDollar(revenue)}</span></div>
-      <div className="text-pf-text-secondary">Fees: <span className="text-pf-text font-mono">{fmtDollar(fees)}</span></div>
-      <div className="text-pf-text-secondary">Purchases: <span className="text-pf-text font-mono">{purchases}</span></div>
+    <div className="bg-surface border border-default rounded px-3 py-2 text-xs">
+      <div className="font-semibold text-primary mb-1">{label}</div>
+      <div className="text-secondary">Revenue: <span className="text-primary font-mono">{fmtDollar(revenue)}</span></div>
+      <div className="text-secondary">Fees: <span className="text-primary font-mono">{fmtDollar(fees)}</span></div>
+      <div className="text-secondary">Purchases: <span className="text-primary font-mono">{purchases}</span></div>
     </div>
   );
 }
@@ -147,11 +147,11 @@ interface CompareTooltipProps {
 function CompareTooltip({ active, payload, label }: CompareTooltipProps) {
   if (!active || !payload?.length) return null;
   return (
-    <div className="bg-pf-surface border border-pf-border rounded px-3 py-2 text-xs">
-      <div className="font-semibold text-pf-text mb-1">{label}</div>
+    <div className="bg-surface border border-default rounded px-3 py-2 text-xs">
+      <div className="font-semibold text-primary mb-1">{label}</div>
       {payload.map(p => (
-        <div key={p.name} className="text-pf-text-secondary">
-          {p.name}: <span className="text-pf-text font-mono">{fmtDollar(p.value)}</span>
+        <div key={p.name} className="text-secondary">
+          {p.name}: <span className="text-primary font-mono">{fmtDollar(p.value)}</span>
         </div>
       ))}
     </div>
@@ -169,8 +169,8 @@ interface DonutLabelProps {
 function DonutCenterLabel({ cx = 0, cy = 0, total }: DonutLabelProps) {
   return (
     <text x={cx} y={cy} textAnchor="middle" dominantBaseline="central">
-      <tspan x={cx} dy="-0.4em" fontSize={11} fill="var(--color-pf-text-secondary)">Total</tspan>
-      <tspan x={cx} dy="1.4em" fontSize={14} fontWeight={700} fill="var(--color-pf-text)" fontFamily="monospace">
+      <tspan x={cx} dy="-0.4em" fontSize={11} fill="var(--text-secondary)">Total</tspan>
+      <tspan x={cx} dy="1.4em" fontSize={14} fontWeight={700} fill="var(--text-primary)" fontFamily="monospace">
         {fmtDollar(total)}
       </tspan>
     </text>
@@ -196,8 +196,8 @@ function PeriodPills({ periods, active, onChange }: PeriodPillProps) {
           onClick={() => onChange(p.value)}
           className={`px-3 py-1 rounded text-xs font-medium transition-colors ${
             active === p.value
-              ? 'bg-pf-cyan-500/20 text-pf-cyan-400 border border-pf-cyan-500/40'
-              : 'text-pf-text-muted hover:text-pf-text border border-transparent'
+              ? 'bg-accent/20 text-accent-text border border-accent/40'
+              : 'text-tertiary hover:text-primary border border-transparent'
           }`}
         >
           {p.label}
@@ -212,7 +212,7 @@ function PeriodPills({ periods, active, onChange }: PeriodPillProps) {
 function ChangeBadge({ change }: { change: number }) {
   const positive = change >= 0;
   return (
-    <span className={`inline-flex items-center gap-1 text-xs font-medium ${positive ? 'text-pf-success' : 'text-pf-danger'}`}>
+    <span className={`inline-flex items-center gap-1 text-xs font-medium ${positive ? 'text-gain' : 'text-loss'}`}>
       {positive
         ? <TrendingUp className="size-3" />
         : <TrendingDown className="size-3" />}
@@ -224,7 +224,7 @@ function ChangeBadge({ change }: { change: number }) {
 // ─── Skeleton ─────────────────────────────────────────────────────────────────
 
 function Skeleton({ className }: { className?: string }) {
-  return <div className={`bg-pf-base rounded animate-pulse ${className ?? ''}`} />;
+  return <div className={`bg-app rounded animate-pulse ${className ?? ''}`} />;
 }
 
 // ─── Main component ───────────────────────────────────────────────────────────
@@ -317,32 +317,32 @@ export function Component() {
       label: 'Total Revenue',
       value: fmt(stats.totalRevenue),
       icon: <DollarSign className="size-5" />,
-      color: 'text-pf-success',
-      bg: 'bg-pf-success/10',
+      color: 'text-gain',
+      bg: 'bg-gain/10',
       sub: breakdown ? <ChangeBadge change={breakdown.totalChange} /> : null,
     },
     {
       label: 'Platform Fees',
       value: fmt(stats.platformFeeTotal),
       icon: <DollarSign className="size-5" />,
-      color: 'text-pf-cyan-400',
-      bg: 'bg-pf-cyan-500/10',
+      color: 'text-accent-text',
+      bg: 'bg-accent/10',
       sub: null,
     },
     {
       label: 'Total Purchases',
       value: String(stats.totalPurchases),
       icon: <ShoppingBag className="size-5" />,
-      color: 'text-pf-info',
-      bg: 'bg-pf-info/10',
+      color: 'text-info',
+      bg: 'bg-info/10',
       sub: null,
     },
     {
       label: 'Active Listings',
       value: `${stats.activeListings} / ${stats.totalListings}`,
       icon: <GitFork className="size-5" />,
-      color: 'text-pf-warning',
-      bg: 'bg-pf-warning/10',
+      color: 'text-warning',
+      bg: 'bg-warning/10',
       sub: null,
     },
   ] : [];
@@ -355,8 +355,8 @@ export function Component() {
           value: fmtDollar(breakdown.totalRevenue),
           change: breakdown.totalChange,
           icon: <DollarSign className="size-5" />,
-          color: 'text-pf-success',
-          bg: 'bg-pf-success/10',
+          color: 'text-gain',
+          bg: 'bg-gain/10',
         },
         ...((['marketplace_listings', 'copy_fees', 'strategy_sales'] as SourceKey[]).map(key => {
           const src = breakdown.sources.find(s => s.source === key);
@@ -365,7 +365,7 @@ export function Component() {
             value: src ? fmtDollar(src.revenue) : '$0',
             change: src?.change ?? 0,
             icon: <BarChart2 className="size-5" />,
-            color: 'text-pf-text',
+            color: 'text-primary',
             bg: SOURCE_BG[key],
             dotColor: SOURCE_COLORS[key],
           };
@@ -397,8 +397,8 @@ export function Component() {
       {/* ── Page header ──────────────────────────────────────────────────── */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-semibold text-pf-text">Admin Revenue</h1>
-          <p className="text-sm text-pf-text-muted mt-1">
+          <h1 className="text-2xl font-semibold text-primary">Admin Revenue</h1>
+          <p className="text-sm text-tertiary mt-1">
             Platform earnings across marketplace listings, copy trading, and strategy sales
           </p>
         </div>
@@ -409,7 +409,7 @@ export function Component() {
             variant="ghost"
             onClick={refreshAll}
             disabled={loading || loadingBreakdown}
-            className="flex items-center gap-2 px-3 py-2 rounded-pf bg-pf-elevated border border-pf-border text-sm text-pf-text-secondary hover:text-pf-text transition-colors disabled:opacity-50"
+            className="flex items-center gap-2 px-3 py-2 rounded-pf bg-elevated border border-default text-sm text-secondary hover:text-primary transition-colors disabled:opacity-50"
           >
             <RefreshCw className={`size-4 ${loading || loadingBreakdown ? 'animate-spin' : ''}`} />
             Refresh
@@ -421,18 +421,18 @@ export function Component() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {loading
           ? Array.from({ length: 4 }, (_, i) => (
-              <div key={i} className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4 animate-pulse">
+              <div key={i} className="bg-elevated border border-default rounded-pf-lg p-4 animate-pulse">
                 <Skeleton className="h-3 w-24 mb-3" />
                 <Skeleton className="h-7 w-16" />
               </div>
             ))
           : statCards.map(card => (
-              <div key={card.label} className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4">
+              <div key={card.label} className="bg-elevated border border-default rounded-pf-lg p-4">
                 <div className="flex items-center gap-2 mb-2">
                   <div className={`p-2 rounded-pf-sm ${card.bg} ${card.color}`}>{card.icon}</div>
-                  <span className="text-xs text-pf-text-muted font-medium uppercase tracking-wide">{card.label}</span>
+                  <span className="text-xs text-tertiary font-medium uppercase tracking-wide">{card.label}</span>
                 </div>
-                <div className="text-2xl font-bold text-pf-text font-mono">{card.value}</div>
+                <div className="text-2xl font-bold text-primary font-mono">{card.value}</div>
                 {card.sub && <div className="mt-1">{card.sub}</div>}
               </div>
             ))}
@@ -442,11 +442,11 @@ export function Component() {
       {/* SECTION 1 — Revenue breakdown                                     */}
       {/* ══════════════════════════════════════════════════════════════════ */}
 
-      <div className="bg-pf-elevated border border-pf-border rounded-pf-lg overflow-hidden">
-        <div className="flex items-center justify-between px-4 py-3 border-b border-pf-border">
+      <div className="bg-elevated border border-default rounded-pf-lg overflow-hidden">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-default">
           <div className="flex items-center gap-2">
-            <PieChartIcon className="size-4 text-pf-cyan-400" />
-            <h2 className="text-sm font-semibold text-pf-text">Revenue Breakdown by Source</h2>
+            <PieChartIcon className="size-4 text-accent-text" />
+            <h2 className="text-sm font-semibold text-primary">Revenue Breakdown by Source</h2>
           </div>
           <PeriodPills periods={PERIODS} active={period} onChange={setPeriod} />
         </div>
@@ -455,14 +455,14 @@ export function Component() {
         <div className="p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           {loadingBreakdown
             ? Array.from({ length: 4 }, (_, i) => (
-                <div key={i} className="bg-pf-base border border-pf-border rounded-pf p-3 animate-pulse">
+                <div key={i} className="bg-app border border-default rounded-pf p-3 animate-pulse">
                   <Skeleton className="h-3 w-20 mb-2" />
                   <Skeleton className="h-6 w-14 mb-1" />
                   <Skeleton className="h-3 w-10" />
                 </div>
               ))
             : breakdownStatCards.map((card, idx) => (
-                <div key={card.label} className="bg-pf-base border border-pf-border rounded-pf p-3">
+                <div key={card.label} className="bg-app border border-default rounded-pf p-3">
                   <div className="flex items-center gap-2 mb-2">
                     {'dotColor' in card && (
                       <span
@@ -470,14 +470,14 @@ export function Component() {
                         style={{ backgroundColor: (card as { dotColor: string }).dotColor }}
                       />
                     )}
-                    <span className="text-xs text-pf-text-muted truncate">{card.label}</span>
+                    <span className="text-xs text-tertiary truncate">{card.label}</span>
                   </div>
-                  <div className={`text-xl font-bold font-mono ${idx === 0 ? 'text-pf-success' : 'text-pf-text'}`}>
+                  <div className={`text-xl font-bold font-mono ${idx === 0 ? 'text-gain' : 'text-primary'}`}>
                     {card.value}
                   </div>
                   <div className="mt-1">
                     <ChangeBadge change={card.change} />
-                    <span className="text-xs text-pf-text-muted ml-1">vs prev period</span>
+                    <span className="text-xs text-tertiary ml-1">vs prev period</span>
                   </div>
                 </div>
               ))}
@@ -488,11 +488,11 @@ export function Component() {
 
           {/* Donut chart */}
           <div>
-            <p className="text-xs text-pf-text-muted font-medium uppercase tracking-wide mb-3">Distribution</p>
+            <p className="text-xs text-tertiary font-medium uppercase tracking-wide mb-3">Distribution</p>
             {loadingBreakdown ? (
               <Skeleton className="h-pf-chart-lg" />
             ) : donutData.length === 0 ? (
-              <div className="h-pf-chart-lg flex items-center justify-center text-sm text-pf-text-muted">No data</div>
+              <div className="h-pf-chart-lg flex items-center justify-center text-sm text-tertiary">No data</div>
             ) : (
               <div>
                 <ResponsiveContainer width="100%" height={200}>
@@ -520,8 +520,8 @@ export function Component() {
 
                 {/* Center label overlay using absolute positioning trick */}
                 <div className="relative -mt-30 mb-15 flex flex-col items-center justify-center pointer-events-none select-none">
-                  <span className="text-xs text-pf-text-muted">Total</span>
-                  <span className="text-base font-bold font-mono text-pf-text">
+                  <span className="text-xs text-tertiary">Total</span>
+                  <span className="text-base font-bold font-mono text-primary">
                     {fmtDollar(breakdown?.totalRevenue ?? 0)}
                   </span>
                 </div>
@@ -534,8 +534,8 @@ export function Component() {
                         className="size-3 rounded-pf-full shrink-0"
                         style={{ backgroundColor: SOURCE_COLORS[s.source] }}
                       />
-                      <span className="text-pf-text-muted truncate">{s.label}</span>
-                      <span className="font-mono text-pf-text ml-auto">{s.pct.toFixed(1)}%</span>
+                      <span className="text-tertiary truncate">{s.label}</span>
+                      <span className="font-mono text-primary ml-auto">{s.pct.toFixed(1)}%</span>
                     </div>
                   ))}
                 </div>
@@ -545,7 +545,7 @@ export function Component() {
 
           {/* Source breakdown table */}
           <div>
-            <p className="text-xs text-pf-text-muted font-medium uppercase tracking-wide mb-3">Source Detail</p>
+            <p className="text-xs text-tertiary font-medium uppercase tracking-wide mb-3">Source Detail</p>
             {loadingBreakdown ? (
               <div className="space-y-2">
                 {Array.from({ length: 5 }, (_, i) => <Skeleton key={i} className="h-10" />)}
@@ -554,7 +554,7 @@ export function Component() {
               <div className="overflow-x-auto">
                 <table className="w-full text-xs" aria-label="Revenue by source">
                   <thead>
-                    <tr className="text-pf-text-muted border-b border-pf-border">
+                    <tr className="text-tertiary border-b border-default">
                       <th className="text-left pb-2 font-medium">Source</th>
                       <th className="text-right pb-2 font-medium">Revenue</th>
                       <th className="text-right pb-2 font-medium w-20">% Share</th>
@@ -562,22 +562,22 @@ export function Component() {
                       <th className="text-right pb-2 font-medium">Txns</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-pf-border-subtle">
+                  <tbody className="divide-y divide-subtle">
                     {(breakdown?.sources ?? []).map(s => (
-                      <tr key={s.source} className="hover:bg-pf-overlay/40 transition-colors">
+                      <tr key={s.source} className="hover:bg-overlay/40 transition-colors">
                         <td className="py-3 pr-2">
                           <div className="flex items-center gap-2">
                             <span
                               className="size-2 rounded-pf-full shrink-0"
                               style={{ backgroundColor: SOURCE_COLORS[s.source] }}
                             />
-                            <span className="text-pf-text">{s.label}</span>
+                            <span className="text-primary">{s.label}</span>
                           </div>
                         </td>
-                        <td className="py-3 text-right font-mono text-pf-text">{fmtDollar(s.revenue)}</td>
+                        <td className="py-3 text-right font-mono text-primary">{fmtDollar(s.revenue)}</td>
                         <td className="py-3 pl-3">
                           <div className="flex items-center gap-2">
-                            <div className="flex-1 h-2 bg-pf-base rounded-pf-full overflow-hidden">
+                            <div className="flex-1 h-2 bg-app rounded-pf-full overflow-hidden">
                               <div
                                 className="h-full rounded-pf-full"
                                 style={{
@@ -586,7 +586,7 @@ export function Component() {
                                 }}
                               />
                             </div>
-                            <span className="font-mono text-pf-text-muted w-9 text-right">
+                            <span className="font-mono text-tertiary w-9 text-right">
                               {s.pct.toFixed(0)}%
                             </span>
                           </div>
@@ -594,7 +594,7 @@ export function Component() {
                         <td className="py-3 text-right">
                           <ChangeBadge change={s.change} />
                         </td>
-                        <td className="py-3 text-right font-mono text-pf-text-muted">
+                        <td className="py-3 text-right font-mono text-tertiary">
                           {fmtNum(s.transactionCount)}
                         </td>
                       </tr>
@@ -611,11 +611,11 @@ export function Component() {
       {/* SECTION 2 — Monthly revenue trend (existing, enhanced)            */}
       {/* ══════════════════════════════════════════════════════════════════ */}
 
-      <div className="bg-pf-elevated border border-pf-border rounded-pf-lg overflow-hidden">
-        <div className="flex items-center justify-between px-4 py-3 border-b border-pf-border">
+      <div className="bg-elevated border border-default rounded-pf-lg overflow-hidden">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-default">
           <div className="flex items-center gap-2">
-            <BarChart2 className="size-4 text-pf-cyan-400" />
-            <h2 className="text-sm font-semibold text-pf-text">Revenue Trend</h2>
+            <BarChart2 className="size-4 text-accent-text" />
+            <h2 className="text-sm font-semibold text-primary">Revenue Trend</h2>
           </div>
           <div className="flex items-center gap-2">
             <div className="flex gap-1">
@@ -627,8 +627,8 @@ export function Component() {
                   onClick={() => setMonthlyPeriod(p)}
                   className={`px-3 py-1 rounded text-xs font-medium transition-colors ${
                     monthlyPeriod === p
-                      ? 'bg-pf-cyan-500/20 text-pf-cyan-400 border border-pf-cyan-500/40'
-                      : 'text-pf-text-muted hover:text-pf-text border border-transparent'
+                      ? 'bg-accent/20 text-accent-text border border-accent/40'
+                      : 'text-tertiary hover:text-primary border border-transparent'
                   }`}
                 >
                   {p} months
@@ -640,7 +640,7 @@ export function Component() {
               variant="ghost"
               onClick={() => loadMonthly(monthlyPeriod)}
               disabled={loadingMonthly}
-              className="flex items-center gap-2 px-3 py-1 rounded text-xs text-pf-text-secondary hover:text-pf-text border border-pf-border bg-pf-base transition-colors disabled:opacity-50"
+              className="flex items-center gap-2 px-3 py-1 rounded text-xs text-secondary hover:text-primary border border-default bg-app transition-colors disabled:opacity-50"
             >
               <RefreshCw className={`size-3 ${loadingMonthly ? 'animate-spin' : ''}`} />
               Refresh
@@ -651,7 +651,7 @@ export function Component() {
           {loadingMonthly ? (
             <Skeleton className="h-pf-chart-md" />
           ) : monthlyData.length === 0 ? (
-            <div className="h-pf-chart-md flex items-center justify-center text-sm text-pf-text-muted">
+            <div className="h-pf-chart-md flex items-center justify-center text-sm text-tertiary">
               No revenue data yet
             </div>
           ) : (
@@ -680,7 +680,7 @@ export function Component() {
                 />
                 <Tooltip content={<MonthlyTooltip />} />
                 <Legend wrapperStyle={chartLegendStyle} />
-                <Bar yAxisId="left" dataKey="revenue" name="Revenue" fill="var(--color-pf-cyan-500)" opacity={0.7} radius={[2, 2, 0, 0]} />
+                <Bar yAxisId="left" dataKey="revenue" name="Revenue" fill="var(--accent-default)" opacity={0.7} radius={[2, 2, 0, 0]} />
                 <Bar yAxisId="left" dataKey="fees" name="Fees" fill="var(--color-pf-purple-500)" opacity={0.7} radius={[2, 2, 0, 0]} />
                 <Line yAxisId="right" type="monotone" dataKey="purchases" name="Purchases" stroke="var(--color-pf-gold-500)" strokeWidth={2} dot={false} />
               </ComposedChart>
@@ -693,17 +693,17 @@ export function Component() {
       {/* SECTION 3 — Period-over-period comparison bar chart               */}
       {/* ══════════════════════════════════════════════════════════════════ */}
 
-      <div className="bg-pf-elevated border border-pf-border rounded-pf-lg overflow-hidden">
-        <div className="flex items-center gap-2 px-4 py-3 border-b border-pf-border">
-          <TrendingUp className="size-4 text-pf-success" />
-          <h2 className="text-sm font-semibold text-pf-text">Period-over-Period Comparison</h2>
-          <span className="text-xs text-pf-text-muted ml-1">Current vs previous {period}</span>
+      <div className="bg-elevated border border-default rounded-pf-lg overflow-hidden">
+        <div className="flex items-center gap-2 px-4 py-3 border-b border-default">
+          <TrendingUp className="size-4 text-gain" />
+          <h2 className="text-sm font-semibold text-primary">Period-over-Period Comparison</h2>
+          <span className="text-xs text-tertiary ml-1">Current vs previous {period}</span>
         </div>
         <div className="px-4 py-4">
           {loadingBreakdown ? (
             <Skeleton className="h-pf-chart-sm" />
           ) : compareData.length === 0 ? (
-            <div className="h-pf-chart-sm flex items-center justify-center text-sm text-pf-text-muted">
+            <div className="h-pf-chart-sm flex items-center justify-center text-sm text-tertiary">
               No comparison data
             </div>
           ) : (
@@ -736,11 +736,11 @@ export function Component() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Top Listings */}
-        <div className="bg-pf-elevated border border-pf-border rounded-pf-lg overflow-hidden">
-          <div className="px-4 py-3 border-b border-pf-border">
-            <h2 className="text-sm font-semibold text-pf-text">Top Listings by Revenue</h2>
+        <div className="bg-elevated border border-default rounded-pf-lg overflow-hidden">
+          <div className="px-4 py-3 border-b border-default">
+            <h2 className="text-sm font-semibold text-primary">Top Listings by Revenue</h2>
           </div>
-          <div className="divide-y divide-pf-border-subtle">
+          <div className="divide-y divide-subtle">
             {loading
               ? Array.from({ length: 5 }, (_, i) => (
                   <div key={i} className="px-4 py-3">
@@ -748,27 +748,27 @@ export function Component() {
                   </div>
                 ))
               : (stats?.topListings ?? []).length === 0
-                ? <div className="px-4 py-8 text-center text-sm text-pf-text-muted">No listings yet</div>
+                ? <div className="px-4 py-8 text-center text-sm text-tertiary">No listings yet</div>
                 : (stats?.topListings ?? []).map((l, i) => (
                     <div key={l.id} className="flex items-center gap-3 px-4 py-3">
-                      <span className="font-mono text-xs text-pf-text-muted w-5 text-right">{i + 1}</span>
+                      <span className="font-mono text-xs text-tertiary w-5 text-right">{i + 1}</span>
                       <div className="flex-1 min-w-0">
-                        <div className="text-sm text-pf-text font-medium truncate">{l.title}</div>
-                        <div className="text-xs text-pf-text-muted">
+                        <div className="text-sm text-primary font-medium truncate">{l.title}</div>
+                        <div className="text-xs text-tertiary">
                           by {l.seller.displayName ?? l.seller.username} · {l.purchaseCount} sales · {l.forkCount} forks
                           {l.avgRating && (
                             <span className="ml-1 inline-flex items-center gap-1">
-                              <Star className="size-3 fill-pf-warning text-pf-warning" />
+                              <Star className="size-3 fill-warning text-warning" />
                               {parseFloat(l.avgRating).toFixed(1)} ({l.ratingCount})
                             </span>
                           )}
                         </div>
                       </div>
                       <div className="text-right shrink-0">
-                        <div className="text-sm font-mono font-semibold text-pf-success">
+                        <div className="text-sm font-mono font-semibold text-gain">
                           {fmt(parseFloat(l.totalRevenue))}
                         </div>
-                        <div className="text-xs text-pf-text-muted">${parseFloat(l.priceUsdc).toFixed(2)} ea</div>
+                        <div className="text-xs text-tertiary">${parseFloat(l.priceUsdc).toFixed(2)} ea</div>
                       </div>
                     </div>
                   ))}
@@ -776,11 +776,11 @@ export function Component() {
         </div>
 
         {/* Recent Purchases */}
-        <div className="bg-pf-elevated border border-pf-border rounded-pf-lg overflow-hidden">
-          <div className="px-4 py-3 border-b border-pf-border">
-            <h2 className="text-sm font-semibold text-pf-text">Recent Purchases (30d)</h2>
+        <div className="bg-elevated border border-default rounded-pf-lg overflow-hidden">
+          <div className="px-4 py-3 border-b border-default">
+            <h2 className="text-sm font-semibold text-primary">Recent Purchases (30d)</h2>
           </div>
-          <div className="divide-y divide-pf-border-subtle">
+          <div className="divide-y divide-subtle">
             {loading
               ? Array.from({ length: 5 }, (_, i) => (
                   <div key={i} className="px-4 py-3">
@@ -788,20 +788,20 @@ export function Component() {
                   </div>
                 ))
               : (stats?.recentPurchases ?? []).length === 0
-                ? <div className="px-4 py-8 text-center text-sm text-pf-text-muted">No recent purchases</div>
+                ? <div className="px-4 py-8 text-center text-sm text-tertiary">No recent purchases</div>
                 : (stats?.recentPurchases ?? []).map(p => (
                     <div key={p.id} className="flex items-center gap-3 px-4 py-3">
                       <div className="flex-1 min-w-0">
-                        <div className="text-sm text-pf-text truncate">{p.listing.title}</div>
-                        <div className="text-xs text-pf-text-muted">
+                        <div className="text-sm text-primary truncate">{p.listing.title}</div>
+                        <div className="text-xs text-tertiary">
                           {new Date(p.createdAt).toLocaleDateString()} · fee: ${parseFloat(p.platformFee).toFixed(2)}
                         </div>
                       </div>
                       <div className="text-right shrink-0">
-                        <div className="text-sm font-mono font-semibold text-pf-text">
+                        <div className="text-sm font-mono font-semibold text-primary">
                           ${parseFloat(p.priceUsdc).toFixed(2)}
                         </div>
-                        <div className="text-xs text-pf-success">+${parseFloat(p.sellerNet).toFixed(2)} seller</div>
+                        <div className="text-xs text-gain">+${parseFloat(p.sellerNet).toFixed(2)} seller</div>
                       </div>
                     </div>
                   ))}
@@ -813,19 +813,19 @@ export function Component() {
       {/* SECTION 5 — Top revenue-generating users                          */}
       {/* ══════════════════════════════════════════════════════════════════ */}
 
-      <div className="bg-pf-elevated border border-pf-border rounded-pf-lg overflow-hidden">
-        <div className="flex items-center justify-between px-4 py-3 border-b border-pf-border">
+      <div className="bg-elevated border border-default rounded-pf-lg overflow-hidden">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-default">
           <div className="flex items-center gap-2">
-            <Users className="size-4 text-pf-cyan-400" />
-            <h2 className="text-sm font-semibold text-pf-text">Top Revenue-Generating Users</h2>
-            <span className="text-xs text-pf-text-muted">fees paid to platform</span>
+            <Users className="size-4 text-accent-text" />
+            <h2 className="text-sm font-semibold text-primary">Top Revenue-Generating Users</h2>
+            <span className="text-xs text-tertiary">fees paid to platform</span>
           </div>
           <Button
             type="button"
             variant="ghost"
             onClick={() => loadTopUsers(period)}
             disabled={loadingTopUsers}
-            className="flex items-center gap-2 px-3 py-1 rounded text-xs text-pf-text-secondary hover:text-pf-text border border-pf-border bg-pf-base transition-colors disabled:opacity-50"
+            className="flex items-center gap-2 px-3 py-1 rounded text-xs text-secondary hover:text-primary border border-default bg-app transition-colors disabled:opacity-50"
           >
             <RefreshCw className={`size-3 ${loadingTopUsers ? 'animate-spin' : ''}`} />
             Refresh
@@ -835,7 +835,7 @@ export function Component() {
         <div className="overflow-x-auto">
           <table className="w-full text-sm" aria-label="Top users by volume">
             <thead>
-              <tr className="text-xs text-pf-text-muted border-b border-pf-border">
+              <tr className="text-xs text-tertiary border-b border-default">
                 <th className="text-left px-4 py-3 font-medium w-10">#</th>
                 <th className="text-left px-2 py-3 font-medium">Username</th>
                 <th className="text-right px-2 py-3 font-medium">Revenue Generated</th>
@@ -843,7 +843,7 @@ export function Component() {
                 <th className="text-right px-4 py-3 font-medium">Primary Source</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-pf-border-subtle">
+            <tbody className="divide-y divide-subtle">
               {loadingTopUsers
                 ? Array.from({ length: 5 }, (_, i) => (
                     <tr key={i}>
@@ -855,29 +855,29 @@ export function Component() {
                 : topUsers.length === 0
                   ? (
                       <tr>
-                        <td colSpan={5} className="px-4 py-8 text-center text-sm text-pf-text-muted">
+                        <td colSpan={5} className="px-4 py-8 text-center text-sm text-tertiary">
                           No data for this period
                         </td>
                       </tr>
                     )
                   : topUsers.map((user, idx) => {
                       const srcKey = user.primarySource as SourceKey;
-                      const dotColor = SOURCE_COLORS[srcKey] ?? 'var(--color-pf-text-muted)';
+                      const dotColor = SOURCE_COLORS[srcKey] ?? 'var(--text-tertiary)';
                       return (
-                        <tr key={user.userId} className="hover:bg-pf-overlay/40 transition-colors">
-                          <td className="px-4 py-3 font-mono text-xs text-pf-text-muted">{idx + 1}</td>
+                        <tr key={user.userId} className="hover:bg-overlay/40 transition-colors">
+                          <td className="px-4 py-3 font-mono text-xs text-tertiary">{idx + 1}</td>
                           <td className="px-2 py-3">
                             <a
                               href={`/admin/users/${user.userId}`}
-                              className="text-pf-cyan-400 hover:text-pf-cyan-300 font-medium transition-colors"
+                              className="text-accent-text hover:text-accent-text font-medium transition-colors"
                             >
                               @{user.username}
                             </a>
                           </td>
-                          <td className="px-2 py-3 text-right font-mono font-semibold text-pf-success">
+                          <td className="px-2 py-3 text-right font-mono font-semibold text-gain">
                             {fmtDollar(user.revenueGenerated)}
                           </td>
-                          <td className="px-2 py-3 text-right font-mono text-pf-text-secondary">
+                          <td className="px-2 py-3 text-right font-mono text-secondary">
                             {user.tradeVolume}
                           </td>
                           <td className="px-4 py-3 text-right">

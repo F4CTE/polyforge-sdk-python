@@ -17,6 +17,9 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **Focus ring token** — added `shadow-focus-ring` per charter §13
 - **Transition tokens** — added `duration-micro` (120ms), `duration-panel` (200ms), `duration-modal` (180ms) per charter §7
 
+- **User-app token migration** — migrated 83 files (4,169 replacements) from `pf-*` Tailwind classes to new Linear-inspired tokens: `bg-pf-base` → `bg-app`, `text-pf-text` → `text-primary`, `border-pf-border` → `border-default`, `text-pf-cyan-500` → `text-accent`, `text-pf-success` → `text-gain`, etc. (closes #607)
+- **Admin-app token migration** — migrated 34 files (1,531 replacements) with same mappings as user-app; admin sidebar aliased to `bg-app` (closes #608)
+
 ### Fixed (Design System)
 - **Landing nav/footer `rounded-sm` → `rounded-pf-sm`** — replaced 15 bare Tailwind `rounded-sm` usages with design token `rounded-pf-sm` in nav.tsx and footer.tsx (closes #589)
 - **Mobile nav missing theme toggle** — added `<ThemeToggle />` to mobile slide-down menu so mobile users can switch dark/light themes (closes #590)
