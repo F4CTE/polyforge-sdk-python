@@ -17,12 +17,10 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **Focus ring token** — added `shadow-focus-ring` per charter §13
 - **Transition tokens** — added `duration-micro` (120ms), `duration-panel` (200ms), `duration-modal` (180ms) per charter §7
 
-- **shadcn/ui component token migration** — migrated all 22 components in `packages/ui/src/components/ui/` from legacy `pf-*` class names to new Linear-inspired tokens (`bg-elevated`, `text-primary`, `border-default`, `bg-accent`, `text-gain`, `text-loss`, etc.); added `--border-color-*` and `--divide-color-*` namespace overrides to `@theme` for correct border/bg color separation (#606)
-
 ### Fixed (Design System)
-- **DropdownMenu focus: → focus-visible:** — trigger and menu items used bare `focus:` pseudo-class; switched to `focus-visible:` per charter §22 (#562)
-- **Chip/Progress rounded-full → rounded-pf-full** — three instances of `rounded-full` in Chip and Progress components bypassed design token system (#552)
-- **Undefined min-w/min-h tokens defined** — `min-w-pf-dropdown-min` (160px) and `min-h-pf-textarea-min` (80px) were referenced but never declared in `@theme`; added to globals.css (#524)
+- **Landing nav/footer `rounded-sm` → `rounded-pf-sm`** — replaced 15 bare Tailwind `rounded-sm` usages with design token `rounded-pf-sm` in nav.tsx and footer.tsx (closes #589)
+- **Mobile nav missing theme toggle** — added `<ThemeToggle />` to mobile slide-down menu so mobile users can switch dark/light themes (closes #590)
+- **Landing nav inline SVGs → Lucide React** — replaced ~50 lines of inline SVG markup (sun, moon, hamburger, close) with tree-shakeable Lucide React imports (closes #591)
 
 ### Fixed (E2E Infrastructure)
 - **Throttle rate limits cause E2E 429 failures** — raised dev-mode rate limits to prevent 429s during E2E suite
@@ -75,7 +73,6 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **#547 LLM API keys cached in memory** — read Anthropic/OpenAI keys from ConfigService per-call instead of caching as class fields; reduces credential exposure window in V8 heap
 - **#557 Dev compose port bindings on 0.0.0.0** — bound all NestJS service and mock-polymarket ports to `127.0.0.1` to prevent direct backend access bypassing the nginx gateway
 - **#558 WhatsApp HMAC bypass when APP_SECRET empty** — bot-service now fails startup if WHATSAPP_TOKEN is set but WHATSAPP_APP_SECRET is empty, preventing silent HMAC verification bypass
-- **#559 CI deploy-dev hardcoded fallback passwords** — removed hardcoded DB and Redis passwords from workflow file; credentials now sourced exclusively from `.env` on lab server with `${VAR:?}` validation
 - **#498 Hardcoded devpass in DIRECT_DATABASE_URL** — parameterized with env var substitution
 - **#499 rejectPlaceholderSecrets missing in 5 services** — added guards to strategy-engine, market-data, notification, backtest, paper-order
 - **#500 Excessive rate limits** — lowered ThrottlerModule limits across financial services
