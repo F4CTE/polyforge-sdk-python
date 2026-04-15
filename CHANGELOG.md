@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.9.2] — 2026-04-15
+
+### Fixed
+- **Price history params** — `get_price_history()` now sends `period` (with values `"1h"`, `"6h"`, `"24h"`) instead of the incorrect `resolution` parameter. Removed unsupported `from_date`/`to_date` params that were silently ignored by the platform. (closes #116)
+
 ## [1.9.1] — 2026-04-15
 
 ### Security

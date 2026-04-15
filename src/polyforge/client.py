@@ -455,26 +455,20 @@ class PolyforgeClient:
         self,
         token_id: str,
         *,
-        resolution: str | None = None,
-        from_date: str | None = None,
-        to_date: str | None = None,
+        period: str | None = None,
         limit: int | None = None,
     ) -> list[PriceHistoryEntry]:
         """Fetch price history for a market token.
 
         Args:
             token_id: The token ID to fetch history for.
-            resolution: Candle resolution — ``"1m"``, ``"1h"``, or ``"1d"`` (default ``"1h"``).
-            from_date: Start time as ISO 8601 string.
-            to_date: End time as ISO 8601 string.
-            limit: Maximum number of entries (1–1000, default 200).
+            period: Candle period — ``"1h"``, ``"6h"``, or ``"24h"`` (default ``"1h"``).
+            limit: Maximum number of entries (1–500, default server-side).
         """
         data = self._get(
             f"/api/v1/markets/{_encode_path(token_id)}/price-history",
             params={
-                "resolution": resolution,
-                "from": from_date,
-                "to": to_date,
+                "period": period,
                 "limit": limit,
             },
         )
@@ -1521,26 +1515,20 @@ class AsyncPolyforgeClient:
         self,
         token_id: str,
         *,
-        resolution: str | None = None,
-        from_date: str | None = None,
-        to_date: str | None = None,
+        period: str | None = None,
         limit: int | None = None,
     ) -> list[PriceHistoryEntry]:
         """Fetch price history for a market token.
 
         Args:
             token_id: The token ID to fetch history for.
-            resolution: Candle resolution — ``"1m"``, ``"1h"``, or ``"1d"`` (default ``"1h"``).
-            from_date: Start time as ISO 8601 string.
-            to_date: End time as ISO 8601 string.
-            limit: Maximum number of entries (1–1000, default 200).
+            period: Candle period — ``"1h"``, ``"6h"``, or ``"24h"`` (default ``"1h"``).
+            limit: Maximum number of entries (1–500, default server-side).
         """
         data = await self._get(
             f"/api/v1/markets/{_encode_path(token_id)}/price-history",
             params={
-                "resolution": resolution,
-                "from": from_date,
-                "to": to_date,
+                "period": period,
                 "limit": limit,
             },
         )
