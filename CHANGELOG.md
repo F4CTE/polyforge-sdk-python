@@ -5,7 +5,17 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
-## [Unreleased] — 2026-04-14
+## [Unreleased] — 2026-04-15
+
+### Changed (Design System)
+- **Linear-inspired token system** — rewrote `globals.css` with new CSS custom properties (`--bg-app`, `--bg-surface`, `--text-primary`, `--accent-default`, `--gain`, `--loss`) per design charter §12; old `--color-pf-*` tokens aliased for backwards compat (#604)
+- **Geist font** — installed Geist variable font (sans + mono) replacing Inter/JetBrains Mono per charter §2; added `@font-face` declarations with woff2 variable fonts (#605)
+- **New Tailwind utilities** — added `bg-app`, `bg-surface`, `bg-elevated`, `text-primary`, `text-secondary`, `bg-accent`, `text-gain`, `text-loss` utility classes via `@theme`
+- **Electric Blue accent** — accent color updated from cyan (#06B6D4) to Electric Blue (#4F6EF7) per charter §1
+- **Charter-aligned type scale** — added `text-display-lg`, `text-display-sm`, `text-heading`, `text-body-md`, `text-body-sm`, `text-label`, `text-caption` tokens
+- **Elevation shadows** — added `shadow-elevation-2` and `shadow-elevation-3` per charter §4
+- **Focus ring token** — added `shadow-focus-ring` per charter §13
+- **Transition tokens** — added `duration-micro` (120ms), `duration-panel` (200ms), `duration-modal` (180ms) per charter §7
 
 ### Fixed (Design System)
 - **DropdownMenu focus: → focus-visible:** — trigger and menu items used bare `focus:` pseudo-class; switched to `focus-visible:` per charter §22 (#562)
