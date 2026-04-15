@@ -428,7 +428,7 @@ describe("StrategyRegistryService — onPriceEvent()", () => {
     prisma.strategy.findUnique.mockResolvedValue(strategy);
     await svc.start("strat-1");
 
-    await expect(svc.onPriceEvent("tok-1", 0.75)).resolves.not.toThrow();
+    expect(() => svc.onPriceEvent("tok-1", 0.75)).not.toThrow();
   });
 
   it("is a no-op when no strategies are running", async () => {
@@ -437,7 +437,7 @@ describe("StrategyRegistryService — onPriceEvent()", () => {
     const state = makeStateMock();
     const svc = new StrategyRegistryService(prisma, redis, state);
 
-    await expect(svc.onPriceEvent("tok-1", 0.5)).resolves.not.toThrow();
+    expect(() => svc.onPriceEvent("tok-1", 0.5)).not.toThrow();
   });
 });
 

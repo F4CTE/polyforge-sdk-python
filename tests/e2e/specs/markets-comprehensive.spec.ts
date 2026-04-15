@@ -445,7 +445,7 @@ test.describe('Markets — Full Workflow Coverage', () => {
         const markets = new MarketsPage(page);
         await markets.goto();
 
-        // Verify card view button is styled as active (bg-pf-elevated)
+        // Verify card view button is styled as active (bg-elevated, formerly bg-pf-elevated)
         const cardBtn = markets.cardViewButton;
         await expect(cardBtn).toBeVisible();
 

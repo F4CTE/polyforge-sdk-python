@@ -97,8 +97,9 @@ export class MarketsPage {
     /** @deprecated Use switchToCardView() or switchToTableView() instead */
     async toggleView(): Promise<void> {
         // Determine current view and toggle to the other
+        // Active view button has bg-elevated class (renamed from bg-pf-elevated)
         const tableActive = await this.tableViewButton.evaluate(
-            (el) => el.classList.contains('bg-pf-elevated'),
+            (el) => el.classList.contains('bg-elevated') || el.classList.contains('bg-pf-elevated'),
         ).catch(() => false);
         if (tableActive) {
             await this.switchToCardView();

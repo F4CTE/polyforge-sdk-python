@@ -111,6 +111,24 @@ describe("TelegramService", () => {
       expect(fetch).not.toHaveBeenCalled();
       vi.unstubAllGlobals();
     });
+
+    it("calls Telegram sendMessage API when enabled", async () => {
+      (svc as any).enabled = true;
+      const mockFetch = vi.fn().mockResolvedValue({ ok: true });
+      vi.stubGlobal("fetch", mockFetch);
+
+      await svc.send("chat-1", "hello");
+
+      expect(mockFetch).toHaveBeenCalledTimes(1);
+      const [url, opts] = mockFetch.mock.calls[0];
+      expect(url).toContain("/sendMessage");
+      const body = JSON.parse(opts.body);
+      expect(body.chat_id).toBe("chat-1");
+      expect(body.text).toBe("hello");
+      expect(body.parse_mode).toBe("HTML");
+
+      vi.unstubAllGlobals();
+    });
   });
 
   // ─── onModuleInit ─────────────────────────────────────────────────────────

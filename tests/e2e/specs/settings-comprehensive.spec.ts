@@ -878,7 +878,7 @@ test.describe.serial('Settings — Full Workflow Coverage', () => {
         // Wait for key to appear in table — confirms creation succeeded
         await expect(page.getByText(keyName)).toBeVisible({ timeout: 10_000 });
 
-        // The one-time secret is displayed in a <code class="...text-pf-warning..."> element
+        // The one-time secret is displayed in a <code class="...text-warning..."> element
         const keyDisplay = settingsPage.createdKeyDisplay;
         const isVisible = await keyDisplay.isVisible();
         if (isVisible) {

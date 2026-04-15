@@ -106,12 +106,13 @@ export class CopySetupPage {
      * Detects step by checking which step indicator button has the active styling.
      */
     async getCurrentStep(): Promise<number> {
-        // Step indicators are buttons with conditional bg-pf-cyan-500/10 class for active step
+        // Active step button has bg-accent/10 border-accent/30 text-accent-text classes
+        // (previously bg-pf-cyan-500/10 before the Linear design-token migration)
         const stepButtons = this.page.locator('.flex.items-center.gap-2 > div > button');
         const count = await stepButtons.count();
         for (let i = 0; i < count; i++) {
             const classes = await stepButtons.nth(i).getAttribute('class') ?? '';
-            if (classes.includes('bg-pf-cyan-500/10')) {
+            if (classes.includes('bg-accent/10') || classes.includes('bg-pf-cyan-500/10')) {
                 return i + 1; // 1-indexed
             }
         }
@@ -131,8 +132,9 @@ export class CopySetupPage {
      * Get the review summary text content from step 4.
      */
     async review(): Promise<string> {
-        // Review step renders key-value pairs in a div with border-b separators
-        const reviewSection = this.page.locator('.bg-pf-elevated .space-y-3');
+        // Review step (step 4) renders key-value pairs in a .space-y-3 container
+        // inside the card wrapper (.bg-elevated or legacy .bg-pf-elevated).
+        const reviewSection = this.page.locator('.bg-elevated .space-y-3, .bg-pf-elevated .space-y-3');
         return (await reviewSection.textContent()) ?? '';
     }
 

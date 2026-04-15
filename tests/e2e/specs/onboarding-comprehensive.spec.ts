@@ -161,8 +161,8 @@ test.describe.serial('Onboarding — Full Workflow Coverage', () => {
         const toggleButton = marketItem.locator('button').first();
         await toggleButton.click();
 
-        // Verify the item now shows a CheckCircle2 icon (success color)
-        const successIcon = marketItem.locator('.text-pf-success');
+        // Verify the item now shows a CheckCircle2 icon (text-gain = success color after token rename)
+        const successIcon = marketItem.locator('.text-gain');
         await expect(successIcon).toBeVisible({ timeout: 5_000 });
     });
 

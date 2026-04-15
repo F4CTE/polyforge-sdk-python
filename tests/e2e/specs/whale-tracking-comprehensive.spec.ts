@@ -119,10 +119,10 @@ test.describe('Whale Tracking — Full Workflow Coverage', () => {
             await whaleFeedPage.setMinSize('50000');
             await page.waitForTimeout(1_000);
 
-            // Verify the $50K+ button is active (has the cyan styling)
+            // Verify the $50K+ button is active (has accent styling — text-accent-text border-accent/30)
             const filterButton = page.locator('button', { hasText: '$50K+' });
             const classList = await filterButton.getAttribute('class') ?? '';
-            const isActive = classList.includes('text-pf-cyan-400');
+            const isActive = classList.includes('text-accent-text') || classList.includes('border-accent');
             expect(isActive).toBe(true);
 
             // Go to next page if available
@@ -131,9 +131,9 @@ test.describe('Whale Tracking — Full Workflow Coverage', () => {
                 await whaleFeedPage.goToPage('next');
                 await page.waitForTimeout(1_000);
 
-                // Verify filter button is still active
+                // Verify filter button is still active after pagination
                 const buttonClassAfter = await filterButton.getAttribute('class') ?? '';
-                expect(buttonClassAfter).toContain('text-pf-cyan-400');
+                expect(buttonClassAfter).toMatch(/text-accent-text|border-accent/);
             }
         });
     });

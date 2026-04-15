@@ -44,11 +44,12 @@ export class BacktestPage {
         this.paginationNext = page.locator('button[aria-label="Next page"]');
 
         // Only result-pnl has a data-testid in the component.
-        // Win rate, orders, and gaps are identified by their label text.
+        // Win rate and orders are in bg-surface stat cards identified by their label text.
+        // Use Playwright's filter({ hasText }) pattern for reliable label-based card matching.
         this.resultDetailsPnl = page.locator('[data-testid="result-pnl"]');
-        this.resultDetailsWinRate = page.locator('.bg-pf-surface:has(> span:text-is("Win Rate")) >> span.font-mono');
-        this.resultDetailsOrders = page.locator('.bg-pf-surface:has(> span:text-is("Orders Placed")) >> span.font-mono');
-        this.resultDetailsGaps = page.locator('.bg-pf-warning\\/10');
+        this.resultDetailsWinRate = page.locator('.bg-surface, .bg-pf-surface').filter({ hasText: /^Win Rate/ }).locator('span.font-mono');
+        this.resultDetailsOrders = page.locator('.bg-surface, .bg-pf-surface').filter({ hasText: /^Orders Placed/ }).locator('span.font-mono');
+        this.resultDetailsGaps = page.locator('.bg-warning\\/10, .bg-pf-warning\\/10');
     }
 
     async goto(): Promise<void> {

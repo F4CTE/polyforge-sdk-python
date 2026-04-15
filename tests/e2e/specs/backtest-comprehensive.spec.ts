@@ -417,8 +417,9 @@ test.describe('Backtesting — Full Workflow Coverage', () => {
         if (pnlVisible) {
             const pnlElement = backtestPage.resultDetailsPnl;
             const classes = await pnlElement.getAttribute('class') || '';
-            // Component applies text-pf-success for positive, text-pf-danger for negative
-            expect(classes).toMatch(/text-pf-(success|danger|text-muted)/);
+            // Component applies text-gain for positive PnL, text-loss for negative PnL
+            // (migrated from text-pf-success / text-pf-danger in the token rename)
+            expect(classes).toMatch(/text-(gain|loss|secondary|tertiary)/);
         }
     });
 

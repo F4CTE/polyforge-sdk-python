@@ -137,8 +137,9 @@ export class SettingsPage {
         this.createKeyButton = page.locator('button', { hasText: 'Generate API Key' });
         // Table has no data-testid; identified by aria-label
         this.keysTable = page.locator('table[aria-label="API keys"]');
-        // One-time secret display: <code class="...text-pf-warning..."> in the warning banner
-        this.createdKeyDisplay = page.locator('code.text-pf-warning');
+        // One-time secret display: <code class="...text-warning..."> in the warning banner
+        // (token renamed from text-pf-warning → text-warning in the Linear design system migration)
+        this.createdKeyDisplay = page.locator('code.text-warning, code.text-pf-warning');
 
         // Gas — panel container is always present when the tab is active.
         // Individual stat cards (Today's Usage / Daily Limit / Remaining) only render

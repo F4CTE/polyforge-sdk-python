@@ -247,16 +247,18 @@ test.describe('Navigation — Full Workflow Coverage', () => {
         const themeToggle = page.locator('[data-tour="theme-toggle"]');
 
         if (await themeToggle.isVisible({ timeout: 2000 }).catch(() => false)) {
-            // Theme is tracked via data-theme="dark"|"light" attribute (not a CSS class)
+            // Theme detection: supports both data-theme attribute (new) and .dark class (legacy)
             const htmlEl = page.locator('html').first();
-            const initialTheme = await htmlEl.getAttribute('data-theme');
-            const isDark = initialTheme === 'dark';
+            const getIsDark = async () => {
+                const dataTheme = await htmlEl.getAttribute('data-theme');
+                if (dataTheme) return dataTheme === 'dark';
+                const classes = await htmlEl.getAttribute('class') ?? '';
+                return classes.includes('dark');
+            };
 
+            const isDark = await getIsDark();
             await themeToggle.click();
-
-            // Check theme changed
-            const newTheme = await htmlEl.getAttribute('data-theme');
-            const isNowDark = newTheme === 'dark';
+            const isNowDark = await getIsDark();
             expect(isNowDark).not.toBe(isDark);
         }
     });
@@ -266,14 +268,19 @@ test.describe('Navigation — Full Workflow Coverage', () => {
         const themeToggle = page.locator('[data-tour="theme-toggle"]');
 
         if (await themeToggle.isVisible({ timeout: 2000 }).catch(() => false)) {
-            // Ensure dark mode is ON — theme uses data-theme attribute
-            const initialTheme = await htmlEl.getAttribute('data-theme');
-            if (initialTheme !== 'dark') {
+            // Theme detection: supports both data-theme attribute (new) and .dark class (legacy)
+            const getIsDark = async () => {
+                const dataTheme = await htmlEl.getAttribute('data-theme');
+                if (dataTheme) return dataTheme === 'dark';
+                const classes = await htmlEl.getAttribute('class') ?? '';
+                return classes.includes('dark');
+            };
+
+            // Ensure dark mode is ON
+            if (!(await getIsDark())) {
                 await themeToggle.click();
             }
-
-            const darkModeTheme = await htmlEl.getAttribute('data-theme');
-            expect(darkModeTheme).toBe('dark');
+            expect(await getIsDark()).toBe(true);
 
             // Navigate to another page
             const sidebar = page.locator('[aria-label="Main navigation"], nav').first();
@@ -282,8 +289,7 @@ test.describe('Navigation — Full Workflow Coverage', () => {
             await expect(page).toHaveURL(/\/strategies/);
 
             // Check dark mode still applied
-            const newTheme = await htmlEl.getAttribute('data-theme');
-            expect(newTheme).toBe('dark');
+            expect(await getIsDark()).toBe(true);
         }
     });
 
@@ -440,8 +446,8 @@ test.describe('Navigation — Full Workflow Coverage', () => {
             await expect(overlay).toBeVisible();
 
             // Click the backdrop element (semi-transparent div behind the sidebar panel)
-            // The backdrop has onClick={() => setMobileOpen(false)} in app-layout.tsx
-            const backdrop = overlay.locator('.bg-pf-backdrop-light');
+            // Uses bg-black/50 in app-layout.tsx (formerly bg-pf-backdrop-light)
+            const backdrop = overlay.locator('[aria-hidden="true"]').first();
             if (await backdrop.isVisible({ timeout: 1000 }).catch(() => false)) {
                 await backdrop.click({ position: { x: 250, y: 300 }, force: true });
                 await expect(overlay).toBeHidden({ timeout: 3000 });

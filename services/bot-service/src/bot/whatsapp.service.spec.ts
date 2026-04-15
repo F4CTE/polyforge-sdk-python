@@ -274,6 +274,127 @@ describe("WhatsAppService", () => {
       expect(fetch).not.toHaveBeenCalled();
       vi.unstubAllGlobals();
     });
+
+    it("calls fetch with correct payload when enabled", async () => {
+      (svc as any).enabled = true;
+      const mockFetch = vi.fn().mockResolvedValue({ ok: true });
+      vi.stubGlobal("fetch", mockFetch);
+
+      await svc.send("+1234567890", "hello");
+
+      expect(mockFetch).toHaveBeenCalledTimes(1);
+      const [url, opts] = mockFetch.mock.calls[0];
+      expect(url).toContain("/messages");
+      const body = JSON.parse(opts.body);
+      expect(body.messaging_product).toBe("whatsapp");
+      expect(body.to).toBe("+1234567890");
+      expect(body.text.body).toBe("hello");
+
+      vi.unstubAllGlobals();
+    });
+
+    it("logs warning when send returns non-ok status", async () => {
+      (svc as any).enabled = true;
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue({ ok: false, status: 429 }),
+      );
+
+      await expect(svc.send("+1234567890", "test")).resolves.not.toThrow();
+
+      vi.unstubAllGlobals();
+    });
+
+    it("catches and logs fetch errors without throwing", async () => {
+      (svc as any).enabled = true;
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockRejectedValue(new Error("Network down")),
+      );
+
+      await expect(svc.send("+1234567890", "test")).resolves.not.toThrow();
+
+      vi.unstubAllGlobals();
+    });
+  });
+
+  // ─── sendTemplate ─────────────────────────────────────────────────────
+
+  describe("sendTemplate", () => {
+    it("does not call fetch when bot is disabled", async () => {
+      vi.stubGlobal("fetch", vi.fn());
+      await svc.sendTemplate("+1234567890", "order_update", ["param1"]);
+      expect(fetch).not.toHaveBeenCalled();
+      vi.unstubAllGlobals();
+    });
+
+    it("sends template with parameters when enabled", async () => {
+      (svc as any).enabled = true;
+      const mockFetch = vi.fn().mockResolvedValue({ ok: true });
+      vi.stubGlobal("fetch", mockFetch);
+
+      await svc.sendTemplate("+1234567890", "order_update", ["filled", "$50"]);
+
+      expect(mockFetch).toHaveBeenCalledTimes(1);
+      const body = JSON.parse(mockFetch.mock.calls[0][1].body);
+      expect(body.type).toBe("template");
+      expect(body.template.name).toBe("order_update");
+      expect(body.template.language.code).toBe("en_US");
+      expect(body.template.components[0].parameters).toHaveLength(2);
+
+      vi.unstubAllGlobals();
+    });
+
+    it("sends template without components when params empty", async () => {
+      (svc as any).enabled = true;
+      const mockFetch = vi.fn().mockResolvedValue({ ok: true });
+      vi.stubGlobal("fetch", mockFetch);
+
+      await svc.sendTemplate("+1234567890", "welcome", []);
+
+      const body = JSON.parse(mockFetch.mock.calls[0][1].body);
+      expect(body.template.components).toEqual([]);
+
+      vi.unstubAllGlobals();
+    });
+
+    it("uses custom language code when provided", async () => {
+      (svc as any).enabled = true;
+      const mockFetch = vi.fn().mockResolvedValue({ ok: true });
+      vi.stubGlobal("fetch", mockFetch);
+
+      await svc.sendTemplate("+1234567890", "welcome", [], "fr_FR");
+
+      const body = JSON.parse(mockFetch.mock.calls[0][1].body);
+      expect(body.template.language.code).toBe("fr_FR");
+
+      vi.unstubAllGlobals();
+    });
+
+    it("logs warning on non-ok response", async () => {
+      (svc as any).enabled = true;
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue({ ok: false, status: 400 }),
+      );
+
+      await expect(
+        svc.sendTemplate("+1234567890", "t", ["p"]),
+      ).resolves.not.toThrow();
+
+      vi.unstubAllGlobals();
+    });
+
+    it("catches fetch errors without throwing", async () => {
+      (svc as any).enabled = true;
+      vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("timeout")));
+
+      await expect(
+        svc.sendTemplate("+1234567890", "t", ["p"]),
+      ).resolves.not.toThrow();
+
+      vi.unstubAllGlobals();
+    });
   });
 
   // ─── handleIncoming ───────────────────────────────────────────────────
@@ -312,6 +433,41 @@ describe("WhatsAppService", () => {
       await expect(svc.handleIncoming({})).resolves.not.toThrow();
       await expect(svc.handleIncoming(null)).resolves.not.toThrow();
       await expect(svc.handleIncoming(undefined)).resolves.not.toThrow();
+    });
+
+    it("dispatches command and sends reply when enabled", async () => {
+      (svc as any).enabled = true;
+      linking.getUserId.mockResolvedValue("user-1");
+      commands.execute.mockResolvedValue("status ok");
+      const mockFetch = vi.fn().mockResolvedValue({ ok: true });
+      vi.stubGlobal("fetch", mockFetch);
+
+      const payload = makeWebhookPayload("+1234567890", "/status");
+      await svc.handleIncoming(payload);
+
+      expect(commands.execute).toHaveBeenCalledWith("user-1", "/status");
+      // send() was called for the reply
+      expect(mockFetch).toHaveBeenCalled();
+
+      vi.unstubAllGlobals();
+    });
+
+    it("sends error message when dispatch throws", async () => {
+      (svc as any).enabled = true;
+      linking.getUserId.mockResolvedValue("user-1");
+      commands.execute.mockRejectedValue(new Error("service down"));
+      const mockFetch = vi.fn().mockResolvedValue({ ok: true });
+      vi.stubGlobal("fetch", mockFetch);
+
+      const payload = makeWebhookPayload("+1234567890", "/status");
+      await svc.handleIncoming(payload);
+
+      // Should have sent error message
+      const lastCall = mockFetch.mock.calls[mockFetch.mock.calls.length - 1];
+      const body = JSON.parse(lastCall[1].body);
+      expect(body.text.body).toContain("error occurred");
+
+      vi.unstubAllGlobals();
     });
   });
 
