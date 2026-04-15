@@ -19,6 +19,12 @@ export default defineConfig({
                 'src/main.ts',
                 'src/**/*.dto.ts',
             ],
+            thresholds: {
+                lines:      80,
+                functions:  85,
+                branches:   68, // WhatsApp board and stream handlers excluded; raise as integration tests land
+                statements: 79,
+            },
         },
     },
 });
