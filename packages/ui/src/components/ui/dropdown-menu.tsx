@@ -49,7 +49,7 @@ function DropdownMenuTrigger({ children, className, ...props }: DropdownMenuTrig
       type="button"
       aria-expanded={open}
       aria-haspopup="menu"
-      className={cn("focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40", className)}
+      className={cn("focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40", className)}
       onClick={() => setOpen(!open)}
       onKeyDown={(e) => {
         if (e.key === "Enter" || e.key === " ") {
@@ -128,7 +128,7 @@ function DropdownMenuContent({ children, className, align = "start" }: DropdownM
       role="menu"
       className={cn(
         "absolute z-50 mt-1 min-w-pf-dropdown-min p-1",
-        "bg-pf-elevated border border-pf-border rounded-pf shadow-pf-lg",
+        "bg-elevated border border-default rounded-pf shadow-pf-lg",
         align === "end" ? "right-0" : "left-0",
         className
       )}
@@ -161,7 +161,7 @@ function DropdownMenuItem({ children, onSelect, disabled, className, ...props }:
       aria-disabled={disabled || undefined}
       className={cn(
         "px-2 py-1 text-sm rounded-pf-xs cursor-pointer select-none outline-none",
-        "hover:bg-pf-overlay focus-visible:bg-pf-overlay",
+        "hover:bg-overlay focus-visible:bg-overlay",
         disabled && "opacity-50 cursor-not-allowed pointer-events-none",
         className
       )}
@@ -183,7 +183,7 @@ function DropdownMenuItem({ children, onSelect, disabled, className, ...props }:
 // ─── Separator ────────────────────────────────────────────────────────────────
 
 function DropdownMenuSeparator({ className }: { className?: string }) {
-  return <div role="separator" className={cn("my-1 h-px bg-pf-border", className)} />;
+  return <div role="separator" className={cn("my-1 h-px bg-[var(--border-subtle)]", className)} />;
 }
 
 export {

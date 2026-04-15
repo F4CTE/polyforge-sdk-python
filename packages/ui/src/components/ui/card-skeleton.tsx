@@ -19,7 +19,7 @@ function CardSkeleton({
   return (
     <div
       className={cn(
-        "bg-pf-elevated border border-pf-border rounded-pf-lg animate-shimmer",
+        "bg-elevated border border-default rounded-pf-lg animate-shimmer",
         padding,
         children ? "space-y-3" : "",
         className,
@@ -51,7 +51,7 @@ function SkeletonLine({
 }: SkeletonLineProps) {
   return (
     <div
-      className={cn("bg-pf-overlay rounded", h, w, className)}
+      className={cn("bg-overlay rounded", h, w, className)}
       {...props}
     />
   );
@@ -76,7 +76,7 @@ function SkeletonCircle({
 }: SkeletonCircleProps) {
   return (
     <div
-      className={cn("bg-pf-overlay shrink-0", size, rounded, className)}
+      className={cn("bg-overlay shrink-0", size, rounded, className)}
       {...props}
     />
   );
@@ -101,7 +101,7 @@ function SkeletonBadge({
 }: SkeletonBadgeProps) {
   return (
     <div
-      className={cn("bg-pf-overlay rounded-pf-full", h, w, className)}
+      className={cn("bg-overlay rounded-pf-full", h, w, className)}
       {...props}
     />
   );

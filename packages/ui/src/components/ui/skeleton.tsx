@@ -4,7 +4,7 @@ import { cn } from "../../lib/utils";
 function Skeleton({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
   return (
     <div
-      className={cn("rounded-pf-sm bg-pf-overlay animate-shimmer", className)}
+      className={cn("rounded-pf-sm bg-overlay animate-shimmer", className)}
       aria-hidden="true"
       {...props}
     />

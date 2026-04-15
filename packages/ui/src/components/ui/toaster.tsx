@@ -18,7 +18,7 @@ function Toaster({ theme = "dark", position = "top-right" }: ToasterProps) {
       theme={theme}
       position={position}
       toastOptions={{
-        className: "bg-pf-elevated border border-pf-border text-pf-text",
+        className: "bg-elevated border border-default text-primary",
       }}
     />
   );

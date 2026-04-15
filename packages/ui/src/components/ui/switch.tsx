@@ -31,15 +31,15 @@ const Switch = React.forwardRef<HTMLInputElement, SwitchProps>(
         />
         <span
           className={cn(
-            "absolute inset-0 rounded-pf-full bg-pf-overlay",
+            "absolute inset-0 rounded-pf-full bg-overlay",
             "transition-colors duration-pf-fast",
-            "peer-checked:bg-pf-cyan-500",
-            "peer-focus-visible:ring-2 peer-focus-visible:ring-pf-cyan-500/40"
+            "peer-checked:bg-accent",
+            "peer-focus-visible:ring-2 peer-focus-visible:ring-accent/40"
           )}
         />
         <span
           className={cn(
-            "pointer-events-none absolute left-px top-px h-4 w-4 rounded-pf-full bg-pf-text-contrast",
+            "pointer-events-none absolute left-px top-px h-4 w-4 rounded-pf-full bg-inverse",
             "shadow-pf-sm transition-transform duration-pf-fast",
             "peer-checked:translate-x-4"
           )}

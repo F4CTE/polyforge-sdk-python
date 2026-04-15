@@ -4,22 +4,22 @@ import { Loader2 } from "lucide-react";
 import { cn } from "../../lib/utils";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm font-semibold transition-colors duration-pf-normal focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 disabled:pointer-events-none disabled:opacity-pf-disabled",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm font-semibold transition-colors duration-pf-normal focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 disabled:pointer-events-none disabled:opacity-pf-disabled",
   {
     variants: {
       variant: {
         default:
-          "bg-pf-cyan-500 text-pf-text-contrast hover:bg-pf-cyan-400 hover:shadow-pf-glow-cyan-strong",
+          "bg-accent text-inverse hover:bg-accent-hover hover:shadow-pf-glow-cyan-strong",
         secondary:
-          "bg-transparent border border-pf-border-subtle text-pf-text-secondary hover:text-pf-text hover:bg-pf-elevated",
+          "bg-transparent border border-subtle text-secondary hover:text-primary hover:bg-elevated",
         ghost:
-          "bg-transparent text-pf-text-secondary hover:text-pf-text hover:bg-pf-elevated",
+          "bg-transparent text-secondary hover:text-primary hover:bg-elevated",
         danger:
-          "bg-pf-danger/10 text-pf-danger hover:bg-pf-danger/20",
+          "bg-loss-subtle text-loss hover:bg-loss/20",
         success:
-          "bg-pf-success/10 text-pf-success hover:bg-pf-success/20",
+          "bg-gain-subtle text-gain hover:bg-gain/20",
         link:
-          "text-pf-cyan-500 underline-offset-4 hover:underline",
+          "text-accent underline-offset-4 hover:underline",
       },
       size: {
         default: "h-9 px-4 py-2 rounded-pf",

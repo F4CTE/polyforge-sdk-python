@@ -108,6 +108,13 @@
   --color-info-subtle: var(--info-subtle);
   --color-neutral-market: var(--neutral-market);
 
+  /* Border-specific overrides (charter §3 — border ≠ bg color) */
+  --border-color-subtle: var(--border-subtle);
+  --border-color-default: var(--border-default);
+  --border-color-strong: var(--border-strong);
+  --divide-color-subtle: var(--border-subtle);
+  --divide-color-default: var(--border-default);
+
   /* ─── Legacy pf-* tokens (aliases to new system) ────────────────────
      Kept during migration. Components still reference these.
      Will be removed by issue #610 after full migration.

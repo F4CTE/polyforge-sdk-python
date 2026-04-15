@@ -8,10 +8,10 @@ const chipVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-pf-overlay text-pf-text",
-        success: "bg-pf-success/20 text-pf-success",
-        danger: "bg-pf-danger/20 text-pf-danger",
-        warning: "bg-pf-warning/20 text-pf-warning",
+        default: "bg-overlay text-primary",
+        success: "bg-gain/20 text-gain",
+        danger: "bg-loss/20 text-loss",
+        warning: "bg-warning/20 text-warning",
       },
     },
     defaultVariants: {
@@ -35,7 +35,7 @@ function Chip({ children, onRemove, variant, className, ...props }: ChipProps) {
           type="button"
           aria-label="Remove"
           onClick={onRemove}
-          className="hover:opacity-70 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 rounded-pf-full"
+          className="hover:opacity-70 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 rounded-pf-full"
         >
           <X size={12} />
         </button>

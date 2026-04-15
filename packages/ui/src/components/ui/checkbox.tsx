@@ -25,16 +25,16 @@ const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>(
         />
         <span
           className={cn(
-            "flex h-4 w-4 shrink-0 items-center justify-center rounded-pf-xs border border-pf-border bg-pf-base",
+            "flex h-4 w-4 shrink-0 items-center justify-center rounded-pf-xs border border-default bg-app",
             "transition-colors duration-pf-fast",
-            "peer-focus-visible:outline-none peer-focus-visible:ring-2 peer-focus-visible:ring-pf-cyan-500/40",
-            "peer-checked:bg-pf-cyan-500 peer-checked:border-pf-cyan-500",
+            "peer-focus-visible:outline-none peer-focus-visible:ring-2 peer-focus-visible:ring-accent/40",
+            "peer-checked:bg-accent peer-checked:border-accent",
             "peer-disabled:opacity-pf-disabled peer-disabled:cursor-not-allowed",
             className
           )}
           aria-hidden="true"
         >
-          <Check className="hidden h-3 w-3 text-pf-text-contrast peer-checked:block" />
+          <Check className="hidden h-3 w-3 text-inverse peer-checked:block" />
         </span>
       </span>
     );

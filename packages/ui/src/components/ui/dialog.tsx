@@ -50,7 +50,7 @@ const DialogContent = React.forwardRef<
     role="dialog"
     aria-modal="true"
     className={cn(
-      "relative z-10 w-full max-w-lg bg-pf-elevated border border-pf-border rounded-pf-lg shadow-pf-lg",
+      "relative z-10 w-full max-w-lg bg-elevated border border-default rounded-pf-lg shadow-pf-lg",
       "animate-scale-in",
       className
     )}
@@ -69,7 +69,7 @@ function DialogHeader({ className, children, onClose, ...props }: DialogHeaderPr
   return (
     <div
       className={cn(
-        "flex items-center justify-between px-6 py-4 border-b border-pf-border",
+        "flex items-center justify-between px-6 py-4 border-b border-default",
         className
       )}
       {...props}
@@ -80,7 +80,7 @@ function DialogHeader({ className, children, onClose, ...props }: DialogHeaderPr
           type="button"
           onClick={onClose}
           aria-label="Close dialog"
-          className="ml-4 p-1 rounded-pf-sm text-pf-text-secondary hover:text-pf-text hover:bg-pf-overlay transition-colors duration-pf-fast focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40"
+          className="ml-4 p-1 rounded-pf-sm text-secondary hover:text-primary hover:bg-overlay transition-colors duration-pf-fast focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
         >
           <X size={16} aria-hidden="true" />
         </button>
@@ -95,7 +95,7 @@ const DialogTitle = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <h2
     ref={ref}
-    className={cn("text-base font-semibold text-pf-text", className)}
+    className={cn("text-base font-semibold text-primary", className)}
     {...props}
   />
 ));
@@ -107,7 +107,7 @@ const DialogDescription = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <p
     ref={ref}
-    className={cn("text-sm text-pf-text-secondary mt-1", className)}
+    className={cn("text-sm text-secondary mt-1", className)}
     {...props}
   />
 ));
@@ -128,7 +128,7 @@ const DialogFooter = React.forwardRef<
   <div
     ref={ref}
     className={cn(
-      "flex items-center justify-end gap-2 px-6 py-4 border-t border-pf-border",
+      "flex items-center justify-end gap-2 px-6 py-4 border-t border-default",
       className
     )}
     {...props}
