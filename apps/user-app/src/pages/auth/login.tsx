@@ -48,6 +48,10 @@ export function Component() {
       if (apiErr?.code === 'TOTP_REQUIRED') {
         setRequireTotp(true);
         setError('');
+      } else if (apiErr?.code === 'TOTP_INVALID') {
+        setError('Invalid authentication code. Please check your authenticator app and try again.');
+      } else if (apiErr?.code === 'TOTP_LOCKED') {
+        setError('Too many failed attempts. Your account is temporarily locked. Please try again in 15 minutes.');
       } else if (apiErr?.code === 'ACCOUNT_SUSPENDED') {
         setError('Your account has been suspended. Please contact support.');
       } else if (apiErr?.code === 'ACCOUNT_PENDING') {

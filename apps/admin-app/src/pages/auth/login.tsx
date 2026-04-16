@@ -25,6 +25,10 @@ export function Component() {
       if (apiErr?.body?.code === 'TOTP_REQUIRED') {
         setTotpRequired(true);
         toast.info('2FA code required');
+      } else if (apiErr?.body?.code === 'TOTP_INVALID') {
+        toast.error('Invalid authentication code. Please check your authenticator app and try again.');
+      } else if (apiErr?.body?.code === 'TOTP_LOCKED') {
+        toast.error('Too many failed attempts. Your account is temporarily locked. Please try again in 15 minutes.');
       } else {
         toast.error(apiErr?.body?.message || 'Invalid credentials');
       }

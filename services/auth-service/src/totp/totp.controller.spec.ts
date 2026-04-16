@@ -22,6 +22,7 @@ describe('TotpController', () => {
       }),
       confirm: vi.fn().mockResolvedValue({ backupCodes: ['CODE1', 'CODE2'] }),
       disable: vi.fn().mockResolvedValue(undefined),
+      regenBackupCodes: vi.fn().mockResolvedValue({ backupCodes: ['NEW1', 'NEW2'] }),
     } as unknown as TotpService;
 
     controller = new TotpController(totpService);
@@ -47,5 +48,11 @@ describe('TotpController', () => {
     expect(result).toMatchObject({
       message: expect.stringContaining('disabled'),
     });
+  });
+
+  it('regenBackupCodes delegates to totpService.regenBackupCodes', async () => {
+    const result = await controller.regenBackupCodes(user as any);
+    expect(totpService.regenBackupCodes).toHaveBeenCalledWith(user.sub);
+    expect(result).toMatchObject({ backupCodes: expect.any(Array) });
   });
 });

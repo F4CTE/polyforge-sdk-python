@@ -674,16 +674,21 @@ export function Component() {
   async function twoFaStartSetup() {
     setTwoFaSetupLoading(true);
     try {
-      const res = await fetch('/api/v1/auth/2fa/setup', { method: 'POST', credentials: 'include' });
+      const res = await fetch('/auth/v1/totp/setup', { method: 'POST', credentials: 'include' });
       if (res.ok) {
         const data = await res.json();
         setTwoFaSetupSecret(data.secret ?? '');
-        setTwoFaQrCodeUrl(data.qrCodeUrl ?? '');
-        setTwoFaBackupCodes(data.backupCodes ?? []);
+        // auth-service returns `qrCode`; map to our local state
+        setTwoFaQrCodeUrl(data.qrCode ?? '');
         setTwoFaVerifyToken('');
         setTwoFaView('setup');
       } else {
-        toast.error('Failed to start 2FA setup');
+        const err = await res.json().catch(() => ({}));
+        if (err?.code === 'TOTP_ALREADY_ENABLED') {
+          toast.error('2FA is already enabled on your account');
+        } else {
+          toast.error('Failed to start 2FA setup');
+        }
       }
     } catch { toast.error('Failed to start 2FA setup'); }
     setTwoFaSetupLoading(false);
@@ -693,34 +698,45 @@ export function Component() {
     if (twoFaVerifying || twoFaVerifyToken.length !== 6) return;
     setTwoFaVerifying(true);
     try {
-      const res = await fetch('/api/v1/auth/2fa/enable', {
+      // auth-service confirm endpoint takes `code`, not `token`
+      const res = await fetch('/auth/v1/totp/confirm', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ token: twoFaVerifyToken }),
+        body: JSON.stringify({ code: twoFaVerifyToken }),
       });
       if (res.ok) {
         const data = await res.json();
         patchUser({ totpEnabled: true });
-        setTwoFaBackupCodes(data.backupCodes ?? twoFaBackupCodes);
+        setTwoFaBackupCodes(data.backupCodes ?? []);
         setTwoFaVerifyToken('');
         setTwoFaView('backup');
       } else {
-        toast.error('Invalid code, try again');
+        const err = await res.json().catch(() => ({}));
+        if (err?.code === 'TOTP_SETUP_EXPIRED') {
+          toast.error('Setup session expired. Please start again.');
+          setTwoFaView('disabled');
+          setTwoFaVerifyToken('');
+          setTwoFaSetupSecret('');
+          setTwoFaQrCodeUrl('');
+        } else {
+          toast.error('Invalid code. Please try again.');
+        }
       }
     } catch { toast.error('Failed to enable 2FA'); }
     setTwoFaVerifying(false);
   }
 
   async function twoFaDisable() {
-    if (twoFaDisabling || twoFaDisableToken.length !== 6) return;
+    if (twoFaDisabling || !twoFaDisableToken) return;
     setTwoFaDisabling(true);
     try {
-      const res = await fetch('/api/v1/auth/2fa/disable', {
-        method: 'POST',
+      // auth-service disable endpoint requires password confirmation
+      const res = await fetch('/auth/v1/totp', {
+        method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ token: twoFaDisableToken }),
+        body: JSON.stringify({ password: twoFaDisableToken }),
       });
       if (res.ok) {
         patchUser({ totpEnabled: false });
@@ -730,7 +746,12 @@ export function Component() {
         setTwoFaView('disabled');
         toast.success('Two-factor authentication has been disabled');
       } else {
-        toast.error('Invalid code, try again');
+        const err = await res.json().catch(() => ({}));
+        if (err?.code === 'INVALID_CREDENTIALS') {
+          toast.error('Incorrect password. Please try again.');
+        } else {
+          toast.error('Failed to disable 2FA. Please try again.');
+        }
       }
     } catch { toast.error('Failed to disable 2FA'); }
     setTwoFaDisabling(false);
@@ -739,7 +760,7 @@ export function Component() {
   async function twoFaRegenBackupCodes() {
     setTwoFaRegenLoading(true);
     try {
-      const res = await fetch('/api/v1/auth/2fa/backup-codes', { method: 'POST', credentials: 'include' });
+      const res = await fetch('/auth/v1/totp/backup-codes', { method: 'POST', credentials: 'include' });
       if (res.ok) {
         const data = await res.json();
         setTwoFaRegenCodes(data.backupCodes ?? []);
@@ -1299,13 +1320,14 @@ export function Component() {
               <div className="space-y-3">
                 <div className="flex items-center gap-2">
                   <span className="flex items-center justify-center w-5 h-5 rounded-full bg-accent text-inverse text-xs font-semibold">2</span>
-                  <h3 className="text-sm font-semibold text-primary">Enter verification code</h3>
+                  <label htmlFor="2fa-verify-token" className="text-sm font-semibold text-primary">Enter verification code</label>
                 </div>
                 <div className="ml-7 space-y-3">
                   <Input
                     id="2fa-verify-token"
                     type="text"
                     inputMode="numeric"
+                    autoComplete="one-time-code"
                     autoFocus
                     maxLength={6}
                     value={twoFaVerifyToken}
@@ -1474,24 +1496,25 @@ export function Component() {
                   </Button>
                 ) : (
                   <div className="space-y-3 p-4 bg-surface border border-loss/20 rounded-pf">
-                    <p className="text-sm font-medium text-primary">Enter your current authenticator code to disable 2FA</p>
+                    <label htmlFor="2fa-disable-password" className="block text-sm font-medium text-primary">
+                      Enter your account password to disable 2FA
+                    </label>
                     <Input
-                      id="2fa-disable-token"
-                      type="text"
-                      inputMode="numeric"
+                      id="2fa-disable-password"
+                      type="password"
+                      autoComplete="current-password"
                       autoFocus
-                      maxLength={6}
                       value={twoFaDisableToken}
-                      onChange={e => setTwoFaDisableToken(e.target.value.replace(/\D/g, ''))}
-                      placeholder="000000"
-                      className="w-40 text-2xl font-mono tracking-widest text-center"
+                      onChange={e => setTwoFaDisableToken(e.target.value)}
+                      placeholder="Your password"
+                      className="w-full max-w-xs"
                     />
                     <div className="flex items-center gap-3">
                       <Button
                         type="button"
                         variant="danger"
                         onClick={twoFaDisable}
-                        disabled={twoFaDisabling || twoFaDisableToken.length !== 6}
+                        disabled={twoFaDisabling || !twoFaDisableToken}
                         className="flex items-center gap-2"
                       >
                         {twoFaDisabling ? <Loader2 className="size-4 animate-spin" /> : <ShieldOff className="size-4" />}

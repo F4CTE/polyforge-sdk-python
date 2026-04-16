@@ -57,6 +57,21 @@ export class TotpController {
     return this.totpService.confirm(user.sub, dto.code);
   }
 
+  @Post('backup-codes')
+  @HttpCode(HttpStatus.OK)
+  @Throttle({
+    default: {
+      ttl: 3600000,
+      limit: throttleLimit(5),
+    },
+  })
+  @ApiOperation({ summary: 'Regenerate backup codes — invalidates previous set' })
+  @ApiResponse({ status: 200, description: '10 new backup codes. Previous codes are invalidated.' })
+  @ApiResponse({ status: 400, description: 'TOTP_NOT_ENABLED.' })
+  async regenBackupCodes(@CurrentUser() user: JwtPayload) {
+    return this.totpService.regenBackupCodes(user.sub);
+  }
+
   @Delete()
   @HttpCode(HttpStatus.OK)
   @Throttle({

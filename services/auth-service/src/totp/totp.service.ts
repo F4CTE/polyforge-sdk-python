@@ -174,6 +174,40 @@ export class TotpService {
     });
   }
 
+  // ─── Regenerate Backup Codes ──────────────────────────────────────────────────
+
+  async regenBackupCodes(userId: string): Promise<{ backupCodes: string[] }> {
+    const user = await this.prisma.user.findUniqueOrThrow({
+      where: { id: userId },
+    });
+
+    if (!user.totpEnabled) {
+      throw new HttpException(
+        {
+          code: 'TOTP_NOT_ENABLED',
+          message: '2FA is not enabled on this account',
+        },
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    // Generate a fresh set of backup codes — same entropy as original setup
+    const backupCodes = Array.from(
+      { length: BACKUP_CODE_COUNT },
+      () => randomBytes(10).toString('hex').toUpperCase(),
+    );
+    const backupCodeHashes = await Promise.all(
+      backupCodes.map((c) => bcrypt.hash(c, 10)),
+    );
+
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { totpBackupCodes: backupCodeHashes },
+    });
+
+    return { backupCodes };
+  }
+
   // ─── Verify (used during login) ───────────────────────────────────────────────
 
   async verify(userId: string, code: string): Promise<boolean> {

@@ -204,6 +204,50 @@ describe('TotpService', () => {
     });
   });
 
+  // ── regenBackupCodes ──────────────────────────────────────────────────────
+
+  describe('regenBackupCodes', () => {
+    it('throws TOTP_NOT_ENABLED (400) when 2FA is off', async () => {
+      const user = userFactory({ totpEnabled: false });
+      db.user.findUniqueOrThrow.mockResolvedValue(user as any);
+
+      await expect(service.regenBackupCodes(user.id)).rejects.toMatchObject({
+        response: { code: 'TOTP_NOT_ENABLED' },
+        status: HttpStatus.BAD_REQUEST,
+      });
+    });
+
+    it('returns 10 new backup codes and updates DB', async () => {
+      const user = userFactory({ totpEnabled: true });
+      db.user.findUniqueOrThrow.mockResolvedValue(user as any);
+      db.user.update.mockResolvedValue(user as any);
+
+      const result = await service.regenBackupCodes(user.id);
+
+      expect(result.backupCodes).toHaveLength(10);
+      expect(result.backupCodes[0]).toMatch(/^[0-9A-F]{20}$/);
+      expect(db.user.update).toHaveBeenCalledWith({
+        where: { id: user.id },
+        data: { totpBackupCodes: expect.arrayContaining([expect.any(String)]) },
+      });
+    });
+
+    it('stores bcrypt-hashed codes in DB, returns plain codes to caller', async () => {
+      const user = userFactory({ totpEnabled: true });
+      db.user.findUniqueOrThrow.mockResolvedValue(user as any);
+      db.user.update.mockResolvedValue(user as any);
+
+      const result = await service.regenBackupCodes(user.id);
+      const updateCall = db.user.update.mock.calls[0][0];
+      const storedHashes = updateCall.data.totpBackupCodes as string[];
+
+      // Plain codes are plain hex — no $2b$ bcrypt prefix
+      expect(result.backupCodes[0]).not.toMatch(/^\$2b\$/);
+      // Stored hashes are bcrypt — they start with $2b$
+      expect(storedHashes[0]).toMatch(/^\$2b\$/);
+    });
+  });
+
   // ── verify ────────────────────────────────────────────────────────────────
 
   describe('verify', () => {
