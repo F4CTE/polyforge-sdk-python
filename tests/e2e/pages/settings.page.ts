@@ -212,6 +212,11 @@ export class SettingsPage {
     }
 
     async saveNotifications(): Promise<void> {
+        // Explicitly wait for the save button to be enabled before clicking.
+        // The button is disabled while notifLoading or notifSaving is true;
+        // this guard prevents a race where the button is clicked while still
+        // in a loading state (which would silently swallow the click).
+        await expect(this.saveNotificationsButton).toBeEnabled({ timeout: 10_000 });
         await this.saveNotificationsButton.click();
     }
 

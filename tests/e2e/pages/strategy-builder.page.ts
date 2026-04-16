@@ -27,9 +27,12 @@ export class StrategyBuilderPage {
 
     async gotoNew(): Promise<void> {
         await this.page.goto('/strategies/new');
-        // A template wizard appears first — click "Start from Scratch" to enter the builder
+        // A template wizard appears first — click "Start from Scratch" to enter the builder.
+        // Wait for network idle first so the wizard JS is fully loaded before asserting
+        // the button (fixes first-attempt timeouts on slow Docker cold-starts).
+        await this.page.waitForLoadState('networkidle', { timeout: 20_000 }).catch(() => {});
         const blankBtn = this.page.locator('button', { hasText: 'Start from Scratch' });
-        await expect(blankBtn).toBeVisible({ timeout: 15_000 });
+        await expect(blankBtn).toBeVisible({ timeout: 20_000 });
         await blankBtn.click();
         // Wait for the BlockPalette name input to confirm the builder canvas is ready
         await expect(this.nameInput).toBeVisible({ timeout: 10_000 });
