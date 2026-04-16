@@ -7,6 +7,7 @@ import { UpdateProfileDto } from "./dto/update-profile.dto";
 import { UpdatePasswordDto } from "./dto/update-password.dto";
 import { UpdateNotificationsDto } from "./dto/update-notifications.dto";
 import { UpdateRiskSettingsDto } from "./dto/update-risk-settings.dto";
+import { UpdateEventNotificationsDto } from "./dto/update-event-notifications.dto";
 
 @Injectable()
 export class SettingsService {
@@ -79,6 +80,39 @@ export class SettingsService {
       create: { userId, ...dto },
       update: { ...dto },
     });
+  }
+
+  async getEventNotifications(
+    userId: string,
+  ): Promise<{ preferences: unknown[]; emailDigest: string }> {
+    const prefs = await this.prisma.notificationPreference.findUnique({
+      where: { userId },
+      select: { eventPrefs: true, emailDigest: true },
+    });
+    return {
+      preferences: (prefs?.eventPrefs as unknown[]) ?? [],
+      emailDigest: prefs?.emailDigest ?? "DAILY",
+    };
+  }
+
+  async updateEventNotifications(
+    userId: string,
+    dto: UpdateEventNotificationsDto,
+  ): Promise<{ preferences: unknown[]; emailDigest: string }> {
+    const data: Record<string, unknown> = {};
+    if (dto.preferences !== undefined) data["eventPrefs"] = dto.preferences;
+    if (dto.emailDigest !== undefined) data["emailDigest"] = dto.emailDigest;
+
+    const result = await this.prisma.notificationPreference.upsert({
+      where: { userId },
+      create: { userId, ...data },
+      update: data,
+      select: { eventPrefs: true, emailDigest: true },
+    });
+    return {
+      preferences: (result.eventPrefs as unknown[]) ?? [],
+      emailDigest: result.emailDigest,
+    };
   }
 
   async updatePassword(userId: string, dto: UpdatePasswordDto): Promise<any> {
