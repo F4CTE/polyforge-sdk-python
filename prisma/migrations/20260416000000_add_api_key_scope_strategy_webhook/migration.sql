@@ -1,0 +1,3 @@
+-- Add STRATEGY and WEBHOOK values to ApiKeyScope enum (closes #571)
+ALTER TYPE "ApiKeyScope" ADD VALUE IF NOT EXISTS 'STRATEGY';
+ALTER TYPE "ApiKeyScope" ADD VALUE IF NOT EXISTS 'WEBHOOK';

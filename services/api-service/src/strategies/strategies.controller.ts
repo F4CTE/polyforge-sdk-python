@@ -59,7 +59,7 @@ export class StrategiesController {
   @Post("from-description")
   @HttpCode(HttpStatus.CREATED)
   @UseGuards(ApiKeyScopeGuard)
-  @RequireScopes("WRITE")
+  @RequireScopes("STRATEGY")
   createFromDescription(
     @CurrentUser() user: JwtPayload,
     @Body() dto: CreateFromDescriptionDto,
@@ -70,7 +70,7 @@ export class StrategiesController {
   @Post()
   @HttpCode(HttpStatus.CREATED)
   @UseGuards(ApiKeyScopeGuard)
-  @RequireScopes("WRITE")
+  @RequireScopes("STRATEGY")
   create(@CurrentUser() user: JwtPayload, @Body() dto: CreateStrategyDto) {
     return this.strategies.create(user.sub, dto);
   }
@@ -85,7 +85,7 @@ export class StrategiesController {
 
   @Patch(":id")
   @UseGuards(ApiKeyScopeGuard)
-  @RequireScopes("WRITE")
+  @RequireScopes("STRATEGY")
   update(
     @Param("id", ParseUUIDPipe) id: string,
     @CurrentUser() user: JwtPayload,
@@ -97,7 +97,7 @@ export class StrategiesController {
   @Delete(":id")
   @HttpCode(HttpStatus.NO_CONTENT)
   @UseGuards(ApiKeyScopeGuard)
-  @RequireScopes("WRITE")
+  @RequireScopes("STRATEGY")
   remove(
     @Param("id", ParseUUIDPipe) id: string,
     @CurrentUser() user: JwtPayload,
@@ -301,7 +301,7 @@ export class StrategiesController {
   @Post(":id/versions/:versionId/rollback")
   @HttpCode(HttpStatus.OK)
   @UseGuards(ApiKeyScopeGuard)
-  @RequireScopes("WRITE")
+  @RequireScopes("STRATEGY")
   rollback(
     @Param("id", ParseUUIDPipe) id: string,
     @Param("versionId", ParseUUIDPipe) versionId: string,

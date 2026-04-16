@@ -47,6 +47,8 @@ export enum ApiKeyScopeEnum {
   READ = "READ",
   WRITE = "WRITE",
   TRADE = "TRADE",
+  STRATEGY = "STRATEGY",
+  WEBHOOK = "WEBHOOK",
 }
 
 export interface ApiKeyMeta {

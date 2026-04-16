@@ -111,6 +111,8 @@ enum ApiKeyScope {
   READ
   WRITE
   TRADE
+  STRATEGY
+  WEBHOOK
 }
 
 enum BotChannel {

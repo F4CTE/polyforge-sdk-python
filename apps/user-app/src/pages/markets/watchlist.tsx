@@ -865,6 +865,7 @@ export function Component() {
                               {/* Full detail link */}
                               <Button
                                 variant="ghost"
+                                aria-label="Open full market detail"
                                 onClick={() => navigate(`/markets/${market.slug}`)}
                                 className="inline-flex items-center gap-1 text-xs text-tertiary hover:text-accent-text transition-colors duration-micro focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 rounded-sm"
                               >

@@ -31,7 +31,7 @@ export class WebhooksController {
   @Post()
   @HttpCode(HttpStatus.CREATED)
   @UseGuards(ApiKeyScopeGuard)
-  @RequireScopes("WRITE")
+  @RequireScopes("WEBHOOK")
   create(@CurrentUser() user: JwtPayload, @Body() dto: CreateWebhookDto) {
     return this.webhooks.create(user.sub, dto);
   }
@@ -44,7 +44,7 @@ export class WebhooksController {
   @Delete(":id")
   @HttpCode(HttpStatus.NO_CONTENT)
   @UseGuards(ApiKeyScopeGuard)
-  @RequireScopes("WRITE")
+  @RequireScopes("WEBHOOK")
   remove(
     @Param("id", ParseUUIDPipe) id: string,
     @CurrentUser() user: JwtPayload,
@@ -54,7 +54,7 @@ export class WebhooksController {
 
   @Post(":id/test")
   @UseGuards(ApiKeyScopeGuard)
-  @RequireScopes("WRITE")
+  @RequireScopes("WEBHOOK")
   test(
     @Param("id", ParseUUIDPipe) id: string,
     @CurrentUser() user: JwtPayload,
