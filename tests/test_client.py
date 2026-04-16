@@ -1477,6 +1477,19 @@ class TestWatchlistMethods:
             source = inspect.getsource(getattr(PolyforgeClient, method_name))
             assert "/api/v1/watchlist" in source, f"{method_name} missing /api/v1/watchlist path"
 
+    def test_get_watchlist_status_uses_correct_route_order(self):
+        """get_watchlist_status() must use /{id}/status not /status/{id} (#122)."""
+        import inspect
+
+        for client_class in (PolyforgeClient, AsyncPolyforgeClient):
+            source = inspect.getsource(getattr(client_class, "get_watchlist_status"))
+            # Must have /{market_id}/status pattern, not /status/{market_id}
+            assert "/status" in source
+            # Verify the route is NOT the old reversed path
+            assert '"/api/v1/watchlist/status/' not in source and \
+                   "f'/api/v1/watchlist/status/" not in source, \
+                f"{client_class.__name__}.get_watchlist_status uses reversed route"
+
 
 class TestWebhookTestResult:
     """Tests for WebhookTestResult model (#55)."""
@@ -1616,14 +1629,16 @@ class TestGetPriceHistory:
     """Tests for get_price_history() method (#51)."""
 
     def test_get_price_history_accepts_all_params(self):
-        """get_price_history() signature must accept token_id, period, limit."""
+        """get_price_history() signature must accept token_id, resolution, limit (#125)."""
         import inspect
 
         sig = inspect.signature(PolyforgeClient.get_price_history)
         param_names = set(sig.parameters.keys())
         assert "token_id" in param_names, "get_price_history() missing 'token_id' parameter"
-        assert "period" in param_names, "get_price_history() missing 'period' parameter"
+        assert "resolution" in param_names, "get_price_history() missing 'resolution' parameter"
         assert "limit" in param_names, "get_price_history() missing 'limit' parameter"
+        assert "from_" in param_names, "get_price_history() missing 'from_' parameter"
+        assert "to" in param_names, "get_price_history() missing 'to' parameter"
 
     def test_async_get_price_history_accepts_all_params(self):
         """AsyncPolyforgeClient.get_price_history() must also accept all params."""
@@ -1632,7 +1647,7 @@ class TestGetPriceHistory:
         sig = inspect.signature(AsyncPolyforgeClient.get_price_history)
         param_names = set(sig.parameters.keys())
         assert "token_id" in param_names
-        assert "period" in param_names
+        assert "resolution" in param_names
         assert "limit" in param_names
 
     def test_get_price_history_uses_correct_path(self):
@@ -1644,12 +1659,14 @@ class TestGetPriceHistory:
         assert "/api/v1/markets/" in source
 
     def test_get_price_history_passes_query_params(self):
-        """get_price_history() must pass period, limit as query params."""
+        """get_price_history() must pass resolution (not period) and limit as query params (#125)."""
         import inspect
 
         source = inspect.getsource(PolyforgeClient.get_price_history)
-        assert '"period"' in source or "'period'" in source
+        assert '"resolution"' in source or "'resolution'" in source, "must use 'resolution' not 'period'"
         assert '"limit"' in source or "'limit'" in source
+        # Ensure old wrong param name is not sent to the platform
+        assert '"period"' not in source and "'period'" not in source, "must not send 'period' to platform"
 
     def test_get_price_history_uses_path_encoding(self):
         """get_price_history() must use _encode_path for the token ID."""
@@ -2809,3 +2826,101 @@ class TestNewModels:
         assert trade.id == ""
         assert trade.side == ""
         assert trade.pnl == ""
+
+
+class TestStrategySocialVersioningEventLog:
+    """Tests for strategy social, versioning, event-log methods (#124)."""
+
+    def test_sync_strategy_social_methods_exist(self):
+        """PolyforgeClient must have all strategy social methods."""
+        for method in ("like_strategy", "list_strategy_comments", "add_strategy_comment",
+                       "delete_strategy_comment", "list_strategy_children", "report_strategy"):
+            assert hasattr(PolyforgeClient, method), f"Missing {method}"
+
+    def test_async_strategy_social_methods_exist(self):
+        """AsyncPolyforgeClient must have all strategy social methods."""
+        for method in ("like_strategy", "list_strategy_comments", "add_strategy_comment",
+                       "delete_strategy_comment", "list_strategy_children", "report_strategy"):
+            assert hasattr(AsyncPolyforgeClient, method), f"Async missing {method}"
+
+    def test_sync_strategy_versioning_methods_exist(self):
+        """PolyforgeClient must have list_strategy_versions and rollback_strategy."""
+        assert hasattr(PolyforgeClient, "list_strategy_versions")
+        assert hasattr(PolyforgeClient, "rollback_strategy")
+
+    def test_async_strategy_versioning_methods_exist(self):
+        """AsyncPolyforgeClient must have list_strategy_versions and rollback_strategy."""
+        assert hasattr(AsyncPolyforgeClient, "list_strategy_versions")
+        assert hasattr(AsyncPolyforgeClient, "rollback_strategy")
+
+    def test_sync_get_strategy_event_log_exists(self):
+        """PolyforgeClient must have get_strategy_event_log."""
+        assert hasattr(PolyforgeClient, "get_strategy_event_log")
+
+    def test_async_get_strategy_event_log_exists(self):
+        """AsyncPolyforgeClient must have get_strategy_event_log."""
+        assert hasattr(AsyncPolyforgeClient, "get_strategy_event_log")
+
+    def test_like_strategy_uses_correct_path(self):
+        import inspect
+        source = inspect.getsource(PolyforgeClient.like_strategy)
+        assert "/like" in source
+        assert "/api/v1/strategies/" in source
+
+    def test_list_strategy_comments_uses_correct_path(self):
+        import inspect
+        source = inspect.getsource(PolyforgeClient.list_strategy_comments)
+        assert "/comments" in source
+        assert "/api/v1/strategies/" in source
+
+    def test_rollback_strategy_uses_correct_path(self):
+        import inspect
+        source = inspect.getsource(PolyforgeClient.rollback_strategy)
+        assert "/versions/" in source
+        assert "/rollback" in source
+
+    def test_get_strategy_event_log_uses_correct_path(self):
+        import inspect
+        source = inspect.getsource(PolyforgeClient.get_strategy_event_log)
+        assert "/event-log" in source
+
+    def test_report_strategy_accepts_reason_and_optional_description(self):
+        import inspect
+        sig = inspect.signature(PolyforgeClient.report_strategy)
+        params = set(sig.parameters.keys())
+        assert "reason" in params
+        assert "description" in params
+
+
+class TestApiKeyManagement:
+    """Tests for API key management methods (#124)."""
+
+    def test_sync_api_key_methods_exist(self):
+        """PolyforgeClient must have list_api_keys, create_api_key, revoke_api_key."""
+        assert hasattr(PolyforgeClient, "list_api_keys")
+        assert hasattr(PolyforgeClient, "create_api_key")
+        assert hasattr(PolyforgeClient, "revoke_api_key")
+
+    def test_async_api_key_methods_exist(self):
+        """AsyncPolyforgeClient must have list_api_keys, create_api_key, revoke_api_key."""
+        assert hasattr(AsyncPolyforgeClient, "list_api_keys")
+        assert hasattr(AsyncPolyforgeClient, "create_api_key")
+        assert hasattr(AsyncPolyforgeClient, "revoke_api_key")
+
+    def test_list_api_keys_uses_correct_path(self):
+        import inspect
+        source = inspect.getsource(PolyforgeClient.list_api_keys)
+        assert "/api/v1/api-keys" in source
+
+    def test_create_api_key_accepts_name_and_scopes(self):
+        import inspect
+        sig = inspect.signature(PolyforgeClient.create_api_key)
+        params = set(sig.parameters.keys())
+        assert "name" in params
+        assert "scopes" in params
+
+    def test_revoke_api_key_uses_delete_method(self):
+        import inspect
+        source = inspect.getsource(PolyforgeClient.revoke_api_key)
+        assert "_delete" in source
+        assert "/api/v1/api-keys/" in source
