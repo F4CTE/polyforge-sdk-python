@@ -2,6 +2,11 @@
  * Animated background for auth pages (login/register).
  * Renders subtle floating geometric shapes that evoke a trading/data aesthetic.
  * Uses pure CSS animations — no JS timers or requestAnimationFrame.
+ *
+ * Opacity values: Decorative only — arbitrary opacity intentional.
+ * Standard Tailwind modifiers (opacity-5, opacity-10) round 3–6% values up
+ * enough to noticeably alter the ambient effect. Arbitrary values are kept per
+ * design charter §9 exception for purely decorative ambient elements.
  */
 export function AuthBackground() {
   return (

@@ -30,7 +30,7 @@ const STEPS: TutorialStep[] = [
     title: 'Safety Blocks — Always Active',
     content: (
       <div className="space-y-3">
-        <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-loss/[0.13] border border-loss/[0.27]">
+        <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-loss/10 border border-loss/25">
           <Shield className="size-4 shrink-0 text-loss" />
           <span className="text-sm font-medium text-loss">Safety</span>
         </div>
@@ -47,14 +47,14 @@ const STEPS: TutorialStep[] = [
     title: 'Trigger Blocks — Must Be Wired',
     content: (
       <div className="space-y-3">
-        <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-warning/[0.13] border border-warning/[0.27]">
+        <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-warning/10 border border-warning/25">
           <Zap className="size-4 shrink-0 text-warning" />
           <span className="text-sm font-medium text-warning">Trigger</span>
         </div>
         <p className="text-sm text-secondary leading-relaxed">
           Triggers detect when something happens (e.g. price crosses a threshold). They only fire if they have an <strong className="text-primary">outgoing connection</strong> — the wire tells the engine where to route execution.
         </p>
-        <div className="flex items-center gap-2 p-2 rounded-pf text-xs bg-warning/[0.07]">
+        <div className="flex items-center gap-2 p-2 rounded-pf text-xs bg-warning/5">
           <Unlink className="size-3 shrink-0 text-warning" />
           <span className="text-warning">Unwired triggers show a &ldquo;Not wired&rdquo; badge and are dimmed — they won&rsquo;t execute.</span>
         </div>
@@ -65,7 +65,7 @@ const STEPS: TutorialStep[] = [
     title: 'Condition Blocks — Global or Scoped',
     content: (
       <div className="space-y-3">
-        <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-accent/[0.13] border border-accent/[0.27]">
+        <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-accent-subtle border border-accent/25">
           <Filter className="size-4 shrink-0 text-accent" />
           <span className="text-sm font-medium text-accent">Condition</span>
         </div>
@@ -89,14 +89,14 @@ const STEPS: TutorialStep[] = [
     title: 'Action Blocks — Must Be Wired',
     content: (
       <div className="space-y-3">
-        <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-gain/[0.13] border border-gain/[0.27]">
+        <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-gain/10 border border-gain/25">
           <Play className="size-4 shrink-0 text-gain" />
           <span className="text-sm font-medium text-gain">Action</span>
         </div>
         <p className="text-sm text-secondary leading-relaxed">
           Actions execute trades — buy, sell, close positions, run sub-strategies. They only execute if they have an <strong className="text-primary">incoming connection</strong> from a trigger or condition.
         </p>
-        <div className="flex items-center gap-2 p-2 rounded-pf text-xs bg-warning/[0.07]">
+        <div className="flex items-center gap-2 p-2 rounded-pf text-xs bg-warning/5">
           <Unlink className="size-3 shrink-0 text-warning" />
           <span className="text-warning">Unwired actions are dimmed and won&rsquo;t execute — they need upstream context.</span>
         </div>
