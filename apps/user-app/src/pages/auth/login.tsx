@@ -8,6 +8,7 @@ import { Button, Input } from '@polyforge/ui';
 export function Component() {
   const navigate = useNavigate();
   const login = useAuthStore((s) => s.login);
+  const getUser = () => useAuthStore.getState().user;
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -41,7 +42,9 @@ export function Component() {
 
     try {
       await login({ email, password, ...(totp ? { totpCode: totp } : {}) });
-      navigate('/markets');
+      // Redirect unverified users to the verification page instead of the app
+      const loggedInUser = getUser();
+      navigate(loggedInUser?.emailVerified === false ? '/verify-email' : '/markets');
     } catch (err: unknown) {
       setLoading(false);
       const apiErr = err as { code?: string; message?: string };

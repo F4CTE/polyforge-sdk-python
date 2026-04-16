@@ -790,7 +790,7 @@ export function Component() {
           <div className="bg-app border border-default rounded-sm px-4 py-3 text-center">
             <div className="text-label text-tertiary mb-1">Total P&amp;L</div>
             <div
-              className={`text-lg font-semibold ${
+              className={`text-lg font-semibold font-mono tabular-nums ${
                 typeof user.totalPnl === 'number' && user.totalPnl < 0
                   ? 'text-loss'
                   : 'text-gain'

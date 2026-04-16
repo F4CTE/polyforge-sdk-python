@@ -6,7 +6,7 @@ import {
   User, Bell, Lock, Shield, Key, Loader2, Check, Copy, Ban, Eye, EyeOff, Fuel, Trash2, AlertTriangle, ShieldAlert,
   Webhook, Send, Plus, ShieldCheck, ShieldOff, Download, KeyRound, RotateCcw,
   History, RefreshCw, ChevronDown, ChevronUp, X, Code,
-  Monitor, Smartphone, MapPin, LogOut,
+  Monitor, Smartphone, MapPin, LogOut, Mail, BadgeCheck,
 } from 'lucide-react';
 import { useAuthStore } from '../../stores/auth-store';
 
@@ -147,6 +147,10 @@ export function Component() {
   const [bio, setBio] = useState(user?.bio ?? '');
   const [avatarUrl, setAvatarUrl] = useState(user?.avatarUrl ?? '');
   const [profileSaving, setProfileSaving] = useState(false);
+
+  // Email verification resend
+  const [emailResending, setEmailResending] = useState(false);
+  const [emailResent, setEmailResent] = useState(false);
 
   // Update profile form when user changes
   useEffect(() => {
@@ -584,6 +588,28 @@ export function Component() {
       }
     } catch { toast.error('Failed to save profile'); }
     setProfileSaving(false);
+  }
+
+  // ── Email Verification ──
+  async function resendVerificationEmail() {
+    if (!user?.email || emailResending) return;
+    setEmailResending(true);
+    setEmailResent(false);
+    try {
+      const res = await fetch('/auth/v1/resend-verification', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ email: user.email }),
+      });
+      if (res.ok) {
+        setEmailResent(true);
+        toast.success('Verification email sent');
+      } else {
+        toast.error('Failed to send verification email');
+      }
+    } catch { toast.error('Failed to send verification email'); }
+    setEmailResending(false);
   }
 
   // ── Password ──
@@ -1028,6 +1054,52 @@ export function Component() {
               {profileSaving ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />}
               Save Profile
             </Button>
+          </div>
+
+          {/* ─── Email Verification Status ─── */}
+          <div className="mt-4 pt-6 border-t border-default">
+            <h2 className="text-sm font-semibold text-primary uppercase tracking-wider mb-4">Email</h2>
+            <div className="flex items-center justify-between gap-4 flex-wrap">
+              <div className="flex items-center gap-2 min-w-0">
+                <Mail className="size-4 text-tertiary shrink-0" />
+                <span className="text-sm text-primary truncate">{user?.email ?? '—'}</span>
+                {user?.emailVerified ? (
+                  <span className="inline-flex items-center gap-1 text-xs font-medium text-gain bg-gain/10 border border-gain/20 rounded-full px-2 py-0.5">
+                    <BadgeCheck className="size-3" />
+                    Verified
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1 text-xs font-medium text-warning bg-warning/10 border border-warning/20 rounded-full px-2 py-0.5">
+                    <AlertTriangle className="size-3" />
+                    Unverified
+                  </span>
+                )}
+              </div>
+              {!user?.emailVerified && (
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  onClick={resendVerificationEmail}
+                  disabled={emailResending || emailResent}
+                  className="flex items-center gap-2 shrink-0"
+                >
+                  {emailResending ? (
+                    <Loader2 className="size-3 animate-spin" />
+                  ) : emailResent ? (
+                    <Check className="size-3" />
+                  ) : (
+                    <Send className="size-3" />
+                  )}
+                  {emailResent ? 'Email sent' : 'Resend verification'}
+                </Button>
+              )}
+            </div>
+            {!user?.emailVerified && (
+              <p className="mt-2 text-xs text-tertiary">
+                Check your inbox and click the verification link to confirm your email address.
+              </p>
+            )}
           </div>
 
           {/* ─── Danger Zone ─── */}

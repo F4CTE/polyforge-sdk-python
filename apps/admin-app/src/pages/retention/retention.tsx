@@ -348,7 +348,7 @@ export function Component() {
                     <TrendingUp size={16} className={card.color} aria-hidden="true" />
                   </div>
                 </div>
-                <div className="text-2xl font-semibold text-primary">{card.value}</div>
+                <div className="text-2xl font-semibold font-mono tabular-nums text-primary">{card.value}</div>
               </div>
             ))}
           </div>
@@ -362,7 +362,7 @@ export function Component() {
                     <TrendingUp size={16} className={card.color} aria-hidden="true" />
                   </div>
                 </div>
-                <div className={`text-2xl font-semibold ${card.valueClass ?? 'text-primary'}`}>
+                <div className={`text-2xl font-semibold font-mono tabular-nums ${card.valueClass ?? 'text-primary'}`}>
                   {card.value}
                 </div>
               </div>

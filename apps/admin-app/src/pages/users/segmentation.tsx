@@ -245,7 +245,7 @@ function CohortCard({ definition, stats, onViewUsers, onBroadcast }: CohortCardP
 
       {/* User Count */}
       <div className="flex items-baseline gap-2">
-        <span className="text-2xl font-semibold text-primary tabular-nums">
+        <span className="text-2xl font-semibold font-mono tabular-nums text-primary">
           {stats.userCount.toLocaleString()}
         </span>
         <span className="text-caption text-tertiary">
@@ -400,7 +400,7 @@ function DrillDown({ cohortId, onBack }: DrillDownProps) {
           ].map((item) => (
             <div key={item.label} className="rounded-xl bg-elevated border border-default px-4 py-3">
               <div className="text-label text-tertiary uppercase tracking-wide">{item.label}</div>
-              <div className="text-lg font-semibold text-primary mt-1 tabular-nums">{item.value}</div>
+              <div className="text-lg font-semibold font-mono tabular-nums text-primary mt-1">{item.value}</div>
             </div>
           ))}
         </div>
