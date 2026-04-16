@@ -7,6 +7,17 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased] — 2026-04-16
 
+### ⚠ Breaking Changes
+- **API key scopes: STRATEGY and WEBHOOK** — existing API keys with `WRITE` scope **no longer have access** to strategy or webhook mutation endpoints. Keys must be re-issued with the explicit `STRATEGY` and/or `WEBHOOK` scopes. JWT-based (session) access is unaffected. (closes #571)
+
+### Added
+- **2FA/TOTP complete flow** — `TOTP_INVALID` and `TOTP_LOCKED` (15-min lockout) error handling in both apps; setup session expiry handled gracefully; backup code regeneration endpoint (`POST /auth/v1/totp/backup-codes`) with bcrypt-hashed storage, 5/hour throttle; `autoComplete="one-time-code"` and `autoComplete="current-password"` for accessibility (closes #568)
+- **API key scopes: STRATEGY + WEBHOOK** — fine-grained scopes added to `ApiKeyScope` enum and Prisma schema; strategy endpoints require `STRATEGY`, webhook endpoints require `WEBHOOK` (closes #571)
+- **Per-event notification preferences** — `eventPrefs` (JSONB) and `emailDigest` columns on `notification_preferences`; `GET/PUT /users/me/notification-preferences` endpoints (closes #572)
+- **Email verification UX** — login redirects unverified users to `/verify-email`; settings page shows Verified/Unverified badge and resend button; resend cooldown prevents duplicate sends (closes #569)
+- **Credentials for unverified accounts** — removed `EMAIL_NOT_VERIFIED` hard block on credential import; unverified users can now connect Polymarket credentials and are guided to verify via UI (closes #573)
+- **Strategy blocks visualization testid** — `data-testid="blocks-visualization"` on detail page blocks panel; enables previously-skipped E2E test (closes #570)
+
 ### Removed (Design System)
 - **Deprecated `pf-*` token aliases** — removed all 2,000+ legacy `pf-*` CSS custom properties and Tailwind utility classes across 141 files; all components now use the canonical Linear-inspired token names (`bg-app`, `text-primary`, `text-accent`, `rounded-sm`, `shadow-lg`, etc.); legacy `--color-pf-*`, `--shadow-pf-*`, `--radius-pf-*`, `--text-pf-*`, `--spacing-pf-*`, `--opacity-pf-*` definitions removed from `@theme` block (closes #610)
 
