@@ -306,7 +306,7 @@ export function Component() {
               type="button"
               variant="ghost"
               onClick={() => handleStatusTab(value)}
-              className={`px-3 py-1 text-xs rounded transition-colors ${
+              className={`px-3 py-1 text-xs rounded-md transition-colors ${
                 statusFilter === value
                   ? 'bg-accent/20 text-accent-text font-medium'
                   : 'text-tertiary hover:text-primary'
@@ -393,7 +393,7 @@ export function Component() {
                   <tr key={i} className="border-b border-default last:border-0">
                     {Array.from({ length: colCount }).map((_, j) => (
                       <td key={j} className="px-4 py-3">
-                        <div className="h-4 bg-surface rounded animate-pulse" />
+                        <div className="h-4 bg-surface rounded-sm animate-pulse" />
                       </td>
                     ))}
                   </tr>
@@ -519,7 +519,7 @@ export function Component() {
                             onClick={() => handleCancel(bt)}
                             disabled={cancelling[bt.id]}
                             aria-label={`Cancel backtest ${bt.id.slice(0, 8)}`}
-                            className="inline-flex items-center gap-1 px-2 py-1 text-xs rounded border border-loss/40 text-loss hover:bg-loss/10 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                            className="inline-flex items-center gap-1 px-2 py-1 text-xs rounded-sm border border-loss/40 text-loss hover:bg-loss/10 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                           >
                             {cancelling[bt.id] ? (
                               <Loader2 size={11} className="animate-spin" aria-hidden="true" />
@@ -552,7 +552,7 @@ export function Component() {
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                 disabled={page === 1}
                 aria-label="Previous page"
-                className="p-2 rounded hover:bg-app text-secondary disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                className="p-2 rounded-sm hover:bg-app text-secondary disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
               >
                 <ChevronLeft size={16} />
               </Button>
@@ -563,7 +563,7 @@ export function Component() {
                 onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                 disabled={page === totalPages}
                 aria-label="Next page"
-                className="p-2 rounded hover:bg-app text-secondary disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                className="p-2 rounded-sm hover:bg-app text-secondary disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
               >
                 <ChevronRight size={16} />
               </Button>

@@ -85,7 +85,7 @@ export function Component() {
           <div className="divide-y divide-subtle">
             {Array.from({ length: 5 }, (_, i) => (
               <div key={i} className="flex items-center gap-4 px-4 py-3">
-                <div className="h-3 bg-overlay rounded flex-1 animate-pulse" />
+                <div className="h-3 bg-overlay rounded-sm flex-1 animate-pulse" />
               </div>
             ))}
           </div>
@@ -115,7 +115,7 @@ export function Component() {
                   </td>
                   <td className="px-4 py-3 text-sm text-secondary">{u.email}</td>
                   <td className="px-4 py-3">
-                    <span className={`inline-flex px-2 py-1 rounded text-xs font-medium ${
+                    <span className={`inline-flex px-2 py-1 rounded-sm text-xs font-medium ${
                       u.emailVerified
                         ? 'bg-gain/10 text-gain'
                         : 'bg-warning/10 text-warning'

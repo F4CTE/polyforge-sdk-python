@@ -168,7 +168,7 @@ export function Component() {
                   <tr key={i}>
                     {Array.from({ length: 5 }).map((_, j) => (
                       <td key={j} className="px-4 py-3">
-                        <div className="h-4 bg-surface rounded animate-pulse" />
+                        <div className="h-4 bg-surface rounded-sm animate-pulse" />
                       </td>
                     ))}
                   </tr>
@@ -205,7 +205,7 @@ export function Component() {
                           variant="ghost"
                           size="icon-sm"
                           onClick={() => openEdit(a)}
-                          className="p-2 rounded hover:bg-app text-tertiary hover:text-primary cursor-pointer transition-colors"
+                          className="p-2 rounded-sm hover:bg-app text-tertiary hover:text-primary cursor-pointer transition-colors"
                           aria-label="Edit admin"
                           title="Edit admin"
                         >
@@ -220,7 +220,7 @@ export function Component() {
                               setDeleteConfirmId(a.id);
                               setDeletePassword('');
                             }}
-                            className="p-2 rounded hover:bg-loss/10 text-tertiary hover:text-loss cursor-pointer transition-colors"
+                            className="p-2 rounded-sm hover:bg-loss/10 text-tertiary hover:text-loss cursor-pointer transition-colors"
                             aria-label="Deactivate admin"
                             title="Deactivate admin"
                           >
@@ -250,7 +250,7 @@ export function Component() {
                 variant="ghost"
                 size="icon-sm"
                 onClick={closeDialog}
-                className="p-1 rounded hover:bg-app text-tertiary"
+                className="p-1 rounded-sm hover:bg-app text-tertiary"
                 aria-label="Close dialog"
               >
                 <X size={18} />

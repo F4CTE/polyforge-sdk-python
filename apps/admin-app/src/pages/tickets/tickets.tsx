@@ -95,7 +95,7 @@ export function Component() {
                   <tr key={i} {...(i === 0 ? { role: 'status' as const, 'aria-live': 'polite' as const, 'aria-label': 'Loading tickets' } : {})}>
                     {Array.from({ length: 6 }).map((_, j) => (
                       <td key={j} className="px-4 py-3">
-                        <div className="h-4 bg-surface rounded animate-pulse" />
+                        <div className="h-4 bg-surface rounded-sm animate-pulse" />
                       </td>
                     ))}
                   </tr>

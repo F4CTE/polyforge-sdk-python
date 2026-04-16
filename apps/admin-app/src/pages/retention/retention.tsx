@@ -70,8 +70,8 @@ function fmtPct(n: number): string {
 function CardSkeleton() {
   return (
     <div className="bg-elevated border border-default rounded-xl p-4 animate-pulse">
-      <div className="h-3 bg-app rounded w-24 mb-3" />
-      <div className="h-7 bg-app rounded w-16" />
+      <div className="h-3 bg-app rounded-sm w-24 mb-3" />
+      <div className="h-7 bg-app rounded-sm w-16" />
     </div>
   );
 }
@@ -79,8 +79,8 @@ function CardSkeleton() {
 function ChartSkeleton() {
   return (
     <div className="bg-elevated border border-default rounded-xl p-5 animate-pulse">
-      <div className="h-4 bg-app rounded w-32 mb-4" />
-      <div className="h-chart-sm bg-app rounded" />
+      <div className="h-4 bg-app rounded-sm w-32 mb-4" />
+      <div className="h-chart-sm bg-app rounded-sm" />
     </div>
   );
 }
@@ -88,10 +88,10 @@ function ChartSkeleton() {
 function TableSkeleton() {
   return (
     <div className="bg-elevated border border-default rounded-xl p-5 animate-pulse">
-      <div className="h-4 bg-app rounded w-40 mb-4" />
+      <div className="h-4 bg-app rounded-sm w-40 mb-4" />
       <div className="space-y-2">
         {[1, 2, 3, 4].map((i) => (
-          <div key={i} className="h-9 bg-app rounded" />
+          <div key={i} className="h-9 bg-app rounded-sm" />
         ))}
       </div>
     </div>

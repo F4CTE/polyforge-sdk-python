@@ -116,7 +116,7 @@ export function Component() {
                   <tr key={i}>
                     {Array.from({ length: 8 }).map((_, j) => (
                       <td key={j} className="px-4 py-3">
-                        <div className="h-4 bg-surface rounded animate-pulse" />
+                        <div className="h-4 bg-surface rounded-sm animate-pulse" />
                       </td>
                     ))}
                   </tr>
@@ -150,7 +150,7 @@ export function Component() {
                         onClick={() => handleToggleFeatured(s.id, !!s.featured)}
                         aria-label={s.featured ? `Remove featured from ${s.name}` : `Feature strategy ${s.name}`}
                         aria-pressed={!!s.featured}
-                        className="inline-flex items-center justify-center p-1 rounded transition-colors hover:bg-app"
+                        className="inline-flex items-center justify-center p-1 rounded-sm transition-colors hover:bg-app"
                       >
                         <Star
                           size={16}
@@ -165,7 +165,7 @@ export function Component() {
                           variant="danger"
                           onClick={() => handleForceStop(s.id)}
                           aria-label={`Force stop strategy ${s.name}`}
-                          className="inline-flex items-center gap-1 px-2 py-1 text-xs rounded bg-loss/10 text-loss hover:bg-loss/20 cursor-pointer transition-colors"
+                          className="inline-flex items-center gap-1 px-2 py-1 text-xs rounded-sm bg-loss/10 text-loss hover:bg-loss/20 cursor-pointer transition-colors"
                         >
                           <Square size={12} aria-hidden="true" />
                           Force Stop

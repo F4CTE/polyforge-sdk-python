@@ -381,7 +381,7 @@ export function Component() {
             <>
               {/* Simulated results badge — compliance (CLAUDE.md hard rule) */}
               <div className="flex items-center gap-2 mb-2">
-                <span className="text-xs font-medium bg-warning/10 text-warning px-2 py-0.5 rounded-sm">Simulated</span>
+                <span className="text-xs font-medium bg-warning/10 text-warning px-2 py-1 rounded-sm">Simulated</span>
                 <span className="text-xs text-tertiary">Results based on historical data replay</span>
               </div>
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">

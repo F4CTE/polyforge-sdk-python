@@ -137,7 +137,7 @@ export function Component() {
                     variant="ghost"
                     size="icon-sm"
                     onClick={() => copyCode(code)}
-                    className="p-1 rounded hover:bg-elevated text-tertiary hover:text-accent-text transition-colors"
+                    className="p-1 rounded-sm hover:bg-elevated text-tertiary hover:text-accent-text transition-colors"
                     aria-label={`Copy code ${code}`}
                   >
                     <Copy size={12} />
@@ -160,7 +160,7 @@ export function Component() {
         {loading ? (
           <div className="space-y-3" role="status" aria-label="Loading invite codes">
             {Array.from({ length: 3 }).map((_, i) => (
-              <div key={i} className="h-10 bg-app rounded animate-pulse" />
+              <div key={i} className="h-10 bg-app rounded-sm animate-pulse" />
             ))}
           </div>
         ) : invites.length === 0 ? (
@@ -192,7 +192,7 @@ export function Component() {
                           variant="ghost"
                           size="icon-sm"
                           onClick={() => copyCode(inv.code)}
-                          className="p-1 rounded hover:bg-app text-tertiary hover:text-accent-text transition-colors"
+                          className="p-1 rounded-sm hover:bg-app text-tertiary hover:text-accent-text transition-colors"
                           aria-label={`Copy code ${inv.code}`}
                         >
                           <Copy size={12} />
@@ -208,8 +208,8 @@ export function Component() {
                     <td className="px-3 py-3 text-right">
                       {confirmRevokeCode === inv.code ? (
                         <div className="flex items-center justify-end gap-2 text-xs">
-                          <Button type="button" variant="danger" onClick={() => handleDelete(inv.code)} className="px-2 py-1 rounded bg-loss/10 text-loss hover:bg-loss/20 transition-colors">Revoke</Button>
-                          <Button type="button" variant="secondary" onClick={() => setConfirmRevokeCode(null)} className="px-2 py-1 rounded bg-elevated text-secondary hover:bg-app transition-colors">Cancel</Button>
+                          <Button type="button" variant="danger" onClick={() => handleDelete(inv.code)} className="px-2 py-1 rounded-sm bg-loss/10 text-loss hover:bg-loss/20 transition-colors">Revoke</Button>
+                          <Button type="button" variant="secondary" onClick={() => setConfirmRevokeCode(null)} className="px-2 py-1 rounded-sm bg-elevated text-secondary hover:bg-app transition-colors">Cancel</Button>
                         </div>
                       ) : (
                         <Button
@@ -217,7 +217,7 @@ export function Component() {
                           variant="ghost"
                           size="icon-sm"
                           onClick={() => setConfirmRevokeCode(inv.code)}
-                          className="p-1 rounded hover:bg-loss/10 text-tertiary hover:text-loss transition-colors"
+                          className="p-1 rounded-sm hover:bg-loss/10 text-tertiary hover:text-loss transition-colors"
                           aria-label="Revoke invite"
                           title="Revoke invite"
                         >

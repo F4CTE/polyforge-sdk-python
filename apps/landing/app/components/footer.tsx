@@ -95,7 +95,7 @@ export function Footer() {
       <div className="max-w-container-landing mx-auto px-6">
         <div className="flex flex-col md:flex-row gap-8 md:gap-16 mb-10">
           {/* Brand */}
-          <div className="shrink-0 min-w-[220px]">
+          <div className="shrink-0 min-w-52">
             <a
               href="/"
               className="inline-flex items-center gap-2 text-display-sm font-semibold text-primary mb-3 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-text rounded-sm"
@@ -130,7 +130,7 @@ export function Footer() {
             aria-label="Footer navigation"
           >
             {footerLinks.map((col) => (
-              <div key={col.title} className="min-w-[120px]">
+              <div key={col.title} className="min-w-28">
                 <p className="text-xs font-semibold uppercase tracking-wider text-tertiary mb-4">
                   {col.title}
                 </p>

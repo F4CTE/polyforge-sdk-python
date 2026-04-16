@@ -5,7 +5,7 @@ export function CtaBanner() {
         <div className="relative overflow-hidden bg-surface border border-accent/20 rounded-xl px-6 sm:px-12 py-12 sm:py-16 text-center">
           {/* Glow */}
           <div
-            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[500px] pointer-events-none cta-glow"
+            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] aspect-[8/5] pointer-events-none cta-glow"
             aria-hidden="true"
           />
 

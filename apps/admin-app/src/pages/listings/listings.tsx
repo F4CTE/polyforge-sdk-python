@@ -54,16 +54,16 @@ function SkeletonCard() {
   return (
     <div className="bg-elevated border border-default rounded-xl p-4 space-y-3 animate-pulse">
       <div className="flex items-start justify-between gap-3">
-        <div className="h-5 w-2/3 bg-surface rounded" />
+        <div className="h-5 w-2/3 bg-surface rounded-sm" />
         <div className="h-5 w-20 bg-surface rounded-full" />
       </div>
-      <div className="h-4 w-full bg-surface rounded" />
-      <div className="h-4 w-4/5 bg-surface rounded" />
-      <div className="h-4 w-1/2 bg-surface rounded" />
+      <div className="h-4 w-full bg-surface rounded-sm" />
+      <div className="h-4 w-4/5 bg-surface rounded-sm" />
+      <div className="h-4 w-1/2 bg-surface rounded-sm" />
       <div className="flex gap-4">
-        <div className="h-4 w-16 bg-surface rounded" />
-        <div className="h-4 w-16 bg-surface rounded" />
-        <div className="h-4 w-16 bg-surface rounded" />
+        <div className="h-4 w-16 bg-surface rounded-sm" />
+        <div className="h-4 w-16 bg-surface rounded-sm" />
+        <div className="h-4 w-16 bg-surface rounded-sm" />
       </div>
     </div>
   );
@@ -107,7 +107,7 @@ function ListingCard({ listing, onApprove, onReject, onDelist, onToggleFeatured,
             disabled={isBusy}
             aria-label={listing.featured ? `Remove featured from ${listing.title}` : `Feature listing ${listing.title}`}
             aria-pressed={listing.featured}
-            className="shrink-0 p-1 rounded transition-colors hover:bg-app disabled:opacity-50"
+            className="shrink-0 p-1 rounded-sm transition-colors hover:bg-app disabled:opacity-50"
           >
             <Star
               size={15}
@@ -433,7 +433,7 @@ export function Component() {
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               disabled={page === 1}
               aria-label="Previous page"
-              className="p-2 rounded hover:bg-elevated text-secondary disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+              className="p-2 rounded-sm hover:bg-elevated text-secondary disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
             >
               <ChevronLeft size={16} />
             </Button>
@@ -444,7 +444,7 @@ export function Component() {
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
               disabled={page === totalPages}
               aria-label="Next page"
-              className="p-2 rounded hover:bg-elevated text-secondary disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+              className="p-2 rounded-sm hover:bg-elevated text-secondary disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
             >
               <ChevronRight size={16} />
             </Button>

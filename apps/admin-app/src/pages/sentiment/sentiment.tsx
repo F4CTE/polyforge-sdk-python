@@ -121,7 +121,7 @@ function StatCard({
     <div className="bg-elevated border border-default rounded-xl p-4 flex flex-col gap-1">
       <span className="text-xs font-medium text-tertiary uppercase tracking-wider">{label}</span>
       {loading ? (
-        <div className="h-7 w-24 bg-surface rounded animate-pulse mt-1" />
+        <div className="h-7 w-24 bg-surface rounded-sm animate-pulse mt-1" />
       ) : (
         <span className={`text-2xl font-semibold ${colorClass ?? 'text-primary'}`}>{value}</span>
       )}
@@ -368,7 +368,7 @@ export function Component() {
 
         {loadingCategory ? (
           <div className="h-chart-sm flex items-center justify-center">
-            <div className="h-4 w-32 bg-surface rounded animate-pulse" />
+            <div className="h-4 w-32 bg-surface rounded-sm animate-pulse" />
           </div>
         ) : chartData.length === 0 ? (
           <div className="h-chart-sm flex items-center justify-center text-tertiary text-sm">
@@ -519,7 +519,7 @@ export function Component() {
                   <tr key={i}>
                     {Array.from({ length: 7 }).map((_, j) => (
                       <td key={j} className="px-4 py-3">
-                        <div className="h-4 bg-surface rounded animate-pulse" />
+                        <div className="h-4 bg-surface rounded-sm animate-pulse" />
                       </td>
                     ))}
                   </tr>
@@ -564,13 +564,13 @@ export function Component() {
                         <div className="flex flex-col gap-1">
                           <LabelPill label={row.label} />
                           <div className="flex items-center gap-1">
-                            <span className="text-caption px-2 py-px rounded bg-gain/10 text-gain font-mono">
+                            <span className="text-caption px-2 py-px rounded-sm bg-gain/10 text-gain font-mono">
                               B:{row.bullishCount}
                             </span>
-                            <span className="text-caption px-2 py-px rounded bg-app border border-default text-secondary font-mono">
+                            <span className="text-caption px-2 py-px rounded-sm bg-app border border-default text-secondary font-mono">
                               N:{Math.max(0, neutralCount)}
                             </span>
-                            <span className="text-caption px-2 py-px rounded bg-loss/10 text-loss font-mono">
+                            <span className="text-caption px-2 py-px rounded-sm bg-loss/10 text-loss font-mono">
                               Be:{row.bearishCount}
                             </span>
                           </div>

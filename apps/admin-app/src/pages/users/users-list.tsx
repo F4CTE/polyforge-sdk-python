@@ -235,7 +235,7 @@ export function Component() {
                   <tr key={i}>
                     {Array.from({ length: 7 }).map((_, j) => (
                       <td key={j} className="px-4 py-3">
-                        <div className="h-4 bg-surface rounded animate-pulse" />
+                        <div className="h-4 bg-surface rounded-sm animate-pulse" />
                       </td>
                     ))}
                   </tr>
@@ -261,12 +261,12 @@ export function Component() {
                       <Link
                         to={`/users/${user.id}`}
                         onClick={(e) => e.stopPropagation()}
-                        className="hover:text-accent-text transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent rounded"
+                        className="hover:text-accent-text transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent rounded-sm"
                       >
                         {user.username ?? ''}
                       </Link>
                       {user.suspended && (
-                        <span className="ml-2 px-2 py-1 rounded text-caption font-medium text-loss bg-loss/10">
+                        <span className="ml-2 px-2 py-1 rounded-sm text-caption font-medium text-loss bg-loss/10">
                           SUSPENDED
                         </span>
                       )}
@@ -308,7 +308,7 @@ export function Component() {
                             type="button"
                             variant="success"
                             onClick={(e) => { e.stopPropagation(); handleApprove(user.id, user.username); }}
-                            className="px-2 py-1 text-xs font-medium rounded bg-gain/10 text-gain hover:bg-gain/20 transition-colors"
+                            className="px-2 py-1 text-xs font-medium rounded-sm bg-gain/10 text-gain hover:bg-gain/20 transition-colors"
                           >
                             Approve
                           </Button>
@@ -316,7 +316,7 @@ export function Component() {
                             type="button"
                             variant="danger"
                             onClick={(e) => { e.stopPropagation(); handleReject(user.id, user.username); }}
-                            className="px-2 py-1 text-xs font-medium rounded bg-loss/10 text-loss hover:bg-loss/20 transition-colors"
+                            className="px-2 py-1 text-xs font-medium rounded-sm bg-loss/10 text-loss hover:bg-loss/20 transition-colors"
                           >
                             Reject
                           </Button>
@@ -344,7 +344,7 @@ export function Component() {
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                 disabled={page === 1}
                 aria-label="Previous page"
-                className="p-2 rounded hover:bg-app text-secondary disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                className="p-2 rounded-sm hover:bg-app text-secondary disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
               >
                 <ChevronLeft size={16} />
               </Button>
@@ -355,7 +355,7 @@ export function Component() {
                 onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                 disabled={page === totalPages}
                 aria-label="Next page"
-                className="p-2 rounded hover:bg-app text-secondary disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                className="p-2 rounded-sm hover:bg-app text-secondary disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
               >
                 <ChevronRight size={16} />
               </Button>

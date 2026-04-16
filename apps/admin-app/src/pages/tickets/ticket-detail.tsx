@@ -113,11 +113,11 @@ export function Component() {
   if (loading) {
     return (
       <div className="animate-pulse space-y-6" role="status" aria-label="Loading ticket details">
-        <div className="h-4 bg-elevated rounded w-32" />
+        <div className="h-4 bg-elevated rounded-sm w-32" />
         <div className="bg-elevated border border-default rounded-xl p-6 space-y-4">
-          <div className="h-5 bg-app rounded w-64" />
-          <div className="h-4 bg-app rounded w-48" />
-          <div className="h-4 bg-app rounded w-32" />
+          <div className="h-5 bg-app rounded-sm w-64" />
+          <div className="h-4 bg-app rounded-sm w-48" />
+          <div className="h-4 bg-app rounded-sm w-32" />
         </div>
         <div className="h-32 bg-elevated rounded-xl animate-pulse" />
       </div>
@@ -131,7 +131,7 @@ export function Component() {
         <Button type="button"
           variant="ghost"
           onClick={() => navigate('/tickets')}
-          className="mt-4 text-sm text-accent hover:underline rounded"
+          className="mt-4 text-sm text-accent hover:underline rounded-sm"
         >
           Back to tickets
         </Button>

@@ -125,7 +125,7 @@ export function Component() {
                   <tr key={i}>
                     {Array.from({ length: tab === 'audit' ? 4 : tab === 'logins' ? 5 : 3 }).map((_, j) => (
                       <td key={j} className="px-4 py-3">
-                        <div className="h-4 bg-surface rounded animate-pulse" />
+                        <div className="h-4 bg-surface rounded-sm animate-pulse" />
                       </td>
                     ))}
                   </tr>
@@ -147,7 +147,7 @@ export function Component() {
                     {tab === 'audit' && (
                       <>
                         <td className="px-4 py-3">
-                          <span className="px-2 py-1 rounded text-label font-medium bg-app text-accent border border-default">
+                          <span className="px-2 py-1 rounded-sm text-label font-medium bg-app text-accent border border-default">
                             {log.action}
                           </span>
                         </td>
@@ -161,14 +161,14 @@ export function Component() {
                     {tab === 'events' && (
                       <>
                         <td className="px-4 py-3">
-                          <span className="px-2 py-1 rounded text-label font-medium bg-purple-500/10 text-purple-500">
+                          <span className="px-2 py-1 rounded-sm text-label font-medium bg-purple-500/10 text-purple-500">
                             {log.type}
                           </span>
                         </td>
                         <td className="px-4 py-3 text-secondary max-w-xs font-mono text-xs">
                           <details className="cursor-pointer">
                             <summary className="truncate focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent">{JSON.stringify(log.payload)}</summary>
-                            <pre className="mt-2 p-2 bg-app rounded text-caption whitespace-pre-wrap break-all max-h-40 overflow-y-auto">{JSON.stringify(log.payload, null, 2)}</pre>
+                            <pre className="mt-2 p-2 bg-app rounded-sm text-caption whitespace-pre-wrap break-all max-h-40 overflow-y-auto">{JSON.stringify(log.payload, null, 2)}</pre>
                           </details>
                         </td>
                       </>

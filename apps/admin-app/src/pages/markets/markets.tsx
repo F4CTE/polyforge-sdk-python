@@ -109,7 +109,7 @@ function SkeletonRow() {
     <tr className="border-b border-default animate-pulse">
       {Array.from({ length: 8 }).map((_, i) => (
         <td key={i} className="px-4 py-3">
-          <div className="h-4 rounded bg-elevated" style={{ width: i === 0 ? '80%' : '60%' }} />
+          <div className="h-4 rounded-sm bg-elevated" style={{ width: i === 0 ? '80%' : '60%' }} />
         </td>
       ))}
     </tr>

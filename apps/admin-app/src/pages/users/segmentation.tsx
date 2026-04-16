@@ -118,11 +118,11 @@ function CohortCardSkeleton() {
   return (
     <div className="rounded-xl bg-elevated border border-default border-l-4 border-l-subtle p-4 space-y-3 animate-shimmer">
       <div className="flex items-center gap-2">
-        <div className="w-5 h-5 rounded bg-overlay" />
-        <div className="h-4 w-28 rounded bg-overlay" />
+        <div className="w-5 h-5 rounded-sm bg-overlay" />
+        <div className="h-4 w-28 rounded-sm bg-overlay" />
       </div>
-      <div className="h-3 w-full rounded bg-overlay" />
-      <div className="h-8 w-20 rounded bg-overlay" />
+      <div className="h-3 w-full rounded-sm bg-overlay" />
+      <div className="h-8 w-20 rounded-sm bg-overlay" />
       <div className="h-2 w-full rounded-full bg-overlay" />
       <div className="flex gap-2">
         <div className="h-7 flex-1 rounded-pf bg-overlay" />
@@ -137,7 +137,7 @@ function TableRowSkeleton() {
     <tr>
       {Array.from({ length: 6 }).map((_, i) => (
         <td key={i} className="px-4 py-3">
-          <div className="h-4 rounded bg-overlay animate-shimmer" style={{ width: `${60 + (i % 3) * 20}%` }} />
+          <div className="h-4 rounded-sm bg-overlay animate-shimmer" style={{ width: `${60 + (i % 3) * 20}%` }} />
         </td>
       ))}
     </tr>
@@ -408,8 +408,8 @@ function DrillDown({ cohortId, onBack }: DrillDownProps) {
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {Array.from({ length: 4 }).map((_, i) => (
             <div key={i} className="rounded-xl bg-elevated border border-default px-4 py-3 animate-shimmer">
-              <div className="h-3 w-16 rounded bg-overlay mb-2" />
-              <div className="h-6 w-20 rounded bg-overlay" />
+              <div className="h-3 w-16 rounded-sm bg-overlay mb-2" />
+              <div className="h-6 w-20 rounded-sm bg-overlay" />
             </div>
           ))}
         </div>

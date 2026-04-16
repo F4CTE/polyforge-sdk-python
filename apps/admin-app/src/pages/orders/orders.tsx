@@ -152,7 +152,7 @@ export function Component() {
                         type="button"
                         variant="danger"
                         onClick={() => confirmAction?.type === 'replay' ? handleReplay(entry.intentId) : handleDiscard(entry.intentId)}
-                        className="px-2 py-1 rounded bg-loss/10 text-loss hover:bg-loss/20 cursor-pointer transition-colors"
+                        className="px-2 py-1 rounded-sm bg-loss/10 text-loss hover:bg-loss/20 cursor-pointer transition-colors"
                       >
                         Confirm
                       </Button>
@@ -160,7 +160,7 @@ export function Component() {
                         type="button"
                         variant="secondary"
                         onClick={() => setConfirmAction(null)}
-                        className="px-2 py-1 rounded bg-elevated text-secondary hover:bg-app cursor-pointer transition-colors"
+                        className="px-2 py-1 rounded-sm bg-elevated text-secondary hover:bg-app cursor-pointer transition-colors"
                       >
                         Cancel
                       </Button>
@@ -171,7 +171,7 @@ export function Component() {
                         type="button"
                         variant="default"
                         onClick={() => setConfirmAction({ type: 'replay', intentId: entry.intentId })}
-                        className="flex items-center gap-1 px-2 py-1 text-xs rounded bg-info/10 text-info hover:bg-info/20 cursor-pointer transition-colors"
+                        className="flex items-center gap-1 px-2 py-1 text-xs rounded-sm bg-info/10 text-info hover:bg-info/20 cursor-pointer transition-colors"
                       >
                         <RotateCcw size={12} aria-hidden="true" />
                         Replay
@@ -180,7 +180,7 @@ export function Component() {
                         type="button"
                         variant="danger"
                         onClick={() => setConfirmAction({ type: 'discard', intentId: entry.intentId })}
-                        className="flex items-center gap-1 px-2 py-1 text-xs rounded bg-loss/10 text-loss hover:bg-loss/20 cursor-pointer transition-colors"
+                        className="flex items-center gap-1 px-2 py-1 text-xs rounded-sm bg-loss/10 text-loss hover:bg-loss/20 cursor-pointer transition-colors"
                       >
                         <Trash2 size={12} aria-hidden="true" />
                         Discard
@@ -216,7 +216,7 @@ export function Component() {
                   <tr key={i}>
                     {Array.from({ length: 7 }).map((_, j) => (
                       <td key={j} className="px-4 py-3">
-                        <div className="h-4 bg-surface rounded animate-pulse" />
+                        <div className="h-4 bg-surface rounded-sm animate-pulse" />
                       </td>
                     ))}
                   </tr>

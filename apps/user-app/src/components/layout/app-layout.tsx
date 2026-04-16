@@ -5,6 +5,7 @@ import { Sidebar } from './sidebar';
 import { Topbar } from './topbar';
 import { CommandPalette } from './command-palette';
 import { MobileBottomNav } from './mobile-bottom-nav';
+import { BetaBanner } from '../beta-banner';
 import { OnboardingChecklist } from '../onboarding/onboarding-checklist';
 import { TooltipTour } from '../onboarding/tooltip-tour';
 import { ShortcutsModal } from '../shortcuts/shortcuts-modal';
@@ -113,6 +114,7 @@ export function AppLayout() {
             <Topbar />
           </div>
         </div>
+        <BetaBanner />
         <main className="flex-1 overflow-y-auto pb-16 sm:pb-0" id="main-content">
           <Outlet />
         </main>

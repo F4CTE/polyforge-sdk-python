@@ -140,16 +140,16 @@ export function Component() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {[1, 2, 3, 4].map(i => (
             <div key={i} className="bg-elevated border border-default rounded-xl p-4 animate-pulse">
-              <div className="h-3 bg-app rounded w-24 mb-3" />
-              <div className="h-7 bg-app rounded w-16" />
+              <div className="h-3 bg-app rounded-sm w-24 mb-3" />
+              <div className="h-7 bg-app rounded-sm w-16" />
             </div>
           ))}
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {[1, 2, 3, 4].map(i => (
             <div key={i} className="bg-elevated border border-default rounded-xl p-4 animate-pulse">
-              <div className="h-3 bg-app rounded w-24 mb-3" />
-              <div className="h-7 bg-app rounded w-16" />
+              <div className="h-3 bg-app rounded-sm w-24 mb-3" />
+              <div className="h-7 bg-app rounded-sm w-16" />
             </div>
           ))}
         </div>
@@ -459,7 +459,7 @@ export function Component() {
                 className="flex items-center justify-between py-2 border-b border-default last:border-0"
               >
                 <div className="flex items-center gap-3">
-                  <span className="px-2 py-1 rounded text-label font-medium bg-app text-accent border border-default">
+                  <span className="px-2 py-1 rounded-sm text-label font-medium bg-app text-accent border border-default">
                     {log.action}
                   </span>
                   <span className="text-sm text-secondary">

@@ -130,7 +130,7 @@ function SkeletonRow() {
     <tr className="border-b border-default">
       {Array.from({ length: 7 }).map((_, i) => (
         <td key={i} className="px-3 py-3">
-          <div className="h-4 bg-app rounded animate-pulse" style={{ width: `${60 + (i * 7) % 30}%` }} />
+          <div className="h-4 bg-app rounded-sm animate-pulse" style={{ width: `${60 + (i * 7) % 30}%` }} />
         </td>
       ))}
     </tr>
@@ -254,7 +254,7 @@ export function Component() {
               variant="ghost"
               size="icon-sm"
               onClick={closeCompose}
-              className="p-1 rounded hover:bg-app text-tertiary hover:text-primary transition-colors"
+              className="p-1 rounded-sm hover:bg-app text-tertiary hover:text-primary transition-colors"
               aria-label="Close compose panel"
             >
               <X size={16} />
@@ -464,7 +464,7 @@ export function Component() {
                             type="button"
                             variant="danger"
                             onClick={() => handleDelete(b.id)}
-                            className="px-2 py-1 rounded bg-loss/10 text-loss hover:bg-loss/20 transition-colors"
+                            className="px-2 py-1 rounded-sm bg-loss/10 text-loss hover:bg-loss/20 transition-colors"
                           >
                             Delete
                           </Button>
@@ -472,7 +472,7 @@ export function Component() {
                             type="button"
                             variant="secondary"
                             onClick={() => setDeleteId(null)}
-                            className="px-2 py-1 rounded bg-elevated text-secondary hover:bg-app transition-colors"
+                            className="px-2 py-1 rounded-sm bg-elevated text-secondary hover:bg-app transition-colors"
                           >
                             Cancel
                           </Button>
@@ -483,7 +483,7 @@ export function Component() {
                           variant="ghost"
                           size="icon-sm"
                           onClick={() => setDeleteId(b.id)}
-                          className="p-1 rounded hover:bg-loss/10 text-tertiary hover:text-loss transition-colors"
+                          className="p-1 rounded-sm hover:bg-loss/10 text-tertiary hover:text-loss transition-colors"
                           aria-label={`Delete broadcast: ${b.title}`}
                           title="Delete broadcast record"
                         >
