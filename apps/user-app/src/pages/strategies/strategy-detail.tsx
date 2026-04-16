@@ -1710,7 +1710,7 @@ export function Component() {
           {/* Body grid */}
           {detailTab === 'overview' && <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
             {/* Blocks summary */}
-            <div className="lg:col-span-3 bg-elevated border border-default rounded-xl p-5 space-y-5">
+            <div data-testid="blocks-visualization" className="lg:col-span-3 bg-elevated border border-default rounded-xl p-5 space-y-5">
               {(
                 [
                   { key: 'safety', title: 'Safety', blocks: strategy.safety },
