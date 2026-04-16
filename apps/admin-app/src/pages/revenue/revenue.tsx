@@ -460,8 +460,8 @@ export function Component() {
                   <div className="flex items-center gap-2 mb-2">
                     {'dotColor' in card && (
                       <span
-                        className="size-2 rounded-full shrink-0"
-                        style={{ backgroundColor: (card as { dotColor: string }).dotColor }}
+                        className="size-2 rounded-full shrink-0 bg-[var(--dot-color)]"
+                        style={{ '--dot-color': (card as { dotColor: string }).dotColor } as React.CSSProperties}
                       />
                     )}
                     <span className="text-xs text-tertiary truncate">{card.label}</span>
@@ -525,8 +525,8 @@ export function Component() {
                   {breakdown?.sources.map(s => (
                     <div key={s.source} className="flex items-center gap-2 text-xs">
                       <span
-                        className="size-3 rounded-full shrink-0"
-                        style={{ backgroundColor: SOURCE_COLORS[s.source] }}
+                        className="size-3 rounded-full shrink-0 bg-[var(--source-color)]"
+                        style={{ '--source-color': SOURCE_COLORS[s.source] } as React.CSSProperties}
                       />
                       <span className="text-tertiary truncate">{s.label}</span>
                       <span className="font-mono text-primary ml-auto">{s.pct.toFixed(1)}%</span>
@@ -562,8 +562,8 @@ export function Component() {
                         <td className="py-3 pr-2">
                           <div className="flex items-center gap-2">
                             <span
-                              className="size-2 rounded-full shrink-0"
-                              style={{ backgroundColor: SOURCE_COLORS[s.source] }}
+                              className="size-2 rounded-full shrink-0 bg-[var(--source-color)]"
+                              style={{ '--source-color': SOURCE_COLORS[s.source] } as React.CSSProperties}
                             />
                             <span className="text-primary">{s.label}</span>
                           </div>
@@ -573,11 +573,11 @@ export function Component() {
                           <div className="flex items-center gap-2">
                             <div className="flex-1 h-2 bg-app rounded-full overflow-hidden">
                               <div
-                                className="h-full rounded-full"
+                                className="h-full rounded-full bg-[var(--source-color)]"
                                 style={{
                                   width: `${Math.min(s.pct, 100)}%`,
-                                  backgroundColor: SOURCE_COLORS[s.source],
-                                }}
+                                  '--source-color': SOURCE_COLORS[s.source],
+                                } as React.CSSProperties}
                               />
                             </div>
                             <span className="font-mono text-tertiary w-9 text-right">
@@ -875,17 +875,19 @@ export function Component() {
                             {user.tradeVolume}
                           </td>
                           <td className="px-4 py-3 text-right">
+                            {/* color-mix() exception: dynamic alpha blending has no Tailwind equivalent.
+                                Inline style is intentional per design charter §1 exception for color-mix(). */}
                             <span
                               className="inline-flex items-center gap-2 px-2 py-1 rounded-full text-xs font-medium"
                               style={{
+                                '--badge-color': dotColor,
                                 backgroundColor: `color-mix(in srgb, ${dotColor} 9%, transparent)`,
                                 color: dotColor,
                                 border: `1px solid color-mix(in srgb, ${dotColor} 20%, transparent)`,
-                              }}
+                              } as React.CSSProperties}
                             >
                               <span
-                                className="size-2 rounded-full"
-                                style={{ backgroundColor: dotColor }}
+                                className="size-2 rounded-full bg-[var(--badge-color)]"
                               />
                               {user.primarySource.replace(/_/g, ' ')}
                             </span>
