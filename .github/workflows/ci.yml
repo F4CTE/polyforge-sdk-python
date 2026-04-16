@@ -238,6 +238,10 @@ jobs:
             set -euo pipefail
             cd ~/PolyForge
 
+            echo "=== 0. Reset local state ==="
+            git reset --hard HEAD
+            git clean -fd
+
             echo "=== 1. Pull latest code ==="
             git fetch origin
 
