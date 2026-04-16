@@ -667,6 +667,90 @@ class PortfolioPnl:
 
 
 # ---------------------------------------------------------------------------
+# Discovery & Ranking
+# ---------------------------------------------------------------------------
+
+@dataclass
+class LeaderboardEntry:
+    """A single entry in the trading leaderboard."""
+
+    address: str = ""
+    rank: int = 0
+    pnl: float = 0.0
+    win_rate: float = 0.0
+    trade_count: int = 0
+    score: float = 0.0
+    volume: float = 0.0
+    period: str = ""
+
+
+# ---------------------------------------------------------------------------
+# Whale Intelligence
+# ---------------------------------------------------------------------------
+
+@dataclass
+class WhaleProfile:
+    """A whale trader's on-chain profile."""
+
+    address: str = ""
+    pnl: float = 0.0
+    win_rate: float = 0.0
+    trade_count: int = 0
+    volume: float = 0.0
+    following: bool = False
+    score: float = 0.0
+    last_active: str = ""
+
+
+# ---------------------------------------------------------------------------
+# Paper Trading
+# ---------------------------------------------------------------------------
+
+@dataclass
+class PaperSummary:
+    """Paper trading account summary."""
+
+    balance: float = 0.0
+    initial_balance: float = 0.0
+    pnl: float = 0.0
+    win_rate: float = 0.0
+    trade_count: int = 0
+    positions: List[Any] = field(default_factory=list)
+
+
+# ---------------------------------------------------------------------------
+# Batch API
+# ---------------------------------------------------------------------------
+
+@dataclass
+class BatchResult:
+    """A single result item returned from a batch request."""
+
+    id: str = ""
+    status: int = 200
+    body: Any = None
+
+
+# ---------------------------------------------------------------------------
+# Copy Trades
+# ---------------------------------------------------------------------------
+
+@dataclass
+class CopyTrade:
+    """A trade executed via copy trading."""
+
+    id: str = ""
+    copy_config_id: str = ""
+    market_id: str = ""
+    market_name: str = ""
+    side: str = ""
+    size: str = ""
+    price: str = ""
+    pnl: str = ""
+    executed_at: str = ""
+
+
+# ---------------------------------------------------------------------------
 # Strategy Execution Events (SSE)
 # ---------------------------------------------------------------------------
 

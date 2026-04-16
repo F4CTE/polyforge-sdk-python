@@ -2273,3 +2273,539 @@ class TestBacktestMethods:
 
     def test_async_get_text_helper_exists(self):
         assert callable(getattr(AsyncPolyforgeClient, "_get_text", None))
+
+
+# ---------------------------------------------------------------------------
+# New endpoint families (POLA-96)
+# ---------------------------------------------------------------------------
+
+class TestDiscoveryAndRanking:
+    """Tests for discover_strategies and get_leaderboard."""
+
+    # -- discover_strategies --
+
+    def test_sync_discover_strategies_exists(self):
+        assert hasattr(PolyforgeClient, "discover_strategies")
+
+    def test_async_discover_strategies_exists(self):
+        assert hasattr(AsyncPolyforgeClient, "discover_strategies")
+
+    def test_sync_discover_strategies_params(self):
+        import inspect
+        sig = inspect.signature(PolyforgeClient.discover_strategies)
+        params = set(sig.parameters.keys())
+        for name in ("sort", "category", "search", "limit", "offset"):
+            assert name in params, f"Missing param: {name}"
+
+    def test_sync_discover_strategies_path(self):
+        import inspect
+        source = inspect.getsource(PolyforgeClient.discover_strategies)
+        assert "/api/v1/discover" in source
+        assert "_get" in source
+
+    def test_async_discover_strategies_path(self):
+        import inspect
+        source = inspect.getsource(AsyncPolyforgeClient.discover_strategies)
+        assert "/api/v1/discover" in source
+
+    def test_sync_discover_strategies_returns_paginated(self):
+        import inspect
+        source = inspect.getsource(PolyforgeClient.discover_strategies)
+        assert "PaginatedResponse" in source
+
+    # -- get_leaderboard --
+
+    def test_sync_get_leaderboard_exists(self):
+        assert hasattr(PolyforgeClient, "get_leaderboard")
+
+    def test_async_get_leaderboard_exists(self):
+        assert hasattr(AsyncPolyforgeClient, "get_leaderboard")
+
+    def test_sync_get_leaderboard_params(self):
+        import inspect
+        sig = inspect.signature(PolyforgeClient.get_leaderboard)
+        params = set(sig.parameters.keys())
+        for name in ("period", "limit", "offset"):
+            assert name in params, f"Missing param: {name}"
+
+    def test_sync_get_leaderboard_path(self):
+        import inspect
+        source = inspect.getsource(PolyforgeClient.get_leaderboard)
+        assert "/api/v1/leaderboard" in source
+        assert "_get" in source
+
+    def test_async_get_leaderboard_path(self):
+        import inspect
+        source = inspect.getsource(AsyncPolyforgeClient.get_leaderboard)
+        assert "/api/v1/leaderboard" in source
+
+
+class TestPaperTrading:
+    """Tests for get_paper_summary and reset_paper_account."""
+
+    # -- get_paper_summary --
+
+    def test_sync_get_paper_summary_exists(self):
+        assert hasattr(PolyforgeClient, "get_paper_summary")
+
+    def test_async_get_paper_summary_exists(self):
+        assert hasattr(AsyncPolyforgeClient, "get_paper_summary")
+
+    def test_sync_get_paper_summary_path(self):
+        import inspect
+        source = inspect.getsource(PolyforgeClient.get_paper_summary)
+        assert "/api/v1/paper/summary" in source
+        assert "_get" in source
+
+    def test_async_get_paper_summary_path(self):
+        import inspect
+        source = inspect.getsource(AsyncPolyforgeClient.get_paper_summary)
+        assert "/api/v1/paper/summary" in source
+
+    # -- reset_paper_account --
+
+    def test_sync_reset_paper_account_exists(self):
+        assert hasattr(PolyforgeClient, "reset_paper_account")
+
+    def test_async_reset_paper_account_exists(self):
+        assert hasattr(AsyncPolyforgeClient, "reset_paper_account")
+
+    def test_sync_reset_paper_account_path(self):
+        import inspect
+        source = inspect.getsource(PolyforgeClient.reset_paper_account)
+        assert "/api/v1/paper/reset" in source
+        assert "_post" in source
+
+    def test_async_reset_paper_account_path(self):
+        import inspect
+        source = inspect.getsource(AsyncPolyforgeClient.reset_paper_account)
+        assert "/api/v1/paper/reset" in source
+
+
+class TestBatchApi:
+    """Tests for batch_requests."""
+
+    def test_sync_batch_requests_exists(self):
+        assert hasattr(PolyforgeClient, "batch_requests")
+
+    def test_async_batch_requests_exists(self):
+        assert hasattr(AsyncPolyforgeClient, "batch_requests")
+
+    def test_sync_batch_requests_params(self):
+        import inspect
+        sig = inspect.signature(PolyforgeClient.batch_requests)
+        assert "requests" in sig.parameters
+
+    def test_sync_batch_requests_path(self):
+        import inspect
+        source = inspect.getsource(PolyforgeClient.batch_requests)
+        assert "/api/v1/batch" in source
+        assert "_post" in source
+
+    def test_async_batch_requests_path(self):
+        import inspect
+        source = inspect.getsource(AsyncPolyforgeClient.batch_requests)
+        assert "/api/v1/batch" in source
+
+
+class TestExtendedWhaleIntelligence:
+    """Tests for get_top_whales, get_whale_profile, follow/unfollow, get_followed_whales."""
+
+    # -- get_top_whales --
+
+    def test_sync_get_top_whales_exists(self):
+        assert hasattr(PolyforgeClient, "get_top_whales")
+
+    def test_async_get_top_whales_exists(self):
+        assert hasattr(AsyncPolyforgeClient, "get_top_whales")
+
+    def test_sync_get_top_whales_params(self):
+        import inspect
+        sig = inspect.signature(PolyforgeClient.get_top_whales)
+        params = set(sig.parameters.keys())
+        assert "sort" in params
+        assert "period" in params
+
+    def test_sync_get_top_whales_path(self):
+        import inspect
+        source = inspect.getsource(PolyforgeClient.get_top_whales)
+        assert "/api/v1/whales/top" in source
+        assert "_get" in source
+
+    def test_async_get_top_whales_path(self):
+        import inspect
+        source = inspect.getsource(AsyncPolyforgeClient.get_top_whales)
+        assert "/api/v1/whales/top" in source
+
+    # -- get_whale_profile --
+
+    def test_sync_get_whale_profile_exists(self):
+        assert hasattr(PolyforgeClient, "get_whale_profile")
+
+    def test_async_get_whale_profile_exists(self):
+        assert hasattr(AsyncPolyforgeClient, "get_whale_profile")
+
+    def test_sync_get_whale_profile_params(self):
+        import inspect
+        sig = inspect.signature(PolyforgeClient.get_whale_profile)
+        assert "address" in sig.parameters
+
+    def test_sync_get_whale_profile_path(self):
+        import inspect
+        source = inspect.getsource(PolyforgeClient.get_whale_profile)
+        assert "/api/v1/whales/" in source
+        assert "_encode_path" in source
+        assert "_get" in source
+
+    def test_async_get_whale_profile_path(self):
+        import inspect
+        source = inspect.getsource(AsyncPolyforgeClient.get_whale_profile)
+        assert "/api/v1/whales/" in source
+        assert "_encode_path" in source
+
+    # -- follow_whale --
+
+    def test_sync_follow_whale_exists(self):
+        assert hasattr(PolyforgeClient, "follow_whale")
+
+    def test_async_follow_whale_exists(self):
+        assert hasattr(AsyncPolyforgeClient, "follow_whale")
+
+    def test_sync_follow_whale_path(self):
+        import inspect
+        source = inspect.getsource(PolyforgeClient.follow_whale)
+        assert "/follow" in source
+        assert "_post" in source
+
+    def test_async_follow_whale_path(self):
+        import inspect
+        source = inspect.getsource(AsyncPolyforgeClient.follow_whale)
+        assert "/follow" in source
+
+    # -- unfollow_whale --
+
+    def test_sync_unfollow_whale_exists(self):
+        assert hasattr(PolyforgeClient, "unfollow_whale")
+
+    def test_async_unfollow_whale_exists(self):
+        assert hasattr(AsyncPolyforgeClient, "unfollow_whale")
+
+    def test_sync_unfollow_whale_path(self):
+        import inspect
+        source = inspect.getsource(PolyforgeClient.unfollow_whale)
+        assert "/unfollow" in source
+        assert "_post" in source
+
+    # -- get_followed_whales --
+
+    def test_sync_get_followed_whales_exists(self):
+        assert hasattr(PolyforgeClient, "get_followed_whales")
+
+    def test_async_get_followed_whales_exists(self):
+        assert hasattr(AsyncPolyforgeClient, "get_followed_whales")
+
+    def test_sync_get_followed_whales_path(self):
+        import inspect
+        source = inspect.getsource(PolyforgeClient.get_followed_whales)
+        assert "/api/v1/whales/following" in source
+        assert "_get" in source
+
+    def test_async_get_followed_whales_path(self):
+        import inspect
+        source = inspect.getsource(AsyncPolyforgeClient.get_followed_whales)
+        assert "/api/v1/whales/following" in source
+
+
+class TestMarketplaceSellerCrud:
+    """Tests for create_marketplace_listing, update, rate, get_my_listings, get_my_purchases."""
+
+    # -- create_marketplace_listing --
+
+    def test_sync_create_marketplace_listing_exists(self):
+        assert hasattr(PolyforgeClient, "create_marketplace_listing")
+
+    def test_async_create_marketplace_listing_exists(self):
+        assert hasattr(AsyncPolyforgeClient, "create_marketplace_listing")
+
+    def test_sync_create_marketplace_listing_params(self):
+        import inspect
+        sig = inspect.signature(PolyforgeClient.create_marketplace_listing)
+        params = set(sig.parameters.keys())
+        assert "strategy_id" in params
+        assert "price" in params
+        assert "description" in params
+
+    def test_sync_create_marketplace_listing_validates_price(self):
+        import inspect
+        source = inspect.getsource(PolyforgeClient.create_marketplace_listing)
+        assert "_validate_financial_param" in source
+
+    def test_sync_create_marketplace_listing_path(self):
+        import inspect
+        source = inspect.getsource(PolyforgeClient.create_marketplace_listing)
+        assert "/api/v1/marketplace" in source
+        assert "_post" in source
+
+    def test_async_create_marketplace_listing_path(self):
+        import inspect
+        source = inspect.getsource(AsyncPolyforgeClient.create_marketplace_listing)
+        assert "/api/v1/marketplace" in source
+
+    # -- update_marketplace_listing --
+
+    def test_sync_update_marketplace_listing_exists(self):
+        assert hasattr(PolyforgeClient, "update_marketplace_listing")
+
+    def test_async_update_marketplace_listing_exists(self):
+        assert hasattr(AsyncPolyforgeClient, "update_marketplace_listing")
+
+    def test_sync_update_marketplace_listing_path(self):
+        import inspect
+        source = inspect.getsource(PolyforgeClient.update_marketplace_listing)
+        assert "/api/v1/marketplace/" in source
+        assert "_patch" in source
+        assert "_encode_path" in source
+
+    # -- rate_marketplace_listing --
+
+    def test_sync_rate_marketplace_listing_exists(self):
+        assert hasattr(PolyforgeClient, "rate_marketplace_listing")
+
+    def test_async_rate_marketplace_listing_exists(self):
+        assert hasattr(AsyncPolyforgeClient, "rate_marketplace_listing")
+
+    def test_sync_rate_marketplace_listing_params(self):
+        import inspect
+        sig = inspect.signature(PolyforgeClient.rate_marketplace_listing)
+        params = set(sig.parameters.keys())
+        assert "listing_id" in params
+        assert "rating" in params
+        assert "review" in params
+
+    def test_sync_rate_marketplace_listing_path(self):
+        import inspect
+        source = inspect.getsource(PolyforgeClient.rate_marketplace_listing)
+        assert "/rate" in source
+        assert "_post" in source
+
+    # -- get_my_listings --
+
+    def test_sync_get_my_listings_exists(self):
+        assert hasattr(PolyforgeClient, "get_my_listings")
+
+    def test_async_get_my_listings_exists(self):
+        assert hasattr(AsyncPolyforgeClient, "get_my_listings")
+
+    def test_sync_get_my_listings_path(self):
+        import inspect
+        source = inspect.getsource(PolyforgeClient.get_my_listings)
+        assert "/api/v1/marketplace/my/listings" in source
+        assert "_get" in source
+
+    def test_async_get_my_listings_path(self):
+        import inspect
+        source = inspect.getsource(AsyncPolyforgeClient.get_my_listings)
+        assert "/api/v1/marketplace/my/listings" in source
+
+    # -- get_my_purchases --
+
+    def test_sync_get_my_purchases_exists(self):
+        assert hasattr(PolyforgeClient, "get_my_purchases")
+
+    def test_async_get_my_purchases_exists(self):
+        assert hasattr(AsyncPolyforgeClient, "get_my_purchases")
+
+    def test_sync_get_my_purchases_path(self):
+        import inspect
+        source = inspect.getsource(PolyforgeClient.get_my_purchases)
+        assert "/api/v1/marketplace/my/purchases" in source
+        assert "_get" in source
+
+    def test_async_get_my_purchases_path(self):
+        import inspect
+        source = inspect.getsource(AsyncPolyforgeClient.get_my_purchases)
+        assert "/api/v1/marketplace/my/purchases" in source
+
+
+class TestCopyTradingCrud:
+    """Tests for full copy-trading lifecycle: create, get, update, pause, resume, delete, trades."""
+
+    # -- create_copy_config --
+
+    def test_sync_create_copy_config_exists(self):
+        assert hasattr(PolyforgeClient, "create_copy_config")
+
+    def test_async_create_copy_config_exists(self):
+        assert hasattr(AsyncPolyforgeClient, "create_copy_config")
+
+    def test_sync_create_copy_config_params(self):
+        import inspect
+        sig = inspect.signature(PolyforgeClient.create_copy_config)
+        params = set(sig.parameters.keys())
+        assert "target_wallet" in params
+        for opt in ("mode", "size_value", "max_exposure", "max_daily_loss", "price_offset"):
+            assert opt in params, f"Missing optional param: {opt}"
+
+    def test_sync_create_copy_config_path(self):
+        import inspect
+        source = inspect.getsource(PolyforgeClient.create_copy_config)
+        assert "/api/v1/copy" in source
+        assert "_post" in source
+
+    def test_async_create_copy_config_path(self):
+        import inspect
+        source = inspect.getsource(AsyncPolyforgeClient.create_copy_config)
+        assert "/api/v1/copy" in source
+        assert "_post" in source
+
+    # -- get_copy_config --
+
+    def test_sync_get_copy_config_exists(self):
+        assert hasattr(PolyforgeClient, "get_copy_config")
+
+    def test_async_get_copy_config_exists(self):
+        assert hasattr(AsyncPolyforgeClient, "get_copy_config")
+
+    def test_sync_get_copy_config_path(self):
+        import inspect
+        source = inspect.getsource(PolyforgeClient.get_copy_config)
+        assert "/api/v1/copy/" in source
+        assert "_encode_path" in source
+        assert "_get" in source
+
+    def test_async_get_copy_config_path(self):
+        import inspect
+        source = inspect.getsource(AsyncPolyforgeClient.get_copy_config)
+        assert "/api/v1/copy/" in source
+        assert "_encode_path" in source
+
+    # -- update_copy_config --
+
+    def test_sync_update_copy_config_exists(self):
+        assert hasattr(PolyforgeClient, "update_copy_config")
+
+    def test_async_update_copy_config_exists(self):
+        assert hasattr(AsyncPolyforgeClient, "update_copy_config")
+
+    def test_sync_update_copy_config_path(self):
+        import inspect
+        source = inspect.getsource(PolyforgeClient.update_copy_config)
+        assert "/api/v1/copy/" in source
+        assert "_patch" in source
+        assert "_encode_path" in source
+
+    # -- pause_copy_config --
+
+    def test_sync_pause_copy_config_exists(self):
+        assert hasattr(PolyforgeClient, "pause_copy_config")
+
+    def test_async_pause_copy_config_exists(self):
+        assert hasattr(AsyncPolyforgeClient, "pause_copy_config")
+
+    def test_sync_pause_copy_config_path(self):
+        import inspect
+        source = inspect.getsource(PolyforgeClient.pause_copy_config)
+        assert "/pause" in source
+        assert "_post" in source
+
+    def test_async_pause_copy_config_path(self):
+        import inspect
+        source = inspect.getsource(AsyncPolyforgeClient.pause_copy_config)
+        assert "/pause" in source
+
+    # -- resume_copy_config --
+
+    def test_sync_resume_copy_config_exists(self):
+        assert hasattr(PolyforgeClient, "resume_copy_config")
+
+    def test_async_resume_copy_config_exists(self):
+        assert hasattr(AsyncPolyforgeClient, "resume_copy_config")
+
+    def test_sync_resume_copy_config_path(self):
+        import inspect
+        source = inspect.getsource(PolyforgeClient.resume_copy_config)
+        assert "/resume" in source
+        assert "_post" in source
+
+    def test_async_resume_copy_config_path(self):
+        import inspect
+        source = inspect.getsource(AsyncPolyforgeClient.resume_copy_config)
+        assert "/resume" in source
+
+    # -- delete_copy_config --
+
+    def test_sync_delete_copy_config_exists(self):
+        assert hasattr(PolyforgeClient, "delete_copy_config")
+
+    def test_async_delete_copy_config_exists(self):
+        assert hasattr(AsyncPolyforgeClient, "delete_copy_config")
+
+    def test_sync_delete_copy_config_path(self):
+        import inspect
+        source = inspect.getsource(PolyforgeClient.delete_copy_config)
+        assert "/api/v1/copy/" in source
+        assert "_delete" in source
+        assert "_encode_path" in source
+
+    def test_async_delete_copy_config_path(self):
+        import inspect
+        source = inspect.getsource(AsyncPolyforgeClient.delete_copy_config)
+        assert "/api/v1/copy/" in source
+        assert "_delete" in source
+
+    # -- get_copy_trades --
+
+    def test_sync_get_copy_trades_exists(self):
+        assert hasattr(PolyforgeClient, "get_copy_trades")
+
+    def test_async_get_copy_trades_exists(self):
+        assert hasattr(AsyncPolyforgeClient, "get_copy_trades")
+
+    def test_sync_get_copy_trades_path(self):
+        import inspect
+        source = inspect.getsource(PolyforgeClient.get_copy_trades)
+        assert "/trades" in source
+        assert "_encode_path" in source
+        assert "_get" in source
+
+    def test_async_get_copy_trades_path(self):
+        import inspect
+        source = inspect.getsource(AsyncPolyforgeClient.get_copy_trades)
+        assert "/trades" in source
+
+
+class TestNewModels:
+    """Tests for the new model dataclasses added in POLA-96."""
+
+    def test_leaderboard_entry_defaults(self):
+        from polyforge.models import LeaderboardEntry
+        entry = LeaderboardEntry()
+        assert entry.address == ""
+        assert entry.rank == 0
+        assert entry.pnl == 0.0
+
+    def test_whale_profile_defaults(self):
+        from polyforge.models import WhaleProfile
+        profile = WhaleProfile()
+        assert profile.address == ""
+        assert profile.following is False
+
+    def test_paper_summary_defaults(self):
+        from polyforge.models import PaperSummary
+        summary = PaperSummary()
+        assert summary.balance == 0.0
+        assert summary.positions == []
+
+    def test_batch_result_defaults(self):
+        from polyforge.models import BatchResult
+        result = BatchResult()
+        assert result.id == ""
+        assert result.status == 200
+        assert result.body is None
+
+    def test_copy_trade_defaults(self):
+        from polyforge.models import CopyTrade
+        trade = CopyTrade()
+        assert trade.id == ""
+        assert trade.side == ""
+        assert trade.pnl == ""

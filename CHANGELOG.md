@@ -1,5 +1,48 @@
 # Changelog
 
+## [2.0.0] — 2026-04-16
+
+### Added
+
+**Discovery & Ranking**
+- `discover_strategies(sort, category, search, limit, offset)` — `GET /api/v1/discover` returns `PaginatedResponse[Strategy]`
+- `get_leaderboard(period, limit, offset)` — `GET /api/v1/leaderboard` returns `list[LeaderboardEntry]`
+
+**Paper Trading**
+- `get_paper_summary()` — `GET /api/v1/paper/summary` returns `PaperSummary`
+- `reset_paper_account()` — `POST /api/v1/paper/reset`
+
+**Batch API**
+- `batch_requests(requests)` — `POST /api/v1/batch` returns `list[BatchResult]`
+
+**Extended Whale Intelligence**
+- `get_top_whales(sort, period)` — `GET /api/v1/whales/top` returns `list[WhaleProfile]`
+- `get_whale_profile(address)` — `GET /api/v1/whales/:address` returns `WhaleProfile`
+- `follow_whale(address)` — `POST /api/v1/whales/:address/follow`
+- `unfollow_whale(address)` — `POST /api/v1/whales/:address/unfollow`
+- `get_followed_whales()` — `GET /api/v1/whales/following` returns `list[WhaleProfile]`
+
+**Marketplace Seller CRUD**
+- `create_marketplace_listing(strategy_id, price, description)` — `POST /api/v1/marketplace`
+- `update_marketplace_listing(listing_id, **kwargs)` — `PATCH /api/v1/marketplace/:id`
+- `rate_marketplace_listing(listing_id, rating, review)` — `POST /api/v1/marketplace/:id/rate`
+- `get_my_listings()` — `GET /api/v1/marketplace/my/listings`
+- `get_my_purchases()` — `GET /api/v1/marketplace/my/purchases`
+
+**Copy Trading CRUD** (full lifecycle, closes #66)
+- `create_copy_config(target_wallet, mode, size_value, max_exposure, max_daily_loss, price_offset)` — `POST /api/v1/copy`
+- `get_copy_config(copy_id)` — `GET /api/v1/copy/:id`
+- `update_copy_config(copy_id, **kwargs)` — `PATCH /api/v1/copy/:id`
+- `pause_copy_config(copy_id)` — `POST /api/v1/copy/:id/pause`
+- `resume_copy_config(copy_id)` — `POST /api/v1/copy/:id/resume`
+- `delete_copy_config(copy_id)` — `DELETE /api/v1/copy/:id`
+- `get_copy_trades(copy_id)` — `GET /api/v1/copy/:id/trades`
+
+**New models**: `LeaderboardEntry`, `WhaleProfile`, `PaperSummary`, `BatchResult`, `CopyTrade`
+
+All 22 new methods available on both `PolyforgeClient` (sync) and `AsyncPolyforgeClient` (async).
+Closes GitHub issue #66.
+
 ## [1.9.3] — 2026-04-15
 
 ### Added
