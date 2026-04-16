@@ -10,6 +10,10 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### ⚠ Breaking Changes
 - **API key scopes: STRATEGY and WEBHOOK** — existing API keys with `WRITE` scope **no longer have access** to strategy or webhook mutation endpoints. Keys must be re-issued with the explicit `STRATEGY` and/or `WEBHOOK` scopes. JWT-based (session) access is unaffected. (closes #571)
 
+### Removed
+- **Stale invite-code ToS copy** — Section 4 of Terms of Service no longer references invite codes or admin approval queues; updated to reflect open-beta registration (POLA-89)
+- **Dead `sendPendingApprovalEmail` mail method** — removed from `auth-service` mail service and its unreachable fire-and-forget call site in `AuthService.register()`; was only reachable when `INVITE_ONLY=true`, which is no longer the production default (POLA-89)
+
 ### Added
 - **2FA/TOTP complete flow** — `TOTP_INVALID` and `TOTP_LOCKED` (15-min lockout) error handling in both apps; setup session expiry handled gracefully; backup code regeneration endpoint (`POST /auth/v1/totp/backup-codes`) with bcrypt-hashed storage, 5/hour throttle; `autoComplete="one-time-code"` and `autoComplete="current-password"` for accessibility (closes #568)
 - **API key scopes: STRATEGY + WEBHOOK** — fine-grained scopes added to `ApiKeyScope` enum and Prisma schema; strategy endpoints require `STRATEGY`, webhook endpoints require `WEBHOOK` (closes #571)
