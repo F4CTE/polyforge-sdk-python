@@ -89,7 +89,7 @@ POSTGRES_USER=poly
 POSTGRES_PASSWORD=${DB_PASSWORD}
 POSTGRES_DB=polyforge
 DATABASE_URL=postgresql://poly:${DB_PASSWORD}@pgbouncer:5432/polyforge?pgbouncer=true&connection_limit=1
-DIRECT_DATABASE_URL=postgresql://poly:${DB_PASSWORD}@postgres:5432/polyforge
+DIRECT_DATABASE_URL=postgresql://poly:${DB_PASSWORD}@localhost:5432/polyforge
 
 # ─────────────────────────────────────────────────────────────────────────────
 # ADMIN DATABASE
@@ -99,7 +99,7 @@ POSTGRES_ADMIN_USER=poly_admin
 POSTGRES_ADMIN_PASSWORD=${ADMIN_DB_PASSWORD}
 POSTGRES_ADMIN_DB=polyforge_admin
 ADMIN_DATABASE_URL=postgresql://poly_admin:${ADMIN_DB_PASSWORD}@pgbouncer-admin:5433/polyforge_admin?pgbouncer=true&connection_limit=1
-ADMIN_DIRECT_DATABASE_URL=postgresql://poly_admin:${ADMIN_DB_PASSWORD}@postgres-admin:5434/polyforge_admin
+ADMIN_DIRECT_DATABASE_URL=postgresql://poly_admin:${ADMIN_DB_PASSWORD}@localhost:5434/polyforge_admin
 
 # ─────────────────────────────────────────────────────────────────────────────
 # REDIS
