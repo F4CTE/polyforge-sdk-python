@@ -181,7 +181,7 @@ function BroadcastDialog({ cohortId, cohortLabel, userCount, onClose }: Broadcas
         <h2 id="broadcast-dialog-title" className="text-base font-semibold text-primary">
           Send Broadcast
         </h2>
-        <p className="text-sm text-secondary">
+        <p className="text-body-sm text-secondary">
           Send broadcast to{' '}
           <span className="font-semibold text-primary">{userCount.toLocaleString()}</span>{' '}
           <span className="text-accent-text">{cohortLabel}</span> users?
@@ -191,7 +191,7 @@ function BroadcastDialog({ cohortId, cohortLabel, userCount, onClose }: Broadcas
             type="button"
             variant="secondary"
             onClick={onClose}
-            className="px-4 py-2 rounded-pf text-sm text-secondary hover:bg-overlay border border-default transition-colors"
+            className="px-4 py-2 rounded-pf text-body-sm text-secondary hover:bg-overlay border border-default transition-colors"
           >
             Cancel
           </Button>
@@ -200,7 +200,7 @@ function BroadcastDialog({ cohortId, cohortLabel, userCount, onClose }: Broadcas
             variant="default"
             onClick={handleConfirm}
             disabled={loading}
-            className="px-4 py-2 rounded-pf text-sm font-medium bg-accent text-inverse hover:bg-accent-text disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="px-4 py-2 rounded-pf text-body-sm font-medium bg-accent text-inverse hover:bg-accent-text disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             {loading ? 'Sending…' : 'Confirm'}
           </Button>
@@ -238,8 +238,8 @@ function CohortCard({ definition, stats, onViewUsers, onBroadcast }: CohortCardP
       <div className="flex items-start gap-2">
         <Icon size={18} className={`${definition.iconColor} shrink-0 mt-1`} aria-hidden="true" />
         <div className="min-w-0">
-          <h3 className="text-sm font-semibold text-primary">{definition.label}</h3>
-          <p className="text-xs text-tertiary mt-1 leading-snug">{definition.description}</p>
+          <h3 className="text-heading font-semibold text-primary">{definition.label}</h3>
+          <p className="text-caption text-tertiary mt-1 leading-snug">{definition.description}</p>
         </div>
       </div>
 
@@ -248,10 +248,10 @@ function CohortCard({ definition, stats, onViewUsers, onBroadcast }: CohortCardP
         <span className="text-2xl font-semibold text-primary tabular-nums">
           {stats.userCount.toLocaleString()}
         </span>
-        <span className="text-xs text-tertiary">
+        <span className="text-caption text-tertiary">
           {stats.pctOfTotal.toFixed(1)}% of total
         </span>
-        <span className={`ml-auto flex items-center gap-1 text-xs font-medium ${trendColor}`}>
+        <span className={`ml-auto flex items-center gap-1 text-label font-medium ${trendColor}`}>
           <TrendIcon size={13} aria-hidden="true" />
           {stats.trendPct > 0 ? '+' : ''}{stats.trendPct.toFixed(1)}%
         </span>
@@ -282,7 +282,7 @@ function CohortCard({ definition, stats, onViewUsers, onBroadcast }: CohortCardP
           type="button"
           variant="ghost"
           onClick={() => onViewUsers(definition.id)}
-          className="flex-1 px-3 py-2 rounded-pf text-xs font-medium bg-accent/10 text-accent-text hover:bg-accent/20 border border-accent-text/20 transition-colors"
+          className="flex-1 px-3 py-2 rounded-pf text-label font-medium bg-accent/10 text-accent-text hover:bg-accent/20 border border-accent-text/20 transition-colors"
         >
           View Users
         </Button>
@@ -290,7 +290,7 @@ function CohortCard({ definition, stats, onViewUsers, onBroadcast }: CohortCardP
           type="button"
           variant="ghost"
           onClick={() => onBroadcast(definition.id)}
-          className="flex-1 px-3 py-2 rounded-pf text-xs font-medium bg-overlay text-secondary hover:text-primary hover:bg-default border border-default transition-colors"
+          className="flex-1 px-3 py-2 rounded-pf text-label font-medium bg-overlay text-secondary hover:text-primary hover:bg-default border border-default transition-colors"
         >
           Send Broadcast
         </Button>
@@ -371,7 +371,7 @@ function DrillDown({ cohortId, onBack }: DrillDownProps) {
         type="button"
         variant="ghost"
         onClick={onBack}
-        className="inline-flex items-center gap-2 text-sm text-secondary hover:text-primary transition-colors rounded-sm"
+        className="inline-flex items-center gap-2 text-body-sm text-secondary hover:text-primary transition-colors rounded-sm"
       >
         <ChevronLeft size={16} aria-hidden="true" />
         All Cohorts
@@ -418,7 +418,7 @@ function DrillDown({ cohortId, onBack }: DrillDownProps) {
       {/* Table */}
       <div className="rounded-xl bg-elevated border border-default overflow-hidden">
         <div className="flex items-center justify-between px-4 py-3 border-b border-default">
-          <span className="text-sm font-medium text-primary">
+          <span className="text-body-sm font-medium text-primary">
             {total > 0 ? `${total.toLocaleString()} users` : 'Users'}
           </span>
           <Button
@@ -426,7 +426,7 @@ function DrillDown({ cohortId, onBack }: DrillDownProps) {
             variant="ghost"
             onClick={handleExportCsv}
             disabled={users.length === 0}
-            className="inline-flex items-center gap-2 px-3 py-2 rounded-pf text-xs font-medium text-secondary hover:text-primary bg-overlay hover:bg-default border border-default transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            className="inline-flex items-center gap-2 px-3 py-2 rounded-pf text-label font-medium text-secondary hover:text-primary bg-overlay hover:bg-default border border-default transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
           >
             <Download size={13} aria-hidden="true" />
             Export CSV
@@ -434,7 +434,7 @@ function DrillDown({ cohortId, onBack }: DrillDownProps) {
         </div>
 
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className="w-full text-body-sm">
             <thead>
               <tr className="border-b border-default bg-surface">
                 <th className="px-4 py-3 text-left text-label font-semibold text-tertiary uppercase tracking-wide">
@@ -462,7 +462,7 @@ function DrillDown({ cohortId, onBack }: DrillDownProps) {
                 Array.from({ length: 8 }).map((_, i) => <TableRowSkeleton key={i} />)
               ) : users.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-4 py-12 text-center text-sm text-tertiary">
+                  <td colSpan={6} className="px-4 py-12 text-center text-body-sm text-tertiary">
                     No users match this segment yet
                   </td>
                 </tr>
@@ -500,7 +500,7 @@ function DrillDown({ cohortId, onBack }: DrillDownProps) {
         {/* Pagination */}
         {totalPages > 1 && (
           <div className="flex items-center justify-between px-4 py-3 border-t border-default">
-            <span className="text-xs text-tertiary">
+            <span className="text-caption text-tertiary">
               Page {page} of {totalPages}
             </span>
             <div className="flex gap-1">
@@ -509,7 +509,7 @@ function DrillDown({ cohortId, onBack }: DrillDownProps) {
                 variant="ghost"
                 onClick={() => handlePageChange(page - 1)}
                 disabled={page <= 1}
-                className="px-3 py-2 rounded-sm text-xs text-secondary hover:text-primary hover:bg-overlay border border-default disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                className="px-3 py-2 rounded-sm text-label text-secondary hover:text-primary hover:bg-overlay border border-default disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
               >
                 Previous
               </Button>
@@ -518,7 +518,7 @@ function DrillDown({ cohortId, onBack }: DrillDownProps) {
                 variant="ghost"
                 onClick={() => handlePageChange(page + 1)}
                 disabled={page >= totalPages}
-                className="px-3 py-2 rounded-sm text-xs text-secondary hover:text-primary hover:bg-overlay border border-default disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                className="px-3 py-2 rounded-sm text-label text-secondary hover:text-primary hover:bg-overlay border border-default disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
               >
                 Next
               </Button>
@@ -562,10 +562,10 @@ function OverviewGrid({ statsMap, loading, onViewUsers, onBroadcast }: OverviewG
             >
               <div className="flex items-center gap-2">
                 <definition.icon size={18} className={`${definition.iconColor} shrink-0`} aria-hidden="true" />
-                <span className="text-sm font-semibold text-primary">{definition.label}</span>
+                <span className="text-heading font-semibold text-primary">{definition.label}</span>
               </div>
-              <p className="text-xs text-tertiary">{definition.description}</p>
-              <p className="text-sm text-tertiary py-4 text-center">No users match this segment yet</p>
+              <p className="text-caption text-tertiary">{definition.description}</p>
+              <p className="text-body-sm text-tertiary py-4 text-center">No users match this segment yet</p>
             </article>
           );
         }
@@ -622,7 +622,7 @@ export function Component() {
         <PieChart size={24} className="text-accent-text shrink-0 mt-1" aria-hidden="true" />
         <div>
           <h1 className="text-xl font-semibold text-primary">User Segmentation</h1>
-          <p className="text-sm text-secondary mt-1">
+          <p className="text-body-sm text-secondary mt-1">
             Understand and act on user cohorts
           </p>
         </div>

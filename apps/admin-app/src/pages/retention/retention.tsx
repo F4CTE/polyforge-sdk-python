@@ -122,7 +122,7 @@ const SERIES_BG_CLASS: Record<string, string> = {
 function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
   if (!active || !payload?.length) return null;
   return (
-    <div className="bg-elevated border border-default rounded-sm p-3 text-xs shadow-lg">
+    <div className="bg-elevated border border-default rounded-sm p-3 text-caption shadow-lg">
       <p className="font-semibold text-primary mb-2">{label}</p>
       {payload.map((entry) => (
         <div key={entry.name} className="flex items-center gap-2 mb-1">
@@ -299,14 +299,14 @@ export function Component() {
           </div>
           <div>
             <h1 className="text-lg font-semibold text-primary">User Retention</h1>
-            <p className="text-xs text-tertiary">DAU, WAU, MAU and cohort analysis</p>
+            <p className="text-caption text-tertiary">DAU, WAU, MAU and cohort analysis</p>
           </div>
         </div>
         <Button
           type="button"
           variant="ghost"
           onClick={handleRefresh}
-          className="flex items-center gap-2 px-3 py-2 rounded-sm border border-default text-sm text-secondary hover:text-primary hover:bg-elevated transition-colors"
+          className="flex items-center gap-2 px-3 py-2 rounded-sm border border-default text-body-sm text-secondary hover:text-primary hover:bg-elevated transition-colors"
           aria-label="Refresh retention data"
         >
           <RefreshCw size={14} aria-hidden="true" />
@@ -326,12 +326,12 @@ export function Component() {
         </div>
       ) : overviewError ? (
         <div className="bg-elevated border border-default rounded-xl p-6 text-center">
-          <p className="text-sm text-secondary">Overview data unavailable</p>
+          <p className="text-body-sm text-secondary">Overview data unavailable</p>
           <Button
             type="button"
             variant="ghost"
             onClick={loadOverviewAndCohorts}
-            className="text-accent-text hover:text-accent-text text-xs mt-2"
+            className="text-accent-text hover:text-accent-text text-caption mt-2"
           >
             Retry
           </Button>
@@ -343,7 +343,7 @@ export function Component() {
             {row1.map((card) => (
               <div key={card.label} className="bg-elevated border border-default rounded-xl p-4">
                 <div className="flex items-center justify-between mb-3">
-                  <span className="text-xs font-medium text-secondary">{card.label}</span>
+                  <span className="text-label text-secondary">{card.label}</span>
                   <div className={`p-2 rounded-sm ${card.bg}`}>
                     <TrendingUp size={16} className={card.color} aria-hidden="true" />
                   </div>
@@ -357,7 +357,7 @@ export function Component() {
             {row2.map((card) => (
               <div key={card.label} className="bg-elevated border border-default rounded-xl p-4">
                 <div className="flex items-center justify-between mb-3">
-                  <span className="text-xs font-medium text-secondary">{card.label}</span>
+                  <span className="text-label text-secondary">{card.label}</span>
                   <div className={`p-2 rounded-sm ${card.bg}`}>
                     <TrendingUp size={16} className={card.color} aria-hidden="true" />
                   </div>
@@ -378,15 +378,15 @@ export function Component() {
         <div className="bg-elevated border border-default rounded-xl p-5">
           <div className="flex items-center gap-2 mb-4">
             <TrendingUp size={16} className="text-tertiary" aria-hidden="true" />
-            <h2 className="text-sm font-semibold text-primary">DAU Trend</h2>
+            <h2 className="text-heading font-semibold text-primary">DAU Trend</h2>
           </div>
           <div className="text-center py-8">
-            <p className="text-sm text-secondary">Trend data unavailable</p>
+            <p className="text-body-sm text-secondary">Trend data unavailable</p>
             <Button
               type="button"
               variant="ghost"
               onClick={() => loadTrend(trendDays)}
-              className="text-accent-text hover:text-accent-text text-xs mt-2"
+              className="text-accent-text hover:text-accent-text text-caption mt-2"
             >
               Retry
             </Button>
@@ -397,7 +397,7 @@ export function Component() {
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
               <TrendingUp size={16} className="text-accent" aria-hidden="true" />
-              <h2 className="text-sm font-semibold text-primary">DAU Trend</h2>
+              <h2 className="text-heading font-semibold text-primary">DAU Trend</h2>
             </div>
             {/* Period selector chips */}
             <div className="flex items-center gap-1" role="group" aria-label="Select trend period">
@@ -407,7 +407,7 @@ export function Component() {
                   type="button"
                   variant="ghost"
                   onClick={() => setTrendDays(opt.value)}
-                  className={`px-3 py-1 rounded-sm text-xs font-medium transition-colors ${
+                  className={`px-3 py-1 rounded-sm text-label font-medium transition-colors ${
                     trendDays === opt.value
                       ? 'bg-accent/20 text-accent border border-accent/40'
                       : 'border border-default text-secondary hover:text-primary hover:bg-app'
@@ -475,15 +475,15 @@ export function Component() {
         <div className="bg-elevated border border-default rounded-xl p-5">
           <div className="flex items-center gap-2 mb-4">
             <Users size={16} className="text-tertiary" aria-hidden="true" />
-            <h2 className="text-sm font-semibold text-primary">Cohort Retention</h2>
+            <h2 className="text-heading font-semibold text-primary">Cohort Retention</h2>
           </div>
           <div className="text-center py-8">
-            <p className="text-sm text-secondary">Cohort data unavailable</p>
+            <p className="text-body-sm text-secondary">Cohort data unavailable</p>
             <Button
               type="button"
               variant="ghost"
               onClick={loadOverviewAndCohorts}
-              className="text-accent-text hover:text-accent-text text-xs mt-2"
+              className="text-accent-text hover:text-accent-text text-caption mt-2"
             >
               Retry
             </Button>
@@ -493,14 +493,14 @@ export function Component() {
         <div className="bg-elevated border border-default rounded-xl p-5">
           <div className="flex items-center gap-2 mb-4">
             <Users size={16} className="text-accent" aria-hidden="true" />
-            <h2 className="text-sm font-semibold text-primary">Cohort Retention</h2>
-            <span className="text-xs text-tertiary ml-1">(last 6 months)</span>
+            <h2 className="text-heading font-semibold text-primary">Cohort Retention</h2>
+            <span className="text-caption text-tertiary ml-1">(last 6 months)</span>
           </div>
           {cohorts.length === 0 ? (
-            <p className="text-sm text-secondary py-4">No cohort data available.</p>
+            <p className="text-body-sm text-secondary py-4">No cohort data available.</p>
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full text-xs">
+              <table className="w-full text-caption">
                 <caption className="sr-only">Cohort retention table</caption>
                 <thead>
                   <tr className="text-left border-b border-default">

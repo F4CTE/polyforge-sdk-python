@@ -311,7 +311,7 @@ function ActivityTimeline({ userId }: ActivityTimelineProps) {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search activity..."
-            className="w-full pl-8 pr-3 py-2 text-sm bg-elevated border border-default rounded-sm text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+            className="w-full pl-8 pr-3 py-2 text-body-sm bg-elevated border border-default rounded-sm text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
             aria-label="Search activity by description"
           />
         </div>
@@ -326,7 +326,7 @@ function ActivityTimeline({ userId }: ActivityTimelineProps) {
           <Select
             value={filterGroup}
             onChange={(e) => setFilterGroup(e.target.value as ActivityFilterGroup)}
-            className="pl-8 pr-8 py-2 text-sm bg-elevated border border-default rounded-sm text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent appearance-none cursor-pointer"
+            className="pl-8 pr-8 py-2 text-body-sm bg-elevated border border-default rounded-sm text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent appearance-none cursor-pointer"
             aria-label="Filter by event type"
           >
             <option value="all">All Events</option>
@@ -354,7 +354,7 @@ function ActivityTimeline({ userId }: ActivityTimelineProps) {
               type="button"
               variant="ghost"
               onClick={() => setDateRange(r)}
-              className={`px-3 py-1 text-xs font-medium rounded-sm transition-colors ${
+              className={`px-3 py-1 text-label font-medium rounded-sm transition-colors ${
                 dateRange === r
                   ? 'bg-accent text-primary'
                   : 'text-secondary hover:text-primary hover:bg-app'
@@ -370,9 +370,9 @@ function ActivityTimeline({ userId }: ActivityTimelineProps) {
       {filtered.length === 0 ? (
         <div className="bg-elevated border border-default rounded-xl p-12 flex flex-col items-center gap-3 text-center">
           <Clock size={32} className="text-tertiary" aria-hidden="true" />
-          <p className="text-sm text-secondary font-medium">No activity recorded for this user</p>
+          <p className="text-body-sm text-secondary font-medium">No activity recorded for this user</p>
           {(search || filterGroup !== 'all' || dateRange !== 'all') && (
-            <p className="text-xs text-tertiary">Try adjusting your filters</p>
+            <p className="text-caption text-tertiary">Try adjusting your filters</p>
           )}
         </div>
       ) : (
@@ -398,24 +398,24 @@ function ActivityTimeline({ userId }: ActivityTimelineProps) {
                     {/* Header row: icon + badge + timestamp */}
                     <div className="flex flex-wrap items-center gap-2 mb-1">
                       <Icon size={13} className={iconClass} aria-hidden="true" />
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${badgeClass}`}>
+                      <span className={`px-2 py-1 rounded-full text-label font-medium ${badgeClass}`}>
                         {label}
                       </span>
                       <time
                         dateTime={ev.timestamp}
                         title={formatDateTime(ev.timestamp)}
-                        className="text-xs text-tertiary ml-auto"
+                        className="text-caption text-tertiary ml-auto"
                       >
                         {relativeTime(ev.timestamp)}
                       </time>
                     </div>
 
                     {/* Description */}
-                    <p className="text-sm text-primary leading-snug">{ev.description}</p>
+                    <p className="text-body-sm text-primary leading-snug">{ev.description}</p>
 
                     {/* IP + User Agent */}
                     {(ev.ipAddress || ev.userAgent) && (
-                      <p className="text-xs text-tertiary mt-1 truncate">
+                      <p className="text-caption text-tertiary mt-1 truncate">
                         {[ev.ipAddress, ev.userAgent].filter(Boolean).join(' · ')}
                       </p>
                     )}
@@ -426,7 +426,7 @@ function ActivityTimeline({ userId }: ActivityTimelineProps) {
                         {Object.entries(ev.metadata).map(([k, v]) => (
                           <span
                             key={k}
-                            className="inline-flex items-center gap-1 px-2 py-1 rounded-sm bg-app border border-default text-xs text-secondary"
+                            className="inline-flex items-center gap-1 px-2 py-1 rounded-sm bg-app border border-default text-label text-secondary"
                           >
                             <span className="text-tertiary capitalize">
                               {k.replace(/([A-Z])/g, ' $1').trim()}:
@@ -445,7 +445,7 @@ function ActivityTimeline({ userId }: ActivityTimelineProps) {
           {/* Load more */}
           {hasMore && (
             <div className="px-5 py-3 border-t border-default flex items-center justify-between">
-              <span className="text-xs text-tertiary">
+              <span className="text-caption text-tertiary">
                 Showing {events.length} of {total} events
               </span>
               <Button
@@ -453,7 +453,7 @@ function ActivityTimeline({ userId }: ActivityTimelineProps) {
                 variant="ghost"
                 onClick={() => fetchActivity(page + 1, true)}
                 disabled={loading}
-                className="flex items-center gap-2 px-3 py-2 text-sm rounded-sm border border-default text-secondary hover:bg-app hover:text-primary disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="flex items-center gap-2 px-3 py-2 text-body-sm rounded-sm border border-default text-secondary hover:bg-app hover:text-primary disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 {loading ? (
                   <RotateCcw size={13} className="animate-spin" aria-hidden="true" />
@@ -670,7 +670,7 @@ export function Component() {
         <p className="text-secondary">User not found</p>
         <Link
           to="/users"
-          className="mt-4 inline-block text-sm text-accent hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent rounded"
+          className="mt-4 inline-block text-body-sm text-accent hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent rounded"
         >
           Back to users
         </Link>
@@ -694,7 +694,7 @@ export function Component() {
       {/* Back link */}
       <Link
         to="/users"
-        className="inline-flex items-center gap-2 text-sm text-secondary hover:text-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent rounded-sm"
+        className="inline-flex items-center gap-2 text-body-sm text-secondary hover:text-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent rounded-sm"
       >
         <ChevronLeft size={16} aria-hidden="true" />
         Back to users
@@ -715,25 +715,25 @@ export function Component() {
               <h2 className="text-lg font-semibold text-primary leading-tight">
                 {user.displayName || user.username}
               </h2>
-              <p className="text-sm text-secondary">@{user.username}</p>
-              <p className="text-sm text-tertiary">{user.email}</p>
+              <p className="text-body-sm text-secondary">@{user.username}</p>
+              <p className="text-body-sm text-tertiary">{user.email}</p>
 
               {/* Status + badges */}
               <div className="flex flex-wrap items-center gap-2 mt-2">
                 <span
-                  className={`px-2 py-1 rounded-full text-xs font-medium ${statusColor(
+                  className={`px-2 py-1 rounded-full text-label font-medium ${statusColor(
                     isSuspended ? 'SUSPENDED' : user.status,
                   )}`}
                 >
                   {isSuspended ? 'SUSPENDED' : (user.status || 'ACTIVE')}
                 </span>
                 {user.polymarketConnected && (
-                  <span className="px-2 py-1 rounded-full text-xs font-medium text-accent-text bg-accent-text/10">
+                  <span className="px-2 py-1 rounded-full text-label font-medium text-accent-text bg-accent-text/10">
                     Polymarket Connected
                   </span>
                 )}
                 {(user.totpEnabled) && (
-                  <span className="px-2 py-1 rounded-full text-xs font-medium text-gain bg-gain/10">
+                  <span className="px-2 py-1 rounded-full text-label font-medium text-gain bg-gain/10">
                     2FA Enabled
                   </span>
                 )}
@@ -749,7 +749,7 @@ export function Component() {
                 variant="success"
                 onClick={handleUnsuspend}
                 disabled={actionLoading}
-                className="flex items-center gap-2 px-3 py-2 text-sm rounded-sm border border-gain text-gain hover:bg-gain/10 disabled:opacity-50 transition-colors"
+                className="flex items-center gap-2 px-3 py-2 text-body-sm rounded-sm border border-gain text-gain hover:bg-gain/10 disabled:opacity-50 transition-colors"
               >
                 <UserCheck size={14} aria-hidden="true" />
                 Unsuspend
@@ -760,7 +760,7 @@ export function Component() {
                 variant="danger"
                 onClick={handleSuspend}
                 disabled={actionLoading}
-                className="flex items-center gap-2 px-3 py-2 text-sm rounded-sm border border-loss text-loss hover:bg-loss/10 disabled:opacity-50 transition-colors"
+                className="flex items-center gap-2 px-3 py-2 text-body-sm rounded-sm border border-loss text-loss hover:bg-loss/10 disabled:opacity-50 transition-colors"
               >
                 <Ban size={14} aria-hidden="true" />
                 Suspend
@@ -771,7 +771,7 @@ export function Component() {
               variant="ghost"
               onClick={handleResetPassword}
               disabled={actionLoading}
-              className="flex items-center gap-2 px-3 py-2 text-sm rounded-sm border border-default text-secondary hover:bg-app hover:text-primary disabled:opacity-50 transition-colors"
+              className="flex items-center gap-2 px-3 py-2 text-body-sm rounded-sm border border-default text-secondary hover:bg-app hover:text-primary disabled:opacity-50 transition-colors"
             >
               <RotateCcw size={14} aria-hidden="true" />
               Reset Password
@@ -782,13 +782,13 @@ export function Component() {
         {/* Stat pills */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-5 pt-5 border-t border-default">
           <div className="bg-app border border-default rounded-sm px-4 py-3 text-center">
-            <div className="text-xs text-tertiary mb-1">Trades</div>
+            <div className="text-label text-tertiary mb-1">Trades</div>
             <div className="text-lg font-semibold text-primary">
               {(user.tradeCount ?? 0).toLocaleString()}
             </div>
           </div>
           <div className="bg-app border border-default rounded-sm px-4 py-3 text-center">
-            <div className="text-xs text-tertiary mb-1">Total P&amp;L</div>
+            <div className="text-label text-tertiary mb-1">Total P&amp;L</div>
             <div
               className={`text-lg font-semibold ${
                 typeof user.totalPnl === 'number' && user.totalPnl < 0
@@ -800,11 +800,11 @@ export function Component() {
             </div>
           </div>
           <div className="bg-app border border-default rounded-sm px-4 py-3 text-center">
-            <div className="text-xs text-tertiary mb-1">Win Rate</div>
+            <div className="text-label text-tertiary mb-1">Win Rate</div>
             <div className="text-lg font-semibold text-primary">{fmtWinRate(user.winRate)}</div>
           </div>
           <div className="bg-app border border-default rounded-sm px-4 py-3 text-center">
-            <div className="text-xs text-tertiary mb-1">Followers</div>
+            <div className="text-label text-tertiary mb-1">Followers</div>
             <div className="text-lg font-semibold text-primary">
               {(user.followerCount ?? 0).toLocaleString()}
             </div>
@@ -823,7 +823,7 @@ export function Component() {
               role="tab"
               aria-selected={activeTab === key}
               onClick={() => handleTabChange(key)}
-              className={`flex items-center gap-2 px-4 py-2 text-sm font-medium whitespace-nowrap transition-colors rounded-t-sm -mb-px border-b-2 shrink-0 ${
+              className={`flex items-center gap-2 px-4 py-2 text-body-sm font-medium whitespace-nowrap transition-colors rounded-t-sm -mb-px border-b-2 shrink-0 ${
                 activeTab === key
                   ? 'border-accent text-accent'
                   : 'border-transparent text-secondary hover:text-primary'
@@ -842,10 +842,10 @@ export function Component() {
             <div className="bg-elevated border border-default rounded-xl p-5">
               <div className="flex items-center gap-2 mb-4">
                 <ShieldCheck size={16} className="text-accent" aria-hidden="true" />
-                <h3 className="text-sm font-semibold text-primary">Risk Settings</h3>
+                <h3 className="text-heading font-semibold text-primary">Risk Settings</h3>
                 {riskSettings?.enabled !== undefined && (
                   <span
-                    className={`ml-auto px-2 py-1 rounded-full text-xs font-medium ${
+                    className={`ml-auto px-2 py-1 rounded-full text-label font-medium ${
                       riskSettings.enabled
                         ? 'text-gain bg-gain/10'
                         : 'text-tertiary bg-app'
@@ -856,9 +856,9 @@ export function Component() {
                 )}
               </div>
               {riskSettings ? (
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-body-sm">
                   <div>
-                    <div className="text-xs text-tertiary mb-1">Daily Loss Limit</div>
+                    <div className="text-label text-tertiary mb-1">Daily Loss Limit</div>
                     <div className="text-primary font-medium">
                       {riskSettings.dailyLossLimit !== undefined
                         ? `$${Number(riskSettings.dailyLossLimit).toLocaleString()}`
@@ -866,7 +866,7 @@ export function Component() {
                     </div>
                   </div>
                   <div>
-                    <div className="text-xs text-tertiary mb-1">Max Position Size</div>
+                    <div className="text-label text-tertiary mb-1">Max Position Size</div>
                     <div className="text-primary font-medium">
                       {riskSettings.maxPositionSize !== undefined
                         ? `$${Number(riskSettings.maxPositionSize).toLocaleString()}`
@@ -874,47 +874,47 @@ export function Component() {
                     </div>
                   </div>
                   <div>
-                    <div className="text-xs text-tertiary mb-1">Max Open Positions</div>
+                    <div className="text-label text-tertiary mb-1">Max Open Positions</div>
                     <div className="text-primary font-medium">
                       {riskSettings.maxOpenPositions ?? '—'}
                     </div>
                   </div>
                 </div>
               ) : (
-                <p className="text-sm text-tertiary">No risk settings configured</p>
+                <p className="text-body-sm text-tertiary">No risk settings configured</p>
               )}
             </div>
 
             {/* Account details */}
             <div className="bg-elevated border border-default rounded-xl p-5">
-              <h3 className="text-sm font-semibold text-primary mb-4">Account Details</h3>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
+              <h3 className="text-heading font-semibold text-primary mb-4">Account Details</h3>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-body-sm">
                 <div>
-                  <div className="text-xs text-tertiary mb-1">Joined</div>
+                  <div className="text-label text-tertiary mb-1">Joined</div>
                   <div className="text-primary">{formatDate(user.createdAt)}</div>
                 </div>
                 <div>
-                  <div className="text-xs text-tertiary mb-1">Last Active</div>
+                  <div className="text-label text-tertiary mb-1">Last Active</div>
                   <div className="text-primary">
                     {user.lastSeen ? formatDateTime(user.lastSeen) : '—'}
                   </div>
                 </div>
                 <div>
-                  <div className="text-xs text-tertiary mb-1">Role</div>
+                  <div className="text-label text-tertiary mb-1">Role</div>
                   <div className="text-primary capitalize">{user.role}</div>
                 </div>
                 <div>
-                  <div className="text-xs text-tertiary mb-1">Following</div>
+                  <div className="text-label text-tertiary mb-1">Following</div>
                   <div className="text-primary">{(user.followingCount ?? 0).toLocaleString()}</div>
                 </div>
                 <div>
-                  <div className="text-xs text-tertiary mb-1">Polymarket</div>
+                  <div className="text-label text-tertiary mb-1">Polymarket</div>
                   <div className="text-primary">
                     {user.polymarketConnected ? 'Connected' : 'Not connected'}
                   </div>
                 </div>
                 <div>
-                  <div className="text-xs text-tertiary mb-1">2FA</div>
+                  <div className="text-label text-tertiary mb-1">2FA</div>
                   <div className="text-primary">
                     {user.totpEnabled ? 'Enabled' : 'Disabled'}
                   </div>
@@ -928,7 +928,7 @@ export function Component() {
         {activeTab === 'orders' && (
           <div className="bg-elevated border border-default rounded-xl overflow-hidden">
             <div className="overflow-x-auto">
-              <table className="w-full text-sm">
+              <table className="w-full text-body-sm">
                 <caption className="sr-only">Recent orders</caption>
                 <thead>
                   <tr className="border-b border-default">
@@ -936,7 +936,7 @@ export function Component() {
                       <th
                         key={h}
                         scope="col"
-                        className="text-left px-4 py-3 text-xs font-medium text-tertiary uppercase tracking-wider"
+                        className="text-left px-4 py-3 text-label font-medium text-tertiary uppercase tracking-wider"
                       >
                         {h}
                       </th>
@@ -971,7 +971,7 @@ export function Component() {
                         </td>
                         <td className="px-4 py-3">
                           <span
-                            className={`px-2 py-1 rounded text-xs font-medium ${
+                            className={`px-2 py-1 rounded text-label font-medium ${
                               String(order.side).toUpperCase() === 'BUY'
                                 ? 'text-gain bg-gain/10'
                                 : 'text-loss bg-loss/10'
@@ -993,7 +993,7 @@ export function Component() {
                         </td>
                         <td className="px-4 py-3">
                           <span
-                            className={`px-2 py-1 rounded-full text-xs font-medium ${statusColor(
+                            className={`px-2 py-1 rounded-full text-label font-medium ${statusColor(
                               String(order.status ?? ''),
                             )}`}
                           >
@@ -1010,7 +1010,7 @@ export function Component() {
             {/* Orders pagination */}
             {ordersLoaded && ordersPageCount > 1 && (
               <div className="flex items-center justify-between px-4 py-3 border-t border-default">
-                <span className="text-xs text-tertiary">
+                <span className="text-caption text-tertiary">
                   Page {ordersPage} of {ordersPageCount}
                 </span>
                 <div className="flex items-center gap-2">
@@ -1070,22 +1070,22 @@ export function Component() {
                       className="bg-elevated border border-default rounded-xl p-4"
                     >
                       <div className="flex items-start justify-between gap-2 mb-2">
-                        <span className="text-sm font-medium text-primary truncate">
+                        <span className="text-body-sm font-medium text-primary truncate">
                           {String(s.name ?? 'Unnamed Strategy')}
                         </span>
                         <span
-                          className={`shrink-0 px-2 py-1 rounded-full text-xs font-medium ${statusColor(
+                          className={`shrink-0 px-2 py-1 rounded-full text-label font-medium ${statusColor(
                             String(s.status ?? ''),
                           )}`}
                         >
                           {String(s.status ?? '—')}
                         </span>
                       </div>
-                      <div className="text-xs text-tertiary">
+                      <div className="text-caption text-tertiary">
                         Created {s.createdAt ? formatDate(s.createdAt) : '—'}
                       </div>
                       {s.tradeCount !== undefined && (
-                        <div className="text-xs text-tertiary mt-1">
+                        <div className="text-caption text-tertiary mt-1">
                           {s.tradeCount.toLocaleString()} trades
                         </div>
                       )}
@@ -1094,7 +1094,7 @@ export function Component() {
                 </div>
                 <Link
                   to="/strategies"
-                  className="inline-flex items-center gap-1 text-sm text-accent hover:text-accent-text transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent rounded"
+                  className="inline-flex items-center gap-1 text-body-sm text-accent hover:text-accent-text transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent rounded"
                 >
                   View all strategies
                   <ChevronRight size={14} aria-hidden="true" />
@@ -1109,14 +1109,14 @@ export function Component() {
           <div className="bg-elevated border border-default rounded-xl p-5">
             <div className="flex items-center gap-2 mb-4">
               <ShieldCheck size={16} className="text-accent" aria-hidden="true" />
-              <h3 className="text-sm font-semibold text-primary">Risk Configuration</h3>
-              <span className="ml-auto text-xs text-tertiary italic">Read-only admin view</span>
+              <h3 className="text-heading font-semibold text-primary">Risk Configuration</h3>
+              <span className="ml-auto text-caption text-tertiary italic">Read-only admin view</span>
             </div>
             {riskSettings ? (
               <div className="space-y-4">
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-body-sm">
                   <div>
-                    <div className="text-xs text-tertiary mb-1">Daily Loss Limit</div>
+                    <div className="text-label text-tertiary mb-1">Daily Loss Limit</div>
                     <div className="text-primary font-medium">
                       {riskSettings.dailyLossLimit !== undefined
                         ? `$${Number(riskSettings.dailyLossLimit).toLocaleString()}`
@@ -1124,7 +1124,7 @@ export function Component() {
                     </div>
                   </div>
                   <div>
-                    <div className="text-xs text-tertiary mb-1">Max Position Size</div>
+                    <div className="text-label text-tertiary mb-1">Max Position Size</div>
                     <div className="text-primary font-medium">
                       {riskSettings.maxPositionSize !== undefined
                         ? `$${Number(riskSettings.maxPositionSize).toLocaleString()}`
@@ -1132,13 +1132,13 @@ export function Component() {
                     </div>
                   </div>
                   <div>
-                    <div className="text-xs text-tertiary mb-1">Max Open Positions</div>
+                    <div className="text-label text-tertiary mb-1">Max Open Positions</div>
                     <div className="text-primary font-medium">
                       {riskSettings.maxOpenPositions ?? '—'}
                     </div>
                   </div>
                   <div>
-                    <div className="text-xs text-tertiary mb-1">Risk Controls</div>
+                    <div className="text-label text-tertiary mb-1">Risk Controls</div>
                     <div
                       className={`font-medium ${
                         riskSettings.enabled ? 'text-gain' : 'text-tertiary'
@@ -1160,7 +1160,7 @@ export function Component() {
                       !['enabled', 'dailyLossLimit', 'maxPositionSize', 'maxOpenPositions'].includes(k),
                   )
                   .map(([k, v]) => (
-                    <div key={k} className="flex items-center justify-between py-2 border-t border-default text-sm">
+                    <div key={k} className="flex items-center justify-between py-2 border-t border-default text-body-sm">
                       <span className="text-tertiary capitalize">
                         {k.replace(/([A-Z])/g, ' $1').trim()}
                       </span>
@@ -1169,7 +1169,7 @@ export function Component() {
                   ))}
               </div>
             ) : (
-              <p className="text-sm text-tertiary">No risk settings configured</p>
+              <p className="text-body-sm text-tertiary">No risk settings configured</p>
             )}
           </div>
         )}

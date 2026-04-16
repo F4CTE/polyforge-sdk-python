@@ -191,8 +191,9 @@ export function Hero() {
               y="73"
               textAnchor="middle"
               fill="var(--color-cyan-300)"
-              fontSize="10"
+              fontSize="11"
               fontWeight="600"
+              fontFamily="var(--font-mono)"
             >
               ENTRY SIGNAL
             </text>
@@ -201,7 +202,8 @@ export function Hero() {
               y="93"
               textAnchor="middle"
               fill="var(--text-tertiary)"
-              fontSize="9"
+              fontSize="11"
+              fontFamily="var(--font-mono)"
             >
               {"Price > 0.65"}
             </text>
@@ -224,8 +226,9 @@ export function Hero() {
               y="193"
               textAnchor="middle"
               fill="var(--color-cyan-300)"
-              fontSize="10"
+              fontSize="11"
               fontWeight="600"
+              fontFamily="var(--font-mono)"
             >
               VOLUME CHECK
             </text>
@@ -234,7 +237,8 @@ export function Hero() {
               y="213"
               textAnchor="middle"
               fill="var(--text-tertiary)"
-              fontSize="9"
+              fontSize="11"
+              fontFamily="var(--font-mono)"
             >
               {"Vol > 10k / 24h"}
             </text>
@@ -257,8 +261,9 @@ export function Hero() {
               y="73"
               textAnchor="middle"
               fill="var(--color-cyan-300)"
-              fontSize="10"
+              fontSize="11"
               fontWeight="600"
+              fontFamily="var(--font-mono)"
             >
               RISK MANAGER
             </text>
@@ -267,7 +272,8 @@ export function Hero() {
               y="93"
               textAnchor="middle"
               fill="var(--text-tertiary)"
-              fontSize="9"
+              fontSize="11"
+              fontFamily="var(--font-mono)"
             >
               Max 5% per trade
             </text>
@@ -290,8 +296,9 @@ export function Hero() {
               y="193"
               textAnchor="middle"
               fill="var(--color-cyan-300)"
-              fontSize="10"
+              fontSize="11"
               fontWeight="600"
+              fontFamily="var(--font-mono)"
             >
               POSITION SIZE
             </text>
@@ -300,7 +307,8 @@ export function Hero() {
               y="213"
               textAnchor="middle"
               fill="var(--text-tertiary)"
-              fontSize="9"
+              fontSize="11"
+              fontFamily="var(--font-mono)"
             >
               Kelly criterion
             </text>
@@ -323,8 +331,9 @@ export function Hero() {
               y="143"
               textAnchor="middle"
               fill="var(--gain)"
-              fontSize="10"
+              fontSize="11"
               fontWeight="600"
+              fontFamily="var(--font-mono)"
             >
               EXECUTE
             </text>
@@ -333,7 +342,8 @@ export function Hero() {
               y="163"
               textAnchor="middle"
               fill="var(--text-tertiary)"
-              fontSize="9"
+              fontSize="11"
+              fontFamily="var(--font-mono)"
             >
               Buy YES @ market
             </text>

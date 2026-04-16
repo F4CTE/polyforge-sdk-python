@@ -107,7 +107,7 @@ export function Component() {
             type="button"
             variant="ghost"
             onClick={() => setTab('cache')}
-            className={`px-3 py-2 text-sm rounded transition-colors ${tab === 'cache' ? 'bg-elevated text-primary font-medium' : 'text-secondary hover:text-primary'}`}
+            className={`px-3 py-2 text-body-sm rounded transition-colors ${tab === 'cache' ? 'bg-elevated text-primary font-medium' : 'text-secondary hover:text-primary'}`}
           >
             Cache
           </Button>
@@ -115,7 +115,7 @@ export function Component() {
             type="button"
             variant="ghost"
             onClick={() => setTab('streams')}
-            className={`px-3 py-2 text-sm rounded transition-colors ${tab === 'streams' ? 'bg-elevated text-primary font-medium' : 'text-secondary hover:text-primary'}`}
+            className={`px-3 py-2 text-body-sm rounded transition-colors ${tab === 'streams' ? 'bg-elevated text-primary font-medium' : 'text-secondary hover:text-primary'}`}
           >
             Streams
           </Button>
@@ -124,7 +124,7 @@ export function Component() {
           type="button"
           variant="ghost"
           onClick={tab === 'cache' ? loadStats : loadStreams}
-          className="flex items-center gap-2 px-3 py-2 text-sm rounded-sm border border-default text-secondary hover:bg-elevated transition-colors"
+          className="flex items-center gap-2 px-3 py-2 text-body-sm rounded-sm border border-default text-secondary hover:bg-elevated transition-colors"
           aria-label="Refresh"
         >
           <RefreshCw size={14} aria-hidden="true" />
@@ -138,19 +138,19 @@ export function Component() {
           {stats && (
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div className="bg-elevated border border-default rounded-xl p-4">
-                <div className="text-xs text-tertiary mb-1">Hit Rate</div>
+                <div className="text-label text-tertiary mb-1">Hit Rate</div>
                 <div className="text-2xl font-semibold text-primary">
                   {((stats.hitRate ?? 0) * 100).toFixed(1)}%
                 </div>
               </div>
               <div className="bg-elevated border border-default rounded-xl p-4">
-                <div className="text-xs text-tertiary mb-1">Total Keys</div>
+                <div className="text-label text-tertiary mb-1">Total Keys</div>
                 <div className="text-2xl font-semibold text-primary">
                   {(stats.keyCount ?? 0).toLocaleString()}
                 </div>
               </div>
               <div className="bg-elevated border border-default rounded-xl p-4">
-                <div className="text-xs text-tertiary mb-1">Memory Usage</div>
+                <div className="text-label text-tertiary mb-1">Memory Usage</div>
                 <div className="text-2xl font-semibold text-primary">
                   {(stats.memoryUsageMb ?? 0).toFixed(1)} MB
                 </div>
@@ -161,7 +161,7 @@ export function Component() {
           <div className="bg-elevated border border-default rounded-xl p-5">
             <div className="flex items-center gap-2 mb-4">
               <Trash2 size={16} className="text-warning" aria-hidden="true" />
-              <h3 className="text-sm font-semibold text-primary">Flush by Pattern</h3>
+              <h3 className="text-heading font-semibold text-primary">Flush by Pattern</h3>
             </div>
             <div className="flex gap-3">
               <label htmlFor="cache-pattern" className="sr-only">Cache key pattern</label>
@@ -171,14 +171,14 @@ export function Component() {
                 value={pattern}
                 onChange={(e) => setPattern(e.target.value)}
                 placeholder="e.g. user:*, strategy:abc*"
-                className="flex-1 px-3 py-2 text-sm rounded-sm border border-default bg-app text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent font-mono"
+                className="flex-1 px-3 py-2 text-body-sm rounded-sm border border-default bg-app text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent font-mono"
               />
               <Button
                 type="button"
                 variant="danger"
                 onClick={handleFlush}
                 disabled={flushing || !pattern.trim()}
-                className="px-4 py-2 text-sm rounded-sm bg-warning text-primary hover:bg-warning/80 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="px-4 py-2 text-body-sm rounded-sm bg-warning text-primary hover:bg-warning/80 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 {flushing ? 'Flushing...' : 'Flush'}
               </Button>
@@ -189,22 +189,22 @@ export function Component() {
             <div className="bg-elevated border border-default rounded-xl p-5">
               <div className="flex items-center gap-2 mb-4">
                 <Database size={16} className="text-accent" aria-hidden="true" />
-                <h3 className="text-sm font-semibold text-primary">Cache Patterns</h3>
+                <h3 className="text-heading font-semibold text-primary">Cache Patterns</h3>
               </div>
               <div className="overflow-x-auto">
-                <table className="w-full text-sm" aria-label="Cache entries">
+                <table className="w-full text-body-sm" aria-label="Cache entries">
                   <caption className="sr-only">Cache patterns</caption>
                   <thead>
                     <tr className="border-b border-default">
-                      <th scope="col" className="text-left px-3 py-2 text-xs font-medium text-tertiary uppercase">Pattern</th>
-                      <th scope="col" className="text-right px-3 py-2 text-xs font-medium text-tertiary uppercase">Keys</th>
-                      <th scope="col" className="text-right px-3 py-2 text-xs font-medium text-tertiary uppercase">Hit Rate</th>
+                      <th scope="col" className="text-left px-3 py-2 text-label font-medium text-tertiary uppercase">Pattern</th>
+                      <th scope="col" className="text-right px-3 py-2 text-label font-medium text-tertiary uppercase">Keys</th>
+                      <th scope="col" className="text-right px-3 py-2 text-label font-medium text-tertiary uppercase">Hit Rate</th>
                     </tr>
                   </thead>
                   <tbody>
                     {stats.patterns.map((p) => (
                       <tr key={p.pattern} className="border-b border-default last:border-0">
-                        <td className="px-3 py-3 font-mono text-xs text-primary">{p.pattern}</td>
+                        <td className="px-3 py-3 font-mono text-label text-primary">{p.pattern}</td>
                         <td className="px-3 py-3 text-right text-secondary">{p.keyCount.toLocaleString()}</td>
                         <td className="px-3 py-3 text-right text-secondary">{(p.hitRate * 100).toFixed(1)}%</td>
                       </tr>
@@ -236,10 +236,10 @@ export function Component() {
                         ? <AlertCircle size={14} className="text-warning" />
                         : <Activity size={14} className="text-gain" />
                       }
-                      <span className="font-mono text-sm text-primary">{s.name}</span>
+                      <span className="font-mono text-body-sm text-primary">{s.name}</span>
                     </div>
                     <div className="flex items-center gap-3">
-                      <span className="text-xs text-tertiary">
+                      <span className="text-caption text-tertiary">
                         {s.error ? 'stream empty or not found' : `${s.length.toLocaleString()} entries`}
                       </span>
                       <span className={`px-2 py-1 rounded-full text-caption font-medium ${
@@ -265,7 +265,7 @@ export function Component() {
                     </div>
                   )}
                   {!s.error && s.groups.length === 0 && (
-                    <p className="text-xs text-tertiary">No consumer groups</p>
+                    <p className="text-caption text-tertiary">No consumer groups</p>
                   )}
                 </div>
               ))}

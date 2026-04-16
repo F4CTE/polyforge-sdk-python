@@ -93,7 +93,7 @@ function getOverallStatus(data: HealthResponse): 'ok' | 'degraded' | 'down' {
 function StatusBadge({ status }: { status: 'UP' | 'DOWN' | 'DEGRADED' | 'UNKNOWN' }) {
   if (status === 'UP') {
     return (
-      <span className="flex items-center gap-2 text-gain text-xs font-medium">
+      <span className="flex items-center gap-2 text-gain text-label font-medium">
         <span className="animate-pulse bg-gain rounded-full w-2 h-2 shrink-0" />
         UP
       </span>
@@ -101,7 +101,7 @@ function StatusBadge({ status }: { status: 'UP' | 'DOWN' | 'DEGRADED' | 'UNKNOWN
   }
   if (status === 'DOWN') {
     return (
-      <span className="flex items-center gap-2 text-loss text-xs font-medium">
+      <span className="flex items-center gap-2 text-loss text-label font-medium">
         <XCircle size={14} className="shrink-0" />
         DOWN
       </span>
@@ -109,14 +109,14 @@ function StatusBadge({ status }: { status: 'UP' | 'DOWN' | 'DEGRADED' | 'UNKNOWN
   }
   if (status === 'DEGRADED') {
     return (
-      <span className="flex items-center gap-2 text-warning text-xs font-medium">
+      <span className="flex items-center gap-2 text-warning text-label font-medium">
         <AlertTriangle size={14} className="shrink-0" />
         DEGRADED
       </span>
     );
   }
   return (
-    <span className="flex items-center gap-2 text-tertiary text-xs font-medium">
+    <span className="flex items-center gap-2 text-tertiary text-label font-medium">
       <span className="bg-tertiary rounded-full w-2 h-2 shrink-0" />
       UNKNOWN
     </span>
@@ -138,14 +138,14 @@ function ServiceCard({ service }: { service: ServiceHealth }) {
       <div className="flex items-start justify-between gap-2">
         <div className="flex items-center gap-2 min-w-0">
           <Server size={15} className="text-secondary shrink-0" />
-          <span className="text-sm font-medium text-primary truncate">
+          <span className="text-body-sm font-medium text-primary truncate">
             {formatServiceName(service.name)}
           </span>
         </div>
         <StatusBadge status={service.status} />
       </div>
 
-      <div className="grid grid-cols-2 gap-2 text-xs">
+      <div className="grid grid-cols-2 gap-2 text-caption">
         <div>
           <span className="text-tertiary">Latency</span>
           <div className="text-primary font-medium mt-1">
@@ -184,12 +184,12 @@ function DbCard({ db }: { db: DbHealth }) {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Database size={16} className="text-secondary" />
-          <span className="text-sm font-semibold text-primary">Database</span>
+          <span className="text-heading font-semibold text-primary">Database</span>
         </div>
         <StatusBadge status={db.status} />
       </div>
 
-      <div className="grid grid-cols-2 gap-3 text-xs">
+      <div className="grid grid-cols-2 gap-3 text-caption">
         <div>
           <span className="text-tertiary">Latency</span>
           <div className="text-primary font-medium mt-1">
@@ -211,7 +211,7 @@ function DbCard({ db }: { db: DbHealth }) {
       </div>
 
       <div>
-        <div className="flex items-center justify-between text-xs mb-2">
+        <div className="flex items-center justify-between text-caption mb-2">
           <span className="text-tertiary">Connections</span>
           <span className="text-primary font-medium">
             {db.activeConnections} / {db.maxConnections}
@@ -235,12 +235,12 @@ function RedisCard({ db }: { db: DbHealth }) {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Database size={16} className="text-secondary" />
-          <span className="text-sm font-semibold text-primary">Redis</span>
+          <span className="text-heading font-semibold text-primary">Redis</span>
         </div>
         <StatusBadge status={db.redisStatus} />
       </div>
 
-      <div className="grid grid-cols-2 gap-3 text-xs">
+      <div className="grid grid-cols-2 gap-3 text-caption">
         <div>
           <span className="text-tertiary">Latency</span>
           <div className="text-primary font-medium mt-1">
@@ -267,7 +267,7 @@ function QueueDepthCell({ depth }: { depth: number }) {
         : 'text-gain bg-gain/10';
 
   return (
-    <span className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium ${colorClass}`}>
+    <span className={`inline-flex items-center px-2 py-1 rounded text-label font-medium ${colorClass}`}>
       {depth.toLocaleString()}
     </span>
   );
@@ -314,7 +314,7 @@ export function Component() {
           <div>
             <h1 className="text-xl font-semibold text-primary">System Health</h1>
             {lastUpdated && (
-              <p className="text-xs text-tertiary mt-1">
+              <p className="text-caption text-tertiary mt-1">
                 Last updated {lastUpdated.toLocaleTimeString()}
               </p>
             )}
@@ -328,7 +328,7 @@ export function Component() {
           variant="default"
           onClick={() => fetchHealth(true)}
           disabled={refreshing}
-          className="flex items-center gap-2 px-3 py-2 rounded-sm border border-default bg-surface text-sm text-primary hover:bg-elevated transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className="flex items-center gap-2 px-3 py-2 rounded-sm border border-default bg-surface text-body-sm text-primary hover:bg-elevated transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <RefreshCw size={14} className={refreshing ? 'animate-spin' : ''} />
           Refresh Now
@@ -337,7 +337,7 @@ export function Component() {
 
       {/* Error state */}
       {error && !data && (
-        <div className="flex items-center gap-3 px-4 py-3 rounded-pf border border-loss/30 bg-loss/10 text-loss text-sm">
+        <div className="flex items-center gap-3 px-4 py-3 rounded-pf border border-loss/30 bg-loss/10 text-loss text-body-sm">
           <XCircle size={16} className="shrink-0" />
           {error}
         </div>
@@ -356,19 +356,19 @@ export function Component() {
         <>
           {/* Overall status banner */}
           {overallStatus === 'ok' && (
-            <div className="flex items-center gap-3 px-4 py-3 rounded-pf border border-gain/30 bg-gain/10 text-gain text-sm font-medium">
+            <div className="flex items-center gap-3 px-4 py-3 rounded-pf border border-gain/30 bg-gain/10 text-gain text-body-sm font-medium">
               <CheckCircle2 size={16} className="shrink-0" />
               All systems operational
             </div>
           )}
           {overallStatus === 'degraded' && (
-            <div className="flex items-center gap-3 px-4 py-3 rounded-pf border border-warning/30 bg-warning/10 text-warning text-sm font-medium">
+            <div className="flex items-center gap-3 px-4 py-3 rounded-pf border border-warning/30 bg-warning/10 text-warning text-body-sm font-medium">
               <AlertTriangle size={16} className="shrink-0" />
               Degraded performance detected
             </div>
           )}
           {overallStatus === 'down' && (
-            <div className="flex items-center gap-3 px-4 py-3 rounded-pf border border-loss/30 bg-loss/10 text-loss text-sm font-medium">
+            <div className="flex items-center gap-3 px-4 py-3 rounded-pf border border-loss/30 bg-loss/10 text-loss text-body-sm font-medium">
               <XCircle size={16} className="shrink-0" />
               System outage detected
             </div>
@@ -376,7 +376,7 @@ export function Component() {
 
           {/* Section 1: Services */}
           <section>
-            <h2 className="text-sm font-semibold text-secondary uppercase tracking-wider mb-3">
+            <h2 className="text-heading font-semibold text-secondary uppercase tracking-wider mb-3">
               Services
             </h2>
             <div className="grid grid-cols-2 md:grid-cols-2 xl:grid-cols-4 gap-4">
@@ -389,26 +389,26 @@ export function Component() {
           {/* Section 2: Redis Streams */}
           {data.queues.length > 0 && (
             <section>
-              <h2 className="text-sm font-semibold text-secondary uppercase tracking-wider mb-3">
+              <h2 className="text-heading font-semibold text-secondary uppercase tracking-wider mb-3">
                 Redis Streams
               </h2>
               <div className="bg-surface rounded-pf border border-default overflow-hidden">
-                <table className="w-full text-sm">
+                <table className="w-full text-body-sm">
                   <thead>
                     <tr className="border-b border-default bg-elevated">
-                      <th className="text-left px-4 py-3 text-xs font-semibold text-secondary uppercase tracking-wider">
+                      <th className="text-left px-4 py-3 text-label font-semibold text-secondary uppercase tracking-wider">
                         Stream Name
                       </th>
-                      <th className="text-left px-4 py-3 text-xs font-semibold text-secondary uppercase tracking-wider">
+                      <th className="text-left px-4 py-3 text-label font-semibold text-secondary uppercase tracking-wider">
                         Depth
                       </th>
-                      <th className="text-left px-4 py-3 text-xs font-semibold text-secondary uppercase tracking-wider hidden sm:table-cell">
+                      <th className="text-left px-4 py-3 text-label font-semibold text-secondary uppercase tracking-wider hidden sm:table-cell">
                         Processed / min
                       </th>
-                      <th className="text-left px-4 py-3 text-xs font-semibold text-secondary uppercase tracking-wider hidden sm:table-cell">
+                      <th className="text-left px-4 py-3 text-label font-semibold text-secondary uppercase tracking-wider hidden sm:table-cell">
                         Consumers
                       </th>
-                      <th className="text-left px-4 py-3 text-xs font-semibold text-secondary uppercase tracking-wider hidden md:table-cell">
+                      <th className="text-left px-4 py-3 text-label font-semibold text-secondary uppercase tracking-wider hidden md:table-cell">
                         Oldest Message
                       </th>
                     </tr>
@@ -419,19 +419,19 @@ export function Component() {
                         key={queue.name}
                         className={`border-b border-default last:border-0 ${idx % 2 === 1 ? 'bg-elevated/30' : ''}`}
                       >
-                        <td className="px-4 py-3 font-mono text-xs text-primary">
+                        <td className="px-4 py-3 font-mono text-label text-primary">
                           {queue.name}
                         </td>
                         <td className="px-4 py-3">
                           <QueueDepthCell depth={queue.depth} />
                         </td>
-                        <td className="px-4 py-3 text-primary text-xs hidden sm:table-cell">
+                        <td className="px-4 py-3 text-primary text-caption hidden sm:table-cell">
                           {queue.processedPerMin.toLocaleString()}
                         </td>
-                        <td className="px-4 py-3 text-primary text-xs hidden sm:table-cell">
+                        <td className="px-4 py-3 text-primary text-caption hidden sm:table-cell">
                           {queue.consumerCount}
                         </td>
-                        <td className="px-4 py-3 text-secondary text-xs hidden md:table-cell">
+                        <td className="px-4 py-3 text-secondary text-caption hidden md:table-cell">
                           {formatAge(queue.oldestMessageAge)}
                         </td>
                       </tr>
@@ -444,7 +444,7 @@ export function Component() {
 
           {/* Section 3: Database & Redis */}
           <section>
-            <h2 className="text-sm font-semibold text-secondary uppercase tracking-wider mb-3">
+            <h2 className="text-heading font-semibold text-secondary uppercase tracking-wider mb-3">
               Infrastructure
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -455,7 +455,7 @@ export function Component() {
 
           {/* Section 4: 24h Uptime Summary */}
           <section>
-            <h2 className="text-sm font-semibold text-secondary uppercase tracking-wider mb-3">
+            <h2 className="text-heading font-semibold text-secondary uppercase tracking-wider mb-3">
               24h Uptime Summary
             </h2>
             <div className="bg-surface rounded-pf border border-default divide-y divide-default">
@@ -481,12 +481,12 @@ export function Component() {
                                 : 'bg-tertiary'
                         }`}
                       />
-                      <span className="text-sm text-primary">
+                      <span className="text-body-sm text-primary">
                         {formatServiceName(service.name)}
                       </span>
                     </div>
                     <span
-                      className={`text-sm font-medium ${
+                      className={`text-body-sm font-medium ${
                         uptimePct !== null && parseFloat(uptimePct) >= 99.9
                           ? 'text-gain'
                           : uptimePct !== null && parseFloat(uptimePct) >= 95
