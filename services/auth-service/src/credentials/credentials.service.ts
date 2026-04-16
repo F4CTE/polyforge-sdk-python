@@ -54,17 +54,9 @@ export class CredentialsService {
       where: { id: userId },
     });
 
-    if (!user.emailVerified) {
-      throw new HttpException(
-        {
-          code: 'EMAIL_NOT_VERIFIED',
-          message: 'You must verify your email before connecting Polymarket',
-        },
-        HttpStatus.FORBIDDEN,
-      );
-    }
-
     // Forward to signer-service — it handles AES-256-GCM encryption + storage
+    // Note: email verification is not required for credential storage; unverified
+    // users are encouraged to verify via the UI but are not hard-blocked here.
     await this.forwardToSigner(userId, dto);
 
     // Mark user as connected

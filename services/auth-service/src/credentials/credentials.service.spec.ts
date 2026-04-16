@@ -60,14 +60,23 @@ describe('CredentialsService', () => {
   // ── import ────────────────────────────────────────────────────────────────
 
   describe('import', () => {
-    it('throws EMAIL_NOT_VERIFIED (403) when email is not verified', async () => {
+    it('allows credential import for unverified users (graceful degradation)', async () => {
+      // Unverified users are no longer hard-blocked — they can connect Polymarket
+      // credentials and are encouraged to verify via the UI.
       const user = userFactory({ emailVerified: false });
       db.user.findUniqueOrThrow.mockResolvedValue(user as any);
+      db.user.update.mockResolvedValue({
+        ...user,
+        polymarketConnected: true,
+      } as any);
+      fetchSpy.mockResolvedValue({ ok: true });
 
-      await expect(service.import(user.id, validDto)).rejects.toMatchObject({
-        response: { code: 'EMAIL_NOT_VERIFIED' },
-        status: HttpStatus.FORBIDDEN,
-      });
+      await expect(service.import(user.id, validDto)).resolves.toBeUndefined();
+      expect(db.user.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({ polymarketConnected: true }),
+        }),
+      );
     });
 
     it('calls signer-service and marks user as connected on success', async () => {

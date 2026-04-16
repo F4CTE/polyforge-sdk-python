@@ -43,7 +43,6 @@ export class CredentialsController {
     status: 204,
     description: 'Credentials stored. User marked as CONNECTED.',
   })
-  @ApiResponse({ status: 403, description: 'Email not verified.' })
   @ApiResponse({ status: 503, description: 'signer-service unavailable.' })
   async import(
     @CurrentUser() user: JwtPayload,
