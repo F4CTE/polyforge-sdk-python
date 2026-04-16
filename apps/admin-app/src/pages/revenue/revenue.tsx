@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
-import { Button } from '@polyforge/ui';
+import { Button, Skeleton } from '@polyforge/ui';
 import { chartTooltipContentStyle, chartAxisTick, chartLegendStyle } from '@polyforge/ui/lib/chart-styles';
 import {
   DollarSign, TrendingUp, TrendingDown, BarChart2,
@@ -219,12 +219,6 @@ function ChangeBadge({ change }: { change: number }) {
       {positive ? '+' : ''}{change.toFixed(1)}%
     </span>
   );
-}
-
-// ─── Skeleton ─────────────────────────────────────────────────────────────────
-
-function Skeleton({ className }: { className?: string }) {
-  return <div className={`bg-app rounded animate-pulse ${className ?? ''}`} />;
 }
 
 // ─── Main component ───────────────────────────────────────────────────────────

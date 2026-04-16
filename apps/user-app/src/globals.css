@@ -190,14 +190,10 @@
     0 0 14px color-mix(in srgb, var(--loss) 12%, transparent);
 }
 
-/* ─── Ambient & builder duration tokens (§9 documented exceptions) ──── */
+/* ─── Builder duration tokens (§9 documented exceptions) ──────────────
+   Ambient float durations moved to packages/ui/src/globals.css :root.
+   ──────────────────────────────────────────────────────────────────── */
 :root {
-  /* Auth-background ambient float durations (decorative, >5s) */
-  --duration-ambient-slow: 15s;
-  --duration-ambient-medium: 18s;
-  --duration-ambient-fast: 21s;
-  --duration-ambient-drift: 25s;
-
   /* Strategy builder section-specific pulse durations */
   --duration-builder-triggers: 1.4s;
   --duration-builder-actions: 1.8s;
