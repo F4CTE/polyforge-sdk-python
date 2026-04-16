@@ -470,20 +470,26 @@ class PolyforgeClient:
         self,
         token_id: str,
         *,
-        period: str | None = None,
+        resolution: str | None = None,
+        from_: str | None = None,
+        to: str | None = None,
         limit: int | None = None,
     ) -> list[PriceHistoryEntry]:
         """Fetch price history for a market token.
 
         Args:
             token_id: The token ID to fetch history for.
-            period: Candle period — ``"1h"``, ``"6h"``, or ``"24h"`` (default ``"1h"``).
-            limit: Maximum number of entries (1–500, default server-side).
+            resolution: Candle resolution — ``"1m"``, ``"1h"``, or ``"1d"`` (default ``"1h"``).
+            from_: ISO 8601 start datetime (e.g. ``"2026-01-01T00:00:00Z"``).
+            to: ISO 8601 end datetime (e.g. ``"2026-01-31T23:59:59Z"``).
+            limit: Maximum number of entries (1–1000, default server-side).
         """
         data = self._get(
             f"/api/v1/markets/{_encode_path(token_id)}/price-history",
             params={
-                "period": period,
+                "resolution": resolution,
+                "from": from_,
+                "to": to,
                 "limit": limit,
             },
         )
@@ -700,6 +706,137 @@ class PolyforgeClient:
 
     def fork_strategy(self, strategy_id: str) -> Strategy:
         return _parse(Strategy, self._post(f"/api/v1/strategies/{_encode_path(strategy_id)}/fork"))
+
+    # -- Strategy Social --
+
+    def like_strategy(self, strategy_id: str) -> dict[str, Any]:
+        """Like or unlike a strategy (toggle). Returns ``{"liked": bool, "likeCount": int}``."""
+        return self._post(f"/api/v1/strategies/{_encode_path(strategy_id)}/like")
+
+    def list_strategy_comments(
+        self,
+        strategy_id: str,
+        *,
+        page: int = 1,
+        limit: int = 20,
+    ) -> PaginatedResponse[dict[str, Any]]:
+        """List comments on a strategy with optional pagination."""
+        raw = self._get(
+            f"/api/v1/strategies/{_encode_path(strategy_id)}/comments",
+            params={"page": page, "limit": limit},
+        )
+        return PaginatedResponse(
+            data=raw["data"],
+            total=raw["total"],
+            page=raw["page"],
+            limit=raw["limit"],
+            has_more=raw["hasNext"],
+            total_pages=raw.get("totalPages", 0),
+        )
+
+    def add_strategy_comment(self, strategy_id: str, content: str) -> dict[str, Any]:
+        """Add a comment to a strategy."""
+        return self._post(
+            f"/api/v1/strategies/{_encode_path(strategy_id)}/comments",
+            json={"content": content},
+        )
+
+    def delete_strategy_comment(self, strategy_id: str, comment_id: str) -> None:
+        """Delete a comment on a strategy (must be the comment author)."""
+        self._delete(
+            f"/api/v1/strategies/{_encode_path(strategy_id)}/comments/{_encode_path(comment_id)}"
+        )
+
+    def list_strategy_children(self, strategy_id: str) -> dict[str, Any]:
+        """List child strategies (forks) of a strategy."""
+        return self._get(f"/api/v1/strategies/{_encode_path(strategy_id)}/children")
+
+    def report_strategy(
+        self,
+        strategy_id: str,
+        reason: str,
+        *,
+        description: str | None = None,
+    ) -> dict[str, Any]:
+        """Report a strategy for violating guidelines.
+
+        Args:
+            strategy_id: Strategy to report.
+            reason: One of ``"SPAM"``, ``"INAPPROPRIATE"``, ``"MISLEADING"``, ``"OTHER"``.
+            description: Optional additional detail.
+        """
+        body: dict[str, Any] = {"reason": reason}
+        if description is not None:
+            body["description"] = description
+        return self._post(f"/api/v1/strategies/{_encode_path(strategy_id)}/report", json=body)
+
+    # -- Strategy Versioning --
+
+    def list_strategy_versions(self, strategy_id: str) -> list[dict[str, Any]]:
+        """List all saved versions of a strategy."""
+        return self._get(f"/api/v1/strategies/{_encode_path(strategy_id)}/versions")
+
+    def rollback_strategy(self, strategy_id: str, version_id: str) -> dict[str, Any]:
+        """Rollback a strategy to a previous version.
+
+        Args:
+            strategy_id: The strategy to rollback.
+            version_id: The version ID to restore.
+        """
+        return self._post(
+            f"/api/v1/strategies/{_encode_path(strategy_id)}/versions/{_encode_path(version_id)}/rollback"
+        )
+
+    # -- Strategy Event Log --
+
+    def get_strategy_event_log(
+        self,
+        strategy_id: str,
+        *,
+        limit: int | None = None,
+    ) -> list[dict[str, Any]]:
+        """Get the execution event log for a strategy.
+
+        Args:
+            strategy_id: The strategy ID.
+            limit: Maximum number of log entries to return.
+        """
+        return self._get(
+            f"/api/v1/strategies/{_encode_path(strategy_id)}/event-log",
+            params={"limit": limit},
+        )
+
+    # -- API Key Management --
+
+    def list_api_keys(self) -> list[dict[str, Any]]:
+        """List all API keys for the authenticated user.
+
+        The raw token is never returned — only the prefix is available for identification.
+        """
+        return self._get("/api/v1/api-keys")
+
+    def create_api_key(
+        self,
+        name: str,
+        *,
+        scopes: list[str] | None = None,
+    ) -> dict[str, Any]:
+        """Create a new API key.
+
+        The raw ``token`` is returned only once and cannot be retrieved later.
+
+        Args:
+            name: Human-readable label for this key.
+            scopes: Optional list of scopes — ``"READ"``, ``"WRITE"``, ``"TRADE"``.
+        """
+        body: dict[str, Any] = {"name": name}
+        if scopes is not None:
+            body["scopes"] = scopes
+        return self._post("/api/v1/api-keys", json=body)
+
+    def revoke_api_key(self, key_id: str) -> None:
+        """Revoke an API key by ID. The key is permanently deactivated."""
+        self._delete(f"/api/v1/api-keys/{_encode_path(key_id)}")
 
     def run_backtest(
         self,
@@ -1357,7 +1494,7 @@ class PolyforgeClient:
 
         Args:
             token_id: The token to monitor.
-            direction: ``"ABOVE"`` or ``"BELOW"``.
+            direction: ``"above"`` or ``"below"``.
             price: The trigger price threshold.
             persistent: If ``True`` the alert re-arms after firing.
 
@@ -1682,7 +1819,7 @@ class PolyforgeClient:
         Returns:
             A :class:`WatchlistItem` with at least ``market_id`` and ``watched``.
         """
-        data = self._get(f"/api/v1/watchlist/status/{_encode_path(market_id)}")
+        data = self._get(f"/api/v1/watchlist/{_encode_path(market_id)}/status")
         return _parse(WatchlistItem, data)
 
     # -- AI --
@@ -1899,20 +2036,26 @@ class AsyncPolyforgeClient:
         self,
         token_id: str,
         *,
-        period: str | None = None,
+        resolution: str | None = None,
+        from_: str | None = None,
+        to: str | None = None,
         limit: int | None = None,
     ) -> list[PriceHistoryEntry]:
         """Fetch price history for a market token.
 
         Args:
             token_id: The token ID to fetch history for.
-            period: Candle period — ``"1h"``, ``"6h"``, or ``"24h"`` (default ``"1h"``).
-            limit: Maximum number of entries (1–500, default server-side).
+            resolution: Candle resolution — ``"1m"``, ``"1h"``, or ``"1d"`` (default ``"1h"``).
+            from_: ISO 8601 start datetime (e.g. ``"2026-01-01T00:00:00Z"``).
+            to: ISO 8601 end datetime (e.g. ``"2026-01-31T23:59:59Z"``).
+            limit: Maximum number of entries (1–1000, default server-side).
         """
         data = await self._get(
             f"/api/v1/markets/{_encode_path(token_id)}/price-history",
             params={
-                "period": period,
+                "resolution": resolution,
+                "from": from_,
+                "to": to,
                 "limit": limit,
             },
         )
@@ -2111,6 +2254,124 @@ class AsyncPolyforgeClient:
 
     async def fork_strategy(self, strategy_id: str) -> Strategy:
         return _parse(Strategy, await self._post(f"/api/v1/strategies/{_encode_path(strategy_id)}/fork"))
+
+    # -- Strategy Social --
+
+    async def like_strategy(self, strategy_id: str) -> dict[str, Any]:
+        """Like or unlike a strategy (toggle). Returns ``{"liked": bool, "likeCount": int}``."""
+        return await self._post(f"/api/v1/strategies/{_encode_path(strategy_id)}/like")
+
+    async def list_strategy_comments(
+        self,
+        strategy_id: str,
+        *,
+        page: int = 1,
+        limit: int = 20,
+    ) -> PaginatedResponse[dict[str, Any]]:
+        """List comments on a strategy with optional pagination."""
+        raw = await self._get(
+            f"/api/v1/strategies/{_encode_path(strategy_id)}/comments",
+            params={"page": page, "limit": limit},
+        )
+        return PaginatedResponse(
+            data=raw["data"],
+            total=raw["total"],
+            page=raw["page"],
+            limit=raw["limit"],
+            has_more=raw["hasNext"],
+            total_pages=raw.get("totalPages", 0),
+        )
+
+    async def add_strategy_comment(self, strategy_id: str, content: str) -> dict[str, Any]:
+        """Add a comment to a strategy."""
+        return await self._post(
+            f"/api/v1/strategies/{_encode_path(strategy_id)}/comments",
+            json={"content": content},
+        )
+
+    async def delete_strategy_comment(self, strategy_id: str, comment_id: str) -> None:
+        """Delete a comment on a strategy (must be the comment author)."""
+        await self._delete(
+            f"/api/v1/strategies/{_encode_path(strategy_id)}/comments/{_encode_path(comment_id)}"
+        )
+
+    async def list_strategy_children(self, strategy_id: str) -> dict[str, Any]:
+        """List child strategies (forks) of a strategy."""
+        return await self._get(f"/api/v1/strategies/{_encode_path(strategy_id)}/children")
+
+    async def report_strategy(
+        self,
+        strategy_id: str,
+        reason: str,
+        *,
+        description: str | None = None,
+    ) -> dict[str, Any]:
+        """Report a strategy for violating guidelines.
+
+        Args:
+            strategy_id: Strategy to report.
+            reason: One of ``"SPAM"``, ``"INAPPROPRIATE"``, ``"MISLEADING"``, ``"OTHER"``.
+            description: Optional additional detail.
+        """
+        body: dict[str, Any] = {"reason": reason}
+        if description is not None:
+            body["description"] = description
+        return await self._post(f"/api/v1/strategies/{_encode_path(strategy_id)}/report", json=body)
+
+    # -- Strategy Versioning --
+
+    async def list_strategy_versions(self, strategy_id: str) -> list[dict[str, Any]]:
+        """List all saved versions of a strategy."""
+        return await self._get(f"/api/v1/strategies/{_encode_path(strategy_id)}/versions")
+
+    async def rollback_strategy(self, strategy_id: str, version_id: str) -> dict[str, Any]:
+        """Rollback a strategy to a previous version."""
+        return await self._post(
+            f"/api/v1/strategies/{_encode_path(strategy_id)}/versions/{_encode_path(version_id)}/rollback"
+        )
+
+    # -- Strategy Event Log --
+
+    async def get_strategy_event_log(
+        self,
+        strategy_id: str,
+        *,
+        limit: int | None = None,
+    ) -> list[dict[str, Any]]:
+        """Get the execution event log for a strategy."""
+        return await self._get(
+            f"/api/v1/strategies/{_encode_path(strategy_id)}/event-log",
+            params={"limit": limit},
+        )
+
+    # -- API Key Management --
+
+    async def list_api_keys(self) -> list[dict[str, Any]]:
+        """List all API keys for the authenticated user."""
+        return await self._get("/api/v1/api-keys")
+
+    async def create_api_key(
+        self,
+        name: str,
+        *,
+        scopes: list[str] | None = None,
+    ) -> dict[str, Any]:
+        """Create a new API key.
+
+        The raw ``token`` is returned only once and cannot be retrieved later.
+
+        Args:
+            name: Human-readable label for this key.
+            scopes: Optional list of scopes — ``"READ"``, ``"WRITE"``, ``"TRADE"``.
+        """
+        body: dict[str, Any] = {"name": name}
+        if scopes is not None:
+            body["scopes"] = scopes
+        return await self._post("/api/v1/api-keys", json=body)
+
+    async def revoke_api_key(self, key_id: str) -> None:
+        """Revoke an API key by ID. The key is permanently deactivated."""
+        await self._delete(f"/api/v1/api-keys/{_encode_path(key_id)}")
 
     async def run_backtest(
         self,
@@ -2666,7 +2927,7 @@ class AsyncPolyforgeClient:
 
         Args:
             token_id: The token to monitor.
-            direction: ``"ABOVE"`` or ``"BELOW"``.
+            direction: ``"above"`` or ``"below"``.
             price: The trigger price threshold.
             persistent: If ``True`` the alert re-arms after firing.
 
@@ -2936,7 +3197,7 @@ class AsyncPolyforgeClient:
         Returns:
             A :class:`WatchlistItem` with at least ``market_id`` and ``watched``.
         """
-        data = await self._get(f"/api/v1/watchlist/status/{_encode_path(market_id)}")
+        data = await self._get(f"/api/v1/watchlist/{_encode_path(market_id)}/status")
         return _parse(WatchlistItem, data)
 
     # -- AI --
