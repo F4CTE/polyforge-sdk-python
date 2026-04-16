@@ -193,9 +193,11 @@ jobs:
       group: deploy-polyforge-lab
       cancel-in-progress: false
     steps:
-      - name: Write .env from GitHub Secrets
+      - name: Deploy to polyforge-lab
         uses: appleboy/ssh-action@v1
         env:
+          HEAD_REF: ${{ github.head_ref }}
+          COMMIT_SHA: ${{ github.sha }}
           USER_JWT_SECRET: ${{ secrets.USER_JWT_SECRET }}
           ADMIN_JWT_SECRET: ${{ secrets.ADMIN_JWT_SECRET }}
           BOT_JWT_SECRET: ${{ secrets.BOT_JWT_SECRET }}
@@ -221,7 +223,9 @@ jobs:
           host: ${{ secrets.LAB_HOST }}
           username: f4cte
           key: ${{ secrets.LAB_SSH_KEY }}
+          command_timeout: 18m
           envs: >-
+            HEAD_REF,COMMIT_SHA,
             USER_JWT_SECRET,ADMIN_JWT_SECRET,BOT_JWT_SECRET,INTERNAL_JWT_SECRET,
             MASTER_ENCRYPTION_KEY,TOTP_ENCRYPTION_KEY,
             DB_PASSWORD,ADMIN_DB_PASSWORD,REDIS_PASSWORD,
@@ -230,19 +234,6 @@ jobs:
             WHATSAPP_TOKEN,WHATSAPP_PHONE_ID,WHATSAPP_VERIFY_TOKEN,WHATSAPP_APP_SECRET,
             GAS_SPONSOR_PRIVATE_KEY,
             ANTHROPIC_API_KEY,OPENAI_API_KEY
-          script: bash ~/PolyForge/scripts/write-env-from-ci.sh
-
-      - name: Deploy to polyforge-lab
-        uses: appleboy/ssh-action@v1
-        env:
-          HEAD_REF: ${{ github.head_ref }}
-          COMMIT_SHA: ${{ github.sha }}
-        with:
-          host: ${{ secrets.LAB_HOST }}
-          username: f4cte
-          key: ${{ secrets.LAB_SSH_KEY }}
-          command_timeout: 18m
-          envs: HEAD_REF,COMMIT_SHA
           script: |
             set -euo pipefail
             cd ~/PolyForge
@@ -268,6 +259,12 @@ jobs:
               echo "Push detected — detaching to SHA: $COMMIT_SHA"
               git checkout --detach "$COMMIT_SHA"
             fi
+
+            # Write .env from CI-injected GitHub Secrets. Must run AFTER git checkout
+            # so scripts/write-env-from-ci.sh is on disk. Previously this was a
+            # separate SSH step that ran before git pull, causing status 127. (POLA-107)
+            echo "=== 1b. Write .env from GitHub Secrets ==="
+            bash scripts/write-env-from-ci.sh
 
             # Source env vars for Prisma + Docker — credentials must come from .env,
             # never hardcoded in the workflow file (see #559)
