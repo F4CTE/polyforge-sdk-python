@@ -290,6 +290,10 @@ model NotificationPreference {
   onTicketReply      Boolean               @default(true)
   minFillNotifyUsdc  Decimal               @default(0) @db.Decimal(10, 2)
   notificationFreq   NotificationFrequency @default(IMMEDIATE)
+  /// Per-event × per-channel preferences stored as JSON array.
+  /// Each element: { event: string, inApp: boolean, email: boolean, push: boolean }
+  eventPrefs         Json?
+  emailDigest        String                @default("DAILY") @db.VarChar(10)
   updatedAt          DateTime              @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
