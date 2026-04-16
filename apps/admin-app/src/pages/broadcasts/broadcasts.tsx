@@ -272,7 +272,7 @@ export function Component() {
               value={draft.title}
               onChange={(e) => handleDraftChange('title', e.target.value)}
               placeholder="e.g. Scheduled maintenance this Sunday"
-              className="w-full px-3 py-2 text-sm rounded-sm border border-default bg-app text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent"
+              className="w-full px-3 py-2 text-sm rounded-sm border border-default bg-app text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/20"
             />
           </div>
 
@@ -287,7 +287,7 @@ export function Component() {
               value={draft.message}
               onChange={(e) => handleDraftChange('message', e.target.value)}
               placeholder="Write your broadcast message here..."
-              className="w-full px-3 py-2 text-sm rounded-sm border border-default bg-app text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent resize-none"
+              className="w-full px-3 py-2 text-sm rounded-sm border border-default bg-app text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/20 resize-none"
             />
           </div>
 

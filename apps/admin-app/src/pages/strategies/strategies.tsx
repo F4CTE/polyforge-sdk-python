@@ -4,6 +4,7 @@ import { Button } from '@polyforge/ui';
 import { ChevronLeft, ChevronRight, Square, Zap, AlertCircle, Star } from 'lucide-react';
 import { adminApi } from '@/lib/api';
 import { statusColor, formatDate } from '@/lib/utils';
+import { ConfirmDialog } from '@/components/confirm-dialog';
 
 interface StrategyRow {
   id: string;
@@ -24,6 +25,7 @@ export function Component() {
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [confirmStop, setConfirmStop] = useState<string | null>(null);
 
   const limit = 20;
 
@@ -47,8 +49,11 @@ export function Component() {
     load();
   }, [load]);
 
-  async function handleForceStop(strategyId: string) {
-    if (!window.confirm('Are you sure you want to force-stop this strategy?')) return;
+  function handleForceStop(strategyId: string) {
+    setConfirmStop(strategyId);
+  }
+
+  async function doForceStop(strategyId: string) {
     try {
       await adminApi.forceStop(strategyId);
       setStrategies((s) =>
@@ -79,6 +84,7 @@ export function Component() {
   }
 
   return (
+    <>
     <div className="animate-fade-in space-y-6">
       <h2 className="text-lg font-semibold text-primary">
         Strategies <span className="text-sm font-normal text-tertiary">({total})</span>
@@ -95,7 +101,7 @@ export function Component() {
       )}
 
       <div className="bg-elevated border border-default rounded-xl overflow-hidden">
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto" data-density="compact">
           <table className="w-full text-sm">
             <caption className="sr-only">Trading strategies</caption>
             <thead>
@@ -194,5 +200,16 @@ export function Component() {
         )}
       </div>
     </div>
+
+    <ConfirmDialog
+      open={confirmStop !== null}
+      title="Force-stop strategy?"
+      description="This will immediately halt the running strategy."
+      confirmationText="stop"
+      destructiveLabel="Force stop"
+      onConfirm={() => { const id = confirmStop!; setConfirmStop(null); doForceStop(id); }}
+      onCancel={() => setConfirmStop(null)}
+    />
+    </>
   );
 }

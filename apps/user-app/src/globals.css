@@ -54,7 +54,6 @@
   border: 1px solid var(--border-subtle) !important;
   box-shadow: 0 4px 24px color-mix(in srgb, black 25%, transparent), 0 0 0 1px color-mix(in srgb, white 4%, transparent) !important;
   overflow: hidden !important;
-  backdrop-filter: blur(12px) !important;
   opacity: 0.85;
   transition: opacity var(--transition-duration-panel) ease;
 }

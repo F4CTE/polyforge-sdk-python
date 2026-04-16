@@ -3,6 +3,7 @@ import { toast } from 'sonner';
 import { Button, Input } from '@polyforge/ui';
 import { Database, Trash2, RefreshCw, Activity, AlertCircle } from 'lucide-react';
 import { adminApi } from '@/lib/api';
+import { ConfirmDialog } from '@/components/confirm-dialog';
 
 interface CacheStats {
   hitRate: number;
@@ -32,6 +33,7 @@ export function Component() {
   const [loading, setLoading] = useState(true);
   const [pattern, setPattern] = useState('');
   const [flushing, setFlushing] = useState(false);
+  const [confirmFlush, setConfirmFlush] = useState(false);
 
   const [streams, setStreams] = useState<StreamInfo[] | null>(null);
   const [loadingStreams, setLoadingStreams] = useState(false);
@@ -68,9 +70,12 @@ export function Component() {
     if (tab === 'streams' && !streams) loadStreams();
   }, [tab]);
 
-  async function handleFlush() {
+  function handleFlush() {
     if (!pattern.trim()) return;
-    if (!window.confirm(`Are you sure you want to flush cache keys matching "${pattern}"?`)) return;
+    setConfirmFlush(true);
+  }
+
+  async function doFlush() {
     setFlushing(true);
     try {
       const res = await adminApi.cacheFlush(pattern);
@@ -100,6 +105,7 @@ export function Component() {
   }
 
   return (
+    <>
     <div className="animate-fade-in space-y-6">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-1 bg-surface border border-default rounded-sm p-1">
@@ -171,7 +177,7 @@ export function Component() {
                 value={pattern}
                 onChange={(e) => setPattern(e.target.value)}
                 placeholder="e.g. user:*, strategy:abc*"
-                className="flex-1 px-3 py-2 text-body-sm rounded-sm border border-default bg-app text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent font-mono"
+                className="flex-1 px-3 py-2 text-body-sm rounded-sm border border-default bg-app text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/20 font-mono"
               />
               <Button
                 type="button"
@@ -274,5 +280,17 @@ export function Component() {
         </>
       )}
     </div>
+
+    <ConfirmDialog
+      open={confirmFlush}
+      title="Flush cache keys?"
+      description={`This will flush all cache keys matching "${pattern}". This cannot be undone.`}
+      confirmationText={pattern}
+      destructiveLabel="Flush cache"
+      isLoading={flushing}
+      onConfirm={() => { setConfirmFlush(false); doFlush(); }}
+      onCancel={() => setConfirmFlush(false)}
+    />
+    </>
   );
 }

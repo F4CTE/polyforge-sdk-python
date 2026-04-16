@@ -153,7 +153,7 @@ export function StrategyCanvas() {
             ? 'color-mix(in srgb, var(--bg-app) 60%, transparent)'
             : 'color-mix(in srgb, var(--bg-app) 60%, transparent)'}
           nodeColor={(node) => {
-            if (node.type === 'variableNode') return 'var(--color-purple-500)';
+            if (node.type === 'variableNode') return 'var(--chart-category-2)';
             if (node.type === 'logicNode') return 'var(--info)';
             if (node.type === 'calcNode') return 'var(--gain)';
             const data = node.data as BlockNodeData;

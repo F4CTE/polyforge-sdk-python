@@ -15,7 +15,7 @@ type VariableNodeType = Node<VariableNodeData, 'variableNode'>;
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
-const VARIABLE_COLOR = 'var(--color-purple-500)';
+const VARIABLE_COLOR = 'var(--chart-category-2)';
 const NAME_PATTERN = /^[a-zA-Z_][a-zA-Z0-9_]*$/;
 
 /** Validate a variable name: must be alphanumeric + underscore, starting with letter or underscore */

@@ -74,7 +74,7 @@ export function Component() {
         <form
           onSubmit={handleSubmit}
           noValidate
-          className="bg-elevated border border-default rounded-xl p-6 space-y-4 shadow-lg"
+          className="bg-elevated border border-default rounded-lg p-6 space-y-4 [box-shadow:var(--shadow-elevation-2)]"
         >
           <div>
             <label htmlFor="email" className="block text-xs font-medium text-secondary mb-2">
@@ -88,7 +88,7 @@ export function Component() {
               onChange={(e) => setEmail(e.target.value)}
               required
               autoFocus
-              className="w-full px-3 py-2 text-sm rounded-sm border border-default bg-app text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent focus-visible:border-accent transition-colors"
+              className="w-full px-3 py-2 text-sm rounded-sm border border-default bg-app text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/20 focus-visible:border-accent transition-colors"
               placeholder="admin@polyforge.io"
             />
           </div>
@@ -104,7 +104,7 @@ export function Component() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="w-full px-3 py-2 text-sm rounded-sm border border-default bg-app text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent focus-visible:border-accent transition-colors"
+              className="w-full px-3 py-2 text-sm rounded-sm border border-default bg-app text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/20 focus-visible:border-accent transition-colors"
               placeholder="Enter password"
             />
           </div>
@@ -125,7 +125,7 @@ export function Component() {
                 onChange={(e) => setTotpCode(e.target.value.replace(/\D/g, ''))}
                 required
                 autoFocus
-                className="w-full px-3 py-2 text-sm text-center tracking-widest font-mono rounded-sm border border-default bg-app text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent focus-visible:border-accent transition-colors"
+                className="w-full px-3 py-2 text-sm text-center tracking-widest font-mono rounded-sm border border-default bg-app text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/20 focus-visible:border-accent transition-colors"
                 placeholder="000000"
               />
             </div>

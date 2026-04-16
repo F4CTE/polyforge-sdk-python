@@ -165,6 +165,10 @@
   --color-chart-tooltip-bg: var(--bg-overlay);
   --color-chart-tooltip-border: var(--border-default);
 
+  /* Chart categorical colors (semantic aliases over palette) */
+  --chart-category-2: var(--color-purple-500); /* variable nodes, Finance category */
+  --chart-category-3: var(--color-gold-500);   /* Crypto/premium category */
+
   /* Transition duration tokens (charter §7) */
   --transition-duration-micro: 120ms;
   --transition-duration-panel: 200ms;
@@ -532,3 +536,8 @@ body {
   --shadow-glow-accent-strong: 0 0 20px color-mix(in srgb, var(--accent-default) 20%, transparent);
   --shadow-focus-ring: 0 0 0 3px var(--accent-subtle);
 }
+
+/* ─── Data density table variants (charter §16) ─────────────────────────── */
+[data-density="compact"] tr  { height: 28px; }
+[data-density="default"] tr  { height: 36px; }
+[data-density="comfortable"] tr { height: 44px; }

@@ -122,7 +122,7 @@ const SERIES_BG_CLASS: Record<string, string> = {
 function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
   if (!active || !payload?.length) return null;
   return (
-    <div className="bg-elevated border border-default rounded-sm p-3 text-caption shadow-lg">
+    <div className="bg-elevated border border-default rounded-sm p-3 text-caption [box-shadow:var(--shadow-elevation-2)]">
       <p className="font-semibold text-primary mb-2">{label}</p>
       {payload.map((entry) => (
         <div key={entry.name} className="flex items-center gap-2 mb-1">
@@ -452,7 +452,7 @@ export function Component() {
                 dataKey="returningUsers"
                 name="Returning Users"
                 stackId="dau"
-                fill="var(--color-purple-500)"
+                fill="var(--chart-category-2)"
                 radius={[2, 2, 0, 0]}
               />
               <Line

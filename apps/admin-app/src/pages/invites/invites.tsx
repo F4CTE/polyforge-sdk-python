@@ -87,7 +87,7 @@ export function Component() {
               max={50}
               value={count}
               onChange={(e) => setCount(Number(e.target.value))}
-              className="w-20 px-3 py-2 text-sm rounded-sm border border-default bg-app text-primary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent"
+              className="w-20 px-3 py-2 text-sm rounded-sm border border-default bg-app text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/20"
             />
           </div>
           <div>
@@ -99,7 +99,7 @@ export function Component() {
               max={100}
               value={maxUses}
               onChange={(e) => setMaxUses(Number(e.target.value))}
-              className="w-20 px-3 py-2 text-sm rounded-sm border border-default bg-app text-primary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent"
+              className="w-20 px-3 py-2 text-sm rounded-sm border border-default bg-app text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/20"
             />
           </div>
           <div>
@@ -111,7 +111,7 @@ export function Component() {
               max={365}
               value={ttlDays}
               onChange={(e) => setTtlDays(Number(e.target.value))}
-              className="w-20 px-3 py-2 text-sm rounded-sm border border-default bg-app text-primary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent"
+              className="w-20 px-3 py-2 text-sm rounded-sm border border-default bg-app text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/20"
             />
           </div>
           <Button

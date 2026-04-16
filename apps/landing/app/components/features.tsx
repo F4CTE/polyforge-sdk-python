@@ -735,7 +735,8 @@ const features = [
           textAnchor="middle"
           fill="var(--gain)"
           fontSize="7"
-          fontWeight="700"
+          fontWeight="600"
+          fontFamily="Geist, sans-serif"
         >
           W
         </text>
@@ -789,7 +790,8 @@ const features = [
           textAnchor="middle"
           fill="var(--loss)"
           fontSize="7"
-          fontWeight="700"
+          fontWeight="600"
+          fontFamily="Geist, sans-serif"
         >
           W
         </text>
@@ -843,7 +845,8 @@ const features = [
           textAnchor="middle"
           fill="var(--gain)"
           fontSize="7"
-          fontWeight="700"
+          fontWeight="600"
+          fontFamily="Geist, sans-serif"
         >
           W
         </text>

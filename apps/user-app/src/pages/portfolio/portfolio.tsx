@@ -207,8 +207,8 @@ const PERIODS: { label: string; value: Period }[] = [
 const CATEGORY_COLORS: Record<string, string> = {
   Politics: 'var(--accent-default)',
   Sports: 'var(--gain)',
-  Crypto: 'var(--color-gold-500)',
-  Finance: 'var(--color-purple-500)',
+  Crypto: 'var(--chart-category-3)',
+  Finance: 'var(--chart-category-2)',
   Entertainment: 'var(--loss)',
   Science: 'var(--info)',
   Other: 'var(--text-tertiary)',

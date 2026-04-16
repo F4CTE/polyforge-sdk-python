@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
 import { Button, Textarea } from '@polyforge/ui';
+import { ConfirmDialog } from '@/components/confirm-dialog';
 import {
   ShoppingBag,
   ChevronLeft,
@@ -241,6 +242,7 @@ export function Component() {
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('PENDING');
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [confirmDelist, setConfirmDelist] = useState<string | null>(null);
 
   const limit = 20;
 
@@ -307,8 +309,11 @@ export function Component() {
     }
   }
 
-  async function handleDelist(id: string) {
-    if (!window.confirm('Delist this listing?')) return;
+  function handleDelist(id: string) {
+    setConfirmDelist(id);
+  }
+
+  async function doDelist(id: string) {
     setActionLoading(id);
     try {
       await adminApi.reviewListing(id, { status: 'DELISTED' });
@@ -334,6 +339,7 @@ export function Component() {
   }
 
   return (
+    <>
     <div className="animate-fade-in space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between gap-4 flex-wrap">
@@ -452,5 +458,16 @@ export function Component() {
         </div>
       )}
     </div>
+
+    <ConfirmDialog
+      open={confirmDelist !== null}
+      title="Delist this listing?"
+      description="The listing will be removed from the marketplace."
+      confirmationText="delist"
+      destructiveLabel="Delist listing"
+      onConfirm={() => { const id = confirmDelist!; setConfirmDelist(null); doDelist(id); }}
+      onCancel={() => setConfirmDelist(null)}
+    />
+    </>
   );
 }

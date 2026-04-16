@@ -1,5 +1,14 @@
 @import "@polyforge/ui/globals.css";
 
+/* ─── Admin accent override (charter §16) ───────────────────────────── */
+:root {
+  --accent-default: #8B5CF6;
+  --accent-hover:   #9d71f8;
+  --accent-subtle:  rgba(139, 92, 246, 0.12);
+  --accent-border:  rgba(139, 92, 246, 0.35);
+  --accent-text:    #a78bfa;
+}
+
 /* ─── Skip to content link ───────────────────────────────────────────── */
 .skip-to-content {
   position: absolute;

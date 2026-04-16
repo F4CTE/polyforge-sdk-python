@@ -36,7 +36,7 @@ const SECTIONS: { key: PaletteTab; icon: React.ReactNode }[] = [
   { key: 'actions', icon: <Play className="size-3" /> },
 ];
 
-const VARIABLE_TAB_META = { label: 'Variables', color: 'var(--color-purple-500)' };
+const VARIABLE_TAB_META = { label: 'Variables', color: 'var(--chart-category-2)' };
 
 // ─── Component ───────────────────────────────────────────────────────────────
 

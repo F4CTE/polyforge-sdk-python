@@ -71,8 +71,8 @@ interface MarketplaceStats {
 const SOURCE_COLORS: Record<SourceKey, string> = {
   marketplace_listings: 'var(--accent-text)',
   copy_fees: 'var(--gain)',
-  strategy_sales: 'var(--color-purple-500)',
-  subscription: 'var(--color-gold-500)',
+  strategy_sales: 'var(--chart-category-2)',
+  subscription: 'var(--chart-category-3)',
   other: 'var(--text-tertiary)',
 };
 
@@ -170,7 +170,7 @@ function DonutCenterLabel({ cx = 0, cy = 0, total }: DonutLabelProps) {
   return (
     <text x={cx} y={cy} textAnchor="middle" dominantBaseline="central">
       <tspan x={cx} dy="-0.4em" fontSize={11} fill="var(--text-secondary)">Total</tspan>
-      <tspan x={cx} dy="1.4em" fontSize={14} fontWeight={700} fill="var(--text-primary)" fontFamily="monospace">
+      <tspan x={cx} dy="1.4em" fontSize={14} fontWeight={600} fill="var(--text-primary)" fontFamily="Geist Mono, monospace">
         {fmtDollar(total)}
       </tspan>
     </text>
@@ -424,7 +424,7 @@ export function Component() {
               <div key={card.label} className="bg-elevated border border-default rounded-xl p-4">
                 <div className="flex items-center gap-2 mb-2">
                   <div className={`p-2 rounded-sm ${card.bg} ${card.color}`}>{card.icon}</div>
-                  <span className="text-xs text-tertiary font-medium uppercase tracking-wide">{card.label}</span>
+                  <span className="text-xs text-tertiary font-medium uppercase tracking-wider">{card.label}</span>
                 </div>
                 <div className="text-2xl font-semibold text-primary font-mono">{card.value}</div>
                 {card.sub && <div className="mt-1">{card.sub}</div>}
@@ -482,7 +482,7 @@ export function Component() {
 
           {/* Donut chart */}
           <div>
-            <p className="text-xs text-tertiary font-medium uppercase tracking-wide mb-3">Distribution</p>
+            <p className="text-xs text-tertiary font-medium uppercase tracking-wider mb-3">Distribution</p>
             {loadingBreakdown ? (
               <Skeleton className="h-chart-lg" />
             ) : donutData.length === 0 ? (
@@ -539,7 +539,7 @@ export function Component() {
 
           {/* Source breakdown table */}
           <div>
-            <p className="text-xs text-tertiary font-medium uppercase tracking-wide mb-3">Source Detail</p>
+            <p className="text-xs text-tertiary font-medium uppercase tracking-wider mb-3">Source Detail</p>
             {loadingBreakdown ? (
               <div className="space-y-2">
                 {Array.from({ length: 5 }, (_, i) => <Skeleton key={i} className="h-10" />)}
@@ -675,8 +675,8 @@ export function Component() {
                 <Tooltip content={<MonthlyTooltip />} />
                 <Legend wrapperStyle={chartLegendStyle} />
                 <Bar yAxisId="left" dataKey="revenue" name="Revenue" fill="var(--accent-default)" opacity={0.7} radius={[2, 2, 0, 0]} />
-                <Bar yAxisId="left" dataKey="fees" name="Fees" fill="var(--color-purple-500)" opacity={0.7} radius={[2, 2, 0, 0]} />
-                <Line yAxisId="right" type="monotone" dataKey="purchases" name="Purchases" stroke="var(--color-gold-500)" strokeWidth={2} dot={false} />
+                <Bar yAxisId="left" dataKey="fees" name="Fees" fill="var(--chart-category-2)" opacity={0.7} radius={[2, 2, 0, 0]} />
+                <Line yAxisId="right" type="monotone" dataKey="purchases" name="Purchases" stroke="var(--chart-category-3)" strokeWidth={2} dot={false} />
               </ComposedChart>
             </ResponsiveContainer>
           )}

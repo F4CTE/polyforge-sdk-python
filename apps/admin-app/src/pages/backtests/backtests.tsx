@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { toast } from 'sonner';
 import { Button, Input } from '@polyforge/ui';
+import { ConfirmDialog } from '@/components/confirm-dialog';
 import {
   ChevronLeft,
   ChevronRight,
@@ -103,6 +104,7 @@ export function Component() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [cancelling, setCancelling] = useState<Record<string, boolean>>({});
+  const [confirmCancel, setConfirmCancel] = useState<BacktestRow | null>(null);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('ALL');
   const [usernameFilter, setUsernameFilter] = useState('');
   const [usernameInput, setUsernameInput] = useState('');
@@ -174,13 +176,11 @@ export function Component() {
 
   // ─── Actions ────────────────────────────────────────────────────────────────
 
-  async function handleCancel(bt: BacktestRow) {
-    if (
-      !window.confirm(
-        `Cancel backtest ${bt.id.slice(0, 8)} for @${bt.username}? This cannot be undone.`
-      )
-    )
-      return;
+  function handleCancel(bt: BacktestRow) {
+    setConfirmCancel(bt);
+  }
+
+  async function doCancel(bt: BacktestRow) {
     setCancelling((prev) => ({ ...prev, [bt.id]: true }));
     try {
       await adminApi.cancelBacktest(bt.id);
@@ -220,6 +220,7 @@ export function Component() {
   // ─── Render ──────────────────────────────────────────────────────────────────
 
   return (
+    <>
     <div className="animate-fade-in space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between gap-4 flex-wrap">
@@ -353,7 +354,7 @@ export function Component() {
 
       {/* Table */}
       <div className="bg-elevated border border-default rounded-xl overflow-hidden">
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto" data-density="compact">
           <table className="w-full text-sm" aria-label="Backtest results">
             <caption className="sr-only">Backtest runs</caption>
             <thead>
@@ -572,5 +573,18 @@ export function Component() {
         )}
       </div>
     </div>
+
+    {confirmCancel && (
+      <ConfirmDialog
+        open={true}
+        title="Cancel backtest?"
+        description={`Cancel backtest ${confirmCancel.id.slice(0, 8)} for @${confirmCancel.username}? This cannot be undone.`}
+        confirmationText="delete"
+        destructiveLabel="Cancel backtest"
+        onConfirm={() => { const bt = confirmCancel; setConfirmCancel(null); doCancel(bt); }}
+        onCancel={() => setConfirmCancel(null)}
+      />
+    )}
+    </>
   );
 }

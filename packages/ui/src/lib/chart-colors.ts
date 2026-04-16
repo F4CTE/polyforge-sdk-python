@@ -11,8 +11,12 @@ export const chartColors = {
   cyan: "var(--accent-default)",
   cyanLight: "var(--accent-text)",
   cyanGlow: "var(--accent-subtle)",
-  purple: "var(--color-purple-500)",
-  gold: "var(--color-gold-500)",
+  /** @deprecated Use category2 — semantic alias over --color-purple-500 */
+  purple: "var(--chart-category-2)",
+  /** @deprecated Use category3 — semantic alias over --color-gold-500 */
+  gold: "var(--chart-category-3)",
+  category2: "var(--chart-category-2)",
+  category3: "var(--chart-category-3)",
   success: "var(--gain)",
   danger: "var(--loss)",
   warning: "var(--warning)",
@@ -42,23 +46,23 @@ export function resolveChartTheme() {
   const get = (v: string, fallback: string) =>
     s?.getPropertyValue(v).trim() || fallback;
   return {
-    cyan500:       get("--color-accent",       "#06b6d4"),
-    success:       get("--color-gain",        "#10b981"),
-    danger:        get("--color-loss",         "#ef4444"),
-    textMuted:     get("--color-tertiary",     "#64748b"),
-    textSecondary: get("--color-secondary", "#94a3b8"),
-    textPrimary:   get("--color-primary",           "#e2e8f0"),
-    bgElevated:    get("--color-elevated",       "#0f172a"),
-    borderColor:   get("--color-subtle",         "#1e293b"),
-    base:          get("--color-app",           "#020817"),
+    cyan500:       get("--accent-default",    "#4F6EF7"),
+    success:       get("--gain",              "#10b981"),
+    danger:        get("--loss",              "#ef4444"),
+    textMuted:     get("--text-tertiary",     "#64748b"),
+    textSecondary: get("--text-secondary",    "#94a3b8"),
+    textPrimary:   get("--text-primary",      "#e2e8f0"),
+    bgElevated:    get("--bg-elevated",       "#0f172a"),
+    borderColor:   get("--border-default",    "#1e293b"),
+    base:          get("--bg-app",            "#0E0F11"),
   };
 }
 
 /** Default categorical palette for multi-series charts. */
 export const chartPalette = [
   chartColors.cyan,
-  chartColors.purple,
-  chartColors.gold,
+  chartColors.category2,
+  chartColors.category3,
   chartColors.success,
   chartColors.info,
   chartColors.danger,

@@ -90,14 +90,14 @@ interface StrategyPerfData {
 
 /* ─── Constants ──────────────────────────────────────────────────────── */
 
-const COMPARE_COLORS = ['var(--accent-default)', 'var(--color-purple-500)', 'var(--color-gold-500)', 'var(--gain)'];
+const COMPARE_COLORS = ['var(--accent-default)', 'var(--chart-category-2)', 'var(--chart-category-3)', 'var(--gain)'];
 
 /* ─── Helpers ────────────────────────────────────────────────────────── */
 
 function statusGradient(status: StrategyStatus): string {
   switch (status) {
     case 'RUNNING':  return 'var(--accent-default)';
-    case 'PAPER':    return 'var(--color-purple-500)';
+    case 'PAPER':    return 'var(--chart-category-2)';
     case 'PAUSED':   return 'var(--warning)';
     case 'ERROR':    return 'var(--loss)';
     case 'IDLE':

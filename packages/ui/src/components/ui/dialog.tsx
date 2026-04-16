@@ -50,7 +50,7 @@ const DialogContent = React.forwardRef<
     role="dialog"
     aria-modal="true"
     className={cn(
-      "relative z-10 w-full max-w-lg bg-elevated border border-default rounded-xl shadow-lg",
+      "relative z-10 w-full max-w-lg bg-elevated border border-default rounded-lg [box-shadow:var(--shadow-elevation-3)]",
       "animate-scale-in",
       className
     )}

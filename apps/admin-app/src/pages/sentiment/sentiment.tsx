@@ -175,7 +175,7 @@ const SERIES_COLOR_CLASS: Record<string, string> = {
 function CategoryTooltip({ active, payload, label }: { active?: boolean; payload?: Array<{ name: string; value: number; color: string }>; label?: string }) {
   if (!active || !payload?.length) return null;
   return (
-    <div className="bg-elevated border border-default rounded-sm px-3 py-2 text-xs shadow-lg">
+    <div className="bg-elevated border border-default rounded-sm px-3 py-2 text-xs [box-shadow:var(--shadow-elevation-2)]">
       <p className="font-semibold text-primary mb-1">{label}</p>
       {payload.map((entry) => (
         <p key={entry.name} className={SERIES_COLOR_CLASS[entry.name] ?? 'text-primary'}>

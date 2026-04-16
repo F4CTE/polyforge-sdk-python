@@ -54,7 +54,7 @@ const TabsList = React.forwardRef<
     ref={ref}
     role="tablist"
     className={cn(
-      "flex gap-1 bg-elevated border border-default rounded-xl p-1 w-fit",
+      "flex gap-1 bg-elevated border border-default rounded-lg p-1 w-fit",
       className
     )}
     {...props}

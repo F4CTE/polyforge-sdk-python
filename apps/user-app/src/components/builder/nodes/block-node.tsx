@@ -219,7 +219,7 @@ function BlockNodeInner({ id, data }: NodeProps<BlockNode>) {
         {isInactive && (
           <div
             className="builder-badge absolute -top-5 left-1/2 -translate-x-1/2 flex items-center gap-1 px-2 py-1 rounded-full text-caption font-semibold whitespace-nowrap z-10 pointer-events-none"
-            style={{ '--badge-color': 'var(--color-gold-500)' } as React.CSSProperties}
+            style={{ '--badge-color': 'var(--chart-category-3)' } as React.CSSProperties}
             title={isTrigger ? 'Trigger has no outgoing connection — wire it to a condition or action to activate it' : 'Action has no incoming connection — wire a trigger or condition to it to activate it'}
           >
             <Unlink className="size-3" />
@@ -296,7 +296,7 @@ function BlockNodeInner({ id, data }: NodeProps<BlockNode>) {
                         id={field.key}
                         className="!w-2 !h-2 !bg-elevated !border-2 !rounded-full builder-handle"
                         style={{
-                          '--node-color': 'var(--color-purple-500)',
+                          '--node-color': 'var(--chart-category-2)',
                           top: `${handleTop}px`,
                         } as React.CSSProperties}
                       />

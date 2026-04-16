@@ -53,7 +53,8 @@ export function ProductPreview() {
                 y="32"
                 fill="var(--color-cyan-300)"
                 fontSize="13"
-                fontWeight="700"
+                fontWeight="600"
+                fontFamily="Geist, sans-serif"
               >
                 Polyforge
               </text>
@@ -268,7 +269,8 @@ export function ProductPreview() {
                 y="102"
                 fill="var(--gain)"
                 fontSize="22"
-                fontWeight="700"
+                fontWeight="600"
+                fontFamily="Geist, sans-serif"
               >
                 +$2,847
               </text>
@@ -312,7 +314,8 @@ export function ProductPreview() {
                 y="102"
                 fill="var(--text-primary)"
                 fontSize="22"
-                fontWeight="700"
+                fontWeight="600"
+                fontFamily="Geist, sans-serif"
               >
                 67.2%
               </text>
@@ -350,7 +353,8 @@ export function ProductPreview() {
                 y="102"
                 fill="var(--text-primary)"
                 fontSize="22"
-                fontWeight="700"
+                fontWeight="600"
+                fontFamily="Geist, sans-serif"
               >
                 3
               </text>

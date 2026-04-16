@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router';
 import { toast } from 'sonner';
 import { Button, Input, Select } from '@polyforge/ui';
+import { ConfirmDialog } from '@/components/confirm-dialog';
 import {
   ChevronLeft,
   ChevronRight,
@@ -479,6 +480,7 @@ export function Component() {
   const [riskSettings, setRiskSettings] = useState<RiskSettings | null>(null);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
+  const [confirmSuspend, setConfirmSuspend] = useState(false);
 
   const [activeTab, setActiveTab] = useState<ActiveTab>('overview');
 
@@ -583,9 +585,12 @@ export function Component() {
 
   // ── Actions ─────────────────────────────────────────────────────────────────
 
-  async function handleSuspend() {
+  function handleSuspend() {
     if (!id || !user) return;
-    if (!window.confirm(`Suspend ${user.username}? This will prevent them from logging in.`)) return;
+    setConfirmSuspend(true);
+  }
+
+  async function doSuspend() {
     setActionLoading(true);
     try {
       await fetch(`/api/v1/users/${id}/suspend`, {
@@ -690,6 +695,7 @@ export function Component() {
   ];
 
   return (
+    <>
     <div className="animate-fade-in space-y-6">
       {/* Back link */}
       <Link
@@ -1180,5 +1186,19 @@ export function Component() {
         )}
       </div>
     </div>
+
+    {user && (
+      <ConfirmDialog
+        open={confirmSuspend}
+        title={`Suspend ${user.username}?`}
+        description="This will prevent them from logging in."
+        confirmationText={user.username}
+        destructiveLabel="Suspend user"
+        isLoading={actionLoading}
+        onConfirm={() => { setConfirmSuspend(false); doSuspend(); }}
+        onCancel={() => setConfirmSuspend(false)}
+      />
+    )}
+    </>
   );
 }

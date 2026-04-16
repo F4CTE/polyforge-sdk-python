@@ -53,7 +53,7 @@ const CATEGORIES = [
 const LIMIT = 25;
 
 function statusBadge(status: AdminMarket['status']) {
-  const base = 'inline-flex items-center px-2 py-1 rounded-sm text-label font-semibold uppercase tracking-wide';
+  const base = 'inline-flex items-center px-2 py-1 rounded-sm text-label font-semibold uppercase tracking-wider';
   switch (status) {
     case 'ACTIVE':
       return <span className={`${base} bg-gain/15 text-gain`}>Active</span>;

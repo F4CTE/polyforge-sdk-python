@@ -21,7 +21,7 @@ export const chartTooltipContentStyle: CSSProperties = {
   border: '1px solid var(--border-default)',
   borderRadius: 6,
   fontSize: 12,
-  fontFamily: "'JetBrains Mono', monospace",
+  fontFamily: "'Geist Mono', 'Fira Code', monospace",
   padding: '4px 8px',
 };
 
@@ -34,7 +34,7 @@ export const chartTooltipLabelStyle: CSSProperties = {
 /** Axis tick text style (XAxis / YAxis `tick` prop). */
 export const chartAxisTick = {
   fontSize: 10,
-  fontFamily: "'JetBrains Mono', monospace",
+  fontFamily: "'Geist Mono', 'Fira Code', monospace",
   fill: 'var(--text-tertiary)',
 } as const;
 

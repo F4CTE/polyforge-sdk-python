@@ -5,6 +5,7 @@ import { Button, Input, Select } from '@polyforge/ui';
 import { Search, ChevronLeft, ChevronRight, ChevronUp, ChevronDown, Check, X, Wifi, Shield, Users, AlertCircle, EyeOff } from 'lucide-react';
 import { adminApi } from '@/lib/api';
 import { statusColor, formatDate } from '@/lib/utils';
+import { ConfirmDialog } from '@/components/confirm-dialog';
 
 interface UserRow {
   id: string;
@@ -55,6 +56,8 @@ export function Component() {
 
   const limit = 20;
 
+  const [confirmReject, setConfirmReject] = useState<{ userId: string; username: string } | null>(null);
+
   async function handleApprove(userId: string, username: string | undefined) {
     try {
       await adminApi.approveUser(userId);
@@ -64,7 +67,10 @@ export function Component() {
   }
 
   async function handleReject(userId: string, username: string | undefined) {
-    if (!window.confirm(`Are you sure you want to reject ${username}?`)) return;
+    setConfirmReject({ userId, username: username ?? userId });
+  }
+
+  async function doReject(userId: string, username: string) {
     try {
       await adminApi.rejectUser(userId);
       toast.success(`${username} rejected`);
@@ -149,6 +155,7 @@ export function Component() {
   }, [users, hideTestAccounts, sortField, sortDir]);
 
   return (
+    <>
     <div className="animate-fade-in space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-semibold text-primary">
@@ -170,7 +177,7 @@ export function Component() {
             aria-label="Search users"
             defaultValue={search}
             onChange={(e) => handleSearch(e.target.value)}
-            className="w-full pl-9 pr-3 py-2 text-sm rounded-sm border border-default bg-app text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+            className="w-full pl-9 pr-3 py-2 text-sm rounded-sm border border-default bg-app text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
           />
         </div>
         <Select
@@ -180,7 +187,7 @@ export function Component() {
             setPage(1);
           }}
           aria-label="Filter by status"
-          className="px-3 py-2 text-sm rounded-sm border border-default bg-app text-primary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent"
+          className="px-3 py-2 text-sm rounded-sm border border-default bg-app text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/20"
         >
           <option value="">All statuses</option>
           <option value="PENDING">Pending approval</option>
@@ -214,7 +221,7 @@ export function Component() {
 
       {/* Table */}
       <div className="bg-elevated border border-default rounded-xl overflow-hidden">
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto" data-density="compact">
           <table className="w-full text-sm">
             <caption className="sr-only">User accounts list</caption>
             <thead>
@@ -261,7 +268,7 @@ export function Component() {
                       <Link
                         to={`/users/${user.id}`}
                         onClick={(e) => e.stopPropagation()}
-                        className="hover:text-accent-text transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent rounded-sm"
+                        className="hover:text-accent-text transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/20 rounded-sm"
                       >
                         {user.username ?? ''}
                       </Link>
@@ -364,5 +371,22 @@ export function Component() {
         )}
       </div>
     </div>
+
+    {confirmReject && (
+      <ConfirmDialog
+        open={true}
+        title={`Reject ${confirmReject.username}?`}
+        description={`This will prevent ${confirmReject.username} from accessing PolyForge.`}
+        confirmationText={confirmReject.username}
+        destructiveLabel="Reject user"
+        onConfirm={() => {
+          const { userId, username } = confirmReject;
+          setConfirmReject(null);
+          doReject(userId, username);
+        }}
+        onCancel={() => setConfirmReject(null)}
+      />
+    )}
+    </>
   );
 }

@@ -65,7 +65,7 @@ export function Component() {
             setPage(1);
           }}
           aria-label="Filter by ticket status"
-          className="px-3 py-2 text-sm rounded-sm border border-default bg-app text-primary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent"
+          className="px-3 py-2 text-sm rounded-sm border border-default bg-app text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/20"
         >
           <option value="">All statuses</option>
           <option value="OPEN">Open</option>

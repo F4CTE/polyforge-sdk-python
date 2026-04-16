@@ -186,7 +186,7 @@ export function Component() {
               id="ticket-status"
               value={statusValue}
               onChange={(e) => handleStatusChange(e.target.value)}
-              className="px-3 py-2 text-sm rounded-sm border border-default bg-app text-primary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent"
+              className="px-3 py-2 text-sm rounded-sm border border-default bg-app text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/20"
             >
               <option value="OPEN">Open</option>
               <option value="IN_PROGRESS">In Progress</option>
@@ -200,7 +200,7 @@ export function Component() {
               id="ticket-assign"
               value={assignedTo}
               onChange={(e) => handleAssign(e.target.value)}
-              className="px-3 py-2 text-sm rounded-sm border border-default bg-app text-primary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent"
+              className="px-3 py-2 text-sm rounded-sm border border-default bg-app text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/20"
             >
               <option value="">Unassigned</option>
               {admins.map((a) => (
@@ -254,7 +254,7 @@ export function Component() {
           placeholder="Type your reply..."
           rows={4}
           disabled={sending}
-          className="w-full px-3 py-2 text-sm rounded-sm border border-default bg-app text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent mb-3 resize-y disabled:opacity-50"
+          className="w-full px-3 py-2 text-sm rounded-sm border border-default bg-app text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/20 mb-3 resize-y disabled:opacity-50"
         />
         <div className="flex justify-end">
           <Button

@@ -399,7 +399,7 @@ function DrillDown({ cohortId, onBack }: DrillDownProps) {
             { label: 'Retention', value: `${stats.retentionRate}%` },
           ].map((item) => (
             <div key={item.label} className="rounded-xl bg-elevated border border-default px-4 py-3">
-              <div className="text-label text-tertiary uppercase tracking-wide">{item.label}</div>
+              <div className="text-label text-tertiary uppercase tracking-wider">{item.label}</div>
               <div className="text-lg font-semibold font-mono tabular-nums text-primary mt-1">{item.value}</div>
             </div>
           ))}
@@ -437,22 +437,22 @@ function DrillDown({ cohortId, onBack }: DrillDownProps) {
           <table className="w-full text-body-sm" aria-label="User segmentation data">
             <thead>
               <tr className="border-b border-default bg-surface">
-                <th className="px-4 py-3 text-left text-label font-semibold text-tertiary uppercase tracking-wide">
+                <th className="px-4 py-3 text-left text-label font-semibold text-tertiary uppercase tracking-wider">
                   Username
                 </th>
-                <th className="px-4 py-3 text-left text-label font-semibold text-tertiary uppercase tracking-wide">
+                <th className="px-4 py-3 text-left text-label font-semibold text-tertiary uppercase tracking-wider">
                   Email
                 </th>
-                <th className="px-4 py-3 text-left text-label font-semibold text-tertiary uppercase tracking-wide">
+                <th className="px-4 py-3 text-left text-label font-semibold text-tertiary uppercase tracking-wider">
                   Joined
                 </th>
-                <th className="px-4 py-3 text-left text-label font-semibold text-tertiary uppercase tracking-wide">
+                <th className="px-4 py-3 text-left text-label font-semibold text-tertiary uppercase tracking-wider">
                   Last Active
                 </th>
-                <th className="px-4 py-3 text-right text-label font-semibold text-tertiary uppercase tracking-wide">
+                <th className="px-4 py-3 text-right text-label font-semibold text-tertiary uppercase tracking-wider">
                   Trades
                 </th>
-                <th className="px-4 py-3 text-right text-label font-semibold text-tertiary uppercase tracking-wide">
+                <th className="px-4 py-3 text-right text-label font-semibold text-tertiary uppercase tracking-wider">
                   Volume
                 </th>
               </tr>
