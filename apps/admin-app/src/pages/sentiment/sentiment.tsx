@@ -65,7 +65,7 @@ type SortDir = 'asc' | 'desc';
 function LabelPill({ label }: { label: string }) {
   if (label === 'BULLISH') {
     return (
-      <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-gain/10 text-gain">
+      <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-label font-medium bg-gain/10 text-gain">
         <TrendingUp size={11} aria-hidden="true" />
         {label}
       </span>
@@ -73,14 +73,14 @@ function LabelPill({ label }: { label: string }) {
   }
   if (label === 'BEARISH') {
     return (
-      <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-loss/10 text-loss">
+      <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-label font-medium bg-loss/10 text-loss">
         <TrendingDown size={11} aria-hidden="true" />
         {label}
       </span>
     );
   }
   return (
-    <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-app text-secondary border border-default">
+    <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-label font-medium bg-app text-secondary border border-default">
       <Minus size={11} aria-hidden="true" />
       {label}
     </span>
@@ -119,14 +119,14 @@ function StatCard({
 }) {
   return (
     <div className="bg-elevated border border-default rounded-xl p-4 flex flex-col gap-1">
-      <span className="text-xs font-medium text-tertiary uppercase tracking-wider">{label}</span>
+      <span className="text-label font-medium text-tertiary uppercase tracking-wider">{label}</span>
       {loading ? (
         <div className="h-7 w-24 bg-surface rounded-sm animate-pulse mt-1" />
       ) : (
         <span className={`text-2xl font-semibold ${colorClass ?? 'text-primary'}`}>{value}</span>
       )}
       {sub && !loading && (
-        <span className="text-xs text-tertiary">{sub}</span>
+        <span className="text-label text-tertiary">{sub}</span>
       )}
     </div>
   );
@@ -154,7 +154,7 @@ function SortableTh({ col, sortKey, sortDir, onSort, align = 'left', children }:
   return (
     <th
       scope="col"
-      className={`px-4 py-3 text-xs font-medium text-tertiary uppercase tracking-wider cursor-pointer select-none hover:text-primary transition-colors ${align === 'right' ? 'text-right' : 'text-left'}`}
+      className={`px-4 py-3 text-label font-medium text-tertiary uppercase tracking-wider cursor-pointer select-none hover:text-primary transition-colors ${align === 'right' ? 'text-right' : 'text-left'}`}
       onClick={() => onSort(col)}
       aria-sort={sortKey === col ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none'}
     >
@@ -175,7 +175,7 @@ const SERIES_COLOR_CLASS: Record<string, string> = {
 function CategoryTooltip({ active, payload, label }: { active?: boolean; payload?: Array<{ name: string; value: number; color: string }>; label?: string }) {
   if (!active || !payload?.length) return null;
   return (
-    <div className="bg-elevated border border-default rounded-sm px-3 py-2 text-xs [box-shadow:var(--shadow-elevation-2)]">
+    <div className="bg-elevated border border-default rounded-sm px-3 py-2 text-label [box-shadow:var(--shadow-elevation-2)]">
       <p className="font-semibold text-primary mb-1">{label}</p>
       {payload.map((entry) => (
         <p key={entry.name} className={SERIES_COLOR_CLASS[entry.name] ?? 'text-primary'}>
@@ -316,7 +316,7 @@ export function Component() {
           onClick={() => { loadRows(true, period); loadSummary(); loadCategory(); }}
           disabled={refreshing}
           aria-label="Refresh sentiment data"
-          className="flex items-center gap-2 px-3 py-2 text-sm rounded-sm border border-default text-secondary hover:bg-elevated hover:text-primary disabled:opacity-50 transition-colors"
+          className="flex items-center gap-2 px-3 py-2 text-body-sm rounded-sm border border-default text-secondary hover:bg-elevated hover:text-primary disabled:opacity-50 transition-colors"
         >
           <RefreshCw size={14} className={refreshing ? 'animate-spin' : ''} aria-hidden="true" />
           Refresh
@@ -358,8 +358,8 @@ export function Component() {
       <div className="bg-elevated border border-default rounded-xl p-4">
         <div className="flex items-center gap-2 mb-4">
           <BarChart2 size={15} className="text-tertiary" aria-hidden="true" />
-          <h3 className="text-sm font-semibold text-primary">Sentiment by Category</h3>
-          <div className="ml-auto flex items-center gap-3 text-xs text-tertiary">
+          <h3 className="text-body-md font-semibold text-primary">Sentiment by Category</h3>
+          <div className="ml-auto flex items-center gap-3 text-label text-tertiary">
             <span className="flex items-center gap-2"><span className="inline-block w-3 h-3 rounded-sm bg-gain" />Bullish</span>
             <span className="flex items-center gap-2"><span className="inline-block w-3 h-3 rounded-sm bg-tertiary opacity-50" />Neutral</span>
             <span className="flex items-center gap-2"><span className="inline-block w-3 h-3 rounded-sm bg-loss" />Bearish</span>
@@ -371,7 +371,7 @@ export function Component() {
             <div className="h-4 w-32 bg-surface rounded-sm animate-pulse" />
           </div>
         ) : chartData.length === 0 ? (
-          <div className="h-chart-sm flex items-center justify-center text-tertiary text-sm">
+          <div className="h-chart-sm flex items-center justify-center text-tertiary text-body-sm">
             No category data available
           </div>
         ) : (
@@ -421,7 +421,7 @@ export function Component() {
       {/* ── Trending topics ── */}
       {(loadingSummary || (summary?.trendingTopics && summary.trendingTopics.length > 0)) && (
         <div className="flex flex-wrap items-center gap-2">
-          <span className="flex items-center gap-2 text-xs font-medium text-tertiary">
+          <span className="flex items-center gap-2 text-label font-medium text-tertiary">
             <Hash size={12} aria-hidden="true" />
             Trending:
           </span>
@@ -432,7 +432,7 @@ export function Component() {
             : summary?.trendingTopics.map((topic) => (
                 <span
                   key={topic}
-                  className="inline-block px-3 py-1 rounded-full text-xs font-medium bg-accent/10 text-accent-text border border-accent/20"
+                  className="inline-block px-3 py-1 rounded-full text-label font-medium bg-accent/10 text-accent-text border border-accent/20"
                 >
                   {topic}
                 </span>
@@ -450,7 +450,7 @@ export function Component() {
               type="button"
               variant="ghost"
               onClick={() => setPeriod(p)}
-              className={`px-3 py-2 text-xs font-medium transition-colors ${
+              className={`px-3 py-2 text-label font-medium transition-colors ${
                 period === p
                   ? 'bg-accent/10 text-accent'
                   : 'text-secondary hover:bg-elevated hover:text-primary'
@@ -470,7 +470,7 @@ export function Component() {
               type="button"
               variant="ghost"
               onClick={() => setLabelFilter(val)}
-              className={`px-3 py-2 text-xs font-medium transition-colors ${
+              className={`px-3 py-2 text-label font-medium transition-colors ${
                 labelFilter === val
                   ? 'bg-accent/10 text-accent'
                   : 'text-secondary hover:bg-elevated hover:text-primary'
@@ -486,7 +486,7 @@ export function Component() {
       {/* ── Main table ── */}
       <div className="bg-elevated border border-default rounded-xl overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className="w-full text-body-sm">
             <caption className="sr-only">Market sentiment overview</caption>
             <thead>
               <tr className="border-b border-default">
@@ -496,7 +496,7 @@ export function Component() {
                 <SortableTh col="score" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} align="right">
                   Score
                 </SortableTh>
-                <th scope="col" className="text-left px-4 py-3 text-xs font-medium text-tertiary uppercase tracking-wider">
+                <th scope="col" className="text-left px-4 py-3 text-label font-medium text-tertiary uppercase tracking-wider">
                   Label
                 </th>
                 <SortableTh col="bullishCount" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} align="right">
@@ -529,7 +529,7 @@ export function Component() {
                   <td colSpan={7} className="text-center py-12">
                     <TrendingUp className="mx-auto mb-3 text-tertiary opacity-40" size={40} aria-hidden="true" />
                     <p className="text-secondary font-medium">No sentiment data found</p>
-                    <p className="text-tertiary text-xs mt-1">
+                    <p className="text-tertiary text-label mt-1">
                       {labelFilter ? `No ${labelFilter} markets at this time` : 'Sentiment signals will appear here'}
                     </p>
                   </td>
@@ -547,7 +547,7 @@ export function Component() {
 
                       {/* Score column: value + progress bar */}
                       <td className="px-4 py-3 text-right min-w-col-xs">
-                        <span className={`font-mono font-medium text-xs ${scoreColor(row.score)}`}>
+                        <span className={`font-mono font-medium text-label ${scoreColor(row.score)}`}>
                           {row.score > 0 ? '+' : ''}{row.score.toFixed(3)}
                         </span>
                         <div className="mt-1 h-2 w-full bg-surface rounded-full overflow-hidden">

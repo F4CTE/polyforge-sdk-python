@@ -118,16 +118,16 @@ function ListingCard({ listing, onApprove, onReject, onDelist, onToggleFeatured,
           </Button>
           <span className="font-semibold text-primary truncate">{listing.title}</span>
         </div>
-        <span className="shrink-0 text-xs font-medium bg-accent/10 text-accent-text px-2 py-1 rounded-full whitespace-nowrap">
+        <span className="shrink-0 text-label font-medium bg-accent/10 text-accent-text px-2 py-1 rounded-full whitespace-nowrap">
           ${price} USDC
         </span>
       </div>
 
       {/* Description */}
-      <p className="text-sm text-secondary line-clamp-2">{listing.description}</p>
+      <p className="text-body-sm text-secondary line-clamp-2">{listing.description}</p>
 
       {/* Meta row */}
-      <div className="text-xs text-tertiary flex flex-wrap gap-x-4 gap-y-1">
+      <div className="text-label text-tertiary flex flex-wrap gap-x-4 gap-y-1">
         <span>Seller: <span className="text-secondary">@{listing.seller.username}</span></span>
         <span>Strategy: <span className="text-secondary">{listing.strategy.name}</span></span>
         <span>Win Rate: <span className="text-secondary">{winRate}</span></span>
@@ -135,7 +135,7 @@ function ListingCard({ listing, onApprove, onReject, onDelist, onToggleFeatured,
       </div>
 
       {/* Stats row */}
-      <div className="text-xs text-tertiary flex gap-4">
+      <div className="text-label text-tertiary flex gap-4">
         <span>{listing.purchaseCount} purchases</span>
         <span>{listing.forkCount} forks</span>
         <span className="flex items-center gap-1">
@@ -146,15 +146,15 @@ function ListingCard({ listing, onApprove, onReject, onDelist, onToggleFeatured,
 
       {/* Status + date */}
       <div className="flex items-center justify-between gap-2 flex-wrap">
-        <span className={`text-xs font-medium px-2 py-1 rounded-full ${statusColor(listing.status)}`}>
+        <span className={`text-label font-medium px-2 py-1 rounded-full ${statusColor(listing.status)}`}>
           {listing.status}
         </span>
-        <span className="text-xs text-tertiary">{formatDate(listing.createdAt)}</span>
+        <span className="text-caption text-tertiary">{formatDate(listing.createdAt)}</span>
       </div>
 
       {/* Admin note (read-only for non-PENDING) */}
       {listing.adminNote && listing.status !== 'PENDING' && (
-        <p className="text-xs text-tertiary italic border-l-2 border-default pl-2">{listing.adminNote}</p>
+        <p className="text-label text-tertiary italic border-l-2 border-default pl-2">{listing.adminNote}</p>
       )}
 
       {/* Actions */}
@@ -166,7 +166,7 @@ function ListingCard({ listing, onApprove, onReject, onDelist, onToggleFeatured,
               variant="success"
               disabled={isBusy}
               onClick={() => onApprove(listing.id)}
-              className="flex items-center gap-2 px-3 py-2 text-xs rounded-sm bg-gain/10 text-gain hover:bg-gain/20 transition-colors disabled:opacity-50"
+              className="flex items-center gap-2 px-3 py-2 text-label rounded-sm bg-gain/10 text-gain hover:bg-gain/20 transition-colors disabled:opacity-50"
             >
               <Check size={13} aria-hidden="true" />
               Approve
@@ -176,7 +176,7 @@ function ListingCard({ listing, onApprove, onReject, onDelist, onToggleFeatured,
               variant="danger"
               disabled={isBusy}
               onClick={() => setRejectOpen((o) => !o)}
-              className="flex items-center gap-2 px-3 py-2 text-xs rounded-sm border border-loss/40 text-loss hover:bg-loss/10 transition-colors disabled:opacity-50"
+              className="flex items-center gap-2 px-3 py-2 text-label rounded-sm border border-loss/40 text-loss hover:bg-loss/10 transition-colors disabled:opacity-50"
             >
               <X size={13} aria-hidden="true" />
               Reject
@@ -189,7 +189,7 @@ function ListingCard({ listing, onApprove, onReject, onDelist, onToggleFeatured,
                 onChange={(e) => setAdminNote(e.target.value)}
                 placeholder="Reason for rejection (optional)"
                 rows={2}
-                className="w-full text-xs bg-app border border-default rounded-sm px-2 py-2 text-primary placeholder:text-tertiary resize-none focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-loss/40"
+                className="w-full text-label bg-app border border-default rounded-sm px-2 py-2 text-primary placeholder:text-tertiary resize-none focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-loss/40"
               />
               <div className="flex gap-2">
                 <Button
@@ -197,7 +197,7 @@ function ListingCard({ listing, onApprove, onReject, onDelist, onToggleFeatured,
                   variant="danger"
                   disabled={isBusy}
                   onClick={handleRejectConfirm}
-                  className="px-3 py-1 text-xs transition-opacity disabled:opacity-50"
+                  className="px-3 py-1 text-label transition-opacity disabled:opacity-50"
                 >
                   Confirm Reject
                 </Button>
@@ -205,7 +205,7 @@ function ListingCard({ listing, onApprove, onReject, onDelist, onToggleFeatured,
                   type="button"
                   variant="secondary"
                   onClick={() => { setRejectOpen(false); setAdminNote(''); }}
-                  className="px-3 py-1 text-xs rounded-sm border border-default text-secondary hover:bg-app transition-colors"
+                  className="px-3 py-1 text-label rounded-sm border border-default text-secondary hover:bg-app transition-colors"
                 >
                   Cancel
                 </Button>
@@ -222,7 +222,7 @@ function ListingCard({ listing, onApprove, onReject, onDelist, onToggleFeatured,
             variant="danger"
             disabled={isBusy}
             onClick={() => onDelist(listing.id)}
-            className="flex items-center gap-2 px-3 py-2 text-xs rounded-sm border border-loss/40 text-loss hover:bg-loss/10 transition-colors disabled:opacity-50"
+            className="flex items-center gap-2 px-3 py-2 text-label rounded-sm border border-loss/40 text-loss hover:bg-loss/10 transition-colors disabled:opacity-50"
           >
             <X size={13} aria-hidden="true" />
             Delist
@@ -356,7 +356,7 @@ export function Component() {
           variant="ghost"
           onClick={() => load(true)}
           disabled={loading}
-          className="flex items-center gap-2 px-3 py-2 text-xs rounded-sm border border-default text-secondary hover:bg-elevated hover:text-primary transition-colors disabled:opacity-50"
+          className="flex items-center gap-2 px-3 py-2 text-label rounded-sm border border-default text-secondary hover:bg-elevated hover:text-primary transition-colors disabled:opacity-50"
         >
           <RefreshCw size={13} aria-hidden="true" className={loading ? 'animate-spin' : ''} />
           Refresh
@@ -373,7 +373,7 @@ export function Component() {
             role="tab"
             aria-selected={statusFilter === tab.value}
             onClick={() => handleTabChange(tab.value)}
-            className={`px-3 py-2 text-sm font-medium border-b-2 -mb-px transition-colors rounded-t-sm ${
+            className={`px-3 py-2 text-body-sm font-medium border-b-2 -mb-px transition-colors rounded-t-sm ${
               statusFilter === tab.value
                 ? 'border-accent text-accent-text'
                 : 'border-transparent text-secondary hover:text-primary'
@@ -391,7 +391,7 @@ export function Component() {
 
       {/* Total count */}
       {!loading && (
-        <p className="text-xs text-tertiary">
+        <p className="text-label text-tertiary">
           {total} listing{total !== 1 ? 's' : ''}
         </p>
       )}
@@ -407,7 +407,7 @@ export function Component() {
         <div className="flex flex-col items-center justify-center py-16 text-center">
           <ShoppingBag size={40} className="text-tertiary opacity-40 mb-3" aria-hidden="true" />
           <p className="text-secondary font-medium">No listings in this status</p>
-          <p className="text-tertiary text-xs mt-1">
+          <p className="text-tertiary text-label mt-1">
             {statusFilter === 'PENDING' ? 'All caught up!' : 'Try a different filter.'}
           </p>
         </div>
@@ -430,7 +430,7 @@ export function Component() {
       {/* Pagination */}
       {totalPages > 1 && (
         <div className="flex items-center justify-between pt-2">
-          <span className="text-xs text-tertiary">Page {page} of {totalPages}</span>
+          <span className="text-caption text-tertiary">Page {page} of {totalPages}</span>
           <div className="flex items-center gap-2">
             <Button
               type="button"

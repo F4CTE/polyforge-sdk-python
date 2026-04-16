@@ -151,8 +151,8 @@ function BlockNodeInner({ id, data }: NodeProps<BlockNode>) {
   /** Render a select field for strategy picker or mode picker */
   function renderSelectField(field: { key: string; label: string; placeholder: string; options?: string[] }) {
     const isEmpty = emptyFieldKeys.has(field.key);
-    const selectClass = `w-full px-2 py-1 text-xs bg-surface border rounded-sm text-primary focus-visible:outline-none focus-visible:border-accent/50 transition-colors ${
-      isEmpty ? 'border-loss/40 bg-loss/5' : 'border-subtle'
+    const selectClass = `w-full px-2 py-1 text-label bg-surface border rounded-sm text-primary focus-visible:outline-none focus-visible:border-accent/50 transition-colors ${
+      isEmpty ? 'border-loss/40 bg-loss-subtle' : 'border-subtle'
     }`;
 
     if (field.key === 'strategyId' && isRunStrategy) {
@@ -254,7 +254,7 @@ function BlockNodeInner({ id, data }: NodeProps<BlockNode>) {
           >
             <GripVertical className="size-3 text-tertiary cursor-grab" />
             <span className="text-secondary">{SECTION_ICONS[d.section]}</span>
-            <span className="text-xs font-medium text-primary flex-1 truncate">
+            <span className="text-label font-medium text-primary flex-1 truncate">
               {d.label}
             </span>
             {/* Misconfiguration indicator in header — visible even when badge is suppressed */}
@@ -283,7 +283,10 @@ function BlockNodeInner({ id, data }: NodeProps<BlockNode>) {
               {d.fields.map((field, fieldIdx) => {
                 const isEmpty = emptyFieldKeys.has(field.key);
                 const isWired = wireableConnections.has(field.key);
-                // Approximate vertical center of this field relative to the node top:
+                // Approximate vertical center of this field relative to the node top.
+                // Heights are derived from measured DOM values and are intentionally
+                // approximate — exact pixel-perfect alignment is not achievable here
+                // without runtime DOM measurement (charter §5 exception for builder canvas).
                 // header ~34px + container padding 8px + fields before this one (each ~52px) + label 16px + input center 14px
                 const handleTop = 34 + 8 + fieldIdx * 52 + 30;
                 return (
@@ -316,9 +319,9 @@ function BlockNodeInner({ id, data }: NodeProps<BlockNode>) {
                         value={d.config[field.key] ?? ''}
                         onChange={(e) => onFieldChange(field.key, e.target.value)}
                         aria-label={field.label}
-                        className={`w-full h-7 px-2 rounded text-xs text-primary focus-visible:outline-none transition-colors ${
+                        className={`w-full h-7 px-2 rounded text-label text-primary focus-visible:outline-none transition-colors ${
                           isEmpty
-                            ? 'bg-loss/8 border border-loss/40 focus-visible:border-loss/60'
+                            ? 'bg-loss-subtle border border-loss/40 focus-visible:border-loss/60'
                             : 'bg-[var(--block-color)]/10 border border-[var(--block-color)]/20 focus-visible:border-[var(--block-color)]/50'
                         }`}
                       >
@@ -335,7 +338,7 @@ function BlockNodeInner({ id, data }: NodeProps<BlockNode>) {
                       // Field is driven by a connected Variable/Calc node — show chip instead of input
                       <div className="flex items-center gap-2 px-2 py-1 rounded-sm bg-purple-500/10 border border-purple-500/30">
                         <Link2 className="size-3 shrink-0 text-purple-500" />
-                        <span className="text-xs text-purple-500 font-mono truncate">
+                        <span className="text-label text-purple-500 font-mono truncate">
                           {wireableConnections.get(field.key)}
                         </span>
                       </div>
@@ -347,9 +350,9 @@ function BlockNodeInner({ id, data }: NodeProps<BlockNode>) {
                           value={d.config[field.key] ?? ''}
                           onChange={(e) => onFieldChange(field.key, e.target.value)}
                           aria-label={field.label}
-                          className={`w-full px-2 py-1 text-xs bg-surface border rounded-sm placeholder:text-tertiary/50 focus-visible:outline-none transition-colors ${
+                          className={`w-full px-2 py-1 text-label bg-surface border rounded-sm placeholder:text-tertiary/50 focus-visible:outline-none transition-colors ${
                             isEmpty
-                              ? 'border-loss/40 bg-loss/5 focus-visible:border-loss/60'
+                              ? 'border-loss/40 bg-loss-subtle focus-visible:border-loss/60'
                               : 'border-subtle focus-visible:border-accent/50'
                           } ${
                             (d.config[field.key] ?? '').startsWith('$')

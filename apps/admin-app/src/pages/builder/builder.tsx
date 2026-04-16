@@ -31,7 +31,7 @@ export function Component() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64" role="status" aria-label="Loading builder statistics">
-        <div className="text-sm text-secondary">Loading builder stats...</div>
+        <div className="text-body-sm text-secondary">Loading builder stats...</div>
       </div>
     );
   }
@@ -53,21 +53,21 @@ export function Component() {
         <div className="bg-elevated border border-default rounded-xl p-4">
           <div className="flex items-center gap-2 mb-2">
             <Award size={16} className="text-warning" aria-hidden="true" />
-            <span className="text-xs text-tertiary">Current Tier</span>
+            <span className="text-label text-tertiary">Current Tier</span>
           </div>
           <div className="text-2xl font-semibold text-primary capitalize">{stats.tier ?? 'N/A'}</div>
         </div>
         <div className="bg-elevated border border-default rounded-xl p-4">
           <div className="flex items-center gap-2 mb-2">
             <DollarSign size={16} className="text-gain" aria-hidden="true" />
-            <span className="text-xs text-tertiary">Weekly Reward</span>
+            <span className="text-label text-tertiary">Weekly Reward</span>
           </div>
           <div className="text-2xl font-semibold text-primary">${stats.weeklyRewardUsdc ?? '0'}</div>
         </div>
         <div className="bg-elevated border border-default rounded-xl p-4">
           <div className="flex items-center gap-2 mb-2">
             <TrendingUp size={16} className="text-info" aria-hidden="true" />
-            <span className="text-xs text-tertiary">Attributed Volume</span>
+            <span className="text-label text-tertiary">Attributed Volume</span>
           </div>
           <div className="text-2xl font-semibold text-primary">${Number(stats.attributedVolume ?? 0).toLocaleString()}</div>
         </div>
@@ -77,19 +77,19 @@ export function Component() {
       <div className="bg-elevated border border-default rounded-xl p-5">
         <div className="flex items-center gap-2 mb-4">
           <Hammer size={16} className="text-accent" aria-hidden="true" />
-          <h3 className="text-sm font-semibold text-primary">Weekly History</h3>
+          <h3 className="text-body-md font-semibold text-primary">Weekly History</h3>
         </div>
         {!stats.weekly || stats.weekly.length === 0 ? (
-          <p className="text-sm text-tertiary">No weekly data</p>
+          <p className="text-body-sm text-tertiary">No weekly data</p>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-sm" aria-label="Strategy builder blocks">
+            <table className="w-full text-body-sm" aria-label="Strategy builder blocks">
               <caption className="sr-only">Weekly builder history</caption>
               <thead>
                 <tr className="border-b border-default">
-                  <th scope="col" className="text-left px-3 py-2 text-xs font-medium text-tertiary uppercase">Week</th>
-                  <th scope="col" className="text-right px-3 py-2 text-xs font-medium text-tertiary uppercase">Volume</th>
-                  <th scope="col" className="text-right px-3 py-2 text-xs font-medium text-tertiary uppercase">Reward</th>
+                  <th scope="col" className="text-left px-3 py-2 text-label font-medium text-tertiary uppercase">Week</th>
+                  <th scope="col" className="text-right px-3 py-2 text-label font-medium text-tertiary uppercase">Volume</th>
+                  <th scope="col" className="text-right px-3 py-2 text-label font-medium text-tertiary uppercase">Reward</th>
                 </tr>
               </thead>
               <tbody>

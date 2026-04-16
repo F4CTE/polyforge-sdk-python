@@ -290,7 +290,7 @@ function CorrelationBar({ value }: { value: number }) {
           style={{ width: `${pct}%` }}
         />
       </span>
-      <span className={`text-xs font-mono ${textColor}`}>{pct}%</span>
+      <span className={`text-label font-mono ${textColor}`}>{pct}%</span>
     </span>
   );
 }
@@ -298,11 +298,11 @@ function CorrelationBar({ value }: { value: number }) {
 function AnalyticsSkeleton() {
   return (
     <div className="mt-3 overflow-x-auto">
-      <table className="w-full text-sm" aria-label="Copy trader analytics loading">
+      <table className="w-full text-body-sm" aria-label="Copy trader analytics loading">
         <thead>
           <tr className="border-b border-default text-left">
             {['Trader', 'Copied P&L', 'Correlation', 'Max Drawdown', 'Win Rate', 'Trend'].map((h) => (
-              <th key={h} className="pb-2 pr-4 font-medium text-tertiary text-xs whitespace-nowrap">{h}</th>
+              <th key={h} className="pb-2 pr-4 font-medium text-tertiary text-label whitespace-nowrap">{h}</th>
             ))}
           </tr>
         </thead>
@@ -342,7 +342,7 @@ function AnalyticsPanel({ analytics, loading, expanded, onToggle }: AnalyticsPan
         type="button"
         variant="ghost"
         onClick={onToggle}
-        className="w-full flex flex-wrap items-center gap-x-4 gap-y-2 px-4 py-3 text-sm text-left hover:bg-surface/40 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent/40"
+        className="w-full flex flex-wrap items-center gap-x-4 gap-y-2 px-4 py-3 text-body-sm text-left hover:bg-surface/40 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent/40"
         aria-expanded={expanded}
         aria-controls="copy-analytics-expanded"
       >
@@ -352,7 +352,7 @@ function AnalyticsPanel({ analytics, loading, expanded, onToggle }: AnalyticsPan
         </span>
 
         {loading && (
-          <span className="text-tertiary text-xs animate-pulse">Loading…</span>
+          <span className="text-tertiary text-label animate-pulse">Loading…</span>
         )}
 
         {!loading && analytics && (
@@ -396,7 +396,7 @@ function AnalyticsPanel({ analytics, loading, expanded, onToggle }: AnalyticsPan
         )}
 
         {!loading && !analytics && (
-          <span className="text-tertiary text-xs">No analytics available</span>
+          <span className="text-tertiary text-label">No analytics available</span>
         )}
 
         <span className="ml-auto text-tertiary shrink-0">
@@ -414,28 +414,28 @@ function AnalyticsPanel({ analytics, loading, expanded, onToggle }: AnalyticsPan
           {!loading && analytics && analytics.traders.length === 0 && (
             <div className="flex flex-col items-center justify-center py-10 text-center gap-2">
               <TrendingUp className="size-8 text-tertiary" aria-hidden="true" />
-              <p className="text-sm text-secondary">Start copying traders to see analytics</p>
+              <p className="text-body-sm text-secondary">Start copying traders to see analytics</p>
             </div>
           )}
 
           {!loading && !analytics && (
             <div className="flex flex-col items-center justify-center py-10 text-center gap-2">
               <TrendingUp className="size-8 text-tertiary" aria-hidden="true" />
-              <p className="text-sm text-secondary">Start copying traders to see analytics</p>
+              <p className="text-body-sm text-secondary">Start copying traders to see analytics</p>
             </div>
           )}
 
           {!loading && analytics && analytics.traders.length > 0 && (
             <div className="mt-3 overflow-x-auto">
-              <table className="w-full text-sm" aria-label="Per-trader copy analytics">
+              <table className="w-full text-body-sm" aria-label="Per-trader copy analytics">
                 <thead>
                   <tr className="border-b border-default text-left">
-                    <th className="pb-2 pr-4 font-medium text-tertiary text-xs whitespace-nowrap">Trader</th>
-                    <th className="pb-2 pr-4 font-medium text-tertiary text-xs whitespace-nowrap">Copied P&amp;L</th>
-                    <th className="pb-2 pr-4 font-medium text-tertiary text-xs whitespace-nowrap">Correlation</th>
-                    <th className="pb-2 pr-4 font-medium text-tertiary text-xs whitespace-nowrap">Max Drawdown</th>
-                    <th className="pb-2 pr-4 font-medium text-tertiary text-xs whitespace-nowrap">Win Rate</th>
-                    <th className="pb-2 font-medium text-tertiary text-xs whitespace-nowrap">Trend</th>
+                    <th className="pb-2 pr-4 font-medium text-tertiary text-label whitespace-nowrap">Trader</th>
+                    <th className="pb-2 pr-4 font-medium text-tertiary text-label whitespace-nowrap">Copied P&amp;L</th>
+                    <th className="pb-2 pr-4 font-medium text-tertiary text-label whitespace-nowrap">Correlation</th>
+                    <th className="pb-2 pr-4 font-medium text-tertiary text-label whitespace-nowrap">Max Drawdown</th>
+                    <th className="pb-2 pr-4 font-medium text-tertiary text-label whitespace-nowrap">Win Rate</th>
+                    <th className="pb-2 font-medium text-tertiary text-label whitespace-nowrap">Trend</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -654,7 +654,7 @@ export function Component() {
         {!loading && configs.length > 0 && (
           <Link
             to="/copy/new"
-            className="flex items-center gap-2 px-4 py-3 rounded-pf bg-accent text-inverse text-sm font-medium hover:bg-accent-text transition-colors"
+            className="flex items-center gap-2 px-4 py-3 rounded-pf bg-accent text-inverse text-body-md font-medium hover:bg-accent-text transition-colors"
           >
             <Plus className="size-4" /> New Copy Config
           </Link>
@@ -677,7 +677,7 @@ export function Component() {
             variant="ghost"
             key={f.value}
             onClick={() => onFilterChange(f.value)}
-            className={`px-3 py-2 text-sm rounded-full border transition-colors cursor-pointer ${
+            className={`px-3 py-2 text-body-sm rounded-full border transition-colors cursor-pointer ${
               filter === f.value
                 ? 'bg-accent/10 border-accent/30 text-accent-text'
                 : 'border-default text-secondary hover:text-primary'
@@ -700,7 +700,7 @@ export function Component() {
         }, 0);
         const pnlPositive = totalPnl >= 0;
         return (
-          <div className="flex flex-wrap items-center gap-3 px-4 py-3 rounded-xl bg-elevated border border-default text-sm">
+          <div className="flex flex-wrap items-center gap-3 px-4 py-3 rounded-xl bg-elevated border border-default text-body-sm">
             <span className="flex items-center gap-2 text-secondary">
               <TrendingUp className="size-4 text-accent-text" aria-hidden="true" />
               <span className="font-medium text-primary">{configs.length}</span>
@@ -741,12 +741,12 @@ export function Component() {
             <path d="M21 21v-2a3 3 0 0 0-3-3h-1" opacity="0.6" />
           </svg>
           <p className="text-primary font-medium">No copy configs yet</p>
-          <p className="text-sm text-tertiary mt-1">
+          <p className="text-body-sm text-tertiary mt-1">
             Start copying a whale's trades to automate your trading.
           </p>
           <Link
             to="/copy/new"
-            className="mt-4 flex items-center gap-2 px-4 py-3 rounded-pf bg-accent text-inverse text-sm font-medium hover:bg-accent-text transition-colors"
+            className="mt-4 flex items-center gap-2 px-4 py-3 rounded-pf bg-accent text-inverse text-body-md font-medium hover:bg-accent-text transition-colors"
           >
             <Plus className="size-4" /> New Copy Config
           </Link>
@@ -777,7 +777,7 @@ export function Component() {
                 {/* Wallet + Status */}
                 <div className="flex items-start justify-between gap-3 mb-3">
                   <div className="flex items-center gap-2 min-w-0">
-                    <span className="font-mono text-sm text-primary group-hover:text-accent-text transition-colors truncate">
+                    <span className="font-mono text-body-md text-primary group-hover:text-accent-text transition-colors truncate">
                       {truncateAddress(config.targetWallet)}
                     </span>
                     <Button
@@ -822,7 +822,7 @@ export function Component() {
 
                 {/* Per-trader P&L breakdown */}
                 <div className="rounded-pf bg-surface border border-subtle p-3 mb-3 space-y-2">
-                  <div className="flex items-center justify-between text-xs">
+                  <div className="flex items-center justify-between text-label">
                     <span className="text-secondary">Copied P&L</span>
                     <span
                       className={`font-mono font-semibold ${
@@ -834,19 +834,19 @@ export function Component() {
                       {config.copiedPnl ?? formatPnl(config.totalPnl)}
                     </span>
                   </div>
-                  <div className="flex items-center justify-between text-xs">
+                  <div className="flex items-center justify-between text-label">
                     <span className="text-secondary">Win rate</span>
                     <span className="font-mono text-primary">
                       {config.copiedWinRate ?? '—'}
                     </span>
                   </div>
-                  <div className="flex items-center justify-between text-xs">
+                  <div className="flex items-center justify-between text-label">
                     <span className="text-secondary">Trades copied</span>
                     <span className="font-mono text-primary">
                       {config.copiedTradeCount ?? config.totalCopiedTrades} trades
                     </span>
                   </div>
-                  <div className="flex items-center justify-between text-xs">
+                  <div className="flex items-center justify-between text-label">
                     <span className="text-secondary">Copying since</span>
                     <span className="font-mono text-primary text-label">
                       {config.copyingSince ? relativeDate(config.copyingSince) : relativeDate(config.createdAt)}
@@ -855,7 +855,7 @@ export function Component() {
                 </div>
 
                 {/* Risk limits + max loss editor */}
-                <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-secondary mb-3">
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-label text-secondary mb-3">
                   <span>
                     Max Exp: <span className="font-mono text-primary">${config.maxExposure.toLocaleString()}</span>
                   </span>
@@ -881,7 +881,7 @@ export function Component() {
                         variant="ghost"
                         onClick={() => doAction(config.id, 'pause')}
                         disabled={busy}
-                        className="flex items-center gap-1 px-3 py-2 rounded-sm text-xs font-medium text-warning bg-warning/10 hover:bg-warning/20 disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 transition-colors"
+                        className="flex items-center gap-1 px-3 py-2 rounded-sm text-label font-medium text-warning bg-warning/10 hover:bg-warning/20 disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 transition-colors"
                         aria-label="Pause config"
                       >
                         <Pause className="size-3" /> Pause
@@ -893,7 +893,7 @@ export function Component() {
                         variant="success"
                         onClick={() => doAction(config.id, 'resume')}
                         disabled={busy}
-                        className="flex items-center gap-1 px-3 py-2 rounded-sm text-xs font-medium text-gain bg-gain/10 hover:bg-gain/20 disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 transition-colors"
+                        className="flex items-center gap-1 px-3 py-2 rounded-sm text-label font-medium text-gain bg-gain/10 hover:bg-gain/20 disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 transition-colors"
                         aria-label="Resume config"
                       >
                         <Play className="size-3" /> Resume
@@ -947,7 +947,7 @@ export function Component() {
           >
             <ChevronLeft className="size-4" />
           </Button>
-          <span className="text-sm font-mono text-secondary" aria-live="polite">
+          <span className="text-body-sm font-mono text-secondary" aria-live="polite">
             Page {page} of {totalPages}
           </span>
           <Button

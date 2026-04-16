@@ -84,30 +84,30 @@ function TryItPanel({ ep }: { ep: EndpointDef }) {
 
   return (
     <div className="border border-default rounded-xl p-4 space-y-3 bg-elevated">
-      <p className="text-xs font-medium text-tertiary uppercase tracking-wider">Try it out</p>
+      <p className="text-label font-medium text-tertiary uppercase tracking-wider">Try it out</p>
 
       {/* API key */}
       <div className="space-y-1">
-        <label className="text-xs text-tertiary">API Key</label>
+        <label className="text-label text-tertiary">API Key</label>
         <Input
           type="password"
           value={apiKey}
           onChange={e => setApiKey(e.target.value)}
           placeholder="pf_live_your_key..."
-          className="w-full bg-app border border-default rounded-sm px-3 py-2 text-xs text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-accent/40 font-mono"
+          className="w-full bg-app border border-default rounded-sm px-3 py-2 text-label text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-accent/40 font-mono"
         />
       </div>
 
       {/* Path params */}
       {paramNames.map(name => (
         <div key={name} className="space-y-1">
-          <label className="text-xs text-tertiary font-mono">:{name}</label>
+          <label className="text-label text-tertiary font-mono">:{name}</label>
           <Input
             type="text"
             value={pathParams[name] ?? ''}
             onChange={e => setPathParams(prev => ({ ...prev, [name]: e.target.value }))}
             placeholder={name}
-            className="w-full bg-app border border-default rounded-sm px-3 py-2 text-xs text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-accent/40 font-mono"
+            className="w-full bg-app border border-default rounded-sm px-3 py-2 text-label text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-accent/40 font-mono"
           />
         </div>
       ))}
@@ -115,12 +115,12 @@ function TryItPanel({ ep }: { ep: EndpointDef }) {
       {/* Request body */}
       {['POST', 'PATCH'].includes(ep.method) && (
         <div className="space-y-1">
-          <label className="text-xs text-tertiary">Request Body (JSON)</label>
+          <label className="text-label text-tertiary">Request Body (JSON)</label>
           <Textarea
             value={body}
             onChange={e => setBody(e.target.value)}
             rows={5}
-            className="w-full bg-app border border-default rounded-sm px-3 py-2 text-xs text-primary font-mono focus-visible:outline-none focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-accent/40 resize-y"
+            className="w-full bg-app border border-default rounded-sm px-3 py-2 text-label text-primary font-mono focus-visible:outline-none focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-accent/40 resize-y"
           />
         </div>
       )}
@@ -129,13 +129,13 @@ function TryItPanel({ ep }: { ep: EndpointDef }) {
         type="button"
         onClick={handleSend}
         disabled={loading}
-        className="flex items-center gap-2 px-4 py-2 rounded-sm bg-accent text-inverse text-xs font-semibold hover:bg-accent-text transition-colors disabled:opacity-50 cursor-pointer"
+        className="flex items-center gap-2 px-4 py-2 rounded-sm bg-accent text-inverse text-label font-semibold hover:bg-accent-text transition-colors disabled:opacity-50 cursor-pointer"
       >
         <Play size={11} /> {loading ? 'Sending…' : 'Send'}
       </Button>
 
       {error && (
-        <p className="text-xs text-loss bg-loss/10 border border-loss/20 rounded-pf px-3 py-2">
+        <p className="text-label text-loss bg-loss/10 border border-loss/20 rounded-pf px-3 py-2">
           {error}
         </p>
       )}
@@ -143,7 +143,7 @@ function TryItPanel({ ep }: { ep: EndpointDef }) {
       {responseStatus != null && (
         <div className="space-y-2">
           <div className="flex items-center gap-2">
-            <span className="text-xs text-tertiary">Status</span>
+            <span className="text-label text-tertiary">Status</span>
             <Badge text={String(responseStatus)} cls={statusCls} />
           </div>
           <Code code={responseText || '(empty response)'} lang="ts" />
@@ -186,8 +186,8 @@ export function EndpointCard({ ep, lang, setLang, forceOpen }: EndpointCardProps
         aria-expanded={isOpen}
       >
         <Badge text={ep.method} cls={METHOD_CLS[ep.method]} />
-        <code className="flex-1 text-xs font-mono text-primary">{ep.path}</code>
-        <span className="hidden sm:block text-xs text-tertiary mr-2 truncate max-w-48">
+        <code className="flex-1 text-label font-mono text-primary">{ep.path}</code>
+        <span className="hidden sm:block text-label text-tertiary mr-2 truncate max-w-48">
           {ep.summary}
         </span>
         {ep.status === 'beta' && (
@@ -205,7 +205,7 @@ export function EndpointCard({ ep, lang, setLang, forceOpen }: EndpointCardProps
 
       {isOpen && (
         <div className="border-t border-default bg-app px-4 py-5 space-y-5">
-          <p className="text-sm text-secondary leading-relaxed">
+          <p className="text-body-sm text-secondary leading-relaxed">
             {ep.description ?? ep.summary}
           </p>
 
@@ -222,7 +222,7 @@ export function EndpointCard({ ep, lang, setLang, forceOpen }: EndpointCardProps
           )}
 
           {ep.responseNote && (
-            <p className="text-xs text-tertiary bg-elevated border border-default rounded-pf px-3 py-3">
+            <p className="text-label text-tertiary bg-elevated border border-default rounded-pf px-3 py-3">
               {ep.responseNote}
             </p>
           )}
@@ -245,7 +245,7 @@ export function EndpointCard({ ep, lang, setLang, forceOpen }: EndpointCardProps
             type="button"
             variant="ghost"
             onClick={() => setTryItOpen(v => !v)}
-            className="text-xs text-accent-text hover:text-accent-text flex items-center gap-2"
+            className="text-label text-accent-text hover:text-accent-text flex items-center gap-2"
           >
             <Play size={12} /> {tryItOpen ? 'Close' : 'Try it out'}
           </Button>

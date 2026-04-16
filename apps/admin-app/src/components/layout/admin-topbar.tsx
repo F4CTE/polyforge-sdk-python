@@ -77,7 +77,7 @@ export function AdminTopbar({ onMenuClick }: TopbarProps) {
             {initials}
           </div>
           <div className="hidden sm:block">
-            <div className="text-sm font-medium text-primary leading-tight">
+            <div className="text-body-sm font-medium text-primary leading-tight">
               {admin?.displayName}
             </div>
             <div className="text-caption text-tertiary leading-tight">

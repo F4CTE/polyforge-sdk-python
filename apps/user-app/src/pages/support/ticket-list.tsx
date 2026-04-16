@@ -83,7 +83,7 @@ export function Component() {
         <h1 className="text-2xl font-semibold text-primary">Support</h1>
         <Link
           to="/support/new"
-          className="flex items-center gap-2 px-4 py-2 rounded-pf bg-accent text-inverse text-sm font-medium hover:bg-accent-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 transition-colors"
+          className="flex items-center gap-2 px-4 py-2 rounded-pf bg-accent text-inverse text-body-md font-medium hover:bg-accent-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 transition-colors"
         >
           <Plus className="size-4" />
           New Ticket
@@ -93,9 +93,9 @@ export function Component() {
       {/* Tickets table */}
       <div data-testid="ticket-list" className="bg-elevated border border-default rounded-xl overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-sm" aria-label="Support tickets">
+          <table className="w-full text-body-sm" aria-label="Support tickets">
             <thead>
-              <tr className="bg-surface text-left text-xs text-secondary uppercase tracking-wider">
+              <tr className="bg-surface text-left text-label text-secondary uppercase tracking-wider">
                 <th scope="col" className="px-4 py-3 font-medium">Subject</th>
                 <th scope="col" className="px-4 py-3 font-medium">Status</th>
                 <th scope="col" className="px-4 py-3 font-medium">Priority</th>
@@ -118,8 +118,8 @@ export function Component() {
                   <td colSpan={6}>
                     <div data-testid="empty-state" className="flex flex-col items-center justify-center py-16 text-center">
                       <LifeBuoy className="size-10 text-tertiary mb-3" />
-                      <p className="text-sm font-medium text-primary">No support tickets</p>
-                      <p className="text-xs text-tertiary mt-1">Create a ticket if you need help.</p>
+                      <p className="text-body-md font-medium text-primary">No support tickets</p>
+                      <p className="text-label text-tertiary mt-1">Create a ticket if you need help.</p>
                     </div>
                   </td>
                 </tr>
@@ -136,16 +136,16 @@ export function Component() {
                         </Link>
                       </td>
                       <td className="px-4 py-3">
-                        <span data-testid="status-badge" className={`inline-flex px-2 py-1 rounded text-xs font-medium ${ss.bg} ${ss.text}`}>
+                        <span data-testid="status-badge" className={`inline-flex px-2 py-1 rounded text-label font-medium ${ss.bg} ${ss.text}`}>
                           {ticket.status.replace(/_/g, ' ')}
                         </span>
                       </td>
                       <td className="px-4 py-3">
-                        <span data-testid="priority-badge" className={`inline-flex px-2 py-1 rounded text-xs font-medium ${ps.bg} ${ps.text}`}>
+                        <span data-testid="priority-badge" className={`inline-flex px-2 py-1 rounded text-label font-medium ${ps.bg} ${ps.text}`}>
                           {ticket.priority}
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-secondary text-xs">{ticket.category}</td>
+                      <td className="px-4 py-3 text-secondary text-label">{ticket.category}</td>
                       <td className="px-4 py-3 text-right font-mono text-label text-tertiary">{formatDate(ticket.createdAt)}</td>
                       <td className="px-4 py-3 text-right font-mono text-label text-tertiary">
                         {lastMsg ? formatDate(lastMsg.createdAt) : '\u2014'}
@@ -174,7 +174,7 @@ export function Component() {
                 aria-expanded={openFaq === idx}
                 aria-controls={`faq-panel-${idx}`}
               >
-                <span className="text-sm font-medium text-primary">{item.q}</span>
+                <span className="text-body-md font-medium text-primary">{item.q}</span>
                 {openFaq === idx ? (
                   <ChevronUp size={20} className="text-tertiary shrink-0" />
                 ) : (
@@ -182,7 +182,7 @@ export function Component() {
                 )}
               </Button>
               {openFaq === idx && (
-                <div data-testid="faq-content" id={`faq-panel-${idx}`} role="region" aria-labelledby={`faq-btn-${idx}`} className="px-4 pb-3 text-sm text-secondary leading-relaxed border-l-2 border-accent/40 ml-4 mr-4">
+                <div data-testid="faq-content" id={`faq-panel-${idx}`} role="region" aria-labelledby={`faq-btn-${idx}`} className="px-4 pb-3 text-body-sm text-secondary leading-relaxed border-l-2 border-accent/40 ml-4 mr-4">
                   {item.a}
                 </div>
               )}

@@ -138,7 +138,7 @@ export function Component() {
     return (
       <div className="p-6 max-w-3xl mx-auto text-center py-20">
         <p className="text-primary font-medium">Ticket not found</p>
-        <Button type="button" variant="link" onClick={() => navigate('/support')} className="text-sm mt-2">
+        <Button type="button" variant="link" onClick={() => navigate('/support')} className="text-body-sm mt-2">
           Back to support
         </Button>
       </div>
@@ -163,7 +163,7 @@ export function Component() {
           </Button>
           <div>
             <h1 className="text-2xl font-semibold text-primary">{ticket.subject}</h1>
-            <div className="flex items-center gap-3 mt-1 text-xs text-tertiary">
+            <div className="flex items-center gap-3 mt-1 text-label text-tertiary">
               <span className={`inline-flex px-2 py-1 rounded font-medium ${ss.bg} ${ss.text}`}>
                 {ticket.status.replace(/_/g, ' ')}
               </span>
@@ -176,7 +176,7 @@ export function Component() {
         {canClose && (
           showCloseConfirm ? (
             <div className="flex items-center gap-2">
-              <span className="text-xs text-tertiary">Close this ticket?</span>
+              <span className="text-label text-tertiary">Close this ticket?</span>
               <Button type="button" variant="default" size="sm" onClick={closeTicket} disabled={closing}>
                 {closing ? 'Closing...' : 'Confirm'}
               </Button>
@@ -215,17 +215,17 @@ export function Component() {
               }`}
             >
               <div className="flex items-center gap-2 mb-2">
-                <span className={`text-xs font-medium ${msg.isAdmin ? 'text-accent-text' : 'text-primary'}`}>
+                <span className={`text-label font-medium ${msg.isAdmin ? 'text-accent-text' : 'text-primary'}`}>
                   {msg.senderName}
                 </span>
                 {msg.isAdmin && (
-                  <span className="text-caption px-2 py-1 rounded bg-accent/15 text-accent-text font-medium">Staff</span>
+                  <span className="text-caption px-2 py-1 rounded bg-accent-subtle text-accent-text font-medium">Staff</span>
                 )}
                 <span className="text-label text-tertiary ml-auto font-mono">
                   {formatDateTime(msg.createdAt)}
                 </span>
               </div>
-              <p className="text-sm text-secondary whitespace-pre-wrap leading-relaxed">{msg.body}</p>
+              <p className="text-body-sm text-secondary whitespace-pre-wrap leading-relaxed">{msg.body}</p>
             </div>
           </div>
         ))}
@@ -250,7 +250,7 @@ export function Component() {
             className="w-full resize-y"
           />
           <div className="flex items-center justify-between mt-3">
-            <span className={`text-xs font-mono ${isOverWarn ? 'text-loss' : 'text-tertiary'}`}>
+            <span className={`text-caption font-mono ${isOverWarn ? 'text-loss' : 'text-tertiary'}`}>
               {charCount} / {MAX_CHARS}
             </span>
             <Button
@@ -266,7 +266,7 @@ export function Component() {
           </div>
         </div>
       ) : (
-        <div className="text-center py-4 text-sm text-tertiary bg-elevated border border-default rounded-xl">
+        <div className="text-center py-4 text-body-sm text-tertiary bg-elevated border border-default rounded-xl">
           This ticket has been closed.
         </div>
       )}

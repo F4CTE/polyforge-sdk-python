@@ -52,13 +52,13 @@ function ServiceCard({ svc }: { svc: ServiceEntry }) {
     <div className="flex items-center justify-between px-4 py-3 bg-elevated border border-default rounded-xl hover:border-strong transition-colors">
       <div className="flex items-center gap-3">
         <StatusDot ok={svc.ok} />
-        <span className="text-sm text-primary">{svc.label}</span>
+        <span className="text-body-md text-primary">{svc.label}</span>
       </div>
       <div className="flex items-center gap-3">
         {svc.latencyMs !== null && (
-          <span className="text-xs text-tertiary font-mono">{svc.latencyMs}ms</span>
+          <span className="text-label text-tertiary font-mono">{svc.latencyMs}ms</span>
         )}
-        <span className={`text-xs font-medium ${svc.ok ? 'text-gain' : 'text-loss'}`}>
+        <span className={`text-label font-medium ${svc.ok ? 'text-gain' : 'text-loss'}`}>
           {svc.ok ? 'Operational' : 'Down'}
         </span>
       </div>
@@ -114,19 +114,19 @@ export function StatusSection() {
       {!loading && !error && data && (
         <div className={`flex items-center justify-between px-4 py-3 rounded-xl border ${
           allOk
-            ? 'bg-gain/5 border-gain/20'
-            : 'bg-loss/5 border-loss/20'
+            ? 'bg-gain-subtle border-gain/20'
+            : 'bg-loss-subtle border-loss/20'
         }`}>
           <div className="flex items-center gap-3">
             {allOk
               ? <CheckCircle2 className="size-4 text-gain" />
               : <AlertCircle  className="size-4 text-loss" />
             }
-            <span className={`text-sm font-semibold ${allOk ? 'text-gain' : 'text-loss'}`}>
+            <span className={`text-body-md font-semibold ${allOk ? 'text-gain' : 'text-loss'}`}>
               {allOk ? 'All systems operational' : `${totalCount - totalOk} service${totalCount - totalOk !== 1 ? 's' : ''} degraded`}
             </span>
           </div>
-          <div className="flex items-center gap-4 text-xs text-tertiary">
+          <div className="flex items-center gap-4 text-label text-tertiary">
             <span className="flex items-center gap-1">
               <Clock className="size-3" />
               Uptime {formatUptime(data.uptime)}
@@ -139,14 +139,14 @@ export function StatusSection() {
       {loading && (
         <div className="flex items-center justify-center h-32 text-tertiary">
           <RefreshCw className="size-4 animate-spin mr-2 opacity-50" />
-          <span className="text-sm">Checking services…</span>
+          <span className="text-body-sm">Checking services…</span>
         </div>
       )}
 
       {!loading && error && (
-        <div className="flex items-center gap-2 px-4 py-3 bg-loss/5 border border-loss/20 rounded-xl">
+        <div className="flex items-center gap-2 px-4 py-3 bg-loss-subtle border border-loss/20 rounded-xl">
           <XCircle className="size-4 text-loss shrink-0" />
-          <span className="text-sm text-loss">{error}</span>
+          <span className="text-body-md text-loss">{error}</span>
         </div>
       )}
 
@@ -160,7 +160,7 @@ export function StatusSection() {
       )}
 
       {/* Footer */}
-      <div className="flex items-center justify-between text-xs text-tertiary pt-1">
+      <div className="flex items-center justify-between text-label text-tertiary pt-1">
         <span>
           {lastChecked ? `Last checked ${formatTimestamp(lastChecked.toISOString())}` : ''}
         </span>

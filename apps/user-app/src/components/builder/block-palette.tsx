@@ -118,7 +118,7 @@ export function BlockPalette({ open, onClose }: BlockPaletteProps) {
       <div className="flex items-center justify-between px-4 py-3 border-b border-subtle">
         <div className="flex items-center gap-2">
           <Settings2 className="size-4 text-secondary" />
-          <span className="text-sm font-medium text-primary">Strategy Settings</span>
+          <span className="text-body-md font-medium text-primary">Strategy Settings</span>
         </div>
         <button
           type="button"
@@ -146,7 +146,7 @@ export function BlockPalette({ open, onClose }: BlockPaletteProps) {
               onBlur={(e) => setName(e.target.value)}
               placeholder="My Strategy"
               aria-required="true"
-              className="w-full px-3 py-2 text-sm bg-surface border border-subtle rounded-sm text-primary placeholder:text-tertiary/50 focus-visible:outline-none focus-visible:border-accent/50 transition-colors"
+              className="w-full px-3 py-2 text-body-md bg-surface border border-subtle rounded-sm text-primary placeholder:text-tertiary/50 focus-visible:outline-none focus-visible:border-accent/50 transition-colors"
             />
           </div>
 
@@ -162,7 +162,7 @@ export function BlockPalette({ open, onClose }: BlockPaletteProps) {
               onBlur={(e) => setDescription(e.target.value)}
               placeholder="What does this strategy do?"
               aria-label="Strategy description"
-              className="w-full px-3 py-2 text-sm bg-surface border border-subtle rounded-sm text-primary placeholder:text-tertiary/50 focus-visible:outline-none focus-visible:border-accent/50 transition-colors resize-none"
+              className="w-full px-3 py-2 text-body-md bg-surface border border-subtle rounded-sm text-primary placeholder:text-tertiary/50 focus-visible:outline-none focus-visible:border-accent/50 transition-colors resize-none"
             />
           </div>
 
@@ -175,7 +175,7 @@ export function BlockPalette({ open, onClose }: BlockPaletteProps) {
               value={execMode}
               onChange={(e) => setExecMode(e.target.value)}
               aria-label="Execution mode"
-              className="w-full px-3 py-2 text-sm bg-surface border border-subtle rounded-sm text-primary focus-visible:outline-none focus-visible:border-accent/50 transition-colors"
+              className="w-full px-3 py-2 text-body-md bg-surface border border-subtle rounded-sm text-primary focus-visible:outline-none focus-visible:border-accent/50 transition-colors"
             >
               <option value="TICK">Tick - evaluate on timer</option>
               <option value="EVENT">Event - evaluate on price change</option>
@@ -197,7 +197,7 @@ export function BlockPalette({ open, onClose }: BlockPaletteProps) {
                 placeholder="1000"
                 min={200}
                 aria-label="Tick interval in milliseconds"
-                className="w-full px-3 py-2 text-sm bg-surface border border-subtle rounded-sm text-primary placeholder:text-tertiary/50 focus-visible:outline-none focus-visible:border-accent/50 transition-colors"
+                className="w-full px-3 py-2 text-body-md bg-surface border border-subtle rounded-sm text-primary placeholder:text-tertiary/50 focus-visible:outline-none focus-visible:border-accent/50 transition-colors"
               />
             </div>
           )}
@@ -211,7 +211,7 @@ export function BlockPalette({ open, onClose }: BlockPaletteProps) {
               value={visibility}
               onChange={(e) => setVisibility(e.target.value)}
               aria-label="Strategy visibility"
-              className="w-full px-3 py-2 text-sm bg-surface border border-subtle rounded-sm text-primary focus-visible:outline-none focus-visible:border-accent/50 transition-colors"
+              className="w-full px-3 py-2 text-body-md bg-surface border border-subtle rounded-sm text-primary focus-visible:outline-none focus-visible:border-accent/50 transition-colors"
             >
               <option value="PRIVATE">Private</option>
               <option value="UNLISTED">Unlisted</option>
@@ -231,14 +231,14 @@ export function BlockPalette({ open, onClose }: BlockPaletteProps) {
               onBlur={(e) => setTags(e.target.value)}
               placeholder="momentum, politics"
               aria-label="Strategy tags, comma-separated"
-              className="w-full px-3 py-2 text-sm bg-surface border border-subtle rounded-sm text-primary placeholder:text-tertiary/50 focus-visible:outline-none focus-visible:border-accent/50 transition-colors"
+              className="w-full px-3 py-2 text-body-md bg-surface border border-subtle rounded-sm text-primary placeholder:text-tertiary/50 focus-visible:outline-none focus-visible:border-accent/50 transition-colors"
             />
           </div>
         </div>
 
         {/* Block palette */}
         <div className="px-4 py-3">
-          <h3 className="text-xs font-medium text-secondary uppercase tracking-wider mb-2">
+          <h3 className="text-label font-medium text-secondary uppercase tracking-wider mb-2">
             Blocks
           </h3>
 
@@ -262,6 +262,7 @@ export function BlockPalette({ open, onClose }: BlockPaletteProps) {
                   }`}
                   style={isActive ? { backgroundColor: `color-mix(in srgb, ${meta.color} 80%, transparent)` } : undefined}
                 >
+                  {/* dynamic-color: intentional — color is runtime chart palette value */}
                   {icon}
                   {meta.label}
                   {count > 0 && (
@@ -270,7 +271,7 @@ export function BlockPalette({ open, onClose }: BlockPaletteProps) {
                       className="ml-1 px-1 py-px rounded-full text-caption font-semibold leading-none"
                       style={{
                         backgroundColor: isActive ? 'color-mix(in srgb, var(--text-primary) 25%, transparent)' : `color-mix(in srgb, ${meta.color} 19%, transparent)`,
-                        color: isActive ? 'white' : meta.color,
+                        color: isActive ? 'var(--text-inverse)' : meta.color,
                       }}
                     >
                       {count}
@@ -295,7 +296,7 @@ export function BlockPalette({ open, onClose }: BlockPaletteProps) {
               <button
                 type="button"
                 onClick={addVariable}
-                className="flex items-center gap-2 w-full px-3 py-2 rounded-sm text-xs font-medium text-primary transition-colors hover:opacity-90 bg-purple-500 focus-visible:outline-none focus-visible:shadow-focus-ring"
+                className="flex items-center gap-2 w-full px-3 py-2 rounded-sm text-label font-medium text-primary transition-colors hover:opacity-90 bg-purple-500 focus-visible:outline-none focus-visible:shadow-focus-ring"
               >
                 <Plus className="size-4" />
                 Add Variable
@@ -317,7 +318,7 @@ export function BlockPalette({ open, onClose }: BlockPaletteProps) {
                   value={paletteSearch}
                   onChange={e => setPaletteSearch(e.target.value)}
                   aria-label="Search blocks"
-                  className="w-full pl-7 pr-2 py-2 text-xs bg-surface border border-default rounded-pf text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:border-accent/50"
+                  className="w-full pl-7 pr-2 py-2 text-label bg-surface border border-default rounded-pf text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:border-accent/50"
                 />
               </div>
               {(() => {
@@ -349,7 +350,7 @@ export function BlockPalette({ open, onClose }: BlockPaletteProps) {
                     <GripVertical className="size-3 text-tertiary/40 mt-1 shrink-0 cursor-grab group-hover:text-tertiary" />
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between">
-                        <span className="text-xs font-medium text-primary">{def.label}</span>
+                        <span className="text-label font-medium text-primary">{def.label}</span>
                         <ChevronRight className="size-3 text-tertiary/0 group-hover:text-tertiary/60 transition-all" />
                       </div>
                       <p className="text-caption text-tertiary leading-snug mt-1">

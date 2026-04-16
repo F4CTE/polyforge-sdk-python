@@ -57,8 +57,8 @@ function correlationTextClass(val: number): string {
 }
 
 function correlationBadgeClass(val: number): string {
-  if (val >= 0.3) return 'bg-gain/15 text-gain border border-gain/30';
-  if (val <= -0.3) return 'bg-loss/15 text-loss border border-loss/30';
+  if (val >= 0.3) return 'bg-gain-subtle text-gain border border-gain/30';
+  if (val <= -0.3) return 'bg-loss-subtle text-loss border border-loss/30';
   return 'bg-overlay text-secondary border border-default';
 }
 
@@ -133,7 +133,7 @@ function HeatmapSkeleton() {
       <Skeleton className="h-5 w-48" />
       <Skeleton className="h-4 w-72" />
       <div className="mt-4 overflow-x-auto">
-        <div className="inline-grid gap-1" style={{ gridTemplateColumns: `80px repeat(6, 72px)` }}>
+        <div className="inline-grid gap-1 correlation-grid" style={{ '--correlation-col-count': 6 } as React.CSSProperties}>
           {Array.from({ length: 7 * 7 }).map((_, i) => (
             <Skeleton key={i} className="h-[72px] w-full" />
           ))}
@@ -279,7 +279,7 @@ export function Component() {
         <GitMerge className="size-5 text-tertiary mt-1 shrink-0" aria-hidden="true" />
         <div>
           <h1 className="text-2xl font-semibold text-primary">Market Correlation</h1>
-          <p className="text-sm text-tertiary mt-1">
+          <p className="text-body-sm text-tertiary mt-1">
             How Polymarket categories move together
           </p>
         </div>
@@ -289,9 +289,9 @@ export function Component() {
       <div className="bg-elevated border border-default rounded-xl p-6 space-y-5">
         <div className="flex items-center gap-2">
           <Grid3x3 className="size-4 text-tertiary" aria-hidden="true" />
-          <h2 className="text-sm font-medium text-primary">Category Correlation Heatmap</h2>
+          <h2 className="text-body-md font-medium text-primary">Category Correlation Heatmap</h2>
         </div>
-        <p className="text-xs text-tertiary -mt-2">
+        <p className="text-label text-tertiary -mt-2">
           Correlation coefficients between Polymarket categories. Values range from -1 (inverse) to +1 (identical movement).
         </p>
 
@@ -300,13 +300,13 @@ export function Component() {
         ) : categories.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 gap-2 text-center">
             <Grid3x3 className="size-10 text-tertiary opacity-30" aria-hidden="true" />
-            <p className="text-sm text-tertiary">No correlation data available.</p>
+            <p className="text-body-sm text-tertiary">No correlation data available.</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
             <div
-              className="inline-grid gap-1"
-              style={{ gridTemplateColumns: `80px repeat(${categories.length}, 72px)` }}
+              className="inline-grid gap-1 correlation-grid"
+              style={{ '--correlation-col-count': categories.length } as React.CSSProperties}
               role="grid"
               aria-label="Category correlation matrix"
             >
@@ -323,8 +323,7 @@ export function Component() {
                   aria-hidden="true"
                 >
                   <span
-                    className="text-caption font-semibold uppercase tracking-wider truncate max-w-[64px] block text-center"
-                    style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)', height: '60px', lineHeight: '60px' }}
+                    className="text-caption font-semibold uppercase tracking-wider truncate max-w-[64px] block text-center correlation-header-cell"
                   >
                     {capitalize(cat)}
                   </span>
@@ -360,7 +359,7 @@ export function Component() {
                           aria-label={`${capitalize(rowCat)} self-correlation`}
                           role="gridcell"
                         >
-                          <span className="text-sm font-mono text-accent-text">—</span>
+                          <span className="text-body-md font-mono text-accent-text">—</span>
                         </div>
                       );
                     }
@@ -381,7 +380,7 @@ export function Component() {
                         onMouseMove={handleCellMove}
                         onMouseLeave={handleCellLeave}
                       >
-                        <span className={`text-xs font-mono font-semibold ${textClass}`}>
+                        <span className={`text-label font-mono font-semibold ${textClass}`}>
                           {formatCorr(val)}
                         </span>
                       </div>
@@ -418,8 +417,8 @@ export function Component() {
       {/* ── Section 2: Top correlated market pairs ─────────────────────── */}
       <div className="bg-elevated border border-default rounded-xl overflow-hidden">
         <div className="px-6 py-4 border-b border-default">
-          <h2 className="text-sm font-medium text-primary">Top Correlated Market Pairs</h2>
-          <p className="text-xs text-tertiary mt-1">
+          <h2 className="text-body-md font-medium text-primary">Top Correlated Market Pairs</h2>
+          <p className="text-label text-tertiary mt-1">
             Select two different categories to see the most correlated individual market pairs between them.
           </p>
         </div>
@@ -443,7 +442,7 @@ export function Component() {
             disabled={loadingMatrix}
           />
           {categoryA && categoryB && categoryA === categoryB && (
-            <div className="flex items-center gap-2 text-xs text-warning self-end pb-1">
+            <div className="flex items-center gap-2 text-label text-warning self-end pb-1">
               <Info className="size-4" aria-hidden="true" />
               Select two different categories
             </div>
@@ -454,7 +453,7 @@ export function Component() {
         {!categoryA || !categoryB || categoryA === categoryB ? (
           <div className="flex flex-col items-center justify-center py-16 gap-2 text-center px-6">
             <GitMerge className="size-10 text-tertiary opacity-30" aria-hidden="true" />
-            <p className="text-sm text-tertiary">Select two categories to see correlated market pairs</p>
+            <p className="text-body-sm text-tertiary">Select two categories to see correlated market pairs</p>
           </div>
         ) : loadingPairs ? (
           <div className="p-6">
@@ -462,13 +461,13 @@ export function Component() {
           </div>
         ) : pairs.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 gap-2 text-center px-6">
-            <p className="text-sm text-tertiary">No correlated pairs found for these categories.</p>
+            <p className="text-body-sm text-tertiary">No correlated pairs found for these categories.</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-sm" aria-label="Correlated market pairs">
+            <table className="w-full text-body-sm" aria-label="Correlated market pairs">
               <thead>
-                <tr className="bg-surface text-left text-xs text-secondary uppercase tracking-wider">
+                <tr className="bg-surface text-left text-label text-secondary uppercase tracking-wider">
                   <th scope="col" className="px-6 py-3 font-medium">Market A</th>
                   <th scope="col" className="px-6 py-3 font-medium">Market B</th>
                   <th scope="col" className="px-6 py-3 font-medium text-right">Correlation</th>
@@ -481,7 +480,7 @@ export function Component() {
                     <td className="px-6 py-3 max-w-xs">
                       <Link
                         to={`/markets/${pair.marketIdA}`}
-                        className="text-primary hover:text-accent-text transition-colors line-clamp-2 text-xs leading-relaxed"
+                        className="text-primary hover:text-accent-text transition-colors line-clamp-2 text-label leading-relaxed"
                       >
                         {pair.titleA}
                       </Link>
@@ -489,19 +488,19 @@ export function Component() {
                     <td className="px-6 py-3 max-w-xs">
                       <Link
                         to={`/markets/${pair.marketIdB}`}
-                        className="text-primary hover:text-accent-text transition-colors line-clamp-2 text-xs leading-relaxed"
+                        className="text-primary hover:text-accent-text transition-colors line-clamp-2 text-label leading-relaxed"
                       >
                         {pair.titleB}
                       </Link>
                     </td>
                     <td className="px-6 py-3 text-right">
-                      <span className={`inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-mono font-semibold ${correlationBadgeClass(pair.correlation)}`}>
+                      <span className={`inline-flex items-center gap-1 px-2 py-1 rounded text-label font-mono font-semibold ${correlationBadgeClass(pair.correlation)}`}>
                         {pair.correlation >= 0.3 && <TrendingUp className="size-3" aria-hidden="true" />}
                         {pair.correlation <= -0.3 && <TrendingDown className="size-3" aria-hidden="true" />}
                         {formatCorr(pair.correlation)}
                       </span>
                     </td>
-                    <td className="px-6 py-3 text-right font-mono text-secondary text-xs">
+                    <td className="px-6 py-3 text-right font-mono text-secondary text-label">
                       {pair.sampleSize.toLocaleString()}
                     </td>
                   </tr>
@@ -516,8 +515,8 @@ export function Component() {
       {tooltip.visible && (
         <div
           ref={tooltipRef}
-          className="fixed z-50 pointer-events-none px-3 py-2 rounded-pf bg-elevated border border-default text-xs text-primary shadow-lg max-w-[240px]"
-          style={{ left: tooltip.x + 12, top: tooltip.y - 40 }}
+          className="fixed z-50 pointer-events-none px-3 py-2 rounded-pf bg-elevated border border-default text-label text-primary shadow-lg max-w-[240px]"
+          style={{ left: tooltip.x + 12, top: tooltip.y - 40 }} /* computed position: intentional */
           aria-hidden="true"
         >
           {tooltip.text}
@@ -548,7 +547,7 @@ function InsightCard({ insight }: { insight: { icon: 'up' | 'down' | 'neutral'; 
   return (
     <div className="bg-elevated border border-default rounded-xl p-4 flex items-start gap-3">
       {iconMap[insight.icon]}
-      <p className="text-xs text-secondary leading-relaxed">{insight.text}</p>
+      <p className="text-label text-secondary leading-relaxed">{insight.text}</p>
     </div>
   );
 }
@@ -575,7 +574,7 @@ function CategorySelect({
 }) {
   return (
     <div className="flex flex-col gap-1 min-w-[160px]">
-      <label htmlFor={id} className="text-xs font-medium text-secondary">
+      <label htmlFor={id} className="text-label font-medium text-secondary">
         {label}
       </label>
       <Select
@@ -583,7 +582,7 @@ function CategorySelect({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         disabled={disabled}
-        className="w-full appearance-none bg-surface border border-default rounded-sm px-3 py-2 pr-8 text-sm text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-text/40 transition disabled:opacity-50 disabled:cursor-not-allowed"
+        className="w-full appearance-none bg-surface border border-default rounded-sm px-3 py-2 pr-8 text-body-md text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-text/40 transition disabled:opacity-50 disabled:cursor-not-allowed"
       >
         <option value="">Select category…</option>
         {options.map((opt) => (

@@ -106,7 +106,7 @@ const STATUS_STYLES: Record<OrderStatus, { text: string; bg: string }> = {
   PENDING:   { text: 'text-warning', bg: 'bg-warning/10' },
   SUBMITTED: { text: 'text-accent-text', bg: 'bg-accent/10' },
   LIVE:      { text: 'text-accent-text', bg: 'bg-accent/10' },
-  MATCHED:   { text: 'text-accent-text', bg: 'bg-accent/8' },
+  MATCHED:   { text: 'text-accent-text', bg: 'bg-accent-subtle' },
   CONFIRMED: { text: 'text-gain', bg: 'bg-gain/10' },
   CANCELLED: { text: 'text-secondary', bg: 'bg-overlay' },
   FAILED:    { text: 'text-loss', bg: 'bg-loss/10' },
@@ -232,7 +232,7 @@ function InlineJournalPanel({ order, entry, onClose, onSaved, onDeleted }: Inlin
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <BookOpen className="size-4 text-accent-text" />
-              <span className="text-sm font-medium text-primary">Journal Note</span>
+              <span className="text-body-md font-medium text-primary">Journal Note</span>
               {entry && <span className="text-caption text-tertiary">Last updated {formatDate(entry.updatedAt)}</span>}
             </div>
             <Button type="button" variant="ghost" size="icon-sm" onClick={onClose} aria-label="Close journal panel">
@@ -242,20 +242,20 @@ function InlineJournalPanel({ order, entry, onClose, onSaved, onDeleted }: Inlin
 
           {/* Textarea */}
           <div>
-            <label className="block text-xs text-secondary mb-1">How did this trade go?</label>
+            <label className="block text-label text-secondary mb-1">How did this trade go?</label>
             <Textarea
               ref={textareaRef}
               rows={3}
               value={note}
               onChange={e => setNote(e.target.value)}
               placeholder="Record your reasoning, what you observed, or what you'd do differently..."
-              className="w-full px-3 py-2 rounded-pf bg-elevated border border-default text-sm text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:border-accent/50 resize-none"
+              className="w-full px-3 py-2 rounded-pf bg-elevated border border-default text-body-sm text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:border-accent/50 resize-none"
             />
           </div>
 
           {/* Mood selector */}
           <div>
-            <span className="block text-xs text-secondary mb-2">Mood</span>
+            <span className="block text-label text-secondary mb-2">Mood</span>
             <div className="flex flex-wrap gap-2">
               {MOOD_KEYS.map(m => (
                 <Button
@@ -263,9 +263,9 @@ function InlineJournalPanel({ order, entry, onClose, onSaved, onDeleted }: Inlin
                   type="button"
                   variant="ghost"
                   onClick={() => setMood(m)}
-                  className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
+                  className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-label font-medium border transition-colors ${
                     mood === m
-                      ? 'bg-accent/15 text-accent-text border-accent/40'
+                      ? 'bg-accent-subtle text-accent-text border-accent/40'
                       : 'bg-elevated text-secondary border-default hover:border-strong'
                   }`}
                 >
@@ -278,7 +278,7 @@ function InlineJournalPanel({ order, entry, onClose, onSaved, onDeleted }: Inlin
 
           {/* Tags */}
           <div>
-            <span className="block text-xs text-secondary mb-2">Tags</span>
+            <span className="block text-label text-secondary mb-2">Tags</span>
             <div className="flex flex-wrap items-center gap-2">
               {tags.map(t => (
                 <span key={t} className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-label bg-purple-500/10 text-purple-400 border border-purple-500/30">
@@ -308,7 +308,7 @@ function InlineJournalPanel({ order, entry, onClose, onSaved, onDeleted }: Inlin
               type="button"
               onClick={handleSave}
               disabled={saving}
-              className="flex items-center gap-2 px-3 py-2 rounded-pf bg-accent text-inverse text-xs font-medium hover:bg-accent-text disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              className="flex items-center gap-2 px-3 py-2 rounded-pf bg-accent text-inverse text-label font-medium hover:bg-accent-text disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
             >
               {saving ? <Loader2 className="size-3 animate-spin" /> : null}
               Save Note
@@ -319,7 +319,7 @@ function InlineJournalPanel({ order, entry, onClose, onSaved, onDeleted }: Inlin
                 variant="danger"
                 onClick={handleDelete}
                 disabled={deleting}
-                className="flex items-center gap-2 px-3 py-2 rounded-pf bg-loss/10 text-loss text-xs font-medium border border-loss/20 hover:bg-loss/20 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                className="flex items-center gap-2 px-3 py-2 rounded-pf bg-loss/10 text-loss text-label font-medium border border-loss/20 hover:bg-loss/20 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
               >
                 {deleting ? <Loader2 className="size-3 animate-spin" /> : <Trash2 className="size-3" />}
                 Delete
@@ -348,7 +348,7 @@ function JournalEntryCard({ entry, onEdit, onDelete }: { entry: JournalEntry; on
       {/* Top row */}
       <div className="flex items-start justify-between gap-3">
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium text-primary line-clamp-1">{entry.marketTitle || `Order ${entry.orderId.slice(0, 8)}`}</p>
+          <p className="text-body-md font-medium text-primary line-clamp-1">{entry.marketTitle || `Order ${entry.orderId.slice(0, 8)}`}</p>
           <div className="flex items-center gap-2 mt-1 flex-wrap">
             <span className={`inline-flex px-2 py-1 rounded text-caption font-medium ${entry.side === 'BUY' ? 'bg-gain/10 text-gain' : 'bg-loss/10 text-loss'}`}>
               {entry.side}
@@ -377,7 +377,7 @@ function JournalEntryCard({ entry, onEdit, onDelete }: { entry: JournalEntry; on
       {/* Mood + note */}
       <div className="flex items-start gap-2">
         <span className="text-base shrink-0" title={mood.label}>{mood.emoji}</span>
-        <p className="text-xs text-secondary line-clamp-2 leading-relaxed">{entry.note}</p>
+        <p className="text-label text-secondary line-clamp-2 leading-relaxed">{entry.note}</p>
       </div>
 
       {/* Tags + date */}
@@ -422,14 +422,14 @@ function JournalTab({ entries, loading, onEdit, onDelete }: JournalTabProps) {
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder="Search notes or markets..."
-            className="w-full h-9 pl-8 pr-3 rounded-pf bg-elevated border border-default text-sm text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:border-accent/50"
+            className="w-full h-9 pl-8 pr-3 rounded-pf bg-elevated border border-default text-body-sm text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:border-accent/50"
           />
         </div>
         {allTags.length > 0 && (
           <Select
             value={tagFilter}
             onChange={e => setTagFilter(e.target.value)}
-            className="h-9 px-2 rounded-pf bg-elevated border border-default text-sm text-primary focus-visible:outline-none focus-visible:border-accent/50"
+            className="h-9 px-2 rounded-pf bg-elevated border border-default text-body-md text-primary focus-visible:outline-none focus-visible:border-accent/50"
           >
             <option value="">All tags</option>
             {allTags.map(t => <option key={t} value={t}>{t}</option>)}
@@ -443,9 +443,9 @@ function JournalTab({ entries, loading, onEdit, onDelete }: JournalTabProps) {
           type="button"
           variant="ghost"
           onClick={() => setMoodFilter('ALL')}
-          className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
+          className={`px-3 py-1 rounded-full text-label font-medium border transition-colors ${
             moodFilter === 'ALL'
-              ? 'bg-accent/15 text-accent-text border-accent/30'
+              ? 'bg-accent-subtle text-accent-text border-accent/30'
               : 'bg-elevated text-secondary border-default hover:border-strong'
           }`}
         >
@@ -457,9 +457,9 @@ function JournalTab({ entries, loading, onEdit, onDelete }: JournalTabProps) {
             type="button"
             variant="ghost"
             onClick={() => setMoodFilter(moodFilter === m ? 'ALL' : m)}
-            className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
+            className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-label font-medium border transition-colors ${
               moodFilter === m
-                ? 'bg-accent/15 text-accent-text border-accent/30'
+                ? 'bg-accent-subtle text-accent-text border-accent/30'
                 : 'bg-elevated text-secondary border-default hover:border-strong'
             }`}
           >
@@ -483,10 +483,10 @@ function JournalTab({ entries, loading, onEdit, onDelete }: JournalTabProps) {
       ) : filtered.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-center">
           <BookOpen className="size-10 text-tertiary mb-3" />
-          <p className="text-sm font-medium text-primary">
+          <p className="text-body-md font-medium text-primary">
             {entries.length === 0 ? 'No journal entries yet' : 'No entries match your filters'}
           </p>
-          <p className="text-xs text-tertiary mt-1">
+          <p className="text-label text-tertiary mt-1">
             {entries.length === 0
               ? 'Click the journal icon on any order to add your first note.'
               : 'Try adjusting your search or filters.'}
@@ -514,10 +514,10 @@ function CategoryBadge({ category }: { category?: string | null }) {
   if (!category) return null;
   const colors: Record<string, string> = {
     crypto: 'bg-gold-500/15 text-gold-500 border-gold-500/30',
-    politics: 'bg-info/15 text-info border-info/30',
-    sports: 'bg-gain/15 text-gain border-gain/30',
+    politics: 'bg-info-subtle text-info border-info/30',
+    sports: 'bg-gain-subtle text-gain border-gain/30',
     entertainment: 'bg-purple-500/15 text-purple-400 border-purple-500/30',
-    science: 'bg-accent/15 text-accent-text border-accent/30',
+    science: 'bg-accent-subtle text-accent-text border-accent/30',
   };
   const key = category.toLowerCase();
   const cls = colors[key] ?? 'bg-surface text-tertiary border-default';
@@ -617,12 +617,12 @@ function CreateConditionalDialog({ onClose, onCreated }: { onClose: () => void; 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-3">
             <div>
-              <label htmlFor="cond-market-select" className="block text-xs font-medium text-secondary mb-1">Market</label>
+              <label htmlFor="cond-market-select" className="block text-label font-medium text-secondary mb-1">Market</label>
               <Select id="cond-market-select" value={form.marketId} onChange={e => {
                 const mkt = positions.find(p => p.marketId === e.target.value);
                 updateField('marketId', e.target.value);
                 if (mkt) updateField('tokenId', mkt.tokenId);
-              }} required className="w-full h-9 px-2 rounded-pf bg-surface border border-default text-sm text-primary focus-visible:outline-none focus-visible:border-accent/50">
+              }} required className="w-full h-9 px-2 rounded-pf bg-surface border border-default text-body-md text-primary focus-visible:outline-none focus-visible:border-accent/50">
                 <option value="">Select from your positions...</option>
                 {positions.map(p => (
                   <option key={p.id} value={p.marketId}>
@@ -632,17 +632,17 @@ function CreateConditionalDialog({ onClose, onCreated }: { onClose: () => void; 
               </Select>
             </div>
             <div>
-              <label htmlFor="cond-token-id" className="block text-xs font-medium text-secondary mb-1">Token</label>
+              <label htmlFor="cond-token-id" className="block text-label font-medium text-secondary mb-1">Token</label>
               <Input id="cond-token-id" value={form.tokenId} readOnly
-                className="w-full h-9 px-3 rounded-pf bg-overlay border border-default text-sm text-secondary cursor-not-allowed font-mono text-xs" />
+                className="w-full h-9 px-3 rounded-pf bg-overlay border border-default text-body-sm text-secondary cursor-not-allowed font-mono text-label" />
               <p className="text-caption text-tertiary mt-1">Auto-filled from selected position</p>
             </div>
           </div>
           <div className="grid grid-cols-3 gap-3">
             <div>
-              <label htmlFor="cond-type" className="block text-xs font-medium text-secondary mb-1">Type</label>
+              <label htmlFor="cond-type" className="block text-label font-medium text-secondary mb-1">Type</label>
               <Select id="cond-type" value={form.type} onChange={e => updateField('type', e.target.value)}
-                className="w-full h-9 px-2 rounded-pf bg-surface border border-default text-sm text-primary focus-visible:outline-none focus-visible:border-accent/50">
+                className="w-full h-9 px-2 rounded-pf bg-surface border border-default text-body-md text-primary focus-visible:outline-none focus-visible:border-accent/50">
                 <option value="TAKE_PROFIT">Take Profit</option>
                 <option value="STOP_LOSS">Stop Loss</option>
                 <option value="TRAILING_STOP">Trailing Stop</option>
@@ -651,17 +651,17 @@ function CreateConditionalDialog({ onClose, onCreated }: { onClose: () => void; 
               </Select>
             </div>
             <div>
-              <label htmlFor="cond-side" className="block text-xs font-medium text-secondary mb-1">Side</label>
+              <label htmlFor="cond-side" className="block text-label font-medium text-secondary mb-1">Side</label>
               <Select id="cond-side" value={form.side} onChange={e => updateField('side', e.target.value)}
-                className="w-full h-9 px-2 rounded-pf bg-surface border border-default text-sm text-primary focus-visible:outline-none focus-visible:border-accent/50">
+                className="w-full h-9 px-2 rounded-pf bg-surface border border-default text-body-md text-primary focus-visible:outline-none focus-visible:border-accent/50">
                 <option value="BUY">BUY</option>
                 <option value="SELL">SELL</option>
               </Select>
             </div>
             <div>
-              <label htmlFor="cond-outcome" className="block text-xs font-medium text-secondary mb-1">Outcome</label>
+              <label htmlFor="cond-outcome" className="block text-label font-medium text-secondary mb-1">Outcome</label>
               <Select id="cond-outcome" value={form.outcome} onChange={e => updateField('outcome', e.target.value)}
-                className="w-full h-9 px-2 rounded-pf bg-surface border border-default text-sm text-primary focus-visible:outline-none focus-visible:border-accent/50">
+                className="w-full h-9 px-2 rounded-pf bg-surface border border-default text-body-md text-primary focus-visible:outline-none focus-visible:border-accent/50">
                 <option value="YES">YES</option>
                 <option value="NO">NO</option>
               </Select>
@@ -669,37 +669,37 @@ function CreateConditionalDialog({ onClose, onCreated }: { onClose: () => void; 
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label htmlFor="cond-size" className="block text-xs font-medium text-secondary mb-1">Size</label>
+              <label htmlFor="cond-size" className="block text-label font-medium text-secondary mb-1">Size</label>
               <Input id="cond-size" type="number" step="any" value={form.size} onChange={e => updateField('size', e.target.value)} required
-                className="w-full h-9 px-3 rounded-pf bg-surface border border-default text-sm text-primary focus-visible:outline-none focus-visible:border-accent/50" />
+                className="w-full h-9 px-3 rounded-pf bg-surface border border-default text-body-md text-primary focus-visible:outline-none focus-visible:border-accent/50" />
             </div>
             <div>
-              <label htmlFor="cond-trigger-price" className="block text-xs font-medium text-secondary mb-1">Trigger Price</label>
+              <label htmlFor="cond-trigger-price" className="block text-label font-medium text-secondary mb-1">Trigger Price</label>
               <Input id="cond-trigger-price" type="number" step="any" value={form.triggerPrice} onChange={e => updateField('triggerPrice', e.target.value)} required
-                className="w-full h-9 px-3 rounded-pf bg-surface border border-default text-sm text-primary focus-visible:outline-none focus-visible:border-accent/50" />
+                className="w-full h-9 px-3 rounded-pf bg-surface border border-default text-body-md text-primary focus-visible:outline-none focus-visible:border-accent/50" />
             </div>
           </div>
           <div className="grid grid-cols-3 gap-3">
             <div>
-              <label htmlFor="cond-limit-price" className="block text-xs font-medium text-secondary mb-1">Limit Price</label>
+              <label htmlFor="cond-limit-price" className="block text-label font-medium text-secondary mb-1">Limit Price</label>
               <Input id="cond-limit-price" type="number" step="any" value={form.limitPrice} onChange={e => updateField('limitPrice', e.target.value)} placeholder="Optional"
-                className="w-full h-9 px-3 rounded-pf bg-surface border border-default text-sm text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:border-accent/50" />
+                className="w-full h-9 px-3 rounded-pf bg-surface border border-default text-body-sm text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:border-accent/50" />
             </div>
             <div>
-              <label htmlFor="cond-trailing-pct" className="block text-xs font-medium text-secondary mb-1">Trailing %</label>
+              <label htmlFor="cond-trailing-pct" className="block text-label font-medium text-secondary mb-1">Trailing %</label>
               <Input id="cond-trailing-pct" type="number" step="any" value={form.trailingPct} onChange={e => updateField('trailingPct', e.target.value)} placeholder="Optional"
-                className="w-full h-9 px-3 rounded-pf bg-surface border border-default text-sm text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:border-accent/50" />
+                className="w-full h-9 px-3 rounded-pf bg-surface border border-default text-body-sm text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:border-accent/50" />
             </div>
             <div>
-              <label htmlFor="cond-expires-at" className="block text-xs font-medium text-secondary mb-1">Expires At</label>
+              <label htmlFor="cond-expires-at" className="block text-caption font-medium text-secondary mb-1">Expires At</label>
               <input id="cond-expires-at" type="datetime-local" lang="en" value={form.expiresAt} onChange={e => updateField('expiresAt', e.target.value)}
-                className="w-full h-9 px-3 rounded-pf bg-surface border border-default text-sm text-primary focus-visible:outline-none focus-visible:border-accent/50" />
+                className="w-full h-9 px-3 rounded-pf bg-surface border border-default text-body-md text-primary focus-visible:outline-none focus-visible:border-accent/50" />
             </div>
           </div>
           <div className="flex gap-2 justify-end pt-3 border-t border-subtle">
-            <Button type="button" variant="secondary" onClick={onClose} className="px-4 py-2 text-sm text-secondary hover:text-primary transition-colors">Cancel</Button>
+            <Button type="button" variant="secondary" onClick={onClose} className="px-4 py-2 text-body-sm text-secondary hover:text-primary transition-colors">Cancel</Button>
             <Button type="submit" disabled={submitting}
-              className="flex items-center gap-2 px-4 py-2 rounded-pf bg-accent text-inverse text-sm font-medium hover:bg-accent-text disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
+              className="flex items-center gap-2 px-4 py-2 rounded-pf bg-accent text-inverse text-body-md font-medium hover:bg-accent-text disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
               <Plus className="size-4" /> Create
             </Button>
           </div>
@@ -921,20 +921,20 @@ export function Component() {
             <Button
               type="button"
               onClick={() => setShowCreateDialog(true)}
-              className="flex items-center gap-2 px-3 py-2 rounded-pf bg-accent/15 text-accent-text text-xs font-medium border border-accent/30 hover:bg-accent/25 transition-colors"
+              className="flex items-center gap-2 px-3 py-2 rounded-pf bg-accent-subtle text-accent-text text-label font-medium border border-accent/30 hover:bg-accent/25 transition-colors"
             >
               <Plus className="size-3" /> New Conditional
             </Button>
           )}
           {!loading && viewTab === 'orders' && (
             <>
-              <span className="text-sm text-tertiary">{total} orders</span>
+              <span className="text-body-sm text-tertiary">{total} orders</span>
               <Button
                 type="button"
                 variant="secondary"
                 onClick={exportCsv}
                 disabled={exportingCsv}
-                className="flex items-center gap-2 px-3 py-2 rounded-pf bg-surface border border-default text-xs text-secondary hover:text-primary hover:border-default transition-colors disabled:opacity-50"
+                className="flex items-center gap-2 px-3 py-2 rounded-pf bg-surface border border-default text-label text-secondary hover:text-primary hover:border-default transition-colors disabled:opacity-50"
               >
                 {exportingCsv
                   ? <Loader2 className="size-3 animate-spin" aria-hidden="true" />
@@ -943,9 +943,9 @@ export function Component() {
               </Button>
             </>
           )}
-          {!condLoading && viewTab === 'conditional' && <span className="text-sm text-tertiary">{condTotal} conditional</span>}
+          {!condLoading && viewTab === 'conditional' && <span className="text-body-sm text-tertiary">{condTotal} conditional</span>}
           {viewTab === 'journal' && !journalLoading && (
-            <span className="text-sm text-tertiary">{journalEntries.length} {journalEntries.length === 1 ? 'entry' : 'entries'}</span>
+            <span className="text-body-sm text-tertiary">{journalEntries.length} {journalEntries.length === 1 ? 'entry' : 'entries'}</span>
           )}
         </div>
       </div>
@@ -958,7 +958,7 @@ export function Component() {
           role="tab"
           aria-selected={viewTab === 'orders'}
           onClick={() => setViewTab('orders')}
-          className={`px-3 py-2 rounded-t text-sm font-medium transition-colors ${
+          className={`px-3 py-2 rounded-t text-body-md font-medium transition-colors ${
             viewTab === 'orders' ? 'text-accent-text border-b-2 border-accent-text' : 'text-secondary hover:text-primary'
           }`}
         >
@@ -970,7 +970,7 @@ export function Component() {
           role="tab"
           aria-selected={viewTab === 'conditional'}
           onClick={() => setViewTab('conditional')}
-          className={`px-3 py-2 rounded-t text-sm font-medium transition-colors ${
+          className={`px-3 py-2 rounded-t text-body-md font-medium transition-colors ${
             viewTab === 'conditional' ? 'text-accent-text border-b-2 border-accent-text' : 'text-secondary hover:text-primary'
           }`}
         >
@@ -982,7 +982,7 @@ export function Component() {
           role="tab"
           aria-selected={viewTab === 'journal'}
           onClick={() => setViewTab('journal')}
-          className={`inline-flex items-center gap-2 px-3 py-2 rounded-t text-sm font-medium transition-colors ${
+          className={`inline-flex items-center gap-2 px-3 py-2 rounded-t text-body-md font-medium transition-colors ${
             viewTab === 'journal' ? 'text-accent-text border-b-2 border-accent-text' : 'text-secondary hover:text-primary'
           }`}
         >
@@ -1008,9 +1008,9 @@ export function Component() {
                 key={f.value}
                 aria-pressed={filter === f.value}
                 onClick={() => changeFilter(f.value)}
-                className={`px-3 py-2 rounded-full text-xs font-medium whitespace-nowrap border transition-colors ${
+                className={`px-3 py-2 rounded-full text-label font-medium whitespace-nowrap border transition-colors ${
                   filter === f.value
-                    ? 'bg-accent/15 text-accent-text border-accent/30'
+                    ? 'bg-accent-subtle text-accent-text border-accent/30'
                     : 'bg-elevated text-secondary border-default hover:border-strong'
                 }`}
               >
@@ -1022,9 +1022,9 @@ export function Component() {
           {/* Table */}
           <div className="bg-elevated border border-default rounded-xl overflow-hidden">
             <div className="overflow-x-auto">
-              <table className="w-full min-w-[800px] text-sm" aria-label="Orders">
+              <table className="w-full min-w-[800px] text-body-sm" aria-label="Orders">
                 <thead>
-                  <tr className="bg-surface text-left text-xs text-secondary uppercase tracking-wider">
+                  <tr className="bg-surface text-left text-label text-secondary uppercase tracking-wider">
                     <th scope="col" className="px-4 py-3 font-medium w-10">#</th>
                     <th scope="col" className="px-4 py-3 font-medium">Market</th>
                     <th scope="col" className="px-4 py-3 font-medium">Side</th>
@@ -1053,8 +1053,8 @@ export function Component() {
                       <td colSpan={12}>
                         <div className="flex flex-col items-center justify-center py-16 text-center">
                           <ClipboardList className="size-10 text-tertiary mb-3" />
-                          <p className="text-sm font-medium text-primary">No orders found</p>
-                          <p className="text-xs text-tertiary mt-1">Orders placed by your strategies will appear here.</p>
+                          <p className="text-body-md font-medium text-primary">No orders found</p>
+                          <p className="text-label text-tertiary mt-1">Orders placed by your strategies will appear here.</p>
                         </div>
                       </td>
                     </tr>
@@ -1077,20 +1077,20 @@ export function Component() {
                             <span className="font-mono text-label text-tertiary">{(page - 1) * 25 + i + 1}</span>
                           </td>
                           <td className="px-4 py-3 max-w-[180px]">
-                            <span className="text-primary text-xs line-clamp-1" title={order.marketQuestion ?? order.marketId ?? ''}>
+                            <span className="text-primary text-label line-clamp-1" title={order.marketQuestion ?? order.marketId ?? ''}>
                               {order.marketQuestion || (order.marketId?.slice(0, 12)) || '—'}
                             </span>
                             <CategoryBadge category={order.marketCategory} />
                           </td>
                           <td className="px-4 py-3">
-                            <span className={`inline-flex px-2 py-1 rounded text-xs font-medium ${
+                            <span className={`inline-flex px-2 py-1 rounded text-label font-medium ${
                               order.side === 'BUY' ? 'bg-gain/10 text-gain' : 'bg-loss/10 text-loss'
                             }`}>
                               {order.side}
                             </span>
                           </td>
                           <td className="px-4 py-3">
-                            <span className={`inline-flex px-2 py-1 rounded text-xs font-medium ${
+                            <span className={`inline-flex px-2 py-1 rounded text-label font-medium ${
                               order.outcome === 'YES' ? 'bg-gain/10 text-gain' : 'bg-loss/10 text-loss'
                             }`}>
                               {order.outcome}
@@ -1104,7 +1104,7 @@ export function Component() {
                             <span className="font-mono text-label text-tertiary">{order.orderType}</span>
                           </td>
                           <td className="px-4 py-3">
-                            <span data-testid="status-cell" className={`inline-flex px-2 py-1 rounded text-xs font-medium ${ss.bg} ${ss.text}`}>
+                            <span data-testid="status-cell" className={`inline-flex px-2 py-1 rounded text-label font-medium ${ss.bg} ${ss.text}`}>
                               {order.status}
                             </span>
                           </td>
@@ -1178,7 +1178,7 @@ export function Component() {
               >
                 <ChevronLeft className="size-4" />
               </Button>
-              <span data-testid="page-info" className="text-sm font-mono text-secondary" aria-live="polite">Page {page} of {totalPages}</span>
+              <span data-testid="page-info" className="text-body-sm font-mono text-secondary" aria-live="polite">Page {page} of {totalPages}</span>
               <Button
                 type="button"
                 variant="ghost"
@@ -1199,9 +1199,9 @@ export function Component() {
         <>
           <div className="bg-elevated border border-default rounded-xl overflow-hidden">
             <div className="overflow-x-auto">
-              <table className="w-full text-sm" aria-label="Conditional orders">
+              <table className="w-full text-body-sm" aria-label="Conditional orders">
                 <thead>
-                  <tr className="bg-surface text-left text-xs text-secondary uppercase tracking-wider">
+                  <tr className="bg-surface text-left text-label text-secondary uppercase tracking-wider">
                     <th scope="col" className="px-4 py-3 font-medium">Type</th>
                     <th scope="col" className="px-4 py-3 font-medium">Market</th>
                     <th scope="col" className="px-4 py-3 font-medium text-right">Trigger</th>
@@ -1228,8 +1228,8 @@ export function Component() {
                       <td colSpan={10}>
                         <div className="flex flex-col items-center justify-center py-16 text-center">
                           <ClipboardList className="size-10 text-tertiary mb-3" />
-                          <p className="text-sm font-medium text-primary">No conditional orders</p>
-                          <p className="text-xs text-tertiary mt-1">Set up take profit, stop loss, or trailing stop orders.</p>
+                          <p className="text-body-md font-medium text-primary">No conditional orders</p>
+                          <p className="text-label text-tertiary mt-1">Set up take profit, stop loss, or trailing stop orders.</p>
                         </div>
                       </td>
                     </tr>
@@ -1240,7 +1240,7 @@ export function Component() {
                       return (
                         <tr key={co.id} data-testid="order-row" data-order-id={co.id} className="hover:bg-surface/50 transition-colors">
                           <td className="px-4 py-3">
-                            <span className={`inline-flex px-2 py-1 rounded text-xs font-medium ${ts.bg} ${ts.text}`}>
+                            <span className={`inline-flex px-2 py-1 rounded text-label font-medium ${ts.bg} ${ts.text}`}>
                               {ts.label}
                             </span>
                           </td>
@@ -1250,21 +1250,21 @@ export function Component() {
                           <td className="px-4 py-3 text-right font-mono text-primary">{co.triggerPrice}</td>
                           <td className="px-4 py-3 text-right font-mono text-primary">{co.size}</td>
                           <td className="px-4 py-3">
-                            <span className={`inline-flex px-2 py-1 rounded text-xs font-medium ${
+                            <span className={`inline-flex px-2 py-1 rounded text-label font-medium ${
                               co.side === 'BUY' ? 'bg-gain/10 text-gain' : 'bg-loss/10 text-loss'
                             }`}>
                               {co.side}
                             </span>
                           </td>
                           <td className="px-4 py-3">
-                            <span className={`inline-flex px-2 py-1 rounded text-xs font-medium ${
+                            <span className={`inline-flex px-2 py-1 rounded text-label font-medium ${
                               co.outcome === 'YES' ? 'bg-gain/10 text-gain' : 'bg-loss/10 text-loss'
                             }`}>
                               {co.outcome}
                             </span>
                           </td>
                           <td className="px-4 py-3">
-                            <span className={`inline-flex px-2 py-1 rounded text-xs font-medium ${cs.bg} ${cs.text}`}>
+                            <span className={`inline-flex px-2 py-1 rounded text-label font-medium ${cs.bg} ${cs.text}`}>
                               {co.status}
                             </span>
                           </td>
@@ -1312,7 +1312,7 @@ export function Component() {
               >
                 <ChevronLeft className="size-4" />
               </Button>
-              <span className="text-sm font-mono text-secondary" aria-live="polite">Page {condPage} of {condTotalPages}</span>
+              <span className="text-body-sm font-mono text-secondary" aria-live="polite">Page {condPage} of {condTotalPages}</span>
               <Button
                 type="button"
                 variant="ghost"
@@ -1358,12 +1358,12 @@ export function Component() {
               {([
                 { label: 'Order ID', value: <span className="font-mono text-label">{selectedOrder.id.slice(0, 8)}...</span> },
                 { label: 'Side', value: (
-                  <span className={`inline-flex px-2 py-1 rounded text-xs font-medium ${
+                  <span className={`inline-flex px-2 py-1 rounded text-label font-medium ${
                     selectedOrder.side === 'BUY' ? 'bg-gain/10 text-gain' : 'bg-loss/10 text-loss'
                   }`}>{selectedOrder.side}</span>
                 )},
                 { label: 'Outcome', value: (
-                  <span className={`inline-flex px-2 py-1 rounded text-xs font-medium ${
+                  <span className={`inline-flex px-2 py-1 rounded text-label font-medium ${
                     selectedOrder.outcome === 'YES' ? 'bg-gain/10 text-gain' : 'bg-loss/10 text-loss'
                   }`}>{selectedOrder.outcome}</span>
                 )},
@@ -1374,13 +1374,13 @@ export function Component() {
                 { label: 'Type', value: selectedOrder.orderType },
                 { label: 'Status', value: (() => {
                   const ss = STATUS_STYLES[selectedOrder.status] ?? STATUS_STYLES.PENDING;
-                  return <span className={`inline-flex px-2 py-1 rounded text-xs font-medium ${ss.bg} ${ss.text}`}>{selectedOrder.status}</span>;
+                  return <span className={`inline-flex px-2 py-1 rounded text-label font-medium ${ss.bg} ${ss.text}`}>{selectedOrder.status}</span>;
                 })() },
-                { label: 'Created', value: <span className="font-mono text-xs">{formatDate(selectedOrder.placedAt ?? selectedOrder.createdAt)}</span> },
+                { label: 'Created', value: <span className="font-mono text-caption">{formatDate(selectedOrder.placedAt ?? selectedOrder.createdAt)}</span> },
               ] as { label: string; value: React.ReactNode }[]).map(row => (
                 <div key={row.label} className="flex items-center justify-between py-2 border-b border-subtle last:border-0">
-                  <span className="text-sm text-secondary">{row.label}</span>
-                  <span className="text-sm text-primary">{row.value}</span>
+                  <span className="text-body-sm text-secondary">{row.label}</span>
+                  <span className="text-body-md text-primary">{row.value}</span>
                 </div>
               ))}
             </div>

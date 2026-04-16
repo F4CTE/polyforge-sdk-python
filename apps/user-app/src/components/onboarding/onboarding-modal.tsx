@@ -196,7 +196,7 @@ function FeatureCardRow({ feature, asBullet }: { feature: FeatureCard; asBullet?
     return (
       <li className="flex items-start gap-3">
         <span className="mt-1">{feature.icon}</span>
-        <span className="text-secondary text-sm leading-snug">{feature.title}</span>
+        <span className="text-secondary text-body-sm leading-snug">{feature.title}</span>
       </li>
     );
   }
@@ -205,10 +205,10 @@ function FeatureCardRow({ feature, asBullet }: { feature: FeatureCard; asBullet?
     <div className="flex flex-col gap-2 rounded-xl border border-default bg-surface p-4 flex-1 min-w-0">
       <div className="flex items-center gap-2">
         {feature.icon}
-        <span className="text-primary text-sm font-semibold">{feature.title}</span>
+        <span className="text-primary text-body-md font-semibold">{feature.title}</span>
       </div>
       {feature.description && (
-        <p className="text-tertiary text-xs leading-relaxed">{feature.description}</p>
+        <p className="text-tertiary text-label leading-relaxed">{feature.description}</p>
       )}
     </div>
   );
@@ -338,13 +338,13 @@ export function OnboardingModal({ open, onClose }: OnboardingModalProps) {
         {/* Top chrome: progress + skip */}
         <div className="flex items-center justify-between mb-6">
           <ProgressDots current={currentStep} />
-          <span className="text-tertiary text-xs">
+          <span className="text-tertiary text-label">
             Step {currentStep} of {TOTAL_STEPS}
           </span>
           {showSkip && (
             <button
               onClick={handleSkip}
-              className="text-tertiary text-xs hover:text-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 rounded-sm px-1"
+              className="text-tertiary text-label hover:text-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 rounded-sm px-1"
               aria-label="Skip onboarding"
             >
               Skip for now
@@ -366,7 +366,7 @@ export function OnboardingModal({ open, onClose }: OnboardingModalProps) {
         >
           {step.heading}
         </h2>
-        <p className="text-secondary text-sm leading-relaxed mb-6">
+        <p className="text-secondary text-body-sm leading-relaxed mb-6">
           {step.subtitle}
         </p>
 
@@ -398,7 +398,7 @@ export function OnboardingModal({ open, onClose }: OnboardingModalProps) {
               onClick={handleBack}
               className={[
                 'flex items-center gap-1 px-3 py-2 rounded-pf',
-                'text-secondary text-sm',
+                'text-secondary text-body-sm',
                 'border border-default hover:border-strong',
                 'hover:text-primary transition-colors',
                 'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40',
@@ -415,7 +415,7 @@ export function OnboardingModal({ open, onClose }: OnboardingModalProps) {
               <button
                 onClick={() => handleSecondary(step.secondaryPath!)}
                 className={[
-                  'text-accent-text text-sm font-medium',
+                  'text-accent-text text-body-md font-medium',
                   'hover:text-accent transition-colors',
                   'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 rounded-sm px-1',
                 ].join(' ')}
@@ -428,7 +428,7 @@ export function OnboardingModal({ open, onClose }: OnboardingModalProps) {
               onClick={handlePrimary}
               className={[
                 'px-5 py-3 rounded-pf',
-                'bg-accent text-inverse text-sm font-semibold',
+                'bg-accent text-inverse text-body-md font-semibold',
                 'hover:opacity-90 active:scale-95 transition-all',
                 'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40',
               ].join(' ')}

@@ -87,14 +87,14 @@ export function Component() {
     <>
     <div className="animate-fade-in space-y-6">
       <h2 className="text-lg font-semibold text-primary">
-        Strategies <span className="text-sm font-normal text-tertiary">({total})</span>
+        Strategies <span className="text-body-sm font-normal text-tertiary">({total})</span>
       </h2>
 
       {error && (
         <div className="text-center py-12">
           <AlertCircle className="mx-auto mb-3 text-tertiary" size={40} aria-hidden="true" />
           <p className="text-secondary mb-4">Failed to load data</p>
-          <Button type="button" variant="ghost" onClick={load} className="text-accent-text hover:text-accent-text text-sm">
+          <Button type="button" variant="ghost" onClick={load} className="text-accent-text hover:text-accent-text text-body-sm">
             Try again
           </Button>
         </div>
@@ -102,18 +102,18 @@ export function Component() {
 
       <div className="bg-elevated border border-default rounded-xl overflow-hidden">
         <div className="overflow-x-auto" data-density="compact">
-          <table className="w-full text-sm">
+          <table className="w-full text-body-sm">
             <caption className="sr-only">Trading strategies</caption>
             <thead>
               <tr className="border-b border-default">
-                <th scope="col" className="text-left px-4 py-3 text-xs font-medium text-tertiary uppercase tracking-wider">Name</th>
-                <th scope="col" className="text-left px-4 py-3 text-xs font-medium text-tertiary uppercase tracking-wider">Owner</th>
-                <th scope="col" className="text-left px-4 py-3 text-xs font-medium text-tertiary uppercase tracking-wider">Status</th>
-                <th scope="col" className="text-left px-4 py-3 text-xs font-medium text-tertiary uppercase tracking-wider">Exec Mode</th>
-                <th scope="col" className="text-left px-4 py-3 text-xs font-medium text-tertiary uppercase tracking-wider">Visibility</th>
-                <th scope="col" className="text-left px-4 py-3 text-xs font-medium text-tertiary uppercase tracking-wider">Created</th>
-                <th scope="col" className="text-center px-4 py-3 text-xs font-medium text-tertiary uppercase tracking-wider">Featured</th>
-                <th scope="col" className="text-right px-4 py-3 text-xs font-medium text-tertiary uppercase tracking-wider">Actions</th>
+                <th scope="col" className="text-left px-4 py-3 text-label font-medium text-tertiary uppercase tracking-wider">Name</th>
+                <th scope="col" className="text-left px-4 py-3 text-label font-medium text-tertiary uppercase tracking-wider">Owner</th>
+                <th scope="col" className="text-left px-4 py-3 text-label font-medium text-tertiary uppercase tracking-wider">Status</th>
+                <th scope="col" className="text-left px-4 py-3 text-label font-medium text-tertiary uppercase tracking-wider">Exec Mode</th>
+                <th scope="col" className="text-left px-4 py-3 text-label font-medium text-tertiary uppercase tracking-wider">Visibility</th>
+                <th scope="col" className="text-left px-4 py-3 text-label font-medium text-tertiary uppercase tracking-wider">Created</th>
+                <th scope="col" className="text-center px-4 py-3 text-label font-medium text-tertiary uppercase tracking-wider">Featured</th>
+                <th scope="col" className="text-right px-4 py-3 text-label font-medium text-tertiary uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -132,7 +132,7 @@ export function Component() {
                   <td colSpan={8} className="text-center py-12">
                     <Zap className="mx-auto mb-3 text-tertiary opacity-40" size={40} aria-hidden="true" />
                     <p className="text-secondary font-medium">No strategies found</p>
-                    <p className="text-tertiary text-xs mt-1">User strategies will appear here</p>
+                    <p className="text-tertiary text-label mt-1">User strategies will appear here</p>
                   </td>
                 </tr>
               ) : (
@@ -141,7 +141,7 @@ export function Component() {
                     <td className="px-4 py-3 font-medium text-primary">{s.name}</td>
                     <td className="px-4 py-3 text-secondary">{(s as any).user?.username ?? s.username ?? ''}</td>
                     <td className="px-4 py-3">
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusColor(s.status)}`}>
+                      <span className={`px-2 py-1 rounded-full text-label font-medium ${statusColor(s.status)}`}>
                         {s.status}
                       </span>
                     </td>
@@ -171,7 +171,7 @@ export function Component() {
                           variant="danger"
                           onClick={() => handleForceStop(s.id)}
                           aria-label={`Force stop strategy ${s.name}`}
-                          className="inline-flex items-center gap-1 px-2 py-1 text-xs rounded-sm bg-loss/10 text-loss hover:bg-loss/20 cursor-pointer transition-colors"
+                          className="inline-flex items-center gap-1 px-2 py-1 text-label rounded-sm bg-loss/10 text-loss hover:bg-loss/20 cursor-pointer transition-colors"
                         >
                           <Square size={12} aria-hidden="true" />
                           Force Stop
@@ -187,7 +187,7 @@ export function Component() {
 
         {totalPages > 1 && (
           <div className="flex items-center justify-between px-4 py-3 border-t border-default">
-            <span className="text-xs text-tertiary">Page {page} of {totalPages}</span>
+            <span className="text-caption text-tertiary">Page {page} of {totalPages}</span>
             <div className="flex items-center gap-2">
               <Button type="button" variant="ghost" size="icon-sm" onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1} aria-label="Previous page">
                 <ChevronLeft size={16} />

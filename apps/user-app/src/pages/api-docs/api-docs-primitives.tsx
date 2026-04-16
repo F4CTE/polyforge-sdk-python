@@ -101,9 +101,9 @@ export function InlineCode({ children }: { children: string }) {
 export function FieldTable({ fields }: { fields: EndpointField[] }) {
   return (
     <div className="border border-default rounded-xl overflow-hidden">
-      <table className="w-full text-sm" aria-label="Field definitions">
+      <table className="w-full text-body-sm" aria-label="Field definitions">
         <thead>
-          <tr className="bg-surface text-left text-xs text-secondary uppercase tracking-wider border-b border-default">
+          <tr className="bg-surface text-left text-label text-secondary uppercase tracking-wider border-b border-default">
             <th scope="col" className="px-4 py-3 font-medium">Field</th>
             <th scope="col" className="px-4 py-3 font-medium">Type</th>
             <th scope="col" className="px-4 py-3 font-medium">Req.</th>
@@ -113,14 +113,14 @@ export function FieldTable({ fields }: { fields: EndpointField[] }) {
         <tbody className="divide-y divide-subtle">
           {fields.map(f => (
             <tr key={f.name} className="group hover:bg-elevated/50 transition-colors">
-              <td className="px-4 py-3 font-mono text-accent-text text-xs">{f.name}</td>
-              <td className="px-4 py-3 text-secondary text-xs">{f.type}</td>
-              <td className="px-4 py-3 text-xs">
+              <td className="px-4 py-3 font-mono text-accent-text text-label">{f.name}</td>
+              <td className="px-4 py-3 text-secondary text-label">{f.type}</td>
+              <td className="px-4 py-3 text-label">
                 {f.required
                   ? <span className="text-gain">✓</span>
                   : <span className="text-tertiary">—</span>}
               </td>
-              <td className="px-4 py-3 text-secondary text-xs leading-relaxed">{f.description}</td>
+              <td className="px-4 py-3 text-secondary text-label leading-relaxed">{f.description}</td>
             </tr>
           ))}
         </tbody>
@@ -134,7 +134,7 @@ export function FieldTable({ fields }: { fields: EndpointField[] }) {
 export function Sub({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div className="space-y-3">
-      <h3 className="text-xs font-medium text-tertiary uppercase tracking-wider">{title}</h3>
+      <h3 className="text-label font-medium text-tertiary uppercase tracking-wider">{title}</h3>
       {children}
     </div>
   );
@@ -159,9 +159,9 @@ export function LangTabs({
           variant="ghost"
           key={l}
           onClick={() => setLang(l)}
-          className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors cursor-pointer ${
+          className={`px-3 py-1 rounded-full text-label font-medium border transition-colors cursor-pointer ${
             lang === l
-              ? 'bg-accent/15 text-accent-text border-accent/30'
+              ? 'bg-accent-subtle text-accent-text border-accent/30'
               : 'border-default text-secondary hover:border-strong hover:text-primary'
           }`}
         >
@@ -194,7 +194,7 @@ export function PageTitle({
         )}
       </div>
       {subtitle && (
-        <p className="text-sm text-secondary leading-relaxed">{subtitle}</p>
+        <p className="text-body-sm text-secondary leading-relaxed">{subtitle}</p>
       )}
     </div>
   );

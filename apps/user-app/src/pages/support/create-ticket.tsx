@@ -84,7 +84,7 @@ export function Component() {
       {/* Form */}
       <form onSubmit={handleSubmit} className="bg-elevated border border-default rounded-xl p-6 space-y-5">
         <div>
-          <label htmlFor="ticket-subject" className="text-xs text-secondary uppercase tracking-wider mb-2 block">Subject</label>
+          <label htmlFor="ticket-subject" className="text-label text-secondary uppercase tracking-wider mb-2 block">Subject</label>
           <Input
             id="ticket-subject"
             type="text"
@@ -94,30 +94,30 @@ export function Component() {
             placeholder="Brief description of your issue"
             aria-required="true"
             aria-describedby={subjectError ? 'ticket-subject-error' : undefined}
-            className={`w-full h-10 px-3 rounded-pf bg-surface border text-sm text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:border-accent/50 focus-visible:ring-1 focus-visible:ring-accent/20 transition-colors ${subjectError ? 'border-loss/50' : 'border-default'}`}
+            className={`w-full h-10 px-3 rounded-pf bg-surface border text-body-md text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:border-accent/50 focus-visible:ring-1 focus-visible:ring-accent/20 transition-colors ${subjectError ? 'border-loss/50' : 'border-default'}`}
           />
-          {subjectError && <p id="ticket-subject-error" className="mt-1 text-xs text-loss">{subjectError}</p>}
+          {subjectError && <p id="ticket-subject-error" className="mt-1 text-label text-loss">{subjectError}</p>}
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label htmlFor="ticket-category" className="text-xs text-secondary uppercase tracking-wider mb-2 block">Category</label>
+            <label htmlFor="ticket-category" className="text-label text-secondary uppercase tracking-wider mb-2 block">Category</label>
             <Select
               id="ticket-category"
               value={category}
               onChange={e => setCategory(e.target.value)}
-              className="w-full h-10 px-3 rounded-pf bg-surface border border-default text-sm text-primary focus-visible:outline-none focus-visible:border-accent/50"
+              className="w-full h-10 px-3 rounded-pf bg-surface border border-default text-body-md text-primary focus-visible:outline-none focus-visible:border-accent/50"
             >
               {CATEGORIES.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
             </Select>
           </div>
           <div>
-            <label htmlFor="ticket-priority" className="text-xs text-secondary uppercase tracking-wider mb-2 block">Priority</label>
+            <label htmlFor="ticket-priority" className="text-label text-secondary uppercase tracking-wider mb-2 block">Priority</label>
             <Select
               id="ticket-priority"
               value={priority}
               onChange={e => setPriority(e.target.value)}
-              className="w-full h-10 px-3 rounded-pf bg-surface border border-default text-sm text-primary focus-visible:outline-none focus-visible:border-accent/50"
+              className="w-full h-10 px-3 rounded-pf bg-surface border border-default text-body-md text-primary focus-visible:outline-none focus-visible:border-accent/50"
             >
               {PRIORITIES.map(p => <option key={p.value} value={p.value}>{p.label}</option>)}
             </Select>
@@ -125,7 +125,7 @@ export function Component() {
         </div>
 
         <div>
-          <label htmlFor="ticket-body" className="text-xs text-secondary uppercase tracking-wider mb-2 block">Description</label>
+          <label htmlFor="ticket-body" className="text-label text-secondary uppercase tracking-wider mb-2 block">Description</label>
           <Textarea
             id="ticket-body"
             value={body}
@@ -135,20 +135,20 @@ export function Component() {
             rows={6}
             aria-required="true"
             aria-describedby={bodyError ? 'ticket-body-error' : undefined}
-            className={`w-full px-3 py-3 rounded-pf bg-surface border text-sm text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:border-accent/50 focus-visible:ring-1 focus-visible:ring-accent/20 transition-colors resize-y ${bodyError ? 'border-loss/50' : 'border-default'}`}
+            className={`w-full px-3 py-3 rounded-pf bg-surface border text-body-md text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:border-accent/50 focus-visible:ring-1 focus-visible:ring-accent/20 transition-colors resize-y ${bodyError ? 'border-loss/50' : 'border-default'}`}
           />
-          {bodyError && <p id="ticket-body-error" className="mt-1 text-xs text-loss">{bodyError}</p>}
+          {bodyError && <p id="ticket-body-error" className="mt-1 text-label text-loss">{bodyError}</p>}
         </div>
 
         {error && (
-          <div role="alert" className="text-sm text-loss bg-loss/10 px-3 py-2 rounded-pf">{error}</div>
+          <div role="alert" className="text-body-sm text-loss bg-loss/10 px-3 py-2 rounded-pf">{error}</div>
         )}
 
         <div className="flex justify-end">
           <Button
             type="submit"
             disabled={!canSubmit}
-            className="flex items-center gap-2 px-5 py-3 rounded-pf bg-accent text-inverse text-sm font-medium hover:bg-accent-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer transition-colors"
+            className="flex items-center gap-2 px-5 py-3 rounded-pf bg-accent text-inverse text-body-md font-medium hover:bg-accent-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer transition-colors"
           >
             {submitting ? <Loader2 className="size-4 animate-spin" /> : <Send className="size-4" />}
             Submit Ticket

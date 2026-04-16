@@ -55,10 +55,10 @@ export function ConfirmDialog({
         </DialogHeader>
 
         <DialogBody className="space-y-4">
-          <p className="text-sm text-secondary">{description}</p>
+          <p className="text-body-sm text-secondary">{description}</p>
 
           <div className="space-y-1.5">
-            <p className="text-xs text-tertiary">
+            <p className="text-label text-tertiary">
               Type <strong className="font-mono text-primary">{confirmationText}</strong> to continue
             </p>
             <Input

@@ -94,13 +94,13 @@ export function WaitlistForm({ className = "" }: WaitlistFormProps) {
           required
           aria-invalid={status === "error"}
           aria-describedby={status === "error" ? "waitlist-error" : undefined}
-          className="flex-1 min-w-[180px] min-h-[44px] bg-elevated border border-subtle rounded-lg text-primary font-sans text-body-md px-4 py-3 outline-none transition-colors duration-panel focus-visible:border-accent-text focus-visible:ring-2 focus-visible:ring-accent-text focus-visible:ring-offset-2 focus-visible:ring-offset-app placeholder:text-tertiary"
+          className="flex-1 min-w-input-min-sm min-h-touch-target bg-elevated border border-subtle rounded-lg text-primary font-sans text-body-md px-4 py-3 outline-none transition-colors duration-panel focus-visible:border-accent-text focus-visible:ring-2 focus-visible:ring-accent-text focus-visible:ring-offset-2 focus-visible:ring-offset-app placeholder:text-tertiary"
         />
         <button
           type="submit"
           disabled={status === "loading"}
           aria-busy={status === "loading"}
-          className="inline-flex items-center justify-center font-semibold text-body-md px-6 py-3 min-h-[44px] rounded-lg bg-accent text-inverse cursor-pointer transition-all duration-panel hover:bg-accent-text hover:shadow-glow-accent-strong focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-text disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:shadow-none disabled:hover:bg-accent whitespace-nowrap"
+          className="inline-flex items-center justify-center font-semibold text-body-md px-6 py-3 min-h-touch-target rounded-lg bg-accent text-inverse cursor-pointer transition-all duration-panel hover:bg-accent-text hover:shadow-glow-accent-strong focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-text disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:shadow-none disabled:hover:bg-accent whitespace-nowrap"
         >
           <span>Request access</span>
           {status === "loading" && (

@@ -34,18 +34,18 @@ interface NewsArticle {
 
 function sourceColor(source: string): string {
   const map: Record<string, string> = {
-    Reuters: 'bg-info/15 text-info border-info/30',
-    CNN: 'bg-loss/15 text-loss border-loss/30',
-    CoinGecko: 'bg-warning/15 text-warning border-warning/30',
+    Reuters: 'bg-info-subtle text-info border-info/30',
+    CNN: 'bg-loss-subtle text-loss border-loss/30',
+    CoinGecko: 'bg-warning-subtle text-warning border-warning/30',
     Bloomberg: 'bg-purple-500/15 text-purple-500 border-purple-500/30',
-    'AP News': 'bg-gain/15 text-gain border-gain/30',
+    'AP News': 'bg-gain-subtle text-gain border-gain/30',
   };
   return map[source] ?? 'bg-overlay text-tertiary border-default';
 }
 
 function sentimentColor(s: Sentiment): string {
-  if (s === 'POSITIVE') return 'bg-gain/15 text-gain';
-  if (s === 'NEGATIVE') return 'bg-loss/15 text-loss';
+  if (s === 'POSITIVE') return 'bg-gain-subtle text-gain';
+  if (s === 'NEGATIVE') return 'bg-loss-subtle text-loss';
   return 'bg-overlay text-tertiary';
 }
 
@@ -56,9 +56,9 @@ function confidenceColor(c: number): string {
 }
 
 function confidenceBarBg(c: number): string {
-  if (c > 70) return 'bg-gain/15';
-  if (c >= 40) return 'bg-warning/15';
-  return 'bg-loss/15';
+  if (c > 70) return 'bg-gain-subtle';
+  if (c >= 40) return 'bg-warning-subtle';
+  return 'bg-loss-subtle';
 }
 
 function formatDate(ts: string): string {
@@ -122,7 +122,7 @@ export function Component() {
       {/* Back link */}
       <Link
         to="/news"
-        className="inline-flex items-center gap-2 text-sm text-secondary hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 rounded-sm transition-colors"
+        className="inline-flex items-center gap-2 text-body-sm text-secondary hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 rounded-sm transition-colors"
       >
         <ArrowLeft className="size-4" aria-hidden="true" /> News
       </Link>
@@ -133,10 +133,10 @@ export function Component() {
         <div className="flex flex-col items-center justify-center py-20 text-center">
           <Newspaper className="size-10 text-tertiary mb-4" />
           <p className="text-primary font-medium text-lg">Article not found</p>
-          <p className="text-sm text-tertiary mt-1">This article may have been removed or the link is incorrect.</p>
+          <p className="text-body-sm text-tertiary mt-1">This article may have been removed or the link is incorrect.</p>
           <Link
             to="/news"
-            className="mt-4 px-4 py-2 rounded-pf bg-elevated border border-default text-sm text-primary hover:border-strong transition-colors"
+            className="mt-4 px-4 py-2 rounded-pf bg-elevated border border-default text-body-md text-primary hover:border-strong transition-colors"
           >
             Back to News
           </Link>
@@ -161,17 +161,17 @@ export function Component() {
             <h1 data-testid="article-title" className="text-xl font-semibold text-primary leading-snug">{article.title}</h1>
 
             {/* Published date */}
-            <p className="text-xs text-tertiary">{formatDate(article.publishedAt)}</p>
+            <p className="text-caption text-tertiary">{formatDate(article.publishedAt)}</p>
 
             {/* Summary */}
-            <p className="text-sm text-secondary leading-relaxed">{article.summary}</p>
+            <p className="text-body-sm text-secondary leading-relaxed">{article.summary}</p>
 
             {/* External link */}
             <a
               href={article.url?.startsWith('https://') ? article.url : '#'}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-3 py-2 rounded-sm text-xs font-medium border border-accent/30 text-accent-text hover:bg-accent/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 transition-colors"
+              className="inline-flex items-center gap-2 px-3 py-2 rounded-sm text-label font-medium border border-accent/30 text-accent-text hover:bg-accent/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 transition-colors"
             >
               <ExternalLink className="size-4" aria-hidden="true" /> Read full article
             </a>
@@ -179,17 +179,17 @@ export function Component() {
 
           {/* Signals table */}
           <div data-testid="signal-section" className="bg-elevated border border-default rounded-xl p-6">
-            <h2 className="text-sm font-medium text-primary mb-4">
+            <h2 className="text-body-md font-medium text-primary mb-4">
               Signals ({article.signals.length})
             </h2>
 
             {article.signals.length === 0 ? (
               <div className="py-8 text-center">
-                <p className="text-xs text-tertiary">No trading signals generated for this article.</p>
+                <p className="text-label text-tertiary">No trading signals generated for this article.</p>
               </div>
             ) : (
               <div className="overflow-x-auto">
-                <table className="w-full text-xs" role="table" aria-label="Trading signals">
+                <table className="w-full text-label" role="table" aria-label="Trading signals">
                   <thead>
                     <tr className="border-b border-subtle">
                       <th scope="col" className="text-left py-2 px-3 text-tertiary font-medium">Market</th>
@@ -217,7 +217,7 @@ export function Component() {
                         </td>
                         <td className="py-3 px-3">
                           <span className={`px-2 py-1 rounded text-caption font-semibold ${
-                            signal.outcome === 'YES' ? 'bg-gain/15 text-gain' : 'bg-loss/15 text-loss'
+                            signal.outcome === 'YES' ? 'bg-gain-subtle text-gain' : 'bg-loss-subtle text-loss'
                           }`}>
                             {signal.outcome}
                           </span>

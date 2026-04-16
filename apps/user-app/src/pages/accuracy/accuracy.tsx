@@ -74,7 +74,7 @@ function StatCard({
   return (
     <div className="bg-elevated border border-default rounded-xl p-5 relative">
       <div className="flex items-center gap-2 mb-2">
-        <span className="text-xs font-medium uppercase tracking-wider text-secondary">{label}</span>
+        <span className="text-label font-medium uppercase tracking-wider text-secondary">{label}</span>
         {tooltip && (
           <Button
             type="button"
@@ -92,9 +92,9 @@ function StatCard({
         )}
       </div>
       <span className="text-3xl font-mono font-semibold text-primary">{value}</span>
-      {sub && <p className="text-xs text-tertiary mt-1">{sub}</p>}
+      {sub && <p className="text-label text-tertiary mt-1">{sub}</p>}
       {showTip && tooltip && (
-        <div className="absolute top-full left-0 z-20 mt-2 w-56 rounded-sm bg-elevated border border-default shadow-lg p-3 text-xs text-secondary leading-relaxed">
+        <div className="absolute top-full left-0 z-20 mt-2 w-56 rounded-sm bg-elevated border border-default shadow-lg p-3 text-label text-secondary leading-relaxed">
           {tooltip}
         </div>
       )}
@@ -149,7 +149,7 @@ export function Component() {
         <div className="flex flex-col items-center justify-center py-20 text-center">
           <Target className="size-10 text-tertiary mb-4" aria-hidden="true" />
           <p className="text-primary font-medium">Failed to load accuracy data</p>
-          <p className="text-sm text-tertiary mt-1">{error}</p>
+          <p className="text-body-sm text-tertiary mt-1">{error}</p>
         </div>
       </div>
     );
@@ -166,7 +166,7 @@ export function Component() {
         <div className="flex flex-col items-center justify-center py-24 text-center bg-elevated border border-default rounded-xl">
           <Target className="size-12 text-tertiary mb-4 opacity-40" aria-hidden="true" />
           <p className="text-primary font-medium text-lg">No predictions yet</p>
-          <p className="text-sm text-tertiary mt-1 max-w-xs">
+          <p className="text-body-sm text-tertiary mt-1 max-w-xs">
             Once you place and resolve predictions, your accuracy metrics will appear here.
           </p>
         </div>
@@ -211,12 +211,12 @@ export function Component() {
 
       {/* Calibration Chart */}
       <div className="bg-elevated border border-default rounded-xl p-6">
-        <h2 className="text-sm font-medium text-primary mb-1">Calibration Curve</h2>
-        <p className="text-xs text-tertiary mb-4">
+        <h2 className="text-body-md font-medium text-primary mb-1">Calibration Curve</h2>
+        <p className="text-label text-tertiary mb-4">
           Points close to the diagonal line indicate well-calibrated predictions.
         </p>
         {data.calibration.length === 0 ? (
-          <div className="h-48 flex items-center justify-center text-sm text-tertiary">
+          <div className="h-48 flex items-center justify-center text-body-sm text-tertiary">
             Not enough data to display calibration curve.
           </div>
         ) : (
@@ -286,12 +286,12 @@ export function Component() {
       {categories.length > 0 && (
         <div className="bg-elevated border border-default rounded-xl overflow-hidden">
           <div className="px-6 py-4 border-b border-subtle">
-            <h2 className="text-sm font-medium text-primary">Breakdown by Category</h2>
+            <h2 className="text-body-md font-medium text-primary">Breakdown by Category</h2>
           </div>
           <div className="overflow-x-auto">
-            <table className="w-full text-sm" aria-label="Accuracy by category">
+            <table className="w-full text-body-sm" aria-label="Accuracy by category">
               <thead>
-                <tr className="bg-surface text-left text-xs text-secondary uppercase tracking-wider">
+                <tr className="bg-surface text-left text-label text-secondary uppercase tracking-wider">
                   <th scope="col" className="px-6 py-3 font-medium">Category</th>
                   <th scope="col" className="px-6 py-3 font-medium text-right">Predictions</th>
                   <th scope="col" className="px-6 py-3 font-medium text-right">Brier Score</th>

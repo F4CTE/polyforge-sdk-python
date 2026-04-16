@@ -1140,7 +1140,7 @@ export function Component() {
     return (
       <div className="max-w-2xl mx-auto py-8 px-4">
         <h1 className="text-xl font-semibold text-primary mb-1">New Strategy</h1>
-        <p className="text-sm text-secondary mb-6">Choose a starting point</p>
+        <p className="text-body-sm text-secondary mb-6">Choose a starting point</p>
         <div className="grid grid-cols-1 gap-3">
           {TEMPLATES.map(t => (
             <Button
@@ -1161,7 +1161,7 @@ export function Component() {
               <span className="text-2xl">{t.icon}</span>
               <div className="flex-1">
                 <div className="flex items-center gap-2">
-                  <span className="text-sm font-semibold text-primary group-hover:text-accent-text transition-colors">{t.name}</span>
+                  <span className="text-body-md font-semibold text-primary group-hover:text-accent-text transition-colors">{t.name}</span>
                   {t.trigger && (
                     <span className="text-caption px-2 py-1 rounded bg-surface-elevated border border-default text-tertiary">{t.trigger}</span>
                   )}
@@ -1171,7 +1171,7 @@ export function Component() {
                     'bg-loss/10 border-loss/30 text-loss'
                   }`}>{t.difficulty}</span>
                 </div>
-                <p className="text-xs text-tertiary mt-1">{t.description}</p>
+                <p className="text-label text-tertiary mt-1">{t.description}</p>
               </div>
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-tertiary group-hover:text-accent-text flex-shrink-0 transition-colors"><polyline points="9 18 15 12 9 6"/></svg>
             </Button>
@@ -1188,7 +1188,7 @@ export function Component() {
       <div className="flex items-center justify-center h-full">
         <div className="flex flex-col items-center gap-3 text-tertiary">
           <Loader2 className="size-6 animate-spin" />
-          <span className="text-sm">Loading strategy...</span>
+          <span className="text-body-sm">Loading strategy...</span>
         </div>
       </div>
     );
@@ -1200,7 +1200,7 @@ export function Component() {
       <div className="flex items-center gap-3 px-4 py-3 border-b border-subtle bg-elevated/50 shrink-0">
         <Link
           to="/strategies"
-          className="flex items-center gap-2 text-xs text-secondary hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 rounded-sm transition-colors"
+          className="flex items-center gap-2 text-label text-secondary hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 rounded-sm transition-colors"
         >
           <ArrowLeft className="size-3" aria-hidden="true" />
           Strategies
@@ -1329,7 +1329,7 @@ export function Component() {
 
           <Link
             to="/strategies"
-            className="px-3 py-2 text-xs text-secondary hover:text-primary rounded-sm hover:bg-overlay transition-colors"
+            className="px-3 py-2 text-label text-secondary hover:text-primary rounded-sm hover:bg-overlay transition-colors"
           >
             Cancel
           </Link>
@@ -1367,7 +1367,7 @@ export function Component() {
                 <LayoutTemplate className="size-4 text-accent-text" aria-hidden="true" />
                 Strategy Templates
               </h2>
-              <p className="text-xs text-tertiary mt-1">Start faster with a pre-built strategy</p>
+              <p className="text-label text-tertiary mt-1">Start faster with a pre-built strategy</p>
             </div>
             <Button
               type="button"
@@ -1413,7 +1413,7 @@ export function Component() {
                     <div className="flex items-start gap-3 mb-3">
                       <span className="text-2xl leading-none mt-1 shrink-0" aria-hidden="true">{template.emoji}</span>
                       <div className="flex-1 min-w-0">
-                        <h3 className="text-sm font-semibold text-primary truncate">{template.name}</h3>
+                        <h3 className="text-body-md font-semibold text-primary truncate">{template.name}</h3>
                         <DifficultyDots difficulty={template.difficulty} />
                       </div>
                     </div>
@@ -1431,7 +1431,7 @@ export function Component() {
                     </div>
 
                     {/* Description */}
-                    <p className="text-xs text-tertiary leading-relaxed flex-1 mb-4">{template.description}</p>
+                    <p className="text-label text-tertiary leading-relaxed flex-1 mb-4">{template.description}</p>
 
                     {/* Block count summary */}
                     <div className="text-caption text-tertiary mb-3">
@@ -1440,7 +1440,7 @@ export function Component() {
 
                     {/* Confirmation inline or use button */}
                     {confirmTemplate?.id === template.id ? (
-                      <div className="bg-warning/8 border border-warning/25 rounded-pf p-3">
+                      <div className="bg-warning-subtle border border-warning/25 rounded-pf p-3">
                         <p className="text-label text-warning mb-2 font-medium">This will replace your current canvas. Continue?</p>
                         <div className="flex items-center gap-2">
                           <Button
@@ -1482,7 +1482,7 @@ export function Component() {
             {STRATEGY_TEMPLATES.filter((t) => templateCategory === 'all' || t.category === templateCategory).length === 0 && (
               <div className="flex flex-col items-center justify-center py-16 text-center">
                 <LayoutTemplate className="size-8 text-tertiary mb-3 opacity-40" />
-                <p className="text-sm text-tertiary">No templates in this category yet.</p>
+                <p className="text-body-sm text-tertiary">No templates in this category yet.</p>
               </div>
             )}
           </div>
@@ -1504,7 +1504,7 @@ export function Component() {
               {/* Canvas issue banner — unwired blocks and/or misconfigured fields */}
               {(canvasIssues.orphaned > 0 || canvasIssues.misconfigured > 0) && (
                 <div
-                  className={`absolute top-2 left-1/2 -translate-x-1/2 z-30 flex items-center gap-3 px-3 py-2 rounded-full text-xs font-medium pointer-events-none border ${
+                  className={`absolute top-2 left-1/2 -translate-x-1/2 z-30 flex items-center gap-3 px-3 py-2 rounded-full text-label font-medium pointer-events-none border ${
                     canvasIssues.misconfigured > 0
                       ? 'bg-loss/10 border-loss/25 text-loss'
                       : 'bg-warning/10 border-warning/25 text-warning'
@@ -1532,7 +1532,7 @@ export function Component() {
                 <div className="absolute inset-0 z-50 flex items-center justify-center bg-surface/80 backdrop-blur-sm border-2 border-dashed border-accent rounded-xl pointer-events-none">
                   <div className="flex flex-col items-center gap-2 text-accent-text">
                     <Upload className="size-8" />
-                    <span className="text-sm font-medium">Drop .polyforge file to import</span>
+                    <span className="text-body-md font-medium">Drop .polyforge file to import</span>
                   </div>
                 </div>
               )}
@@ -1542,10 +1542,10 @@ export function Component() {
             {quickResult && (
               <div className="absolute bottom-4 left-4 z-40 bg-elevated border border-default rounded-xl p-4 shadow-lg max-w-xs">
                 <div className="flex items-center justify-between mb-3">
-                  <span className="text-xs font-semibold text-primary uppercase tracking-wider">Quick Test Results</span>
+                  <span className="text-label font-semibold text-primary uppercase tracking-wider">Quick Test Results</span>
                   <Button type="button" variant="ghost" size="icon-sm" onClick={() => setQuickResult(null)} aria-label="Close quick test results"><X className="size-3" /></Button>
                 </div>
-                <div className="grid grid-cols-2 gap-2 text-xs">
+                <div className="grid grid-cols-2 gap-2 text-label">
                   <div className="bg-surface rounded-pf p-2">
                     <span className="text-secondary block">P&L</span>
                     <span className={`font-mono font-semibold ${parseFloat(String(quickResult.totalPnl ?? '0')) >= 0 ? 'text-gain' : 'text-loss'}`}>
@@ -1582,7 +1582,7 @@ export function Component() {
                 >
                   <Target className="size-4 text-accent-text" aria-hidden="true" />
                   Pinned Market
-                  {pinnedMarket && <span className="ml-auto text-caption bg-accent/15 text-accent-text px-2 py-1 rounded-full truncate max-w-[90px]">{pinnedMarket.title.slice(0, 20)}{pinnedMarket.title.length > 20 ? '…' : ''}</span>}
+                  {pinnedMarket && <span className="ml-auto text-caption bg-accent-subtle text-accent-text px-2 py-1 rounded-full truncate max-w-[90px]">{pinnedMarket.title.slice(0, 20)}{pinnedMarket.title.length > 20 ? '…' : ''}</span>}
                 </Button>
                 {marketPickerOpen && (
                   <div className="px-2 pb-2 space-y-2">

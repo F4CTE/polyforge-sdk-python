@@ -138,6 +138,7 @@
   --color-cyan-200: #bfcdfe;
   --color-cyan-300: #93a8fc;
   --color-cyan-600: #3B5BDB;
+  --color-cyan-700: #0E7490;
 
   /* Gold palette (charts, badges) */
   --color-gold-300: #fcd34d;
@@ -240,11 +241,18 @@
   /* Component minimum dimensions */
   --min-width-dropdown-min: 160px;
   --min-height-textarea-min: 80px;
+  --min-height-touch-target: 44px;
 
   /* Opacity scale */
   --opacity-subtle: 0.04;
   --opacity-muted: 0.06;
   --opacity-disabled: 0.6;
+  --opacity-pf-5: 0.05;
+  --opacity-pf-6: 0.06;
+  --opacity-pf-8: 0.08;
+  --opacity-pf-10: 0.10;
+  --opacity-pf-12: 0.12;
+  --opacity-pf-15: 0.15;
 }
 
 /* Base styles */

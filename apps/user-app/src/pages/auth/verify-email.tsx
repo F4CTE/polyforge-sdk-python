@@ -92,7 +92,7 @@ export function Component() {
           {state === 'pending' && (
             <div className="text-center py-4" role="status">
               <Loader2 className="size-12 text-accent motion-safe:animate-spin mx-auto mb-4" aria-hidden="true" />
-              <p className="text-tertiary text-sm">Verifying your email...</p>
+              <p className="text-tertiary text-body-sm">Verifying your email...</p>
             </div>
           )}
 
@@ -103,7 +103,7 @@ export function Component() {
                 <Check className="size-8 text-gain" />
               </div>
               <h1 className="text-xl font-semibold text-primary mb-2">Email verified!</h1>
-              <p className="text-sm text-tertiary mb-6">Your account is now active.</p>
+              <p className="text-body-sm text-tertiary mb-6">Your account is now active.</p>
               <Link
                 to="/markets"
                 className="inline-block px-6 py-3 bg-accent text-inverse font-semibold rounded-pf hover:bg-accent-text transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 focus-visible:ring-offset-2 focus-visible:ring-offset-elevated"
@@ -120,7 +120,7 @@ export function Component() {
                 <AlertCircle className="size-8 text-loss" />
               </div>
               <h1 className="text-xl font-semibold text-primary mb-2">Verification failed</h1>
-              <p className="text-sm text-loss mb-6">{error}</p>
+              <p className="text-body-md text-loss mb-6">{error}</p>
               <Button
                 type="button"
                 variant="secondary"
@@ -140,14 +140,14 @@ export function Component() {
                 <Mail className="size-8 text-accent" />
               </div>
               <h1 className="text-xl font-semibold text-primary mb-2">Check your email</h1>
-              <p className="text-sm text-tertiary mb-4">
+              <p className="text-body-sm text-tertiary mb-4">
                 We sent a verification link to{' '}
                 {user?.email ? <strong className="text-primary">{user.email}</strong> : 'your email'}
                 . Click the link to activate your account.
               </p>
 
               {resent && (
-                <div className="flex items-center justify-center gap-2 bg-gain/10 border border-gain/20 text-gain rounded-pf px-4 py-3 mb-4 text-sm">
+                <div className="flex items-center justify-center gap-2 bg-gain/10 border border-gain/20 text-gain rounded-pf px-4 py-3 mb-4 text-body-md">
                   <Check className="size-4" />
                   <span>Verification email resent!</span>
                 </div>
@@ -163,7 +163,7 @@ export function Component() {
                 {resending ? 'Sending...' : 'Resend email'}
               </Button>
 
-              <div className="mt-4 text-sm">
+              <div className="mt-4 text-body-sm">
                 <Link to="/login" className="text-accent hover:text-accent-text transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 rounded-sm">
                   Back to login
                 </Link>

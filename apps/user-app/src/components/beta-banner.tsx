@@ -38,7 +38,7 @@ export function BetaBanner() {
         type="button"
         onClick={dismiss}
         aria-label="Dismiss beta notice"
-        className="shrink-0 flex items-center justify-center rounded-sm p-1 hover:bg-warning/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-warning/50 transition-colors"
+        className="shrink-0 flex items-center justify-center rounded-sm p-1 hover:bg-warning-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-warning/50 transition-colors"
       >
         <X size={14} aria-hidden="true" />
       </button>

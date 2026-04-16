@@ -159,7 +159,7 @@ export function Component() {
     <div className="animate-fade-in space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-semibold text-primary">
-          Users <span className="text-sm font-normal text-tertiary">({total})</span>
+          Users <span className="text-body-sm font-normal text-tertiary">({total})</span>
         </h2>
       </div>
 
@@ -177,7 +177,7 @@ export function Component() {
             aria-label="Search users"
             defaultValue={search}
             onChange={(e) => handleSearch(e.target.value)}
-            className="w-full pl-9 pr-3 py-2 text-sm rounded-sm border border-default bg-app text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+            className="w-full pl-9 pr-3 py-2 text-body-sm rounded-sm border border-default bg-app text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
           />
         </div>
         <Select
@@ -187,7 +187,7 @@ export function Component() {
             setPage(1);
           }}
           aria-label="Filter by status"
-          className="px-3 py-2 text-sm rounded-sm border border-default bg-app text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/20"
+          className="px-3 py-2 text-body-sm rounded-sm border border-default bg-app text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/20"
         >
           <option value="">All statuses</option>
           <option value="PENDING">Pending approval</option>
@@ -196,7 +196,7 @@ export function Component() {
           <option value="CONNECTED">Connected</option>
           <option value="SUSPENDED">Suspended</option>
         </Select>
-        <label className="flex items-center gap-2 text-sm text-secondary cursor-pointer select-none ml-auto">
+        <label className="flex items-center gap-2 text-body-sm text-secondary cursor-pointer select-none ml-auto">
           <input
             type="checkbox"
             checked={hideTestAccounts}
@@ -213,7 +213,7 @@ export function Component() {
         <div className="text-center py-12">
           <AlertCircle className="mx-auto mb-3 text-tertiary" size={40} aria-hidden="true" />
           <p className="text-secondary mb-4">Failed to load data</p>
-          <Button type="button" variant="ghost" onClick={load} className="text-accent-text hover:text-accent-text text-sm rounded-sm px-2 py-1">
+          <Button type="button" variant="ghost" onClick={load} className="text-accent-text hover:text-accent-text text-body-sm rounded-sm px-2 py-1">
             Try again
           </Button>
         </div>
@@ -222,18 +222,18 @@ export function Component() {
       {/* Table */}
       <div className="bg-elevated border border-default rounded-xl overflow-hidden">
         <div className="overflow-x-auto" data-density="compact">
-          <table className="w-full text-sm">
+          <table className="w-full text-body-sm">
             <caption className="sr-only">User accounts list</caption>
             <thead>
               <tr className="border-b border-default">
-                <th scope="col" onClick={() => toggleSort('username')} role="columnheader" aria-sort={sortField === 'username' ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none'} className="text-left px-4 py-3 text-xs font-medium text-tertiary uppercase tracking-wider cursor-pointer hover:text-secondary select-none transition-colors">Username{sortIndicator('username')}</th>
-                <th scope="col" className="text-left px-4 py-3 text-xs font-medium text-tertiary uppercase tracking-wider">Email</th>
-                <th scope="col" onClick={() => toggleSort('status')} role="columnheader" aria-sort={sortField === 'status' ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none'} className="text-left px-4 py-3 text-xs font-medium text-tertiary uppercase tracking-wider cursor-pointer hover:text-secondary select-none transition-colors">Status{sortIndicator('status')}</th>
-                <th scope="col" onClick={() => toggleSort('emailVerified')} role="columnheader" aria-sort={sortField === 'emailVerified' ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none'} className="text-center px-4 py-3 text-xs font-medium text-tertiary uppercase tracking-wider cursor-pointer hover:text-secondary select-none transition-colors">Verified{sortIndicator('emailVerified')}</th>
-                <th scope="col" className="text-center px-4 py-3 text-xs font-medium text-tertiary uppercase tracking-wider">2FA</th>
-                <th scope="col" className="text-center px-4 py-3 text-xs font-medium text-tertiary uppercase tracking-wider">Connected</th>
-                <th scope="col" onClick={() => toggleSort('createdAt')} role="columnheader" aria-sort={sortField === 'createdAt' ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none'} className="text-left px-4 py-3 text-xs font-medium text-tertiary uppercase tracking-wider cursor-pointer hover:text-secondary select-none transition-colors">Created{sortIndicator('createdAt')}</th>
-                <th scope="col" className="text-right px-4 py-3 text-xs font-medium text-tertiary uppercase tracking-wider">Actions</th>
+                <th scope="col" onClick={() => toggleSort('username')} role="columnheader" aria-sort={sortField === 'username' ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none'} className="text-left px-4 py-3 text-label font-medium text-tertiary uppercase tracking-wider cursor-pointer hover:text-secondary select-none transition-colors">Username{sortIndicator('username')}</th>
+                <th scope="col" className="text-left px-4 py-3 text-label font-medium text-tertiary uppercase tracking-wider">Email</th>
+                <th scope="col" onClick={() => toggleSort('status')} role="columnheader" aria-sort={sortField === 'status' ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none'} className="text-left px-4 py-3 text-label font-medium text-tertiary uppercase tracking-wider cursor-pointer hover:text-secondary select-none transition-colors">Status{sortIndicator('status')}</th>
+                <th scope="col" onClick={() => toggleSort('emailVerified')} role="columnheader" aria-sort={sortField === 'emailVerified' ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none'} className="text-center px-4 py-3 text-label font-medium text-tertiary uppercase tracking-wider cursor-pointer hover:text-secondary select-none transition-colors">Verified{sortIndicator('emailVerified')}</th>
+                <th scope="col" className="text-center px-4 py-3 text-label font-medium text-tertiary uppercase tracking-wider">2FA</th>
+                <th scope="col" className="text-center px-4 py-3 text-label font-medium text-tertiary uppercase tracking-wider">Connected</th>
+                <th scope="col" onClick={() => toggleSort('createdAt')} role="columnheader" aria-sort={sortField === 'createdAt' ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none'} className="text-left px-4 py-3 text-label font-medium text-tertiary uppercase tracking-wider cursor-pointer hover:text-secondary select-none transition-colors">Created{sortIndicator('createdAt')}</th>
+                <th scope="col" className="text-right px-4 py-3 text-label font-medium text-tertiary uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -252,7 +252,7 @@ export function Component() {
                   <td colSpan={8} className="text-center py-12">
                     <Users className="mx-auto mb-3 text-tertiary opacity-40" size={40} aria-hidden="true" />
                     <p className="text-secondary font-medium">No users found</p>
-                    <p className="text-tertiary text-xs mt-1">Try adjusting your search or filters</p>
+                    <p className="text-tertiary text-label mt-1">Try adjusting your search or filters</p>
                   </td>
                 </tr>
               ) : (
@@ -262,7 +262,7 @@ export function Component() {
                     tabIndex={0}
                     onClick={() => navigate(`/users/${user.id}`)}
                     onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); navigate(`/users/${user.id}`); } }}
-                    className="border-b border-default last:border-0 hover:bg-app focus-visible:bg-accent/5 cursor-pointer transition-colors"
+                    className="border-b border-default last:border-0 hover:bg-app focus-visible:bg-accent-subtle cursor-pointer transition-colors"
                   >
                     <td className="px-4 py-3 font-medium text-primary">
                       <Link
@@ -280,7 +280,7 @@ export function Component() {
                     </td>
                     <td className="px-4 py-3 text-secondary">{user.email ?? ''}</td>
                     <td className="px-4 py-3">
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusColor(computeUserStatus(user))}`}>
+                      <span className={`px-2 py-1 rounded-full text-label font-medium ${statusColor(computeUserStatus(user))}`}>
                         {computeUserStatus(user)}
                       </span>
                     </td>
@@ -315,7 +315,7 @@ export function Component() {
                             type="button"
                             variant="success"
                             onClick={(e) => { e.stopPropagation(); handleApprove(user.id, user.username); }}
-                            className="px-2 py-1 text-xs font-medium rounded-sm bg-gain/10 text-gain hover:bg-gain/20 transition-colors"
+                            className="px-2 py-1 text-label font-medium rounded-sm bg-gain/10 text-gain hover:bg-gain/20 transition-colors"
                           >
                             Approve
                           </Button>
@@ -323,7 +323,7 @@ export function Component() {
                             type="button"
                             variant="danger"
                             onClick={(e) => { e.stopPropagation(); handleReject(user.id, user.username); }}
-                            className="px-2 py-1 text-xs font-medium rounded-sm bg-loss/10 text-loss hover:bg-loss/20 transition-colors"
+                            className="px-2 py-1 text-label font-medium rounded-sm bg-loss/10 text-loss hover:bg-loss/20 transition-colors"
                           >
                             Reject
                           </Button>
@@ -340,7 +340,7 @@ export function Component() {
         {/* Pagination */}
         {totalPages > 1 && (
           <div className="flex items-center justify-between px-4 py-3 border-t border-default">
-            <span className="text-xs text-tertiary">
+            <span className="text-caption text-tertiary">
               Page {page} of {totalPages}
             </span>
             <div className="flex items-center gap-2">

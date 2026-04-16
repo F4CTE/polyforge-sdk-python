@@ -99,7 +99,7 @@ export function ShortcutsModal({ open, onClose }: ShortcutsModalProps) {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-6">
           {SHORTCUT_GROUPS.map((group) => (
             <div key={group.title}>
-              <h3 className="text-xs font-semibold text-tertiary uppercase tracking-wide mb-3">
+              <h3 className="text-label font-semibold text-tertiary uppercase tracking-wide mb-3">
                 {group.title}
               </h3>
               <ul className="space-y-2">
@@ -108,16 +108,16 @@ export function ShortcutsModal({ open, onClose }: ShortcutsModalProps) {
                     <span className="flex items-center gap-1 flex-shrink-0">
                       {shortcut.keys.map((key, ki) => (
                         <span key={ki} className="flex items-center gap-1">
-                          <kbd className="inline-flex items-center px-2 py-1 rounded bg-elevated border border-default text-xs font-mono text-primary">
+                          <kbd className="inline-flex items-center px-2 py-1 rounded bg-elevated border border-default text-label font-mono text-primary">
                             {key}
                           </kbd>
                           {ki < shortcut.keys.length - 1 && (
-                            <span className="text-xs text-tertiary">+</span>
+                            <span className="text-label text-tertiary">+</span>
                           )}
                         </span>
                       ))}
                     </span>
-                    <span className="text-sm text-secondary text-right">
+                    <span className="text-body-sm text-secondary text-right">
                       {shortcut.description}
                     </span>
                   </li>

@@ -186,10 +186,10 @@ export function StrategyCanvas() {
                 />
               </svg>
             </div>
-            <p className="text-sm text-secondary font-medium">
+            <p className="text-body-sm text-secondary font-medium">
               Drag a block from the panel to get started
             </p>
-            <p className="text-xs text-tertiary">
+            <p className="text-label text-tertiary">
               Or click a block in the panel to add it
             </p>
           </div>

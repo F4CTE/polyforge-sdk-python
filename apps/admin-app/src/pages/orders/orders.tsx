@@ -89,13 +89,13 @@ export function Component() {
     <div className="animate-fade-in space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-semibold text-primary">
-          Orders <span className="text-sm font-normal text-tertiary">({total})</span>
+          Orders <span className="text-body-sm font-normal text-tertiary">({total})</span>
         </h2>
         <Select
           value={statusFilter}
           onChange={e => { setStatusFilter(e.target.value); setPage(1); }}
           aria-label="Filter by order status"
-          className="h-8 px-2 rounded-sm bg-elevated border border-default text-xs text-primary focus-visible:outline-none focus-visible:border-accent"
+          className="h-8 px-2 rounded-sm bg-elevated border border-default text-label text-primary focus-visible:outline-none focus-visible:border-accent"
         >
           <option value="">All statuses</option>
           <option value="PENDING">Pending</option>
@@ -111,7 +111,7 @@ export function Component() {
         <div className="text-center py-12">
           <AlertCircle className="mx-auto mb-3 text-tertiary" size={40} aria-hidden="true" />
           <p className="text-secondary mb-4">Failed to load data</p>
-          <Button type="button" variant="ghost" onClick={load} className="text-accent-text hover:text-accent-text text-sm">
+          <Button type="button" variant="ghost" onClick={load} className="text-accent-text hover:text-accent-text text-body-sm">
             Try again
           </Button>
         </div>
@@ -122,7 +122,7 @@ export function Component() {
         <div className="bg-elevated border border-warning/30 rounded-xl p-5">
           <div className="flex items-center gap-2 mb-4">
             <AlertTriangle size={16} className="text-warning" aria-hidden="true" />
-            <h3 className="text-sm font-semibold text-warning">
+            <h3 className="text-body-md font-semibold text-warning">
               Dead Letter Queue ({dlqEntries.length})
             </h3>
           </div>
@@ -133,18 +133,18 @@ export function Component() {
                 className="flex items-center justify-between p-3 rounded-sm bg-app border border-default"
               >
                 <div className="min-w-0">
-                  <div className="text-sm text-primary">
+                  <div className="text-body-sm text-primary">
                     <span className="font-medium">{entry.username}</span>
                     <span className="text-tertiary"> - Intent {entry.intentId.slice(0, 8)}</span>
                   </div>
-                  <div className="text-xs text-loss mt-1 truncate">{entry.lastError}</div>
+                  <div className="text-label text-loss mt-1 truncate">{entry.lastError}</div>
                   <div className="text-label text-tertiary mt-1">
                     {entry.attempts} attempts - {formatDateTime(entry.enqueuedAt)}
                   </div>
                 </div>
                 <div className="flex items-center gap-2 ml-4 shrink-0">
                   {confirmAction?.intentId === entry.intentId ? (
-                    <div className="flex items-center gap-2 text-xs">
+                    <div className="flex items-center gap-2 text-label">
                       <span className="text-secondary">
                         {confirmAction?.type === 'discard' ? 'Discard?' : 'Replay?'}
                       </span>
@@ -171,7 +171,7 @@ export function Component() {
                         type="button"
                         variant="default"
                         onClick={() => setConfirmAction({ type: 'replay', intentId: entry.intentId })}
-                        className="flex items-center gap-1 px-2 py-1 text-xs rounded-sm bg-info/10 text-info hover:bg-info/20 cursor-pointer transition-colors"
+                        className="flex items-center gap-1 px-2 py-1 text-label rounded-sm bg-info/10 text-info hover:bg-info/20 cursor-pointer transition-colors"
                       >
                         <RotateCcw size={12} aria-hidden="true" />
                         Replay
@@ -180,7 +180,7 @@ export function Component() {
                         type="button"
                         variant="danger"
                         onClick={() => setConfirmAction({ type: 'discard', intentId: entry.intentId })}
-                        className="flex items-center gap-1 px-2 py-1 text-xs rounded-sm bg-loss/10 text-loss hover:bg-loss/20 cursor-pointer transition-colors"
+                        className="flex items-center gap-1 px-2 py-1 text-label rounded-sm bg-loss/10 text-loss hover:bg-loss/20 cursor-pointer transition-colors"
                       >
                         <Trash2 size={12} aria-hidden="true" />
                         Discard
@@ -197,17 +197,17 @@ export function Component() {
       {/* Orders Table */}
       <div className="bg-elevated border border-default rounded-xl overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className="w-full text-body-sm">
             <caption className="sr-only">Trading orders</caption>
             <thead>
               <tr className="border-b border-default">
-                <th scope="col" className="text-left px-4 py-3 text-xs font-medium text-tertiary uppercase tracking-wider">ID</th>
-                <th scope="col" className="text-left px-4 py-3 text-xs font-medium text-tertiary uppercase tracking-wider">User</th>
-                <th scope="col" className="text-left px-4 py-3 text-xs font-medium text-tertiary uppercase tracking-wider">Side</th>
-                <th scope="col" className="text-left px-4 py-3 text-xs font-medium text-tertiary uppercase tracking-wider">Status</th>
-                <th scope="col" className="text-right px-4 py-3 text-xs font-medium text-tertiary uppercase tracking-wider">Size</th>
-                <th scope="col" className="text-right px-4 py-3 text-xs font-medium text-tertiary uppercase tracking-wider">Price</th>
-                <th scope="col" className="text-left px-4 py-3 text-xs font-medium text-tertiary uppercase tracking-wider">Created</th>
+                <th scope="col" className="text-left px-4 py-3 text-label font-medium text-tertiary uppercase tracking-wider">ID</th>
+                <th scope="col" className="text-left px-4 py-3 text-label font-medium text-tertiary uppercase tracking-wider">User</th>
+                <th scope="col" className="text-left px-4 py-3 text-label font-medium text-tertiary uppercase tracking-wider">Side</th>
+                <th scope="col" className="text-left px-4 py-3 text-label font-medium text-tertiary uppercase tracking-wider">Status</th>
+                <th scope="col" className="text-right px-4 py-3 text-label font-medium text-tertiary uppercase tracking-wider">Size</th>
+                <th scope="col" className="text-right px-4 py-3 text-label font-medium text-tertiary uppercase tracking-wider">Price</th>
+                <th scope="col" className="text-left px-4 py-3 text-label font-medium text-tertiary uppercase tracking-wider">Created</th>
               </tr>
             </thead>
             <tbody>
@@ -226,13 +226,13 @@ export function Component() {
                   <td colSpan={7} className="text-center py-12">
                     <ClipboardList className="mx-auto mb-3 text-tertiary opacity-40" size={40} aria-hidden="true" />
                     <p className="text-secondary font-medium">No orders found</p>
-                    <p className="text-tertiary text-xs mt-1">Orders will appear here once users start trading</p>
+                    <p className="text-tertiary text-label mt-1">Orders will appear here once users start trading</p>
                   </td>
                 </tr>
               ) : (
                 orders.map((o) => (
                   <tr key={o.id} className="border-b border-default last:border-0 hover:bg-app transition-colors">
-                    <td className="px-4 py-3 font-mono text-xs text-secondary">
+                    <td className="px-4 py-3 font-mono text-label text-secondary">
                       {o.id.slice(0, 8)}
                     </td>
                     <td className="px-4 py-3 text-primary">{o.username}</td>
@@ -242,7 +242,7 @@ export function Component() {
                       </span>
                     </td>
                     <td className="px-4 py-3">
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusColor(o.status)}`}>
+                      <span className={`px-2 py-1 rounded-full text-label font-medium ${statusColor(o.status)}`}>
                         {o.status}
                       </span>
                     </td>
@@ -258,7 +258,7 @@ export function Component() {
 
         {totalPages > 1 && (
           <div className="flex items-center justify-between px-4 py-3 border-t border-default">
-            <span className="text-xs text-tertiary">Page {page} of {totalPages}</span>
+            <span className="text-caption text-tertiary">Page {page} of {totalPages}</span>
             <div className="flex items-center gap-2">
               <Button type="button" variant="ghost" size="icon-sm" onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1} aria-label="Previous page">
                 <ChevronLeft size={16} />

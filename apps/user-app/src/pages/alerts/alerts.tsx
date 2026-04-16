@@ -199,14 +199,14 @@ export function Component() {
         <div className="flex items-center justify-between mb-6">
           <div>
             <h1 className="text-xl font-semibold text-primary">Price Alerts</h1>
-            <p className="text-sm text-secondary mt-1">
+            <p className="text-body-sm text-secondary mt-1">
               {loading ? '...' : `${alerts.length} alert${alerts.length !== 1 ? 's' : ''}`}
             </p>
           </div>
           <Button
             type="button"
             onClick={() => { setFormOpen(v => !v); if (formOpen) resetForm(); }}
-            className="flex items-center gap-2 text-sm px-3 py-2 rounded-sm bg-accent/10 text-accent-text hover:bg-accent/20 transition-colors font-medium"
+            className="flex items-center gap-2 text-body-md px-3 py-2 rounded-sm bg-accent/10 text-accent-text hover:bg-accent/20 transition-colors font-medium"
           >
             <span className="text-base leading-none">＋</span>
             New Alert
@@ -221,7 +221,7 @@ export function Component() {
           >
             {/* Market search */}
             <div className="space-y-1" ref={searchRef}>
-              <label className="block text-xs font-medium text-secondary uppercase tracking-wide">
+              <label className="block text-label font-medium text-secondary uppercase tracking-wide">
                 Market
               </label>
               <div className="relative">
@@ -236,7 +236,7 @@ export function Component() {
                     }
                   }}
                   placeholder="Search markets..."
-                  className="w-full bg-elevated border border-default rounded-sm px-3 py-2 text-sm text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent/50"
+                  className="w-full bg-elevated border border-default rounded-sm px-3 py-2 text-body-sm text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent/50"
                 />
                 {showDropdown && (
                   <div className="absolute z-20 w-full top-full mt-1 rounded-pf border border-default bg-elevated shadow-lg overflow-hidden">
@@ -246,7 +246,7 @@ export function Component() {
                         type="button"
                         variant="ghost"
                         onMouseDown={() => selectMarket(m)}
-                        className="w-full text-left px-3 py-2 text-sm text-primary hover:bg-surface transition-colors truncate"
+                        className="w-full text-left px-3 py-2 text-body-md text-primary hover:bg-surface transition-colors truncate"
                       >
                         {m.title}
                       </Button>
@@ -259,14 +259,14 @@ export function Component() {
             {/* YES / NO token selector */}
             {selectedMarket && yesNoTokens.length > 0 && (
               <div className="space-y-1">
-                <label className="block text-xs font-medium text-secondary uppercase tracking-wide">
+                <label className="block text-label font-medium text-secondary uppercase tracking-wide">
                   Outcome
                 </label>
                 <div className="flex gap-2">
                   {yesNoTokens.map(t => (
                     <label
                       key={t.id}
-                      className={`flex items-center gap-2 px-3 py-2 rounded-sm border cursor-pointer text-sm transition-colors ${
+                      className={`flex items-center gap-2 px-3 py-2 rounded-sm border cursor-pointer text-body-sm transition-colors ${
                         selectedTokenId === t.id
                           ? t.outcome.toUpperCase() === 'YES'
                             ? 'border-gain/50 bg-gain/10 text-gain'
@@ -284,7 +284,7 @@ export function Component() {
                         className="sr-only"
                       />
                       <span className="font-semibold">{t.outcome.toUpperCase()}</span>
-                      <span className="text-xs font-mono opacity-70">
+                      <span className="text-label font-mono opacity-70">
                         {(parseFloat(t.price) * 100).toFixed(0)}¢
                       </span>
                     </label>
@@ -296,20 +296,20 @@ export function Component() {
             {/* Direction + price row */}
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
-                <label className="block text-xs font-medium text-secondary uppercase tracking-wide">
+                <label className="block text-label font-medium text-secondary uppercase tracking-wide">
                   Direction
                 </label>
                 <Select
                   value={direction}
                   onChange={e => setDirection(e.target.value as 'above' | 'below')}
-                  className="w-full bg-elevated border border-default rounded-sm px-3 py-2 text-sm text-primary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent/50"
+                  className="w-full bg-elevated border border-default rounded-sm px-3 py-2 text-body-md text-primary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent/50"
                 >
                   <option value="above">Price rises above</option>
                   <option value="below">Price falls below</option>
                 </Select>
               </div>
               <div className="space-y-1">
-                <label className="block text-xs font-medium text-secondary uppercase tracking-wide">
+                <label className="block text-label font-medium text-secondary uppercase tracking-wide">
                   Price threshold
                 </label>
                 <Input
@@ -319,7 +319,7 @@ export function Component() {
                   step="0.01"
                   value={price}
                   onChange={e => setPrice(e.target.value)}
-                  className="w-full bg-elevated border border-default rounded-sm px-3 py-2 text-sm text-primary font-mono focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent/50"
+                  className="w-full bg-elevated border border-default rounded-sm px-3 py-2 text-body-md text-primary font-mono focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent/50"
                 />
               </div>
             </div>
@@ -332,7 +332,7 @@ export function Component() {
                 onChange={e => setPersistent(e.target.checked)}
                 className="w-4 h-4 rounded border-default accent-accent"
               />
-              <span className="text-sm text-secondary">Keep alerting after trigger</span>
+              <span className="text-body-sm text-secondary">Keep alerting after trigger</span>
             </label>
 
             {/* Submit */}
@@ -340,7 +340,7 @@ export function Component() {
               <Button
                 type="submit"
                 disabled={submitting || !selectedTokenId}
-                className="px-4 py-2 rounded-sm bg-accent text-app text-sm font-semibold hover:bg-accent-text transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-4 py-2 rounded-sm bg-accent text-app text-body-md font-semibold hover:bg-accent-text transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {submitting ? 'Creating...' : 'Create Alert'}
               </Button>
@@ -350,12 +350,12 @@ export function Component() {
 
         {/* Alerts list */}
         {loading ? (
-          <div className="text-center py-12 text-tertiary text-sm">Loading alerts...</div>
+          <div className="text-center py-12 text-tertiary text-body-sm">Loading alerts...</div>
         ) : alerts.length === 0 ? (
           <div className="text-center py-16">
             <Bell size={40} strokeWidth={1.25} className="text-tertiary mx-auto mb-3" />
-            <p className="text-secondary text-sm font-medium">No active alerts</p>
-            <p className="text-tertiary text-xs mt-1">
+            <p className="text-secondary text-body-sm font-medium">No active alerts</p>
+            <p className="text-tertiary text-label mt-1">
               Set a price target on any market to get notified
             </p>
           </div>
@@ -389,10 +389,10 @@ export function Component() {
 
                   {/* Market + price */}
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm text-primary font-medium truncate" title={title}>
+                    <p className="text-body-md text-primary font-medium truncate" title={title}>
                       {title}
                     </p>
-                    <p className="text-xs text-tertiary mt-1">
+                    <p className="text-label text-tertiary mt-1">
                       {alert.direction === 'above' ? 'Rises above' : 'Falls below'}{' '}
                       <span className="font-mono font-semibold text-primary">{priceCents}</span>
                       {' · '}{created}

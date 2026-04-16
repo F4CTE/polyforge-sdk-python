@@ -48,7 +48,7 @@ function StatCard({
 }) {
   return (
     <div className="bg-elevated border border-default rounded-xl p-4 flex flex-col gap-2">
-      <div className="flex items-center gap-2 text-secondary text-sm">
+      <div className="flex items-center gap-2 text-secondary text-body-sm">
         <Icon size={15} className="shrink-0" aria-hidden="true" />
         <span>{label}</span>
       </div>
@@ -175,7 +175,7 @@ export function Component() {
         <Gift size={22} className="text-accent-text shrink-0" aria-hidden="true" />
         <div>
           <h1 className="text-xl font-semibold text-primary">Referrals</h1>
-          <p className="text-sm text-secondary">
+          <p className="text-body-sm text-secondary">
             Invite friends and earn credits together
           </p>
         </div>
@@ -185,11 +185,11 @@ export function Component() {
       <div className="bg-elevated border border-default rounded-xl p-6 space-y-4">
         <div className="flex items-center gap-2">
           <Gift size={16} className="text-accent-text shrink-0" aria-hidden="true" />
-          <h2 className="text-sm font-semibold text-primary">Your Referral Link</h2>
+          <h2 className="text-body-md font-semibold text-primary">Your Referral Link</h2>
         </div>
 
         {/* Monospace link display */}
-        <div className="bg-surface border border-default rounded-sm px-4 py-3 font-mono text-sm text-primary break-all select-all">
+        <div className="bg-surface border border-default rounded-sm px-4 py-3 font-mono text-body-md text-primary break-all select-all">
           {loading ? (
             <span className="animate-pulse text-secondary">Loading...</span>
           ) : (
@@ -203,7 +203,7 @@ export function Component() {
             type="button"
             onClick={handleCopyLink}
             disabled={loading || !data}
-            className="flex items-center gap-2 px-3 py-2 bg-accent/10 text-accent-text border border-accent/20 rounded-sm text-sm font-medium hover:bg-accent/20 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            className="flex items-center gap-2 px-3 py-2 bg-accent/10 text-accent-text border border-accent/20 rounded-sm text-body-md font-medium hover:bg-accent/20 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
           >
             {copiedLink ? (
               <Check size={14} aria-hidden="true" />
@@ -218,7 +218,7 @@ export function Component() {
             type="button"
             onClick={handleCopyCode}
             disabled={loading || !data}
-            className="flex items-center gap-2 px-3 py-2 bg-surface border border-default rounded-sm text-sm font-medium text-secondary hover:text-primary hover:bg-surface transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            className="flex items-center gap-2 px-3 py-2 bg-surface border border-default rounded-sm text-body-sm font-medium text-secondary hover:text-primary hover:bg-surface transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
           >
             {copiedCode ? (
               <Check size={14} aria-hidden="true" />
@@ -239,7 +239,7 @@ export function Component() {
             type="button"
             onClick={handleShareTwitter}
             disabled={loading || !data}
-            className="flex items-center gap-2 px-3 py-2 bg-surface border border-default rounded-sm text-sm font-medium text-secondary hover:text-primary transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            className="flex items-center gap-2 px-3 py-2 bg-surface border border-default rounded-sm text-body-sm font-medium text-secondary hover:text-primary transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
           >
             <ExternalLink size={14} aria-hidden="true" />
             Share on X
@@ -249,7 +249,7 @@ export function Component() {
             type="button"
             onClick={handleShare}
             disabled={loading || !data}
-            className="flex items-center gap-2 px-3 py-2 bg-surface border border-default rounded-sm text-sm font-medium text-secondary hover:text-primary transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            className="flex items-center gap-2 px-3 py-2 bg-surface border border-default rounded-sm text-body-sm font-medium text-secondary hover:text-primary transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
           >
             <Share2 size={14} aria-hidden="true" />
             Share
@@ -257,7 +257,7 @@ export function Component() {
         </div>
 
         {/* How it works */}
-        <p className="text-xs text-secondary pt-1">
+        <p className="text-label text-secondary pt-1">
           Invite friends → they sign up → you both earn credits
         </p>
       </div>
@@ -293,7 +293,7 @@ export function Component() {
       <div className="bg-elevated border border-default rounded-xl overflow-hidden">
         <div className="px-4 py-3 border-b border-default flex items-center gap-2">
           <Users size={15} className="text-secondary shrink-0" aria-hidden="true" />
-          <h2 className="text-sm font-semibold text-primary">Your Referrals</h2>
+          <h2 className="text-body-md font-semibold text-primary">Your Referrals</h2>
         </div>
 
         {loading ? (
@@ -301,13 +301,13 @@ export function Component() {
         ) : !data || data.referrals.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 gap-2 text-secondary">
             <Gift size={28} className="opacity-30" aria-hidden="true" />
-            <p className="text-sm">No referrals yet — share your link to get started</p>
+            <p className="text-body-sm">No referrals yet — share your link to get started</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-sm" aria-label="Referral entries">
+            <table className="w-full text-body-sm" aria-label="Referral entries">
               <thead>
-                <tr className="border-b border-default text-left text-secondary text-xs">
+                <tr className="border-b border-default text-left text-secondary text-label">
                   <th className="px-4 py-2 font-medium">User</th>
                   <th className="px-4 py-2 font-medium">Status</th>
                   <th className="px-4 py-2 font-medium">Joined</th>
@@ -319,7 +319,7 @@ export function Component() {
                   <tr key={entry.id} className="hover:bg-surface transition-colors">
                     <td className="px-4 py-3">
                       <div className="font-medium text-primary">{entry.displayName}</div>
-                      <div className="text-xs text-secondary">@{entry.username}</div>
+                      <div className="text-label text-secondary">@{entry.username}</div>
                     </td>
                     <td className="px-4 py-3">
                       <ReferralStatusBadge status={entry.status} />
@@ -340,37 +340,37 @@ export function Component() {
 
       {/* Section 4: How Referrals Work */}
       <div className="bg-elevated border border-default rounded-xl p-6 space-y-4">
-        <h2 className="text-sm font-semibold text-primary">How Referrals Work</h2>
+        <h2 className="text-body-md font-semibold text-primary">How Referrals Work</h2>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div className="flex gap-3">
-            <div className="flex-shrink-0 w-7 h-7 rounded-full bg-accent/10 border border-accent/20 flex items-center justify-center text-accent-text text-xs font-semibold">
+            <div className="flex-shrink-0 w-7 h-7 rounded-full bg-accent/10 border border-accent/20 flex items-center justify-center text-accent-text text-label font-semibold">
               1
             </div>
             <div>
-              <p className="text-sm font-medium text-primary">Share your unique referral link</p>
-              <p className="text-xs text-secondary mt-1">
+              <p className="text-body-md font-medium text-primary">Share your unique referral link</p>
+              <p className="text-label text-secondary mt-1">
                 Send it to friends via social, email, or direct message
               </p>
             </div>
           </div>
           <div className="flex gap-3">
-            <div className="flex-shrink-0 w-7 h-7 rounded-full bg-accent/10 border border-accent/20 flex items-center justify-center text-accent-text text-xs font-semibold">
+            <div className="flex-shrink-0 w-7 h-7 rounded-full bg-accent/10 border border-accent/20 flex items-center justify-center text-accent-text text-label font-semibold">
               2
             </div>
             <div>
-              <p className="text-sm font-medium text-primary">Friend signs up and connects Polymarket</p>
-              <p className="text-xs text-secondary mt-1">
+              <p className="text-body-md font-medium text-primary">Friend signs up and connects Polymarket</p>
+              <p className="text-label text-secondary mt-1">
                 They create an account using your link
               </p>
             </div>
           </div>
           <div className="flex gap-3">
-            <div className="flex-shrink-0 w-7 h-7 rounded-full bg-accent/10 border border-accent/20 flex items-center justify-center text-accent-text text-xs font-semibold">
+            <div className="flex-shrink-0 w-7 h-7 rounded-full bg-accent/10 border border-accent/20 flex items-center justify-center text-accent-text text-label font-semibold">
               3
             </div>
             <div>
-              <p className="text-sm font-medium text-primary">You earn $5 USDC when they trade</p>
-              <p className="text-xs text-secondary mt-1">
+              <p className="text-body-md font-medium text-primary">You earn $5 USDC when they trade</p>
+              <p className="text-label text-secondary mt-1">
                 Credits are awarded when they place their first trade
               </p>
             </div>

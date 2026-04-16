@@ -124,7 +124,7 @@ export function Component() {
             <Layers className="size-6 text-accent-text" />
             Smart Orders
           </h1>
-          <p className="text-sm text-secondary mt-1">
+          <p className="text-body-sm text-secondary mt-1">
             TWAP, DCA, Bracket, and OCO orders — advanced execution strategies.
           </p>
         </div>
@@ -134,7 +134,7 @@ export function Component() {
             variant="secondary"
             onClick={load}
             disabled={loading}
-            className="flex items-center gap-2 px-3 py-2 rounded-pf bg-elevated border border-default text-sm text-secondary hover:text-primary hover:border-strong transition-colors disabled:opacity-50"
+            className="flex items-center gap-2 px-3 py-2 rounded-pf bg-elevated border border-default text-body-sm text-secondary hover:text-primary hover:border-strong transition-colors disabled:opacity-50"
           >
             {loading ? <Loader2 className="size-4 animate-spin" /> : <RefreshCw className="size-4" />}
             Refresh
@@ -146,7 +146,7 @@ export function Component() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         {(Object.keys(TYPE_DESC) as SmartOrderType[]).map((t) => (
           <div key={t} className="p-3 bg-surface border border-default rounded-xl">
-            <p className="text-xs font-semibold text-primary mb-1">{TYPE_LABEL[t]}</p>
+            <p className="text-label font-semibold text-primary mb-1">{TYPE_LABEL[t]}</p>
             <p className="text-label text-tertiary leading-relaxed">{TYPE_DESC[t]}</p>
           </div>
         ))}
@@ -162,8 +162,8 @@ export function Component() {
       ) : orders.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-center">
           <Layers className="size-10 text-tertiary mb-3" />
-          <p className="text-secondary text-sm">No smart orders yet.</p>
-          <p className="text-tertiary text-xs mt-1">
+          <p className="text-secondary text-body-sm">No smart orders yet.</p>
+          <p className="text-tertiary text-label mt-1">
             Place a smart order via the{' '}
             <Link to="/markets" className="text-accent-text hover:underline">market detail page</Link>{' '}
             or API.
@@ -188,16 +188,16 @@ export function Component() {
                 </Button>
 
                 {/* Type badge */}
-                <span className="shrink-0 px-2 py-1 rounded text-xs font-semibold bg-surface border border-default text-secondary">
+                <span className="shrink-0 px-2 py-1 rounded text-label font-semibold bg-surface border border-default text-secondary">
                   {TYPE_LABEL[so.type]}
                 </span>
 
                 {/* Market / token */}
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm text-primary font-medium truncate">
+                  <p className="text-body-md text-primary font-medium truncate">
                     {so.side} {so.outcome} · {so.tokenId.slice(0, 12)}…
                   </p>
-                  <p className="text-xs text-tertiary">
+                  <p className="text-label text-tertiary">
                     Size: {parseFloat(so.totalSize).toFixed(2)} USDC
                     {(so.type === 'TWAP' || so.type === 'DCA') && (
                       <> · Slice {so.slicesFilled}/{so.slicesTotal}</>
@@ -210,7 +210,7 @@ export function Component() {
 
                 <SmartOrderStatusBadge status={so.status} />
 
-                <span className="text-xs text-tertiary shrink-0">{formatDate(so.createdAt)}</span>
+                <span className="text-caption text-tertiary shrink-0">{formatDate(so.createdAt)}</span>
 
                 {['PENDING', 'ACTIVE'].includes(so.status) && (
                   <Button
@@ -239,7 +239,7 @@ export function Component() {
                     {so.orders.map((child) => (
                       <div
                         key={child.id}
-                        className="flex items-center gap-4 text-xs text-secondary"
+                        className="flex items-center gap-4 text-label text-secondary"
                       >
                         <span className="font-mono text-tertiary truncate w-24">{child.id.slice(0, 10)}…</span>
                         <span className={`font-medium ${

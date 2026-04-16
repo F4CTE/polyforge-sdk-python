@@ -423,7 +423,7 @@ export function ExecutionPanel({ strategyId, expanded, onToggle, activeTab, onTa
             <button
               type="button"
               onClick={(e) => { e.stopPropagation(); onTabChange('backtest'); if (!expanded) onToggle(); }}
-              className={`px-3 py-1 rounded-sm text-xs font-medium transition-colors focus-visible:outline-none focus-visible:shadow-focus-ring ${
+              className={`px-3 py-1 rounded-sm text-label font-medium transition-colors focus-visible:outline-none focus-visible:shadow-focus-ring ${
                 activeTab === 'backtest'
                   ? 'bg-accent/10 text-accent-text'
                   : 'text-tertiary hover:text-secondary'
@@ -438,7 +438,7 @@ export function ExecutionPanel({ strategyId, expanded, onToggle, activeTab, onTa
             <button
               type="button"
               onClick={(e) => { e.stopPropagation(); onTabChange('live'); if (!expanded) onToggle(); }}
-              className={`px-3 py-1 rounded-sm text-xs font-medium transition-colors focus-visible:outline-none focus-visible:shadow-focus-ring ${
+              className={`px-3 py-1 rounded-sm text-label font-medium transition-colors focus-visible:outline-none focus-visible:shadow-focus-ring ${
                 activeTab === 'live'
                   ? 'bg-accent/10 text-accent-text'
                   : 'text-tertiary hover:text-secondary'
@@ -561,7 +561,7 @@ function BacktestTab({
               value={dateStart}
               onChange={e => setDateStart(e.target.value)}
               aria-label="Start date"
-              className="w-full h-8 px-3 rounded-sm bg-surface border border-default text-xs text-primary focus-visible:outline-none focus-visible:border-accent/50"
+              className="w-full h-8 px-3 rounded-sm bg-surface border border-default text-label text-primary focus-visible:outline-none focus-visible:border-accent/50"
             />
           </div>
           <div className="flex-1 min-w-[140px]">
@@ -573,14 +573,14 @@ function BacktestTab({
               value={dateEnd}
               onChange={e => setDateEnd(e.target.value)}
               aria-label="End date"
-              className="w-full h-8 px-3 rounded-sm bg-surface border border-default text-xs text-primary focus-visible:outline-none focus-visible:border-accent/50"
+              className="w-full h-8 px-3 rounded-sm bg-surface border border-default text-label text-primary focus-visible:outline-none focus-visible:border-accent/50"
             />
           </div>
           <button
             type="button"
             onClick={onSubmit}
             disabled={submitting || !strategyId || !dateStart || !dateEnd}
-            className="h-8 px-4 rounded-sm bg-accent text-inverse text-xs font-medium hover:bg-accent-text disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2 shrink-0 focus-visible:outline-none focus-visible:shadow-focus-ring"
+            className="h-8 px-4 rounded-sm bg-accent text-inverse text-label font-medium hover:bg-accent-text disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2 shrink-0 focus-visible:outline-none focus-visible:shadow-focus-ring"
           >
             {submitting ? <Loader2 className="size-3 animate-spin" /> : <Play className="size-3" />}
             Run Backtest
@@ -610,11 +610,11 @@ function BacktestTab({
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Loader2 className="size-4 animate-spin text-accent-text" />
-            <span className="text-xs text-secondary">
+            <span className="text-label text-secondary">
               {bt.status === 'QUEUED' ? 'Waiting in queue...' : 'Running backtest...'}
             </span>
           </div>
-          <span className="text-xs font-mono text-accent-text">{bt.progress}%</span>
+          <span className="text-label font-mono text-accent-text">{bt.progress}%</span>
         </div>
         <div className="h-2 bg-surface rounded-full overflow-hidden" role="progressbar" aria-valuenow={bt.progress} aria-valuemin={0} aria-valuemax={100} aria-label="Backtest progress">
           <div
@@ -630,7 +630,7 @@ function BacktestTab({
     return (
       <div className="pt-2 space-y-3">
         <div className="flex items-center justify-between">
-          <span className="text-xs font-medium text-gain flex items-center gap-2">
+          <span className="text-label font-medium text-gain flex items-center gap-2">
             <BarChart3 className="size-3" /> Backtest Complete
           </span>
           <button
@@ -701,7 +701,7 @@ function BacktestTab({
   // FAILED
   return (
     <div className="pt-2 space-y-3">
-      <div className="flex items-center gap-2 px-3 py-2 rounded-sm bg-loss/10 text-loss text-xs">
+      <div className="flex items-center gap-2 px-3 py-2 rounded-sm bg-loss/10 text-loss text-label">
         <XCircle className="size-4 shrink-0" />
         {bt.error ?? 'Backtest failed'}
       </div>
@@ -762,7 +762,7 @@ function LiveTab({
             type="button"
             onClick={() => onStart('PAPER')}
             disabled={!strategyId}
-            className="flex-1 h-8 rounded-sm bg-elevated border border-default text-xs font-medium text-primary hover:border-accent/50 disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
+            className="flex-1 h-8 rounded-sm bg-elevated border border-default text-label font-medium text-primary hover:border-accent/50 disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
           >
             <Play className="size-3" />
             Paper Trade
@@ -771,7 +771,7 @@ function LiveTab({
             type="button"
             onClick={() => onStart('LIVE')}
             disabled={!strategyId}
-            className="flex-1 h-8 rounded-sm bg-gain/10 border border-gain/30 text-xs font-medium text-gain hover:bg-gain/20 disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
+            className="flex-1 h-8 rounded-sm bg-gain/10 border border-gain/30 text-label font-medium text-gain hover:bg-gain/20 disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
           >
             <Play className="size-3" />
             Live Trade
@@ -789,7 +789,7 @@ function LiveTab({
     return (
       <div className="flex items-center justify-center gap-2 py-6">
         <Loader2 className="size-4 animate-spin text-accent-text" />
-        <span className="text-xs text-secondary">
+        <span className="text-label text-secondary">
           {live.status === 'STARTING' ? 'Starting strategy...' : 'Stopping strategy...'}
         </span>
       </div>
@@ -806,7 +806,7 @@ function LiveTab({
             live.status === 'RUNNING' ? 'bg-gain animate-pulse' :
             live.status === 'PAUSED' ? 'bg-warning' : 'bg-loss'
           }`} />
-          <span className="text-xs font-medium text-primary">
+          <span className="text-label font-medium text-primary">
             {live.mode === 'PAPER' ? 'Paper' : 'Live'} — {live.status}
           </span>
           {live.lastTick && (
@@ -922,7 +922,7 @@ function MetricCard({ label, value, color, icon }: { label: string; value: strin
   return (
     <div className="bg-surface rounded-sm p-2">
       <span className="text-caption text-tertiary flex items-center gap-1">{icon}{label}</span>
-      <span className={`text-sm font-mono font-semibold ${color} block mt-1`}>{value}</span>
+      <span className={`text-body-md font-mono font-semibold ${color} block mt-1`}>{value}</span>
     </div>
   );
 }

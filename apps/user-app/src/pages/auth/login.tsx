@@ -82,14 +82,14 @@ export function Component() {
           <h1 className="text-2xl font-semibold mt-4 bg-gradient-to-r from-accent-text to-accent-text bg-clip-text text-transparent">
             Welcome back
           </h1>
-          <p className="text-tertiary text-sm mt-1">Sign in to your Polyforge account</p>
+          <p className="text-tertiary text-body-sm mt-1">Sign in to your Polyforge account</p>
         </div>
 
         {/* Card */}
         <div className="bg-elevated border border-default rounded-xl p-8 shadow-lg">
 
           {sessionExpired && (
-            <div role="alert" className="flex items-center gap-2 bg-warning/10 border border-warning/20 text-warning rounded-pf px-4 py-3 mb-4 text-sm">
+            <div role="alert" className="flex items-center gap-2 bg-warning/10 border border-warning/20 text-warning rounded-pf px-4 py-3 mb-4 text-body-md">
               <AlertCircle className="size-4 shrink-0" />
               <span className="flex-1">Your session has expired. Please sign in again.</span>
               <Button
@@ -106,7 +106,7 @@ export function Component() {
           )}
 
           {error && (
-            <div role="alert" className="flex items-center gap-2 bg-loss/10 border border-loss/20 text-loss rounded-pf px-4 py-3 mb-4 text-sm">
+            <div role="alert" className="flex items-center gap-2 bg-loss/10 border border-loss/20 text-loss rounded-pf px-4 py-3 mb-4 text-body-md">
               <AlertCircle className="size-4 shrink-0" />
               <span className="flex-1">{error}</span>
               <Button
@@ -125,7 +125,7 @@ export function Component() {
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Email */}
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-primary mb-2">Email</label>
+              <label htmlFor="email" className="block text-body-md font-medium text-primary mb-2">Email</label>
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-tertiary" />
                 <Input
@@ -142,12 +142,12 @@ export function Component() {
                   className="w-full pl-10 pr-4 py-3 bg-app border border-default rounded-pf text-primary placeholder:text-tertiary/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 focus-visible:border-accent transition-colors"
                 />
               </div>
-              {emailError && <p id="login-email-error" role="alert" className="mt-1 text-xs text-loss">{emailError}</p>}
+              {emailError && <p id="login-email-error" role="alert" className="mt-1 text-label text-loss">{emailError}</p>}
             </div>
 
             {/* Password */}
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-primary mb-2">Password</label>
+              <label htmlFor="password" className="block text-body-md font-medium text-primary mb-2">Password</label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-tertiary" />
                 <Input
@@ -173,14 +173,14 @@ export function Component() {
                   {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
                 </Button>
               </div>
-              {passwordError && <p id="login-password-error" role="alert" className="mt-1 text-xs text-loss">{passwordError}</p>}
+              {passwordError && <p id="login-password-error" role="alert" className="mt-1 text-label text-loss">{passwordError}</p>}
             </div>
 
             {/* TOTP */}
             {requireTotp && (
               <div>
-                <label htmlFor="totp" className="block text-sm font-medium text-primary mb-1">Two-Factor Code</label>
-                <p className="text-xs text-tertiary mb-2">Enter the 6-digit code from your authenticator app.</p>
+                <label htmlFor="totp" className="block text-body-md font-medium text-primary mb-1">Two-Factor Code</label>
+                <p className="text-label text-tertiary mb-2">Enter the 6-digit code from your authenticator app.</p>
                 <div className="relative">
                   <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-tertiary" />
                   <Input
@@ -209,7 +209,7 @@ export function Component() {
             </Button>
           </form>
 
-          <div className="mt-6 text-center text-sm">
+          <div className="mt-6 text-center text-body-sm">
               <Link to="/forgot-password" className="text-accent hover:text-accent-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 rounded-sm transition-colors">
                 Forgot password?
               </Link>
@@ -217,7 +217,7 @@ export function Component() {
         </div>
 
         {/* Links below card */}
-        <p className="text-center text-sm text-tertiary mt-6">
+        <p className="text-center text-body-sm text-tertiary mt-6">
           Don&apos;t have an account?{' '}
           <Link to="/register" className="text-accent-text hover:text-accent-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 rounded-sm transition-colors">
             Create one

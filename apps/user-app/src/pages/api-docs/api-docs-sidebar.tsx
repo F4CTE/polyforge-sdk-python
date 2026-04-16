@@ -57,7 +57,7 @@ export function DocsSidebar({ activeId, onNavigate }: DocsSidebarProps) {
     <aside className="flex flex-col h-full w-full bg-surface border-r border-default overflow-hidden">
       {/* Header */}
       <div className="px-3 py-3 border-b border-default shrink-0 flex items-center justify-between gap-2">
-        <span className="text-xs font-semibold text-secondary uppercase tracking-wider">
+        <span className="text-label font-semibold text-secondary uppercase tracking-wider">
           API Reference
         </span>
         <div className="flex items-center gap-2">
@@ -74,7 +74,7 @@ export function DocsSidebar({ activeId, onNavigate }: DocsSidebarProps) {
           value={searchQuery}
           onChange={e => setSearchQuery(e.target.value)}
           placeholder="Search docs..."
-          className="w-full bg-app border border-default rounded-sm px-3 py-2 text-sm text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:border-accent focus-visible:ring-1 focus-visible:ring-accent/50 pr-8"
+          className="w-full bg-app border border-default rounded-sm px-3 py-2 text-body-sm text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:border-accent focus-visible:ring-1 focus-visible:ring-accent/50 pr-8"
         />
         {searchQuery && (
           <Button
@@ -109,7 +109,7 @@ export function DocsSidebar({ activeId, onNavigate }: DocsSidebarProps) {
                   variant="ghost"
                   key={item.id}
                   onClick={() => onNavigate(item.id)}
-                  className={`w-full text-left px-3 py-2 rounded-sm text-sm transition-colors duration-micro cursor-pointer ${
+                  className={`w-full text-left px-3 py-2 rounded-sm text-body-sm transition-colors duration-micro cursor-pointer ${
                     activeId === item.id
                       ? 'bg-accent/10 text-accent-text font-medium'
                       : 'text-secondary hover:text-primary hover:bg-elevated'
@@ -135,7 +135,7 @@ export function DocsSidebar({ activeId, onNavigate }: DocsSidebarProps) {
                   variant="ghost"
                   key={`${ep.method}-${ep.path}`}
                   onClick={() => onNavigate(sectionId)}
-                  className="w-full text-left px-3 py-2 rounded-sm text-xs transition-colors duration-micro cursor-pointer text-secondary hover:text-primary hover:bg-elevated"
+                  className="w-full text-left px-3 py-2 rounded-sm text-label transition-colors duration-micro cursor-pointer text-secondary hover:text-primary hover:bg-elevated"
                 >
                   <span className="font-mono text-accent-text mr-1">{ep.method}</span>
                   {ep.summary}
@@ -146,7 +146,7 @@ export function DocsSidebar({ activeId, onNavigate }: DocsSidebarProps) {
         )}
 
         {q && filteredGroups.length === 0 && matchingEndpoints.length === 0 && (
-          <p className="text-xs text-tertiary px-3 py-2">No results for "{searchQuery}"</p>
+          <p className="text-label text-tertiary px-3 py-2">No results for "{searchQuery}"</p>
         )}
       </nav>
 
@@ -155,21 +155,21 @@ export function DocsSidebar({ activeId, onNavigate }: DocsSidebarProps) {
         <a
           href="/api/v1/openapi.json"
           download
-          className="flex items-center gap-2 text-xs text-tertiary hover:text-accent-text transition-colors"
+          className="flex items-center gap-2 text-label text-tertiary hover:text-accent-text transition-colors"
         >
           <Download size={13} /> OpenAPI spec (JSON)
         </a>
         <a
           href="/api/v1/postman.json"
           download
-          className="flex items-center gap-2 text-xs text-tertiary hover:text-accent-text transition-colors"
+          className="flex items-center gap-2 text-label text-tertiary hover:text-accent-text transition-colors"
         >
           <Download size={13} /> Postman collection
         </a>
         {user && (
           <Link
             to="/settings"
-            className="flex items-center gap-2 text-xs text-tertiary hover:text-accent-text transition-colors"
+            className="flex items-center gap-2 text-label text-tertiary hover:text-accent-text transition-colors"
           >
             <Key size={13} /> API Keys
           </Link>

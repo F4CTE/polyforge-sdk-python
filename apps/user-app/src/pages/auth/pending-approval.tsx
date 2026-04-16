@@ -27,19 +27,19 @@ export function Component() {
             Account pending approval
           </h1>
 
-          <p className="text-secondary text-sm mb-6">
+          <p className="text-secondary text-body-sm mb-6">
             Your account has been created and is waiting for beta access approval.
             We'll send you an email at your registered address once your account is approved.
           </p>
 
-          <div className="flex items-center gap-2 bg-surface border border-default rounded-pf px-4 py-3 mb-6 text-sm text-tertiary">
+          <div className="flex items-center gap-2 bg-surface border border-default rounded-pf px-4 py-3 mb-6 text-body-sm text-tertiary">
             <Mail className="size-4 shrink-0 text-accent-text" />
             <span>Check your inbox for a confirmation email</span>
           </div>
 
           <Link
             to="/login"
-            className="text-accent-text text-sm hover:text-accent-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 rounded-sm transition-colors"
+            className="text-accent-text text-body-md hover:text-accent-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 rounded-sm transition-colors"
           >
             Back to login
           </Link>

@@ -29,22 +29,22 @@ type SortOption = 'newest' | 'popular' | 'rating' | 'price_asc' | 'price_desc';
 /* ─── Helpers ────────────────────────────────────────────────────────── */
 
 function StarRating({ rating, count }: { rating: string | null; count: number }) {
-  if (!rating || count === 0) return <span className="text-xs text-tertiary">No reviews</span>;
+  if (!rating || count === 0) return <span className="text-label text-tertiary">No reviews</span>;
   const n = parseFloat(rating);
   return (
     <span className="flex items-center gap-1">
       <Star className="size-3 fill-warning text-warning" />
-      <span className="text-xs text-primary font-medium">{n.toFixed(1)}</span>
-      <span className="text-xs text-tertiary">({count})</span>
+      <span className="text-label text-primary font-medium">{n.toFixed(1)}</span>
+      <span className="text-label text-tertiary">({count})</span>
     </span>
   );
 }
 
 function PriceTag({ price }: { price: string }) {
   const n = parseFloat(price);
-  if (n === 0) return <span className="text-gain font-semibold text-sm">Free</span>;
+  if (n === 0) return <span className="text-gain font-semibold text-body-md">Free</span>;
   return (
-    <span className="font-mono text-sm text-primary font-semibold">${n.toFixed(2)}</span>
+    <span className="font-mono text-body-md text-primary font-semibold">${n.toFixed(2)}</span>
   );
 }
 
@@ -128,7 +128,7 @@ export function Component() {
             <Store className="size-6 text-accent-text" />
             Strategy Marketplace
           </h1>
-          <p className="text-sm text-secondary mt-1">
+          <p className="text-body-sm text-secondary mt-1">
             Buy proven trading strategies from top forecasters — get a private fork you can customize.
           </p>
         </div>
@@ -136,7 +136,7 @@ export function Component() {
           type="button"
           onClick={load}
           disabled={loading}
-          className="flex items-center gap-2 px-3 py-2 rounded-pf bg-elevated border border-default text-sm text-secondary hover:text-primary hover:border-strong transition-colors disabled:opacity-50"
+          className="flex items-center gap-2 px-3 py-2 rounded-pf bg-elevated border border-default text-body-sm text-secondary hover:text-primary hover:border-strong transition-colors disabled:opacity-50"
         >
           {loading ? <Loader2 className="size-4 animate-spin" /> : <RefreshCw className="size-4" />}
           Refresh
@@ -151,7 +151,7 @@ export function Component() {
             type="button"
             variant="ghost"
             onClick={() => setTab(t)}
-            className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors -mb-px ${
+            className={`px-4 py-2 text-body-md font-medium border-b-2 transition-colors -mb-px ${
               tab === t
                 ? 'border-accent text-accent-text'
                 : 'border-transparent text-secondary hover:text-primary'
@@ -176,7 +176,7 @@ export function Component() {
                 placeholder="Search strategies…"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="w-full pl-9 pr-3 py-2 bg-surface border border-default rounded-pf text-sm text-primary placeholder-tertiary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/30"
+                className="w-full pl-9 pr-3 py-2 bg-surface border border-default rounded-pf text-body-md text-primary placeholder-tertiary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/30"
               />
             </div>
 
@@ -190,9 +190,9 @@ export function Component() {
                     type="button"
                     variant="ghost"
                     onClick={() => setSort(s)}
-                    className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
+                    className={`px-3 py-1 rounded-full text-label font-medium border transition-colors ${
                       sort === s
-                        ? 'bg-accent/15 text-accent-text border-accent/30'
+                        ? 'bg-accent-subtle text-accent-text border-accent/30'
                         : 'bg-elevated text-secondary border-default hover:border-strong'
                     }`}
                   >
@@ -202,7 +202,7 @@ export function Component() {
               </div>
             </div>
 
-            <span className="ml-auto text-xs text-tertiary">
+            <span className="ml-auto text-label text-tertiary">
               {loading ? 'Loading…' : `${total} listing${total !== 1 ? 's' : ''}`}
             </span>
           </div>
@@ -217,8 +217,8 @@ export function Component() {
           ) : filtered.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20 text-center">
               <AlertTriangle className="size-10 text-tertiary mb-3" />
-              <p className="text-secondary text-sm">No listings found.</p>
-              <p className="text-tertiary text-xs mt-1">
+              <p className="text-secondary text-body-sm">No listings found.</p>
+              <p className="text-tertiary text-label mt-1">
                 Try a different filter or check back later.
               </p>
             </div>
@@ -255,12 +255,12 @@ function ListingCard({
     <div className="flex flex-col bg-elevated border border-default rounded-xl p-4 hover:border-strong transition-colors">
       {/* Title + seller */}
       <div className="flex-1 space-y-2 min-w-0">
-        <p className="text-sm font-semibold text-primary line-clamp-2">{listing.title}</p>
-        <p className="text-xs text-tertiary">
+        <p className="text-body-md font-semibold text-primary line-clamp-2">{listing.title}</p>
+        <p className="text-label text-tertiary">
           by <span className="text-secondary">{listing.seller.name}</span>
         </p>
         {listing.description && (
-          <p className="text-xs text-secondary line-clamp-2 leading-relaxed">
+          <p className="text-label text-secondary line-clamp-2 leading-relaxed">
             {listing.description}
           </p>
         )}
@@ -283,11 +283,11 @@ function ListingCard({
       {/* Stats row */}
       <div className="flex items-center gap-4 mt-3 pt-3 border-t border-default/50">
         <StarRating rating={listing.avgRating} count={listing.ratingCount} />
-        <span className="flex items-center gap-1 text-xs text-tertiary">
+        <span className="flex items-center gap-1 text-label text-tertiary">
           <GitFork className="size-3" />
           {listing.forkCount}
         </span>
-        <span className="flex items-center gap-1 text-xs text-tertiary ml-auto">
+        <span className="flex items-center gap-1 text-label text-tertiary ml-auto">
           <ShoppingCart className="size-3" />
           {listing.purchaseCount}
         </span>
@@ -300,7 +300,7 @@ function ListingCard({
           type="button"
           onClick={onPurchase}
           disabled={purchasing}
-          className="flex items-center gap-2 px-3 py-2 rounded-pf bg-accent text-inverse text-xs font-medium hover:bg-accent-text disabled:opacity-50 transition-colors"
+          className="flex items-center gap-2 px-3 py-2 rounded-pf bg-accent text-inverse text-label font-medium hover:bg-accent-text disabled:opacity-50 transition-colors"
         >
           {purchasing ? (
             <Loader2 className="size-3 animate-spin" />
@@ -356,8 +356,8 @@ function MyPurchases() {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-center">
         <ShoppingCart className="size-10 text-tertiary mb-3" />
-        <p className="text-secondary text-sm">No purchases yet.</p>
-        <p className="text-tertiary text-xs mt-1">Browse the marketplace to find strategies.</p>
+        <p className="text-secondary text-body-sm">No purchases yet.</p>
+        <p className="text-tertiary text-label mt-1">Browse the marketplace to find strategies.</p>
       </div>
     );
   }
@@ -370,12 +370,12 @@ function MyPurchases() {
           className="flex items-center justify-between px-4 py-3 bg-elevated border border-default rounded-xl"
         >
           <div>
-            <p className="text-sm text-primary font-medium">{p.listing.title}</p>
-            <p className="text-xs text-tertiary">
+            <p className="text-body-md text-primary font-medium">{p.listing.title}</p>
+            <p className="text-label text-tertiary">
               by {p.listing.seller.name} · {new Date(p.createdAt).toLocaleDateString()}
             </p>
           </div>
-          <span className="font-mono text-sm text-primary">
+          <span className="font-mono text-body-md text-primary">
             {parseFloat(p.priceUsdc) === 0 ? 'Free' : `$${parseFloat(p.priceUsdc).toFixed(2)}`}
           </span>
         </div>

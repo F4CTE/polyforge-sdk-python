@@ -84,7 +84,7 @@ export function Component() {
       {/* Back link */}
       <Link
         to="/collections"
-        className="inline-flex items-center gap-2 text-sm text-secondary hover:text-primary transition-colors"
+        className="inline-flex items-center gap-2 text-body-sm text-secondary hover:text-primary transition-colors"
       >
         <ChevronLeft className="size-4" aria-hidden="true" />
         All Collections
@@ -108,8 +108,8 @@ export function Component() {
           </span>
           <div>
             <h1 className="text-2xl font-semibold text-primary">{collection.title}</h1>
-            <p className="text-sm text-tertiary mt-1 max-w-prose">{collection.description}</p>
-            <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-secondary mt-3">
+            <p className="text-body-sm text-tertiary mt-1 max-w-prose">{collection.description}</p>
+            <div className="flex flex-wrap gap-x-4 gap-y-1 text-label text-secondary mt-3">
               <span className="flex items-center gap-1">
                 <Library className="size-4" aria-hidden="true" />
                 {collection.listingCount} strategies
@@ -126,7 +126,7 @@ export function Component() {
         <div className="flex flex-col items-center justify-center py-20 text-center" role="status">
           <Library className="size-10 text-tertiary mb-4" aria-hidden="true" />
           <p className="text-primary font-medium">Collection not found</p>
-          <Link to="/collections" className="text-sm text-accent-text hover:text-accent-text mt-2">
+          <Link to="/collections" className="text-body-md text-accent-text hover:text-accent-text mt-2">
             Back to all collections
           </Link>
         </div>
@@ -149,23 +149,23 @@ export function Component() {
                 >
                   {/* Seller */}
                   <div className="flex items-center gap-2 mb-2">
-                    <div className="size-6 rounded-full bg-accent/15 border border-accent/25 flex items-center justify-center text-caption font-semibold text-accent-text">
+                    <div className="size-6 rounded-full bg-accent-subtle border border-accent/25 flex items-center justify-center text-caption font-semibold text-accent-text">
                       {(listing.seller.displayName ?? listing.seller.username).slice(0, 2).toUpperCase()}
                     </div>
-                    <span className="text-xs text-secondary truncate">
+                    <span className="text-label text-secondary truncate">
                       {listing.seller.displayName ?? listing.seller.username}
                     </span>
-                    <span className="ml-auto text-sm font-semibold text-primary">
+                    <span className="ml-auto text-body-md font-semibold text-primary">
                       {Number(listing.priceUsdc) === 0 ? 'Free' : `$${Number(listing.priceUsdc).toFixed(2)}`}
                     </span>
                   </div>
 
                   {/* Title */}
-                  <div className="text-sm font-semibold text-primary mb-1 truncate">{listing.title}</div>
+                  <div className="text-body-md font-semibold text-primary mb-1 truncate">{listing.title}</div>
 
                   {/* Description */}
                   {listing.description && (
-                    <div className="text-xs text-tertiary line-clamp-2 mb-3">{listing.description}</div>
+                    <div className="text-label text-tertiary line-clamp-2 mb-3">{listing.description}</div>
                   )}
 
                   {/* Stats */}
@@ -184,13 +184,13 @@ export function Component() {
                   <div className="flex gap-2 mt-auto">
                     <Link
                       to={`/marketplace/${listing.id}`}
-                      className="flex-1 text-center py-2 rounded-sm text-xs font-medium border border-default text-secondary hover:border-strong hover:text-primary transition-colors"
+                      className="flex-1 text-center py-2 rounded-sm text-label font-medium border border-default text-secondary hover:border-strong hover:text-primary transition-colors"
                     >
                       View
                     </Link>
                     <Link
                       to={`/marketplace/${listing.id}?action=fork`}
-                      className="flex-1 text-center py-2 rounded-sm text-xs font-medium border border-accent/40 text-accent-text hover:bg-accent/10 transition-colors flex items-center justify-center gap-1"
+                      className="flex-1 text-center py-2 rounded-sm text-label font-medium border border-accent/40 text-accent-text hover:bg-accent/10 transition-colors flex items-center justify-center gap-1"
                     >
                       <GitFork className="size-3" aria-hidden="true" /> Fork
                     </Link>

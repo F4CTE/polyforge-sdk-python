@@ -978,7 +978,7 @@ export function Features() {
 
               <div className="p-5 sm:p-7">
                 {/* Icon */}
-                <div className="w-14 h-14 bg-accent/8 border border-accent/20 rounded-lg flex items-center justify-center text-accent-text mb-5">
+                <div className="w-14 h-14 bg-accent-subtle border border-accent/20 rounded-lg flex items-center justify-center text-accent-text mb-5">
                   {feature.icon}
                 </div>
 

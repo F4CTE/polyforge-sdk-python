@@ -108,18 +108,18 @@ export function Topbar() {
         {notifOpen && (
           <div role="dialog" aria-label="Notifications" className="animate-slide-up absolute right-0 top-12 w-80 bg-elevated border border-default rounded-pf shadow-xl z-50">
             <div className="flex items-center justify-between px-4 py-3 border-b border-default">
-              <strong className="text-sm text-primary">Notifications</strong>
+              <strong className="text-body-md text-primary">Notifications</strong>
               <button
                 type="button"
                 onClick={markAllRead}
-                className="text-xs text-accent-text hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 rounded-sm"
+                className="text-label text-accent-text hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 rounded-sm"
               >
                 Mark all read
               </button>
             </div>
             <div className="max-h-80 overflow-y-auto">
               {notifications.length === 0 ? (
-                <p className="text-center text-tertiary text-sm py-6">
+                <p className="text-center text-tertiary text-body-sm py-6">
                   No notifications
                 </p>
               ) : (
@@ -129,7 +129,7 @@ export function Topbar() {
                     key={n.id}
                     onClick={() => markRead(n.id)}
                     className={`w-full flex items-start gap-3 px-4 py-3 cursor-pointer hover:bg-surface transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent/40 ${
-                      !n.read ? 'bg-accent/5' : ''
+                      !n.read ? 'bg-accent-subtle' : ''
                     }`}
                     aria-label={`${n.read ? '' : 'Unread: '}${n.title}`}
                   >
@@ -145,10 +145,10 @@ export function Topbar() {
                       }`}
                     />
                     <div className="min-w-0 flex-1">
-                      <strong className="text-sm text-primary block truncate">
+                      <strong className="text-body-md text-primary block truncate">
                         {n.title}
                       </strong>
-                      <p className="text-xs text-tertiary truncate">
+                      <p className="text-label text-tertiary truncate">
                         {n.body}
                       </p>
                       <span className="text-caption text-tertiary/70" title={new Date(n.timestamp).toLocaleString()}>
@@ -165,7 +165,7 @@ export function Topbar() {
                 setNotifOpen(false);
                 navigate('/settings');
               }}
-              className="block w-full text-center text-xs text-accent-text py-3 border-t border-default hover:bg-surface transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent/40"
+              className="block w-full text-center text-label text-accent-text py-3 border-t border-default hover:bg-surface transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent/40"
             >
               Manage notification preferences
             </button>
@@ -184,10 +184,10 @@ export function Topbar() {
           aria-expanded={menuOpen}
           aria-haspopup="menu"
         >
-          <div className="w-8 h-8 rounded-full bg-accent/20 text-accent-text flex items-center justify-center text-xs font-semibold">
+          <div className="w-8 h-8 rounded-full bg-accent/20 text-accent-text flex items-center justify-center text-label font-semibold">
             {initials}
           </div>
-          <span className="text-sm text-primary hidden sm:inline">
+          <span className="text-body-md text-primary hidden sm:inline">
             {displayName}
           </span>
           <ChevronDown size={14} className="text-secondary" />
@@ -202,7 +202,7 @@ export function Topbar() {
                 setMenuOpen(false);
                 navigate('/profile/me');
               }}
-              className="flex items-center gap-2 w-full px-4 py-2 text-sm text-primary hover:bg-surface transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent/40"
+              className="flex items-center gap-2 w-full px-4 py-2 text-body-md text-primary hover:bg-surface transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent/40"
             >
               <User size={16} />
               Profile
@@ -214,7 +214,7 @@ export function Topbar() {
                 setMenuOpen(false);
                 navigate('/settings');
               }}
-              className="flex items-center gap-2 w-full px-4 py-2 text-sm text-primary hover:bg-surface transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent/40"
+              className="flex items-center gap-2 w-full px-4 py-2 text-body-md text-primary hover:bg-surface transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent/40"
             >
               <Settings size={16} />
               Settings
@@ -224,7 +224,7 @@ export function Topbar() {
               type="button"
               role="menuitem"
               onClick={logout}
-              className="flex items-center gap-2 w-full px-4 py-2 text-sm text-loss hover:bg-surface transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent/40"
+              className="flex items-center gap-2 w-full px-4 py-2 text-body-md text-loss hover:bg-surface transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent/40"
             >
               <LogOut size={16} />
               Sign out

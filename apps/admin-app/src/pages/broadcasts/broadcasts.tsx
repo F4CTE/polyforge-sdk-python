@@ -118,7 +118,7 @@ function EmptyState() {
     <div className="text-center py-16">
       <Megaphone className="mx-auto mb-3 text-tertiary opacity-30" size={44} aria-hidden="true" />
       <p className="text-secondary font-medium">No broadcasts sent yet</p>
-      <p className="text-tertiary text-xs mt-1">Use the compose panel above to send your first broadcast</p>
+      <p className="text-tertiary text-label mt-1">Use the compose panel above to send your first broadcast</p>
     </div>
   );
 }
@@ -233,7 +233,7 @@ export function Component() {
             type="button"
             variant="default"
             onClick={openCompose}
-            className="flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-sm bg-accent text-inverse hover:bg-accent-text transition-colors"
+            className="flex items-center gap-2 px-4 py-2 text-body-md font-semibold rounded-sm bg-accent text-inverse hover:bg-accent-text transition-colors"
           >
             <Megaphone size={15} aria-hidden="true" />
             New Broadcast
@@ -247,7 +247,7 @@ export function Component() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Send size={15} className="text-accent" aria-hidden="true" />
-              <h3 className="text-sm font-semibold text-primary">Compose Broadcast</h3>
+              <h3 className="text-body-md font-semibold text-primary">Compose Broadcast</h3>
             </div>
             <Button
               type="button"
@@ -263,7 +263,7 @@ export function Component() {
 
           {/* Title */}
           <div>
-            <label htmlFor="bc-title" className="block text-xs text-tertiary mb-1">
+            <label htmlFor="bc-title" className="block text-label text-tertiary mb-1">
               Title
             </label>
             <Input
@@ -272,13 +272,13 @@ export function Component() {
               value={draft.title}
               onChange={(e) => handleDraftChange('title', e.target.value)}
               placeholder="e.g. Scheduled maintenance this Sunday"
-              className="w-full px-3 py-2 text-sm rounded-sm border border-default bg-app text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/20"
+              className="w-full px-3 py-2 text-body-sm rounded-sm border border-default bg-app text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/20"
             />
           </div>
 
           {/* Message */}
           <div>
-            <label htmlFor="bc-message" className="block text-xs text-tertiary mb-1">
+            <label htmlFor="bc-message" className="block text-label text-tertiary mb-1">
               Message
             </label>
             <Textarea
@@ -287,13 +287,13 @@ export function Component() {
               value={draft.message}
               onChange={(e) => handleDraftChange('message', e.target.value)}
               placeholder="Write your broadcast message here..."
-              className="w-full px-3 py-2 text-sm rounded-sm border border-default bg-app text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/20 resize-none"
+              className="w-full px-3 py-2 text-body-sm rounded-sm border border-default bg-app text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/20 resize-none"
             />
           </div>
 
           {/* Type */}
           <div>
-            <div className="text-xs text-tertiary mb-2">Type</div>
+            <div className="text-label text-tertiary mb-2">Type</div>
             <div className="flex flex-wrap gap-2" role="group" aria-label="Broadcast type">
               {TYPE_OPTIONS.map((opt) => (
                 <Button
@@ -301,7 +301,7 @@ export function Component() {
                   type="button"
                   variant="ghost"
                   onClick={() => handleDraftChange('type', opt.value)}
-                  className={`flex items-center gap-2 px-3 py-2 text-xs font-medium rounded-full transition-colors ${typePillClass(opt.value, draft.type === opt.value)}`}
+                  className={`flex items-center gap-2 px-3 py-2 text-label font-medium rounded-full transition-colors ${typePillClass(opt.value, draft.type === opt.value)}`}
                   aria-pressed={draft.type === opt.value}
                 >
                   <TypeIcon type={opt.value} size={12} />
@@ -313,7 +313,7 @@ export function Component() {
 
           {/* Audience */}
           <div>
-            <div className="text-xs text-tertiary mb-2">Target Audience</div>
+            <div className="text-label text-tertiary mb-2">Target Audience</div>
             <div className="flex flex-wrap gap-2" role="group" aria-label="Target audience">
               {AUDIENCE_OPTIONS.map((opt) => (
                 <Button
@@ -321,7 +321,7 @@ export function Component() {
                   type="button"
                   variant="ghost"
                   onClick={() => handleDraftChange('targetAudience', opt.value)}
-                  className={`flex items-center gap-2 px-3 py-2 text-xs font-medium rounded-full transition-colors ${
+                  className={`flex items-center gap-2 px-3 py-2 text-label font-medium rounded-full transition-colors ${
                     draft.targetAudience === opt.value
                       ? 'border border-accent/40 bg-accent/10 text-accent-text'
                       : 'border border-default bg-app text-secondary hover:text-primary hover:border-secondary'
@@ -339,7 +339,7 @@ export function Component() {
           </div>
 
           {/* Reach estimate */}
-          <div className="flex items-center gap-2 text-xs text-secondary">
+          <div className="flex items-center gap-2 text-label text-secondary">
             <Users size={12} className="text-accent" aria-hidden="true" />
             Estimated reach: <span className="font-semibold text-primary">~{estimatedReach.toLocaleString()} users</span>
           </div>
@@ -350,8 +350,8 @@ export function Component() {
               <div className="flex items-start gap-2 mb-3">
                 <AlertTriangle size={16} className="text-warning shrink-0 mt-1" aria-hidden="true" />
                 <div>
-                  <p className="text-sm font-semibold text-warning">Confirm broadcast</p>
-                  <p className="text-xs text-secondary mt-1">
+                  <p className="text-body-md font-semibold text-warning">Confirm broadcast</p>
+                  <p className="text-label text-secondary mt-1">
                     You are about to send to <span className="font-semibold text-primary">~{estimatedReach.toLocaleString()} users</span>. This cannot be undone.
                   </p>
                 </div>
@@ -362,7 +362,7 @@ export function Component() {
                   variant="default"
                   onClick={handleConfirmSend}
                   disabled={sending}
-                  className="flex items-center gap-2 px-4 py-2 text-xs font-semibold rounded-sm bg-accent text-inverse hover:bg-accent-text disabled:opacity-50 transition-colors"
+                  className="flex items-center gap-2 px-4 py-2 text-label font-semibold rounded-sm bg-accent text-inverse hover:bg-accent-text disabled:opacity-50 transition-colors"
                 >
                   <Send size={12} aria-hidden="true" />
                   {sending ? 'Sending...' : 'Confirm Send'}
@@ -372,7 +372,7 @@ export function Component() {
                   variant="secondary"
                   onClick={() => setConfirmSend(false)}
                   disabled={sending}
-                  className="px-4 py-2 text-xs font-medium rounded-sm border border-default bg-app text-secondary hover:text-primary hover:border-secondary transition-colors"
+                  className="px-4 py-2 text-label font-medium rounded-sm border border-default bg-app text-secondary hover:text-primary hover:border-secondary transition-colors"
                 >
                   Cancel
                 </Button>
@@ -387,7 +387,7 @@ export function Component() {
                 type="button"
                 variant="default"
                 onClick={handleSendClick}
-                className="flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-sm bg-accent text-inverse hover:bg-accent-text transition-colors"
+                className="flex items-center gap-2 px-4 py-2 text-body-md font-semibold rounded-sm bg-accent text-inverse hover:bg-accent-text transition-colors"
               >
                 <Send size={14} aria-hidden="true" />
                 Send Broadcast
@@ -396,7 +396,7 @@ export function Component() {
                 type="button"
                 variant="secondary"
                 onClick={closeCompose}
-                className="px-4 py-2 text-sm font-medium rounded-sm border border-default bg-app text-secondary hover:text-primary hover:border-secondary transition-colors"
+                className="px-4 py-2 text-body-sm font-medium rounded-sm border border-default bg-app text-secondary hover:text-primary hover:border-secondary transition-colors"
               >
                 Cancel
               </Button>
@@ -409,12 +409,12 @@ export function Component() {
       <div className="bg-elevated border border-default rounded-xl p-5">
         <div className="flex items-center gap-2 mb-4">
           <Megaphone size={15} className="text-accent" aria-hidden="true" />
-          <h3 className="text-sm font-semibold text-primary">Broadcast History</h3>
+          <h3 className="text-body-md font-semibold text-primary">Broadcast History</h3>
         </div>
 
         {loading ? (
           <div className="overflow-x-auto">
-            <table className="w-full text-sm" aria-label="Loading broadcasts">
+            <table className="w-full text-body-sm" aria-label="Loading broadcasts">
               <tbody>
                 {Array.from({ length: 4 }).map((_, i) => (
                   <SkeletonRow key={i} />
@@ -426,16 +426,16 @@ export function Component() {
           <EmptyState />
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-sm" aria-label="Broadcast messages">
+            <table className="w-full text-body-sm" aria-label="Broadcast messages">
               <caption className="sr-only">Sent broadcasts</caption>
               <thead>
                 <tr className="border-b border-default">
-                  <th scope="col" className="text-left px-3 py-2 text-xs font-medium text-tertiary uppercase whitespace-nowrap">Title</th>
-                  <th scope="col" className="text-left px-3 py-2 text-xs font-medium text-tertiary uppercase whitespace-nowrap">Type</th>
-                  <th scope="col" className="text-left px-3 py-2 text-xs font-medium text-tertiary uppercase whitespace-nowrap">Audience</th>
-                  <th scope="col" className="text-right px-3 py-2 text-xs font-medium text-tertiary uppercase whitespace-nowrap">Recipients</th>
-                  <th scope="col" className="text-left px-3 py-2 text-xs font-medium text-tertiary uppercase whitespace-nowrap">Sent By</th>
-                  <th scope="col" className="text-left px-3 py-2 text-xs font-medium text-tertiary uppercase whitespace-nowrap">Date</th>
+                  <th scope="col" className="text-left px-3 py-2 text-label font-medium text-tertiary uppercase whitespace-nowrap">Title</th>
+                  <th scope="col" className="text-left px-3 py-2 text-label font-medium text-tertiary uppercase whitespace-nowrap">Type</th>
+                  <th scope="col" className="text-left px-3 py-2 text-label font-medium text-tertiary uppercase whitespace-nowrap">Audience</th>
+                  <th scope="col" className="text-right px-3 py-2 text-label font-medium text-tertiary uppercase whitespace-nowrap">Recipients</th>
+                  <th scope="col" className="text-left px-3 py-2 text-label font-medium text-tertiary uppercase whitespace-nowrap">Sent By</th>
+                  <th scope="col" className="text-left px-3 py-2 text-label font-medium text-tertiary uppercase whitespace-nowrap">Date</th>
                   <th scope="col" className="px-3 py-2"><span className="sr-only">Actions</span></th>
                 </tr>
               </thead>
@@ -451,15 +451,15 @@ export function Component() {
                         {b.type}
                       </span>
                     </td>
-                    <td className="px-3 py-3 text-secondary text-xs whitespace-nowrap">{b.targetAudience}</td>
+                    <td className="px-3 py-3 text-secondary text-label whitespace-nowrap">{b.targetAudience}</td>
                     <td className="px-3 py-3 text-right text-secondary tabular-nums">
                       {b.recipientCount.toLocaleString()}
                     </td>
-                    <td className="px-3 py-3 text-secondary text-xs whitespace-nowrap">{b.sentBy}</td>
-                    <td className="px-3 py-3 text-tertiary text-xs whitespace-nowrap">{formatDate(b.sentAt)}</td>
+                    <td className="px-3 py-3 text-secondary text-label whitespace-nowrap">{b.sentBy}</td>
+                    <td className="px-3 py-3 text-tertiary text-caption whitespace-nowrap">{formatDate(b.sentAt)}</td>
                     <td className="px-3 py-3 text-right">
                       {deleteId === b.id ? (
-                        <div className="flex items-center justify-end gap-2 text-xs">
+                        <div className="flex items-center justify-end gap-2 text-label">
                           <Button
                             type="button"
                             variant="danger"

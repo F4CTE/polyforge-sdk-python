@@ -56,11 +56,11 @@ export function Component() {
           {!sent ? (
             <>
               <h1 className="text-xl font-semibold text-primary mb-1">Reset password</h1>
-              <p className="text-sm text-tertiary mb-6">We&apos;ll send you a reset link.</p>
+              <p className="text-body-sm text-tertiary mb-6">We&apos;ll send you a reset link.</p>
 
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
-                  <label htmlFor="email" className="block text-sm font-medium text-primary mb-2">Email</label>
+                  <label htmlFor="email" className="block text-body-md font-medium text-primary mb-2">Email</label>
                   <div className="relative">
                     <Mail className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-tertiary" />
                     <Input
@@ -77,7 +77,7 @@ export function Component() {
                       className="w-full pl-10 pr-4 py-3 bg-app border border-default rounded-pf text-primary placeholder:text-tertiary/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 focus-visible:border-accent transition-colors"
                     />
                   </div>
-                  {emailError && <p id="forgot-email-error" role="alert" className="mt-1 text-xs text-loss">{emailError}</p>}
+                  {emailError && <p id="forgot-email-error" role="alert" className="mt-1 text-label text-loss">{emailError}</p>}
                 </div>
 
                 <Button
@@ -95,13 +95,13 @@ export function Component() {
                 <Check className="size-8 text-accent" />
               </div>
               <h1 className="text-xl font-semibold text-primary mb-2">Check your inbox</h1>
-              <p className="text-sm text-tertiary">
+              <p className="text-body-sm text-tertiary">
                 If an account with that email exists, we&apos;ve sent a reset link.
               </p>
             </div>
           )}
 
-          <div className="border-t border-default mt-6 pt-4 text-center text-sm">
+          <div className="border-t border-default mt-6 pt-4 text-center text-body-sm">
             <Link to="/login" className="inline-flex items-center gap-2 text-accent hover:text-accent-text transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 rounded-sm">
               <ArrowLeft className="size-4" />
               Back to login

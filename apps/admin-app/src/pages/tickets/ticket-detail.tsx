@@ -131,7 +131,7 @@ export function Component() {
         <Button type="button"
           variant="ghost"
           onClick={() => navigate('/tickets')}
-          className="mt-4 text-sm text-accent hover:underline rounded-sm"
+          className="mt-4 text-body-sm text-accent hover:underline rounded-sm"
         >
           Back to tickets
         </Button>
@@ -146,7 +146,7 @@ export function Component() {
       {/* Back */}
       <Button type="button" variant="ghost"
         onClick={() => navigate('/tickets')}
-        className="flex items-center gap-2 text-sm text-secondary hover:text-primary transition-colors"
+        className="flex items-center gap-2 text-body-sm text-secondary hover:text-primary transition-colors"
       >
         <ArrowLeft size={16} aria-hidden="true" />
         Back to tickets
@@ -159,19 +159,19 @@ export function Component() {
             <h2 className="text-lg font-semibold text-primary">
               {ticket.subject}
             </h2>
-            <p className="text-sm text-tertiary mt-1">
+            <p className="text-body-sm text-tertiary mt-1">
               {ticket.username ?? ticket.userId} - {formatDateTime(ticket.createdAt)}
             </p>
           </div>
           <div className="flex items-center gap-2">
-            <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusColor(ticket.status)}`}>
+            <span className={`px-2 py-1 rounded-full text-label font-medium ${statusColor(ticket.status)}`}>
               {ticket.status}
             </span>
-            <span className={`px-2 py-1 rounded-full text-xs font-medium ${priorityColor[ticket.priority] ?? ''}`}>
+            <span className={`px-2 py-1 rounded-full text-label font-medium ${priorityColor[ticket.priority] ?? ''}`}>
               {ticket.priority}
             </span>
             {ticket.category && (
-              <span className="px-2 py-1 rounded-full text-xs font-medium bg-app text-secondary border border-default">
+              <span className="px-2 py-1 rounded-full text-label font-medium bg-app text-secondary border border-default">
                 {ticket.category}
               </span>
             )}
@@ -181,12 +181,12 @@ export function Component() {
         {/* Controls */}
         <div className="flex flex-wrap gap-4 pt-4 border-t border-default">
           <div>
-            <label htmlFor="ticket-status" className="block text-xs text-tertiary mb-1">Status</label>
+            <label htmlFor="ticket-status" className="block text-label text-tertiary mb-1">Status</label>
             <Select
               id="ticket-status"
               value={statusValue}
               onChange={(e) => handleStatusChange(e.target.value)}
-              className="px-3 py-2 text-sm rounded-sm border border-default bg-app text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/20"
+              className="px-3 py-2 text-body-sm rounded-sm border border-default bg-app text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/20"
             >
               <option value="OPEN">Open</option>
               <option value="IN_PROGRESS">In Progress</option>
@@ -195,12 +195,12 @@ export function Component() {
             </Select>
           </div>
           <div>
-            <label htmlFor="ticket-assign" className="block text-xs text-tertiary mb-1">Assign To</label>
+            <label htmlFor="ticket-assign" className="block text-label text-tertiary mb-1">Assign To</label>
             <Select
               id="ticket-assign"
               value={assignedTo}
               onChange={(e) => handleAssign(e.target.value)}
-              className="px-3 py-2 text-sm rounded-sm border border-default bg-app text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/20"
+              className="px-3 py-2 text-body-sm rounded-sm border border-default bg-app text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/20"
             >
               <option value="">Unassigned</option>
               {admins.map((a) => (
@@ -227,14 +227,14 @@ export function Component() {
               }`}
             >
               <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-medium text-secondary">
+                <span className="text-label font-medium text-secondary">
                   {isAdmin ? (msg.senderName ?? 'Admin') : (ticket.username ?? 'User')}
                 </span>
                 <span className="text-label text-tertiary">
                   {msg.createdAt ? timeAgo(msg.createdAt) : ''}
                 </span>
               </div>
-              <p className="text-sm text-primary whitespace-pre-wrap">{msg.body}</p>
+              <p className="text-body-sm text-primary whitespace-pre-wrap">{msg.body}</p>
             </div>
           );
         })}
@@ -254,14 +254,14 @@ export function Component() {
           placeholder="Type your reply..."
           rows={4}
           disabled={sending}
-          className="w-full px-3 py-2 text-sm rounded-sm border border-default bg-app text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/20 mb-3 resize-y disabled:opacity-50"
+          className="w-full px-3 py-2 text-body-sm rounded-sm border border-default bg-app text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/20 mb-3 resize-y disabled:opacity-50"
         />
         <div className="flex justify-end">
           <Button
             type="submit"
             variant="default"
             disabled={sending || !reply.trim()}
-            className="flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-sm bg-accent text-inverse hover:bg-accent-text disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="flex items-center gap-2 px-4 py-2 text-body-md font-semibold rounded-sm bg-accent text-inverse hover:bg-accent-text disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             <Send size={14} aria-hidden="true" />
             {sending ? 'Sending...' : 'Reply'}

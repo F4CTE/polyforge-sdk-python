@@ -41,19 +41,19 @@ export class ErrorBoundary extends Component<Props, State> {
               <h1 className="text-xl font-semibold text-primary mb-2">
                 Something went wrong
               </h1>
-              <p className="text-sm text-tertiary">
+              <p className="text-body-sm text-tertiary">
                 An unexpected error occurred. Please try refreshing the page.
               </p>
             </div>
             {this.state.error && (
-              <pre className="text-xs text-left text-loss bg-loss/5 border border-loss/10 rounded-pf p-3 overflow-auto max-h-32">
+              <pre className="text-label text-left text-loss bg-loss-subtle border border-loss/10 rounded-pf p-3 overflow-auto max-h-32">
                 {this.state.error.message}
               </pre>
             )}
             <button
               type="button"
               onClick={this.handleReset}
-              className="inline-flex items-center gap-2 px-5 py-3 rounded-pf bg-accent text-inverse text-sm font-medium hover:bg-accent-text active:bg-accent-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 transition-colors"
+              className="inline-flex items-center gap-2 px-5 py-3 rounded-pf bg-accent text-inverse text-body-md font-medium hover:bg-accent-text active:bg-accent-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 transition-colors"
             >
               <RefreshCw className="size-4" />
               Reload Application

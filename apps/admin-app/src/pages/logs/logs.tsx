@@ -77,7 +77,7 @@ export function Component() {
             role="tab"
             aria-selected={tab === t.key}
             aria-controls={`tabpanel-${t.key}`}
-            className={`px-4 py-2 text-sm rounded-sm transition-colors ${
+            className={`px-4 py-2 text-body-sm rounded-sm transition-colors ${
               tab === t.key
                 ? 'bg-accent/10 text-accent font-medium'
                 : 'text-secondary hover:text-primary'
@@ -91,30 +91,30 @@ export function Component() {
       {/* Log Table */}
       <div role="tabpanel" id={`tabpanel-${tab}`} aria-labelledby={`tab-${tab}`} className="bg-elevated border border-default rounded-xl overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className="w-full text-body-sm">
             <caption className="sr-only">System logs</caption>
             <thead>
               <tr className="border-b border-default">
-                <th scope="col" className="text-left px-4 py-3 text-xs font-medium text-tertiary uppercase tracking-wider">Timestamp</th>
+                <th scope="col" className="text-left px-4 py-3 text-label font-medium text-tertiary uppercase tracking-wider">Timestamp</th>
                 {tab === 'audit' && (
                   <>
-                    <th scope="col" className="text-left px-4 py-3 text-xs font-medium text-tertiary uppercase tracking-wider">Action</th>
-                    <th scope="col" className="text-left px-4 py-3 text-xs font-medium text-tertiary uppercase tracking-wider">Target</th>
-                    <th scope="col" className="text-left px-4 py-3 text-xs font-medium text-tertiary uppercase tracking-wider">IP</th>
+                    <th scope="col" className="text-left px-4 py-3 text-label font-medium text-tertiary uppercase tracking-wider">Action</th>
+                    <th scope="col" className="text-left px-4 py-3 text-label font-medium text-tertiary uppercase tracking-wider">Target</th>
+                    <th scope="col" className="text-left px-4 py-3 text-label font-medium text-tertiary uppercase tracking-wider">IP</th>
                   </>
                 )}
                 {tab === 'events' && (
                   <>
-                    <th scope="col" className="text-left px-4 py-3 text-xs font-medium text-tertiary uppercase tracking-wider">Type</th>
-                    <th scope="col" className="text-left px-4 py-3 text-xs font-medium text-tertiary uppercase tracking-wider">Details</th>
+                    <th scope="col" className="text-left px-4 py-3 text-label font-medium text-tertiary uppercase tracking-wider">Type</th>
+                    <th scope="col" className="text-left px-4 py-3 text-label font-medium text-tertiary uppercase tracking-wider">Details</th>
                   </>
                 )}
                 {tab === 'logins' && (
                   <>
-                    <th scope="col" className="text-left px-4 py-3 text-xs font-medium text-tertiary uppercase tracking-wider">User</th>
-                    <th scope="col" className="text-left px-4 py-3 text-xs font-medium text-tertiary uppercase tracking-wider">IP</th>
-                    <th scope="col" className="text-left px-4 py-3 text-xs font-medium text-tertiary uppercase tracking-wider">Status</th>
-                    <th scope="col" className="text-left px-4 py-3 text-xs font-medium text-tertiary uppercase tracking-wider">Reason</th>
+                    <th scope="col" className="text-left px-4 py-3 text-label font-medium text-tertiary uppercase tracking-wider">User</th>
+                    <th scope="col" className="text-left px-4 py-3 text-label font-medium text-tertiary uppercase tracking-wider">IP</th>
+                    <th scope="col" className="text-left px-4 py-3 text-label font-medium text-tertiary uppercase tracking-wider">Status</th>
+                    <th scope="col" className="text-left px-4 py-3 text-label font-medium text-tertiary uppercase tracking-wider">Reason</th>
                   </>
                 )}
               </tr>
@@ -135,7 +135,7 @@ export function Component() {
                   <td colSpan={tab === 'audit' ? 4 : tab === 'logins' ? 5 : 3} className="text-center py-12">
                     <ScrollText className="mx-auto mb-3 text-tertiary opacity-40" size={40} aria-hidden="true" />
                     <p className="text-secondary font-medium">No logs found</p>
-                    <p className="text-tertiary text-xs mt-1">System logs will appear here</p>
+                    <p className="text-tertiary text-label mt-1">System logs will appear here</p>
                   </td>
                 </tr>
               ) : (
@@ -155,7 +155,7 @@ export function Component() {
                           {log.target && `${log.target}`}
                           {log.targetId && ` #${log.targetId.slice(0, 8)}`}
                         </td>
-                        <td className="px-4 py-3 font-mono text-xs text-tertiary">{log.ip ?? '-'}</td>
+                        <td className="px-4 py-3 font-mono text-label text-tertiary">{log.ip ?? '-'}</td>
                       </>
                     )}
                     {tab === 'events' && (
@@ -165,7 +165,7 @@ export function Component() {
                             {log.type}
                           </span>
                         </td>
-                        <td className="px-4 py-3 text-secondary max-w-xs font-mono text-xs">
+                        <td className="px-4 py-3 text-secondary max-w-xs font-mono text-label">
                           <details className="cursor-pointer">
                             <summary className="truncate focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent">{JSON.stringify(log.payload)}</summary>
                             <pre className="mt-2 p-2 bg-app rounded-sm text-caption whitespace-pre-wrap break-all max-h-40 overflow-y-auto">{JSON.stringify(log.payload, null, 2)}</pre>
@@ -176,15 +176,15 @@ export function Component() {
                     {tab === 'logins' && (
                       <>
                         <td className="px-4 py-3 text-primary">{(log as any).user?.username ?? log.username ?? ''}</td>
-                        <td className="px-4 py-3 font-mono text-xs text-tertiary">{log.ip}</td>
+                        <td className="px-4 py-3 font-mono text-label text-tertiary">{log.ip}</td>
                         <td className="px-4 py-3">
                           {log.success ? (
-                            <span className="text-xs text-gain">Success</span>
+                            <span className="text-label text-gain">Success</span>
                           ) : (
-                            <span className="text-xs text-loss">Failed</span>
+                            <span className="text-label text-loss">Failed</span>
                           )}
                         </td>
-                        <td className="px-4 py-3 text-xs text-tertiary">{log.failReason ?? '-'}</td>
+                        <td className="px-4 py-3 text-label text-tertiary">{log.failReason ?? '-'}</td>
                       </>
                     )}
                   </tr>
@@ -196,7 +196,7 @@ export function Component() {
 
         {totalPages > 1 && (
           <div className="flex items-center justify-between px-4 py-3 border-t border-default">
-            <span className="text-xs text-tertiary">Page {page} of {totalPages}</span>
+            <span className="text-caption text-tertiary">Page {page} of {totalPages}</span>
             <div className="flex items-center gap-2">
               <Button type="button" variant="ghost" size="icon-sm" onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1} aria-label="Previous page">
                 <ChevronLeft size={16} />

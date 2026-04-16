@@ -200,11 +200,11 @@ export function Component() {
         <div className="flex items-center gap-3">
           <Link
             to="/whales/following"
-            className="text-xs font-medium text-primary hover:text-accent-text transition-colors"
+            className="text-label font-medium text-primary hover:text-accent-text transition-colors"
           >
             Following
           </Link>
-          {!loading && <span className="text-sm font-medium text-secondary">{total} trades</span>}
+          {!loading && <span className="text-body-sm font-medium text-secondary">{total} trades</span>}
         </div>
       </div>
 
@@ -218,9 +218,9 @@ export function Component() {
               variant="ghost"
               key={s.value}
               onClick={() => changeMinSize(s.value)}
-              className={`px-3 py-2 rounded-full text-xs font-medium whitespace-nowrap border transition-colors ${
+              className={`px-3 py-2 rounded-full text-label font-medium whitespace-nowrap border transition-colors ${
                 minSize === s.value
-                  ? 'bg-accent/15 text-accent-text border-accent/30'
+                  ? 'bg-accent-subtle text-accent-text border-accent/30'
                   : 'bg-elevated text-secondary border-default hover:border-strong'
               }`}
             >
@@ -234,7 +234,7 @@ export function Component() {
           value={category}
           onChange={e => changeCategory(e.target.value)}
           aria-label="Filter by category"
-          className="px-3 py-2 rounded-sm text-xs bg-elevated text-secondary border border-default hover:border-strong transition-colors"
+          className="px-3 py-2 rounded-sm text-label bg-elevated text-secondary border border-default hover:border-strong transition-colors"
         >
           <option value="">All Categories</option>
           <option value="crypto">Crypto</option>
@@ -253,7 +253,7 @@ export function Component() {
             aria-label="Search wallet address"
             value={walletSearch}
             onChange={e => { setWalletSearch(e.target.value); setPage(1); }}
-            className="w-full pl-8 pr-3 py-2 rounded-sm text-xs bg-elevated text-primary border border-default hover:border-strong focus-visible:border-accent/50 focus-visible:outline-none transition-colors placeholder:text-tertiary"
+            className="w-full pl-8 pr-3 py-2 rounded-sm text-label bg-elevated text-primary border border-default hover:border-strong focus-visible:border-accent/50 focus-visible:outline-none transition-colors placeholder:text-tertiary"
           />
         </div>
       </div>
@@ -267,7 +267,7 @@ export function Component() {
         <div className="flex flex-col items-center justify-center py-20 text-center">
           <Fish className="size-10 text-tertiary mb-4" />
           <p className="text-primary font-medium">No whale trades detected yet</p>
-          <p className="text-sm text-tertiary mt-1 max-w-sm">
+          <p className="text-body-sm text-tertiary mt-1 max-w-sm">
             When large trades happen on Polymarket, they'll appear here. Follow wallets to track specific traders.
           </p>
         </div>
@@ -285,7 +285,7 @@ export function Component() {
                   <Link
                     to={`/whales/${trade.walletAddress}`}
                     data-testid={`whale-${trade.walletAddress}`}
-                    className="font-mono text-sm text-primary hover:text-accent-text transition-colors"
+                    className="font-mono text-body-md text-primary hover:text-accent-text transition-colors"
                   >
                     <span data-testid="whale-address">{truncateAddress(trade.walletAddress)}</span>
                   </Link>
@@ -305,7 +305,7 @@ export function Component() {
 
               {/* Market name + category */}
               <div className="flex items-center gap-2 mb-3">
-                <span data-testid="transaction-market" className="text-sm text-primary font-medium truncate">{trade.marketName}</span>
+                <span data-testid="transaction-market" className="text-body-md text-primary font-medium truncate">{trade.marketName}</span>
                 <span className="px-2 py-1 rounded-full text-caption bg-overlay text-tertiary shrink-0">
                   {trade.marketCategory}
                 </span>
@@ -315,22 +315,22 @@ export function Component() {
               <div className="flex items-center gap-2 mb-3">
                 <span data-testid="transaction-side" className={`px-2 py-1 rounded text-label font-semibold ${
                   trade.side === 'BUY'
-                    ? 'bg-gain/15 text-gain'
-                    : 'bg-loss/15 text-loss'
+                    ? 'bg-gain-subtle text-gain'
+                    : 'bg-loss-subtle text-loss'
                 }`}>
                   {trade.side}
                 </span>
                 <span className={`px-2 py-1 rounded text-label font-semibold ${
                   trade.outcome === 'YES'
-                    ? 'bg-gain/15 text-gain'
-                    : 'bg-loss/15 text-loss'
+                    ? 'bg-gain-subtle text-gain'
+                    : 'bg-loss-subtle text-loss'
                 }`}>
                   {trade.outcome}
                 </span>
               </div>
 
               {/* Size / Price / Notional */}
-              <div className="flex items-center gap-4 text-xs text-secondary mb-3">
+              <div className="flex items-center gap-4 text-label text-secondary mb-3">
                 <span data-testid="transaction-amount">Size: <span className="font-mono text-primary">{fmtUsd(trade.size)}</span></span>
                 <span>Price: <span className="font-mono text-primary">{fmtPrice(trade.price)}</span></span>
                 <span>Notional: <span className="font-mono text-primary font-semibold">{fmtUsd(trade.notional)}</span></span>
@@ -346,9 +346,9 @@ export function Component() {
                   variant="ghost"
                   data-testid={followingSet.has(trade.walletAddress) ? `unfollow-${trade.walletAddress}` : `follow-${trade.walletAddress}`}
                   onClick={() => toggleFollow(trade.walletAddress)}
-                  className={`flex items-center gap-2 px-3 py-2 rounded-sm text-xs font-medium border cursor-pointer transition-colors ${
+                  className={`flex items-center gap-2 px-3 py-2 rounded-sm text-label font-medium border cursor-pointer transition-colors ${
                     followingSet.has(trade.walletAddress)
-                      ? 'bg-accent/15 text-accent-text border-accent/30'
+                      ? 'bg-accent-subtle text-accent-text border-accent/30'
                       : 'text-accent-text border-accent/30 hover:bg-accent/10'
                   }`}
                 >
@@ -360,7 +360,7 @@ export function Component() {
                 </Button>
                 <Link
                   to={`/copy/new?wallet=${trade.walletAddress}`}
-                  className="flex items-center gap-2 px-3 py-2 rounded-sm text-xs font-medium border border-gain/30 text-gain hover:bg-gain/10 transition-colors"
+                  className="flex items-center gap-2 px-3 py-2 rounded-sm text-label font-medium border border-gain/30 text-gain hover:bg-gain/10 transition-colors"
                 >
                   <Copy className="size-4" /> Copy
                 </Link>
@@ -384,7 +384,7 @@ export function Component() {
           >
             <ChevronLeft className="size-4" />
           </Button>
-          <span data-testid="page-indicator" className="text-sm font-mono text-secondary" aria-live="polite">{page} / {totalPages}</span>
+          <span data-testid="page-indicator" className="text-body-sm font-mono text-secondary" aria-live="polite">{page} / {totalPages}</span>
           <Button
             type="button"
             variant="ghost"
