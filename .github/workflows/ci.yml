@@ -193,6 +193,45 @@ jobs:
       group: deploy-polyforge-lab
       cancel-in-progress: false
     steps:
+      - name: Write .env from GitHub Secrets
+        uses: appleboy/ssh-action@v1
+        env:
+          USER_JWT_SECRET: ${{ secrets.USER_JWT_SECRET }}
+          ADMIN_JWT_SECRET: ${{ secrets.ADMIN_JWT_SECRET }}
+          BOT_JWT_SECRET: ${{ secrets.BOT_JWT_SECRET }}
+          INTERNAL_JWT_SECRET: ${{ secrets.INTERNAL_JWT_SECRET }}
+          MASTER_ENCRYPTION_KEY: ${{ secrets.MASTER_ENCRYPTION_KEY }}
+          TOTP_ENCRYPTION_KEY: ${{ secrets.TOTP_ENCRYPTION_KEY }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          ADMIN_DB_PASSWORD: ${{ secrets.ADMIN_DB_PASSWORD }}
+          REDIS_PASSWORD: ${{ secrets.REDIS_PASSWORD }}
+          POLY_BUILDER_API_KEY: ${{ secrets.POLY_BUILDER_API_KEY }}
+          POLY_BUILDER_SECRET: ${{ secrets.POLY_BUILDER_SECRET }}
+          POLY_BUILDER_PASSPHRASE: ${{ secrets.POLY_BUILDER_PASSPHRASE }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          DISCORD_BOT_TOKEN: ${{ secrets.DISCORD_BOT_TOKEN }}
+          WHATSAPP_TOKEN: ${{ secrets.WHATSAPP_TOKEN }}
+          WHATSAPP_PHONE_ID: ${{ secrets.WHATSAPP_PHONE_ID }}
+          WHATSAPP_VERIFY_TOKEN: ${{ secrets.WHATSAPP_VERIFY_TOKEN }}
+          WHATSAPP_APP_SECRET: ${{ secrets.WHATSAPP_APP_SECRET }}
+          GAS_SPONSOR_PRIVATE_KEY: ${{ secrets.GAS_SPONSOR_PRIVATE_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        with:
+          host: ${{ secrets.LAB_HOST }}
+          username: f4cte
+          key: ${{ secrets.LAB_SSH_KEY }}
+          envs: >-
+            USER_JWT_SECRET,ADMIN_JWT_SECRET,BOT_JWT_SECRET,INTERNAL_JWT_SECRET,
+            MASTER_ENCRYPTION_KEY,TOTP_ENCRYPTION_KEY,
+            DB_PASSWORD,ADMIN_DB_PASSWORD,REDIS_PASSWORD,
+            POLY_BUILDER_API_KEY,POLY_BUILDER_SECRET,POLY_BUILDER_PASSPHRASE,
+            TELEGRAM_BOT_TOKEN,DISCORD_BOT_TOKEN,
+            WHATSAPP_TOKEN,WHATSAPP_PHONE_ID,WHATSAPP_VERIFY_TOKEN,WHATSAPP_APP_SECRET,
+            GAS_SPONSOR_PRIVATE_KEY,
+            ANTHROPIC_API_KEY,OPENAI_API_KEY
+          script: bash ~/PolyForge/scripts/write-env-from-ci.sh
+
       - name: Deploy to polyforge-lab
         uses: appleboy/ssh-action@v1
         env:
