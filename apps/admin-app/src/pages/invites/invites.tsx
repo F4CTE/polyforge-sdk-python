@@ -72,7 +72,7 @@ export function Component() {
       <h2 className="text-lg font-semibold text-primary">Invites</h2>
 
       {/* Generate Form */}
-      <div className="bg-elevated border border-default rounded-pf-lg p-5">
+      <div className="bg-elevated border border-default rounded-xl p-5">
         <div className="flex items-center gap-2 mb-4">
           <Plus size={16} className="text-accent" aria-hidden="true" />
           <h3 className="text-sm font-semibold text-primary">Generate Invite Codes</h3>
@@ -87,7 +87,7 @@ export function Component() {
               max={50}
               value={count}
               onChange={(e) => setCount(Number(e.target.value))}
-              className="w-20 px-3 py-2 text-sm rounded-pf-sm border border-default bg-app text-primary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent"
+              className="w-20 px-3 py-2 text-sm rounded-sm border border-default bg-app text-primary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent"
             />
           </div>
           <div>
@@ -99,7 +99,7 @@ export function Component() {
               max={100}
               value={maxUses}
               onChange={(e) => setMaxUses(Number(e.target.value))}
-              className="w-20 px-3 py-2 text-sm rounded-pf-sm border border-default bg-app text-primary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent"
+              className="w-20 px-3 py-2 text-sm rounded-sm border border-default bg-app text-primary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent"
             />
           </div>
           <div>
@@ -111,14 +111,14 @@ export function Component() {
               max={365}
               value={ttlDays}
               onChange={(e) => setTtlDays(Number(e.target.value))}
-              className="w-20 px-3 py-2 text-sm rounded-pf-sm border border-default bg-app text-primary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent"
+              className="w-20 px-3 py-2 text-sm rounded-sm border border-default bg-app text-primary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent"
             />
           </div>
           <Button
             type="submit"
             variant="default"
             disabled={generating}
-            className="px-4 py-2 text-sm font-semibold rounded-pf-sm bg-accent text-inverse hover:bg-accent-text disabled:opacity-50 transition-colors"
+            className="px-4 py-2 text-sm font-semibold rounded-sm bg-accent text-inverse hover:bg-accent-text disabled:opacity-50 transition-colors"
           >
             {generating ? 'Generating...' : 'Generate'}
           </Button>
@@ -126,7 +126,7 @@ export function Component() {
 
         {/* Generated Codes */}
         {generatedCodes.length > 0 && (
-          <div className="mt-4 p-3 rounded-pf-sm bg-app border border-default">
+          <div className="mt-4 p-3 rounded-sm bg-app border border-default">
             <div className="text-xs text-tertiary mb-2">Generated codes:</div>
             <div className="space-y-1">
               {generatedCodes.map((code) => (
@@ -150,7 +150,7 @@ export function Component() {
       </div>
 
       {/* Active Invites Table */}
-      <div className="bg-elevated border border-default rounded-pf-lg p-5">
+      <div className="bg-elevated border border-default rounded-xl p-5">
         <div className="flex items-center gap-2 mb-4">
           <Mail size={16} className="text-accent" aria-hidden="true" />
           <h3 className="text-sm font-semibold text-primary">

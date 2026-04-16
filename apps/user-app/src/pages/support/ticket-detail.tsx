@@ -128,8 +128,8 @@ export function Component() {
     return (
       <div className="p-6 max-w-3xl mx-auto space-y-4">
         <div className="h-6 w-48 bg-overlay rounded animate-pulse" />
-        <div className="h-40 bg-overlay rounded-pf-lg animate-pulse" />
-        <div className="h-20 bg-overlay rounded-pf-lg animate-pulse" />
+        <div className="h-40 bg-overlay rounded-xl animate-pulse" />
+        <div className="h-20 bg-overlay rounded-xl animate-pulse" />
       </div>
     );
   }
@@ -208,7 +208,7 @@ export function Component() {
             className={`flex ${msg.isAdmin ? 'justify-end' : 'justify-start'}`}
           >
             <div
-              className={`max-w-[80%] rounded-pf-lg p-4 ${
+              className={`max-w-[80%] rounded-xl p-4 ${
                 msg.isAdmin
                   ? 'bg-accent/10 border border-accent/20'
                   : 'bg-elevated border border-default'
@@ -219,9 +219,9 @@ export function Component() {
                   {msg.senderName}
                 </span>
                 {msg.isAdmin && (
-                  <span className="text-pf-caption px-2 py-1 rounded bg-accent/15 text-accent-text font-medium">Staff</span>
+                  <span className="text-caption px-2 py-1 rounded bg-accent/15 text-accent-text font-medium">Staff</span>
                 )}
-                <span className="text-pf-label text-tertiary ml-auto font-mono">
+                <span className="text-label text-tertiary ml-auto font-mono">
                   {formatDateTime(msg.createdAt)}
                 </span>
               </div>
@@ -233,14 +233,14 @@ export function Component() {
       </div>
 
       {/* Auto-polling indicator */}
-      <div className="flex items-center gap-2 text-pf-label text-tertiary">
+      <div className="flex items-center gap-2 text-label text-tertiary">
         <RefreshCw className="size-3" />
         Auto-updating every 15s
       </div>
 
       {/* Reply */}
       {ticket.status !== 'CLOSED' ? (
-        <div className="bg-elevated border border-default rounded-pf-lg p-4">
+        <div className="bg-elevated border border-default rounded-xl p-4">
           <Textarea
             value={reply}
             onChange={e => setReply(e.target.value.slice(0, MAX_CHARS))}
@@ -266,7 +266,7 @@ export function Component() {
           </div>
         </div>
       ) : (
-        <div className="text-center py-4 text-sm text-tertiary bg-elevated border border-default rounded-pf-lg">
+        <div className="text-center py-4 text-sm text-tertiary bg-elevated border border-default rounded-xl">
           This ticket has been closed.
         </div>
       )}

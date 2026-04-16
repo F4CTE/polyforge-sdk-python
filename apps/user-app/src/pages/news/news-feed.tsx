@@ -77,7 +77,7 @@ function sourceColor(source: string): string {
     Reuters: 'bg-info/15 text-info border-info/30',
     CNN: 'bg-loss/15 text-loss border-loss/30',
     CoinGecko: 'bg-warning/15 text-warning border-warning/30',
-    Bloomberg: 'bg-pf-purple-500/15 text-pf-purple-500 border-pf-purple-500/30',
+    Bloomberg: 'bg-purple-500/15 text-purple-500 border-purple-500/30',
     'AP News': 'bg-accent/15 text-accent border-accent/30',
   };
   return map[source] ?? 'bg-overlay text-tertiary border-default';
@@ -117,10 +117,10 @@ function timeAgo(ts: string): string {
 
 function ArticleSkeleton() {
   return (
-    <div className="bg-elevated border border-default rounded-pf-lg p-4 space-y-3 animate-shimmer">
+    <div className="bg-elevated border border-default rounded-xl p-4 space-y-3 animate-shimmer">
       <div className="flex items-center gap-2">
-        <div className="h-5 w-16 bg-overlay rounded-pf-full" />
-        <div className="h-5 w-16 bg-overlay rounded-pf-full" />
+        <div className="h-5 w-16 bg-overlay rounded-full" />
+        <div className="h-5 w-16 bg-overlay rounded-full" />
         <div className="ml-auto h-3 w-16 bg-overlay rounded" />
       </div>
       <div className="h-4 bg-overlay rounded w-[85%]" />
@@ -132,7 +132,7 @@ function ArticleSkeleton() {
 
 function SignalSkeleton() {
   return (
-    <div className="bg-elevated border border-default rounded-pf-lg p-3 space-y-2 animate-shimmer">
+    <div className="bg-elevated border border-default rounded-xl p-3 space-y-2 animate-shimmer">
       <div className="h-4 bg-overlay rounded w-[60%]" />
       <div className="h-3 bg-overlay rounded w-[40%]" />
       <div className="h-2 bg-overlay rounded w-full" />
@@ -259,7 +259,7 @@ export function Component() {
       <div className="flex flex-wrap items-center gap-3">
         {/* Market search filter */}
         <div className="relative">
-          <div className="flex items-center gap-2 px-3 py-2 rounded-pf-sm border border-default bg-elevated focus-within:border-accent/50 transition-colors">
+          <div className="flex items-center gap-2 px-3 py-2 rounded-sm border border-default bg-elevated focus-within:border-accent/50 transition-colors">
             <Search className="size-3 text-tertiary shrink-0" aria-hidden="true" />
             <Input
               type="text"
@@ -273,7 +273,7 @@ export function Component() {
 
           {/* Dropdown */}
           {marketSearchResults.length > 0 && !marketId && (
-            <div className="absolute z-20 left-0 mt-1 w-72 bg-elevated border border-default rounded-pf-sm shadow-pf-lg overflow-hidden">
+            <div className="absolute z-20 left-0 mt-1 w-72 bg-elevated border border-default rounded-sm shadow-lg overflow-hidden">
               {marketSearchResults.map(m => (
                 <Button
                   key={m.id}
@@ -288,7 +288,7 @@ export function Component() {
                   }}
                   className="w-full flex flex-col items-start px-3 py-2 hover:bg-surface transition-colors text-left"
                 >
-                  <span className="text-pf-caption font-mono text-tertiary">{m.slug}</span>
+                  <span className="text-caption font-mono text-tertiary">{m.slug}</span>
                   <span className="text-xs text-primary truncate w-full">
                     {m.question.length > 60 ? m.question.slice(0, 60) + '…' : m.question}
                   </span>
@@ -300,7 +300,7 @@ export function Component() {
 
         {/* Active market filter chip */}
         {marketId && (
-          <span className="inline-flex items-center gap-2 px-3 py-2 rounded-pf-full text-xs font-medium bg-accent/15 text-accent-text border border-accent/30">
+          <span className="inline-flex items-center gap-2 px-3 py-2 rounded-full text-xs font-medium bg-accent/15 text-accent-text border border-accent/30">
             {selectedMarketName}
             <Button
               type="button"
@@ -319,7 +319,7 @@ export function Component() {
           value={source}
           onChange={e => changeSource(e.target.value)}
           aria-label="Filter by news source"
-          className="px-3 py-2 rounded-pf-sm text-xs bg-elevated text-secondary border border-default hover:border-strong transition-colors"
+          className="px-3 py-2 rounded-sm text-xs bg-elevated text-secondary border border-default hover:border-strong transition-colors"
         >
           {SOURCES.map(s => (
             <option key={s} value={s}>{s}</option>
@@ -334,7 +334,7 @@ export function Component() {
               variant="ghost"
               key={tab.value}
               onClick={() => changeSentiment(tab.value)}
-              className={`px-3 py-2 rounded-pf-full text-xs font-medium whitespace-nowrap border transition-colors ${
+              className={`px-3 py-2 rounded-full text-xs font-medium whitespace-nowrap border transition-colors ${
                 sentiment === tab.value
                   ? 'bg-accent/15 text-accent-text border-accent/30'
                   : 'bg-elevated text-secondary border-default hover:border-strong'
@@ -385,14 +385,14 @@ export function Component() {
                   <div
                     key={article.id}
                     data-testid="news-card"
-                    className="bg-elevated border border-default rounded-pf-lg p-4 transition-all duration-pf-normal hover:border-strong hover:shadow-pf-sm"
+                    className="bg-elevated border border-default rounded-xl p-4 transition-all duration-panel hover:border-strong hover:shadow-sm"
                   >
                     {/* Top row: badges + time */}
                     <div className="flex items-center gap-2 mb-2">
-                      <span data-testid="news-source" className={`px-2 py-1 rounded-pf-full text-pf-label font-medium border ${sourceColor(article.source)}`}>
+                      <span data-testid="news-source" className={`px-2 py-1 rounded-full text-label font-medium border ${sourceColor(article.source)}`}>
                         {article.source}
                       </span>
-                      <span data-testid="news-sentiment" className={`px-2 py-1 rounded-pf-full text-pf-label font-medium ${sentimentColor(article.sentiment)}`}>
+                      <span data-testid="news-sentiment" className={`px-2 py-1 rounded-full text-label font-medium ${sentimentColor(article.sentiment)}`}>
                         {article.sentiment}
                       </span>
                       <span
@@ -403,11 +403,11 @@ export function Component() {
                         {article.sentiment}
                       </span>
                       {signals.length > 0 && (
-                        <span className="px-2 py-1 rounded-pf-full text-pf-label font-medium bg-accent/15 text-accent-text">
+                        <span className="px-2 py-1 rounded-full text-label font-medium bg-accent/15 text-accent-text">
                           {signals.length} signal{signals.length !== 1 ? 's' : ''}
                         </span>
                       )}
-                      <span className="ml-auto text-pf-label text-tertiary">{timeAgo(article.publishedAt)}</span>
+                      <span className="ml-auto text-label text-tertiary">{timeAgo(article.publishedAt)}</span>
                     </div>
 
                     {/* Title */}
@@ -447,7 +447,7 @@ export function Component() {
                               <div
                                 key={signal.id}
                                 data-testid="trading-signal"
-                                className="flex items-center gap-3 px-3 py-2 rounded-pf-sm bg-surface border border-subtle"
+                                className="flex items-center gap-3 px-3 py-2 rounded-sm bg-surface border border-subtle"
                               >
                                 {/* Direction arrow */}
                                 <div data-testid="signal-type" className={`flex items-center gap-1 text-xs font-semibold ${
@@ -464,7 +464,7 @@ export function Component() {
                                 <span className="text-xs text-primary truncate flex-1">{signal.marketName}</span>
 
                                 {/* Outcome */}
-                                <span className={`px-2 py-1 rounded text-pf-caption font-semibold ${
+                                <span className={`px-2 py-1 rounded text-caption font-semibold ${
                                   signal.outcome === 'YES' ? 'bg-gain/15 text-gain' : 'bg-loss/15 text-loss'
                                 }`}>
                                   {signal.outcome}
@@ -472,19 +472,19 @@ export function Component() {
 
                                 {/* Confidence bar */}
                                 <div className="flex items-center gap-2 min-w-[80px]">
-                                  <div className={`h-2 rounded-pf-full flex-1 ${confidenceBarBg(signal.confidence)}`}>
+                                  <div className={`h-2 rounded-full flex-1 ${confidenceBarBg(signal.confidence)}`}>
                                     <div
-                                      className={`h-full rounded-pf-full ${confidenceColor(signal.confidence)}`}
+                                      className={`h-full rounded-full ${confidenceColor(signal.confidence)}`}
                                       style={{ width: `${signal.confidence}%` }}
                                     />
                                   </div>
-                                  <span className="text-pf-caption font-mono text-tertiary w-7 text-right">{signal.confidence}%</span>
+                                  <span className="text-caption font-mono text-tertiary w-7 text-right">{signal.confidence}%</span>
                                 </div>
 
                                 {/* Trade button */}
                                 <Link
                                   to={`/markets/${signal.marketId}`}
-                                  className="px-2 py-1 rounded-pf-sm text-pf-label font-medium border border-accent/30 text-accent-text hover:bg-accent/10 transition-colors"
+                                  className="px-2 py-1 rounded-sm text-label font-medium border border-accent/30 text-accent-text hover:bg-accent/10 transition-colors"
                                 >
                                   Trade
                                 </Link>
@@ -499,7 +499,7 @@ export function Component() {
                     <div className="flex items-center justify-end mt-2">
                       <Link
                         to={`/news/${article.id}`}
-                        className="text-pf-label text-tertiary hover:text-accent-text transition-colors"
+                        className="text-label text-tertiary hover:text-accent-text transition-colors"
                       >
                         View details &rarr;
                       </Link>
@@ -543,7 +543,7 @@ export function Component() {
         {/* Right column: Top Signals sidebar (1/3) — hidden when empty */}
         {(loadingSignals || topSignals.length > 0) && (
         <div className="space-y-4">
-          <div className="bg-elevated border border-default rounded-pf-lg p-4">
+          <div className="bg-elevated border border-default rounded-xl p-4">
             <h2 className="text-sm font-medium text-primary mb-4">Top Signals</h2>
 
             {loadingSignals && topSignals.length === 0 ? (
@@ -555,9 +555,9 @@ export function Component() {
                 {topSignals.map(signal => (
                   <div
                     key={signal.id}
-                    className={`rounded-pf-sm border p-3 transition-all duration-pf-normal ${
+                    className={`rounded-sm border p-3 transition-all duration-panel ${
                       signal.confidence > 80
-                        ? 'border-accent/30 shadow-pf-glow-cyan'
+                        ? 'border-accent/30 shadow-glow-accent'
                         : 'border-subtle'
                     }`}
                   >
@@ -578,22 +578,22 @@ export function Component() {
 
                     {/* Confidence bar */}
                     <div className="flex items-center gap-2 mb-2">
-                      <div className={`h-2 rounded-pf-full flex-1 ${confidenceBarBg(signal.confidence)}`}>
+                      <div className={`h-2 rounded-full flex-1 ${confidenceBarBg(signal.confidence)}`}>
                         <div
-                          className={`h-full rounded-pf-full transition-all duration-pf-slow ${confidenceColor(signal.confidence)}`}
+                          className={`h-full rounded-full transition-all duration-slow ${confidenceColor(signal.confidence)}`}
                           style={{ width: `${signal.confidence}%` }}
                         />
                       </div>
-                      <span className="text-pf-caption font-mono text-tertiary w-7 text-right">{signal.confidence}%</span>
+                      <span className="text-caption font-mono text-tertiary w-7 text-right">{signal.confidence}%</span>
                     </div>
 
                     {/* Reasoning */}
-                    <p className="text-pf-label text-tertiary line-clamp-1 mb-2">{signal.reasoning}</p>
+                    <p className="text-label text-tertiary line-clamp-1 mb-2">{signal.reasoning}</p>
 
                     {/* Trade button */}
                     <Link
                       to={`/markets/${signal.marketId}`}
-                      className="inline-flex items-center gap-1 px-3 py-1 rounded-pf-sm text-pf-label font-medium border border-accent/30 text-accent-text hover:bg-accent/10 transition-colors"
+                      className="inline-flex items-center gap-1 px-3 py-1 rounded-sm text-label font-medium border border-accent/30 text-accent-text hover:bg-accent/10 transition-colors"
                     >
                       Trade
                     </Link>

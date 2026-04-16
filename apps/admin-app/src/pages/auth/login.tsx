@@ -70,7 +70,7 @@ export function Component() {
         <form
           onSubmit={handleSubmit}
           noValidate
-          className="bg-elevated border border-default rounded-pf-lg p-6 space-y-4 shadow-pf-lg"
+          className="bg-elevated border border-default rounded-xl p-6 space-y-4 shadow-lg"
         >
           <div>
             <label htmlFor="email" className="block text-xs font-medium text-secondary mb-2">
@@ -84,7 +84,7 @@ export function Component() {
               onChange={(e) => setEmail(e.target.value)}
               required
               autoFocus
-              className="w-full px-3 py-2 text-sm rounded-pf-sm border border-default bg-app text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent focus-visible:border-accent transition-colors"
+              className="w-full px-3 py-2 text-sm rounded-sm border border-default bg-app text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent focus-visible:border-accent transition-colors"
               placeholder="admin@polyforge.io"
             />
           </div>
@@ -100,7 +100,7 @@ export function Component() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="w-full px-3 py-2 text-sm rounded-pf-sm border border-default bg-app text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent focus-visible:border-accent transition-colors"
+              className="w-full px-3 py-2 text-sm rounded-sm border border-default bg-app text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent focus-visible:border-accent transition-colors"
               placeholder="Enter password"
             />
           </div>
@@ -121,7 +121,7 @@ export function Component() {
                 onChange={(e) => setTotpCode(e.target.value.replace(/\D/g, ''))}
                 required
                 autoFocus
-                className="w-full px-3 py-2 text-sm text-center tracking-[var(--tracking-pf-code)] font-mono rounded-pf-sm border border-default bg-app text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent focus-visible:border-accent transition-colors"
+                className="w-full px-3 py-2 text-sm text-center tracking-[0.3em] font-mono rounded-sm border border-default bg-app text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent focus-visible:border-accent transition-colors"
                 placeholder="000000"
               />
             </div>
@@ -131,7 +131,7 @@ export function Component() {
             type="submit"
             variant="default"
             disabled={loading || (totpRequired && totpCode.length < 6)}
-            className="w-full py-2 px-4 text-sm font-semibold rounded-pf-sm bg-accent text-inverse hover:bg-accent-text disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="w-full py-2 px-4 text-sm font-semibold rounded-sm bg-accent text-inverse hover:bg-accent-text disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             {loading ? 'Signing in...' : totpRequired ? 'Verify & Sign In' : 'Sign In'}
           </Button>

@@ -286,7 +286,7 @@ export function Component() {
       </div>
 
       {/* ── Section 1: Category Heatmap ────────────────────────────────── */}
-      <div className="bg-elevated border border-default rounded-pf-lg p-6 space-y-5">
+      <div className="bg-elevated border border-default rounded-xl p-6 space-y-5">
         <div className="flex items-center gap-2">
           <Grid3x3 className="size-4 text-tertiary" aria-hidden="true" />
           <h2 className="text-sm font-medium text-primary">Category Correlation Heatmap</h2>
@@ -317,13 +317,13 @@ export function Component() {
               {categories.map((cat, j) => (
                 <div
                   key={`col-${cat}`}
-                  className={`h-[72px] w-[72px] flex items-end justify-center pb-2 transition-colors duration-pf-fast ${
+                  className={`h-[72px] w-[72px] flex items-end justify-center pb-2 transition-colors duration-micro ${
                     highlightCol === j ? 'text-accent-text' : 'text-secondary'
                   }`}
                   aria-hidden="true"
                 >
                   <span
-                    className="text-pf-caption font-semibold uppercase tracking-wider truncate max-w-[64px] block text-center"
+                    className="text-caption font-semibold uppercase tracking-wider truncate max-w-[64px] block text-center"
                     style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)', height: '60px', lineHeight: '60px' }}
                   >
                     {capitalize(cat)}
@@ -337,12 +337,12 @@ export function Component() {
                   {/* Row header */}
                   <div
                     key={`row-label-${rowCat}`}
-                    className={`h-[72px] w-20 flex items-center justify-end pr-2 transition-colors duration-pf-fast ${
+                    className={`h-[72px] w-20 flex items-center justify-end pr-2 transition-colors duration-micro ${
                       highlightRow === i ? 'text-accent-text' : 'text-secondary'
                     }`}
                     aria-hidden="true"
                   >
-                    <span className="text-pf-caption font-semibold uppercase tracking-wider truncate">
+                    <span className="text-caption font-semibold uppercase tracking-wider truncate">
                       {capitalize(rowCat)}
                     </span>
                   </div>
@@ -372,7 +372,7 @@ export function Component() {
                     return (
                       <div
                         key={`cell-${i}-${j}`}
-                        className={`h-[72px] w-[72px] rounded flex items-center justify-center cursor-default transition-all duration-pf-fast ${cellBg} ${
+                        className={`h-[72px] w-[72px] rounded flex items-center justify-center cursor-default transition-all duration-micro ${cellBg} ${
                           isHighlighted ? 'ring-1 ring-accent-text/50 scale-[1.04]' : ''
                         }`}
                         role="gridcell"
@@ -396,7 +396,7 @@ export function Component() {
         {/* Legend */}
         {!loadingMatrix && categories.length > 0 && (
           <div className="flex flex-wrap items-center gap-x-4 gap-y-2 pt-2">
-            <span className="text-pf-label text-tertiary font-medium uppercase tracking-wider">Legend:</span>
+            <span className="text-label text-tertiary font-medium uppercase tracking-wider">Legend:</span>
             <LegendItem bgClass="bg-gain/80" label="Strong positive" />
             <LegendItem bgClass="bg-gain/35" label="Moderate positive" />
             <LegendItem bgClass="bg-overlay border border-default" label="Neutral" />
@@ -416,7 +416,7 @@ export function Component() {
       )}
 
       {/* ── Section 2: Top correlated market pairs ─────────────────────── */}
-      <div className="bg-elevated border border-default rounded-pf-lg overflow-hidden">
+      <div className="bg-elevated border border-default rounded-xl overflow-hidden">
         <div className="px-6 py-4 border-b border-default">
           <h2 className="text-sm font-medium text-primary">Top Correlated Market Pairs</h2>
           <p className="text-xs text-tertiary mt-1">
@@ -516,7 +516,7 @@ export function Component() {
       {tooltip.visible && (
         <div
           ref={tooltipRef}
-          className="fixed z-50 pointer-events-none px-3 py-2 rounded-pf bg-elevated border border-default text-xs text-primary shadow-pf-lg max-w-[240px]"
+          className="fixed z-50 pointer-events-none px-3 py-2 rounded-pf bg-elevated border border-default text-xs text-primary shadow-lg max-w-[240px]"
           style={{ left: tooltip.x + 12, top: tooltip.y - 40 }}
           aria-hidden="true"
         >
@@ -533,7 +533,7 @@ function LegendItem({ bgClass, label }: { bgClass: string; label: string }) {
   return (
     <div className="flex items-center gap-2">
       <div className={`size-3 rounded-sm ${bgClass}`} aria-hidden="true" />
-      <span className="text-pf-label text-tertiary">{label}</span>
+      <span className="text-label text-tertiary">{label}</span>
     </div>
   );
 }
@@ -546,7 +546,7 @@ function InsightCard({ insight }: { insight: { icon: 'up' | 'down' | 'neutral'; 
   };
 
   return (
-    <div className="bg-elevated border border-default rounded-pf-lg p-4 flex items-start gap-3">
+    <div className="bg-elevated border border-default rounded-xl p-4 flex items-start gap-3">
       {iconMap[insight.icon]}
       <p className="text-xs text-secondary leading-relaxed">{insight.text}</p>
     </div>
@@ -583,7 +583,7 @@ function CategorySelect({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         disabled={disabled}
-        className="w-full appearance-none bg-surface border border-default rounded-pf-sm px-3 py-2 pr-8 text-sm text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-text/40 transition disabled:opacity-50 disabled:cursor-not-allowed"
+        className="w-full appearance-none bg-surface border border-default rounded-sm px-3 py-2 pr-8 text-sm text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-text/40 transition disabled:opacity-50 disabled:cursor-not-allowed"
       >
         <option value="">Select category…</option>
         {options.map((opt) => (

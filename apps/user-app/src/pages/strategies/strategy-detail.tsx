@@ -254,7 +254,7 @@ const SECTION_ICONS: Record<string, React.ReactNode> = {
 const SECTION_STYLES: Record<string, string> = {
   safety: 'bg-warning/10 text-warning border-warning/20',
   trigger: 'bg-accent/10 text-accent-text border-accent/20',
-  condition: 'bg-pf-purple-500/10 text-pf-purple-500 border-pf-purple-500/20',
+  condition: 'bg-purple-500/10 text-purple-500 border-purple-500/20',
   action: 'bg-gain/10 text-gain border-gain/20',
 };
 
@@ -884,7 +884,7 @@ export function Component() {
       {/* Back */}
       <Link
         to="/strategies"
-        className="inline-flex items-center gap-2 text-sm text-secondary hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 rounded-pf-sm transition-colors"
+        className="inline-flex items-center gap-2 text-sm text-secondary hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 rounded-sm transition-colors"
       >
         <ArrowLeft className="size-4" aria-hidden="true" /> Strategies
       </Link>
@@ -936,8 +936,8 @@ export function Component() {
             <div>
               <div className="flex items-center gap-3 mb-2">
                 <h1 className="text-2xl font-semibold text-primary">{strategy.name}</h1>
-                <span data-testid="status-badge" className={`inline-flex items-center gap-2 px-3 py-1 rounded-pf-full text-xs font-medium ${statusStyle.bg} ${statusStyle.text}`}>
-                  <span className={`w-2 h-2 rounded-pf-full ${statusStyle.dot} ${isActive(status) ? 'animate-pulse-dot' : ''}`} />
+                <span data-testid="status-badge" className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium ${statusStyle.bg} ${statusStyle.text}`}>
+                  <span className={`w-2 h-2 rounded-full ${statusStyle.dot} ${isActive(status) ? 'animate-pulse-dot' : ''}`} />
                   {status}
                 </span>
               </div>
@@ -1064,7 +1064,7 @@ export function Component() {
               >
                 <Bell className="size-4" />
                 {strategyAlerts.length > 0 && (
-                  <span className="absolute -top-1 -right-1 flex items-center justify-center w-4 h-4 rounded-pf-full bg-warning text-inverse text-pf-micro font-semibold leading-none">
+                  <span className="absolute -top-1 -right-1 flex items-center justify-center w-4 h-4 rounded-full bg-warning text-inverse text-caption font-semibold leading-none">
                     {strategyAlerts.length > 9 ? '9+' : strategyAlerts.length}
                   </span>
                 )}
@@ -1097,7 +1097,7 @@ export function Component() {
 
           {/* Marketplace listing form */}
           {showListing && (
-            <div className="bg-elevated border border-accent/30 rounded-pf-lg p-4 space-y-3">
+            <div className="bg-elevated border border-accent/30 rounded-xl p-4 space-y-3">
               <div className="flex items-center justify-between">
                 <span className="text-sm font-semibold text-primary flex items-center gap-2">
                   <Store className="size-4 text-accent-text" />
@@ -1140,7 +1140,7 @@ export function Component() {
                       placeholder="0"
                       className="w-full h-9 px-3 rounded-pf bg-surface border border-default text-sm font-mono text-primary focus-visible:outline-none focus-visible:border-accent/50"
                     />
-                    <p className="text-pf-caption text-tertiary mt-1">0 = Free</p>
+                    <p className="text-caption text-tertiary mt-1">0 = Free</p>
                   </div>
                   <div className="flex-1">
                     <label className="block text-xs font-medium text-secondary mb-1">Tags (comma-separated)</label>
@@ -1167,7 +1167,7 @@ export function Component() {
 
           {/* Share Panel */}
           {showSharePanel && (
-            <div className="bg-elevated border border-accent/30 rounded-pf-lg p-4 space-y-4">
+            <div className="bg-elevated border border-accent/30 rounded-xl p-4 space-y-4">
               {/* Panel header */}
               <div className="flex items-center justify-between">
                 <span className="text-sm font-semibold text-primary flex items-center gap-2">
@@ -1258,7 +1258,7 @@ export function Component() {
                   <div className="flex items-center gap-4 py-2 border-t border-b border-subtle">
                     {stratPnl && parseFloat(stratPnl.winRate) > 0 && (
                       <div className="text-center">
-                        <p className="text-pf-caption text-tertiary">Win Rate</p>
+                        <p className="text-caption text-tertiary">Win Rate</p>
                         <p className="text-xs font-mono font-semibold text-accent-text">
                           {(parseFloat(stratPnl.winRate) * 100).toFixed(0)}%
                         </p>
@@ -1266,7 +1266,7 @@ export function Component() {
                     )}
                     {(strategy.totalPnl ?? null) !== null && (
                       <div className="text-center">
-                        <p className="text-pf-caption text-tertiary">P&amp;L</p>
+                        <p className="text-caption text-tertiary">P&amp;L</p>
                         <p className={`text-xs font-mono font-semibold ${(strategy.totalPnl ?? 0) >= 0 ? 'text-gain' : 'text-loss'}`}>
                           {formatPnl(strategy.totalPnl ?? 0)}
                         </p>
@@ -1274,12 +1274,12 @@ export function Component() {
                     )}
                     {recentOrderCount !== null && (
                       <div className="text-center">
-                        <p className="text-pf-caption text-tertiary">Trades</p>
+                        <p className="text-caption text-tertiary">Trades</p>
                         <p className="text-xs font-mono font-semibold text-primary">{recentOrderCount}</p>
                       </div>
                     )}
                   </div>
-                  <p className="text-pf-caption text-tertiary">PolyForge · polyforge.io</p>
+                  <p className="text-caption text-tertiary">PolyForge · polyforge.io</p>
                 </div>
               </div>
 
@@ -1318,7 +1318,7 @@ export function Component() {
 
           {/* Alerts Panel */}
           {showAlertsPanel && (
-            <div className="bg-elevated border border-warning/30 rounded-pf-lg p-4 space-y-4">
+            <div className="bg-elevated border border-warning/30 rounded-xl p-4 space-y-4">
               {/* Panel header */}
               <div className="flex items-center justify-between">
                 <span className="text-sm font-semibold text-primary flex items-center gap-2">
@@ -1469,9 +1469,9 @@ export function Component() {
                         variant="ghost"
                         onClick={() => toggleAlertEnabled(alert)}
                         aria-label={alert.enabled ? 'Disable alert' : 'Enable alert'}
-                        className={`shrink-0 w-8 h-5 rounded-pf-full border transition-colors relative ${alert.enabled ? 'bg-warning/20 border-warning/40' : 'bg-overlay border-default'}`}
+                        className={`shrink-0 w-8 h-5 rounded-full border transition-colors relative ${alert.enabled ? 'bg-warning/20 border-warning/40' : 'bg-overlay border-default'}`}
                       >
-                        <span className={`absolute top-1 w-3 h-3 rounded-pf-full transition-all ${alert.enabled ? 'left-4 bg-warning' : 'left-1 bg-tertiary'}`} />
+                        <span className={`absolute top-1 w-3 h-3 rounded-full transition-all ${alert.enabled ? 'left-4 bg-warning' : 'left-1 bg-tertiary'}`} />
                       </Button>
 
                       {/* Label + threshold */}
@@ -1492,7 +1492,7 @@ export function Component() {
 
                       {/* Triggered badge */}
                       {alert.triggeredAt && (
-                        <span className="shrink-0 inline-flex items-center gap-1 px-2 py-1 rounded-pf-full bg-warning/15 text-warning text-pf-caption font-semibold">
+                        <span className="shrink-0 inline-flex items-center gap-1 px-2 py-1 rounded-full bg-warning/15 text-warning text-caption font-semibold">
                           <AlertTriangle className="size-3" aria-hidden="true" />
                           Triggered
                         </span>
@@ -1532,26 +1532,26 @@ export function Component() {
 
           {/* Meta chips */}
           <div className="flex flex-wrap items-center gap-2">
-            <span className={`px-3 py-1 rounded-pf-full text-xs font-medium ${
+            <span className={`px-3 py-1 rounded-full text-xs font-medium ${
               strategy.execMode === 'TICK' || strategy.execMode === 'HYBRID'
-                ? 'bg-pf-purple-500/10 text-pf-purple-500'
+                ? 'bg-purple-500/10 text-purple-500'
                 : 'bg-accent/10 text-accent-text'
             }`}>
               {execLabel(strategy)}
             </span>
-            <span className="px-3 py-1 rounded-pf-full bg-overlay text-secondary text-xs font-medium">
+            <span className="px-3 py-1 rounded-full bg-overlay text-secondary text-xs font-medium">
               v{strategy.version}
             </span>
-            <span className="px-3 py-1 rounded-pf-full bg-overlay text-secondary text-xs font-medium">
+            <span className="px-3 py-1 rounded-full bg-overlay text-secondary text-xs font-medium">
               {strategy.visibility.toLowerCase()}
             </span>
-            <span className="px-3 py-1 rounded-pf-full bg-overlay text-secondary text-xs font-medium">
+            <span className="px-3 py-1 rounded-full bg-overlay text-secondary text-xs font-medium">
               {totalBlocks} blocks
             </span>
             {strategy.tags.map((tag) => (
-              <span key={tag} className={`px-3 py-1 rounded-pf-full text-xs font-medium ${
+              <span key={tag} className={`px-3 py-1 rounded-full text-xs font-medium ${
                 tag.toLowerCase() === 'momentum'
-                  ? 'bg-pf-gold-500/10 text-pf-gold-500'
+                  ? 'bg-gold-500/10 text-gold-500'
                   : tag.toLowerCase() === 'defensive'
                     ? 'bg-info/10 text-info'
                     : 'bg-accent/10 text-accent-text'
@@ -1559,7 +1559,7 @@ export function Component() {
                 {tag}
               </span>
             ))}
-            <span className="px-3 py-1 rounded-pf-full text-tertiary text-xs ml-auto">
+            <span className="px-3 py-1 rounded-full text-tertiary text-xs ml-auto">
               Updated {formatDate(strategy.updatedAt)}
             </span>
           </div>
@@ -1586,7 +1586,7 @@ export function Component() {
 
           {/* Parent strategy link */}
           {parentStrategy && (
-            <div className="flex items-center gap-2 px-3 py-2 bg-elevated border border-default rounded-pf-lg">
+            <div className="flex items-center gap-2 px-3 py-2 bg-elevated border border-default rounded-xl">
               <GitBranch className="size-4 text-tertiary" />
               <span className="text-xs text-tertiary">Part of:</span>
               <Link
@@ -1600,7 +1600,7 @@ export function Component() {
 
           {/* Sub-Strategies */}
           {childStrategies.length > 0 && (
-            <div className="bg-elevated border border-default rounded-pf-lg p-4">
+            <div className="bg-elevated border border-default rounded-xl p-4">
               <h2 className="text-sm font-medium text-primary mb-3 flex items-center gap-2">
                 <GitBranch className="size-4" />
                 Sub-Strategies
@@ -1613,13 +1613,13 @@ export function Component() {
                     <Link
                       key={child.id}
                       to={`/strategies/${child.id}`}
-                      className="flex items-center justify-between px-3 py-2 rounded-pf-sm border border-subtle hover:border-strong transition-colors"
+                      className="flex items-center justify-between px-3 py-2 rounded-sm border border-subtle hover:border-strong transition-colors"
                     >
                       <span className="text-xs text-primary font-medium">{child.name}</span>
                       <span
-                        className={`inline-flex items-center gap-2 px-2 py-1 rounded-pf-full text-pf-caption font-medium ${childStyle.bg} ${childStyle.text}`}
+                        className={`inline-flex items-center gap-2 px-2 py-1 rounded-full text-caption font-medium ${childStyle.bg} ${childStyle.text}`}
                       >
-                        <span className={`w-1 h-1 rounded-pf-full ${childStyle.dot}`} />
+                        <span className={`w-1 h-1 rounded-full ${childStyle.dot}`} />
                         {child.status}
                       </span>
                     </Link>
@@ -1632,24 +1632,24 @@ export function Component() {
           {/* Health stats row */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             {pnl !== null && (
-              <div className="bg-elevated border border-default rounded-pf-lg p-4">
+              <div className="bg-elevated border border-default rounded-xl p-4">
                 <span className="text-xs text-tertiary block mb-1">Total P&L</span>
                 <span className={`font-mono text-xl font-semibold ${pnl >= 0 ? 'text-gain' : 'text-loss'}`}>
                   {formatPnl(pnl)}
                 </span>
               </div>
             )}
-            <div className="bg-elevated border border-default rounded-pf-lg p-4">
+            <div className="bg-elevated border border-default rounded-xl p-4">
               <span className="text-xs text-tertiary block mb-1">Blocks</span>
               <span className="font-mono text-xl font-semibold text-primary">{totalBlocks}</span>
             </div>
-            <div className="bg-elevated border border-default rounded-pf-lg p-4">
+            <div className="bg-elevated border border-default rounded-xl p-4">
               <span className="text-xs text-tertiary block mb-1">Recent Orders</span>
               <span className="font-mono text-xl font-semibold text-primary">
                 {recentOrderCount !== null ? recentOrderCount : '—'}
               </span>
             </div>
-            <div className="bg-elevated border border-default rounded-pf-lg p-4">
+            <div className="bg-elevated border border-default rounded-xl p-4">
               <span className="text-xs text-tertiary block mb-1">Last Order</span>
               <span className="font-mono text-sm font-semibold text-primary">
                 {lastOrderAt ? new Date(lastOrderAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '—'}
@@ -1701,7 +1701,7 @@ export function Component() {
               className="flex items-center gap-2"
             >
               {detailTab === 'live' && wsConnected
-                ? <span className="w-2 h-2 rounded-pf-full bg-gain animate-pulse" />
+                ? <span className="w-2 h-2 rounded-full bg-gain animate-pulse" />
                 : <Wifi className="size-3" />}
               Live
             </Button>
@@ -1710,7 +1710,7 @@ export function Component() {
           {/* Body grid */}
           {detailTab === 'overview' && <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
             {/* Blocks summary */}
-            <div className="lg:col-span-3 bg-elevated border border-default rounded-pf-lg p-5 space-y-5">
+            <div className="lg:col-span-3 bg-elevated border border-default rounded-xl p-5 space-y-5">
               {(
                 [
                   { key: 'safety', title: 'Safety', blocks: strategy.safety },
@@ -1729,7 +1729,7 @@ export function Component() {
                       {blocks.map((b, i) => (
                         <span
                           key={i}
-                          className={`inline-flex items-center gap-2 px-3 py-1 rounded-pf-sm border text-xs font-medium ${SECTION_STYLES[key]}`}
+                          className={`inline-flex items-center gap-2 px-3 py-1 rounded-sm border text-xs font-medium ${SECTION_STYLES[key]}`}
                         >
                           {SECTION_ICONS[key]}
                           {blockLabel(b.type)}
@@ -1753,12 +1753,12 @@ export function Component() {
             </div>
 
             {/* Live events */}
-            <div className="lg:col-span-2 bg-elevated border border-default rounded-pf-lg overflow-hidden">
+            <div className="lg:col-span-2 bg-elevated border border-default rounded-xl overflow-hidden">
               <div className="flex items-center justify-between px-4 py-3 border-b border-subtle">
                 <span className="text-sm font-medium text-primary">Live Events</span>
                 {isActive(status) && (
                   <span className="flex items-center gap-2 text-xs text-accent-text">
-                    <span className="w-2 h-2 rounded-pf-full bg-accent-text animate-pulse-dot" />
+                    <span className="w-2 h-2 rounded-full bg-accent-text animate-pulse-dot" />
                     Live
                   </span>
                 )}
@@ -1768,7 +1768,7 @@ export function Component() {
                 {liveLog.length === 0 ? (
                   <div className="py-8 text-center text-sm text-tertiary space-y-2">
                     <p>{isActive(status) ? 'Strategy is running.' : 'Start the strategy to generate events.'}</p>
-                    <p className="text-xs">Check the <a href={`/orders?strategy=${strategy?.id}`} className="text-accent-text hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 rounded-pf-sm">Orders</a> page for trade activity.</p>
+                    <p className="text-xs">Check the <a href={`/orders?strategy=${strategy?.id}`} className="text-accent-text hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 rounded-sm">Orders</a> page for trade activity.</p>
                   </div>
                 ) : (
                   <div className="space-y-2">
@@ -1777,7 +1777,7 @@ export function Component() {
                         <span className="font-mono text-tertiary shrink-0 w-16">
                           {formatTime(entry.time)}
                         </span>
-                        <span className={`w-2 h-2 rounded-pf-full mt-2 shrink-0 ${LOG_DOT_COLORS[entry.severity]}`} />
+                        <span className={`w-2 h-2 rounded-full mt-2 shrink-0 ${LOG_DOT_COLORS[entry.severity]}`} />
                         <span className={LOG_COLORS[entry.severity]}>{entry.message}</span>
                       </div>
                     ))}
@@ -1800,7 +1800,7 @@ export function Component() {
                 <ul className="space-y-2">
                   {execLog.map(ev => (
                     <li key={ev.id} className="flex items-start gap-3 rounded-pf bg-surface px-3 py-2 border border-subtle">
-                      <span className={`mt-1 flex-shrink-0 h-2 w-2 rounded-pf-full ${
+                      <span className={`mt-1 flex-shrink-0 h-2 w-2 rounded-full ${
                         ev.eventType === 'ERROR' ? 'bg-loss' :
                         ev.eventType === 'ORDER_PLACED' ? 'bg-gain' :
                         ev.eventType === 'TRIGGERED' ? 'bg-accent-text' : 'bg-tertiary'
@@ -1808,12 +1808,12 @@ export function Component() {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between gap-2">
                           <span className="text-xs font-medium text-primary">{ev.eventType}</span>
-                          <span className="text-pf-caption text-tertiary flex-shrink-0">
+                          <span className="text-caption text-tertiary flex-shrink-0">
                             {new Date(ev.createdAt).toLocaleString()}
                           </span>
                         </div>
                         {ev.payload && Object.keys(ev.payload).length > 0 && (
-                          <p className="text-pf-label text-secondary mt-1 font-mono truncate">
+                          <p className="text-label text-secondary mt-1 font-mono truncate">
                             {JSON.stringify(ev.payload).slice(0, 120)}
                           </p>
                         )}
@@ -1888,7 +1888,7 @@ export function Component() {
                                 {ex.fillPrice ? ` @ ${ex.fillPrice}` : ''}
                               </td>
                               <td className="px-3 py-3">
-                                <span className={`inline-flex px-2 py-1 rounded-pf-full text-pf-caption font-medium ${statusBadge}`}>
+                                <span className={`inline-flex px-2 py-1 rounded-full text-caption font-medium ${statusBadge}`}>
                                   {ex.status}
                                 </span>
                               </td>
@@ -1949,19 +1949,19 @@ export function Component() {
                   {[1, 2, 3].map((i) => (
                     <div key={i} className="flex items-start gap-4 px-5 py-4 border-b border-subtle last:border-0 bg-elevated animate-pulse">
                       <div className="flex flex-col items-center gap-1 shrink-0 pt-1">
-                        <div className="size-3 rounded-pf-full bg-overlay" />
+                        <div className="size-3 rounded-full bg-overlay" />
                         {i < 3 && <div className="w-px h-10 bg-overlay" />}
                       </div>
                       <div className="flex-1 space-y-2 pb-1">
                         <div className="flex items-center gap-3">
-                          <div className="h-5 w-10 bg-overlay rounded-pf-sm" />
+                          <div className="h-5 w-10 bg-overlay rounded-sm" />
                           <div className="h-3 w-24 bg-overlay rounded" />
                           <div className="h-3 w-16 bg-overlay rounded ml-auto" />
                         </div>
                         <div className="h-3 w-40 bg-overlay rounded" />
                         <div className="flex gap-2">
-                          <div className="h-4 w-14 bg-overlay rounded-pf-full" />
-                          <div className="h-4 w-14 bg-overlay rounded-pf-full" />
+                          <div className="h-4 w-14 bg-overlay rounded-full" />
+                          <div className="h-4 w-14 bg-overlay rounded-full" />
                         </div>
                       </div>
                     </div>
@@ -1998,7 +1998,7 @@ export function Component() {
                       >
                         {/* Timeline spine */}
                         <div className="flex flex-col items-center shrink-0 pt-1" aria-hidden="true">
-                          <span className={`size-3 rounded-pf-full border-2 ${isCurrent ? 'border-accent-text bg-accent-text' : 'border-strong bg-surface'}`} />
+                          <span className={`size-3 rounded-full border-2 ${isCurrent ? 'border-accent-text bg-accent-text' : 'border-strong bg-surface'}`} />
                           {idx < versions.length - 1 && (
                             <span className="w-px flex-1 min-h-[2rem] bg-subtle mt-1" />
                           )}
@@ -2008,16 +2008,16 @@ export function Component() {
                         <div className="flex-1 min-w-0 space-y-2">
                           {/* Top row: badge + date + current pill */}
                           <div className="flex items-center gap-2 flex-wrap">
-                            <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-pf-sm text-xs font-semibold tabular-nums ${isCurrent ? 'bg-accent/15 text-accent-text' : 'bg-overlay text-tertiary'}`}>
+                            <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-sm text-xs font-semibold tabular-nums ${isCurrent ? 'bg-accent/15 text-accent-text' : 'bg-overlay text-tertiary'}`}>
                               {v.label}
                             </span>
                             {isCurrent && (
-                              <span className="inline-flex items-center gap-1 px-2 py-1 rounded-pf-full bg-gain/10 text-gain text-pf-caption font-semibold uppercase tracking-wide">
+                              <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-gain/10 text-gain text-caption font-semibold uppercase tracking-wide">
                                 current
                               </span>
                             )}
                             <span className="text-xs text-tertiary">{formatDate(v.createdAt)}</span>
-                            <span className="text-pf-caption text-tertiary ml-auto">by {v.author}</span>
+                            <span className="text-caption text-tertiary ml-auto">by {v.author}</span>
                           </div>
 
                           {/* Change note */}
@@ -2029,25 +2029,25 @@ export function Component() {
 
                           {/* Block count + change chips */}
                           <div className="flex items-center gap-2 flex-wrap">
-                            <span className="text-pf-label text-tertiary">
+                            <span className="text-label text-tertiary">
                               {v.blockCount} block{v.blockCount !== 1 ? 's' : ''}
                             </span>
                             {v.changes && (
                               <>
                                 {v.changes.added > 0 && (
-                                  <span className="inline-flex items-center gap-1 px-2 py-1 rounded-pf-full bg-gain/15 text-gain text-pf-caption font-semibold">
+                                  <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-gain/15 text-gain text-caption font-semibold">
                                     <Plus className="size-3" aria-hidden="true" />
                                     {v.changes.added} added
                                   </span>
                                 )}
                                 {v.changes.removed > 0 && (
-                                  <span className="inline-flex items-center gap-1 px-2 py-1 rounded-pf-full bg-loss/15 text-loss text-pf-caption font-semibold">
+                                  <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-loss/15 text-loss text-caption font-semibold">
                                     <Minus className="size-3" aria-hidden="true" />
                                     {v.changes.removed} removed
                                   </span>
                                 )}
                                 {v.changes.modified > 0 && (
-                                  <span className="inline-flex items-center gap-1 px-2 py-1 rounded-pf-full bg-warning/15 text-warning text-pf-caption font-semibold">
+                                  <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-warning/15 text-warning text-caption font-semibold">
                                     <Edit2 className="size-3" aria-hidden="true" />
                                     {v.changes.modified} modified
                                   </span>
@@ -2125,7 +2125,7 @@ export function Component() {
                   <span className="text-sm font-semibold text-primary">Live Execution Feed</span>
                   {wsConnected ? (
                     <span className="flex items-center gap-2 text-xs text-gain font-medium">
-                      <span className="animate-pulse bg-gain rounded-pf-full w-2 h-2" />
+                      <span className="animate-pulse bg-gain rounded-full w-2 h-2" />
                       LIVE
                     </span>
                   ) : (
@@ -2177,12 +2177,12 @@ export function Component() {
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center justify-between gap-2 mb-1">
                             <span className={`text-xs font-semibold ${color}`}>{ev.type.replace(/_/g, ' ')}</span>
-                            <span className="text-pf-caption text-tertiary flex-shrink-0">{relativeDate(ev.timestamp)}</span>
+                            <span className="text-caption text-tertiary flex-shrink-0">{relativeDate(ev.timestamp)}</span>
                           </div>
                           {ev.type === 'STRATEGY_ERROR' ? (
                             <p className="text-xs text-loss truncate">{ev.data.errorMessage ?? 'Unknown error'}</p>
                           ) : (
-                            <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-pf-label text-secondary">
+                            <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-label text-secondary">
                               {ev.data.marketQuestion && (
                                 <span className="truncate max-w-[200px] text-tertiary" title={ev.data.marketQuestion}>
                                   {ev.data.marketQuestion}
@@ -2366,7 +2366,7 @@ function ReviewsSection({ listingId }: { listingId: string }) {
   const maxStarCount = Math.max(...starCounts.map((s) => s.count), 1);
 
   return (
-    <div className="bg-elevated border border-default rounded-pf-lg p-5 space-y-6">
+    <div className="bg-elevated border border-default rounded-xl p-5 space-y-6">
       <h2 className="text-base font-semibold text-primary flex items-center gap-2">
         <Star className="size-4 text-warning fill-warning" />
         Reviews &amp; Ratings
@@ -2392,9 +2392,9 @@ function ReviewsSection({ listingId }: { listingId: string }) {
               <div key={star} className="flex items-center gap-2">
                 <span className="text-xs text-tertiary w-4 text-right shrink-0">{star}</span>
                 <Star className="size-3 text-warning fill-warning shrink-0" />
-                <div className="flex-1 h-2 bg-surface rounded-pf-full overflow-hidden">
+                <div className="flex-1 h-2 bg-surface rounded-full overflow-hidden">
                   <div
-                    className="h-full bg-warning rounded-pf-full transition-all duration-pf-slow"
+                    className="h-full bg-warning rounded-full transition-all duration-slow"
                     style={{ width: `${(count / maxStarCount) * 100}%` }}
                   />
                 </div>
@@ -2406,7 +2406,7 @@ function ReviewsSection({ listingId }: { listingId: string }) {
       )}
 
       {/* Write a Review */}
-      <div className="border border-default rounded-pf-lg p-4 space-y-3 bg-surface">
+      <div className="border border-default rounded-xl p-4 space-y-3 bg-surface">
         <p className="text-sm font-medium text-primary">Write a Review</p>
 
         {/* Star selector */}
@@ -2439,7 +2439,7 @@ function ReviewsSection({ listingId }: { listingId: string }) {
           className="w-full resize-none"
         />
         <div className="flex items-center justify-between">
-          <span className="text-pf-caption text-tertiary">
+          <span className="text-caption text-tertiary">
             {state.submitComment.length}/500
           </span>
           <Button
@@ -2460,7 +2460,7 @@ function ReviewsSection({ listingId }: { listingId: string }) {
         <div className="space-y-3">
           {[1, 2, 3].map((i) => (
             <div key={i} className="flex gap-3 animate-pulse">
-              <div className="size-8 rounded-pf-full bg-overlay shrink-0" />
+              <div className="size-8 rounded-full bg-overlay shrink-0" />
               <div className="flex-1 space-y-2">
                 <div className="h-3 bg-overlay rounded w-[30%]" />
                 <div className="h-3 bg-overlay rounded w-[80%]" />
@@ -2490,13 +2490,13 @@ function ReviewsSection({ listingId }: { listingId: string }) {
                   <img
                     src={review.author.avatarUrl}
                     alt={`${review.author.displayName ?? review.author.username} avatar`}
-                    className="size-8 rounded-pf-full object-cover shrink-0"
+                    className="size-8 rounded-full object-cover shrink-0"
                     width={32}
                     height={32}
                     loading="lazy"
                   />
                 ) : (
-                  <div className="size-8 rounded-pf-full bg-accent/15 border border-accent/25 flex items-center justify-center text-pf-caption font-semibold text-accent-text shrink-0">
+                  <div className="size-8 rounded-full bg-accent/15 border border-accent/25 flex items-center justify-center text-caption font-semibold text-accent-text shrink-0">
                     {initials}
                   </div>
                 )}

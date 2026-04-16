@@ -114,12 +114,12 @@ export function Component() {
     return (
       <div className="animate-pulse space-y-6" role="status" aria-label="Loading ticket details">
         <div className="h-4 bg-elevated rounded w-32" />
-        <div className="bg-elevated border border-default rounded-pf-lg p-6 space-y-4">
+        <div className="bg-elevated border border-default rounded-xl p-6 space-y-4">
           <div className="h-5 bg-app rounded w-64" />
           <div className="h-4 bg-app rounded w-48" />
           <div className="h-4 bg-app rounded w-32" />
         </div>
-        <div className="h-32 bg-elevated rounded-pf-lg animate-pulse" />
+        <div className="h-32 bg-elevated rounded-xl animate-pulse" />
       </div>
     );
   }
@@ -153,7 +153,7 @@ export function Component() {
       </Button>
 
       {/* Header */}
-      <header className="bg-elevated border border-default rounded-pf-lg p-6">
+      <header className="bg-elevated border border-default rounded-xl p-6">
         <div className="flex flex-wrap items-start justify-between gap-4 mb-4">
           <div>
             <h2 className="text-lg font-semibold text-primary">
@@ -164,14 +164,14 @@ export function Component() {
             </p>
           </div>
           <div className="flex items-center gap-2">
-            <span className={`px-2 py-1 rounded-pf-full text-xs font-medium ${statusColor(ticket.status)}`}>
+            <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusColor(ticket.status)}`}>
               {ticket.status}
             </span>
-            <span className={`px-2 py-1 rounded-pf-full text-xs font-medium ${priorityColor[ticket.priority] ?? ''}`}>
+            <span className={`px-2 py-1 rounded-full text-xs font-medium ${priorityColor[ticket.priority] ?? ''}`}>
               {ticket.priority}
             </span>
             {ticket.category && (
-              <span className="px-2 py-1 rounded-pf-full text-xs font-medium bg-app text-secondary border border-default">
+              <span className="px-2 py-1 rounded-full text-xs font-medium bg-app text-secondary border border-default">
                 {ticket.category}
               </span>
             )}
@@ -186,7 +186,7 @@ export function Component() {
               id="ticket-status"
               value={statusValue}
               onChange={(e) => handleStatusChange(e.target.value)}
-              className="px-3 py-2 text-sm rounded-pf-sm border border-default bg-app text-primary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent"
+              className="px-3 py-2 text-sm rounded-sm border border-default bg-app text-primary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent"
             >
               <option value="OPEN">Open</option>
               <option value="IN_PROGRESS">In Progress</option>
@@ -200,7 +200,7 @@ export function Component() {
               id="ticket-assign"
               value={assignedTo}
               onChange={(e) => handleAssign(e.target.value)}
-              className="px-3 py-2 text-sm rounded-pf-sm border border-default bg-app text-primary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent"
+              className="px-3 py-2 text-sm rounded-sm border border-default bg-app text-primary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent"
             >
               <option value="">Unassigned</option>
               {admins.map((a) => (
@@ -220,7 +220,7 @@ export function Component() {
           return (
             <div
               key={msg.id ?? i}
-              className={`p-4 rounded-pf-lg border ${
+              className={`p-4 rounded-xl border ${
                 isAdmin
                   ? 'bg-accent/5 border-accent/20 ml-8'
                   : 'bg-elevated border-default mr-8'
@@ -230,7 +230,7 @@ export function Component() {
                 <span className="text-xs font-medium text-secondary">
                   {isAdmin ? (msg.senderName ?? 'Admin') : (ticket.username ?? 'User')}
                 </span>
-                <span className="text-pf-label text-tertiary">
+                <span className="text-label text-tertiary">
                   {msg.createdAt ? timeAgo(msg.createdAt) : ''}
                 </span>
               </div>
@@ -244,7 +244,7 @@ export function Component() {
       <form
         onSubmit={handleReply}
         noValidate
-        className="bg-elevated border border-default rounded-pf-lg p-4"
+        className="bg-elevated border border-default rounded-xl p-4"
       >
         <label htmlFor="ticket-reply" className="sr-only">Reply message</label>
         <Textarea
@@ -254,14 +254,14 @@ export function Component() {
           placeholder="Type your reply..."
           rows={4}
           disabled={sending}
-          className="w-full px-3 py-2 text-sm rounded-pf-sm border border-default bg-app text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent mb-3 resize-y disabled:opacity-50"
+          className="w-full px-3 py-2 text-sm rounded-sm border border-default bg-app text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent mb-3 resize-y disabled:opacity-50"
         />
         <div className="flex justify-end">
           <Button
             type="submit"
             variant="default"
             disabled={sending || !reply.trim()}
-            className="flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-pf-sm bg-accent text-inverse hover:bg-accent-text disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-sm bg-accent text-inverse hover:bg-accent-text disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             <Send size={14} aria-hidden="true" />
             {sending ? 'Sending...' : 'Reply'}

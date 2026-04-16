@@ -83,7 +83,7 @@ function TryItPanel({ ep }: { ep: EndpointDef }) {
       : '';
 
   return (
-    <div className="border border-default rounded-pf-lg p-4 space-y-3 bg-elevated">
+    <div className="border border-default rounded-xl p-4 space-y-3 bg-elevated">
       <p className="text-xs font-medium text-tertiary uppercase tracking-wider">Try it out</p>
 
       {/* API key */}
@@ -94,7 +94,7 @@ function TryItPanel({ ep }: { ep: EndpointDef }) {
           value={apiKey}
           onChange={e => setApiKey(e.target.value)}
           placeholder="pf_live_your_key..."
-          className="w-full bg-app border border-default rounded-pf-sm px-3 py-2 text-xs text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-accent/40 font-mono"
+          className="w-full bg-app border border-default rounded-sm px-3 py-2 text-xs text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-accent/40 font-mono"
         />
       </div>
 
@@ -107,7 +107,7 @@ function TryItPanel({ ep }: { ep: EndpointDef }) {
             value={pathParams[name] ?? ''}
             onChange={e => setPathParams(prev => ({ ...prev, [name]: e.target.value }))}
             placeholder={name}
-            className="w-full bg-app border border-default rounded-pf-sm px-3 py-2 text-xs text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-accent/40 font-mono"
+            className="w-full bg-app border border-default rounded-sm px-3 py-2 text-xs text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-accent/40 font-mono"
           />
         </div>
       ))}
@@ -120,7 +120,7 @@ function TryItPanel({ ep }: { ep: EndpointDef }) {
             value={body}
             onChange={e => setBody(e.target.value)}
             rows={5}
-            className="w-full bg-app border border-default rounded-pf-sm px-3 py-2 text-xs text-primary font-mono focus-visible:outline-none focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-accent/40 resize-y"
+            className="w-full bg-app border border-default rounded-sm px-3 py-2 text-xs text-primary font-mono focus-visible:outline-none focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-accent/40 resize-y"
           />
         </div>
       )}
@@ -129,7 +129,7 @@ function TryItPanel({ ep }: { ep: EndpointDef }) {
         type="button"
         onClick={handleSend}
         disabled={loading}
-        className="flex items-center gap-2 px-4 py-2 rounded-pf-sm bg-accent text-inverse text-xs font-semibold hover:bg-accent-text transition-colors disabled:opacity-50 cursor-pointer"
+        className="flex items-center gap-2 px-4 py-2 rounded-sm bg-accent text-inverse text-xs font-semibold hover:bg-accent-text transition-colors disabled:opacity-50 cursor-pointer"
       >
         <Play size={11} /> {loading ? 'Sending…' : 'Send'}
       </Button>
@@ -150,7 +150,7 @@ function TryItPanel({ ep }: { ep: EndpointDef }) {
         </div>
       )}
 
-      <p className="text-pf-caption text-tertiary">
+      <p className="text-caption text-tertiary">
         Requests go directly to api.polyforge.app from your browser.
       </p>
     </div>
@@ -176,13 +176,13 @@ export function EndpointCard({ ep, lang, setLang, forceOpen }: EndpointCardProps
 
   return (
     <div
-      className={`border border-default border-l-[3px] ${METHOD_BORDER[ep.method]} rounded-pf-lg overflow-hidden transition-all duration-pf-normal ${isOpen ? '' : 'hover:border-strong'}`}
+      className={`border border-default border-l-[3px] ${METHOD_BORDER[ep.method]} rounded-xl overflow-hidden transition-all duration-panel ${isOpen ? '' : 'hover:border-strong'}`}
     >
       <Button
         type="button"
         variant="ghost"
         onClick={() => setOpen(o => !o)}
-        className="w-full flex items-center gap-3 px-4 py-3 bg-elevated hover:bg-elevated/80 text-left transition-colors duration-pf-normal cursor-pointer"
+        className="w-full flex items-center gap-3 px-4 py-3 bg-elevated hover:bg-elevated/80 text-left transition-colors duration-panel cursor-pointer"
         aria-expanded={isOpen}
       >
         <Badge text={ep.method} cls={METHOD_CLS[ep.method]} />

@@ -80,7 +80,7 @@ export function Component() {
         </Button>
       </div>
 
-      <div className="bg-elevated border border-default rounded-pf-lg overflow-hidden">
+      <div className="bg-elevated border border-default rounded-xl overflow-hidden">
         {loading ? (
           <div className="divide-y divide-subtle">
             {Array.from({ length: 5 }, (_, i) => (
@@ -136,7 +136,7 @@ export function Component() {
                         onClick={() => approve(u.id)}
                         disabled={acting === u.id}
                         title="Approve"
-                        className="flex items-center gap-1 px-2 py-1 rounded-pf-sm bg-gain/10 text-gain hover:bg-gain/20 text-xs font-medium transition-colors disabled:opacity-50"
+                        className="flex items-center gap-1 px-2 py-1 rounded-sm bg-gain/10 text-gain hover:bg-gain/20 text-xs font-medium transition-colors disabled:opacity-50"
                       >
                         <Check className="size-3" /> Approve
                       </Button>
@@ -146,7 +146,7 @@ export function Component() {
                         onClick={() => reject(u.id)}
                         disabled={acting === u.id}
                         title="Reject"
-                        className="flex items-center gap-1 px-2 py-1 rounded-pf-sm bg-loss/10 text-loss hover:bg-loss/20 text-xs font-medium transition-colors disabled:opacity-50"
+                        className="flex items-center gap-1 px-2 py-1 rounded-sm bg-loss/10 text-loss hover:bg-loss/20 text-xs font-medium transition-colors disabled:opacity-50"
                       >
                         <X className="size-3" /> Reject
                       </Button>

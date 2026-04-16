@@ -120,7 +120,7 @@ export function AdminSidebar({ collapsed, onToggle, onNavigate }: Props) {
   return (
     <aside
       aria-label="Admin sidebar"
-      className="flex flex-col h-full border-r border-default bg-pf-admin-sidebar border-t-4 border-t-pf-danger"
+      className="flex flex-col h-full border-r border-default bg-admin-sidebar border-t-4 border-t-loss"
     >
       {/* Brand */}
       <div className="flex items-center gap-2 h-14 px-3 border-b border-default shrink-0">
@@ -136,7 +136,7 @@ export function AdminSidebar({ collapsed, onToggle, onNavigate }: Props) {
         <button
           type="button"
           onClick={onToggle}
-          className="ml-auto p-2 rounded-pf-sm hover:bg-elevated border border-default text-secondary hover:text-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+          className="ml-auto p-2 rounded-sm hover:bg-elevated border border-default text-secondary hover:text-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
           aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
         >
           {collapsed ? <PanelLeftOpen size={20} /> : <PanelLeftClose size={20} />}
@@ -150,7 +150,7 @@ export function AdminSidebar({ collapsed, onToggle, onNavigate }: Props) {
           return (
             <div key={section.title} className="mb-2">
               {!collapsed && (
-                <div className="px-2 py-2 text-pf-caption font-semibold uppercase tracking-wider text-tertiary">
+                <div className="px-2 py-2 text-caption font-semibold uppercase tracking-wider text-tertiary">
                   {section.title}
                 </div>
               )}
@@ -161,7 +161,7 @@ export function AdminSidebar({ collapsed, onToggle, onNavigate }: Props) {
                   title={collapsed ? item.label : undefined}
                   onClick={onNavigate}
                   className={({ isActive }) =>
-                    `flex items-center gap-3 px-3 py-2 rounded-pf-sm text-sm transition-colors duration-pf-fast focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${
+                    `flex items-center gap-3 px-3 py-2 rounded-sm text-sm transition-colors duration-micro focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${
                       isActive
                         ? 'bg-accent/10 text-accent font-medium'
                         : 'text-secondary hover:bg-elevated hover:text-primary'
@@ -171,7 +171,7 @@ export function AdminSidebar({ collapsed, onToggle, onNavigate }: Props) {
                   <span className="shrink-0 relative">
                     {item.icon}
                     {collapsed && item.label === 'Tickets' && openTickets > 0 && (
-                      <span className="absolute -top-2 -right-2 flex items-center justify-center min-w-4 h-4 px-1 rounded-pf-full bg-accent text-pf-micro font-semibold text-inverse" aria-label={`${openTickets} open tickets`}>
+                      <span className="absolute -top-2 -right-2 flex items-center justify-center min-w-4 h-4 px-1 rounded-full bg-accent text-caption font-semibold text-inverse" aria-label={`${openTickets} open tickets`}>
                         {openTickets}
                       </span>
                     )}
@@ -180,7 +180,7 @@ export function AdminSidebar({ collapsed, onToggle, onNavigate }: Props) {
                     <>
                       <span className="truncate">{item.label}</span>
                       {item.label === 'Tickets' && openTickets > 0 && (
-                        <span className="ml-auto flex items-center justify-center min-w-5 h-5 px-2 rounded-pf-full bg-accent text-pf-caption font-semibold text-inverse" aria-label={`${openTickets} open tickets`}>
+                        <span className="ml-auto flex items-center justify-center min-w-5 h-5 px-2 rounded-full bg-accent text-caption font-semibold text-inverse" aria-label={`${openTickets} open tickets`}>
                           {openTickets}
                         </span>
                       )}
@@ -196,7 +196,7 @@ export function AdminSidebar({ collapsed, onToggle, onNavigate }: Props) {
       {/* Footer */}
       <div className="border-t border-default px-3 py-4 shrink-0">
         <div className="flex items-center gap-2">
-          <div className="flex items-center justify-center w-8 h-8 rounded-pf-full bg-elevated text-accent text-pf-label font-semibold shrink-0">
+          <div className="flex items-center justify-center w-8 h-8 rounded-full bg-elevated text-accent text-label font-semibold shrink-0">
             {initials}
           </div>
           {!collapsed && (
@@ -204,9 +204,9 @@ export function AdminSidebar({ collapsed, onToggle, onNavigate }: Props) {
               <div className="text-sm font-medium text-primary truncate">
                 {admin?.displayName}
               </div>
-              <div className="flex items-center gap-2 text-pf-label text-tertiary">
+              <div className="flex items-center gap-2 text-label text-tertiary">
                 {roleLabel}
-                <span className="px-2 py-1 rounded-pf-sm bg-loss/[0.12] text-loss text-pf-caption font-semibold uppercase tracking-wider">
+                <span className="px-2 py-1 rounded-sm bg-loss/[0.12] text-loss text-caption font-semibold uppercase tracking-wider">
                   Admin
                 </span>
               </div>

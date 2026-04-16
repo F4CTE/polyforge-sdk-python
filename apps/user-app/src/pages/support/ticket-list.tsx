@@ -91,7 +91,7 @@ export function Component() {
       </div>
 
       {/* Tickets table */}
-      <div data-testid="ticket-list" className="bg-elevated border border-default rounded-pf-lg overflow-hidden">
+      <div data-testid="ticket-list" className="bg-elevated border border-default rounded-xl overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm" aria-label="Support tickets">
             <thead>
@@ -146,8 +146,8 @@ export function Component() {
                         </span>
                       </td>
                       <td className="px-4 py-3 text-secondary text-xs">{ticket.category}</td>
-                      <td className="px-4 py-3 text-right font-mono text-pf-label text-tertiary">{formatDate(ticket.createdAt)}</td>
-                      <td className="px-4 py-3 text-right font-mono text-pf-label text-tertiary">
+                      <td className="px-4 py-3 text-right font-mono text-label text-tertiary">{formatDate(ticket.createdAt)}</td>
+                      <td className="px-4 py-3 text-right font-mono text-label text-tertiary">
                         {lastMsg ? formatDate(lastMsg.createdAt) : '\u2014'}
                       </td>
                     </tr>
@@ -164,7 +164,7 @@ export function Component() {
         <h2 className="text-lg font-semibold text-primary mb-4">Frequently Asked Questions</h2>
         <div data-testid="faq-accordion" className="space-y-2">
           {FAQ_ITEMS.map((item, idx) => (
-            <div key={idx} data-testid="faq-item" className="bg-elevated border border-default rounded-pf-lg overflow-hidden">
+            <div key={idx} data-testid="faq-item" className="bg-elevated border border-default rounded-xl overflow-hidden">
               <Button
                 type="button"
                 variant="ghost"

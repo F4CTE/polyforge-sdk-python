@@ -43,8 +43,8 @@
 .hero-glow {
   background: radial-gradient(
     ellipse,
-    color-mix(in srgb, var(--color-pf-cyan-500) 14%, transparent) 0%,
-    color-mix(in srgb, var(--color-pf-cyan-500)  4%, transparent) 40%,
+    color-mix(in srgb, var(--accent-default) 14%, transparent) 0%,
+    color-mix(in srgb, var(--accent-default)  4%, transparent) 40%,
     transparent 65%
   );
 }
@@ -52,8 +52,8 @@
 .cta-glow {
   background: radial-gradient(
     ellipse,
-    color-mix(in srgb, var(--color-pf-cyan-500) 12%, transparent) 0%,
-    color-mix(in srgb, var(--color-pf-cyan-500)  4%, transparent) 40%,
+    color-mix(in srgb, var(--accent-default) 12%, transparent) 0%,
+    color-mix(in srgb, var(--accent-default)  4%, transparent) 40%,
     transparent 65%
   );
 }

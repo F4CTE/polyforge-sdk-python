@@ -27,7 +27,7 @@ export function Hero() {
         {PARTICLES.map((p) => (
           <div
             key={`${p.left}-${p.top}`}
-            className="absolute rounded-pf-full bg-pf-cyan-500/25 hero-particle"
+            className="absolute rounded-full bg-accent/25 hero-particle"
             style={
               {
                 width: p.w,
@@ -44,23 +44,23 @@ export function Hero() {
 
       <div className="relative z-10 max-w-[1100px] mx-auto px-6">
         {/* Badge */}
-        <div className="inline-flex items-center gap-2 text-pf-body-sm font-medium text-pf-cyan-400 bg-pf-cyan-500/8 border border-pf-cyan-500/20 rounded-pf-full px-4 py-1 mb-7">
-          <span className="w-2 h-2 rounded-pf-full bg-pf-cyan-400 animate-[pulse-dot_var(--duration-pf-slow)_ease-in-out_infinite]" />
+        <div className="inline-flex items-center gap-2 text-body-sm font-medium text-accent-text bg-accent/8 border border-accent/20 rounded-full px-4 py-1 mb-7">
+          <span className="w-2 h-2 rounded-full bg-accent-text animate-[pulse-dot_var(--duration-slow)_ease-in-out_infinite]" />
           Early Access &mdash; Limited Invites
         </div>
 
         <h1
           id="hero-heading"
-          className="text-4xl sm:text-5xl lg:text-7xl font-semibold leading-pf-tight tracking-tight text-pf-text mb-6"
+          className="text-4xl sm:text-5xl lg:text-7xl font-semibold leading-[1.15] tracking-tight text-primary mb-6"
         >
           Trade Smarter. Copy the Best.
           <br />
-          <span className="bg-gradient-to-br from-pf-cyan-300 to-pf-cyan-500 bg-clip-text text-transparent">
+          <span className="bg-gradient-to-br from-cyan-300 to-accent bg-clip-text text-transparent">
             Win More.
           </span>
         </h1>
 
-        <p className="text-base lg:text-lg text-pf-text-secondary max-w-[600px] mx-auto mb-9 leading-relaxed">
+        <p className="text-base lg:text-lg text-secondary max-w-[600px] mx-auto mb-9 leading-relaxed">
           PolyForge is the prediction market platform where data-driven
           strategies meet social trading. Build automated strategies, copy top
           traders, and track every edge.
@@ -69,13 +69,13 @@ export function Hero() {
         <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-8">
           <a
             href="/signup"
-            className="inline-flex items-center justify-center px-6 py-3 rounded-pf bg-pf-cyan-500 hover:bg-pf-cyan-400 text-pf-text-contrast font-semibold text-pf-body transition-colors duration-pf-fast focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pf-cyan-400"
+            className="inline-flex items-center justify-center px-6 py-3 rounded-pf bg-accent hover:bg-accent-text text-inverse font-semibold text-body-md transition-colors duration-micro focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-text"
           >
             Start Trading Free
           </a>
           <a
             href="#how-it-works"
-            className="inline-flex items-center justify-center px-6 py-3 rounded-pf border border-pf-cyan-500/40 hover:border-pf-cyan-500/70 text-pf-cyan-400 hover:text-pf-cyan-300 font-semibold text-pf-body transition-colors duration-pf-fast focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pf-cyan-400"
+            className="inline-flex items-center justify-center px-6 py-3 rounded-pf border border-accent/40 hover:border-accent/70 text-accent-text hover:text-cyan-300 font-semibold text-body-md transition-colors duration-micro focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-text"
           >
             See How It Works
           </a>
@@ -90,10 +90,10 @@ export function Hero() {
           ].map((badge) => (
             <span
               key={badge.number}
-              className="inline-flex items-center gap-2 text-pf-body-sm font-medium text-pf-text-secondary bg-pf-surface border border-pf-border-subtle rounded-pf-full px-4 py-2"
+              className="inline-flex items-center gap-2 text-body-sm font-medium text-secondary bg-surface border border-subtle rounded-full px-4 py-2"
             >
               <span
-                className="w-2 h-2 rounded-pf-full bg-pf-cyan-400"
+                className="w-2 h-2 rounded-full bg-accent-text"
                 aria-hidden="true"
               />
               <span className="font-mono">{badge.number}</span> {badge.label}
@@ -102,7 +102,7 @@ export function Hero() {
         </div>
 
         {/* Hero strategy builder canvas */}
-        <div className="max-w-[620px] mx-auto mt-6 bg-pf-surface border border-pf-border-subtle rounded-pf-lg overflow-hidden p-2 sm:p-4 shadow-pf-lg min-w-0">
+        <div className="max-w-[620px] mx-auto mt-6 bg-surface border border-subtle rounded-xl overflow-hidden p-2 sm:p-4 shadow-lg min-w-0">
           <svg
             viewBox="0 0 560 300"
             fill="none"
@@ -114,7 +114,7 @@ export function Hero() {
             {/* Connection lines */}
             <path
               d="M140 80 L240 80"
-              stroke="var(--color-pf-cyan-500)"
+              stroke="var(--accent-default)"
               strokeOpacity="0.4"
               strokeWidth="2"
               strokeDasharray="6 4"
@@ -129,7 +129,7 @@ export function Hero() {
             </path>
             <path
               d="M340 80 L420 130"
-              stroke="var(--color-pf-cyan-500)"
+              stroke="var(--accent-default)"
               strokeOpacity="0.4"
               strokeWidth="2"
               strokeDasharray="6 4"
@@ -144,7 +144,7 @@ export function Hero() {
             </path>
             <path
               d="M140 200 L240 200"
-              stroke="var(--color-pf-cyan-500)"
+              stroke="var(--accent-default)"
               strokeOpacity="0.4"
               strokeWidth="2"
               strokeDasharray="6 4"
@@ -159,7 +159,7 @@ export function Hero() {
             </path>
             <path
               d="M340 200 L420 170"
-              stroke="var(--color-pf-cyan-500)"
+              stroke="var(--accent-default)"
               strokeOpacity="0.4"
               strokeWidth="2"
               strokeDasharray="6 4"
@@ -180,9 +180,9 @@ export function Hero() {
               width="120"
               height="60"
               rx="10"
-              fill="var(--color-pf-cyan-500)"
+              fill="var(--accent-default)"
               fillOpacity="0.08"
-              stroke="var(--color-pf-cyan-500)"
+              stroke="var(--accent-default)"
               strokeOpacity="0.35"
               strokeWidth="1.5"
             />
@@ -190,7 +190,7 @@ export function Hero() {
               x="80"
               y="73"
               textAnchor="middle"
-              fill="var(--color-pf-cyan-300)"
+              fill="var(--color-cyan-300)"
               fontSize="10"
               fontWeight="600"
             >
@@ -200,7 +200,7 @@ export function Hero() {
               x="80"
               y="93"
               textAnchor="middle"
-              fill="var(--color-pf-text-muted)"
+              fill="var(--text-tertiary)"
               fontSize="9"
             >
               {"Price > 0.65"}
@@ -213,9 +213,9 @@ export function Hero() {
               width="120"
               height="60"
               rx="10"
-              fill="var(--color-pf-cyan-500)"
+              fill="var(--accent-default)"
               fillOpacity="0.08"
-              stroke="var(--color-pf-cyan-500)"
+              stroke="var(--accent-default)"
               strokeOpacity="0.35"
               strokeWidth="1.5"
             />
@@ -223,7 +223,7 @@ export function Hero() {
               x="80"
               y="193"
               textAnchor="middle"
-              fill="var(--color-pf-cyan-300)"
+              fill="var(--color-cyan-300)"
               fontSize="10"
               fontWeight="600"
             >
@@ -233,7 +233,7 @@ export function Hero() {
               x="80"
               y="213"
               textAnchor="middle"
-              fill="var(--color-pf-text-muted)"
+              fill="var(--text-tertiary)"
               fontSize="9"
             >
               {"Vol > 10k / 24h"}
@@ -246,9 +246,9 @@ export function Hero() {
               width="120"
               height="60"
               rx="10"
-              fill="var(--color-pf-cyan-400)"
+              fill="var(--accent-text)"
               fillOpacity="0.06"
-              stroke="var(--color-pf-cyan-400)"
+              stroke="var(--accent-text)"
               strokeOpacity="0.3"
               strokeWidth="1.5"
             />
@@ -256,7 +256,7 @@ export function Hero() {
               x="300"
               y="73"
               textAnchor="middle"
-              fill="var(--color-pf-cyan-300)"
+              fill="var(--color-cyan-300)"
               fontSize="10"
               fontWeight="600"
             >
@@ -266,7 +266,7 @@ export function Hero() {
               x="300"
               y="93"
               textAnchor="middle"
-              fill="var(--color-pf-text-muted)"
+              fill="var(--text-tertiary)"
               fontSize="9"
             >
               Max 5% per trade
@@ -279,9 +279,9 @@ export function Hero() {
               width="120"
               height="60"
               rx="10"
-              fill="var(--color-pf-cyan-400)"
+              fill="var(--accent-text)"
               fillOpacity="0.06"
-              stroke="var(--color-pf-cyan-400)"
+              stroke="var(--accent-text)"
               strokeOpacity="0.3"
               strokeWidth="1.5"
             />
@@ -289,7 +289,7 @@ export function Hero() {
               x="300"
               y="193"
               textAnchor="middle"
-              fill="var(--color-pf-cyan-300)"
+              fill="var(--color-cyan-300)"
               fontSize="10"
               fontWeight="600"
             >
@@ -299,7 +299,7 @@ export function Hero() {
               x="300"
               y="213"
               textAnchor="middle"
-              fill="var(--color-pf-text-muted)"
+              fill="var(--text-tertiary)"
               fontSize="9"
             >
               Kelly criterion
@@ -312,9 +312,9 @@ export function Hero() {
               width="120"
               height="60"
               rx="10"
-              fill="var(--color-pf-success)"
+              fill="var(--gain)"
               fillOpacity="0.06"
-              stroke="var(--color-pf-success)"
+              stroke="var(--gain)"
               strokeOpacity="0.3"
               strokeWidth="1.5"
             />
@@ -322,7 +322,7 @@ export function Hero() {
               x="480"
               y="143"
               textAnchor="middle"
-              fill="var(--color-pf-success)"
+              fill="var(--gain)"
               fontSize="10"
               fontWeight="600"
             >
@@ -332,14 +332,14 @@ export function Hero() {
               x="480"
               y="163"
               textAnchor="middle"
-              fill="var(--color-pf-text-muted)"
+              fill="var(--text-tertiary)"
               fontSize="9"
             >
               Buy YES @ market
             </text>
 
             {/* Live pulse */}
-            <circle cx="530" cy="128" r="4" fill="var(--color-pf-success)">
+            <circle cx="530" cy="128" r="4" fill="var(--gain)">
               <animate
                 attributeName="opacity"
                 values="1;0.3;1"

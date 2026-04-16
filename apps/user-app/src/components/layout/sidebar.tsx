@@ -123,7 +123,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
     <aside
       data-tour="sidebar"
       aria-label="Main navigation"
-      className={`flex flex-col h-full bg-elevated border-r border-default transition-all duration-pf-normal ${collapsed ? 'w-16 min-w-16' : 'w-60 min-w-60'}`}
+      className={`flex flex-col h-full bg-elevated border-r border-default transition-all duration-panel ${collapsed ? 'w-16 min-w-16' : 'w-60 min-w-60'}`}
     >
       {/* Logo */}
       <div className="flex items-center gap-3 px-4 h-14 border-b border-default">
@@ -142,7 +142,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
         {navSections.map((section) => (
           <div key={section.title}>
             {!collapsed && (
-              <div className="px-2 mb-1 text-pf-label font-semibold uppercase tracking-wider text-secondary">
+              <div className="px-2 mb-1 text-label font-semibold uppercase tracking-wider text-secondary">
                 {section.title}
               </div>
             )}
@@ -153,7 +153,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
                   to={item.route}
                   title={collapsed ? item.label : undefined}
                   className={({ isActive }) =>
-                    `flex items-center gap-3 px-2 py-2 rounded-pf-sm text-sm transition-colors duration-pf-fast focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 focus-visible:rounded-lg ${
+                    `flex items-center gap-3 px-2 py-2 rounded-sm text-sm transition-colors duration-micro focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 focus-visible:rounded-lg ${
                       isActive
                         ? 'bg-accent/10 text-accent-text'
                         : 'text-secondary hover:bg-surface hover:text-primary'
@@ -176,7 +176,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
           <Link
             to="/profile/me"
             data-tour="edge-rating"
-            className="flex items-center gap-3 px-2 py-2 rounded-pf-sm text-sm transition-colors duration-pf-fast text-secondary hover:bg-surface hover:text-primary"
+            className="flex items-center gap-3 px-2 py-2 rounded-sm text-sm transition-colors duration-micro text-secondary hover:bg-surface hover:text-primary"
             title={collapsed ? `Edge Rating: ${myScore}` : undefined}
           >
             <TrendingUp size={18} className={`shrink-0 ${
@@ -201,7 +201,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
         <button
           type="button"
           onClick={onToggle}
-          className="flex items-center gap-3 px-2 py-2 rounded-pf-sm text-sm transition-colors duration-pf-fast text-secondary hover:bg-surface hover:text-primary w-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 focus-visible:rounded-lg"
+          className="flex items-center gap-3 px-2 py-2 rounded-sm text-sm transition-colors duration-micro text-secondary hover:bg-surface hover:text-primary w-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 focus-visible:rounded-lg"
           aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
         >
           {collapsed ? (
@@ -214,7 +214,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
           to="/settings"
           title={collapsed ? 'Settings' : undefined}
           className={({ isActive }) =>
-            `flex items-center gap-3 px-2 py-2 rounded-pf-sm text-sm transition-colors duration-pf-fast focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 focus-visible:rounded-lg ${
+            `flex items-center gap-3 px-2 py-2 rounded-sm text-sm transition-colors duration-micro focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 focus-visible:rounded-lg ${
               isActive
                 ? 'bg-accent/10 text-accent-text'
                 : 'text-secondary hover:bg-surface hover:text-primary'

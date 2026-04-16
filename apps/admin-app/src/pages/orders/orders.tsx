@@ -95,7 +95,7 @@ export function Component() {
           value={statusFilter}
           onChange={e => { setStatusFilter(e.target.value); setPage(1); }}
           aria-label="Filter by order status"
-          className="h-8 px-2 rounded-pf-sm bg-elevated border border-default text-xs text-primary focus-visible:outline-none focus-visible:border-accent"
+          className="h-8 px-2 rounded-sm bg-elevated border border-default text-xs text-primary focus-visible:outline-none focus-visible:border-accent"
         >
           <option value="">All statuses</option>
           <option value="PENDING">Pending</option>
@@ -119,7 +119,7 @@ export function Component() {
 
       {/* DLQ Section */}
       {dlqEntries.length > 0 && (
-        <div className="bg-elevated border border-warning/30 rounded-pf-lg p-5">
+        <div className="bg-elevated border border-warning/30 rounded-xl p-5">
           <div className="flex items-center gap-2 mb-4">
             <AlertTriangle size={16} className="text-warning" aria-hidden="true" />
             <h3 className="text-sm font-semibold text-warning">
@@ -130,7 +130,7 @@ export function Component() {
             {dlqEntries.map((entry) => (
               <div
                 key={entry.intentId}
-                className="flex items-center justify-between p-3 rounded-pf-sm bg-app border border-default"
+                className="flex items-center justify-between p-3 rounded-sm bg-app border border-default"
               >
                 <div className="min-w-0">
                   <div className="text-sm text-primary">
@@ -138,7 +138,7 @@ export function Component() {
                     <span className="text-tertiary"> - Intent {entry.intentId.slice(0, 8)}</span>
                   </div>
                   <div className="text-xs text-loss mt-1 truncate">{entry.lastError}</div>
-                  <div className="text-pf-label text-tertiary mt-1">
+                  <div className="text-label text-tertiary mt-1">
                     {entry.attempts} attempts - {formatDateTime(entry.enqueuedAt)}
                   </div>
                 </div>
@@ -195,7 +195,7 @@ export function Component() {
       )}
 
       {/* Orders Table */}
-      <div className="bg-elevated border border-default rounded-pf-lg overflow-hidden">
+      <div className="bg-elevated border border-default rounded-xl overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <caption className="sr-only">Trading orders</caption>
@@ -242,7 +242,7 @@ export function Component() {
                       </span>
                     </td>
                     <td className="px-4 py-3">
-                      <span className={`px-2 py-1 rounded-pf-full text-xs font-medium ${statusColor(o.status)}`}>
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusColor(o.status)}`}>
                         {o.status}
                       </span>
                     </td>

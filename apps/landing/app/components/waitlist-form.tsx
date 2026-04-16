@@ -61,7 +61,7 @@ export function WaitlistForm({ className = "" }: WaitlistFormProps) {
         role="status"
         aria-live="polite"
       >
-        <p className="text-sm text-pf-success flex items-center justify-center gap-2">
+        <p className="text-sm text-gain flex items-center justify-center gap-2">
           <Check size={16} aria-hidden="true" />
           {errorMsg === "already"
             ? "You\u2019re already on the list \u2014 check your inbox!"
@@ -94,13 +94,13 @@ export function WaitlistForm({ className = "" }: WaitlistFormProps) {
           required
           aria-invalid={status === "error"}
           aria-describedby={status === "error" ? "waitlist-error" : undefined}
-          className="flex-1 min-w-[180px] min-h-[44px] bg-pf-elevated border border-pf-border-subtle rounded-pf-md text-pf-text font-sans text-pf-body px-4 py-3 outline-none transition-colors duration-pf-normal focus-visible:border-pf-cyan-400 focus-visible:ring-2 focus-visible:ring-pf-cyan-400 focus-visible:ring-offset-2 focus-visible:ring-offset-pf-base placeholder:text-pf-text-muted"
+          className="flex-1 min-w-[180px] min-h-[44px] bg-elevated border border-subtle rounded-lg text-primary font-sans text-body-md px-4 py-3 outline-none transition-colors duration-panel focus-visible:border-accent-text focus-visible:ring-2 focus-visible:ring-accent-text focus-visible:ring-offset-2 focus-visible:ring-offset-app placeholder:text-tertiary"
         />
         <button
           type="submit"
           disabled={status === "loading"}
           aria-busy={status === "loading"}
-          className="inline-flex items-center justify-center font-semibold text-pf-body px-6 py-3 min-h-[44px] rounded-pf-md bg-pf-cyan-500 text-pf-text-contrast cursor-pointer transition-all duration-pf-normal hover:bg-pf-cyan-400 hover:shadow-pf-glow-cyan-strong focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pf-cyan-400 disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:shadow-none disabled:hover:bg-pf-cyan-500 whitespace-nowrap"
+          className="inline-flex items-center justify-center font-semibold text-body-md px-6 py-3 min-h-[44px] rounded-lg bg-accent text-inverse cursor-pointer transition-all duration-panel hover:bg-accent-text hover:shadow-glow-accent-strong focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-text disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:shadow-none disabled:hover:bg-accent whitespace-nowrap"
         >
           <span>Request access</span>
           {status === "loading" && (
@@ -112,14 +112,14 @@ export function WaitlistForm({ className = "" }: WaitlistFormProps) {
           )}
         </button>
       </div>
-      <p className="text-pf-body-sm text-pf-text-muted mt-3 text-center">
+      <p className="text-body-sm text-tertiary mt-3 text-center">
         Join the early-access list &mdash; no spam, ever.
       </p>
       {status === "error" && errorMsg && (
         <p
           id="waitlist-error"
           role="alert"
-          className="text-pf-body-sm text-pf-danger mt-2 text-center"
+          className="text-body-sm text-loss mt-2 text-center"
         >
           {errorMsg}
         </p>

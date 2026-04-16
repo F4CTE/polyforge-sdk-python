@@ -206,7 +206,7 @@ export function Component() {
           <Button
             type="button"
             onClick={() => { setFormOpen(v => !v); if (formOpen) resetForm(); }}
-            className="flex items-center gap-2 text-sm px-3 py-2 rounded-pf-sm bg-accent/10 text-accent-text hover:bg-accent/20 transition-colors font-medium"
+            className="flex items-center gap-2 text-sm px-3 py-2 rounded-sm bg-accent/10 text-accent-text hover:bg-accent/20 transition-colors font-medium"
           >
             <span className="text-base leading-none">＋</span>
             New Alert
@@ -236,10 +236,10 @@ export function Component() {
                     }
                   }}
                   placeholder="Search markets..."
-                  className="w-full bg-elevated border border-default rounded-pf-sm px-3 py-2 text-sm text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent/50"
+                  className="w-full bg-elevated border border-default rounded-sm px-3 py-2 text-sm text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent/50"
                 />
                 {showDropdown && (
-                  <div className="absolute z-20 w-full top-full mt-1 rounded-pf border border-default bg-elevated shadow-pf-lg overflow-hidden">
+                  <div className="absolute z-20 w-full top-full mt-1 rounded-pf border border-default bg-elevated shadow-lg overflow-hidden">
                     {searchResults.map(m => (
                       <Button
                         key={m.id}
@@ -266,7 +266,7 @@ export function Component() {
                   {yesNoTokens.map(t => (
                     <label
                       key={t.id}
-                      className={`flex items-center gap-2 px-3 py-2 rounded-pf-sm border cursor-pointer text-sm transition-colors ${
+                      className={`flex items-center gap-2 px-3 py-2 rounded-sm border cursor-pointer text-sm transition-colors ${
                         selectedTokenId === t.id
                           ? t.outcome.toUpperCase() === 'YES'
                             ? 'border-gain/50 bg-gain/10 text-gain'
@@ -302,7 +302,7 @@ export function Component() {
                 <Select
                   value={direction}
                   onChange={e => setDirection(e.target.value as 'above' | 'below')}
-                  className="w-full bg-elevated border border-default rounded-pf-sm px-3 py-2 text-sm text-primary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent/50"
+                  className="w-full bg-elevated border border-default rounded-sm px-3 py-2 text-sm text-primary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent/50"
                 >
                   <option value="above">Price rises above</option>
                   <option value="below">Price falls below</option>
@@ -319,7 +319,7 @@ export function Component() {
                   step="0.01"
                   value={price}
                   onChange={e => setPrice(e.target.value)}
-                  className="w-full bg-elevated border border-default rounded-pf-sm px-3 py-2 text-sm text-primary font-mono focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent/50"
+                  className="w-full bg-elevated border border-default rounded-sm px-3 py-2 text-sm text-primary font-mono focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent/50"
                 />
               </div>
             </div>
@@ -340,7 +340,7 @@ export function Component() {
               <Button
                 type="submit"
                 disabled={submitting || !selectedTokenId}
-                className="px-4 py-2 rounded-pf-sm bg-accent text-app text-sm font-semibold hover:bg-accent-text transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-4 py-2 rounded-sm bg-accent text-app text-sm font-semibold hover:bg-accent-text transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {submitting ? 'Creating...' : 'Create Alert'}
               </Button>
@@ -402,16 +402,16 @@ export function Component() {
                   {/* Badges */}
                   <div className="flex items-center gap-2 shrink-0">
                     {alert.triggered ? (
-                      <span className="text-pf-caption px-2 py-1 rounded border border-warning/30 bg-warning/10 text-warning font-semibold">
+                      <span className="text-caption px-2 py-1 rounded border border-warning/30 bg-warning/10 text-warning font-semibold">
                         Triggered
                       </span>
                     ) : (
-                      <span className="text-pf-caption px-2 py-1 rounded border border-accent/30 bg-accent/10 text-accent-text font-semibold">
+                      <span className="text-caption px-2 py-1 rounded border border-accent/30 bg-accent/10 text-accent-text font-semibold">
                         Active
                       </span>
                     )}
                     {alert.persistent && (
-                      <span className="text-pf-caption px-2 py-1 rounded border border-default bg-elevated text-tertiary font-medium">
+                      <span className="text-caption px-2 py-1 rounded border border-default bg-elevated text-tertiary font-medium">
                         Persistent
                       </span>
                     )}

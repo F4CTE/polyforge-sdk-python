@@ -82,7 +82,7 @@ export function Component() {
       </div>
 
       {/* Form */}
-      <form onSubmit={handleSubmit} className="bg-elevated border border-default rounded-pf-lg p-6 space-y-5">
+      <form onSubmit={handleSubmit} className="bg-elevated border border-default rounded-xl p-6 space-y-5">
         <div>
           <label htmlFor="ticket-subject" className="text-xs text-secondary uppercase tracking-wider mb-2 block">Subject</label>
           <Input

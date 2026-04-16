@@ -88,7 +88,7 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
       aria-label="Command palette"
     >
       <div
-        className="motion-safe:animate-scale-in w-full max-w-sm sm:max-w-xl mx-4 bg-elevated border border-default rounded-pf-lg shadow-pf-lg overflow-hidden"
+        className="motion-safe:animate-scale-in w-full max-w-sm sm:max-w-xl mx-4 bg-elevated border border-default rounded-xl shadow-lg overflow-hidden"
         onClick={e => e.stopPropagation()}
       >
         {/* Search input */}
@@ -108,10 +108,10 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
             placeholder="Search markets, strategies..."
             className="flex-1 bg-transparent text-sm text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 rounded"
           />
-          <kbd className="hidden sm:inline-flex items-center px-2 py-1 rounded text-pf-label text-tertiary border border-default font-mono">
+          <kbd className="hidden sm:inline-flex items-center px-2 py-1 rounded text-label text-tertiary border border-default font-mono">
             Esc
           </kbd>
-          <button type="button" onClick={onClose} className="min-w-[44px] min-h-[44px] flex items-center justify-center text-tertiary hover:text-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 rounded-pf-md" aria-label="Close command palette">
+          <button type="button" onClick={onClose} className="min-w-[44px] min-h-[44px] flex items-center justify-center text-tertiary hover:text-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 rounded-lg" aria-label="Close command palette">
             <X className="size-4" />
           </button>
         </div>
@@ -124,9 +124,9 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
           {!loading && !query && (
             <div className="px-4 py-8 text-center">
               <p className="text-xs text-tertiary">Type to search markets and strategies</p>
-              <p className="text-pf-label text-tertiary mt-1 opacity-60">
-                <kbd className="px-1 py-1 rounded border border-default font-mono text-pf-caption">↑↓</kbd> navigate ·{' '}
-                <kbd className="px-1 py-1 rounded border border-default font-mono text-pf-caption">Enter</kbd> open
+              <p className="text-label text-tertiary mt-1 opacity-60">
+                <kbd className="px-1 py-1 rounded border border-default font-mono text-caption">↑↓</kbd> navigate ·{' '}
+                <kbd className="px-1 py-1 rounded border border-default font-mono text-caption">Enter</kbd> open
               </p>
             </div>
           )}
@@ -147,17 +147,17 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
                 i === activeIndex ? 'bg-accent/10' : 'hover:bg-surface'
               }`}
             >
-              <span className={`p-2 rounded-pf-sm shrink-0 ${
-                r.type === 'market' ? 'bg-accent/10 text-accent-text' : 'bg-pf-purple-500/10 text-pf-purple-400'
+              <span className={`p-2 rounded-sm shrink-0 ${
+                r.type === 'market' ? 'bg-accent/10 text-accent-text' : 'bg-purple-500/10 text-purple-400'
               }`}>
                 {r.type === 'market' ? <BarChart3 className="size-4" /> : <Zap className="size-4" />}
               </span>
               <div className="min-w-0 flex-1">
                 <div className="text-sm text-primary truncate">{r.title}</div>
-                {r.sub && <div className="text-pf-label text-tertiary capitalize">{r.sub}</div>}
+                {r.sub && <div className="text-label text-tertiary capitalize">{r.sub}</div>}
               </div>
-              <span className={`text-pf-caption font-medium px-2 py-1 rounded shrink-0 ${
-                r.type === 'market' ? 'bg-accent/10 text-accent-text' : 'bg-pf-purple-500/10 text-pf-purple-400'
+              <span className={`text-caption font-medium px-2 py-1 rounded shrink-0 ${
+                r.type === 'market' ? 'bg-accent/10 text-accent-text' : 'bg-purple-500/10 text-purple-400'
               }`}>
                 {r.type === 'market' ? 'Market' : 'Strategy'}
               </span>

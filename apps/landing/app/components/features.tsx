@@ -13,7 +13,7 @@ const features = [
     title: "Strategy Builder",
     description:
       "Build no-code automated trading strategies with our visual block editor. Set conditions, triggers, and position limits.",
-    gradientClass: "from-pf-cyan-500/[var(--opacity-pf-subtle)]",
+    gradientClass: "from-accent/[var(--opacity-subtle)]",
     icon: <LayoutGrid size={24} aria-hidden="true" />,
     visual: (
       <svg viewBox="0 0 200 100" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -23,9 +23,9 @@ const features = [
           width="42"
           height="24"
           rx="5"
-          fill="var(--color-pf-cyan-500)"
+          fill="var(--accent-default)"
           fillOpacity="0.1"
-          stroke="var(--color-pf-cyan-500)"
+          stroke="var(--accent-default)"
           strokeOpacity="0.3"
           strokeWidth="1"
         />
@@ -33,7 +33,7 @@ const features = [
           x="26"
           y="26"
           textAnchor="middle"
-          fill="var(--color-pf-cyan-300)"
+          fill="var(--color-cyan-300)"
           fontSize="7"
         >
           IF Price
@@ -44,9 +44,9 @@ const features = [
           width="42"
           height="24"
           rx="5"
-          fill="var(--color-pf-cyan-500)"
+          fill="var(--accent-default)"
           fillOpacity="0.1"
-          stroke="var(--color-pf-cyan-500)"
+          stroke="var(--accent-default)"
           strokeOpacity="0.3"
           strokeWidth="1"
         />
@@ -54,21 +54,21 @@ const features = [
           x="26"
           y="60"
           textAnchor="middle"
-          fill="var(--color-pf-cyan-300)"
+          fill="var(--color-cyan-300)"
           fontSize="7"
         >
           IF Volume
         </text>
         <path
           d="M47 22 L62 38"
-          stroke="var(--color-pf-cyan-500)"
+          stroke="var(--accent-default)"
           strokeOpacity="0.4"
           strokeWidth="1.5"
           strokeDasharray="3 2"
         />
         <path
           d="M47 56 L62 42"
-          stroke="var(--color-pf-cyan-500)"
+          stroke="var(--accent-default)"
           strokeOpacity="0.4"
           strokeWidth="1.5"
           strokeDasharray="3 2"
@@ -80,9 +80,9 @@ const features = [
           width="30"
           height="24"
           rx="5"
-          fill="var(--color-pf-gold-400)"
+          fill="var(--color-gold-400)"
           fillOpacity="0.1"
-          stroke="var(--color-pf-gold-400)"
+          stroke="var(--color-gold-400)"
           strokeOpacity="0.3"
           strokeWidth="1"
         />
@@ -90,14 +90,14 @@ const features = [
           x="77"
           y="44"
           textAnchor="middle"
-          fill="var(--color-pf-gold-400)"
+          fill="var(--color-gold-400)"
           fontSize="7"
         >
           AND
         </text>
         <path
           d="M92 40 L108 40"
-          stroke="var(--color-pf-cyan-500)"
+          stroke="var(--accent-default)"
           strokeOpacity="0.4"
           strokeWidth="1.5"
           strokeDasharray="3 2"
@@ -109,9 +109,9 @@ const features = [
           width="38"
           height="24"
           rx="5"
-          fill="var(--color-pf-purple-400)"
+          fill="var(--color-purple-400)"
           fillOpacity="0.1"
-          stroke="var(--color-pf-purple-400)"
+          stroke="var(--color-purple-400)"
           strokeOpacity="0.3"
           strokeWidth="1"
         />
@@ -119,14 +119,14 @@ const features = [
           x="127"
           y="44"
           textAnchor="middle"
-          fill="var(--color-pf-purple-400)"
+          fill="var(--color-purple-400)"
           fontSize="7"
         >
           Size = 5%
         </text>
         <path
           d="M146 40 L158 40"
-          stroke="var(--color-pf-success)"
+          stroke="var(--gain)"
           strokeOpacity="0.4"
           strokeWidth="1.5"
           strokeDasharray="3 2"
@@ -137,9 +137,9 @@ const features = [
           width="36"
           height="24"
           rx="5"
-          fill="var(--color-pf-success)"
+          fill="var(--gain)"
           fillOpacity="0.1"
-          stroke="var(--color-pf-success)"
+          stroke="var(--gain)"
           strokeOpacity="0.3"
           strokeWidth="1"
         />
@@ -147,7 +147,7 @@ const features = [
           x="176"
           y="44"
           textAnchor="middle"
-          fill="var(--color-pf-success)"
+          fill="var(--gain)"
           fontSize="7"
         >
           Execute
@@ -156,7 +156,7 @@ const features = [
           x="100"
           y="90"
           textAnchor="middle"
-          fill="var(--color-pf-text-muted)"
+          fill="var(--text-tertiary)"
           fontSize="6"
         >
           50+ blocks available
@@ -168,7 +168,7 @@ const features = [
     title: "Paper Trading & Backtesting",
     description:
       "Test against historical data, simulate with real-time prices. Prove your edge before risking capital with detailed P&L curves, Sharpe ratio, and drawdown analytics.",
-    gradientClass: "from-pf-cyan-400/[var(--opacity-pf-subtle)]",
+    gradientClass: "from-accent-text/[var(--opacity-subtle)]",
     icon: <Activity size={24} aria-hidden="true" />,
     visual: (
       <svg viewBox="0 0 200 100" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -177,7 +177,7 @@ const features = [
           y1="85"
           x2="180"
           y2="85"
-          stroke="var(--color-pf-text)"
+          stroke="var(--text-primary)"
           strokeOpacity="0.06"
           strokeWidth="1"
         />
@@ -186,7 +186,7 @@ const features = [
           y1="60"
           x2="180"
           y2="60"
-          stroke="var(--color-pf-text)"
+          stroke="var(--text-primary)"
           strokeOpacity="0.04"
           strokeWidth="1"
         />
@@ -195,13 +195,13 @@ const features = [
           y1="35"
           x2="180"
           y2="35"
-          stroke="var(--color-pf-text)"
+          stroke="var(--text-primary)"
           strokeOpacity="0.04"
           strokeWidth="1"
         />
         <polyline
           points="20,75 40,70 55,72 75,60 90,55 110,58 125,45 145,40 160,35 180,28"
-          stroke="var(--color-pf-cyan-400)"
+          stroke="var(--accent-text)"
           strokeWidth="2"
           fill="none"
           strokeLinecap="round"
@@ -221,10 +221,10 @@ const features = [
             y2="85"
             gradientUnits="userSpaceOnUse"
           >
-            <stop stopColor="var(--color-pf-cyan-400)" stopOpacity="0.4" />
+            <stop stopColor="var(--accent-text)" stopOpacity="0.4" />
             <stop
               offset="1"
-              stopColor="var(--color-pf-cyan-400)"
+              stopColor="var(--accent-text)"
               stopOpacity="0"
             />
           </linearGradient>
@@ -233,7 +233,7 @@ const features = [
           x="180"
           y="23"
           textAnchor="end"
-          fill="var(--color-pf-success)"
+          fill="var(--gain)"
           fontSize="8"
         >
           +34.2%
@@ -244,9 +244,9 @@ const features = [
           width="50"
           height="14"
           rx="3"
-          fill="var(--color-pf-gold-400)"
+          fill="var(--color-gold-400)"
           fillOpacity="0.1"
-          stroke="var(--color-pf-gold-400)"
+          stroke="var(--color-gold-400)"
           strokeOpacity="0.3"
           strokeWidth="0.5"
         />
@@ -254,7 +254,7 @@ const features = [
           x="45"
           y="20"
           textAnchor="middle"
-          fill="var(--color-pf-gold-400)"
+          fill="var(--color-gold-400)"
           fontSize="6"
         >
           Paper Mode
@@ -266,7 +266,7 @@ const features = [
     title: "Copy Trading",
     description:
       "Follow top performers and mirror their trades automatically. Browse the leaderboard and copy with one click.",
-    gradientClass: "from-pf-success/[var(--opacity-pf-subtle)]",
+    gradientClass: "from-gain/[var(--opacity-subtle)]",
     icon: <Users size={24} aria-hidden="true" />,
     visual: (
       <svg viewBox="0 0 200 100" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -277,9 +277,9 @@ const features = [
           width="60"
           height="30"
           rx="6"
-          fill="var(--color-pf-success)"
+          fill="var(--gain)"
           fillOpacity="0.08"
-          stroke="var(--color-pf-success)"
+          stroke="var(--gain)"
           strokeOpacity="0.3"
           strokeWidth="1"
         />
@@ -287,7 +287,7 @@ const features = [
           x="45"
           y="33"
           textAnchor="middle"
-          fill="var(--color-pf-success)"
+          fill="var(--gain)"
           fontSize="7"
           fontWeight="600"
         >
@@ -297,7 +297,7 @@ const features = [
           x="45"
           y="44"
           textAnchor="middle"
-          fill="var(--color-pf-text-muted)"
+          fill="var(--text-tertiary)"
           fontSize="6"
         >
           0x8f..3a
@@ -305,13 +305,13 @@ const features = [
         {/* Arrow */}
         <path
           d="M75 35 L95 35"
-          stroke="var(--color-pf-success)"
+          stroke="var(--gain)"
           strokeOpacity="0.5"
           strokeWidth="1.5"
         />
         <polygon
           points="95,32 100,35 95,38"
-          fill="var(--color-pf-success)"
+          fill="var(--gain)"
           fillOpacity="0.5"
         />
         {/* Your copy */}
@@ -321,9 +321,9 @@ const features = [
           width="60"
           height="30"
           rx="6"
-          fill="var(--color-pf-cyan-500)"
+          fill="var(--accent-default)"
           fillOpacity="0.08"
-          stroke="var(--color-pf-cyan-500)"
+          stroke="var(--accent-default)"
           strokeOpacity="0.3"
           strokeWidth="1"
         />
@@ -331,7 +331,7 @@ const features = [
           x="135"
           y="33"
           textAnchor="middle"
-          fill="var(--color-pf-cyan-300)"
+          fill="var(--color-cyan-300)"
           fontSize="7"
           fontWeight="600"
         >
@@ -341,7 +341,7 @@ const features = [
           x="135"
           y="44"
           textAnchor="middle"
-          fill="var(--color-pf-text-muted)"
+          fill="var(--text-tertiary)"
           fontSize="6"
         >
           Mirrored
@@ -353,9 +353,9 @@ const features = [
           width="45"
           height="18"
           rx="4"
-          fill="var(--color-pf-cyan-500)"
+          fill="var(--accent-default)"
           fillOpacity="0.06"
-          stroke="var(--color-pf-cyan-500)"
+          stroke="var(--accent-default)"
           strokeOpacity="0.15"
           strokeWidth="0.5"
         />
@@ -363,7 +363,7 @@ const features = [
           x="37"
           y="74"
           textAnchor="middle"
-          fill="var(--color-pf-cyan-300)"
+          fill="var(--color-cyan-300)"
           fontSize="6"
         >
           % Mode
@@ -374,9 +374,9 @@ const features = [
           width="45"
           height="18"
           rx="4"
-          fill="var(--color-pf-cyan-500)"
+          fill="var(--accent-default)"
           fillOpacity="0.06"
-          stroke="var(--color-pf-cyan-500)"
+          stroke="var(--accent-default)"
           strokeOpacity="0.15"
           strokeWidth="0.5"
         />
@@ -384,7 +384,7 @@ const features = [
           x="89"
           y="74"
           textAnchor="middle"
-          fill="var(--color-pf-cyan-300)"
+          fill="var(--color-cyan-300)"
           fontSize="6"
         >
           Fixed
@@ -395,9 +395,9 @@ const features = [
           width="45"
           height="18"
           rx="4"
-          fill="var(--color-pf-cyan-500)"
+          fill="var(--accent-default)"
           fillOpacity="0.06"
-          stroke="var(--color-pf-cyan-500)"
+          stroke="var(--accent-default)"
           strokeOpacity="0.15"
           strokeWidth="0.5"
         />
@@ -405,7 +405,7 @@ const features = [
           x="141"
           y="74"
           textAnchor="middle"
-          fill="var(--color-pf-cyan-300)"
+          fill="var(--color-cyan-300)"
           fontSize="6"
         >
           Mirror
@@ -417,7 +417,7 @@ const features = [
     title: "Backtesting",
     description:
       "Test your strategies against historical market data before going live. See P&L curves and win rates.",
-    gradientClass: "from-pf-purple-500/[var(--opacity-pf-subtle)]",
+    gradientClass: "from-purple-500/[var(--opacity-subtle)]",
     icon: <Lightbulb size={24} aria-hidden="true" />,
     visual: (
       <svg viewBox="0 0 200 100" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -428,13 +428,13 @@ const features = [
           width="75"
           height="20"
           rx="4"
-          fill="var(--color-pf-text)"
+          fill="var(--text-primary)"
           fillOpacity="0.03"
-          stroke="var(--color-pf-text)"
+          stroke="var(--text-primary)"
           strokeOpacity="0.08"
           strokeWidth="0.5"
         />
-        <text x="18" y="24" fill="var(--color-pf-text-muted)" fontSize="6">
+        <text x="18" y="24" fill="var(--text-tertiary)" fontSize="6">
           Breaking: Fed holds...
         </text>
         <rect
@@ -443,19 +443,19 @@ const features = [
           width="75"
           height="20"
           rx="4"
-          fill="var(--color-pf-text)"
+          fill="var(--text-primary)"
           fillOpacity="0.03"
-          stroke="var(--color-pf-text)"
+          stroke="var(--text-primary)"
           strokeOpacity="0.08"
           strokeWidth="0.5"
         />
-        <text x="18" y="48" fill="var(--color-pf-text-muted)" fontSize="6">
+        <text x="18" y="48" fill="var(--text-tertiary)" fontSize="6">
           Trump announces...
         </text>
         {/* Arrow to AI */}
         <path
           d="M85 35 L100 35"
-          stroke="var(--color-pf-purple-400)"
+          stroke="var(--color-purple-400)"
           strokeOpacity="0.5"
           strokeWidth="1.5"
           strokeDasharray="3 2"
@@ -467,9 +467,9 @@ const features = [
           width="45"
           height="34"
           rx="8"
-          fill="var(--color-pf-purple-400)"
+          fill="var(--color-purple-400)"
           fillOpacity="0.08"
-          stroke="var(--color-pf-purple-400)"
+          stroke="var(--color-purple-400)"
           strokeOpacity="0.3"
           strokeWidth="1"
         />
@@ -477,7 +477,7 @@ const features = [
           x="122"
           y="33"
           textAnchor="middle"
-          fill="var(--color-pf-purple-400)"
+          fill="var(--color-purple-400)"
           fontSize="8"
           fontWeight="600"
         >
@@ -487,7 +487,7 @@ const features = [
           x="122"
           y="44"
           textAnchor="middle"
-          fill="var(--color-pf-text-muted)"
+          fill="var(--text-tertiary)"
           fontSize="5"
         >
           Claude + GPT
@@ -495,7 +495,7 @@ const features = [
         {/* Arrow to signal */}
         <path
           d="M145 35 L160 35"
-          stroke="var(--color-pf-success)"
+          stroke="var(--gain)"
           strokeOpacity="0.5"
           strokeWidth="1.5"
           strokeDasharray="3 2"
@@ -507,9 +507,9 @@ const features = [
           width="32"
           height="34"
           rx="6"
-          fill="var(--color-pf-success)"
+          fill="var(--gain)"
           fillOpacity="0.08"
-          stroke="var(--color-pf-success)"
+          stroke="var(--gain)"
           strokeOpacity="0.3"
           strokeWidth="1"
         />
@@ -517,7 +517,7 @@ const features = [
           x="176"
           y="33"
           textAnchor="middle"
-          fill="var(--color-pf-success)"
+          fill="var(--gain)"
           fontSize="7"
           fontWeight="600"
         >
@@ -527,7 +527,7 @@ const features = [
           x="176"
           y="44"
           textAnchor="middle"
-          fill="var(--color-pf-text-muted)"
+          fill="var(--text-tertiary)"
           fontSize="5"
         >
           Signal
@@ -539,16 +539,16 @@ const features = [
           width="182"
           height="20"
           rx="4"
-          fill="var(--color-pf-success)"
+          fill="var(--gain)"
           fillOpacity="0.04"
-          stroke="var(--color-pf-success)"
+          stroke="var(--gain)"
           strokeOpacity="0.15"
           strokeWidth="0.5"
         />
-        <text x="18" y="82" fill="var(--color-pf-success)" fontSize="7">
+        <text x="18" y="82" fill="var(--gain)" fontSize="7">
           Confidence: 87%
         </text>
-        <text x="130" y="82" fill="var(--color-pf-text-muted)" fontSize="6">
+        <text x="130" y="82" fill="var(--text-tertiary)" fontSize="6">
           Market: US Election
         </text>
       </svg>
@@ -558,14 +558,14 @@ const features = [
     title: "Smart Alerts",
     description:
       "Get notified on price movements, whale trades, and strategy signals via webhooks, email, or in-app alerts.",
-    gradientClass: "from-pf-cyan-500/[var(--opacity-pf-subtle)]",
+    gradientClass: "from-accent/[var(--opacity-subtle)]",
     icon: <TrendingUp size={24} aria-hidden="true" />,
     visual: (
       <svg viewBox="0 0 200 100" fill="none" xmlns="http://www.w3.org/2000/svg">
         {/* Price line */}
         <polyline
           points="15,60 40,55 60,58 80,48 100,50 120,42 140,45 160,38 185,35"
-          stroke="var(--color-pf-cyan-400)"
+          stroke="var(--accent-text)"
           strokeWidth="1.5"
           fill="none"
           strokeLinecap="round"
@@ -576,12 +576,12 @@ const features = [
           y1="25"
           x2="185"
           y2="25"
-          stroke="var(--color-pf-success)"
+          stroke="var(--gain)"
           strokeOpacity="0.4"
           strokeWidth="1"
           strokeDasharray="4 3"
         />
-        <text x="187" y="28" fill="var(--color-pf-success)" fontSize="6">
+        <text x="187" y="28" fill="var(--gain)" fontSize="6">
           TP 0.85
         </text>
         {/* SL line */}
@@ -590,24 +590,24 @@ const features = [
           y1="75"
           x2="185"
           y2="75"
-          stroke="var(--color-pf-danger)"
+          stroke="var(--loss)"
           strokeOpacity="0.4"
           strokeWidth="1"
           strokeDasharray="4 3"
         />
-        <text x="187" y="78" fill="var(--color-pf-danger)" fontSize="6">
+        <text x="187" y="78" fill="var(--loss)" fontSize="6">
           SL 0.55
         </text>
         {/* Trailing stop */}
         <polyline
           points="80,58 100,60 120,52 140,55 160,48 185,45"
-          stroke="var(--color-pf-gold-400)"
+          stroke="var(--color-gold-400)"
           strokeOpacity="0.4"
           strokeWidth="1"
           strokeDasharray="3 2"
           fill="none"
         />
-        <text x="187" y="48" fill="var(--color-pf-gold-400)" fontSize="6">
+        <text x="187" y="48" fill="var(--color-gold-400)" fontSize="6">
           Trail
         </text>
         {/* Labels */}
@@ -617,9 +617,9 @@ const features = [
           width="36"
           height="12"
           rx="3"
-          fill="var(--color-pf-success)"
+          fill="var(--gain)"
           fillOpacity="0.08"
-          stroke="var(--color-pf-success)"
+          stroke="var(--gain)"
           strokeOpacity="0.2"
           strokeWidth="0.5"
         />
@@ -627,7 +627,7 @@ const features = [
           x="33"
           y="93"
           textAnchor="middle"
-          fill="var(--color-pf-success)"
+          fill="var(--gain)"
           fontSize="5.5"
         >
           TP/SL
@@ -638,9 +638,9 @@ const features = [
           width="36"
           height="12"
           rx="3"
-          fill="var(--color-pf-gold-400)"
+          fill="var(--color-gold-400)"
           fillOpacity="0.08"
-          stroke="var(--color-pf-gold-400)"
+          stroke="var(--color-gold-400)"
           strokeOpacity="0.2"
           strokeWidth="0.5"
         />
@@ -648,7 +648,7 @@ const features = [
           x="74"
           y="93"
           textAnchor="middle"
-          fill="var(--color-pf-gold-400)"
+          fill="var(--color-gold-400)"
           fontSize="5.5"
         >
           Trailing
@@ -659,9 +659,9 @@ const features = [
           width="36"
           height="12"
           rx="3"
-          fill="var(--color-pf-cyan-500)"
+          fill="var(--accent-default)"
           fillOpacity="0.08"
-          stroke="var(--color-pf-cyan-500)"
+          stroke="var(--accent-default)"
           strokeOpacity="0.2"
           strokeWidth="0.5"
         />
@@ -669,7 +669,7 @@ const features = [
           x="115"
           y="93"
           textAnchor="middle"
-          fill="var(--color-pf-cyan-300)"
+          fill="var(--color-cyan-300)"
           fontSize="5.5"
         >
           Limit
@@ -680,9 +680,9 @@ const features = [
           width="36"
           height="12"
           rx="3"
-          fill="var(--color-pf-purple-400)"
+          fill="var(--color-purple-400)"
           fillOpacity="0.08"
-          stroke="var(--color-pf-purple-400)"
+          stroke="var(--color-purple-400)"
           strokeOpacity="0.2"
           strokeWidth="0.5"
         />
@@ -690,7 +690,7 @@ const features = [
           x="156"
           y="93"
           textAnchor="middle"
-          fill="var(--color-pf-purple-400)"
+          fill="var(--color-purple-400)"
           fontSize="5.5"
         >
           Pegged
@@ -702,7 +702,7 @@ const features = [
     title: "Strategy Marketplace",
     description:
       "Buy, sell, and fork proven strategies from top traders. Rate and review what you use.",
-    gradientClass: "from-pf-gold-400/[var(--opacity-pf-subtle)]",
+    gradientClass: "from-gold-400/[var(--opacity-subtle)]",
     icon: <ZoomIn size={24} aria-hidden="true" />,
     visual: (
       <svg viewBox="0 0 200 100" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -713,9 +713,9 @@ const features = [
           width="180"
           height="26"
           rx="5"
-          fill="var(--color-pf-success)"
+          fill="var(--gain)"
           fillOpacity="0.06"
-          stroke="var(--color-pf-success)"
+          stroke="var(--gain)"
           strokeOpacity="0.2"
           strokeWidth="1"
         />
@@ -723,9 +723,9 @@ const features = [
           cx="24"
           cy="21"
           r="6"
-          fill="var(--color-pf-success)"
+          fill="var(--gain)"
           fillOpacity="0.15"
-          stroke="var(--color-pf-success)"
+          stroke="var(--gain)"
           strokeOpacity="0.3"
           strokeWidth="0.5"
         />
@@ -733,7 +733,7 @@ const features = [
           x="24"
           y="24"
           textAnchor="middle"
-          fill="var(--color-pf-success)"
+          fill="var(--gain)"
           fontSize="7"
           fontWeight="700"
         >
@@ -742,20 +742,20 @@ const features = [
         <text
           x="38"
           y="18"
-          fill="var(--color-pf-text)"
+          fill="var(--text-primary)"
           fontSize="7"
           fontWeight="600"
         >
           0x8f..3a bought
         </text>
-        <text x="38" y="28" fill="var(--color-pf-success)" fontSize="7">
+        <text x="38" y="28" fill="var(--gain)" fontSize="7">
           $52K YES
         </text>
         <text
           x="182"
           y="24"
           textAnchor="end"
-          fill="var(--color-pf-text-muted)"
+          fill="var(--text-tertiary)"
           fontSize="6"
         >
           2m ago
@@ -767,9 +767,9 @@ const features = [
           width="180"
           height="26"
           rx="5"
-          fill="var(--color-pf-danger)"
+          fill="var(--loss)"
           fillOpacity="0.06"
-          stroke="var(--color-pf-danger)"
+          stroke="var(--loss)"
           strokeOpacity="0.2"
           strokeWidth="1"
         />
@@ -777,9 +777,9 @@ const features = [
           cx="24"
           cy="53"
           r="6"
-          fill="var(--color-pf-danger)"
+          fill="var(--loss)"
           fillOpacity="0.15"
-          stroke="var(--color-pf-danger)"
+          stroke="var(--loss)"
           strokeOpacity="0.3"
           strokeWidth="0.5"
         />
@@ -787,7 +787,7 @@ const features = [
           x="24"
           y="56"
           textAnchor="middle"
-          fill="var(--color-pf-danger)"
+          fill="var(--loss)"
           fontSize="7"
           fontWeight="700"
         >
@@ -796,20 +796,20 @@ const features = [
         <text
           x="38"
           y="50"
-          fill="var(--color-pf-text)"
+          fill="var(--text-primary)"
           fontSize="7"
           fontWeight="600"
         >
           0xd4..b7 sold
         </text>
-        <text x="38" y="60" fill="var(--color-pf-danger)" fontSize="7">
+        <text x="38" y="60" fill="var(--loss)" fontSize="7">
           $31K NO
         </text>
         <text
           x="182"
           y="56"
           textAnchor="end"
-          fill="var(--color-pf-text-muted)"
+          fill="var(--text-tertiary)"
           fontSize="6"
         >
           5m ago
@@ -821,9 +821,9 @@ const features = [
           width="180"
           height="26"
           rx="5"
-          fill="var(--color-pf-success)"
+          fill="var(--gain)"
           fillOpacity="0.06"
-          stroke="var(--color-pf-success)"
+          stroke="var(--gain)"
           strokeOpacity="0.2"
           strokeWidth="1"
         />
@@ -831,9 +831,9 @@ const features = [
           cx="24"
           cy="85"
           r="6"
-          fill="var(--color-pf-success)"
+          fill="var(--gain)"
           fillOpacity="0.15"
-          stroke="var(--color-pf-success)"
+          stroke="var(--gain)"
           strokeOpacity="0.3"
           strokeWidth="0.5"
         />
@@ -841,7 +841,7 @@ const features = [
           x="24"
           y="88"
           textAnchor="middle"
-          fill="var(--color-pf-success)"
+          fill="var(--gain)"
           fontSize="7"
           fontWeight="700"
         >
@@ -850,20 +850,20 @@ const features = [
         <text
           x="38"
           y="82"
-          fill="var(--color-pf-text)"
+          fill="var(--text-primary)"
           fontSize="7"
           fontWeight="600"
         >
           0xa1..9c bought
         </text>
-        <text x="38" y="92" fill="var(--color-pf-success)" fontSize="7">
+        <text x="38" y="92" fill="var(--gain)" fontSize="7">
           $88K YES
         </text>
         <text
           x="182"
           y="88"
           textAnchor="end"
-          fill="var(--color-pf-text-muted)"
+          fill="var(--text-tertiary)"
           fontSize="6"
         >
           8m ago
@@ -875,7 +875,7 @@ const features = [
     title: "AI Portfolio Review",
     description:
       "Get AI-powered insights on your portfolio, risk exposure, and trading opportunities.",
-    gradientClass: "from-pf-purple-400/[var(--opacity-pf-subtle)]",
+    gradientClass: "from-purple-400/[var(--opacity-subtle)]",
     icon: <Code2 size={24} aria-hidden="true" />,
     visual: (
       <svg viewBox="0 0 200 100" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -885,9 +885,9 @@ const features = [
           width="180"
           height="84"
           rx="6"
-          fill="var(--color-pf-cyan-500)"
+          fill="var(--accent-default)"
           fillOpacity="0.04"
-          stroke="var(--color-pf-cyan-500)"
+          stroke="var(--accent-default)"
           strokeOpacity="0.2"
           strokeWidth="1"
         />
@@ -895,21 +895,21 @@ const features = [
           cx="22"
           cy="18"
           r="3"
-          fill="var(--color-pf-danger)"
+          fill="var(--loss)"
           fillOpacity="0.5"
         />
         <circle
           cx="32"
           cy="18"
           r="3"
-          fill="var(--color-pf-warning)"
+          fill="var(--warning)"
           fillOpacity="0.5"
         />
         <circle
           cx="42"
           cy="18"
           r="3"
-          fill="var(--color-pf-success)"
+          fill="var(--gain)"
           fillOpacity="0.5"
         />
         <line
@@ -917,24 +917,24 @@ const features = [
           y1="26"
           x2="190"
           y2="26"
-          stroke="var(--color-pf-text)"
+          stroke="var(--text-primary)"
           strokeOpacity="0.06"
           strokeWidth="1"
         />
-        <text x="20" y="39" fill="var(--color-pf-text-muted)" fontSize="6.5">
+        <text x="20" y="39" fill="var(--text-tertiary)" fontSize="6.5">
           import {"{"} PolyforgeClient {"}"} from
         </text>
-        <text x="20" y="50" fill="var(--color-pf-purple-400)" fontSize="6.5">
+        <text x="20" y="50" fill="var(--color-purple-400)" fontSize="6.5">
           &apos;@polyforge/sdk&apos;;
         </text>
-        <text x="20" y="63" fill="var(--color-pf-cyan-400)" fontSize="6.5">
+        <text x="20" y="63" fill="var(--accent-text)" fontSize="6.5">
           for await (const event of
         </text>
-        <text x="20" y="74" fill="var(--color-pf-cyan-400)" fontSize="6.5">
+        <text x="20" y="74" fill="var(--accent-text)" fontSize="6.5">
           {" "}
           client.watchStrategy(id)) {"{"}
         </text>
-        <text x="20" y="85" fill="var(--color-pf-success)" fontSize="6.5">
+        <text x="20" y="85" fill="var(--gain)" fontSize="6.5">
           {" "}
           console.log(event.type); {"}"}
         </text>
@@ -946,15 +946,15 @@ const features = [
 export function Features() {
   return (
     <section className="py-24" id="features" aria-labelledby="features-heading">
-      <div className="max-w-pf-container-landing mx-auto px-6">
-        <div className="text-center max-w-pf-content-sm mx-auto mb-14">
+      <div className="max-w-container-landing mx-auto px-6">
+        <div className="text-center max-w-content-sm mx-auto mb-14">
           <h2
             id="features-heading"
-            className="text-2xl sm:text-3xl font-semibold text-pf-text mb-4"
+            className="text-2xl sm:text-3xl font-semibold text-primary mb-4"
           >
             Everything you need to trade smarter
           </h2>
-          <p className="text-pf-subhead text-pf-text-secondary">
+          <p className="text-display-sm text-secondary">
             From idea to live strategy in minutes, not months.
           </p>
         </div>
@@ -963,11 +963,11 @@ export function Features() {
           {features.map((feature) => (
             <article
               key={feature.title}
-              className={`bg-pf-surface bg-gradient-to-br ${feature.gradientClass} to-pf-surface border border-pf-border-subtle rounded-pf-lg transition-all duration-pf-normal hover:border-pf-cyan-500/30 hover:shadow-pf-md`}
+              className={`bg-surface bg-gradient-to-br ${feature.gradientClass} to-surface border border-subtle rounded-xl transition-all duration-panel hover:border-accent/30 hover:shadow-md`}
             >
               {/* Visual preview */}
               <div
-                className="px-4 py-3 border-b border-pf-border-subtle bg-pf-base/20 rounded-t-pf-lg overflow-hidden"
+                className="px-4 py-3 border-b border-subtle bg-app/20 rounded-t-xl overflow-hidden"
                 aria-hidden="true"
               >
                 <div className="w-full h-auto">{feature.visual}</div>
@@ -975,14 +975,14 @@ export function Features() {
 
               <div className="p-5 sm:p-7">
                 {/* Icon */}
-                <div className="w-14 h-14 bg-pf-cyan-500/8 border border-pf-cyan-500/20 rounded-pf-md flex items-center justify-center text-pf-cyan-400 mb-5">
+                <div className="w-14 h-14 bg-accent/8 border border-accent/20 rounded-lg flex items-center justify-center text-accent-text mb-5">
                   {feature.icon}
                 </div>
 
-                <h3 className="text-pf-subhead font-semibold text-pf-text mb-3">
+                <h3 className="text-display-sm font-semibold text-primary mb-3">
                   {feature.title}
                 </h3>
-                <p className="text-sm text-pf-text-secondary leading-7">
+                <p className="text-sm text-secondary leading-7">
                   {feature.description}
                 </p>
               </div>

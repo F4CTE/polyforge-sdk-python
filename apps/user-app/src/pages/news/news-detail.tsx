@@ -37,7 +37,7 @@ function sourceColor(source: string): string {
     Reuters: 'bg-info/15 text-info border-info/30',
     CNN: 'bg-loss/15 text-loss border-loss/30',
     CoinGecko: 'bg-warning/15 text-warning border-warning/30',
-    Bloomberg: 'bg-pf-purple-500/15 text-pf-purple-500 border-pf-purple-500/30',
+    Bloomberg: 'bg-purple-500/15 text-purple-500 border-purple-500/30',
     'AP News': 'bg-gain/15 text-gain border-gain/30',
   };
   return map[source] ?? 'bg-overlay text-tertiary border-default';
@@ -122,7 +122,7 @@ export function Component() {
       {/* Back link */}
       <Link
         to="/news"
-        className="inline-flex items-center gap-2 text-sm text-secondary hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 rounded-pf-sm transition-colors"
+        className="inline-flex items-center gap-2 text-sm text-secondary hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 rounded-sm transition-colors"
       >
         <ArrowLeft className="size-4" aria-hidden="true" /> News
       </Link>
@@ -146,13 +146,13 @@ export function Component() {
       {!loading && article && (
         <>
           {/* Article header */}
-          <div className="bg-elevated border border-default rounded-pf-lg p-6 space-y-4">
+          <div className="bg-elevated border border-default rounded-xl p-6 space-y-4">
             {/* Badges */}
             <div className="flex items-center gap-2 flex-wrap">
-              <span className={`px-2 py-1 rounded-pf-full text-pf-label font-medium border ${sourceColor(article.source)}`}>
+              <span className={`px-2 py-1 rounded-full text-label font-medium border ${sourceColor(article.source)}`}>
                 {article.source}
               </span>
-              <span className={`px-2 py-1 rounded-pf-full text-pf-label font-medium ${sentimentColor(article.sentiment)}`}>
+              <span className={`px-2 py-1 rounded-full text-label font-medium ${sentimentColor(article.sentiment)}`}>
                 {article.sentiment}
               </span>
             </div>
@@ -171,14 +171,14 @@ export function Component() {
               href={article.url?.startsWith('https://') ? article.url : '#'}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-3 py-2 rounded-pf-sm text-xs font-medium border border-accent/30 text-accent-text hover:bg-accent/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 transition-colors"
+              className="inline-flex items-center gap-2 px-3 py-2 rounded-sm text-xs font-medium border border-accent/30 text-accent-text hover:bg-accent/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 transition-colors"
             >
               <ExternalLink className="size-4" aria-hidden="true" /> Read full article
             </a>
           </div>
 
           {/* Signals table */}
-          <div data-testid="signal-section" className="bg-elevated border border-default rounded-pf-lg p-6">
+          <div data-testid="signal-section" className="bg-elevated border border-default rounded-xl p-6">
             <h2 className="text-sm font-medium text-primary mb-4">
               Signals ({article.signals.length})
             </h2>
@@ -216,7 +216,7 @@ export function Component() {
                           </span>
                         </td>
                         <td className="py-3 px-3">
-                          <span className={`px-2 py-1 rounded text-pf-caption font-semibold ${
+                          <span className={`px-2 py-1 rounded text-caption font-semibold ${
                             signal.outcome === 'YES' ? 'bg-gain/15 text-gain' : 'bg-loss/15 text-loss'
                           }`}>
                             {signal.outcome}
@@ -224,9 +224,9 @@ export function Component() {
                         </td>
                         <td data-testid="signal-strength" className="py-3 px-3">
                           <div className="flex items-center gap-2 min-w-[100px]">
-                            <div className={`h-2 rounded-pf-full flex-1 ${confidenceBarBg(signal.confidence)}`}>
+                            <div className={`h-2 rounded-full flex-1 ${confidenceBarBg(signal.confidence)}`}>
                               <div
-                                className={`h-full rounded-pf-full ${confidenceColor(signal.confidence)}`}
+                                className={`h-full rounded-full ${confidenceColor(signal.confidence)}`}
                                 style={{ width: `${signal.confidence}%` }}
                               />
                             </div>
@@ -237,7 +237,7 @@ export function Component() {
                         <td className="py-3 px-3 text-right">
                           <Link
                             to={`/markets/${signal.marketId}`}
-                            className="px-3 py-1 rounded-pf-sm text-pf-label font-medium border border-accent/30 text-accent-text hover:bg-accent/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 transition-colors"
+                            className="px-3 py-1 rounded-sm text-label font-medium border border-accent/30 text-accent-text hover:bg-accent/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 transition-colors"
                           >
                             Trade
                           </Link>

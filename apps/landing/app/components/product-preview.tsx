@@ -4,17 +4,17 @@ export function ProductPreview() {
       className="pt-8 -mt-2 overflow-hidden"
       aria-label="Product dashboard preview"
     >
-      <div className="max-w-pf-container-landing mx-auto px-6">
-        <div className="bg-pf-surface border border-pf-border-subtle rounded-pf-lg overflow-hidden transition-transform duration-pf-slow shadow-pf-lg product-preview-tilt">
+      <div className="max-w-container-landing mx-auto px-6">
+        <div className="bg-surface border border-subtle rounded-xl overflow-hidden transition-transform duration-slow shadow-lg product-preview-tilt">
           {/* Browser chrome */}
           <div
-            className="flex items-center gap-2 px-4 py-3 border-b border-pf-border-subtle bg-pf-elevated"
+            className="flex items-center gap-2 px-4 py-3 border-b border-subtle bg-elevated"
             aria-hidden="true"
           >
-            <span className="w-3 h-3 rounded-pf-full bg-pf-danger" />
-            <span className="w-3 h-3 rounded-pf-full bg-pf-warning" />
-            <span className="w-3 h-3 rounded-pf-full bg-pf-success" />
-            <span className="flex-1 text-center text-pf-label font-mono text-pf-text-muted bg-pf-text/4 rounded-pf-sm px-3 py-1 ml-2">
+            <span className="w-3 h-3 rounded-full bg-loss" />
+            <span className="w-3 h-3 rounded-full bg-warning" />
+            <span className="w-3 h-3 rounded-full bg-gain" />
+            <span className="flex-1 text-center text-label font-mono text-tertiary bg-primary/4 rounded-sm px-3 py-1 ml-2">
               app.polyforge.app/dashboard
             </span>
           </div>
@@ -37,21 +37,21 @@ export function ProductPreview() {
                 y="0"
                 width="180"
                 height="440"
-                fill="var(--color-pf-base)"
+                fill="var(--bg-app)"
               />
               <rect
                 x="0"
                 y="0"
                 width="180"
                 height="440"
-                stroke="var(--color-pf-text)"
+                stroke="var(--text-primary)"
                 strokeOpacity="0.06"
                 strokeWidth="1"
               />
               <text
                 x="24"
                 y="32"
-                fill="var(--color-pf-cyan-300)"
+                fill="var(--color-cyan-300)"
                 fontSize="13"
                 fontWeight="700"
               >
@@ -63,13 +63,13 @@ export function ProductPreview() {
                 width="156"
                 height="32"
                 rx="6"
-                fill="var(--color-pf-cyan-500)"
+                fill="var(--accent-default)"
                 fillOpacity="0.1"
               />
               <text
                 x="44"
                 y="76"
-                fill="var(--color-pf-cyan-400)"
+                fill="var(--accent-text)"
                 fontSize="11"
                 fontWeight="500"
               >
@@ -79,13 +79,13 @@ export function ProductPreview() {
                 cx="28"
                 cy="72"
                 r="4"
-                fill="var(--color-pf-cyan-500)"
+                fill="var(--accent-default)"
                 fillOpacity="0.5"
               />
               <text
                 x="44"
                 y="112"
-                fill="var(--color-pf-text-muted)"
+                fill="var(--text-tertiary)"
                 fontSize="11"
               >
                 Markets
@@ -94,13 +94,13 @@ export function ProductPreview() {
                 cx="28"
                 cy="108"
                 r="3"
-                fill="var(--color-pf-text)"
+                fill="var(--text-primary)"
                 fillOpacity="0.1"
               />
               <text
                 x="44"
                 y="144"
-                fill="var(--color-pf-text-muted)"
+                fill="var(--text-tertiary)"
                 fontSize="11"
               >
                 Strategies
@@ -109,13 +109,13 @@ export function ProductPreview() {
                 cx="28"
                 cy="140"
                 r="3"
-                fill="var(--color-pf-text)"
+                fill="var(--text-primary)"
                 fillOpacity="0.1"
               />
               <text
                 x="44"
                 y="176"
-                fill="var(--color-pf-text-muted)"
+                fill="var(--text-tertiary)"
                 fontSize="11"
               >
                 Whale Tracker
@@ -124,13 +124,13 @@ export function ProductPreview() {
                 cx="28"
                 cy="172"
                 r="3"
-                fill="var(--color-pf-success)"
+                fill="var(--gain)"
                 fillOpacity="0.4"
               />
               <text
                 x="44"
                 y="208"
-                fill="var(--color-pf-text-muted)"
+                fill="var(--text-tertiary)"
                 fontSize="11"
               >
                 Copy Trading
@@ -139,13 +139,13 @@ export function ProductPreview() {
                 cx="28"
                 cy="204"
                 r="3"
-                fill="var(--color-pf-success)"
+                fill="var(--gain)"
                 fillOpacity="0.4"
               />
               <text
                 x="44"
                 y="240"
-                fill="var(--color-pf-text-muted)"
+                fill="var(--text-tertiary)"
                 fontSize="11"
               >
                 AI Signals
@@ -154,13 +154,13 @@ export function ProductPreview() {
                 cx="28"
                 cy="236"
                 r="3"
-                fill="var(--color-pf-purple-400)"
+                fill="var(--color-purple-400)"
                 fillOpacity="0.4"
               />
               <text
                 x="44"
                 y="272"
-                fill="var(--color-pf-text-muted)"
+                fill="var(--text-tertiary)"
                 fontSize="11"
               >
                 Orders
@@ -169,13 +169,13 @@ export function ProductPreview() {
                 cx="28"
                 cy="268"
                 r="3"
-                fill="var(--color-pf-text)"
+                fill="var(--text-primary)"
                 fillOpacity="0.1"
               />
               <text
                 x="44"
                 y="304"
-                fill="var(--color-pf-text-muted)"
+                fill="var(--text-tertiary)"
                 fontSize="11"
               >
                 Portfolio
@@ -184,13 +184,13 @@ export function ProductPreview() {
                 cx="28"
                 cy="300"
                 r="3"
-                fill="var(--color-pf-text)"
+                fill="var(--text-primary)"
                 fillOpacity="0.1"
               />
               <text
                 x="44"
                 y="336"
-                fill="var(--color-pf-text-muted)"
+                fill="var(--text-tertiary)"
                 fontSize="11"
               >
                 API Keys
@@ -199,7 +199,7 @@ export function ProductPreview() {
                 cx="28"
                 cy="332"
                 r="3"
-                fill="var(--color-pf-text)"
+                fill="var(--text-primary)"
                 fillOpacity="0.1"
               />
 
@@ -209,12 +209,12 @@ export function ProductPreview() {
                 y="0"
                 width="720"
                 height="440"
-                fill="var(--color-pf-base)"
+                fill="var(--bg-app)"
               />
               <text
                 x="204"
                 y="32"
-                fill="var(--color-pf-text)"
+                fill="var(--text-primary)"
                 fontSize="14"
                 fontWeight="600"
               >
@@ -226,9 +226,9 @@ export function ProductPreview() {
                 width="80"
                 height="28"
                 rx="6"
-                fill="var(--color-pf-cyan-500)"
+                fill="var(--accent-default)"
                 fillOpacity="0.15"
-                stroke="var(--color-pf-cyan-500)"
+                stroke="var(--accent-default)"
                 strokeOpacity="0.3"
                 strokeWidth="1"
               />
@@ -236,7 +236,7 @@ export function ProductPreview() {
                 x="800"
                 y="33"
                 textAnchor="middle"
-                fill="var(--color-pf-cyan-400)"
+                fill="var(--accent-text)"
                 fontSize="10"
                 fontWeight="500"
               >
@@ -250,15 +250,15 @@ export function ProductPreview() {
                 width="220"
                 height="100"
                 rx="10"
-                fill="var(--color-pf-base)"
-                stroke="var(--color-pf-text)"
+                fill="var(--bg-app)"
+                stroke="var(--text-primary)"
                 strokeOpacity="0.08"
                 strokeWidth="1"
               />
               <text
                 x="224"
                 y="76"
-                fill="var(--color-pf-text-muted)"
+                fill="var(--text-tertiary)"
                 fontSize="10"
               >
                 {"Total P&L"}
@@ -266,7 +266,7 @@ export function ProductPreview() {
               <text
                 x="224"
                 y="102"
-                fill="var(--color-pf-success)"
+                fill="var(--gain)"
                 fontSize="22"
                 fontWeight="700"
               >
@@ -275,14 +275,14 @@ export function ProductPreview() {
               <text
                 x="224"
                 y="122"
-                fill="var(--color-pf-success)"
+                fill="var(--gain)"
                 fontSize="10"
               >
                 +18.3% all time
               </text>
               <polyline
                 points="330,105 345,98 360,100 375,88 390,82 405,78"
-                stroke="var(--color-pf-success)"
+                stroke="var(--gain)"
                 strokeWidth="1.5"
                 fill="none"
               />
@@ -294,15 +294,15 @@ export function ProductPreview() {
                 width="220"
                 height="100"
                 rx="10"
-                fill="var(--color-pf-base)"
-                stroke="var(--color-pf-text)"
+                fill="var(--bg-app)"
+                stroke="var(--text-primary)"
                 strokeOpacity="0.08"
                 strokeWidth="1"
               />
               <text
                 x="460"
                 y="76"
-                fill="var(--color-pf-text-muted)"
+                fill="var(--text-tertiary)"
                 fontSize="10"
               >
                 Win Rate
@@ -310,7 +310,7 @@ export function ProductPreview() {
               <text
                 x="460"
                 y="102"
-                fill="var(--color-pf-text)"
+                fill="var(--text-primary)"
                 fontSize="22"
                 fontWeight="700"
               >
@@ -319,7 +319,7 @@ export function ProductPreview() {
               <text
                 x="460"
                 y="122"
-                fill="var(--color-pf-text-muted)"
+                fill="var(--text-tertiary)"
                 fontSize="10"
               >
                 142 / 212 trades
@@ -332,15 +332,15 @@ export function ProductPreview() {
                 width="148"
                 height="100"
                 rx="10"
-                fill="var(--color-pf-base)"
-                stroke="var(--color-pf-text)"
+                fill="var(--bg-app)"
+                stroke="var(--text-primary)"
                 strokeOpacity="0.08"
                 strokeWidth="1"
               />
               <text
                 x="696"
                 y="76"
-                fill="var(--color-pf-text-muted)"
+                fill="var(--text-tertiary)"
                 fontSize="10"
               >
                 Active
@@ -348,7 +348,7 @@ export function ProductPreview() {
               <text
                 x="696"
                 y="102"
-                fill="var(--color-pf-text)"
+                fill="var(--text-primary)"
                 fontSize="22"
                 fontWeight="700"
               >
@@ -357,7 +357,7 @@ export function ProductPreview() {
               <text
                 x="696"
                 y="122"
-                fill="var(--color-pf-cyan-400)"
+                fill="var(--accent-text)"
                 fontSize="10"
               >
                 strategies live
@@ -370,12 +370,12 @@ export function ProductPreview() {
                 width="340"
                 height="80"
                 rx="10"
-                fill="var(--color-pf-base)"
-                stroke="var(--color-pf-text)"
+                fill="var(--bg-app)"
+                stroke="var(--text-primary)"
                 strokeOpacity="0.08"
                 strokeWidth="1"
               />
-              <circle cx="224" cy="198" r="5" fill="var(--color-pf-success)">
+              <circle cx="224" cy="198" r="5" fill="var(--gain)">
                 <animate
                   attributeName="opacity"
                   values="1;0.4;1"
@@ -386,7 +386,7 @@ export function ProductPreview() {
               <text
                 x="238"
                 y="201"
-                fill="var(--color-pf-text)"
+                fill="var(--text-primary)"
                 fontSize="12"
                 fontWeight="600"
               >
@@ -395,7 +395,7 @@ export function ProductPreview() {
               <text
                 x="460"
                 y="201"
-                fill="var(--color-pf-success)"
+                fill="var(--gain)"
                 fontSize="11"
                 textAnchor="end"
               >
@@ -404,14 +404,14 @@ export function ProductPreview() {
               <text
                 x="238"
                 y="222"
-                fill="var(--color-pf-text-muted)"
+                fill="var(--text-tertiary)"
                 fontSize="9"
               >
                 {"Polymarket  \u00b7  12 active positions  \u00b7  Sharpe 1.84"}
               </text>
               <polyline
                 points="224,242 260,238 296,234 332,240 368,230 404,225 440,222 476,218 512,214"
-                stroke="var(--color-pf-cyan-500)"
+                stroke="var(--accent-default)"
                 strokeOpacity="0.5"
                 strokeWidth="1.2"
                 fill="none"
@@ -424,12 +424,12 @@ export function ProductPreview() {
                 width="340"
                 height="80"
                 rx="10"
-                fill="var(--color-pf-base)"
-                stroke="var(--color-pf-text)"
+                fill="var(--bg-app)"
+                stroke="var(--text-primary)"
                 strokeOpacity="0.08"
                 strokeWidth="1"
               />
-              <circle cx="224" cy="294" r="5" fill="var(--color-pf-success)">
+              <circle cx="224" cy="294" r="5" fill="var(--gain)">
                 <animate
                   attributeName="opacity"
                   values="1;0.4;1"
@@ -440,7 +440,7 @@ export function ProductPreview() {
               <text
                 x="238"
                 y="297"
-                fill="var(--color-pf-text)"
+                fill="var(--text-primary)"
                 fontSize="12"
                 fontWeight="600"
               >
@@ -449,7 +449,7 @@ export function ProductPreview() {
               <text
                 x="460"
                 y="297"
-                fill="var(--color-pf-success)"
+                fill="var(--gain)"
                 fontSize="11"
                 textAnchor="end"
               >
@@ -458,14 +458,14 @@ export function ProductPreview() {
               <text
                 x="238"
                 y="318"
-                fill="var(--color-pf-text-muted)"
+                fill="var(--text-tertiary)"
                 fontSize="9"
               >
                 {"Polymarket  \u00b7  6 active positions  \u00b7  Sharpe 1.42"}
               </text>
               <polyline
                 points="224,338 260,340 296,336 332,330 368,335 404,328 440,324 476,320 512,316"
-                stroke="var(--color-pf-cyan-500)"
+                stroke="var(--accent-default)"
                 strokeOpacity="0.5"
                 strokeWidth="1.2"
                 fill="none"
@@ -478,15 +478,15 @@ export function ProductPreview() {
                 width="264"
                 height="70"
                 rx="10"
-                fill="var(--color-pf-base)"
-                stroke="var(--color-pf-text)"
+                fill="var(--bg-app)"
+                stroke="var(--text-primary)"
                 strokeOpacity="0.08"
                 strokeWidth="1"
               />
               <text
                 x="580"
                 y="196"
-                fill="var(--color-pf-text)"
+                fill="var(--text-primary)"
                 fontSize="11"
                 fontWeight="500"
               >
@@ -495,7 +495,7 @@ export function ProductPreview() {
               <text
                 x="580"
                 y="214"
-                fill="var(--color-pf-text-muted)"
+                fill="var(--text-tertiary)"
                 fontSize="9"
               >
                 {"YES 0.42  \u00b7  NO 0.58"}
@@ -503,7 +503,7 @@ export function ProductPreview() {
               <text
                 x="780"
                 y="196"
-                fill="var(--color-pf-cyan-400)"
+                fill="var(--accent-text)"
                 fontSize="10"
                 textAnchor="end"
               >
@@ -515,7 +515,7 @@ export function ProductPreview() {
                 width="100"
                 height="4"
                 rx="2"
-                fill="var(--color-pf-text)"
+                fill="var(--text-primary)"
                 fillOpacity="0.06"
               />
               <rect
@@ -524,7 +524,7 @@ export function ProductPreview() {
                 width="42"
                 height="4"
                 rx="2"
-                fill="var(--color-pf-cyan-500)"
+                fill="var(--accent-default)"
                 fillOpacity="0.5"
               />
 
@@ -534,15 +534,15 @@ export function ProductPreview() {
                 width="264"
                 height="70"
                 rx="10"
-                fill="var(--color-pf-base)"
-                stroke="var(--color-pf-text)"
+                fill="var(--bg-app)"
+                stroke="var(--text-primary)"
                 strokeOpacity="0.08"
                 strokeWidth="1"
               />
               <text
                 x="580"
                 y="280"
-                fill="var(--color-pf-text)"
+                fill="var(--text-primary)"
                 fontSize="11"
                 fontWeight="500"
               >
@@ -551,7 +551,7 @@ export function ProductPreview() {
               <text
                 x="580"
                 y="298"
-                fill="var(--color-pf-text-muted)"
+                fill="var(--text-tertiary)"
                 fontSize="9"
               >
                 {"YES 0.31  \u00b7  NO 0.69"}
@@ -559,7 +559,7 @@ export function ProductPreview() {
               <text
                 x="780"
                 y="280"
-                fill="var(--color-pf-cyan-400)"
+                fill="var(--accent-text)"
                 fontSize="10"
                 textAnchor="end"
               >
@@ -571,7 +571,7 @@ export function ProductPreview() {
                 width="100"
                 height="4"
                 rx="2"
-                fill="var(--color-pf-text)"
+                fill="var(--text-primary)"
                 fillOpacity="0.06"
               />
               <rect
@@ -580,7 +580,7 @@ export function ProductPreview() {
                 width="31"
                 height="4"
                 rx="2"
-                fill="var(--color-pf-cyan-500)"
+                fill="var(--accent-default)"
                 fillOpacity="0.5"
               />
 
@@ -590,15 +590,15 @@ export function ProductPreview() {
                 width="264"
                 height="70"
                 rx="10"
-                fill="var(--color-pf-base)"
-                stroke="var(--color-pf-text)"
+                fill="var(--bg-app)"
+                stroke="var(--text-primary)"
                 strokeOpacity="0.08"
                 strokeWidth="1"
               />
               <text
                 x="580"
                 y="364"
-                fill="var(--color-pf-text)"
+                fill="var(--text-primary)"
                 fontSize="11"
                 fontWeight="500"
               >
@@ -607,7 +607,7 @@ export function ProductPreview() {
               <text
                 x="580"
                 y="382"
-                fill="var(--color-pf-text-muted)"
+                fill="var(--text-tertiary)"
                 fontSize="9"
               >
                 {"YES 0.73  \u00b7  NO 0.27"}
@@ -615,7 +615,7 @@ export function ProductPreview() {
               <text
                 x="780"
                 y="364"
-                fill="var(--color-pf-cyan-400)"
+                fill="var(--accent-text)"
                 fontSize="10"
                 textAnchor="end"
               >
@@ -627,7 +627,7 @@ export function ProductPreview() {
                 width="100"
                 height="4"
                 rx="2"
-                fill="var(--color-pf-text)"
+                fill="var(--text-primary)"
                 fillOpacity="0.06"
               />
               <rect
@@ -636,7 +636,7 @@ export function ProductPreview() {
                 width="73"
                 height="4"
                 rx="2"
-                fill="var(--color-pf-cyan-500)"
+                fill="var(--accent-default)"
                 fillOpacity="0.5"
               />
             </svg>

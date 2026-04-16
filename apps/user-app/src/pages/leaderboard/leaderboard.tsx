@@ -70,16 +70,16 @@ function pnlSign(pnl: string): string {
 }
 
 function rankMedal(rank: number): React.ReactNode {
-  if (rank === 1) return <Trophy data-testid="medal-badge" data-medal="gold" className="size-4 text-pf-gold-400" aria-label="Gold medal" />;
+  if (rank === 1) return <Trophy data-testid="medal-badge" data-medal="gold" className="size-4 text-gold-400" aria-label="Gold medal" />;
   if (rank === 2) return <Trophy data-testid="medal-badge" data-medal="silver" className="size-4 text-secondary" aria-label="Silver medal" />;
-  if (rank === 3) return <Trophy data-testid="medal-badge" data-medal="bronze" className="size-4 text-pf-gold-600" aria-label="Bronze medal" />;
+  if (rank === 3) return <Trophy data-testid="medal-badge" data-medal="bronze" className="size-4 text-gold-600" aria-label="Bronze medal" />;
   return null;
 }
 
 function rankColor(rank: number): string {
   if (rank === 1) return 'text-warning'; /* gold */
   if (rank === 2) return 'text-secondary';
-  if (rank === 3) return 'text-pf-gold-600';
+  if (rank === 3) return 'text-gold-600';
   return 'text-tertiary';
 }
 
@@ -181,7 +181,7 @@ export function Component() {
             role="tab"
             aria-selected={period === p.value}
             onClick={() => changePeriod(p.value)}
-            className={`px-3 py-2 rounded-pf-full text-xs font-medium whitespace-nowrap border transition-colors ${
+            className={`px-3 py-2 rounded-full text-xs font-medium whitespace-nowrap border transition-colors ${
               period === p.value
                 ? 'bg-accent/15 text-accent-text border-accent/30'
                 : 'bg-elevated text-secondary border-default hover:border-strong'
@@ -200,7 +200,7 @@ export function Component() {
             variant="ghost"
             key={String(cat.value)}
             onClick={() => changeCategory(cat.value)}
-            className={`px-3 py-2 rounded-pf-full text-xs font-medium whitespace-nowrap border transition-colors ${
+            className={`px-3 py-2 rounded-full text-xs font-medium whitespace-nowrap border transition-colors ${
               category === cat.value
                 ? 'bg-accent/15 text-accent-text border-accent/30'
                 : 'bg-elevated text-secondary border-default hover:border-strong'
@@ -226,7 +226,7 @@ export function Component() {
       </div>
 
       {/* Table */}
-      <div data-testid="leaderboard-table" className="bg-elevated border border-default rounded-pf-lg overflow-hidden">
+      <div data-testid="leaderboard-table" className="bg-elevated border border-default rounded-xl overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm" aria-label="Leaderboard rankings">
             <thead>
@@ -275,9 +275,9 @@ export function Component() {
                       <div className="flex items-center gap-2">
                       <Link to={`/profile/${entry.username}`} data-testid={`trader-${entry.username}`} className="flex items-center gap-3 hover:text-accent-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 transition-colors">
                         {entry.avatarUrl ? (
-                          <img src={entry.avatarUrl} alt={`${entry.displayName ?? entry.username} avatar`} className="size-8 rounded-pf-full object-cover" width={32} height={32} loading="lazy" />
+                          <img src={entry.avatarUrl} alt={`${entry.displayName ?? entry.username} avatar`} className="size-8 rounded-full object-cover" width={32} height={32} loading="lazy" />
                         ) : (
-                          <div className="size-8 rounded-pf-full bg-surface flex items-center justify-center text-pf-label font-semibold text-accent-text">
+                          <div className="size-8 rounded-full bg-surface flex items-center justify-center text-label font-semibold text-accent-text">
                             {userInitials(entry)}
                           </div>
                         )}
@@ -291,7 +291,7 @@ export function Component() {
                       <Link
                         to={`/copy/new?address=${encodeURIComponent(entry.username)}`}
                         title="Copy trade this trader"
-                        className="shrink-0 text-pf-caption px-2 py-1 rounded border border-accent/30 bg-accent/8 text-accent-text hover:bg-accent/20 transition-colors font-medium"
+                        className="shrink-0 text-caption px-2 py-1 rounded border border-accent/30 bg-accent/8 text-accent-text hover:bg-accent/20 transition-colors font-medium"
                       >
                         Copy Trade
                       </Link>

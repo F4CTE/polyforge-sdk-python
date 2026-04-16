@@ -22,18 +22,18 @@ const testimonials = [
 export function Testimonials() {
   return (
     <section
-      className="py-24 bg-pf-surface border-t border-b border-pf-border-subtle"
+      className="py-24 bg-surface border-t border-b border-subtle"
       aria-labelledby="testimonials-heading"
     >
-      <div className="max-w-pf-container-landing mx-auto px-6">
-        <div className="text-center max-w-pf-content-sm mx-auto mb-14">
+      <div className="max-w-container-landing mx-auto px-6">
+        <div className="text-center max-w-content-sm mx-auto mb-14">
           <h2
             id="testimonials-heading"
-            className="text-2xl sm:text-3xl font-semibold text-pf-text mb-4"
+            className="text-2xl sm:text-3xl font-semibold text-primary mb-4"
           >
             Trusted by traders
           </h2>
-          <p className="text-pf-subhead text-pf-text-secondary">
+          <p className="text-display-sm text-secondary">
             Early adopters are already building their edge.
           </p>
         </div>
@@ -42,31 +42,31 @@ export function Testimonials() {
           {testimonials.map((t) => (
             <figure
               key={t.name}
-              className="animate-fade-in bg-pf-base border border-pf-border-subtle rounded-pf-lg p-6 sm:p-8 transition-all duration-pf-normal hover:border-pf-cyan-500/20"
+              className="animate-fade-in bg-app border border-subtle rounded-xl p-6 sm:p-8 transition-all duration-panel hover:border-accent/20"
             >
               <div
-                className="text-5xl font-semibold leading-none text-pf-cyan-500/15 -mb-2 font-sans"
+                className="text-5xl font-semibold leading-none text-accent/15 -mb-2 font-sans"
                 aria-hidden="true"
               >
                 &ldquo;
               </div>
               <blockquote>
-                <p className="text-sm text-pf-text-secondary leading-7 italic mb-6">
+                <p className="text-sm text-secondary leading-7 italic mb-6">
                   {t.text}
                 </p>
               </blockquote>
               <figcaption className="flex items-center gap-3">
                 <div
-                  className="w-10 h-10 rounded-pf-full bg-gradient-to-br from-pf-cyan-500/20 to-pf-cyan-500/5 border border-pf-cyan-500/25 flex items-center justify-center text-pf-body-sm font-semibold text-pf-cyan-400 font-mono shrink-0"
+                  className="w-10 h-10 rounded-full bg-gradient-to-br from-accent/20 to-accent/5 border border-accent/25 flex items-center justify-center text-body-sm font-semibold text-accent-text font-mono shrink-0"
                   aria-hidden="true"
                 >
                   {t.initials}
                 </div>
                 <cite className="not-italic">
-                  <div className="text-sm font-semibold text-pf-text">
+                  <div className="text-sm font-semibold text-primary">
                     {t.name}
                   </div>
-                  <div className="text-xs text-pf-text-muted mt-1">
+                  <div className="text-xs text-tertiary mt-1">
                     {t.role}
                   </div>
                 </cite>

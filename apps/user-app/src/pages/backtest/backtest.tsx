@@ -248,7 +248,7 @@ export function Component() {
       </div>
 
       {/* New run panel */}
-      <div className="bg-elevated border border-default rounded-pf-lg p-5">
+      <div className="bg-elevated border border-default rounded-xl p-5">
         <div className="flex items-center gap-2 mb-4">
           <Play className="size-4 text-accent-text" />
           <span className="text-sm font-medium text-primary">New Backtest</span>
@@ -321,7 +321,7 @@ export function Component() {
                       className="w-full h-9 px-3 rounded-pf bg-surface border border-default text-sm text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:border-accent/50 transition-colors"
                     />
                     {marketBindings[slot.slot] && (
-                      <span className="absolute right-2 top-1/2 -translate-y-1/2 text-pf-caption text-accent-text font-mono">bound</span>
+                      <span className="absolute right-2 top-1/2 -translate-y-1/2 text-caption text-accent-text font-mono">bound</span>
                     )}
                   </div>
                   {(marketResults[slot.slot] ?? []).length > 0 && (
@@ -352,7 +352,7 @@ export function Component() {
 
       {/* Selected run detail */}
       {selectedRun && (
-        <div className="bg-elevated border border-default rounded-pf-lg p-5">
+        <div className="bg-elevated border border-default rounded-xl p-5">
           <div className="flex items-start justify-between mb-4">
             <div>
               <div className="text-sm font-medium text-primary">{selectedRun.strategyName ?? 'Unnamed Strategy'}</div>
@@ -371,8 +371,8 @@ export function Component() {
                 </span>
                 <span className="text-xs font-mono text-accent-text">{selectedRun.progress}%</span>
               </div>
-              <div className="h-2 bg-overlay rounded-pf-full overflow-hidden">
-                <div className="h-full bg-accent rounded-pf-full transition-all" style={{ width: `${selectedRun.progress}%` }} />
+              <div className="h-2 bg-overlay rounded-full overflow-hidden">
+                <div className="h-full bg-accent rounded-full transition-all" style={{ width: `${selectedRun.progress}%` }} />
               </div>
             </div>
           )}
@@ -381,7 +381,7 @@ export function Component() {
             <>
               {/* Simulated results badge — compliance (CLAUDE.md hard rule) */}
               <div className="flex items-center gap-2 mb-2">
-                <span className="text-xs font-medium bg-warning/10 text-warning px-2 py-0.5 rounded-pf-sm">Simulated</span>
+                <span className="text-xs font-medium bg-warning/10 text-warning px-2 py-0.5 rounded-sm">Simulated</span>
                 <span className="text-xs text-tertiary">Results based on historical data replay</span>
               </div>
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -451,7 +451,7 @@ export function Component() {
       )}
 
       {/* History table */}
-      <div className="bg-elevated border border-default rounded-pf-lg overflow-hidden">
+      <div className="bg-elevated border border-default rounded-xl overflow-hidden">
         <div className="px-4 pt-4 pb-2">
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-base font-semibold text-primary">Backtest History</h2>
@@ -515,14 +515,14 @@ export function Component() {
                       }`}
                     >
                       <td className="px-4 py-3">
-                        <span className="text-pf-body-sm font-medium text-primary">
+                        <span className="text-body-sm font-medium text-primary">
                           {run.strategyName
                             ?? strategies.find(s => s.id === run.strategyId)?.name
                             ?? (run.strategyId ? `${run.strategyId.slice(0, 8)}...` : '\u2014')}
                         </span>
                       </td>
                       <td className="px-4 py-3">
-                        <span className="font-mono text-pf-label text-tertiary">{dateRangeLabel(run)}</span>
+                        <span className="font-mono text-label text-tertiary">{dateRangeLabel(run)}</span>
                       </td>
                       <td className="px-4 py-3">
                         <span className={`inline-flex px-2 py-1 rounded text-xs font-medium ${ss.bg} ${ss.text}`}>
@@ -532,13 +532,13 @@ export function Component() {
                       <td className="px-4 py-3">
                         {run.status === 'RUNNING' ? (
                           <div className="flex items-center gap-2">
-                            <div className="flex-1 h-2 bg-overlay rounded-pf-full overflow-hidden">
-                              <div className="h-full bg-accent rounded-pf-full" style={{ width: `${run.progress}%` }} />
+                            <div className="flex-1 h-2 bg-overlay rounded-full overflow-hidden">
+                              <div className="h-full bg-accent rounded-full" style={{ width: `${run.progress}%` }} />
                             </div>
-                            <span className="font-mono text-pf-label text-accent-text">{run.progress}%</span>
+                            <span className="font-mono text-label text-accent-text">{run.progress}%</span>
                           </div>
                         ) : run.status === 'COMPLETED' ? (
-                          <span className="font-mono text-pf-label text-gain">100%</span>
+                          <span className="font-mono text-label text-gain">100%</span>
                         ) : (
                           <span className="text-tertiary">\u2014</span>
                         )}
@@ -550,7 +550,7 @@ export function Component() {
                         {winRatePct(run.winRate)}
                       </td>
                       <td className="px-4 py-3 text-right">
-                        <span className="font-mono text-pf-label text-tertiary">{formatShortDate(run.createdAt)}</span>
+                        <span className="font-mono text-label text-tertiary">{formatShortDate(run.createdAt)}</span>
                       </td>
                       {compareMode && (
                         <td className="px-3 py-2 text-right" onClick={e => e.stopPropagation()}>
@@ -559,13 +559,13 @@ export function Component() {
                               type="button"
                               variant="ghost"
                               onClick={() => setCompareA(run.id === compareA ? null : run.id)}
-                              className={`text-pf-caption px-2 py-1 rounded border transition-colors ${compareA === run.id ? 'bg-info/20 border-info/40 text-info' : 'border-default text-tertiary hover:text-primary'}`}
+                              className={`text-caption px-2 py-1 rounded border transition-colors ${compareA === run.id ? 'bg-info/20 border-info/40 text-info' : 'border-default text-tertiary hover:text-primary'}`}
                             >A</Button>
                             <Button
                               type="button"
                               variant="ghost"
                               onClick={() => setCompareB(run.id === compareB ? null : run.id)}
-                              className={`text-pf-caption px-2 py-1 rounded border transition-colors ${compareB === run.id ? 'bg-pf-purple-500/20 border-pf-purple-500/40 text-pf-purple-400' : 'border-default text-tertiary hover:text-primary'}`}
+                              className={`text-caption px-2 py-1 rounded border transition-colors ${compareB === run.id ? 'bg-purple-500/20 border-purple-500/40 text-purple-400' : 'border-default text-tertiary hover:text-primary'}`}
                             >B</Button>
                           </div>
                         </td>
@@ -602,7 +602,7 @@ export function Component() {
               <>
                 {winner && (
                   <div className="mb-3 text-xs text-secondary">
-                    Run <span className={`font-semibold ${winner === 'A' ? 'text-info' : 'text-pf-purple-400'}`}>{winner}</span> outperforms by <span className="font-mono text-gain">{Math.abs(pnlA - pnlB).toFixed(2)}</span>
+                    Run <span className={`font-semibold ${winner === 'A' ? 'text-info' : 'text-purple-400'}`}>{winner}</span> outperforms by <span className="font-mono text-gain">{Math.abs(pnlA - pnlB).toFixed(2)}</span>
                   </div>
                 )}
                 <div className="overflow-x-auto">
@@ -611,7 +611,7 @@ export function Component() {
                       <tr className="border-b border-default">
                         <th className="text-left py-2 pr-4 font-medium text-tertiary">Metric</th>
                         <th className="text-center py-2 px-4 font-medium text-info">Run A</th>
-                        <th className="text-center py-2 px-4 font-medium text-pf-purple-400">Run B</th>
+                        <th className="text-center py-2 px-4 font-medium text-purple-400">Run B</th>
                       </tr>
                     </thead>
                     <tbody>

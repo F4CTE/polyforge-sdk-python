@@ -39,7 +39,7 @@ export const SCOPE_CLS: Record<string, string> = {
 
 export function Badge({ text, cls }: { text: string; cls: string }) {
   return (
-    <span className={`inline-flex items-center text-pf-label font-medium px-2 py-1 rounded-pf-full ${cls}`}>
+    <span className={`inline-flex items-center text-label font-medium px-2 py-1 rounded-full ${cls}`}>
       {text}
     </span>
   );
@@ -58,10 +58,10 @@ export function Code({ code, lang }: { code: string; lang?: string }) {
   }, [code]);
 
   return (
-    <div className="rounded-pf-lg overflow-hidden border border-default">
+    <div className="rounded-xl overflow-hidden border border-default">
       {lang && (
         <div className="flex items-center justify-between px-4 py-2 bg-surface border-b border-default">
-          <span className="text-pf-label font-mono text-tertiary">
+          <span className="text-label font-mono text-tertiary">
             {LANG_LABELS[lang as Lang] ?? lang}
           </span>
           <Button
@@ -70,7 +70,7 @@ export function Code({ code, lang }: { code: string; lang?: string }) {
             size="sm"
             onClick={handleCopy}
             aria-label="Copy code"
-            className="flex items-center gap-1 text-pf-label text-tertiary hover:text-primary transition-colors cursor-pointer"
+            className="flex items-center gap-1 text-label text-tertiary hover:text-primary transition-colors cursor-pointer"
           >
             {copied
               ? <><Check size={12} className="text-gain" /><span className="text-gain">Copied</span></>
@@ -79,7 +79,7 @@ export function Code({ code, lang }: { code: string; lang?: string }) {
           </Button>
         </div>
       )}
-      <pre className="bg-app px-4 py-4 text-pf-label font-mono text-primary overflow-x-auto whitespace-pre leading-relaxed">
+      <pre className="bg-app px-4 py-4 text-label font-mono text-primary overflow-x-auto whitespace-pre leading-relaxed">
         {code.trim()}
       </pre>
     </div>
@@ -90,7 +90,7 @@ export function Code({ code, lang }: { code: string; lang?: string }) {
 
 export function InlineCode({ children }: { children: string }) {
   return (
-    <code className="bg-overlay px-2 py-1 rounded text-pf-label font-mono text-accent-text">
+    <code className="bg-overlay px-2 py-1 rounded text-label font-mono text-accent-text">
       {children}
     </code>
   );
@@ -100,7 +100,7 @@ export function InlineCode({ children }: { children: string }) {
 
 export function FieldTable({ fields }: { fields: EndpointField[] }) {
   return (
-    <div className="border border-default rounded-pf-lg overflow-hidden">
+    <div className="border border-default rounded-xl overflow-hidden">
       <table className="w-full text-sm" aria-label="Field definitions">
         <thead>
           <tr className="bg-surface text-left text-xs text-secondary uppercase tracking-wider border-b border-default">
@@ -159,7 +159,7 @@ export function LangTabs({
           variant="ghost"
           key={l}
           onClick={() => setLang(l)}
-          className={`px-3 py-1 rounded-pf-full text-xs font-medium border transition-colors cursor-pointer ${
+          className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors cursor-pointer ${
             lang === l
               ? 'bg-accent/15 text-accent-text border-accent/30'
               : 'border-default text-secondary hover:border-strong hover:text-primary'
@@ -188,7 +188,7 @@ export function PageTitle({
       <div className="flex items-center gap-3 mb-2">
         <h1 className="text-2xl font-semibold text-primary">{title}</h1>
         {count !== undefined && (
-          <span className="inline-flex items-center text-pf-label font-medium px-2 py-1 rounded-pf-full bg-overlay text-tertiary">
+          <span className="inline-flex items-center text-label font-medium px-2 py-1 rounded-full bg-overlay text-tertiary">
             {count} endpoint{count !== 1 ? 's' : ''}
           </span>
         )}

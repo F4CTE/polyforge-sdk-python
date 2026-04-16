@@ -209,7 +209,7 @@ function ComparisonSkeleton({ count }: { count: number }) {
         <div />
         {Array.from({ length: count }).map((_, i) => (
           <div key={i} className="flex flex-col items-center gap-2">
-            <div className="size-12 rounded-pf-full bg-overlay" />
+            <div className="size-12 rounded-full bg-overlay" />
             <div className="h-4 bg-overlay rounded w-20" />
             <div className="h-3 bg-overlay rounded w-14" />
           </div>
@@ -329,7 +329,7 @@ function ComparisonPanel({ data, loading, onBack }: ComparisonPanelProps) {
 
   if (loading) {
     return (
-      <div className="bg-elevated border border-default rounded-pf-lg p-6 space-y-4">
+      <div className="bg-elevated border border-default rounded-xl p-6 space-y-4">
         <Button
           type="button"
           variant="ghost"
@@ -349,7 +349,7 @@ function ComparisonPanel({ data, loading, onBack }: ComparisonPanelProps) {
   const colTemplate = `180px repeat(${data.length}, 1fr)`;
 
   return (
-    <div className="bg-elevated border border-default rounded-pf-lg overflow-hidden">
+    <div className="bg-elevated border border-default rounded-xl overflow-hidden">
       {/* Back button */}
       <div className="px-6 pt-5 pb-3 border-b border-subtle">
         <Button
@@ -373,7 +373,7 @@ function ComparisonPanel({ data, loading, onBack }: ComparisonPanelProps) {
           </div>
           {data.map((t) => (
             <div key={t.userId} className="flex flex-col items-center gap-2 text-center">
-              <div className="size-12 rounded-pf-full bg-accent/20 text-accent-text flex items-center justify-center text-base font-semibold select-none">
+              <div className="size-12 rounded-full bg-accent/20 text-accent-text flex items-center justify-center text-base font-semibold select-none">
                 {t.avatarInitials}
               </div>
               <div>
@@ -444,7 +444,7 @@ function ComparisonPanel({ data, loading, onBack }: ComparisonPanelProps) {
                 {t.topCategories.slice(0, 4).map((cat) => (
                   <span
                     key={cat}
-                    className="inline-flex items-center gap-1 px-2 py-1 rounded-pf-full text-pf-label bg-overlay text-secondary border border-default"
+                    className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-label bg-overlay text-secondary border border-default"
                   >
                     {categoryEmoji(cat)} {cat}
                   </span>
@@ -466,7 +466,7 @@ function ComparisonPanel({ data, loading, onBack }: ComparisonPanelProps) {
                     className="flex items-center gap-2 bg-overlay rounded-pf px-3 py-2"
                   >
                     <span
-                      className={`text-pf-caption font-semibold px-2 py-1 rounded shrink-0 ${
+                      className={`text-caption font-semibold px-2 py-1 rounded shrink-0 ${
                         trade.result === 'win'
                           ? 'bg-gain/15 text-gain'
                           : 'bg-loss/15 text-loss'
@@ -474,11 +474,11 @@ function ComparisonPanel({ data, loading, onBack }: ComparisonPanelProps) {
                     >
                       {trade.result === 'win' ? 'WIN' : 'LOSS'}
                     </span>
-                    <span className="text-pf-label text-secondary truncate flex-1 max-w-[120px]">
+                    <span className="text-label text-secondary truncate flex-1 max-w-[120px]">
                       {trade.marketTitle}
                     </span>
                     <span
-                      className={`text-pf-label font-mono shrink-0 ${
+                      className={`text-label font-mono shrink-0 ${
                         pnlIsPositive(trade.pnl) ? 'text-gain' : 'text-loss'
                       }`}
                     >
@@ -544,7 +544,7 @@ function TraderCardItem({
 
   return (
     <div
-      className={`relative bg-elevated border rounded-pf-lg p-4 hover:border-strong transition-colors flex flex-col gap-3 ${
+      className={`relative bg-elevated border rounded-xl p-4 hover:border-strong transition-colors flex flex-col gap-3 ${
         compareMode && isSelected
           ? 'border-accent/50 ring-1 ring-accent/20'
           : 'border-default'
@@ -575,10 +575,10 @@ function TraderCardItem({
           <img
             src={trader.avatarUrl}
             alt={trader.displayName ?? trader.username}
-            className="size-10 rounded-pf-full object-cover shrink-0 bg-overlay"
+            className="size-10 rounded-full object-cover shrink-0 bg-overlay"
           />
         ) : (
-          <div className="size-10 rounded-pf-full bg-accent/20 text-accent-text flex items-center justify-center text-sm font-semibold shrink-0 select-none">
+          <div className="size-10 rounded-full bg-accent/20 text-accent-text flex items-center justify-center text-sm font-semibold shrink-0 select-none">
             {initials(trader.displayName ?? trader.username)}
           </div>
         )}
@@ -589,7 +589,7 @@ function TraderCardItem({
           <p className="text-xs text-tertiary truncate">@{trader.username}</p>
         </div>
         <span
-          className={`inline-flex items-center gap-1 px-2 py-1 rounded-pf-full text-pf-label font-semibold shrink-0 ${rankBadgeClass(trader.rank)}`}
+          className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-label font-semibold shrink-0 ${rankBadgeClass(trader.rank)}`}
           title={`Rank #${trader.rank}`}
         >
           {trader.rank <= 3 && <Trophy className="size-3" aria-hidden="true" />}#
@@ -868,7 +868,7 @@ export function Component() {
                 type="button"
                 variant="ghost"
                 onClick={() => setCategory(cat)}
-                className={`px-3 py-2 text-sm rounded-pf-full border transition-colors cursor-pointer ${
+                className={`px-3 py-2 text-sm rounded-full border transition-colors cursor-pointer ${
                   category === cat
                     ? 'bg-accent/10 border-accent/30 text-accent-text'
                     : 'border-default text-secondary hover:text-primary'
@@ -1017,7 +1017,7 @@ export function Component() {
               {selectedTraders.map((t) => (
                 <span
                   key={t.userId}
-                  className="inline-flex items-center gap-2 px-3 py-1 rounded-pf-full text-xs font-medium bg-accent/10 text-accent-text border border-accent/25"
+                  className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium bg-accent/10 text-accent-text border border-accent/25"
                 >
                   @{t.username}
                   <Button

@@ -116,14 +116,14 @@ const COHORT_DEFINITIONS = [
 
 function CohortCardSkeleton() {
   return (
-    <div className="rounded-pf-lg bg-elevated border border-default border-l-4 border-l-pf-border p-4 space-y-3 animate-shimmer">
+    <div className="rounded-xl bg-elevated border border-default border-l-4 border-l-subtle p-4 space-y-3 animate-shimmer">
       <div className="flex items-center gap-2">
         <div className="w-5 h-5 rounded bg-overlay" />
         <div className="h-4 w-28 rounded bg-overlay" />
       </div>
       <div className="h-3 w-full rounded bg-overlay" />
       <div className="h-8 w-20 rounded bg-overlay" />
-      <div className="h-2 w-full rounded-pf-full bg-overlay" />
+      <div className="h-2 w-full rounded-full bg-overlay" />
       <div className="flex gap-2">
         <div className="h-7 flex-1 rounded-pf bg-overlay" />
         <div className="h-7 flex-1 rounded-pf bg-overlay" />
@@ -177,7 +177,7 @@ function BroadcastDialog({ cohortId, cohortLabel, userCount, onClose }: Broadcas
       className="fixed inset-0 z-50 flex items-center justify-center p-4"
     >
       <div className="absolute inset-0 bg-black/60" onClick={onClose} aria-hidden="true" />
-      <div className="relative z-10 w-full max-w-sm rounded-pf-lg bg-elevated border border-default p-6 space-y-4 animate-fade-in">
+      <div className="relative z-10 w-full max-w-sm rounded-xl bg-elevated border border-default p-6 space-y-4 animate-fade-in">
         <h2 id="broadcast-dialog-title" className="text-base font-semibold text-primary">
           Send Broadcast
         </h2>
@@ -232,7 +232,7 @@ function CohortCard({ definition, stats, onViewUsers, onBroadcast }: CohortCardP
 
   return (
     <article
-      className={`rounded-pf-lg bg-elevated border border-default border-l-4 ${definition.borderColor} p-4 flex flex-col gap-3 animate-fade-in`}
+      className={`rounded-xl bg-elevated border border-default border-l-4 ${definition.borderColor} p-4 flex flex-col gap-3 animate-fade-in`}
     >
       {/* Header */}
       <div className="flex items-start gap-2">
@@ -259,13 +259,13 @@ function CohortCard({ definition, stats, onViewUsers, onBroadcast }: CohortCardP
 
       {/* Retention Bar */}
       <div>
-        <div className="flex justify-between text-pf-label text-tertiary mb-1">
+        <div className="flex justify-between text-label text-tertiary mb-1">
           <span>Retention</span>
           <span>{stats.retentionRate}%</span>
         </div>
-        <div className="h-2 w-full rounded-pf-full bg-overlay overflow-hidden">
+        <div className="h-2 w-full rounded-full bg-overlay overflow-hidden">
           <div
-            className="h-full rounded-pf-full bg-accent-text transition-all"
+            className="h-full rounded-full bg-accent-text transition-all"
             style={{ width: `${stats.retentionRate}%` }}
             role="meter"
             aria-valuenow={stats.retentionRate}
@@ -371,7 +371,7 @@ function DrillDown({ cohortId, onBack }: DrillDownProps) {
         type="button"
         variant="ghost"
         onClick={onBack}
-        className="inline-flex items-center gap-2 text-sm text-secondary hover:text-primary transition-colors rounded-pf-sm"
+        className="inline-flex items-center gap-2 text-sm text-secondary hover:text-primary transition-colors rounded-sm"
       >
         <ChevronLeft size={16} aria-hidden="true" />
         All Cohorts
@@ -398,8 +398,8 @@ function DrillDown({ cohortId, onBack }: DrillDownProps) {
             { label: 'Avg P&L', value: stats.avgPnl },
             { label: 'Retention', value: `${stats.retentionRate}%` },
           ].map((item) => (
-            <div key={item.label} className="rounded-pf-lg bg-elevated border border-default px-4 py-3">
-              <div className="text-pf-label text-tertiary uppercase tracking-wide">{item.label}</div>
+            <div key={item.label} className="rounded-xl bg-elevated border border-default px-4 py-3">
+              <div className="text-label text-tertiary uppercase tracking-wide">{item.label}</div>
               <div className="text-lg font-semibold text-primary mt-1 tabular-nums">{item.value}</div>
             </div>
           ))}
@@ -407,7 +407,7 @@ function DrillDown({ cohortId, onBack }: DrillDownProps) {
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="rounded-pf-lg bg-elevated border border-default px-4 py-3 animate-shimmer">
+            <div key={i} className="rounded-xl bg-elevated border border-default px-4 py-3 animate-shimmer">
               <div className="h-3 w-16 rounded bg-overlay mb-2" />
               <div className="h-6 w-20 rounded bg-overlay" />
             </div>
@@ -416,7 +416,7 @@ function DrillDown({ cohortId, onBack }: DrillDownProps) {
       )}
 
       {/* Table */}
-      <div className="rounded-pf-lg bg-elevated border border-default overflow-hidden">
+      <div className="rounded-xl bg-elevated border border-default overflow-hidden">
         <div className="flex items-center justify-between px-4 py-3 border-b border-default">
           <span className="text-sm font-medium text-primary">
             {total > 0 ? `${total.toLocaleString()} users` : 'Users'}
@@ -437,22 +437,22 @@ function DrillDown({ cohortId, onBack }: DrillDownProps) {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-default bg-surface">
-                <th className="px-4 py-3 text-left text-pf-label font-semibold text-tertiary uppercase tracking-wide">
+                <th className="px-4 py-3 text-left text-label font-semibold text-tertiary uppercase tracking-wide">
                   Username
                 </th>
-                <th className="px-4 py-3 text-left text-pf-label font-semibold text-tertiary uppercase tracking-wide">
+                <th className="px-4 py-3 text-left text-label font-semibold text-tertiary uppercase tracking-wide">
                   Email
                 </th>
-                <th className="px-4 py-3 text-left text-pf-label font-semibold text-tertiary uppercase tracking-wide">
+                <th className="px-4 py-3 text-left text-label font-semibold text-tertiary uppercase tracking-wide">
                   Joined
                 </th>
-                <th className="px-4 py-3 text-left text-pf-label font-semibold text-tertiary uppercase tracking-wide">
+                <th className="px-4 py-3 text-left text-label font-semibold text-tertiary uppercase tracking-wide">
                   Last Active
                 </th>
-                <th className="px-4 py-3 text-right text-pf-label font-semibold text-tertiary uppercase tracking-wide">
+                <th className="px-4 py-3 text-right text-label font-semibold text-tertiary uppercase tracking-wide">
                   Trades
                 </th>
-                <th className="px-4 py-3 text-right text-pf-label font-semibold text-tertiary uppercase tracking-wide">
+                <th className="px-4 py-3 text-right text-label font-semibold text-tertiary uppercase tracking-wide">
                   Volume
                 </th>
               </tr>
@@ -472,7 +472,7 @@ function DrillDown({ cohortId, onBack }: DrillDownProps) {
                     <td className="px-4 py-3">
                       <Link
                         to={`/users/${user.id}`}
-                        className="font-medium text-accent-text hover:text-accent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 rounded-pf-sm"
+                        className="font-medium text-accent-text hover:text-accent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 rounded-sm"
                       >
                         {user.username}
                       </Link>
@@ -509,7 +509,7 @@ function DrillDown({ cohortId, onBack }: DrillDownProps) {
                 variant="ghost"
                 onClick={() => handlePageChange(page - 1)}
                 disabled={page <= 1}
-                className="px-3 py-2 rounded-pf-sm text-xs text-secondary hover:text-primary hover:bg-overlay border border-default disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                className="px-3 py-2 rounded-sm text-xs text-secondary hover:text-primary hover:bg-overlay border border-default disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
               >
                 Previous
               </Button>
@@ -518,7 +518,7 @@ function DrillDown({ cohortId, onBack }: DrillDownProps) {
                 variant="ghost"
                 onClick={() => handlePageChange(page + 1)}
                 disabled={page >= totalPages}
-                className="px-3 py-2 rounded-pf-sm text-xs text-secondary hover:text-primary hover:bg-overlay border border-default disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                className="px-3 py-2 rounded-sm text-xs text-secondary hover:text-primary hover:bg-overlay border border-default disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
               >
                 Next
               </Button>
@@ -558,7 +558,7 @@ function OverviewGrid({ statsMap, loading, onViewUsers, onBroadcast }: OverviewG
           return (
             <article
               key={definition.id}
-              className={`rounded-pf-lg bg-elevated border border-default border-l-4 ${definition.borderColor} p-4 flex flex-col gap-3`}
+              className={`rounded-xl bg-elevated border border-default border-l-4 ${definition.borderColor} p-4 flex flex-col gap-3`}
             >
               <div className="flex items-center gap-2">
                 <definition.icon size={18} className={`${definition.iconColor} shrink-0`} aria-hidden="true" />

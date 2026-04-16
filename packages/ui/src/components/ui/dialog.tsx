@@ -32,7 +32,7 @@ function Dialog({ open, onOpenChange, children }: DialogProps) {
       className="fixed inset-0 z-50 flex items-center justify-center"
     >
       <div
-        className="absolute inset-0 bg-pf-backdrop backdrop-blur-sm"
+        className="absolute inset-0 bg-backdrop backdrop-blur-sm"
         aria-hidden="true"
         onClick={() => onOpenChange(false)}
       />
@@ -50,7 +50,7 @@ const DialogContent = React.forwardRef<
     role="dialog"
     aria-modal="true"
     className={cn(
-      "relative z-10 w-full max-w-lg bg-elevated border border-default rounded-pf-lg shadow-pf-lg",
+      "relative z-10 w-full max-w-lg bg-elevated border border-default rounded-xl shadow-lg",
       "animate-scale-in",
       className
     )}
@@ -80,7 +80,7 @@ function DialogHeader({ className, children, onClose, ...props }: DialogHeaderPr
           type="button"
           onClick={onClose}
           aria-label="Close dialog"
-          className="ml-4 p-1 rounded-pf-sm text-secondary hover:text-primary hover:bg-overlay transition-colors duration-pf-fast focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+          className="ml-4 p-1 rounded-sm text-secondary hover:text-primary hover:bg-overlay transition-colors duration-micro focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
         >
           <X size={16} aria-hidden="true" />
         </button>

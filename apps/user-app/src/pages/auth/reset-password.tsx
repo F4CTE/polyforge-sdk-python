@@ -70,7 +70,7 @@ export function Component() {
         </div>
 
         {/* Card */}
-        <div className="bg-elevated border border-default rounded-pf-lg p-8 shadow-pf-lg">
+        <div className="bg-elevated border border-default rounded-xl p-8 shadow-lg">
           {!done ? (
             <>
               <h1 className="text-xl font-semibold text-primary mb-1">Set new password</h1>
@@ -130,7 +130,7 @@ export function Component() {
                 <Button
                   type="submit"
                   disabled={loading || !token}
-                  className="w-full py-3 bg-accent text-inverse font-semibold rounded-pf hover:bg-accent-text disabled:opacity-50 disabled:cursor-not-allowed transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 focus-visible:ring-offset-2 focus-visible:ring-offset-pf-elevated"
+                  className="w-full py-3 bg-accent text-inverse font-semibold rounded-pf hover:bg-accent-text disabled:opacity-50 disabled:cursor-not-allowed transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 focus-visible:ring-offset-2 focus-visible:ring-offset-elevated"
                 >
                   {loading ? 'Resetting...' : 'Reset password'}
                 </Button>
@@ -138,14 +138,14 @@ export function Component() {
             </>
           ) : (
             <div className="text-center">
-              <div className="size-16 rounded-pf-full bg-gain/10 flex items-center justify-center mx-auto mb-4">
+              <div className="size-16 rounded-full bg-gain/10 flex items-center justify-center mx-auto mb-4">
                 <Check className="size-8 text-gain" />
               </div>
               <h1 className="text-xl font-semibold text-primary mb-2">Password reset</h1>
               <p className="text-sm text-tertiary mb-6">You can now sign in with your new password.</p>
               <Link
                 to="/login"
-                className="inline-block px-6 py-3 bg-accent text-inverse font-semibold rounded-pf hover:bg-accent-text transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 focus-visible:ring-offset-2 focus-visible:ring-offset-pf-elevated"
+                className="inline-block px-6 py-3 bg-accent text-inverse font-semibold rounded-pf hover:bg-accent-text transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 focus-visible:ring-offset-2 focus-visible:ring-offset-elevated"
               >
                 Sign in
               </Link>

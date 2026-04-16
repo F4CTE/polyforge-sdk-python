@@ -123,10 +123,10 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
       </head>
-      <body className="bg-pf-base text-pf-text font-sans antialiased min-h-screen">
+      <body className="bg-app text-primary font-sans antialiased min-h-screen">
         <a
           href="#main-content"
-          className="sr-only focus-visible:not-sr-only focus-visible:fixed focus-visible:top-2 focus-visible:left-2 focus-visible:z-[100] focus-visible:px-4 focus-visible:py-2 focus-visible:bg-pf-cyan-500 focus-visible:text-pf-text-contrast focus-visible:rounded-pf-sm focus-visible:text-sm focus-visible:font-semibold"
+          className="sr-only focus-visible:not-sr-only focus-visible:fixed focus-visible:top-2 focus-visible:left-2 focus-visible:z-[100] focus-visible:px-4 focus-visible:py-2 focus-visible:bg-accent focus-visible:text-inverse focus-visible:rounded-sm focus-visible:text-sm focus-visible:font-semibold"
         >
           Skip to main content
         </a>

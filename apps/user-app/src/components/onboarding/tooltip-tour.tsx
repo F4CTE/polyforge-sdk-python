@@ -232,7 +232,7 @@ export function TooltipTour() {
       <div
         role="dialog"
         aria-label={`Tour step: ${step.title}`}
-        className="fixed z-[9999] w-80 bg-elevated border border-default rounded-pf-lg shadow-pf-2xl animate-fade-in"
+        className="fixed z-[9999] w-80 bg-elevated border border-default rounded-xl shadow-2xl animate-fade-in"
         style={{
           top: `${Math.max(8, position.top)}px`,
           left: `${Math.max(8, Math.min(position.left, window.innerWidth - 340))}px`,
@@ -272,7 +272,7 @@ export function TooltipTour() {
             )}
             <button type="button"
               onClick={nextStep}
-              className="flex items-center gap-1 px-3 py-2 rounded-pf text-xs font-medium bg-accent text-inverse hover:bg-accent-text transition-colors active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 focus-visible:ring-offset-2 focus-visible:ring-offset-pf-elevated"
+              className="flex items-center gap-1 px-3 py-2 rounded-pf text-xs font-medium bg-accent text-inverse hover:bg-accent-text transition-colors active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 focus-visible:ring-offset-2 focus-visible:ring-offset-elevated"
             >
               {isLast ? 'Finish' : 'Next'}
               {!isLast && <ChevronRight className="size-3" />}

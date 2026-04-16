@@ -65,7 +65,7 @@ type SortDir = 'asc' | 'desc';
 function LabelPill({ label }: { label: string }) {
   if (label === 'BULLISH') {
     return (
-      <span className="inline-flex items-center gap-1 px-2 py-1 rounded-pf-full text-xs font-medium bg-gain/10 text-gain">
+      <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-gain/10 text-gain">
         <TrendingUp size={11} aria-hidden="true" />
         {label}
       </span>
@@ -73,14 +73,14 @@ function LabelPill({ label }: { label: string }) {
   }
   if (label === 'BEARISH') {
     return (
-      <span className="inline-flex items-center gap-1 px-2 py-1 rounded-pf-full text-xs font-medium bg-loss/10 text-loss">
+      <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-loss/10 text-loss">
         <TrendingDown size={11} aria-hidden="true" />
         {label}
       </span>
     );
   }
   return (
-    <span className="inline-flex items-center gap-1 px-2 py-1 rounded-pf-full text-xs font-medium bg-app text-secondary border border-default">
+    <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-app text-secondary border border-default">
       <Minus size={11} aria-hidden="true" />
       {label}
     </span>
@@ -118,7 +118,7 @@ function StatCard({
   loading: boolean;
 }) {
   return (
-    <div className="bg-elevated border border-default rounded-pf-lg p-4 flex flex-col gap-1">
+    <div className="bg-elevated border border-default rounded-xl p-4 flex flex-col gap-1">
       <span className="text-xs font-medium text-tertiary uppercase tracking-wider">{label}</span>
       {loading ? (
         <div className="h-7 w-24 bg-surface rounded animate-pulse mt-1" />
@@ -175,7 +175,7 @@ const SERIES_COLOR_CLASS: Record<string, string> = {
 function CategoryTooltip({ active, payload, label }: { active?: boolean; payload?: Array<{ name: string; value: number; color: string }>; label?: string }) {
   if (!active || !payload?.length) return null;
   return (
-    <div className="bg-elevated border border-default rounded-pf-sm px-3 py-2 text-xs shadow-pf-lg">
+    <div className="bg-elevated border border-default rounded-sm px-3 py-2 text-xs shadow-lg">
       <p className="font-semibold text-primary mb-1">{label}</p>
       {payload.map((entry) => (
         <p key={entry.name} className={SERIES_COLOR_CLASS[entry.name] ?? 'text-primary'}>
@@ -316,7 +316,7 @@ export function Component() {
           onClick={() => { loadRows(true, period); loadSummary(); loadCategory(); }}
           disabled={refreshing}
           aria-label="Refresh sentiment data"
-          className="flex items-center gap-2 px-3 py-2 text-sm rounded-pf-sm border border-default text-secondary hover:bg-elevated hover:text-primary disabled:opacity-50 transition-colors"
+          className="flex items-center gap-2 px-3 py-2 text-sm rounded-sm border border-default text-secondary hover:bg-elevated hover:text-primary disabled:opacity-50 transition-colors"
         >
           <RefreshCw size={14} className={refreshing ? 'animate-spin' : ''} aria-hidden="true" />
           Refresh
@@ -355,7 +355,7 @@ export function Component() {
       </div>
 
       {/* ── Category breakdown chart ── */}
-      <div className="bg-elevated border border-default rounded-pf-lg p-4">
+      <div className="bg-elevated border border-default rounded-xl p-4">
         <div className="flex items-center gap-2 mb-4">
           <BarChart2 size={15} className="text-tertiary" aria-hidden="true" />
           <h3 className="text-sm font-semibold text-primary">Sentiment by Category</h3>
@@ -367,11 +367,11 @@ export function Component() {
         </div>
 
         {loadingCategory ? (
-          <div className="h-pf-chart-sm flex items-center justify-center">
+          <div className="h-chart-sm flex items-center justify-center">
             <div className="h-4 w-32 bg-surface rounded animate-pulse" />
           </div>
         ) : chartData.length === 0 ? (
-          <div className="h-pf-chart-sm flex items-center justify-center text-tertiary text-sm">
+          <div className="h-chart-sm flex items-center justify-center text-tertiary text-sm">
             No category data available
           </div>
         ) : (
@@ -397,7 +397,7 @@ export function Component() {
                 axisLine={false}
                 tickLine={false}
               />
-              <Tooltip content={<CategoryTooltip />} cursor={{ fill: 'var(--color-pf-chart-grid)' }} />
+              <Tooltip content={<CategoryTooltip />} cursor={{ fill: 'var(--color-chart-grid)' }} />
               <Bar dataKey="bullishPct" name="Bullish %" stackId="a" fill="var(--gain)" radius={[0, 0, 0, 0]}>
                 {chartData.map((entry) => (
                   <Cell key={entry.category} fill="var(--gain)" />
@@ -427,12 +427,12 @@ export function Component() {
           </span>
           {loadingSummary
             ? Array.from({ length: 5 }).map((_, i) => (
-                <span key={i} className="h-5 w-16 bg-surface rounded-pf-full animate-pulse inline-block" />
+                <span key={i} className="h-5 w-16 bg-surface rounded-full animate-pulse inline-block" />
               ))
             : summary?.trendingTopics.map((topic) => (
                 <span
                   key={topic}
-                  className="inline-block px-3 py-1 rounded-pf-full text-xs font-medium bg-accent/10 text-accent-text border border-accent/20"
+                  className="inline-block px-3 py-1 rounded-full text-xs font-medium bg-accent/10 text-accent-text border border-accent/20"
                 >
                   {topic}
                 </span>
@@ -443,7 +443,7 @@ export function Component() {
       {/* ── Table controls ── */}
       <div className="flex flex-wrap items-center gap-3">
         {/* Period pills */}
-        <div className="flex items-center gap-1 rounded-pf-sm border border-default overflow-hidden">
+        <div className="flex items-center gap-1 rounded-sm border border-default overflow-hidden">
           {(['1h', '24h', '7d'] as Period[]).map((p) => (
             <Button
               key={p}
@@ -463,7 +463,7 @@ export function Component() {
         </div>
 
         {/* Label filter pills */}
-        <div className="flex items-center gap-1 rounded-pf-sm border border-default overflow-hidden">
+        <div className="flex items-center gap-1 rounded-sm border border-default overflow-hidden">
           {(['', 'BULLISH', 'BEARISH', 'NEUTRAL'] as LabelFilter[]).map((val) => (
             <Button
               key={val === '' ? 'all' : val}
@@ -484,7 +484,7 @@ export function Component() {
       </div>
 
       {/* ── Main table ── */}
-      <div className="bg-elevated border border-default rounded-pf-lg overflow-hidden">
+      <div className="bg-elevated border border-default rounded-xl overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <caption className="sr-only">Market sentiment overview</caption>
@@ -541,18 +541,18 @@ export function Component() {
                   return (
                     <tr key={row.marketId} className="border-b border-default last:border-0 hover:bg-app transition-colors">
                       {/* Market title */}
-                      <td className="px-4 py-3 text-primary font-medium max-w-pf-col-lg">
+                      <td className="px-4 py-3 text-primary font-medium max-w-col-lg">
                         <span className="block truncate">{row.marketTitle}</span>
                       </td>
 
                       {/* Score column: value + progress bar */}
-                      <td className="px-4 py-3 text-right min-w-pf-col-xs">
+                      <td className="px-4 py-3 text-right min-w-col-xs">
                         <span className={`font-mono font-medium text-xs ${scoreColor(row.score)}`}>
                           {row.score > 0 ? '+' : ''}{row.score.toFixed(3)}
                         </span>
-                        <div className="mt-1 h-2 w-full bg-surface rounded-pf-full overflow-hidden">
+                        <div className="mt-1 h-2 w-full bg-surface rounded-full overflow-hidden">
                           <div
-                            className={`h-full rounded-pf-full transition-all ${scoreBgColor(row.score)}`}
+                            className={`h-full rounded-full transition-all ${scoreBgColor(row.score)}`}
                             style={{ width: `${pct}%` }}
                             aria-label={`Score ${pct}%`}
                           />
@@ -564,13 +564,13 @@ export function Component() {
                         <div className="flex flex-col gap-1">
                           <LabelPill label={row.label} />
                           <div className="flex items-center gap-1">
-                            <span className="text-pf-caption px-2 py-px rounded bg-gain/10 text-gain font-mono">
+                            <span className="text-caption px-2 py-px rounded bg-gain/10 text-gain font-mono">
                               B:{row.bullishCount}
                             </span>
-                            <span className="text-pf-caption px-2 py-px rounded bg-app border border-default text-secondary font-mono">
+                            <span className="text-caption px-2 py-px rounded bg-app border border-default text-secondary font-mono">
                               N:{Math.max(0, neutralCount)}
                             </span>
-                            <span className="text-pf-caption px-2 py-px rounded bg-loss/10 text-loss font-mono">
+                            <span className="text-caption px-2 py-px rounded bg-loss/10 text-loss font-mono">
                               Be:{row.bearishCount}
                             </span>
                           </div>

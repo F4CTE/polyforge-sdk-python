@@ -21,7 +21,7 @@ const STEPS: TutorialStep[] = [
           Strategies are built by connecting <strong className="text-primary">blocks</strong> — each representing a piece of trading logic. Blocks are wired together to define execution flow.
         </p>
         <p className="text-sm text-secondary leading-relaxed">
-          Drag blocks from the palette onto the canvas, then connect them by dragging from the <span className="inline-block size-2 rounded-pf-full bg-accent-text mr-2" aria-hidden="true" /> handles on each block.
+          Drag blocks from the palette onto the canvas, then connect them by dragging from the <span className="inline-block size-2 rounded-full bg-accent-text mr-2" aria-hidden="true" /> handles on each block.
         </p>
       </div>
     ),
@@ -30,7 +30,7 @@ const STEPS: TutorialStep[] = [
     title: 'Safety Blocks — Always Active',
     content: (
       <div className="space-y-3">
-        <div className="flex items-center gap-2 px-3 py-2 rounded-pf-md bg-loss/[0.13] border border-loss/[0.27]">
+        <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-loss/[0.13] border border-loss/[0.27]">
           <Shield className="size-4 shrink-0 text-loss" />
           <span className="text-sm font-medium text-loss">Safety</span>
         </div>
@@ -47,7 +47,7 @@ const STEPS: TutorialStep[] = [
     title: 'Trigger Blocks — Must Be Wired',
     content: (
       <div className="space-y-3">
-        <div className="flex items-center gap-2 px-3 py-2 rounded-pf-md bg-warning/[0.13] border border-warning/[0.27]">
+        <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-warning/[0.13] border border-warning/[0.27]">
           <Zap className="size-4 shrink-0 text-warning" />
           <span className="text-sm font-medium text-warning">Trigger</span>
         </div>
@@ -65,7 +65,7 @@ const STEPS: TutorialStep[] = [
     title: 'Condition Blocks — Global or Scoped',
     content: (
       <div className="space-y-3">
-        <div className="flex items-center gap-2 px-3 py-2 rounded-pf-md bg-accent/[0.13] border border-accent/[0.27]">
+        <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-accent/[0.13] border border-accent/[0.27]">
           <Filter className="size-4 shrink-0 text-accent" />
           <span className="text-sm font-medium text-accent">Condition</span>
         </div>
@@ -89,7 +89,7 @@ const STEPS: TutorialStep[] = [
     title: 'Action Blocks — Must Be Wired',
     content: (
       <div className="space-y-3">
-        <div className="flex items-center gap-2 px-3 py-2 rounded-pf-md bg-gain/[0.13] border border-gain/[0.27]">
+        <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-gain/[0.13] border border-gain/[0.27]">
           <Play className="size-4 shrink-0 text-gain" />
           <span className="text-sm font-medium text-gain">Action</span>
         </div>
@@ -108,13 +108,13 @@ const STEPS: TutorialStep[] = [
     content: (
       <div className="space-y-3">
         <p className="text-sm text-secondary leading-relaxed">
-          Many blocks have a <strong className="text-primary">Market Slot</strong> field (<code className="text-pf-purple-500 font-mono text-xs">$MARKET_A</code> … <code className="text-pf-purple-500 font-mono text-xs">$MARKET_E</code>). These are placeholders — you bind them to real markets when you start the strategy.
+          Many blocks have a <strong className="text-primary">Market Slot</strong> field (<code className="text-purple-500 font-mono text-xs">$MARKET_A</code> … <code className="text-purple-500 font-mono text-xs">$MARKET_E</code>). These are placeholders — you bind them to real markets when you start the strategy.
         </p>
         <p className="text-sm text-secondary leading-relaxed">
           This lets a single strategy template trade across different markets without rebuilding the block graph.
         </p>
         <p className="text-sm text-secondary leading-relaxed">
-          Fields that start with <code className="text-pf-purple-500 font-mono text-xs">$</code> are <strong className="text-primary">variables</strong> — shown in purple with a <em>var</em> badge.
+          Fields that start with <code className="text-purple-500 font-mono text-xs">$</code> are <strong className="text-primary">variables</strong> — shown in purple with a <em>var</em> badge.
         </p>
       </div>
     ),
@@ -162,7 +162,7 @@ export function BuilderTutorial({ forceVisible, onDismiss }: BuilderTutorialProp
     <div
       role="dialog"
       aria-label="Strategy builder tutorial"
-      className="absolute bottom-4 left-4 z-40 w-80 bg-elevated border border-default rounded-pf-lg shadow-pf-lg flex flex-col overflow-hidden"
+      className="absolute bottom-4 left-4 z-40 w-80 bg-elevated border border-default rounded-xl shadow-lg flex flex-col overflow-hidden"
     >
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-subtle">
@@ -196,7 +196,7 @@ export function BuilderTutorial({ forceVisible, onDismiss }: BuilderTutorialProp
               onClick={() => setStep(i)}
               aria-label={`Go to step ${i + 1}`}
               aria-current={i === step ? 'step' : undefined}
-              className={`rounded-pf-full transition-all focus-visible:outline-none h-2 ${
+              className={`rounded-full transition-all focus-visible:outline-none h-2 ${
                 i === step ? 'w-4 bg-accent' : 'w-2 bg-default'
               }`}
             />

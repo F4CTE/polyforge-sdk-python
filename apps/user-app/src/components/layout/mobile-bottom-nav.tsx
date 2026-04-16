@@ -35,7 +35,7 @@ export function MobileBottomNav() {
           key={item.label}
           to={item.route}
           className={({ isActive }) =>
-            `flex-1 flex flex-col items-center justify-center gap-1 text-pf-caption font-medium transition-colors duration-pf-fast -mt-px ${
+            `flex-1 flex flex-col items-center justify-center gap-1 text-caption font-medium transition-colors duration-micro -mt-px ${
               isActive
                 ? 'text-accent-text border-t-2 border-accent'
                 : 'text-tertiary hover:text-secondary border-t-2 border-transparent'

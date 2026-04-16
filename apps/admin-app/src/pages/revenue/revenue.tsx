@@ -71,16 +71,16 @@ interface MarketplaceStats {
 const SOURCE_COLORS: Record<SourceKey, string> = {
   marketplace_listings: 'var(--accent-text)',
   copy_fees: 'var(--gain)',
-  strategy_sales: 'var(--color-pf-purple-500)',
-  subscription: 'var(--color-pf-gold-500)',
+  strategy_sales: 'var(--color-purple-500)',
+  subscription: 'var(--color-gold-500)',
   other: 'var(--text-tertiary)',
 };
 
 const SOURCE_BG: Record<SourceKey, string> = {
   marketplace_listings: 'bg-accent-text/10',
   copy_fees: 'bg-gain/10',
-  strategy_sales: 'bg-pf-purple-500/10',
-  subscription: 'bg-pf-gold-500/10',
+  strategy_sales: 'bg-purple-500/10',
+  subscription: 'bg-gold-500/10',
   other: 'bg-tertiary/10',
 };
 
@@ -421,15 +421,15 @@ export function Component() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {loading
           ? Array.from({ length: 4 }, (_, i) => (
-              <div key={i} className="bg-elevated border border-default rounded-pf-lg p-4 animate-pulse">
+              <div key={i} className="bg-elevated border border-default rounded-xl p-4 animate-pulse">
                 <Skeleton className="h-3 w-24 mb-3" />
                 <Skeleton className="h-7 w-16" />
               </div>
             ))
           : statCards.map(card => (
-              <div key={card.label} className="bg-elevated border border-default rounded-pf-lg p-4">
+              <div key={card.label} className="bg-elevated border border-default rounded-xl p-4">
                 <div className="flex items-center gap-2 mb-2">
-                  <div className={`p-2 rounded-pf-sm ${card.bg} ${card.color}`}>{card.icon}</div>
+                  <div className={`p-2 rounded-sm ${card.bg} ${card.color}`}>{card.icon}</div>
                   <span className="text-xs text-tertiary font-medium uppercase tracking-wide">{card.label}</span>
                 </div>
                 <div className="text-2xl font-semibold text-primary font-mono">{card.value}</div>
@@ -442,7 +442,7 @@ export function Component() {
       {/* SECTION 1 — Revenue breakdown                                     */}
       {/* ══════════════════════════════════════════════════════════════════ */}
 
-      <div className="bg-elevated border border-default rounded-pf-lg overflow-hidden">
+      <div className="bg-elevated border border-default rounded-xl overflow-hidden">
         <div className="flex items-center justify-between px-4 py-3 border-b border-default">
           <div className="flex items-center gap-2">
             <PieChartIcon className="size-4 text-accent-text" />
@@ -466,7 +466,7 @@ export function Component() {
                   <div className="flex items-center gap-2 mb-2">
                     {'dotColor' in card && (
                       <span
-                        className="size-2 rounded-pf-full shrink-0"
+                        className="size-2 rounded-full shrink-0"
                         style={{ backgroundColor: (card as { dotColor: string }).dotColor }}
                       />
                     )}
@@ -490,9 +490,9 @@ export function Component() {
           <div>
             <p className="text-xs text-tertiary font-medium uppercase tracking-wide mb-3">Distribution</p>
             {loadingBreakdown ? (
-              <Skeleton className="h-pf-chart-lg" />
+              <Skeleton className="h-chart-lg" />
             ) : donutData.length === 0 ? (
-              <div className="h-pf-chart-lg flex items-center justify-center text-sm text-tertiary">No data</div>
+              <div className="h-chart-lg flex items-center justify-center text-sm text-tertiary">No data</div>
             ) : (
               <div>
                 <ResponsiveContainer width="100%" height={200}>
@@ -531,7 +531,7 @@ export function Component() {
                   {breakdown?.sources.map(s => (
                     <div key={s.source} className="flex items-center gap-2 text-xs">
                       <span
-                        className="size-3 rounded-pf-full shrink-0"
+                        className="size-3 rounded-full shrink-0"
                         style={{ backgroundColor: SOURCE_COLORS[s.source] }}
                       />
                       <span className="text-tertiary truncate">{s.label}</span>
@@ -568,7 +568,7 @@ export function Component() {
                         <td className="py-3 pr-2">
                           <div className="flex items-center gap-2">
                             <span
-                              className="size-2 rounded-pf-full shrink-0"
+                              className="size-2 rounded-full shrink-0"
                               style={{ backgroundColor: SOURCE_COLORS[s.source] }}
                             />
                             <span className="text-primary">{s.label}</span>
@@ -577,9 +577,9 @@ export function Component() {
                         <td className="py-3 text-right font-mono text-primary">{fmtDollar(s.revenue)}</td>
                         <td className="py-3 pl-3">
                           <div className="flex items-center gap-2">
-                            <div className="flex-1 h-2 bg-app rounded-pf-full overflow-hidden">
+                            <div className="flex-1 h-2 bg-app rounded-full overflow-hidden">
                               <div
-                                className="h-full rounded-pf-full"
+                                className="h-full rounded-full"
                                 style={{
                                   width: `${Math.min(s.pct, 100)}%`,
                                   backgroundColor: SOURCE_COLORS[s.source],
@@ -611,7 +611,7 @@ export function Component() {
       {/* SECTION 2 — Monthly revenue trend (existing, enhanced)            */}
       {/* ══════════════════════════════════════════════════════════════════ */}
 
-      <div className="bg-elevated border border-default rounded-pf-lg overflow-hidden">
+      <div className="bg-elevated border border-default rounded-xl overflow-hidden">
         <div className="flex items-center justify-between px-4 py-3 border-b border-default">
           <div className="flex items-center gap-2">
             <BarChart2 className="size-4 text-accent-text" />
@@ -649,9 +649,9 @@ export function Component() {
         </div>
         <div className="px-4 py-4">
           {loadingMonthly ? (
-            <Skeleton className="h-pf-chart-md" />
+            <Skeleton className="h-chart-md" />
           ) : monthlyData.length === 0 ? (
-            <div className="h-pf-chart-md flex items-center justify-center text-sm text-tertiary">
+            <div className="h-chart-md flex items-center justify-center text-sm text-tertiary">
               No revenue data yet
             </div>
           ) : (
@@ -660,7 +660,7 @@ export function Component() {
                 data={monthlyData.map(d => ({ ...d, label: fmtMonth(d.month) }))}
                 margin={{ top: 4, right: 48, left: 8, bottom: 0 }}
               >
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--color-pf-chart-grid)" />
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--color-chart-grid)" />
                 <XAxis dataKey="label" tick={chartAxisTick} axisLine={false} tickLine={false} />
                 <YAxis
                   yAxisId="left"
@@ -681,8 +681,8 @@ export function Component() {
                 <Tooltip content={<MonthlyTooltip />} />
                 <Legend wrapperStyle={chartLegendStyle} />
                 <Bar yAxisId="left" dataKey="revenue" name="Revenue" fill="var(--accent-default)" opacity={0.7} radius={[2, 2, 0, 0]} />
-                <Bar yAxisId="left" dataKey="fees" name="Fees" fill="var(--color-pf-purple-500)" opacity={0.7} radius={[2, 2, 0, 0]} />
-                <Line yAxisId="right" type="monotone" dataKey="purchases" name="Purchases" stroke="var(--color-pf-gold-500)" strokeWidth={2} dot={false} />
+                <Bar yAxisId="left" dataKey="fees" name="Fees" fill="var(--color-purple-500)" opacity={0.7} radius={[2, 2, 0, 0]} />
+                <Line yAxisId="right" type="monotone" dataKey="purchases" name="Purchases" stroke="var(--color-gold-500)" strokeWidth={2} dot={false} />
               </ComposedChart>
             </ResponsiveContainer>
           )}
@@ -693,7 +693,7 @@ export function Component() {
       {/* SECTION 3 — Period-over-period comparison bar chart               */}
       {/* ══════════════════════════════════════════════════════════════════ */}
 
-      <div className="bg-elevated border border-default rounded-pf-lg overflow-hidden">
+      <div className="bg-elevated border border-default rounded-xl overflow-hidden">
         <div className="flex items-center gap-2 px-4 py-3 border-b border-default">
           <TrendingUp className="size-4 text-gain" />
           <h2 className="text-sm font-semibold text-primary">Period-over-Period Comparison</h2>
@@ -701,15 +701,15 @@ export function Component() {
         </div>
         <div className="px-4 py-4">
           {loadingBreakdown ? (
-            <Skeleton className="h-pf-chart-sm" />
+            <Skeleton className="h-chart-sm" />
           ) : compareData.length === 0 ? (
-            <div className="h-pf-chart-sm flex items-center justify-center text-sm text-tertiary">
+            <div className="h-chart-sm flex items-center justify-center text-sm text-tertiary">
               No comparison data
             </div>
           ) : (
             <ResponsiveContainer width="100%" height={220}>
               <BarChart data={compareData} margin={{ top: 4, right: 16, left: 8, bottom: 0 }} barCategoryGap="30%">
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--color-pf-chart-grid)" vertical={false} />
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--color-chart-grid)" vertical={false} />
                 <XAxis dataKey="name" tick={chartAxisTick} axisLine={false} tickLine={false} />
                 <YAxis tickFormatter={fmtDollar} tick={chartAxisTick} axisLine={false} tickLine={false} width={52} />
                 <Tooltip content={<CompareTooltip />} />
@@ -736,7 +736,7 @@ export function Component() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Top Listings */}
-        <div className="bg-elevated border border-default rounded-pf-lg overflow-hidden">
+        <div className="bg-elevated border border-default rounded-xl overflow-hidden">
           <div className="px-4 py-3 border-b border-default">
             <h2 className="text-sm font-semibold text-primary">Top Listings by Revenue</h2>
           </div>
@@ -776,7 +776,7 @@ export function Component() {
         </div>
 
         {/* Recent Purchases */}
-        <div className="bg-elevated border border-default rounded-pf-lg overflow-hidden">
+        <div className="bg-elevated border border-default rounded-xl overflow-hidden">
           <div className="px-4 py-3 border-b border-default">
             <h2 className="text-sm font-semibold text-primary">Recent Purchases (30d)</h2>
           </div>
@@ -813,7 +813,7 @@ export function Component() {
       {/* SECTION 5 — Top revenue-generating users                          */}
       {/* ══════════════════════════════════════════════════════════════════ */}
 
-      <div className="bg-elevated border border-default rounded-pf-lg overflow-hidden">
+      <div className="bg-elevated border border-default rounded-xl overflow-hidden">
         <div className="flex items-center justify-between px-4 py-3 border-b border-default">
           <div className="flex items-center gap-2">
             <Users className="size-4 text-accent-text" />
@@ -882,7 +882,7 @@ export function Component() {
                           </td>
                           <td className="px-4 py-3 text-right">
                             <span
-                              className="inline-flex items-center gap-2 px-2 py-1 rounded-pf-full text-xs font-medium"
+                              className="inline-flex items-center gap-2 px-2 py-1 rounded-full text-xs font-medium"
                               style={{
                                 backgroundColor: `color-mix(in srgb, ${dotColor} 9%, transparent)`,
                                 color: dotColor,
@@ -890,7 +890,7 @@ export function Component() {
                               }}
                             >
                               <span
-                                className="size-2 rounded-pf-full"
+                                className="size-2 rounded-full"
                                 style={{ backgroundColor: dotColor }}
                               />
                               {user.primarySource.replace(/_/g, ' ')}

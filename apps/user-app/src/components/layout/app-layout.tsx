@@ -85,7 +85,7 @@ export function AppLayout() {
         Skip to main content
       </a>
       {/* Desktop sidebar */}
-      <div className={`hidden md:block overflow-hidden transition-[width,min-width] duration-pf-normal ${collapsed ? 'w-16 min-w-16' : 'w-60 min-w-60'}`}>
+      <div className={`hidden md:block overflow-hidden transition-[width,min-width] duration-panel ${collapsed ? 'w-16 min-w-16' : 'w-60 min-w-60'}`}>
         <Sidebar collapsed={collapsed} onToggle={() => setCollapsed((v) => !v)} />
       </div>
 
@@ -104,7 +104,7 @@ export function AppLayout() {
           <button
             type="button"
             onClick={() => setMobileOpen(true)}
-            className="min-h-[44px] min-w-[44px] flex items-center justify-center ml-2 rounded-pf-sm text-tertiary hover:bg-elevated hover:text-primary active:bg-surface transition-colors md:hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+            className="min-h-[44px] min-w-[44px] flex items-center justify-center ml-2 rounded-sm text-tertiary hover:bg-elevated hover:text-primary active:bg-surface transition-colors md:hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
             aria-label="Open navigation menu"
           >
             <Menu size={20} />

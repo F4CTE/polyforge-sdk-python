@@ -321,11 +321,11 @@ export function Component() {
               <Link
                 key={f.id}
                 to={`/marketplace/${f.id}`}
-                className="group block bg-elevated border border-warning/40 rounded-pf-lg p-4 transition-all duration-pf-normal hover:border-warning/60 hover:shadow-pf-sm hover:-translate-y-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+                className="group block bg-elevated border border-warning/40 rounded-xl p-4 transition-all duration-panel hover:border-warning/60 hover:shadow-sm hover:-translate-y-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
               >
                 {/* FEATURED badge + seller */}
                 <div className="flex items-center gap-2 mb-3">
-                  <span className="bg-warning/15 text-warning text-pf-caption font-semibold px-2 py-1 rounded">
+                  <span className="bg-warning/15 text-warning text-caption font-semibold px-2 py-1 rounded">
                     FEATURED
                   </span>
                   <span className="text-xs text-secondary ml-auto truncate">
@@ -344,7 +344,7 @@ export function Component() {
                 )}
 
                 {/* Stats row */}
-                <div className="flex flex-wrap gap-2 text-pf-label text-secondary mb-3">
+                <div className="flex flex-wrap gap-2 text-label text-secondary mb-3">
                   {f.winRate != null && (
                     <span className="flex items-center gap-1">
                       <TrendingUp className="size-3" aria-hidden="true" />
@@ -366,7 +366,7 @@ export function Component() {
                 <div className="flex items-center gap-3 text-xs text-tertiary">
                   <span className="flex items-center gap-1"><GitFork className="size-3" aria-hidden="true" /> {f.forkCount}</span>
                   <span className="flex items-center gap-1"><Heart className="size-3" aria-hidden="true" /> {f.likeCount}</span>
-                  <span className="ml-auto border border-accent/40 text-accent-text text-pf-caption font-medium px-2 py-1 rounded hover:bg-accent/10 transition-colors">
+                  <span className="ml-auto border border-accent/40 text-accent-text text-caption font-medium px-2 py-1 rounded hover:bg-accent/10 transition-colors">
                     View Strategy
                   </span>
                 </div>
@@ -398,7 +398,7 @@ export function Component() {
                 type="button"
                 variant="ghost"
                 onClick={() => navigate(`/collections/${col.id}`)}
-                className="bg-elevated border border-default rounded-pf-full px-3 py-2 text-sm flex items-center gap-2 whitespace-nowrap hover:border-strong cursor-pointer transition-colors shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+                className="bg-elevated border border-default rounded-full px-3 py-2 text-sm flex items-center gap-2 whitespace-nowrap hover:border-strong cursor-pointer transition-colors shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
               >
                 <span role="img" aria-label={col.title}>{col.emoji}</span>
                 <span className="text-primary font-medium">{col.title}</span>
@@ -420,7 +420,7 @@ export function Component() {
             aria-label="Search strategies"
             value={searchQuery}
             onChange={e => { setSearchQuery(e.target.value); setPage(1); }}
-            className="w-full pl-10 pr-4 py-3 rounded-pf-sm text-sm bg-elevated text-primary border border-default hover:border-strong focus-visible:border-accent/50 focus-visible:outline-none transition-colors placeholder:text-tertiary"
+            className="w-full pl-10 pr-4 py-3 rounded-sm text-sm bg-elevated text-primary border border-default hover:border-strong focus-visible:border-accent/50 focus-visible:outline-none transition-colors placeholder:text-tertiary"
           />
         </div>
         {/* Tag filter */}
@@ -432,7 +432,7 @@ export function Component() {
             aria-label="Filter by tag"
             value={tagFilter}
             onChange={e => setTagFilter(e.target.value)}
-            className="pl-8 pr-3 py-3 rounded-pf-sm text-sm bg-elevated text-primary border border-default hover:border-strong focus-visible:border-accent/50 focus-visible:outline-none transition-colors placeholder:text-tertiary w-36"
+            className="pl-8 pr-3 py-3 rounded-sm text-sm bg-elevated text-primary border border-default hover:border-strong focus-visible:border-accent/50 focus-visible:outline-none transition-colors placeholder:text-tertiary w-36"
           />
         </div>
       </div>
@@ -447,7 +447,7 @@ export function Component() {
             role="tab"
             aria-selected={sort === opt.value}
             onClick={() => changeSort(opt.value)}
-            className={`px-3 py-2 rounded-pf-full text-xs font-medium whitespace-nowrap border transition-colors ${
+            className={`px-3 py-2 rounded-full text-xs font-medium whitespace-nowrap border transition-colors ${
               sort === opt.value
                 ? 'bg-accent/15 text-accent-text border-accent/30'
                 : 'bg-elevated text-secondary border-default hover:border-strong'
@@ -466,7 +466,7 @@ export function Component() {
             variant="ghost"
             key={cat.value ?? 'all'}
             onClick={() => changeCategory(cat.value)}
-            className={`px-3 py-1 rounded-pf-full text-xs font-medium border transition-colors whitespace-nowrap ${
+            className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors whitespace-nowrap ${
               category === cat.value
                 ? 'bg-accent/15 text-accent-text border-accent/30'
                 : 'bg-elevated text-secondary border-default hover:border-strong'
@@ -500,14 +500,14 @@ export function Component() {
                 key={s.id}
                 data-testid="strategy-card"
                 to={`/strategies/${s.id}`}
-                className="group block bg-elevated border border-default rounded-pf-lg p-4 transition-all duration-pf-normal hover:border-strong hover:shadow-pf-sm hover:-translate-y-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+                className="group block bg-elevated border border-default rounded-xl p-4 transition-all duration-panel hover:border-strong hover:shadow-sm hover:-translate-y-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
               >
                 {/* Author row */}
                 <div className="flex items-center gap-2 mb-3">
                   {s.author.avatarUrl ? (
-                    <img src={s.author.avatarUrl} alt={`${s.author.displayName ?? s.author.username} avatar`} className="size-7 rounded-pf-full object-cover" width={28} height={28} loading="lazy" />
+                    <img src={s.author.avatarUrl} alt={`${s.author.displayName ?? s.author.username} avatar`} className="size-7 rounded-full object-cover" width={28} height={28} loading="lazy" />
                   ) : (
-                    <div className="size-7 rounded-pf-full bg-accent/15 border border-accent/25 flex items-center justify-center text-pf-caption font-semibold text-accent-text">
+                    <div className="size-7 rounded-full bg-accent/15 border border-accent/25 flex items-center justify-center text-caption font-semibold text-accent-text">
                       {authorInitials(s)}
                     </div>
                   )}
@@ -520,7 +520,7 @@ export function Component() {
                     {s.author.displayName ?? s.author.username}
                   </a>
                   {s.author.score != null && s.author.score > 0 && (
-                    <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-pf-full text-pf-caption font-mono font-semibold border ${
+                    <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-caption font-mono font-semibold border ${
                       s.author.score >= 70 ? 'text-gain bg-gain/10 border-gain/20' :
                       s.author.score >= 40 ? 'text-warning bg-warning/10 border-warning/20' :
                       'text-loss bg-loss/10 border-loss/20'
@@ -529,7 +529,7 @@ export function Component() {
                       {s.author.score}
                     </span>
                   )}
-                  <span data-testid="strategy-status" className="ml-auto text-pf-caption px-2 py-1 rounded bg-overlay text-tertiary">
+                  <span data-testid="strategy-status" className="ml-auto text-caption px-2 py-1 rounded bg-overlay text-tertiary">
                     {execLabel(s.execMode)}
                   </span>
                 </div>
@@ -546,13 +546,13 @@ export function Component() {
                 {s.tags.length > 0 && (
                   <div className="flex flex-wrap gap-1 mb-3">
                     {s.tags.slice(0, 4).map(tag => (
-                      <span key={tag} className={`px-2 py-1 rounded-pf-full text-pf-caption font-medium ${
+                      <span key={tag} className={`px-2 py-1 rounded-full text-caption font-medium ${
                         tag === 'momentum' ? 'bg-warning/15 text-warning' :
                         tag === 'political' ? 'bg-info/15 text-info' :
                         tag === 'yes-bias' ? 'bg-gain/15 text-gain' :
-                        tag === 'defensive' ? 'bg-pf-purple-500/15 text-pf-purple-400' :
+                        tag === 'defensive' ? 'bg-purple-500/15 text-purple-400' :
                         tag === 'scalping' ? 'bg-loss/15 text-loss' :
-                        tag === 'high-freq' ? 'bg-pf-purple-300/15 text-pf-purple-300' :
+                        tag === 'high-freq' ? 'bg-purple-300/15 text-purple-300' :
                         'bg-overlay text-tertiary'
                       }`}>
                         {tag}
@@ -589,8 +589,8 @@ export function Component() {
                     {likeCount}
                   </Button>
                   <span data-testid="strategy-forks" className="flex items-center gap-1"><GitFork className="size-4" aria-hidden="true" /> {s.forkCount}</span>
-                  <span className="ml-auto text-pf-label text-tertiary">&bull;</span>
-                  <span className="font-mono text-pf-label">{formatDate(s.createdAt)}</span>
+                  <span className="ml-auto text-label text-tertiary">&bull;</span>
+                  <span className="font-mono text-label">{formatDate(s.createdAt)}</span>
                 </div>
               </Link>
             );

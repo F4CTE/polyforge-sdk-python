@@ -225,7 +225,7 @@ export function Component() {
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <h2 className="text-lg font-semibold text-primary flex items-center gap-2">
           Backtests
-          <span className="text-sm font-normal text-tertiary px-2 py-1 bg-elevated border border-default rounded-pf-full">
+          <span className="text-sm font-normal text-tertiary px-2 py-1 bg-elevated border border-default rounded-full">
             {total}
           </span>
         </h2>
@@ -240,8 +240,8 @@ export function Component() {
                 onChange={(e) => setAutoRefresh(e.target.checked)}
                 aria-label="Toggle auto-refresh"
               />
-              <span className="block w-full h-full rounded-pf-full bg-default peer-checked:bg-accent transition-colors" />
-              <span className="absolute top-1 left-1 w-3 h-3 rounded-pf-full bg-primary transition-transform peer-checked:translate-x-4" />
+              <span className="block w-full h-full rounded-full bg-default peer-checked:bg-accent transition-colors" />
+              <span className="absolute top-1 left-1 w-3 h-3 rounded-full bg-primary transition-transform peer-checked:translate-x-4" />
             </span>
             Auto-refresh
             {refreshing && (
@@ -256,7 +256,7 @@ export function Component() {
             onClick={() => load({ silent: true })}
             disabled={loading || refreshing}
             aria-label="Refresh backtests"
-            className="flex items-center gap-2 px-3 py-2 text-xs rounded-pf-sm bg-elevated border border-default text-secondary hover:text-primary hover:border-accent/50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="flex items-center gap-2 px-3 py-2 text-xs rounded-sm bg-elevated border border-default text-secondary hover:text-primary hover:border-accent/50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             <RefreshCw
               size={12}
@@ -278,7 +278,7 @@ export function Component() {
         ].map(({ label, value, highlight, danger }) => (
           <div
             key={label}
-            className="bg-elevated border border-default rounded-pf-lg p-4"
+            className="bg-elevated border border-default rounded-xl p-4"
           >
             <p className="text-xs text-tertiary mb-1">{label}</p>
             <p
@@ -299,7 +299,7 @@ export function Component() {
       {/* Filter controls */}
       <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
         {/* Status tabs */}
-        <div className="flex items-center gap-1 bg-elevated border border-default rounded-pf-sm p-1 flex-wrap">
+        <div className="flex items-center gap-1 bg-elevated border border-default rounded-sm p-1 flex-wrap">
           {STATUS_TABS.map(({ label, value }) => (
             <Button
               key={value}
@@ -325,12 +325,12 @@ export function Component() {
             onChange={(e) => setUsernameInput(e.target.value)}
             placeholder="Filter by username..."
             aria-label="Filter by username"
-            className="h-8 px-3 rounded-pf-sm bg-elevated border border-default text-xs text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:border-accent transition-colors w-48"
+            className="h-8 px-3 rounded-sm bg-elevated border border-default text-xs text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:border-accent transition-colors w-48"
           />
           <Button
             type="submit"
             variant="default"
-            className="h-8 px-3 rounded-pf-sm bg-accent/10 border border-accent/30 text-xs text-accent-text hover:bg-accent/20 transition-colors"
+            className="h-8 px-3 rounded-sm bg-accent/10 border border-accent/30 text-xs text-accent-text hover:bg-accent/20 transition-colors"
           >
             Search
           </Button>
@@ -343,7 +343,7 @@ export function Component() {
                 setUsernameInput('');
                 setPage(1);
               }}
-              className="h-8 px-3 rounded-pf-sm bg-elevated border border-default text-xs text-secondary hover:text-primary transition-colors"
+              className="h-8 px-3 rounded-sm bg-elevated border border-default text-xs text-secondary hover:text-primary transition-colors"
             >
               Clear
             </Button>
@@ -352,7 +352,7 @@ export function Component() {
       </div>
 
       {/* Table */}
-      <div className="bg-elevated border border-default rounded-pf-lg overflow-hidden">
+      <div className="bg-elevated border border-default rounded-xl overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm" aria-label="Backtest results">
             <caption className="sr-only">Backtest runs</caption>
@@ -452,18 +452,18 @@ export function Component() {
                       </td>
 
                       {/* Strategy */}
-                      <td className="px-4 py-3 text-secondary text-xs max-w-pf-col-sm truncate" title={bt.strategyName}>
+                      <td className="px-4 py-3 text-secondary text-xs max-w-col-sm truncate" title={bt.strategyName}>
                         {bt.strategyName || '—'}
                       </td>
 
                       {/* Status badge */}
                       <td className="px-4 py-3">
                         <span
-                          className={`inline-flex items-center gap-1 px-2 py-1 rounded-pf-full text-xs font-medium ${statusBadgeClass(bt.status)}`}
+                          className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${statusBadgeClass(bt.status)}`}
                         >
                           {isRunning && (
                             <span
-                              className="w-2 h-2 rounded-pf-full bg-accent-text animate-pulse"
+                              className="w-2 h-2 rounded-full bg-accent-text animate-pulse"
                               aria-hidden="true"
                             />
                           )}
@@ -498,7 +498,7 @@ export function Component() {
                           </span>
                         ) : isFailed && bt.errorMessage ? (
                           <span
-                            className="text-loss truncate max-w-pf-col-xs inline-block"
+                            className="text-loss truncate max-w-col-xs inline-block"
                             title={bt.errorMessage}
                           >
                             {bt.errorMessage.length > 30

@@ -89,7 +89,7 @@ export function Component() {
       <div className="animate-fade-in space-y-6" role="status" aria-label="Loading cache statistics">
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="bg-elevated border border-default rounded-pf-lg p-5 space-y-3">
+            <div key={i} className="bg-elevated border border-default rounded-xl p-5 space-y-3">
               <div className="h-3 bg-app rounded w-20 animate-pulse" />
               <div className="h-6 bg-app rounded w-16 animate-pulse" />
             </div>
@@ -102,7 +102,7 @@ export function Component() {
   return (
     <div className="animate-fade-in space-y-6">
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-1 bg-surface border border-default rounded-pf-sm p-1">
+        <div className="flex items-center gap-1 bg-surface border border-default rounded-sm p-1">
           <Button
             type="button"
             variant="ghost"
@@ -124,7 +124,7 @@ export function Component() {
           type="button"
           variant="ghost"
           onClick={tab === 'cache' ? loadStats : loadStreams}
-          className="flex items-center gap-2 px-3 py-2 text-sm rounded-pf-sm border border-default text-secondary hover:bg-elevated transition-colors"
+          className="flex items-center gap-2 px-3 py-2 text-sm rounded-sm border border-default text-secondary hover:bg-elevated transition-colors"
           aria-label="Refresh"
         >
           <RefreshCw size={14} aria-hidden="true" />
@@ -137,19 +137,19 @@ export function Component() {
         <>
           {stats && (
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div className="bg-elevated border border-default rounded-pf-lg p-4">
+              <div className="bg-elevated border border-default rounded-xl p-4">
                 <div className="text-xs text-tertiary mb-1">Hit Rate</div>
                 <div className="text-2xl font-semibold text-primary">
                   {((stats.hitRate ?? 0) * 100).toFixed(1)}%
                 </div>
               </div>
-              <div className="bg-elevated border border-default rounded-pf-lg p-4">
+              <div className="bg-elevated border border-default rounded-xl p-4">
                 <div className="text-xs text-tertiary mb-1">Total Keys</div>
                 <div className="text-2xl font-semibold text-primary">
                   {(stats.keyCount ?? 0).toLocaleString()}
                 </div>
               </div>
-              <div className="bg-elevated border border-default rounded-pf-lg p-4">
+              <div className="bg-elevated border border-default rounded-xl p-4">
                 <div className="text-xs text-tertiary mb-1">Memory Usage</div>
                 <div className="text-2xl font-semibold text-primary">
                   {(stats.memoryUsageMb ?? 0).toFixed(1)} MB
@@ -158,7 +158,7 @@ export function Component() {
             </div>
           )}
 
-          <div className="bg-elevated border border-default rounded-pf-lg p-5">
+          <div className="bg-elevated border border-default rounded-xl p-5">
             <div className="flex items-center gap-2 mb-4">
               <Trash2 size={16} className="text-warning" aria-hidden="true" />
               <h3 className="text-sm font-semibold text-primary">Flush by Pattern</h3>
@@ -171,14 +171,14 @@ export function Component() {
                 value={pattern}
                 onChange={(e) => setPattern(e.target.value)}
                 placeholder="e.g. user:*, strategy:abc*"
-                className="flex-1 px-3 py-2 text-sm rounded-pf-sm border border-default bg-app text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent font-mono"
+                className="flex-1 px-3 py-2 text-sm rounded-sm border border-default bg-app text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent font-mono"
               />
               <Button
                 type="button"
                 variant="danger"
                 onClick={handleFlush}
                 disabled={flushing || !pattern.trim()}
-                className="px-4 py-2 text-sm rounded-pf-sm bg-warning text-primary hover:bg-warning/80 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="px-4 py-2 text-sm rounded-sm bg-warning text-primary hover:bg-warning/80 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 {flushing ? 'Flushing...' : 'Flush'}
               </Button>
@@ -186,7 +186,7 @@ export function Component() {
           </div>
 
           {stats && stats.patterns && stats.patterns.length > 0 && (
-            <div className="bg-elevated border border-default rounded-pf-lg p-5">
+            <div className="bg-elevated border border-default rounded-xl p-5">
               <div className="flex items-center gap-2 mb-4">
                 <Database size={16} className="text-accent" aria-hidden="true" />
                 <h3 className="text-sm font-semibold text-primary">Cache Patterns</h3>
@@ -223,13 +223,13 @@ export function Component() {
           {loadingStreams ? (
             <div className="space-y-3">
               {Array.from({ length: 4 }).map((_, i) => (
-                <div key={i} className="bg-elevated border border-default rounded-pf-lg p-4 animate-pulse h-20" />
+                <div key={i} className="bg-elevated border border-default rounded-xl p-4 animate-pulse h-20" />
               ))}
             </div>
           ) : streams ? (
             <div className="space-y-3">
               {streams.map((s) => (
-                <div key={s.name} className="bg-elevated border border-default rounded-pf-lg p-4">
+                <div key={s.name} className="bg-elevated border border-default rounded-xl p-4">
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-2">
                       {s.error
@@ -242,7 +242,7 @@ export function Component() {
                       <span className="text-xs text-tertiary">
                         {s.error ? 'stream empty or not found' : `${s.length.toLocaleString()} entries`}
                       </span>
-                      <span className={`px-2 py-1 rounded-pf-full text-pf-caption font-medium ${
+                      <span className={`px-2 py-1 rounded-full text-caption font-medium ${
                         s.error ? 'bg-warning/10 text-warning' : 'bg-gain/10 text-gain'
                       }`}>
                         {s.error ? 'empty' : 'active'}
@@ -252,11 +252,11 @@ export function Component() {
                   {!s.error && s.groups.length > 0 && (
                     <div className="grid grid-cols-3 gap-2">
                       {s.groups.map((g, gi) => (
-                        <div key={gi} className="bg-app border border-default rounded-pf-sm p-3">
-                          <p className="font-mono text-pf-label text-primary truncate">{String(g.name)}</p>
+                        <div key={gi} className="bg-app border border-default rounded-sm p-3">
+                          <p className="font-mono text-label text-primary truncate">{String(g.name)}</p>
                           <div className="flex items-center gap-3 mt-1">
-                            <span className="text-pf-caption text-tertiary">{g.consumers} consumer{g.consumers !== 1 ? 's' : ''}</span>
-                            <span className={`text-pf-caption font-medium ${g.pending > 0 ? 'text-warning' : 'text-gain'}`}>
+                            <span className="text-caption text-tertiary">{g.consumers} consumer{g.consumers !== 1 ? 's' : ''}</span>
+                            <span className={`text-caption font-medium ${g.pending > 0 ? 'text-warning' : 'text-gain'}`}>
                               {g.pending} pending
                             </span>
                           </div>

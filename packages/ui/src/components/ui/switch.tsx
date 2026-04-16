@@ -16,8 +16,8 @@ const Switch = React.forwardRef<HTMLInputElement, SwitchProps>(
     return (
       <label
         className={cn(
-          "relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-pf-full",
-          "transition-colors duration-pf-fast",
+          "relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full",
+          "transition-colors duration-micro",
           props.disabled && "opacity-50 cursor-not-allowed",
           className
         )}
@@ -31,16 +31,16 @@ const Switch = React.forwardRef<HTMLInputElement, SwitchProps>(
         />
         <span
           className={cn(
-            "absolute inset-0 rounded-pf-full bg-overlay",
-            "transition-colors duration-pf-fast",
+            "absolute inset-0 rounded-full bg-overlay",
+            "transition-colors duration-micro",
             "peer-checked:bg-accent",
             "peer-focus-visible:ring-2 peer-focus-visible:ring-accent/40"
           )}
         />
         <span
           className={cn(
-            "pointer-events-none absolute left-px top-px h-4 w-4 rounded-pf-full bg-inverse",
-            "shadow-pf-sm transition-transform duration-pf-fast",
+            "pointer-events-none absolute left-px top-px h-4 w-4 rounded-full bg-inverse",
+            "shadow-sm transition-transform duration-micro",
             "peer-checked:translate-x-4"
           )}
         />

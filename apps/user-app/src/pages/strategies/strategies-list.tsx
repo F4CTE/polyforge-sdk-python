@@ -90,14 +90,14 @@ interface StrategyPerfData {
 
 /* ─── Constants ──────────────────────────────────────────────────────── */
 
-const COMPARE_COLORS = ['var(--accent-default)', 'var(--color-pf-purple-500)', 'var(--color-pf-gold-500)', 'var(--gain)'];
+const COMPARE_COLORS = ['var(--accent-default)', 'var(--color-purple-500)', 'var(--color-gold-500)', 'var(--gain)'];
 
 /* ─── Helpers ────────────────────────────────────────────────────────── */
 
 function statusGradient(status: StrategyStatus): string {
   switch (status) {
     case 'RUNNING':  return 'var(--accent-default)';
-    case 'PAPER':    return 'var(--color-pf-purple-500)';
+    case 'PAPER':    return 'var(--color-purple-500)';
     case 'PAUSED':   return 'var(--warning)';
     case 'ERROR':    return 'var(--loss)';
     case 'IDLE':
@@ -107,7 +107,7 @@ function statusGradient(status: StrategyStatus): string {
 
 const STATUS_STYLES: Record<StrategyStatus, { dot: string; bg: string; text: string }> = {
   RUNNING:  { dot: 'bg-accent',   bg: 'bg-accent/10',   text: 'text-accent' },
-  PAPER:    { dot: 'bg-pf-purple-500', bg: 'bg-pf-purple-500/10', text: 'text-pf-purple-500' },
+  PAPER:    { dot: 'bg-purple-500', bg: 'bg-purple-500/10', text: 'text-purple-500' },
   PAUSED:   { dot: 'bg-warning',   bg: 'bg-warning/10',   text: 'text-warning' },
   IDLE:     { dot: 'bg-tertiary',    bg: 'bg-overlay',    text: 'text-tertiary' },
   ERROR:    { dot: 'bg-loss',     bg: 'bg-loss/10',     text: 'text-loss' },
@@ -211,12 +211,12 @@ function ComparisonPanel({ perfData, loading, onBack }: ComparisonPanelProps) {
         {/* Back button skeleton */}
         <div className="h-8 w-32 bg-overlay rounded animate-shimmer" />
         {/* Chart skeleton */}
-        <div className="bg-elevated border border-default rounded-pf-lg p-5">
+        <div className="bg-elevated border border-default rounded-xl p-5">
           <div className="h-4 w-40 bg-overlay rounded mb-4 animate-shimmer" />
           <div className="h-56 bg-overlay rounded animate-shimmer" />
         </div>
         {/* Table skeleton */}
-        <div className="bg-elevated border border-default rounded-pf-lg p-5 space-y-3">
+        <div className="bg-elevated border border-default rounded-xl p-5 space-y-3">
           <div className="h-4 w-32 bg-overlay rounded animate-shimmer" />
           {[1, 2, 3, 4, 5].map((i) => (
             <div key={i} className="h-8 bg-overlay rounded animate-shimmer" />
@@ -246,7 +246,7 @@ function ComparisonPanel({ perfData, loading, onBack }: ComparisonPanelProps) {
       </Button>
 
       {/* P&L Line Chart */}
-      <div className="bg-elevated border border-default rounded-pf-lg p-5">
+      <div className="bg-elevated border border-default rounded-xl p-5">
         <h2 className="text-sm font-semibold text-primary mb-4">P&L Performance</h2>
         {chartData.length === 0 ? (
           <div className="flex items-center justify-center h-56 text-tertiary text-sm">
@@ -298,7 +298,7 @@ function ComparisonPanel({ perfData, loading, onBack }: ComparisonPanelProps) {
       </div>
 
       {/* Stats Table */}
-      <div className="bg-elevated border border-default rounded-pf-lg overflow-hidden">
+      <div className="bg-elevated border border-default rounded-xl overflow-hidden">
         <div className="p-5 pb-3">
           <h2 className="text-sm font-semibold text-primary">Performance Metrics</h2>
         </div>
@@ -310,7 +310,7 @@ function ComparisonPanel({ perfData, loading, onBack }: ComparisonPanelProps) {
                 {perfData.map((s) => (
                   <th key={s.strategyId} className="text-left px-5 py-3 font-medium text-xs">
                     <span className="flex items-center gap-2">
-                      <span className="inline-block w-3 h-3 rounded-pf-full shrink-0" style={{ background: s.color }} aria-hidden="true" />
+                      <span className="inline-block w-3 h-3 rounded-full shrink-0" style={{ background: s.color }} aria-hidden="true" />
                       <span className="text-primary truncate max-w-[120px]">{s.name}</span>
                     </span>
                   </th>
@@ -631,7 +631,7 @@ export function Component() {
               variant="ghost"
               key={f.value}
               onClick={() => onFilterChange(f.value)}
-              className={`px-3 py-2 text-sm rounded-pf-full border transition-colors ${
+              className={`px-3 py-2 text-sm rounded-full border transition-colors ${
                 filter === f.value
                   ? 'bg-accent/10 border-accent/30 text-accent-text'
                   : 'border-default text-secondary hover:text-primary'
@@ -714,10 +714,10 @@ export function Component() {
                 role={compareMode ? 'checkbox' : 'link'}
                 aria-checked={compareMode ? isSelected : undefined}
                 className={[
-                  'group bg-elevated border rounded-pf-lg p-5 cursor-pointer transition-all duration-pf-normal overflow-hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40',
+                  'group bg-elevated border rounded-xl p-5 cursor-pointer transition-all duration-panel overflow-hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40',
                   compareMode && isSelected
-                    ? 'border-accent/50 shadow-pf-ring-cyan'
-                    : 'border-default hover:border-strong hover:shadow-pf-sm hover:-translate-y-1',
+                    ? 'border-accent/50 shadow-ring-accent'
+                    : 'border-default hover:border-strong hover:shadow-sm hover:-translate-y-1',
                   compareMode && isMaxed
                     ? 'opacity-50 pointer-events-none'
                     : '',
@@ -725,7 +725,7 @@ export function Component() {
               >
                 {/* Gradient status bar */}
                 <div
-                  className="h-1 -mx-5 -mt-5 mb-4 rounded-t-pf-lg"
+                  className="h-1 -mx-5 -mt-5 mb-4 rounded-t-xl"
                   style={{ background: statusGradient(strategy.status) }}
                   aria-hidden="true"
                 />
@@ -757,30 +757,30 @@ export function Component() {
                   <h3 className="text-sm font-medium text-primary leading-snug line-clamp-1 group-hover:text-accent-text transition-colors">
                     {strategy.name}
                   </h3>
-                  <span data-testid="status-badge" className={`inline-flex items-center gap-2 px-2 py-1 rounded-pf-full text-pf-label font-medium shrink-0 ${statusStyle.bg} ${statusStyle.text}`}>
-                    <span className={`w-3 h-3 rounded-pf-full ${statusStyle.dot} ${strategy.status === 'RUNNING' ? 'animate-pulse-dot' : ''}`} />
+                  <span data-testid="status-badge" className={`inline-flex items-center gap-2 px-2 py-1 rounded-full text-label font-medium shrink-0 ${statusStyle.bg} ${statusStyle.text}`}>
+                    <span className={`w-3 h-3 rounded-full ${statusStyle.dot} ${strategy.status === 'RUNNING' ? 'animate-pulse-dot' : ''}`} />
                     {strategy.status}
                   </span>
                 </div>
 
                 {/* Meta chips */}
                 <div className="flex flex-wrap gap-2 mb-2">
-                  <span className={`inline-flex items-center px-2 py-1 rounded-pf-full text-pf-label font-medium ${
+                  <span className={`inline-flex items-center px-2 py-1 rounded-full text-label font-medium ${
                     strategy.execMode === 'TICK'
-                      ? 'bg-pf-purple-500/10 text-pf-purple-500'
+                      ? 'bg-purple-500/10 text-purple-500'
                       : strategy.execMode === 'HYBRID'
-                        ? 'bg-pf-purple-500/10 text-pf-purple-500'
+                        ? 'bg-purple-500/10 text-purple-500'
                         : 'bg-accent/10 text-accent-text'
                   }`}>
                     {execLabel(strategy)}
                   </span>
-                  <span className="inline-flex items-center px-2 py-1 rounded-pf-full bg-overlay text-tertiary text-pf-label font-medium">
+                  <span className="inline-flex items-center px-2 py-1 rounded-full bg-overlay text-tertiary text-label font-medium">
                     {blocksCount(strategy)} blocks
                   </span>
                   {strategy.tags.length > 0 && (
-                    <span className={`inline-flex items-center px-2 py-1 rounded-pf-full text-pf-label font-medium ${
+                    <span className={`inline-flex items-center px-2 py-1 rounded-full text-label font-medium ${
                       strategy.tags[0].toLowerCase() === 'momentum'
-                        ? 'bg-pf-gold-500/10 text-pf-gold-500'
+                        ? 'bg-gold-500/10 text-gold-500'
                         : strategy.tags[0].toLowerCase() === 'defensive'
                           ? 'bg-info/10 text-info'
                           : 'bg-overlay text-tertiary'
@@ -788,7 +788,7 @@ export function Component() {
                       {strategy.tags[0]}
                     </span>
                   )}
-                  <span className="inline-flex items-center px-2 py-1 rounded-pf-full bg-pf-purple-500/10 text-pf-purple-500 text-pf-label font-medium ml-auto">
+                  <span className="inline-flex items-center px-2 py-1 rounded-full bg-purple-500/10 text-purple-500 text-label font-medium ml-auto">
                     v{strategy.version}
                   </span>
                 </div>
@@ -815,7 +815,7 @@ export function Component() {
                     className="flex items-center justify-between pt-3 border-t border-subtle"
                     onClick={(e) => e.stopPropagation()}
                   >
-                    <span className="font-mono text-pf-label text-tertiary">
+                    <span className="font-mono text-label text-tertiary">
                       {formatDate(strategy.updatedAt)}
                     </span>
                     <div className="flex items-center gap-1">
@@ -826,7 +826,7 @@ export function Component() {
                             variant="ghost"
                             onClick={(e) => { e.stopPropagation(); doAction(strategy.id, 'start', { mode: 'live' }); }}
                             disabled={busy}
-                            className="flex items-center gap-1 px-2 py-1 rounded-pf-sm bg-accent/10 text-accent-text text-pf-label font-medium hover:bg-accent/20 disabled:opacity-40 transition-colors"
+                            className="flex items-center gap-1 px-2 py-1 rounded-sm bg-accent/10 text-accent-text text-label font-medium hover:bg-accent/20 disabled:opacity-40 transition-colors"
                             title="Start strategy (Live)"
                             aria-label="Start strategy in live mode"
                           >
@@ -837,7 +837,7 @@ export function Component() {
                             variant="ghost"
                             onClick={(e) => { e.stopPropagation(); doAction(strategy.id, 'start', { mode: 'paper' }); }}
                             disabled={busy}
-                            className="flex items-center gap-1 px-2 py-1 rounded-pf-sm bg-overlay text-secondary text-pf-label font-medium hover:bg-subtle disabled:opacity-40 transition-colors"
+                            className="flex items-center gap-1 px-2 py-1 rounded-sm bg-overlay text-secondary text-label font-medium hover:bg-subtle disabled:opacity-40 transition-colors"
                             title="Start strategy (Paper)"
                             aria-label="Start strategy in paper mode"
                           >
@@ -916,7 +916,7 @@ export function Component() {
                       <Link
                         to={`/strategies/${strategy.id}/edit`}
                         onClick={(e) => e.stopPropagation()}
-                        className="p-2 rounded-pf-sm text-secondary hover:text-primary hover:bg-overlay transition-colors"
+                        className="p-2 rounded-sm text-secondary hover:text-primary hover:bg-overlay transition-colors"
                         aria-label="Edit strategy"
                         title="Edit strategy"
                       >
@@ -929,7 +929,7 @@ export function Component() {
                 {/* Compare mode footer — show date only */}
                 {compareMode && (
                   <div className="pt-3 border-t border-subtle">
-                    <span className="font-mono text-pf-label text-tertiary">
+                    <span className="font-mono text-label text-tertiary">
                       {formatDate(strategy.updatedAt)}
                     </span>
                   </div>
@@ -960,10 +960,10 @@ export function Component() {
                 return (
                   <span
                     key={id}
-                    className="inline-flex items-center gap-1 pl-2 pr-1 py-1 rounded-pf-full text-pf-label font-medium text-primary bg-overlay border border-default"
+                    className="inline-flex items-center gap-1 pl-2 pr-1 py-1 rounded-full text-label font-medium text-primary bg-overlay border border-default"
                   >
                     <span
-                      className="inline-block w-2 h-2 rounded-pf-full shrink-0"
+                      className="inline-block w-2 h-2 rounded-full shrink-0"
                       style={{ background: COMPARE_COLORS[i % COMPARE_COLORS.length] }}
                       aria-hidden="true"
                     />

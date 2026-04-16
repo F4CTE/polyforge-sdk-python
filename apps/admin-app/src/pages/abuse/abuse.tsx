@@ -98,22 +98,22 @@ function formatRelativeTime(iso: string): string {
 
 function SkeletonCard() {
   return (
-    <div className="rounded-pf-md border border-default bg-surface p-5 animate-pulse space-y-3">
+    <div className="rounded-lg border border-default bg-surface p-5 animate-pulse space-y-3">
       <div className="flex items-center gap-3">
-        <div className="h-5 w-20 rounded-pf-sm bg-elevated" />
-        <div className="h-5 w-40 rounded-pf-sm bg-elevated" />
-        <div className="ml-auto h-5 w-24 rounded-pf-sm bg-elevated" />
+        <div className="h-5 w-20 rounded-sm bg-elevated" />
+        <div className="h-5 w-40 rounded-sm bg-elevated" />
+        <div className="ml-auto h-5 w-24 rounded-sm bg-elevated" />
       </div>
-      <div className="h-4 w-48 rounded-pf-sm bg-elevated" />
+      <div className="h-4 w-48 rounded-sm bg-elevated" />
       <div className="space-y-2">
-        <div className="h-4 w-full rounded-pf-sm bg-elevated" />
-        <div className="h-4 w-3/4 rounded-pf-sm bg-elevated" />
+        <div className="h-4 w-full rounded-sm bg-elevated" />
+        <div className="h-4 w-3/4 rounded-sm bg-elevated" />
       </div>
       <div className="flex gap-2 pt-1">
-        <div className="h-8 w-24 rounded-pf-sm bg-elevated" />
-        <div className="h-8 w-24 rounded-pf-sm bg-elevated" />
-        <div className="h-8 w-28 rounded-pf-sm bg-elevated" />
-        <div className="h-8 w-24 rounded-pf-sm bg-elevated" />
+        <div className="h-8 w-24 rounded-sm bg-elevated" />
+        <div className="h-8 w-24 rounded-sm bg-elevated" />
+        <div className="h-8 w-28 rounded-sm bg-elevated" />
+        <div className="h-8 w-24 rounded-sm bg-elevated" />
       </div>
     </div>
   );
@@ -130,8 +130,8 @@ interface SummaryCardProps {
 
 function SummaryCard({ label, value, icon, accent }: SummaryCardProps) {
   return (
-    <div className="rounded-pf-md border border-default bg-surface p-4 flex items-center gap-4">
-      <div className={`flex items-center justify-center w-10 h-10 rounded-pf-md ${accent ?? 'bg-elevated text-secondary'}`}>
+    <div className="rounded-lg border border-default bg-surface p-4 flex items-center gap-4">
+      <div className={`flex items-center justify-center w-10 h-10 rounded-lg ${accent ?? 'bg-elevated text-secondary'}`}>
         {icon}
       </div>
       <div>
@@ -179,10 +179,10 @@ function FlaggedCard({ strategy, onAction }: FlaggedCardProps) {
   const isActioning = pending !== null;
 
   return (
-    <div className="rounded-pf-md border border-default bg-surface p-5 space-y-4">
+    <div className="rounded-lg border border-default bg-surface p-5 space-y-4">
       {/* Header row */}
       <div className="flex flex-wrap items-start gap-2">
-        <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-pf-sm text-xs font-semibold uppercase tracking-wide ${SEVERITY_STYLES[strategy.severity]}`}>
+        <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-sm text-xs font-semibold uppercase tracking-wide ${SEVERITY_STYLES[strategy.severity]}`}>
           {strategy.severity === 'critical' && <AlertTriangle size={11} aria-hidden="true" />}
           {strategy.severity}
         </span>
@@ -219,7 +219,7 @@ function FlaggedCard({ strategy, onAction }: FlaggedCardProps) {
       {strategy.evidence.length > 0 && (
         <div className="space-y-1">
           <div className="text-xs font-semibold text-secondary uppercase tracking-wide">Evidence</div>
-          <div className="rounded-pf-sm border border-default divide-y divide-default overflow-hidden">
+          <div className="rounded-sm border border-default divide-y divide-default overflow-hidden">
             {strategy.evidence.map((ev, i) => (
               <div key={i} className="grid grid-cols-4 gap-2 px-3 py-2 text-xs bg-elevated/40">
                 <span className="text-secondary font-medium">{ev.metric}</span>
@@ -249,13 +249,13 @@ function FlaggedCard({ strategy, onAction }: FlaggedCardProps) {
           onChange={(e) => setNote(e.target.value)}
           placeholder="Add a review note..."
           disabled={isActioning}
-          className="w-full rounded-pf-sm border border-default bg-elevated px-3 py-2 text-xs text-primary placeholder:text-tertiary resize-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent disabled:opacity-50"
+          className="w-full rounded-sm border border-default bg-elevated px-3 py-2 text-xs text-primary placeholder:text-tertiary resize-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent disabled:opacity-50"
         />
       </div>
 
       {/* Ban confirmation */}
       {confirmBan && (
-        <div className="rounded-pf-sm border border-loss/30 bg-loss/5 px-4 py-3 flex flex-wrap items-center gap-3">
+        <div className="rounded-sm border border-loss/30 bg-loss/5 px-4 py-3 flex flex-wrap items-center gap-3">
           <AlertTriangle size={15} className="text-loss shrink-0" aria-hidden="true" />
           <span className="text-xs text-loss flex-1">
             Ban <strong>@{strategy.authorUsername}</strong>? This will permanently disable their account and remove all their listings.
@@ -265,7 +265,7 @@ function FlaggedCard({ strategy, onAction }: FlaggedCardProps) {
               type="button"
               variant="secondary"
               onClick={() => setConfirmBan(false)}
-              className="px-3 py-2 rounded-pf-sm border border-default text-xs text-secondary hover:bg-elevated transition-colors"
+              className="px-3 py-2 rounded-sm border border-default text-xs text-secondary hover:bg-elevated transition-colors"
             >
               Cancel
             </Button>
@@ -290,7 +290,7 @@ function FlaggedCard({ strategy, onAction }: FlaggedCardProps) {
             variant="success"
             onClick={() => handleAction('clear')}
             disabled={isActioning}
-            className="inline-flex items-center gap-2 px-3 py-2 rounded-pf-sm border border-gain/40 text-xs font-medium text-gain hover:bg-gain/10 transition-colors disabled:opacity-50"
+            className="inline-flex items-center gap-2 px-3 py-2 rounded-sm border border-gain/40 text-xs font-medium text-gain hover:bg-gain/10 transition-colors disabled:opacity-50"
           >
             <ShieldCheck size={13} aria-hidden="true" />
             {pending === 'clear' ? 'Clearing…' : 'Clear — No Abuse'}
@@ -301,7 +301,7 @@ function FlaggedCard({ strategy, onAction }: FlaggedCardProps) {
             variant="ghost"
             onClick={() => handleAction('warn')}
             disabled={isActioning}
-            className="inline-flex items-center gap-2 px-3 py-2 rounded-pf-sm border border-warning/40 text-xs font-medium text-warning hover:bg-warning/10 transition-colors disabled:opacity-50"
+            className="inline-flex items-center gap-2 px-3 py-2 rounded-sm border border-warning/40 text-xs font-medium text-warning hover:bg-warning/10 transition-colors disabled:opacity-50"
           >
             <AlertTriangle size={13} aria-hidden="true" />
             {pending === 'warn' ? 'Warning…' : 'Warn Author'}
@@ -312,7 +312,7 @@ function FlaggedCard({ strategy, onAction }: FlaggedCardProps) {
             variant="danger"
             onClick={() => handleAction('delist')}
             disabled={isActioning}
-            className="inline-flex items-center gap-2 px-3 py-2 rounded-pf-sm border border-loss/40 text-xs font-medium text-loss hover:bg-loss/10 transition-colors disabled:opacity-50"
+            className="inline-flex items-center gap-2 px-3 py-2 rounded-sm border border-loss/40 text-xs font-medium text-loss hover:bg-loss/10 transition-colors disabled:opacity-50"
           >
             <Eye size={13} aria-hidden="true" />
             {pending === 'delist' ? 'Delisting…' : 'Delist Strategy'}
@@ -333,7 +333,7 @@ function FlaggedCard({ strategy, onAction }: FlaggedCardProps) {
 
       {/* Existing review note (cleared/actioned) */}
       {strategy.reviewNote && (
-        <div className="rounded-pf-sm bg-elevated px-3 py-2 text-xs text-secondary">
+        <div className="rounded-sm bg-elevated px-3 py-2 text-xs text-secondary">
           <span className="font-medium text-tertiary">Admin note: </span>
           {strategy.reviewNote}
         </div>
@@ -423,7 +423,7 @@ export function Component() {
         </div>
         {pendingCount > 0 && (
           <span
-            className="inline-flex items-center justify-center min-w-6 h-5 px-2 rounded-pf-full bg-loss text-pf-caption font-semibold text-primary"
+            className="inline-flex items-center justify-center min-w-6 h-5 px-2 rounded-full bg-loss text-caption font-semibold text-primary"
             aria-label={`${pendingCount} pending flagged strategies`}
           >
             {pendingCount}
@@ -468,7 +468,7 @@ export function Component() {
             type="button"
             variant="ghost"
             onClick={() => setActiveTab(tab.key)}
-            className={`px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-px rounded-t-pf-sm ${
+            className={`px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-px rounded-t-sm ${
               activeTab === tab.key
                 ? 'border-accent text-accent'
                 : 'border-transparent text-secondary hover:text-primary'
@@ -477,7 +477,7 @@ export function Component() {
           >
             {tab.label}
             {tab.key === 'pending' && pendingCount > 0 && (
-              <span className="ml-2 inline-flex items-center justify-center min-w-5 h-4 px-1 rounded-pf-full bg-loss text-pf-micro font-semibold text-primary">
+              <span className="ml-2 inline-flex items-center justify-center min-w-5 h-4 px-1 rounded-full bg-loss text-caption font-semibold text-primary">
                 {pendingCount}
               </span>
             )}

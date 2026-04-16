@@ -278,12 +278,12 @@ function ActivityTimeline({ userId }: ActivityTimelineProps) {
         {Array.from({ length: 5 }).map((_, i) => (
           <div key={i} className="flex gap-4 animate-pulse">
             <div className="flex flex-col items-center">
-              <div className="w-3 h-3 rounded-pf-full bg-default mt-1 shrink-0" />
+              <div className="w-3 h-3 rounded-full bg-default mt-1 shrink-0" />
               {i < 4 && <div className="w-px flex-1 bg-default mt-1" />}
             </div>
             <div className="pb-6 flex-1 space-y-2">
               <div className="flex items-center gap-3">
-                <div className="h-5 w-24 bg-elevated rounded-pf-full" />
+                <div className="h-5 w-24 bg-elevated rounded-full" />
                 <div className="h-3 w-16 bg-elevated rounded" />
               </div>
               <div className="h-4 bg-elevated rounded w-3/4" />
@@ -311,7 +311,7 @@ function ActivityTimeline({ userId }: ActivityTimelineProps) {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search activity..."
-            className="w-full pl-8 pr-3 py-2 text-sm bg-elevated border border-default rounded-pf-sm text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+            className="w-full pl-8 pr-3 py-2 text-sm bg-elevated border border-default rounded-sm text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
             aria-label="Search activity by description"
           />
         </div>
@@ -326,7 +326,7 @@ function ActivityTimeline({ userId }: ActivityTimelineProps) {
           <Select
             value={filterGroup}
             onChange={(e) => setFilterGroup(e.target.value as ActivityFilterGroup)}
-            className="pl-8 pr-8 py-2 text-sm bg-elevated border border-default rounded-pf-sm text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent appearance-none cursor-pointer"
+            className="pl-8 pr-8 py-2 text-sm bg-elevated border border-default rounded-sm text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent appearance-none cursor-pointer"
             aria-label="Filter by event type"
           >
             <option value="all">All Events</option>
@@ -344,7 +344,7 @@ function ActivityTimeline({ userId }: ActivityTimelineProps) {
 
         {/* Date range pills */}
         <div
-          className="flex items-center gap-1 bg-elevated border border-default rounded-pf-sm p-1"
+          className="flex items-center gap-1 bg-elevated border border-default rounded-sm p-1"
           role="group"
           aria-label="Date range filter"
         >
@@ -354,7 +354,7 @@ function ActivityTimeline({ userId }: ActivityTimelineProps) {
               type="button"
               variant="ghost"
               onClick={() => setDateRange(r)}
-              className={`px-3 py-1 text-xs font-medium rounded-pf-sm transition-colors ${
+              className={`px-3 py-1 text-xs font-medium rounded-sm transition-colors ${
                 dateRange === r
                   ? 'bg-accent text-primary'
                   : 'text-secondary hover:text-primary hover:bg-app'
@@ -368,7 +368,7 @@ function ActivityTimeline({ userId }: ActivityTimelineProps) {
 
       {/* ── Timeline ────────────────────────────────────────────────────────── */}
       {filtered.length === 0 ? (
-        <div className="bg-elevated border border-default rounded-pf-lg p-12 flex flex-col items-center gap-3 text-center">
+        <div className="bg-elevated border border-default rounded-xl p-12 flex flex-col items-center gap-3 text-center">
           <Clock size={32} className="text-tertiary" aria-hidden="true" />
           <p className="text-sm text-secondary font-medium">No activity recorded for this user</p>
           {(search || filterGroup !== 'all' || dateRange !== 'all') && (
@@ -376,7 +376,7 @@ function ActivityTimeline({ userId }: ActivityTimelineProps) {
           )}
         </div>
       ) : (
-        <div className="bg-elevated border border-default rounded-pf-lg overflow-hidden">
+        <div className="bg-elevated border border-default rounded-xl overflow-hidden">
           <ul className="divide-y divide-default" aria-label="Activity timeline">
             {filtered.map((ev, idx) => {
               const visual = getEventVisual(ev.type);
@@ -387,7 +387,7 @@ function ActivityTimeline({ userId }: ActivityTimelineProps) {
                 <li key={ev.id} className="flex gap-4 px-5 py-4">
                   {/* Timeline connector */}
                   <div className="flex flex-col items-center shrink-0 pt-1">
-                    <span className={`w-3 h-3 rounded-pf-full shrink-0 ${dotClass}`} aria-hidden="true" />
+                    <span className={`w-3 h-3 rounded-full shrink-0 ${dotClass}`} aria-hidden="true" />
                     {!isLast && (
                       <span className="w-px flex-1 bg-default mt-2" aria-hidden="true" />
                     )}
@@ -398,7 +398,7 @@ function ActivityTimeline({ userId }: ActivityTimelineProps) {
                     {/* Header row: icon + badge + timestamp */}
                     <div className="flex flex-wrap items-center gap-2 mb-1">
                       <Icon size={13} className={iconClass} aria-hidden="true" />
-                      <span className={`px-2 py-1 rounded-pf-full text-xs font-medium ${badgeClass}`}>
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${badgeClass}`}>
                         {label}
                       </span>
                       <time
@@ -426,12 +426,12 @@ function ActivityTimeline({ userId }: ActivityTimelineProps) {
                         {Object.entries(ev.metadata).map(([k, v]) => (
                           <span
                             key={k}
-                            className="inline-flex items-center gap-1 px-2 py-1 rounded-pf-sm bg-app border border-default text-xs text-secondary"
+                            className="inline-flex items-center gap-1 px-2 py-1 rounded-sm bg-app border border-default text-xs text-secondary"
                           >
                             <span className="text-tertiary capitalize">
                               {k.replace(/([A-Z])/g, ' $1').trim()}:
                             </span>
-                            <span className="font-medium text-primary truncate max-w-pf-col-sm">{String(v)}</span>
+                            <span className="font-medium text-primary truncate max-w-col-sm">{String(v)}</span>
                           </span>
                         ))}
                       </div>
@@ -453,7 +453,7 @@ function ActivityTimeline({ userId }: ActivityTimelineProps) {
                 variant="ghost"
                 onClick={() => fetchActivity(page + 1, true)}
                 disabled={loading}
-                className="flex items-center gap-2 px-3 py-2 text-sm rounded-pf-sm border border-default text-secondary hover:bg-app hover:text-primary disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="flex items-center gap-2 px-3 py-2 text-sm rounded-sm border border-default text-secondary hover:bg-app hover:text-primary disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 {loading ? (
                   <RotateCcw size={13} className="animate-spin" aria-hidden="true" />
@@ -646,9 +646,9 @@ export function Component() {
     return (
       <div className="animate-pulse space-y-6" role="status" aria-label="Loading user details">
         <div className="h-4 bg-elevated rounded w-28" />
-        <div className="bg-elevated border border-default rounded-pf-lg p-6 space-y-4">
+        <div className="bg-elevated border border-default rounded-xl p-6 space-y-4">
           <div className="flex items-center gap-4">
-            <div className="w-16 h-16 rounded-pf-full bg-app" />
+            <div className="w-16 h-16 rounded-full bg-app" />
             <div className="space-y-2 flex-1">
               <div className="h-5 bg-app rounded w-48" />
               <div className="h-4 bg-app rounded w-64" />
@@ -694,19 +694,19 @@ export function Component() {
       {/* Back link */}
       <Link
         to="/users"
-        className="inline-flex items-center gap-2 text-sm text-secondary hover:text-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent rounded-pf-sm"
+        className="inline-flex items-center gap-2 text-sm text-secondary hover:text-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent rounded-sm"
       >
         <ChevronLeft size={16} aria-hidden="true" />
         Back to users
       </Link>
 
       {/* ── Section 1: Profile Header Card ─────────────────────────────────── */}
-      <div className="bg-elevated border border-default rounded-pf-lg p-6">
+      <div className="bg-elevated border border-default rounded-xl p-6">
         <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-5">
           {/* Avatar + identity */}
           <div className="flex items-start gap-4">
             <div
-              className="w-16 h-16 rounded-pf-full bg-accent/20 text-accent-text flex items-center justify-center text-xl font-semibold shrink-0 select-none"
+              className="w-16 h-16 rounded-full bg-accent/20 text-accent-text flex items-center justify-center text-xl font-semibold shrink-0 select-none"
               aria-hidden="true"
             >
               {getInitials(user.displayName, user.username)}
@@ -721,19 +721,19 @@ export function Component() {
               {/* Status + badges */}
               <div className="flex flex-wrap items-center gap-2 mt-2">
                 <span
-                  className={`px-2 py-1 rounded-pf-full text-xs font-medium ${statusColor(
+                  className={`px-2 py-1 rounded-full text-xs font-medium ${statusColor(
                     isSuspended ? 'SUSPENDED' : user.status,
                   )}`}
                 >
                   {isSuspended ? 'SUSPENDED' : (user.status || 'ACTIVE')}
                 </span>
                 {user.polymarketConnected && (
-                  <span className="px-2 py-1 rounded-pf-full text-xs font-medium text-accent-text bg-accent-text/10">
+                  <span className="px-2 py-1 rounded-full text-xs font-medium text-accent-text bg-accent-text/10">
                     Polymarket Connected
                   </span>
                 )}
                 {(user.totpEnabled) && (
-                  <span className="px-2 py-1 rounded-pf-full text-xs font-medium text-gain bg-gain/10">
+                  <span className="px-2 py-1 rounded-full text-xs font-medium text-gain bg-gain/10">
                     2FA Enabled
                   </span>
                 )}
@@ -749,7 +749,7 @@ export function Component() {
                 variant="success"
                 onClick={handleUnsuspend}
                 disabled={actionLoading}
-                className="flex items-center gap-2 px-3 py-2 text-sm rounded-pf-sm border border-gain text-gain hover:bg-gain/10 disabled:opacity-50 transition-colors"
+                className="flex items-center gap-2 px-3 py-2 text-sm rounded-sm border border-gain text-gain hover:bg-gain/10 disabled:opacity-50 transition-colors"
               >
                 <UserCheck size={14} aria-hidden="true" />
                 Unsuspend
@@ -760,7 +760,7 @@ export function Component() {
                 variant="danger"
                 onClick={handleSuspend}
                 disabled={actionLoading}
-                className="flex items-center gap-2 px-3 py-2 text-sm rounded-pf-sm border border-loss text-loss hover:bg-loss/10 disabled:opacity-50 transition-colors"
+                className="flex items-center gap-2 px-3 py-2 text-sm rounded-sm border border-loss text-loss hover:bg-loss/10 disabled:opacity-50 transition-colors"
               >
                 <Ban size={14} aria-hidden="true" />
                 Suspend
@@ -771,7 +771,7 @@ export function Component() {
               variant="ghost"
               onClick={handleResetPassword}
               disabled={actionLoading}
-              className="flex items-center gap-2 px-3 py-2 text-sm rounded-pf-sm border border-default text-secondary hover:bg-app hover:text-primary disabled:opacity-50 transition-colors"
+              className="flex items-center gap-2 px-3 py-2 text-sm rounded-sm border border-default text-secondary hover:bg-app hover:text-primary disabled:opacity-50 transition-colors"
             >
               <RotateCcw size={14} aria-hidden="true" />
               Reset Password
@@ -781,13 +781,13 @@ export function Component() {
 
         {/* Stat pills */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-5 pt-5 border-t border-default">
-          <div className="bg-app border border-default rounded-pf-sm px-4 py-3 text-center">
+          <div className="bg-app border border-default rounded-sm px-4 py-3 text-center">
             <div className="text-xs text-tertiary mb-1">Trades</div>
             <div className="text-lg font-semibold text-primary">
               {(user.tradeCount ?? 0).toLocaleString()}
             </div>
           </div>
-          <div className="bg-app border border-default rounded-pf-sm px-4 py-3 text-center">
+          <div className="bg-app border border-default rounded-sm px-4 py-3 text-center">
             <div className="text-xs text-tertiary mb-1">Total P&amp;L</div>
             <div
               className={`text-lg font-semibold ${
@@ -799,11 +799,11 @@ export function Component() {
               {fmtPnl(user.totalPnl)}
             </div>
           </div>
-          <div className="bg-app border border-default rounded-pf-sm px-4 py-3 text-center">
+          <div className="bg-app border border-default rounded-sm px-4 py-3 text-center">
             <div className="text-xs text-tertiary mb-1">Win Rate</div>
             <div className="text-lg font-semibold text-primary">{fmtWinRate(user.winRate)}</div>
           </div>
-          <div className="bg-app border border-default rounded-pf-sm px-4 py-3 text-center">
+          <div className="bg-app border border-default rounded-sm px-4 py-3 text-center">
             <div className="text-xs text-tertiary mb-1">Followers</div>
             <div className="text-lg font-semibold text-primary">
               {(user.followerCount ?? 0).toLocaleString()}
@@ -823,7 +823,7 @@ export function Component() {
               role="tab"
               aria-selected={activeTab === key}
               onClick={() => handleTabChange(key)}
-              className={`flex items-center gap-2 px-4 py-2 text-sm font-medium whitespace-nowrap transition-colors rounded-t-pf-sm -mb-px border-b-2 shrink-0 ${
+              className={`flex items-center gap-2 px-4 py-2 text-sm font-medium whitespace-nowrap transition-colors rounded-t-sm -mb-px border-b-2 shrink-0 ${
                 activeTab === key
                   ? 'border-accent text-accent'
                   : 'border-transparent text-secondary hover:text-primary'
@@ -839,13 +839,13 @@ export function Component() {
         {activeTab === 'overview' && (
           <div className="space-y-4">
             {/* Risk settings summary */}
-            <div className="bg-elevated border border-default rounded-pf-lg p-5">
+            <div className="bg-elevated border border-default rounded-xl p-5">
               <div className="flex items-center gap-2 mb-4">
                 <ShieldCheck size={16} className="text-accent" aria-hidden="true" />
                 <h3 className="text-sm font-semibold text-primary">Risk Settings</h3>
                 {riskSettings?.enabled !== undefined && (
                   <span
-                    className={`ml-auto px-2 py-1 rounded-pf-full text-xs font-medium ${
+                    className={`ml-auto px-2 py-1 rounded-full text-xs font-medium ${
                       riskSettings.enabled
                         ? 'text-gain bg-gain/10'
                         : 'text-tertiary bg-app'
@@ -886,7 +886,7 @@ export function Component() {
             </div>
 
             {/* Account details */}
-            <div className="bg-elevated border border-default rounded-pf-lg p-5">
+            <div className="bg-elevated border border-default rounded-xl p-5">
               <h3 className="text-sm font-semibold text-primary mb-4">Account Details</h3>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
                 <div>
@@ -926,7 +926,7 @@ export function Component() {
 
         {/* ── Orders tab ────────────────────────────────────────────────────── */}
         {activeTab === 'orders' && (
-          <div className="bg-elevated border border-default rounded-pf-lg overflow-hidden">
+          <div className="bg-elevated border border-default rounded-xl overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <caption className="sr-only">Recent orders</caption>
@@ -966,7 +966,7 @@ export function Component() {
                         <td className="px-4 py-3 text-tertiary whitespace-nowrap">
                           {order.createdAt ? formatDate(order.createdAt) : '—'}
                         </td>
-                        <td className="px-4 py-3 text-primary max-w-pf-col-md truncate">
+                        <td className="px-4 py-3 text-primary max-w-col-md truncate">
                           {String(order.market ?? '—')}
                         </td>
                         <td className="px-4 py-3">
@@ -993,7 +993,7 @@ export function Component() {
                         </td>
                         <td className="px-4 py-3">
                           <span
-                            className={`px-2 py-1 rounded-pf-full text-xs font-medium ${statusColor(
+                            className={`px-2 py-1 rounded-full text-xs font-medium ${statusColor(
                               String(order.status ?? ''),
                             )}`}
                           >
@@ -1050,7 +1050,7 @@ export function Component() {
                 {Array.from({ length: 3 }).map((_, i) => (
                   <div
                     key={i}
-                    className="bg-elevated border border-default rounded-pf-lg p-4 animate-pulse space-y-3"
+                    className="bg-elevated border border-default rounded-xl p-4 animate-pulse space-y-3"
                   >
                     <div className="h-4 bg-app rounded w-3/4" />
                     <div className="h-3 bg-app rounded w-1/2" />
@@ -1058,7 +1058,7 @@ export function Component() {
                 ))}
               </div>
             ) : strategies.length === 0 ? (
-              <div className="bg-elevated border border-default rounded-pf-lg p-10 text-center">
+              <div className="bg-elevated border border-default rounded-xl p-10 text-center">
                 <p className="text-secondary">No strategies found</p>
               </div>
             ) : (
@@ -1067,14 +1067,14 @@ export function Component() {
                   {strategies.map((s) => (
                     <div
                       key={s.id}
-                      className="bg-elevated border border-default rounded-pf-lg p-4"
+                      className="bg-elevated border border-default rounded-xl p-4"
                     >
                       <div className="flex items-start justify-between gap-2 mb-2">
                         <span className="text-sm font-medium text-primary truncate">
                           {String(s.name ?? 'Unnamed Strategy')}
                         </span>
                         <span
-                          className={`shrink-0 px-2 py-1 rounded-pf-full text-xs font-medium ${statusColor(
+                          className={`shrink-0 px-2 py-1 rounded-full text-xs font-medium ${statusColor(
                             String(s.status ?? ''),
                           )}`}
                         >
@@ -1106,7 +1106,7 @@ export function Component() {
 
         {/* ── Risk tab ──────────────────────────────────────────────────────── */}
         {activeTab === 'risk' && (
-          <div className="bg-elevated border border-default rounded-pf-lg p-5">
+          <div className="bg-elevated border border-default rounded-xl p-5">
             <div className="flex items-center gap-2 mb-4">
               <ShieldCheck size={16} className="text-accent" aria-hidden="true" />
               <h3 className="text-sm font-semibold text-primary">Risk Configuration</h3>

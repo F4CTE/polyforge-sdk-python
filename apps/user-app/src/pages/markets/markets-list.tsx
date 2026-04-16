@@ -151,10 +151,10 @@ const CATEGORY_ICONS: Record<string, React.ReactNode> = {
 const CATEGORY_COLORS: Record<string, { bg: string; text: string }> = {
   Sports: { bg: 'bg-info/15', text: 'text-info' },
   Crypto: { bg: 'bg-warning/15', text: 'text-warning' },
-  Politics: { bg: 'bg-pf-purple-500/15', text: 'text-pf-purple-400' },
+  Politics: { bg: 'bg-purple-500/15', text: 'text-purple-400' },
   Economics: { bg: 'bg-gain/15', text: 'text-gain' },
   Finance: { bg: 'bg-accent/15', text: 'text-accent-text' },
-  Technology: { bg: 'bg-pf-purple-300/15', text: 'text-pf-purple-300' },
+  Technology: { bg: 'bg-purple-300/15', text: 'text-purple-300' },
 };
 
 function formatVolume(vol: string): string {
@@ -206,13 +206,13 @@ function MarketCardSkeleton() {
   return (
     <CardSkeleton>
       <div className="flex items-start gap-3">
-        <SkeletonCircle size="w-12 h-12" rounded="rounded-pf-md" />
+        <SkeletonCircle size="w-12 h-12" rounded="rounded-lg" />
         <div className="flex-1 space-y-2">
           <SkeletonLine h="h-4" w="w-[85%]" />
           <SkeletonLine w="w-[50%]" />
         </div>
       </div>
-      <SkeletonLine h="h-2" className="rounded-pf-full" />
+      <SkeletonLine h="h-2" className="rounded-full" />
       <div className="grid grid-cols-2 gap-2">
         <SkeletonLine h="h-9" className="rounded-pf" />
         <SkeletonLine h="h-9" className="rounded-pf" />
@@ -232,7 +232,7 @@ function SentimentPill({ sentiment }: { sentiment: MarketSentiment | undefined }
   };
   return (
     <span
-      className={`inline-flex items-center px-2 py-1 rounded-pf-full text-pf-caption font-semibold uppercase tracking-wide ${styles[sentiment.direction]}`}
+      className={`inline-flex items-center px-2 py-1 rounded-full text-caption font-semibold uppercase tracking-wide ${styles[sentiment.direction]}`}
       title={`Sentiment score: ${sentiment.score}`}
       aria-label={`Market sentiment: ${sentiment.direction}`}
     >
@@ -262,12 +262,12 @@ const MarketCard = memo(function MarketCard({
     <Link
       to={`/markets/${market.id}`}
       data-testid="market-card"
-      className={`group block bg-elevated border border-default rounded-pf-lg p-4 transition-all duration-pf-normal hover:border-strong hover:shadow-pf-sm hover:-translate-y-1 ${featured ? 'ring-1 ring-accent/20' : ''}`}
+      className={`group block bg-elevated border border-default rounded-xl p-4 transition-all duration-panel hover:border-strong hover:shadow-sm hover:-translate-y-1 ${featured ? 'ring-1 ring-accent/20' : ''}`}
     >
       {/* Header */}
       <div className="flex items-start gap-3 mb-3">
         <div
-          className={`w-[52px] h-[52px] rounded-pf-md flex items-center justify-center shrink-0 ${catColor?.bg ?? 'bg-overlay'}`}
+          className={`w-[52px] h-[52px] rounded-lg flex items-center justify-center shrink-0 ${catColor?.bg ?? 'bg-overlay'}`}
         >
           <span className={`text-lg font-semibold ${catColor?.text ?? 'text-tertiary'}`}>
             {market.title.charAt(0).toUpperCase()}
@@ -292,7 +292,7 @@ const MarketCard = memo(function MarketCard({
           onClick={(e) => onToggleWatch(market.id, e)}
           disabled={isWatchLoading}
           aria-label={isWatched ? 'Remove from watchlist' : 'Add to watchlist'}
-          className={`p-2 rounded-pf transition-colors ${isWatched ? 'text-pf-gold-500 hover:text-pf-gold-400' : 'text-tertiary hover:text-primary'}`}
+          className={`p-2 rounded-pf transition-colors ${isWatched ? 'text-gold-500 hover:text-gold-400' : 'text-tertiary hover:text-primary'}`}
           title={isWatched ? 'Remove from watchlist' : 'Add to watchlist'}
         >
           <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill={isWatched ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -305,13 +305,13 @@ const MarketCard = memo(function MarketCard({
       {market.tokens.length <= 2 ? (
         <div className="space-y-2">
           <div>
-            <div className="h-2 bg-overlay rounded-pf-full overflow-hidden">
+            <div className="h-2 bg-overlay rounded-full overflow-hidden">
               <div
-                className="h-full bg-accent rounded-pf-full transition-all"
+                className="h-full bg-accent rounded-full transition-all"
                 style={{ width: `${yesPercent(market) ?? 50}%` }}
               />
             </div>
-            <span className="text-pf-label text-tertiary mt-1 block">
+            <span className="text-label text-tertiary mt-1 block">
               {yesPercent(market) !== null ? `${yesPercent(market)}% chance` : '\u2014'}
             </span>
           </div>
@@ -330,9 +330,9 @@ const MarketCard = memo(function MarketCard({
           {market.tokens.slice(0, 4).map((token) => (
             <div key={token.id} className="flex items-center gap-2 text-xs">
               <span className="w-20 truncate text-secondary">{token.outcome}</span>
-              <div className="flex-1 h-2 bg-overlay rounded-pf-full overflow-hidden">
+              <div className="flex-1 h-2 bg-overlay rounded-full overflow-hidden">
                 <div
-                  className="h-full bg-accent/60 rounded-pf-full"
+                  className="h-full bg-accent/60 rounded-full"
                   style={{ width: `${tokenPercent(token)}%` }}
                 />
               </div>
@@ -340,7 +340,7 @@ const MarketCard = memo(function MarketCard({
             </div>
           ))}
           {market.tokens.length > 4 && (
-            <span className="text-pf-label text-tertiary">+{market.tokens.length - 4} more</span>
+            <span className="text-label text-tertiary">+{market.tokens.length - 4} more</span>
           )}
         </div>
       )}
@@ -348,7 +348,7 @@ const MarketCard = memo(function MarketCard({
       {/* Footer */}
       {market.tokens.length > 0 && (
         <div className="flex items-center justify-between gap-1 mt-3">
-          <div className="flex items-center gap-2 text-pf-label text-tertiary">
+          <div className="flex items-center gap-2 text-label text-tertiary">
             <span className="flex items-center gap-1">
               <Zap className="size-3" aria-hidden="true" />
               {market.tokens.length} outcomes
@@ -392,7 +392,7 @@ function TrendingCard({ market }: { market: Market }) {
   return (
     <Link
       to={`/markets/${market.slug || market.id}`}
-      className="group block bg-elevated border border-default rounded-pf-lg p-4 space-y-3 transition-all duration-pf-normal hover:border-accent/30 hover:shadow-pf-sm hover:-translate-y-1"
+      className="group block bg-elevated border border-default rounded-xl p-4 space-y-3 transition-all duration-panel hover:border-accent/30 hover:shadow-sm hover:-translate-y-1"
     >
       {/* Question */}
       <p className="text-sm font-medium text-primary leading-snug line-clamp-2 group-hover:text-accent-text transition-colors">
@@ -401,7 +401,7 @@ function TrendingCard({ market }: { market: Market }) {
 
       {/* Category badge */}
       <span
-        className={`inline-flex items-center gap-1 px-2 py-1 rounded-pf-full text-pf-label font-medium ${catColor?.bg ?? 'bg-overlay'} ${catColor?.text ?? 'text-tertiary'}`}
+        className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-label font-medium ${catColor?.bg ?? 'bg-overlay'} ${catColor?.text ?? 'text-tertiary'}`}
       >
         {market.category}
       </span>
@@ -413,7 +413,7 @@ function TrendingCard({ market }: { market: Market }) {
 
       {/* Footer badges */}
       <div className="flex items-center justify-between gap-2 flex-wrap">
-        <span className="inline-flex items-center gap-1 px-2 py-1 rounded-pf-full text-xs bg-warning/10 text-warning">
+        <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs bg-warning/10 text-warning">
           <TrendingUp className="size-3" aria-hidden="true" />
           {formatVolume(market.volume24h)} vol
         </span>
@@ -551,7 +551,7 @@ function AdvancedSearchModal({
       className="fixed inset-0 z-50 flex items-start justify-center pt-12 px-4 pb-6 bg-surface/80 backdrop-blur-sm"
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
-      <div className="relative w-full max-w-2xl bg-elevated border border-default rounded-pf-lg shadow-pf-lg flex flex-col max-h-[calc(100vh-6rem)] overflow-hidden">
+      <div className="relative w-full max-w-2xl bg-elevated border border-default rounded-xl shadow-lg flex flex-col max-h-[calc(100vh-6rem)] overflow-hidden">
 
         {/* Header */}
         <div className="flex items-center gap-3 px-5 py-4 border-b border-default shrink-0">
@@ -592,7 +592,7 @@ function AdvancedSearchModal({
                 type="button"
                 variant="ghost"
                 onClick={() => updateFilters((prev) => ({ ...prev, categories: [] }))}
-                className={`px-3 py-1 rounded-pf-full text-xs font-medium border transition-colors ${
+                className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
                   filters.categories.length === 0
                     ? 'bg-accent/15 text-accent-text border-accent/30'
                     : 'bg-surface text-secondary border-default hover:border-strong'
@@ -606,7 +606,7 @@ function AdvancedSearchModal({
                   type="button"
                   variant="ghost"
                   onClick={() => toggleCategory(cat)}
-                  className={`px-3 py-1 rounded-pf-full text-xs font-medium border transition-colors ${
+                  className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
                     filters.categories.includes(cat)
                       ? 'bg-accent/15 text-accent-text border-accent/30'
                       : 'bg-surface text-secondary border-default hover:border-strong'
@@ -625,7 +625,7 @@ function AdvancedSearchModal({
               <p className="text-xs font-medium text-secondary uppercase tracking-wide">End Date</p>
               <div className="flex items-center gap-2">
                 <div className="flex-1">
-                  <label htmlFor="end-date-from" className="block text-pf-caption text-tertiary mb-1">From</label>
+                  <label htmlFor="end-date-from" className="block text-caption text-tertiary mb-1">From</label>
                   <input
                     id="end-date-from"
                     type="date"
@@ -635,7 +635,7 @@ function AdvancedSearchModal({
                   />
                 </div>
                 <div className="flex-1">
-                  <label htmlFor="end-date-to" className="block text-pf-caption text-tertiary mb-1">To</label>
+                  <label htmlFor="end-date-to" className="block text-caption text-tertiary mb-1">To</label>
                   <input
                     id="end-date-to"
                     type="date"
@@ -652,7 +652,7 @@ function AdvancedSearchModal({
               <p className="text-xs font-medium text-secondary uppercase tracking-wide">YES Price Range</p>
               <div className="flex items-center gap-2">
                 <div className="flex-1">
-                  <label className="block text-pf-caption text-tertiary mb-1">Min</label>
+                  <label className="block text-caption text-tertiary mb-1">Min</label>
                   <Input
                     type="number"
                     min={0.01}
@@ -666,7 +666,7 @@ function AdvancedSearchModal({
                 </div>
                 <span className="text-tertiary text-xs mt-4">—</span>
                 <div className="flex-1">
-                  <label className="block text-pf-caption text-tertiary mb-1">Max</label>
+                  <label className="block text-caption text-tertiary mb-1">Max</label>
                   <Input
                     type="number"
                     min={0.01}
@@ -680,7 +680,7 @@ function AdvancedSearchModal({
                 </div>
               </div>
               {(filters.minYesPrice !== undefined || filters.maxYesPrice !== undefined) && (
-                <p className="text-pf-label text-accent-text font-mono">
+                <p className="text-label text-accent-text font-mono">
                   {filters.minYesPrice ?? '0.01'} — {filters.maxYesPrice ?? '0.99'}
                 </p>
               )}
@@ -737,7 +737,7 @@ function AdvancedSearchModal({
                     type="button"
                     variant="ghost"
                     onClick={() => updateFilters((prev) => ({ ...prev, status: s }))}
-                    className={`px-3 py-1 rounded-pf-full text-xs font-medium border transition-colors capitalize ${
+                    className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors capitalize ${
                       filters.status === s
                         ? s === 'active'
                           ? 'bg-gain/15 text-gain border-gain/30'
@@ -749,7 +749,7 @@ function AdvancedSearchModal({
                   >
                     {s === 'active' && filters.status === 'active' ? 'Active' : s.charAt(0).toUpperCase() + s.slice(1)}
                     {s === 'active' && filters.status === 'active' && (
-                      <span className="ml-1 inline-block w-2 h-2 rounded-pf-full bg-gain align-middle" />
+                      <span className="ml-1 inline-block w-2 h-2 rounded-full bg-gain align-middle" />
                     )}
                   </Button>
                 ))}
@@ -772,7 +772,7 @@ function AdvancedSearchModal({
                         sortDir: prev.sortBy === opt.value && prev.sortDir === 'desc' ? 'asc' : 'desc',
                       }));
                     }}
-                    className={`flex items-center gap-1 px-3 py-1 rounded-pf-full text-xs font-medium border transition-colors ${
+                    className={`flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
                       filters.sortBy === opt.value
                         ? 'bg-accent/15 text-accent-text border-accent/30'
                         : 'bg-surface text-secondary border-default hover:border-strong'
@@ -805,7 +805,7 @@ function AdvancedSearchModal({
               className="flex items-center gap-2 px-5 py-2 rounded-pf bg-accent hover:bg-accent-text text-app text-sm font-semibold transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
             >
               {searchLoading ? (
-                <span className="inline-block w-4 h-4 border-2 border-app/30 border-t-pf-bg rounded-pf-full animate-spin" aria-hidden="true" />
+                <span className="inline-block w-4 h-4 border-2 border-app/30 border-t-app rounded-full animate-spin" aria-hidden="true" />
               ) : (
                 <Search className="size-4" aria-hidden="true" />
               )}
@@ -842,7 +842,7 @@ function AdvancedSearchModal({
                         onClick={() => handleResultClick(market)}
                         className="w-full flex items-center gap-3 px-4 py-3 bg-surface hover:bg-elevated transition-colors text-left group"
                       >
-                        <div className={`w-8 h-8 rounded-pf-sm flex items-center justify-center shrink-0 ${catColor?.bg ?? 'bg-overlay'}`}>
+                        <div className={`w-8 h-8 rounded-sm flex items-center justify-center shrink-0 ${catColor?.bg ?? 'bg-overlay'}`}>
                           <span className={`text-xs font-semibold ${catColor?.text ?? 'text-tertiary'}`}>
                             {market.title.charAt(0).toUpperCase()}
                           </span>
@@ -852,10 +852,10 @@ function AdvancedSearchModal({
                             {market.title}
                           </p>
                           <div className="flex items-center gap-2 mt-1">
-                            <span className={`text-pf-caption px-2 py-1 rounded-pf-full ${catColor?.bg ?? 'bg-overlay'} ${catColor?.text ?? 'text-tertiary'}`}>
+                            <span className={`text-caption px-2 py-1 rounded-full ${catColor?.bg ?? 'bg-overlay'} ${catColor?.text ?? 'text-tertiary'}`}>
                               {market.category}
                             </span>
-                            <span className="text-pf-caption text-tertiary">{formatVolume(market.volume24h)} vol</span>
+                            <span className="text-caption text-tertiary">{formatVolume(market.volume24h)} vol</span>
                           </div>
                         </div>
                         <div className="shrink-0 text-right">
@@ -864,7 +864,7 @@ function AdvancedSearchModal({
                           ) : (
                             <span className="text-sm text-tertiary">—</span>
                           )}
-                          <p className="text-pf-caption text-tertiary mt-1">{daysUntil(market.endDate)}</p>
+                          <p className="text-caption text-tertiary mt-1">{daysUntil(market.endDate)}</p>
                         </div>
                       </Button>
                     );
@@ -1091,7 +1091,7 @@ export function Component() {
             aria-label="Search markets"
             defaultValue=""
             onChange={(e) => onSearchInput(e.target.value)}
-            className="w-full h-11 pl-11 pr-4 rounded-pf-full bg-elevated border border-default text-sm text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:border-accent/50 focus-visible:ring-2 focus-visible:ring-accent/40 transition-colors"
+            className="w-full h-11 pl-11 pr-4 rounded-full bg-elevated border border-default text-sm text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:border-accent/50 focus-visible:ring-2 focus-visible:ring-accent/40 transition-colors"
           />
         </div>
         {/* Advanced search button */}
@@ -1101,7 +1101,7 @@ export function Component() {
           onClick={() => setShowAdvancedSearch(true)}
           aria-label="Open advanced search"
           title="Advanced Search (Ctrl+F)"
-          className={`relative flex items-center gap-2 h-11 px-4 rounded-pf-full border text-sm font-medium transition-colors shrink-0 ${
+          className={`relative flex items-center gap-2 h-11 px-4 rounded-full border text-sm font-medium transition-colors shrink-0 ${
             countActiveFilters(advancedFilters) > 0
               ? 'bg-accent/15 text-accent-text border-accent/30 hover:bg-accent/20'
               : 'bg-elevated text-secondary border-default hover:border-strong hover:text-primary'
@@ -1110,7 +1110,7 @@ export function Component() {
           <SlidersHorizontal className="size-4" aria-hidden="true" />
           <span>Advanced</span>
           {countActiveFilters(advancedFilters) > 0 && (
-            <span className="flex items-center justify-center w-5 h-5 rounded-pf-full bg-accent text-app text-pf-caption font-semibold -mr-1">
+            <span className="flex items-center justify-center w-5 h-5 rounded-full bg-accent text-app text-caption font-semibold -mr-1">
               {countActiveFilters(advancedFilters)}
             </span>
           )}
@@ -1125,7 +1125,7 @@ export function Component() {
             variant="ghost"
             key={cat}
             onClick={() => { setCategory(cat); setPage(1); }}
-            className={`flex items-center gap-2 px-3 py-2 rounded-pf-full text-xs font-medium whitespace-nowrap border transition-colors ${
+            className={`flex items-center gap-2 px-3 py-2 rounded-full text-xs font-medium whitespace-nowrap border transition-colors ${
               category === cat
                 ? 'bg-accent/15 text-accent-text border-accent/30'
                 : 'bg-elevated text-secondary border-default hover:border-strong'
@@ -1153,7 +1153,7 @@ export function Component() {
               type="button"
               variant="ghost"
               onClick={() => changeViewMode('cards')}
-              className={`p-2 rounded-pf-sm transition-colors ${viewMode === 'cards' ? 'bg-elevated text-primary' : 'text-tertiary hover:text-secondary'}`}
+              className={`p-2 rounded-sm transition-colors ${viewMode === 'cards' ? 'bg-elevated text-primary' : 'text-tertiary hover:text-secondary'}`}
               aria-label="Card view"
             >
               <Grid3X3 className="size-4" />
@@ -1162,7 +1162,7 @@ export function Component() {
               type="button"
               variant="ghost"
               onClick={() => changeViewMode('table')}
-              className={`p-2 rounded-pf-sm transition-colors ${viewMode === 'table' ? 'bg-elevated text-primary' : 'text-tertiary hover:text-secondary'}`}
+              className={`p-2 rounded-sm transition-colors ${viewMode === 'table' ? 'bg-elevated text-primary' : 'text-tertiary hover:text-secondary'}`}
               aria-label="Table view"
             >
               <List className="size-4" />
@@ -1186,7 +1186,7 @@ export function Component() {
                   setEndDateFilter(endDateFilter === value ? 'any' : value);
                   setPage(1);
                 }}
-                className={`flex items-center gap-1 px-3 py-1 rounded-pf-full text-xs font-medium border transition-colors whitespace-nowrap ${
+                className={`flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium border transition-colors whitespace-nowrap ${
                   endDateFilter === value
                     ? 'bg-warning/15 text-warning border-warning/30'
                     : 'bg-elevated text-secondary border-default hover:border-strong'
@@ -1265,7 +1265,7 @@ export function Component() {
               <p className="text-sm text-tertiary mt-1">Try adjusting your search or filters</p>
             </div>
           ) : (
-            <div className="border border-default rounded-pf-lg overflow-hidden">
+            <div className="border border-default rounded-xl overflow-hidden">
               <table className="w-full text-sm" aria-label="Markets">
                 <thead>
                   <tr className="bg-surface text-left text-xs text-secondary uppercase tracking-wider">
@@ -1289,7 +1289,7 @@ export function Component() {
                           </Link>
                         </td>
                         <td className="px-4 py-3">
-                          <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-pf-full text-pf-label font-medium ${catColor?.bg ?? 'bg-overlay'} ${catColor?.text ?? 'text-tertiary'}`}>
+                          <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-label font-medium ${catColor?.bg ?? 'bg-overlay'} ${catColor?.text ?? 'text-tertiary'}`}>
                             {CATEGORY_ICONS[market.category]}
                             {market.category}
                           </span>
@@ -1316,7 +1316,7 @@ export function Component() {
                             onClick={(e) => toggleWatch(market.id, e)}
                             disabled={watchlistLoading.has(market.id)}
                             aria-label={watchedIds.has(market.id) ? 'Remove from watchlist' : 'Add to watchlist'}
-                            className={`p-2 rounded-pf transition-colors ${watchedIds.has(market.id) ? 'text-pf-gold-500 hover:text-pf-gold-400' : 'text-tertiary hover:text-primary'}`}
+                            className={`p-2 rounded-pf transition-colors ${watchedIds.has(market.id) ? 'text-gold-500 hover:text-gold-400' : 'text-tertiary hover:text-primary'}`}
                             title={watchedIds.has(market.id) ? 'Remove from watchlist' : 'Add to watchlist'}
                           >
                             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill={watchedIds.has(market.id) ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

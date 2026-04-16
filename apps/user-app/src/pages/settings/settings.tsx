@@ -975,7 +975,7 @@ export function Component() {
             variant={activeTab === t.value ? 'default' : 'secondary'}
             size="sm"
             onClick={() => handleTab(t.value)}
-            className="flex items-center gap-2 whitespace-nowrap rounded-pf-full"
+            className="flex items-center gap-2 whitespace-nowrap rounded-full"
           >
             {t.icon}
             {t.label}
@@ -985,7 +985,7 @@ export function Component() {
 
       {/* ─── Profile Tab ─── */}
       {activeTab === 'profile' && (
-        <div className="bg-elevated border border-default rounded-pf-lg p-6 space-y-5">
+        <div className="bg-elevated border border-default rounded-xl p-6 space-y-5">
           <h2 className="text-sm font-semibold text-primary uppercase tracking-wider">Public Profile</h2>
           <div>
             <label htmlFor="settings-display-name" className="text-xs text-secondary mb-2 block">Display Name</label>
@@ -999,7 +999,7 @@ export function Component() {
             <label htmlFor="settings-avatar-url" className="text-xs text-secondary mb-2 block">Avatar URL</label>
             <div className="flex items-center gap-3">
               <Input id="settings-avatar-url" value={avatarUrl} onChange={e => setAvatarUrl(e.target.value)} placeholder="https://..." className="flex-1" />
-              {avatarUrl && <img src={avatarUrl} alt="Avatar preview" className="w-12 h-12 rounded-pf-full object-cover border border-default" />}
+              {avatarUrl && <img src={avatarUrl} alt="Avatar preview" className="w-12 h-12 rounded-full object-cover border border-default" />}
             </div>
           </div>
           <div className="flex justify-end">
@@ -1010,7 +1010,7 @@ export function Component() {
           </div>
 
           {/* ─── Danger Zone ─── */}
-          <div className="mt-10 pt-6 border-t-2 border-loss/20 bg-elevated border border-loss/20 rounded-pf-lg p-6 space-y-4">
+          <div className="mt-10 pt-6 border-t-2 border-loss/20 bg-elevated border border-loss/20 rounded-xl p-6 space-y-4">
             <h2 className="text-sm font-semibold text-loss uppercase tracking-wider flex items-center gap-2">
               <AlertTriangle className="size-4" />
               Danger Zone
@@ -1030,9 +1030,9 @@ export function Component() {
 
             {deleteDialogOpen && (
               <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="delete-dialog-title" onKeyDown={(e) => { if (e.key === 'Escape') { setDeleteDialogOpen(false); setDeletePassword(''); } }}>
-                <div className="bg-elevated border border-default rounded-pf-lg p-6 max-w-md w-full mx-4 space-y-4">
+                <div className="bg-elevated border border-default rounded-xl p-6 max-w-md w-full mx-4 space-y-4">
                   <div className="flex items-center gap-3">
-                    <div className="size-10 rounded-pf-full bg-loss/10 flex items-center justify-center">
+                    <div className="size-10 rounded-full bg-loss/10 flex items-center justify-center">
                       <AlertTriangle className="size-5 text-loss" />
                     </div>
                     <div>
@@ -1086,7 +1086,7 @@ export function Component() {
 
       {/* ─── Notifications Tab ─── */}
       {activeTab === 'notifications' && (
-        <div data-testid="notifications-panel" className="bg-elevated border border-default rounded-pf-lg p-6 space-y-6">
+        <div data-testid="notifications-panel" className="bg-elevated border border-default rounded-xl p-6 space-y-6">
           <h2 className="text-sm font-semibold text-primary uppercase tracking-wider">Notification Preferences</h2>
 
           {/* Email Digest Frequency */}
@@ -1101,7 +1101,7 @@ export function Component() {
                   variant={emailDigest === opt.value ? 'default' : 'secondary'}
                   size="sm"
                   onClick={() => setEmailDigest(opt.value)}
-                  className="rounded-pf-full"
+                  className="rounded-full"
                 >
                   {opt.label}
                 </Button>
@@ -1121,9 +1121,9 @@ export function Component() {
                     <div className="h-3 w-52 rounded bg-overlay/60" />
                   </div>
                   <div className="flex gap-2">
-                    <div className="h-6 w-14 rounded-pf-full bg-overlay" />
-                    <div className="h-6 w-14 rounded-pf-full bg-overlay" />
-                    <div className="h-6 w-14 rounded-pf-full bg-overlay" />
+                    <div className="h-6 w-14 rounded-full bg-overlay" />
+                    <div className="h-6 w-14 rounded-full bg-overlay" />
+                    <div className="h-6 w-14 rounded-full bg-overlay" />
                   </div>
                 </div>
               ))}
@@ -1133,7 +1133,7 @@ export function Component() {
               {/* Column headers */}
               <div className="flex items-center justify-between pb-1">
                 <div />
-                <div className="flex gap-2 text-pf-caption font-medium text-tertiary uppercase tracking-wider">
+                <div className="flex gap-2 text-caption font-medium text-tertiary uppercase tracking-wider">
                   <span className="w-14 text-center">In-App</span>
                   <span className="w-14 text-center">Email</span>
                   <span className="w-14 text-center">Push</span>
@@ -1144,7 +1144,7 @@ export function Component() {
                 if (events.length === 0) return null;
                 return (
                   <div key={category} className="space-y-1">
-                    <div className="text-pf-caption font-semibold text-tertiary uppercase tracking-widest pb-1 border-b border-subtle">
+                    <div className="text-caption font-semibold text-tertiary uppercase tracking-widest pb-1 border-b border-subtle">
                       {category}
                     </div>
                     {events.map(evtDef => {
@@ -1165,7 +1165,7 @@ export function Component() {
                                 aria-checked={pref[field]}
                                 aria-label={`${evtDef.label} ${field} notification`}
                                 onClick={() => toggleNotifField(evtDef.event, field)}
-                                className={`px-3 py-1 rounded-pf-full text-pf-caption font-medium w-14 transition-colors cursor-pointer ${
+                                className={`px-3 py-1 rounded-full text-caption font-medium w-14 transition-colors cursor-pointer ${
                                   pref[field]
                                     ? 'bg-accent text-primary'
                                     : 'bg-overlay text-tertiary'
@@ -1195,7 +1195,7 @@ export function Component() {
 
       {/* ─── Password Tab ─── */}
       {activeTab === 'password' && (
-        <div data-testid="password-panel" className="bg-elevated border border-default rounded-pf-lg p-6 space-y-5">
+        <div data-testid="password-panel" className="bg-elevated border border-default rounded-xl p-6 space-y-5">
           <h2 className="text-sm font-semibold text-primary uppercase tracking-wider">Change Password</h2>
           <div>
             <label htmlFor="settings-current-password" className="text-xs text-secondary mb-2 block">Current Password</label>
@@ -1233,7 +1233,7 @@ export function Component() {
 
       {/* ─── 2FA Tab ─── */}
       {activeTab === '2fa' && (
-        <div data-testid="twofa-panel" className="bg-elevated border border-default rounded-pf-lg p-6 space-y-5">
+        <div data-testid="twofa-panel" className="bg-elevated border border-default rounded-xl p-6 space-y-5">
           <h2 className="text-sm font-semibold text-primary uppercase tracking-wider">Two-Factor Authentication (TOTP)</h2>
 
           {/* View A: 2FA Disabled */}
@@ -1269,7 +1269,7 @@ export function Component() {
               {/* Step 1: QR Code */}
               <div className="space-y-3">
                 <div className="flex items-center gap-2">
-                  <span className="flex items-center justify-center w-5 h-5 rounded-pf-full bg-accent text-inverse text-xs font-semibold">1</span>
+                  <span className="flex items-center justify-center w-5 h-5 rounded-full bg-accent text-inverse text-xs font-semibold">1</span>
                   <h3 className="text-sm font-semibold text-primary">Scan QR Code</h3>
                 </div>
                 <p className="text-xs text-secondary ml-7">
@@ -1277,7 +1277,7 @@ export function Component() {
                 </p>
                 <div className="ml-7 space-y-3">
                   {twoFaQrCodeUrl.startsWith('data:') ? (
-                    <div className="inline-block bg-white p-3 rounded-pf-lg border border-default">{/* bg-white intentional: QR codes require white background for scanner compatibility */}
+                    <div className="inline-block bg-white p-3 rounded-xl border border-default">{/* bg-white intentional: QR codes require white background for scanner compatibility */}
                       <img src={twoFaQrCodeUrl} alt="TOTP QR Code" className="w-44 h-44" />
                     </div>
                   ) : (
@@ -1298,7 +1298,7 @@ export function Component() {
               {/* Step 2: Verify */}
               <div className="space-y-3">
                 <div className="flex items-center gap-2">
-                  <span className="flex items-center justify-center w-5 h-5 rounded-pf-full bg-accent text-inverse text-xs font-semibold">2</span>
+                  <span className="flex items-center justify-center w-5 h-5 rounded-full bg-accent text-inverse text-xs font-semibold">2</span>
                   <h3 className="text-sm font-semibold text-primary">Enter verification code</h3>
                 </div>
                 <div className="ml-7 space-y-3">
@@ -1515,7 +1515,7 @@ export function Component() {
 
       {/* ─── Gas Usage Tab ─── */}
       {activeTab === 'gas' && (
-        <div data-testid="gas-panel" className="bg-elevated border border-default rounded-pf-lg p-6 space-y-5">
+        <div data-testid="gas-panel" className="bg-elevated border border-default rounded-xl p-6 space-y-5">
           <h2 className="text-sm font-semibold text-primary uppercase tracking-wider">Gas Sponsorship</h2>
           <p className="text-sm text-secondary">
             Polyforge absorbs Polygon gas fees so you can trade without worrying about network costs.
@@ -1555,9 +1555,9 @@ export function Component() {
                   <span>Usage</span>
                   <span>{((gasUsage.todayUsage / gasUsage.dailyLimit) * 100).toFixed(1)}%</span>
                 </div>
-                <div className="w-full h-2 bg-overlay rounded-pf-full overflow-hidden">
+                <div className="w-full h-2 bg-overlay rounded-full overflow-hidden">
                   <div
-                    className={`h-full rounded-pf-full transition-all duration-pf-slow ${
+                    className={`h-full rounded-full transition-all duration-slow ${
                       gasUsage.todayUsage / gasUsage.dailyLimit > 0.8 ? 'bg-loss' : 'bg-accent'
                     }`}
                     style={{ width: `${Math.min(100, (gasUsage.todayUsage / gasUsage.dailyLimit) * 100)}%` }}
@@ -1566,7 +1566,7 @@ export function Component() {
               </div>
 
               <div className="flex items-center gap-2 text-sm">
-                <div className={`w-2 h-2 rounded-pf-full ${gasUsage.sponsorEnabled ? 'bg-gain' : 'bg-loss'}`} />
+                <div className={`w-2 h-2 rounded-full ${gasUsage.sponsorEnabled ? 'bg-gain' : 'bg-loss'}`} />
                 <span className="text-secondary">
                   Gas sponsorship is currently {gasUsage.sponsorEnabled ? 'active' : 'inactive'}
                 </span>
@@ -1593,7 +1593,7 @@ export function Component() {
         <div className="space-y-4">
           {/* Circuit Breaker Tripped Banner */}
           {circuitBreakerTripped && (
-            <div className="flex items-start gap-3 p-4 rounded-pf-lg bg-loss/10 border border-loss/30">
+            <div className="flex items-start gap-3 p-4 rounded-xl bg-loss/10 border border-loss/30">
               <ShieldAlert className="size-5 text-loss shrink-0 mt-1" />
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-semibold text-loss">Circuit Breaker Tripped</p>
@@ -1618,7 +1618,7 @@ export function Component() {
             </div>
           )}
 
-          <div className="bg-elevated border border-default rounded-pf-lg p-6 space-y-6">
+          <div className="bg-elevated border border-default rounded-xl p-6 space-y-6">
             <div className="flex items-center justify-between">
               <h2 className="text-sm font-semibold text-primary uppercase tracking-wider">Drawdown Circuit Breaker</h2>
               {riskLoading && <Loader2 className="size-4 animate-spin text-tertiary" />}
@@ -1641,11 +1641,11 @@ export function Component() {
                 role="switch"
                 aria-checked={drawdownEnabled}
                 onClick={() => setDrawdownEnabled(v => !v)}
-                className={`relative inline-flex h-6 w-11 items-center rounded-pf-full transition-colors ${
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
                   drawdownEnabled ? 'bg-accent' : 'bg-surface border border-default'
                 }`}
               >
-                <span className={`inline-block size-4 rounded-pf-full bg-primary shadow transition-transform ${
+                <span className={`inline-block size-4 rounded-full bg-primary shadow transition-transform ${
                   drawdownEnabled ? 'translate-x-6' : 'translate-x-1'
                 }`} />
               </Button>
@@ -1687,7 +1687,7 @@ export function Component() {
                 disabled={!drawdownEnabled}
                 className="w-full accent-loss disabled:opacity-50"
               />
-              <div className="flex justify-between text-pf-caption text-tertiary mt-1">
+              <div className="flex justify-between text-caption text-tertiary mt-1">
                 <span>1%</span>
                 <span>25%</span>
                 <span>50%</span>
@@ -1709,7 +1709,7 @@ export function Component() {
           </div>
 
           {/* Daily Loss Limit card */}
-          <div className="bg-elevated border border-default rounded-pf-lg p-6 space-y-6">
+          <div className="bg-elevated border border-default rounded-xl p-6 space-y-6">
             <div className="flex items-center justify-between">
               <h2 className="text-sm font-semibold text-primary uppercase tracking-wider">Daily Loss Limit</h2>
               {dlLoading && <Loader2 className="size-4 animate-spin text-tertiary" />}
@@ -1731,11 +1731,11 @@ export function Component() {
                 role="switch"
                 aria-checked={dlEnabled}
                 onClick={() => setDlEnabled(v => !v)}
-                className={`relative inline-flex h-6 w-11 items-center rounded-pf-full transition-colors ${
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
                   dlEnabled ? 'bg-accent' : 'bg-surface border border-default'
                 }`}
               >
-                <span className={`inline-block size-4 rounded-pf-full bg-primary shadow transition-transform ${
+                <span className={`inline-block size-4 rounded-full bg-primary shadow transition-transform ${
                   dlEnabled ? 'translate-x-6' : 'translate-x-1'
                 }`} />
               </Button>
@@ -1819,7 +1819,7 @@ export function Component() {
 
       {/* ─── API Keys Tab ─── */}
       {activeTab === 'apikeys' && (
-        <div data-testid="apikeys-panel" className="bg-elevated border border-default rounded-pf-lg p-6 space-y-6">
+        <div data-testid="apikeys-panel" className="bg-elevated border border-default rounded-xl p-6 space-y-6">
           {/* Generate section */}
           <div className="space-y-4">
             <h2 className="text-sm font-semibold text-primary uppercase tracking-wider">Generate API Key</h2>
@@ -1850,14 +1850,14 @@ export function Component() {
                       />
                       <div>
                         <span className={`text-xs font-medium block ${scopeBadgeClass(scope.value).split(' ')[1]}`}>{scope.label}</span>
-                        <span className="text-pf-label text-tertiary">{scope.desc}</span>
+                        <span className="text-label text-tertiary">{scope.desc}</span>
                       </div>
                     </label>
                   );
                 })}
               </div>
               {newKeyScopes.size === 0 && (
-                <p className="text-pf-label text-loss mt-1">Select at least one scope.</p>
+                <p className="text-label text-loss mt-1">Select at least one scope.</p>
               )}
             </div>
             <div>
@@ -1969,7 +1969,7 @@ export function Component() {
                           <td className="py-3 pr-4">
                             <div className="flex flex-wrap gap-1">
                               {key.scopes.map(scope => (
-                                <span key={scope} className={`text-pf-caption px-2 py-1 rounded font-medium ${scopeBadgeClass(scope)}`}>
+                                <span key={scope} className={`text-caption px-2 py-1 rounded font-medium ${scopeBadgeClass(scope)}`}>
                                   {scope}
                                 </span>
                               ))}
@@ -1979,7 +1979,7 @@ export function Component() {
                           <td className="py-3 pr-4 text-xs text-tertiary whitespace-nowrap">
                             <div>{daysAgo(key.lastUsedAt)}</div>
                             {typeof key.usageCount === 'number' && (
-                              <div className="text-pf-caption text-tertiary">{key.usageCount.toLocaleString()} requests</div>
+                              <div className="text-caption text-tertiary">{key.usageCount.toLocaleString()} requests</div>
                             )}
                           </td>
                           <td className="py-3 pr-4 font-mono text-xs text-tertiary hidden sm:table-cell whitespace-nowrap">
@@ -1991,9 +1991,9 @@ export function Component() {
                           </td>
                           <td className="py-3 pr-4">
                             {key.revoked || key.active === false ? (
-                              <span className="text-pf-caption px-2 py-1 rounded font-medium bg-loss/10 text-loss">Revoked</span>
+                              <span className="text-caption px-2 py-1 rounded font-medium bg-loss/10 text-loss">Revoked</span>
                             ) : (
-                              <span className="text-pf-caption px-2 py-1 rounded font-medium bg-gain/10 text-gain">Active</span>
+                              <span className="text-caption px-2 py-1 rounded font-medium bg-gain/10 text-gain">Active</span>
                             )}
                           </td>
                           <td className="py-3">
@@ -2038,7 +2038,7 @@ export function Component() {
       {activeTab === 'webhooks' && (
         <div className="space-y-4">
           {/* Add Webhook Form */}
-          <div className="bg-elevated border border-default rounded-pf-lg p-6 space-y-4">
+          <div className="bg-elevated border border-default rounded-xl p-6 space-y-4">
             <h2 className="text-sm font-semibold text-primary uppercase tracking-wider">Add Webhook</h2>
             <div>
               <label htmlFor="webhook-url" className="text-xs text-secondary mb-2 block">HTTPS URL</label>
@@ -2097,7 +2097,7 @@ export function Component() {
           </div>
 
           {/* Webhooks List */}
-          <div className="bg-elevated border border-default rounded-pf-lg p-6 space-y-3">
+          <div className="bg-elevated border border-default rounded-xl p-6 space-y-3">
             <h2 className="text-sm font-semibold text-primary uppercase tracking-wider">Your Webhooks</h2>
 
             {webhooksLoading ? (
@@ -2134,14 +2134,14 @@ export function Component() {
                             {wh.url.length > 50 ? `${wh.url.slice(0, 47)}…` : wh.url}
                           </div>
                           <div className="flex items-center gap-2 mt-1">
-                            <span className="text-pf-caption px-2 py-1 rounded font-medium bg-overlay text-secondary border border-default">
+                            <span className="text-caption px-2 py-1 rounded font-medium bg-overlay text-secondary border border-default">
                               {wh.events.length} event{wh.events.length !== 1 ? 's' : ''}
                             </span>
-                            <span className={`text-pf-caption px-2 py-1 rounded font-medium ${wh.active ? 'bg-gain/10 text-gain' : 'bg-overlay text-tertiary'}`}>
+                            <span className={`text-caption px-2 py-1 rounded font-medium ${wh.active ? 'bg-gain/10 text-gain' : 'bg-overlay text-tertiary'}`}>
                               {wh.active ? 'Active' : 'Inactive'}
                             </span>
                             {wh.failureCount > 0 && (
-                              <span className="text-pf-caption px-2 py-1 rounded font-medium bg-loss/10 text-loss">
+                              <span className="text-caption px-2 py-1 rounded font-medium bg-loss/10 text-loss">
                                 {wh.failureCount} failure{wh.failureCount !== 1 ? 's' : ''}
                               </span>
                             )}
@@ -2160,7 +2160,7 @@ export function Component() {
                             <History className="size-4" />
                             Deliveries
                             {recentFailures > 0 && (
-                              <span className="absolute -top-2 -right-2 flex items-center justify-center min-w-[16px] h-4 px-1 rounded-pf-full bg-loss text-primary text-pf-micro font-semibold leading-none">
+                              <span className="absolute -top-2 -right-2 flex items-center justify-center min-w-[16px] h-4 px-1 rounded-full bg-loss text-primary text-caption font-semibold leading-none">
                                 {recentFailures}
                               </span>
                             )}
@@ -2192,7 +2192,7 @@ export function Component() {
 
                       {/* Expandable deliveries panel */}
                       {isExpanded && (
-                        <div className="bg-surface/50 border-t border-subtle rounded-b-pf-lg">
+                        <div className="bg-surface/50 border-t border-subtle rounded-b-xl">
                           {/* Panel header */}
                           <div className="flex items-center justify-between px-4 py-3 border-b border-subtle">
                             <span className="text-xs font-semibold text-primary uppercase tracking-wider">Recent Deliveries</span>
@@ -2323,7 +2323,7 @@ export function Component() {
       {activeTab === 'sessions' && (
         <div className="space-y-4">
           {/* Header card */}
-          <div className="bg-elevated border border-default rounded-pf-lg p-6">
+          <div className="bg-elevated border border-default rounded-xl p-6">
             <div className="flex items-center justify-between gap-4">
               <div className="flex items-center gap-3">
                 <div className="size-9 rounded-pf bg-accent/10 flex items-center justify-center">
@@ -2351,7 +2351,7 @@ export function Component() {
           </div>
 
           {/* Session list */}
-          <div className="bg-elevated border border-default rounded-pf-lg p-6">
+          <div className="bg-elevated border border-default rounded-xl p-6">
             {sessionsLoading ? (
               <div className="space-y-3">
                 {[1, 2, 3].map(i => (
@@ -2384,7 +2384,7 @@ export function Component() {
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className="text-sm font-medium text-primary">{session.deviceName}</span>
                         {session.isCurrent && (
-                          <span className="text-gain bg-gain/10 text-xs px-2 py-1 rounded-pf-full">
+                          <span className="text-gain bg-gain/10 text-xs px-2 py-1 rounded-full">
                             Current Session
                           </span>
                         )}

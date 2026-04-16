@@ -153,7 +153,7 @@ export function StrategyCanvas() {
             ? 'color-mix(in srgb, var(--bg-app) 60%, transparent)'
             : 'color-mix(in srgb, var(--bg-app) 60%, transparent)'}
           nodeColor={(node) => {
-            if (node.type === 'variableNode') return 'var(--color-pf-purple-500)';
+            if (node.type === 'variableNode') return 'var(--color-purple-500)';
             if (node.type === 'logicNode') return 'var(--info)';
             if (node.type === 'calcNode') return 'var(--gain)';
             const data = node.data as BlockNodeData;
@@ -170,7 +170,7 @@ export function StrategyCanvas() {
       {isEmpty && (
         <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none z-10">
           <div className="flex flex-col items-center gap-3 text-center">
-            <div className="w-16 h-16 rounded-pf-full bg-surface border border-default flex items-center justify-center">
+            <div className="w-16 h-16 rounded-full bg-surface border border-default flex items-center justify-center">
               <svg
                 className="size-8 text-tertiary opacity-50"
                 fill="none"

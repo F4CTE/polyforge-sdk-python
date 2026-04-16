@@ -15,7 +15,7 @@ type VariableNodeType = Node<VariableNodeData, 'variableNode'>;
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
-const VARIABLE_COLOR = 'var(--color-pf-purple-500)';
+const VARIABLE_COLOR = 'var(--color-purple-500)';
 const NAME_PATTERN = /^[a-zA-Z_][a-zA-Z0-9_]*$/;
 
 /** Validate a variable name: must be alphanumeric + underscore, starting with letter or underscore */
@@ -127,7 +127,7 @@ function VariableNodeInner({ id, data }: NodeProps<VariableNodeType>) {
   return (
     <>
       <div
-        className="builder-node-card w-[200px] rounded-pf-md shadow-pf-md overflow-hidden"
+        className="builder-node-card w-[200px] rounded-lg shadow-md overflow-hidden"
         style={{ '--node-color': VARIABLE_COLOR } as React.CSSProperties}
       >
         {/* Header bar */}
@@ -137,7 +137,7 @@ function VariableNodeInner({ id, data }: NodeProps<VariableNodeType>) {
         >
           <GripVertical className="size-3 opacity-70 cursor-grab" />
           <Variable className="size-3" />
-          <span className="text-pf-label font-semibold flex-1 truncate">Variable</span>
+          <span className="text-label font-semibold flex-1 truncate">Variable</span>
           <button
             type="button"
             onClick={onDelete}
@@ -153,7 +153,7 @@ function VariableNodeInner({ id, data }: NodeProps<VariableNodeType>) {
         <div className="px-3 py-2 space-y-2">
           {/* Name */}
           <div>
-            <label htmlFor={`${id}-var-name`} className="block text-pf-caption font-medium text-tertiary mb-1 uppercase tracking-wider">
+            <label htmlFor={`${id}-var-name`} className="block text-caption font-medium text-tertiary mb-1 uppercase tracking-wider">
               Name
             </label>
             <input
@@ -163,14 +163,14 @@ function VariableNodeInner({ id, data }: NodeProps<VariableNodeType>) {
               value={data.variableName ?? ''}
               onChange={onNameChange}
               aria-describedby={!nameValid ? `${id}-name-error` : undefined}
-              className={`w-full px-2 py-1 text-xs bg-surface border rounded-pf-sm text-primary placeholder:text-tertiary/50 focus-visible:outline-none transition-colors ${
+              className={`w-full px-2 py-1 text-xs bg-surface border rounded-sm text-primary placeholder:text-tertiary/50 focus-visible:outline-none transition-colors ${
                 nameValid
-                  ? 'border-subtle focus-visible:border-pf-purple-500/50'
+                  ? 'border-subtle focus-visible:border-purple-500/50'
                   : 'border-loss/60 focus-visible:border-loss'
               }`}
             />
             {!nameValid && (
-              <p id={`${id}-name-error`} className="text-pf-micro text-loss mt-1">
+              <p id={`${id}-name-error`} className="text-caption text-loss mt-1">
                 Letters, digits, underscores only
               </p>
             )}
@@ -178,7 +178,7 @@ function VariableNodeInner({ id, data }: NodeProps<VariableNodeType>) {
 
           {/* Expression */}
           <div>
-            <label htmlFor={`${id}-var-expr`} className="block text-pf-caption font-medium text-tertiary mb-1 uppercase tracking-wider">
+            <label htmlFor={`${id}-var-expr`} className="block text-caption font-medium text-tertiary mb-1 uppercase tracking-wider">
               Expression
             </label>
             <input
@@ -188,13 +188,13 @@ function VariableNodeInner({ id, data }: NodeProps<VariableNodeType>) {
               value={data.expression ?? ''}
               onChange={onExpressionChange}
               aria-label="Variable expression"
-              className="w-full px-2 py-1 text-xs bg-surface border border-subtle rounded-pf-sm text-primary placeholder:text-tertiary/50 focus-visible:outline-none focus-visible:border-pf-purple-500/50 transition-colors font-mono"
+              className="w-full px-2 py-1 text-xs bg-surface border border-subtle rounded-sm text-primary placeholder:text-tertiary/50 focus-visible:outline-none focus-visible:border-purple-500/50 transition-colors font-mono"
             />
           </div>
 
           {/* Preview */}
           {preview !== null && (
-            <div className="builder-preview-chip text-pf-label font-mono px-2 py-1 rounded-pf-sm">
+            <div className="builder-preview-chip text-label font-mono px-2 py-1 rounded-sm">
               = {preview}
             </div>
           )}
@@ -205,7 +205,7 @@ function VariableNodeInner({ id, data }: NodeProps<VariableNodeType>) {
       <Handle
         type="source"
         position={Position.Right}
-        className="!w-3 !h-3 !bg-elevated !border-2 !rounded-pf-full builder-handle"
+        className="!w-3 !h-3 !bg-elevated !border-2 !rounded-full builder-handle"
         style={{ '--node-color': VARIABLE_COLOR } as React.CSSProperties}
       />
     </>
