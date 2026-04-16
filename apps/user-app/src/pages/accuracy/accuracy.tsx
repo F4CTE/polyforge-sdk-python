@@ -267,7 +267,7 @@ export function Component() {
                   stroke={textSecondary}
                   strokeDasharray="4 4"
                   strokeOpacity={0.5}
-                  label={{ value: 'Perfect', position: 'insideTopLeft', fontSize: 10, fill: textSecondary }}
+                  label={{ value: 'Perfect', position: 'insideTopLeft', fontSize: 11, fill: textSecondary }}
                 />
                 <Scatter
                   name="Calibration"

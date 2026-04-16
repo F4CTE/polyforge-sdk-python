@@ -1416,7 +1416,7 @@ export function Component() {
                                 label={{
                                   value: midPrice.toFixed(3),
                                   position: 'top',
-                                  fontSize: 9,
+                                  fontSize: 11,
                                   fill: textSecondary,
                                 }}
                               />

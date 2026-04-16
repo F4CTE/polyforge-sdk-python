@@ -424,13 +424,13 @@ export function Component() {
               <XAxis
                 dataKey="date"
                 tickFormatter={formatDate}
-                tick={{ fontSize: 10, fill: 'var(--text-tertiary)' }}
+                tick={{ fontSize: 11, fill: 'var(--text-tertiary)' }}
                 tickLine={false}
                 axisLine={false}
                 interval="preserveStartEnd"
               />
               <YAxis
-                tick={{ fontSize: 10, fill: 'var(--text-tertiary)' }}
+                tick={{ fontSize: 11, fill: 'var(--text-tertiary)' }}
                 tickLine={false}
                 axisLine={false}
                 tickFormatter={(v: number) => v >= 1000 ? `${(v / 1000).toFixed(0)}k` : String(v)}

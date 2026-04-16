@@ -618,7 +618,7 @@ export function Component() {
               </defs>
               <XAxis
                 dataKey="date"
-                tick={{ fontSize: 10, fill: 'var(--text-tertiary)' }}
+                tick={{ fontSize: 11, fill: 'var(--text-tertiary)' }}
                 tickLine={false}
                 axisLine={false}
                 interval="preserveStartEnd"
