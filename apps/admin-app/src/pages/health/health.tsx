@@ -393,7 +393,7 @@ export function Component() {
                 Redis Streams
               </h2>
               <div className="bg-surface rounded-pf border border-default overflow-hidden">
-                <table className="w-full text-body-sm">
+                <table className="w-full text-body-sm" aria-label="Service health status">
                   <thead>
                     <tr className="border-b border-default bg-elevated">
                       <th className="text-left px-4 py-3 text-label font-semibold text-secondary uppercase tracking-wider">

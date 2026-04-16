@@ -868,7 +868,7 @@ export function Component() {
                                 onClick={() => navigate(`/markets/${market.slug}`)}
                                 className="inline-flex items-center gap-1 text-xs text-tertiary hover:text-accent-text transition-colors duration-micro focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 rounded-sm"
                               >
-                                <ExternalLink className="w-3 h-3" />
+                                <ExternalLink className="w-3 h-3" aria-hidden="true" />
                                 Full detail
                               </Button>
                             </div>

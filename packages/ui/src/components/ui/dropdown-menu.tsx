@@ -161,7 +161,7 @@ function DropdownMenuItem({ children, onSelect, disabled, className, ...props }:
       aria-disabled={disabled || undefined}
       className={cn(
         "px-2 py-1 text-sm rounded-xs cursor-pointer select-none outline-none",
-        "hover:bg-overlay focus-visible:bg-overlay",
+        "hover:bg-overlay focus-visible:bg-overlay focus-visible:outline-none focus-visible:shadow-focus-ring",
         disabled && "opacity-50 cursor-not-allowed pointer-events-none",
         className
       )}
