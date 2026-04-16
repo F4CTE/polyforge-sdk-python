@@ -42,7 +42,7 @@ export function Hero() {
         ))}
       </div>
 
-      <div className="relative z-10 max-w-[1100px] mx-auto px-6">
+      <div className="relative z-10 max-w-container-landing mx-auto px-6">
         {/* Badge */}
         <div className="inline-flex items-center gap-2 text-body-sm font-medium text-accent-text bg-accent/8 border border-accent/20 rounded-full px-4 py-1 mb-7">
           <span className="w-2 h-2 rounded-full bg-accent-text animate-[pulse-dot_var(--duration-slow)_ease-in-out_infinite]" />
@@ -60,7 +60,7 @@ export function Hero() {
           </span>
         </h1>
 
-        <p className="text-base lg:text-lg text-secondary max-w-[600px] mx-auto mb-9 leading-relaxed">
+        <p className="text-base lg:text-lg text-secondary max-w-content-sm mx-auto mb-9 leading-relaxed">
           PolyForge is the prediction market platform where data-driven
           strategies meet social trading. Build automated strategies, copy top
           traders, and track every edge.
@@ -102,7 +102,7 @@ export function Hero() {
         </div>
 
         {/* Hero strategy builder canvas */}
-        <div className="max-w-[620px] mx-auto mt-6 bg-surface border border-subtle rounded-xl overflow-hidden p-2 sm:p-4 shadow-lg min-w-0">
+        <div className="max-w-content-sm mx-auto mt-6 bg-surface border border-subtle rounded-xl overflow-hidden p-2 sm:p-4 shadow-lg min-w-0">
           <svg
             viewBox="0 0 560 300"
             fill="none"
