@@ -687,3 +687,34 @@ class StrategyEvent:
     strategy_id: str = ""
     data: dict[str, Any] | None = None
     timestamp: int = 0
+
+
+# ---------------------------------------------------------------------------
+# Whale extended
+# ---------------------------------------------------------------------------
+
+@dataclass
+class WhaleProfile:
+    """Full trading profile of a whale wallet."""
+
+    wallet_address: str = ""
+    stats: dict[str, Any] | None = None
+    recent_trades: list[dict[str, Any]] = field(default_factory=list)
+    sparkline: list[int] = field(default_factory=list)
+    is_following: bool = False
+
+
+# ---------------------------------------------------------------------------
+# Paper trading
+# ---------------------------------------------------------------------------
+
+@dataclass
+class PaperSummary:
+    """Summary of the paper (simulated) trading account."""
+
+    balance: float = 0.0
+    pnl: float = 0.0
+    trade_count: int = 0
+    open_positions: int = 0
+
+

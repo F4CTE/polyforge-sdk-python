@@ -2273,3 +2273,214 @@ class TestBacktestMethods:
 
     def test_async_get_text_helper_exists(self):
         assert callable(getattr(AsyncPolyforgeClient, "_get_text", None))
+
+
+class TestCopyTradingCRUD:
+    """Tests for copy trading CRUD methods (#51)."""
+
+    def test_create_copy_config_exists(self):
+        assert callable(getattr(PolyforgeClient, "create_copy_config", None))
+
+    def test_get_copy_config_exists(self):
+        assert callable(getattr(PolyforgeClient, "get_copy_config", None))
+
+    def test_update_copy_config_exists(self):
+        assert callable(getattr(PolyforgeClient, "update_copy_config", None))
+
+    def test_pause_copy_config_exists(self):
+        assert callable(getattr(PolyforgeClient, "pause_copy_config", None))
+
+    def test_resume_copy_config_exists(self):
+        assert callable(getattr(PolyforgeClient, "resume_copy_config", None))
+
+    def test_delete_copy_config_exists(self):
+        assert callable(getattr(PolyforgeClient, "delete_copy_config", None))
+
+    def test_get_copy_trades_exists(self):
+        assert callable(getattr(PolyforgeClient, "get_copy_trades", None))
+
+    def test_async_create_copy_config_exists(self):
+        assert callable(getattr(AsyncPolyforgeClient, "create_copy_config", None))
+
+    def test_async_get_copy_config_exists(self):
+        assert callable(getattr(AsyncPolyforgeClient, "get_copy_config", None))
+
+    def test_async_update_copy_config_exists(self):
+        assert callable(getattr(AsyncPolyforgeClient, "update_copy_config", None))
+
+    def test_async_pause_copy_config_exists(self):
+        assert callable(getattr(AsyncPolyforgeClient, "pause_copy_config", None))
+
+    def test_async_resume_copy_config_exists(self):
+        assert callable(getattr(AsyncPolyforgeClient, "resume_copy_config", None))
+
+    def test_async_delete_copy_config_exists(self):
+        assert callable(getattr(AsyncPolyforgeClient, "delete_copy_config", None))
+
+    def test_async_get_copy_trades_exists(self):
+        assert callable(getattr(AsyncPolyforgeClient, "get_copy_trades", None))
+
+    def test_create_copy_config_posts_to_correct_endpoint(self):
+        import inspect
+        source = inspect.getsource(PolyforgeClient.create_copy_config)
+        assert "/api/v1/copy" in source
+        assert "targetWallet" in source
+
+    def test_get_copy_config_uses_encode_path(self):
+        import inspect
+        source = inspect.getsource(PolyforgeClient.get_copy_config)
+        assert "_encode_path" in source
+        assert "/api/v1/copy/" in source
+
+    def test_pause_copy_config_uses_pause_endpoint(self):
+        import inspect
+        source = inspect.getsource(PolyforgeClient.pause_copy_config)
+        assert "/pause" in source
+
+    def test_resume_copy_config_uses_resume_endpoint(self):
+        import inspect
+        source = inspect.getsource(PolyforgeClient.resume_copy_config)
+        assert "/resume" in source
+
+    def test_get_copy_trades_uses_trades_endpoint(self):
+        import inspect
+        source = inspect.getsource(PolyforgeClient.get_copy_trades)
+        assert "/trades" in source
+
+    def test_create_copy_config_returns_copy_config(self):
+        import inspect
+        source = inspect.getsource(PolyforgeClient.create_copy_config)
+        assert "-> CopyConfig" in source
+
+
+class TestMissingEndpointFamilies:
+    """Tests for missing endpoint families: discover, leaderboard, paper, batch, whales (#66)."""
+
+    def test_discover_strategies_exists(self):
+        assert callable(getattr(PolyforgeClient, "discover_strategies", None))
+
+    def test_get_leaderboard_exists(self):
+        assert callable(getattr(PolyforgeClient, "get_leaderboard", None))
+
+    def test_get_paper_summary_exists(self):
+        assert callable(getattr(PolyforgeClient, "get_paper_summary", None))
+
+    def test_reset_paper_account_exists(self):
+        assert callable(getattr(PolyforgeClient, "reset_paper_account", None))
+
+    def test_batch_requests_exists(self):
+        assert callable(getattr(PolyforgeClient, "batch_requests", None))
+
+    def test_get_top_whales_exists(self):
+        assert callable(getattr(PolyforgeClient, "get_top_whales", None))
+
+    def test_get_whale_profile_exists(self):
+        assert callable(getattr(PolyforgeClient, "get_whale_profile", None))
+
+    def test_follow_whale_exists(self):
+        assert callable(getattr(PolyforgeClient, "follow_whale", None))
+
+    def test_unfollow_whale_exists(self):
+        assert callable(getattr(PolyforgeClient, "unfollow_whale", None))
+
+    def test_get_following_whales_exists(self):
+        assert callable(getattr(PolyforgeClient, "get_following_whales", None))
+
+    def test_create_listing_exists(self):
+        assert callable(getattr(PolyforgeClient, "create_listing", None))
+
+    def test_update_listing_exists(self):
+        assert callable(getattr(PolyforgeClient, "update_listing", None))
+
+    def test_get_my_listings_exists(self):
+        assert callable(getattr(PolyforgeClient, "get_my_listings", None))
+
+    def test_get_my_purchases_exists(self):
+        assert callable(getattr(PolyforgeClient, "get_my_purchases", None))
+
+    def test_rate_listing_exists(self):
+        assert callable(getattr(PolyforgeClient, "rate_listing", None))
+
+    def test_async_discover_strategies_exists(self):
+        assert callable(getattr(AsyncPolyforgeClient, "discover_strategies", None))
+
+    def test_async_get_leaderboard_exists(self):
+        assert callable(getattr(AsyncPolyforgeClient, "get_leaderboard", None))
+
+    def test_async_get_paper_summary_exists(self):
+        assert callable(getattr(AsyncPolyforgeClient, "get_paper_summary", None))
+
+    def test_async_reset_paper_account_exists(self):
+        assert callable(getattr(AsyncPolyforgeClient, "reset_paper_account", None))
+
+    def test_async_batch_requests_exists(self):
+        assert callable(getattr(AsyncPolyforgeClient, "batch_requests", None))
+
+    def test_async_get_top_whales_exists(self):
+        assert callable(getattr(AsyncPolyforgeClient, "get_top_whales", None))
+
+    def test_async_create_listing_exists(self):
+        assert callable(getattr(AsyncPolyforgeClient, "create_listing", None))
+
+    def test_discover_strategies_uses_correct_endpoint(self):
+        import inspect
+        source = inspect.getsource(PolyforgeClient.discover_strategies)
+        assert "/api/v1/discover" in source
+
+    def test_get_leaderboard_uses_correct_endpoint(self):
+        import inspect
+        source = inspect.getsource(PolyforgeClient.get_leaderboard)
+        assert "/api/v1/leaderboard" in source
+
+    def test_get_paper_summary_uses_correct_endpoint(self):
+        import inspect
+        source = inspect.getsource(PolyforgeClient.get_paper_summary)
+        assert "/api/v1/paper/summary" in source
+
+    def test_reset_paper_account_uses_correct_endpoint(self):
+        import inspect
+        source = inspect.getsource(PolyforgeClient.reset_paper_account)
+        assert "/api/v1/paper/reset" in source
+
+    def test_batch_requests_uses_correct_endpoint(self):
+        import inspect
+        source = inspect.getsource(PolyforgeClient.batch_requests)
+        assert "/api/v1/batch" in source
+        assert "items" in source
+
+    def test_get_top_whales_uses_correct_endpoint(self):
+        import inspect
+        source = inspect.getsource(PolyforgeClient.get_top_whales)
+        assert "/api/v1/whales/top" in source
+
+    def test_get_whale_profile_uses_encode_path(self):
+        import inspect
+        source = inspect.getsource(PolyforgeClient.get_whale_profile)
+        assert "_encode_path" in source
+
+    def test_follow_whale_uses_follow_endpoint(self):
+        import inspect
+        source = inspect.getsource(PolyforgeClient.follow_whale)
+        assert "/follow" in source
+
+    def test_unfollow_whale_uses_unfollow_endpoint(self):
+        import inspect
+        source = inspect.getsource(PolyforgeClient.unfollow_whale)
+        assert "/unfollow" in source
+
+    def test_get_my_listings_uses_correct_endpoint(self):
+        import inspect
+        source = inspect.getsource(PolyforgeClient.get_my_listings)
+        assert "my/listings" in source
+
+    def test_get_my_purchases_uses_correct_endpoint(self):
+        import inspect
+        source = inspect.getsource(PolyforgeClient.get_my_purchases)
+        assert "my/purchases" in source
+
+    def test_create_listing_sends_required_fields(self):
+        import inspect
+        source = inspect.getsource(PolyforgeClient.create_listing)
+        assert "strategyId" in source
+        assert "title" in source
+        assert "priceUsdc" in source

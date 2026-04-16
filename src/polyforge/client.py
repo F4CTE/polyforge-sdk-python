@@ -61,9 +61,11 @@ from polyforge.models import (
     StrategyTemplate,
     Token,
     TraderScore,
+    PaperSummary,
     WatchlistItem,
     Webhook,
     WebhookTestResult,
+    WhaleProfile,
     WhaleTrade,
 )
 
@@ -1028,6 +1030,65 @@ class PolyforgeClient:
             seller_net=float(data["sellerNet"]),
         )
 
+    def rate_listing(self, listing_id: str, rating: int, *, review: str | None = None) -> dict[str, Any]:
+        """Rate a purchased marketplace strategy (1–5 stars)."""
+        payload: dict[str, Any] = {"rating": rating}
+        if review is not None:
+            payload["review"] = review
+        return self._post(f"/api/v1/marketplace/{_encode_path(listing_id)}/rate", json=payload)  # type: ignore[return-value]
+
+    def get_my_listings(self) -> list[MarketplaceListing]:
+        """List your own marketplace listings (sell-side)."""
+        data = self._get("/api/v1/marketplace/my/listings")
+        items = data if isinstance(data, list) else data.get("data", [])
+        return [_parse(MarketplaceListing, lst) for lst in items]
+
+    def get_my_purchases(self) -> list[dict[str, Any]]:
+        """List strategies you have purchased from the marketplace."""
+        data = self._get("/api/v1/marketplace/my/purchases")
+        return data if isinstance(data, list) else data.get("data", [])  # type: ignore[return-value]
+
+    def create_listing(
+        self,
+        strategy_id: str,
+        title: str,
+        price_usdc: float,
+        *,
+        description: str | None = None,
+        tags: list[str] | None = None,
+    ) -> MarketplaceListing:
+        """Create a marketplace listing for one of your strategies."""
+        payload: dict[str, Any] = {"strategyId": strategy_id, "title": title, "priceUsdc": price_usdc}
+        if description is not None:
+            payload["description"] = description
+        if tags is not None:
+            payload["tags"] = tags
+        return _parse(MarketplaceListing, self._post("/api/v1/marketplace", json=payload))
+
+    def update_listing(
+        self,
+        listing_id: str,
+        *,
+        title: str | None = None,
+        description: str | None = None,
+        price_usdc: float | None = None,
+        tags: list[str] | None = None,
+        status: str | None = None,
+    ) -> MarketplaceListing:
+        """Update a marketplace listing you own."""
+        payload: dict[str, Any] = {}
+        if title is not None:
+            payload["title"] = title
+        if description is not None:
+            payload["description"] = description
+        if price_usdc is not None:
+            payload["priceUsdc"] = price_usdc
+        if tags is not None:
+            payload["tags"] = tags
+        if status is not None:
+            payload["status"] = status
+        return _parse(MarketplaceListing, self._patch(f"/api/v1/marketplace/{_encode_path(listing_id)}", json=payload))
+
     def watch_strategy(self, strategy_id: str) -> Iterator[StrategyEvent]:
         """Stream live execution events for a strategy via SSE.
 
@@ -1078,10 +1139,83 @@ class PolyforgeClient:
         items = data["data"]
         return [_parse(WhaleTrade, w) for w in items]
 
+    def get_top_whales(
+        self,
+        *,
+        sort_by: str | None = None,
+        period: str | None = None,
+        limit: int | None = None,
+    ) -> list[WhaleProfile]:
+        """Get top whale wallets ranked by volume, PnL, win rate, or trade count."""
+        params = _strip_none({"sortBy": sort_by, "period": period, "limit": limit})
+        data = self._get("/api/v1/whales/top", params=params)
+        items = data if isinstance(data, list) else data.get("data", [])
+        return [_parse(WhaleProfile, w) for w in items]
+
+    def get_whale_profile(self, address: str) -> WhaleProfile:
+        """Get the full trading profile of a whale wallet."""
+        return _parse(WhaleProfile, self._get(f"/api/v1/whales/{_encode_path(address)}"))
+
+    def follow_whale(self, address: str) -> dict[str, Any]:
+        """Follow a whale wallet."""
+        return self._post(f"/api/v1/whales/{_encode_path(address)}/follow")  # type: ignore[return-value]
+
+    def unfollow_whale(self, address: str) -> dict[str, Any]:
+        """Unfollow a whale wallet."""
+        return self._post(f"/api/v1/whales/{_encode_path(address)}/unfollow")  # type: ignore[return-value]
+
+    def get_following_whales(self) -> list[WhaleProfile]:
+        """List whale wallets you are currently following."""
+        data = self._get("/api/v1/whales/following")
+        items = data if isinstance(data, list) else data.get("data", [])
+        return [_parse(WhaleProfile, w) for w in items]
+
     def get_news_signals(self, *, min_confidence: int = 70) -> list[NewsSignal]:
         data = self._get("/api/v1/news/signals", params={"minConfidence": min_confidence})
         items = data["data"]
         return [_parse(NewsSignal, s) for s in items]
+
+    # -- Discover & Leaderboard --
+
+    def discover_strategies(
+        self,
+        *,
+        sort: str | None = None,
+        category: str | None = None,
+        search: str | None = None,
+        page: int | None = None,
+        limit: int | None = None,
+    ) -> dict[str, Any]:
+        """Discover public strategies."""
+        params = _strip_none({"sort": sort, "category": category, "search": search, "page": page, "limit": limit})
+        return self._get("/api/v1/discover", params=params)  # type: ignore[return-value]
+
+    def get_leaderboard(
+        self,
+        *,
+        period: str | None = None,
+        page: int | None = None,
+        limit: int | None = None,
+    ) -> dict[str, Any]:
+        """Get trader leaderboard ranked by P&L."""
+        params = _strip_none({"period": period, "page": page, "limit": limit})
+        return self._get("/api/v1/leaderboard", params=params)  # type: ignore[return-value]
+
+    # -- Paper trading --
+
+    def get_paper_summary(self) -> PaperSummary:
+        """Get paper trading account summary."""
+        return _parse(PaperSummary, self._get("/api/v1/paper/summary"))
+
+    def reset_paper_account(self) -> dict[str, Any]:
+        """Reset paper trading account to initial balance."""
+        return self._post("/api/v1/paper/reset")  # type: ignore[return-value]
+
+    # -- Batch API --
+
+    def batch_requests(self, items: list[dict[str, Any]]) -> dict[str, Any]:
+        """Execute multiple API calls in a single round-trip."""
+        return self._post("/api/v1/batch", json={"items": items})  # type: ignore[return-value]
 
     # -- Configuration --
 
@@ -1247,6 +1381,83 @@ class PolyforgeClient:
         data = self._get("/api/v1/copy")
         items = data if isinstance(data, list) else data.get("data", [])
         return [_parse(CopyConfig, c) for c in items]
+
+    def create_copy_config(
+        self,
+        target_wallet: str,
+        *,
+        mode: str | None = None,
+        size_value: str | None = None,
+        max_exposure: str | None = None,
+        max_daily_loss: str | None = None,
+        price_offset: str | None = None,
+    ) -> CopyConfig:
+        """Create a new copy trading configuration."""
+        payload: dict[str, Any] = {"targetWallet": target_wallet}
+        if mode is not None:
+            payload["mode"] = mode
+        if size_value is not None:
+            payload["sizeValue"] = size_value
+        if max_exposure is not None:
+            payload["maxExposure"] = max_exposure
+        if max_daily_loss is not None:
+            payload["maxDailyLoss"] = max_daily_loss
+        if price_offset is not None:
+            payload["priceOffset"] = price_offset
+        return _parse(CopyConfig, self._post("/api/v1/copy", json=payload))
+
+    def get_copy_config(self, config_id: str) -> CopyConfig:
+        """Get a single copy trading configuration by ID."""
+        return _parse(CopyConfig, self._get(f"/api/v1/copy/{_encode_path(config_id)}"))
+
+    def update_copy_config(
+        self,
+        config_id: str,
+        *,
+        mode: str | None = None,
+        size_value: str | None = None,
+        max_exposure: str | None = None,
+        max_daily_loss: str | None = None,
+        price_offset: str | None = None,
+    ) -> CopyConfig:
+        """Update an existing copy trading configuration."""
+        payload: dict[str, Any] = {}
+        if mode is not None:
+            payload["mode"] = mode
+        if size_value is not None:
+            payload["sizeValue"] = size_value
+        if max_exposure is not None:
+            payload["maxExposure"] = max_exposure
+        if max_daily_loss is not None:
+            payload["maxDailyLoss"] = max_daily_loss
+        if price_offset is not None:
+            payload["priceOffset"] = price_offset
+        return _parse(CopyConfig, self._patch(f"/api/v1/copy/{_encode_path(config_id)}", json=payload))
+
+    def pause_copy_config(self, config_id: str) -> CopyConfig:
+        """Pause a copy trading configuration."""
+        return _parse(CopyConfig, self._post(f"/api/v1/copy/{_encode_path(config_id)}/pause"))
+
+    def resume_copy_config(self, config_id: str) -> CopyConfig:
+        """Resume a paused copy trading configuration."""
+        return _parse(CopyConfig, self._post(f"/api/v1/copy/{_encode_path(config_id)}/resume"))
+
+    def delete_copy_config(self, config_id: str) -> dict[str, Any]:
+        """Delete (stop) a copy trading configuration."""
+        return self._delete(f"/api/v1/copy/{_encode_path(config_id)}")  # type: ignore[return-value]
+
+    def get_copy_trades(
+        self,
+        config_id: str,
+        *,
+        page: int | None = None,
+        limit: int | None = None,
+    ) -> list[Order]:
+        """Get trades executed by a copy trading configuration."""
+        params = _strip_none({"page": page, "limit": limit})
+        data = self._get(f"/api/v1/copy/{_encode_path(config_id)}/trades", params=params)
+        items = data if isinstance(data, list) else data.get("data", [])
+        return [_parse(Order, o) for o in items]
 
     def list_webhooks(self) -> list[Webhook]:
         data = self._get("/api/v1/webhooks")
@@ -2074,6 +2285,65 @@ class AsyncPolyforgeClient:
             seller_net=float(data["sellerNet"]),
         )
 
+    async def rate_listing(self, listing_id: str, rating: int, *, review: str | None = None) -> dict[str, Any]:
+        """Rate a purchased marketplace strategy (1–5 stars)."""
+        payload: dict[str, Any] = {"rating": rating}
+        if review is not None:
+            payload["review"] = review
+        return await self._post(f"/api/v1/marketplace/{_encode_path(listing_id)}/rate", json=payload)  # type: ignore[return-value]
+
+    async def get_my_listings(self) -> list[MarketplaceListing]:
+        """List your own marketplace listings (sell-side)."""
+        data = await self._get("/api/v1/marketplace/my/listings")
+        items = data if isinstance(data, list) else data.get("data", [])
+        return [_parse(MarketplaceListing, lst) for lst in items]
+
+    async def get_my_purchases(self) -> list[dict[str, Any]]:
+        """List strategies you have purchased from the marketplace."""
+        data = await self._get("/api/v1/marketplace/my/purchases")
+        return data if isinstance(data, list) else data.get("data", [])  # type: ignore[return-value]
+
+    async def create_listing(
+        self,
+        strategy_id: str,
+        title: str,
+        price_usdc: float,
+        *,
+        description: str | None = None,
+        tags: list[str] | None = None,
+    ) -> MarketplaceListing:
+        """Create a marketplace listing for one of your strategies."""
+        payload: dict[str, Any] = {"strategyId": strategy_id, "title": title, "priceUsdc": price_usdc}
+        if description is not None:
+            payload["description"] = description
+        if tags is not None:
+            payload["tags"] = tags
+        return _parse(MarketplaceListing, await self._post("/api/v1/marketplace", json=payload))
+
+    async def update_listing(
+        self,
+        listing_id: str,
+        *,
+        title: str | None = None,
+        description: str | None = None,
+        price_usdc: float | None = None,
+        tags: list[str] | None = None,
+        status: str | None = None,
+    ) -> MarketplaceListing:
+        """Update a marketplace listing you own."""
+        payload: dict[str, Any] = {}
+        if title is not None:
+            payload["title"] = title
+        if description is not None:
+            payload["description"] = description
+        if price_usdc is not None:
+            payload["priceUsdc"] = price_usdc
+        if tags is not None:
+            payload["tags"] = tags
+        if status is not None:
+            payload["status"] = status
+        return _parse(MarketplaceListing, await self._patch(f"/api/v1/marketplace/{_encode_path(listing_id)}", json=payload))
+
     async def watch_strategy(self, strategy_id: str) -> AsyncIterator[StrategyEvent]:  # type: ignore[override]
         """Stream live execution events for a strategy via SSE.
 
@@ -2121,10 +2391,83 @@ class AsyncPolyforgeClient:
         items = data["data"]
         return [_parse(WhaleTrade, w) for w in items]
 
+    async def get_top_whales(
+        self,
+        *,
+        sort_by: str | None = None,
+        period: str | None = None,
+        limit: int | None = None,
+    ) -> list[WhaleProfile]:
+        """Get top whale wallets ranked by volume, PnL, win rate, or trade count."""
+        params = _strip_none({"sortBy": sort_by, "period": period, "limit": limit})
+        data = await self._get("/api/v1/whales/top", params=params)
+        items = data if isinstance(data, list) else data.get("data", [])
+        return [_parse(WhaleProfile, w) for w in items]
+
+    async def get_whale_profile(self, address: str) -> WhaleProfile:
+        """Get the full trading profile of a whale wallet."""
+        return _parse(WhaleProfile, await self._get(f"/api/v1/whales/{_encode_path(address)}"))
+
+    async def follow_whale(self, address: str) -> dict[str, Any]:
+        """Follow a whale wallet."""
+        return await self._post(f"/api/v1/whales/{_encode_path(address)}/follow")  # type: ignore[return-value]
+
+    async def unfollow_whale(self, address: str) -> dict[str, Any]:
+        """Unfollow a whale wallet."""
+        return await self._post(f"/api/v1/whales/{_encode_path(address)}/unfollow")  # type: ignore[return-value]
+
+    async def get_following_whales(self) -> list[WhaleProfile]:
+        """List whale wallets you are currently following."""
+        data = await self._get("/api/v1/whales/following")
+        items = data if isinstance(data, list) else data.get("data", [])
+        return [_parse(WhaleProfile, w) for w in items]
+
     async def get_news_signals(self, *, min_confidence: int = 70) -> list[NewsSignal]:
         data = await self._get("/api/v1/news/signals", params={"minConfidence": min_confidence})
         items = data["data"]
         return [_parse(NewsSignal, s) for s in items]
+
+    # -- Discover & Leaderboard --
+
+    async def discover_strategies(
+        self,
+        *,
+        sort: str | None = None,
+        category: str | None = None,
+        search: str | None = None,
+        page: int | None = None,
+        limit: int | None = None,
+    ) -> dict[str, Any]:
+        """Discover public strategies."""
+        params = _strip_none({"sort": sort, "category": category, "search": search, "page": page, "limit": limit})
+        return await self._get("/api/v1/discover", params=params)  # type: ignore[return-value]
+
+    async def get_leaderboard(
+        self,
+        *,
+        period: str | None = None,
+        page: int | None = None,
+        limit: int | None = None,
+    ) -> dict[str, Any]:
+        """Get trader leaderboard ranked by P&L."""
+        params = _strip_none({"period": period, "page": page, "limit": limit})
+        return await self._get("/api/v1/leaderboard", params=params)  # type: ignore[return-value]
+
+    # -- Paper trading --
+
+    async def get_paper_summary(self) -> PaperSummary:
+        """Get paper trading account summary."""
+        return _parse(PaperSummary, await self._get("/api/v1/paper/summary"))
+
+    async def reset_paper_account(self) -> dict[str, Any]:
+        """Reset paper trading account to initial balance."""
+        return await self._post("/api/v1/paper/reset")  # type: ignore[return-value]
+
+    # -- Batch API --
+
+    async def batch_requests(self, items: list[dict[str, Any]]) -> dict[str, Any]:
+        """Execute multiple API calls in a single round-trip."""
+        return await self._post("/api/v1/batch", json={"items": items})  # type: ignore[return-value]
 
     # -- Configuration --
 
@@ -2290,6 +2633,83 @@ class AsyncPolyforgeClient:
         data = await self._get("/api/v1/copy")
         items = data if isinstance(data, list) else data.get("data", [])
         return [_parse(CopyConfig, c) for c in items]
+
+    async def create_copy_config(
+        self,
+        target_wallet: str,
+        *,
+        mode: str | None = None,
+        size_value: str | None = None,
+        max_exposure: str | None = None,
+        max_daily_loss: str | None = None,
+        price_offset: str | None = None,
+    ) -> CopyConfig:
+        """Create a new copy trading configuration."""
+        payload: dict[str, Any] = {"targetWallet": target_wallet}
+        if mode is not None:
+            payload["mode"] = mode
+        if size_value is not None:
+            payload["sizeValue"] = size_value
+        if max_exposure is not None:
+            payload["maxExposure"] = max_exposure
+        if max_daily_loss is not None:
+            payload["maxDailyLoss"] = max_daily_loss
+        if price_offset is not None:
+            payload["priceOffset"] = price_offset
+        return _parse(CopyConfig, await self._post("/api/v1/copy", json=payload))
+
+    async def get_copy_config(self, config_id: str) -> CopyConfig:
+        """Get a single copy trading configuration by ID."""
+        return _parse(CopyConfig, await self._get(f"/api/v1/copy/{_encode_path(config_id)}"))
+
+    async def update_copy_config(
+        self,
+        config_id: str,
+        *,
+        mode: str | None = None,
+        size_value: str | None = None,
+        max_exposure: str | None = None,
+        max_daily_loss: str | None = None,
+        price_offset: str | None = None,
+    ) -> CopyConfig:
+        """Update an existing copy trading configuration."""
+        payload: dict[str, Any] = {}
+        if mode is not None:
+            payload["mode"] = mode
+        if size_value is not None:
+            payload["sizeValue"] = size_value
+        if max_exposure is not None:
+            payload["maxExposure"] = max_exposure
+        if max_daily_loss is not None:
+            payload["maxDailyLoss"] = max_daily_loss
+        if price_offset is not None:
+            payload["priceOffset"] = price_offset
+        return _parse(CopyConfig, await self._patch(f"/api/v1/copy/{_encode_path(config_id)}", json=payload))
+
+    async def pause_copy_config(self, config_id: str) -> CopyConfig:
+        """Pause a copy trading configuration."""
+        return _parse(CopyConfig, await self._post(f"/api/v1/copy/{_encode_path(config_id)}/pause"))
+
+    async def resume_copy_config(self, config_id: str) -> CopyConfig:
+        """Resume a paused copy trading configuration."""
+        return _parse(CopyConfig, await self._post(f"/api/v1/copy/{_encode_path(config_id)}/resume"))
+
+    async def delete_copy_config(self, config_id: str) -> dict[str, Any]:
+        """Delete (stop) a copy trading configuration."""
+        return await self._delete(f"/api/v1/copy/{_encode_path(config_id)}")  # type: ignore[return-value]
+
+    async def get_copy_trades(
+        self,
+        config_id: str,
+        *,
+        page: int | None = None,
+        limit: int | None = None,
+    ) -> list[Order]:
+        """Get trades executed by a copy trading configuration."""
+        params = _strip_none({"page": page, "limit": limit})
+        data = await self._get(f"/api/v1/copy/{_encode_path(config_id)}/trades", params=params)
+        items = data if isinstance(data, list) else data.get("data", [])
+        return [_parse(Order, o) for o in items]
 
     async def list_webhooks(self) -> list[Webhook]:
         data = await self._get("/api/v1/webhooks")

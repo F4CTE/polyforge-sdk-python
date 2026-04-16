@@ -24,6 +24,7 @@ from polyforge.models import (
     OrderBookLevel,
     OrderStatus,
     PaginatedResponse,
+    PaperSummary,
     PlaceOrderResponse,
     Portfolio,
     PortfolioPnl,
@@ -41,6 +42,7 @@ from polyforge.models import (
     WatchlistItem,
     Webhook,
     WebhookTestResult,
+    WhaleProfile,
     WhaleTrade,
 )
 
@@ -85,9 +87,11 @@ __all__ = [
     "StrategyTemplate",
     "Token",
     "TraderScore",
+    "PaperSummary",
     "WatchlistItem",
     "Webhook",
     "WebhookTestResult",
+    "WhaleProfile",
     "WhaleTrade",
 ]
 
