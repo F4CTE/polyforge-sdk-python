@@ -12,7 +12,6 @@ import {
   DecryptedCredentials,
   zeroCredentials,
 } from "../credentials/credentials.service";
-import { GasSponsorService } from "../gas/gas-sponsor.service";
 import { SignOrderDto } from "./dto/sign-order.dto";
 
 export interface SignedOrder {
@@ -25,8 +24,6 @@ export interface SignedOrder {
     POLY_BUILDER_PASSPHRASE: string;
     POLY_BUILDER_SIGNATURE: string;
   };
-  /** Whether the platform sponsored gas fees for this transaction */
-  gasSponsored: boolean;
 }
 
 const NONCE_CACHE_TTL = 30; // 30 seconds
@@ -54,7 +51,6 @@ export class SigningService implements OnModuleInit {
   constructor(
     private readonly credentials: CredentialsService,
     private readonly config: ConfigService,
-    private readonly gasSponsor: GasSponsorService,
     private readonly redis: RedisService,
   ) {
     this.chainId = parseInt(this.config.get<string>("CHAIN_ID") ?? "137", 10);
@@ -174,21 +170,11 @@ export class SigningService implements OnModuleInit {
 
       const builderHeaders = this.buildBuilderHeaders(requestId);
 
-      // Use configurable gas estimate from environment
-      const gasEstimate = parseFloat(
-        this.config.get<string>("GAS_ESTIMATE_MATIC") ?? "0.002",
-      );
-      const gasSponsored = await this.gasSponsor.sponsorGas(
-        userId,
-        gasEstimate,
-      );
-
       this.logger.log(
-        `Order signed for user=${userId} requestId=${requestId} tokenId=${tokenId} side=${side}` +
-          ` gasSponsored=${gasSponsored}`,
+        `Order signed for user=${userId} requestId=${requestId} tokenId=${tokenId} side=${side}`,
       );
 
-      return { order, builderHeaders, gasSponsored };
+      return { order, builderHeaders };
     } finally {
       zeroCredentials(creds);
     }
@@ -380,7 +366,7 @@ export class SigningService implements OnModuleInit {
   async redeemPosition(
     userId: string,
     tokenId: string,
-  ): Promise<{ txHash: string; gasSponsored: boolean }> {
+  ): Promise<{ txHash: string }> {
     let txHash: string;
 
     if (this.isStubMode) {
@@ -398,20 +384,11 @@ export class SigningService implements OnModuleInit {
       }
     }
 
-    // Use configurable gas estimate for redemptions (slightly higher than orders)
-    const gasEstimateRedemption =
-      parseFloat(this.config.get<string>("GAS_ESTIMATE_MATIC") ?? "0.002") *
-      1.5;
-    const gasSponsored = await this.gasSponsor.sponsorGas(
-      userId,
-      gasEstimateRedemption,
-    );
-
     this.logger.log(
-      `Position redeemed for user=${userId} tokenId=${tokenId} gasSponsored=${gasSponsored}`,
+      `Position redeemed for user=${userId} tokenId=${tokenId}`,
     );
 
-    return { txHash, gasSponsored };
+    return { txHash };
   }
 
   // ─── CTF Split / Merge ──────────────────────────────────────────────────

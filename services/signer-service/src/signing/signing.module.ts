@@ -4,13 +4,11 @@ import { RedisModule } from "@polyforge/shared-redis";
 import { SigningController } from "./signing.controller";
 import { SigningService } from "./signing.service";
 import { CredentialsModule } from "../credentials/credentials.module";
-import { GasSponsorModule } from "../gas/gas-sponsor.module";
 import { InternalAuthGuard } from "../common/internal-auth.guard";
 
 @Module({
   imports: [
     CredentialsModule,
-    GasSponsorModule,
     JwtModule.register({}),
     RedisModule,
   ],

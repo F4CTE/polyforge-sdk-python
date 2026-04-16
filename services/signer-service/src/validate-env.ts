@@ -17,8 +17,6 @@ const REQUIRED_ENV = [
   "POLY_BUILDER_PASSPHRASE",
 ];
 
-/** Regex for a valid 0x-prefixed 256-bit hex private key */
-const PRIVATE_KEY_RE = /^0x[0-9a-fA-F]{64}$/;
 
 export function validateEnv(
   env: Record<string, string | undefined> = process.env,
@@ -46,17 +44,6 @@ export function validateEnv(
     }
   }
 
-  // Validate GAS_SPONSOR_PRIVATE_KEY format when gas sponsorship is enabled
-  const gasSponsorEnabled = (env.GAS_SPONSOR_ENABLED ?? "false") === "true";
-  if (gasSponsorEnabled) {
-    const gasKey = env.GAS_SPONSOR_PRIVATE_KEY;
-    if (!gasKey || !PRIVATE_KEY_RE.test(gasKey)) {
-      throw new Error(
-        "GAS_SPONSOR_PRIVATE_KEY must be a valid 0x-prefixed 64-char hex string when gas sponsorship is enabled",
-      );
-    }
-  }
-
   // Reject all known placeholder patterns in production
   rejectPlaceholderSecrets(
     "signer-service",
@@ -66,7 +53,6 @@ export function validateEnv(
       "POLY_BUILDER_API_KEY",
       "POLY_BUILDER_SECRET",
       "POLY_BUILDER_PASSPHRASE",
-      ...(gasSponsorEnabled ? ["GAS_SPONSOR_PRIVATE_KEY"] : []),
     ],
     env,
   );
