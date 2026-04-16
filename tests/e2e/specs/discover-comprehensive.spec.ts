@@ -381,7 +381,18 @@ test.describe('Discover — Full Workflow Coverage', () => {
         });
 
         test('Strategy detail shows blocks visualization', async ({ page }) => {
-            test.skip(true, 'TODO: blocks-visualization data-testid not yet implemented in strategy detail page');
+            const discoverPage = new DiscoverPage(page);
+            await discoverPage.goto();
+
+            const cardCount = await discoverPage.getStrategyCount();
+            if (cardCount === 0) return; // Skip when no seed data
+
+            const firstCard = page.locator('[data-testid="strategy-card"]').first();
+            await firstCard.click();
+            await page.waitForURL(/\/strategies\//, { timeout: 10_000 });
+
+            // Blocks visualization panel must be present on the detail page
+            await expect(page.locator('[data-testid="blocks-visualization"]')).toBeVisible({ timeout: 10_000 });
         });
 
         test('Can fork a public strategy (if feature available)', async ({ page }) => {
