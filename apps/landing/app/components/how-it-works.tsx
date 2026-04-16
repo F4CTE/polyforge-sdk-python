@@ -180,7 +180,7 @@ export function HowItWorks() {
           </p>
         </div>
 
-        <ol className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-[1000px] mx-auto stagger-children list-none p-0 m-0">
+        <ol className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-content-md mx-auto stagger-children list-none p-0 m-0">
           {steps.map((step) => (
             <li
               key={step.number}
