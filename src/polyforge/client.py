@@ -28,10 +28,13 @@ from polyforge.models import (
     AiQueryResponse,
     Alert,
     ArbitrageOpportunity,
+    BatchResult,
     CalibrationBucket,
     CategoryAccuracy,
     ConditionalOrder,
     CopyConfig,
+    CopyTrade,
+    LeaderboardEntry,
     LpPosition,
     Market,
     MarketplaceListing,
@@ -45,6 +48,7 @@ from polyforge.models import (
     OrderBookLevel,
     OrderStatus,
     PaginatedResponse,
+    PaperSummary,
     PlaceOrderResponse,
     PlaceSmartOrderResponse,
     Portfolio,
@@ -65,6 +69,7 @@ from polyforge.models import (
     Webhook,
     WebhookTestResult,
     WhaleTrade,
+    WhaleProfile,
 )
 
 T = TypeVar("T")
@@ -81,6 +86,11 @@ _MODEL_REGISTRY: dict[str, type] = {
     "Order": Order,
     "TraderScore": TraderScore,
     "WhaleTrade": WhaleTrade,
+    "WhaleProfile": WhaleProfile,
+    "LeaderboardEntry": LeaderboardEntry,
+    "PaperSummary": PaperSummary,
+    "BatchResult": BatchResult,
+    "CopyTrade": CopyTrade,
     "NewsSignal": NewsSignal,
     "Alert": Alert,
     "ConditionalOrder": ConditionalOrder,
@@ -488,6 +498,66 @@ class PolyforgeClient:
         """
         data = self._get(f"/api/v1/markets/{_encode_path(token_id)}/book")
         return _parse(OrderBook, data)
+
+    # -- Discovery & Ranking --
+
+    def discover_strategies(
+        self,
+        *,
+        sort: str | None = None,
+        category: str | None = None,
+        search: str | None = None,
+        limit: int | None = None,
+        offset: int | None = None,
+    ) -> PaginatedResponse[Strategy]:
+        """Discover and browse public strategies.
+
+        Args:
+            sort: Sort order (e.g. ``"pnl"``, ``"win_rate"``).
+            category: Filter by market category.
+            search: Full-text search query.
+            limit: Maximum number of results.
+            offset: Pagination offset.
+
+        Returns:
+            A :class:`PaginatedResponse` of :class:`Strategy` objects.
+        """
+        raw = self._get("/api/v1/discover", params=_strip_none({
+            "sort": sort, "category": category, "search": search,
+            "limit": limit, "offset": offset,
+        }))
+        items = raw.get("data", raw.get("items", []))
+        return PaginatedResponse(
+            data=[_parse(Strategy, s) for s in items],
+            total=raw.get("total", 0),
+            page=raw.get("page", 1),
+            limit=raw.get("limit", 10),
+            has_more=raw.get("hasNext", False),
+            total_pages=raw.get("totalPages", 0),
+        )
+
+    def get_leaderboard(
+        self,
+        *,
+        period: str | None = None,
+        limit: int | None = None,
+        offset: int | None = None,
+    ) -> list[LeaderboardEntry]:
+        """Fetch the trader leaderboard.
+
+        Args:
+            period: Time period (e.g. ``"7d"``, ``"30d"``).
+            limit: Maximum number of results.
+            offset: Pagination offset.
+
+        Returns:
+            A list of :class:`LeaderboardEntry` objects.
+        """
+        data = self._get("/api/v1/leaderboard", params=_strip_none({
+            "period": period, "limit": limit, "offset": offset,
+        }))
+        items = data if isinstance(data, list) else data.get("data", [])
+        return [_parse(LeaderboardEntry, e) for e in items]
 
     # -- Strategies --
 
@@ -1028,6 +1098,89 @@ class PolyforgeClient:
             seller_net=float(data["sellerNet"]),
         )
 
+    def create_marketplace_listing(
+        self,
+        strategy_id: str,
+        price: float,
+        *,
+        description: str | None = None,
+    ) -> MarketplaceListing:
+        """Create a new marketplace listing for one of your strategies.
+
+        Args:
+            strategy_id: The ID of the strategy to list.
+            price: Listing price in USDC (must be positive).
+            description: Optional description for the listing.
+
+        Returns:
+            The created :class:`MarketplaceListing`.
+        """
+        _validate_financial_param("price", price)
+        body: dict[str, Any] = {"strategyId": strategy_id, "price": price}
+        if description is not None:
+            body["description"] = description
+        return _parse(MarketplaceListing, self._post("/api/v1/marketplace", json=body))
+
+    def update_marketplace_listing(self, listing_id: str, **kwargs: Any) -> MarketplaceListing:
+        """Update an existing marketplace listing.
+
+        Pass API field names as keyword arguments (e.g. ``price=9.99``,
+        ``description="Updated desc"``).
+
+        Args:
+            listing_id: The listing ID to update.
+            **kwargs: Fields to update (passed directly to the API).
+
+        Returns:
+            The updated :class:`MarketplaceListing`.
+        """
+        return _parse(
+            MarketplaceListing,
+            self._patch(f"/api/v1/marketplace/{_encode_path(listing_id)}", json=kwargs),
+        )
+
+    def rate_marketplace_listing(
+        self,
+        listing_id: str,
+        rating: int,
+        *,
+        review: str | None = None,
+    ) -> dict[str, Any]:
+        """Submit a rating and optional review for a marketplace listing.
+
+        Args:
+            listing_id: The listing ID to rate.
+            rating: Integer rating (e.g. 1–5).
+            review: Optional text review.
+
+        Returns:
+            A dict with the rating submission confirmation.
+        """
+        body: dict[str, Any] = {"rating": rating}
+        if review is not None:
+            body["review"] = review
+        return self._post(f"/api/v1/marketplace/{_encode_path(listing_id)}/rate", json=body)
+
+    def get_my_listings(self) -> list[MarketplaceListing]:
+        """Get all marketplace listings created by the current user.
+
+        Returns:
+            A list of :class:`MarketplaceListing` objects.
+        """
+        data = self._get("/api/v1/marketplace/my/listings")
+        items = data if isinstance(data, list) else data.get("data", [])
+        return [_parse(MarketplaceListing, lst) for lst in items]
+
+    def get_my_purchases(self) -> list[MarketplacePurchaseResult]:
+        """Get all marketplace strategies purchased by the current user.
+
+        Returns:
+            A list of :class:`MarketplacePurchaseResult` objects.
+        """
+        data = self._get("/api/v1/marketplace/my/purchases")
+        items = data if isinstance(data, list) else data.get("data", [])
+        return [_parse(MarketplacePurchaseResult, p) for p in items]
+
     def watch_strategy(self, strategy_id: str) -> Iterator[StrategyEvent]:
         """Stream live execution events for a strategy via SSE.
 
@@ -1071,12 +1224,114 @@ class PolyforgeClient:
                     _log.warning("Malformed SSE event: failed to parse JSON")
                     continue
 
+    # -- Paper Trading --
+
+    def get_paper_summary(self) -> PaperSummary:
+        """Get the current paper trading account summary.
+
+        Returns:
+            A :class:`PaperSummary` with balance, PnL, and position data.
+        """
+        data = self._get("/api/v1/paper/summary")
+        return _parse(PaperSummary, data)
+
+    def reset_paper_account(self) -> dict[str, Any]:
+        """Reset the paper trading account to its initial state.
+
+        Returns:
+            A dict containing the reset confirmation from the server.
+        """
+        return self._post("/api/v1/paper/reset")
+
+    # -- Batch API --
+
+    def batch_requests(self, requests: list[dict[str, Any]]) -> list[BatchResult]:
+        """Execute multiple API requests in a single round-trip.
+
+        Each request dict must have: ``id`` (str), ``method`` (str),
+        ``path`` (str), and optionally ``body`` (dict).
+
+        Args:
+            requests: List of request dicts.
+
+        Returns:
+            A list of :class:`BatchResult` objects, one per request.
+        """
+        data = self._post("/api/v1/batch", json={"requests": requests})
+        items = data if isinstance(data, list) else data.get("results", [])
+        return [_parse(BatchResult, r) for r in items]
+
     # -- Social & Signals --
 
     def get_whale_feed(self, *, min_size: int = 10000) -> list[WhaleTrade]:
         data = self._get("/api/v1/whales/feed", params={"minSize": min_size})
         items = data["data"]
         return [_parse(WhaleTrade, w) for w in items]
+
+    def get_top_whales(
+        self,
+        *,
+        sort: str | None = None,
+        period: str | None = None,
+    ) -> list[WhaleProfile]:
+        """Fetch the top whale traders ranked by activity.
+
+        Args:
+            sort: Sort field (e.g. ``"pnl"``, ``"volume"``).
+            period: Time period (e.g. ``"7d"``, ``"30d"``).
+
+        Returns:
+            A list of :class:`WhaleProfile` objects.
+        """
+        data = self._get("/api/v1/whales/top", params=_strip_none({
+            "sort": sort, "period": period,
+        }))
+        items = data if isinstance(data, list) else data.get("data", [])
+        return [_parse(WhaleProfile, w) for w in items]
+
+    def get_whale_profile(self, address: str) -> WhaleProfile:
+        """Get a whale trader's profile by wallet address.
+
+        Args:
+            address: The wallet address of the whale.
+
+        Returns:
+            The :class:`WhaleProfile` for the given address.
+        """
+        data = self._get(f"/api/v1/whales/{_encode_path(address)}")
+        return _parse(WhaleProfile, data)
+
+    def follow_whale(self, address: str) -> dict[str, Any]:
+        """Follow a whale trader.
+
+        Args:
+            address: The wallet address of the whale to follow.
+
+        Returns:
+            A dict with the follow confirmation from the server.
+        """
+        return self._post(f"/api/v1/whales/{_encode_path(address)}/follow")
+
+    def unfollow_whale(self, address: str) -> dict[str, Any]:
+        """Unfollow a whale trader.
+
+        Args:
+            address: The wallet address of the whale to unfollow.
+
+        Returns:
+            A dict with the unfollow confirmation from the server.
+        """
+        return self._post(f"/api/v1/whales/{_encode_path(address)}/unfollow")
+
+    def get_followed_whales(self) -> list[WhaleProfile]:
+        """List all whales the current user is following.
+
+        Returns:
+            A list of :class:`WhaleProfile` objects.
+        """
+        data = self._get("/api/v1/whales/following")
+        items = data if isinstance(data, list) else data.get("data", [])
+        return [_parse(WhaleProfile, w) for w in items]
 
     def get_news_signals(self, *, min_confidence: int = 70) -> list[NewsSignal]:
         data = self._get("/api/v1/news/signals", params={"minConfidence": min_confidence})
@@ -1247,6 +1502,115 @@ class PolyforgeClient:
         data = self._get("/api/v1/copy")
         items = data if isinstance(data, list) else data.get("data", [])
         return [_parse(CopyConfig, c) for c in items]
+
+    def create_copy_config(
+        self,
+        target_wallet: str,
+        *,
+        mode: str | None = None,
+        size_value: float | None = None,
+        max_exposure: float | None = None,
+        max_daily_loss: float | None = None,
+        price_offset: float | None = None,
+    ) -> CopyConfig:
+        """Create a new copy-trading configuration.
+
+        Args:
+            target_wallet: The wallet address to copy trades from.
+            mode: Copy mode (``"PERCENTAGE"``, ``"FIXED"``, or ``"MIRROR"``).
+            size_value: Trade size value (percentage or fixed USDC amount).
+            max_exposure: Maximum USDC exposure per copied wallet.
+            max_daily_loss: Maximum daily loss limit in USDC.
+            price_offset: Price offset applied to copied orders.
+
+        Returns:
+            The created :class:`CopyConfig`.
+        """
+        body: dict[str, Any] = {"targetWallet": target_wallet}
+        if mode is not None:
+            body["mode"] = mode
+        if size_value is not None:
+            body["sizeValue"] = size_value
+        if max_exposure is not None:
+            body["maxExposure"] = max_exposure
+        if max_daily_loss is not None:
+            body["maxDailyLoss"] = max_daily_loss
+        if price_offset is not None:
+            body["priceOffset"] = price_offset
+        return _parse(CopyConfig, self._post("/api/v1/copy", json=body))
+
+    def get_copy_config(self, copy_id: str) -> CopyConfig:
+        """Get a copy-trading configuration by ID.
+
+        Args:
+            copy_id: The copy config ID.
+
+        Returns:
+            The :class:`CopyConfig`.
+        """
+        data = self._get(f"/api/v1/copy/{_encode_path(copy_id)}")
+        return _parse(CopyConfig, data)
+
+    def update_copy_config(self, copy_id: str, **kwargs: Any) -> CopyConfig:
+        """Update an existing copy-trading configuration.
+
+        Pass API field names as keyword arguments (e.g. ``mode="FIXED"``,
+        ``sizeValue=100``).
+
+        Args:
+            copy_id: The copy config ID to update.
+            **kwargs: Fields to update (passed directly to the API).
+
+        Returns:
+            The updated :class:`CopyConfig`.
+        """
+        return _parse(
+            CopyConfig,
+            self._patch(f"/api/v1/copy/{_encode_path(copy_id)}", json=kwargs),
+        )
+
+    def pause_copy_config(self, copy_id: str) -> CopyConfig:
+        """Pause an active copy-trading configuration.
+
+        Args:
+            copy_id: The copy config ID to pause.
+
+        Returns:
+            The updated :class:`CopyConfig` with ``status="PAUSED"``.
+        """
+        return _parse(CopyConfig, self._post(f"/api/v1/copy/{_encode_path(copy_id)}/pause"))
+
+    def resume_copy_config(self, copy_id: str) -> CopyConfig:
+        """Resume a paused copy-trading configuration.
+
+        Args:
+            copy_id: The copy config ID to resume.
+
+        Returns:
+            The updated :class:`CopyConfig` with ``status="ACTIVE"``.
+        """
+        return _parse(CopyConfig, self._post(f"/api/v1/copy/{_encode_path(copy_id)}/resume"))
+
+    def delete_copy_config(self, copy_id: str) -> None:
+        """Delete a copy-trading configuration.
+
+        Args:
+            copy_id: The copy config ID to delete.
+        """
+        self._delete(f"/api/v1/copy/{_encode_path(copy_id)}")
+
+    def get_copy_trades(self, copy_id: str) -> list[CopyTrade]:
+        """List all trades executed via a copy-trading configuration.
+
+        Args:
+            copy_id: The copy config ID.
+
+        Returns:
+            A list of :class:`CopyTrade` objects.
+        """
+        data = self._get(f"/api/v1/copy/{_encode_path(copy_id)}/trades")
+        items = data if isinstance(data, list) else data.get("data", [])
+        return [_parse(CopyTrade, t) for t in items]
 
     def list_webhooks(self) -> list[Webhook]:
         data = self._get("/api/v1/webhooks")
@@ -1563,6 +1927,66 @@ class AsyncPolyforgeClient:
         """
         data = await self._get(f"/api/v1/markets/{_encode_path(token_id)}/book")
         return _parse(OrderBook, data)
+
+    # -- Discovery & Ranking --
+
+    async def discover_strategies(
+        self,
+        *,
+        sort: str | None = None,
+        category: str | None = None,
+        search: str | None = None,
+        limit: int | None = None,
+        offset: int | None = None,
+    ) -> PaginatedResponse[Strategy]:
+        """Discover and browse public strategies.
+
+        Args:
+            sort: Sort order (e.g. ``"pnl"``, ``"win_rate"``).
+            category: Filter by market category.
+            search: Full-text search query.
+            limit: Maximum number of results.
+            offset: Pagination offset.
+
+        Returns:
+            A :class:`PaginatedResponse` of :class:`Strategy` objects.
+        """
+        raw = await self._get("/api/v1/discover", params=_strip_none({
+            "sort": sort, "category": category, "search": search,
+            "limit": limit, "offset": offset,
+        }))
+        items = raw.get("data", raw.get("items", []))
+        return PaginatedResponse(
+            data=[_parse(Strategy, s) for s in items],
+            total=raw.get("total", 0),
+            page=raw.get("page", 1),
+            limit=raw.get("limit", 10),
+            has_more=raw.get("hasNext", False),
+            total_pages=raw.get("totalPages", 0),
+        )
+
+    async def get_leaderboard(
+        self,
+        *,
+        period: str | None = None,
+        limit: int | None = None,
+        offset: int | None = None,
+    ) -> list[LeaderboardEntry]:
+        """Fetch the trader leaderboard.
+
+        Args:
+            period: Time period (e.g. ``"7d"``, ``"30d"``).
+            limit: Maximum number of results.
+            offset: Pagination offset.
+
+        Returns:
+            A list of :class:`LeaderboardEntry` objects.
+        """
+        data = await self._get("/api/v1/leaderboard", params=_strip_none({
+            "period": period, "limit": limit, "offset": offset,
+        }))
+        items = data if isinstance(data, list) else data.get("data", [])
+        return [_parse(LeaderboardEntry, e) for e in items]
 
     # -- Strategies --
 
@@ -2074,6 +2498,52 @@ class AsyncPolyforgeClient:
             seller_net=float(data["sellerNet"]),
         )
 
+    async def create_marketplace_listing(
+        self,
+        strategy_id: str,
+        price: float,
+        *,
+        description: str | None = None,
+    ) -> MarketplaceListing:
+        """Create a new marketplace listing for one of your strategies."""
+        _validate_financial_param("price", price)
+        body: dict[str, Any] = {"strategyId": strategy_id, "price": price}
+        if description is not None:
+            body["description"] = description
+        return _parse(MarketplaceListing, await self._post("/api/v1/marketplace", json=body))
+
+    async def update_marketplace_listing(self, listing_id: str, **kwargs: Any) -> MarketplaceListing:
+        """Update an existing marketplace listing."""
+        return _parse(
+            MarketplaceListing,
+            await self._patch(f"/api/v1/marketplace/{_encode_path(listing_id)}", json=kwargs),
+        )
+
+    async def rate_marketplace_listing(
+        self,
+        listing_id: str,
+        rating: int,
+        *,
+        review: str | None = None,
+    ) -> dict[str, Any]:
+        """Submit a rating and optional review for a marketplace listing."""
+        body: dict[str, Any] = {"rating": rating}
+        if review is not None:
+            body["review"] = review
+        return await self._post(f"/api/v1/marketplace/{_encode_path(listing_id)}/rate", json=body)
+
+    async def get_my_listings(self) -> list[MarketplaceListing]:
+        """Get all marketplace listings created by the current user."""
+        data = await self._get("/api/v1/marketplace/my/listings")
+        items = data if isinstance(data, list) else data.get("data", [])
+        return [_parse(MarketplaceListing, lst) for lst in items]
+
+    async def get_my_purchases(self) -> list[MarketplacePurchaseResult]:
+        """Get all marketplace strategies purchased by the current user."""
+        data = await self._get("/api/v1/marketplace/my/purchases")
+        items = data if isinstance(data, list) else data.get("data", [])
+        return [_parse(MarketplacePurchaseResult, p) for p in items]
+
     async def watch_strategy(self, strategy_id: str) -> AsyncIterator[StrategyEvent]:  # type: ignore[override]
         """Stream live execution events for a strategy via SSE.
 
@@ -2114,12 +2584,63 @@ class AsyncPolyforgeClient:
                     _log.warning("Malformed SSE event: failed to parse JSON")
                     continue
 
+    # -- Paper Trading --
+
+    async def get_paper_summary(self) -> PaperSummary:
+        """Get the current paper trading account summary."""
+        data = await self._get("/api/v1/paper/summary")
+        return _parse(PaperSummary, data)
+
+    async def reset_paper_account(self) -> dict[str, Any]:
+        """Reset the paper trading account to its initial state."""
+        return await self._post("/api/v1/paper/reset")
+
+    # -- Batch API --
+
+    async def batch_requests(self, requests: list[dict[str, Any]]) -> list[BatchResult]:
+        """Execute multiple API requests in a single round-trip."""
+        data = await self._post("/api/v1/batch", json={"requests": requests})
+        items = data if isinstance(data, list) else data.get("results", [])
+        return [_parse(BatchResult, r) for r in items]
+
     # -- Social & Signals --
 
     async def get_whale_feed(self, *, min_size: int = 10000) -> list[WhaleTrade]:
         data = await self._get("/api/v1/whales/feed", params={"minSize": min_size})
         items = data["data"]
         return [_parse(WhaleTrade, w) for w in items]
+
+    async def get_top_whales(
+        self,
+        *,
+        sort: str | None = None,
+        period: str | None = None,
+    ) -> list[WhaleProfile]:
+        """Fetch the top whale traders ranked by activity."""
+        data = await self._get("/api/v1/whales/top", params=_strip_none({
+            "sort": sort, "period": period,
+        }))
+        items = data if isinstance(data, list) else data.get("data", [])
+        return [_parse(WhaleProfile, w) for w in items]
+
+    async def get_whale_profile(self, address: str) -> WhaleProfile:
+        """Get a whale trader's profile by wallet address."""
+        data = await self._get(f"/api/v1/whales/{_encode_path(address)}")
+        return _parse(WhaleProfile, data)
+
+    async def follow_whale(self, address: str) -> dict[str, Any]:
+        """Follow a whale trader."""
+        return await self._post(f"/api/v1/whales/{_encode_path(address)}/follow")
+
+    async def unfollow_whale(self, address: str) -> dict[str, Any]:
+        """Unfollow a whale trader."""
+        return await self._post(f"/api/v1/whales/{_encode_path(address)}/unfollow")
+
+    async def get_followed_whales(self) -> list[WhaleProfile]:
+        """List all whales the current user is following."""
+        data = await self._get("/api/v1/whales/following")
+        items = data if isinstance(data, list) else data.get("data", [])
+        return [_parse(WhaleProfile, w) for w in items]
 
     async def get_news_signals(self, *, min_confidence: int = 70) -> list[NewsSignal]:
         data = await self._get("/api/v1/news/signals", params={"minConfidence": min_confidence})
@@ -2290,6 +2811,60 @@ class AsyncPolyforgeClient:
         data = await self._get("/api/v1/copy")
         items = data if isinstance(data, list) else data.get("data", [])
         return [_parse(CopyConfig, c) for c in items]
+
+    async def create_copy_config(
+        self,
+        target_wallet: str,
+        *,
+        mode: str | None = None,
+        size_value: float | None = None,
+        max_exposure: float | None = None,
+        max_daily_loss: float | None = None,
+        price_offset: float | None = None,
+    ) -> CopyConfig:
+        """Create a new copy-trading configuration."""
+        body: dict[str, Any] = {"targetWallet": target_wallet}
+        if mode is not None:
+            body["mode"] = mode
+        if size_value is not None:
+            body["sizeValue"] = size_value
+        if max_exposure is not None:
+            body["maxExposure"] = max_exposure
+        if max_daily_loss is not None:
+            body["maxDailyLoss"] = max_daily_loss
+        if price_offset is not None:
+            body["priceOffset"] = price_offset
+        return _parse(CopyConfig, await self._post("/api/v1/copy", json=body))
+
+    async def get_copy_config(self, copy_id: str) -> CopyConfig:
+        """Get a copy-trading configuration by ID."""
+        data = await self._get(f"/api/v1/copy/{_encode_path(copy_id)}")
+        return _parse(CopyConfig, data)
+
+    async def update_copy_config(self, copy_id: str, **kwargs: Any) -> CopyConfig:
+        """Update an existing copy-trading configuration."""
+        return _parse(
+            CopyConfig,
+            await self._patch(f"/api/v1/copy/{_encode_path(copy_id)}", json=kwargs),
+        )
+
+    async def pause_copy_config(self, copy_id: str) -> CopyConfig:
+        """Pause an active copy-trading configuration."""
+        return _parse(CopyConfig, await self._post(f"/api/v1/copy/{_encode_path(copy_id)}/pause"))
+
+    async def resume_copy_config(self, copy_id: str) -> CopyConfig:
+        """Resume a paused copy-trading configuration."""
+        return _parse(CopyConfig, await self._post(f"/api/v1/copy/{_encode_path(copy_id)}/resume"))
+
+    async def delete_copy_config(self, copy_id: str) -> None:
+        """Delete a copy-trading configuration."""
+        await self._delete(f"/api/v1/copy/{_encode_path(copy_id)}")
+
+    async def get_copy_trades(self, copy_id: str) -> list[CopyTrade]:
+        """List all trades executed via a copy-trading configuration."""
+        data = await self._get(f"/api/v1/copy/{_encode_path(copy_id)}/trades")
+        items = data if isinstance(data, list) else data.get("data", [])
+        return [_parse(CopyTrade, t) for t in items]
 
     async def list_webhooks(self) -> list[Webhook]:
         data = await self._get("/api/v1/webhooks")
