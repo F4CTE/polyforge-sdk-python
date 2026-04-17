@@ -1,7 +1,6 @@
 import {
   Injectable,
   Logger,
-  NotImplementedException,
   OnModuleInit,
   ServiceUnavailableException,
 } from "@nestjs/common";
@@ -15,7 +14,9 @@ import {
   zeroCredentials,
 } from "../credentials/credentials.service";
 import { NativeEip712Service } from "./native-eip712.service";
+import { NativeCtfService } from "./native-ctf.service";
 import { SignOrderDto } from "./dto/sign-order.dto";
+import { RedeemPositionDto, SplitPositionDto, MergePositionDto } from "./dto/ctf-operations.dto";
 
 export interface SignedOrder {
   /** Signed order payload for Polymarket CLOB API */
@@ -50,12 +51,14 @@ export class SigningService implements OnModuleInit {
   private readonly chainId: number;
   private readonly isStubMode: boolean;
   private readonly clobApiUrl: string;
+  private readonly rpcUrl: string;
 
   constructor(
     private readonly credentials: CredentialsService,
     private readonly config: ConfigService,
     private readonly redis: RedisService,
     private readonly nativeEip712: NativeEip712Service,
+    private readonly nativeCtf: NativeCtfService,
   ) {
     this.chainId = parseInt(this.config.get<string>("CHAIN_ID") ?? "137", 10);
 
@@ -74,6 +77,8 @@ export class SigningService implements OnModuleInit {
     this.isStubMode = signingMode === "stub";
     this.clobApiUrl =
       this.config.get<string>("CLOB_API_URL") ?? "https://clob.polymarket.com";
+    this.rpcUrl =
+      this.config.get<string>("POLYGON_RPC_URL") ?? "https://polygon-rpc.com";
   }
 
   /** Read builder credentials on demand — never cached in class instance memory */
@@ -117,6 +122,10 @@ export class SigningService implements OnModuleInit {
         throw new Error(
           "Production requires POLY_BUILDER_API_KEY, POLY_BUILDER_SECRET, and POLY_BUILDER_PASSPHRASE",
         );
+      }
+      // Verify RPC URL for on-chain CTF operations
+      if (!this.rpcUrl || this.rpcUrl.includes("localhost")) {
+        throw new Error("Production requires a real POLYGON_RPC_URL for on-chain CTF operations");
       }
     }
   }
@@ -328,10 +337,9 @@ export class SigningService implements OnModuleInit {
 
   // ─── Redeem position ─────────────────────────────────────────────────────
 
-  async redeemPosition(
-    userId: string,
-    tokenId: string,
-  ): Promise<{ txHash: string }> {
+  async redeemPosition(dto: RedeemPositionDto): Promise<{ txHash: string }> {
+    const { userId } = dto;
+
     if (this.isStubMode) {
       this.logger.warn(
         "DEV MODE: Using stub redemption — positions will NOT be redeemed on Polymarket",
@@ -341,53 +349,78 @@ export class SigningService implements OnModuleInit {
       };
     }
 
-    // On-chain CTF redemption requires an ethers.js provider wallet integration
-    // that is not yet implemented. Private keys are intentionally never converted
-    // to JS strings — see POLA-136 / GitHub #671.
-    this.logger.warn(
-      `redeemPosition called for user=${userId} tokenId=${tokenId} — on-chain operations not yet implemented`,
-    );
-    throw new NotImplementedException(
-      "On-chain position redemption is not yet available",
-    );
+    const creds = await this.credentials.getDecryptedCredentials(userId);
+    try {
+      return await this.nativeCtf.redeemPosition(
+        creds,
+        this.chainId,
+        this.rpcUrl,
+        {
+          conditionId: dto.conditionId,
+          indexSets: dto.indexSets.map((s) => BigInt(s)),
+          collateralToken: dto.collateralToken,
+          parentCollectionId: dto.parentCollectionId,
+        },
+      );
+    } finally {
+      zeroCredentials(creds);
+    }
   }
 
   // ─── CTF Split / Merge ──────────────────────────────────────────────────
 
-  async splitPosition(
-    userId: string,
-    tokenId: string,
-    amount: string,
-  ): Promise<{ txHash: string }> {
+  async splitPosition(dto: SplitPositionDto): Promise<{ txHash: string }> {
+    const { userId } = dto;
+
     if (this.isStubMode) {
       this.logger.warn("DEV MODE: Stub split");
       return { txHash: `dev-split-${Date.now()}` };
     }
 
-    this.logger.warn(
-      `splitPosition called for user=${userId} tokenId=${tokenId} amount=${amount} — on-chain operations not yet implemented`,
-    );
-    throw new NotImplementedException(
-      "On-chain position split is not yet available",
-    );
+    const creds = await this.credentials.getDecryptedCredentials(userId);
+    try {
+      return await this.nativeCtf.splitPosition(
+        creds,
+        this.chainId,
+        this.rpcUrl,
+        {
+          conditionId: dto.conditionId,
+          partition: dto.partition.map((s) => BigInt(s)),
+          amount: BigInt(dto.amount),
+          collateralToken: dto.collateralToken,
+          parentCollectionId: dto.parentCollectionId,
+        },
+      );
+    } finally {
+      zeroCredentials(creds);
+    }
   }
 
-  async mergePosition(
-    userId: string,
-    tokenId: string,
-    amount: string,
-  ): Promise<{ txHash: string }> {
+  async mergePosition(dto: MergePositionDto): Promise<{ txHash: string }> {
+    const { userId } = dto;
+
     if (this.isStubMode) {
       this.logger.warn("DEV MODE: Stub merge");
       return { txHash: `dev-merge-${Date.now()}` };
     }
 
-    this.logger.warn(
-      `mergePosition called for user=${userId} tokenId=${tokenId} amount=${amount} — on-chain operations not yet implemented`,
-    );
-    throw new NotImplementedException(
-      "On-chain position merge is not yet available",
-    );
+    const creds = await this.credentials.getDecryptedCredentials(userId);
+    try {
+      return await this.nativeCtf.mergePosition(
+        creds,
+        this.chainId,
+        this.rpcUrl,
+        {
+          conditionId: dto.conditionId,
+          partition: dto.partition.map((s) => BigInt(s)),
+          amount: BigInt(dto.amount),
+          collateralToken: dto.collateralToken,
+          parentCollectionId: dto.parentCollectionId,
+        },
+      );
+    } finally {
+      zeroCredentials(creds);
+    }
   }
 
   // ─── Builder HMAC headers ─────────────────────────────────────────────────

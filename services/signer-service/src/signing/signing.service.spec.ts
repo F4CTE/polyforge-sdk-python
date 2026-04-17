@@ -3,7 +3,8 @@ import { ConfigService } from "@nestjs/config";
 import { SigningService } from "./signing.service";
 import { CredentialsService } from "../credentials/credentials.service";
 import { NativeEip712Service } from "./native-eip712.service";
-import { NotFoundException, NotImplementedException } from "@nestjs/common";
+import { NativeCtfService } from "./native-ctf.service";
+import { NotFoundException } from "@nestjs/common";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -88,11 +89,36 @@ function makeMockNativeEip712(
   } as any;
 }
 
+function makeMockNativeCtf(
+  override: Partial<NativeCtfService> = {},
+): NativeCtfService {
+  return {
+    redeemPosition: vi
+      .fn()
+      .mockResolvedValue({ txHash: "0x" + "ff".repeat(32) }),
+    splitPosition: vi
+      .fn()
+      .mockResolvedValue({ txHash: "0x" + "ee".repeat(32) }),
+    mergePosition: vi
+      .fn()
+      .mockResolvedValue({ txHash: "0x" + "dd".repeat(32) }),
+    getEoaAddress: vi.fn().mockReturnValue("0x" + "0".repeat(40)),
+    signTransaction: vi.fn().mockReturnValue(Buffer.alloc(100)),
+    broadcastTransaction: vi
+      .fn()
+      .mockResolvedValue("0x" + "aa".repeat(32)),
+    getTransactionCount: vi.fn().mockResolvedValue(0),
+    getGasPrice: vi.fn().mockResolvedValue(1_000_000_000n),
+    ...override,
+  } as any;
+}
+
 describe("SigningService", () => {
   let svc: SigningService;
   let credentials: CredentialsService;
   let redis: ReturnType<typeof makeMockRedis>;
   let nativeEip712: NativeEip712Service;
+  let nativeCtf: NativeCtfService;
 
   beforeEach(() => {
     credentials = {
@@ -100,11 +126,13 @@ describe("SigningService", () => {
     } as any;
     redis = makeMockRedis();
     nativeEip712 = makeMockNativeEip712();
+    nativeCtf = makeMockNativeCtf();
     svc = new SigningService(
       credentials,
       makeConfig(),
       redis as any,
       nativeEip712,
+      nativeCtf,
     );
   });
 
@@ -264,6 +292,7 @@ describe("SigningService", () => {
             makeConfig({ NODE_ENV: "staging", SIGNING_MODE: "stub" }),
             redis as any,
             nativeEip712,
+            nativeCtf,
           ),
       ).toThrow("Stub signing mode is only allowed in development");
     });
@@ -276,6 +305,7 @@ describe("SigningService", () => {
             makeConfig({ NODE_ENV: "test", SIGNING_MODE: "stub" }),
             redis as any,
             nativeEip712,
+            nativeCtf,
           ),
       ).toThrow("Stub signing mode is only allowed in development");
     });
@@ -288,6 +318,7 @@ describe("SigningService", () => {
             makeConfig({ NODE_ENV: "production", SIGNING_MODE: "stub" }),
             redis as any,
             nativeEip712,
+            nativeCtf,
           ),
       ).toThrow("Stub signing mode is only allowed in development");
     });
@@ -300,6 +331,7 @@ describe("SigningService", () => {
             makeConfig({ NODE_ENV: "development", SIGNING_MODE: "stub" }),
             redis as any,
             nativeEip712,
+            nativeCtf,
           ),
       ).not.toThrow();
     });
@@ -317,6 +349,7 @@ describe("SigningService", () => {
         }),
         redis as any,
         nativeEip712,
+        nativeCtf,
       );
 
       expect(() => prodSvc.onModuleInit()).toThrow(
@@ -334,11 +367,27 @@ describe("SigningService", () => {
         }),
         redis as any,
         nativeEip712,
+        nativeCtf,
       );
 
       expect(() => prodSvc.onModuleInit()).toThrow(
         "Production requires POLY_BUILDER_API_KEY",
       );
+    });
+
+    it("throws when POLYGON_RPC_URL is localhost in production (POLA-148)", () => {
+      const prodSvc = new SigningService(
+        credentials,
+        makeConfig({
+          NODE_ENV: "production",
+          CLOB_API_URL: "https://clob.polymarket.com",
+          POLYGON_RPC_URL: "http://localhost:8545",
+        }),
+        redis as any,
+        nativeEip712,
+        nativeCtf,
+      );
+      expect(() => prodSvc.onModuleInit()).toThrow("POLYGON_RPC_URL");
     });
 
     it("does not throw in dev mode even with mock URLs", () => {
@@ -347,6 +396,7 @@ describe("SigningService", () => {
         makeConfig({ NODE_ENV: "development" }),
         redis as any,
         nativeEip712,
+        nativeCtf,
       );
 
       expect(() => devSvc.onModuleInit()).not.toThrow();
@@ -380,9 +430,11 @@ describe("SigningService", () => {
           NODE_ENV: "production",
           CLOB_API_URL: "https://clob.polymarket.com",
           SIGNING_MODE: "production",
+          POLYGON_RPC_URL: "https://polygon-rpc.com",
         }),
         prodRedis as any,
         nativeEip712,
+        nativeCtf,
       );
     });
 
@@ -440,22 +492,49 @@ describe("SigningService", () => {
       expect(result).toHaveProperty("builderHeaders");
     });
 
-    it("redeemPosition throws NotImplementedException in production (no ClobClient string exposure)", async () => {
-      await expect(
-        prodSvc["redeemPosition"]("user-1", "token-1"),
-      ).rejects.toThrow(NotImplementedException);
+    it("redeemPosition delegates to NativeCtfService in production (POLA-148)", async () => {
+      const result = await prodSvc["redeemPosition"]({
+        userId: "user-1",
+        conditionId: "0x" + "ab".repeat(32),
+        indexSets: ["1"],
+      });
+      expect(nativeCtf.redeemPosition).toHaveBeenCalledOnce();
+      expect(result).toHaveProperty("txHash");
     });
 
-    it("splitPosition throws NotImplementedException in production (no ClobClient string exposure)", async () => {
-      await expect(
-        prodSvc["splitPosition"]("user-1", "token-1", "100"),
-      ).rejects.toThrow(NotImplementedException);
+    it("splitPosition delegates to NativeCtfService in production (POLA-148)", async () => {
+      const result = await prodSvc["splitPosition"]({
+        userId: "user-1",
+        conditionId: "0x" + "ab".repeat(32),
+        partition: ["1", "2"],
+        amount: "1000000",
+      });
+      expect(nativeCtf.splitPosition).toHaveBeenCalledOnce();
+      expect(result).toHaveProperty("txHash");
     });
 
-    it("mergePosition throws NotImplementedException in production (no ClobClient string exposure)", async () => {
-      await expect(
-        prodSvc["mergePosition"]("user-1", "token-1", "100"),
-      ).rejects.toThrow(NotImplementedException);
+    it("mergePosition delegates to NativeCtfService in production (POLA-148)", async () => {
+      const result = await prodSvc["mergePosition"]({
+        userId: "user-1",
+        conditionId: "0x" + "ab".repeat(32),
+        partition: ["1", "2"],
+        amount: "1000000",
+      });
+      expect(nativeCtf.mergePosition).toHaveBeenCalledOnce();
+      expect(result).toHaveProperty("txHash");
+    });
+
+    it("redeemPosition passes privateKey as Buffer (not string) to NativeCtfService (POLA-148)", async () => {
+      await prodSvc["redeemPosition"]({
+        userId: "user-1",
+        conditionId: "0x" + "ab".repeat(32),
+        indexSets: ["1"],
+      });
+      const [calledCreds] = (
+        nativeCtf.redeemPosition as ReturnType<typeof vi.fn>
+      ).mock.calls[0];
+      expect(calledCreds.privateKey).toBeInstanceOf(Buffer);
+      expect(typeof calledCreds.privateKey).not.toBe("string");
     });
   });
 });
