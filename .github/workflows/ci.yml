@@ -345,40 +345,46 @@ jobs:
           BASE_URL=http://localhost AUTH_URL=http://localhost:3001 MAILHOG_URL=http://localhost:8025 \
             CI=true npx tsx global-setup.ts
 
-  # ── 4b. E2E shards — serialized through deploy group ─────────────────
-  # Each shard receives ~1/2 of spec files. global-setup already ran via
-  # e2e-setup so PLAYWRIGHT_SKIP_GLOBAL_SETUP suppresses it here.
-  # Same concurrency group as deploy-dev — prevents a concurrent deploy
-  # from restarting Docker containers while shards are running (POLA-185).
-  # Tradeoff: shards serialize across runs (and within a run), but this
-  # eliminates the SIGTERM failures that wasted ~40 min per occurrence.
+  # ── 4b. E2E — single job, both shards sequential ────────────────────
+  # Runs both shards sequentially inside one job so that only ONE job
+  # occupies the deploy-polyforge-lab concurrency group. A matrix would
+  # create two jobs competing for the single pending slot, and a third
+  # entrant (e.g. another branch's deploy) would evict the oldest
+  # pending shard — see POLA-185 review feedback.
   e2e:
-    name: E2E (shard ${{ matrix.shard }}/2)
+    name: E2E
     runs-on: [self-hosted, linux]
     needs: [e2e-setup]
-    timeout-minutes: 40
+    timeout-minutes: 60
     concurrency:
       group: deploy-polyforge-lab
       cancel-in-progress: false
-    strategy:
-      fail-fast: false
-      matrix:
-        shard: [1, 2]
     steps:
-      - name: Run E2E shard ${{ matrix.shard }}/2
-        # 40m matches job timeout; timeout(1) at 39m sends SIGTERM first;
-        # --kill-after=10s ensures chromium receives SIGKILL so no zombies remain.
-        timeout-minutes: 40
+      - name: Run E2E shard 1/2
+        timeout-minutes: 30
         run: |
           set -euo pipefail
           cd ~/PolyForge/tests/e2e
 
           BASE_URL=http://localhost CI=true PLAYWRIGHT_SKIP_GLOBAL_SETUP=true \
-            timeout --kill-after=10s 2340 npx playwright test \
+            timeout --kill-after=10s 1740 npx playwright test \
               --project=chromium \
               --reporter=list \
-              --shard=${{ matrix.shard }}/2 \
-              --global-timeout=2340000
+              --shard=1/2 \
+              --global-timeout=1740000
+
+      - name: Run E2E shard 2/2
+        timeout-minutes: 30
+        run: |
+          set -euo pipefail
+          cd ~/PolyForge/tests/e2e
+
+          BASE_URL=http://localhost CI=true PLAYWRIGHT_SKIP_GLOBAL_SETUP=true \
+            timeout --kill-after=10s 1740 npx playwright test \
+              --project=chromium \
+              --reporter=list \
+              --shard=2/2 \
+              --global-timeout=1740000
 
   # ── 5. Deploy to AWS (Production) ──────────────────────────────────────
   deploy:
