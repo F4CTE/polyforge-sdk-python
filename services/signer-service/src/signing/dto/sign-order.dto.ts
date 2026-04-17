@@ -63,10 +63,4 @@ export class SignOrderDto {
   @IsOptional()
   @IsBoolean()
   postOnly?: boolean;
-
-  /** Optional taker address for directed orders */
-  @IsOptional()
-  @IsString()
-  @MaxLength(255)
-  taker?: string;
 }

@@ -1,6 +1,5 @@
 import { Module } from "@nestjs/common";
 import { JwtModule } from "@nestjs/jwt";
-import { RedisModule } from "@polyforge/shared-redis";
 import { SigningController } from "./signing.controller";
 import { InternalSigningController } from "./internal-signing.controller";
 import { SigningService } from "./signing.service";
@@ -10,7 +9,7 @@ import { CredentialsModule } from "../credentials/credentials.module";
 import { InternalAuthGuard } from "../common/internal-auth.guard";
 
 @Module({
-  imports: [CredentialsModule, JwtModule.register({}), RedisModule],
+  imports: [CredentialsModule, JwtModule.register({})],
   controllers: [SigningController, InternalSigningController],
   providers: [SigningService, NativeEip712Service, NativeCtfService, InternalAuthGuard],
 })

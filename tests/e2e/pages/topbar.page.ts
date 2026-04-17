@@ -15,22 +15,26 @@ export class TopbarPage {
     readonly markAllReadButton: Locator;
     readonly userMenuButton: Locator;
     readonly userMenu: Locator;
-    readonly profileLink: Locator;
-    readonly settingsLink: Locator;
+    readonly profileButton: Locator;
+    readonly settingsButton: Locator;
     readonly signOutButton: Locator;
 
     constructor(page: Page) {
         this.page = page;
-        this.themeToggle = page.locator('[data-testid="theme-toggle"]');
-        this.notificationBell = page.locator('[data-testid="notification-bell"]');
-        this.unreadBadge = page.locator('[data-testid="unread-badge"]');
-        this.notificationDropdown = page.locator('[data-testid="notification-dropdown"]');
+        // Component uses data-tour (not data-testid) for tour anchors
+        this.themeToggle = page.locator('[data-tour="theme-toggle"]');
+        this.notificationBell = page.locator('[data-tour="notification-bell"] button[aria-label="Notifications"]');
+        this.unreadBadge = page.locator('[data-tour="notification-bell"] [aria-label*="unread"]');
+        this.notificationDropdown = page.locator('[role="dialog"][aria-label="Notifications"]');
         this.markAllReadButton = page.locator('button', { hasText: 'Mark all as read' });
-        this.userMenuButton = page.locator('[data-testid="user-menu-button"]');
-        this.userMenu = page.locator('[data-testid="user-menu"]');
-        this.profileLink = page.locator('[data-testid="user-menu"] a', { hasText: 'Profile' });
-        this.settingsLink = page.locator('[data-testid="user-menu"] a', { hasText: 'Settings' });
-        this.signOutButton = page.locator('[data-testid="user-menu"] button', { hasText: 'Sign Out' });
+        // User menu trigger uses data-testid="user-menu-btn"
+        this.userMenuButton = page.locator('[data-testid="user-menu-btn"]');
+        // Dropdown uses role="menu" (no data-testid on container)
+        this.userMenu = page.locator('[role="menu"]');
+        // Profile/Settings/SignOut are menuitem buttons — not anchor links
+        this.profileButton = page.locator('[role="menu"] button[role="menuitem"]', { hasText: 'Profile' });
+        this.settingsButton = page.locator('[role="menu"] button[role="menuitem"]', { hasText: 'Settings' });
+        this.signOutButton = page.locator('[role="menu"] button[role="menuitem"]', { hasText: /sign out/i });
     }
 
     async toggleTheme(): Promise<void> {
@@ -46,9 +50,10 @@ export class TopbarPage {
         await this.markAllReadButton.click();
     }
 
-    async getUnreadCount(): Promise<string> {
-        const badge = await this.unreadBadge.textContent();
-        return badge ?? '0';
+    async getUnreadCount(): Promise<number> {
+        const label = await this.unreadBadge.getAttribute('aria-label');
+        const match = label?.match(/(\d+)/);
+        return match ? parseInt(match[1], 10) : 0;
     }
 
     async openUserMenu(): Promise<void> {
@@ -58,12 +63,12 @@ export class TopbarPage {
 
     async goToProfile(): Promise<void> {
         await this.openUserMenu();
-        await this.profileLink.click();
+        await this.profileButton.click();
     }
 
     async goToSettings(): Promise<void> {
         await this.openUserMenu();
-        await this.settingsLink.click();
+        await this.settingsButton.click();
     }
 
     async signOut(): Promise<void> {

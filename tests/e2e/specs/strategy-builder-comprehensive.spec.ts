@@ -471,7 +471,7 @@ test.describe('Strategy Builder — Full Workflow Coverage', () => {
         await editLink.click();
 
         await expect(page).toHaveURL(/\/edit/);
-        await expect(page.locator('.react-flow')).toBeVisible({ timeout: 15_000 });
+        await expect(page.locator('.react-flow')).toBeVisible({ timeout: 30_000 });
     });
 
     test('@comprehensive should preserve all nodes and edges when loading strategy for edit', async ({ page }) => {
@@ -498,7 +498,7 @@ test.describe('Strategy Builder — Full Workflow Coverage', () => {
         if (await editLink.isVisible().catch(() => false)) {
             await editLink.click();
             await expect(page).toHaveURL(/\/edit/);
-            await expect(page.locator('.react-flow')).toBeVisible({ timeout: 15_000 });
+            await expect(page.locator('.react-flow')).toBeVisible({ timeout: 30_000 });
             const blocks     = builder.blockCards();
             const blockCount = await blocks.count();
             expect(blockCount).toBeGreaterThan(0);

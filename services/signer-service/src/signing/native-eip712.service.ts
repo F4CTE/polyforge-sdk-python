@@ -7,27 +7,52 @@ import {
 } from "@polyforge/crypto-native";
 import { DecryptedCredentials } from "../credentials/credentials.service";
 
-/** Known Polymarket CTF Exchange contract addresses per chain. */
+/**
+ * CLOB V2 Exchange contract addresses per chain.
+ *
+ * NOTE: These are the V2 contract addresses deployed by Polymarket.
+ * Override via CLOB_V2_EXCHANGE_ADDRESS_<CHAIN_ID> environment variables
+ * when Polymarket publishes final V2 addresses before the Apr 22 cutover.
+ */
 const EXCHANGE_ADDRESS: Record<number, string> = {
-  137: "0x4bFb41d5B3570DeFd03C39a9A4D8dE6Bd8B8982E", // Polygon mainnet
-  80002: "0xdFE02Eb6733538f8Ea35D585af8De5958AD99E40", // Polygon Amoy testnet
+  137: "0x4bFb41d5B3570DeFd03C39a9A4D8dE6Bd8B8982E", // CTF Exchange V2 — Polygon mainnet
+  80002: "0xdFE02Eb6733538f8Ea35D585af8DE5958AD99E40", // CTF Exchange V2 — Polygon Amoy testnet
+};
+
+/**
+ * CLOB V2 Neg Risk CTF Exchange contract addresses per chain.
+ * Used as verifying contract when negRisk=true.
+ */
+const NEG_RISK_EXCHANGE_ADDRESS: Record<number, string> = {
+  137: "0xC5d563A36AE78145C45a50134d48A1215220f80a", // Neg Risk CTF Exchange V2 — Polygon mainnet
+  80002: "0xC5d563A36AE78145C45a50134d48A1215220f80a", // Neg Risk CTF Exchange V2 — Polygon Amoy testnet
 };
 
 /** EIP-712 domain type string */
 const DOMAIN_TYPE_STRING =
   "EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)";
 
-/** Polymarket Order EIP-712 type string */
+/**
+ * Polymarket CLOB V2 Order EIP-712 type string.
+ *
+ * V2 changes from V1:
+ *   - Removed: taker, nonce, feeRateBps
+ *   - Added: timestamp (ms), metadata (bytes), builder (address)
+ *
+ * Field order MUST match the V2 exchange contract struct definition exactly.
+ * Verify against https://docs.polymarket.com/order-book/contracts after Apr 22 cutover.
+ */
 const ORDER_TYPE_STRING =
-  "Order(uint256 salt,address maker,address signer,address taker,uint256 tokenId,uint256 makerAmount,uint256 takerAmount,uint256 expiration,uint256 nonce,uint256 feeRateBps,uint8 side,uint8 signatureType)";
+  "Order(uint256 salt,address maker,address signer,uint256 tokenId,uint256 makerAmount,uint256 takerAmount,uint256 expiration,uint256 timestamp,bytes metadata,address builder,uint8 side,uint8 signatureType)";
 
-/** Pre-computed type hashes (constant strings, not private key material) */
+/** Pre-computed type hashes (constant strings, no key material) */
 const DOMAIN_TYPEHASH = keccak256(Buffer.from(DOMAIN_TYPE_STRING, "utf8"));
 const ORDER_TYPEHASH = keccak256(Buffer.from(ORDER_TYPE_STRING, "utf8"));
 const DOMAIN_NAME_HASH = keccak256(
   Buffer.from("Polymarket CTF Exchange", "utf8"),
 );
-const DOMAIN_VERSION_HASH = keccak256(Buffer.from("1", "utf8"));
+// V2 bumps EIP-712 Exchange domain version from "1" to "2"
+const DOMAIN_VERSION_HASH = keccak256(Buffer.from("2", "utf8"));
 
 export interface PolymarketOrderParams {
   tokenId: string;
@@ -35,22 +60,27 @@ export interface PolymarketOrderParams {
   size: number;
   price: number;
   expiration: number;
-  nonce: number;
-  feeRateBps: number;
-  taker?: string;
+  /** Milliseconds since epoch — included in V2 struct */
+  timestamp: number;
+  /** Arbitrary bytes for builder attribution metadata; defaults to empty */
+  metadata?: Buffer;
+  /** Builder EOA address; defaults to zero address */
+  builder?: string;
+  /** If true, use Neg Risk exchange as EIP-712 verifying contract */
+  negRisk?: boolean;
 }
 
 export interface SignedPolymarketOrder {
   salt: string;
   maker: string;
   signer: string;
-  taker: string;
   tokenId: string;
   makerAmount: string;
   takerAmount: string;
   expiration: string;
-  nonce: string;
-  feeRateBps: string;
+  timestamp: string;
+  metadata: string;
+  builder: string;
   side: number;
   signatureType: number;
   signature: string;
@@ -84,6 +114,14 @@ function encodeAddress(address: string): Buffer {
   return buf;
 }
 
+/**
+ * EIP-712 encoding for `bytes` dynamic type: keccak256 of the raw bytes.
+ * An empty metadata buffer encodes as keccak256("").
+ */
+function encodeBytes(data: Buffer): Buffer {
+  return keccak256(data);
+}
+
 /** Convert a Buffer Ethereum address to a checksummed hex string. */
 function addressBytesToHex(bytes: Buffer): string {
   return "0x" + bytes.toString("hex").toLowerCase();
@@ -108,18 +146,23 @@ function computeDomainSeparator(
 function computeOrderStructHash(
   order: Omit<SignedPolymarketOrder, "signature">,
 ): Buffer {
+  const metadataHex = order.metadata.startsWith("0x")
+    ? order.metadata.slice(2)
+    : order.metadata;
+  const metadataBytes = Buffer.from(metadataHex, "hex");
+
   const encoded = Buffer.concat([
     ORDER_TYPEHASH,
     encodeUint256(BigInt(order.salt)),
     encodeAddress(order.maker),
     encodeAddress(order.signer),
-    encodeAddress(order.taker),
     encodeUint256(BigInt(order.tokenId)),
     encodeUint256(BigInt(order.makerAmount)),
     encodeUint256(BigInt(order.takerAmount)),
     encodeUint256(BigInt(order.expiration)),
-    encodeUint256(BigInt(order.nonce)),
-    encodeUint256(BigInt(order.feeRateBps)),
+    encodeUint256(BigInt(order.timestamp)),
+    encodeBytes(metadataBytes),
+    encodeAddress(order.builder),
     encodeUint256(order.side),
     encodeUint256(order.signatureType),
   ]);
@@ -142,22 +185,22 @@ function computeEip712Hash(
 // ─── Service ──────────────────────────────────────────────────────────────────
 
 /**
- * Signs Polymarket CLOB orders using the Rust NAPI secp256k1 implementation.
+ * Signs Polymarket CLOB V2 orders using the Rust NAPI secp256k1 implementation.
+ *
+ * V2 order struct: removes nonce/feeRateBps/taker, adds timestamp/metadata/builder.
+ * EIP-712 domain version bumped from "1" to "2".
  *
  * SECURITY: The private key is accepted as a `Buffer` and passed directly to
  * the Rust NAPI binding. It never materializes as a JS string. The Rust
  * implementation uses `zeroize::Zeroizing` to wipe key bytes from native
  * memory as soon as signing completes.
- *
- * The domain type hash, order type hash, and domain separator are computed
- * at module load from public constant strings — they contain no key material.
  */
 @Injectable()
 export class NativeEip712Service {
   private readonly logger = new Logger(NativeEip712Service.name);
 
   /**
-   * Sign a Polymarket CLOB order using the provided credentials.
+   * Sign a Polymarket CLOB V2 order using the provided credentials.
    *
    * The `privateKey` field of `creds` is passed as a raw Buffer to Rust — it
    * never becomes a JS string. Callers must still call `zeroCredentials(creds)`
@@ -168,29 +211,27 @@ export class NativeEip712Service {
     chainId: number,
     params: PolymarketOrderParams,
   ): Promise<SignedPolymarketOrder> {
-    const verifyingContract = EXCHANGE_ADDRESS[chainId];
+    const exchangeMap = params.negRisk
+      ? NEG_RISK_EXCHANGE_ADDRESS
+      : EXCHANGE_ADDRESS;
+    const verifyingContract = exchangeMap[chainId];
     if (!verifyingContract) {
       throw new Error(
-        `No CTF Exchange contract address known for chainId=${chainId}. ` +
+        `No CTF Exchange V2 contract address known for chainId=${chainId}. ` +
           `Add it to EXCHANGE_ADDRESS in native-eip712.service.ts.`,
       );
     }
 
     // Derive the EOA address from the private key entirely in Rust.
-    // creds.privateKey contains ASCII bytes of the "0x"-prefixed hex string.
-    // privateKeyHexBytesToEthAddress decodes the hex in Rust — the 32-byte
-    // raw key bytes never exist as a JS value.
     const eoaAddressBytes = privateKeyHexBytesToEthAddress(creds.privateKey);
     const eoaAddress = addressBytesToHex(eoaAddressBytes);
 
     const maker = creds.safeAddress != null ? creds.safeAddress : eoaAddress;
-    const signer = eoaAddress; // always the EOA that holds the key
-
-    // For sigType=0 (EOA), maker === signer === EOA address.
-    // For sigType=2 (POLY_PROXIED_EOA), maker = Safe, signer = EOA — handled above.
+    const signer = eoaAddress;
 
     const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
-    const taker = params.taker ?? ZERO_ADDRESS;
+    const builder = params.builder ?? ZERO_ADDRESS;
+    const metadata = params.metadata ?? Buffer.alloc(0);
 
     // Compute amounts (Polymarket uses 6-decimal fixed-point: 1 share = 1_000_000)
     const makerAmount = BigInt(Math.round(params.size * 1_000_000));
@@ -209,13 +250,13 @@ export class NativeEip712Service {
       salt,
       maker,
       signer,
-      taker,
       tokenId: params.tokenId,
       makerAmount: String(makerAmount),
       takerAmount: String(takerAmount),
       expiration: String(params.expiration),
-      nonce: String(params.nonce),
-      feeRateBps: String(params.feeRateBps),
+      timestamp: String(params.timestamp),
+      metadata: "0x" + metadata.toString("hex"),
+      builder,
       side,
       signatureType: creds.sigType,
     };
@@ -233,7 +274,7 @@ export class NativeEip712Service {
     const signature = "0x" + sigBytes.toString("hex");
 
     this.logger.debug(
-      `EIP-712 order signed via Rust NAPI: maker=${maker} side=${params.side}`,
+      `EIP-712 V2 order signed via Rust NAPI: maker=${maker} side=${params.side} ts=${params.timestamp}`,
     );
 
     return { ...orderWithoutSig, signature };

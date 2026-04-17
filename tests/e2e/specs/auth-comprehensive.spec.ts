@@ -536,8 +536,8 @@ test.describe('Authentication — Full Workflow Coverage', () => {
         const invalidToken = 'invalid-reset-token-xyz';
         await page.goto(`/reset-password?token=${invalidToken}`);
 
-        // Should show error or redirect
-        const errorMsg = page.locator('[data-testid="error"], .bg-red-500');
+        // Should show error or redirect — design system uses div[role="alert"].bg-loss/10
+        const errorMsg = page.locator('div[role="alert"], [data-testid="error"]').first();
         const isErrorVisible = await errorMsg.isVisible({ timeout: 5000 }).catch(() => false);
         if (isErrorVisible) {
             const text = await errorMsg.textContent();

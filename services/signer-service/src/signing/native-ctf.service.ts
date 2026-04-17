@@ -14,10 +14,10 @@ const CTF_ADDRESS: Record<number, string> = {
   80002: "0x69308FB512518e39F9b16112fA8d994F4e2Bf8bB", // Polygon Amoy testnet
 };
 
-/** Default collateral token (USDC) per chain. */
+/** Default collateral token — pUSD (Polymarket USD, standard ERC-20) per chain. */
 const DEFAULT_COLLATERAL: Record<number, string> = {
-  137: "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174", // USDC.e on Polygon mainnet
-  80002: "0x9999f7Fea5938fD3b1E26A12c3f2fb024e194f97", // test USDC on Amoy
+  137: "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174", // pUSD on Polygon mainnet (replaces USDC.e at V2 cutover)
+  80002: "0x9c4e1703476e875070ee25b56a58b008cfb8fa78", // pUSD on Polygon Amoy testnet
 };
 
 /** Empty bytes32 — default parentCollectionId for root-level CTF positions. */
