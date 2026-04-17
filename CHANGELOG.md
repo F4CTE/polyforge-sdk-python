@@ -7,6 +7,9 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased] — 2026-04-17
 
+### Security
+- **POLA-148: On-chain CTF redeem/split/merge via Rust NAPI secp256k1 (POLA-136 follow-up)** — `SigningService.redeemPosition()`, `splitPosition()`, and `mergePosition()` now send real EIP-155 Ethereum transactions in production instead of throwing `NotImplementedException`. Private keys remain in Rust `Zeroizing` memory throughout — the same pattern as POLA-136. EIP-155 transaction hash computed via Rust `keccak256`, signature via Rust `signSecp256K1HexKey`; TypeScript only handles public data (calldata, RLP-encoded unsigned fields). New `/internal/redeem-position`, `/internal/split-position`, `/internal/merge-position` controller endpoints added. Regression test suite confirms zero `Buffer.prototype.toString('utf8')` calls on key material (closes POLA-148).
+
 ### Fixed
 - **api-service crash-loop in dev CI (POLA-145 / POLA-137 regression)** — `validateEnv()` now skips the CLOB_API_URL mock-URL check when `CI=true`; GitHub Actions sets this automatically, allowing dev CI to use `mock-polymarket` under `NODE_ENV=production` without aborting startup
 

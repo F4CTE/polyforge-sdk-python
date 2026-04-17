@@ -281,7 +281,7 @@ jobs:
             export REDIS_PASSWORD="${REDIS_PASSWORD:?REDIS_PASSWORD must be set in .env}"
 
             echo "=== 2. Install dependencies ==="
-            pnpm install --frozen-lockfile
+            NODE_ENV=development pnpm install --frozen-lockfile
 
             echo "=== 3. Generate Prisma clients ==="
             pnpm prisma generate --schema prisma/schema.prisma --config prisma/prisma.config.ts
