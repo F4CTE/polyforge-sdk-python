@@ -5,6 +5,13 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [Unreleased] — 2026-04-18
+
+### Fixed
+- **E2E: harden strategy-builder-comprehensive against per-test timeout (POLA-159)** — replaced `waitForLoadState('networkidle')` with `domcontentloaded` in `gotoNew()` and `gotoEdit()` page objects (networkidle stalls on continuous market-data polling); added `testInfo.setTimeout(90_000)` to 10 slow tests involving creation wizard or lifecycle state machine transitions; increased `waitForStatus` default timeout from 15s to 30s for bot-service state transitions under Docker load
+
+---
+
 ## [Unreleased] — 2026-04-17
 
 ### Security

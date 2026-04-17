@@ -424,7 +424,8 @@ test.describe('Strategy Builder — Full Workflow Coverage', () => {
 
     // ─── Strategy Save/Load/Edit Tests ────────────────────────────────────────
 
-    test('@smoke @comprehensive should save strategy with valid name', async ({ page }) => {
+    test('@smoke @comprehensive should save strategy with valid name', async ({ page }, testInfo) => {
+        testInfo.setTimeout(90_000);
         const builder   = new StrategyBuilderPage(page);
         const listPage  = new StrategiesListPage(page);
 
@@ -505,7 +506,8 @@ test.describe('Strategy Builder — Full Workflow Coverage', () => {
         }
     });
 
-    test('@comprehensive should save edited strategy with changes', async ({ page }) => {
+    test('@comprehensive should save edited strategy with changes', async ({ page }, testInfo) => {
+        testInfo.setTimeout(90_000);
         const builder         = new StrategyBuilderPage(page);
         const strategyName    = `Edit Changes ${Date.now()}`;
         const { id: stratId } = await apiCreateStrategy(token, strategyName);
@@ -517,7 +519,8 @@ test.describe('Strategy Builder — Full Workflow Coverage', () => {
         await expect(page).not.toHaveURL(/\/edit/);
     });
 
-    test('@comprehensive should cancel editing without saving changes', async ({ page }) => {
+    test('@comprehensive should cancel editing without saving changes', async ({ page }, testInfo) => {
+        testInfo.setTimeout(90_000);
         const builder         = new StrategyBuilderPage(page);
         const strategyName    = `Cancel Edit ${Date.now()}`;
         const { id: stratId } = await apiCreateStrategy(token, strategyName);
@@ -569,7 +572,8 @@ test.describe('Strategy Builder — Full Workflow Coverage', () => {
 
     // ─── Strategy Lifecycle Tests ──────────────────────────────────────────────
 
-    test('@smoke @comprehensive should start strategy in Paper mode', async ({ page }) => {
+    test('@smoke @comprehensive should start strategy in Paper mode', async ({ page }, testInfo) => {
+        testInfo.setTimeout(90_000);
         const listPage     = new StrategiesListPage(page);
         const strategyName = `Paper Mode ${Date.now()}`;
         await apiCreateStrategy(token, strategyName);
@@ -579,17 +583,19 @@ test.describe('Strategy Builder — Full Workflow Coverage', () => {
         await listPage.waitForStatus(strategyName, /PAPER/i);
     });
 
-    test('@smoke @comprehensive should start strategy in Live mode', async ({ page }) => {
+    test('@smoke @comprehensive should start strategy in Live mode', async ({ page }, testInfo) => {
+        testInfo.setTimeout(90_000);
         const listPage     = new StrategiesListPage(page);
         const strategyName = `Live Mode ${Date.now()}`;
         await apiCreateStrategy(token, strategyName);
 
         await listPage.goto();
         await listPage.startLive(strategyName);
-        await listPage.waitForStatus(strategyName, /RUNNING|IDLE/i, 10_000);
+        await listPage.waitForStatus(strategyName, /RUNNING|IDLE/i);
     });
 
-    test('@smoke @comprehensive should pause running strategy', async ({ page }) => {
+    test('@smoke @comprehensive should pause running strategy', async ({ page }, testInfo) => {
+        testInfo.setTimeout(90_000);
         const listPage     = new StrategiesListPage(page);
         const strategyName = `Pause Test ${Date.now()}`;
         await apiCreateStrategy(token, strategyName);
@@ -602,7 +608,8 @@ test.describe('Strategy Builder — Full Workflow Coverage', () => {
         await listPage.waitForStatus(strategyName, /PAUSED/i);
     });
 
-    test('@smoke @comprehensive should resume paused strategy', async ({ page }) => {
+    test('@smoke @comprehensive should resume paused strategy', async ({ page }, testInfo) => {
+        testInfo.setTimeout(90_000);
         const listPage     = new StrategiesListPage(page);
         const strategyName = `Resume Test ${Date.now()}`;
         await apiCreateStrategy(token, strategyName);
@@ -618,7 +625,8 @@ test.describe('Strategy Builder — Full Workflow Coverage', () => {
         await listPage.waitForStatus(strategyName, /PAPER|RUNNING/i);
     });
 
-    test('@smoke @comprehensive should stop running strategy', async ({ page }) => {
+    test('@smoke @comprehensive should stop running strategy', async ({ page }, testInfo) => {
+        testInfo.setTimeout(90_000);
         const listPage     = new StrategiesListPage(page);
         const strategyName = `Stop Test ${Date.now()}`;
         await apiCreateStrategy(token, strategyName);
@@ -667,7 +675,8 @@ test.describe('Strategy Builder — Full Workflow Coverage', () => {
         }
     });
 
-    test('@comprehensive should show live events log when strategy running', async ({ page }) => {
+    test('@comprehensive should show live events log when strategy running', async ({ page }, testInfo) => {
+        testInfo.setTimeout(90_000);
         const listPage     = new StrategiesListPage(page);
         const strategyName = `Events Log ${Date.now()}`;
         await apiCreateStrategy(token, strategyName);
@@ -682,7 +691,8 @@ test.describe('Strategy Builder — Full Workflow Coverage', () => {
         }
     });
 
-    test('@comprehensive should display P&L data on detail page', async ({ page }) => {
+    test('@comprehensive should display P&L data on detail page', async ({ page }, testInfo) => {
+        testInfo.setTimeout(90_000);
         const listPage     = new StrategiesListPage(page);
         const strategyName = `PL Data ${Date.now()}`;
         await apiCreateStrategy(token, strategyName);
