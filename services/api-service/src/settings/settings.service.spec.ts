@@ -38,7 +38,6 @@ function createMockRedis() {
 function createMockConfig(overrides: Record<string, string> = {}) {
   const defaults: Record<string, string> = {
     GAS_DAILY_LIMIT_MATIC: "0.5",
-    GAS_SPONSOR_ENABLED: "true",
     ...overrides,
   };
   return {
@@ -362,7 +361,6 @@ describe("SettingsService", () => {
         todayUsage: 0.2,
         dailyLimit: 0.5,
         remaining: 0.3,
-        sponsorEnabled: true,
       });
     });
 
@@ -403,18 +401,6 @@ describe("SettingsService", () => {
       expect(result.remaining).toBe(0);
     });
 
-    it("reflects disabled sponsor when GAS_SPONSOR_ENABLED=false", async () => {
-      mockConfig = createMockConfig({ GAS_SPONSOR_ENABLED: "false" });
-      service = new SettingsService(
-        db as any,
-        mockRedis as any,
-        mockConfig as any,
-      );
-
-      const result = await service.getGasUsage("user-uuid-1");
-
-      expect(result.sponsorEnabled).toBe(false);
-    });
   });
 
   // ── getEventNotifications / updateEventNotifications ────────────────────────

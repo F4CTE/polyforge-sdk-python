@@ -240,7 +240,6 @@ export class SettingsService {
     todayUsage: number;
     dailyLimit: number;
     remaining: number;
-    sponsorEnabled: boolean;
   }> {
     const today = new Date().toISOString().slice(0, 10);
     const key = `gas:spent:${userId}:${today}`;
@@ -253,14 +252,10 @@ export class SettingsService {
       this.logger.error(`Failed to read gas usage for user ${userId}`, err);
     }
 
-    const sponsorEnabled =
-      (this.config.get<string>("GAS_SPONSOR_ENABLED") ?? "true") === "true";
-
     return {
       todayUsage,
       dailyLimit: this.dailyLimitMatic,
       remaining: Math.max(0, this.dailyLimitMatic - todayUsage),
-      sponsorEnabled,
     };
   }
 }

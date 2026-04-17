@@ -681,18 +681,7 @@ Extends the strategy builder with import/export, variables UI, logic blocks, cal
 
 UX-focused improvements to reduce friction for new and existing users, plus forward-looking feature documentation.
 
-### 9.1 · Gasless Trading `HIGH PRIORITY`
-
-Critical for the Polymarket Builder Program — the platform absorbs Polygon gas fees so users never need to hold MATIC.
-
-- **Gas sponsor service** — dedicated platform wallet funds all user transaction gas fees
-- **Per-user daily budget** — configurable daily MATIC limit per user tracked in Redis (default: 0.5 MATIC)
-- **Gas usage API** — `GET /api/v1/settings/gas` returns usage stats (today's usage, daily limit, remaining)
-- **Gas usage UI** — settings tab with progress bar, usage breakdown, and sponsor status indicator
-- **Gasless indicator** — visible badge on portfolio page confirming gas is being sponsored
-- **Environment configuration** — `GAS_SPONSOR_PRIVATE_KEY`, `GAS_SPONSOR_ENABLED`, `GAS_DAILY_LIMIT_MATIC`
-
-### 9.2 · Educational Onboarding `MEDIUM PRIORITY`
+### 9.1 · Educational Onboarding `MEDIUM PRIORITY`
 
 Guide new users through the platform to reduce time-to-first-trade and improve retention.
 
@@ -706,7 +695,7 @@ Guide new users through the platform to reduce time-to-first-trade and improve r
 - **Tooltip tour** — 5-step guided tour highlighting key UI elements on first visit
 - **"Take a tour" link** in the onboarding checklist for on-demand access
 
-### 9.3 · Future Features Documentation `LOW PRIORITY`
+### 9.2 · Future Features Documentation `LOW PRIORITY`
 
 - **`docs/14-future-features.md`** documenting 7 potential future features:
   - Arbitrage Scanner (cross-platform price comparison)

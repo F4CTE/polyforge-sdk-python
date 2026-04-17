@@ -16,7 +16,6 @@ function makeConfig(overrides: Record<string, string> = {}): ConfigService {
     POLY_BUILDER_PASSPHRASE: "test-builder-pass",
     NODE_ENV: "development", // forces dev stub path
     CLOB_API_URL: "http://mock-polymarket:3099",
-    GAS_ESTIMATE_MATIC: "0.002",
     ...overrides,
   };
   return {
@@ -65,15 +64,10 @@ describe("SigningService", () => {
     credentials = {
       getDecryptedCredentials: vi.fn().mockResolvedValue(DECRYPTED_CREDS),
     } as any;
-    const gasSponsor = {
-      sponsorGas: vi.fn().mockResolvedValue(true),
-      isActive: vi.fn().mockReturnValue(true),
-    } as any;
     redis = makeMockRedis();
     svc = new SigningService(
       credentials,
       makeConfig(),
-      gasSponsor,
       redis as any,
     );
   });
@@ -227,52 +221,44 @@ describe("SigningService", () => {
 
   describe("constructor — stub mode only allowed in development", () => {
     it("throws when SIGNING_MODE=stub and NODE_ENV=staging", () => {
-      const gasSponsor = { sponsorGas: vi.fn(), isActive: vi.fn() } as any;
       expect(
         () =>
           new SigningService(
             credentials,
             makeConfig({ NODE_ENV: "staging", SIGNING_MODE: "stub" }),
-            gasSponsor,
             redis as any,
           ),
       ).toThrow("Stub signing mode is only allowed in development");
     });
 
     it("throws when SIGNING_MODE=stub and NODE_ENV=test", () => {
-      const gasSponsor = { sponsorGas: vi.fn(), isActive: vi.fn() } as any;
       expect(
         () =>
           new SigningService(
             credentials,
             makeConfig({ NODE_ENV: "test", SIGNING_MODE: "stub" }),
-            gasSponsor,
             redis as any,
           ),
       ).toThrow("Stub signing mode is only allowed in development");
     });
 
     it("throws when SIGNING_MODE=stub and NODE_ENV=production", () => {
-      const gasSponsor = { sponsorGas: vi.fn(), isActive: vi.fn() } as any;
       expect(
         () =>
           new SigningService(
             credentials,
             makeConfig({ NODE_ENV: "production", SIGNING_MODE: "stub" }),
-            gasSponsor,
             redis as any,
           ),
       ).toThrow("Stub signing mode is only allowed in development");
     });
 
     it("allows stub mode when NODE_ENV=development", () => {
-      const gasSponsor = { sponsorGas: vi.fn(), isActive: vi.fn() } as any;
       expect(
         () =>
           new SigningService(
             credentials,
             makeConfig({ NODE_ENV: "development", SIGNING_MODE: "stub" }),
-            gasSponsor,
             redis as any,
           ),
       ).not.toThrow();
@@ -283,14 +269,12 @@ describe("SigningService", () => {
 
   describe("onModuleInit — production validation", () => {
     it("throws when CLOB_API_URL contains 'mock' in production", () => {
-      const gasSponsor = { sponsorGas: vi.fn(), isActive: vi.fn() } as any;
       const prodSvc = new SigningService(
         credentials,
         makeConfig({
           NODE_ENV: "production",
           CLOB_API_URL: "http://mock-polymarket:3099",
         }),
-        gasSponsor,
         redis as any,
       );
 
@@ -300,7 +284,6 @@ describe("SigningService", () => {
     });
 
     it("throws when builder keys are missing in production", () => {
-      const gasSponsor = { sponsorGas: vi.fn(), isActive: vi.fn() } as any;
       const prodSvc = new SigningService(
         credentials,
         makeConfig({
@@ -308,7 +291,6 @@ describe("SigningService", () => {
           CLOB_API_URL: "https://clob.polymarket.com",
           POLY_BUILDER_API_KEY: "",
         }),
-        gasSponsor,
         redis as any,
       );
 
@@ -318,11 +300,9 @@ describe("SigningService", () => {
     });
 
     it("does not throw in dev mode even with mock URLs", () => {
-      const gasSponsor = { sponsorGas: vi.fn(), isActive: vi.fn() } as any;
       const devSvc = new SigningService(
         credentials,
         makeConfig({ NODE_ENV: "development" }),
-        gasSponsor,
         redis as any,
       );
 
@@ -330,41 +310,4 @@ describe("SigningService", () => {
     });
   });
 
-  // ── Gas estimate from env ─────────────────────────────────────────────────
-
-  describe("gas estimate configuration", () => {
-    it("uses GAS_ESTIMATE_MATIC from env when set", async () => {
-      const gasSponsor = {
-        sponsorGas: vi.fn().mockResolvedValue(true),
-        isActive: vi.fn(),
-      } as any;
-      const customSvc = new SigningService(
-        credentials,
-        makeConfig({ GAS_ESTIMATE_MATIC: "0.005" }),
-        gasSponsor,
-        redis as any,
-      );
-
-      await customSvc.signOrder(BASE_REQ);
-
-      expect(gasSponsor.sponsorGas).toHaveBeenCalledWith("user-1", 0.005);
-    });
-
-    it("defaults gas estimate to 0.002 MATIC when env not set", async () => {
-      const gasSponsor = {
-        sponsorGas: vi.fn().mockResolvedValue(true),
-        isActive: vi.fn(),
-      } as any;
-      const defaultSvc = new SigningService(
-        credentials,
-        makeConfig(),
-        gasSponsor,
-        redis as any,
-      );
-
-      await defaultSvc.signOrder(BASE_REQ);
-
-      expect(gasSponsor.sponsorGas).toHaveBeenCalledWith("user-1", 0.002);
-    });
-  });
 });
