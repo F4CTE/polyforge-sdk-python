@@ -39,7 +39,7 @@ function validateEnv() {
   }
 
   // Validate JWT secret minimum length (32 characters)
-  const secrets = ["INTERNAL_JWT_SECRET"];
+  const secrets = ["JWT_SECRET", "INTERNAL_JWT_SECRET"];
   for (const key of secrets) {
     const secret = process.env[key];
     if (secret && secret.length < 32) {
@@ -62,6 +62,7 @@ function validateEnv() {
 
   // Reject all known placeholder patterns in production
   rejectPlaceholderSecrets("api-service", [
+    "JWT_SECRET",
     "INTERNAL_JWT_SECRET",
     "ANTHROPIC_API_KEY",
     "OPENAI_API_KEY",

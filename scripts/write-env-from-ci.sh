@@ -59,7 +59,7 @@ cat > "$TMPFILE" << ENV_HEREDOC
 # RUNTIME
 # ─────────────────────────────────────────────────────────────────────────────
 
-NODE_ENV=development
+NODE_ENV=production
 LOG_LEVEL=info
 ENABLE_SWAGGER=false
 
