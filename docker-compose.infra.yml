@@ -281,6 +281,7 @@ services:
       CORS_ORIGINS: ${CORS_ORIGINS:-http://polyforge-lab,http://polyforge-lab:8080}
       PORT: "3002"
       NODE_ENV: ${NODE_ENV:?NODE_ENV must be set}
+      CI: "${CI:-false}"
       NODE_OPTIONS: "--max-old-space-size=1024"
       PRISMA_POOL_SIZE: "20"
     ports:
@@ -463,6 +464,7 @@ services:
       CORS_ORIGINS: ${CORS_ORIGINS:-http://polyforge-lab,http://polyforge-lab:8080}
       AUTH_SERVICE_PORT: "3001"
       NODE_ENV: ${NODE_ENV:?NODE_ENV must be set}
+      CI: "${CI:-false}"
     ports:
       - "127.0.0.1:3001:3001"
     networks: [internal]
@@ -491,6 +493,7 @@ services:
       CORS_ORIGINS: ${CORS_ORIGINS:-http://polyforge-lab,http://polyforge-lab:8080}
       ADMIN_AUTH_SERVICE_PORT: "3003"
       NODE_ENV: ${NODE_ENV:?NODE_ENV must be set}
+      CI: "${CI:-false}"
     ports:
       - "127.0.0.1:3003:3003"
     networks: [internal, admin-only]
