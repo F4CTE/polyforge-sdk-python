@@ -134,7 +134,7 @@
   --color-backdrop: rgba(0, 0, 0, 0.6);
 
   /* Admin sidebar */
-  --color-admin-sidebar: #0a0e18;
+  --color-admin-sidebar: var(--bg-surface);
 
   /* Extended accent shades (Electric Blue) */
   --color-cyan-50: #eff3ff;
