@@ -361,19 +361,19 @@ jobs:
         shard: [1, 2]
     steps:
       - name: Run E2E shard ${{ matrix.shard }}/2
-        # 35m < 40m job timeout — runner sends SIGTERM before job-level cancel;
+        # 40m matches job timeout; timeout(1) at 39m sends SIGTERM first;
         # --kill-after=10s ensures chromium receives SIGKILL so no zombies remain.
-        timeout-minutes: 35
+        timeout-minutes: 40
         run: |
           set -euo pipefail
           cd ~/PolyForge/tests/e2e
 
           BASE_URL=http://localhost CI=true PLAYWRIGHT_SKIP_GLOBAL_SETUP=true \
-            timeout --kill-after=10s 2110 npx playwright test \
+            timeout --kill-after=10s 2340 npx playwright test \
               --project=chromium \
               --reporter=list \
               --shard=${{ matrix.shard }}/2 \
-              --global-timeout=2100000
+              --global-timeout=2340000
 
   # ── 5. Deploy to AWS (Production) ──────────────────────────────────────
   deploy:
