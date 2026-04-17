@@ -677,7 +677,7 @@ class PolyforgeClient:
         period: str | None = None,
         limit: int | None = None,
         page: int | None = None,
-    ) -> list[LeaderboardEntry]:
+    ) -> PaginatedResponse[LeaderboardEntry]:
         """Fetch the trader leaderboard.
 
         Args:
@@ -686,13 +686,20 @@ class PolyforgeClient:
             page: Page number for pagination.
 
         Returns:
-            A list of :class:`LeaderboardEntry` objects.
+            A :class:`PaginatedResponse` of :class:`LeaderboardEntry` objects.
         """
-        data = self._get("/api/v1/leaderboard", params=_strip_none({
+        raw = self._get("/api/v1/leaderboard", params=_strip_none({
             "period": period, "limit": limit, "page": page,
         }))
-        items = data if isinstance(data, list) else data.get("data", [])
-        return [_parse(LeaderboardEntry, e) for e in items]
+        items = raw if isinstance(raw, list) else raw.get("data", [])
+        return PaginatedResponse(
+            data=[_parse(LeaderboardEntry, e) for e in items],
+            total=raw.get("total", 0) if isinstance(raw, dict) else len(items),
+            page=raw.get("page", 1) if isinstance(raw, dict) else 1,
+            limit=raw.get("limit", len(items)) if isinstance(raw, dict) else len(items),
+            has_more=raw.get("hasNext", False) if isinstance(raw, dict) else False,
+            total_pages=raw.get("totalPages", 0) if isinstance(raw, dict) else 0,
+        )
 
     # -- Strategies --
 
@@ -1651,9 +1658,20 @@ class PolyforgeClient:
 
     # -- Social & Signals --
 
-    def get_whale_feed(self, *, min_size: int = 10000) -> list[WhaleTrade]:
-        data = self._get("/api/v1/whales/feed", params={"minSize": min_size})
-        items = data["data"]
+    def get_whale_feed(
+        self,
+        *,
+        min_size: int | None = None,
+        market_id: str | None = None,
+        wallet_address: str | None = None,
+        page: int | None = None,
+        limit: int | None = None,
+    ) -> list[WhaleTrade]:
+        data = self._get("/api/v1/whales/feed", params=_strip_none({
+            "minSize": min_size, "marketId": market_id,
+            "walletAddress": wallet_address, "page": page, "limit": limit,
+        }))
+        items = data["data"] if isinstance(data, dict) and "data" in data else (data if isinstance(data, list) else [])
         return [_parse(WhaleTrade, w) for w in items]
 
     def get_top_whales(
@@ -1723,9 +1741,20 @@ class PolyforgeClient:
         items = data if isinstance(data, list) else data.get("data", [])
         return [_parse(WhaleProfile, w) for w in items]
 
-    def get_news_signals(self, *, min_confidence: int = 70) -> list[NewsSignal]:
-        data = self._get("/api/v1/news/signals", params={"minConfidence": min_confidence})
-        items = data["data"]
+    def get_news_signals(
+        self,
+        *,
+        min_confidence: int | None = None,
+        market_id: str | None = None,
+        direction: str | None = None,
+        page: int | None = None,
+        limit: int | None = None,
+    ) -> list[NewsSignal]:
+        data = self._get("/api/v1/news/signals", params=_strip_none({
+            "minConfidence": min_confidence, "marketId": market_id,
+            "direction": direction, "page": page, "limit": limit,
+        }))
+        items = data["data"] if isinstance(data, dict) and "data" in data else (data if isinstance(data, list) else [])
         return [_parse(NewsSignal, s) for s in items]
 
     def list_news(
@@ -2549,7 +2578,7 @@ class AsyncPolyforgeClient:
         period: str | None = None,
         limit: int | None = None,
         page: int | None = None,
-    ) -> list[LeaderboardEntry]:
+    ) -> PaginatedResponse[LeaderboardEntry]:
         """Fetch the trader leaderboard.
 
         Args:
@@ -2558,13 +2587,20 @@ class AsyncPolyforgeClient:
             page: Page number for pagination.
 
         Returns:
-            A list of :class:`LeaderboardEntry` objects.
+            A :class:`PaginatedResponse` of :class:`LeaderboardEntry` objects.
         """
-        data = await self._get("/api/v1/leaderboard", params=_strip_none({
+        raw = await self._get("/api/v1/leaderboard", params=_strip_none({
             "period": period, "limit": limit, "page": page,
         }))
-        items = data if isinstance(data, list) else data.get("data", [])
-        return [_parse(LeaderboardEntry, e) for e in items]
+        items = raw if isinstance(raw, list) else raw.get("data", [])
+        return PaginatedResponse(
+            data=[_parse(LeaderboardEntry, e) for e in items],
+            total=raw.get("total", 0) if isinstance(raw, dict) else len(items),
+            page=raw.get("page", 1) if isinstance(raw, dict) else 1,
+            limit=raw.get("limit", len(items)) if isinstance(raw, dict) else len(items),
+            has_more=raw.get("hasNext", False) if isinstance(raw, dict) else False,
+            total_pages=raw.get("totalPages", 0) if isinstance(raw, dict) else 0,
+        )
 
     # -- Strategies --
 
@@ -3422,9 +3458,20 @@ class AsyncPolyforgeClient:
 
     # -- Social & Signals --
 
-    async def get_whale_feed(self, *, min_size: int = 10000) -> list[WhaleTrade]:
-        data = await self._get("/api/v1/whales/feed", params={"minSize": min_size})
-        items = data["data"]
+    async def get_whale_feed(
+        self,
+        *,
+        min_size: int | None = None,
+        market_id: str | None = None,
+        wallet_address: str | None = None,
+        page: int | None = None,
+        limit: int | None = None,
+    ) -> list[WhaleTrade]:
+        data = await self._get("/api/v1/whales/feed", params=_strip_none({
+            "minSize": min_size, "marketId": market_id,
+            "walletAddress": wallet_address, "page": page, "limit": limit,
+        }))
+        items = data["data"] if isinstance(data, dict) and "data" in data else (data if isinstance(data, list) else [])
         return [_parse(WhaleTrade, w) for w in items]
 
     async def get_top_whales(
@@ -3460,9 +3507,20 @@ class AsyncPolyforgeClient:
         items = data if isinstance(data, list) else data.get("data", [])
         return [_parse(WhaleProfile, w) for w in items]
 
-    async def get_news_signals(self, *, min_confidence: int = 70) -> list[NewsSignal]:
-        data = await self._get("/api/v1/news/signals", params={"minConfidence": min_confidence})
-        items = data["data"]
+    async def get_news_signals(
+        self,
+        *,
+        min_confidence: int | None = None,
+        market_id: str | None = None,
+        direction: str | None = None,
+        page: int | None = None,
+        limit: int | None = None,
+    ) -> list[NewsSignal]:
+        data = await self._get("/api/v1/news/signals", params=_strip_none({
+            "minConfidence": min_confidence, "marketId": market_id,
+            "direction": direction, "page": page, "limit": limit,
+        }))
+        items = data["data"] if isinstance(data, dict) and "data" in data else (data if isinstance(data, list) else [])
         return [_parse(NewsSignal, s) for s in items]
 
     async def list_news(
