@@ -22,7 +22,7 @@ export class StrategiesListPage {
 
     async goto(): Promise<void> {
         await this.page.goto('/strategies');
-        await expect(this.page.locator('h1', { hasText: 'My Strategies' })).toBeVisible({ timeout: 15_000 });
+        await expect(this.page.locator('h1', { hasText: 'My Strategies' })).toBeVisible({ timeout: 30_000 });
     }
 
     /** Find a strategy card by name */

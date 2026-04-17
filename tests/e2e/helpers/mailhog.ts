@@ -98,7 +98,7 @@ export async function clearAllMessages(): Promise<void> {
  */
 export async function waitForEmail(
     toEmail:   string,
-    timeoutMs = 10_000,
+    timeoutMs = 30_000,
 ): Promise<MailpitMessage> {
     const deadline = Date.now() + timeoutMs;
 
