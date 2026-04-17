@@ -246,7 +246,7 @@ services:
       REDIS_URL: redis://:${REDIS_PASSWORD:?REDIS_PASSWORD is required}@redis:6379
       INTERNAL_JWT_SECRET: "${INTERNAL_JWT_SECRET:?INTERNAL_JWT_SECRET is required}"
       SIGNER_SERVICE_URL: http://signer-service:3012
-      CLOB_API_URL: http://mock-polymarket:3099
+      CLOB_API_URL: ${CLOB_API_URL:-https://clob.polymarket.com}
       PORT: "3007"
     ports:
       - "127.0.0.1:3007:3007"
@@ -272,6 +272,7 @@ services:
       USER_JWT_SECRET: "${USER_JWT_SECRET:?USER_JWT_SECRET is required}"
       INTERNAL_JWT_SECRET: "${INTERNAL_JWT_SECRET:?INTERNAL_JWT_SECRET is required}"
       STRATEGY_ENGINE_URL: http://strategy-engine:3006
+      CLOB_API_URL: ${CLOB_API_URL:-https://clob.polymarket.com}
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       NEWS_RSS_FEEDS: ${NEWS_RSS_FEEDS:-}
@@ -559,6 +560,7 @@ services:
       DATABASE_URL: postgresql://poly:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}@postgres:5432/polyforge
       DIRECT_DATABASE_URL: postgresql://poly:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}@postgres:5432/polyforge
       REDIS_URL: redis://:${REDIS_PASSWORD:?REDIS_PASSWORD is required}@redis:6379
+      CLOB_API_URL: ${CLOB_API_URL:-https://clob.polymarket.com}
       CLOB_WS_URL: wss://ws-subscriptions-clob.polymarket.com/ws/market
       GAMMA_API_URL: https://gamma-api.polymarket.com
       PORT: "3005"
