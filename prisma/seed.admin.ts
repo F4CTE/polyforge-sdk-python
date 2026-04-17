@@ -12,7 +12,7 @@
 
 import { randomBytes } from 'crypto';
 
-if (process.env.NODE_ENV && process.env.NODE_ENV !== 'development') {
+if (process.env.NODE_ENV && process.env.NODE_ENV !== 'development' && process.env.CI !== 'true') {
   console.error('ERROR: Seed scripts must only run in development environment');
   process.exit(1);
 }
