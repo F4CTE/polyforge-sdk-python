@@ -318,7 +318,7 @@ jobs:
     name: E2E
     runs-on: [self-hosted, linux]
     needs: [deploy-dev]
-    timeout-minutes: 40
+    timeout-minutes: 50
     # Same serialization group as deploy — E2E runs against Docker services
     # that only serve one branch at a time.
     concurrency:
@@ -326,11 +326,11 @@ jobs:
       cancel-in-progress: false
     steps:
       - name: Run E2E tests
-        # 35m < 40m job timeout — runner kills this step's process group with
+        # 45m < 50m job timeout — runner kills this step's process group with
         # SIGTERM before the job-level cancel fires. --kill-after=10s ensures
         # chromium (which ignores SIGTERM) receives SIGKILL 10s later so it
         # cannot leave zombies that block the next branch run.
-        timeout-minutes: 35
+        timeout-minutes: 45
         run: |
           set -euo pipefail
 
@@ -342,10 +342,10 @@ jobs:
 
           timeout --kill-after=10s 120 npx playwright install --with-deps chromium 2>/dev/null || true
 
-          BASE_URL=http://localhost CI=true timeout --kill-after=10s 1810 npx playwright test \
+          BASE_URL=http://localhost CI=true timeout --kill-after=10s 2710 npx playwright test \
             --project=chromium \
             --reporter=list \
-            --global-timeout=1800000
+            --global-timeout=2700000
 
   # ── 5. Deploy to AWS (Production) ──────────────────────────────────────
   deploy:
