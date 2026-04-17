@@ -5,7 +5,7 @@ use aes_gcm::aead::Aead;
 use sha2::{Sha256, Digest};
 use sha3::{Keccak256, Digest as Keccak256Digest};
 use hmac::{Hmac, Mac};
-use rand::RngCore;
+use rand::TryRngCore;
 use rand::rngs::OsRng;
 use zeroize::Zeroizing;
 use k256::ecdsa::{SigningKey, signature::hazmat::PrehashSigner, RecoveryId};
@@ -19,7 +19,7 @@ type HmacSha256 = Hmac<Sha256>;
 #[napi]
 pub fn generate_dek() -> String {
     let mut dek = Zeroizing::new([0u8; 32]);
-    OsRng.fill_bytes(dek.as_mut());
+    OsRng.try_fill_bytes(dek.as_mut()).expect("OS RNG failed");
     let hex = hex::encode(dek.as_ref());
     hex
 }
@@ -35,7 +35,7 @@ pub fn encrypt_aes256gcm(plaintext: String, key_hex: String) -> Result<String> {
     let cipher = Aes256Gcm::new(key);
 
     let mut iv_bytes = [0u8; 12];
-    OsRng.fill_bytes(&mut iv_bytes);
+    OsRng.try_fill_bytes(&mut iv_bytes).expect("OS RNG failed");
     let nonce = Nonce::from_slice(&iv_bytes);
 
     let ciphertext = cipher.encrypt(nonce, plaintext.as_bytes())
@@ -130,7 +130,7 @@ pub fn hmac_sha256_verify(message: String, secret: String, expected_hex: String)
 #[napi]
 pub fn random_bytes_hex(length: u32) -> String {
     let mut bytes = vec![0u8; length as usize];
-    OsRng.fill_bytes(&mut bytes);
+    OsRng.try_fill_bytes(&mut bytes).expect("OS RNG failed");
     hex::encode(bytes)
 }
 
