@@ -463,9 +463,14 @@ test.describe('Markets — Full Workflow Coverage', () => {
         const markets = new MarketsPage(page);
         await markets.goto();
 
+        // Wait for in-flight API requests to settle before asserting cards.
+        // On Docker cold-starts the markets fetch can take several seconds after
+        // the h1 heading renders, causing the first-attempt timeout.
+        await page.waitForLoadState('networkidle', { timeout: 20_000 }).catch(() => {});
+
         // Wait for initial data load to complete (cards or empty state must be present)
         const cardOrEmpty = markets.marketCards.first().or(page.locator('[role="status"]'));
-        await expect(cardOrEmpty).toBeVisible({ timeout: 15_000 });
+        await expect(cardOrEmpty).toBeVisible({ timeout: 20_000 });
 
         // Switch to table view by clicking the table view button
         const tableBtn = markets.tableViewButton;

@@ -314,9 +314,21 @@ test.describe.serial('Settings — Full Workflow Coverage', () => {
         const isCheckedAfterToggle = await checkbox.isChecked();
         expect(isCheckedAfterToggle).not.toBe(isCheckedBefore);
 
+        // Register the response listener BEFORE clicking save so we don't miss
+        // a fast response. waitForResponse resolves when the PUT completes and
+        // React has had a chance to call toast.success/error.
+        const saveResponse = page.waitForResponse(
+            r => r.url().includes('/api/v1/users/me/notification-preferences') &&
+                 r.request().method() === 'PUT',
+            { timeout: 15_000 },
+        );
         await settingsPage.saveNotifications();
+        await saveResponse; // ensure the API round-trip is done before checking toast
+
+        // The toast appears after the fetch resolves; give generous time for
+        // Docker networking overhead + React re-render + Sonner animation.
         await expect(page.locator('[data-sonner-toast]')).toBeVisible({
-            timeout: 5000,
+            timeout: 10_000,
         });
 
         // Verify persistence — use typeof check since new-user preference rows
