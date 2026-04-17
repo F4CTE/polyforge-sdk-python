@@ -345,16 +345,21 @@ jobs:
           BASE_URL=http://localhost AUTH_URL=http://localhost:3001 MAILHOG_URL=http://localhost:8025 \
             CI=true npx tsx global-setup.ts
 
-  # ── 4b. E2E shards — 2 parallel shards ────────────────────────────────
+  # ── 4b. E2E shards — serialized through deploy group ─────────────────
   # Each shard receives ~1/2 of spec files. global-setup already ran via
   # e2e-setup so PLAYWRIGHT_SKIP_GLOBAL_SETUP suppresses it here.
-  # No concurrency group — shards are read-only against Docker and two
-  # shards from the same branch run safely in parallel.
+  # Same concurrency group as deploy-dev — prevents a concurrent deploy
+  # from restarting Docker containers while shards are running (POLA-185).
+  # Tradeoff: shards serialize across runs (and within a run), but this
+  # eliminates the SIGTERM failures that wasted ~40 min per occurrence.
   e2e:
     name: E2E (shard ${{ matrix.shard }}/2)
     runs-on: [self-hosted, linux]
     needs: [e2e-setup]
     timeout-minutes: 40
+    concurrency:
+      group: deploy-polyforge-lab
+      cancel-in-progress: false
     strategy:
       fail-fast: false
       matrix:
