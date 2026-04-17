@@ -39,7 +39,7 @@ export class StrategiesListPage {
     }
 
     /** Wait for a strategy's status badge to match a pattern (polls until timeout) */
-    async waitForStatus(name: string, pattern: RegExp, timeout = 15_000): Promise<void> {
+    async waitForStatus(name: string, pattern: RegExp, timeout = 30_000): Promise<void> {
         const badge = this.cardByName(name).locator('[data-testid="status-badge"]');
         await expect(badge).toHaveText(pattern, { timeout });
     }

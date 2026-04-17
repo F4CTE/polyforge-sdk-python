@@ -27,10 +27,7 @@ export class StrategyBuilderPage {
 
     async gotoNew(): Promise<void> {
         await this.page.goto('/strategies/new');
-        // A template wizard appears first — click "Start from Scratch" to enter the builder.
-        // Wait for network idle first so the wizard JS is fully loaded before asserting
-        // the button (fixes first-attempt timeouts on slow Docker cold-starts).
-        await this.page.waitForLoadState('networkidle', { timeout: 20_000 }).catch(() => {});
+        await this.page.waitForLoadState('domcontentloaded');
         const blankBtn = this.page.locator('button', { hasText: 'Start from Scratch' });
         await expect(blankBtn).toBeVisible({ timeout: 20_000 });
         await blankBtn.click();
@@ -46,7 +43,7 @@ export class StrategyBuilderPage {
 
     async gotoEdit(strategyId: string): Promise<void> {
         await this.page.goto(`/strategies/${strategyId}/edit`);
-        await this.page.waitForLoadState('networkidle', { timeout: 20_000 }).catch(() => {});
+        await this.page.waitForLoadState('domcontentloaded');
         await expect(this.page.locator('.react-flow')).toBeVisible({ timeout: 30_000 });
         // Ensure the block palette panel is open (may be collapsed in edit mode)
         const showBtn = this.page.locator('button[title="Show blocks"]');
