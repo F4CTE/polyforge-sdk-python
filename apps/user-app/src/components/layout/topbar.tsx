@@ -59,7 +59,7 @@ export function Topbar() {
   const unread = unreadCount();
 
   return (
-    <header className="flex items-center h-14 px-4 border-b border-default bg-surface">
+    <header className="flex items-center h-12 px-4 border-b border-default bg-surface">
       <div className="flex-1" />
 
       {/* Keyboard shortcuts button */}

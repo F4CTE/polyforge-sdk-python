@@ -120,7 +120,7 @@ export function AdminSidebar({ collapsed, onToggle, onNavigate }: Props) {
   return (
     <aside
       aria-label="Admin sidebar"
-      className="flex flex-col h-full border-r border-default bg-admin-sidebar border-t-4 border-t-loss"
+      className="flex flex-col h-full border-r border-default bg-admin-sidebar"
     >
       {/* Brand */}
       <div className="flex items-center gap-2 h-14 px-3 border-b border-default shrink-0">
