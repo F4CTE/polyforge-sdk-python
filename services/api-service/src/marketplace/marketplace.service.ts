@@ -7,6 +7,7 @@ import {
 import { PrismaService } from "@polyforge/shared-db";
 import { randomUUID } from "crypto";
 import { Prisma, StrategyStatus } from "@prisma/client";
+import { BETA_LIMITS } from "../common/beta-limits.config";
 
 export class CreateListingDto {
   strategyId!: string;
@@ -137,6 +138,20 @@ export class MarketplaceService {
       throw new UnprocessableEntityException({
         code: "ALREADY_LISTED",
         message: "This strategy is already listed",
+      });
+    }
+
+    // Enforce marketplace listing limit (count non-delisted listings)
+    const listingCount = await this.prisma.marketplaceListing.count({
+      where: {
+        sellerId,
+        status: { notIn: ["DELISTED"] },
+      },
+    });
+    if (listingCount >= BETA_LIMITS.maxMarketplaceListings) {
+      throw new UnprocessableEntityException({
+        code: "MARKETPLACE_LISTING_LIMIT_REACHED",
+        message: `Beta limit: maximum ${BETA_LIMITS.maxMarketplaceListings} marketplace listings allowed. Delist an existing listing to publish a new one.`,
       });
     }
 

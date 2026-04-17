@@ -2,6 +2,7 @@ import { Injectable, Logger } from "@nestjs/common";
 import { Cron, CronExpression } from "@nestjs/schedule";
 import { RedisService } from "@polyforge/shared-redis";
 import { PrismaService } from "@polyforge/shared-db";
+import { BETA_LIMITS } from "../common/beta-limits.config";
 
 const SERVICES = [
   {
@@ -301,6 +302,125 @@ export class DashboardService {
       platformFeeTotal: Number(platformFeeTotal._sum.platformFee ?? 0),
       topListings,
       recentPurchases,
+    };
+  }
+
+  async getBetaUsage() {
+    const now = new Date();
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    const warningThreshold = 0.8; // flag users at ≥80% of any limit
+
+    // Strategy slot usage: users with ≥1 active strategy, ranked by count
+    const strategyCountsRaw = await this.prisma.strategy.groupBy({
+      by: ["userId"],
+      where: { status: { not: "ARCHIVED" } },
+      _count: { id: true },
+      orderBy: { _count: { id: "desc" } },
+      take: 50,
+    });
+
+    // Monthly volume by user
+    const volumeRaw = await this.prisma.order.groupBy({
+      by: ["userId"],
+      where: {
+        status: "CONFIRMED",
+        createdAt: { gte: monthStart },
+      },
+      _sum: { size: true },
+      orderBy: { _sum: { size: "desc" } },
+      take: 50,
+    });
+
+    // Active backtests (RUNNING or QUEUED) by user
+    const backtestRaw = await this.prisma.backtestRun.groupBy({
+      by: ["userId"],
+      where: { status: { in: ["RUNNING", "QUEUED"] } },
+      _count: { id: true },
+      orderBy: { _count: { id: "desc" } },
+      take: 20,
+    });
+
+    // Marketplace listings (non-delisted) by user
+    const listingRaw = await this.prisma.marketplaceListing.groupBy({
+      by: ["sellerId"],
+      where: { status: { not: "DELISTED" } },
+      _count: { id: true },
+    });
+
+    // Resolve usernames for display
+    const allUserIds = [
+      ...new Set([
+        ...strategyCountsRaw.map((r) => r.userId),
+        ...volumeRaw.map((r) => r.userId),
+        ...backtestRaw.map((r) => r.userId),
+        ...listingRaw.map((r) => r.sellerId),
+      ]),
+    ];
+    const users = await this.prisma.user.findMany({
+      where: { id: { in: allUserIds } },
+      select: { id: true, username: true, email: true },
+    });
+    const userMap = new Map(users.map((u) => [u.id, u]));
+
+    const strategyUsers = strategyCountsRaw.map((r) => ({
+      userId: r.userId,
+      username: userMap.get(r.userId)?.username ?? null,
+      email: userMap.get(r.userId)?.email ?? null,
+      activeStrategies: r._count.id,
+      limit: BETA_LIMITS.maxActiveStrategies,
+      pct: r._count.id / BETA_LIMITS.maxActiveStrategies,
+      atLimit: r._count.id >= BETA_LIMITS.maxActiveStrategies,
+    }));
+
+    const volumeUsers = volumeRaw.map((r) => {
+      const vol = Number(r._sum.size ?? 0);
+      return {
+        userId: r.userId,
+        username: userMap.get(r.userId)?.username ?? null,
+        email: userMap.get(r.userId)?.email ?? null,
+        monthlyVolumeUsdc: vol,
+        limit: BETA_LIMITS.maxMonthlyVolumeUsdc,
+        pct: vol / BETA_LIMITS.maxMonthlyVolumeUsdc,
+        atLimit: vol >= BETA_LIMITS.maxMonthlyVolumeUsdc,
+      };
+    });
+
+    const backtestUsers = backtestRaw.map((r) => ({
+      userId: r.userId,
+      username: userMap.get(r.userId)?.username ?? null,
+      pendingBacktests: r._count.id,
+    }));
+
+    const listingUsers = listingRaw.map((r) => ({
+      userId: r.sellerId,
+      username: userMap.get(r.sellerId)?.username ?? null,
+      listings: r._count.id,
+      limit: BETA_LIMITS.maxMarketplaceListings,
+      atLimit: r._count.id >= BETA_LIMITS.maxMarketplaceListings,
+    }));
+
+    // Summary counts
+    const usersApproachingStrategyCap = strategyUsers.filter(
+      (u) => u.pct >= warningThreshold,
+    ).length;
+    const usersApproachingVolumeCap = volumeUsers.filter(
+      (u) => u.pct >= warningThreshold,
+    ).length;
+
+    return {
+      asOf: now.toISOString(),
+      limits: BETA_LIMITS,
+      summary: {
+        usersApproachingStrategyCap,
+        usersApproachingVolumeCap,
+        usersAtStrategyCap: strategyUsers.filter((u) => u.atLimit).length,
+        usersAtVolumeCap: volumeUsers.filter((u) => u.atLimit).length,
+        usersAtMarketplaceCap: listingUsers.filter((u) => u.atLimit).length,
+      },
+      strategyUsage: strategyUsers.filter((u) => u.pct >= warningThreshold),
+      volumeUsage: volumeUsers.filter((u) => u.pct >= warningThreshold),
+      backtestBacklog: backtestUsers,
+      marketplaceUsage: listingUsers.filter((u) => u.atLimit),
     };
   }
 }

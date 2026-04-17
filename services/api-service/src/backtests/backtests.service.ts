@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
+import {
+  Injectable,
+  NotFoundException,
+  UnprocessableEntityException,
+} from "@nestjs/common";
 import { PrismaService } from "@polyforge/shared-db";
 import { type BacktestRun, type BacktestOrder } from "@prisma/client";
 import { RedisService } from "@polyforge/shared-redis";
@@ -8,6 +12,7 @@ import {
   PaginationDto,
 } from "../common/dto/pagination.dto";
 import { CreateBacktestDto } from "./dto/create-backtest.dto";
+import { BETA_LIMITS } from "../common/beta-limits.config";
 
 export interface BacktestQueryDto extends PaginationDto {
   strategyId?: string;
@@ -65,6 +70,19 @@ export class BacktestsService {
         winRate: "0.00",
         hasDataGaps: false,
       };
+    }
+
+    // Enforce 90-day history window
+    if (dto.dateRangeStart) {
+      const start = new Date(dto.dateRangeStart);
+      const maxStart = new Date();
+      maxStart.setDate(maxStart.getDate() - BETA_LIMITS.maxBacktestHistoryDays);
+      if (start < maxStart) {
+        throw new UnprocessableEntityException({
+          code: "BACKTEST_HISTORY_WINDOW_EXCEEDED",
+          message: `Beta limit: backtest history is limited to the last ${BETA_LIMITS.maxBacktestHistoryDays} days.`,
+        });
+      }
     }
 
     const run = await this.prisma.backtestRun.create({

@@ -17,6 +17,9 @@ function makeRedis(overrides: Record<string, unknown> = {}) {
         .mockResolvedValue([
           JSON.stringify({ price: 0.5, timestamp: Date.now() }),
         ]),
+      // Beta daily execution counter
+      incr: vi.fn().mockResolvedValue(1),
+      expire: vi.fn().mockResolvedValue(1),
     }),
     xadd: vi.fn().mockResolvedValue("1-0"),
     ...overrides,
@@ -157,6 +160,8 @@ describe("StrategyRunner — stale data detection", () => {
       getClient: vi.fn().mockReturnValue({
         lrange: vi.fn().mockResolvedValue([]),
         mget: vi.fn().mockResolvedValue([null]),
+        incr: vi.fn().mockResolvedValue(1),
+        expire: vi.fn().mockResolvedValue(1),
       }),
     });
     const onStatusChange = vi.fn().mockResolvedValue(undefined);

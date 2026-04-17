@@ -5,6 +5,7 @@ import {
   ForbiddenException,
   BadRequestException,
 } from "@nestjs/common";
+import { BETA_LIMITS } from "../common/beta-limits.config";
 import { ConfigService } from "@nestjs/config";
 import { JwtService } from "@nestjs/jwt";
 import { PrismaService } from "@polyforge/shared-db";
@@ -338,13 +339,45 @@ export class OrdersService {
       });
     }
 
-    // 2. Find the token and its market
+    // 2a. Enforce max position size per order
+    const orderSize = Number(dto.size);
+    if (orderSize > BETA_LIMITS.maxPositionSizeUsdc) {
+      throw new UnprocessableEntityException({
+        code: "POSITION_SIZE_EXCEEDED",
+        message: `Beta limit: maximum position size is $${BETA_LIMITS.maxPositionSizeUsdc} USDC per order.`,
+      });
+    }
+
+    // 2b. Enforce monthly volume cap
+    const now = new Date();
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    const monthlyVolumeAgg = await this.prisma.order.aggregate({
+      where: {
+        userId,
+        status: OrderStatus.CONFIRMED,
+        createdAt: { gte: monthStart },
+      },
+      _sum: { size: true },
+    });
+    const currentMonthlyVolume = Number(monthlyVolumeAgg._sum.size ?? 0);
+    if (currentMonthlyVolume + orderSize > BETA_LIMITS.maxMonthlyVolumeUsdc) {
+      const remaining = Math.max(
+        0,
+        BETA_LIMITS.maxMonthlyVolumeUsdc - currentMonthlyVolume,
+      );
+      throw new UnprocessableEntityException({
+        code: "MONTHLY_VOLUME_EXCEEDED",
+        message: `Beta limit: monthly trade volume cap of $${BETA_LIMITS.maxMonthlyVolumeUsdc} USDC reached. Remaining this month: $${remaining.toFixed(2)}.`,
+      });
+    }
+
+    // 3. Find the token and its market
     const token = await this.prisma.token.findUniqueOrThrow({
       where: { id: dto.tokenId },
       include: { market: true },
     });
 
-    // 3. Create intent
+    // 5. Create intent
     const intentId = randomUUID();
     const intent = {
       intentId,
@@ -359,10 +392,10 @@ export class OrdersService {
       orderType: dto.orderType || "GTC",
     };
 
-    // 4. Publish to Redis stream
+    // 6. Publish to Redis stream
     await this.redis.xadd("stream:orders", intent);
 
-    // 5. Create order record
+    // 7. Create order record
     const order = await this.prisma.order.create({
       data: {
         intentId,

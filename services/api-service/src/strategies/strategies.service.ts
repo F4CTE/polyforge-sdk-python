@@ -28,8 +28,7 @@ import { ImportStrategyDto } from "./dto/import-strategy.dto";
 import { CreateFromDescriptionDto } from "./dto/create-from-description.dto";
 import { PaginationDto } from "../common/dto/pagination.dto";
 import { LlmService } from "../news/llm.service";
-
-const MAX_STRATEGIES = 50;
+import { BETA_LIMITS } from "../common/beta-limits.config";
 
 @Injectable()
 export class StrategiesService {
@@ -75,10 +74,10 @@ export class StrategiesService {
     const count = await this.prisma.strategy.count({
       where: { userId, status: { not: StrategyStatus.ARCHIVED } },
     });
-    if (count >= MAX_STRATEGIES) {
+    if (count >= BETA_LIMITS.maxActiveStrategies) {
       throw new UnprocessableEntityException({
         code: "STRATEGY_LIMIT_REACHED",
-        message: "Strategy limit reached",
+        message: `Beta limit: maximum ${BETA_LIMITS.maxActiveStrategies} active strategies allowed. Archive existing strategies to create new ones.`,
       });
     }
 
@@ -432,10 +431,10 @@ export class StrategiesService {
     const count = await this.prisma.strategy.count({
       where: { userId, status: { not: StrategyStatus.ARCHIVED } },
     });
-    if (count >= MAX_STRATEGIES) {
+    if (count >= BETA_LIMITS.maxActiveStrategies) {
       throw new UnprocessableEntityException({
         code: "STRATEGY_LIMIT_REACHED",
-        message: "Strategy limit reached",
+        message: `Beta limit: maximum ${BETA_LIMITS.maxActiveStrategies} active strategies allowed. Archive existing strategies to create new ones.`,
       });
     }
 
@@ -687,10 +686,10 @@ export class StrategiesService {
     const count = await this.prisma.strategy.count({
       where: { userId, status: { not: StrategyStatus.ARCHIVED } },
     });
-    if (count >= MAX_STRATEGIES) {
+    if (count >= BETA_LIMITS.maxActiveStrategies) {
       throw new UnprocessableEntityException({
         code: "STRATEGY_LIMIT_REACHED",
-        message: "Strategy limit reached",
+        message: `Beta limit: maximum ${BETA_LIMITS.maxActiveStrategies} active strategies allowed. Archive existing strategies to create new ones.`,
       });
     }
 

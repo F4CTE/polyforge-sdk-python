@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router';
-import { Button, CardSkeleton, SkeletonLine } from '@polyforge/ui';
+import { Button, CardSkeleton, SkeletonLine, Tooltip } from '@polyforge/ui';
+import { useBetaUsage } from '@/hooks/use-beta-usage';
+import { BetaUsageBar } from '@/components/beta-usage-bar';
 import { chartTooltipContentStyle, chartAxisTick } from '@polyforge/ui/lib/chart-styles';
 import {
   Plus,
@@ -24,7 +26,7 @@ import {
   Line,
   XAxis,
   YAxis,
-  Tooltip,
+  Tooltip as ChartTooltip,
   Legend,
   ResponsiveContainer,
   CartesianGrid,
@@ -268,7 +270,7 @@ function ComparisonPanel({ perfData, loading, onBack }: ComparisonPanelProps) {
                 tickLine={false}
                 tickFormatter={(v: number) => `$${v}`}
               />
-              <Tooltip
+              <ChartTooltip
                 contentStyle={chartTooltipContentStyle}
                 formatter={(value: number, name: string) => {
                   const strategy = perfData.find((s) => s.strategyId === name);
@@ -387,6 +389,9 @@ export function Component() {
   const [perfData, setPerfData] = useState<StrategyPerfData[]>([]);
   const [loadingPerf, setLoadingPerf] = useState(false);
   const [showComparison, setShowComparison] = useState(false);
+
+  const { usage: betaUsage } = useBetaUsage();
+  const atStrategySlotCap = betaUsage != null && betaUsage.strategies.used >= betaUsage.strategies.limit;
 
   function load(status?: FilterStatus) {
     setLoading(true);
@@ -613,14 +618,35 @@ export function Component() {
           >
             <Upload className="size-4" aria-hidden="true" /> Import Strategy
           </Button>
-          <Link
-            to="/strategies/new"
-            className="flex items-center gap-2 px-4 py-3 rounded-pf bg-accent text-inverse text-body-md font-medium hover:bg-accent-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 transition-colors"
-          >
-            <Plus className="size-4" aria-hidden="true" /> New Strategy
-          </Link>
+          {atStrategySlotCap ? (
+            <Tooltip content={`Beta limit: ${betaUsage!.strategies.limit} active strategies`}>
+              <span
+                aria-disabled="true"
+                className="flex items-center gap-2 px-4 py-3 rounded-pf bg-overlay border border-default text-body-md text-tertiary font-medium cursor-not-allowed select-none"
+              >
+                <Plus className="size-4" aria-hidden="true" /> New Strategy
+              </span>
+            </Tooltip>
+          ) : (
+            <Link
+              to="/strategies/new"
+              className="flex items-center gap-2 px-4 py-3 rounded-pf bg-accent text-inverse text-body-md font-medium hover:bg-accent-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 transition-colors"
+            >
+              <Plus className="size-4" aria-hidden="true" /> New Strategy
+            </Link>
+          )}
         </div>
       </div>
+
+      {/* Beta strategy slot indicator */}
+      {betaUsage && (
+        <BetaUsageBar
+          label="strategies active"
+          used={betaUsage.strategies.used}
+          limit={betaUsage.strategies.limit}
+          className="max-w-xs"
+        />
+      )}
 
       {/* Filter tabs — hidden when showing comparison panel */}
       {!showComparison && (
@@ -665,12 +691,23 @@ export function Component() {
           <Code2 className="size-10 text-tertiary mb-4" aria-hidden="true" />
           <p className="text-primary font-medium">No strategies yet</p>
           <p className="text-body-sm text-tertiary mt-1">Create your first strategy to start trading.</p>
-          <Link
-            to="/strategies/new"
-            className="mt-4 flex items-center gap-2 px-4 py-3 rounded-pf bg-accent text-inverse text-body-md font-medium hover:bg-accent-text transition-colors"
-          >
-            <Plus className="size-4" aria-hidden="true" /> New Strategy
-          </Link>
+          {atStrategySlotCap ? (
+            <Tooltip content={`Beta limit: ${betaUsage!.strategies.limit} active strategies`}>
+              <span
+                aria-disabled="true"
+                className="mt-4 flex items-center gap-2 px-4 py-3 rounded-pf bg-overlay border border-default text-body-md text-tertiary font-medium cursor-not-allowed select-none"
+              >
+                <Plus className="size-4" aria-hidden="true" /> New Strategy
+              </span>
+            </Tooltip>
+          ) : (
+            <Link
+              to="/strategies/new"
+              className="mt-4 flex items-center gap-2 px-4 py-3 rounded-pf bg-accent text-inverse text-body-md font-medium hover:bg-accent-text transition-colors"
+            >
+              <Plus className="size-4" aria-hidden="true" /> New Strategy
+            </Link>
+          )}
         </div>
       )}
 

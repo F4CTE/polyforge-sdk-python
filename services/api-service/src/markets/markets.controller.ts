@@ -1,13 +1,21 @@
 import { Controller, Get, Param, Query, UseGuards } from "@nestjs/common";
 import { ApiTags, ApiBearerAuth } from "@nestjs/swagger";
+import { Throttle } from "@nestjs/throttler";
 import { JwtAuthGuard } from "@polyforge/shared-auth";
 import { MarketsService } from "./markets.service";
 import { MarketQueryDto, PriceHistoryQueryDto } from "./dto/market-query.dto";
+import { BETA_LIMITS } from "../common/beta-limits.config";
+
+// Market-data endpoints get a tighter per-user rate limit (beta: 100 req/min)
+const MARKET_DATA_THROTTLE = {
+  default: { ttl: 60000, limit: BETA_LIMITS.marketDataRateLimitPerMinute },
+};
 
 @ApiTags("markets")
 @ApiBearerAuth("jwt")
 @Controller("markets")
 @UseGuards(JwtAuthGuard)
+@Throttle(MARKET_DATA_THROTTLE)
 export class MarketsController {
   constructor(private readonly markets: MarketsService) {}
 

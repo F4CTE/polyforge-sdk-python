@@ -338,4 +338,61 @@ describe("StrategiesService", () => {
       });
     });
   });
+
+  // ── createTemplate ────────────────────────────────────────────────────────
+
+  describe("createTemplate", () => {
+    it("marks a non-template strategy as a template", async () => {
+      const strategy = makeStrategy({ template: false });
+      prisma.strategy.findUnique.mockResolvedValue(strategy as any);
+      prisma.strategy.update.mockResolvedValue({
+        ...strategy,
+        template: true,
+      } as any);
+
+      const result = await service.createTemplate("strat-1");
+
+      expect(result).toEqual({ id: "strat-1", template: true });
+    });
+
+    it("throws NotFoundException when strategy does not exist", async () => {
+      prisma.strategy.findUnique.mockResolvedValue(null);
+
+      await expect(service.createTemplate("ghost")).rejects.toThrow(
+        NotFoundException,
+      );
+    });
+
+    it("includes code NOT_FOUND in the exception", async () => {
+      prisma.strategy.findUnique.mockResolvedValue(null);
+
+      await expect(service.createTemplate("ghost")).rejects.toMatchObject({
+        response: { code: "NOT_FOUND" },
+      });
+    });
+
+    it("throws ALREADY_TEMPLATE when strategy is already a template", async () => {
+      const strategy = makeStrategy({ template: true });
+      prisma.strategy.findUnique.mockResolvedValue(strategy as any);
+
+      await expect(service.createTemplate("strat-1")).rejects.toMatchObject({
+        response: { code: "ALREADY_TEMPLATE" },
+      });
+    });
+
+    it("calls prisma update with template: true", async () => {
+      const strategy = makeStrategy({ template: false });
+      prisma.strategy.findUnique.mockResolvedValue(strategy as any);
+      prisma.strategy.update.mockResolvedValue({
+        ...strategy,
+        template: true,
+      } as any);
+
+      await service.createTemplate("strat-1");
+
+      expect(prisma.strategy.update).toHaveBeenCalledWith(
+        expect.objectContaining({ data: { template: true } }),
+      );
+    });
+  });
 });

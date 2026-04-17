@@ -55,6 +55,11 @@ export class SettingsController {
     return this.settings.updatePassword(user.sub, dto);
   }
 
+  @Get("beta-usage")
+  getBetaUsage(@CurrentUser() user: JwtPayload) {
+    return this.settings.getBetaUsage(user.sub);
+  }
+
   @Get("gas")
   getGasUsage(@CurrentUser() user: JwtPayload) {
     return this.settings.getGasUsage(user.sub);

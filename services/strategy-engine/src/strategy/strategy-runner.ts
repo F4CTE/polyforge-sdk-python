@@ -15,6 +15,14 @@ import {
 import { resolveParams } from "../blocks/resolve-params";
 import { StateService } from "../state/state.service";
 import { safeEvaluate } from "../common/safe-evaluate";
+import { BETA_LIMITS } from "../common/beta-limits.config";
+
+/** Redis key for daily execution counter — resets at midnight UTC */
+const dailyExecKey = (strategyId: string): string => {
+  const d = new Date();
+  const date = `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}-${String(d.getUTCDate()).padStart(2, "0")}`;
+  return `beta:executions:${strategyId}:${date}`;
+};
 
 const MIN_TICK_MS = 200;
 const STALE_PRICE_MS = 5_000;
@@ -159,6 +167,26 @@ export class StrategyRunner {
     if (this.status !== "RUNNING") return;
 
     try {
+      // Enforce daily execution limit — auto-stop if exceeded
+      const redisClient = this.redis.getClient();
+      const key = dailyExecKey(this.strategyId);
+      const count = await redisClient.incr(key);
+      if (count === 1) {
+        // New key: set TTL to 25 hours so it expires safely after UTC midnight
+        await redisClient.expire(key, 90_000);
+      }
+      if (count > BETA_LIMITS.maxDailyStrategyExecutions) {
+        this.logger.warn(
+          `Strategy ${this.strategyId} hit daily execution limit (${BETA_LIMITS.maxDailyStrategyExecutions}) — pausing until midnight UTC`,
+        );
+        this.pause("daily_execution_limit_reached");
+        await this.onStatusChange(
+          "PAUSED",
+          "daily_execution_limit_reached",
+        ).catch(() => {});
+        return;
+      }
+
       await this.evaluate();
     } catch (err) {
       this.logger.error("Tick evaluation failed", err);

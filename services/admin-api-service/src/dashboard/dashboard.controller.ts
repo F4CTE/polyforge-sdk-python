@@ -26,4 +26,9 @@ export class DashboardController {
   getMarketplaceStats() {
     return this.dashboard.getMarketplaceStats();
   }
+
+  @Get("beta-usage")
+  getBetaUsage() {
+    return this.dashboard.getBetaUsage();
+  }
 }

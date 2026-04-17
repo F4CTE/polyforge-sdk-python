@@ -2,6 +2,7 @@ import { Injectable, Logger } from "@nestjs/common";
 import { PrismaService } from "@polyforge/shared-db";
 import { RedisService } from "@polyforge/shared-redis";
 import { Prisma } from "@prisma/client";
+import { BETA_LIMITS } from "../common/beta-limits.config";
 import {
   Block,
   PriceState,
@@ -43,6 +44,35 @@ export class BacktestService {
 
   async run(runId: string): Promise<void> {
     this.logger.log(`Starting backtest run ${runId}`);
+
+    // Enforce concurrent backtest limit per user (queue model)
+    const run = await this.prisma.backtestRun.findUnique({
+      where: { id: runId },
+      select: { userId: true, strategyId: true },
+    });
+    if (run) {
+      const runningCount = await this.prisma.backtestRun.count({
+        where: {
+          userId: run.userId,
+          status: "RUNNING",
+          id: { not: runId },
+        },
+      });
+      if (runningCount >= BETA_LIMITS.maxConcurrentBacktests) {
+        this.logger.log(
+          `Backtest run ${runId} deferred — user ${run.userId} already has ${runningCount} running`,
+        );
+        // Re-enqueue so it will be picked up when the running job finishes
+        await this.redis.xadd("stream:backtests", {
+          runId,
+          userId: run.userId,
+          strategyId: run.strategyId ?? "",
+          ts: String(Date.now()),
+          requeued: "1",
+        });
+        return;
+      }
+    }
 
     await this.prisma.backtestRun.update({
       where: { id: runId },

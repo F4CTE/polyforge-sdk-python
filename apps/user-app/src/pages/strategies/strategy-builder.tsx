@@ -1,8 +1,9 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router';
 import { ReactFlowProvider } from '@xyflow/react';
-import { ArrowLeft, Check, Loader2, Pencil, Blocks, Upload, Zap, FlaskConical, HelpCircle, Target, RotateCcw, RotateCw, LayoutTemplate, X, TrendingUp, RefreshCw, Calendar, Brain } from 'lucide-react';
+import { ArrowLeft, Check, Loader2, Pencil, Blocks, Upload, Zap, FlaskConical, HelpCircle, Target, RotateCcw, RotateCw, LayoutTemplate, X, TrendingUp, RefreshCw, Calendar, Brain, AlertCircle } from 'lucide-react';
 import { Button, Input } from '@polyforge/ui';
+import { useBetaUsage } from '@/hooks/use-beta-usage';
 import { toast } from 'sonner';
 import type { Node, Edge } from '@xyflow/react';
 import type { BlockNodeData } from '../../stores/builder-store';
@@ -817,6 +818,8 @@ export function Component() {
   const [dragOver, setDragOver] = useState(false);
   const dragCounterRef = useRef(0);
 
+  const { usage: betaUsage } = useBetaUsage();
+
   // Execution panel state
   const [execPanelExpanded, setExecPanelExpanded] = useState(false);
   const [execTab, setExecTab] = useState<'backtest' | 'live'>('backtest');
@@ -902,6 +905,18 @@ export function Component() {
       difficulty: 'Advanced',
     },
   ] as const;
+
+  // Detect action blocks whose configured size exceeds the beta position-size limit.
+  const positionSizeViolations = useBuilderStore((s) => {
+    const maxSize = betaUsage?.positionSize.maxUsdc ?? Infinity;
+    return s.nodes.filter((n) => {
+      if (n.type !== 'blockNode') return false;
+      const nd = n.data as import('../../stores/builder-store').BlockNodeData;
+      if (nd.section !== 'actions') return false;
+      const sizeVal = parseFloat(String(nd.config['size'] ?? ''));
+      return !isNaN(sizeVal) && sizeVal > maxSize;
+    }).length;
+  });
 
   // Count canvas issues: unwired trigger/action blocks + active blocks with empty required fields.
   const canvasIssues = useBuilderStore((s) => {
@@ -1334,12 +1349,23 @@ export function Component() {
             Cancel
           </Link>
 
+          {positionSizeViolations > 0 && (
+            <span
+              className="flex items-center gap-1 text-xs text-[var(--color-gold-500)]"
+              role="alert"
+              aria-live="polite"
+            >
+              <AlertCircle className="size-3 shrink-0" aria-hidden="true" />
+              {positionSizeViolations} action block{positionSizeViolations !== 1 ? 's' : ''} exceed${positionSizeViolations === 1 ? 's' : ''} the ${betaUsage?.positionSize.maxUsdc ?? 500} USDC beta limit
+            </span>
+          )}
+
           <Button
             type="button"
             variant="default"
             size="sm"
             onClick={onSave}
-            disabled={saving}
+            disabled={saving || positionSizeViolations > 0}
             className="flex items-center gap-2"
           >
             {saving ? (

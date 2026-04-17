@@ -2,9 +2,10 @@ import { useState, useEffect, useCallback } from 'react';
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import { toast } from 'sonner';
 import {
-  Play, ChevronLeft, ChevronRight, History, X, AlertTriangle, XCircle, Loader2,
+  Play, ChevronLeft, ChevronRight, History, X, AlertTriangle, XCircle, Loader2, Clock,
 } from 'lucide-react';
 import { Button, Input, Select } from '@polyforge/ui';
+import { useBetaUsage } from '@/hooks/use-beta-usage';
 import { chartTooltipContentStyle, chartAxisTick } from '@polyforge/ui/lib/chart-styles';
 
 /* ─── Types ──────────────────────────────────────────────────────────── */
@@ -86,6 +87,8 @@ export function Component() {
   const [totalPages, setTotalPages] = useState(0);
   const [page, setPage] = useState(1);
   const [selectedRun, setSelectedRun] = useState<BacktestRun | null>(null);
+
+  const { usage: betaUsage } = useBetaUsage();
 
   // Form state
   const [strategies, setStrategies] = useState<Strategy[]>([]);
@@ -366,8 +369,18 @@ export function Component() {
           {(selectedRun.status === 'RUNNING' || selectedRun.status === 'QUEUED') && (
             <div>
               <div className="flex items-center justify-between mb-2">
-                <span className="text-label text-tertiary">
-                  {selectedRun.status === 'QUEUED' ? 'Waiting in queue...' : 'Running...'}
+                <span className="text-label text-tertiary flex items-center gap-1">
+                  {selectedRun.status === 'QUEUED' ? (
+                    <>
+                      <Clock className="size-3 shrink-0" aria-hidden="true" />
+                      Queued — waiting for a free slot
+                      {betaUsage && (
+                        <span className="text-tertiary/70">
+                          ({betaUsage.backtests.maxConcurrent} concurrent max)
+                        </span>
+                      )}
+                    </>
+                  ) : 'Running...'}
                 </span>
                 <span className="text-label font-mono text-accent-text">{selectedRun.progress}%</span>
               </div>
@@ -525,9 +538,19 @@ export function Component() {
                         <span className="font-mono text-label text-tertiary">{dateRangeLabel(run)}</span>
                       </td>
                       <td className="px-4 py-3">
-                        <span className={`inline-flex px-2 py-1 rounded text-label font-medium ${ss.bg} ${ss.text}`}>
-                          {run.status}
-                        </span>
+                        {run.status === 'QUEUED' ? (
+                          <span
+                            className={`inline-flex items-center gap-1 px-2 py-1 rounded text-label font-medium ${ss.bg} ${ss.text}`}
+                            title={betaUsage ? `Concurrent limit: ${betaUsage.backtests.maxConcurrent} backtest at a time` : undefined}
+                          >
+                            <Clock className="size-3 shrink-0" aria-hidden="true" />
+                            Queued
+                          </span>
+                        ) : (
+                          <span className={`inline-flex px-2 py-1 rounded text-label font-medium ${ss.bg} ${ss.text}`}>
+                            {run.status}
+                          </span>
+                        )}
                       </td>
                       <td className="px-4 py-3">
                         {run.status === 'RUNNING' ? (

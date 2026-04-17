@@ -17,6 +17,8 @@ import { toast } from 'sonner';
 import { useThemeStore } from '@/stores/theme-store';
 import { useAuthStore } from '@/stores/auth-store';
 import { Button, Input, Select, CardSkeleton } from '@polyforge/ui';
+import { useBetaUsage } from '@/hooks/use-beta-usage';
+import { BetaUsageBar } from '@/components/beta-usage-bar';
 import { resolveChartTheme } from '@polyforge/ui/lib/chart-colors';
 import { chartTooltipContentStyle, chartTooltipLabelStyle, chartAxisTick } from '@polyforge/ui/lib/chart-styles';
 
@@ -457,6 +459,8 @@ export function Component() {
   const { isDark } = useThemeStore();
   const { user } = useAuthStore();
   const username = user?.username ?? '';
+
+  const { usage: betaUsage } = useBetaUsage();
 
   // Share card state
   const [edgeScore, setEdgeScore] = useState<number | null>(null);
@@ -1084,6 +1088,17 @@ export function Component() {
           </div>
         </div>
       </div>
+
+      {/* ── Beta monthly volume indicator ──────────────────────────────── */}
+      {betaUsage && (
+        <BetaUsageBar
+          label="monthly volume used"
+          used={betaUsage.monthlyVolume.usedUsdc}
+          limit={betaUsage.monthlyVolume.limitUsdc}
+          format={(v) => `$${v.toLocaleString(undefined, { maximumFractionDigits: 0 })}`}
+          className="max-w-sm"
+        />
+      )}
 
       {/* ── Live P&L Strip ─────────────────────────────────────────────── */}
       {(() => {

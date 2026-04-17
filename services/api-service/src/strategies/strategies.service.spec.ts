@@ -278,8 +278,8 @@ describe("StrategiesService", () => {
       expect(dataArg.tags).toEqual(["tag1"]);
     });
 
-    it("throws STRATEGY_LIMIT_REACHED when user has 50 strategies", async () => {
-      db.strategy.count.mockResolvedValue(50);
+    it("throws STRATEGY_LIMIT_REACHED when user is at beta limit (3 strategies)", async () => {
+      db.strategy.count.mockResolvedValue(3);
 
       await expect(
         service.create("user-1", { name: "Over limit" } as any),
@@ -290,16 +290,16 @@ describe("StrategiesService", () => {
       expect(db.strategy.create).not.toHaveBeenCalled();
     });
 
-    it("throws STRATEGY_LIMIT_REACHED at exactly 50 (boundary)", async () => {
-      db.strategy.count.mockResolvedValue(50);
+    it("throws STRATEGY_LIMIT_REACHED at exactly 3 (boundary check)", async () => {
+      db.strategy.count.mockResolvedValue(3);
 
       await expect(
         service.create("user-1", { name: "Limit" } as any),
       ).rejects.toBeInstanceOf(UnprocessableEntityException);
     });
 
-    it("allows creation when count is 49", async () => {
-      db.strategy.count.mockResolvedValue(49);
+    it("allows creation when count is 2 (under beta limit)", async () => {
+      db.strategy.count.mockResolvedValue(2);
       db.strategy.create.mockResolvedValue(makeStrategy() as any);
 
       await expect(
@@ -1117,13 +1117,13 @@ describe("StrategiesService", () => {
       await expect(service.fork(strategy.id, "user-1")).resolves.toBeDefined();
     });
 
-    it("throws STRATEGY_LIMIT_REACHED when user already has 50 strategies", async () => {
+    it("throws STRATEGY_LIMIT_REACHED when user already has 3 strategies (beta limit)", async () => {
       const strategy = makeStrategy({
         userId: "owner-id",
         visibility: "PUBLIC",
       });
       db.strategy.findUnique.mockResolvedValue(strategy as any);
-      db.strategy.count.mockResolvedValue(50);
+      db.strategy.count.mockResolvedValue(3);
 
       await expect(service.fork(strategy.id, "user-1")).rejects.toMatchObject({
         response: { code: "STRATEGY_LIMIT_REACHED" },

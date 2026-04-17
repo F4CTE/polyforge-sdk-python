@@ -6,15 +6,19 @@ import { RedisService } from "@polyforge/shared-redis";
 
 // ─── Factories ────────────────────────────────────────────────────────────────
 
+// Dates within the 90-day beta backtest window, relative to now
+const RANGE_START = new Date(Date.now() - 30 * 86400_000).toISOString(); // 30 days ago
+const RANGE_END = new Date(Date.now() - 1 * 86400_000).toISOString(); // yesterday
+
 function makeRun(overrides: Record<string, unknown> = {}) {
   return {
     id: "run-uuid-1",
     userId: "user-uuid-1",
     strategyId: "strategy-uuid-1",
-    dateRangeStart: new Date("2024-01-01"),
-    dateRangeEnd: new Date("2024-12-31"),
+    dateRangeStart: new Date(RANGE_START),
+    dateRangeEnd: new Date(RANGE_END),
     status: "QUEUED",
-    createdAt: new Date("2025-01-01T00:00:00.000Z"),
+    createdAt: new Date(),
     ...overrides,
   };
 }
@@ -30,8 +34,8 @@ function makeQuery(overrides: Record<string, unknown> = {}) {
 function makeCreateDto(overrides: Record<string, unknown> = {}) {
   return {
     strategyId: "strategy-uuid-1",
-    dateRangeStart: "2024-01-01T00:00:00.000Z",
-    dateRangeEnd: "2024-12-31T00:00:00.000Z",
+    dateRangeStart: RANGE_START,
+    dateRangeEnd: RANGE_END,
     quickMode: false,
     ...overrides,
   };
@@ -259,21 +263,18 @@ describe("BacktestsService", () => {
       const run = makeRun();
       db.backtestRun.create.mockResolvedValue(run as any);
 
+      // Use dates within the 90-day beta window
+      const start = new Date(Date.now() - 60 * 86400_000).toISOString();
+      const end = new Date(Date.now() - 1 * 86400_000).toISOString();
+
       await service.create(
         "user-uuid-1",
-        makeCreateDto({
-          dateRangeStart: "2024-03-01T00:00:00.000Z",
-          dateRangeEnd: "2024-09-30T00:00:00.000Z",
-        }) as any,
+        makeCreateDto({ dateRangeStart: start, dateRangeEnd: end }) as any,
       );
 
       const dataArg = db.backtestRun.create.mock.calls[0][0]?.data;
-      expect(dataArg.dateRangeStart).toEqual(
-        new Date("2024-03-01T00:00:00.000Z"),
-      );
-      expect(dataArg.dateRangeEnd).toEqual(
-        new Date("2024-09-30T00:00:00.000Z"),
-      );
+      expect(dataArg.dateRangeStart).toEqual(new Date(start));
+      expect(dataArg.dateRangeEnd).toEqual(new Date(end));
     });
 
     it("uses epoch start and current date when dateRange not provided", async () => {

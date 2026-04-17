@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from "vitest";
+import { NotFoundException } from "@nestjs/common";
 import { BacktestsService } from "./backtests.service";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -26,8 +27,16 @@ function makePrisma() {
   return {
     backtestRun: {
       findMany: vi.fn(),
+      findUnique: vi.fn(),
       count: vi.fn(),
+      update: vi.fn(),
     },
+  };
+}
+
+function makeRedis() {
+  return {
+    xadd: vi.fn().mockResolvedValue("stream-id"),
   };
 }
 
@@ -36,10 +45,12 @@ function makePrisma() {
 describe("BacktestsService", () => {
   let service: BacktestsService;
   let prisma: ReturnType<typeof makePrisma>;
+  let redis: ReturnType<typeof makeRedis>;
 
   beforeEach(() => {
     prisma = makePrisma();
-    service = new BacktestsService(prisma as any, {} as any);
+    redis = makeRedis();
+    service = new BacktestsService(prisma as any, redis as any);
   });
 
   afterEach(() => {
@@ -235,6 +246,65 @@ describe("BacktestsService", () => {
 
       await expect(service.findAll({ page: 1, limit: 10 })).rejects.toThrow(
         "DB connection lost",
+      );
+    });
+  });
+
+  // ── cancel ────────────────────────────────────────────────────────────────
+
+  describe("cancel", () => {
+    it("returns id and CANCELLED status on success", async () => {
+      const run = makeRun({ status: "RUNNING" });
+      prisma.backtestRun.findUnique.mockResolvedValue(run as any);
+      prisma.backtestRun.update.mockResolvedValue({
+        ...run,
+        status: "CANCELLED",
+      } as any);
+
+      const result = await service.cancel("run-1");
+
+      expect(result).toEqual({ id: "run-1", status: "CANCELLED" });
+    });
+
+    it("throws NotFoundException when run does not exist", async () => {
+      prisma.backtestRun.findUnique.mockResolvedValue(null);
+
+      await expect(service.cancel("ghost")).rejects.toThrow(NotFoundException);
+    });
+
+    it("includes code NOT_FOUND in exception", async () => {
+      prisma.backtestRun.findUnique.mockResolvedValue(null);
+
+      await expect(service.cancel("ghost")).rejects.toMatchObject({
+        response: { code: "NOT_FOUND" },
+      });
+    });
+
+    it("updates run status to CANCELLED with completedAt", async () => {
+      const run = makeRun();
+      prisma.backtestRun.findUnique.mockResolvedValue(run as any);
+      prisma.backtestRun.update.mockResolvedValue(run as any);
+
+      await service.cancel("run-1");
+
+      expect(prisma.backtestRun.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: "run-1" },
+          data: expect.objectContaining({ status: "CANCELLED" }),
+        }),
+      );
+    });
+
+    it("publishes cancellation event to backtests stream", async () => {
+      const run = makeRun();
+      prisma.backtestRun.findUnique.mockResolvedValue(run as any);
+      prisma.backtestRun.update.mockResolvedValue(run as any);
+
+      await service.cancel("run-1");
+
+      expect(redis.xadd).toHaveBeenCalledWith(
+        "stream:backtests:cancel",
+        expect.objectContaining({ runId: "run-1" }),
       );
     });
   });

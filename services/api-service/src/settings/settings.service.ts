@@ -8,6 +8,7 @@ import { UpdatePasswordDto } from "./dto/update-password.dto";
 import { UpdateNotificationsDto } from "./dto/update-notifications.dto";
 import { UpdateRiskSettingsDto } from "./dto/update-risk-settings.dto";
 import { UpdateEventNotificationsDto } from "./dto/update-event-notifications.dto";
+import { BETA_LIMITS } from "../common/beta-limits.config";
 
 @Injectable()
 export class SettingsService {
@@ -256,6 +257,49 @@ export class SettingsService {
       todayUsage,
       dailyLimit: this.dailyLimitMatic,
       remaining: Math.max(0, this.dailyLimitMatic - todayUsage),
+    };
+  }
+
+  async getBetaUsage(userId: string): Promise<{
+    strategies: { used: number; limit: number };
+    monthlyVolume: { usedUsdc: number; limitUsdc: number };
+    positionSize: { maxUsdc: number };
+    backtests: { runningOrQueued: number; maxConcurrent: number };
+    marketplaceListings: { used: number; limit: number };
+  }> {
+    const now = new Date();
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+
+    const [
+      activeStrategyCount,
+      monthlyVolumeAgg,
+      activeBacktestCount,
+      activeListingCount,
+    ] = await Promise.all([
+      this.prisma.strategy.count({
+        where: { userId, status: { not: "ARCHIVED" } },
+      }),
+      this.prisma.order.aggregate({
+        where: { userId, status: "CONFIRMED", createdAt: { gte: monthStart } },
+        _sum: { size: true },
+      }),
+      this.prisma.backtestRun.count({
+        where: { userId, status: { in: ["RUNNING", "QUEUED"] } },
+      }),
+      this.prisma.marketplaceListing.count({
+        where: { sellerId: userId, status: { notIn: ["DELISTED"] } },
+      }),
+    ]);
+
+    return {
+      strategies: { used: activeStrategyCount, limit: BETA_LIMITS.maxActiveStrategies },
+      monthlyVolume: {
+        usedUsdc: Number(monthlyVolumeAgg._sum?.size ?? 0),
+        limitUsdc: BETA_LIMITS.maxMonthlyVolumeUsdc,
+      },
+      positionSize: { maxUsdc: BETA_LIMITS.maxPositionSizeUsdc },
+      backtests: { runningOrQueued: activeBacktestCount, maxConcurrent: BETA_LIMITS.maxConcurrentBacktests },
+      marketplaceListings: { used: activeListingCount, limit: BETA_LIMITS.maxMarketplaceListings },
     };
   }
 }

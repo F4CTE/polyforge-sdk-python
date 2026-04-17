@@ -33,7 +33,12 @@ function makePrismaMock() {
   return {
     backtestRun: {
       update: vi.fn().mockResolvedValue({}),
+      findUnique: vi.fn().mockResolvedValue({
+        userId: "user-1",
+        strategyId: "strat-1",
+      }),
       findUniqueOrThrow: vi.fn().mockResolvedValue(null),
+      count: vi.fn().mockResolvedValue(0), // 0 concurrent running jobs by default
     },
     strategy: {
       findUniqueOrThrow: vi.fn().mockResolvedValue(null),
