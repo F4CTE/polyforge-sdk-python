@@ -223,6 +223,9 @@ jobs:
           host: ${{ secrets.LAB_HOST }}
           username: f4cte
           key: ${{ secrets.LAB_SSH_KEY }}
+          # request_tty allocates a PTY so command_timeout/job-timeout SIGHUP kills the
+          # remote process tree instead of leaving zombie deploy processes on polyforge-lab.
+          request_tty: true
           command_timeout: 18m
           envs: >-
             HEAD_REF,COMMIT_SHA,
@@ -328,21 +331,39 @@ jobs:
           host: ${{ secrets.LAB_HOST }}
           username: f4cte
           key: ${{ secrets.LAB_SSH_KEY }}
-          # 23m < 25m job timeout so the SSH session always exits cleanly before
-          # GitHub kills the runner, avoiding zombie SSH processes on the lab host.
+          # request_tty allocates a PTY so that when command_timeout fires (or the
+          # GitHub runner is killed by timeout-minutes), the SSH channel close delivers
+          # SIGHUP to the remote bash shell → entire playwright+chromium process tree
+          # exits cleanly instead of becoming a zombie that blocks the next branch run.
+          request_tty: true
+          # 23m < 25m job timeout so the SSH command_timeout fires first, giving the
+          # remote process time to exit before GitHub cancels the runner.
           command_timeout: 23m
           script: |
             set -euo pipefail
+
+            # ── Kill any orphaned playwright/chromium from previous runs ──────────
+            # Without request_tty (fixed above) the previous SSH session's close
+            # didn't send SIGHUP, leaving zombie processes on the lab. Pre-kill
+            # here provides defense-in-depth if a survivor somehow escaped.
+            pkill -u f4cte -f 'playwright test' 2>/dev/null || true
+            pkill -u f4cte -f 'chrome-headless-shell' 2>/dev/null || true
+            sleep 1
+
             cd ~/PolyForge/tests/e2e
 
             echo "=== Install Playwright browsers ==="
-            npx playwright install --with-deps chromium 2>/dev/null || true
+            # timeout 120: prevents apt-get from hanging on dpkg lock indefinitely.
+            # --with-deps installs system libs; already present after first run but
+            # kept here for fresh-lab compatibility. || true ignores non-zero exits.
+            timeout 120 npx playwright install --with-deps chromium 2>/dev/null || true
 
             echo "=== Run E2E tests ==="
-            # --global-timeout=1200000 — 20 min hard cap on the entire test run.
-            # Per-test and per-action timeouts come from playwright.config.ts
-            # (timeout: 60s, actionTimeout: 12s in CI) — do not override here.
-            BASE_URL=http://localhost CI=true npx playwright test \
+            # Double-layer timeout:
+            #   --global-timeout=1200000 — Playwright's own 20 min hard cap.
+            #   timeout 1210 (OS-level) — fires if Playwright hangs before its
+            #   timer starts (e.g., stuck in global-setup awaiting service health).
+            BASE_URL=http://localhost CI=true timeout 1210 npx playwright test \
               --project=chromium \
               --reporter=list \
               --global-timeout=1200000
