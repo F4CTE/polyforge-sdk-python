@@ -1,17 +1,20 @@
 import {
   Injectable,
   Logger,
+  NotImplementedException,
   OnModuleInit,
   ServiceUnavailableException,
 } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { RedisService } from "@polyforge/shared-redis";
 import * as crypto from "crypto";
+import { privateKeyHexBytesToEthAddress } from "@polyforge/crypto-native";
 import {
   CredentialsService,
   DecryptedCredentials,
   zeroCredentials,
 } from "../credentials/credentials.service";
+import { NativeEip712Service } from "./native-eip712.service";
 import { SignOrderDto } from "./dto/sign-order.dto";
 
 export interface SignedOrder {
@@ -52,6 +55,7 @@ export class SigningService implements OnModuleInit {
     private readonly credentials: CredentialsService,
     private readonly config: ConfigService,
     private readonly redis: RedisService,
+    private readonly nativeEip712: NativeEip712Service,
   ) {
     this.chainId = parseInt(this.config.get<string>("CHAIN_ID") ?? "137", 10);
 
@@ -227,70 +231,31 @@ export class SigningService implements OnModuleInit {
       taker?: string;
     },
   ): Promise<Record<string, unknown>> {
-    // Dynamic import to avoid hard dependency in dev builds
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { ClobClient } = require("@polymarket/clob-client");
-
-    const {
-      apiKey: builderApiKey,
-      secret: builderSecret,
-      passphrase: builderPassphrase,
-    } = this.getBuilderCredentials();
-
-    // SECURITY: ClobClient requires string credentials. Buffer.toString() creates
-    // immutable JS strings that persist in V8 heap until GC — we cannot wipe them.
-    // Mitigation: convert once, pass immediately, null out client after use.
-    // TODO: Move EIP-712 signing into polyforge-crypto-native (Rust NAPI) so
-    // private keys never materialize as JS strings. See #548.
-    const walletAddress = creds.safeAddress ?? creds.apiKey.toString("utf8");
-    const client = new ClobClient(
-      this.clobApiUrl,
-      this.chainId,
-      undefined, // ethers provider (not needed for signing)
-      {
-        key: creds.apiKey.toString("utf8"),
-        secret: creds.apiSecret.toString("utf8"),
-        passphrase: creds.apiPassphrase.toString("utf8"),
-      },
-      creds.sigType,
-      creds.privateKey.toString("utf8"),
-      creds.safeAddress ?? undefined,
-      {
-        apiKey: builderApiKey,
-        secret: builderSecret,
-        passphrase: builderPassphrase,
-      },
-    );
+    // Derive the EOA wallet address entirely in Rust — private key never becomes a JS string.
+    // creds.privateKey holds ASCII bytes of the "0x{64hex}" string; decoding happens in Rust.
+    const eoaBytes = privateKeyHexBytesToEthAddress(creds.privateKey);
+    const eoaAddress = "0x" + eoaBytes.toString("hex");
+    const walletAddress = creds.safeAddress ?? eoaAddress;
 
     // Fetch nonce from Polymarket relayer (cached 30s in Redis)
     const nonce = await this.fetchNonce(walletAddress);
 
     // Fetch fee rate from Polymarket (cached 5min in Redis)
-    const feeRateBps = await this.fetchFeeRate(params.tokenId);
+    const feeRateBpsStr = await this.fetchFeeRate(params.tokenId);
 
-    const createOrderParams: Record<string, unknown> = {
-      tokenID: params.tokenId,
-      price: params.price,
+    // Sign via Rust NAPI secp256k1 — private key stays in Rust Zeroizing memory,
+    // is wiped as soon as signOrder() returns, and never materializes as a JS string.
+    const signed = await this.nativeEip712.signOrder(creds, this.chainId, {
+      tokenId: params.tokenId,
       side: params.side,
       size: params.size,
-      feeRateBps,
-      nonce: String(nonce),
-      expiration: String(params.expiration ?? 0),
-      tickSize: params.tickSize ?? "0.01",
-      negRisk: params.negRisk ?? false,
-    };
-
-    if (params.taker) {
-      createOrderParams.taker = params.taker;
-    }
-
-    if (params.postOnly) {
-      createOrderParams.postOnly = true;
-    }
-
-    const order = await client.createOrder(createOrderParams);
-
-    return order as Record<string, unknown>;
+      price: params.price,
+      expiration: params.expiration ?? 0,
+      nonce,
+      feeRateBps: Number(feeRateBpsStr),
+      taker: params.taker,
+    });
+    return signed as unknown as Record<string, unknown>;
   }
 
   // ─── Nonce and Fee Rate Fetching ────────────────────────────────────────────
@@ -367,28 +332,24 @@ export class SigningService implements OnModuleInit {
     userId: string,
     tokenId: string,
   ): Promise<{ txHash: string }> {
-    let txHash: string;
-
     if (this.isStubMode) {
       this.logger.warn(
         "DEV MODE: Using stub redemption — positions will NOT be redeemed on Polymarket",
       );
-      txHash = "dev-redemption-" + crypto.randomBytes(16).toString("hex");
-    } else {
-      const { client, creds } = await this.buildClient(userId);
-      try {
-        const result = await client.redeemPositions([tokenId]);
-        txHash = result?.transactionHash ?? "0x0";
-      } finally {
-        zeroCredentials(creds);
-      }
+      return {
+        txHash: "dev-redemption-" + crypto.randomBytes(16).toString("hex"),
+      };
     }
 
-    this.logger.log(
-      `Position redeemed for user=${userId} tokenId=${tokenId}`,
+    // On-chain CTF redemption requires an ethers.js provider wallet integration
+    // that is not yet implemented. Private keys are intentionally never converted
+    // to JS strings — see POLA-136 / GitHub #671.
+    this.logger.warn(
+      `redeemPosition called for user=${userId} tokenId=${tokenId} — on-chain operations not yet implemented`,
     );
-
-    return { txHash };
+    throw new NotImplementedException(
+      "On-chain position redemption is not yet available",
+    );
   }
 
   // ─── CTF Split / Merge ──────────────────────────────────────────────────
@@ -402,13 +363,13 @@ export class SigningService implements OnModuleInit {
       this.logger.warn("DEV MODE: Stub split");
       return { txHash: `dev-split-${Date.now()}` };
     }
-    const { client, creds } = await this.buildClient(userId);
-    try {
-      const result = await client.splitPosition(tokenId, parseFloat(amount));
-      return { txHash: result.transactionHash ?? result };
-    } finally {
-      zeroCredentials(creds);
-    }
+
+    this.logger.warn(
+      `splitPosition called for user=${userId} tokenId=${tokenId} amount=${amount} — on-chain operations not yet implemented`,
+    );
+    throw new NotImplementedException(
+      "On-chain position split is not yet available",
+    );
   }
 
   async mergePosition(
@@ -420,46 +381,13 @@ export class SigningService implements OnModuleInit {
       this.logger.warn("DEV MODE: Stub merge");
       return { txHash: `dev-merge-${Date.now()}` };
     }
-    const { client, creds } = await this.buildClient(userId);
-    try {
-      const result = await client.mergePositions(tokenId, parseFloat(amount));
-      return { txHash: result.transactionHash ?? result };
-    } finally {
-      zeroCredentials(creds);
-    }
-  }
 
-  // ─── Build ClobClient helper ────────────────────────────────────────────
-
-  private async buildClient(
-    userId: string,
-  ): Promise<{ client: any; creds: DecryptedCredentials }> {
-    const creds = await this.credentials.getDecryptedCredentials(userId);
-
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { ClobClient } = require("@polymarket/clob-client");
-
-    // SECURITY: ClobClient requires string credentials. Buffer.toString() creates
-    // immutable JS strings that persist in V8 heap until GC — we cannot wipe them.
-    // Callers MUST: (1) use the client for a single operation then discard it,
-    // (2) zero creds in a finally block via zeroCredentials().
-    // TODO: Move signing into polyforge-crypto-native (Rust NAPI) so private keys
-    // never materialize as JS strings. See #548.
-    const client = new ClobClient(
-      this.clobApiUrl,
-      this.chainId,
-      undefined,
-      {
-        key: creds.apiKey.toString("utf8"),
-        secret: creds.apiSecret.toString("utf8"),
-        passphrase: creds.apiPassphrase.toString("utf8"),
-      },
-      creds.sigType,
-      creds.privateKey.toString("utf8"),
-      creds.safeAddress ?? undefined,
+    this.logger.warn(
+      `mergePosition called for user=${userId} tokenId=${tokenId} amount=${amount} — on-chain operations not yet implemented`,
     );
-
-    return { client, creds };
+    throw new NotImplementedException(
+      "On-chain position merge is not yet available",
+    );
   }
 
   // ─── Builder HMAC headers ─────────────────────────────────────────────────

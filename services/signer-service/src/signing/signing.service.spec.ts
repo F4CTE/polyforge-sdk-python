@@ -1,8 +1,9 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { ConfigService } from "@nestjs/config";
 import { SigningService } from "./signing.service";
 import { CredentialsService } from "../credentials/credentials.service";
-import { NotFoundException } from "@nestjs/common";
+import { NativeEip712Service } from "./native-eip712.service";
+import { NotFoundException, NotImplementedException } from "@nestjs/common";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -34,14 +35,23 @@ function makeMockRedis() {
   };
 }
 
-const DECRYPTED_CREDS = {
-  privateKey: Buffer.from("0x" + "f".repeat(64), "utf8"),
-  apiKey: Buffer.from("ak", "utf8"),
-  apiSecret: Buffer.from("as", "utf8"),
-  apiPassphrase: Buffer.from("ap", "utf8"),
-  safeAddress: null,
-  sigType: 0,
-};
+// Well-known Hardhat account #0 — valid secp256k1 key, safe for test use only.
+const TEST_PK_HEX =
+  "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80";
+
+function makeFreshCreds(sigType = 0) {
+  return {
+    privateKey: Buffer.from(TEST_PK_HEX, "utf8"),
+    apiKey: Buffer.from("ak", "utf8"),
+    apiSecret: Buffer.from("as", "utf8"),
+    apiPassphrase: Buffer.from("ap", "utf8"),
+    safeAddress: null,
+    sigType,
+  };
+}
+
+// Shared reference only used to read sigType in stub tests (never zeroed there)
+const DECRYPTED_CREDS = makeFreshCreds();
 
 const BASE_REQ = {
   userId: "user-1",
@@ -55,20 +65,46 @@ const BASE_REQ = {
 
 // ─── Suite ────────────────────────────────────────────────────────────────────
 
+function makeMockNativeEip712(
+  override: Partial<NativeEip712Service> = {},
+): NativeEip712Service {
+  return {
+    signOrder: vi.fn().mockResolvedValue({
+      salt: "0x" + "ab".repeat(32),
+      maker: "0x" + "0".repeat(40),
+      signer: "0x" + "0".repeat(40),
+      taker: "0x" + "0".repeat(40),
+      tokenId: "token-xyz",
+      makerAmount: "10000000",
+      takerAmount: "6000000",
+      expiration: "0",
+      nonce: "0",
+      feeRateBps: "0",
+      side: 0,
+      signatureType: 0,
+      signature: "0x" + "cc".repeat(65),
+    }),
+    ...override,
+  } as any;
+}
+
 describe("SigningService", () => {
   let svc: SigningService;
   let credentials: CredentialsService;
   let redis: ReturnType<typeof makeMockRedis>;
+  let nativeEip712: NativeEip712Service;
 
   beforeEach(() => {
     credentials = {
       getDecryptedCredentials: vi.fn().mockResolvedValue(DECRYPTED_CREDS),
     } as any;
     redis = makeMockRedis();
+    nativeEip712 = makeMockNativeEip712();
     svc = new SigningService(
       credentials,
       makeConfig(),
       redis as any,
+      nativeEip712,
     );
   });
 
@@ -227,6 +263,7 @@ describe("SigningService", () => {
             credentials,
             makeConfig({ NODE_ENV: "staging", SIGNING_MODE: "stub" }),
             redis as any,
+            nativeEip712,
           ),
       ).toThrow("Stub signing mode is only allowed in development");
     });
@@ -238,6 +275,7 @@ describe("SigningService", () => {
             credentials,
             makeConfig({ NODE_ENV: "test", SIGNING_MODE: "stub" }),
             redis as any,
+            nativeEip712,
           ),
       ).toThrow("Stub signing mode is only allowed in development");
     });
@@ -249,6 +287,7 @@ describe("SigningService", () => {
             credentials,
             makeConfig({ NODE_ENV: "production", SIGNING_MODE: "stub" }),
             redis as any,
+            nativeEip712,
           ),
       ).toThrow("Stub signing mode is only allowed in development");
     });
@@ -260,6 +299,7 @@ describe("SigningService", () => {
             credentials,
             makeConfig({ NODE_ENV: "development", SIGNING_MODE: "stub" }),
             redis as any,
+            nativeEip712,
           ),
       ).not.toThrow();
     });
@@ -276,6 +316,7 @@ describe("SigningService", () => {
           CLOB_API_URL: "http://mock-polymarket:3099",
         }),
         redis as any,
+        nativeEip712,
       );
 
       expect(() => prodSvc.onModuleInit()).toThrow(
@@ -292,6 +333,7 @@ describe("SigningService", () => {
           POLY_BUILDER_API_KEY: "",
         }),
         redis as any,
+        nativeEip712,
       );
 
       expect(() => prodSvc.onModuleInit()).toThrow(
@@ -304,10 +346,116 @@ describe("SigningService", () => {
         credentials,
         makeConfig({ NODE_ENV: "development" }),
         redis as any,
+        nativeEip712,
       );
 
       expect(() => devSvc.onModuleInit()).not.toThrow();
     });
   });
 
+  // ── Regression: private key must never become a JS string (POLA-136 / #671) ──
+
+  describe("signOrder() — production mode POLA-136 regression", () => {
+    let prodSvc: SigningService;
+    let prodCredentials: CredentialsService;
+    let prodRedis: ReturnType<typeof makeMockRedis>;
+
+    beforeEach(() => {
+      // Each test gets fresh Buffers so zeroCredentials() in finally blocks
+      // doesn't corrupt subsequent tests (Buffers are mutable — zeroing one
+      // instance would affect all tests sharing the same reference).
+      prodCredentials = {
+        getDecryptedCredentials: vi
+          .fn()
+          .mockImplementation(async () => makeFreshCreds()),
+      } as any;
+      // Return cached values so fetchNonce/fetchFeeRate never hit external HTTP
+      prodRedis = {
+        get: vi.fn().mockResolvedValue("0"),
+        set: vi.fn().mockResolvedValue("OK"),
+      };
+      prodSvc = new SigningService(
+        prodCredentials,
+        makeConfig({
+          NODE_ENV: "production",
+          CLOB_API_URL: "https://clob.polymarket.com",
+          SIGNING_MODE: "production",
+        }),
+        prodRedis as any,
+        nativeEip712,
+      );
+    });
+
+    afterEach(() => {
+      vi.restoreAllMocks();
+    });
+
+    it("routes through NativeEip712Service — private key stays as Buffer", async () => {
+      await prodSvc.signOrder(BASE_REQ);
+      expect(nativeEip712.signOrder).toHaveBeenCalledOnce();
+    });
+
+    it("passes creds with privateKey as Buffer (not string) to NativeEip712Service", async () => {
+      await prodSvc.signOrder(BASE_REQ);
+      const [calledCreds] = (nativeEip712.signOrder as ReturnType<typeof vi.fn>)
+        .mock.calls[0];
+      expect(calledCreds.privateKey).toBeInstanceOf(Buffer);
+      expect(typeof calledCreds.privateKey).not.toBe("string");
+    });
+
+    it("never calls toString('utf8') on creds.privateKey", async () => {
+      // Track every Buffer.prototype.toString("utf8") call made during signOrder.
+      // The private key buffer must not appear as a "utf8" conversion.
+      const utf8Calls: unknown[][] = [];
+      const origToString = Buffer.prototype.toString;
+      Buffer.prototype.toString = function (
+        this: Buffer,
+        encoding?: BufferEncoding,
+        ...rest: unknown[]
+      ) {
+        if (encoding === "utf8")
+          utf8Calls.push([this.toString("hex"), encoding, ...rest]);
+        return origToString.apply(this, [encoding, ...rest] as Parameters<
+          typeof origToString
+        >);
+      };
+
+      try {
+        await prodSvc.signOrder(BASE_REQ);
+      } finally {
+        Buffer.prototype.toString = origToString;
+      }
+
+      // creds.privateKey contains ASCII bytes of "0x{64hex}" — if it were
+      // converted to a JS string via toString("utf8"), the hex representation
+      // of the private key string would appear in utf8Calls.
+      const pkHex = Buffer.from(TEST_PK_HEX, "utf8").toString("hex");
+      const pkLeaked = utf8Calls.some((c) => c[0] === pkHex);
+      expect(pkLeaked).toBe(false);
+    });
+
+    it("returns order with builderHeaders in production mode", async () => {
+      const result = await prodSvc.signOrder(BASE_REQ);
+      expect(result).toHaveProperty("order");
+      expect(result).toHaveProperty("builderHeaders");
+    });
+
+    it("redeemPosition throws NotImplementedException in production (no ClobClient string exposure)", async () => {
+      await expect(
+        prodSvc["redeemPosition"]("user-1", "token-1"),
+      ).rejects.toThrow(NotImplementedException);
+    });
+
+    it("splitPosition throws NotImplementedException in production (no ClobClient string exposure)", async () => {
+      await expect(
+        prodSvc["splitPosition"]("user-1", "token-1", "100"),
+      ).rejects.toThrow(NotImplementedException);
+    });
+
+    it("mergePosition throws NotImplementedException in production (no ClobClient string exposure)", async () => {
+      await expect(
+        prodSvc["mergePosition"]("user-1", "token-1", "100"),
+      ).rejects.toThrow(NotImplementedException);
+    });
+  });
 });
