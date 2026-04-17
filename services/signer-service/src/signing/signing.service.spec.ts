@@ -29,13 +29,6 @@ function makeConfig(overrides: Record<string, string> = {}): ConfigService {
   } as any;
 }
 
-function makeMockRedis() {
-  return {
-    get: vi.fn().mockResolvedValue(null),
-    set: vi.fn().mockResolvedValue("OK"),
-  };
-}
-
 // Well-known Hardhat account #0 — valid secp256k1 key, safe for test use only.
 const TEST_PK_HEX =
   "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80";
@@ -74,13 +67,13 @@ function makeMockNativeEip712(
       salt: "0x" + "ab".repeat(32),
       maker: "0x" + "0".repeat(40),
       signer: "0x" + "0".repeat(40),
-      taker: "0x" + "0".repeat(40),
       tokenId: "token-xyz",
       makerAmount: "10000000",
       takerAmount: "6000000",
       expiration: "0",
-      nonce: "0",
-      feeRateBps: "0",
+      timestamp: String(Date.now()),
+      metadata: "0x",
+      builder: "0x" + "0".repeat(40),
       side: 0,
       signatureType: 0,
       signature: "0x" + "cc".repeat(65),
@@ -113,10 +106,9 @@ function makeMockNativeCtf(
   } as any;
 }
 
-describe("SigningService", () => {
+describe("SigningService (CLOB V2)", () => {
   let svc: SigningService;
   let credentials: CredentialsService;
-  let redis: ReturnType<typeof makeMockRedis>;
   let nativeEip712: NativeEip712Service;
   let nativeCtf: NativeCtfService;
 
@@ -124,13 +116,11 @@ describe("SigningService", () => {
     credentials = {
       getDecryptedCredentials: vi.fn().mockResolvedValue(DECRYPTED_CREDS),
     } as any;
-    redis = makeMockRedis();
     nativeEip712 = makeMockNativeEip712();
     nativeCtf = makeMockNativeCtf();
     svc = new SigningService(
       credentials,
       makeConfig(),
-      redis as any,
       nativeEip712,
       nativeCtf,
     );
@@ -163,7 +153,7 @@ describe("SigningService", () => {
       await expect(svc.signOrder(BASE_REQ)).rejects.toThrow(NotFoundException);
     });
 
-    // ── order fields ──
+    // ── V2 order fields ──
 
     it("sets tokenId on the signed order", async () => {
       const { order } = await svc.signOrder(BASE_REQ);
@@ -232,9 +222,38 @@ describe("SigningService", () => {
       expect(o1.salt).not.toBe(o2.salt);
     });
 
-    it('sets nonce to "0"', async () => {
+    it("includes timestamp in stub order (ms since epoch string)", async () => {
+      const before = Date.now();
       const { order } = await svc.signOrder(BASE_REQ);
-      expect(order.nonce).toBe("0");
+      const after = Date.now();
+      const ts = Number(order.timestamp);
+      expect(ts).toBeGreaterThanOrEqual(before);
+      expect(ts).toBeLessThanOrEqual(after);
+    });
+
+    it("sets metadata to 0x (empty) in stub order", async () => {
+      const { order } = await svc.signOrder(BASE_REQ);
+      expect(order.metadata).toBe("0x");
+    });
+
+    it("sets builder to zero address in stub order", async () => {
+      const { order } = await svc.signOrder(BASE_REQ);
+      expect(order.builder).toBe("0x0000000000000000000000000000000000000000");
+    });
+
+    it("does NOT include V1 taker field in stub order", async () => {
+      const { order } = await svc.signOrder(BASE_REQ);
+      expect(order).not.toHaveProperty("taker");
+    });
+
+    it("does NOT include V1 nonce field in stub order", async () => {
+      const { order } = await svc.signOrder(BASE_REQ);
+      expect(order).not.toHaveProperty("nonce");
+    });
+
+    it("does NOT include V1 feeRateBps field in stub order", async () => {
+      const { order } = await svc.signOrder(BASE_REQ);
+      expect(order).not.toHaveProperty("feeRateBps");
     });
 
     it("sets maker and signer to the dev stub address", async () => {
@@ -290,7 +309,6 @@ describe("SigningService", () => {
           new SigningService(
             credentials,
             makeConfig({ NODE_ENV: "staging", SIGNING_MODE: "stub" }),
-            redis as any,
             nativeEip712,
             nativeCtf,
           ),
@@ -303,7 +321,6 @@ describe("SigningService", () => {
           new SigningService(
             credentials,
             makeConfig({ NODE_ENV: "test", SIGNING_MODE: "stub" }),
-            redis as any,
             nativeEip712,
             nativeCtf,
           ),
@@ -316,7 +333,6 @@ describe("SigningService", () => {
           new SigningService(
             credentials,
             makeConfig({ NODE_ENV: "production", SIGNING_MODE: "stub" }),
-            redis as any,
             nativeEip712,
             nativeCtf,
           ),
@@ -329,7 +345,6 @@ describe("SigningService", () => {
           new SigningService(
             credentials,
             makeConfig({ NODE_ENV: "development", SIGNING_MODE: "stub" }),
-            redis as any,
             nativeEip712,
             nativeCtf,
           ),
@@ -347,7 +362,6 @@ describe("SigningService", () => {
           NODE_ENV: "production",
           CLOB_API_URL: "http://mock-polymarket:3099",
         }),
-        redis as any,
         nativeEip712,
         nativeCtf,
       );
@@ -365,7 +379,6 @@ describe("SigningService", () => {
           CLOB_API_URL: "https://clob.polymarket.com",
           POLY_BUILDER_API_KEY: "",
         }),
-        redis as any,
         nativeEip712,
         nativeCtf,
       );
@@ -383,7 +396,6 @@ describe("SigningService", () => {
           CLOB_API_URL: "https://clob.polymarket.com",
           POLYGON_RPC_URL: "http://localhost:8545",
         }),
-        redis as any,
         nativeEip712,
         nativeCtf,
       );
@@ -394,7 +406,6 @@ describe("SigningService", () => {
       const devSvc = new SigningService(
         credentials,
         makeConfig({ NODE_ENV: "development" }),
-        redis as any,
         nativeEip712,
         nativeCtf,
       );
@@ -408,22 +419,13 @@ describe("SigningService", () => {
   describe("signOrder() — production mode POLA-136 regression", () => {
     let prodSvc: SigningService;
     let prodCredentials: CredentialsService;
-    let prodRedis: ReturnType<typeof makeMockRedis>;
 
     beforeEach(() => {
-      // Each test gets fresh Buffers so zeroCredentials() in finally blocks
-      // doesn't corrupt subsequent tests (Buffers are mutable — zeroing one
-      // instance would affect all tests sharing the same reference).
       prodCredentials = {
         getDecryptedCredentials: vi
           .fn()
           .mockImplementation(async () => makeFreshCreds()),
       } as any;
-      // Return cached values so fetchNonce/fetchFeeRate never hit external HTTP
-      prodRedis = {
-        get: vi.fn().mockResolvedValue("0"),
-        set: vi.fn().mockResolvedValue("OK"),
-      };
       prodSvc = new SigningService(
         prodCredentials,
         makeConfig({
@@ -432,7 +434,6 @@ describe("SigningService", () => {
           SIGNING_MODE: "production",
           POLYGON_RPC_URL: "https://polygon-rpc.com",
         }),
-        prodRedis as any,
         nativeEip712,
         nativeCtf,
       );
@@ -456,8 +457,6 @@ describe("SigningService", () => {
     });
 
     it("never calls toString('utf8') on creds.privateKey", async () => {
-      // Track every Buffer.prototype.toString("utf8") call made during signOrder.
-      // The private key buffer must not appear as a "utf8" conversion.
       const utf8Calls: unknown[][] = [];
       const origToString = Buffer.prototype.toString;
       Buffer.prototype.toString = function (
@@ -478,9 +477,6 @@ describe("SigningService", () => {
         Buffer.prototype.toString = origToString;
       }
 
-      // creds.privateKey contains ASCII bytes of "0x{64hex}" — if it were
-      // converted to a JS string via toString("utf8"), the hex representation
-      // of the private key string would appear in utf8Calls.
       const pkHex = Buffer.from(TEST_PK_HEX, "utf8").toString("hex");
       const pkLeaked = utf8Calls.some((c) => c[0] === pkHex);
       expect(pkLeaked).toBe(false);

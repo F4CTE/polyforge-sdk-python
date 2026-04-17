@@ -29,19 +29,19 @@ function makeTestCreds(
   };
 }
 
+// V2 BASE_PARAMS: no nonce/feeRateBps/taker; adds timestamp
 const BASE_PARAMS = {
   tokenId: "12345678901234567890",
   side: "BUY" as "BUY" | "SELL",
   size: 10,
   price: 0.6,
   expiration: 0,
-  nonce: 0,
-  feeRateBps: 0,
+  timestamp: 1_714_000_000_000, // fixed ms timestamp for deterministic tests
 };
 
 // ─── Suite ────────────────────────────────────────────────────────────────────
 
-describe("NativeEip712Service", () => {
+describe("NativeEip712Service (CLOB V2)", () => {
   let svc: NativeEip712Service;
 
   beforeEach(() => {
@@ -51,22 +51,31 @@ describe("NativeEip712Service", () => {
   // ── Basic output shape ────────────────────────────────────────────────────
 
   describe("signOrder() — output shape", () => {
-    it("returns an object with all required order fields", async () => {
+    it("returns an object with all required V2 order fields", async () => {
       const creds = makeTestCreds();
       const order = await svc.signOrder(creds, 80002, BASE_PARAMS);
       expect(order).toHaveProperty("salt");
       expect(order).toHaveProperty("maker");
       expect(order).toHaveProperty("signer");
-      expect(order).toHaveProperty("taker");
       expect(order).toHaveProperty("tokenId");
       expect(order).toHaveProperty("makerAmount");
       expect(order).toHaveProperty("takerAmount");
       expect(order).toHaveProperty("expiration");
-      expect(order).toHaveProperty("nonce");
-      expect(order).toHaveProperty("feeRateBps");
+      expect(order).toHaveProperty("timestamp");
+      expect(order).toHaveProperty("metadata");
+      expect(order).toHaveProperty("builder");
       expect(order).toHaveProperty("side");
       expect(order).toHaveProperty("signatureType");
       expect(order).toHaveProperty("signature");
+      zeroCredentials(creds);
+    });
+
+    it("does NOT include removed V1 fields (taker, nonce, feeRateBps)", async () => {
+      const creds = makeTestCreds();
+      const order = await svc.signOrder(creds, 80002, BASE_PARAMS);
+      expect(order).not.toHaveProperty("taker");
+      expect(order).not.toHaveProperty("nonce");
+      expect(order).not.toHaveProperty("feeRateBps");
       zeroCredentials(creds);
     });
 
@@ -95,6 +104,55 @@ describe("NativeEip712Service", () => {
     });
   });
 
+  // ── V2 new fields ─────────────────────────────────────────────────────────
+
+  describe("signOrder() — V2 new fields", () => {
+    it("encodes timestamp as a string matching params.timestamp", async () => {
+      const creds = makeTestCreds();
+      const order = await svc.signOrder(creds, 80002, {
+        ...BASE_PARAMS,
+        timestamp: 1_714_000_000_000,
+      });
+      expect(order.timestamp).toBe("1714000000000");
+      zeroCredentials(creds);
+    });
+
+    it("defaults metadata to 0x (empty bytes)", async () => {
+      const creds = makeTestCreds();
+      const order = await svc.signOrder(creds, 80002, BASE_PARAMS);
+      expect(order.metadata).toBe("0x");
+      zeroCredentials(creds);
+    });
+
+    it("encodes provided metadata as 0x-prefixed hex", async () => {
+      const creds = makeTestCreds();
+      const order = await svc.signOrder(creds, 80002, {
+        ...BASE_PARAMS,
+        metadata: Buffer.from("hello", "utf8"),
+      });
+      expect(order.metadata).toBe("0x68656c6c6f");
+      zeroCredentials(creds);
+    });
+
+    it("defaults builder to zero address", async () => {
+      const creds = makeTestCreds();
+      const order = await svc.signOrder(creds, 80002, BASE_PARAMS);
+      expect(order.builder).toBe("0x0000000000000000000000000000000000000000");
+      zeroCredentials(creds);
+    });
+
+    it("uses provided builder address", async () => {
+      const builder = "0x1234567890123456789012345678901234567890";
+      const creds = makeTestCreds();
+      const order = await svc.signOrder(creds, 80002, {
+        ...BASE_PARAMS,
+        builder,
+      });
+      expect(order.builder.toLowerCase()).toBe(builder.toLowerCase());
+      zeroCredentials(creds);
+    });
+  });
+
   // ── Address derivation (maker/signer) ────────────────────────────────────
 
   describe("signOrder() — maker and signer addresses", () => {
@@ -120,7 +178,6 @@ describe("NativeEip712Service", () => {
       const creds = makeTestCreds({ safeAddress, sigType: 2 });
       const order = await svc.signOrder(creds, 80002, BASE_PARAMS);
       expect(order.maker.toLowerCase()).toBe(safeAddress.toLowerCase());
-      // Signer is still the EOA
       expect(order.signer.toLowerCase()).toBe(
         "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266",
       );
@@ -173,26 +230,6 @@ describe("NativeEip712Service", () => {
       zeroCredentials(creds);
     });
 
-    it("passes feeRateBps through from params", async () => {
-      const creds = makeTestCreds();
-      const order = await svc.signOrder(creds, 80002, {
-        ...BASE_PARAMS,
-        feeRateBps: 200,
-      });
-      expect(order.feeRateBps).toBe("200");
-      zeroCredentials(creds);
-    });
-
-    it("sets nonce from params", async () => {
-      const creds = makeTestCreds();
-      const order = await svc.signOrder(creds, 80002, {
-        ...BASE_PARAMS,
-        nonce: 42,
-      });
-      expect(order.nonce).toBe("42");
-      zeroCredentials(creds);
-    });
-
     it("sets expiration from params", async () => {
       const creds = makeTestCreds();
       const order = await svc.signOrder(creds, 80002, {
@@ -202,22 +239,24 @@ describe("NativeEip712Service", () => {
       expect(order.expiration).toBe("1700000000");
       zeroCredentials(creds);
     });
+  });
 
-    it("sets taker to provided address when given", async () => {
-      const taker = "0x1234567890123456789012345678901234567890";
+  // ── negRisk exchange routing ──────────────────────────────────────────────
+
+  describe("signOrder() — negRisk exchange routing", () => {
+    it("signs without error for regular market (negRisk=false)", async () => {
       const creds = makeTestCreds();
-      const order = await svc.signOrder(creds, 80002, {
-        ...BASE_PARAMS,
-        taker,
-      });
-      expect(order.taker.toLowerCase()).toBe(taker.toLowerCase());
+      await expect(
+        svc.signOrder(creds, 80002, { ...BASE_PARAMS, negRisk: false }),
+      ).resolves.toBeDefined();
       zeroCredentials(creds);
     });
 
-    it("sets taker to zero address when not provided", async () => {
+    it("signs without error for neg-risk market (negRisk=true)", async () => {
       const creds = makeTestCreds();
-      const order = await svc.signOrder(creds, 80002, BASE_PARAMS);
-      expect(order.taker).toBe("0x0000000000000000000000000000000000000000");
+      await expect(
+        svc.signOrder(creds, 80002, { ...BASE_PARAMS, negRisk: true }),
+      ).resolves.toBeDefined();
       zeroCredentials(creds);
     });
   });
@@ -238,27 +277,18 @@ describe("NativeEip712Service", () => {
 
     it("private key Buffer can be zeroed after signing (Buffer, not string)", async () => {
       const creds = makeTestCreds();
-      // If privateKey were converted to a string, zeroCredentials would have nothing to zero.
-      // Verify it remains a Buffer that can be inspected before/after zeroing.
       expect(Buffer.isBuffer(creds.privateKey)).toBe(true);
 
       await svc.signOrder(creds, 80002, BASE_PARAMS);
-
-      // After signing, zero the credentials
       zeroCredentials(creds);
 
-      // All bytes should be zeroed
       expect(creds.privateKey.every((b) => b === 0)).toBe(true);
     });
 
     it("produces a valid signature even when the credentials Buffer is later zeroed", async () => {
       const creds = makeTestCreds();
       const order = await svc.signOrder(creds, 80002, BASE_PARAMS);
-
-      // Zero the credentials AFTER signing
       zeroCredentials(creds);
-
-      // The signature should still be valid hex (zeroing after use is fine)
       expect(order.signature).toMatch(/^0x[0-9a-f]{130}$/);
     });
 
@@ -276,7 +306,7 @@ describe("NativeEip712Service", () => {
     it("throws for unknown chainId", async () => {
       const creds = makeTestCreds();
       await expect(svc.signOrder(creds, 999999, BASE_PARAMS)).rejects.toThrow(
-        "No CTF Exchange contract address known for chainId=999999",
+        "No CTF Exchange V2 contract address known for chainId=999999",
       );
       zeroCredentials(creds);
     });
@@ -298,22 +328,17 @@ describe("NativeEip712Service", () => {
     });
   });
 
-  // ── Signature determinism (same inputs → same sig for given salt) ─────────
+  // ── Signature consistency ─────────────────────────────────────────────────
 
   describe("signOrder() — signature consistency", () => {
-    it("produces same signature for same inputs and same salt (secp256k1 is deterministic)", async () => {
-      // We cannot control the random salt from outside, but we can verify
-      // that two different calls produce valid-format signatures
+    it("produces valid-format signatures for two independent calls", async () => {
       const c1 = makeTestCreds();
       const c2 = makeTestCreds();
       const o1 = await svc.signOrder(c1, 80002, BASE_PARAMS);
       const o2 = await svc.signOrder(c2, 80002, BASE_PARAMS);
 
-      // Both must be valid hex signatures
       expect(o1.signature).toMatch(/^0x[0-9a-f]{130}$/);
       expect(o2.signature).toMatch(/^0x[0-9a-f]{130}$/);
-
-      // Both must have the same maker/signer (derived from same key)
       expect(o1.signer.toLowerCase()).toBe(o2.signer.toLowerCase());
       zeroCredentials(c1);
       zeroCredentials(c2);

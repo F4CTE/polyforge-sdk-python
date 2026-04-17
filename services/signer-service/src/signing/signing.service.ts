@@ -2,10 +2,8 @@ import {
   Injectable,
   Logger,
   OnModuleInit,
-  ServiceUnavailableException,
 } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
-import { RedisService } from "@polyforge/shared-redis";
 import * as crypto from "crypto";
 import { privateKeyHexBytesToEthAddress } from "@polyforge/crypto-native";
 import {
@@ -19,7 +17,7 @@ import { SignOrderDto } from "./dto/sign-order.dto";
 import { RedeemPositionDto, SplitPositionDto, MergePositionDto } from "./dto/ctf-operations.dto";
 
 export interface SignedOrder {
-  /** Signed order payload for Polymarket CLOB API */
+  /** Signed order payload for Polymarket CLOB V2 API */
   order: Record<string, unknown>;
   /** Builder attribution headers */
   builderHeaders: {
@@ -30,16 +28,16 @@ export interface SignedOrder {
   };
 }
 
-const NONCE_CACHE_TTL = 30; // 30 seconds
-const FEE_RATE_CACHE_TTL = 300; // 5 minutes
-
 /**
- * Signs Polymarket CLOB orders using the user's stored credentials.
+ * Signs Polymarket CLOB V2 orders using the user's stored credentials.
  *
  * Signing mode is controlled by the SIGNING_MODE env variable:
  *   - "stub":       uses a stub signer that produces fake signatures (dev only)
- *   - "production": uses @polymarket/clob-client for real EIP712 signing
+ *   - "production": uses NativeEip712Service for real EIP-712 V2 signing
  *   - Defaults to "stub" when NODE_ENV=development, "production" otherwise
+ *
+ * V2 changes: no more nonce or feeRateBps — timestamp (ms) is embedded in the
+ * order struct. Fees are set at match time by the exchange.
  *
  * SECURITY: SIGNING_MODE=stub is only allowed when NODE_ENV=development.
  * Decrypted credentials are held in memory only for the duration
@@ -56,7 +54,6 @@ export class SigningService implements OnModuleInit {
   constructor(
     private readonly credentials: CredentialsService,
     private readonly config: ConfigService,
-    private readonly redis: RedisService,
     private readonly nativeEip712: NativeEip712Service,
     private readonly nativeCtf: NativeCtfService,
   ) {
@@ -143,7 +140,6 @@ export class SigningService implements OnModuleInit {
       tickSize,
       negRisk,
       postOnly,
-      taker,
     } = dto;
 
     // Retrieve decrypted credentials (never logs them)
@@ -164,7 +160,6 @@ export class SigningService implements OnModuleInit {
           orderType,
           expiration,
           sigType: creds.sigType,
-          taker,
         });
       } else {
         order = await this.eip712Sign(creds, {
@@ -177,7 +172,6 @@ export class SigningService implements OnModuleInit {
           tickSize,
           negRisk,
           postOnly,
-          taker,
         });
       }
 
@@ -203,19 +197,18 @@ export class SigningService implements OnModuleInit {
     orderType: string;
     expiration?: number;
     sigType: number;
-    taker?: string;
   }): Record<string, unknown> {
     return {
       salt: crypto.randomBytes(16).toString("hex"),
       maker: "0x0000000000000000000000000000000000000001",
       signer: "0x0000000000000000000000000000000000000001",
-      taker: params.taker ?? "0x0000000000000000000000000000000000000000",
       tokenId: params.tokenId,
       makerAmount: String(Math.round(params.size * 1_000_000)),
       takerAmount: String(Math.round(params.size * params.price * 1_000_000)),
       expiration: String(params.expiration ?? 0),
-      nonce: "0",
-      feeRateBps: "0",
+      timestamp: String(Date.now()),
+      metadata: "0x",
+      builder: "0x0000000000000000000000000000000000000000",
       side: params.side === "BUY" ? 0 : 1,
       signatureType: params.sigType,
       signature: "0x" + crypto.randomBytes(65).toString("hex"),
@@ -223,7 +216,7 @@ export class SigningService implements OnModuleInit {
     };
   }
 
-  // ─── Production EIP712 signer ─────────────────────────────────────────────
+  // ─── Production EIP-712 V2 signer ─────────────────────────────────────────
 
   private async eip712Sign(
     creds: DecryptedCredentials,
@@ -237,20 +230,14 @@ export class SigningService implements OnModuleInit {
       tickSize?: string;
       negRisk?: boolean;
       postOnly?: boolean;
-      taker?: string;
     },
   ): Promise<Record<string, unknown>> {
     // Derive the EOA wallet address entirely in Rust — private key never becomes a JS string.
-    // creds.privateKey holds ASCII bytes of the "0x{64hex}" string; decoding happens in Rust.
     const eoaBytes = privateKeyHexBytesToEthAddress(creds.privateKey);
     const eoaAddress = "0x" + eoaBytes.toString("hex");
     const walletAddress = creds.safeAddress ?? eoaAddress;
 
-    // Fetch nonce from Polymarket relayer (cached 30s in Redis)
-    const nonce = await this.fetchNonce(walletAddress);
-
-    // Fetch fee rate from Polymarket (cached 5min in Redis)
-    const feeRateBpsStr = await this.fetchFeeRate(params.tokenId);
+    this.logger.debug(`Signing V2 order for wallet=${walletAddress}`);
 
     // Sign via Rust NAPI secp256k1 — private key stays in Rust Zeroizing memory,
     // is wiped as soon as signOrder() returns, and never materializes as a JS string.
@@ -260,79 +247,10 @@ export class SigningService implements OnModuleInit {
       size: params.size,
       price: params.price,
       expiration: params.expiration ?? 0,
-      nonce,
-      feeRateBps: Number(feeRateBpsStr),
-      taker: params.taker,
+      timestamp: Date.now(),
+      negRisk: params.negRisk,
     });
     return signed as unknown as Record<string, unknown>;
-  }
-
-  // ─── Nonce and Fee Rate Fetching ────────────────────────────────────────────
-
-  /**
-   * Fetches the current nonce for the wallet address from the Polymarket relayer.
-   * Cached in Redis with a 30s TTL to reduce API calls.
-   * In dev mode, returns 0.
-   */
-  private async fetchNonce(walletAddress: string): Promise<number> {
-    if (this.isStubMode) return 0;
-
-    const cacheKey = `polymarket:nonce:${walletAddress}`;
-    const cached = await this.redis.get(cacheKey);
-    if (cached !== null) return parseInt(cached, 10);
-
-    try {
-      const res = await fetch(
-        `${this.clobApiUrl}/nonce?address=${encodeURIComponent(walletAddress)}`,
-        { signal: AbortSignal.timeout(5_000) },
-      );
-      if (res.ok) {
-        const data = (await res.json()) as Record<string, unknown>;
-        const nonce = Number(data.nonce ?? data ?? 0);
-        await this.redis.set(cacheKey, String(nonce), NONCE_CACHE_TTL);
-        return nonce;
-      }
-    } catch (err) {
-      this.logger.warn(
-        `Failed to fetch nonce for ${walletAddress}: ${(err as Error).message}`,
-      );
-    }
-
-    throw new ServiceUnavailableException(
-      "Cannot fetch nonce from Polymarket relayer — refusing to sign with potentially stale nonce",
-    );
-  }
-
-  /**
-   * Fetches the fee rate for a token from Polymarket.
-   * Cached in Redis with a 5-minute TTL.
-   * In dev mode, returns "0".
-   */
-  private async fetchFeeRate(tokenId: string): Promise<string> {
-    if (this.isStubMode) return "0";
-
-    const cacheKey = `polymarket:feeRate:${tokenId}`;
-    const cached = await this.redis.get(cacheKey);
-    if (cached !== null) return cached;
-
-    try {
-      const res = await fetch(
-        `${this.clobApiUrl}/fee-rate?tokenId=${encodeURIComponent(tokenId)}`,
-        { signal: AbortSignal.timeout(5_000) },
-      );
-      if (res.ok) {
-        const data = (await res.json()) as Record<string, unknown>;
-        const feeRate = String(data.feeRateBps ?? data ?? "0");
-        await this.redis.set(cacheKey, feeRate, FEE_RATE_CACHE_TTL);
-        return feeRate;
-      }
-    } catch (err) {
-      this.logger.warn(
-        `Failed to fetch fee rate for ${tokenId}: ${(err as Error).message}`,
-      );
-    }
-
-    return "0"; // fallback
   }
 
   // ─── Redeem position ─────────────────────────────────────────────────────
