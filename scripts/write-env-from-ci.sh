@@ -60,6 +60,7 @@ cat > "$TMPFILE" << ENV_HEREDOC
 # ─────────────────────────────────────────────────────────────────────────────
 
 NODE_ENV=production
+CI=true
 LOG_LEVEL=info
 ENABLE_SWAGGER=false
 
