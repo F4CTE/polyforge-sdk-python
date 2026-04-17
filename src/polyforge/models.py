@@ -771,3 +771,18 @@ class StrategyEvent:
     strategy_id: str = ""
     data: dict[str, Any] | None = None
     timestamp: int = 0
+
+
+# ---------------------------------------------------------------------------
+# Risk Settings
+# ---------------------------------------------------------------------------
+
+@dataclass
+class RiskSettings:
+    """Circuit-breaker and drawdown configuration for the authenticated user."""
+
+    drawdown_enabled: bool = False
+    drawdown_lookback_hours: int = 24
+    drawdown_threshold_pct: float = 0.1
+    circuit_breaker_tripped: bool = False
+    circuit_breaker_tripped_at: str | None = None
