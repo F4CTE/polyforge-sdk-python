@@ -2273,3 +2273,95 @@ class TestBacktestMethods:
 
     def test_async_get_text_helper_exists(self):
         assert callable(getattr(AsyncPolyforgeClient, "_get_text", None))
+
+
+# ── Risk Settings (#124) ────────────────────────────────────────────────────
+
+class TestRiskSettings:
+    """Tests for risk settings / circuit-breaker endpoints."""
+
+    def test_sync_get_risk_settings_exists(self):
+        assert callable(getattr(PolyforgeClient, "get_risk_settings", None))
+
+    def test_sync_update_risk_settings_exists(self):
+        assert callable(getattr(PolyforgeClient, "update_risk_settings", None))
+
+    def test_sync_reset_circuit_breaker_exists(self):
+        assert callable(getattr(PolyforgeClient, "reset_circuit_breaker", None))
+
+    def test_async_get_risk_settings_exists(self):
+        assert callable(getattr(AsyncPolyforgeClient, "get_risk_settings", None))
+
+    def test_async_update_risk_settings_exists(self):
+        assert callable(getattr(AsyncPolyforgeClient, "update_risk_settings", None))
+
+    def test_async_reset_circuit_breaker_exists(self):
+        assert callable(getattr(AsyncPolyforgeClient, "reset_circuit_breaker", None))
+
+    def test_get_risk_settings_uses_correct_path(self):
+        import inspect
+        source = inspect.getsource(PolyforgeClient.get_risk_settings)
+        assert "/api/v1/settings/risk" in source
+
+    def test_update_risk_settings_uses_correct_path(self):
+        import inspect
+        source = inspect.getsource(PolyforgeClient.update_risk_settings)
+        assert "/api/v1/settings/risk" in source
+
+    def test_reset_circuit_breaker_uses_correct_path(self):
+        import inspect
+        source = inspect.getsource(PolyforgeClient.reset_circuit_breaker)
+        assert "/api/v1/settings/risk/reset" in source
+
+    def test_get_risk_settings_returns_risk_settings(self):
+        import inspect
+        from polyforge.models import RiskSettings
+        sig = inspect.signature(PolyforgeClient.get_risk_settings)
+        assert sig.return_annotation in (RiskSettings, "RiskSettings")
+
+    def test_update_risk_settings_returns_risk_settings(self):
+        import inspect
+        from polyforge.models import RiskSettings
+        sig = inspect.signature(PolyforgeClient.update_risk_settings)
+        assert sig.return_annotation in (RiskSettings, "RiskSettings")
+
+    def test_reset_circuit_breaker_returns_risk_settings(self):
+        import inspect
+        from polyforge.models import RiskSettings
+        sig = inspect.signature(PolyforgeClient.reset_circuit_breaker)
+        assert sig.return_annotation in (RiskSettings, "RiskSettings")
+
+    def test_risk_settings_model_fields(self):
+        from polyforge.models import RiskSettings
+        rs = RiskSettings()
+        assert rs.drawdown_enabled is False
+        assert rs.drawdown_lookback_hours == 24
+        assert rs.drawdown_threshold_pct == 0.1
+        assert rs.circuit_breaker_tripped is False
+        assert rs.circuit_breaker_tripped_at is None
+
+    def test_risk_settings_model_with_values(self):
+        from polyforge.models import RiskSettings
+        rs = RiskSettings(
+            drawdown_enabled=True,
+            drawdown_lookback_hours=8,
+            drawdown_threshold_pct=0.15,
+            circuit_breaker_tripped=True,
+            circuit_breaker_tripped_at="2026-04-17T10:00:00Z",
+        )
+        assert rs.drawdown_enabled is True
+        assert rs.drawdown_lookback_hours == 8
+        assert rs.drawdown_threshold_pct == 0.15
+        assert rs.circuit_breaker_tripped is True
+        assert rs.circuit_breaker_tripped_at == "2026-04-17T10:00:00Z"
+
+    def test_update_risk_settings_builds_correct_body(self):
+        import inspect
+        source = inspect.getsource(PolyforgeClient.update_risk_settings)
+        assert "drawdownEnabled" in source
+        assert "drawdownLookbackHours" in source
+        assert "drawdownThresholdPct" in source
+
+    def test_risk_settings_exported_from_package(self):
+        from polyforge import RiskSettings
+        assert RiskSettings is not None

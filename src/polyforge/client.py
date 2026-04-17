@@ -52,6 +52,7 @@ from polyforge.models import (
     PortfolioReview,
     Position,
     PriceHistoryEntry,
+    RiskSettings,
     SmartOrder,
     SmartOrderChildOrder,
     Strategy,
@@ -802,6 +803,54 @@ class PolyforgeClient:
 
     def get_score(self) -> TraderScore:
         return _parse(TraderScore, self._get("/api/v1/scores/me"))
+
+    # -- Risk Settings --
+
+    def get_risk_settings(self) -> RiskSettings:
+        """Fetch the current risk / circuit-breaker settings."""
+        data = self._get("/api/v1/settings/risk")
+        return RiskSettings(
+            drawdown_enabled=data.get("drawdownEnabled", False),
+            drawdown_lookback_hours=data.get("drawdownLookbackHours", 24),
+            drawdown_threshold_pct=float(data.get("drawdownThresholdPct", 0.1)),
+            circuit_breaker_tripped=data.get("circuitBreakerTripped", False),
+            circuit_breaker_tripped_at=data.get("circuitBreakerTrippedAt"),
+        )
+
+    def update_risk_settings(
+        self,
+        *,
+        drawdown_enabled: bool | None = None,
+        drawdown_lookback_hours: int | None = None,
+        drawdown_threshold_pct: float | None = None,
+    ) -> RiskSettings:
+        """Update risk settings. Only supplied fields are changed."""
+        body: dict[str, Any] = {}
+        if drawdown_enabled is not None:
+            body["drawdownEnabled"] = drawdown_enabled
+        if drawdown_lookback_hours is not None:
+            body["drawdownLookbackHours"] = drawdown_lookback_hours
+        if drawdown_threshold_pct is not None:
+            body["drawdownThresholdPct"] = drawdown_threshold_pct
+        data = self._patch("/api/v1/settings/risk", json=body)
+        return RiskSettings(
+            drawdown_enabled=data.get("drawdownEnabled", False),
+            drawdown_lookback_hours=data.get("drawdownLookbackHours", 24),
+            drawdown_threshold_pct=float(data.get("drawdownThresholdPct", 0.1)),
+            circuit_breaker_tripped=data.get("circuitBreakerTripped", False),
+            circuit_breaker_tripped_at=data.get("circuitBreakerTrippedAt"),
+        )
+
+    def reset_circuit_breaker(self) -> RiskSettings:
+        """Reset the circuit breaker after it has been tripped."""
+        data = self._post("/api/v1/settings/risk/reset")
+        return RiskSettings(
+            drawdown_enabled=data.get("drawdownEnabled", False),
+            drawdown_lookback_hours=data.get("drawdownLookbackHours", 24),
+            drawdown_threshold_pct=float(data.get("drawdownThresholdPct", 0.1)),
+            circuit_breaker_tripped=data.get("circuitBreakerTripped", False),
+            circuit_breaker_tripped_at=data.get("circuitBreakerTrippedAt"),
+        )
 
     # -- CSV Exports --
 
@@ -1852,6 +1901,54 @@ class AsyncPolyforgeClient:
 
     async def get_score(self) -> TraderScore:
         return _parse(TraderScore, await self._get("/api/v1/scores/me"))
+
+    # -- Risk Settings --
+
+    async def get_risk_settings(self) -> RiskSettings:
+        """Fetch the current risk / circuit-breaker settings."""
+        data = await self._get("/api/v1/settings/risk")
+        return RiskSettings(
+            drawdown_enabled=data.get("drawdownEnabled", False),
+            drawdown_lookback_hours=data.get("drawdownLookbackHours", 24),
+            drawdown_threshold_pct=float(data.get("drawdownThresholdPct", 0.1)),
+            circuit_breaker_tripped=data.get("circuitBreakerTripped", False),
+            circuit_breaker_tripped_at=data.get("circuitBreakerTrippedAt"),
+        )
+
+    async def update_risk_settings(
+        self,
+        *,
+        drawdown_enabled: bool | None = None,
+        drawdown_lookback_hours: int | None = None,
+        drawdown_threshold_pct: float | None = None,
+    ) -> RiskSettings:
+        """Update risk settings. Only supplied fields are changed."""
+        body: dict[str, Any] = {}
+        if drawdown_enabled is not None:
+            body["drawdownEnabled"] = drawdown_enabled
+        if drawdown_lookback_hours is not None:
+            body["drawdownLookbackHours"] = drawdown_lookback_hours
+        if drawdown_threshold_pct is not None:
+            body["drawdownThresholdPct"] = drawdown_threshold_pct
+        data = await self._patch("/api/v1/settings/risk", json=body)
+        return RiskSettings(
+            drawdown_enabled=data.get("drawdownEnabled", False),
+            drawdown_lookback_hours=data.get("drawdownLookbackHours", 24),
+            drawdown_threshold_pct=float(data.get("drawdownThresholdPct", 0.1)),
+            circuit_breaker_tripped=data.get("circuitBreakerTripped", False),
+            circuit_breaker_tripped_at=data.get("circuitBreakerTrippedAt"),
+        )
+
+    async def reset_circuit_breaker(self) -> RiskSettings:
+        """Reset the circuit breaker after it has been tripped."""
+        data = await self._post("/api/v1/settings/risk/reset")
+        return RiskSettings(
+            drawdown_enabled=data.get("drawdownEnabled", False),
+            drawdown_lookback_hours=data.get("drawdownLookbackHours", 24),
+            drawdown_threshold_pct=float(data.get("drawdownThresholdPct", 0.1)),
+            circuit_breaker_tripped=data.get("circuitBreakerTripped", False),
+            circuit_breaker_tripped_at=data.get("circuitBreakerTrippedAt"),
+        )
 
     # -- CSV Exports --
 
