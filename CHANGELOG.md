@@ -5,6 +5,13 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [Unreleased] — 2026-04-17
+
+### Security
+- **CVE-2026-6414: @fastify/static path-separator bypass fixed** — upgraded `@fastify/static` from `^8.1.0` to `^9.0.0` (resolved 9.1.1) in `api-service`; 8.x decoded `%2F` before filesystem resolution allowing route guards on `/admin/*` to be bypassed via `/admin%2Fsecret` requests (closes #668)
+
+---
+
 ## [Unreleased] — 2026-04-16
 
 ### ⚠ Breaking Changes
