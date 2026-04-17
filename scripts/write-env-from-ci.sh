@@ -120,8 +120,7 @@ AWS_SES_REGION=us-east-1
 AWS_SES_FROM_EMAIL=noreply@polyforge.app
 
 # ─────────────────────────────────────────────────────────────────────────────
-# POLYMARKET APIs — real endpoints (no mock for order execution in dev)
-# mock-polymarket stays in docker-compose.infra.yml for E2E tests only
+# POLYMARKET APIs — real endpoints (mock-polymarket is profiles: [mock], opt-in only)
 # ─────────────────────────────────────────────────────────────────────────────
 
 GAMMA_API_URL=https://gamma-api.polymarket.com
@@ -213,7 +212,6 @@ BACKTEST_SERVICE_PORT=3009
 NOTIFICATION_SERVICE_PORT=3010
 BOT_SERVICE_PORT=3011
 SIGNER_SERVICE_PORT=3012
-MOCK_POLYMARKET_PORT=3096
 ENV_HEREDOC
 
 chmod 600 "$TMPFILE"

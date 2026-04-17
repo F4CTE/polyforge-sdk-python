@@ -11,6 +11,10 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **Bump `rand` crate 0.8.5 → 0.9.4 (POLA-152)** — resolves Dependabot alerts #1 and #2 (LOW severity); upgraded both `polyforge-crypto` (WASM) and `polyforge-crypto-native` (NAPI). Migrated `RngCore::fill_bytes` → `TryRngCore::try_fill_bytes` per rand 0.9 semantics; WASM build activates `getrandom 0.2 js` and `getrandom 0.3 wasm_js` features to cover both the aes-gcm and rand_core 0.9 transitive dependency chains
 - **POLA-148: On-chain CTF redeem/split/merge via Rust NAPI secp256k1 (POLA-136 follow-up)** — `SigningService.redeemPosition()`, `splitPosition()`, and `mergePosition()` now send real EIP-155 Ethereum transactions in production instead of throwing `NotImplementedException`. Private keys remain in Rust `Zeroizing` memory throughout — the same pattern as POLA-136. EIP-155 transaction hash computed via Rust `keccak256`, signature via Rust `signSecp256K1HexKey`; TypeScript only handles public data (calldata, RLP-encoded unsigned fields). New `/internal/redeem-position`, `/internal/split-position`, `/internal/merge-position` controller endpoints added. Regression test suite confirms zero `Buffer.prototype.toString('utf8')` calls on key material (closes POLA-148).
 
+### Changed
+- **mock-polymarket moved to opt-in profile (POLA-150)** — `mock-polymarket` service now requires `docker compose --profile mock up -d` to start; it no longer auto-starts in CI or default dev stack. `order-service` and `market-data-service` `depends_on` entries removed accordingly.
+- **api-service: remove CI bypass in CLOB_API_URL validation (POLA-150)** — `validateEnv()` now enforces real CLOB_API_URL unconditionally in `NODE_ENV=production`; the `!process.env.CI` guard is removed since dev CI already uses `https://clob.polymarket.com`.
+
 ### Fixed
 - **api-service crash-loop in dev CI (POLA-145 / POLA-137 regression)** — `validateEnv()` now skips the CLOB_API_URL mock-URL check when `CI=true`; GitHub Actions sets this automatically, allowing dev CI to use `mock-polymarket` under `NODE_ENV=production` without aborting startup
 

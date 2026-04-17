@@ -400,7 +400,6 @@ describe("SettingsService", () => {
 
       expect(result.remaining).toBe(0);
     });
-
   });
 
   // ── getEventNotifications / updateEventNotifications ────────────────────────
@@ -415,7 +414,9 @@ describe("SettingsService", () => {
     });
 
     it("returns stored eventPrefs and emailDigest", async () => {
-      const stored = [{ event: "ORDER_FILLED", inApp: true, email: true, push: false }];
+      const stored = [
+        { event: "ORDER_FILLED", inApp: true, email: true, push: false },
+      ];
       db.notificationPreference.findUnique.mockResolvedValue({
         eventPrefs: stored,
         emailDigest: "WEEKLY",
@@ -430,7 +431,9 @@ describe("SettingsService", () => {
 
   describe("updateEventNotifications", () => {
     it("upserts eventPrefs and emailDigest, returns them", async () => {
-      const prefs = [{ event: "ORDER_FILLED", inApp: true, email: false, push: false }];
+      const prefs = [
+        { event: "ORDER_FILLED", inApp: true, email: false, push: false },
+      ];
       db.notificationPreference.upsert.mockResolvedValue({
         eventPrefs: prefs,
         emailDigest: "INSTANT",
@@ -451,7 +454,9 @@ describe("SettingsService", () => {
         emailDigest: "DAILY",
       } as any);
 
-      await service.updateEventNotifications("user-uuid-1", { preferences: [] });
+      await service.updateEventNotifications("user-uuid-1", {
+        preferences: [],
+      });
 
       const call = db.notificationPreference.upsert.mock.calls[0][0];
       expect(call.update).not.toHaveProperty("emailDigest");

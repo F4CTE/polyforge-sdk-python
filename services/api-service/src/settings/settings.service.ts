@@ -292,14 +292,23 @@ export class SettingsService {
     ]);
 
     return {
-      strategies: { used: activeStrategyCount, limit: BETA_LIMITS.maxActiveStrategies },
+      strategies: {
+        used: activeStrategyCount,
+        limit: BETA_LIMITS.maxActiveStrategies,
+      },
       monthlyVolume: {
         usedUsdc: Number(monthlyVolumeAgg._sum?.size ?? 0),
         limitUsdc: BETA_LIMITS.maxMonthlyVolumeUsdc,
       },
       positionSize: { maxUsdc: BETA_LIMITS.maxPositionSizeUsdc },
-      backtests: { runningOrQueued: activeBacktestCount, maxConcurrent: BETA_LIMITS.maxConcurrentBacktests },
-      marketplaceListings: { used: activeListingCount, limit: BETA_LIMITS.maxMarketplaceListings },
+      backtests: {
+        runningOrQueued: activeBacktestCount,
+        maxConcurrent: BETA_LIMITS.maxConcurrentBacktests,
+      },
+      marketplaceListings: {
+        used: activeListingCount,
+        limit: BETA_LIMITS.maxMarketplaceListings,
+      },
     };
   }
 }

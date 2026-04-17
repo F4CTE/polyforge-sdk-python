@@ -165,8 +165,11 @@ services:
     networks: [internal]
 
   # ─── MOCK POLYMARKET ─────────────────────────────────────────────────────
+  # Opt-in only: docker compose --profile mock up -d
+  # CI and production use real Polymarket endpoints (CLOB_API_URL in .env).
 
   mock-polymarket:
+    profiles: [mock]
     build:
       context: .
       dockerfile: services/mock-polymarket/Dockerfile
@@ -255,7 +258,6 @@ services:
       postgres: { condition: service_healthy }
       redis: { condition: service_healthy }
       signer-service: { condition: service_started }
-      mock-polymarket: { condition: service_started }
     restart: unless-stopped
 
   # ─── API SERVICE ─────────────────────────────────────────────────────────
@@ -573,5 +575,4 @@ services:
     depends_on:
       postgres: { condition: service_healthy }
       redis: { condition: service_healthy }
-      mock-polymarket: { condition: service_started }
     restart: unless-stopped

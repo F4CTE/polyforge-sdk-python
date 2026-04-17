@@ -89,7 +89,7 @@ All encryption keys are **required** — services will fail to start if unset. G
 | Variable | Dev default | Description |
 |---|---|---|
 | `GAMMA_API_URL` | `https://gamma-api.polymarket.com` | Polymarket Gamma API (market metadata). Real data in dev (hybrid mode). |
-| `CLOB_API_URL` | `http://mock-polymarket:3099` | Polymarket CLOB REST API (order submission). Mock in dev (no real money). |
+| `CLOB_API_URL` | `https://clob.polymarket.com` | Polymarket CLOB REST API (order submission). Real endpoint in CI and production. Local dev can override to `http://mock-polymarket:3099` with `--profile mock`. |
 | `CLOB_WS_URL` | `wss://ws-subscriptions-clob.polymarket.com/ws/market` | Polymarket CLOB WebSocket (live prices). Real data in dev. |
 | `DATA_API_URL` | `https://data-api.polymarket.com` | Polymarket Data API (historical prices). Real data in dev. |
 | `SCENARIO` | `normal` | Mock behaviour: `normal` \| `volatile` \| `api_down` \| `rate_limited` \| `slow` |
@@ -154,7 +154,6 @@ Internal Docker network ports. No need to change these in dev or production.
 | `NOTIFICATION_SERVICE_PORT` | `3010` | notification-service |
 | `BOT_SERVICE_PORT` | `3011` | bot-service |
 | `SIGNER_SERVICE_PORT` | `3012` | signer-service |
-| `MOCK_POLYMARKET_PORT` | `3096` | mock-polymarket (dev only) |
 
 ---
 
