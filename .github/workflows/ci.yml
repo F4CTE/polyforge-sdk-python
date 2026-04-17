@@ -327,8 +327,9 @@ jobs:
     steps:
       - name: Run E2E tests
         # 22m < 25m job timeout — runner kills this step's process group with
-        # SIGTERM before the job-level cancel fires, so playwright+chromium exit
-        # cleanly without leaving zombies that block the next branch run.
+        # SIGTERM before the job-level cancel fires. --kill-after=10s ensures
+        # chromium (which ignores SIGTERM) receives SIGKILL 10s later so it
+        # cannot leave zombies that block the next branch run.
         timeout-minutes: 22
         run: |
           set -euo pipefail
@@ -339,9 +340,9 @@ jobs:
 
           cd ~/PolyForge/tests/e2e
 
-          timeout 120 npx playwright install --with-deps chromium 2>/dev/null || true
+          timeout --kill-after=10s 120 npx playwright install --with-deps chromium 2>/dev/null || true
 
-          BASE_URL=http://localhost CI=true timeout 1210 npx playwright test \
+          BASE_URL=http://localhost CI=true timeout --kill-after=10s 1210 npx playwright test \
             --project=chromium \
             --reporter=list \
             --global-timeout=1200000
