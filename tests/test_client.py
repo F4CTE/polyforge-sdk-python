@@ -29,6 +29,7 @@ from polyforge.models import (
     ConditionalOrder,
     CopyConfig,
     Market,
+    Token,
     MarketplaceListing,
     MarketplaceSeller,
     MarketplaceStrategy,
@@ -428,6 +429,86 @@ class TestModelParsing:
         assert strategy.like_count == 0
         assert strategy.tags == []
         assert strategy.version == 0
+
+
+class TestTokenModel:
+    """Tests for the Token model — prediction market outcome tokens (#142)."""
+
+    def test_token_has_platform_fields(self):
+        """Token must have id, outcome, price — not ERC-20 symbol/name/address."""
+        import dataclasses
+        field_names = {f.name for f in dataclasses.fields(Token)}
+        assert "id" in field_names
+        assert "outcome" in field_names
+        assert "price" in field_names
+
+    def test_token_has_no_erc20_fields(self):
+        """Token must NOT expose ERC-20 fields that don't exist on the platform."""
+        import dataclasses
+        field_names = {f.name for f in dataclasses.fields(Token)}
+        assert "symbol" not in field_names
+        assert "name" not in field_names
+        assert "address" not in field_names
+        assert "decimals" not in field_names
+        assert "logo_url" not in field_names
+
+    def test_token_defaults(self):
+        token = Token()
+        assert token.id == ""
+        assert token.outcome is None
+        assert token.price is None
+
+    def test_token_with_values(self):
+        token = Token(id="abc123", outcome="YES", price=0.65)
+        assert token.id == "abc123"
+        assert token.outcome == "YES"
+        assert token.price == 0.65
+
+    def test_token_parses_from_api_response(self):
+        """_parse must correctly construct Token from platform JSON."""
+        raw = {"id": "tok-yes", "outcome": "YES", "price": 0.72}
+        token = _parse(Token, raw)
+        assert token.id == "tok-yes"
+        assert token.outcome == "YES"
+        assert token.price == 0.72
+
+    def test_market_has_tokens_array(self):
+        """Market.tokens replaces the old base_token/quote_token trading-pair fields."""
+        import dataclasses
+        field_names = {f.name for f in dataclasses.fields(Market)}
+        assert "tokens" in field_names
+        assert "base_token" not in field_names
+        assert "quote_token" not in field_names
+
+    def test_market_tokens_defaults_to_empty_list(self):
+        market = Market()
+        assert market.tokens == []
+
+    def test_market_parses_tokens_array_from_api_response(self):
+        """_parse must recursively build Token objects from Market.tokens array."""
+        raw = {
+            "id": "mkt-001",
+            "title": "Will ETH flip BTC by 2025?",
+            "tokens": [
+                {"id": "tok-yes", "outcome": "YES", "price": 0.35},
+                {"id": "tok-no", "outcome": "NO", "price": 0.65},
+            ],
+        }
+        market = _parse(Market, raw)
+        assert len(market.tokens) == 2
+        yes_tok = market.tokens[0]
+        no_tok = market.tokens[1]
+        assert yes_tok.id == "tok-yes"
+        assert yes_tok.outcome == "YES"
+        assert yes_tok.price == 0.35
+        assert no_tok.id == "tok-no"
+        assert no_tok.outcome == "NO"
+        assert no_tok.price == 0.65
+
+    def test_market_parses_empty_tokens_array(self):
+        raw = {"id": "mkt-002", "title": "Test", "tokens": []}
+        market = _parse(Market, raw)
+        assert market.tokens == []
 
 
 class TestReprSecurity:
@@ -2630,6 +2711,7 @@ class TestMarketplaceSellerCrud:
         sig = inspect.signature(PolyforgeClient.create_marketplace_listing)
         params = set(sig.parameters.keys())
         assert "strategy_id" in params
+        assert "title" in params
         assert "price" in params
         assert "description" in params
 
@@ -2644,10 +2726,30 @@ class TestMarketplaceSellerCrud:
         assert "/api/v1/marketplace" in source
         assert "_post" in source
 
+    def test_sync_create_marketplace_listing_sends_priceUsdc(self):
+        import inspect
+        source = inspect.getsource(PolyforgeClient.create_marketplace_listing)
+        assert '"priceUsdc"' in source, "must send priceUsdc, not price"
+
+    def test_sync_create_marketplace_listing_sends_title(self):
+        import inspect
+        source = inspect.getsource(PolyforgeClient.create_marketplace_listing)
+        assert '"title"' in source, "must include title in request body"
+
     def test_async_create_marketplace_listing_path(self):
         import inspect
         source = inspect.getsource(AsyncPolyforgeClient.create_marketplace_listing)
         assert "/api/v1/marketplace" in source
+
+    def test_async_create_marketplace_listing_sends_priceUsdc(self):
+        import inspect
+        source = inspect.getsource(AsyncPolyforgeClient.create_marketplace_listing)
+        assert '"priceUsdc"' in source, "must send priceUsdc, not price"
+
+    def test_async_create_marketplace_listing_sends_title(self):
+        import inspect
+        source = inspect.getsource(AsyncPolyforgeClient.create_marketplace_listing)
+        assert '"title"' in source, "must include title in request body"
 
     # -- update_marketplace_listing --
 

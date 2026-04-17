@@ -1291,6 +1291,7 @@ class PolyforgeClient:
     def create_marketplace_listing(
         self,
         strategy_id: str,
+        title: str,
         price: float,
         *,
         description: str | None = None,
@@ -1299,6 +1300,7 @@ class PolyforgeClient:
 
         Args:
             strategy_id: The ID of the strategy to list.
+            title: Listing title (required by the API).
             price: Listing price in USDC (must be positive).
             description: Optional description for the listing.
 
@@ -1306,7 +1308,7 @@ class PolyforgeClient:
             The created :class:`MarketplaceListing`.
         """
         _validate_financial_param("price", price)
-        body: dict[str, Any] = {"strategyId": strategy_id, "price": price}
+        body: dict[str, Any] = {"strategyId": strategy_id, "title": title, "priceUsdc": price}
         if description is not None:
             body["description"] = description
         return _parse(MarketplaceListing, self._post("/api/v1/marketplace", json=body))
@@ -2867,13 +2869,14 @@ class AsyncPolyforgeClient:
     async def create_marketplace_listing(
         self,
         strategy_id: str,
+        title: str,
         price: float,
         *,
         description: str | None = None,
     ) -> MarketplaceListing:
         """Create a new marketplace listing for one of your strategies."""
         _validate_financial_param("price", price)
-        body: dict[str, Any] = {"strategyId": strategy_id, "price": price}
+        body: dict[str, Any] = {"strategyId": strategy_id, "title": title, "priceUsdc": price}
         if description is not None:
             body["description"] = description
         return _parse(MarketplaceListing, await self._post("/api/v1/marketplace", json=body))
