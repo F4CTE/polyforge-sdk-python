@@ -7,6 +7,9 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased] — 2026-04-17
 
+### Fixed
+- **api-service crash-loop in dev CI (POLA-145 / POLA-137 regression)** — `validateEnv()` now skips the CLOB_API_URL mock-URL check when `CI=true`; GitHub Actions sets this automatically, allowing dev CI to use `mock-polymarket` under `NODE_ENV=production` without aborting startup
+
 ### Security
 - **CVE-2026-6414: @fastify/static path-separator bypass fixed** — upgraded `@fastify/static` from `^8.1.0` to `^9.0.0` (resolved 9.1.1) in `api-service`; 8.x decoded `%2F` before filesystem resolution allowing route guards on `/admin/*` to be bypassed via `/admin%2Fsecret` requests (closes #668)
 - **Fastify 5.8.5 upgrade (GHSA-247c-9743-5963)** — upgraded fastify from 5.8.4 to 5.8.5 across all 13 NestJS services to fix the Content-Type leading-space schema validation bypass; added regression test in `admin-api-service` (closes #667)

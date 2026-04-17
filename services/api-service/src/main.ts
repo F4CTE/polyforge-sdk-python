@@ -50,8 +50,8 @@ function validateEnv() {
     }
   }
 
-  if (process.env.NODE_ENV === "production") {
-    // Reject mock URLs in production
+  if (process.env.NODE_ENV === "production" && !process.env.CI) {
+    // Reject mock URLs in production (CI=true allows mock URLs in CI pipelines)
     const clobUrl = process.env.CLOB_API_URL;
     if (!clobUrl || clobUrl.includes("mock")) {
       throw new Error(
