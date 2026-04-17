@@ -315,7 +315,7 @@ jobs:
     name: E2E
     runs-on: [self-hosted, linux]
     needs: [deploy-dev]
-    timeout-minutes: 60
+    timeout-minutes: 25
     # Same serialization group as deploy — E2E runs against Docker services
     # that only serve one branch at a time.
     concurrency:
@@ -328,7 +328,9 @@ jobs:
           host: ${{ secrets.LAB_HOST }}
           username: f4cte
           key: ${{ secrets.LAB_SSH_KEY }}
-          command_timeout: 55m
+          # 23m < 25m job timeout so the SSH session always exits cleanly before
+          # GitHub kills the runner, avoiding zombie SSH processes on the lab host.
+          command_timeout: 23m
           script: |
             set -euo pipefail
             cd ~/PolyForge/tests/e2e
@@ -337,7 +339,13 @@ jobs:
             npx playwright install --with-deps chromium 2>/dev/null || true
 
             echo "=== Run E2E tests ==="
-            BASE_URL=http://localhost CI=true npx playwright test --project=chromium --reporter=list
+            # --global-timeout=1200000 — 20 min hard cap on the entire test run.
+            # Per-test and per-action timeouts come from playwright.config.ts
+            # (timeout: 60s, actionTimeout: 12s in CI) — do not override here.
+            BASE_URL=http://localhost CI=true npx playwright test \
+              --project=chromium \
+              --reporter=list \
+              --global-timeout=1200000
 
   # ── 5. Deploy to AWS (Production) ──────────────────────────────────────
   deploy:
