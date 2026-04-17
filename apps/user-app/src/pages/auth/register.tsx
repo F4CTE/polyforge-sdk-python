@@ -128,14 +128,14 @@ export function Component() {
           <h1 className="text-2xl font-semibold mt-4 bg-gradient-to-r from-accent-text to-accent-text bg-clip-text text-transparent">
             Create your account
           </h1>
-          <p className="text-tertiary text-sm mt-1">Start trading on autopilot</p>
+          <p className="text-tertiary text-body-sm mt-1">Start trading on autopilot</p>
         </div>
 
         {/* Card */}
         <div className="bg-elevated border border-default rounded-xl p-8 shadow-lg">
 
           {error && (
-            <div role="alert" className="flex items-center gap-2 bg-loss/10 border border-loss/20 text-loss rounded-pf px-4 py-3 mb-4 text-sm">
+            <div role="alert" className="flex items-center gap-2 bg-loss/10 border border-loss/20 text-loss rounded-pf px-4 py-3 mb-4 text-body-md">
               <AlertCircle className="size-4 shrink-0" />
               <span>{error}</span>
             </div>
@@ -144,7 +144,7 @@ export function Component() {
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Email */}
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-primary mb-2">Email</label>
+              <label htmlFor="email" className="block text-body-md font-medium text-primary mb-2">Email</label>
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-tertiary" />
                 <Input
@@ -161,12 +161,12 @@ export function Component() {
                   className={inputClass}
                 />
               </div>
-              {fieldError('email') && <p id="register-email-error" role="alert" className="mt-1 text-xs text-loss">{fieldError('email')}</p>}
+              {fieldError('email') && <p id="register-email-error" role="alert" className="mt-1 text-label text-loss">{fieldError('email')}</p>}
             </div>
 
             {/* Username */}
             <div>
-              <label htmlFor="username" className="block text-sm font-medium text-primary mb-2">Username</label>
+              <label htmlFor="username" className="block text-body-md font-medium text-primary mb-2">Username</label>
               <div className="relative">
                 <User className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-tertiary" />
                 <Input
@@ -182,12 +182,12 @@ export function Component() {
                   className={inputClass}
                 />
               </div>
-              {fieldError('username') && <p id="register-username-error" role="alert" className="mt-1 text-xs text-loss">{fieldError('username')}</p>}
+              {fieldError('username') && <p id="register-username-error" role="alert" className="mt-1 text-label text-loss">{fieldError('username')}</p>}
             </div>
 
             {/* Password */}
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-primary mb-2">Password</label>
+              <label htmlFor="password" className="block text-body-md font-medium text-primary mb-2">Password</label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-tertiary" />
                 <Input
@@ -206,9 +206,9 @@ export function Component() {
                   {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
                 </Button>
               </div>
-              {fieldError('password') && <p id="register-password-error" role="alert" className="mt-1 text-xs text-loss">{fieldError('password')}</p>}
+              {fieldError('password') && <p id="register-password-error" role="alert" className="mt-1 text-label text-loss">{fieldError('password')}</p>}
               {touched.password && password && (
-                <ul id="register-password-requirements" className="mt-2 text-xs space-y-1 list-disc list-inside" aria-label="Password requirements">
+                <ul id="register-password-requirements" className="mt-2 text-label space-y-1 list-disc list-inside" aria-label="Password requirements">
                   <li className={password.length >= 8 ? 'text-gain' : 'text-tertiary'}>Minimum 8 characters</li>
                   <li className={/[A-Z]/.test(password) ? 'text-gain' : 'text-tertiary'}>One uppercase letter</li>
                   <li className={/[a-z]/.test(password) ? 'text-gain' : 'text-tertiary'}>One lowercase letter</li>
@@ -219,7 +219,7 @@ export function Component() {
 
             {/* Confirm Password */}
             <div>
-              <label htmlFor="confirmPassword" className="block text-sm font-medium text-primary mb-2">Confirm password</label>
+              <label htmlFor="confirmPassword" className="block text-body-md font-medium text-primary mb-2">Confirm password</label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-tertiary" />
                 <Input
@@ -238,13 +238,13 @@ export function Component() {
                   {showConfirmPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
                 </Button>
               </div>
-              {fieldError('confirmPassword') && <p id="register-confirm-password-error" role="alert" className="mt-1 text-xs text-loss">{fieldError('confirmPassword')}</p>}
+              {fieldError('confirmPassword') && <p id="register-confirm-password-error" role="alert" className="mt-1 text-label text-loss">{fieldError('confirmPassword')}</p>}
             </div>
 
             {/* Invite Code */}
             {(showInvite || inviteCode) && (
               <div>
-                <label htmlFor="inviteCode" className="block text-sm font-medium text-primary mb-2">Invite code</label>
+                <label htmlFor="inviteCode" className="block text-body-md font-medium text-primary mb-2">Invite code</label>
                 <div className="relative">
                   <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-tertiary" />
                   <Input
@@ -270,7 +270,7 @@ export function Component() {
                 aria-describedby={fieldError('tos') ? 'register-tos-error' : undefined}
                 className="mt-1 size-5 rounded border-default bg-app accent-accent cursor-pointer"
               />
-              <label htmlFor="tos" className="text-sm text-primary leading-relaxed cursor-pointer">
+              <label htmlFor="tos" className="text-body-md text-primary leading-relaxed cursor-pointer">
                 I agree to the{' '}
                 <a href="/terms" target="_blank" rel="noopener noreferrer" className="text-accent hover:text-accent-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 rounded-sm transition-colors">
                   Terms of Service
@@ -281,7 +281,7 @@ export function Component() {
                 </a>
               </label>
             </div>
-            {fieldError('tos') && <p id="register-tos-error" role="alert" className="text-xs text-loss -mt-2">{fieldError('tos')}</p>}
+            {fieldError('tos') && <p id="register-tos-error" role="alert" className="text-label text-loss -mt-2">{fieldError('tos')}</p>}
 
             <Button
               type="submit"
@@ -295,7 +295,7 @@ export function Component() {
         </div>
 
         {/* Links below card */}
-        <p className="text-center text-sm text-tertiary mt-6">
+        <p className="text-center text-body-sm text-tertiary mt-6">
           Already have an account?{' '}
           <Link to="/login" className="text-accent-text hover:text-accent-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 rounded-sm transition-colors">
             Sign in

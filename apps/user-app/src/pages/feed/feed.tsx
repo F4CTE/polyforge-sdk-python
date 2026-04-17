@@ -123,7 +123,7 @@ function toEnhanced(item: FeedItem): FeedItemEnhanced {
 function Initials({ actor }: { actor: FeedActor }) {
   const label = (actor.displayName ?? actor.username).slice(0, 2).toUpperCase();
   return (
-    <div className="size-9 rounded-full bg-surface flex items-center justify-center text-sm font-semibold text-accent-text shrink-0">
+    <div className="size-9 rounded-full bg-surface flex items-center justify-center text-body-md font-semibold text-accent-text shrink-0">
       {label}
     </div>
   );
@@ -247,7 +247,7 @@ function CommentSection({
   return (
     <div className="mt-3 pt-3 border-t border-subtle space-y-3">
       {/* Header */}
-      <div className="flex items-center gap-2 text-xs font-medium text-secondary">
+      <div className="flex items-center gap-2 text-label font-medium text-secondary">
         <MessageCircle className="size-4 text-accent-text" aria-hidden="true" />
         <span>Comments ({commentCount})</span>
       </div>
@@ -268,7 +268,7 @@ function CommentSection({
               <CommentAvatar initials={comment.authorInitials} />
               <div className="flex-1 min-w-0">
                 <div className="flex items-baseline gap-2 flex-wrap">
-                  <span className="text-xs font-semibold text-primary">@{comment.authorUsername}</span>
+                  <span className="text-label font-semibold text-primary">@{comment.authorUsername}</span>
                   <time
                     className="text-caption text-tertiary"
                     dateTime={comment.createdAt}
@@ -277,7 +277,7 @@ function CommentSection({
                     {relativeTime(comment.createdAt)}
                   </time>
                 </div>
-                <p className="text-xs text-secondary mt-1 leading-relaxed break-words">
+                <p className="text-label text-secondary mt-1 leading-relaxed break-words">
                   {comment.body}
                 </p>
                 <Button
@@ -305,7 +305,7 @@ function CommentSection({
           type="button"
           variant="ghost"
           onClick={onLoadMore}
-          className="flex items-center gap-1 text-xs text-accent-text hover:text-accent-text transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+          className="flex items-center gap-1 text-label text-accent-text hover:text-accent-text transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
           aria-label={`Load ${remaining} more comment${remaining !== 1 ? 's' : ''}`}
         >
           <ChevronDown className="size-4" aria-hidden="true" />
@@ -323,14 +323,14 @@ function CommentSection({
           onKeyDown={handleKeyDown}
           placeholder="Add a comment..."
           aria-label={`Add a comment to post ${itemId}`}
-          className="flex-1 min-w-0 bg-surface border border-default rounded-pf px-3 py-2 text-xs text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:border-accent/60 focus-visible:ring-1 focus-visible:ring-accent/30 transition-colors"
+          className="flex-1 min-w-0 bg-surface border border-default rounded-pf px-3 py-2 text-label text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:border-accent/60 focus-visible:ring-1 focus-visible:ring-accent/30 transition-colors"
         />
         <Button
           type="button"
           onClick={onSubmit}
           disabled={!commentInput.trim()}
           aria-label="Post comment"
-          className="flex items-center gap-1 px-3 py-2 rounded-pf bg-accent/15 text-accent-text border border-accent/30 hover:bg-accent/25 disabled:opacity-40 disabled:cursor-not-allowed text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 shrink-0"
+          className="flex items-center gap-1 px-3 py-2 rounded-pf bg-accent-subtle text-accent-text border border-accent/30 hover:bg-accent/25 disabled:opacity-40 disabled:cursor-not-allowed text-label font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 shrink-0"
         >
           <Send className="size-3" aria-hidden="true" />
           Post
@@ -646,7 +646,7 @@ export function Component() {
         <Users className="size-5 text-accent-text shrink-0" aria-hidden="true" />
         <h1 className="text-2xl font-semibold text-primary">Following Feed</h1>
         {!loading && total > 0 && (
-          <span className="ml-auto text-xs text-tertiary">{total.toLocaleString()} item{total !== 1 ? 's' : ''}</span>
+          <span className="ml-auto text-label text-tertiary">{total.toLocaleString()} item{total !== 1 ? 's' : ''}</span>
         )}
       </div>
 
@@ -666,13 +666,13 @@ export function Component() {
             <Users className="size-10 text-tertiary mb-3" aria-hidden="true" />
             {hasFollows === false ? (
               <>
-                <p className="text-sm font-medium text-primary mb-1">You're not following anyone yet</p>
-                <p className="text-xs text-tertiary mb-4">
+                <p className="text-body-md font-medium text-primary mb-1">You're not following anyone yet</p>
+                <p className="text-label text-tertiary mb-4">
                   Follow traders to see their activity here.
                 </p>
                 <Link
                   to="/leaderboard"
-                  className="flex items-center gap-2 px-4 py-2 rounded-pf bg-accent/15 text-accent-text border border-accent/30 hover:bg-accent/25 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+                  className="flex items-center gap-2 px-4 py-2 rounded-pf bg-accent-subtle text-accent-text border border-accent/30 hover:bg-accent/25 text-label font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
                 >
                   <Trophy className="size-4" aria-hidden="true" />
                   Discover traders on the Leaderboard
@@ -680,8 +680,8 @@ export function Component() {
               </>
             ) : (
               <>
-                <p className="text-sm font-medium text-primary mb-1">No recent activity</p>
-                <p className="text-xs text-tertiary">
+                <p className="text-body-md font-medium text-primary mb-1">No recent activity</p>
+                <p className="text-label text-tertiary">
                   No recent activity from traders you follow.
                 </p>
               </>
@@ -725,13 +725,13 @@ export function Component() {
                       <div className="flex items-baseline gap-2 flex-wrap">
                         <Link
                           to={`/profile/${actor.username}`}
-                          className="text-sm font-semibold text-primary hover:text-accent-text transition-colors focus-visible:outline-none focus-visible:underline"
+                          className="text-body-md font-semibold text-primary hover:text-accent-text transition-colors focus-visible:outline-none focus-visible:underline"
                         >
                           {displayName}
                         </Link>
-                        <span className="text-xs text-tertiary">@{actor.username}</span>
+                        <span className="text-label text-tertiary">@{actor.username}</span>
                       </div>
-                      <p className="text-xs text-secondary mt-1 leading-relaxed">
+                      <p className="text-label text-secondary mt-1 leading-relaxed">
                         {activityDescription(item)}
                       </p>
                       <time
@@ -754,9 +754,9 @@ export function Component() {
                         onClick={() => handleReact(item.id, r.emoji)}
                         aria-pressed={r.userReacted}
                         aria-label={`${r.emoji} ${r.count} reaction${r.count !== 1 ? 's' : ''}${r.userReacted ? ', you reacted' : ''}`}
-                        className={`flex items-center gap-1 px-2 py-1 rounded-full border text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 ${
+                        className={`flex items-center gap-1 px-2 py-1 rounded-full border text-label font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 ${
                           r.userReacted
-                            ? 'bg-accent/15 border-accent/40 text-accent-text'
+                            ? 'bg-accent-subtle border-accent/40 text-accent-text'
                             : 'bg-elevated border-default text-secondary hover:border-strong hover:text-primary'
                         }`}
                       >
@@ -779,7 +779,7 @@ export function Component() {
                           onClick={() => setPickerOpen(item.id)}
                           aria-label="Add reaction"
                           aria-expanded={false}
-                          className="flex items-center gap-1 px-2 py-1 rounded-full border border-default text-xs text-tertiary hover:border-strong hover:text-secondary bg-elevated transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+                          className="flex items-center gap-1 px-2 py-1 rounded-full border border-default text-label text-tertiary hover:border-strong hover:text-secondary bg-elevated transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
                         >
                           <span aria-hidden="true">+</span>
                           React
@@ -796,7 +796,7 @@ export function Component() {
                       onClick={() => handleToggleComments(item.id, item.commentsLoaded)}
                       aria-expanded={isExpanded}
                       aria-controls={`comments-${item.id}`}
-                      className={`flex items-center gap-2 text-xs transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 rounded ${
+                      className={`flex items-center gap-2 text-label transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 rounded ${
                         isExpanded
                           ? 'text-accent-text'
                           : 'text-tertiary hover:text-secondary'
@@ -810,7 +810,7 @@ export function Component() {
                       type="button"
                       variant="ghost"
                       onClick={() => handleShare(item.id)}
-                      className="flex items-center gap-2 text-xs text-tertiary hover:text-secondary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 rounded"
+                      className="flex items-center gap-2 text-label text-tertiary hover:text-secondary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 rounded"
                     >
                       <Share2 className="size-4" aria-hidden="true" />
                       Share to profile
@@ -853,12 +853,12 @@ export function Component() {
             onClick={handlePrev}
             disabled={page <= 1}
             aria-label="Previous page"
-            className="flex items-center gap-2 px-3 py-2 rounded-pf text-xs font-medium text-secondary border border-default hover:border-strong hover:text-primary disabled:opacity-40 disabled:cursor-not-allowed transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+            className="flex items-center gap-2 px-3 py-2 rounded-pf text-label font-medium text-secondary border border-default hover:border-strong hover:text-primary disabled:opacity-40 disabled:cursor-not-allowed transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
           >
             <ChevronLeft className="size-4" aria-hidden="true" />
             Previous
           </Button>
-          <span className="text-xs text-tertiary">
+          <span className="text-label text-tertiary">
             Page {page} of {totalPages}
           </span>
           <Button
@@ -867,7 +867,7 @@ export function Component() {
             onClick={handleNext}
             disabled={page >= totalPages}
             aria-label="Next page"
-            className="flex items-center gap-2 px-3 py-2 rounded-pf text-xs font-medium text-secondary border border-default hover:border-strong hover:text-primary disabled:opacity-40 disabled:cursor-not-allowed transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+            className="flex items-center gap-2 px-3 py-2 rounded-pf text-label font-medium text-secondary border border-default hover:border-strong hover:text-primary disabled:opacity-40 disabled:cursor-not-allowed transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
           >
             Next
             <ChevronRight className="size-4" aria-hidden="true" />

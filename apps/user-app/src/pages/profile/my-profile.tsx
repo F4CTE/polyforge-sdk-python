@@ -38,10 +38,10 @@ function scoreColor(score: number): string {
 }
 
 function scoreBg(score: number): string {
-  if (score >= 80) return 'bg-gain/15 border-gain/25';
-  if (score >= 60) return 'bg-accent/15 border-accent/25';
-  if (score >= 40) return 'bg-warning/15 border-warning/25';
-  return 'bg-loss/15 border-loss/25';
+  if (score >= 80) return 'bg-gain-subtle border-gain/25';
+  if (score >= 60) return 'bg-accent-subtle border-accent/25';
+  if (score >= 40) return 'bg-warning-subtle border-warning/25';
+  return 'bg-loss-subtle border-loss/25';
 }
 
 const BADGE_ICONS: Record<string, React.ReactNode> = {
@@ -97,7 +97,7 @@ export function Component() {
         <h1 className="text-2xl font-semibold text-primary">My Profile</h1>
         <Link
           to="/settings"
-          className="flex items-center gap-2 px-3 py-2 rounded-pf bg-elevated border border-default text-xs font-medium text-secondary hover:border-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 transition-colors"
+          className="flex items-center gap-2 px-3 py-2 rounded-pf bg-elevated border border-default text-label font-medium text-secondary hover:border-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 transition-colors"
         >
           <Settings className="size-4" aria-hidden="true" />
           Edit Profile
@@ -118,20 +118,20 @@ export function Component() {
           <div>
             <div data-testid="profile-display-name" className="text-lg font-semibold text-primary">{user.displayName ?? user.username}</div>
             {user.displayName && (
-              <div data-testid="profile-username" className="text-sm text-tertiary">@{user.username}</div>
+              <div data-testid="profile-username" className="text-body-sm text-tertiary">@{user.username}</div>
             )}
-            <div className="text-xs font-mono text-tertiary mt-1">Member since {memberSince}</div>
+            <div className="text-label font-mono text-tertiary mt-1">Member since {memberSince}</div>
           </div>
         </div>
 
         {/* Bio */}
         {user.bio && (
-          <p data-testid="profile-bio" className="text-sm text-secondary mb-4 leading-relaxed">{user.bio}</p>
+          <p data-testid="profile-bio" className="text-body-sm text-secondary mb-4 leading-relaxed">{user.bio}</p>
         )}
 
         {/* Status chips */}
         <div className="flex flex-wrap gap-2">
-          <span data-testid="status-chip" className={`flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium border ${
+          <span data-testid="status-chip" className={`flex items-center gap-2 px-3 py-1 rounded-full text-label font-medium border ${
             user.emailVerified
               ? 'bg-gain/10 text-gain border-gain/20'
               : 'bg-overlay text-tertiary border-default'
@@ -139,7 +139,7 @@ export function Component() {
             <Mail className="size-3" />
             {user.emailVerified ? 'Email Verified' : 'Email Unverified'}
           </span>
-          <span data-testid="status-chip" className={`flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium border ${
+          <span data-testid="status-chip" className={`flex items-center gap-2 px-3 py-1 rounded-full text-label font-medium border ${
             user.polymarketConnected
               ? 'bg-gain/10 text-gain border-gain/20'
               : 'bg-overlay text-tertiary border-default'
@@ -147,7 +147,7 @@ export function Component() {
             <Link2 className="size-3" />
             {user.polymarketConnected ? 'Polymarket Connected' : 'Not Connected'}
           </span>
-          <span data-testid="status-chip" className={`flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium border ${
+          <span data-testid="status-chip" className={`flex items-center gap-2 px-3 py-1 rounded-full text-label font-medium border ${
             user.totpEnabled
               ? 'bg-gain/10 text-gain border-gain/20'
               : 'bg-overlay text-tertiary border-default'
@@ -162,7 +162,7 @@ export function Component() {
       <div data-testid="edge-rating" className="bg-elevated border border-default rounded-xl p-6">
         <div className="flex items-center gap-2 mb-4">
           <TrendingUp className="size-4 text-accent-text" />
-          <h2 className="text-sm font-semibold text-primary">Edge Rating</h2>
+          <h2 className="text-body-md font-semibold text-primary">Edge Rating</h2>
         </div>
 
         {scoreData?.score ? (
@@ -174,7 +174,7 @@ export function Component() {
                   {scoreData.score.score}
                 </span>
               </div>
-              <div className="flex-1 grid grid-cols-2 gap-x-6 gap-y-1 text-xs">
+              <div className="flex-1 grid grid-cols-2 gap-x-6 gap-y-1 text-label">
                 <div className="flex justify-between">
                   <span className="text-tertiary">Win Rate</span>
                   <span className="font-mono text-primary">{scoreData.score.winRate}%</span>
@@ -203,7 +203,7 @@ export function Component() {
             </div>
           </>
         ) : (
-          <p className="text-xs text-tertiary">
+          <p className="text-label text-tertiary">
             No score yet. Start trading to build your Edge Rating.
           </p>
         )}
@@ -213,8 +213,8 @@ export function Component() {
       <div className="bg-elevated border border-default rounded-xl p-6">
         <div className="flex items-center gap-2 mb-4">
           <Award className="size-4 text-accent-text" />
-          <h2 className="text-sm font-semibold text-primary">Badges</h2>
-          <span className="text-xs text-tertiary ml-auto">{badges.length} earned</span>
+          <h2 className="text-body-md font-semibold text-primary">Badges</h2>
+          <span className="text-label text-tertiary ml-auto">{badges.length} earned</span>
         </div>
 
         {badges.length > 0 ? (
@@ -228,7 +228,7 @@ export function Component() {
               >
                 <span data-testid="badge-icon" className="text-lg">{BADGE_ICONS[badge.type] ?? <Target className="size-4" />}</span>
                 <div className="min-w-0">
-                  <div data-testid="badge-name" className="text-xs font-medium text-primary truncate">{badge.name}</div>
+                  <div data-testid="badge-name" className="text-label font-medium text-primary truncate">{badge.name}</div>
                   <div data-testid="earned-date" className="text-caption text-tertiary">
                     {new Date(badge.earnedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                   </div>
@@ -237,7 +237,7 @@ export function Component() {
             ))}
           </div>
         ) : (
-          <p className="text-xs text-tertiary">
+          <p className="text-label text-tertiary">
             No badges yet. Keep trading to unlock achievements.
           </p>
         )}
@@ -256,7 +256,7 @@ export function Component() {
             className="flex items-center gap-3 px-4 py-3 bg-elevated border border-default rounded-xl hover:border-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 transition-colors"
           >
             <span className="text-tertiary">{link.icon}</span>
-            <span className="text-sm font-medium text-primary flex-1">{link.label}</span>
+            <span className="text-body-md font-medium text-primary flex-1">{link.label}</span>
             <ChevronRight className="size-4 text-tertiary" />
           </Link>
         ))}

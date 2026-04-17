@@ -127,7 +127,7 @@ export function AdminSidebar({ collapsed, onToggle, onNavigate }: Props) {
         <Link to="/dashboard" className="flex items-center gap-2 min-w-0" aria-label="Polyforge Admin home">
           <PolyforgeLogomark size={28} className="shrink-0 text-accent" />
           {!collapsed && (
-            <span className="text-sm font-semibold text-primary whitespace-nowrap">
+            <span className="text-body-sm font-semibold text-primary whitespace-nowrap">
               Polyforge{' '}
               <span className="text-accent">Admin</span>
             </span>
@@ -161,7 +161,7 @@ export function AdminSidebar({ collapsed, onToggle, onNavigate }: Props) {
                   title={collapsed ? item.label : undefined}
                   onClick={onNavigate}
                   className={({ isActive }) =>
-                    `flex items-center gap-3 px-3 py-2 rounded-sm text-sm transition-colors duration-micro focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${
+                    `flex items-center gap-3 px-3 py-2 rounded-sm text-body-sm transition-colors duration-micro focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${
                       isActive
                         ? 'bg-accent/10 text-accent font-medium'
                         : 'text-secondary hover:bg-elevated hover:text-primary'
@@ -201,7 +201,7 @@ export function AdminSidebar({ collapsed, onToggle, onNavigate }: Props) {
           </div>
           {!collapsed && (
             <div className="min-w-0">
-              <div className="text-sm font-medium text-primary truncate">
+              <div className="text-body-sm font-medium text-primary truncate">
                 {admin?.displayName}
               </div>
               <div className="flex items-center gap-2 text-label text-tertiary">

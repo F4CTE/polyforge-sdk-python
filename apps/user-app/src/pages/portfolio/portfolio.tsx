@@ -252,10 +252,10 @@ function CategoryBadge({ category }: { category?: string | null }) {
   if (!category) return null;
   const colors: Record<string, string> = {
     crypto: 'bg-gold-500/15 text-gold-500 border-gold-500/30',
-    politics: 'bg-info/15 text-info border-info/30',
-    sports: 'bg-gain/15 text-gain border-gain/30',
+    politics: 'bg-info-subtle text-info border-info/30',
+    sports: 'bg-gain-subtle text-gain border-gain/30',
     entertainment: 'bg-purple-500/15 text-purple-400 border-purple-500/30',
-    science: 'bg-accent/15 text-accent-text border-accent/30',
+    science: 'bg-accent-subtle text-accent-text border-accent/30',
   };
   const key = category.toLowerCase();
   const cls = colors[key] ?? 'bg-surface text-tertiary border-default';
@@ -415,7 +415,7 @@ function HeatmapGrid({ data }: { data: DailyHeatmapEntry[] }) {
 
       {/* Summary row */}
       {data.length > 0 && (
-        <div className="flex flex-wrap gap-x-4 gap-y-1 mt-3 text-xs">
+        <div className="flex flex-wrap gap-x-4 gap-y-1 mt-3 text-label">
           <span className="text-gain"><span className="font-mono">{profitDays}</span> profit day{profitDays !== 1 ? 's' : ''}</span>
           <span className="text-tertiary">|</span>
           <span className="text-loss"><span className="font-mono">{lossDays}</span> loss day{lossDays !== 1 ? 's' : ''}</span>
@@ -1030,7 +1030,7 @@ export function Component() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <h1 className="text-2xl font-semibold text-primary">Portfolio</h1>
-          <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-gain/10 text-gain text-xs font-medium border border-gain/20" title="Gas fees are sponsored — you pay zero network fees">
+          <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-gain/10 text-gain text-label font-medium border border-gain/20" title="Gas fees are sponsored — you pay zero network fees">
             <Fuel className="size-3" />
             Gasless
           </span>
@@ -1120,13 +1120,13 @@ export function Component() {
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-gain opacity-60" />
                     <span className="relative inline-flex rounded-full size-2 bg-gain" />
                   </span>
-                  <span className="text-xs font-medium text-gain">Live</span>
+                  <span className="text-label font-medium text-gain">Live</span>
                   <Wifi className="size-3 text-gain" />
                 </>
               ) : (
                 <>
                   <span className="inline-flex rounded-full size-2 bg-tertiary" />
-                  <span className="text-xs font-medium text-tertiary">Offline</span>
+                  <span className="text-label font-medium text-tertiary">Offline</span>
                   <WifiOff className="size-3 text-tertiary" />
                 </>
               )}
@@ -1136,12 +1136,12 @@ export function Component() {
 
             {/* Total P&L */}
             <div className="flex items-baseline gap-2 shrink-0">
-              <span className="text-xs text-secondary">Total P&L</span>
-              <span className={`text-sm font-mono font-semibold ${colorClass(totalPnlNum)}`}>
+              <span className="text-label text-secondary">Total P&L</span>
+              <span className={`text-body-md font-mono font-semibold ${colorClass(totalPnlNum)}`}>
                 {fmtPnl(totalPnlNum)}
               </span>
               {totalPnlPctNum != null && (
-                <span className={`text-xs font-mono ${colorClass(totalPnlPctNum)}`}>
+                <span className={`text-label font-mono ${colorClass(totalPnlPctNum)}`}>
                   {fmtPct(totalPnlPctNum)}
                 </span>
               )}
@@ -1154,12 +1154,12 @@ export function Component() {
               <>
                 <span className="w-px h-4 bg-default shrink-0 hidden sm:block" />
                 <div className="flex items-baseline gap-2 shrink-0">
-                  <span className="text-xs text-secondary">Today</span>
-                  <span className={`text-sm font-mono font-semibold ${colorClass(dayPnlNum)}`}>
+                  <span className="text-label text-secondary">Today</span>
+                  <span className={`text-body-md font-mono font-semibold ${colorClass(dayPnlNum)}`}>
                     {fmtPnl(dayPnlNum)}
                   </span>
                   {dayPnlPctNum != null && (
-                    <span className={`text-xs font-mono ${colorClass(dayPnlPctNum)}`}>
+                    <span className={`text-label font-mono ${colorClass(dayPnlPctNum)}`}>
                       {fmtPct(dayPnlPctNum)}
                     </span>
                   )}
@@ -1171,8 +1171,8 @@ export function Component() {
 
             {/* Unrealised P&L */}
             <div className="flex items-baseline gap-2 shrink-0">
-              <span className="text-xs text-secondary">Unrealised</span>
-              <span className={`text-sm font-mono font-semibold ${colorClass(unrealisedNum)}`}>
+              <span className="text-label text-secondary">Unrealised</span>
+              <span className={`text-body-md font-mono font-semibold ${colorClass(unrealisedNum)}`}>
                 {fmtPnl(unrealisedNum)}
               </span>
             </div>
@@ -1185,8 +1185,8 @@ export function Component() {
         <div className="flex items-start gap-3 p-4 rounded-xl bg-loss/10 border border-loss/30">
           <ShieldAlert className="size-5 text-loss shrink-0 mt-1" />
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-loss">Circuit Breaker Active</p>
-            <p className="text-xs text-secondary mt-1">
+            <p className="text-body-md font-semibold text-loss">Circuit Breaker Active</p>
+            <p className="text-label text-secondary mt-1">
               All strategies have been paused due to drawdown exceeding your risk threshold.
               {circuitBreakerTrippedAt && (
                 <span> Triggered {new Date(circuitBreakerTrippedAt).toLocaleString()}.</span>
@@ -1208,19 +1208,19 @@ export function Component() {
             ) : portfolio ? (
               <>
                 <div className={`bg-elevated border border-default rounded-xl p-4 border-l-4 ${pnlBorderColor(portfolio.totalUnrealizedPnl)}`}>
-                  <span className="text-xs text-secondary uppercase tracking-wider">Unrealized P&L</span>
+                  <span className="text-label text-secondary uppercase tracking-wider">Unrealized P&L</span>
                   <span data-testid="stat-pnl" className={`block mt-1 text-xl font-mono font-semibold ${pnlColor(portfolio.totalUnrealizedPnl)}`}>
                     {formatPnl(portfolio.totalUnrealizedPnl)}
                   </span>
                 </div>
                 <div className={`bg-elevated border border-default rounded-xl p-4 border-l-4 ${pnlBorderColor(portfolio.totalRealizedPnl)}`}>
-                  <span className="text-xs text-secondary uppercase tracking-wider">Realized P&L</span>
+                  <span className="text-label text-secondary uppercase tracking-wider">Realized P&L</span>
                   <span data-testid="stat-return" className={`block mt-1 text-xl font-mono font-semibold ${pnlColor(portfolio.totalRealizedPnl)}`}>
                     {formatPnl(portfolio.totalRealizedPnl)}
                   </span>
                 </div>
                 <div className="bg-elevated border border-default rounded-xl p-4 border-l-4 border-l-accent">
-                  <span className="text-xs text-secondary uppercase tracking-wider">Win Rate</span>
+                  <span className="text-label text-secondary uppercase tracking-wider">Win Rate</span>
                   <span data-testid="stat-win-rate" className="block mt-1 text-xl font-mono font-semibold text-accent-text">
                     {parseFloat(pnl?.winRate ?? '0') === 0 && (portfolio?.positions ?? []).length > 0
                       ? '—'
@@ -1231,7 +1231,7 @@ export function Component() {
                   )}
                 </div>
                 <div className="bg-elevated border border-default rounded-xl p-4 border-l-4 border-l-primary">
-                  <span className="text-xs text-secondary uppercase tracking-wider">Open Positions</span>
+                  <span className="text-label text-secondary uppercase tracking-wider">Open Positions</span>
                   <span className="block mt-1 text-xl font-mono font-semibold text-primary">
                     {portfolio.positions.length}
                   </span>
@@ -1240,8 +1240,8 @@ export function Component() {
             ) : (
               <div className="col-span-full bg-elevated border border-loss/20 rounded-xl p-6 text-center">
                 <AlertTriangle className="mx-auto mb-3 text-loss opacity-60" size={32} />
-                <p className="text-sm font-medium text-primary mb-1">Failed to load portfolio</p>
-                <p className="text-xs text-tertiary mb-4">Something went wrong while fetching your data.</p>
+                <p className="text-body-md font-medium text-primary mb-1">Failed to load portfolio</p>
+                <p className="text-label text-tertiary mb-4">Something went wrong while fetching your data.</p>
                 <Button type="button" variant="default" onClick={loadPortfolio}>
                   Retry
                 </Button>
@@ -1255,7 +1255,7 @@ export function Component() {
             <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
               <div className="flex items-center gap-2">
                 <Receipt className="size-4 text-accent-text" />
-                <span className="text-sm font-semibold text-primary">Tax Report</span>
+                <span className="text-body-md font-semibold text-primary">Tax Report</span>
               </div>
               <div className="flex items-center gap-2 flex-wrap">
                 <Select
@@ -1318,8 +1318,8 @@ export function Component() {
             ) : !loadingTax && (
               <div className="flex flex-col items-center justify-center py-8 text-center mb-4">
                 <FileText className="size-8 text-tertiary mb-2" />
-                <p className="text-sm font-medium text-primary">No tax data for {taxYear}</p>
-                <p className="text-xs text-tertiary mt-1">Closed trades will appear here once available.</p>
+                <p className="text-body-md font-medium text-primary">No tax data for {taxYear}</p>
+                <p className="text-label text-tertiary mt-1">Closed trades will appear here once available.</p>
               </div>
             )}
 
@@ -1331,7 +1331,7 @@ export function Component() {
               return (
                 <div className="mb-3">
                   <div className="overflow-x-auto rounded-pf border border-subtle">
-                    <table className="w-full text-xs" aria-label="Capital gains and losses">
+                    <table className="w-full text-label" aria-label="Capital gains and losses">
                       <thead>
                         <tr className="border-b border-subtle bg-overlay">
                           <th className="px-3 py-2 text-left text-secondary font-medium">Close Date</th>
@@ -1444,7 +1444,7 @@ export function Component() {
                 <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
                   <div className="flex items-center gap-2">
                     <Target className="size-4 text-accent-text" />
-                    <span className="text-sm font-semibold text-primary">Goal Tracker</span>
+                    <span className="text-body-md font-semibold text-primary">Goal Tracker</span>
                   </div>
                   <div className="flex items-center gap-2">
                     {goals.length < 3 && !showGoalForm && (
@@ -1484,7 +1484,7 @@ export function Component() {
                 {showGoalForm && (
                   <div className="bg-surface border border-default rounded-xl p-4 mb-4 space-y-3">
                     <div>
-                      <label className="text-xs text-secondary block mb-1">Goal name</label>
+                      <label className="text-label text-secondary block mb-1">Goal name</label>
                       <Input
                         type="text"
                         placeholder="e.g. October target"
@@ -1494,9 +1494,9 @@ export function Component() {
                       />
                     </div>
                     <div>
-                      <label className="text-xs text-secondary block mb-1">Target amount (USDC profit)</label>
+                      <label className="text-label text-secondary block mb-1">Target amount (USDC profit)</label>
                       <div className="relative">
-                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-tertiary">$</span>
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-body-sm text-tertiary">$</span>
                         <Input
                           type="number"
                           min="0"
@@ -1509,7 +1509,7 @@ export function Component() {
                       </div>
                     </div>
                     <div>
-                      <label className="text-xs text-secondary block mb-1">Deadline</label>
+                      <label className="text-label text-secondary block mb-1">Deadline</label>
                       <Input
                         type="date"
                         value={newGoalDeadline}
@@ -1578,8 +1578,8 @@ export function Component() {
                       {/* Goal header row */}
                       <div className="flex items-start justify-between mb-3">
                         <div>
-                          <p className="text-sm font-medium text-primary">{activeGoal.label}</p>
-                          <p className="text-xs text-tertiary flex items-center gap-1 mt-1">
+                          <p className="text-body-md font-medium text-primary">{activeGoal.label}</p>
+                          <p className="text-label text-tertiary flex items-center gap-1 mt-1">
                             <CalendarDays className="size-3" />
                             Ends {endLabel}
                           </p>
@@ -1610,7 +1610,7 @@ export function Component() {
                       {isAchieved && (
                         <div className="flex items-center gap-2 bg-gain/10 border border-gain/30 rounded-pf p-3 mb-3">
                           <Trophy className="size-4 text-gain shrink-0" />
-                          <span className="text-sm font-semibold text-gain">Goal achieved!</span>
+                          <span className="text-body-md font-semibold text-gain">Goal achieved!</span>
                         </div>
                       )}
 
@@ -1619,7 +1619,7 @@ export function Component() {
                         <span className={`text-2xl font-mono font-semibold ${earned >= 0 ? 'text-gain' : 'text-loss'}`}>
                           {earned >= 0 ? '+' : ''}{earned.toFixed(2)}
                         </span>
-                        <span className="text-sm text-tertiary font-mono ml-1">
+                        <span className="text-body-sm text-tertiary font-mono ml-1">
                           earned of ${activeGoal.targetAmount.toFixed(2)} target
                         </span>
                       </div>
@@ -1633,7 +1633,7 @@ export function Component() {
                       </div>
 
                       {/* Footer stats */}
-                      <div className="flex items-center justify-between text-xs flex-wrap gap-y-1">
+                      <div className="flex items-center justify-between text-label flex-wrap gap-y-1">
                         {isExpired ? (
                           <span className="text-loss font-medium">Goal expired</span>
                         ) : (
@@ -1658,8 +1658,8 @@ export function Component() {
                 {!showGoalForm && goals.length === 0 && (
                   <div className="flex flex-col items-center justify-center py-8 text-center">
                     <Target className="size-8 text-tertiary mb-2" />
-                    <p className="text-sm font-medium text-primary">No goals set</p>
-                    <p className="text-xs text-tertiary mt-1">Set a profit target to track your progress.</p>
+                    <p className="text-body-md font-medium text-primary">No goals set</p>
+                    <p className="text-label text-tertiary mt-1">Set a profit target to track your progress.</p>
                   </div>
                 )}
               </div>
@@ -1670,7 +1670,7 @@ export function Component() {
           <div className="bg-elevated border border-default rounded-xl p-4">
             <div className="flex items-center gap-2 mb-4">
               <Share2 className="size-4 text-accent-text" />
-              <span className="text-sm font-semibold text-primary">Share Performance</span>
+              <span className="text-body-md font-semibold text-primary">Share Performance</span>
             </div>
 
             {/* Preview card */}
@@ -1695,10 +1695,10 @@ export function Component() {
                       className="text-accent/20"
                     />
                   </svg>
-                  <span className="text-sm font-semibold text-primary tracking-wide">PolyForge</span>
+                  <span className="text-body-md font-semibold text-primary tracking-wide">PolyForge</span>
                 </div>
                 {username && (
-                  <span className="text-xs font-mono text-tertiary">@{username}</span>
+                  <span className="text-label font-mono text-tertiary">@{username}</span>
                 )}
               </div>
 
@@ -1726,7 +1726,7 @@ export function Component() {
 
               {/* Tagline + footer */}
               <div className="border-t border-subtle pt-3 flex items-end justify-between">
-                <p className="text-xs text-secondary italic">"Trading smarter on Polymarket"</p>
+                <p className="text-label text-secondary italic">"Trading smarter on Polymarket"</p>
                 <p className="text-caption font-mono text-tertiary">polyforge.io</p>
               </div>
             </div>
@@ -1791,7 +1791,7 @@ export function Component() {
                 {/* Header */}
                 <div className="flex items-center gap-2 mb-3">
                   <Shield className="size-4 text-tertiary" />
-                  <span className="text-sm font-medium text-primary">Today's P&L</span>
+                  <span className="text-body-md font-medium text-primary">Today's P&L</span>
                 </div>
 
                 {loadingDailyPnl ? (
@@ -1811,7 +1811,7 @@ export function Component() {
                     {limitHit && (
                       <div className="flex items-center gap-2 p-3 rounded-pf bg-loss/10 border border-loss/30 mb-3">
                         <AlertTriangle className="size-4 text-loss shrink-0" />
-                        <p className="text-xs font-medium text-loss">Daily loss limit reached — trading paused</p>
+                        <p className="text-label font-medium text-loss">Daily loss limit reached — trading paused</p>
                       </div>
                     )}
 
@@ -1836,7 +1836,7 @@ export function Component() {
 
                     {/* No limit set — offer link */}
                     {limit == null && (
-                      <p className="text-xs text-tertiary">
+                      <p className="text-label text-tertiary">
                         No daily loss limit set.{' '}
                         <a href="/settings?tab=risk" className="underline text-accent-text hover:text-accent-text">
                           Set a loss limit
@@ -1852,7 +1852,7 @@ export function Component() {
           {/* P&L Chart */}
           <div data-testid="pnl-chart" className="bg-elevated border border-default rounded-xl">
             <div className="flex items-center justify-between px-4 py-3 border-b border-subtle">
-              <span className="text-sm font-medium text-primary">P&L Over Time</span>
+              <span className="text-body-md font-medium text-primary">P&L Over Time</span>
               <div className="flex gap-1">
                 {PERIODS.map(p => (
                   <Button
@@ -1903,8 +1903,8 @@ export function Component() {
             ) : (
               <div className="flex flex-col items-center justify-center py-16 text-center">
                 <BarChart3 className="size-10 text-tertiary mb-3" />
-                <p className="text-sm font-medium text-primary">No P&L data yet</p>
-                <p className="text-xs text-tertiary mt-1">P&L data will appear once your strategies generate trades.</p>
+                <p className="text-body-md font-medium text-primary">No P&L data yet</p>
+                <p className="text-label text-tertiary mt-1">P&L data will appear once your strategies generate trades.</p>
               </div>
             )}
           </div>
@@ -1912,21 +1912,21 @@ export function Component() {
           {/* Positions table */}
           <div data-testid="positions-table" className="bg-elevated border border-default rounded-xl">
             <div className="px-4 py-3 border-b border-subtle">
-              <span className="text-sm font-medium text-primary">Open Positions</span>
+              <span className="text-body-md font-medium text-primary">Open Positions</span>
             </div>
             {loadingPortfolio ? (
               <TableSkeleton />
             ) : (portfolio?.positions ?? []).length === 0 ? (
               <div className="flex flex-col items-center justify-center py-16 text-center">
                 <Wallet className="size-10 text-tertiary mb-3" />
-                <p className="text-sm font-medium text-primary">No open positions</p>
-                <p className="text-xs text-tertiary mt-1">Start a strategy to build positions.</p>
+                <p className="text-body-md font-medium text-primary">No open positions</p>
+                <p className="text-label text-tertiary mt-1">Start a strategy to build positions.</p>
               </div>
             ) : (
               <div className="overflow-x-auto">
-                <table className="w-full text-sm" aria-label="Open positions">
+                <table className="w-full text-body-sm" aria-label="Open positions">
                   <thead>
-                    <tr className="bg-surface text-left text-xs text-secondary uppercase tracking-wider">
+                    <tr className="bg-surface text-left text-label text-secondary uppercase tracking-wider">
                       <th scope="col" className="px-4 py-3 font-medium">Market</th>
                       <th scope="col" className="px-4 py-3 font-medium">Side</th>
                       <th scope="col" className="px-4 py-3 font-medium text-right">Size</th>
@@ -1992,7 +1992,7 @@ export function Component() {
                               </div>
                             </td>
                             <td className="px-4 py-3">
-                              <span className={`inline-flex px-2 py-1 rounded text-xs font-medium ${
+                              <span className={`inline-flex px-2 py-1 rounded text-label font-medium ${
                                 pos.side === 'BUY' ? 'bg-gain/10 text-gain' : 'bg-loss/10 text-loss'
                               }`}>
                                 {pos.side}
@@ -2020,7 +2020,7 @@ export function Component() {
                                 if (livePrice != null && flash != null) {
                                   const isUp = flash === 'up';
                                   return (
-                                    <span className={`inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-mono font-medium transition-colors ${
+                                    <span className={`inline-flex items-center gap-1 px-2 py-1 rounded text-label font-mono font-medium transition-colors ${
                                       isUp
                                         ? 'bg-gain/10 text-gain'
                                         : 'bg-loss/10 text-loss'
@@ -2037,7 +2037,7 @@ export function Component() {
                                   const prevStatic = staticPrice ?? livePrice;
                                   const isUp = livePrice >= prevStatic;
                                   return (
-                                    <span className={`inline-flex items-center gap-1 text-xs font-mono font-medium ${
+                                    <span className={`inline-flex items-center gap-1 text-label font-mono font-medium ${
                                       isUp ? 'text-gain' : 'text-loss'
                                     }`}>
                                       {isUp
@@ -2056,7 +2056,7 @@ export function Component() {
                             </td>
                             <td className="px-4 py-3 text-right">
                               <span
-                                className={`inline-flex px-2 py-1 rounded text-xs font-medium ${
+                                className={`inline-flex px-2 py-1 rounded text-label font-medium ${
                                   pos.resolutionStatus === 'UNRESOLVED'
                                     ? 'bg-accent/10 text-accent-text'
                                     : 'bg-overlay text-tertiary'
@@ -2117,10 +2117,10 @@ export function Component() {
                                   <div className="flex items-center justify-between mb-4">
                                     <div className="flex items-center gap-2">
                                       <SlidersHorizontal className="size-4 text-accent-text" />
-                                      <span className="text-sm font-semibold text-primary">
+                                      <span className="text-body-md font-semibold text-primary">
                                         Auto-Close Rules
                                       </span>
-                                      <span className="text-xs text-tertiary truncate max-w-[200px]" title={pos.marketTitle}>
+                                      <span className="text-label text-tertiary truncate max-w-[200px]" title={pos.marketTitle}>
                                         — {pos.marketTitle}
                                       </span>
                                     </div>
@@ -2138,7 +2138,7 @@ export function Component() {
                                   {acLoading[pos.id] ? (
                                     <div className="flex items-center gap-2 py-4">
                                       <Loader2 className="size-4 animate-spin text-tertiary" />
-                                      <span className="text-sm text-tertiary">Loading rule…</span>
+                                      <span className="text-body-sm text-tertiary">Loading rule…</span>
                                     </div>
                                   ) : (
                                     <div className="space-y-4">
@@ -2155,11 +2155,11 @@ export function Component() {
                                             onClick={e => e.stopPropagation()}
                                             className="rounded border-default accent-accent-text"
                                           />
-                                          <span className="text-sm font-medium text-primary">Stop Loss</span>
+                                          <span className="text-body-md font-medium text-primary">Stop Loss</span>
                                         </label>
                                         {(acSlEnabled[pos.id] ?? false) && (
                                           <div className="ml-6 space-y-1">
-                                            <p className="text-xs text-secondary">Sell if YES price drops below:</p>
+                                            <p className="text-label text-secondary">Sell if YES price drops below:</p>
                                             <div className="flex items-center gap-2">
                                               <Input
                                                 type="number"
@@ -2172,10 +2172,10 @@ export function Component() {
                                                 onClick={e => e.stopPropagation()}
                                                 className="w-28 font-mono"
                                               />
-                                              <span className="text-xs text-tertiary">(0.01 – 0.99)</span>
+                                              <span className="text-label text-tertiary">(0.01 – 0.99)</span>
                                             </div>
                                             {currentPrice > 0 && (
-                                              <p className="text-xs text-tertiary">Current price: <span className="font-mono text-accent-text">{currentPrice.toFixed(3)}</span></p>
+                                              <p className="text-label text-tertiary">Current price: <span className="font-mono text-accent-text">{currentPrice.toFixed(3)}</span></p>
                                             )}
                                           </div>
                                         )}
@@ -2194,11 +2194,11 @@ export function Component() {
                                             onClick={e => e.stopPropagation()}
                                             className="rounded border-default accent-accent-text"
                                           />
-                                          <span className="text-sm font-medium text-primary">Take Profit</span>
+                                          <span className="text-body-md font-medium text-primary">Take Profit</span>
                                         </label>
                                         {(acTpEnabled[pos.id] ?? false) && (
                                           <div className="ml-6 space-y-1">
-                                            <p className="text-xs text-secondary">Sell if YES price rises above:</p>
+                                            <p className="text-label text-secondary">Sell if YES price rises above:</p>
                                             <div className="flex items-center gap-2">
                                               <Input
                                                 type="number"
@@ -2211,10 +2211,10 @@ export function Component() {
                                                 onClick={e => e.stopPropagation()}
                                                 className="w-28 font-mono"
                                               />
-                                              <span className="text-xs text-tertiary">(0.01 – 0.99)</span>
+                                              <span className="text-label text-tertiary">(0.01 – 0.99)</span>
                                             </div>
                                             {currentPrice > 0 && (
-                                              <p className="text-xs text-tertiary">Current price: <span className="font-mono text-accent-text">{currentPrice.toFixed(3)}</span></p>
+                                              <p className="text-label text-tertiary">Current price: <span className="font-mono text-accent-text">{currentPrice.toFixed(3)}</span></p>
                                             )}
                                           </div>
                                         )}
@@ -2222,7 +2222,7 @@ export function Component() {
 
                                       {/* Quantity */}
                                       <div className="space-y-2">
-                                        <p className="text-sm font-medium text-primary">Quantity</p>
+                                        <p className="text-body-md font-medium text-primary">Quantity</p>
                                         <div className="flex items-center gap-3 ml-0">
                                           <label className="flex items-center gap-2 cursor-pointer select-none">
                                             <input
@@ -2233,7 +2233,7 @@ export function Component() {
                                               onClick={e => e.stopPropagation()}
                                               className="accent-accent-text"
                                             />
-                                            <span className="text-sm text-primary">All shares</span>
+                                            <span className="text-body-md text-primary">All shares</span>
                                           </label>
                                           <label className="flex items-center gap-2 cursor-pointer select-none">
                                             <input
@@ -2244,7 +2244,7 @@ export function Component() {
                                               onClick={e => e.stopPropagation()}
                                               className="accent-accent-text"
                                             />
-                                            <span className="text-sm text-primary">Partial</span>
+                                            <span className="text-body-md text-primary">Partial</span>
                                           </label>
                                           {!(acQuantityAll[pos.id] ?? true) && (
                                             <Input
@@ -2265,7 +2265,7 @@ export function Component() {
                                       {acErrors[pos.id] && (
                                         <div className="flex items-center gap-2 px-3 py-2 rounded-pf bg-loss/10 border border-loss/25">
                                           <AlertTriangle className="size-4 text-loss shrink-0" />
-                                          <p className="text-xs text-loss">{acErrors[pos.id]}</p>
+                                          <p className="text-label text-loss">{acErrors[pos.id]}</p>
                                         </div>
                                       )}
 
@@ -2298,7 +2298,7 @@ export function Component() {
                                       {/* Disclaimer */}
                                       <div className="flex items-start gap-2 pt-1">
                                         <AlertTriangle className="size-4 text-tertiary shrink-0 mt-1" />
-                                        <p className="text-xs text-tertiary">Rules execute as market orders on Polymarket</p>
+                                        <p className="text-label text-tertiary">Rules execute as market orders on Polymarket</p>
                                       </div>
                                     </div>
                                   )}
@@ -2321,7 +2321,7 @@ export function Component() {
                                     </div>
 
                                     {/* Detail stats */}
-                                    <div className="flex flex-wrap gap-4 text-xs">
+                                    <div className="flex flex-wrap gap-4 text-label">
                                       <div>
                                         <p className="text-tertiary mb-1">Entry Price</p>
                                         <p className="font-mono text-primary">{entryPrice.toFixed(3)}</p>
@@ -2372,12 +2372,12 @@ export function Component() {
               <section className="mt-6">
                 <h2 className="text-base font-semibold text-primary mb-3">Resolved Positions</h2>
                 <div className="rounded-pf border border-default overflow-hidden">
-                  <table className="w-full text-sm" aria-label="Resolved positions">
+                  <table className="w-full text-body-sm" aria-label="Resolved positions">
                     <thead>
                       <tr className="border-b border-default bg-surface-elevated">
-                        <th className="text-left px-4 py-3 text-xs font-medium text-tertiary">Market</th>
-                        <th className="text-right px-4 py-3 text-xs font-medium text-tertiary">Outcome</th>
-                        <th className="text-right px-4 py-3 text-xs font-medium text-tertiary">Realized P&L</th>
+                        <th className="text-left px-4 py-3 text-label font-medium text-tertiary">Market</th>
+                        <th className="text-right px-4 py-3 text-label font-medium text-tertiary">Outcome</th>
+                        <th className="text-right px-4 py-3 text-label font-medium text-tertiary">Realized P&L</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -2386,9 +2386,9 @@ export function Component() {
                         const isWin = pnl > 0;
                         return (
                           <tr key={i} className="border-b border-subtle last:border-0">
-                            <td className="px-4 py-3 text-primary text-xs">{pos.market?.title ?? pos.marketTitle ?? pos.marketId}</td>
-                            <td className="px-4 py-3 text-right text-xs font-mono text-secondary">{pos.outcome ?? '-'}</td>
-                            <td className={`px-4 py-3 text-right text-xs font-mono font-semibold ${isWin ? 'text-gain' : 'text-loss'}`}>
+                            <td className="px-4 py-3 text-primary text-label">{pos.market?.title ?? pos.marketTitle ?? pos.marketId}</td>
+                            <td className="px-4 py-3 text-right text-label font-mono text-secondary">{pos.outcome ?? '-'}</td>
+                            <td className={`px-4 py-3 text-right text-label font-mono font-semibold ${isWin ? 'text-gain' : 'text-loss'}`}>
                               {isWin ? '+' : ''}{pnl.toFixed(2)}
                             </td>
                           </tr>
@@ -2404,16 +2404,16 @@ export function Component() {
           {/* P&L Breakdown — Realized vs Unrealized */}
           {portfolio && (
             <div className="bg-elevated border border-default rounded-xl p-4">
-              <p className="text-xs text-secondary uppercase tracking-wider mb-3">P&L Breakdown</p>
+              <p className="text-label text-secondary uppercase tracking-wider mb-3">P&L Breakdown</p>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <p className="text-xs text-tertiary mb-1">Realized P&L</p>
+                  <p className="text-label text-tertiary mb-1">Realized P&L</p>
                   <span className={`text-xl font-mono font-semibold ${pnlColor(portfolio.totalRealizedPnl)}`}>
                     {formatPnl(portfolio.totalRealizedPnl)}
                   </span>
                 </div>
                 <div>
-                  <p className="text-xs text-tertiary mb-1">Unrealized P&L</p>
+                  <p className="text-label text-tertiary mb-1">Unrealized P&L</p>
                   <span className={`text-xl font-mono font-semibold ${pnlColor(portfolio.totalUnrealizedPnl)}`}>
                     {formatPnl(portfolio.totalUnrealizedPnl)}
                   </span>
@@ -2450,7 +2450,7 @@ export function Component() {
               const { name, value } = payload[0].payload;
               const pct = ((value / totalAllocation) * 100).toFixed(1);
               return (
-                <div className="bg-surface border border-default rounded-pf px-3 py-2 text-xs font-mono shadow-pf">
+                <div className="bg-surface border border-default rounded-pf px-3 py-2 text-label font-mono shadow-pf">
                   <p className="text-primary font-medium">{name}</p>
                   <p className="text-secondary">${value.toLocaleString(undefined, { maximumFractionDigits: 2 })} ({pct}%)</p>
                 </div>
@@ -2462,7 +2462,7 @@ export function Component() {
                 {/* Section header */}
                 <div className="flex items-center gap-2 mb-4">
                   <PieChart className="size-4 text-tertiary" />
-                  <span className="text-sm font-medium text-primary">Position Allocation</span>
+                  <span className="text-body-md font-medium text-primary">Position Allocation</span>
                 </div>
 
                 {/* Donut + legend */}
@@ -2500,12 +2500,13 @@ export function Component() {
                       const pct = ((entry.value / totalAllocation) * 100).toFixed(1);
                       return (
                         <div key={entry.name} className="flex items-center gap-2">
+                          {/* dynamic-color: intentional — color is runtime chart palette value */}
                           <span className="size-3 rounded-full shrink-0" style={{ backgroundColor: color }} />
-                          <span className="flex-1 text-sm text-primary capitalize truncate">{entry.name}</span>
-                          <span className="text-xs font-mono text-secondary shrink-0">
+                          <span className="flex-1 text-body-md text-primary capitalize truncate">{entry.name}</span>
+                          <span className="text-label font-mono text-secondary shrink-0">
                             ${entry.value.toLocaleString(undefined, { maximumFractionDigits: 2 })}
                           </span>
-                          <span className="text-xs font-mono text-tertiary w-12 text-right shrink-0">{pct}%</span>
+                          <span className="text-label font-mono text-tertiary w-12 text-right shrink-0">{pct}%</span>
                         </div>
                       );
                     })}
@@ -2514,9 +2515,9 @@ export function Component() {
 
                 {/* Largest Positions table */}
                 <div className="mt-5">
-                  <p className="text-xs text-secondary uppercase tracking-wider mb-2">Largest Positions</p>
+                  <p className="text-label text-secondary uppercase tracking-wider mb-2">Largest Positions</p>
                   <div className="overflow-x-auto">
-                    <table className="w-full text-xs" aria-label="Largest positions">
+                    <table className="w-full text-label" aria-label="Largest positions">
                       <thead>
                         <tr className="text-left text-tertiary border-b border-subtle">
                           <th className="pb-2 font-medium pr-3">Market</th>
@@ -2545,6 +2546,7 @@ export function Component() {
                               <td className="py-2 pr-3">
                                 {categoryNorm ? (
                                   <span className="inline-flex items-center gap-1">
+                                    {/* dynamic-color: intentional — color is runtime chart palette value */}
                                     <span className="size-2 rounded-full" style={{ backgroundColor: dotColor }} />
                                     <span className="text-secondary">{categoryNorm}</span>
                                   </span>
@@ -2643,13 +2645,13 @@ export function Component() {
               <div className="bg-elevated border border-default rounded-xl p-4">
                 <div className="flex items-center gap-2 mb-4">
                   <TrendingUp className="size-4 text-tertiary" />
-                  <span className="text-sm font-medium text-primary">Advanced Statistics</span>
+                  <span className="text-body-md font-medium text-primary">Advanced Statistics</span>
                 </div>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                   {statItems.map((item) => (
                     <div key={item.label} className="bg-surface rounded-pf p-3">
                       <p
-                        className="text-xs text-tertiary uppercase tracking-wider mb-1"
+                        className="text-label text-tertiary uppercase tracking-wider mb-1"
                         title={item.tooltip}
                       >
                         {item.label}
@@ -2669,12 +2671,12 @@ export function Component() {
           <div className="bg-elevated border border-default rounded-xl p-4">
             <div className="flex items-center gap-2 mb-4">
               <CalendarDays className="size-4 text-tertiary" />
-              <span className="text-sm font-medium text-primary">Daily Returns (12 months)</span>
+              <span className="text-body-md font-medium text-primary">Daily Returns (12 months)</span>
             </div>
             {loadingHeatmap ? (
               <div className="h-32 bg-overlay rounded animate-pulse" />
             ) : heatmapData.length === 0 ? (
-              <p className="text-sm text-tertiary">No trading data yet</p>
+              <p className="text-body-sm text-tertiary">No trading data yet</p>
             ) : (
               <HeatmapGrid data={heatmapData} />
             )}
@@ -2703,7 +2705,7 @@ export function Component() {
                 <div className="bg-elevated border border-default rounded-xl p-4">
                   <div className="flex items-center gap-2 mb-4">
                     <ShieldAlert className="size-4 text-accent-text" />
-                    <span className="text-sm font-semibold text-primary">Risk Concentration</span>
+                    <span className="text-body-md font-semibold text-primary">Risk Concentration</span>
                   </div>
                   {/* 2×6 skeleton grid */}
                   <div className="grid gap-2" style={{ gridTemplateColumns: 'auto repeat(6, 1fr)' }}>
@@ -2731,12 +2733,12 @@ export function Component() {
                 <div className="bg-elevated border border-default rounded-xl p-4">
                   <div className="flex items-center gap-2 mb-4">
                     <ShieldAlert className="size-4 text-accent-text" />
-                    <span className="text-sm font-semibold text-primary">Risk Concentration</span>
+                    <span className="text-body-md font-semibold text-primary">Risk Concentration</span>
                   </div>
                   <div className="flex flex-col items-center justify-center py-10 text-center">
                     <ShieldCheck className="size-8 text-tertiary mb-2" />
-                    <p className="text-sm font-medium text-primary">No open positions — nothing to analyse</p>
-                    <p className="text-xs text-tertiary mt-1">Open some positions to see your risk concentration.</p>
+                    <p className="text-body-md font-medium text-primary">No open positions — nothing to analyse</p>
+                    <p className="text-label text-tertiary mt-1">Open some positions to see your risk concentration.</p>
                   </div>
                 </div>
               );
@@ -2769,7 +2771,7 @@ export function Component() {
                   <div className="flex items-center gap-2">
                     <ShieldAlert className="size-4 text-accent-text" />
                     <div>
-                      <span className="text-sm font-semibold text-primary">Risk Concentration</span>
+                      <span className="text-body-md font-semibold text-primary">Risk Concentration</span>
                       <p className="text-label text-tertiary mt-1">Exposure by category and outcome</p>
                     </div>
                   </div>
@@ -2784,7 +2786,7 @@ export function Component() {
                       className="flex items-center gap-2 mt-3 px-3 py-2 rounded-pf bg-warning/10 border border-warning/30"
                     >
                       <AlertTriangle className="size-4 text-warning shrink-0" />
-                      <p className="text-xs text-gold-300">
+                      <p className="text-label text-gold-300">
                         High concentration in{' '}
                         <span className="font-semibold capitalize">{c.category}</span>{' '}
                         <span className="font-semibold">{c.outcome}</span>{' '}
@@ -2816,7 +2818,7 @@ export function Component() {
                           key={`row-lbl-${outcome}`}
                           className="flex items-center justify-center"
                         >
-                          <span className={`text-xs font-semibold px-2 py-1 rounded ${
+                          <span className={`text-label font-semibold px-2 py-1 rounded ${
                             outcome === 'YES'
                               ? 'text-gain bg-gain/10'
                               : 'text-loss bg-loss/10'
@@ -2838,7 +2840,7 @@ export function Component() {
                                 key={`${outcome}-${cat}`}
                                 className={`${bgClass} rounded-pf border border-subtle flex items-center justify-center h-14`}
                               >
-                                <span className="text-tertiary text-sm">—</span>
+                                <span className="text-tertiary text-body-sm">—</span>
                               </div>
                             );
                           }
@@ -2857,7 +2859,7 @@ export function Component() {
                               className={`${bgClass} rounded-pf border border-subtle h-14 relative p-2 cursor-default transition-opacity hover:opacity-80`}
                             >
                               {/* Dollar value */}
-                              <p className="text-primary font-mono text-xs leading-tight">{formatCellValue(cell.totalValue)}</p>
+                              <p className="text-primary font-mono text-label leading-tight">{formatCellValue(cell.totalValue)}</p>
                               {/* Position count */}
                               <p className="text-tertiary text-caption leading-tight mt-1">{cell.positionCount} pos</p>
                               {/* P&L badge bottom-right */}
@@ -2970,7 +2972,7 @@ export function Component() {
                 <div className="bg-elevated border border-default rounded-xl p-4">
                   <div className="flex items-center gap-2 mb-4">
                     <Lightbulb className="size-4 text-warning" />
-                    <span className="text-sm font-semibold text-primary">Rebalancing Suggestions</span>
+                    <span className="text-body-md font-semibold text-primary">Rebalancing Suggestions</span>
                   </div>
                   <div className="space-y-3">
                     {[0, 1].map(i => (
@@ -2986,9 +2988,9 @@ export function Component() {
                 {/* Header */}
                 <div className="flex items-center gap-2 mb-4">
                   <Lightbulb className="size-4 text-warning" />
-                  <span className="text-sm font-semibold text-primary">Rebalancing Suggestions</span>
+                  <span className="text-body-md font-semibold text-primary">Rebalancing Suggestions</span>
                   {visibleSuggestions.length > 0 && (
-                    <span className="inline-flex items-center justify-center min-w-4 h-4 px-1 rounded-full bg-warning/15 text-warning text-caption font-semibold">
+                    <span className="inline-flex items-center justify-center min-w-4 h-4 px-1 rounded-full bg-warning-subtle text-warning text-caption font-semibold">
                       {visibleSuggestions.length}
                     </span>
                   )}
@@ -2997,8 +2999,8 @@ export function Component() {
                 {visibleSuggestions.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-8 text-center">
                     <CheckCircle2 className="size-8 text-gain mb-2" />
-                    <p className="text-sm font-medium text-primary">Your portfolio looks well balanced</p>
-                    <p className="text-xs text-tertiary mt-1">No rebalancing actions are needed right now.</p>
+                    <p className="text-body-md font-medium text-primary">Your portfolio looks well balanced</p>
+                    <p className="text-label text-tertiary mt-1">No rebalancing actions are needed right now.</p>
                   </div>
                 ) : (
                   <div className="space-y-3">
@@ -3018,7 +3020,7 @@ export function Component() {
                             `}>
                               <SuggestionTypeIcon type={s.type} />
                             </span>
-                            <p className="text-sm font-medium text-primary truncate">{s.title}</p>
+                            <p className="text-body-md font-medium text-primary truncate">{s.title}</p>
                           </div>
                           <Button
                             type="button"
@@ -3033,7 +3035,7 @@ export function Component() {
                         </div>
 
                         {/* Description */}
-                        <p className="text-xs text-tertiary mt-2 leading-relaxed">{s.description}</p>
+                        <p className="text-label text-tertiary mt-2 leading-relaxed">{s.description}</p>
 
                         {/* Current → Target bar */}
                         <div className="mt-3">
@@ -3083,15 +3085,15 @@ export function Component() {
             const totalExposure = entries.reduce((sum, [, v]) => sum + v.exposure, 0) || 1;
             return (
               <div className="bg-elevated border border-default rounded-xl p-4">
-                <p className="text-xs text-secondary uppercase tracking-wider mb-3">Category Exposure</p>
+                <p className="text-label text-secondary uppercase tracking-wider mb-3">Category Exposure</p>
                 <div className="space-y-3">
                   {entries.map(([category, { count, exposure }]) => {
                     const barPct = Math.round((exposure / totalExposure) * 100);
                     return (
                       <div key={category}>
                         <div className="flex items-center justify-between mb-1">
-                          <span className="text-sm text-primary capitalize">{category}</span>
-                          <span className="text-xs text-tertiary font-mono">
+                          <span className="text-body-md text-primary capitalize">{category}</span>
+                          <span className="text-label text-tertiary font-mono">
                             {exposure.toLocaleString(undefined, { maximumFractionDigits: 0 })} shares &middot; {count} position{count !== 1 ? 's' : ''}
                           </span>
                         </div>
@@ -3123,7 +3125,7 @@ export function Component() {
               <div className="bg-elevated border border-default rounded-xl">
                 <div className="flex items-center gap-2 px-4 py-3 border-b border-subtle">
                   <PieChart className="size-4 text-tertiary" />
-                  <span className="text-sm font-medium text-primary">Exposure by Market</span>
+                  <span className="text-body-md font-medium text-primary">Exposure by Market</span>
                 </div>
                 <div className="divide-y divide-subtle">
                   {sorted.map((m) => {
@@ -3132,7 +3134,7 @@ export function Component() {
                     return (
                       <div key={m.title} className="flex items-center gap-3 px-4 py-3">
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm text-primary truncate" title={m.title}>{m.title}</p>
+                          <p className="text-body-md text-primary truncate" title={m.title}>{m.title}</p>
                           <div className="mt-1 h-2 rounded-full bg-surface overflow-hidden">
                             <div
                               className={`h-full rounded-full ${m.pnl >= 0 ? 'bg-gain/60' : 'bg-loss/60'}`}
@@ -3141,7 +3143,7 @@ export function Component() {
                           </div>
                         </div>
                         <div className="text-right shrink-0">
-                          <span className={`text-xs font-mono font-medium ${pnlColor(String(m.pnl))}`}>
+                          <span className={`text-label font-mono font-medium ${pnlColor(String(m.pnl))}`}>
                             {formatPnl(String(m.pnl))}
                           </span>
                           <p className="text-caption text-tertiary">{m.count} position{m.count !== 1 ? 's' : ''}</p>
@@ -3171,17 +3173,17 @@ export function Component() {
               {/* Paper summary */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div className="bg-elevated border border-default rounded-xl p-4">
-                  <span className="text-xs text-secondary uppercase tracking-wider">Paper P&L</span>
+                  <span className="text-label text-secondary uppercase tracking-wider">Paper P&L</span>
                   <span className={`block mt-1 text-xl font-mono font-semibold ${pnlColor(paper.pnl)}`}>
                     {formatPnl(paper.pnl)}
                   </span>
                 </div>
                 <div className="bg-elevated border border-default rounded-xl p-4">
-                  <span className="text-xs text-secondary uppercase tracking-wider">Positions</span>
+                  <span className="text-label text-secondary uppercase tracking-wider">Positions</span>
                   <span className="block mt-1 text-xl font-mono font-semibold text-primary">{paper.positions.length}</span>
                 </div>
                 <div className="bg-elevated border border-default rounded-xl p-4">
-                  <span className="text-xs text-secondary uppercase tracking-wider">Total Orders</span>
+                  <span className="text-label text-secondary uppercase tracking-wider">Total Orders</span>
                   <span className="block mt-1 text-xl font-mono font-semibold text-primary">{paper.orderCount}</span>
                 </div>
                 <div className="bg-elevated border border-default rounded-xl p-4 flex items-end justify-end">
@@ -3201,9 +3203,9 @@ export function Component() {
                       <div role="dialog" aria-modal="true" aria-labelledby="reset-dialog-title" className="bg-elevated border border-default rounded-xl p-6 max-w-sm mx-4 shadow-lg" onClick={(e) => e.stopPropagation()}>
                         <div className="flex items-center gap-2 mb-3">
                           <AlertTriangle className="size-5 text-loss" />
-                          <h2 id="reset-dialog-title" className="text-sm font-semibold text-primary">Reset Paper Account</h2>
+                          <h2 id="reset-dialog-title" className="text-body-md font-semibold text-primary">Reset Paper Account</h2>
                         </div>
-                        <p className="text-sm text-secondary mb-4">This will delete all paper positions and orders. This cannot be undone.</p>
+                        <p className="text-body-sm text-secondary mb-4">This will delete all paper positions and orders. This cannot be undone.</p>
                         <div className="flex justify-end gap-2">
                           <Button type="button" variant="ghost" size="sm" onClick={() => setShowResetConfirm(false)}>Cancel</Button>
                           <Button type="button" variant="danger" size="sm" onClick={resetPaper}>Reset</Button>
@@ -3219,19 +3221,19 @@ export function Component() {
                 <div className="bg-elevated border border-default rounded-xl">
                   <div className="flex flex-col items-center justify-center py-16 text-center">
                     <Wallet className="size-10 text-tertiary mb-3" />
-                    <p className="text-sm font-medium text-primary">No paper positions</p>
-                    <p className="text-xs text-tertiary mt-1">Start a strategy in Paper mode to simulate trades.</p>
+                    <p className="text-body-md font-medium text-primary">No paper positions</p>
+                    <p className="text-label text-tertiary mt-1">Start a strategy in Paper mode to simulate trades.</p>
                   </div>
                 </div>
               ) : (
                 <div className="bg-elevated border border-default rounded-xl">
                   <div className="px-4 py-3 border-b border-subtle">
-                    <span className="text-sm font-medium text-primary">Paper Positions</span>
+                    <span className="text-body-md font-medium text-primary">Paper Positions</span>
                   </div>
                   <div className="overflow-x-auto">
-                    <table className="w-full text-sm" aria-label="Paper positions">
+                    <table className="w-full text-body-sm" aria-label="Paper positions">
                       <thead>
-                        <tr className="bg-surface text-left text-xs text-secondary uppercase tracking-wider">
+                        <tr className="bg-surface text-left text-label text-secondary uppercase tracking-wider">
                           <th scope="col" className="px-4 py-3 font-medium">Token</th>
                           <th scope="col" className="px-4 py-3 font-medium">Side</th>
                           <th scope="col" className="px-4 py-3 font-medium text-right">Size</th>
@@ -3245,7 +3247,7 @@ export function Component() {
                               <span className="text-primary" title={pos.tokenId}>{formatTokenId(pos.tokenId)}</span>
                             </td>
                             <td className="px-4 py-3">
-                              <span className={`inline-flex px-2 py-1 rounded text-xs font-medium ${
+                              <span className={`inline-flex px-2 py-1 rounded text-label font-medium ${
                                 pos.side === 'BUY' ? 'bg-gain/10 text-gain' : 'bg-loss/10 text-loss'
                               }`}>
                                 {pos.side}
@@ -3270,7 +3272,7 @@ export function Component() {
       )}
 
       {/* Risk disclaimer — compliance (CLAUDE.md hard rule) */}
-      <p className="text-xs text-tertiary mt-4 italic">
+      <p className="text-label text-tertiary mt-4 italic">
         Past performance does not guarantee future results. Trading on prediction markets involves risk of loss.
       </p>
     </div>

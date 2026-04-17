@@ -122,7 +122,7 @@ export function Component() {
             <TrendingDown className="size-6 text-gain" />
             Merge Arbitrage Scanner
           </h1>
-          <p className="text-sm text-secondary mt-1">
+          <p className="text-body-sm text-secondary mt-1">
             Markets where YES + NO prices sum to less than $1.00 — buy both tokens and lock in
             risk-free profit on resolution.
           </p>
@@ -131,7 +131,7 @@ export function Component() {
           type="button"
           onClick={load}
           disabled={loading}
-          className="flex items-center gap-2 px-3 py-2 rounded-pf bg-elevated border border-default text-sm text-secondary hover:text-primary hover:border-strong transition-colors disabled:opacity-50"
+          className="flex items-center gap-2 px-3 py-2 rounded-pf bg-elevated border border-default text-body-sm text-secondary hover:text-primary hover:border-strong transition-colors disabled:opacity-50"
         >
           {loading ? <Loader2 className="size-4 animate-spin" /> : <RefreshCw className="size-4" />}
           Refresh
@@ -141,7 +141,7 @@ export function Component() {
       {/* How it works */}
       <div className="flex items-start gap-3 p-4 rounded-xl bg-surface border border-default">
         <Info className="size-4 text-accent-text shrink-0 mt-1" />
-        <p className="text-xs text-secondary leading-relaxed">
+        <p className="text-label text-secondary leading-relaxed">
           <span className="text-primary font-medium">How merge arbitrage works: </span>
           In a binary market, YES + NO = $1.00 at resolution. If the live prices sum to less than $1.00,
           you can buy both tokens at a discount and receive $1.00 back regardless of the outcome.
@@ -152,23 +152,23 @@ export function Component() {
 
       {/* Filter */}
       <div className="flex items-center gap-4">
-        <span className="text-xs text-secondary whitespace-nowrap">Min margin:</span>
+        <span className="text-label text-secondary whitespace-nowrap">Min margin:</span>
         {[0.5, 1, 2, 5].map(v => (
           <Button
             key={v}
             type="button"
             variant="ghost"
             onClick={() => setMinMargin(v)}
-            className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
+            className={`px-3 py-1 rounded-full text-label font-medium border transition-colors ${
               minMargin === v
-                ? 'bg-accent/15 text-accent-text border-accent/30'
+                ? 'bg-accent-subtle text-accent-text border-accent/30'
                 : 'bg-elevated text-secondary border-default hover:border-strong'
             }`}
           >
             {v}%+
           </Button>
         ))}
-        <span className="ml-auto text-xs text-tertiary">
+        <span className="ml-auto text-label text-tertiary">
           {loading ? 'Scanning…' : `${opportunities.length} opportunit${opportunities.length !== 1 ? 'ies' : 'y'} found`}
         </span>
       </div>
@@ -183,8 +183,8 @@ export function Component() {
       ) : opportunities.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-center">
           <AlertTriangle className="size-10 text-tertiary mb-3" />
-          <p className="text-secondary text-sm">No arbitrage opportunities at the {minMargin}%+ threshold right now.</p>
-          <p className="text-tertiary text-xs mt-1">Markets are efficiently priced. Lower the threshold or check back shortly.</p>
+          <p className="text-secondary text-body-sm">No arbitrage opportunities at the {minMargin}%+ threshold right now.</p>
+          <p className="text-tertiary text-label mt-1">Markets are efficiently priced. Lower the threshold or check back shortly.</p>
         </div>
       ) : (
         <div className="bg-elevated border border-default rounded-xl overflow-hidden">
@@ -207,7 +207,7 @@ export function Component() {
               <div className="min-w-0">
                 <Link
                   to={`/markets/${opp.marketId}`}
-                  className="text-sm text-primary hover:text-accent-text transition-colors line-clamp-1"
+                  className="text-body-md text-primary hover:text-accent-text transition-colors line-clamp-1"
                 >
                   {opp.marketTitle}
                 </Link>
@@ -222,16 +222,16 @@ export function Component() {
               </div>
 
               {/* YES */}
-              <span className="font-mono text-sm text-primary text-right">${opp.yesPrice}</span>
+              <span className="font-mono text-body-md text-primary text-right">${opp.yesPrice}</span>
 
               {/* NO */}
-              <span className="font-mono text-sm text-primary text-right">${opp.noPrice}</span>
+              <span className="font-mono text-body-md text-primary text-right">${opp.noPrice}</span>
 
               {/* Sum */}
-              <span className="font-mono text-sm text-tertiary text-right">${opp.sum}</span>
+              <span className="font-mono text-body-sm text-tertiary text-right">${opp.sum}</span>
 
               {/* Margin */}
-              <span className={`font-mono text-sm font-semibold text-right ${marginColor(opp.marginPct)}`}>
+              <span className={`font-mono text-body-md font-semibold text-right ${marginColor(opp.marginPct)}`}>
                 +{opp.marginPct}%
               </span>
 
@@ -241,7 +241,7 @@ export function Component() {
                 variant="success"
                 onClick={() => executeArbitrage(opp)}
                 disabled={executing === opp.marketId}
-                className="flex items-center gap-2 px-3 py-2 rounded-pf bg-gain text-inverse text-xs font-medium hover:bg-gain/80 disabled:opacity-50 transition-colors whitespace-nowrap"
+                className="flex items-center gap-2 px-3 py-2 rounded-pf bg-gain text-inverse text-label font-medium hover:bg-gain/80 disabled:opacity-50 transition-colors whitespace-nowrap"
               >
                 {executing === opp.marketId
                   ? <Loader2 className="size-3 animate-spin" />

@@ -153,7 +153,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
                   to={item.route}
                   title={collapsed ? item.label : undefined}
                   className={({ isActive }) =>
-                    `flex items-center gap-3 px-2 py-2 rounded-sm text-sm transition-colors duration-micro focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 focus-visible:rounded-lg ${
+                    `flex items-center gap-3 px-2 py-2 rounded-sm text-body-sm transition-colors duration-micro focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 focus-visible:rounded-lg ${
                       isActive
                         ? 'bg-accent/10 text-accent-text'
                         : 'text-secondary hover:bg-surface hover:text-primary'
@@ -176,7 +176,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
           <Link
             to="/profile/me"
             data-tour="edge-rating"
-            className="flex items-center gap-3 px-2 py-2 rounded-sm text-sm transition-colors duration-micro text-secondary hover:bg-surface hover:text-primary"
+            className="flex items-center gap-3 px-2 py-2 rounded-sm text-body-sm transition-colors duration-micro text-secondary hover:bg-surface hover:text-primary"
             title={collapsed ? `Edge Rating: ${myScore}` : undefined}
           >
             <TrendingUp size={18} className={`shrink-0 ${
@@ -188,7 +188,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
             {!collapsed && (
               <span className="flex items-center gap-2">
                 <span>Edge Rating</span>
-                <span className={`font-mono font-semibold text-xs ${
+                <span className={`font-mono font-semibold text-label ${
                   myScore >= 80 ? 'text-gain' :
                   myScore >= 60 ? 'text-accent-text' :
                   myScore >= 40 ? 'text-warning' :
@@ -201,7 +201,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
         <button
           type="button"
           onClick={onToggle}
-          className="flex items-center gap-3 px-2 py-2 rounded-sm text-sm transition-colors duration-micro text-secondary hover:bg-surface hover:text-primary w-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 focus-visible:rounded-lg"
+          className="flex items-center gap-3 px-2 py-2 rounded-sm text-body-sm transition-colors duration-micro text-secondary hover:bg-surface hover:text-primary w-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 focus-visible:rounded-lg"
           aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
         >
           {collapsed ? (
@@ -214,7 +214,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
           to="/settings"
           title={collapsed ? 'Settings' : undefined}
           className={({ isActive }) =>
-            `flex items-center gap-3 px-2 py-2 rounded-sm text-sm transition-colors duration-micro focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 focus-visible:rounded-lg ${
+            `flex items-center gap-3 px-2 py-2 rounded-sm text-body-sm transition-colors duration-micro focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 focus-visible:rounded-lg ${
               isActive
                 ? 'bg-accent/10 text-accent-text'
                 : 'text-secondary hover:bg-surface hover:text-primary'

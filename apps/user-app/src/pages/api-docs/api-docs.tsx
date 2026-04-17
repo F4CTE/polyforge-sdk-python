@@ -20,11 +20,11 @@ function PublicHeader() {
   return (
     <header className="shrink-0 flex items-center justify-between px-5 h-14 border-b border-default bg-surface">
       <Link to="/" className="flex items-center gap-3">
-        <span className="text-sm font-semibold tracking-tight text-primary">
+        <span className="text-body-md font-semibold tracking-tight text-primary">
           <span className="text-accent-text">Poly</span>forge
         </span>
-        <span className="text-strong text-sm font-light select-none">/</span>
-        <span className="text-xs font-medium text-secondary">API Reference</span>
+        <span className="text-strong text-body-sm font-light select-none">/</span>
+        <span className="text-label font-medium text-secondary">API Reference</span>
       </Link>
       <div className="flex items-center gap-2">
         <Button
@@ -39,13 +39,13 @@ function PublicHeader() {
         </Button>
         <Link
           to="/login"
-          className="text-sm font-medium text-secondary hover:text-primary transition-colors px-3 py-2"
+          className="text-body-sm font-medium text-secondary hover:text-primary transition-colors px-3 py-2"
         >
           Sign in
         </Link>
         <Link
           to="/register"
-          className="text-sm font-semibold px-4 py-2 rounded-pf bg-accent text-inverse hover:bg-accent-text transition-colors duration-micro"
+          className="text-body-md font-semibold px-4 py-2 rounded-pf bg-accent text-inverse hover:bg-accent-text transition-colors duration-micro"
         >
           Sign up free
         </Link>
@@ -75,7 +75,7 @@ function OnThisPage({ sectionId, onSelect }: TocProps) {
           variant="ghost"
           key={`${ep.method}-${ep.path}`}
           onClick={() => onSelect(`${ep.method}-${ep.path}`)}
-          className="text-xs text-tertiary hover:text-primary py-1 cursor-pointer text-left flex items-center gap-2 truncate"
+          className="text-label text-tertiary hover:text-primary py-1 cursor-pointer text-left flex items-center gap-2 truncate"
         >
           <Badge text={ep.method} cls={`${METHOD_CLS[ep.method]} shrink-0`} />
           <span className="truncate">{ep.summary}</span>
@@ -144,7 +144,7 @@ export function Component() {
         {/* Breadcrumb bar */}
         <nav
           aria-label="Breadcrumb"
-          className="sticky top-0 z-10 flex items-center gap-2 px-6 h-11 bg-surface/80 backdrop-blur-sm border-b border-default text-xs text-tertiary shrink-0"
+          className="sticky top-0 z-10 flex items-center gap-2 px-6 h-11 bg-surface/80 backdrop-blur-sm border-b border-default text-label text-tertiary shrink-0"
         >
           {/* Mobile docs menu button — visible only below lg */}
           <Button
@@ -155,7 +155,7 @@ export function Component() {
             aria-label="Open docs navigation"
           >
             <BookOpen size={16} />
-            <span className="text-xs">Menu</span>
+            <span className="text-label">Menu</span>
           </Button>
           <span>Docs</span>
           <ChevronRight className="size-3 shrink-0" />

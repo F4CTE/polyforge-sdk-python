@@ -28,7 +28,7 @@ export function AuthGuard() {
               fill="var(--accent-default)"
             />
           </svg>
-          <p className="mt-4 text-sm text-secondary" role="status">
+          <p className="mt-4 text-body-sm text-secondary" role="status">
             Verifying admin session...
           </p>
         </div>

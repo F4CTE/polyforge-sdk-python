@@ -56,7 +56,7 @@ export function Component() {
     <div className="animate-fade-in space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-semibold text-primary">
-          Tickets <span className="text-sm font-normal text-tertiary">({total})</span>
+          Tickets <span className="text-body-sm font-normal text-tertiary">({total})</span>
         </h2>
         <Select
           value={statusFilter}
@@ -65,7 +65,7 @@ export function Component() {
             setPage(1);
           }}
           aria-label="Filter by ticket status"
-          className="px-3 py-2 text-sm rounded-sm border border-default bg-app text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/20"
+          className="px-3 py-2 text-body-sm rounded-sm border border-default bg-app text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/20"
         >
           <option value="">All statuses</option>
           <option value="OPEN">Open</option>
@@ -77,16 +77,16 @@ export function Component() {
 
       <div className="bg-elevated border border-default rounded-xl overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className="w-full text-body-sm">
             <caption className="sr-only">Support tickets</caption>
             <thead>
               <tr className="border-b border-default">
-                <th scope="col" className="text-left px-4 py-3 text-xs font-medium text-tertiary uppercase tracking-wider">Subject</th>
-                <th scope="col" className="text-left px-4 py-3 text-xs font-medium text-tertiary uppercase tracking-wider">User</th>
-                <th scope="col" className="text-left px-4 py-3 text-xs font-medium text-tertiary uppercase tracking-wider">Status</th>
-                <th scope="col" className="text-left px-4 py-3 text-xs font-medium text-tertiary uppercase tracking-wider">Priority</th>
-                <th scope="col" className="text-left px-4 py-3 text-xs font-medium text-tertiary uppercase tracking-wider">Assigned To</th>
-                <th scope="col" className="text-left px-4 py-3 text-xs font-medium text-tertiary uppercase tracking-wider">Created</th>
+                <th scope="col" className="text-left px-4 py-3 text-label font-medium text-tertiary uppercase tracking-wider">Subject</th>
+                <th scope="col" className="text-left px-4 py-3 text-label font-medium text-tertiary uppercase tracking-wider">User</th>
+                <th scope="col" className="text-left px-4 py-3 text-label font-medium text-tertiary uppercase tracking-wider">Status</th>
+                <th scope="col" className="text-left px-4 py-3 text-label font-medium text-tertiary uppercase tracking-wider">Priority</th>
+                <th scope="col" className="text-left px-4 py-3 text-label font-medium text-tertiary uppercase tracking-wider">Assigned To</th>
+                <th scope="col" className="text-left px-4 py-3 text-label font-medium text-tertiary uppercase tracking-wider">Created</th>
               </tr>
             </thead>
             <tbody>
@@ -105,7 +105,7 @@ export function Component() {
                   <td colSpan={6} className="text-center py-12">
                     <MessageSquare className="mx-auto mb-3 text-tertiary opacity-40" size={40} aria-hidden="true" />
                     <p className="text-secondary font-medium">No tickets found</p>
-                    <p className="text-tertiary text-xs mt-1">Support tickets will appear here</p>
+                    <p className="text-tertiary text-label mt-1">Support tickets will appear here</p>
                   </td>
                 </tr>
               ) : (
@@ -121,12 +121,12 @@ export function Component() {
                     <td className="px-4 py-3 font-medium text-primary">{t.subject}</td>
                     <td className="px-4 py-3 text-secondary">{t.username ?? (t.userId ? t.userId.slice(0, 8) : '')}</td>
                     <td className="px-4 py-3">
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusColor(t.status)}`}>
+                      <span className={`px-2 py-1 rounded-full text-label font-medium ${statusColor(t.status)}`}>
                         {t.status}
                       </span>
                     </td>
                     <td className="px-4 py-3">
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${priorityColor[t.priority] ?? ''}`}>
+                      <span className={`px-2 py-1 rounded-full text-label font-medium ${priorityColor[t.priority] ?? ''}`}>
                         {t.priority}
                       </span>
                     </td>
@@ -136,12 +136,12 @@ export function Component() {
                           <div className="w-5 h-5 rounded-full bg-accent/20 flex items-center justify-center text-caption font-semibold text-accent">
                             {t.assignedToName?.[0]?.toUpperCase() ?? 'A'}
                           </div>
-                          <span className="text-secondary text-xs">
+                          <span className="text-secondary text-label">
                             {t.assignedToName ?? (t.assignedTo ? t.assignedTo.slice(0, 8) : '')}
                           </span>
                         </div>
                       ) : (
-                        <span className="text-tertiary text-xs">Unassigned</span>
+                        <span className="text-tertiary text-label">Unassigned</span>
                       )}
                     </td>
                     <td className="px-4 py-3 text-tertiary">{formatDateTime(t.createdAt)}</td>
@@ -154,7 +154,7 @@ export function Component() {
 
         {totalPages > 1 && (
           <div className="flex items-center justify-between px-4 py-3 border-t border-default">
-            <span className="text-xs text-tertiary">Page {page} of {totalPages}</span>
+            <span className="text-caption text-tertiary">Page {page} of {totalPages}</span>
             <div className="flex items-center gap-2">
               <Button type="button" variant="ghost" size="icon-sm" onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1} aria-label="Previous page">
                 <ChevronLeft size={16} />

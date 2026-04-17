@@ -106,7 +106,7 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
             onKeyDown={handleKeyDown}
             aria-label="Search markets and strategies"
             placeholder="Search markets, strategies..."
-            className="flex-1 bg-transparent text-sm text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 rounded"
+            className="flex-1 bg-transparent text-body-sm text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 rounded"
           />
           <kbd className="hidden sm:inline-flex items-center px-2 py-1 rounded text-label text-tertiary border border-default font-mono">
             Esc
@@ -119,11 +119,11 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
         {/* Results */}
         <div role="listbox" id="cmd-palette-results" aria-label="Search results" className="max-h-72 overflow-y-auto">
           {loading && (
-            <div className="px-4 py-3 text-sm text-tertiary motion-safe:animate-pulse">Searching...</div>
+            <div className="px-4 py-3 text-body-sm text-tertiary motion-safe:animate-pulse">Searching...</div>
           )}
           {!loading && !query && (
             <div className="px-4 py-8 text-center">
-              <p className="text-xs text-tertiary">Type to search markets and strategies</p>
+              <p className="text-label text-tertiary">Type to search markets and strategies</p>
               <p className="text-label text-tertiary mt-1 opacity-60">
                 <kbd className="px-1 py-1 rounded border border-default font-mono text-caption">↑↓</kbd> navigate ·{' '}
                 <kbd className="px-1 py-1 rounded border border-default font-mono text-caption">Enter</kbd> open
@@ -131,7 +131,7 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
             </div>
           )}
           {!loading && query && results.length === 0 && (
-            <div className="px-4 py-8 text-center text-sm text-tertiary">
+            <div className="px-4 py-8 text-center text-body-sm text-tertiary">
               No results for &ldquo;{query}&rdquo;
             </div>
           )}
@@ -153,7 +153,7 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
                 {r.type === 'market' ? <BarChart3 className="size-4" /> : <Zap className="size-4" />}
               </span>
               <div className="min-w-0 flex-1">
-                <div className="text-sm text-primary truncate">{r.title}</div>
+                <div className="text-body-md text-primary truncate">{r.title}</div>
                 {r.sub && <div className="text-label text-tertiary capitalize">{r.sub}</div>}
               </div>
               <span className={`text-caption font-medium px-2 py-1 rounded shrink-0 ${

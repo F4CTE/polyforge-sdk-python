@@ -176,7 +176,7 @@ function NotificationCard({ item, onRead, onDelete }: NotificationCardProps) {
       className={[
         'relative w-full flex items-start gap-3 rounded-lg border border-default px-4 py-3',
         'transition-colors group',
-        item.read ? 'bg-surface' : 'bg-accent/5',
+        item.read ? 'bg-surface' : 'bg-accent-subtle',
       ].join(' ')}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
@@ -222,11 +222,11 @@ function NotificationCard({ item, onRead, onDelete }: NotificationCardProps) {
           </span>
         </span>
 
-        <span className="block text-sm text-tertiary mt-1 leading-relaxed">
+        <span className="block text-body-sm text-tertiary mt-1 leading-relaxed">
           {item.body}
         </span>
 
-        <span className="block text-xs text-tertiary mt-1">
+        <span className="block text-label text-tertiary mt-1">
           {relativeTime(item.timestamp)}
         </span>
       </Button>
@@ -241,7 +241,7 @@ function NotificationCard({ item, onRead, onDelete }: NotificationCardProps) {
             to={item.actionUrl}
             onClick={(e) => e.stopPropagation()}
             className={[
-              'text-xs font-medium text-accent-text hover:text-accent-text',
+              'text-label font-medium text-accent-text hover:text-accent-text',
               'transition-colors whitespace-nowrap',
             ].join(' ')}
           >
@@ -380,7 +380,7 @@ export function Component() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-xl font-semibold text-primary">Notifications</h1>
-          <p className="text-sm text-tertiary mt-1">
+          <p className="text-body-sm text-tertiary mt-1">
             Real-time alerts and system messages
           </p>
         </div>
@@ -409,7 +409,7 @@ export function Component() {
             variant="ghost"
             onClick={handleMarkAllRead}
             className={[
-              'text-sm font-medium text-accent-text hover:text-accent-text',
+              'text-body-md font-medium text-accent-text hover:text-accent-text',
               'transition-colors focus-visible:outline-none focus-visible:ring-2',
               'focus-visible:ring-accent-text rounded px-2 py-1',
             ].join(' ')}
@@ -420,7 +420,7 @@ export function Component() {
       </div>
 
       {/* Stats bar */}
-      <div className="flex items-center gap-2 text-sm text-tertiary">
+      <div className="flex items-center gap-2 text-body-sm text-tertiary">
         <span>
           <span className="font-medium text-primary">{unreadCount}</span> unread
         </span>
@@ -445,7 +445,7 @@ export function Component() {
             variant="ghost"
             onClick={() => setActiveTab(tab.value)}
             className={[
-              'px-3 py-2 text-sm font-medium rounded-t transition-colors',
+              'px-3 py-2 text-body-md font-medium rounded-t transition-colors',
               'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-text',
               activeTab === tab.value
                 ? 'text-accent-text border-b-2 border-accent-text -mb-px'
@@ -462,7 +462,7 @@ export function Component() {
         <div className="flex flex-col items-center justify-center gap-3 py-20 text-tertiary">
           <Bell className="h-10 w-10 opacity-40" />
           <p className="text-base font-medium">No notifications yet</p>
-          <p className="text-sm">Real-time alerts will appear here</p>
+          <p className="text-body-sm">Real-time alerts will appear here</p>
         </div>
       ) : (
         <div className="flex flex-col gap-2">
@@ -480,7 +480,7 @@ export function Component() {
       {/* Pagination info + load more */}
       {merged.length > 0 && (
         <div className="flex items-center justify-between pt-2 border-t border-default">
-          <p className="text-xs text-tertiary">
+          <p className="text-label text-tertiary">
             Showing{' '}
             <span className="font-medium text-primary">{merged.length}</span>
             {serverTotal > 0 && (
@@ -499,7 +499,7 @@ export function Component() {
               onClick={handleLoadMore}
               disabled={loadingMore}
               className={[
-                'text-sm font-medium text-accent-text hover:text-accent-text',
+                'text-body-md font-medium text-accent-text hover:text-accent-text',
                 'transition-colors focus-visible:outline-none focus-visible:ring-2',
                 'focus-visible:ring-accent-text rounded px-2 py-1',
                 'disabled:opacity-50',

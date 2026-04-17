@@ -21,9 +21,9 @@ interface PortfolioReview {
 /* ─── Helpers ────────────────────────────────────────────────────────── */
 
 function riskPillClass(level: string): string {
-  if (level === 'low') return 'bg-gain/15 text-gain border border-gain/30';
-  if (level === 'medium') return 'bg-warning/15 text-warning border border-warning/30';
-  return 'bg-loss/15 text-loss border border-loss/30';
+  if (level === 'low') return 'bg-gain-subtle text-gain border border-gain/30';
+  if (level === 'medium') return 'bg-warning-subtle text-warning border border-warning/30';
+  return 'bg-loss-subtle text-loss border border-loss/30';
 }
 
 function suggestionText(s: Suggestion | string): string {
@@ -118,7 +118,7 @@ export function Component() {
           type="button"
           onClick={load}
           disabled={loading}
-          className="flex items-center gap-2 px-3 py-2 rounded-pf bg-elevated border border-default text-xs text-secondary hover:border-strong hover:text-primary disabled:opacity-40 disabled:cursor-not-allowed transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+          className="flex items-center gap-2 px-3 py-2 rounded-pf bg-elevated border border-default text-label text-secondary hover:border-strong hover:text-primary disabled:opacity-40 disabled:cursor-not-allowed transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
           aria-label="Refresh analysis"
         >
           <RefreshCw className={`size-4 ${loading ? 'animate-spin' : ''}`} />
@@ -132,11 +132,11 @@ export function Component() {
         <div className="flex flex-col items-center justify-center py-20 text-center bg-elevated border border-default rounded-xl">
           <Sparkles className="size-10 text-tertiary mb-4 opacity-40" aria-hidden="true" />
           <p className="text-primary font-medium">Failed to load review</p>
-          <p className="text-sm text-tertiary mt-1">{error}</p>
+          <p className="text-body-sm text-tertiary mt-1">{error}</p>
           <Button
             type="button"
             onClick={load}
-            className="mt-4 px-4 py-2 rounded-pf bg-elevated border border-default text-sm text-primary hover:border-strong transition-colors"
+            className="mt-4 px-4 py-2 rounded-pf bg-elevated border border-default text-body-md text-primary hover:border-strong transition-colors"
           >
             Try Again
           </Button>
@@ -148,17 +148,17 @@ export function Component() {
           {/* Review card */}
           <div className="bg-elevated border border-default rounded-xl p-6 space-y-4">
             <div className="flex items-center justify-between flex-wrap gap-2">
-              <h2 className="text-sm font-medium text-primary uppercase tracking-wide">Portfolio Review</h2>
+              <h2 className="text-body-md font-medium text-primary uppercase tracking-wide">Portfolio Review</h2>
               <div className="flex items-center gap-2">
                 <span
-                  className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wide ${riskPillClass(data.riskLevel)}`}
+                  className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-label font-semibold uppercase tracking-wide ${riskPillClass(data.riskLevel)}`}
                   aria-label={`Risk level: ${data.riskLevel}`}
                 >
                   {data.riskLevel} risk
                 </span>
               </div>
             </div>
-            <p className="text-sm text-secondary leading-relaxed whitespace-pre-wrap">
+            <p className="text-body-sm text-secondary leading-relaxed whitespace-pre-wrap">
               {data.summary}
             </p>
             {data.generatedAt && (
@@ -171,10 +171,10 @@ export function Component() {
           {/* Suggestions */}
           {data.suggestions.length > 0 && (
             <div className="bg-elevated border border-default rounded-xl p-6">
-              <h2 className="text-sm font-medium text-primary uppercase tracking-wide mb-4">Suggestions</h2>
+              <h2 className="text-body-md font-medium text-primary uppercase tracking-wide mb-4">Suggestions</h2>
               <ul className="space-y-3" aria-label="Portfolio suggestions">
                 {data.suggestions.map((suggestion, i) => (
-                  <li key={i} className="flex items-start gap-3 text-sm text-secondary">
+                  <li key={i} className="flex items-start gap-3 text-body-sm text-secondary">
                     <span
                       className="mt-2 size-2 rounded-full bg-accent shrink-0"
                       aria-hidden="true"

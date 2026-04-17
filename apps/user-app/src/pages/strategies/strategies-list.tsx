@@ -239,7 +239,7 @@ function ComparisonPanel({ perfData, loading, onBack }: ComparisonPanelProps) {
         type="button"
         variant="ghost"
         onClick={onBack}
-        className="flex items-center gap-2 text-sm text-secondary hover:text-primary transition-colors"
+        className="flex items-center gap-2 text-body-sm text-secondary hover:text-primary transition-colors"
       >
         <ChevronLeft className="size-4" aria-hidden="true" />
         Back to Strategies
@@ -247,9 +247,9 @@ function ComparisonPanel({ perfData, loading, onBack }: ComparisonPanelProps) {
 
       {/* P&L Line Chart */}
       <div className="bg-elevated border border-default rounded-xl p-5">
-        <h2 className="text-sm font-semibold text-primary mb-4">P&L Performance</h2>
+        <h2 className="text-body-md font-semibold text-primary mb-4">P&L Performance</h2>
         {chartData.length === 0 ? (
-          <div className="flex items-center justify-center h-56 text-tertiary text-sm">
+          <div className="flex items-center justify-center h-56 text-tertiary text-body-sm">
             No P&L history available
           </div>
         ) : (
@@ -278,7 +278,7 @@ function ComparisonPanel({ perfData, loading, onBack }: ComparisonPanelProps) {
               <Legend
                 formatter={(value: string) => {
                   const strategy = perfData.find((s) => s.strategyId === value);
-                  return <span className="text-secondary text-xs">{strategy?.name ?? value}</span>;
+                  return <span className="text-secondary text-label">{strategy?.name ?? value}</span>;
                 }}
               />
               {perfData.map((s) => (
@@ -300,15 +300,15 @@ function ComparisonPanel({ perfData, loading, onBack }: ComparisonPanelProps) {
       {/* Stats Table */}
       <div className="bg-elevated border border-default rounded-xl overflow-hidden">
         <div className="p-5 pb-3">
-          <h2 className="text-sm font-semibold text-primary">Performance Metrics</h2>
+          <h2 className="text-body-md font-semibold text-primary">Performance Metrics</h2>
         </div>
         <div className="overflow-x-auto">
-          <table className="w-full text-sm" aria-label="Strategy performance metrics">
+          <table className="w-full text-body-sm" aria-label="Strategy performance metrics">
             <thead>
               <tr className="border-t border-default">
-                <th className="text-left px-5 py-3 text-tertiary font-medium text-xs w-36">Metric</th>
+                <th className="text-left px-5 py-3 text-tertiary font-medium text-label w-36">Metric</th>
                 {perfData.map((s) => (
-                  <th key={s.strategyId} className="text-left px-5 py-3 font-medium text-xs">
+                  <th key={s.strategyId} className="text-left px-5 py-3 font-medium text-label">
                     <span className="flex items-center gap-2">
                       <span className="inline-block w-3 h-3 rounded-full shrink-0" style={{ background: s.color }} aria-hidden="true" />
                       <span className="text-primary truncate max-w-[120px]">{s.name}</span>
@@ -320,45 +320,45 @@ function ComparisonPanel({ perfData, loading, onBack }: ComparisonPanelProps) {
             <tbody className="divide-y divide-default">
               {/* Total P&L */}
               <tr>
-                <td className="px-5 py-3 text-tertiary text-xs">Total P&L</td>
+                <td className="px-5 py-3 text-tertiary text-label">Total P&L</td>
                 {perfData.map((s, i) => (
-                  <td key={s.strategyId} className={`px-5 py-3 font-mono text-xs rounded-sm ${bestWorstClass(totalPnlNums, i, true)}`}>
+                  <td key={s.strategyId} className={`px-5 py-3 font-mono text-label rounded-sm ${bestWorstClass(totalPnlNums, i, true)}`}>
                     {s.stats.totalPnl}
                   </td>
                 ))}
               </tr>
               {/* Win Rate */}
               <tr>
-                <td className="px-5 py-3 text-tertiary text-xs">Win Rate</td>
+                <td className="px-5 py-3 text-tertiary text-label">Win Rate</td>
                 {perfData.map((s, i) => (
-                  <td key={s.strategyId} className={`px-5 py-3 font-mono text-xs ${bestWorstClass(winRates, i, true)}`}>
+                  <td key={s.strategyId} className={`px-5 py-3 font-mono text-label ${bestWorstClass(winRates, i, true)}`}>
                     {s.stats.winRate}%
                   </td>
                 ))}
               </tr>
               {/* Max Drawdown */}
               <tr>
-                <td className="px-5 py-3 text-tertiary text-xs">Max Drawdown</td>
+                <td className="px-5 py-3 text-tertiary text-label">Max Drawdown</td>
                 {perfData.map((s, i) => (
-                  <td key={s.strategyId} className={`px-5 py-3 font-mono text-xs ${bestWorstClass(drawdowns, i, true)}`}>
+                  <td key={s.strategyId} className={`px-5 py-3 font-mono text-label ${bestWorstClass(drawdowns, i, true)}`}>
                     {s.stats.maxDrawdown}
                   </td>
                 ))}
               </tr>
               {/* Trade Count */}
               <tr>
-                <td className="px-5 py-3 text-tertiary text-xs">Trade Count</td>
+                <td className="px-5 py-3 text-tertiary text-label">Trade Count</td>
                 {perfData.map((s, i) => (
-                  <td key={s.strategyId} className={`px-5 py-3 font-mono text-xs ${bestWorstClass(tradeCounts, i, true)}`}>
+                  <td key={s.strategyId} className={`px-5 py-3 font-mono text-label ${bestWorstClass(tradeCounts, i, true)}`}>
                     {s.stats.tradeCount}
                   </td>
                 ))}
               </tr>
               {/* Sharpe Ratio */}
               <tr>
-                <td className="px-5 py-3 text-tertiary text-xs">Sharpe Ratio</td>
+                <td className="px-5 py-3 text-tertiary text-label">Sharpe Ratio</td>
                 {perfData.map((s, i) => (
-                  <td key={s.strategyId} className={`px-5 py-3 font-mono text-xs ${bestWorstClass(sharpes, i, true)}`}>
+                  <td key={s.strategyId} className={`px-5 py-3 font-mono text-label ${bestWorstClass(sharpes, i, true)}`}>
                     {s.stats.sharpeRatio !== undefined ? s.stats.sharpeRatio.toFixed(2) : '—'}
                   </td>
                 ))}
@@ -591,7 +591,7 @@ export function Component() {
               type="button"
               variant="secondary"
               onClick={enterCompareMode}
-              className="flex items-center gap-2 px-4 py-3 rounded-pf bg-elevated border border-default text-sm text-secondary font-medium hover:border-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 transition-colors"
+              className="flex items-center gap-2 px-4 py-3 rounded-pf bg-elevated border border-default text-body-sm text-secondary font-medium hover:border-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 transition-colors"
             >
               <GitCompare className="size-4" aria-hidden="true" /> Compare
             </Button>
@@ -600,7 +600,7 @@ export function Component() {
               type="button"
               variant="ghost"
               onClick={exitCompareMode}
-              className="flex items-center gap-2 px-4 py-3 rounded-pf bg-accent/10 border border-accent/30 text-sm text-accent-text font-medium hover:bg-accent/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 transition-colors"
+              className="flex items-center gap-2 px-4 py-3 rounded-pf bg-accent/10 border border-accent/30 text-body-md text-accent-text font-medium hover:bg-accent/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 transition-colors"
             >
               <X className="size-4" aria-hidden="true" /> Exit Compare
             </Button>
@@ -609,13 +609,13 @@ export function Component() {
             type="button"
             variant="secondary"
             onClick={handleImport}
-            className="flex items-center gap-2 px-4 py-3 rounded-pf bg-elevated border border-default text-sm text-secondary font-medium hover:border-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 transition-colors"
+            className="flex items-center gap-2 px-4 py-3 rounded-pf bg-elevated border border-default text-body-sm text-secondary font-medium hover:border-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 transition-colors"
           >
             <Upload className="size-4" aria-hidden="true" /> Import Strategy
           </Button>
           <Link
             to="/strategies/new"
-            className="flex items-center gap-2 px-4 py-3 rounded-pf bg-accent text-inverse text-sm font-medium hover:bg-accent-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 transition-colors"
+            className="flex items-center gap-2 px-4 py-3 rounded-pf bg-accent text-inverse text-body-md font-medium hover:bg-accent-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 transition-colors"
           >
             <Plus className="size-4" aria-hidden="true" /> New Strategy
           </Link>
@@ -631,7 +631,7 @@ export function Component() {
               variant="ghost"
               key={f.value}
               onClick={() => onFilterChange(f.value)}
-              className={`px-3 py-2 text-sm rounded-full border transition-colors ${
+              className={`px-3 py-2 text-body-sm rounded-full border transition-colors ${
                 filter === f.value
                   ? 'bg-accent/10 border-accent/30 text-accent-text'
                   : 'border-default text-secondary hover:text-primary'
@@ -664,10 +664,10 @@ export function Component() {
         <div className="flex flex-col items-center justify-center py-20 text-center" role="status">
           <Code2 className="size-10 text-tertiary mb-4" aria-hidden="true" />
           <p className="text-primary font-medium">No strategies yet</p>
-          <p className="text-sm text-tertiary mt-1">Create your first strategy to start trading.</p>
+          <p className="text-body-sm text-tertiary mt-1">Create your first strategy to start trading.</p>
           <Link
             to="/strategies/new"
-            className="mt-4 flex items-center gap-2 px-4 py-3 rounded-pf bg-accent text-inverse text-sm font-medium hover:bg-accent-text transition-colors"
+            className="mt-4 flex items-center gap-2 px-4 py-3 rounded-pf bg-accent text-inverse text-body-md font-medium hover:bg-accent-text transition-colors"
           >
             <Plus className="size-4" aria-hidden="true" /> New Strategy
           </Link>
@@ -754,7 +754,7 @@ export function Component() {
 
                 {/* Name + status */}
                 <div className={`flex items-start justify-between gap-3 mb-2 ${compareMode ? 'pl-7' : ''}`}>
-                  <h3 className="text-sm font-medium text-primary leading-snug line-clamp-1 group-hover:text-accent-text transition-colors">
+                  <h3 className="text-body-md font-medium text-primary leading-snug line-clamp-1 group-hover:text-accent-text transition-colors">
                     {strategy.name}
                   </h3>
                   <span data-testid="status-badge" className={`inline-flex items-center gap-2 px-2 py-1 rounded-full text-label font-medium shrink-0 ${statusStyle.bg} ${statusStyle.text}`}>
@@ -795,7 +795,7 @@ export function Component() {
 
                 {/* Description */}
                 {strategy.description && (
-                  <p className="text-xs text-secondary line-clamp-2 mb-3">
+                  <p className="text-label text-secondary line-clamp-2 mb-3">
                     {strategy.description}
                   </p>
                 )}
@@ -803,7 +803,7 @@ export function Component() {
                 {/* P&L */}
                 {pnl !== null && (
                   <div className="mb-3">
-                    <span className={`font-mono text-sm font-medium ${pnl >= 0 ? 'text-gain' : 'text-loss'}`}>
+                    <span className={`font-mono text-body-md font-medium ${pnl >= 0 ? 'text-gain' : 'text-loss'}`}>
                       {formatPnl(pnl)}
                     </span>
                   </div>
@@ -948,7 +948,7 @@ export function Component() {
           aria-label="Compare selection bar"
         >
           <div className="max-w-7xl mx-auto flex items-center gap-3 flex-wrap">
-            <span className="text-sm font-medium text-primary shrink-0">
+            <span className="text-body-md font-medium text-primary shrink-0">
               Comparing {selectedIds.length} {selectedIds.length === 1 ? 'strategy' : 'strategies'}
             </span>
 
@@ -988,14 +988,14 @@ export function Component() {
                 type="button"
                 variant="secondary"
                 onClick={() => setSelectedIds([])}
-                className="text-sm text-secondary hover:text-primary transition-colors px-3 py-2 rounded-pf border border-default hover:border-strong"
+                className="text-body-sm text-secondary hover:text-primary transition-colors px-3 py-2 rounded-pf border border-default hover:border-strong"
               >
                 Clear
               </Button>
               <Button
                 type="button"
                 onClick={openComparison}
-                className="flex items-center gap-2 text-sm font-medium px-4 py-2 rounded-pf bg-accent text-inverse hover:bg-accent-text transition-colors"
+                className="flex items-center gap-2 text-body-md font-medium px-4 py-2 rounded-pf bg-accent text-inverse hover:bg-accent-text transition-colors"
               >
                 <GitCompare className="size-4" aria-hidden="true" />
                 View Comparison

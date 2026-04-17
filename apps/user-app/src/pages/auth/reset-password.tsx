@@ -74,10 +74,10 @@ export function Component() {
           {!done ? (
             <>
               <h1 className="text-xl font-semibold text-primary mb-1">Set new password</h1>
-              <p className="text-sm text-tertiary mb-6">Choose a strong password.</p>
+              <p className="text-body-sm text-tertiary mb-6">Choose a strong password.</p>
 
               {error && (
-                <div role="alert" className="flex items-center gap-2 bg-loss/10 border border-loss/20 text-loss rounded-pf px-4 py-3 mb-4 text-sm">
+                <div role="alert" className="flex items-center gap-2 bg-loss/10 border border-loss/20 text-loss rounded-pf px-4 py-3 mb-4 text-body-md">
                   <AlertCircle className="size-4 shrink-0" />
                   <span>{error}</span>
                 </div>
@@ -86,7 +86,7 @@ export function Component() {
               <form onSubmit={handleSubmit} className="space-y-4">
                 {/* New password */}
                 <div>
-                  <label htmlFor="password" className="block text-sm font-medium text-primary mb-2">New password</label>
+                  <label htmlFor="password" className="block text-body-md font-medium text-primary mb-2">New password</label>
                   <div className="relative">
                     <Lock className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-tertiary" />
                     <Input
@@ -103,12 +103,12 @@ export function Component() {
                       className="w-full pl-10 pr-4 py-3 bg-app border border-default rounded-pf text-primary placeholder:text-tertiary/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 focus-visible:border-accent transition-colors"
                     />
                   </div>
-                  {passwordError && <p id="reset-password-error" role="alert" className="mt-1 text-xs text-loss">{passwordError}</p>}
+                  {passwordError && <p id="reset-password-error" role="alert" className="mt-1 text-label text-loss">{passwordError}</p>}
                 </div>
 
                 {/* Confirm password */}
                 <div>
-                  <label htmlFor="confirm" className="block text-sm font-medium text-primary mb-2">Confirm password</label>
+                  <label htmlFor="confirm" className="block text-body-md font-medium text-primary mb-2">Confirm password</label>
                   <div className="relative">
                     <Lock className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-tertiary" />
                     <Input
@@ -124,7 +124,7 @@ export function Component() {
                       className="w-full pl-10 pr-4 py-3 bg-app border border-default rounded-pf text-primary placeholder:text-tertiary/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 focus-visible:border-accent transition-colors"
                     />
                   </div>
-                  {confirmError && <p id="reset-confirm-error" role="alert" className="mt-1 text-xs text-loss">{confirmError}</p>}
+                  {confirmError && <p id="reset-confirm-error" role="alert" className="mt-1 text-label text-loss">{confirmError}</p>}
                 </div>
 
                 <Button
@@ -142,7 +142,7 @@ export function Component() {
                 <Check className="size-8 text-gain" />
               </div>
               <h1 className="text-xl font-semibold text-primary mb-2">Password reset</h1>
-              <p className="text-sm text-tertiary mb-6">You can now sign in with your new password.</p>
+              <p className="text-body-sm text-tertiary mb-6">You can now sign in with your new password.</p>
               <Link
                 to="/login"
                 className="inline-block px-6 py-3 bg-accent text-inverse font-semibold rounded-pf hover:bg-accent-text transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 focus-visible:ring-offset-2 focus-visible:ring-offset-elevated"

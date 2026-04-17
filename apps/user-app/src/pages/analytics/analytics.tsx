@@ -144,13 +144,13 @@ function StatCard({
 }) {
   return (
     <div className="bg-elevated border border-default rounded-xl p-5">
-      <span className="text-xs font-medium uppercase tracking-wider text-secondary block mb-2">
+      <span className="text-label font-medium uppercase tracking-wider text-secondary block mb-2">
         {label}
       </span>
       <span className={`text-3xl font-mono font-semibold ${valueClass ?? 'text-primary'}`}>
         {value}
       </span>
-      {sub && <p className="text-xs text-tertiary mt-1">{sub}</p>}
+      {sub && <p className="text-label text-tertiary mt-1">{sub}</p>}
     </div>
   );
 }
@@ -163,7 +163,7 @@ function ScoreRow({ label, value, max }: { label: string; value: string; max: nu
 
   return (
     <div className="space-y-2">
-      <div className="flex items-center justify-between text-sm">
+      <div className="flex items-center justify-between text-body-sm">
         <span className="text-secondary">{label}</span>
         <span className="font-mono text-primary">{value}</span>
       </div>
@@ -381,7 +381,7 @@ export function Component() {
             type="button"
             onClick={exportCsv}
             disabled={exportingCsv}
-            className="flex items-center gap-2 px-3 py-2 rounded-pf bg-surface border border-default text-xs text-secondary hover:text-primary hover:border-default transition-colors disabled:opacity-50"
+            className="flex items-center gap-2 px-3 py-2 rounded-pf bg-surface border border-default text-label text-secondary hover:text-primary hover:border-default transition-colors disabled:opacity-50"
             aria-label="Export analytics as CSV"
           >
             {exportingCsv
@@ -402,7 +402,7 @@ export function Component() {
                 type="button"
                 variant="ghost"
                 onClick={() => setPeriod(p.value)}
-                className={`px-3 py-2 rounded text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-text/40 ${
+                className={`px-3 py-2 rounded text-body-md font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-text/40 ${
                   period === p.value
                     ? 'bg-accent-text/15 text-accent-text'
                     : 'text-secondary hover:text-primary hover:bg-surface'
@@ -442,15 +442,15 @@ export function Component() {
 
       {/* Row 2: P&L equity curve */}
       <div className="bg-elevated border border-default rounded-xl p-6">
-        <h2 className="text-sm font-medium text-primary mb-1">P&L Equity Curve</h2>
-        <p className="text-xs text-tertiary mb-4">Cumulative profit and loss over the selected period.</p>
+        <h2 className="text-body-md font-medium text-primary mb-1">P&L Equity Curve</h2>
+        <p className="text-label text-tertiary mb-4">Cumulative profit and loss over the selected period.</p>
         {loadingPnl ? (
           <div className="h-64 animate-pulse bg-overlay rounded" />
         ) : chartData.length === 0 ? (
           <div className="h-64 flex flex-col items-center justify-center text-center gap-2">
             <LineChartIcon className="size-10 text-tertiary opacity-40" aria-hidden="true" />
-            <p className="text-sm text-tertiary">No P&L data for this period yet.</p>
-            <p className="text-xs text-tertiary">Place and resolve trades to see your equity curve.</p>
+            <p className="text-body-sm text-tertiary">No P&L data for this period yet.</p>
+            <p className="text-label text-tertiary">Place and resolve trades to see your equity curve.</p>
           </div>
         ) : (
           <div className="h-64">
@@ -503,8 +503,8 @@ export function Component() {
         {/* Category Performance */}
         <div className="bg-elevated border border-default rounded-xl overflow-hidden">
           <div className="px-6 py-4 border-b border-default">
-            <h2 className="text-sm font-medium text-primary">Category Performance</h2>
-            <p className="text-xs text-tertiary mt-1">Brier score by category — lower is better.</p>
+            <h2 className="text-body-md font-medium text-primary">Category Performance</h2>
+            <p className="text-label text-tertiary mt-1">Brier score by category — lower is better.</p>
           </div>
           {loadingAccuracy ? (
             <div className="p-4 space-y-2">
@@ -514,16 +514,16 @@ export function Component() {
             </div>
           ) : categories.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16 px-6 text-center gap-2">
-              <p className="text-sm text-tertiary">No category data available yet.</p>
-              <p className="text-xs text-tertiary">
+              <p className="text-body-sm text-tertiary">No category data available yet.</p>
+              <p className="text-label text-tertiary">
                 Resolve predictions across categories to see breakdown here.
               </p>
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full text-sm" aria-label="Category performance">
+              <table className="w-full text-body-sm" aria-label="Category performance">
                 <thead>
-                  <tr className="bg-surface text-left text-xs text-secondary uppercase tracking-wider">
+                  <tr className="bg-surface text-left text-label text-secondary uppercase tracking-wider">
                     <th scope="col" className="px-6 py-3 font-medium">Category</th>
                     <th scope="col" className="px-6 py-3 font-medium text-right">Trades</th>
                     <th scope="col" className="px-6 py-3 font-medium text-right">Brier Score</th>
@@ -551,16 +551,16 @@ export function Component() {
 
         {/* Score Breakdown */}
         <div className="bg-elevated border border-default rounded-xl p-6">
-          <h2 className="text-sm font-medium text-primary mb-1">Score Breakdown</h2>
-          <p className="text-xs text-tertiary mb-6">Key trading performance metrics.</p>
+          <h2 className="text-body-md font-medium text-primary mb-1">Score Breakdown</h2>
+          <p className="text-label text-tertiary mb-6">Key trading performance metrics.</p>
           {loadingScore ? (
             <div className="space-y-4">
               {[0, 1, 2].map((i) => <Skeleton key={i} className="h-8" />)}
             </div>
           ) : scoreData === null ? (
             <div className="flex flex-col items-center justify-center py-12 text-center gap-2">
-              <p className="text-sm text-tertiary">No score data available yet.</p>
-              <p className="text-xs text-tertiary">
+              <p className="text-body-sm text-tertiary">No score data available yet.</p>
+              <p className="text-label text-tertiary">
                 Complete more trades to generate your score breakdown.
               </p>
             </div>
@@ -593,11 +593,11 @@ export function Component() {
           <div className="flex items-center gap-2">
             <Sparkles className="size-4 text-accent-text" aria-hidden="true" />
             <Bot className="size-4 text-accent-text" aria-hidden="true" />
-            <h2 className="text-sm font-medium text-primary">AI Portfolio Review</h2>
+            <h2 className="text-body-md font-medium text-primary">AI Portfolio Review</h2>
           </div>
           <div className="flex items-center gap-3">
             {aiReview && (
-              <span className="text-xs text-tertiary">
+              <span className="text-label text-tertiary">
                 Last updated: {minutesAgo(aiReview.generatedAt)}
               </span>
             )}
@@ -606,7 +606,7 @@ export function Component() {
               variant="ghost"
               onClick={loadAiReview}
               disabled={loadingAiReview}
-              className="flex items-center gap-2 px-3 py-2 rounded text-xs font-medium text-secondary hover:text-primary hover:bg-surface border border-default transition-colors disabled:opacity-50"
+              className="flex items-center gap-2 px-3 py-2 rounded text-label font-medium text-secondary hover:text-primary hover:bg-surface border border-default transition-colors disabled:opacity-50"
               aria-label="Refresh AI review"
             >
               <RefreshCw className={`size-4 ${loadingAiReview ? 'animate-spin' : ''}`} aria-hidden="true" />
@@ -636,11 +636,11 @@ export function Component() {
           ) : aiReviewError || !aiReview ? (
             <div className="flex flex-col items-center justify-center py-10 gap-3 text-center">
               <AlertTriangle className="size-8 text-loss opacity-60" aria-hidden="true" />
-              <p className="text-sm text-secondary">Could not load AI review.</p>
+              <p className="text-body-sm text-secondary">Could not load AI review.</p>
               <Button
                 type="button"
                 onClick={loadAiReview}
-                className="px-4 py-2 rounded text-sm font-medium bg-surface border border-default text-secondary hover:text-primary transition-colors"
+                className="px-4 py-2 rounded text-body-sm font-medium bg-surface border border-default text-secondary hover:text-primary transition-colors"
               >
                 Retry
               </Button>
@@ -648,7 +648,7 @@ export function Component() {
           ) : (
             <div className="space-y-6">
               {/* Review paragraph */}
-              <p className="text-sm text-secondary leading-relaxed">{aiReview.review}</p>
+              <p className="text-body-sm text-secondary leading-relaxed">{aiReview.review}</p>
 
               {/* Three-column breakdown */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
@@ -656,13 +656,13 @@ export function Component() {
                 <div>
                   <div className="flex items-center gap-2 mb-3">
                     <TrendingUp className="size-4 text-accent-text" aria-hidden="true" />
-                    <h3 className="text-xs font-semibold uppercase tracking-wider text-accent-text">
+                    <h3 className="text-label font-semibold uppercase tracking-wider text-accent-text">
                       Key Insights
                     </h3>
                   </div>
                   <ul className="space-y-2">
                     {aiReview.keyInsights.map((item, idx) => (
-                      <li key={idx} className="flex items-start gap-2 text-xs text-secondary">
+                      <li key={idx} className="flex items-start gap-2 text-label text-secondary">
                         <span className="mt-2 size-2 rounded-full bg-accent-text shrink-0" aria-hidden="true" />
                         {item}
                       </li>
@@ -674,13 +674,13 @@ export function Component() {
                 <div>
                   <div className="flex items-center gap-2 mb-3">
                     <Shield className="size-4 text-loss" aria-hidden="true" />
-                    <h3 className="text-xs font-semibold uppercase tracking-wider text-loss">
+                    <h3 className="text-label font-semibold uppercase tracking-wider text-loss">
                       Risk Factors
                     </h3>
                   </div>
                   <ul className="space-y-2">
                     {aiReview.riskFactors.map((item, idx) => (
-                      <li key={idx} className="flex items-start gap-2 text-xs text-secondary">
+                      <li key={idx} className="flex items-start gap-2 text-label text-secondary">
                         <span className="mt-2 size-2 rounded-full bg-loss shrink-0" aria-hidden="true" />
                         {item}
                       </li>
@@ -692,13 +692,13 @@ export function Component() {
                 <div>
                   <div className="flex items-center gap-2 mb-3">
                     <Sparkles className="size-4 text-gain" aria-hidden="true" />
-                    <h3 className="text-xs font-semibold uppercase tracking-wider text-gain">
+                    <h3 className="text-label font-semibold uppercase tracking-wider text-gain">
                       Opportunities
                     </h3>
                   </div>
                   <ul className="space-y-2">
                     {aiReview.opportunities.map((item, idx) => (
-                      <li key={idx} className="flex items-start gap-2 text-xs text-secondary">
+                      <li key={idx} className="flex items-start gap-2 text-label text-secondary">
                         <span className="mt-2 size-2 rounded-full bg-gain shrink-0" aria-hidden="true" />
                         {item}
                       </li>
@@ -715,7 +715,7 @@ export function Component() {
       <div className="bg-elevated border border-default rounded-xl p-6 space-y-4">
         <div className="flex items-center gap-2">
           <Bot className="size-4 text-accent-text" aria-hidden="true" />
-          <h2 className="text-sm font-medium text-primary">Ask AI</h2>
+          <h2 className="text-body-md font-medium text-primary">Ask AI</h2>
         </div>
 
         {/* Input row */}
@@ -729,7 +729,7 @@ export function Component() {
               if (e.key === 'Enter' && !loadingAiQuery) submitAiQuery();
             }}
             placeholder="Ask about your portfolio..."
-            className="flex-1 bg-surface border border-default rounded-sm px-3 py-2 text-sm text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-text/40 transition"
+            className="flex-1 bg-surface border border-default rounded-sm px-3 py-2 text-body-sm text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-text/40 transition"
             disabled={loadingAiQuery}
             aria-label="Ask AI a question about your portfolio"
           />
@@ -737,7 +737,7 @@ export function Component() {
             type="button"
             onClick={submitAiQuery}
             disabled={loadingAiQuery || !aiQuery.trim()}
-            className="flex items-center gap-2 px-4 py-2 rounded-sm text-sm font-medium bg-accent-text/15 text-accent-text border border-accent-text/30 hover:bg-accent-text/25 transition-colors disabled:opacity-50"
+            className="flex items-center gap-2 px-4 py-2 rounded-sm text-body-md font-medium bg-accent-text/15 text-accent-text border border-accent-text/30 hover:bg-accent-text/25 transition-colors disabled:opacity-50"
             aria-label="Send question to AI"
           >
             {loadingAiQuery ? (
@@ -753,7 +753,7 @@ export function Component() {
         {aiAnswer && (
           <div className="bg-surface border border-default rounded-sm p-4 flex items-start gap-3">
             <Bot className="size-4 text-accent-text mt-1 shrink-0" aria-hidden="true" />
-            <p className="text-sm text-secondary leading-relaxed">{aiAnswer.response}</p>
+            <p className="text-body-sm text-secondary leading-relaxed">{aiAnswer.response}</p>
           </div>
         )}
       </div>

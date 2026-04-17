@@ -226,8 +226,8 @@ export function OnboardingDashboardChecklist() {
       <div className="flex items-start justify-between gap-3 mb-3">
         <div className="flex items-center gap-2">
           <Sparkles className="size-4 text-accent-text shrink-0" aria-hidden="true" />
-          <span className="text-sm font-semibold text-primary">Getting Started</span>
-          <span className="text-xs text-secondary font-mono">
+          <span className="text-body-md font-semibold text-primary">Getting Started</span>
+          <span className="text-label text-secondary font-mono">
             {completedCount} / {STEPS.length} complete
           </span>
         </div>
@@ -258,7 +258,7 @@ export function OnboardingDashboardChecklist() {
 
       {/* ── Celebration ────────────────────────────────────────────── */}
       {celebrating && (
-        <div className="text-center py-2 text-sm text-gain font-medium animate-fade-in">
+        <div className="text-center py-2 text-body-md text-gain font-medium animate-fade-in">
           🎉 You're all set!
         </div>
       )}
@@ -277,7 +277,7 @@ export function OnboardingDashboardChecklist() {
                   className="flex items-center gap-3 px-2 py-2 rounded-pf opacity-50"
                 >
                   <CheckCircle2 className="size-4 text-gain shrink-0" aria-hidden="true" />
-                  <span className="text-sm text-secondary line-through leading-none">
+                  <span className="text-body-sm text-secondary line-through leading-none">
                     {step.label}
                   </span>
                 </div>
@@ -289,12 +289,12 @@ export function OnboardingDashboardChecklist() {
                 <Link
                   key={step.id}
                   to={step.href}
-                  className="flex items-center gap-3 px-2 py-2 rounded-pf bg-accent/5 border border-accent/20 transition-colors hover:bg-accent/10 group"
+                  className="flex items-center gap-3 px-2 py-2 rounded-pf bg-accent-subtle border border-accent/20 transition-colors hover:bg-accent/10 group"
                 >
                   <Circle className="size-4 text-accent-text shrink-0" aria-hidden="true" />
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-primary leading-none">{step.label}</p>
-                    <p className="text-xs text-secondary mt-1">{step.description}</p>
+                    <p className="text-body-md font-medium text-primary leading-none">{step.label}</p>
+                    <p className="text-label text-secondary mt-1">{step.description}</p>
                   </div>
                   <ArrowRight className="size-4 text-accent-text shrink-0 group-hover:translate-x-1 transition-transform" aria-hidden="true" />
                 </Link>
@@ -308,7 +308,7 @@ export function OnboardingDashboardChecklist() {
                 className="flex items-center gap-3 px-2 py-2 rounded-pf opacity-40"
               >
                 <Circle className="size-4 text-tertiary shrink-0" aria-hidden="true" />
-                <span className="text-sm text-secondary leading-none">{step.label}</span>
+                <span className="text-body-sm text-secondary leading-none">{step.label}</span>
               </div>
             );
           })}

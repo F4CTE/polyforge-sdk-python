@@ -334,7 +334,7 @@ function ComparisonPanel({ data, loading, onBack }: ComparisonPanelProps) {
           type="button"
           variant="ghost"
           onClick={onBack}
-          className="flex items-center gap-2 text-sm text-secondary hover:text-primary transition-colors mb-2"
+          className="flex items-center gap-2 text-body-sm text-secondary hover:text-primary transition-colors mb-2"
         >
           <ChevronLeft className="size-4" />
           Back to traders
@@ -356,7 +356,7 @@ function ComparisonPanel({ data, loading, onBack }: ComparisonPanelProps) {
           type="button"
           variant="ghost"
           onClick={onBack}
-          className="flex items-center gap-2 text-sm text-secondary hover:text-primary transition-colors"
+          className="flex items-center gap-2 text-body-sm text-secondary hover:text-primary transition-colors"
         >
           <ChevronLeft className="size-4" />
           Back to traders
@@ -367,7 +367,7 @@ function ComparisonPanel({ data, loading, onBack }: ComparisonPanelProps) {
         {/* ── Header: avatars + names ───────────────────────────────── */}
         <div className="grid gap-4 min-w-max" style={{ gridTemplateColumns: colTemplate }}>
           <div className="flex items-end pb-1">
-            <span className="text-xs font-semibold text-tertiary uppercase tracking-wider">
+            <span className="text-label font-semibold text-tertiary uppercase tracking-wider">
               Trader
             </span>
           </div>
@@ -377,10 +377,10 @@ function ComparisonPanel({ data, loading, onBack }: ComparisonPanelProps) {
                 {t.avatarInitials}
               </div>
               <div>
-                <p className="text-sm font-semibold text-primary">
+                <p className="text-body-md font-semibold text-primary">
                   {t.displayName ?? t.username}
                 </p>
-                <p className="text-xs text-tertiary">@{t.username}</p>
+                <p className="text-label text-tertiary">@{t.username}</p>
               </div>
             </div>
           ))}
@@ -398,14 +398,14 @@ function ComparisonPanel({ data, loading, onBack }: ComparisonPanelProps) {
                 className={`grid gap-4 py-3 ${ri > 0 ? 'border-t border-subtle' : ''}`}
                 style={{ gridTemplateColumns: colTemplate }}
               >
-                <span className="text-xs text-secondary self-center">{row.label}</span>
+                <span className="text-label text-secondary self-center">{row.label}</span>
                 {data.map((t, ci) => {
                   const isBest = bi === ci;
                   const isWorst = wi === ci;
                   return (
                     <div key={t.userId} className="flex items-center justify-center">
                       <span
-                        className={`text-sm font-mono font-semibold px-2 py-1 rounded ${
+                        className={`text-body-md font-mono font-semibold px-2 py-1 rounded ${
                           isBest
                             ? 'bg-gain/10 text-gain'
                             : isWorst
@@ -426,7 +426,7 @@ function ComparisonPanel({ data, loading, onBack }: ComparisonPanelProps) {
         {/* ── Sparkline row ─────────────────────────────────────────── */}
         <div className="border-t border-default pt-4">
           <div className="grid gap-4 min-w-max" style={{ gridTemplateColumns: colTemplate }}>
-            <span className="text-xs text-secondary self-center">P&L Trend</span>
+            <span className="text-label text-secondary self-center">P&L Trend</span>
             {data.map((t) => (
               <div key={t.userId} className="flex items-center justify-center">
                 <MiniSparkline data={t.pnlHistory} />
@@ -438,7 +438,7 @@ function ComparisonPanel({ data, loading, onBack }: ComparisonPanelProps) {
         {/* ── Top categories row ────────────────────────────────────── */}
         <div className="border-t border-default pt-4">
           <div className="grid gap-4 min-w-max" style={{ gridTemplateColumns: colTemplate }}>
-            <span className="text-xs text-secondary self-center">Top Categories</span>
+            <span className="text-label text-secondary self-center">Top Categories</span>
             {data.map((t) => (
               <div key={t.userId} className="flex flex-wrap justify-center gap-1">
                 {t.topCategories.slice(0, 4).map((cat) => (
@@ -457,7 +457,7 @@ function ComparisonPanel({ data, loading, onBack }: ComparisonPanelProps) {
         {/* ── Recent trades ─────────────────────────────────────────── */}
         <div className="border-t border-default pt-4">
           <div className="grid gap-4 min-w-max" style={{ gridTemplateColumns: colTemplate }}>
-            <span className="text-xs text-secondary self-start pt-1">Recent Trades</span>
+            <span className="text-label text-secondary self-start pt-1">Recent Trades</span>
             {data.map((t) => (
               <div key={t.userId} className="space-y-2">
                 {t.recentTrades.slice(0, 3).map((trade, idx) => (
@@ -468,8 +468,8 @@ function ComparisonPanel({ data, loading, onBack }: ComparisonPanelProps) {
                     <span
                       className={`text-caption font-semibold px-2 py-1 rounded shrink-0 ${
                         trade.result === 'win'
-                          ? 'bg-gain/15 text-gain'
-                          : 'bg-loss/15 text-loss'
+                          ? 'bg-gain-subtle text-gain'
+                          : 'bg-loss-subtle text-loss'
                       }`}
                     >
                       {trade.result === 'win' ? 'WIN' : 'LOSS'}
@@ -487,7 +487,7 @@ function ComparisonPanel({ data, loading, onBack }: ComparisonPanelProps) {
                   </div>
                 ))}
                 {t.recentTrades.length === 0 && (
-                  <p className="text-xs text-tertiary text-center py-1">No recent trades</p>
+                  <p className="text-label text-tertiary text-center py-1">No recent trades</p>
                 )}
               </div>
             ))}
@@ -503,13 +503,13 @@ function ComparisonPanel({ data, loading, onBack }: ComparisonPanelProps) {
                 <Button
                   type="button"
                   onClick={() => navigate(`/copy/setup/${t.userId}`)}
-                  className="w-full px-4 py-2 rounded-pf text-sm font-semibold bg-accent text-inverse hover:bg-accent-text transition-colors"
+                  className="w-full px-4 py-2 rounded-pf text-body-md font-semibold bg-accent text-inverse hover:bg-accent-text transition-colors"
                 >
                   Copy @{t.username}
                 </Button>
                 <Link
                   to={`/profile/${t.username}`}
-                  className="text-xs text-secondary hover:text-primary transition-colors"
+                  className="text-label text-secondary hover:text-primary transition-colors"
                 >
                   View Profile
                 </Link>
@@ -578,15 +578,15 @@ function TraderCardItem({
             className="size-10 rounded-full object-cover shrink-0 bg-overlay"
           />
         ) : (
-          <div className="size-10 rounded-full bg-accent/20 text-accent-text flex items-center justify-center text-sm font-semibold shrink-0 select-none">
+          <div className="size-10 rounded-full bg-accent/20 text-accent-text flex items-center justify-center text-body-md font-semibold shrink-0 select-none">
             {initials(trader.displayName ?? trader.username)}
           </div>
         )}
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium text-primary truncate">
+          <p className="text-body-md font-medium text-primary truncate">
             {trader.displayName ?? trader.username}
           </p>
-          <p className="text-xs text-tertiary truncate">@{trader.username}</p>
+          <p className="text-label text-tertiary truncate">@{trader.username}</p>
         </div>
         <span
           className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-label font-semibold shrink-0 ${rankBadgeClass(trader.rank)}`}
@@ -601,15 +601,15 @@ function TraderCardItem({
       {trader.score !== undefined && (
         <div className="flex items-center gap-2">
           <TrendingUp className="size-4 text-tertiary" aria-hidden="true" />
-          <span className="text-xs text-secondary">Edge Score</span>
-          <span className={`text-xs font-mono font-semibold ${scoreColor(trader.score)}`}>
+          <span className="text-label text-secondary">Edge Score</span>
+          <span className={`text-label font-mono font-semibold ${scoreColor(trader.score)}`}>
             {trader.score}
           </span>
         </div>
       )}
 
       {/* Stats row */}
-      <div className="flex items-center gap-4 text-xs">
+      <div className="flex items-center gap-4 text-label">
         <span className="flex flex-col gap-1">
           <span className="text-tertiary">P&amp;L</span>
           <span className={`font-mono font-semibold ${positive ? 'text-gain' : 'text-loss'}`}>
@@ -633,19 +633,19 @@ function TraderCardItem({
         <div className="flex items-center gap-2 pt-1 border-t border-subtle">
           <Link
             to={`/profile/${trader.username}`}
-            className="flex-1 text-center px-3 py-2 rounded-pf text-xs font-medium text-secondary bg-overlay hover:bg-surface hover:text-primary transition-colors"
+            className="flex-1 text-center px-3 py-2 rounded-pf text-label font-medium text-secondary bg-overlay hover:bg-surface hover:text-primary transition-colors"
           >
             View Profile
           </Link>
           {isCopying ? (
-            <span className="flex items-center gap-1 px-3 py-2 rounded-pf text-xs font-medium bg-gain/10 text-gain border border-gain/20 shrink-0">
+            <span className="flex items-center gap-1 px-3 py-2 rounded-pf text-label font-medium bg-gain/10 text-gain border border-gain/20 shrink-0">
               Already Copying
             </span>
           ) : (
             <Button
               type="button"
               onClick={() => navigate(`/copy/new?address=${trader.username}`)}
-              className="px-3 py-2 rounded-pf text-xs font-medium bg-accent text-inverse hover:bg-accent-text transition-colors shrink-0"
+              className="px-3 py-2 rounded-pf text-label font-medium bg-accent text-inverse hover:bg-accent-text transition-colors shrink-0"
             >
               Copy Trade
             </Button>
@@ -812,7 +812,7 @@ export function Component() {
           <Users className="size-6 text-accent-text mt-1 shrink-0" aria-hidden="true" />
           <div>
             <h1 className="text-2xl font-semibold text-primary">Discover Traders</h1>
-            <p className="text-sm text-tertiary mt-1">Find top performers to copy</p>
+            <p className="text-body-sm text-tertiary mt-1">Find top performers to copy</p>
           </div>
         </div>
 
@@ -822,7 +822,7 @@ export function Component() {
             type="button"
             variant="secondary"
             onClick={enterCompareMode}
-            className="flex items-center gap-2 px-3 py-2 rounded-pf text-sm font-medium border border-default text-secondary bg-elevated hover:text-primary hover:border-strong transition-colors shrink-0"
+            className="flex items-center gap-2 px-3 py-2 rounded-pf text-body-sm font-medium border border-default text-secondary bg-elevated hover:text-primary hover:border-strong transition-colors shrink-0"
           >
             <GitCompare className="size-4" />
             Compare
@@ -832,7 +832,7 @@ export function Component() {
             type="button"
             variant="ghost"
             onClick={exitCompareMode}
-            className="flex items-center gap-2 px-3 py-2 rounded-pf text-sm font-medium border border-accent/30 text-accent-text bg-accent/10 hover:bg-accent/20 transition-colors shrink-0"
+            className="flex items-center gap-2 px-3 py-2 rounded-pf text-body-md font-medium border border-accent/30 text-accent-text bg-accent/10 hover:bg-accent/20 transition-colors shrink-0"
           >
             <X className="size-4" />
             Exit Compare
@@ -842,7 +842,7 @@ export function Component() {
 
       {/* Compare mode hint banner */}
       {compareMode && !showComparison && (
-        <div className="flex items-center gap-2 px-4 py-3 rounded-pf bg-accent/8 border border-accent/20 text-sm text-accent-text">
+        <div className="flex items-center gap-2 px-4 py-3 rounded-pf bg-accent-subtle border border-accent/20 text-body-md text-accent-text">
           <GitCompare className="size-4 shrink-0" />
           Select 2–3 traders to compare side by side. Click a card to select it.
         </div>
@@ -857,7 +857,7 @@ export function Component() {
             placeholder="Search by username..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full sm:max-w-sm px-3 py-2 rounded-pf bg-elevated border border-default text-primary text-sm placeholder:text-tertiary focus-visible:outline-none focus-visible:border-accent/50 focus-visible:ring-1 focus-visible:ring-accent/20 transition-colors"
+            className="w-full sm:max-w-sm px-3 py-2 rounded-pf bg-elevated border border-default text-primary text-body-sm placeholder:text-tertiary focus-visible:outline-none focus-visible:border-accent/50 focus-visible:ring-1 focus-visible:ring-accent/20 transition-colors"
           />
 
           {/* Category chips */}
@@ -868,7 +868,7 @@ export function Component() {
                 type="button"
                 variant="ghost"
                 onClick={() => setCategory(cat)}
-                className={`px-3 py-2 text-sm rounded-full border transition-colors cursor-pointer ${
+                className={`px-3 py-2 text-body-sm rounded-full border transition-colors cursor-pointer ${
                   category === cat
                     ? 'bg-accent/10 border-accent/30 text-accent-text'
                     : 'border-default text-secondary hover:text-primary'
@@ -882,14 +882,14 @@ export function Component() {
           {/* Win Rate + Min Trades selects */}
           <div className="flex flex-wrap gap-3">
             <div className="flex items-center gap-2">
-              <label className="text-xs text-secondary whitespace-nowrap" htmlFor="win-rate-filter">
+              <label className="text-label text-secondary whitespace-nowrap" htmlFor="win-rate-filter">
                 Win Rate
               </label>
               <Select
                 id="win-rate-filter"
                 value={winRate}
                 onChange={(e) => setWinRate(e.target.value as WinRateFilter)}
-                className="px-3 py-2 rounded-pf bg-elevated border border-default text-primary text-sm focus-visible:outline-none focus-visible:border-accent/50 transition-colors cursor-pointer"
+                className="px-3 py-2 rounded-pf bg-elevated border border-default text-primary text-body-md focus-visible:outline-none focus-visible:border-accent/50 transition-colors cursor-pointer"
               >
                 {WIN_RATE_OPTIONS.map((o) => (
                   <option key={o.value} value={o.value}>
@@ -900,14 +900,14 @@ export function Component() {
             </div>
 
             <div className="flex items-center gap-2">
-              <label className="text-xs text-secondary whitespace-nowrap" htmlFor="min-trades-filter">
+              <label className="text-label text-secondary whitespace-nowrap" htmlFor="min-trades-filter">
                 Min Trades
               </label>
               <Select
                 id="min-trades-filter"
                 value={minTrades}
                 onChange={(e) => setMinTrades(e.target.value as MinTradesFilter)}
-                className="px-3 py-2 rounded-pf bg-elevated border border-default text-primary text-sm focus-visible:outline-none focus-visible:border-accent/50 transition-colors cursor-pointer"
+                className="px-3 py-2 rounded-pf bg-elevated border border-default text-primary text-body-md focus-visible:outline-none focus-visible:border-accent/50 transition-colors cursor-pointer"
               >
                 {MIN_TRADES_OPTIONS.map((o) => (
                   <option key={o.value} value={o.value}>
@@ -943,7 +943,7 @@ export function Component() {
         <div className="flex flex-col items-center justify-center py-20 text-center">
           <Users className="size-10 text-tertiary mb-4" aria-hidden="true" />
           <p className="text-primary font-medium">No traders found matching your filters</p>
-          <p className="text-sm text-tertiary mt-1">
+          <p className="text-body-sm text-tertiary mt-1">
             Try adjusting your search or filter criteria.
           </p>
         </div>
@@ -984,7 +984,7 @@ export function Component() {
           >
             <ChevronLeft className="size-4" />
           </Button>
-          <span className="text-sm font-mono text-secondary" aria-live="polite">
+          <span className="text-body-sm font-mono text-secondary" aria-live="polite">
             Page {page} of {totalPages}
           </span>
           <Button
@@ -1008,7 +1008,7 @@ export function Component() {
       {compareMode && selectedIds.length >= 2 && !showComparison && (
         <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-default bg-surface/95 backdrop-blur-sm px-4 py-3">
           <div className="max-w-7xl mx-auto flex items-center gap-3 flex-wrap">
-            <span className="text-sm font-medium text-secondary shrink-0">
+            <span className="text-body-sm font-medium text-secondary shrink-0">
               Comparing {selectedIds.length} trader{selectedIds.length !== 1 ? 's' : ''}
             </span>
 
@@ -1017,7 +1017,7 @@ export function Component() {
               {selectedTraders.map((t) => (
                 <span
                   key={t.userId}
-                  className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium bg-accent/10 text-accent-text border border-accent/25"
+                  className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-label font-medium bg-accent/10 text-accent-text border border-accent/25"
                 >
                   @{t.username}
                   <Button
@@ -1040,14 +1040,14 @@ export function Component() {
                 type="button"
                 variant="secondary"
                 onClick={() => setSelectedIds([])}
-                className="px-3 py-2 rounded-pf text-sm text-secondary hover:text-primary border border-default hover:border-strong bg-elevated transition-colors"
+                className="px-3 py-2 rounded-pf text-body-sm text-secondary hover:text-primary border border-default hover:border-strong bg-elevated transition-colors"
               >
                 Clear
               </Button>
               <Button
                 type="button"
                 onClick={openComparison}
-                className="flex items-center gap-2 px-4 py-2 rounded-pf text-sm font-semibold bg-accent text-inverse hover:bg-accent-text transition-colors"
+                className="flex items-center gap-2 px-4 py-2 rounded-pf text-body-md font-semibold bg-accent text-inverse hover:bg-accent-text transition-colors"
               >
                 <GitCompare className="size-4" />
                 Compare

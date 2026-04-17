@@ -56,13 +56,13 @@ function statusBadge(status: AdminMarket['status']) {
   const base = 'inline-flex items-center px-2 py-1 rounded-sm text-label font-semibold uppercase tracking-wider';
   switch (status) {
     case 'ACTIVE':
-      return <span className={`${base} bg-gain/15 text-gain`}>Active</span>;
+      return <span className={`${base} bg-gain-subtle text-gain`}>Active</span>;
     case 'RESOLVED':
-      return <span className={`${base} bg-accent/15 text-accent`}>Resolved</span>;
+      return <span className={`${base} bg-accent-subtle text-accent`}>Resolved</span>;
     case 'DELISTED':
       return <span className={`${base} bg-tertiary/20 text-tertiary`}>Delisted</span>;
     case 'PENDING':
-      return <span className={`${base} bg-warning/15 text-warning`}>Pending</span>;
+      return <span className={`${base} bg-warning-subtle text-warning`}>Pending</span>;
     default:
       return <span className={`${base} bg-elevated text-secondary`}>{status}</span>;
   }
@@ -226,7 +226,7 @@ export function Component() {
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <div className="flex items-center gap-3">
           <h1 className="text-xl font-semibold text-primary">Markets</h1>
-          <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-elevated text-secondary border border-default">
+          <span className="inline-flex items-center px-3 py-1 rounded-full text-label font-semibold bg-elevated text-secondary border border-default">
             {total.toLocaleString()}
           </span>
         </div>
@@ -235,7 +235,7 @@ export function Component() {
           variant="ghost"
           onClick={fetchMarkets}
           disabled={loading}
-          className="flex items-center gap-2 px-3 py-2 rounded-sm border border-default text-sm text-secondary hover:text-primary hover:bg-elevated transition-colors disabled:opacity-50"
+          className="flex items-center gap-2 px-3 py-2 rounded-sm border border-default text-body-sm text-secondary hover:text-primary hover:bg-elevated transition-colors disabled:opacity-50"
         >
           <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
           Refresh
@@ -278,7 +278,7 @@ export function Component() {
           placeholder="Search markets..."
           value={searchInput}
           onChange={(e) => setSearchInput(e.target.value)}
-          className="w-full max-w-sm px-3 py-2 rounded-sm border border-default bg-elevated text-primary text-sm placeholder:text-tertiary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+          className="w-full max-w-sm px-3 py-2 rounded-sm border border-default bg-elevated text-primary text-body-sm placeholder:text-tertiary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
         />
 
         {/* Status tabs + Category */}
@@ -290,7 +290,7 @@ export function Component() {
                 type="button"
                 variant="ghost"
                 onClick={() => { setStatusTab(tab); setPage(1); }}
-                className={`px-3 py-1 rounded-sm text-sm font-medium transition-colors ${
+                className={`px-3 py-1 rounded-sm text-body-sm font-medium transition-colors ${
                   statusTab === tab
                     ? 'bg-accent text-inverse'
                     : 'text-secondary hover:text-primary'
@@ -304,7 +304,7 @@ export function Component() {
           <Select
             value={category}
             onChange={(e) => { setCategory(e.target.value); setPage(1); }}
-            className="px-3 py-2 rounded-sm border border-default bg-elevated text-sm text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+            className="px-3 py-2 rounded-sm border border-default bg-elevated text-body-sm text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
           >
             {CATEGORIES.map((c) => (
               <option key={c} value={c}>{c}</option>
@@ -315,7 +315,7 @@ export function Component() {
 
       {/* Table */}
       <div className="rounded-pf border border-default overflow-x-auto bg-surface">
-        <table className="w-full text-sm" aria-label="Markets list">
+        <table className="w-full text-body-sm" aria-label="Markets list">
           <thead>
             <tr className="border-b border-default">
               <th className="px-4 py-3 text-left text-label font-semibold uppercase tracking-wider text-tertiary">
@@ -352,7 +352,7 @@ export function Component() {
                 <td colSpan={8} className="px-4 py-16 text-center">
                   <div className="flex flex-col items-center gap-3 text-tertiary">
                     <BarChart2 size={32} />
-                    <span className="text-sm">No markets found</span>
+                    <span className="text-body-sm">No markets found</span>
                   </div>
                 </td>
               </tr>
@@ -370,7 +370,7 @@ export function Component() {
                     {/* Question */}
                     <td className="px-4 py-3 max-w-xs">
                       <div className="flex items-start gap-2">
-                        <span className="text-primary line-clamp-2 text-xs leading-relaxed">
+                        <span className="text-primary line-clamp-2 text-label leading-relaxed">
                           {market.question}
                         </span>
                         <a
@@ -506,7 +506,7 @@ export function Component() {
       {/* Pagination */}
       {totalPages > 1 && (
         <div className="flex items-center justify-between gap-4 flex-wrap">
-          <span className="text-sm text-secondary">
+          <span className="text-body-sm text-secondary">
             Page {page} of {totalPages} &mdash; {total.toLocaleString()} markets
           </span>
           <div className="flex items-center gap-2">
@@ -515,7 +515,7 @@ export function Component() {
               variant="ghost"
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               disabled={page <= 1 || loading}
-              className="flex items-center gap-1 px-3 py-2 rounded-sm border border-default text-sm text-secondary hover:text-primary hover:bg-elevated transition-colors disabled:opacity-40"
+              className="flex items-center gap-1 px-3 py-2 rounded-sm border border-default text-body-sm text-secondary hover:text-primary hover:bg-elevated transition-colors disabled:opacity-40"
             >
               <ChevronLeft size={14} />
               Prev
@@ -525,7 +525,7 @@ export function Component() {
               variant="ghost"
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
               disabled={page >= totalPages || loading}
-              className="flex items-center gap-1 px-3 py-2 rounded-sm border border-default text-sm text-secondary hover:text-primary hover:bg-elevated transition-colors disabled:opacity-40"
+              className="flex items-center gap-1 px-3 py-2 rounded-sm border border-default text-body-sm text-secondary hover:text-primary hover:bg-elevated transition-colors disabled:opacity-40"
             >
               Next
               <ChevronRight size={14} />

@@ -226,13 +226,13 @@ export function Component() {
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <h2 className="text-lg font-semibold text-primary flex items-center gap-2">
           Backtests
-          <span className="text-sm font-normal text-tertiary px-2 py-1 bg-elevated border border-default rounded-full">
+          <span className="text-body-sm font-normal text-tertiary px-2 py-1 bg-elevated border border-default rounded-full">
             {total}
           </span>
         </h2>
         <div className="flex items-center gap-2">
           {/* Auto-refresh toggle */}
-          <label className="flex items-center gap-2 text-xs text-secondary cursor-pointer select-none">
+          <label className="flex items-center gap-2 text-label text-secondary cursor-pointer select-none">
             <span className="relative inline-block w-8 h-4">
               <input
                 type="checkbox"
@@ -257,7 +257,7 @@ export function Component() {
             onClick={() => load({ silent: true })}
             disabled={loading || refreshing}
             aria-label="Refresh backtests"
-            className="flex items-center gap-2 px-3 py-2 text-xs rounded-sm bg-elevated border border-default text-secondary hover:text-primary hover:border-accent/50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="flex items-center gap-2 px-3 py-2 text-label rounded-sm bg-elevated border border-default text-secondary hover:text-primary hover:border-accent/50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             <RefreshCw
               size={12}
@@ -281,7 +281,7 @@ export function Component() {
             key={label}
             className="bg-elevated border border-default rounded-xl p-4"
           >
-            <p className="text-xs text-tertiary mb-1">{label}</p>
+            <p className="text-label text-tertiary mb-1">{label}</p>
             <p
               className={`text-2xl font-semibold ${
                 danger
@@ -307,7 +307,7 @@ export function Component() {
               type="button"
               variant="ghost"
               onClick={() => handleStatusTab(value)}
-              className={`px-3 py-1 text-xs rounded-md transition-colors ${
+              className={`px-3 py-1 text-label rounded-md transition-colors ${
                 statusFilter === value
                   ? 'bg-accent/20 text-accent-text font-medium'
                   : 'text-tertiary hover:text-primary'
@@ -326,12 +326,12 @@ export function Component() {
             onChange={(e) => setUsernameInput(e.target.value)}
             placeholder="Filter by username..."
             aria-label="Filter by username"
-            className="h-8 px-3 rounded-sm bg-elevated border border-default text-xs text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:border-accent transition-colors w-48"
+            className="h-8 px-3 rounded-sm bg-elevated border border-default text-label text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:border-accent transition-colors w-48"
           />
           <Button
             type="submit"
             variant="default"
-            className="h-8 px-3 rounded-sm bg-accent/10 border border-accent/30 text-xs text-accent-text hover:bg-accent/20 transition-colors"
+            className="h-8 px-3 rounded-sm bg-accent/10 border border-accent/30 text-label text-accent-text hover:bg-accent/20 transition-colors"
           >
             Search
           </Button>
@@ -344,7 +344,7 @@ export function Component() {
                 setUsernameInput('');
                 setPage(1);
               }}
-              className="h-8 px-3 rounded-sm bg-elevated border border-default text-xs text-secondary hover:text-primary transition-colors"
+              className="h-8 px-3 rounded-sm bg-elevated border border-default text-label text-secondary hover:text-primary transition-colors"
             >
               Clear
             </Button>
@@ -355,35 +355,35 @@ export function Component() {
       {/* Table */}
       <div className="bg-elevated border border-default rounded-xl overflow-hidden">
         <div className="overflow-x-auto" data-density="compact">
-          <table className="w-full text-sm" aria-label="Backtest results">
+          <table className="w-full text-body-sm" aria-label="Backtest results">
             <caption className="sr-only">Backtest runs</caption>
             <thead>
               <tr className="border-b border-default">
-                <th scope="col" className="text-left px-4 py-3 text-xs font-medium text-tertiary uppercase tracking-wider">
+                <th scope="col" className="text-left px-4 py-3 text-label font-medium text-tertiary uppercase tracking-wider">
                   Started At
                 </th>
-                <th scope="col" className="text-left px-4 py-3 text-xs font-medium text-tertiary uppercase tracking-wider">
+                <th scope="col" className="text-left px-4 py-3 text-label font-medium text-tertiary uppercase tracking-wider">
                   User
                 </th>
-                <th scope="col" className="text-left px-4 py-3 text-xs font-medium text-tertiary uppercase tracking-wider">
+                <th scope="col" className="text-left px-4 py-3 text-label font-medium text-tertiary uppercase tracking-wider">
                   Strategy
                 </th>
-                <th scope="col" className="text-left px-4 py-3 text-xs font-medium text-tertiary uppercase tracking-wider">
+                <th scope="col" className="text-left px-4 py-3 text-label font-medium text-tertiary uppercase tracking-wider">
                   Status
                 </th>
-                <th scope="col" className="text-left px-4 py-3 text-xs font-medium text-tertiary uppercase tracking-wider">
+                <th scope="col" className="text-left px-4 py-3 text-label font-medium text-tertiary uppercase tracking-wider">
                   Duration
                 </th>
-                <th scope="col" className="text-right px-4 py-3 text-xs font-medium text-tertiary uppercase tracking-wider">
+                <th scope="col" className="text-right px-4 py-3 text-label font-medium text-tertiary uppercase tracking-wider">
                   Trades
                 </th>
-                <th scope="col" className="text-right px-4 py-3 text-xs font-medium text-tertiary uppercase tracking-wider">
+                <th scope="col" className="text-right px-4 py-3 text-label font-medium text-tertiary uppercase tracking-wider">
                   Win Rate
                 </th>
-                <th scope="col" className="text-right px-4 py-3 text-xs font-medium text-tertiary uppercase tracking-wider">
+                <th scope="col" className="text-right px-4 py-3 text-label font-medium text-tertiary uppercase tracking-wider">
                   P&amp;L
                 </th>
-                <th scope="col" className="text-right px-4 py-3 text-xs font-medium text-tertiary uppercase tracking-wider">
+                <th scope="col" className="text-right px-4 py-3 text-label font-medium text-tertiary uppercase tracking-wider">
                   Actions
                 </th>
               </tr>
@@ -408,7 +408,7 @@ export function Component() {
                       aria-hidden="true"
                     />
                     <p className="text-secondary font-medium">No backtests found</p>
-                    <p className="text-tertiary text-xs mt-1">
+                    <p className="text-tertiary text-label mt-1">
                       {statusFilter !== 'ALL' || usernameFilter
                         ? 'Try adjusting your filters'
                         : 'Backtest runs will appear here'}
@@ -432,7 +432,7 @@ export function Component() {
                       }`}
                     >
                       {/* Started At */}
-                      <td className="px-4 py-3 text-tertiary text-xs whitespace-nowrap">
+                      <td className="px-4 py-3 text-tertiary text-caption whitespace-nowrap">
                         {bt.createdAt ? formatDateTime(bt.createdAt) : '—'}
                       </td>
 
@@ -441,26 +441,26 @@ export function Component() {
                         {bt.userId ? (
                           <Link
                             to={`/users/${bt.userId}`}
-                            className="text-accent-text hover:text-accent-text transition-colors text-xs"
+                            className="text-accent-text hover:text-accent-text transition-colors text-label"
                           >
                             @{bt.username || bt.userId.slice(0, 8)}
                           </Link>
                         ) : (
-                          <span className="text-secondary text-xs">
+                          <span className="text-secondary text-label">
                             @{bt.username || '—'}
                           </span>
                         )}
                       </td>
 
                       {/* Strategy */}
-                      <td className="px-4 py-3 text-secondary text-xs max-w-col-sm truncate" title={bt.strategyName}>
+                      <td className="px-4 py-3 text-secondary text-label max-w-col-sm truncate" title={bt.strategyName}>
                         {bt.strategyName || '—'}
                       </td>
 
                       {/* Status badge */}
                       <td className="px-4 py-3">
                         <span
-                          className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${statusBadgeClass(bt.status)}`}
+                          className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-label font-medium ${statusBadgeClass(bt.status)}`}
                         >
                           {isRunning && (
                             <span
@@ -473,17 +473,17 @@ export function Component() {
                       </td>
 
                       {/* Duration */}
-                      <td className="px-4 py-3 text-secondary text-xs whitespace-nowrap">
+                      <td className="px-4 py-3 text-secondary text-label whitespace-nowrap">
                         {formatDuration(bt)}
                       </td>
 
                       {/* Trades */}
-                      <td className="px-4 py-3 text-right text-secondary text-xs">
+                      <td className="px-4 py-3 text-right text-secondary text-label">
                         {isCompleted && bt.totalTrades != null ? bt.totalTrades : '—'}
                       </td>
 
                       {/* Win Rate */}
-                      <td className="px-4 py-3 text-right text-xs">
+                      <td className="px-4 py-3 text-right text-label">
                         {isCompleted && bt.winRate != null ? (
                           <span className="text-primary">{bt.winRate}%</span>
                         ) : (
@@ -492,7 +492,7 @@ export function Component() {
                       </td>
 
                       {/* P&L */}
-                      <td className="px-4 py-3 text-right text-xs">
+                      <td className="px-4 py-3 text-right text-label">
                         {isCompleted && bt.totalPnl != null ? (
                           <span className={pnlClass(bt.totalPnl)}>
                             {pnlPrefix(bt.totalPnl)}{bt.totalPnl}
@@ -520,7 +520,7 @@ export function Component() {
                             onClick={() => handleCancel(bt)}
                             disabled={cancelling[bt.id]}
                             aria-label={`Cancel backtest ${bt.id.slice(0, 8)}`}
-                            className="inline-flex items-center gap-1 px-2 py-1 text-xs rounded-sm border border-loss/40 text-loss hover:bg-loss/10 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                            className="inline-flex items-center gap-1 px-2 py-1 text-label rounded-sm border border-loss/40 text-loss hover:bg-loss/10 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                           >
                             {cancelling[bt.id] ? (
                               <Loader2 size={11} className="animate-spin" aria-hidden="true" />
@@ -542,7 +542,7 @@ export function Component() {
         {/* Pagination */}
         {totalPages > 1 && (
           <div className="flex items-center justify-between px-4 py-3 border-t border-default">
-            <span className="text-xs text-tertiary">
+            <span className="text-caption text-tertiary">
               Page {page} of {totalPages}
             </span>
             <div className="flex items-center gap-2">

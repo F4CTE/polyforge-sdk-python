@@ -186,7 +186,7 @@ function SliderInput({ value, min, max, onChange, label, unit }: SliderInputProp
         onChange={(e) => onChange(Number(e.target.value))}
         className="flex-1 h-2 rounded-full accent-accent cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
       />
-      <span className="w-14 text-right text-sm font-medium text-primary tabular-nums">
+      <span className="w-14 text-right text-body-md font-medium text-primary tabular-nums">
         {value}
         {unit}
       </span>
@@ -208,7 +208,7 @@ interface NumberFieldProps {
 function NumberField({ value, min, max, step = 1, onChange, label, prefix, suffix }: NumberFieldProps) {
   return (
     <div className="flex items-center gap-2">
-      {prefix && <span className="text-tertiary text-sm">{prefix}</span>}
+      {prefix && <span className="text-tertiary text-body-sm">{prefix}</span>}
       <input
         type="number"
         min={min}
@@ -219,12 +219,12 @@ function NumberField({ value, min, max, step = 1, onChange, label, prefix, suffi
         onChange={(e) => onChange(Number(e.target.value))}
         className={[
           'w-28 rounded-sm border border-default bg-surface px-3 py-2',
-          'text-sm text-primary tabular-nums',
+          'text-body-sm text-primary tabular-nums',
           'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40',
           'placeholder:text-tertiary',
         ].join(' ')}
       />
-      {suffix && <span className="text-tertiary text-sm">{suffix}</span>}
+      {suffix && <span className="text-tertiary text-body-sm">{suffix}</span>}
     </div>
   );
 }
@@ -253,9 +253,9 @@ function FieldRow({ label, description, children }: FieldRowProps) {
   return (
     <div className="flex items-center justify-between gap-4 min-h-10">
       <div className="min-w-0">
-        <p className="text-sm font-medium text-primary leading-tight">{label}</p>
+        <p className="text-body-md font-medium text-primary leading-tight">{label}</p>
         {description && (
-          <p className="text-xs text-tertiary mt-1 leading-tight">{description}</p>
+          <p className="text-label text-tertiary mt-1 leading-tight">{description}</p>
         )}
       </div>
       <div className="shrink-0">{children}</div>
@@ -310,10 +310,10 @@ function MaintenanceConfirmBox({ onConfirm, onCancel }: MaintenanceConfirmProps)
       <div className="flex items-start gap-2">
         <AlertTriangle className="mt-1 h-4 w-4 shrink-0 text-warning" aria-hidden />
         <div>
-          <p id="maintenance-confirm-heading" className="text-sm font-semibold text-warning">
+          <p id="maintenance-confirm-heading" className="text-body-md font-semibold text-warning">
             Enable maintenance mode?
           </p>
-          <p className="text-xs text-secondary mt-1">
+          <p className="text-label text-secondary mt-1">
             This will pause all trading activity across the platform immediately. Users will see a
             maintenance page until you turn this off.
           </p>
@@ -324,7 +324,7 @@ function MaintenanceConfirmBox({ onConfirm, onCancel }: MaintenanceConfirmProps)
           type="button"
           variant="secondary"
           onClick={onCancel}
-          className="rounded-sm px-3 py-2 text-xs font-medium text-secondary border border-default hover:border-strong transition-colors"
+          className="rounded-sm px-3 py-2 text-label font-medium text-secondary border border-default hover:border-strong transition-colors"
         >
           Cancel
         </Button>
@@ -332,7 +332,7 @@ function MaintenanceConfirmBox({ onConfirm, onCancel }: MaintenanceConfirmProps)
           type="button"
           variant="danger"
           onClick={onConfirm}
-          className="px-3 py-2 text-xs font-medium transition-all"
+          className="px-3 py-2 text-label font-medium transition-all"
         >
           Yes, enable maintenance
         </Button>
@@ -485,7 +485,7 @@ export function Component() {
             </div>
             <div>
               <h1 className="text-xl font-semibold text-primary leading-tight">Platform Config</h1>
-              <p className="text-xs text-tertiary mt-1">
+              <p className="text-caption text-tertiary mt-1">
                 Last saved:{' '}
                 <span className="text-secondary">{lastSavedDisplay}</span>
               </p>
@@ -498,7 +498,7 @@ export function Component() {
             onClick={handleSave}
             disabled={!dirty || saving}
             className={[
-              'inline-flex items-center gap-2 rounded-pf px-4 py-2 text-sm font-semibold transition-all',
+              'inline-flex items-center gap-2 rounded-pf px-4 py-2 text-body-md font-semibold transition-all',
               dirty && !saving
                 ? 'bg-accent text-inverse hover:bg-accent-text transition-colors duration-micro cursor-pointer'
                 : 'bg-elevated border border-default text-tertiary cursor-not-allowed opacity-50',
@@ -513,7 +513,7 @@ export function Component() {
         {dirty && (
           <div
             role="status"
-            className="flex items-center gap-2 rounded-sm border border-warning/40 bg-warning/10 px-4 py-3 text-sm text-warning"
+            className="flex items-center gap-2 rounded-sm border border-warning/40 bg-warning/10 px-4 py-3 text-body-sm text-warning"
           >
             <AlertTriangle className="h-4 w-4 shrink-0" aria-hidden />
             <span>
@@ -683,7 +683,7 @@ export function Component() {
 
                 {/* Maintenance active warning */}
                 {config.riskControls.maintenanceMode && !showMaintenanceConfirm && (
-                  <div className="mt-3 flex items-center gap-2 rounded-sm border border-loss/40 bg-loss/10 px-3 py-2 text-sm text-loss">
+                  <div className="mt-3 flex items-center gap-2 rounded-sm border border-loss/40 bg-loss/10 px-3 py-2 text-body-sm text-loss">
                     <AlertTriangle className="h-4 w-4 shrink-0" aria-hidden />
                     <span>Platform is in maintenance mode — all trading is paused.</span>
                   </div>
@@ -764,15 +764,15 @@ export function Component() {
                             aria-hidden
                           />
                         )}
-                        <span className="text-sm font-medium text-primary truncate">{label}</span>
+                        <span className="text-body-md font-medium text-primary truncate">{label}</span>
                       </div>
 
                       <div className="flex items-center gap-2 shrink-0">
                         <span
                           className={[
-                            'inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs font-medium',
+                            'inline-flex items-center gap-1 rounded-full px-2 py-1 text-label font-medium',
                             enabled
-                              ? 'bg-gain/15 text-gain'
+                              ? 'bg-gain-subtle text-gain'
                               : 'bg-default/30 text-tertiary',
                           ].join(' ')}
                         >

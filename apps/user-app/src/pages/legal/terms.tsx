@@ -9,7 +9,7 @@ export function Component() {
       <main className="max-w-3xl mx-auto px-4 sm:px-6 py-12">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
-          <Link to="/" className="flex items-center gap-2 text-sm text-tertiary hover:text-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 rounded-sm">
+          <Link to="/" className="flex items-center gap-2 text-body-sm text-tertiary hover:text-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 rounded-sm">
             <ArrowLeft className="size-4" /> Back
           </Link>
           <div className="flex items-center gap-2 text-primary">
@@ -19,9 +19,9 @@ export function Component() {
         </div>
 
         <h1 className="text-2xl font-semibold text-primary mb-2">Terms of Service</h1>
-        <p className="text-sm text-tertiary mb-10">Last updated: {LAST_UPDATED}</p>
+        <p className="text-body-sm text-tertiary mb-10">Last updated: {LAST_UPDATED}</p>
 
-        <div className="space-y-8 text-sm text-secondary leading-relaxed">
+        <div className="space-y-8 text-body-sm text-secondary leading-relaxed">
           <section>
             <h2 className="text-lg font-semibold text-primary mb-3">1. Acceptance of Terms</h2>
             <p>By accessing or using Polyforge ("the Platform", "we", "our"), you agree to be bound by these Terms of Service and our Privacy Policy. If you do not agree to these terms, do not use the Platform.</p>
@@ -91,12 +91,12 @@ export function Component() {
 
           <section>
             <h2 className="text-lg font-semibold text-primary mb-3">12. Disclaimers</h2>
-            <p className="uppercase text-xs tracking-wide">THE PLATFORM IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND. POLYFORGE MAKES NO WARRANTIES, EXPRESS OR IMPLIED, INCLUDING WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, OR NON-INFRINGEMENT. WE DO NOT GUARANTEE UNINTERRUPTED OR ERROR-FREE OPERATION.</p>
+            <p className="uppercase text-label tracking-wide">THE PLATFORM IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND. POLYFORGE MAKES NO WARRANTIES, EXPRESS OR IMPLIED, INCLUDING WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, OR NON-INFRINGEMENT. WE DO NOT GUARANTEE UNINTERRUPTED OR ERROR-FREE OPERATION.</p>
           </section>
 
           <section>
             <h2 className="text-lg font-semibold text-primary mb-3">13. Limitation of Liability</h2>
-            <p className="uppercase text-xs tracking-wide">TO THE MAXIMUM EXTENT PERMITTED BY LAW, POLYFORGE SHALL NOT BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES, INCLUDING LOSS OF PROFITS OR DATA, ARISING FROM YOUR USE OF THE PLATFORM.</p>
+            <p className="uppercase text-label tracking-wide">TO THE MAXIMUM EXTENT PERMITTED BY LAW, POLYFORGE SHALL NOT BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES, INCLUDING LOSS OF PROFITS OR DATA, ARISING FROM YOUR USE OF THE PLATFORM.</p>
           </section>
 
           <section>
@@ -116,7 +116,7 @@ export function Component() {
         </div>
 
         {/* Footer */}
-        <nav aria-label="Legal pages" className="flex items-center gap-3 mt-12 pt-6 border-t border-subtle text-sm text-tertiary">
+        <nav aria-label="Legal pages" className="flex items-center gap-3 mt-12 pt-6 border-t border-subtle text-body-sm text-tertiary">
           <Link to="/privacy" className="hover:text-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 rounded-sm">Privacy Policy</Link>
           <span aria-hidden="true">&middot;</span>
           <Link to="/login" className="hover:text-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 rounded-sm">Sign in</Link>

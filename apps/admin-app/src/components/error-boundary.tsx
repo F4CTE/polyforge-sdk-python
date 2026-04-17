@@ -41,14 +41,14 @@ export class ErrorBoundary extends Component<Props, State> {
               <h1 className="text-xl font-semibold text-primary mb-2">
                 Something went wrong
               </h1>
-              <p className="text-sm text-tertiary">
+              <p className="text-body-sm text-tertiary">
                 An unexpected error occurred. Please try refreshing the page.
               </p>
             </div>
             <button
               type="button"
               onClick={this.handleReset}
-              className="inline-flex items-center gap-2 px-5 py-3 rounded-pf bg-accent text-inverse text-sm font-medium hover:bg-accent-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 transition-colors"
+              className="inline-flex items-center gap-2 px-5 py-3 rounded-pf bg-accent text-inverse text-body-sm font-medium hover:bg-accent-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 transition-colors"
             >
               <RefreshCw className="size-4" aria-hidden="true" />
               Try again

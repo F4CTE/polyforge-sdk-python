@@ -244,49 +244,49 @@ export function Component() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold text-primary">Backtest</h1>
-        {!loading && <span className="text-sm text-tertiary">{total} runs</span>}
+        {!loading && <span className="text-body-sm text-tertiary">{total} runs</span>}
       </div>
 
       {/* New run panel */}
       <div className="bg-elevated border border-default rounded-xl p-5">
         <div className="flex items-center gap-2 mb-4">
           <Play className="size-4 text-accent-text" />
-          <span className="text-sm font-medium text-primary">New Backtest</span>
+          <span className="text-body-md font-medium text-primary">New Backtest</span>
         </div>
         <div className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <div>
-              <label htmlFor="backtest-strategy" className="text-xs text-secondary uppercase tracking-wider mb-2 block">Strategy</label>
+              <label htmlFor="backtest-strategy" className="text-label text-secondary uppercase tracking-wider mb-2 block">Strategy</label>
               <Select
                 id="backtest-strategy"
                 value={selectedStratId}
                 onChange={e => setSelectedStratId(e.target.value)}
-                className="w-full h-9 px-3 rounded-pf bg-surface border border-default text-sm text-primary focus-visible:outline-none focus-visible:border-accent/50"
+                className="w-full h-9 px-3 rounded-pf bg-surface border border-default text-body-md text-primary focus-visible:outline-none focus-visible:border-accent/50"
               >
                 <option value="">Select strategy</option>
                 {strategies.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
               </Select>
             </div>
             <div>
-              <label htmlFor="backtest-start" className="text-xs text-secondary uppercase tracking-wider mb-2 block">Start Date</label>
+              <label htmlFor="backtest-start" className="text-label text-secondary uppercase tracking-wider mb-2 block">Start Date</label>
               <input
                 id="backtest-start"
                 type="date"
                 lang="en"
                 value={dateStart}
                 onChange={e => setDateStart(e.target.value)}
-                className="w-full h-9 px-3 rounded-pf bg-surface border border-default text-sm text-primary focus-visible:outline-none focus-visible:border-accent/50"
+                className="w-full h-9 px-3 rounded-pf bg-surface border border-default text-body-md text-primary focus-visible:outline-none focus-visible:border-accent/50"
               />
             </div>
             <div>
-              <label htmlFor="backtest-end" className="text-xs text-secondary uppercase tracking-wider mb-2 block">End Date</label>
+              <label htmlFor="backtest-end" className="text-label text-secondary uppercase tracking-wider mb-2 block">End Date</label>
               <input
                 id="backtest-end"
                 type="date"
                 lang="en"
                 value={dateEnd}
                 onChange={e => setDateEnd(e.target.value)}
-                className="w-full h-9 px-3 rounded-pf bg-surface border border-default text-sm text-primary focus-visible:outline-none focus-visible:border-accent/50"
+                className="w-full h-9 px-3 rounded-pf bg-surface border border-default text-body-md text-primary focus-visible:outline-none focus-visible:border-accent/50"
               />
             </div>
             <div className="flex items-end">
@@ -294,7 +294,7 @@ export function Component() {
                 type="button"
                 onClick={submit}
                 disabled={!canSubmit}
-                className="w-full h-9 rounded-pf bg-accent text-inverse text-sm font-medium hover:bg-accent-text disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+                className="w-full h-9 rounded-pf bg-accent text-inverse text-body-md font-medium hover:bg-accent-text disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
               >
                 {submitting ? <Loader2 className="size-4 animate-spin" /> : <Play className="size-4" />}
                 Run Backtest
@@ -304,10 +304,10 @@ export function Component() {
 
           {marketSlots.length > 0 && (
             <div className="space-y-3">
-              <span className="text-xs text-secondary font-medium uppercase tracking-wider" id="market-bindings-label">Market Bindings</span>
+              <span className="text-label text-secondary font-medium uppercase tracking-wider" id="market-bindings-label">Market Bindings</span>
               {marketSlots.map(slot => (
                 <div key={slot.slot} className="space-y-1">
-                  <label htmlFor={`market-binding-${slot.slot}`} className="text-xs text-tertiary">{slot.label || slot.slot}</label>
+                  <label htmlFor={`market-binding-${slot.slot}`} className="text-label text-tertiary">{slot.label || slot.slot}</label>
                   <div className="relative">
                     <Input
                       id={`market-binding-${slot.slot}`}
@@ -318,7 +318,7 @@ export function Component() {
                         searchMarkets(slot.slot, e.target.value);
                       }}
                       placeholder="Search markets..."
-                      className="w-full h-9 px-3 rounded-pf bg-surface border border-default text-sm text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:border-accent/50 transition-colors"
+                      className="w-full h-9 px-3 rounded-pf bg-surface border border-default text-body-sm text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:border-accent/50 transition-colors"
                     />
                     {marketBindings[slot.slot] && (
                       <span className="absolute right-2 top-1/2 -translate-y-1/2 text-caption text-accent-text font-mono">bound</span>
@@ -336,7 +336,7 @@ export function Component() {
                             setMarketSearch(prev => ({ ...prev, [slot.slot]: m.title ?? m.question ?? '' }));
                             setMarketResults(prev => ({ ...prev, [slot.slot]: [] }));
                           }}
-                          className="w-full text-left px-3 py-2 text-xs text-primary hover:bg-surface cursor-pointer transition-colors border-b border-subtle last:border-b-0"
+                          className="w-full text-left px-3 py-2 text-label text-primary hover:bg-surface cursor-pointer transition-colors border-b border-subtle last:border-b-0"
                         >
                           {m.title ?? m.question}
                         </Button>
@@ -355,8 +355,8 @@ export function Component() {
         <div className="bg-elevated border border-default rounded-xl p-5">
           <div className="flex items-start justify-between mb-4">
             <div>
-              <div className="text-sm font-medium text-primary">{selectedRun.strategyName ?? 'Unnamed Strategy'}</div>
-              <div className="text-xs font-mono text-tertiary mt-1">{dateRangeLabel(selectedRun)}</div>
+              <div className="text-body-md font-medium text-primary">{selectedRun.strategyName ?? 'Unnamed Strategy'}</div>
+              <div className="text-caption font-mono text-tertiary mt-1">{dateRangeLabel(selectedRun)}</div>
             </div>
             <Button type="button" variant="ghost" size="icon" onClick={() => setSelectedRun(null)} aria-label="Close run details" className="text-tertiary hover:text-primary transition-colors">
               <X className="size-4" />
@@ -366,10 +366,10 @@ export function Component() {
           {(selectedRun.status === 'RUNNING' || selectedRun.status === 'QUEUED') && (
             <div>
               <div className="flex items-center justify-between mb-2">
-                <span className="text-xs text-tertiary">
+                <span className="text-label text-tertiary">
                   {selectedRun.status === 'QUEUED' ? 'Waiting in queue...' : 'Running...'}
                 </span>
-                <span className="text-xs font-mono text-accent-text">{selectedRun.progress}%</span>
+                <span className="text-label font-mono text-accent-text">{selectedRun.progress}%</span>
               </div>
               <div className="h-2 bg-overlay rounded-full overflow-hidden">
                 <div className="h-full bg-accent rounded-full transition-all" style={{ width: `${selectedRun.progress}%` }} />
@@ -381,30 +381,30 @@ export function Component() {
             <>
               {/* Simulated results badge — compliance (CLAUDE.md hard rule) */}
               <div className="flex items-center gap-2 mb-2">
-                <span className="text-xs font-medium bg-warning/10 text-warning px-2 py-1 rounded-sm">Simulated</span>
-                <span className="text-xs text-tertiary">Results based on historical data replay</span>
+                <span className="text-label font-medium bg-warning/10 text-warning px-2 py-1 rounded-sm">Simulated</span>
+                <span className="text-label text-tertiary">Results based on historical data replay</span>
               </div>
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                 <div className="bg-surface rounded-pf p-3">
-                  <span className="text-xs text-tertiary block">Total P&L</span>
+                  <span className="text-label text-tertiary block">Total P&L</span>
                   <span data-testid="result-pnl" className={`text-lg font-mono font-semibold ${pnlColor(selectedRun.totalPnl)}`}>
                     {pnlSign(selectedRun.totalPnl)}
                   </span>
                 </div>
                 <div className="bg-surface rounded-pf p-3">
-                  <span className="text-xs text-tertiary block">Win Rate</span>
+                  <span className="text-label text-tertiary block">Win Rate</span>
                   <span className="text-lg font-mono font-semibold text-primary">{winRatePct(selectedRun.winRate)}</span>
                 </div>
                 <div className="bg-surface rounded-pf p-3">
-                  <span className="text-xs text-tertiary block">Orders Placed</span>
+                  <span className="text-label text-tertiary block">Orders Placed</span>
                   <span className="text-lg font-mono font-semibold text-primary">{selectedRun.totalOrders ?? '\u2014'}</span>
                 </div>
                 <div className="bg-surface rounded-pf p-3">
-                  <span className="text-xs text-tertiary block">Orders Filled</span>
+                  <span className="text-label text-tertiary block">Orders Filled</span>
                   <span className="text-lg font-mono font-semibold text-primary">{selectedRun.filledOrders ?? '\u2014'}</span>
                 </div>
                 {selectedRun.hasDataGaps && (
-                  <div className="col-span-full flex items-center gap-2 px-3 py-2 rounded-pf bg-warning/10 text-warning text-xs">
+                  <div className="col-span-full flex items-center gap-2 px-3 py-2 rounded-pf bg-warning/10 text-warning text-label">
                     <AlertTriangle className="size-4 shrink-0" />
                     Results may be affected by data gaps in the selected date range.
                   </div>
@@ -412,7 +412,7 @@ export function Component() {
               </div>
               {equityData.length > 1 && (
                 <div className="mt-4">
-                  <div className="text-xs text-tertiary mb-2 font-medium">Equity Curve</div>
+                  <div className="text-label text-tertiary mb-2 font-medium">Equity Curve</div>
                   <div className="h-40">
                     <ResponsiveContainer width="100%" height="100%">
                       <AreaChart data={equityData.map(p => ({ time: new Date(p.simulatedAt).toLocaleDateString(), value: parseFloat(p.equityCurve) }))}>
@@ -435,14 +435,14 @@ export function Component() {
                 <div className="mt-4 h-40 bg-overlay rounded-pf animate-pulse" />
               )}
               {/* Simulated performance disclaimer — compliance (CLAUDE.md hard rule) */}
-              <p className="text-xs text-tertiary mt-4 italic">
+              <p className="text-label text-tertiary mt-4 italic">
                 Simulated performance based on historical data. Past results do not guarantee future performance. Trading involves risk of loss.
               </p>
             </>
           )}
 
           {selectedRun.status === 'FAILED' && (
-            <div className="flex items-center gap-2 px-3 py-2 rounded-pf bg-loss/10 text-loss text-sm">
+            <div className="flex items-center gap-2 px-3 py-2 rounded-pf bg-loss/10 text-loss text-body-md">
               <XCircle className="size-4 shrink-0" />
               {selectedRun.error ?? 'Backtest failed.'}
             </div>
@@ -459,16 +459,16 @@ export function Component() {
               type="button"
               variant="ghost"
               onClick={() => { setCompareMode(!compareMode); setCompareA(null); setCompareB(null); }}
-              className={`text-xs px-3 py-2 rounded-pf border transition-colors ${compareMode ? 'bg-accent/15 border-accent/30 text-accent-text' : 'border-default text-secondary hover:text-primary'}`}
+              className={`text-label px-3 py-2 rounded-pf border transition-colors ${compareMode ? 'bg-accent-subtle border-accent/30 text-accent-text' : 'border-default text-secondary hover:text-primary'}`}
             >
               {compareMode ? 'Exit Compare' : 'Compare Runs'}
             </Button>
           </div>
         </div>
         <div className="overflow-x-auto">
-          <table className="w-full text-sm" aria-label="Backtest history">
+          <table className="w-full text-body-sm" aria-label="Backtest history">
             <thead>
-              <tr className="bg-surface text-left text-xs text-secondary uppercase tracking-wider">
+              <tr className="bg-surface text-left text-label text-secondary uppercase tracking-wider">
                 <th scope="col" className="px-4 py-3 font-medium">Strategy</th>
                 <th scope="col" className="px-4 py-3 font-medium">Date Range</th>
                 <th scope="col" className="px-4 py-3 font-medium">Status</th>
@@ -476,7 +476,7 @@ export function Component() {
                 <th scope="col" className="px-4 py-3 font-medium text-right">P&L</th>
                 <th scope="col" className="px-4 py-3 font-medium text-right">Win Rate</th>
                 <th scope="col" className="px-4 py-3 font-medium text-right">Created</th>
-                {compareMode && <th scope="col" className="px-3 py-2 text-right text-xs font-medium text-tertiary">Compare</th>}
+                {compareMode && <th scope="col" className="px-3 py-2 text-right text-label font-medium text-tertiary">Compare</th>}
               </tr>
             </thead>
             <tbody className="divide-y divide-subtle">
@@ -493,8 +493,8 @@ export function Component() {
                   <td colSpan={compareMode ? 8 : 7}>
                     <div className="flex flex-col items-center justify-center py-16 text-center">
                       <History className="size-10 text-tertiary mb-3" />
-                      <p className="text-sm font-medium text-primary">No backtest runs yet</p>
-                      <p className="text-xs text-tertiary mt-1">Select a strategy and date range above, then click Run Backtest.</p>
+                      <p className="text-body-md font-medium text-primary">No backtest runs yet</p>
+                      <p className="text-caption text-tertiary mt-1">Select a strategy and date range above, then click Run Backtest.</p>
                     </div>
                   </td>
                 </tr>
@@ -511,7 +511,7 @@ export function Component() {
                       onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') selectRun(run); }}
                       aria-label={run.strategyName ?? strategies.find(s => s.id === run.strategyId)?.name ?? 'Backtest run'}
                       className={`hover:bg-surface/50 transition-colors cursor-pointer ${
-                        selectedRun?.id === run.id ? 'bg-accent/5' : ''
+                        selectedRun?.id === run.id ? 'bg-accent-subtle' : ''
                       }`}
                     >
                       <td className="px-4 py-3">
@@ -525,7 +525,7 @@ export function Component() {
                         <span className="font-mono text-label text-tertiary">{dateRangeLabel(run)}</span>
                       </td>
                       <td className="px-4 py-3">
-                        <span className={`inline-flex px-2 py-1 rounded text-xs font-medium ${ss.bg} ${ss.text}`}>
+                        <span className={`inline-flex px-2 py-1 rounded text-label font-medium ${ss.bg} ${ss.text}`}>
                           {run.status}
                         </span>
                       </td>
@@ -582,7 +582,7 @@ export function Component() {
       {/* Compare panel */}
       {compareMode && compareA && compareB && (
         <div className="mt-6 rounded-pf border border-accent/30 bg-surface p-4">
-          <h3 className="text-sm font-semibold text-primary mb-4">Comparison</h3>
+          <h3 className="text-body-md font-semibold text-primary mb-4">Comparison</h3>
           {(() => {
             const runA = runs.find((r: BacktestRun) => r.id === compareA);
             const runB = runs.find((r: BacktestRun) => r.id === compareB);
@@ -601,12 +601,12 @@ export function Component() {
             return (
               <>
                 {winner && (
-                  <div className="mb-3 text-xs text-secondary">
+                  <div className="mb-3 text-label text-secondary">
                     Run <span className={`font-semibold ${winner === 'A' ? 'text-info' : 'text-purple-400'}`}>{winner}</span> outperforms by <span className="font-mono text-gain">{Math.abs(pnlA - pnlB).toFixed(2)}</span>
                   </div>
                 )}
                 <div className="overflow-x-auto">
-                  <table className="w-full text-xs" aria-label="Backtest results">
+                  <table className="w-full text-label" aria-label="Backtest results">
                     <thead>
                       <tr className="border-b border-default">
                         <th className="text-left py-2 pr-4 font-medium text-tertiary">Metric</th>
@@ -645,7 +645,7 @@ export function Component() {
           >
             <ChevronLeft className="size-4" />
           </Button>
-          <span className="text-sm font-mono text-secondary" aria-live="polite">Page {page} of {totalPages}</span>
+          <span className="text-body-sm font-mono text-secondary" aria-live="polite">Page {page} of {totalPages}</span>
           <Button
             type="button"
             variant="ghost"

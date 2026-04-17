@@ -141,7 +141,7 @@ export function Component() {
           type="button"
           variant="default"
           onClick={openAdd}
-          className="flex items-center gap-2 px-3 py-2 text-sm font-semibold rounded-sm bg-accent text-inverse hover:bg-accent-text transition-colors"
+          className="flex items-center gap-2 px-3 py-2 text-body-md font-semibold rounded-sm bg-accent text-inverse hover:bg-accent-text transition-colors"
         >
           <Plus size={14} aria-hidden="true" />
           Add Admin
@@ -151,15 +151,15 @@ export function Component() {
       {/* Table */}
       <div className="bg-elevated border border-default rounded-xl overflow-hidden">
         <div className="overflow-x-auto" data-density="compact">
-          <table className="w-full text-sm" aria-label="Admin accounts">
+          <table className="w-full text-body-sm" aria-label="Admin accounts">
             <caption className="sr-only">Admin accounts</caption>
             <thead>
               <tr className="border-b border-default">
-                <th scope="col" className="text-left px-4 py-3 text-xs font-medium text-tertiary uppercase tracking-wider">Name</th>
-                <th scope="col" className="text-left px-4 py-3 text-xs font-medium text-tertiary uppercase tracking-wider">Email</th>
-                <th scope="col" className="text-left px-4 py-3 text-xs font-medium text-tertiary uppercase tracking-wider">Role</th>
-                <th scope="col" className="text-left px-4 py-3 text-xs font-medium text-tertiary uppercase tracking-wider">Created</th>
-                <th scope="col" className="text-right px-4 py-3 text-xs font-medium text-tertiary uppercase tracking-wider">Actions</th>
+                <th scope="col" className="text-left px-4 py-3 text-label font-medium text-tertiary uppercase tracking-wider">Name</th>
+                <th scope="col" className="text-left px-4 py-3 text-label font-medium text-tertiary uppercase tracking-wider">Email</th>
+                <th scope="col" className="text-left px-4 py-3 text-label font-medium text-tertiary uppercase tracking-wider">Role</th>
+                <th scope="col" className="text-left px-4 py-3 text-label font-medium text-tertiary uppercase tracking-wider">Created</th>
+                <th scope="col" className="text-right px-4 py-3 text-label font-medium text-tertiary uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -178,7 +178,7 @@ export function Component() {
                   <td colSpan={5} className="text-center py-12">
                     <ShieldCheck className="mx-auto mb-3 text-tertiary opacity-40" size={40} aria-hidden="true" />
                     <p className="text-secondary font-medium">No admins found</p>
-                    <p className="text-tertiary text-xs mt-1">Add an admin account to get started</p>
+                    <p className="text-tertiary text-label mt-1">Add an admin account to get started</p>
                   </td>
                 </tr>
               ) : (
@@ -187,7 +187,7 @@ export function Component() {
                     <td className="px-4 py-3 font-medium text-primary">{a.displayName}</td>
                     <td className="px-4 py-3 text-secondary">{a.email}</td>
                     <td className="px-4 py-3">
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                      <span className={`px-2 py-1 rounded-full text-label font-medium ${
                         a.role === 'SUPER_ADMIN'
                           ? 'text-warning bg-warning/10'
                           : a.role === 'ADMIN'
@@ -259,30 +259,30 @@ export function Component() {
             <form onSubmit={handleSubmit} noValidate className="space-y-4">
               {dialogMode === 'add' && (
                 <div>
-                  <label htmlFor="admin-email" className="block text-xs font-medium text-secondary mb-1">Email</label>
+                  <label htmlFor="admin-email" className="block text-label font-medium text-secondary mb-1">Email</label>
                   <Input
                     id="admin-email"
                     type="email"
                     value={form.email}
                     onChange={(e) => setForm({ ...form, email: e.target.value })}
                     required
-                    className="w-full px-3 py-2 text-sm rounded-sm border border-default bg-app text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/20"
+                    className="w-full px-3 py-2 text-body-sm rounded-sm border border-default bg-app text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/20"
                   />
                 </div>
               )}
               <div>
-                <label htmlFor="admin-display-name" className="block text-xs font-medium text-secondary mb-1">Display Name</label>
+                <label htmlFor="admin-display-name" className="block text-label font-medium text-secondary mb-1">Display Name</label>
                 <Input
                   id="admin-display-name"
                   type="text"
                   value={form.displayName}
                   onChange={(e) => setForm({ ...form, displayName: e.target.value })}
                   required
-                  className="w-full px-3 py-2 text-sm rounded-sm border border-default bg-app text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/20"
+                  className="w-full px-3 py-2 text-body-sm rounded-sm border border-default bg-app text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/20"
                 />
               </div>
               <div>
-                <label htmlFor="admin-password" className="block text-xs font-medium text-secondary mb-1">
+                <label htmlFor="admin-password" className="block text-label font-medium text-secondary mb-1">
                   Password{dialogMode === 'edit' ? ' (leave blank to keep)' : ''}
                 </label>
                 <Input
@@ -291,16 +291,16 @@ export function Component() {
                   value={form.password}
                   onChange={(e) => setForm({ ...form, password: e.target.value })}
                   required={dialogMode === 'add'}
-                  className="w-full px-3 py-2 text-sm rounded-sm border border-default bg-app text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/20"
+                  className="w-full px-3 py-2 text-body-sm rounded-sm border border-default bg-app text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/20"
                 />
               </div>
               <div>
-                <label htmlFor="admin-role" className="block text-xs font-medium text-secondary mb-1">Role</label>
+                <label htmlFor="admin-role" className="block text-label font-medium text-secondary mb-1">Role</label>
                 <Select
                   id="admin-role"
                   value={form.role}
                   onChange={(e) => setForm({ ...form, role: e.target.value })}
-                  className="w-full px-3 py-2 text-sm rounded-sm border border-default bg-app text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/20"
+                  className="w-full px-3 py-2 text-body-sm rounded-sm border border-default bg-app text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/20"
                 >
                   <option value="VIEWER">Viewer</option>
                   <option value="ADMIN">Admin</option>
@@ -312,7 +312,7 @@ export function Component() {
                   type="submit"
                   variant="default"
                   disabled={submitting}
-                  className="flex-1 py-2 text-sm font-semibold rounded-sm bg-accent text-inverse hover:bg-accent-text disabled:opacity-50 transition-colors"
+                  className="flex-1 py-2 text-body-md font-semibold rounded-sm bg-accent text-inverse hover:bg-accent-text disabled:opacity-50 transition-colors"
                 >
                   {submitting ? 'Saving...' : dialogMode === 'add' ? 'Create Admin' : 'Save Changes'}
                 </Button>
@@ -320,7 +320,7 @@ export function Component() {
                   type="button"
                   variant="secondary"
                   onClick={closeDialog}
-                  className="px-4 py-2 text-sm rounded-sm border border-default text-secondary hover:bg-app transition-colors"
+                  className="px-4 py-2 text-body-sm rounded-sm border border-default text-secondary hover:bg-app transition-colors"
                 >
                   Cancel
                 </Button>
@@ -337,7 +337,7 @@ export function Component() {
             <h3 id="deactivate-dialog-title" className="text-base font-semibold text-primary mb-2">
               Deactivate Admin
             </h3>
-            <p className="text-sm text-secondary mb-4">
+            <p className="text-body-sm text-secondary mb-4">
               Enter your password to confirm this action.
             </p>
             <label htmlFor="deactivate-password" className="sr-only">Your password</label>
@@ -347,7 +347,7 @@ export function Component() {
               value={deletePassword}
               onChange={(e) => setDeletePassword(e.target.value)}
               placeholder="Your password"
-              className="w-full px-3 py-2 text-sm rounded-sm border border-default bg-app text-primary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-loss mb-4"
+              className="w-full px-3 py-2 text-body-sm rounded-sm border border-default bg-app text-primary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-loss mb-4"
             />
             <div className="flex gap-3">
               <Button
@@ -355,7 +355,7 @@ export function Component() {
                 variant="danger"
                 onClick={handleDeactivate}
                 disabled={submitting || !deletePassword}
-                className="flex-1 py-2 text-sm font-medium disabled:opacity-50 transition-colors"
+                className="flex-1 py-2 text-body-sm font-medium disabled:opacity-50 transition-colors"
               >
                 {submitting ? 'Deactivating...' : 'Deactivate'}
               </Button>
@@ -363,7 +363,7 @@ export function Component() {
                 type="button"
                 variant="secondary"
                 onClick={() => setDeleteConfirmId(null)}
-                className="px-4 py-2 text-sm rounded-sm border border-default text-secondary hover:bg-app transition-colors"
+                className="px-4 py-2 text-body-sm rounded-sm border border-default text-secondary hover:bg-app transition-colors"
               >
                 Cancel
               </Button>

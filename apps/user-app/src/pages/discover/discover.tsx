@@ -304,7 +304,7 @@ export function Component() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold text-primary">Discover</h1>
-        {!loading && <span className="text-sm text-tertiary">{total} strategies</span>}
+        {!loading && <span className="text-body-sm text-tertiary">{total} strategies</span>}
       </div>
 
       {/* Featured Strategies */}
@@ -314,7 +314,7 @@ export function Component() {
             <Star className="size-4 text-warning fill-warning" aria-hidden="true" />
             <span className="text-base font-semibold text-primary">Featured</span>
             <Award className="size-4 text-warning ml-1" aria-hidden="true" />
-            <span className="text-xs text-tertiary ml-1">Hand-picked by the PolyForge team</span>
+            <span className="text-label text-tertiary ml-1">Hand-picked by the PolyForge team</span>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {featuredListings.map(f => (
@@ -325,22 +325,22 @@ export function Component() {
               >
                 {/* FEATURED badge + seller */}
                 <div className="flex items-center gap-2 mb-3">
-                  <span className="bg-warning/15 text-warning text-caption font-semibold px-2 py-1 rounded">
+                  <span className="bg-warning-subtle text-warning text-caption font-semibold px-2 py-1 rounded">
                     FEATURED
                   </span>
-                  <span className="text-xs text-secondary ml-auto truncate">
+                  <span className="text-label text-secondary ml-auto truncate">
                     {f.seller.displayName ?? f.seller.username}
                   </span>
                 </div>
 
                 {/* Title */}
-                <div className="text-sm font-semibold text-primary group-hover:text-warning transition-colors mb-1 truncate">
+                <div className="text-body-md font-semibold text-primary group-hover:text-warning transition-colors mb-1 truncate">
                   {f.title}
                 </div>
 
                 {/* Description */}
                 {f.description && (
-                  <div className="text-xs text-tertiary line-clamp-2 mb-3">{f.description}</div>
+                  <div className="text-label text-tertiary line-clamp-2 mb-3">{f.description}</div>
                 )}
 
                 {/* Stats row */}
@@ -363,7 +363,7 @@ export function Component() {
                 <div className="border-t border-subtle my-2" />
 
                 {/* Footer: forks / likes + CTA */}
-                <div className="flex items-center gap-3 text-xs text-tertiary">
+                <div className="flex items-center gap-3 text-label text-tertiary">
                   <span className="flex items-center gap-1"><GitFork className="size-3" aria-hidden="true" /> {f.forkCount}</span>
                   <span className="flex items-center gap-1"><Heart className="size-3" aria-hidden="true" /> {f.likeCount}</span>
                   <span className="ml-auto border border-accent/40 text-accent-text text-caption font-medium px-2 py-1 rounded hover:bg-accent/10 transition-colors">
@@ -386,7 +386,7 @@ export function Component() {
             <span className="text-base font-semibold text-primary">Collections</span>
             <Link
               to="/collections"
-              className="ml-auto text-xs text-accent-text hover:text-accent-text transition-colors flex items-center gap-1"
+              className="ml-auto text-label text-accent-text hover:text-accent-text transition-colors flex items-center gap-1"
             >
               View all <ChevronRight className="size-3" aria-hidden="true" />
             </Link>
@@ -398,11 +398,11 @@ export function Component() {
                 type="button"
                 variant="ghost"
                 onClick={() => navigate(`/collections/${col.id}`)}
-                className="bg-elevated border border-default rounded-full px-3 py-2 text-sm flex items-center gap-2 whitespace-nowrap hover:border-strong cursor-pointer transition-colors shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+                className="bg-elevated border border-default rounded-full px-3 py-2 text-body-sm flex items-center gap-2 whitespace-nowrap hover:border-strong cursor-pointer transition-colors shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
               >
                 <span role="img" aria-label={col.title}>{col.emoji}</span>
                 <span className="text-primary font-medium">{col.title}</span>
-                <span className="text-tertiary text-xs">{col.listingCount} strategies</span>
+                <span className="text-tertiary text-label">{col.listingCount} strategies</span>
               </Button>
             ))}
           </div>
@@ -420,7 +420,7 @@ export function Component() {
             aria-label="Search strategies"
             value={searchQuery}
             onChange={e => { setSearchQuery(e.target.value); setPage(1); }}
-            className="w-full pl-10 pr-4 py-3 rounded-sm text-sm bg-elevated text-primary border border-default hover:border-strong focus-visible:border-accent/50 focus-visible:outline-none transition-colors placeholder:text-tertiary"
+            className="w-full pl-10 pr-4 py-3 rounded-sm text-body-sm bg-elevated text-primary border border-default hover:border-strong focus-visible:border-accent/50 focus-visible:outline-none transition-colors placeholder:text-tertiary"
           />
         </div>
         {/* Tag filter */}
@@ -432,7 +432,7 @@ export function Component() {
             aria-label="Filter by tag"
             value={tagFilter}
             onChange={e => setTagFilter(e.target.value)}
-            className="pl-8 pr-3 py-3 rounded-sm text-sm bg-elevated text-primary border border-default hover:border-strong focus-visible:border-accent/50 focus-visible:outline-none transition-colors placeholder:text-tertiary w-36"
+            className="pl-8 pr-3 py-3 rounded-sm text-body-sm bg-elevated text-primary border border-default hover:border-strong focus-visible:border-accent/50 focus-visible:outline-none transition-colors placeholder:text-tertiary w-36"
           />
         </div>
       </div>
@@ -447,9 +447,9 @@ export function Component() {
             role="tab"
             aria-selected={sort === opt.value}
             onClick={() => changeSort(opt.value)}
-            className={`px-3 py-2 rounded-full text-xs font-medium whitespace-nowrap border transition-colors ${
+            className={`px-3 py-2 rounded-full text-label font-medium whitespace-nowrap border transition-colors ${
               sort === opt.value
-                ? 'bg-accent/15 text-accent-text border-accent/30'
+                ? 'bg-accent-subtle text-accent-text border-accent/30'
                 : 'bg-elevated text-secondary border-default hover:border-strong'
             }`}
           >
@@ -466,9 +466,9 @@ export function Component() {
             variant="ghost"
             key={cat.value ?? 'all'}
             onClick={() => changeCategory(cat.value)}
-            className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors whitespace-nowrap ${
+            className={`px-3 py-1 rounded-full text-label font-medium border transition-colors whitespace-nowrap ${
               category === cat.value
-                ? 'bg-accent/15 text-accent-text border-accent/30'
+                ? 'bg-accent-subtle text-accent-text border-accent/30'
                 : 'bg-elevated text-secondary border-default hover:border-strong'
             }`}
           >
@@ -486,7 +486,7 @@ export function Component() {
         <div data-testid="empty-state" className="flex flex-col items-center justify-center py-20 text-center" role="status">
           <Compass className="size-10 text-tertiary mb-4" aria-hidden="true" />
           <p className="text-primary font-medium">No strategies found</p>
-          <p className="text-sm text-tertiary mt-1">Be the first to publish a public strategy.</p>
+          <p className="text-body-sm text-tertiary mt-1">Be the first to publish a public strategy.</p>
         </div>
       ) : (
         <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 stagger-children ${loading ? 'opacity-60' : ''}`}>
@@ -507,7 +507,7 @@ export function Component() {
                   {s.author.avatarUrl ? (
                     <img src={s.author.avatarUrl} alt={`${s.author.displayName ?? s.author.username} avatar`} className="size-7 rounded-full object-cover" width={28} height={28} loading="lazy" />
                   ) : (
-                    <div className="size-7 rounded-full bg-accent/15 border border-accent/25 flex items-center justify-center text-caption font-semibold text-accent-text">
+                    <div className="size-7 rounded-full bg-accent-subtle border border-accent/25 flex items-center justify-center text-caption font-semibold text-accent-text">
                       {authorInitials(s)}
                     </div>
                   )}
@@ -515,7 +515,7 @@ export function Component() {
                     data-testid="strategy-author"
                     href={`/profile/${s.author.username}`}
                     onClick={e => { e.stopPropagation(); }}
-                    className="text-xs text-secondary hover:text-accent-text transition-colors"
+                    className="text-label text-secondary hover:text-accent-text transition-colors"
                   >
                     {s.author.displayName ?? s.author.username}
                   </a>
@@ -535,11 +535,11 @@ export function Component() {
                 </div>
 
                 {/* Name + description */}
-                <div data-testid="strategy-name" className="text-sm font-medium text-primary group-hover:text-accent-text transition-colors mb-1">
+                <div data-testid="strategy-name" className="text-body-md font-medium text-primary group-hover:text-accent-text transition-colors mb-1">
                   {s.name}
                 </div>
                 {s.description && (
-                  <div data-testid="strategy-description" className="text-xs text-tertiary line-clamp-2 mb-3">{s.description}</div>
+                  <div data-testid="strategy-description" className="text-label text-tertiary line-clamp-2 mb-3">{s.description}</div>
                 )}
 
                 {/* Tags */}
@@ -547,11 +547,11 @@ export function Component() {
                   <div className="flex flex-wrap gap-1 mb-3">
                     {s.tags.slice(0, 4).map(tag => (
                       <span key={tag} className={`px-2 py-1 rounded-full text-caption font-medium ${
-                        tag === 'momentum' ? 'bg-warning/15 text-warning' :
-                        tag === 'political' ? 'bg-info/15 text-info' :
-                        tag === 'yes-bias' ? 'bg-gain/15 text-gain' :
+                        tag === 'momentum' ? 'bg-warning-subtle text-warning' :
+                        tag === 'political' ? 'bg-info-subtle text-info' :
+                        tag === 'yes-bias' ? 'bg-gain-subtle text-gain' :
                         tag === 'defensive' ? 'bg-purple-500/15 text-purple-400' :
-                        tag === 'scalping' ? 'bg-loss/15 text-loss' :
+                        tag === 'scalping' ? 'bg-loss-subtle text-loss' :
                         tag === 'high-freq' ? 'bg-purple-300/15 text-purple-300' :
                         'bg-overlay text-tertiary'
                       }`}>
@@ -565,7 +565,7 @@ export function Component() {
                 <div className="border-t border-subtle my-2" />
 
                 {/* Footer stats */}
-                <div className="flex items-center gap-3 text-sm text-tertiary pt-1">
+                <div className="flex items-center gap-3 text-body-sm text-tertiary pt-1">
                   {/* Like button */}
                   <Button
                     type="button"
@@ -612,7 +612,7 @@ export function Component() {
           >
             <ChevronLeft className="size-4" />
           </Button>
-          <span data-testid="page-indicator" className="text-sm font-mono text-secondary" aria-live="polite">Page {page} of {totalPages}</span>
+          <span data-testid="page-indicator" className="text-body-sm font-mono text-secondary" aria-live="polite">Page {page} of {totalPages}</span>
           <Button
             type="button"
             variant="ghost"

@@ -103,6 +103,7 @@ export default function RootLayout({
     <html
       lang="en"
       data-theme="dark"
+      suppressHydrationWarning
       className={`${GeistSans.variable} ${GeistMono.variable}`}
     >
       <head>

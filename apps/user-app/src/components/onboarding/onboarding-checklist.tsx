@@ -126,8 +126,8 @@ export function OnboardingChecklist() {
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-subtle">
         <div className="flex items-center gap-2">
-          <span className="text-sm font-semibold text-primary">Getting Started</span>
-          <span className="text-caption px-2 py-1 rounded-full bg-accent/15 text-accent-text font-medium">
+          <span className="text-body-md font-semibold text-primary">Getting Started</span>
+          <span className="text-caption px-2 py-1 rounded-full bg-accent-subtle text-accent-text font-medium">
             {completedCount}/{CHECKLIST_ITEMS.length}
           </span>
         </div>
@@ -186,7 +186,7 @@ export function OnboardingChecklist() {
                 <button
                   type="button"
                   onClick={() => handleNavigate(item.route)}
-                  className={`text-sm text-left font-medium transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 rounded-sm ${
+                  className={`text-body-md text-left font-medium transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 rounded-sm ${
                     completed[item.key]
                       ? 'text-tertiary line-through'
                       : 'text-primary hover:text-accent-text'
@@ -195,7 +195,7 @@ export function OnboardingChecklist() {
                   {item.label}
                 </button>
                 {!completed[item.key] && (
-                  <p className="text-xs text-secondary mt-1 leading-relaxed">{item.description}</p>
+                  <p className="text-label text-secondary mt-1 leading-relaxed">{item.description}</p>
                 )}
               </div>
             </div>
@@ -212,7 +212,7 @@ export function OnboardingChecklist() {
               const event = new CustomEvent('polyforge:start-tour');
               window.dispatchEvent(event);
             }}
-            className="text-xs text-accent-text hover:text-accent-text cursor-pointer transition-colors font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 rounded-sm"
+            className="text-label text-accent-text hover:text-accent-text cursor-pointer transition-colors font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 rounded-sm"
           >
             Take a tour of the platform
           </button>
@@ -222,7 +222,7 @@ export function OnboardingChecklist() {
       {/* All done message */}
       {allDone && (
         <div className="px-4 py-3 text-center">
-          <p className="text-sm text-gain font-medium">All done! You're ready to trade.</p>
+          <p className="text-body-md text-gain font-medium">All done! You're ready to trade.</p>
         </div>
       )}
     </div>

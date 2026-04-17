@@ -15,7 +15,7 @@ export function Hero() {
     >
       {/* Glow */}
       <div
-        className="absolute -top-[200px] left-1/2 -translate-x-1/2 w-[900px] h-[900px] pointer-events-none hero-glow"
+        className="absolute -top-[200px] left-1/2 -translate-x-1/2 pointer-events-none hero-glow"
         aria-hidden="true"
       />
 
@@ -44,7 +44,7 @@ export function Hero() {
 
       <div className="relative z-10 max-w-container-landing mx-auto px-6">
         {/* Badge */}
-        <div className="inline-flex items-center gap-2 text-body-sm font-medium text-accent-text bg-accent/8 border border-accent/20 rounded-full px-4 py-1 mb-7">
+        <div className="inline-flex items-center gap-2 text-body-sm font-medium text-accent-text bg-accent-subtle border border-accent/20 rounded-full px-4 py-1 mb-7">
           <span className="w-2 h-2 rounded-full bg-accent-text animate-[pulse-dot_var(--duration-slow)_ease-in-out_infinite]" />
           Early Access &mdash; Limited Invites
         </div>

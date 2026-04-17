@@ -179,7 +179,7 @@ function PriceBadge({ price, variant }: { price: number; variant: 'yes' | 'no' }
       : 'bg-loss/10 text-loss border-loss/20';
   return (
     <span
-      className={`inline-flex items-center px-2 py-1 rounded-sm border text-xs font-semibold tabular-nums ${base}`}
+      className={`inline-flex items-center px-2 py-1 rounded-sm border text-label font-semibold tabular-nums ${base}`}
     >
       {formatPrice(price)}
     </span>
@@ -190,7 +190,7 @@ function ChangeBadge({ change }: { change: number }) {
   const positive = change >= 0;
   return (
     <span
-      className={`inline-flex items-center gap-1 text-xs font-medium tabular-nums ${
+      className={`inline-flex items-center gap-1 text-label font-medium tabular-nums ${
         positive ? 'text-gain' : 'text-loss'
       }`}
     >
@@ -482,7 +482,7 @@ export function Component() {
               <Star className="w-5 h-5 text-accent-text" aria-hidden="true" />
               Watchlist
             </h1>
-            <p className="text-sm text-tertiary mt-1">
+            <p className="text-body-sm text-tertiary mt-1">
               {displayedMarkets.length} market{displayedMarkets.length !== 1 ? 's' : ''} tracked
             </p>
           </div>
@@ -494,7 +494,7 @@ export function Component() {
                 key={cat}
                 variant="ghost"
                 onClick={() => setFilterCategory(cat)}
-                className={`px-3 py-1 text-xs font-medium rounded-sm border transition-colors duration-micro focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 ${
+                className={`px-3 py-1 text-label font-medium rounded-sm border transition-colors duration-micro focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 ${
                   filterCategory === cat
                     ? 'bg-accent text-inverse border-accent'
                     : 'bg-transparent text-secondary border-default hover:border-strong hover:text-primary'
@@ -514,12 +514,12 @@ export function Component() {
         <div className="max-w-screen-xl mx-auto px-6 py-24 flex flex-col items-center gap-4 text-center">
           <Star className="w-12 h-12 text-tertiary opacity-30" aria-hidden="true" />
           <p className="text-secondary text-lg font-medium">No markets in your watchlist</p>
-          <p className="text-tertiary text-sm max-w-xs">
+          <p className="text-tertiary text-body-sm max-w-xs">
             Browse markets and tap the star icon to add them here for quick access.
           </p>
           <Button
             onClick={() => navigate('/markets')}
-            className="mt-2 px-4 py-2 bg-accent text-inverse text-sm font-semibold rounded-pf hover:brightness-110 transition-all duration-micro focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+            className="mt-2 px-4 py-2 bg-accent text-inverse text-body-md font-semibold rounded-pf hover:brightness-110 transition-all duration-micro focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
           >
             Browse Markets
           </Button>
@@ -531,7 +531,7 @@ export function Component() {
       {/* ------------------------------------------------------------------ */}
       {displayedMarkets.length > 0 && (
         <div className="max-w-screen-xl mx-auto px-6 py-4 overflow-x-auto">
-          <table className="w-full border-collapse text-sm" aria-label="Watchlist markets">
+          <table className="w-full border-collapse text-body-sm" aria-label="Watchlist markets">
             {/* Head */}
             <thead>
               <tr className="border-b border-default">
@@ -539,18 +539,18 @@ export function Component() {
                 <th className="w-8 pb-2" aria-label="Remove from watchlist" />
 
                 {/* Market */}
-                <th className="text-left pb-2 pr-4 text-xs font-medium text-tertiary uppercase tracking-wider">
+                <th className="text-left pb-2 pr-4 text-label font-medium text-tertiary uppercase tracking-wider">
                   Market
                 </th>
 
                 {/* Category */}
-                <th className="text-left pb-2 pr-4 text-xs font-medium text-tertiary uppercase tracking-wider hidden md:table-cell">
+                <th className="text-left pb-2 pr-4 text-label font-medium text-tertiary uppercase tracking-wider hidden md:table-cell">
                   Category
                 </th>
 
                 {/* YES */}
                 <th
-                  className="text-right pb-2 pr-4 text-xs font-medium text-tertiary uppercase tracking-wider cursor-pointer select-none whitespace-nowrap"
+                  className="text-right pb-2 pr-4 text-label font-medium text-tertiary uppercase tracking-wider cursor-pointer select-none whitespace-nowrap"
                   onClick={() => handleSort('yesPrice')}
                   aria-sort={sortKey === 'yesPrice' ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none'}
                 >
@@ -559,7 +559,7 @@ export function Component() {
 
                 {/* NO */}
                 <th
-                  className="text-right pb-2 pr-4 text-xs font-medium text-tertiary uppercase tracking-wider cursor-pointer select-none whitespace-nowrap"
+                  className="text-right pb-2 pr-4 text-label font-medium text-tertiary uppercase tracking-wider cursor-pointer select-none whitespace-nowrap"
                   onClick={() => handleSort('noPrice')}
                   aria-sort={sortKey === 'noPrice' ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none'}
                 >
@@ -568,7 +568,7 @@ export function Component() {
 
                 {/* 24h */}
                 <th
-                  className="text-right pb-2 pr-4 text-xs font-medium text-tertiary uppercase tracking-wider cursor-pointer select-none whitespace-nowrap hidden sm:table-cell"
+                  className="text-right pb-2 pr-4 text-label font-medium text-tertiary uppercase tracking-wider cursor-pointer select-none whitespace-nowrap hidden sm:table-cell"
                   onClick={() => handleSort('change24h')}
                   aria-sort={sortKey === 'change24h' ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none'}
                 >
@@ -577,7 +577,7 @@ export function Component() {
 
                 {/* Volume */}
                 <th
-                  className="text-right pb-2 pr-4 text-xs font-medium text-tertiary uppercase tracking-wider cursor-pointer select-none whitespace-nowrap hidden lg:table-cell"
+                  className="text-right pb-2 pr-4 text-label font-medium text-tertiary uppercase tracking-wider cursor-pointer select-none whitespace-nowrap hidden lg:table-cell"
                   onClick={() => handleSort('volume24h')}
                   aria-sort={sortKey === 'volume24h' ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none'}
                 >
@@ -586,7 +586,7 @@ export function Component() {
 
                 {/* Liquidity */}
                 <th
-                  className="text-right pb-2 pr-4 text-xs font-medium text-tertiary uppercase tracking-wider cursor-pointer select-none whitespace-nowrap hidden xl:table-cell"
+                  className="text-right pb-2 pr-4 text-label font-medium text-tertiary uppercase tracking-wider cursor-pointer select-none whitespace-nowrap hidden xl:table-cell"
                   onClick={() => handleSort('liquidity')}
                   aria-sort={sortKey === 'liquidity' ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none'}
                 >
@@ -594,13 +594,13 @@ export function Component() {
                 </th>
 
                 {/* Alerts — v6.29.0 */}
-                <th className="w-10 pb-2 text-center text-xs font-medium text-tertiary uppercase tracking-wider">
+                <th className="w-10 pb-2 text-center text-label font-medium text-tertiary uppercase tracking-wider">
                   <Bell className="w-4 h-4 inline-block" aria-hidden="true" />
                   <span className="sr-only">Alerts</span>
                 </th>
 
                 {/* Trade */}
-                <th className="w-20 pb-2 text-right text-xs font-medium text-tertiary uppercase tracking-wider">
+                <th className="w-20 pb-2 text-right text-label font-medium text-tertiary uppercase tracking-wider">
                   Trade
                 </th>
               </tr>
@@ -650,7 +650,7 @@ export function Component() {
                           >
                             {market.title}
                           </Button>
-                          <span className="flex items-center gap-1 text-xs text-tertiary">
+                          <span className="flex items-center gap-1 text-label text-tertiary">
                             <Clock className="w-3 h-3" aria-hidden="true" />
                             Expires {formatDate(market.expiryDate)}
                           </span>
@@ -659,7 +659,7 @@ export function Component() {
 
                       {/* Category */}
                       <td className="py-3 pr-4 hidden md:table-cell">
-                        <span className="px-2 py-1 rounded-sm bg-surface border border-default text-xs text-secondary">
+                        <span className="px-2 py-1 rounded-sm bg-surface border border-default text-label text-secondary">
                           {market.category}
                         </span>
                       </td>
@@ -706,7 +706,7 @@ export function Component() {
                           onClick={() => openQuickOrder(market.id)}
                           aria-pressed={isQuickOrderOpen}
                           aria-label={`Quick order for ${market.title}`}
-                          className={`inline-flex items-center gap-1 px-3 py-2 rounded-pf text-xs font-semibold transition-all duration-micro focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 ${
+                          className={`inline-flex items-center gap-1 px-3 py-2 rounded-pf text-label font-semibold transition-all duration-micro focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 ${
                             isQuickOrderOpen
                               ? 'bg-accent/20 text-accent-text border border-accent/40'
                               : 'bg-elevated border border-default text-secondary hover:border-accent/60 hover:text-accent-text'
@@ -729,8 +729,8 @@ export function Component() {
                             <div className="flex items-center justify-between mb-4">
                               <div className="flex items-center gap-2">
                                 <Zap className="w-4 h-4 text-accent-text" aria-hidden="true" />
-                                <span className="text-sm font-semibold text-primary">Quick Order</span>
-                                <span className="text-xs text-tertiary truncate max-w-xs hidden sm:block">
+                                <span className="text-body-md font-semibold text-primary">Quick Order</span>
+                                <span className="text-label text-tertiary truncate max-w-xs hidden sm:block">
                                   — {market.title}
                                 </span>
                               </div>
@@ -748,7 +748,7 @@ export function Component() {
                             <div className="flex flex-wrap items-end gap-4">
                               {/* Outcome toggle */}
                               <div className="flex flex-col gap-1">
-                                <label className="text-xs text-tertiary font-medium">Outcome</label>
+                                <label className="text-label text-tertiary font-medium">Outcome</label>
                                 <div
                                   className="flex rounded-pf border border-default overflow-hidden"
                                   role="group"
@@ -760,7 +760,7 @@ export function Component() {
                                       variant="ghost"
                                       onClick={() => updateQuickOrder(market.id, { outcome: o })}
                                       aria-pressed={qo.outcome === o}
-                                      className={`px-4 py-2 text-sm font-semibold transition-colors duration-micro focus-visible:outline-none focus-visible:ring-inset focus-visible:ring-2 focus-visible:ring-accent/40 ${
+                                      className={`px-4 py-2 text-body-md font-semibold transition-colors duration-micro focus-visible:outline-none focus-visible:ring-inset focus-visible:ring-2 focus-visible:ring-accent/40 ${
                                         qo.outcome === o
                                           ? o === 'YES'
                                             ? 'bg-gain text-primary'
@@ -776,7 +776,7 @@ export function Component() {
 
                               {/* Amount */}
                               <div className="flex flex-col gap-1">
-                                <label className="text-xs text-tertiary font-medium">Amount (USDC)</label>
+                                <label className="text-label text-tertiary font-medium">Amount (USDC)</label>
                                 <div className="flex items-center gap-1 border border-default rounded-pf bg-elevated px-1">
                                   <Button
                                     variant="ghost"
@@ -800,7 +800,7 @@ export function Component() {
                                       })
                                     }
                                     aria-label="Order amount in USDC"
-                                    className="w-16 text-center bg-transparent text-primary text-sm font-semibold tabular-nums py-2 focus-visible:outline-none"
+                                    className="w-16 text-center bg-transparent text-primary text-body-md font-semibold tabular-nums py-2 focus-visible:outline-none"
                                   />
                                   <Button
                                     variant="ghost"
@@ -823,7 +823,7 @@ export function Component() {
                                     key={preset}
                                     variant="ghost"
                                     onClick={() => updateQuickOrder(market.id, { amount: preset })}
-                                    className={`px-2 py-2 text-xs font-medium rounded-sm border transition-colors duration-micro focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 ${
+                                    className={`px-2 py-2 text-label font-medium rounded-sm border transition-colors duration-micro focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 ${
                                       qo.amount === preset
                                         ? 'bg-accent/20 border-accent/40 text-accent-text'
                                         : 'bg-transparent border-default text-tertiary hover:text-primary hover:border-strong'
@@ -835,7 +835,7 @@ export function Component() {
                               </div>
 
                               {/* Expected shares / price info */}
-                              <div className="flex flex-col gap-1 text-xs text-tertiary ml-auto hidden sm:flex">
+                              <div className="flex flex-col gap-1 text-label text-tertiary ml-auto hidden sm:flex">
                                 <span>
                                   Price:{' '}
                                   <strong className="text-primary">
@@ -857,7 +857,7 @@ export function Component() {
                               <Button
                                 onClick={() => submitQuickOrder(market)}
                                 disabled={qo.submitting}
-                                className="px-5 py-2 bg-accent text-inverse text-sm font-semibold rounded-pf hover:brightness-110 disabled:opacity-50 disabled:cursor-wait transition-all duration-micro focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 whitespace-nowrap"
+                                className="px-5 py-2 bg-accent text-inverse text-body-md font-semibold rounded-pf hover:brightness-110 disabled:opacity-50 disabled:cursor-wait transition-all duration-micro focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 whitespace-nowrap"
                               >
                                 {qo.submitting ? 'Placing…' : `Buy ${qo.outcome}`}
                               </Button>
@@ -867,7 +867,7 @@ export function Component() {
                                 variant="ghost"
                                 aria-label="Open full market detail"
                                 onClick={() => navigate(`/markets/${market.slug}`)}
-                                className="inline-flex items-center gap-1 text-xs text-tertiary hover:text-accent-text transition-colors duration-micro focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 rounded-sm"
+                                className="inline-flex items-center gap-1 text-label text-tertiary hover:text-accent-text transition-colors duration-micro focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 rounded-sm"
                               >
                                 <ExternalLink className="w-3 h-3" aria-hidden="true" />
                                 Full detail
@@ -889,8 +889,8 @@ export function Component() {
                             <div className="flex items-center justify-between mb-4">
                               <div className="flex items-center gap-2">
                                 <Bell className="w-4 h-4 text-accent-text" aria-hidden="true" />
-                                <span className="text-sm font-semibold text-primary">Price Alerts</span>
-                                <span className="text-xs text-tertiary truncate max-w-xs hidden sm:block">
+                                <span className="text-body-md font-semibold text-primary">Price Alerts</span>
+                                <span className="text-label text-tertiary truncate max-w-xs hidden sm:block">
                                   — {market.title}
                                 </span>
                               </div>
@@ -907,13 +907,13 @@ export function Component() {
 
                             {/* ---- Create new alert form ---- */}
                             <div className="mb-4">
-                              <p className="text-xs font-medium text-tertiary mb-2 uppercase tracking-wider">
+                              <p className="text-label font-medium text-tertiary mb-2 uppercase tracking-wider">
                                 Set new alert
                               </p>
                               <div className="flex flex-wrap items-end gap-3">
                                 {/* Outcome toggle */}
                                 <div className="flex flex-col gap-1">
-                                  <label className="text-xs text-tertiary">Outcome</label>
+                                  <label className="text-label text-tertiary">Outcome</label>
                                   <div
                                     className="flex rounded-pf border border-default overflow-hidden"
                                     role="group"
@@ -925,7 +925,7 @@ export function Component() {
                                         variant="ghost"
                                         onClick={() => setAlertOutcome(o)}
                                         aria-pressed={alertOutcome === o}
-                                        className={`px-4 py-2 text-sm font-semibold transition-colors duration-micro focus-visible:outline-none focus-visible:ring-inset focus-visible:ring-2 focus-visible:ring-accent/40 ${
+                                        className={`px-4 py-2 text-body-md font-semibold transition-colors duration-micro focus-visible:outline-none focus-visible:ring-inset focus-visible:ring-2 focus-visible:ring-accent/40 ${
                                           alertOutcome === o
                                             ? o === 'YES'
                                               ? 'bg-gain text-primary'
@@ -941,7 +941,7 @@ export function Component() {
 
                                 {/* Condition toggle */}
                                 <div className="flex flex-col gap-1">
-                                  <label className="text-xs text-tertiary">Condition</label>
+                                  <label className="text-label text-tertiary">Condition</label>
                                   <div
                                     className="flex rounded-pf border border-default overflow-hidden"
                                     role="group"
@@ -953,7 +953,7 @@ export function Component() {
                                         variant="ghost"
                                         onClick={() => setAlertCondition(c)}
                                         aria-pressed={alertCondition === c}
-                                        className={`px-3 py-2 text-sm font-medium transition-colors duration-micro capitalize focus-visible:outline-none focus-visible:ring-inset focus-visible:ring-2 focus-visible:ring-accent/40 ${
+                                        className={`px-3 py-2 text-body-md font-medium transition-colors duration-micro capitalize focus-visible:outline-none focus-visible:ring-inset focus-visible:ring-2 focus-visible:ring-accent/40 ${
                                           alertCondition === c
                                             ? 'bg-accent/20 text-accent-text border-r border-accent/30'
                                             : 'bg-elevated text-secondary hover:text-primary'
@@ -969,7 +969,7 @@ export function Component() {
                                 <div className="flex flex-col gap-1">
                                   <label
                                     htmlFor={`alert-threshold-${market.id}`}
-                                    className="text-xs text-tertiary"
+                                    className="text-label text-tertiary"
                                   >
                                     Threshold (0–1)
                                   </label>
@@ -981,12 +981,12 @@ export function Component() {
                                     step={0.01}
                                     value={alertThreshold}
                                     onChange={(e) => setAlertThreshold(Number(e.target.value))}
-                                    className="w-24 px-3 py-2 bg-elevated border border-default rounded-pf text-sm text-primary tabular-nums focus-visible:outline-none focus-visible:border-accent/60 focus-visible:ring-2 focus-visible:ring-accent/40 transition-colors duration-micro"
+                                    className="w-24 px-3 py-2 bg-elevated border border-default rounded-pf text-body-md text-primary tabular-nums focus-visible:outline-none focus-visible:border-accent/60 focus-visible:ring-2 focus-visible:ring-accent/40 transition-colors duration-micro"
                                   />
                                 </div>
 
                                 {/* Current price hint */}
-                                <div className="flex flex-col gap-1 text-xs text-tertiary pb-1 hidden sm:flex">
+                                <div className="flex flex-col gap-1 text-label text-tertiary pb-1 hidden sm:flex">
                                   <span>
                                     Current YES:{' '}
                                     <strong className="text-gain tabular-nums">
@@ -1005,7 +1005,7 @@ export function Component() {
                                 <Button
                                   onClick={() => handleAddAlert(market.id)}
                                   disabled={addingAlert}
-                                  className="inline-flex items-center gap-2 px-4 py-2 bg-accent text-inverse text-sm font-semibold rounded-pf hover:brightness-110 disabled:opacity-50 disabled:cursor-wait transition-all duration-micro focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 whitespace-nowrap"
+                                  className="inline-flex items-center gap-2 px-4 py-2 bg-accent text-inverse text-body-md font-semibold rounded-pf hover:brightness-110 disabled:opacity-50 disabled:cursor-wait transition-all duration-micro focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 whitespace-nowrap"
                                 >
                                   <Plus className="w-4 h-4" aria-hidden="true" />
                                   {addingAlert ? 'Adding…' : 'Add Alert'}
@@ -1018,7 +1018,7 @@ export function Component() {
 
                             {/* ---- Active alerts list ---- */}
                             <div>
-                              <p className="text-xs font-medium text-tertiary mb-2 uppercase tracking-wider">
+                              <p className="text-label font-medium text-tertiary mb-2 uppercase tracking-wider">
                                 Active alerts
                               </p>
 
@@ -1037,7 +1037,7 @@ export function Component() {
 
                               {/* Empty */}
                               {!alertsLoading && (!marketAlerts || marketAlerts.length === 0) && (
-                                <div className="flex items-center gap-2 py-3 text-sm text-tertiary">
+                                <div className="flex items-center gap-2 py-3 text-body-sm text-tertiary">
                                   <BellOff className="w-4 h-4 opacity-50" aria-hidden="true" />
                                   No alerts for this market
                                 </div>
@@ -1049,9 +1049,9 @@ export function Component() {
                                   {marketAlerts.map((alert) => (
                                     <li
                                       key={alert.id}
-                                      className={`flex items-center justify-between gap-3 px-3 py-2 rounded-pf border text-sm ${
+                                      className={`flex items-center justify-between gap-3 px-3 py-2 rounded-pf border text-body-sm ${
                                         alert.triggered
-                                          ? 'border-warning/30 bg-warning/5'
+                                          ? 'border-warning/30 bg-warning-subtle'
                                           : 'border-default bg-elevated'
                                       }`}
                                     >
@@ -1086,7 +1086,7 @@ export function Component() {
 
                                         {/* Triggered badge */}
                                         {alert.triggered && (
-                                          <span className="flex-shrink-0 px-2 py-1 rounded-sm bg-warning/15 border border-warning/30 text-xs font-medium text-warning">
+                                          <span className="flex-shrink-0 px-2 py-1 rounded-sm bg-warning-subtle border border-warning/30 text-label font-medium text-warning">
                                             Triggered
                                           </span>
                                         )}
@@ -1114,7 +1114,7 @@ export function Component() {
                               <Button
                                 variant="ghost"
                                 onClick={() => navigate(`/markets/${market.slug}`)}
-                                className="inline-flex items-center gap-1 text-xs text-tertiary hover:text-accent-text transition-colors duration-micro focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 rounded-sm"
+                                className="inline-flex items-center gap-1 text-label text-tertiary hover:text-accent-text transition-colors duration-micro focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 rounded-sm"
                               >
                                 <BarChart2 className="w-3 h-3" aria-hidden="true" />
                                 View full market &amp; alerts
@@ -1138,7 +1138,7 @@ export function Component() {
       {/* ------------------------------------------------------------------ */}
       {displayedMarkets.length > 0 && (
         <div className="border-t border-default bg-elevated px-6 py-3 mt-4">
-          <div className="max-w-screen-xl mx-auto flex items-center gap-6 flex-wrap text-xs text-tertiary">
+          <div className="max-w-screen-xl mx-auto flex items-center gap-6 flex-wrap text-label text-tertiary">
             <span>
               <strong className="text-primary">{displayedMarkets.length}</strong> markets
             </span>

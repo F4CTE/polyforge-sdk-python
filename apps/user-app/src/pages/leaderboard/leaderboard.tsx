@@ -168,7 +168,7 @@ export function Component() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold text-primary">Leaderboard</h1>
-        {!loading && <span className="text-sm text-tertiary">{total} traders</span>}
+        {!loading && <span className="text-body-sm text-tertiary">{total} traders</span>}
       </div>
 
       {/* Period tabs */}
@@ -181,9 +181,9 @@ export function Component() {
             role="tab"
             aria-selected={period === p.value}
             onClick={() => changePeriod(p.value)}
-            className={`px-3 py-2 rounded-full text-xs font-medium whitespace-nowrap border transition-colors ${
+            className={`px-3 py-2 rounded-full text-label font-medium whitespace-nowrap border transition-colors ${
               period === p.value
-                ? 'bg-accent/15 text-accent-text border-accent/30'
+                ? 'bg-accent-subtle text-accent-text border-accent/30'
                 : 'bg-elevated text-secondary border-default hover:border-strong'
             }`}
           >
@@ -200,9 +200,9 @@ export function Component() {
             variant="ghost"
             key={String(cat.value)}
             onClick={() => changeCategory(cat.value)}
-            className={`px-3 py-2 rounded-full text-xs font-medium whitespace-nowrap border transition-colors ${
+            className={`px-3 py-2 rounded-full text-label font-medium whitespace-nowrap border transition-colors ${
               category === cat.value
-                ? 'bg-accent/15 text-accent-text border-accent/30'
+                ? 'bg-accent-subtle text-accent-text border-accent/30'
                 : 'bg-elevated text-secondary border-default hover:border-strong'
             }`}
           >
@@ -216,7 +216,7 @@ export function Component() {
         <Select
           value={String(minTrades)}
           onChange={e => changeMinTrades(Number(e.target.value))}
-          className="bg-elevated border border-default rounded-pf text-xs text-secondary px-2 py-2"
+          className="bg-elevated border border-default rounded-pf text-label text-secondary px-2 py-2"
           aria-label="Minimum trades filter"
         >
           {MIN_TRADES_OPTIONS.map(opt => (
@@ -228,9 +228,9 @@ export function Component() {
       {/* Table */}
       <div data-testid="leaderboard-table" className="bg-elevated border border-default rounded-xl overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-sm" aria-label="Leaderboard rankings">
+          <table className="w-full text-body-sm" aria-label="Leaderboard rankings">
             <thead>
-              <tr className="bg-surface text-left text-xs text-secondary uppercase tracking-wider">
+              <tr className="bg-surface text-left text-label text-secondary uppercase tracking-wider">
                 <th scope="col" data-testid="column-rank" className="px-4 py-3 font-medium text-right w-16">Rank</th>
                 <th scope="col" data-testid="column-trader" className="px-4 py-3 font-medium">Trader</th>
                 <th scope="col" data-testid="column-score" className="px-4 py-3 font-medium text-right hidden sm:table-cell">Score</th>
@@ -254,8 +254,8 @@ export function Component() {
                   <td colSpan={7}>
                     <div className="flex flex-col items-center justify-center py-16 text-center">
                       <Trophy className="size-10 text-tertiary mb-3" />
-                      <p className="text-sm font-medium text-primary">No leaderboard data yet</p>
-                      <p className="text-xs text-tertiary mt-1">Rankings will appear once traders have resolved positions.</p>
+                      <p className="text-body-md font-medium text-primary">No leaderboard data yet</p>
+                      <p className="text-label text-tertiary mt-1">Rankings will appear once traders have resolved positions.</p>
                     </div>
                   </td>
                 </tr>
@@ -267,7 +267,7 @@ export function Component() {
                         {rankMedal(entry.rank) !== null ? (
                           <span className="text-lg"><span className="sr-only">{entry.rank}</span>{rankMedal(entry.rank)}</span>
                         ) : (
-                          <span className="font-mono text-xs">{entry.rank}</span>
+                          <span className="font-mono text-label">{entry.rank}</span>
                         )}
                       </div>
                     </td>
@@ -282,16 +282,16 @@ export function Component() {
                           </div>
                         )}
                         <div>
-                          <div className="text-sm font-medium text-primary">{entry.displayName ?? entry.username}</div>
+                          <div className="text-body-md font-medium text-primary">{entry.displayName ?? entry.username}</div>
                           {entry.displayName && (
-                            <div className="text-xs text-tertiary">@{entry.username}</div>
+                            <div className="text-label text-tertiary">@{entry.username}</div>
                           )}
                         </div>
                       </Link>
                       <Link
                         to={`/copy/new?address=${encodeURIComponent(entry.username)}`}
                         title="Copy trade this trader"
-                        className="shrink-0 text-caption px-2 py-1 rounded border border-accent/30 bg-accent/8 text-accent-text hover:bg-accent/20 transition-colors font-medium"
+                        className="shrink-0 text-caption px-2 py-1 rounded border border-accent/30 bg-accent-subtle text-accent-text hover:bg-accent/20 transition-colors font-medium"
                       >
                         Copy Trade
                       </Link>
@@ -299,7 +299,7 @@ export function Component() {
                     </td>
                     <td data-testid="trader-score" className="px-4 py-3 text-right hidden sm:table-cell">
                       {entry.score != null ? (
-                        <span className={`inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-mono font-semibold ${
+                        <span className={`inline-flex items-center gap-1 px-2 py-1 rounded text-label font-mono font-semibold ${
                           entry.score >= 80 ? 'text-gain bg-gain/10' :
                           entry.score >= 60 ? 'text-accent-text bg-accent/10' :
                           entry.score >= 40 ? 'text-warning bg-warning/10' :
@@ -309,7 +309,7 @@ export function Component() {
                           {entry.score}
                         </span>
                       ) : (
-                        <span className="text-xs text-tertiary">&mdash;</span>
+                        <span className="text-label text-tertiary">&mdash;</span>
                       )}
                     </td>
                     <td data-testid="trader-pnl" className={`px-4 py-3 text-right font-mono ${pnlColor(entry.pnl)}`}>
@@ -324,7 +324,7 @@ export function Component() {
                           <MiniSparkline data={entry.pnlHistory} />
                         </div>
                       ) : (
-                        <span className="text-xs text-tertiary">&mdash;</span>
+                        <span className="text-label text-tertiary">&mdash;</span>
                       )}
                     </td>
                     <td className="px-4 py-3 text-right font-mono text-secondary">
@@ -352,7 +352,7 @@ export function Component() {
           >
             <ChevronLeft className="size-4" />
           </Button>
-          <span data-testid="page-indicator" className="text-sm font-mono text-secondary" aria-live="polite">{page} / {totalPages}</span>
+          <span data-testid="page-indicator" className="text-body-sm font-mono text-secondary" aria-live="polite">{page} / {totalPages}</span>
           <Button
             type="button"
             variant="ghost"

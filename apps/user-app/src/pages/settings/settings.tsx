@@ -1003,11 +1003,11 @@ export function Component() {
         <div className="text-right">
           <Link
             to="/settings/trading-account"
-            className="text-sm text-accent-text hover:text-accent-text transition-colors"
+            className="text-body-md text-accent-text hover:text-accent-text transition-colors"
           >
             Manage Trading Account &rarr;
           </Link>
-          <p className="text-xs text-tertiary mt-1">Connect or manage your Polymarket wallet</p>
+          <p className="text-label text-tertiary mt-1">Connect or manage your Polymarket wallet</p>
         </div>
       </div>
 
@@ -1033,17 +1033,17 @@ export function Component() {
       {/* ─── Profile Tab ─── */}
       {activeTab === 'profile' && (
         <div className="bg-elevated border border-default rounded-xl p-6 space-y-5">
-          <h2 className="text-sm font-semibold text-primary uppercase tracking-wider">Public Profile</h2>
+          <h2 className="text-body-md font-semibold text-primary uppercase tracking-wider">Public Profile</h2>
           <div>
-            <label htmlFor="settings-display-name" className="text-xs text-secondary mb-2 block">Display Name</label>
+            <label htmlFor="settings-display-name" className="text-label text-secondary mb-2 block">Display Name</label>
             <Input id="settings-display-name" value={displayName} onChange={e => setDisplayName(e.target.value)} placeholder="Your display name" className="w-full" />
           </div>
           <div>
-            <label htmlFor="settings-bio" className="text-xs text-secondary mb-2 block">Bio</label>
+            <label htmlFor="settings-bio" className="text-label text-secondary mb-2 block">Bio</label>
             <Textarea id="settings-bio" value={bio} onChange={e => setBio(e.target.value)} rows={3} placeholder="Tell others about yourself..." className="w-full resize-y" />
           </div>
           <div>
-            <label htmlFor="settings-avatar-url" className="text-xs text-secondary mb-2 block">Avatar URL</label>
+            <label htmlFor="settings-avatar-url" className="text-label text-secondary mb-2 block">Avatar URL</label>
             <div className="flex items-center gap-3">
               <Input id="settings-avatar-url" value={avatarUrl} onChange={e => setAvatarUrl(e.target.value)} placeholder="https://..." className="flex-1" />
               {avatarUrl && <img src={avatarUrl} alt="Avatar preview" className="w-12 h-12 rounded-full object-cover border border-default" />}
@@ -1058,18 +1058,18 @@ export function Component() {
 
           {/* ─── Email Verification Status ─── */}
           <div className="mt-4 pt-6 border-t border-default">
-            <h2 className="text-sm font-semibold text-primary uppercase tracking-wider mb-4">Email</h2>
+            <h2 className="text-body-md font-semibold text-primary uppercase tracking-wider mb-4">Email</h2>
             <div className="flex items-center justify-between gap-4 flex-wrap">
               <div className="flex items-center gap-2 min-w-0">
                 <Mail className="size-4 text-tertiary shrink-0" />
-                <span className="text-sm text-primary truncate">{user?.email ?? '—'}</span>
+                <span className="text-body-md text-primary truncate">{user?.email ?? '—'}</span>
                 {user?.emailVerified ? (
-                  <span className="inline-flex items-center gap-1 text-xs font-medium text-gain bg-gain/10 border border-gain/20 rounded-full px-2 py-0.5">
+                  <span className="inline-flex items-center gap-1 text-label font-medium text-gain bg-gain/10 border border-gain/20 rounded-full px-2 py-0.5">
                     <BadgeCheck className="size-3" />
                     Verified
                   </span>
                 ) : (
-                  <span className="inline-flex items-center gap-1 text-xs font-medium text-warning bg-warning/10 border border-warning/20 rounded-full px-2 py-0.5">
+                  <span className="inline-flex items-center gap-1 text-label font-medium text-warning bg-warning/10 border border-warning/20 rounded-full px-2 py-0.5">
                     <AlertTriangle className="size-3" />
                     Unverified
                   </span>
@@ -1096,7 +1096,7 @@ export function Component() {
               )}
             </div>
             {!user?.emailVerified && (
-              <p className="mt-2 text-xs text-tertiary">
+              <p className="mt-2 text-label text-tertiary">
                 Check your inbox and click the verification link to confirm your email address.
               </p>
             )}
@@ -1104,11 +1104,11 @@ export function Component() {
 
           {/* ─── Danger Zone ─── */}
           <div className="mt-10 pt-6 border-t-2 border-loss/20 bg-elevated border border-loss/20 rounded-xl p-6 space-y-4">
-            <h2 className="text-sm font-semibold text-loss uppercase tracking-wider flex items-center gap-2">
+            <h2 className="text-body-md font-semibold text-loss uppercase tracking-wider flex items-center gap-2">
               <AlertTriangle className="size-4" />
               Danger Zone
             </h2>
-            <p className="text-sm text-secondary">
+            <p className="text-body-sm text-secondary">
               Permanently delete your account and all associated data. This action cannot be undone.
             </p>
             <Button
@@ -1130,17 +1130,17 @@ export function Component() {
                     </div>
                     <div>
                       <h3 id="delete-dialog-title" className="text-base font-semibold text-primary">Delete Account</h3>
-                      <p className="text-xs text-tertiary">This cannot be undone</p>
+                      <p className="text-label text-tertiary">This cannot be undone</p>
                     </div>
                   </div>
-                  <div className="bg-loss/5 border border-loss/10 rounded-pf p-3">
-                    <p className="text-sm text-loss">
+                  <div className="bg-loss-subtle border border-loss/10 rounded-pf p-3">
+                    <p className="text-body-md text-loss">
                       This will permanently delete your account. All strategies will be stopped.
                       All API keys will be revoked. All data will be lost.
                     </p>
                   </div>
                   <div>
-                    <label htmlFor="settings-delete-password" className="text-xs text-secondary mb-2 block">Enter your password to confirm</label>
+                    <label htmlFor="settings-delete-password" className="text-label text-secondary mb-2 block">Enter your password to confirm</label>
                     <Input
                       id="settings-delete-password"
                       type="password"
@@ -1180,12 +1180,12 @@ export function Component() {
       {/* ─── Notifications Tab ─── */}
       {activeTab === 'notifications' && (
         <div data-testid="notifications-panel" className="bg-elevated border border-default rounded-xl p-6 space-y-6">
-          <h2 className="text-sm font-semibold text-primary uppercase tracking-wider">Notification Preferences</h2>
+          <h2 className="text-body-md font-semibold text-primary uppercase tracking-wider">Notification Preferences</h2>
 
           {/* Email Digest Frequency */}
           <div className="space-y-2">
-            <div className="text-xs font-medium text-secondary uppercase tracking-wider">Email Digest Frequency</div>
-            <p className="text-xs text-tertiary">How often to receive email summaries of your activity</p>
+            <div className="text-label font-medium text-secondary uppercase tracking-wider">Email Digest Frequency</div>
+            <p className="text-label text-tertiary">How often to receive email summaries of your activity</p>
             <div className="flex gap-2 flex-wrap mt-2">
               {EMAIL_DIGEST_OPTIONS.map(opt => (
                 <Button
@@ -1245,8 +1245,8 @@ export function Component() {
                       return (
                         <div key={evtDef.event} className="flex items-center justify-between py-3">
                           <div className="flex-1 pr-4">
-                            <div className="text-sm font-medium text-primary">{evtDef.label}</div>
-                            <div className="text-xs text-tertiary mt-1">{evtDef.desc}</div>
+                            <div className="text-body-md font-medium text-primary">{evtDef.label}</div>
+                            <div className="text-label text-tertiary mt-1">{evtDef.desc}</div>
                           </div>
                           <div className="flex gap-2 shrink-0">
                             {(['inApp', 'email', 'push'] as const).map(field => (
@@ -1289,9 +1289,9 @@ export function Component() {
       {/* ─── Password Tab ─── */}
       {activeTab === 'password' && (
         <div data-testid="password-panel" className="bg-elevated border border-default rounded-xl p-6 space-y-5">
-          <h2 className="text-sm font-semibold text-primary uppercase tracking-wider">Change Password</h2>
+          <h2 className="text-body-md font-semibold text-primary uppercase tracking-wider">Change Password</h2>
           <div>
-            <label htmlFor="settings-current-password" className="text-xs text-secondary mb-2 block">Current Password</label>
+            <label htmlFor="settings-current-password" className="text-label text-secondary mb-2 block">Current Password</label>
             <div className="relative">
               <Input id="settings-current-password" type={showCurrentPw ? 'text' : 'password'} autoComplete="current-password" value={currentPassword} onChange={e => setCurrentPassword(e.target.value)} className="w-full pr-10" />
               <Button type="button" variant="ghost" size="icon-sm" onClick={() => setShowCurrentPw(!showCurrentPw)} className="absolute right-3 top-1/2 -translate-y-1/2" aria-label="Toggle password visibility">
@@ -1300,7 +1300,7 @@ export function Component() {
             </div>
           </div>
           <div>
-            <label htmlFor="settings-new-password" className="text-xs text-secondary mb-2 block">New Password</label>
+            <label htmlFor="settings-new-password" className="text-label text-secondary mb-2 block">New Password</label>
             <div className="relative">
               <Input id="settings-new-password" type={showNewPw ? 'text' : 'password'} autoComplete="new-password" value={newPassword} onChange={e => setNewPassword(e.target.value)} className="w-full pr-10" />
               <Button type="button" variant="ghost" size="icon-sm" onClick={() => setShowNewPw(!showNewPw)} className="absolute right-3 top-1/2 -translate-y-1/2" aria-label="Toggle password visibility">
@@ -1309,10 +1309,10 @@ export function Component() {
             </div>
           </div>
           <div>
-            <label htmlFor="settings-confirm-password" className="text-xs text-secondary mb-2 block">Confirm New Password</label>
+            <label htmlFor="settings-confirm-password" className="text-label text-secondary mb-2 block">Confirm New Password</label>
             <Input id="settings-confirm-password" type="password" autoComplete="new-password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} className="w-full" />
             {confirmPassword && newPassword !== confirmPassword && (
-              <span className="text-xs text-loss mt-1 block">Passwords do not match</span>
+              <span className="text-label text-loss mt-1 block">Passwords do not match</span>
             )}
           </div>
           <div className="flex justify-end">
@@ -1327,7 +1327,7 @@ export function Component() {
       {/* ─── 2FA Tab ─── */}
       {activeTab === '2fa' && (
         <div data-testid="twofa-panel" className="bg-elevated border border-default rounded-xl p-6 space-y-5">
-          <h2 className="text-sm font-semibold text-primary uppercase tracking-wider">Two-Factor Authentication (TOTP)</h2>
+          <h2 className="text-body-md font-semibold text-primary uppercase tracking-wider">Two-Factor Authentication (TOTP)</h2>
 
           {/* View A: 2FA Disabled */}
           {twoFaView === 'disabled' && (
@@ -1335,8 +1335,8 @@ export function Component() {
               <div className="flex items-start gap-4 p-4 rounded-pf bg-surface border border-default">
                 <Shield className="size-8 text-tertiary shrink-0 mt-1" />
                 <div className="space-y-1">
-                  <p className="text-sm font-medium text-primary">Protect your account with an authenticator app</p>
-                  <p className="text-xs text-secondary">
+                  <p className="text-body-md font-medium text-primary">Protect your account with an authenticator app</p>
+                  <p className="text-label text-secondary">
                     Two-factor authentication adds a second layer of security. Each time you sign in,
                     you'll need your password plus a 6-digit code from your authenticator app (e.g. Google
                     Authenticator, Authy, 1Password).
@@ -1362,10 +1362,10 @@ export function Component() {
               {/* Step 1: QR Code */}
               <div className="space-y-3">
                 <div className="flex items-center gap-2">
-                  <span className="flex items-center justify-center w-5 h-5 rounded-full bg-accent text-inverse text-xs font-semibold">1</span>
-                  <h3 className="text-sm font-semibold text-primary">Scan QR Code</h3>
+                  <span className="flex items-center justify-center w-5 h-5 rounded-full bg-accent text-inverse text-label font-semibold">1</span>
+                  <h3 className="text-body-md font-semibold text-primary">Scan QR Code</h3>
                 </div>
-                <p className="text-xs text-secondary ml-7">
+                <p className="text-label text-secondary ml-7">
                   Open your authenticator app and scan the QR code below, or enter the secret key manually.
                 </p>
                 <div className="ml-7 space-y-3">
@@ -1374,14 +1374,14 @@ export function Component() {
                       <img src={twoFaQrCodeUrl} alt="TOTP QR Code" className="w-44 h-44" />
                     </div>
                   ) : (
-                    <div className="p-4 bg-surface border border-default rounded-pf text-xs text-secondary">
+                    <div className="p-4 bg-surface border border-default rounded-pf text-label text-secondary">
                       <p className="mb-1">Open your authenticator app and add account manually using:</p>
                       <p className="font-mono text-primary break-all">{twoFaQrCodeUrl}</p>
                     </div>
                   )}
                   <div>
-                    <p className="text-xs text-secondary mb-1">Or enter this secret manually:</p>
-                    <code className="block font-mono text-sm text-primary bg-surface border border-default rounded-pf px-3 py-2 tracking-widest break-all">
+                    <p className="text-label text-secondary mb-1">Or enter this secret manually:</p>
+                    <code className="block font-mono text-body-md text-primary bg-surface border border-default rounded-pf px-3 py-2 tracking-widest break-all">
                       {twoFaSetupSecret}
                     </code>
                   </div>
@@ -1391,8 +1391,8 @@ export function Component() {
               {/* Step 2: Verify */}
               <div className="space-y-3">
                 <div className="flex items-center gap-2">
-                  <span className="flex items-center justify-center w-5 h-5 rounded-full bg-accent text-inverse text-xs font-semibold">2</span>
-                  <label htmlFor="2fa-verify-token" className="text-sm font-semibold text-primary">Enter verification code</label>
+                  <span className="flex items-center justify-center w-5 h-5 rounded-full bg-accent text-inverse text-label font-semibold">2</span>
+                  <label htmlFor="2fa-verify-token" className="text-body-md font-semibold text-primary">Enter verification code</label>
                 </div>
                 <div className="ml-7 space-y-3">
                   <Input
@@ -1436,19 +1436,19 @@ export function Component() {
             <div className="space-y-5">
               <div className="flex items-center gap-3 p-4 rounded-pf bg-gain/10 border border-gain/30">
                 <ShieldCheck className="size-5 text-gain shrink-0" />
-                <p className="text-sm font-medium text-gain">2FA enabled successfully!</p>
+                <p className="text-body-md font-medium text-gain">2FA enabled successfully!</p>
               </div>
-              <div className="p-4 bg-warning/5 border border-warning/30 rounded-pf space-y-3">
+              <div className="p-4 bg-warning-subtle border border-warning/30 rounded-pf space-y-3">
                 <div className="flex items-start gap-2">
                   <KeyRound className="size-4 text-warning shrink-0 mt-1" />
-                  <p className="text-xs text-warning font-medium">
+                  <p className="text-label text-warning font-medium">
                     Save these backup codes somewhere safe. Each can only be used once. If you lose access to
                     your authenticator, you can use a backup code to sign in.
                   </p>
                 </div>
                 <div className="grid grid-cols-2 gap-2">
                   {twoFaBackupCodes.map(code => (
-                    <span key={code} className="font-mono text-sm bg-surface px-3 py-2 rounded border border-default text-center text-primary">
+                    <span key={code} className="font-mono text-body-md bg-surface px-3 py-2 rounded border border-default text-center text-primary">
                       {code}
                     </span>
                   ))}
@@ -1493,14 +1493,14 @@ export function Component() {
             <div className="space-y-5">
               <div className="flex items-center gap-3 p-4 rounded-pf bg-gain/10 border border-gain/30">
                 <ShieldCheck className="size-5 text-gain shrink-0" />
-                <p className="text-sm font-medium text-gain">Two-factor authentication is active</p>
+                <p className="text-body-md font-medium text-gain">Two-factor authentication is active</p>
               </div>
 
               {/* Regenerate backup codes */}
               <div className="space-y-3">
                 <div>
-                  <p className="text-sm font-medium text-primary">Backup Codes</p>
-                  <p className="text-xs text-secondary mt-1">
+                  <p className="text-body-md font-medium text-primary">Backup Codes</p>
+                  <p className="text-label text-secondary mt-1">
                     Generate a new set of backup codes. Your old codes will be invalidated immediately.
                   </p>
                 </div>
@@ -1516,14 +1516,14 @@ export function Component() {
                 </Button>
 
                 {twoFaRegenCodes.length > 0 && (
-                  <div className="p-4 bg-warning/5 border border-warning/30 rounded-pf space-y-3">
-                    <p className="text-xs text-warning font-medium flex items-center gap-2">
+                  <div className="p-4 bg-warning-subtle border border-warning/30 rounded-pf space-y-3">
+                    <p className="text-label text-warning font-medium flex items-center gap-2">
                       <KeyRound className="size-4" />
                       New backup codes — save these now, they won't be shown again
                     </p>
                     <div className="grid grid-cols-2 gap-2">
                       {twoFaRegenCodes.map(code => (
-                        <span key={code} className="font-mono text-sm bg-surface px-3 py-2 rounded border border-default text-center text-primary">
+                        <span key={code} className="font-mono text-body-md bg-surface px-3 py-2 rounded border border-default text-center text-primary">
                           {code}
                         </span>
                       ))}
@@ -1568,7 +1568,7 @@ export function Component() {
                   </Button>
                 ) : (
                   <div className="space-y-3 p-4 bg-surface border border-loss/20 rounded-pf">
-                    <label htmlFor="2fa-disable-password" className="block text-sm font-medium text-primary">
+                    <label htmlFor="2fa-disable-password" className="block text-body-md font-medium text-primary">
                       Enter your account password to disable 2FA
                     </label>
                     <Input
@@ -1611,8 +1611,8 @@ export function Component() {
       {/* ─── Gas Usage Tab ─── */}
       {activeTab === 'gas' && (
         <div data-testid="gas-panel" className="bg-elevated border border-default rounded-xl p-6 space-y-5">
-          <h2 className="text-sm font-semibold text-primary uppercase tracking-wider">Gas Sponsorship</h2>
-          <p className="text-sm text-secondary">
+          <h2 className="text-body-md font-semibold text-primary uppercase tracking-wider">Gas Sponsorship</h2>
+          <p className="text-body-sm text-secondary">
             Polyforge absorbs Polygon gas fees so you can trade without worrying about network costs.
           </p>
           {gasLoading ? (
@@ -1625,19 +1625,19 @@ export function Component() {
             <>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div className="bg-surface rounded-pf p-4 border border-subtle">
-                  <span className="text-xs text-secondary uppercase tracking-wider">Today's Usage</span>
+                  <span className="text-label text-secondary uppercase tracking-wider">Today's Usage</span>
                   <span className="block mt-1 text-lg font-mono font-semibold text-primary">
                     {gasUsage.todayUsage.toFixed(4)} MATIC
                   </span>
                 </div>
                 <div className="bg-surface rounded-pf p-4 border border-subtle">
-                  <span className="text-xs text-secondary uppercase tracking-wider">Daily Limit</span>
+                  <span className="text-label text-secondary uppercase tracking-wider">Daily Limit</span>
                   <span className="block mt-1 text-lg font-mono font-semibold text-primary">
                     {gasUsage.dailyLimit.toFixed(4)} MATIC
                   </span>
                 </div>
                 <div className="bg-surface rounded-pf p-4 border border-subtle">
-                  <span className="text-xs text-secondary uppercase tracking-wider">Remaining</span>
+                  <span className="text-label text-secondary uppercase tracking-wider">Remaining</span>
                   <span className={`block mt-1 text-lg font-mono font-semibold ${gasUsage.remaining > 0.1 ? 'text-gain' : 'text-loss'}`}>
                     {gasUsage.remaining.toFixed(4)} MATIC
                   </span>
@@ -1646,7 +1646,7 @@ export function Component() {
 
               {/* Usage bar */}
               <div>
-                <div className="flex justify-between text-xs text-secondary mb-2">
+                <div className="flex justify-between text-label text-secondary mb-2">
                   <span>Usage</span>
                   <span>{((gasUsage.todayUsage / gasUsage.dailyLimit) * 100).toFixed(1)}%</span>
                 </div>
@@ -1660,7 +1660,7 @@ export function Component() {
                 </div>
               </div>
 
-              <div className="flex items-center gap-2 text-sm">
+              <div className="flex items-center gap-2 text-body-sm">
                 <div className={`w-2 h-2 rounded-full ${gasUsage.sponsorEnabled ? 'bg-gain' : 'bg-loss'}`} />
                 <span className="text-secondary">
                   Gas sponsorship is currently {gasUsage.sponsorEnabled ? 'active' : 'inactive'}
@@ -1677,7 +1677,7 @@ export function Component() {
           ) : (
             <div className="flex flex-col items-center py-6 text-center">
               <Fuel className="size-8 text-tertiary mb-2" />
-              <p className="text-sm text-tertiary">Unable to load gas usage data.</p>
+              <p className="text-body-sm text-tertiary">Unable to load gas usage data.</p>
             </div>
           )}
         </div>
@@ -1691,8 +1691,8 @@ export function Component() {
             <div className="flex items-start gap-3 p-4 rounded-xl bg-loss/10 border border-loss/30">
               <ShieldAlert className="size-5 text-loss shrink-0 mt-1" />
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-loss">Circuit Breaker Tripped</p>
-                <p className="text-xs text-secondary mt-1">
+                <p className="text-body-md font-semibold text-loss">Circuit Breaker Tripped</p>
+                <p className="text-label text-secondary mt-1">
                   All running strategies were paused due to drawdown exceeding your threshold.
                   {circuitBreakerTrippedAt && (
                     <span> Triggered {new Date(circuitBreakerTrippedAt).toLocaleString()}.</span>
@@ -1715,11 +1715,11 @@ export function Component() {
 
           <div className="bg-elevated border border-default rounded-xl p-6 space-y-6">
             <div className="flex items-center justify-between">
-              <h2 className="text-sm font-semibold text-primary uppercase tracking-wider">Drawdown Circuit Breaker</h2>
+              <h2 className="text-body-md font-semibold text-primary uppercase tracking-wider">Drawdown Circuit Breaker</h2>
               {riskLoading && <Loader2 className="size-4 animate-spin text-tertiary" />}
             </div>
 
-            <p className="text-xs text-secondary -mt-2">
+            <p className="text-label text-secondary -mt-2">
               Automatically pauses all running strategies if your portfolio loses more than the
               configured percentage within the lookback window.
             </p>
@@ -1727,8 +1727,8 @@ export function Component() {
             {/* Enable toggle */}
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-primary font-medium">Enable Circuit Breaker</p>
-                <p className="text-xs text-tertiary mt-1">Pause all strategies when drawdown threshold is hit</p>
+                <p className="text-body-md text-primary font-medium">Enable Circuit Breaker</p>
+                <p className="text-label text-tertiary mt-1">Pause all strategies when drawdown threshold is hit</p>
               </div>
               <Button
                 type="button"
@@ -1748,7 +1748,7 @@ export function Component() {
 
             {/* Lookback window */}
             <div>
-              <label htmlFor="settings-lookback" className="text-xs text-secondary mb-2 block">
+              <label htmlFor="settings-lookback" className="text-label text-secondary mb-2 block">
                 Lookback Window
               </label>
               <Select
@@ -1768,7 +1768,7 @@ export function Component() {
 
             {/* Threshold */}
             <div>
-              <label htmlFor="settings-threshold" className="text-xs text-secondary mb-2 block">
+              <label htmlFor="settings-threshold" className="text-label text-secondary mb-2 block">
                 Loss Threshold: <span className="font-mono text-loss">{drawdownThresholdPct}%</span>
               </label>
               <input
@@ -1806,19 +1806,19 @@ export function Component() {
           {/* Daily Loss Limit card */}
           <div className="bg-elevated border border-default rounded-xl p-6 space-y-6">
             <div className="flex items-center justify-between">
-              <h2 className="text-sm font-semibold text-primary uppercase tracking-wider">Daily Loss Limit</h2>
+              <h2 className="text-body-md font-semibold text-primary uppercase tracking-wider">Daily Loss Limit</h2>
               {dlLoading && <Loader2 className="size-4 animate-spin text-tertiary" />}
             </div>
 
-            <p className="text-xs text-secondary -mt-2">
+            <p className="text-label text-secondary -mt-2">
               Set a hard cap on how much you can lose in a single trading day. When hit, all new trades are paused automatically.
             </p>
 
             {/* Enable risk controls toggle */}
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-primary font-medium">Enable Risk Controls</p>
-                <p className="text-xs text-tertiary mt-1">When off, all limits below are ignored</p>
+                <p className="text-body-md text-primary font-medium">Enable Risk Controls</p>
+                <p className="text-label text-tertiary mt-1">When off, all limits below are ignored</p>
               </div>
               <Button
                 type="button"
@@ -1838,7 +1838,7 @@ export function Component() {
 
             {/* Daily Loss Limit input */}
             <div>
-              <label htmlFor="settings-dl-limit" className="text-xs text-secondary mb-2 block">
+              <label htmlFor="settings-dl-limit" className="text-label text-secondary mb-2 block">
                 Daily Loss Limit (USDC)
               </label>
               <Input
@@ -1852,14 +1852,14 @@ export function Component() {
                 disabled={!dlEnabled}
                 className="w-full"
               />
-              <p className="text-xs text-tertiary mt-2">
+              <p className="text-label text-tertiary mt-2">
                 Trading is paused automatically if your daily P&amp;L drops below this threshold.
               </p>
             </div>
 
             {/* Max Position Size input */}
             <div>
-              <label htmlFor="settings-dl-position" className="text-xs text-secondary mb-2 block">
+              <label htmlFor="settings-dl-position" className="text-label text-secondary mb-2 block">
                 Max Position Size (USDC)
               </label>
               <Input
@@ -1873,12 +1873,12 @@ export function Component() {
                 disabled={!dlEnabled}
                 className="w-full"
               />
-              <p className="text-xs text-tertiary mt-2">Maximum size for any single position.</p>
+              <p className="text-label text-tertiary mt-2">Maximum size for any single position.</p>
             </div>
 
             {/* Max Open Positions input */}
             <div>
-              <label htmlFor="settings-dl-open" className="text-xs text-secondary mb-2 block">
+              <label htmlFor="settings-dl-open" className="text-label text-secondary mb-2 block">
                 Max Open Positions
               </label>
               <Input
@@ -1893,7 +1893,7 @@ export function Component() {
                 disabled={!dlEnabled}
                 className="w-full"
               />
-              <p className="text-xs text-tertiary mt-2">Maximum number of concurrent open positions (1–50).</p>
+              <p className="text-label text-tertiary mt-2">Maximum number of concurrent open positions (1–50).</p>
             </div>
 
             <div className="flex justify-end pt-2 border-t border-default">
@@ -1917,13 +1917,13 @@ export function Component() {
         <div data-testid="apikeys-panel" className="bg-elevated border border-default rounded-xl p-6 space-y-6">
           {/* Generate section */}
           <div className="space-y-4">
-            <h2 className="text-sm font-semibold text-primary uppercase tracking-wider">Generate API Key</h2>
+            <h2 className="text-body-md font-semibold text-primary uppercase tracking-wider">Generate API Key</h2>
             <div>
-              <label htmlFor="settings-key-name" className="text-xs text-secondary mb-2 block">Key Name</label>
+              <label htmlFor="settings-key-name" className="text-label text-secondary mb-2 block">Key Name</label>
               <Input id="settings-key-name" value={newKeyName} onChange={e => setNewKeyName(e.target.value)} placeholder="My Integration" className="w-full" />
             </div>
             <div>
-              <span className="text-xs text-secondary mb-2 block" id="settings-scopes-label">
+              <span className="text-label text-secondary mb-2 block" id="settings-scopes-label">
                 Scopes <span className="text-loss">*</span>
               </span>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2" role="group" aria-labelledby="settings-scopes-label">
@@ -1931,7 +1931,7 @@ export function Component() {
                   const checked = newKeyScopes.has(scope.value);
                   return (
                     <label key={scope.value} className={`flex items-start gap-3 p-3 rounded-pf border cursor-pointer transition-colors ${
-                      checked ? 'border-accent/50 bg-accent/5' : 'border-default bg-surface hover:border-default-muted'
+                      checked ? 'border-accent/50 bg-accent-subtle' : 'border-default bg-surface hover:border-default-muted'
                     }`}>
                       <input
                         type="checkbox"
@@ -1944,7 +1944,7 @@ export function Component() {
                         className="mt-1 rounded border-default shrink-0"
                       />
                       <div>
-                        <span className={`text-xs font-medium block ${scopeBadgeClass(scope.value).split(' ')[1]}`}>{scope.label}</span>
+                        <span className={`text-label font-medium block ${scopeBadgeClass(scope.value).split(' ')[1]}`}>{scope.label}</span>
                         <span className="text-label text-tertiary">{scope.desc}</span>
                       </div>
                     </label>
@@ -1956,7 +1956,7 @@ export function Component() {
               )}
             </div>
             <div>
-              <label htmlFor="settings-key-expiration" className="text-xs text-secondary mb-2 block">Expiration (optional)</label>
+              <label htmlFor="settings-key-expiration" className="text-label text-secondary mb-2 block">Expiration (optional)</label>
               <Input id="settings-key-expiration" type="date" lang="en" value={newKeyExpiration} onChange={e => setNewKeyExpiration(e.target.value)} className="w-full max-w-[220px]" />
             </div>
             <Button type="button" variant="default" onClick={createApiKey} disabled={apiKeysCreating || !newKeyName.trim() || newKeyScopes.size === 0} className="flex items-center gap-2">
@@ -1969,11 +1969,11 @@ export function Component() {
           {(createdKey?.secret || createdKey?.key || createdKey?.token) && (
             <div className="space-y-2">
               <div className="bg-warning/10 border border-warning/30 rounded-pf p-3 space-y-2">
-                <p className="text-xs text-warning font-medium flex items-center gap-2">
+                <p className="text-label text-warning font-medium flex items-center gap-2">
                   <Shield className="size-4 shrink-0" />
                   Copy this secret now — it won&apos;t be shown again
                 </p>
-                <code className="block font-mono text-sm text-warning break-all">
+                <code className="block font-mono text-body-md text-warning break-all">
                   {createdKey.secret ?? createdKey.token ?? createdKey.key}
                 </code>
                 <div className="flex items-center gap-2 pt-1">
@@ -1992,11 +1992,11 @@ export function Component() {
           {rotatedSecret && (
             <div className="space-y-2">
               <div className="bg-warning/10 border border-warning/30 rounded-pf p-3 space-y-2">
-                <p className="text-xs text-warning font-medium flex items-center gap-2">
+                <p className="text-label text-warning font-medium flex items-center gap-2">
                   <RotateCcw className="size-4 shrink-0" />
                   New secret — copy it now, it won&apos;t be shown again
                 </p>
-                <code className="block font-mono text-sm text-warning break-all">{rotatedSecret.secret}</code>
+                <code className="block font-mono text-body-md text-warning break-all">{rotatedSecret.secret}</code>
                 <div className="flex items-center gap-2 pt-1">
                   <Button type="button" variant="secondary" size="sm" onClick={() => copySecret(rotatedSecret.secret)} className="flex items-center gap-2">
                     {secretCopied ? <><Check className="size-3" /> Copied!</> : <><Copy className="size-3" /> Copy Secret</>}
@@ -2011,7 +2011,7 @@ export function Component() {
 
           {/* Keys table */}
           <div className="border-t border-subtle pt-6">
-            <h2 className="text-sm font-semibold text-primary uppercase tracking-wider mb-4">Your API Keys</h2>
+            <h2 className="text-body-md font-semibold text-primary uppercase tracking-wider mb-4">Your API Keys</h2>
             {apiKeysLoading ? (
               <div className="space-y-2">
                 {[1, 2, 3].map(i => (
@@ -2021,13 +2021,13 @@ export function Component() {
             ) : apiKeys.length === 0 ? (
               <div className="flex flex-col items-center py-6 text-center">
                 <Key className="size-8 text-tertiary mb-2" />
-                <p className="text-sm text-tertiary">No API keys yet. Generate one to get started.</p>
+                <p className="text-body-sm text-tertiary">No API keys yet. Generate one to get started.</p>
               </div>
             ) : (
               <div className="overflow-x-auto">
-                <table className="w-full text-sm" aria-label="API keys">
+                <table className="w-full text-body-sm" aria-label="API keys">
                   <thead>
-                    <tr className="text-left text-xs text-secondary uppercase tracking-wider border-b border-subtle">
+                    <tr className="text-left text-label text-secondary uppercase tracking-wider border-b border-subtle">
                       <th scope="col" className="pb-2 pr-4 font-medium">Name</th>
                       <th scope="col" className="pb-2 pr-4 font-medium">Key Prefix</th>
                       <th scope="col" className="pb-2 pr-4 font-medium">Scopes</th>
@@ -2046,7 +2046,7 @@ export function Component() {
                           <td className="py-3 pr-4 text-primary font-medium">{key.name}</td>
                           <td className="py-3 pr-4">
                             <div className="flex items-center gap-2">
-                              <code className="font-mono text-xs text-secondary">{displayPrefix}</code>
+                              <code className="font-mono text-label text-secondary">{displayPrefix}</code>
                               <Button
                                 type="button"
                                 variant="ghost"
@@ -2070,14 +2070,14 @@ export function Component() {
                               ))}
                             </div>
                           </td>
-                          <td className="py-3 pr-4 font-mono text-xs text-tertiary whitespace-nowrap">{formatDate(key.createdAt)}</td>
-                          <td className="py-3 pr-4 text-xs text-tertiary whitespace-nowrap">
+                          <td className="py-3 pr-4 font-mono text-caption text-tertiary whitespace-nowrap">{formatDate(key.createdAt)}</td>
+                          <td className="py-3 pr-4 text-label text-tertiary whitespace-nowrap">
                             <div>{daysAgo(key.lastUsedAt)}</div>
                             {typeof key.usageCount === 'number' && (
                               <div className="text-caption text-tertiary">{key.usageCount.toLocaleString()} requests</div>
                             )}
                           </td>
-                          <td className="py-3 pr-4 font-mono text-xs text-tertiary hidden sm:table-cell whitespace-nowrap">
+                          <td className="py-3 pr-4 font-mono text-label text-tertiary hidden sm:table-cell whitespace-nowrap">
                             {key.expiresAt ? (
                               <span className={new Date(key.expiresAt) < new Date() ? 'text-loss' : ''}>
                                 {formatDate(key.expiresAt)}
@@ -2134,9 +2134,9 @@ export function Component() {
         <div className="space-y-4">
           {/* Add Webhook Form */}
           <div className="bg-elevated border border-default rounded-xl p-6 space-y-4">
-            <h2 className="text-sm font-semibold text-primary uppercase tracking-wider">Add Webhook</h2>
+            <h2 className="text-body-md font-semibold text-primary uppercase tracking-wider">Add Webhook</h2>
             <div>
-              <label htmlFor="webhook-url" className="text-xs text-secondary mb-2 block">HTTPS URL</label>
+              <label htmlFor="webhook-url" className="text-label text-secondary mb-2 block">HTTPS URL</label>
               <Input
                 id="webhook-url"
                 type="url"
@@ -2146,11 +2146,11 @@ export function Component() {
                 className="w-full"
               />
               {webhookUrl && !webhookUrl.startsWith('https://') && (
-                <span className="text-xs text-loss mt-1 block">URL must start with https://</span>
+                <span className="text-label text-loss mt-1 block">URL must start with https://</span>
               )}
             </div>
             <div>
-              <div className="text-xs text-secondary mb-2">Events (select at least 1)</div>
+              <div className="text-label text-secondary mb-2">Events (select at least 1)</div>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                 {WEBHOOK_EVENTS.map(event => {
                   const checked = webhookEvents.includes(event);
@@ -2162,9 +2162,9 @@ export function Component() {
                       onClick={() => setWebhookEvents(prev =>
                         checked ? prev.filter(e => e !== event) : [...prev, event]
                       )}
-                      className={`flex items-center gap-2 px-3 py-2 rounded-pf text-xs font-medium border transition-colors text-left ${
+                      className={`flex items-center gap-2 px-3 py-2 rounded-pf text-label font-medium border transition-colors text-left ${
                         checked
-                          ? 'bg-accent/15 text-accent-text border-accent/30'
+                          ? 'bg-accent-subtle text-accent-text border-accent/30'
                           : 'bg-surface text-secondary border-default hover:border-strong'
                       }`}
                     >
@@ -2193,7 +2193,7 @@ export function Component() {
 
           {/* Webhooks List */}
           <div className="bg-elevated border border-default rounded-xl p-6 space-y-3">
-            <h2 className="text-sm font-semibold text-primary uppercase tracking-wider">Your Webhooks</h2>
+            <h2 className="text-body-md font-semibold text-primary uppercase tracking-wider">Your Webhooks</h2>
 
             {webhooksLoading ? (
               <div className="space-y-2">
@@ -2205,8 +2205,8 @@ export function Component() {
               <div className="flex flex-col items-center gap-3 py-10 text-center">
                 <Webhook className="size-8 text-tertiary" />
                 <div>
-                  <p className="text-sm font-medium text-primary">No webhooks yet</p>
-                  <p className="text-xs text-tertiary mt-1">Add a webhook above to receive real-time event notifications</p>
+                  <p className="text-body-md font-medium text-primary">No webhooks yet</p>
+                  <p className="text-caption text-tertiary mt-1">Add a webhook above to receive real-time event notifications</p>
                 </div>
               </div>
             ) : (
@@ -2225,7 +2225,7 @@ export function Component() {
                       {/* Webhook row */}
                       <div className="flex items-center gap-3 px-4 py-3 bg-surface">
                         <div className="flex-1 min-w-0">
-                          <div className="text-sm text-primary font-mono truncate" title={wh.url}>
+                          <div className="text-body-md text-primary font-mono truncate" title={wh.url}>
                             {wh.url.length > 50 ? `${wh.url.slice(0, 47)}…` : wh.url}
                           </div>
                           <div className="flex items-center gap-2 mt-1">
@@ -2290,7 +2290,7 @@ export function Component() {
                         <div className="bg-surface/50 border-t border-subtle rounded-b-xl">
                           {/* Panel header */}
                           <div className="flex items-center justify-between px-4 py-3 border-b border-subtle">
-                            <span className="text-xs font-semibold text-primary uppercase tracking-wider">Recent Deliveries</span>
+                            <span className="text-label font-semibold text-primary uppercase tracking-wider">Recent Deliveries</span>
                             <Button
                               type="button"
                               variant="ghost"
@@ -2310,10 +2310,10 @@ export function Component() {
                               ))}
                             </div>
                           ) : whDeliveries.length === 0 ? (
-                            <div className="py-8 text-center text-xs text-tertiary">No deliveries yet</div>
+                            <div className="py-8 text-center text-label text-tertiary">No deliveries yet</div>
                           ) : (
                             <div className="overflow-x-auto">
-                              <table className="w-full text-xs" aria-label="Webhook deliveries">
+                              <table className="w-full text-label" aria-label="Webhook deliveries">
                                 <thead>
                                   <tr className="text-tertiary border-b border-subtle">
                                     <th className="text-left px-4 py-2 font-medium">Time</th>
@@ -2383,7 +2383,7 @@ export function Component() {
                                         {isDelExpanded && (
                                           <tr key={`${del.id}-preview`}>
                                             <td colSpan={5} className="px-4 pb-3 pt-1">
-                                              <pre className="bg-overlay text-secondary text-xs font-mono p-3 rounded overflow-x-auto max-h-48 whitespace-pre-wrap break-all">
+                                              <pre className="bg-overlay text-secondary text-label font-mono p-3 rounded overflow-x-auto max-h-48 whitespace-pre-wrap break-all">
                                                 <span className="text-tertiary">-- Request Body --{'\n'}</span>
                                                 {(() => { try { return JSON.stringify(JSON.parse(del.requestBody), null, 2); } catch { return del.requestBody; } })()}
                                                 {del.responseBody != null && (
@@ -2425,8 +2425,8 @@ export function Component() {
                   <Monitor className="size-4 text-accent-text" />
                 </div>
                 <div>
-                  <h2 className="text-sm font-semibold text-primary">Active Sessions</h2>
-                  <p className="text-xs text-tertiary mt-1">
+                  <h2 className="text-body-md font-semibold text-primary">Active Sessions</h2>
+                  <p className="text-label text-tertiary mt-1">
                     {sessionsLoading ? 'Loading…' : `${sessions.length} session${sessions.length !== 1 ? 's' : ''} total`}
                   </p>
                 </div>
@@ -2463,7 +2463,7 @@ export function Component() {
             ) : sessions.length === 0 ? (
               <div className="flex flex-col items-center gap-3 py-10 text-center">
                 <Monitor className="size-8 text-tertiary" />
-                <p className="text-sm text-tertiary">No other active sessions</p>
+                <p className="text-body-sm text-tertiary">No other active sessions</p>
               </div>
             ) : (
               <div className="divide-y divide-subtle">
@@ -2477,21 +2477,21 @@ export function Component() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span className="text-sm font-medium text-primary">{session.deviceName}</span>
+                        <span className="text-body-md font-medium text-primary">{session.deviceName}</span>
                         {session.isCurrent && (
-                          <span className="text-gain bg-gain/10 text-xs px-2 py-1 rounded-full">
+                          <span className="text-gain bg-gain/10 text-label px-2 py-1 rounded-full">
                             Current Session
                           </span>
                         )}
                       </div>
-                      <p className="text-xs text-tertiary mt-1">{session.ipAddress}</p>
+                      <p className="text-label text-tertiary mt-1">{session.ipAddress}</p>
                       {session.location && (
-                        <p className="flex items-center gap-1 text-xs text-tertiary mt-1">
+                        <p className="flex items-center gap-1 text-label text-tertiary mt-1">
                           <MapPin className="size-3 shrink-0" />
                           {session.location}
                         </p>
                       )}
-                      <p className="text-xs text-tertiary mt-1">
+                      <p className="text-label text-tertiary mt-1">
                         Last active: {sessionRelativeTime(session.lastActiveAt)}
                       </p>
                     </div>

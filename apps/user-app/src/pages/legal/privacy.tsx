@@ -9,7 +9,7 @@ export function Component() {
       <main className="max-w-3xl mx-auto px-4 sm:px-6 py-12">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
-          <Link to="/" className="flex items-center gap-2 text-sm text-tertiary hover:text-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 rounded-sm">
+          <Link to="/" className="flex items-center gap-2 text-body-sm text-tertiary hover:text-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 rounded-sm">
             <ArrowLeft className="size-4" /> Back
           </Link>
           <div className="flex items-center gap-2 text-primary">
@@ -19,9 +19,9 @@ export function Component() {
         </div>
 
         <h1 className="text-2xl font-semibold text-primary mb-2">Privacy Policy</h1>
-        <p className="text-sm text-tertiary mb-10">Last updated: {LAST_UPDATED}</p>
+        <p className="text-body-sm text-tertiary mb-10">Last updated: {LAST_UPDATED}</p>
 
-        <div className="space-y-8 text-sm text-secondary leading-relaxed">
+        <div className="space-y-8 text-body-sm text-secondary leading-relaxed">
           <section>
             <h2 className="text-lg font-semibold text-primary mb-3">1. Overview</h2>
             <p>Polyforge ("we", "our") is committed to protecting your privacy. This Privacy Policy explains what information we collect, how we use it, and your rights regarding that information when you use our Platform.</p>
@@ -116,7 +116,7 @@ export function Component() {
         </div>
 
         {/* Footer */}
-        <nav aria-label="Legal pages" className="flex items-center gap-3 mt-12 pt-6 border-t border-subtle text-sm text-tertiary">
+        <nav aria-label="Legal pages" className="flex items-center gap-3 mt-12 pt-6 border-t border-subtle text-body-sm text-tertiary">
           <Link to="/terms" className="hover:text-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 rounded-sm">Terms of Service</Link>
           <span aria-hidden="true">&middot;</span>
           <Link to="/login" className="hover:text-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 rounded-sm">Sign in</Link>

@@ -218,6 +218,17 @@
   50%       { box-shadow: 0 0 0 2px color-mix(in srgb, var(--loss) 35%, transparent), 0 0 16px color-mix(in srgb, var(--loss) 18%, transparent); }
 }
 
+/* ─── Correlation matrix ─────────────────────────────────────────────── */
+.correlation-grid {
+  grid-template-columns: 80px repeat(var(--correlation-col-count, 6), 72px);
+}
+.correlation-header-cell {
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  height: 60px;
+  line-height: 60px;
+}
+
 /* ─── Tooltip tour highlight ─────────────────────────────────────────── */
 .tour-highlight {
   position: relative;

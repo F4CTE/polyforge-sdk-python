@@ -177,7 +177,7 @@ export function Component() {
       {statsError ? (
         <div className="bg-elevated border border-default rounded-xl p-6 text-center">
           <AlertCircle className="mx-auto mb-2 text-tertiary" size={24} aria-hidden="true" />
-          <p className="text-sm text-secondary">Stats unavailable</p>
+          <p className="text-body-sm text-secondary">Stats unavailable</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 stagger-children">
@@ -187,7 +187,7 @@ export function Component() {
               className="bg-elevated border border-default rounded-xl p-4"
             >
               <div className="flex items-center justify-between mb-3">
-                <span className="text-xs font-medium text-secondary">
+                <span className="text-label font-medium text-secondary">
                   {card.label}
                 </span>
                 <div className={`p-2 rounded-sm ${card.bg}`}>
@@ -204,13 +204,13 @@ export function Component() {
 
       {/* Platform Activity */}
       <div>
-        <h2 className="text-xs font-semibold uppercase tracking-wider text-tertiary mb-3 px-1">
+        <h2 className="text-label font-semibold uppercase tracking-wider text-tertiary mb-3 px-1">
           Platform Activity
         </h2>
         {platformStatsError ? (
           <div className="bg-elevated border border-default rounded-xl p-6 text-center">
             <AlertCircle className="mx-auto mb-2 text-tertiary" size={24} aria-hidden="true" />
-            <p className="text-sm text-secondary">Platform stats unavailable</p>
+            <p className="text-body-sm text-secondary">Platform stats unavailable</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 stagger-children">
@@ -220,7 +220,7 @@ export function Component() {
                 className="bg-elevated border border-default rounded-xl p-4"
               >
                 <div className="flex items-center justify-between mb-3">
-                  <span className="text-xs font-medium text-secondary">
+                  <span className="text-label font-medium text-secondary">
                     {card.label}
                   </span>
                   <div className={`p-2 rounded-sm ${card.bg}`}>
@@ -242,14 +242,14 @@ export function Component() {
           <div className="bg-elevated border border-default rounded-xl p-5">
             <div className="flex items-center gap-2 mb-4">
               <Activity size={16} className="text-tertiary" aria-hidden="true" />
-              <h2 className="text-sm font-semibold text-primary">
+              <h2 className="text-body-md font-semibold text-primary">
                 System Health
               </h2>
             </div>
             <div className="text-center py-6">
               <AlertCircle className="mx-auto mb-2 text-tertiary" size={24} aria-hidden="true" />
-              <p className="text-sm text-secondary">Health unavailable</p>
-              <Button type="button" variant="ghost" onClick={load} className="text-accent-text hover:text-accent-text text-xs mt-2">
+              <p className="text-body-sm text-secondary">Health unavailable</p>
+              <Button type="button" variant="ghost" onClick={load} className="text-accent-text hover:text-accent-text text-label mt-2">
                 Retry
               </Button>
             </div>
@@ -258,11 +258,11 @@ export function Component() {
           <div className="bg-elevated border border-default rounded-xl p-5">
             <div className="flex items-center gap-2 mb-4">
               <Activity size={16} className="text-accent" aria-hidden="true" />
-              <h2 className="text-sm font-semibold text-primary">
+              <h2 className="text-body-md font-semibold text-primary">
                 System Health
               </h2>
               <span
-                className={`ml-auto px-2 py-1 rounded-full text-xs font-medium ${statusColor(health.status)}`}
+                className={`ml-auto px-2 py-1 rounded-full text-label font-medium ${statusColor(health.status)}`}
               >
                 {health.status}
               </span>
@@ -274,7 +274,7 @@ export function Component() {
                   className="flex items-center justify-between p-3 rounded-sm bg-app border border-default"
                 >
                   <div>
-                    <div className="text-xs font-medium text-primary capitalize">
+                    <div className="text-label font-medium text-primary capitalize">
                       {name}
                     </div>
                     <div className="text-label text-tertiary">
@@ -304,16 +304,16 @@ export function Component() {
           <div className="bg-elevated border border-default rounded-xl p-5">
             <div className="flex items-center gap-2 mb-3">
               <Database size={16} className="text-accent" aria-hidden="true" />
-              <h2 className="text-sm font-semibold text-primary">
+              <h2 className="text-body-md font-semibold text-primary">
                 Database
               </h2>
               <span
-                className={`ml-auto px-2 py-1 rounded-full text-xs font-medium ${statusColor(health.db?.status)}`}
+                className={`ml-auto px-2 py-1 rounded-full text-label font-medium ${statusColor(health.db?.status)}`}
               >
                 {health.db?.status ?? 'UNKNOWN'}
               </span>
             </div>
-            <div className="text-sm text-secondary">
+            <div className="text-body-sm text-secondary">
               Active connections: <span className="text-primary font-medium">{health.db?.connections ?? 0}</span>
             </div>
           </div>
@@ -323,16 +323,16 @@ export function Component() {
           <div className="bg-elevated border border-default rounded-xl p-5">
             <div className="flex items-center gap-2 mb-3">
               <Server size={16} className="text-accent" aria-hidden="true" />
-              <h2 className="text-sm font-semibold text-primary">
+              <h2 className="text-body-md font-semibold text-primary">
                 Redis
               </h2>
               <span
-                className={`ml-auto px-2 py-1 rounded-full text-xs font-medium ${statusColor(health.redis?.status)}`}
+                className={`ml-auto px-2 py-1 rounded-full text-label font-medium ${statusColor(health.redis?.status)}`}
               >
                 {health.redis?.status ?? 'UNKNOWN'}
               </span>
             </div>
-            <div className="text-sm text-secondary">
+            <div className="text-body-sm text-secondary">
               Memory usage: <span className="text-primary font-medium font-mono">{(health.redis?.memoryUsageMb ?? 0).toFixed(1)} MB</span>
             </div>
           </div>
@@ -342,10 +342,10 @@ export function Component() {
           <div className="bg-elevated border border-default rounded-xl p-5">
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-sm font-semibold text-primary">
+                <h2 className="text-body-md font-semibold text-primary">
                   Launch Control
                 </h2>
-                <p className="text-xs text-tertiary mt-1">
+                <p className="text-label text-tertiary mt-1">
                   Invite-only registration
                 </p>
               </div>
@@ -373,39 +373,39 @@ export function Component() {
       <div className="bg-elevated border border-default rounded-xl p-5">
         <div className="flex items-center gap-2 mb-4">
           <ShieldAlert size={16} className="text-accent" aria-hidden="true" />
-          <h2 className="text-sm font-semibold text-primary">
+          <h2 className="text-body-md font-semibold text-primary">
             Rate Limiting
           </h2>
         </div>
         {rateLimitsError ? (
           <div className="text-center py-4">
             <AlertCircle className="mx-auto mb-2 text-tertiary" size={20} aria-hidden="true" />
-            <p className="text-sm text-secondary">Rate limit data unavailable</p>
+            <p className="text-body-sm text-secondary">Rate limit data unavailable</p>
           </div>
         ) : rateLimits ? (
           <div className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div className="bg-app border border-default rounded-sm p-3">
                 <span className="text-label text-tertiary uppercase">Tracked Keys</span>
-                <span className="block text-lg font-semibold text-primary">{rateLimits.totalTrackedKeys}</span>
+                <span className="block text-lg font-semibold font-mono tabular-nums text-primary">{rateLimits.totalTrackedKeys}</span>
               </div>
               <div className="bg-app border border-default rounded-sm p-3">
                 <span className="text-label text-tertiary uppercase">Recent 429s</span>
-                <span className={`block text-lg font-semibold ${rateLimits.recent429Count > 0 ? 'text-warning' : 'text-primary'}`}>
+                <span className={`block text-lg font-semibold font-mono tabular-nums ${rateLimits.recent429Count > 0 ? 'text-warning' : 'text-primary'}`}>
                   {rateLimits.recent429Count}
                 </span>
               </div>
               <div className="bg-app border border-default rounded-sm p-3">
                 <span className="text-label text-tertiary uppercase">Top Offenders</span>
-                <span className="block text-lg font-semibold text-primary">{rateLimits.topOffenders?.length ?? 0}</span>
+                <span className="block text-lg font-semibold font-mono tabular-nums text-primary">{rateLimits.topOffenders?.length ?? 0}</span>
               </div>
             </div>
             {rateLimits.totalTrackedKeys === 0 && rateLimits.recent429Count === 0 && (rateLimits.topOffenders?.length ?? 0) === 0 && (
-              <p className="text-xs text-tertiary italic">No rate limit events recorded</p>
+              <p className="text-label text-tertiary italic">No rate limit events recorded</p>
             )}
             {rateLimits.topOffenders?.length > 0 && (
               <div className="overflow-x-auto">
-                <table className="w-full text-xs">
+                <table className="w-full text-label">
                   <caption className="sr-only">Rate limit top offenders</caption>
                   <thead>
                     <tr className="text-left text-tertiary uppercase tracking-wider border-b border-default">
@@ -428,28 +428,28 @@ export function Component() {
             )}
           </div>
         ) : (
-          <p className="text-sm text-tertiary" role="status">Loading...</p>
+          <p className="text-body-sm text-tertiary" role="status">Loading...</p>
         )}
       </div>
 
       {/* Recent Activity */}
       <div className="bg-elevated border border-default rounded-xl p-5">
-        <h2 className="text-sm font-semibold text-primary mb-4">
+        <h2 className="text-body-md font-semibold text-primary mb-4">
           Recent Activity
         </h2>
         {logsError ? (
           <div className="text-center py-4">
             <Clock className="mx-auto mb-2 text-tertiary" size={20} aria-hidden="true" />
-            <p className="text-sm text-secondary">No recent activity</p>
-            <p className="text-xs text-tertiary mt-1">Activity will appear here as admins take actions.</p>
-            <Button type="button" variant="ghost" onClick={load} className="text-accent-text hover:text-accent-text text-xs mt-2">
+            <p className="text-body-sm text-secondary">No recent activity</p>
+            <p className="text-label text-tertiary mt-1">Activity will appear here as admins take actions.</p>
+            <Button type="button" variant="ghost" onClick={load} className="text-accent-text hover:text-accent-text text-label mt-2">
               Refresh
             </Button>
           </div>
         ) : auditLogs.length === 0 ? (
           <div className="py-2">
-            <p className="text-sm text-secondary">No admin actions recorded yet.</p>
-            <p className="text-xs text-tertiary mt-1">Activity will appear as admins manage users, strategies, and settings.</p>
+            <p className="text-body-sm text-secondary">No admin actions recorded yet.</p>
+            <p className="text-label text-tertiary mt-1">Activity will appear as admins manage users, strategies, and settings.</p>
           </div>
         ) : (
           <div className="space-y-3">
@@ -462,12 +462,12 @@ export function Component() {
                   <span className="px-2 py-1 rounded-sm text-label font-medium bg-app text-accent border border-default">
                     {log.action}
                   </span>
-                  <span className="text-sm text-secondary">
+                  <span className="text-body-sm text-secondary">
                     {log.target ?? ''}
                     {log.targetId ? ` #${log.targetId.slice(0, 8)}` : ''}
                   </span>
                 </div>
-                <span className="text-xs text-tertiary whitespace-nowrap">
+                <span className="text-caption text-tertiary whitespace-nowrap">
                   {timeAgo(log.createdAt)}
                 </span>
               </div>

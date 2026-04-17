@@ -75,11 +75,11 @@ export function Component() {
       <div className="bg-elevated border border-default rounded-xl p-5">
         <div className="flex items-center gap-2 mb-4">
           <Plus size={16} className="text-accent" aria-hidden="true" />
-          <h3 className="text-sm font-semibold text-primary">Generate Invite Codes</h3>
+          <h3 className="text-body-md font-semibold text-primary">Generate Invite Codes</h3>
         </div>
         <form onSubmit={handleGenerate} className="flex flex-wrap items-end gap-4">
           <div>
-            <label htmlFor="invite-count" className="block text-xs text-tertiary mb-1">Count</label>
+            <label htmlFor="invite-count" className="block text-label text-tertiary mb-1">Count</label>
             <Input
               id="invite-count"
               type="number"
@@ -87,11 +87,11 @@ export function Component() {
               max={50}
               value={count}
               onChange={(e) => setCount(Number(e.target.value))}
-              className="w-20 px-3 py-2 text-sm rounded-sm border border-default bg-app text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/20"
+              className="w-20 px-3 py-2 text-body-sm rounded-sm border border-default bg-app text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/20"
             />
           </div>
           <div>
-            <label htmlFor="invite-max-uses" className="block text-xs text-tertiary mb-1">Max Uses</label>
+            <label htmlFor="invite-max-uses" className="block text-label text-tertiary mb-1">Max Uses</label>
             <Input
               id="invite-max-uses"
               type="number"
@@ -99,11 +99,11 @@ export function Component() {
               max={100}
               value={maxUses}
               onChange={(e) => setMaxUses(Number(e.target.value))}
-              className="w-20 px-3 py-2 text-sm rounded-sm border border-default bg-app text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/20"
+              className="w-20 px-3 py-2 text-body-sm rounded-sm border border-default bg-app text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/20"
             />
           </div>
           <div>
-            <label htmlFor="invite-ttl" className="block text-xs text-tertiary mb-1">TTL (days)</label>
+            <label htmlFor="invite-ttl" className="block text-label text-tertiary mb-1">TTL (days)</label>
             <Input
               id="invite-ttl"
               type="number"
@@ -111,14 +111,14 @@ export function Component() {
               max={365}
               value={ttlDays}
               onChange={(e) => setTtlDays(Number(e.target.value))}
-              className="w-20 px-3 py-2 text-sm rounded-sm border border-default bg-app text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/20"
+              className="w-20 px-3 py-2 text-body-sm rounded-sm border border-default bg-app text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/20"
             />
           </div>
           <Button
             type="submit"
             variant="default"
             disabled={generating}
-            className="px-4 py-2 text-sm font-semibold rounded-sm bg-accent text-inverse hover:bg-accent-text disabled:opacity-50 transition-colors"
+            className="px-4 py-2 text-body-md font-semibold rounded-sm bg-accent text-inverse hover:bg-accent-text disabled:opacity-50 transition-colors"
           >
             {generating ? 'Generating...' : 'Generate'}
           </Button>
@@ -127,11 +127,11 @@ export function Component() {
         {/* Generated Codes */}
         {generatedCodes.length > 0 && (
           <div className="mt-4 p-3 rounded-sm bg-app border border-default">
-            <div className="text-xs text-tertiary mb-2">Generated codes:</div>
+            <div className="text-label text-tertiary mb-2">Generated codes:</div>
             <div className="space-y-1">
               {generatedCodes.map((code) => (
                 <div key={code} className="flex items-center gap-2">
-                  <code className="text-sm font-mono text-accent">{code}</code>
+                  <code className="text-body-sm font-mono text-accent">{code}</code>
                   <Button
                     type="button"
                     variant="ghost"
@@ -153,7 +153,7 @@ export function Component() {
       <div className="bg-elevated border border-default rounded-xl p-5">
         <div className="flex items-center gap-2 mb-4">
           <Mail size={16} className="text-accent" aria-hidden="true" />
-          <h3 className="text-sm font-semibold text-primary">
+          <h3 className="text-body-md font-semibold text-primary">
             Active Invites ({invites.length})
           </h3>
         </div>
@@ -167,17 +167,17 @@ export function Component() {
           <div className="text-center py-12">
             <KeyRound className="mx-auto mb-3 text-tertiary opacity-40" size={40} aria-hidden="true" />
             <p className="text-secondary font-medium">No active invites</p>
-            <p className="text-tertiary text-xs mt-1">Generate invite codes above to get started</p>
+            <p className="text-tertiary text-label mt-1">Generate invite codes above to get started</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+            <table className="w-full text-body-sm">
               <caption className="sr-only">Active invite codes</caption>
               <thead>
                 <tr className="border-b border-default">
-                  <th scope="col" className="text-left px-3 py-2 text-xs font-medium text-tertiary uppercase">Code</th>
-                  <th scope="col" className="text-right px-3 py-2 text-xs font-medium text-tertiary uppercase">Remaining Uses</th>
-                  <th scope="col" className="text-right px-3 py-2 text-xs font-medium text-tertiary uppercase">TTL</th>
+                  <th scope="col" className="text-left px-3 py-2 text-label font-medium text-tertiary uppercase">Code</th>
+                  <th scope="col" className="text-right px-3 py-2 text-label font-medium text-tertiary uppercase">Remaining Uses</th>
+                  <th scope="col" className="text-right px-3 py-2 text-label font-medium text-tertiary uppercase">TTL</th>
                   <th scope="col" className="text-right px-3 py-2"><span className="sr-only">Actions</span></th>
                 </tr>
               </thead>
@@ -186,7 +186,7 @@ export function Component() {
                   <tr key={inv.code} className="border-b border-default last:border-0">
                     <td className="px-3 py-3">
                       <div className="flex items-center gap-2">
-                        <code className="text-sm font-mono text-primary">{inv.code}</code>
+                        <code className="text-body-sm font-mono text-primary">{inv.code}</code>
                         <Button
                           type="button"
                           variant="ghost"
@@ -207,7 +207,7 @@ export function Component() {
                     </td>
                     <td className="px-3 py-3 text-right">
                       {confirmRevokeCode === inv.code ? (
-                        <div className="flex items-center justify-end gap-2 text-xs">
+                        <div className="flex items-center justify-end gap-2 text-label">
                           <Button type="button" variant="danger" onClick={() => handleDelete(inv.code)} className="px-2 py-1 rounded-sm bg-loss/10 text-loss hover:bg-loss/20 transition-colors">Revoke</Button>
                           <Button type="button" variant="secondary" onClick={() => setConfirmRevokeCode(null)} className="px-2 py-1 rounded-sm bg-elevated text-secondary hover:bg-app transition-colors">Cancel</Button>
                         </div>

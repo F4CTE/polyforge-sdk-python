@@ -136,7 +136,7 @@ function SummaryCard({ label, value, icon, accent }: SummaryCardProps) {
       </div>
       <div>
         <div className={`text-xl font-semibold ${accent ? 'text-loss' : 'text-primary'}`}>{value}</div>
-        <div className="text-xs text-tertiary">{label}</div>
+        <div className="text-label text-tertiary">{label}</div>
       </div>
     </div>
   );
@@ -182,21 +182,21 @@ function FlaggedCard({ strategy, onAction }: FlaggedCardProps) {
     <div className="rounded-lg border border-default bg-surface p-5 space-y-4">
       {/* Header row */}
       <div className="flex flex-wrap items-start gap-2">
-        <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-sm text-xs font-semibold uppercase tracking-wider ${SEVERITY_STYLES[strategy.severity]}`}>
+        <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-sm text-label font-semibold uppercase tracking-wider ${SEVERITY_STYLES[strategy.severity]}`}>
           {strategy.severity === 'critical' && <AlertTriangle size={11} aria-hidden="true" />}
           {strategy.severity}
         </span>
 
         <div className="flex-1 min-w-0">
-          <span className="text-sm font-semibold text-primary">{strategy.strategyName}</span>
-          <span className="ml-2 text-xs text-secondary">@{strategy.authorUsername}</span>
+          <span className="text-body-md font-semibold text-primary">{strategy.strategyName}</span>
+          <span className="ml-2 text-label text-secondary">@{strategy.authorUsername}</span>
         </div>
 
         <a
           href={`/strategies/${strategy.id}`}
           target="_blank"
           rel="noopener noreferrer"
-          className="flex items-center gap-1 text-xs text-secondary hover:text-accent transition-colors"
+          className="flex items-center gap-1 text-label text-secondary hover:text-accent transition-colors"
           aria-label={`View strategy ${strategy.strategyName}`}
         >
           <ExternalLink size={13} aria-hidden="true" />
@@ -206,11 +206,11 @@ function FlaggedCard({ strategy, onAction }: FlaggedCardProps) {
 
       {/* Abuse type + flagged time */}
       <div className="flex flex-wrap items-center gap-3">
-        <span className="inline-flex items-center gap-2 text-xs font-medium text-secondary">
+        <span className="inline-flex items-center gap-2 text-label font-medium text-secondary">
           {meta.icon}
           {meta.label}
         </span>
-        <span className="text-xs text-tertiary">
+        <span className="text-caption text-tertiary">
           Flagged: {formatRelativeTime(strategy.flaggedAt)}
         </span>
       </div>
@@ -218,10 +218,10 @@ function FlaggedCard({ strategy, onAction }: FlaggedCardProps) {
       {/* Evidence table */}
       {strategy.evidence.length > 0 && (
         <div className="space-y-1">
-          <div className="text-xs font-semibold text-secondary uppercase tracking-wider">Evidence</div>
+          <div className="text-label font-semibold text-secondary uppercase tracking-wider">Evidence</div>
           <div className="rounded-sm border border-default divide-y divide-default overflow-hidden">
             {strategy.evidence.map((ev, i) => (
-              <div key={i} className="grid grid-cols-4 gap-2 px-3 py-2 text-xs bg-elevated/40">
+              <div key={i} className="grid grid-cols-4 gap-2 px-3 py-2 text-label bg-elevated/40">
                 <span className="text-secondary font-medium">{ev.metric}</span>
                 <span className="text-primary font-semibold">{ev.value}</span>
                 <span className="text-tertiary">threshold: {ev.threshold}</span>
@@ -233,13 +233,13 @@ function FlaggedCard({ strategy, onAction }: FlaggedCardProps) {
       )}
 
       {/* Details */}
-      <p className="text-xs text-secondary leading-relaxed">
+      <p className="text-body-sm text-secondary leading-relaxed">
         {strategy.details}
       </p>
 
       {/* Review note */}
       <div>
-        <label htmlFor={`note-${strategy.id}`} className="block text-xs font-medium text-secondary mb-1">
+        <label htmlFor={`note-${strategy.id}`} className="block text-label font-medium text-secondary mb-1">
           Review note <span className="text-tertiary">(required for Warn, Delist, Ban)</span>
         </label>
         <Textarea
@@ -249,7 +249,7 @@ function FlaggedCard({ strategy, onAction }: FlaggedCardProps) {
           onChange={(e) => setNote(e.target.value)}
           placeholder="Add a review note..."
           disabled={isActioning}
-          className="w-full rounded-sm border border-default bg-elevated px-3 py-2 text-xs text-primary placeholder:text-tertiary resize-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent disabled:opacity-50"
+          className="w-full rounded-sm border border-default bg-elevated px-3 py-2 text-label text-primary placeholder:text-tertiary resize-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent disabled:opacity-50"
         />
       </div>
 
@@ -257,7 +257,7 @@ function FlaggedCard({ strategy, onAction }: FlaggedCardProps) {
       {confirmBan && (
         <div className="rounded-sm border border-loss/30 bg-loss/5 px-4 py-3 flex flex-wrap items-center gap-3">
           <AlertTriangle size={15} className="text-loss shrink-0" aria-hidden="true" />
-          <span className="text-xs text-loss flex-1">
+          <span className="text-label text-loss flex-1">
             Ban <strong>@{strategy.authorUsername}</strong>? This will permanently disable their account and remove all their listings.
           </span>
           <div className="flex gap-2">
@@ -265,7 +265,7 @@ function FlaggedCard({ strategy, onAction }: FlaggedCardProps) {
               type="button"
               variant="secondary"
               onClick={() => setConfirmBan(false)}
-              className="px-3 py-2 rounded-sm border border-default text-xs text-secondary hover:bg-elevated transition-colors"
+              className="px-3 py-2 rounded-sm border border-default text-label text-secondary hover:bg-elevated transition-colors"
             >
               Cancel
             </Button>
@@ -274,7 +274,7 @@ function FlaggedCard({ strategy, onAction }: FlaggedCardProps) {
               variant="danger"
               onClick={() => handleAction('ban_author')}
               disabled={isActioning}
-              className="px-3 py-2 text-xs font-medium transition-colors disabled:opacity-50"
+              className="px-3 py-2 text-label font-medium transition-colors disabled:opacity-50"
             >
               {pending === 'ban_author' ? 'Banning…' : 'Confirm Ban'}
             </Button>
@@ -290,7 +290,7 @@ function FlaggedCard({ strategy, onAction }: FlaggedCardProps) {
             variant="success"
             onClick={() => handleAction('clear')}
             disabled={isActioning}
-            className="inline-flex items-center gap-2 px-3 py-2 rounded-sm border border-gain/40 text-xs font-medium text-gain hover:bg-gain/10 transition-colors disabled:opacity-50"
+            className="inline-flex items-center gap-2 px-3 py-2 rounded-sm border border-gain/40 text-label font-medium text-gain hover:bg-gain/10 transition-colors disabled:opacity-50"
           >
             <ShieldCheck size={13} aria-hidden="true" />
             {pending === 'clear' ? 'Clearing…' : 'Clear — No Abuse'}
@@ -301,7 +301,7 @@ function FlaggedCard({ strategy, onAction }: FlaggedCardProps) {
             variant="ghost"
             onClick={() => handleAction('warn')}
             disabled={isActioning}
-            className="inline-flex items-center gap-2 px-3 py-2 rounded-sm border border-warning/40 text-xs font-medium text-warning hover:bg-warning/10 transition-colors disabled:opacity-50"
+            className="inline-flex items-center gap-2 px-3 py-2 rounded-sm border border-warning/40 text-label font-medium text-warning hover:bg-warning/10 transition-colors disabled:opacity-50"
           >
             <AlertTriangle size={13} aria-hidden="true" />
             {pending === 'warn' ? 'Warning…' : 'Warn Author'}
@@ -312,7 +312,7 @@ function FlaggedCard({ strategy, onAction }: FlaggedCardProps) {
             variant="danger"
             onClick={() => handleAction('delist')}
             disabled={isActioning}
-            className="inline-flex items-center gap-2 px-3 py-2 rounded-sm border border-loss/40 text-xs font-medium text-loss hover:bg-loss/10 transition-colors disabled:opacity-50"
+            className="inline-flex items-center gap-2 px-3 py-2 rounded-sm border border-loss/40 text-label font-medium text-loss hover:bg-loss/10 transition-colors disabled:opacity-50"
           >
             <Eye size={13} aria-hidden="true" />
             {pending === 'delist' ? 'Delisting…' : 'Delist Strategy'}
@@ -323,7 +323,7 @@ function FlaggedCard({ strategy, onAction }: FlaggedCardProps) {
             variant="danger"
             onClick={() => handleAction('ban_author')}
             disabled={isActioning}
-            className="inline-flex items-center gap-2 px-3 py-2 text-xs font-medium transition-colors disabled:opacity-50"
+            className="inline-flex items-center gap-2 px-3 py-2 text-label font-medium transition-colors disabled:opacity-50"
           >
             <Ban size={13} aria-hidden="true" />
             {pending === 'ban_author' ? 'Banning…' : 'Ban Author'}
@@ -333,7 +333,7 @@ function FlaggedCard({ strategy, onAction }: FlaggedCardProps) {
 
       {/* Existing review note (cleared/actioned) */}
       {strategy.reviewNote && (
-        <div className="rounded-sm bg-elevated px-3 py-2 text-xs text-secondary">
+        <div className="rounded-sm bg-elevated px-3 py-2 text-body-sm text-secondary">
           <span className="font-medium text-tertiary">Admin note: </span>
           {strategy.reviewNote}
         </div>
@@ -429,7 +429,7 @@ export function Component() {
             {pendingCount}
           </span>
         )}
-        <p className="text-sm text-secondary ml-auto">
+        <p className="text-body-sm text-secondary ml-auto">
           Automated detection of strategy marketplace abuse patterns.
         </p>
       </div>
@@ -468,7 +468,7 @@ export function Component() {
             type="button"
             variant="ghost"
             onClick={() => setActiveTab(tab.key)}
-            className={`px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-px rounded-t-sm ${
+            className={`px-4 py-2 text-body-sm font-medium transition-colors border-b-2 -mb-px rounded-t-sm ${
               activeTab === tab.key
                 ? 'border-accent text-accent'
                 : 'border-transparent text-secondary hover:text-primary'
@@ -496,7 +496,7 @@ export function Component() {
         <div className="flex flex-col items-center justify-center py-20 gap-3 text-center">
           <ShieldCheck size={48} className="text-gain opacity-60" aria-hidden="true" />
           <p className="text-base font-semibold text-primary">No flagged strategies</p>
-          <p className="text-sm text-secondary max-w-xs">
+          <p className="text-body-sm text-secondary max-w-xs">
             {activeTab === 'pending'
               ? 'Everything looks clean — no strategies are currently flagged for review.'
               : `No strategies in the "${activeTab}" state.`}
@@ -504,7 +504,7 @@ export function Component() {
         </div>
       ) : (
         <>
-          <div className="text-xs text-tertiary">
+          <div className="text-label text-tertiary">
             {total} {total === 1 ? 'strategy' : 'strategies'} — showing {visibleStrategies.length}
           </div>
           <div className="space-y-4">

@@ -111,8 +111,8 @@ export function renderContent({
       />
       <div className="bg-elevated border border-default rounded-xl p-4 flex flex-wrap items-center justify-between gap-4">
         <div>
-          <p className="text-xs text-tertiary uppercase tracking-wider mb-1">Base URL</p>
-          <code className="text-sm font-mono text-accent-text">https://api.polyforge.app/api/v1</code>
+          <p className="text-label text-tertiary uppercase tracking-wider mb-1">Base URL</p>
+          <code className="text-body-md font-mono text-accent-text">https://api.polyforge.app/api/v1</code>
         </div>
         <div className="flex gap-2">
           <span className="inline-flex items-center text-label font-medium px-2 py-1 rounded-full bg-overlay text-secondary">REST · JSON</span>
@@ -123,7 +123,7 @@ export function renderContent({
         {[
           {
             step: '1', title: 'Create an API key', body: (
-              <p className="text-sm text-secondary">
+              <p className="text-body-sm text-secondary">
                 Go to <Link to="/settings" className="text-accent-text hover:text-accent-text underline underline-offset-2">Settings → API Keys</Link> and
                 click <strong className="text-primary">Create Key</strong>. Choose the scopes you need
                 (<InlineCode>READ</InlineCode> / <InlineCode>WRITE</InlineCode> / <InlineCode>TRADE</InlineCode>) and
@@ -149,9 +149,9 @@ export function renderContent({
           },
         ].map(({ step, title, body }) => (
           <div key={step} className="flex gap-4 p-4 bg-elevated border border-default rounded-xl">
-            <span className="shrink-0 w-6 h-6 rounded-full bg-accent/20 text-accent-text text-xs font-semibold flex items-center justify-center">{step}</span>
+            <span className="shrink-0 w-6 h-6 rounded-full bg-accent/20 text-accent-text text-label font-semibold flex items-center justify-center">{step}</span>
             <div className="flex-1 space-y-3">
-              <p className="text-sm font-medium text-primary">{title}</p>
+              <p className="text-body-md font-medium text-primary">{title}</p>
               {body}
             </div>
           </div>
@@ -177,13 +177,13 @@ export function renderContent({
           ] as { scope: string; cls: string; desc: string }[]).map(s => (
             <div key={s.scope} className="flex items-start gap-3 p-3 bg-elevated border border-default rounded-xl hover:border-strong transition-all duration-panel">
               <Badge text={s.scope} cls={s.cls} />
-              <p className="text-xs text-secondary leading-relaxed pt-1">{s.desc}</p>
+              <p className="text-label text-secondary leading-relaxed pt-1">{s.desc}</p>
             </div>
           ))}
         </div>
       </Sub>
       <Sub title="API Key lifecycle">
-        <p className="text-sm text-secondary leading-relaxed">
+        <p className="text-body-sm text-secondary leading-relaxed">
           Keys are prefixed <InlineCode>pf_</InlineCode>. The full key is shown <strong className="text-primary">once</strong> at
           creation — store it securely. Up to 10 active keys per account. Revoke via{' '}
           <InlineCode>DELETE /api/v1/api-keys/:id</InlineCode> or from the Settings page.
@@ -206,7 +206,7 @@ export function renderContent({
           { label: 'Rust',       install: 'cargo add polyforge tokio',   cls: 'text-warning', code: `use polyforge::PolyforgeClient;\nlet client = PolyforgeClient::new("pf_...");` },
         ]).map(s => (
           <div key={s.label} className="bg-elevated border border-default rounded-xl p-4 space-y-3 hover:border-strong transition-all duration-panel">
-            <p className={`text-sm font-semibold ${s.cls}`}>{s.label}</p>
+            <p className={`text-body-md font-semibold ${s.cls}`}>{s.label}</p>
             <Code code={s.install} />
             <Code code={s.code} />
           </div>
@@ -214,11 +214,11 @@ export function renderContent({
       </div>
       <div className="bg-elevated border border-default rounded-xl p-4 space-y-3 hover:border-strong transition-all duration-panel">
         <div className="flex items-center gap-2">
-          <p className="text-sm font-semibold text-purple-300">MCP Server</p>
+          <p className="text-body-md font-semibold text-purple-300">MCP Server</p>
           <Badge text="Claude · Cursor · Windsurf · Zed" cls="bg-purple-500/10 text-purple-400" />
         </div>
         <Code code={'npx @polyforge/mcp-server'} lang="curl" />
-        <p className="text-xs text-secondary">
+        <p className="text-label text-secondary">
           23 tools covering markets, strategies, orders, and live events.{' '}
           <Button variant="link" type="button" onClick={() => navigate('mcp-server')} className="text-accent-text hover:text-accent-text underline underline-offset-2 cursor-pointer">
             Setup guide →
@@ -235,12 +235,12 @@ export function renderContent({
       {CHANGELOG.map(entry => (
         <div key={entry.date} className="border border-default rounded-xl overflow-hidden">
           <div className="flex items-center gap-3 px-4 py-3 bg-surface border-b border-default">
-            <span className="text-sm font-semibold text-primary">{entry.date}</span>
+            <span className="text-body-md font-semibold text-primary">{entry.date}</span>
             <Badge text={entry.tag} cls={tagCls(entry.tag)} />
           </div>
           <div className="px-4 py-4 space-y-2">
             {entry.items.map((item, i) => (
-              <p key={i} className="text-sm text-secondary">• {item}</p>
+              <p key={i} className="text-body-sm text-secondary">• {item}</p>
             ))}
           </div>
         </div>
@@ -280,9 +280,9 @@ export function renderContent({
       </Sub>
       <Sub title="Inbound event types">
         <div className="border border-default rounded-xl overflow-hidden">
-          <table className="w-full text-sm" aria-label="Inbound event types">
+          <table className="w-full text-body-sm" aria-label="Inbound event types">
             <thead>
-              <tr className="bg-surface text-left text-xs text-secondary uppercase tracking-wider border-b border-default">
+              <tr className="bg-surface text-left text-label text-secondary uppercase tracking-wider border-b border-default">
                 <th scope="col" className="px-4 py-3 font-medium">Event</th>
                 <th scope="col" className="px-4 py-3 font-medium">Payload</th>
               </tr>
@@ -300,8 +300,8 @@ export function renderContent({
                 ['NOTIFICATION',       '{ type, title, message }'],
               ].map(([ev, payload]) => (
                 <tr key={ev} className="group hover:bg-elevated/50 transition-colors">
-                  <td className="px-4 py-3 font-mono text-accent-text text-xs">{ev}</td>
-                  <td className="px-4 py-3 font-mono text-secondary text-xs">{payload}</td>
+                  <td className="px-4 py-3 font-mono text-accent-text text-label">{ev}</td>
+                  <td className="px-4 py-3 font-mono text-secondary text-label">{payload}</td>
                 </tr>
               ))}
             </tbody>
@@ -320,11 +320,11 @@ export function renderContent({
       />
       <Sub title="Endpoint">
         <Code code={'GET /api/v1/strategies/:id/events\nAuthorization: Bearer pf_live_...\nAccept: text/event-stream'} lang="curl" />
-        <p className="text-xs text-tertiary mt-2">Scope: <strong className="text-secondary">READ</strong> · Heartbeat comment every 15 s</p>
+        <p className="text-label text-tertiary mt-2">Scope: <strong className="text-secondary">READ</strong> · Heartbeat comment every 15 s</p>
       </Sub>
       <Sub title="Event shape">
         <Code code={`{\n  "type": "ORDER_FILLED",\n  "strategyId": "uuid",\n  "data": { "orderId": "...", "price": 0.62 },\n  "timestamp": 1711720000000\n}`} lang="ts" />
-        <p className="text-xs text-tertiary mt-2">First event is always <InlineCode>{'{"type":"CONNECTED","strategyId":"...","timestamp":...}'}</InlineCode></p>
+        <p className="text-caption text-tertiary mt-2">First event is always <InlineCode>{'{"type":"CONNECTED","strategyId":"...","timestamp":...}'}</InlineCode></p>
       </Sub>
       <Sub title="SDK usage">
         <LangTabs lang={lang} setLang={setLang} available={['ts', 'py', 'rust']} />
@@ -345,7 +345,7 @@ export function renderContent({
       />
       <Sub title="Signature format">
         <Code code={'X-Polyforge-Signature: sha256=<hex-digest>'} lang="curl" />
-        <p className="text-xs text-tertiary mt-2">
+        <p className="text-label text-tertiary mt-2">
           Computed as <InlineCode>HMAC-SHA256(raw body bytes, webhookSecret)</InlineCode>.
         </p>
       </Sub>
@@ -374,9 +374,9 @@ export function renderContent({
         subtitle="120 requests per minute per API key. Exceeding the limit returns 429 with a Retry-After header."
       />
       <div className="border border-default rounded-xl overflow-hidden">
-        <table className="w-full text-sm" aria-label="Rate limit headers">
+        <table className="w-full text-body-sm" aria-label="Rate limit headers">
           <thead>
-            <tr className="bg-surface text-left text-xs text-secondary uppercase tracking-wider border-b border-default">
+            <tr className="bg-surface text-left text-label text-secondary uppercase tracking-wider border-b border-default">
               <th scope="col" className="px-4 py-3 font-medium">Header</th>
               <th scope="col" className="px-4 py-3 font-medium">Value</th>
             </tr>
@@ -389,14 +389,14 @@ export function renderContent({
               ['Retry-After',           'Seconds to wait (only on 429 responses)'],
             ].map(([h, v]) => (
               <tr key={h} className="group hover:bg-elevated/50 transition-colors">
-                <td className="px-4 py-3 font-mono text-accent-text text-xs">{h}</td>
-                <td className="px-4 py-3 text-secondary text-xs">{v}</td>
+                <td className="px-4 py-3 font-mono text-accent-text text-label">{h}</td>
+                <td className="px-4 py-3 text-secondary text-label">{v}</td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
-      <p className="text-xs text-tertiary bg-elevated border border-default rounded-pf px-3 py-3">
+      <p className="text-label text-tertiary bg-elevated border border-default rounded-pf px-3 py-3">
         Auth endpoints (register, forgot-password) have tighter per-IP limits.
         The SSE endpoint does not count toward the rate limit while the connection is held open.
       </p>
@@ -415,9 +415,9 @@ export function renderContent({
       </Sub>
       <Sub title="HTTP status codes">
         <div className="border border-default rounded-xl overflow-hidden">
-          <table className="w-full text-sm" aria-label="HTTP status codes">
+          <table className="w-full text-body-sm" aria-label="HTTP status codes">
             <thead>
-              <tr className="bg-surface text-left text-xs text-secondary uppercase tracking-wider border-b border-default">
+              <tr className="bg-surface text-left text-label text-secondary uppercase tracking-wider border-b border-default">
                 <th scope="col" className="px-4 py-3 font-medium w-16">Code</th>
                 <th scope="col" className="px-4 py-3 font-medium">Meaning</th>
               </tr>
@@ -434,8 +434,8 @@ export function renderContent({
                 [500, 'Server Error — unexpected error; include requestId when reporting'],
               ].map(([code, meaning]) => (
                 <tr key={code} className="group hover:bg-elevated/50 transition-colors">
-                  <td className="px-4 py-3 font-mono text-primary text-xs font-medium">{code}</td>
-                  <td className="px-4 py-3 text-secondary text-xs">{meaning}</td>
+                  <td className="px-4 py-3 font-mono text-primary text-label font-medium">{code}</td>
+                  <td className="px-4 py-3 text-secondary text-label">{meaning}</td>
                 </tr>
               ))}
             </tbody>

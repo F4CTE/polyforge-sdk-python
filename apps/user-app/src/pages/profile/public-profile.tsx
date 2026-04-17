@@ -102,10 +102,10 @@ function scoreColor(score: number): string {
 }
 
 function scoreBg(score: number): string {
-  if (score >= 80) return 'bg-gain/15 border-gain/25';
-  if (score >= 60) return 'bg-accent/15 border-accent/25';
-  if (score >= 40) return 'bg-warning/15 border-warning/25';
-  return 'bg-loss/15 border-loss/25';
+  if (score >= 80) return 'bg-gain-subtle border-gain/25';
+  if (score >= 60) return 'bg-accent-subtle border-accent/25';
+  if (score >= 40) return 'bg-warning-subtle border-warning/25';
+  return 'bg-loss-subtle border-loss/25';
 }
 
 const BADGE_ICONS: Record<string, React.ReactNode> = {
@@ -159,7 +159,7 @@ function PerfTooltip({ active, payload, label }: PerfTooltipProps) {
   const val = payload[0].value as number;
   const isPos = val >= 0;
   return (
-    <div className="bg-elevated border border-default rounded-pf px-3 py-2 text-xs shadow-lg">
+    <div className="bg-elevated border border-default rounded-pf px-3 py-2 text-label shadow-lg">
       <div className="text-tertiary mb-1">{label}</div>
       <div className={`font-mono font-semibold ${isPos ? 'text-gain' : 'text-loss'}`}>
         {fmtPnl(val)}
@@ -331,8 +331,8 @@ export function Component() {
       <div className="p-6 max-w-2xl mx-auto">
         <div className="flex flex-col items-center justify-center py-20 text-center">
           <User className="size-10 text-tertiary mb-3" />
-          <p className="text-sm font-medium text-primary">User not found</p>
-          <p className="text-xs text-tertiary mt-1">This profile doesn't exist or has been removed.</p>
+          <p className="text-body-md font-medium text-primary">User not found</p>
+          <p className="text-label text-tertiary mt-1">This profile doesn't exist or has been removed.</p>
         </div>
       </div>
     );
@@ -357,7 +357,7 @@ export function Component() {
           <h1 className="text-2xl font-semibold text-primary">{profile.displayName ?? profile.username}</h1>
           {/* Inline score badge */}
           {scoreData?.score && (
-            <div className={`flex items-center gap-1 px-2 py-1 rounded-full border text-xs font-mono font-semibold ${scoreBg(scoreData.score.score)} ${scoreColor(scoreData.score.score)}`}>
+            <div className={`flex items-center gap-1 px-2 py-1 rounded-full border text-label font-mono font-semibold ${scoreBg(scoreData.score.score)} ${scoreColor(scoreData.score.score)}`}>
               <TrendingUp className="size-3" />
               {scoreData.score.score}
             </div>
@@ -365,13 +365,13 @@ export function Component() {
         </div>
         {isOwn ? (
           <Link to="/settings"
-            className="flex items-center gap-2 px-3 py-2 rounded-pf bg-elevated border border-default text-xs font-medium text-secondary hover:border-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 transition-colors">
+            className="flex items-center gap-2 px-3 py-2 rounded-pf bg-elevated border border-default text-label font-medium text-secondary hover:border-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 transition-colors">
             <Settings className="size-4" aria-hidden="true" />
             Edit Profile
           </Link>
         ) : (
           <div className="flex items-center gap-3">
-            <span className="text-xs text-tertiary">
+            <span className="text-label text-tertiary">
               {profile.followersCount.toLocaleString()} follower{profile.followersCount !== 1 ? 's' : ''}
             </span>
             <Button
@@ -380,10 +380,10 @@ export function Component() {
               onClick={toggleFollow}
               disabled={followLoading}
               aria-label={profile.isFollowing ? 'Unfollow this user' : 'Follow this user'}
-              className={`group flex items-center gap-2 px-3 py-2 rounded-pf text-xs font-medium cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 transition-colors disabled:opacity-60 disabled:cursor-not-allowed ${
+              className={`group flex items-center gap-2 px-3 py-2 rounded-pf text-label font-medium cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 transition-colors disabled:opacity-60 disabled:cursor-not-allowed ${
                 profile.isFollowing
                   ? 'bg-elevated text-secondary border border-default hover:border-loss hover:text-loss'
-                  : 'bg-accent/15 text-accent-text border border-accent/30 hover:bg-accent/25'
+                  : 'bg-accent-subtle text-accent-text border border-accent/30 hover:bg-accent/25'
               }`}
             >
               {followLoading ? (
@@ -418,30 +418,30 @@ export function Component() {
           <div>
             <div data-testid="profile-display-name" className="text-lg font-semibold text-primary">{profile.displayName ?? profile.username}</div>
             {profile.displayName && (
-              <div data-testid="profile-username" className="text-sm text-tertiary">@{profile.username}</div>
+              <div data-testid="profile-username" className="text-body-sm text-tertiary">@{profile.username}</div>
             )}
-            <div className="text-xs font-mono text-tertiary mt-1">Joined {joinedDate}</div>
+            <div className="text-caption font-mono text-tertiary mt-1">Joined {joinedDate}</div>
           </div>
         </div>
 
         {/* Bio */}
         {profile.bio && (
-          <p data-testid="profile-bio" className="text-sm text-secondary mb-4 leading-relaxed">{profile.bio}</p>
+          <p data-testid="profile-bio" className="text-body-sm text-secondary mb-4 leading-relaxed">{profile.bio}</p>
         )}
 
         {/* Stats */}
         <div className="flex items-center divide-x divide-subtle border-t border-subtle pt-4 mt-4">
           <div className="flex-1 text-center">
             <div className="text-lg font-mono font-semibold text-primary">{profile.followersCount}</div>
-            <div className="text-xs text-tertiary">Followers</div>
+            <div className="text-label text-tertiary">Followers</div>
           </div>
           <div className="flex-1 text-center">
             <div className="text-lg font-mono font-semibold text-primary">{profile.followingCount}</div>
-            <div className="text-xs text-tertiary">Following</div>
+            <div className="text-label text-tertiary">Following</div>
           </div>
           <div className="flex-1 text-center">
             <div className="text-lg font-mono font-semibold text-primary">{profile.publicStrategyCount}</div>
-            <div className="text-xs text-tertiary">Strategies</div>
+            <div className="text-label text-tertiary">Strategies</div>
           </div>
         </div>
       </div>
@@ -451,7 +451,7 @@ export function Component() {
         <div data-testid="edge-rating" className="bg-elevated border border-default rounded-xl p-6">
           <div className="flex items-center gap-2 mb-4">
             <TrendingUp className="size-4 text-accent-text" />
-            <h2 className="text-sm font-semibold text-primary">Edge Rating</h2>
+            <h2 className="text-body-md font-semibold text-primary">Edge Rating</h2>
           </div>
           <div className="flex items-center gap-6">
             <div className={`size-16 rounded-full border-2 flex items-center justify-center ${scoreBg(scoreData.score.score)}`}>
@@ -459,7 +459,7 @@ export function Component() {
                 {scoreData.score.score}
               </span>
             </div>
-            <div className="flex-1 grid grid-cols-2 gap-x-6 gap-y-1 text-xs">
+            <div className="flex-1 grid grid-cols-2 gap-x-6 gap-y-1 text-label">
               <div className="flex justify-between">
                 <span className="text-tertiary">Win Rate</span>
                 <span data-testid="win-rate" className="font-mono text-primary">{scoreData.score.winRate}%</span>
@@ -505,8 +505,8 @@ export function Component() {
             {/* Header row */}
             <div className="flex items-center gap-2 mb-4">
               <Award className="size-4 text-accent-text" />
-              <h2 className="text-sm font-semibold text-primary">Achievements</h2>
-              <span className="text-xs text-tertiary">
+              <h2 className="text-body-md font-semibold text-primary">Achievements</h2>
+              <span className="text-label text-tertiary">
                 ({unlockedBadges.length} / {badges.length})
               </span>
               {badges.length > 0 && (
@@ -514,7 +514,7 @@ export function Component() {
                   type="button"
                   variant="ghost"
                   onClick={() => setShowAllBadges(v => !v)}
-                  className="ml-auto flex items-center gap-1 text-xs text-accent-text hover:text-accent-text transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 rounded-pf"
+                  className="ml-auto flex items-center gap-1 text-label text-accent-text hover:text-accent-text transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 rounded-pf"
                 >
                   {showAllBadges ? (
                     <><ChevronUp className="size-4" />Hide locked</>
@@ -540,7 +540,7 @@ export function Component() {
               /* Empty state */
               <div className="flex flex-col items-center justify-center gap-2 py-6">
                 <Trophy className="size-7 text-tertiary opacity-40" />
-                <p className="text-xs text-tertiary">No badges yet</p>
+                <p className="text-label text-tertiary">No badges yet</p>
               </div>
             ) : (
               <div className="flex flex-wrap gap-2">
@@ -593,9 +593,9 @@ export function Component() {
       <div className="bg-elevated border border-default rounded-xl p-6">
         <div className="flex items-center gap-2 mb-4">
           <BarChart2 className="size-4 text-accent-text" />
-          <h2 className="text-sm font-semibold text-primary">Performance (30d)</h2>
+          <h2 className="text-body-md font-semibold text-primary">Performance (30d)</h2>
           {!perfLoading && perfData.length > 0 && (
-            <span className={`ml-auto text-xs font-mono font-semibold ${finalCumPnl >= 0 ? 'text-gain' : 'text-loss'}`}>
+            <span className={`ml-auto text-label font-mono font-semibold ${finalCumPnl >= 0 ? 'text-gain' : 'text-loss'}`}>
               {fmtPnl(finalCumPnl)}
             </span>
           )}
@@ -605,7 +605,7 @@ export function Component() {
           <div className="h-[140px] bg-overlay rounded animate-pulse" />
         ) : perfData.length === 0 ? (
           <div className="h-[140px] flex items-center justify-center">
-            <p className="text-xs text-tertiary">No trade history yet</p>
+            <p className="text-label text-tertiary">No trade history yet</p>
           </div>
         ) : (
           <ResponsiveContainer width="100%" height={140}>
@@ -643,7 +643,7 @@ export function Component() {
       <div className="bg-elevated border border-default rounded-xl p-6">
         <div className="flex items-center gap-2 mb-4">
           <TrendingUp className="size-4 text-accent-text" />
-          <h2 className="text-sm font-semibold text-primary">Strategies</h2>
+          <h2 className="text-body-md font-semibold text-primary">Strategies</h2>
         </div>
 
         {strategiesLoading ? (
@@ -661,7 +661,7 @@ export function Component() {
           </div>
         ) : strategies.length === 0 ? (
           <div className="py-8 flex items-center justify-center">
-            <p className="text-xs text-tertiary">No public strategies yet</p>
+            <p className="text-label text-tertiary">No public strategies yet</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -671,7 +671,7 @@ export function Component() {
                 className="rounded-pf bg-surface border border-subtle p-3 flex flex-col gap-2"
               >
                 <div className="min-w-0">
-                  <div className="text-xs font-semibold text-primary truncate">{s.name}</div>
+                  <div className="text-label font-semibold text-primary truncate">{s.name}</div>
                   <div className="text-label text-tertiary truncate mt-1">{s.description}</div>
                 </div>
 
@@ -700,7 +700,7 @@ export function Component() {
                   </div>
                   <Link
                     to={`/marketplace/${s.id}`}
-                    className="px-2 py-1 rounded-pf bg-accent/15 border border-accent/25 text-caption font-medium text-accent-text hover:bg-accent/25 transition-colors"
+                    className="px-2 py-1 rounded-pf bg-accent-subtle border border-accent/25 text-caption font-medium text-accent-text hover:bg-accent/25 transition-colors"
                   >
                     View
                   </Link>
@@ -715,7 +715,7 @@ export function Component() {
       <div className="bg-elevated border border-default rounded-xl p-6">
         <div className="flex items-center gap-2 mb-4">
           <TrendingUp className="size-4 text-accent-text" />
-          <h2 className="text-sm font-semibold text-primary">Recent Activity</h2>
+          <h2 className="text-body-md font-semibold text-primary">Recent Activity</h2>
         </div>
 
         {activityLoading ? (
@@ -732,7 +732,7 @@ export function Component() {
           </div>
         ) : activity.length === 0 ? (
           <div className="py-8 flex items-center justify-center">
-            <p className="text-xs text-tertiary">No resolved positions yet</p>
+            <p className="text-label text-tertiary">No resolved positions yet</p>
           </div>
         ) : (
           <div className="space-y-0 divide-y divide-subtle">
@@ -741,12 +741,12 @@ export function Component() {
               return (
                 <div key={item.id} className="flex items-start gap-3 py-3 first:pt-0 last:pb-0">
                   <div className="flex-1 min-w-0">
-                    <div className="text-xs text-primary truncate">{item.marketQuestion}</div>
+                    <div className="text-label text-primary truncate">{item.marketQuestion}</div>
                     <div className="flex items-center gap-2 mt-1">
                       <span className={`px-2 py-px rounded-full text-caption font-semibold ${
                         item.outcome === 'YES'
-                          ? 'bg-gain/15 text-gain border border-gain/20'
-                          : 'bg-loss/15 text-loss border border-loss/20'
+                          ? 'bg-gain-subtle text-gain border border-gain/20'
+                          : 'bg-loss-subtle text-loss border border-loss/20'
                       }`}>
                         {item.outcome}
                       </span>
@@ -754,7 +754,7 @@ export function Component() {
                     </div>
                   </div>
                   <div className="text-right shrink-0">
-                    <div className={`text-xs font-mono font-semibold ${isPos ? 'text-gain' : 'text-loss'}`}>
+                    <div className={`text-label font-mono font-semibold ${isPos ? 'text-gain' : 'text-loss'}`}>
                       {fmtPnl(item.pnl)}
                     </div>
                     <div className="text-caption text-tertiary mt-1">{relativeTime(item.resolvedAt)}</div>

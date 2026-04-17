@@ -240,7 +240,7 @@ export function TooltipTour() {
       >
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-subtle">
-          <span className="text-sm font-semibold text-primary">{step.title}</span>
+          <span className="text-body-md font-semibold text-primary">{step.title}</span>
           <button type="button"
             onClick={closeTour}
             className="p-1 rounded hover:bg-overlay transition-colors text-tertiary hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50"
@@ -252,19 +252,19 @@ export function TooltipTour() {
 
         {/* Content */}
         <div className="px-4 py-3">
-          <p className="text-sm text-secondary leading-relaxed">{step.content}</p>
+          <p className="text-body-sm text-secondary leading-relaxed">{step.content}</p>
         </div>
 
         {/* Footer */}
         <div className="flex items-center justify-between px-4 py-3 border-t border-subtle">
-          <span className="text-xs text-tertiary">
+          <span className="text-label text-tertiary">
             {visibleIndex + 1} of {visibleSteps.length}
           </span>
           <div className="flex items-center gap-2">
             {!isFirst && (
               <button type="button"
                 onClick={prevStep}
-                className="flex items-center gap-1 px-3 py-2 rounded-pf text-xs font-medium text-secondary hover:text-primary bg-surface border border-default hover:border-strong transition-colors active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50"
+                className="flex items-center gap-1 px-3 py-2 rounded-pf text-label font-medium text-secondary hover:text-primary bg-surface border border-default hover:border-strong transition-colors active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50"
               >
                 <ChevronLeft className="size-3" />
                 Back
@@ -272,7 +272,7 @@ export function TooltipTour() {
             )}
             <button type="button"
               onClick={nextStep}
-              className="flex items-center gap-1 px-3 py-2 rounded-pf text-xs font-medium bg-accent text-inverse hover:bg-accent-text transition-colors active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 focus-visible:ring-offset-2 focus-visible:ring-offset-elevated"
+              className="flex items-center gap-1 px-3 py-2 rounded-pf text-label font-medium bg-accent text-inverse hover:bg-accent-text transition-colors active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 focus-visible:ring-offset-2 focus-visible:ring-offset-elevated"
             >
               {isLast ? 'Finish' : 'Next'}
               {!isLast && <ChevronRight className="size-3" />}

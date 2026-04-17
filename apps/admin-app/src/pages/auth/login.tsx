@@ -64,7 +64,7 @@ export function Component() {
           </h1>
           <div className="flex items-center justify-center gap-2 mt-2">
             <ShieldCheck size={14} className="text-accent" aria-hidden="true" />
-            <span className="text-xs text-tertiary">
+            <span className="text-label text-tertiary">
               Admin Console
             </span>
           </div>
@@ -77,7 +77,7 @@ export function Component() {
           className="bg-elevated border border-default rounded-lg p-6 space-y-4 [box-shadow:var(--shadow-elevation-2)]"
         >
           <div>
-            <label htmlFor="email" className="block text-xs font-medium text-secondary mb-2">
+            <label htmlFor="email" className="block text-label font-medium text-secondary mb-2">
               Email
             </label>
             <Input
@@ -88,13 +88,13 @@ export function Component() {
               onChange={(e) => setEmail(e.target.value)}
               required
               autoFocus
-              className="w-full px-3 py-2 text-sm rounded-sm border border-default bg-app text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/20 focus-visible:border-accent transition-colors"
+              className="w-full px-3 py-2 text-body-sm rounded-sm border border-default bg-app text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/20 focus-visible:border-accent transition-colors"
               placeholder="admin@polyforge.io"
             />
           </div>
 
           <div>
-            <label htmlFor="password" className="block text-xs font-medium text-secondary mb-2">
+            <label htmlFor="password" className="block text-label font-medium text-secondary mb-2">
               Password
             </label>
             <Input
@@ -104,14 +104,14 @@ export function Component() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="w-full px-3 py-2 text-sm rounded-sm border border-default bg-app text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/20 focus-visible:border-accent transition-colors"
+              className="w-full px-3 py-2 text-body-sm rounded-sm border border-default bg-app text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/20 focus-visible:border-accent transition-colors"
               placeholder="Enter password"
             />
           </div>
 
           {totpRequired && (
             <div>
-              <label htmlFor="totp" className="block text-xs font-medium text-secondary mb-2">
+              <label htmlFor="totp" className="block text-label font-medium text-secondary mb-2">
                 2FA Code
               </label>
               <Input
@@ -125,7 +125,7 @@ export function Component() {
                 onChange={(e) => setTotpCode(e.target.value.replace(/\D/g, ''))}
                 required
                 autoFocus
-                className="w-full px-3 py-2 text-sm text-center tracking-widest font-mono rounded-sm border border-default bg-app text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/20 focus-visible:border-accent transition-colors"
+                className="w-full px-3 py-2 text-body-sm text-center tracking-widest font-mono rounded-sm border border-default bg-app text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/20 focus-visible:border-accent transition-colors"
                 placeholder="000000"
               />
             </div>
@@ -135,17 +135,17 @@ export function Component() {
             type="submit"
             variant="default"
             disabled={loading || (totpRequired && totpCode.length < 6)}
-            className="w-full py-2 px-4 text-sm font-semibold rounded-sm bg-accent text-inverse hover:bg-accent-text disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="w-full py-2 px-4 text-body-md font-semibold rounded-sm bg-accent text-inverse hover:bg-accent-text disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             {loading ? 'Signing in...' : totpRequired ? 'Verify & Sign In' : 'Sign In'}
           </Button>
 
-          <p className="text-sm text-center text-warning">
+          <p className="text-body-sm text-center text-warning">
             This endpoint is rate limited. Too many failed attempts will result in a temporary lockout.
           </p>
         </form>
 
-        <p className="text-sm text-tertiary mt-3 text-center">
+        <p className="text-body-sm text-tertiary mt-3 text-center">
           Forgot password? Contact your system administrator.
         </p>
       </div>
