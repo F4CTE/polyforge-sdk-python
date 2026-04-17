@@ -26,7 +26,7 @@
 Trace a concrete example to understand how everything connects: **a user starts a strategy**.
 
 ```
-1. User clicks "Start" in user-app (Angular)
+1. User clicks "Start" in user-app (React)
    └─► POST /api/v1/strategies/:id/start  (api-service)
 
 2. api-service validates JWT, calls strategy-engine
@@ -57,7 +57,7 @@ Trace a concrete example to understand how everything connects: **a user starts 
 ### Example 2: A user creates a support ticket
 
 ```
-1. User fills out support form in user-app (Angular)
+1. User fills out support form in user-app (React)
    └─► POST /api/v1/tickets  (api-service)
 
 2. api-service validates JWT, creates ticket + first message in a transaction
@@ -477,7 +477,7 @@ async getPriceHistory(
 }
 ```
 
-**Step 6 — Regenerate the Angular client:**
+**Step 6 — Regenerate the API client:**
 
 ```bash
 pnpm generate:api
@@ -485,7 +485,7 @@ pnpm generate:api
 
 See `03-openapi-codegen.md` for details on the full generation pipeline.
 
-**Step 7 — Verify TypeScript compiles in Angular apps:**
+**Step 7 — Verify TypeScript compiles in React apps:**
 
 ```bash
 pnpm typecheck
@@ -681,13 +681,13 @@ This is the most critical workflow to internalize:
 
 2. Run pnpm generate:api
    └─► swagger.json is regenerated
-   └─► Angular services are regenerated
+   └─► React API client services are regenerated
 
-3. Check for TypeScript errors in Angular apps
+3. Check for TypeScript errors in React apps
    └─► pnpm typecheck
    └─► Errors = the frontend used a field that no longer exists
 
-4. Fix any Angular code that broke
+4. Fix any React code that broke
    └─► The compiler tells you exactly what changed
 
 5. Commit swagger.json + generated api/ files with your backend change
@@ -729,31 +729,28 @@ See [`docs/09-dev-setup.md`](./09-dev-setup.md) for full HTTPS setup instruction
 
 ---
 
-## 10. React App Structure (v3.0)
+## 10. React App Structure
 
-> Starting with v3.0, the frontend is migrating from Angular to React. This section documents the new React application architecture. The Angular sections above remain valid during the transition.
-
-### New Apps and Packages
+### Apps and Packages
 
 ```
 apps/
-├── user-app-react/           # Vite + React 19 + React Router v7 — user SPA
-├── admin-app-react/          # Vite + React 19 + React Router v7 — admin SPA
-├── landing-next/             # Next.js 15 App Router — landing page (SSR/SEO)
-├── user-app/                 # (legacy) Angular 21 user SPA
-└── admin-app/                # (legacy) Angular 21 admin SPA
+├── user-app/                 # Vite + React 19 + React Router v7 — user SPA
+├── admin-app/                # Vite + React 19 + React Router v7 — admin SPA
+├── landing/                  # Next.js 15 App Router — landing page (SSR/SEO)
+└── gateway/                  # Nginx reverse proxy config
 
 packages/
 ├── ui/                       # Shared shadcn/ui components + Tailwind theme
 ├── api-client/               # Shared @hey-api/client-fetch generated client
-├── shared-types/             # (unchanged) TypeScript interfaces and enums
-├── shared-schemas/           # (unchanged) Zod schemas
+├── shared-types/             # TypeScript interfaces and enums
+├── shared-schemas/           # Zod schemas
 └── ...
 ```
 
 ### `packages/ui/` — Shared Component Library
 
-Contains shadcn/ui components and the shared Tailwind theme. Both `user-app-react` and `admin-app-react` import from this package.
+Contains shadcn/ui components and the shared Tailwind theme. Both `user-app` and `admin-app` import from this package.
 
 ```
 packages/ui/
@@ -944,7 +941,7 @@ export class IfThenElseEvaluator implements LogicBlockEvaluator<IfThenElseBlock>
 
 > **Note:** The MCP server has been extracted from `packages/mcp-server` to its own repository [`polyforge-mcp`](https://github.com/polyforge/polyforge-mcp) for independent versioning. The in-monorepo package is deprecated.
 
-The MCP server implements the [Model Context Protocol](https://modelcontextprotocol.io) so that AI assistants like Claude can interact with Polyforge directly via 22 tools.
+The MCP server implements the [Model Context Protocol](https://modelcontextprotocol.io) so that AI assistants like Claude can interact with Polyforge directly via 33 tools.
 
 ### Setup
 
@@ -977,9 +974,9 @@ POLYFORGE_API_URL=http://localhost:3001 POLYFORGE_API_KEY=pf_xxx npx @polyforge/
 
 The MCP server is a standalone Node.js process that communicates over stdio. It defines 20 tools that map 1:1 to Polyforge API endpoints. Each tool call translates to an authenticated HTTP request to the Polyforge API using the configured API key.
 
-### Available tools
+### Available tools (33 total)
 
-`list_markets`, `list_strategies`, `get_strategy`, `create_strategy`, `create_strategy_from_description`, `start_strategy`, `stop_strategy`, `get_portfolio`, `get_orders`, `get_whale_feed`, `get_news_signals`, `get_score`, `list_alerts`, `list_copy_configs`, `list_webhooks`, `create_webhook`, `ai_query`, `get_strategy_templates`, `get_market`, `export_strategy`
+`list_markets`, `get_market`, `provide_liquidity`, `list_strategies`, `get_strategy`, `create_strategy`, `create_strategy_from_description`, `start_strategy`, `stop_strategy`, `get_strategy_templates`, `export_strategy`, `get_strategy_events`, `get_portfolio`, `get_orders`, `get_score`, `place_order`, `cancel_order`, `get_accuracy`, `get_portfolio_review`, `get_whale_feed`, `get_news_signals`, `get_market_sentiment`, `list_alerts`, `list_copy_configs`, `list_webhooks`, `create_webhook`, `ai_query`
 
 ---
 

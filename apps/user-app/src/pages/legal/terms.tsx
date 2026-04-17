@@ -1,7 +1,7 @@
 import { Link } from 'react-router';
 import { ArrowLeft, Zap } from 'lucide-react';
 
-const LAST_UPDATED = 'March 27, 2026';
+const LAST_UPDATED = 'April 16, 2026';
 
 export function Component() {
   return (
@@ -40,7 +40,7 @@ export function Component() {
           <section>
             <h2 className="text-lg font-semibold text-primary mb-3">4. Accounts and Security</h2>
             <p>You are responsible for maintaining the confidentiality of your credentials. You agree to notify us immediately of any unauthorized use of your account. Polyforge is not liable for losses arising from unauthorized account access where you have not reported the issue promptly.</p>
-            <p className="mt-2">During the early-access period, accounts may be created with a valid invite code (instant access) or without one (subject to admin approval). Invite codes are non-transferable and may not be sold. Accounts pending approval may be accepted or declined at our sole discretion.</p>
+            <p className="mt-2">Polyforge is currently in open beta. Any eligible user may register and gain immediate access to the Platform upon email verification. We reserve the right to suspend or terminate accounts that violate these Terms.</p>
           </section>
 
           <section>

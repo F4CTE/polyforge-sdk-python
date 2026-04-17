@@ -186,7 +186,7 @@ stream:news_signals   api-service → notification-service (signal alerts)
 
 The AI integration layer enables external AI agents (Claude, GPT, custom assistants) to interact with the platform programmatically:
 
-**MCP Server** ([`polyforge-mcp`](https://github.com/polyforge/polyforge-mcp)) — a standalone Model Context Protocol server (previously `packages/mcp-server`, now its own repo for independent versioning) that exposes 22 tools for Claude Desktop and other MCP-compatible AI assistants. It proxies authenticated API calls using a user-provided API key (`POLYFORGE_API_KEY`). Communicates over stdio transport. Tools cover markets, strategies, portfolio, orders (including `place_order` and `cancel_order`), whales, news, scores, alerts, copy trading, and webhooks.
+**MCP Server** ([`polyforge-mcp`](https://github.com/polyforge/polyforge-mcp)) — a standalone Model Context Protocol server (previously `packages/mcp-server`, now its own repo for independent versioning) that exposes 33 tools for Claude Desktop and other MCP-compatible AI assistants. It proxies authenticated API calls using a user-provided API key (`POLYFORGE_API_KEY`). Communicates over stdio transport. Tools cover markets, strategies, portfolio, orders (including `place_order` and `cancel_order`), whales, news, scores, alerts, copy trading, and webhooks.
 
 **Batch API** (`POST /api/v1/batch`) — allows AI agents to execute up to 10 API requests in a single HTTP call. Each sub-request runs in parallel using `Promise.allSettled`, with the caller's auth token forwarded to each. Results are correlated by client-provided `id` fields. 15-second timeout per sub-request.
 

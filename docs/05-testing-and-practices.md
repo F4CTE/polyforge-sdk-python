@@ -80,7 +80,7 @@ If a test fails and you can't tell where to look, the test is too big. Break it 
 
 - **Unit tests** — pure logic: block evaluators, schema validation, encryption helpers, P&L calculations. No DB, no Redis, no network.
 - **Integration tests** — service boundaries: controller → service → DB → response. Uses real Postgres + Redis in test containers.
-- **E2E / Smoke tests** — happy path through the full stack: register → build strategy → start → place order → fill. Runs against the dev Docker environment via `BASE_URL=http://localhost pnpm --filter @polyforge/e2e test`. Requires `docker compose -f docker-compose.infra.yml up -d` running. Global setup clears `config:invite_only` Redis flag. PrimeNG locators use icon classes (`.pi-pencil`, `.pi-pause`, etc.) since `pTooltip` directives don't render as DOM attributes in AOT builds. CI runs E2E after build (Chromium-only for stability; Firefox skipped). Rate-limit bypass via `X-E2E-Bypass` header in test environments. CI includes a free-disk-space step before Docker builds.
+- **E2E / Smoke tests** — happy path through the full stack: register → build strategy → start → place order → fill. Runs against the dev Docker environment via `BASE_URL=http://localhost pnpm --filter @polyforge/e2e test`. Requires `docker compose -f docker-compose.infra.yml up -d` running. Global setup clears `config:invite_only` Redis flag. Selectors target `data-testid`, `role`, and semantic HTML (shadcn/ui components). CI runs E2E after build (Chromium-only for stability; Firefox skipped). Rate-limit bypass via `X-E2E-Bypass` header in test environments. CI includes a free-disk-space step before Docker builds.
 
 ---
 
@@ -164,48 +164,39 @@ describe('PriceCrossesUpEvaluator', () => {
 });
 ```
 
-### Testing Angular components with the generated API client
+### Testing React components with the generated API client
 
-Angular component tests must mock the generated API services — never mock `HttpClient` directly.
+React component tests use **React Testing Library** (RTL) and mock the generated `@hey-api` client functions — never mock `fetch` directly.
 
 ```typescript
-// apps/user-app/src/app/strategies/strategy-list.component.spec.ts
-import { TestBed } from '@angular/core/testing';
-import { StrategiesService } from '../api/services/strategies.service';
-import { StrategyListComponent } from './strategy-list.component';
-import { of } from 'rxjs';
+// apps/user-app/src/features/strategies/StrategyList.spec.tsx
+import { render, screen, waitFor } from '@testing-library/react';
+import { vi } from 'vitest';
+import { StrategyList } from './StrategyList';
+import * as strategiesApi from '@polyforge/api-client/user';
 
-describe('StrategyListComponent', () => {
-  let mockStrategiesApi: Partial<StrategiesService>;
+vi.mock('@polyforge/api-client/user');
 
+describe('StrategyList', () => {
   beforeEach(() => {
-    mockStrategiesApi = {
-      listStrategies: vi.fn().mockReturnValue(of({
-        data: [strategyFactory(), strategyFactory()],
-        total: 2, page: 1, limit: 20, totalPages: 1, hasNext: false,
-      })),
-    };
-
-    TestBed.configureTestingModule({
-      declarations: [StrategyListComponent],
-      providers: [
-        { provide: StrategiesService, useValue: mockStrategiesApi },
-      ],
-    });
+    vi.mocked(strategiesApi.listStrategies).mockResolvedValue({
+      data: { data: [strategyFactory(), strategyFactory()], total: 2, page: 1, limit: 20 },
+    } as any);
   });
 
-  it('renders the strategy list on init', () => {
-    const fixture = TestBed.createComponent(StrategyListComponent);
-    fixture.detectChanges();
+  it('renders the strategy list on mount', async () => {
+    render(<StrategyList />);
 
-    const items = fixture.nativeElement.querySelectorAll('.strategy-card');
-    expect(items.length).toBe(2);
-    expect(mockStrategiesApi.listStrategies).toHaveBeenCalledWith({ page: 1, limit: 20 });
+    await waitFor(() => {
+      expect(screen.getAllByRole('row')).toHaveLength(3); // header + 2 rows
+    });
+
+    expect(strategiesApi.listStrategies).toHaveBeenCalledWith({ query: { page: 1, limit: 20 } });
   });
 });
 ```
 
-> **Rule:** Provide the generated service as a mock in `providers` — never spy on `HttpClient`. The generated service is the contract; testing against it ensures tests break when the contract changes.
+> **Rule:** Mock the generated API client functions — never mock `fetch` or `XMLHttpRequest` directly. The generated client is the contract; testing against it ensures tests break when the API schema changes.
 
 ---
 
@@ -592,24 +583,35 @@ describe('TicketReminderService', () => {
 
 **E2E ticket tests** follow the same Playwright patterns as other features. The ticket E2E tests verify the full flow: create ticket as user, reply as admin, verify status transitions and notification delivery.
 
-### OnPush change detection
+### React state and async rendering
 
-Key Angular components use `ChangeDetectionStrategy.OnPush` to reduce unnecessary re-renders. When testing OnPush components:
+React components using `useState`, Zustand stores, or `useQuery` update asynchronously. RTL's `waitFor` and `findBy*` queries handle this without manual change detection:
 
 ```typescript
-// Trigger change detection explicitly after async operations
-fixture.detectChanges();
+// Wait for async state to settle — use findBy* or waitFor
+it('shows loading spinner then results', async () => {
+  render(<MarketList />);
 
-// For signal-based state, update the signal and then detect changes
-component.someSignal.set(newValue);
-fixture.detectChanges();
+  // loading state is immediate
+  expect(screen.getByRole('progressbar')).toBeInTheDocument();
 
-// For observable-driven components, ensure the mock emits before detectChanges
-mockService.getData.mockReturnValue(of(testData));
-fixture.detectChanges();
+  // wait for API response
+  const rows = await screen.findAllByRole('row');
+  expect(rows).toHaveLength(6); // header + 5 market rows
+});
+
+// Testing Zustand store interactions
+it('updates theme on toggle click', async () => {
+  render(<ThemeToggle />);
+  const button = screen.getByRole('button', { name: /toggle theme/i });
+
+  await userEvent.click(button);
+
+  expect(document.documentElement).toHaveAttribute('data-theme', 'light');
+});
 ```
 
-OnPush components only re-render when their `@Input()` references change, a signal updates, or an observable emits through the `async` pipe. Tests must account for this by explicitly triggering change detection after state changes.
+Use `findBy*` (async) instead of `getBy*` (sync) whenever the component has any async side effects on mount.
 
 ### Recent test file additions
 
@@ -1283,8 +1285,8 @@ ALTER TABLE orders ADD COLUMN priority INT DEFAULT 0;
 
 ### OpenAPI / Code generation
 - [ ] New endpoints / DTOs have `@ApiProperty` and `@ApiResponse` decorators
-- [ ] `npm run generate:api` was run and generated files are committed
-- [ ] `npm run typecheck` passes in both Angular apps
+- [ ] `pnpm generate:api` was run and generated files are committed
+- [ ] `pnpm typecheck` passes in both React apps
 
 ---
 

@@ -349,59 +349,59 @@ Next: deploy to AWS eu-west-2, then submit Polymarket Builders Program grant app
 
 ### Core Stack Migration
 
-- [ ] Vite + React 19 setup for `user-app-react`
-- [ ] Vite + React 19 setup for `admin-app-react`
-- [ ] Next.js 15 App Router setup for `landing-next`
-- [ ] `packages/ui/` — shared shadcn/ui component library with Polyforge theme
-- [ ] `packages/api-client/` — `@hey-api/client-fetch` generated client (user + admin)
-- [ ] Tailwind CSS v4 with `@theme` directive for Polyforge design tokens
-- [ ] React Router v7 routing for both SPAs
+- [x] Vite + React 19 setup for `user-app`
+- [x] Vite + React 19 setup for `admin-app`
+- [x] Next.js 15 App Router setup for `landing`
+- [x] `packages/ui/` — shared shadcn/ui component library with Polyforge theme
+- [x] `packages/api-client/` — `@hey-api/client-fetch` generated client (user + admin)
+- [x] Tailwind CSS v4 with `@theme` directive for Polyforge design tokens
+- [x] React Router v7 routing for both SPAs
 
 ### State Management (Zustand)
 
-- [ ] `authStore` — session, JWT, login/logout
-- [ ] `themeStore` — dark/light mode toggle with localStorage persistence
-- [ ] `notificationStore` — toast queue, notification bell count
-- [ ] `websocketStore` — WebSocket connection, message dispatch
-- [ ] `builderStore` — strategy builder canvas state, blocks, connections
+- [x] `authStore` — session, JWT, login/logout
+- [x] `themeStore` — dark/light mode toggle with localStorage persistence
+- [x] `notificationStore` — toast queue, notification bell count
+- [x] `websocketStore` — WebSocket connection, message dispatch
+- [x] `builderStore` — strategy builder canvas state, blocks, connections
 
 ### Strategy Builder (React Flow)
 
-- [ ] React Flow (`@xyflow/react`) canvas with custom block nodes
-- [ ] Category-colored block headers (Safety, Triggers, Conditions, Actions, Variables)
-- [ ] Drag-to-wire edge connections between blocks
-- [ ] Canvas persistence (load/save `canvasJson`)
-- [ ] Minimap and viewport controls
+- [x] React Flow (`@xyflow/react`) canvas with custom block nodes
+- [x] Category-colored block headers (Safety, Triggers, Conditions, Actions, Variables)
+- [x] Drag-to-wire edge connections between blocks
+- [x] Canvas persistence (load/save `canvasJson`)
+- [x] Minimap and viewport controls
 
 ### Data Visualization (Recharts)
 
-- [ ] Market sparkline charts
-- [ ] Portfolio performance charts
-- [ ] Price history OHLCV charts
+- [x] Market sparkline charts
+- [x] Portfolio performance charts
+- [x] Price history OHLCV charts
 
 ### Component Migration (shadcn/ui)
 
-- [ ] Navigation sidebar
-- [ ] Data tables (`@tanstack/react-table`)
-- [ ] Forms and inputs
-- [ ] Dialogs and modals
-- [ ] Toast notifications (Sonner)
-- [ ] Market cards and grid layout
+- [x] Navigation sidebar
+- [x] Data tables (`@tanstack/react-table`)
+- [x] Forms and inputs
+- [x] Dialogs and modals
+- [x] Toast notifications (Sonner)
+- [x] Market cards and grid layout
 
 ### Icons and Assets
 
-- [ ] Lucide React icon migration (replaces PrimeIcons)
+- [x] Lucide React icon migration (replaces PrimeIcons)
 
 ### Auth and Guards
 
-- [ ] `AuthGuard` component (replaces Angular route guard)
-- [ ] `VerifiedGuard` component (email verification check)
-- [ ] `useAuth` hook
+- [x] `AuthGuard` component (replaces Angular route guard)
+- [x] `VerifiedGuard` component (email verification check)
+- [x] `useAuth` hook
 
 ### Hooks
 
-- [ ] `usePriceUpdates` — real-time price feed via WebSocket
-- [ ] `useStrategyEvents` — strategy execution events via WebSocket
+- [x] `usePriceUpdates` — real-time price feed via WebSocket
+- [x] `useStrategyEvents` — strategy execution events via WebSocket
 
 ---
 

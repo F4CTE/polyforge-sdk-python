@@ -118,12 +118,7 @@ export class AuthService {
     });
 
     if (!user.approved) {
-      // Pending user — send waitlist email, do NOT issue JWT
-      this.mailService
-        .sendPendingApprovalEmail(user.email, user.username)
-        .catch((err) => this.logger.error('Failed to send pending email', err));
-
-      // Also send verification email so they can verify while waiting
+      // Pending user — send verification email so they can verify while waiting, do NOT issue JWT
       this.usersService
         .createEmailVerificationToken(user.id)
         .then((verifyToken) =>

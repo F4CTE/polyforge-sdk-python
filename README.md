@@ -23,7 +23,6 @@ Strategy automation platform for [Polymarket](https://polymarket.com) — users 
 - **Security audit** — 120+ findings fixed across 13 audit rounds; covers envelope encryption, JWT validation, TOTP re-authentication, CSP headers, rate limiting, refresh token rotation, SSRF protection, CSRF, login lockout, admin role guards
 - **Rust security hardening** — Private key encryption via NAPI-RS addon with `Zeroize` memory safety (keys never enter V8 heap); strategy evaluation sandboxed in Rust WASM (no `expr-eval` fallback); homebrew KDF deleted
 - **Real Polymarket integration** — 20,000+ live markets synced from Polymarket Gamma API with real-time WebSocket price feeds; hybrid mode (real reads, mock order execution)
-- **OnPush change detection** — Key components use `ChangeDetectionStrategy.OnPush` for rendering performance
 - **Local HTTPS** — Self-signed cert generation and `docker-compose.ssl.yml` for secure local development
 - **CI/CD pipeline** — Lint, typecheck, test, build, and E2E stages with Playwright; dependency audit via `pnpm audit`
 - **Load testing** — k6 suite with 7 scenarios (auth, markets, strategies, orders, WebSocket, spike)
@@ -224,7 +223,7 @@ pnpm build
 
 | URL | What you get |
 |---|---|
-| http://localhost | User app (landing at `/`, Angular SPA, api-service, auth-service, WebSocket) |
+| http://localhost | User app (landing at `/`, React SPA, api-service, auth-service, WebSocket) |
 | http://localhost:8080 | Admin console (admin-app, admin-api-service, admin-auth-service) |
 | https://localhost | User app over HTTPS (requires `docker-compose.ssl.yml` overlay) |
 | https://localhost:8443 | Admin console over HTTPS |
