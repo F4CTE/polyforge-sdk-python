@@ -23,6 +23,7 @@ Used by all user-facing services: `auth-service`, `api-service`, `strategy-engin
 |---|---|---|
 | `DATABASE_URL` | `postgresql://poly:devpass@pgbouncer:5432/polyforge?pgbouncer=true&connection_limit=1` | Points to PgBouncer (transaction mode). Used by all user-facing services at runtime. |
 | `DIRECT_DATABASE_URL` | `postgresql://poly:devpass@postgres:5432/polyforge` | Points directly to Postgres, bypassing PgBouncer. Used **only** by `prisma migrate`. |
+| `PRISMA_POOL_SIZE` | `10` | Connections in the per-service Prisma `PrismaPg` pool. `api-service` sets this to `20` in `docker-compose.infra.yml` to prevent connection-pool saturation during E2E runs. |
 
 ---
 
