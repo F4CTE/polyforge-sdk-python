@@ -265,7 +265,7 @@ def _validate_enum(name: str, value: str, allowed: frozenset[str]) -> None:
 _VALID_MODES = frozenset({"live", "paper"})
 _VALID_SIDES = frozenset({"BUY", "SELL"})
 _VALID_OUTCOMES = frozenset({"YES", "NO"})
-_VALID_ORDER_TYPES = frozenset({"GTC", "GTD", "FOK", "FAK"})
+_VALID_ORDER_TYPES = frozenset({"GTC", "GTD", "FOK"})
 
 
 def _validate_financial_param(name: str, value: float) -> None:
@@ -643,7 +643,7 @@ class PolyforgeClient:
         category: str | None = None,
         search: str | None = None,
         limit: int | None = None,
-        offset: int | None = None,
+        page: int | None = None,
     ) -> PaginatedResponse[Strategy]:
         """Discover and browse public strategies.
 
@@ -652,14 +652,14 @@ class PolyforgeClient:
             category: Filter by market category.
             search: Full-text search query.
             limit: Maximum number of results.
-            offset: Pagination offset.
+            page: Page number for pagination.
 
         Returns:
             A :class:`PaginatedResponse` of :class:`Strategy` objects.
         """
         raw = self._get("/api/v1/discover", params=_strip_none({
             "sort": sort, "category": category, "search": search,
-            "limit": limit, "offset": offset,
+            "limit": limit, "page": page,
         }))
         items = raw.get("data", raw.get("items", []))
         return PaginatedResponse(
@@ -676,20 +676,20 @@ class PolyforgeClient:
         *,
         period: str | None = None,
         limit: int | None = None,
-        offset: int | None = None,
+        page: int | None = None,
     ) -> list[LeaderboardEntry]:
         """Fetch the trader leaderboard.
 
         Args:
             period: Time period (e.g. ``"7d"``, ``"30d"``).
             limit: Maximum number of results.
-            offset: Pagination offset.
+            page: Page number for pagination.
 
         Returns:
             A list of :class:`LeaderboardEntry` objects.
         """
         data = self._get("/api/v1/leaderboard", params=_strip_none({
-            "period": period, "limit": limit, "offset": offset,
+            "period": period, "limit": limit, "page": page,
         }))
         items = data if isinstance(data, list) else data.get("data", [])
         return [_parse(LeaderboardEntry, e) for e in items]
@@ -891,7 +891,7 @@ class PolyforgeClient:
 
         Args:
             strategy_id: Strategy to report.
-            reason: One of ``"SPAM"``, ``"INAPPROPRIATE"``, ``"MISLEADING"``, ``"OTHER"``.
+            reason: One of ``"SPAM"``, ``"HARMFUL"``, ``"MISLEADING"``, ``"OTHER"``.
             description: Optional additional detail.
         """
         body: dict[str, Any] = {"reason": reason}
@@ -2515,7 +2515,7 @@ class AsyncPolyforgeClient:
         category: str | None = None,
         search: str | None = None,
         limit: int | None = None,
-        offset: int | None = None,
+        page: int | None = None,
     ) -> PaginatedResponse[Strategy]:
         """Discover and browse public strategies.
 
@@ -2524,14 +2524,14 @@ class AsyncPolyforgeClient:
             category: Filter by market category.
             search: Full-text search query.
             limit: Maximum number of results.
-            offset: Pagination offset.
+            page: Page number for pagination.
 
         Returns:
             A :class:`PaginatedResponse` of :class:`Strategy` objects.
         """
         raw = await self._get("/api/v1/discover", params=_strip_none({
             "sort": sort, "category": category, "search": search,
-            "limit": limit, "offset": offset,
+            "limit": limit, "page": page,
         }))
         items = raw.get("data", raw.get("items", []))
         return PaginatedResponse(
@@ -2548,20 +2548,20 @@ class AsyncPolyforgeClient:
         *,
         period: str | None = None,
         limit: int | None = None,
-        offset: int | None = None,
+        page: int | None = None,
     ) -> list[LeaderboardEntry]:
         """Fetch the trader leaderboard.
 
         Args:
             period: Time period (e.g. ``"7d"``, ``"30d"``).
             limit: Maximum number of results.
-            offset: Pagination offset.
+            page: Page number for pagination.
 
         Returns:
             A list of :class:`LeaderboardEntry` objects.
         """
         data = await self._get("/api/v1/leaderboard", params=_strip_none({
-            "period": period, "limit": limit, "offset": offset,
+            "period": period, "limit": limit, "page": page,
         }))
         items = data if isinstance(data, list) else data.get("data", [])
         return [_parse(LeaderboardEntry, e) for e in items]
@@ -2745,7 +2745,7 @@ class AsyncPolyforgeClient:
 
         Args:
             strategy_id: Strategy to report.
-            reason: One of ``"SPAM"``, ``"INAPPROPRIATE"``, ``"MISLEADING"``, ``"OTHER"``.
+            reason: One of ``"SPAM"``, ``"HARMFUL"``, ``"MISLEADING"``, ``"OTHER"``.
             description: Optional additional detail.
         """
         body: dict[str, Any] = {"reason": reason}
