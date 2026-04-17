@@ -1,9 +1,10 @@
 use wasm_bindgen::prelude::*;
 use aes_gcm::{Aes256Gcm, Key, Nonce, KeyInit};
-use aes_gcm::aead::{Aead, OsRng};
+use aes_gcm::aead::Aead;
 use sha2::{Sha256, Digest};
 use hmac::{Hmac, Mac};
-use rand::RngCore;
+use rand::TryRngCore;
+use rand::rngs::OsRng;
 
 type HmacSha256 = Hmac<Sha256>;
 
@@ -15,7 +16,7 @@ pub fn aes_encrypt(plaintext: &str, key_hex: &str) -> Result<String, JsValue> {
     let cipher = Aes256Gcm::new(key);
 
     let mut iv_bytes = [0u8; 12];
-    OsRng.fill_bytes(&mut iv_bytes);
+    OsRng.try_fill_bytes(&mut iv_bytes).expect("OS RNG failed");
     let nonce = Nonce::from_slice(&iv_bytes);
 
     let ciphertext = cipher.encrypt(nonce, plaintext.as_bytes())
@@ -84,7 +85,7 @@ pub fn hmac_verify(message: &str, secret: &str, expected_hex: &str) -> Result<bo
 #[wasm_bindgen]
 pub fn random_bytes(length: usize) -> String {
     let mut bytes = vec![0u8; length];
-    OsRng.fill_bytes(&mut bytes);
+    OsRng.try_fill_bytes(&mut bytes).expect("OS RNG failed");
     hex::encode(bytes)
 }
 
