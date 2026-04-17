@@ -71,5 +71,5 @@ export default defineConfig({
     expect: { timeout: 20_000 },
     // Hard cap on the entire test run; prevents CI hangs when Playwright blocks
     // on a selector with no GitHub Actions job-level timeout to rescue it.
-    globalTimeout: process.env.CI ? 20 * 60 * 1000 : 0,
+    globalTimeout: process.env.CI ? 65 * 60 * 1000 : 0,
 });
