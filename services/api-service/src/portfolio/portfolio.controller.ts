@@ -5,7 +5,9 @@ import { ApiTags, ApiBearerAuth } from "@nestjs/swagger";
 import { JwtAuthGuard, CurrentUser } from "@polyforge/shared-auth";
 import { IsOptional, IsIn, IsString } from "class-validator";
 import { PortfolioService } from "./portfolio.service";
+import { PolymarketDataApiService } from "./polymarket-data-api.service";
 import { JwtPayload } from "@polyforge/shared-types";
+import { PrismaService } from "@polyforge/shared-db";
 
 class PnlQueryDto {
   @IsOptional()
@@ -22,7 +24,11 @@ class PnlQueryDto {
 @Controller("portfolio")
 @UseGuards(JwtAuthGuard)
 export class PortfolioController {
-  constructor(private readonly portfolio: PortfolioService) {}
+  constructor(
+    private readonly portfolio: PortfolioService,
+    private readonly dataApi: PolymarketDataApiService,
+    private readonly prisma: PrismaService,
+  ) {}
 
   @Get()
   getPortfolio(@CurrentUser() user: JwtPayload) {
@@ -44,5 +50,31 @@ export class PortfolioController {
     res.header("Content-Type", "text/csv");
     res.header("Content-Disposition", 'attachment; filename="portfolio.csv"');
     res.send(csv);
+  }
+
+  @Get("polymarket/portfolio")
+  async getPolymarketPortfolio(@CurrentUser() user: JwtPayload) {
+    const profile = await this.prisma.user.findUnique({
+      where: { id: user.sub },
+      select: { polymarketAddress: true, polymarketConnected: true },
+    });
+    if (!profile?.polymarketConnected || !profile.polymarketAddress) {
+      return { entries: [] };
+    }
+    const entries = await this.dataApi.getPortfolio(profile.polymarketAddress);
+    return { entries };
+  }
+
+  @Get("polymarket/earnings")
+  async getPolymarketEarnings(@CurrentUser() user: JwtPayload) {
+    const profile = await this.prisma.user.findUnique({
+      where: { id: user.sub },
+      select: { polymarketAddress: true, polymarketConnected: true },
+    });
+    if (!profile?.polymarketConnected || !profile.polymarketAddress) {
+      return { entries: [] };
+    }
+    const entries = await this.dataApi.getEarnings(profile.polymarketAddress);
+    return { entries };
   }
 }

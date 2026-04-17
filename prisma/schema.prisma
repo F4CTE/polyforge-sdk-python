@@ -795,6 +795,23 @@ model DataGap {
 // MARKET DATA TABLES
 // ─────────────────────────────────────────────
 
+model Event {
+  id          String    @id @db.VarChar(255)  // Polymarket event ID
+  slug        String    @unique @db.VarChar(255)
+  title       String
+  description String?
+  startDate   DateTime?
+  endDate     DateTime?
+  firstSeenAt DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  markets Market[]
+
+  @@index([slug])
+  @@index([endDate(sort: Asc)])
+  @@map("events")
+}
+
 model Market {
   id            String    @id @db.VarChar(255)  // Polymarket condition ID
   slug          String    @unique @db.VarChar(255)
@@ -803,6 +820,7 @@ model Market {
   category      String?   @db.VarChar(100)
   image         String?
   seriesSlug    String?   @db.VarChar(255)
+  eventId       String?   @db.VarChar(255)
   endDate       DateTime?
   closed        Boolean   @default(false)
   negRisk       Boolean   @default(false)
@@ -810,6 +828,7 @@ model Market {
   firstSeenAt   DateTime  @default(now())
   lastUpdatedAt DateTime  @updatedAt
 
+  event             Event?             @relation(fields: [eventId], references: [id], onDelete: SetNull)
   tokens            Token[]
   whaleAlerts       WhaleAlert[]
   conditionalOrders ConditionalOrder[]
@@ -820,6 +839,7 @@ model Market {
   @@index([category])
   @@index([closed])
   @@index([seriesSlug])
+  @@index([eventId])
   @@index([volume24h(sort: Desc)])
   @@index([endDate(sort: Asc)])
   @@index([firstSeenAt(sort: Desc)])

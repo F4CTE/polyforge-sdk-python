@@ -33,7 +33,7 @@ class MockWebSocket {
     (this.handlers.get("message") ?? []).forEach((h) => h(buf));
   }
 
-  triggerClose(code = 1000, reason = "") {
+  triggerClose(code = 1006, reason = "") {
     this.readyState = MockWebSocket.CLOSED;
     (this.handlers.get("close") ?? []).forEach((h) =>
       h(code, Buffer.from(reason)),
@@ -165,33 +165,117 @@ describe("PolymarketUserWsService", () => {
     );
   });
 
-  // ── Reconnects on close ────────────────────────────────────────────────
+  // ── Reconnects on abnormal close ────────────────────────────────────────
 
-  it("cleans up connection on close without auto-reconnecting", () => {
+  it("auto-reconnects on abnormal close (code 1006)", async () => {
     svc.subscribeUser("user-1", "0xWallet");
     const firstWs = mockWsInstances[0];
 
     firstWs.triggerClose(1006, "abnormal");
 
-    // No auto-reconnect — connection is removed, caller must re-subscribe
-    vi.advanceTimersByTime(10_000);
-    expect(mockWsInstances).toHaveLength(1); // no new WS created
+    // Advance past the first reconnect delay (1000ms)
+    await vi.advanceTimersByTimeAsync(1100);
+
+    // A second WS should have been created for the reconnect
+    expect(mockWsInstances).toHaveLength(2);
+    expect(mockWsInstances[1].url).toContain("address=0xWallet");
   });
 
-  // ── Does not reconnect if already resubscribed ─────────────────────────
+  // ── Does NOT reconnect on normal close ─────────────────────────────────
 
-  it("does not reconnect if user was manually resubscribed before timeout", () => {
+  it("does not reconnect on normal close (code 1000)", () => {
     svc.subscribeUser("user-1", "0xWallet");
     const firstWs = mockWsInstances[0];
 
-    firstWs.triggerClose();
+    firstWs.triggerClose(1000);
 
-    // Manually resubscribe before timeout fires
+    vi.advanceTimersByTime(5_000);
+    expect(mockWsInstances).toHaveLength(1);
+  });
+
+  // ── Does NOT reconnect on going-away close ──────────────────────────────
+
+  it("does not reconnect on going-away close (code 1001)", () => {
+    svc.subscribeUser("user-1", "0xWallet");
+    const firstWs = mockWsInstances[0];
+
+    firstWs.triggerClose(1001);
+
+    vi.advanceTimersByTime(5_000);
+    expect(mockWsInstances).toHaveLength(1);
+  });
+
+  // ── Reconnect uses exponential backoff ──────────────────────────────────
+
+  it("uses increasing delays on repeated reconnect failures", async () => {
+    svc.subscribeUser("user-1", "0xWallet");
+
+    // Trigger 2 consecutive abnormal closes
+    mockWsInstances[0].triggerClose(1006);
+    await vi.advanceTimersByTimeAsync(1100); // first reconnect delay = 1000ms
+
+    expect(mockWsInstances).toHaveLength(2);
+
+    mockWsInstances[1].triggerClose(1006);
+    // Second reconnect delay = 2000ms; 1100ms should NOT be enough
+    await vi.advanceTimersByTimeAsync(1100);
+    expect(mockWsInstances).toHaveLength(2); // still waiting
+
+    await vi.advanceTimersByTimeAsync(1000); // now past 2000ms total
+    expect(mockWsInstances).toHaveLength(3);
+  });
+
+  // ── Stops reconnecting after max attempts ──────────────────────────────
+
+  it("stops reconnecting after max attempts (5)", async () => {
+    svc.subscribeUser("user-1", "0xWallet");
+
+    // Trigger 5 closes to exhaust all reconnect attempts
+    for (let i = 0; i < 5; i++) {
+      const ws = mockWsInstances[mockWsInstances.length - 1];
+      ws.triggerClose(1006);
+      // Advance past the delay for this attempt (max 30s for last ones)
+      await vi.advanceTimersByTimeAsync(35_000);
+    }
+
+    const countAfterExhaustion = mockWsInstances.length;
+
+    // One more large advance should not create more WS instances
+    await vi.advanceTimersByTimeAsync(60_000);
+    expect(mockWsInstances).toHaveLength(countAfterExhaustion);
+  });
+
+  // ── Cancels pending reconnect on explicit unsubscribe ──────────────────
+
+  it("cancels pending reconnect timer on unsubscribeUser", async () => {
+    svc.subscribeUser("user-1", "0xWallet");
+    const firstWs = mockWsInstances[0];
+
+    firstWs.triggerClose(1006); // schedule reconnect
+
+    // Unsubscribe before timer fires
+    svc.unsubscribeUser("user-1");
+
+    await vi.advanceTimersByTimeAsync(2000);
+
+    // No reconnect should have occurred
+    expect(mockWsInstances).toHaveLength(1);
+  });
+
+  // ── Does not reconnect if user was manually resubscribed ───────────────
+
+  it("does not reconnect if user was manually resubscribed before timer fires", async () => {
+    svc.subscribeUser("user-1", "0xWallet");
+    const firstWs = mockWsInstances[0];
+
+    firstWs.triggerClose(1006);
+
+    // Manually resubscribe before reconnect timer fires (timer = 1000ms)
     svc.subscribeUser("user-1", "0xWallet2");
 
-    vi.advanceTimersByTime(6_000);
+    await vi.advanceTimersByTimeAsync(2000);
 
-    // Should be 2 total: the closed one + the new manual one (no reconnect)
+    // Should be 2 total: the closed one + the manual resubscribe (no extra reconnect)
     expect(mockWsInstances).toHaveLength(2);
   });
 

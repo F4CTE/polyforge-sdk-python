@@ -3,10 +3,20 @@ import { ConfigService } from "@nestjs/config";
 import { RedisService } from "@polyforge/shared-redis";
 import WebSocket from "ws";
 
+const RECONNECT_DELAYS_MS = [1_000, 2_000, 5_000, 10_000, 30_000];
+const NORMAL_CLOSE_CODES = new Set([1000, 1001]);
+
+interface UserConnection {
+  ws: WebSocket;
+  walletAddress: string;
+  attempts: number;
+  reconnectTimer: ReturnType<typeof setTimeout> | null;
+}
+
 @Injectable()
 export class PolymarketUserWsService implements OnModuleDestroy {
   private readonly logger = new Logger(PolymarketUserWsService.name);
-  private connections = new Map<string, WebSocket>();
+  private connections = new Map<string, UserConnection>();
   private readonly MAX_CONNECTIONS = 500;
 
   constructor(
@@ -23,11 +33,46 @@ export class PolymarketUserWsService implements OnModuleDestroy {
       return;
     }
 
+    this.connect(userId, walletAddress, 0);
+  }
+
+  unsubscribeUser(userId: string): void {
+    const conn = this.connections.get(userId);
+    if (conn) {
+      if (conn.reconnectTimer !== null) clearTimeout(conn.reconnectTimer);
+      conn.ws.close();
+      this.connections.delete(userId);
+    }
+  }
+
+  onModuleDestroy() {
+    for (const [, conn] of this.connections) {
+      if (conn.reconnectTimer !== null) clearTimeout(conn.reconnectTimer);
+      conn.ws.close();
+    }
+    this.connections.clear();
+  }
+
+  // ─── Private ───────────────────────────────────────────────────────────────
+
+  private connect(
+    userId: string,
+    walletAddress: string,
+    attempts: number,
+  ): void {
     const wsUrl =
       this.config.get<string>("CLOB_WS_URL") ??
       "wss://ws-subscriptions-clob.polymarket.com/ws/user";
 
     const ws = new WebSocket(`${wsUrl}?address=${walletAddress}`);
+
+    const conn: UserConnection = {
+      ws,
+      walletAddress,
+      attempts,
+      reconnectTimer: null,
+    };
+    this.connections.set(userId, conn);
 
     ws.on("message", (data: Buffer) => {
       (async () => {
@@ -63,30 +108,49 @@ export class PolymarketUserWsService implements OnModuleDestroy {
       });
     });
 
-    ws.on("close", () => {
+    ws.on("close", (code: number) => {
+      // Only reconnect on abnormal close (not explicit unsubscribe)
+      const current = this.connections.get(userId);
+      if (!current || current.ws !== ws) return;
+
       this.connections.delete(userId);
-      // Don't auto-reconnect — let the caller re-subscribe when needed
+
+      if (NORMAL_CLOSE_CODES.has(code)) return;
+
+      const nextAttempts = attempts + 1;
+      if (nextAttempts > RECONNECT_DELAYS_MS.length) {
+        this.logger.warn(
+          `User WS ${userId}: max reconnect attempts reached, giving up`,
+        );
+        return;
+      }
+
+      const delay =
+        RECONNECT_DELAYS_MS[attempts] ??
+        RECONNECT_DELAYS_MS[RECONNECT_DELAYS_MS.length - 1];
+      this.logger.log(
+        `User WS ${userId}: scheduling reconnect in ${delay}ms (attempt ${nextAttempts})`,
+      );
+
+      // Store a placeholder so unsubscribeUser can cancel the pending reconnect
+      const placeholder: UserConnection = {
+        ws,
+        walletAddress,
+        attempts: nextAttempts,
+        reconnectTimer: null,
+      };
+      this.connections.set(userId, placeholder);
+
+      placeholder.reconnectTimer = setTimeout(() => {
+        // Guard: user may have been manually re-subscribed or unsubscribed
+        if (this.connections.get(userId) !== placeholder) return;
+        this.connections.delete(userId);
+        this.connect(userId, walletAddress, nextAttempts);
+      }, delay);
     });
 
     ws.on("error", (err) => {
       this.logger.error(`User WS error for ${userId}: ${err.message}`);
     });
-
-    this.connections.set(userId, ws);
-  }
-
-  unsubscribeUser(userId: string): void {
-    const ws = this.connections.get(userId);
-    if (ws) {
-      ws.close();
-      this.connections.delete(userId);
-    }
-  }
-
-  onModuleDestroy() {
-    for (const [, ws] of this.connections) {
-      ws.close();
-    }
-    this.connections.clear();
   }
 }

@@ -12,6 +12,8 @@ export interface ClobOrderResponse {
   transactionHash?: string;
 }
 
+const RETRY_DELAYS_MS = [500, 1000, 2000];
+
 /**
  * HTTP client for the Polymarket CLOB API.
  * In dev, points to mock-polymarket.
@@ -27,70 +29,56 @@ export class ClobClientService {
   }
 
   async submitOrder(req: ClobSubmitRequest): Promise<ClobOrderResponse> {
-    const res = await fetch(`${this.clobUrl}/order`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        ...req.builderHeaders,
-      },
-      body: JSON.stringify(req.order),
-      signal: AbortSignal.timeout(15_000),
-    });
-
-    if (!res.ok) {
-      const body = await res.text().catch(() => "");
-      throw new Error(`CLOB API error ${res.status}: ${body}`);
-    }
-
-    return res.json() as Promise<ClobOrderResponse>;
+    return this.withRetry(() =>
+      fetch(`${this.clobUrl}/order`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...req.builderHeaders,
+        },
+        body: JSON.stringify(req.order),
+        signal: AbortSignal.timeout(15_000),
+      }),
+    );
   }
 
   async cancelOrder(clobOrderId: string, apiKey: string): Promise<void> {
-    const res = await fetch(`${this.clobUrl}/order/${clobOrderId}`, {
-      method: "DELETE",
-      headers: { "POLY-API-KEY": apiKey },
-      signal: AbortSignal.timeout(10_000),
-    });
-
-    if (!res.ok) {
-      const body = await res.text().catch(() => "");
-      throw new Error(`CLOB cancel error ${res.status}: ${body}`);
-    }
+    await this.withRetryVoid(() =>
+      fetch(`${this.clobUrl}/order/${clobOrderId}`, {
+        method: "DELETE",
+        headers: { "POLY-API-KEY": apiKey },
+        signal: AbortSignal.timeout(10_000),
+      }),
+    );
   }
 
   /**
    * Cancel all open orders for a user via the Polymarket CLOB bulk cancel endpoint.
    */
   async cancelAll(apiKey: string): Promise<void> {
-    const res = await fetch(`${this.clobUrl}/cancel-all`, {
-      method: "DELETE",
-      headers: { "POLY-API-KEY": apiKey },
-      signal: AbortSignal.timeout(15_000),
-    });
-
-    if (!res.ok) {
-      const body = await res.text().catch(() => "");
-      throw new Error(`CLOB cancel-all error ${res.status}: ${body}`);
-    }
+    await this.withRetryVoid(() =>
+      fetch(`${this.clobUrl}/cancel-all`, {
+        method: "DELETE",
+        headers: { "POLY-API-KEY": apiKey },
+        signal: AbortSignal.timeout(15_000),
+      }),
+    );
   }
 
   /**
    * Cancel all open orders for a user in a specific market.
    */
   async cancelByMarket(apiKey: string, marketId: string): Promise<void> {
-    const res = await fetch(
-      `${this.clobUrl}/cancel-orders?market=${encodeURIComponent(marketId)}`,
-      {
-        method: "DELETE",
-        headers: { "POLY-API-KEY": apiKey },
-        signal: AbortSignal.timeout(15_000),
-      },
+    await this.withRetryVoid(() =>
+      fetch(
+        `${this.clobUrl}/cancel-orders?market=${encodeURIComponent(marketId)}`,
+        {
+          method: "DELETE",
+          headers: { "POLY-API-KEY": apiKey },
+          signal: AbortSignal.timeout(15_000),
+        },
+      ),
     );
-
-    if (!res.ok) {
-      const body = await res.text().catch(() => "");
-      throw new Error(`CLOB cancel-by-market error ${res.status}: ${body}`);
-    }
   }
 
   /**
@@ -99,18 +87,70 @@ export class ClobClientService {
   async fetchTrades(
     walletAddress: string,
   ): Promise<Array<Record<string, string>>> {
-    const res = await fetch(
-      `${this.clobUrl}/trades?user=${encodeURIComponent(walletAddress)}`,
-      {
-        signal: AbortSignal.timeout(10_000),
-      },
+    return this.withRetry(() =>
+      fetch(
+        `${this.clobUrl}/trades?user=${encodeURIComponent(walletAddress)}`,
+        {
+          signal: AbortSignal.timeout(10_000),
+        },
+      ),
     );
+  }
 
-    if (!res.ok) {
-      const body = await res.text().catch(() => "");
-      throw new Error(`CLOB fetch-trades error ${res.status}: ${body}`);
+  // ─── Private ───────────────────────────────────────────────────────────────
+
+  /**
+   * Execute a fetch call with exponential backoff on 429 responses.
+   * Retries up to RETRY_DELAYS_MS.length times (max 3 attempts total).
+   * Only 429 triggers a retry — other errors propagate immediately.
+   */
+  private async withRetry<T>(call: () => Promise<Response>): Promise<T> {
+    for (let attempt = 0; attempt <= RETRY_DELAYS_MS.length; attempt++) {
+      const res = await call();
+
+      if (res.status === 429 && attempt < RETRY_DELAYS_MS.length) {
+        this.logger.warn(
+          `CLOB 429 rate-limited, retrying in ${RETRY_DELAYS_MS[attempt]}ms (attempt ${attempt + 1})`,
+        );
+        await sleep(RETRY_DELAYS_MS[attempt]);
+        continue;
+      }
+
+      if (!res.ok) {
+        const body = await res.text().catch(() => "");
+        throw new Error(`CLOB API error ${res.status}: ${body}`);
+      }
+
+      return res.json() as Promise<T>;
     }
 
-    return res.json() as Promise<Array<Record<string, string>>>;
+    throw new Error("CLOB API error 429: rate limit exhausted");
   }
+
+  private async withRetryVoid(call: () => Promise<Response>): Promise<void> {
+    for (let attempt = 0; attempt <= RETRY_DELAYS_MS.length; attempt++) {
+      const res = await call();
+
+      if (res.status === 429 && attempt < RETRY_DELAYS_MS.length) {
+        this.logger.warn(
+          `CLOB 429 rate-limited, retrying in ${RETRY_DELAYS_MS[attempt]}ms (attempt ${attempt + 1})`,
+        );
+        await sleep(RETRY_DELAYS_MS[attempt]);
+        continue;
+      }
+
+      if (!res.ok) {
+        const body = await res.text().catch(() => "");
+        throw new Error(`CLOB API error ${res.status}: ${body}`);
+      }
+
+      return;
+    }
+
+    throw new Error("CLOB API error 429: rate limit exhausted");
+  }
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
