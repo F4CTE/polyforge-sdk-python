@@ -14,7 +14,7 @@ import { defineConfig, devices } from '@playwright/test';
  *   MAILHOG_URL  — MailHog web URL  (default: http://localhost:8025)
  */
 export default defineConfig({
-    globalSetup: './global-setup.ts',
+    globalSetup: process.env.PLAYWRIGHT_SKIP_GLOBAL_SETUP ? undefined : './global-setup.ts',
     testDir:   './specs',
     fullyParallel: false,           // sequential within a file, but each file gets a fresh context
     forbidOnly: !!process.env.CI,
