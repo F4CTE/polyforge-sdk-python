@@ -4,12 +4,14 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { Sun, Moon, Menu, X } from "lucide-react";
 import { PolyforgeLogomark } from "@polyforge/ui";
 
-const MOBILE_NAV_LINKS = [
+const NAV_LINKS = [
   { href: "#features", label: "Features" },
-  { href: "#how-it-works", label: "How it works" },
-  { href: "/api-docs", label: "API Docs" },
-  { href: "/terms", label: "Terms" },
-  { href: "/privacy", label: "Privacy" },
+  { href: "/api-docs", label: "Developers" },
+  { href: "/pricing", label: "Pricing" },
+] as const;
+
+const MOBILE_NAV_LINKS = [
+  ...NAV_LINKS,
   { href: "/login", label: "Sign in" },
 ] as const;
 
@@ -65,7 +67,6 @@ export function Nav() {
     }
   }, [mobileOpen]);
 
-  // Focus management: move focus into menu on open, return to button on close
   useEffect(() => {
     if (mobileOpen) {
       const firstFocusable = menuRef.current?.querySelector<HTMLElement>(
@@ -77,7 +78,6 @@ export function Nav() {
     }
   }, [mobileOpen]);
 
-  // Focus trap: keep Tab within the open menu
   useEffect(() => {
     if (!mobileOpen || !menuRef.current) return;
     function handleTab(e: KeyboardEvent) {
@@ -122,36 +122,15 @@ export function Nav() {
         </a>
 
         <div className="hidden md:flex gap-6 mr-auto">
-          <a
-            href="#features"
-            className="text-sm text-secondary hover:text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-text rounded-sm transition-colors duration-micro"
-          >
-            Features
-          </a>
-          <a
-            href="#how-it-works"
-            className="text-sm text-secondary hover:text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-text rounded-sm transition-colors duration-micro"
-          >
-            How it works
-          </a>
-          <a
-            href="/terms"
-            className="text-sm text-secondary hover:text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-text rounded-sm transition-colors duration-micro"
-          >
-            Terms
-          </a>
-          <a
-            href="/api-docs"
-            className="text-sm text-secondary hover:text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-text rounded-sm transition-colors duration-micro"
-          >
-            API Docs
-          </a>
-          <a
-            href="/privacy"
-            className="text-sm text-secondary hover:text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-text rounded-sm transition-colors duration-micro"
-          >
-            Privacy
-          </a>
+          {NAV_LINKS.map(({ href, label }) => (
+            <a
+              key={href}
+              href={href}
+              className="text-sm text-secondary hover:text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-text rounded-sm transition-colors duration-micro"
+            >
+              {label}
+            </a>
+          ))}
         </div>
 
         <div className="hidden md:flex gap-2 items-center">
@@ -164,9 +143,9 @@ export function Nav() {
           </a>
           <a
             href="/register"
-            className="inline-flex items-center justify-center text-sm font-semibold px-4 py-2 rounded-sm bg-accent text-inverse transition-all duration-panel hover:bg-accent-text hover:shadow-glow-accent-strong focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-text"
+            className="inline-flex items-center justify-center text-sm font-semibold px-4 py-2 rounded-sm bg-accent text-inverse transition-colors duration-micro hover:bg-accent-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-text"
           >
-            Start building free
+            Start free
           </a>
         </div>
 
@@ -210,9 +189,9 @@ export function Nav() {
           <a
             href="/register"
             onClick={closeMobile}
-            className="block text-center text-sm font-semibold px-4 py-2 rounded-sm bg-accent text-inverse transition-all duration-panel hover:bg-accent-text hover:shadow-glow-accent-strong focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-text"
+            className="block text-center text-sm font-semibold px-4 py-2 rounded-sm bg-accent text-inverse transition-colors duration-micro hover:bg-accent-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-text"
           >
-            Start building free
+            Start free
           </a>
         </div>
       </div>

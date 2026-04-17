@@ -69,4 +69,7 @@ export default defineConfig({
     // Global timeout per test — allow extra for nginx proxy + SPA bootstrap
     timeout: 60_000,
     expect: { timeout: 20_000 },
+    // Hard cap on the entire test run; prevents CI hangs when Playwright blocks
+    // on a selector with no GitHub Actions job-level timeout to rescue it.
+    globalTimeout: process.env.CI ? 20 * 60 * 1000 : 0,
 });
