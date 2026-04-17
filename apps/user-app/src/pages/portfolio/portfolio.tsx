@@ -256,7 +256,7 @@ function CategoryBadge({ category }: { category?: string | null }) {
     crypto: 'bg-gold-500/15 text-gold-500 border-gold-500/30',
     politics: 'bg-info-subtle text-info border-info/30',
     sports: 'bg-gain-subtle text-gain border-gain/30',
-    entertainment: 'bg-purple-500/15 text-purple-400 border-purple-500/30',
+    entertainment: 'bg-variable-subtle text-variable-text border-variable/30',
     science: 'bg-accent-subtle text-accent-text border-accent/30',
   };
   const key = category.toLowerCase();

@@ -152,10 +152,10 @@ const CATEGORY_ICONS: Record<string, React.ReactNode> = {
 const CATEGORY_COLORS: Record<string, { bg: string; text: string }> = {
   Sports: { bg: 'bg-info-subtle', text: 'text-info' },
   Crypto: { bg: 'bg-warning-subtle', text: 'text-warning' },
-  Politics: { bg: 'bg-purple-500/15', text: 'text-purple-400' },
+  Politics: { bg: 'bg-variable-subtle', text: 'text-variable-text' },
   Economics: { bg: 'bg-gain-subtle', text: 'text-gain' },
   Finance: { bg: 'bg-accent-subtle', text: 'text-accent-text' },
-  Technology: { bg: 'bg-purple-300/15', text: 'text-purple-300' },
+  Technology: { bg: 'bg-variable-subtle', text: 'text-variable-text' },
 };
 
 function formatVolume(vol: string): string {

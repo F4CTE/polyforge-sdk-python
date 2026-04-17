@@ -37,7 +37,7 @@ function sourceColor(source: string): string {
     Reuters: 'bg-info-subtle text-info border-info/30',
     CNN: 'bg-loss-subtle text-loss border-loss/30',
     CoinGecko: 'bg-warning-subtle text-warning border-warning/30',
-    Bloomberg: 'bg-purple-500/15 text-purple-500 border-purple-500/30',
+    Bloomberg: 'bg-variable-subtle text-variable border-variable/30',
     'AP News': 'bg-gain-subtle text-gain border-gain/30',
   };
   return map[source] ?? 'bg-overlay text-tertiary border-default';

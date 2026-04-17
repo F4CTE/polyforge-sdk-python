@@ -143,7 +143,7 @@ function LogicNodeInner({ id, data }: NodeProps<LogicNode>) {
                   aria-label={field.label}
                   className={`w-full px-2 py-1 text-label bg-surface border border-subtle rounded-sm placeholder:text-tertiary/50 focus-visible:outline-none focus-visible:border-accent/50 transition-colors ${
                     (d.config[field.key] ?? '').startsWith('$')
-                      ? 'text-purple-400 font-mono'
+                      ? 'text-variable-text font-mono'
                       : 'text-primary'
                   }`}
                 />

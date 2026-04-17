@@ -121,7 +121,7 @@ function rarityCircleStyle(rarity: Badge['rarity']): string {
   switch (rarity) {
     case 'common':    return 'bg-elevated border-default';
     case 'rare':      return 'bg-accent/10 border-accent/30';
-    case 'epic':      return 'bg-purple-500/10 border-purple-500/30';
+    case 'epic':      return 'bg-variable-subtle border-variable/30';
     case 'legendary': return 'bg-warning/10 border-warning/30';
   }
 }

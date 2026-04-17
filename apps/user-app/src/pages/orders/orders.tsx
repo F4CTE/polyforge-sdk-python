@@ -117,7 +117,7 @@ const CONDITIONAL_TYPE_STYLES: Record<ConditionalOrderType, { text: string; bg: 
   STOP_LOSS:     { text: 'text-loss', bg: 'bg-loss/10', label: 'SL' },
   TRAILING_STOP: { text: 'text-warning', bg: 'bg-warning/10', label: 'TRAILING' },
   LIMIT:         { text: 'text-info', bg: 'bg-info/10', label: 'LIMIT' },
-  PEGGED:        { text: 'text-purple-500', bg: 'bg-purple-500/10', label: 'PEGGED' },
+  PEGGED:        { text: 'text-variable', bg: 'bg-variable-subtle', label: 'PEGGED' },
 };
 
 const CONDITIONAL_STATUS_STYLES: Record<ConditionalOrderStatus, { text: string; bg: string }> = {
@@ -281,7 +281,7 @@ function InlineJournalPanel({ order, entry, onClose, onSaved, onDeleted }: Inlin
             <span className="block text-label text-secondary mb-2">Tags</span>
             <div className="flex flex-wrap items-center gap-2">
               {tags.map(t => (
-                <span key={t} className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-label bg-purple-500/10 text-purple-400 border border-purple-500/30">
+                <span key={t} className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-label bg-variable-subtle text-variable-text border border-variable/30">
                   <Tag className="size-3" />
                   {t}
                   <Button type="button" variant="ghost" onClick={() => removeTag(t)} aria-label={`Remove tag ${t}`} className="hover:text-loss transition-colors ml-1">
@@ -384,7 +384,7 @@ function JournalEntryCard({ entry, onEdit, onDelete }: { entry: JournalEntry; on
       <div className="flex items-center justify-between gap-2 flex-wrap">
         <div className="flex flex-wrap gap-1">
           {entry.tags.map(t => (
-            <span key={t} className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-caption bg-purple-500/10 text-purple-400 border border-purple-500/20">
+            <span key={t} className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-caption bg-variable-subtle text-variable-text border border-variable/20">
               <Tag className="size-2" />{t}
             </span>
           ))}
@@ -516,7 +516,7 @@ function CategoryBadge({ category }: { category?: string | null }) {
     crypto: 'bg-gold-500/15 text-gold-500 border-gold-500/30',
     politics: 'bg-info-subtle text-info border-info/30',
     sports: 'bg-gain-subtle text-gain border-gain/30',
-    entertainment: 'bg-purple-500/15 text-purple-400 border-purple-500/30',
+    entertainment: 'bg-variable-subtle text-variable-text border-variable/30',
     science: 'bg-accent-subtle text-accent-text border-accent/30',
   };
   const key = category.toLowerCase();
