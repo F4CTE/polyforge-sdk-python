@@ -16,6 +16,7 @@ import {
   HelpCircle,
   ChevronLeft,
   ChevronRight,
+  Keyboard,
   Settings,
   TrendingUp,
   TrendingDown,
@@ -123,7 +124,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
     <aside
       data-tour="sidebar"
       aria-label="Main navigation"
-      className={`flex flex-col h-full bg-elevated border-r border-default transition-all duration-panel ${collapsed ? 'w-16 min-w-16' : 'w-60 min-w-60'}`}
+      className={`flex flex-col h-full bg-surface border-r border-default transition-all duration-panel ${collapsed ? 'w-12 min-w-12' : 'w-[220px] min-w-[220px]'}`}
     >
       {/* Logo */}
       <div className="flex items-center gap-3 px-4 h-14 border-b border-default">
@@ -142,7 +143,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
         {navSections.map((section) => (
           <div key={section.title}>
             {!collapsed && (
-              <div className="px-2 mb-1 text-label font-semibold uppercase tracking-wider text-secondary">
+              <div className="px-2 mb-1 text-label font-semibold uppercase tracking-wider text-tertiary">
                 {section.title}
               </div>
             )}
@@ -153,7 +154,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
                   to={item.route}
                   title={collapsed ? item.label : undefined}
                   className={({ isActive }) =>
-                    `flex items-center gap-3 px-2 py-2 rounded-sm text-body-sm transition-colors duration-micro focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 focus-visible:rounded-lg ${
+                    `flex items-center gap-3 px-3 py-2 rounded-sm text-body-sm transition-colors duration-micro focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 focus-visible:rounded-lg ${
                       isActive
                         ? 'bg-accent/10 text-accent-text'
                         : 'text-secondary hover:bg-surface hover:text-primary'
@@ -168,6 +169,30 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
           </div>
         ))}
       </nav>
+
+      {/* Pinned secondary links */}
+      <div className="px-2 py-1 space-y-0.5">
+        <a
+          href="https://discord.gg/polyforge"
+          target="_blank"
+          rel="noopener noreferrer"
+          title={collapsed ? 'Help & Support' : undefined}
+          className="flex items-center gap-3 px-3 py-2 rounded-sm text-body-sm transition-colors duration-micro text-tertiary hover:bg-surface hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 focus-visible:rounded-lg"
+        >
+          <HelpCircle size={18} className="shrink-0" aria-hidden="true" />
+          {!collapsed && <span>Help & Support</span>}
+        </a>
+        <button
+          type="button"
+          onClick={() => window.dispatchEvent(new CustomEvent('open-shortcuts'))}
+          title={collapsed ? 'Keyboard shortcuts' : undefined}
+          className="flex items-center gap-3 px-3 py-2 rounded-sm text-body-sm transition-colors duration-micro text-tertiary hover:bg-surface hover:text-primary w-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 focus-visible:rounded-lg"
+          aria-label="Keyboard shortcuts"
+        >
+          <Keyboard size={18} className="shrink-0" aria-hidden="true" />
+          {!collapsed && <span>Keyboard shortcuts</span>}
+        </button>
+      </div>
 
       {/* Bottom collapse + settings */}
       <div className="border-t border-default px-2 py-2 space-y-1">
@@ -214,7 +239,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
           to="/settings"
           title={collapsed ? 'Settings' : undefined}
           className={({ isActive }) =>
-            `flex items-center gap-3 px-2 py-2 rounded-sm text-body-sm transition-colors duration-micro focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 focus-visible:rounded-lg ${
+            `flex items-center gap-3 px-3 py-2 rounded-sm text-body-sm transition-colors duration-micro focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 focus-visible:rounded-lg ${
               isActive
                 ? 'bg-accent/10 text-accent-text'
                 : 'text-secondary hover:bg-surface hover:text-primary'

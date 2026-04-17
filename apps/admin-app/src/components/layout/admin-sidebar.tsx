@@ -25,6 +25,8 @@ import {
   Megaphone,
   PieChart,
   Settings2,
+  HelpCircle,
+  Keyboard,
 } from 'lucide-react';
 import { useAdminAuthStore } from '@/stores/admin-auth-store';
 import { usePollingStore } from '@/stores/polling-store';
@@ -120,7 +122,7 @@ export function AdminSidebar({ collapsed, onToggle, onNavigate }: Props) {
   return (
     <aside
       aria-label="Admin sidebar"
-      className="flex flex-col h-full border-r border-default bg-admin-sidebar border-t-4 border-t-loss"
+      className="flex flex-col h-full border-r border-default bg-admin-sidebar"
     >
       {/* Brand */}
       <div className="flex items-center gap-2 h-14 px-3 border-b border-default shrink-0">
@@ -192,6 +194,30 @@ export function AdminSidebar({ collapsed, onToggle, onNavigate }: Props) {
           );
         })}
       </nav>
+
+      {/* Pinned secondary links */}
+      <div className="px-2 py-1 space-y-0.5">
+        <a
+          href="https://discord.gg/polyforge"
+          target="_blank"
+          rel="noopener noreferrer"
+          title={collapsed ? 'Help & Support' : undefined}
+          className="flex items-center gap-3 px-3 py-2 rounded-sm text-body-sm transition-colors duration-micro text-tertiary hover:bg-elevated hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:rounded-lg"
+        >
+          <HelpCircle size={18} className="shrink-0" aria-hidden="true" />
+          {!collapsed && <span>Help & Support</span>}
+        </a>
+        <button
+          type="button"
+          onClick={() => window.dispatchEvent(new CustomEvent('open-shortcuts'))}
+          title={collapsed ? 'Keyboard shortcuts' : undefined}
+          className="flex items-center gap-3 px-3 py-2 rounded-sm text-body-sm transition-colors duration-micro text-tertiary hover:bg-elevated hover:text-primary w-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:rounded-lg"
+          aria-label="Keyboard shortcuts"
+        >
+          <Keyboard size={18} className="shrink-0" aria-hidden="true" />
+          {!collapsed && <span>Keyboard shortcuts</span>}
+        </button>
+      </div>
 
       {/* Footer */}
       <div className="border-t border-default px-3 py-4 shrink-0">
