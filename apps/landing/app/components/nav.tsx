@@ -58,10 +58,10 @@ export function Nav() {
       if (e.key === "Escape" && mobileOpen) setMobileOpen(false);
     }
     if (mobileOpen) {
-      document.body.style.overflow = "hidden";
+      document.body.classList.add("nav-open");
       window.addEventListener("keydown", handleEscape);
       return () => {
-        document.body.style.overflow = "";
+        document.body.classList.remove("nav-open");
         window.removeEventListener("keydown", handleEscape);
       };
     }

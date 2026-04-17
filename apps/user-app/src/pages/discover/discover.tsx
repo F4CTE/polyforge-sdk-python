@@ -550,9 +550,9 @@ export function Component() {
                         tag === 'momentum' ? 'bg-warning-subtle text-warning' :
                         tag === 'political' ? 'bg-info-subtle text-info' :
                         tag === 'yes-bias' ? 'bg-gain-subtle text-gain' :
-                        tag === 'defensive' ? 'bg-purple-500/15 text-purple-400' :
+                        tag === 'defensive' ? 'bg-category-subtle text-category-muted' :
                         tag === 'scalping' ? 'bg-loss-subtle text-loss' :
-                        tag === 'high-freq' ? 'bg-purple-300/15 text-purple-300' :
+                        tag === 'high-freq' ? 'bg-category-subtle text-category-muted' :
                         'bg-overlay text-tertiary'
                       }`}>
                         {tag}

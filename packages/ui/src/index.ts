@@ -114,5 +114,8 @@ export type { ToasterProps } from './components/ui/toaster';
 
 export { PolyforgeLogomark } from './components/polyforge-logomark';
 
+// Shared structural components
+export { ErrorBoundary } from './components/error-boundary';
+
 // Chart color utilities
 export { chartColors, resolveChartTheme, chartPalette } from './lib/chart-colors';

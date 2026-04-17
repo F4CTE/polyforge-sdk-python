@@ -254,7 +254,7 @@ const SECTION_ICONS: Record<string, React.ReactNode> = {
 const SECTION_STYLES: Record<string, string> = {
   safety: 'bg-warning/10 text-warning border-warning/20',
   trigger: 'bg-accent/10 text-accent-text border-accent/20',
-  condition: 'bg-purple-500/10 text-purple-500 border-purple-500/20',
+  condition: 'bg-category-subtle text-category border-category-border',
   action: 'bg-gain/10 text-gain border-gain/20',
 };
 
@@ -1534,7 +1534,7 @@ export function Component() {
           <div className="flex flex-wrap items-center gap-2">
             <span className={`px-3 py-1 rounded-full text-label font-medium ${
               strategy.execMode === 'TICK' || strategy.execMode === 'HYBRID'
-                ? 'bg-purple-500/10 text-purple-500'
+                ? 'bg-category-subtle text-category'
                 : 'bg-accent/10 text-accent-text'
             }`}>
               {execLabel(strategy)}
@@ -1551,7 +1551,7 @@ export function Component() {
             {strategy.tags.map((tag) => (
               <span key={tag} className={`px-3 py-1 rounded-full text-label font-medium ${
                 tag.toLowerCase() === 'momentum'
-                  ? 'bg-gold-500/10 text-gold-500'
+                  ? 'bg-category-subtle text-watchlist'
                   : tag.toLowerCase() === 'defensive'
                     ? 'bg-info/10 text-info'
                     : 'bg-accent/10 text-accent-text'

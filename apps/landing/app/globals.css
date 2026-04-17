@@ -85,3 +85,8 @@
 svg text {
   font-family: inherit;
 }
+
+/* Mobile nav scroll lock — toggled via classList, not inline style (#684) */
+body.nav-open {
+  overflow: hidden;
+}

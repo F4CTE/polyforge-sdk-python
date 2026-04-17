@@ -22,6 +22,7 @@ import {
   SlidersHorizontal,
   X,
   ArrowUpDown,
+  Star,
 } from 'lucide-react';
 import { OnboardingDashboardChecklist } from '../../components/onboarding/onboarding-dashboard-checklist';
 
@@ -292,12 +293,10 @@ const MarketCard = memo(function MarketCard({
           onClick={(e) => onToggleWatch(market.id, e)}
           disabled={isWatchLoading}
           aria-label={isWatched ? 'Remove from watchlist' : 'Add to watchlist'}
-          className={`p-2 rounded-pf transition-colors ${isWatched ? 'text-gold-500 hover:text-gold-400' : 'text-tertiary hover:text-primary'}`}
+          className={`p-2 rounded-pf transition-colors ${isWatched ? 'text-watchlist hover:text-watchlist-muted' : 'text-tertiary hover:text-primary'}`}
           title={isWatched ? 'Remove from watchlist' : 'Add to watchlist'}
         >
-          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill={isWatched ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
-          </svg>
+          <Star size={14} fill={isWatched ? 'currentColor' : 'none'} aria-hidden="true" />
         </Button>
       </div>
 
@@ -551,7 +550,7 @@ function AdvancedSearchModal({
       className="fixed inset-0 z-50 flex items-start justify-center pt-12 px-4 pb-6 bg-surface/80 backdrop-blur-sm"
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
-      <div className="relative w-full max-w-2xl bg-elevated border border-default rounded-xl shadow-lg flex flex-col max-h-[calc(100vh-6rem)] overflow-hidden">
+      <div className="relative w-full max-w-2xl bg-elevated border border-default rounded-xl shadow-lg flex flex-col max-h-modal-full overflow-hidden">
 
         {/* Header */}
         <div className="flex items-center gap-3 px-5 py-4 border-b border-default shrink-0">

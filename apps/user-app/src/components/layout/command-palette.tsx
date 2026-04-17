@@ -148,7 +148,7 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
               }`}
             >
               <span className={`p-2 rounded-sm shrink-0 ${
-                r.type === 'market' ? 'bg-accent/10 text-accent-text' : 'bg-purple-500/10 text-purple-400'
+                r.type === 'market' ? 'bg-accent/10 text-accent-text' : 'bg-category-subtle text-category-muted'
               }`}>
                 {r.type === 'market' ? <BarChart3 className="size-4" /> : <Zap className="size-4" />}
               </span>
@@ -157,7 +157,7 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
                 {r.sub && <div className="text-label text-tertiary capitalize">{r.sub}</div>}
               </div>
               <span className={`text-caption font-medium px-2 py-1 rounded shrink-0 ${
-                r.type === 'market' ? 'bg-accent/10 text-accent-text' : 'bg-purple-500/10 text-purple-400'
+                r.type === 'market' ? 'bg-accent/10 text-accent-text' : 'bg-category-subtle text-category-muted'
               }`}>
                 {r.type === 'market' ? 'Market' : 'Strategy'}
               </span>

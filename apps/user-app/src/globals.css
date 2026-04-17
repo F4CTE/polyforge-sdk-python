@@ -256,3 +256,8 @@
     animation: none !important;
   }
 }
+
+/* Modal viewport utility — avoids arbitrary calc bracket syntax (#682) */
+@theme {
+  --max-height-modal-full: calc(100vh - 6rem);
+}

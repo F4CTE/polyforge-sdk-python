@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router';
 import { ReactFlowProvider } from '@xyflow/react';
-import { ArrowLeft, Check, Loader2, Pencil, Blocks, Upload, Zap, FlaskConical, HelpCircle, Target, RotateCcw, RotateCw, LayoutTemplate, X, TrendingUp, RefreshCw, Calendar, Brain, AlertCircle } from 'lucide-react';
+import { ArrowLeft, Check, Loader2, Pencil, Blocks, Upload, Zap, FlaskConical, HelpCircle, Target, RotateCcw, RotateCw, LayoutTemplate, X, TrendingUp, RefreshCw, Calendar, Brain, AlertCircle, ChevronRight } from 'lucide-react';
 import { Button, Input } from '@polyforge/ui';
 import { useBetaUsage } from '@/hooks/use-beta-usage';
 import { toast } from 'sonner';
@@ -1188,7 +1188,7 @@ export function Component() {
                 </div>
                 <p className="text-label text-tertiary mt-1">{t.description}</p>
               </div>
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-tertiary group-hover:text-accent-text flex-shrink-0 transition-colors"><polyline points="9 18 15 12 9 6"/></svg>
+              <ChevronRight size={16} className="text-tertiary group-hover:text-accent-text flex-shrink-0 transition-colors" aria-hidden="true" />
             </Button>
           ))}
         </div>

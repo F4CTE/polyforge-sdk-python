@@ -307,7 +307,7 @@ function BlockNodeInner({ id, data }: NodeProps<BlockNode>) {
                     <label className={`flex items-center gap-1 text-caption font-medium mb-1 uppercase tracking-wider ${isEmpty ? 'text-loss/80' : 'text-tertiary'}`}>
                       {field.wireable && (
                         <Link2
-                          className={`size-3 shrink-0 ${isWired ? 'text-purple-500 opacity-100' : 'text-tertiary opacity-50'}`}
+                          className={`size-3 shrink-0 ${isWired ? 'text-category opacity-100' : 'text-tertiary opacity-50'}`}
                           aria-label="This field can receive a value from a Variable or Calc node"
                         />
                       )}
@@ -336,9 +336,9 @@ function BlockNodeInner({ id, data }: NodeProps<BlockNode>) {
                       renderSelectField(field)
                     ) : isWired ? (
                       // Field is driven by a connected Variable/Calc node — show chip instead of input
-                      <div className="flex items-center gap-2 px-2 py-1 rounded-sm bg-purple-500/10 border border-purple-500/30">
-                        <Link2 className="size-3 shrink-0 text-purple-500" />
-                        <span className="text-label text-purple-500 font-mono truncate">
+                      <div className="flex items-center gap-2 px-2 py-1 rounded-sm bg-category-subtle border border-category-border">
+                        <Link2 className="size-3 shrink-0 text-category" />
+                        <span className="text-label text-category font-mono truncate">
                           {wireableConnections.get(field.key)}
                         </span>
                       </div>

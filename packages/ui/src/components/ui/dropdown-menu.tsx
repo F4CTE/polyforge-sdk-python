@@ -183,7 +183,7 @@ function DropdownMenuItem({ children, onSelect, disabled, className, ...props }:
 // ─── Separator ────────────────────────────────────────────────────────────────
 
 function DropdownMenuSeparator({ className }: { className?: string }) {
-  return <div role="separator" className={cn("my-1 h-px bg-[var(--border-subtle)]", className)} />;
+  return <div role="separator" className={cn("my-1 h-px bg-border-subtle", className)} />;
 }
 
 export {
