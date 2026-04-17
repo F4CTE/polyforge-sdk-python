@@ -446,7 +446,7 @@ test.describe.serial('Settings — Full Workflow Coverage', () => {
 
         // Enable all that are currently off, verify state changes in UI
         for (const name of checkboxNames) {
-            const checkbox = settingsPage.notificationCheckboxes[name];
+            const checkbox  = settingsPage.notificationCheckboxes[name];
             const isChecked = await checkbox.isChecked();
             if (!isChecked) {
                 await settingsPage.toggleNotification(name);
@@ -455,7 +455,17 @@ test.describe.serial('Settings — Full Workflow Coverage', () => {
             }
         }
 
-        await settingsPage.saveNotifications();
+        // Wait for the PATCH response to confirm the save completed before checking the toast.
+        // On CI Docker the bcrypt/DB path can exceed 5 s, causing a serial-describe retry
+        // loop (test.describe.serial reruns the whole group on failure) — 15 s covers it.
+        const [saveResp] = await Promise.all([
+            page.waitForResponse(
+                resp => resp.url().includes('/settings/notifications') && resp.request().method() === 'PATCH',
+                { timeout: 15_000 },
+            ),
+            settingsPage.saveNotifications(),
+        ]);
+        expect(saveResp.ok()).toBe(true);
         await expect(page.locator('[data-sonner-toast]')).toBeVisible({ timeout: 5_000 });
 
         // Persistence: new-user preference rows may not exist yet; the API may
@@ -492,7 +502,15 @@ test.describe.serial('Settings — Full Workflow Coverage', () => {
             }
         }
 
-        await settingsPage.saveNotifications();
+        // Same waitForResponse pattern as "enable all" to prevent the serial retry loop.
+        const [disableResp] = await Promise.all([
+            page.waitForResponse(
+                resp => resp.url().includes('/settings/notifications') && resp.request().method() === 'PATCH',
+                { timeout: 15_000 },
+            ),
+            settingsPage.saveNotifications(),
+        ]);
+        expect(disableResp.ok()).toBe(true);
         await expect(page.locator('[data-sonner-toast]')).toBeVisible({ timeout: 5_000 });
 
         // Persistence: new-user preference rows may not exist yet; the API may

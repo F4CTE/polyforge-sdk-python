@@ -177,6 +177,23 @@ export async function apiDeleteStrategy(token: string, id: string): Promise<void
     }
 }
 
+export async function apiCreateStrategy(token: string, name: string): Promise<StrategyResponse> {
+    const res = await fetch(`${API_URL}/api/v1/strategies`, {
+        method:  'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            Authorization:  `Bearer ${token}`,
+            Cookie:         `pf_token=${token}`,
+        },
+        body: JSON.stringify({ name }),
+    });
+    if (!res.ok) {
+        const err = await res.json().catch(() => ({})) as Record<string, unknown>;
+        throw new Error(`POST /strategies failed: ${res.status} ${JSON.stringify(err)}`);
+    }
+    return res.json() as Promise<StrategyResponse>;
+}
+
 export async function apiStopStrategy(token: string, id: string): Promise<void> {
     await fetch(`${API_URL}/api/v1/strategies/${id}/stop`, {
         method:  'POST',

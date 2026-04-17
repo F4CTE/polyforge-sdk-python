@@ -46,8 +46,18 @@ export class StrategyBuilderPage {
 
     async gotoEdit(strategyId: string): Promise<void> {
         await this.page.goto(`/strategies/${strategyId}/edit`);
-        // Edit mode skips the wizard and goes directly to the builder canvas
         await expect(this.page.locator('.react-flow')).toBeVisible({ timeout: 15_000 });
+        // Ensure the block palette panel is open (may be collapsed in edit mode)
+        const showBtn = this.page.locator('button[title="Show blocks"]');
+        if (await showBtn.isVisible({ timeout: 2_000 }).catch(() => false)) {
+            await showBtn.click();
+        }
+        await expect(this.nameInput).toBeVisible({ timeout: 10_000 });
+        // Dismiss builder tutorial if visible
+        const tutorialDismiss = this.page.locator('button[aria-label="Dismiss tutorial"]');
+        if (await tutorialDismiss.isVisible({ timeout: 1_000 }).catch(() => false)) {
+            await tutorialDismiss.click();
+        }
     }
 
     async fillName(name: string): Promise<void> {
