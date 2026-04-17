@@ -37,8 +37,12 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     const request = ctx.getRequest<FastifyRequest>();
 
     const requestId = randomUUID();
-    const status =
-      exception instanceof HttpException
+    // CORS errors from @fastify/cors are plain Errors, not HttpExceptions — map to 403
+    const isCorsError =
+      exception instanceof Error && exception.message.startsWith("CORS:");
+    const status = isCorsError
+      ? HttpStatus.FORBIDDEN
+      : exception instanceof HttpException
         ? exception.getStatus()
         : HttpStatus.INTERNAL_SERVER_ERROR;
 
@@ -50,16 +54,18 @@ export class GlobalExceptionFilter implements ExceptionFilter {
         ? (exception.getResponse() as Record<string, unknown>)
         : null;
 
-    const message =
-      status >= 500 && isProduction
+    const message = isCorsError
+      ? "Forbidden"
+      : status >= 500 && isProduction
         ? "Internal server error"
         : exception instanceof HttpException
           ? ((httpResponse?.["message"] as string | undefined) ??
             exception.message)
           : "Internal server error";
 
-    const code =
-      status >= 500 && isProduction
+    const code = isCorsError
+      ? "CORS_FORBIDDEN"
+      : status >= 500 && isProduction
         ? "INTERNAL_SERVER_ERROR"
         : exception instanceof HttpException
           ? ((httpResponse?.["code"] as string | undefined) ??

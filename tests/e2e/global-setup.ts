@@ -32,13 +32,15 @@ export default async function globalSetup() {
 
   // Clear invite-only Redis flag and approve all seed users
   try {
-    const { execSync } = await import('child_process');
+    const { execSync, execFileSync } = await import('child_process');
+
+    const REDIS_PASS = process.env.REDIS_PASSWORD ?? '53AoI9w0LIRVXT39Scyy5oNlNDplxABr';
 
     // Disable invite-only mode (SET to 'false' so the env-var fallback is overridden)
-    execSync('docker exec polyforge-dev-redis-1 redis-cli -a devredispass SET config:invite_only false', {
-      stdio: 'ignore',
-      timeout: 5000,
-    });
+    execFileSync('docker', [
+      'exec', 'polyforge-dev-redis-1',
+      'redis-cli', '-a', REDIS_PASS, 'SET', 'config:invite_only', 'false',
+    ], { stdio: 'ignore', timeout: 5000 });
 
     // Approve ALL seed users — safety net in case the seed's updateMany didn't run
     // or the approved column was reset by a migration/rebuild.
@@ -47,11 +49,20 @@ export default async function globalSetup() {
       { stdio: 'ignore', timeout: 5000 },
     );
 
-    // Flush all throttle counters so E2E tests don't hit rate limits
-    execSync(
-      'docker exec polyforge-dev-redis-1 redis-cli -a devredispass --scan --pattern "throttler:*" | xargs -r docker exec -i polyforge-dev-redis-1 redis-cli -a devredispass DEL',
-      { stdio: 'ignore', timeout: 5000 },
-    );
+    // Flush all throttle counters so E2E tests don't hit rate limits.
+    // Keys use the format {<hash>:default}:hits and {<hash>:default}:blocked
+    // as created by @nest-lab/throttler-storage-redis v1.x.
+    const throttleKeys = execFileSync('docker', [
+      'exec', 'polyforge-dev-redis-1',
+      'redis-cli', '-a', REDIS_PASS, '--scan', '--pattern', '*:default}:*',
+    ], { timeout: 5000 }).toString().trim().split('\n').filter(Boolean);
+
+    if (throttleKeys.length > 0) {
+      execFileSync('docker', [
+        'exec', 'polyforge-dev-redis-1',
+        'redis-cli', '-a', REDIS_PASS, 'DEL', ...throttleKeys,
+      ], { stdio: 'ignore', timeout: 5000 });
+    }
   } catch {
     // Fallback: if Docker is not accessible, skip
     console.warn('[E2E setup] Could not clear Redis state — Docker may not be accessible');

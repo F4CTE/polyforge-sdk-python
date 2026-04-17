@@ -488,14 +488,12 @@ test.describe('Backtesting — Full Workflow Coverage', () => {
         const firstEntry = page.locator('[data-testid="backtest-history-row"]').first();
         if (await firstEntry.isVisible().catch(() => false)) {
             await firstEntry.click();
-            await page.locator('[data-testid="result-pnl"]').waitFor({ state: 'visible', timeout: 3_000 }).catch(() => {});
 
-            // Should show the detail panel — check for either result-pnl (completed)
-            // or progress bar (running/queued) or error message (failed)
-            const hasDetail = await Promise.race([
-                page.locator('[data-testid="result-pnl"]').waitFor({ timeout: 10_000 }).then(() => true),
-                page.locator('text=/Running|Waiting in queue|failed/i').waitFor({ timeout: 10_000 }).then(() => true),
-            ]).catch(() => false);
+            // Detail panel opens in any backtest state — "Close run details" uses aria-label (icon button)
+            const hasDetail = await page.getByRole('button', { name: /Close run details/i })
+                .waitFor({ timeout: 10_000 })
+                .then(() => true)
+                .catch(() => false);
             // Detail panel should be visible in some form
             expect(hasDetail).toBeTruthy();
         }

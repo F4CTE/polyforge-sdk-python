@@ -192,9 +192,8 @@ export class TotpService {
     }
 
     // Generate a fresh set of backup codes — same entropy as original setup
-    const backupCodes = Array.from(
-      { length: BACKUP_CODE_COUNT },
-      () => randomBytes(10).toString('hex').toUpperCase(),
+    const backupCodes = Array.from({ length: BACKUP_CODE_COUNT }, () =>
+      randomBytes(10).toString('hex').toUpperCase(),
     );
     const backupCodeHashes = await Promise.all(
       backupCodes.map((c) => bcrypt.hash(c, 10)),

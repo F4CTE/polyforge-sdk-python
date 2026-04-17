@@ -109,8 +109,8 @@ async function bootstrap() {
     origin: (origin, cb) => {
       const allowed = [
         ...(process.env.CORS_ORIGINS?.split(',').map((s) => s.trim()) ?? []),
-        // dev origins — stripped in production by env check
-        ...(process.env.NODE_ENV !== 'production'
+        // dev origins — stripped in production; kept in CI for E2E tests
+        ...(process.env.NODE_ENV !== 'production' || process.env.CI === 'true'
           ? [
               'http://localhost',
               'http://localhost:4200',
