@@ -109,7 +109,7 @@ function statusGradient(status: StrategyStatus): string {
 
 const STATUS_STYLES: Record<StrategyStatus, { dot: string; bg: string; text: string }> = {
   RUNNING:  { dot: 'bg-accent',   bg: 'bg-accent/10',   text: 'text-accent' },
-  PAPER:    { dot: 'bg-purple-500', bg: 'bg-purple-500/10', text: 'text-purple-500' },
+  PAPER:    { dot: 'bg-variable', bg: 'bg-variable-subtle', text: 'text-variable' },
   PAUSED:   { dot: 'bg-warning',   bg: 'bg-warning/10',   text: 'text-warning' },
   IDLE:     { dot: 'bg-tertiary',    bg: 'bg-overlay',    text: 'text-tertiary' },
   ERROR:    { dot: 'bg-loss',     bg: 'bg-loss/10',     text: 'text-loss' },
@@ -804,9 +804,9 @@ export function Component() {
                 <div className="flex flex-wrap gap-2 mb-2">
                   <span className={`inline-flex items-center px-2 py-1 rounded-full text-label font-medium ${
                     strategy.execMode === 'TICK'
-                      ? 'bg-purple-500/10 text-purple-500'
+                      ? 'bg-variable-subtle text-variable'
                       : strategy.execMode === 'HYBRID'
-                        ? 'bg-purple-500/10 text-purple-500'
+                        ? 'bg-variable-subtle text-variable'
                         : 'bg-accent/10 text-accent-text'
                   }`}>
                     {execLabel(strategy)}
@@ -825,7 +825,7 @@ export function Component() {
                       {strategy.tags[0]}
                     </span>
                   )}
-                  <span className="inline-flex items-center px-2 py-1 rounded-full bg-purple-500/10 text-purple-500 text-label font-medium ml-auto">
+                  <span className="inline-flex items-center px-2 py-1 rounded-full bg-variable-subtle text-variable text-label font-medium ml-auto">
                     v{strategy.version}
                   </span>
                 </div>

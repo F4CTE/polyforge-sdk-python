@@ -70,7 +70,7 @@ const STATUS_STYLES: Record<CopyStatus, { dot: string; bg: string; text: string 
 
 const MODE_STYLES: Record<CopyMode, { bg: string; text: string }> = {
   PERCENTAGE: { bg: 'bg-accent/10', text: 'text-accent-text' },
-  FIXED:      { bg: 'bg-purple-500/10',  text: 'text-purple-500' },
+  FIXED:      { bg: 'bg-variable-subtle',  text: 'text-variable' },
   MIRROR:     { bg: 'bg-gain/10', text: 'text-gain' },
 };
 

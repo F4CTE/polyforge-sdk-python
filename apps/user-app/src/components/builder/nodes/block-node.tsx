@@ -356,13 +356,13 @@ function BlockNodeInner({ id, data }: NodeProps<BlockNode>) {
                               : 'border-subtle focus-visible:border-accent/50'
                           } ${
                             (d.config[field.key] ?? '').startsWith('$')
-                              ? 'text-purple-500 font-mono'
+                              ? 'text-variable font-mono'
                               : 'text-primary'
                           }`}
                         />
                         {(d.config[field.key] ?? '').startsWith('$') && (
                           <span
-                            className="absolute right-2 top-1/2 -translate-y-1/2 text-caption text-purple-500/70 pointer-events-none"
+                            className="absolute right-2 top-1/2 -translate-y-1/2 text-caption text-variable/70 pointer-events-none"
                             title={`Variable: ${d.config[field.key]}`}
                           >
                             var

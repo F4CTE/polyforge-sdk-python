@@ -588,7 +588,7 @@ export function Component() {
                               type="button"
                               variant="ghost"
                               onClick={() => setCompareB(run.id === compareB ? null : run.id)}
-                              className={`text-caption px-2 py-1 rounded border transition-colors ${compareB === run.id ? 'bg-purple-500/20 border-purple-500/40 text-purple-400' : 'border-default text-tertiary hover:text-primary'}`}
+                              className={`text-caption px-2 py-1 rounded border transition-colors ${compareB === run.id ? 'bg-variable-subtle border-variable/40 text-variable-text' : 'border-default text-tertiary hover:text-primary'}`}
                             >B</Button>
                           </div>
                         </td>
@@ -625,7 +625,7 @@ export function Component() {
               <>
                 {winner && (
                   <div className="mb-3 text-label text-secondary">
-                    Run <span className={`font-semibold ${winner === 'A' ? 'text-info' : 'text-purple-400'}`}>{winner}</span> outperforms by <span className="font-mono text-gain">{Math.abs(pnlA - pnlB).toFixed(2)}</span>
+                    Run <span className={`font-semibold ${winner === 'A' ? 'text-info' : 'text-variable-text'}`}>{winner}</span> outperforms by <span className="font-mono text-gain">{Math.abs(pnlA - pnlB).toFixed(2)}</span>
                   </div>
                 )}
                 <div className="overflow-x-auto">
@@ -634,7 +634,7 @@ export function Component() {
                       <tr className="border-b border-default">
                         <th className="text-left py-2 pr-4 font-medium text-tertiary">Metric</th>
                         <th className="text-center py-2 px-4 font-medium text-info">Run A</th>
-                        <th className="text-center py-2 px-4 font-medium text-purple-400">Run B</th>
+                        <th className="text-center py-2 px-4 font-medium text-variable-text">Run B</th>
                       </tr>
                     </thead>
                     <tbody>

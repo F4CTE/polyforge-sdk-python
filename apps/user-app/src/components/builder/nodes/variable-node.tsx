@@ -165,7 +165,7 @@ function VariableNodeInner({ id, data }: NodeProps<VariableNodeType>) {
               aria-describedby={!nameValid ? `${id}-name-error` : undefined}
               className={`w-full px-2 py-1 text-label bg-surface border rounded-sm text-primary placeholder:text-tertiary/50 focus-visible:outline-none transition-colors ${
                 nameValid
-                  ? 'border-subtle focus-visible:border-purple-500/50'
+                  ? 'border-subtle focus-visible:border-variable/50'
                   : 'border-loss/60 focus-visible:border-loss'
               }`}
             />
@@ -188,7 +188,7 @@ function VariableNodeInner({ id, data }: NodeProps<VariableNodeType>) {
               value={data.expression ?? ''}
               onChange={onExpressionChange}
               aria-label="Variable expression"
-              className="w-full px-2 py-1 text-label bg-surface border border-subtle rounded-sm text-primary placeholder:text-tertiary/50 focus-visible:outline-none focus-visible:border-purple-500/50 transition-colors font-mono"
+              className="w-full px-2 py-1 text-label bg-surface border border-subtle rounded-sm text-primary placeholder:text-tertiary/50 focus-visible:outline-none focus-visible:border-variable/50 transition-colors font-mono"
             />
           </div>
 

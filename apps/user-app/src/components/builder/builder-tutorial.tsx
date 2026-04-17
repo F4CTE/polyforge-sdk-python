@@ -108,13 +108,13 @@ const STEPS: TutorialStep[] = [
     content: (
       <div className="space-y-3">
         <p className="text-body-sm text-secondary leading-relaxed">
-          Many blocks have a <strong className="text-primary">Market Slot</strong> field (<code className="text-purple-500 font-mono text-label">$MARKET_A</code> … <code className="text-purple-500 font-mono text-label">$MARKET_E</code>). These are placeholders — you bind them to real markets when you start the strategy.
+          Many blocks have a <strong className="text-primary">Market Slot</strong> field (<code className="text-variable font-mono text-label">$MARKET_A</code> … <code className="text-variable font-mono text-label">$MARKET_E</code>). These are placeholders — you bind them to real markets when you start the strategy.
         </p>
         <p className="text-body-sm text-secondary leading-relaxed">
           This lets a single strategy template trade across different markets without rebuilding the block graph.
         </p>
         <p className="text-body-sm text-secondary leading-relaxed">
-          Fields that start with <code className="text-purple-500 font-mono text-label">$</code> are <strong className="text-primary">variables</strong> — shown in purple with a <em>var</em> badge.
+          Fields that start with <code className="text-variable font-mono text-label">$</code> are <strong className="text-primary">variables</strong> — shown in purple with a <em>var</em> badge.
         </p>
       </div>
     ),

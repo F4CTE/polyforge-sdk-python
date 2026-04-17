@@ -63,6 +63,11 @@
   --info: #0EA5E9;
   --info-subtle: rgba(14, 165, 233, 0.12);
 
+  /* Variable / category purple — semantic token for variable nodes, paper trading, badges */
+  --variable: #A78BFA;
+  --variable-subtle: rgba(167, 139, 250, 0.12);
+  --variable-text: #C4B5FD;
+
   /* Auth-background ambient float durations (decorative, >5s — charter §9 exception) */
   --duration-ambient-slow: 15s;
   --duration-ambient-medium: 18s;
@@ -180,6 +185,10 @@
   --color-category-subtle: var(--color-purple-glow);
   --color-category-muted: var(--color-purple-400);
   --color-category-border: rgba(139, 92, 246, 0.3);
+  /* variable: variable nodes, paper trading mode, MCP badge, entertainment/politics categories */
+  --color-variable: var(--variable);
+  --color-variable-subtle: var(--variable-subtle);
+  --color-variable-text: var(--variable-text);
   /* watchlist: starred/favorited items */
   --color-watchlist: var(--color-gold-500);
   --color-watchlist-muted: var(--color-gold-400);
@@ -538,6 +547,11 @@ body {
   --color-purple-400: #7c3aed;
   --color-purple-500: #6d28d9;
   --color-purple-600: #5b21b6;
+
+  /* Variable token overrides — darker for AA on white */
+  --variable: #6d28d9;
+  --variable-subtle: rgba(109, 40, 217, 0.10);
+  --variable-text: #7c3aed;
 
   /* Chart palette */
   --color-chart-tooltip-bg: #ffffff;

@@ -214,8 +214,8 @@ export function renderContent({
       </div>
       <div className="bg-elevated border border-default rounded-xl p-4 space-y-3 hover:border-strong transition-all duration-panel">
         <div className="flex items-center gap-2">
-          <p className="text-body-md font-semibold text-purple-300">MCP Server</p>
-          <Badge text="Claude · Cursor · Windsurf · Zed" cls="bg-purple-500/10 text-purple-400" />
+          <p className="text-body-md font-semibold text-variable-text">MCP Server</p>
+          <Badge text="Claude · Cursor · Windsurf · Zed" cls="bg-variable-subtle text-variable-text" />
         </div>
         <Code code={'npx @polyforge/mcp-server'} lang="curl" />
         <p className="text-label text-secondary">

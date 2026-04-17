@@ -291,12 +291,12 @@ export function BlockPalette({ open, onClose }: BlockPaletteProps) {
             <div className="space-y-3">
               <p className="text-caption text-tertiary leading-snug">
                 Variables let you define reusable expressions. Reference them
-                in block fields with <code className="text-purple-500 font-mono">$varName</code>.
+                in block fields with <code className="text-variable font-mono">$varName</code>.
               </p>
               <button
                 type="button"
                 onClick={addVariable}
-                className="flex items-center gap-2 w-full px-3 py-2 rounded-sm text-label font-medium text-primary transition-colors hover:opacity-90 bg-purple-500 focus-visible:outline-none focus-visible:shadow-focus-ring"
+                className="flex items-center gap-2 w-full px-3 py-2 rounded-sm text-label font-medium text-primary transition-colors hover:opacity-90 bg-variable focus-visible:outline-none focus-visible:shadow-focus-ring"
               >
                 <Plus className="size-4" />
                 Add Variable
