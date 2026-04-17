@@ -4,6 +4,7 @@ import { PortfolioController } from "./portfolio.controller";
 import { PortfolioService } from "./portfolio.service";
 import { PositionReconcilerService } from "./position-reconciler.service";
 import { DrawdownCircuitBreakerService } from "./drawdown-circuit-breaker.service";
+import { PolymarketDataApiService } from "./polymarket-data-api.service";
 import { EventsModule } from "../gateway/events.module";
 
 @Module({
@@ -13,6 +14,7 @@ import { EventsModule } from "../gateway/events.module";
     PortfolioService,
     PositionReconcilerService,
     DrawdownCircuitBreakerService,
+    PolymarketDataApiService,
   ],
 })
 export class PortfolioModule {}

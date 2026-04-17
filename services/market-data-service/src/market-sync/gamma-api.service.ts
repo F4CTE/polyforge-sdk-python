@@ -35,7 +35,7 @@ interface GammaMarket {
   clobTokenIds?: string; // JSON array string
   outcomes?: string; // JSON array string
   outcomePrices?: string; // JSON array string
-  events?: Array<{ slug?: string }>;
+  events?: Array<{ id?: string; slug?: string }>;
 }
 
 interface GammaEvent {
@@ -151,9 +151,8 @@ export class GammaApiService implements OnModuleInit {
   @Interval(SYNC_INTERVAL_MS)
   async syncMarkets() {
     try {
+      await this.syncEvents();
       await this.syncAllMarkets();
-      // TODO(2026-Q2): Enable once Event model is added to Prisma schema
-      // await this.syncEvents();
     } catch (err) {
       this.logger.error("Failed to sync markets from Gamma API", err);
     }
@@ -199,9 +198,23 @@ export class GammaApiService implements OnModuleInit {
     this.logger.log(`Synced ${totalSynced} markets from Gamma API`);
   }
 
-  // TODO(2026-Q2): Enable syncEvents once Event model is added to Prisma schema
-  // Placeholder for syncing events grouped by category/series
-  // async syncEvents(): Promise<void> { ... }
+  /**
+   * Sync events from the Gamma API and upsert them into the database.
+   * Events group related markets (e.g. "2024 Election" → multiple markets).
+   */
+  async syncEvents(): Promise<void> {
+    try {
+      const events = await this.fetchEvents();
+      for (const event of events) {
+        await this.upsertEvent(event);
+      }
+      this.logger.log(`Synced ${events.length} events from Gamma API`);
+    } catch (err) {
+      this.logger.warn(
+        `Event sync failed (non-fatal): ${(err as Error).message}`,
+      );
+    }
+  }
 
   // ─── Private ─────────────────────────────────────────────────────────────
 
@@ -222,10 +235,40 @@ export class GammaApiService implements OnModuleInit {
     return arr as GammaMarket[];
   }
 
-  // TODO(2026-Q2): Enable fetchEvents + upsertEvent once Event model is added to Prisma schema
-  // These methods will fetch events from Gamma API and upsert them into the database
-  // private async fetchEvents(): Promise<GammaEvent[]> { ... }
-  // private async upsertEvent(event: GammaEvent) { ... }
+  private async fetchEvents(): Promise<GammaEvent[]> {
+    await GAMMA_LIMITER.acquire();
+    const res = await fetch(
+      `${this.gammaUrl}/events?closed=false&limit=200&offset=0`,
+      { signal: AbortSignal.timeout(10_000) },
+    );
+
+    if (!res.ok) throw new Error(`Gamma events API returned ${res.status}`);
+
+    const body = (await res.json()) as { data?: unknown[] } | unknown[];
+    const arr = Array.isArray(body)
+      ? body
+      : ((body as { data?: unknown[] }).data ?? []);
+    return arr as GammaEvent[];
+  }
+
+  private async upsertEvent(event: GammaEvent): Promise<void> {
+    await this.prisma.event.upsert({
+      where: { slug: event.slug },
+      create: {
+        id: event.id,
+        slug: event.slug,
+        title: event.title,
+        description: event.description ?? null,
+        startDate: event.startDate ? new Date(event.startDate) : null,
+        endDate: event.endDate ? new Date(event.endDate) : null,
+      },
+      update: {
+        title: event.title,
+        description: event.description ?? undefined,
+        endDate: event.endDate ? new Date(event.endDate) : undefined,
+      },
+    });
+  }
 
   /**
    * Parse tokens from either mock format (tokens[]) or real Polymarket format
@@ -269,6 +312,9 @@ export class GammaApiService implements OnModuleInit {
         ? market.volume24hr
         : 0;
 
+    // Resolve the eventId from the embedded event reference if present
+    const eventId = market.events?.[0]?.id ?? null;
+
     // Upsert the market record
     await this.prisma.market.upsert({
       where: { id: market.id },
@@ -280,6 +326,7 @@ export class GammaApiService implements OnModuleInit {
         category,
         image: market.image ?? null,
         seriesSlug: eventSlug,
+        eventId,
         endDate: market.endDate ? new Date(market.endDate) : undefined,
         closed: market.closed,
         negRisk: market.negRisk ?? false,
@@ -291,6 +338,7 @@ export class GammaApiService implements OnModuleInit {
         closed: market.closed,
         image: market.image ?? undefined,
         volume24h: volume,
+        eventId: eventId ?? undefined,
         lastUpdatedAt: new Date(),
       },
     });

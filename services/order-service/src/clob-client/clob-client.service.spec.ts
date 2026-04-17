@@ -297,4 +297,129 @@ describe("ClobClientService", () => {
       expect(fetchSpy.mock.calls[0][0]).toContain("mock-polymarket");
     });
   });
+
+  // ── 429 retry / backoff ───────────────────────────────────────────────────
+
+  describe("429 retry behaviour", () => {
+    beforeEach(() => {
+      vi.useFakeTimers();
+    });
+
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it("retries submitOrder on 429 and succeeds on next attempt", async () => {
+      fetchSpy
+        .mockResolvedValueOnce({
+          ok: false,
+          status: 429,
+          text: vi.fn().mockResolvedValue(""),
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: vi
+            .fn()
+            .mockResolvedValue({ orderID: "retry-ok", status: "LIVE" }),
+        });
+
+      const promise = svc.submitOrder(SUBMIT_REQ);
+      // Advance past first retry delay (500ms)
+      await vi.advanceTimersByTimeAsync(600);
+      const result = await promise;
+
+      expect(fetchSpy).toHaveBeenCalledTimes(2);
+      expect(result.orderID).toBe("retry-ok");
+    });
+
+    it("retries up to 3 times before throwing on repeated 429", async () => {
+      fetchSpy.mockResolvedValue({
+        ok: false,
+        status: 429,
+        text: vi.fn().mockResolvedValue("rate limited"),
+      });
+
+      const promise = svc.submitOrder(SUBMIT_REQ);
+      // Attach rejects assertion before advancing timers to avoid unhandled rejection
+      const assertion = expect(promise).rejects.toThrow("429");
+      // Advance past all three retry delays (500 + 1000 + 2000 = 3500ms)
+      await vi.advanceTimersByTimeAsync(4000);
+      await assertion;
+
+      // Called: initial + 3 retries = 4 times (index 0,1,2 trigger retries; index 3 exhausts)
+      expect(fetchSpy).toHaveBeenCalledTimes(4);
+    });
+
+    it("does NOT retry on 500 — propagates immediately", async () => {
+      fetchSpy.mockResolvedValue({
+        ok: false,
+        status: 500,
+        text: vi.fn().mockResolvedValue("server error"),
+      });
+
+      await expect(svc.submitOrder(SUBMIT_REQ)).rejects.toThrow("500");
+      expect(fetchSpy).toHaveBeenCalledTimes(1);
+    });
+
+    it("does NOT retry on 400 — propagates immediately", async () => {
+      fetchSpy.mockResolvedValue({
+        ok: false,
+        status: 400,
+        text: vi.fn().mockResolvedValue("bad request"),
+      });
+
+      await expect(svc.submitOrder(SUBMIT_REQ)).rejects.toThrow("400");
+      expect(fetchSpy).toHaveBeenCalledTimes(1);
+    });
+
+    it("retries cancelOrder on 429", async () => {
+      fetchSpy
+        .mockResolvedValueOnce({
+          ok: false,
+          status: 429,
+          text: vi.fn().mockResolvedValue(""),
+        })
+        .mockResolvedValueOnce({ ok: true });
+
+      const promise = svc.cancelOrder("order-abc", "key");
+      await vi.advanceTimersByTimeAsync(600);
+      await expect(promise).resolves.toBeUndefined();
+      expect(fetchSpy).toHaveBeenCalledTimes(2);
+    });
+
+    it("retries cancelAll on 429", async () => {
+      fetchSpy
+        .mockResolvedValueOnce({
+          ok: false,
+          status: 429,
+          text: vi.fn().mockResolvedValue(""),
+        })
+        .mockResolvedValueOnce({ ok: true });
+
+      const promise = svc.cancelAll("key");
+      await vi.advanceTimersByTimeAsync(600);
+      await expect(promise).resolves.toBeUndefined();
+      expect(fetchSpy).toHaveBeenCalledTimes(2);
+    });
+
+    it("retries fetchTrades on 429 and returns result", async () => {
+      const trades = [{ id: "t1" }];
+      fetchSpy
+        .mockResolvedValueOnce({
+          ok: false,
+          status: 429,
+          text: vi.fn().mockResolvedValue(""),
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: vi.fn().mockResolvedValue(trades),
+        });
+
+      const promise = svc.fetchTrades("0xwallet");
+      await vi.advanceTimersByTimeAsync(600);
+      const result = await promise;
+      expect(result).toEqual(trades);
+      expect(fetchSpy).toHaveBeenCalledTimes(2);
+    });
+  });
 });

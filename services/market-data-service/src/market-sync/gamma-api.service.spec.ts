@@ -381,4 +381,166 @@ describe("GammaApiService", () => {
       expect(tokenCall.update.liquidity).toBe(10000);
     });
   });
+
+  // ── syncEvents ────────────────────────────────────────────────────────────
+
+  describe("syncEvents()", () => {
+    function makeGammaEvent(overrides: Record<string, unknown> = {}) {
+      return {
+        id: "event-1",
+        slug: "2024-election",
+        title: "2024 US Election",
+        description: "Who will win the 2024 US election?",
+        startDate: "2024-01-01T00:00:00Z",
+        endDate: "2024-11-05T23:59:59Z",
+        markets: ["market-1", "market-2"],
+        ...overrides,
+      };
+    }
+
+    it("upserts events fetched from Gamma API", async () => {
+      globalThis.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve([makeGammaEvent()]),
+      });
+
+      await svc.syncEvents();
+
+      expect(prisma.event.upsert).toHaveBeenCalledTimes(1);
+    });
+
+    it("upserts event with correct create payload", async () => {
+      globalThis.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve([makeGammaEvent()]),
+      });
+
+      await svc.syncEvents();
+
+      const call = prisma.event.upsert.mock.calls[0][0];
+      expect(call.where).toEqual({ slug: "2024-election" });
+      expect(call.create.id).toBe("event-1");
+      expect(call.create.title).toBe("2024 US Election");
+      expect(call.create.startDate).toEqual(new Date("2024-01-01T00:00:00Z"));
+      expect(call.create.endDate).toEqual(new Date("2024-11-05T23:59:59Z"));
+    });
+
+    it("upserts event with correct update payload", async () => {
+      globalThis.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: () =>
+          Promise.resolve([makeGammaEvent({ title: "Updated Title" })]),
+      });
+
+      await svc.syncEvents();
+
+      const call = prisma.event.upsert.mock.calls[0][0];
+      expect(call.update.title).toBe("Updated Title");
+    });
+
+    it("handles event with no dates", async () => {
+      globalThis.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: () =>
+          Promise.resolve([
+            makeGammaEvent({ startDate: undefined, endDate: undefined }),
+          ]),
+      });
+
+      await svc.syncEvents();
+
+      const call = prisma.event.upsert.mock.calls[0][0];
+      expect(call.create.startDate).toBeNull();
+      expect(call.create.endDate).toBeNull();
+    });
+
+    it("handles multiple events in one sync pass", async () => {
+      globalThis.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: () =>
+          Promise.resolve([
+            makeGammaEvent(),
+            makeGammaEvent({
+              id: "event-2",
+              slug: "nba-finals-2024",
+              title: "NBA Finals 2024",
+            }),
+          ]),
+      });
+
+      await svc.syncEvents();
+
+      expect(prisma.event.upsert).toHaveBeenCalledTimes(2);
+    });
+
+    it("handles empty events response gracefully", async () => {
+      globalThis.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve([]),
+      });
+
+      await svc.syncEvents();
+
+      expect(prisma.event.upsert).not.toHaveBeenCalled();
+    });
+
+    it("does not throw when events API returns non-ok status", async () => {
+      globalThis.fetch = vi.fn().mockResolvedValue({
+        ok: false,
+        status: 503,
+      });
+
+      await expect(svc.syncEvents()).resolves.toBeUndefined();
+    });
+
+    it("does not throw when events API fetch rejects", async () => {
+      globalThis.fetch = vi.fn().mockRejectedValue(new Error("network error"));
+
+      await expect(svc.syncEvents()).resolves.toBeUndefined();
+    });
+
+    it("syncMarkets() calls syncEvents before syncAllMarkets", async () => {
+      const syncEventsSpy = vi.spyOn(svc, "syncEvents").mockResolvedValue();
+      const syncAllMarketsSpy = vi
+        .spyOn(svc, "syncAllMarkets")
+        .mockResolvedValue();
+
+      await svc.syncMarkets();
+
+      expect(syncEventsSpy).toHaveBeenCalled();
+      expect(syncAllMarketsSpy).toHaveBeenCalled();
+    });
+  });
+
+  // ── eventId propagation ───────────────────────────────────────────────────
+
+  describe("market eventId propagation", () => {
+    it("sets eventId on market create when event reference present", async () => {
+      const market = makeGammaMarket({
+        events: [{ id: "evt-abc", slug: "some-event" }],
+      });
+      globalThis.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve({ data: [market] }),
+      });
+
+      await svc.syncAllMarkets();
+
+      const call = prisma.market.upsert.mock.calls[0][0];
+      expect(call.create.eventId).toBe("evt-abc");
+    });
+
+    it("leaves eventId null when no event reference", async () => {
+      const market = makeGammaMarket({ events: undefined });
+      globalThis.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve({ data: [market] }),
+      });
+
+      await svc.syncAllMarkets();
+
+      const call = prisma.market.upsert.mock.calls[0][0];
+      expect(call.create.eventId).toBeNull();
+    });
+  });
 });
