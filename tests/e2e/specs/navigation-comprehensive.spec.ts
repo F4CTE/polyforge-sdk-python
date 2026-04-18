@@ -22,7 +22,7 @@ import {
  * Sidebar is organized into collapsible sections:
  *   Trade: Markets, Strategies, Portfolio, Orders, Backtest, Copy Trading, etc.
  *   Analytics: Accuracy, Analytics, etc.
- *   Social: Discover, News, Whales, Leaderboard
+ *   Social: Discover, News, Whale Tracker, Leaderboard
  *   Developers: API Docs
  *   Help: Support
  */
@@ -79,7 +79,7 @@ test.describe('Navigation — Full Workflow Coverage', () => {
     test('sidebar Social section items are visible', async ({ page }) => {
         const sidebar = page.locator('[aria-label="Main navigation"], nav').first();
 
-        const socialItems = ['News', 'Whales', 'Leaderboard'];
+        const socialItems = ['News', 'Whale Tracker', 'Leaderboard'];
 
         for (const item of socialItems) {
             const navItem = sidebar.locator('a, button', { hasText: new RegExp(item, 'i') });
@@ -147,9 +147,9 @@ test.describe('Navigation — Full Workflow Coverage', () => {
         await expect(page).toHaveURL(/\/news/);
     });
 
-    test('click Whales nav item navigates to /whales', async ({ page }) => {
+    test('click Whale Tracker nav item navigates to /whales', async ({ page }) => {
         const sidebar = page.locator('[aria-label="Main navigation"], nav').first();
-        const whaleLink = sidebar.locator('a', { hasText: /^Whales$/i });
+        const whaleLink = sidebar.locator('a', { hasText: /^Whale Tracker$/i });
         await whaleLink.click();
         await expect(page).toHaveURL(/\/whales/);
     });
