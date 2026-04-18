@@ -1,11 +1,11 @@
-<!-- Last reviewed: 2026-04-15 -->
+<!-- Last reviewed: 2026-04-18 -->
 
 # PolyForge Terms of Service
 
 **Effective Date:** April 15, 2026
-**Last Updated:** April 15, 2026
-**Company:** PolyForge Labs SAS — registered in France (SIREN: *[TO BE FILED]*)
-**Registered Office:** *[Address — France — to be completed upon registration]*
+**Last Updated:** April 18, 2026
+**Operator:** Shems Chelgoui, trading as PolyForge Labs — *entrepreneur individuel* under the French *micro-entreprise* (auto-entrepreneur) regime (SIRET: *[TO BE ASSIGNED]*)
+**Professional Address:** *[Address, City, Postal Code — France — to be completed upon registration]*
 
 > **IMPORTANT RISK NOTICE:** Trading on prediction markets involves significant risk of loss. Past performance of any strategy — including backtested or simulated results — does not guarantee future results. PolyForge is a software automation tool, not a broker, exchange, financial adviser, or investment manager. You are solely responsible for your trading decisions and any losses that result from them.
 
@@ -43,7 +43,7 @@
 
 ## 1. Agreement to Terms
 
-These Terms of Service ("Terms") constitute a legally binding agreement between you ("User," "you," or "your") and **PolyForge Labs SAS**, a *société par actions simplifiée* incorporated under French law and registered in France ("PolyForge," "we," "us," or "our"), governing your access to and use of the PolyForge platform, website, APIs, and all associated software tools and services (collectively, the "Service").
+These Terms of Service ("Terms") constitute a legally binding agreement between you ("User," "you," or "your") and **Shems Chelgoui, trading as PolyForge Labs**, an *entrepreneur individuel* operating under the French *micro-entreprise* (auto-entrepreneur) regime ("PolyForge," "we," "us," or "our"), governing your access to and use of the PolyForge platform, website, APIs, and all associated software tools and services (collectively, the "Service").
 
 **By accessing or using the Service in any way, you affirm that:**
 
@@ -155,7 +155,7 @@ You are not: (a) identified on any list of prohibited or restricted parties main
 - Thailand
 - Poland
 
-> **Note on France:** PolyForge Labs SAS is incorporated in France. However, PolyForge's incorporation in France does not constitute an offer or availability of the Service to French residents. The Service is not directed at persons resident in France. Polymarket — the underlying third-party platform — is geo-restricted in France by regulatory requirement. Accordingly, French residents are prohibited from using the Service's live trading features. PolyForge's French legal domicile is a corporate and tax matter only and confers no right of access on French residents.
+> **Note on France:** PolyForge Labs is operated by an auto-entrepreneur domiciled in France. However, PolyForge's French domicile does not constitute an offer or availability of the Service to French residents. The Service is not directed at persons resident in France. Polymarket — the underlying third-party platform — is geo-restricted in France by regulatory requirement. Accordingly, French residents are prohibited from using the Service's live trading features. PolyForge's French domicile is a fiscal and administrative matter only and confers no right of access on French residents.
 
 ### 4.3 Sub-National Restrictions
 
@@ -279,7 +279,7 @@ By connecting third-party credentials to PolyForge, you grant PolyForge a limite
 
 ### 9.1 PolyForge IP
 
-The Service, including all software, technology, algorithms, interfaces, designs, trademarks, logos, and all content not provided by users ("PolyForge IP"), is the exclusive property of PolyForge, Inc. and its licensors. PolyForge IP is protected by applicable intellectual property laws.
+The Service, including all software, technology, algorithms, interfaces, designs, trademarks, logos, and all content not provided by users ("PolyForge IP"), is the exclusive property of Shems Chelgoui, trading as PolyForge Labs, and its licensors. PolyForge IP is protected by applicable intellectual property laws.
 
 These Terms do not grant you any ownership rights in the Service. Subject to your compliance with these Terms, PolyForge grants you a limited, non-exclusive, non-transferable, non-sublicensable, revocable license to access and use the Service for your own personal or internal business purposes.
 
@@ -415,7 +415,7 @@ Some jurisdictions do not allow the exclusion of implied warranties, so some of 
 
 ### 15.1 Exclusion of Consequential Damages
 
-**TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, IN NO EVENT SHALL POLYFORGE, ITS OFFICERS, DIRECTORS, EMPLOYEES, AGENTS, AFFILIATES, LICENSORS, OR SERVICE PROVIDERS BE LIABLE FOR ANY:**
+**TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, IN NO EVENT SHALL POLYFORGE, ITS CONTRACTORS, AFFILIATES, LICENSORS, OR SERVICE PROVIDERS BE LIABLE FOR ANY:**
 
 - **INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, PUNITIVE, OR EXEMPLARY DAMAGES;**
 - **LOSS OF PROFITS, REVENUE, DATA, GOODWILL, OPPORTUNITIES, OR ANTICIPATED SAVINGS;**
@@ -444,7 +444,7 @@ Nothing in these Terms limits PolyForge's liability for: (a) death or personal i
 
 ## 16. Indemnification
 
-You agree to indemnify, defend, and hold harmless PolyForge, its affiliates, officers, directors, employees, agents, licensors, and service providers from and against any claims, liabilities, damages, judgments, awards, losses, costs, or expenses (including reasonable attorneys' fees) arising out of or relating to:
+You agree to indemnify, defend, and hold harmless PolyForge, its contractors, affiliates, licensors, and service providers from and against any claims, liabilities, damages, judgments, awards, losses, costs, or expenses (including reasonable attorneys' fees) arising out of or relating to:
 
 - Your use of the Service in violation of these Terms;
 - Your violation of any applicable law, regulation, or third-party rights (including Polymarket's terms);
@@ -499,39 +499,35 @@ Upon account termination, PolyForge will delete or anonymize your personal data 
 
 Before initiating any formal dispute proceeding, you agree to contact PolyForge at legal@polyforge.app and describe your dispute in detail. PolyForge will attempt to resolve the dispute informally within 30 days. If the dispute is not resolved within 30 days, either party may proceed to arbitration as described below.
 
-### 18.2 Binding Arbitration
+### 18.2 Mandatory Mediation
 
-**Except for the limited exceptions in Sections 18.5 and 18.6, you and PolyForge agree that any dispute, claim, or controversy arising out of or relating to these Terms, the Service, or your trading activity (including questions of arbitrability) shall be resolved exclusively through final, binding arbitration** administered by the **International Chamber of Commerce (ICC)** pursuant to the ICC Rules of Arbitration in force at the time the arbitration is commenced. The arbitration shall be conducted:
+**Except for the limited exceptions in Section 18.5, you and PolyForge agree that any dispute, claim, or controversy arising out of or relating to these Terms, the Service, or your trading activity shall first be submitted to mediation** administered by the **Centre de Médiation et d'Arbitrage de Paris (CMAP)** pursuant to its mediation rules in force at the time the mediation is commenced. The mediation shall be conducted:
 
 - **In English** (or, if both parties agree, in French and English jointly);
-- **Seated in Paris, France;**
-- **Before a single arbitrator** (unless the claim exceeds EUR 1,000,000 or the complexity of the dispute warrants a panel, in which case three arbitrators shall be appointed per ICC Rules).
+- **In Paris, France;**
+- **Before a single mediator** selected in accordance with CMAP rules.
 
-The award shall be final and binding and may be enforced in any court of competent jurisdiction under the New York Convention on the Recognition and Enforcement of Foreign Arbitral Awards (1958).
+The mediation shall conclude within 60 days of the appointment of the mediator, unless both parties agree to extend this period.
 
-### 18.3 Arbitration Costs
+### 18.3 Mediation Costs
 
-ICC filing, administration, and arbitrator fees shall be allocated in accordance with the applicable ICC Rules. Notwithstanding the ICC Rules:
+CMAP mediation filing and mediator fees shall be split equally between the parties. For claims you initiate of EUR 5,000 or less, PolyForge will advance all mediation fees regardless of outcome.
 
-- For claims you initiate of EUR 10,000 or less, PolyForge will advance all ICC fees regardless of outcome;
-- For claims between EUR 10,000 and EUR 75,000, ICC fees shall be split equally between the parties.
-- The arbitrator may reallocate costs in the final award.
+### 18.4 Court Proceedings After Mediation
 
-### 18.4 Arbitration Opt-Out
+If the dispute is not resolved through mediation within the time period set out in Section 18.2, either party may bring the dispute before the competent French courts as set out in Section 20.
 
-You may opt out of the agreement to arbitrate by notifying PolyForge in writing at legal@polyforge.app within **30 days of first accepting these Terms**. Your opt-out notice must include your name, address, account email, and a clear statement that you are opting out of arbitration. Opting out does not affect any other provision of these Terms.
+### 18.5 Exceptions to Mediation
 
-### 18.5 Exceptions to Arbitration
+The following disputes are excluded from the mandatory mediation requirement and may be brought directly before a court of competent jurisdiction:
 
-The following disputes are excluded from the arbitration requirement and may be brought in a court of competent jurisdiction:
-
-- Disputes regarding the validity, scope, or enforceability of Section 19 (Class Action Waiver) — which must be determined by a court;
-- Claims for injunctive or other equitable relief (including interim measures under Article 28 of the ICC Rules) to prevent unauthorized use of intellectual property or to protect the security of the Service;
-- Emergency applications to a court for provisional relief pending constitution of an arbitral tribunal.
+- Claims for injunctive or other equitable relief to prevent unauthorized use of intellectual property or to protect the security of the Service;
+- Emergency applications for provisional measures (*référé*) where urgency precludes mediation;
+- Disputes regarding the validity, scope, or enforceability of Section 19 (Class Action Waiver) — which must be determined by a court.
 
 ### 18.6 EU Consumer Exception
 
-**If you are a consumer (as defined under applicable EU law) habitually resident in an EU Member State where mandatory consumer protection laws prohibit or restrict pre-dispute mandatory arbitration, the mandatory arbitration clause in Section 18.2 does not apply to you.** In such case, any dispute may be brought before the courts of your place of habitual residence or, alternatively, the courts of Paris, France, at your election. PolyForge will not oppose jurisdiction in your place of habitual residence for claims brought by qualifying EU consumers.
+**If you are a consumer (as defined under applicable EU law) habitually resident in an EU Member State, you are not required to participate in mediation under Section 18.2 before bringing a claim.** You may bring any dispute before the courts of your place of habitual residence or, alternatively, the courts of Paris, France, at your election. PolyForge will not oppose jurisdiction in your place of habitual residence for claims brought by qualifying EU consumers.
 
 Nothing in these Terms prevents you from bringing a complaint to the relevant national consumer protection authority or alternative dispute resolution body in your country of residence.
 
@@ -566,7 +562,7 @@ Notwithstanding the choice of French law above, if you are a consumer habitually
 
 ### 20.3 Future Change of Domicile
 
-PolyForge is currently incorporated in France. If PolyForge re-domiciles to another jurisdiction, we will provide at least 90 days' advance notice and the governing law provision will be updated accordingly. The updated governing law will apply to disputes arising from events that occur after the effective date of re-domiciliation only; prior disputes remain subject to French law.
+PolyForge is currently registered in France as a micro-entreprise. If PolyForge re-domiciles to another jurisdiction or changes legal form (for example, by incorporating as a SAS or SASU), we will provide at least 90 days' advance notice and the governing law provision will be updated accordingly. The updated governing law will apply to disputes arising from events that occur after the effective date of re-domiciliation only; prior disputes remain subject to French law.
 
 ---
 
@@ -649,10 +645,10 @@ Section headings are for convenience only and do not affect the interpretation o
 
 ## 25. Contact Information
 
-**PolyForge Labs SAS**
-*Société par Actions Simplifiée — registered in France*
-SIREN: *[TO BE FILED]*
-Registered Office: *[Address, City, Postal Code — France — to be completed upon registration]*
+**Shems Chelgoui, trading as PolyForge Labs**
+*Entrepreneur individuel — micro-entreprise (auto-entrepreneur) registered in France*
+SIRET: *[TO BE ASSIGNED]*
+Professional Address: *[Address, City, Postal Code — France — to be completed upon registration]*
 
 For legal and compliance matters:
 **Email:** legal@polyforge.app
@@ -665,7 +661,7 @@ For security issues and vulnerability disclosure:
 
 For privacy, GDPR data subject requests, and CNIL-related matters:
 **Email:** privacy@polyforge.app
-**DPO:** *[Data Protection Officer name — to be appointed if legally required under GDPR Art. 37]*
+**DPO:** Not required under GDPR Art. 37 for micro-entreprise scale operations. PolyForge will appoint a DPO if processing activities reach the thresholds defined in Art. 37(1). In the meantime, privacy inquiries are handled directly by the operator at the address above.
 
 For AMF / regulatory compliance inquiries:
 **Email:** compliance@polyforge.app
@@ -674,18 +670,19 @@ For AMF / regulatory compliance inquiries:
 
 ---
 
-*PolyForge Labs SAS is a software company incorporated in France that provides strategy automation tools for prediction markets. By using PolyForge, you acknowledge that you have read, understood, and agree to be bound by these Terms of Service.*
+*PolyForge Labs is operated by Shems Chelgoui as an auto-entrepreneur registered in France. PolyForge provides strategy automation tools for prediction markets. By using PolyForge, you acknowledge that you have read, understood, and agree to be bound by these Terms of Service.*
 
 ---
 
-> **Compliance Note (Internal):** This ToS was drafted 2026-04-15 and revised (governing law → France) on 2026-04-15 following founder confirmation of French incorporation. Material items to track before publication:
+> **Compliance Note (Internal):** This ToS was drafted 2026-04-15, revised for French governing law on 2026-04-15, and updated for auto-entrepreneur status on 2026-04-18 following founder confirmation. Material items to track before publication:
 >
 > **France / EU:**
-> - [ ] File SAS with INPI / Greffe du Tribunal de Commerce — obtain SIREN and fill placeholders in §1 and §25
-> - [ ] Complete registered office address in §25 and document header
-> - [ ] Determine if a DPO appointment is legally required (GDPR Art. 37) — fill placeholder in §25
+> - [ ] Register auto-entrepreneur via guichet-entreprises.fr / INPI portal — obtain SIRET and fill placeholders in §1 and §25
+> - [ ] Complete professional address in §25 and document header
+> - [x] DPO assessment: not required at micro-entreprise scale (GDPR Art. 37) — documented in §25. Reassess if processing activities grow to large-scale
 > - [ ] File CNIL registration / Records of Processing Activities (GDPR Art. 30)
 > - [ ] Assess AMF / MiCA exposure before 1 July 2026 MiCA transitional deadline — if PolyForge is deemed a crypto-asset service provider under MiCA, registration with the AMF may be required
+> - [ ] Prepare for mandatory e-invoicing reception by 1 September 2026 (all micro-entreprises must accept electronic invoices via approved platform)
 > - [x] `legal@polyforge.app` confirmed active (2026-04-15)
 > - [x] `support@polyforge.app` confirmed active (2026-04-15)
 > - [x] `security@polyforge.app` confirmed active (2026-04-15)
@@ -698,4 +695,4 @@ For AMF / regulatory compliance inquiries:
 > - [ ] State-level actions (Nevada, Tennessee 2026) — monitor for expansion to tooling providers
 > - [ ] OFAC sanctions list — review quarterly; update §4.1 as needed
 >
-> **Re-domiciliation:** If the company moves to another jurisdiction, follow §20.3 process: 90-day notice, update §20 governing law, confirm whether §18 arbitration seat should also move.
+> **Change of legal form / re-domiciliation:** If the operator transitions from auto-entrepreneur to SAS/SASU or moves to another jurisdiction, follow §20.3 process: 90-day notice, update §20 governing law, update entity references in §1 and §25, and reassess whether formal arbitration (e.g. ICC) should replace the current mediation-first approach.
