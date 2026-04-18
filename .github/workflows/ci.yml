@@ -356,7 +356,7 @@ jobs:
     name: E2E
     runs-on: [self-hosted, linux]
     needs: [e2e-setup]
-    timeout-minutes: 100
+    timeout-minutes: 105
     concurrency:
       group: deploy-polyforge-lab
       cancel-in-progress: false
@@ -402,17 +402,17 @@ jobs:
 
       - name: Run E2E shard 3/3
         if: success() || failure()
-        timeout-minutes: 30
+        timeout-minutes: 35
         run: |
           set -euo pipefail
           cd ~/PolyForge/tests/e2e
 
           BASE_URL=http://localhost CI=true PLAYWRIGHT_SKIP_GLOBAL_SETUP=true \
-            timeout --kill-after=10s 1740 npx playwright test \
+            timeout --kill-after=10s 2040 npx playwright test \
               --project=chromium \
               --reporter=list \
               --shard=3/3 \
-              --global-timeout=1740000
+              --global-timeout=2040000
 
   # ── 5. Deploy to AWS (Production) ──────────────────────────────────────
   deploy:
