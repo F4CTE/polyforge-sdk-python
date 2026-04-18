@@ -33,6 +33,7 @@ import {
   Users,
   Library,
   GitMerge,
+  Activity,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
@@ -59,6 +60,7 @@ const navSections: NavSection[] = [
       { label: 'Notifications', icon: Bell, route: '/notifications' },
       { label: 'Alerts', icon: BellRing, route: '/alerts' },
       { label: 'Smart Orders', icon: Layers, route: '/orders/smart' },
+      { label: 'Activity', icon: Activity, route: '/activity' },
     ],
   },
   {

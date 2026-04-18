@@ -352,6 +352,10 @@ export function Component() {
   const [lpSubmitting, setLpSubmitting] = useState(false);
   const [lpError, setLpError] = useState('');
 
+  // Tick size & fee state
+  const [tickSize, setTickSize] = useState<number | null>(null);
+  const [feeRate, setFeeRate] = useState<number>(0.02);
+
   // Community Sentiment state
   const [sentiment, setSentiment] = useState<SentimentData | null>(null);
   const [loadingSentiment, setLoadingSentiment] = useState(true);
@@ -423,7 +427,15 @@ export function Component() {
       .catch(() => { toast.error('Failed to load order book'); setLoadingBook(false); });
   }, []);
 
-  // When market loads, fetch chart + book
+  // Load tick size for a token
+  const loadTickSize = useCallback((tokenId: string) => {
+    fetch(`/api/v1/markets/${tokenId}/tick-size`, { credentials: 'include' })
+      .then(r => r.ok ? r.json() : null)
+      .then(data => { if (data?.tickSize != null) setTickSize(Number(data.tickSize)); })
+      .catch(() => {});
+  }, []);
+
+  // When market loads, fetch chart + book + tick size
   useEffect(() => {
     if (!market) return;
     let cancelled = false;
@@ -431,9 +443,10 @@ export function Component() {
     if (yesToken) {
       loadChart(yesToken.id, resolution);
       loadBook(yesToken.id);
+      loadTickSize(yesToken.id);
     }
     return () => { cancelled = true; };
-  }, [market, resolution, loadChart, loadBook]);
+  }, [market, resolution, loadChart, loadBook, loadTickSize]);
 
   // Auto-refresh order book every 30s
   useEffect(() => {
@@ -1609,9 +1622,27 @@ export function Component() {
                     <span className="font-mono text-primary">${estCost.toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between text-label">
+                    <span className="text-tertiary">Est. Fee ({(feeRate * 100).toFixed(0)}%)</span>
+                    <span className="font-mono text-secondary">${(estCost * feeRate).toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between text-label border-t border-subtle pt-1">
+                    <span className="text-tertiary">Total Cost</span>
+                    <span className="font-mono text-primary">${(estCost * (1 + feeRate)).toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between text-label">
                     <span className="text-tertiary">Potential Payout</span>
                     <span className="font-mono text-gain">${estPayout.toFixed(2)}</span>
                   </div>
+                </div>
+              )}
+
+              {/* Tick size info */}
+              {tickSize !== null && (
+                <div className="mt-2 flex items-center gap-2 text-caption text-tertiary">
+                  <span>Tick size: <span className="font-mono text-secondary">{tickSize}</span></span>
+                  {!isMarketOrder && tradePrice && (parseFloat(tradePrice) * 100) % (tickSize * 100) !== 0 && (
+                    <span className="text-loss text-caption">Price must be a multiple of {tickSize}</span>
+                  )}
                 </div>
               )}
 

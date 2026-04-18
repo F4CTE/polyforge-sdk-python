@@ -23,6 +23,7 @@ import {
   X,
   ArrowUpDown,
   Star,
+  Gift,
 } from 'lucide-react';
 import { OnboardingDashboardChecklist } from '../../components/onboarding/onboarding-dashboard-checklist';
 
@@ -249,6 +250,7 @@ const MarketCard = memo(function MarketCard({
   isWatchLoading,
   onToggleWatch,
   sentiment,
+  hasRewards,
 }: {
   market: Market;
   featured?: boolean;
@@ -256,6 +258,7 @@ const MarketCard = memo(function MarketCard({
   isWatchLoading: boolean;
   onToggleWatch: (marketId: string, e: React.MouseEvent) => void;
   sentiment?: MarketSentiment;
+  hasRewards?: boolean;
 }) {
   const catColor = CATEGORY_COLORS[market.category];
 
@@ -284,6 +287,15 @@ const MarketCard = memo(function MarketCard({
             <span className={isClosingSoon(market.endDate) ? 'text-warning' : ''}>
               {daysUntil(market.endDate)}
             </span>
+            {hasRewards && (
+              <>
+                <span>&middot;</span>
+                <span className="inline-flex items-center gap-1 text-gain" title="Active rewards">
+                  <Gift size={10} />
+                  <span className="text-caption font-medium">Rewards</span>
+                </span>
+              </>
+            )}
           </div>
         </div>
         <Button
@@ -912,6 +924,7 @@ export function Component() {
   const [trendingLoading, setTrendingLoading] = useState(true);
   const [showAdvancedSearch, setShowAdvancedSearch] = useState(false);
   const [advancedFilters, setAdvancedFilters] = useState<MarketSearchFilters>(DEFAULT_ADVANCED_FILTERS);
+  const [rewardsMarketIds, setRewardsMarketIds] = useState<Set<string>>(new Set());
 
   const searchTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -968,6 +981,17 @@ export function Component() {
       .then(r => r.ok ? r.json() : [])
       .then((items: Array<{ id: string }>) => {
         setWatchedIds(new Set(items.map((m: any) => m.id)));
+      })
+      .catch(() => {});
+  }, []);
+
+  // Fetch markets with active rewards once on mount
+  useEffect(() => {
+    fetch('/api/v1/rewards/markets', { credentials: 'include' })
+      .then(r => r.ok ? r.json() : [])
+      .then((items: Array<{ conditionId: string; marketId?: string }>) => {
+        const ids = new Set(items.map(i => i.marketId ?? i.conditionId));
+        setRewardsMarketIds(ids);
       })
       .catch(() => {});
   }, []);
@@ -1240,13 +1264,13 @@ export function Component() {
               {/* Featured */}
               {featured.length > 0 && (
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 stagger-children">
-                  {featured.map((m) => <MarketCard key={m.id} market={m} featured isWatched={watchedIds.has(m.id)} isWatchLoading={watchlistLoading.has(m.id)} onToggleWatch={toggleWatch} sentiment={sentimentMap.get(m.id)} />)}
+                  {featured.map((m) => <MarketCard key={m.id} market={m} featured isWatched={watchedIds.has(m.id)} isWatchLoading={watchlistLoading.has(m.id)} onToggleWatch={toggleWatch} sentiment={sentimentMap.get(m.id)} hasRewards={rewardsMarketIds.has(m.id)} />)}
                 </div>
               )}
               {/* Grid */}
               {grid.length > 0 && (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 stagger-children">
-                  {grid.map((m) => <MarketCard key={m.id} market={m} isWatched={watchedIds.has(m.id)} isWatchLoading={watchlistLoading.has(m.id)} onToggleWatch={toggleWatch} sentiment={sentimentMap.get(m.id)} />)}
+                  {grid.map((m) => <MarketCard key={m.id} market={m} isWatched={watchedIds.has(m.id)} isWatchLoading={watchlistLoading.has(m.id)} onToggleWatch={toggleWatch} sentiment={sentimentMap.get(m.id)} hasRewards={rewardsMarketIds.has(m.id)} />)}
                 </div>
               )}
             </>
@@ -1283,8 +1307,11 @@ export function Component() {
                     return (
                       <tr key={market.id} className="group hover:bg-elevated/50 transition-colors">
                         <td className="px-4 py-3">
-                          <Link to={`/markets/${market.id}`} className="text-primary hover:text-accent-text transition-colors line-clamp-1">
+                          <Link to={`/markets/${market.id}`} className="text-primary hover:text-accent-text transition-colors line-clamp-1 inline-flex items-center gap-1.5">
                             {market.title}
+                            {rewardsMarketIds.has(market.id) && (
+                              <Gift size={12} className="text-gain flex-shrink-0" aria-label="Active rewards" />
+                            )}
                           </Link>
                         </td>
                         <td className="px-4 py-3">
