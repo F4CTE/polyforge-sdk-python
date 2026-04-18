@@ -345,12 +345,13 @@ jobs:
           BASE_URL=http://localhost AUTH_URL=http://localhost:3001 MAILHOG_URL=http://localhost:8025 \
             CI=true npx tsx global-setup.ts
 
-  # ── 4b. E2E — single job, both shards sequential ────────────────────
-  # Runs both shards sequentially inside one job so that only ONE job
+  # ── 4b. E2E — single job, all shards sequential ─────────────────────
+  # Runs all shards sequentially inside one job so that only ONE job
   # occupies the deploy-polyforge-lab concurrency group. A matrix would
-  # create two jobs competing for the single pending slot, and a third
-  # entrant (e.g. another branch's deploy) would evict the oldest
+  # create multiple jobs competing for the single pending slot, and a
+  # new entrant (e.g. another branch's deploy) would evict the oldest
   # pending shard — see POLA-185 review feedback.
+  # Split to 3 shards (from 2) to keep each shard under 25 min — POLA-189.
   e2e:
     name: E2E
     runs-on: [self-hosted, linux]
@@ -360,38 +361,58 @@ jobs:
       group: deploy-polyforge-lab
       cancel-in-progress: false
     steps:
-      - name: Run E2E shard 1/2
-        timeout-minutes: 35
+      - name: Run E2E shard 1/3
+        timeout-minutes: 30
         run: |
           set -euo pipefail
           cd ~/PolyForge/tests/e2e
 
           BASE_URL=http://localhost CI=true PLAYWRIGHT_SKIP_GLOBAL_SETUP=true \
-            timeout --kill-after=10s 2040 npx playwright test \
+            timeout --kill-after=10s 1740 npx playwright test \
               --project=chromium \
               --reporter=list \
-              --shard=1/2 \
-              --global-timeout=2040000
+              --shard=1/3 \
+              --global-timeout=1740000
 
-      - name: Clean up stale browsers between shards
+      - name: Clean up browsers between shards 1→2
         if: success() || failure()
         run: |
           pkill -u f4cte -f 'chrome-headless-shell' 2>/dev/null || true
           sleep 2
 
-      - name: Run E2E shard 2/2
+      - name: Run E2E shard 2/3
         if: success() || failure()
-        timeout-minutes: 45
+        timeout-minutes: 30
         run: |
           set -euo pipefail
           cd ~/PolyForge/tests/e2e
 
           BASE_URL=http://localhost CI=true PLAYWRIGHT_SKIP_GLOBAL_SETUP=true \
-            timeout --kill-after=10s 2700 npx playwright test \
+            timeout --kill-after=10s 1740 npx playwright test \
               --project=chromium \
               --reporter=list \
-              --shard=2/2 \
-              --global-timeout=2700000
+              --shard=2/3 \
+              --global-timeout=1740000
+
+      - name: Clean up browsers between shards 2→3
+        if: success() || failure()
+        run: |
+          pkill -u f4cte -f 'chrome-headless-shell' 2>/dev/null || true
+          sleep 2
+
+      - name: Run E2E shard 3/3
+        if: success() || failure()
+        timeout-minutes: 30
+        run: |
+          set -euo pipefail
+          cd ~/PolyForge/tests/e2e
+
+          BASE_URL=http://localhost CI=true PLAYWRIGHT_SKIP_GLOBAL_SETUP=true \
+            timeout --kill-after=10s 1740 npx playwright test \
+              --project=chromium \
+              --reporter=list \
+              --shard=3/3 \
+              --global-timeout=1740000
 
   # ── 5. Deploy to AWS (Production) ──────────────────────────────────────
   deploy:
