@@ -39,7 +39,7 @@ function Tooltip({ children, content, side = "top", className }: TooltipProps) {
           "bg-elevated border border-default text-primary text-xs rounded-sm px-2 py-1 shadow-lg",
           "transition-all duration-micro",
           sideStyles[side],
-          visible ? "opacity-100 scale-100" : "opacity-0 scale-95",
+          visible ? "opacity-100 scale-100" : "opacity-0 scale-[0.97]",
           className
         )}
       >

@@ -3,6 +3,9 @@
 import * as React from "react";
 import { X } from "lucide-react";
 import { cn } from "../../lib/utils";
+import { useDelayedUnmount } from "../../lib/use-delayed-unmount";
+
+const DialogStateContext = React.createContext<"open" | "closed">("open");
 
 export interface DialogProps {
   open: boolean;
@@ -11,6 +14,8 @@ export interface DialogProps {
 }
 
 function Dialog({ open, onOpenChange, children }: DialogProps) {
+  const { mounted, visible } = useDelayedUnmount(open, 120);
+
   React.useEffect(() => {
     if (!open) return;
     function handleKey(e: KeyboardEvent) {
@@ -24,41 +29,50 @@ function Dialog({ open, onOpenChange, children }: DialogProps) {
     };
   }, [open, onOpenChange]);
 
-  if (!open) return null;
+  if (!mounted) return null;
+
+  const state = visible ? "open" : "closed";
 
   return (
-    <div
-      role="presentation"
-      className="fixed inset-0 z-50 flex items-center justify-center"
-    >
+    <DialogStateContext.Provider value={state}>
       <div
-        className="absolute inset-0 bg-backdrop backdrop-blur-sm"
-        aria-hidden="true"
-        onClick={() => onOpenChange(false)}
-      />
-      {children}
-    </div>
+        role="presentation"
+        className="fixed inset-0 z-50 flex items-center justify-center"
+      >
+        <div
+          data-state={state}
+          className="animate-backdrop absolute inset-0 bg-backdrop backdrop-blur-sm"
+          aria-hidden="true"
+          onClick={() => onOpenChange(false)}
+        />
+        {children}
+      </div>
+    </DialogStateContext.Provider>
   );
 }
 
 const DialogContent = React.forwardRef<
   HTMLDivElement,
   React.HTMLAttributes<HTMLDivElement>
->(({ className, children, ...props }, ref) => (
-  <div
-    ref={ref}
-    role="dialog"
-    aria-modal="true"
-    className={cn(
-      "relative z-10 w-full max-w-lg bg-elevated border border-default rounded-lg [box-shadow:var(--shadow-elevation-3)]",
-      "animate-scale-in",
-      className
-    )}
-    {...props}
-  >
-    {children}
-  </div>
-));
+>(({ className, children, ...props }, ref) => {
+  const state = React.useContext(DialogStateContext);
+  return (
+    <div
+      ref={ref}
+      role="dialog"
+      aria-modal="true"
+      data-state={state}
+      className={cn(
+        "relative z-10 w-full max-w-lg bg-elevated border border-default rounded-lg [box-shadow:var(--shadow-elevation-3)]",
+        "animate-dialog-content",
+        className
+      )}
+      {...props}
+    >
+      {children}
+    </div>
+  );
+});
 DialogContent.displayName = "DialogContent";
 
 interface DialogHeaderProps extends React.HTMLAttributes<HTMLDivElement> {

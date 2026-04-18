@@ -1,3 +1,7 @@
+"use client";
+
+import { useInViewAnimation } from "../hooks/use-in-view-animation";
+
 const SDK_LINKS = [
   { label: "TypeScript SDK", href: "/docs/sdk/typescript" },
   { label: "Python SDK", href: "/docs/sdk/python" },
@@ -6,6 +10,9 @@ const SDK_LINKS = [
 ] as const;
 
 export function DeveloperSection() {
+  const { ref: textRef, inView: textInView } = useInViewAnimation();
+  const { ref: codeRef, inView: codeInView } = useInViewAnimation({ threshold: 0.1 });
+
   return (
     <section
       className="py-20 sm:py-28 border-t border-subtle bg-surface"
@@ -13,7 +20,12 @@ export function DeveloperSection() {
     >
       <div className="max-w-container-landing mx-auto px-6">
         <div className="grid grid-cols-1 lg:grid-cols-2 items-center gap-12 lg:gap-20">
-          <div>
+          <div
+            ref={textRef}
+            className={`transition-all duration-600 ease-out ${
+              textInView ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-6"
+            }`}
+          >
             <p className="text-label font-medium text-accent-text uppercase tracking-wider mb-4">
               Developer API
             </p>
@@ -49,7 +61,11 @@ export function DeveloperSection() {
           </div>
 
           <div
-            className="bg-elevated border border-default rounded-lg overflow-hidden"
+            ref={codeRef}
+            style={{ transitionDelay: "80ms" }}
+            className={`bg-elevated border border-default rounded-lg overflow-hidden transition-all duration-600 ease-out ${
+              codeInView ? "opacity-100 translate-x-0" : "opacity-0 translate-x-6"
+            }`}
             aria-label="TypeScript SDK code example"
           >
             <div className="flex items-center gap-2 px-4 py-3 border-b border-subtle">

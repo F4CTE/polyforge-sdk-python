@@ -1,5 +1,6 @@
 import * as React from "react";
 import { cn } from "../../lib/utils";
+import { useDelayedUnmount } from "../../lib/use-delayed-unmount";
 
 // ─── Context ──────────────────────────────────────────────────────────────────
 
@@ -75,6 +76,7 @@ export interface DropdownMenuContentProps {
 
 function DropdownMenuContent({ children, className, align = "start" }: DropdownMenuContentProps) {
   const { open, setOpen, triggerRef } = useDropdownMenu();
+  const { mounted, visible } = useDelayedUnmount(open, 100);
   const contentRef = React.useRef<HTMLDivElement>(null);
 
   React.useEffect(() => {
@@ -120,15 +122,17 @@ function DropdownMenuContent({ children, className, align = "start" }: DropdownM
     };
   }, [open, setOpen, triggerRef]);
 
-  if (!open) return null;
+  if (!mounted) return null;
 
   return (
     <div
       ref={contentRef}
       role="menu"
+      data-state={visible ? "open" : "closed"}
       className={cn(
         "absolute z-50 mt-1 min-w-dropdown-min p-1",
         "bg-elevated border border-default rounded-pf shadow-lg",
+        "animate-dropdown",
         align === "end" ? "right-0" : "left-0",
         className
       )}

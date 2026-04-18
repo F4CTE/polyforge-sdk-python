@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router';
 import { Search, X, BarChart3, Zap } from 'lucide-react';
+import { useDelayedUnmount } from '@polyforge/ui/lib/use-delayed-unmount';
 
 interface SearchResult {
   type: 'market' | 'strategy';
@@ -17,6 +18,7 @@ interface CommandPaletteProps {
 
 export function CommandPalette({ open, onClose }: CommandPaletteProps) {
   const navigate = useNavigate();
+  const { mounted, visible } = useDelayedUnmount(open, 120);
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<SearchResult[]>([]);
   const [loading, setLoading] = useState(false);
@@ -77,18 +79,22 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
     else if (e.key === 'Escape') onClose();
   }
 
-  if (!open) return null;
+  if (!mounted) return null;
+
+  const state = visible ? 'open' : 'closed';
 
   return (
     <div
-      className="fixed inset-0 z-[60] flex items-start justify-center pt-[10vh] bg-black/60 backdrop-blur-sm"
+      data-state={state}
+      className="animate-backdrop fixed inset-0 z-[60] flex items-start justify-center pt-[10vh] bg-black/60 backdrop-blur-sm"
       onClick={onClose}
       role="dialog"
       aria-modal="true"
       aria-label="Command palette"
     >
       <div
-        className="motion-safe:animate-scale-in w-full max-w-sm sm:max-w-xl mx-4 bg-elevated border border-default rounded-xl shadow-lg overflow-hidden"
+        data-state={state}
+        className="animate-dialog-content w-full max-w-sm sm:max-w-xl mx-4 bg-elevated border border-default rounded-xl shadow-lg overflow-hidden"
         onClick={e => e.stopPropagation()}
       >
         {/* Search input */}

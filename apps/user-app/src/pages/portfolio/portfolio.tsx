@@ -557,8 +557,10 @@ export function Component() {
   const [wsConnected, setWsConnected] = useState(false);
   // Flash state: set of positionIds whose price cell is flashing
   const [flashingPrices, setFlashingPrices] = useState<Record<string, 'up' | 'down' | null>>({});
-  // Flash state for the header bar
+  // Flash state for the header bar (direction determines animation class)
   const [pnlFlashing, setPnlFlashing] = useState(false);
+  const [pnlFlashDir, setPnlFlashDir] = useState<'gain' | 'loss'>('gain');
+  const [pnlFlashKey, setPnlFlashKey] = useState(0);
 
   useEffect(() => {
     const handler = (msg: { type: string; [key: string]: unknown }) => {
@@ -584,8 +586,10 @@ export function Component() {
           dayPnlPct: update.dayPnlPct,
           unrealisedPnl: update.unrealisedPnl,
         });
+        setPnlFlashDir(update.totalPnl >= 0 ? 'gain' : 'loss');
+        setPnlFlashKey(k => k + 1);
         setPnlFlashing(true);
-        setTimeout(() => setPnlFlashing(false), 500);
+        setTimeout(() => setPnlFlashing(false), 600);
       }
     };
 
@@ -1152,7 +1156,16 @@ export function Component() {
             {/* Total P&L */}
             <div className="flex items-baseline gap-2 shrink-0">
               <span className="text-label text-secondary">Total P&L</span>
-              <span className={`text-body-md font-mono font-semibold ${colorClass(totalPnlNum)}`}>
+              <span
+                key={pnlFlashKey}
+                className={`text-body-md font-mono font-semibold px-1 rounded ${colorClass(totalPnlNum)} ${
+                  pnlFlashing
+                    ? pnlFlashDir === 'gain'
+                      ? 'animate-value-flash-gain'
+                      : 'animate-value-flash-loss'
+                    : ''
+                }`}
+              >
                 {fmtPnl(totalPnlNum)}
               </span>
               {totalPnlPctNum != null && (
@@ -2035,10 +2048,10 @@ export function Component() {
                                 if (livePrice != null && flash != null) {
                                   const isUp = flash === 'up';
                                   return (
-                                    <span className={`inline-flex items-center gap-1 px-2 py-1 rounded text-label font-mono font-medium transition-colors ${
+                                    <span className={`inline-flex items-center gap-1 px-2 py-1 rounded text-label font-mono font-medium ${
                                       isUp
-                                        ? 'bg-gain/10 text-gain'
-                                        : 'bg-loss/10 text-loss'
+                                        ? 'text-gain animate-value-flash-gain'
+                                        : 'text-loss animate-value-flash-loss'
                                     }`}>
                                       {isUp
                                         ? <TrendingUp className="size-3" />

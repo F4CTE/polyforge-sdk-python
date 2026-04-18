@@ -54,7 +54,7 @@ const TabsList = React.forwardRef<
     ref={ref}
     role="tablist"
     className={cn(
-      "flex gap-1 bg-elevated border border-default rounded-lg p-1 w-fit",
+      "relative flex gap-1 bg-elevated border border-default rounded-lg p-1 w-fit",
       className
     )}
     {...props}
@@ -78,7 +78,7 @@ const TabsTrigger = React.forwardRef<HTMLButtonElement, TabsTriggerProps>(
         aria-selected={isActive}
         onClick={() => setActive(value)}
         className={cn(
-          "px-4 py-2 text-sm rounded-sm transition-colors duration-micro",
+          "relative px-4 py-2 text-sm rounded-sm transition-colors duration-micro",
           "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40",
           isActive
             ? "bg-accent-subtle text-accent font-medium"
@@ -88,6 +88,13 @@ const TabsTrigger = React.forwardRef<HTMLButtonElement, TabsTriggerProps>(
         {...props}
       >
         {children}
+        {/* Sliding underline accent on active tab */}
+        {isActive && (
+          <span
+            aria-hidden="true"
+            className="absolute bottom-0.5 left-2 right-2 h-0.5 rounded-full bg-accent transition-all duration-micro"
+          />
+        )}
       </button>
     );
   }
@@ -104,8 +111,10 @@ const TabsContent = React.forwardRef<HTMLDivElement, TabsContentProps>(
     if (active !== value) return null;
     return (
       <div
+        key={value}
         ref={ref}
         role="tabpanel"
+        style={{ animation: "tab-content-in 0.15s ease-out both" }}
         className={cn("mt-4", className)}
         {...props}
       />

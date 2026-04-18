@@ -1,3 +1,7 @@
+"use client";
+
+import { useInViewAnimation } from "../hooks/use-in-view-animation";
+
 const testimonials = [
   {
     initials: "AK",
@@ -20,13 +24,21 @@ const testimonials = [
 ];
 
 export function Testimonials() {
+  const { ref: headingRef, inView: headingInView } = useInViewAnimation();
+  const { ref: gridRef, inView: gridInView } = useInViewAnimation({ threshold: 0.1 });
+
   return (
     <section
       className="py-24 bg-surface border-t border-b border-subtle"
       aria-labelledby="testimonials-heading"
     >
       <div className="max-w-container-landing mx-auto px-6">
-        <div className="text-center max-w-content-sm mx-auto mb-14">
+        <div
+          ref={headingRef}
+          className={`text-center max-w-content-sm mx-auto mb-14 transition-all duration-500 ease-out ${
+            headingInView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
+          }`}
+        >
           <h2
             id="testimonials-heading"
             className="text-2xl sm:text-3xl font-semibold text-primary mb-4"
@@ -38,11 +50,19 @@ export function Testimonials() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 stagger-children">
-          {testimonials.map((t) => (
+        <div
+          ref={gridRef}
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
+        >
+          {testimonials.map((t, i) => (
             <figure
               key={t.name}
-              className="animate-fade-in bg-app border border-subtle rounded-xl p-6 sm:p-8 transition-all duration-panel hover:border-accent/20"
+              style={{
+                transitionDelay: gridInView ? `${i * 80}ms` : "0ms",
+              }}
+              className={`bg-app border border-subtle rounded-xl p-6 sm:p-8 transition-all duration-500 ease-out hover:border-accent/20 ${
+                gridInView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
+              }`}
             >
               <div
                 className="text-5xl font-semibold leading-none text-accent/15 -mb-2 font-sans"

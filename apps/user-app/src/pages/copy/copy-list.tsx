@@ -297,7 +297,7 @@ function CorrelationBar({ value }: { value: number }) {
 
 function AnalyticsSkeleton() {
   return (
-    <div className="mt-3 overflow-x-auto">
+    <div className="mt-3 overflow-x-auto animate-shimmer rounded-lg">
       <table className="w-full text-body-sm" aria-label="Copy trader analytics loading">
         <thead>
           <tr className="border-b border-default text-left">
@@ -308,7 +308,7 @@ function AnalyticsSkeleton() {
         </thead>
         <tbody>
           {[0, 1].map((i) => (
-            <tr key={i} className="border-b border-default/40 animate-shimmer">
+            <tr key={i} className="border-b border-default/40">
               <td className="py-3 pr-4"><div className="h-4 w-28 bg-overlay rounded" /></td>
               <td className="py-3 pr-4"><div className="h-4 w-16 bg-overlay rounded" /></td>
               <td className="py-3 pr-4"><div className="h-4 w-20 bg-overlay rounded" /></td>

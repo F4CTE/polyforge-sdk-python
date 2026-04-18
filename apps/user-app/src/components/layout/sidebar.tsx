@@ -167,7 +167,15 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
                   }
                 >
                   <item.icon size={18} className="shrink-0" aria-hidden="true" />
-                  {!collapsed && <span>{item.label}</span>}
+                  <span
+                    className="overflow-hidden whitespace-nowrap transition-[max-width,opacity] duration-panel"
+                    style={{
+                      maxWidth: collapsed ? '0' : '10rem',
+                      opacity: collapsed ? 0 : 1,
+                    }}
+                  >
+                    {item.label}
+                  </span>
                 </NavLink>
               ))}
             </div>

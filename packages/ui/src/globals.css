@@ -350,16 +350,98 @@ body {
   }
 }
 
-/* Scale in (for modals, popovers) */
+/* Scale in (for modals, popovers) — charter §7: 0.97 overshoot */
 @keyframes scale-in {
   from {
     opacity: 0;
-    transform: scale(0.95);
+    transform: scale(0.97);
   }
   to {
     opacity: 1;
     transform: scale(1);
   }
+}
+
+/* Dialog overlay/content entry + exit */
+@keyframes dialog-in {
+  from {
+    opacity: 0;
+    transform: scale(0.97) translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes dialog-out {
+  from {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.97) translateY(4px);
+  }
+}
+
+@keyframes backdrop-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes backdrop-out {
+  from { opacity: 1; }
+  to   { opacity: 0; }
+}
+
+/* Dropdown entry + exit (4px translateY, charter §7) */
+@keyframes dropdown-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes dropdown-out {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.97);
+  }
+}
+
+/* Tab panel fade-in */
+@keyframes tab-content-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* PnL value flash — gain (green pulse) */
+@keyframes value-flash-gain {
+  0%   { background-color: transparent; }
+  30%  { background-color: var(--gain-subtle); }
+  100% { background-color: transparent; }
+}
+
+/* PnL value flash — loss (red pulse) */
+@keyframes value-flash-loss {
+  0%   { background-color: transparent; }
+  30%  { background-color: var(--loss-subtle); }
+  100% { background-color: transparent; }
 }
 
 /* Slide in from right (panels, drawers) */
@@ -447,6 +529,38 @@ body {
   );
   background-size: 200% 100%;
   animation: shimmer 2s ease-in-out infinite;
+}
+
+/* data-state driven animations (dialog, dropdown, backdrop) */
+[data-state="open"].animate-dialog-content {
+  animation: dialog-in 0.12s ease-out both;
+}
+[data-state="closed"].animate-dialog-content {
+  animation: dialog-out 0.12s ease-in both;
+}
+
+[data-state="open"].animate-backdrop {
+  animation: backdrop-in 0.12s ease-out both;
+}
+[data-state="closed"].animate-backdrop {
+  animation: backdrop-out 0.12s ease-in both;
+}
+
+[data-state="open"].animate-dropdown {
+  animation: dropdown-in 0.1s ease-out both;
+}
+[data-state="closed"].animate-dropdown {
+  animation: dropdown-out 0.1s ease-in both;
+}
+
+/* PnL value flash utilities */
+.animate-value-flash-gain {
+  animation: value-flash-gain 0.6s ease-out both;
+  border-radius: 3px;
+}
+.animate-value-flash-loss {
+  animation: value-flash-loss 0.6s ease-out both;
+  border-radius: 3px;
 }
 
 /* Stagger children */
