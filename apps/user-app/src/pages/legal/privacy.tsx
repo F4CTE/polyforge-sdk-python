@@ -1,5 +1,5 @@
-import { Link } from 'react-router';
-import { ArrowLeft, Zap } from 'lucide-react';
+import { Link } from "react-router";
+import { LegalHeader } from "@/components/legal-header";
 
 const LAST_UPDATED = 'March 27, 2026';
 
@@ -7,16 +7,7 @@ export function Component() {
   return (
     <div className="min-h-screen bg-app text-primary">
       <main className="max-w-3xl mx-auto px-4 sm:px-6 py-12">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <Link to="/" className="flex items-center gap-2 text-body-sm text-tertiary hover:text-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 rounded-sm">
-            <ArrowLeft className="size-4" /> Back
-          </Link>
-          <div className="flex items-center gap-2 text-primary">
-            <Zap className="size-4 text-accent-text" />
-            <span className="font-semibold">Polyforge</span>
-          </div>
-        </div>
+        <LegalHeader />
 
         <h1 className="text-2xl font-semibold text-primary mb-2">Privacy Policy</h1>
         <p className="text-body-sm text-tertiary mb-10">Last updated: {LAST_UPDATED}</p>
