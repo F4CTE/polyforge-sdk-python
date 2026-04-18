@@ -8,7 +8,8 @@ export function Hero() {
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_55%] items-center gap-12 lg:gap-16">
           {/* Text column */}
           <div className="flex flex-col items-start">
-            <div className="inline-flex items-center gap-2 text-body-sm font-medium text-accent-text bg-accent/8 border border-accent/20 rounded-full px-4 py-1 mb-7">
+            <div className="inline-flex items-center gap-2 text-body-sm font-medium text-accent-text bg-accent/8 border border-accent/20 rounded-sm px-4 py-1 mb-7">
+              <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
               Now in early access
             </div>
 
@@ -19,7 +20,7 @@ export function Hero() {
               The trading terminal for prediction markets.
             </h1>
 
-            <p className="text-base lg:text-lg text-secondary leading-relaxed max-w-[480px] mb-9">
+            <p className="text-[15px] text-secondary leading-relaxed max-w-[480px] mb-9">
               Build automated strategies, track whale activity, and backtest
               your edge on Polymarket — without writing a single line of code.
             </p>
@@ -42,7 +43,8 @@ export function Hero() {
 
           {/* Dashboard screenshot column */}
           <div
-            className="bg-surface border border-subtle rounded-xl overflow-hidden shadow-lg"
+            className="bg-surface border border-subtle rounded-xl overflow-hidden ring-1 ring-inset ring-white/[0.06]"
+            style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.3), 0 4px 12px rgba(0,0,0,0.15)" }}
             aria-hidden="true"
           >
             <div className="flex items-center gap-2 px-4 py-3 border-b border-subtle bg-elevated">
