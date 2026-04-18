@@ -2,7 +2,6 @@ import dynamic from "next/dynamic";
 import { Nav } from "./components/nav";
 import { Hero } from "./components/hero";
 import { MetricsStrip } from "./components/metrics-strip";
-import { ProductShowcase } from "./components/product-showcase";
 import { DeveloperSection } from "./components/developer-section";
 
 const Tape = dynamic(() =>
@@ -10,6 +9,26 @@ const Tape = dynamic(() =>
 );
 const TrustStrip = dynamic(() =>
   import("./components/trust-strip").then((m) => ({ default: m.TrustStrip })),
+);
+const BuilderSection = dynamic(() =>
+  import("./components/builder-section").then((m) => ({
+    default: m.BuilderSection,
+  })),
+);
+const WhaleSection = dynamic(() =>
+  import("./components/whale-section").then((m) => ({
+    default: m.WhaleSection,
+  })),
+);
+const BacktestSection = dynamic(() =>
+  import("./components/backtest-section").then((m) => ({
+    default: m.BacktestSection,
+  })),
+);
+const SmartExecutionSection = dynamic(() =>
+  import("./components/smart-execution-section").then((m) => ({
+    default: m.SmartExecutionSection,
+  })),
 );
 const Testimonials = dynamic(() =>
   import("./components/testimonials").then((m) => ({
@@ -32,8 +51,11 @@ export default function LandingPage() {
         <Tape />
         <MetricsStrip />
         <TrustStrip />
-        <ProductShowcase />
+        <BuilderSection />
+        <WhaleSection />
+        <BacktestSection />
         <DeveloperSection />
+        <SmartExecutionSection />
         <Testimonials />
         <CtaBanner />
       </main>
