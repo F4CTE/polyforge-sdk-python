@@ -1,0 +1,42 @@
+name: Setup monorepo
+description: Install deps, generate Prisma clients, and optionally build shared packages
+
+inputs:
+  node-version:
+    description: Node.js version to install
+    required: false
+    default: '24'
+  build-packages:
+    description: Whether to build shared packages after setup
+    required: false
+    default: 'true'
+
+runs:
+  using: composite
+  steps:
+    - name: Enable corepack (pnpm via packageManager field)
+      shell: bash
+      run: |
+        mkdir -p "$HOME/.corepack/bin"
+        corepack enable --install-directory "$HOME/.corepack/bin"
+        echo "$HOME/.corepack/bin" >> "$GITHUB_PATH"
+
+    - uses: actions/setup-node@v4
+      with:
+        node-version: ${{ inputs.node-version }}
+        cache: pnpm
+
+    - name: Install dependencies
+      shell: bash
+      run: pnpm install --frozen-lockfile
+
+    - name: Generate Prisma clients
+      shell: bash
+      run: |
+        pnpm prisma generate --schema prisma/schema.prisma --config prisma/prisma.config.ts
+        pnpm prisma generate --schema prisma/schema.admin.prisma --config prisma/prisma.admin.config.ts
+
+    - name: Build shared packages
+      if: inputs.build-packages == 'true'
+      shell: bash
+      run: pnpm turbo build --filter=./packages/*

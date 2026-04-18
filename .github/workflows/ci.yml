@@ -37,27 +37,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Enable corepack (pnpm via packageManager field)
-        run: |
-          mkdir -p "$HOME/.corepack/bin"
-          corepack enable --install-directory "$HOME/.corepack/bin"
-          echo "$HOME/.corepack/bin" >> "$GITHUB_PATH"
-
-      - uses: actions/setup-node@v4
+      - uses: ./.github/actions/setup
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: pnpm
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Generate Prisma clients
-        run: |
-          pnpm prisma generate --schema prisma/schema.prisma --config prisma/prisma.config.ts
-          pnpm prisma generate --schema prisma/schema.admin.prisma --config prisma/prisma.admin.config.ts
-
-      - name: Build packages
-        run: pnpm turbo build --filter=./packages/*
 
       - name: Lint
         run: pnpm lint
@@ -70,27 +52,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Enable corepack (pnpm via packageManager field)
-        run: |
-          mkdir -p "$HOME/.corepack/bin"
-          corepack enable --install-directory "$HOME/.corepack/bin"
-          echo "$HOME/.corepack/bin" >> "$GITHUB_PATH"
-
-      - uses: actions/setup-node@v4
+      - uses: ./.github/actions/setup
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: pnpm
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Generate Prisma clients
-        run: |
-          pnpm prisma generate --schema prisma/schema.prisma --config prisma/prisma.config.ts
-          pnpm prisma generate --schema prisma/schema.admin.prisma --config prisma/prisma.admin.config.ts
-
-      - name: Build packages
-        run: pnpm turbo build --filter=./packages/*
 
       - name: Typecheck
         run: pnpm typecheck
@@ -103,34 +67,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Enable corepack (pnpm via packageManager field)
-        run: |
-          mkdir -p "$HOME/.corepack/bin"
-          corepack enable --install-directory "$HOME/.corepack/bin"
-          echo "$HOME/.corepack/bin" >> "$GITHUB_PATH"
-
-      - uses: actions/setup-node@v4
+      - uses: ./.github/actions/setup
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: pnpm
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Generate Prisma clients
-        run: |
-          pnpm prisma generate --schema prisma/schema.prisma --config prisma/prisma.config.ts
-          pnpm prisma generate --schema prisma/schema.admin.prisma --config prisma/prisma.admin.config.ts
-
-      - name: Build packages
-        run: pnpm turbo build --filter=./packages/*
 
       - name: Test
         run: pnpm turbo test:cov
         env:
           CI: true
-
-      # Coverage runs locally — no need to upload to GitHub (saves artifact storage)
 
   # ── 2. Build ─────────────────────────────────────────────────────────────
   build:
@@ -141,24 +85,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Enable corepack (pnpm via packageManager field)
-        run: |
-          mkdir -p "$HOME/.corepack/bin"
-          corepack enable --install-directory "$HOME/.corepack/bin"
-          echo "$HOME/.corepack/bin" >> "$GITHUB_PATH"
-
-      - uses: actions/setup-node@v4
+      - uses: ./.github/actions/setup
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: pnpm
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Generate Prisma clients
-        run: |
-          pnpm prisma generate --schema prisma/schema.prisma --config prisma/prisma.config.ts
-          pnpm prisma generate --schema prisma/schema.admin.prisma --config prisma/prisma.admin.config.ts
+          build-packages: 'false'
 
       - name: Build all workspaces
         run: pnpm build
