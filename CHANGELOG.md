@@ -7,6 +7,9 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased] — 2026-04-18
 
+### Added
+- **landing: Phase 1 redesign — Nav, Hero, Tape, MetricsStrip, TrustStrip (POLA-212)** — Complete above-fold landing page redesign following Claude Design handoff. Nav: 6 links (product/blocks/whales/developers/pricing/docs), ⌘K search button, beta chip, theme toggle, responsive hamburger at <820px with focus trap. Hero: 3 switchable variants (terminal/typography/builder), DashboardMock with live-ticking market data via `useTicker` hook, BuilderCanvas strategy-node SVG graph, hero glow + grid background effects. Tape: horizontal scrolling price ticker with 12 markets. MetricsStrip: 4 platform stats with staggered in-view animation. TrustStrip: 4-column security feature grid with Lucide icons. New shared data layer (`landing-data.ts`) and `useTicker`/`useInViewAnimation` hooks. All components respect `prefers-reduced-motion`. Dynamic imports for below-fold components.
+
 ### Fixed
 - **E2E: harden strategy-builder-comprehensive against per-test timeout (POLA-159)** — replaced `waitForLoadState('networkidle')` with `domcontentloaded` in `gotoNew()` and `gotoEdit()` page objects (networkidle stalls on continuous market-data polling); added `testInfo.setTimeout(90_000)` to 10 slow tests involving creation wizard or lifecycle state machine transitions; increased `waitForStatus` default timeout from 15s to 30s for bot-service state transitions under Docker load
 

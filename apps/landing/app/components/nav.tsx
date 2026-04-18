@@ -1,17 +1,21 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { Sun, Moon, Menu, X } from "lucide-react";
+import { Sun, Moon, Menu, X, Search, ArrowRight } from "lucide-react";
 import { PolyforgeLogomark } from "@polyforge/ui";
 
 const NAV_LINKS = [
-  { href: "#features", label: "Features" },
-  { href: "/api-docs", label: "Developers" },
+  { href: "#product", label: "product" },
+  { href: "#blocks", label: "blocks" },
+  { href: "#whales", label: "whales" },
+  { href: "/api-docs", label: "developers" },
+  { href: "#pricing", label: "pricing" },
+  { href: "/docs", label: "docs" },
 ] as const;
 
 const MOBILE_NAV_LINKS = [
   ...NAV_LINKS,
-  { href: "/login", label: "Sign in" },
+  { href: "/login", label: "sign in" },
 ] as const;
 
 function ThemeToggle() {
@@ -24,7 +28,10 @@ function ThemeToggle() {
   function toggle() {
     const next = !isLight;
     setIsLight(next);
-    document.documentElement.setAttribute("data-theme", next ? "light" : "dark");
+    document.documentElement.setAttribute(
+      "data-theme",
+      next ? "light" : "dark",
+    );
     localStorage.setItem("polyforge:theme", next ? "light" : "dark");
   }
 
@@ -33,12 +40,12 @@ function ThemeToggle() {
       type="button"
       onClick={toggle}
       aria-label={isLight ? "Switch to dark mode" : "Switch to light mode"}
-      className="inline-flex items-center justify-center w-9 h-9 rounded-sm border border-subtle text-secondary hover:text-primary hover:bg-elevated focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-text transition-colors duration-micro"
+      className="inline-flex items-center justify-center w-8 h-8 rounded-md bg-transparent text-secondary hover:text-primary hover:bg-subtle focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-text transition-colors duration-micro"
     >
       {isLight ? (
-        <Moon size={18} strokeWidth={2} aria-hidden="true" />
+        <Moon size={14} strokeWidth={1.5} aria-hidden="true" />
       ) : (
-        <Sun size={18} strokeWidth={2} aria-hidden="true" />
+        <Sun size={14} strokeWidth={1.5} aria-hidden="true" />
       )}
     </button>
   );
@@ -107,20 +114,25 @@ export function Nav() {
 
   return (
     <nav
-      className="sticky top-0 z-50 bg-app/85 backdrop-blur-xl border-b border-subtle"
+      className="sticky top-0 z-50 bg-app/85 backdrop-blur-xl saturate-[1.4] border-b border-subtle"
       aria-label="Main navigation"
     >
-      <div className="flex items-center gap-4 md:gap-8 h-16 max-w-container-landing mx-auto px-6">
+      <div className="flex items-center gap-7 h-16 max-w-[1200px] mx-auto px-6 md:px-8">
+        {/* Logo + beta chip */}
         <a
           href="/"
-          className="flex items-center gap-2 text-display-sm font-semibold text-primary shrink-0 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-text rounded-sm"
+          className="flex items-center gap-2 text-[15px] font-semibold text-primary shrink-0 tracking-tight focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-text rounded-sm"
           aria-label="Polyforge home"
         >
-          <PolyforgeLogomark size={26} className="text-accent-text" />
-          <span>Polyforge</span>
+          <PolyforgeLogomark size={20} className="text-accent-text" />
+          <span>polyforge</span>
+          <span className="inline-flex items-center h-[18px] px-2 ml-1.5 rounded text-[10px] font-medium bg-elevated border border-subtle text-secondary">
+            beta
+          </span>
         </a>
 
-        <div className="hidden md:flex gap-6 mr-auto">
+        {/* Desktop nav links — hidden below 820px */}
+        <div className="hidden min-[820px]:flex gap-6">
           {NAV_LINKS.map(({ href, label }) => (
             <a
               key={href}
@@ -132,53 +144,70 @@ export function Nav() {
           ))}
         </div>
 
-        <div className="hidden md:flex gap-2 items-center">
+        {/* Right section */}
+        <div className="hidden min-[820px]:flex gap-2 items-center ml-auto">
+          {/* Search button */}
+          <button
+            type="button"
+            className="inline-flex items-center gap-1.5 h-7 px-2.5 rounded-md bg-transparent text-secondary hover:text-primary hover:bg-subtle focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-text transition-colors duration-micro"
+            aria-label="Search markets"
+          >
+            <Search size={14} strokeWidth={1.5} aria-hidden="true" />
+            <kbd className="inline-flex items-center justify-center min-w-[16px] h-[18px] px-1 rounded bg-elevated border border-default font-mono text-[11px] text-tertiary">
+              ⌘K
+            </kbd>
+          </button>
+
           <ThemeToggle />
+
           <a
             href="/login"
-            className="inline-flex items-center justify-center text-sm font-semibold px-4 py-2 rounded-sm bg-transparent text-secondary border border-subtle hover:text-primary hover:bg-elevated focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-text transition-colors duration-micro"
+            className="inline-flex items-center justify-center text-sm font-medium h-7 px-4 rounded-md bg-transparent text-primary border border-default hover:bg-elevated focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-text transition-colors duration-micro"
           >
-            Sign in
+            sign in
           </a>
           <a
             href="/register"
-            className="inline-flex items-center justify-center text-sm font-semibold px-4 py-2 rounded-sm bg-accent text-inverse transition-colors duration-micro hover:bg-accent-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-text"
+            className="inline-flex items-center gap-1.5 text-sm font-semibold h-7 px-4 rounded-md bg-accent text-white hover:bg-accent-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-text transition-colors duration-micro"
           >
-            Start free
+            start free
+            <ArrowRight size={13} strokeWidth={1.5} aria-hidden="true" />
           </a>
         </div>
 
+        {/* Mobile hamburger */}
         <button
           ref={menuButtonRef}
           type="button"
-          className="flex md:hidden flex-col items-center justify-center gap-2 w-11 h-11 bg-transparent border-none cursor-pointer ml-auto hover:bg-primary/5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-text rounded-sm"
+          className="flex min-[820px]:hidden items-center justify-center w-10 h-10 bg-transparent border-none cursor-pointer ml-auto hover:bg-subtle focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-text rounded-sm"
           aria-label={mobileOpen ? "Close menu" : "Open menu"}
           aria-expanded={mobileOpen}
           aria-controls="mobile-nav-menu"
           onClick={toggleMobile}
         >
           {mobileOpen ? (
-            <X size={22} className="text-secondary" aria-hidden="true" />
+            <X size={20} className="text-secondary" aria-hidden="true" />
           ) : (
-            <Menu size={22} className="text-secondary" aria-hidden="true" />
+            <Menu size={20} className="text-secondary" aria-hidden="true" />
           )}
         </button>
       </div>
 
+      {/* Mobile menu */}
       <div
         ref={menuRef}
         id="mobile-nav-menu"
         role="navigation"
         aria-modal={mobileOpen || undefined}
         aria-label="Mobile navigation"
-        className={`${mobileOpen ? "flex" : "hidden"} md:hidden flex-col gap-1 px-6 pb-4 border-t border-subtle`}
+        className={`${mobileOpen ? "flex" : "hidden"} min-[820px]:hidden flex-col gap-1 px-6 pb-4 border-t border-subtle`}
       >
         {MOBILE_NAV_LINKS.map(({ href, label }) => (
           <a
             key={href}
             href={href}
             onClick={closeMobile}
-            className="py-2 text-body-md text-secondary border-b border-subtle hover:text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-text rounded-sm transition-colors duration-micro"
+            className="py-2 text-sm text-secondary border-b border-subtle hover:text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-text rounded-sm transition-colors duration-micro"
           >
             {label}
           </a>
@@ -188,9 +217,10 @@ export function Nav() {
           <a
             href="/register"
             onClick={closeMobile}
-            className="block text-center text-sm font-semibold px-4 py-2 rounded-sm bg-accent text-inverse transition-colors duration-micro hover:bg-accent-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-text"
+            className="inline-flex items-center gap-1.5 text-sm font-semibold px-4 py-2 rounded-md bg-accent text-white transition-colors duration-micro hover:bg-accent-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-text"
           >
-            Start free
+            start free
+            <ArrowRight size={13} strokeWidth={1.5} aria-hidden="true" />
           </a>
         </div>
       </div>

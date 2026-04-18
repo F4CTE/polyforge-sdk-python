@@ -5,6 +5,12 @@ import { MetricsStrip } from "./components/metrics-strip";
 import { ProductShowcase } from "./components/product-showcase";
 import { DeveloperSection } from "./components/developer-section";
 
+const Tape = dynamic(() =>
+  import("./components/tape").then((m) => ({ default: m.Tape })),
+);
+const TrustStrip = dynamic(() =>
+  import("./components/trust-strip").then((m) => ({ default: m.TrustStrip })),
+);
 const Testimonials = dynamic(() =>
   import("./components/testimonials").then((m) => ({
     default: m.Testimonials,
@@ -23,7 +29,9 @@ export default function LandingPage() {
       <Nav />
       <main id="main-content">
         <Hero />
+        <Tape />
         <MetricsStrip />
+        <TrustStrip />
         <ProductShowcase />
         <DeveloperSection />
         <Testimonials />

@@ -1,62 +1,37 @@
 @import "@polyforge/ui/globals.css";
 
-/* Landing-specific overrides */
+/* ─── Landing-specific overrides ─────────────────────────────────── */
 
-.product-preview-tilt {
-  transform: perspective(1200px) rotateX(2deg);
-}
-
-@keyframes float-particle {
-  0% {
-    transform: translateY(0) translateX(0);
-    opacity: 0;
-  }
-  10% {
-    opacity: 0.6;
-  }
-  90% {
-    opacity: 0.6;
-  }
-  100% {
-    transform: translateY(-80px) translateX(30px);
-    opacity: 0;
-  }
-}
-
-.hero-particle {
-  animation: float-particle var(--particle-dur, 10s) linear var(--particle-delay, 0s) infinite;
-}
-
-@keyframes pulse-dot {
-  0%,
-  100% {
-    opacity: 1;
-    transform: scale(1);
-  }
-  50% {
-    opacity: 0.5;
-    transform: scale(0.85);
-  }
-}
-
-/* Glow & pattern backgrounds (extracted from inline styles) */
+/* Hero glow — radial accent gradient behind hero content */
 .hero-glow {
-  width: 900px;
+  width: 1100px;
   height: 900px;
   background: radial-gradient(
     ellipse,
     color-mix(in srgb, var(--accent-default) 14%, transparent) 0%,
-    color-mix(in srgb, var(--accent-default)  4%, transparent) 40%,
+    color-mix(in srgb, var(--accent-default) 5%, transparent) 40%,
     transparent 65%
   );
+  filter: blur(2px);
 }
 
+/* Hero grid — 64px line grid fading behind hero */
+.hero-grid-bg {
+  background-image:
+    linear-gradient(to right, var(--border-subtle) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--border-subtle) 1px, transparent 1px);
+  background-size: 64px 64px;
+  mask-image: radial-gradient(ellipse 70% 55% at 50% 30%, rgba(0, 0, 0, 0.35), transparent 75%);
+  -webkit-mask-image: radial-gradient(ellipse 70% 55% at 50% 30%, rgba(0, 0, 0, 0.35), transparent 75%);
+}
+
+/* CTA banner backgrounds */
 .cta-glow {
   width: 800px;
   background: radial-gradient(
     ellipse,
     color-mix(in srgb, var(--accent-default) 12%, transparent) 0%,
-    color-mix(in srgb, var(--accent-default)  4%, transparent) 40%,
+    color-mix(in srgb, var(--accent-default) 4%, transparent) 40%,
     transparent 65%
   );
 }
@@ -64,6 +39,24 @@
 .cta-dots {
   background-image: radial-gradient(color-mix(in srgb, white 3%, transparent) 1px, transparent 1px);
   background-size: 24px 24px;
+}
+
+/* Tape — continuous horizontal scroll */
+@keyframes tape-slide {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+/* Pulsing dot (live indicators) */
+@keyframes dot-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.45; transform: scale(0.85); }
+}
+
+/* Builder canvas — dot-grid pattern */
+.builder-dot-grid {
+  background-image: radial-gradient(circle, var(--border-subtle) 1px, transparent 1px);
+  background-size: 16px 16px;
 }
 
 @media (prefers-reduced-motion: no-preference) {
@@ -81,12 +74,12 @@
   }
 }
 
-/* SVG text inherits the page font stack (Geist via Tailwind font-sans) */
+/* SVG text inherits the page font stack */
 svg text {
   font-family: inherit;
 }
 
-/* Mobile nav scroll lock — toggled via classList, not inline style (#684) */
+/* Mobile nav scroll lock (#684) */
 body.nav-open {
   overflow: hidden;
 }

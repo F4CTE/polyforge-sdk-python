@@ -1,145 +1,412 @@
+"use client";
+
+import { useState } from "react";
+import { ArrowRight } from "lucide-react";
+import { useTicker } from "../hooks/use-ticker";
+import {
+  HEADLINES,
+  DASHBOARD_MARKETS,
+  type HeroVariant,
+} from "../data/landing-data";
+
+function DashboardMock() {
+  const live = useTicker(DASHBOARD_MARKETS, { interval: 2200 });
+
+  return (
+    <div className="bg-surface border border-subtle rounded-[14px] overflow-hidden shadow-elevation-2">
+      {/* Browser chrome */}
+      <div className="flex items-center gap-2.5 px-3.5 py-2.5 bg-elevated border-b border-subtle">
+        <div className="flex gap-1.5">
+          <span className="w-2.5 h-2.5 rounded-full bg-loss/70" />
+          <span className="w-2.5 h-2.5 rounded-full bg-warning/70" />
+          <span className="w-2.5 h-2.5 rounded-full bg-gain/70" />
+        </div>
+        <div className="flex-1 text-center font-mono text-[11px] text-tertiary bg-app/50 px-2.5 py-1 rounded-md tracking-wide">
+          app.polyforge.com · portfolio
+        </div>
+        <span className="inline-flex items-center gap-1.5 h-5 px-2 rounded bg-accent-subtle border border-accent-border text-accent-text text-[11px] font-medium">
+          <span
+            className="w-1.5 h-1.5 rounded-full bg-accent"
+            style={{ animation: "dot-pulse 2s ease-in-out infinite" }}
+          />
+          live
+        </span>
+      </div>
+
+      <div className="p-4">
+        {/* Top stats row */}
+        <div className="grid grid-cols-3 gap-2 mb-3">
+          <div className="border border-subtle rounded-lg p-3">
+            <div className="text-[11px] text-tertiary">Total P&L</div>
+            <div className="tabular-nums font-mono text-gain-text text-xl font-semibold mt-0.5 tracking-tight">
+              +$2,847
+            </div>
+            <div className="text-[11px] tabular-nums text-gain-text">
+              +18.3%
+            </div>
+          </div>
+          <div className="border border-subtle rounded-lg p-3">
+            <div className="text-[11px] text-tertiary">Win rate</div>
+            <div className="tabular-nums font-mono text-primary text-xl font-semibold mt-0.5 tracking-tight">
+              67.2%
+            </div>
+            <div className="text-[11px] tabular-nums text-tertiary">
+              142/212
+            </div>
+          </div>
+          <div className="border border-subtle rounded-lg p-3">
+            <div className="text-[11px] text-tertiary">Strategies</div>
+            <div className="tabular-nums font-mono text-primary text-xl font-semibold mt-0.5 tracking-tight">
+              3
+            </div>
+            <div className="text-[11px] tabular-nums text-accent-text">
+              2 paper · 1 live
+            </div>
+          </div>
+        </div>
+
+        {/* Equity curve */}
+        <div className="border border-subtle rounded-lg p-3 mb-3">
+          <div className="flex justify-between items-baseline mb-2">
+            <span className="text-xs font-medium text-secondary">
+              Equity curve · 30d
+            </span>
+            <span className="tabular-nums font-mono text-gain-text text-xs">
+              +18.3%
+            </span>
+          </div>
+          <svg
+            width="100%"
+            height="80"
+            viewBox="0 0 400 80"
+            preserveAspectRatio="none"
+            aria-hidden="true"
+          >
+            <defs>
+              <linearGradient id="eqGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop
+                  offset="0%"
+                  stopColor="var(--accent-default)"
+                  stopOpacity="0.25"
+                />
+                <stop
+                  offset="100%"
+                  stopColor="var(--accent-default)"
+                  stopOpacity="0"
+                />
+              </linearGradient>
+            </defs>
+            <g stroke="var(--border-subtle)" strokeWidth="0.5">
+              <line x1="0" y1="20" x2="400" y2="20" />
+              <line x1="0" y1="40" x2="400" y2="40" />
+              <line x1="0" y1="60" x2="400" y2="60" />
+            </g>
+            <path
+              d="M0 62 Q 30 55 50 52 T 100 48 T 150 50 T 200 38 T 260 32 T 310 20 T 400 10 L 400 80 L 0 80 Z"
+              fill="url(#eqGrad)"
+            />
+            <path
+              d="M0 62 Q 30 55 50 52 T 100 48 T 150 50 T 200 38 T 260 32 T 310 20 T 400 10"
+              fill="none"
+              stroke="var(--accent-default)"
+              strokeWidth="1.5"
+            />
+            <circle cx="400" cy="10" r="3" fill="var(--accent-default)" />
+            <circle
+              cx="400"
+              cy="10"
+              r="6"
+              fill="var(--accent-default)"
+              opacity="0.25"
+            />
+          </svg>
+        </div>
+
+        {/* Markets table */}
+        <div className="border border-subtle rounded-lg">
+          <div className="grid grid-cols-[1fr_70px_70px] gap-3 px-3.5 py-2 font-mono text-[10px] tracking-widest uppercase text-tertiary border-b border-subtle">
+            <span>Market</span>
+            <span className="text-right">Yes</span>
+            <span className="text-right">Δ</span>
+          </div>
+          {live.map((m, i) => (
+            <div
+              key={m.sym}
+              className={`grid grid-cols-[1fr_70px_70px] gap-3 px-3.5 py-2.5 text-[13px] items-center ${
+                i < live.length - 1 ? "border-b border-subtle" : ""
+              }`}
+            >
+              <span className="text-primary truncate">{m.sym}</span>
+              <span className="tabular-nums font-mono text-right text-primary">
+                ¢
+                {Math.round(m.px * 100)
+                  .toString()
+                  .padStart(2, "0")}
+              </span>
+              <span
+                className={`tabular-nums font-mono text-right ${
+                  m.chg >= 0 ? "text-gain-text" : "text-loss-text"
+                }`}
+              >
+                {m.chg >= 0 ? "+" : ""}
+                {m.chg.toFixed(1)}%
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+interface NodeProps {
+  top: number;
+  left: number;
+  cat: "trigger" | "condition" | "action" | "safety";
+  title: string;
+  detail: string;
+}
+
+const NODE_COLORS: Record<NodeProps["cat"], string> = {
+  trigger: "var(--accent-text)",
+  condition: "var(--color-purple-400)",
+  action: "var(--gain-text)",
+  safety: "var(--warning)",
+};
+
+function CanvasNode({ top, left, cat, title, detail }: NodeProps) {
+  const color = NODE_COLORS[cat];
+  return (
+    <div
+      className="absolute w-[140px] bg-surface border border-default rounded-lg p-2 shadow-elevation-2"
+      style={{ top, left, borderLeftWidth: 2, borderLeftColor: color }}
+    >
+      <div
+        className="font-mono text-[9.5px] tracking-widest uppercase"
+        style={{ color }}
+      >
+        {cat}
+      </div>
+      <div className="font-mono text-xs font-medium text-primary mt-0.5">
+        {title}
+      </div>
+      <div className="font-mono text-[10.5px] text-tertiary mt-0.5">
+        {detail}
+      </div>
+    </div>
+  );
+}
+
+function BuilderCanvas() {
+  return (
+    <div className="relative bg-surface border border-subtle rounded-[14px] h-[440px] overflow-hidden builder-dot-grid">
+      {/* Chrome bar */}
+      <div className="flex items-center gap-2 px-3.5 py-2.5 border-b border-subtle bg-surface">
+        <span className="font-mono text-[11px] text-secondary">
+          momentum-α3.polyforge
+        </span>
+        <span className="inline-flex items-center gap-1.5 h-5 px-2 rounded bg-elevated border border-subtle text-secondary text-[11px] font-medium">
+          <span
+            className="w-1.5 h-1.5 rounded-full bg-gain"
+            style={{ animation: "dot-pulse 2s ease-in-out infinite" }}
+          />
+          running · 42ms
+        </span>
+        <span className="ml-auto inline-flex items-center h-5 px-2 rounded bg-accent-subtle border border-accent-border text-accent-text text-[11px] font-medium">
+          paper
+        </span>
+      </div>
+
+      {/* SVG edges */}
+      <svg
+        width="100%"
+        height={398}
+        className="absolute top-[42px] left-0 pointer-events-none"
+        aria-hidden="true"
+      >
+        <defs>
+          <marker
+            id="arrow"
+            viewBox="0 0 10 10"
+            refX="8"
+            refY="5"
+            markerWidth="6"
+            markerHeight="6"
+            orient="auto"
+          >
+            <path d="M0,0 L10,5 L0,10 Z" fill="var(--accent-text)" />
+          </marker>
+        </defs>
+        <path
+          d="M 180,70 C 230,70 260,140 310,140"
+          stroke="var(--accent-text)"
+          strokeWidth="1.5"
+          fill="none"
+          opacity="0.6"
+        />
+        <path
+          d="M 180,180 C 230,180 260,140 310,140"
+          stroke="var(--accent-text)"
+          strokeWidth="1.5"
+          fill="none"
+          opacity="0.6"
+        />
+        <path
+          d="M 450,140 C 510,140 530,70 580,70"
+          stroke="var(--accent-text)"
+          strokeWidth="1.5"
+          fill="none"
+          opacity="0.6"
+          markerEnd="url(#arrow)"
+        />
+        <path
+          d="M 450,140 C 510,140 530,220 580,220"
+          stroke="var(--accent-text)"
+          strokeWidth="1.5"
+          fill="none"
+          opacity="0.6"
+          markerEnd="url(#arrow)"
+        />
+      </svg>
+
+      {/* Nodes */}
+      <CanvasNode
+        top={44}
+        left={24}
+        cat="trigger"
+        title="price_above_tick"
+        detail="YES ≥ 0.65"
+      />
+      <CanvasNode
+        top={154}
+        left={24}
+        cat="trigger"
+        title="volume_rate_tick"
+        detail="vol > 10k/24h"
+      />
+      <CanvasNode
+        top={110}
+        left={310}
+        cat="condition"
+        title="max_position"
+        detail="$500 · 5% port"
+      />
+      <CanvasNode
+        top={40}
+        left={580}
+        cat="action"
+        title="buy_yes"
+        detail="GTC · Kelly"
+      />
+      <CanvasNode
+        top={190}
+        left={580}
+        cat="action"
+        title="set_stop_loss"
+        detail="−8% trailing"
+      />
+
+      {/* Footer stats */}
+      <div className="absolute bottom-2.5 left-4 right-4 flex justify-between items-center font-mono text-[11px] text-tertiary">
+        <span>blocks: 5 · edges: 4 · tick 200ms</span>
+        <span>last fill · 00:12 · buy_yes 0.67 × $412</span>
+      </div>
+    </div>
+  );
+}
+
+const VARIANT_ORDER: HeroVariant[] = ["terminal", "typography", "builder"];
+
 export function Hero() {
+  const [variant, setVariant] = useState<HeroVariant>("terminal");
+  const copy = HEADLINES[variant];
+
   return (
     <section
-      className="pt-20 sm:pt-28 pb-16 sm:pb-24 border-b border-subtle"
+      className="relative overflow-hidden border-b border-subtle"
+      id="top"
       aria-labelledby="hero-heading"
     >
-      <div className="max-w-container-landing mx-auto px-6">
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_55%] items-center gap-12 lg:gap-16">
+      {/* Background effects */}
+      <div
+        className="hero-glow absolute top-[-200px] left-1/2 -translate-x-1/2 pointer-events-none z-0"
+        aria-hidden="true"
+      />
+      <div
+        className="hero-grid-bg absolute inset-0 pointer-events-none z-0"
+        aria-hidden="true"
+      />
+
+      <div className="relative z-10 max-w-[1200px] mx-auto px-6 md:px-8 py-20 md:py-28 lg:py-[112px] lg:pb-[120px]">
+        <div className="grid grid-cols-1 min-[960px]:grid-cols-[minmax(0,1fr)_minmax(0,55%)] items-center gap-12 min-[960px]:gap-14">
           {/* Text column */}
           <div className="flex flex-col items-start">
-            <div className="inline-flex items-center gap-2 text-body-sm font-medium text-accent-text bg-accent/8 border border-accent/20 rounded-sm px-4 py-1 mb-7">
-              <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
-              Now in early access
+            {/* Eyebrow badge */}
+            <div className="inline-flex items-center gap-2 h-6 px-2.5 rounded bg-accent-subtle border border-accent-border text-accent-text text-xs font-medium mb-6">
+              <span
+                className="w-1.5 h-1.5 rounded-full bg-gain"
+                style={{ animation: "dot-pulse 2s ease-in-out infinite" }}
+              />
+              now in early access · v6.32
             </div>
 
             <h1
               id="hero-heading"
-              className="text-4xl sm:text-5xl lg:text-6xl font-semibold leading-[1.1] tracking-tight text-primary mb-5"
+              className="text-[clamp(36px,5.2vw,60px)] font-semibold leading-[1.05] tracking-[-0.03em] text-primary"
             >
-              The trading terminal for prediction markets.
+              {copy.h}
+              <em className="not-italic text-secondary tracking-[-0.03em]">
+                {copy.hEm}
+              </em>
             </h1>
 
-            <p className="text-[15px] text-secondary leading-relaxed max-w-[480px] mb-9">
-              Build automated strategies, track whale activity, and backtest
-              your edge on Polymarket — without writing a single line of code.
+            <p className="text-[15px] text-secondary leading-relaxed max-w-[480px] mt-5 mb-7">
+              {copy.sub}
             </p>
 
-            <div className="flex items-center gap-4">
+            <div className="flex gap-3 items-center flex-wrap">
               <a
                 href="/register"
-                className="inline-flex items-center justify-center px-5 py-2.5 rounded-sm bg-accent hover:bg-accent-text text-inverse font-semibold text-body-md transition-colors duration-micro focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-text"
+                className="inline-flex items-center gap-1.5 h-10 px-5 rounded-lg bg-accent text-white font-semibold text-sm hover:bg-accent-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-text transition-colors duration-micro"
               >
-                Start free →
+                start free
+                <ArrowRight size={14} strokeWidth={1.5} aria-hidden="true" />
               </a>
               <a
                 href="/api-docs"
-                className="text-body-md text-secondary hover:text-primary transition-colors duration-micro focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-text rounded-sm"
+                className="inline-flex items-center h-10 px-5 rounded-lg bg-transparent text-primary border border-default font-medium text-sm hover:bg-elevated focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-text transition-colors duration-micro"
               >
-                Read the docs
+                read the docs
               </a>
+            </div>
+
+            <div className="flex gap-2.5 items-center mt-5 text-xs text-tertiary">
+              No credit card · Paper trade unlimited · Polymarket builder
+              program
+            </div>
+
+            {/* Variant switcher */}
+            <div className="flex gap-1 mt-8">
+              {VARIANT_ORDER.map((v) => (
+                <button
+                  key={v}
+                  type="button"
+                  onClick={() => setVariant(v)}
+                  className={`h-6 px-2 rounded text-[11px] font-medium border transition-colors duration-micro ${
+                    variant === v
+                      ? "bg-accent-subtle border-accent-border text-accent-text"
+                      : "bg-transparent border-subtle text-secondary hover:text-primary hover:border-default"
+                  }`}
+                >
+                  {v}
+                </button>
+              ))}
             </div>
           </div>
 
-          {/* Dashboard screenshot column */}
-          <div
-            className="bg-surface border border-subtle rounded-xl overflow-hidden ring-1 ring-inset ring-white/[0.06]"
-            style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.3), 0 4px 12px rgba(0,0,0,0.15)" }}
-            aria-hidden="true"
-          >
-            <div className="flex items-center gap-2 px-4 py-3 border-b border-subtle bg-elevated">
-              <span className="w-3 h-3 rounded-full bg-loss" />
-              <span className="w-3 h-3 rounded-full bg-warning" />
-              <span className="w-3 h-3 rounded-full bg-gain" />
-              <span className="flex-1 text-center text-label font-mono text-tertiary bg-primary/4 rounded-sm px-3 py-1 ml-2">
-                app.polyforge.app/dashboard
-              </span>
-            </div>
-
-            <svg
-              viewBox="0 0 900 440"
-              width="100%"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-              className="block w-full h-auto"
-              role="img"
-              aria-label="Polyforge dashboard showing portfolio P&L, active strategies, market data, and recent trades"
-            >
-              <style>{`@media(prefers-reduced-motion:reduce){animate{display:none}}`}</style>
-              <rect x="0" y="0" width="180" height="440" fill="var(--bg-app)" />
-              <rect x="0" y="0" width="180" height="440" stroke="var(--text-primary)" strokeOpacity="0.06" strokeWidth="1" />
-              <text x="24" y="32" fill="var(--color-cyan-300)" fontSize="13" fontWeight="600" fontFamily="Geist, sans-serif">Polyforge</text>
-              <rect x="12" y="56" width="156" height="32" rx="6" fill="var(--accent-default)" fillOpacity="0.1" />
-              <text x="44" y="76" fill="var(--accent-text)" fontSize="11" fontWeight="500">Dashboard</text>
-              <circle cx="28" cy="72" r="4" fill="var(--accent-default)" fillOpacity="0.5" />
-              <text x="44" y="112" fill="var(--text-tertiary)" fontSize="11">Markets</text>
-              <circle cx="28" cy="108" r="3" fill="var(--text-primary)" fillOpacity="0.1" />
-              <text x="44" y="144" fill="var(--text-tertiary)" fontSize="11">Strategies</text>
-              <circle cx="28" cy="140" r="3" fill="var(--text-primary)" fillOpacity="0.1" />
-              <text x="44" y="176" fill="var(--text-tertiary)" fontSize="11">Whale Tracker</text>
-              <circle cx="28" cy="172" r="3" fill="var(--gain)" fillOpacity="0.4" />
-              <text x="44" y="208" fill="var(--text-tertiary)" fontSize="11">Copy Trading</text>
-              <circle cx="28" cy="204" r="3" fill="var(--gain)" fillOpacity="0.4" />
-              <text x="44" y="240" fill="var(--text-tertiary)" fontSize="11">AI Signals</text>
-              <circle cx="28" cy="236" r="3" fill="var(--color-purple-400)" fillOpacity="0.4" />
-              <text x="44" y="272" fill="var(--text-tertiary)" fontSize="11">Orders</text>
-              <circle cx="28" cy="268" r="3" fill="var(--text-primary)" fillOpacity="0.1" />
-              <text x="44" y="304" fill="var(--text-tertiary)" fontSize="11">Portfolio</text>
-              <circle cx="28" cy="300" r="3" fill="var(--text-primary)" fillOpacity="0.1" />
-              <text x="44" y="336" fill="var(--text-tertiary)" fontSize="11">API Keys</text>
-              <circle cx="28" cy="332" r="3" fill="var(--text-primary)" fillOpacity="0.1" />
-              <rect x="180" y="0" width="720" height="440" fill="var(--bg-app)" />
-              <text x="204" y="32" fill="var(--text-primary)" fontSize="14" fontWeight="600">Portfolio Overview</text>
-              <rect x="760" y="14" width="80" height="28" rx="6" fill="var(--accent-default)" fillOpacity="0.15" stroke="var(--accent-default)" strokeOpacity="0.3" strokeWidth="1" />
-              <text x="800" y="33" textAnchor="middle" fill="var(--accent-text)" fontSize="10" fontWeight="500">Deploy</text>
-              <rect x="204" y="52" width="220" height="100" rx="10" fill="var(--bg-app)" stroke="var(--text-primary)" strokeOpacity="0.08" strokeWidth="1" />
-              <text x="224" y="76" fill="var(--text-tertiary)" fontSize="10">Total P&amp;L</text>
-              <text x="224" y="102" fill="var(--gain)" fontSize="22" fontWeight="600" fontFamily="Geist, sans-serif">+$2,847</text>
-              <text x="224" y="122" fill="var(--gain)" fontSize="10">+18.3% all time</text>
-              <polyline points="330,105 345,98 360,100 375,88 390,82 405,78" stroke="var(--gain)" strokeWidth="1.5" fill="none" />
-              <rect x="440" y="52" width="220" height="100" rx="10" fill="var(--bg-app)" stroke="var(--text-primary)" strokeOpacity="0.08" strokeWidth="1" />
-              <text x="460" y="76" fill="var(--text-tertiary)" fontSize="10">Win Rate</text>
-              <text x="460" y="102" fill="var(--text-primary)" fontSize="22" fontWeight="600" fontFamily="Geist, sans-serif">67.2%</text>
-              <text x="460" y="122" fill="var(--text-tertiary)" fontSize="10">142 / 212 trades</text>
-              <rect x="676" y="52" width="148" height="100" rx="10" fill="var(--bg-app)" stroke="var(--text-primary)" strokeOpacity="0.08" strokeWidth="1" />
-              <text x="696" y="76" fill="var(--text-tertiary)" fontSize="10">Active</text>
-              <text x="696" y="102" fill="var(--text-primary)" fontSize="22" fontWeight="600" fontFamily="Geist, sans-serif">3</text>
-              <text x="696" y="122" fill="var(--accent-text)" fontSize="10">strategies live</text>
-              <rect x="204" y="172" width="340" height="80" rx="10" fill="var(--bg-app)" stroke="var(--text-primary)" strokeOpacity="0.08" strokeWidth="1" />
-              <circle cx="224" cy="198" r="5" fill="var(--gain)">
-                <animate attributeName="opacity" values="1;0.4;1" dur="2s" repeatCount="indefinite" />
-              </circle>
-              <text x="238" y="201" fill="var(--text-primary)" fontSize="12" fontWeight="600">Momentum Alpha v3</text>
-              <text x="460" y="201" fill="var(--gain)" fontSize="11" textAnchor="end">+$412</text>
-              <text x="238" y="222" fill="var(--text-tertiary)" fontSize="9">Polymarket · 12 active positions · Sharpe 1.84</text>
-              <polyline points="224,242 260,238 296,234 332,240 368,230 404,225 440,222 476,218 512,214" stroke="var(--accent-default)" strokeOpacity="0.5" strokeWidth="1.2" fill="none" />
-              <rect x="204" y="268" width="340" height="80" rx="10" fill="var(--bg-app)" stroke="var(--text-primary)" strokeOpacity="0.08" strokeWidth="1" />
-              <circle cx="224" cy="294" r="5" fill="var(--gain)">
-                <animate attributeName="opacity" values="1;0.4;1" dur="2s" repeatCount="indefinite" />
-              </circle>
-              <text x="238" y="297" fill="var(--text-primary)" fontSize="12" fontWeight="600">Mean Reversion v1</text>
-              <text x="460" y="297" fill="var(--gain)" fontSize="11" textAnchor="end">+$189</text>
-              <text x="238" y="318" fill="var(--text-tertiary)" fontSize="9">Polymarket · 6 active positions · Sharpe 1.42</text>
-              <polyline points="224,338 260,340 296,336 332,330 368,335 404,328 440,324 476,320 512,316" stroke="var(--accent-default)" strokeOpacity="0.5" strokeWidth="1.2" fill="none" />
-              <rect x="560" y="172" width="264" height="70" rx="10" fill="var(--bg-app)" stroke="var(--text-primary)" strokeOpacity="0.08" strokeWidth="1" />
-              <text x="580" y="196" fill="var(--text-primary)" fontSize="11" fontWeight="500">US Election 2028</text>
-              <text x="580" y="214" fill="var(--text-tertiary)" fontSize="9">YES 0.42 · NO 0.58</text>
-              <text x="780" y="196" fill="var(--accent-text)" fontSize="10" textAnchor="end">$1.2M vol</text>
-              <rect x="580" y="226" width="100" height="4" rx="2" fill="var(--text-primary)" fillOpacity="0.06" />
-              <rect x="580" y="226" width="42" height="4" rx="2" fill="var(--accent-default)" fillOpacity="0.5" />
-              <rect x="560" y="256" width="264" height="70" rx="10" fill="var(--bg-app)" stroke="var(--text-primary)" strokeOpacity="0.08" strokeWidth="1" />
-              <text x="580" y="280" fill="var(--text-primary)" fontSize="11" fontWeight="500">BTC &gt; $150k by Dec</text>
-              <text x="580" y="298" fill="var(--text-tertiary)" fontSize="9">YES 0.31 · NO 0.69</text>
-              <text x="780" y="280" fill="var(--accent-text)" fontSize="10" textAnchor="end">$840K vol</text>
-              <rect x="580" y="310" width="100" height="4" rx="2" fill="var(--text-primary)" fillOpacity="0.06" />
-              <rect x="580" y="310" width="31" height="4" rx="2" fill="var(--accent-default)" fillOpacity="0.5" />
-              <rect x="560" y="340" width="264" height="70" rx="10" fill="var(--bg-app)" stroke="var(--text-primary)" strokeOpacity="0.08" strokeWidth="1" />
-              <text x="580" y="364" fill="var(--text-primary)" fontSize="11" fontWeight="500">Fed Rate Cut Jul</text>
-              <text x="580" y="382" fill="var(--text-tertiary)" fontSize="9">YES 0.73 · NO 0.27</text>
-              <text x="780" y="364" fill="var(--accent-text)" fontSize="10" textAnchor="end">$620K vol</text>
-              <rect x="580" y="394" width="100" height="4" rx="2" fill="var(--text-primary)" fillOpacity="0.06" />
-              <rect x="580" y="394" width="73" height="4" rx="2" fill="var(--accent-default)" fillOpacity="0.5" />
-            </svg>
+          {/* Visual column */}
+          <div aria-hidden="true">
+            {variant === "builder" ? <BuilderCanvas /> : <DashboardMock />}
           </div>
         </div>
       </div>
