@@ -78,6 +78,7 @@ interface BuilderState {
   saving: boolean;
   loading: boolean;
   dirty: boolean;
+  highlightedBlockId: string | null;
 
   // Node/edge actions (React Flow callbacks)
   setNodes: (nodes: Node<BlockNodeData>[]) => void;
@@ -108,6 +109,9 @@ interface BuilderState {
   setVisibility: (visibility: string) => void;
   setTags: (tags: string) => void;
   setMarketId: (marketId: string) => void;
+
+  // Canvas search
+  setHighlightedBlockId: (id: string | null) => void;
 
   // Persistence
   save: () => Promise<Record<string, unknown>>;
@@ -151,6 +155,7 @@ function initialState() {
     saving: false,
     loading: false,
     dirty: false,
+    highlightedBlockId: null as string | null,
   };
 }
 
@@ -399,6 +404,7 @@ export const useBuilderStore = create<BuilderState>((set, get) => ({
   setVisibility: (visibility) => set({ visibility, dirty: true }),
   setTags: (tags) => set({ tags, dirty: true }),
   setMarketId: (marketId) => set({ marketId, dirty: true }),
+  setHighlightedBlockId: (id) => set({ highlightedBlockId: id }),
 
   // ─── Load strategy ──────────────────────────────────────────────────────
 

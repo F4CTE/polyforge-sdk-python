@@ -29,6 +29,8 @@ function BlockNodeInner({ id, data }: NodeProps<BlockNode>) {
   const isExecuting = isLive || isBtRunning;
   const hasFired = useExecutionStore((s) => s.firedBlockIds.has(id));
 
+  const isHighlighted = useBuilderStore((s) => s.highlightedBlockId === id);
+
   const edges = useBuilderStore((s) => s.edges);
   const nodes = useBuilderStore((s) => s.nodes);
   const isSafety = d.section === 'safety';
@@ -240,7 +242,7 @@ function BlockNodeInner({ id, data }: NodeProps<BlockNode>) {
         )}
 
         <div
-          className={`builder-node-card w-[260px] rounded-lg shadow-md overflow-hidden ${isInactive ? 'opacity-45 builder-node-card--dashed' : ''} ${(isExecuting || hasFired) ? 'builder-node-card--executing' : ''} ${showSetupBadge && !isExecuting && !hasFired ? 'builder-node-card--setup-needed' : ''}`}
+          className={`builder-node-card w-[260px] rounded-lg shadow-md overflow-hidden ${isInactive ? 'opacity-45 builder-node-card--dashed' : ''} ${(isExecuting || hasFired) ? 'builder-node-card--executing' : ''} ${showSetupBadge && !isExecuting && !hasFired ? 'builder-node-card--setup-needed' : ''} ${isHighlighted ? 'ring-2 ring-accent ring-offset-2 ring-offset-app animate-pulse' : ''}`}
           style={{
             '--node-color': borderColor,
             borderColor,

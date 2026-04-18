@@ -1,7 +1,7 @@
-import { useEffect, useState, useCallback, useRef } from 'react';
+import { useEffect, useState, useCallback, useRef, useMemo } from 'react';
 import { useParams, useNavigate, Link } from 'react-router';
-import { ReactFlowProvider } from '@xyflow/react';
-import { ArrowLeft, Check, Loader2, Pencil, Blocks, Upload, Zap, FlaskConical, HelpCircle, Target, RotateCcw, RotateCw, LayoutTemplate, X, TrendingUp, RefreshCw, Calendar, Brain, AlertCircle, ChevronRight } from 'lucide-react';
+import { ReactFlowProvider, useReactFlow } from '@xyflow/react';
+import { ArrowLeft, Check, Loader2, Pencil, Blocks, Upload, Zap, FlaskConical, HelpCircle, Target, RotateCcw, RotateCw, LayoutTemplate, X, TrendingUp, RefreshCw, Calendar, Brain, AlertCircle, ChevronRight, Search } from 'lucide-react';
 import { Button, Input } from '@polyforge/ui';
 import { useBetaUsage } from '@/hooks/use-beta-usage';
 import { toast } from 'sonner';
@@ -807,6 +807,102 @@ const TEMPLATE_CATEGORY_ICONS: Record<string, React.ReactNode> = {
   sentiment: <Brain className="size-3" />,
 };
 
+// ─── Canvas Search ──────────────────────────────────────────────────────────
+
+interface CanvasSearchBarProps {
+  open: boolean;
+  onClose: () => void;
+}
+
+function CanvasSearchBar({ open, onClose }: CanvasSearchBarProps) {
+  const [query, setQuery] = useState('');
+  const nodes = useBuilderStore((s) => s.nodes);
+  const setHighlightedBlockId = useBuilderStore((s) => s.setHighlightedBlockId);
+  const { fitView } = useReactFlow();
+
+  const matches = useMemo(() => {
+    if (!query.trim()) return [];
+    const q = query.toLowerCase();
+    return nodes.filter((n) => {
+      const data = n.data as Record<string, unknown>;
+      const label = String(data.label ?? '').toLowerCase();
+      const type = String(data.type ?? '').toLowerCase();
+      const section = String(data.section ?? '').toLowerCase();
+      return label.includes(q) || type.includes(q) || section.includes(q);
+    });
+  }, [nodes, query]);
+
+  const [matchIndex, setMatchIndex] = useState(0);
+
+  useEffect(() => {
+    setMatchIndex(0);
+  }, [query]);
+
+  const navigateToMatch = useCallback((index: number) => {
+    const node = matches[index];
+    if (!node) return;
+    setHighlightedBlockId(node.id);
+    fitView({ nodes: [{ id: node.id }], duration: 300, padding: 0.5 });
+    const timer = setTimeout(() => setHighlightedBlockId(null), 3000);
+    return () => clearTimeout(timer);
+  }, [matches, setHighlightedBlockId, fitView]);
+
+  useEffect(() => {
+    if (matches.length > 0) {
+      navigateToMatch(matchIndex);
+    } else {
+      setHighlightedBlockId(null);
+    }
+  }, [matchIndex, matches.length]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+    if (e.key === 'Escape') {
+      setHighlightedBlockId(null);
+      onClose();
+    } else if (e.key === 'Enter') {
+      if (e.shiftKey) {
+        setMatchIndex((i) => (i - 1 + matches.length) % matches.length);
+      } else {
+        setMatchIndex((i) => (i + 1) % matches.length);
+      }
+    }
+  }, [onClose, setHighlightedBlockId, matches.length]);
+
+  if (!open) return null;
+
+  return (
+    <div className="absolute top-2 right-2 z-30 flex items-center gap-2 bg-elevated border border-default rounded-lg shadow-md px-3 py-2">
+      <Search className="size-4 text-tertiary shrink-0" />
+      <input
+        type="text"
+        placeholder="Search canvas blocks..."
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+        onKeyDown={handleKeyDown}
+        autoFocus
+        aria-label="Search blocks on canvas"
+        className="w-48 bg-transparent text-body-sm text-primary placeholder:text-tertiary focus:outline-none"
+      />
+      {query && matches.length > 0 && (
+        <span className="text-caption text-tertiary whitespace-nowrap">
+          {matchIndex + 1}/{matches.length}
+        </span>
+      )}
+      {query && matches.length === 0 && (
+        <span className="text-caption text-tertiary">No match</span>
+      )}
+      <button
+        type="button"
+        onClick={() => { setHighlightedBlockId(null); onClose(); }}
+        aria-label="Close search"
+        className="p-0.5 rounded hover:bg-overlay text-tertiary hover:text-primary transition-colors"
+      >
+        <X className="size-3" />
+      </button>
+    </div>
+  );
+}
+
 // ─── Component ───────────────────────────────────────────────────────────────
 
 export function Component() {
@@ -853,6 +949,12 @@ export function Component() {
   const [showTemplates, setShowTemplates] = useState(false);
   const [templateCategory, setTemplateCategory] = useState<string>('all');
   const [confirmTemplate, setConfirmTemplate] = useState<StrategyTemplate | null>(null);
+
+  // Canvas search state
+  const [canvasSearch, setCanvasSearch] = useState('');
+  const [canvasSearchOpen, setCanvasSearchOpen] = useState(false);
+  const setHighlightedBlockId = useBuilderStore((s) => s.setHighlightedBlockId);
+  const allNodes = useBuilderStore((s) => s.nodes);
 
   const setNodes = useBuilderStore((s) => s.setNodes);
   const setEdges = useBuilderStore((s) => s.setEdges);
@@ -983,6 +1085,7 @@ export function Component() {
       const mod = e.ctrlKey || e.metaKey;
       if (mod && e.key === 'z' && !e.shiftKey) { e.preventDefault(); undo(); }
       if (mod && (e.key === 'y' || (e.key === 'z' && e.shiftKey))) { e.preventDefault(); redo(); }
+      if (mod && e.key === 'f') { e.preventDefault(); setCanvasSearchOpen(true); }
     }
     window.addEventListener('keydown', handleKey);
     return () => window.removeEventListener('keydown', handleKey);
@@ -1283,6 +1386,18 @@ export function Component() {
             <HelpCircle className="size-4" />
           </Button>
 
+          {/* Canvas search */}
+          <Button
+            type="button"
+            variant={canvasSearchOpen ? 'default' : 'ghost'}
+            size="icon-sm"
+            onClick={() => setCanvasSearchOpen((v) => !v)}
+            aria-label="Search blocks on canvas"
+            title="Search Canvas (Ctrl+F)"
+          >
+            <Search className="size-4" />
+          </Button>
+
           {/* Template library */}
           <Button
             type="button"
@@ -1553,6 +1668,7 @@ export function Component() {
                 </div>
               )}
               <StrategyCanvas />
+              <CanvasSearchBar open={canvasSearchOpen} onClose={() => setCanvasSearchOpen(false)} />
               <BuilderTutorial forceVisible={showTutorial} onDismiss={() => setShowTutorial(false)} />
               {dragOver && (
                 <div className="absolute inset-0 z-50 flex items-center justify-center bg-surface/80 backdrop-blur-sm border-2 border-dashed border-accent rounded-xl pointer-events-none">

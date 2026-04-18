@@ -42,10 +42,12 @@ import {
   Bell,
   BellPlus,
   Mail,
+  Activity,
 } from 'lucide-react';
 import { wsManager } from '@/lib/websocket';
 import { toast } from 'sonner';
 import { Button, Input, Select, Textarea } from '@polyforge/ui';
+import { HealthDashboard } from '../../components/strategy/health-dashboard';
 
 /* ─── Types ──────────────────────────────────────────────────────────── */
 
@@ -294,7 +296,7 @@ export function Component() {
   const [parentStrategy, setParentStrategy] = useState<ParentStrategy | null>(null);
   const [recentOrderCount, setRecentOrderCount] = useState<number | null>(null);
   const [lastOrderAt, setLastOrderAt] = useState<string | null>(null);
-  const [detailTab, setDetailTab] = useState<'overview' | 'log' | 'versions' | 'executions' | 'live'>('overview');
+  const [detailTab, setDetailTab] = useState<'overview' | 'log' | 'versions' | 'executions' | 'live' | 'health'>('overview');
   const [liveEvents, setLiveEvents] = useState<LiveEvent[]>([]);
   const [wsConnected, setWsConnected] = useState(false);
   const [executions, setExecutions] = useState<StratExecution[]>([]);
@@ -1705,6 +1707,16 @@ export function Component() {
                 : <Wifi className="size-3" />}
               Live
             </Button>
+            <Button
+              type="button"
+              variant={detailTab === 'health' ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => setDetailTab('health')}
+              className="flex items-center gap-2"
+            >
+              <Activity className="size-3" />
+              Health
+            </Button>
           </div>
 
           {/* Body grid */}
@@ -2213,6 +2225,11 @@ export function Component() {
                 </div>
               )}
             </div>
+          )}
+
+          {/* Health Dashboard */}
+          {detailTab === 'health' && (
+            <HealthDashboard strategyId={strategy.id} strategyStatus={strategy.status} />
           )}
 
           {/* Reviews & Ratings */}
