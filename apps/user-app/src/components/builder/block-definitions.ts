@@ -20,6 +20,8 @@ export interface BlockDef {
   fields: BlockField[];
   /** Output port IDs for multi-output logic blocks (e.g. ['true', 'false'] for IF/THEN/ELSE) */
   outputs?: string[];
+  /** Sub-group label for palette grouping (e.g. 'Technical Analysis') */
+  group?: string;
 }
 
 export const SECTION_META: Record<
@@ -87,7 +89,7 @@ export const BLOCK_DEFS: Record<BlockSection, BlockDef[]> = {
     },
   ],
 
-  // ── Trigger blocks (13) ────────────────────────────────────────────────────
+  // ── Trigger blocks (17) ────────────────────────────────────────────────────
   triggers: [
     {
       type: 'price_crosses_up',
@@ -195,6 +197,55 @@ export const BLOCK_DEFS: Record<BlockSection, BlockDef[]> = {
         { key: 'endHour', label: 'End Hour', type: 'number', placeholder: '17' },
       ],
     },
+    // ── Technical Analysis triggers ──
+    {
+      type: 'ma_crossover_tick',
+      label: 'MA Crossover',
+      description: 'Fires when short MA crosses long MA.',
+      group: 'Technical Analysis',
+      fields: [
+        { key: 'marketSlot', label: 'Market', type: 'market_slot', placeholder: '$MARKET_A' },
+        { key: 'shortPeriod', label: 'Short Period', type: 'number', placeholder: '10' },
+        { key: 'longPeriod', label: 'Long Period', type: 'number', placeholder: '50' },
+        { key: 'maType', label: 'MA Type', type: 'select', placeholder: 'sma', options: ['sma', 'ema'] },
+        { key: 'direction', label: 'Direction', type: 'select', placeholder: 'golden_cross', options: ['golden_cross', 'death_cross'] },
+      ],
+    },
+    {
+      type: 'macd_signal_tick',
+      label: 'MACD Signal',
+      description: 'Fires on MACD line crossing signal line.',
+      group: 'Technical Analysis',
+      fields: [
+        { key: 'marketSlot', label: 'Market', type: 'market_slot', placeholder: '$MARKET_A' },
+        { key: 'fastPeriod', label: 'Fast Period', type: 'number', placeholder: '12' },
+        { key: 'slowPeriod', label: 'Slow Period', type: 'number', placeholder: '26' },
+        { key: 'signalPeriod', label: 'Signal Period', type: 'number', placeholder: '9' },
+        { key: 'signal', label: 'Signal', type: 'select', placeholder: 'line_cross', options: ['line_cross', 'histogram_sign_change'] },
+      ],
+    },
+    {
+      type: 'bollinger_breakout_tick',
+      label: 'Bollinger Breakout',
+      description: 'Fires when price breaks Bollinger Band.',
+      group: 'Technical Analysis',
+      fields: [
+        { key: 'marketSlot', label: 'Market', type: 'market_slot', placeholder: '$MARKET_A' },
+        { key: 'period', label: 'Period', type: 'number', placeholder: '20' },
+        { key: 'stdDevMultiplier', label: 'Std Dev Multiplier', type: 'number', placeholder: '2' },
+        { key: 'direction', label: 'Direction', type: 'select', placeholder: 'upper_break', options: ['upper_break', 'lower_break'] },
+      ],
+    },
+    {
+      type: 'vwap_cross_tick',
+      label: 'VWAP Cross',
+      description: 'Fires when price crosses VWAP.',
+      group: 'Technical Analysis',
+      fields: [
+        { key: 'marketSlot', label: 'Market', type: 'market_slot', placeholder: '$MARKET_A' },
+        { key: 'direction', label: 'Direction', type: 'select', placeholder: 'above', options: ['above', 'below'] },
+      ],
+    },
   ],
 
   // ── Condition blocks (9) ───────────────────────────────────────────────────
@@ -299,7 +350,7 @@ export const BLOCK_DEFS: Record<BlockSection, BlockDef[]> = {
     },
   ],
 
-  // ── Calculation blocks (4) ─────────────────────────────────────────────────
+  // ── Calculation blocks (9) ─────────────────────────────────────────────────
   calc: [
     {
       type: 'MATH',
@@ -335,6 +386,62 @@ export const BLOCK_DEFS: Record<BlockSection, BlockDef[]> = {
       fields: [
         { key: 'function', label: 'Function', type: 'text', placeholder: 'abs' },
         { key: 'decimals', label: 'Decimals', type: 'number', placeholder: '0' },
+      ],
+    },
+    // ── Technical Analysis indicators ──
+    {
+      type: 'SMA',
+      label: 'SMA',
+      description: 'Simple Moving Average over N periods.',
+      group: 'Technical Analysis',
+      fields: [
+        { key: 'marketSlot', label: 'Market', type: 'market_slot', placeholder: '$MARKET_A' },
+        { key: 'period', label: 'Period', type: 'number', placeholder: '20' },
+      ],
+    },
+    {
+      type: 'EMA',
+      label: 'EMA',
+      description: 'Exponential Moving Average over N periods.',
+      group: 'Technical Analysis',
+      fields: [
+        { key: 'marketSlot', label: 'Market', type: 'market_slot', placeholder: '$MARKET_A' },
+        { key: 'period', label: 'Period', type: 'number', placeholder: '20' },
+      ],
+    },
+    {
+      type: 'MACD',
+      label: 'MACD',
+      description: 'Moving Average Convergence Divergence.',
+      group: 'Technical Analysis',
+      fields: [
+        { key: 'marketSlot', label: 'Market', type: 'market_slot', placeholder: '$MARKET_A' },
+        { key: 'fastPeriod', label: 'Fast Period', type: 'number', placeholder: '12' },
+        { key: 'slowPeriod', label: 'Slow Period', type: 'number', placeholder: '26' },
+        { key: 'signalPeriod', label: 'Signal Period', type: 'number', placeholder: '9' },
+        { key: 'output', label: 'Output', type: 'select', placeholder: 'macd_line', options: ['macd_line', 'signal_line', 'histogram'] },
+      ],
+    },
+    {
+      type: 'BOLLINGER',
+      label: 'Bollinger',
+      description: 'Bollinger Bands value for a given band.',
+      group: 'Technical Analysis',
+      fields: [
+        { key: 'marketSlot', label: 'Market', type: 'market_slot', placeholder: '$MARKET_A' },
+        { key: 'period', label: 'Period', type: 'number', placeholder: '20' },
+        { key: 'stdDev', label: 'Std Dev', type: 'number', placeholder: '2' },
+        { key: 'output', label: 'Output', type: 'select', placeholder: 'upper', options: ['upper', 'middle', 'lower'] },
+      ],
+    },
+    {
+      type: 'ATR',
+      label: 'ATR',
+      description: 'Average True Range over N periods.',
+      group: 'Technical Analysis',
+      fields: [
+        { key: 'marketSlot', label: 'Market', type: 'market_slot', placeholder: '$MARKET_A' },
+        { key: 'period', label: 'Period', type: 'number', placeholder: '14' },
       ],
     },
   ],

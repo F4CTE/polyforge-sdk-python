@@ -328,6 +328,7 @@ export function BlockPalette({ open, onClose }: BlockPaletteProps) {
                   !q ||
                   def.label.toLowerCase().includes(q) ||
                   def.description.toLowerCase().includes(q) ||
+                  def.group?.toLowerCase().includes(q) ||
                   sectionLabel.toLowerCase().includes(q)
                 );
                 if (filtered.length === 0) {
@@ -335,30 +336,43 @@ export function BlockPalette({ open, onClose }: BlockPaletteProps) {
                     <p className="text-label text-tertiary px-1 py-2">No blocks match</p>
                   );
                 }
-                return filtered.map((def) => (
-                  <div
-                    key={def.type}
-                    draggable
-                    role="button"
-                    tabIndex={0}
-                    aria-label={`Add ${def.label} block`}
-                    onDragStart={(e) => onDragStart(e, def, activeSection as BlockSection)}
-                    onClick={() => onBlockClick(def)}
-                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onBlockClick(def); } }}
-                    className="group flex items-start gap-2 px-3 py-2 rounded-sm cursor-pointer hover:bg-overlay/60 transition-colors border border-transparent hover:border-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50"
-                  >
-                    <GripVertical className="size-3 text-tertiary/40 mt-1 shrink-0 cursor-grab group-hover:text-tertiary" />
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between">
-                        <span className="text-label font-medium text-primary">{def.label}</span>
-                        <ChevronRight className="size-3 text-tertiary/0 group-hover:text-tertiary/60 transition-all" />
+                const renderedGroups = new Set<string>();
+                return filtered.map((def) => {
+                  const groupHeader = def.group && !renderedGroups.has(def.group)
+                    ? (() => { renderedGroups.add(def.group!); return def.group; })()
+                    : null;
+                  return (
+                    <div key={def.type}>
+                      {groupHeader && (
+                        <div className="flex items-center gap-2 px-3 pt-3 pb-1">
+                          <span className="text-caption font-semibold text-secondary uppercase tracking-wider">{groupHeader}</span>
+                          <div className="flex-1 h-px bg-subtle" />
+                        </div>
+                      )}
+                      <div
+                        draggable
+                        role="button"
+                        tabIndex={0}
+                        aria-label={`Add ${def.label} block`}
+                        onDragStart={(e) => onDragStart(e, def, activeSection as BlockSection)}
+                        onClick={() => onBlockClick(def)}
+                        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onBlockClick(def); } }}
+                        className="group flex items-start gap-2 px-3 py-2 rounded-sm cursor-pointer hover:bg-overlay/60 transition-colors border border-transparent hover:border-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50"
+                      >
+                        <GripVertical className="size-3 text-tertiary/40 mt-1 shrink-0 cursor-grab group-hover:text-tertiary" />
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between">
+                            <span className="text-label font-medium text-primary">{def.label}</span>
+                            <ChevronRight className="size-3 text-tertiary/0 group-hover:text-tertiary/60 transition-all" />
+                          </div>
+                          <p className="text-caption text-tertiary leading-snug mt-1">
+                            {def.description}
+                          </p>
+                        </div>
                       </div>
-                      <p className="text-caption text-tertiary leading-snug mt-1">
-                        {def.description}
-                      </p>
                     </div>
-                  </div>
-                ));
+                  );
+                });
               })()}
             </div>
           )}
