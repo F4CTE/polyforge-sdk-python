@@ -1,3 +1,5 @@
+"use client";
+
 import { PolyforgeLogomark } from "@polyforge/ui";
 
 const socialLinks = [

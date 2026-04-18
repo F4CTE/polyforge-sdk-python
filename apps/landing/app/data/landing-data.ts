@@ -80,3 +80,63 @@ export const METRICS = [
   { value: "$2.3M", label: "Monthly volume" },
   { value: "200ms", label: "Median tick latency" },
 ] as const;
+
+export interface WhaleTrade {
+  wallet: string;
+  init: string;
+  market: string;
+  side: "bought" | "sold";
+  px: string;
+  size: string;
+  t: string;
+  tone: "gain" | "loss";
+}
+
+export const WHALES: WhaleTrade[] = [
+  { wallet: "0x8f··3a", init: "8F", market: "US Elections 2028 · YES", side: "bought", px: "0.42", size: "$52,000", t: "2m", tone: "gain" },
+  { wallet: "0xd4··b7", init: "D4", market: "BTC > $150k by Dec · NO", side: "sold", px: "0.31", size: "$31,000", t: "5m", tone: "loss" },
+  { wallet: "0xa1··9c", init: "A1", market: "Fed Rate Cut Jul · YES", side: "bought", px: "0.73", size: "$88,000", t: "8m", tone: "gain" },
+  { wallet: "0x21··ef", init: "21", market: "Oscar Best Picture · YES", side: "bought", px: "0.26", size: "$18,400", t: "12m", tone: "gain" },
+  { wallet: "0xbc··04", init: "BC", market: "NBA Finals MVP · YES", side: "sold", px: "0.39", size: "$24,700", t: "18m", tone: "loss" },
+];
+
+export const BUILDER_CATEGORIES = [
+  { label: "Triggers", count: "13", sub: "event + tick", color: "var(--accent-text)" },
+  { label: "Conditions", count: "9", sub: "liquidity · limits · windows", color: "var(--color-purple-400)" },
+  { label: "Actions", count: "8", sub: "GTC · FOK · stops · scales", color: "var(--gain-text)" },
+  { label: "Safety", count: "6", sub: "circuit breakers", color: "var(--warning)" },
+] as const;
+
+export const BACKTEST_STATS = [
+  { label: "Sharpe", value: "1.84", color: "text-accent-text" },
+  { label: "Max DD", value: "-8.2%", color: "text-loss" },
+  { label: "Win rate", value: "67.2%", color: "text-gain" },
+  { label: "Trades", value: "212", color: "text-primary" },
+] as const;
+
+export const STRATEGY_LINES = [
+  { name: "momentum α3", color: "var(--accent-default)" },
+  { name: "mean-reversion", color: "var(--gain)" },
+  { name: "news-reactive", color: "var(--warning)" },
+  { name: "control", color: "var(--loss)" },
+] as const;
+
+export const PNL_CATEGORIES = [
+  { category: "Politics", pct: 62, tone: "gain" as const },
+  { category: "Crypto", pct: 38, tone: "gain" as const },
+  { category: "Sports", pct: -14, tone: "loss" as const },
+  { category: "Macro", pct: 22, tone: "gain" as const },
+  { category: "Culture", pct: -6, tone: "loss" as const },
+];
+
+export const BRACKET_ORDERS = [
+  { label: "Entry", value: "BUY 1,500 @ 0.31", status: "filled", color: "var(--gain-text)" },
+  { label: "Take-profit", value: "SELL 1,500 @ 0.42", status: "working", color: "var(--accent-text)" },
+  { label: "Stop-loss", value: "SELL 1,500 @ 0.27", status: "working", color: "var(--warning)" },
+] as const;
+
+export const BRACKET_STATS = [
+  { label: "Max gain", value: "+$165", color: "var(--gain-text)" },
+  { label: "Max loss", value: "-$60", color: "var(--loss-text)" },
+  { label: "R:R", value: "2.75", color: "var(--accent-text)" },
+] as const;
