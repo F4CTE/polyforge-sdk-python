@@ -47,12 +47,12 @@ export function DeveloperSection() {
 
   return (
     <section
-      className="py-20 sm:py-28 bg-surface border-t border-subtle"
+      className="py-20 md:py-28 bg-surface border-t border-subtle"
       id="developers"
       aria-labelledby="developer-heading"
     >
       <div className="max-w-container-landing mx-auto px-6">
-        <div className="grid grid-cols-1 lg:grid-cols-2 items-start gap-12 lg:gap-20">
+        <div className="grid grid-cols-1 lg:grid-cols-2 items-start gap-10 lg:gap-[72px]">
           <div
             ref={textRef}
             className={`transition-all duration-600 ease-out ${

@@ -10,7 +10,7 @@ export function Testimonials() {
   });
 
   return (
-    <section className="py-20 sm:py-28" aria-labelledby="testimonials-heading">
+    <section className="py-20 md:py-28" aria-labelledby="testimonials-heading">
       <div className="max-w-container-landing mx-auto px-6">
         <div
           ref={headRef}
@@ -34,7 +34,7 @@ export function Testimonials() {
 
         <div
           ref={gridRef}
-          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5"
         >
           {TESTIMONIALS.map((t, i) => {
             const initials = t.who
@@ -47,7 +47,7 @@ export function Testimonials() {
                 style={{
                   transitionDelay: gridInView ? `${i * 80}ms` : "0ms",
                 }}
-                className={`bg-surface border border-subtle rounded-xl p-6 sm:p-8 transition-all duration-500 ease-out hover:border-accent/20 ${
+                className={`bg-surface border border-subtle rounded-xl p-7 transition-all duration-500 ease-out hover:border-accent/20 ${
                   gridInView
                     ? "opacity-100 translate-y-0"
                     : "opacity-0 translate-y-6"

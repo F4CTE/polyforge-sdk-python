@@ -6,11 +6,11 @@ export function CtaBanner() {
   const { ref, inView } = useInViewAnimation({ threshold: 0.2 });
 
   return (
-    <section className="py-20 sm:py-28" aria-labelledby="cta-heading">
+    <section className="py-20 md:py-28" aria-labelledby="cta-heading">
       <div className="max-w-container-landing mx-auto px-6">
         <div
           ref={ref}
-          className={`relative overflow-hidden bg-surface border border-accent/20 rounded-xl px-6 sm:px-12 py-12 sm:py-16 text-center transition-all duration-600 ease-out ${
+          className={`relative overflow-hidden bg-surface border border-accent/20 rounded-xl px-8 py-[72px] text-center transition-all duration-600 ease-out ${
             inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
           }`}
         >
