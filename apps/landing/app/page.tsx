@@ -2,7 +2,6 @@ import dynamic from "next/dynamic";
 import { Nav } from "./components/nav";
 import { Hero } from "./components/hero";
 import { MetricsStrip } from "./components/metrics-strip";
-import { DeveloperSection } from "./components/developer-section";
 
 const Tape = dynamic(() =>
   import("./components/tape").then((m) => ({ default: m.Tape })),
@@ -30,6 +29,19 @@ const SmartExecutionSection = dynamic(() =>
     default: m.SmartExecutionSection,
   })),
 );
+const Registry = dynamic(() =>
+  import("./components/registry").then((m) => ({ default: m.Registry })),
+);
+const DeveloperSection = dynamic(() =>
+  import("./components/developer-section").then((m) => ({
+    default: m.DeveloperSection,
+  })),
+);
+const FeatureMatrix = dynamic(() =>
+  import("./components/feature-matrix").then((m) => ({
+    default: m.FeatureMatrix,
+  })),
+);
 const Testimonials = dynamic(() =>
   import("./components/testimonials").then((m) => ({
     default: m.Testimonials,
@@ -48,14 +60,16 @@ export default function LandingPage() {
       <Nav />
       <main id="main-content">
         <Hero />
-        <Tape />
         <MetricsStrip />
         <TrustStrip />
+        <Tape />
         <BuilderSection />
         <WhaleSection />
         <BacktestSection />
-        <DeveloperSection />
         <SmartExecutionSection />
+        <Registry />
+        <DeveloperSection />
+        <FeatureMatrix />
         <Testimonials />
         <CtaBanner />
       </main>
