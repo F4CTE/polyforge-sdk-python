@@ -170,9 +170,17 @@ Numeric values (prices, PnL, percentages) always use `font-variant-numeric: tabu
 ─────────────────
 [Settings]
 [Docs]
+
+  ↕ mt-auto (fills remaining space)
+
+─────────────────
+[Help & Support]     ← pinned bottom
+[Keyboard shortcuts]
 ```
 
 Sidebar items: 32px height, 8px vertical padding, 12px horizontal padding, 4px border-radius. Active state: `--accent-subtle` background + `--accent-text` color.
+
+**Pinned-bottom section**: Secondary utility links (Help & Support, keyboard shortcuts reference) are pinned to the bottom of the sidebar using `mt-auto` on a bottom group. These use `text-tertiary` at `text-label` (12px) size, not `text-body-sm`, to visually subordinate them to primary nav. Hover: `text-primary`. No active state on these items.
 
 ---
 
@@ -237,9 +245,22 @@ Primary:   bg --accent-default, text white, hover --accent-hover
 Secondary: bg --bg-elevated, text --text-primary, border --border-default
 Ghost:     bg transparent, text --text-secondary, hover bg --bg-subtle
 Danger:    bg --loss-subtle, text --loss-text, hover bg rgba(239,68,68,0.2)
+Link:      bg transparent, text --accent-text, no border (inline "Try Now →")
 ```
 
-Height: 32px default, 28px small, 36px large. Border-radius: 6px. No rounded pills for action buttons (only for tags/badges).
+| Size | Height | Font size | Padding (h) | Token |
+|------|--------|-----------|-------------|-------|
+| xs   | 24px   | 12px      | 8px         | `h-6` |
+| sm   | 28px   | 13px      | 12px        | `h-7` |
+| md   | 32px   | 14px      | 16px        | `h-8` |
+| lg   | 36px   | 14px      | 20px        | `h-9` |
+| xl   | 44px   | 16px      | 24px        | `h-11` |
+
+**Border-radius**: `8px` (`rounded-pf` = `var(--radius-pf)` = `var(--radius-md)` = `8px`). The charter previously stated 6px — this was incorrect. The actual token resolves to 8px, which is the established standard across 470+ component usages. Use `rounded-pf` on all buttons; never hardcode a radius value.
+
+No rounded pills for action buttons. Pills (`rounded-full`) are for tags, status badges, and toggle tracks only.
+
+**Disabled state**: same variant at `opacity: 0.5`, `cursor: not-allowed`. Never hide disabled buttons.
 
 ### Cards / Panels
 
@@ -257,15 +278,87 @@ No box-shadow at elevation 1. Cards are differentiated from the background purel
 ```css
 background: var(--bg-app);
 border: 1px solid var(--border-default);
-border-radius: 6px;
-padding: 6px 10px;
+border-radius: 8px;           /* rounded-pf — matches button radius */
+padding: 6px 12px;
 font-size: 14px;
+height: 36px;                 /* default; 32px for sm, 40px for lg */
 color: var(--text-primary);
 
 /* Focus */
 border-color: var(--accent-default);
 box-shadow: 0 0 0 3px var(--accent-subtle);
+
+/* Error */
+border-color: var(--loss);
+box-shadow: 0 0 0 3px var(--loss-subtle);
 ```
+
+- Label: `text-body-sm` (13px) or `text-label` (12px) placed above the field, `--text-primary`, `font-weight: 500`
+- Placeholder: `--text-tertiary` at 60% opacity
+- Disabled: `opacity: 0.5`, `cursor: not-allowed`, no focus ring
+- Prefix icons (left inset): `--text-tertiary`, 16px Lucide, `padding-left: 36px` on input
+- Suffix icons/actions (right inset): same, `padding-right: 36px`
+- **Dropdown position**: open at the position of the already-selected option, centered to the input field (not always at top of list)
+
+### Toggle
+
+```css
+/* Track */
+width: 36px; height: 20px;
+border-radius: 999px;      /* full pill */
+background: var(--bg-elevated);
+border: 1px solid var(--border-default);
+transition: background 120ms ease;
+
+/* Track — checked */
+background: var(--accent-default);
+border-color: var(--accent-default);
+
+/* Thumb */
+width: 14px; height: 14px;
+border-radius: 999px;
+background: var(--text-inverse);
+transform: translateX(2px);    /* off state */
+
+/* Thumb — checked */
+transform: translateX(18px);
+```
+
+Use Radix UI `Switch` primitive. No custom toggle implementations. Focus ring on the track element, not the thumb.
+
+### Checkbox
+
+```css
+width: 16px; height: 16px;
+border-radius: 3px;           /* rounded-xs — slightly squared, not pill */
+border: 1px solid var(--border-default);
+background: var(--bg-app);
+
+/* Checked */
+background: var(--accent-default);
+border-color: var(--accent-default);
+/* White checkmark via Check icon (Lucide), 10px */
+```
+
+Use Radix UI `Checkbox` primitive. Indeterminate state: horizontal dash instead of checkmark.
+
+### Keyboard Shortcut Chips
+
+Inline keyboard shortcut indicators shown in tooltips, command menus, and wherever keyboard shortcuts are surfaced:
+
+```tsx
+<kbd className="inline-flex items-center px-1.5 py-0.5 rounded-sm bg-elevated border border-default text-label font-mono text-tertiary">
+  ⌘
+</kbd>
+<span className="text-tertiary text-label ml-0.5">B</span>
+```
+
+- `<kbd>` element for semantic meaning
+- `rounded-sm` (4px) — slightly more square than buttons/inputs
+- `text-label` (12px), `font-mono`, `--text-tertiary`
+- `--bg-elevated` fill, `--border-default` border
+- Modifier keys (⌘, ⇧, ⌥, Ctrl) shown as single chars, letter keys shown uppercase
+- Multi-key chords: `G then R` shown as separate chips with `text-tertiary` "then" text between
 
 ### Charts (Recharts / D3)
 
@@ -291,7 +384,9 @@ Use **Lucide Icons** exclusively (already in shadcn/ui ecosystem).
 - **Size**: 16px default in UI, 14px inline with text, 20px for empty states
 - **Stroke width**: 1.5px (Lucide default — never change this)
 - **Color**: always inherit from parent text color token, never hardcode icon colors
-- **No filled icons** in the UI chrome — outline only
+- **Outline only** in the UI chrome — no filled icons
+
+> **Intentional divergence from Linear**: Linear's design system uses a custom **solid/filled** icon set at 16px. PolyForge deliberately uses Lucide's **outlined** icons instead. The 1.5px stroke weight creates a consistent, lighter visual language that pairs well with the Geist typeface and reinforces the "precision tool" aesthetic. This is a brand decision — do not change to filled icons.
 
 ---
 
@@ -371,7 +466,7 @@ PolyForge is a **desktop-first** application. Mobile is not a priority for the t
 ### Don't
 - Use `font-weight: 700+` anywhere in the app UI
 - Use colored backgrounds for cards (only neutral elevation tokens)
-- Mix border-radius values (pick 4px, 6px, or 8px — stick to it per component type)
+- Mix border-radius values — use the semantic tokens: `rounded-xs` (2px), `rounded-sm` (4px), `rounded-pf` (8px), `rounded-full`. **6px is not a valid PolyForge radius.**
 - Add decorative gradients to UI chrome (landing page only)
 - Show modals for confirmations that could be undone inline
 - Use loading spinners that block the whole view
@@ -436,11 +531,17 @@ theme: {
       'caption':    ['11px', { lineHeight: '1.4',  fontWeight: '400' }],
     },
     borderRadius: {
-      sm: '4px',
-      md: '6px',
-      lg: '8px',
-      xl: '12px',
+      xs:  '2px',   // rounded-xs  — checkboxes, tight chips
+      sm:  '4px',   // rounded-sm  — kbd chips, inline tags
+      md:  '8px',   // rounded-md  — NOT 6px (corrected from original charter)
+      lg:  '8px',   // rounded-lg  — cards, panels (same as md in practice)
+      xl:  '12px',  // rounded-xl  — landing marketing cards only
+      pf:  '8px',   // rounded-pf  — PolyForge standard: buttons, inputs, all interactive components
+      full: '9999px', // rounded-full — pill badges, toggle tracks, avatar circles
     },
+    // Note: rounded-pf is the standard for all interactive components (buttons, inputs, selects).
+    // It resolves to 8px. The charter previously stated 6px — that was incorrect.
+    // 6px is not used anywhere in the codebase; do not introduce it.
     transitionDuration: {
       micro:  '120ms',
       panel:  '200ms',
@@ -744,7 +845,7 @@ Before merging any UI PR, verify:
 - [ ] Interactive elements have `:focus-visible` ring
 - [ ] Numbers use `tabular-nums` and are right-aligned in tables
 - [ ] Font weight ≤ 600
-- [ ] Border-radius matches component type (4/6/8px)
+- [ ] Border-radius matches component type: `rounded-xs` (2px) checkboxes, `rounded-sm` (4px) kbd/tags, `rounded-pf` (8px) buttons/inputs/cards, `rounded-full` pills/toggles
 - [ ] Works in both dark and light theme
 - [ ] Renders correctly at 1280px and 375px widths
 - [ ] No `!important` declarations
