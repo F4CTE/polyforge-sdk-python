@@ -7,7 +7,6 @@ import { PolyforgeLogomark } from "@polyforge/ui";
 const NAV_LINKS = [
   { href: "#features", label: "Features" },
   { href: "/api-docs", label: "Developers" },
-  { href: "/pricing", label: "Pricing" },
 ] as const;
 
 const MOBILE_NAV_LINKS = [
