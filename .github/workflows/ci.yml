@@ -184,6 +184,7 @@ jobs:
   # incrementally, restart services, run migrations, and verify health.
   deploy-dev:
     name: Deploy to Dev
+    if: github.event_name != 'push'
     runs-on: [self-hosted, linux]
     needs: [build]
     timeout-minutes: 20
@@ -319,6 +320,7 @@ jobs:
   # PLAYWRIGHT_SKIP_GLOBAL_SETUP=true.
   e2e-setup:
     name: E2E Setup
+    if: github.event_name != 'push'
     runs-on: [self-hosted, linux]
     needs: [deploy-dev]
     timeout-minutes: 10
@@ -354,6 +356,7 @@ jobs:
   # Split to 3 shards (from 2) to keep each shard under 25 min — POLA-189.
   e2e:
     name: E2E
+    if: github.event_name != 'push'
     runs-on: [self-hosted, linux]
     needs: [e2e-setup]
     timeout-minutes: 105
