@@ -157,7 +157,7 @@ function CategoryPnlCard() {
 
 export function BacktestSection() {
   return (
-    <section className="py-20 sm:py-28 border-t border-subtle" id="backtest">
+    <section className="py-20 md:py-28 border-t border-subtle" id="backtest">
       <div className="max-w-container-landing mx-auto px-6">
         <div className="mb-12 max-w-2xl mx-auto text-center">
           <p className="text-label font-medium text-accent-text uppercase tracking-wider font-mono mb-4">

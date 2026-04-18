@@ -742,6 +742,20 @@ The landing page (`apps/landing/`) and the trading app (`apps/user-app/`) share 
 
 The landing page may break density rules for marketing impact, but must still use the same color tokens and font families.
 
+### Landing Page Spacing Conventions
+
+The landing page (`apps/landing/`) uses a distinct spacing system derived from the design prototype CSS (`.pf-section` class). These values intentionally exceed the app's 4px-base spacing scale.
+
+| Token | Mobile | Desktop (≥768px) | Tailwind |
+|-------|--------|-------------------|----------|
+| Section vertical padding | 80px | 112px | `py-20 md:py-28` |
+| Two-column showcase gap | 40px | 72px (≥1024px) | `gap-10 lg:gap-[72px]` |
+| CTA banner padding | 72px vertical, 32px horizontal | same | `py-[72px] px-8` |
+
+**Breakpoint alignment**: The design CSS uses `@media (min-width: 768px)` for section padding transitions. In Tailwind, this maps to the `md:` prefix (768px), **not** `sm:` (640px). All section-level responsive padding must use `md:` to match the design prototype.
+
+**Grid gaps in testimonials/cards**: Design specifies `gap: 20px` for testimonial grids and `padding: 28px` for testimonial cards. Use `gap-5` and `p-7` respectively — these map exactly to the design's values within Tailwind's standard scale.
+
 ---
 
 ## 16. Admin Panel

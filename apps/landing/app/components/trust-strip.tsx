@@ -18,7 +18,7 @@ export function TrustStrip() {
 
   return (
     <section className="bg-surface border-t border-b border-subtle">
-      <div className="max-w-container-landing mx-auto px-6 py-14">
+      <div className="max-w-container-landing mx-auto px-6 py-20 md:py-28">
         <div
           ref={ref}
           className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 border border-subtle rounded-xl overflow-hidden bg-subtle"

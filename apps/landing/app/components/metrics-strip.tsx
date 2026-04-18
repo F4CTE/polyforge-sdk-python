@@ -29,7 +29,7 @@ export function MetricsStrip() {
               )}
               <div
                 style={{ transitionDelay: inView ? `${i * 60}ms` : "0ms" }}
-                className={`flex flex-col items-center gap-1 px-4 sm:px-10 py-6 min-w-[180px] transition-all duration-500 ease-out ${
+                className={`flex flex-col items-center gap-1 px-5 sm:px-10 py-6 min-w-[180px] transition-all duration-500 ease-out ${
                   inView
                     ? "opacity-100 translate-y-0"
                     : "opacity-0 translate-y-3"

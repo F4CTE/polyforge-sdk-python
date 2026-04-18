@@ -11,7 +11,7 @@ export function Registry() {
 
   return (
     <section
-      className="py-20 sm:py-28"
+      className="py-20 md:py-28"
       id="blocks"
       aria-labelledby="registry-heading"
     >
