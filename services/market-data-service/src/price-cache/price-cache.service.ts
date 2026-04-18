@@ -9,6 +9,8 @@ import {
 
 const PRICE_TTL = 10; // seconds
 const BOOK_TTL = 5; // seconds
+const TA_PRICE_TTL = 86_400; // 24h
+const TA_MAX_WINDOW = 250;
 
 // Batch price snapshots to TimescaleDB — flush every 5 seconds
 const SNAPSHOT_FLUSH_MS = 5_000;
@@ -61,6 +63,9 @@ export class PriceCacheService {
       JSON.stringify({ price, timestamp }),
       PRICE_TTL,
     );
+
+    // Push into TA price window sorted set (ta:prices:{tokenId})
+    await this.writeTaPricePoint(tokenId, price, timestamp);
 
     // Buffer token price for batched DB write (every 5s instead of per-tick)
     this.priceUpdateBuffer.set(tokenId, price);
@@ -186,6 +191,23 @@ export class PriceCacheService {
         await this.recordDataGap(tokenId, new Date(lastMs), new Date());
         this.lastUpdateMs.delete(tokenId);
       }
+    }
+  }
+
+  // ─── TA price window ──────────────────────────────────────────────────────
+
+  private async writeTaPricePoint(
+    tokenId: string,
+    price: number,
+    timestamp: number,
+  ) {
+    const client = this.redis.getClient();
+    const k = `ta:prices:${tokenId}`;
+    const isNew = (await client.exists(k)) === 0;
+    await client.zadd(k, timestamp, `${timestamp}:${price}`);
+    await client.zremrangebyrank(k, 0, -(TA_MAX_WINDOW + 1));
+    if (isNew) {
+      await client.expire(k, TA_PRICE_TTL);
     }
   }
 

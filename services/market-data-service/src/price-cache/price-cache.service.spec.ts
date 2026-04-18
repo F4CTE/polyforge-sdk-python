@@ -8,9 +8,17 @@ import {
 // ── Mocks ─────────────────────────────────────────────────────────────────────
 
 function makeMocks() {
+  const ioredisClient = {
+    exists: vi.fn().mockResolvedValue(0),
+    zadd: vi.fn().mockResolvedValue(1),
+    zremrangebyrank: vi.fn().mockResolvedValue(0),
+    expire: vi.fn().mockResolvedValue(1),
+    zrange: vi.fn().mockResolvedValue([]),
+  };
   const redis = {
     set: vi.fn().mockResolvedValue("OK"),
     get: vi.fn().mockResolvedValue(null),
+    getClient: vi.fn().mockReturnValue(ioredisClient),
   } as any;
 
   const prisma = {
