@@ -284,86 +284,72 @@ jobs:
   # new entrant (e.g. another branch's deploy) would evict the oldest
   # pending shard — see POLA-185 review feedback.
   # Split to 4 shards (from 3) — POLA-206.
-  # Per-shard timeout bumped to 35 min (from 25) — POLA-189.
+  # Shards run in parallel as background processes within a single job
+  # to keep the deploy-polyforge-lab concurrency group occupied by one
+  # job only (see POLA-185). Parallelized from sequential — POLA-250.
   e2e:
     name: E2E
     if: github.event_name != 'push'
     runs-on: [self-hosted, linux]
     needs: [e2e-setup]
-    timeout-minutes: 150
+    timeout-minutes: 45
     concurrency:
       group: deploy-polyforge-lab
       cancel-in-progress: false
     steps:
-      - name: Run E2E shard 1/4
-        timeout-minutes: 35
+      - name: Run all E2E shards in parallel
         run: |
           set -euo pipefail
           cd ~/PolyForge/tests/e2e
 
-          BASE_URL=http://localhost CI=true PLAYWRIGHT_SKIP_GLOBAL_SETUP=true \
-            timeout --kill-after=10s 2040 npx playwright test \
-              --project=chromium \
-              --reporter=list \
-              --shard=1/4 \
-              --global-timeout=2040000
+          TOTAL_SHARDS=4
+          PIDS=()
+          LOGS=()
 
-      - name: Clean up browsers between shards 1→2
-        if: success() || failure()
-        run: |
-          pkill -u f4cte -f 'chrome-headless-shell' 2>/dev/null || true
-          sleep 2
+          for i in $(seq 1 $TOTAL_SHARDS); do
+            LOG="/tmp/e2e-shard-${i}.log"
+            LOGS+=("$LOG")
 
-      - name: Run E2E shard 2/4
-        timeout-minutes: 35
-        run: |
-          set -euo pipefail
-          cd ~/PolyForge/tests/e2e
+            BASE_URL=http://localhost CI=true PLAYWRIGHT_SKIP_GLOBAL_SETUP=true \
+              timeout --kill-after=10s 2040 npx playwright test \
+                --project=chromium \
+                --reporter=list \
+                --shard="${i}/${TOTAL_SHARDS}" \
+                --global-timeout=2040000 \
+                > "$LOG" 2>&1 &
+            PIDS+=($!)
+            echo "Started shard ${i}/${TOTAL_SHARDS} (PID ${PIDS[-1]}) → $LOG"
+          done
 
-          BASE_URL=http://localhost CI=true PLAYWRIGHT_SKIP_GLOBAL_SETUP=true \
-            timeout --kill-after=10s 2040 npx playwright test \
-              --project=chromium \
-              --reporter=list \
-              --shard=2/4 \
-              --global-timeout=2040000
+          echo "Waiting for ${#PIDS[@]} shards..."
+          FAILED=0
+          for i in $(seq 0 $(( TOTAL_SHARDS - 1 ))); do
+            SHARD_NUM=$(( i + 1 ))
+            if wait "${PIDS[$i]}"; then
+              echo "✓ Shard ${SHARD_NUM}/${TOTAL_SHARDS} passed"
+            else
+              EXIT_CODE=$?
+              echo "✗ Shard ${SHARD_NUM}/${TOTAL_SHARDS} failed (exit ${EXIT_CODE})"
+              FAILED=$(( FAILED + 1 ))
+            fi
+          done
 
-      - name: Clean up browsers between shards 2→3
-        if: success() || failure()
-        run: |
-          pkill -u f4cte -f 'chrome-headless-shell' 2>/dev/null || true
-          sleep 2
+          echo ""
+          echo "=== Shard logs ==="
+          for i in $(seq 0 $(( TOTAL_SHARDS - 1 ))); do
+            SHARD_NUM=$(( i + 1 ))
+            echo ""
+            echo "────── Shard ${SHARD_NUM}/${TOTAL_SHARDS} ──────"
+            tail -30 "${LOGS[$i]}" || true
+          done
 
-      - name: Run E2E shard 3/4
-        timeout-minutes: 35
-        run: |
-          set -euo pipefail
-          cd ~/PolyForge/tests/e2e
-
-          BASE_URL=http://localhost CI=true PLAYWRIGHT_SKIP_GLOBAL_SETUP=true \
-            timeout --kill-after=10s 2040 npx playwright test \
-              --project=chromium \
-              --reporter=list \
-              --shard=3/4 \
-              --global-timeout=2040000
-
-      - name: Clean up browsers between shards 3→4
-        if: success() || failure()
-        run: |
-          pkill -u f4cte -f 'chrome-headless-shell' 2>/dev/null || true
-          sleep 2
-
-      - name: Run E2E shard 4/4
-        timeout-minutes: 35
-        run: |
-          set -euo pipefail
-          cd ~/PolyForge/tests/e2e
-
-          BASE_URL=http://localhost CI=true PLAYWRIGHT_SKIP_GLOBAL_SETUP=true \
-            timeout --kill-after=10s 2040 npx playwright test \
-              --project=chromium \
-              --reporter=list \
-              --shard=4/4 \
-              --global-timeout=2040000
+          if [ "$FAILED" -gt 0 ]; then
+            echo ""
+            echo "FAILED: ${FAILED}/${TOTAL_SHARDS} shards failed"
+            exit 1
+          fi
+          echo ""
+          echo "All ${TOTAL_SHARDS} shards passed"
 
   # ── 5. Deploy to AWS (Production) ──────────────────────────────────────
   deploy:
