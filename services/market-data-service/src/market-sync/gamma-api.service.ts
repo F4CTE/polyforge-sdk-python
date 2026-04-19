@@ -48,6 +48,11 @@ interface GammaEvent {
   markets: string[]; // market IDs grouped under this event
 }
 
+interface KeysetPage {
+  data: GammaMarket[];
+  next_cursor?: string | null;
+}
+
 const SYNC_INTERVAL_MS = 60_000; // poll for new markets every minute
 
 /**
@@ -160,48 +165,39 @@ export class GammaApiService implements OnModuleInit {
 
   /**
    * Paginate through ALL active markets from the Gamma API.
-   * Fetches in pages of 100 until fewer than `limit` results are returned.
+   * Prefers keyset pagination (/markets/keyset) when supported; falls back to offset.
    */
   async syncAllMarkets(): Promise<void> {
-    let offset = 0;
-    const limit = 100;
-    let hasMore = true;
     let totalSynced = 0;
+    const limit = 100;
 
-    while (hasMore) {
-      const markets = await this.fetchMarkets(offset, limit);
-      if (markets.length < limit) hasMore = false;
+    const supportsKeyset = await this.probeKeysetSupport();
 
-      for (const market of markets) {
-        // Skip neg-risk markets (binary-only filter)
-        if (market.negRisk) continue;
-
-        try {
-          // Parse tokens — handle both mock format (tokens[]) and real format (clobTokenIds JSON string)
-          const tokens = this.parseTokens(market);
-          await this.upsertMarket(market, tokens);
-
-          // Subscribe WebSocket to all tokens in this market
-          const tokenIds = tokens.map((t) => t.tokenId);
-          if (tokenIds.length > 0) this.ws.subscribeTokens(tokenIds);
-          totalSynced++;
-        } catch (err) {
-          this.logger.warn(
-            `Skipped market ${market.id}: ${(err as Error).message}`,
-          );
+    if (supportsKeyset) {
+      let cursor: string | null = null;
+      do {
+        const page = await this.fetchMarketsKeyset(cursor, limit);
+        for (const market of page.data) {
+          totalSynced += await this.processMarket(market);
         }
+        cursor = page.next_cursor ?? null;
+      } while (cursor);
+    } else {
+      let offset = 0;
+      let hasMore = true;
+      while (hasMore) {
+        const markets = await this.fetchMarkets(offset, limit);
+        if (markets.length < limit) hasMore = false;
+        for (const market of markets) {
+          totalSynced += await this.processMarket(market);
+        }
+        offset += limit;
       }
-
-      offset += limit;
     }
 
     this.logger.log(`Synced ${totalSynced} markets from Gamma API`);
   }
 
-  /**
-   * Sync events from the Gamma API and upsert them into the database.
-   * Events group related markets (e.g. "2024 Election" → multiple markets).
-   */
   async syncEvents(): Promise<void> {
     try {
       const events = await this.fetchEvents();
@@ -214,6 +210,50 @@ export class GammaApiService implements OnModuleInit {
         `Event sync failed (non-fatal): ${(err as Error).message}`,
       );
     }
+  }
+
+  async probeKeysetSupport(): Promise<boolean> {
+    try {
+      await GAMMA_LIMITER.acquire();
+      const res = await fetch(
+        `${this.gammaUrl}/markets/keyset?closed=false&limit=1`,
+        { signal: AbortSignal.timeout(5_000) },
+      );
+      return res.ok;
+    } catch {
+      return false;
+    }
+  }
+
+  private async processMarket(market: GammaMarket): Promise<number> {
+    if (market.negRisk) return 0;
+    try {
+      const tokens = this.parseTokens(market);
+      await this.upsertMarket(market, tokens);
+      const tokenIds = tokens.map((t) => t.tokenId);
+      if (tokenIds.length > 0) this.ws.subscribeTokens(tokenIds);
+      return 1;
+    } catch (err) {
+      this.logger.warn(
+        `Skipped market ${market.id}: ${(err as Error).message}`,
+      );
+      return 0;
+    }
+  }
+
+  async fetchMarketsKeyset(
+    afterCursor: string | null,
+    limit: number,
+  ): Promise<KeysetPage> {
+    await GAMMA_LIMITER.acquire();
+    const params = new URLSearchParams({ closed: "false", limit: String(limit) });
+    if (afterCursor) params.set("after_cursor", afterCursor);
+    const res = await fetch(
+      `${this.gammaUrl}/markets/keyset?${params.toString()}`,
+      { signal: AbortSignal.timeout(10_000) },
+    );
+    if (!res.ok) throw new Error(`Gamma keyset API returned ${res.status}`);
+    return res.json() as Promise<KeysetPage>;
   }
 
   // ─── Private ─────────────────────────────────────────────────────────────

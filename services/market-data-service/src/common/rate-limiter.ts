@@ -58,5 +58,11 @@ export class OutboundRateLimiter {
 /** Pre-configured limiters at 50% of Polymarket's per-endpoint limits */
 export const CLOB_LIMITER = new OutboundRateLimiter(75); // 50% of /book 150/s
 export const GAMMA_LIMITER = new OutboundRateLimiter(15); // 50% of /markets 30/s
-export const DATA_LIMITER = new OutboundRateLimiter(10); // 50% of /trades 20/s
+export const DATA_LIMITER = new OutboundRateLimiter(50); // 50% of /trades 100/s (updated)
 export const RELAYER_LIMITER = new OutboundRateLimiter(0.4); // ~25/min
+// POST/DELETE order: 500/10s burst, sustained 3,000/10min = 5/s; use 2.5/s at 50%
+export const CLOB_ORDER_LIMITER = new OutboundRateLimiter(2.5);
+
+/** API-enforced caps for /trades and /activity endpoints */
+export const DATA_MAX_LIMIT = 500;
+export const DATA_MAX_OFFSET = 1_000;

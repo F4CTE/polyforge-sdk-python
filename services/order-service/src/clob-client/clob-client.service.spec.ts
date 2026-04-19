@@ -240,15 +240,26 @@ describe("ClobClientService", () => {
   // ── fetchTrades ─────────────────────────────────────────────────────────
 
   describe("fetchTrades()", () => {
-    it("sends GET to /trades with user query param", async () => {
+    it("sends GET to /trades with user, limit, offset params", async () => {
       fetchSpy.mockResolvedValue({
         ok: true,
         json: vi.fn().mockResolvedValue([]),
       });
       await svc.fetchTrades("0xwallet");
       expect(fetchSpy.mock.calls[0][0]).toBe(
-        "http://clob:3099/trades?user=0xwallet",
+        "http://clob:3099/trades?user=0xwallet&limit=500&offset=0",
       );
+    });
+
+    it("caps limit at 500 and offset at 1000", async () => {
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue([]),
+      });
+      await svc.fetchTrades("0xwallet", 9999, 9999);
+      const url = fetchSpy.mock.calls[0][0] as string;
+      expect(url).toContain("limit=500");
+      expect(url).toContain("offset=1000");
     });
 
     it("returns parsed trades array", async () => {

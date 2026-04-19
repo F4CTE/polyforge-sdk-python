@@ -53,7 +53,7 @@ export interface OrderIntent {
   outcome: "YES" | "NO";
   size: string; // decimal shares
   price: string; // decimal 0–1
-  orderType: "GTC" | "FOK" | "GTD" | "FAK";
+  orderType: "GTC" | "FOK" | "GTD" | "FAK" | "POST_ONLY";
   expiration?: number;
 }
 

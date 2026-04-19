@@ -21,6 +21,8 @@ export enum OrderTypeDto {
   GTC = "GTC",
   FOK = "FOK",
   GTD = "GTD",
+  FAK = "FAK",
+  POST_ONLY = "POST_ONLY",
 }
 
 export class PlaceOrderDto {

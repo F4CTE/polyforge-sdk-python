@@ -28,6 +28,9 @@ export interface BookUpdateEvent {
   midpoint: string;
   spread: string;
   timestamp: number;
+  minOrderSize?: string;
+  tickSize?: string;
+  negRisk?: boolean;
 }
 
 /**
@@ -191,7 +194,7 @@ export class PolymarketWsService implements OnModuleInit, OnModuleDestroy {
         break;
       }
       case "book": {
-        // { event_type: "book", asset_id, bids, asks, ... }
+        // { event_type: "book", asset_id, bids, asks, min_order_size, tick_size, neg_risk }
         this.emitter.emit("market-data.book", {
           tokenId: msg.asset_id,
           bids: msg.bids ?? [],
@@ -199,6 +202,13 @@ export class PolymarketWsService implements OnModuleInit, OnModuleDestroy {
           midpoint: "0",
           spread: "0",
           timestamp: ts,
+          ...(msg.min_order_size !== undefined && {
+            minOrderSize: msg.min_order_size as string,
+          }),
+          ...(msg.tick_size !== undefined && {
+            tickSize: msg.tick_size as string,
+          }),
+          ...(msg.neg_risk !== undefined && { negRisk: msg.neg_risk as boolean }),
         } satisfies BookUpdateEvent);
         break;
       }
@@ -263,7 +273,7 @@ export class PolymarketWsService implements OnModuleInit, OnModuleDestroy {
           JSON.stringify({
             assets_ids: batch,
             type: "market",
-            custom_feature_enabled: true,
+            initial_dump: true,
           }),
         );
       }

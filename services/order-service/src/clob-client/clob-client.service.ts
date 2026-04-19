@@ -83,17 +83,24 @@ export class ClobClientService {
 
   /**
    * Fetch trades for a user from the Polymarket CLOB API.
+   * limit capped at 500, offset capped at 1,000 per API enforcement.
    */
   async fetchTrades(
     walletAddress: string,
+    limit = 500,
+    offset = 0,
   ): Promise<Array<Record<string, string>>> {
+    const safeLimit = Math.min(limit, 500);
+    const safeOffset = Math.min(offset, 1_000);
+    const params = new URLSearchParams({
+      user: walletAddress,
+      limit: String(safeLimit),
+      offset: String(safeOffset),
+    });
     return this.withRetry(() =>
-      fetch(
-        `${this.clobUrl}/trades?user=${encodeURIComponent(walletAddress)}`,
-        {
-          signal: AbortSignal.timeout(10_000),
-        },
-      ),
+      fetch(`${this.clobUrl}/trades?${params.toString()}`, {
+        signal: AbortSignal.timeout(10_000),
+      }),
     );
   }
 

@@ -57,6 +57,7 @@ enum OrderType {
   GTD
   FOK
   FAK
+  POST_ONLY
 }
 
 enum OrderStatus {

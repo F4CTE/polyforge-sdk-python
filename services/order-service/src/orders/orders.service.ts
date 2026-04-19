@@ -22,7 +22,7 @@ export interface OrderIntent {
   outcome: string;
   size: string;
   price: string;
-  orderType: "GTC" | "FOK" | "GTD" | "FAK";
+  orderType: "GTC" | "FOK" | "GTD" | "FAK" | "POST_ONLY";
   expiration?: number;
   tickSize?: string;
   negRisk?: boolean;

@@ -67,6 +67,8 @@ describe("GammaApiService", () => {
     const m = makeMocks();
     ({ prisma, ws } = m);
     svc = new GammaApiService(prisma, ws);
+    // Force offset mode in all existing tests — keyset is tested separately below
+    vi.spyOn(svc, "probeKeysetSupport").mockResolvedValue(false);
   });
 
   afterEach(() => {
@@ -334,6 +336,70 @@ describe("GammaApiService", () => {
       });
 
       await expect(svc.syncMarkets()).resolves.toBeUndefined();
+    });
+  });
+
+  // ── keyset pagination ──────────────────────────────────────────────────────
+
+  describe("syncAllMarkets() — keyset pagination", () => {
+    beforeEach(() => {
+      // Override: enable keyset mode for these tests
+      vi.spyOn(svc, "probeKeysetSupport").mockResolvedValue(true);
+    });
+
+    it("follows next_cursor across pages until null", async () => {
+      const page1 = { data: [makeGammaMarket({ id: "m-1" })], next_cursor: "cursor-1" };
+      const page2 = { data: [makeGammaMarket({ id: "m-2" })], next_cursor: null };
+
+      let call = 0;
+      globalThis.fetch = vi.fn().mockImplementation(() => {
+        const body = call++ === 0 ? page1 : page2;
+        return Promise.resolve({ ok: true, json: () => Promise.resolve(body) });
+      });
+
+      await svc.syncAllMarkets();
+
+      expect(vi.mocked(globalThis.fetch)).toHaveBeenCalledTimes(2);
+      expect(prisma.market.upsert).toHaveBeenCalledTimes(2);
+    });
+
+    it("passes after_cursor in URL for subsequent pages", async () => {
+      const page1 = { data: [makeGammaMarket({ id: "m-1" })], next_cursor: "abc123" };
+      const page2 = { data: [], next_cursor: null };
+
+      let call = 0;
+      globalThis.fetch = vi.fn().mockImplementation(() => {
+        const body = call++ === 0 ? page1 : page2;
+        return Promise.resolve({ ok: true, json: () => Promise.resolve(body) });
+      });
+
+      await svc.syncAllMarkets();
+
+      const secondCallUrl = (vi.mocked(globalThis.fetch).mock.calls[1][0] as string);
+      expect(secondCallUrl).toContain("after_cursor=abc123");
+    });
+
+    it("stops when next_cursor is absent", async () => {
+      globalThis.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: () =>
+          Promise.resolve({ data: [makeGammaMarket()], next_cursor: undefined }),
+      });
+
+      await svc.syncAllMarkets();
+
+      expect(vi.mocked(globalThis.fetch)).toHaveBeenCalledTimes(1);
+    });
+
+    it("handles empty first page without error", async () => {
+      globalThis.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve({ data: [], next_cursor: null }),
+      });
+
+      await svc.syncAllMarkets();
+
+      expect(prisma.market.upsert).not.toHaveBeenCalled();
     });
   });
 

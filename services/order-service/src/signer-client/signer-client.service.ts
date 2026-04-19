@@ -14,7 +14,7 @@ export interface SignOrderRequest {
   side: "BUY" | "SELL";
   size: number;
   price: number;
-  orderType: "GTC" | "FOK" | "GTD" | "FAK";
+  orderType: "GTC" | "FOK" | "GTD" | "FAK" | "POST_ONLY";
   expiration?: number;
   tickSize?: string;
   negRisk?: boolean;

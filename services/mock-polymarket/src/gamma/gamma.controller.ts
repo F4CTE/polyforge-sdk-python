@@ -34,6 +34,72 @@ export class GammaController {
     return true;
   }
 
+  // GET /markets/keyset — cursor-based pagination
+  @Get("markets/keyset")
+  async listMarketsKeyset(
+    @Req() req: FastifyRequest,
+    @Res() reply: FastifyReply,
+    @Query("limit") limit?: string,
+    @Query("after_cursor") afterCursor?: string,
+    @Query("closed") closed?: string,
+  ) {
+    if (!(await this.guard(reply, req.ip))) return;
+
+    let markets = [...FIXTURE_MARKETS];
+    if (closed !== undefined)
+      markets = markets.filter((m) => m.closed === (closed === "true"));
+
+    const lim = Math.min(parseInt(limit ?? "20", 10), 100);
+    const startIndex = afterCursor
+      ? parseInt(Buffer.from(afterCursor, "base64").toString("utf8"), 10)
+      : 0;
+    const page = markets.slice(startIndex, startIndex + lim);
+    const nextIndex = startIndex + lim;
+    const nextCursor =
+      nextIndex < markets.length
+        ? Buffer.from(String(nextIndex)).toString("base64")
+        : null;
+
+    reply.send({
+      data: page.map(this.formatMarket.bind(this)),
+      next_cursor: nextCursor,
+    });
+  }
+
+  // GET /events/keyset — cursor-based pagination for events
+  @Get("events/keyset")
+  async listEventsKeyset(
+    @Req() req: FastifyRequest,
+    @Res() reply: FastifyReply,
+    @Query("limit") limit?: string,
+    @Query("after_cursor") afterCursor?: string,
+  ) {
+    if (!(await this.guard(reply, req.ip))) return;
+
+    const allSeries = [...FIXTURE_MARKETS.reduce(
+      (acc, m) => {
+        const slug = m.seriesSlug ?? m.slug;
+        if (!acc.has(slug)) acc.set(slug, { slug, markets: [] as any[] });
+        acc.get(slug)!.markets.push(this.formatMarket(m));
+        return acc;
+      },
+      new Map<string, { slug: string; markets: any[] }>(),
+    ).values()];
+
+    const lim = Math.min(parseInt(limit ?? "20", 10), 100);
+    const startIndex = afterCursor
+      ? parseInt(Buffer.from(afterCursor, "base64").toString("utf8"), 10)
+      : 0;
+    const page = allSeries.slice(startIndex, startIndex + lim);
+    const nextIndex = startIndex + lim;
+    const nextCursor =
+      nextIndex < allSeries.length
+        ? Buffer.from(String(nextIndex)).toString("base64")
+        : null;
+
+    reply.send({ data: page, next_cursor: nextCursor });
+  }
+
   // GET /markets
   @Get("markets")
   async listMarkets(
@@ -121,6 +187,9 @@ export class GammaController {
       endDate: m.endDate,
       closed: m.closed,
       active: m.active,
+      tickSize: m.tickSize,
+      negRisk: m.negRisk,
+      feeSchedule: m.feeSchedule,
     };
   }
 }

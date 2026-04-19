@@ -64,6 +64,7 @@ export class ClobController {
     const midpoint = this.scenario.getPrice(tokenId);
     const spread = parseFloat(asks[0].price) - parseFloat(bids[0].price);
 
+    const token = TOKENS_BY_ID.get(tokenId);
     reply.send({
       tokenId,
       bids,
@@ -71,6 +72,9 @@ export class ClobController {
       spread: spread.toFixed(4),
       midpoint: midpoint.toFixed(4),
       timestamp: Date.now(),
+      min_order_size: "5",
+      tick_size: token ? "0.01" : "0.01",
+      neg_risk: false,
     });
   }
 
@@ -83,7 +87,7 @@ export class ClobController {
       side: "buy" | "sell";
       price: string;
       size: string;
-      orderType?: "GTC" | "FOK" | "GTD";
+      orderType?: "GTC" | "FOK" | "GTD" | "FAK" | "POST_ONLY";
     },
     @Req() req: FastifyRequest,
     @Res() reply: FastifyReply,
@@ -256,21 +260,38 @@ export class ClobController {
       if (!order || order.status !== "PENDING") return;
 
       const currentPrice = this.scenario.getPrice(order.tokenId);
-      const canFill =
-        orderType === "FOK"
-          ? Math.abs(currentPrice - requestedPrice) < 0.05 // FOK needs exact match
-          : true; // GTC always fills eventually
+      const priceMatch = Math.abs(currentPrice - requestedPrice) < 0.05;
+      const slippage = (Math.random() - 0.5) * 0.01;
+      const fillPrice = Math.max(0.01, Math.min(0.99, currentPrice + slippage));
 
-      if (!canFill) {
-        order.status = "CANCELLED";
+      if (orderType === "POST_ONLY") {
+        // Rejected if would immediately match
+        if (priceMatch) {
+          order.status = "CANCELLED";
+          order.updatedAt = new Date().toISOString();
+          return;
+        }
+      } else if (orderType === "FOK") {
+        // Cancelled if not immediately fillable
+        if (!priceMatch) {
+          order.status = "CANCELLED";
+          order.updatedAt = new Date().toISOString();
+          return;
+        }
+      } else if (orderType === "FAK") {
+        // Partial fill: 50-100% of size, cancel remainder
+        const fillFraction = 0.5 + Math.random() * 0.5;
+        const filled = (size * fillFraction).toFixed(4);
+        const remaining = (size * (1 - fillFraction)).toFixed(4);
+        order.status = "MATCHED";
+        order.filledSize = filled;
+        order.remainingSize = remaining;
+        order.avgFillPrice = fillPrice.toFixed(4);
         order.updatedAt = new Date().toISOString();
         return;
       }
 
-      // Simulate a realistic fill price (slight slippage)
-      const slippage = (Math.random() - 0.5) * 0.01;
-      const fillPrice = Math.max(0.01, Math.min(0.99, currentPrice + slippage));
-
+      // GTC / GTD — full fill
       order.status = "MATCHED";
       order.filledSize = size.toString();
       order.remainingSize = "0";

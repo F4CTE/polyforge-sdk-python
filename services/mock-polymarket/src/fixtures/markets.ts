@@ -10,6 +10,12 @@ export interface MockToken {
   liquidity: string; // USD
 }
 
+export interface FeeSchedule {
+  makerFeeRate: string;
+  takerFeeRate: string;
+  category: string;
+}
+
 export interface MockMarket {
   id: string;
   slug: string;
@@ -23,6 +29,9 @@ export interface MockMarket {
   endDate: string;
   closed: boolean;
   active: boolean;
+  tickSize: string;
+  negRisk: boolean;
+  feeSchedule: FeeSchedule;
 }
 
 // ─── Static fixture markets ──────────────────────────────────────────────────
@@ -55,6 +64,9 @@ export const FIXTURE_MARKETS: MockMarket[] = [
     endDate: "2026-11-10T00:00:00Z",
     closed: false,
     active: true,
+    tickSize: "0.01",
+    negRisk: false,
+    feeSchedule: { makerFeeRate: "0", takerFeeRate: "0.02", category: "politics" },
   },
   {
     id: "mkt-002",
@@ -82,6 +94,9 @@ export const FIXTURE_MARKETS: MockMarket[] = [
     endDate: "2026-12-31T23:59:59Z",
     closed: false,
     active: true,
+    tickSize: "0.01",
+    negRisk: false,
+    feeSchedule: { makerFeeRate: "0", takerFeeRate: "0.02", category: "crypto" },
   },
   {
     id: "mkt-003",
@@ -109,6 +124,9 @@ export const FIXTURE_MARKETS: MockMarket[] = [
     endDate: "2026-06-17T18:00:00Z",
     closed: false,
     active: true,
+    tickSize: "0.01",
+    negRisk: false,
+    feeSchedule: { makerFeeRate: "0", takerFeeRate: "0.02", category: "economics" },
   },
   {
     id: "mkt-004",
@@ -137,6 +155,9 @@ export const FIXTURE_MARKETS: MockMarket[] = [
     endDate: "2027-02-08T23:59:59Z",
     closed: false,
     active: true,
+    tickSize: "0.01",
+    negRisk: false,
+    feeSchedule: { makerFeeRate: "0", takerFeeRate: "0.02", category: "sports" },
   },
   {
     id: "mkt-005",
@@ -164,6 +185,9 @@ export const FIXTURE_MARKETS: MockMarket[] = [
     endDate: "2026-12-31T21:00:00Z",
     closed: false,
     active: true,
+    tickSize: "0.01",
+    negRisk: false,
+    feeSchedule: { makerFeeRate: "0", takerFeeRate: "0.02", category: "finance" },
   },
   {
     id: "mkt-006",
@@ -191,6 +215,9 @@ export const FIXTURE_MARKETS: MockMarket[] = [
     endDate: "2026-12-31T23:59:59Z",
     closed: false,
     active: true,
+    tickSize: "0.01",
+    negRisk: false,
+    feeSchedule: { makerFeeRate: "0", takerFeeRate: "0.02", category: "crypto" },
   },
   {
     id: "mkt-007",
@@ -218,6 +245,9 @@ export const FIXTURE_MARKETS: MockMarket[] = [
     endDate: "2026-12-31T23:59:59Z",
     closed: false,
     active: true,
+    tickSize: "0.01",
+    negRisk: false,
+    feeSchedule: { makerFeeRate: "0", takerFeeRate: "0.02", category: "economics" },
   },
   {
     id: "mkt-008",
@@ -245,6 +275,9 @@ export const FIXTURE_MARKETS: MockMarket[] = [
     endDate: "2026-12-31T23:59:59Z",
     closed: false,
     active: true,
+    tickSize: "0.01",
+    negRisk: false,
+    feeSchedule: { makerFeeRate: "0", takerFeeRate: "0.02", category: "technology" },
   },
   {
     id: "mkt-009",
@@ -272,6 +305,9 @@ export const FIXTURE_MARKETS: MockMarket[] = [
     endDate: "2026-12-31T23:59:59Z",
     closed: false,
     active: true,
+    tickSize: "0.01",
+    negRisk: false,
+    feeSchedule: { makerFeeRate: "0", takerFeeRate: "0.02", category: "crypto" },
   },
   {
     id: "mkt-010",
@@ -299,6 +335,9 @@ export const FIXTURE_MARKETS: MockMarket[] = [
     endDate: "2026-09-30T23:59:59Z",
     closed: false,
     active: true,
+    tickSize: "0.01",
+    negRisk: false,
+    feeSchedule: { makerFeeRate: "0", takerFeeRate: "0.02", category: "politics" },
   },
 ];
 
