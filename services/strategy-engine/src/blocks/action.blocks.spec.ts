@@ -8,6 +8,7 @@ import {
   ScaleOutAction,
   CancelAllOrdersAction,
   SkipBetAction,
+  NotifyAction,
 } from "./action.blocks";
 import { block, makeCtx, makePrisma, makeRedis } from "./__helpers__";
 
@@ -352,6 +353,86 @@ describe("SkipBetAction", () => {
       block("skip_bet", {}),
       makeCtx(),
       makeRedis(),
+      makePrisma(),
+    );
+    expect(intents).toHaveLength(0);
+  });
+});
+
+describe("NotifyAction", () => {
+  it("returns empty intents (no trade)", async () => {
+    const redis = makeRedis();
+    redis.getClient.mockReturnValue({
+      xadd: vi.fn().mockResolvedValue("1-0"),
+    });
+    const { intents } = await NotifyAction.execute(
+      block("NOTIFY", {
+        channel: "in_app",
+        message: "PnL is {{dailyPnl}}",
+      }),
+      makeCtx({ dailyPnl: 42 }),
+      redis,
+      makePrisma(),
+    );
+    expect(intents).toHaveLength(0);
+  });
+
+  it("emits in_app notification to Redis stream", async () => {
+    const xadd = vi.fn().mockResolvedValue("1-0");
+    const redis = makeRedis();
+    redis.getClient.mockReturnValue({ xadd });
+
+    await NotifyAction.execute(
+      block("NOTIFY", {
+        channel: "in_app",
+        message: "Alert: PnL={{dailyPnl}}",
+      }),
+      makeCtx({ dailyPnl: -50 }),
+      redis,
+      makePrisma(),
+    );
+
+    expect(xadd).toHaveBeenCalledWith(
+      "stream:events",
+      "*",
+      "type",
+      "NOTIFICATION",
+      "payload",
+      expect.stringContaining("Alert: PnL=-50"),
+    );
+  });
+
+  it("interpolates template variables", async () => {
+    const xadd = vi.fn().mockResolvedValue("1-0");
+    const redis = makeRedis();
+    redis.getClient.mockReturnValue({ xadd });
+
+    await NotifyAction.execute(
+      block("NOTIFY", {
+        channel: "in_app",
+        message: "Wins: {{consecutiveWin}}, Orders: {{totalOrders}}",
+      }),
+      makeCtx({ consecutiveWin: 5, totalOrders: 100 }),
+      redis,
+      makePrisma(),
+    );
+
+    expect(xadd).toHaveBeenCalled();
+    const payloadStr = xadd.mock.calls[0][5];
+    const payload = JSON.parse(payloadStr);
+    expect(payload.message).toBe("Wins: 5, Orders: 100");
+  });
+
+  it("skips webhook when URL is not HTTPS", async () => {
+    const redis = makeRedis();
+    const { intents } = await NotifyAction.execute(
+      block("NOTIFY", {
+        channel: "webhook",
+        message: "test",
+        webhookUrl: "http://evil.com/hook",
+      }),
+      makeCtx(),
+      redis,
       makePrisma(),
     );
     expect(intents).toHaveLength(0);

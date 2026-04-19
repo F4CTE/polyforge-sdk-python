@@ -1,4 +1,5 @@
 import { v4 as uuidv4 } from "uuid";
+import { Logger } from "@nestjs/common";
 import {
   ActionEvaluator,
   ActionResult,
@@ -6,6 +7,7 @@ import {
   OrderIntent,
 } from "./block.types";
 import { PrismaService } from "@polyforge/shared-db";
+import { interpolateTemplate } from "../common/template";
 
 type BlockParams = Record<string, string | number | undefined>;
 type OrderType = "GTC" | "FOK" | "GTD" | "FAK";
@@ -343,5 +345,71 @@ export const RunStrategyAction: ActionEvaluator = {
         },
       ],
     };
+  },
+};
+
+// ─── NOTIFY — send notification without placing a trade ──────────────────────
+const notifyLogger = new Logger("NotifyAction");
+
+export const NotifyAction: ActionEvaluator = {
+  async execute(block, ctx, redis): Promise<ActionResult> {
+    const params = (block["params"] as BlockParams) ?? {};
+    const channel = String(params.channel ?? "in_app");
+    const messageTemplate = String(params.message ?? "");
+    const webhookUrl = params.webhookUrl
+      ? String(params.webhookUrl)
+      : undefined;
+
+    const templateVars: Record<string, unknown> = {
+      strategyId: ctx.strategyId,
+      dailyPnl: ctx.state.dailyPnl,
+      weeklyPnl: ctx.state.weeklyPnl,
+      betsToday: ctx.state.betsToday,
+      totalOrders: ctx.state.totalOrders,
+      consecutiveWin: ctx.state.consecutiveWin,
+      consecutiveLoss: ctx.state.consecutiveLoss,
+      ...(ctx.variables ?? {}),
+    };
+    const message = interpolateTemplate(messageTemplate, templateVars);
+
+    const payload = {
+      type: "NOTIFICATION",
+      strategyId: ctx.strategyId,
+      userId: ctx.userId,
+      channel,
+      message,
+      timestamp: ctx.now,
+    };
+
+    if (channel === "in_app") {
+      await redis
+        .getClient()
+        .xadd(
+          "stream:events",
+          "*",
+          "type",
+          "NOTIFICATION",
+          "payload",
+          JSON.stringify(payload),
+        );
+    } else if (channel === "webhook" && webhookUrl) {
+      const url = new URL(webhookUrl);
+      if (url.protocol !== "https:") {
+        notifyLogger.warn("Webhook URL must use HTTPS — skipping");
+      } else {
+        fetch(webhookUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+          signal: AbortSignal.timeout(5_000),
+        }).catch((err) => {
+          notifyLogger.warn(`Webhook delivery failed: ${String(err)}`);
+        });
+      }
+    } else if (channel === "telegram") {
+      notifyLogger.debug("Telegram notifications deferred to Phase 3");
+    }
+
+    return { intents: [] };
   },
 };

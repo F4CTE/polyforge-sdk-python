@@ -17,6 +17,9 @@ const DEFAULT_STATE: StrategyState = {
   lastTradeAt: 0,
   tradedTokensToday: [],
   totalOrders: 0,
+  tickCount: 0,
+  weeklyPnl: 0,
+  weekStartDate: new Date().toISOString().slice(0, 10),
 };
 
 export function makeCtx(
