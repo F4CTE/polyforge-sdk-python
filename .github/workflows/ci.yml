@@ -314,7 +314,6 @@ jobs:
           sleep 2
 
       - name: Run E2E shard 2/4
-        if: success() || failure()
         timeout-minutes: 25
         run: |
           set -euo pipefail
@@ -334,7 +333,6 @@ jobs:
           sleep 2
 
       - name: Run E2E shard 3/4
-        if: success() || failure()
         timeout-minutes: 25
         run: |
           set -euo pipefail
@@ -354,7 +352,6 @@ jobs:
           sleep 2
 
       - name: Run E2E shard 4/4
-        if: success() || failure()
         timeout-minutes: 25
         run: |
           set -euo pipefail
