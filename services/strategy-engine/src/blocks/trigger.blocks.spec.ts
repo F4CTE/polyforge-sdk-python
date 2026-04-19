@@ -582,18 +582,33 @@ describe("PriceMomentumTickBlock", () => {
 });
 
 describe("RsiThresholdTickBlock", () => {
-  function makeRsiRedis(prices: number[]) {
+  // Build a redis mock that serves prices via the ta:prices sorted set (primary path)
+  function makeRsiRedisSortedSet(prices: number[]) {
     const redis = makeRedis();
+    const flat: string[] = [];
+    prices.forEach((p, i) => {
+      flat.push(String(p), String(i * 1000)); // member, score (timestamp)
+    });
     redis.getClient.mockReturnValue({
-      lrange: vi.fn().mockResolvedValue(prices.map(String)),
+      lrange: vi.fn().mockResolvedValue([]),
+      zrange: vi.fn().mockResolvedValue(flat),
     });
     return redis;
   }
 
-  it("fires when RSI is above threshold (overbought)", async () => {
-    // 13 gains of 0.05, 0 losses → RSI = 100
-    const prices = Array.from({ length: 14 }, (_, i) => 0.4 + i * 0.05);
-    const redis = makeRsiRedis(prices);
+  // Build a redis mock that serves prices via the legacy list (fallback path)
+  function makeRsiRedisLegacy(prices: number[]) {
+    const redis = makeRedis();
+    redis.getClient.mockReturnValue({
+      lrange: vi.fn().mockResolvedValue(prices.map(String)),
+      zrange: vi.fn().mockResolvedValue([]),
+    });
+    return redis;
+  }
+
+  it("fires when RSI is above threshold via sorted set (overbought)", async () => {
+    const prices = Array.from({ length: 20 }, (_, i) => 0.4 + i * 0.05);
+    const redis = makeRsiRedisSortedSet(prices);
     const res = await RsiThresholdTickBlock.evaluate(
       block("rsi_threshold_tick", {
         tokenId: "tok1",
@@ -607,10 +622,9 @@ describe("RsiThresholdTickBlock", () => {
     expect(res.fired).toBe(true);
   });
 
-  it("fires when RSI is below threshold (oversold)", async () => {
-    // 13 losses → RSI approaches 0
-    const prices = Array.from({ length: 14 }, (_, i) => 0.8 - i * 0.05);
-    const redis = makeRsiRedis(prices);
+  it("fires when RSI is below threshold via sorted set (oversold)", async () => {
+    const prices = Array.from({ length: 20 }, (_, i) => 0.8 - i * 0.04);
+    const redis = makeRsiRedisSortedSet(prices);
     const res = await RsiThresholdTickBlock.evaluate(
       block("rsi_threshold_tick", {
         tokenId: "tok1",
@@ -625,7 +639,7 @@ describe("RsiThresholdTickBlock", () => {
   });
 
   it("does not fire with insufficient price history", async () => {
-    const redis = makeRsiRedis([0.5]); // only 1 price
+    const redis = makeRsiRedisSortedSet([0.5]); // only 1 price
     const res = await RsiThresholdTickBlock.evaluate(
       block("rsi_threshold_tick", {
         tokenId: "tok1",
@@ -641,8 +655,8 @@ describe("RsiThresholdTickBlock", () => {
   });
 
   it("handles zero losses (avgLoss=0) without divide-by-zero", async () => {
-    const prices = Array.from({ length: 14 }, (_, i) => 0.4 + i * 0.01); // all gains
-    const redis = makeRsiRedis(prices);
+    const prices = Array.from({ length: 20 }, (_, i) => 0.4 + i * 0.01);
+    const redis = makeRsiRedisSortedSet(prices);
     const res = await RsiThresholdTickBlock.evaluate(
       block("rsi_threshold_tick", {
         tokenId: "tok1",
@@ -653,7 +667,23 @@ describe("RsiThresholdTickBlock", () => {
       redis,
       makePrisma(),
     );
-    expect(res.fired).toBe(true); // RSI = 100 > 70
+    expect(res.fired).toBe(true); // RSI ≈ 100 > 70
+  });
+
+  it("falls back to legacy list when sorted set is empty", async () => {
+    const prices = Array.from({ length: 20 }, (_, i) => 0.4 + i * 0.05);
+    const redis = makeRsiRedisLegacy(prices);
+    const res = await RsiThresholdTickBlock.evaluate(
+      block("rsi_threshold_tick", {
+        tokenId: "tok1",
+        level: "70",
+        direction: "above",
+      }),
+      makeCtx(),
+      redis,
+      makePrisma(),
+    );
+    expect(res.fired).toBe(true);
   });
 });
 

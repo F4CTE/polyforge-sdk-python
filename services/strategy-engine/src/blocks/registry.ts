@@ -59,6 +59,11 @@ import {
   AggregationBlockEvaluator,
   ComparisonBlockEvaluator,
   AbsRoundBlockEvaluator,
+  SmaBlockEvaluator,
+  EmaBlockEvaluator,
+  MacdBlockEvaluator,
+  BollingerBlockEvaluator,
+  AtrBlockEvaluator,
 } from "./calc.blocks";
 
 import {
@@ -165,4 +170,9 @@ export const CALC_REGISTRY: Record<string, CalcBlockEvaluator> = {
   AGGREGATION: AggregationBlockEvaluator,
   COMPARISON: ComparisonBlockEvaluator,
   ABS_ROUND: AbsRoundBlockEvaluator,
+  SMA: SmaBlockEvaluator,
+  EMA: EmaBlockEvaluator,
+  MACD: MacdBlockEvaluator,
+  BOLLINGER: BollingerBlockEvaluator,
+  ATR: AtrBlockEvaluator,
 };

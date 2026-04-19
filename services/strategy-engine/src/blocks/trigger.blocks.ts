@@ -1,5 +1,5 @@
 import { BlockEvaluator, BlockResult } from "./block.types";
-import { sma, ema, macd, bollingerBands, vwap } from "../ta/indicators";
+import { sma, ema, macd, bollingerBands, vwap, rsiWilder } from "../ta/indicators";
 import { readPriceWindow } from "../ta/price-window";
 
 type BlockParams = Record<string, string | number | undefined>;
@@ -242,33 +242,37 @@ export const PriceMomentumTickBlock: BlockEvaluator = {
   },
 };
 
-// rsi_threshold_tick — simple RSI approximation using stored price history
+// rsi_threshold_tick — RSI using Wilder smoothing, reads ta:prices sorted set
+// Falls back to price:history list for backward compatibility during migration.
 export const RsiThresholdTickBlock: BlockEvaluator = {
   async evaluate(block, _ctx, redis, _prisma): Promise<BlockResult> {
     const params = (block["params"] as BlockParams) ?? {};
     const tokenId = String(params.tokenId ?? "");
     const level = String(params.level ?? "70");
     const direction = String(params.direction ?? "");
+    const period = Number(params.period ?? 14);
 
-    // Read last 14 prices from Redis list (set by market-data-service, best-effort)
-    const client = redis.getClient();
-    const priceHistory = await client.lrange(`price:history:${tokenId}`, 0, 13);
+    // Primary: sorted set written by market-data-service via writePricePoint
+    const points = await readPriceWindow(redis, tokenId, period + 50);
+    let prices: number[];
+    if (points.length > 0) {
+      prices = points.map((pt) => pt.price);
+    } else {
+      // Fallback: legacy Redis list during migration window
+      const client = redis.getClient();
+      const raw = await client.lrange(
+        `price:history:${tokenId}`,
+        0,
+        period + 49,
+      );
+      prices = raw.map(Number);
+    }
 
-    if (priceHistory.length < 2)
+    if (prices.length < period + 1)
       return { fired: false, reason: "insufficient price history for RSI" };
 
-    const prices = priceHistory.map(Number);
-    let gains = 0,
-      losses = 0;
-    for (let i = 1; i < prices.length; i++) {
-      const diff = prices[i] - prices[i - 1];
-      if (diff > 0) gains += diff;
-      else losses += Math.abs(diff);
-    }
-    const avgGain = gains / (prices.length - 1);
-    const avgLoss = losses / (prices.length - 1);
-    const rs = avgLoss === 0 ? 100 : avgGain / avgLoss;
-    const rsi = 100 - 100 / (1 + rs);
+    const rsi = rsiWilder(prices, period);
+    if (isNaN(rsi)) return { fired: false, reason: "RSI returned NaN" };
 
     const threshold = parseFloat(level);
     let fired = false;

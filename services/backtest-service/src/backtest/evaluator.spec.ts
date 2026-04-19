@@ -983,3 +983,147 @@ describe("checkAutoExits", () => {
     expect(fills.find((f) => f.tokenId === "tok-b")?.type).toBe("take_profit");
   });
 });
+
+// ─── TA Trigger Tests ─────────────────────────────────────────────────────────
+
+describe("checkTriggers — TA blocks", () => {
+  function makeHistory(values: number[]): Map<string, number[]> {
+    return new Map([["tok-a", values]]);
+  }
+
+  describe("ma_crossover", () => {
+    it("fires when fast SMA crosses above slow SMA", () => {
+      // Build a series where the last bar causes a crossover
+      // 20 bars of flat price then sudden spike causes fast(5) > slow(10)
+      const hist = [
+        0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5,
+        0.5, 0.5, 0.5, 0.5, 0.5, 0.9,
+      ];
+      const prices = makePrices({ "tok-a": { price: 0.9 } });
+      const blocks: Block[] = [
+        {
+          type: "ma_crossover",
+          config: { tokenId: "tok-a", fastPeriod: 3, slowPeriod: 10 },
+        },
+      ];
+      expect(checkTriggers(blocks, prices, makeHistory(hist))).toBe(true);
+    });
+
+    it("does not fire when history is insufficient", () => {
+      const prices = makePrices({ "tok-a": { price: 0.9 } });
+      const blocks: Block[] = [
+        {
+          type: "ma_crossover",
+          config: { tokenId: "tok-a", fastPeriod: 5, slowPeriod: 20 },
+        },
+      ];
+      expect(checkTriggers(blocks, prices, makeHistory([0.5, 0.6]))).toBe(
+        false,
+      );
+    });
+  });
+
+  describe("macd_crossover", () => {
+    it("fires when MACD line crosses above zero", () => {
+      // 20 flat bars at 0.5, then a sharp drop to 0.1 (MACD goes clearly negative),
+      // then a sharp spike to 0.9 (MACD crosses to positive on the last bar).
+      const flat = Array.from({ length: 20 }, () => 0.5);
+      const hist = [...flat, 0.1, 0.9];
+      const prices = makePrices({ "tok-a": { price: 0.9 } });
+      const blocks: Block[] = [
+        {
+          type: "macd_crossover",
+          config: { tokenId: "tok-a", fastPeriod: 3, slowPeriod: 6 },
+        },
+      ];
+      expect(checkTriggers(blocks, prices, makeHistory(hist))).toBe(true);
+    });
+
+    it("does not fire when history is insufficient", () => {
+      const prices = makePrices({ "tok-a": { price: 0.5 } });
+      const blocks: Block[] = [
+        {
+          type: "macd_crossover",
+          config: { tokenId: "tok-a" },
+        },
+      ];
+      expect(checkTriggers(blocks, prices, makeHistory([0.5]))).toBe(false);
+    });
+  });
+
+  describe("bollinger_bands", () => {
+    it("fires when price breaks above upper band", () => {
+      // 20 bars at 0.5 → bands at 0.5 ± 0. Then spike to 0.9 → above upper
+      const hist = Array.from({ length: 20 }, () => 0.5);
+      const prices = makePrices({ "tok-a": { price: 0.9 } });
+      const blocks: Block[] = [
+        {
+          type: "bollinger_bands",
+          config: { tokenId: "tok-a", period: 20, stdDev: 2, band: "upper" },
+        },
+      ];
+      expect(checkTriggers(blocks, prices, makeHistory(hist))).toBe(true);
+    });
+
+    it("fires when price breaks below lower band", () => {
+      const hist = Array.from({ length: 20 }, () => 0.5);
+      const prices = makePrices({ "tok-a": { price: 0.1 } });
+      const blocks: Block[] = [
+        {
+          type: "bollinger_bands",
+          config: { tokenId: "tok-a", period: 20, stdDev: 2, band: "lower" },
+        },
+      ];
+      expect(checkTriggers(blocks, prices, makeHistory(hist))).toBe(true);
+    });
+
+    it("does not fire when price is within bands", () => {
+      const hist = Array.from({ length: 20 }, () => 0.5);
+      const prices = makePrices({ "tok-a": { price: 0.5 } });
+      const blocks: Block[] = [
+        {
+          type: "bollinger_bands",
+          config: { tokenId: "tok-a", period: 20, stdDev: 2, band: "upper" },
+        },
+      ];
+      expect(checkTriggers(blocks, prices, makeHistory(hist))).toBe(false);
+    });
+  });
+
+  describe("rsi_threshold_tick (backtest)", () => {
+    it("fires when RSI is above threshold (overbought)", () => {
+      const hist = Array.from({ length: 20 }, (_, i) => 0.3 + i * 0.05);
+      const prices = makePrices({ "tok-a": { price: hist[hist.length - 1] } });
+      const blocks: Block[] = [
+        {
+          type: "rsi_threshold_tick",
+          config: { tokenId: "tok-a", level: 70, direction: "above" },
+        },
+      ];
+      expect(checkTriggers(blocks, prices, makeHistory(hist))).toBe(true);
+    });
+
+    it("fires when RSI is below threshold (oversold)", () => {
+      const hist = Array.from({ length: 20 }, (_, i) => 0.9 - i * 0.04);
+      const prices = makePrices({ "tok-a": { price: hist[hist.length - 1] } });
+      const blocks: Block[] = [
+        {
+          type: "rsi_threshold_tick",
+          config: { tokenId: "tok-a", level: 30, direction: "below" },
+        },
+      ];
+      expect(checkTriggers(blocks, prices, makeHistory(hist))).toBe(true);
+    });
+
+    it("does not fire when history is insufficient", () => {
+      const prices = makePrices({ "tok-a": { price: 0.5 } });
+      const blocks: Block[] = [
+        {
+          type: "rsi_threshold_tick",
+          config: { tokenId: "tok-a", level: 70, direction: "above" },
+        },
+      ];
+      expect(checkTriggers(blocks, prices, makeHistory([0.5]))).toBe(false);
+    });
+  });
+});

@@ -8,12 +8,82 @@
  *
  * SAFETY:    stop_if_daily_loss, max_orders_total, stop_if_consecutive_loss
  * TRIGGERS:  every_tick, price_above, price_below, price_crosses_up,
- *            price_crosses_down, spread_below
+ *            price_crosses_down, spread_below, ma_crossover, macd_crossover,
+ *            bollinger_bands, rsi_threshold_tick
  * CONDITIONS: max_bets_per_day, daily_loss_limit, price_in_range,
  *             max_position, cooldown_after_trade
  * ACTIONS:   buy_yes, buy_no, set_stop_loss, take_profit,
  *            scale_in, scale_out, skip_bet
  */
+
+// ─── Inline TA functions (no cross-service dep needed for pure math) ──────────
+
+function _sma(prices: number[], period: number): number {
+  if (prices.length < period || period <= 0) return NaN;
+  const slice = prices.slice(-period);
+  return slice.reduce((s, p) => s + p, 0) / period;
+}
+
+function _ema(prices: number[], period: number): number {
+  if (prices.length < period || period <= 0) return NaN;
+  const k = 2 / (period + 1);
+  let value = prices.slice(0, period).reduce((s, p) => s + p, 0) / period;
+  for (let i = period; i < prices.length; i++) {
+    value = prices[i] * k + value * (1 - k);
+  }
+  return value;
+}
+
+function _rsiWilder(prices: number[], period: number): number {
+  if (prices.length < period + 1 || period <= 0) return NaN;
+  let avgGain = 0;
+  let avgLoss = 0;
+  for (let i = 1; i <= period; i++) {
+    const change = prices[i] - prices[i - 1];
+    if (change > 0) avgGain += change;
+    else avgLoss += Math.abs(change);
+  }
+  avgGain /= period;
+  avgLoss /= period;
+  for (let i = period + 1; i < prices.length; i++) {
+    const change = prices[i] - prices[i - 1];
+    avgGain = (avgGain * (period - 1) + (change > 0 ? change : 0)) / period;
+    avgLoss =
+      (avgLoss * (period - 1) + (change < 0 ? Math.abs(change) : 0)) / period;
+  }
+  if (avgLoss === 0) return 100;
+  return 100 - 100 / (1 + avgGain / avgLoss);
+}
+
+function _macdLine(prices: number[], fast = 12, slow = 26): number {
+  if (prices.length < slow) return NaN;
+  const kFast = 2 / (fast + 1);
+  const kSlow = 2 / (slow + 1);
+  let emaFast = prices.slice(0, fast).reduce((s, p) => s + p, 0) / fast;
+  let emaSlow = prices.slice(0, slow).reduce((s, p) => s + p, 0) / slow;
+  for (let i = fast; i < slow; i++) {
+    emaFast = prices[i] * kFast + emaFast * (1 - kFast);
+  }
+  for (let i = slow; i < prices.length; i++) {
+    emaFast = prices[i] * kFast + emaFast * (1 - kFast);
+    emaSlow = prices[i] * kSlow + emaSlow * (1 - kSlow);
+  }
+  return emaFast - emaSlow;
+}
+
+function _bollingerBands(
+  prices: number[],
+  period = 20,
+  stdDev = 2,
+): { upper: number; middle: number; lower: number } {
+  const nan = { upper: NaN, middle: NaN, lower: NaN };
+  if (prices.length < period || period <= 0) return nan;
+  const slice = prices.slice(-period);
+  const middle = slice.reduce((s, p) => s + p, 0) / period;
+  const variance = slice.reduce((s, p) => s + (p - middle) ** 2, 0) / period;
+  const sd = Math.sqrt(variance);
+  return { upper: middle + stdDev * sd, middle, lower: middle - stdDev * sd };
+}
 
 export interface Block {
   type: string;
@@ -109,6 +179,7 @@ export function checkSafety(
 export function checkTriggers(
   triggers: Block[],
   prices: Map<string, PriceState>,
+  priceHistory: Map<string, number[]> = new Map(),
 ): boolean {
   if (triggers.length === 0) return true;
 
@@ -116,6 +187,7 @@ export function checkTriggers(
     const cfg = block.config ?? {};
     const tokenId = String(cfg.tokenId ?? "");
     const ps = prices.get(tokenId);
+    const hist = priceHistory.get(tokenId) ?? [];
 
     switch (block.type) {
       case "every_tick":
@@ -159,6 +231,66 @@ export function checkTriggers(
           return true;
         if (block.type === "price_below_tick" && ps && ps.price < threshold)
           return true;
+        break;
+      }
+
+      // ─── TA Triggers (require rolling price history) ───────────────────────
+
+      case "ma_crossover": {
+        // Fires when fast MA crosses above slow MA
+        const fastPeriod = parseInt(String(cfg.fastPeriod ?? 10), 10);
+        const slowPeriod = parseInt(String(cfg.slowPeriod ?? 20), 10);
+        const maType = String(cfg.maType ?? "sma");
+        if (hist.length >= slowPeriod + 1) {
+          const prevHist = hist.slice(0, -1);
+          const maFn = maType === "ema" ? _ema : _sma;
+          const fastNow = maFn(hist, fastPeriod);
+          const slowNow = maFn(hist, slowPeriod);
+          const fastPrev = maFn(prevHist, fastPeriod);
+          const slowPrev = maFn(prevHist, slowPeriod);
+          if (fastPrev <= slowPrev && fastNow > slowNow) return true;
+        }
+        break;
+      }
+
+      case "macd_crossover": {
+        // Fires when MACD line crosses above/below zero or signal line
+        const fast = parseInt(String(cfg.fastPeriod ?? 12), 10);
+        const slow = parseInt(String(cfg.slowPeriod ?? 26), 10);
+        const crossAbove = String(cfg.crossAbove ?? "true") !== "false";
+        if (hist.length >= slow + 1) {
+          const macdNow = _macdLine(hist, fast, slow);
+          const macdPrev = _macdLine(hist.slice(0, -1), fast, slow);
+          if (crossAbove && macdPrev <= 0 && macdNow > 0) return true;
+          if (!crossAbove && macdPrev >= 0 && macdNow < 0) return true;
+        }
+        break;
+      }
+
+      case "bollinger_bands": {
+        // Fires when price breaks outside upper or lower band
+        const period = parseInt(String(cfg.period ?? 20), 10);
+        const stdDev = parseFloat(String(cfg.stdDev ?? 2));
+        const band = String(cfg.band ?? "upper"); // "upper" | "lower"
+        if (ps && hist.length >= period) {
+          const bands = _bollingerBands(hist, period, stdDev);
+          if (band === "upper" && ps.price > bands.upper) return true;
+          if (band === "lower" && ps.price < bands.lower) return true;
+        }
+        break;
+      }
+
+      case "rsi_threshold_tick": {
+        const period = parseInt(String(cfg.period ?? 14), 10);
+        const level = parseFloat(String(cfg.level ?? "70"));
+        const direction = String(cfg.direction ?? "above");
+        if (hist.length >= period + 1) {
+          const rsi = _rsiWilder(hist, period);
+          if (!isNaN(rsi)) {
+            if (direction === "above" && rsi > level) return true;
+            if (direction === "below" && rsi < level) return true;
+          }
+        }
         break;
       }
     }

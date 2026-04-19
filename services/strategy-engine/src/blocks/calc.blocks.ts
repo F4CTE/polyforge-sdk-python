@@ -193,3 +193,73 @@ export const AbsRoundBlockEvaluator: CalcBlockEvaluator = {
     return { value };
   },
 };
+
+// ─── TA Indicator Blocks ─────────────────────────────────────────────────────
+// These blocks read pre-computed values from ctx.variables.
+// Actual computation happens in strategy-runner.ts before this eval phase.
+
+function blockId(block: Record<string, unknown>): string {
+  return typeof block.id === "string" ? block.id : "";
+}
+
+// ─── SMA Block ───────────────────────────────────────────────────────────────
+
+export const SmaBlockEvaluator: CalcBlockEvaluator = {
+  evaluate(block, _inputs, ctx): CalcBlockResult {
+    return { value: ctx.variables?.[`__ta_${blockId(block)}`] ?? NaN };
+  },
+};
+
+// ─── EMA Block ───────────────────────────────────────────────────────────────
+
+export const EmaBlockEvaluator: CalcBlockEvaluator = {
+  evaluate(block, _inputs, ctx): CalcBlockResult {
+    return { value: ctx.variables?.[`__ta_${blockId(block)}`] ?? NaN };
+  },
+};
+
+// ─── MACD Block ──────────────────────────────────────────────────────────────
+// output param selects which component: macdLine | signalLine | histogram
+
+export type MACDOutput = "macdLine" | "signalLine" | "histogram";
+
+export const MacdBlockEvaluator: CalcBlockEvaluator = {
+  evaluate(block, _inputs, ctx): CalcBlockResult {
+    const id = blockId(block);
+    const output = strParam(block, "output", "macdLine") as MACDOutput;
+    const key =
+      output === "signalLine"
+        ? `__ta_${id}_signalLine`
+        : output === "histogram"
+          ? `__ta_${id}_histogram`
+          : `__ta_${id}`;
+    return { value: ctx.variables?.[key] ?? NaN };
+  },
+};
+
+// ─── BOLLINGER Block ─────────────────────────────────────────────────────────
+// output param selects band: upper | middle | lower
+
+export type BollingerOutput = "upper" | "middle" | "lower";
+
+export const BollingerBlockEvaluator: CalcBlockEvaluator = {
+  evaluate(block, _inputs, ctx): CalcBlockResult {
+    const id = blockId(block);
+    const output = strParam(block, "output", "middle") as BollingerOutput;
+    const key =
+      output === "upper"
+        ? `__ta_${id}_upper`
+        : output === "lower"
+          ? `__ta_${id}_lower`
+          : `__ta_${id}`;
+    return { value: ctx.variables?.[key] ?? NaN };
+  },
+};
+
+// ─── ATR Block ───────────────────────────────────────────────────────────────
+
+export const AtrBlockEvaluator: CalcBlockEvaluator = {
+  evaluate(block, _inputs, ctx): CalcBlockResult {
+    return { value: ctx.variables?.[`__ta_${blockId(block)}`] ?? NaN };
+  },
+};

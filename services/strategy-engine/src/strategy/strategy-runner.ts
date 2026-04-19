@@ -16,6 +16,8 @@ import { resolveParams } from "../blocks/resolve-params";
 import { StateService } from "../state/state.service";
 import { safeEvaluate } from "../common/safe-evaluate";
 import { BETA_LIMITS } from "../common/beta-limits.config";
+import { sma, ema, macd, bollingerBands, atr } from "../ta/indicators";
+import { readPriceWindow } from "../ta/price-window";
 
 /** Redis key for daily execution counter — resets at midnight UTC */
 const dailyExecKey = (strategyId: string): string => {
@@ -234,6 +236,62 @@ export class StrategyRunner {
       }
     }
     ctx.variables = variables;
+
+    // 0.4 Pre-fetch TA indicator values for TA calc blocks
+    // CalcBlockEvaluator has no Redis access, so we compute here and store in ctx.variables.
+    const TA_TYPES = new Set(["SMA", "EMA", "MACD", "BOLLINGER", "ATR"]);
+    const taBlocks = this.calcBlocks.filter((b) => TA_TYPES.has(b.type));
+    if (taBlocks.length > 0) {
+      // Group by tokenId to batch price-window reads
+      const priceCache = new Map<string, number[]>();
+      for (const block of taBlocks) {
+        const p = block.params ?? {};
+        const tokenId = typeof p.tokenId === "string" ? p.tokenId : "";
+        if (!tokenId) continue;
+
+        if (!priceCache.has(tokenId)) {
+          // Fetch enough prices for the widest indicator (250 is the sorted-set max)
+          const points = await readPriceWindow(this.redis, tokenId, 250);
+          priceCache.set(
+            tokenId,
+            points.map((pt) => pt.price),
+          );
+        }
+
+        const prices = priceCache.get(tokenId)!;
+        ctx.variables = ctx.variables ?? {};
+
+        if (block.type === "SMA") {
+          const period = Number(p.period ?? 14);
+          ctx.variables[`__ta_${block.id}`] = sma(prices, period);
+        } else if (block.type === "EMA") {
+          const period = Number(p.period ?? 14);
+          ctx.variables[`__ta_${block.id}`] = ema(prices, period);
+        } else if (block.type === "MACD") {
+          const fast = Number(p.fastPeriod ?? 12);
+          const slow = Number(p.slowPeriod ?? 26);
+          const signal = Number(p.signalPeriod ?? 9);
+          const result = macd(prices, fast, slow, signal);
+          ctx.variables[`__ta_${block.id}`] = result.macdLine;
+          ctx.variables[`__ta_${block.id}_signalLine`] = result.signalLine;
+          ctx.variables[`__ta_${block.id}_histogram`] = result.histogram;
+        } else if (block.type === "BOLLINGER") {
+          const period = Number(p.period ?? 20);
+          const stdDev = Number(p.stdDev ?? 2);
+          const result = bollingerBands(prices, period, stdDev);
+          ctx.variables[`__ta_${block.id}`] = result.middle;
+          ctx.variables[`__ta_${block.id}_upper`] = result.upper;
+          ctx.variables[`__ta_${block.id}_lower`] = result.lower;
+        } else if (block.type === "ATR") {
+          const period = Number(p.period ?? 14);
+          // Use price ± half-spread as high/low proxy (single price series)
+          const halfSpread = 0.01;
+          const highs = prices.map((price) => price + halfSpread);
+          const lows = prices.map((price) => price - halfSpread);
+          ctx.variables[`__ta_${block.id}`] = atr(highs, lows, prices, period);
+        }
+      }
+    }
 
     // 0.5 Evaluate calculation blocks — produce computed values for downstream use
     if (this.calcBlocks.length > 0) {

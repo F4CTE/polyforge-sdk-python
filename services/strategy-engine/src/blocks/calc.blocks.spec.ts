@@ -505,3 +505,150 @@ describe("Calc blocks — NaN propagation", () => {
     expect(result.value).toBe(1);
   });
 });
+
+// ─── TA Indicator Blocks ─────────────────────────────────────────────────────
+
+import {
+  SmaBlockEvaluator,
+  EmaBlockEvaluator,
+  MacdBlockEvaluator,
+  BollingerBlockEvaluator,
+  AtrBlockEvaluator,
+} from "./calc.blocks";
+
+describe("SmaBlockEvaluator", () => {
+  it("returns pre-computed value from ctx.variables", () => {
+    const ctx = makeCtx({ variables: { __ta_sma1: 0.55 } });
+    const result = SmaBlockEvaluator.evaluate({ id: "sma1" }, [], ctx);
+    expect(result.value).toBe(0.55);
+  });
+
+  it("returns NaN when ctx.variables key is missing", () => {
+    const result = SmaBlockEvaluator.evaluate({ id: "sma1" }, [], makeCtx());
+    expect(result.value).toBeNaN();
+  });
+});
+
+describe("EmaBlockEvaluator", () => {
+  it("returns pre-computed value from ctx.variables", () => {
+    const ctx = makeCtx({ variables: { __ta_ema1: 0.62 } });
+    const result = EmaBlockEvaluator.evaluate({ id: "ema1" }, [], ctx);
+    expect(result.value).toBe(0.62);
+  });
+
+  it("returns NaN when ctx.variables key is missing", () => {
+    const result = EmaBlockEvaluator.evaluate({ id: "ema1" }, [], makeCtx());
+    expect(result.value).toBeNaN();
+  });
+});
+
+describe("MacdBlockEvaluator", () => {
+  it("returns macdLine by default", () => {
+    const ctx = makeCtx({
+      variables: {
+        __ta_m1: 0.01,
+        __ta_m1_signalLine: 0.008,
+        __ta_m1_histogram: 0.002,
+      },
+    });
+    expect(MacdBlockEvaluator.evaluate({ id: "m1" }, [], ctx).value).toBe(0.01);
+  });
+
+  it("returns signalLine when output=signalLine", () => {
+    const ctx = makeCtx({
+      variables: {
+        __ta_m1: 0.01,
+        __ta_m1_signalLine: 0.008,
+        __ta_m1_histogram: 0.002,
+      },
+    });
+    expect(
+      MacdBlockEvaluator.evaluate({ id: "m1", output: "signalLine" }, [], ctx)
+        .value,
+    ).toBeCloseTo(0.008);
+  });
+
+  it("returns histogram when output=histogram", () => {
+    const ctx = makeCtx({
+      variables: {
+        __ta_m1: 0.01,
+        __ta_m1_signalLine: 0.008,
+        __ta_m1_histogram: 0.002,
+      },
+    });
+    expect(
+      MacdBlockEvaluator.evaluate({ id: "m1", output: "histogram" }, [], ctx)
+        .value,
+    ).toBeCloseTo(0.002);
+  });
+
+  it("returns NaN when variables are missing", () => {
+    expect(
+      MacdBlockEvaluator.evaluate({ id: "m1" }, [], makeCtx()).value,
+    ).toBeNaN();
+  });
+});
+
+describe("BollingerBlockEvaluator", () => {
+  it("returns middle band by default", () => {
+    const ctx = makeCtx({
+      variables: {
+        __ta_b1: 0.5,
+        __ta_b1_upper: 0.6,
+        __ta_b1_lower: 0.4,
+      },
+    });
+    expect(BollingerBlockEvaluator.evaluate({ id: "b1" }, [], ctx).value).toBe(
+      0.5,
+    );
+  });
+
+  it("returns upper band when output=upper", () => {
+    const ctx = makeCtx({
+      variables: {
+        __ta_b1: 0.5,
+        __ta_b1_upper: 0.6,
+        __ta_b1_lower: 0.4,
+      },
+    });
+    expect(
+      BollingerBlockEvaluator.evaluate({ id: "b1", output: "upper" }, [], ctx)
+        .value,
+    ).toBe(0.6);
+  });
+
+  it("returns lower band when output=lower", () => {
+    const ctx = makeCtx({
+      variables: {
+        __ta_b1: 0.5,
+        __ta_b1_upper: 0.6,
+        __ta_b1_lower: 0.4,
+      },
+    });
+    expect(
+      BollingerBlockEvaluator.evaluate({ id: "b1", output: "lower" }, [], ctx)
+        .value,
+    ).toBe(0.4);
+  });
+
+  it("returns NaN when variables are missing", () => {
+    expect(
+      BollingerBlockEvaluator.evaluate({ id: "b1" }, [], makeCtx()).value,
+    ).toBeNaN();
+  });
+});
+
+describe("AtrBlockEvaluator", () => {
+  it("returns pre-computed value from ctx.variables", () => {
+    const ctx = makeCtx({ variables: { __ta_atr1: 0.03 } });
+    expect(AtrBlockEvaluator.evaluate({ id: "atr1" }, [], ctx).value).toBe(
+      0.03,
+    );
+  });
+
+  it("returns NaN when ctx.variables key is missing", () => {
+    expect(
+      AtrBlockEvaluator.evaluate({ id: "atr1" }, [], makeCtx()).value,
+    ).toBeNaN();
+  });
+});

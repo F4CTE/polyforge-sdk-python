@@ -127,7 +127,10 @@ describe("rsiWilder", () => {
   });
 
   it("stays in [0, 100] range", () => {
-    const prices = [44, 44.34, 44.09, 44.15, 43.61, 44.33, 44.83, 45, 45.1, 45.15, 43.61, 44.33, 44.83, 45, 45.1];
+    const prices = [
+      44, 44.34, 44.09, 44.15, 43.61, 44.33, 44.83, 45, 45.1, 45.15, 43.61,
+      44.33, 44.83, 45, 45.1,
+    ];
     const r = rsiWilder(prices, 14);
     expect(r).toBeGreaterThanOrEqual(0);
     expect(r).toBeLessThanOrEqual(100);
