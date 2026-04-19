@@ -9,7 +9,7 @@ const NAV_LINKS = [
   { href: "#blocks", label: "blocks" },
   { href: "#whales", label: "whales" },
   { href: "/api-docs", label: "developers" },
-  { href: "#pricing", label: "pricing" },
+  { href: "/pricing", label: "pricing" },
   { href: "/docs", label: "docs" },
 ] as const;
 
