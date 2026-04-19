@@ -165,3 +165,4 @@ tests/e2e/**/*.d.ts.map
 # Session logs — stored outside repo on polyforge-lab
 docs/session-logs/
 docs/reports/
+graphify-out/
