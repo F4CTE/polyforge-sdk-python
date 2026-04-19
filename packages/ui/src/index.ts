@@ -1,3 +1,5 @@
+// Copyright (c) 2026 PolyForge Labs. All Rights Reserved. See LICENSE for details.
+
 export { cn } from './lib/utils';
 
 // UI Components
