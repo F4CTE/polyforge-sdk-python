@@ -49,11 +49,20 @@ export type MockRedisService = {
   xadd: ReturnType<typeof vi.fn>;
 } & RedisService;
 
+/**
+ * Converts a price array into the alternating [member, score] format
+ * returned by Redis ZRANGE ... WITHSCORES, where member=price and score=timestamp.
+ */
+export function toPriceWindow(prices: number[]): string[] {
+  return prices.flatMap((p, i) => [String(p), String(i * 1000)]);
+}
+
 export function makeRedis(
   overrides: Record<string, unknown> = {},
 ): MockRedisService {
   const client = {
     lrange: vi.fn().mockResolvedValue([]),
+    zrange: vi.fn().mockResolvedValue([]),
   };
 
   return {

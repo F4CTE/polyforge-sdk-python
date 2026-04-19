@@ -28,6 +28,10 @@ import {
   PriceMomentumTickBlock,
   RsiThresholdTickBlock,
   EveryTickBlock,
+  MaCrossoverTickBlock,
+  MacdSignalTickBlock,
+  BollingerBreakoutTickBlock,
+  VwapCrossTickBlock,
 } from "./trigger.blocks";
 
 import {
@@ -106,6 +110,14 @@ export const TRIGGER_REGISTRY: Record<string, BlockEvaluator> = {
   rsi_threshold_tick: RsiThresholdTickBlock,
   TICK: EveryTickBlock,
   every_tick: EveryTickBlock,
+  ma_crossover_tick: MaCrossoverTickBlock,
+  MA_CROSSOVER: MaCrossoverTickBlock,
+  macd_signal_tick: MacdSignalTickBlock,
+  MACD_SIGNAL: MacdSignalTickBlock,
+  bollinger_breakout_tick: BollingerBreakoutTickBlock,
+  BOLLINGER_BREAKOUT: BollingerBreakoutTickBlock,
+  vwap_cross_tick: VwapCrossTickBlock,
+  VWAP_CROSS: VwapCrossTickBlock,
 };
 
 export const CONDITION_REGISTRY: Record<string, BlockEvaluator> = {

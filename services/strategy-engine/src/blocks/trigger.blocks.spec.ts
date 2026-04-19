@@ -13,8 +13,18 @@ import {
   PriceMomentumTickBlock,
   RsiThresholdTickBlock,
   EveryTickBlock,
+  MaCrossoverTickBlock,
+  MacdSignalTickBlock,
+  BollingerBreakoutTickBlock,
+  VwapCrossTickBlock,
 } from "./trigger.blocks";
-import { block, makeCtx, makePrisma, makeRedis } from "./__helpers__";
+import {
+  block,
+  makeCtx,
+  makePrisma,
+  makeRedis,
+  toPriceWindow,
+} from "./__helpers__";
 
 // ─── EVENT TRIGGERS ───────────────────────────────────────────────────────────
 
@@ -657,5 +667,376 @@ describe("EveryTickBlock", () => {
     );
     expect(res.fired).toBe(true);
     expect(res.reason).toBe("every_tick");
+  });
+});
+
+// ─── TA TICK TRIGGER HELPERS ──────────────────────────────────────────────────
+
+function makeZrangeRedis(prices: number[]) {
+  const redis = makeRedis();
+  redis.getClient.mockReturnValue({
+    lrange: vi.fn().mockResolvedValue([]),
+    zrange: vi.fn().mockResolvedValue(toPriceWindow(prices)),
+  });
+  return redis;
+}
+
+// ─── MaCrossoverTickBlock ─────────────────────────────────────────────────────
+
+describe("MaCrossoverTickBlock", () => {
+  // shortPeriod=3, longPeriod=5 — need 6 prices (longPeriod+1)
+  // prev=[0.7,0.6,0.5,0.4,0.3]: short(3)=0.4 < long(5)=0.5 (bearish)
+  // curr=[0.6,0.5,0.4,0.3,1.0]: short(3)=0.567 > long(5)=0.56 (bullish cross)
+  const goldenCrossPrices = [0.7, 0.6, 0.5, 0.4, 0.3, 1.0];
+
+  it("fires on golden cross (SMA)", async () => {
+    const redis = makeZrangeRedis(goldenCrossPrices);
+    const res = await MaCrossoverTickBlock.evaluate(
+      block("ma_crossover_tick", {
+        tokenId: "tok1",
+        shortPeriod: 3,
+        longPeriod: 5,
+        maType: "sma",
+        direction: "golden_cross",
+      }),
+      makeCtx(),
+      redis,
+      makePrisma(),
+    );
+    expect(res.fired).toBe(true);
+  });
+
+  it("fires on death cross (SMA)", async () => {
+    // prev=[0.3,0.4,0.5,0.6,0.7]: short(3)=0.6 > long(5)=0.5 (bullish)
+    // curr=[0.4,0.5,0.6,0.7,0.0]: short(3)=0.433 <= long(5)=0.44 (bearish cross)
+    const deathCrossPrices = [0.3, 0.4, 0.5, 0.6, 0.7, 0.0];
+    const redis = makeZrangeRedis(deathCrossPrices);
+    const res = await MaCrossoverTickBlock.evaluate(
+      block("ma_crossover_tick", {
+        tokenId: "tok1",
+        shortPeriod: 3,
+        longPeriod: 5,
+        maType: "sma",
+        direction: "death_cross",
+      }),
+      makeCtx(),
+      redis,
+      makePrisma(),
+    );
+    expect(res.fired).toBe(true);
+  });
+
+  it("fires on golden cross (EMA)", async () => {
+    const redis = makeZrangeRedis(goldenCrossPrices);
+    const res = await MaCrossoverTickBlock.evaluate(
+      block("ma_crossover_tick", {
+        tokenId: "tok1",
+        shortPeriod: 3,
+        longPeriod: 5,
+        maType: "ema",
+        direction: "golden_cross",
+      }),
+      makeCtx(),
+      redis,
+      makePrisma(),
+    );
+    expect(res.fired).toBe(true);
+  });
+
+  it("does not fire when no cross occurred", async () => {
+    // Steady uptrend — short stays above long the whole time (no crossover)
+    const steadyPrices = [0.5, 0.51, 0.52, 0.53, 0.54, 0.55];
+    const redis = makeZrangeRedis(steadyPrices);
+    const res = await MaCrossoverTickBlock.evaluate(
+      block("ma_crossover_tick", {
+        tokenId: "tok1",
+        shortPeriod: 3,
+        longPeriod: 5,
+        maType: "sma",
+        direction: "golden_cross",
+      }),
+      makeCtx(),
+      redis,
+      makePrisma(),
+    );
+    expect(res.fired).toBe(false);
+  });
+
+  it("does not fire with insufficient data", async () => {
+    const redis = makeZrangeRedis([0.5, 0.6]); // only 2 prices
+    const res = await MaCrossoverTickBlock.evaluate(
+      block("ma_crossover_tick", {
+        tokenId: "tok1",
+        shortPeriod: 3,
+        longPeriod: 5,
+        maType: "sma",
+        direction: "golden_cross",
+      }),
+      makeCtx(),
+      redis,
+      makePrisma(),
+    );
+    expect(res.fired).toBe(false);
+    expect(res.reason).toMatch(/insufficient/);
+  });
+
+  it("does not fire with invalid config", async () => {
+    const res = await MaCrossoverTickBlock.evaluate(
+      block("ma_crossover_tick", {}),
+      makeCtx(),
+      makeRedis(),
+      makePrisma(),
+    );
+    expect(res.fired).toBe(false);
+    expect(res.reason).toMatch(/invalid config/);
+  });
+});
+
+// ─── MacdSignalTickBlock ──────────────────────────────────────────────────────
+
+describe("MacdSignalTickBlock", () => {
+  // Use small periods to keep test data manageable: fast=3, slow=5, signal=3
+  // Need slow+signal = 8 prices
+  // Build a series where MACD line crosses signal line between tick N-1 and N
+  function makeSmallMacdParams(signal: string) {
+    return {
+      tokenId: "tok1",
+      fastPeriod: 3,
+      slowPeriod: 5,
+      signalPeriod: 3,
+      signal,
+    };
+  }
+
+  it("fires on MACD line_cross", async () => {
+    // Downtrend [0.9..0.1] pushes MACD below signal, then sharp reversal (0.9) flips it
+    const prices = [0.9, 0.8, 0.7, 0.6, 0.5, 0.1, 0.1, 0.9];
+    const redis = makeZrangeRedis(prices);
+    const res = await MacdSignalTickBlock.evaluate(
+      block("macd_signal_tick", makeSmallMacdParams("line_cross")),
+      makeCtx(),
+      redis,
+      makePrisma(),
+    );
+    expect(res.fired).toBe(true);
+  });
+
+  it("fires on histogram_sign_change", async () => {
+    const prices = [0.9, 0.8, 0.7, 0.6, 0.5, 0.1, 0.1, 0.9];
+    const redis = makeZrangeRedis(prices);
+    const res = await MacdSignalTickBlock.evaluate(
+      block("macd_signal_tick", makeSmallMacdParams("histogram_sign_change")),
+      makeCtx(),
+      redis,
+      makePrisma(),
+    );
+    expect(res.fired).toBe(true);
+  });
+
+  it("does not fire when MACD is stable", async () => {
+    // Flat prices → MACD line ≈ signal line ≈ 0, no cross
+    const prices = [0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5];
+    const redis = makeZrangeRedis(prices);
+    const res = await MacdSignalTickBlock.evaluate(
+      block("macd_signal_tick", makeSmallMacdParams("line_cross")),
+      makeCtx(),
+      redis,
+      makePrisma(),
+    );
+    expect(res.fired).toBe(false);
+  });
+
+  it("does not fire with insufficient data", async () => {
+    const redis = makeZrangeRedis([0.5, 0.6]); // far fewer than slow+signal
+    const res = await MacdSignalTickBlock.evaluate(
+      block("macd_signal_tick", makeSmallMacdParams("line_cross")),
+      makeCtx(),
+      redis,
+      makePrisma(),
+    );
+    expect(res.fired).toBe(false);
+    expect(res.reason).toMatch(/insufficient/);
+  });
+
+  it("does not fire with invalid config", async () => {
+    const res = await MacdSignalTickBlock.evaluate(
+      block("macd_signal_tick", {}),
+      makeCtx(),
+      makeRedis(),
+      makePrisma(),
+    );
+    expect(res.fired).toBe(false);
+    expect(res.reason).toMatch(/invalid config/);
+  });
+});
+
+// ─── BollingerBreakoutTickBlock ───────────────────────────────────────────────
+
+describe("BollingerBreakoutTickBlock", () => {
+  // period=5, stdDev=2 — need 6 prices
+  // Use a tight cluster then a breakout price at position 5
+  const baseParams = { tokenId: "tok1", period: 5, stdDevMultiplier: 2 };
+
+  it("fires on upper_break", async () => {
+    // prev prices [0..4]: tight cluster around 0.5 → narrow bands
+    // current price [5]: well above upper band
+    const prices = [0.5, 0.5, 0.5, 0.5, 0.5, 0.9];
+    const redis = makeZrangeRedis(prices);
+    const res = await BollingerBreakoutTickBlock.evaluate(
+      block("bollinger_breakout_tick", {
+        ...baseParams,
+        direction: "upper_break",
+      }),
+      makeCtx(),
+      redis,
+      makePrisma(),
+    );
+    expect(res.fired).toBe(true);
+  });
+
+  it("fires on lower_break", async () => {
+    const prices = [0.5, 0.5, 0.5, 0.5, 0.5, 0.1];
+    const redis = makeZrangeRedis(prices);
+    const res = await BollingerBreakoutTickBlock.evaluate(
+      block("bollinger_breakout_tick", {
+        ...baseParams,
+        direction: "lower_break",
+      }),
+      makeCtx(),
+      redis,
+      makePrisma(),
+    );
+    expect(res.fired).toBe(true);
+  });
+
+  it("does not fire when price stays inside bands", async () => {
+    // Small variation, current price stays within bands
+    const prices = [0.48, 0.49, 0.5, 0.51, 0.52, 0.5];
+    const redis = makeZrangeRedis(prices);
+    const res = await BollingerBreakoutTickBlock.evaluate(
+      block("bollinger_breakout_tick", {
+        ...baseParams,
+        direction: "upper_break",
+      }),
+      makeCtx(),
+      redis,
+      makePrisma(),
+    );
+    expect(res.fired).toBe(false);
+  });
+
+  it("does not fire for opposite direction (upper_break when price breaks down)", async () => {
+    // Price breaks below lower band — upper_break should not fire
+    const prices = [0.5, 0.5, 0.5, 0.5, 0.5, 0.1];
+    const redis = makeZrangeRedis(prices);
+    const res = await BollingerBreakoutTickBlock.evaluate(
+      block("bollinger_breakout_tick", {
+        ...baseParams,
+        direction: "upper_break",
+      }),
+      makeCtx(),
+      redis,
+      makePrisma(),
+    );
+    expect(res.fired).toBe(false);
+  });
+
+  it("does not fire with insufficient data", async () => {
+    const redis = makeZrangeRedis([0.5, 0.6]); // far fewer than period+1
+    const res = await BollingerBreakoutTickBlock.evaluate(
+      block("bollinger_breakout_tick", {
+        ...baseParams,
+        direction: "upper_break",
+      }),
+      makeCtx(),
+      redis,
+      makePrisma(),
+    );
+    expect(res.fired).toBe(false);
+    expect(res.reason).toMatch(/insufficient/);
+  });
+
+  it("does not fire with invalid config", async () => {
+    const res = await BollingerBreakoutTickBlock.evaluate(
+      block("bollinger_breakout_tick", {}),
+      makeCtx(),
+      makeRedis(),
+      makePrisma(),
+    );
+    expect(res.fired).toBe(false);
+    expect(res.reason).toMatch(/invalid config/);
+  });
+});
+
+// ─── VwapCrossTickBlock ───────────────────────────────────────────────────────
+
+describe("VwapCrossTickBlock", () => {
+  // VWAP = mean of all prices (uniform volume)
+  // 5 session prices: [0.4, 0.4, 0.4, 0.4, 0.4] → VWAP = 0.4
+  // Use series where second-to-last is below VWAP, last is above
+  it("fires when price crosses above VWAP", async () => {
+    // VWAP = mean([0.4, 0.4, 0.4, 0.3, 0.5]) = 0.4
+    // prevPrice = 0.3 (below VWAP), currentPrice = 0.5 (above)
+    const prices = [0.4, 0.4, 0.4, 0.3, 0.5];
+    const redis = makeZrangeRedis(prices);
+    const res = await VwapCrossTickBlock.evaluate(
+      block("vwap_cross_tick", { tokenId: "tok1", direction: "above" }),
+      makeCtx(),
+      redis,
+      makePrisma(),
+    );
+    expect(res.fired).toBe(true);
+  });
+
+  it("fires when price crosses below VWAP", async () => {
+    // VWAP = mean([0.6, 0.6, 0.6, 0.7, 0.5]) = 0.6
+    // prevPrice = 0.7 (above), currentPrice = 0.5 (below)
+    const prices = [0.6, 0.6, 0.6, 0.7, 0.5];
+    const redis = makeZrangeRedis(prices);
+    const res = await VwapCrossTickBlock.evaluate(
+      block("vwap_cross_tick", { tokenId: "tok1", direction: "below" }),
+      makeCtx(),
+      redis,
+      makePrisma(),
+    );
+    expect(res.fired).toBe(true);
+  });
+
+  it("does not fire when price stays above VWAP without a cross", async () => {
+    // Both prevPrice and currentPrice above VWAP
+    // VWAP = mean([0.3, 0.3, 0.3, 0.6, 0.7]) = 0.44
+    // prevPrice = 0.6 > 0.44, currentPrice = 0.7 > 0.44 → no cross
+    const prices = [0.3, 0.3, 0.3, 0.6, 0.7];
+    const redis = makeZrangeRedis(prices);
+    const res = await VwapCrossTickBlock.evaluate(
+      block("vwap_cross_tick", { tokenId: "tok1", direction: "above" }),
+      makeCtx(),
+      redis,
+      makePrisma(),
+    );
+    expect(res.fired).toBe(false);
+  });
+
+  it("does not fire with insufficient data", async () => {
+    const redis = makeZrangeRedis([0.5, 0.6]); // only 2 prices — need ≥ 3
+    const res = await VwapCrossTickBlock.evaluate(
+      block("vwap_cross_tick", { tokenId: "tok1", direction: "above" }),
+      makeCtx(),
+      redis,
+      makePrisma(),
+    );
+    expect(res.fired).toBe(false);
+    expect(res.reason).toMatch(/insufficient/);
+  });
+
+  it("does not fire with invalid config", async () => {
+    const res = await VwapCrossTickBlock.evaluate(
+      block("vwap_cross_tick", {}),
+      makeCtx(),
+      makeRedis(),
+      makePrisma(),
+    );
+    expect(res.fired).toBe(false);
+    expect(res.reason).toMatch(/invalid config/);
   });
 });

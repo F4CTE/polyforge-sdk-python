@@ -1,4 +1,6 @@
 import { BlockEvaluator, BlockResult } from "./block.types";
+import { sma, ema, macd, bollingerBands, vwap } from "../ta/indicators";
+import { readPriceWindow } from "../ta/price-window";
 
 type BlockParams = Record<string, string | number | undefined>;
 
@@ -201,7 +203,7 @@ export const VolumeRateTickBlock: BlockEvaluator = {
     if (!book) return { fired: false, reason: "no book data" };
     const volume = book.bids
       .slice(0, 5)
-      .reduce((s, b) => s + parseFloat(b.size), 0);
+      .reduce((s: number, b: { size: string }) => s + parseFloat(b.size), 0);
     const fired = volume >= parseFloat(minRate);
     return {
       fired,
@@ -284,5 +286,175 @@ export const RsiThresholdTickBlock: BlockEvaluator = {
 export const EveryTickBlock: BlockEvaluator = {
   evaluate(_block, _ctx, _redis, _prisma): Promise<BlockResult> {
     return Promise.resolve({ fired: true, reason: "every_tick" });
+  },
+};
+
+// ─── TA TICK TRIGGERS ─────────────────────────────────────────────────────────
+
+// ma_crossover_tick — fires when the short MA crosses the long MA
+export const MaCrossoverTickBlock: BlockEvaluator = {
+  async evaluate(block, _ctx, redis, _prisma): Promise<BlockResult> {
+    const params = (block["params"] as BlockParams) ?? {};
+    const tokenId = String(params.tokenId ?? "");
+    const shortPeriod = parseInt(String(params.shortPeriod ?? "10"), 10);
+    const longPeriod = parseInt(String(params.longPeriod ?? "50"), 10);
+    const maType = String(params.maType ?? "sma");
+    const direction = String(params.direction ?? "");
+
+    if (!tokenId || !direction)
+      return { fired: false, reason: "invalid config" };
+
+    const points = await readPriceWindow(redis, tokenId, longPeriod + 1);
+    if (points.length < longPeriod + 1)
+      return { fired: false, reason: "insufficient price history" };
+
+    const prices = points.map((p) => p.price);
+    const maFn = maType === "ema" ? ema : sma;
+
+    const prev = prices.slice(0, longPeriod);
+    const curr = prices.slice(1);
+
+    const prevShortMA = maFn(prev.slice(-shortPeriod), shortPeriod);
+    const prevLongMA = maFn(prev, longPeriod);
+    const currShortMA = maFn(curr.slice(-shortPeriod), shortPeriod);
+    const currLongMA = maFn(curr, longPeriod);
+
+    if ([prevShortMA, prevLongMA, currShortMA, currLongMA].some(isNaN))
+      return { fired: false, reason: "insufficient data for MA computation" };
+
+    let fired = false;
+    if (direction === "golden_cross")
+      fired = prevShortMA < prevLongMA && currShortMA >= currLongMA;
+    if (direction === "death_cross")
+      fired = prevShortMA > prevLongMA && currShortMA <= currLongMA;
+
+    return {
+      fired,
+      reason: `${maType} short=${currShortMA.toFixed(4)} long=${currLongMA.toFixed(4)} dir=${direction}`,
+    };
+  },
+};
+
+// macd_signal_tick — fires on MACD signal conditions
+export const MacdSignalTickBlock: BlockEvaluator = {
+  async evaluate(block, _ctx, redis, _prisma): Promise<BlockResult> {
+    const params = (block["params"] as BlockParams) ?? {};
+    const tokenId = String(params.tokenId ?? "");
+    const fastPeriod = parseInt(String(params.fastPeriod ?? "12"), 10);
+    const slowPeriod = parseInt(String(params.slowPeriod ?? "26"), 10);
+    const signalPeriod = parseInt(String(params.signalPeriod ?? "9"), 10);
+    const signal = String(params.signal ?? "");
+
+    if (!tokenId || !signal) return { fired: false, reason: "invalid config" };
+
+    const count = slowPeriod + signalPeriod;
+    const points = await readPriceWindow(redis, tokenId, count);
+    if (points.length < count)
+      return { fired: false, reason: "insufficient price history" };
+
+    const prices = points.map((p) => p.price);
+    const currMacd = macd(prices, fastPeriod, slowPeriod, signalPeriod);
+    const prevMacd = macd(
+      prices.slice(0, count - 1),
+      fastPeriod,
+      slowPeriod,
+      signalPeriod,
+    );
+
+    if (isNaN(currMacd.macdLine) || isNaN(prevMacd.macdLine))
+      return { fired: false, reason: "insufficient data for MACD" };
+
+    let fired = false;
+    if (signal === "line_cross") {
+      const prevDiff = prevMacd.macdLine - prevMacd.signalLine;
+      const currDiff = currMacd.macdLine - currMacd.signalLine;
+      fired = prevDiff * currDiff < 0;
+    }
+    if (signal === "histogram_sign_change") {
+      fired = prevMacd.histogram * currMacd.histogram < 0;
+    }
+
+    return {
+      fired,
+      reason: `MACD hist=${currMacd.histogram.toFixed(4)} signal=${signal}`,
+    };
+  },
+};
+
+// bollinger_breakout_tick — fires when price breaks out of Bollinger Bands
+export const BollingerBreakoutTickBlock: BlockEvaluator = {
+  async evaluate(block, _ctx, redis, _prisma): Promise<BlockResult> {
+    const params = (block["params"] as BlockParams) ?? {};
+    const tokenId = String(params.tokenId ?? "");
+    const period = parseInt(String(params.period ?? "20"), 10);
+    const stdDevMultiplier = parseFloat(String(params.stdDevMultiplier ?? "2"));
+    const direction = String(params.direction ?? "");
+
+    if (!tokenId || !direction)
+      return { fired: false, reason: "invalid config" };
+
+    const points = await readPriceWindow(redis, tokenId, period + 1);
+    if (points.length < period + 1)
+      return { fired: false, reason: "insufficient price history" };
+
+    const prices = points.map((p) => p.price);
+    const prevPrice = prices[period - 1];
+    const currentPrice = prices[period];
+    const bands = bollingerBands(
+      prices.slice(0, period),
+      period,
+      stdDevMultiplier,
+    );
+
+    if (isNaN(bands.upper))
+      return { fired: false, reason: "insufficient data for Bollinger Bands" };
+
+    let fired = false;
+    if (direction === "upper_break")
+      fired = prevPrice <= bands.upper && currentPrice > bands.upper;
+    if (direction === "lower_break")
+      fired = prevPrice >= bands.lower && currentPrice < bands.lower;
+
+    return {
+      fired,
+      reason: `price=${currentPrice.toFixed(4)} upper=${bands.upper.toFixed(4)} lower=${bands.lower.toFixed(4)} dir=${direction}`,
+    };
+  },
+};
+
+// vwap_cross_tick — fires when price crosses the session VWAP
+export const VwapCrossTickBlock: BlockEvaluator = {
+  async evaluate(block, _ctx, redis, _prisma): Promise<BlockResult> {
+    const params = (block["params"] as BlockParams) ?? {};
+    const tokenId = String(params.tokenId ?? "");
+    const direction = String(params.direction ?? "");
+
+    if (!tokenId || !direction)
+      return { fired: false, reason: "invalid config" };
+
+    // Read all session prices (up to 250) from the TA sorted set
+    const points = await readPriceWindow(redis, tokenId, 250);
+    if (points.length < 3)
+      return { fired: false, reason: "insufficient price history" };
+
+    const prices = points.map((p) => p.price);
+    // Polymarket has no native per-bar volume in the price window, so we use
+    // uniform volume (=1 each), making this a TWAP rather than true VWAP.
+    const volumes = Array<number>(prices.length).fill(1);
+    const vwapValue = vwap(prices, volumes);
+
+    const currentPrice = prices[prices.length - 1];
+    const prevPrice = prices[prices.length - 2];
+
+    let fired = false;
+    if (direction === "above")
+      fired = prevPrice <= vwapValue && currentPrice > vwapValue;
+    if (direction === "below")
+      fired = prevPrice >= vwapValue && currentPrice < vwapValue;
+
+    return {
+      fired,
+      reason: `price=${currentPrice.toFixed(4)} vwap=${vwapValue.toFixed(4)} dir=${direction}`,
+    };
   },
 };
