@@ -120,7 +120,7 @@ AWS_SES_REGION=us-east-1
 AWS_SES_FROM_EMAIL=noreply@polyforge.app
 
 # ─────────────────────────────────────────────────────────────────────────────
-# POLYMARKET APIs — real endpoints (mock-polymarket is profiles: [mock], opt-in only)
+# POLYMARKET APIs — real endpoints
 # ─────────────────────────────────────────────────────────────────────────────
 
 GAMMA_API_URL=https://gamma-api.polymarket.com

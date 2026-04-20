@@ -17,7 +17,7 @@ function makeConfig(overrides: Record<string, string> = {}): ConfigService {
     POLY_BUILDER_SECRET: BUILDER_SECRET,
     POLY_BUILDER_PASSPHRASE: "test-builder-pass",
     NODE_ENV: "development", // forces dev stub path
-    CLOB_API_URL: "http://mock-polymarket:3099",
+    CLOB_API_URL: "http://clob-api.test:3099",
     ...overrides,
   };
   return {
@@ -97,9 +97,7 @@ function makeMockNativeCtf(
       .mockResolvedValue({ txHash: "0x" + "dd".repeat(32) }),
     getEoaAddress: vi.fn().mockReturnValue("0x" + "0".repeat(40)),
     signTransaction: vi.fn().mockReturnValue(Buffer.alloc(100)),
-    broadcastTransaction: vi
-      .fn()
-      .mockResolvedValue("0x" + "aa".repeat(32)),
+    broadcastTransaction: vi.fn().mockResolvedValue("0x" + "aa".repeat(32)),
     getTransactionCount: vi.fn().mockResolvedValue(0),
     getGasPrice: vi.fn().mockResolvedValue(1_000_000_000n),
     ...override,
@@ -360,7 +358,8 @@ describe("SigningService (CLOB V2)", () => {
         credentials,
         makeConfig({
           NODE_ENV: "production",
-          CLOB_API_URL: "http://mock-polymarket:3099",
+          CLOB_API_URL: "http://mock-clob:3099",
+          POLYGON_RPC_URL: "https://polygon-rpc.com",
         }),
         nativeEip712,
         nativeCtf,

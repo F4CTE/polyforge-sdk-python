@@ -21,7 +21,7 @@ export const SEED_USERS = [
     { email: 'dave@dev.local',    password: 'password123' },
 ];
 
-// Sample token IDs from mock-polymarket fixture markets
+// Sample token IDs for load test fixture markets
 export const TOKEN_IDS = [
     'tok-yes-1', 'tok-yes-2', 'tok-yes-3',
     'tok-yes-4', 'tok-yes-5', 'tok-yes-6',

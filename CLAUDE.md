@@ -97,7 +97,6 @@ polyForge/
 │   ├── notification-service email/Telegram/Discord/webhook
 │   ├── bot-service/         strategy tick runner
 │   ├── signer-service/      EIP712 + credential vault
-│   └── mock-polymarket/     dev only
 ├── packages/                shared libs
 ├── prisma/                  schema + migrations
 ├── docs/                    all documentation

@@ -28,7 +28,7 @@ PolyForge uses two categories of seed data:
 | **SQL seeds** | `seed-news-whales.sql`, `seed-whale-alerts.sql` | Populate live-data tables (news, signals, whale tracking) with realistic sample content for development and QA |
 | **TypeScript seeds** | `seed.ts`, `seed.admin.ts` | Populate reference data and admin accounts via the Prisma client (run via `prisma db seed`) |
 
-The SQL seeds are designed to be run against a database that already has market and token data populated (via the market sync pipeline or the mock-polymarket service). They use `SELECT` queries against the real `markets` and `tokens` tables to pick up live market IDs, which means the seeded records reference real data rather than hardcoded UUIDs.
+The SQL seeds are designed to be run against a database that already has market and token data populated (via the market sync pipeline). They use `SELECT` queries against the real `markets` and `tokens` tables to pick up live market IDs, which means the seeded records reference real data rather than hardcoded UUIDs.
 
 ---
 
@@ -288,10 +288,9 @@ The market closed status is stored as a boolean column named `closed`, not a nul
 
 The `seed-whale-alerts.sql` found no open markets in the `markets` table. This means either:
 - The market sync pipeline has not run yet.
-- The mock-polymarket service is not running.
 - All markets in the database are marked as closed.
 
-Start the mock-polymarket service and trigger a sync before running the whale alerts seed.
+Run the market sync pipeline before running the whale alerts seed.
 
 ### Duplicate key violations on re-seed
 

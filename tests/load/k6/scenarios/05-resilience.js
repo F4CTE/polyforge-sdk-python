@@ -2,7 +2,7 @@
  * Resilience tests — degraded conditions.
  *
  * Scenarios:
- *   api-down-recovery  — mock-polymarket switched to "api_down" scenario;
+ *   api-down-recovery  — CLOB API switched to "api_down" scenario;
  *                        strategy-engine should auto-pause and NOT produce orders.
  *                        Verifies the system degrades gracefully rather than erroring.
  *
@@ -15,7 +15,7 @@
  * Run:
  *   k6 run tests/load/k6/scenarios/05-resilience.js
  *
- * Note: the api-down scenario requires the mock-polymarket scenario to be
+ * Note: the api-down scenario requires the CLOB API scenario to be
  *       changed to "api_down" first:
  *         curl -X POST http://localhost:3099/scenario -d '{"scenario":"api_down"}'
  */
@@ -131,7 +131,7 @@ export function wsReconnectScenario(data) {
 
 // ─── API degraded scenario ────────────────────────────────────────────────────
 //
-// Simulates clients polling the API while mock-polymarket is in "api_down" mode.
+// Simulates clients polling the API while the CLOB API is in "api_down" mode.
 // The system should:
 //   - Still respond to auth requests (auth-service doesn't depend on Polymarket)
 //   - Still serve cached market data (Redis cache)

@@ -60,13 +60,6 @@ Rien ne peut démarrer sans cette phase. Elle établit l'environnement de dével
 - Indexes critiques en place
 - Script `seed.ts` (5 comptes + données de test cohérentes)
 
-### mock-polymarket `S3` `CRITIQUE`
-
-- REST mock : Gamma API, CLOB API, Data API
-- WebSocket mock : price feed temps réel, order book updates, order lifecycle events
-- 5 scénarios configurables via `SCENARIO` dans `.env` : `normal`, `volatile`, `api_down`, `rate_limited`, `slow`
-- 10 marchés fixtures alignés avec les données du seed
-
 ### ✅ Livrable de fin de phase
 
 L'environnement local tourne intégralement. Un développeur qui clone le repo peut exécuter `docker compose up` + `npm run migrate` + `npm run seed` et obtenir un environnement fonctionnel en moins de 10 minutes.
@@ -216,7 +209,7 @@ Le cœur technique du produit. Ces trois services constituent la chaîne de vale
 
 ### ✅ Livrable de fin de phase
 
-Une stratégie simple (`price_crosses_up` → `buy_yes`) peut être démarrée et place un vrai ordre sur mock-polymarket. Le cycle de vie complet de l'ordre (PENDING → CONFIRMED) est observable en temps réel via les logs.
+Une stratégie simple (`price_crosses_up` → `buy_yes`) peut être démarrée et place un vrai ordre sur Polymarket. Le cycle de vie complet de l'ordre (PENDING → CONFIRMED) est observable en temps réel via les logs.
 
 ---
 
@@ -284,7 +277,7 @@ Tous les endpoints REST et WebSocket de l'api-service, le paper trading, le back
 
 ### ✅ Livrable de fin de phase
 
-Toutes les API backend sont fonctionnelles et testées contre mock-polymarket. Le pipeline `npm run generate:api` génère les clients Angular typés. Paper trading et backtest sont opérationnels.
+Toutes les API backend sont fonctionnelles et testées. Le pipeline `npm run generate:api` génère les clients Angular typés. Paper trading et backtest sont opérationnels.
 
 ---
 
@@ -500,7 +493,7 @@ L'API CLOB en production a des comportements non documentés, des rate limits pl
 ## Dépendances critiques entre services
 
 ```
-mock-polymarket
+polymarket APIs
     │
     └── market-data-service ──► cache Redis ──► strategy-engine
                                                       │

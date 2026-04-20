@@ -16,7 +16,6 @@ const RETRY_DELAYS_MS = [500, 1000, 2000];
 
 /**
  * HTTP client for the Polymarket CLOB API.
- * In dev, points to mock-polymarket.
  */
 @Injectable()
 export class ClobClientService {
@@ -24,8 +23,7 @@ export class ClobClientService {
   private readonly clobUrl: string;
 
   constructor(private readonly config: ConfigService) {
-    this.clobUrl =
-      this.config.get<string>("CLOB_API_URL") ?? "http://mock-polymarket:3099";
+    this.clobUrl = this.config.getOrThrow<string>("CLOB_API_URL");
   }
 
   async submitOrder(req: ClobSubmitRequest): Promise<ClobOrderResponse> {
@@ -112,10 +110,9 @@ export class ClobClientService {
     timestamp: number;
   }> {
     return this.withRetry(() =>
-      fetch(
-        `${this.clobUrl}/book?token_id=${encodeURIComponent(tokenId)}`,
-        { signal: AbortSignal.timeout(10_000) },
-      ),
+      fetch(`${this.clobUrl}/book?token_id=${encodeURIComponent(tokenId)}`, {
+        signal: AbortSignal.timeout(10_000),
+      }),
     );
   }
 
@@ -138,10 +135,9 @@ export class ClobClientService {
 
   async getSpread(tokenId: string): Promise<{ spread: string }> {
     return this.withRetry(() =>
-      fetch(
-        `${this.clobUrl}/spread?token_id=${encodeURIComponent(tokenId)}`,
-        { signal: AbortSignal.timeout(10_000) },
-      ),
+      fetch(`${this.clobUrl}/spread?token_id=${encodeURIComponent(tokenId)}`, {
+        signal: AbortSignal.timeout(10_000),
+      }),
     );
   }
 
@@ -186,7 +182,10 @@ export class ClobClientService {
   }
 
   async submitBatchOrders(
-    orders: Array<{ order: Record<string, unknown>; builderHeaders: Record<string, string> }>,
+    orders: Array<{
+      order: Record<string, unknown>;
+      builderHeaders: Record<string, string>;
+    }>,
   ): Promise<Array<{ orderID: string; status: string }>> {
     if (orders.length > 15) {
       throw new Error("Batch order limit is 15");

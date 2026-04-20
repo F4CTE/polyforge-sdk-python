@@ -665,13 +665,6 @@ Next: deploy to AWS eu-west-2, then submit Polymarket Builders Program grant app
 - [x] Critical indexes (31 indexes across 10 tables)
 - [x] `seed.ts` (alice, bob, charlie, carol, dave + strategies, orders, positions, social, backtest)
 
-### mock-polymarket
-
-- [x] REST mock: Gamma API, CLOB API, Data API
-- [x] WebSocket mock: price feed, order book, order lifecycle events
-- [x] 5 scenarios (`normal`, `volatile`, `api_down`, `rate_limited`, `slow`)
-- [x] 10 fixture markets aligned with seed data
-
 ---
 
 ## Phase 2 — Auth & Market Data

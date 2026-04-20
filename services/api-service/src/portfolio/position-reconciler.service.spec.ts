@@ -20,7 +20,8 @@ function makeMocks() {
   } as any;
 
   const config = {
-    get: vi.fn().mockReturnValue("http://mock-polymarket:3099"),
+    get: vi.fn().mockReturnValue("http://clob-api.test:3099"),
+    getOrThrow: vi.fn().mockReturnValue("http://clob-api.test:3099"),
   } as any;
 
   const gateway = {
@@ -243,7 +244,12 @@ describe("PositionReconcilerService", () => {
       vi.fn().mockResolvedValue({
         ok: true,
         json: async () => [
-          { asset: "token-xyz", size: "0", avgPrice: "0.50", realizedPnl: "25.00" },
+          {
+            asset: "token-xyz",
+            size: "0",
+            avgPrice: "0.50",
+            realizedPnl: "25.00",
+          },
         ],
       }),
     );

@@ -60,8 +60,7 @@ export class HeartbeatService implements OnModuleInit, OnModuleDestroy {
 
     if (ordersByUser.size === 0) return;
 
-    const clobUrl =
-      this.config.get<string>("CLOB_API_URL") ?? "http://mock-polymarket:3099";
+    const clobUrl = this.config.getOrThrow<string>("CLOB_API_URL");
     const signerUrl =
       this.config.get<string>("SIGNER_SERVICE_URL") ??
       "http://signer-service:3012";

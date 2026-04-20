@@ -137,7 +137,6 @@ Four isolated networks control exactly which services can communicate:
 | `bot-service` | NestJS | internal | Interactive Telegram + Discord bots |
 | `signer-service` | NestJS | signer-only | Key vault, EIP712, Builder HMAC |
 
-> **Dev only:** `mock-polymarket` — a NestJS service that mocks the Polymarket APIs for local development. Never deployed to production.
 
 ### Inter-Service Communication
 
@@ -1022,7 +1021,6 @@ polyforge/
 │   ├── notification-service/NestJS
 │   ├── bot-service/       NestJS
 │   ├── signer-service/    NestJS
-│   └── mock-polymarket/   NestJS (dev only)
 └── packages/
     ├── shared-types/      All interfaces, enums, WebSocket messages
     ├── shared-schemas/    Zod validation schemas

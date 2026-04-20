@@ -76,7 +76,7 @@ run_scenario "04-strategy-pipeline" "${SCRIPT_DIR}/scenarios/04-strategy-pipelin
 # ── 05: Resilience ────────────────────────────────────────────────────────────
 echo ""
 echo "NOTE: scenario 05 (resilience) tests degraded conditions."
-echo "To run the api_down sub-scenario, first switch mock-polymarket:"
+echo "To run the api_down sub-scenario, first switch the CLOB API scenario:"
 echo "  curl -X POST http://localhost:3099/scenario -d '{\"scenario\":\"api_down\"}'"
 echo "Then re-run: k6 run tests/load/k6/scenarios/05-resilience.js"
 run_scenario "05-resilience" "${SCRIPT_DIR}/scenarios/05-resilience.js"

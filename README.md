@@ -107,7 +107,6 @@ polyforge/
 │   ├── notification-service/      # ✅ Email + Telegram + Discord + Webhooks
 │   ├── bot-service/               # ✅ Interactive bots
 │   ├── signer-service/            # ✅ Credential vault + EIP712 signing
-│   └── mock-polymarket/           # ✅ Dev-only fake Polymarket APIs
 │
 └── packages/
     ├── ui/                        # Shared shadcn/ui components + Tailwind theme

@@ -104,7 +104,7 @@ const IDS = {
     login5: 'd0e1f2a3-0010-4000-8000-000000000005',
 };
 // ─────────────────────────────────────────────────────────────────────────────
-// MOCK MARKET / TOKEN IDs (matches mock-polymarket)
+// MOCK MARKET / TOKEN IDs (used for local seed data)
 // ─────────────────────────────────────────────────────────────────────────────
 const MARKETS = {
     usElections: {

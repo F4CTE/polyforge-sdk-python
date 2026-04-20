@@ -147,7 +147,6 @@ BASE_URL=http://localhost pnpm --filter @polyforge/e2e test
 | PostgreSQL (admin) | 5434 | Direct access |
 | Redis | 6379 | No password in dev |
 | MailHog | 8025 | Email UI |
-| mock-polymarket | 3096-3099 | Gamma, Data, CLOB APIs |
 
 ---
 

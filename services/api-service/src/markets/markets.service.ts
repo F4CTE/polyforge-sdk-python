@@ -36,8 +36,7 @@ export class MarketsService implements OnModuleInit {
     private readonly redis: RedisService,
     private readonly config: ConfigService,
   ) {
-    this.clobUrl =
-      this.config.get<string>("CLOB_API_URL") ?? "http://mock-polymarket:3099";
+    this.clobUrl = this.config.getOrThrow<string>("CLOB_API_URL");
     this.gammaUrl =
       this.config.get<string>("GAMMA_API_URL") ?? "http://localhost:3096";
   }
@@ -365,9 +364,7 @@ export class MarketsService implements OnModuleInit {
     return result;
   }
 
-  async spread(
-    tokenId: string,
-  ): Promise<{ tokenId: string; spread: string }> {
+  async spread(tokenId: string): Promise<{ tokenId: string; spread: string }> {
     const cacheKey = `cache:spread:${tokenId}`;
     const cached = await this.redis.get(cacheKey);
     if (cached) {
@@ -448,7 +445,14 @@ export class MarketsService implements OnModuleInit {
 
     if (!res.ok) {
       this.logger.warn(`CLOB book returned ${res.status}`);
-      return { tokenId, bids: [], asks: [], spread: "0", midpoint: "0", timestamp: Date.now() };
+      return {
+        tokenId,
+        bids: [],
+        asks: [],
+        spread: "0",
+        midpoint: "0",
+        timestamp: Date.now(),
+      };
     }
 
     const data = (await res.json()) as {
@@ -493,9 +497,12 @@ export class MarketsService implements OnModuleInit {
       fidelity: String(fidelity),
     });
 
-    const res = await fetch(`${this.clobUrl}/prices-history?${params.toString()}`, {
-      signal: AbortSignal.timeout(10_000),
-    });
+    const res = await fetch(
+      `${this.clobUrl}/prices-history?${params.toString()}`,
+      {
+        signal: AbortSignal.timeout(10_000),
+      },
+    );
 
     if (!res.ok) {
       this.logger.warn(`CLOB prices-history returned ${res.status}`);

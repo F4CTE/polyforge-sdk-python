@@ -70,6 +70,7 @@ describe("MarketsService", () => {
     } as unknown as RedisService;
     const config = {
       get: vi.fn().mockReturnValue(undefined),
+      getOrThrow: vi.fn().mockReturnValue("http://clob-api.test:3099"),
     } as unknown as ConfigService;
     service = new MarketsService(db as any, redis, config);
   });
@@ -793,7 +794,10 @@ describe("MarketsService", () => {
         json: vi.fn().mockResolvedValue({ history: [] }),
       });
 
-      await service.clobPricesHistory("token-1", { interval: "1h", fidelity: 60 });
+      await service.clobPricesHistory("token-1", {
+        interval: "1h",
+        fidelity: 60,
+      });
       expect(redis.set).toHaveBeenCalledWith(
         "cache:clobprices:token-1:1h:60",
         expect.any(String),
@@ -802,10 +806,16 @@ describe("MarketsService", () => {
     });
 
     it("returns cached result when available", async () => {
-      const cached = { tokenId: "token-1", interval: "1h", history: [{ t: 1, p: "0.5" }] };
+      const cached = {
+        tokenId: "token-1",
+        interval: "1h",
+        history: [{ t: 1, p: "0.5" }],
+      };
       (redis.get as any).mockResolvedValue(JSON.stringify(cached));
 
-      const result = await service.clobPricesHistory("token-1", { interval: "1h" });
+      const result = await service.clobPricesHistory("token-1", {
+        interval: "1h",
+      });
       expect(result).toEqual(cached);
     });
   });

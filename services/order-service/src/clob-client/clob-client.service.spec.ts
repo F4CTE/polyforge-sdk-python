@@ -7,6 +7,10 @@ import { ClobClientService } from "./clob-client.service";
 function makeConfig(url = "http://clob:3099"): ConfigService {
   return {
     get: (k: string, d?: string) => (k === "CLOB_API_URL" ? url : (d ?? "")),
+    getOrThrow: (k: string) => {
+      if (k === "CLOB_API_URL") return url;
+      throw new Error(`Missing ${k}`);
+    },
   } as any;
 }
 
@@ -320,9 +324,9 @@ describe("ClobClientService", () => {
     it("POSTs to /books with array of token IDs", async () => {
       fetchSpy.mockResolvedValue({
         ok: true,
-        json: vi.fn().mockResolvedValue([
-          { tokenId: "t1", bids: [], asks: [] },
-        ]),
+        json: vi
+          .fn()
+          .mockResolvedValue([{ tokenId: "t1", bids: [], asks: [] }]),
       });
       const result = await svc.getBooks(["t1", "t2"]);
       expect(fetchSpy.mock.calls[0][0]).toBe("http://clob:3099/books");
@@ -423,9 +427,7 @@ describe("ClobClientService", () => {
     it("POSTs to /orders with order array", async () => {
       fetchSpy.mockResolvedValue({
         ok: true,
-        json: vi.fn().mockResolvedValue([
-          { orderID: "o1", status: "PENDING" },
-        ]),
+        json: vi.fn().mockResolvedValue([{ orderID: "o1", status: "PENDING" }]),
       });
       const result = await svc.submitBatchOrders([
         {
@@ -460,9 +462,7 @@ describe("ClobClientService", () => {
       const result = await svc.cancelOrders(["o1", "o2"], "api-key");
       expect(fetchSpy.mock.calls[0][0]).toBe("http://clob:3099/orders");
       expect(fetchSpy.mock.calls[0][1].method).toBe("DELETE");
-      expect(fetchSpy.mock.calls[0][1].headers["POLY-API-KEY"]).toBe(
-        "api-key",
-      );
+      expect(fetchSpy.mock.calls[0][1].headers["POLY-API-KEY"]).toBe("api-key");
       expect(result.cancelled).toEqual(["o1", "o2"]);
     });
 
@@ -489,15 +489,15 @@ describe("ClobClientService", () => {
       expect(fetchSpy.mock.calls[0][0]).toBe("http://prod-clob:443/order");
     });
 
-    it("falls back to mock-polymarket URL when config returns undefined", async () => {
-      const config = { get: () => undefined } as any as ConfigService;
-      const fallbackSvc = new ClobClientService(config);
-      fetchSpy.mockResolvedValue({
-        ok: true,
-        json: vi.fn().mockResolvedValue({ orderID: "x", status: "LIVE" }),
-      });
-      await fallbackSvc.submitOrder(SUBMIT_REQ);
-      expect(fetchSpy.mock.calls[0][0]).toContain("mock-polymarket");
+    it("throws when CLOB_API_URL is not configured", () => {
+      const config = {
+        getOrThrow: () => {
+          throw new Error("Missing CLOB_API_URL");
+        },
+      } as any as ConfigService;
+      expect(() => new ClobClientService(config)).toThrow(
+        "Missing CLOB_API_URL",
+      );
     });
   });
 

@@ -62,8 +62,7 @@ export class PositionReconcilerService {
   }
 
   async reconcileUser(userId: string, walletAddress: string): Promise<void> {
-    const clobUrl =
-      this.config.get<string>("CLOB_API_URL") ?? "http://mock-polymarket:3099";
+    const clobUrl = this.config.getOrThrow<string>("CLOB_API_URL");
 
     const res = await fetch(`${clobUrl}/positions?user=${walletAddress}`, {
       signal: AbortSignal.timeout(10_000),

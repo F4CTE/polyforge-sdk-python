@@ -66,7 +66,7 @@ The `.env.dev` file has dev-safe defaults that work out of the box for local dev
 docker compose -f docker-compose.infra.yml up --build
 ```
 
-This starts everything: databases, Redis, MailHog, mock-polymarket, migrations, all NestJS services, Angular frontends, and the nginx gateway.
+This starts everything: databases, Redis, MailHog, migrations, all NestJS services, Angular frontends, and the nginx gateway.
 
 **First run** takes 5–10 minutes to build all images. Subsequent runs start in ~30 seconds.
 
@@ -98,7 +98,6 @@ This starts everything: databases, Redis, MailHog, mock-polymarket, migrations, 
 | PostgreSQL admin | 5434 | Admin DB (direct) |
 | Redis | 6379 | — |
 | MailHog UI | 8025 | http://localhost:8025 |
-| mock-polymarket | 3096–3099 | Gamma, Data, CLOB WS APIs |
 
 ---
 
@@ -264,22 +263,6 @@ docker compose -f docker-compose.infra.yml up --build
 > **Note:** The override file does not mount `node_modules` or Prisma client files. If you add new npm dependencies or change Prisma schemas, you still need to rebuild the Docker image for that service with `docker compose -f docker-compose.infra.yml up --build <service>`.
 
 ---
-
-## 9. Mock Scenarios
-
-The `mock-polymarket` service supports different behaviour modes. Set `SCENARIO` in `.env` and restart:
-
-```bash
-# In .env:
-SCENARIO=normal       # Default: realistic price movement, fills in ~2s
-SCENARIO=volatile     # Fast price swings, instant fills
-SCENARIO=api_down     # REST returns 503, WebSocket disconnects periodically
-SCENARIO=rate_limited # 429 after 10 requests/min (tests backoff logic)
-SCENARIO=slow         # All responses delayed 2–5 seconds
-
-# Apply:
-docker compose -f docker-compose.infra.yml restart mock-polymarket
-```
 
 ---
 

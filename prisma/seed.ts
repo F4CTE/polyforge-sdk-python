@@ -117,7 +117,7 @@ const IDS = {
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-// MOCK MARKET / TOKEN IDs (matches mock-polymarket)
+// MOCK MARKET / TOKEN IDs (used for local seed data)
 // ─────────────────────────────────────────────────────────────────────────────
 
 const MARKETS = {

@@ -17,7 +17,7 @@ brew install k6
 The full dev stack must be running before executing any test:
 
 ```bash
-docker compose up -d          # Postgres, Redis, MailHog, mock-polymarket, all services
+docker compose up -d          # Postgres, Redis, MailHog, all services
 ```
 
 The Angular app is **not** required — tests hit the backends directly.
@@ -106,10 +106,10 @@ accumulate errors as the engine fires ticks concurrently.
 
 ## Resilience test: api_down scenario
 
-To test degraded behaviour when mock-polymarket goes down:
+To test degraded behaviour when the Polymarket CLOB API goes down:
 
 ```bash
-# 1. Switch mock-polymarket to api_down
+# 1. Simulate API down scenario
 curl -X POST http://localhost:3099/scenario \
      -H 'Content-Type: application/json' \
      -d '{"scenario":"api_down"}'

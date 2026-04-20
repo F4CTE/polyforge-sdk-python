@@ -159,7 +159,3 @@ services:
       - ./packages/logger/dist:/app/packages/logger/dist:ro
     command: ["node", "--watch", "dist/main.js"]
 
-  mock-polymarket:
-    volumes:
-      - ./services/mock-polymarket/dist:/app/services/mock-polymarket/dist:ro
-    command: ["node", "--watch", "dist/main.js"]

@@ -34,12 +34,7 @@ export interface BookUpdateEvent {
 }
 
 /**
- * Maintains a persistent WebSocket connection to the CLOB feed
- * (mock-polymarket in dev, real Polymarket WS in prod).
- *
- * Handles both message formats:
- *   - Mock: { type: "PRICE_UPDATE", tokenId, price, timestamp }
- *   - Real: { event_type: "price_change", price_changes: [...], timestamp }
+ * Maintains a persistent WebSocket connection to Polymarket's CLOB WebSocket feed.
  *
  * Emits typed events via EventEmitter2:
  *   - market-data.price  → PriceUpdateEvent
@@ -208,7 +203,9 @@ export class PolymarketWsService implements OnModuleInit, OnModuleDestroy {
           ...(msg.tick_size !== undefined && {
             tickSize: msg.tick_size as string,
           }),
-          ...(msg.neg_risk !== undefined && { negRisk: msg.neg_risk as boolean }),
+          ...(msg.neg_risk !== undefined && {
+            negRisk: msg.neg_risk as boolean,
+          }),
         } satisfies BookUpdateEvent);
         break;
       }

@@ -179,13 +179,12 @@ AWS_SES_REGION=us-east-1
 AWS_SES_FROM_EMAIL=noreply@polyforge.app
 
 # ─────────────────────────────────────────────────────────────
-# POLYMARKET APIs — mock in dev
+# POLYMARKET APIs
 # ─────────────────────────────────────────────────────────────
-GAMMA_API_URL=http://mock-polymarket:3096
-CLOB_API_URL=http://mock-polymarket:3099
-CLOB_WS_URL=ws://mock-polymarket:3098
-DATA_API_URL=http://mock-polymarket:3097
-SCENARIO=normal
+GAMMA_API_URL=https://gamma-api.polymarket.com
+CLOB_API_URL=https://clob.polymarket.com
+CLOB_WS_URL=wss://ws-subscriptions-clob.polymarket.com/ws/market
+DATA_API_URL=https://data-api.polymarket.com
 
 # ─────────────────────────────────────────────────────────────
 # POLYMARKET BUILDER PROGRAM
@@ -243,7 +242,7 @@ cp .env.example .env
 
 Create this file at the **root of the repository**.
 
-This file defines **20 containers**: 2 Postgres instances, 2 PgBouncers, Redis, MailHog, mock-polymarket, 13 NestJS services, and Nginx.
+This file defines **19 containers**: 2 Postgres instances, 2 PgBouncers, Redis, MailHog, 13 NestJS services, and Nginx.
 
 ```yaml
 name: polyforge-dev
@@ -346,21 +345,6 @@ services:
       - "1025:1025"   # SMTP
     networks: [internal]
 
-  # ─── MOCK POLYMARKET (dev only) ────────────────────────────
-
-  mock-polymarket:
-    build:
-      context: .
-      dockerfile: services/mock-polymarket/Dockerfile
-    environment:
-      SCENARIO: ${SCENARIO:-normal}
-    ports:
-      - "3096:3096"
-      - "3097:3097"
-      - "3098:3098"
-      - "3099:3099"
-    networks: [internal]
-
   # ─── USER-FACING SERVICES (use DATABASE_URL) ───────────────
 
   signer-service:
@@ -413,7 +397,6 @@ services:
     depends_on:
       postgres:        { condition: service_healthy }
       redis:           { condition: service_healthy }
-      mock-polymarket: { condition: service_started }
     networks: [internal]
     restart: unless-stopped
 
@@ -440,7 +423,6 @@ services:
     depends_on:
       redis:           { condition: service_healthy }
       signer-service:  { condition: service_started }
-      mock-polymarket: { condition: service_started }
     networks: [internal, signer-only]
     restart: unless-stopped
 

@@ -11,7 +11,8 @@ function makeMocks() {
   } as any;
 
   const config = {
-    get: vi.fn().mockReturnValue("http://mock-polymarket:3099"),
+    get: vi.fn().mockReturnValue("http://clob-api.test:3099"),
+    getOrThrow: vi.fn().mockReturnValue("http://clob-api.test:3099"),
   } as any;
 
   return { prisma, config };
@@ -55,7 +56,7 @@ describe("HeartbeatService", () => {
     await svc.sendHeartbeats();
 
     expect(fetch).toHaveBeenCalledWith(
-      "http://mock-polymarket:3099/heartbeats",
+      "http://clob-api.test:3099/heartbeats",
       expect.objectContaining({
         method: "POST",
       }),

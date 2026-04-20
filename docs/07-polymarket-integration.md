@@ -243,27 +243,18 @@ Polymarket approval takes 1–5 business days. Orders still work — they just w
 
 ---
 
-## Development Mode — Hybrid Real/Mock
+## Development Mode
 
-In development, Polyforge uses **real Polymarket data for reads** and **mock-polymarket for order execution**:
+In development, Polyforge uses **real Polymarket endpoints** for all APIs:
 
-| API | Dev Target | Production Target |
-|-----|-----------|-------------------|
-| Gamma API (markets) | `https://gamma-api.polymarket.com` | Same |
-| WebSocket (prices) | `wss://ws-subscriptions-clob.polymarket.com/ws/market` | Same |
-| CLOB API (orders) | `http://mock-polymarket:3099` | `https://clob.polymarket.com` |
-| Data API (positions) | `https://data-api.polymarket.com` | Same |
+| API | Endpoint |
+|-----|---------|
+| Gamma API (markets) | `https://gamma-api.polymarket.com` |
+| WebSocket (prices) | `wss://ws-subscriptions-clob.polymarket.com/ws/market` |
+| CLOB API (orders) | `https://clob.polymarket.com` |
+| Data API (positions) | `https://data-api.polymarket.com` |
 
-This gives you **20,000+ real markets with live prices** while keeping order execution safe (no real money in dev).
-
-### Switching to full mock (offline dev)
-
-```bash
-# In .env or docker-compose override:
-GAMMA_API_URL=http://mock-polymarket:3096
-DATA_API_URL=http://mock-polymarket:3097
-CLOB_WS_URL=ws://mock-polymarket:3098
-```
+All environments require `CLOB_API_URL` to be set explicitly (no fallback).
 
 ### Rate Limits
 

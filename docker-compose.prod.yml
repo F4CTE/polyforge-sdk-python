@@ -12,7 +12,7 @@ name: polyforge-prod
 #
 # All NestJS services pull images from ECR.
 # Secrets come from .env.prod (never committed).
-# No dev-only services (mock-polymarket, mailhog) are present.
+# No dev-only services (mailhog) are present.
 #
 # Usage:
 #   bash scripts/deploy.sh           # full deploy (build + push + compose up)
