@@ -70,7 +70,7 @@ interface TemplateCardProps {
 export function TemplateCard({ template, onPreview, onUse }: TemplateCardProps) {
   return (
     <div
-      className="flex flex-col bg-surface border border-subtle rounded-lg p-4 hover:border-default transition-colors group"
+      className="flex flex-col bg-surface border border-subtle rounded-pf p-4 hover:border-default transition-colors group"
       role="article"
       aria-label={`${template.name} strategy template`}
     >

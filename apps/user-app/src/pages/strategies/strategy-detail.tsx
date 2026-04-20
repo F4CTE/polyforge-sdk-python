@@ -1099,7 +1099,7 @@ export function Component() {
 
           {/* Marketplace listing form */}
           {showListing && (
-            <div className="bg-elevated border border-accent/30 rounded-xl p-4 space-y-3">
+            <div className="bg-elevated border border-accent/30 rounded-pf p-4 space-y-3">
               <div className="flex items-center justify-between">
                 <span className="text-body-md font-semibold text-primary flex items-center gap-2">
                   <Store className="size-4 text-accent-text" />
@@ -1169,7 +1169,7 @@ export function Component() {
 
           {/* Share Panel */}
           {showSharePanel && (
-            <div className="bg-elevated border border-accent/30 rounded-xl p-4 space-y-4">
+            <div className="bg-elevated border border-accent/30 rounded-pf p-4 space-y-4">
               {/* Panel header */}
               <div className="flex items-center justify-between">
                 <span className="text-body-md font-semibold text-primary flex items-center gap-2">
@@ -1320,7 +1320,7 @@ export function Component() {
 
           {/* Alerts Panel */}
           {showAlertsPanel && (
-            <div className="bg-elevated border border-warning/30 rounded-xl p-4 space-y-4">
+            <div className="bg-elevated border border-warning/30 rounded-pf p-4 space-y-4">
               {/* Panel header */}
               <div className="flex items-center justify-between">
                 <span className="text-body-md font-semibold text-primary flex items-center gap-2">
@@ -1588,7 +1588,7 @@ export function Component() {
 
           {/* Parent strategy link */}
           {parentStrategy && (
-            <div className="flex items-center gap-2 px-3 py-2 bg-elevated border border-default rounded-xl">
+            <div className="flex items-center gap-2 px-3 py-2 bg-elevated border border-default rounded-pf">
               <GitBranch className="size-4 text-tertiary" />
               <span className="text-label text-tertiary">Part of:</span>
               <Link
@@ -1602,7 +1602,7 @@ export function Component() {
 
           {/* Sub-Strategies */}
           {childStrategies.length > 0 && (
-            <div className="bg-elevated border border-default rounded-xl p-4">
+            <div className="bg-elevated border border-default rounded-pf p-4">
               <h2 className="text-body-md font-medium text-primary mb-3 flex items-center gap-2">
                 <GitBranch className="size-4" />
                 Sub-Strategies
@@ -1634,24 +1634,24 @@ export function Component() {
           {/* Health stats row */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             {pnl !== null && (
-              <div className="bg-elevated border border-default rounded-xl p-4">
+              <div className="bg-elevated border border-default rounded-pf p-4">
                 <span className="text-label text-tertiary block mb-1">Total P&L</span>
                 <span className={`font-mono text-xl font-semibold ${pnl >= 0 ? 'text-gain' : 'text-loss'}`}>
                   {formatPnl(pnl)}
                 </span>
               </div>
             )}
-            <div className="bg-elevated border border-default rounded-xl p-4">
+            <div className="bg-elevated border border-default rounded-pf p-4">
               <span className="text-label text-tertiary block mb-1">Blocks</span>
               <span className="font-mono text-xl font-semibold text-primary">{totalBlocks}</span>
             </div>
-            <div className="bg-elevated border border-default rounded-xl p-4">
+            <div className="bg-elevated border border-default rounded-pf p-4">
               <span className="text-label text-tertiary block mb-1">Recent Orders</span>
               <span className="font-mono text-xl font-semibold text-primary">
                 {recentOrderCount !== null ? recentOrderCount : '—'}
               </span>
             </div>
-            <div className="bg-elevated border border-default rounded-xl p-4">
+            <div className="bg-elevated border border-default rounded-pf p-4">
               <span className="text-label text-tertiary block mb-1">Last Order</span>
               <span className="font-mono text-body-md font-semibold text-primary">
                 {lastOrderAt ? new Date(lastOrderAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '—'}
@@ -1722,7 +1722,7 @@ export function Component() {
           {/* Body grid */}
           {detailTab === 'overview' && <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
             {/* Blocks summary */}
-            <div data-testid="blocks-visualization" className="lg:col-span-3 bg-elevated border border-default rounded-xl p-5 space-y-5">
+            <div data-testid="blocks-visualization" className="lg:col-span-3 bg-elevated border border-default rounded-pf p-5 space-y-5">
               {(
                 [
                   { key: 'safety', title: 'Safety', blocks: strategy.safety },
@@ -1765,7 +1765,7 @@ export function Component() {
             </div>
 
             {/* Live events */}
-            <div className="lg:col-span-2 bg-elevated border border-default rounded-xl overflow-hidden">
+            <div className="lg:col-span-2 bg-elevated border border-default rounded-pf overflow-hidden">
               <div className="flex items-center justify-between px-4 py-3 border-b border-subtle">
                 <span className="text-body-md font-medium text-primary">Live Events</span>
                 {isActive(status) && (
@@ -2383,7 +2383,7 @@ function ReviewsSection({ listingId }: { listingId: string }) {
   const maxStarCount = Math.max(...starCounts.map((s) => s.count), 1);
 
   return (
-    <div className="bg-elevated border border-default rounded-xl p-5 space-y-6">
+    <div className="bg-elevated border border-default rounded-pf p-5 space-y-6">
       <h2 className="text-base font-semibold text-primary flex items-center gap-2">
         <Star className="size-4 text-warning fill-warning" />
         Reviews &amp; Ratings
@@ -2423,7 +2423,7 @@ function ReviewsSection({ listingId }: { listingId: string }) {
       )}
 
       {/* Write a Review */}
-      <div className="border border-default rounded-xl p-4 space-y-3 bg-surface">
+      <div className="border border-default rounded-pf p-4 space-y-3 bg-surface">
         <p className="text-body-md font-medium text-primary">Write a Review</p>
 
         {/* Star selector */}

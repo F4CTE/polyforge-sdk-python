@@ -91,7 +91,7 @@ export function Component() {
       </div>
 
       {/* Tickets table */}
-      <div data-testid="ticket-list" className="bg-elevated border border-default rounded-xl overflow-hidden">
+      <div data-testid="ticket-list" className="bg-elevated border border-default rounded-pf overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-body-sm" aria-label="Support tickets">
             <thead>
@@ -164,7 +164,7 @@ export function Component() {
         <h2 className="text-lg font-semibold text-primary mb-4">Frequently Asked Questions</h2>
         <div data-testid="faq-accordion" className="space-y-2">
           {FAQ_ITEMS.map((item, idx) => (
-            <div key={idx} data-testid="faq-item" className="bg-elevated border border-default rounded-xl overflow-hidden">
+            <div key={idx} data-testid="faq-item" className="bg-elevated border border-default rounded-pf overflow-hidden">
               <Button
                 type="button"
                 variant="ghost"

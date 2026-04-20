@@ -53,7 +53,7 @@ function statusColor(status: string): string {
 
 function SkeletonCard() {
   return (
-    <div className="bg-elevated border border-default rounded-xl p-4 space-y-3 animate-pulse">
+    <div className="bg-elevated border border-default rounded-pf p-4 space-y-3 animate-pulse">
       <div className="flex items-start justify-between gap-3">
         <div className="h-5 w-2/3 bg-surface rounded-sm" />
         <div className="h-5 w-20 bg-surface rounded-full" />
@@ -96,7 +96,7 @@ function ListingCard({ listing, onApprove, onReject, onDelist, onToggleFeatured,
   }
 
   return (
-    <div className="bg-elevated border border-default rounded-xl p-4 space-y-3">
+    <div className="bg-elevated border border-default rounded-pf p-4 space-y-3">
       {/* Title row */}
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-2 min-w-0">

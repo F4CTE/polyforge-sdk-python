@@ -103,7 +103,7 @@ function LogicNodeInner({ id, data }: NodeProps<LogicNode>) {
       )}
 
       <div
-        className={`builder-node-card rounded-lg shadow-md overflow-hidden ${isCompact ? 'w-[160px]' : 'w-[220px]'}`}
+        className={`builder-node-card rounded-pf shadow-md overflow-hidden ${isCompact ? 'w-[160px]' : 'w-[220px]'}`}
         style={{ '--node-color': color } as React.CSSProperties}
       >
         {/* Header bar */}

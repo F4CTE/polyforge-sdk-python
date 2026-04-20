@@ -72,7 +72,7 @@ export function Component() {
       <h2 className="text-lg font-semibold text-primary">Invites</h2>
 
       {/* Generate Form */}
-      <div className="bg-elevated border border-default rounded-xl p-5">
+      <div className="bg-elevated border border-default rounded-pf p-5">
         <div className="flex items-center gap-2 mb-4">
           <Plus size={16} className="text-accent" aria-hidden="true" />
           <h3 className="text-body-md font-semibold text-primary">Generate Invite Codes</h3>
@@ -150,7 +150,7 @@ export function Component() {
       </div>
 
       {/* Active Invites Table */}
-      <div className="bg-elevated border border-default rounded-xl p-5">
+      <div className="bg-elevated border border-default rounded-pf p-5">
         <div className="flex items-center gap-2 mb-4">
           <Mail size={16} className="text-accent" aria-hidden="true" />
           <h3 className="text-body-md font-semibold text-primary">

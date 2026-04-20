@@ -67,7 +67,7 @@ export function Component() {
       <h2 className="text-lg font-semibold text-primary">Logs</h2>
 
       {/* Tabs */}
-      <div className="flex gap-1 bg-elevated border border-default rounded-xl p-1 w-fit" role="tablist" aria-label="Log type">
+      <div className="flex gap-1 bg-elevated border border-default rounded-pf p-1 w-fit" role="tablist" aria-label="Log type">
         {tabs.map((t) => (
           <Button type="button"
             key={t.key}
@@ -89,7 +89,7 @@ export function Component() {
       </div>
 
       {/* Log Table */}
-      <div role="tabpanel" id={`tabpanel-${tab}`} aria-labelledby={`tab-${tab}`} className="bg-elevated border border-default rounded-xl overflow-hidden">
+      <div role="tabpanel" id={`tabpanel-${tab}`} aria-labelledby={`tab-${tab}`} className="bg-elevated border border-default rounded-pf overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-body-sm">
             <caption className="sr-only">System logs</caption>

@@ -91,13 +91,13 @@ function ProfileSkeleton() {
       <div className="h-6 bg-overlay rounded w-[300px] animate-pulse" />
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {Array.from({ length: 4 }, (_, i) => (
-          <div key={i} className="bg-elevated border border-default rounded-xl p-4 space-y-2 animate-shimmer">
+          <div key={i} className="bg-elevated border border-default rounded-pf p-4 space-y-2 animate-shimmer">
             <div className="h-3 bg-overlay rounded w-[60%]" />
             <div className="h-5 bg-overlay rounded w-[80%]" />
           </div>
         ))}
       </div>
-      <div className="bg-elevated border border-default rounded-xl p-4 animate-shimmer">
+      <div className="bg-elevated border border-default rounded-pf p-4 animate-shimmer">
         {Array.from({ length: 5 }, (_, i) => (
           <div key={i} className="h-3 bg-overlay rounded w-full mb-3" />
         ))}
@@ -252,25 +252,25 @@ export function Component() {
 
       {/* Stats cards */}
       <div data-testid="whale-stats" className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="bg-elevated border border-default rounded-xl p-4">
+        <div className="bg-elevated border border-default rounded-pf p-4">
           <div className="text-label text-secondary mb-1">Total Volume</div>
           <div data-testid="whale-total-volume" className="text-lg font-mono font-semibold text-primary">{stats.totalVolume}</div>
         </div>
-        <div className="bg-elevated border border-default rounded-xl p-4">
+        <div className="bg-elevated border border-default rounded-pf p-4">
           <div className="text-label text-secondary mb-1">Total P&L</div>
           <div className={`text-lg font-mono font-semibold ${pnlColor(stats.totalPnl)}`}>
             {pnlSign(stats.totalPnl)}
           </div>
         </div>
-        <div className="bg-elevated border border-default rounded-xl p-4">
+        <div className="bg-elevated border border-default rounded-pf p-4">
           <div className="text-label text-secondary mb-1">Trade Count</div>
           <div className="text-lg font-mono font-semibold text-primary">{stats.tradeCount}</div>
         </div>
-        <div className="bg-elevated border border-default rounded-xl p-4">
+        <div className="bg-elevated border border-default rounded-pf p-4">
           <div className="text-label text-secondary mb-1">Win Rate</div>
           <div data-testid="whale-win-rate" className="text-lg font-mono font-semibold text-primary">{stats.winRate}%</div>
         </div>
-        <div className="bg-elevated border border-default rounded-xl p-4">
+        <div className="bg-elevated border border-default rounded-pf p-4">
           <div className="text-label text-secondary mb-1">Favorite Market</div>
           <div data-testid="whale-favorite-markets" className="text-body-md font-mono font-semibold text-primary truncate">
             {recentTrades.length > 0 ? recentTrades[0].marketName : '—'}
@@ -280,14 +280,14 @@ export function Component() {
 
       {/* Activity sparkline */}
       {sparkline.length > 0 && (
-        <div className="bg-elevated border border-default rounded-xl p-4">
+        <div className="bg-elevated border border-default rounded-pf p-4">
           <div className="text-label text-secondary mb-3">Activity (last 30 days)</div>
           <Sparkline data={sparkline} />
         </div>
       )}
 
       {/* Recent trades table */}
-      <div data-testid="trading-history" className="bg-elevated border border-default rounded-xl overflow-hidden">
+      <div data-testid="trading-history" className="bg-elevated border border-default rounded-pf overflow-hidden">
         <div className="px-4 py-3 border-b border-default">
           <h2 className="text-body-md font-medium text-primary">Recent Trades</h2>
         </div>

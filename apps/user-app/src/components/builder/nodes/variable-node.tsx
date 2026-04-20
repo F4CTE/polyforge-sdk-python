@@ -127,7 +127,7 @@ function VariableNodeInner({ id, data }: NodeProps<VariableNodeType>) {
   return (
     <>
       <div
-        className="builder-node-card w-[200px] rounded-lg shadow-md overflow-hidden"
+        className="builder-node-card w-[200px] rounded-pf shadow-md overflow-hidden"
         style={{ '--node-color': VARIABLE_COLOR } as React.CSSProperties}
       >
         {/* Header bar */}

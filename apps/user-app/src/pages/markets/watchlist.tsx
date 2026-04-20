@@ -724,7 +724,7 @@ export function Component() {
                     {isQuickOrderOpen && qo && (
                       <tr key={`${market.id}-quickorder`} className="bg-elevated">
                         <td colSpan={TOTAL_COLS} className="px-4 pb-4 pt-0">
-                          <div className="border border-default rounded-xl p-4 bg-surface">
+                          <div className="border border-default rounded-pf p-4 bg-surface">
                             {/* Panel header */}
                             <div className="flex items-center justify-between mb-4">
                               <div className="flex items-center gap-2">
@@ -884,7 +884,7 @@ export function Component() {
                     {isAlertsOpen && (
                       <tr key={`${market.id}-alerts`} className="bg-elevated">
                         <td colSpan={TOTAL_COLS} className="px-4 pb-4 pt-0">
-                          <div className="border border-default rounded-xl p-4 bg-surface">
+                          <div className="border border-default rounded-pf p-4 bg-surface">
                             {/* Panel header */}
                             <div className="flex items-center justify-between mb-4">
                               <div className="flex items-center gap-2">

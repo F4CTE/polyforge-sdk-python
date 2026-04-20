@@ -139,7 +139,7 @@ export function Component() {
       </div>
 
       {/* How it works */}
-      <div className="flex items-start gap-3 p-4 rounded-xl bg-surface border border-default">
+      <div className="flex items-start gap-3 p-4 rounded-pf bg-surface border border-default">
         <Info className="size-4 text-accent-text shrink-0 mt-1" />
         <p className="text-label text-secondary leading-relaxed">
           <span className="text-primary font-medium">How merge arbitrage works: </span>
@@ -177,7 +177,7 @@ export function Component() {
       {loading ? (
         <div className="space-y-2">
           {[1, 2, 3, 4, 5].map(i => (
-            <div key={i} className="h-16 bg-elevated border border-default rounded-xl animate-pulse" />
+            <div key={i} className="h-16 bg-elevated border border-default rounded-pf animate-pulse" />
           ))}
         </div>
       ) : opportunities.length === 0 ? (
@@ -187,7 +187,7 @@ export function Component() {
           <p className="text-tertiary text-label mt-1">Markets are efficiently priced. Lower the threshold or check back shortly.</p>
         </div>
       ) : (
-        <div className="bg-elevated border border-default rounded-xl overflow-hidden">
+        <div className="bg-elevated border border-default rounded-pf overflow-hidden">
           {/* Header row */}
           <div className="grid grid-cols-[1fr_auto_auto_auto_auto_auto] gap-4 px-4 py-2 border-b border-default bg-surface">
             <span className="text-caption font-medium text-tertiary uppercase tracking-wider">Market</span>

@@ -220,7 +220,7 @@ export function OnboardingDashboardChecklist() {
     <div
       role="region"
       aria-label="Getting started checklist"
-      className="bg-elevated border border-default rounded-xl p-4 animate-fade-in"
+      className="bg-elevated border border-default rounded-pf p-4 animate-fade-in"
     >
       {/* ── Header ─────────────────────────────────────────────────── */}
       <div className="flex items-start justify-between gap-3 mb-3">

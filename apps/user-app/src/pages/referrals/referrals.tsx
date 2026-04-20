@@ -47,7 +47,7 @@ function StatCard({
   valueClass?: string;
 }) {
   return (
-    <div className="bg-elevated border border-default rounded-xl p-4 flex flex-col gap-2">
+    <div className="bg-elevated border border-default rounded-pf p-4 flex flex-col gap-2">
       <div className="flex items-center gap-2 text-secondary text-body-sm">
         <Icon size={15} className="shrink-0" aria-hidden="true" />
         <span>{label}</span>
@@ -182,7 +182,7 @@ export function Component() {
       </div>
 
       {/* Section 1: Referral Link card */}
-      <div className="bg-elevated border border-default rounded-xl p-6 space-y-4">
+      <div className="bg-elevated border border-default rounded-pf p-6 space-y-4">
         <div className="flex items-center gap-2">
           <Gift size={16} className="text-accent-text shrink-0" aria-hidden="true" />
           <h2 className="text-body-md font-semibold text-primary">Your Referral Link</h2>
@@ -290,7 +290,7 @@ export function Component() {
       </div>
 
       {/* Section 3: Referrals table */}
-      <div className="bg-elevated border border-default rounded-xl overflow-hidden">
+      <div className="bg-elevated border border-default rounded-pf overflow-hidden">
         <div className="px-4 py-3 border-b border-default flex items-center gap-2">
           <Users size={15} className="text-secondary shrink-0" aria-hidden="true" />
           <h2 className="text-body-md font-semibold text-primary">Your Referrals</h2>
@@ -339,7 +339,7 @@ export function Component() {
       </div>
 
       {/* Section 4: How Referrals Work */}
-      <div className="bg-elevated border border-default rounded-xl p-6 space-y-4">
+      <div className="bg-elevated border border-default rounded-pf p-6 space-y-4">
         <h2 className="text-body-md font-semibold text-primary">How Referrals Work</h2>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div className="flex gap-3">

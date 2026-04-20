@@ -139,7 +139,7 @@ export function Component() {
       <div className="space-y-6" role="status" aria-label="Loading dashboard">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {[1, 2, 3, 4].map(i => (
-            <div key={i} className="bg-elevated border border-default rounded-xl p-4 animate-pulse">
+            <div key={i} className="bg-elevated border border-default rounded-pf p-4 animate-pulse">
               <div className="h-3 bg-app rounded-sm w-24 mb-3" />
               <div className="h-7 bg-app rounded-sm w-16" />
             </div>
@@ -147,7 +147,7 @@ export function Component() {
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {[1, 2, 3, 4].map(i => (
-            <div key={i} className="bg-elevated border border-default rounded-xl p-4 animate-pulse">
+            <div key={i} className="bg-elevated border border-default rounded-pf p-4 animate-pulse">
               <div className="h-3 bg-app rounded-sm w-24 mb-3" />
               <div className="h-7 bg-app rounded-sm w-16" />
             </div>
@@ -175,7 +175,7 @@ export function Component() {
     <div className="animate-fade-in space-y-6">
       {/* Stat Cards */}
       {statsError ? (
-        <div className="bg-elevated border border-default rounded-xl p-6 text-center">
+        <div className="bg-elevated border border-default rounded-pf p-6 text-center">
           <AlertCircle className="mx-auto mb-2 text-tertiary" size={24} aria-hidden="true" />
           <p className="text-body-sm text-secondary">Stats unavailable</p>
         </div>
@@ -184,7 +184,7 @@ export function Component() {
           {statCards.map((card) => (
             <div
               key={card.label}
-              className="bg-elevated border border-default rounded-xl p-4"
+              className="bg-elevated border border-default rounded-pf p-4"
             >
               <div className="flex items-center justify-between mb-3">
                 <span className="text-label font-medium text-secondary">
@@ -208,7 +208,7 @@ export function Component() {
           Platform Activity
         </h2>
         {platformStatsError ? (
-          <div className="bg-elevated border border-default rounded-xl p-6 text-center">
+          <div className="bg-elevated border border-default rounded-pf p-6 text-center">
             <AlertCircle className="mx-auto mb-2 text-tertiary" size={24} aria-hidden="true" />
             <p className="text-body-sm text-secondary">Platform stats unavailable</p>
           </div>
@@ -217,7 +217,7 @@ export function Component() {
             {platformStatCards.map((card) => (
               <div
                 key={card.label}
-                className="bg-elevated border border-default rounded-xl p-4"
+                className="bg-elevated border border-default rounded-pf p-4"
               >
                 <div className="flex items-center justify-between mb-3">
                   <span className="text-label font-medium text-secondary">
@@ -239,7 +239,7 @@ export function Component() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* System Health */}
         {healthError ? (
-          <div className="bg-elevated border border-default rounded-xl p-5">
+          <div className="bg-elevated border border-default rounded-pf p-5">
             <div className="flex items-center gap-2 mb-4">
               <Activity size={16} className="text-tertiary" aria-hidden="true" />
               <h2 className="text-body-md font-semibold text-primary">
@@ -255,7 +255,7 @@ export function Component() {
             </div>
           </div>
         ) : health ? (
-          <div className="bg-elevated border border-default rounded-xl p-5">
+          <div className="bg-elevated border border-default rounded-pf p-5">
             <div className="flex items-center gap-2 mb-4">
               <Activity size={16} className="text-accent" aria-hidden="true" />
               <h2 className="text-body-md font-semibold text-primary">
@@ -301,7 +301,7 @@ export function Component() {
         {/* Infrastructure + Launch Control */}
         <div className="space-y-4">
           {health?.db && (
-          <div className="bg-elevated border border-default rounded-xl p-5">
+          <div className="bg-elevated border border-default rounded-pf p-5">
             <div className="flex items-center gap-2 mb-3">
               <Database size={16} className="text-accent" aria-hidden="true" />
               <h2 className="text-body-md font-semibold text-primary">
@@ -320,7 +320,7 @@ export function Component() {
           )}
 
           {health?.redis && (
-          <div className="bg-elevated border border-default rounded-xl p-5">
+          <div className="bg-elevated border border-default rounded-pf p-5">
             <div className="flex items-center gap-2 mb-3">
               <Server size={16} className="text-accent" aria-hidden="true" />
               <h2 className="text-body-md font-semibold text-primary">
@@ -339,7 +339,7 @@ export function Component() {
           )}
 
           {/* Launch Control */}
-          <div className="bg-elevated border border-default rounded-xl p-5">
+          <div className="bg-elevated border border-default rounded-pf p-5">
             <div className="flex items-center justify-between">
               <div>
                 <h2 className="text-body-md font-semibold text-primary">
@@ -370,7 +370,7 @@ export function Component() {
       </div>
 
       {/* Rate Limiting */}
-      <div className="bg-elevated border border-default rounded-xl p-5">
+      <div className="bg-elevated border border-default rounded-pf p-5">
         <div className="flex items-center gap-2 mb-4">
           <ShieldAlert size={16} className="text-accent" aria-hidden="true" />
           <h2 className="text-body-md font-semibold text-primary">
@@ -433,7 +433,7 @@ export function Component() {
       </div>
 
       {/* Recent Activity */}
-      <div className="bg-elevated border border-default rounded-xl p-5">
+      <div className="bg-elevated border border-default rounded-pf p-5">
         <h2 className="text-body-md font-semibold text-primary mb-4">
           Recent Activity
         </h2>

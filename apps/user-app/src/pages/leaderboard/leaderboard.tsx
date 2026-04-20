@@ -226,7 +226,7 @@ export function Component() {
       </div>
 
       {/* Table */}
-      <div data-testid="leaderboard-table" className="bg-elevated border border-default rounded-xl overflow-hidden">
+      <div data-testid="leaderboard-table" className="bg-elevated border border-default rounded-pf overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-body-sm" aria-label="Leaderboard rankings">
             <thead>

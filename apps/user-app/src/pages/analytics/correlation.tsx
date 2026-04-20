@@ -286,7 +286,7 @@ export function Component() {
       </div>
 
       {/* ── Section 1: Category Heatmap ────────────────────────────────── */}
-      <div className="bg-elevated border border-default rounded-xl p-6 space-y-5">
+      <div className="bg-elevated border border-default rounded-pf p-6 space-y-5">
         <div className="flex items-center gap-2">
           <Grid3x3 className="size-4 text-tertiary" aria-hidden="true" />
           <h2 className="text-body-md font-medium text-primary">Category Correlation Heatmap</h2>
@@ -415,7 +415,7 @@ export function Component() {
       )}
 
       {/* ── Section 2: Top correlated market pairs ─────────────────────── */}
-      <div className="bg-elevated border border-default rounded-xl overflow-hidden">
+      <div className="bg-elevated border border-default rounded-pf overflow-hidden">
         <div className="px-6 py-4 border-b border-default">
           <h2 className="text-body-md font-medium text-primary">Top Correlated Market Pairs</h2>
           <p className="text-label text-tertiary mt-1">
@@ -545,7 +545,7 @@ function InsightCard({ insight }: { insight: { icon: 'up' | 'down' | 'neutral'; 
   };
 
   return (
-    <div className="bg-elevated border border-default rounded-xl p-4 flex items-start gap-3">
+    <div className="bg-elevated border border-default rounded-pf p-4 flex items-start gap-3">
       {iconMap[insight.icon]}
       <p className="text-label text-secondary leading-relaxed">{insight.text}</p>
     </div>

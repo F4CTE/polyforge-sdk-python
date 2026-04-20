@@ -329,7 +329,7 @@ function ComparisonPanel({ data, loading, onBack }: ComparisonPanelProps) {
 
   if (loading) {
     return (
-      <div className="bg-elevated border border-default rounded-xl p-6 space-y-4">
+      <div className="bg-elevated border border-default rounded-pf p-6 space-y-4">
         <Button
           type="button"
           variant="ghost"
@@ -349,7 +349,7 @@ function ComparisonPanel({ data, loading, onBack }: ComparisonPanelProps) {
   const colTemplate = `180px repeat(${data.length}, 1fr)`;
 
   return (
-    <div className="bg-elevated border border-default rounded-xl overflow-hidden">
+    <div className="bg-elevated border border-default rounded-pf overflow-hidden">
       {/* Back button */}
       <div className="px-6 pt-5 pb-3 border-b border-subtle">
         <Button
@@ -544,7 +544,7 @@ function TraderCardItem({
 
   return (
     <div
-      className={`relative bg-elevated border rounded-xl p-4 hover:border-strong transition-colors flex flex-col gap-3 ${
+      className={`relative bg-elevated border rounded-pf p-4 hover:border-strong transition-colors flex flex-col gap-3 ${
         compareMode && isSelected
           ? 'border-accent/50 ring-1 ring-accent/20'
           : 'border-default'

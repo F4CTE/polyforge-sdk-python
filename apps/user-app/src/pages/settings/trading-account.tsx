@@ -112,7 +112,7 @@ export function Component() {
       </div>
 
       {/* Credentials panel */}
-      <div className="bg-elevated border border-default rounded-xl p-6 space-y-5">
+      <div className="bg-elevated border border-default rounded-pf p-6 space-y-5">
         {isConnected ? (
           <>
             <h2 className="text-body-md font-semibold text-primary uppercase tracking-wider">Polymarket Credentials</h2>
@@ -184,7 +184,7 @@ export function Component() {
       </div>
 
       {/* Bot link code */}
-      <div className="bg-elevated border border-default rounded-xl p-6 space-y-4">
+      <div className="bg-elevated border border-default rounded-pf p-6 space-y-4">
         <h2 className="text-body-md font-semibold text-primary uppercase tracking-wider">Bot Link Code</h2>
         <p className="text-body-sm text-secondary">
           Generate a one-time code to link the PolyForge Telegram bot to your account. The code expires after 10 minutes.

@@ -217,7 +217,7 @@ export function Component() {
             {/* Visual comparison summary */}
             <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {strategies.map((s) => (
-                <div key={s.id} className="bg-surface border border-subtle rounded-lg p-4">
+                <div key={s.id} className="bg-surface border border-subtle rounded-pf p-4">
                   <div className="flex items-center justify-between mb-3">
                     <Link
                       to={`/strategies/${s.id}`}

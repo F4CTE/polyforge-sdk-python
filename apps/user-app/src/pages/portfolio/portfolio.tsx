@@ -1123,7 +1123,7 @@ export function Component() {
 
         return (
           <div
-            className={`flex flex-wrap items-center gap-x-5 gap-y-2 px-4 py-3 rounded-xl border transition-colors ${
+            className={`flex flex-wrap items-center gap-x-5 gap-y-2 px-4 py-3 rounded-pf border transition-colors ${
               pnlFlashing
                 ? 'bg-elevated/80 border-default'
                 : 'bg-elevated border-default'
@@ -1210,7 +1210,7 @@ export function Component() {
 
       {/* Circuit Breaker Banner */}
       {circuitBreakerTripped && (
-        <div className="flex items-start gap-3 p-4 rounded-xl bg-loss/10 border border-loss/30">
+        <div className="flex items-start gap-3 p-4 rounded-pf bg-loss/10 border border-loss/30">
           <ShieldAlert className="size-5 text-loss shrink-0 mt-1" />
           <div className="flex-1 min-w-0">
             <p className="text-body-md font-semibold text-loss">Circuit Breaker Active</p>
@@ -1235,19 +1235,19 @@ export function Component() {
               [1, 2, 3, 4].map(i => <PortfolioCardSkeleton key={i} />)
             ) : portfolio ? (
               <>
-                <div className={`bg-elevated border border-default rounded-xl p-4 border-l-4 ${pnlBorderColor(portfolio.totalUnrealizedPnl)}`}>
+                <div className={`bg-elevated border border-default rounded-pf p-4 border-l-4 ${pnlBorderColor(portfolio.totalUnrealizedPnl)}`}>
                   <span className="text-label text-secondary uppercase tracking-wider">Unrealized P&L</span>
                   <span data-testid="stat-pnl" className={`block mt-1 text-xl font-mono font-semibold ${pnlColor(portfolio.totalUnrealizedPnl)}`}>
                     {formatPnl(portfolio.totalUnrealizedPnl)}
                   </span>
                 </div>
-                <div className={`bg-elevated border border-default rounded-xl p-4 border-l-4 ${pnlBorderColor(portfolio.totalRealizedPnl)}`}>
+                <div className={`bg-elevated border border-default rounded-pf p-4 border-l-4 ${pnlBorderColor(portfolio.totalRealizedPnl)}`}>
                   <span className="text-label text-secondary uppercase tracking-wider">Realized P&L</span>
                   <span data-testid="stat-return" className={`block mt-1 text-xl font-mono font-semibold ${pnlColor(portfolio.totalRealizedPnl)}`}>
                     {formatPnl(portfolio.totalRealizedPnl)}
                   </span>
                 </div>
-                <div className="bg-elevated border border-default rounded-xl p-4 border-l-4 border-l-accent">
+                <div className="bg-elevated border border-default rounded-pf p-4 border-l-4 border-l-accent">
                   <span className="text-label text-secondary uppercase tracking-wider">Win Rate</span>
                   <span data-testid="stat-win-rate" className="block mt-1 text-xl font-mono font-semibold text-accent-text">
                     {parseFloat(pnl?.winRate ?? '0') === 0 && (portfolio?.positions ?? []).length > 0
@@ -1258,7 +1258,7 @@ export function Component() {
                     <span className="text-caption text-tertiary mt-1 block">No resolved trades yet</span>
                   )}
                 </div>
-                <div className="bg-elevated border border-default rounded-xl p-4 border-l-4 border-l-primary">
+                <div className="bg-elevated border border-default rounded-pf p-4 border-l-4 border-l-primary">
                   <span className="text-label text-secondary uppercase tracking-wider">Open Positions</span>
                   <span className="block mt-1 text-xl font-mono font-semibold text-primary">
                     {portfolio.positions.length}
@@ -1266,7 +1266,7 @@ export function Component() {
                 </div>
               </>
             ) : (
-              <div className="col-span-full bg-elevated border border-loss/20 rounded-xl p-6 text-center">
+              <div className="col-span-full bg-elevated border border-loss/20 rounded-pf p-6 text-center">
                 <AlertTriangle className="mx-auto mb-3 text-loss opacity-60" size={32} />
                 <p className="text-body-md font-medium text-primary mb-1">Failed to load portfolio</p>
                 <p className="text-label text-tertiary mb-4">Something went wrong while fetching your data.</p>
@@ -1278,7 +1278,7 @@ export function Component() {
           </div>
 
           {/* ─── Tax Report ─── */}
-          <div className="bg-elevated border border-default rounded-xl p-4">
+          <div className="bg-elevated border border-default rounded-pf p-4">
             {/* Header */}
             <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
               <div className="flex items-center gap-2">
@@ -1312,33 +1312,33 @@ export function Component() {
             {/* Summary cards */}
             {loadingTax ? (
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
-                {[1, 2, 3, 4].map(i => <div key={i} className="h-16 bg-overlay rounded-xl animate-pulse" />)}
+                {[1, 2, 3, 4].map(i => <div key={i} className="h-16 bg-overlay rounded-pf animate-pulse" />)}
               </div>
             ) : taxSummary ? (
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
                 {/* Net Realized Gain/Loss */}
-                <div className={`bg-surface border border-default rounded-xl p-3 border-l-4 ${taxSummary.netGain >= 0 ? 'border-l-gain' : 'border-l-loss'}`}>
+                <div className={`bg-surface border border-default rounded-pf p-3 border-l-4 ${taxSummary.netGain >= 0 ? 'border-l-gain' : 'border-l-loss'}`}>
                   <span className="text-caption text-secondary uppercase tracking-wider block mb-1">Net Realized Gain/Loss</span>
                   <span className={`text-lg font-mono font-semibold ${taxSummary.netGain >= 0 ? 'text-gain' : 'text-loss'}`}>
                     {taxSummary.netGain >= 0 ? '+' : ''}{taxSummary.netGain.toFixed(2)} USDC
                   </span>
                 </div>
                 {/* Short-term Gains */}
-                <div className="bg-surface border border-default rounded-xl p-3">
+                <div className="bg-surface border border-default rounded-pf p-3">
                   <span className="text-caption text-secondary uppercase tracking-wider block mb-1">Short-term Gains</span>
                   <span className={`text-lg font-mono font-semibold ${taxSummary.shortTermGain >= 0 ? 'text-gain' : 'text-loss'}`}>
                     {taxSummary.shortTermGain >= 0 ? '+' : ''}{taxSummary.shortTermGain.toFixed(2)} USDC
                   </span>
                 </div>
                 {/* Long-term Gains */}
-                <div className="bg-surface border border-default rounded-xl p-3">
+                <div className="bg-surface border border-default rounded-pf p-3">
                   <span className="text-caption text-secondary uppercase tracking-wider block mb-1">Long-term Gains</span>
                   <span className={`text-lg font-mono font-semibold ${taxSummary.longTermGain >= 0 ? 'text-gain' : 'text-loss'}`}>
                     {taxSummary.longTermGain >= 0 ? '+' : ''}{taxSummary.longTermGain.toFixed(2)} USDC
                   </span>
                 </div>
                 {/* Total Trades */}
-                <div className="bg-surface border border-default rounded-xl p-3">
+                <div className="bg-surface border border-default rounded-pf p-3">
                   <span className="text-caption text-secondary uppercase tracking-wider block mb-1">Total Trades</span>
                   <span className="text-lg font-mono font-semibold text-primary">{taxSummary.tradeCount}</span>
                 </div>
@@ -1467,7 +1467,7 @@ export function Component() {
             const activeGoal = goals[activeGoalIdx] ?? goals[0] ?? null;
 
             return (
-              <div className="bg-elevated border border-default rounded-xl p-4">
+              <div className="bg-elevated border border-default rounded-pf p-4">
                 {/* Header */}
                 <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
                   <div className="flex items-center gap-2">
@@ -1510,7 +1510,7 @@ export function Component() {
 
                 {/* Inline form */}
                 {showGoalForm && (
-                  <div className="bg-surface border border-default rounded-xl p-4 mb-4 space-y-3">
+                  <div className="bg-surface border border-default rounded-pf p-4 mb-4 space-y-3">
                     <div>
                       <label className="text-label text-secondary block mb-1">Goal name</label>
                       <Input
@@ -1695,7 +1695,7 @@ export function Component() {
           })()}
 
           {/* ─── Share Performance ─── */}
-          <div className="bg-elevated border border-default rounded-xl p-4">
+          <div className="bg-elevated border border-default rounded-pf p-4">
             <div className="flex items-center gap-2 mb-4">
               <Share2 className="size-4 text-accent-text" />
               <span className="text-body-md font-semibold text-primary">Share Performance</span>
@@ -1704,7 +1704,7 @@ export function Component() {
             {/* Preview card */}
             <div
               id="share-card"
-              className="bg-gradient-to-br from-surface to-elevated border border-accent/30 rounded-xl p-5 mb-4"
+              className="bg-gradient-to-br from-surface to-elevated border border-accent/30 rounded-pf p-5 mb-4"
             >
               {/* Top row: logo + username */}
               <div className="flex items-center justify-between mb-5">
@@ -1815,7 +1815,7 @@ export function Component() {
             const limitHit = progress >= 100;
             const remaining = limit != null ? limit - Math.abs(Math.min(0, totalPnl)) : 0;
             return (
-              <div className="bg-elevated border border-default rounded-xl p-4">
+              <div className="bg-elevated border border-default rounded-pf p-4">
                 {/* Header */}
                 <div className="flex items-center gap-2 mb-3">
                   <Shield className="size-4 text-tertiary" />
@@ -1878,7 +1878,7 @@ export function Component() {
           })()}
 
           {/* P&L Chart */}
-          <div data-testid="pnl-chart" className="bg-elevated border border-default rounded-xl">
+          <div data-testid="pnl-chart" className="bg-elevated border border-default rounded-pf">
             <div className="flex items-center justify-between px-4 py-3 border-b border-subtle">
               <span className="text-body-md font-medium text-primary">P&L Over Time</span>
               <div className="flex gap-1">
@@ -1938,7 +1938,7 @@ export function Component() {
           </div>
 
           {/* Positions table */}
-          <div data-testid="positions-table" className="bg-elevated border border-default rounded-xl">
+          <div data-testid="positions-table" className="bg-elevated border border-default rounded-pf">
             <div className="px-4 py-3 border-b border-subtle">
               <span className="text-body-md font-medium text-primary">Open Positions</span>
             </div>
@@ -2431,7 +2431,7 @@ export function Component() {
 
           {/* P&L Breakdown — Realized vs Unrealized */}
           {portfolio && (
-            <div className="bg-elevated border border-default rounded-xl p-4">
+            <div className="bg-elevated border border-default rounded-pf p-4">
               <p className="text-label text-secondary uppercase tracking-wider mb-3">P&L Breakdown</p>
               <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -2486,7 +2486,7 @@ export function Component() {
             };
 
             return (
-              <div className="bg-elevated border border-default rounded-xl p-4">
+              <div className="bg-elevated border border-default rounded-pf p-4">
                 {/* Section header */}
                 <div className="flex items-center gap-2 mb-4">
                   <PieChart className="size-4 text-tertiary" />
@@ -2670,7 +2670,7 @@ export function Component() {
             ];
 
             return (
-              <div className="bg-elevated border border-default rounded-xl p-4">
+              <div className="bg-elevated border border-default rounded-pf p-4">
                 <div className="flex items-center gap-2 mb-4">
                   <TrendingUp className="size-4 text-tertiary" />
                   <span className="text-body-md font-medium text-primary">Advanced Statistics</span>
@@ -2696,7 +2696,7 @@ export function Component() {
           })()}
 
           {/* ─── Daily Returns Heatmap ─── */}
-          <div className="bg-elevated border border-default rounded-xl p-4">
+          <div className="bg-elevated border border-default rounded-pf p-4">
             <div className="flex items-center gap-2 mb-4">
               <CalendarDays className="size-4 text-tertiary" />
               <span className="text-body-md font-medium text-primary">Daily Returns (12 months)</span>
@@ -2730,7 +2730,7 @@ export function Component() {
 
             if (loadingRiskHeatmap) {
               return (
-                <div className="bg-elevated border border-default rounded-xl p-4">
+                <div className="bg-elevated border border-default rounded-pf p-4">
                   <div className="flex items-center gap-2 mb-4">
                     <ShieldAlert className="size-4 text-accent-text" />
                     <span className="text-body-md font-semibold text-primary">Risk Concentration</span>
@@ -2758,7 +2758,7 @@ export function Component() {
             // Empty state — no positions
             if (!riskHeatmap || riskHeatmap.cells.length === 0) {
               return (
-                <div className="bg-elevated border border-default rounded-xl p-4">
+                <div className="bg-elevated border border-default rounded-pf p-4">
                   <div className="flex items-center gap-2 mb-4">
                     <ShieldAlert className="size-4 text-accent-text" />
                     <span className="text-body-md font-semibold text-primary">Risk Concentration</span>
@@ -2793,7 +2793,7 @@ export function Component() {
             const highConcentrationCells = cells.filter(c => totalValue > 0 && c.totalValue / totalValue > 0.3);
 
             return (
-              <div className="bg-elevated border border-default rounded-xl p-4">
+              <div className="bg-elevated border border-default rounded-pf p-4">
                 {/* Header */}
                 <div className="flex items-start justify-between mb-1 flex-wrap gap-2">
                   <div className="flex items-center gap-2">
@@ -2997,7 +2997,7 @@ export function Component() {
 
             if (loadingSuggestions) {
               return (
-                <div className="bg-elevated border border-default rounded-xl p-4">
+                <div className="bg-elevated border border-default rounded-pf p-4">
                   <div className="flex items-center gap-2 mb-4">
                     <Lightbulb className="size-4 text-warning" />
                     <span className="text-body-md font-semibold text-primary">Rebalancing Suggestions</span>
@@ -3012,7 +3012,7 @@ export function Component() {
             }
 
             return (
-              <div className="bg-elevated border border-default rounded-xl p-4">
+              <div className="bg-elevated border border-default rounded-pf p-4">
                 {/* Header */}
                 <div className="flex items-center gap-2 mb-4">
                   <Lightbulb className="size-4 text-warning" />
@@ -3112,7 +3112,7 @@ export function Component() {
             const entries = Object.entries(byCategory).sort((a, b) => b[1].exposure - a[1].exposure);
             const totalExposure = entries.reduce((sum, [, v]) => sum + v.exposure, 0) || 1;
             return (
-              <div className="bg-elevated border border-default rounded-xl p-4">
+              <div className="bg-elevated border border-default rounded-pf p-4">
                 <p className="text-label text-secondary uppercase tracking-wider mb-3">Category Exposure</p>
                 <div className="space-y-3">
                   {entries.map(([category, { count, exposure }]) => {
@@ -3150,7 +3150,7 @@ export function Component() {
             }, {});
             const sorted = Object.values(byMarket).sort((a, b) => Math.abs(b.pnl) - Math.abs(a.pnl));
             return (
-              <div className="bg-elevated border border-default rounded-xl">
+              <div className="bg-elevated border border-default rounded-pf">
                 <div className="flex items-center gap-2 px-4 py-3 border-b border-subtle">
                   <PieChart className="size-4 text-tertiary" />
                   <span className="text-body-md font-medium text-primary">Exposure by Market</span>
@@ -3200,21 +3200,21 @@ export function Component() {
             <>
               {/* Paper summary */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div className="bg-elevated border border-default rounded-xl p-4">
+                <div className="bg-elevated border border-default rounded-pf p-4">
                   <span className="text-label text-secondary uppercase tracking-wider">Paper P&L</span>
                   <span className={`block mt-1 text-xl font-mono font-semibold ${pnlColor(paper.pnl)}`}>
                     {formatPnl(paper.pnl)}
                   </span>
                 </div>
-                <div className="bg-elevated border border-default rounded-xl p-4">
+                <div className="bg-elevated border border-default rounded-pf p-4">
                   <span className="text-label text-secondary uppercase tracking-wider">Positions</span>
                   <span className="block mt-1 text-xl font-mono font-semibold text-primary">{paper.positions.length}</span>
                 </div>
-                <div className="bg-elevated border border-default rounded-xl p-4">
+                <div className="bg-elevated border border-default rounded-pf p-4">
                   <span className="text-label text-secondary uppercase tracking-wider">Total Orders</span>
                   <span className="block mt-1 text-xl font-mono font-semibold text-primary">{paper.orderCount}</span>
                 </div>
-                <div className="bg-elevated border border-default rounded-xl p-4 flex items-end justify-end">
+                <div className="bg-elevated border border-default rounded-pf p-4 flex items-end justify-end">
                   <Button
                     type="button"
                     variant="danger"
@@ -3228,7 +3228,7 @@ export function Component() {
                   </Button>
                   {showResetConfirm && (
                     <div role="presentation" className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => setShowResetConfirm(false)} onKeyDown={(e) => { if (e.key === 'Escape') setShowResetConfirm(false); }}>
-                      <div role="dialog" aria-modal="true" aria-labelledby="reset-dialog-title" className="bg-elevated border border-default rounded-xl p-6 max-w-sm mx-4 shadow-lg" onClick={(e) => e.stopPropagation()}>
+                      <div role="dialog" aria-modal="true" aria-labelledby="reset-dialog-title" className="bg-elevated border border-default rounded-pf p-6 max-w-sm mx-4 shadow-lg" onClick={(e) => e.stopPropagation()}>
                         <div className="flex items-center gap-2 mb-3">
                           <AlertTriangle className="size-5 text-loss" />
                           <h2 id="reset-dialog-title" className="text-body-md font-semibold text-primary">Reset Paper Account</h2>
@@ -3246,7 +3246,7 @@ export function Component() {
 
               {/* Paper positions */}
               {paper.positions.length === 0 ? (
-                <div className="bg-elevated border border-default rounded-xl">
+                <div className="bg-elevated border border-default rounded-pf">
                   <div className="flex flex-col items-center justify-center py-16 text-center">
                     <Wallet className="size-10 text-tertiary mb-3" />
                     <p className="text-body-md font-medium text-primary">No paper positions</p>
@@ -3254,7 +3254,7 @@ export function Component() {
                   </div>
                 </div>
               ) : (
-                <div className="bg-elevated border border-default rounded-xl">
+                <div className="bg-elevated border border-default rounded-pf">
                   <div className="px-4 py-3 border-b border-subtle">
                     <span className="text-body-md font-medium text-primary">Paper Positions</span>
                   </div>

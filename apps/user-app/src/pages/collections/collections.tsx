@@ -21,9 +21,9 @@ interface Collection {
 
 function CollectionSkeleton() {
   return (
-    <div className="bg-elevated border border-default rounded-xl p-5 space-y-3 animate-shimmer">
+    <div className="bg-elevated border border-default rounded-pf p-5 space-y-3 animate-shimmer">
       <div className="flex items-center gap-3 mb-2">
-        <div className="size-10 bg-overlay rounded-lg" />
+        <div className="size-10 bg-overlay rounded-pf" />
         <div className="h-4 bg-overlay rounded w-[45%]" />
       </div>
       <div className="h-3 bg-overlay rounded w-[90%]" />
@@ -92,7 +92,7 @@ export function Component() {
           {collections.map(col => (
             <div
               key={col.id}
-              className="bg-elevated border border-default rounded-xl p-5 hover:border-strong transition-all duration-panel hover:shadow-sm flex flex-col"
+              className="bg-elevated border border-default rounded-pf p-5 hover:border-strong transition-all duration-panel hover:shadow-sm flex flex-col"
             >
               {/* Emoji + Title */}
               <div className="flex items-center gap-3 mb-2">

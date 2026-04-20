@@ -211,7 +211,7 @@ export function Component() {
           {loading ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {[1, 2, 3, 4, 5, 6].map((i) => (
-                <div key={i} className="h-52 bg-elevated border border-default rounded-xl animate-pulse" />
+                <div key={i} className="h-52 bg-elevated border border-default rounded-pf animate-pulse" />
               ))}
             </div>
           ) : filtered.length === 0 ? (
@@ -252,7 +252,7 @@ function ListingCard({
   onPurchase: () => void;
 }) {
   return (
-    <div className="flex flex-col bg-elevated border border-default rounded-xl p-4 hover:border-strong transition-colors">
+    <div className="flex flex-col bg-elevated border border-default rounded-pf p-4 hover:border-strong transition-colors">
       {/* Title + seller */}
       <div className="flex-1 space-y-2 min-w-0">
         <p className="text-body-md font-semibold text-primary line-clamp-2">{listing.title}</p>
@@ -346,7 +346,7 @@ function MyPurchases() {
     return (
       <div className="space-y-2">
         {[1, 2, 3].map((i) => (
-          <div key={i} className="h-16 bg-elevated border border-default rounded-xl animate-pulse" />
+          <div key={i} className="h-16 bg-elevated border border-default rounded-pf animate-pulse" />
         ))}
       </div>
     );
@@ -367,7 +367,7 @@ function MyPurchases() {
       {purchases.map((p) => (
         <div
           key={p.id}
-          className="flex items-center justify-between px-4 py-3 bg-elevated border border-default rounded-xl"
+          className="flex items-center justify-between px-4 py-3 bg-elevated border border-default rounded-pf"
         >
           <div>
             <p className="text-body-md text-primary font-medium">{p.listing.title}</p>

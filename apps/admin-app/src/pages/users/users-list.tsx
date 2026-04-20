@@ -220,7 +220,7 @@ export function Component() {
       )}
 
       {/* Table */}
-      <div className="bg-elevated border border-default rounded-xl overflow-hidden">
+      <div className="bg-elevated border border-default rounded-pf overflow-hidden">
         <div className="overflow-x-auto" data-density="compact">
           <table className="w-full text-body-sm">
             <caption className="sr-only">User accounts list</caption>

@@ -186,7 +186,7 @@ function ReviewCard({ review, onAction }: ReviewCardProps) {
   return (
     <article
       className={[
-        'rounded-xl border bg-elevated p-5 space-y-3 transition-opacity',
+        'rounded-pf border bg-elevated p-5 space-y-3 transition-opacity',
         CARD_BORDER[review.status],
         busy ? 'opacity-70 pointer-events-none' : '',
       ].join(' ')}
@@ -368,7 +368,7 @@ function ReviewCard({ review, onAction }: ReviewCardProps) {
 
 function ReviewCardSkeleton() {
   return (
-    <div className="rounded-xl border border-default bg-elevated p-5 space-y-3 animate-shimmer">
+    <div className="rounded-pf border border-default bg-elevated p-5 space-y-3 animate-shimmer">
       <div className="flex items-center gap-3">
         <div className="h-4 w-24 rounded-sm bg-default" />
         <div className="h-4 w-40 rounded-sm bg-default" />
@@ -419,7 +419,7 @@ function StatTile({ label, value, accent, danger }: StatTileProps) {
       : 'text-primary';
 
   return (
-    <div className="rounded-xl border border-default bg-elevated px-4 py-3 space-y-1">
+    <div className="rounded-pf border border-default bg-elevated px-4 py-3 space-y-1">
       <p className="text-label font-semibold uppercase tracking-wider text-tertiary">
         {label}
       </p>
@@ -434,7 +434,7 @@ function StatTile({ label, value, accent, danger }: StatTileProps) {
 
 function EmptyState({ status }: { status: ReviewStatus }) {
   return (
-    <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-default bg-elevated py-16 text-center">
+    <div className="flex flex-col items-center justify-center gap-3 rounded-pf border border-default bg-elevated py-16 text-center">
       <MessageSquare className="h-10 w-10 text-tertiary" aria-hidden />
       <p className="text-body-sm font-medium text-secondary">
         No {status} reviews
@@ -739,7 +739,7 @@ export function Component() {
 
         {/* Page header */}
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-elevated border border-default">
+          <div className="flex h-10 w-10 items-center justify-center rounded-pf bg-elevated border border-default">
             <MessageSquare className="h-5 w-5 text-accent-text" aria-hidden />
           </div>
           <div>

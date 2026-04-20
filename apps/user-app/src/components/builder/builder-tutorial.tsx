@@ -30,7 +30,7 @@ const STEPS: TutorialStep[] = [
     title: 'Safety Blocks — Always Active',
     content: (
       <div className="space-y-3">
-        <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-loss/10 border border-loss/25">
+        <div className="flex items-center gap-2 px-3 py-2 rounded-pf bg-loss/10 border border-loss/25">
           <Shield className="size-4 shrink-0 text-loss" />
           <span className="text-body-md font-medium text-loss">Safety</span>
         </div>
@@ -47,7 +47,7 @@ const STEPS: TutorialStep[] = [
     title: 'Trigger Blocks — Must Be Wired',
     content: (
       <div className="space-y-3">
-        <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-warning/10 border border-warning/25">
+        <div className="flex items-center gap-2 px-3 py-2 rounded-pf bg-warning/10 border border-warning/25">
           <Zap className="size-4 shrink-0 text-warning" />
           <span className="text-body-md font-medium text-warning">Trigger</span>
         </div>
@@ -65,7 +65,7 @@ const STEPS: TutorialStep[] = [
     title: 'Condition Blocks — Global or Scoped',
     content: (
       <div className="space-y-3">
-        <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-accent-subtle border border-accent/25">
+        <div className="flex items-center gap-2 px-3 py-2 rounded-pf bg-accent-subtle border border-accent/25">
           <Filter className="size-4 shrink-0 text-accent" />
           <span className="text-body-md font-medium text-accent">Condition</span>
         </div>
@@ -89,7 +89,7 @@ const STEPS: TutorialStep[] = [
     title: 'Action Blocks — Must Be Wired',
     content: (
       <div className="space-y-3">
-        <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-gain/10 border border-gain/25">
+        <div className="flex items-center gap-2 px-3 py-2 rounded-pf bg-gain/10 border border-gain/25">
           <Play className="size-4 shrink-0 text-gain" />
           <span className="text-body-md font-medium text-gain">Action</span>
         </div>
@@ -162,7 +162,7 @@ export function BuilderTutorial({ forceVisible, onDismiss }: BuilderTutorialProp
     <div
       role="dialog"
       aria-label="Strategy builder tutorial"
-      className="absolute bottom-4 left-4 z-40 w-80 bg-elevated border border-default rounded-xl shadow-lg flex flex-col overflow-hidden"
+      className="absolute bottom-4 left-4 z-40 w-80 bg-elevated border border-default rounded-pf shadow-lg flex flex-col overflow-hidden"
     >
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-subtle">

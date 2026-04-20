@@ -1032,7 +1032,7 @@ export function Component() {
 
       {/* ─── Profile Tab ─── */}
       {activeTab === 'profile' && (
-        <div className="bg-elevated border border-default rounded-xl p-6 space-y-5">
+        <div className="bg-elevated border border-default rounded-pf p-6 space-y-5">
           <h2 className="text-body-md font-semibold text-primary uppercase tracking-wider">Public Profile</h2>
           <div>
             <label htmlFor="settings-display-name" className="text-label text-secondary mb-2 block">Display Name</label>
@@ -1103,7 +1103,7 @@ export function Component() {
           </div>
 
           {/* ─── Danger Zone ─── */}
-          <div className="mt-10 pt-6 border-t-2 border-loss/20 bg-elevated border border-loss/20 rounded-xl p-6 space-y-4">
+          <div className="mt-10 pt-6 border-t-2 border-loss/20 bg-elevated border border-loss/20 rounded-pf p-6 space-y-4">
             <h2 className="text-body-md font-semibold text-loss uppercase tracking-wider flex items-center gap-2">
               <AlertTriangle className="size-4" />
               Danger Zone
@@ -1123,7 +1123,7 @@ export function Component() {
 
             {deleteDialogOpen && (
               <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="delete-dialog-title" onKeyDown={(e) => { if (e.key === 'Escape') { setDeleteDialogOpen(false); setDeletePassword(''); } }}>
-                <div className="bg-elevated border border-default rounded-xl p-6 max-w-md w-full mx-4 space-y-4">
+                <div className="bg-elevated border border-default rounded-pf p-6 max-w-md w-full mx-4 space-y-4">
                   <div className="flex items-center gap-3">
                     <div className="size-10 rounded-full bg-loss/10 flex items-center justify-center">
                       <AlertTriangle className="size-5 text-loss" />
@@ -1179,7 +1179,7 @@ export function Component() {
 
       {/* ─── Notifications Tab ─── */}
       {activeTab === 'notifications' && (
-        <div data-testid="notifications-panel" className="bg-elevated border border-default rounded-xl p-6 space-y-6">
+        <div data-testid="notifications-panel" className="bg-elevated border border-default rounded-pf p-6 space-y-6">
           <h2 className="text-body-md font-semibold text-primary uppercase tracking-wider">Notification Preferences</h2>
 
           {/* Email Digest Frequency */}
@@ -1288,7 +1288,7 @@ export function Component() {
 
       {/* ─── Password Tab ─── */}
       {activeTab === 'password' && (
-        <div data-testid="password-panel" className="bg-elevated border border-default rounded-xl p-6 space-y-5">
+        <div data-testid="password-panel" className="bg-elevated border border-default rounded-pf p-6 space-y-5">
           <h2 className="text-body-md font-semibold text-primary uppercase tracking-wider">Change Password</h2>
           <div>
             <label htmlFor="settings-current-password" className="text-label text-secondary mb-2 block">Current Password</label>
@@ -1326,7 +1326,7 @@ export function Component() {
 
       {/* ─── 2FA Tab ─── */}
       {activeTab === '2fa' && (
-        <div data-testid="twofa-panel" className="bg-elevated border border-default rounded-xl p-6 space-y-5">
+        <div data-testid="twofa-panel" className="bg-elevated border border-default rounded-pf p-6 space-y-5">
           <h2 className="text-body-md font-semibold text-primary uppercase tracking-wider">Two-Factor Authentication (TOTP)</h2>
 
           {/* View A: 2FA Disabled */}
@@ -1370,7 +1370,7 @@ export function Component() {
                 </p>
                 <div className="ml-7 space-y-3">
                   {twoFaQrCodeUrl.startsWith('data:') ? (
-                    <div className="inline-block bg-white p-3 rounded-xl border border-default">{/* bg-white intentional: QR codes require white background for scanner compatibility */}
+                    <div className="inline-block bg-white p-3 rounded-pf border border-default">{/* bg-white intentional: QR codes require white background for scanner compatibility */}
                       <img src={twoFaQrCodeUrl} alt="TOTP QR Code" className="w-44 h-44" />
                     </div>
                   ) : (
@@ -1610,7 +1610,7 @@ export function Component() {
 
       {/* ─── Gas Usage Tab ─── */}
       {activeTab === 'gas' && (
-        <div data-testid="gas-panel" className="bg-elevated border border-default rounded-xl p-6 space-y-5">
+        <div data-testid="gas-panel" className="bg-elevated border border-default rounded-pf p-6 space-y-5">
           <h2 className="text-body-md font-semibold text-primary uppercase tracking-wider">Gas Sponsorship</h2>
           <p className="text-body-sm text-secondary">
             Polyforge absorbs Polygon gas fees so you can trade without worrying about network costs.
@@ -1688,7 +1688,7 @@ export function Component() {
         <div className="space-y-4">
           {/* Circuit Breaker Tripped Banner */}
           {circuitBreakerTripped && (
-            <div className="flex items-start gap-3 p-4 rounded-xl bg-loss/10 border border-loss/30">
+            <div className="flex items-start gap-3 p-4 rounded-pf bg-loss/10 border border-loss/30">
               <ShieldAlert className="size-5 text-loss shrink-0 mt-1" />
               <div className="flex-1 min-w-0">
                 <p className="text-body-md font-semibold text-loss">Circuit Breaker Tripped</p>
@@ -1713,7 +1713,7 @@ export function Component() {
             </div>
           )}
 
-          <div className="bg-elevated border border-default rounded-xl p-6 space-y-6">
+          <div className="bg-elevated border border-default rounded-pf p-6 space-y-6">
             <div className="flex items-center justify-between">
               <h2 className="text-body-md font-semibold text-primary uppercase tracking-wider">Drawdown Circuit Breaker</h2>
               {riskLoading && <Loader2 className="size-4 animate-spin text-tertiary" />}
@@ -1804,7 +1804,7 @@ export function Component() {
           </div>
 
           {/* Daily Loss Limit card */}
-          <div className="bg-elevated border border-default rounded-xl p-6 space-y-6">
+          <div className="bg-elevated border border-default rounded-pf p-6 space-y-6">
             <div className="flex items-center justify-between">
               <h2 className="text-body-md font-semibold text-primary uppercase tracking-wider">Daily Loss Limit</h2>
               {dlLoading && <Loader2 className="size-4 animate-spin text-tertiary" />}
@@ -1914,7 +1914,7 @@ export function Component() {
 
       {/* ─── API Keys Tab ─── */}
       {activeTab === 'apikeys' && (
-        <div data-testid="apikeys-panel" className="bg-elevated border border-default rounded-xl p-6 space-y-6">
+        <div data-testid="apikeys-panel" className="bg-elevated border border-default rounded-pf p-6 space-y-6">
           {/* Generate section */}
           <div className="space-y-4">
             <h2 className="text-body-md font-semibold text-primary uppercase tracking-wider">Generate API Key</h2>
@@ -2133,7 +2133,7 @@ export function Component() {
       {activeTab === 'webhooks' && (
         <div className="space-y-4">
           {/* Add Webhook Form */}
-          <div className="bg-elevated border border-default rounded-xl p-6 space-y-4">
+          <div className="bg-elevated border border-default rounded-pf p-6 space-y-4">
             <h2 className="text-body-md font-semibold text-primary uppercase tracking-wider">Add Webhook</h2>
             <div>
               <label htmlFor="webhook-url" className="text-label text-secondary mb-2 block">HTTPS URL</label>
@@ -2192,7 +2192,7 @@ export function Component() {
           </div>
 
           {/* Webhooks List */}
-          <div className="bg-elevated border border-default rounded-xl p-6 space-y-3">
+          <div className="bg-elevated border border-default rounded-pf p-6 space-y-3">
             <h2 className="text-body-md font-semibold text-primary uppercase tracking-wider">Your Webhooks</h2>
 
             {webhooksLoading ? (
@@ -2287,7 +2287,7 @@ export function Component() {
 
                       {/* Expandable deliveries panel */}
                       {isExpanded && (
-                        <div className="bg-surface/50 border-t border-subtle rounded-b-xl">
+                        <div className="bg-surface/50 border-t border-subtle rounded-b-pf">
                           {/* Panel header */}
                           <div className="flex items-center justify-between px-4 py-3 border-b border-subtle">
                             <span className="text-label font-semibold text-primary uppercase tracking-wider">Recent Deliveries</span>
@@ -2418,7 +2418,7 @@ export function Component() {
       {activeTab === 'sessions' && (
         <div className="space-y-4">
           {/* Header card */}
-          <div className="bg-elevated border border-default rounded-xl p-6">
+          <div className="bg-elevated border border-default rounded-pf p-6">
             <div className="flex items-center justify-between gap-4">
               <div className="flex items-center gap-3">
                 <div className="size-9 rounded-pf bg-accent/10 flex items-center justify-center">
@@ -2446,7 +2446,7 @@ export function Component() {
           </div>
 
           {/* Session list */}
-          <div className="bg-elevated border border-default rounded-xl p-6">
+          <div className="bg-elevated border border-default rounded-pf p-6">
             {sessionsLoading ? (
               <div className="space-y-3">
                 {[1, 2, 3].map(i => (

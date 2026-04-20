@@ -100,7 +100,7 @@ export function Component() {
         </div>
       )}
 
-      <div className="bg-elevated border border-default rounded-xl overflow-hidden">
+      <div className="bg-elevated border border-default rounded-pf overflow-hidden">
         <div className="overflow-x-auto" data-density="compact">
           <table className="w-full text-body-sm">
             <caption className="sr-only">Trading strategies</caption>

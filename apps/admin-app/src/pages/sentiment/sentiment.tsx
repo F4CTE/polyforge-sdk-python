@@ -118,7 +118,7 @@ function StatCard({
   loading: boolean;
 }) {
   return (
-    <div className="bg-elevated border border-default rounded-xl p-4 flex flex-col gap-1">
+    <div className="bg-elevated border border-default rounded-pf p-4 flex flex-col gap-1">
       <span className="text-label font-medium text-tertiary uppercase tracking-wider">{label}</span>
       {loading ? (
         <div className="h-7 w-24 bg-surface rounded-sm animate-pulse mt-1" />
@@ -355,7 +355,7 @@ export function Component() {
       </div>
 
       {/* ── Category breakdown chart ── */}
-      <div className="bg-elevated border border-default rounded-xl p-4">
+      <div className="bg-elevated border border-default rounded-pf p-4">
         <div className="flex items-center gap-2 mb-4">
           <BarChart2 size={15} className="text-tertiary" aria-hidden="true" />
           <h3 className="text-body-md font-semibold text-primary">Sentiment by Category</h3>
@@ -484,7 +484,7 @@ export function Component() {
       </div>
 
       {/* ── Main table ── */}
-      <div className="bg-elevated border border-default rounded-xl overflow-hidden">
+      <div className="bg-elevated border border-default rounded-pf overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-body-sm">
             <caption className="sr-only">Market sentiment overview</caption>

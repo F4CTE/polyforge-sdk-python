@@ -124,13 +124,13 @@ function DetailSkeleton() {
       <div className="h-6 bg-overlay rounded w-[300px] animate-pulse" />
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {Array.from({ length: 4 }, (_, i) => (
-          <div key={i} className="bg-elevated border border-default rounded-xl p-4 space-y-2 animate-shimmer">
+          <div key={i} className="bg-elevated border border-default rounded-pf p-4 space-y-2 animate-shimmer">
             <div className="h-3 bg-overlay rounded w-[60%]" />
             <div className="h-5 bg-overlay rounded w-[80%]" />
           </div>
         ))}
       </div>
-      <div className="bg-elevated border border-default rounded-xl p-4 animate-shimmer">
+      <div className="bg-elevated border border-default rounded-pf p-4 animate-shimmer">
         {Array.from({ length: 5 }, (_, i) => (
           <div key={i} className="h-3 bg-overlay rounded w-full mb-3" />
         ))}
@@ -181,7 +181,7 @@ function EditDialog({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="edit-config-title" onKeyDown={(e) => { if (e.key === 'Escape') onClose(); }}>
-      <div className="bg-elevated border border-default rounded-xl p-6 w-full max-w-md space-y-5 animate-fade-in">
+      <div className="bg-elevated border border-default rounded-pf p-6 w-full max-w-md space-y-5 animate-fade-in">
         <div className="flex items-center justify-between">
           <h2 id="edit-config-title" className="text-body-md font-medium text-primary">Edit Config</h2>
           <Button type="button" variant="ghost" size="icon" onClick={onClose} aria-label="Close edit config" className="text-tertiary hover:text-primary transition-colors">
@@ -471,28 +471,28 @@ export function Component() {
 
       {/* Stats cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="bg-elevated border border-default rounded-xl p-4">
+        <div className="bg-elevated border border-default rounded-pf p-4">
           <div className="text-label text-secondary mb-1">Total P&L</div>
           <div className={`text-lg font-mono font-semibold ${config.totalPnl >= 0 ? 'text-gain' : 'text-loss'}`}>
             {formatPnl(config.totalPnl)}
           </div>
         </div>
-        <div className="bg-elevated border border-default rounded-xl p-4">
+        <div className="bg-elevated border border-default rounded-pf p-4">
           <div className="text-label text-secondary mb-1">Total Trades</div>
           <div className="text-lg font-mono font-semibold text-primary">{config.totalCopiedTrades}</div>
         </div>
-        <div className="bg-elevated border border-default rounded-xl p-4">
+        <div className="bg-elevated border border-default rounded-pf p-4">
           <div className="text-label text-secondary mb-1">Win Rate</div>
           <div className="text-lg font-mono font-semibold text-primary">{config.winRate}%</div>
         </div>
-        <div className="bg-elevated border border-default rounded-xl p-4">
+        <div className="bg-elevated border border-default rounded-pf p-4">
           <div className="text-label text-secondary mb-1">Avg Size</div>
           <div className="text-lg font-mono font-semibold text-primary">${config.avgSize.toFixed(2)}</div>
         </div>
       </div>
 
       {/* Risk settings */}
-      <div className="bg-elevated border border-default rounded-xl p-4">
+      <div className="bg-elevated border border-default rounded-pf p-4">
         <div className="text-label text-secondary mb-3 uppercase tracking-wider font-medium">Risk Settings</div>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div>
@@ -511,7 +511,7 @@ export function Component() {
       </div>
 
       {/* Trade history table */}
-      <div className="bg-elevated border border-default rounded-xl overflow-hidden">
+      <div className="bg-elevated border border-default rounded-pf overflow-hidden">
         <div className="px-4 py-3 border-b border-default">
           <h2 className="text-body-md font-medium text-primary">Trade History</h2>
         </div>

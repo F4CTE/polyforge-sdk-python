@@ -202,7 +202,7 @@ export function AdminSidebar({ collapsed, onToggle, onNavigate }: Props) {
           target="_blank"
           rel="noopener noreferrer"
           title={collapsed ? 'Help & Support' : undefined}
-          className="flex items-center gap-3 px-3 py-2 rounded-sm text-body-sm transition-colors duration-micro text-tertiary hover:bg-elevated hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:rounded-lg"
+          className="flex items-center gap-3 px-3 py-2 rounded-sm text-body-sm transition-colors duration-micro text-tertiary hover:bg-elevated hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:rounded-pf"
         >
           <HelpCircle size={18} className="shrink-0" aria-hidden="true" />
           {!collapsed && <span>Help & Support</span>}
@@ -211,7 +211,7 @@ export function AdminSidebar({ collapsed, onToggle, onNavigate }: Props) {
           type="button"
           onClick={() => window.dispatchEvent(new CustomEvent('open-shortcuts'))}
           title={collapsed ? 'Keyboard shortcuts' : undefined}
-          className="flex items-center gap-3 px-3 py-2 rounded-sm text-body-sm transition-colors duration-micro text-tertiary hover:bg-elevated hover:text-primary w-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:rounded-lg"
+          className="flex items-center gap-3 px-3 py-2 rounded-sm text-body-sm transition-colors duration-micro text-tertiary hover:bg-elevated hover:text-primary w-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:rounded-pf"
           aria-label="Keyboard shortcuts"
         >
           <Keyboard size={18} className="shrink-0" aria-hidden="true" />

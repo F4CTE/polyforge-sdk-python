@@ -369,7 +369,7 @@ function ActivityTimeline({ userId }: ActivityTimelineProps) {
 
       {/* ── Timeline ────────────────────────────────────────────────────────── */}
       {filtered.length === 0 ? (
-        <div className="bg-elevated border border-default rounded-xl p-12 flex flex-col items-center gap-3 text-center">
+        <div className="bg-elevated border border-default rounded-pf p-12 flex flex-col items-center gap-3 text-center">
           <Clock size={32} className="text-tertiary" aria-hidden="true" />
           <p className="text-body-sm text-secondary font-medium">No activity recorded for this user</p>
           {(search || filterGroup !== 'all' || dateRange !== 'all') && (
@@ -377,7 +377,7 @@ function ActivityTimeline({ userId }: ActivityTimelineProps) {
           )}
         </div>
       ) : (
-        <div className="bg-elevated border border-default rounded-xl overflow-hidden">
+        <div className="bg-elevated border border-default rounded-pf overflow-hidden">
           <ul className="divide-y divide-default" aria-label="Activity timeline">
             {filtered.map((ev, idx) => {
               const visual = getEventVisual(ev.type);
@@ -651,7 +651,7 @@ export function Component() {
     return (
       <div className="animate-pulse space-y-6" role="status" aria-label="Loading user details">
         <div className="h-4 bg-elevated rounded w-28" />
-        <div className="bg-elevated border border-default rounded-xl p-6 space-y-4">
+        <div className="bg-elevated border border-default rounded-pf p-6 space-y-4">
           <div className="flex items-center gap-4">
             <div className="w-16 h-16 rounded-full bg-app" />
             <div className="space-y-2 flex-1">
@@ -707,7 +707,7 @@ export function Component() {
       </Link>
 
       {/* ── Section 1: Profile Header Card ─────────────────────────────────── */}
-      <div className="bg-elevated border border-default rounded-xl p-6">
+      <div className="bg-elevated border border-default rounded-pf p-6">
         <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-5">
           {/* Avatar + identity */}
           <div className="flex items-start gap-4">
@@ -845,7 +845,7 @@ export function Component() {
         {activeTab === 'overview' && (
           <div className="space-y-4">
             {/* Risk settings summary */}
-            <div className="bg-elevated border border-default rounded-xl p-5">
+            <div className="bg-elevated border border-default rounded-pf p-5">
               <div className="flex items-center gap-2 mb-4">
                 <ShieldCheck size={16} className="text-accent" aria-hidden="true" />
                 <h3 className="text-heading font-semibold text-primary">Risk Settings</h3>
@@ -892,7 +892,7 @@ export function Component() {
             </div>
 
             {/* Account details */}
-            <div className="bg-elevated border border-default rounded-xl p-5">
+            <div className="bg-elevated border border-default rounded-pf p-5">
               <h3 className="text-heading font-semibold text-primary mb-4">Account Details</h3>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-body-sm">
                 <div>
@@ -932,7 +932,7 @@ export function Component() {
 
         {/* ── Orders tab ────────────────────────────────────────────────────── */}
         {activeTab === 'orders' && (
-          <div className="bg-elevated border border-default rounded-xl overflow-hidden">
+          <div className="bg-elevated border border-default rounded-pf overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-body-sm">
                 <caption className="sr-only">Recent orders</caption>
@@ -1056,7 +1056,7 @@ export function Component() {
                 {Array.from({ length: 3 }).map((_, i) => (
                   <div
                     key={i}
-                    className="bg-elevated border border-default rounded-xl p-4 animate-pulse space-y-3"
+                    className="bg-elevated border border-default rounded-pf p-4 animate-pulse space-y-3"
                   >
                     <div className="h-4 bg-app rounded w-3/4" />
                     <div className="h-3 bg-app rounded w-1/2" />
@@ -1064,7 +1064,7 @@ export function Component() {
                 ))}
               </div>
             ) : strategies.length === 0 ? (
-              <div className="bg-elevated border border-default rounded-xl p-10 text-center">
+              <div className="bg-elevated border border-default rounded-pf p-10 text-center">
                 <p className="text-secondary">No strategies found</p>
               </div>
             ) : (
@@ -1073,7 +1073,7 @@ export function Component() {
                   {strategies.map((s) => (
                     <div
                       key={s.id}
-                      className="bg-elevated border border-default rounded-xl p-4"
+                      className="bg-elevated border border-default rounded-pf p-4"
                     >
                       <div className="flex items-start justify-between gap-2 mb-2">
                         <span className="text-body-sm font-medium text-primary truncate">
@@ -1112,7 +1112,7 @@ export function Component() {
 
         {/* ── Risk tab ──────────────────────────────────────────────────────── */}
         {activeTab === 'risk' && (
-          <div className="bg-elevated border border-default rounded-xl p-5">
+          <div className="bg-elevated border border-default rounded-pf p-5">
             <div className="flex items-center gap-2 mb-4">
               <ShieldCheck size={16} className="text-accent" aria-hidden="true" />
               <h3 className="text-heading font-semibold text-primary">Risk Configuration</h3>

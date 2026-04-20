@@ -123,7 +123,7 @@ export function Component() {
             <div
               key={wallet.walletAddress}
               data-testid="whale-feed-item"
-              className="bg-elevated border border-default rounded-xl p-4 transition-all duration-panel hover:border-strong hover:shadow-sm"
+              className="bg-elevated border border-default rounded-pf p-4 transition-all duration-panel hover:border-strong hover:shadow-sm"
             >
               <div className="flex items-center justify-between mb-3">
                 <Link

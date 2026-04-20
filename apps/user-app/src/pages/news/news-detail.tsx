@@ -146,7 +146,7 @@ export function Component() {
       {!loading && article && (
         <>
           {/* Article header */}
-          <div className="bg-elevated border border-default rounded-xl p-6 space-y-4">
+          <div className="bg-elevated border border-default rounded-pf p-6 space-y-4">
             {/* Badges */}
             <div className="flex items-center gap-2 flex-wrap">
               <span className={`px-2 py-1 rounded-full text-label font-medium border ${sourceColor(article.source)}`}>
@@ -178,7 +178,7 @@ export function Component() {
           </div>
 
           {/* Signals table */}
-          <div data-testid="signal-section" className="bg-elevated border border-default rounded-xl p-6">
+          <div data-testid="signal-section" className="bg-elevated border border-default rounded-pf p-6">
             <h2 className="text-body-md font-medium text-primary mb-4">
               Signals ({article.signals.length})
             </h2>

@@ -50,21 +50,21 @@ export function Component() {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="bg-elevated border border-default rounded-xl p-4">
+        <div className="bg-elevated border border-default rounded-pf p-4">
           <div className="flex items-center gap-2 mb-2">
             <Award size={16} className="text-warning" aria-hidden="true" />
             <span className="text-label text-tertiary">Current Tier</span>
           </div>
           <div className="text-2xl font-semibold text-primary capitalize">{stats.tier ?? 'N/A'}</div>
         </div>
-        <div className="bg-elevated border border-default rounded-xl p-4">
+        <div className="bg-elevated border border-default rounded-pf p-4">
           <div className="flex items-center gap-2 mb-2">
             <DollarSign size={16} className="text-gain" aria-hidden="true" />
             <span className="text-label text-tertiary">Weekly Reward</span>
           </div>
           <div className="text-2xl font-semibold text-primary">${stats.weeklyRewardUsdc ?? '0'}</div>
         </div>
-        <div className="bg-elevated border border-default rounded-xl p-4">
+        <div className="bg-elevated border border-default rounded-pf p-4">
           <div className="flex items-center gap-2 mb-2">
             <TrendingUp size={16} className="text-info" aria-hidden="true" />
             <span className="text-label text-tertiary">Attributed Volume</span>
@@ -74,7 +74,7 @@ export function Component() {
       </div>
 
       {/* Weekly History */}
-      <div className="bg-elevated border border-default rounded-xl p-5">
+      <div className="bg-elevated border border-default rounded-pf p-5">
         <div className="flex items-center gap-2 mb-4">
           <Hammer size={16} className="text-accent" aria-hidden="true" />
           <h3 className="text-body-md font-semibold text-primary">Weekly History</h3>

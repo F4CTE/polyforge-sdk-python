@@ -87,7 +87,7 @@ export function Component() {
         </div>
 
         {/* Card */}
-        <div className="bg-elevated border border-default rounded-xl p-8 shadow-lg">
+        <div className="bg-elevated border border-default rounded-pf p-8 shadow-lg">
           {/* Pending - loading */}
           {state === 'pending' && (
             <div className="text-center py-4" role="status">

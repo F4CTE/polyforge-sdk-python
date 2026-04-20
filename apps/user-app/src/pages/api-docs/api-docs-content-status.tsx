@@ -49,7 +49,7 @@ function StatusDot({ ok }: { ok: boolean }) {
 
 function ServiceCard({ svc }: { svc: ServiceEntry }) {
   return (
-    <div className="flex items-center justify-between px-4 py-3 bg-elevated border border-default rounded-xl hover:border-strong transition-colors">
+    <div className="flex items-center justify-between px-4 py-3 bg-elevated border border-default rounded-pf hover:border-strong transition-colors">
       <div className="flex items-center gap-3">
         <StatusDot ok={svc.ok} />
         <span className="text-body-md text-primary">{svc.label}</span>
@@ -112,7 +112,7 @@ export function StatusSection() {
 
       {/* Overall banner */}
       {!loading && !error && data && (
-        <div className={`flex items-center justify-between px-4 py-3 rounded-xl border ${
+        <div className={`flex items-center justify-between px-4 py-3 rounded-pf border ${
           allOk
             ? 'bg-gain-subtle border-gain/20'
             : 'bg-loss-subtle border-loss/20'
@@ -144,7 +144,7 @@ export function StatusSection() {
       )}
 
       {!loading && error && (
-        <div className="flex items-center gap-2 px-4 py-3 bg-loss-subtle border border-loss/20 rounded-xl">
+        <div className="flex items-center gap-2 px-4 py-3 bg-loss-subtle border border-loss/20 rounded-pf">
           <XCircle className="size-4 text-loss shrink-0" />
           <span className="text-body-md text-loss">{error}</span>
         </div>

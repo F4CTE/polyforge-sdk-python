@@ -13,7 +13,7 @@ export function McpSection() {
       />
 
       {/* Protocol info */}
-      <div className="bg-elevated border border-default rounded-xl px-4 py-3 flex flex-wrap items-center justify-between gap-3">
+      <div className="bg-elevated border border-default rounded-pf px-4 py-3 flex flex-wrap items-center justify-between gap-3">
         <div>
           <p className="text-label text-tertiary uppercase tracking-wider mb-1">Transport</p>
           <code className="text-body-md font-mono text-accent-text">stdio (MCP 1.0)</code>

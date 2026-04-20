@@ -83,7 +83,7 @@ function TryItPanel({ ep }: { ep: EndpointDef }) {
       : '';
 
   return (
-    <div className="border border-default rounded-xl p-4 space-y-3 bg-elevated">
+    <div className="border border-default rounded-pf p-4 space-y-3 bg-elevated">
       <p className="text-label font-medium text-tertiary uppercase tracking-wider">Try it out</p>
 
       {/* API key */}
@@ -176,7 +176,7 @@ export function EndpointCard({ ep, lang, setLang, forceOpen }: EndpointCardProps
 
   return (
     <div
-      className={`border border-default border-l-[3px] ${METHOD_BORDER[ep.method]} rounded-xl overflow-hidden transition-all duration-panel ${isOpen ? '' : 'hover:border-strong'}`}
+      className={`border border-default border-l-[3px] ${METHOD_BORDER[ep.method]} rounded-pf overflow-hidden transition-all duration-panel ${isOpen ? '' : 'hover:border-strong'}`}
     >
       <Button
         type="button"

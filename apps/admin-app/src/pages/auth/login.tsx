@@ -74,7 +74,7 @@ export function Component() {
         <form
           onSubmit={handleSubmit}
           noValidate
-          className="bg-elevated border border-default rounded-lg p-6 space-y-4 [box-shadow:var(--shadow-elevation-2)]"
+          className="bg-elevated border border-default rounded-pf p-6 space-y-4 [box-shadow:var(--shadow-elevation-2)]"
         >
           <div>
             <label htmlFor="email" className="block text-label font-medium text-secondary mb-2">

@@ -58,7 +58,7 @@ export function Code({ code, lang }: { code: string; lang?: string }) {
   }, [code]);
 
   return (
-    <div className="rounded-xl overflow-hidden border border-default">
+    <div className="rounded-pf overflow-hidden border border-default">
       {lang && (
         <div className="flex items-center justify-between px-4 py-2 bg-surface border-b border-default">
           <span className="text-label font-mono text-tertiary">
@@ -100,7 +100,7 @@ export function InlineCode({ children }: { children: string }) {
 
 export function FieldTable({ fields }: { fields: EndpointField[] }) {
   return (
-    <div className="border border-default rounded-xl overflow-hidden">
+    <div className="border border-default rounded-pf overflow-hidden">
       <table className="w-full text-body-sm" aria-label="Field definitions">
         <thead>
           <tr className="bg-surface text-left text-label text-secondary uppercase tracking-wider border-b border-default">

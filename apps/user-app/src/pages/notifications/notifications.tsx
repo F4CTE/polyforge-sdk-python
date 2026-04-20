@@ -174,7 +174,7 @@ function NotificationCard({ item, onRead, onDelete }: NotificationCardProps) {
   return (
     <div
       className={[
-        'relative w-full flex items-start gap-3 rounded-lg border border-default px-4 py-3',
+        'relative w-full flex items-start gap-3 rounded-pf border border-default px-4 py-3',
         'transition-colors group',
         item.read ? 'bg-surface' : 'bg-accent-subtle',
       ].join(' ')}
