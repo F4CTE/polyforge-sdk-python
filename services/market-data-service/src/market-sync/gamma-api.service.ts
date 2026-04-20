@@ -246,7 +246,10 @@ export class GammaApiService implements OnModuleInit {
     limit: number,
   ): Promise<KeysetPage> {
     await GAMMA_LIMITER.acquire();
-    const params = new URLSearchParams({ closed: "false", limit: String(limit) });
+    const params = new URLSearchParams({
+      closed: "false",
+      limit: String(limit),
+    });
     if (afterCursor) params.set("after_cursor", afterCursor);
     const res = await fetch(
       `${this.gammaUrl}/markets/keyset?${params.toString()}`,

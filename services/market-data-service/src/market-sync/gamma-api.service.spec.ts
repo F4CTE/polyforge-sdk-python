@@ -348,8 +348,14 @@ describe("GammaApiService", () => {
     });
 
     it("follows next_cursor across pages until null", async () => {
-      const page1 = { data: [makeGammaMarket({ id: "m-1" })], next_cursor: "cursor-1" };
-      const page2 = { data: [makeGammaMarket({ id: "m-2" })], next_cursor: null };
+      const page1 = {
+        data: [makeGammaMarket({ id: "m-1" })],
+        next_cursor: "cursor-1",
+      };
+      const page2 = {
+        data: [makeGammaMarket({ id: "m-2" })],
+        next_cursor: null,
+      };
 
       let call = 0;
       globalThis.fetch = vi.fn().mockImplementation(() => {
@@ -364,7 +370,10 @@ describe("GammaApiService", () => {
     });
 
     it("passes after_cursor in URL for subsequent pages", async () => {
-      const page1 = { data: [makeGammaMarket({ id: "m-1" })], next_cursor: "abc123" };
+      const page1 = {
+        data: [makeGammaMarket({ id: "m-1" })],
+        next_cursor: "abc123",
+      };
       const page2 = { data: [], next_cursor: null };
 
       let call = 0;
@@ -375,7 +384,8 @@ describe("GammaApiService", () => {
 
       await svc.syncAllMarkets();
 
-      const secondCallUrl = (vi.mocked(globalThis.fetch).mock.calls[1][0] as string);
+      const secondCallUrl = vi.mocked(globalThis.fetch).mock
+        .calls[1][0] as string;
       expect(secondCallUrl).toContain("after_cursor=abc123");
     });
 
@@ -383,7 +393,10 @@ describe("GammaApiService", () => {
       globalThis.fetch = vi.fn().mockResolvedValue({
         ok: true,
         json: () =>
-          Promise.resolve({ data: [makeGammaMarket()], next_cursor: undefined }),
+          Promise.resolve({
+            data: [makeGammaMarket()],
+            next_cursor: undefined,
+          }),
       });
 
       await svc.syncAllMarkets();

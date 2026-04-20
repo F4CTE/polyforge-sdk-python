@@ -18,6 +18,7 @@
     "@nestjs/config": "^4.0.3",
     "@nestjs/core": "^11.1.18",
     "@nestjs/event-emitter": "^3.0.1",
+    "@nestjs/jwt": "^11.0.2",
     "@nestjs/platform-fastify": "^11.1.16",
     "@nestjs/schedule": "^6.1.1",
     "@nestjs/throttler": "^6.5.0",

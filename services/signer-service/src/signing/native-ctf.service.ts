@@ -283,7 +283,12 @@ export class NativeCtfService {
   signTransaction(
     creds: DecryptedCredentials,
     chainId: number,
-    tx: Required<Pick<TxParams, "to" | "data" | "gasLimit" | "gasPrice" | "value" | "nonce">>,
+    tx: Required<
+      Pick<
+        TxParams,
+        "to" | "data" | "gasLimit" | "gasPrice" | "value" | "nonce"
+      >
+    >,
   ): Buffer {
     const { nonce, gasPrice, gasLimit, to, value, data } = tx;
 
@@ -438,9 +443,7 @@ export class NativeCtfService {
   ): Promise<{ txHash: string }> {
     const ctfAddress = CTF_ADDRESS[chainId];
     if (!ctfAddress) {
-      throw new Error(
-        `No CTF contract address known for chainId=${chainId}`,
-      );
+      throw new Error(`No CTF contract address known for chainId=${chainId}`);
     }
 
     const collateralToken =

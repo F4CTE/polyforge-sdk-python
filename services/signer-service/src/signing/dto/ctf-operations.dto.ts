@@ -18,7 +18,9 @@ export class RedeemPositionDto {
   /** CTF conditionId (bytes32) for the market. */
   @IsString()
   @IsNotEmpty()
-  @Matches(BYTES32_REGEX, { message: "conditionId must be a 0x-prefixed 32-byte hex string" })
+  @Matches(BYTES32_REGEX, {
+    message: "conditionId must be a 0x-prefixed 32-byte hex string",
+  })
   conditionId!: string;
 
   /** Index sets identifying the winning outcome slots. Must be non-empty. */
@@ -30,13 +32,17 @@ export class RedeemPositionDto {
   /** Collateral token address (defaults to USDC for the configured chain). */
   @IsOptional()
   @IsString()
-  @Matches(ADDRESS_REGEX, { message: "collateralToken must be a valid Ethereum address" })
+  @Matches(ADDRESS_REGEX, {
+    message: "collateralToken must be a valid Ethereum address",
+  })
   collateralToken?: string;
 
   /** parentCollectionId (bytes32, defaults to zero bytes32). */
   @IsOptional()
   @IsString()
-  @Matches(BYTES32_REGEX, { message: "parentCollectionId must be a 0x-prefixed 32-byte hex string" })
+  @Matches(BYTES32_REGEX, {
+    message: "parentCollectionId must be a 0x-prefixed 32-byte hex string",
+  })
   parentCollectionId?: string;
 }
 
@@ -47,7 +53,9 @@ export class SplitPositionDto {
   /** CTF conditionId (bytes32). */
   @IsString()
   @IsNotEmpty()
-  @Matches(BYTES32_REGEX, { message: "conditionId must be a 0x-prefixed 32-byte hex string" })
+  @Matches(BYTES32_REGEX, {
+    message: "conditionId must be a 0x-prefixed 32-byte hex string",
+  })
   conditionId!: string;
 
   /** Partition of outcome slots (e.g. [\"1\", \"2\"] for YES+NO binary market). */
@@ -63,12 +71,16 @@ export class SplitPositionDto {
 
   @IsOptional()
   @IsString()
-  @Matches(ADDRESS_REGEX, { message: "collateralToken must be a valid Ethereum address" })
+  @Matches(ADDRESS_REGEX, {
+    message: "collateralToken must be a valid Ethereum address",
+  })
   collateralToken?: string;
 
   @IsOptional()
   @IsString()
-  @Matches(BYTES32_REGEX, { message: "parentCollectionId must be a 0x-prefixed 32-byte hex string" })
+  @Matches(BYTES32_REGEX, {
+    message: "parentCollectionId must be a 0x-prefixed 32-byte hex string",
+  })
   parentCollectionId?: string;
 }
 
@@ -79,7 +91,9 @@ export class MergePositionDto {
   /** CTF conditionId (bytes32). */
   @IsString()
   @IsNotEmpty()
-  @Matches(BYTES32_REGEX, { message: "conditionId must be a 0x-prefixed 32-byte hex string" })
+  @Matches(BYTES32_REGEX, {
+    message: "conditionId must be a 0x-prefixed 32-byte hex string",
+  })
   conditionId!: string;
 
   /** Partition of outcome slots to merge. */
@@ -95,11 +109,15 @@ export class MergePositionDto {
 
   @IsOptional()
   @IsString()
-  @Matches(ADDRESS_REGEX, { message: "collateralToken must be a valid Ethereum address" })
+  @Matches(ADDRESS_REGEX, {
+    message: "collateralToken must be a valid Ethereum address",
+  })
   collateralToken?: string;
 
   @IsOptional()
   @IsString()
-  @Matches(BYTES32_REGEX, { message: "parentCollectionId must be a 0x-prefixed 32-byte hex string" })
+  @Matches(BYTES32_REGEX, {
+    message: "parentCollectionId must be a 0x-prefixed 32-byte hex string",
+  })
   parentCollectionId?: string;
 }

@@ -9,6 +9,7 @@ import {
 import { Throttle } from "@nestjs/throttler";
 import { SigningService } from "./signing.service";
 import { SignOrderDto } from "./dto/sign-order.dto";
+import { SignKalshiJwtDto } from "./dto/sign-kalshi-jwt.dto";
 import { InternalAuthGuard } from "../common/internal-auth.guard";
 
 @Controller("sign")
@@ -29,5 +30,14 @@ export class SigningController {
     dto: SignOrderDto,
   ) {
     return this.signing.signOrder(dto);
+  }
+
+  @Post("kalshi-jwt")
+  @HttpCode(200)
+  async signKalshiJwt(
+    @Body(new ValidationPipe({ whitelist: true }))
+    dto: SignKalshiJwtDto,
+  ) {
+    return this.signing.signKalshiJwt(dto.userId, dto.requestId);
   }
 }

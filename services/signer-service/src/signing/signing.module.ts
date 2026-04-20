@@ -11,6 +11,11 @@ import { InternalAuthGuard } from "../common/internal-auth.guard";
 @Module({
   imports: [CredentialsModule, JwtModule.register({})],
   controllers: [SigningController, InternalSigningController],
-  providers: [SigningService, NativeEip712Service, NativeCtfService, InternalAuthGuard],
+  providers: [
+    SigningService,
+    NativeEip712Service,
+    NativeCtfService,
+    InternalAuthGuard,
+  ],
 })
 export class SigningModule {}

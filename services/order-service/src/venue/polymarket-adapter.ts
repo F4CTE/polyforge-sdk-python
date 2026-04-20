@@ -9,7 +9,11 @@ import type {
   VenuePosition,
   VenueOrderHistory,
 } from "@polyforge/shared-types";
-import type { OrderBook, PriceCandle, CandleResolution } from "@polyforge/shared-types";
+import type {
+  OrderBook,
+  PriceCandle,
+  CandleResolution,
+} from "@polyforge/shared-types";
 import { ClobClientService } from "../clob-client/clob-client.service";
 
 interface PolymarketAuthContext {

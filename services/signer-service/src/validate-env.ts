@@ -17,7 +17,6 @@ const REQUIRED_ENV = [
   "POLY_BUILDER_PASSPHRASE",
 ];
 
-
 export function validateEnv(
   env: Record<string, string | undefined> = process.env,
 ): void {

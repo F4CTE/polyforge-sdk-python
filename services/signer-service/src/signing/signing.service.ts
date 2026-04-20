@@ -1,8 +1,4 @@
-import {
-  Injectable,
-  Logger,
-  OnModuleInit,
-} from "@nestjs/common";
+import { Injectable, Logger, OnModuleInit } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import * as crypto from "crypto";
 import { privateKeyHexBytesToEthAddress } from "@polyforge/crypto-native";
@@ -14,7 +10,16 @@ import {
 import { NativeEip712Service } from "./native-eip712.service";
 import { NativeCtfService } from "./native-ctf.service";
 import { SignOrderDto } from "./dto/sign-order.dto";
-import { RedeemPositionDto, SplitPositionDto, MergePositionDto } from "./dto/ctf-operations.dto";
+import {
+  RedeemPositionDto,
+  SplitPositionDto,
+  MergePositionDto,
+} from "./dto/ctf-operations.dto";
+
+export interface KalshiJwtResult {
+  token: string;
+  expiresAt: number;
+}
 
 export interface SignedOrder {
   /** Signed order payload for Polymarket CLOB V2 API */
@@ -201,6 +206,46 @@ export class SigningService implements OnModuleInit {
     } finally {
       zeroCredentials(creds);
     }
+  }
+
+  // ─── Kalshi JWT signing ───────────────────────────────────────────────────
+
+  async signKalshiJwt(
+    _userId: string,
+    _requestId: string,
+  ): Promise<KalshiJwtResult> {
+    const kalshiKeyId = this.config.getOrThrow<string>("KALSHI_KEY_ID");
+    const kalshiPrivateKeyPem = this.config.getOrThrow<string>(
+      "KALSHI_PRIVATE_KEY_PEM",
+    );
+
+    const now = Math.floor(Date.now() / 1000);
+    const exp = now + 1800; // 30-minute TTL
+
+    const header = Buffer.from(
+      JSON.stringify({ alg: "RS256", typ: "JWT", kid: kalshiKeyId }),
+    ).toString("base64url");
+
+    const payload = Buffer.from(
+      JSON.stringify({ sub: kalshiKeyId, iat: now, exp }),
+    ).toString("base64url");
+
+    const signingInput = `${header}.${payload}`;
+
+    const signature = crypto
+      .sign("sha256", Buffer.from(signingInput), {
+        key: kalshiPrivateKeyPem,
+        // Kalshi requires RSA-PSS with SHA-256: https://docs.kalshi.com/#authentication
+        padding: crypto.constants.RSA_PKCS1_PSS_PADDING,
+        saltLength: crypto.constants.RSA_PSS_SALTLEN_DIGEST,
+      })
+      .toString("base64url");
+
+    this.logger.log(
+      `Kalshi JWT signed for userId=${_userId} requestId=${_requestId} exp=${exp}`,
+    );
+
+    return { token: `${signingInput}.${signature}`, expiresAt: exp };
   }
 
   // ─── Dev stub signer ─────────────────────────────────────────────────────

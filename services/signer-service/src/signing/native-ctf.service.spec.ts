@@ -25,8 +25,7 @@ function makeTestCreds(
   };
 }
 
-const CONDITION_ID =
-  "0x" + "ab".repeat(32);
+const CONDITION_ID = "0x" + "ab".repeat(32);
 const ZERO_BYTES32 = "0x" + "00".repeat(32);
 
 // ─── Suite ────────────────────────────────────────────────────────────────────
@@ -518,13 +517,21 @@ describe("NativeCtfService", () => {
   describe("calldata encoding (ABI structure)", () => {
     it("redeemPosition calldata starts with the correct 4-byte selector", async () => {
       let capturedBody: Record<string, unknown> | null = null;
-      global.fetch = vi.fn().mockImplementation(async (_url: string, init: RequestInit) => {
-        const body = JSON.parse(init.body as string) as Record<string, unknown>;
-        if ((body.method as string) === "eth_sendRawTransaction") {
-          capturedBody = body;
-        }
-        return { ok: true, json: async () => ({ result: "0x" + "aa".repeat(32) }) } as Response;
-      });
+      global.fetch = vi
+        .fn()
+        .mockImplementation(async (_url: string, init: RequestInit) => {
+          const body = JSON.parse(init.body as string) as Record<
+            string,
+            unknown
+          >;
+          if ((body.method as string) === "eth_sendRawTransaction") {
+            capturedBody = body;
+          }
+          return {
+            ok: true,
+            json: async () => ({ result: "0x" + "aa".repeat(32) }),
+          } as Response;
+        });
 
       const creds = makeTestCreds();
       await svc.redeemPosition(creds, 137, "http://fake-rpc", {
@@ -542,13 +549,21 @@ describe("NativeCtfService", () => {
     it("splitPosition and mergePosition use different selectors", async () => {
       const splitRpcs: string[] = [];
       const mergeRpcs: string[] = [];
-      global.fetch = vi.fn().mockImplementation(async (_url: string, init: RequestInit) => {
-        const body = JSON.parse(init.body as string) as Record<string, unknown>;
-        if ((body.method as string) === "eth_sendRawTransaction") {
-          splitRpcs.push(body.params as string);
-        }
-        return { ok: true, json: async () => ({ result: "0x" + "ab".repeat(32) }) } as Response;
-      });
+      global.fetch = vi
+        .fn()
+        .mockImplementation(async (_url: string, init: RequestInit) => {
+          const body = JSON.parse(init.body as string) as Record<
+            string,
+            unknown
+          >;
+          if ((body.method as string) === "eth_sendRawTransaction") {
+            splitRpcs.push(body.params as string);
+          }
+          return {
+            ok: true,
+            json: async () => ({ result: "0x" + "ab".repeat(32) }),
+          } as Response;
+        });
 
       const c1 = makeTestCreds();
       await svc.splitPosition(c1, 137, "http://fake-rpc", {
@@ -558,13 +573,21 @@ describe("NativeCtfService", () => {
       });
       zeroCredentials(c1);
 
-      global.fetch = vi.fn().mockImplementation(async (_url: string, init: RequestInit) => {
-        const body = JSON.parse(init.body as string) as Record<string, unknown>;
-        if ((body.method as string) === "eth_sendRawTransaction") {
-          mergeRpcs.push(body.params as string);
-        }
-        return { ok: true, json: async () => ({ result: "0x" + "ac".repeat(32) }) } as Response;
-      });
+      global.fetch = vi
+        .fn()
+        .mockImplementation(async (_url: string, init: RequestInit) => {
+          const body = JSON.parse(init.body as string) as Record<
+            string,
+            unknown
+          >;
+          if ((body.method as string) === "eth_sendRawTransaction") {
+            mergeRpcs.push(body.params as string);
+          }
+          return {
+            ok: true,
+            json: async () => ({ result: "0x" + "ac".repeat(32) }),
+          } as Response;
+        });
 
       const c2 = makeTestCreds();
       await svc.mergePosition(c2, 137, "http://fake-rpc", {
