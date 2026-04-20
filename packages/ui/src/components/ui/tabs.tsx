@@ -114,8 +114,7 @@ const TabsContent = React.forwardRef<HTMLDivElement, TabsContentProps>(
         key={value}
         ref={ref}
         role="tabpanel"
-        style={{ animation: "tab-content-in 0.15s ease-out both" }}
-        className={cn("mt-4", className)}
+        className={cn("mt-4 animate-tab-content-in", className)}
         {...props}
       />
     );

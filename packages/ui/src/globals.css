@@ -53,15 +53,19 @@
   /* Semantic — Trading context */
   --gain: #22C55E;
   --gain-subtle: rgba(34, 197, 94, 0.12);
+  --gain-border: rgba(34, 197, 94, 0.35);
   --gain-text: #4ADE80;
   --loss: #EF4444;
   --loss-subtle: rgba(239, 68, 68, 0.12);
+  --loss-border: rgba(239, 68, 68, 0.35);
   --loss-text: #F87171;
   --neutral-market: #8B8FA8;
   --warning: #F59E0B;
   --warning-subtle: rgba(245, 158, 11, 0.12);
+  --warning-border: rgba(245, 158, 11, 0.35);
   --info: #0EA5E9;
   --info-subtle: rgba(14, 165, 233, 0.12);
+  --info-border: rgba(14, 165, 233, 0.35);
 
   /* Variable / category purple — semantic token for variable nodes, paper trading, badges */
   --variable: #A78BFA;
@@ -102,21 +106,25 @@
   --color-accent-border: var(--accent-border);
   --color-accent-text: var(--accent-text);
 
-  /* Semantic: gain → text-gain, bg-gain, bg-gain-subtle, text-gain-text */
+  /* Semantic: gain → text-gain, bg-gain, bg-gain-subtle, border-gain-border, text-gain-text */
   --color-gain: var(--gain);
   --color-gain-subtle: var(--gain-subtle);
+  --color-gain-border: var(--gain-border);
   --color-gain-text: var(--gain-text);
 
-  /* Semantic: loss → text-loss, bg-loss, bg-loss-subtle, text-loss-text */
+  /* Semantic: loss → text-loss, bg-loss, bg-loss-subtle, border-loss-border, text-loss-text */
   --color-loss: var(--loss);
   --color-loss-subtle: var(--loss-subtle);
+  --color-loss-border: var(--loss-border);
   --color-loss-text: var(--loss-text);
 
   /* Semantic: warning, info */
   --color-warning: var(--warning);
   --color-warning-subtle: var(--warning-subtle);
+  --color-warning-border: var(--warning-border);
   --color-info: var(--info);
   --color-info-subtle: var(--info-subtle);
+  --color-info-border: var(--info-border);
   --color-neutral-market: var(--neutral-market);
 
   /* Border-specific overrides (charter §3 — border ≠ bg color) */
@@ -515,6 +523,9 @@ body {
 .animate-slide-up {
   animation: slide-up 0.2s ease-out both;
 }
+.animate-tab-content-in {
+  animation: tab-content-in 0.15s ease-out both;
+}
 .animate-pulse-dot {
   animation: pulse-dot 2s ease-in-out infinite;
 }
@@ -631,14 +642,18 @@ body {
   /* Semantic — adjusted for light AA compliance */
   --gain: #16A34A;
   --gain-subtle: rgba(22, 163, 74, 0.10);
+  --gain-border: rgba(22, 163, 74, 0.30);
   --gain-text: #16A34A;
   --loss: #DC2626;
   --loss-subtle: rgba(220, 38, 38, 0.10);
+  --loss-border: rgba(220, 38, 38, 0.30);
   --loss-text: #DC2626;
   --warning: #D97706;
   --warning-subtle: rgba(217, 119, 6, 0.10);
+  --warning-border: rgba(217, 119, 6, 0.30);
   --info: #2563EB;
   --info-subtle: rgba(37, 99, 235, 0.10);
+  --info-border: rgba(37, 99, 235, 0.30);
   --neutral-market: #5A5E72;
 
   /* Backdrop overrides — lighter for light mode */

@@ -8,17 +8,17 @@ const badgeVariants = cva(
     variants: {
       variant: {
         default:
-          "bg-accent-subtle text-accent border border-accent/20",
+          "bg-accent-subtle text-accent border border-accent-border",
         secondary:
           "bg-elevated text-secondary border border-default",
         success:
-          "bg-gain-subtle text-gain border border-gain/20",
+          "bg-gain-subtle text-gain border border-gain-border",
         danger:
-          "bg-loss-subtle text-loss border border-loss/20",
+          "bg-loss-subtle text-loss border border-loss-border",
         warning:
-          "bg-warning-subtle text-warning border border-warning/20",
+          "bg-warning-subtle text-warning border border-warning-border",
         info:
-          "bg-info-subtle text-info border border-info/20",
+          "bg-info-subtle text-info border border-info-border",
         ghost:
           "bg-transparent text-tertiary",
       },

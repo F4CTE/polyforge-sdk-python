@@ -9,9 +9,9 @@ const chipVariants = cva(
     variants: {
       variant: {
         default: "bg-overlay text-primary",
-        success: "bg-gain/20 text-gain",
-        danger: "bg-loss/20 text-loss",
-        warning: "bg-warning/20 text-warning",
+        success: "bg-gain-subtle text-gain",
+        danger: "bg-loss-subtle text-loss",
+        warning: "bg-warning-subtle text-warning",
       },
     },
     defaultVariants: {

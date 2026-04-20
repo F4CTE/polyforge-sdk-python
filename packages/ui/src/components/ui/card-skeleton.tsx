@@ -19,7 +19,7 @@ function CardSkeleton({
   return (
     <div
       className={cn(
-        "bg-elevated border border-default rounded-lg animate-shimmer",
+        "bg-elevated border border-subtle rounded-lg animate-shimmer",
         padding,
         children ? "space-y-3" : "",
         className,
