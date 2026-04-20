@@ -79,7 +79,7 @@ const SOURCE_COLORS: Record<SourceKey, string> = {
 const SOURCE_BG: Record<SourceKey, string> = {
   marketplace_listings: 'bg-accent-text/10',
   copy_fees: 'bg-gain/10',
-  strategy_sales: 'bg-purple-500/10',
+  strategy_sales: 'bg-accent-subtle',
   subscription: 'bg-gold-500/10',
   other: 'bg-tertiary/10',
 };

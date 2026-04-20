@@ -52,7 +52,7 @@ export function statusColor(status: string | undefined | null): string {
     IN_PROGRESS: 'text-info bg-info/10',
     PENDING: 'text-warning bg-warning/10',
     QUEUED: 'text-warning bg-warning/10',
-    PAPER: 'text-purple-500 bg-purple-500/10',
+    PAPER: 'text-accent bg-accent-subtle',
     PAUSED: 'text-warning bg-warning/10',
     IDLE: 'text-secondary bg-elevated',
     DEGRADED: 'text-warning bg-warning/10',

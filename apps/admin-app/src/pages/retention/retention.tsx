@@ -115,7 +115,7 @@ interface CustomTooltipProps {
 // Map series names back to design token classes (Recharts resolves CSS vars to hex)
 const SERIES_BG_CLASS: Record<string, string> = {
   'New Users': 'bg-accent',
-  'Returning Users': 'bg-purple-500',
+  'Returning Users': 'bg-accent',
   'DAU': 'bg-warning',
 };
 
@@ -251,8 +251,8 @@ export function Component() {
     {
       label: 'WAU',
       value: fmt(overview?.wau ?? 0),
-      color: 'text-purple-500',
-      bg: 'bg-purple-500/10',
+      color: 'text-accent',
+      bg: 'bg-accent-subtle',
     },
     {
       label: 'MAU',

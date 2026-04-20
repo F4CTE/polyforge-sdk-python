@@ -160,14 +160,14 @@ export function Component() {
   const statCards = [
     { label: 'Total Users', value: stats.totalUsers, icon: <Users size={20} aria-hidden="true" />, color: 'text-info', bg: 'bg-info/10' },
     { label: 'Active Strategies', value: stats.activeStrategies, icon: <Blocks size={20} aria-hidden="true" />, color: 'text-gain', bg: 'bg-gain/10' },
-    { label: 'Total Orders', value: stats.totalOrders, icon: <ShoppingCart size={20} aria-hidden="true" />, color: 'text-purple-500', bg: 'bg-purple-500/10' },
+    { label: 'Total Orders', value: stats.totalOrders, icon: <ShoppingCart size={20} aria-hidden="true" />, color: 'text-accent', bg: 'bg-accent-subtle' },
     { label: 'Open Tickets', value: stats.openTickets, icon: <TicketCheck size={20} aria-hidden="true" />, color: 'text-warning', bg: 'bg-warning/10' },
   ];
 
   const platformStatCards = [
     { label: 'News Signals (30d)', value: platformStats?.totalNewsSignals ?? 0, icon: <Newspaper size={20} aria-hidden="true" />, color: 'text-accent', bg: 'bg-accent/10' },
     { label: 'Markets w/ Sentiment', value: platformStats?.marketsWithSentiment ?? 0, icon: <BarChart2 size={20} aria-hidden="true" />, color: 'text-info', bg: 'bg-info/10' },
-    { label: 'LP Orders', value: platformStats?.totalLpOrders ?? 0, icon: <Layers size={20} aria-hidden="true" />, color: 'text-purple-500', bg: 'bg-purple-500/10' },
+    { label: 'LP Orders', value: platformStats?.totalLpOrders ?? 0, icon: <Layers size={20} aria-hidden="true" />, color: 'text-accent', bg: 'bg-accent-subtle' },
     { label: 'Resolved Positions', value: platformStats?.resolvedPositions ?? 0, icon: <CheckSquare size={20} aria-hidden="true" />, color: 'text-gain', bg: 'bg-gain/10' },
   ];
 
