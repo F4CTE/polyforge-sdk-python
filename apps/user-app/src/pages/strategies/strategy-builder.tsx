@@ -1299,19 +1299,6 @@ export function Component() {
     );
   }
 
-  // ─── Loading state ────────────────────────────────────────────────────
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-full">
-        <div className="flex flex-col items-center gap-3 text-tertiary">
-          <Loader2 className="size-6 animate-spin" />
-          <span className="text-body-sm">Loading strategy...</span>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="relative flex flex-col h-full overflow-hidden">
       {/* ─── Top bar ──────────────────────────────────────────────────────── */}
@@ -1445,7 +1432,7 @@ export function Component() {
             variant="secondary"
             size="sm"
             onClick={onQuickTest}
-            disabled={quickTesting || !strategyId}
+            disabled={loading || quickTesting || !strategyId}
             title="Run a 7-day quick backtest"
             className="flex items-center gap-2"
           >
@@ -1480,7 +1467,7 @@ export function Component() {
             variant="default"
             size="sm"
             onClick={onSave}
-            disabled={saving || positionSizeViolations > 0}
+            disabled={loading || saving || positionSizeViolations > 0}
             className="flex items-center gap-2"
           >
             {saving ? (
@@ -1668,6 +1655,14 @@ export function Component() {
                 </div>
               )}
               <StrategyCanvas />
+              {loading && (
+                <div className="absolute inset-0 z-40 flex items-center justify-center bg-surface/80 backdrop-blur-sm pointer-events-none">
+                  <div className="flex flex-col items-center gap-3 text-tertiary">
+                    <Loader2 className="size-6 animate-spin" />
+                    <span className="text-body-sm">Loading strategy...</span>
+                  </div>
+                </div>
+              )}
               <CanvasSearchBar open={canvasSearchOpen} onClose={() => setCanvasSearchOpen(false)} />
               <BuilderTutorial forceVisible={showTutorial} onDismiss={() => setShowTutorial(false)} />
               {dragOver && (

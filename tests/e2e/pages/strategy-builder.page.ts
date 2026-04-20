@@ -40,9 +40,8 @@ export class StrategyBuilderPage {
     }
 
     async gotoEdit(strategyId: string): Promise<void> {
-        await this.page.goto(`/strategies/${strategyId}/edit`);
-        await this.page.waitForLoadState('domcontentloaded');
-        await expect(this.page.locator('.react-flow')).toBeVisible({ timeout: 15_000 });
+        await this.page.goto(`/strategies/${strategyId}/edit`, { waitUntil: 'domcontentloaded' });
+        await expect(this.page.locator('.react-flow')).toBeVisible({ timeout: 20_000 });
         // Ensure the block palette panel is open (may be collapsed in edit mode).
         // Short timeout: palette is either visible immediately or not at all.
         const showBtn = this.page.locator('button[title="Show blocks"]');

@@ -111,7 +111,12 @@ export class StrategiesService {
     id: string,
     userId: string,
   ): Promise<Strategy & { childCount: number }> {
-    const strategy = await this.prisma.strategy.findUnique({ where: { id } });
+    const [strategy, childCount] = await Promise.all([
+      this.prisma.strategy.findUnique({ where: { id } }),
+      this.prisma.strategy.count({
+        where: { parentStrategyId: id, status: { not: StrategyStatus.ARCHIVED } },
+      }),
+    ]);
     if (!strategy || strategy.status === StrategyStatus.ARCHIVED) {
       throw new NotFoundException({
         code: "NOT_FOUND",
@@ -127,9 +132,6 @@ export class StrategiesService {
         message: "Access denied",
       });
     }
-    const childCount = await this.prisma.strategy.count({
-      where: { parentStrategyId: id, status: { not: StrategyStatus.ARCHIVED } },
-    });
     return { ...strategy, childCount };
   }
 
