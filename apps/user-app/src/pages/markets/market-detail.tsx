@@ -28,6 +28,8 @@ import {
   Bell,
   BellPlus,
   Trash2,
+  Wallet,
+  ChevronDown,
 } from 'lucide-react';
 import {
   XAxis,
@@ -1454,7 +1456,7 @@ export function Component() {
               {/* Wallet not connected — prompt user */}
               {!isWalletConnected && (
                 <div className="mt-3 flex flex-col items-center gap-2 py-5 px-3 rounded-pf bg-overlay border border-default text-center">
-                  <svg className="size-8 text-tertiary" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 3H8L2 7h20l-6-4z"/><circle cx="16" cy="14" r="1" fill="currentColor" stroke="none"/></svg>
+                  <Wallet className="size-8 text-tertiary" strokeWidth={1.5} aria-hidden="true" />
                   <p className="text-body-md font-medium text-primary">Connect your wallet to trade</p>
                   <p className="text-label text-tertiary">Link your Polymarket account to place orders</p>
                   <Link
@@ -1697,21 +1699,12 @@ export function Component() {
                   <Droplets className="size-4 text-tertiary" aria-hidden="true" />
                   Provide Liquidity
                 </div>
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="14"
-                  height="14"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
+                <ChevronDown
+                  size={14}
+                  strokeWidth={1.5}
                   className={`text-tertiary transition-transform duration-panel ${lpExpanded ? 'rotate-180' : ''}`}
                   aria-hidden="true"
-                >
-                  <polyline points="6 9 12 15 18 9" />
-                </svg>
+                />
               </Button>
 
               {lpExpanded && (

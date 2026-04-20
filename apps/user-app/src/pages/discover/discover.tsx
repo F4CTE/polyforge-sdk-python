@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { Link, useNavigate } from 'react-router';
 import { toast } from 'sonner';
 import {
-  ChevronLeft, ChevronRight, Compass, Heart, GitFork, TrendingUp, Tag, Star, Award, Library,
+  ChevronLeft, ChevronRight, Compass, Heart, GitFork, TrendingUp, Tag, Star, Award, Library, Search,
 } from 'lucide-react';
 import { Button, Input, CardSkeleton, SkeletonLine, SkeletonBadge } from '@polyforge/ui';
 
@@ -413,7 +413,7 @@ export function Component() {
       <div className="flex gap-2">
         {/* Search */}
         <div className="relative flex-1">
-          <svg className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-tertiary" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" /></svg>
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-tertiary" strokeWidth={1.5} aria-hidden="true" />
           <Input
             type="text"
             placeholder="Search strategies..."
