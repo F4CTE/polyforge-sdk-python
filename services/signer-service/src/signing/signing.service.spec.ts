@@ -388,6 +388,33 @@ describe("SigningService (CLOB V2)", () => {
       );
     });
 
+    it("throws when POLYGON_RPC_URL is unset in production (POLA-266)", () => {
+      const prodSvc = new SigningService(
+        credentials,
+        makeConfig({
+          NODE_ENV: "production",
+          CLOB_API_URL: "https://clob.polymarket.com",
+        }),
+        nativeEip712,
+        nativeCtf,
+      );
+      expect(() => prodSvc.onModuleInit()).toThrow("POLYGON_RPC_URL");
+    });
+
+    it("throws when POLYGON_RPC_URL is the public fallback in production (POLA-266)", () => {
+      const prodSvc = new SigningService(
+        credentials,
+        makeConfig({
+          NODE_ENV: "production",
+          CLOB_API_URL: "https://clob.polymarket.com",
+          POLYGON_RPC_URL: "https://polygon-rpc.com",
+        }),
+        nativeEip712,
+        nativeCtf,
+      );
+      expect(() => prodSvc.onModuleInit()).toThrow("POLYGON_RPC_URL");
+    });
+
     it("throws when POLYGON_RPC_URL is localhost in production (POLA-148)", () => {
       const prodSvc = new SigningService(
         credentials,
@@ -432,7 +459,7 @@ describe("SigningService (CLOB V2)", () => {
           NODE_ENV: "production",
           CLOB_API_URL: "https://clob.polymarket.com",
           SIGNING_MODE: "production",
-          POLYGON_RPC_URL: "https://polygon-rpc.com",
+          POLYGON_RPC_URL: "https://polygon-mainnet.g.alchemy.com/v2/test",
         }),
         nativeEip712,
         nativeCtf,

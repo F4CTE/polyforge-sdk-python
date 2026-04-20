@@ -49,7 +49,7 @@ export class SigningService implements OnModuleInit {
   private readonly chainId: number;
   private readonly isStubMode: boolean;
   private readonly clobApiUrl: string;
-  private readonly rpcUrl: string;
+  private rpcUrl: string;
 
   constructor(
     private readonly credentials: CredentialsService,
@@ -74,8 +74,7 @@ export class SigningService implements OnModuleInit {
     this.isStubMode = signingMode === "stub";
     this.clobApiUrl =
       this.config.get<string>("CLOB_API_URL") ?? "https://clob.polymarket.com";
-    this.rpcUrl =
-      this.config.get<string>("POLYGON_RPC_URL") ?? "https://polygon-rpc.com";
+    this.rpcUrl = this.config.get<string>("POLYGON_RPC_URL") ?? "";
   }
 
   /** Read builder credentials on demand — never cached in class instance memory */
@@ -120,10 +119,17 @@ export class SigningService implements OnModuleInit {
           "Production requires POLY_BUILDER_API_KEY, POLY_BUILDER_SECRET, and POLY_BUILDER_PASSPHRASE",
         );
       }
-      // Verify RPC URL for on-chain CTF operations
-      if (!this.rpcUrl || this.rpcUrl.includes("localhost")) {
-        throw new Error("Production requires a real POLYGON_RPC_URL for on-chain CTF operations");
+      if (
+        !this.rpcUrl ||
+        this.rpcUrl.includes("localhost") ||
+        this.rpcUrl === "https://polygon-rpc.com"
+      ) {
+        throw new Error(
+          "Production requires a private POLYGON_RPC_URL — public RPCs leak server IP and are unreliable",
+        );
       }
+    } else if (!this.rpcUrl) {
+      this.rpcUrl = "https://polygon-rpc.com";
     }
   }
 
