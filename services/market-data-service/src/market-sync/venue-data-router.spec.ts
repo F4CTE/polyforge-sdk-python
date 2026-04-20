@@ -112,10 +112,16 @@ describe("VenueDataRouter", () => {
       expect(kalshiFeed.subscribeTokens).not.toHaveBeenCalled();
     });
 
-    it("throws if the venue feed is not registered", () => {
+    it("does not throw for a registered venue", () => {
       expect(() =>
-        router.subscribeTokens("kalshi" as any, ["tok"]),
+        router.subscribeTokens("kalshi", ["tok"]),
       ).not.toThrow();
+    });
+
+    it("throws for an unregistered venue", () => {
+      expect(() =>
+        router.subscribeTokens("unknown" as any, ["tok"]),
+      ).toThrow("No feed registered for venue 'unknown'");
     });
   });
 
