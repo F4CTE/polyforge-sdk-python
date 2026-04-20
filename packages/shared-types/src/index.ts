@@ -35,3 +35,7 @@ export * from "./news";
 
 // Scores & Badges
 export * from "./scores";
+
+// Venue abstraction
+export * from "./venues";
+export * from "./venue-adapter";

@@ -27,6 +27,11 @@ const ORDER_EVENT_TYPES = new Set([
   'ORDER_FAILED',
 ]);
 
+const WHALE_EVENT_TYPES = new Set([
+  'WHALE_TRADE',
+  'WHALE_ALERT',
+]);
+
 export class WebSocketManager {
   private ws: WebSocket | null = null;
   private reconnectDelay = 1000;
@@ -37,6 +42,7 @@ export class WebSocketManager {
 
   private readonly subscribedTokens = new Set<string>();
   private readonly subscribedStrategies = new Set<string>();
+  private subscribedWhales = false;
   private readonly listeners = new Set<MessageListener>();
 
   // ── Listener management ─────────────────────────────────────────────
@@ -94,6 +100,9 @@ export class WebSocketManager {
           for (const id of this.subscribedStrategies) {
             this.send({ type: 'SUBSCRIBE_STRATEGY', strategyId: id });
           }
+          if (this.subscribedWhales) {
+            this.send({ type: 'SUBSCRIBE_WHALES' });
+          }
         }
       } catch {
         /* ignore malformed messages */
@@ -139,6 +148,20 @@ export class WebSocketManager {
     this.subscribedStrategies.delete(strategyId);
     if (this.ws?.readyState === WebSocket.OPEN) {
       this.send({ type: 'UNSUBSCRIBE_STRATEGY', strategyId });
+    }
+  }
+
+  subscribeWhales(): void {
+    this.subscribedWhales = true;
+    if (this.ws?.readyState === WebSocket.OPEN && this.authenticated) {
+      this.send({ type: 'SUBSCRIBE_WHALES' });
+    }
+  }
+
+  unsubscribeWhales(): void {
+    this.subscribedWhales = false;
+    if (this.ws?.readyState === WebSocket.OPEN) {
+      this.send({ type: 'UNSUBSCRIBE_WHALES' });
     }
   }
 
@@ -188,6 +211,10 @@ export class WebSocketManager {
 
   static isOrderEvent(msg: WsMessage): boolean {
     return ORDER_EVENT_TYPES.has(msg.type);
+  }
+
+  static isWhaleEvent(msg: WsMessage): boolean {
+    return WHALE_EVENT_TYPES.has(msg.type);
   }
 }
 

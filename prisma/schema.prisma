@@ -164,6 +164,11 @@ enum ConditionalOrderStatus {
   @@map("conditional_order_status")
 }
 
+enum Venue {
+  POLYMARKET
+  KALSHI
+}
+
 // ─────────────────────────────────────────────
 // AUTH TABLES
 // ─────────────────────────────────────────────
@@ -222,6 +227,7 @@ model User {
   passwordResetTokens PasswordResetToken[]
   tickets             Ticket[]
   whaleFollows         WhaleFollow[]
+  whaleAlertFilter     WhaleAlertFilter?
   copyConfigs          CopyConfig[]
   conditionalOrders    ConditionalOrder[]
   traderScore          TraderScore?
@@ -442,6 +448,9 @@ model Strategy {
   tags             String[]
   canvas           Json?
   version          Int                @default(1)
+  warmupTicks      Int                @default(0)
+  schedule         Json?
+  settings         Json?
   createdAt        DateTime           @default(now())
   updatedAt        DateTime           @updatedAt
 
@@ -558,28 +567,30 @@ model StrategyEvent {
 }
 
 model Order {
-  id           String       @id @default(uuid())
-  intentId     String       @unique
-  clobOrderId  String?      @db.VarChar(255)
-  clobStatus   String?      @db.VarChar(20)
-  userId       String
-  strategyId   String?
-  smartOrderId String?
-  marketId     String       @db.VarChar(255)
-  tokenId      String       @db.VarChar(255)
-  side         OrderSide
-  outcome      OrderOutcome
-  size         Decimal      @db.Decimal(20, 6)
-  price        Decimal      @db.Decimal(10, 6)
-  orderType    OrderType
-  status       OrderStatus  @default(PENDING)
-  fillSize     Decimal?     @db.Decimal(20, 6)
-  fillPrice    Decimal?     @db.Decimal(10, 6)
-  fee          Decimal?     @db.Decimal(20, 6)
-  errorMessage String?
-  placedAt     DateTime?
-  filledAt     DateTime?
-  createdAt    DateTime     @default(now())
+  id            String       @id @default(uuid())
+  intentId      String       @unique
+  venue         Venue        @default(POLYMARKET)
+  clobOrderId   String?      @db.VarChar(255)
+  venueOrderId  String?      @db.VarChar(255)
+  clobStatus    String?      @db.VarChar(20)
+  userId        String
+  strategyId    String?
+  smartOrderId  String?
+  marketId      String       @db.VarChar(255)
+  tokenId       String       @db.VarChar(255)
+  side          OrderSide
+  outcome       OrderOutcome
+  size          Decimal      @db.Decimal(20, 6)
+  price         Decimal      @db.Decimal(10, 6)
+  orderType     OrderType
+  status        OrderStatus  @default(PENDING)
+  fillSize      Decimal?     @db.Decimal(20, 6)
+  fillPrice     Decimal?     @db.Decimal(10, 6)
+  fee           Decimal?     @db.Decimal(20, 6)
+  errorMessage  String?
+  placedAt      DateTime?
+  filledAt      DateTime?
+  createdAt     DateTime     @default(now())
 
   user       User        @relation(fields: [userId],       references: [id], onDelete: Cascade)
   strategy   Strategy?   @relation(fields: [strategyId],   references: [id], onDelete: SetNull)
@@ -591,6 +602,8 @@ model Order {
   @@index([smartOrderId])
   @@index([tokenId])
   @@index([createdAt])
+  @@index([venue])
+  @@index([venueOrderId])
   @@map("orders")
 }
 
@@ -647,6 +660,7 @@ model SmartOrder {
 model Position {
   id                String             @id @default(uuid())
   userId            String
+  venue             Venue              @default(POLYMARKET)
   marketId          String             @db.VarChar(255)
   tokenId           String             @db.VarChar(255)
   outcome           OrderOutcome
@@ -814,7 +828,8 @@ model Event {
 }
 
 model Market {
-  id            String    @id @db.VarChar(255)  // Polymarket condition ID
+  id            String    @id @db.VarChar(255)  // venue-specific market ID
+  venue         Venue     @default(POLYMARKET)
   slug          String    @unique @db.VarChar(255)
   title         String
   description   String?
@@ -837,6 +852,7 @@ model Market {
   watchlistItems    WatchlistItem[]
   strategies        Strategy[]
 
+  @@index([venue])
   @@index([category])
   @@index([closed])
   @@index([seriesSlug])
@@ -1011,16 +1027,45 @@ model WhaleFollow {
   @@map("whale_follows")
 }
 
+enum WhaleClassification {
+  UNKNOWN
+  RETAIL_WHALE
+  MARKET_MAKER
+  TOP_100
+  SMART_MONEY
+
+  @@map("whale_classification")
+}
+
 model WhaleProfile {
-  walletAddress String   @id @db.VarChar(255)
-  totalVolume   Decimal  @db.Decimal(20, 6) @default(0)
-  totalPnl      Decimal  @db.Decimal(20, 6) @default(0)
-  tradeCount    Int      @default(0)
-  winRate       Decimal  @db.Decimal(5, 2) @default(0)
-  lastTradeAt   DateTime?
-  updatedAt     DateTime @updatedAt
+  walletAddress  String              @id @db.VarChar(255)
+  totalVolume    Decimal             @db.Decimal(20, 6) @default(0)
+  totalPnl       Decimal             @db.Decimal(20, 6) @default(0)
+  tradeCount     Int                 @default(0)
+  winRate        Decimal             @db.Decimal(5, 2) @default(0)
+  classification WhaleClassification @default(UNKNOWN)
+  label          String?             @db.VarChar(100)
+  lastTradeAt    DateTime?
+  updatedAt      DateTime            @updatedAt
 
   @@map("whale_profiles")
+}
+
+model WhaleAlertFilter {
+  id              String      @id @default(uuid())
+  userId          String
+  minSize         Decimal?    @db.Decimal(20, 6)
+  marketIds       String[]
+  walletAddresses String[]
+  sides           OrderSide[]
+  active          Boolean     @default(true)
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId])
+  @@map("whale_alert_filters")
 }
 
 // ─── COPY TRADING ──────────────────────────────
@@ -1294,4 +1339,37 @@ model WatchlistItem {
   @@unique([userId, marketId])
   @@index([userId])
   @@map("watchlist_items")
+}
+
+// ─────────────────────────────────────────────
+// MULTI-VENUE
+// ─────────────────────────────────────────────
+
+model MarketMatch {
+  id              String   @id @default(uuid())
+  polymarketId    String   @db.VarChar(255)
+  kalshiId        String   @db.VarChar(255)
+  confidence      Decimal  @db.Decimal(5, 4)
+  matchMethod     String   @db.VarChar(50)
+  verified        Boolean  @default(false)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@unique([polymarketId, kalshiId])
+  @@index([polymarketId])
+  @@index([kalshiId])
+  @@map("market_matches")
+}
+
+// Accessible ONLY by signer-service — RSA keys for Kalshi JWT auth
+model KalshiCredential {
+  userId         String   @id
+  privateKeyCt   Bytes
+  privateKeyIv   Bytes
+  privateKeyTag  Bytes
+  keyId          String   @db.VarChar(255)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@map("kalshi_credentials")
 }

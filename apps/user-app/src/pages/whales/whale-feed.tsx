@@ -2,9 +2,11 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { Link } from 'react-router';
 import { toast } from 'sonner';
 import {
-  ChevronLeft, ChevronRight, Fish, Copy, Search, UserPlus, UserCheck,
+  ChevronLeft, ChevronRight, Fish, Copy, Search, UserPlus, UserCheck, Radio, Bell, BellOff,
 } from 'lucide-react';
 import { Button, Input, Select, CardSkeleton, SkeletonLine, SkeletonBadge } from '@polyforge/ui';
+import { wsManager, type WsMessage } from '../../lib/websocket';
+import { useWhaleNotifications } from '../../hooks/use-whale-notifications';
 
 /* ─── Types ──────────────────────────────────────────────────────────── */
 
@@ -102,6 +104,8 @@ function WhaleFeedSkeleton() {
 
 /* ─── Component ──────────────────────────────────────────────────────── */
 
+const MAX_LIVE_TRADES = 100;
+
 export function Component() {
   const [trades, setTrades] = useState<WhaleTrade[]>([]);
   const [loading, setLoading] = useState(true);
@@ -112,12 +116,16 @@ export function Component() {
   const [category, setCategory] = useState('');
   const [walletSearch, setWalletSearch] = useState('');
   const [followingSet, setFollowingSet] = useState<Set<string>>(new Set());
-  const refreshRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [liveCount, setLiveCount] = useState(0);
+  const [wsConnected, setWsConnected] = useState(false);
+  const [showNotifSettings, setShowNotifSettings] = useState(false);
+  const { permission, config: notifConfig, supported: notifSupported, requestPermission, updateConfig } = useWhaleNotifications();
 
   const abortRef = useRef<AbortController | null>(null);
+  const filtersRef = useRef({ minSize, category, walletSearch });
+  filtersRef.current = { minSize, category, walletSearch };
 
   const load = useCallback(async (p: number, min: MinSize, cat: string, wallet: string) => {
-    // Abort any in-flight request
     abortRef.current?.abort();
     const controller = new AbortController();
     abortRef.current = controller;
@@ -130,8 +138,7 @@ export function Component() {
       const res = await fetch(`/api/v1/whales/feed?${params}`, { credentials: 'include', signal: controller.signal });
       if (res.ok) {
         const json: WhaleFeedResponse = await res.json();
-        // Normalise: API returns nested market object + detectedAt; flatten for UI
-        const trades: WhaleTrade[] = (json.data ?? []).map((t: WhaleTrade & { market?: { title?: string; category?: string }; detectedAt?: string; createdAt?: string }) => ({
+        const normalized: WhaleTrade[] = (json.data ?? []).map((t: WhaleTrade & { market?: { title?: string; category?: string }; detectedAt?: string; createdAt?: string }) => ({
           ...t,
           marketName: t.marketName ?? t.market?.title ?? 'Unknown market',
           marketCategory: t.marketCategory ?? t.market?.category ?? '',
@@ -140,11 +147,11 @@ export function Component() {
           price: typeof t.price === 'number' || typeof t.price === 'string' ? String(t.price) : '0',
           notional: typeof t.notional === 'number' || typeof t.notional === 'string' ? String(t.notional) : '0',
         }));
-        setTrades(trades);
+        setTrades(normalized);
         setTotal(json.meta?.total ?? 0);
         setTotalPages(json.meta?.totalPages ?? 0);
         const following = new Set<string>();
-        trades.forEach(t => { if (t.isFollowing) following.add(t.walletAddress); });
+        normalized.forEach(t => { if (t.isFollowing) following.add(t.walletAddress); });
         setFollowingSet(prev => {
           const merged = new Set(prev);
           following.forEach(a => merged.add(a));
@@ -160,13 +167,48 @@ export function Component() {
 
   useEffect(() => { load(page, minSize, category, walletSearch); }, [page, minSize, category, walletSearch, load]);
 
-  // Auto-refresh every 10 seconds — guarded against concurrent fetches
+  // WebSocket subscription for real-time whale trades
   useEffect(() => {
-    refreshRef.current = setInterval(() => {
-      if (!loading) load(page, minSize, category, walletSearch);
-    }, 10_000);
-    return () => { if (refreshRef.current) clearInterval(refreshRef.current); };
-  }, [page, minSize, category, walletSearch, load, loading]);
+    wsManager.subscribeWhales();
+    setWsConnected(true);
+
+    const listener = (msg: WsMessage) => {
+      if (msg.type !== 'WHALE_TRADE') return;
+      const trade = msg as unknown as WhaleTrade & { market?: { title?: string; category?: string }; detectedAt?: string; createdAt?: string };
+      const { minSize: filterMin, category: filterCat, walletSearch: filterWallet } = filtersRef.current;
+
+      const tradeSize = parseFloat(String(trade.size ?? trade.notional ?? '0'));
+      if (tradeSize < parseInt(filterMin)) return;
+      if (filterCat && (trade.marketCategory ?? trade.market?.category ?? '').toLowerCase() !== filterCat.toLowerCase()) return;
+      if (filterWallet && !(trade.walletAddress ?? '').toLowerCase().includes(filterWallet.toLowerCase())) return;
+
+      const normalized: WhaleTrade = {
+        id: trade.id ?? `ws-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+        walletAddress: trade.walletAddress ?? '',
+        marketName: trade.marketName ?? trade.market?.title ?? 'Unknown market',
+        marketCategory: trade.marketCategory ?? trade.market?.category ?? '',
+        side: trade.side ?? 'BUY',
+        outcome: trade.outcome ?? 'YES',
+        size: String(trade.size ?? '0'),
+        price: String(trade.price ?? '0'),
+        notional: String(trade.notional ?? '0'),
+        timestamp: trade.timestamp ?? trade.detectedAt ?? trade.createdAt ?? new Date().toISOString(),
+        isFollowing: trade.isFollowing,
+      };
+
+      setTrades(prev => [normalized, ...prev].slice(0, MAX_LIVE_TRADES));
+      setTotal(prev => prev + 1);
+      setLiveCount(prev => prev + 1);
+    };
+
+    wsManager.addListener(listener);
+
+    return () => {
+      wsManager.removeListener(listener);
+      wsManager.unsubscribeWhales();
+      setWsConnected(false);
+    };
+  }, []);
 
   function changeMinSize(s: MinSize) { setMinSize(s); setPage(1); }
   function changeCategory(c: string) { setCategory(c); setPage(1); }
@@ -196,14 +238,48 @@ export function Component() {
         <div className="flex items-center gap-3">
           <Fish className="size-6 text-accent-text" aria-hidden="true" />
           <h1 className="text-2xl font-semibold text-primary">Whale Tracker</h1>
+          {wsConnected && (
+            <span className="flex items-center gap-1.5 px-2 py-1 rounded-full text-caption font-medium bg-gain/10 text-gain border border-gain/20" aria-label="Live feed connected">
+              <Radio className="size-3 animate-pulse" aria-hidden="true" />
+              LIVE
+            </span>
+          )}
         </div>
         <div className="flex items-center gap-3">
+          {liveCount > 0 && (
+            <span className="text-label font-medium text-gain" aria-live="polite">
+              +{liveCount} new
+            </span>
+          )}
+          <Link
+            to="/whales/heatmap"
+            className="text-label font-medium text-primary hover:text-accent-text transition-colors"
+          >
+            Heatmap
+          </Link>
           <Link
             to="/whales/following"
             className="text-label font-medium text-primary hover:text-accent-text transition-colors"
           >
             Following
           </Link>
+          {notifSupported && (
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => setShowNotifSettings(v => !v)}
+              className={`flex items-center gap-1.5 px-2 py-1.5 rounded-pf text-label font-medium border transition-colors ${
+                notifConfig.enabled && permission === 'granted'
+                  ? 'bg-accent-subtle text-accent-text border-accent/30'
+                  : 'text-secondary border-default hover:text-primary hover:border-strong'
+              }`}
+              aria-label="Notification settings"
+              aria-pressed={showNotifSettings}
+            >
+              {notifConfig.enabled && permission === 'granted' ? <Bell className="size-3.5" /> : <BellOff className="size-3.5" />}
+              Alerts
+            </Button>
+          )}
           {!loading && <span className="text-body-sm font-medium text-secondary">{total} trades</span>}
         </div>
       </div>
@@ -257,6 +333,81 @@ export function Component() {
           />
         </div>
       </div>
+
+      {/* Notification settings panel */}
+      {showNotifSettings && (
+        <div className="rounded-pf border border-default bg-elevated p-4 space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="text-body-md font-medium text-primary flex items-center gap-2">
+              <Bell className="size-4 text-accent-text" aria-hidden="true" />
+              Push Notifications
+            </h3>
+            {permission === 'denied' && (
+              <span className="text-label text-loss">Blocked by browser</span>
+            )}
+          </div>
+
+          {permission === 'default' && (
+            <div className="flex items-center gap-3">
+              <p className="text-body-sm text-secondary flex-1">
+                Get notified instantly when whale trades match your filters.
+              </p>
+              <Button
+                type="button"
+                onClick={requestPermission}
+                className="px-4 py-2 rounded-pf bg-accent text-inverse text-label font-medium hover:bg-accent-text transition-colors shrink-0"
+              >
+                Enable Notifications
+              </Button>
+            </div>
+          )}
+
+          {permission === 'granted' && (
+            <div className="space-y-3">
+              <label className="flex items-center gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={notifConfig.enabled}
+                  onChange={e => updateConfig({ enabled: e.target.checked })}
+                  className="accent-[var(--accent-default)] size-4"
+                />
+                <span className="text-body-sm text-primary">Enable whale trade notifications</span>
+              </label>
+
+              <div className="flex flex-wrap items-center gap-3 pl-7">
+                <label className="text-label text-secondary whitespace-nowrap" htmlFor="notif-min-size">Min size</label>
+                <Select
+                  id="notif-min-size"
+                  value={String(notifConfig.minSize)}
+                  onChange={e => updateConfig({ minSize: parseInt(e.target.value) })}
+                  className="px-2 py-1 rounded-sm text-label bg-surface border border-default text-primary"
+                >
+                  <option value="5000">$5K+</option>
+                  <option value="10000">$10K+</option>
+                  <option value="50000">$50K+</option>
+                  <option value="100000">$100K+</option>
+                </Select>
+              </div>
+
+              <label className="flex items-center gap-3 cursor-pointer pl-7">
+                <input
+                  type="checkbox"
+                  checked={notifConfig.followedOnly}
+                  onChange={e => updateConfig({ followedOnly: e.target.checked })}
+                  className="accent-[var(--accent-default)] size-4"
+                />
+                <span className="text-label text-secondary">Only from followed wallets</span>
+              </label>
+            </div>
+          )}
+
+          {permission === 'denied' && (
+            <p className="text-body-sm text-tertiary">
+              Notifications are blocked. Enable them in your browser settings for this site.
+            </p>
+          )}
+        </div>
+      )}
 
       {/* Feed */}
       {loading && trades.length === 0 ? (

@@ -1,5 +1,6 @@
 import { RedisService } from "@polyforge/shared-redis";
 import { PrismaService } from "@polyforge/shared-db";
+import type { VenueId } from "@polyforge/shared-types";
 
 /** Minimal price data from Redis cache */
 export interface CachedPrice {
@@ -55,6 +56,7 @@ export interface OrderIntent {
   price: string; // decimal 0–1
   orderType: "GTC" | "FOK" | "GTD" | "FAK" | "POST_ONLY";
   expiration?: number;
+  venue?: VenueId;
 }
 
 export interface BlockEvaluator {

@@ -27,6 +27,8 @@ export const OrderStatusSchema = z.enum([
 
 // ─── Order intent (published to stream:orders by strategy-engine) ─────────────
 
+export const VenueIdSchema = z.enum(["polymarket", "kalshi"]);
+
 export const OrderIntentSchema = z.object({
   intentId: UuidSchema,
   userId: UuidSchema,
@@ -38,6 +40,7 @@ export const OrderIntentSchema = z.object({
   size: DecimalStringSchema,
   price: PriceStringSchema,
   orderType: OrderTypeSchema,
+  venue: VenueIdSchema.optional(),
 });
 
 export type OrderIntentSchema = z.infer<typeof OrderIntentSchema>;
