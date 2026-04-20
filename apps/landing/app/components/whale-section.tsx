@@ -8,7 +8,7 @@ function WhaleFeed() {
       aria-hidden="true"
     >
       <div
-        className="grid items-center gap-2 px-4 py-2 text-[9px] font-mono font-medium uppercase tracking-widest text-tertiary border-b border-subtle"
+        className="grid items-center gap-2 px-4 py-2 text-caption font-mono font-medium uppercase tracking-widest text-tertiary border-b border-subtle"
         style={{
           gridTemplateColumns: "28px 1fr 72px 56px 64px 40px",
           background: "color-mix(in srgb, var(--text-primary) 3%, transparent)",
@@ -35,7 +35,7 @@ function WhaleFeed() {
           }}
         >
           <div
-            className="w-7 h-7 rounded-full flex items-center justify-center text-[8px] font-semibold font-mono"
+            className="w-7 h-7 rounded-full flex items-center justify-center text-caption font-semibold font-mono"
             style={{
               color: `var(--${w.tone})`,
               background: `color-mix(in srgb, var(--${w.tone}) 15%, transparent)`,
@@ -46,10 +46,10 @@ function WhaleFeed() {
           </div>
           <div className="min-w-0">
             <div className="font-mono text-xs text-primary">{w.wallet}</div>
-            <div className="text-[11px] text-tertiary truncate">{w.market}</div>
+            <div className="text-caption text-tertiary truncate">{w.market}</div>
           </div>
           <span
-            className="inline-flex px-2 py-0.5 rounded text-[10px] font-mono font-medium w-fit"
+            className="inline-flex px-2 py-0.5 rounded text-caption font-mono font-medium w-fit"
             style={{
               color: `var(--${w.tone})`,
               background: `color-mix(in srgb, var(--${w.tone}) 10%, transparent)`,
@@ -63,26 +63,26 @@ function WhaleFeed() {
           <span className="font-mono text-xs text-primary tabular-nums text-right">
             {w.size}
           </span>
-          <span className="font-mono text-[11px] text-tertiary text-right">
+          <span className="font-mono text-caption text-tertiary text-right">
             {w.t}
           </span>
         </div>
       ))}
 
       <div className="flex items-center gap-2 px-4 py-3 bg-subtle border-t border-subtle text-xs">
-        <span className="font-mono text-[10px] text-tertiary uppercase tracking-widest">
+        <span className="font-mono text-caption text-tertiary uppercase tracking-widest">
           copy mode
         </span>
-        <span className="inline-flex px-2 py-0.5 rounded text-[10px] font-mono text-accent-text bg-[color-mix(in_srgb,var(--accent-default)_8%,transparent)] border border-[color-mix(in_srgb,var(--accent-default)_20%,transparent)]">
+        <span className="inline-flex px-2 py-0.5 rounded text-caption font-mono text-accent-text bg-[color-mix(in_srgb,var(--accent-default)_8%,transparent)] border border-[color-mix(in_srgb,var(--accent-default)_20%,transparent)]">
           kelly
         </span>
-        <span className="inline-flex px-2 py-0.5 rounded text-[10px] font-mono text-tertiary bg-[color-mix(in_srgb,var(--accent-default)_6%,transparent)] border border-[color-mix(in_srgb,var(--accent-default)_12%,transparent)]">
+        <span className="inline-flex px-2 py-0.5 rounded text-caption font-mono text-tertiary bg-[color-mix(in_srgb,var(--accent-default)_6%,transparent)] border border-[color-mix(in_srgb,var(--accent-default)_12%,transparent)]">
           proportional
         </span>
-        <span className="inline-flex px-2 py-0.5 rounded text-[10px] font-mono text-tertiary bg-[color-mix(in_srgb,var(--accent-default)_6%,transparent)] border border-[color-mix(in_srgb,var(--accent-default)_12%,transparent)]">
+        <span className="inline-flex px-2 py-0.5 rounded text-caption font-mono text-tertiary bg-[color-mix(in_srgb,var(--accent-default)_6%,transparent)] border border-[color-mix(in_srgb,var(--accent-default)_12%,transparent)]">
           fixed
         </span>
-        <span className="ml-auto font-mono text-[11px] text-tertiary">
+        <span className="ml-auto font-mono text-caption text-tertiary">
           42 wallets · alerts on
         </span>
       </div>

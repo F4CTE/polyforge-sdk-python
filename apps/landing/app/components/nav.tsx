@@ -121,12 +121,12 @@ export function Nav() {
         {/* Logo + beta chip */}
         <a
           href="/"
-          className="flex items-center gap-2 text-[15px] font-semibold text-primary shrink-0 tracking-tight focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-text rounded-sm"
+          className="flex items-center gap-2 text-sm font-semibold text-primary shrink-0 tracking-tight focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-text rounded-sm"
           aria-label="Polyforge home"
         >
           <PolyforgeLogomark size={20} className="text-accent-text" />
           <span>polyforge</span>
-          <span className="inline-flex items-center h-[18px] px-2 ml-1.5 rounded text-[10px] font-medium bg-elevated border border-subtle text-secondary">
+          <span className="inline-flex items-center h-[18px] px-2 ml-1.5 rounded text-caption font-medium bg-elevated border border-subtle text-secondary">
             beta
           </span>
         </a>
@@ -153,7 +153,7 @@ export function Nav() {
             aria-label="Search markets"
           >
             <Search size={14} strokeWidth={1.5} aria-hidden="true" />
-            <kbd className="inline-flex items-center justify-center min-w-[16px] h-[18px] px-1 rounded bg-elevated border border-default font-mono text-[11px] text-tertiary">
+            <kbd className="inline-flex items-center justify-center min-w-[16px] h-[18px] px-1 rounded bg-elevated border border-default font-mono text-caption text-tertiary">
               ⌘K
             </kbd>
           </button>

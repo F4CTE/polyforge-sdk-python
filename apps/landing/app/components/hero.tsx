@@ -13,7 +13,7 @@ function DashboardMock() {
   const live = useTicker(DASHBOARD_MARKETS, { interval: 2200 });
 
   return (
-    <div className="bg-surface border border-subtle rounded-[14px] overflow-hidden shadow-elevation-2">
+    <div className="bg-surface border border-subtle rounded-xl overflow-hidden shadow-elevation-2">
       {/* Browser chrome */}
       <div className="flex items-center gap-2.5 px-3.5 py-2.5 bg-elevated border-b border-subtle">
         <div className="flex gap-1.5">
@@ -21,10 +21,10 @@ function DashboardMock() {
           <span className="w-2.5 h-2.5 rounded-full bg-warning/70" />
           <span className="w-2.5 h-2.5 rounded-full bg-gain/70" />
         </div>
-        <div className="flex-1 text-center font-mono text-[11px] text-tertiary bg-app/50 px-2.5 py-1 rounded-md tracking-wide">
+        <div className="flex-1 text-center font-mono text-caption text-tertiary bg-app/50 px-2.5 py-1 rounded-md tracking-wide">
           app.polyforge.com · portfolio
         </div>
-        <span className="inline-flex items-center gap-1.5 h-5 px-2 rounded bg-accent-subtle border border-accent-border text-accent-text text-[11px] font-medium">
+        <span className="inline-flex items-center gap-1.5 h-5 px-2 rounded bg-accent-subtle border border-accent-border text-accent-text text-caption font-medium">
           <span
             className="w-1.5 h-1.5 rounded-full bg-accent"
             style={{ animation: "dot-pulse 2s ease-in-out infinite" }}
@@ -37,29 +37,29 @@ function DashboardMock() {
         {/* Top stats row */}
         <div className="grid grid-cols-3 gap-2 mb-3">
           <div className="border border-subtle rounded-lg p-3">
-            <div className="text-[11px] text-tertiary">Total P&L</div>
+            <div className="text-caption text-tertiary">Total P&L</div>
             <div className="tabular-nums font-mono text-gain-text text-xl font-semibold mt-0.5 tracking-tight">
               +$2,847
             </div>
-            <div className="text-[11px] tabular-nums text-gain-text">
+            <div className="text-caption tabular-nums text-gain-text">
               +18.3%
             </div>
           </div>
           <div className="border border-subtle rounded-lg p-3">
-            <div className="text-[11px] text-tertiary">Win rate</div>
+            <div className="text-caption text-tertiary">Win rate</div>
             <div className="tabular-nums font-mono text-primary text-xl font-semibold mt-0.5 tracking-tight">
               67.2%
             </div>
-            <div className="text-[11px] tabular-nums text-tertiary">
+            <div className="text-caption tabular-nums text-tertiary">
               142/212
             </div>
           </div>
           <div className="border border-subtle rounded-lg p-3">
-            <div className="text-[11px] text-tertiary">Strategies</div>
+            <div className="text-caption text-tertiary">Strategies</div>
             <div className="tabular-nums font-mono text-primary text-xl font-semibold mt-0.5 tracking-tight">
               3
             </div>
-            <div className="text-[11px] tabular-nums text-accent-text">
+            <div className="text-caption tabular-nums text-accent-text">
               2 paper · 1 live
             </div>
           </div>
@@ -124,7 +124,7 @@ function DashboardMock() {
 
         {/* Markets table */}
         <div className="border border-subtle rounded-lg">
-          <div className="grid grid-cols-[1fr_70px_70px] gap-3 px-3.5 py-2 font-mono text-[10px] tracking-widest uppercase text-tertiary border-b border-subtle">
+          <div className="grid grid-cols-[1fr_70px_70px] gap-3 px-3.5 py-2 font-mono text-caption tracking-widest uppercase text-tertiary border-b border-subtle">
             <span>Market</span>
             <span className="text-right">Yes</span>
             <span className="text-right">Δ</span>
@@ -132,7 +132,7 @@ function DashboardMock() {
           {live.map((m, i) => (
             <div
               key={m.sym}
-              className={`grid grid-cols-[1fr_70px_70px] gap-3 px-3.5 py-2.5 text-[13px] items-center ${
+              className={`grid grid-cols-[1fr_70px_70px] gap-3 px-3.5 py-2.5 text-body-sm items-center ${
                 i < live.length - 1 ? "border-b border-subtle" : ""
               }`}
             >
@@ -182,7 +182,7 @@ function CanvasNode({ top, left, cat, title, detail }: NodeProps) {
       style={{ top, left, borderLeftWidth: 2, borderLeftColor: color }}
     >
       <div
-        className="font-mono text-[9.5px] tracking-widest uppercase"
+        className="font-mono text-caption tracking-widest uppercase"
         style={{ color }}
       >
         {cat}
@@ -190,7 +190,7 @@ function CanvasNode({ top, left, cat, title, detail }: NodeProps) {
       <div className="font-mono text-xs font-medium text-primary mt-0.5">
         {title}
       </div>
-      <div className="font-mono text-[10.5px] text-tertiary mt-0.5">
+      <div className="font-mono text-caption text-tertiary mt-0.5">
         {detail}
       </div>
     </div>
@@ -199,20 +199,20 @@ function CanvasNode({ top, left, cat, title, detail }: NodeProps) {
 
 function BuilderCanvas() {
   return (
-    <div className="relative bg-surface border border-subtle rounded-[14px] h-[440px] overflow-hidden builder-dot-grid">
+    <div className="relative bg-surface border border-subtle rounded-xl h-[440px] overflow-hidden builder-dot-grid">
       {/* Chrome bar */}
       <div className="flex items-center gap-2 px-3.5 py-2.5 border-b border-subtle bg-surface">
-        <span className="font-mono text-[11px] text-secondary">
+        <span className="font-mono text-caption text-secondary">
           momentum-α3.polyforge
         </span>
-        <span className="inline-flex items-center gap-1.5 h-5 px-2 rounded bg-elevated border border-subtle text-secondary text-[11px] font-medium">
+        <span className="inline-flex items-center gap-1.5 h-5 px-2 rounded bg-elevated border border-subtle text-secondary text-caption font-medium">
           <span
             className="w-1.5 h-1.5 rounded-full bg-gain"
             style={{ animation: "dot-pulse 2s ease-in-out infinite" }}
           />
           running · 42ms
         </span>
-        <span className="ml-auto inline-flex items-center h-5 px-2 rounded bg-accent-subtle border border-accent-border text-accent-text text-[11px] font-medium">
+        <span className="ml-auto inline-flex items-center h-5 px-2 rounded bg-accent-subtle border border-accent-border text-accent-text text-caption font-medium">
           paper
         </span>
       </div>
@@ -307,7 +307,7 @@ function BuilderCanvas() {
       />
 
       {/* Footer stats */}
-      <div className="absolute bottom-2.5 left-4 right-4 flex justify-between items-center font-mono text-[11px] text-tertiary">
+      <div className="absolute bottom-2.5 left-4 right-4 flex justify-between items-center font-mono text-caption text-tertiary">
         <span>blocks: 5 · edges: 4 · tick 200ms</span>
         <span>last fill · 00:12 · buy_yes 0.67 × $412</span>
       </div>
@@ -360,7 +360,7 @@ export function Hero() {
               </em>
             </h1>
 
-            <p className="text-[15px] text-secondary leading-relaxed max-w-[480px] mt-5 mb-7">
+            <p className="text-sm text-secondary leading-relaxed max-w-[480px] mt-5 mb-7">
               {copy.sub}
             </p>
 
@@ -392,7 +392,7 @@ export function Hero() {
                   key={v}
                   type="button"
                   onClick={() => setVariant(v)}
-                  className={`h-6 px-2 rounded text-[11px] font-medium border transition-colors duration-micro ${
+                  className={`h-6 px-2 rounded text-caption font-medium border transition-colors duration-micro ${
                     variant === v
                       ? "bg-accent-subtle border-accent-border text-accent-text"
                       : "bg-transparent border-subtle text-secondary hover:text-primary hover:border-default"

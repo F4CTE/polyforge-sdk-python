@@ -7,7 +7,7 @@ import {
 function EquityCurveCard() {
   return (
     <div className="bg-surface border border-subtle rounded-xl p-5">
-      <div className="font-mono text-[10px] text-tertiary uppercase tracking-widest">
+      <div className="font-mono text-caption text-tertiary uppercase tracking-widest">
         Equity curve · 30d
       </div>
       <div className="font-mono text-[28px] font-semibold text-gain tracking-tight mt-1 tabular-nums">
@@ -41,7 +41,7 @@ function EquityCurveCard() {
       <div className="grid grid-cols-4 gap-3 mt-3.5 pt-3.5 border-t border-subtle">
         {BACKTEST_STATS.map(({ label, value, color }) => (
           <div key={label}>
-            <div className="font-mono text-[9.5px] text-tertiary uppercase tracking-widest">
+            <div className="font-mono text-caption text-tertiary uppercase tracking-widest">
               {label}
             </div>
             <div
@@ -59,7 +59,7 @@ function EquityCurveCard() {
 function StrategyComparisonCard() {
   return (
     <div className="bg-surface border border-subtle rounded-xl p-5">
-      <div className="font-mono text-[10px] text-tertiary uppercase tracking-widest mb-2.5">
+      <div className="font-mono text-caption text-tertiary uppercase tracking-widest mb-2.5">
         Compare · 4 strategies
       </div>
       <svg
@@ -100,7 +100,7 @@ function StrategyComparisonCard() {
           strokeDasharray="3 3"
         />
       </svg>
-      <div className="flex gap-3 flex-wrap mt-2.5 text-[11px] font-mono">
+      <div className="flex gap-3 flex-wrap mt-2.5 text-caption font-mono">
         {STRATEGY_LINES.map(({ name, color }) => (
           <span key={name} className="inline-flex items-center gap-1.5">
             <span
@@ -118,7 +118,7 @@ function StrategyComparisonCard() {
 function CategoryPnlCard() {
   return (
     <div className="bg-surface border border-subtle rounded-xl p-5">
-      <div className="font-mono text-[10px] text-tertiary uppercase tracking-widest mb-2.5">
+      <div className="font-mono text-caption text-tertiary uppercase tracking-widest mb-2.5">
         Per-category P&L
       </div>
       {PNL_CATEGORIES.map(({ category, pct, tone }) => (

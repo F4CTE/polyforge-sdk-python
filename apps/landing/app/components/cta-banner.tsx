@@ -65,7 +65,7 @@ export function CtaBanner() {
             </a>
           </div>
 
-          <div className="relative font-mono text-[11px] text-tertiary mt-6 tracking-wider">
+          <div className="relative font-mono text-caption text-tertiary mt-6 tracking-wider">
             NO CARD · FREE FOREVER FOR PAPER · EU-WEST-2 · 99.97% UPTIME YTD
           </div>
         </div>

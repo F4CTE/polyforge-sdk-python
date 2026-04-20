@@ -154,7 +154,7 @@ export function DeveloperSection() {
                   <span className="w-2.5 h-2.5 rounded-full bg-warning/60" />
                   <span className="w-2.5 h-2.5 rounded-full bg-gain/60" />
                 </div>
-                <span className="ml-2 font-mono text-[11px] text-tertiary">
+                <span className="ml-2 font-mono text-caption text-tertiary">
                   strategy-watcher.ts
                 </span>
                 <button
@@ -178,11 +178,11 @@ export function DeveloperSection() {
                   </svg>
                 </button>
               </div>
-              <pre className="p-4 text-[13px] font-mono leading-6 overflow-x-auto">
+              <pre className="p-4 text-body-sm font-mono leading-6 overflow-x-auto">
                 <code>
                   {CODE_TOKENS.map(({ line, tokens }) => (
                     <div key={line} className="flex">
-                      <span className="w-8 shrink-0 text-right pr-4 text-tertiary select-none text-[12px]">
+                      <span className="w-8 shrink-0 text-right pr-4 text-tertiary select-none text-label">
                         {line}
                       </span>
                       <span>
@@ -200,7 +200,7 @@ export function DeveloperSection() {
                 </code>
               </pre>
             </div>
-            <div className="mt-3 flex items-center justify-between font-mono text-[11px] px-1">
+            <div className="mt-3 flex items-center justify-between font-mono text-caption px-1">
               <span className="text-tertiary">
                 $ npm install @polyforge/sdk
               </span>

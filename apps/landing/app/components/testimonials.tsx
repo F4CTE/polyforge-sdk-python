@@ -72,10 +72,10 @@ export function Testimonials() {
                     {initials}
                   </div>
                   <cite className="not-italic">
-                    <div className="text-[13px] font-medium text-primary">
+                    <div className="text-body-sm font-medium text-primary">
                       {t.who}
                     </div>
-                    <div className="text-[11px] text-tertiary mt-0.5">
+                    <div className="text-caption text-tertiary mt-0.5">
                       {t.role}
                     </div>
                   </cite>

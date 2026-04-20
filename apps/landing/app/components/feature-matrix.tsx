@@ -75,7 +75,7 @@ export function FeatureMatrix() {
 
         <div
           ref={gridRef}
-          className={`grid overflow-hidden rounded-[14px] border border-subtle transition-all duration-600 ease-out ${
+          className={`grid overflow-hidden rounded-xl border border-subtle transition-all duration-600 ease-out ${
             gridInView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
           }`}
           style={{
@@ -92,10 +92,10 @@ export function FeatureMatrix() {
               <span className="inline-flex text-accent-text mb-3.5">
                 <FeatureIcon name={cell.icon} />
               </span>
-              <div className="text-[15px] font-semibold text-primary tracking-tight mb-1.5">
+              <div className="text-sm font-semibold text-primary tracking-tight mb-1.5">
                 {cell.title}
               </div>
-              <div className="text-[13px] text-secondary leading-relaxed">
+              <div className="text-body-sm text-secondary leading-relaxed">
                 {cell.desc}
               </div>
             </div>

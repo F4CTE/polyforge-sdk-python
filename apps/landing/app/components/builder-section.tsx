@@ -8,17 +8,17 @@ function BuilderCanvas() {
       style={{ height: 340 }}
     >
       <div className="flex items-center gap-2 px-3.5 py-2.5 border-b border-subtle bg-surface">
-        <span className="font-mono text-[11px] text-secondary">
+        <span className="font-mono text-caption text-secondary">
           momentum-α3.polyforge
         </span>
-        <span className="inline-flex items-center gap-1.5 px-2 py-0.5 text-[10px] font-mono text-secondary bg-surface border border-subtle rounded">
+        <span className="inline-flex items-center gap-1.5 px-2 py-0.5 text-caption font-mono text-secondary bg-surface border border-subtle rounded">
           <span
             className="w-1.5 h-1.5 rounded-full bg-gain"
             style={{ animation: "dot-pulse 2s ease-in-out infinite" }}
           />
           running · 42ms
         </span>
-        <span className="ml-auto inline-flex px-2 py-0.5 text-[10px] font-mono text-accent-text bg-[color-mix(in_srgb,var(--accent-default)_8%,transparent)] border border-[color-mix(in_srgb,var(--accent-default)_20%,transparent)] rounded">
+        <span className="ml-auto inline-flex px-2 py-0.5 text-caption font-mono text-accent-text bg-[color-mix(in_srgb,var(--accent-default)_8%,transparent)] border border-[color-mix(in_srgb,var(--accent-default)_20%,transparent)] rounded">
           paper
         </span>
       </div>
@@ -80,7 +80,7 @@ function BuilderCanvas() {
       <CanvasNode top={40} left={580} cat="action" title="buy_yes" detail="GTC · Kelly" />
       <CanvasNode top={190} left={580} cat="action" title="set_stop_loss" detail="−8% trailing" />
 
-      <div className="absolute bottom-2.5 left-4 right-4 flex justify-between items-center font-mono text-[11px] text-tertiary">
+      <div className="absolute bottom-2.5 left-4 right-4 flex justify-between items-center font-mono text-caption text-tertiary">
         <span>blocks: 5 · edges: 4 · tick 200ms</span>
         <span>last fill · 00:12 · buy_yes 0.67 × $412</span>
       </div>
@@ -115,7 +115,7 @@ function CanvasNode({
       style={{ top, left, borderLeftWidth: 2, borderLeftColor: color }}
     >
       <div
-        className="font-mono text-[9.5px] uppercase tracking-widest"
+        className="font-mono text-caption uppercase tracking-widest"
         style={{ color }}
       >
         {cat}
@@ -123,7 +123,7 @@ function CanvasNode({
       <div className="font-mono text-xs font-medium text-primary mt-0.5">
         {title}
       </div>
-      <div className="font-mono text-[10.5px] text-tertiary mt-0.5">
+      <div className="font-mono text-caption text-tertiary mt-0.5">
         {detail}
       </div>
     </div>
@@ -192,7 +192,7 @@ export function BuilderSection() {
           {BUILDER_CATEGORIES.map(({ label, count, sub, color }) => (
             <div key={label} className="bg-surface px-5 py-5">
               <div
-                className="font-mono text-[10px] uppercase tracking-widest"
+                className="font-mono text-caption uppercase tracking-widest"
                 style={{ color }}
               >
                 {label}

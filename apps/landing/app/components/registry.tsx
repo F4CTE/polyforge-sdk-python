@@ -39,7 +39,7 @@ export function Registry() {
 
         <div
           ref={gridRef}
-          className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 overflow-hidden rounded-[14px] border border-subtle transition-all duration-600 ease-out ${
+          className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 overflow-hidden rounded-xl border border-subtle transition-all duration-600 ease-out ${
             gridInView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
           }`}
           style={{ gap: 1, background: "var(--border-subtle)" }}
@@ -49,17 +49,17 @@ export function Registry() {
             return (
               <div key={g.key} className="bg-surface p-6">
                 <div className="flex items-baseline gap-2.5">
-                  <span className="text-[15px] font-semibold text-primary tracking-tight">
+                  <span className="text-sm font-semibold text-primary tracking-tight">
                     {g.label}
                   </span>
                   <span
-                    className="font-mono text-[13px] font-semibold tabular-nums"
+                    className="font-mono text-body-sm font-semibold tabular-nums"
                     style={{ color: g.color }}
                   >
                     {count}
                   </span>
                 </div>
-                <p className="font-mono text-[10.5px] text-tertiary uppercase tracking-widest mt-1 mb-4">
+                <p className="font-mono text-caption text-tertiary uppercase tracking-widest mt-1 mb-4">
                   {g.hint}
                 </p>
                 <div className="flex flex-col gap-1.5">
@@ -74,7 +74,7 @@ export function Registry() {
                       {name}
                     </div>
                   ))}
-                  <div className="font-mono text-[11px] text-tertiary mt-1">
+                  <div className="font-mono text-caption text-tertiary mt-1">
                     + {count - 3} more
                   </div>
                 </div>

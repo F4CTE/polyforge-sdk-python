@@ -33,7 +33,7 @@ export function Footer() {
               <PolyforgeLogomark size={22} className="text-accent-text" />
               <span>polyforge</span>
             </a>
-            <p className="text-[13px] text-tertiary mt-3 max-w-[280px] leading-relaxed">
+            <p className="text-body-sm text-tertiary mt-3 max-w-[280px] leading-relaxed">
               Algorithmic trading for prediction markets. Dark by default.
               Precise by design.
             </p>
@@ -52,7 +52,7 @@ export function Footer() {
                 </a>
               ))}
             </div>
-            <div className="font-mono text-[11px] text-tertiary mt-7 tracking-wide leading-relaxed">
+            <div className="font-mono text-caption text-tertiary mt-7 tracking-wide leading-relaxed">
               v6.32.0 · eu-west-2
               <br />
               builder program · tier 3
@@ -70,7 +70,7 @@ export function Footer() {
                   <li key={label}>
                     <a
                       href="#"
-                      className="text-[13px] text-secondary hover:text-primary transition-colors duration-micro focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-text rounded-sm"
+                      className="text-body-sm text-secondary hover:text-primary transition-colors duration-micro focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-text rounded-sm"
                     >
                       {label}
                     </a>

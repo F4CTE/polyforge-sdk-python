@@ -9,10 +9,10 @@ function BracketOrderMock() {
     >
       <div className="flex items-center gap-2.5 px-5 py-4 border-b border-subtle">
         <span className="font-mono text-xs text-secondary">Bracket order</span>
-        <span className="inline-flex px-2 py-0.5 rounded text-[10px] font-mono text-accent-text bg-[color-mix(in_srgb,var(--accent-default)_8%,transparent)] border border-[color-mix(in_srgb,var(--accent-default)_20%,transparent)]">
+        <span className="inline-flex px-2 py-0.5 rounded text-caption font-mono text-accent-text bg-[color-mix(in_srgb,var(--accent-default)_8%,transparent)] border border-[color-mix(in_srgb,var(--accent-default)_20%,transparent)]">
           active
         </span>
-        <span className="ml-auto font-mono text-[11px] text-tertiary">
+        <span className="ml-auto font-mono text-caption text-tertiary">
           BTC&gt;150K · YES · 0.31
         </span>
       </div>
@@ -32,11 +32,11 @@ function BracketOrderMock() {
                 {label}
               </span>
             </div>
-            <span className="font-mono text-[13px] text-primary tabular-nums">
+            <span className="font-mono text-body-sm text-primary tabular-nums">
               {value}
             </span>
             <span
-              className="font-mono text-[11px] uppercase tracking-wider text-right"
+              className="font-mono text-caption uppercase tracking-wider text-right"
               style={{ color }}
             >
               {status}
@@ -49,7 +49,7 @@ function BracketOrderMock() {
               key={label}
               className="border border-subtle rounded-lg px-3 py-2.5"
             >
-              <div className="text-[10px] text-tertiary uppercase tracking-wider">
+              <div className="text-caption text-tertiary uppercase tracking-wider">
                 {label}
               </div>
               <div
