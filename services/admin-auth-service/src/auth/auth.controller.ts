@@ -31,7 +31,7 @@ function cookieOpts() {
 }
 
 function extractAdminId(req: FastifyRequest, authService: AuthService): string {
-  const token = (req as any).cookies?.[ADMIN_COOKIE];
+  const token = req.cookies[ADMIN_COOKIE];
   if (!token) throw new UnauthorizedException("Not authenticated");
   // Cryptographically verify the JWT and extract admin ID
   const payload = authService.verifyToken(token);
@@ -79,7 +79,7 @@ export class AuthController {
   })
   @ApiResponse({ status: 401, description: "Unauthorized" })
   async me(@Req() req: FastifyRequest) {
-    const token = (req as any).cookies?.[ADMIN_COOKIE];
+    const token = req.cookies[ADMIN_COOKIE];
     if (!token) throw new UnauthorizedException("Not authenticated");
     return this.authService.getMe(token);
   }
@@ -94,7 +94,7 @@ export class AuthController {
     @Req() req: FastifyRequest,
     @Res({ passthrough: true }) reply: FastifyReply,
   ) {
-    const cookieToken = (req as any).cookies?.[ADMIN_COOKIE];
+    const cookieToken = req.cookies[ADMIN_COOKIE];
     const bearerHeader = req.headers["authorization"];
     await this.authService.logout(
       cookieToken ? `Bearer ${cookieToken}` : bearerHeader,
@@ -146,7 +146,7 @@ export class AuthController {
     @Req() req: FastifyRequest,
     @Body() body: { password: string; totpCode: string },
   ) {
-    const token = (req as any).cookies?.[ADMIN_COOKIE];
+    const token = req.cookies[ADMIN_COOKIE];
     if (!token) throw new UnauthorizedException("Not authenticated");
     const payload = this.authService.verifyToken(token);
     await this.authService.disableTotp(
