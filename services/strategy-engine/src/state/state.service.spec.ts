@@ -1,27 +1,14 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { StateService } from "./state.service";
 
-function currentWeekStart(): string {
-  const now = new Date();
-  const day = now.getUTCDay();
-  const diff = now.getUTCDate() - day;
-  const sunday = new Date(
-    Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), diff),
-  );
-  return sunday.toISOString().slice(0, 10);
-}
-
 const DEFAULT_STATE = {
   betsToday: 0,
   dailyPnl: 0,
   consecutiveLoss: 0,
   consecutiveWin: 0,
   lastTradeAt: 0,
-  tradedTokensToday: [] as string[],
+  tradedTokensToday: [],
   totalOrders: 0,
-  tickCount: 0,
-  weeklyPnl: 0,
-  weekStartDate: currentWeekStart(),
 };
 
 function makeRedisMock(overrides: Record<string, unknown> = {}) {

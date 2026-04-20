@@ -18,11 +18,7 @@ import {
   LogicConnection,
 } from "./strategy-runner";
 import { StateService } from "../state/state.service";
-import {
-  OrderIntent,
-  ScheduleConfig,
-  StrategySettings,
-} from "../blocks/block.types";
+import { OrderIntent } from "../blocks/block.types";
 
 const ORDER_STREAM = "stream:orders";
 const PAPER_ORDER_STREAM = "stream:paper_orders";
@@ -167,9 +163,6 @@ export class StrategyRegistryService implements OnApplicationBootstrap {
             calcBlocks,
             (childId, parentId, mode, context) =>
               this.startAsChild(childId, parentId, mode, context),
-            strategy.warmupTicks ?? 0,
-            (strategy.schedule as unknown as ScheduleConfig) ?? null,
-            (strategy.settings as unknown as StrategySettings) ?? null,
           );
 
           this.runners.set(strategy.id, runner);
@@ -248,9 +241,6 @@ export class StrategyRegistryService implements OnApplicationBootstrap {
       calcBlocks,
       (childId, parentId, mode, context) =>
         this.startAsChild(childId, parentId, mode, context),
-      strategy.warmupTicks ?? 0,
-      (strategy.schedule as unknown as ScheduleConfig) ?? null,
-      (strategy.settings as unknown as StrategySettings) ?? null,
     );
 
     this.runners.set(strategyId, runner);
@@ -499,9 +489,6 @@ export class StrategyRegistryService implements OnApplicationBootstrap {
       calcBlocks,
       (grandchildId, pId, m, ctx) =>
         this.startAsChild(grandchildId, pId, m, ctx),
-      child.warmupTicks ?? 0,
-      (child.schedule as unknown as ScheduleConfig) ?? null,
-      (child.settings as unknown as StrategySettings) ?? null,
     );
 
     this.runners.set(childStrategyId, runner);

@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { PortfolioPage } from '../pages/portfolio.page';
-import { apiLogin, apiRegister, apiRegisterAndVerify, uniqueEmail, uniqueUsername, ensureFreshToken, LoginResponse } from '../helpers/api';
+import { apiLogin, apiRegister, apiRegisterAndVerify, uniqueEmail, uniqueUsername } from '../helpers/api';
 
 /**
  * Portfolio — Full Workflow Coverage (@e2e @comprehensive)
@@ -15,21 +15,17 @@ import { apiLogin, apiRegister, apiRegisterAndVerify, uniqueEmail, uniqueUsernam
  */
 
 test.describe('Portfolio — Full Workflow Coverage', () => {
-    let loginState: LoginResponse;
     let token: string;
 
     test.beforeAll(async () => {
         // Register a unique test user for portfolio tests
         const email = uniqueEmail('portfolio');
         const username = uniqueUsername('portfoliouser');
-        loginState = await apiRegisterAndVerify(email, username, 'TestPass123!');
-        token = loginState.token;
+        const res = await apiRegisterAndVerify(email, username, 'TestPass123!');
+        token = res.token;
     });
 
     test.beforeEach(async ({ page }) => {
-        await ensureFreshToken(loginState);
-        token = loginState.token;
-
         // Set auth cookie for each test
         await page.context().addCookies([{
             name: 'pf_token',

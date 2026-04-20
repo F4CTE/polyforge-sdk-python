@@ -11,7 +11,6 @@ on:
 # if a malicious PR manages to execute code on the self-hosted runner.
 permissions:
   contents: read
-  pull-requests: read
 
 # Per-branch concurrency: a new push to the SAME branch cancels its previous run,
 # but different branches queue independently instead of killing each other.
@@ -30,46 +29,6 @@ env:
   ADMIN_DIRECT_DATABASE_URL: 'postgresql://ci:ci@localhost:5432/ci_admin'
 
 jobs:
-  # ── 0. Detect changed paths ────────────────────────────────────────────
-  # Determines whether the PR touches application code. Non-code-only PRs
-  # (docs, markdown, CI config, scripts, legal text) skip the expensive
-  # deploy-dev → E2E chain while fast gates still run.
-  # Push-to-main and workflow_dispatch always run everything.
-  changes:
-    name: Detect changes
-    runs-on: [self-hosted, linux]
-    if: github.event_name == 'pull_request'
-    outputs:
-      code: ${{ steps.filter.outputs.code }}
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: dorny/paths-filter@v3
-        id: filter
-        with:
-          filters: |
-            code:
-              - 'packages/**'
-              - 'services/**'
-              - 'apps/**'
-              - 'prisma/**'
-              - 'tests/**'
-              - 'docker-compose*.yml'
-              - 'Dockerfile*'
-              - 'pnpm-lock.yaml'
-              - 'package.json'
-              - 'turbo.json'
-              - 'tsconfig*.json'
-              - 'vite.config.*'
-              - 'playwright.config.*'
-              - 'tailwind.config.*'
-              - 'postcss.config.*'
-              - 'eslint.config.*'
-              - '.env.example'
-              - 'nest-cli.json'
-              - 'rust/**'
-              - 'wasm/**'
-
   # ── 1a. Lint (parallel) ─────────────────────────────────────────────────
   lint:
     name: Lint
@@ -166,11 +125,9 @@ jobs:
   # incrementally, restart services, run migrations, and verify health.
   deploy-dev:
     name: Deploy to Dev
-    if: >-
-      github.event_name != 'push' &&
-      (needs.changes.result == 'skipped' || needs.changes.outputs.code == 'true')
+    if: github.event_name != 'push'
     runs-on: [self-hosted, linux]
-    needs: [build, changes]
+    needs: [build]
     timeout-minutes: 20
     # Serialize deploy across all branches — only one branch can deploy at a time.
     # Other branches wait (no cancel) so their pipeline resumes after the current one finishes.
@@ -337,73 +294,86 @@ jobs:
   # create multiple jobs competing for the single pending slot, and a
   # new entrant (e.g. another branch's deploy) would evict the oldest
   # pending shard — see POLA-185 review feedback.
-  # Split to 4 shards (from 3) — POLA-206.
-  # Shards run in parallel as background processes within a single job
-  # to keep the deploy-polyforge-lab concurrency group occupied by one
-  # job only (see POLA-185). Parallelized from sequential — POLA-250.
+  # Split to 4 shards (from 3) to keep each shard under 25 min — POLA-206.
   e2e:
     name: E2E
     if: github.event_name != 'push'
     runs-on: [self-hosted, linux]
     needs: [e2e-setup]
-    timeout-minutes: 45
+    timeout-minutes: 120
     concurrency:
       group: deploy-polyforge-lab
       cancel-in-progress: false
     steps:
-      - name: Run all E2E shards in parallel
+      - name: Run E2E shard 1/4
+        timeout-minutes: 25
         run: |
           set -euo pipefail
           cd ~/PolyForge/tests/e2e
 
-          TOTAL_SHARDS=4
-          PIDS=()
-          LOGS=()
+          BASE_URL=http://localhost CI=true PLAYWRIGHT_SKIP_GLOBAL_SETUP=true \
+            timeout --kill-after=10s 1440 npx playwright test \
+              --project=chromium \
+              --reporter=list \
+              --shard=1/4 \
+              --global-timeout=1440000
 
-          for i in $(seq 1 $TOTAL_SHARDS); do
-            LOG="/tmp/e2e-shard-${i}.log"
-            LOGS+=("$LOG")
+      - name: Clean up browsers between shards 1→2
+        if: success() || failure()
+        run: |
+          pkill -u f4cte -f 'chrome-headless-shell' 2>/dev/null || true
+          sleep 2
 
-            BASE_URL=http://localhost CI=true PLAYWRIGHT_SKIP_GLOBAL_SETUP=true \
-              timeout --kill-after=10s 2040 npx playwright test \
-                --project=chromium \
-                --reporter=list \
-                --shard="${i}/${TOTAL_SHARDS}" \
-                --global-timeout=2040000 \
-                > "$LOG" 2>&1 &
-            PIDS+=($!)
-            echo "Started shard ${i}/${TOTAL_SHARDS} (PID ${PIDS[-1]}) → $LOG"
-          done
+      - name: Run E2E shard 2/4
+        timeout-minutes: 25
+        run: |
+          set -euo pipefail
+          cd ~/PolyForge/tests/e2e
 
-          echo "Waiting for ${#PIDS[@]} shards..."
-          FAILED=0
-          for i in $(seq 0 $(( TOTAL_SHARDS - 1 ))); do
-            SHARD_NUM=$(( i + 1 ))
-            if wait "${PIDS[$i]}"; then
-              echo "✓ Shard ${SHARD_NUM}/${TOTAL_SHARDS} passed"
-            else
-              EXIT_CODE=$?
-              echo "✗ Shard ${SHARD_NUM}/${TOTAL_SHARDS} failed (exit ${EXIT_CODE})"
-              FAILED=$(( FAILED + 1 ))
-            fi
-          done
+          BASE_URL=http://localhost CI=true PLAYWRIGHT_SKIP_GLOBAL_SETUP=true \
+            timeout --kill-after=10s 1440 npx playwright test \
+              --project=chromium \
+              --reporter=list \
+              --shard=2/4 \
+              --global-timeout=1440000
 
-          echo ""
-          echo "=== Shard logs ==="
-          for i in $(seq 0 $(( TOTAL_SHARDS - 1 ))); do
-            SHARD_NUM=$(( i + 1 ))
-            echo ""
-            echo "────── Shard ${SHARD_NUM}/${TOTAL_SHARDS} ──────"
-            tail -30 "${LOGS[$i]}" || true
-          done
+      - name: Clean up browsers between shards 2→3
+        if: success() || failure()
+        run: |
+          pkill -u f4cte -f 'chrome-headless-shell' 2>/dev/null || true
+          sleep 2
 
-          if [ "$FAILED" -gt 0 ]; then
-            echo ""
-            echo "FAILED: ${FAILED}/${TOTAL_SHARDS} shards failed"
-            exit 1
-          fi
-          echo ""
-          echo "All ${TOTAL_SHARDS} shards passed"
+      - name: Run E2E shard 3/4
+        timeout-minutes: 25
+        run: |
+          set -euo pipefail
+          cd ~/PolyForge/tests/e2e
+
+          BASE_URL=http://localhost CI=true PLAYWRIGHT_SKIP_GLOBAL_SETUP=true \
+            timeout --kill-after=10s 1440 npx playwright test \
+              --project=chromium \
+              --reporter=list \
+              --shard=3/4 \
+              --global-timeout=1440000
+
+      - name: Clean up browsers between shards 3→4
+        if: success() || failure()
+        run: |
+          pkill -u f4cte -f 'chrome-headless-shell' 2>/dev/null || true
+          sleep 2
+
+      - name: Run E2E shard 4/4
+        timeout-minutes: 25
+        run: |
+          set -euo pipefail
+          cd ~/PolyForge/tests/e2e
+
+          BASE_URL=http://localhost CI=true PLAYWRIGHT_SKIP_GLOBAL_SETUP=true \
+            timeout --kill-after=10s 1440 npx playwright test \
+              --project=chromium \
+              --reporter=list \
+              --shard=4/4 \
+              --global-timeout=1440000
 
   # ── 5. Deploy to AWS (Production) ──────────────────────────────────────
   deploy:

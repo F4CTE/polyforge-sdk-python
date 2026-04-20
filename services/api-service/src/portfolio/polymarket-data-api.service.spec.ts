@@ -141,4 +141,146 @@ describe("PolymarketDataApiService", () => {
       expect(result).toEqual([]);
     });
   });
+
+  // ── getRewardsMarkets ─────────────────────────────────────────────────
+
+  describe("getRewardsMarkets()", () => {
+    it("fetches from /rewards/markets/current", async () => {
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue([]),
+      });
+
+      await svc.getRewardsMarkets();
+
+      expect(fetchSpy.mock.calls[0][0]).toContain("/rewards/markets/current");
+    });
+
+    it("returns parsed rewards markets", async () => {
+      const markets = [
+        {
+          conditionId: "c1",
+          rewardsDaily: "100",
+          rewardsMaxSpread: "0.05",
+          rewardsMinSize: "10",
+          startDate: "2026-01-01",
+          endDate: "2026-12-31",
+        },
+      ];
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue(markets),
+      });
+
+      const result = await svc.getRewardsMarkets();
+      expect(result).toEqual(markets);
+    });
+
+    it("returns empty array on non-ok response", async () => {
+      fetchSpy.mockResolvedValue({ ok: false, status: 500 });
+
+      const result = await svc.getRewardsMarkets();
+      expect(result).toEqual([]);
+    });
+  });
+
+  // ── getUserRewards ────────────────────────────────────────────────────
+
+  describe("getUserRewards()", () => {
+    it("fetches from /rewards/user with wallet address", async () => {
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue([]),
+      });
+
+      await svc.getUserRewards("0xWallet");
+
+      expect(fetchSpy.mock.calls[0][0]).toContain(
+        "/rewards/user?user=0xWallet",
+      );
+    });
+
+    it("returns empty array on failure", async () => {
+      fetchSpy.mockResolvedValue({ ok: false, status: 500 });
+
+      const result = await svc.getUserRewards("0xWallet");
+      expect(result).toEqual([]);
+    });
+  });
+
+  // ── getActivity ──────────────────────────────────────────────────────
+
+  describe("getActivity()", () => {
+    it("fetches from /activity with wallet address", async () => {
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue([]),
+      });
+
+      await svc.getActivity("0xWallet");
+
+      expect(fetchSpy.mock.calls[0][0]).toContain("/activity?user=0xWallet");
+    });
+
+    it("includes type filter when provided", async () => {
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue([]),
+      });
+
+      await svc.getActivity("0xWallet", "TRADE");
+
+      expect(fetchSpy.mock.calls[0][0]).toContain("type=TRADE");
+    });
+
+    it("returns parsed activity entries", async () => {
+      const activities = [
+        {
+          id: "a1",
+          type: "TRADE",
+          amount: "100",
+          asset: "tok-1",
+          timestamp: "2026-01-01T00:00:00Z",
+        },
+      ];
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue(activities),
+      });
+
+      const result = await svc.getActivity("0xWallet");
+      expect(result).toEqual(activities);
+    });
+
+    it("returns empty array on failure", async () => {
+      fetchSpy.mockResolvedValue({ ok: false, status: 500 });
+
+      const result = await svc.getActivity("0xWallet");
+      expect(result).toEqual([]);
+    });
+  });
+
+  // ── getRebates ───────────────────────────────────────────────────────
+
+  describe("getRebates()", () => {
+    it("fetches from /rebates/current with wallet address", async () => {
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue([]),
+      });
+
+      await svc.getRebates("0xWallet");
+
+      expect(fetchSpy.mock.calls[0][0]).toContain(
+        "/rebates/current?user=0xWallet",
+      );
+    });
+
+    it("returns empty array on failure", async () => {
+      fetchSpy.mockResolvedValue({ ok: false, status: 500 });
+
+      const result = await svc.getRebates("0xWallet");
+      expect(result).toEqual([]);
+    });
+  });
 });

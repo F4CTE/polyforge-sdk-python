@@ -245,6 +245,191 @@ export class ClobController {
     reply.status(201).send({ results });
   }
 
+  // GET /book?token_id=X — CLOB-style order book
+  @Get("book")
+  async getBook(
+    @Query("token_id") tokenId: string,
+    @Req() req: FastifyRequest,
+    @Res() reply: FastifyReply,
+  ) {
+    if (!(await this.guard(reply, req.ip))) return;
+    if (!tokenId || !TOKENS_BY_ID.has(tokenId))
+      return reply.status(404).send({ error: "Token not found" });
+
+    const { bids, asks } = this.scenario.getOrderBook(tokenId);
+    const midpoint = this.scenario.getPrice(tokenId);
+    const spread =
+      parseFloat(asks[0].price) - parseFloat(bids[0].price);
+
+    reply.send({
+      bids,
+      asks,
+      spread: spread.toFixed(4),
+      midpoint: midpoint.toFixed(4),
+      timestamp: Date.now(),
+    });
+  }
+
+  // POST /books — batch order books
+  @Post("books")
+  async getBooks(
+    @Body() tokenIds: string[],
+    @Req() req: FastifyRequest,
+    @Res() reply: FastifyReply,
+  ) {
+    if (!(await this.guard(reply, req.ip))) return;
+    if (!Array.isArray(tokenIds)) {
+      return reply.status(400).send({ error: "Body must be an array of token IDs" });
+    }
+
+    const results = tokenIds.map((tokenId) => {
+      if (!TOKENS_BY_ID.has(tokenId))
+        return { tokenId, bids: [], asks: [], error: "Token not found" };
+
+      const { bids, asks } = this.scenario.getOrderBook(tokenId);
+      return { tokenId, bids, asks };
+    });
+
+    reply.send(results);
+  }
+
+  // GET /spread?token_id=X
+  @Get("spread")
+  async getSpread(
+    @Query("token_id") tokenId: string,
+    @Req() req: FastifyRequest,
+    @Res() reply: FastifyReply,
+  ) {
+    if (!(await this.guard(reply, req.ip))) return;
+    if (!tokenId || !TOKENS_BY_ID.has(tokenId))
+      return reply.status(404).send({ error: "Token not found" });
+
+    const { bids, asks } = this.scenario.getOrderBook(tokenId);
+    const spread =
+      parseFloat(asks[0].price) - parseFloat(bids[0].price);
+
+    reply.send({ spread: spread.toFixed(4) });
+  }
+
+  // GET /midpoint?token_id=X
+  @Get("midpoint")
+  async getMidpoint(
+    @Query("token_id") tokenId: string,
+    @Req() req: FastifyRequest,
+    @Res() reply: FastifyReply,
+  ) {
+    if (!(await this.guard(reply, req.ip))) return;
+    if (!tokenId || !TOKENS_BY_ID.has(tokenId))
+      return reply.status(404).send({ error: "Token not found" });
+
+    const mid = this.scenario.getPrice(tokenId);
+    reply.send({ mid: mid.toFixed(4) });
+  }
+
+  // GET /prices-history?token_id=X&interval=max&fidelity=60
+  @Get("prices-history")
+  async getPricesHistory(
+    @Query("token_id") tokenId: string,
+    @Query("fidelity") fidelity: string,
+    @Req() req: FastifyRequest,
+    @Res() reply: FastifyReply,
+  ) {
+    if (!(await this.guard(reply, req.ip))) return;
+    if (!tokenId || !TOKENS_BY_ID.has(tokenId))
+      return reply.status(404).send({ error: "Token not found" });
+
+    const count = parseInt(fidelity || "10", 10);
+    const now = Date.now();
+    const history = Array.from({ length: Math.min(count, 100) }, (_, i) => ({
+      t: now - (count - i) * 60_000,
+      p: this.scenario.getPrice(tokenId).toFixed(4),
+    }));
+
+    reply.send({ history });
+  }
+
+  // POST /batch-prices-history
+  @Post("batch-prices-history")
+  async getBatchPricesHistory(
+    @Body() body: { tokenIds: string[]; fidelity?: number },
+    @Req() req: FastifyRequest,
+    @Res() reply: FastifyReply,
+  ) {
+    if (!(await this.guard(reply, req.ip))) return;
+    if (!Array.isArray(body.tokenIds)) {
+      return reply.status(400).send({ error: "tokenIds must be an array" });
+    }
+
+    const count = body.fidelity ?? 10;
+    const now = Date.now();
+    const result: Record<string, Array<{ t: number; p: string }>> = {};
+
+    for (const tokenId of body.tokenIds) {
+      if (!TOKENS_BY_ID.has(tokenId)) continue;
+      result[tokenId] = Array.from({ length: Math.min(count, 100) }, (_, i) => ({
+        t: now - (count - i) * 60_000,
+        p: this.scenario.getPrice(tokenId).toFixed(4),
+      }));
+    }
+
+    reply.send(result);
+  }
+
+  // POST /orders — batch place up to 15
+  @Post("orders")
+  async placeBatchOrders(
+    @Body()
+    body: Array<{
+      tokenId: string;
+      side: "buy" | "sell";
+      price: string;
+      size: string;
+    }>,
+    @Req() req: FastifyRequest,
+    @Res() reply: FastifyReply,
+  ) {
+    if (!(await this.guard(reply, req.ip))) return;
+
+    if (!Array.isArray(body) || body.length > 15) {
+      return reply.status(400).send({ error: "Batch size must be 1-15" });
+    }
+
+    const results = body.map((o) => {
+      if (!TOKENS_BY_ID.has(o.tokenId))
+        return { error: "Invalid tokenId", tokenId: o.tokenId };
+
+      const orderId = randomUUID();
+      return { orderID: orderId, status: "PENDING" };
+    });
+
+    reply.status(201).send(results);
+  }
+
+  // DELETE /orders — bulk cancel up to 3000
+  @Delete("orders")
+  async cancelBulkOrders(
+    @Body() orderIds: string[],
+    @Req() req: FastifyRequest,
+    @Res() reply: FastifyReply,
+  ) {
+    if (!(await this.guard(reply, req.ip))) return;
+
+    if (!Array.isArray(orderIds) || orderIds.length > 3000) {
+      return reply.status(400).send({ error: "Cancel limit is 3000" });
+    }
+
+    const cancelled = orderIds.filter((id) => {
+      const order = this.orders.get(id);
+      if (order && ["PENDING", "LIVE"].includes(order.status)) {
+        order.status = "CANCELLED";
+        return true;
+      }
+      return false;
+    });
+
+    reply.send({ cancelled });
+  }
+
   // ─── Simulation ───────────────────────────────────────────────────────────
 
   private simulateFill(

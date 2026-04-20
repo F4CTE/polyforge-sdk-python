@@ -224,6 +224,114 @@ describe("BuilderService", () => {
     });
   });
 
+  // ── getBuilderLeaderboard ───────────────────────────────────────────────
+
+  describe("getBuilderLeaderboard", () => {
+    it("fetches from /v1/builders/leaderboard with auth headers", async () => {
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue({
+          rank: 5,
+          totalBuilders: 200,
+          entries: [{ name: "PolyForge", volume: 100000 }],
+        }),
+      });
+
+      const result = await service.getBuilderLeaderboard();
+
+      expect(fetchSpy.mock.calls[0][0]).toBe(
+        "http://builder:3099/v1/builders/leaderboard",
+      );
+      expect(result.rank).toBe(5);
+      expect(result.totalBuilders).toBe(200);
+      expect(result.entries).toHaveLength(1);
+    });
+
+    it("defaults missing fields to safe values", async () => {
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue({}),
+      });
+
+      const result = await service.getBuilderLeaderboard();
+
+      expect(result.rank).toBeNull();
+      expect(result.totalBuilders).toBe(0);
+      expect(result.entries).toEqual([]);
+    });
+
+    it("returns safe defaults on non-OK response", async () => {
+      fetchSpy.mockResolvedValue({ ok: false, status: 500 });
+
+      const result = await service.getBuilderLeaderboard();
+
+      expect(result.rank).toBeNull();
+      expect(result.totalBuilders).toBe(0);
+      expect(result.entries).toEqual([]);
+    });
+
+    it("returns safe defaults on network error", async () => {
+      fetchSpy.mockRejectedValue(new Error("network error"));
+
+      const result = await service.getBuilderLeaderboard();
+
+      expect(result.rank).toBeNull();
+      expect(result.totalBuilders).toBe(0);
+    });
+  });
+
+  // ── getBuilderVolume ───────────────────────────────────────────────────
+
+  describe("getBuilderVolume", () => {
+    it("fetches from /v1/builders/volume with auth headers", async () => {
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue({
+          daily: [{ date: "2026-04-17", volume: 5000 }],
+          totalVolume: 150000,
+        }),
+      });
+
+      const result = await service.getBuilderVolume();
+
+      expect(fetchSpy.mock.calls[0][0]).toBe(
+        "http://builder:3099/v1/builders/volume",
+      );
+      expect(result.daily).toHaveLength(1);
+      expect(result.totalVolume).toBe(150000);
+    });
+
+    it("defaults missing fields to safe values", async () => {
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue({}),
+      });
+
+      const result = await service.getBuilderVolume();
+
+      expect(result.daily).toEqual([]);
+      expect(result.totalVolume).toBe(0);
+    });
+
+    it("returns safe defaults on non-OK response", async () => {
+      fetchSpy.mockResolvedValue({ ok: false, status: 500 });
+
+      const result = await service.getBuilderVolume();
+
+      expect(result.daily).toEqual([]);
+      expect(result.totalVolume).toBe(0);
+    });
+
+    it("returns safe defaults on network error", async () => {
+      fetchSpy.mockRejectedValue(new Error("timeout"));
+
+      const result = await service.getBuilderVolume();
+
+      expect(result.daily).toEqual([]);
+      expect(result.totalVolume).toBe(0);
+    });
+  });
+
   // ── getStats with builder API ───────────────────────────────────────────
 
   describe("getStats with builder API", () => {

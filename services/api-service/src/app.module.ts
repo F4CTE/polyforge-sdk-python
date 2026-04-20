@@ -36,6 +36,7 @@ import { MarketplaceModule } from "./marketplace/marketplace.module";
 import { WatchlistModule } from "./watchlist/watchlist.module";
 import { AccuracyModule } from "./accuracy/accuracy.module";
 import { LpModule } from "./lp/lp.module";
+import { RewardsModule } from "./rewards/rewards.module";
 
 @Module({
   imports: [
@@ -84,6 +85,7 @@ import { LpModule } from "./lp/lp.module";
     WatchlistModule,
     AccuracyModule,
     LpModule,
+    RewardsModule,
   ],
   controllers: [HealthController, StatusController],
   providers: [{ provide: APP_GUARD, useClass: ApiKeyThrottlerGuard }],

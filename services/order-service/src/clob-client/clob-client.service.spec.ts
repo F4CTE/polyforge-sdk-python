@@ -282,6 +282,198 @@ describe("ClobClientService", () => {
     });
   });
 
+  // ── getBook ──────────────────────────────────────────────────────────────
+
+  describe("getBook()", () => {
+    it("sends GET to /book with token_id query param", async () => {
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue({
+          bids: [{ price: "0.55", size: "100" }],
+          asks: [{ price: "0.57", size: "200" }],
+          spread: "0.0200",
+          midpoint: "0.5600",
+          timestamp: 1234567890,
+        }),
+      });
+      const result = await svc.getBook("tok-yes");
+      expect(fetchSpy.mock.calls[0][0]).toBe(
+        "http://clob:3099/book?token_id=tok-yes",
+      );
+      expect(result.bids).toHaveLength(1);
+      expect(result.spread).toBe("0.0200");
+    });
+
+    it("throws on non-OK response", async () => {
+      fetchSpy.mockResolvedValue({
+        ok: false,
+        status: 404,
+        text: vi.fn().mockResolvedValue("not found"),
+      });
+      await expect(svc.getBook("bad")).rejects.toThrow("404");
+    });
+  });
+
+  // ── getBooks ────────────────────────────────────────────────────────────
+
+  describe("getBooks()", () => {
+    it("POSTs to /books with array of token IDs", async () => {
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue([
+          { tokenId: "t1", bids: [], asks: [] },
+        ]),
+      });
+      const result = await svc.getBooks(["t1", "t2"]);
+      expect(fetchSpy.mock.calls[0][0]).toBe("http://clob:3099/books");
+      expect(fetchSpy.mock.calls[0][1].method).toBe("POST");
+      expect(result).toHaveLength(1);
+    });
+  });
+
+  // ── getSpread ──────────────────────────────────────────────────────────
+
+  describe("getSpread()", () => {
+    it("sends GET to /spread with token_id query param", async () => {
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue({ spread: "0.0200" }),
+      });
+      const result = await svc.getSpread("tok-yes");
+      expect(fetchSpy.mock.calls[0][0]).toBe(
+        "http://clob:3099/spread?token_id=tok-yes",
+      );
+      expect(result.spread).toBe("0.0200");
+    });
+
+    it("throws on non-OK response", async () => {
+      fetchSpy.mockResolvedValue({
+        ok: false,
+        status: 500,
+        text: vi.fn().mockResolvedValue("error"),
+      });
+      await expect(svc.getSpread("bad")).rejects.toThrow("500");
+    });
+  });
+
+  // ── getMidpoint ────────────────────────────────────────────────────────
+
+  describe("getMidpoint()", () => {
+    it("sends GET to /midpoint with token_id query param", async () => {
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue({ mid: "0.5500" }),
+      });
+      const result = await svc.getMidpoint("tok-yes");
+      expect(fetchSpy.mock.calls[0][0]).toBe(
+        "http://clob:3099/midpoint?token_id=tok-yes",
+      );
+      expect(result.mid).toBe("0.5500");
+    });
+  });
+
+  // ── getPricesHistory ───────────────────────────────────────────────────
+
+  describe("getPricesHistory()", () => {
+    it("sends GET to /prices-history with params", async () => {
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue({
+          history: [{ t: 123, p: "0.55" }],
+        }),
+      });
+      const result = await svc.getPricesHistory("tok-yes", "1h", 60);
+      expect(fetchSpy.mock.calls[0][0]).toContain("/prices-history?");
+      expect(fetchSpy.mock.calls[0][0]).toContain("token_id=tok-yes");
+      expect(fetchSpy.mock.calls[0][0]).toContain("interval=1h");
+      expect(fetchSpy.mock.calls[0][0]).toContain("fidelity=60");
+      expect(result.history).toHaveLength(1);
+    });
+
+    it("omits optional params when not provided", async () => {
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue({ history: [] }),
+      });
+      await svc.getPricesHistory("tok-yes");
+      expect(fetchSpy.mock.calls[0][0]).not.toContain("interval=");
+    });
+  });
+
+  // ── getBatchPricesHistory ──────────────────────────────────────────────
+
+  describe("getBatchPricesHistory()", () => {
+    it("POSTs to /batch-prices-history", async () => {
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue({ "tok-1": [{ t: 1, p: "0.5" }] }),
+      });
+      const result = await svc.getBatchPricesHistory(["tok-1"], "1h", 30);
+      expect(fetchSpy.mock.calls[0][0]).toBe(
+        "http://clob:3099/batch-prices-history",
+      );
+      expect(fetchSpy.mock.calls[0][1].method).toBe("POST");
+      expect(result["tok-1"]).toHaveLength(1);
+    });
+  });
+
+  // ── submitBatchOrders ──────────────────────────────────────────────────
+
+  describe("submitBatchOrders()", () => {
+    it("POSTs to /orders with order array", async () => {
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue([
+          { orderID: "o1", status: "PENDING" },
+        ]),
+      });
+      const result = await svc.submitBatchOrders([
+        {
+          order: { tokenId: "tok", price: "0.5", size: "10" },
+          builderHeaders: { "POLY-API-KEY": "k" },
+        },
+      ]);
+      expect(fetchSpy.mock.calls[0][0]).toBe("http://clob:3099/orders");
+      expect(fetchSpy.mock.calls[0][1].method).toBe("POST");
+      expect(result).toHaveLength(1);
+    });
+
+    it("throws if batch exceeds 15 orders", async () => {
+      const orders = Array.from({ length: 16 }, () => ({
+        order: { tokenId: "tok" },
+        builderHeaders: {},
+      }));
+      await expect(svc.submitBatchOrders(orders)).rejects.toThrow(
+        "Batch order limit is 15",
+      );
+    });
+  });
+
+  // ── cancelOrders ──────────────────────────────────────────────────────
+
+  describe("cancelOrders()", () => {
+    it("sends DELETE to /orders with order ID array", async () => {
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue({ cancelled: ["o1", "o2"] }),
+      });
+      const result = await svc.cancelOrders(["o1", "o2"], "api-key");
+      expect(fetchSpy.mock.calls[0][0]).toBe("http://clob:3099/orders");
+      expect(fetchSpy.mock.calls[0][1].method).toBe("DELETE");
+      expect(fetchSpy.mock.calls[0][1].headers["POLY-API-KEY"]).toBe(
+        "api-key",
+      );
+      expect(result.cancelled).toEqual(["o1", "o2"]);
+    });
+
+    it("throws if bulk cancel exceeds 3000 orders", async () => {
+      const ids = Array.from({ length: 3001 }, (_, i) => `o${i}`);
+      await expect(svc.cancelOrders(ids, "key")).rejects.toThrow(
+        "Bulk cancel limit is 3000",
+      );
+    });
+  });
+
   // ── URL config ────────────────────────────────────────────────────────────
 
   describe("URL configuration", () => {

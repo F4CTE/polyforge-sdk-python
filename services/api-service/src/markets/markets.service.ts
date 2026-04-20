@@ -6,13 +6,20 @@ import {
 } from "@nestjs/common";
 import { PrismaService } from "@polyforge/shared-db";
 import { Prisma } from "@prisma/client";
+import { ConfigService } from "@nestjs/config";
 import { RedisService } from "@polyforge/shared-redis";
 import { paginate, PaginatedResponse } from "../common/dto/pagination.dto";
-import { MarketQueryDto, PriceHistoryQueryDto } from "./dto/market-query.dto";
+import {
+  MarketQueryDto,
+  PriceHistoryQueryDto,
+  ClobPriceHistoryQueryDto,
+} from "./dto/market-query.dto";
 
 @Injectable()
 export class MarketsService implements OnModuleInit {
   private readonly logger = new Logger(MarketsService.name);
+  private readonly clobUrl: string;
+  private readonly gammaUrl: string;
 
   // Whitelist of allowed ORDER BY expressions - SQL injection protection
   private readonly allowedSortColumns = new Map<string, string>([
@@ -27,7 +34,13 @@ export class MarketsService implements OnModuleInit {
   constructor(
     private readonly prisma: PrismaService,
     private readonly redis: RedisService,
-  ) {}
+    private readonly config: ConfigService,
+  ) {
+    this.clobUrl =
+      this.config.get<string>("CLOB_API_URL") ?? "http://mock-polymarket:3099";
+    this.gammaUrl =
+      this.config.get<string>("GAMMA_API_URL") ?? "http://localhost:3096";
+  }
 
   /** Pre-warm the Redis cache with the first page of markets on startup */
   async onModuleInit() {
@@ -319,5 +332,213 @@ export class MarketsService implements OnModuleInit {
       midpoint,
       timestamp: book.timestamp ?? Date.now(),
     };
+  }
+
+  async tickSize(
+    tokenId: string,
+  ): Promise<{ tokenId: string; tickSize: string; feeRate: string }> {
+    const cacheKey = `cache:ticksize:${tokenId}`;
+    const cached = await this.redis.get(cacheKey);
+    if (cached) {
+      try {
+        return JSON.parse(cached);
+      } catch {
+        // no-op
+      }
+    }
+
+    const [tickRes, feeRes] = await Promise.all([
+      fetch(`${this.clobUrl}/tick-size/${encodeURIComponent(tokenId)}`, {
+        signal: AbortSignal.timeout(10_000),
+      }),
+      fetch(`${this.clobUrl}/fee-rate/${encodeURIComponent(tokenId)}`, {
+        signal: AbortSignal.timeout(10_000),
+      }),
+    ]);
+
+    const tickSize = tickRes.ok ? String(await tickRes.json()) : "0.01";
+    const feeRate = feeRes.ok ? String(await feeRes.json()) : "0";
+
+    const result = { tokenId, tickSize, feeRate };
+    await this.redis.set(cacheKey, JSON.stringify(result), 600);
+
+    return result;
+  }
+
+  async spread(
+    tokenId: string,
+  ): Promise<{ tokenId: string; spread: string }> {
+    const cacheKey = `cache:spread:${tokenId}`;
+    const cached = await this.redis.get(cacheKey);
+    if (cached) {
+      try {
+        return JSON.parse(cached);
+      } catch {
+        // no-op
+      }
+    }
+
+    const res = await fetch(
+      `${this.clobUrl}/spread?token_id=${encodeURIComponent(tokenId)}`,
+      { signal: AbortSignal.timeout(10_000) },
+    );
+
+    if (!res.ok) {
+      this.logger.warn(`CLOB spread returned ${res.status}`);
+      return { tokenId, spread: "0" };
+    }
+
+    const data = (await res.json()) as { spread: string };
+    const result = { tokenId, spread: data.spread ?? "0" };
+    await this.redis.set(cacheKey, JSON.stringify(result), 10);
+    return result;
+  }
+
+  async midpoint(
+    tokenId: string,
+  ): Promise<{ tokenId: string; midpoint: string }> {
+    const cacheKey = `cache:midpoint:${tokenId}`;
+    const cached = await this.redis.get(cacheKey);
+    if (cached) {
+      try {
+        return JSON.parse(cached);
+      } catch {
+        // no-op
+      }
+    }
+
+    const res = await fetch(
+      `${this.clobUrl}/midpoint?token_id=${encodeURIComponent(tokenId)}`,
+      { signal: AbortSignal.timeout(10_000) },
+    );
+
+    if (!res.ok) {
+      this.logger.warn(`CLOB midpoint returned ${res.status}`);
+      return { tokenId, midpoint: "0" };
+    }
+
+    const data = (await res.json()) as { mid: string };
+    const result = { tokenId, midpoint: data.mid ?? "0" };
+    await this.redis.set(cacheKey, JSON.stringify(result), 10);
+    return result;
+  }
+
+  async clobBook(tokenId: string): Promise<{
+    tokenId: string;
+    bids: unknown[];
+    asks: unknown[];
+    spread: string;
+    midpoint: string;
+    timestamp: number;
+  }> {
+    const cacheKey = `cache:clobbook:${tokenId}`;
+    const cached = await this.redis.get(cacheKey);
+    if (cached) {
+      try {
+        return JSON.parse(cached);
+      } catch {
+        // no-op
+      }
+    }
+
+    const res = await fetch(
+      `${this.clobUrl}/book?token_id=${encodeURIComponent(tokenId)}`,
+      { signal: AbortSignal.timeout(10_000) },
+    );
+
+    if (!res.ok) {
+      this.logger.warn(`CLOB book returned ${res.status}`);
+      return { tokenId, bids: [], asks: [], spread: "0", midpoint: "0", timestamp: Date.now() };
+    }
+
+    const data = (await res.json()) as {
+      bids?: unknown[];
+      asks?: unknown[];
+      spread?: string;
+      midpoint?: string;
+      timestamp?: number;
+    };
+
+    const result = {
+      tokenId,
+      bids: data.bids ?? [],
+      asks: data.asks ?? [],
+      spread: data.spread ?? "0",
+      midpoint: data.midpoint ?? "0",
+      timestamp: data.timestamp ?? Date.now(),
+    };
+
+    await this.redis.set(cacheKey, JSON.stringify(result), 5);
+    return result;
+  }
+
+  async clobPricesHistory(
+    tokenId: string,
+    query: ClobPriceHistoryQueryDto,
+  ): Promise<{ tokenId: string; interval: string; history: unknown[] }> {
+    const { interval = "1h", fidelity = 60 } = query;
+    const cacheKey = `cache:clobprices:${tokenId}:${interval}:${fidelity}`;
+    const cached = await this.redis.get(cacheKey);
+    if (cached) {
+      try {
+        return JSON.parse(cached);
+      } catch {
+        // no-op
+      }
+    }
+
+    const params = new URLSearchParams({
+      token_id: tokenId,
+      interval,
+      fidelity: String(fidelity),
+    });
+
+    const res = await fetch(`${this.clobUrl}/prices-history?${params.toString()}`, {
+      signal: AbortSignal.timeout(10_000),
+    });
+
+    if (!res.ok) {
+      this.logger.warn(`CLOB prices-history returned ${res.status}`);
+      return { tokenId, interval, history: [] };
+    }
+
+    const data = (await res.json()) as { history?: unknown[] };
+    const result = {
+      tokenId,
+      interval,
+      history: data.history ?? [],
+    };
+
+    await this.redis.set(cacheKey, JSON.stringify(result), 30);
+    return result;
+  }
+
+  async search(query: {
+    q: string;
+    limit?: number;
+  }): Promise<{ results: unknown[] }> {
+    const cacheKey = `cache:markets:search:${query.q}:${query.limit ?? 20}`;
+    const cached = await this.redis.get(cacheKey);
+    if (cached) {
+      try {
+        return JSON.parse(cached);
+      } catch {
+        // no-op
+      }
+    }
+
+    const url = `${this.gammaUrl}/public-search?q=${encodeURIComponent(query.q)}&limit=${query.limit ?? 20}`;
+    const res = await fetch(url, { signal: AbortSignal.timeout(10_000) });
+
+    if (!res.ok) {
+      this.logger.warn(`Gamma public-search returned ${res.status}`);
+      return { results: [] };
+    }
+
+    const body = (await res.json()) as unknown[];
+    const result = { results: Array.isArray(body) ? body : [] };
+    await this.redis.set(cacheKey, JSON.stringify(result), 300);
+
+    return result;
   }
 }

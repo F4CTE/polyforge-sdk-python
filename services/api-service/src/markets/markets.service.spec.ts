@@ -3,6 +3,7 @@ import { NotFoundException } from "@nestjs/common";
 import { MarketsService } from "./markets.service";
 import { createMockDb, MockDb } from "../../test/helpers/mock-db";
 import { RedisService } from "@polyforge/shared-redis";
+import { ConfigService } from "@nestjs/config";
 
 // ─── Factories ────────────────────────────────────────────────────────────────
 
@@ -67,7 +68,10 @@ describe("MarketsService", () => {
         set: vi.fn(),
       }),
     } as unknown as RedisService;
-    service = new MarketsService(db as any, redis);
+    const config = {
+      get: vi.fn().mockReturnValue(undefined),
+    } as unknown as ConfigService;
+    service = new MarketsService(db as any, redis, config);
   });
 
   afterEach(() => {
@@ -459,6 +463,350 @@ describe("MarketsService", () => {
       await service.orderBook("token-uuid-abc");
 
       expect(redis.get).toHaveBeenCalledWith("cache:book:token-uuid-abc");
+    });
+  });
+
+  // ── tickSize ──────────────────────────────────────────────────────────
+
+  describe("tickSize", () => {
+    let fetchSpy: ReturnType<typeof vi.fn>;
+
+    beforeEach(() => {
+      fetchSpy = vi.fn();
+      vi.stubGlobal("fetch", fetchSpy);
+    });
+
+    afterEach(() => {
+      vi.unstubAllGlobals();
+    });
+
+    it("returns tick size and fee rate from CLOB API", async () => {
+      fetchSpy
+        .mockResolvedValueOnce({
+          ok: true,
+          json: vi.fn().mockResolvedValue("0.01"),
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: vi.fn().mockResolvedValue("0.002"),
+        });
+
+      const result = await service.tickSize("token-1");
+      expect(result).toEqual({
+        tokenId: "token-1",
+        tickSize: "0.01",
+        feeRate: "0.002",
+      });
+    });
+
+    it("caches result in Redis with 600s TTL", async () => {
+      fetchSpy
+        .mockResolvedValueOnce({
+          ok: true,
+          json: vi.fn().mockResolvedValue("0.01"),
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: vi.fn().mockResolvedValue("0"),
+        });
+
+      await service.tickSize("token-1");
+      expect(redis.set).toHaveBeenCalledWith(
+        "cache:ticksize:token-1",
+        expect.any(String),
+        600,
+      );
+    });
+
+    it("returns cached result when available", async () => {
+      const cached = { tokenId: "token-1", tickSize: "0.001", feeRate: "0.01" };
+      (redis.get as any).mockResolvedValue(JSON.stringify(cached));
+
+      const result = await service.tickSize("token-1");
+      expect(result).toEqual(cached);
+      expect(fetchSpy).not.toHaveBeenCalled();
+    });
+
+    it("defaults to 0.01 tick size on CLOB error", async () => {
+      fetchSpy
+        .mockResolvedValueOnce({ ok: false, status: 500 })
+        .mockResolvedValueOnce({ ok: false, status: 500 });
+
+      const result = await service.tickSize("token-1");
+      expect(result.tickSize).toBe("0.01");
+      expect(result.feeRate).toBe("0");
+    });
+  });
+
+  // ── search ────────────────────────────────────────────────────────────
+
+  describe("search", () => {
+    let fetchSpy: ReturnType<typeof vi.fn>;
+
+    beforeEach(() => {
+      fetchSpy = vi.fn();
+      vi.stubGlobal("fetch", fetchSpy);
+    });
+
+    afterEach(() => {
+      vi.unstubAllGlobals();
+    });
+
+    it("proxies to Gamma public-search endpoint", async () => {
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue([]),
+      });
+
+      await service.search({ q: "bitcoin" });
+
+      expect(fetchSpy.mock.calls[0][0]).toContain("/public-search?q=bitcoin");
+    });
+
+    it("returns search results from Gamma", async () => {
+      const markets = [{ id: "m1", title: "Bitcoin $100k" }];
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue(markets),
+      });
+
+      const result = await service.search({ q: "bitcoin" });
+      expect(result).toEqual({ results: markets });
+    });
+
+    it("caches search results in Redis with 300s TTL", async () => {
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue([]),
+      });
+
+      await service.search({ q: "bitcoin" });
+      expect(redis.set).toHaveBeenCalledWith(
+        expect.stringContaining("cache:markets:search:bitcoin"),
+        expect.any(String),
+        300,
+      );
+    });
+
+    it("returns empty results on Gamma API failure", async () => {
+      fetchSpy.mockResolvedValue({ ok: false, status: 500 });
+
+      const result = await service.search({ q: "bitcoin" });
+      expect(result).toEqual({ results: [] });
+    });
+  });
+
+  // ── spread ───────────────────────────────────────────────────────────
+
+  describe("spread", () => {
+    let fetchSpy: ReturnType<typeof vi.fn>;
+
+    beforeEach(() => {
+      fetchSpy = vi.fn();
+      vi.stubGlobal("fetch", fetchSpy);
+    });
+
+    afterEach(() => {
+      vi.unstubAllGlobals();
+    });
+
+    it("fetches spread from CLOB /spread endpoint", async () => {
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue({ spread: "0.0200" }),
+      });
+
+      const result = await service.spread("token-1");
+      expect(fetchSpy.mock.calls[0][0]).toContain("/spread?token_id=token-1");
+      expect(result).toEqual({ tokenId: "token-1", spread: "0.0200" });
+    });
+
+    it("returns cached spread when available", async () => {
+      const cached = { tokenId: "token-1", spread: "0.0100" };
+      (redis.get as any).mockResolvedValue(JSON.stringify(cached));
+
+      const result = await service.spread("token-1");
+      expect(result).toEqual(cached);
+    });
+
+    it('returns spread "0" on CLOB failure', async () => {
+      fetchSpy.mockResolvedValue({ ok: false, status: 500 });
+
+      const result = await service.spread("token-1");
+      expect(result.spread).toBe("0");
+    });
+
+    it("caches spread with 10s TTL", async () => {
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue({ spread: "0.0200" }),
+      });
+
+      await service.spread("token-1");
+      expect(redis.set).toHaveBeenCalledWith(
+        "cache:spread:token-1",
+        expect.any(String),
+        10,
+      );
+    });
+  });
+
+  // ── midpoint ────────────────────────────────────────────────────────
+
+  describe("midpoint", () => {
+    let fetchSpy: ReturnType<typeof vi.fn>;
+
+    beforeEach(() => {
+      fetchSpy = vi.fn();
+      vi.stubGlobal("fetch", fetchSpy);
+    });
+
+    afterEach(() => {
+      vi.unstubAllGlobals();
+    });
+
+    it("fetches midpoint from CLOB /midpoint endpoint", async () => {
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue({ mid: "0.5500" }),
+      });
+
+      const result = await service.midpoint("token-1");
+      expect(fetchSpy.mock.calls[0][0]).toContain("/midpoint?token_id=token-1");
+      expect(result).toEqual({ tokenId: "token-1", midpoint: "0.5500" });
+    });
+
+    it("returns cached midpoint when available", async () => {
+      const cached = { tokenId: "token-1", midpoint: "0.6000" };
+      (redis.get as any).mockResolvedValue(JSON.stringify(cached));
+
+      const result = await service.midpoint("token-1");
+      expect(result).toEqual(cached);
+    });
+
+    it('returns midpoint "0" on CLOB failure', async () => {
+      fetchSpy.mockResolvedValue({ ok: false, status: 500 });
+
+      const result = await service.midpoint("token-1");
+      expect(result.midpoint).toBe("0");
+    });
+  });
+
+  // ── clobBook ────────────────────────────────────────────────────────
+
+  describe("clobBook", () => {
+    let fetchSpy: ReturnType<typeof vi.fn>;
+
+    beforeEach(() => {
+      fetchSpy = vi.fn();
+      vi.stubGlobal("fetch", fetchSpy);
+    });
+
+    afterEach(() => {
+      vi.unstubAllGlobals();
+    });
+
+    it("fetches book from CLOB /book endpoint", async () => {
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue({
+          bids: [{ price: "0.55", size: "100" }],
+          asks: [{ price: "0.57", size: "200" }],
+          spread: "0.0200",
+          midpoint: "0.5600",
+          timestamp: 1234567890,
+        }),
+      });
+
+      const result = await service.clobBook("token-1");
+      expect(fetchSpy.mock.calls[0][0]).toContain("/book?token_id=token-1");
+      expect(result.bids).toHaveLength(1);
+      expect(result.spread).toBe("0.0200");
+    });
+
+    it("returns empty book on CLOB failure", async () => {
+      fetchSpy.mockResolvedValue({ ok: false, status: 500 });
+
+      const result = await service.clobBook("token-1");
+      expect(result.bids).toEqual([]);
+      expect(result.asks).toEqual([]);
+      expect(result.spread).toBe("0");
+    });
+
+    it("returns cached book when available", async () => {
+      const cached = {
+        tokenId: "token-1",
+        bids: [{ price: "0.55", size: "100" }],
+        asks: [],
+        spread: "0.01",
+        midpoint: "0.55",
+        timestamp: 123,
+      };
+      (redis.get as any).mockResolvedValue(JSON.stringify(cached));
+
+      const result = await service.clobBook("token-1");
+      expect(result).toEqual(cached);
+    });
+  });
+
+  // ── clobPricesHistory ───────────────────────────────────────────────
+
+  describe("clobPricesHistory", () => {
+    let fetchSpy: ReturnType<typeof vi.fn>;
+
+    beforeEach(() => {
+      fetchSpy = vi.fn();
+      vi.stubGlobal("fetch", fetchSpy);
+    });
+
+    afterEach(() => {
+      vi.unstubAllGlobals();
+    });
+
+    it("fetches prices history from CLOB /prices-history endpoint", async () => {
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue({
+          history: [{ t: 123, p: "0.55" }],
+        }),
+      });
+
+      const result = await service.clobPricesHistory("token-1", {
+        interval: "1h",
+        fidelity: 60,
+      });
+      expect(fetchSpy.mock.calls[0][0]).toContain("/prices-history?");
+      expect(fetchSpy.mock.calls[0][0]).toContain("token_id=token-1");
+      expect(result.history).toHaveLength(1);
+    });
+
+    it("returns empty history on CLOB failure", async () => {
+      fetchSpy.mockResolvedValue({ ok: false, status: 500 });
+
+      const result = await service.clobPricesHistory("token-1", {});
+      expect(result.history).toEqual([]);
+    });
+
+    it("caches prices history with 30s TTL", async () => {
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue({ history: [] }),
+      });
+
+      await service.clobPricesHistory("token-1", { interval: "1h", fidelity: 60 });
+      expect(redis.set).toHaveBeenCalledWith(
+        "cache:clobprices:token-1:1h:60",
+        expect.any(String),
+        30,
+      );
+    });
+
+    it("returns cached result when available", async () => {
+      const cached = { tokenId: "token-1", interval: "1h", history: [{ t: 1, p: "0.5" }] };
+      (redis.get as any).mockResolvedValue(JSON.stringify(cached));
+
+      const result = await service.clobPricesHistory("token-1", { interval: "1h" });
+      expect(result).toEqual(cached);
     });
   });
 });
