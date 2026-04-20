@@ -219,13 +219,16 @@
   /* Focus ring — charter §13 */
   --shadow-focus-ring: 0 0 0 3px var(--accent-subtle);
 
-  /* Radius — charter §5 (4/6/8/10/12px) */
-  --radius-xs: 4px;
-  --radius-sm: 6px;
+  /* Radius — charter §10: rounded-xs (2px), rounded-sm (4px), rounded-pf (8px), rounded-full */
+  --radius-xs: 2px;
+  --radius-sm: 4px;
   --radius-md: 8px;
-  --radius-lg: 10px;
-  --radius-xl: 12px;
-  /* PolyForge default component radius — maps to --radius-md */
+  /* DEPRECATED: --radius-lg and --radius-xl are not charter-compliant.
+     Use --radius-pf (8px) instead. These aliases exist only to avoid
+     breaking 392 existing usages — see POLA-263 for the migration. */
+  --radius-lg: 8px;
+  --radius-xl: 8px;
+  /* PolyForge default component radius — maps to --radius-md (8px) */
   --radius-pf: var(--radius-md);
 
   /* Type scale — charter §2 */

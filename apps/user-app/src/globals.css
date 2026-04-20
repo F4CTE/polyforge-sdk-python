@@ -45,12 +45,12 @@
 .react-flow__node.selected > div {
   outline: 2px solid var(--accent-default);
   outline-offset: 2px;
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-pf);
 }
 
 /* ─── Minimap polish ─────────────────────────────────────────────────────── */
 .react-flow__minimap {
-  border-radius: 12px !important;
+  border-radius: var(--radius-pf) !important;
   border: 1px solid var(--border-subtle) !important;
   box-shadow: 0 4px 24px color-mix(in srgb, black 25%, transparent), 0 0 0 1px color-mix(in srgb, white 4%, transparent) !important;
   overflow: hidden !important;
