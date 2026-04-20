@@ -11,6 +11,7 @@ on:
 # if a malicious PR manages to execute code on the self-hosted runner.
 permissions:
   contents: read
+  pull-requests: read
 
 # Per-branch concurrency: a new push to the SAME branch cancels its previous run,
 # but different branches queue independently instead of killing each other.
@@ -29,6 +30,46 @@ env:
   ADMIN_DIRECT_DATABASE_URL: 'postgresql://ci:ci@localhost:5432/ci_admin'
 
 jobs:
+  # ── 0. Detect changed paths ────────────────────────────────────────────
+  # Determines whether the PR touches application code. Non-code-only PRs
+  # (docs, markdown, CI config, scripts, legal text) skip the expensive
+  # deploy-dev → E2E chain while fast gates still run.
+  # Push-to-main and workflow_dispatch always run everything.
+  changes:
+    name: Detect changes
+    runs-on: [self-hosted, linux]
+    if: github.event_name == 'pull_request'
+    outputs:
+      code: ${{ steps.filter.outputs.code }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            code:
+              - 'packages/**'
+              - 'services/**'
+              - 'apps/**'
+              - 'prisma/**'
+              - 'tests/**'
+              - 'docker-compose*.yml'
+              - 'Dockerfile*'
+              - 'pnpm-lock.yaml'
+              - 'package.json'
+              - 'turbo.json'
+              - 'tsconfig*.json'
+              - 'vite.config.*'
+              - 'playwright.config.*'
+              - 'tailwind.config.*'
+              - 'postcss.config.*'
+              - 'eslint.config.*'
+              - '.env.example'
+              - 'nest-cli.json'
+              - 'rust/**'
+              - 'wasm/**'
+
   # ── 1a. Lint (parallel) ─────────────────────────────────────────────────
   lint:
     name: Lint
@@ -114,9 +155,11 @@ jobs:
   # incrementally, restart services, run migrations, and verify health.
   deploy-dev:
     name: Deploy to Dev
-    if: github.event_name != 'push'
+    if: >-
+      github.event_name != 'push' &&
+      (needs.changes.result == 'skipped' || needs.changes.outputs.code == 'true')
     runs-on: [self-hosted, linux]
-    needs: [build]
+    needs: [build, changes]
     timeout-minutes: 20
     # Serialize deploy across all branches — only one branch can deploy at a time.
     # Other branches wait (no cancel) so their pipeline resumes after the current one finishes.
