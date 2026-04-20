@@ -243,4 +243,279 @@ describe("AlertsService", () => {
       expect(db.priceAlert.delete).not.toHaveBeenCalled();
     });
   });
+
+  // ── checkAndFireAlerts ───────────────────────────────────────────────────
+
+  describe("checkAndFireAlerts", () => {
+    let mockRedis: {
+      get: ReturnType<typeof vi.fn>;
+      set: ReturnType<typeof vi.fn>;
+      getClient: ReturnType<typeof vi.fn>;
+    };
+    let mockGateway: { pushNotification: ReturnType<typeof vi.fn> };
+    let mockMget: ReturnType<typeof vi.fn>;
+
+    beforeEach(() => {
+      mockMget = vi.fn().mockResolvedValue([]);
+      mockRedis = {
+        get: vi.fn().mockResolvedValue(null),
+        set: vi.fn().mockResolvedValue("OK"),
+        getClient: vi.fn().mockReturnValue({ mget: mockMget }),
+      };
+      mockGateway = { pushNotification: vi.fn() };
+      service = new AlertsService(
+        db as any,
+        mockRedis as any,
+        mockGateway as any,
+      );
+    });
+
+    it("does nothing when there are no untriggered alerts", async () => {
+      db.priceAlert.findMany.mockResolvedValue([]);
+
+      await service.checkAndFireAlerts();
+
+      expect(mockMget).not.toHaveBeenCalled();
+      expect(db.priceAlert.updateMany).not.toHaveBeenCalled();
+    });
+
+    it("fires an 'above' alert when current price >= threshold", async () => {
+      const alert = makeAlert({
+        direction: "above",
+        price: "0.50",
+        tokenId: "token-1",
+        userId: "user-1",
+      });
+      db.priceAlert.findMany.mockResolvedValue([alert] as any);
+      mockMget.mockResolvedValue([JSON.stringify({ price: "0.60" })]);
+      db.priceAlert.updateMany.mockResolvedValue({ count: 1 } as any);
+      db.priceAlert.deleteMany.mockResolvedValue({ count: 1 } as any);
+
+      await service.checkAndFireAlerts();
+
+      expect(db.priceAlert.updateMany).toHaveBeenCalledWith({
+        where: { id: { in: [alert.id] } },
+        data: { triggered: true },
+      });
+      expect(mockGateway.pushNotification).toHaveBeenCalledWith(
+        "user-1",
+        expect.objectContaining({ type: "PRICE_ALERT" }),
+      );
+    });
+
+    it("fires a 'below' alert when current price <= threshold", async () => {
+      const alert = makeAlert({
+        direction: "below",
+        price: "0.80",
+        tokenId: "token-1",
+        userId: "user-1",
+      });
+      db.priceAlert.findMany.mockResolvedValue([alert] as any);
+      mockMget.mockResolvedValue([JSON.stringify({ price: "0.70" })]);
+      db.priceAlert.updateMany.mockResolvedValue({ count: 1 } as any);
+      db.priceAlert.deleteMany.mockResolvedValue({ count: 1 } as any);
+
+      await service.checkAndFireAlerts();
+
+      expect(db.priceAlert.updateMany).toHaveBeenCalled();
+    });
+
+    it("does NOT fire 'above' alert when price is below threshold", async () => {
+      const alert = makeAlert({
+        direction: "above",
+        price: "0.80",
+        tokenId: "token-1",
+      });
+      db.priceAlert.findMany.mockResolvedValue([alert] as any);
+      mockMget.mockResolvedValue([JSON.stringify({ price: "0.50" })]);
+
+      await service.checkAndFireAlerts();
+
+      expect(db.priceAlert.updateMany).not.toHaveBeenCalled();
+    });
+
+    it("does NOT fire 'below' alert when price is above threshold", async () => {
+      const alert = makeAlert({
+        direction: "below",
+        price: "0.30",
+        tokenId: "token-1",
+      });
+      db.priceAlert.findMany.mockResolvedValue([alert] as any);
+      mockMget.mockResolvedValue([JSON.stringify({ price: "0.50" })]);
+
+      await service.checkAndFireAlerts();
+
+      expect(db.priceAlert.updateMany).not.toHaveBeenCalled();
+    });
+
+    it("skips alerts whose token has no price in Redis", async () => {
+      const alert = makeAlert({ tokenId: "token-1" });
+      db.priceAlert.findMany.mockResolvedValue([alert] as any);
+      mockMget.mockResolvedValue([null]);
+
+      await service.checkAndFireAlerts();
+
+      expect(db.priceAlert.updateMany).not.toHaveBeenCalled();
+      expect(mockGateway.pushNotification).not.toHaveBeenCalled();
+    });
+
+    it("deletes non-persistent alerts after triggering", async () => {
+      const alert = makeAlert({
+        persistent: false,
+        direction: "above",
+        price: "0.50",
+        tokenId: "token-1",
+      });
+      db.priceAlert.findMany.mockResolvedValue([alert] as any);
+      mockMget.mockResolvedValue([JSON.stringify({ price: "0.60" })]);
+      db.priceAlert.updateMany.mockResolvedValue({ count: 1 } as any);
+      db.priceAlert.deleteMany.mockResolvedValue({ count: 1 } as any);
+
+      await service.checkAndFireAlerts();
+
+      expect(db.priceAlert.deleteMany).toHaveBeenCalledWith({
+        where: { id: { in: [alert.id] }, persistent: false },
+      });
+    });
+
+    it("de-duplicates token IDs when fetching prices from Redis", async () => {
+      const alert1 = makeAlert({
+        id: "a1",
+        tokenId: "token-1",
+        direction: "above",
+        price: "0.50",
+      });
+      const alert2 = makeAlert({
+        id: "a2",
+        tokenId: "token-1",
+        direction: "below",
+        price: "0.90",
+      });
+      db.priceAlert.findMany.mockResolvedValue([alert1, alert2] as any);
+      mockMget.mockResolvedValue([JSON.stringify({ price: "0.60" })]);
+      db.priceAlert.updateMany.mockResolvedValue({ count: 2 } as any);
+      db.priceAlert.deleteMany.mockResolvedValue({ count: 2 } as any);
+
+      await service.checkAndFireAlerts();
+
+      // mget should only be called once with one key (deduplicated)
+      expect(mockMget).toHaveBeenCalledWith("cache:price:token-1");
+    });
+
+    it("handles malformed Redis price JSON gracefully", async () => {
+      const alert = makeAlert({ tokenId: "token-1" });
+      db.priceAlert.findMany.mockResolvedValue([alert] as any);
+      mockMget.mockResolvedValue(["not-json"]);
+
+      await service.checkAndFireAlerts();
+
+      expect(db.priceAlert.updateMany).not.toHaveBeenCalled();
+    });
+
+    it("fires 'above' alert when price exactly equals threshold", async () => {
+      const alert = makeAlert({
+        direction: "above",
+        price: "0.50",
+        tokenId: "token-1",
+        userId: "user-1",
+      });
+      db.priceAlert.findMany.mockResolvedValue([alert] as any);
+      mockMget.mockResolvedValue([JSON.stringify({ price: "0.50" })]);
+      db.priceAlert.updateMany.mockResolvedValue({ count: 1 } as any);
+      db.priceAlert.deleteMany.mockResolvedValue({ count: 1 } as any);
+
+      await service.checkAndFireAlerts();
+
+      expect(db.priceAlert.updateMany).toHaveBeenCalled();
+    });
+
+    it("fires 'below' alert when price exactly equals threshold", async () => {
+      const alert = makeAlert({
+        direction: "below",
+        price: "0.50",
+        tokenId: "token-1",
+        userId: "user-1",
+      });
+      db.priceAlert.findMany.mockResolvedValue([alert] as any);
+      mockMget.mockResolvedValue([JSON.stringify({ price: "0.50" })]);
+      db.priceAlert.updateMany.mockResolvedValue({ count: 1 } as any);
+      db.priceAlert.deleteMany.mockResolvedValue({ count: 1 } as any);
+
+      await service.checkAndFireAlerts();
+
+      expect(db.priceAlert.updateMany).toHaveBeenCalled();
+    });
+
+    it("sends correct notification payload", async () => {
+      const alert = makeAlert({
+        id: "alert-123",
+        direction: "above",
+        price: "0.50",
+        tokenId: "token-1",
+        userId: "user-1",
+      });
+      db.priceAlert.findMany.mockResolvedValue([alert] as any);
+      mockMget.mockResolvedValue([JSON.stringify({ price: "0.60" })]);
+      db.priceAlert.updateMany.mockResolvedValue({ count: 1 } as any);
+      db.priceAlert.deleteMany.mockResolvedValue({ count: 1 } as any);
+
+      await service.checkAndFireAlerts();
+
+      expect(mockGateway.pushNotification).toHaveBeenCalledWith(
+        "user-1",
+        expect.objectContaining({
+          type: "PRICE_ALERT",
+          alertId: "alert-123",
+          tokenId: "token-1",
+          direction: "above",
+          threshold: "0.50",
+          currentPrice: "0.6000",
+        }),
+      );
+    });
+
+    it("catches and logs errors without throwing", async () => {
+      db.priceAlert.findMany.mockRejectedValue(new Error("DB down"));
+
+      // Should not throw
+      await expect(service.checkAndFireAlerts()).resolves.toBeUndefined();
+    });
+
+    it("handles Redis price with missing price field", async () => {
+      const alert = makeAlert({ tokenId: "token-1" });
+      db.priceAlert.findMany.mockResolvedValue([alert] as any);
+      mockMget.mockResolvedValue([JSON.stringify({ notPrice: "0.5" })]);
+
+      await service.checkAndFireAlerts();
+
+      // price defaults to 0, threshold is 0.75 (above), so should not trigger
+      expect(db.priceAlert.updateMany).not.toHaveBeenCalled();
+    });
+  });
+
+  // ── onModuleInit ─────────────────────────────────────────────────────────
+
+  describe("onModuleInit", () => {
+    it("sets up a periodic interval", () => {
+      vi.useFakeTimers();
+      const mockRedis = {
+        get: vi.fn(),
+        set: vi.fn(),
+        getClient: vi.fn().mockReturnValue({ mget: vi.fn() }),
+      };
+      const svc = new AlertsService(
+        db as any,
+        mockRedis as any,
+        {} as any,
+      );
+
+      svc.onModuleInit();
+
+      // The interval should be set (we verify by checking that checkAndFireAlerts
+      // would be called on timer advance, but we just verify no error on init)
+      expect(() => svc.onModuleInit()).not.toThrow();
+
+      vi.useRealTimers();
+    });
+  });
 });

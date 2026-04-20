@@ -461,5 +461,397 @@ describe("SettingsService", () => {
       const call = db.notificationPreference.upsert.mock.calls[0][0];
       expect(call.update).not.toHaveProperty("emailDigest");
     });
+
+    it("upserts without preferences when not provided", async () => {
+      db.notificationPreference.upsert.mockResolvedValue({
+        eventPrefs: [],
+        emailDigest: "WEEKLY",
+      } as any);
+
+      await service.updateEventNotifications("user-uuid-1", {
+        emailDigest: "WEEKLY",
+      });
+
+      const call = db.notificationPreference.upsert.mock.calls[0][0];
+      expect(call.update).not.toHaveProperty("eventPrefs");
+      expect(call.update).toHaveProperty("emailDigest", "WEEKLY");
+    });
+
+    it("returns empty preferences when eventPrefs is null", async () => {
+      db.notificationPreference.upsert.mockResolvedValue({
+        eventPrefs: null,
+        emailDigest: "DAILY",
+      } as any);
+
+      const result = await service.updateEventNotifications("user-uuid-1", {
+        emailDigest: "DAILY",
+      });
+
+      expect(result.preferences).toEqual([]);
+    });
+  });
+
+  // ── getNotifications ─────────────────────────────────────────────────────
+
+  describe("getNotifications", () => {
+    it("returns stored notification preferences when row exists", async () => {
+      const prefs = {
+        emailEnabled: true,
+        telegramEnabled: true,
+        discordEnabled: false,
+        onOrderFilled: true,
+        onStrategyError: false,
+        onBacktestComplete: true,
+        onDailyLossLimit: false,
+        onMarketResolved: true,
+        onSomeoneFelked: false,
+        onSomeoneFollowed: true,
+        onSomeoneLiked: false,
+        onSomeoneCommented: true,
+      };
+      db.notificationPreference.findUnique.mockResolvedValue(prefs as any);
+
+      const result = await service.getNotifications("user-uuid-1");
+
+      expect(result).toEqual(prefs);
+    });
+
+    it("returns defaults when no row exists", async () => {
+      db.notificationPreference.findUnique.mockResolvedValue(null);
+
+      const result = await service.getNotifications("user-uuid-1");
+
+      expect(result.emailEnabled).toBe(true);
+      expect(result.telegramEnabled).toBe(false);
+      expect(result.discordEnabled).toBe(false);
+      expect(result.onOrderFilled).toBe(true);
+      expect(result.onStrategyError).toBe(true);
+      expect(result.onBacktestComplete).toBe(true);
+      expect(result.onDailyLossLimit).toBe(true);
+      expect(result.onMarketResolved).toBe(true);
+      expect(result.onSomeoneFelked).toBe(false);
+      expect(result.onSomeoneFollowed).toBe(false);
+      expect(result.onSomeoneLiked).toBe(false);
+      expect(result.onSomeoneCommented).toBe(false);
+    });
+
+    it("queries by userId", async () => {
+      db.notificationPreference.findUnique.mockResolvedValue(null);
+
+      await service.getNotifications("user-uuid-1");
+
+      expect(db.notificationPreference.findUnique).toHaveBeenCalledWith({
+        where: { userId: "user-uuid-1" },
+      });
+    });
+  });
+
+  // ── getRiskSettings ──────────────────────────────────────────────────────
+
+  describe("getRiskSettings", () => {
+    it("returns stored risk settings", async () => {
+      db.userLimit.findUnique.mockResolvedValue({
+        drawdownEnabled: true,
+        drawdownLookbackHours: 48,
+        drawdownThresholdPct: "0.15",
+        circuitBreakerTripped: false,
+        circuitBreakerTrippedAt: null,
+      } as any);
+
+      const result = await service.getRiskSettings("user-uuid-1");
+
+      expect(result.drawdownEnabled).toBe(true);
+      expect(result.drawdownLookbackHours).toBe(48);
+      expect(result.drawdownThresholdPct).toBe(0.15);
+      expect(result.circuitBreakerTripped).toBe(false);
+      expect(result.circuitBreakerTrippedAt).toBeNull();
+    });
+
+    it("returns defaults when no row exists", async () => {
+      db.userLimit.findUnique.mockResolvedValue(null);
+
+      const result = await service.getRiskSettings("user-uuid-1");
+
+      expect(result.drawdownEnabled).toBe(false);
+      expect(result.drawdownLookbackHours).toBe(24);
+      expect(result.drawdownThresholdPct).toBe(0.1);
+      expect(result.circuitBreakerTripped).toBe(false);
+      expect(result.circuitBreakerTrippedAt).toBeNull();
+    });
+
+    it("parses drawdownThresholdPct from string to number", async () => {
+      db.userLimit.findUnique.mockResolvedValue({
+        drawdownThresholdPct: "0.25",
+      } as any);
+
+      const result = await service.getRiskSettings("user-uuid-1");
+
+      expect(typeof result.drawdownThresholdPct).toBe("number");
+      expect(result.drawdownThresholdPct).toBe(0.25);
+    });
+  });
+
+  // ── updateRiskSettings ───────────────────────────────────────────────────
+
+  describe("updateRiskSettings", () => {
+    it("upserts and returns updated risk settings", async () => {
+      db.userLimit.upsert.mockResolvedValue({} as any);
+      db.userLimit.findUnique.mockResolvedValue({
+        drawdownEnabled: true,
+        drawdownLookbackHours: 12,
+        drawdownThresholdPct: "0.05",
+        circuitBreakerTripped: false,
+        circuitBreakerTrippedAt: null,
+      } as any);
+
+      const result = await service.updateRiskSettings("user-uuid-1", {
+        drawdownEnabled: true,
+        drawdownLookbackHours: 12,
+        drawdownThresholdPct: 0.05,
+      });
+
+      expect(result.drawdownEnabled).toBe(true);
+      expect(result.drawdownLookbackHours).toBe(12);
+    });
+
+    it("only includes defined fields in the upsert data", async () => {
+      db.userLimit.upsert.mockResolvedValue({} as any);
+      db.userLimit.findUnique.mockResolvedValue(null);
+
+      await service.updateRiskSettings("user-uuid-1", {
+        drawdownEnabled: true,
+      });
+
+      const call = db.userLimit.upsert.mock.calls[0][0];
+      expect(call.update).toHaveProperty("drawdownEnabled", true);
+      expect(call.update).not.toHaveProperty("drawdownLookbackHours");
+      expect(call.update).not.toHaveProperty("drawdownThresholdPct");
+    });
+
+    it("passes correct where clause with userId", async () => {
+      db.userLimit.upsert.mockResolvedValue({} as any);
+      db.userLimit.findUnique.mockResolvedValue(null);
+
+      await service.updateRiskSettings("user-uuid-1", {
+        drawdownEnabled: false,
+      });
+
+      expect(db.userLimit.upsert).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { userId: "user-uuid-1" },
+          create: expect.objectContaining({ userId: "user-uuid-1" }),
+        }),
+      );
+    });
+  });
+
+  // ── resetCircuitBreaker ──────────────────────────────────────────────────
+
+  describe("resetCircuitBreaker", () => {
+    it("resets circuit breaker and returns { reset: true }", async () => {
+      db.userLimit.upsert.mockResolvedValue({} as any);
+      const mockDel = vi.fn().mockResolvedValue(1);
+      mockRedis.getClient.mockReturnValue({ del: mockDel });
+
+      const result = await service.resetCircuitBreaker("user-uuid-1");
+
+      expect(result).toEqual({ reset: true });
+    });
+
+    it("upserts with circuitBreakerTripped false and null timestamp", async () => {
+      db.userLimit.upsert.mockResolvedValue({} as any);
+      mockRedis.getClient.mockReturnValue({ del: vi.fn() });
+
+      await service.resetCircuitBreaker("user-uuid-1");
+
+      expect(db.userLimit.upsert).toHaveBeenCalledWith({
+        where: { userId: "user-uuid-1" },
+        create: {
+          userId: "user-uuid-1",
+          circuitBreakerTripped: false,
+          circuitBreakerTrippedAt: null,
+        },
+        update: {
+          circuitBreakerTripped: false,
+          circuitBreakerTrippedAt: null,
+        },
+      });
+    });
+
+    it("deletes the Redis debounce key", async () => {
+      db.userLimit.upsert.mockResolvedValue({} as any);
+      const mockDel = vi.fn().mockResolvedValue(1);
+      mockRedis.getClient.mockReturnValue({ del: mockDel });
+
+      await service.resetCircuitBreaker("user-uuid-1");
+
+      expect(mockDel).toHaveBeenCalledWith("cb:tripped:user-uuid-1");
+    });
+
+    it("still returns { reset: true } when Redis del fails", async () => {
+      db.userLimit.upsert.mockResolvedValue({} as any);
+      mockRedis.getClient.mockReturnValue({
+        del: vi.fn().mockRejectedValue(new Error("Redis down")),
+      });
+
+      const result = await service.resetCircuitBreaker("user-uuid-1");
+
+      expect(result).toEqual({ reset: true });
+    });
+  });
+
+  // ── getBetaUsage ─────────────────────────────────────────────────────────
+
+  describe("getBetaUsage", () => {
+    it("returns all beta usage metrics", async () => {
+      db.strategy.count.mockResolvedValue(2);
+      db.order.aggregate.mockResolvedValue({ _sum: { size: 1500 } } as any);
+      db.backtestRun.count.mockResolvedValue(1);
+      db.marketplaceListing.count.mockResolvedValue(0);
+
+      const result = await service.getBetaUsage("user-uuid-1");
+
+      expect(result.strategies.used).toBe(2);
+      expect(result.strategies.limit).toBe(3);
+      expect(result.monthlyVolume.usedUsdc).toBe(1500);
+      expect(result.monthlyVolume.limitUsdc).toBe(5000);
+      expect(result.positionSize.maxUsdc).toBe(500);
+      expect(result.backtests.runningOrQueued).toBe(1);
+      expect(result.backtests.maxConcurrent).toBe(1);
+      expect(result.marketplaceListings.used).toBe(0);
+      expect(result.marketplaceListings.limit).toBe(2);
+    });
+
+    it("returns 0 volume when no orders exist", async () => {
+      db.strategy.count.mockResolvedValue(0);
+      db.order.aggregate.mockResolvedValue({ _sum: { size: null } } as any);
+      db.backtestRun.count.mockResolvedValue(0);
+      db.marketplaceListing.count.mockResolvedValue(0);
+
+      const result = await service.getBetaUsage("user-uuid-1");
+
+      expect(result.monthlyVolume.usedUsdc).toBe(0);
+    });
+
+    it("queries strategies excluding ARCHIVED status", async () => {
+      db.strategy.count.mockResolvedValue(0);
+      db.order.aggregate.mockResolvedValue({ _sum: { size: null } } as any);
+      db.backtestRun.count.mockResolvedValue(0);
+      db.marketplaceListing.count.mockResolvedValue(0);
+
+      await service.getBetaUsage("user-uuid-1");
+
+      expect(db.strategy.count).toHaveBeenCalledWith({
+        where: { userId: "user-uuid-1", status: { not: "ARCHIVED" } },
+      });
+    });
+
+    it("queries orders with CONFIRMED status in current month", async () => {
+      db.strategy.count.mockResolvedValue(0);
+      db.order.aggregate.mockResolvedValue({ _sum: { size: null } } as any);
+      db.backtestRun.count.mockResolvedValue(0);
+      db.marketplaceListing.count.mockResolvedValue(0);
+
+      await service.getBetaUsage("user-uuid-1");
+
+      expect(db.order.aggregate).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            userId: "user-uuid-1",
+            status: "CONFIRMED",
+          }),
+        }),
+      );
+    });
+
+    it("queries backtests with RUNNING or QUEUED status", async () => {
+      db.strategy.count.mockResolvedValue(0);
+      db.order.aggregate.mockResolvedValue({ _sum: { size: null } } as any);
+      db.backtestRun.count.mockResolvedValue(0);
+      db.marketplaceListing.count.mockResolvedValue(0);
+
+      await service.getBetaUsage("user-uuid-1");
+
+      expect(db.backtestRun.count).toHaveBeenCalledWith({
+        where: {
+          userId: "user-uuid-1",
+          status: { in: ["RUNNING", "QUEUED"] },
+        },
+      });
+    });
+
+    it("queries marketplace listings excluding DELISTED", async () => {
+      db.strategy.count.mockResolvedValue(0);
+      db.order.aggregate.mockResolvedValue({ _sum: { size: null } } as any);
+      db.backtestRun.count.mockResolvedValue(0);
+      db.marketplaceListing.count.mockResolvedValue(0);
+
+      await service.getBetaUsage("user-uuid-1");
+
+      expect(db.marketplaceListing.count).toHaveBeenCalledWith({
+        where: {
+          sellerId: "user-uuid-1",
+          status: { notIn: ["DELISTED"] },
+        },
+      });
+    });
+  });
+
+  // ── updatePassword Redis side effects ────────────────────────────────────
+
+  describe("updatePassword — Redis side effects", () => {
+    it("sets pwchange key in Redis after successful password change", async () => {
+      const hash = await bcrypt.hash("OldPassw0rd!", 10);
+      db.user.findUniqueOrThrow.mockResolvedValue({
+        passwordHash: hash,
+      } as any);
+      db.user.update.mockResolvedValue({} as any);
+
+      await service.updatePassword(
+        "user-uuid-1",
+        makeUpdatePasswordDto() as any,
+      );
+
+      expect(mockRedis.set).toHaveBeenCalledWith(
+        "pwchange:user-uuid-1",
+        expect.any(String),
+        300,
+      );
+    });
+
+    it("scans and deletes refresh tokens after password change", async () => {
+      const hash = await bcrypt.hash("OldPassw0rd!", 10);
+      db.user.findUniqueOrThrow.mockResolvedValue({
+        passwordHash: hash,
+      } as any);
+      db.user.update.mockResolvedValue({} as any);
+
+      await service.updatePassword(
+        "user-uuid-1",
+        makeUpdatePasswordDto() as any,
+      );
+
+      const client = mockRedis.getClient();
+      expect(client.scanStream).toHaveBeenCalledWith({
+        match: "refresh:user-uuid-1:*",
+        count: 100,
+      });
+    });
+
+    it("still returns success when Redis set fails", async () => {
+      const hash = await bcrypt.hash("OldPassw0rd!", 10);
+      db.user.findUniqueOrThrow.mockResolvedValue({
+        passwordHash: hash,
+      } as any);
+      db.user.update.mockResolvedValue({} as any);
+      mockRedis.set.mockRejectedValue(new Error("Redis down"));
+
+      const result = await service.updatePassword(
+        "user-uuid-1",
+        makeUpdatePasswordDto() as any,
+      );
+
+      expect(result).toEqual({ message: "Password updated" });
+    });
   });
 });

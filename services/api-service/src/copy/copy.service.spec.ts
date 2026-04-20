@@ -237,6 +237,242 @@ describe("CopyService", () => {
         "Config is already stopped",
       );
     });
+
+    it("stops a PAUSED config", async () => {
+      prisma.copyConfig.findUnique.mockResolvedValue({
+        id: "cfg-1",
+        userId: "user-1",
+        status: "PAUSED",
+      });
+      prisma.copyConfig.update.mockResolvedValue({
+        id: "cfg-1",
+        status: "STOPPED",
+        stoppedAt: new Date(),
+      });
+
+      const result = await service.stop("cfg-1", "user-1");
+
+      expect(result.status).toBe("STOPPED");
+    });
+  });
+
+  describe("getDetail", () => {
+    it("returns config with trades when owned by user", async () => {
+      prisma.copyConfig.findUnique.mockResolvedValue({
+        id: "cfg-1",
+        userId: "user-1",
+        targetWallet: "0xabc",
+        status: "ACTIVE",
+        trades: [{ id: "trade-1" }],
+      });
+
+      const result = await service.getDetail("cfg-1", "user-1");
+
+      expect(result.id).toBe("cfg-1");
+      expect(result.trades).toHaveLength(1);
+    });
+
+    it("throws NotFoundException when config does not exist", async () => {
+      prisma.copyConfig.findUnique.mockResolvedValue(null);
+
+      await expect(service.getDetail("cfg-missing", "user-1")).rejects.toThrow(
+        "Copy config not found",
+      );
+    });
+
+    it("throws ForbiddenException when user does not own the config", async () => {
+      prisma.copyConfig.findUnique.mockResolvedValue({
+        id: "cfg-1",
+        userId: "user-2",
+        status: "ACTIVE",
+      });
+
+      await expect(service.getDetail("cfg-1", "user-1")).rejects.toThrow();
+    });
+  });
+
+  describe("update", () => {
+    it("updates mode and sizeValue", async () => {
+      prisma.copyConfig.findUnique.mockResolvedValue({
+        id: "cfg-1",
+        userId: "user-1",
+        status: "ACTIVE",
+      });
+      prisma.copyConfig.update.mockResolvedValue({
+        id: "cfg-1",
+        mode: "FIXED",
+        sizeValue: new Prisma.Decimal(200),
+      });
+
+      const result = await service.update("cfg-1", "user-1", {
+        mode: "FIXED" as any,
+        sizeValue: "200",
+      });
+
+      expect(result.mode).toBe("FIXED");
+      expect(prisma.copyConfig.update).toHaveBeenCalledWith({
+        where: { id: "cfg-1" },
+        data: expect.objectContaining({
+          mode: "FIXED",
+        }),
+      });
+    });
+
+    it("updates maxExposure and maxDailyLoss", async () => {
+      prisma.copyConfig.findUnique.mockResolvedValue({
+        id: "cfg-1",
+        userId: "user-1",
+        status: "ACTIVE",
+      });
+      prisma.copyConfig.update.mockResolvedValue({ id: "cfg-1" });
+
+      await service.update("cfg-1", "user-1", {
+        maxExposure: "5000",
+        maxDailyLoss: "200",
+      });
+
+      const updateCall = prisma.copyConfig.update.mock.calls[0][0];
+      expect(updateCall.data.maxExposure).toBeDefined();
+      expect(updateCall.data.maxDailyLoss).toBeDefined();
+    });
+
+    it("updates priceOffset when set to 0", async () => {
+      prisma.copyConfig.findUnique.mockResolvedValue({
+        id: "cfg-1",
+        userId: "user-1",
+        status: "ACTIVE",
+      });
+      prisma.copyConfig.update.mockResolvedValue({ id: "cfg-1" });
+
+      await service.update("cfg-1", "user-1", {
+        priceOffset: "0",
+      });
+
+      const updateCall = prisma.copyConfig.update.mock.calls[0][0];
+      expect(updateCall.data.priceOffset).toBeDefined();
+    });
+
+    it("throws NotFoundException when config does not exist", async () => {
+      prisma.copyConfig.findUnique.mockResolvedValue(null);
+
+      await expect(
+        service.update("cfg-missing", "user-1", { mode: "FIXED" as any }),
+      ).rejects.toThrow("Copy config not found");
+    });
+
+    it("throws ForbiddenException when user does not own config", async () => {
+      prisma.copyConfig.findUnique.mockResolvedValue({
+        id: "cfg-1",
+        userId: "user-2",
+        status: "ACTIVE",
+      });
+
+      await expect(
+        service.update("cfg-1", "user-1", { mode: "FIXED" as any }),
+      ).rejects.toThrow();
+    });
+  });
+
+  describe("getTrades", () => {
+    it("returns paginated trades with meta", async () => {
+      prisma.copyConfig.findUnique.mockResolvedValue({
+        id: "cfg-1",
+        userId: "user-1",
+        status: "ACTIVE",
+      });
+      prisma.copyTrade.findMany.mockResolvedValue([
+        { id: "trade-1" },
+        { id: "trade-2" },
+      ]);
+      prisma.copyTrade.count.mockResolvedValue(25);
+
+      const result = await service.getTrades("cfg-1", "user-1", 1, 20);
+
+      expect(result.data).toHaveLength(2);
+      expect(result.page).toBe(1);
+      expect(result.limit).toBe(20);
+      expect(result.total).toBe(25);
+      expect(result.totalPages).toBe(2);
+    });
+
+    it("calculates correct skip for page 3", async () => {
+      prisma.copyConfig.findUnique.mockResolvedValue({
+        id: "cfg-1",
+        userId: "user-1",
+        status: "ACTIVE",
+      });
+      prisma.copyTrade.findMany.mockResolvedValue([]);
+      prisma.copyTrade.count.mockResolvedValue(0);
+
+      await service.getTrades("cfg-1", "user-1", 3, 10);
+
+      expect(prisma.copyTrade.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ skip: 20, take: 10 }),
+      );
+    });
+
+    it("throws NotFoundException for non-existent config", async () => {
+      prisma.copyConfig.findUnique.mockResolvedValue(null);
+
+      await expect(
+        service.getTrades("cfg-missing", "user-1", 1, 20),
+      ).rejects.toThrow("Copy config not found");
+    });
+
+    it("throws ForbiddenException when user does not own config", async () => {
+      prisma.copyConfig.findUnique.mockResolvedValue({
+        id: "cfg-1",
+        userId: "user-2",
+        status: "ACTIVE",
+      });
+
+      await expect(
+        service.getTrades("cfg-1", "user-1", 1, 20),
+      ).rejects.toThrow();
+    });
+  });
+
+  describe("create with optional fields", () => {
+    it("passes sizeValue, maxExposure, maxDailyLoss, and priceOffset to create", async () => {
+      prisma.copyConfig.count.mockResolvedValue(0);
+      prisma.copyConfig.findUnique.mockResolvedValue(null);
+      prisma.copyConfig.create.mockResolvedValue({
+        id: "cfg-1",
+        userId: "user-1",
+        targetWallet: "0xabc",
+        mode: "FIXED",
+        status: "ACTIVE",
+      });
+
+      await service.create("user-1", {
+        targetWallet: "0xabc",
+        mode: "FIXED" as any,
+        sizeValue: "100",
+        maxExposure: "5000",
+        maxDailyLoss: "200",
+        priceOffset: "5",
+      });
+
+      const createCall = prisma.copyConfig.create.mock.calls[0][0];
+      expect(createCall.data.sizeValue).toBeDefined();
+      expect(createCall.data.maxExposure).toBeDefined();
+      expect(createCall.data.maxDailyLoss).toBeDefined();
+      expect(createCall.data.priceOffset).toBeDefined();
+    });
+
+    it("rejects duplicate wallet with PAUSED config", async () => {
+      prisma.copyConfig.count.mockResolvedValue(1);
+      prisma.copyConfig.findUnique.mockResolvedValue({
+        id: "cfg-existing",
+        status: "PAUSED",
+      });
+
+      await expect(
+        service.create("user-1", { targetWallet: "0xabc" }),
+      ).rejects.toThrow(
+        "You already have an active copy config for this wallet",
+      );
+    });
   });
 });
 
@@ -542,6 +778,276 @@ describe("CopyEngineService", () => {
       expect(parseFloat(createCall.data.copiedPrice.toString())).toBeCloseTo(
         0.525,
       );
+    });
+  });
+
+  describe("handleWhaleTrade error handling", () => {
+    it("emits COPY_TRADE_FAILED event when processCopyForConfig throws", async () => {
+      const config = {
+        id: "cfg-1",
+        userId: "user-1",
+        targetWallet: "0xwhale",
+        mode: "PERCENTAGE",
+        sizeValue: new Prisma.Decimal(10),
+        maxExposure: new Prisma.Decimal(10000),
+        maxDailyLoss: new Prisma.Decimal(1000),
+        priceOffset: new Prisma.Decimal(0),
+        status: "ACTIVE",
+      };
+
+      prisma.copyConfig.findMany.mockResolvedValue([config]);
+      // Force processCopyForConfig to throw by making incrbyfloat reject
+      redis.getClient().incrbyfloat.mockRejectedValue(new Error("Redis down"));
+      redis.xadd.mockResolvedValue("ok");
+
+      await engine.handleWhaleTrade({
+        walletAddress: "0xwhale",
+        marketId: "mkt-1",
+        tokenId: "tok-1",
+        side: "BUY",
+        outcome: "YES",
+        notional: "5000",
+        price: "0.5",
+      });
+
+      expect(redis.xadd).toHaveBeenCalledWith(
+        "stream:events",
+        expect.objectContaining({
+          type: "COPY_TRADE_FAILED",
+          userId: "user-1",
+          configId: "cfg-1",
+          error: "Copy trade failed",
+        }),
+      );
+    });
+
+    it("ignores events with no walletAddress", async () => {
+      await engine.handleWhaleTrade({ type: "WHALE_TRADE" });
+
+      expect(prisma.copyConfig.findMany).not.toHaveBeenCalled();
+    });
+
+    it("processes multiple configs and continues even if one fails", async () => {
+      const config1 = {
+        id: "cfg-1",
+        userId: "user-1",
+        targetWallet: "0xwhale",
+        mode: "FIXED",
+        sizeValue: new Prisma.Decimal(100),
+        maxExposure: new Prisma.Decimal(10000),
+        maxDailyLoss: new Prisma.Decimal(1000),
+        priceOffset: new Prisma.Decimal(0),
+        status: "ACTIVE",
+      };
+      const config2 = {
+        id: "cfg-2",
+        userId: "user-2",
+        targetWallet: "0xwhale",
+        mode: "FIXED",
+        sizeValue: new Prisma.Decimal(50),
+        maxExposure: new Prisma.Decimal(10000),
+        maxDailyLoss: new Prisma.Decimal(1000),
+        priceOffset: new Prisma.Decimal(0),
+        status: "ACTIVE",
+      };
+
+      prisma.copyConfig.findMany.mockResolvedValue([config1, config2]);
+
+      let callCount = 0;
+      redis.getClient().incrbyfloat.mockImplementation(async () => {
+        callCount++;
+        if (callCount === 1) throw new Error("Redis error");
+        return "50";
+      });
+      redis.get.mockResolvedValue("0");
+      prisma.copyTrade.findMany.mockResolvedValue([]);
+      prisma.copyTrade.create.mockResolvedValue({ id: "trade-2" });
+      prisma.copyConfig.update.mockResolvedValue({});
+      redis.xadd.mockResolvedValue("ok");
+
+      await engine.handleWhaleTrade({
+        walletAddress: "0xwhale",
+        marketId: "mkt-1",
+        tokenId: "tok-1",
+        side: "BUY",
+        outcome: "YES",
+        notional: "1000",
+        price: "0.5",
+      });
+
+      // First config failed, but second should be attempted
+      // redis.xadd should have been called for the failure notification at minimum
+      expect(redis.xadd).toHaveBeenCalled();
+    });
+  });
+
+  describe("processCopyForConfig edge cases", () => {
+    it("skips trade when copiedSize is 0 (unknown mode)", async () => {
+      const config = {
+        id: "cfg-1",
+        userId: "user-1",
+        targetWallet: "0xwhale",
+        mode: "UNKNOWN_MODE",
+        sizeValue: new Prisma.Decimal(10),
+        maxExposure: new Prisma.Decimal(10000),
+        maxDailyLoss: new Prisma.Decimal(1000),
+        priceOffset: new Prisma.Decimal(0),
+        status: "ACTIVE",
+      };
+
+      redis.get.mockResolvedValue("0");
+      redis.getClient().incrbyfloat.mockResolvedValue("0.1");
+
+      await engine.processCopyForConfig(
+        config as unknown as CopyConfig,
+        {
+          walletAddress: "0xwhale",
+          marketId: "mkt-1",
+          tokenId: "tok-1",
+          side: "BUY",
+          outcome: "YES",
+        },
+        1000,
+        0.5,
+      );
+
+      expect(prisma.copyTrade.create).not.toHaveBeenCalled();
+    });
+
+    it("publishes ORDER_INTENT to stream:orders after creating trade", async () => {
+      const config = {
+        id: "cfg-1",
+        userId: "user-1",
+        targetWallet: "0xwhale",
+        mode: "FIXED",
+        sizeValue: new Prisma.Decimal(100),
+        maxExposure: new Prisma.Decimal(50000),
+        maxDailyLoss: new Prisma.Decimal(5000),
+        priceOffset: new Prisma.Decimal(0),
+        status: "ACTIVE",
+      };
+
+      redis.get.mockResolvedValue("0");
+      prisma.copyTrade.findMany.mockResolvedValue([]);
+      prisma.copyTrade.create.mockResolvedValue({
+        id: "trade-1",
+        configId: "cfg-1",
+      });
+      prisma.copyConfig.update.mockResolvedValue({});
+      redis.xadd.mockResolvedValue("ok");
+
+      await engine.processCopyForConfig(
+        config as unknown as CopyConfig,
+        {
+          walletAddress: "0xwhale",
+          marketId: "mkt-1",
+          tokenId: "tok-1",
+          side: "BUY",
+          outcome: "YES",
+          txHash: "0xtx123",
+        },
+        1000,
+        0.5,
+      );
+
+      // xadd should be called twice: once for ORDER_INTENT, once for COPY_TRADE_EXECUTED
+      expect(redis.xadd).toHaveBeenCalledWith(
+        "stream:orders",
+        expect.objectContaining({
+          type: "ORDER_INTENT",
+          userId: "user-1",
+          source: "copy-engine",
+          copyTradeId: "trade-1",
+        }),
+      );
+
+      expect(redis.xadd).toHaveBeenCalledWith(
+        "stream:events",
+        expect.objectContaining({
+          type: "COPY_TRADE_EXECUTED",
+          userId: "user-1",
+          configId: "cfg-1",
+          tradeId: "trade-1",
+        }),
+      );
+    });
+
+    it("increments totalCopied on the config after trade", async () => {
+      const config = {
+        id: "cfg-1",
+        userId: "user-1",
+        targetWallet: "0xwhale",
+        mode: "FIXED",
+        sizeValue: new Prisma.Decimal(100),
+        maxExposure: new Prisma.Decimal(50000),
+        maxDailyLoss: new Prisma.Decimal(5000),
+        priceOffset: new Prisma.Decimal(0),
+        status: "ACTIVE",
+      };
+
+      redis.get.mockResolvedValue("0");
+      prisma.copyTrade.findMany.mockResolvedValue([]);
+      prisma.copyTrade.create.mockResolvedValue({
+        id: "trade-1",
+        configId: "cfg-1",
+      });
+      prisma.copyConfig.update.mockResolvedValue({});
+      redis.xadd.mockResolvedValue("ok");
+
+      await engine.processCopyForConfig(
+        config as unknown as CopyConfig,
+        {
+          walletAddress: "0xwhale",
+          marketId: "mkt-1",
+          tokenId: "tok-1",
+          side: "BUY",
+          outcome: "YES",
+        },
+        1000,
+        0.5,
+      );
+
+      expect(prisma.copyConfig.update).toHaveBeenCalledWith({
+        where: { id: "cfg-1" },
+        data: { totalCopied: { increment: 1 } },
+      });
+    });
+
+    it("rolls back daily loss counter when limit exceeded", async () => {
+      const config = {
+        id: "cfg-1",
+        userId: "user-1",
+        targetWallet: "0xwhale",
+        mode: "FIXED",
+        sizeValue: new Prisma.Decimal(100),
+        maxExposure: new Prisma.Decimal(10000),
+        maxDailyLoss: new Prisma.Decimal(100),
+        priceOffset: new Prisma.Decimal(0),
+        status: "ACTIVE",
+      };
+
+      // incrbyfloat returns value above daily loss limit
+      redis.getClient().incrbyfloat.mockResolvedValue("250");
+
+      await engine.processCopyForConfig(
+        config as unknown as CopyConfig,
+        {
+          walletAddress: "0xwhale",
+          marketId: "mkt-1",
+          tokenId: "tok-1",
+          side: "BUY",
+          outcome: "YES",
+        },
+        1000,
+        0.5,
+      );
+
+      // Should have rolled back the increment
+      const incrbyfloatCalls = redis.getClient().incrbyfloat.mock.calls;
+      expect(incrbyfloatCalls.length).toBeGreaterThanOrEqual(2);
+      // Second call should be a negative rollback
+      expect(incrbyfloatCalls[1][1]).toBeLessThan(0);
+      expect(prisma.copyTrade.create).not.toHaveBeenCalled();
     });
   });
 });

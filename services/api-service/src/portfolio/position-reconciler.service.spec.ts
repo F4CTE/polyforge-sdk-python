@@ -237,6 +237,71 @@ describe("PositionReconcilerService", () => {
 
   // ── Does not modify position that already matches ──────────────────────
 
+  it("sends WebSocket notification when position is resolved", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => [
+          { asset: "token-xyz", size: "0", avgPrice: "0.50", realizedPnl: "25.00" },
+        ],
+      }),
+    );
+
+    prisma.position.findMany.mockResolvedValue([
+      {
+        id: "pos-1",
+        tokenId: "token-xyz",
+        marketId: "mkt-1",
+        outcome: "YES",
+        resolutionStatus: "UNRESOLVED",
+      },
+    ]);
+
+    await svc.reconcileUser("user-1", "0xWallet");
+
+    expect(gateway.pushNotification).toHaveBeenCalledWith(
+      "user-1",
+      expect.objectContaining({
+        type: "MARKET_RESOLVED",
+        positionId: "pos-1",
+        tokenId: "token-xyz",
+        realizedPnl: "25.00",
+      }),
+    );
+  });
+
+  it("returns early when no users have unresolved positions", async () => {
+    prisma.position.findMany.mockResolvedValueOnce([]);
+
+    await svc.reconcile();
+
+    // Should not query users at all
+    expect(prisma.user.findMany).not.toHaveBeenCalled();
+  });
+
+  it("handles missing realizedPnl in polymarket data (defaults to '0')", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => [
+          { asset: "token-abc", size: "50", avgPrice: "0.65" },
+        ],
+      }),
+    );
+
+    prisma.position.findMany.mockResolvedValue([]);
+
+    await svc.reconcileUser("user-1", "0xWallet");
+
+    expect(prisma.position.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        realizedPnl: "0",
+      }),
+    });
+  });
+
   it("does not modify position that already matches Polymarket", async () => {
     vi.stubGlobal(
       "fetch",

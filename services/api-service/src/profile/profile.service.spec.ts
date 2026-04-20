@@ -2,9 +2,11 @@ import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import {
   NotFoundException,
   UnprocessableEntityException,
+  BadRequestException,
 } from "@nestjs/common";
 import { ProfileService } from "./profile.service";
 import { createMockDb, MockDb } from "../../test/helpers/mock-db";
+import * as bcrypt from "bcrypt";
 
 // ─── Factories ────────────────────────────────────────────────────────────────
 
@@ -281,6 +283,235 @@ describe("ProfileService", () => {
 
       expect(db.follow.create).not.toHaveBeenCalled();
       expect(db.follow.delete).not.toHaveBeenCalled();
+    });
+  });
+
+  // ── updateProfile ────────────────────────────────────────────────────────
+
+  describe("updateProfile", () => {
+    it("updates and returns selected fields", async () => {
+      const updated = {
+        displayName: "New Name",
+        bio: "Updated bio",
+        avatarUrl: "https://example.com/new.png",
+      };
+      db.user.update.mockResolvedValue(updated as any);
+
+      const result = await service.updateProfile("user-uuid-1", {
+        displayName: "New Name",
+        bio: "Updated bio",
+        avatarUrl: "https://example.com/new.png",
+      });
+
+      expect(result).toEqual(updated);
+    });
+
+    it("truncates displayName to 50 characters", async () => {
+      db.user.update.mockResolvedValue({} as any);
+      const longName = "A".repeat(100);
+
+      await service.updateProfile("user-uuid-1", { displayName: longName });
+
+      const dataArg = db.user.update.mock.calls[0][0]?.data;
+      expect((dataArg.displayName as string).length).toBe(50);
+    });
+
+    it("truncates bio to 500 characters", async () => {
+      db.user.update.mockResolvedValue({} as any);
+      const longBio = "B".repeat(1000);
+
+      await service.updateProfile("user-uuid-1", { bio: longBio });
+
+      const dataArg = db.user.update.mock.calls[0][0]?.data;
+      expect((dataArg.bio as string).length).toBe(500);
+    });
+
+    it("truncates avatarUrl to 500 characters", async () => {
+      db.user.update.mockResolvedValue({} as any);
+      const longUrl = "https://example.com/" + "x".repeat(600);
+
+      await service.updateProfile("user-uuid-1", { avatarUrl: longUrl });
+
+      const dataArg = db.user.update.mock.calls[0][0]?.data;
+      expect((dataArg.avatarUrl as string).length).toBe(500);
+    });
+
+    it("only includes fields that are defined", async () => {
+      db.user.update.mockResolvedValue({} as any);
+
+      await service.updateProfile("user-uuid-1", { displayName: "Test" });
+
+      const dataArg = db.user.update.mock.calls[0][0]?.data;
+      expect(dataArg).toHaveProperty("displayName", "Test");
+      expect(dataArg).not.toHaveProperty("bio");
+      expect(dataArg).not.toHaveProperty("avatarUrl");
+    });
+
+    it("includes fields set to empty string", async () => {
+      db.user.update.mockResolvedValue({} as any);
+
+      await service.updateProfile("user-uuid-1", {
+        displayName: "",
+        bio: "",
+        avatarUrl: "",
+      });
+
+      const dataArg = db.user.update.mock.calls[0][0]?.data;
+      expect(dataArg.displayName).toBe("");
+      expect(dataArg.bio).toBe("");
+      expect(dataArg.avatarUrl).toBe("");
+    });
+
+    it("selects only displayName, bio, and avatarUrl", async () => {
+      db.user.update.mockResolvedValue({} as any);
+
+      await service.updateProfile("user-uuid-1", { displayName: "X" });
+
+      expect(db.user.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          select: { displayName: true, bio: true, avatarUrl: true },
+        }),
+      );
+    });
+
+    it("passes no data keys when dto has no defined fields", async () => {
+      db.user.update.mockResolvedValue({} as any);
+
+      await service.updateProfile("user-uuid-1", {});
+
+      const dataArg = db.user.update.mock.calls[0][0]?.data;
+      expect(Object.keys(dataArg)).toHaveLength(0);
+    });
+  });
+
+  // ── changePassword ───────────────────────────────────────────────────────
+
+  describe("changePassword", () => {
+    it("changes password and returns success message", async () => {
+      const hash = await bcrypt.hash("OldPass123!", 10);
+      db.user.findUnique.mockResolvedValue({ passwordHash: hash } as any);
+      db.user.update.mockResolvedValue({} as any);
+
+      const result = await service.changePassword("user-uuid-1", {
+        currentPassword: "OldPass123!",
+        newPassword: "NewPass123!",
+      });
+
+      expect(result).toEqual({ message: "Password changed" });
+    });
+
+    it("hashes the new password with bcrypt before storing", async () => {
+      const hash = await bcrypt.hash("OldPass123!", 10);
+      db.user.findUnique.mockResolvedValue({ passwordHash: hash } as any);
+      db.user.update.mockResolvedValue({} as any);
+
+      await service.changePassword("user-uuid-1", {
+        currentPassword: "OldPass123!",
+        newPassword: "NewPass123!",
+      });
+
+      const newHash = db.user.update.mock.calls[0][0]?.data
+        .passwordHash as string;
+      expect(await bcrypt.compare("NewPass123!", newHash)).toBe(true);
+    });
+
+    it("throws NotFoundException when user does not exist", async () => {
+      db.user.findUnique.mockResolvedValue(null);
+
+      await expect(
+        service.changePassword("user-uuid-1", {
+          currentPassword: "X",
+          newPassword: "Y1234567",
+        }),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it("throws BadRequestException when current password is incorrect", async () => {
+      const hash = await bcrypt.hash("Correct123!", 10);
+      db.user.findUnique.mockResolvedValue({ passwordHash: hash } as any);
+
+      await expect(
+        service.changePassword("user-uuid-1", {
+          currentPassword: "Wrong123!",
+          newPassword: "NewPass123!",
+        }),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it("throws BadRequestException when new password is shorter than 8 characters", async () => {
+      const hash = await bcrypt.hash("OldPass123!", 10);
+      db.user.findUnique.mockResolvedValue({ passwordHash: hash } as any);
+
+      await expect(
+        service.changePassword("user-uuid-1", {
+          currentPassword: "OldPass123!",
+          newPassword: "short",
+        }),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it("does NOT update when current password is wrong", async () => {
+      const hash = await bcrypt.hash("Correct123!", 10);
+      db.user.findUnique.mockResolvedValue({ passwordHash: hash } as any);
+
+      await service
+        .changePassword("user-uuid-1", {
+          currentPassword: "Wrong123!",
+          newPassword: "NewPass123!",
+        })
+        .catch(() => {});
+
+      expect(db.user.update).not.toHaveBeenCalled();
+    });
+
+    it("uses bcrypt cost 12 for hashing", async () => {
+      const hash = await bcrypt.hash("OldPass123!", 10);
+      db.user.findUnique.mockResolvedValue({ passwordHash: hash } as any);
+      db.user.update.mockResolvedValue({} as any);
+
+      await service.changePassword("user-uuid-1", {
+        currentPassword: "OldPass123!",
+        newPassword: "NewPass123!",
+      });
+
+      const newHash = db.user.update.mock.calls[0][0]?.data
+        .passwordHash as string;
+      expect(newHash).toMatch(/^\$2[ab]\$12\$/);
+    });
+  });
+
+  // ── updateNotifications ──────────────────────────────────────────────────
+
+  describe("updateNotifications", () => {
+    it("upserts and returns success message", async () => {
+      db.notificationPreference.upsert.mockResolvedValue({} as any);
+
+      const result = await service.updateNotifications("user-uuid-1", {
+        emailEnabled: true,
+      });
+
+      expect(result).toEqual({ message: "Notification preferences updated" });
+    });
+
+    it("calls upsert with correct where, create, and update", async () => {
+      db.notificationPreference.upsert.mockResolvedValue({} as any);
+      const prefs = { emailEnabled: true, telegramEnabled: false };
+
+      await service.updateNotifications("user-uuid-1", prefs);
+
+      expect(db.notificationPreference.upsert).toHaveBeenCalledWith({
+        where: { userId: "user-uuid-1" },
+        create: { userId: "user-uuid-1", ...prefs },
+        update: prefs,
+      });
+    });
+
+    it("handles empty prefs without error", async () => {
+      db.notificationPreference.upsert.mockResolvedValue({} as any);
+
+      await expect(
+        service.updateNotifications("user-uuid-1", {}),
+      ).resolves.toEqual({ message: "Notification preferences updated" });
     });
   });
 });

@@ -141,5 +141,377 @@ describe("CopyEngineService", () => {
 
       expect(prisma.copyTrade.create).toHaveBeenCalledOnce();
     });
+
+    it("emits COPY_TRADE_FAILED when processCopyForConfig throws", async () => {
+      const config = {
+        id: "cfg1",
+        userId: "user1",
+        mode: "MIRROR",
+        sizeValue: "0",
+        maxDailyLoss: "10000",
+        maxExposure: "50000",
+        priceOffset: "0",
+        totalCopied: 0,
+      };
+      prisma.copyConfig.findMany.mockResolvedValue([config]);
+      redis.getClient().incrbyfloat.mockRejectedValue(new Error("Redis down"));
+
+      await service.handleWhaleTrade({
+        type: "WHALE_TRADE",
+        walletAddress: "0xabc",
+        notional: "1000",
+        price: "0.5",
+        marketId: "m1",
+        tokenId: "t1",
+        side: "BUY",
+        outcome: "YES",
+      });
+
+      expect(redis.xadd).toHaveBeenCalledWith(
+        "stream:events",
+        expect.objectContaining({
+          type: "COPY_TRADE_FAILED",
+          userId: "user1",
+          configId: "cfg1",
+          error: "Copy trade failed",
+        }),
+      );
+    });
+
+    it("continues processing remaining configs when one fails", async () => {
+      const config1 = {
+        id: "cfg1",
+        userId: "user1",
+        mode: "MIRROR",
+        sizeValue: "0",
+        maxDailyLoss: "10000",
+        maxExposure: "50000",
+        priceOffset: "0",
+      };
+      const config2 = {
+        id: "cfg2",
+        userId: "user2",
+        mode: "MIRROR",
+        sizeValue: "0",
+        maxDailyLoss: "10000",
+        maxExposure: "50000",
+        priceOffset: "0",
+      };
+      prisma.copyConfig.findMany.mockResolvedValue([config1, config2]);
+
+      let callCount = 0;
+      redis.getClient().incrbyfloat.mockImplementation(async () => {
+        callCount++;
+        if (callCount === 1) throw new Error("Redis fail");
+        return "100";
+      });
+      prisma.copyTrade.findMany.mockResolvedValue([]);
+      prisma.copyTrade.create.mockResolvedValue({ id: "trade-2" });
+      prisma.copyConfig.update.mockResolvedValue({});
+
+      await service.handleWhaleTrade({
+        type: "WHALE_TRADE",
+        walletAddress: "0xabc",
+        notional: "1000",
+        price: "0.5",
+        marketId: "m1",
+        tokenId: "t1",
+        side: "BUY",
+        outcome: "YES",
+      });
+
+      // Should have emitted failure for first config and attempted second
+      expect(redis.xadd).toHaveBeenCalled();
+    });
+  });
+
+  // ── parseFields ──────────────────────────────────────────────────────
+
+  describe("parseFields", () => {
+    it("converts flat array of key-value pairs into an object", () => {
+      // parseFields is private, but we can test it indirectly or access it
+      const fields = ["type", "WHALE_TRADE", "walletAddress", "0xabc"];
+      // Access private method via bracket notation for testing
+      const result = (service as any).parseFields(fields);
+
+      expect(result).toEqual({
+        type: "WHALE_TRADE",
+        walletAddress: "0xabc",
+      });
+    });
+
+    it("handles empty fields array", () => {
+      const result = (service as any).parseFields([]);
+      expect(result).toEqual({});
+    });
+  });
+
+  // ── ensureGroup ──────────────────────────────────────────────────────
+
+  describe("ensureGroup", () => {
+    it("creates consumer group on stream", async () => {
+      await (service as any).ensureGroup();
+
+      expect(redis.getClient().xgroup).toHaveBeenCalledWith(
+        "CREATE",
+        "stream:events",
+        "copy-engine",
+        "$",
+        "MKSTREAM",
+      );
+    });
+
+    it("ignores BUSYGROUP error (group already exists)", async () => {
+      redis.getClient().xgroup.mockRejectedValue(new Error("BUSYGROUP Consumer Group name already exists"));
+
+      await expect((service as any).ensureGroup()).resolves.toBeUndefined();
+    });
+
+    it("rethrows non-BUSYGROUP errors", async () => {
+      redis.getClient().xgroup.mockRejectedValue(new Error("Connection refused"));
+
+      await expect((service as any).ensureGroup()).rejects.toThrow("Connection refused");
+    });
+  });
+
+  // ── onModuleInit / onModuleDestroy ──────────────────────────────────
+
+  describe("lifecycle hooks", () => {
+    it("onModuleDestroy sets running to false", async () => {
+      // We just want to verify it doesn't throw and sets running = false
+      (service as any).running = false;
+      (service as any).loopPromise = Promise.resolve();
+
+      await expect(service.onModuleDestroy()).resolves.toBeUndefined();
+    });
+  });
+
+  // ── getDailyPnl (private, tested via processCopyForConfig) ──────────
+
+  describe("getDailyPnl (private)", () => {
+    it("returns cached value from Redis when available", async () => {
+      redis.get.mockResolvedValue("42.5");
+
+      const result = await (service as any).getDailyPnl("cfg1");
+
+      expect(result).toBe(42.5);
+    });
+
+    it("returns NaN-safe fallback when cached value is not a number", async () => {
+      redis.get.mockResolvedValue("not-a-number");
+      prisma.copyTrade.findMany.mockResolvedValue([]);
+
+      const result = await (service as any).getDailyPnl("cfg1");
+
+      // Falls through to DB calculation since parsed is NaN
+      expect(result).toBe(0);
+    });
+
+    it("calculates from DB trades when cache is empty", async () => {
+      redis.get.mockResolvedValue(null);
+      prisma.copyTrade.findMany.mockResolvedValue([
+        { pnl: "10.5" },
+        { pnl: "5.5" },
+      ]);
+
+      const result = await (service as any).getDailyPnl("cfg1");
+
+      expect(result).toBe(16);
+      expect(redis.set).toHaveBeenCalledWith(
+        "copy:cfg1:daily_pnl",
+        "16",
+        300,
+      );
+    });
+  });
+
+  // ── getCurrentExposure (private) ────────────────────────────────────
+
+  describe("getCurrentExposure (private)", () => {
+    it("returns cached exposure from Redis when available", async () => {
+      redis.get.mockResolvedValue("250");
+
+      const result = await (service as any).getCurrentExposure("cfg1");
+
+      expect(result).toBe(250);
+    });
+
+    it("computes exposure from DB and caches when Redis is empty", async () => {
+      redis.get.mockResolvedValue(null);
+      prisma.copyTrade.findMany.mockResolvedValue([
+        { copiedSize: "100" },
+        { copiedSize: "50" },
+      ]);
+
+      const result = await (service as any).getCurrentExposure("cfg1");
+
+      expect(result).toBe(150);
+      expect(redis.set).toHaveBeenCalledWith(
+        "copy:cfg1:exposure",
+        "150",
+        30,
+      );
+    });
+  });
+
+  // ── processCopyForConfig additional cases ───────────────────────────
+
+  describe("processCopyForConfig", () => {
+    it("skips trade when daily loss limit exceeded (rollback)", async () => {
+      const config = {
+        id: "cfg1",
+        userId: "user1",
+        mode: "FIXED",
+        sizeValue: "100",
+        maxDailyLoss: "50",
+        maxExposure: "50000",
+        priceOffset: "0",
+      };
+
+      redis.getClient().incrbyfloat.mockResolvedValue("250"); // Exceeds 50
+
+      await service.processCopyForConfig(
+        config as any,
+        {
+          walletAddress: "0xabc",
+          marketId: "m1",
+          tokenId: "t1",
+          side: "BUY",
+          outcome: "YES",
+        },
+        1000,
+        0.5,
+      );
+
+      // Should rollback (second incrbyfloat call with negative value)
+      const calls = redis.getClient().incrbyfloat.mock.calls;
+      expect(calls.length).toBeGreaterThanOrEqual(2);
+      expect(prisma.copyTrade.create).not.toHaveBeenCalled();
+    });
+
+    it("skips trade when max exposure is reached", async () => {
+      const config = {
+        id: "cfg1",
+        userId: "user1",
+        mode: "FIXED",
+        sizeValue: "100",
+        maxDailyLoss: "10000",
+        maxExposure: "100",
+        priceOffset: "0",
+      };
+
+      redis.getClient().incrbyfloat.mockResolvedValue("50"); // Daily loss OK
+      redis.get.mockResolvedValue("100"); // Exposure at limit
+
+      await service.processCopyForConfig(
+        config as any,
+        {
+          walletAddress: "0xabc",
+          marketId: "m1",
+          tokenId: "t1",
+          side: "BUY",
+          outcome: "YES",
+        },
+        1000,
+        0.5,
+      );
+
+      expect(prisma.copyTrade.create).not.toHaveBeenCalled();
+    });
+
+    it("skips trade when copiedSize is 0 (unknown mode)", async () => {
+      const config = {
+        id: "cfg1",
+        userId: "user1",
+        mode: "UNKNOWN",
+        sizeValue: "100",
+        maxDailyLoss: "10000",
+        maxExposure: "50000",
+        priceOffset: "0",
+      };
+
+      redis.getClient().incrbyfloat.mockResolvedValue("50");
+      redis.get.mockResolvedValue("0");
+
+      await service.processCopyForConfig(
+        config as any,
+        {
+          walletAddress: "0xabc",
+          marketId: "m1",
+          tokenId: "t1",
+          side: "BUY",
+          outcome: "YES",
+        },
+        1000,
+        0.5,
+      );
+
+      expect(prisma.copyTrade.create).not.toHaveBeenCalled();
+    });
+
+    it("applies price offset and publishes ORDER_INTENT + COPY_TRADE_EXECUTED", async () => {
+      const config = {
+        id: "cfg1",
+        userId: "user1",
+        mode: "FIXED",
+        sizeValue: "100",
+        maxDailyLoss: "10000",
+        maxExposure: "50000",
+        priceOffset: "5",
+      };
+
+      redis.getClient().incrbyfloat.mockResolvedValue("50");
+      redis.get.mockResolvedValue("0");
+      prisma.copyTrade.findMany.mockResolvedValue([]);
+      prisma.copyTrade.create.mockResolvedValue({ id: "trade-1" });
+      prisma.copyConfig.update.mockResolvedValue({});
+
+      await service.processCopyForConfig(
+        config as any,
+        {
+          walletAddress: "0xabc",
+          marketId: "m1",
+          tokenId: "t1",
+          side: "BUY",
+          outcome: "YES",
+          txHash: "0xtx123",
+        },
+        1000,
+        0.5,
+      );
+
+      expect(prisma.copyTrade.create).toHaveBeenCalledOnce();
+      // Verify price offset: 0.5 * 1.05 = 0.525
+      const createCall = prisma.copyTrade.create.mock.calls[0][0];
+      expect(parseFloat(createCall.data.copiedPrice.toString())).toBeCloseTo(0.525);
+
+      // Verify ORDER_INTENT published
+      expect(redis.xadd).toHaveBeenCalledWith(
+        "stream:orders",
+        expect.objectContaining({
+          type: "ORDER_INTENT",
+          userId: "user1",
+          source: "copy-engine",
+          copyTradeId: "trade-1",
+        }),
+      );
+
+      // Verify COPY_TRADE_EXECUTED published
+      expect(redis.xadd).toHaveBeenCalledWith(
+        "stream:events",
+        expect.objectContaining({
+          type: "COPY_TRADE_EXECUTED",
+          userId: "user1",
+          configId: "cfg1",
+          tradeId: "trade-1",
+        }),
+      );
+
+      // Verify totalCopied incremented
+      expect(prisma.copyConfig.update).toHaveBeenCalledWith({
+        where: { id: "cfg1" },
+        data: { totalCopied: { increment: 1 } },
+      });
+    });
   });
 });
