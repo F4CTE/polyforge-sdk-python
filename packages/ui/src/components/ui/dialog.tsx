@@ -63,7 +63,7 @@ const DialogContent = React.forwardRef<
       aria-modal="true"
       data-state={state}
       className={cn(
-        "relative z-10 w-full max-w-lg bg-elevated border border-default rounded-lg [box-shadow:var(--shadow-elevation-3)]",
+        "relative z-10 w-full max-w-lg bg-overlay border border-strong rounded-lg [box-shadow:var(--shadow-elevation-3)]",
         "animate-dialog-content",
         className
       )}
