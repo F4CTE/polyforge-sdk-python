@@ -96,6 +96,9 @@ export class StrategiesService {
         safety: (dto.safety ?? []) as unknown as Prisma.InputJsonValue,
         tags: dto.tags ?? [],
         canvas: dto.canvas as unknown as Prisma.InputJsonValue | undefined,
+        warmupTicks: dto.warmupTicks ?? 0,
+        schedule: dto.schedule as unknown as Prisma.InputJsonValue | undefined,
+        settings: dto.settings as unknown as Prisma.InputJsonValue | undefined,
         ...(dto.marketId ? { marketId: dto.marketId } : {}),
         status: StrategyStatus.IDLE,
         version: 1,
@@ -171,6 +174,11 @@ export class StrategiesService {
     if (dto.tags !== undefined) data.tags = dto.tags;
     if (dto.canvas !== undefined)
       data.canvas = dto.canvas as unknown as Prisma.InputJsonValue;
+    if (dto.warmupTicks !== undefined) data.warmupTicks = dto.warmupTicks;
+    if (dto.schedule !== undefined)
+      data.schedule = dto.schedule as unknown as Prisma.InputJsonValue;
+    if (dto.settings !== undefined)
+      data.settings = dto.settings as unknown as Prisma.InputJsonValue;
     if (dto.marketId !== undefined) {
       data.market = dto.marketId
         ? { connect: { id: dto.marketId } }
@@ -451,6 +459,9 @@ export class StrategiesService {
         actions: strategy.actions as unknown as Prisma.InputJsonValue,
         safety: strategy.safety as unknown as Prisma.InputJsonValue,
         tags: strategy.tags ?? [],
+        warmupTicks: strategy.warmupTicks,
+        schedule: strategy.schedule as unknown as Prisma.InputJsonValue,
+        settings: strategy.settings as unknown as Prisma.InputJsonValue,
         status: StrategyStatus.IDLE,
         version: 1,
         template: false,

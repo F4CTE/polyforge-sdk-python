@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { SettingsPage } from '../pages/settings.page';
-import { apiRegisterAndVerify, uniqueEmail, uniqueUsername } from '../helpers/api';
+import { apiRegisterAndVerify, uniqueEmail, uniqueUsername, ensureFreshToken, LoginResponse } from '../helpers/api';
 
 /**
  * Comprehensive Settings workflow tests for PolyForge.
@@ -19,6 +19,7 @@ import { apiRegisterAndVerify, uniqueEmail, uniqueUsername } from '../helpers/ap
 test.describe.serial('Settings — Full Workflow Coverage', () => {
     let settingsPage: SettingsPage;
     // One fresh user per describe block — registered once, reused across serial tests.
+    let loginState: LoginResponse;
     let authToken: string;
     // Password used during registration — kept in sync with apiRegisterAndVerify call below.
     // Note: if the "change password succeeds" test runs and passes, the account password
@@ -29,11 +30,14 @@ test.describe.serial('Settings — Full Workflow Coverage', () => {
     test.beforeAll(async () => {
         const email    = uniqueEmail('settings');
         const username = uniqueUsername('settingsuser');
-        const { token } = await apiRegisterAndVerify(email, username, 'TestPass123!');
-        authToken = token;
+        loginState = await apiRegisterAndVerify(email, username, 'TestPass123!');
+        authToken = loginState.token;
     });
 
     test.beforeEach(async ({ page }) => {
+        await ensureFreshToken(loginState);
+        authToken = loginState.token;
+
         settingsPage = new SettingsPage(page);
 
         // Set auth cookie for this test's page

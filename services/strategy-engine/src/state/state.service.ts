@@ -2,6 +2,16 @@ import { Injectable } from "@nestjs/common";
 import { RedisService } from "@polyforge/shared-redis";
 import { StrategyState } from "../blocks/block.types";
 
+function currentWeekStart(): string {
+  const now = new Date();
+  const day = now.getUTCDay();
+  const diff = now.getUTCDate() - day;
+  const sunday = new Date(
+    Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), diff),
+  );
+  return sunday.toISOString().slice(0, 10);
+}
+
 const DEFAULT_STATE: StrategyState = {
   betsToday: 0,
   dailyPnl: 0,
@@ -10,6 +20,9 @@ const DEFAULT_STATE: StrategyState = {
   lastTradeAt: 0,
   tradedTokensToday: [],
   totalOrders: 0,
+  tickCount: 0,
+  weeklyPnl: 0,
+  weekStartDate: currentWeekStart(),
 };
 
 function midnightUtcTtl(): number {
@@ -30,14 +43,20 @@ export class StateService {
 
   async get(strategyId: string): Promise<StrategyState> {
     const raw = await this.redis.get(this.key(strategyId));
-    if (!raw) return { ...DEFAULT_STATE };
+    if (!raw) return { ...DEFAULT_STATE, weekStartDate: currentWeekStart() };
     try {
-      return {
+      const parsed = {
         ...DEFAULT_STATE,
         ...(JSON.parse(raw) as Partial<StrategyState>),
       };
+      const thisWeek = currentWeekStart();
+      if (parsed.weekStartDate !== thisWeek) {
+        parsed.weeklyPnl = 0;
+        parsed.weekStartDate = thisWeek;
+      }
+      return parsed;
     } catch {
-      return { ...DEFAULT_STATE };
+      return { ...DEFAULT_STATE, weekStartDate: currentWeekStart() };
     }
   }
 

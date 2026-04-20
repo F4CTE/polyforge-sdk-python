@@ -3,7 +3,13 @@ import { StrategyStatus } from ".prisma/client";
 import { PrismaService } from "@polyforge/shared-db";
 import { RedisService } from "@polyforge/shared-redis";
 import { StrategyVariable, SubStrategyMode } from "@polyforge/shared-types";
-import { EvalContext, OrderIntent } from "../blocks/block.types";
+import {
+  EvalContext,
+  OrderIntent,
+  ScheduleConfig,
+  StrategySettings,
+} from "../blocks/block.types";
+import { isWithinSchedule } from "../common/schedule-guard";
 import {
   SAFETY_REGISTRY,
   TRIGGER_REGISTRY,
@@ -94,6 +100,9 @@ export class StrategyRunner {
       mode: SubStrategyMode,
       context?: { userId: string },
     ) => Promise<void>,
+    private readonly warmupTicks: number = 0,
+    private readonly schedule?: ScheduleConfig | null,
+    private readonly settings?: StrategySettings | null,
   ) {
     this.logger = new Logger(`StrategyRunner:${strategyId}`);
   }
@@ -167,6 +176,8 @@ export class StrategyRunner {
 
   private async tick() {
     if (this.status !== "RUNNING") return;
+
+    if (this.schedule && !isWithinSchedule(this.schedule, new Date())) return;
 
     try {
       // Enforce daily execution limit — auto-stop if exceeded
@@ -326,6 +337,24 @@ export class StrategyRunner {
       }
     }
 
+    // 0.9 Warmup gate — accumulate tick data but skip trading pipeline
+    const newTickCount = stateData.tickCount + 1;
+    await this.state.update(this.strategyId, { tickCount: newTickCount });
+    ctx.state = { ...ctx.state, tickCount: newTickCount };
+
+    if (this.warmupTicks > 0 && newTickCount <= this.warmupTicks) {
+      if (newTickCount === 1) {
+        this.logger.log(
+          `Warming up: ${this.warmupTicks} ticks required before trading`,
+        );
+        await this.emitStrategyEvent(
+          "STRATEGY_WARMING_UP",
+          `${newTickCount}/${this.warmupTicks}`,
+        );
+      }
+      return;
+    }
+
     // 1. Check stale data — pause if any subscribed token's price is stale
     const staleToken = await this.detectStaleData();
     if (staleToken) {
@@ -375,6 +404,49 @@ export class StrategyRunner {
           })
           .catch(() => {});
         await this.emitStrategyEvent("STRATEGY_STOPPED", result.reason);
+        return;
+      }
+    }
+
+    // 2.5 PnL targets and loss limits — auto-pause when hit
+    if (this.settings) {
+      const { profitTarget, lossLimit } = this.settings;
+      const { dailyPnl, weeklyPnl } = ctx.state;
+
+      if (lossLimit?.daily != null && dailyPnl <= lossLimit.daily) {
+        this.pause("daily_loss_limit_hit");
+        await this.onStatusChange("PAUSED", "daily_loss_limit_hit");
+        await this.emitStrategyEvent(
+          "STRATEGY_AUTO_STOPPED",
+          `Daily loss limit hit: ${dailyPnl}`,
+        );
+        return;
+      }
+      if (lossLimit?.weekly != null && weeklyPnl <= lossLimit.weekly) {
+        this.pause("weekly_loss_limit_hit");
+        await this.onStatusChange("PAUSED", "weekly_loss_limit_hit");
+        await this.emitStrategyEvent(
+          "STRATEGY_AUTO_STOPPED",
+          `Weekly loss limit hit: ${weeklyPnl}`,
+        );
+        return;
+      }
+      if (profitTarget?.daily != null && dailyPnl >= profitTarget.daily) {
+        this.pause("daily_profit_target_hit");
+        await this.onStatusChange("PAUSED", "daily_profit_target_hit");
+        await this.emitStrategyEvent(
+          "STRATEGY_AUTO_STOPPED",
+          `Daily profit target hit: ${dailyPnl}`,
+        );
+        return;
+      }
+      if (profitTarget?.weekly != null && weeklyPnl >= profitTarget.weekly) {
+        this.pause("weekly_profit_target_hit");
+        await this.onStatusChange("PAUSED", "weekly_profit_target_hit");
+        await this.emitStrategyEvent(
+          "STRATEGY_AUTO_STOPPED",
+          `Weekly profit target hit: ${weeklyPnl}`,
+        );
         return;
       }
     }

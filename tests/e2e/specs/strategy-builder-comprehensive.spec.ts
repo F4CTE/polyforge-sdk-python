@@ -1,6 +1,5 @@
 import { test, expect } from '@playwright/test';
 import { StrategyBuilderPage } from '../pages/strategy-builder.page';
-import { StrategiesListPage } from '../pages/strategies-list.page';
 import {
     apiRegisterAndVerify,
     uniqueEmail,
@@ -8,27 +7,28 @@ import {
     apiDeleteStrategy,
     apiGetStrategies,
     apiCreateStrategy,
+    ensureFreshToken,
+    LoginResponse,
 } from '../helpers/api';
 
 /**
- * Strategy Builder — Full Workflow Coverage (@e2e @comprehensive)
+ * Strategy Builder — Canvas & Palette Tests (@e2e @comprehensive)
  *
- * Comprehensive test suite for the strategy builder including:
- * - Strategy creation with name, description, and properties
+ * Tests for the strategy builder canvas including:
+ * - Strategy configuration (name, description, properties)
  * - Block palette interaction (drag, add, delete)
  * - Canvas interaction (nodes, edges, connections)
- * - Strategy save/load/edit workflows
- * - Strategy import/export functionality
- * - Strategy lifecycle from list page (start, pause, resume, stop)
+ *
+ * Save/load/edit, import/export, and lifecycle tests are in
+ * strategy-detail-comprehensive.spec.ts (split for shard balance — POLA-189).
  *
  * Performance notes:
  *   beforeEach uses gotoEdit(sharedStrategyId) (~2–4 s) instead of gotoNew()
- *   (~16–18 s) for the ~33 tests that only need to be on the builder canvas.
- *   gotoNew() is reserved for the single test that exercises the creation wizard.
- *   Lifecycle/edit tests create strategies via apiCreateStrategy (no wizard).
+ *   (~16–18 s) for the tests that only need to be on the builder canvas.
  */
 
 test.describe('Strategy Builder — Full Workflow Coverage', () => {
+    let loginState: LoginResponse;
     let token: string;
     let userId: string;
     /** Shared strategy used by palette/canvas/config tests — created once in beforeAll. */
@@ -37,9 +37,9 @@ test.describe('Strategy Builder — Full Workflow Coverage', () => {
     test.beforeAll(async () => {
         const email    = uniqueEmail('strategybuilder');
         const username = uniqueUsername('stratbuilder');
-        const res = await apiRegisterAndVerify(email, username, 'TestPass123!');
-        token  = res.token;
-        userId = res.user.id;
+        loginState = await apiRegisterAndVerify(email, username, 'TestPass123!');
+        token  = loginState.token;
+        userId = loginState.user.id;
 
         // Create the shared canvas strategy once — reused by all palette/config tests
         // to skip the creation wizard (saves ~14 s per test).
@@ -48,6 +48,9 @@ test.describe('Strategy Builder — Full Workflow Coverage', () => {
     });
 
     test.beforeEach(async ({ page }) => {
+        await ensureFreshToken(loginState);
+        token = loginState.token;
+
         await page.context().addCookies([{
             name:   'pf_token',
             value:  token,
@@ -422,314 +425,4 @@ test.describe('Strategy Builder — Full Workflow Coverage', () => {
         expect(blockCount).toBeGreaterThanOrEqual(3);
     });
 
-    // ─── Strategy Save/Load/Edit Tests ────────────────────────────────────────
-
-    test('@smoke @comprehensive should save strategy with valid name', async ({ page }, testInfo) => {
-        testInfo.setTimeout(90_000);
-        const builder   = new StrategyBuilderPage(page);
-        const listPage  = new StrategiesListPage(page);
-
-        // This test specifically exercises the creation wizard — the only test that calls gotoNew().
-        await builder.gotoNew();
-
-        const strategyName = `Test Strategy ${Date.now()}`;
-        await builder.fillName(strategyName);
-        await builder.fillDescription('A test strategy for saving');
-        await builder.saveAndRedirect();
-
-        await expect(page).not.toHaveURL(/\/new|\/edit/);
-
-        await listPage.goto();
-        const card = listPage.cardByName(strategyName);
-        await expect(card).toBeVisible();
-    });
-
-    test('@comprehensive should show validation error when saving without name', async ({ page }) => {
-        const builder = new StrategyBuilderPage(page);
-        // beforeEach loaded the shared strategy — just clear the name and try to save.
-        await builder.fillName('');
-        await builder.save();
-
-        const errorToast = page.locator('[data-sonner-toast]', { hasText: /name.*required|required/i })
-            .or(page.locator('[role="status"]', { hasText: /name.*required|required/i }));
-        await expect(errorToast).toBeVisible({ timeout: 10_000 });
-    });
-
-    test('@comprehensive should edit existing strategy', async ({ page }) => {
-        const builder  = new StrategyBuilderPage(page);
-        const listPage = new StrategiesListPage(page);
-
-        const strategyName  = `Edit Test ${Date.now()}`;
-        const { id: stratId } = await apiCreateStrategy(token, strategyName);
-
-        // Navigate via the list→detail→edit flow (tests that navigation path).
-        await listPage.goto();
-        const card = listPage.cardByName(strategyName);
-        await card.click();
-
-        const editLink = page.locator('a[title*="Edit"], a[title*="edit"]').first();
-        await expect(editLink).toBeVisible({ timeout: 10_000 });
-        await editLink.click();
-
-        await expect(page).toHaveURL(/\/edit/);
-        await expect(page.locator('.react-flow')).toBeVisible({ timeout: 15_000 });
-    });
-
-    test('@comprehensive should preserve all nodes and edges when loading strategy for edit', async ({ page }) => {
-        const builder  = new StrategyBuilderPage(page);
-        const listPage = new StrategiesListPage(page);
-
-        const strategyName    = `Multi-Block ${Date.now()}`;
-        const { id: stratId } = await apiCreateStrategy(token, strategyName);
-
-        // Load in edit mode, add a block, save.
-        await builder.gotoEdit(stratId);
-        await builder.selectSection('Triggers');
-        const triggerBlock = page.locator('[draggable="true"]').first();
-        if (await triggerBlock.isVisible()) {
-            await triggerBlock.click();
-        }
-        await builder.saveAndRedirect();
-
-        // Navigate back via list→detail→edit to verify block persistence.
-        await listPage.goto();
-        const card = listPage.cardByName(strategyName);
-        await card.click();
-        const editLink = page.locator('a[title*="Edit"], a[title*="edit"]').first();
-        if (await editLink.isVisible().catch(() => false)) {
-            await editLink.click();
-            await expect(page).toHaveURL(/\/edit/);
-            await expect(page.locator('.react-flow')).toBeVisible({ timeout: 15_000 });
-            const blocks     = builder.blockCards();
-            const blockCount = await blocks.count();
-            expect(blockCount).toBeGreaterThan(0);
-        }
-    });
-
-    test('@comprehensive should save edited strategy with changes', async ({ page }, testInfo) => {
-        testInfo.setTimeout(90_000);
-        const builder         = new StrategyBuilderPage(page);
-        const strategyName    = `Edit Changes ${Date.now()}`;
-        const { id: stratId } = await apiCreateStrategy(token, strategyName);
-
-        await builder.gotoEdit(stratId);
-        await builder.fillDescription('Updated description');
-        await builder.saveAndRedirect();
-
-        await expect(page).not.toHaveURL(/\/edit/);
-    });
-
-    test('@comprehensive should cancel editing without saving changes', async ({ page }, testInfo) => {
-        testInfo.setTimeout(90_000);
-        const builder         = new StrategyBuilderPage(page);
-        const strategyName    = `Cancel Edit ${Date.now()}`;
-        const { id: stratId } = await apiCreateStrategy(token, strategyName);
-
-        await builder.gotoEdit(stratId);
-        await builder.fillDescription('This should not be saved');
-        await builder.cancelButton.click();
-
-        await expect(page).not.toHaveURL(/\/edit/);
-    });
-
-    // ─── Strategy Import/Export Tests ─────────────────────────────────────────
-
-    test('@comprehensive should export strategy to JSON file', async ({ page }) => {
-        // beforeEach loaded the shared strategy — look for an export button.
-        const exportButton = page.locator('button[title*="Export"], button[title*="export"]').first();
-        if (await exportButton.isVisible({ timeout: 5_000 }).catch(() => false)) {
-            const downloadPromise = page.waitForEvent('download', { timeout: 10_000 });
-            await exportButton.click();
-            const download = await downloadPromise;
-            expect(download.suggestedFilename).toMatch(/\.polyforge\.json|\.json/);
-        }
-    });
-
-    test('@comprehensive should import strategy from file', async ({ page }) => {
-        const importButton = page.locator('button[title*="Import"], button[title*="import"]').first();
-        if (await importButton.isVisible()) {
-            await expect(importButton).toBeEnabled();
-        }
-    });
-
-    test('@comprehensive should show error on invalid import file', async ({ page }) => {
-        const importButton = page.locator('button[title*="Import"], button[title*="import"]').first();
-        if (await importButton.isVisible()) {
-            const fileInput = page.locator('input[type="file"]').first();
-            if (await fileInput.isVisible()) {
-                const errorShown = page.locator('[role="alert"], .error');
-                if (await errorShown.isVisible()) {
-                    await expect(errorShown).toBeVisible();
-                }
-            }
-        }
-    });
-
-    test('@comprehensive should drag and drop polyforge file to import', async ({ page }) => {
-        const canvas = page.locator('.react-flow__viewport');
-        await expect(canvas).toBeVisible();
-    });
-
-    // ─── Strategy Lifecycle Tests ──────────────────────────────────────────────
-
-    test('@smoke @comprehensive should start strategy in Paper mode', async ({ page }, testInfo) => {
-        testInfo.setTimeout(90_000);
-        const listPage     = new StrategiesListPage(page);
-        const strategyName = `Paper Mode ${Date.now()}`;
-        await apiCreateStrategy(token, strategyName);
-
-        await listPage.goto();
-        await listPage.startPaper(strategyName);
-        await listPage.waitForStatus(strategyName, /PAPER/i);
-    });
-
-    test('@smoke @comprehensive should start strategy in Live mode', async ({ page }, testInfo) => {
-        testInfo.setTimeout(90_000);
-        const listPage     = new StrategiesListPage(page);
-        const strategyName = `Live Mode ${Date.now()}`;
-        await apiCreateStrategy(token, strategyName);
-
-        await listPage.goto();
-        await listPage.startLive(strategyName);
-        await listPage.waitForStatus(strategyName, /RUNNING|IDLE/i);
-    });
-
-    test('@smoke @comprehensive should pause running strategy', async ({ page }, testInfo) => {
-        testInfo.setTimeout(90_000);
-        const listPage     = new StrategiesListPage(page);
-        const strategyName = `Pause Test ${Date.now()}`;
-        await apiCreateStrategy(token, strategyName);
-
-        await listPage.goto();
-        await listPage.startPaper(strategyName);
-        await listPage.waitForStatus(strategyName, /PAPER/i);
-
-        await listPage.pauseStrategy(strategyName);
-        await listPage.waitForStatus(strategyName, /PAUSED/i);
-    });
-
-    test('@smoke @comprehensive should resume paused strategy', async ({ page }, testInfo) => {
-        testInfo.setTimeout(90_000);
-        const listPage     = new StrategiesListPage(page);
-        const strategyName = `Resume Test ${Date.now()}`;
-        await apiCreateStrategy(token, strategyName);
-
-        await listPage.goto();
-        await listPage.startPaper(strategyName);
-        await listPage.waitForStatus(strategyName, /PAPER/i);
-
-        await listPage.pauseStrategy(strategyName);
-        await listPage.waitForStatus(strategyName, /PAUSED/i);
-
-        await listPage.resumeStrategy(strategyName);
-        await listPage.waitForStatus(strategyName, /PAPER|RUNNING/i);
-    });
-
-    test('@smoke @comprehensive should stop running strategy', async ({ page }, testInfo) => {
-        testInfo.setTimeout(90_000);
-        const listPage     = new StrategiesListPage(page);
-        const strategyName = `Stop Test ${Date.now()}`;
-        await apiCreateStrategy(token, strategyName);
-
-        await listPage.goto();
-        await listPage.startPaper(strategyName);
-        await listPage.waitForStatus(strategyName, /PAPER/i);
-
-        await listPage.stopStrategy(strategyName);
-        await listPage.waitForStatus(strategyName, /IDLE/i);
-    });
-
-    test('@comprehensive should display strategy detail page', async ({ page }) => {
-        const listPage     = new StrategiesListPage(page);
-        const strategyName = `Detail View ${Date.now()}`;
-        await apiCreateStrategy(token, strategyName);
-
-        await listPage.goto();
-        await listPage.clickCard(strategyName);
-
-        await page.waitForURL(/\/strategies\/[a-z0-9-]+$/, { timeout: 15_000 });
-        await expect(page.locator('h1').first()).toBeVisible({ timeout: 15_000 });
-    });
-
-    test('@comprehensive should show blocks visualization on detail page', async ({ page }) => {
-        const builder         = new StrategyBuilderPage(page);
-        const listPage        = new StrategiesListPage(page);
-        const strategyName    = `Block Viz ${Date.now()}`;
-        const { id: stratId } = await apiCreateStrategy(token, strategyName);
-
-        // Add a block and save via edit mode.
-        await builder.gotoEdit(stratId);
-        await builder.selectSection('Triggers');
-        const triggerBlock = page.locator('[draggable="true"]').first();
-        if (await triggerBlock.isVisible()) {
-            await triggerBlock.click();
-        }
-        await builder.saveAndRedirect();
-
-        await listPage.goto();
-        await listPage.clickCard(strategyName);
-
-        const visualization = page.locator('[data-testid="strategy-visualization"], .react-flow');
-        if (await visualization.isVisible()) {
-            await expect(visualization).toBeVisible();
-        }
-    });
-
-    test('@comprehensive should show live events log when strategy running', async ({ page }, testInfo) => {
-        testInfo.setTimeout(90_000);
-        const listPage     = new StrategiesListPage(page);
-        const strategyName = `Events Log ${Date.now()}`;
-        await apiCreateStrategy(token, strategyName);
-
-        await listPage.goto();
-        await listPage.startPaper(strategyName);
-        await listPage.clickCard(strategyName);
-
-        const eventsLog = page.locator('[data-testid="events-log"]');
-        if (await eventsLog.isVisible()) {
-            await expect(eventsLog).toBeVisible();
-        }
-    });
-
-    test('@comprehensive should display P&L data on detail page', async ({ page }, testInfo) => {
-        testInfo.setTimeout(90_000);
-        const listPage     = new StrategiesListPage(page);
-        const strategyName = `PL Data ${Date.now()}`;
-        await apiCreateStrategy(token, strategyName);
-
-        await listPage.goto();
-        await listPage.startPaper(strategyName);
-        await listPage.clickCard(strategyName);
-
-        const pnlSection = page.locator('[data-testid="pnl-summary"], :text("P&L")').first();
-        if (await pnlSection.isVisible()) {
-            await expect(pnlSection).toBeVisible();
-        }
-    });
-
-    test('@comprehensive should trigger 7-day backtest from builder', async ({ page }) => {
-        const builder         = new StrategyBuilderPage(page);
-        const listPage        = new StrategiesListPage(page);
-        const strategyName    = `Backtest ${Date.now()}`;
-        const { id: stratId } = await apiCreateStrategy(token, strategyName);
-
-        // Navigate via list→detail to get the /edit URL that enables Quick Test.
-        await listPage.goto();
-        await listPage.clickCard(strategyName);
-        await page.waitForURL(/\/strategies\/[a-z0-9-]+$/, { timeout: 15_000 });
-        await page.goto(page.url() + '/edit');
-        await expect(page).toHaveURL(/\/edit$/);
-
-        const backtestButton = page.locator('button', { hasText: /Quick Test|Backtest/i }).first();
-        if (await backtestButton.isVisible({ timeout: 5_000 }).catch(() => false)) {
-            await expect(backtestButton).toBeEnabled({ timeout: 5_000 });
-            await backtestButton.click();
-
-            await Promise.race([
-                page.locator('text=/Quick Test Results/i').first().waitFor({ timeout: 15_000 }),
-                page.locator('.animate-spin').first().waitFor({ timeout: 5_000 }),
-                page.locator('[data-sonner-toast]').first().waitFor({ timeout: 10_000 }),
-            ]).catch(() => { /* acceptable — strategy may have no blocks */ });
-        }
-    });
 });

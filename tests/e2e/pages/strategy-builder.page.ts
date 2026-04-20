@@ -108,10 +108,27 @@ export class StrategyBuilderPage {
 
     /** Save and wait for redirect away from builder (to list or detail) */
     async saveAndRedirect(): Promise<void> {
+        await expect(this.saveButton).toBeEnabled({ timeout: 10_000 });
+
+        const responsePromise = this.page.waitForResponse(
+            resp =>
+                resp.url().includes('/api/v1/strategies') &&
+                ['POST', 'PATCH'].includes(resp.request().method()),
+            { timeout: 30_000 },
+        );
         await this.save();
+        const response = await responsePromise;
+
+        if (!response.ok()) {
+            throw new Error(`Strategy save failed with status ${response.status()}`);
+        }
+
         await this.page.waitForURL(
-            url => url.pathname.startsWith('/strategies') && !url.pathname.includes('/new') && !url.pathname.includes('/edit'),
-            { timeout: 20_000 },
+            url =>
+                url.pathname.startsWith('/strategies') &&
+                !url.pathname.includes('/new') &&
+                !url.pathname.includes('/edit'),
+            { timeout: 15_000 },
         );
     }
 }
