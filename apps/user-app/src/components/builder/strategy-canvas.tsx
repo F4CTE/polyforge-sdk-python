@@ -16,6 +16,7 @@ import { CalcNode } from './nodes/calc-node';
 import { useBuilderStore, type BlockNodeData, type LogicNodeData, type CalcNodeData } from '../../stores/builder-store';
 import { useExecutionStore } from '../../stores/execution-store';
 import { useThemeStore } from '../../stores/theme-store';
+import { ArrowLeftRight } from 'lucide-react';
 import {
   BLOCK_DEFS,
   type BlockSection,
@@ -171,20 +172,7 @@ export function StrategyCanvas() {
         <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none z-10">
           <div className="flex flex-col items-center gap-3 text-center">
             <div className="w-16 h-16 rounded-full bg-surface border border-default flex items-center justify-center">
-              <svg
-                className="size-8 text-tertiary opacity-50"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={1.5}
-                aria-hidden="true"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5"
-                />
-              </svg>
+              <ArrowLeftRight className="size-8 text-tertiary opacity-50" strokeWidth={1.5} aria-hidden="true" />
             </div>
             <p className="text-body-sm text-secondary font-medium">
               Drag a block from the panel to get started
