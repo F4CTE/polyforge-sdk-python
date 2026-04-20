@@ -113,6 +113,12 @@ export class OrdersController {
   }
 
   @Post("redeem")
+  @Throttle({
+    default: {
+      limit: process.env.NODE_ENV === "production" ? 30 : 10000,
+      ttl: 60000,
+    },
+  })
   @HttpCode(HttpStatus.OK)
   @ApiResponse({ status: 200, type: RedeemPositionResponseDto })
   @UseGuards(ApiKeyScopeGuard, GeoBlockGuard)
