@@ -4,25 +4,30 @@ import { VenueRouter } from "./venue-router";
 import { PolymarketAdapter } from "./polymarket-adapter";
 import { ClobClientModule } from "../clob-client/clob-client.module";
 import { ClobClientService } from "../clob-client/clob-client.service";
+import { KalshiClientModule } from "../kalshi-client/kalshi-client.module";
+import { KalshiAdapterService } from "../kalshi-client/kalshi-adapter.service";
+import type { VenueAdapter } from "@polyforge/shared-types";
 
 @Module({
-  imports: [ClobClientModule],
+  imports: [ClobClientModule, KalshiClientModule],
   providers: [
     PolymarketAdapter,
     {
       provide: VenueRouter,
-      useFactory: (clob: ClobClientService, config: ConfigService) => {
-        const polyAdapter = new PolymarketAdapter(clob);
-        const adapters = [polyAdapter];
+      useFactory: (
+        clob: ClobClientService,
+        config: ConfigService,
+        kalshi: KalshiAdapterService,
+      ) => {
+        const adapters: VenueAdapter[] = [new PolymarketAdapter(clob)];
 
         if (config.get<string>("KALSHI_ENABLED") === "true") {
-          // KalshiAdapter will be registered here once Phase 2 is complete.
-          // The VenueRouter is designed to accept it without any changes.
+          adapters.push(kalshi);
         }
 
         return new VenueRouter(adapters);
       },
-      inject: [ClobClientService, ConfigService],
+      inject: [ClobClientService, ConfigService, KalshiAdapterService],
     },
   ],
   exports: [VenueRouter],
