@@ -207,7 +207,7 @@ function MarketCardSkeleton() {
   return (
     <CardSkeleton>
       <div className="flex items-start gap-3">
-        <SkeletonCircle size="w-12 h-12" rounded="rounded-lg" />
+        <SkeletonCircle size="w-12 h-12" rounded="rounded-pf" />
         <div className="flex-1 space-y-2">
           <SkeletonLine h="h-4" w="w-[85%]" />
           <SkeletonLine w="w-[50%]" />
@@ -263,12 +263,12 @@ const MarketCard = memo(function MarketCard({
     <Link
       to={`/markets/${market.id}`}
       data-testid="market-card"
-      className={`group block bg-elevated border border-default rounded-xl p-4 transition-all duration-panel hover:border-strong hover:shadow-sm hover:-translate-y-1 ${featured ? 'ring-1 ring-accent/20' : ''}`}
+      className={`group block bg-elevated border border-default rounded-pf p-4 transition-all duration-panel hover:border-strong hover:shadow-sm hover:-translate-y-1 ${featured ? 'ring-1 ring-accent/20' : ''}`}
     >
       {/* Header */}
       <div className="flex items-start gap-3 mb-3">
         <div
-          className={`w-[52px] h-[52px] rounded-lg flex items-center justify-center shrink-0 ${catColor?.bg ?? 'bg-overlay'}`}
+          className={`w-[52px] h-[52px] rounded-pf flex items-center justify-center shrink-0 ${catColor?.bg ?? 'bg-overlay'}`}
         >
           <span className={`text-lg font-semibold ${catColor?.text ?? 'text-tertiary'}`}>
             {market.title.charAt(0).toUpperCase()}
@@ -391,7 +391,7 @@ function TrendingCard({ market }: { market: Market }) {
   return (
     <Link
       to={`/markets/${market.slug || market.id}`}
-      className="group block bg-elevated border border-default rounded-xl p-4 space-y-3 transition-all duration-panel hover:border-accent/30 hover:shadow-sm hover:-translate-y-1"
+      className="group block bg-elevated border border-default rounded-pf p-4 space-y-3 transition-all duration-panel hover:border-accent/30 hover:shadow-sm hover:-translate-y-1"
     >
       {/* Question */}
       <p className="text-body-md font-medium text-primary leading-snug line-clamp-2 group-hover:text-accent-text transition-colors">
@@ -550,7 +550,7 @@ function AdvancedSearchModal({
       className="fixed inset-0 z-50 flex items-start justify-center pt-12 px-4 pb-6 bg-surface/80 backdrop-blur-sm"
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
-      <div className="relative w-full max-w-2xl bg-elevated border border-default rounded-xl shadow-lg flex flex-col max-h-modal-full overflow-hidden">
+      <div className="relative w-full max-w-2xl bg-elevated border border-default rounded-pf shadow-lg flex flex-col max-h-modal-full overflow-hidden">
 
         {/* Header */}
         <div className="flex items-center gap-3 px-5 py-4 border-b border-default shrink-0">
@@ -1264,7 +1264,7 @@ export function Component() {
               <p className="text-body-sm text-tertiary mt-1">Try adjusting your search or filters</p>
             </div>
           ) : (
-            <div className="border border-default rounded-xl overflow-hidden">
+            <div className="border border-default rounded-pf overflow-hidden">
               <table className="w-full text-body-sm" aria-label="Markets">
                 <thead>
                   <tr className="bg-surface text-left text-label text-secondary uppercase tracking-wider">

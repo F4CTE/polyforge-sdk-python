@@ -344,7 +344,7 @@ interface JournalTabProps {
 function JournalEntryCard({ entry, onEdit, onDelete }: { entry: JournalEntry; onEdit: () => void; onDelete: () => void }) {
   const mood = MOOD_CONFIG[entry.mood];
   return (
-    <div className="bg-elevated border border-default rounded-xl p-4 space-y-3 hover:border-default transition-colors">
+    <div className="bg-elevated border border-default rounded-pf p-4 space-y-3 hover:border-default transition-colors">
       {/* Top row */}
       <div className="flex items-start justify-between gap-3">
         <div className="flex-1 min-w-0">
@@ -472,7 +472,7 @@ function JournalTab({ entries, loading, onEdit, onDelete }: JournalTabProps) {
       {loading ? (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {Array.from({ length: 6 }, (_, i) => (
-            <div key={i} className="bg-elevated border border-default rounded-xl p-4 space-y-3 animate-pulse">
+            <div key={i} className="bg-elevated border border-default rounded-pf p-4 space-y-3 animate-pulse">
               <div className="h-3 bg-overlay rounded w-3/4" />
               <div className="h-3 bg-overlay rounded w-1/2" />
               <div className="h-8 bg-overlay rounded" />
@@ -607,7 +607,7 @@ function CreateConditionalDialog({ onClose, onCreated }: { onClose: () => void; 
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" role="dialog" aria-modal="true" aria-label="Create Conditional Order">
-      <div className="animate-scale-in bg-elevated border border-default rounded-xl w-full max-w-lg p-6 shadow-lg">
+      <div className="animate-scale-in bg-elevated border border-default rounded-pf w-full max-w-lg p-6 shadow-lg">
         <div className="flex items-center justify-between mb-5">
           <h2 className="text-base font-semibold text-primary">Create Conditional Order</h2>
           <Button type="button" variant="ghost" size="icon" onClick={onClose} aria-label="Close dialog">
@@ -1020,7 +1020,7 @@ export function Component() {
           </div>
 
           {/* Table */}
-          <div className="bg-elevated border border-default rounded-xl overflow-hidden">
+          <div className="bg-elevated border border-default rounded-pf overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full min-w-[800px] text-body-sm" aria-label="Orders">
                 <thead>
@@ -1197,7 +1197,7 @@ export function Component() {
       {/* ─── Conditional Orders Tab ──────────────────────────── */}
       {viewTab === 'conditional' && (
         <>
-          <div className="bg-elevated border border-default rounded-xl overflow-hidden">
+          <div className="bg-elevated border border-default rounded-pf overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-body-sm" aria-label="Conditional orders">
                 <thead>

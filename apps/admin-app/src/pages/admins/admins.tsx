@@ -149,7 +149,7 @@ export function Component() {
       </div>
 
       {/* Table */}
-      <div className="bg-elevated border border-default rounded-xl overflow-hidden">
+      <div className="bg-elevated border border-default rounded-pf overflow-hidden">
         <div className="overflow-x-auto" data-density="compact">
           <table className="w-full text-body-sm" aria-label="Admin accounts">
             <caption className="sr-only">Admin accounts</caption>
@@ -240,7 +240,7 @@ export function Component() {
       {/* Add/Edit Dialog */}
       {dialogMode && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" role="dialog" aria-modal="true" aria-labelledby="admin-dialog-title">
-          <div className="animate-scale-in bg-elevated border border-default rounded-xl p-6 w-full max-w-md mx-4">
+          <div className="animate-scale-in bg-elevated border border-default rounded-pf p-6 w-full max-w-md mx-4">
             <div className="flex items-center justify-between mb-4">
               <h3 id="admin-dialog-title" className="text-base font-semibold text-primary">
                 {dialogMode === 'add' ? 'Add Admin' : 'Edit Admin'}
@@ -333,7 +333,7 @@ export function Component() {
       {/* Delete Confirmation Dialog */}
       {deleteConfirmId && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" role="dialog" aria-modal="true" aria-labelledby="deactivate-dialog-title">
-          <div className="animate-scale-in bg-elevated border border-default rounded-xl p-6 w-full max-w-sm mx-4">
+          <div className="animate-scale-in bg-elevated border border-default rounded-pf p-6 w-full max-w-sm mx-4">
             <h3 id="deactivate-dialog-title" className="text-base font-semibold text-primary mb-2">
               Deactivate Admin
             </h3>

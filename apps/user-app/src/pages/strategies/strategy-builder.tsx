@@ -871,7 +871,7 @@ function CanvasSearchBar({ open, onClose }: CanvasSearchBarProps) {
   if (!open) return null;
 
   return (
-    <div className="absolute top-2 right-2 z-30 flex items-center gap-2 bg-elevated border border-default rounded-lg shadow-md px-3 py-2">
+    <div className="absolute top-2 right-2 z-30 flex items-center gap-2 bg-elevated border border-default rounded-pf shadow-md px-3 py-2">
       <Search className="size-4 text-tertiary shrink-0" />
       <input
         type="text"
@@ -1548,7 +1548,7 @@ export function Component() {
                 .map((template) => (
                   <div
                     key={template.id}
-                    className="flex flex-col bg-elevated border border-default rounded-xl p-4 hover:border-strong transition-colors"
+                    className="flex flex-col bg-elevated border border-default rounded-pf p-4 hover:border-strong transition-colors"
                   >
                     {/* Card header */}
                     <div className="flex items-start gap-3 mb-3">
@@ -1671,7 +1671,7 @@ export function Component() {
               <CanvasSearchBar open={canvasSearchOpen} onClose={() => setCanvasSearchOpen(false)} />
               <BuilderTutorial forceVisible={showTutorial} onDismiss={() => setShowTutorial(false)} />
               {dragOver && (
-                <div className="absolute inset-0 z-50 flex items-center justify-center bg-surface/80 backdrop-blur-sm border-2 border-dashed border-accent rounded-xl pointer-events-none">
+                <div className="absolute inset-0 z-50 flex items-center justify-center bg-surface/80 backdrop-blur-sm border-2 border-dashed border-accent rounded-pf pointer-events-none">
                   <div className="flex flex-col items-center gap-2 text-accent-text">
                     <Upload className="size-8" />
                     <span className="text-body-md font-medium">Drop .polyforge file to import</span>
@@ -1682,7 +1682,7 @@ export function Component() {
 
             {/* Quick test results overlay */}
             {quickResult && (
-              <div className="absolute bottom-4 left-4 z-40 bg-elevated border border-default rounded-xl p-4 shadow-lg max-w-xs">
+              <div className="absolute bottom-4 left-4 z-40 bg-elevated border border-default rounded-pf p-4 shadow-lg max-w-xs">
                 <div className="flex items-center justify-between mb-3">
                   <span className="text-label font-semibold text-primary uppercase tracking-wider">Quick Test Results</span>
                   <Button type="button" variant="ghost" size="icon-sm" onClick={() => setQuickResult(null)} aria-label="Close quick test results"><X className="size-3" /></Button>

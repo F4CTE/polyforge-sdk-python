@@ -49,7 +49,7 @@ interface HealthMetricCardProps {
 function HealthMetricCard({ label, value, level, icon, subtitle }: HealthMetricCardProps) {
   const colors = HEALTH_COLORS[level];
   return (
-    <div className={`rounded-lg border border-subtle p-3 ${colors.bg}`}>
+    <div className={`rounded-pf border border-subtle p-3 ${colors.bg}`}>
       <div className="flex items-center justify-between mb-1">
         <span className="text-caption text-secondary uppercase tracking-wider font-medium">{label}</span>
         <div className="flex items-center gap-1.5">
@@ -149,7 +149,7 @@ export function HealthDashboard({ strategyId, strategyStatus }: HealthDashboardP
   return (
     <div className="space-y-4">
       {/* Overall health banner */}
-      <div className={`flex items-center justify-between rounded-lg border border-subtle p-3 ${HEALTH_COLORS[overallHealth].bg}`}>
+      <div className={`flex items-center justify-between rounded-pf border border-subtle p-3 ${HEALTH_COLORS[overallHealth].bg}`}>
         <div className="flex items-center gap-2">
           <span className={`size-2.5 rounded-full ${HEALTH_COLORS[overallHealth].dot}`} />
           <span className={`text-body-sm font-medium ${HEALTH_COLORS[overallHealth].text}`}>
@@ -196,7 +196,7 @@ export function HealthDashboard({ strategyId, strategyStatus }: HealthDashboardP
       {(metrics.winRate !== null || metrics.totalPnl !== null || metrics.maxDrawdown !== null) && (
         <div className="grid grid-cols-3 gap-3">
           {metrics.winRate !== null && (
-            <div className="rounded-lg border border-subtle bg-surface p-3">
+            <div className="rounded-pf border border-subtle bg-surface p-3">
               <span className="text-caption text-secondary uppercase tracking-wider font-medium block mb-1">Win Rate</span>
               <span className="text-base font-semibold font-mono tabular-nums text-primary">
                 {metrics.winRate.toFixed(1)}%
@@ -204,7 +204,7 @@ export function HealthDashboard({ strategyId, strategyStatus }: HealthDashboardP
             </div>
           )}
           {metrics.totalPnl !== null && (
-            <div className="rounded-lg border border-subtle bg-surface p-3">
+            <div className="rounded-pf border border-subtle bg-surface p-3">
               <span className="text-caption text-secondary uppercase tracking-wider font-medium block mb-1">Total PnL</span>
               <span className={`text-base font-semibold font-mono tabular-nums ${metrics.totalPnl >= 0 ? 'text-gain' : 'text-loss'}`}>
                 {metrics.totalPnl >= 0 ? '+' : ''}{metrics.totalPnl.toFixed(2)}
@@ -212,7 +212,7 @@ export function HealthDashboard({ strategyId, strategyStatus }: HealthDashboardP
             </div>
           )}
           {metrics.maxDrawdown !== null && (
-            <div className="rounded-lg border border-subtle bg-surface p-3">
+            <div className="rounded-pf border border-subtle bg-surface p-3">
               <span className="text-caption text-secondary uppercase tracking-wider font-medium block mb-1">Max Drawdown</span>
               <span className="text-base font-semibold font-mono tabular-nums text-loss">
                 -{metrics.maxDrawdown.toFixed(1)}%

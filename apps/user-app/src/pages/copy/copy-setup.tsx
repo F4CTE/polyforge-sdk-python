@@ -219,7 +219,7 @@ export function Component() {
       </div>
 
       {/* Step content */}
-      <div className="bg-elevated border border-default rounded-xl p-6 space-y-5">
+      <div className="bg-elevated border border-default rounded-pf p-6 space-y-5">
         {/* Step 1: Target Wallet */}
         {step === 0 && (
           <>
@@ -276,7 +276,7 @@ export function Component() {
                     variant="ghost"
                     key={opt.value}
                     onClick={() => setMode(opt.value)}
-                    className={`flex flex-col items-start gap-2 p-4 rounded-xl border text-left transition-all duration-micro ${
+                    className={`flex flex-col items-start gap-2 p-4 rounded-pf border text-left transition-all duration-micro ${
                       selected
                         ? 'bg-accent/10 border-accent/30 shadow-sm'
                         : 'border-default hover:border-strong'

@@ -159,7 +159,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
                   to={item.route}
                   title={collapsed ? item.label : undefined}
                   className={({ isActive }) =>
-                    `flex items-center gap-3 px-3 py-2 rounded-sm text-body-sm transition-colors duration-micro focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 focus-visible:rounded-lg ${
+                    `flex items-center gap-3 px-3 py-2 rounded-sm text-body-sm transition-colors duration-micro focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 focus-visible:rounded-pf ${
                       isActive
                         ? 'bg-accent/10 text-accent-text'
                         : 'text-secondary hover:bg-surface hover:text-primary'
@@ -190,7 +190,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
           target="_blank"
           rel="noopener noreferrer"
           title={collapsed ? 'Help & Support' : undefined}
-          className="flex items-center gap-3 px-3 py-2 rounded-sm text-body-sm transition-colors duration-micro text-tertiary hover:bg-surface hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 focus-visible:rounded-lg"
+          className="flex items-center gap-3 px-3 py-2 rounded-sm text-body-sm transition-colors duration-micro text-tertiary hover:bg-surface hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 focus-visible:rounded-pf"
         >
           <HelpCircle size={18} className="shrink-0" aria-hidden="true" />
           {!collapsed && <span>Help & Support</span>}
@@ -199,7 +199,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
           type="button"
           onClick={() => window.dispatchEvent(new CustomEvent('open-shortcuts'))}
           title={collapsed ? 'Keyboard shortcuts' : undefined}
-          className="flex items-center gap-3 px-3 py-2 rounded-sm text-body-sm transition-colors duration-micro text-tertiary hover:bg-surface hover:text-primary w-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 focus-visible:rounded-lg"
+          className="flex items-center gap-3 px-3 py-2 rounded-sm text-body-sm transition-colors duration-micro text-tertiary hover:bg-surface hover:text-primary w-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 focus-visible:rounded-pf"
           aria-label="Keyboard shortcuts"
         >
           <Keyboard size={18} className="shrink-0" aria-hidden="true" />
@@ -239,7 +239,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
         <button
           type="button"
           onClick={onToggle}
-          className="flex items-center gap-3 px-2 py-2 rounded-sm text-body-sm transition-colors duration-micro text-secondary hover:bg-surface hover:text-primary w-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 focus-visible:rounded-lg"
+          className="flex items-center gap-3 px-2 py-2 rounded-sm text-body-sm transition-colors duration-micro text-secondary hover:bg-surface hover:text-primary w-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 focus-visible:rounded-pf"
           aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
         >
           {collapsed ? (
@@ -252,7 +252,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
           to="/settings"
           title={collapsed ? 'Settings' : undefined}
           className={({ isActive }) =>
-            `flex items-center gap-3 px-3 py-2 rounded-sm text-body-sm transition-colors duration-micro focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 focus-visible:rounded-lg ${
+            `flex items-center gap-3 px-3 py-2 rounded-sm text-body-sm transition-colors duration-micro focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 focus-visible:rounded-pf ${
               isActive
                 ? 'bg-accent/10 text-accent-text'
                 : 'text-secondary hover:bg-surface hover:text-primary'

@@ -864,7 +864,7 @@ export function Component() {
             {/* Price pills + TP/SL + Run Strategy */}
             <div className="flex items-center gap-3 flex-wrap sm:flex-shrink-0">
               <div className="flex gap-2">
-                <div className="flex flex-col items-center px-4 py-2 rounded-lg bg-gain/10 border border-gain/20">
+                <div className="flex flex-col items-center px-4 py-2 rounded-pf bg-gain/10 border border-gain/20">
                   <span className="text-caption uppercase tracking-wide text-gain/70">YES</span>
                   <span className="text-lg font-mono font-semibold text-gain">
                     {yesPrice ?? '\u2014'}
@@ -890,7 +890,7 @@ export function Component() {
                     </Button>
                   </div>
                 </div>
-                <div className="flex flex-col items-center px-4 py-2 rounded-lg bg-loss/10 border border-loss/20">
+                <div className="flex flex-col items-center px-4 py-2 rounded-pf bg-loss/10 border border-loss/20">
                   <span className="text-caption uppercase tracking-wide text-loss/70">NO</span>
                   <span className="text-lg font-mono font-semibold text-loss">
                     {noPrice ?? '\u2014'}
@@ -935,7 +935,7 @@ export function Component() {
               { icon: <Droplets className="size-4 text-tertiary" />, label: 'Liquidity', value: totalLiquidity(market.tokens) },
               { icon: <Clock className="size-4 text-tertiary" />, label: 'End Date', value: formatDate(market.endDate) },
             ].map((stat) => (
-              <div key={stat.label} className="bg-elevated border border-default rounded-xl p-4">
+              <div key={stat.label} className="bg-elevated border border-default rounded-pf p-4">
                 <div className="flex items-center gap-2 mb-1">
                   {stat.icon}
                   <span className="text-label text-tertiary">{stat.label}</span>
@@ -946,7 +946,7 @@ export function Component() {
           </div>
 
           {/* Price History Chart */}
-          <div className="bg-elevated border border-default rounded-xl overflow-hidden">
+          <div className="bg-elevated border border-default rounded-pf overflow-hidden">
             {/* Header row */}
             <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 border-b border-default">
               <div className="flex items-center gap-3">
@@ -1087,7 +1087,7 @@ export function Component() {
           {/* Chart + Order Book */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
             {/* Chart */}
-            <div className="lg:col-span-2 bg-elevated border border-default rounded-xl p-4">
+            <div className="lg:col-span-2 bg-elevated border border-default rounded-pf p-4">
               <div className="flex items-center justify-between mb-4">
                 <span className="text-body-md font-medium text-primary">Price History &mdash; YES</span>
                 <div className="flex gap-1">
@@ -1177,7 +1177,7 @@ export function Component() {
             {/* Right column: Order Book + Trade Panel */}
             <div className="space-y-4">
             {/* Order Book */}
-            <div className="bg-elevated border border-default rounded-xl p-4">
+            <div className="bg-elevated border border-default rounded-pf p-4">
               <div className="flex items-center justify-between mb-3">
                 <span className="text-body-md font-medium text-primary">Order Book</span>
                 <div className="flex items-center gap-2">
@@ -1448,7 +1448,7 @@ export function Component() {
             </div>
 
             {/* Trade Panel */}
-            <div className="bg-elevated border border-default rounded-xl p-4">
+            <div className="bg-elevated border border-default rounded-pf p-4">
               <span className="text-body-md font-medium text-primary">Trade</span>
 
               {/* Wallet not connected — prompt user */}
@@ -1685,7 +1685,7 @@ export function Component() {
             </div>
 
             {/* Provide Liquidity */}
-            <div className="bg-elevated border border-default rounded-xl overflow-hidden">
+            <div className="bg-elevated border border-default rounded-pf overflow-hidden">
               <Button
                 type="button"
                 variant="ghost"
@@ -1787,7 +1787,7 @@ export function Component() {
             </div>
 
             {/* Community Sentiment */}
-            <div className="bg-elevated border border-default rounded-xl p-4">
+            <div className="bg-elevated border border-default rounded-pf p-4">
               {/* Header */}
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
@@ -1943,7 +1943,7 @@ export function Component() {
             </div>
 
             {/* Price Alerts Widget */}
-            <div className="bg-elevated border border-default rounded-xl overflow-hidden">
+            <div className="bg-elevated border border-default rounded-pf overflow-hidden">
               {/* Header */}
               <div className="flex items-center justify-between px-4 py-3 border-b border-default">
                 <div className="flex items-center gap-2">
@@ -2166,7 +2166,7 @@ export function Component() {
           </div>
 
           {/* Strategies on this market */}
-          <div className="bg-elevated border border-default rounded-xl p-6">
+          <div className="bg-elevated border border-default rounded-pf p-6">
             <h2 className="text-body-md font-medium text-primary mb-4">Strategies on This Market</h2>
             <div className="flex flex-col items-center py-6 text-center">
               <Zap className="size-6 text-tertiary mb-2" />
@@ -2183,7 +2183,7 @@ export function Component() {
           </div>
 
           {/* Related News */}
-          <div className="bg-elevated border border-default rounded-xl overflow-hidden">
+          <div className="bg-elevated border border-default rounded-pf overflow-hidden">
             <div className="flex items-center justify-between px-6 py-4">
               <div className="flex items-center gap-2">
                 <Newspaper className="size-4 text-tertiary" aria-hidden="true" />
@@ -2257,7 +2257,7 @@ export function Component() {
 
           {/* Description */}
           {market.description && (
-            <div className="bg-elevated border border-default rounded-xl p-6">
+            <div className="bg-elevated border border-default rounded-pf p-6">
               <h2 className="text-body-md font-medium text-primary mb-2">About</h2>
               <p className="text-body-sm text-secondary leading-relaxed">{market.description}</p>
             </div>
@@ -2266,7 +2266,7 @@ export function Component() {
           {/* Conditional Order Dialog (TP/SL) */}
           {showConditional && (
             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" role="dialog" aria-modal="true" aria-label="Set Conditional Order">
-              <div className="animate-scale-in bg-elevated border border-default rounded-xl w-full max-w-sm p-6 shadow-lg">
+              <div className="animate-scale-in bg-elevated border border-default rounded-pf w-full max-w-sm p-6 shadow-lg">
                 <div className="flex items-center justify-between mb-5">
                   <h2 className="text-base font-semibold text-primary">
                     {condType === 'TAKE_PROFIT' ? 'Set Take Profit' : 'Set Stop Loss'} &mdash; {condOutcome}
@@ -2339,7 +2339,7 @@ export function Component() {
           {/* Run Strategy Dialog */}
           {showRunStrategy && (
             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" role="dialog" aria-modal="true" aria-label="Run Strategy">
-              <div className="animate-scale-in bg-elevated border border-default rounded-xl w-full max-w-md p-6 shadow-lg">
+              <div className="animate-scale-in bg-elevated border border-default rounded-pf w-full max-w-md p-6 shadow-lg">
                 <div className="flex items-center justify-between mb-5">
                   <h2 className="text-base font-semibold text-primary">Run Strategy on This Market</h2>
                   <Button

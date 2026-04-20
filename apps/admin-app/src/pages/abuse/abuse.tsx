@@ -98,7 +98,7 @@ function formatRelativeTime(iso: string): string {
 
 function SkeletonCard() {
   return (
-    <div className="rounded-lg border border-default bg-surface p-5 animate-pulse space-y-3">
+    <div className="rounded-pf border border-default bg-surface p-5 animate-pulse space-y-3">
       <div className="flex items-center gap-3">
         <div className="h-5 w-20 rounded-sm bg-elevated" />
         <div className="h-5 w-40 rounded-sm bg-elevated" />
@@ -130,8 +130,8 @@ interface SummaryCardProps {
 
 function SummaryCard({ label, value, icon, accent }: SummaryCardProps) {
   return (
-    <div className="rounded-lg border border-default bg-surface p-4 flex items-center gap-4">
-      <div className={`flex items-center justify-center w-10 h-10 rounded-lg ${accent ?? 'bg-elevated text-secondary'}`}>
+    <div className="rounded-pf border border-default bg-surface p-4 flex items-center gap-4">
+      <div className={`flex items-center justify-center w-10 h-10 rounded-pf ${accent ?? 'bg-elevated text-secondary'}`}>
         {icon}
       </div>
       <div>
@@ -179,7 +179,7 @@ function FlaggedCard({ strategy, onAction }: FlaggedCardProps) {
   const isActioning = pending !== null;
 
   return (
-    <div className="rounded-lg border border-default bg-surface p-5 space-y-4">
+    <div className="rounded-pf border border-default bg-surface p-5 space-y-4">
       {/* Header row */}
       <div className="flex flex-wrap items-start gap-2">
         <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-sm text-label font-semibold uppercase tracking-wider ${SEVERITY_STYLES[strategy.severity]}`}>

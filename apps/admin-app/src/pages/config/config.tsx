@@ -236,7 +236,7 @@ interface SectionCardProps {
 
 function SectionCard({ title, children }: SectionCardProps) {
   return (
-    <section className="rounded-xl border border-default bg-elevated p-6 space-y-5">
+    <section className="rounded-pf border border-default bg-elevated p-6 space-y-5">
       <h2 className="text-base font-semibold text-primary">{title}</h2>
       {children}
     </section>
@@ -269,7 +269,7 @@ function FieldRow({ label, description, children }: FieldRowProps) {
 
 function ConfigSkeleton() {
   const shimmerCard = (rows: number) => (
-    <div className="rounded-xl border border-default bg-elevated p-6 space-y-5 animate-shimmer">
+    <div className="rounded-pf border border-default bg-elevated p-6 space-y-5 animate-shimmer">
       <div className="h-4 w-40 rounded-sm bg-default" />
       {Array.from({ length: rows }).map((_, i) => (
         <div key={i} className="flex items-center justify-between gap-4">
@@ -305,7 +305,7 @@ function MaintenanceConfirmBox({ onConfirm, onCancel }: MaintenanceConfirmProps)
     <div
       role="alertdialog"
       aria-labelledby="maintenance-confirm-heading"
-      className="mt-3 rounded-xl border border-warning/40 bg-warning/10 p-4 space-y-3"
+      className="mt-3 rounded-pf border border-warning/40 bg-warning/10 p-4 space-y-3"
     >
       <div className="flex items-start gap-2">
         <AlertTriangle className="mt-1 h-4 w-4 shrink-0 text-warning" aria-hidden />
@@ -480,7 +480,7 @@ export function Component() {
         {/* Header */}
         <div className="flex items-start justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-elevated border border-default">
+            <div className="flex h-10 w-10 items-center justify-center rounded-pf bg-elevated border border-default">
               <Settings2 className="h-5 w-5 text-accent-text" aria-hidden />
             </div>
             <div>
@@ -751,7 +751,7 @@ export function Component() {
                       key={key}
                       role="listitem"
                       className={[
-                        'relative flex items-center justify-between gap-3 rounded-xl border px-4 py-3 transition-colors',
+                        'relative flex items-center justify-between gap-3 rounded-pf border px-4 py-3 transition-colors',
                         enabled
                           ? 'border-default bg-surface'
                           : 'border-subtle bg-surface/50',

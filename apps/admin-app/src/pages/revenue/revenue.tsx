@@ -415,13 +415,13 @@ export function Component() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {loading
           ? Array.from({ length: 4 }, (_, i) => (
-              <div key={i} className="bg-elevated border border-default rounded-xl p-4 animate-pulse">
+              <div key={i} className="bg-elevated border border-default rounded-pf p-4 animate-pulse">
                 <Skeleton className="h-3 w-24 mb-3" />
                 <Skeleton className="h-7 w-16" />
               </div>
             ))
           : statCards.map(card => (
-              <div key={card.label} className="bg-elevated border border-default rounded-xl p-4">
+              <div key={card.label} className="bg-elevated border border-default rounded-pf p-4">
                 <div className="flex items-center gap-2 mb-2">
                   <div className={`p-2 rounded-sm ${card.bg} ${card.color}`}>{card.icon}</div>
                   <span className="text-label text-tertiary font-medium uppercase tracking-wider">{card.label}</span>
@@ -436,7 +436,7 @@ export function Component() {
       {/* SECTION 1 — Revenue breakdown                                     */}
       {/* ══════════════════════════════════════════════════════════════════ */}
 
-      <div className="bg-elevated border border-default rounded-xl overflow-hidden">
+      <div className="bg-elevated border border-default rounded-pf overflow-hidden">
         <div className="flex items-center justify-between px-4 py-3 border-b border-default">
           <div className="flex items-center gap-2">
             <PieChartIcon className="size-4 text-accent-text" />
@@ -605,7 +605,7 @@ export function Component() {
       {/* SECTION 2 — Monthly revenue trend (existing, enhanced)            */}
       {/* ══════════════════════════════════════════════════════════════════ */}
 
-      <div className="bg-elevated border border-default rounded-xl overflow-hidden">
+      <div className="bg-elevated border border-default rounded-pf overflow-hidden">
         <div className="flex items-center justify-between px-4 py-3 border-b border-default">
           <div className="flex items-center gap-2">
             <BarChart2 className="size-4 text-accent-text" />
@@ -687,7 +687,7 @@ export function Component() {
       {/* SECTION 3 — Period-over-period comparison bar chart               */}
       {/* ══════════════════════════════════════════════════════════════════ */}
 
-      <div className="bg-elevated border border-default rounded-xl overflow-hidden">
+      <div className="bg-elevated border border-default rounded-pf overflow-hidden">
         <div className="flex items-center gap-2 px-4 py-3 border-b border-default">
           <TrendingUp className="size-4 text-gain" />
           <h2 className="text-body-md font-semibold text-primary">Period-over-Period Comparison</h2>
@@ -730,7 +730,7 @@ export function Component() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Top Listings */}
-        <div className="bg-elevated border border-default rounded-xl overflow-hidden">
+        <div className="bg-elevated border border-default rounded-pf overflow-hidden">
           <div className="px-4 py-3 border-b border-default">
             <h2 className="text-body-md font-semibold text-primary">Top Listings by Revenue</h2>
           </div>
@@ -770,7 +770,7 @@ export function Component() {
         </div>
 
         {/* Recent Purchases */}
-        <div className="bg-elevated border border-default rounded-xl overflow-hidden">
+        <div className="bg-elevated border border-default rounded-pf overflow-hidden">
           <div className="px-4 py-3 border-b border-default">
             <h2 className="text-body-md font-semibold text-primary">Recent Purchases (30d)</h2>
           </div>
@@ -807,7 +807,7 @@ export function Component() {
       {/* SECTION 5 — Top revenue-generating users                          */}
       {/* ══════════════════════════════════════════════════════════════════ */}
 
-      <div className="bg-elevated border border-default rounded-xl overflow-hidden">
+      <div className="bg-elevated border border-default rounded-pf overflow-hidden">
         <div className="flex items-center justify-between px-4 py-3 border-b border-default">
           <div className="flex items-center gap-2">
             <Users className="size-4 text-accent-text" />

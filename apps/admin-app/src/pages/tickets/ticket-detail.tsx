@@ -114,12 +114,12 @@ export function Component() {
     return (
       <div className="animate-pulse space-y-6" role="status" aria-label="Loading ticket details">
         <div className="h-4 bg-elevated rounded-sm w-32" />
-        <div className="bg-elevated border border-default rounded-xl p-6 space-y-4">
+        <div className="bg-elevated border border-default rounded-pf p-6 space-y-4">
           <div className="h-5 bg-app rounded-sm w-64" />
           <div className="h-4 bg-app rounded-sm w-48" />
           <div className="h-4 bg-app rounded-sm w-32" />
         </div>
-        <div className="h-32 bg-elevated rounded-xl animate-pulse" />
+        <div className="h-32 bg-elevated rounded-pf animate-pulse" />
       </div>
     );
   }
@@ -153,7 +153,7 @@ export function Component() {
       </Button>
 
       {/* Header */}
-      <header className="bg-elevated border border-default rounded-xl p-6">
+      <header className="bg-elevated border border-default rounded-pf p-6">
         <div className="flex flex-wrap items-start justify-between gap-4 mb-4">
           <div>
             <h2 className="text-lg font-semibold text-primary">
@@ -220,7 +220,7 @@ export function Component() {
           return (
             <div
               key={msg.id ?? i}
-              className={`p-4 rounded-xl border ${
+              className={`p-4 rounded-pf border ${
                 isAdmin
                   ? 'bg-accent/5 border-accent/20 ml-8'
                   : 'bg-elevated border-default mr-8'
@@ -244,7 +244,7 @@ export function Component() {
       <form
         onSubmit={handleReply}
         noValidate
-        className="bg-elevated border border-default rounded-xl p-4"
+        className="bg-elevated border border-default rounded-pf p-4"
       >
         <label htmlFor="ticket-reply" className="sr-only">Reply message</label>
         <Textarea

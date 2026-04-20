@@ -76,7 +76,7 @@ export function ShortcutsModal({ open, onClose }: ShortcutsModalProps) {
       onClick={onClose}
     >
       <div
-        className="animate-fade-in bg-surface border border-default rounded-xl w-full max-w-2xl max-h-[80vh] overflow-y-auto mx-4"
+        className="animate-fade-in bg-surface border border-default rounded-pf w-full max-w-2xl max-h-[80vh] overflow-y-auto mx-4"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}

@@ -297,7 +297,7 @@ function CorrelationBar({ value }: { value: number }) {
 
 function AnalyticsSkeleton() {
   return (
-    <div className="mt-3 overflow-x-auto animate-shimmer rounded-lg">
+    <div className="mt-3 overflow-x-auto animate-shimmer rounded-pf">
       <table className="w-full text-body-sm" aria-label="Copy trader analytics loading">
         <thead>
           <tr className="border-b border-default text-left">
@@ -336,7 +336,7 @@ function AnalyticsPanel({ analytics, loading, expanded, onToggle }: AnalyticsPan
     : false;
 
   return (
-    <div className="rounded-xl border border-default bg-elevated overflow-hidden">
+    <div className="rounded-pf border border-default bg-elevated overflow-hidden">
       {/* Summary bar — always visible */}
       <Button
         type="button"
@@ -700,7 +700,7 @@ export function Component() {
         }, 0);
         const pnlPositive = totalPnl >= 0;
         return (
-          <div className="flex flex-wrap items-center gap-3 px-4 py-3 rounded-xl bg-elevated border border-default text-body-sm">
+          <div className="flex flex-wrap items-center gap-3 px-4 py-3 rounded-pf bg-elevated border border-default text-body-sm">
             <span className="flex items-center gap-2 text-secondary">
               <TrendingUp className="size-4 text-accent-text" aria-hidden="true" />
               <span className="font-medium text-primary">{configs.length}</span>
@@ -772,7 +772,7 @@ export function Component() {
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); navigate(`/copy/${config.id}`); }
                 }}
-                className="group bg-elevated border border-default rounded-xl p-5 cursor-pointer transition-all duration-panel hover:border-strong hover:shadow-sm hover:-translate-y-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+                className="group bg-elevated border border-default rounded-pf p-5 cursor-pointer transition-all duration-panel hover:border-strong hover:shadow-sm hover:-translate-y-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
               >
                 {/* Wallet + Status */}
                 <div className="flex items-start justify-between gap-3 mb-3">

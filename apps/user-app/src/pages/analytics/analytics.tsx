@@ -143,7 +143,7 @@ function StatCard({
   valueClass?: string;
 }) {
   return (
-    <div className="bg-elevated border border-default rounded-xl p-5">
+    <div className="bg-elevated border border-default rounded-pf p-5">
       <span className="text-label font-medium uppercase tracking-wider text-secondary block mb-2">
         {label}
       </span>
@@ -441,7 +441,7 @@ export function Component() {
       </div>
 
       {/* Row 2: P&L equity curve */}
-      <div className="bg-elevated border border-default rounded-xl p-6">
+      <div className="bg-elevated border border-default rounded-pf p-6">
         <h2 className="text-body-md font-medium text-primary mb-1">P&L Equity Curve</h2>
         <p className="text-label text-tertiary mb-4">Cumulative profit and loss over the selected period.</p>
         {loadingPnl ? (
@@ -501,7 +501,7 @@ export function Component() {
       {/* Row 3: Category table + Score breakdown */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Category Performance */}
-        <div className="bg-elevated border border-default rounded-xl overflow-hidden">
+        <div className="bg-elevated border border-default rounded-pf overflow-hidden">
           <div className="px-6 py-4 border-b border-default">
             <h2 className="text-body-md font-medium text-primary">Category Performance</h2>
             <p className="text-label text-tertiary mt-1">Brier score by category — lower is better.</p>
@@ -550,7 +550,7 @@ export function Component() {
         </div>
 
         {/* Score Breakdown */}
-        <div className="bg-elevated border border-default rounded-xl p-6">
+        <div className="bg-elevated border border-default rounded-pf p-6">
           <h2 className="text-body-md font-medium text-primary mb-1">Score Breakdown</h2>
           <p className="text-label text-tertiary mb-6">Key trading performance metrics.</p>
           {loadingScore ? (
@@ -587,7 +587,7 @@ export function Component() {
       </div>
 
       {/* ─── AI Portfolio Review ────────────────────────────────────────── */}
-      <div className="bg-elevated border border-default rounded-xl overflow-hidden">
+      <div className="bg-elevated border border-default rounded-pf overflow-hidden">
         {/* Card header */}
         <div className="px-6 py-4 border-b border-default flex items-center justify-between gap-3">
           <div className="flex items-center gap-2">
@@ -712,7 +712,7 @@ export function Component() {
       </div>
 
       {/* ─── Ask AI ─────────────────────────────────────────────────────── */}
-      <div className="bg-elevated border border-default rounded-xl p-6 space-y-4">
+      <div className="bg-elevated border border-default rounded-pf p-6 space-y-4">
         <div className="flex items-center gap-2">
           <Bot className="size-4 text-accent-text" aria-hidden="true" />
           <h2 className="text-body-md font-medium text-primary">Ask AI</h2>

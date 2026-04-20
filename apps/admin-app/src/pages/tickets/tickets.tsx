@@ -75,7 +75,7 @@ export function Component() {
         </Select>
       </div>
 
-      <div className="bg-elevated border border-default rounded-xl overflow-hidden">
+      <div className="bg-elevated border border-default rounded-pf overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-body-sm">
             <caption className="sr-only">Support tickets</caption>

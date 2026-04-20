@@ -128,8 +128,8 @@ export function Component() {
     return (
       <div className="p-6 max-w-3xl mx-auto space-y-4">
         <div className="h-6 w-48 bg-overlay rounded animate-pulse" />
-        <div className="h-40 bg-overlay rounded-xl animate-pulse" />
-        <div className="h-20 bg-overlay rounded-xl animate-pulse" />
+        <div className="h-40 bg-overlay rounded-pf animate-pulse" />
+        <div className="h-20 bg-overlay rounded-pf animate-pulse" />
       </div>
     );
   }
@@ -208,7 +208,7 @@ export function Component() {
             className={`flex ${msg.isAdmin ? 'justify-end' : 'justify-start'}`}
           >
             <div
-              className={`max-w-[80%] rounded-xl p-4 ${
+              className={`max-w-[80%] rounded-pf p-4 ${
                 msg.isAdmin
                   ? 'bg-accent/10 border border-accent/20'
                   : 'bg-elevated border border-default'
@@ -240,7 +240,7 @@ export function Component() {
 
       {/* Reply */}
       {ticket.status !== 'CLOSED' ? (
-        <div className="bg-elevated border border-default rounded-xl p-4">
+        <div className="bg-elevated border border-default rounded-pf p-4">
           <Textarea
             value={reply}
             onChange={e => setReply(e.target.value.slice(0, MAX_CHARS))}
@@ -266,7 +266,7 @@ export function Component() {
           </div>
         </div>
       ) : (
-        <div className="text-center py-4 text-body-sm text-tertiary bg-elevated border border-default rounded-xl">
+        <div className="text-center py-4 text-body-sm text-tertiary bg-elevated border border-default rounded-pf">
           This ticket has been closed.
         </div>
       )}

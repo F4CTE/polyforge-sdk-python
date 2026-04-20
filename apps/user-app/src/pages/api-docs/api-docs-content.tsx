@@ -109,7 +109,7 @@ export function renderContent({
         title="Getting Started"
         subtitle="Three steps to make your first API call against the Polyforge REST API."
       />
-      <div className="bg-elevated border border-default rounded-xl p-4 flex flex-wrap items-center justify-between gap-4">
+      <div className="bg-elevated border border-default rounded-pf p-4 flex flex-wrap items-center justify-between gap-4">
         <div>
           <p className="text-label text-tertiary uppercase tracking-wider mb-1">Base URL</p>
           <code className="text-body-md font-mono text-accent-text">https://api.polyforge.app/api/v1</code>
@@ -148,7 +148,7 @@ export function renderContent({
             ),
           },
         ].map(({ step, title, body }) => (
-          <div key={step} className="flex gap-4 p-4 bg-elevated border border-default rounded-xl">
+          <div key={step} className="flex gap-4 p-4 bg-elevated border border-default rounded-pf">
             <span className="shrink-0 w-6 h-6 rounded-full bg-accent/20 text-accent-text text-label font-semibold flex items-center justify-center">{step}</span>
             <div className="flex-1 space-y-3">
               <p className="text-body-md font-medium text-primary">{title}</p>
@@ -175,7 +175,7 @@ export function renderContent({
             { scope: 'WRITE', cls: SCOPE_CLS.WRITE, desc: 'Create/update strategies, alerts, webhooks, and run backtests.' },
             { scope: 'TRADE', cls: SCOPE_CLS.TRADE, desc: 'Place and cancel orders, start/stop strategies, manage copy trading.' },
           ] as { scope: string; cls: string; desc: string }[]).map(s => (
-            <div key={s.scope} className="flex items-start gap-3 p-3 bg-elevated border border-default rounded-xl hover:border-strong transition-all duration-panel">
+            <div key={s.scope} className="flex items-start gap-3 p-3 bg-elevated border border-default rounded-pf hover:border-strong transition-all duration-panel">
               <Badge text={s.scope} cls={s.cls} />
               <p className="text-label text-secondary leading-relaxed pt-1">{s.desc}</p>
             </div>
@@ -205,14 +205,14 @@ export function renderContent({
           { label: 'Python',     install: 'pip install polyforge',       cls: 'text-gain', code: `from polyforge import PolyforgeClient\nclient = PolyforgeClient(api_key='pf_...')` },
           { label: 'Rust',       install: 'cargo add polyforge tokio',   cls: 'text-warning', code: `use polyforge::PolyforgeClient;\nlet client = PolyforgeClient::new("pf_...");` },
         ]).map(s => (
-          <div key={s.label} className="bg-elevated border border-default rounded-xl p-4 space-y-3 hover:border-strong transition-all duration-panel">
+          <div key={s.label} className="bg-elevated border border-default rounded-pf p-4 space-y-3 hover:border-strong transition-all duration-panel">
             <p className={`text-body-md font-semibold ${s.cls}`}>{s.label}</p>
             <Code code={s.install} />
             <Code code={s.code} />
           </div>
         ))}
       </div>
-      <div className="bg-elevated border border-default rounded-xl p-4 space-y-3 hover:border-strong transition-all duration-panel">
+      <div className="bg-elevated border border-default rounded-pf p-4 space-y-3 hover:border-strong transition-all duration-panel">
         <div className="flex items-center gap-2">
           <p className="text-body-md font-semibold text-variable-text">MCP Server</p>
           <Badge text="Claude · Cursor · Windsurf · Zed" cls="bg-variable-subtle text-variable-text" />
@@ -233,7 +233,7 @@ export function renderContent({
     <div className="space-y-6">
       <PageTitle title="Changelog" subtitle="API version history and breaking changes." />
       {CHANGELOG.map(entry => (
-        <div key={entry.date} className="border border-default rounded-xl overflow-hidden">
+        <div key={entry.date} className="border border-default rounded-pf overflow-hidden">
           <div className="flex items-center gap-3 px-4 py-3 bg-surface border-b border-default">
             <span className="text-body-md font-semibold text-primary">{entry.date}</span>
             <Badge text={entry.tag} cls={tagCls(entry.tag)} />
@@ -279,7 +279,7 @@ export function renderContent({
         <Code code={`// Send after connection opens\n{ "event": "subscribe", "data": { "strategyId": "strat-uuid" } }`} lang="ts" />
       </Sub>
       <Sub title="Inbound event types">
-        <div className="border border-default rounded-xl overflow-hidden">
+        <div className="border border-default rounded-pf overflow-hidden">
           <table className="w-full text-body-sm" aria-label="Inbound event types">
             <thead>
               <tr className="bg-surface text-left text-label text-secondary uppercase tracking-wider border-b border-default">
@@ -373,7 +373,7 @@ export function renderContent({
         title="Rate Limits"
         subtitle="120 requests per minute per API key. Exceeding the limit returns 429 with a Retry-After header."
       />
-      <div className="border border-default rounded-xl overflow-hidden">
+      <div className="border border-default rounded-pf overflow-hidden">
         <table className="w-full text-body-sm" aria-label="Rate limit headers">
           <thead>
             <tr className="bg-surface text-left text-label text-secondary uppercase tracking-wider border-b border-default">
@@ -414,7 +414,7 @@ export function renderContent({
         <Code code={`{\n  "statusCode": 422,\n  "code": "STRATEGY_IS_RUNNING",\n  "message": "Stop the strategy before editing its blocks",\n  "field": null,\n  "requestId": "req_5f3a1e"\n}`} lang="ts" />
       </Sub>
       <Sub title="HTTP status codes">
-        <div className="border border-default rounded-xl overflow-hidden">
+        <div className="border border-default rounded-pf overflow-hidden">
           <table className="w-full text-body-sm" aria-label="HTTP status codes">
             <thead>
               <tr className="bg-surface text-left text-label text-secondary uppercase tracking-wider border-b border-default">

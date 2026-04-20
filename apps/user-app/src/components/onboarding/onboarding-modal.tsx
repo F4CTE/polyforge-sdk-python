@@ -202,7 +202,7 @@ function FeatureCardRow({ feature, asBullet }: { feature: FeatureCard; asBullet?
   }
 
   return (
-    <div className="flex flex-col gap-2 rounded-xl border border-default bg-surface p-4 flex-1 min-w-0">
+    <div className="flex flex-col gap-2 rounded-pf border border-default bg-surface p-4 flex-1 min-w-0">
       <div className="flex items-center gap-2">
         {feature.icon}
         <span className="text-primary text-body-md font-semibold">{feature.title}</span>

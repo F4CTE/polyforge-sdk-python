@@ -117,7 +117,7 @@ function timeAgo(ts: string): string {
 
 function ArticleSkeleton() {
   return (
-    <div className="bg-elevated border border-default rounded-xl p-4 space-y-3 animate-shimmer">
+    <div className="bg-elevated border border-default rounded-pf p-4 space-y-3 animate-shimmer">
       <div className="flex items-center gap-2">
         <div className="h-5 w-16 bg-overlay rounded-full" />
         <div className="h-5 w-16 bg-overlay rounded-full" />
@@ -132,7 +132,7 @@ function ArticleSkeleton() {
 
 function SignalSkeleton() {
   return (
-    <div className="bg-elevated border border-default rounded-xl p-3 space-y-2 animate-shimmer">
+    <div className="bg-elevated border border-default rounded-pf p-3 space-y-2 animate-shimmer">
       <div className="h-4 bg-overlay rounded w-[60%]" />
       <div className="h-3 bg-overlay rounded w-[40%]" />
       <div className="h-2 bg-overlay rounded w-full" />
@@ -385,7 +385,7 @@ export function Component() {
                   <div
                     key={article.id}
                     data-testid="news-card"
-                    className="bg-elevated border border-default rounded-xl p-4 transition-all duration-panel hover:border-strong hover:shadow-sm"
+                    className="bg-elevated border border-default rounded-pf p-4 transition-all duration-panel hover:border-strong hover:shadow-sm"
                   >
                     {/* Top row: badges + time */}
                     <div className="flex items-center gap-2 mb-2">
@@ -543,7 +543,7 @@ export function Component() {
         {/* Right column: Top Signals sidebar (1/3) — hidden when empty */}
         {(loadingSignals || topSignals.length > 0) && (
         <div className="space-y-4">
-          <div className="bg-elevated border border-default rounded-xl p-4">
+          <div className="bg-elevated border border-default rounded-pf p-4">
             <h2 className="text-body-md font-medium text-primary mb-4">Top Signals</h2>
 
             {loadingSignals && topSignals.length === 0 ? (

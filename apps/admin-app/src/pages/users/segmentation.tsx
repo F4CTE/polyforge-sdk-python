@@ -116,7 +116,7 @@ const COHORT_DEFINITIONS = [
 
 function CohortCardSkeleton() {
   return (
-    <div className="rounded-xl bg-elevated border border-default border-l-4 border-l-subtle p-4 space-y-3 animate-shimmer">
+    <div className="rounded-pf bg-elevated border border-default border-l-4 border-l-subtle p-4 space-y-3 animate-shimmer">
       <div className="flex items-center gap-2">
         <div className="w-5 h-5 rounded-sm bg-overlay" />
         <div className="h-4 w-28 rounded-sm bg-overlay" />
@@ -177,7 +177,7 @@ function BroadcastDialog({ cohortId, cohortLabel, userCount, onClose }: Broadcas
       className="fixed inset-0 z-50 flex items-center justify-center p-4"
     >
       <div className="absolute inset-0 bg-black/60" onClick={onClose} aria-hidden="true" />
-      <div className="relative z-10 w-full max-w-sm rounded-xl bg-elevated border border-default p-6 space-y-4 animate-fade-in">
+      <div className="relative z-10 w-full max-w-sm rounded-pf bg-elevated border border-default p-6 space-y-4 animate-fade-in">
         <h2 id="broadcast-dialog-title" className="text-base font-semibold text-primary">
           Send Broadcast
         </h2>
@@ -232,7 +232,7 @@ function CohortCard({ definition, stats, onViewUsers, onBroadcast }: CohortCardP
 
   return (
     <article
-      className={`rounded-xl bg-elevated border border-default border-l-4 ${definition.borderColor} p-4 flex flex-col gap-3 animate-fade-in`}
+      className={`rounded-pf bg-elevated border border-default border-l-4 ${definition.borderColor} p-4 flex flex-col gap-3 animate-fade-in`}
     >
       {/* Header */}
       <div className="flex items-start gap-2">
@@ -398,7 +398,7 @@ function DrillDown({ cohortId, onBack }: DrillDownProps) {
             { label: 'Avg P&L', value: stats.avgPnl },
             { label: 'Retention', value: `${stats.retentionRate}%` },
           ].map((item) => (
-            <div key={item.label} className="rounded-xl bg-elevated border border-default px-4 py-3">
+            <div key={item.label} className="rounded-pf bg-elevated border border-default px-4 py-3">
               <div className="text-label text-tertiary uppercase tracking-wider">{item.label}</div>
               <div className="text-lg font-semibold font-mono tabular-nums text-primary mt-1">{item.value}</div>
             </div>
@@ -407,7 +407,7 @@ function DrillDown({ cohortId, onBack }: DrillDownProps) {
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="rounded-xl bg-elevated border border-default px-4 py-3 animate-shimmer">
+            <div key={i} className="rounded-pf bg-elevated border border-default px-4 py-3 animate-shimmer">
               <div className="h-3 w-16 rounded-sm bg-overlay mb-2" />
               <div className="h-6 w-20 rounded-sm bg-overlay" />
             </div>
@@ -416,7 +416,7 @@ function DrillDown({ cohortId, onBack }: DrillDownProps) {
       )}
 
       {/* Table */}
-      <div className="rounded-xl bg-elevated border border-default overflow-hidden">
+      <div className="rounded-pf bg-elevated border border-default overflow-hidden">
         <div className="flex items-center justify-between px-4 py-3 border-b border-default">
           <span className="text-body-sm font-medium text-primary">
             {total > 0 ? `${total.toLocaleString()} users` : 'Users'}
@@ -558,7 +558,7 @@ function OverviewGrid({ statsMap, loading, onViewUsers, onBroadcast }: OverviewG
           return (
             <article
               key={definition.id}
-              className={`rounded-xl bg-elevated border border-default border-l-4 ${definition.borderColor} p-4 flex flex-col gap-3`}
+              className={`rounded-pf bg-elevated border border-default border-l-4 ${definition.borderColor} p-4 flex flex-col gap-3`}
             >
               <div className="flex items-center gap-2">
                 <definition.icon size={18} className={`${definition.iconColor} shrink-0`} aria-hidden="true" />

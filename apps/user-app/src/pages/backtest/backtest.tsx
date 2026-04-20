@@ -251,7 +251,7 @@ export function Component() {
       </div>
 
       {/* New run panel */}
-      <div className="bg-elevated border border-default rounded-xl p-5">
+      <div className="bg-elevated border border-default rounded-pf p-5">
         <div className="flex items-center gap-2 mb-4">
           <Play className="size-4 text-accent-text" />
           <span className="text-body-md font-medium text-primary">New Backtest</span>
@@ -355,7 +355,7 @@ export function Component() {
 
       {/* Selected run detail */}
       {selectedRun && (
-        <div className="bg-elevated border border-default rounded-xl p-5">
+        <div className="bg-elevated border border-default rounded-pf p-5">
           <div className="flex items-start justify-between mb-4">
             <div>
               <div className="text-body-md font-medium text-primary">{selectedRun.strategyName ?? 'Unnamed Strategy'}</div>
@@ -464,7 +464,7 @@ export function Component() {
       )}
 
       {/* History table */}
-      <div className="bg-elevated border border-default rounded-xl overflow-hidden">
+      <div className="bg-elevated border border-default rounded-pf overflow-hidden">
         <div className="px-4 pt-4 pb-2">
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-base font-semibold text-primary">Backtest History</h2>

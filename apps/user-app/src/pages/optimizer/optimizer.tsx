@@ -50,7 +50,7 @@ function ReviewSkeleton() {
   return (
     <div className="animate-fade-in space-y-6">
       {/* Score skeleton */}
-      <div className="bg-elevated border border-default rounded-xl p-6 space-y-3">
+      <div className="bg-elevated border border-default rounded-pf p-6 space-y-3">
         <div className="flex items-center justify-between">
           <div className="h-4 bg-overlay rounded w-28 animate-pulse" />
           <div className="h-7 bg-overlay rounded-full w-16 animate-pulse" />
@@ -63,7 +63,7 @@ function ReviewSkeleton() {
         </div>
       </div>
       {/* Suggestions skeleton */}
-      <div className="bg-elevated border border-default rounded-xl p-6 space-y-2">
+      <div className="bg-elevated border border-default rounded-pf p-6 space-y-2">
         <div className="h-4 bg-overlay rounded w-28 animate-pulse mb-4" />
         {[0, 1, 2].map((i) => (
           <div key={i} className="flex items-start gap-2">
@@ -129,7 +129,7 @@ export function Component() {
       {loading && <ReviewSkeleton />}
 
       {!loading && error && (
-        <div className="flex flex-col items-center justify-center py-20 text-center bg-elevated border border-default rounded-xl">
+        <div className="flex flex-col items-center justify-center py-20 text-center bg-elevated border border-default rounded-pf">
           <Sparkles className="size-10 text-tertiary mb-4 opacity-40" aria-hidden="true" />
           <p className="text-primary font-medium">Failed to load review</p>
           <p className="text-body-sm text-tertiary mt-1">{error}</p>
@@ -146,7 +146,7 @@ export function Component() {
       {!loading && data && (
         <>
           {/* Review card */}
-          <div className="bg-elevated border border-default rounded-xl p-6 space-y-4">
+          <div className="bg-elevated border border-default rounded-pf p-6 space-y-4">
             <div className="flex items-center justify-between flex-wrap gap-2">
               <h2 className="text-body-md font-medium text-primary uppercase tracking-wide">Portfolio Review</h2>
               <div className="flex items-center gap-2">
@@ -170,7 +170,7 @@ export function Component() {
 
           {/* Suggestions */}
           {data.suggestions.length > 0 && (
-            <div className="bg-elevated border border-default rounded-xl p-6">
+            <div className="bg-elevated border border-default rounded-pf p-6">
               <h2 className="text-body-md font-medium text-primary uppercase tracking-wide mb-4">Suggestions</h2>
               <ul className="space-y-3" aria-label="Portfolio suggestions">
                 {data.suggestions.map((suggestion, i) => (

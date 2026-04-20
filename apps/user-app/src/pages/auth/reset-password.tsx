@@ -70,7 +70,7 @@ export function Component() {
         </div>
 
         {/* Card */}
-        <div className="bg-elevated border border-default rounded-xl p-8 shadow-lg">
+        <div className="bg-elevated border border-default rounded-pf p-8 shadow-lg">
           {!done ? (
             <>
               <h1 className="text-xl font-semibold text-primary mb-1">Set new password</h1>

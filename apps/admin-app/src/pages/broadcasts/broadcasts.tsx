@@ -243,7 +243,7 @@ export function Component() {
 
       {/* Compose Panel */}
       {composeOpen && (
-        <div className="bg-elevated border border-default rounded-xl p-5 space-y-4">
+        <div className="bg-elevated border border-default rounded-pf p-5 space-y-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Send size={15} className="text-accent" aria-hidden="true" />
@@ -406,7 +406,7 @@ export function Component() {
       )}
 
       {/* Broadcast History */}
-      <div className="bg-elevated border border-default rounded-xl p-5">
+      <div className="bg-elevated border border-default rounded-pf p-5">
         <div className="flex items-center gap-2 mb-4">
           <Megaphone size={15} className="text-accent" aria-hidden="true" />
           <h3 className="text-body-md font-semibold text-primary">Broadcast History</h3>

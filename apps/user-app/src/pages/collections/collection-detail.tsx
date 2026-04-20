@@ -36,7 +36,7 @@ interface Listing {
 
 function ListingSkeleton() {
   return (
-    <div className="bg-elevated border border-default rounded-xl p-4 space-y-3 animate-shimmer">
+    <div className="bg-elevated border border-default rounded-pf p-4 space-y-3 animate-shimmer">
       <div className="h-4 bg-overlay rounded w-[60%]" />
       <div className="h-3 bg-overlay rounded w-[90%]" />
       <div className="h-3 bg-overlay rounded w-[75%]" />
@@ -94,7 +94,7 @@ export function Component() {
       {loading ? (
         <div className="space-y-3 animate-shimmer">
           <div className="flex items-center gap-4">
-            <div className="size-14 bg-overlay rounded-xl" />
+            <div className="size-14 bg-overlay rounded-pf" />
             <div className="space-y-2 flex-1">
               <div className="h-6 bg-overlay rounded w-[40%]" />
               <div className="h-4 bg-overlay rounded w-[60%]" />
@@ -145,7 +145,7 @@ export function Component() {
               {listings.map(listing => (
                 <div
                   key={listing.id}
-                  className="bg-elevated border border-default rounded-xl p-4 hover:border-strong hover:shadow-sm hover:-translate-y-1 transition-all duration-panel flex flex-col"
+                  className="bg-elevated border border-default rounded-pf p-4 hover:border-strong hover:shadow-sm hover:-translate-y-1 transition-all duration-panel flex flex-col"
                 >
                   {/* Seller */}
                   <div className="flex items-center gap-2 mb-2">

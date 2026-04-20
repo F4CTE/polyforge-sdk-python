@@ -94,7 +94,7 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
     >
       <div
         data-state={state}
-        className="animate-dialog-content w-full max-w-sm sm:max-w-xl mx-4 bg-elevated border border-default rounded-xl shadow-lg overflow-hidden"
+        className="animate-dialog-content w-full max-w-sm sm:max-w-xl mx-4 bg-elevated border border-default rounded-pf shadow-lg overflow-hidden"
         onClick={e => e.stopPropagation()}
       >
         {/* Search input */}
@@ -117,7 +117,7 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
           <kbd className="hidden sm:inline-flex items-center px-2 py-1 rounded text-label text-tertiary border border-default font-mono">
             Esc
           </kbd>
-          <button type="button" onClick={onClose} className="min-w-[44px] min-h-[44px] flex items-center justify-center text-tertiary hover:text-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 rounded-lg" aria-label="Close command palette">
+          <button type="button" onClick={onClose} className="min-w-[44px] min-h-[44px] flex items-center justify-center text-tertiary hover:text-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 rounded-pf" aria-label="Close command palette">
             <X className="size-4" />
           </button>
         </div>

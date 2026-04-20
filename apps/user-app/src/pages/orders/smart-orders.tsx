@@ -145,7 +145,7 @@ export function Component() {
       {/* Order types info */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         {(Object.keys(TYPE_DESC) as SmartOrderType[]).map((t) => (
-          <div key={t} className="p-3 bg-surface border border-default rounded-xl">
+          <div key={t} className="p-3 bg-surface border border-default rounded-pf">
             <p className="text-label font-semibold text-primary mb-1">{TYPE_LABEL[t]}</p>
             <p className="text-label text-tertiary leading-relaxed">{TYPE_DESC[t]}</p>
           </div>
@@ -156,7 +156,7 @@ export function Component() {
       {loading ? (
         <div className="space-y-2">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="h-20 bg-elevated border border-default rounded-xl animate-pulse" />
+            <div key={i} className="h-20 bg-elevated border border-default rounded-pf animate-pulse" />
           ))}
         </div>
       ) : orders.length === 0 ? (
@@ -172,7 +172,7 @@ export function Component() {
       ) : (
         <div className="space-y-2">
           {orders.map((so) => (
-            <div key={so.id} className="bg-elevated border border-default rounded-xl overflow-hidden">
+            <div key={so.id} className="bg-elevated border border-default rounded-pf overflow-hidden">
               {/* Row */}
               <div className="flex items-center gap-4 px-4 py-3">
                 <Button

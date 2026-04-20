@@ -69,7 +69,7 @@ function fmtPct(n: number): string {
 
 function CardSkeleton() {
   return (
-    <div className="bg-elevated border border-default rounded-xl p-4 animate-pulse">
+    <div className="bg-elevated border border-default rounded-pf p-4 animate-pulse">
       <div className="h-3 bg-app rounded-sm w-24 mb-3" />
       <div className="h-7 bg-app rounded-sm w-16" />
     </div>
@@ -78,7 +78,7 @@ function CardSkeleton() {
 
 function ChartSkeleton() {
   return (
-    <div className="bg-elevated border border-default rounded-xl p-5 animate-pulse">
+    <div className="bg-elevated border border-default rounded-pf p-5 animate-pulse">
       <div className="h-4 bg-app rounded-sm w-32 mb-4" />
       <div className="h-chart-sm bg-app rounded-sm" />
     </div>
@@ -87,7 +87,7 @@ function ChartSkeleton() {
 
 function TableSkeleton() {
   return (
-    <div className="bg-elevated border border-default rounded-xl p-5 animate-pulse">
+    <div className="bg-elevated border border-default rounded-pf p-5 animate-pulse">
       <div className="h-4 bg-app rounded-sm w-40 mb-4" />
       <div className="space-y-2">
         {[1, 2, 3, 4].map((i) => (
@@ -325,7 +325,7 @@ export function Component() {
           </div>
         </div>
       ) : overviewError ? (
-        <div className="bg-elevated border border-default rounded-xl p-6 text-center">
+        <div className="bg-elevated border border-default rounded-pf p-6 text-center">
           <p className="text-body-sm text-secondary">Overview data unavailable</p>
           <Button
             type="button"
@@ -341,7 +341,7 @@ export function Component() {
           {/* Row 1: DAU | WAU | MAU */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 stagger-children">
             {row1.map((card) => (
-              <div key={card.label} className="bg-elevated border border-default rounded-xl p-4">
+              <div key={card.label} className="bg-elevated border border-default rounded-pf p-4">
                 <div className="flex items-center justify-between mb-3">
                   <span className="text-label text-secondary">{card.label}</span>
                   <div className={`p-2 rounded-sm ${card.bg}`}>
@@ -355,7 +355,7 @@ export function Component() {
           {/* Row 2: DAU/WAU Ratio | New Users (7d) | Churn Rate */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 stagger-children">
             {row2.map((card) => (
-              <div key={card.label} className="bg-elevated border border-default rounded-xl p-4">
+              <div key={card.label} className="bg-elevated border border-default rounded-pf p-4">
                 <div className="flex items-center justify-between mb-3">
                   <span className="text-label text-secondary">{card.label}</span>
                   <div className={`p-2 rounded-sm ${card.bg}`}>
@@ -375,7 +375,7 @@ export function Component() {
       {loadingTrend ? (
         <ChartSkeleton />
       ) : trendError ? (
-        <div className="bg-elevated border border-default rounded-xl p-5">
+        <div className="bg-elevated border border-default rounded-pf p-5">
           <div className="flex items-center gap-2 mb-4">
             <TrendingUp size={16} className="text-tertiary" aria-hidden="true" />
             <h2 className="text-heading font-semibold text-primary">DAU Trend</h2>
@@ -393,7 +393,7 @@ export function Component() {
           </div>
         </div>
       ) : (
-        <div className="bg-elevated border border-default rounded-xl p-5">
+        <div className="bg-elevated border border-default rounded-pf p-5">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
               <TrendingUp size={16} className="text-accent" aria-hidden="true" />
@@ -472,7 +472,7 @@ export function Component() {
       {loadingCohorts ? (
         <TableSkeleton />
       ) : cohortsError ? (
-        <div className="bg-elevated border border-default rounded-xl p-5">
+        <div className="bg-elevated border border-default rounded-pf p-5">
           <div className="flex items-center gap-2 mb-4">
             <Users size={16} className="text-tertiary" aria-hidden="true" />
             <h2 className="text-heading font-semibold text-primary">Cohort Retention</h2>
@@ -490,7 +490,7 @@ export function Component() {
           </div>
         </div>
       ) : (
-        <div className="bg-elevated border border-default rounded-xl p-5">
+        <div className="bg-elevated border border-default rounded-pf p-5">
           <div className="flex items-center gap-2 mb-4">
             <Users size={16} className="text-accent" aria-hidden="true" />
             <h2 className="text-heading font-semibold text-primary">Cohort Retention</h2>

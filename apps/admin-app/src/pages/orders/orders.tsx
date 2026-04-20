@@ -119,7 +119,7 @@ export function Component() {
 
       {/* DLQ Section */}
       {dlqEntries.length > 0 && (
-        <div className="bg-elevated border border-warning/30 rounded-xl p-5">
+        <div className="bg-elevated border border-warning/30 rounded-pf p-5">
           <div className="flex items-center gap-2 mb-4">
             <AlertTriangle size={16} className="text-warning" aria-hidden="true" />
             <h3 className="text-body-md font-semibold text-warning">
@@ -195,7 +195,7 @@ export function Component() {
       )}
 
       {/* Orders Table */}
-      <div className="bg-elevated border border-default rounded-xl overflow-hidden">
+      <div className="bg-elevated border border-default rounded-pf overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-body-sm">
             <caption className="sr-only">Trading orders</caption>

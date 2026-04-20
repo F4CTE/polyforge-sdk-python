@@ -75,7 +75,7 @@ export function Component() {
 
   if (!user) return (
     <div className="animate-fade-in p-6 max-w-4xl mx-auto space-y-6">
-      <div className="bg-elevated border border-default rounded-xl p-6">
+      <div className="bg-elevated border border-default rounded-pf p-6">
         <div className="flex items-center gap-4 mb-4">
           <div className="size-20 rounded-full bg-surface animate-pulse" />
           <div className="space-y-2 flex-1">
@@ -105,7 +105,7 @@ export function Component() {
       </div>
 
       {/* Profile card */}
-      <div className="bg-elevated border border-default rounded-xl p-6">
+      <div className="bg-elevated border border-default rounded-pf p-6">
         {/* Identity */}
         <div className="flex items-center gap-4 mb-4">
           {user.avatarUrl ? (
@@ -159,7 +159,7 @@ export function Component() {
       </div>
 
       {/* Edge Rating card */}
-      <div data-testid="edge-rating" className="bg-elevated border border-default rounded-xl p-6">
+      <div data-testid="edge-rating" className="bg-elevated border border-default rounded-pf p-6">
         <div className="flex items-center gap-2 mb-4">
           <TrendingUp className="size-4 text-accent-text" />
           <h2 className="text-body-md font-semibold text-primary">Edge Rating</h2>
@@ -210,7 +210,7 @@ export function Component() {
       </div>
 
       {/* Badges card */}
-      <div className="bg-elevated border border-default rounded-xl p-6">
+      <div className="bg-elevated border border-default rounded-pf p-6">
         <div className="flex items-center gap-2 mb-4">
           <Award className="size-4 text-accent-text" />
           <h2 className="text-body-md font-semibold text-primary">Badges</h2>
@@ -253,7 +253,7 @@ export function Component() {
           <Link
             key={link.to}
             to={link.to}
-            className="flex items-center gap-3 px-4 py-3 bg-elevated border border-default rounded-xl hover:border-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 transition-colors"
+            className="flex items-center gap-3 px-4 py-3 bg-elevated border border-default rounded-pf hover:border-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 transition-colors"
           >
             <span className="text-tertiary">{link.icon}</span>
             <span className="text-body-md font-medium text-primary flex-1">{link.label}</span>

@@ -94,7 +94,7 @@ export function Component() {
       <div className="animate-fade-in space-y-6" role="status" aria-label="Loading cache statistics">
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="bg-elevated border border-default rounded-xl p-5 space-y-3">
+            <div key={i} className="bg-elevated border border-default rounded-pf p-5 space-y-3">
               <div className="h-3 bg-app rounded w-20 animate-pulse" />
               <div className="h-6 bg-app rounded w-16 animate-pulse" />
             </div>
@@ -143,19 +143,19 @@ export function Component() {
         <>
           {stats && (
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div className="bg-elevated border border-default rounded-xl p-4">
+              <div className="bg-elevated border border-default rounded-pf p-4">
                 <div className="text-label text-tertiary mb-1">Hit Rate</div>
                 <div className="text-2xl font-semibold text-primary">
                   {((stats.hitRate ?? 0) * 100).toFixed(1)}%
                 </div>
               </div>
-              <div className="bg-elevated border border-default rounded-xl p-4">
+              <div className="bg-elevated border border-default rounded-pf p-4">
                 <div className="text-label text-tertiary mb-1">Total Keys</div>
                 <div className="text-2xl font-semibold text-primary">
                   {(stats.keyCount ?? 0).toLocaleString()}
                 </div>
               </div>
-              <div className="bg-elevated border border-default rounded-xl p-4">
+              <div className="bg-elevated border border-default rounded-pf p-4">
                 <div className="text-label text-tertiary mb-1">Memory Usage</div>
                 <div className="text-2xl font-semibold text-primary">
                   {(stats.memoryUsageMb ?? 0).toFixed(1)} MB
@@ -164,7 +164,7 @@ export function Component() {
             </div>
           )}
 
-          <div className="bg-elevated border border-default rounded-xl p-5">
+          <div className="bg-elevated border border-default rounded-pf p-5">
             <div className="flex items-center gap-2 mb-4">
               <Trash2 size={16} className="text-warning" aria-hidden="true" />
               <h3 className="text-heading font-semibold text-primary">Flush by Pattern</h3>
@@ -192,7 +192,7 @@ export function Component() {
           </div>
 
           {stats && stats.patterns && stats.patterns.length > 0 && (
-            <div className="bg-elevated border border-default rounded-xl p-5">
+            <div className="bg-elevated border border-default rounded-pf p-5">
               <div className="flex items-center gap-2 mb-4">
                 <Database size={16} className="text-accent" aria-hidden="true" />
                 <h3 className="text-heading font-semibold text-primary">Cache Patterns</h3>
@@ -229,13 +229,13 @@ export function Component() {
           {loadingStreams ? (
             <div className="space-y-3">
               {Array.from({ length: 4 }).map((_, i) => (
-                <div key={i} className="bg-elevated border border-default rounded-xl p-4 animate-pulse h-20" />
+                <div key={i} className="bg-elevated border border-default rounded-pf p-4 animate-pulse h-20" />
               ))}
             </div>
           ) : streams ? (
             <div className="space-y-3">
               {streams.map((s) => (
-                <div key={s.name} className="bg-elevated border border-default rounded-xl p-4">
+                <div key={s.name} className="bg-elevated border border-default rounded-pf p-4">
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-2">
                       {s.error

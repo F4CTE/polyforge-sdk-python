@@ -213,12 +213,12 @@ function ComparisonPanel({ perfData, loading, onBack }: ComparisonPanelProps) {
         {/* Back button skeleton */}
         <div className="h-8 w-32 bg-overlay rounded animate-shimmer" />
         {/* Chart skeleton */}
-        <div className="bg-elevated border border-default rounded-xl p-5">
+        <div className="bg-elevated border border-default rounded-pf p-5">
           <div className="h-4 w-40 bg-overlay rounded mb-4 animate-shimmer" />
           <div className="h-56 bg-overlay rounded animate-shimmer" />
         </div>
         {/* Table skeleton */}
-        <div className="bg-elevated border border-default rounded-xl p-5 space-y-3">
+        <div className="bg-elevated border border-default rounded-pf p-5 space-y-3">
           <div className="h-4 w-32 bg-overlay rounded animate-shimmer" />
           {[1, 2, 3, 4, 5].map((i) => (
             <div key={i} className="h-8 bg-overlay rounded animate-shimmer" />
@@ -248,7 +248,7 @@ function ComparisonPanel({ perfData, loading, onBack }: ComparisonPanelProps) {
       </Button>
 
       {/* P&L Line Chart */}
-      <div className="bg-elevated border border-default rounded-xl p-5">
+      <div className="bg-elevated border border-default rounded-pf p-5">
         <h2 className="text-body-md font-semibold text-primary mb-4">P&L Performance</h2>
         {chartData.length === 0 ? (
           <div className="flex items-center justify-center h-56 text-tertiary text-body-sm">
@@ -300,7 +300,7 @@ function ComparisonPanel({ perfData, loading, onBack }: ComparisonPanelProps) {
       </div>
 
       {/* Stats Table */}
-      <div className="bg-elevated border border-default rounded-xl overflow-hidden">
+      <div className="bg-elevated border border-default rounded-pf overflow-hidden">
         <div className="p-5 pb-3">
           <h2 className="text-body-md font-semibold text-primary">Performance Metrics</h2>
         </div>
@@ -751,7 +751,7 @@ export function Component() {
                 role={compareMode ? 'checkbox' : 'link'}
                 aria-checked={compareMode ? isSelected : undefined}
                 className={[
-                  'group bg-elevated border rounded-xl p-5 cursor-pointer transition-all duration-panel overflow-hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40',
+                  'group bg-elevated border rounded-pf p-5 cursor-pointer transition-all duration-panel overflow-hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40',
                   compareMode && isSelected
                     ? 'border-accent/50 shadow-ring-accent'
                     : 'border-default hover:border-strong hover:shadow-sm hover:-translate-y-1',
@@ -762,7 +762,7 @@ export function Component() {
               >
                 {/* Gradient status bar */}
                 <div
-                  className="h-1 -mx-5 -mt-5 mb-4 rounded-t-xl"
+                  className="h-1 -mx-5 -mt-5 mb-4 rounded-t-pf"
                   style={{ background: statusGradient(strategy.status) }}
                   aria-hidden="true"
                 />

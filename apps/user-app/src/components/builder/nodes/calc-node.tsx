@@ -202,7 +202,7 @@ function CalcNodeInner({ id, data }: NodeProps<CalcNode>) {
       )}
 
       <div
-        className="builder-node-card w-[180px] rounded-lg shadow-md overflow-hidden"
+        className="builder-node-card w-[180px] rounded-pf shadow-md overflow-hidden"
         style={{ '--node-color': CALC_COLOR } as React.CSSProperties}
       >
         {/* Header bar */}

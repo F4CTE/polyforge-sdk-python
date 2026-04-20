@@ -651,7 +651,7 @@ export function Component() {
       </div>
 
       {/* Feed card */}
-      <div className="bg-elevated border border-default rounded-xl overflow-hidden">
+      <div className="bg-elevated border border-default rounded-pf overflow-hidden">
         {loading ? (
           <>
             <SkeletonRow />

@@ -86,7 +86,7 @@ export function Component() {
         </div>
 
         {/* Card */}
-        <div className="bg-elevated border border-default rounded-xl p-8 shadow-lg">
+        <div className="bg-elevated border border-default rounded-pf p-8 shadow-lg">
 
           {sessionExpired && (
             <div role="alert" className="flex items-center gap-2 bg-warning/10 border border-warning/20 text-warning rounded-pf px-4 py-3 mb-4 text-body-md">
@@ -194,7 +194,7 @@ export function Component() {
                     onChange={(e) => setTotp(e.target.value.replace(/\D/g, '').slice(0, 6))}
                     placeholder="000000"
                     aria-label="6-digit authentication code"
-                    className="w-full pl-10 pr-4 py-3 bg-app border border-default rounded-lg text-primary placeholder:text-tertiary/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 focus-visible:border-accent tracking-[0.3em] font-mono transition-colors"
+                    className="w-full pl-10 pr-4 py-3 bg-app border border-default rounded-pf text-primary placeholder:text-tertiary/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 focus-visible:border-accent tracking-[0.3em] font-mono transition-colors"
                   />
                 </div>
               </div>

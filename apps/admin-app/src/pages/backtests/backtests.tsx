@@ -279,7 +279,7 @@ export function Component() {
         ].map(({ label, value, highlight, danger }) => (
           <div
             key={label}
-            className="bg-elevated border border-default rounded-xl p-4"
+            className="bg-elevated border border-default rounded-pf p-4"
           >
             <p className="text-label text-tertiary mb-1">{label}</p>
             <p
@@ -353,7 +353,7 @@ export function Component() {
       </div>
 
       {/* Table */}
-      <div className="bg-elevated border border-default rounded-xl overflow-hidden">
+      <div className="bg-elevated border border-default rounded-pf overflow-hidden">
         <div className="overflow-x-auto" data-density="compact">
           <table className="w-full text-body-sm" aria-label="Backtest results">
             <caption className="sr-only">Backtest runs</caption>

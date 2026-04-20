@@ -80,7 +80,7 @@ export function Component() {
         </Button>
       </div>
 
-      <div className="bg-elevated border border-default rounded-xl overflow-hidden">
+      <div className="bg-elevated border border-default rounded-pf overflow-hidden">
         {loading ? (
           <div className="divide-y divide-subtle">
             {Array.from({ length: 5 }, (_, i) => (

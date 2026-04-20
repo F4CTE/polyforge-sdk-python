@@ -312,7 +312,7 @@ export function Component() {
   if (loading) {
     return (
       <div className="p-6 max-w-2xl mx-auto">
-        <div className="bg-elevated border border-default rounded-xl p-6">
+        <div className="bg-elevated border border-default rounded-pf p-6">
           <div className="flex items-center gap-4">
             <div className="size-20 rounded-full bg-overlay animate-pulse" />
             <div className="flex-1 space-y-2">
@@ -405,7 +405,7 @@ export function Component() {
       </div>
 
       {/* Profile card */}
-      <div className="bg-elevated border border-default rounded-xl p-6">
+      <div className="bg-elevated border border-default rounded-pf p-6">
         {/* Identity */}
         <div className="flex items-center gap-4 mb-4">
           {profile.avatarUrl ? (
@@ -448,7 +448,7 @@ export function Component() {
 
       {/* Score breakdown */}
       {scoreData?.score && (
-        <div data-testid="edge-rating" className="bg-elevated border border-default rounded-xl p-6">
+        <div data-testid="edge-rating" className="bg-elevated border border-default rounded-pf p-6">
           <div className="flex items-center gap-2 mb-4">
             <TrendingUp className="size-4 text-accent-text" />
             <h2 className="text-body-md font-semibold text-primary">Edge Rating</h2>
@@ -501,7 +501,7 @@ export function Component() {
         }));
 
         return (
-          <div className="bg-elevated border border-default rounded-xl p-6">
+          <div className="bg-elevated border border-default rounded-pf p-6">
             {/* Header row */}
             <div className="flex items-center gap-2 mb-4">
               <Award className="size-4 text-accent-text" />
@@ -590,7 +590,7 @@ export function Component() {
       })()}
 
       {/* ── A. Performance (30d) Sparkline ─────────────────────────────── */}
-      <div className="bg-elevated border border-default rounded-xl p-6">
+      <div className="bg-elevated border border-default rounded-pf p-6">
         <div className="flex items-center gap-2 mb-4">
           <BarChart2 className="size-4 text-accent-text" />
           <h2 className="text-body-md font-semibold text-primary">Performance (30d)</h2>
@@ -640,7 +640,7 @@ export function Component() {
       </div>
 
       {/* ── B. Public Strategies ────────────────────────────────────────── */}
-      <div className="bg-elevated border border-default rounded-xl p-6">
+      <div className="bg-elevated border border-default rounded-pf p-6">
         <div className="flex items-center gap-2 mb-4">
           <TrendingUp className="size-4 text-accent-text" />
           <h2 className="text-body-md font-semibold text-primary">Strategies</h2>
@@ -712,7 +712,7 @@ export function Component() {
       </div>
 
       {/* ── C. Recent Activity ──────────────────────────────────────────── */}
-      <div className="bg-elevated border border-default rounded-xl p-6">
+      <div className="bg-elevated border border-default rounded-pf p-6">
         <div className="flex items-center gap-2 mb-4">
           <TrendingUp className="size-4 text-accent-text" />
           <h2 className="text-body-md font-semibold text-primary">Recent Activity</h2>
