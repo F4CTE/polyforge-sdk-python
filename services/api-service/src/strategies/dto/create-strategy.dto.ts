@@ -156,18 +156,4 @@ export class CreateStrategyDto {
   @ValidateNested({ each: true })
   @Type(() => MarketSlotDto)
   marketSlots?: MarketSlotDto[];
-
-  @IsOptional()
-  @IsInt()
-  @Min(0)
-  @Max(10000)
-  warmupTicks?: number = 0;
-
-  @IsOptional()
-  @IsObject()
-  schedule?: Record<string, unknown>;
-
-  @IsOptional()
-  @IsObject()
-  settings?: Record<string, unknown>;
 }

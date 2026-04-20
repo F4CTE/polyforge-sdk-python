@@ -11,4 +11,14 @@ export class BuilderController {
   getStats() {
     return this.builder.getStats();
   }
+
+  @Get("leaderboard")
+  getLeaderboard() {
+    return this.builder.getBuilderLeaderboard();
+  }
+
+  @Get("volume")
+  getVolume() {
+    return this.builder.getBuilderVolume();
+  }
 }

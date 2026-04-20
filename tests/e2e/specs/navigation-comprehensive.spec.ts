@@ -4,8 +4,6 @@ import {
     apiLogin,
     uniqueEmail,
     uniqueUsername,
-    ensureFreshToken,
-    LoginResponse,
 } from '../helpers/api';
 
 /**
@@ -30,23 +28,19 @@ import {
  */
 
 // Shared test user — registered once, reused across all tests
-let sharedLoginState: LoginResponse;
 let sharedToken = '';
 
 test.beforeAll(async () => {
     const email = uniqueEmail('nav');
     const username = uniqueUsername('nav');
     const result = await apiRegisterAndVerify(email, username, 'Password123!');
-    sharedLoginState = await apiLogin(email, 'Password123!');
-    sharedToken = sharedLoginState.token;
+    const loginResult = await apiLogin(email, 'Password123!');
+    sharedToken = loginResult.token;
 });
 
 test.describe('Navigation — Full Workflow Coverage', () => {
 
     test.beforeEach(async ({ page }) => {
-        await ensureFreshToken(sharedLoginState);
-        sharedToken = sharedLoginState.token;
-
         await page.context().addCookies([{
             name: 'pf_token',
             value: sharedToken,

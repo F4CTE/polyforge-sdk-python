@@ -441,9 +441,6 @@ model Strategy {
   template         Boolean            @default(false)
   tags             String[]
   canvas           Json?
-  warmupTicks      Int                @default(0)
-  schedule         Json?
-  settings         Json?
   version          Int                @default(1)
   createdAt        DateTime           @default(now())
   updatedAt        DateTime           @updatedAt

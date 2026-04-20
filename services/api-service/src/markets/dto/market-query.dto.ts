@@ -62,3 +62,29 @@ export class PriceHistoryQueryDto {
   @Max(1000)
   limit?: number = 200;
 }
+
+export class ClobPriceHistoryQueryDto {
+  @IsOptional()
+  @IsIn(["1m", "5m", "1h", "4h", "1d", "1w", "max"])
+  interval?: string = "1h";
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @Max(500)
+  fidelity?: number = 60;
+}
+
+export class SearchQueryDto {
+  @IsString()
+  @MaxLength(255)
+  q!: string;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @Max(100)
+  limit?: number = 20;
+}

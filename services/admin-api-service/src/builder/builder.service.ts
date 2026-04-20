@@ -136,4 +136,72 @@ export class BuilderService {
       };
     }
   }
+
+  async getBuilderLeaderboard(): Promise<{
+    rank: number | null;
+    totalBuilders: number;
+    entries: unknown[];
+  }> {
+    try {
+      const res = await fetch(`${this.builderApiUrl}/v1/builders/leaderboard`, {
+        headers: {
+          "POLY-API-KEY": this.builderApiKey,
+          "POLY-API-SECRET": this.builderSecret,
+          "POLY-API-PASSPHRASE": this.builderPassphrase,
+          "Content-Type": "application/json",
+        },
+        signal: AbortSignal.timeout(10_000),
+      });
+
+      if (!res.ok) {
+        throw new Error(`Builder leaderboard API returned ${res.status}`);
+      }
+
+      const data = (await res.json()) as {
+        rank?: number;
+        totalBuilders?: number;
+        entries?: unknown[];
+      };
+
+      return {
+        rank: data.rank ?? null,
+        totalBuilders: data.totalBuilders ?? 0,
+        entries: data.entries ?? [],
+      };
+    } catch (err) {
+      this.logger.warn("Failed to fetch builder leaderboard", err);
+      return { rank: null, totalBuilders: 0, entries: [] };
+    }
+  }
+
+  async getBuilderVolume(): Promise<{ daily: unknown[]; totalVolume: number }> {
+    try {
+      const res = await fetch(`${this.builderApiUrl}/v1/builders/volume`, {
+        headers: {
+          "POLY-API-KEY": this.builderApiKey,
+          "POLY-API-SECRET": this.builderSecret,
+          "POLY-API-PASSPHRASE": this.builderPassphrase,
+          "Content-Type": "application/json",
+        },
+        signal: AbortSignal.timeout(10_000),
+      });
+
+      if (!res.ok) {
+        throw new Error(`Builder volume API returned ${res.status}`);
+      }
+
+      const data = (await res.json()) as {
+        daily?: unknown[];
+        totalVolume?: number;
+      };
+
+      return {
+        daily: data.daily ?? [],
+        totalVolume: data.totalVolume ?? 0,
+      };
+    } catch (err) {
+      this.logger.warn("Failed to fetch builder volume", err);
+      return { daily: [], totalVolume: 0 };
+    }
+  }
 }

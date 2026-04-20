@@ -147,6 +147,30 @@ export class GammaController {
     reply.send(this.formatMarket(market));
   }
 
+  // GET /public-search
+  @Get("public-search")
+  async publicSearch(
+    @Req() req: FastifyRequest,
+    @Res() reply: FastifyReply,
+    @Query("q") q?: string,
+    @Query("limit") limit?: string,
+  ) {
+    if (!(await this.guard(reply, req.ip))) return;
+
+    if (!q) {
+      return reply.send([]);
+    }
+
+    const lim = Math.min(parseInt(limit ?? "20", 10), 100);
+    const needle = q.toLowerCase();
+    const results = FIXTURE_MARKETS
+      .filter((m) => m.title.toLowerCase().includes(needle))
+      .slice(0, lim)
+      .map(this.formatMarket.bind(this));
+
+    reply.send(results);
+  }
+
   // GET /events (series markets)
   @Get("events")
   async listEvents(@Req() req: FastifyRequest, @Res() reply: FastifyReply) {

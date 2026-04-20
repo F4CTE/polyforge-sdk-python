@@ -327,6 +327,146 @@ export class OrdersService {
     return res.json();
   }
 
+  async placeBatch(
+    userId: string,
+    dto: { orders: PlaceOrderDto[] },
+  ): Promise<{ results: Array<{ orderId: string; intentId: string; status: string }> }> {
+    const user = await this.prisma.user.findUniqueOrThrow({
+      where: { id: userId },
+    });
+    if (!user.polymarketConnected) {
+      throw new ForbiddenException({
+        code: "WALLET_NOT_CONNECTED",
+        message: "Connect your Polymarket wallet first",
+      });
+    }
+
+    if (dto.orders.length > 15) {
+      throw new BadRequestException({
+        code: "BATCH_LIMIT_EXCEEDED",
+        message: "Maximum 15 orders per batch",
+      });
+    }
+
+    const totalSize = dto.orders.reduce((sum, o) => sum + Number(o.size), 0);
+
+    const now = new Date();
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    const monthlyVolumeAgg = await this.prisma.order.aggregate({
+      where: {
+        userId,
+        status: OrderStatus.CONFIRMED,
+        createdAt: { gte: monthStart },
+      },
+      _sum: { size: true },
+    });
+    const currentMonthlyVolume = Number(monthlyVolumeAgg._sum.size ?? 0);
+    if (currentMonthlyVolume + totalSize > BETA_LIMITS.maxMonthlyVolumeUsdc) {
+      throw new UnprocessableEntityException({
+        code: "MONTHLY_VOLUME_EXCEEDED",
+        message: `Beta limit: monthly trade volume cap exceeded by batch total.`,
+      });
+    }
+
+    const results: Array<{ orderId: string; intentId: string; status: string }> = [];
+
+    for (const orderDto of dto.orders) {
+      const token = await this.prisma.token.findUniqueOrThrow({
+        where: { id: orderDto.tokenId },
+        include: { market: true },
+      });
+
+      const intentId = randomUUID();
+      await this.redis.xadd("stream:orders", {
+        intentId,
+        userId,
+        strategyId: "",
+        marketId: token.marketId,
+        tokenId: orderDto.tokenId,
+        side: orderDto.side,
+        outcome: orderDto.outcome,
+        size: String(orderDto.size),
+        price: String(orderDto.price),
+        orderType: orderDto.orderType || "GTC",
+      });
+
+      const order = await this.prisma.order.create({
+        data: {
+          intentId,
+          userId,
+          strategyId: null,
+          marketId: token.marketId,
+          tokenId: orderDto.tokenId,
+          side: orderDto.side as OrderSide,
+          outcome: orderDto.outcome,
+          size: String(orderDto.size),
+          price: String(orderDto.price),
+          orderType: (orderDto.orderType || "GTC") as OrderType,
+          status: OrderStatus.PENDING,
+        },
+      });
+
+      results.push({ orderId: order.id, intentId, status: "PENDING" });
+    }
+
+    return { results };
+  }
+
+  async cancelBulk(
+    userId: string,
+    dto: { orderIds: string[] },
+  ): Promise<{ cancelled: string[]; errors: Array<{ orderId: string; reason: string }> }> {
+    if (dto.orderIds.length > 3000) {
+      throw new BadRequestException({
+        code: "BULK_CANCEL_LIMIT_EXCEEDED",
+        message: "Maximum 3000 orders per bulk cancel",
+      });
+    }
+
+    const cancelled: string[] = [];
+    const errors: Array<{ orderId: string; reason: string }> = [];
+
+    for (const orderId of dto.orderIds) {
+      try {
+        const order = await this.prisma.order.findUnique({
+          where: { id: orderId },
+        });
+
+        if (!order) {
+          errors.push({ orderId, reason: "NOT_FOUND" });
+          continue;
+        }
+        if (order.userId !== userId) {
+          errors.push({ orderId, reason: "FORBIDDEN" });
+          continue;
+        }
+        if (!["PENDING", "SUBMITTED", "LIVE"].includes(order.status)) {
+          errors.push({ orderId, reason: `NOT_CANCELLABLE_${order.status}` });
+          continue;
+        }
+
+        await this.prisma.order.update({
+          where: { id: orderId },
+          data: { status: OrderStatus.CANCELLED },
+        });
+
+        if (order.clobOrderId) {
+          await this.redis.xadd("stream:cancellations", {
+            orderId,
+            clobOrderId: order.clobOrderId,
+            userId,
+          });
+        }
+
+        cancelled.push(orderId);
+      } catch {
+        errors.push({ orderId, reason: "INTERNAL_ERROR" });
+      }
+    }
+
+    return { cancelled, errors };
+  }
+
   async placeOrder(userId: string, dto: PlaceOrderDto) {
     // 1. Find user and verify polymarketConnected
     const user = await this.prisma.user.findUniqueOrThrow({

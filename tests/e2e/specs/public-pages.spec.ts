@@ -13,23 +13,23 @@ import { test, expect } from '@playwright/test';
 test.describe('Public pages', () => {
 
     test('@smoke /privacy page renders correctly', async ({ page }) => {
-        await page.goto('/privacy', { waitUntil: 'networkidle' });
+        await page.goto('/privacy');
         await expect(page.locator('h1', { hasText: 'Privacy Policy' })).toBeVisible({ timeout: 15_000 });
         // Must not redirect to login
         await expect(page).not.toHaveURL(/\/login/);
-        // Back navigation present (LegalHeader renders a <button>, not <a>)
-        await expect(page.locator('button', { hasText: /back/i }).first()).toBeVisible();
+        // Back navigation present
+        await expect(page.locator('a', { hasText: /back/i }).first()).toBeVisible();
     });
 
     test('@smoke /terms page renders correctly', async ({ page }) => {
-        await page.goto('/terms', { waitUntil: 'networkidle' });
+        await page.goto('/terms');
         await expect(page.locator('h1', { hasText: 'Terms of Service' })).toBeVisible({ timeout: 15_000 });
         await expect(page).not.toHaveURL(/\/login/);
-        await expect(page.locator('button', { hasText: /back/i }).first()).toBeVisible();
+        await expect(page.locator('a', { hasText: /back/i }).first()).toBeVisible();
     });
 
     test('@smoke /api-docs page renders without auth', async ({ page }) => {
-        await page.goto('/api-docs', { waitUntil: 'networkidle' });
+        await page.goto('/api-docs');
         // Should not redirect to login
         await expect(page).not.toHaveURL(/\/login/);
         // API docs content is present (any heading or key text)
@@ -39,14 +39,14 @@ test.describe('Public pages', () => {
     });
 
     test('/privacy page has accessible heading structure', async ({ page }) => {
-        await page.goto('/privacy', { waitUntil: 'networkidle' });
+        await page.goto('/privacy');
         await expect(page.locator('h1').first()).toBeVisible({ timeout: 10_000 });
         // At least one h2 section present
         await expect(page.locator('h2').first()).toBeVisible();
     });
 
     test('/terms page has accessible heading structure', async ({ page }) => {
-        await page.goto('/terms', { waitUntil: 'networkidle' });
+        await page.goto('/terms');
         await expect(page.locator('h1').first()).toBeVisible({ timeout: 10_000 });
         await expect(page.locator('h2').first()).toBeVisible();
     });

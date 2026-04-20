@@ -17,9 +17,6 @@ function makeCtx(overrides: Partial<EvalContext> = {}): EvalContext {
     lastTradeAt: 0,
     tradedTokensToday: [],
     totalOrders: 0,
-    tickCount: 0,
-    weeklyPnl: 0,
-    weekStartDate: new Date().toISOString().slice(0, 10),
   };
 
   return {
@@ -212,9 +209,6 @@ describe("Logic blocks — edge cases", () => {
         lastTradeAt: 0,
         tradedTokensToday: [],
         totalOrders: 25,
-        tickCount: 0,
-        weeklyPnl: 0,
-        weekStartDate: new Date().toISOString().slice(0, 10),
       },
     });
     const result = IfThenElseBlock.evaluate(

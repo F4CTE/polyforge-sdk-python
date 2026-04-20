@@ -16,10 +16,8 @@ const API_URL  = process.env.API_URL  ?? 'http://localhost:3002';
 
 export interface LoginResponse {
     token: string;
-    refreshToken: string;
     user:  { id: string; email: string; username: string; status: string };
     cookie?: string;
-    issuedAt: number;
 }
 
 export interface StrategyResponse {
@@ -63,14 +61,11 @@ export async function apiLogin(email: string, password: string): Promise<LoginRe
     // Cookie-based auth: token is in Set-Cookie header, user object in body
     const cookie = getSetCookieString(res.headers);
     const tokenMatch = cookie.match(/pf_token=([^;]+)/);
-    const refreshMatch = cookie.match(/pf_refresh=([^;]+)/);
     const user = await res.json() as LoginResponse['user'];
     return {
         token: tokenMatch?.[1] ?? '',
-        refreshToken: refreshMatch?.[1] ?? '',
         user,
         cookie,
-        issuedAt: Date.now(),
     };
 }
 
@@ -91,14 +86,11 @@ export async function apiRegister(
             // Cookie-based auth: token is in Set-Cookie header, user object in body
             const cookie = getSetCookieString(res.headers);
             const tokenMatch = cookie.match(/pf_token=([^;]+)/);
-            const refreshMatch = cookie.match(/pf_refresh=([^;]+)/);
             const user = await res.json() as LoginResponse['user'];
             return {
                 token: tokenMatch?.[1] ?? '',
-                refreshToken: refreshMatch?.[1] ?? '',
                 user,
                 cookie,
-                issuedAt: Date.now(),
             };
         }
 
@@ -155,40 +147,6 @@ export async function apiRegisterAndVerify(
     }
 
     return result;
-}
-
-// ─── Token refresh ───────────────────────────────────────────────────────────
-
-const TOKEN_REFRESH_THRESHOLD_MS = 12 * 60 * 1000; // refresh after 12 min (TTL is 15 min)
-
-export async function apiRefreshToken(refreshToken: string): Promise<{ token: string; refreshToken: string }> {
-    const res = await fetch(`${AUTH_URL}/auth/v1/refresh`, {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ refreshToken }),
-    });
-    if (!res.ok) {
-        const err = await res.json().catch(() => ({})) as Record<string, unknown>;
-        throw new Error(`Token refresh failed: ${res.status} ${JSON.stringify(err)}`);
-    }
-    const cookie = getSetCookieString(res.headers);
-    const newRefreshMatch = cookie.match(/pf_refresh=([^;]+)/);
-    const body = await res.json() as { token: string };
-    return {
-        token: body.token,
-        refreshToken: newRefreshMatch?.[1] ?? refreshToken,
-    };
-}
-
-export async function ensureFreshToken(login: LoginResponse): Promise<LoginResponse> {
-    if (Date.now() - login.issuedAt < TOKEN_REFRESH_THRESHOLD_MS) {
-        return login;
-    }
-    const refreshed = await apiRefreshToken(login.refreshToken);
-    login.token = refreshed.token;
-    login.refreshToken = refreshed.refreshToken;
-    login.issuedAt = Date.now();
-    return login;
 }
 
 // ─── Strategy helpers ─────────────────────────────────────────────────────────

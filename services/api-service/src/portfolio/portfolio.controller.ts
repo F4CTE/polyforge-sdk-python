@@ -9,6 +9,21 @@ import { PolymarketDataApiService } from "./polymarket-data-api.service";
 import { JwtPayload } from "@polyforge/shared-types";
 import { PrismaService } from "@polyforge/shared-db";
 
+class ActivityQueryDto {
+  @IsOptional()
+  @IsIn([
+    "TRADE",
+    "SPLIT",
+    "MERGE",
+    "REDEEM",
+    "REWARD",
+    "CONVERSION",
+    "MAKER_REBATE",
+    "REFERRAL_REWARD",
+  ])
+  type?: string;
+}
+
 class PnlQueryDto {
   @IsOptional()
   @IsIn(["7d", "30d", "90d", "allTime"])
@@ -76,5 +91,24 @@ export class PortfolioController {
     }
     const entries = await this.dataApi.getEarnings(profile.polymarketAddress);
     return { entries };
+  }
+
+  @Get("polymarket/activity")
+  async getPolymarketActivity(
+    @CurrentUser() user: JwtPayload,
+    @Query() query: ActivityQueryDto,
+  ) {
+    const profile = await this.prisma.user.findUnique({
+      where: { id: user.sub },
+      select: { polymarketAddress: true, polymarketConnected: true },
+    });
+    if (!profile?.polymarketConnected || !profile.polymarketAddress) {
+      return { activities: [] };
+    }
+    const activities = await this.dataApi.getActivity(
+      profile.polymarketAddress,
+      query.type,
+    );
+    return { activities };
   }
 }

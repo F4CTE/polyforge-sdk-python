@@ -16,6 +16,36 @@ export interface PolymarketEarningsEntry {
   winRate: string;
 }
 
+export interface PolymarketRewardsMarket {
+  conditionId: string;
+  rewardsDaily: string;
+  rewardsMaxSpread: string;
+  rewardsMinSize: string;
+  startDate: string;
+  endDate: string;
+}
+
+export interface PolymarketUserRewards {
+  date: string;
+  amount: string;
+  market: string;
+}
+
+export interface PolymarketActivity {
+  id: string;
+  type: string;
+  amount: string;
+  asset: string;
+  timestamp: string;
+  metadata?: Record<string, unknown>;
+}
+
+export interface PolymarketRebate {
+  date: string;
+  amount: string;
+  feesPaid: string;
+}
+
 @Injectable()
 export class PolymarketDataApiService {
   private readonly logger = new Logger(PolymarketDataApiService.name);
@@ -59,5 +89,110 @@ export class PolymarketDataApiService {
     }
 
     return (await res.json()) as PolymarketEarningsEntry[];
+  }
+
+  async getRewardsMarkets(): Promise<PolymarketRewardsMarket[]> {
+    const res = await fetch(`${this.dataApiUrl}/rewards/markets/current`, {
+      signal: AbortSignal.timeout(10_000),
+    });
+    if (!res.ok) {
+      this.logger.warn(`Polymarket rewards/markets returned ${res.status}`);
+      return [];
+    }
+    return (await res.json()) as PolymarketRewardsMarket[];
+  }
+
+  async getRewardsForMarket(
+    conditionId: string,
+  ): Promise<PolymarketRewardsMarket | null> {
+    const res = await fetch(
+      `${this.dataApiUrl}/rewards/markets/${encodeURIComponent(conditionId)}`,
+      { signal: AbortSignal.timeout(10_000) },
+    );
+    if (!res.ok) return null;
+    return (await res.json()) as PolymarketRewardsMarket;
+  }
+
+  async getUserRewards(
+    walletAddress: string,
+  ): Promise<PolymarketUserRewards[]> {
+    const res = await fetch(
+      `${this.dataApiUrl}/rewards/user?user=${encodeURIComponent(walletAddress)}`,
+      { signal: AbortSignal.timeout(10_000) },
+    );
+    if (!res.ok) {
+      this.logger.warn(
+        `Polymarket rewards/user returned ${res.status} for ${walletAddress}`,
+      );
+      return [];
+    }
+    return (await res.json()) as PolymarketUserRewards[];
+  }
+
+  async getUserRewardsTotal(
+    walletAddress: string,
+  ): Promise<{ total: string; byDate: unknown[] }> {
+    const res = await fetch(
+      `${this.dataApiUrl}/rewards/user/total?user=${encodeURIComponent(walletAddress)}`,
+      { signal: AbortSignal.timeout(10_000) },
+    );
+    if (!res.ok) {
+      this.logger.warn(`Polymarket rewards/user/total returned ${res.status}`);
+      return { total: "0", byDate: [] };
+    }
+    return (await res.json()) as { total: string; byDate: unknown[] };
+  }
+
+  async getUserRewardsPerMarket(walletAddress: string): Promise<unknown[]> {
+    const res = await fetch(
+      `${this.dataApiUrl}/rewards/user/markets?user=${encodeURIComponent(walletAddress)}`,
+      { signal: AbortSignal.timeout(10_000) },
+    );
+    if (!res.ok) {
+      this.logger.warn(
+        `Polymarket rewards/user/markets returned ${res.status}`,
+      );
+      return [];
+    }
+    return (await res.json()) as unknown[];
+  }
+
+  async getUserRewardsPercentages(walletAddress: string): Promise<unknown> {
+    const res = await fetch(
+      `${this.dataApiUrl}/rewards/user/percentages?user=${encodeURIComponent(walletAddress)}`,
+      { signal: AbortSignal.timeout(10_000) },
+    );
+    if (!res.ok) return {};
+    return await res.json();
+  }
+
+  async getRebates(walletAddress: string): Promise<PolymarketRebate[]> {
+    const res = await fetch(
+      `${this.dataApiUrl}/rebates/current?user=${encodeURIComponent(walletAddress)}`,
+      { signal: AbortSignal.timeout(10_000) },
+    );
+    if (!res.ok) {
+      this.logger.warn(`Polymarket rebates returned ${res.status}`);
+      return [];
+    }
+    return (await res.json()) as PolymarketRebate[];
+  }
+
+  async getActivity(
+    walletAddress: string,
+    type?: string,
+  ): Promise<PolymarketActivity[]> {
+    const params = new URLSearchParams({ user: walletAddress });
+    if (type) params.set("type", type);
+
+    const res = await fetch(
+      `${this.dataApiUrl}/activity?${params.toString()}`,
+      { signal: AbortSignal.timeout(10_000) },
+    );
+    if (!res.ok) {
+      this.logger.warn(`Polymarket activity returned ${res.status}`);
+      return [];
+    }
+    return (await res.json()) as PolymarketActivity[];
   }
 }

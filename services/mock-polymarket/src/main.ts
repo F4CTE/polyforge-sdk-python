@@ -1,5 +1,3 @@
-// Copyright (c) 2026 PolyForge Labs. All Rights Reserved. See LICENSE for details.
-
 import "reflect-metadata";
 import { NestFactory } from "@nestjs/core";
 import {

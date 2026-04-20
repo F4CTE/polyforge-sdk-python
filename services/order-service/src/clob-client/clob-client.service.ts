@@ -104,6 +104,145 @@ export class ClobClientService {
     );
   }
 
+  async getBook(tokenId: string): Promise<{
+    bids: Array<{ price: string; size: string }>;
+    asks: Array<{ price: string; size: string }>;
+    spread: string;
+    midpoint: string;
+    timestamp: number;
+  }> {
+    return this.withRetry(() =>
+      fetch(
+        `${this.clobUrl}/book?token_id=${encodeURIComponent(tokenId)}`,
+        { signal: AbortSignal.timeout(10_000) },
+      ),
+    );
+  }
+
+  async getBooks(tokenIds: string[]): Promise<
+    Array<{
+      tokenId: string;
+      bids: Array<{ price: string; size: string }>;
+      asks: Array<{ price: string; size: string }>;
+    }>
+  > {
+    return this.withRetry(() =>
+      fetch(`${this.clobUrl}/books`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(tokenIds),
+        signal: AbortSignal.timeout(15_000),
+      }),
+    );
+  }
+
+  async getSpread(tokenId: string): Promise<{ spread: string }> {
+    return this.withRetry(() =>
+      fetch(
+        `${this.clobUrl}/spread?token_id=${encodeURIComponent(tokenId)}`,
+        { signal: AbortSignal.timeout(10_000) },
+      ),
+    );
+  }
+
+  async getMidpoint(tokenId: string): Promise<{ mid: string }> {
+    return this.withRetry(() =>
+      fetch(
+        `${this.clobUrl}/midpoint?token_id=${encodeURIComponent(tokenId)}`,
+        { signal: AbortSignal.timeout(10_000) },
+      ),
+    );
+  }
+
+  async getPricesHistory(
+    tokenId: string,
+    interval?: string,
+    fidelity?: number,
+  ): Promise<{ history: Array<{ t: number; p: string }> }> {
+    const params = new URLSearchParams({ token_id: tokenId });
+    if (interval) params.set("interval", interval);
+    if (fidelity !== undefined) params.set("fidelity", String(fidelity));
+
+    return this.withRetry(() =>
+      fetch(`${this.clobUrl}/prices-history?${params.toString()}`, {
+        signal: AbortSignal.timeout(10_000),
+      }),
+    );
+  }
+
+  async getBatchPricesHistory(
+    tokenIds: string[],
+    interval?: string,
+    fidelity?: number,
+  ): Promise<Record<string, Array<{ t: number; p: string }>>> {
+    return this.withRetry(() =>
+      fetch(`${this.clobUrl}/batch-prices-history`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ tokenIds, interval, fidelity }),
+        signal: AbortSignal.timeout(15_000),
+      }),
+    );
+  }
+
+  async submitBatchOrders(
+    orders: Array<{ order: Record<string, unknown>; builderHeaders: Record<string, string> }>,
+  ): Promise<Array<{ orderID: string; status: string }>> {
+    if (orders.length > 15) {
+      throw new Error("Batch order limit is 15");
+    }
+
+    const firstHeaders = orders[0]?.builderHeaders ?? {};
+    return this.withRetry(() =>
+      fetch(`${this.clobUrl}/orders`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...firstHeaders,
+        },
+        body: JSON.stringify(orders.map((o) => o.order)),
+        signal: AbortSignal.timeout(15_000),
+      }),
+    );
+  }
+
+  async cancelOrders(
+    orderIds: string[],
+    apiKey: string,
+  ): Promise<{ cancelled: string[] }> {
+    if (orderIds.length > 3000) {
+      throw new Error("Bulk cancel limit is 3000");
+    }
+
+    return this.withRetry(() =>
+      fetch(`${this.clobUrl}/orders`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          "POLY-API-KEY": apiKey,
+        },
+        body: JSON.stringify(orderIds),
+        signal: AbortSignal.timeout(15_000),
+      }),
+    );
+  }
+
+  async getTickSize(tokenId: string): Promise<string> {
+    return this.withRetry<string>(() =>
+      fetch(`${this.clobUrl}/tick-size/${encodeURIComponent(tokenId)}`, {
+        signal: AbortSignal.timeout(10_000),
+      }),
+    );
+  }
+
+  async getFeeRate(tokenId: string): Promise<string> {
+    return this.withRetry<string>(() =>
+      fetch(`${this.clobUrl}/fee-rate/${encodeURIComponent(tokenId)}`, {
+        signal: AbortSignal.timeout(10_000),
+      }),
+    );
+  }
+
   // ─── Private ───────────────────────────────────────────────────────────────
 
   /**

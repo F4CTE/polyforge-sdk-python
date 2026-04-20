@@ -16,7 +16,7 @@ export interface CachedBook {
   timestamp: number;
 }
 
-/** Per-strategy state stored in Redis (daily fields reset at midnight UTC) */
+/** Per-strategy state stored in Redis (resets at midnight UTC) */
 export interface StrategyState {
   betsToday: number;
   dailyPnl: number;
@@ -25,30 +25,7 @@ export interface StrategyState {
   lastTradeAt: number; // epoch ms
   tradedTokensToday: string[];
   totalOrders: number;
-  tickCount: number;
-  weeklyPnl: number;
-  weekStartDate: string; // ISO date of current week start
 }
-
-/** Schedule configuration for strategy execution windows */
-export interface ScheduleConfig {
-  type: "cron" | "time_range";
-  cron?: string;
-  startTime?: string; // HH:MM
-  endTime?: string; // HH:MM
-  timezone?: string; // IANA timezone
-  daysOfWeek?: number[]; // 0=Sun, 1=Mon, ..., 6=Sat
-}
-
-/** Strategy-level settings for profit targets and loss limits */
-export interface StrategySettings {
-  profitTarget?: { daily?: number; weekly?: number };
-  lossLimit?: { daily?: number; weekly?: number };
-  resetTimezone?: string; // IANA timezone for PnL reset
-}
-
-/** Notification channel for NOTIFY action blocks */
-export type NotifyChannel = "in_app" | "webhook" | "telegram";
 
 /** Context passed to every block evaluator */
 export interface EvalContext {

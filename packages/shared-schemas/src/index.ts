@@ -1,5 +1,3 @@
-// Copyright (c) 2026 PolyForge Labs. All Rights Reserved. See LICENSE for details.
-
 // ─────────────────────────────────────────────────────────────────────────────
 // @polyforge/shared-schemas
 // Zod validation schemas for streams, WebSocket messages, and internal APIs.

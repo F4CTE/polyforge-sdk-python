@@ -1,5 +1,3 @@
-// Copyright (c) 2026 PolyForge Labs. All Rights Reserved. See LICENSE for details.
-
 // ─────────────────────────────────────────────────────────────────────────────
 // @polyforge/shared-types
 // All shared TypeScript interfaces, enums and types across services

@@ -32,6 +32,7 @@ import {
 import { OrdersService } from "./orders.service";
 import { ClosePositionDto } from "./dto/close-position.dto";
 import { PlaceOrderDto } from "./dto/place-order.dto";
+import { BatchPlaceOrderDto, BulkCancelDto } from "./dto/batch-order.dto";
 import { RedeemPositionDto } from "./dto/redeem-position.dto";
 import { GeoBlockGuard } from "../common/guards/geo.guard";
 import { PaginationDto } from "../common/dto/pagination.dto";
@@ -155,6 +156,34 @@ export class OrdersController {
     @Body() dto: MergePositionDto,
   ) {
     return this.orders.mergePosition(user.sub, dto);
+  }
+
+  @Post("batch")
+  @Throttle({
+    default: {
+      limit: process.env.NODE_ENV === "production" ? 10 : 10000,
+      ttl: 60000,
+    },
+  })
+  @HttpCode(HttpStatus.ACCEPTED)
+  @UseGuards(ApiKeyScopeGuard, GeoBlockGuard)
+  @RequireScopes("TRADE")
+  placeBatch(
+    @CurrentUser() user: JwtPayload,
+    @Body() dto: BatchPlaceOrderDto,
+  ) {
+    return this.orders.placeBatch(user.sub, dto);
+  }
+
+  @Delete("bulk")
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(ApiKeyScopeGuard)
+  @RequireScopes("TRADE")
+  cancelBulk(
+    @CurrentUser() user: JwtPayload,
+    @Body() dto: BulkCancelDto,
+  ) {
+    return this.orders.cancelBulk(user.sub, dto);
   }
 
   @Post("place")

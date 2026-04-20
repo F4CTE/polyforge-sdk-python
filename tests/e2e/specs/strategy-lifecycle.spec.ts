@@ -9,8 +9,6 @@ import {
     apiStopStrategy,
     uniqueEmail,
     uniqueUsername,
-    ensureFreshToken,
-    LoginResponse,
 } from '../helpers/api';
 
 /**
@@ -28,12 +26,11 @@ import {
 const ALICE_EMAIL    = 'alice@e2e.dev.local';
 const ALICE_PASSWORD = 'TestPass123!';
 
-let aliceLoginState: LoginResponse;
 let aliceToken = '';
 
 test.beforeAll(async () => {
-    aliceLoginState = await apiLogin(ALICE_EMAIL, ALICE_PASSWORD);
-    aliceToken = aliceLoginState.token;
+    const resp = await apiLogin(ALICE_EMAIL, ALICE_PASSWORD);
+    aliceToken = resp.token;
 });
 
 test.afterAll(async () => {
@@ -41,8 +38,6 @@ test.afterAll(async () => {
     // exceeding the 60s hook limit and failing the last test.
     if (!aliceToken) return;
     const cleanup = async () => {
-        await ensureFreshToken(aliceLoginState);
-        aliceToken = aliceLoginState.token;
         const strategies = await apiGetStrategies(aliceToken);
         for (const s of strategies.filter(s => s.name.startsWith('E2E-'))) {
             try {
@@ -184,7 +179,7 @@ test.describe('Strategy lifecycle', () => {
         await builderPage.fillName(original);
         await builderPage.saveAndRedirect();
 
-        // saveAndRedirect lands on /strategies/:id — extract id and use gotoEdit
+        // Extract strategy ID from detail page URL and use gotoEdit
         await expect(page).toHaveURL(/\/strategies\/[a-z0-9-]+$/);
         const strategyId = page.url().split('/strategies/')[1];
         await builderPage.gotoEdit(strategyId);
