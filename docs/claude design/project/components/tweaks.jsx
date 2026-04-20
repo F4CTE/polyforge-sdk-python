@@ -9,12 +9,13 @@ function Tweaks() {
 
   useEffect(() => {
     const onMsg = (e) => {
+      if (e.origin !== window.location.origin) return;
       if (!e.data) return;
       if (e.data.type === '__activate_edit_mode') setOpen(true);
       if (e.data.type === '__deactivate_edit_mode') setOpen(false);
     };
     window.addEventListener('message', onMsg);
-    try { window.parent.postMessage({ type: '__edit_mode_available' }, '*'); } catch(e){}
+    try { window.parent.postMessage({ type: '__edit_mode_available' }, window.location.origin); } catch(e){}
     return () => window.removeEventListener('message', onMsg);
   }, []);
 

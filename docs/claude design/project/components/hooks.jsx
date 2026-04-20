@@ -35,7 +35,7 @@ function useTweak(key) {
     window.__TWEAKS__[key] = next;
     setVal(next);
     try {
-      window.parent.postMessage({ type: '__edit_mode_set_keys', edits: { [key]: next } }, '*');
+      window.parent.postMessage({ type: '__edit_mode_set_keys', edits: { [key]: next } }, window.location.origin);
     } catch (e) {}
     // Apply side effects
     if (key === 'theme') document.documentElement.setAttribute('data-theme', next);
