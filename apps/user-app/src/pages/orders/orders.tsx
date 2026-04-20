@@ -607,7 +607,7 @@ function CreateConditionalDialog({ onClose, onCreated }: { onClose: () => void; 
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" role="dialog" aria-modal="true" aria-label="Create Conditional Order">
-      <div className="animate-scale-in bg-elevated border border-default rounded-pf w-full max-w-lg p-6 shadow-lg">
+      <div className="animate-scale-in bg-elevated border border-default rounded-pf w-full max-w-lg p-6 shadow-elevation-3">
         <div className="flex items-center justify-between mb-5">
           <h2 className="text-base font-semibold text-primary">Create Conditional Order</h2>
           <Button type="button" variant="ghost" size="icon" onClick={onClose} aria-label="Close dialog">

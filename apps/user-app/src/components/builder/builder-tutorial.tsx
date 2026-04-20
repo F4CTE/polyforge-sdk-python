@@ -162,7 +162,7 @@ export function BuilderTutorial({ forceVisible, onDismiss }: BuilderTutorialProp
     <div
       role="dialog"
       aria-label="Strategy builder tutorial"
-      className="absolute bottom-4 left-4 z-40 w-80 bg-elevated border border-default rounded-pf shadow-lg flex flex-col overflow-hidden"
+      className="absolute bottom-4 left-4 z-40 w-80 bg-elevated border border-default rounded-pf shadow-elevation-3 flex flex-col overflow-hidden"
     >
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-subtle">

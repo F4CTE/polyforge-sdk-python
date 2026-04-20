@@ -94,7 +94,7 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
     >
       <div
         data-state={state}
-        className="animate-dialog-content w-full max-w-sm sm:max-w-xl mx-4 bg-elevated border border-default rounded-pf shadow-lg overflow-hidden"
+        className="animate-dialog-content w-full max-w-sm sm:max-w-xl mx-4 bg-elevated border border-default rounded-pf shadow-elevation-3 overflow-hidden"
         onClick={e => e.stopPropagation()}
       >
         {/* Search input */}

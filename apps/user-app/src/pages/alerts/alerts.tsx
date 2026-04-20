@@ -239,7 +239,7 @@ export function Component() {
                   className="w-full bg-elevated border border-default rounded-sm px-3 py-2 text-body-sm text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent/50"
                 />
                 {showDropdown && (
-                  <div className="absolute z-20 w-full top-full mt-1 rounded-pf border border-default bg-elevated shadow-lg overflow-hidden">
+                  <div className="absolute z-20 w-full top-full mt-1 rounded-pf border border-default bg-elevated shadow-elevation-2 overflow-hidden">
                     {searchResults.map(m => (
                       <Button
                         key={m.id}

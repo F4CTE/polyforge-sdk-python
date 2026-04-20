@@ -3232,7 +3232,7 @@ export function Component() {
                   </Button>
                   {showResetConfirm && (
                     <div role="presentation" className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => setShowResetConfirm(false)} onKeyDown={(e) => { if (e.key === 'Escape') setShowResetConfirm(false); }}>
-                      <div role="dialog" aria-modal="true" aria-labelledby="reset-dialog-title" className="bg-elevated border border-default rounded-pf p-6 max-w-sm mx-4 shadow-lg" onClick={(e) => e.stopPropagation()}>
+                      <div role="dialog" aria-modal="true" aria-labelledby="reset-dialog-title" className="bg-elevated border border-default rounded-pf p-6 max-w-sm mx-4 shadow-elevation-3" onClick={(e) => e.stopPropagation()}>
                         <div className="flex items-center gap-2 mb-3">
                           <AlertTriangle className="size-5 text-loss" />
                           <h2 id="reset-dialog-title" className="text-body-md font-semibold text-primary">Reset Paper Account</h2>

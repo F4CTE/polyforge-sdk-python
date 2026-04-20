@@ -74,7 +74,7 @@ export function TemplatePreviewDialog({ template, onClose, onUse, loading }: Tem
       onClick={handleBackdropClick}
       onKeyDown={handleKeyDown}
     >
-      <div className="bg-elevated border border-default rounded-pf shadow-lg max-w-lg w-full mx-4 max-h-[80vh] flex flex-col">
+      <div className="bg-elevated border border-default rounded-pf shadow-elevation-3 max-w-lg w-full mx-4 max-h-[80vh] flex flex-col">
         {/* Header */}
         <div className="flex items-start justify-between px-5 py-4 border-b border-subtle shrink-0">
           <div className="flex items-start gap-3">

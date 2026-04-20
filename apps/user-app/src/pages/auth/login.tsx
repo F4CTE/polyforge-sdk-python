@@ -86,7 +86,7 @@ export function Component() {
         </div>
 
         {/* Card */}
-        <div className="bg-elevated border border-default rounded-pf p-8 shadow-lg">
+        <div className="bg-elevated border border-default rounded-pf p-8 shadow-elevation-3">
 
           {sessionExpired && (
             <div role="alert" className="flex items-center gap-2 bg-warning/10 border border-warning/20 text-warning rounded-pf px-4 py-3 mb-4 text-body-md">

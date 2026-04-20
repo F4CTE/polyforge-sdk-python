@@ -964,7 +964,7 @@ function MarketBindingsSection({
               <span className="absolute right-2 top-[22px] text-caption text-accent-text font-mono">bound</span>
             )}
             {(marketResults[slot.slot] ?? []).length > 0 && (
-              <div className="absolute z-50 w-full mt-1 bg-elevated border border-default rounded-sm max-h-32 overflow-y-auto shadow-lg">
+              <div className="absolute z-50 w-full mt-1 bg-elevated border border-default rounded-sm max-h-32 overflow-y-auto shadow-elevation-2">
                 {marketResults[slot.slot].map((m) => (
                   <button
                     type="button"

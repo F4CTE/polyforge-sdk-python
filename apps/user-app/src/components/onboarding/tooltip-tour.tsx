@@ -232,7 +232,7 @@ export function TooltipTour() {
       <div
         role="dialog"
         aria-label={`Tour step: ${step.title}`}
-        className="fixed z-[9999] w-80 bg-elevated border border-default rounded-pf shadow-2xl animate-fade-in"
+        className="fixed z-[9999] w-80 bg-elevated border border-default rounded-pf shadow-elevation-3 animate-fade-in"
         style={{
           top: `${Math.max(8, position.top)}px`,
           left: `${Math.max(8, Math.min(position.left, window.innerWidth - 340))}px`,

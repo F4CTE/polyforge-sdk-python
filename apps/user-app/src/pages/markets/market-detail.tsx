@@ -1374,7 +1374,7 @@ export function Component() {
                                   ? (bestAskPrice - bestBidPrice).toFixed(4)
                                   : null;
                                 return (
-                                  <div className="bg-surface border border-default rounded px-3 py-2 text-label shadow-md">
+                                  <div className="bg-surface border border-default rounded px-3 py-2 text-label shadow-elevation-2">
                                     <p className="text-secondary mb-1 font-mono">
                                       Price: {d.price.toFixed(4)}
                                     </p>
@@ -2290,7 +2290,7 @@ export function Component() {
           {/* Conditional Order Dialog (TP/SL) */}
           {showConditional && (
             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" role="dialog" aria-modal="true" aria-label="Set Conditional Order">
-              <div className="animate-scale-in bg-elevated border border-default rounded-pf w-full max-w-sm p-6 shadow-lg">
+              <div className="animate-scale-in bg-elevated border border-default rounded-pf w-full max-w-sm p-6 shadow-elevation-3">
                 <div className="flex items-center justify-between mb-5">
                   <h2 className="text-base font-semibold text-primary">
                     {condType === 'TAKE_PROFIT' ? 'Set Take Profit' : 'Set Stop Loss'} &mdash; {condOutcome}
@@ -2363,7 +2363,7 @@ export function Component() {
           {/* Run Strategy Dialog */}
           {showRunStrategy && (
             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" role="dialog" aria-modal="true" aria-label="Run Strategy">
-              <div className="animate-scale-in bg-elevated border border-default rounded-pf w-full max-w-md p-6 shadow-lg">
+              <div className="animate-scale-in bg-elevated border border-default rounded-pf w-full max-w-md p-6 shadow-elevation-3">
                 <div className="flex items-center justify-between mb-5">
                   <h2 className="text-base font-semibold text-primary">Run Strategy on This Market</h2>
                   <Button

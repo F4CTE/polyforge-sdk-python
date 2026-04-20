@@ -273,7 +273,7 @@ export function Component() {
 
           {/* Dropdown */}
           {marketSearchResults.length > 0 && !marketId && (
-            <div className="absolute z-20 left-0 mt-1 w-72 bg-elevated border border-default rounded-sm shadow-lg overflow-hidden">
+            <div className="absolute z-20 left-0 mt-1 w-72 bg-elevated border border-default rounded-sm shadow-elevation-2 overflow-hidden">
               {marketSearchResults.map(m => (
                 <Button
                   key={m.id}

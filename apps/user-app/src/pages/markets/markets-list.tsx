@@ -562,7 +562,7 @@ function AdvancedSearchModal({
       className="fixed inset-0 z-50 flex items-start justify-center pt-12 px-4 pb-6 bg-surface/80 backdrop-blur-sm"
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
-      <div className="relative w-full max-w-2xl bg-elevated border border-default rounded-pf shadow-lg flex flex-col max-h-modal-full overflow-hidden">
+      <div className="relative w-full max-w-2xl bg-elevated border border-default rounded-pf shadow-elevation-3 flex flex-col max-h-modal-full overflow-hidden">
 
         {/* Header */}
         <div className="flex items-center gap-3 px-5 py-4 border-b border-default shrink-0">

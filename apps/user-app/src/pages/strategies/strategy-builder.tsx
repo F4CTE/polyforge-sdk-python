@@ -871,7 +871,7 @@ function CanvasSearchBar({ open, onClose }: CanvasSearchBarProps) {
   if (!open) return null;
 
   return (
-    <div className="absolute top-2 right-2 z-30 flex items-center gap-2 bg-elevated border border-default rounded-pf shadow-md px-3 py-2">
+    <div className="absolute top-2 right-2 z-30 flex items-center gap-2 bg-elevated border border-default rounded-pf shadow-elevation-2 px-3 py-2">
       <Search className="size-4 text-tertiary shrink-0" />
       <input
         type="text"
@@ -1677,7 +1677,7 @@ export function Component() {
 
             {/* Quick test results overlay */}
             {quickResult && (
-              <div className="absolute bottom-4 left-4 z-40 bg-elevated border border-default rounded-pf p-4 shadow-lg max-w-xs">
+              <div className="absolute bottom-4 left-4 z-40 bg-elevated border border-default rounded-pf p-4 shadow-elevation-2 max-w-xs">
                 <div className="flex items-center justify-between mb-3">
                   <span className="text-label font-semibold text-primary uppercase tracking-wider">Quick Test Results</span>
                   <Button type="button" variant="ghost" size="icon-sm" onClick={() => setQuickResult(null)} aria-label="Close quick test results"><X className="size-3" /></Button>

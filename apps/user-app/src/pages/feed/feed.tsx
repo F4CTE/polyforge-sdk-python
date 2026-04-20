@@ -188,7 +188,7 @@ function EmojiPicker({
   return (
     <div
       ref={ref}
-      className="flex items-center gap-1 px-2 py-2 bg-surface border border-default rounded-pf shadow-lg z-10"
+      className="flex items-center gap-1 px-2 py-2 bg-surface border border-default rounded-pf shadow-elevation-2 z-10"
       role="toolbar"
       aria-label="Pick a reaction"
     >

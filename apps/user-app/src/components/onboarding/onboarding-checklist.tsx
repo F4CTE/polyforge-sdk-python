@@ -122,7 +122,7 @@ export function OnboardingChecklist() {
   }
 
   return (
-    <div data-testid="onboarding-checklist" role="region" aria-label="Getting started checklist" className="fixed bottom-4 right-4 z-50 w-80 bg-elevated border border-default rounded-pf shadow-2xl animate-fade-in">
+    <div data-testid="onboarding-checklist" role="region" aria-label="Getting started checklist" className="fixed bottom-4 right-4 z-50 w-80 bg-elevated border border-default rounded-pf shadow-elevation-3 animate-fade-in">
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-subtle">
         <div className="flex items-center gap-2">

@@ -94,7 +94,7 @@ function StatCard({
       <span className="text-3xl font-mono font-semibold text-primary">{value}</span>
       {sub && <p className="text-label text-tertiary mt-1">{sub}</p>}
       {showTip && tooltip && (
-        <div className="absolute top-full left-0 z-20 mt-2 w-56 rounded-sm bg-elevated border border-default shadow-lg p-3 text-label text-secondary leading-relaxed">
+        <div className="absolute top-full left-0 z-20 mt-2 w-56 rounded-sm bg-elevated border border-default shadow-elevation-2 p-3 text-label text-secondary leading-relaxed">
           {tooltip}
         </div>
       )}

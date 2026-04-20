@@ -106,7 +106,7 @@ export function Topbar() {
         </button>
 
         {notifOpen && (
-          <div role="dialog" aria-label="Notifications" className="animate-slide-up absolute right-0 top-12 w-80 bg-elevated border border-default rounded-pf shadow-xl z-50">
+          <div role="dialog" aria-label="Notifications" className="animate-slide-up absolute right-0 top-12 w-80 bg-elevated border border-default rounded-pf shadow-elevation-2 z-50">
             <div className="flex items-center justify-between px-4 py-3 border-b border-default">
               <strong className="text-body-md text-primary">Notifications</strong>
               <button
@@ -194,7 +194,7 @@ export function Topbar() {
         </button>
 
         {menuOpen && (
-          <div role="menu" className="animate-slide-up absolute right-0 top-12 w-48 bg-elevated border border-default rounded-pf shadow-xl z-50 py-1">
+          <div role="menu" className="animate-slide-up absolute right-0 top-12 w-48 bg-elevated border border-default rounded-pf shadow-elevation-2 z-50 py-1">
             <button
               type="button"
               role="menuitem"

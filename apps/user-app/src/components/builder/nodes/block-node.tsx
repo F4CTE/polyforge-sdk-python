@@ -242,7 +242,7 @@ function BlockNodeInner({ id, data }: NodeProps<BlockNode>) {
         )}
 
         <div
-          className={`builder-node-card w-[260px] rounded-pf shadow-md overflow-hidden ${isInactive ? 'opacity-45 builder-node-card--dashed' : ''} ${(isExecuting || hasFired) ? 'builder-node-card--executing' : ''} ${showSetupBadge && !isExecuting && !hasFired ? 'builder-node-card--setup-needed' : ''} ${isHighlighted ? 'ring-2 ring-accent ring-offset-2 ring-offset-app animate-pulse' : ''}`}
+          className={`builder-node-card w-[260px] rounded-pf shadow-elevation-2 overflow-hidden ${isInactive ? 'opacity-45 builder-node-card--dashed' : ''} ${(isExecuting || hasFired) ? 'builder-node-card--executing' : ''} ${showSetupBadge && !isExecuting && !hasFired ? 'builder-node-card--setup-needed' : ''} ${isHighlighted ? 'ring-2 ring-accent ring-offset-2 ring-offset-app animate-pulse' : ''}`}
           style={{
             '--node-color': borderColor,
             borderColor,
