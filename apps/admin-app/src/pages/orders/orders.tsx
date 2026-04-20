@@ -196,7 +196,7 @@ export function Component() {
 
       {/* Orders Table */}
       <div className="bg-elevated border border-default rounded-pf overflow-hidden">
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto" data-density="compact">
           <table className="w-full text-body-sm">
             <caption className="sr-only">Trading orders</caption>
             <thead>
