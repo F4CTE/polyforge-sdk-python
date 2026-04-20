@@ -35,6 +35,8 @@ export interface EvalContext {
   state: StrategyState;
   now: number; // epoch ms
   variables?: Record<string, number>;
+  /** Target venue for all OrderIntents generated in this evaluation cycle. */
+  venue?: VenueId | "best";
 }
 
 export interface BlockResult {
@@ -56,7 +58,7 @@ export interface OrderIntent {
   price: string; // decimal 0–1
   orderType: "GTC" | "FOK" | "GTD" | "FAK" | "POST_ONLY";
   expiration?: number;
-  venue?: VenueId;
+  venue?: VenueId | "best";
 }
 
 export interface BlockEvaluator {

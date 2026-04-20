@@ -22,12 +22,14 @@ const DEFAULT_STATE: StrategyState = {
 export function makeCtx(
   state: Partial<StrategyState> = {},
   now = Date.now(),
+  venue?: EvalContext["venue"],
 ): EvalContext {
   return {
     strategyId: "strat-test",
     userId: "user-test",
     now,
     state: { ...DEFAULT_STATE, ...state },
+    ...(venue !== undefined ? { venue } : {}),
   };
 }
 

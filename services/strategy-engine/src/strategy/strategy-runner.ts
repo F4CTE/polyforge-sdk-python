@@ -3,6 +3,7 @@ import { StrategyStatus } from ".prisma/client";
 import { PrismaService } from "@polyforge/shared-db";
 import { RedisService } from "@polyforge/shared-redis";
 import { StrategyVariable, SubStrategyMode } from "@polyforge/shared-types";
+import type { VenueId } from "@polyforge/shared-types";
 import { EvalContext, OrderIntent } from "../blocks/block.types";
 import {
   SAFETY_REGISTRY,
@@ -94,6 +95,7 @@ export class StrategyRunner {
       mode: SubStrategyMode,
       context?: { userId: string },
     ) => Promise<void>,
+    private readonly venue?: VenueId | "best",
   ) {
     this.logger = new Logger(`StrategyRunner:${strategyId}`);
   }
@@ -202,6 +204,7 @@ export class StrategyRunner {
       userId: this.userId,
       state: stateData,
       now: Date.now(),
+      ...(this.venue !== undefined ? { venue: this.venue } : {}),
     };
 
     // 0. Evaluate user-defined calculation variables

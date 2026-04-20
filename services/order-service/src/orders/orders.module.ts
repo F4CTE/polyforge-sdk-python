@@ -7,6 +7,7 @@ import { SignerClientModule } from "../signer-client/signer-client.module";
 import { ClobClientModule } from "../clob-client/clob-client.module";
 import { EventsModule } from "../events/events.module";
 import { InternalAuthGuard } from "../common/internal-auth.guard";
+import { VenueModule } from "../venue/venue.module";
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import { InternalAuthGuard } from "../common/internal-auth.guard";
     ClobClientModule,
     EventsModule,
     JwtModule.register({}),
+    VenueModule,
   ],
   controllers: [OrdersController],
   providers: [OrdersService, InternalAuthGuard],
