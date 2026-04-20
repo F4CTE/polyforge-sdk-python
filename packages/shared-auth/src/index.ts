@@ -6,3 +6,4 @@ export { SharedAuthModule } from "./shared-auth.module";
 export { RequireScopes, REQUIRED_SCOPES } from "./api-key-scopes.decorator";
 export { ApiKeyScopeGuard } from "./api-key-scopes.guard";
 export { rejectPlaceholderSecrets } from "./reject-placeholder-secrets";
+export { rejectInsecureCookies } from "./reject-insecure-cookies";

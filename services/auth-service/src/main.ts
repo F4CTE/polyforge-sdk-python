@@ -11,7 +11,10 @@ import etag from '@fastify/etag';
 import helmet from '@fastify/helmet';
 import { AppModule } from './app.module';
 import { GlobalExceptionFilter } from './common/filters/http-exception.filter';
-import { rejectPlaceholderSecrets } from '@polyforge/shared-auth';
+import {
+  rejectPlaceholderSecrets,
+  rejectInsecureCookies,
+} from '@polyforge/shared-auth';
 
 const REQUIRED_ENV = ['USER_JWT_SECRET', 'INTERNAL_JWT_SECRET', 'DATABASE_URL'];
 
@@ -59,6 +62,8 @@ function validateEnv() {
     'INTERNAL_JWT_SECRET',
     'TOTP_ENCRYPTION_KEY',
   ]);
+
+  rejectInsecureCookies('auth-service');
 }
 
 async function bootstrap() {

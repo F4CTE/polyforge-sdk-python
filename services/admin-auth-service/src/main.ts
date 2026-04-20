@@ -10,7 +10,10 @@ import helmet from "@fastify/helmet";
 import { AppModule } from "./app.module";
 import { GlobalExceptionFilter } from "./common/filters/http-exception.filter";
 import { PrismaAdminService } from "@polyforge/shared-db";
-import { rejectPlaceholderSecrets } from "@polyforge/shared-auth";
+import {
+  rejectPlaceholderSecrets,
+  rejectInsecureCookies,
+} from "@polyforge/shared-auth";
 
 const REQUIRED_ENV = ["ADMIN_JWT_SECRET", "ADMIN_DATABASE_URL"];
 
@@ -47,6 +50,8 @@ function validateEnv() {
     "ADMIN_JWT_SECRET",
     "TOTP_ENCRYPTION_KEY",
   ]);
+
+  rejectInsecureCookies("admin-auth-service");
 }
 
 async function bootstrap() {
