@@ -8,6 +8,7 @@ import {
 } from "@nestjs/common";
 import { PrismaService } from "@polyforge/shared-db";
 import { Prisma } from "@prisma/client";
+import { paginate } from "../common/dto/pagination.dto";
 import { CreateCopyDto } from "./dto/create-copy.dto";
 import { UpdateCopyDto } from "./dto/update-copy.dto";
 
@@ -201,15 +202,7 @@ export class CopyService {
       this.prisma.copyTrade.count({ where: { configId: id } }),
     ]);
 
-    return {
-      data,
-      meta: {
-        page,
-        limit,
-        total,
-        totalPages: Math.ceil(total / limit),
-      },
-    };
+    return paginate(data, total, page, limit);
   }
 
   // ─── Helpers ─────────────────────────────────────────────────────────────────

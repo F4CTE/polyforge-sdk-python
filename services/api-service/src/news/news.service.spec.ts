@@ -80,9 +80,10 @@ describe("NewsService", () => {
       const result = await service.getArticles({ page: 1, limit: 20 });
 
       expect(result.data).toHaveLength(2);
-      expect(result.meta.total).toBe(2);
-      expect(result.meta.page).toBe(1);
-      expect(result.meta.totalPages).toBe(1);
+      expect(result.total).toBe(2);
+      expect(result.page).toBe(1);
+      expect(result.totalPages).toBe(1);
+      expect(result.hasNext).toBe(false);
     });
 
     it("applies source filter", async () => {
@@ -155,7 +156,8 @@ describe("NewsService", () => {
       const result = await service.getSignals({ page: 1, limit: 20 });
 
       expect(result.data).toHaveLength(2);
-      expect(result.meta.total).toBe(2);
+      expect(result.total).toBe(2);
+      expect(result.hasNext).toBe(false);
     });
 
     it("applies marketId filter", async () => {

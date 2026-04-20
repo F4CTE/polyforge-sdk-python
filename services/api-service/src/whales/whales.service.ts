@@ -1,6 +1,7 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { PrismaService } from "@polyforge/shared-db";
 import { Prisma } from "@prisma/client";
+import { paginate } from "../common/dto/pagination.dto";
 import { WhaleFeedQueryDto, WhaleTopQueryDto } from "./dto/whale-query.dto";
 
 @Injectable()
@@ -44,15 +45,7 @@ export class WhalesService {
       this.prisma.whaleAlert.count({ where }),
     ]);
 
-    return {
-      data,
-      meta: {
-        page,
-        limit,
-        total,
-        totalPages: Math.ceil(total / limit),
-      },
-    };
+    return paginate(data, total, page, limit);
   }
 
   // ─── Top Whales ────────────────────────────────────────────────────────────

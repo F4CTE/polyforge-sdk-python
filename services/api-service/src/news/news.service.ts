@@ -1,6 +1,7 @@
 import { Injectable, Logger, NotFoundException } from "@nestjs/common";
 import { PrismaService } from "@polyforge/shared-db";
 import { Prisma, NewsSentiment } from "@prisma/client";
+import { paginate } from "../common/dto/pagination.dto";
 import { NewsArticleQueryDto, NewsSignalQueryDto } from "./dto/news-query.dto";
 
 @Injectable()
@@ -45,15 +46,7 @@ export class NewsService {
       this.prisma.newsArticle.count({ where }),
     ]);
 
-    return {
-      data,
-      meta: {
-        page,
-        limit,
-        total,
-        totalPages: Math.ceil(total / limit),
-      },
-    };
+    return paginate(data, total, page, limit);
   }
 
   // ─── Article Detail ───────────────────────────────────────────────────────
@@ -173,14 +166,6 @@ export class NewsService {
       this.prisma.newsSignal.count({ where }),
     ]);
 
-    return {
-      data,
-      meta: {
-        page,
-        limit,
-        total,
-        totalPages: Math.ceil(total / limit),
-      },
-    };
+    return paginate(data, total, page, limit);
   }
 }
