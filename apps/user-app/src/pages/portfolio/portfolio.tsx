@@ -19,6 +19,7 @@ import { useAuthStore } from '@/stores/auth-store';
 import { Button, Input, Select, CardSkeleton } from '@polyforge/ui';
 import { useBetaUsage } from '@/hooks/use-beta-usage';
 import { BetaUsageBar } from '@/components/beta-usage-bar';
+import { RewardsDashboard } from '@/components/rewards/rewards-dashboard';
 import { resolveChartTheme } from '@polyforge/ui/lib/chart-colors';
 import { chartTooltipContentStyle, chartTooltipLabelStyle, chartAxisTick } from '@polyforge/ui/lib/chart-styles';
 
@@ -1276,6 +1277,9 @@ export function Component() {
               </div>
             )}
           </div>
+
+          {/* ─── Rewards & Rebates ─── */}
+          <RewardsDashboard />
 
           {/* ─── Tax Report ─── */}
           <div className="bg-elevated border border-default rounded-pf p-4">

@@ -4,7 +4,7 @@ import { describe, it, expect } from 'vitest';
 // lightweight parse of the source constants. We test the exported component
 // indirectly through structural invariants that matter for UX.
 
-const MAX_SECTION_ITEMS = 8;
+const MAX_SECTION_ITEMS = 9;
 
 // Inline the navSections mirror so the tests are self-contained and catch
 // regressions in the sidebar source without requiring DOM rendering.
@@ -20,6 +20,7 @@ const navSections = [
       { label: 'Notifications', route: '/notifications' },
       { label: 'Alerts', route: '/alerts' },
       { label: 'Smart Orders', route: '/orders/smart' },
+      { label: 'Activity', route: '/activity' },
     ],
   },
   {
