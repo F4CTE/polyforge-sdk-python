@@ -102,6 +102,7 @@ All encryption keys are **required** — services will fail to start if unset. G
 | `POLY_BUILDER_API_KEY` | `dev-builder-api-key` | Builder program API key. |
 | `POLY_BUILDER_SECRET` | `dev-builder-secret` | Builder program secret. |
 | `POLY_BUILDER_PASSPHRASE` | `dev-builder-passphrase` | Builder program passphrase. |
+| `POLYMARKET_BUILDER_CODE` | _(empty)_ | Builder address (0x…) embedded in EIP-712 order struct for volume attribution. Obtain from Polymarket Builder Profile. |
 
 ---
 

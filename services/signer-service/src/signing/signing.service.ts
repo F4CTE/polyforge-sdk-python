@@ -49,6 +49,7 @@ export class SigningService implements OnModuleInit {
   private readonly chainId: number;
   private readonly isStubMode: boolean;
   private readonly clobApiUrl: string;
+  private readonly builderCode: string;
   private rpcUrl: string;
 
   constructor(
@@ -74,6 +75,8 @@ export class SigningService implements OnModuleInit {
     this.isStubMode = signingMode === "stub";
     this.clobApiUrl =
       this.config.get<string>("CLOB_API_URL") ?? "https://clob.polymarket.com";
+    this.builderCode =
+      this.config.get<string>("POLYMARKET_BUILDER_CODE") ?? "";
     this.rpcUrl = this.config.get<string>("POLYGON_RPC_URL") ?? "";
   }
 
@@ -117,6 +120,11 @@ export class SigningService implements OnModuleInit {
       if (!apiKey || !secret || !passphrase) {
         throw new Error(
           "Production requires POLY_BUILDER_API_KEY, POLY_BUILDER_SECRET, and POLY_BUILDER_PASSPHRASE",
+        );
+      }
+      if (!this.builderCode) {
+        this.logger.warn(
+          "POLYMARKET_BUILDER_CODE is not set — orders will not be attributed to a builder",
         );
       }
       if (
@@ -166,6 +174,7 @@ export class SigningService implements OnModuleInit {
           orderType,
           expiration,
           sigType: creds.sigType,
+          builder: this.builderCode || undefined,
         });
       } else {
         order = await this.eip712Sign(creds, {
@@ -178,6 +187,7 @@ export class SigningService implements OnModuleInit {
           tickSize,
           negRisk,
           postOnly,
+          builder: this.builderCode || undefined,
         });
       }
 
@@ -203,6 +213,7 @@ export class SigningService implements OnModuleInit {
     orderType: string;
     expiration?: number;
     sigType: number;
+    builder?: string;
   }): Record<string, unknown> {
     return {
       salt: crypto.randomBytes(16).toString("hex"),
@@ -214,7 +225,7 @@ export class SigningService implements OnModuleInit {
       expiration: String(params.expiration ?? 0),
       timestamp: String(Date.now()),
       metadata: "0x",
-      builder: "0x0000000000000000000000000000000000000000",
+      builder: params.builder ?? "0x0000000000000000000000000000000000000000",
       side: params.side === "BUY" ? 0 : 1,
       signatureType: params.sigType,
       signature: "0x" + crypto.randomBytes(65).toString("hex"),
@@ -236,6 +247,7 @@ export class SigningService implements OnModuleInit {
       tickSize?: string;
       negRisk?: boolean;
       postOnly?: boolean;
+      builder?: string;
     },
   ): Promise<Record<string, unknown>> {
     // Derive the EOA wallet address entirely in Rust — private key never becomes a JS string.
@@ -255,6 +267,7 @@ export class SigningService implements OnModuleInit {
       expiration: params.expiration ?? 0,
       timestamp: Date.now(),
       negRisk: params.negRisk,
+      builder: params.builder,
     });
     return signed as unknown as Record<string, unknown>;
   }

@@ -234,9 +234,21 @@ describe("SigningService (CLOB V2)", () => {
       expect(order.metadata).toBe("0x");
     });
 
-    it("sets builder to zero address in stub order", async () => {
+    it("sets builder to zero address in stub order when POLYMARKET_BUILDER_CODE is unset", async () => {
       const { order } = await svc.signOrder(BASE_REQ);
       expect(order.builder).toBe("0x0000000000000000000000000000000000000000");
+    });
+
+    it("sets builder to POLYMARKET_BUILDER_CODE when configured", async () => {
+      const builderCode = "0x1234567890abcdef1234567890abcdef12345678";
+      const svcWithBuilder = new SigningService(
+        credentials,
+        makeConfig({ POLYMARKET_BUILDER_CODE: builderCode }),
+        nativeEip712,
+        nativeCtf,
+      );
+      const { order } = await svcWithBuilder.signOrder(BASE_REQ);
+      expect(order.builder).toBe(builderCode);
     });
 
     it("does NOT include V1 taker field in stub order", async () => {
@@ -512,6 +524,26 @@ describe("SigningService (CLOB V2)", () => {
       const result = await prodSvc.signOrder(BASE_REQ);
       expect(result).toHaveProperty("order");
       expect(result).toHaveProperty("builderHeaders");
+    });
+
+    it("passes POLYMARKET_BUILDER_CODE to NativeEip712Service.signOrder", async () => {
+      const builderCode = "0xdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef";
+      const prodSvcWithBuilder = new SigningService(
+        prodCredentials,
+        makeConfig({
+          NODE_ENV: "production",
+          CLOB_API_URL: "https://clob.polymarket.com",
+          SIGNING_MODE: "production",
+          POLYGON_RPC_URL: "https://polygon-mainnet.g.alchemy.com/v2/test",
+          POLYMARKET_BUILDER_CODE: builderCode,
+        }),
+        nativeEip712,
+        nativeCtf,
+      );
+      await prodSvcWithBuilder.signOrder(BASE_REQ);
+      const [, , params] = (nativeEip712.signOrder as ReturnType<typeof vi.fn>)
+        .mock.calls[0];
+      expect(params.builder).toBe(builderCode);
     });
 
     it("redeemPosition delegates to NativeCtfService in production (POLA-148)", async () => {
