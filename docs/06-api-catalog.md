@@ -982,14 +982,14 @@ Or alternatively:
 ```json
 {
   "positionId": "uuid",
-  "marketId": "uuid",
-  "redemptionValue": "200.000000",
-  "txHash": "0x...",
-  "redeemedAt": "2026-03-12T10:00:00Z"
+  "intentId": "uuid",
+  "status": "REDEEMED"
 }
 ```
 
-**Errors:** `404 POSITION_NOT_FOUND` · `422 MARKET_NOT_RESOLVED` · `422 ALREADY_REDEEMED` · `451 GEO_BLOCKED`
+> **Note:** Redemption is async — a redemption intent is published to `stream:redemptions` for the signer-service to process on-chain. The `intentId` can be used to track settlement progress. A future `POST /api/v1/orders/redeem/intent` endpoint may expose synchronous on-chain settlement.
+
+**Errors:** `404 POSITION_NOT_FOUND` · `422 MARKET_NOT_RESOLVED` · `422 NOT_CONNECTED` · `451 GEO_BLOCKED`
 
 ---
 

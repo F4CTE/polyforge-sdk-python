@@ -18,6 +18,7 @@ import {
 import { ClosePositionDto } from "./dto/close-position.dto";
 import { PlaceOrderDto } from "./dto/place-order.dto";
 import { RedeemPositionDto } from "./dto/redeem-position.dto";
+import { RedeemPositionResponseDto } from "./dto/redeem-position-response.dto";
 import { randomUUID } from "crypto";
 import {
   OrderSide,
@@ -162,7 +163,10 @@ export class OrdersService {
     return { orderId: order.id, intentId, status: "PENDING" };
   }
 
-  async redeemPosition(userId: string, dto: RedeemPositionDto): Promise<any> {
+  async redeemPosition(
+    userId: string,
+    dto: RedeemPositionDto,
+  ): Promise<RedeemPositionResponseDto> {
     if (!dto.positionId && !dto.marketId) {
       throw new UnprocessableEntityException({
         code: "MISSING_PARAM",

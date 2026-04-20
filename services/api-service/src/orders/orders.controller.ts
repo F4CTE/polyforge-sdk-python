@@ -14,7 +14,7 @@ import {
 } from "@nestjs/common";
 import type { FastifyReply } from "fastify";
 type Response = FastifyReply;
-import { ApiTags, ApiBearerAuth } from "@nestjs/swagger";
+import { ApiTags, ApiBearerAuth, ApiResponse } from "@nestjs/swagger";
 import { Throttle } from "@nestjs/throttler";
 import {
   JwtAuthGuard,
@@ -33,6 +33,7 @@ import { OrdersService } from "./orders.service";
 import { ClosePositionDto } from "./dto/close-position.dto";
 import { PlaceOrderDto } from "./dto/place-order.dto";
 import { RedeemPositionDto } from "./dto/redeem-position.dto";
+import { RedeemPositionResponseDto } from "./dto/redeem-position-response.dto";
 import { GeoBlockGuard } from "../common/guards/geo.guard";
 import { PaginationDto } from "../common/dto/pagination.dto";
 import { JwtPayload } from "@polyforge/shared-types";
@@ -112,6 +113,7 @@ export class OrdersController {
 
   @Post("redeem")
   @HttpCode(HttpStatus.OK)
+  @ApiResponse({ status: 200, type: RedeemPositionResponseDto })
   @UseGuards(ApiKeyScopeGuard, GeoBlockGuard)
   @RequireScopes("TRADE")
   redeemPosition(

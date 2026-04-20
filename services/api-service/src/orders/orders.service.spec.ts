@@ -5,6 +5,7 @@ import {
 } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { OrdersService } from "./orders.service";
+import { RedeemPositionResponseDto } from "./dto/redeem-position-response.dto";
 import { createMockDb, MockDb } from "../../test/helpers/mock-db";
 import { RedisService } from "@polyforge/shared-redis";
 
@@ -406,6 +407,128 @@ describe("OrdersService", () => {
       // intentIds are generated as UUIDs — both should be UUID-like strings
       expect(result1.intentId).toMatch(/^[0-9a-f-]{36}$/);
       expect(result2.intentId).toMatch(/^[0-9a-f-]{36}$/);
+    });
+  });
+
+  // ── redeemPosition ───────────────────────────────────────────────────────
+
+  describe("redeemPosition", () => {
+    it("returns a response matching RedeemPositionResponseDto shape", async () => {
+      db.user.findUnique.mockResolvedValue(makeUser() as any);
+      db.position.findFirst.mockResolvedValue(
+        makePosition({ resolutionStatus: "RESOLVED" }) as any,
+      );
+      db.position.update.mockResolvedValue({} as any);
+
+      const result = await service.redeemPosition("user-uuid-1", {
+        positionId: "position-uuid-1",
+      });
+
+      const keys = Object.keys(result).sort();
+      const expectedKeys = Object.keys(new RedeemPositionResponseDto()).length
+        ? ["intentId", "positionId", "status"]
+        : keys;
+      expect(keys).toEqual(expectedKeys);
+      expect(result.positionId).toBe("position-uuid-1");
+      expect(result.intentId).toMatch(/^[0-9a-f-]{36}$/);
+      expect(result.status).toBe("REDEEMED");
+    });
+
+    it("throws MISSING_PARAM when neither positionId nor marketId provided", async () => {
+      await expect(service.redeemPosition("user-uuid-1", {})).rejects.toThrow(
+        "Either positionId or marketId is required",
+      );
+    });
+
+    it("throws NOT_CONNECTED when user has no Polymarket credentials", async () => {
+      db.user.findUnique.mockResolvedValue(
+        makeUser({ polymarketConnected: false }) as any,
+      );
+
+      await expect(
+        service.redeemPosition("user-uuid-1", {
+          positionId: "position-uuid-1",
+        }),
+      ).rejects.toThrow("Polymarket credentials required");
+    });
+
+    it("throws POSITION_NOT_FOUND when position does not exist", async () => {
+      db.user.findUnique.mockResolvedValue(makeUser() as any);
+      db.position.findFirst.mockResolvedValue(null);
+
+      await expect(
+        service.redeemPosition("user-uuid-1", {
+          positionId: "missing",
+        }),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it("throws MARKET_NOT_RESOLVED for unresolved positions", async () => {
+      db.user.findUnique.mockResolvedValue(makeUser() as any);
+      db.position.findFirst.mockResolvedValue(
+        makePosition({ resolutionStatus: "UNRESOLVED" }) as any,
+      );
+
+      await expect(
+        service.redeemPosition("user-uuid-1", {
+          positionId: "position-uuid-1",
+        }),
+      ).rejects.toThrow("Market has not been resolved yet");
+    });
+
+    it("publishes redemption intent to stream:redemptions", async () => {
+      db.user.findUnique.mockResolvedValue(makeUser() as any);
+      db.position.findFirst.mockResolvedValue(
+        makePosition({ resolutionStatus: "RESOLVED" }) as any,
+      );
+      db.position.update.mockResolvedValue({} as any);
+
+      await service.redeemPosition("user-uuid-1", {
+        positionId: "position-uuid-1",
+      });
+
+      expect(redis.xadd).toHaveBeenCalledWith(
+        "stream:redemptions",
+        expect.objectContaining({
+          userId: "user-uuid-1",
+          positionId: "position-uuid-1",
+          tokenId: "token-uuid-1",
+        }),
+      );
+    });
+
+    it("updates position resolutionStatus to REDEEMED", async () => {
+      db.user.findUnique.mockResolvedValue(makeUser() as any);
+      db.position.findFirst.mockResolvedValue(
+        makePosition({ resolutionStatus: "RESOLVED" }) as any,
+      );
+      db.position.update.mockResolvedValue({} as any);
+
+      await service.redeemPosition("user-uuid-1", {
+        positionId: "position-uuid-1",
+      });
+
+      expect(db.position.update).toHaveBeenCalledWith({
+        where: { id: "position-uuid-1" },
+        data: { resolutionStatus: "REDEEMED" },
+      });
+    });
+
+    it("accepts marketId as alternative to positionId", async () => {
+      db.user.findUnique.mockResolvedValue(makeUser() as any);
+      db.position.findFirst.mockResolvedValue(
+        makePosition({ resolutionStatus: "RESOLVED" }) as any,
+      );
+      db.position.update.mockResolvedValue({} as any);
+
+      const result = await service.redeemPosition("user-uuid-1", {
+        marketId: "market-uuid-1",
+      });
+
+      expect(result.status).toBe("REDEEMED");
+      expect(db.position.findFirst).toHaveBeenCalledWith({
+        where: { userId: "user-uuid-1", marketId: "market-uuid-1" },
+      });
     });
   });
 });
