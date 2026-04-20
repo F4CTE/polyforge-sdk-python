@@ -85,6 +85,17 @@ jobs:
       - name: Lint
         run: pnpm lint
 
+  # ── 1a-2. Nginx security (parallel) ──────────────────────────────────────
+  nginx-security:
+    name: Nginx H2C check
+    runs-on: [self-hosted, linux]
+    timeout-minutes: 2
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check for H2C smuggling patterns
+        run: bash scripts/check-nginx-h2c.sh
+
   # ── 1b. Typecheck (parallel) ────────────────────────────────────────────
   typecheck:
     name: Typecheck
@@ -121,7 +132,7 @@ jobs:
   build:
     name: Build
     runs-on: [self-hosted, linux]
-    needs: [lint, typecheck, test]
+    needs: [lint, typecheck, test, nginx-security]
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4

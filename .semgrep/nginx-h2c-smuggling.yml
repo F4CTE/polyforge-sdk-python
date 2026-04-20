@@ -1,0 +1,43 @@
+rules:
+  - id: nginx-h2c-smuggling-upgrade
+    patterns:
+      - pattern: proxy_set_header Upgrade $http_upgrade
+    message: >
+      H2C smuggling risk: forwarding $http_upgrade directly allows attackers to
+      inject Upgrade: h2c and smuggle HTTP/2 cleartext through the proxy.
+      Use the $safe_upgrade map variable instead, which restricts upgrades to
+      WebSocket only. See https://github.com/F4CTE/PolyForge/issues/777
+    languages: [generic]
+    severity: ERROR
+    paths:
+      include:
+        - "*.conf"
+    metadata:
+      cwe:
+        - "CWE-444: Inconsistent Interpretation of HTTP Requests"
+      references:
+        - https://github.com/F4CTE/PolyForge/issues/777
+      category: security
+      technology:
+        - nginx
+
+  - id: nginx-h2c-smuggling-connection
+    patterns:
+      - pattern: proxy_set_header Connection "upgrade"
+    message: >
+      H2C smuggling risk: hardcoded Connection "upgrade" header allows upgrade
+      for any protocol including h2c. Use the $safe_connection map variable
+      instead. See https://github.com/F4CTE/PolyForge/issues/777
+    languages: [generic]
+    severity: ERROR
+    paths:
+      include:
+        - "*.conf"
+    metadata:
+      cwe:
+        - "CWE-444: Inconsistent Interpretation of HTTP Requests"
+      references:
+        - https://github.com/F4CTE/PolyForge/issues/777
+      category: security
+      technology:
+        - nginx
