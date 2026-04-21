@@ -1447,7 +1447,7 @@ class PolyforgeClient:
         Returns:
             A list of :class:`BatchResult` objects, one per request.
         """
-        data = self._post("/api/v1/batch", json={"requests": requests})
+        data = self._post("/api/v1/batch", json={"items": requests})
         items = data if isinstance(data, list) else data.get("results", [])
         return [_parse(BatchResult, r) for r in items]
 
@@ -2965,7 +2965,7 @@ class AsyncPolyforgeClient:
 
     async def batch_requests(self, requests: list[dict[str, Any]]) -> list[BatchResult]:
         """Execute multiple API requests in a single round-trip."""
-        data = await self._post("/api/v1/batch", json={"requests": requests})
+        data = await self._post("/api/v1/batch", json={"items": requests})
         items = data if isinstance(data, list) else data.get("results", [])
         return [_parse(BatchResult, r) for r in items]
 

@@ -2464,6 +2464,47 @@ class TestBatchApi:
         source = inspect.getsource(AsyncPolyforgeClient.batch_requests)
         assert "/api/v1/batch" in source
 
+    def test_sync_batch_requests_sends_items_key(self):
+        import inspect
+        source = inspect.getsource(PolyforgeClient.batch_requests)
+        assert '"items"' in source
+        assert '"requests"' not in source or "requests)" in source
+
+    def test_async_batch_requests_sends_items_key(self):
+        import inspect
+        source = inspect.getsource(AsyncPolyforgeClient.batch_requests)
+        assert '"items"' in source
+        assert '"requests"' not in source or "requests)" in source
+
+    def test_sync_batch_requests_payload(self):
+        from unittest.mock import MagicMock
+        client = PolyforgeClient(api_key="test-key")
+        fake_response = [{"id": "1", "status": 200, "body": {}}]
+        client._post = MagicMock(return_value=fake_response)
+        reqs = [{"id": "1", "method": "GET", "path": "/api/v1/markets"}]
+        client.batch_requests(reqs)
+        client._post.assert_called_once_with(
+            "/api/v1/batch", json={"items": reqs},
+        )
+        client.close()
+
+    def test_async_batch_requests_payload(self):
+        import asyncio
+        from unittest.mock import AsyncMock
+
+        async def _run():
+            client = AsyncPolyforgeClient(api_key="test-key")
+            fake_response = [{"id": "1", "status": 200, "body": {}}]
+            client._post = AsyncMock(return_value=fake_response)
+            reqs = [{"id": "1", "method": "GET", "path": "/api/v1/markets"}]
+            await client.batch_requests(reqs)
+            client._post.assert_called_once_with(
+                "/api/v1/batch", json={"items": reqs},
+            )
+            await client.close()
+
+        asyncio.run(_run())
+
 
 class TestExtendedWhaleIntelligence:
     """Tests for get_top_whales, get_whale_profile, follow/unfollow, get_followed_whales."""
