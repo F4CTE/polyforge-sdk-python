@@ -226,7 +226,7 @@ def _validate_enum(name: str, value: str, allowed: frozenset[str]) -> None:
 _VALID_MODES = frozenset({"live", "paper"})
 _VALID_SIDES = frozenset({"BUY", "SELL"})
 _VALID_OUTCOMES = frozenset({"YES", "NO"})
-_VALID_ORDER_TYPES = frozenset({"GTC", "GTD", "FOK", "FAK"})
+_VALID_ORDER_TYPES = frozenset({"GTC", "GTD", "FOK", "FAK", "POST_ONLY"})
 
 
 def _validate_financial_param(name: str, value: float) -> None:

@@ -708,6 +708,15 @@ class TestPlatformContractCompliance:
         source = inspect.getsource(PolyforgeClient.start_strategy)
         assert ".upper()" not in source, "start_strategy() must not uppercase the mode value"
 
+    def test_order_type_enum_matches_platform_dto(self):
+        """_VALID_ORDER_TYPES must equal platform OrderTypeDto exactly (#157)."""
+        from polyforge.client import _VALID_ORDER_TYPES
+
+        platform_order_types = {"GTC", "GTD", "FOK", "FAK", "POST_ONLY"}
+        assert _VALID_ORDER_TYPES == platform_order_types, (
+            f"SDK order types {_VALID_ORDER_TYPES} don't match platform DTO {platform_order_types}"
+        )
+
 
 class TestFinancialParamValidation:
     """Test _validate_financial_param rejects dangerous values (#88)."""
@@ -777,6 +786,14 @@ class TestEnumValidation:
         client = PolyforgeClient(api_key="test-key")
         with pytest.raises(ValueError, match="must be one of"):
             client.place_order("tok", "BUY", "YES", 10.0, 0.5, order_type="IOC")
+
+    def test_place_order_accepts_post_only(self):
+        """POST_ONLY is a valid platform order type and must not be rejected (#157)."""
+        from polyforge.client import _VALID_ORDER_TYPES
+        from polyforge.client import _validate_enum
+
+        # Should not raise
+        _validate_enum("order_type", "POST_ONLY", _VALID_ORDER_TYPES)
 
 
 class TestPlaceOrderValidation:
