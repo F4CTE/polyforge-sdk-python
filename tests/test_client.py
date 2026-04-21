@@ -3640,3 +3640,33 @@ class TestNewModels:
         assert entry.username == "trader1"
         assert entry.display_name == "Trader One"
         assert entry.total_trades == 250
+
+
+class TestRedeemPosition:
+    """Tests for redeem_position field-name fix (POLA-478).
+
+    The platform returns positionId (not orderId) from /api/v1/orders/redeem.
+    """
+
+    def test_redeem_position_exists_sync(self):
+        assert callable(getattr(PolyforgeClient, "redeem_position", None))
+
+    def test_redeem_position_exists_async(self):
+        assert callable(getattr(AsyncPolyforgeClient, "redeem_position", None))
+
+    def test_redeem_position_uses_correct_path(self):
+        import inspect
+        source = inspect.getsource(PolyforgeClient.redeem_position)
+        assert "/api/v1/orders/redeem" in source
+
+    def test_redeem_position_parses_position_id_not_order_id(self):
+        import inspect
+        source = inspect.getsource(PolyforgeClient.redeem_position)
+        assert 'data["positionId"]' in source
+        assert 'data["orderId"]' not in source
+
+    def test_redeem_position_async_parses_position_id_not_order_id(self):
+        import inspect
+        source = inspect.getsource(AsyncPolyforgeClient.redeem_position)
+        assert 'data["positionId"]' in source
+        assert 'data["orderId"]' not in source
