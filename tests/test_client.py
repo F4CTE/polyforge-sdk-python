@@ -338,26 +338,26 @@ class TestModelParsing:
         """Should instantiate Market model."""
         market = Market(
             id="btc-usd",
-            title="Bitcoin / US Dollar",
+            question="Bitcoin / US Dollar",
             symbol="BTC/USD",
             category="crypto",
             price=45000.0,
         )
         assert market.id == "btc-usd"
-        assert market.title == "Bitcoin / US Dollar"
+        assert market.question == "Bitcoin / US Dollar"
         assert market.price == 45000.0
 
-    def test_market_parses_title_from_api_response(self):
-        """Platform returns 'title' not 'name' — _parse must map it correctly (#43)."""
+    def test_market_parses_question_from_api_response(self):
+        """Platform returns 'question' not 'title' — _parse must map it correctly (#147)."""
         api_response = {
             "id": "0xabc",
-            "title": "Will BTC reach $100K by June?",
+            "question": "Will BTC reach $100K by June?",
             "symbol": "BTC-100K",
             "category": "Crypto",
             "price": 0.65,
         }
         market = _parse(Market, api_response)
-        assert market.title == "Will BTC reach $100K by June?"
+        assert market.question == "Will BTC reach $100K by June?"
         assert market.id == "0xabc"
 
     def test_strategy_model_instantiation(self):
@@ -488,7 +488,7 @@ class TestTokenModel:
         """_parse must recursively build Token objects from Market.tokens array."""
         raw = {
             "id": "mkt-001",
-            "title": "Will ETH flip BTC by 2025?",
+            "question": "Will ETH flip BTC by 2025?",
             "tokens": [
                 {"id": "tok-yes", "outcome": "YES", "price": 0.35},
                 {"id": "tok-no", "outcome": "NO", "price": 0.65},
@@ -506,7 +506,7 @@ class TestTokenModel:
         assert no_tok.price == 0.65
 
     def test_market_parses_empty_tokens_array(self):
-        raw = {"id": "mkt-002", "title": "Test", "tokens": []}
+        raw = {"id": "mkt-002", "question": "Test", "tokens": []}
         market = _parse(Market, raw)
         assert market.tokens == []
 

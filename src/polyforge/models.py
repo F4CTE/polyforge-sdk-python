@@ -98,7 +98,7 @@ class Market:
     """A prediction market."""
 
     id: str = ""
-    title: str = ""
+    question: str = ""
     symbol: str = ""
     category: str = ""
     tokens: list[Token] = field(default_factory=list)
