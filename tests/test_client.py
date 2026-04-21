@@ -2477,6 +2477,57 @@ class TestDiscoveryAndRanking:
         source = inspect.getsource(AsyncPolyforgeClient.get_leaderboard)
         assert "/api/v1/leaderboard" in source
 
+    def test_sync_get_leaderboard_returns_paginated(self):
+        import inspect
+        source = inspect.getsource(PolyforgeClient.get_leaderboard)
+        assert "PaginatedResponse" in source
+
+    def test_async_get_leaderboard_returns_paginated(self):
+        import inspect
+        source = inspect.getsource(AsyncPolyforgeClient.get_leaderboard)
+        assert "PaginatedResponse" in source
+
+    def test_get_leaderboard_paginated_response_parsing(self):
+        """PaginatedResponse wraps data and preserves all pagination metadata."""
+        from polyforge.models import LeaderboardEntry, PaginatedResponse
+        from unittest.mock import MagicMock, patch
+
+        client = PolyforgeClient(api_key="test")
+        raw_response = {
+            "data": [{"rank": 1, "address": "0xabc", "profit": 100.0}],
+            "total": 50,
+            "page": 2,
+            "limit": 10,
+            "hasNext": True,
+            "totalPages": 5,
+        }
+        with patch.object(client, "_get", return_value=raw_response):
+            result = client.get_leaderboard(period="7d", limit=10, offset=10)
+
+        assert isinstance(result, PaginatedResponse)
+        assert len(result.data) == 1
+        assert isinstance(result.data[0], LeaderboardEntry)
+        assert result.total == 50
+        assert result.page == 2
+        assert result.limit == 10
+        assert result.has_more is True
+        assert result.total_pages == 5
+
+    def test_get_leaderboard_legacy_list_response(self):
+        """When the server returns a bare list, wrap it in PaginatedResponse gracefully."""
+        from polyforge.models import LeaderboardEntry, PaginatedResponse
+        from unittest.mock import patch
+
+        client = PolyforgeClient(api_key="test")
+        with patch.object(client, "_get", return_value=[{"rank": 1, "address": "0xabc", "profit": 50.0}]):
+            result = client.get_leaderboard()
+
+        assert isinstance(result, PaginatedResponse)
+        assert len(result.data) == 1
+        assert isinstance(result.data[0], LeaderboardEntry)
+        assert result.total == 0
+        assert result.has_more is False
+
 
 class TestPaperTrading:
     """Tests for get_paper_summary and reset_paper_account."""
