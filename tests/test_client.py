@@ -1866,6 +1866,26 @@ class TestAlertCrud:
         assert "/api/v1/alerts/" in source
         assert "_delete" in source
 
+    # -- Regression: price must be sent as string (#162 / POLA-332) --
+
+    def test_sync_create_alert_sends_price_as_string(self):
+        """create_alert() must convert price to str for @IsNumberString."""
+        import inspect
+
+        source = inspect.getsource(PolyforgeClient.create_alert)
+        assert 'str(price)' in source, (
+            "price must be serialised as str(price) — platform requires @IsNumberString"
+        )
+
+    def test_async_create_alert_sends_price_as_string(self):
+        """Async create_alert() must convert price to str for @IsNumberString."""
+        import inspect
+
+        source = inspect.getsource(AsyncPolyforgeClient.create_alert)
+        assert 'str(price)' in source, (
+            "price must be serialised as str(price) — platform requires @IsNumberString"
+        )
+
 
 # ---------------------------------------------------------------------------
 # Conditional Orders (#50)
