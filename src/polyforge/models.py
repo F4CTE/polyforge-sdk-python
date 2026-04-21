@@ -426,6 +426,15 @@ class PlaceOrderResponse:
     status: str = ""
 
 
+@dataclass
+class RedeemPositionResponse:
+    """Response from redeeming a resolved position."""
+
+    position_id: str = ""
+    intent_id: str = ""
+    status: str = ""
+
+
 # ---------------------------------------------------------------------------
 # Arbitrage
 # ---------------------------------------------------------------------------

@@ -44,6 +44,7 @@ from polyforge.models import (
     Position,
     PriceHistoryEntry,
     Rebate,
+    RedeemPositionResponse,
     RewardMarket,
     Strategy,
     StrategyExecMode,
@@ -3647,9 +3648,10 @@ class TestNewModels:
 
 
 class TestRedeemPosition:
-    """Tests for redeem_position field-name fix (POLA-478).
+    """Tests for redeem_position response type (POLA-478, POLA-488).
 
     The platform returns positionId (not orderId) from /api/v1/orders/redeem.
+    POLA-488: return type must be RedeemPositionResponse (not PlaceOrderResponse).
     """
 
     def test_redeem_position_exists_sync(self):
@@ -3674,6 +3676,28 @@ class TestRedeemPosition:
         source = inspect.getsource(AsyncPolyforgeClient.redeem_position)
         assert 'data["positionId"]' in source
         assert 'data["orderId"]' not in source
+
+    def test_redeem_position_returns_redeem_position_response(self):
+        import typing
+        hints = typing.get_type_hints(PolyforgeClient.redeem_position)
+        assert hints["return"] is RedeemPositionResponse
+
+    def test_redeem_position_async_returns_redeem_position_response(self):
+        import typing
+        hints = typing.get_type_hints(AsyncPolyforgeClient.redeem_position)
+        assert hints["return"] is RedeemPositionResponse
+
+    def test_redeem_position_response_model(self):
+        resp = RedeemPositionResponse(position_id="pos-1", intent_id="int-1", status="REDEEMED")
+        assert resp.position_id == "pos-1"
+        assert resp.intent_id == "int-1"
+        assert resp.status == "REDEEMED"
+
+    def test_redeem_position_response_defaults(self):
+        resp = RedeemPositionResponse()
+        assert resp.position_id == ""
+        assert resp.intent_id == ""
+        assert resp.status == ""
 
 
 
