@@ -773,3 +773,79 @@ class StrategyEvent:
     strategy_id: str = ""
     data: dict[str, Any] | None = None
     timestamp: int = 0
+
+
+# ---------------------------------------------------------------------------
+# News Articles
+# ---------------------------------------------------------------------------
+
+@dataclass
+class NewsArticle:
+    """A news article from the platform news feed."""
+
+    id: str = ""
+    title: str = ""
+    source: str = ""
+    url: str = ""
+    sentiment: str = ""
+    published_at: str = ""
+    summary: str = ""
+    image_url: str = ""
+
+
+# ---------------------------------------------------------------------------
+# Trader Badges & Top Traders
+# ---------------------------------------------------------------------------
+
+@dataclass
+class TraderBadge:
+    """A badge earned by a trader."""
+
+    id: str = ""
+    user_id: str = ""
+    badge_type: str = ""
+    tier: str = ""
+    earned_at: str = ""
+    label: str = ""
+    description: str = ""
+
+
+@dataclass
+class TopTrader:
+    """An entry in the top-traders leaderboard."""
+
+    user_id: str = ""
+    username: str = ""
+    display_name: str = ""
+    avatar_url: str = ""
+    score: float = 0.0
+    win_rate: str = "0"
+    total_trades: int = 0
+
+
+# ---------------------------------------------------------------------------
+# CLOB Book
+# ---------------------------------------------------------------------------
+
+@dataclass
+class ClobBookLevel:
+    """A single price level in a CLOB order book."""
+
+    price: str = ""
+    size: str = ""
+
+
+@dataclass
+class ClobBook:
+    """CLOB order book snapshot for a market token.
+
+    Unlike the standard :class:`OrderBook`, the CLOB book also carries
+    ``spread``, ``midpoint``, and a server-side ``timestamp``.
+    """
+
+    token_id: str = ""
+    bids: List[ClobBookLevel] = field(default_factory=list)
+    asks: List[ClobBookLevel] = field(default_factory=list)
+    spread: str = "0"
+    midpoint: str = "0"
+    timestamp: int = 0

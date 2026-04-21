@@ -26,6 +26,8 @@ from polyforge.errors import (
 from polyforge.models import (
     AiQueryResponse,
     Alert,
+    ClobBook,
+    ClobBookLevel,
     ConditionalOrder,
     CopyConfig,
     Market,
@@ -33,6 +35,7 @@ from polyforge.models import (
     MarketplaceListing,
     MarketplaceSeller,
     MarketplaceStrategy,
+    NewsArticle,
     Order,
     OrderBook,
     OrderBookLevel,
@@ -46,6 +49,8 @@ from polyforge.models import (
     Strategy,
     StrategyExecMode,
     StrategyVisibility,
+    TopTrader,
+    TraderBadge,
     TraderScore,
     WatchlistItem,
     WebhookEvent,
@@ -3022,3 +3027,403 @@ class TestApiKeyManagement:
         source = inspect.getsource(PolyforgeClient.revoke_api_key)
         assert "_delete" in source
         assert "/api/v1/api-keys/" in source
+
+
+# ---------------------------------------------------------------------------
+# POLA-331 — 17 missing platform endpoints
+# ---------------------------------------------------------------------------
+
+class TestMarketsExtendedEndpoints:
+    """Tests for markets extended-data endpoints (#163)."""
+
+    def test_search_markets_exists_sync(self):
+        assert hasattr(PolyforgeClient, "search_markets")
+        assert callable(PolyforgeClient.search_markets)
+
+    def test_search_markets_exists_async(self):
+        assert hasattr(AsyncPolyforgeClient, "search_markets")
+        assert callable(AsyncPolyforgeClient.search_markets)
+
+    def test_search_markets_accepts_q_and_limit(self):
+        import inspect
+        for cls in (PolyforgeClient, AsyncPolyforgeClient):
+            sig = inspect.signature(getattr(cls, "search_markets"))
+            params = set(sig.parameters.keys())
+            assert "q" in params, f"{cls.__name__}.search_markets missing 'q'"
+            assert "limit" in params, f"{cls.__name__}.search_markets missing 'limit'"
+
+    def test_search_markets_uses_correct_path(self):
+        import inspect
+        for cls in (PolyforgeClient, AsyncPolyforgeClient):
+            src = inspect.getsource(getattr(cls, "search_markets"))
+            assert "/api/v1/markets/search" in src
+
+    def test_get_tick_size_exists(self):
+        for cls in (PolyforgeClient, AsyncPolyforgeClient):
+            assert hasattr(cls, "get_tick_size"), f"{cls.__name__} missing get_tick_size"
+
+    def test_get_tick_size_uses_correct_path(self):
+        import inspect
+        for cls in (PolyforgeClient, AsyncPolyforgeClient):
+            src = inspect.getsource(getattr(cls, "get_tick_size"))
+            assert "/tick-size" in src
+
+    def test_get_spread_exists(self):
+        for cls in (PolyforgeClient, AsyncPolyforgeClient):
+            assert hasattr(cls, "get_spread"), f"{cls.__name__} missing get_spread"
+
+    def test_get_spread_uses_correct_path(self):
+        import inspect
+        for cls in (PolyforgeClient, AsyncPolyforgeClient):
+            src = inspect.getsource(getattr(cls, "get_spread"))
+            assert "/spread" in src
+
+    def test_get_midpoint_exists(self):
+        for cls in (PolyforgeClient, AsyncPolyforgeClient):
+            assert hasattr(cls, "get_midpoint"), f"{cls.__name__} missing get_midpoint"
+
+    def test_get_midpoint_uses_correct_path(self):
+        import inspect
+        for cls in (PolyforgeClient, AsyncPolyforgeClient):
+            src = inspect.getsource(getattr(cls, "get_midpoint"))
+            assert "/midpoint" in src
+
+    def test_get_clob_book_exists(self):
+        for cls in (PolyforgeClient, AsyncPolyforgeClient):
+            assert hasattr(cls, "get_clob_book"), f"{cls.__name__} missing get_clob_book"
+
+    def test_get_clob_book_uses_correct_path(self):
+        import inspect
+        for cls in (PolyforgeClient, AsyncPolyforgeClient):
+            src = inspect.getsource(getattr(cls, "get_clob_book"))
+            assert "/clob-book" in src
+
+    def test_get_clob_prices_history_exists(self):
+        for cls in (PolyforgeClient, AsyncPolyforgeClient):
+            assert hasattr(cls, "get_clob_prices_history")
+
+    def test_get_clob_prices_history_accepts_interval_and_fidelity(self):
+        import inspect
+        for cls in (PolyforgeClient, AsyncPolyforgeClient):
+            sig = inspect.signature(getattr(cls, "get_clob_prices_history"))
+            params = set(sig.parameters.keys())
+            assert "interval" in params
+            assert "fidelity" in params
+
+    def test_get_clob_prices_history_uses_correct_path(self):
+        import inspect
+        for cls in (PolyforgeClient, AsyncPolyforgeClient):
+            src = inspect.getsource(getattr(cls, "get_clob_prices_history"))
+            assert "/clob-prices-history" in src
+
+
+class TestClobBookModel:
+    """Tests for ClobBook and ClobBookLevel models (#163)."""
+
+    def test_clob_book_level_fields(self):
+        level = ClobBookLevel(price="0.55", size="100")
+        assert level.price == "0.55"
+        assert level.size == "100"
+
+    def test_clob_book_level_defaults(self):
+        level = ClobBookLevel()
+        assert level.price == ""
+        assert level.size == ""
+
+    def test_clob_book_fields(self):
+        book = ClobBook(
+            token_id="tok-1",
+            bids=[ClobBookLevel(price="0.50", size="50")],
+            asks=[ClobBookLevel(price="0.52", size="30")],
+            spread="0.02",
+            midpoint="0.51",
+            timestamp=1700000000,
+        )
+        assert book.token_id == "tok-1"
+        assert len(book.bids) == 1
+        assert len(book.asks) == 1
+        assert book.spread == "0.02"
+        assert book.midpoint == "0.51"
+        assert book.timestamp == 1700000000
+
+    def test_clob_book_defaults(self):
+        book = ClobBook()
+        assert book.token_id == ""
+        assert book.bids == []
+        assert book.asks == []
+        assert book.spread == "0"
+        assert book.midpoint == "0"
+        assert book.timestamp == 0
+
+
+class TestBulkOrderEndpoints:
+    """Tests for batch orders and bulk cancel endpoints (#163)."""
+
+    def test_batch_orders_exists(self):
+        for cls in (PolyforgeClient, AsyncPolyforgeClient):
+            assert hasattr(cls, "batch_orders"), f"{cls.__name__} missing batch_orders"
+
+    def test_batch_orders_uses_correct_path(self):
+        import inspect
+        for cls in (PolyforgeClient, AsyncPolyforgeClient):
+            src = inspect.getsource(getattr(cls, "batch_orders"))
+            assert "/api/v1/orders/batch" in src
+
+    def test_batch_orders_validates_limit(self):
+        client = PolyforgeClient(api_key="test")
+        too_many = [{"tokenId": f"t{i}"} for i in range(16)]
+        with pytest.raises(ValueError, match="15"):
+            client.batch_orders(too_many)
+        client.close()
+
+    def test_async_batch_orders_validates_limit(self):
+        import asyncio
+        client = AsyncPolyforgeClient(api_key="test")
+        too_many = [{"tokenId": f"t{i}"} for i in range(16)]
+        async def run():
+            with pytest.raises(ValueError, match="15"):
+                await client.batch_orders(too_many)
+            await client.close()
+        asyncio.run(run())
+
+    def test_bulk_cancel_orders_exists(self):
+        for cls in (PolyforgeClient, AsyncPolyforgeClient):
+            assert hasattr(cls, "bulk_cancel_orders"), f"{cls.__name__} missing bulk_cancel_orders"
+
+    def test_bulk_cancel_orders_uses_correct_path(self):
+        import inspect
+        for cls in (PolyforgeClient, AsyncPolyforgeClient):
+            src = inspect.getsource(getattr(cls, "bulk_cancel_orders"))
+            assert "/api/v1/orders/bulk" in src
+
+    def test_bulk_cancel_orders_uses_delete_with_body(self):
+        import inspect
+        for cls in (PolyforgeClient, AsyncPolyforgeClient):
+            src = inspect.getsource(getattr(cls, "bulk_cancel_orders"))
+            assert "_delete_with_body" in src
+
+    def test_bulk_cancel_orders_validates_limit(self):
+        client = PolyforgeClient(api_key="test")
+        with pytest.raises(ValueError, match="3000"):
+            client.bulk_cancel_orders(["x"] * 3001)
+        client.close()
+
+
+class TestNewsArticleEndpoints:
+    """Tests for news article endpoints (#163)."""
+
+    def test_news_article_model_fields(self):
+        article = NewsArticle(
+            id="art-1",
+            title="BTC hits ATH",
+            source="Reuters",
+            url="https://reuters.com/1",
+            sentiment="POSITIVE",
+            published_at="2026-01-01T00:00:00Z",
+        )
+        assert article.id == "art-1"
+        assert article.title == "BTC hits ATH"
+        assert article.source == "Reuters"
+        assert article.sentiment == "POSITIVE"
+
+    def test_news_article_defaults(self):
+        article = NewsArticle()
+        assert article.id == ""
+        assert article.title == ""
+        assert article.sentiment == ""
+
+    def test_news_article_parses_from_api(self):
+        raw = {
+            "id": "art-42",
+            "title": "Market update",
+            "source": "Bloomberg",
+            "url": "https://bloomberg.com/42",
+            "sentiment": "NEUTRAL",
+            "publishedAt": "2026-04-01T12:00:00Z",
+            "summary": "Short summary.",
+            "imageUrl": "https://img.example.com/42.jpg",
+        }
+        article = _parse(NewsArticle, raw)
+        assert article.id == "art-42"
+        assert article.published_at == "2026-04-01T12:00:00Z"
+        assert article.image_url == "https://img.example.com/42.jpg"
+
+    def test_list_news_exists(self):
+        for cls in (PolyforgeClient, AsyncPolyforgeClient):
+            assert hasattr(cls, "list_news"), f"{cls.__name__} missing list_news"
+
+    def test_list_news_accepts_source_sentiment_page_limit(self):
+        import inspect
+        for cls in (PolyforgeClient, AsyncPolyforgeClient):
+            sig = inspect.signature(getattr(cls, "list_news"))
+            params = set(sig.parameters.keys())
+            for p in ("source", "sentiment", "page", "limit"):
+                assert p in params, f"{cls.__name__}.list_news missing '{p}'"
+
+    def test_list_news_uses_correct_path(self):
+        import inspect
+        for cls in (PolyforgeClient, AsyncPolyforgeClient):
+            src = inspect.getsource(getattr(cls, "list_news"))
+            assert '"/api/v1/news"' in src or "'/api/v1/news'" in src
+
+    def test_get_news_article_exists(self):
+        for cls in (PolyforgeClient, AsyncPolyforgeClient):
+            assert hasattr(cls, "get_news_article"), f"{cls.__name__} missing get_news_article"
+
+    def test_get_news_article_uses_correct_path(self):
+        import inspect
+        for cls in (PolyforgeClient, AsyncPolyforgeClient):
+            src = inspect.getsource(getattr(cls, "get_news_article"))
+            assert "/api/v1/news/" in src
+
+
+class TestScoresExtendedEndpoints:
+    """Tests for extended scores endpoints (#163)."""
+
+    def test_trader_badge_model_fields(self):
+        badge = TraderBadge(
+            id="b-1",
+            user_id="u-1",
+            badge_type="VOLUME_MASTER",
+            tier="GOLD",
+            earned_at="2026-01-15T00:00:00Z",
+            label="Volume Master",
+            description="Traded over 1M USDC",
+        )
+        assert badge.badge_type == "VOLUME_MASTER"
+        assert badge.tier == "GOLD"
+        assert badge.label == "Volume Master"
+
+    def test_trader_badge_defaults(self):
+        badge = TraderBadge()
+        assert badge.id == ""
+        assert badge.tier == ""
+
+    def test_trader_badge_parses_from_api(self):
+        raw = {
+            "id": "b-99",
+            "userId": "u-99",
+            "badgeType": "ACCURACY_PRO",
+            "tier": "SILVER",
+            "earnedAt": "2026-03-01T00:00:00Z",
+            "label": "Accuracy Pro",
+            "description": "High accuracy rate",
+        }
+        badge = _parse(TraderBadge, raw)
+        assert badge.badge_type == "ACCURACY_PRO"
+        assert badge.tier == "SILVER"
+
+    def test_top_trader_model_fields(self):
+        trader = TopTrader(
+            user_id="u-1",
+            username="alice",
+            display_name="Alice",
+            avatar_url="https://example.com/alice.png",
+            score=9850.0,
+            win_rate="0.72",
+            total_trades=1234,
+        )
+        assert trader.username == "alice"
+        assert trader.score == 9850.0
+        assert trader.total_trades == 1234
+
+    def test_top_trader_parses_from_api(self):
+        raw = {
+            "userId": "u-42",
+            "username": "bob",
+            "displayName": "Bob",
+            "avatarUrl": "",
+            "score": 7500.0,
+            "winRate": "0.65",
+            "totalTrades": 800,
+        }
+        trader = _parse(TopTrader, raw)
+        assert trader.user_id == "u-42"
+        assert trader.username == "bob"
+        assert trader.win_rate == "0.65"
+
+    def test_get_top_scores_exists(self):
+        for cls in (PolyforgeClient, AsyncPolyforgeClient):
+            assert hasattr(cls, "get_top_scores"), f"{cls.__name__} missing get_top_scores"
+
+    def test_get_top_scores_uses_correct_path(self):
+        import inspect
+        for cls in (PolyforgeClient, AsyncPolyforgeClient):
+            src = inspect.getsource(getattr(cls, "get_top_scores"))
+            assert "/api/v1/scores/top" in src
+
+    def test_get_my_badges_exists(self):
+        for cls in (PolyforgeClient, AsyncPolyforgeClient):
+            assert hasattr(cls, "get_my_badges"), f"{cls.__name__} missing get_my_badges"
+
+    def test_get_my_badges_uses_correct_path(self):
+        import inspect
+        for cls in (PolyforgeClient, AsyncPolyforgeClient):
+            src = inspect.getsource(getattr(cls, "get_my_badges"))
+            assert "/api/v1/scores/me/badges" in src
+
+    def test_get_user_score_exists(self):
+        for cls in (PolyforgeClient, AsyncPolyforgeClient):
+            assert hasattr(cls, "get_user_score"), f"{cls.__name__} missing get_user_score"
+
+    def test_get_user_score_accepts_user_id(self):
+        import inspect
+        for cls in (PolyforgeClient, AsyncPolyforgeClient):
+            sig = inspect.signature(getattr(cls, "get_user_score"))
+            assert "user_id" in sig.parameters
+
+    def test_get_user_score_uses_correct_path(self):
+        import inspect
+        for cls in (PolyforgeClient, AsyncPolyforgeClient):
+            src = inspect.getsource(getattr(cls, "get_user_score"))
+            assert "/api/v1/scores/" in src
+
+    def test_get_user_badges_exists(self):
+        for cls in (PolyforgeClient, AsyncPolyforgeClient):
+            assert hasattr(cls, "get_user_badges"), f"{cls.__name__} missing get_user_badges"
+
+    def test_get_user_badges_uses_correct_path(self):
+        import inspect
+        for cls in (PolyforgeClient, AsyncPolyforgeClient):
+            src = inspect.getsource(getattr(cls, "get_user_badges"))
+            assert "/badges" in src
+
+
+class TestPolymarketPortfolioEndpoints:
+    """Tests for Polymarket-native portfolio endpoints (#163)."""
+
+    def test_get_polymarket_portfolio_exists(self):
+        for cls in (PolyforgeClient, AsyncPolyforgeClient):
+            assert hasattr(cls, "get_polymarket_portfolio")
+
+    def test_get_polymarket_portfolio_uses_correct_path(self):
+        import inspect
+        for cls in (PolyforgeClient, AsyncPolyforgeClient):
+            src = inspect.getsource(getattr(cls, "get_polymarket_portfolio"))
+            assert "/api/v1/portfolio/polymarket/portfolio" in src
+
+    def test_get_polymarket_earnings_exists(self):
+        for cls in (PolyforgeClient, AsyncPolyforgeClient):
+            assert hasattr(cls, "get_polymarket_earnings")
+
+    def test_get_polymarket_earnings_uses_correct_path(self):
+        import inspect
+        for cls in (PolyforgeClient, AsyncPolyforgeClient):
+            src = inspect.getsource(getattr(cls, "get_polymarket_earnings"))
+            assert "/api/v1/portfolio/polymarket/earnings" in src
+
+    def test_get_polymarket_activity_exists(self):
+        for cls in (PolyforgeClient, AsyncPolyforgeClient):
+            assert hasattr(cls, "get_polymarket_activity")
+
+    def test_get_polymarket_activity_accepts_type_param(self):
+        import inspect
+        for cls in (PolyforgeClient, AsyncPolyforgeClient):
+            sig = inspect.signature(getattr(cls, "get_polymarket_activity"))
+            assert "type" in sig.parameters
+
+    def test_get_polymarket_activity_uses_correct_path(self):
+        import inspect
+        for cls in (PolyforgeClient, AsyncPolyforgeClient):
+            src = inspect.getsource(getattr(cls, "get_polymarket_activity"))
+            assert "/api/v1/portfolio/polymarket/activity" in src
