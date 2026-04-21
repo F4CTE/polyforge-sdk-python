@@ -3056,3 +3056,133 @@ class TestRiskSettings:
     def test_risk_settings_exported_from_package(self):
         from polyforge import RiskSettings
         assert RiskSettings is not None
+
+
+class TestNewsSignalsWhalesFeedParams:
+    """Tests for get_news_signals and get_whale_feed missing query params (#132)."""
+
+    # -- get_whale_feed --
+
+    def test_sync_get_whale_feed_exists(self):
+        assert hasattr(PolyforgeClient, "get_whale_feed")
+
+    def test_async_get_whale_feed_exists(self):
+        assert hasattr(AsyncPolyforgeClient, "get_whale_feed")
+
+    def test_sync_get_whale_feed_has_all_params(self):
+        import inspect
+        sig = inspect.signature(PolyforgeClient.get_whale_feed)
+        params = set(sig.parameters.keys())
+        assert "min_size" in params
+        assert "market_id" in params
+        assert "wallet_address" in params
+        assert "page" in params
+        assert "limit" in params
+
+    def test_async_get_whale_feed_has_all_params(self):
+        import inspect
+        sig = inspect.signature(AsyncPolyforgeClient.get_whale_feed)
+        params = set(sig.parameters.keys())
+        assert "min_size" in params
+        assert "market_id" in params
+        assert "wallet_address" in params
+        assert "page" in params
+        assert "limit" in params
+
+    def test_sync_get_whale_feed_uses_correct_path(self):
+        import inspect
+        source = inspect.getsource(PolyforgeClient.get_whale_feed)
+        assert "/api/v1/whales/feed" in source
+        assert "_get" in source
+
+    def test_async_get_whale_feed_uses_correct_path(self):
+        import inspect
+        source = inspect.getsource(AsyncPolyforgeClient.get_whale_feed)
+        assert "/api/v1/whales/feed" in source
+
+    def test_sync_get_whale_feed_maps_camel_case_params(self):
+        import inspect
+        source = inspect.getsource(PolyforgeClient.get_whale_feed)
+        assert "marketId" in source
+        assert "walletAddress" in source
+        assert "minSize" in source
+
+    def test_async_get_whale_feed_maps_camel_case_params(self):
+        import inspect
+        source = inspect.getsource(AsyncPolyforgeClient.get_whale_feed)
+        assert "marketId" in source
+        assert "walletAddress" in source
+        assert "minSize" in source
+
+    def test_sync_get_whale_feed_uses_strip_none(self):
+        import inspect
+        source = inspect.getsource(PolyforgeClient.get_whale_feed)
+        assert "_strip_none" in source
+
+    def test_async_get_whale_feed_uses_strip_none(self):
+        import inspect
+        source = inspect.getsource(AsyncPolyforgeClient.get_whale_feed)
+        assert "_strip_none" in source
+
+    # -- get_news_signals --
+
+    def test_sync_get_news_signals_exists(self):
+        assert hasattr(PolyforgeClient, "get_news_signals")
+
+    def test_async_get_news_signals_exists(self):
+        assert hasattr(AsyncPolyforgeClient, "get_news_signals")
+
+    def test_sync_get_news_signals_has_all_params(self):
+        import inspect
+        sig = inspect.signature(PolyforgeClient.get_news_signals)
+        params = set(sig.parameters.keys())
+        assert "min_confidence" in params
+        assert "market_id" in params
+        assert "direction" in params
+        assert "page" in params
+        assert "limit" in params
+
+    def test_async_get_news_signals_has_all_params(self):
+        import inspect
+        sig = inspect.signature(AsyncPolyforgeClient.get_news_signals)
+        params = set(sig.parameters.keys())
+        assert "min_confidence" in params
+        assert "market_id" in params
+        assert "direction" in params
+        assert "page" in params
+        assert "limit" in params
+
+    def test_sync_get_news_signals_uses_correct_path(self):
+        import inspect
+        source = inspect.getsource(PolyforgeClient.get_news_signals)
+        assert "/api/v1/news/signals" in source
+        assert "_get" in source
+
+    def test_async_get_news_signals_uses_correct_path(self):
+        import inspect
+        source = inspect.getsource(AsyncPolyforgeClient.get_news_signals)
+        assert "/api/v1/news/signals" in source
+
+    def test_sync_get_news_signals_maps_camel_case_params(self):
+        import inspect
+        source = inspect.getsource(PolyforgeClient.get_news_signals)
+        assert "minConfidence" in source
+        assert "marketId" in source
+        assert "direction" in source
+
+    def test_async_get_news_signals_maps_camel_case_params(self):
+        import inspect
+        source = inspect.getsource(AsyncPolyforgeClient.get_news_signals)
+        assert "minConfidence" in source
+        assert "marketId" in source
+        assert "direction" in source
+
+    def test_sync_get_news_signals_uses_strip_none(self):
+        import inspect
+        source = inspect.getsource(PolyforgeClient.get_news_signals)
+        assert "_strip_none" in source
+
+    def test_async_get_news_signals_uses_strip_none(self):
+        import inspect
+        source = inspect.getsource(AsyncPolyforgeClient.get_news_signals)
+        assert "_strip_none" in source

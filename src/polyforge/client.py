@@ -1453,8 +1453,22 @@ class PolyforgeClient:
 
     # -- Social & Signals --
 
-    def get_whale_feed(self, *, min_size: int = 10000) -> list[WhaleTrade]:
-        data = self._get("/api/v1/whales/feed", params={"minSize": min_size})
+    def get_whale_feed(
+        self,
+        *,
+        min_size: int = 10000,
+        market_id: str | None = None,
+        wallet_address: str | None = None,
+        page: int | None = None,
+        limit: int | None = None,
+    ) -> list[WhaleTrade]:
+        data = self._get("/api/v1/whales/feed", params=_strip_none({
+            "minSize": min_size,
+            "marketId": market_id,
+            "walletAddress": wallet_address,
+            "page": page,
+            "limit": limit,
+        }))
         items = data["data"]
         return [_parse(WhaleTrade, w) for w in items]
 
@@ -1523,8 +1537,22 @@ class PolyforgeClient:
         items = data if isinstance(data, list) else data.get("data", [])
         return [_parse(WhaleProfile, w) for w in items]
 
-    def get_news_signals(self, *, min_confidence: int = 70) -> list[NewsSignal]:
-        data = self._get("/api/v1/news/signals", params={"minConfidence": min_confidence})
+    def get_news_signals(
+        self,
+        *,
+        min_confidence: int = 70,
+        market_id: str | None = None,
+        direction: str | None = None,
+        page: int | None = None,
+        limit: int | None = None,
+    ) -> list[NewsSignal]:
+        data = self._get("/api/v1/news/signals", params=_strip_none({
+            "minConfidence": min_confidence,
+            "marketId": market_id,
+            "direction": direction,
+            "page": page,
+            "limit": limit,
+        }))
         items = data["data"]
         return [_parse(NewsSignal, s) for s in items]
 
@@ -2971,8 +2999,22 @@ class AsyncPolyforgeClient:
 
     # -- Social & Signals --
 
-    async def get_whale_feed(self, *, min_size: int = 10000) -> list[WhaleTrade]:
-        data = await self._get("/api/v1/whales/feed", params={"minSize": min_size})
+    async def get_whale_feed(
+        self,
+        *,
+        min_size: int = 10000,
+        market_id: str | None = None,
+        wallet_address: str | None = None,
+        page: int | None = None,
+        limit: int | None = None,
+    ) -> list[WhaleTrade]:
+        data = await self._get("/api/v1/whales/feed", params=_strip_none({
+            "minSize": min_size,
+            "marketId": market_id,
+            "walletAddress": wallet_address,
+            "page": page,
+            "limit": limit,
+        }))
         items = data["data"]
         return [_parse(WhaleTrade, w) for w in items]
 
@@ -3008,8 +3050,22 @@ class AsyncPolyforgeClient:
         items = data if isinstance(data, list) else data.get("data", [])
         return [_parse(WhaleProfile, w) for w in items]
 
-    async def get_news_signals(self, *, min_confidence: int = 70) -> list[NewsSignal]:
-        data = await self._get("/api/v1/news/signals", params={"minConfidence": min_confidence})
+    async def get_news_signals(
+        self,
+        *,
+        min_confidence: int = 70,
+        market_id: str | None = None,
+        direction: str | None = None,
+        page: int | None = None,
+        limit: int | None = None,
+    ) -> list[NewsSignal]:
+        data = await self._get("/api/v1/news/signals", params=_strip_none({
+            "minConfidence": min_confidence,
+            "marketId": market_id,
+            "direction": direction,
+            "page": page,
+            "limit": limit,
+        }))
         items = data["data"]
         return [_parse(NewsSignal, s) for s in items]
 
