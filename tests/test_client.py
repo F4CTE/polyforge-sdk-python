@@ -451,6 +451,46 @@ class TestReprSecurity:
         assert "[REDACTED]" in repr_str
 
 
+class TestApiKeyNotInInstanceDict:
+    """CWE-522: API key must not be accessible via vars() or __dict__."""
+
+    def test_sync_client_vars_does_not_contain_api_key(self):
+        client = PolyforgeClient(api_key="pf_live_supersecretkey123456")
+        instance_vars = vars(client)
+        for value in instance_vars.values():
+            if isinstance(value, str):
+                assert "supersecretkey123456" not in value
+        assert "_api_key" not in instance_vars
+        client.close()
+
+    def test_async_client_vars_does_not_contain_api_key(self):
+        client = AsyncPolyforgeClient(api_key="pf_live_supersecretkey123456")
+        instance_vars = vars(client)
+        for value in instance_vars.values():
+            if isinstance(value, str):
+                assert "supersecretkey123456" not in value
+        assert "_api_key" not in instance_vars
+
+
+class TestGetstateSafety:
+    """API key must not leak through __getstate__ serialization."""
+
+    def test_sync_client_getstate_excludes_client(self):
+        client = PolyforgeClient(api_key="pf_live_supersecretkey123456")
+        state = client.__getstate__()
+        assert "_client" not in state
+        serialized = str(state)
+        assert "supersecretkey123456" not in serialized
+        client.close()
+
+    def test_async_client_getstate_excludes_client(self):
+        client = AsyncPolyforgeClient(api_key="pf_live_supersecretkey123456")
+        state = client.__getstate__()
+        assert "_client" not in state
+        serialized = str(state)
+        assert "supersecretkey123456" not in serialized
+
+
 class TestWebhookValidation:
     """Test webhook URL SSRF validation."""
 

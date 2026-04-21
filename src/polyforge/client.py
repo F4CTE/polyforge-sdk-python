@@ -379,7 +379,6 @@ class PolyforgeClient:
         api_url: str = "https://api.polyforge.app",
         timeout: float = 15.0,
     ) -> None:
-        self._api_key = api_key
         self._api_url = api_url.rstrip("/")
 
         # Reject non-HTTPS URLs for non-localhost hosts
@@ -400,6 +399,11 @@ class PolyforgeClient:
 
     def __repr__(self) -> str:
         return f"PolyforgeClient(api_key='[REDACTED]', base_url='{self._api_url}')"
+
+    def __getstate__(self) -> dict[str, Any]:
+        state = self.__dict__.copy()
+        state.pop("_client", None)
+        return state
 
     # -- helpers --
 
@@ -1945,7 +1949,6 @@ class AsyncPolyforgeClient:
         api_url: str = "https://api.polyforge.app",
         timeout: float = 15.0,
     ) -> None:
-        self._api_key = api_key
         self._api_url = api_url.rstrip("/")
 
         # Reject non-HTTPS URLs for non-localhost hosts
@@ -1966,6 +1969,11 @@ class AsyncPolyforgeClient:
 
     def __repr__(self) -> str:
         return f"AsyncPolyforgeClient(api_key='[REDACTED]', base_url='{self._api_url}')"
+
+    def __getstate__(self) -> dict[str, Any]:
+        state = self.__dict__.copy()
+        state.pop("_client", None)
+        return state
 
     # -- helpers --
 
