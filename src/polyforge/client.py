@@ -563,8 +563,14 @@ class PolyforgeClient:
             limit: Maximum number of results (1–100, default 20).
         """
         data = self._get("/api/v1/markets/search", params=_strip_none({"q": q, "limit": limit}))
-        results = data.get("results", data) if isinstance(data, dict) else data
-        return [_parse(Market, m) for m in results]
+        if isinstance(data, list):
+            return [_parse(Market, m) for m in data]
+        if isinstance(data, dict):
+            if "results" in data:
+                return [_parse(Market, m) for m in data["results"]]
+            if "data" in data:
+                return [_parse(Market, m) for m in data["data"]]
+        return []
 
     def get_market_tick_size(self, token_id: str) -> TickSizeInfo:
         """Fetch the tick size and fee rate for a market token."""
@@ -1165,7 +1171,7 @@ class PolyforgeClient:
         items = data if isinstance(data, list) else data.get("data", [])
         return [_parse(Badge, b) for b in items]
 
-    # -- Risk Settings --
+    # -- Risk Settings (tracked in polyforge-sdk-python#139) --
 
     def get_risk_settings(self) -> RiskSettings:
         """Fetch the current risk / circuit-breaker settings."""
@@ -1266,6 +1272,10 @@ class PolyforgeClient:
                 ``outcome``, ``size``, ``price``, and optionally ``orderType``.
                 Maximum 15 orders per call.
         """
+        if not orders:
+            raise ValueError("batch_orders requires at least 1 order")
+        if len(orders) > 15:
+            raise ValueError("batch_orders accepts at most 15 orders per call")
         data = self._post("/api/v1/orders/batch", json={"orders": orders})
         items = [
             BatchOrderItem(
@@ -1283,6 +1293,10 @@ class PolyforgeClient:
         Args:
             order_ids: List of order IDs to cancel (maximum 3000).
         """
+        if not order_ids:
+            raise ValueError("bulk_cancel_orders requires at least 1 order ID")
+        if len(order_ids) > 3000:
+            raise ValueError("bulk_cancel_orders accepts at most 3000 order IDs")
         data = self._delete_json("/api/v1/orders/bulk", json={"orderIds": order_ids})
         errors = [
             BulkCancelError(order_id=e.get("orderId", ""), reason=e.get("reason", ""))
@@ -1918,15 +1932,15 @@ class PolyforgeClient:
         items = data if isinstance(data, list) else data.get("data", [])
         return [_parse(PolymarketEarningsEntry, e) for e in items]
 
-    def get_polymarket_activity(self, *, type: str | None = None) -> list[PolymarketActivity]:
+    def get_polymarket_activity(self, *, activity_type: str | None = None) -> list[PolymarketActivity]:
         """Fetch on-chain activity for the connected Polymarket wallet.
 
         Args:
-            type: Optional activity type filter (e.g. ``"TRADE"``, ``"REDEEM"``).
+            activity_type: Optional activity type filter (e.g. ``"TRADE"``, ``"REDEEM"``).
         """
         data = self._get(
             "/api/v1/portfolio/polymarket/activity",
-            params=_strip_none({"type": type}),
+            params=_strip_none({"type": activity_type}),
         )
         items = data if isinstance(data, list) else data.get("data", [])
         return [_parse(PolymarketActivity, a) for a in items]
@@ -2421,8 +2435,14 @@ class AsyncPolyforgeClient:
             limit: Maximum number of results (1–100, default 20).
         """
         data = await self._get("/api/v1/markets/search", params=_strip_none({"q": q, "limit": limit}))
-        results = data.get("results", data) if isinstance(data, dict) else data
-        return [_parse(Market, m) for m in results]
+        if isinstance(data, list):
+            return [_parse(Market, m) for m in data]
+        if isinstance(data, dict):
+            if "results" in data:
+                return [_parse(Market, m) for m in data["results"]]
+            if "data" in data:
+                return [_parse(Market, m) for m in data["data"]]
+        return []
 
     async def get_market_tick_size(self, token_id: str) -> TickSizeInfo:
         """Fetch the tick size and fee rate for a market token."""
@@ -2985,7 +3005,7 @@ class AsyncPolyforgeClient:
         items = data if isinstance(data, list) else data.get("data", [])
         return [_parse(Badge, b) for b in items]
 
-    # -- Risk Settings --
+    # -- Risk Settings (tracked in polyforge-sdk-python#139) --
 
     async def get_risk_settings(self) -> RiskSettings:
         """Fetch the current risk / circuit-breaker settings."""
@@ -3086,6 +3106,10 @@ class AsyncPolyforgeClient:
                 ``outcome``, ``size``, ``price``, and optionally ``orderType``.
                 Maximum 15 orders per call.
         """
+        if not orders:
+            raise ValueError("batch_orders requires at least 1 order")
+        if len(orders) > 15:
+            raise ValueError("batch_orders accepts at most 15 orders per call")
         data = await self._post("/api/v1/orders/batch", json={"orders": orders})
         items = [
             BatchOrderItem(
@@ -3103,6 +3127,10 @@ class AsyncPolyforgeClient:
         Args:
             order_ids: List of order IDs to cancel (maximum 3000).
         """
+        if not order_ids:
+            raise ValueError("bulk_cancel_orders requires at least 1 order ID")
+        if len(order_ids) > 3000:
+            raise ValueError("bulk_cancel_orders accepts at most 3000 order IDs")
         data = await self._delete_json("/api/v1/orders/bulk", json={"orderIds": order_ids})
         errors = [
             BulkCancelError(order_id=e.get("orderId", ""), reason=e.get("reason", ""))
@@ -3641,15 +3669,15 @@ class AsyncPolyforgeClient:
         items = data if isinstance(data, list) else data.get("data", [])
         return [_parse(PolymarketEarningsEntry, e) for e in items]
 
-    async def get_polymarket_activity(self, *, type: str | None = None) -> list[PolymarketActivity]:
+    async def get_polymarket_activity(self, *, activity_type: str | None = None) -> list[PolymarketActivity]:
         """Fetch on-chain activity for the connected Polymarket wallet.
 
         Args:
-            type: Optional activity type filter (e.g. ``"TRADE"``, ``"REDEEM"``).
+            activity_type: Optional activity type filter (e.g. ``"TRADE"``, ``"REDEEM"``).
         """
         data = await self._get(
             "/api/v1/portfolio/polymarket/activity",
-            params=_strip_none({"type": type}),
+            params=_strip_none({"type": activity_type}),
         )
         items = data if isinstance(data, list) else data.get("data", [])
         return [_parse(PolymarketActivity, a) for a in items]

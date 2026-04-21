@@ -3346,6 +3346,30 @@ class TestBulkOrderEndpoints:
         source = inspect.getsource(PolyforgeClient.bulk_cancel_orders)
         assert '"orderIds"' in source
 
+    def test_batch_orders_validates_minimum(self):
+        client = PolyforgeClient(api_key="test")
+        with pytest.raises(ValueError, match="at least 1"):
+            client.batch_orders([])
+        client.close()
+
+    def test_batch_orders_validates_maximum(self):
+        client = PolyforgeClient(api_key="test")
+        with pytest.raises(ValueError, match="at most 15"):
+            client.batch_orders([{"tokenId": f"t{i}"} for i in range(16)])
+        client.close()
+
+    def test_bulk_cancel_orders_validates_minimum(self):
+        client = PolyforgeClient(api_key="test")
+        with pytest.raises(ValueError, match="at least 1"):
+            client.bulk_cancel_orders([])
+        client.close()
+
+    def test_bulk_cancel_orders_validates_maximum(self):
+        client = PolyforgeClient(api_key="test")
+        with pytest.raises(ValueError, match="at most 3000"):
+            client.bulk_cancel_orders(["x"] * 3001)
+        client.close()
+
 
 class TestNewsArticleEndpoints:
     """Tests for the 2 new news article endpoints (POLA-476)."""
@@ -3471,7 +3495,7 @@ class TestPolymarketPortfolioEndpoints:
         import inspect
         sig = inspect.signature(PolyforgeClient.get_polymarket_activity)
         params = set(sig.parameters.keys())
-        assert "type" in params
+        assert "activity_type" in params
 
 
 class TestNewModels:
