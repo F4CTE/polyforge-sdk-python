@@ -1463,18 +1463,20 @@ class PolyforgeClient:
         *,
         sort: str | None = None,
         period: str | None = None,
+        limit: int | None = None,
     ) -> list[WhaleProfile]:
         """Fetch the top whale traders ranked by activity.
 
         Args:
             sort: Sort field (e.g. ``"pnl"``, ``"volume"``).
             period: Time period (e.g. ``"7d"``, ``"30d"``).
+            limit: Maximum number of results (1--100, default 20).
 
         Returns:
             A list of :class:`WhaleProfile` objects.
         """
         data = self._get("/api/v1/whales/top", params=_strip_none({
-            "sort": sort, "period": period,
+            "sortBy": sort, "period": period, "limit": limit,
         }))
         items = data if isinstance(data, list) else data.get("data", [])
         return [_parse(WhaleProfile, w) for w in items]
@@ -2981,10 +2983,11 @@ class AsyncPolyforgeClient:
         *,
         sort: str | None = None,
         period: str | None = None,
+        limit: int | None = None,
     ) -> list[WhaleProfile]:
         """Fetch the top whale traders ranked by activity."""
         data = await self._get("/api/v1/whales/top", params=_strip_none({
-            "sort": sort, "period": period,
+            "sortBy": sort, "period": period, "limit": limit,
         }))
         items = data if isinstance(data, list) else data.get("data", [])
         return [_parse(WhaleProfile, w) for w in items]

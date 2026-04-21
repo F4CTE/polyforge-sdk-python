@@ -2482,12 +2482,33 @@ class TestExtendedWhaleIntelligence:
         params = set(sig.parameters.keys())
         assert "sort" in params
         assert "period" in params
+        assert "limit" in params
 
     def test_sync_get_top_whales_path(self):
         import inspect
         source = inspect.getsource(PolyforgeClient.get_top_whales)
         assert "/api/v1/whales/top" in source
         assert "_get" in source
+
+    def test_sync_get_top_whales_sends_sort_by(self):
+        import inspect
+        source = inspect.getsource(PolyforgeClient.get_top_whales)
+        assert '"sortBy"' in source, "sync get_top_whales must send 'sortBy' (not 'sort') as query param"
+
+    def test_async_get_top_whales_sends_sort_by(self):
+        import inspect
+        source = inspect.getsource(AsyncPolyforgeClient.get_top_whales)
+        assert '"sortBy"' in source, "async get_top_whales must send 'sortBy' (not 'sort') as query param"
+
+    def test_sync_get_top_whales_sends_limit(self):
+        import inspect
+        source = inspect.getsource(PolyforgeClient.get_top_whales)
+        assert '"limit"' in source, "sync get_top_whales must include 'limit' query param"
+
+    def test_async_get_top_whales_sends_limit(self):
+        import inspect
+        source = inspect.getsource(AsyncPolyforgeClient.get_top_whales)
+        assert '"limit"' in source, "async get_top_whales must include 'limit' query param"
 
     def test_async_get_top_whales_path(self):
         import inspect
