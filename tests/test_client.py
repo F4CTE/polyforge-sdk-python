@@ -2166,6 +2166,31 @@ class TestPaginatedResponses:
         assert 'raw["total"]' in source or "raw['total']" in source
         assert 'raw["hasNext"]' in source or "raw['hasNext']" in source
 
+    def test_get_leaderboard_returns_paginated_response(self):
+        """get_leaderboard() must return PaginatedResponse[LeaderboardEntry]."""
+        import inspect
+
+        sig = inspect.signature(PolyforgeClient.get_leaderboard)
+        ret = str(sig.return_annotation)
+        assert "PaginatedResponse" in ret, f"Expected PaginatedResponse, got {ret}"
+
+    def test_async_get_leaderboard_returns_paginated_response(self):
+        """Async get_leaderboard() must return PaginatedResponse[LeaderboardEntry]."""
+        import inspect
+
+        sig = inspect.signature(AsyncPolyforgeClient.get_leaderboard)
+        ret = str(sig.return_annotation)
+        assert "PaginatedResponse" in ret, f"Expected PaginatedResponse, got {ret}"
+
+    def test_get_leaderboard_source_builds_paginated_response(self):
+        """get_leaderboard() must construct PaginatedResponse from raw API response."""
+        import inspect
+
+        source = inspect.getsource(PolyforgeClient.get_leaderboard)
+        assert "PaginatedResponse(" in source
+        assert "total" in source
+        assert "hasNext" in source or "has_more" in source
+
 
 class TestBacktestMethods:
     """Tests for backtest list/get/quick/orders methods (#73)."""

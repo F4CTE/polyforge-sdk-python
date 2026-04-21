@@ -553,7 +553,7 @@ class PolyforgeClient:
         period: str | None = None,
         limit: int | None = None,
         offset: int | None = None,
-    ) -> list[LeaderboardEntry]:
+    ) -> PaginatedResponse[LeaderboardEntry]:
         """Fetch the trader leaderboard.
 
         Args:
@@ -562,13 +562,20 @@ class PolyforgeClient:
             offset: Pagination offset.
 
         Returns:
-            A list of :class:`LeaderboardEntry` objects.
+            A :class:`PaginatedResponse` of :class:`LeaderboardEntry` objects.
         """
-        data = self._get("/api/v1/leaderboard", params=_strip_none({
+        raw = self._get("/api/v1/leaderboard", params=_strip_none({
             "period": period, "limit": limit, "offset": offset,
         }))
-        items = data if isinstance(data, list) else data.get("data", [])
-        return [_parse(LeaderboardEntry, e) for e in items]
+        items = raw.get("data", raw.get("items", raw if isinstance(raw, list) else []))
+        return PaginatedResponse(
+            data=[_parse(LeaderboardEntry, e) for e in items],
+            total=raw.get("total", 0) if isinstance(raw, dict) else len(items),
+            page=raw.get("page", 1) if isinstance(raw, dict) else 1,
+            limit=raw.get("limit", limit or 10) if isinstance(raw, dict) else len(items),
+            has_more=raw.get("hasNext", False) if isinstance(raw, dict) else False,
+            total_pages=raw.get("totalPages", 0) if isinstance(raw, dict) else 1,
+        )
 
     # -- Strategies --
 
@@ -2171,7 +2178,7 @@ class AsyncPolyforgeClient:
         period: str | None = None,
         limit: int | None = None,
         offset: int | None = None,
-    ) -> list[LeaderboardEntry]:
+    ) -> PaginatedResponse[LeaderboardEntry]:
         """Fetch the trader leaderboard.
 
         Args:
@@ -2180,13 +2187,20 @@ class AsyncPolyforgeClient:
             offset: Pagination offset.
 
         Returns:
-            A list of :class:`LeaderboardEntry` objects.
+            A :class:`PaginatedResponse` of :class:`LeaderboardEntry` objects.
         """
-        data = await self._get("/api/v1/leaderboard", params=_strip_none({
+        raw = await self._get("/api/v1/leaderboard", params=_strip_none({
             "period": period, "limit": limit, "offset": offset,
         }))
-        items = data if isinstance(data, list) else data.get("data", [])
-        return [_parse(LeaderboardEntry, e) for e in items]
+        items = raw.get("data", raw.get("items", raw if isinstance(raw, list) else []))
+        return PaginatedResponse(
+            data=[_parse(LeaderboardEntry, e) for e in items],
+            total=raw.get("total", 0) if isinstance(raw, dict) else len(items),
+            page=raw.get("page", 1) if isinstance(raw, dict) else 1,
+            limit=raw.get("limit", limit or 10) if isinstance(raw, dict) else len(items),
+            has_more=raw.get("hasNext", False) if isinstance(raw, dict) else False,
+            total_pages=raw.get("totalPages", 0) if isinstance(raw, dict) else 1,
+        )
 
     # -- Strategies --
 
