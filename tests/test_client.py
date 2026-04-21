@@ -1151,13 +1151,13 @@ class TestOrderMonetaryFields:
         """Position monetary fields must be str."""
         pos = Position(
             size="100.00",
-            entry_price="0.55",
+            avg_price="0.55",
             current_price="0.65",
             unrealized_pnl="10.00",
             realized_pnl="5.00",
         )
         assert isinstance(pos.size, str)
-        assert isinstance(pos.entry_price, str)
+        assert isinstance(pos.avg_price, str)
         assert pos.unrealized_pnl == "10.00"
 
 
@@ -3824,3 +3824,117 @@ class TestRewardsMethods:
         for method_name in self.REWARD_METHODS:
             source = inspect.getsource(getattr(AsyncPolyforgeClient, method_name))
             assert "await" in source or "async" in source, f"async {method_name} not using await"
+
+
+class TestPositionPlatformContract:
+    """Position model must match the platform contract (closes #143)."""
+
+    def test_position_has_token_id_field(self):
+        pos = Position(token_id="tok-1")
+        assert pos.token_id == "tok-1"
+
+    def test_position_has_outcome_field(self):
+        pos = Position(outcome="YES")
+        assert pos.outcome == "YES"
+
+    def test_position_uses_avg_price_not_entry_price(self):
+        pos = Position(avg_price="0.55")
+        assert pos.avg_price == "0.55"
+
+    def test_position_no_entry_price_field(self):
+        assert not hasattr(Position, "entry_price") or "entry_price" not in {
+            f.name for f in __import__("dataclasses").fields(Position)
+        }
+
+    def test_position_no_market_name_field(self):
+        assert "market_name" not in {
+            f.name for f in __import__("dataclasses").fields(Position)
+        }
+
+    def test_position_token_id_defaults_to_empty(self):
+        pos = Position()
+        assert pos.token_id == ""
+
+    def test_position_outcome_defaults_to_empty(self):
+        pos = Position()
+        assert pos.outcome == ""
+
+    def test_position_avg_price_defaults_to_empty(self):
+        pos = Position()
+        assert pos.avg_price == ""
+
+    def test_position_parses_from_platform_response(self):
+        api_response = {
+            "id": "pos-1",
+            "marketId": "mkt-1",
+            "tokenId": "tok-1",
+            "outcome": "YES",
+            "side": "BUY",
+            "size": "100.00",
+            "avgPrice": "0.55",
+            "currentPrice": "0.65",
+            "unrealizedPnl": "10.00",
+            "realizedPnl": "0.00",
+            "openedAt": "2026-01-01T00:00:00Z",
+        }
+        pos = _parse(Position, api_response)
+        assert pos.id == "pos-1"
+        assert pos.market_id == "mkt-1"
+        assert pos.token_id == "tok-1"
+        assert pos.outcome == "YES"
+        assert pos.avg_price == "0.55"
+        assert pos.current_price == "0.65"
+
+
+class TestOrderPlatformContract:
+    """Order model must match the platform contract (closes #143)."""
+
+    def test_order_has_token_id_field(self):
+        order = Order(token_id="tok-1")
+        assert order.token_id == "tok-1"
+
+    def test_order_has_outcome_field(self):
+        order = Order(outcome="NO")
+        assert order.outcome == "NO"
+
+    def test_order_has_intent_id_field(self):
+        order = Order(intent_id="int-1")
+        assert order.intent_id == "int-1"
+
+    def test_order_token_id_defaults_to_empty(self):
+        order = Order()
+        assert order.token_id == ""
+
+    def test_order_outcome_defaults_to_empty(self):
+        order = Order()
+        assert order.outcome == ""
+
+    def test_order_intent_id_defaults_to_none(self):
+        order = Order()
+        assert order.intent_id is None
+
+    def test_order_parses_from_platform_response(self):
+        api_response = {
+            "id": "ord-1",
+            "marketId": "mkt-1",
+            "tokenId": "tok-1",
+            "outcome": "YES",
+            "strategyId": "str-1",
+            "intentId": "int-1",
+            "side": "BUY",
+            "orderType": "LIMIT",
+            "status": "CONFIRMED",
+            "price": "0.65",
+            "size": "150.00",
+            "fillSize": "100.00",
+            "fillPrice": "0.64",
+            "fee": "0.50",
+            "createdAt": "2026-01-01T00:00:00Z",
+            "updatedAt": "2026-01-01T01:00:00Z",
+        }
+        order = _parse(Order, api_response)
+        assert order.id == "ord-1"
+        assert order.token_id == "tok-1"
+        assert order.outcome == "YES"
+        assert order.intent_id == "int-1"
+        assert order.strategy_id == "str-1"
