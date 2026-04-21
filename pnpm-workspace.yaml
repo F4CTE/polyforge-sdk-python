@@ -5,3 +5,4 @@ packages:
   - "services/*"
   - "!services/gateway"
   - "tests/e2e"
+  - "scripts/watchdog"
