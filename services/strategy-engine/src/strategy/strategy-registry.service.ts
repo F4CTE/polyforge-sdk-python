@@ -10,6 +10,7 @@ import { StrategyStatus } from ".prisma/client";
 import { PrismaService } from "@polyforge/shared-db";
 import { RedisService } from "@polyforge/shared-redis";
 import { SubStrategyMode, StrategyVariable } from "@polyforge/shared-types";
+import type { VenueId } from "@polyforge/shared-types";
 import {
   StrategyRunner,
   StrategyRunnerStatus,
@@ -36,6 +37,16 @@ const PAPER_ORDER_STREAM = "stream:paper_orders";
  *
  * Legacy strategies with no connections return all blocks unchanged.
  */
+/** Maps Prisma Venue enum values to shared-types VenueId strings. */
+function mapVenue(
+  prismaVenue: string | null | undefined,
+): VenueId | "best" | undefined {
+  if (!prismaVenue) return undefined;
+  if (prismaVenue === "POLYMARKET") return "polymarket";
+  if (prismaVenue === "KALSHI") return "kalshi";
+  return undefined;
+}
+
 /** Extract typed arrays from the strategy canvas JSON */
 function extractCanvasFields(canvas: Record<string, unknown> | null): {
   variables: StrategyVariable[];
@@ -163,6 +174,7 @@ export class StrategyRegistryService implements OnApplicationBootstrap {
             calcBlocks,
             (childId, parentId, mode, context) =>
               this.startAsChild(childId, parentId, mode, context),
+            mapVenue((strategy as Record<string, unknown>).venue as string),
           );
 
           this.runners.set(strategy.id, runner);
@@ -241,6 +253,7 @@ export class StrategyRegistryService implements OnApplicationBootstrap {
       calcBlocks,
       (childId, parentId, mode, context) =>
         this.startAsChild(childId, parentId, mode, context),
+      mapVenue((strategy as Record<string, unknown>).venue as string),
     );
 
     this.runners.set(strategyId, runner);
@@ -489,6 +502,7 @@ export class StrategyRegistryService implements OnApplicationBootstrap {
       calcBlocks,
       (grandchildId, pId, m, ctx) =>
         this.startAsChild(grandchildId, pId, m, ctx),
+      mapVenue((child as Record<string, unknown>).venue as string),
     );
 
     this.runners.set(childStrategyId, runner);

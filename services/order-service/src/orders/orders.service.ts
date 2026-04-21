@@ -1,4 +1,4 @@
-import { Injectable, Logger } from "@nestjs/common";
+import { Injectable, Logger, Optional } from "@nestjs/common";
 import { v4 as uuidv4 } from "uuid";
 import { OrderOutcome, OrderStatus } from ".prisma/client";
 import { PrismaService } from "@polyforge/shared-db";
@@ -6,6 +6,8 @@ import { RedisService } from "@polyforge/shared-redis";
 import { SignerClientService } from "../signer-client/signer-client.service";
 import { ClobClientService } from "../clob-client/clob-client.service";
 import { EventsService } from "../events/events.service";
+import type { VenueId } from "@polyforge/shared-types";
+import { VenueRouter } from "../venue/venue-router";
 
 const MAX_BATCH_SIZE = 15;
 const MAX_ATTEMPTS = 3;
@@ -26,6 +28,8 @@ export interface OrderIntent {
   expiration?: number;
   tickSize?: string;
   negRisk?: boolean;
+  /** Target venue for this order. Defaults to POLYMARKET when absent. */
+  venue?: VenueId | "best";
 }
 
 @Injectable()
@@ -38,6 +42,7 @@ export class OrdersService {
     private readonly signer: SignerClientService,
     private readonly clob: ClobClientService,
     private readonly events: EventsService,
+    @Optional() private readonly venueRouter?: VenueRouter,
   ) {}
 
   /**
@@ -105,33 +110,78 @@ export class OrdersService {
     }
 
     try {
-      // Sign the order via signer-service
-      const { order, builderHeaders } = await this.signer.signOrder({
-        userId: intent.userId,
-        requestId: orderId,
-        tokenId: intent.tokenId,
-        side: intent.side,
-        size: parseFloat(intent.size),
-        price: parseFloat(intent.price),
-        orderType: intent.orderType,
-        expiration: intent.expiration,
-        tickSize: intent.tickSize,
-        negRisk: intent.negRisk,
-      });
+      let venueOrderId: string;
+      let venueStatus: string;
 
-      // Submit to CLOB
-      const clobResponse = await this.clob.submitOrder({
-        order,
-        builderHeaders,
-      });
+      if (this.venueRouter) {
+        // ── Venue-routed path ─────────────────────────────────────────────────
+        // For Polymarket, pre-sign and pass auth context. For other venues
+        // (e.g. Kalshi), the adapter handles its own auth via authContext.
+        const venue = intent.venue ?? "polymarket";
+        let authContext: Record<string, unknown> = {};
+
+        if (venue === "polymarket" || venue === "best") {
+          const signed = await this.signer.signOrder({
+            userId: intent.userId,
+            requestId: orderId,
+            tokenId: intent.tokenId,
+            side: intent.side,
+            size: parseFloat(intent.size),
+            price: parseFloat(intent.price),
+            orderType: intent.orderType,
+            expiration: intent.expiration,
+            tickSize: intent.tickSize,
+            negRisk: intent.negRisk,
+          });
+          authContext = {
+            order: signed.order,
+            builderHeaders: signed.builderHeaders,
+          };
+        }
+
+        const resp = await this.venueRouter.route(venue, {
+          venueMarketId: intent.marketId,
+          venueOutcomeId: intent.tokenId,
+          side: intent.side,
+          size: intent.size,
+          price: intent.price,
+          orderType: intent.orderType,
+          expiration: intent.expiration,
+          authContext,
+        });
+
+        venueOrderId = resp.venueOrderId;
+        venueStatus = resp.status;
+      } else {
+        // ── Legacy CLOB path (backward compat, no VenueRouter injected) ───────
+        const { order, builderHeaders } = await this.signer.signOrder({
+          userId: intent.userId,
+          requestId: orderId,
+          tokenId: intent.tokenId,
+          side: intent.side,
+          size: parseFloat(intent.size),
+          price: parseFloat(intent.price),
+          orderType: intent.orderType,
+          expiration: intent.expiration,
+          tickSize: intent.tickSize,
+          negRisk: intent.negRisk,
+        });
+        const clobResponse = await this.clob.submitOrder({
+          order,
+          builderHeaders,
+        });
+        venueOrderId = clobResponse.orderID;
+        venueStatus = clobResponse.status;
+      }
 
       // Single DB update: PENDING → final status (consolidates 2 updates into 1)
       await this.prisma.order.update({
         where: { id: orderId },
         data: {
-          clobOrderId: clobResponse.orderID,
-          clobStatus: clobResponse.status,
-          status: this.mapClobStatus(clobResponse.status) as OrderStatus,
+          clobOrderId: venueOrderId,
+          venueOrderId,
+          clobStatus: venueStatus,
+          status: this.mapClobStatus(venueStatus) as OrderStatus,
           placedAt: new Date(),
         },
       });
@@ -142,7 +192,7 @@ export class OrdersService {
         intent.intentId,
       );
       this.logger.log(
-        `Order placed: ${orderId} (CLOB: ${clobResponse.orderID})`,
+        `Order placed: ${orderId} (venue order: ${venueOrderId})`,
       );
     } catch (err) {
       const errMsg = err instanceof Error ? err.message : String(err);

@@ -57,6 +57,7 @@ function makeIntent(
     size,
     price,
     orderType,
+    ...(ctx.venue !== undefined ? { venue: ctx.venue } : {}),
   };
 }
 

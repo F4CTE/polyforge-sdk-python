@@ -451,6 +451,7 @@ model Strategy {
   warmupTicks      Int                @default(0)
   schedule         Json?
   settings         Json?
+  venue            Venue              @default(POLYMARKET)
   createdAt        DateTime           @default(now())
   updatedAt        DateTime           @updatedAt
 

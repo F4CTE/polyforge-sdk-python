@@ -11,6 +11,7 @@ import { PolymarketWsService } from "./market-sync/polymarket-ws.service";
 import { PolymarketUserWsService } from "./market-sync/polymarket-user-ws.service";
 import { GammaApiService } from "./market-sync/gamma-api.service";
 import { PriceCacheService } from "./price-cache/price-cache.service";
+import { VenueDataModule } from "./market-sync/venue-data.module";
 import { HealthController } from "./health/health.controller";
 
 @Module({
@@ -22,6 +23,7 @@ import { HealthController } from "./health/health.controller";
     LoggerModule,
     SharedDbModule,
     RedisModule,
+    VenueDataModule,
   ],
   controllers: [HealthController],
   providers: [
