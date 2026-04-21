@@ -660,12 +660,13 @@ class TestPlatformContractCompliance:
         source = inspect.getsource(PolyforgeClient.create_strategy_from_description)
         assert '"description"' in source or "'description'" in source
 
-    def test_start_strategy_sends_lowercase_mode(self):
-        """start_strategy() must not call .upper() on mode (#92)."""
+    def test_start_strategy_sends_paper_mode_field(self):
+        """start_strategy() must send paperMode boolean, not {mode} string (#150)."""
         import inspect
 
         source = inspect.getsource(PolyforgeClient.start_strategy)
-        assert ".upper()" not in source, "start_strategy() must not uppercase the mode value"
+        assert "paperMode" in source, "start_strategy() must send 'paperMode' field to match platform contract"
+        assert '"mode"' not in source and "'mode'" not in source, "start_strategy() must not send legacy 'mode' field"
 
 
 class TestFinancialParamValidation:
@@ -717,10 +718,10 @@ class TestEnumValidation:
         with pytest.raises(ValueError, match="must be one of"):
             _validate_enum("side", "HOLD", frozenset({"BUY", "SELL"}))
 
-    def test_start_strategy_rejects_invalid_mode(self):
+    def test_start_strategy_rejects_invalid_deployment_mode(self):
         client = PolyforgeClient(api_key="test-key")
         with pytest.raises(ValueError, match="must be one of"):
-            client.start_strategy("s-1", mode="turbo")
+            client.start_strategy("s-1", deployment_mode="turbo")
 
     def test_place_order_rejects_invalid_side(self):
         client = PolyforgeClient(api_key="test-key")
