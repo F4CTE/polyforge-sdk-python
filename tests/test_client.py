@@ -36,6 +36,7 @@ from polyforge.models import (
     OrderBook,
     OrderBookLevel,
     OrderStatus,
+    Pagination,
     PaginatedResponse,
     PlaceOrderResponse,
     Portfolio,
@@ -1006,16 +1007,16 @@ class TestCreateStrategyParams:
 
 
 class TestPaginatedResponseDataField:
-    """Tests for PaginatedResponse using 'data' field (#33)."""
+    """Tests for PaginatedResponse using 'data' field and nested pagination (#33, #145)."""
 
     def test_paginated_response_uses_data_field(self):
         """PaginatedResponse must have a 'data' field, not 'items'."""
-        pr = PaginatedResponse(data=["a", "b", "c"], total=3, page=1, limit=10)
+        pr = PaginatedResponse(data=["a", "b", "c"], pagination=Pagination(total=3, page=1, limit=10))
         assert pr.data == ["a", "b", "c"]
 
     def test_paginated_response_items_is_alias(self):
         """PaginatedResponse.items must be a backward-compat alias for data."""
-        pr = PaginatedResponse(data=["x", "y"], total=2, page=1, limit=10)
+        pr = PaginatedResponse(data=["x", "y"], pagination=Pagination(total=2, page=1, limit=10))
         assert pr.items == ["x", "y"]
         assert pr.items is pr.data
 
@@ -1024,6 +1025,20 @@ class TestPaginatedResponseDataField:
         pr = PaginatedResponse()
         assert pr.data == []
         assert pr.items == []
+
+    def test_paginated_response_nested_pagination(self):
+        """PaginatedResponse must expose pagination fields via nested Pagination object."""
+        pag = Pagination(page=2, limit=20, total=150, total_pages=8)
+        pr = PaginatedResponse(data=[], pagination=pag)
+        assert pr.pagination.page == 2
+        assert pr.pagination.limit == 20
+        assert pr.pagination.total == 150
+        assert pr.pagination.total_pages == 8
+
+    def test_paginated_response_no_has_more(self):
+        """PaginatedResponse must not have a has_more field — it does not exist on the platform."""
+        pr = PaginatedResponse()
+        assert not hasattr(pr, "has_more")
 
 
 class TestOrderMonetaryFields:
@@ -2158,13 +2173,13 @@ class TestPaginatedResponses:
         assert "page" in param_names, "list_conditional_orders() missing 'page' parameter"
 
     def test_list_strategies_source_builds_paginated_response(self):
-        """list_strategies() must construct PaginatedResponse from raw API data."""
+        """list_strategies() must construct PaginatedResponse with nested Pagination from raw API data."""
         import inspect
 
         source = inspect.getsource(PolyforgeClient.list_strategies)
         assert "PaginatedResponse(" in source
-        assert 'raw["total"]' in source or "raw['total']" in source
-        assert 'raw["hasNext"]' in source or "raw['hasNext']" in source
+        assert "Pagination(" in source
+        assert 'raw["pagination"]' in source or "raw['pagination']" in source
 
 
 class TestBacktestMethods:
@@ -2251,13 +2266,13 @@ class TestBacktestMethods:
     # -- Source inspection tests --
 
     def test_list_backtests_builds_paginated_response(self):
-        """list_backtests() must construct PaginatedResponse from raw API data."""
+        """list_backtests() must construct PaginatedResponse with nested Pagination from raw API data."""
         import inspect
 
         source = inspect.getsource(PolyforgeClient.list_backtests)
         assert "PaginatedResponse(" in source
-        assert 'raw["total"]' in source or "raw['total']" in source
-        assert 'raw["hasNext"]' in source or "raw['hasNext']" in source
+        assert "Pagination(" in source
+        assert 'raw["pagination"]' in source or "raw['pagination']" in source
 
     def test_list_backtests_passes_query_params(self):
         """list_backtests() must pass strategyId and status to the HTTP params."""

@@ -54,20 +54,26 @@ class StrategyExecMode(str, Enum):
 # ---------------------------------------------------------------------------
 
 @dataclass
+class Pagination:
+    """Pagination metadata returned by the platform inside the ``pagination`` key."""
+
+    page: int = 1
+    limit: int = 10
+    total: int = 0
+    total_pages: int = 0  # from camelCase totalPages
+
+
+@dataclass
 class PaginatedResponse(Generic[T]):
     """A page of results from a list endpoint.
 
-    The platform returns paginated results under the ``data`` key with a
-    ``hasNext`` boolean. For backward compatibility the ``items`` property
-    is an alias for ``data``.
+    The platform wraps pagination metadata under a nested ``pagination``
+    sub-object.  For backward compatibility the ``items`` property is an
+    alias for ``data``.
     """
 
     data: list[T] = field(default_factory=list)
-    total: int = 0
-    page: int = 1
-    limit: int = 10
-    has_more: bool = False
-    total_pages: int = 0
+    pagination: Pagination = field(default_factory=Pagination)
 
     @property
     def items(self) -> list[T]:
