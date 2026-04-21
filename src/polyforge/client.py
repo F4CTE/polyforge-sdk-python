@@ -28,9 +28,16 @@ from polyforge.models import (
     AiQueryResponse,
     Alert,
     ArbitrageOpportunity,
+    Badge,
+    BatchOrderItem,
+    BatchOrderResult,
     BatchResult,
+    BulkCancelError,
+    BulkCancelResult,
     CalibrationBucket,
     CategoryAccuracy,
+    ClobBook,
+    ClobPriceHistory,
     ConditionalOrder,
     CopyConfig,
     CopyTrade,
@@ -42,6 +49,8 @@ from polyforge.models import (
     MarketplaceSeller,
     MarketplaceStrategy,
     MarketSentiment,
+    MidpointInfo,
+    NewsArticle,
     NewsSignal,
     Order,
     OrderBook,
@@ -51,6 +60,9 @@ from polyforge.models import (
     PaperSummary,
     PlaceOrderResponse,
     PlaceSmartOrderResponse,
+    PolymarketActivity,
+    PolymarketEarningsEntry,
+    PolymarketPortfolioEntry,
     Portfolio,
     PortfolioPnl,
     PortfolioReview,
@@ -59,12 +71,15 @@ from polyforge.models import (
     RiskSettings,
     SmartOrder,
     SmartOrderChildOrder,
+    SpreadInfo,
     Strategy,
     StrategyBlock,
     StrategyEvent,
     StrategyStatusResponse,
     StrategyTemplate,
+    TickSizeInfo,
     Token,
+    TopTraderEntry,
     TraderScore,
     WatchlistItem,
     Webhook,
@@ -93,6 +108,21 @@ _MODEL_REGISTRY: dict[str, type] = {
     "BatchResult": BatchResult,
     "CopyTrade": CopyTrade,
     "NewsSignal": NewsSignal,
+    "NewsArticle": NewsArticle,
+    "Badge": Badge,
+    "TopTraderEntry": TopTraderEntry,
+    "TickSizeInfo": TickSizeInfo,
+    "SpreadInfo": SpreadInfo,
+    "MidpointInfo": MidpointInfo,
+    "ClobBook": ClobBook,
+    "ClobPriceHistory": ClobPriceHistory,
+    "BatchOrderItem": BatchOrderItem,
+    "BatchOrderResult": BatchOrderResult,
+    "BulkCancelError": BulkCancelError,
+    "BulkCancelResult": BulkCancelResult,
+    "PolymarketPortfolioEntry": PolymarketPortfolioEntry,
+    "PolymarketEarningsEntry": PolymarketEarningsEntry,
+    "PolymarketActivity": PolymarketActivity,
     "Alert": Alert,
     "ConditionalOrder": ConditionalOrder,
     "CopyConfig": CopyConfig,
@@ -430,6 +460,13 @@ class PolyforgeClient:
             return None
         return resp.json()
 
+    def _delete_json(self, path: str, *, json: dict[str, Any]) -> Any:
+        resp = self._client.request("DELETE", path, json=json)
+        _raise_for_status(resp)
+        if resp.status_code == 204:
+            return None
+        return resp.json()
+
     def _get_text(self, path: str, *, params: dict[str, Any] | None = None) -> str:
         resp = self._client.get(path, params=_strip_none(params or {}))
         _raise_for_status(resp)
@@ -509,6 +546,79 @@ class PolyforgeClient:
         """
         data = self._get(f"/api/v1/markets/{_encode_path(token_id)}/book")
         return _parse(OrderBook, data)
+
+    def search_markets(self, q: str, *, limit: int | None = None) -> list[Market]:
+        """Full-text search for markets.
+
+        Args:
+            q: Search query string (required).
+            limit: Maximum number of results (1–100, default 20).
+        """
+        data = self._get("/api/v1/markets/search", params=_strip_none({"q": q, "limit": limit}))
+        results = data.get("results", data) if isinstance(data, dict) else data
+        return [_parse(Market, m) for m in results]
+
+    def get_market_tick_size(self, token_id: str) -> TickSizeInfo:
+        """Fetch the tick size and fee rate for a market token."""
+        data = self._get(f"/api/v1/markets/{_encode_path(token_id)}/tick-size")
+        return TickSizeInfo(
+            token_id=data.get("tokenId", token_id),
+            tick_size=data.get("tickSize", ""),
+            fee_rate=data.get("feeRate", ""),
+        )
+
+    def get_market_spread(self, token_id: str) -> SpreadInfo:
+        """Fetch the current bid-ask spread for a market token."""
+        data = self._get(f"/api/v1/markets/{_encode_path(token_id)}/spread")
+        return SpreadInfo(
+            token_id=data.get("tokenId", token_id),
+            spread=data.get("spread", ""),
+        )
+
+    def get_market_midpoint(self, token_id: str) -> MidpointInfo:
+        """Fetch the current midpoint price for a market token."""
+        data = self._get(f"/api/v1/markets/{_encode_path(token_id)}/midpoint")
+        return MidpointInfo(
+            token_id=data.get("tokenId", token_id),
+            midpoint=data.get("midpoint", ""),
+        )
+
+    def get_clob_book(self, token_id: str) -> ClobBook:
+        """Fetch the full CLOB order book snapshot for a market token."""
+        data = self._get(f"/api/v1/markets/{_encode_path(token_id)}/clob-book")
+        return ClobBook(
+            token_id=data.get("tokenId", token_id),
+            bids=data.get("bids", []),
+            asks=data.get("asks", []),
+            spread=data.get("spread", ""),
+            midpoint=data.get("midpoint", ""),
+            timestamp=data.get("timestamp", 0),
+        )
+
+    def get_clob_prices_history(
+        self,
+        token_id: str,
+        *,
+        interval: str | None = None,
+        fidelity: int | None = None,
+    ) -> ClobPriceHistory:
+        """Fetch CLOB price history for a market token.
+
+        Args:
+            token_id: The token ID to fetch history for.
+            interval: Time interval — ``"1m"``, ``"5m"``, ``"1h"``, ``"4h"``,
+                ``"1d"``, ``"1w"``, or ``"max"`` (default ``"1h"``).
+            fidelity: Number of data points (1–500, default 60).
+        """
+        data = self._get(
+            f"/api/v1/markets/{_encode_path(token_id)}/clob-prices-history",
+            params=_strip_none({"interval": interval, "fidelity": fidelity}),
+        )
+        return ClobPriceHistory(
+            token_id=data.get("tokenId", token_id),
+            interval=data.get("interval", interval or "1h"),
+            history=data.get("history", []),
+        )
 
     # -- Discovery & Ranking --
 
@@ -1015,6 +1125,38 @@ class PolyforgeClient:
     def get_score(self) -> TraderScore:
         return _parse(TraderScore, self._get("/api/v1/scores/me"))
 
+    def get_top_scores(self) -> list[TopTraderEntry]:
+        """Fetch the top 20 traders by score."""
+        data = self._get("/api/v1/scores/top")
+        items = data if isinstance(data, list) else data.get("data", [])
+        return [_parse(TopTraderEntry, e) for e in items]
+
+    def get_my_badges(self) -> list[Badge]:
+        """Fetch the authenticated user's earned badges."""
+        data = self._get("/api/v1/scores/me/badges")
+        items = data if isinstance(data, list) else data.get("data", [])
+        return [_parse(Badge, b) for b in items]
+
+    def get_user_score(self, user_id: str) -> TraderScore:
+        """Fetch a specific user's trader score.
+
+        Args:
+            user_id: The user's UUID.
+        """
+        data = self._get(f"/api/v1/scores/{_encode_path(user_id)}")
+        score_data = data.get("score", data) if isinstance(data, dict) and "score" in data else data
+        return _parse(TraderScore, score_data)
+
+    def get_user_badges(self, user_id: str) -> list[Badge]:
+        """Fetch the badges earned by a specific user.
+
+        Args:
+            user_id: The user's UUID.
+        """
+        data = self._get(f"/api/v1/scores/{_encode_path(user_id)}/badges")
+        items = data if isinstance(data, list) else data.get("data", [])
+        return [_parse(Badge, b) for b in items]
+
     # -- Risk Settings --
 
     def get_risk_settings(self) -> RiskSettings:
@@ -1107,6 +1249,38 @@ class PolyforgeClient:
     def cancel_order(self, order_id: str) -> dict:
         """Cancel a pending or live order."""
         return self._delete(f"/api/v1/orders/{_encode_path(order_id)}")
+
+    def batch_orders(self, orders: list[dict[str, Any]]) -> BatchOrderResult:
+        """Place up to 15 orders in a single request.
+
+        Args:
+            orders: List of order dicts, each with keys ``tokenId``, ``side``,
+                ``outcome``, ``size``, ``price``, and optionally ``orderType``.
+                Maximum 15 orders per call.
+        """
+        data = self._post("/api/v1/orders/batch", json={"orders": orders})
+        items = [
+            BatchOrderItem(
+                order_id=r.get("orderId", ""),
+                intent_id=r.get("intentId", ""),
+                status=r.get("status", ""),
+            )
+            for r in data.get("results", [])
+        ]
+        return BatchOrderResult(results=items)
+
+    def bulk_cancel_orders(self, order_ids: list[str]) -> BulkCancelResult:
+        """Cancel up to 3000 orders in a single request.
+
+        Args:
+            order_ids: List of order IDs to cancel (maximum 3000).
+        """
+        data = self._delete_json("/api/v1/orders/bulk", json={"orderIds": order_ids})
+        errors = [
+            BulkCancelError(order_id=e.get("orderId", ""), reason=e.get("reason", ""))
+            for e in data.get("errors", [])
+        ]
+        return BulkCancelResult(cancelled=data.get("cancelled", []), errors=errors)
 
     def close_position(self, token_id: str, size: float | str | None = None) -> PlaceOrderResponse:
         """Close an open position (sell all shares at market price)."""
@@ -1530,6 +1704,38 @@ class PolyforgeClient:
         items = data["data"]
         return [_parse(NewsSignal, s) for s in items]
 
+    def list_news(
+        self,
+        *,
+        source: str | None = None,
+        sentiment: str | None = None,
+        page: int = 1,
+        limit: int = 20,
+    ) -> PaginatedResponse[NewsArticle]:
+        """List news articles with optional filters.
+
+        Args:
+            source: Filter by news source (e.g. ``"Reuters"``).
+            sentiment: Filter by sentiment — ``"POSITIVE"``, ``"NEGATIVE"``, or ``"NEUTRAL"``.
+            page: Page number (default 1).
+            limit: Items per page (1–100, default 20).
+        """
+        raw = self._get("/api/v1/news", params=_strip_none({
+            "source": source, "sentiment": sentiment, "page": page, "limit": limit,
+        }))
+        return PaginatedResponse(
+            data=[_parse(NewsArticle, a) for a in raw.get("data", [])],
+            total=raw.get("total", 0),
+            page=raw.get("page", page),
+            limit=raw.get("limit", limit),
+            has_more=raw.get("hasNext", False),
+            total_pages=raw.get("totalPages", 0),
+        )
+
+    def get_news_article(self, article_id: str) -> NewsArticle:
+        """Fetch a single news article by ID."""
+        return _parse(NewsArticle, self._get(f"/api/v1/news/{_encode_path(article_id)}"))
+
     # -- Configuration --
 
     def list_alerts(self) -> list[Alert]:
@@ -1689,6 +1895,31 @@ class PolyforgeClient:
         params = _strip_none({"period": period, "strategyId": strategy_id})
         data = self._get("/api/v1/portfolio/pnl", params=params)
         return _parse(PortfolioPnl, data)
+
+    def get_polymarket_portfolio(self) -> list[PolymarketPortfolioEntry]:
+        """Fetch the Polymarket-native portfolio positions for the connected wallet."""
+        data = self._get("/api/v1/portfolio/polymarket/portfolio")
+        items = data if isinstance(data, list) else data.get("data", [])
+        return [_parse(PolymarketPortfolioEntry, e) for e in items]
+
+    def get_polymarket_earnings(self) -> list[PolymarketEarningsEntry]:
+        """Fetch daily earnings from the Polymarket rewards programme."""
+        data = self._get("/api/v1/portfolio/polymarket/earnings")
+        items = data if isinstance(data, list) else data.get("data", [])
+        return [_parse(PolymarketEarningsEntry, e) for e in items]
+
+    def get_polymarket_activity(self, *, type: str | None = None) -> list[PolymarketActivity]:
+        """Fetch on-chain activity for the connected Polymarket wallet.
+
+        Args:
+            type: Optional activity type filter (e.g. ``"TRADE"``, ``"REDEEM"``).
+        """
+        data = self._get(
+            "/api/v1/portfolio/polymarket/activity",
+            params=_strip_none({"type": type}),
+        )
+        items = data if isinstance(data, list) else data.get("data", [])
+        return [_parse(PolymarketActivity, a) for a in items]
 
     def list_copy_configs(self) -> list[CopyConfig]:
         data = self._get("/api/v1/copy")
@@ -2050,6 +2281,13 @@ class AsyncPolyforgeClient:
             return None
         return resp.json()
 
+    async def _delete_json(self, path: str, *, json: dict[str, Any]) -> Any:
+        resp = await self._client.request("DELETE", path, json=json)
+        _raise_for_status(resp)
+        if resp.status_code == 204:
+            return None
+        return resp.json()
+
     async def _get_text(self, path: str, *, params: dict[str, Any] | None = None) -> str:
         resp = await self._client.get(path, params=_strip_none(params or {}))
         _raise_for_status(resp)
@@ -2129,6 +2367,79 @@ class AsyncPolyforgeClient:
         """
         data = await self._get(f"/api/v1/markets/{_encode_path(token_id)}/book")
         return _parse(OrderBook, data)
+
+    async def search_markets(self, q: str, *, limit: int | None = None) -> list[Market]:
+        """Full-text search for markets.
+
+        Args:
+            q: Search query string (required).
+            limit: Maximum number of results (1–100, default 20).
+        """
+        data = await self._get("/api/v1/markets/search", params=_strip_none({"q": q, "limit": limit}))
+        results = data.get("results", data) if isinstance(data, dict) else data
+        return [_parse(Market, m) for m in results]
+
+    async def get_market_tick_size(self, token_id: str) -> TickSizeInfo:
+        """Fetch the tick size and fee rate for a market token."""
+        data = await self._get(f"/api/v1/markets/{_encode_path(token_id)}/tick-size")
+        return TickSizeInfo(
+            token_id=data.get("tokenId", token_id),
+            tick_size=data.get("tickSize", ""),
+            fee_rate=data.get("feeRate", ""),
+        )
+
+    async def get_market_spread(self, token_id: str) -> SpreadInfo:
+        """Fetch the current bid-ask spread for a market token."""
+        data = await self._get(f"/api/v1/markets/{_encode_path(token_id)}/spread")
+        return SpreadInfo(
+            token_id=data.get("tokenId", token_id),
+            spread=data.get("spread", ""),
+        )
+
+    async def get_market_midpoint(self, token_id: str) -> MidpointInfo:
+        """Fetch the current midpoint price for a market token."""
+        data = await self._get(f"/api/v1/markets/{_encode_path(token_id)}/midpoint")
+        return MidpointInfo(
+            token_id=data.get("tokenId", token_id),
+            midpoint=data.get("midpoint", ""),
+        )
+
+    async def get_clob_book(self, token_id: str) -> ClobBook:
+        """Fetch the full CLOB order book snapshot for a market token."""
+        data = await self._get(f"/api/v1/markets/{_encode_path(token_id)}/clob-book")
+        return ClobBook(
+            token_id=data.get("tokenId", token_id),
+            bids=data.get("bids", []),
+            asks=data.get("asks", []),
+            spread=data.get("spread", ""),
+            midpoint=data.get("midpoint", ""),
+            timestamp=data.get("timestamp", 0),
+        )
+
+    async def get_clob_prices_history(
+        self,
+        token_id: str,
+        *,
+        interval: str | None = None,
+        fidelity: int | None = None,
+    ) -> ClobPriceHistory:
+        """Fetch CLOB price history for a market token.
+
+        Args:
+            token_id: The token ID to fetch history for.
+            interval: Time interval — ``"1m"``, ``"5m"``, ``"1h"``, ``"4h"``,
+                ``"1d"``, ``"1w"``, or ``"max"`` (default ``"1h"``).
+            fidelity: Number of data points (1–500, default 60).
+        """
+        data = await self._get(
+            f"/api/v1/markets/{_encode_path(token_id)}/clob-prices-history",
+            params=_strip_none({"interval": interval, "fidelity": fidelity}),
+        )
+        return ClobPriceHistory(
+            token_id=data.get("tokenId", token_id),
+            interval=data.get("interval", interval or "1h"),
+            history=data.get("history", []),
+        )
 
     # -- Discovery & Ranking --
 
@@ -2597,6 +2908,38 @@ class AsyncPolyforgeClient:
     async def get_score(self) -> TraderScore:
         return _parse(TraderScore, await self._get("/api/v1/scores/me"))
 
+    async def get_top_scores(self) -> list[TopTraderEntry]:
+        """Fetch the top 20 traders by score."""
+        data = await self._get("/api/v1/scores/top")
+        items = data if isinstance(data, list) else data.get("data", [])
+        return [_parse(TopTraderEntry, e) for e in items]
+
+    async def get_my_badges(self) -> list[Badge]:
+        """Fetch the authenticated user's earned badges."""
+        data = await self._get("/api/v1/scores/me/badges")
+        items = data if isinstance(data, list) else data.get("data", [])
+        return [_parse(Badge, b) for b in items]
+
+    async def get_user_score(self, user_id: str) -> TraderScore:
+        """Fetch a specific user's trader score.
+
+        Args:
+            user_id: The user's UUID.
+        """
+        data = await self._get(f"/api/v1/scores/{_encode_path(user_id)}")
+        score_data = data.get("score", data) if isinstance(data, dict) and "score" in data else data
+        return _parse(TraderScore, score_data)
+
+    async def get_user_badges(self, user_id: str) -> list[Badge]:
+        """Fetch the badges earned by a specific user.
+
+        Args:
+            user_id: The user's UUID.
+        """
+        data = await self._get(f"/api/v1/scores/{_encode_path(user_id)}/badges")
+        items = data if isinstance(data, list) else data.get("data", [])
+        return [_parse(Badge, b) for b in items]
+
     # -- Risk Settings --
 
     async def get_risk_settings(self) -> RiskSettings:
@@ -2689,6 +3032,38 @@ class AsyncPolyforgeClient:
     async def cancel_order(self, order_id: str) -> dict:
         """Cancel a pending or live order."""
         return await self._delete(f"/api/v1/orders/{_encode_path(order_id)}")
+
+    async def batch_orders(self, orders: list[dict[str, Any]]) -> BatchOrderResult:
+        """Place up to 15 orders in a single request.
+
+        Args:
+            orders: List of order dicts, each with keys ``tokenId``, ``side``,
+                ``outcome``, ``size``, ``price``, and optionally ``orderType``.
+                Maximum 15 orders per call.
+        """
+        data = await self._post("/api/v1/orders/batch", json={"orders": orders})
+        items = [
+            BatchOrderItem(
+                order_id=r.get("orderId", ""),
+                intent_id=r.get("intentId", ""),
+                status=r.get("status", ""),
+            )
+            for r in data.get("results", [])
+        ]
+        return BatchOrderResult(results=items)
+
+    async def bulk_cancel_orders(self, order_ids: list[str]) -> BulkCancelResult:
+        """Cancel up to 3000 orders in a single request.
+
+        Args:
+            order_ids: List of order IDs to cancel (maximum 3000).
+        """
+        data = await self._delete_json("/api/v1/orders/bulk", json={"orderIds": order_ids})
+        errors = [
+            BulkCancelError(order_id=e.get("orderId", ""), reason=e.get("reason", ""))
+            for e in data.get("errors", [])
+        ]
+        return BulkCancelResult(cancelled=data.get("cancelled", []), errors=errors)
 
     async def close_position(self, token_id: str, size: float | str | None = None) -> PlaceOrderResponse:
         """Close an open position (sell all shares at market price)."""
@@ -3016,6 +3391,38 @@ class AsyncPolyforgeClient:
         items = data["data"]
         return [_parse(NewsSignal, s) for s in items]
 
+    async def list_news(
+        self,
+        *,
+        source: str | None = None,
+        sentiment: str | None = None,
+        page: int = 1,
+        limit: int = 20,
+    ) -> PaginatedResponse[NewsArticle]:
+        """List news articles with optional filters.
+
+        Args:
+            source: Filter by news source (e.g. ``"Reuters"``).
+            sentiment: Filter by sentiment — ``"POSITIVE"``, ``"NEGATIVE"``, or ``"NEUTRAL"``.
+            page: Page number (default 1).
+            limit: Items per page (1–100, default 20).
+        """
+        raw = await self._get("/api/v1/news", params=_strip_none({
+            "source": source, "sentiment": sentiment, "page": page, "limit": limit,
+        }))
+        return PaginatedResponse(
+            data=[_parse(NewsArticle, a) for a in raw.get("data", [])],
+            total=raw.get("total", 0),
+            page=raw.get("page", page),
+            limit=raw.get("limit", limit),
+            has_more=raw.get("hasNext", False),
+            total_pages=raw.get("totalPages", 0),
+        )
+
+    async def get_news_article(self, article_id: str) -> NewsArticle:
+        """Fetch a single news article by ID."""
+        return _parse(NewsArticle, await self._get(f"/api/v1/news/{_encode_path(article_id)}"))
+
     # -- Configuration --
 
     async def list_alerts(self) -> list[Alert]:
@@ -3175,6 +3582,31 @@ class AsyncPolyforgeClient:
         params = _strip_none({"period": period, "strategyId": strategy_id})
         data = await self._get("/api/v1/portfolio/pnl", params=params)
         return _parse(PortfolioPnl, data)
+
+    async def get_polymarket_portfolio(self) -> list[PolymarketPortfolioEntry]:
+        """Fetch the Polymarket-native portfolio positions for the connected wallet."""
+        data = await self._get("/api/v1/portfolio/polymarket/portfolio")
+        items = data if isinstance(data, list) else data.get("data", [])
+        return [_parse(PolymarketPortfolioEntry, e) for e in items]
+
+    async def get_polymarket_earnings(self) -> list[PolymarketEarningsEntry]:
+        """Fetch daily earnings from the Polymarket rewards programme."""
+        data = await self._get("/api/v1/portfolio/polymarket/earnings")
+        items = data if isinstance(data, list) else data.get("data", [])
+        return [_parse(PolymarketEarningsEntry, e) for e in items]
+
+    async def get_polymarket_activity(self, *, type: str | None = None) -> list[PolymarketActivity]:
+        """Fetch on-chain activity for the connected Polymarket wallet.
+
+        Args:
+            type: Optional activity type filter (e.g. ``"TRADE"``, ``"REDEEM"``).
+        """
+        data = await self._get(
+            "/api/v1/portfolio/polymarket/activity",
+            params=_strip_none({"type": type}),
+        )
+        items = data if isinstance(data, list) else data.get("data", [])
+        return [_parse(PolymarketActivity, a) for a in items]
 
     async def list_copy_configs(self) -> list[CopyConfig]:
         data = await self._get("/api/v1/copy")

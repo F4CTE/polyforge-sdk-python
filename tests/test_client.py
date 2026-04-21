@@ -3199,3 +3199,444 @@ class TestRiskSettings:
     def test_risk_settings_exported_from_package(self):
         from polyforge import RiskSettings
         assert RiskSettings is not None
+
+
+# ── POLA-476: 17 missing platform endpoints ──────────────────────────────────
+
+
+class TestMarketsExtendedEndpoints:
+    """Tests for the 6 new market data endpoints (POLA-476)."""
+
+    def test_search_markets_exists_sync(self):
+        assert callable(getattr(PolyforgeClient, "search_markets", None))
+
+    def test_search_markets_exists_async(self):
+        assert callable(getattr(AsyncPolyforgeClient, "search_markets", None))
+
+    def test_search_markets_uses_correct_path(self):
+        import inspect
+        source = inspect.getsource(PolyforgeClient.search_markets)
+        assert "/api/v1/markets/search" in source
+
+    def test_search_markets_accepts_q_and_limit(self):
+        import inspect
+        sig = inspect.signature(PolyforgeClient.search_markets)
+        params = set(sig.parameters.keys())
+        assert "q" in params
+        assert "limit" in params
+
+    def test_get_market_tick_size_exists_sync(self):
+        assert callable(getattr(PolyforgeClient, "get_market_tick_size", None))
+
+    def test_get_market_tick_size_exists_async(self):
+        assert callable(getattr(AsyncPolyforgeClient, "get_market_tick_size", None))
+
+    def test_get_market_tick_size_uses_correct_path(self):
+        import inspect
+        source = inspect.getsource(PolyforgeClient.get_market_tick_size)
+        assert "/tick-size" in source
+        assert "/api/v1/markets/" in source
+
+    def test_get_market_spread_exists(self):
+        assert callable(getattr(PolyforgeClient, "get_market_spread", None))
+        assert callable(getattr(AsyncPolyforgeClient, "get_market_spread", None))
+
+    def test_get_market_spread_uses_correct_path(self):
+        import inspect
+        source = inspect.getsource(PolyforgeClient.get_market_spread)
+        assert "/spread" in source
+
+    def test_get_market_midpoint_exists(self):
+        assert callable(getattr(PolyforgeClient, "get_market_midpoint", None))
+        assert callable(getattr(AsyncPolyforgeClient, "get_market_midpoint", None))
+
+    def test_get_market_midpoint_uses_correct_path(self):
+        import inspect
+        source = inspect.getsource(PolyforgeClient.get_market_midpoint)
+        assert "/midpoint" in source
+
+    def test_get_clob_book_exists(self):
+        assert callable(getattr(PolyforgeClient, "get_clob_book", None))
+        assert callable(getattr(AsyncPolyforgeClient, "get_clob_book", None))
+
+    def test_get_clob_book_uses_correct_path(self):
+        import inspect
+        source = inspect.getsource(PolyforgeClient.get_clob_book)
+        assert "/clob-book" in source
+
+    def test_get_clob_prices_history_exists(self):
+        assert callable(getattr(PolyforgeClient, "get_clob_prices_history", None))
+        assert callable(getattr(AsyncPolyforgeClient, "get_clob_prices_history", None))
+
+    def test_get_clob_prices_history_uses_correct_path(self):
+        import inspect
+        source = inspect.getsource(PolyforgeClient.get_clob_prices_history)
+        assert "/clob-prices-history" in source
+
+    def test_get_clob_prices_history_accepts_interval_and_fidelity(self):
+        import inspect
+        sig = inspect.signature(PolyforgeClient.get_clob_prices_history)
+        params = set(sig.parameters.keys())
+        assert "interval" in params
+        assert "fidelity" in params
+
+
+class TestBulkOrderEndpoints:
+    """Tests for the 2 new bulk order endpoints (POLA-476)."""
+
+    def test_batch_orders_exists_sync(self):
+        assert callable(getattr(PolyforgeClient, "batch_orders", None))
+
+    def test_batch_orders_exists_async(self):
+        assert callable(getattr(AsyncPolyforgeClient, "batch_orders", None))
+
+    def test_batch_orders_uses_correct_path(self):
+        import inspect
+        source = inspect.getsource(PolyforgeClient.batch_orders)
+        assert "/api/v1/orders/batch" in source
+
+    def test_batch_orders_sends_orders_key(self):
+        import inspect
+        source = inspect.getsource(PolyforgeClient.batch_orders)
+        assert '"orders"' in source
+
+    def test_bulk_cancel_orders_exists_sync(self):
+        assert callable(getattr(PolyforgeClient, "bulk_cancel_orders", None))
+
+    def test_bulk_cancel_orders_exists_async(self):
+        assert callable(getattr(AsyncPolyforgeClient, "bulk_cancel_orders", None))
+
+    def test_bulk_cancel_orders_uses_correct_path(self):
+        import inspect
+        source = inspect.getsource(PolyforgeClient.bulk_cancel_orders)
+        assert "/api/v1/orders/bulk" in source
+
+    def test_bulk_cancel_orders_uses_delete_json(self):
+        import inspect
+        source = inspect.getsource(PolyforgeClient.bulk_cancel_orders)
+        assert "_delete_json" in source
+
+    def test_bulk_cancel_orders_sends_order_ids_key(self):
+        import inspect
+        source = inspect.getsource(PolyforgeClient.bulk_cancel_orders)
+        assert '"orderIds"' in source
+
+
+class TestNewsArticleEndpoints:
+    """Tests for the 2 new news article endpoints (POLA-476)."""
+
+    def test_list_news_exists_sync(self):
+        assert callable(getattr(PolyforgeClient, "list_news", None))
+
+    def test_list_news_exists_async(self):
+        assert callable(getattr(AsyncPolyforgeClient, "list_news", None))
+
+    def test_list_news_uses_correct_path(self):
+        import inspect
+        source = inspect.getsource(PolyforgeClient.list_news)
+        assert '"/api/v1/news"' in source or "'/api/v1/news'" in source
+
+    def test_list_news_accepts_filters(self):
+        import inspect
+        sig = inspect.signature(PolyforgeClient.list_news)
+        params = set(sig.parameters.keys())
+        assert "source" in params
+        assert "sentiment" in params
+        assert "page" in params
+        assert "limit" in params
+
+    def test_get_news_article_exists_sync(self):
+        assert callable(getattr(PolyforgeClient, "get_news_article", None))
+
+    def test_get_news_article_exists_async(self):
+        assert callable(getattr(AsyncPolyforgeClient, "get_news_article", None))
+
+    def test_get_news_article_uses_correct_path(self):
+        import inspect
+        source = inspect.getsource(PolyforgeClient.get_news_article)
+        assert "/api/v1/news/" in source
+
+
+class TestScoresBadgeEndpoints:
+    """Tests for the 4 new scores/badges endpoints (POLA-476)."""
+
+    def test_get_top_scores_exists_sync(self):
+        assert callable(getattr(PolyforgeClient, "get_top_scores", None))
+
+    def test_get_top_scores_exists_async(self):
+        assert callable(getattr(AsyncPolyforgeClient, "get_top_scores", None))
+
+    def test_get_top_scores_uses_correct_path(self):
+        import inspect
+        source = inspect.getsource(PolyforgeClient.get_top_scores)
+        assert "/api/v1/scores/top" in source
+
+    def test_get_my_badges_exists_sync(self):
+        assert callable(getattr(PolyforgeClient, "get_my_badges", None))
+
+    def test_get_my_badges_exists_async(self):
+        assert callable(getattr(AsyncPolyforgeClient, "get_my_badges", None))
+
+    def test_get_my_badges_uses_correct_path(self):
+        import inspect
+        source = inspect.getsource(PolyforgeClient.get_my_badges)
+        assert "/api/v1/scores/me/badges" in source
+
+    def test_get_user_score_exists_sync(self):
+        assert callable(getattr(PolyforgeClient, "get_user_score", None))
+
+    def test_get_user_score_exists_async(self):
+        assert callable(getattr(AsyncPolyforgeClient, "get_user_score", None))
+
+    def test_get_user_score_uses_correct_path(self):
+        import inspect
+        source = inspect.getsource(PolyforgeClient.get_user_score)
+        assert "/api/v1/scores/" in source
+
+    def test_get_user_badges_exists_sync(self):
+        assert callable(getattr(PolyforgeClient, "get_user_badges", None))
+
+    def test_get_user_badges_exists_async(self):
+        assert callable(getattr(AsyncPolyforgeClient, "get_user_badges", None))
+
+    def test_get_user_badges_uses_correct_path(self):
+        import inspect
+        source = inspect.getsource(PolyforgeClient.get_user_badges)
+        assert "/api/v1/scores/" in source
+        assert "/badges" in source
+
+
+class TestPolymarketPortfolioEndpoints:
+    """Tests for the 3 new Polymarket-native portfolio endpoints (POLA-476)."""
+
+    def test_get_polymarket_portfolio_exists_sync(self):
+        assert callable(getattr(PolyforgeClient, "get_polymarket_portfolio", None))
+
+    def test_get_polymarket_portfolio_exists_async(self):
+        assert callable(getattr(AsyncPolyforgeClient, "get_polymarket_portfolio", None))
+
+    def test_get_polymarket_portfolio_uses_correct_path(self):
+        import inspect
+        source = inspect.getsource(PolyforgeClient.get_polymarket_portfolio)
+        assert "/api/v1/portfolio/polymarket/portfolio" in source
+
+    def test_get_polymarket_earnings_exists_sync(self):
+        assert callable(getattr(PolyforgeClient, "get_polymarket_earnings", None))
+
+    def test_get_polymarket_earnings_exists_async(self):
+        assert callable(getattr(AsyncPolyforgeClient, "get_polymarket_earnings", None))
+
+    def test_get_polymarket_earnings_uses_correct_path(self):
+        import inspect
+        source = inspect.getsource(PolyforgeClient.get_polymarket_earnings)
+        assert "/api/v1/portfolio/polymarket/earnings" in source
+
+    def test_get_polymarket_activity_exists_sync(self):
+        assert callable(getattr(PolyforgeClient, "get_polymarket_activity", None))
+
+    def test_get_polymarket_activity_exists_async(self):
+        assert callable(getattr(AsyncPolyforgeClient, "get_polymarket_activity", None))
+
+    def test_get_polymarket_activity_uses_correct_path(self):
+        import inspect
+        source = inspect.getsource(PolyforgeClient.get_polymarket_activity)
+        assert "/api/v1/portfolio/polymarket/activity" in source
+
+    def test_get_polymarket_activity_accepts_type_filter(self):
+        import inspect
+        sig = inspect.signature(PolyforgeClient.get_polymarket_activity)
+        params = set(sig.parameters.keys())
+        assert "type" in params
+
+
+class TestNewModels:
+    """Tests for new model classes (POLA-476)."""
+
+    def test_news_article_model_fields(self):
+        from polyforge.models import NewsArticle
+        a = NewsArticle(id="a1", source="Reuters", title="Test", sentiment="POSITIVE")
+        assert a.id == "a1"
+        assert a.source == "Reuters"
+        assert a.title == "Test"
+        assert a.sentiment == "POSITIVE"
+        assert a.summary is None
+        assert a.signals == []
+
+    def test_badge_model_fields(self):
+        from polyforge.models import Badge
+        b = Badge(id="b1", user_id="u1", type="TOP_10", name="Top 10 Trader", earned_at="2026-01-01")
+        assert b.id == "b1"
+        assert b.type == "TOP_10"
+        assert b.name == "Top 10 Trader"
+
+    def test_top_trader_entry_model_fields(self):
+        from polyforge.models import TopTraderEntry
+        e = TopTraderEntry(user_id="u1", score=95.5, win_rate="0.72", total_trades=100)
+        assert e.user_id == "u1"
+        assert e.score == 95.5
+        assert e.win_rate == "0.72"
+        assert e.total_trades == 100
+        assert e.username is None
+
+    def test_tick_size_info_model_fields(self):
+        from polyforge.models import TickSizeInfo
+        t = TickSizeInfo(token_id="tok1", tick_size="0.01", fee_rate="0.002")
+        assert t.token_id == "tok1"
+        assert t.tick_size == "0.01"
+        assert t.fee_rate == "0.002"
+
+    def test_spread_info_model_fields(self):
+        from polyforge.models import SpreadInfo
+        s = SpreadInfo(token_id="tok1", spread="0.02")
+        assert s.spread == "0.02"
+
+    def test_midpoint_info_model_fields(self):
+        from polyforge.models import MidpointInfo
+        m = MidpointInfo(token_id="tok1", midpoint="0.55")
+        assert m.midpoint == "0.55"
+
+    def test_clob_book_model_fields(self):
+        from polyforge.models import ClobBook
+        book = ClobBook(
+            token_id="tok1",
+            bids=[{"price": "0.50", "size": "100"}],
+            asks=[{"price": "0.52", "size": "50"}],
+            spread="0.02",
+            midpoint="0.51",
+            timestamp=1700000000,
+        )
+        assert book.token_id == "tok1"
+        assert len(book.bids) == 1
+        assert len(book.asks) == 1
+        assert book.spread == "0.02"
+        assert book.midpoint == "0.51"
+        assert book.timestamp == 1700000000
+
+    def test_clob_price_history_model_fields(self):
+        from polyforge.models import ClobPriceHistory
+        h = ClobPriceHistory(token_id="tok1", interval="1h", history=[{"t": 100, "p": 0.5}])
+        assert h.token_id == "tok1"
+        assert h.interval == "1h"
+        assert len(h.history) == 1
+
+    def test_batch_order_item_model_fields(self):
+        from polyforge.models import BatchOrderItem
+        item = BatchOrderItem(order_id="ord1", intent_id="int1", status="PENDING")
+        assert item.order_id == "ord1"
+        assert item.intent_id == "int1"
+        assert item.status == "PENDING"
+
+    def test_batch_order_result_model_fields(self):
+        from polyforge.models import BatchOrderItem, BatchOrderResult
+        result = BatchOrderResult(results=[BatchOrderItem(order_id="ord1", intent_id="int1", status="PENDING")])
+        assert len(result.results) == 1
+        assert result.results[0].order_id == "ord1"
+
+    def test_bulk_cancel_result_model_fields(self):
+        from polyforge.models import BulkCancelError, BulkCancelResult
+        result = BulkCancelResult(
+            cancelled=["ord1", "ord2"],
+            errors=[BulkCancelError(order_id="ord3", reason="NOT_FOUND")],
+        )
+        assert result.cancelled == ["ord1", "ord2"]
+        assert len(result.errors) == 1
+        assert result.errors[0].reason == "NOT_FOUND"
+
+    def test_polymarket_portfolio_entry_model_fields(self):
+        from polyforge.models import PolymarketPortfolioEntry
+        e = PolymarketPortfolioEntry(asset="BTC", size="10", avg_price="0.5")
+        assert e.asset == "BTC"
+        assert e.size == "10"
+        assert e.avg_price == "0.5"
+
+    def test_polymarket_earnings_entry_model_fields(self):
+        from polyforge.models import PolymarketEarningsEntry
+        e = PolymarketEarningsEntry(date="2026-01-01", earnings="50.0", volume="1000.0", win_rate="0.6")
+        assert e.date == "2026-01-01"
+        assert e.earnings == "50.0"
+
+    def test_polymarket_activity_model_fields(self):
+        from polyforge.models import PolymarketActivity
+        a = PolymarketActivity(id="act1", type="TRADE", amount="100", asset="BTC", timestamp="2026-01-01T00:00:00Z")
+        assert a.id == "act1"
+        assert a.type == "TRADE"
+        assert a.metadata == {}
+
+    def test_new_models_exported_from_package(self):
+        from polyforge import (
+            Badge,
+            BatchOrderItem,
+            BatchOrderResult,
+            BulkCancelError,
+            BulkCancelResult,
+            ClobBook,
+            ClobPriceHistory,
+            MidpointInfo,
+            NewsArticle,
+            PolymarketActivity,
+            PolymarketEarningsEntry,
+            PolymarketPortfolioEntry,
+            SpreadInfo,
+            TickSizeInfo,
+            TopTraderEntry,
+        )
+        assert all(m is not None for m in [
+            Badge, BatchOrderItem, BatchOrderResult, BulkCancelError, BulkCancelResult,
+            ClobBook, ClobPriceHistory, MidpointInfo, NewsArticle,
+            PolymarketActivity, PolymarketEarningsEntry, PolymarketPortfolioEntry,
+            SpreadInfo, TickSizeInfo, TopTraderEntry,
+        ])
+
+    def test_news_article_parses_from_camel_case(self):
+        from polyforge.client import _parse
+        from polyforge.models import NewsArticle
+        api_response = {
+            "id": "art-1",
+            "source": "Reuters",
+            "title": "Test Article",
+            "summary": "A summary",
+            "url": "https://example.com/article",
+            "imageUrl": "https://example.com/img.jpg",
+            "sentiment": "POSITIVE",
+            "publishedAt": "2026-01-01T12:00:00Z",
+            "ingestedAt": "2026-01-01T13:00:00Z",
+        }
+        article = _parse(NewsArticle, api_response)
+        assert article.id == "art-1"
+        assert article.source == "Reuters"
+        assert article.image_url == "https://example.com/img.jpg"
+        assert article.published_at == "2026-01-01T12:00:00Z"
+        assert article.sentiment == "POSITIVE"
+
+    def test_badge_parses_from_camel_case(self):
+        from polyforge.client import _parse
+        from polyforge.models import Badge
+        api_response = {
+            "id": "badge-1",
+            "userId": "user-1",
+            "type": "TOP_10",
+            "name": "Top 10 Trader",
+            "earnedAt": "2026-01-15T00:00:00Z",
+        }
+        badge = _parse(Badge, api_response)
+        assert badge.id == "badge-1"
+        assert badge.user_id == "user-1"
+        assert badge.earned_at == "2026-01-15T00:00:00Z"
+
+    def test_top_trader_entry_parses_from_camel_case(self):
+        from polyforge.client import _parse
+        from polyforge.models import TopTraderEntry
+        api_response = {
+            "userId": "u1",
+            "username": "trader1",
+            "displayName": "Trader One",
+            "avatarUrl": "https://example.com/avatar.jpg",
+            "score": 99.5,
+            "winRate": "0.78",
+            "totalTrades": 250,
+        }
+        entry = _parse(TopTraderEntry, api_response)
+        assert entry.user_id == "u1"
+        assert entry.username == "trader1"
+        assert entry.display_name == "Trader One"
+        assert entry.total_trades == 250

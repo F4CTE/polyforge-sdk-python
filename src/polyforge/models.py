@@ -776,6 +776,182 @@ class StrategyEvent:
 
 
 # ---------------------------------------------------------------------------
+# News Articles
+# ---------------------------------------------------------------------------
+
+
+@dataclass
+class NewsArticle:
+    """A news article with optional AI-generated trading signals."""
+
+    id: str = ""
+    source: str = ""
+    title: str = ""
+    summary: str | None = None
+    url: str = ""
+    image_url: str | None = None
+    sentiment: str = ""
+    published_at: str = ""
+    ingested_at: str = ""
+    signals: list[dict[str, Any]] = field(default_factory=list)
+
+
+# ---------------------------------------------------------------------------
+# Scores — Badges
+# ---------------------------------------------------------------------------
+
+
+@dataclass
+class Badge:
+    """A trader badge awarded for reaching a performance milestone."""
+
+    id: str = ""
+    user_id: str = ""
+    type: str = ""
+    name: str = ""
+    earned_at: str = ""
+
+
+@dataclass
+class TopTraderEntry:
+    """A single entry from the top-traders leaderboard (scores/top)."""
+
+    user_id: str = ""
+    username: str | None = None
+    display_name: str | None = None
+    avatar_url: str | None = None
+    score: float = 0.0
+    win_rate: str = ""
+    total_trades: int = 0
+
+
+# ---------------------------------------------------------------------------
+# Markets — extended CLOB data
+# ---------------------------------------------------------------------------
+
+
+@dataclass
+class TickSizeInfo:
+    """Tick size and fee rate for a market token."""
+
+    token_id: str = ""
+    tick_size: str = ""
+    fee_rate: str = ""
+
+
+@dataclass
+class SpreadInfo:
+    """Current bid-ask spread for a market token."""
+
+    token_id: str = ""
+    spread: str = ""
+
+
+@dataclass
+class MidpointInfo:
+    """Current midpoint price for a market token."""
+
+    token_id: str = ""
+    midpoint: str = ""
+
+
+@dataclass
+class ClobBook:
+    """Full CLOB order book snapshot including spread and midpoint."""
+
+    token_id: str = ""
+    bids: list[dict[str, Any]] = field(default_factory=list)
+    asks: list[dict[str, Any]] = field(default_factory=list)
+    spread: str = ""
+    midpoint: str = ""
+    timestamp: int = 0
+
+
+@dataclass
+class ClobPriceHistory:
+    """CLOB price history for a market token."""
+
+    token_id: str = ""
+    interval: str = ""
+    history: list[dict[str, Any]] = field(default_factory=list)
+
+
+# ---------------------------------------------------------------------------
+# Orders — Batch / Bulk
+# ---------------------------------------------------------------------------
+
+
+@dataclass
+class BatchOrderItem:
+    """A single result from a batch order placement."""
+
+    order_id: str = ""
+    intent_id: str = ""
+    status: str = ""
+
+
+@dataclass
+class BatchOrderResult:
+    """Response from POST /api/v1/orders/batch."""
+
+    results: list[BatchOrderItem] = field(default_factory=list)
+
+
+@dataclass
+class BulkCancelError:
+    """An error entry from a bulk cancel operation."""
+
+    order_id: str = ""
+    reason: str = ""
+
+
+@dataclass
+class BulkCancelResult:
+    """Response from DELETE /api/v1/orders/bulk."""
+
+    cancelled: list[str] = field(default_factory=list)
+    errors: list[BulkCancelError] = field(default_factory=list)
+
+
+# ---------------------------------------------------------------------------
+# Portfolio — Polymarket-native
+# ---------------------------------------------------------------------------
+
+
+@dataclass
+class PolymarketPortfolioEntry:
+    """A single position in a Polymarket-native portfolio."""
+
+    asset: str = ""
+    size: str = ""
+    avg_price: str = ""
+    realized_pnl: str = ""
+    unrealized_pnl: str = ""
+
+
+@dataclass
+class PolymarketEarningsEntry:
+    """Daily earnings data from the Polymarket rewards programme."""
+
+    date: str = ""
+    earnings: str = ""
+    volume: str = ""
+    win_rate: str = ""
+
+
+@dataclass
+class PolymarketActivity:
+    """A single on-chain activity event from a Polymarket wallet."""
+
+    id: str = ""
+    type: str = ""
+    amount: str = ""
+    asset: str = ""
+    timestamp: str = ""
+    metadata: dict[str, Any] = field(default_factory=dict)
+
+
+# ---------------------------------------------------------------------------
 # Risk Settings
 # ---------------------------------------------------------------------------
 
