@@ -185,10 +185,11 @@ class Position:
 
     id: str = ""
     market_id: str = ""
-    market_name: str = ""
+    token_id: str = ""
+    outcome: str = ""
     side: str = ""
     size: str = ""
-    entry_price: str = ""
+    avg_price: str = ""
     current_price: str = ""
     unrealized_pnl: str = ""
     realized_pnl: str = ""
@@ -219,7 +220,10 @@ class Order:
 
     id: str = ""
     market_id: str = ""
+    token_id: str = ""
+    outcome: str = ""
     strategy_id: str = ""
+    intent_id: str | None = None
     side: str = ""
     order_type: str = ""
     status: str = ""  # One of OrderStatus values
