@@ -2549,6 +2549,7 @@ class TestMarketplaceSellerCrud:
         sig = inspect.signature(PolyforgeClient.create_marketplace_listing)
         params = set(sig.parameters.keys())
         assert "strategy_id" in params
+        assert "title" in params
         assert "price" in params
         assert "description" in params
 
@@ -2563,10 +2564,30 @@ class TestMarketplaceSellerCrud:
         assert "/api/v1/marketplace" in source
         assert "_post" in source
 
+    def test_sync_create_marketplace_listing_sends_priceUsdc(self):
+        import inspect
+        source = inspect.getsource(PolyforgeClient.create_marketplace_listing)
+        assert '"priceUsdc"' in source, "must send priceUsdc, not price"
+
+    def test_sync_create_marketplace_listing_sends_title(self):
+        import inspect
+        source = inspect.getsource(PolyforgeClient.create_marketplace_listing)
+        assert '"title"' in source, "must include title in request body"
+
     def test_async_create_marketplace_listing_path(self):
         import inspect
         source = inspect.getsource(AsyncPolyforgeClient.create_marketplace_listing)
         assert "/api/v1/marketplace" in source
+
+    def test_async_create_marketplace_listing_sends_priceUsdc(self):
+        import inspect
+        source = inspect.getsource(AsyncPolyforgeClient.create_marketplace_listing)
+        assert '"priceUsdc"' in source, "must send priceUsdc, not price"
+
+    def test_async_create_marketplace_listing_sends_title(self):
+        import inspect
+        source = inspect.getsource(AsyncPolyforgeClient.create_marketplace_listing)
+        assert '"title"' in source, "must include title in request body"
 
     # -- update_marketplace_listing --
 
