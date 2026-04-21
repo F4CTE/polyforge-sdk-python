@@ -51,6 +51,7 @@ from polyforge.models import (
     PaperSummary,
     PlaceOrderResponse,
     PlaceSmartOrderResponse,
+    RedeemPositionResponse,
     Portfolio,
     PortfolioPnl,
     PortfolioReview,
@@ -1075,7 +1076,7 @@ class PolyforgeClient:
         # Deprecated aliases kept for backward compat — ignored by the platform.
         token_id: str | None = None,
         condition_id: str | None = None,
-    ) -> PlaceOrderResponse:
+    ) -> RedeemPositionResponse:
         """Redeem winning shares after a market resolves.
 
         Args:
@@ -1088,7 +1089,7 @@ class PolyforgeClient:
         if market_id is not None:
             body["marketId"] = market_id
         data = self._post("/api/v1/orders/redeem", json=body)
-        return PlaceOrderResponse(order_id=data["orderId"], intent_id=data["intentId"], status=data["status"])
+        return RedeemPositionResponse(position_id=data["positionId"], intent_id=data["intentId"], status=data["status"])
 
     def split_position(self, token_id: str, amount: float | str, **_kwargs: Any) -> PlaceOrderResponse:
         """Split a position into smaller positions.
@@ -2607,7 +2608,7 @@ class AsyncPolyforgeClient:
         # Deprecated aliases kept for backward compat — ignored by the platform.
         token_id: str | None = None,
         condition_id: str | None = None,
-    ) -> PlaceOrderResponse:
+    ) -> RedeemPositionResponse:
         """Redeem winning shares after a market resolves.
 
         Args:
@@ -2620,7 +2621,7 @@ class AsyncPolyforgeClient:
         if market_id is not None:
             body["marketId"] = market_id
         data = await self._post("/api/v1/orders/redeem", json=body)
-        return PlaceOrderResponse(order_id=data["orderId"], intent_id=data["intentId"], status=data["status"])
+        return RedeemPositionResponse(position_id=data["positionId"], intent_id=data["intentId"], status=data["status"])
 
     async def split_position(self, token_id: str, amount: float | str, **_kwargs: Any) -> PlaceOrderResponse:
         """Split a position into smaller positions.

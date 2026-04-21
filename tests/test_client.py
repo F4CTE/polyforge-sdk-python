@@ -38,6 +38,7 @@ from polyforge.models import (
     OrderStatus,
     PaginatedResponse,
     PlaceOrderResponse,
+    RedeemPositionResponse,
     Portfolio,
     PortfolioPnl,
     Position,
@@ -2964,3 +2965,41 @@ class TestApiKeyManagement:
         source = inspect.getsource(PolyforgeClient.revoke_api_key)
         assert "_delete" in source
         assert "/api/v1/api-keys/" in source
+
+
+class TestRedeemPosition:
+    """Tests for redeem_position response parsing (POLA-338)."""
+
+    def test_sync_redeem_position_returns_redeem_response(self):
+        import inspect
+        hints = inspect.get_annotations(PolyforgeClient.redeem_position)
+        assert hints["return"] == "RedeemPositionResponse"
+
+    def test_async_redeem_position_returns_redeem_response(self):
+        import inspect
+        hints = inspect.get_annotations(AsyncPolyforgeClient.redeem_position)
+        assert hints["return"] == "RedeemPositionResponse"
+
+    def test_sync_redeem_position_parses_position_id(self):
+        import inspect
+        source = inspect.getsource(PolyforgeClient.redeem_position)
+        assert 'data["positionId"]' in source
+        assert 'data["orderId"]' not in source
+
+    def test_async_redeem_position_parses_position_id(self):
+        import inspect
+        source = inspect.getsource(AsyncPolyforgeClient.redeem_position)
+        assert 'data["positionId"]' in source
+        assert 'data["orderId"]' not in source
+
+    def test_redeem_position_response_model_fields(self):
+        resp = RedeemPositionResponse(position_id="pos-1", intent_id="int-1", status="REDEEMED")
+        assert resp.position_id == "pos-1"
+        assert resp.intent_id == "int-1"
+        assert resp.status == "REDEEMED"
+
+    def test_redeem_position_response_defaults(self):
+        resp = RedeemPositionResponse()
+        assert resp.position_id == ""
+        assert resp.intent_id == ""
+        assert resp.status == ""
