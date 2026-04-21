@@ -1615,21 +1615,36 @@ class TestWebhookMutationMethods:
 
 
 class TestPriceHistoryEntryModel:
-    """Tests for PriceHistoryEntry model (#51)."""
+    """Tests for PriceHistoryEntry model (#51, #148)."""
 
-    def test_price_history_entry_fields(self):
-        """PriceHistoryEntry must have timestamp, price, volume fields."""
-        entry = PriceHistoryEntry(timestamp="2026-04-13T00:00:00Z", price=0.65, volume=1234.5)
+    def test_price_history_entry_ohlcv_fields(self):
+        """PriceHistoryEntry must have timestamp and OHLCV fields."""
+        entry = PriceHistoryEntry(
+            timestamp="2026-04-13T00:00:00Z",
+            open=0.45, high=0.70, low=0.40, close=0.65, volume=1234.5,
+        )
         assert entry.timestamp == "2026-04-13T00:00:00Z"
-        assert entry.price == 0.65
+        assert entry.open == 0.45
+        assert entry.high == 0.70
+        assert entry.low == 0.40
+        assert entry.close == 0.65
         assert entry.volume == 1234.5
+
+    def test_price_history_entry_price_compat(self):
+        """PriceHistoryEntry.price should alias close for backward compatibility (#148)."""
+        entry = PriceHistoryEntry(close=0.65)
+        assert entry.price == 0.65
 
     def test_price_history_entry_defaults(self):
         """PriceHistoryEntry defaults should be sensible."""
         entry = PriceHistoryEntry()
         assert entry.timestamp == ""
-        assert entry.price == 0.0
+        assert entry.open == 0.0
+        assert entry.high == 0.0
+        assert entry.low == 0.0
+        assert entry.close == 0.0
         assert entry.volume == 0.0
+        assert entry.price == 0.0
 
 
 class TestOrderBookModels:
@@ -1722,6 +1737,44 @@ class TestGetPriceHistory:
         sig = inspect.signature(PolyforgeClient.get_price_history)
         ret = sig.return_annotation
         assert "PriceHistoryEntry" in str(ret)
+
+    def test_parse_ohlcv_candle_from_platform_response(self):
+        """_parse must map platform OHLCV candle shape to PriceHistoryEntry (#148)."""
+        from polyforge.client import _parse
+
+        candle = {
+            "time": "2026-04-13T12:00:00Z",
+            "open": "0.450000",
+            "high": "0.700000",
+            "low": "0.400000",
+            "close": "0.650000",
+            "volume": "1234.560000",
+        }
+        entry = _parse(PriceHistoryEntry, candle)
+        assert entry.timestamp == "2026-04-13T12:00:00Z"
+        assert entry.open == 0.45
+        assert entry.high == 0.70
+        assert entry.low == 0.40
+        assert entry.close == 0.65
+        assert entry.volume == 1234.56
+        assert entry.price == 0.65
+
+    def test_parse_ohlcv_candle_zero_defaults(self):
+        """_parse handles '0' string values from platform correctly (#148)."""
+        from polyforge.client import _parse
+
+        candle = {
+            "time": "2026-04-13T12:00:00Z",
+            "open": "0",
+            "high": "0",
+            "low": "0",
+            "close": "0",
+            "volume": "0",
+        }
+        entry = _parse(PriceHistoryEntry, candle)
+        assert entry.timestamp == "2026-04-13T12:00:00Z"
+        assert entry.open == 0.0
+        assert entry.close == 0.0
 
 
 class TestGetOrderBook:

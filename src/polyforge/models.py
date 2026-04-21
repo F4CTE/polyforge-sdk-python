@@ -591,11 +591,18 @@ class MarketSentiment:
 
 @dataclass
 class PriceHistoryEntry:
-    """A single data point in a market's price history."""
+    """A single OHLCV candle in a market's price history."""
 
     timestamp: str = ""
-    price: float = 0.0
+    open: float = 0.0
+    high: float = 0.0
+    low: float = 0.0
+    close: float = 0.0
     volume: float = 0.0
+
+    @property
+    def price(self) -> float:
+        return self.close
 
 
 @dataclass
