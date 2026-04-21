@@ -42,6 +42,7 @@ from polyforge.models import (
     OrderStatus,
     PaginatedResponse,
     PlaceOrderResponse,
+    RedeemPositionResponse,
     Portfolio,
     PortfolioPnl,
     Position,
@@ -3551,3 +3552,48 @@ class TestPolymarketPortfolioEndpoints:
         for cls in (PolyforgeClient, AsyncPolyforgeClient):
             src = inspect.getsource(getattr(cls, "get_polymarket_activity"))
             assert "/api/v1/portfolio/polymarket/activity" in src
+
+
+class TestRedeemPositionResponseParsing:
+    """redeem_position must parse positionId (not orderId) from the platform response (#156)."""
+
+    def test_redeem_position_parses_position_id_not_order_id(self):
+        """Sync redeem_position must read positionId from the response dict."""
+        import inspect
+        src = inspect.getsource(PolyforgeClient.redeem_position)
+        assert 'data["positionId"]' in src or "data['positionId']" in src
+        assert 'data["orderId"]' not in src and "data['orderId']" not in src
+
+    def test_async_redeem_position_parses_position_id_not_order_id(self):
+        """Async redeem_position must read positionId from the response dict."""
+        import inspect
+        src = inspect.getsource(AsyncPolyforgeClient.redeem_position)
+        assert 'data["positionId"]' in src or "data['positionId']" in src
+        assert 'data["orderId"]' not in src and "data['orderId']" not in src
+
+    def test_redeem_position_returns_redeem_position_response_type(self):
+        """Sync redeem_position return annotation must be RedeemPositionResponse."""
+        import inspect
+        sig = inspect.signature(PolyforgeClient.redeem_position)
+        assert sig.return_annotation is not inspect.Parameter.empty
+        assert "RedeemPositionResponse" in str(sig.return_annotation)
+
+    def test_async_redeem_position_returns_redeem_position_response_type(self):
+        """Async redeem_position return annotation must be RedeemPositionResponse."""
+        import inspect
+        sig = inspect.signature(AsyncPolyforgeClient.redeem_position)
+        assert sig.return_annotation is not inspect.Parameter.empty
+        assert "RedeemPositionResponse" in str(sig.return_annotation)
+
+    def test_redeem_position_response_model_has_position_id(self):
+        """RedeemPositionResponse dataclass must have a position_id field."""
+        from polyforge.models import RedeemPositionResponse
+        import dataclasses
+        fields = {f.name for f in dataclasses.fields(RedeemPositionResponse)}
+        assert "position_id" in fields
+        assert "order_id" not in fields
+
+    def test_redeem_position_response_exported_from_package(self):
+        """RedeemPositionResponse must be importable from the top-level polyforge package."""
+        import polyforge
+        assert hasattr(polyforge, "RedeemPositionResponse")
