@@ -965,6 +965,60 @@ class TestCreateStrategyParams:
         assert '"tags"' in source
 
 
+class TestUpdateStrategyParams:
+    """Tests for update_strategy() accepting all platform-supported fields (#144)."""
+
+    def test_update_strategy_accepts_all_params(self):
+        """update_strategy() must accept visibility, exec_mode, blocks, tags, etc."""
+        import inspect
+        sig = inspect.signature(PolyforgeClient.update_strategy)
+        params = set(sig.parameters.keys())
+        for expected in (
+            "name", "description", "market_id", "visibility", "exec_mode",
+            "tick_ms", "triggers", "conditions", "actions", "safety",
+            "logic_blocks", "calc_blocks", "tags", "variables", "canvas",
+            "market_slots",
+        ):
+            assert expected in params, f"missing param: {expected}"
+
+    def test_async_update_strategy_accepts_all_params(self):
+        """Async update_strategy() must also accept the expanded params."""
+        import inspect
+        sig = inspect.signature(AsyncPolyforgeClient.update_strategy)
+        params = set(sig.parameters.keys())
+        for expected in (
+            "name", "description", "market_id", "visibility", "exec_mode",
+            "tick_ms", "triggers", "conditions", "actions", "safety",
+            "logic_blocks", "calc_blocks", "tags", "variables", "canvas",
+            "market_slots",
+        ):
+            assert expected in params, f"missing async param: {expected}"
+
+    def test_update_strategy_sends_camel_case_fields(self):
+        """update_strategy() must send camelCase field names to the API."""
+        import inspect
+        source = inspect.getsource(PolyforgeClient.update_strategy)
+        for camel in (
+            '"visibility"', '"execMode"', '"tickMs"', '"triggers"',
+            '"conditions"', '"actions"', '"safety"', '"logicBlocks"',
+            '"calcBlocks"', '"tags"', '"variables"', '"canvas"',
+            '"marketSlots"',
+        ):
+            assert camel in source, f"missing camelCase key: {camel}"
+
+    def test_update_strategy_params_are_keyword_only(self):
+        """All update params after strategy_id must be keyword-only."""
+        import inspect
+        sig = inspect.signature(PolyforgeClient.update_strategy)
+        for pname, param in sig.parameters.items():
+            if pname == "self":
+                continue
+            if pname == "strategy_id":
+                assert param.kind == inspect.Parameter.POSITIONAL_OR_KEYWORD
+            else:
+                assert param.kind == inspect.Parameter.KEYWORD_ONLY, f"{pname} should be keyword-only"
+
+
 class TestPaginatedResponseDataField:
     """Tests for PaginatedResponse using 'data' field (#33)."""
 

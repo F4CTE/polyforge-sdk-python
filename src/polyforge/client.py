@@ -682,7 +682,27 @@ class PolyforgeClient:
     def export_strategy(self, strategy_id: str) -> dict:
         return self._get(f"/api/v1/strategies/{_encode_path(strategy_id)}/export")
 
-    def update_strategy(self, strategy_id: str, name: str | None = None, description: str | None = None, market_id: str | None = None) -> Strategy:
+    def update_strategy(
+        self,
+        strategy_id: str,
+        *,
+        name: str | None = None,
+        description: str | None = None,
+        market_id: str | None = None,
+        visibility: str | None = None,
+        exec_mode: str | None = None,
+        tick_ms: int | None = None,
+        triggers: list[dict[str, Any]] | None = None,
+        conditions: list[dict[str, Any]] | None = None,
+        actions: list[dict[str, Any]] | None = None,
+        safety: list[dict[str, Any]] | None = None,
+        logic_blocks: list[dict[str, Any]] | None = None,
+        calc_blocks: list[dict[str, Any]] | None = None,
+        tags: list[str] | None = None,
+        variables: list[dict[str, Any]] | None = None,
+        canvas: dict[str, Any] | None = None,
+        market_slots: list[dict[str, Any]] | None = None,
+    ) -> Strategy:
         body: dict[str, Any] = {}
         if name is not None:
             body["name"] = name
@@ -690,6 +710,32 @@ class PolyforgeClient:
             body["description"] = description
         if market_id is not None:
             body["marketId"] = market_id
+        if visibility is not None:
+            body["visibility"] = visibility
+        if exec_mode is not None:
+            body["execMode"] = exec_mode
+        if tick_ms is not None:
+            body["tickMs"] = tick_ms
+        if triggers is not None:
+            body["triggers"] = triggers
+        if conditions is not None:
+            body["conditions"] = conditions
+        if actions is not None:
+            body["actions"] = actions
+        if safety is not None:
+            body["safety"] = safety
+        if logic_blocks is not None:
+            body["logicBlocks"] = logic_blocks
+        if calc_blocks is not None:
+            body["calcBlocks"] = calc_blocks
+        if tags is not None:
+            body["tags"] = tags
+        if variables is not None:
+            body["variables"] = variables
+        if canvas is not None:
+            body["canvas"] = canvas
+        if market_slots is not None:
+            body["marketSlots"] = market_slots
         return _parse(Strategy, self._patch(f"/api/v1/strategies/{_encode_path(strategy_id)}", json=body))
 
     def delete_strategy(self, strategy_id: str) -> None:
@@ -2230,7 +2276,27 @@ class AsyncPolyforgeClient:
     async def export_strategy(self, strategy_id: str) -> dict:
         return await self._get(f"/api/v1/strategies/{_encode_path(strategy_id)}/export")
 
-    async def update_strategy(self, strategy_id: str, name: str | None = None, description: str | None = None, market_id: str | None = None) -> Strategy:
+    async def update_strategy(
+        self,
+        strategy_id: str,
+        *,
+        name: str | None = None,
+        description: str | None = None,
+        market_id: str | None = None,
+        visibility: str | None = None,
+        exec_mode: str | None = None,
+        tick_ms: int | None = None,
+        triggers: list[dict[str, Any]] | None = None,
+        conditions: list[dict[str, Any]] | None = None,
+        actions: list[dict[str, Any]] | None = None,
+        safety: list[dict[str, Any]] | None = None,
+        logic_blocks: list[dict[str, Any]] | None = None,
+        calc_blocks: list[dict[str, Any]] | None = None,
+        tags: list[str] | None = None,
+        variables: list[dict[str, Any]] | None = None,
+        canvas: dict[str, Any] | None = None,
+        market_slots: list[dict[str, Any]] | None = None,
+    ) -> Strategy:
         body: dict[str, Any] = {}
         if name is not None:
             body["name"] = name
@@ -2238,6 +2304,32 @@ class AsyncPolyforgeClient:
             body["description"] = description
         if market_id is not None:
             body["marketId"] = market_id
+        if visibility is not None:
+            body["visibility"] = visibility
+        if exec_mode is not None:
+            body["execMode"] = exec_mode
+        if tick_ms is not None:
+            body["tickMs"] = tick_ms
+        if triggers is not None:
+            body["triggers"] = triggers
+        if conditions is not None:
+            body["conditions"] = conditions
+        if actions is not None:
+            body["actions"] = actions
+        if safety is not None:
+            body["safety"] = safety
+        if logic_blocks is not None:
+            body["logicBlocks"] = logic_blocks
+        if calc_blocks is not None:
+            body["calcBlocks"] = calc_blocks
+        if tags is not None:
+            body["tags"] = tags
+        if variables is not None:
+            body["variables"] = variables
+        if canvas is not None:
+            body["canvas"] = canvas
+        if market_slots is not None:
+            body["marketSlots"] = market_slots
         return _parse(Strategy, await self._patch(f"/api/v1/strategies/{_encode_path(strategy_id)}", json=body))
 
     async def delete_strategy(self, strategy_id: str) -> None:
