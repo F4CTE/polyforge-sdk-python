@@ -2502,6 +2502,130 @@ class TestPaperTrading:
         assert "/api/v1/paper/reset" in source
 
 
+class TestRiskSettings:
+    """Tests for get_risk_settings, update_risk_settings, reset_circuit_breaker."""
+
+    # -- get_risk_settings --
+
+    def test_sync_get_risk_settings_exists(self):
+        assert hasattr(PolyforgeClient, "get_risk_settings")
+
+    def test_async_get_risk_settings_exists(self):
+        assert hasattr(AsyncPolyforgeClient, "get_risk_settings")
+
+    def test_sync_get_risk_settings_path(self):
+        import inspect
+        source = inspect.getsource(PolyforgeClient.get_risk_settings)
+        assert "/api/v1/settings/risk" in source
+        assert "_get" in source
+
+    def test_async_get_risk_settings_path(self):
+        import inspect
+        source = inspect.getsource(AsyncPolyforgeClient.get_risk_settings)
+        assert "/api/v1/settings/risk" in source
+        assert "_get" in source
+
+    def test_get_risk_settings_returns_risk_settings_type(self):
+        import inspect
+        sig = inspect.signature(PolyforgeClient.get_risk_settings)
+        assert sig.return_annotation is not inspect.Parameter.empty
+
+    # -- update_risk_settings --
+
+    def test_sync_update_risk_settings_exists(self):
+        assert hasattr(PolyforgeClient, "update_risk_settings")
+
+    def test_async_update_risk_settings_exists(self):
+        assert hasattr(AsyncPolyforgeClient, "update_risk_settings")
+
+    def test_sync_update_risk_settings_path(self):
+        import inspect
+        source = inspect.getsource(PolyforgeClient.update_risk_settings)
+        assert "/api/v1/settings/risk" in source
+        assert "_patch" in source
+
+    def test_async_update_risk_settings_path(self):
+        import inspect
+        source = inspect.getsource(AsyncPolyforgeClient.update_risk_settings)
+        assert "/api/v1/settings/risk" in source
+        assert "_patch" in source
+
+    def test_sync_update_risk_settings_accepts_kwargs(self):
+        import inspect
+        sig = inspect.signature(PolyforgeClient.update_risk_settings)
+        assert any(
+            p.kind == inspect.Parameter.VAR_KEYWORD
+            for p in sig.parameters.values()
+        )
+
+    # -- reset_circuit_breaker --
+
+    def test_sync_reset_circuit_breaker_exists(self):
+        assert hasattr(PolyforgeClient, "reset_circuit_breaker")
+
+    def test_async_reset_circuit_breaker_exists(self):
+        assert hasattr(AsyncPolyforgeClient, "reset_circuit_breaker")
+
+    def test_sync_reset_circuit_breaker_path(self):
+        import inspect
+        source = inspect.getsource(PolyforgeClient.reset_circuit_breaker)
+        assert "/api/v1/settings/risk/reset" in source
+        assert "_post" in source
+
+    def test_async_reset_circuit_breaker_path(self):
+        import inspect
+        source = inspect.getsource(AsyncPolyforgeClient.reset_circuit_breaker)
+        assert "/api/v1/settings/risk/reset" in source
+        assert "_post" in source
+
+    # -- RiskSettings model --
+
+    def test_risk_settings_model_exists(self):
+        from polyforge.models import RiskSettings
+        assert RiskSettings is not None
+
+    def test_risk_settings_model_fields(self):
+        from polyforge.models import RiskSettings
+        from dataclasses import fields
+        field_names = {f.name for f in fields(RiskSettings)}
+        assert "drawdown_enabled" in field_names
+        assert "drawdown_lookback_hours" in field_names
+        assert "drawdown_threshold_pct" in field_names
+        assert "circuit_breaker_tripped" in field_names
+        assert "circuit_breaker_tripped_at" in field_names
+
+    def test_risk_settings_default_construction(self):
+        from polyforge.models import RiskSettings
+        rs = RiskSettings()
+        assert rs.drawdown_enabled is False
+        assert rs.circuit_breaker_tripped is False
+        assert rs.circuit_breaker_tripped_at is None
+
+    def test_risk_settings_exported_from_package(self):
+        from polyforge import RiskSettings
+        assert RiskSettings is not None
+
+    def test_risk_settings_parse_from_camel_case(self):
+        """Verify camelCase API response keys map correctly to snake_case fields."""
+        from polyforge.models import RiskSettings
+        import sys, os
+        sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../src"))
+        from polyforge.client import _parse
+        data = {
+            "drawdownEnabled": True,
+            "drawdownLookbackHours": 48,
+            "drawdownThresholdPct": 0.2,
+            "circuitBreakerTripped": True,
+            "circuitBreakerTrippedAt": "2026-01-01T00:00:00Z",
+        }
+        rs = _parse(RiskSettings, data)
+        assert rs.drawdown_enabled is True
+        assert rs.drawdown_lookback_hours == 48
+        assert rs.drawdown_threshold_pct == 0.2
+        assert rs.circuit_breaker_tripped is True
+        assert rs.circuit_breaker_tripped_at == "2026-01-01T00:00:00Z"
+
+
 class TestBatchApi:
     """Tests for batch_requests."""
 

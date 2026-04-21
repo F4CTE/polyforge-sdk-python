@@ -75,6 +75,7 @@ from polyforge.models import (
     WebhookTestResult,
     WhaleTrade,
     WhaleProfile,
+    RiskSettings,
 )
 
 T = TypeVar("T")
@@ -111,6 +112,7 @@ _MODEL_REGISTRY: dict[str, type] = {
     "PriceHistoryEntry": PriceHistoryEntry,
     "OrderBookLevel": OrderBookLevel,
     "OrderBook": OrderBook,
+    "RiskSettings": RiskSettings,
 }
 
 
@@ -1591,6 +1593,38 @@ class PolyforgeClient:
             A dict containing the reset confirmation from the server.
         """
         return self._post("/api/v1/paper/reset")
+
+    # -- Risk Settings --
+
+    def get_risk_settings(self) -> RiskSettings:
+        """Get the current risk / circuit-breaker settings for the authenticated user.
+
+        Returns:
+            A :class:`RiskSettings` with drawdown and circuit-breaker configuration.
+        """
+        return _parse(RiskSettings, self._get("/api/v1/settings/risk"))
+
+    def update_risk_settings(self, **kwargs: Any) -> RiskSettings:
+        """Update risk settings. Only the supplied fields are changed.
+
+        Pass API field names as keyword arguments (e.g. ``drawdownEnabled=True``,
+        ``drawdownThresholdPct=0.15``).
+
+        Args:
+            **kwargs: Fields to update (passed directly to the API).
+
+        Returns:
+            The updated :class:`RiskSettings`.
+        """
+        return _parse(RiskSettings, self._patch("/api/v1/settings/risk", json=_strip_none(kwargs)))
+
+    def reset_circuit_breaker(self) -> RiskSettings:
+        """Reset the circuit breaker after it has been tripped.
+
+        Returns:
+            The updated :class:`RiskSettings` with ``circuit_breaker_tripped`` set to ``False``.
+        """
+        return _parse(RiskSettings, self._post("/api/v1/settings/risk/reset"))
 
     # -- Batch API --
 
@@ -3319,6 +3353,23 @@ class AsyncPolyforgeClient:
     async def reset_paper_account(self) -> dict[str, Any]:
         """Reset the paper trading account to its initial state."""
         return await self._post("/api/v1/paper/reset")
+
+    # -- Risk Settings --
+
+    async def get_risk_settings(self) -> RiskSettings:
+        """Get the current risk / circuit-breaker settings for the authenticated user."""
+        return _parse(RiskSettings, await self._get("/api/v1/settings/risk"))
+
+    async def update_risk_settings(self, **kwargs: Any) -> RiskSettings:
+        """Update risk settings. Only the supplied fields are changed.
+
+        Pass API field names as keyword arguments (e.g. ``drawdownEnabled=True``).
+        """
+        return _parse(RiskSettings, await self._patch("/api/v1/settings/risk", json=_strip_none(kwargs)))
+
+    async def reset_circuit_breaker(self) -> RiskSettings:
+        """Reset the circuit breaker after it has been tripped."""
+        return _parse(RiskSettings, await self._post("/api/v1/settings/risk/reset"))
 
     # -- Batch API --
 

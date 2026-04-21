@@ -849,3 +849,23 @@ class ClobBook:
     spread: str = "0"
     midpoint: str = "0"
     timestamp: int = 0
+
+
+# ---------------------------------------------------------------------------
+# Risk Settings / Circuit Breaker
+# ---------------------------------------------------------------------------
+
+@dataclass
+class RiskSettings:
+    """Per-account risk and circuit-breaker configuration.
+
+    Returned by :meth:`~polyforge.client.PolyforgeClient.get_risk_settings`,
+    :meth:`~polyforge.client.PolyforgeClient.update_risk_settings`, and
+    :meth:`~polyforge.client.PolyforgeClient.reset_circuit_breaker`.
+    """
+
+    drawdown_enabled: bool = False
+    drawdown_lookback_hours: int = 24
+    drawdown_threshold_pct: float = 0.1
+    circuit_breaker_tripped: bool = False
+    circuit_breaker_tripped_at: Optional[str] = None
