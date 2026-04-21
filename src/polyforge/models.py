@@ -81,25 +81,27 @@ class PaginatedResponse(Generic[T]):
 
 @dataclass
 class Token:
-    """A token within a market pair."""
+    """A prediction market outcome token (YES/NO share).
 
-    symbol: str = ""
-    name: str = ""
-    address: str = ""
-    decimals: int = 18
-    logo_url: str = ""
+    Platform contract: id is required; outcome ("YES"/"NO") and price
+    (implied probability 0.001–0.999) are optional server-side but
+    always present in practice.
+    """
+
+    id: str = ""
+    outcome: str | None = None
+    price: float | None = None
 
 
 @dataclass
 class Market:
-    """A trading market / pair."""
+    """A prediction market."""
 
     id: str = ""
     title: str = ""
     symbol: str = ""
     category: str = ""
-    base_token: Token | None = None
-    quote_token: Token | None = None
+    tokens: list[Token] = field(default_factory=list)
     price: float = 0.0
     volume_24h: float = 0.0
     change_24h: float = 0.0
