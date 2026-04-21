@@ -627,6 +627,40 @@ class LpPosition:
 
 
 # ---------------------------------------------------------------------------
+# Rewards
+# ---------------------------------------------------------------------------
+
+@dataclass
+class RewardMarket:
+    condition_id: str = ""
+    rewards_daily: str = ""
+    rewards_max_spread: str = ""
+    rewards_min_size: str = ""
+    start_date: str = ""
+    end_date: str = ""
+
+
+@dataclass
+class UserReward:
+    date: str = ""
+    amount: str = ""
+    market: str = ""
+
+
+@dataclass
+class UserRewardsTotal:
+    total: str = ""
+    by_date: List[Dict[str, Any]] = field(default_factory=list)
+
+
+@dataclass
+class Rebate:
+    date: str = ""
+    amount: str = ""
+    fees_paid: str = ""
+
+
+# ---------------------------------------------------------------------------
 # Conditional Orders
 # ---------------------------------------------------------------------------
 
