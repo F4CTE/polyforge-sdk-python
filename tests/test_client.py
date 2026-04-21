@@ -43,10 +43,14 @@ from polyforge.models import (
     PortfolioPnl,
     Position,
     PriceHistoryEntry,
+    Rebate,
+    RewardMarket,
     Strategy,
     StrategyExecMode,
     StrategyVisibility,
     TraderScore,
+    UserReward,
+    UserRewardsTotal,
     WatchlistItem,
     WebhookEvent,
     WebhookTestResult,
@@ -3670,3 +3674,153 @@ class TestRedeemPosition:
         source = inspect.getsource(AsyncPolyforgeClient.redeem_position)
         assert 'data["positionId"]' in source
         assert 'data["orderId"]' not in source
+
+
+
+class TestRewardsModels:
+    """Tests for Rewards dataclass models."""
+
+    def test_reward_market_defaults(self):
+        rm = RewardMarket()
+        assert rm.condition_id == ""
+        assert rm.rewards_daily == ""
+        assert rm.rewards_max_spread == ""
+        assert rm.rewards_min_size == ""
+        assert rm.start_date == ""
+        assert rm.end_date == ""
+
+    def test_reward_market_with_values(self):
+        rm = RewardMarket(
+            condition_id="0xabc",
+            rewards_daily="100.5",
+            rewards_max_spread="0.05",
+            rewards_min_size="25",
+            start_date="2025-01-01",
+            end_date="2025-12-31",
+        )
+        assert rm.condition_id == "0xabc"
+        assert rm.rewards_daily == "100.5"
+
+    def test_user_reward_defaults(self):
+        ur = UserReward()
+        assert ur.date == ""
+        assert ur.amount == ""
+        assert ur.market == ""
+
+    def test_user_rewards_total_defaults(self):
+        urt = UserRewardsTotal()
+        assert urt.total == ""
+        assert urt.by_date == []
+
+    def test_rebate_defaults(self):
+        r = Rebate()
+        assert r.date == ""
+        assert r.amount == ""
+        assert r.fees_paid == ""
+
+    def test_parse_reward_market(self):
+        data = {
+            "conditionId": "0xabc",
+            "rewardsDaily": "100",
+            "rewardsMaxSpread": "0.05",
+            "rewardsMinSize": "25",
+            "startDate": "2025-01-01",
+            "endDate": "2025-12-31",
+        }
+        rm = _parse(RewardMarket, data)
+        assert rm.condition_id == "0xabc"
+        assert rm.rewards_daily == "100"
+        assert rm.rewards_max_spread == "0.05"
+        assert rm.rewards_min_size == "25"
+        assert rm.start_date == "2025-01-01"
+        assert rm.end_date == "2025-12-31"
+
+    def test_parse_user_reward(self):
+        data = {"date": "2025-04-01", "amount": "12.5", "market": "Will X happen?"}
+        ur = _parse(UserReward, data)
+        assert ur.date == "2025-04-01"
+        assert ur.amount == "12.5"
+        assert ur.market == "Will X happen?"
+
+    def test_parse_user_rewards_total(self):
+        data = {"total": "500.25", "byDate": [{"date": "2025-04-01", "amount": "50"}]}
+        urt = _parse(UserRewardsTotal, data)
+        assert urt.total == "500.25"
+        assert len(urt.by_date) == 1
+
+    def test_parse_rebate(self):
+        data = {"date": "2025-04-01", "amount": "3.5", "feesPaid": "10.0"}
+        r = _parse(Rebate, data)
+        assert r.date == "2025-04-01"
+        assert r.amount == "3.5"
+        assert r.fees_paid == "10.0"
+
+
+class TestRewardsMethods:
+    """Tests for Rewards API methods on sync and async clients."""
+
+    REWARD_METHODS = [
+        "list_rewards_markets",
+        "get_rewards_for_market",
+        "get_user_rewards",
+        "get_user_rewards_total",
+        "get_user_rewards_percentages",
+        "get_user_rewards_per_market",
+        "get_rebates",
+    ]
+
+    @pytest.mark.parametrize("method", REWARD_METHODS)
+    def test_sync_method_exists(self, method):
+        assert hasattr(PolyforgeClient, method)
+        assert callable(getattr(PolyforgeClient, method))
+
+    @pytest.mark.parametrize("method", REWARD_METHODS)
+    def test_async_method_exists(self, method):
+        assert hasattr(AsyncPolyforgeClient, method)
+        assert callable(getattr(AsyncPolyforgeClient, method))
+
+    def test_get_rewards_for_market_accepts_condition_id(self):
+        import inspect
+        sig = inspect.signature(PolyforgeClient.get_rewards_for_market)
+        assert "condition_id" in sig.parameters
+
+    def test_get_rewards_for_market_uses_encode_path(self):
+        import inspect
+        source = inspect.getsource(PolyforgeClient.get_rewards_for_market)
+        assert "_encode_path(condition_id)" in source
+
+    def test_sync_endpoints_use_correct_paths(self):
+        import inspect
+        path_map = {
+            "list_rewards_markets": "/api/v1/rewards/markets",
+            "get_rewards_for_market": "/api/v1/rewards/markets/",
+            "get_user_rewards": "/api/v1/rewards/user",
+            "get_user_rewards_total": "/api/v1/rewards/user/total",
+            "get_user_rewards_percentages": "/api/v1/rewards/user/percentages",
+            "get_user_rewards_per_market": "/api/v1/rewards/user/markets",
+            "get_rebates": "/api/v1/rewards/rebates",
+        }
+        for method_name, expected_path in path_map.items():
+            source = inspect.getsource(getattr(PolyforgeClient, method_name))
+            assert expected_path in source, f"{method_name} missing path {expected_path}"
+
+    def test_async_endpoints_use_correct_paths(self):
+        import inspect
+        path_map = {
+            "list_rewards_markets": "/api/v1/rewards/markets",
+            "get_rewards_for_market": "/api/v1/rewards/markets/",
+            "get_user_rewards": "/api/v1/rewards/user",
+            "get_user_rewards_total": "/api/v1/rewards/user/total",
+            "get_user_rewards_percentages": "/api/v1/rewards/user/percentages",
+            "get_user_rewards_per_market": "/api/v1/rewards/user/markets",
+            "get_rebates": "/api/v1/rewards/rebates",
+        }
+        for method_name, expected_path in path_map.items():
+            source = inspect.getsource(getattr(AsyncPolyforgeClient, method_name))
+            assert expected_path in source, f"async {method_name} missing path {expected_path}"
+
+    def test_async_methods_use_await(self):
+        import inspect
+        for method_name in self.REWARD_METHODS:
+            source = inspect.getsource(getattr(AsyncPolyforgeClient, method_name))
+            assert "await" in source or "async" in source, f"async {method_name} not using await"

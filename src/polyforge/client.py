@@ -68,6 +68,8 @@ from polyforge.models import (
     PortfolioReview,
     Position,
     PriceHistoryEntry,
+    Rebate,
+    RewardMarket,
     RiskSettings,
     SmartOrder,
     SmartOrderChildOrder,
@@ -81,6 +83,8 @@ from polyforge.models import (
     Token,
     TopTraderEntry,
     TraderScore,
+    UserReward,
+    UserRewardsTotal,
     WatchlistItem,
     Webhook,
     WebhookTestResult,
@@ -137,6 +141,10 @@ _MODEL_REGISTRY: dict[str, type] = {
     "PriceHistoryEntry": PriceHistoryEntry,
     "OrderBookLevel": OrderBookLevel,
     "OrderBook": OrderBook,
+    "RewardMarket": RewardMarket,
+    "UserReward": UserReward,
+    "UserRewardsTotal": UserRewardsTotal,
+    "Rebate": Rebate,
 }
 
 
@@ -2188,6 +2196,41 @@ class PolyforgeClient:
             size=data.get("size", ""),
         )
 
+    # -- Rewards --
+
+    def list_rewards_markets(self) -> list[RewardMarket]:
+        data = self._get("/api/v1/rewards/markets")
+        if isinstance(data, list):
+            return [_parse(RewardMarket, item) for item in data]
+        return []
+
+    def get_rewards_for_market(self, condition_id: str) -> RewardMarket:
+        data = self._get(f"/api/v1/rewards/markets/{_encode_path(condition_id)}")
+        return _parse(RewardMarket, data)
+
+    def get_user_rewards(self) -> list[UserReward]:
+        data = self._get("/api/v1/rewards/user")
+        rewards = data.get("rewards", []) if isinstance(data, dict) else []
+        return [_parse(UserReward, item) for item in rewards]
+
+    def get_user_rewards_total(self) -> UserRewardsTotal:
+        data = self._get("/api/v1/rewards/user/total")
+        return _parse(UserRewardsTotal, data)
+
+    def get_user_rewards_percentages(self) -> dict[str, Any]:
+        return self._get("/api/v1/rewards/user/percentages")
+
+    def get_user_rewards_per_market(self) -> list[dict[str, Any]]:
+        data = self._get("/api/v1/rewards/user/markets")
+        if isinstance(data, dict):
+            return data.get("markets", [])
+        return []
+
+    def get_rebates(self) -> list[Rebate]:
+        data = self._get("/api/v1/rewards/rebates")
+        rebates = data.get("rebates", []) if isinstance(data, dict) else []
+        return [_parse(Rebate, item) for item in rebates]
+
     # -- Lifecycle --
 
     def close(self) -> None:
@@ -3819,6 +3862,41 @@ class AsyncPolyforgeClient:
             sell_price=data.get("sellPrice", ""),
             size=data.get("size", ""),
         )
+
+    # -- Rewards --
+
+    async def list_rewards_markets(self) -> list[RewardMarket]:
+        data = await self._get("/api/v1/rewards/markets")
+        if isinstance(data, list):
+            return [_parse(RewardMarket, item) for item in data]
+        return []
+
+    async def get_rewards_for_market(self, condition_id: str) -> RewardMarket:
+        data = await self._get(f"/api/v1/rewards/markets/{_encode_path(condition_id)}")
+        return _parse(RewardMarket, data)
+
+    async def get_user_rewards(self) -> list[UserReward]:
+        data = await self._get("/api/v1/rewards/user")
+        rewards = data.get("rewards", []) if isinstance(data, dict) else []
+        return [_parse(UserReward, item) for item in rewards]
+
+    async def get_user_rewards_total(self) -> UserRewardsTotal:
+        data = await self._get("/api/v1/rewards/user/total")
+        return _parse(UserRewardsTotal, data)
+
+    async def get_user_rewards_percentages(self) -> dict[str, Any]:
+        return await self._get("/api/v1/rewards/user/percentages")
+
+    async def get_user_rewards_per_market(self) -> list[dict[str, Any]]:
+        data = await self._get("/api/v1/rewards/user/markets")
+        if isinstance(data, dict):
+            return data.get("markets", [])
+        return []
+
+    async def get_rebates(self) -> list[Rebate]:
+        data = await self._get("/api/v1/rewards/rebates")
+        rebates = data.get("rebates", []) if isinstance(data, dict) else []
+        return [_parse(Rebate, item) for item in rebates]
 
     # -- Lifecycle --
 
