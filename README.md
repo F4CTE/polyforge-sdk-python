@@ -270,7 +270,7 @@ The MCP server has moved to a standalone repo: [`polyforge-mcp`](https://github.
 npx @polyforge/mcp-server
 
 # Required environment variables
-export POLYFORGE_API_URL=http://localhost:3002   # or your production URL
+export POLYFORGE_API_URL=https://api.polyforge.app   # or http://localhost:3002 for local dev
 export POLYFORGE_API_KEY=pf_your_api_key_here    # API key with desired scopes
 ```
 
