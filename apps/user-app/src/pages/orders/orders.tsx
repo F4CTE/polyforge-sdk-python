@@ -1120,7 +1120,7 @@ export function Component() {
                                 onClick={() => setOpenJournalOrderId(isJournalOpen ? null : order.id)}
                                 title={hasNote ? 'Edit journal note' : 'Add journal note'}
                                 aria-label={hasNote ? 'Edit journal note' : 'Add journal note'}
-                                className={`p-1 rounded transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 ${
+                                className={`p-1 rounded transition-colors focus-visible:outline-none focus-visible:shadow-focus-ring ${
                                   hasNote
                                     ? 'text-accent-text hover:text-accent-text'
                                     : 'text-tertiary hover:text-accent-text'

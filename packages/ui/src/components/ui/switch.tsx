@@ -34,7 +34,7 @@ const Switch = React.forwardRef<HTMLInputElement, SwitchProps>(
             "absolute inset-0 rounded-full bg-overlay",
             "transition-colors duration-micro",
             "peer-checked:bg-accent",
-            "peer-focus-visible:ring-2 peer-focus-visible:ring-accent/40"
+            "peer-focus-visible:shadow-focus-ring"
           )}
         />
         <span

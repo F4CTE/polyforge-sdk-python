@@ -118,7 +118,7 @@ export function Component() {
           type="button"
           onClick={load}
           disabled={loading}
-          className="flex items-center gap-2 px-3 py-2 rounded-pf bg-elevated border border-default text-label text-secondary hover:border-strong hover:text-primary disabled:opacity-40 disabled:cursor-not-allowed transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+          className="flex items-center gap-2 px-3 py-2 rounded-pf bg-elevated border border-default text-label text-secondary hover:border-strong hover:text-primary disabled:opacity-40 disabled:cursor-not-allowed transition-colors focus-visible:outline-none focus-visible:shadow-focus-ring"
           aria-label="Refresh analysis"
         >
           <RefreshCw className={`size-4 ${loading ? 'animate-spin' : ''}`} />

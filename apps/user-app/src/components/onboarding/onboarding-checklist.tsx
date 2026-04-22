@@ -173,7 +173,7 @@ export function OnboardingChecklist() {
               <button
                 type="button"
                 onClick={() => toggleItem(item.key)}
-                className="mt-1 shrink-0 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 rounded-full"
+                className="mt-1 shrink-0 transition-colors cursor-pointer focus-visible:outline-none focus-visible:shadow-focus-ring rounded-full"
                 aria-label={`Mark "${item.label}" as ${completed[item.key] ? 'incomplete' : 'complete'}`}
               >
                 {completed[item.key] ? (
@@ -186,7 +186,7 @@ export function OnboardingChecklist() {
                 <button
                   type="button"
                   onClick={() => handleNavigate(item.route)}
-                  className={`text-body-md text-left font-medium transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 rounded-sm ${
+                  className={`text-body-md text-left font-medium transition-colors cursor-pointer focus-visible:outline-none focus-visible:shadow-focus-ring rounded-sm ${
                     completed[item.key]
                       ? 'text-tertiary line-through'
                       : 'text-primary hover:text-accent-text'
@@ -212,7 +212,7 @@ export function OnboardingChecklist() {
               const event = new CustomEvent('polyforge:start-tour');
               window.dispatchEvent(event);
             }}
-            className="text-label text-accent-text hover:text-accent-text cursor-pointer transition-colors font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 rounded-sm"
+            className="text-label text-accent-text hover:text-accent-text cursor-pointer transition-colors font-medium focus-visible:outline-none focus-visible:shadow-focus-ring rounded-sm"
           >
             Take a tour of the platform
           </button>

@@ -1305,7 +1305,7 @@ export function Component() {
       <div className="flex items-center gap-3 px-4 py-3 border-b border-subtle bg-elevated/50 shrink-0">
         <Link
           to="/strategies"
-          className="flex items-center gap-2 text-label text-secondary hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 rounded-sm transition-colors"
+          className="flex items-center gap-2 text-label text-secondary hover:text-primary focus-visible:outline-none focus-visible:shadow-focus-ring rounded-sm transition-colors"
         >
           <ArrowLeft className="size-3" aria-hidden="true" />
           Strategies

@@ -198,7 +198,7 @@ function EmojiPicker({
           type="button"
           variant="ghost"
           onClick={() => { onSelect(emoji); onClose(); }}
-          className="text-base leading-none p-1 rounded hover:bg-elevated transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+          className="text-base leading-none p-1 rounded hover:bg-elevated transition-colors focus-visible:outline-none focus-visible:shadow-focus-ring"
           aria-label={`React with ${emoji}`}
         >
           {emoji}
@@ -285,7 +285,7 @@ function CommentSection({
                   variant="ghost"
                   onClick={() => onLikeComment(comment.id)}
                   aria-label={comment.userLiked ? 'Unlike comment' : 'Like comment'}
-                  className={`mt-1 flex items-center gap-1 text-caption rounded px-1 py-1 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 ${
+                  className={`mt-1 flex items-center gap-1 text-caption rounded px-1 py-1 transition-colors focus-visible:outline-none focus-visible:shadow-focus-ring ${
                     comment.userLiked
                       ? 'text-accent-text bg-accent/10'
                       : 'text-tertiary hover:text-secondary'
@@ -305,7 +305,7 @@ function CommentSection({
           type="button"
           variant="ghost"
           onClick={onLoadMore}
-          className="flex items-center gap-1 text-label text-accent-text hover:text-accent-text transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+          className="flex items-center gap-1 text-label text-accent-text hover:text-accent-text transition-colors focus-visible:outline-none focus-visible:shadow-focus-ring"
           aria-label={`Load ${remaining} more comment${remaining !== 1 ? 's' : ''}`}
         >
           <ChevronDown className="size-4" aria-hidden="true" />
@@ -330,7 +330,7 @@ function CommentSection({
           onClick={onSubmit}
           disabled={!commentInput.trim()}
           aria-label="Post comment"
-          className="flex items-center gap-1 px-3 py-2 rounded-pf bg-accent-subtle text-accent-text border border-accent/30 hover:bg-accent/25 disabled:opacity-40 disabled:cursor-not-allowed text-label font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 shrink-0"
+          className="flex items-center gap-1 px-3 py-2 rounded-pf bg-accent-subtle text-accent-text border border-accent/30 hover:bg-accent/25 disabled:opacity-40 disabled:cursor-not-allowed text-label font-medium transition-colors focus-visible:outline-none focus-visible:shadow-focus-ring shrink-0"
         >
           <Send className="size-3" aria-hidden="true" />
           Post
@@ -672,7 +672,7 @@ export function Component() {
                 </p>
                 <Link
                   to="/leaderboard"
-                  className="flex items-center gap-2 px-4 py-2 rounded-pf bg-accent-subtle text-accent-text border border-accent/30 hover:bg-accent/25 text-label font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+                  className="flex items-center gap-2 px-4 py-2 rounded-pf bg-accent-subtle text-accent-text border border-accent/30 hover:bg-accent/25 text-label font-medium transition-colors focus-visible:outline-none focus-visible:shadow-focus-ring"
                 >
                   <Trophy className="size-4" aria-hidden="true" />
                   Discover traders on the Leaderboard
@@ -707,7 +707,7 @@ export function Component() {
                     <Link
                       to={`/profile/${actor.username}`}
                       aria-label={`View ${displayName}'s profile`}
-                      className="shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 rounded-full"
+                      className="shrink-0 focus-visible:outline-none focus-visible:shadow-focus-ring rounded-full"
                     >
                       {actor.avatarUrl ? (
                         <img
@@ -754,7 +754,7 @@ export function Component() {
                         onClick={() => handleReact(item.id, r.emoji)}
                         aria-pressed={r.userReacted}
                         aria-label={`${r.emoji} ${r.count} reaction${r.count !== 1 ? 's' : ''}${r.userReacted ? ', you reacted' : ''}`}
-                        className={`flex items-center gap-1 px-2 py-1 rounded-full border text-label font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 ${
+                        className={`flex items-center gap-1 px-2 py-1 rounded-full border text-label font-medium transition-colors focus-visible:outline-none focus-visible:shadow-focus-ring ${
                           r.userReacted
                             ? 'bg-accent-subtle border-accent/40 text-accent-text'
                             : 'bg-elevated border-default text-secondary hover:border-strong hover:text-primary'
@@ -779,7 +779,7 @@ export function Component() {
                           onClick={() => setPickerOpen(item.id)}
                           aria-label="Add reaction"
                           aria-expanded={false}
-                          className="flex items-center gap-1 px-2 py-1 rounded-full border border-default text-label text-tertiary hover:border-strong hover:text-secondary bg-elevated transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+                          className="flex items-center gap-1 px-2 py-1 rounded-full border border-default text-label text-tertiary hover:border-strong hover:text-secondary bg-elevated transition-colors focus-visible:outline-none focus-visible:shadow-focus-ring"
                         >
                           <span aria-hidden="true">+</span>
                           React
@@ -796,7 +796,7 @@ export function Component() {
                       onClick={() => handleToggleComments(item.id, item.commentsLoaded)}
                       aria-expanded={isExpanded}
                       aria-controls={`comments-${item.id}`}
-                      className={`flex items-center gap-2 text-label transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 rounded ${
+                      className={`flex items-center gap-2 text-label transition-colors focus-visible:outline-none focus-visible:shadow-focus-ring rounded ${
                         isExpanded
                           ? 'text-accent-text'
                           : 'text-tertiary hover:text-secondary'
@@ -810,7 +810,7 @@ export function Component() {
                       type="button"
                       variant="ghost"
                       onClick={() => handleShare(item.id)}
-                      className="flex items-center gap-2 text-label text-tertiary hover:text-secondary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 rounded"
+                      className="flex items-center gap-2 text-label text-tertiary hover:text-secondary transition-colors focus-visible:outline-none focus-visible:shadow-focus-ring rounded"
                     >
                       <Share2 className="size-4" aria-hidden="true" />
                       Share to profile
@@ -853,7 +853,7 @@ export function Component() {
             onClick={handlePrev}
             disabled={page <= 1}
             aria-label="Previous page"
-            className="flex items-center gap-2 px-3 py-2 rounded-pf text-label font-medium text-secondary border border-default hover:border-strong hover:text-primary disabled:opacity-40 disabled:cursor-not-allowed transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+            className="flex items-center gap-2 px-3 py-2 rounded-pf text-label font-medium text-secondary border border-default hover:border-strong hover:text-primary disabled:opacity-40 disabled:cursor-not-allowed transition-colors focus-visible:outline-none focus-visible:shadow-focus-ring"
           >
             <ChevronLeft className="size-4" aria-hidden="true" />
             Previous
@@ -867,7 +867,7 @@ export function Component() {
             onClick={handleNext}
             disabled={page >= totalPages}
             aria-label="Next page"
-            className="flex items-center gap-2 px-3 py-2 rounded-pf text-label font-medium text-secondary border border-default hover:border-strong hover:text-primary disabled:opacity-40 disabled:cursor-not-allowed transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+            className="flex items-center gap-2 px-3 py-2 rounded-pf text-label font-medium text-secondary border border-default hover:border-strong hover:text-primary disabled:opacity-40 disabled:cursor-not-allowed transition-colors focus-visible:outline-none focus-visible:shadow-focus-ring"
           >
             Next
             <ChevronRight className="size-4" aria-hidden="true" />

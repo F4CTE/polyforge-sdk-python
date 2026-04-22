@@ -343,7 +343,7 @@ function AnalyticsPanel({ analytics, loading, expanded, onToggle }: AnalyticsPan
         type="button"
         variant="ghost"
         onClick={onToggle}
-        className="w-full flex flex-wrap items-center gap-x-4 gap-y-2 px-4 py-3 text-body-sm text-left hover:bg-surface/40 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent/40"
+        className="w-full flex flex-wrap items-center gap-x-4 gap-y-2 px-4 py-3 text-body-sm text-left hover:bg-surface/40 transition-colors focus-visible:outline-none focus-visible:shadow-focus-ring"
         aria-expanded={expanded}
         aria-controls="copy-analytics-expanded"
       >
@@ -768,7 +768,7 @@ export function Component() {
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); navigate(`/copy/${config.id}`); }
                 }}
-                className="group bg-elevated border border-default rounded-pf p-5 cursor-pointer transition-all duration-panel hover:border-strong hover:shadow-sm hover:-translate-y-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+                className="group bg-elevated border border-default rounded-pf p-5 cursor-pointer transition-all duration-panel hover:border-strong hover:shadow-sm hover:-translate-y-1 focus-visible:outline-none focus-visible:shadow-focus-ring"
               >
                 {/* Wallet + Status */}
                 <div className="flex items-start justify-between gap-3 mb-3">
@@ -877,7 +877,7 @@ export function Component() {
                         variant="ghost"
                         onClick={() => doAction(config.id, 'pause')}
                         disabled={busy}
-                        className="flex items-center gap-1 px-3 py-2 rounded-sm text-label font-medium text-warning bg-warning/10 hover:bg-warning/20 disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 transition-colors"
+                        className="flex items-center gap-1 px-3 py-2 rounded-sm text-label font-medium text-warning bg-warning/10 hover:bg-warning/20 disabled:opacity-40 focus-visible:outline-none focus-visible:shadow-focus-ring transition-colors"
                         aria-label="Pause config"
                       >
                         <Pause className="size-3" /> Pause
@@ -889,7 +889,7 @@ export function Component() {
                         variant="success"
                         onClick={() => doAction(config.id, 'resume')}
                         disabled={busy}
-                        className="flex items-center gap-1 px-3 py-2 rounded-sm text-label font-medium text-gain bg-gain/10 hover:bg-gain/20 disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 transition-colors"
+                        className="flex items-center gap-1 px-3 py-2 rounded-sm text-label font-medium text-gain bg-gain/10 hover:bg-gain/20 disabled:opacity-40 focus-visible:outline-none focus-visible:shadow-focus-ring transition-colors"
                         aria-label="Resume config"
                       >
                         <Play className="size-3" /> Resume
@@ -901,7 +901,7 @@ export function Component() {
                         variant="danger"
                         onClick={() => doAction(config.id, 'stop')}
                         disabled={busy}
-                        className="px-3 py-2 rounded-sm text-loss hover:bg-loss/10 disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 transition-colors"
+                        className="px-3 py-2 rounded-sm text-loss hover:bg-loss/10 disabled:opacity-40 focus-visible:outline-none focus-visible:shadow-focus-ring transition-colors"
                         aria-label="Stop config"
                         title="Stop"
                       >

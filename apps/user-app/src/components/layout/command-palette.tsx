@@ -112,12 +112,12 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
             onKeyDown={handleKeyDown}
             aria-label="Search markets and strategies"
             placeholder="Search markets, strategies..."
-            className="flex-1 bg-transparent text-body-sm text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 rounded"
+            className="flex-1 bg-transparent text-body-sm text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:shadow-focus-ring rounded"
           />
           <kbd className="hidden sm:inline-flex items-center px-2 py-1 rounded text-label text-tertiary border border-default font-mono">
             Esc
           </kbd>
-          <button type="button" onClick={onClose} className="min-w-[44px] min-h-[44px] flex items-center justify-center text-tertiary hover:text-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 rounded-pf" aria-label="Close command palette">
+          <button type="button" onClick={onClose} className="min-w-[44px] min-h-[44px] flex items-center justify-center text-tertiary hover:text-primary transition-colors focus-visible:outline-none focus-visible:shadow-focus-ring rounded-pf" aria-label="Close command palette">
             <X className="size-4" />
           </button>
         </div>
@@ -149,7 +149,7 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
               role="option"
               aria-selected={i === activeIndex}
               onClick={() => select(r)}
-              className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent/40 ${
+              className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-colors focus-visible:outline-none focus-visible:shadow-focus-ring ${
                 i === activeIndex ? 'bg-accent/10' : 'hover:bg-surface'
               }`}
             >

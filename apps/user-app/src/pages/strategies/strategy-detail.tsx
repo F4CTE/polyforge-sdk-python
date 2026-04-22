@@ -886,7 +886,7 @@ export function Component() {
       {/* Back */}
       <Link
         to="/strategies"
-        className="inline-flex items-center gap-2 text-body-sm text-secondary hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 rounded-sm transition-colors"
+        className="inline-flex items-center gap-2 text-body-sm text-secondary hover:text-primary focus-visible:outline-none focus-visible:shadow-focus-ring rounded-sm transition-colors"
       >
         <ArrowLeft className="size-4" aria-hidden="true" /> Strategies
       </Link>
@@ -1780,7 +1780,7 @@ export function Component() {
                 {liveLog.length === 0 ? (
                   <div className="py-8 text-center text-body-sm text-tertiary space-y-2">
                     <p>{isActive(status) ? 'Strategy is running.' : 'Start the strategy to generate events.'}</p>
-                    <p className="text-label">Check the <a href={`/orders?strategy=${strategy?.id}`} className="text-accent-text hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 rounded-sm">Orders</a> page for trade activity.</p>
+                    <p className="text-label">Check the <a href={`/orders?strategy=${strategy?.id}`} className="text-accent-text hover:underline focus-visible:outline-none focus-visible:shadow-focus-ring rounded-sm">Orders</a> page for trade activity.</p>
                   </div>
                 ) : (
                   <div className="space-y-2">

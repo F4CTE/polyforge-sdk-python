@@ -177,7 +177,7 @@ export function Component() {
             aria-label="Search users"
             defaultValue={search}
             onChange={(e) => handleSearch(e.target.value)}
-            className="w-full pl-9 pr-3 py-2 text-body-sm rounded-sm border border-default bg-app text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+            className="w-full pl-9 pr-3 py-2 text-body-sm rounded-sm border border-default bg-app text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:shadow-focus-ring"
           />
         </div>
         <Select

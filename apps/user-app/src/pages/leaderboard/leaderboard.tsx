@@ -273,7 +273,7 @@ export function Component() {
                     </td>
                     <td data-testid="trader-name" className="px-4 py-3">
                       <div className="flex items-center gap-2">
-                      <Link to={`/profile/${entry.username}`} data-testid={`trader-${entry.username}`} className="flex items-center gap-3 hover:text-accent-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 transition-colors">
+                      <Link to={`/profile/${entry.username}`} data-testid={`trader-${entry.username}`} className="flex items-center gap-3 hover:text-accent-text focus-visible:outline-none focus-visible:shadow-focus-ring transition-colors">
                         {entry.avatarUrl ? (
                           <img src={entry.avatarUrl} alt={`${entry.displayName ?? entry.username} avatar`} className="size-8 rounded-full object-cover" width={32} height={32} loading="lazy" />
                         ) : (

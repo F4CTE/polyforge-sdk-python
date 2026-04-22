@@ -60,7 +60,7 @@ export class ErrorBoundary extends Component<Props, State> {
             <button
               type="button"
               onClick={this.handleReset}
-              className="inline-flex items-center gap-2 px-5 py-3 rounded-pf bg-accent text-inverse text-body-sm font-medium hover:bg-accent-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 transition-colors"
+              className="inline-flex items-center gap-2 px-5 py-3 rounded-pf bg-accent text-inverse text-body-sm font-medium hover:bg-accent-text focus-visible:outline-none focus-visible:shadow-focus-ring transition-colors"
             >
               <RefreshCw className="size-4" aria-hidden="true" />
               {resetLabel}

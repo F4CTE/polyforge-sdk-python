@@ -592,7 +592,7 @@ function AdvancedSearchModal({
             value={filters.query}
             onChange={(e) => updateFilters((prev) => ({ ...prev, query: e.target.value }))}
             onKeyDown={(e) => { if (e.key === 'Enter') runSearch(0); }}
-            className="w-full h-11 px-4 rounded-pf bg-surface border border-default text-body-sm text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:border-accent/50 focus-visible:ring-2 focus-visible:ring-accent/40 transition-colors"
+            className="w-full h-11 px-4 rounded-pf bg-surface border border-default text-body-sm text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:border-accent/50 focus-visible:shadow-focus-ring transition-colors"
           />
 
           {/* Categories */}
@@ -1114,7 +1114,7 @@ export function Component() {
             aria-label="Search markets"
             defaultValue=""
             onChange={(e) => onSearchInput(e.target.value)}
-            className="w-full h-11 pl-11 pr-4 rounded-full bg-elevated border border-default text-body-sm text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:border-accent/50 focus-visible:ring-2 focus-visible:ring-accent/40 transition-colors"
+            className="w-full h-11 pl-11 pr-4 rounded-full bg-elevated border border-default text-body-sm text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:border-accent/50 focus-visible:shadow-focus-ring transition-colors"
           />
         </div>
         {/* Advanced search button */}

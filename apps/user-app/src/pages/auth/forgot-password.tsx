@@ -74,7 +74,7 @@ export function Component() {
                       placeholder="you@example.com"
                       aria-invalid={!!emailError}
                       aria-describedby={emailError ? 'forgot-email-error' : undefined}
-                      className="w-full pl-10 pr-4 py-3 bg-app border border-default rounded-pf text-primary placeholder:text-tertiary/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 focus-visible:border-accent transition-colors"
+                      className="w-full pl-10 pr-4 py-3 bg-app border border-default rounded-pf text-primary placeholder:text-tertiary/50 focus-visible:outline-none focus-visible:shadow-focus-ring focus-visible:border-accent transition-colors"
                     />
                   </div>
                   {emailError && <p id="forgot-email-error" role="alert" className="mt-1 text-label text-loss">{emailError}</p>}
@@ -83,7 +83,7 @@ export function Component() {
                 <Button
                   type="submit"
                   disabled={loading}
-                  className="w-full py-3 bg-accent text-inverse font-semibold rounded-pf hover:bg-accent-text disabled:opacity-50 disabled:cursor-not-allowed transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 focus-visible:ring-offset-2 focus-visible:ring-offset-elevated"
+                  className="w-full py-3 bg-accent text-inverse font-semibold rounded-pf hover:bg-accent-text disabled:opacity-50 disabled:cursor-not-allowed transition-colors focus-visible:outline-none focus-visible:shadow-focus-ring focus-visible:ring-offset-2 focus-visible:ring-offset-elevated"
                 >
                   {loading ? 'Sending...' : 'Send reset link'}
                 </Button>

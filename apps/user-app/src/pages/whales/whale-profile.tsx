@@ -156,7 +156,7 @@ export function Component() {
   if (notFound) {
     return (
       <div className="animate-fade-in p-6 max-w-5xl mx-auto">
-        <Link to="/whales" className="flex items-center gap-2 text-body-sm text-secondary hover:text-accent-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 rounded-sm transition-colors mb-6">
+        <Link to="/whales" className="flex items-center gap-2 text-body-sm text-secondary hover:text-accent-text focus-visible:outline-none focus-visible:shadow-focus-ring rounded-sm transition-colors mb-6">
           <ArrowLeft className="size-4" /> Back to feed
         </Link>
         <div className="flex flex-col items-center justify-center py-20 text-center">
@@ -171,7 +171,7 @@ export function Component() {
   if (error || !profile) {
     return (
       <div className="animate-fade-in p-6 max-w-5xl mx-auto">
-        <Link to="/whales" className="flex items-center gap-2 text-body-sm text-secondary hover:text-accent-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 rounded-sm transition-colors mb-6">
+        <Link to="/whales" className="flex items-center gap-2 text-body-sm text-secondary hover:text-accent-text focus-visible:outline-none focus-visible:shadow-focus-ring rounded-sm transition-colors mb-6">
           <ArrowLeft className="size-4" /> Back to feed
         </Link>
         <div className="flex flex-col items-center justify-center py-20 text-center">
@@ -190,7 +190,7 @@ export function Component() {
   if (!stats) {
     return (
       <div className="animate-fade-in p-6 max-w-5xl mx-auto">
-        <Link to="/whales" className="flex items-center gap-2 text-body-sm text-secondary hover:text-accent-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 rounded-sm transition-colors mb-6">
+        <Link to="/whales" className="flex items-center gap-2 text-body-sm text-secondary hover:text-accent-text focus-visible:outline-none focus-visible:shadow-focus-ring rounded-sm transition-colors mb-6">
           <ArrowLeft className="size-4" /> Back to feed
         </Link>
         <div className="flex flex-col items-center justify-center py-20 text-center">
@@ -205,7 +205,7 @@ export function Component() {
   return (
     <div className="animate-fade-in p-6 max-w-5xl mx-auto space-y-6">
       {/* Back link */}
-      <Link to="/whales" className="flex items-center gap-2 text-body-sm text-secondary hover:text-accent-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 rounded-sm transition-colors">
+      <Link to="/whales" className="flex items-center gap-2 text-body-sm text-secondary hover:text-accent-text focus-visible:outline-none focus-visible:shadow-focus-ring rounded-sm transition-colors">
         <ArrowLeft className="size-4" /> Back to feed
       </Link>
 

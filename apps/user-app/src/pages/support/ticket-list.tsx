@@ -83,7 +83,7 @@ export function Component() {
         <h1 className="text-2xl font-semibold text-primary">Support</h1>
         <Link
           to="/support/new"
-          className="flex items-center gap-2 px-4 py-2 rounded-pf bg-accent text-inverse text-body-md font-medium hover:bg-accent-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 transition-colors"
+          className="flex items-center gap-2 px-4 py-2 rounded-pf bg-accent text-inverse text-body-md font-medium hover:bg-accent-text focus-visible:outline-none focus-visible:shadow-focus-ring transition-colors"
         >
           <Plus className="size-4" />
           New Ticket
@@ -131,7 +131,7 @@ export function Component() {
                   return (
                     <tr key={ticket.id} data-testid="ticket-row" className="hover:bg-surface/50 transition-colors">
                       <td className="px-4 py-3">
-                        <Link to={`/support/${ticket.id}`} data-testid="ticket-subject" className="text-primary hover:text-accent-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 transition-colors font-medium">
+                        <Link to={`/support/${ticket.id}`} data-testid="ticket-subject" className="text-primary hover:text-accent-text focus-visible:outline-none focus-visible:shadow-focus-ring transition-colors font-medium">
                           {ticket.subject}
                         </Link>
                       </td>
@@ -170,7 +170,7 @@ export function Component() {
                 variant="ghost"
                 id={`faq-btn-${idx}`}
                 onClick={() => setOpenFaq(openFaq === idx ? null : idx)}
-                className="w-full flex items-center justify-between px-4 py-4 text-left hover:bg-surface/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent/40 transition-colors"
+                className="w-full flex items-center justify-between px-4 py-4 text-left hover:bg-surface/50 focus-visible:outline-none focus-visible:shadow-focus-ring transition-colors"
                 aria-expanded={openFaq === idx}
                 aria-controls={`faq-panel-${idx}`}
               >

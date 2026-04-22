@@ -66,7 +66,7 @@ export function Topbar() {
       <button
         type="button"
         onClick={() => window.dispatchEvent(new CustomEvent('open-shortcuts'))}
-        className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-sm text-secondary hover:bg-elevated hover:text-primary active:bg-surface transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+        className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-sm text-secondary hover:bg-elevated hover:text-primary active:bg-surface transition-colors focus-visible:outline-none focus-visible:shadow-focus-ring"
         aria-label="Keyboard shortcuts"
         title="Keyboard shortcuts (?)"
       >
@@ -78,7 +78,7 @@ export function Topbar() {
         type="button"
         data-tour="theme-toggle"
         onClick={toggleTheme}
-        className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-sm text-secondary hover:bg-elevated hover:text-primary active:bg-surface transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+        className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-sm text-secondary hover:bg-elevated hover:text-primary active:bg-surface transition-colors focus-visible:outline-none focus-visible:shadow-focus-ring"
         aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
       >
         {isDark ? <Sun size={18} /> : <Moon size={18} />}
@@ -89,7 +89,7 @@ export function Topbar() {
         <button
           type="button"
           onClick={() => setNotifOpen((v) => !v)}
-          className="relative min-h-[44px] min-w-[44px] flex items-center justify-center rounded-sm text-secondary hover:bg-elevated hover:text-primary active:bg-surface transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+          className="relative min-h-[44px] min-w-[44px] flex items-center justify-center rounded-sm text-secondary hover:bg-elevated hover:text-primary active:bg-surface transition-colors focus-visible:outline-none focus-visible:shadow-focus-ring"
           aria-label="Notifications"
           aria-expanded={notifOpen}
           aria-haspopup="dialog"
@@ -112,7 +112,7 @@ export function Topbar() {
               <button
                 type="button"
                 onClick={markAllRead}
-                className="text-label text-accent-text hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 rounded-sm"
+                className="text-label text-accent-text hover:underline focus-visible:outline-none focus-visible:shadow-focus-ring rounded-sm"
               >
                 Mark all read
               </button>
@@ -128,7 +128,7 @@ export function Topbar() {
                     type="button"
                     key={n.id}
                     onClick={() => markRead(n.id)}
-                    className={`w-full flex items-start gap-3 px-4 py-3 cursor-pointer hover:bg-surface transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent/40 ${
+                    className={`w-full flex items-start gap-3 px-4 py-3 cursor-pointer hover:bg-surface transition-colors focus-visible:outline-none focus-visible:shadow-focus-ring ${
                       !n.read ? 'bg-accent-subtle' : ''
                     }`}
                     aria-label={`${n.read ? '' : 'Unread: '}${n.title}`}
@@ -165,7 +165,7 @@ export function Topbar() {
                 setNotifOpen(false);
                 navigate('/settings');
               }}
-              className="block w-full text-center text-label text-accent-text py-3 border-t border-default hover:bg-surface transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent/40"
+              className="block w-full text-center text-label text-accent-text py-3 border-t border-default hover:bg-surface transition-colors focus-visible:outline-none focus-visible:shadow-focus-ring"
             >
               Manage notification preferences
             </button>
@@ -179,7 +179,7 @@ export function Topbar() {
           type="button"
           data-testid="user-menu-btn"
           onClick={() => setMenuOpen((v) => !v)}
-          className="flex items-center gap-2 p-1 rounded-sm hover:bg-elevated active:bg-surface transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+          className="flex items-center gap-2 p-1 rounded-sm hover:bg-elevated active:bg-surface transition-colors focus-visible:outline-none focus-visible:shadow-focus-ring"
           aria-label="User menu"
           aria-expanded={menuOpen}
           aria-haspopup="menu"
@@ -202,7 +202,7 @@ export function Topbar() {
                 setMenuOpen(false);
                 navigate('/profile/me');
               }}
-              className="flex items-center gap-2 w-full px-4 py-2 text-body-md text-primary hover:bg-surface transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent/40"
+              className="flex items-center gap-2 w-full px-4 py-2 text-body-md text-primary hover:bg-surface transition-colors focus-visible:outline-none focus-visible:shadow-focus-ring"
             >
               <User size={16} />
               Profile
@@ -214,7 +214,7 @@ export function Topbar() {
                 setMenuOpen(false);
                 navigate('/settings');
               }}
-              className="flex items-center gap-2 w-full px-4 py-2 text-body-md text-primary hover:bg-surface transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent/40"
+              className="flex items-center gap-2 w-full px-4 py-2 text-body-md text-primary hover:bg-surface transition-colors focus-visible:outline-none focus-visible:shadow-focus-ring"
             >
               <Settings size={16} />
               Settings
@@ -224,7 +224,7 @@ export function Topbar() {
               type="button"
               role="menuitem"
               onClick={logout}
-              className="flex items-center gap-2 w-full px-4 py-2 text-body-md text-loss hover:bg-surface transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent/40"
+              className="flex items-center gap-2 w-full px-4 py-2 text-body-md text-loss hover:bg-surface transition-colors focus-visible:outline-none focus-visible:shadow-focus-ring"
             >
               <LogOut size={16} />
               Sign out

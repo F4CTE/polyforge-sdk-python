@@ -96,7 +96,7 @@ export function Component() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <Link to="/settings" className="p-2 rounded-pf text-tertiary hover:text-primary hover:bg-elevated focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 transition-colors" aria-label="Back to settings">
+          <Link to="/settings" className="p-2 rounded-pf text-tertiary hover:text-primary hover:bg-elevated focus-visible:outline-none focus-visible:shadow-focus-ring transition-colors" aria-label="Back to settings">
             <ArrowLeft className="size-4" aria-hidden="true" />
           </Link>
           <h1 className="text-2xl font-semibold text-primary">Trading Account</h1>

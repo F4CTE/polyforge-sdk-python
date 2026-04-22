@@ -139,7 +139,7 @@ export function Component() {
                   placeholder="you@example.com"
                   aria-invalid={!!emailError}
                   aria-describedby={emailError ? 'login-email-error' : undefined}
-                  className="w-full pl-10 pr-4 py-3 bg-app border border-default rounded-pf text-primary placeholder:text-tertiary/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 focus-visible:border-accent transition-colors"
+                  className="w-full pl-10 pr-4 py-3 bg-app border border-default rounded-pf text-primary placeholder:text-tertiary/50 focus-visible:outline-none focus-visible:shadow-focus-ring focus-visible:border-accent transition-colors"
                 />
               </div>
               {emailError && <p id="login-email-error" role="alert" className="mt-1 text-label text-loss">{emailError}</p>}
@@ -160,14 +160,14 @@ export function Component() {
                   placeholder="Your password"
                   aria-invalid={!!passwordError}
                   aria-describedby={passwordError ? 'login-password-error' : undefined}
-                  className="w-full pl-10 pr-10 py-3 bg-app border border-default rounded-pf text-primary placeholder:text-tertiary/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 focus-visible:border-accent transition-colors"
+                  className="w-full pl-10 pr-10 py-3 bg-app border border-default rounded-pf text-primary placeholder:text-tertiary/50 focus-visible:outline-none focus-visible:shadow-focus-ring focus-visible:border-accent transition-colors"
                 />
                 <Button
                   type="button"
                   variant="ghost"
                   size="icon-sm"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-tertiary hover:text-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 rounded-sm"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-tertiary hover:text-primary transition-colors focus-visible:outline-none focus-visible:shadow-focus-ring rounded-sm"
                   aria-label={showPassword ? 'Hide password' : 'Show password'}
                 >
                   {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
@@ -194,7 +194,7 @@ export function Component() {
                     onChange={(e) => setTotp(e.target.value.replace(/\D/g, '').slice(0, 6))}
                     placeholder="000000"
                     aria-label="6-digit authentication code"
-                    className="w-full pl-10 pr-4 py-3 bg-app border border-default rounded-pf text-primary placeholder:text-tertiary/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 focus-visible:border-accent tracking-[0.3em] font-mono transition-colors"
+                    className="w-full pl-10 pr-4 py-3 bg-app border border-default rounded-pf text-primary placeholder:text-tertiary/50 focus-visible:outline-none focus-visible:shadow-focus-ring focus-visible:border-accent tracking-[0.3em] font-mono transition-colors"
                   />
                 </div>
               </div>
@@ -203,14 +203,14 @@ export function Component() {
             <Button
               type="submit"
               disabled={loading}
-              className="w-full py-3 bg-accent text-inverse font-semibold rounded-pf hover:bg-accent-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="w-full py-3 bg-accent text-inverse font-semibold rounded-pf hover:bg-accent-text focus-visible:outline-none focus-visible:shadow-focus-ring disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               {loading ? 'Signing in...' : 'Sign in'}
             </Button>
           </form>
 
           <div className="mt-6 text-center text-body-sm">
-              <Link to="/forgot-password" className="text-accent hover:text-accent-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 rounded-sm transition-colors">
+              <Link to="/forgot-password" className="text-accent hover:text-accent-text focus-visible:outline-none focus-visible:shadow-focus-ring rounded-sm transition-colors">
                 Forgot password?
               </Link>
           </div>
@@ -219,7 +219,7 @@ export function Component() {
         {/* Links below card */}
         <p className="text-center text-body-sm text-tertiary mt-6">
           Don&apos;t have an account?{' '}
-          <Link to="/register" className="text-accent-text hover:text-accent-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 rounded-sm transition-colors">
+          <Link to="/register" className="text-accent-text hover:text-accent-text focus-visible:outline-none focus-visible:shadow-focus-ring rounded-sm transition-colors">
             Create one
           </Link>
         </p>

@@ -10,7 +10,7 @@ export function Component() {
         <h2 className="text-secondary mt-4 text-lg">The page you are looking for does not exist.</h2>
         <Link
           to="/markets"
-          className="inline-block mt-6 px-5 py-3 bg-accent text-inverse font-medium rounded-pf hover:bg-accent-text active:bg-accent-hover transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+          className="inline-block mt-6 px-5 py-3 bg-accent text-inverse font-medium rounded-pf hover:bg-accent-text active:bg-accent-hover transition-colors focus-visible:outline-none focus-visible:shadow-focus-ring"
         >
           Go to Markets
         </Link>

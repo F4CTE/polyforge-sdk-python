@@ -100,7 +100,7 @@ export function Component() {
                       placeholder="At least 8 characters"
                       aria-invalid={!!passwordError}
                       aria-describedby={passwordError ? 'reset-password-error' : undefined}
-                      className="w-full pl-10 pr-4 py-3 bg-app border border-default rounded-pf text-primary placeholder:text-tertiary/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 focus-visible:border-accent transition-colors"
+                      className="w-full pl-10 pr-4 py-3 bg-app border border-default rounded-pf text-primary placeholder:text-tertiary/50 focus-visible:outline-none focus-visible:shadow-focus-ring focus-visible:border-accent transition-colors"
                     />
                   </div>
                   {passwordError && <p id="reset-password-error" role="alert" className="mt-1 text-label text-loss">{passwordError}</p>}
@@ -121,7 +121,7 @@ export function Component() {
                       placeholder="Repeat password"
                       aria-invalid={!!confirmError}
                       aria-describedby={confirmError ? 'reset-confirm-error' : undefined}
-                      className="w-full pl-10 pr-4 py-3 bg-app border border-default rounded-pf text-primary placeholder:text-tertiary/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 focus-visible:border-accent transition-colors"
+                      className="w-full pl-10 pr-4 py-3 bg-app border border-default rounded-pf text-primary placeholder:text-tertiary/50 focus-visible:outline-none focus-visible:shadow-focus-ring focus-visible:border-accent transition-colors"
                     />
                   </div>
                   {confirmError && <p id="reset-confirm-error" role="alert" className="mt-1 text-label text-loss">{confirmError}</p>}
@@ -130,7 +130,7 @@ export function Component() {
                 <Button
                   type="submit"
                   disabled={loading || !token}
-                  className="w-full py-3 bg-accent text-inverse font-semibold rounded-pf hover:bg-accent-text disabled:opacity-50 disabled:cursor-not-allowed transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 focus-visible:ring-offset-2 focus-visible:ring-offset-elevated"
+                  className="w-full py-3 bg-accent text-inverse font-semibold rounded-pf hover:bg-accent-text disabled:opacity-50 disabled:cursor-not-allowed transition-colors focus-visible:outline-none focus-visible:shadow-focus-ring focus-visible:ring-offset-2 focus-visible:ring-offset-elevated"
                 >
                   {loading ? 'Resetting...' : 'Reset password'}
                 </Button>

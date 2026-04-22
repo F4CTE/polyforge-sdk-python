@@ -94,7 +94,7 @@ function TryItPanel({ ep }: { ep: EndpointDef }) {
           value={apiKey}
           onChange={e => setApiKey(e.target.value)}
           placeholder="pf_live_your_key..."
-          className="w-full bg-app border border-default rounded-sm px-3 py-2 text-label text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-accent/40 font-mono"
+          className="w-full bg-app border border-default rounded-sm px-3 py-2 text-label text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:border-accent focus-visible:shadow-focus-ring font-mono"
         />
       </div>
 
@@ -107,7 +107,7 @@ function TryItPanel({ ep }: { ep: EndpointDef }) {
             value={pathParams[name] ?? ''}
             onChange={e => setPathParams(prev => ({ ...prev, [name]: e.target.value }))}
             placeholder={name}
-            className="w-full bg-app border border-default rounded-sm px-3 py-2 text-label text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-accent/40 font-mono"
+            className="w-full bg-app border border-default rounded-sm px-3 py-2 text-label text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:border-accent focus-visible:shadow-focus-ring font-mono"
           />
         </div>
       ))}
@@ -120,7 +120,7 @@ function TryItPanel({ ep }: { ep: EndpointDef }) {
             value={body}
             onChange={e => setBody(e.target.value)}
             rows={5}
-            className="w-full bg-app border border-default rounded-sm px-3 py-2 text-label text-primary font-mono focus-visible:outline-none focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-accent/40 resize-y"
+            className="w-full bg-app border border-default rounded-sm px-3 py-2 text-label text-primary font-mono focus-visible:outline-none focus-visible:border-accent focus-visible:shadow-focus-ring resize-y"
           />
         </div>
       )}

@@ -122,7 +122,7 @@ export function Component() {
       {/* Back link */}
       <Link
         to="/news"
-        className="inline-flex items-center gap-2 text-body-sm text-secondary hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 rounded-sm transition-colors"
+        className="inline-flex items-center gap-2 text-body-sm text-secondary hover:text-primary focus-visible:outline-none focus-visible:shadow-focus-ring rounded-sm transition-colors"
       >
         <ArrowLeft className="size-4" aria-hidden="true" /> News
       </Link>
@@ -171,7 +171,7 @@ export function Component() {
               href={article.url?.startsWith('https://') ? article.url : '#'}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-3 py-2 rounded-sm text-label font-medium border border-accent/30 text-accent-text hover:bg-accent/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 transition-colors"
+              className="inline-flex items-center gap-2 px-3 py-2 rounded-sm text-label font-medium border border-accent/30 text-accent-text hover:bg-accent/10 focus-visible:outline-none focus-visible:shadow-focus-ring transition-colors"
             >
               <ExternalLink className="size-4" aria-hidden="true" /> Read full article
             </a>
@@ -237,7 +237,7 @@ export function Component() {
                         <td className="py-3 px-3 text-right">
                           <Link
                             to={`/markets/${signal.marketId}`}
-                            className="px-3 py-1 rounded-sm text-label font-medium border border-accent/30 text-accent-text hover:bg-accent/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 transition-colors"
+                            className="px-3 py-1 rounded-sm text-label font-medium border border-accent/30 text-accent-text hover:bg-accent/10 focus-visible:outline-none focus-visible:shadow-focus-ring transition-colors"
                           >
                             Trade
                           </Link>

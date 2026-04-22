@@ -596,7 +596,7 @@ export function Component() {
               type="button"
               variant="secondary"
               onClick={enterCompareMode}
-              className="flex items-center gap-2 px-4 py-3 rounded-pf bg-elevated border border-default text-body-sm text-secondary font-medium hover:border-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 transition-colors"
+              className="flex items-center gap-2 px-4 py-3 rounded-pf bg-elevated border border-default text-body-sm text-secondary font-medium hover:border-strong focus-visible:outline-none focus-visible:shadow-focus-ring transition-colors"
             >
               <GitCompare className="size-4" aria-hidden="true" /> Compare
             </Button>
@@ -605,7 +605,7 @@ export function Component() {
               type="button"
               variant="ghost"
               onClick={exitCompareMode}
-              className="flex items-center gap-2 px-4 py-3 rounded-pf bg-accent/10 border border-accent/30 text-body-md text-accent-text font-medium hover:bg-accent/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 transition-colors"
+              className="flex items-center gap-2 px-4 py-3 rounded-pf bg-accent/10 border border-accent/30 text-body-md text-accent-text font-medium hover:bg-accent/20 focus-visible:outline-none focus-visible:shadow-focus-ring transition-colors"
             >
               <X className="size-4" aria-hidden="true" /> Exit Compare
             </Button>
@@ -614,7 +614,7 @@ export function Component() {
             type="button"
             variant="secondary"
             onClick={handleImport}
-            className="flex items-center gap-2 px-4 py-3 rounded-pf bg-elevated border border-default text-body-sm text-secondary font-medium hover:border-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 transition-colors"
+            className="flex items-center gap-2 px-4 py-3 rounded-pf bg-elevated border border-default text-body-sm text-secondary font-medium hover:border-strong focus-visible:outline-none focus-visible:shadow-focus-ring transition-colors"
           >
             <Upload className="size-4" aria-hidden="true" /> Import Strategy
           </Button>
@@ -630,7 +630,7 @@ export function Component() {
           ) : (
             <Link
               to="/strategies/new"
-              className="flex items-center gap-2 px-4 py-3 rounded-pf bg-accent text-inverse text-body-md font-medium hover:bg-accent-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 transition-colors"
+              className="flex items-center gap-2 px-4 py-3 rounded-pf bg-accent text-inverse text-body-md font-medium hover:bg-accent-text focus-visible:outline-none focus-visible:shadow-focus-ring transition-colors"
             >
               <Plus className="size-4" aria-hidden="true" /> New Strategy
             </Link>
@@ -751,7 +751,7 @@ export function Component() {
                 role={compareMode ? 'checkbox' : 'link'}
                 aria-checked={compareMode ? isSelected : undefined}
                 className={[
-                  'group bg-elevated border rounded-pf p-5 cursor-pointer transition-all duration-panel overflow-hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40',
+                  'group bg-elevated border rounded-pf p-5 cursor-pointer transition-all duration-panel overflow-hidden focus-visible:outline-none focus-visible:shadow-focus-ring',
                   compareMode && isSelected
                     ? 'border-accent/50 shadow-ring-accent'
                     : 'border-default hover:border-strong hover:shadow-sm hover:-translate-y-1',

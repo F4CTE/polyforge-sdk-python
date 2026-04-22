@@ -472,7 +472,7 @@ function DrillDown({ cohortId, onBack }: DrillDownProps) {
                     <td className="px-4 py-3">
                       <Link
                         to={`/users/${user.id}`}
-                        className="font-medium text-accent-text hover:text-accent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 rounded-sm"
+                        className="font-medium text-accent-text hover:text-accent transition-colors focus-visible:outline-none focus-visible:shadow-focus-ring rounded-sm"
                       >
                         {user.username}
                       </Link>

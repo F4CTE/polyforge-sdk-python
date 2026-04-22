@@ -365,7 +365,7 @@ export function Component() {
         </div>
         {isOwn ? (
           <Link to="/settings"
-            className="flex items-center gap-2 px-3 py-2 rounded-pf bg-elevated border border-default text-label font-medium text-secondary hover:border-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 transition-colors">
+            className="flex items-center gap-2 px-3 py-2 rounded-pf bg-elevated border border-default text-label font-medium text-secondary hover:border-strong focus-visible:outline-none focus-visible:shadow-focus-ring transition-colors">
             <Settings className="size-4" aria-hidden="true" />
             Edit Profile
           </Link>
@@ -380,7 +380,7 @@ export function Component() {
               onClick={toggleFollow}
               disabled={followLoading}
               aria-label={profile.isFollowing ? 'Unfollow this user' : 'Follow this user'}
-              className={`group flex items-center gap-2 px-3 py-2 rounded-pf text-label font-medium cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 transition-colors disabled:opacity-60 disabled:cursor-not-allowed ${
+              className={`group flex items-center gap-2 px-3 py-2 rounded-pf text-label font-medium cursor-pointer focus-visible:outline-none focus-visible:shadow-focus-ring transition-colors disabled:opacity-60 disabled:cursor-not-allowed ${
                 profile.isFollowing
                   ? 'bg-elevated text-secondary border border-default hover:border-loss hover:text-loss'
                   : 'bg-accent-subtle text-accent-text border border-accent/30 hover:bg-accent/25'
@@ -514,7 +514,7 @@ export function Component() {
                   type="button"
                   variant="ghost"
                   onClick={() => setShowAllBadges(v => !v)}
-                  className="ml-auto flex items-center gap-1 text-label text-accent-text hover:text-accent-text transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 rounded-pf"
+                  className="ml-auto flex items-center gap-1 text-label text-accent-text hover:text-accent-text transition-colors focus-visible:outline-none focus-visible:shadow-focus-ring rounded-pf"
                 >
                   {showAllBadges ? (
                     <><ChevronUp className="size-4" />Hide locked</>

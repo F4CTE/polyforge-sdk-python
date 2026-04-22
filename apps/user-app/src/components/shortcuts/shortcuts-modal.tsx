@@ -88,7 +88,7 @@ export function ShortcutsModal({ open, onClose }: ShortcutsModalProps) {
           <button
             type="button"
             onClick={onClose}
-            className="min-h-[36px] min-w-[36px] flex items-center justify-center rounded-sm text-secondary hover:bg-elevated hover:text-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+            className="min-h-[36px] min-w-[36px] flex items-center justify-center rounded-sm text-secondary hover:bg-elevated hover:text-primary transition-colors focus-visible:outline-none focus-visible:shadow-focus-ring"
             aria-label="Close shortcuts modal"
           >
             <X size={16} />

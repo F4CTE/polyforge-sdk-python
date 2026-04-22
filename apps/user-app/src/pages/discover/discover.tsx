@@ -321,7 +321,7 @@ export function Component() {
               <Link
                 key={f.id}
                 to={`/marketplace/${f.id}`}
-                className="group block bg-elevated border border-warning/40 rounded-pf p-4 transition-all duration-panel hover:border-warning/60 hover:shadow-sm hover:-translate-y-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+                className="group block bg-elevated border border-warning/40 rounded-pf p-4 transition-all duration-panel hover:border-warning/60 hover:shadow-sm hover:-translate-y-1 focus-visible:outline-none focus-visible:shadow-focus-ring"
               >
                 {/* FEATURED badge + seller */}
                 <div className="flex items-center gap-2 mb-3">
@@ -398,7 +398,7 @@ export function Component() {
                 type="button"
                 variant="ghost"
                 onClick={() => navigate(`/collections/${col.id}`)}
-                className="bg-elevated border border-default rounded-full px-3 py-2 text-body-sm flex items-center gap-2 whitespace-nowrap hover:border-strong cursor-pointer transition-colors shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+                className="bg-elevated border border-default rounded-full px-3 py-2 text-body-sm flex items-center gap-2 whitespace-nowrap hover:border-strong cursor-pointer transition-colors shrink-0 focus-visible:outline-none focus-visible:shadow-focus-ring"
               >
                 <span role="img" aria-label={col.title}>{col.emoji}</span>
                 <span className="text-primary font-medium">{col.title}</span>
@@ -500,7 +500,7 @@ export function Component() {
                 key={s.id}
                 data-testid="strategy-card"
                 to={`/strategies/${s.id}`}
-                className="group block bg-elevated border border-default rounded-pf p-4 transition-all duration-panel hover:border-strong hover:shadow-sm hover:-translate-y-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+                className="group block bg-elevated border border-default rounded-pf p-4 transition-all duration-panel hover:border-strong hover:shadow-sm hover:-translate-y-1 focus-visible:outline-none focus-visible:shadow-focus-ring"
               >
                 {/* Author row */}
                 <div className="flex items-center gap-2 mb-3">

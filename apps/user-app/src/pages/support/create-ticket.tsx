@@ -73,7 +73,7 @@ export function Component() {
           variant="ghost"
           size="icon"
           onClick={() => navigate('/support')}
-          className="p-2 rounded-pf text-tertiary hover:text-primary hover:bg-elevated focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 transition-colors"
+          className="p-2 rounded-pf text-tertiary hover:text-primary hover:bg-elevated focus-visible:outline-none focus-visible:shadow-focus-ring transition-colors"
           aria-label="Back to support"
         >
           <ArrowLeft className="size-4" aria-hidden="true" />
@@ -148,7 +148,7 @@ export function Component() {
           <Button
             type="submit"
             disabled={!canSubmit}
-            className="flex items-center gap-2 px-5 py-3 rounded-pf bg-accent text-inverse text-body-md font-medium hover:bg-accent-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer transition-colors"
+            className="flex items-center gap-2 px-5 py-3 rounded-pf bg-accent text-inverse text-body-md font-medium hover:bg-accent-text focus-visible:outline-none focus-visible:shadow-focus-ring disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer transition-colors"
           >
             {submitting ? <Loader2 className="size-4 animate-spin" /> : <Send className="size-4" />}
             Submit Ticket

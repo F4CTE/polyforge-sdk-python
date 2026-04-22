@@ -821,7 +821,7 @@ function LiveTab({
             <button
               type="button"
               onClick={onPause}
-              className="p-2 rounded-sm text-tertiary hover:text-warning hover:bg-warning/10 cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+              className="p-2 rounded-sm text-tertiary hover:text-warning hover:bg-warning/10 cursor-pointer transition-colors focus-visible:outline-none focus-visible:shadow-focus-ring"
               title="Pause"
               aria-label="Pause execution"
             >
@@ -832,7 +832,7 @@ function LiveTab({
             <button
               type="button"
               onClick={onResume}
-              className="p-2 rounded-sm text-tertiary hover:text-gain hover:bg-gain/10 cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+              className="p-2 rounded-sm text-tertiary hover:text-gain hover:bg-gain/10 cursor-pointer transition-colors focus-visible:outline-none focus-visible:shadow-focus-ring"
               title="Resume"
               aria-label="Resume execution"
             >
@@ -842,7 +842,7 @@ function LiveTab({
           <button
             type="button"
             onClick={onStop}
-            className="p-2 rounded-sm text-tertiary hover:text-loss hover:bg-loss/10 cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+            className="p-2 rounded-sm text-tertiary hover:text-loss hover:bg-loss/10 cursor-pointer transition-colors focus-visible:outline-none focus-visible:shadow-focus-ring"
             title="Stop"
             aria-label="Stop execution"
           >

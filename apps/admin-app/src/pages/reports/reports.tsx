@@ -301,7 +301,7 @@ function ReviewCard({ review, onAction }: ReviewCardProps) {
           className={[
             'ml-auto inline-flex items-center gap-2 rounded-sm border border-default px-3 py-2 text-label font-medium text-secondary',
             'hover:text-accent-text hover:border-accent-text/40 transition-colors',
-            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40',
+            'focus-visible:outline-none focus-visible:shadow-focus-ring',
           ].join(' ')}
         >
           <ExternalLink className="h-4 w-4" aria-hidden />
@@ -328,7 +328,7 @@ function ReviewCard({ review, onAction }: ReviewCardProps) {
             className={[
               'w-full resize-y rounded-sm border border-default bg-surface px-3 py-2',
               'text-label text-primary placeholder:text-tertiary',
-              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40',
+              'focus-visible:outline-none focus-visible:shadow-focus-ring',
             ].join(' ')}
           />
           <div className="flex items-center gap-2 justify-end">
@@ -631,7 +631,7 @@ function ReviewsTab() {
             aria-label="Minimum report count filter"
             className={[
               'rounded-sm border border-default bg-surface px-3 py-2 text-label text-primary',
-              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40',
+              'focus-visible:outline-none focus-visible:shadow-focus-ring',
             ].join(' ')}
           >
             {MIN_REPORTS_OPTIONS.map((opt) => (
@@ -656,7 +656,7 @@ function ReviewsTab() {
               className={[
                 'w-full rounded-sm border border-default bg-surface py-2 pl-8 pr-3 text-label text-primary',
                 'placeholder:text-tertiary',
-                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40',
+                'focus-visible:outline-none focus-visible:shadow-focus-ring',
               ].join(' ')}
             />
           </div>

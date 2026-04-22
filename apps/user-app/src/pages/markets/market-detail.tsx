@@ -827,7 +827,7 @@ export function Component() {
       {/* Back */}
       <Link
         to="/markets"
-        className="inline-flex items-center gap-2 text-body-sm text-secondary hover:text-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 rounded-sm"
+        className="inline-flex items-center gap-2 text-body-sm text-secondary hover:text-primary transition-colors focus-visible:outline-none focus-visible:shadow-focus-ring rounded-sm"
       >
         <ArrowLeft className="size-4" aria-hidden="true" /> Markets
       </Link>
@@ -1723,7 +1723,7 @@ export function Component() {
                 type="button"
                 variant="ghost"
                 onClick={() => setLpExpanded((v) => !v)}
-                className="w-full flex items-center justify-between px-4 py-3 text-body-md font-medium text-primary hover:bg-surface/50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 focus-visible:rounded-pf"
+                className="w-full flex items-center justify-between px-4 py-3 text-body-md font-medium text-primary hover:bg-surface/50 transition-colors focus-visible:outline-none focus-visible:shadow-focus-ring focus-visible:rounded-pf"
                 aria-expanded={lpExpanded}
               >
                 <div className="flex items-center gap-2">
@@ -2003,7 +2003,7 @@ export function Component() {
                           variant="ghost"
                           key={o}
                           onClick={() => setAlertOutcome(o)}
-                          className={`flex-1 py-2 rounded-sm text-label font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 ${
+                          className={`flex-1 py-2 rounded-sm text-label font-semibold transition-colors focus-visible:outline-none focus-visible:shadow-focus-ring ${
                             alertOutcome === o
                               ? o === 'YES'
                                 ? 'bg-gain/10 text-gain border border-gain/30'
@@ -2027,7 +2027,7 @@ export function Component() {
                           variant="ghost"
                           key={c}
                           onClick={() => setAlertCondition(c)}
-                          className={`flex-1 py-2 rounded-sm text-label font-semibold capitalize transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 ${
+                          className={`flex-1 py-2 rounded-sm text-label font-semibold capitalize transition-colors focus-visible:outline-none focus-visible:shadow-focus-ring ${
                             alertCondition === c
                               ? 'bg-accent/10 text-accent-text border border-accent/30'
                               : 'bg-surface text-tertiary border border-default hover:border-strong'

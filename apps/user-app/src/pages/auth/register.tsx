@@ -109,7 +109,7 @@ export function Component() {
     }
   }
 
-  const inputClass = 'w-full pl-10 pr-4 py-3 bg-app border border-default rounded-pf text-primary placeholder:text-tertiary/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 focus-visible:border-accent transition-colors';
+  const inputClass = 'w-full pl-10 pr-4 py-3 bg-app border border-default rounded-pf text-primary placeholder:text-tertiary/50 focus-visible:outline-none focus-visible:shadow-focus-ring focus-visible:border-accent transition-colors';
 
   return (
     <main
@@ -272,11 +272,11 @@ export function Component() {
               />
               <label htmlFor="tos" className="text-body-md text-primary leading-relaxed cursor-pointer">
                 I agree to the{' '}
-                <a href="/terms" target="_blank" rel="noopener noreferrer" className="text-accent hover:text-accent-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 rounded-sm transition-colors">
+                <a href="/terms" target="_blank" rel="noopener noreferrer" className="text-accent hover:text-accent-text focus-visible:outline-none focus-visible:shadow-focus-ring rounded-sm transition-colors">
                   Terms of Service
                 </a>{' '}
                 and{' '}
-                <a href="/privacy" target="_blank" rel="noopener noreferrer" className="text-accent hover:text-accent-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 rounded-sm transition-colors">
+                <a href="/privacy" target="_blank" rel="noopener noreferrer" className="text-accent hover:text-accent-text focus-visible:outline-none focus-visible:shadow-focus-ring rounded-sm transition-colors">
                   Privacy Policy
                 </a>
               </label>
@@ -286,7 +286,7 @@ export function Component() {
             <Button
               type="submit"
               disabled={loading}
-              className="w-full py-3 bg-accent text-inverse font-semibold rounded-pf hover:bg-accent-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="w-full py-3 bg-accent text-inverse font-semibold rounded-pf hover:bg-accent-text focus-visible:outline-none focus-visible:shadow-focus-ring disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               {loading ? 'Creating account...' : 'Create account'}
             </Button>
@@ -297,7 +297,7 @@ export function Component() {
         {/* Links below card */}
         <p className="text-center text-body-sm text-tertiary mt-6">
           Already have an account?{' '}
-          <Link to="/login" className="text-accent-text hover:text-accent-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 rounded-sm transition-colors">
+          <Link to="/login" className="text-accent-text hover:text-accent-text focus-visible:outline-none focus-visible:shadow-focus-ring rounded-sm transition-colors">
             Sign in
           </Link>
         </p>

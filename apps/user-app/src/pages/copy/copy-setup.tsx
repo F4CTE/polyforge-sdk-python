@@ -178,7 +178,7 @@ export function Component() {
       {/* Back link */}
       <Link
         to="/copy"
-        className="flex items-center gap-2 text-body-sm text-secondary hover:text-accent-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 rounded-sm transition-colors"
+        className="flex items-center gap-2 text-body-sm text-secondary hover:text-accent-text focus-visible:outline-none focus-visible:shadow-focus-ring rounded-sm transition-colors"
       >
         <ArrowLeft className="size-4" /> Back to Copy Trading
       </Link>
@@ -541,7 +541,7 @@ export function Component() {
           variant="ghost"
           onClick={prevStep}
           disabled={step === 0}
-          className="flex items-center gap-2 px-4 py-3 rounded-pf text-body-sm text-secondary hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+          className="flex items-center gap-2 px-4 py-3 rounded-pf text-body-sm text-secondary hover:text-primary focus-visible:outline-none focus-visible:shadow-focus-ring disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
         >
           <ChevronLeft className="size-4" /> Back
         </Button>
@@ -550,7 +550,7 @@ export function Component() {
             type="button"
             onClick={nextStep}
             disabled={!canAdvance()}
-            className="flex items-center gap-2 px-4 py-3 rounded-pf bg-accent text-inverse text-body-md font-medium hover:bg-accent-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+            className="flex items-center gap-2 px-4 py-3 rounded-pf bg-accent text-inverse text-body-md font-medium hover:bg-accent-text focus-visible:outline-none focus-visible:shadow-focus-ring disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
           >
             Next <ChevronRight className="size-4" />
           </Button>
@@ -559,7 +559,7 @@ export function Component() {
             type="button"
             onClick={handleSubmit}
             disabled={submitting || !isFormValid}
-            className="flex items-center gap-2 px-5 py-3 rounded-pf bg-accent text-inverse text-body-md font-medium hover:bg-accent-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 disabled:opacity-40 transition-colors"
+            className="flex items-center gap-2 px-5 py-3 rounded-pf bg-accent text-inverse text-body-md font-medium hover:bg-accent-text focus-visible:outline-none focus-visible:shadow-focus-ring disabled:opacity-40 transition-colors"
           >
             <Rocket className="size-4" />
             {submitting ? 'Starting...' : 'Start Copying'}

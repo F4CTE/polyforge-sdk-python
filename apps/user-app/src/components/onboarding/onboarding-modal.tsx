@@ -344,7 +344,7 @@ export function OnboardingModal({ open, onClose }: OnboardingModalProps) {
           {showSkip && (
             <button
               onClick={handleSkip}
-              className="text-tertiary text-label hover:text-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 rounded-sm px-1"
+              className="text-tertiary text-label hover:text-primary transition-colors focus-visible:outline-none focus-visible:shadow-focus-ring rounded-sm px-1"
               aria-label="Skip onboarding"
             >
               Skip for now
@@ -401,7 +401,7 @@ export function OnboardingModal({ open, onClose }: OnboardingModalProps) {
                 'text-secondary text-body-sm',
                 'border border-default hover:border-strong',
                 'hover:text-primary transition-colors',
-                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40',
+                'focus-visible:outline-none focus-visible:shadow-focus-ring',
               ].join(' ')}
               aria-label="Go back"
             >
@@ -417,7 +417,7 @@ export function OnboardingModal({ open, onClose }: OnboardingModalProps) {
                 className={[
                   'text-accent-text text-body-md font-medium',
                   'hover:text-accent transition-colors',
-                  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 rounded-sm px-1',
+                  'focus-visible:outline-none focus-visible:shadow-focus-ring rounded-sm px-1',
                 ].join(' ')}
               >
                 {step.secondaryLabel}
@@ -430,7 +430,7 @@ export function OnboardingModal({ open, onClose }: OnboardingModalProps) {
                 'px-5 py-3 rounded-pf',
                 'bg-accent text-inverse text-body-md font-semibold',
                 'hover:opacity-90 active:scale-95 transition-all',
-                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40',
+                'focus-visible:outline-none focus-visible:shadow-focus-ring',
               ].join(' ')}
             >
               {step.primaryLabel}

@@ -116,7 +116,7 @@ export function Component() {
                     aria-label={`View ticket: ${t.subject}`}
                     onClick={() => navigate(`/tickets/${t.id}`)}
                     onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); navigate(`/tickets/${t.id}`); } }}
-                    className="border-b border-default last:border-0 hover:bg-app cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent/40"
+                    className="border-b border-default last:border-0 hover:bg-app cursor-pointer transition-colors focus-visible:outline-none focus-visible:shadow-focus-ring"
                   >
                     <td className="px-4 py-3 font-medium text-primary">{t.subject}</td>
                     <td className="px-4 py-3 text-secondary">{t.username ?? (t.userId ? t.userId.slice(0, 8) : '')}</td>

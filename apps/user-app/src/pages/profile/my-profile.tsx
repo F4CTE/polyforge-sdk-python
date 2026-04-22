@@ -97,7 +97,7 @@ export function Component() {
         <h1 className="text-2xl font-semibold text-primary">My Profile</h1>
         <Link
           to="/settings"
-          className="flex items-center gap-2 px-3 py-2 rounded-pf bg-elevated border border-default text-label font-medium text-secondary hover:border-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 transition-colors"
+          className="flex items-center gap-2 px-3 py-2 rounded-pf bg-elevated border border-default text-label font-medium text-secondary hover:border-strong focus-visible:outline-none focus-visible:shadow-focus-ring transition-colors"
         >
           <Settings className="size-4" aria-hidden="true" />
           Edit Profile
@@ -253,7 +253,7 @@ export function Component() {
           <Link
             key={link.to}
             to={link.to}
-            className="flex items-center gap-3 px-4 py-3 bg-elevated border border-default rounded-pf hover:border-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 transition-colors"
+            className="flex items-center gap-3 px-4 py-3 bg-elevated border border-default rounded-pf hover:border-strong focus-visible:outline-none focus-visible:shadow-focus-ring transition-colors"
           >
             <span className="text-tertiary">{link.icon}</span>
             <span className="text-body-md font-medium text-primary flex-1">{link.label}</span>

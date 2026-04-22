@@ -50,7 +50,7 @@ function DropdownMenuTrigger({ children, className, ...props }: DropdownMenuTrig
       type="button"
       aria-expanded={open}
       aria-haspopup="menu"
-      className={cn("focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40", className)}
+      className={cn("focus-visible:outline-none focus-visible:shadow-focus-ring", className)}
       onClick={() => setOpen(!open)}
       onKeyDown={(e) => {
         if (e.key === "Enter" || e.key === " ") {

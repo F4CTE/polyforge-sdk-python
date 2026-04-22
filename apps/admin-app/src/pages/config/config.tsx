@@ -152,7 +152,7 @@ function ToggleSwitch({ checked, onChange, danger, disabled, label }: ToggleSwit
         'relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors duration-panel',
         trackClass,
         disabled ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer',
-        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40',
+        'focus-visible:outline-none focus-visible:shadow-focus-ring',
       ].join(' ')}
     >
       <span
@@ -184,7 +184,7 @@ function SliderInput({ value, min, max, onChange, label, unit }: SliderInputProp
         value={value}
         aria-label={label}
         onChange={(e) => onChange(Number(e.target.value))}
-        className="flex-1 h-2 rounded-full accent-accent cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+        className="flex-1 h-2 rounded-full accent-accent cursor-pointer focus-visible:outline-none focus-visible:shadow-focus-ring"
       />
       <span className="w-14 text-right text-body-md font-medium text-primary tabular-nums">
         {value}
@@ -220,7 +220,7 @@ function NumberField({ value, min, max, step = 1, onChange, label, prefix, suffi
         className={[
           'w-28 rounded-sm border border-default bg-surface px-3 py-2',
           'text-body-sm text-primary tabular-nums',
-          'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40',
+          'focus-visible:outline-none focus-visible:shadow-focus-ring',
           'placeholder:text-tertiary',
         ].join(' ')}
       />

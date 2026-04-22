@@ -39,7 +39,7 @@ export function Component() {
 
           <Link
             to="/login"
-            className="text-accent-text text-body-md hover:text-accent-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 rounded-sm transition-colors"
+            className="text-accent-text text-body-md hover:text-accent-text focus-visible:outline-none focus-visible:shadow-focus-ring rounded-sm transition-colors"
           >
             Back to login
           </Link>
