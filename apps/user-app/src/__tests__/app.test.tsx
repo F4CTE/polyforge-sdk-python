@@ -1,24 +1,31 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render } from '@testing-library/react';
+import { createMemoryRouter } from 'react-router';
 import { App } from '../app';
 import { ErrorBoundary } from '../components/error-boundary';
 
-// Mock the router and stores to avoid initialization issues
 vi.mock('../router', () => ({
-  router: {
-    routes: [],
+  router: createMemoryRouter([{ path: '/', element: <div>Home</div> }]),
+}));
+
+const mockInit = vi.fn();
+vi.mock('../stores/auth-store', () => ({
+  useAuthStore: (selector?: (s: Record<string, unknown>) => unknown) => {
+    const state = { init: mockInit };
+    return selector ? selector(state) : state;
   },
 }));
 
-vi.mock('../stores/auth-store', () => ({
-  useAuthStore: () => ({
-    init: vi.fn(),
-  }),
+vi.mock('../stores/theme-store', () => ({
+  useThemeStore: (selector?: (s: Record<string, unknown>) => unknown) => {
+    const state = { isDark: false };
+    return selector ? selector(state) : state;
+  },
 }));
 
-vi.mock('../stores/theme-store', () => ({
-  useThemeStore: () => ({
-    isDark: false,
+vi.mock('../stores/notification-store', () => ({
+  useNotificationStore: Object.assign(() => ({}), {
+    getState: () => ({ bindWebSocket: () => vi.fn() }),
   }),
 }));
 
