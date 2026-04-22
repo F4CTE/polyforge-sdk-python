@@ -107,4 +107,81 @@ runIntegration("KalshiRestService (sandbox integration)", () => {
     const result = await rest.getBalance();
     expect(typeof result.balance).toBe("number");
   });
+
+  it("validates market shape from sandbox", async () => {
+    const markets = await rest.getMarkets({ limit: 3, status: "open" });
+    if (!markets.length) return;
+
+    const m = markets[0];
+    expect(typeof m.ticker).toBe("string");
+    expect(m.ticker.length).toBeGreaterThan(0);
+    expect(typeof m.status).toBe("string");
+  });
+
+  it("fetches markets with pagination offset", async () => {
+    const page1 = await rest.getMarkets({ limit: 2, status: "open" });
+    if (page1.length < 2) return;
+
+    const page2 = await rest.getMarkets({
+      limit: 2,
+      offset: 2,
+      status: "open",
+    });
+    expect(Array.isArray(page2)).toBe(true);
+    if (page2.length > 0) {
+      expect(page2[0].ticker).not.toBe(page1[0].ticker);
+    }
+  });
+
+  it("orderbook contains price and quantity fields", async () => {
+    const markets = await rest.getMarkets({ limit: 1, status: "open" });
+    if (!markets.length) return;
+
+    const book = await rest.getOrderBook(markets[0].ticker);
+    for (const entry of book.yes) {
+      expect(typeof entry.price).toBe("number");
+      expect(typeof entry.quantity).toBe("number");
+      expect(entry.price).toBeGreaterThanOrEqual(1);
+      expect(entry.price).toBeLessThanOrEqual(99);
+    }
+    for (const entry of book.no) {
+      expect(typeof entry.price).toBe("number");
+      expect(entry.price).toBeGreaterThanOrEqual(1);
+      expect(entry.price).toBeLessThanOrEqual(99);
+    }
+  });
+
+  describe("order lifecycle", () => {
+    it("places a limit order, verifies it, then cancels it", async () => {
+      const markets = await rest.getMarkets({ limit: 5, status: "open" });
+      const market = markets.find((m) => m.yes_bid && m.yes_bid > 0);
+      if (!market) return; // no liquid market in sandbox
+
+      const result = await rest.placeOrder({
+        ticker: market.ticker,
+        side: "yes",
+        action: "buy",
+        count: 1,
+        type: "limit",
+        yes_price: 1,
+      });
+
+      expect(result.order_id).toBeTruthy();
+      expect(typeof result.order_id).toBe("string");
+
+      const orders = await rest.getOrders("integration-test", 10);
+      const placed = orders.find((o) => o.order_id === result.order_id);
+      if (placed) {
+        expect(placed.ticker).toBe(market.ticker);
+      }
+
+      await rest.cancelOrder(result.order_id);
+
+      const afterCancel = await rest.getOrders("integration-test", 10);
+      const cancelled = afterCancel.find((o) => o.order_id === result.order_id);
+      if (cancelled) {
+        expect(cancelled.status).not.toBe("resting");
+      }
+    });
+  });
 });
