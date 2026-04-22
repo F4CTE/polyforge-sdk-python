@@ -187,6 +187,13 @@ export class TemplatesService {
             parseInt(data.confidence ?? "0", 10) >= 80 ? "warning" : "info",
         };
 
+      case "ARBITRAGE_CROSS_VENUE":
+        return {
+          title: "Cross-Venue Arbitrage",
+          body: `${data.spreadPct ?? "?"}% spread detected between Polymarket and Kalshi. Direction: ${data.direction ?? "unknown"}.`,
+          severity: "warning",
+        };
+
       default:
         return {
           title: "Polyforge Notification",

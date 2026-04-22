@@ -43,6 +43,10 @@ function toNotifType(
       return "SOMEONE_COMMENTED";
     case "NEWS_SIGNAL":
       return "NEWS_SIGNAL";
+    case "ARBITRAGE_OPPORTUNITY":
+      return "ARBITRAGE_OPPORTUNITY";
+    case "ARBITRAGE_CROSS_VENUE":
+      return "ARBITRAGE_CROSS_VENUE";
     default:
       return null;
   }

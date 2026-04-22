@@ -288,6 +288,32 @@ describe("TemplatesService", () => {
       });
     });
 
+    describe("ARBITRAGE_CROSS_VENUE", () => {
+      it("returns correct title and warning severity", () => {
+        const result = service.build("ARBITRAGE_CROSS_VENUE", {
+          spreadPct: "3.5",
+          direction: "buy_kalshi_sell_poly",
+        });
+        expect(result.title).toBe("Cross-Venue Arbitrage");
+        expect(result.severity).toBe("warning");
+      });
+
+      it("includes spreadPct and direction in body", () => {
+        const result = service.build("ARBITRAGE_CROSS_VENUE", {
+          spreadPct: "3.5",
+          direction: "buy_kalshi_sell_poly",
+        });
+        expect(result.body).toContain("3.5");
+        expect(result.body).toContain("buy_kalshi_sell_poly");
+      });
+
+      it("falls back to defaults when data fields absent", () => {
+        const result = service.build("ARBITRAGE_CROSS_VENUE", {});
+        expect(result.body).toContain("?");
+        expect(result.body).toContain("unknown");
+      });
+    });
+
     describe("unknown eventType (default branch)", () => {
       it("returns generic title and info severity", () => {
         const result = service.build("SOME_UNKNOWN_EVENT", {});

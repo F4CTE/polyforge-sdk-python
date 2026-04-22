@@ -105,6 +105,8 @@ describe("EventsConsumerService", () => {
                 DAILY_LOSS_TRIGGERED: "DAILY_LOSS_LIMIT",
                 MARKET_RESOLVED: "MARKET_RESOLVED",
                 NEWS_SIGNAL: "NEWS_SIGNAL",
+                ARBITRAGE_OPPORTUNITY: "ARBITRAGE_OPPORTUNITY",
+                ARBITRAGE_CROSS_VENUE: "ARBITRAGE_CROSS_VENUE",
               };
               const notifType = typeMap[event.type] ?? null;
               if (notifType) {
