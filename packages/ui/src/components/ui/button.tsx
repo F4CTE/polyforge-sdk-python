@@ -9,11 +9,11 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default:
-          "bg-accent text-inverse hover:bg-accent-hover hover:shadow-glow-accent-strong",
+          "bg-accent text-inverse hover:bg-accent-hover",
         secondary:
-          "bg-transparent border border-subtle text-secondary hover:text-primary hover:bg-elevated",
+          "bg-elevated border border-default text-primary hover:bg-overlay",
         ghost:
-          "bg-transparent text-secondary hover:text-primary hover:bg-elevated",
+          "bg-transparent text-secondary hover:text-primary hover:bg-subtle",
         danger:
           "bg-loss-subtle text-loss hover:bg-loss/20",
         success:
@@ -22,10 +22,10 @@ const buttonVariants = cva(
           "text-accent underline-offset-4 hover:underline",
       },
       size: {
-        default: "h-9 px-4 py-2 rounded-pf",
+        default: "h-8 px-4 py-2 rounded-pf",
         sm: "h-7 px-3 py-1 text-xs rounded-pf",
-        lg: "h-11 px-6 py-3 rounded-pf",
-        icon: "h-9 w-9 rounded-pf",
+        lg: "h-9 px-5 py-2 rounded-pf",
+        icon: "h-8 w-8 rounded-pf",
         "icon-sm": "h-7 w-7 rounded-pf",
       },
     },
