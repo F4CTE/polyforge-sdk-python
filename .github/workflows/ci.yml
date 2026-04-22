@@ -120,17 +120,19 @@ jobs:
         continue-on-error: true
         run: pnpm audit --audit-level=high || echo "::warning::Dependency audit found issues"
 
-  # ── 3. Deploy to Dev (polyforge-lab) ──────────────────────────────────
-  # SSH to polyforge-lab, pull latest code, rebuild Docker images
-  # incrementally, restart services, run migrations, and verify health.
-  deploy-dev:
+  # ── 3. Deploy + E2E (polyforge-lab) ─────────────────────────────────
+  # Single job: deploy → setup → E2E shards (sequential).
+  # MUST be one job so the concurrency group holds the lock from deploy
+  # through E2E completion. Previously deploy-dev, e2e-setup, and e2e
+  # were 3 separate jobs in the same concurrency group, which allowed
+  # interleaving: PR1 deploys → PR2 deploys (overwrites env) → PR1's
+  # E2E runs against PR2's code → ECONNREFUSED. (POLA-552)
+  deploy-and-e2e:
     name: Deploy to Dev
     if: github.event_name != 'push'
     runs-on: [self-hosted, linux]
     needs: [build]
-    timeout-minutes: 20
-    # Serialize deploy across all branches — only one branch can deploy at a time.
-    # Other branches wait (no cancel) so their pipeline resumes after the current one finishes.
+    timeout-minutes: 150
     concurrency:
       group: deploy-polyforge-lab
       cancel-in-progress: false
@@ -165,9 +167,9 @@ jobs:
           host: ${{ secrets.LAB_HOST }}
           username: f4cte
           key: ${{ secrets.LAB_SSH_KEY }}
-          # request_tty allocates a PTY so command_timeout/job-timeout SIGHUP kills the
+          # request_pty allocates a PTY so command_timeout/job-timeout SIGHUP kills the
           # remote process tree instead of leaving zombie deploy processes on polyforge-lab.
-          request_tty: true
+          request_pty: true
           command_timeout: 18m
           envs: >-
             HEAD_REF,COMMIT_SHA,
@@ -190,16 +192,6 @@ jobs:
             echo "=== 1. Pull latest code ==="
             git fetch origin
 
-            # Use detached HEAD in all cases to avoid "branch already used by
-            # worktree" errors when another worktree (e.g. PolyForge-Dev) has
-            # the same branch checked out. Detaching bypasses the branch-lock
-            # constraint — we only need the files, not the branch reference.
-            #
-            # For pull_request events, COMMIT_SHA is a synthetic merge commit
-            # that only exists in GitHub's refs/pull/N/merge — not in any real
-            # branch. Use the PR branch tip via origin/HEAD_REF instead.
-            # For push events, HEAD_REF is empty and COMMIT_SHA is a real
-            # commit on the pushed branch.
             if [ -n "$HEAD_REF" ]; then
               echo "PR detected — detaching to tip of origin/$HEAD_REF"
               git fetch origin "$HEAD_REF"
@@ -209,14 +201,9 @@ jobs:
               git checkout --detach "$COMMIT_SHA"
             fi
 
-            # Write .env from CI-injected GitHub Secrets. Must run AFTER git checkout
-            # so scripts/write-env-from-ci.sh is on disk. Previously this was a
-            # separate SSH step that ran before git pull, causing status 127. (POLA-107)
             echo "=== 1b. Write .env from GitHub Secrets ==="
             bash scripts/write-env-from-ci.sh
 
-            # Source env vars for Prisma + Docker — credentials must come from .env,
-            # never hardcoded in the workflow file (see #559)
             set -a; source .env 2>/dev/null || true; set +a
             export DIRECT_DATABASE_URL="${DIRECT_DATABASE_URL:?DIRECT_DATABASE_URL must be set in .env}"
             export ADMIN_DIRECT_DATABASE_URL="${ADMIN_DIRECT_DATABASE_URL:?ADMIN_DIRECT_DATABASE_URL must be set in .env}"
@@ -232,16 +219,16 @@ jobs:
             echo "=== 4. Build shared packages ==="
             pnpm turbo build --filter=./packages/*
 
-            echo "=== 5. Incremental Docker rebuild + restart ==="
-            docker compose -f docker-compose.infra.yml build
-            docker compose -f docker-compose.infra.yml up -d
+            echo "=== 5. Incremental Docker rebuild + restart (with TLS) ==="
+            docker compose -f docker-compose.infra.yml -f docker-compose.ssl.yml build
+            docker compose -f docker-compose.infra.yml -f docker-compose.ssl.yml up -d
 
             echo "=== 6. Wait for services ==="
             timeout 120 bash -c 'until curl -sf http://localhost:3001/health; do sleep 2; done'
             echo "  auth-service: healthy"
             timeout 120 bash -c 'until curl -sf http://localhost:3002/health; do sleep 2; done'
             echo "  api-service: healthy"
-            timeout 120 bash -c 'until curl -sf http://localhost/login; do sleep 2; done'
+            timeout 120 bash -c 'until curl -sf https://localhost/login; do sleep 2; done'
             echo "  gateway: healthy"
 
             echo "=== 7. Migrate + seed ==="
@@ -255,21 +242,7 @@ jobs:
 
             echo "=== Dev environment deployed and healthy ==="
 
-  # ── 4a. E2E Setup — runs global setup once before all shards ──────────
-  # Clears Redis throttle keys, disables invite-only, approves seed users,
-  # and clears MailHog. Must run exactly once; shards skip it via
-  # PLAYWRIGHT_SKIP_GLOBAL_SETUP=true.
-  e2e-setup:
-    name: E2E Setup
-    if: github.event_name != 'push'
-    runs-on: [self-hosted, linux]
-    needs: [deploy-dev]
-    timeout-minutes: 10
-    # Same serialization group as deploy — setup touches shared Docker state.
-    concurrency:
-      group: deploy-polyforge-lab
-      cancel-in-progress: false
-    steps:
+      # ── E2E Setup ──────────────────────────────────────────────────────
       - name: Kill stale Playwright / Chromium processes
         run: |
           pkill -u f4cte -f 'playwright test' 2>/dev/null || true
@@ -281,105 +254,62 @@ jobs:
           cd ~/PolyForge/tests/e2e
           timeout --kill-after=10s 120 npx playwright install --with-deps chromium 2>/dev/null || true
 
-      - name: Run global setup (once for all shards)
+      - name: Run E2E global setup
         timeout-minutes: 8
         run: |
           cd ~/PolyForge/tests/e2e
-          BASE_URL=http://localhost AUTH_URL=http://localhost:3001 MAILHOG_URL=http://localhost:8025 \
+          BASE_URL=https://localhost AUTH_URL=http://localhost:3001 MAILHOG_URL=http://localhost:8025 \
             CI=true npx tsx global-setup.ts
 
-  # ── 4b. E2E — single job, all shards sequential ─────────────────────
-  # Runs all shards sequentially inside one job so that only ONE job
-  # occupies the deploy-polyforge-lab concurrency group. A matrix would
-  # create multiple jobs competing for the single pending slot, and a
-  # new entrant (e.g. another branch's deploy) would evict the oldest
-  # pending shard — see POLA-185 review feedback.
-  # Split to 4 shards (from 3) to keep each shard under 25 min — POLA-206.
-  e2e:
-    name: E2E
-    if: github.event_name != 'push'
-    runs-on: [self-hosted, linux]
-    needs: [e2e-setup]
-    timeout-minutes: 120
-    concurrency:
-      group: deploy-polyforge-lab
-      cancel-in-progress: false
-    steps:
-      - name: Run E2E shard 1/4
-        timeout-minutes: 25
+      - name: Clean stale test-results
+        run: rm -rf ~/PolyForge/tests/e2e/test-results/
+
+      # ── E2E Shards (parallel within same job) ─────────────────────────
+      # All 4 shards run concurrently as background processes. Keeping them
+      # inside the single deploy-and-e2e job preserves the concurrency group
+      # lock so no other PR can deploy while E2E is running. The self-hosted
+      # runner (Ryzen 5 7600X, 32GB RAM) handles 4 Playwright workers well.
+      - name: Run E2E shards 1-4 in parallel
+        timeout-minutes: 40
         run: |
-          set -euo pipefail
+          set -uo pipefail
           cd ~/PolyForge/tests/e2e
 
-          BASE_URL=http://localhost CI=true PLAYWRIGHT_SKIP_GLOBAL_SETUP=true \
-            timeout --kill-after=10s 1440 npx playwright test \
-              --project=chromium \
-              --reporter=list \
-              --shard=1/4 \
-              --global-timeout=1440000
+          run_shard() {
+            local shard=$1
+            echo "=== Starting E2E shard ${shard}/4 ==="
+            BASE_URL=https://localhost CI=true PLAYWRIGHT_SKIP_GLOBAL_SETUP=true \
+              timeout --kill-after=10s 2100 npx playwright test \
+                --project=chromium \
+                --reporter=list \
+                --shard="${shard}/4" \
+                --global-timeout=2100000
+          }
 
-      - name: Clean up browsers between shards 1→2
-        if: success() || failure()
-        run: |
-          pkill -u f4cte -f 'chrome-headless-shell' 2>/dev/null || true
-          sleep 2
+          run_shard 1 &
+          pid1=$!
+          run_shard 2 &
+          pid2=$!
+          run_shard 3 &
+          pid3=$!
+          run_shard 4 &
+          pid4=$!
 
-      - name: Run E2E shard 2/4
-        timeout-minutes: 25
-        run: |
-          set -euo pipefail
-          cd ~/PolyForge/tests/e2e
+          fail=0
+          for pid in $pid1 $pid2 $pid3 $pid4; do
+            if ! wait "$pid"; then
+              fail=1
+            fi
+          done
 
-          BASE_URL=http://localhost CI=true PLAYWRIGHT_SKIP_GLOBAL_SETUP=true \
-            timeout --kill-after=10s 1440 npx playwright test \
-              --project=chromium \
-              --reporter=list \
-              --shard=2/4 \
-              --global-timeout=1440000
-
-      - name: Clean up browsers between shards 2→3
-        if: success() || failure()
-        run: |
-          pkill -u f4cte -f 'chrome-headless-shell' 2>/dev/null || true
-          sleep 2
-
-      - name: Run E2E shard 3/4
-        timeout-minutes: 25
-        run: |
-          set -euo pipefail
-          cd ~/PolyForge/tests/e2e
-
-          BASE_URL=http://localhost CI=true PLAYWRIGHT_SKIP_GLOBAL_SETUP=true \
-            timeout --kill-after=10s 1440 npx playwright test \
-              --project=chromium \
-              --reporter=list \
-              --shard=3/4 \
-              --global-timeout=1440000
-
-      - name: Clean up browsers between shards 3→4
-        if: success() || failure()
-        run: |
-          pkill -u f4cte -f 'chrome-headless-shell' 2>/dev/null || true
-          sleep 2
-
-      - name: Run E2E shard 4/4
-        timeout-minutes: 25
-        run: |
-          set -euo pipefail
-          cd ~/PolyForge/tests/e2e
-
-          BASE_URL=http://localhost CI=true PLAYWRIGHT_SKIP_GLOBAL_SETUP=true \
-            timeout --kill-after=10s 1440 npx playwright test \
-              --project=chromium \
-              --reporter=list \
-              --shard=4/4 \
-              --global-timeout=1440000
+          echo "=== All E2E shards complete (exit: $fail) ==="
+          exit "$fail"
 
   # ── 5. Deploy to AWS (Production) ──────────────────────────────────────
   deploy:
     name: Deploy to Production
     runs-on: [self-hosted, linux]
-    needs: [e2e]
+    needs: [deploy-and-e2e]
     if: github.ref == 'refs/heads/main' && github.event_name == 'workflow_dispatch'
     environment: production
     steps:

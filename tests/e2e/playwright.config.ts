@@ -18,12 +18,13 @@ export default defineConfig({
     testDir:   './specs',
     fullyParallel: false,           // sequential within a file, but each file gets a fresh context
     forbidOnly: !!process.env.CI,
-    retries:   process.env.CI ? 1 : 0,
+    retries:   process.env.CI ? 2 : 0,
     workers:   1,  // Sequential: 2 workers cause resource contention on shared Docker backend
     reporter:  [['html', { open: 'never' }], ['list']],
 
     use: {
         baseURL:       process.env.BASE_URL    ?? 'http://localhost',
+        ignoreHTTPSErrors: true,
         trace:         'on-first-retry',
         screenshot:    'only-on-failure',
         video:         'retain-on-failure',

@@ -194,7 +194,7 @@ ADMIN_ALLOWED_IPS=
 # ─────────────────────────────────────────────────────────────────────────────
 
 INVITE_ONLY=false
-COOKIE_SECURE=false
+COOKIE_SECURE=true
 
 # ─────────────────────────────────────────────────────────────────────────────
 # SERVICE PORTS (internal Docker network — no need to change)

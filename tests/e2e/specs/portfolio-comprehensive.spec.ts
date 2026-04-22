@@ -319,18 +319,22 @@ test.describe('Portfolio — Full Workflow Coverage', () => {
         const portfolio = new PortfolioPage(page);
         await portfolio.goto();
 
-        // Verify table headers exist
-        const tableHeaders = page.locator('th, [role="columnheader"]');
-        const headerCount = await tableHeaders.count();
+        // Scope to the positions table specifically — the unscoped `th` selector
+        // matched headers from unrelated tables (Tax Report, etc.) on the page.
+        const posTable = portfolio.positionsTable;
+        const tableVisible = await posTable.isVisible({ timeout: 5_000 }).catch(() => false);
 
-        // Should have at least Market, Side, Size, Entry, Current, P&L
-        if (headerCount > 0) {
-            const headers = await tableHeaders.allTextContents();
-            const headerText = headers.join(' ').toUpperCase();
+        if (tableVisible) {
+            const tableHeaders = posTable.locator('th, [role="columnheader"]');
+            const headerCount = await tableHeaders.count();
 
-            // Verify key columns exist
-            expect(headerText).toContain('MARKET');
+            if (headerCount > 0) {
+                const headers = await tableHeaders.allTextContents();
+                const headerText = headers.join(' ').toUpperCase();
+                expect(headerText).toContain('MARKET');
+            }
         }
+        // No positions table is valid for a fresh user — test passes either way.
     });
 
     test('@comprehensive should show empty state when no positions', async ({ page }) => {

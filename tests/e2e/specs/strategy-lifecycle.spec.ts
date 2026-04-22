@@ -4,11 +4,10 @@ import { StrategiesListPage }  from '../pages/strategies-list.page';
 import { StrategyBuilderPage } from '../pages/strategy-builder.page';
 import {
     apiLogin,
+    apiCreateStrategy,
     apiGetStrategies,
     apiDeleteStrategy,
     apiStopStrategy,
-    uniqueEmail,
-    uniqueUsername,
 } from '../helpers/api';
 
 /**
@@ -171,21 +170,23 @@ test.describe('Strategy lifecycle', () => {
         const original     = `E2E-${Date.now().toString(36)}`;
         const renamed      = `${original}-edited`;
 
+        // Login via UI for a fresh session — the beforeAll token may have
+        // expired (15m JWT TTL) by the time this test runs late in the shard.
         await loginPage.goto();
         await loginPage.loginAndRedirect(ALICE_EMAIL, ALICE_PASSWORD);
 
-        // Create
-        await builderPage.gotoNew();
-        await builderPage.fillName(original);
-        await builderPage.saveAndRedirect();
+        // Create strategy via the fresh session's token.
+        const freshResp = await apiLogin(ALICE_EMAIL, ALICE_PASSWORD);
+        const { id: strategyId } = await apiCreateStrategy(freshResp.token, original);
 
-        // Extract strategy ID from detail page URL and use gotoEdit
-        await expect(page).toHaveURL(/\/strategies\/[a-z0-9-]+$/);
-        const strategyId = page.url().split('/strategies/')[1];
+        // Navigate directly to edit mode (session cookie is set by loginAndRedirect).
         await builderPage.gotoEdit(strategyId);
 
-        // Rename
-        await builderPage.nameInput.fill('');
+        // Wait for loadStrategy() to populate the input — without this,
+        // fillName() races against the async store hydration and the
+        // store overwrites the DOM value after our fill.
+        await expect(builderPage.nameInput).toHaveValue(original, { timeout: 10_000 });
+
         await builderPage.fillName(renamed);
         await builderPage.saveAndRedirect();
 

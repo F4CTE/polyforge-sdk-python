@@ -201,14 +201,16 @@ test.describe('Markets — Full Workflow Coverage', () => {
         // Search for something
         await markets.search('xyz-nonexistent-market');
 
-        // Clear search by emptying input and wait for debounce
+        // Clear search by emptying input
         await markets.searchInput.clear();
         await markets.searchInput.fill('');
-        await page.waitForTimeout(400);
 
-        // Verify results are restored
-        const finalCount = await markets.getMarketCount();
-        expect(finalCount).toBe(initialCount);
+        // List repopulation after clearing search takes longer than the
+        // debounce interval — retry until the count stabilises.
+        await expect(async () => {
+            const finalCount = await markets.getMarketCount();
+            expect(finalCount).toBe(initialCount);
+        }).toPass({ timeout: 10_000 });
     });
 
     test('@comprehensive should show empty state when search has no results', async ({ page }) => {

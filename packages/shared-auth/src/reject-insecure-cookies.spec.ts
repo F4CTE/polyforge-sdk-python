@@ -45,6 +45,26 @@ describe("rejectInsecureCookies", () => {
     ).not.toThrow();
   });
 
+  it("allows COOKIE_SECURE=false in production when CI=true", () => {
+    expect(() =>
+      rejectInsecureCookies("test-service", {
+        NODE_ENV: "production",
+        COOKIE_SECURE: "false",
+        CI: "true",
+      }),
+    ).not.toThrow();
+  });
+
+  it("still throws in production when CI is not true", () => {
+    expect(() =>
+      rejectInsecureCookies("test-service", {
+        NODE_ENV: "production",
+        COOKIE_SECURE: "false",
+        CI: "false",
+      }),
+    ).toThrow("COOKIE_SECURE=false is forbidden in production");
+  });
+
   it("includes service name in error message", () => {
     expect(() =>
       rejectInsecureCookies("my-auth", {
