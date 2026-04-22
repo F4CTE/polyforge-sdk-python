@@ -131,7 +131,7 @@ function DropdownMenuContent({ children, className, align = "start" }: DropdownM
       data-state={visible ? "open" : "closed"}
       className={cn(
         "absolute z-50 mt-1 min-w-dropdown-min p-1",
-        "bg-elevated border border-default rounded-pf shadow-lg",
+        "bg-elevated border border-default rounded-pf [box-shadow:var(--shadow-elevation-2)]",
         "animate-dropdown",
         align === "end" ? "right-0" : "left-0",
         className
