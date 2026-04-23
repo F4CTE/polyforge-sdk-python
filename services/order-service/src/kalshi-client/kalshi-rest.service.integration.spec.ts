@@ -151,6 +151,137 @@ runIntegration("KalshiRestService (sandbox integration)", () => {
     }
   });
 
+  // ── Phase 2: Events API ────────────────────────────────────────────────
+
+  describe("Events API", () => {
+    it("lists events with cursor pagination", async () => {
+      const result = await rest.getEvents({ limit: 5 });
+      expect(Array.isArray(result.events)).toBe(true);
+      expect(typeof result.cursor).toBe("string");
+    });
+
+    it("filters events by status", async () => {
+      const result = await rest.getEvents({ limit: 3, status: "open" });
+      expect(Array.isArray(result.events)).toBe(true);
+    });
+
+    it("fetches a single event by ticker", async () => {
+      const list = await rest.getEvents({ limit: 1, status: "open" });
+      if (!list.events.length) return;
+
+      const ticker = list.events[0].event_ticker;
+      const result = await rest.getEvent(ticker);
+      expect(result.event.event_ticker).toBe(ticker);
+      expect(typeof result.event.title).toBe("string");
+    });
+
+    it("fetches event with nested markets", async () => {
+      const list = await rest.getEvents({ limit: 1, status: "open" });
+      if (!list.events.length) return;
+
+      const result = await rest.getEvent(list.events[0].event_ticker, true);
+      expect(result.event.event_ticker).toBeTruthy();
+    });
+
+    it("fetches event metadata", async () => {
+      const list = await rest.getEvents({ limit: 1, status: "open" });
+      if (!list.events.length) return;
+
+      const meta = await rest.getEventMetadata(list.events[0].event_ticker);
+      expect(typeof meta.image_url).toBe("string");
+      expect(Array.isArray(meta.market_details)).toBe(true);
+      expect(Array.isArray(meta.settlement_sources)).toBe(true);
+    });
+  });
+
+  // ── Phase 2: Portfolio fills & settlements ─────────────────────────────
+
+  describe("Fills and Settlements", () => {
+    it("lists fills (may be empty)", async () => {
+      const result = await rest.getFills({ limit: 5 });
+      expect(Array.isArray(result.fills)).toBe(true);
+      expect(typeof result.cursor).toBe("string");
+    });
+
+    it("lists settlements (may be empty)", async () => {
+      const result = await rest.getSettlements({ limit: 5 });
+      expect(Array.isArray(result.settlements)).toBe(true);
+      expect(typeof result.cursor).toBe("string");
+    });
+  });
+
+  // ── Phase 2: Exchange status ───────────────────────────────────────────
+
+  describe("Exchange status", () => {
+    it("returns exchange status", async () => {
+      const status = await rest.getExchangeStatus();
+      expect(typeof status.exchange_active).toBe("boolean");
+      expect(typeof status.trading_active).toBe("boolean");
+    });
+
+    it("returns exchange schedule", async () => {
+      const schedule = await rest.getExchangeSchedule();
+      expect(Array.isArray(schedule.standard_hours)).toBe(true);
+      expect(Array.isArray(schedule.maintenance_windows)).toBe(true);
+    });
+  });
+
+  // ── Phase 2: Market trades ─────────────────────────────────────────────
+
+  describe("Market trades", () => {
+    it("lists recent trades", async () => {
+      const result = await rest.getTrades({ limit: 10 });
+      expect(Array.isArray(result.trades)).toBe(true);
+      expect(typeof result.cursor).toBe("string");
+    });
+
+    it("filters trades by market ticker", async () => {
+      const markets = await rest.getMarkets({ limit: 1, status: "open" });
+      if (!markets.length) return;
+
+      const result = await rest.getTrades({
+        ticker: markets[0].ticker,
+        limit: 5,
+      });
+      expect(Array.isArray(result.trades)).toBe(true);
+      for (const t of result.trades) {
+        expect(t.ticker).toBe(markets[0].ticker);
+      }
+    });
+
+    it("validates trade shape", async () => {
+      const result = await rest.getTrades({ limit: 3 });
+      for (const t of result.trades) {
+        expect(typeof t.trade_id).toBe("string");
+        expect(typeof t.ticker).toBe("string");
+        expect(typeof t.count).toBe("number");
+        expect(typeof t.yes_price).toBe("number");
+        expect(typeof t.no_price).toBe("number");
+        expect(["yes", "no"]).toContain(t.taker_side);
+      }
+    });
+  });
+
+  // ── Phase 2: Multiple orderbooks ───────────────────────────────────────
+
+  describe("Multiple orderbooks", () => {
+    it("fetches multiple orderbooks in parallel", async () => {
+      const markets = await rest.getMarkets({ limit: 3, status: "open" });
+      if (markets.length < 2) return;
+
+      const tickers = markets.map((m) => m.ticker);
+      const books = await rest.getOrderBooks(tickers);
+      expect(books.size).toBeGreaterThan(0);
+      expect(books.size).toBeLessThanOrEqual(tickers.length);
+      for (const [, book] of books) {
+        expect(Array.isArray(book.yes)).toBe(true);
+        expect(Array.isArray(book.no)).toBe(true);
+      }
+    });
+  });
+
+  // ── Phase 1 (existing): order lifecycle ────────────────────────────────
+
   describe("order lifecycle", () => {
     it("places a limit order, verifies it, then cancels it", async () => {
       const markets = await rest.getMarkets({ limit: 5, status: "open" });
