@@ -14,10 +14,10 @@
   },
   "dependencies": {
     "@fastify/helmet": "^13.0.2",
-    "@nestjs/common": "^11.1.18",
-    "@nestjs/config": "^4.0.2",
-    "@nestjs/core": "^11.1.18",
-    "@nestjs/platform-fastify": "^11.1.16",
+    "@nestjs/common": "^11.1.19",
+    "@nestjs/config": "^4.0.4",
+    "@nestjs/core": "^11.1.19",
+    "@nestjs/platform-fastify": "^11.1.19",
     "@nestjs/throttler": "^6.5.0",
     "@polyforge/logger": "workspace:*",
     "@polyforge/shared-auth": "workspace:^",
@@ -33,14 +33,14 @@
     "rxjs": "^7.8.0"
   },
   "devDependencies": {
-    "@nestjs/cli": "^11.0.0",
+    "@nestjs/cli": "^11.0.21",
     "@nestjs/schematics": "^11.0.0",
-    "@nestjs/testing": "^11.1.16",
+    "@nestjs/testing": "^11.1.19",
     "@types/node": "^25.5.0",
     "@types/nodemailer": "^6.4.23",
-    "@vitest/coverage-v8": "^4.1.0",
+    "@vitest/coverage-v8": "^4.1.5",
     "typescript": "^5.9.2",
-    "vitest": "^4.1.0",
+    "vitest": "^4.1.5",
     "vitest-mock-extended": "^3.1.1"
   }
 }

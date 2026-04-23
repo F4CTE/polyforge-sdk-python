@@ -14,12 +14,12 @@
   },
   "dependencies": {
     "@fastify/helmet": "^13.0.2",
-    "@nestjs/common": "^11.1.18",
-    "@nestjs/config": "^4.0.2",
-    "@nestjs/core": "^11.1.18",
+    "@nestjs/common": "^11.1.19",
+    "@nestjs/config": "^4.0.4",
+    "@nestjs/core": "^11.1.19",
     "@nestjs/event-emitter": "^3.0.1",
     "@nestjs/jwt": "^11.0.2",
-    "@nestjs/platform-fastify": "^11.1.16",
+    "@nestjs/platform-fastify": "^11.1.19",
     "@nestjs/schedule": "^6.1.1",
     "@nestjs/throttler": "^6.5.0",
     "@polyforge/logger": "workspace:*",
@@ -39,14 +39,14 @@
     "ws": "^8.18.3"
   },
   "devDependencies": {
-    "@nestjs/cli": "^11.0.0",
+    "@nestjs/cli": "^11.0.21",
     "@nestjs/schematics": "^11.0.0",
-    "@nestjs/testing": "^11.1.16",
+    "@nestjs/testing": "^11.1.19",
     "@types/node": "^25.5.0",
     "@types/uuid": "^11.0.0",
     "@types/ws": "^8.18.1",
-    "@vitest/coverage-v8": "^4.1.0",
+    "@vitest/coverage-v8": "^4.1.5",
     "typescript": "^5.9.2",
-    "vitest": "^4.1.0"
+    "vitest": "^4.1.5"
   }
 }

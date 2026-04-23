@@ -14,8 +14,8 @@
     "ioredis": "^5.10.0"
   },
   "devDependencies": {
-    "@nestjs/common": "^11.1.18",
-    "@nestjs/core": "^11.1.18",
+    "@nestjs/common": "^11.1.19",
+    "@nestjs/core": "^11.1.19",
     "@types/node": "^25.5.0",
     "typescript": "^5.9.2"
   }
