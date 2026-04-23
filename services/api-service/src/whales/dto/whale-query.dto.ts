@@ -26,6 +26,10 @@ export class WhaleFeedQueryDto {
   walletAddress?: string;
 
   @IsOptional()
+  @IsIn(["BUY", "SELL"])
+  side?: string;
+
+  @IsOptional()
   @Type(() => Number)
   @IsInt()
   @Min(1)

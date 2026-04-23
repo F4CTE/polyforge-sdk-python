@@ -1,7 +1,10 @@
 import {
   Controller,
   Get,
+  Put,
+  Delete,
   Post,
+  Body,
   Param,
   Query,
   UseGuards,
@@ -13,6 +16,7 @@ import { Throttle } from "@nestjs/throttler";
 import { JwtAuthGuard, CurrentUser } from "@polyforge/shared-auth";
 import { WhalesService } from "./whales.service";
 import { SmartMoneyService } from "./smart-money.service";
+import { UpsertWhaleAlertFilterDto } from "./dto/whale-alert-filter.dto";
 import {
   WhaleFeedQueryDto,
   WhaleTopQueryDto,
@@ -66,6 +70,25 @@ export class WhalesController {
   @Get("following")
   getFollowing(@CurrentUser() user: JwtPayload) {
     return this.whales.getFollowing(user.sub);
+  }
+
+  @Get("alerts/filter")
+  getAlertFilter(@CurrentUser() user: JwtPayload) {
+    return this.whales.getAlertFilter(user.sub);
+  }
+
+  @Put("alerts/filter")
+  upsertAlertFilter(
+    @CurrentUser() user: JwtPayload,
+    @Body() dto: UpsertWhaleAlertFilterDto,
+  ) {
+    return this.whales.upsertAlertFilter(user.sub, dto);
+  }
+
+  @Delete("alerts/filter")
+  @HttpCode(HttpStatus.NO_CONTENT)
+  deleteAlertFilter(@CurrentUser() user: JwtPayload) {
+    return this.whales.deleteAlertFilter(user.sub);
   }
 
   @Get(":address")

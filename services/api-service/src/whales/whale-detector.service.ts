@@ -157,14 +157,24 @@ export class WhaleDetectorService implements OnModuleInit, OnModuleDestroy {
       },
     });
 
-    // Fetch market title for notification context
+    // Fetch market title and whale classification for notification context
     let marketTitle: string | undefined;
+    let classification = "UNKNOWN";
+    let label: string | undefined;
     try {
-      const market = await this.prisma.market.findUnique({
-        where: { id: event.marketId },
-        select: { title: true },
-      });
+      const [market, profile] = await Promise.all([
+        this.prisma.market.findUnique({
+          where: { id: event.marketId },
+          select: { title: true },
+        }),
+        this.prisma.whaleProfile.findUnique({
+          where: { walletAddress },
+          select: { classification: true, label: true },
+        }),
+      ]);
       marketTitle = market?.title ?? undefined;
+      classification = profile?.classification ?? "UNKNOWN";
+      label = profile?.label ?? undefined;
     } catch {
       // non-critical
     }
@@ -179,6 +189,8 @@ export class WhaleDetectorService implements OnModuleInit, OnModuleDestroy {
       outcome: event.outcome ?? "",
       notional: notional.toFixed(6),
       marketTitle: marketTitle ?? "",
+      classification,
+      label: label ?? "",
       alertId: alert.id,
       ts: String(Date.now()),
     });

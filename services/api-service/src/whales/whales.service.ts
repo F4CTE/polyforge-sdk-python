@@ -1,7 +1,8 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { PrismaService } from "@polyforge/shared-db";
-import { Prisma } from "@prisma/client";
+import { OrderSide, Prisma } from "@prisma/client";
 import { paginate } from "../common/dto/pagination.dto";
+import { UpsertWhaleAlertFilterDto } from "./dto/whale-alert-filter.dto";
 import { WhaleFeedQueryDto, WhaleTopQueryDto } from "./dto/whale-query.dto";
 
 @Injectable()
@@ -28,6 +29,9 @@ export class WhalesService {
     }
     if (query.walletAddress) {
       where.walletAddress = query.walletAddress;
+    }
+    if (query.side) {
+      where.side = query.side as Prisma.EnumOrderSideFilter;
     }
 
     const [data, total] = await Promise.all([
@@ -172,5 +176,45 @@ export class WhalesService {
       ...f,
       profile: profileMap.get(f.walletAddress) ?? null,
     }));
+  }
+
+  // ─── Alert Filters ─────────────────────────────────────────────────────────
+
+  async getAlertFilter(userId: string) {
+    return this.prisma.whaleAlertFilter.findUnique({
+      where: { userId },
+    });
+  }
+
+  async upsertAlertFilter(userId: string, dto: UpsertWhaleAlertFilterDto) {
+    const sides = (dto.sides ?? []) as OrderSide[];
+    return this.prisma.whaleAlertFilter.upsert({
+      where: { userId },
+      create: {
+        userId,
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
+        minSize: dto.minSize ? new Prisma.Decimal(dto.minSize) : null,
+        marketIds: dto.marketIds ?? [],
+        walletAddresses: dto.walletAddresses ?? [],
+        sides,
+        active: dto.active ?? true,
+      },
+      update: {
+        ...(dto.minSize !== undefined && {
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
+          minSize: dto.minSize ? new Prisma.Decimal(dto.minSize) : null,
+        }),
+        ...(dto.marketIds !== undefined && { marketIds: dto.marketIds }),
+        ...(dto.walletAddresses !== undefined && {
+          walletAddresses: dto.walletAddresses,
+        }),
+        ...(dto.sides !== undefined && { sides }),
+        ...(dto.active !== undefined && { active: dto.active }),
+      },
+    });
+  }
+
+  async deleteAlertFilter(userId: string) {
+    await this.prisma.whaleAlertFilter.deleteMany({ where: { userId } });
   }
 }

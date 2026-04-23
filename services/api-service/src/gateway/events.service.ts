@@ -4,7 +4,9 @@ import {
   OnModuleInit,
   OnModuleDestroy,
 } from "@nestjs/common";
+import { PrismaService } from "@polyforge/shared-db";
 import { RedisService } from "@polyforge/shared-redis";
+import { WebhooksService } from "../webhooks/webhooks.service";
 import { EventsGateway } from "./events.gateway";
 import { StrategyEventsService } from "./strategy-events.service";
 
@@ -28,8 +30,10 @@ export class EventsService implements OnModuleInit, OnModuleDestroy {
 
   constructor(
     private readonly redis: RedisService,
+    private readonly prisma: PrismaService,
     private readonly gateway: EventsGateway,
     private readonly strategyEvents: StrategyEventsService,
+    private readonly webhooks: WebhooksService,
   ) {}
 
   async onModuleInit() {
@@ -102,6 +106,35 @@ export class EventsService implements OnModuleInit, OnModuleDestroy {
     return obj;
   }
 
+  private dispatchWhaleWebhooks(
+    walletAddress: string,
+    data: Record<string, string>,
+  ) {
+    if (!walletAddress) return;
+    this.prisma.whaleFollow
+      .findMany({
+        where: { walletAddress },
+        select: { userId: true },
+      })
+      .then((followers) => {
+        for (const { userId } of followers) {
+          this.webhooks
+            .dispatch(userId, "WHALE_TRADE", {
+              walletAddress,
+              ...data,
+            })
+            .catch((err: unknown) => {
+              const msg = err instanceof Error ? err.message : String(err);
+              this.logger.warn(`Whale webhook dispatch failed: ${msg}`);
+            });
+        }
+      })
+      .catch((err: unknown) => {
+        const msg = err instanceof Error ? err.message : String(err);
+        this.logger.warn(`Failed to fetch whale followers: ${msg}`);
+      });
+  }
+
   private dispatch(event: Record<string, string>) {
     const { type, strategyId, userId, orderId, tokenId, reason, ...rest } =
       event;
@@ -170,6 +203,7 @@ export class EventsService implements OnModuleInit, OnModuleDestroy {
           ...rest,
           walletAddress: rest.walletAddress,
         });
+        this.dispatchWhaleWebhooks(rest.walletAddress ?? "", rest);
         break;
 
       case "NEWS_SIGNAL":

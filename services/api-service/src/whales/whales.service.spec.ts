@@ -30,6 +30,11 @@ function createMockPrisma() {
       create: vi.fn(),
       delete: vi.fn(),
     },
+    whaleAlertFilter: {
+      findUnique: vi.fn(),
+      upsert: vi.fn(),
+      deleteMany: vi.fn(),
+    },
   } as any;
 }
 
@@ -346,6 +351,10 @@ describe("WhaleDetectorService", () => {
       prisma.whaleAlert.create.mockResolvedValue({ id: "alert-1" });
       prisma.whaleProfile.upsert.mockResolvedValue({});
       prisma.market.findUnique.mockResolvedValue({ title: "Test Market" });
+      prisma.whaleProfile.findUnique.mockResolvedValue({
+        classification: "MARKET_MAKER",
+        label: "Wintermute",
+      });
       redis.xadd.mockResolvedValue("ok");
 
       const processEvent = (detector as any).processEvent.bind(detector);
@@ -369,6 +378,8 @@ describe("WhaleDetectorService", () => {
         expect.objectContaining({
           type: "WHALE_TRADE",
           walletAddress: "0xwhale",
+          classification: "MARKET_MAKER",
+          label: "Wintermute",
         }),
       );
     });
@@ -425,6 +436,89 @@ describe("WhaleDetectorService", () => {
       await detector.aggregateProfiles();
 
       expect(prisma.whaleProfile.update).not.toHaveBeenCalled();
+    });
+  });
+});
+
+// ─── WhalesService: side filter ──────────────────────────────────────────────
+
+describe("WhalesService side filter", () => {
+  let service: WhalesService;
+  let prisma: ReturnType<typeof createMockPrisma>;
+
+  beforeEach(() => {
+    prisma = createMockPrisma();
+    service = new WhalesService(prisma);
+  });
+
+  it("applies side filter to feed query", async () => {
+    prisma.whaleAlert.findMany.mockResolvedValue([]);
+    prisma.whaleAlert.count.mockResolvedValue(0);
+
+    await service.getFeed({ side: "BUY", page: 1, limit: 20 });
+
+    const whereArg = prisma.whaleAlert.findMany.mock.calls[0][0].where;
+    expect(whereArg.side).toBe("BUY");
+  });
+
+  it("does not include side filter when not specified", async () => {
+    prisma.whaleAlert.findMany.mockResolvedValue([]);
+    prisma.whaleAlert.count.mockResolvedValue(0);
+
+    await service.getFeed({ page: 1, limit: 20 });
+
+    const whereArg = prisma.whaleAlert.findMany.mock.calls[0][0].where;
+    expect(whereArg.side).toBeUndefined();
+  });
+});
+
+// ─── WhalesService: alert filters ────────────────────────────────────────────
+
+describe("WhalesService alert filters", () => {
+  let service: WhalesService;
+  let prisma: ReturnType<typeof createMockPrisma>;
+
+  beforeEach(() => {
+    prisma = createMockPrisma();
+    service = new WhalesService(prisma);
+  });
+
+  it("getAlertFilter returns user filter", async () => {
+    const filter = { id: "f1", userId: "u1", minSize: null, active: true };
+    prisma.whaleAlertFilter.findUnique.mockResolvedValue(filter);
+
+    const result = await service.getAlertFilter("u1");
+
+    expect(result).toEqual(filter);
+    expect(prisma.whaleAlertFilter.findUnique).toHaveBeenCalledWith({
+      where: { userId: "u1" },
+    });
+  });
+
+  it("upsertAlertFilter creates or updates filter", async () => {
+    const upserted = { id: "f1", userId: "u1", minSize: "10000", active: true };
+    prisma.whaleAlertFilter.upsert.mockResolvedValue(upserted);
+
+    const result = await service.upsertAlertFilter("u1", {
+      minSize: "10000",
+      sides: ["BUY"],
+    });
+
+    expect(result).toEqual(upserted);
+    expect(prisma.whaleAlertFilter.upsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { userId: "u1" },
+      }),
+    );
+  });
+
+  it("deleteAlertFilter removes user filter", async () => {
+    prisma.whaleAlertFilter.deleteMany.mockResolvedValue({ count: 1 });
+
+    await service.deleteAlertFilter("u1");
+
+    expect(prisma.whaleAlertFilter.deleteMany).toHaveBeenCalledWith({
+      where: { userId: "u1" },
     });
   });
 });
