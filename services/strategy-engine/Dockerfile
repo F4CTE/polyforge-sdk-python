@@ -1,5 +1,5 @@
 # ── Rust build stage: compile WASM strategy evaluator ─────────────────────────
-FROM rust:1-slim@sha256:1d0000a49fb62f4fde24455f49d59c6c088af46202d65d8f455b722f7263e8f8 AS wasm-builder
+FROM rust:1-slim@sha256:c03ea1587a8e4474ae1a3f4a377cbb35ad53d2eb5c27f0bdf1ca8986025e322f AS wasm-builder
 
 RUN rustup target add wasm32-unknown-unknown && \
     cargo install wasm-pack
