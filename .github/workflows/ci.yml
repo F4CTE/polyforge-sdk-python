@@ -129,7 +129,7 @@ jobs:
   # E2E runs against PR2's code → ECONNREFUSED. (POLA-552)
   deploy-and-e2e:
     name: Deploy to Dev
-    if: github.event_name != 'push'
+    if: github.ref == 'refs/heads/main'
     runs-on: [self-hosted, linux]
     needs: [build]
     timeout-minutes: 150
