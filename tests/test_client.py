@@ -1206,14 +1206,101 @@ class TestOrderMonetaryFields:
         """Position monetary fields must be str."""
         pos = Position(
             size="100.00",
-            entry_price="0.55",
+            avg_price="0.55",
             current_price="0.65",
             unrealized_pnl="10.00",
             realized_pnl="5.00",
         )
         assert isinstance(pos.size, str)
-        assert isinstance(pos.entry_price, str)
+        assert isinstance(pos.avg_price, str)
         assert pos.unrealized_pnl == "10.00"
+
+
+class TestPositionOrderFieldAlignment:
+    """Tests for Position and Order field alignment with platform contract (#143)."""
+
+    def test_position_has_token_id(self):
+        """Position must have token_id field (#143)."""
+        pos = Position(token_id="0xabc123")
+        assert pos.token_id == "0xabc123"
+
+    def test_position_has_outcome(self):
+        """Position must have outcome field for YES/NO (#143)."""
+        pos_yes = Position(outcome="YES")
+        pos_no = Position(outcome="NO")
+        assert pos_yes.outcome == "YES"
+        assert pos_no.outcome == "NO"
+
+    def test_position_uses_avg_price_not_entry_price(self):
+        """Position must use avg_price (platform field), not entry_price (#143)."""
+        import dataclasses
+        field_names = {f.name for f in dataclasses.fields(Position)}
+        assert "avg_price" in field_names
+        assert "entry_price" not in field_names
+
+    def test_position_no_market_name_phantom_field(self):
+        """Position must not have phantom market_name field (#143)."""
+        import dataclasses
+        field_names = {f.name for f in dataclasses.fields(Position)}
+        assert "market_name" not in field_names
+
+    def test_position_parses_from_api(self):
+        """_parse must map camelCase platform fields to Position (#143)."""
+        api_response = {
+            "id": "pos-1",
+            "marketId": "mkt-abc",
+            "tokenId": "0xtoken",
+            "outcome": "YES",
+            "side": "BUY",
+            "size": "50.00",
+            "avgPrice": "0.60",
+            "currentPrice": "0.70",
+            "unrealizedPnl": "5.00",
+            "realizedPnl": "0.00",
+            "openedAt": "2026-01-01T00:00:00Z",
+        }
+        pos = _parse(Position, api_response)
+        assert pos.token_id == "0xtoken"
+        assert pos.outcome == "YES"
+        assert pos.avg_price == "0.60"
+
+    def test_order_has_token_id(self):
+        """Order must have token_id field (#143)."""
+        order = Order(token_id="0xdef456")
+        assert order.token_id == "0xdef456"
+
+    def test_order_has_outcome(self):
+        """Order must have outcome field for YES/NO (#143)."""
+        order = Order(outcome="NO")
+        assert order.outcome == "NO"
+
+    def test_order_has_intent_id(self):
+        """Order must have intent_id field (#143)."""
+        order = Order(intent_id="intent-xyz")
+        assert order.intent_id == "intent-xyz"
+
+    def test_order_intent_id_defaults_none(self):
+        """Order intent_id must default to None (optional field) (#143)."""
+        order = Order()
+        assert order.intent_id is None
+
+    def test_order_parses_token_id_and_outcome_from_api(self):
+        """_parse must map tokenId and outcome to Order (#143)."""
+        api_response = {
+            "id": "ord-2",
+            "marketId": "mkt-abc",
+            "tokenId": "0xtoken",
+            "outcome": "YES",
+            "intentId": "intent-99",
+            "side": "BUY",
+            "price": "0.65",
+            "size": "100.00",
+            "status": "LIVE",
+        }
+        order = _parse(Order, api_response)
+        assert order.token_id == "0xtoken"
+        assert order.outcome == "YES"
+        assert order.intent_id == "intent-99"
 
 
 class TestAlertFields:
