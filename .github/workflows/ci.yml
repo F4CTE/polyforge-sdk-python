@@ -221,6 +221,7 @@ jobs:
 
             echo "=== 5. Incremental Docker rebuild + restart (with TLS) ==="
             docker compose -f docker-compose.infra.yml -f docker-compose.ssl.yml build
+            docker compose -f docker-compose.infra.yml -f docker-compose.ssl.yml rm -f -s migrate-user migrate-admin 2>/dev/null || true
             docker compose -f docker-compose.infra.yml -f docker-compose.ssl.yml up -d
 
             echo "=== 6. Wait for services ==="
@@ -232,6 +233,8 @@ jobs:
             echo "  gateway: healthy"
 
             echo "=== 7. Migrate + seed ==="
+            npx prisma migrate deploy --schema prisma/schema.prisma --config prisma/prisma.config.ts
+            npx prisma migrate deploy --schema prisma/schema.admin.prisma --config prisma/prisma.admin.config.ts
             npx ts-node prisma/seed.ts
             npx ts-node prisma/seed.admin.ts
 
