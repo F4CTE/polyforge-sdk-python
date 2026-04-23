@@ -216,6 +216,258 @@ describe("KalshiWsService", () => {
     });
   });
 
+  // ── Phase 3: orderbook_delta channel ────────────────────────────────────
+
+  describe("orderbook_delta channel", () => {
+    it("emits kalshi.orderbook.delta on orderbook_delta message", async () => {
+      svc.onModuleInit();
+      await vi.runAllTimersAsync();
+      mockWsInstance!.triggerOpen();
+
+      mockWsInstance!.triggerMessage({
+        type: "orderbook_delta",
+        msg: {
+          market_ticker: "BTC-USD",
+          side: "yes",
+          price: 45,
+          delta: 10,
+          seq: 1,
+          ts: 1700000000,
+        },
+      });
+
+      expect(emitter.emit).toHaveBeenCalledWith(
+        "kalshi.orderbook.delta",
+        expect.objectContaining({
+          ticker: "BTC-USD",
+          side: "yes",
+          price: 0.45,
+          delta: 10,
+          seq: 1,
+        }),
+      );
+    });
+
+    it("tracks seq numbers and detects gaps", async () => {
+      svc.onModuleInit();
+      await vi.runAllTimersAsync();
+      mockWsInstance!.triggerOpen();
+
+      mockWsInstance!.triggerMessage({
+        type: "orderbook_delta",
+        msg: {
+          market_ticker: "BTC",
+          side: "yes",
+          price: 50,
+          delta: 1,
+          seq: 1,
+          ts: 0,
+        },
+      });
+      expect(svc.getOrderbookSeq("BTC")).toBe(1);
+
+      mockWsInstance!.triggerMessage({
+        type: "orderbook_delta",
+        msg: {
+          market_ticker: "BTC",
+          side: "yes",
+          price: 50,
+          delta: 1,
+          seq: 3,
+          ts: 0,
+        },
+      });
+      expect(svc.getOrderbookSeq("BTC")).toBe(3);
+    });
+
+    it("sends subscription for orderbook_delta channel", async () => {
+      svc.onModuleInit();
+      await vi.runAllTimersAsync();
+      mockWsInstance!.triggerOpen();
+
+      svc.subscribeOrderbookDelta(["BTC-USD"]);
+      const frame = JSON.parse(
+        mockWsInstance!.send.mock.calls[
+          mockWsInstance!.send.mock.calls.length - 1
+        ][0] as string,
+      );
+      expect(frame.params.channels).toContain("orderbook_delta");
+      expect(frame.params.market_tickers).toContain("BTC-USD");
+    });
+  });
+
+  // ── Phase 3: fill channel ─────────────────────────────────────────────────
+
+  describe("fill channel", () => {
+    it("emits kalshi.fill on fill message", async () => {
+      svc.onModuleInit();
+      await vi.runAllTimersAsync();
+      mockWsInstance!.triggerOpen();
+
+      mockWsInstance!.triggerMessage({
+        type: "fill",
+        msg: {
+          fill_id: "f-1",
+          order_id: "ord-1",
+          ticker: "BTC-USD",
+          side: "yes",
+          action: "buy",
+          count: 5,
+          yes_price: 45,
+          is_taker: true,
+          ts: 1700000000,
+        },
+      });
+
+      expect(emitter.emit).toHaveBeenCalledWith(
+        "kalshi.fill",
+        expect.objectContaining({
+          fill_id: "f-1",
+          order_id: "ord-1",
+          ticker: "BTC-USD",
+          price: 0.45,
+          is_taker: true,
+        }),
+      );
+    });
+
+    it("subscribes to fill channel", async () => {
+      svc.onModuleInit();
+      await vi.runAllTimersAsync();
+      mockWsInstance!.triggerOpen();
+
+      svc.subscribeFills();
+      const frame = JSON.parse(
+        mockWsInstance!.send.mock.calls[
+          mockWsInstance!.send.mock.calls.length - 1
+        ][0] as string,
+      );
+      expect(frame.params.channels).toContain("fill");
+    });
+  });
+
+  // ── Phase 3: user_orders channel ──────────────────────────────────────────
+
+  describe("user_orders channel", () => {
+    it("emits kalshi.order on user_orders message", async () => {
+      svc.onModuleInit();
+      await vi.runAllTimersAsync();
+      mockWsInstance!.triggerOpen();
+
+      mockWsInstance!.triggerMessage({
+        type: "user_orders",
+        msg: {
+          order_id: "ord-1",
+          ticker: "BTC-USD",
+          status: "executed",
+          side: "yes",
+          action: "buy",
+          remaining_count: 0,
+          fill_count: 10,
+          ts: 1700000000,
+        },
+      });
+
+      expect(emitter.emit).toHaveBeenCalledWith(
+        "kalshi.order",
+        expect.objectContaining({
+          order_id: "ord-1",
+          status: "executed",
+          fill_count: 10,
+        }),
+      );
+    });
+
+    it("subscribes to user_orders channel", async () => {
+      svc.onModuleInit();
+      await vi.runAllTimersAsync();
+      mockWsInstance!.triggerOpen();
+
+      svc.subscribeUserOrders();
+      const frame = JSON.parse(
+        mockWsInstance!.send.mock.calls[
+          mockWsInstance!.send.mock.calls.length - 1
+        ][0] as string,
+      );
+      expect(frame.params.channels).toContain("user_orders");
+    });
+  });
+
+  // ── Phase 3: market_positions channel ─────────────────────────────────────
+
+  describe("market_positions channel", () => {
+    it("emits kalshi.position on market_positions message", async () => {
+      svc.onModuleInit();
+      await vi.runAllTimersAsync();
+      mockWsInstance!.triggerOpen();
+
+      mockWsInstance!.triggerMessage({
+        type: "market_positions",
+        msg: {
+          ticker: "BTC-USD",
+          position: 25,
+          market_exposure: 1000,
+          realized_pnl: 150,
+          ts: 1700000000,
+        },
+      });
+
+      expect(emitter.emit).toHaveBeenCalledWith(
+        "kalshi.position",
+        expect.objectContaining({
+          ticker: "BTC-USD",
+          position: 25,
+          market_exposure: 1000,
+          realized_pnl: 150,
+        }),
+      );
+    });
+
+    it("subscribes to market_positions channel", async () => {
+      svc.onModuleInit();
+      await vi.runAllTimersAsync();
+      mockWsInstance!.triggerOpen();
+
+      svc.subscribeMarketPositions();
+      const frame = JSON.parse(
+        mockWsInstance!.send.mock.calls[
+          mockWsInstance!.send.mock.calls.length - 1
+        ][0] as string,
+      );
+      expect(frame.params.channels).toContain("market_positions");
+    });
+  });
+
+  // ── Phase 3: private channel reconnection ─────────────────────────────────
+
+  describe("private channel reconnection", () => {
+    it("re-subscribes private channels on reconnect", async () => {
+      svc.onModuleInit();
+      await vi.runAllTimersAsync();
+      const firstInstance = mockWsInstance!;
+      firstInstance.triggerOpen();
+
+      svc.subscribeFills();
+      svc.subscribeUserOrders();
+
+      firstInstance.triggerClose(1006, "lost");
+      await vi.advanceTimersByTimeAsync(1100);
+      await vi.runAllTimersAsync();
+
+      const secondInstance = mockWsInstance!;
+      secondInstance.triggerOpen();
+
+      const calls = secondInstance.send.mock.calls.map((c: unknown[]) =>
+        JSON.parse(c[0] as string),
+      );
+      const channels = calls.flatMap(
+        (f: { params?: { channels?: string[] } }) => f.params?.channels ?? [],
+      );
+      expect(channels).toContain("fill");
+      expect(channels).toContain("user_orders");
+    });
+  });
+
   // ── Reconnection ──────────────────────────────────────────────────────────
 
   describe("reconnection", () => {

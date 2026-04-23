@@ -324,6 +324,103 @@ export interface KalshiOrderDetail {
   client_order_id?: string;
 }
 
+// ─── Phase 3: Order groups ──────────────────────────────────────────────────
+
+export interface KalshiOrderGroup {
+  id: string;
+  max_loss: number;
+  created_time?: string;
+  status?: string;
+}
+
+export interface KalshiCreateOrderGroupRequest {
+  max_loss: number;
+  market_tickers?: string[];
+}
+
+export interface KalshiUpdateOrderGroupRequest {
+  max_loss: number;
+}
+
+// ─── Phase 3: Historical data ───────────────────────────────────────────────
+
+export interface KalshiHistoricalMarketsParams extends KalshiCursorParams {
+  min_close_ts?: number;
+  max_close_ts?: number;
+  status?: string;
+  ticker?: string;
+  event_ticker?: string;
+}
+
+export interface KalshiHistoricalCandlesticksParams {
+  start_ts?: number;
+  end_ts?: number;
+  period_interval?: number;
+}
+
+export interface KalshiHistoricalOrdersParams extends KalshiCursorParams {
+  ticker?: string;
+  status?: string;
+  min_ts?: number;
+  max_ts?: number;
+}
+
+export interface KalshiCutoffTimestamps {
+  markets_cutoff_ts: number;
+  fills_cutoff_ts: number;
+  orders_cutoff_ts: number;
+  trades_cutoff_ts: number;
+}
+
+// ─── Phase 3: Subaccounts ───────────────────────────────────────────────────
+
+export interface KalshiSubaccount {
+  id: string;
+  name?: string;
+  created_time?: string;
+}
+
+export interface KalshiCreateSubaccountRequest {
+  name?: string;
+}
+
+export interface KalshiSubaccountBalance {
+  subaccount_id: string;
+  balance: number;
+  available_balance?: number;
+}
+
+export interface KalshiSubaccountTransferRequest {
+  from_subaccount_id: string;
+  to_subaccount_id: string;
+  amount: number;
+}
+
+export interface KalshiSubaccountNettingConfig {
+  netting_enabled: boolean;
+}
+
+// ─── Phase 3: Search and filters ────────────────────────────────────────────
+
+export interface KalshiSportFilter {
+  sport: string;
+  league?: string;
+  filters: Array<{ key: string; values: string[] }>;
+}
+
+export interface KalshiSeriesTag {
+  tag: string;
+  series_tickers: string[];
+}
+
+// ─── Phase 3: Order queue position ──────────────────────────────────────────
+
+export interface KalshiQueuePosition {
+  order_id: string;
+  queue_position: number;
+  ticker: string;
+}
+
 @Injectable()
 export class KalshiRestService {
   private readonly logger = new Logger(KalshiRestService.name);
@@ -679,6 +776,265 @@ export class KalshiRestService {
     );
   }
 
+  // ─── Phase 3: Order groups ─────────────────────────────────────────────────
+
+  async createOrderGroup(
+    req: KalshiCreateOrderGroupRequest,
+  ): Promise<KalshiOrderGroup> {
+    const result = await this.withRetry<{ order_group: KalshiOrderGroup }>(
+      () =>
+        this.post(
+          "/portfolio/order-groups",
+          req as unknown as Record<string, unknown>,
+        ),
+      "user",
+    );
+    return result.order_group;
+  }
+
+  async getOrderGroups(): Promise<KalshiOrderGroup[]> {
+    const result = await this.withRetry<{ order_groups: KalshiOrderGroup[] }>(
+      () => this.get("/portfolio/order-groups"),
+      "user",
+    );
+    return result.order_groups;
+  }
+
+  async getOrderGroup(groupId: string): Promise<KalshiOrderGroup> {
+    const result = await this.withRetry<{ order_group: KalshiOrderGroup }>(
+      () => this.get(`/portfolio/order-groups/${encodeURIComponent(groupId)}`),
+      "user",
+    );
+    return result.order_group;
+  }
+
+  async updateOrderGroup(
+    groupId: string,
+    req: KalshiUpdateOrderGroupRequest,
+  ): Promise<KalshiOrderGroup> {
+    const result = await this.withRetry<{ order_group: KalshiOrderGroup }>(
+      () =>
+        this.put(
+          `/portfolio/order-groups/${encodeURIComponent(groupId)}`,
+          req as unknown as Record<string, unknown>,
+        ),
+      "user",
+    );
+    return result.order_group;
+  }
+
+  async resetOrderGroup(groupId: string): Promise<void> {
+    await this.withRetryVoid(
+      () =>
+        this.post(
+          `/portfolio/order-groups/${encodeURIComponent(groupId)}/reset`,
+          {},
+        ),
+      "user",
+    );
+  }
+
+  async triggerOrderGroup(groupId: string): Promise<void> {
+    await this.withRetryVoid(
+      () =>
+        this.post(
+          `/portfolio/order-groups/${encodeURIComponent(groupId)}/trigger`,
+          {},
+        ),
+      "user",
+    );
+  }
+
+  async deleteOrderGroup(groupId: string): Promise<void> {
+    await this.withRetryVoid(
+      () =>
+        this.delete(`/portfolio/order-groups/${encodeURIComponent(groupId)}`),
+      "user",
+    );
+  }
+
+  // ─── Phase 3: Historical data ─────────────────────────────────────────────
+
+  async getHistoricalMarkets(
+    params: KalshiHistoricalMarketsParams = {},
+  ): Promise<{ markets: KalshiMarket[]; cursor: string }> {
+    const qs = new URLSearchParams();
+    if (params.limit !== undefined) qs.set("limit", String(params.limit));
+    if (params.cursor) qs.set("cursor", params.cursor);
+    if (params.min_close_ts !== undefined)
+      qs.set("min_close_ts", String(params.min_close_ts));
+    if (params.max_close_ts !== undefined)
+      qs.set("max_close_ts", String(params.max_close_ts));
+    if (params.status) qs.set("status", params.status);
+    if (params.ticker) qs.set("ticker", params.ticker);
+    if (params.event_ticker) qs.set("event_ticker", params.event_ticker);
+
+    return this.withRetry<{ markets: KalshiMarket[]; cursor: string }>(
+      () => this.get(`/markets?${qs.toString()}`),
+      "user",
+    );
+  }
+
+  async getHistoricalMarketCandlesticks(
+    ticker: string,
+    params: KalshiHistoricalCandlesticksParams = {},
+  ): Promise<KalshiCandlestick[]> {
+    const qs = new URLSearchParams();
+    if (params.start_ts !== undefined)
+      qs.set("start_ts", String(params.start_ts));
+    if (params.end_ts !== undefined) qs.set("end_ts", String(params.end_ts));
+    if (params.period_interval !== undefined)
+      qs.set("period_interval", String(params.period_interval));
+
+    const result = await this.withRetry<{
+      candlesticks: KalshiCandlestick[];
+    }>(
+      () =>
+        this.get(
+          `/markets/${encodeURIComponent(ticker)}/candlesticks?${qs.toString()}`,
+        ),
+      "user",
+    );
+    return result.candlesticks ?? [];
+  }
+
+  async getHistoricalTrades(
+    params: KalshiTradesParams = {},
+  ): Promise<{ trades: KalshiTrade[]; cursor: string }> {
+    return this.getTrades(params);
+  }
+
+  async getHistoricalFills(
+    params: KalshiFillsParams = {},
+  ): Promise<{ fills: KalshiFill[]; cursor: string }> {
+    return this.getFills(params);
+  }
+
+  async getHistoricalOrders(
+    params: KalshiHistoricalOrdersParams = {},
+  ): Promise<{ orders: KalshiOrder[]; cursor: string }> {
+    const qs = new URLSearchParams();
+    if (params.limit !== undefined) qs.set("limit", String(params.limit));
+    if (params.cursor) qs.set("cursor", params.cursor);
+    if (params.ticker) qs.set("ticker", params.ticker);
+    if (params.status) qs.set("status", params.status);
+    if (params.min_ts !== undefined) qs.set("min_ts", String(params.min_ts));
+    if (params.max_ts !== undefined) qs.set("max_ts", String(params.max_ts));
+
+    return this.withRetry<{ orders: KalshiOrder[]; cursor: string }>(
+      () => this.get(`/portfolio/orders?${qs.toString()}`),
+      "user",
+    );
+  }
+
+  async getCutoffTimestamps(): Promise<KalshiCutoffTimestamps> {
+    return this.withRetry<KalshiCutoffTimestamps>(
+      () => this.get("/history/cutoff-timestamps"),
+      "user",
+    );
+  }
+
+  // ─── Phase 3: Subaccounts ─────────────────────────────────────────────────
+
+  async createSubaccount(
+    req: KalshiCreateSubaccountRequest,
+  ): Promise<KalshiSubaccount> {
+    const result = await this.withRetry<{ subaccount: KalshiSubaccount }>(
+      () =>
+        this.post(
+          "/portfolio/subaccounts",
+          req as unknown as Record<string, unknown>,
+        ),
+      "user",
+    );
+    return result.subaccount;
+  }
+
+  async getSubaccountBalances(): Promise<KalshiSubaccountBalance[]> {
+    const result = await this.withRetry<{
+      subaccount_balances: KalshiSubaccountBalance[];
+    }>(() => this.get("/portfolio/subaccount-balances"), "user");
+    return result.subaccount_balances;
+  }
+
+  async transferSubaccountFunds(
+    req: KalshiSubaccountTransferRequest,
+  ): Promise<void> {
+    await this.withRetryVoid(
+      () =>
+        this.post(
+          "/portfolio/subaccount-transfers",
+          req as unknown as Record<string, unknown>,
+        ),
+      "user",
+    );
+  }
+
+  async getSubaccountNetting(): Promise<KalshiSubaccountNettingConfig> {
+    return this.withRetry<KalshiSubaccountNettingConfig>(
+      () => this.get("/portfolio/subaccount-netting"),
+      "user",
+    );
+  }
+
+  async updateSubaccountNetting(
+    req: KalshiSubaccountNettingConfig,
+  ): Promise<KalshiSubaccountNettingConfig> {
+    return this.withRetry<KalshiSubaccountNettingConfig>(
+      () =>
+        this.put(
+          "/portfolio/subaccount-netting",
+          req as unknown as Record<string, unknown>,
+        ),
+      "user",
+    );
+  }
+
+  // ─── Phase 3: Search and filters ──────────────────────────────────────────
+
+  async getSportsFilters(): Promise<KalshiSportFilter[]> {
+    const result = await this.withRetry<{ filters: KalshiSportFilter[] }>(
+      () => this.get("/search/sports/filters"),
+      "user",
+    );
+    return result.filters;
+  }
+
+  async getSeriesTags(): Promise<KalshiSeriesTag[]> {
+    const result = await this.withRetry<{ tags: KalshiSeriesTag[] }>(
+      () => this.get("/search/series/tags"),
+      "user",
+    );
+    return result.tags;
+  }
+
+  // ─── Phase 3: Order queue position ────────────────────────────────────────
+
+  async getOrderQueuePosition(orderId: string): Promise<KalshiQueuePosition> {
+    return this.withRetry<KalshiQueuePosition>(
+      () =>
+        this.get(
+          `/portfolio/orders/${encodeURIComponent(orderId)}/queue-position`,
+        ),
+      "user",
+    );
+  }
+
+  async getOrderQueuePositions(
+    orderIds: string[],
+  ): Promise<KalshiQueuePosition[]> {
+    const qs = new URLSearchParams();
+    for (const id of orderIds) qs.append("order_ids", id);
+
+    const result = await this.withRetry<{
+      queue_positions: KalshiQueuePosition[];
+    }>(
+      () => this.get(`/portfolio/orders/queue-positions?${qs.toString()}`),
+      "user",
+    );
+    return result.queue_positions;
+  }
+
   // ─── HTTP helpers ─────────────────────────────────────────────────────────
 
   private async get(path: string): Promise<Response> {
@@ -699,6 +1055,22 @@ export class KalshiRestService {
     const token = await this.auth.getToken("user");
     return fetch(`${this.baseUrl}${path}`, {
       method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(body),
+      signal: AbortSignal.timeout(15_000),
+    });
+  }
+
+  private async put(
+    path: string,
+    body: Record<string, unknown>,
+  ): Promise<Response> {
+    const token = await this.auth.getToken("user");
+    return fetch(`${this.baseUrl}${path}`, {
+      method: "PUT",
       headers: {
         Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",

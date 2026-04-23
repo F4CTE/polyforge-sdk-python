@@ -824,6 +824,398 @@ describe("KalshiRestService", () => {
     });
   });
 
+  // ── Phase 3: createOrderGroup ─────────────────────────────────────────────
+
+  describe("createOrderGroup()", () => {
+    it("POSTs to /portfolio/order-groups", async () => {
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue({
+          order_group: { id: "og-1", max_loss: 1000 },
+        }),
+      });
+      const result = await svc.createOrderGroup({ max_loss: 1000 });
+      expect(fetchSpy.mock.calls[0][0]).toContain("/portfolio/order-groups");
+      expect(fetchSpy.mock.calls[0][1].method).toBe("POST");
+      expect(result.id).toBe("og-1");
+    });
+  });
+
+  // ── Phase 3: getOrderGroups ───────────────────────────────────────────────
+
+  describe("getOrderGroups()", () => {
+    it("GETs /portfolio/order-groups", async () => {
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue({
+          order_groups: [{ id: "og-1" }, { id: "og-2" }],
+        }),
+      });
+      const result = await svc.getOrderGroups();
+      expect(fetchSpy.mock.calls[0][0]).toContain("/portfolio/order-groups");
+      expect(result).toHaveLength(2);
+    });
+  });
+
+  // ── Phase 3: getOrderGroup ────────────────────────────────────────────────
+
+  describe("getOrderGroup()", () => {
+    it("GETs /portfolio/order-groups/:id", async () => {
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue({
+          order_group: { id: "og-42", max_loss: 500 },
+        }),
+      });
+      const result = await svc.getOrderGroup("og-42");
+      expect(fetchSpy.mock.calls[0][0]).toContain(
+        "/portfolio/order-groups/og-42",
+      );
+      expect(result.max_loss).toBe(500);
+    });
+  });
+
+  // ── Phase 3: updateOrderGroup ─────────────────────────────────────────────
+
+  describe("updateOrderGroup()", () => {
+    it("PUTs to /portfolio/order-groups/:id", async () => {
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue({
+          order_group: { id: "og-1", max_loss: 2000 },
+        }),
+      });
+      const result = await svc.updateOrderGroup("og-1", { max_loss: 2000 });
+      expect(fetchSpy.mock.calls[0][0]).toContain(
+        "/portfolio/order-groups/og-1",
+      );
+      expect(fetchSpy.mock.calls[0][1].method).toBe("PUT");
+      expect(result.max_loss).toBe(2000);
+    });
+  });
+
+  // ── Phase 3: resetOrderGroup ──────────────────────────────────────────────
+
+  describe("resetOrderGroup()", () => {
+    it("POSTs to /portfolio/order-groups/:id/reset", async () => {
+      fetchSpy.mockResolvedValue({ ok: true });
+      await svc.resetOrderGroup("og-1");
+      expect(fetchSpy.mock.calls[0][0]).toContain(
+        "/portfolio/order-groups/og-1/reset",
+      );
+      expect(fetchSpy.mock.calls[0][1].method).toBe("POST");
+    });
+  });
+
+  // ── Phase 3: triggerOrderGroup ────────────────────────────────────────────
+
+  describe("triggerOrderGroup()", () => {
+    it("POSTs to /portfolio/order-groups/:id/trigger", async () => {
+      fetchSpy.mockResolvedValue({ ok: true });
+      await svc.triggerOrderGroup("og-1");
+      expect(fetchSpy.mock.calls[0][0]).toContain(
+        "/portfolio/order-groups/og-1/trigger",
+      );
+      expect(fetchSpy.mock.calls[0][1].method).toBe("POST");
+    });
+  });
+
+  // ── Phase 3: deleteOrderGroup ─────────────────────────────────────────────
+
+  describe("deleteOrderGroup()", () => {
+    it("DELETEs /portfolio/order-groups/:id", async () => {
+      fetchSpy.mockResolvedValue({ ok: true });
+      await svc.deleteOrderGroup("og-1");
+      expect(fetchSpy.mock.calls[0][0]).toContain(
+        "/portfolio/order-groups/og-1",
+      );
+      expect(fetchSpy.mock.calls[0][1].method).toBe("DELETE");
+    });
+  });
+
+  // ── Phase 3: getHistoricalMarkets ─────────────────────────────────────────
+
+  describe("getHistoricalMarkets()", () => {
+    it("GETs /markets with timestamp filters", async () => {
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue({ markets: [], cursor: "" }),
+      });
+      await svc.getHistoricalMarkets({
+        min_close_ts: 1700000000,
+        max_close_ts: 1710000000,
+        status: "settled",
+      });
+      const url = fetchSpy.mock.calls[0][0] as string;
+      expect(url).toContain("min_close_ts=1700000000");
+      expect(url).toContain("max_close_ts=1710000000");
+      expect(url).toContain("status=settled");
+    });
+
+    it("returns markets and cursor", async () => {
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue({
+          markets: [{ ticker: "OLD-MKT" }],
+          cursor: "next",
+        }),
+      });
+      const result = await svc.getHistoricalMarkets();
+      expect(result.markets).toHaveLength(1);
+      expect(result.cursor).toBe("next");
+    });
+  });
+
+  // ── Phase 3: getHistoricalMarketCandlesticks ──────────────────────────────
+
+  describe("getHistoricalMarketCandlesticks()", () => {
+    it("GETs candlesticks with time-range filters", async () => {
+      const candles = [
+        {
+          end_period_ts: 1700000000,
+          price: { open: 40, close: 45, high: 50, low: 35 },
+          volume: 100,
+        },
+      ];
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue({ candlesticks: candles }),
+      });
+      const result = await svc.getHistoricalMarketCandlesticks("BTC-USD", {
+        start_ts: 1699000000,
+        end_ts: 1700000000,
+        period_interval: 60,
+      });
+      expect(result).toEqual(candles);
+      const url = fetchSpy.mock.calls[0][0] as string;
+      expect(url).toContain("/markets/BTC-USD/candlesticks");
+      expect(url).toContain("start_ts=1699000000");
+      expect(url).toContain("end_ts=1700000000");
+      expect(url).toContain("period_interval=60");
+    });
+
+    it("returns empty array when no candlesticks field", async () => {
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue({}),
+      });
+      const result = await svc.getHistoricalMarketCandlesticks("X", {});
+      expect(result).toEqual([]);
+    });
+  });
+
+  // ── Phase 3: getHistoricalOrders ──────────────────────────────────────────
+
+  describe("getHistoricalOrders()", () => {
+    it("GETs /portfolio/orders with time and status filters", async () => {
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue({ orders: [], cursor: "" }),
+      });
+      await svc.getHistoricalOrders({
+        ticker: "BTC-USD",
+        status: "executed",
+        min_ts: 1700000000,
+      });
+      const url = fetchSpy.mock.calls[0][0] as string;
+      expect(url).toContain("/portfolio/orders");
+      expect(url).toContain("ticker=BTC-USD");
+      expect(url).toContain("status=executed");
+      expect(url).toContain("min_ts=1700000000");
+    });
+  });
+
+  // ── Phase 3: getCutoffTimestamps ──────────────────────────────────────────
+
+  describe("getCutoffTimestamps()", () => {
+    it("GETs /history/cutoff-timestamps", async () => {
+      const cutoff = {
+        markets_cutoff_ts: 1690000000,
+        fills_cutoff_ts: 1690000000,
+        orders_cutoff_ts: 1690000000,
+        trades_cutoff_ts: 1690000000,
+      };
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue(cutoff),
+      });
+      const result = await svc.getCutoffTimestamps();
+      expect(fetchSpy.mock.calls[0][0]).toContain("/history/cutoff-timestamps");
+      expect(result.markets_cutoff_ts).toBe(1690000000);
+    });
+  });
+
+  // ── Phase 3: createSubaccount ─────────────────────────────────────────────
+
+  describe("createSubaccount()", () => {
+    it("POSTs to /portfolio/subaccounts", async () => {
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue({
+          subaccount: { id: "sub-1", name: "Trading" },
+        }),
+      });
+      const result = await svc.createSubaccount({ name: "Trading" });
+      expect(fetchSpy.mock.calls[0][0]).toContain("/portfolio/subaccounts");
+      expect(fetchSpy.mock.calls[0][1].method).toBe("POST");
+      expect(result.id).toBe("sub-1");
+    });
+  });
+
+  // ── Phase 3: getSubaccountBalances ────────────────────────────────────────
+
+  describe("getSubaccountBalances()", () => {
+    it("GETs /portfolio/subaccount-balances", async () => {
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue({
+          subaccount_balances: [
+            { subaccount_id: "sub-1", balance: 5000 },
+            { subaccount_id: "sub-2", balance: 3000 },
+          ],
+        }),
+      });
+      const result = await svc.getSubaccountBalances();
+      expect(fetchSpy.mock.calls[0][0]).toContain(
+        "/portfolio/subaccount-balances",
+      );
+      expect(result).toHaveLength(2);
+      expect(result[0].balance).toBe(5000);
+    });
+  });
+
+  // ── Phase 3: transferSubaccountFunds ──────────────────────────────────────
+
+  describe("transferSubaccountFunds()", () => {
+    it("POSTs to /portfolio/subaccount-transfers", async () => {
+      fetchSpy.mockResolvedValue({ ok: true });
+      await svc.transferSubaccountFunds({
+        from_subaccount_id: "sub-1",
+        to_subaccount_id: "sub-2",
+        amount: 1000,
+      });
+      expect(fetchSpy.mock.calls[0][0]).toContain(
+        "/portfolio/subaccount-transfers",
+      );
+      expect(fetchSpy.mock.calls[0][1].method).toBe("POST");
+      const body = JSON.parse(fetchSpy.mock.calls[0][1].body as string);
+      expect(body.amount).toBe(1000);
+    });
+  });
+
+  // ── Phase 3: getSubaccountNetting ─────────────────────────────────────────
+
+  describe("getSubaccountNetting()", () => {
+    it("GETs /portfolio/subaccount-netting", async () => {
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue({ netting_enabled: true }),
+      });
+      const result = await svc.getSubaccountNetting();
+      expect(fetchSpy.mock.calls[0][0]).toContain(
+        "/portfolio/subaccount-netting",
+      );
+      expect(result.netting_enabled).toBe(true);
+    });
+  });
+
+  // ── Phase 3: updateSubaccountNetting ──────────────────────────────────────
+
+  describe("updateSubaccountNetting()", () => {
+    it("PUTs to /portfolio/subaccount-netting", async () => {
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue({ netting_enabled: false }),
+      });
+      const result = await svc.updateSubaccountNetting({
+        netting_enabled: false,
+      });
+      expect(fetchSpy.mock.calls[0][0]).toContain(
+        "/portfolio/subaccount-netting",
+      );
+      expect(fetchSpy.mock.calls[0][1].method).toBe("PUT");
+      expect(result.netting_enabled).toBe(false);
+    });
+  });
+
+  // ── Phase 3: getSportsFilters ─────────────────────────────────────────────
+
+  describe("getSportsFilters()", () => {
+    it("GETs /search/sports/filters", async () => {
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue({
+          filters: [
+            { sport: "NBA", filters: [{ key: "team", values: ["LAL"] }] },
+          ],
+        }),
+      });
+      const result = await svc.getSportsFilters();
+      expect(fetchSpy.mock.calls[0][0]).toContain("/search/sports/filters");
+      expect(result).toHaveLength(1);
+      expect(result[0].sport).toBe("NBA");
+    });
+  });
+
+  // ── Phase 3: getSeriesTags ────────────────────────────────────────────────
+
+  describe("getSeriesTags()", () => {
+    it("GETs /search/series/tags", async () => {
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue({
+          tags: [{ tag: "politics", series_tickers: ["POL-2026"] }],
+        }),
+      });
+      const result = await svc.getSeriesTags();
+      expect(fetchSpy.mock.calls[0][0]).toContain("/search/series/tags");
+      expect(result).toHaveLength(1);
+      expect(result[0].tag).toBe("politics");
+    });
+  });
+
+  // ── Phase 3: getOrderQueuePosition ────────────────────────────────────────
+
+  describe("getOrderQueuePosition()", () => {
+    it("GETs /portfolio/orders/:id/queue-position", async () => {
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue({
+          order_id: "ord-1",
+          queue_position: 3,
+          ticker: "BTC-USD",
+        }),
+      });
+      const result = await svc.getOrderQueuePosition("ord-1");
+      expect(fetchSpy.mock.calls[0][0]).toContain(
+        "/portfolio/orders/ord-1/queue-position",
+      );
+      expect(result.queue_position).toBe(3);
+    });
+  });
+
+  // ── Phase 3: getOrderQueuePositions (batch) ───────────────────────────────
+
+  describe("getOrderQueuePositions()", () => {
+    it("GETs /portfolio/orders/queue-positions with order_ids params", async () => {
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue({
+          queue_positions: [
+            { order_id: "ord-1", queue_position: 3, ticker: "BTC-USD" },
+            { order_id: "ord-2", queue_position: 7, ticker: "ETH-USD" },
+          ],
+        }),
+      });
+      const result = await svc.getOrderQueuePositions(["ord-1", "ord-2"]);
+      const url = fetchSpy.mock.calls[0][0] as string;
+      expect(url).toContain("/portfolio/orders/queue-positions");
+      expect(url).toContain("order_ids=ord-1");
+      expect(url).toContain("order_ids=ord-2");
+      expect(result).toHaveLength(2);
+    });
+  });
+
   // ── Price normalization ───────────────────────────────────────────────────
 
   describe("normalizeKalshiPrice()", () => {
