@@ -4232,3 +4232,89 @@ class TestOrderPlatformContract:
         assert order.outcome == "YES"
         assert order.intent_id == "int-1"
         assert order.strategy_id == "str-1"
+
+
+class TestEndpointPathRegression:
+    """Regression tests for issue #149: 12 SDK paths that previously returned 404.
+
+    Each test asserts the exact platform-correct path is present in the method
+    source so a future edit cannot silently revert to the broken path.
+    """
+
+    def test_sync_get_news_signals_path(self):
+        import inspect
+        source = inspect.getsource(PolyforgeClient.get_news_signals)
+        assert "/api/v1/news/signals" in source
+        assert "/api/v1/signals/news" not in source
+
+    def test_async_get_news_signals_path(self):
+        import inspect
+        source = inspect.getsource(AsyncPolyforgeClient.get_news_signals)
+        assert "/api/v1/news/signals" in source
+        assert "/api/v1/signals/news" not in source
+
+    def test_sync_get_accuracy_path(self):
+        import inspect
+        source = inspect.getsource(PolyforgeClient.get_accuracy)
+        assert "/api/v1/accuracy/me" in source
+        assert '"/api/v1/accuracy"' not in source
+
+    def test_async_get_accuracy_path(self):
+        import inspect
+        source = inspect.getsource(AsyncPolyforgeClient.get_accuracy)
+        assert "/api/v1/accuracy/me" in source
+        assert '"/api/v1/accuracy"' not in source
+
+    def test_sync_get_portfolio_review_path(self):
+        import inspect
+        source = inspect.getsource(PolyforgeClient.get_portfolio_review)
+        assert "/api/v1/ai/portfolio-review" in source
+        assert "/api/v1/portfolio/review" not in source
+
+    def test_async_get_portfolio_review_path(self):
+        import inspect
+        source = inspect.getsource(AsyncPolyforgeClient.get_portfolio_review)
+        assert "/api/v1/ai/portfolio-review" in source
+        assert "/api/v1/portfolio/review" not in source
+
+    def test_sync_get_market_sentiment_path(self):
+        import inspect
+        source = inspect.getsource(PolyforgeClient.get_market_sentiment)
+        assert "/api/v1/news/sentiment/" in source
+        assert "/api/v1/market-sentiment/" not in source
+
+    def test_async_get_market_sentiment_path(self):
+        import inspect
+        source = inspect.getsource(AsyncPolyforgeClient.get_market_sentiment)
+        assert "/api/v1/news/sentiment/" in source
+        assert "/api/v1/market-sentiment/" not in source
+
+    def test_sync_provide_liquidity_path(self):
+        import inspect
+        source = inspect.getsource(PolyforgeClient.provide_liquidity)
+        assert "/api/v1/lp/provide" in source
+        assert "/api/v1/liquidity/provide" not in source
+
+    def test_async_provide_liquidity_path(self):
+        import inspect
+        source = inspect.getsource(AsyncPolyforgeClient.provide_liquidity)
+        assert "/api/v1/lp/provide" in source
+        assert "/api/v1/liquidity/provide" not in source
+
+    def test_sync_rollback_strategy_full_path(self):
+        """Platform path is /strategies/{id}/versions/{vid}/rollback, NOT /strategies/{id}/rollback/{vid}."""
+        import inspect
+        import re
+        source = inspect.getsource(PolyforgeClient.rollback_strategy)
+        assert re.search(r"/strategies/.*?/versions/.*?/rollback", source), (
+            "rollback_strategy must use path .../versions/{vid}/rollback, not .../rollback/{vid}"
+        )
+
+    def test_async_rollback_strategy_full_path(self):
+        """Platform path is /strategies/{id}/versions/{vid}/rollback, NOT /strategies/{id}/rollback/{vid}."""
+        import inspect
+        import re
+        source = inspect.getsource(AsyncPolyforgeClient.rollback_strategy)
+        assert re.search(r"/strategies/.*?/versions/.*?/rollback", source), (
+            "rollback_strategy must use path .../versions/{vid}/rollback, not .../rollback/{vid}"
+        )
