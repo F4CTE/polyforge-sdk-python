@@ -94,6 +94,10 @@ from polyforge.models import (
 
 T = TypeVar("T")
 
+_FIELD_ALIASES: dict[str, dict[str, str]] = {
+    "PriceHistoryEntry": {"time": "timestamp"},
+}
+
 _MODEL_REGISTRY: dict[str, type] = {
     "Market": Market,
     "Token": Token,
@@ -178,14 +182,17 @@ def _parse(cls: type[T], data: dict[str, Any]) -> T:
     if not isinstance(data, dict):
         return data  # type: ignore[return-value]
 
+    aliases = _FIELD_ALIASES.get(cls.__name__, {})
+    aliased = {aliases.get(k, k): v for k, v in data.items()}
+
     # Build a snake_case lookup so camelCase API keys map to dataclass fields
-    snake_data = {_camel_to_snake(k): v for k, v in data.items()}
+    snake_data = {_camel_to_snake(k): v for k, v in aliased.items()}
 
     hints = get_type_hints(cls)
     kwargs: dict[str, Any] = {}
 
     for f in fields(cls):  # type: ignore[arg-type]
-        raw = data.get(f.name) or snake_data.get(f.name)
+        raw = aliased.get(f.name) or snake_data.get(f.name)
         if raw is None:
             continue
 
@@ -203,6 +210,8 @@ def _parse(cls: type[T], data: dict[str, Any]) -> T:
                 kwargs[f.name] = [_parse(_MODEL_REGISTRY[inner_name], item) for item in raw]
             else:
                 kwargs[f.name] = raw
+        elif hint is float and isinstance(raw, str):
+            kwargs[f.name] = float(raw)
         else:
             kwargs[f.name] = raw
 
