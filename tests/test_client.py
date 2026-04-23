@@ -2436,7 +2436,7 @@ class TestDiscoveryAndRanking:
         import inspect
         sig = inspect.signature(PolyforgeClient.discover_strategies)
         params = set(sig.parameters.keys())
-        for name in ("sort", "category", "search", "limit", "offset"):
+        for name in ("sort", "category", "search", "limit", "page"):
             assert name in params, f"Missing param: {name}"
 
     def test_sync_discover_strategies_path(self):
@@ -2467,7 +2467,7 @@ class TestDiscoveryAndRanking:
         import inspect
         sig = inspect.signature(PolyforgeClient.get_leaderboard)
         params = set(sig.parameters.keys())
-        for name in ("period", "limit", "offset"):
+        for name in ("period", "limit", "page"):
             assert name in params, f"Missing param: {name}"
 
     def test_sync_get_leaderboard_path(self):
