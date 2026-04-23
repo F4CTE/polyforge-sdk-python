@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
+import { Prisma } from "@prisma/client";
 import { CopyEngineService } from "./copy-engine.service";
 
 // ─── Mocks ──────────────────────────────────────────────────────────────────
@@ -12,6 +13,8 @@ function createMockPrisma() {
     copyTrade: {
       create: vi.fn(),
       findMany: vi.fn(),
+      findUnique: vi.fn(),
+      update: vi.fn(),
     },
   } as any;
 }
@@ -21,6 +24,7 @@ function createMockRedis() {
     xadd: vi.fn().mockResolvedValue("stream-id"),
     get: vi.fn().mockResolvedValue(null),
     set: vi.fn().mockResolvedValue("OK"),
+    del: vi.fn().mockResolvedValue(1),
     getClient: vi.fn().mockReturnValue({
       xgroup: vi.fn().mockResolvedValue("OK"),
       incrbyfloat: vi.fn().mockResolvedValue("100"),
@@ -262,15 +266,23 @@ describe("CopyEngineService", () => {
     });
 
     it("ignores BUSYGROUP error (group already exists)", async () => {
-      redis.getClient().xgroup.mockRejectedValue(new Error("BUSYGROUP Consumer Group name already exists"));
+      redis
+        .getClient()
+        .xgroup.mockRejectedValue(
+          new Error("BUSYGROUP Consumer Group name already exists"),
+        );
 
       await expect((service as any).ensureGroup()).resolves.toBeUndefined();
     });
 
     it("rethrows non-BUSYGROUP errors", async () => {
-      redis.getClient().xgroup.mockRejectedValue(new Error("Connection refused"));
+      redis
+        .getClient()
+        .xgroup.mockRejectedValue(new Error("Connection refused"));
 
-      await expect((service as any).ensureGroup()).rejects.toThrow("Connection refused");
+      await expect((service as any).ensureGroup()).rejects.toThrow(
+        "Connection refused",
+      );
     });
   });
 
@@ -317,11 +329,7 @@ describe("CopyEngineService", () => {
       const result = await (service as any).getDailyPnl("cfg1");
 
       expect(result).toBe(16);
-      expect(redis.set).toHaveBeenCalledWith(
-        "copy:cfg1:daily_pnl",
-        "16",
-        300,
-      );
+      expect(redis.set).toHaveBeenCalledWith("copy:cfg1:daily_pnl", "16", 300);
     });
   });
 
@@ -346,11 +354,7 @@ describe("CopyEngineService", () => {
       const result = await (service as any).getCurrentExposure("cfg1");
 
       expect(result).toBe(150);
-      expect(redis.set).toHaveBeenCalledWith(
-        "copy:cfg1:exposure",
-        "150",
-        30,
-      );
+      expect(redis.set).toHaveBeenCalledWith("copy:cfg1:exposure", "150", 30);
     });
   });
 
@@ -483,7 +487,9 @@ describe("CopyEngineService", () => {
       expect(prisma.copyTrade.create).toHaveBeenCalledOnce();
       // Verify price offset: 0.5 * 1.05 = 0.525
       const createCall = prisma.copyTrade.create.mock.calls[0][0];
-      expect(parseFloat(createCall.data.copiedPrice.toString())).toBeCloseTo(0.525);
+      expect(parseFloat(createCall.data.copiedPrice.toString())).toBeCloseTo(
+        0.525,
+      );
 
       // Verify ORDER_INTENT published
       expect(redis.xadd).toHaveBeenCalledWith(
@@ -512,6 +518,111 @@ describe("CopyEngineService", () => {
         where: { id: "cfg1" },
         data: { totalCopied: { increment: 1 } },
       });
+    });
+  });
+
+  // ── reconcileCopyTrade ─────────────────────────────────────────────────
+
+  describe("reconcileCopyTrade", () => {
+    it("updates copy trade with fill price and PnL on ORDER_FILLED", async () => {
+      prisma.copyTrade.findUnique.mockResolvedValue({
+        id: "ct-1",
+        configId: "cfg-1",
+        side: "BUY",
+        copiedPrice: new Prisma.Decimal("0.60"),
+        sourcePrice: new Prisma.Decimal("0.60"),
+        copiedSize: new Prisma.Decimal("100"),
+        config: { userId: "user-1" },
+      });
+      prisma.copyTrade.update.mockResolvedValue({});
+      prisma.copyConfig.update.mockResolvedValue({});
+
+      await service.reconcileCopyTrade({
+        type: "ORDER_FILLED",
+        copyTradeId: "ct-1",
+        fillPrice: "0.65",
+        orderId: "order-1",
+      });
+
+      expect(prisma.copyTrade.update).toHaveBeenCalledWith({
+        where: { id: "ct-1" },
+        data: expect.objectContaining({
+          status: "CONFIRMED",
+          orderId: "order-1",
+        }),
+      });
+
+      // PnL = (0.65 - 0.60) * 100 = 5.0
+      const updateCall = prisma.copyTrade.update.mock.calls[0][0];
+      expect(parseFloat(updateCall.data.pnl.toString())).toBeCloseTo(5.0, 2);
+
+      // Verify config PnL updated
+      expect(prisma.copyConfig.update).toHaveBeenCalledWith({
+        where: { id: "cfg-1" },
+        data: { totalPnl: { increment: expect.any(Number) } },
+      });
+
+      // Verify exposure cache cleared
+      expect(redis.del).toHaveBeenCalledWith("copy:cfg-1:exposure");
+    });
+
+    it("skips reconciliation if copy trade not found", async () => {
+      prisma.copyTrade.findUnique.mockResolvedValue(null);
+
+      await service.reconcileCopyTrade({
+        type: "ORDER_FILLED",
+        copyTradeId: "non-existent",
+        fillPrice: "0.65",
+      });
+
+      expect(prisma.copyTrade.update).not.toHaveBeenCalled();
+    });
+
+    it("skips reconciliation if no copyTradeId", async () => {
+      await service.reconcileCopyTrade({
+        type: "ORDER_FILLED",
+      });
+
+      expect(prisma.copyTrade.findUnique).not.toHaveBeenCalled();
+    });
+  });
+
+  // ── handleCopyTradeCancelled ───────────────────────────────────────────
+
+  describe("handleCopyTradeCancelled", () => {
+    it("marks copy trade as cancelled", async () => {
+      prisma.copyTrade.findUnique.mockResolvedValue({
+        id: "ct-2",
+        configId: "cfg-2",
+        status: "PENDING",
+      });
+      prisma.copyTrade.update.mockResolvedValue({});
+
+      await service.handleCopyTradeCancelled({
+        type: "ORDER_CANCELLED",
+        copyTradeId: "ct-2",
+      });
+
+      expect(prisma.copyTrade.update).toHaveBeenCalledWith({
+        where: { id: "ct-2" },
+        data: { status: "CANCELLED" },
+      });
+      expect(redis.del).toHaveBeenCalledWith("copy:cfg-2:exposure");
+    });
+
+    it("does not overwrite confirmed trades", async () => {
+      prisma.copyTrade.findUnique.mockResolvedValue({
+        id: "ct-3",
+        configId: "cfg-3",
+        status: "CONFIRMED",
+      });
+
+      await service.handleCopyTradeCancelled({
+        type: "ORDER_CANCELLED",
+        copyTradeId: "ct-3",
+      });
+
+      expect(prisma.copyTrade.update).not.toHaveBeenCalled();
     });
   });
 });

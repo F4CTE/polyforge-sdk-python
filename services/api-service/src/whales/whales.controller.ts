@@ -12,7 +12,12 @@ import { ApiTags, ApiBearerAuth } from "@nestjs/swagger";
 import { Throttle } from "@nestjs/throttler";
 import { JwtAuthGuard, CurrentUser } from "@polyforge/shared-auth";
 import { WhalesService } from "./whales.service";
-import { WhaleFeedQueryDto, WhaleTopQueryDto } from "./dto/whale-query.dto";
+import { SmartMoneyService } from "./smart-money.service";
+import {
+  WhaleFeedQueryDto,
+  WhaleTopQueryDto,
+  SmartMoneyLeaderboardDto,
+} from "./dto/whale-query.dto";
 import { JwtPayload } from "@polyforge/shared-types";
 
 @ApiTags("whales")
@@ -20,7 +25,10 @@ import { JwtPayload } from "@polyforge/shared-types";
 @Controller("whales")
 @UseGuards(JwtAuthGuard)
 export class WhalesController {
-  constructor(private readonly whales: WhalesService) {}
+  constructor(
+    private readonly whales: WhalesService,
+    private readonly smartMoney: SmartMoneyService,
+  ) {}
 
   @Get("feed")
   @Throttle({
@@ -42,6 +50,17 @@ export class WhalesController {
   })
   getTopWhales(@Query() query: WhaleTopQueryDto) {
     return this.whales.getTopWhales(query);
+  }
+
+  @Get("leaderboard")
+  @Throttle({
+    default: {
+      ttl: 60000,
+      limit: process.env.NODE_ENV === "production" ? 30 : 10000,
+    },
+  })
+  getLeaderboard(@Query() query: SmartMoneyLeaderboardDto) {
+    return this.smartMoney.getLeaderboard(query.limit, query.period);
   }
 
   @Get("following")

@@ -55,3 +55,16 @@ export class WhaleTopQueryDto {
   @Max(100)
   limit?: number = 20;
 }
+
+export class SmartMoneyLeaderboardDto {
+  @IsOptional()
+  @IsIn(["24h", "7d", "30d", "all"])
+  period?: string = "all";
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @Max(100)
+  limit?: number = 20;
+}

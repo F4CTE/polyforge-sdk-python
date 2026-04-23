@@ -79,6 +79,10 @@ export class CopyEngineService implements OnModuleInit, OnModuleDestroy {
             const event = this.parseFields(fields);
             if (event.type === "WHALE_TRADE") {
               await this.handleWhaleTrade(event);
+            } else if (event.type === "ORDER_FILLED" && event.copyTradeId) {
+              await this.reconcileCopyTrade(event);
+            } else if (event.type === "ORDER_CANCELLED" && event.copyTradeId) {
+              await this.handleCopyTradeCancelled(event);
             }
             await this.redis.getClient().xack(STREAM, GROUP, id);
           }
@@ -326,5 +330,87 @@ export class CopyEngineService implements OnModuleInit, OnModuleDestroy {
 
     await this.redis.set(`copy:${configId}:exposure`, total.toString(), 30);
     return total;
+  }
+
+  // ─── Order Reconciliation ───────────────────────────────────────────────────
+
+  async reconcileCopyTrade(event: Record<string, string>) {
+    const copyTradeId = event.copyTradeId;
+    if (!copyTradeId) return;
+
+    const fillPrice = parseFloat(event.fillPrice ?? event.price ?? "0");
+    const orderId = event.orderId ?? null;
+
+    try {
+      const trade = await this.prisma.copyTrade.findUnique({
+        where: { id: copyTradeId },
+        include: { config: { select: { userId: true } } },
+      });
+
+      if (!trade) return;
+
+      const entryPrice = parseFloat(
+        String(trade.copiedPrice ?? trade.sourcePrice),
+      );
+      const size = parseFloat(String(trade.copiedSize));
+
+      const pnl =
+        trade.side === "BUY"
+          ? (fillPrice - entryPrice) * size
+          : (entryPrice - fillPrice) * size;
+
+      await this.prisma.copyTrade.update({
+        where: { id: copyTradeId },
+        data: {
+          status: "CONFIRMED",
+          orderId,
+          copiedPrice: new Prisma.Decimal(fillPrice),
+          pnl: new Prisma.Decimal(pnl.toFixed(6)),
+        },
+      });
+
+      // Update config total PnL
+      await this.prisma.copyConfig.update({
+        where: { id: trade.configId },
+        data: { totalPnl: { increment: pnl } },
+      });
+
+      // Update exposure cache
+      await this.redis.del(`copy:${trade.configId}:exposure`);
+
+      this.logger.log(
+        `Reconciled copy trade ${copyTradeId}: PnL=${pnl.toFixed(2)}`,
+      );
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      this.logger.error(
+        `Failed to reconcile copy trade ${copyTradeId}: ${msg}`,
+      );
+    }
+  }
+
+  async handleCopyTradeCancelled(event: Record<string, string>) {
+    const copyTradeId = event.copyTradeId;
+    if (!copyTradeId) return;
+
+    try {
+      const trade = await this.prisma.copyTrade.findUnique({
+        where: { id: copyTradeId },
+      });
+
+      if (!trade || trade.status === "CONFIRMED") return;
+
+      await this.prisma.copyTrade.update({
+        where: { id: copyTradeId },
+        data: { status: "CANCELLED" },
+      });
+
+      await this.redis.del(`copy:${trade.configId}:exposure`);
+
+      this.logger.log(`Copy trade ${copyTradeId} cancelled`);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      this.logger.error(`Failed to cancel copy trade ${copyTradeId}: ${msg}`);
+    }
   }
 }

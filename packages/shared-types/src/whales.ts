@@ -27,7 +27,10 @@ export interface WhaleProfile {
   totalVolume: string;
   totalPnl: string;
   tradeCount: number;
+  winCount: number;
   winRate: string;
+  sharpeRatio: string;
+  smartMoneyScore: string;
   lastTradeAt: string | null;
   updatedAt?: string;
 }

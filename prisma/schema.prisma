@@ -1039,16 +1039,20 @@ enum WhaleClassification {
 }
 
 model WhaleProfile {
-  walletAddress  String              @id @db.VarChar(255)
-  totalVolume    Decimal             @db.Decimal(20, 6) @default(0)
-  totalPnl       Decimal             @db.Decimal(20, 6) @default(0)
-  tradeCount     Int                 @default(0)
-  winRate        Decimal             @db.Decimal(5, 2) @default(0)
-  classification WhaleClassification @default(UNKNOWN)
-  label          String?             @db.VarChar(100)
-  lastTradeAt    DateTime?
-  updatedAt      DateTime            @updatedAt
+  walletAddress   String              @id @db.VarChar(255)
+  totalVolume     Decimal             @db.Decimal(20, 6) @default(0)
+  totalPnl        Decimal             @db.Decimal(20, 6) @default(0)
+  tradeCount      Int                 @default(0)
+  winCount        Int                 @default(0)
+  winRate         Decimal             @db.Decimal(5, 2) @default(0)
+  sharpeRatio     Decimal             @db.Decimal(8, 4) @default(0)
+  smartMoneyScore Decimal             @db.Decimal(8, 2) @default(0)
+  classification  WhaleClassification @default(UNKNOWN)
+  label           String?             @db.VarChar(100)
+  lastTradeAt     DateTime?
+  updatedAt       DateTime            @updatedAt
 
+  @@index([smartMoneyScore(sort: Desc)])
   @@map("whale_profiles")
 }
 
