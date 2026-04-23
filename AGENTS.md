@@ -99,3 +99,19 @@ To check whether embeddings exist, inspect `.gitnexus/meta.json` — the `stats.
 | Index, status, clean, wiki CLI commands | `.claude/skills/gitnexus/gitnexus-cli/SKILL.md` |
 
 <!-- gitnexus:end -->
+
+# Git Workflow Policy
+
+These rules are mandatory for all agents working in this repository. Violations cause merge conflicts, lost work, and CI failures.
+
+## Rules
+
+1. **NEVER cherry-pick between branches.** Cherry-picking duplicates commits and causes conflicts when branches merge. If you need a fix from another branch, wait for it to land on the default branch and rebase.
+
+2. **Fixes go to the default branch first.** If you discover a bug while working on a feature branch, do NOT fix it in your feature branch. Open a separate PR targeting the default branch. Once merged, rebase your feature branch to pick it up.
+
+3. **PRs merge in FIFO order.** The oldest ready PR merges first. Do not skip ahead — out-of-order merges cause cascading rebase failures for every PR behind you. If your PR is blocked, fix the blocker or wait.
+
+4. **Rebase, never merge.** Keep your branch up to date with `git rebase origin/<default-branch>`, not `git merge`. Merge commits pollute history and make bisecting harder.
+
+5. **One fix, one PR.** Each PR addresses exactly one issue. Do not bundle unrelated fixes — it makes review harder, reverts riskier, and CI failures ambiguous.
