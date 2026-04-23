@@ -78,10 +78,12 @@ describe("KalshiWsService", () => {
     emitter = new EventEmitter2();
     vi.spyOn(emitter, "emit");
     auth = { getToken: vi.fn().mockResolvedValue("test.jwt.token") } as any;
-    const config = { get: vi.fn().mockImplementation((key: string) => {
-      if (key === "KALSHI_ENABLED") return "true";
-      return undefined;
-    }) } as any;
+    const config = {
+      get: vi.fn().mockImplementation((key: string) => {
+        if (key === "KALSHI_ENABLED") return "true";
+        return undefined;
+      }),
+    } as any;
     svc = new KalshiWsService(emitter, auth, config);
   });
 

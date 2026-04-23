@@ -67,6 +67,12 @@ export interface KalshiOrder {
   created_time?: string;
 }
 
+export interface KalshiCandlestick {
+  end_period_ts: number;
+  price: { open: number; close: number; high: number; low: number };
+  volume: number;
+}
+
 export interface KalshiMarketsParams {
   limit?: number;
   offset?: number;
@@ -170,6 +176,26 @@ export class KalshiRestService {
       () => this.get("/portfolio/balance"),
       "user",
     );
+  }
+
+  async getCandlesticks(
+    ticker: string,
+    periodInterval: number,
+  ): Promise<KalshiCandlestick[]> {
+    const qs = new URLSearchParams({
+      series_ticker: ticker,
+      period_interval: String(periodInterval),
+    });
+    const result = await this.withRetry<{
+      candlesticks: KalshiCandlestick[];
+    }>(
+      () =>
+        this.get(
+          `/markets/${encodeURIComponent(ticker)}/candlesticks?${qs.toString()}`,
+        ),
+      "user",
+    );
+    return result.candlesticks ?? [];
   }
 
   // ─── HTTP helpers ─────────────────────────────────────────────────────────

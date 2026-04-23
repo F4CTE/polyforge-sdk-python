@@ -173,7 +173,7 @@ export class KalshiFeedService implements OnModuleInit, OnModuleDestroy {
 
     const ts = typeof inner["ts"] === "number" ? inner["ts"] : Date.now();
 
-    this.emitter.emit("market-data.price", {
+    this.emitter.emit("market-data.price.raw.kalshi", {
       tokenId: ticker,
       price: yesPrice / 100,
       timestamp: ts,

@@ -113,15 +113,13 @@ describe("VenueDataRouter", () => {
     });
 
     it("does not throw for a registered venue", () => {
-      expect(() =>
-        router.subscribeTokens("kalshi", ["tok"]),
-      ).not.toThrow();
+      expect(() => router.subscribeTokens("kalshi", ["tok"])).not.toThrow();
     });
 
     it("throws for an unregistered venue", () => {
-      expect(() =>
-        router.subscribeTokens("unknown" as any, ["tok"]),
-      ).toThrow("No feed registered for venue 'unknown'");
+      expect(() => router.subscribeTokens("unknown" as any, ["tok"])).toThrow(
+        "No feed registered for venue 'unknown'",
+      );
     });
   });
 

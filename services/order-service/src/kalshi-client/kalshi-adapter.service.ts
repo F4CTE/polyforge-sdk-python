@@ -58,27 +58,46 @@ export class KalshiAdapterService implements VenueAdapter {
     return String(KalshiRestService.normalizeKalshiPrice(centPrice));
   }
 
-  // Kalshi v2 API does not provide OHLCV candles in Phase 2 scope
+  private static readonly CANDLE_INTERVAL_MAP: Partial<
+    Record<CandleResolution, number>
+  > = {
+    "1m": 1,
+    "1h": 60,
+    "1d": 1440,
+  };
+
   async getPriceHistory(
-    _outcomeId: string,
-    _resolution: CandleResolution,
+    outcomeId: string,
+    resolution: CandleResolution,
   ): Promise<PriceCandle[]> {
-    return [];
+    const interval = KalshiAdapterService.CANDLE_INTERVAL_MAP[resolution];
+    if (!interval) return [];
+
+    const candles = await this.rest.getCandlesticks(outcomeId, interval);
+    return candles.map((c) => ({
+      bucket: new Date(c.end_period_ts * 1000).toISOString(),
+      open: String(KalshiRestService.normalizeKalshiPrice(c.price.open)),
+      high: String(KalshiRestService.normalizeKalshiPrice(c.price.high)),
+      low: String(KalshiRestService.normalizeKalshiPrice(c.price.low)),
+      close: String(KalshiRestService.normalizeKalshiPrice(c.price.close)),
+      volume: c.volume,
+    }));
   }
 
   async submitOrder(order: VenueOrderRequest): Promise<VenueOrderResponse> {
-    const ctx = order.authContext as { userId?: string };
-    const yesPrice = KalshiRestService.denormalizeKalshiPrice(
+    const isNo = order.venueOutcomeId === "no";
+    const kalshiSide: "yes" | "no" = isNo ? "no" : "yes";
+    const centPrice = KalshiRestService.denormalizeKalshiPrice(
       parseFloat(order.price),
     );
 
     const result = await this.rest.placeOrder({
       ticker: order.venueMarketId,
-      side: "yes",
+      side: kalshiSide,
       action: order.side === "BUY" ? "buy" : "sell",
       count: parseInt(order.size, 10),
       type: "limit",
-      yes_price: yesPrice,
+      ...(isNo ? { no_price: centPrice } : { yes_price: centPrice }),
       expiration_ts: order.expiration,
     });
 
@@ -119,19 +138,46 @@ export class KalshiAdapterService implements VenueAdapter {
   async getPositions(userId: string): Promise<VenuePosition[]> {
     const positions = await this.rest.getPositions(userId);
 
-    return positions.map((p) => ({
-      venueId: "kalshi" as VenueId,
-      venueMarketId: p.ticker,
-      venueOutcomeId: p.ticker,
-      outcome: "yes",
-      size: String(p.position),
-      avgPrice:
-        p.position > 0
-          ? String((parseFloat(p.total_cost ?? "0") / p.position).toFixed(4))
-          : "0",
-      currentPrice: "0", // TODO(POLA-405): wire real-time price from KalshiWsService
-      unrealizedPnl: "0", // TODO(POLA-405): compute from currentPrice - avgPrice
-    }));
+    const markets = await Promise.all(
+      positions.map((p) =>
+        this.rest.getMarket(p.ticker).catch((err) => {
+          this.logger.warn(
+            `Failed to fetch price for ${p.ticker}: ${String(err)}`,
+          );
+          return null;
+        }),
+      ),
+    );
+
+    return positions.map((p, i) => {
+      const isNo = p.position < 0;
+      const absSize = Math.abs(p.position);
+      const outcome = isNo ? "no" : "yes";
+      const avgPrice =
+        absSize > 0 ? parseFloat(p.total_cost ?? "0") / absSize : 0;
+
+      const market = markets[i];
+      const yesPrice = market
+        ? KalshiRestService.normalizeKalshiPrice(
+            market.yes_bid ?? market.last_price ?? 0,
+          )
+        : 0;
+      const currentPrice = isNo ? 1 - yesPrice : yesPrice;
+
+      const unrealizedPnl =
+        absSize > 0 ? (currentPrice - avgPrice) * absSize : 0;
+
+      return {
+        venueId: "kalshi" as VenueId,
+        venueMarketId: p.ticker,
+        venueOutcomeId: p.ticker,
+        outcome,
+        size: String(absSize),
+        avgPrice: avgPrice.toFixed(4),
+        currentPrice: String(currentPrice),
+        unrealizedPnl: unrealizedPnl.toFixed(4),
+      };
+    });
   }
 
   async getOrderHistory(

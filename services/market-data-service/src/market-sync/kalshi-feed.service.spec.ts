@@ -156,7 +156,7 @@ describe("KalshiFeedService", () => {
       });
 
       expect(emitter.emit).toHaveBeenCalledWith(
-        "market-data.price",
+        "market-data.price.raw.kalshi",
         expect.objectContaining({
           tokenId: "PRES-2024",
           price: 0.67,
@@ -176,7 +176,7 @@ describe("KalshiFeedService", () => {
 
       const priceCall = (
         emitter.emit as ReturnType<typeof vi.fn>
-      ).mock.calls.find(([e]) => e === "market-data.price");
+      ).mock.calls.find(([e]) => e === "market-data.price.raw.kalshi");
       expect(priceCall?.[1].price).toBeCloseTo(0.99);
     });
 
@@ -188,7 +188,7 @@ describe("KalshiFeedService", () => {
       mockWsInstance.triggerMessage({ type: "subscribed", sid: 42 });
 
       expect(emitter.emit).not.toHaveBeenCalledWith(
-        "market-data.price",
+        "market-data.price.raw.kalshi",
         expect.anything(),
       );
     });

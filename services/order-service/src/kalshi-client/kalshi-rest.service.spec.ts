@@ -354,6 +354,40 @@ describe("KalshiRestService", () => {
     });
   });
 
+  // ── getCandlesticks ──────────────────────────────────────────────────────
+
+  describe("getCandlesticks()", () => {
+    it("fetches candlesticks for a given ticker and period interval", async () => {
+      const candles = [
+        {
+          end_period_ts: 1700000000,
+          price: { open: 40, close: 45, high: 50, low: 35 },
+          volume: 200,
+        },
+      ];
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue({ candlesticks: candles }),
+      });
+
+      const result = await svc.getCandlesticks("BTC-USD", 60);
+      expect(result).toEqual(candles);
+      const url = fetchSpy.mock.calls[0][0] as string;
+      expect(url).toContain("/markets/BTC-USD/candlesticks");
+      expect(url).toContain("period_interval=60");
+      expect(url).toContain("series_ticker=BTC-USD");
+    });
+
+    it("returns empty array when API returns no candlesticks field", async () => {
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue({}),
+      });
+      const result = await svc.getCandlesticks("X", 1);
+      expect(result).toEqual([]);
+    });
+  });
+
   // ── Price normalization ───────────────────────────────────────────────────
 
   describe("normalizeKalshiPrice()", () => {

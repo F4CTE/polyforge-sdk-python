@@ -2,7 +2,9 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { MarketMatchScheduler } from "./market-match.scheduler";
 
 function makeMatchService() {
-  return { runAutoMatch: vi.fn().mockResolvedValue({ created: 0, skipped: 0 }) } as any;
+  return {
+    runAutoMatch: vi.fn().mockResolvedValue({ created: 0, skipped: 0 }),
+  } as any;
 }
 
 describe("MarketMatchScheduler", () => {

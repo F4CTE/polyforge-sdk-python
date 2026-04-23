@@ -269,6 +269,53 @@ describe("KalshiAdapterService", () => {
       const body = JSON.parse(fetchSpy.mock.calls[0][1].body as string);
       expect(body.action).toBe("sell");
     });
+
+    it("places 'no' side order when venueOutcomeId is 'no'", async () => {
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue({
+          order: { order_id: "ord-no1", status: "resting" },
+        }),
+      });
+      const req: VenueOrderRequest = {
+        venueMarketId: "BTC-USD",
+        venueOutcomeId: "no",
+        side: "BUY",
+        size: "10",
+        price: "0.35",
+        orderType: "GTC",
+        authContext: { userId: "user-1" },
+      };
+      const resp = await adapter.submitOrder(req);
+      expect(resp.venueOrderId).toBe("ord-no1");
+      const body = JSON.parse(fetchSpy.mock.calls[0][1].body as string);
+      expect(body.side).toBe("no");
+      expect(body.no_price).toBe(35);
+      expect(body.yes_price).toBeUndefined();
+    });
+
+    it("places 'yes' side order by default when venueOutcomeId is not 'no'", async () => {
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue({
+          order: { order_id: "ord-y1", status: "resting" },
+        }),
+      });
+      const req: VenueOrderRequest = {
+        venueMarketId: "BTC-USD",
+        venueOutcomeId: "yes",
+        side: "BUY",
+        size: "5",
+        price: "0.65",
+        orderType: "GTC",
+        authContext: { userId: "user-1" },
+      };
+      await adapter.submitOrder(req);
+      const body = JSON.parse(fetchSpy.mock.calls[0][1].body as string);
+      expect(body.side).toBe("yes");
+      expect(body.yes_price).toBe(65);
+      expect(body.no_price).toBeUndefined();
+    });
   });
 
   // ── cancelOrder ───────────────────────────────────────────────────────────
@@ -332,25 +379,84 @@ describe("KalshiAdapterService", () => {
   // ── getPositions ──────────────────────────────────────────────────────────
 
   describe("getPositions()", () => {
-    it("maps Kalshi positions to VenuePosition shape", async () => {
-      fetchSpy.mockResolvedValue({
-        ok: true,
-        json: vi.fn().mockResolvedValue({
-          market_positions: [
-            {
-              ticker: "BTC-USD",
-              position: 10,
-              resting_orders_count: 1,
-              realized_pnl: "2.50",
-              total_cost: "45.00",
-            },
-          ],
-        }),
-      });
+    it("maps Kalshi positions with live currentPrice and unrealizedPnl", async () => {
+      fetchSpy
+        .mockResolvedValueOnce({
+          ok: true,
+          json: vi.fn().mockResolvedValue({
+            market_positions: [
+              {
+                ticker: "BTC-USD",
+                position: 10,
+                resting_orders_count: 1,
+                realized_pnl: "2.50",
+                total_cost: "4.50",
+              },
+            ],
+          }),
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: vi.fn().mockResolvedValue({
+            market: { ticker: "BTC-USD", yes_bid: 55, status: "active" },
+          }),
+        });
       const positions = await adapter.getPositions("user-1");
       expect(positions).toHaveLength(1);
       expect(positions[0].venueId).toBe("kalshi");
       expect(positions[0].venueMarketId).toBe("BTC-USD");
+      expect(positions[0].outcome).toBe("yes");
+      expect(positions[0].size).toBe("10");
+      expect(positions[0].currentPrice).toBe("0.55");
+      expect(positions[0].avgPrice).toBe("0.4500");
+      expect(parseFloat(positions[0].unrealizedPnl)).toBeCloseTo(1.0, 2);
+    });
+
+    it("handles no-side positions (negative position) with inverted price", async () => {
+      fetchSpy
+        .mockResolvedValueOnce({
+          ok: true,
+          json: vi.fn().mockResolvedValue({
+            market_positions: [
+              {
+                ticker: "ETH-USD",
+                position: -5,
+                resting_orders_count: 0,
+                total_cost: "2.00",
+              },
+            ],
+          }),
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: vi.fn().mockResolvedValue({
+            market: { ticker: "ETH-USD", yes_bid: 40, status: "active" },
+          }),
+        });
+      const positions = await adapter.getPositions("user-1");
+      expect(positions[0].outcome).toBe("no");
+      expect(positions[0].size).toBe("5");
+      expect(positions[0].currentPrice).toBe("0.6");
+    });
+
+    it("falls back to 0 price when market fetch fails", async () => {
+      fetchSpy
+        .mockResolvedValueOnce({
+          ok: true,
+          json: vi.fn().mockResolvedValue({
+            market_positions: [
+              {
+                ticker: "FAIL-MKT",
+                position: 3,
+                resting_orders_count: 0,
+                total_cost: "1.50",
+              },
+            ],
+          }),
+        })
+        .mockRejectedValueOnce(new Error("Network error"));
+      const positions = await adapter.getPositions("user-1");
+      expect(positions[0].currentPrice).toBe("0");
     });
   });
 
@@ -449,9 +555,45 @@ describe("KalshiAdapterService", () => {
   // ── getPriceHistory ───────────────────────────────────────────────────────
 
   describe("getPriceHistory()", () => {
-    it("returns empty array (candlestick not in Kalshi v2 scope)", async () => {
+    it("returns mapped candles for supported resolutions (1m, 1h, 1d)", async () => {
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue({
+          candlesticks: [
+            {
+              end_period_ts: 1700000000,
+              price: { open: 40, close: 45, high: 50, low: 35 },
+              volume: 100,
+            },
+          ],
+        }),
+      });
       const candles = await adapter.getPriceHistory("BTC-USD", "1h");
-      expect(candles).toEqual([]);
+      expect(candles).toHaveLength(1);
+      expect(candles[0].open).toBe("0.4");
+      expect(candles[0].close).toBe("0.45");
+      expect(candles[0].high).toBe("0.5");
+      expect(candles[0].low).toBe("0.35");
+      expect(candles[0].volume).toBe(100);
+      expect(candles[0].bucket).toBe(new Date(1700000000 * 1000).toISOString());
+    });
+
+    it("returns empty array for unsupported resolutions (5m, 15m)", async () => {
+      const candles5m = await adapter.getPriceHistory("BTC-USD", "5m");
+      expect(candles5m).toEqual([]);
+      const candles15m = await adapter.getPriceHistory("BTC-USD", "15m");
+      expect(candles15m).toEqual([]);
+      expect(fetchSpy).not.toHaveBeenCalled();
+    });
+
+    it("passes correct period_interval for 1d resolution", async () => {
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue({ candlesticks: [] }),
+      });
+      await adapter.getPriceHistory("MKT-1", "1d");
+      const url = fetchSpy.mock.calls[0][0] as string;
+      expect(url).toContain("period_interval=1440");
     });
   });
 });
