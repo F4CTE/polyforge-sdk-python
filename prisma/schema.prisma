@@ -1043,10 +1043,10 @@ model WhaleProfile {
   totalVolume     Decimal             @db.Decimal(20, 6) @default(0)
   totalPnl        Decimal             @db.Decimal(20, 6) @default(0)
   tradeCount      Int                 @default(0)
-  winCount        Int                 @default(0)
+  winCount        Int                 @default(0) @map("win_count")
   winRate         Decimal             @db.Decimal(5, 2) @default(0)
-  sharpeRatio     Decimal             @db.Decimal(8, 4) @default(0)
-  smartMoneyScore Decimal             @db.Decimal(8, 2) @default(0)
+  sharpeRatio     Decimal             @db.Decimal(8, 4) @default(0) @map("sharpe_ratio")
+  smartMoneyScore Decimal             @db.Decimal(8, 2) @default(0) @map("smart_money_score")
   classification  WhaleClassification @default(UNKNOWN)
   label           String?             @db.VarChar(100)
   lastTradeAt     DateTime?
