@@ -1865,7 +1865,7 @@ class PolyforgeClient:
         body: dict[str, Any] = {
             "tokenId": token_id,
             "direction": direction,
-            "price": price,
+            "price": str(price),
             "persistent": persistent,
         }
         return _parse(Alert, self._post("/api/v1/alerts", json=body))
@@ -3677,7 +3677,7 @@ class AsyncPolyforgeClient:
         body: dict[str, Any] = {
             "tokenId": token_id,
             "direction": direction,
-            "price": price,
+            "price": str(price),
             "persistent": persistent,
         }
         return _parse(Alert, await self._post("/api/v1/alerts", json=body))
