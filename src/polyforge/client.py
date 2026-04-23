@@ -428,8 +428,10 @@ class PolyforgeClient:
         api_key: str,
         api_url: str = "https://api.polyforge.app",
         timeout: float = 15.0,
+        stream_timeout: float = 86400.0,
     ) -> None:
         self._api_url = api_url.rstrip("/")
+        self._stream_timeout = stream_timeout
 
         # Reject non-HTTPS URLs for non-localhost hosts
         parsed = urlparse(self._api_url)
@@ -1657,6 +1659,7 @@ class PolyforgeClient:
             "GET",
             f"/api/v1/strategies/{_encode_path(strategy_id)}/events",
             headers={"Accept": "text/event-stream"},
+            timeout=httpx.Timeout(self._stream_timeout, connect=10.0),
         ) as response:
             _raise_for_status(response)
             for line in response.iter_lines():
@@ -2379,8 +2382,10 @@ class AsyncPolyforgeClient:
         api_key: str,
         api_url: str = "https://api.polyforge.app",
         timeout: float = 15.0,
+        stream_timeout: float = 86400.0,
     ) -> None:
         self._api_url = api_url.rstrip("/")
+        self._stream_timeout = stream_timeout
 
         # Reject non-HTTPS URLs for non-localhost hosts
         parsed = urlparse(self._api_url)
@@ -3525,6 +3530,7 @@ class AsyncPolyforgeClient:
             "GET",
             f"/api/v1/strategies/{_encode_path(strategy_id)}/events",
             headers={"Accept": "text/event-stream"},
+            timeout=httpx.Timeout(self._stream_timeout, connect=10.0),
         ) as response:
             _raise_for_status(response)
             async for line in response.aiter_lines():

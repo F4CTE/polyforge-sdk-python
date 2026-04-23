@@ -4318,3 +4318,56 @@ class TestEndpointPathRegression:
         assert re.search(r"/strategies/.*?/versions/.*?/rollback", source), (
             "rollback_strategy must use path .../versions/{vid}/rollback, not .../rollback/{vid}"
         )
+
+
+class TestSseStreamTimeout:
+    """Regression tests for SSE stream timeout — POLA-340 / #154."""
+
+    def test_sync_client_accepts_stream_timeout_param(self):
+        """PolyforgeClient.__init__ must accept stream_timeout keyword."""
+        import inspect
+        sig = inspect.signature(PolyforgeClient.__init__)
+        assert "stream_timeout" in sig.parameters
+
+    def test_async_client_accepts_stream_timeout_param(self):
+        """AsyncPolyforgeClient.__init__ must accept stream_timeout keyword."""
+        import inspect
+        sig = inspect.signature(AsyncPolyforgeClient.__init__)
+        assert "stream_timeout" in sig.parameters
+
+    def test_sync_client_default_stream_timeout_is_24h(self):
+        """PolyforgeClient stream_timeout default must be 86400.0 (24 hours)."""
+        import inspect
+        sig = inspect.signature(PolyforgeClient.__init__)
+        assert sig.parameters["stream_timeout"].default == 86400.0
+
+    def test_async_client_default_stream_timeout_is_24h(self):
+        """AsyncPolyforgeClient stream_timeout default must be 86400.0 (24 hours)."""
+        import inspect
+        sig = inspect.signature(AsyncPolyforgeClient.__init__)
+        assert sig.parameters["stream_timeout"].default == 86400.0
+
+    def test_sync_client_stores_stream_timeout(self):
+        """PolyforgeClient must store stream_timeout as _stream_timeout attribute."""
+        client = PolyforgeClient(api_key="test-key", stream_timeout=300.0)
+        assert client._stream_timeout == 300.0
+        client.close()
+
+    def test_async_client_stores_stream_timeout(self):
+        """AsyncPolyforgeClient must store stream_timeout as _stream_timeout attribute."""
+        client = AsyncPolyforgeClient(api_key="test-key", stream_timeout=300.0)
+        assert client._stream_timeout == 300.0
+
+    def test_sync_watch_strategy_uses_stream_timeout(self):
+        """watch_strategy must pass _stream_timeout to httpx, not the default timeout."""
+        import inspect
+        source = inspect.getsource(PolyforgeClient.watch_strategy)
+        assert "self._stream_timeout" in source
+        assert "httpx.Timeout" in source
+
+    def test_async_watch_strategy_uses_stream_timeout(self):
+        """async watch_strategy must pass _stream_timeout to httpx, not the default timeout."""
+        import inspect
+        source = inspect.getsource(AsyncPolyforgeClient.watch_strategy)
+        assert "self._stream_timeout" in source
+        assert "httpx.Timeout" in source
