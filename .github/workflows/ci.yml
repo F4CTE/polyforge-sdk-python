@@ -265,11 +265,11 @@ jobs:
         run: rm -rf ~/PolyForge/tests/e2e/test-results/
 
       # ── E2E Shards (parallel within same job) ─────────────────────────
-      # All 4 shards run concurrently as background processes. Keeping them
+      # All 5 shards run concurrently as background processes. Keeping them
       # inside the single deploy-and-e2e job preserves the concurrency group
       # lock so no other PR can deploy while E2E is running. The self-hosted
-      # runner (Ryzen 5 7600X, 32GB RAM) handles 4 Playwright workers well.
-      - name: Run E2E shards 1-4 in parallel
+      # runner (Ryzen 9 9950X, 32GB RAM) handles 5 Playwright workers well.
+      - name: Run E2E shards 1-5 in parallel
         timeout-minutes: 40
         run: |
           set -uo pipefail
@@ -277,12 +277,12 @@ jobs:
 
           run_shard() {
             local shard=$1
-            echo "=== Starting E2E shard ${shard}/4 ==="
+            echo "=== Starting E2E shard ${shard}/5 ==="
             BASE_URL=https://localhost CI=true PLAYWRIGHT_SKIP_GLOBAL_SETUP=true \
               timeout --kill-after=10s 2100 npx playwright test \
                 --project=chromium \
                 --reporter=list \
-                --shard="${shard}/4" \
+                --shard="${shard}/5" \
                 --global-timeout=2100000
           }
 
@@ -294,9 +294,11 @@ jobs:
           pid3=$!
           run_shard 4 &
           pid4=$!
+          run_shard 5 &
+          pid5=$!
 
           fail=0
-          for pid in $pid1 $pid2 $pid3 $pid4; do
+          for pid in $pid1 $pid2 $pid3 $pid4 $pid5; do
             if ! wait "$pid"; then
               fail=1
             fi
