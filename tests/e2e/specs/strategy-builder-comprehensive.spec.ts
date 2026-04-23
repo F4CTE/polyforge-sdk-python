@@ -501,31 +501,27 @@ test.describe('Strategy Builder — Full Workflow Coverage', () => {
         await expect(page.locator('.react-flow')).toBeVisible({ timeout: 15_000 });
     });
 
-    // FIXME(POLA-596): Block added via palette click does not reliably persist
-    // through save/reload in headless CI. The click creates a visible React Flow
-    // DOM node but the Zustand store's nodes array may not update before save()
-    // serializes the payload. Needs frontend investigation (Daedalus).
-    test.fixme('@comprehensive should preserve all nodes and edges when loading strategy for edit', async ({ page }, testInfo) => {
+    test('@comprehensive should preserve all nodes and edges when loading strategy for edit', async ({ page }, testInfo) => {
         testInfo.setTimeout(120_000);
         const builder = new StrategyBuilderPage(page);
 
-        // Use the shared strategy (already loaded by beforeEach) to avoid
-        // apiCreateStrategy token-expiry issues late in the shard.
         await builder.selectSection('Triggers');
         await builder.addBlock('Price Crosses Up');
         await expect(builder.blockCards().first()).toBeVisible({ timeout: 5_000 });
 
-        // save() + visual toast confirmation avoids the waitForResponse()
-        // hang that saveAndRedirect() triggers under parallel shard load.
+        // Wait for the PATCH response before proceeding — the save button's
+        // onSave handler navigates away from /edit only after a successful save.
+        // Waiting for the URL change is more reliable than toast detection (which
+        // used .catch(() => {}) and silently swallowed save failures) and avoids
+        // the waitForResponse() hang that saveAndRedirect() triggers under
+        // parallel shard load.
         await builder.save();
-        await expect(
-            page.locator('[data-sonner-toast]').first()
-                .or(page.locator('text=/saved/i')),
-        ).toBeVisible({ timeout: 30_000 }).catch(() => {});
+        await page.waitForURL(
+            url => url.pathname.startsWith('/strategies') && !url.pathname.includes('/edit') && !url.pathname.includes('/new'),
+            { timeout: 30_000 },
+        );
 
         // Reload the strategy and verify the block persisted.
-        // Blocks load asynchronously after the canvas renders, so use a
-        // retrying assertion instead of a point-in-time count.
         await builder.gotoEdit(sharedStrategyId);
         await expect(async () => {
             const blockCount = await builder.blockCards().count();
