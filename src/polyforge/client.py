@@ -276,7 +276,7 @@ _VALID_MODES = frozenset({"live", "paper"})
 _VALID_DEPLOYMENT_MODES = frozenset({"LIVE", "SIMULATION"})
 _VALID_SIDES = frozenset({"BUY", "SELL"})
 _VALID_OUTCOMES = frozenset({"YES", "NO"})
-_VALID_ORDER_TYPES = frozenset({"GTC", "GTD", "FOK"})
+_VALID_ORDER_TYPES = frozenset({"GTC", "GTD", "FOK", "POST_ONLY"})
 
 
 def _validate_financial_param(name: str, value: float) -> None:

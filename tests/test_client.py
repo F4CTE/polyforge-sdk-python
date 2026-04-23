@@ -14,6 +14,7 @@ from polyforge.client import (
     _validate_webhook_url,
     _is_ip_blocked,
     _resolve_and_validate_ips,
+    _VALID_ORDER_TYPES,
 )
 from polyforge.errors import (
     PolyforgeError,
@@ -823,6 +824,15 @@ class TestEnumValidation:
         client = PolyforgeClient(api_key="test-key")
         with pytest.raises(ValueError, match="must be one of"):
             client.place_order("tok", "BUY", "YES", 10.0, 0.5, order_type="IOC")
+
+    def test_valid_order_types_match_platform_dto(self):
+        """SDK order types must include all values from platform's OrderTypeDto."""
+        platform_order_types = {"GTC", "GTD", "FOK", "POST_ONLY"}
+        assert _VALID_ORDER_TYPES == platform_order_types
+
+    def test_place_order_accepts_post_only(self):
+        """POST_ONLY is a valid platform order type — SDK must not reject it."""
+        _validate_enum("order_type", "POST_ONLY", _VALID_ORDER_TYPES)
 
 
 class TestPlaceOrderValidation:
