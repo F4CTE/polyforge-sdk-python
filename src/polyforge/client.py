@@ -272,6 +272,7 @@ def _validate_enum(name: str, value: str, allowed: frozenset[str]) -> None:
 
 
 _VALID_MODES = frozenset({"live", "paper"})
+_VALID_DEPLOYMENT_MODES = frozenset({"LIVE", "SIMULATION"})
 _VALID_SIDES = frozenset({"BUY", "SELL"})
 _VALID_OUTCOMES = frozenset({"YES", "NO"})
 _VALID_ORDER_TYPES = frozenset({"GTC", "GTD", "FOK"})
@@ -811,9 +812,13 @@ class PolyforgeClient:
             body["marketId"] = market_id
         return _parse(Strategy, self._post("/api/v1/strategies/from-description", json=body))
 
-    def start_strategy(self, strategy_id: str, mode: str = "paper") -> StrategyStatusResponse:
-        _validate_enum("mode", mode, _VALID_MODES)
-        return _parse(StrategyStatusResponse, self._post(f"/api/v1/strategies/{_encode_path(strategy_id)}/start", json={"mode": mode}))
+    def start_strategy(self, strategy_id: str, paper_mode: bool = True,
+                       deployment_mode: str | None = None) -> StrategyStatusResponse:
+        body: dict[str, Any] = {"paperMode": paper_mode}
+        if deployment_mode is not None:
+            _validate_enum("deploymentMode", deployment_mode, _VALID_DEPLOYMENT_MODES)
+            body["deploymentMode"] = deployment_mode
+        return _parse(StrategyStatusResponse, self._post(f"/api/v1/strategies/{_encode_path(strategy_id)}/start", json=body))
 
     def stop_strategy(self, strategy_id: str) -> StrategyStatusResponse:
         return _parse(StrategyStatusResponse, self._post(f"/api/v1/strategies/{_encode_path(strategy_id)}/stop"))
@@ -2740,9 +2745,13 @@ class AsyncPolyforgeClient:
             body["marketId"] = market_id
         return _parse(Strategy, await self._post("/api/v1/strategies/from-description", json=body))
 
-    async def start_strategy(self, strategy_id: str, mode: str = "paper") -> StrategyStatusResponse:
-        _validate_enum("mode", mode, _VALID_MODES)
-        return _parse(StrategyStatusResponse, await self._post(f"/api/v1/strategies/{_encode_path(strategy_id)}/start", json={"mode": mode}))
+    async def start_strategy(self, strategy_id: str, paper_mode: bool = True,
+                             deployment_mode: str | None = None) -> StrategyStatusResponse:
+        body: dict[str, Any] = {"paperMode": paper_mode}
+        if deployment_mode is not None:
+            _validate_enum("deploymentMode", deployment_mode, _VALID_DEPLOYMENT_MODES)
+            body["deploymentMode"] = deployment_mode
+        return _parse(StrategyStatusResponse, await self._post(f"/api/v1/strategies/{_encode_path(strategy_id)}/start", json=body))
 
     async def stop_strategy(self, strategy_id: str) -> StrategyStatusResponse:
         return _parse(StrategyStatusResponse, await self._post(f"/api/v1/strategies/{_encode_path(strategy_id)}/stop"))
