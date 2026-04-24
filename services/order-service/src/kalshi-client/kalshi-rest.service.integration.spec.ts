@@ -280,6 +280,97 @@ runIntegration("KalshiRestService (sandbox integration)", () => {
     });
   });
 
+  // ── Phase 4: Exchange status / account limits ──────────────────────────
+
+  describe("Account limits", () => {
+    it("returns account rate limits and tier info", async () => {
+      try {
+        const limits = await rest.getAccountLimits();
+        expect(typeof limits.tier).toBe("string");
+        expect(typeof limits.order_rate_limit).toBe("number");
+      } catch (err) {
+        // Sandbox may not support this endpoint — skip silently
+        if (String(err).includes("404")) return;
+        throw err;
+      }
+    });
+  });
+
+  describe("Incentives", () => {
+    it("returns incentives list (may be empty)", async () => {
+      try {
+        const incentives = await rest.getIncentives();
+        expect(Array.isArray(incentives)).toBe(true);
+      } catch (err) {
+        if (String(err).includes("404")) return;
+        throw err;
+      }
+    });
+  });
+
+  describe("Milestones", () => {
+    it("lists milestones with pagination", async () => {
+      try {
+        const result = await rest.getMilestones({ limit: 5 });
+        expect(Array.isArray(result.milestones)).toBe(true);
+        expect(typeof result.cursor).toBe("string");
+      } catch (err) {
+        if (String(err).includes("404")) return;
+        throw err;
+      }
+    });
+  });
+
+  describe("Structured targets", () => {
+    it("lists structured targets with pagination", async () => {
+      try {
+        const result = await rest.getStructuredTargets({ limit: 5 });
+        expect(Array.isArray(result.structured_targets)).toBe(true);
+        expect(typeof result.cursor).toBe("string");
+      } catch (err) {
+        if (String(err).includes("404")) return;
+        throw err;
+      }
+    });
+  });
+
+  describe("MVE collections", () => {
+    it("lists multivariate event collections", async () => {
+      try {
+        const result = await rest.getMultivariateCollections({ limit: 5 });
+        expect(Array.isArray(result.collections)).toBe(true);
+        expect(typeof result.cursor).toBe("string");
+      } catch (err) {
+        if (String(err).includes("404")) return;
+        throw err;
+      }
+    });
+  });
+
+  describe("API keys", () => {
+    it("lists API keys (may be empty)", async () => {
+      try {
+        const keys = await rest.getApiKeys();
+        expect(Array.isArray(keys)).toBe(true);
+      } catch (err) {
+        if (String(err).includes("404")) return;
+        throw err;
+      }
+    });
+  });
+
+  describe("Game stats", () => {
+    it("fetches live game stats (may be empty)", async () => {
+      try {
+        const stats = await rest.getGameStats({ sport: "nfl" });
+        expect(Array.isArray(stats)).toBe(true);
+      } catch (err) {
+        if (String(err).includes("404")) return;
+        throw err;
+      }
+    });
+  });
+
   // ── Phase 1 (existing): order lifecycle ────────────────────────────────
 
   describe("order lifecycle", () => {

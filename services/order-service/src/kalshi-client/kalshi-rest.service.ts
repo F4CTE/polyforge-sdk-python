@@ -421,6 +421,198 @@ export interface KalshiQueuePosition {
   ticker: string;
 }
 
+// ─── Phase 4: RFQ (Request for Quote) ──────────────────────────────────────
+
+export interface KalshiRfq {
+  rfq_id: string;
+  ticker: string;
+  side: "yes" | "no";
+  count: number;
+  status: "open" | "accepted" | "confirmed" | "expired" | "cancelled";
+  created_time?: string;
+  expiration_time?: string;
+}
+
+export interface KalshiCreateRfqRequest {
+  ticker: string;
+  side: "yes" | "no";
+  count: number;
+}
+
+export interface KalshiRfqsParams extends KalshiCursorParams {
+  ticker?: string;
+  status?: string;
+}
+
+export interface KalshiQuote {
+  quote_id: string;
+  rfq_id: string;
+  price: number;
+  side: "yes" | "no";
+  count: number;
+  status: "open" | "accepted" | "confirmed" | "expired" | "cancelled";
+  created_time?: string;
+  expiration_time?: string;
+}
+
+export interface KalshiCreateQuoteRequest {
+  price: number;
+  side: "yes" | "no";
+  count: number;
+}
+
+export interface KalshiRfqCommunications {
+  communications_id: string;
+}
+
+// ─── Phase 4: Combo / MVE markets ──────────────────────────────────────────
+
+export interface KalshiCreateComboMarketRequest {
+  ticker_components: string[];
+  label?: string;
+}
+
+export interface KalshiComboMarket {
+  ticker: string;
+  components: string[];
+  label?: string;
+  created_time?: string;
+}
+
+export interface KalshiMveCollectionsParams extends KalshiCursorParams {
+  series_ticker?: string;
+}
+
+export interface KalshiTickerLookup {
+  ticker: string;
+  event_ticker: string;
+  series_ticker: string;
+  title?: string;
+}
+
+// ─── Phase 4: Live sports data ─────────────────────────────────────────────
+
+export interface KalshiGameStats {
+  game_id: string;
+  sport: string;
+  league?: string;
+  home_team?: string;
+  away_team?: string;
+  home_score?: number;
+  away_score?: number;
+  status?: string;
+  period?: string;
+  clock?: string;
+  stats?: Record<string, unknown>;
+}
+
+export interface KalshiGameStatsParams {
+  sport?: string;
+  league?: string;
+  game_id?: string;
+}
+
+export interface KalshiMilestoneData {
+  milestone_id: string;
+  type: string;
+  value?: number;
+  status?: string;
+  timestamp?: string;
+}
+
+export interface KalshiBatchMilestoneParams {
+  milestone_ids: string[];
+}
+
+// ─── Phase 4: Milestones and structured targets ────────────────────────────
+
+export interface KalshiMilestone {
+  id: string;
+  title: string;
+  type: string;
+  status: "active" | "resolved" | "cancelled";
+  target_value?: number;
+  current_value?: number;
+  resolved_time?: string;
+  event_ticker?: string;
+}
+
+export interface KalshiMilestonesParams extends KalshiCursorParams {
+  status?: string;
+  event_ticker?: string;
+}
+
+export interface KalshiStructuredTarget {
+  id: string;
+  title: string;
+  type: string;
+  market_ticker?: string;
+  target_value?: number;
+  description?: string;
+}
+
+export interface KalshiStructuredTargetsParams extends KalshiCursorParams {
+  type?: string;
+  market_ticker?: string;
+}
+
+// ─── Phase 4: Incentives ───────────────────────────────────────────────────
+
+export interface KalshiIncentive {
+  id: string;
+  title: string;
+  description?: string;
+  type: string;
+  status: "active" | "expired" | "redeemed";
+  value?: number;
+  expiration_time?: string;
+}
+
+// ─── Phase 4: API key management ───────────────────────────────────────────
+
+export interface KalshiApiKey {
+  api_key_id: string;
+  name?: string;
+  created_time?: string;
+  last_used_time?: string;
+  status?: string;
+}
+
+export interface KalshiCreateApiKeyRequest {
+  name?: string;
+}
+
+export interface KalshiGeneratedApiKey extends KalshiApiKey {
+  secret: string;
+}
+
+// ─── Phase 4: Account rate limits ──────────────────────────────────────────
+
+export interface KalshiAccountLimits {
+  tier: string;
+  order_rate_limit: number;
+  order_rate_remaining: number;
+  combo_creation_limit: number;
+  combo_creation_remaining: number;
+  reset_time?: string;
+}
+
+// ─── Phase 4: WS communications event ──────────────────────────────────────
+
+export interface KalshiCommunicationsEvent {
+  rfq_id: string;
+  type:
+    | "quote_received"
+    | "quote_accepted"
+    | "quote_confirmed"
+    | "rfq_expired"
+    | "rfq_cancelled";
+  quote_id?: string;
+  price?: number;
+  count?: number;
+  timestamp: number;
+}
+
 @Injectable()
 export class KalshiRestService {
   private readonly logger = new Logger(KalshiRestService.name);
@@ -1033,6 +1225,317 @@ export class KalshiRestService {
       "user",
     );
     return result.queue_positions;
+  }
+
+  // ─── Phase 4: RFQ system ───────────────────────────────────────────────────
+
+  async createRfq(req: KalshiCreateRfqRequest): Promise<KalshiRfq> {
+    const result = await this.withRetry<{ rfq: KalshiRfq }>(
+      () => this.post("/rfqs", req as unknown as Record<string, unknown>),
+      "user",
+    );
+    return result.rfq;
+  }
+
+  async getRfqs(
+    params: KalshiRfqsParams = {},
+  ): Promise<{ rfqs: KalshiRfq[]; cursor: string }> {
+    const qs = new URLSearchParams();
+    if (params.limit !== undefined) qs.set("limit", String(params.limit));
+    if (params.cursor) qs.set("cursor", params.cursor);
+    if (params.ticker) qs.set("ticker", params.ticker);
+    if (params.status) qs.set("status", params.status);
+
+    return this.withRetry<{ rfqs: KalshiRfq[]; cursor: string }>(
+      () => this.get(`/rfqs?${qs.toString()}`),
+      "user",
+    );
+  }
+
+  async getRfq(rfqId: string): Promise<KalshiRfq> {
+    const result = await this.withRetry<{ rfq: KalshiRfq }>(
+      () => this.get(`/rfqs/${encodeURIComponent(rfqId)}`),
+      "user",
+    );
+    return result.rfq;
+  }
+
+  async deleteRfq(rfqId: string): Promise<void> {
+    await this.withRetryVoid(
+      () => this.delete(`/rfqs/${encodeURIComponent(rfqId)}`),
+      "user",
+    );
+  }
+
+  async createQuote(
+    rfqId: string,
+    req: KalshiCreateQuoteRequest,
+  ): Promise<KalshiQuote> {
+    const result = await this.withRetry<{ quote: KalshiQuote }>(
+      () =>
+        this.post(
+          `/rfqs/${encodeURIComponent(rfqId)}/quotes`,
+          req as unknown as Record<string, unknown>,
+        ),
+      "user",
+    );
+    return result.quote;
+  }
+
+  async getQuotes(rfqId: string): Promise<KalshiQuote[]> {
+    const result = await this.withRetry<{ quotes: KalshiQuote[] }>(
+      () => this.get(`/rfqs/${encodeURIComponent(rfqId)}/quotes`),
+      "user",
+    );
+    return result.quotes;
+  }
+
+  async getQuote(rfqId: string, quoteId: string): Promise<KalshiQuote> {
+    const result = await this.withRetry<{ quote: KalshiQuote }>(
+      () =>
+        this.get(
+          `/rfqs/${encodeURIComponent(rfqId)}/quotes/${encodeURIComponent(quoteId)}`,
+        ),
+      "user",
+    );
+    return result.quote;
+  }
+
+  async deleteQuote(rfqId: string, quoteId: string): Promise<void> {
+    await this.withRetryVoid(
+      () =>
+        this.delete(
+          `/rfqs/${encodeURIComponent(rfqId)}/quotes/${encodeURIComponent(quoteId)}`,
+        ),
+      "user",
+    );
+  }
+
+  async acceptQuote(rfqId: string, quoteId: string): Promise<KalshiQuote> {
+    const result = await this.withRetry<{ quote: KalshiQuote }>(
+      () =>
+        this.post(
+          `/rfqs/${encodeURIComponent(rfqId)}/quotes/${encodeURIComponent(quoteId)}/accept`,
+          {},
+        ),
+      "user",
+    );
+    return result.quote;
+  }
+
+  async confirmQuote(rfqId: string, quoteId: string): Promise<KalshiQuote> {
+    const result = await this.withRetry<{ quote: KalshiQuote }>(
+      () =>
+        this.post(
+          `/rfqs/${encodeURIComponent(rfqId)}/quotes/${encodeURIComponent(quoteId)}/confirm`,
+          {},
+        ),
+      "user",
+    );
+    return result.quote;
+  }
+
+  async getRfqCommunicationsId(
+    rfqId: string,
+  ): Promise<KalshiRfqCommunications> {
+    return this.withRetry<KalshiRfqCommunications>(
+      () => this.get(`/rfqs/${encodeURIComponent(rfqId)}/communications-id`),
+      "user",
+    );
+  }
+
+  // ─── Phase 4: Combo / MVE markets ─────────────────────────────────────────
+
+  async createComboMarket(
+    collectionTicker: string,
+    req: KalshiCreateComboMarketRequest,
+  ): Promise<KalshiComboMarket> {
+    const result = await this.withRetry<{ market: KalshiComboMarket }>(
+      () =>
+        this.post(
+          `/markets/mve/${encodeURIComponent(collectionTicker)}/create`,
+          req as unknown as Record<string, unknown>,
+        ),
+      "user",
+    );
+    return result.market;
+  }
+
+  async getMultivariateCollections(
+    params: KalshiMveCollectionsParams = {},
+  ): Promise<{
+    collections: KalshiMultivariateCollection[];
+    cursor: string;
+  }> {
+    const qs = new URLSearchParams();
+    if (params.limit !== undefined) qs.set("limit", String(params.limit));
+    if (params.cursor) qs.set("cursor", params.cursor);
+    if (params.series_ticker) qs.set("series_ticker", params.series_ticker);
+
+    return this.withRetry<{
+      collections: KalshiMultivariateCollection[];
+      cursor: string;
+    }>(
+      () => this.get(`/multivariate_event_collections?${qs.toString()}`),
+      "user",
+    );
+  }
+
+  async lookupTicker(ticker: string): Promise<KalshiTickerLookup> {
+    return this.withRetry<KalshiTickerLookup>(
+      () => this.get(`/markets/lookup?ticker=${encodeURIComponent(ticker)}`),
+      "user",
+    );
+  }
+
+  // ─── Phase 4: Live sports data ────────────────────────────────────────────
+
+  async getGameStats(
+    params: KalshiGameStatsParams = {},
+  ): Promise<KalshiGameStats[]> {
+    const qs = new URLSearchParams();
+    if (params.sport) qs.set("sport", params.sport);
+    if (params.league) qs.set("league", params.league);
+    if (params.game_id) qs.set("game_id", params.game_id);
+
+    const result = await this.withRetry<{ games: KalshiGameStats[] }>(
+      () => this.get(`/live-data/game-stats?${qs.toString()}`),
+      "user",
+    );
+    return result.games;
+  }
+
+  async getLiveData(type: string): Promise<KalshiMilestoneData[]> {
+    const result = await this.withRetry<{ milestones: KalshiMilestoneData[] }>(
+      () => this.get(`/live-data/${encodeURIComponent(type)}`),
+      "user",
+    );
+    return result.milestones;
+  }
+
+  async getBatchLiveData(
+    params: KalshiBatchMilestoneParams,
+  ): Promise<KalshiMilestoneData[]> {
+    const result = await this.withRetry<{ milestones: KalshiMilestoneData[] }>(
+      () =>
+        this.post("/live-data/batch", {
+          milestone_ids: params.milestone_ids,
+        }),
+      "user",
+    );
+    return result.milestones;
+  }
+
+  // ─── Phase 4: Milestones ──────────────────────────────────────────────────
+
+  async getMilestones(
+    params: KalshiMilestonesParams = {},
+  ): Promise<{ milestones: KalshiMilestone[]; cursor: string }> {
+    const qs = new URLSearchParams();
+    if (params.limit !== undefined) qs.set("limit", String(params.limit));
+    if (params.cursor) qs.set("cursor", params.cursor);
+    if (params.status) qs.set("status", params.status);
+    if (params.event_ticker) qs.set("event_ticker", params.event_ticker);
+
+    return this.withRetry<{ milestones: KalshiMilestone[]; cursor: string }>(
+      () => this.get(`/milestones?${qs.toString()}`),
+      "user",
+    );
+  }
+
+  async getMilestone(milestoneId: string): Promise<KalshiMilestone> {
+    const result = await this.withRetry<{ milestone: KalshiMilestone }>(
+      () => this.get(`/milestones/${encodeURIComponent(milestoneId)}`),
+      "user",
+    );
+    return result.milestone;
+  }
+
+  // ─── Phase 4: Structured targets ──────────────────────────────────────────
+
+  async getStructuredTargets(
+    params: KalshiStructuredTargetsParams = {},
+  ): Promise<{ structured_targets: KalshiStructuredTarget[]; cursor: string }> {
+    const qs = new URLSearchParams();
+    if (params.limit !== undefined) qs.set("limit", String(params.limit));
+    if (params.cursor) qs.set("cursor", params.cursor);
+    if (params.type) qs.set("type", params.type);
+    if (params.market_ticker) qs.set("market_ticker", params.market_ticker);
+
+    return this.withRetry<{
+      structured_targets: KalshiStructuredTarget[];
+      cursor: string;
+    }>(() => this.get(`/structured-targets?${qs.toString()}`), "user");
+  }
+
+  async getStructuredTarget(targetId: string): Promise<KalshiStructuredTarget> {
+    const result = await this.withRetry<{
+      structured_target: KalshiStructuredTarget;
+    }>(
+      () => this.get(`/structured-targets/${encodeURIComponent(targetId)}`),
+      "user",
+    );
+    return result.structured_target;
+  }
+
+  // ─── Phase 4: Incentives ──────────────────────────────────────────────────
+
+  async getIncentives(): Promise<KalshiIncentive[]> {
+    const result = await this.withRetry<{ incentives: KalshiIncentive[] }>(
+      () => this.get("/incentives"),
+      "user",
+    );
+    return result.incentives;
+  }
+
+  // ─── Phase 4: API key management ──────────────────────────────────────────
+
+  async createApiKey(req: KalshiCreateApiKeyRequest): Promise<KalshiApiKey> {
+    const result = await this.withRetry<{ api_key: KalshiApiKey }>(
+      () => this.post("/api-keys", req as unknown as Record<string, unknown>),
+      "user",
+    );
+    return result.api_key;
+  }
+
+  async generateApiKey(
+    req: KalshiCreateApiKeyRequest,
+  ): Promise<KalshiGeneratedApiKey> {
+    const result = await this.withRetry<{
+      api_key: KalshiGeneratedApiKey;
+    }>(
+      () =>
+        this.post(
+          "/api-keys/generate",
+          req as unknown as Record<string, unknown>,
+        ),
+      "user",
+    );
+    return result.api_key;
+  }
+
+  async getApiKeys(): Promise<KalshiApiKey[]> {
+    const result = await this.withRetry<{ api_keys: KalshiApiKey[] }>(
+      () => this.get("/api-keys"),
+      "user",
+    );
+    return result.api_keys;
+  }
+
+  async deleteApiKey(keyId: string): Promise<void> {
+    await this.withRetryVoid(
+      () => this.delete(`/api-keys/${encodeURIComponent(keyId)}`),
+      "user",
+    );
+  }
+
+  // ─── Phase 4: Account rate limits ─────────────────────────────────────────
+
+  async getAccountLimits(): Promise<KalshiAccountLimits> {
+    return this.withRetry<KalshiAccountLimits>(
+      () => this.get("/account/limits"),
+      "user",
+    );
   }
 
   // ─── HTTP helpers ─────────────────────────────────────────────────────────

@@ -49,6 +49,11 @@ class MockWebSocket {
   triggerError(err: Error) {
     (this.handlers.get("error") ?? []).forEach((h) => h(err));
   }
+
+  triggerRawMessage(raw: string) {
+    const buf = Buffer.from(raw);
+    (this.handlers.get("message") ?? []).forEach((h) => h(buf));
+  }
 }
 
 let mockWsInstance: MockWebSocket | undefined;
@@ -524,6 +529,128 @@ describe("KalshiWsService", () => {
       expect(secondInstance.send).toHaveBeenCalledTimes(1);
       const frame = JSON.parse(secondInstance.send.mock.calls[0][0] as string);
       expect(frame.params.market_tickers).toContain("BTC-USD");
+    });
+  });
+
+  // ── Phase 4: Communications channel ──────────────────────────────────────
+
+  describe("subscribeCommunications()", () => {
+    it("sends channel subscription when socket is open", async () => {
+      svc.onModuleInit();
+      await vi.runAllTimersAsync();
+      mockWsInstance!.triggerOpen();
+      svc.subscribeCommunications(["rfq-1"]);
+      const calls = mockWsInstance!.send.mock.calls;
+      const frame = JSON.parse(calls[calls.length - 1][0] as string);
+      expect(frame.cmd).toBe("subscribe");
+      expect(frame.params.channels).toContain("communications");
+      expect(frame.params.market_tickers).toContain("rfq-1");
+    });
+
+    it("queues subscription if socket not yet open", async () => {
+      svc.subscribeCommunications();
+      svc.onModuleInit();
+      await vi.runAllTimersAsync();
+      mockWsInstance!.triggerOpen();
+      const calls = mockWsInstance!.send.mock.calls;
+      const commFrame = calls.find((c: any) => {
+        const f = JSON.parse(c[0] as string);
+        return f.params.channels?.includes("communications");
+      });
+      expect(commFrame).toBeDefined();
+    });
+
+    it("emits kalshi.communications event on communications message", async () => {
+      const emitSpy = vi.fn();
+      emitter.emit = emitSpy;
+      svc.onModuleInit();
+      await vi.runAllTimersAsync();
+      mockWsInstance!.triggerOpen();
+      svc.subscribeCommunications();
+
+      mockWsInstance!.triggerMessage({
+        type: "communications",
+        msg: {
+          rfq_id: "rfq-1",
+          type: "quote_received",
+          quote_id: "q-1",
+          price: 50,
+          count: 100,
+          ts: 1700000000,
+        },
+      });
+
+      const commCall = emitSpy.mock.calls.find(
+        (c: any[]) => c[0] === "kalshi.communications",
+      );
+      expect(commCall).toBeDefined();
+      expect(commCall![1]).toMatchObject({
+        rfq_id: "rfq-1",
+        type: "quote_received",
+        quote_id: "q-1",
+        price: 50,
+        count: 100,
+        timestamp: 1700000000,
+      });
+    });
+
+    it("skips communications messages with missing rfq_id", async () => {
+      const emitSpy = vi.fn();
+      emitter.emit = emitSpy;
+      svc.onModuleInit();
+      await vi.runAllTimersAsync();
+      mockWsInstance!.triggerOpen();
+
+      mockWsInstance!.triggerMessage({
+        type: "communications",
+        msg: { type: "quote_received" },
+      });
+
+      const commCall = emitSpy.mock.calls.find(
+        (c: any[]) => c[0] === "kalshi.communications",
+      );
+      expect(commCall).toBeUndefined();
+    });
+  });
+
+  // ── Error handling branches ───────────────────────────────────────────────
+
+  describe("error handling", () => {
+    it("logs and ignores unparseable WS frames", async () => {
+      svc.onModuleInit();
+      await vi.runAllTimersAsync();
+      mockWsInstance!.triggerOpen();
+
+      mockWsInstance!.triggerRawMessage("not valid json {{{");
+      expect(emitter.emit).not.toHaveBeenCalledWith(
+        "market-data.price",
+        expect.anything(),
+      );
+    });
+
+    it("logs and recovers when handleMessage throws", async () => {
+      svc.onModuleInit();
+      await vi.runAllTimersAsync();
+      mockWsInstance!.triggerOpen();
+
+      vi.spyOn(svc as any, "handleMessage").mockImplementationOnce(() => {
+        throw new Error("boom");
+      });
+
+      mockWsInstance!.triggerMessage({
+        type: "ticker",
+        msg: { market_ticker: "X" },
+      });
+      expect(mockWsInstance!.close).not.toHaveBeenCalled();
+    });
+
+    it("closes socket on WebSocket error event", async () => {
+      svc.onModuleInit();
+      await vi.runAllTimersAsync();
+      mockWsInstance!.triggerOpen();
+
+      mockWsInstance!.triggerError(new Error("connection reset"));
+      expect(mockWsInstance!.close).toHaveBeenCalled();
     });
   });
 

@@ -452,6 +452,81 @@ describe("OrdersService", () => {
       );
       expect(submittedUpdate).toBeDefined();
     });
+
+    it("maps DELAYED to DELAYED", async () => {
+      clob.submitOrder.mockResolvedValue({
+        orderID: "clob-d",
+        status: "DELAYED",
+      });
+      const p = svc.processIntent(makeIntent());
+      await vi.runAllTimersAsync();
+      await p;
+      expect(
+        prisma.order.update.mock.calls.find(
+          ([a]: any[]) => a.data?.status === "DELAYED",
+        ),
+      ).toBeDefined();
+    });
+
+    it("maps MINED to MINED", async () => {
+      clob.submitOrder.mockResolvedValue({
+        orderID: "clob-m",
+        status: "MINED",
+      });
+      const p = svc.processIntent(makeIntent());
+      await vi.runAllTimersAsync();
+      await p;
+      expect(
+        prisma.order.update.mock.calls.find(
+          ([a]: any[]) => a.data?.status === "MINED",
+        ),
+      ).toBeDefined();
+    });
+
+    it("maps RETRYING to SUBMITTED", async () => {
+      clob.submitOrder.mockResolvedValue({
+        orderID: "clob-r",
+        status: "RETRYING",
+      });
+      const p = svc.processIntent(makeIntent());
+      await vi.runAllTimersAsync();
+      await p;
+      expect(
+        prisma.order.update.mock.calls.find(
+          ([a]: any[]) => a.data?.status === "SUBMITTED",
+        ),
+      ).toBeDefined();
+    });
+
+    it("maps UNMATCHED to LIVE", async () => {
+      clob.submitOrder.mockResolvedValue({
+        orderID: "clob-um",
+        status: "UNMATCHED",
+      });
+      const p = svc.processIntent(makeIntent());
+      await vi.runAllTimersAsync();
+      await p;
+      expect(
+        prisma.order.update.mock.calls.find(
+          ([a]: any[]) => a.data?.status === "LIVE",
+        ),
+      ).toBeDefined();
+    });
+
+    it("maps FAILED to FAILED", async () => {
+      clob.submitOrder.mockResolvedValue({
+        orderID: "clob-f",
+        status: "FAILED",
+      });
+      const p = svc.processIntent(makeIntent());
+      await vi.runAllTimersAsync();
+      await p;
+      expect(
+        prisma.order.update.mock.calls.find(
+          ([a]: any[]) => a.data?.status === "FAILED",
+        ),
+      ).toBeDefined();
+    });
   });
 
   // ── DLQ redis failure ─────────────────────────────────────────────────────

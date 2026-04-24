@@ -352,6 +352,61 @@ describe("KalshiRestService", () => {
       await expect(svc.getMarkets({})).rejects.toThrow("500");
       expect(fetchSpy).toHaveBeenCalledTimes(1);
     });
+
+    it("retries on TypeError (network error) then succeeds", async () => {
+      fetchSpy
+        .mockRejectedValueOnce(new TypeError("fetch failed"))
+        .mockResolvedValueOnce({
+          ok: true,
+          json: vi.fn().mockResolvedValue({ markets: [] }),
+        });
+
+      const promise = svc.getMarkets({});
+      await vi.advanceTimersByTimeAsync(600);
+      const result = await promise;
+      expect(fetchSpy).toHaveBeenCalledTimes(2);
+      expect(result).toEqual([]);
+    });
+
+    it("retries on AbortError (timeout) then succeeds", async () => {
+      const abortErr = new DOMException("signal timed out", "AbortError");
+      fetchSpy.mockRejectedValueOnce(abortErr).mockResolvedValueOnce({
+        ok: true,
+        json: vi.fn().mockResolvedValue({ markets: [] }),
+      });
+
+      const promise = svc.getMarkets({});
+      await vi.advanceTimersByTimeAsync(600);
+      const result = await promise;
+      expect(fetchSpy).toHaveBeenCalledTimes(2);
+      expect(result).toEqual([]);
+    });
+
+    it("does not retry non-retryable errors", async () => {
+      fetchSpy.mockRejectedValue(new Error("unexpected"));
+      await expect(svc.getMarkets({})).rejects.toThrow("unexpected");
+      expect(fetchSpy).toHaveBeenCalledTimes(1);
+    });
+
+    it("throws on unparseable JSON response", async () => {
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockRejectedValue(new SyntaxError("bad JSON")),
+        text: vi.fn().mockResolvedValue("<html>not json</html>"),
+        status: 200,
+      });
+      await expect(svc.getMarkets({})).rejects.toThrow("unparseable response");
+    });
+
+    it("handles text() also failing on unparseable response", async () => {
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockRejectedValue(new SyntaxError("bad JSON")),
+        text: vi.fn().mockRejectedValue(new Error("stream consumed")),
+        status: 502,
+      });
+      await expect(svc.getMarkets({})).rejects.toThrow("unparseable response");
+    });
   });
 
   // ── getCandlesticks ──────────────────────────────────────────────────────
@@ -1213,6 +1268,547 @@ describe("KalshiRestService", () => {
       expect(url).toContain("order_ids=ord-1");
       expect(url).toContain("order_ids=ord-2");
       expect(result).toHaveLength(2);
+    });
+  });
+
+  // ── Phase 4: RFQ system ──────────────────────────────────────────────────
+
+  describe("createRfq()", () => {
+    it("POSTs /rfqs with ticker, side, count", async () => {
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue({
+          rfq: {
+            rfq_id: "rfq-1",
+            ticker: "BTC-USD",
+            side: "yes",
+            count: 100,
+            status: "open",
+          },
+        }),
+      });
+      const result = await svc.createRfq({
+        ticker: "BTC-USD",
+        side: "yes",
+        count: 100,
+      });
+      const url = fetchSpy.mock.calls[0][0] as string;
+      expect(url).toContain("/rfqs");
+      expect(fetchSpy.mock.calls[0][1].method).toBe("POST");
+      expect(result.rfq_id).toBe("rfq-1");
+      expect(result.status).toBe("open");
+    });
+  });
+
+  describe("getRfqs()", () => {
+    it("GETs /rfqs with cursor pagination", async () => {
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue({
+          rfqs: [
+            {
+              rfq_id: "rfq-1",
+              ticker: "BTC-USD",
+              side: "yes",
+              count: 100,
+              status: "open",
+            },
+          ],
+          cursor: "next-cursor",
+        }),
+      });
+      const result = await svc.getRfqs({ ticker: "BTC-USD", limit: 10 });
+      const url = fetchSpy.mock.calls[0][0] as string;
+      expect(url).toContain("/rfqs?");
+      expect(url).toContain("ticker=BTC-USD");
+      expect(url).toContain("limit=10");
+      expect(result.rfqs).toHaveLength(1);
+      expect(result.cursor).toBe("next-cursor");
+    });
+  });
+
+  describe("getRfq()", () => {
+    it("GETs /rfqs/{id}", async () => {
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue({
+          rfq: {
+            rfq_id: "rfq-1",
+            ticker: "BTC-USD",
+            side: "yes",
+            count: 100,
+            status: "open",
+          },
+        }),
+      });
+      const result = await svc.getRfq("rfq-1");
+      expect(fetchSpy.mock.calls[0][0]).toContain("/rfqs/rfq-1");
+      expect(result.rfq_id).toBe("rfq-1");
+    });
+  });
+
+  describe("deleteRfq()", () => {
+    it("DELETEs /rfqs/{id}", async () => {
+      fetchSpy.mockResolvedValue({ ok: true });
+      await svc.deleteRfq("rfq-1");
+      const url = fetchSpy.mock.calls[0][0] as string;
+      expect(url).toContain("/rfqs/rfq-1");
+      expect(fetchSpy.mock.calls[0][1].method).toBe("DELETE");
+    });
+  });
+
+  describe("createQuote()", () => {
+    it("POSTs /rfqs/{id}/quotes", async () => {
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue({
+          quote: {
+            quote_id: "q-1",
+            rfq_id: "rfq-1",
+            price: 50,
+            side: "yes",
+            count: 100,
+            status: "open",
+          },
+        }),
+      });
+      const result = await svc.createQuote("rfq-1", {
+        price: 50,
+        side: "yes",
+        count: 100,
+      });
+      const url = fetchSpy.mock.calls[0][0] as string;
+      expect(url).toContain("/rfqs/rfq-1/quotes");
+      expect(fetchSpy.mock.calls[0][1].method).toBe("POST");
+      expect(result.quote_id).toBe("q-1");
+    });
+  });
+
+  describe("getQuotes()", () => {
+    it("GETs /rfqs/{id}/quotes", async () => {
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue({
+          quotes: [
+            {
+              quote_id: "q-1",
+              rfq_id: "rfq-1",
+              price: 50,
+              side: "yes",
+              count: 100,
+              status: "open",
+            },
+          ],
+        }),
+      });
+      const result = await svc.getQuotes("rfq-1");
+      expect(fetchSpy.mock.calls[0][0]).toContain("/rfqs/rfq-1/quotes");
+      expect(result).toHaveLength(1);
+    });
+  });
+
+  describe("getQuote()", () => {
+    it("GETs /rfqs/{rfqId}/quotes/{quoteId}", async () => {
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue({
+          quote: {
+            quote_id: "q-1",
+            rfq_id: "rfq-1",
+            price: 50,
+            side: "yes",
+            count: 100,
+            status: "open",
+          },
+        }),
+      });
+      const result = await svc.getQuote("rfq-1", "q-1");
+      expect(fetchSpy.mock.calls[0][0]).toContain("/rfqs/rfq-1/quotes/q-1");
+      expect(result.quote_id).toBe("q-1");
+    });
+  });
+
+  describe("deleteQuote()", () => {
+    it("DELETEs /rfqs/{rfqId}/quotes/{quoteId}", async () => {
+      fetchSpy.mockResolvedValue({ ok: true });
+      await svc.deleteQuote("rfq-1", "q-1");
+      const url = fetchSpy.mock.calls[0][0] as string;
+      expect(url).toContain("/rfqs/rfq-1/quotes/q-1");
+      expect(fetchSpy.mock.calls[0][1].method).toBe("DELETE");
+    });
+  });
+
+  describe("acceptQuote()", () => {
+    it("POSTs /rfqs/{rfqId}/quotes/{quoteId}/accept", async () => {
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue({
+          quote: {
+            quote_id: "q-1",
+            rfq_id: "rfq-1",
+            price: 50,
+            side: "yes",
+            count: 100,
+            status: "accepted",
+          },
+        }),
+      });
+      const result = await svc.acceptQuote("rfq-1", "q-1");
+      const url = fetchSpy.mock.calls[0][0] as string;
+      expect(url).toContain("/rfqs/rfq-1/quotes/q-1/accept");
+      expect(result.status).toBe("accepted");
+    });
+  });
+
+  describe("confirmQuote()", () => {
+    it("POSTs /rfqs/{rfqId}/quotes/{quoteId}/confirm", async () => {
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue({
+          quote: {
+            quote_id: "q-1",
+            rfq_id: "rfq-1",
+            price: 50,
+            side: "yes",
+            count: 100,
+            status: "confirmed",
+          },
+        }),
+      });
+      const result = await svc.confirmQuote("rfq-1", "q-1");
+      const url = fetchSpy.mock.calls[0][0] as string;
+      expect(url).toContain("/rfqs/rfq-1/quotes/q-1/confirm");
+      expect(result.status).toBe("confirmed");
+    });
+  });
+
+  describe("getRfqCommunicationsId()", () => {
+    it("GETs /rfqs/{id}/communications-id", async () => {
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue({ communications_id: "comm-abc" }),
+      });
+      const result = await svc.getRfqCommunicationsId("rfq-1");
+      expect(fetchSpy.mock.calls[0][0]).toContain(
+        "/rfqs/rfq-1/communications-id",
+      );
+      expect(result.communications_id).toBe("comm-abc");
+    });
+  });
+
+  // ── Phase 4: Combo / MVE markets ────────────────────────────────────────
+
+  describe("createComboMarket()", () => {
+    it("POSTs /markets/mve/{collection}/create", async () => {
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue({
+          market: { ticker: "COMBO-1", components: ["A", "B"], label: "test" },
+        }),
+      });
+      const result = await svc.createComboMarket("coll-1", {
+        ticker_components: ["A", "B"],
+        label: "test",
+      });
+      const url = fetchSpy.mock.calls[0][0] as string;
+      expect(url).toContain("/markets/mve/coll-1/create");
+      expect(fetchSpy.mock.calls[0][1].method).toBe("POST");
+      expect(result.ticker).toBe("COMBO-1");
+    });
+  });
+
+  describe("getMultivariateCollections()", () => {
+    it("GETs /multivariate_event_collections with series_ticker filter", async () => {
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue({
+          collections: [
+            {
+              collection_ticker: "coll-1",
+              series_ticker: "SER-1",
+              title: "Test",
+            },
+          ],
+          cursor: "next",
+        }),
+      });
+      const result = await svc.getMultivariateCollections({
+        series_ticker: "SER-1",
+      });
+      const url = fetchSpy.mock.calls[0][0] as string;
+      expect(url).toContain("/multivariate_event_collections");
+      expect(url).toContain("series_ticker=SER-1");
+      expect(result.collections).toHaveLength(1);
+    });
+  });
+
+  describe("lookupTicker()", () => {
+    it("GETs /markets/lookup with ticker param", async () => {
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue({
+          ticker: "BTC-USD",
+          event_ticker: "EVT-1",
+          series_ticker: "SER-1",
+        }),
+      });
+      const result = await svc.lookupTicker("BTC-USD");
+      expect(fetchSpy.mock.calls[0][0]).toContain(
+        "/markets/lookup?ticker=BTC-USD",
+      );
+      expect(result.ticker).toBe("BTC-USD");
+    });
+  });
+
+  // ── Phase 4: Live sports data ───────────────────────────────────────────
+
+  describe("getGameStats()", () => {
+    it("GETs /live-data/game-stats with sport and league filters", async () => {
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue({
+          games: [
+            {
+              game_id: "g-1",
+              sport: "nfl",
+              league: "NFL",
+              home_team: "KC",
+              away_team: "BUF",
+            },
+          ],
+        }),
+      });
+      const result = await svc.getGameStats({ sport: "nfl", league: "NFL" });
+      const url = fetchSpy.mock.calls[0][0] as string;
+      expect(url).toContain("/live-data/game-stats");
+      expect(url).toContain("sport=nfl");
+      expect(url).toContain("league=NFL");
+      expect(result).toHaveLength(1);
+      expect(result[0].game_id).toBe("g-1");
+    });
+  });
+
+  describe("getLiveData()", () => {
+    it("GETs /live-data/{type}", async () => {
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue({
+          milestones: [{ milestone_id: "m-1", type: "touchdown", value: 1 }],
+        }),
+      });
+      const result = await svc.getLiveData("touchdown");
+      expect(fetchSpy.mock.calls[0][0]).toContain("/live-data/touchdown");
+      expect(result).toHaveLength(1);
+    });
+  });
+
+  describe("getBatchLiveData()", () => {
+    it("POSTs /live-data/batch with milestone_ids", async () => {
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue({
+          milestones: [
+            { milestone_id: "m-1", type: "td", value: 1 },
+            { milestone_id: "m-2", type: "fg", value: 1 },
+          ],
+        }),
+      });
+      const result = await svc.getBatchLiveData({
+        milestone_ids: ["m-1", "m-2"],
+      });
+      expect(fetchSpy.mock.calls[0][0]).toContain("/live-data/batch");
+      expect(fetchSpy.mock.calls[0][1].method).toBe("POST");
+      expect(result).toHaveLength(2);
+    });
+  });
+
+  // ── Phase 4: Milestones ─────────────────────────────────────────────────
+
+  describe("getMilestones()", () => {
+    it("GETs /milestones with cursor pagination and status filter", async () => {
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue({
+          milestones: [
+            {
+              id: "ms-1",
+              title: "Bitcoin 100k",
+              type: "price",
+              status: "active",
+            },
+          ],
+          cursor: "next",
+        }),
+      });
+      const result = await svc.getMilestones({ status: "active", limit: 10 });
+      const url = fetchSpy.mock.calls[0][0] as string;
+      expect(url).toContain("/milestones?");
+      expect(url).toContain("status=active");
+      expect(url).toContain("limit=10");
+      expect(result.milestones).toHaveLength(1);
+    });
+  });
+
+  describe("getMilestone()", () => {
+    it("GETs /milestones/{id}", async () => {
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue({
+          milestone: {
+            id: "ms-1",
+            title: "Bitcoin 100k",
+            type: "price",
+            status: "active",
+          },
+        }),
+      });
+      const result = await svc.getMilestone("ms-1");
+      expect(fetchSpy.mock.calls[0][0]).toContain("/milestones/ms-1");
+      expect(result.id).toBe("ms-1");
+    });
+  });
+
+  // ── Phase 4: Structured targets ─────────────────────────────────────────
+
+  describe("getStructuredTargets()", () => {
+    it("GETs /structured-targets with type filter", async () => {
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue({
+          structured_targets: [
+            { id: "st-1", title: "Target", type: "numeric" },
+          ],
+          cursor: "next",
+        }),
+      });
+      const result = await svc.getStructuredTargets({ type: "numeric" });
+      const url = fetchSpy.mock.calls[0][0] as string;
+      expect(url).toContain("/structured-targets?");
+      expect(url).toContain("type=numeric");
+      expect(result.structured_targets).toHaveLength(1);
+    });
+  });
+
+  describe("getStructuredTarget()", () => {
+    it("GETs /structured-targets/{id}", async () => {
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue({
+          structured_target: { id: "st-1", title: "Target", type: "numeric" },
+        }),
+      });
+      const result = await svc.getStructuredTarget("st-1");
+      expect(fetchSpy.mock.calls[0][0]).toContain("/structured-targets/st-1");
+      expect(result.id).toBe("st-1");
+    });
+  });
+
+  // ── Phase 4: Incentives ─────────────────────────────────────────────────
+
+  describe("getIncentives()", () => {
+    it("GETs /incentives", async () => {
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue({
+          incentives: [
+            {
+              id: "inc-1",
+              title: "Welcome Bonus",
+              type: "bonus",
+              status: "active",
+              value: 50,
+            },
+          ],
+        }),
+      });
+      const result = await svc.getIncentives();
+      expect(fetchSpy.mock.calls[0][0]).toContain("/incentives");
+      expect(result).toHaveLength(1);
+      expect(result[0].id).toBe("inc-1");
+    });
+  });
+
+  // ── Phase 4: API key management ─────────────────────────────────────────
+
+  describe("createApiKey()", () => {
+    it("POSTs /api-keys", async () => {
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue({
+          api_key: { api_key_id: "ak-1", name: "test-key" },
+        }),
+      });
+      const result = await svc.createApiKey({ name: "test-key" });
+      expect(fetchSpy.mock.calls[0][0]).toContain("/api-keys");
+      expect(fetchSpy.mock.calls[0][1].method).toBe("POST");
+      expect(result.api_key_id).toBe("ak-1");
+    });
+  });
+
+  describe("generateApiKey()", () => {
+    it("POSTs /api-keys/generate and returns secret", async () => {
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue({
+          api_key: {
+            api_key_id: "ak-2",
+            name: "gen-key",
+            secret: "sk_live_abc123",
+          },
+        }),
+      });
+      const result = await svc.generateApiKey({ name: "gen-key" });
+      expect(fetchSpy.mock.calls[0][0]).toContain("/api-keys/generate");
+      expect(result.secret).toBe("sk_live_abc123");
+    });
+  });
+
+  describe("getApiKeys()", () => {
+    it("GETs /api-keys", async () => {
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue({
+          api_keys: [
+            { api_key_id: "ak-1", name: "key-1" },
+            { api_key_id: "ak-2", name: "key-2" },
+          ],
+        }),
+      });
+      const result = await svc.getApiKeys();
+      expect(fetchSpy.mock.calls[0][0]).toContain("/api-keys");
+      expect(result).toHaveLength(2);
+    });
+  });
+
+  describe("deleteApiKey()", () => {
+    it("DELETEs /api-keys/{id}", async () => {
+      fetchSpy.mockResolvedValue({ ok: true });
+      await svc.deleteApiKey("ak-1");
+      const url = fetchSpy.mock.calls[0][0] as string;
+      expect(url).toContain("/api-keys/ak-1");
+      expect(fetchSpy.mock.calls[0][1].method).toBe("DELETE");
+    });
+  });
+
+  // ── Phase 4: Account rate limits ────────────────────────────────────────
+
+  describe("getAccountLimits()", () => {
+    it("GETs /account/limits", async () => {
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue({
+          tier: "standard",
+          order_rate_limit: 100,
+          order_rate_remaining: 95,
+          combo_creation_limit: 5000,
+          combo_creation_remaining: 4990,
+        }),
+      });
+      const result = await svc.getAccountLimits();
+      expect(fetchSpy.mock.calls[0][0]).toContain("/account/limits");
+      expect(result.tier).toBe("standard");
+      expect(result.order_rate_limit).toBe(100);
+      expect(result.combo_creation_limit).toBe(5000);
     });
   });
 

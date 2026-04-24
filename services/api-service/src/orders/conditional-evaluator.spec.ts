@@ -348,25 +348,17 @@ describe("ConditionalEvaluatorService", () => {
 
   describe("Expiration", () => {
     it("cancels expired orders", async () => {
-      const order = makeConditionalOrder({
-        expiresAt: new Date("2020-01-01T00:00:00.000Z"), // already expired
+      db.conditionalOrder.updateMany.mockResolvedValue({ count: 1 } as any);
+
+      await (service as any).checkExpiredOrders();
+
+      expect(db.conditionalOrder.updateMany).toHaveBeenCalledWith({
+        where: {
+          status: "PENDING",
+          expiresAt: { not: null, lte: expect.any(Date) },
+        },
+        data: { status: "CANCELLED" },
       });
-      db.conditionalOrder.findMany.mockResolvedValue([order] as any);
-      db.conditionalOrder.update.mockResolvedValue({
-        ...order,
-        status: "CANCELLED",
-      } as any);
-
-      // Expiration is now in a separate cron method
-      if (typeof (service as any).checkExpiredOrders === "function") {
-        await (service as any).checkExpiredOrders();
-      } else {
-        await service.processOrders();
-      }
-
-      expect(
-        db.conditionalOrder.updateMany || db.conditionalOrder.update,
-      ).toBeDefined();
     });
 
     it("does NOT cancel non-expired orders", async () => {

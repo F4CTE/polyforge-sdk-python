@@ -8,6 +8,7 @@ import { ConfigService } from "@nestjs/config";
 import { EventEmitter2 } from "@nestjs/event-emitter";
 import WebSocket from "ws";
 import { KalshiAuthService } from "./kalshi-auth.service";
+import type { KalshiCommunicationsEvent } from "./kalshi-rest.service";
 import { KalshiRestService } from "./kalshi-rest.service";
 
 interface PriceUpdateEvent {
@@ -156,6 +157,14 @@ export class KalshiWsService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
+  subscribeCommunications(rfqIds?: string[]) {
+    this.privateChannels.add("communications");
+
+    if (this.ws?.readyState === WebSocket.OPEN) {
+      this.sendChannelSubscription("communications", rfqIds);
+    }
+  }
+
   getOrderbookSeq(ticker: string): number | undefined {
     return this.orderbookSeq.get(ticker);
   }
@@ -267,6 +276,9 @@ export class KalshiWsService implements OnModuleInit, OnModuleDestroy {
       case "market_positions":
         this.handleMarketPositionMessage(inner);
         break;
+      case "communications":
+        this.handleCommunicationsMessage(inner);
+        break;
     }
   }
 
@@ -370,6 +382,23 @@ export class KalshiWsService implements OnModuleInit, OnModuleDestroy {
       realized_pnl: (inner["realized_pnl"] as number) ?? 0,
       timestamp: ts,
     } satisfies MarketPositionEvent);
+  }
+
+  private handleCommunicationsMessage(inner: Record<string, unknown>) {
+    const rfqId = inner["rfq_id"] as string | undefined;
+    const type = inner["type"] as string | undefined;
+    if (!rfqId || !type) return;
+
+    const ts = typeof inner["ts"] === "number" ? inner["ts"] : Date.now();
+
+    this.emitter.emit("kalshi.communications", {
+      rfq_id: rfqId,
+      type: type as KalshiCommunicationsEvent["type"],
+      quote_id: (inner["quote_id"] as string) ?? undefined,
+      price: (inner["price"] as number) ?? undefined,
+      count: (inner["count"] as number) ?? undefined,
+      timestamp: ts,
+    } satisfies KalshiCommunicationsEvent);
   }
 
   private sendSubscription(tickers: string[]) {
