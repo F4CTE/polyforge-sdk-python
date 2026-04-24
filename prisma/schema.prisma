@@ -191,9 +191,9 @@ model User {
   polymarketConnected Boolean   @default(false)
   polymarketSigType   Int?      @db.SmallInt
   polymarketAddress   String?   @db.VarChar(42)
-  kalshiConnected     Boolean   @default(false)
-  kalshiUserId        String?   @db.VarChar(255)
-  venuePreferences    Json?     @db.JsonB
+  kalshiConnected     Boolean   @default(false) @map("kalshi_connected")
+  kalshiUserId        String?   @db.VarChar(255) @map("kalshi_user_id")
+  venuePreferences    Json?     @db.JsonB @map("venue_preferences")
   tosAcceptedAt       DateTime?
   emailVerified       Boolean   @default(false)
   emailVerifiedAt     DateTime?
