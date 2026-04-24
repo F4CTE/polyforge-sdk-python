@@ -24,7 +24,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
-    "@hey-api/openapi-ts": "0.94.1",
+    "@hey-api/openapi-ts": "0.96.1",
     "@types/bcrypt": "^6.0.0",
     "@types/node": "25.5.0",
     "bcrypt": "^6.0.0",
