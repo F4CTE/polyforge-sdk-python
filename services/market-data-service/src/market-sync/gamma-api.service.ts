@@ -66,6 +66,38 @@ interface KeysetPage {
   next_cursor?: string | null;
 }
 
+export interface GammaSearchResult {
+  id: string;
+  type: string;
+  title: string;
+  slug?: string;
+  image?: string;
+  [key: string]: unknown;
+}
+
+export interface GammaSearchParams {
+  status?: string;
+  tag?: string;
+  sort?: string;
+  limit?: number;
+  offset?: number;
+}
+
+export interface GammaComment {
+  id: string;
+  author: string;
+  body: string;
+  market?: string;
+  createdAt: string;
+  [key: string]: unknown;
+}
+
+export interface GammaCommentsParams {
+  market?: string;
+  limit?: number;
+  offset?: number;
+}
+
 const SYNC_INTERVAL_MS = 60_000; // poll for new markets every minute
 
 /**
@@ -331,6 +363,74 @@ export class GammaApiService implements OnModuleInit {
       data: GammaSimplifiedMarket[];
       next_cursor?: string | null;
     }>;
+  }
+
+  // ─── Phase 4: Search & Social ─────────────────────────────────────────────
+
+  async search(
+    query: string,
+    opts?: GammaSearchParams,
+  ): Promise<GammaSearchResult[]> {
+    await GAMMA_LIMITER.acquire();
+    const params = new URLSearchParams({ q: query });
+    if (opts?.status) params.set("status", opts.status);
+    if (opts?.tag) params.set("tag", opts.tag);
+    if (opts?.sort) params.set("sort", opts.sort);
+    if (opts?.limit !== undefined) params.set("limit", String(opts.limit));
+    if (opts?.offset !== undefined) params.set("offset", String(opts.offset));
+
+    const res = await fetch(
+      `${this.gammaUrl}/public-search?${params.toString()}`,
+      { signal: AbortSignal.timeout(10_000) },
+    );
+    if (!res.ok) throw new Error(`Gamma search returned ${res.status}`);
+    const body = await res.json();
+    return (
+      Array.isArray(body) ? body : ((body as any).data ?? [])
+    ) as GammaSearchResult[];
+  }
+
+  async getComments(opts?: GammaCommentsParams): Promise<GammaComment[]> {
+    await GAMMA_LIMITER.acquire();
+    const params = new URLSearchParams();
+    if (opts?.market) params.set("market", opts.market);
+    if (opts?.limit !== undefined) params.set("limit", String(opts.limit));
+    if (opts?.offset !== undefined) params.set("offset", String(opts.offset));
+
+    const query = params.toString();
+    const res = await fetch(
+      `${this.gammaUrl}/comments${query ? `?${query}` : ""}`,
+      { signal: AbortSignal.timeout(10_000) },
+    );
+    if (!res.ok) throw new Error(`Gamma comments returned ${res.status}`);
+    const body = await res.json();
+    return (
+      Array.isArray(body) ? body : ((body as any).data ?? [])
+    ) as GammaComment[];
+  }
+
+  async getCommentById(commentId: string): Promise<GammaComment | null> {
+    await GAMMA_LIMITER.acquire();
+    const res = await fetch(
+      `${this.gammaUrl}/comments/${encodeURIComponent(commentId)}`,
+      { signal: AbortSignal.timeout(10_000) },
+    );
+    if (res.status === 404) return null;
+    if (!res.ok) throw new Error(`Gamma comment returned ${res.status}`);
+    return (await res.json()) as GammaComment;
+  }
+
+  async getUserComments(address: string): Promise<GammaComment[]> {
+    await GAMMA_LIMITER.acquire();
+    const res = await fetch(
+      `${this.gammaUrl}/comments/user/${encodeURIComponent(address)}`,
+      { signal: AbortSignal.timeout(10_000) },
+    );
+    if (!res.ok) throw new Error(`Gamma user comments returned ${res.status}`);
+    const body = await res.json();
+    return (
+      Array.isArray(body) ? body : ((body as any).data ?? [])
+    ) as GammaComment[];
   }
 
   // ─── Private ─────────────────────────────────────────────────────────────

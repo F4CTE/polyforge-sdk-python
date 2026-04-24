@@ -477,4 +477,340 @@ describe("PolymarketDataApiService", () => {
       expect(url).toContain("offset=10000");
     });
   });
+
+  // ── Phase 4: Analytics ──────────────────────────────────────────────────
+
+  describe("getLeaderboard()", () => {
+    it("fetches from /v1/leaderboard with no params by default", async () => {
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue([]),
+      });
+
+      await svc.getLeaderboard();
+
+      expect(fetchSpy.mock.calls[0][0]).toContain("/v1/leaderboard");
+      expect(fetchSpy.mock.calls[0][0]).not.toContain("?");
+    });
+
+    it("includes category and timeframe params", async () => {
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue([]),
+      });
+
+      await svc.getLeaderboard({
+        category: "POLITICS",
+        timeframe: "WEEK",
+        limit: 10,
+      });
+
+      const url = fetchSpy.mock.calls[0][0] as string;
+      expect(url).toContain("category=POLITICS");
+      expect(url).toContain("timeframe=WEEK");
+      expect(url).toContain("limit=10");
+    });
+
+    it("caps limit between 1 and 50", async () => {
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue([]),
+      });
+
+      await svc.getLeaderboard({ limit: 100 });
+      expect(fetchSpy.mock.calls[0][0]).toContain("limit=50");
+    });
+
+    it("returns parsed leaderboard entries", async () => {
+      const entries = [
+        {
+          rank: 1,
+          address: "0xTop",
+          username: "whale",
+          volume: "1000000",
+          pnl: "50000",
+          markets_traded: 200,
+        },
+      ];
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue(entries),
+      });
+
+      const result = await svc.getLeaderboard();
+      expect(result).toEqual(entries);
+    });
+
+    it("returns empty array on failure", async () => {
+      fetchSpy.mockResolvedValue({ ok: false, status: 500 });
+
+      const result = await svc.getLeaderboard();
+      expect(result).toEqual([]);
+    });
+  });
+
+  describe("getTopHolders()", () => {
+    it("fetches from /top-holders with market param", async () => {
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue([]),
+      });
+
+      await svc.getTopHolders("0xMarket");
+
+      expect(fetchSpy.mock.calls[0][0]).toContain(
+        "/top-holders?market=0xMarket",
+      );
+    });
+
+    it("returns parsed holders", async () => {
+      const holders = [
+        {
+          address: "0xHolder",
+          position: "YES",
+          value: "50000",
+          percentage: "5.2",
+        },
+      ];
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue(holders),
+      });
+
+      const result = await svc.getTopHolders("0xMarket");
+      expect(result).toEqual(holders);
+    });
+
+    it("returns empty array on failure", async () => {
+      fetchSpy.mockResolvedValue({ ok: false, status: 500 });
+
+      const result = await svc.getTopHolders("0xMarket");
+      expect(result).toEqual([]);
+    });
+  });
+
+  describe("getTotalPositionValue()", () => {
+    it("fetches from /total-value with user param", async () => {
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue({ totalValue: "12345" }),
+      });
+
+      await svc.getTotalPositionValue("0xWallet");
+
+      expect(fetchSpy.mock.calls[0][0]).toContain("/total-value?user=0xWallet");
+    });
+
+    it("returns default on failure", async () => {
+      fetchSpy.mockResolvedValue({ ok: false, status: 404 });
+
+      const result = await svc.getTotalPositionValue("0xWallet");
+      expect(result).toEqual({ totalValue: "0" });
+    });
+  });
+
+  describe("getTotalMarketsTraded()", () => {
+    it("fetches from /total-markets-traded with user param", async () => {
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue({ totalMarkets: 42 }),
+      });
+
+      const result = await svc.getTotalMarketsTraded("0xWallet");
+
+      expect(fetchSpy.mock.calls[0][0]).toContain(
+        "/total-markets-traded?user=0xWallet",
+      );
+      expect(result).toEqual({ totalMarkets: 42 });
+    });
+
+    it("returns default on failure", async () => {
+      fetchSpy.mockResolvedValue({ ok: false, status: 500 });
+
+      const result = await svc.getTotalMarketsTraded("0xWallet");
+      expect(result).toEqual({ totalMarkets: 0 });
+    });
+  });
+
+  describe("getPublicProfile()", () => {
+    it("fetches from /profile/{address}", async () => {
+      const profile = {
+        address: "0xWallet",
+        username: "trader1",
+        bio: "Top trader",
+        profileImage: "https://img.com/a.jpg",
+        twitterHandle: "@trader1",
+      };
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue(profile),
+      });
+
+      const result = await svc.getPublicProfile("0xWallet");
+
+      expect(fetchSpy.mock.calls[0][0]).toContain("/profile/0xWallet");
+      expect(result).toEqual(profile);
+    });
+
+    it("URL-encodes the address", async () => {
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue({}),
+      });
+
+      await svc.getPublicProfile("0x123+test");
+
+      expect(fetchSpy.mock.calls[0][0]).toContain(
+        encodeURIComponent("0x123+test"),
+      );
+    });
+
+    it("returns null on failure", async () => {
+      fetchSpy.mockResolvedValue({ ok: false, status: 404 });
+
+      const result = await svc.getPublicProfile("0xWallet");
+      expect(result).toBeNull();
+    });
+  });
+
+  describe("getOpenInterest()", () => {
+    it("fetches from /open-interest with market param", async () => {
+      const oi = { market: "0xMarket", openInterest: "500000" };
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue(oi),
+      });
+
+      const result = await svc.getOpenInterest("0xMarket");
+
+      expect(fetchSpy.mock.calls[0][0]).toContain(
+        "/open-interest?market=0xMarket",
+      );
+      expect(result).toEqual(oi);
+    });
+
+    it("returns null on failure", async () => {
+      fetchSpy.mockResolvedValue({ ok: false, status: 500 });
+
+      const result = await svc.getOpenInterest("0xMarket");
+      expect(result).toBeNull();
+    });
+  });
+
+  describe("getLiveVolume()", () => {
+    it("fetches from /live-volume/{eventId}", async () => {
+      const vol = {
+        eventId: "evt-1",
+        volume: "250000",
+        timestamp: "2026-04-24T00:00:00Z",
+      };
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue(vol),
+      });
+
+      const result = await svc.getLiveVolume("evt-1");
+
+      expect(fetchSpy.mock.calls[0][0]).toContain("/live-volume/evt-1");
+      expect(result).toEqual(vol);
+    });
+
+    it("returns null on failure", async () => {
+      fetchSpy.mockResolvedValue({ ok: false, status: 404 });
+
+      const result = await svc.getLiveVolume("evt-1");
+      expect(result).toBeNull();
+    });
+  });
+
+  describe("getAccountingSnapshot()", () => {
+    it("fetches from /accounting-snapshot with user param", async () => {
+      const buffer = new ArrayBuffer(8);
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        arrayBuffer: vi.fn().mockResolvedValue(buffer),
+      });
+
+      const result = await svc.getAccountingSnapshot("0xWallet");
+
+      expect(fetchSpy.mock.calls[0][0]).toContain(
+        "/accounting-snapshot?user=0xWallet",
+      );
+      expect(result).toBe(buffer);
+    });
+
+    it("returns null on failure", async () => {
+      fetchSpy.mockResolvedValue({ ok: false, status: 500 });
+
+      const result = await svc.getAccountingSnapshot("0xWallet");
+      expect(result).toBeNull();
+    });
+
+    it("uses 30s timeout for large ZIP downloads", async () => {
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        arrayBuffer: vi.fn().mockResolvedValue(new ArrayBuffer(0)),
+      });
+
+      await svc.getAccountingSnapshot("0xWallet");
+
+      const opts = fetchSpy.mock.calls[0][1] as { signal: AbortSignal };
+      expect(opts.signal).toBeDefined();
+    });
+  });
+
+  // ── Phase 4: Rewards Deep Dive ──────────────────────────────────────────
+
+  describe("getRawRewards()", () => {
+    it("fetches from /raw-rewards/{market}", async () => {
+      const rewards = [
+        {
+          address: "0xTrader",
+          amount: "100",
+          epoch: 42,
+          conditionId: "cond-1",
+        },
+      ];
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue(rewards),
+      });
+
+      const result = await svc.getRawRewards("0xMarket");
+
+      expect(fetchSpy.mock.calls[0][0]).toContain("/raw-rewards/0xMarket");
+      expect(result).toEqual(rewards);
+    });
+
+    it("returns empty array on failure", async () => {
+      fetchSpy.mockResolvedValue({ ok: false, status: 404 });
+
+      const result = await svc.getRawRewards("0xMarket");
+      expect(result).toEqual([]);
+    });
+  });
+
+  describe("getRewardPercentages()", () => {
+    it("fetches from /reward-percentages/{user}", async () => {
+      const pcts = [{ market: "0xMarket", percentage: "0.05", amount: "500" }];
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue(pcts),
+      });
+
+      const result = await svc.getRewardPercentages("0xWallet");
+
+      expect(fetchSpy.mock.calls[0][0]).toContain(
+        "/reward-percentages/0xWallet",
+      );
+      expect(result).toEqual(pcts);
+    });
+
+    it("returns empty array on failure", async () => {
+      fetchSpy.mockResolvedValue({ ok: false, status: 500 });
+
+      const result = await svc.getRewardPercentages("0xWallet");
+      expect(result).toEqual([]);
+    });
+  });
 });

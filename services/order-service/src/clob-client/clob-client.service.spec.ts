@@ -1174,4 +1174,112 @@ describe("ClobClientService", () => {
       expect(fetchSpy).toHaveBeenCalledTimes(2);
     });
   });
+
+  // ── Phase 4: Builder Analytics ────────────────────────────────────────────
+
+  describe("getBuilderLeaderboard()", () => {
+    it("sends GET to /builder-leaderboard", async () => {
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi
+          .fn()
+          .mockResolvedValue([
+            { builder: "b1", volume: "1000", trades: 10, rank: 1 },
+          ]),
+      });
+
+      const result = await svc.getBuilderLeaderboard();
+
+      expect(fetchSpy.mock.calls[0][0]).toBe(
+        "http://clob:3099/builder-leaderboard",
+      );
+      expect(result).toEqual([
+        { builder: "b1", volume: "1000", trades: 10, rank: 1 },
+      ]);
+    });
+
+    it("throws on non-OK response", async () => {
+      fetchSpy.mockResolvedValue({
+        ok: false,
+        status: 500,
+        text: vi.fn().mockResolvedValue("server error"),
+      });
+
+      await expect(svc.getBuilderLeaderboard()).rejects.toThrow("500");
+    });
+
+    it("retries on 429", async () => {
+      vi.useFakeTimers();
+      fetchSpy
+        .mockResolvedValueOnce({
+          ok: false,
+          status: 429,
+          text: vi.fn().mockResolvedValue(""),
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: vi.fn().mockResolvedValue([]),
+        });
+
+      const promise = svc.getBuilderLeaderboard();
+      await vi.advanceTimersByTimeAsync(600);
+      const result = await promise;
+      expect(result).toEqual([]);
+      expect(fetchSpy).toHaveBeenCalledTimes(2);
+      vi.useRealTimers();
+    });
+  });
+
+  describe("getDailyBuilderVolume()", () => {
+    it("sends GET to /daily-builder-volume", async () => {
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi
+          .fn()
+          .mockResolvedValue([
+            { date: "2026-04-24", builder: "b1", volume: "500" },
+          ]),
+      });
+
+      const result = await svc.getDailyBuilderVolume();
+
+      expect(fetchSpy.mock.calls[0][0]).toBe(
+        "http://clob:3099/daily-builder-volume",
+      );
+      expect(result).toEqual([
+        { date: "2026-04-24", builder: "b1", volume: "500" },
+      ]);
+    });
+
+    it("throws on non-OK response", async () => {
+      fetchSpy.mockResolvedValue({
+        ok: false,
+        status: 503,
+        text: vi.fn().mockResolvedValue("unavailable"),
+      });
+
+      await expect(svc.getDailyBuilderVolume()).rejects.toThrow("503");
+    });
+
+    it("retries on 429", async () => {
+      vi.useFakeTimers();
+      fetchSpy
+        .mockResolvedValueOnce({
+          ok: false,
+          status: 429,
+          text: vi.fn().mockResolvedValue(""),
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: vi.fn().mockResolvedValue([]),
+        });
+
+      const promise = svc.getDailyBuilderVolume();
+      await vi.advanceTimersByTimeAsync(600);
+      const result = await promise;
+      expect(result).toEqual([]);
+      expect(fetchSpy).toHaveBeenCalledTimes(2);
+      vi.useRealTimers();
+    });
+  });
 });

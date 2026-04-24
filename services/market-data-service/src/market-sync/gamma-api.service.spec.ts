@@ -795,4 +795,247 @@ describe("GammaApiService", () => {
       expect(call.create.eventId).toBeNull();
     });
   });
+
+  // ── Phase 4: Search & Social ────────────────────────────────────────────
+
+  describe("search()", () => {
+    it("sends GET to /public-search with query", async () => {
+      globalThis.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve([]),
+      });
+
+      await svc.search("bitcoin");
+      const url = vi.mocked(globalThis.fetch).mock.calls[0][0] as string;
+      expect(url).toContain("/public-search?q=bitcoin");
+    });
+
+    it("includes optional filter params", async () => {
+      globalThis.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve([]),
+      });
+
+      await svc.search("election", {
+        status: "active",
+        tag: "politics",
+        sort: "volume",
+        limit: 20,
+        offset: 10,
+      });
+
+      const url = vi.mocked(globalThis.fetch).mock.calls[0][0] as string;
+      expect(url).toContain("status=active");
+      expect(url).toContain("tag=politics");
+      expect(url).toContain("sort=volume");
+      expect(url).toContain("limit=20");
+      expect(url).toContain("offset=10");
+    });
+
+    it("returns parsed search results", async () => {
+      const results = [
+        { id: "r-1", type: "market", title: "BTC 100k", slug: "btc-100k" },
+      ];
+      globalThis.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve(results),
+      });
+
+      const result = await svc.search("btc");
+      expect(result).toEqual(results);
+    });
+
+    it("handles { data: [...] } wrapper response", async () => {
+      const results = [{ id: "r-1", type: "event", title: "Election" }];
+      globalThis.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve({ data: results }),
+      });
+
+      const result = await svc.search("election");
+      expect(result).toEqual(results);
+    });
+
+    it("throws on non-OK response", async () => {
+      globalThis.fetch = vi.fn().mockResolvedValue({
+        ok: false,
+        status: 500,
+      });
+
+      await expect(svc.search("test")).rejects.toThrow("500");
+    });
+  });
+
+  describe("getComments()", () => {
+    it("sends GET to /comments with no params by default", async () => {
+      globalThis.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve([]),
+      });
+
+      await svc.getComments();
+      const url = vi.mocked(globalThis.fetch).mock.calls[0][0] as string;
+      expect(url).toContain("/comments");
+    });
+
+    it("includes optional filter params", async () => {
+      globalThis.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve([]),
+      });
+
+      await svc.getComments({ market: "0xMarket", limit: 50, offset: 10 });
+      const url = vi.mocked(globalThis.fetch).mock.calls[0][0] as string;
+      expect(url).toContain("market=0xMarket");
+      expect(url).toContain("limit=50");
+      expect(url).toContain("offset=10");
+    });
+
+    it("returns parsed comments", async () => {
+      const comments = [
+        {
+          id: "c-1",
+          author: "0xUser",
+          body: "Great market!",
+          market: "0xMarket",
+          createdAt: "2026-04-24T00:00:00Z",
+        },
+      ];
+      globalThis.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve(comments),
+      });
+
+      const result = await svc.getComments();
+      expect(result).toEqual(comments);
+    });
+
+    it("handles { data: [...] } wrapper", async () => {
+      const comments = [
+        { id: "c-1", author: "0xUser", body: "test", createdAt: "2026-01-01" },
+      ];
+      globalThis.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve({ data: comments }),
+      });
+
+      const result = await svc.getComments();
+      expect(result).toEqual(comments);
+    });
+
+    it("throws on non-OK response", async () => {
+      globalThis.fetch = vi.fn().mockResolvedValue({
+        ok: false,
+        status: 503,
+      });
+
+      await expect(svc.getComments()).rejects.toThrow("503");
+    });
+  });
+
+  describe("getCommentById()", () => {
+    it("sends GET to /comments/{id}", async () => {
+      const comment = {
+        id: "c-1",
+        author: "0xUser",
+        body: "Hello",
+        createdAt: "2026-04-24",
+      };
+      globalThis.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve(comment),
+      });
+
+      const result = await svc.getCommentById("c-1");
+      const url = vi.mocked(globalThis.fetch).mock.calls[0][0] as string;
+      expect(url).toContain("/comments/c-1");
+      expect(result).toEqual(comment);
+    });
+
+    it("returns null on 404", async () => {
+      globalThis.fetch = vi.fn().mockResolvedValue({
+        ok: false,
+        status: 404,
+      });
+
+      const result = await svc.getCommentById("nonexistent");
+      expect(result).toBeNull();
+    });
+
+    it("throws on non-404 error", async () => {
+      globalThis.fetch = vi.fn().mockResolvedValue({
+        ok: false,
+        status: 500,
+      });
+
+      await expect(svc.getCommentById("c-1")).rejects.toThrow("500");
+    });
+
+    it("URL-encodes the comment ID", async () => {
+      globalThis.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve({ id: "a+b" }),
+      });
+
+      await svc.getCommentById("a+b");
+      const url = vi.mocked(globalThis.fetch).mock.calls[0][0] as string;
+      expect(url).toContain("a%2Bb");
+    });
+  });
+
+  describe("getUserComments()", () => {
+    it("sends GET to /comments/user/{address}", async () => {
+      globalThis.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve([]),
+      });
+
+      await svc.getUserComments("0xUser");
+      const url = vi.mocked(globalThis.fetch).mock.calls[0][0] as string;
+      expect(url).toContain("/comments/user/0xUser");
+    });
+
+    it("returns parsed user comments", async () => {
+      const comments = [
+        { id: "c-1", author: "0xUser", body: "My comment", createdAt: "2026" },
+      ];
+      globalThis.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve(comments),
+      });
+
+      const result = await svc.getUserComments("0xUser");
+      expect(result).toEqual(comments);
+    });
+
+    it("handles { data: [...] } wrapper", async () => {
+      globalThis.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve({ data: [{ id: "c-1" }] }),
+      });
+
+      const result = await svc.getUserComments("0xUser");
+      expect(result).toHaveLength(1);
+    });
+
+    it("throws on non-OK response", async () => {
+      globalThis.fetch = vi.fn().mockResolvedValue({
+        ok: false,
+        status: 500,
+      });
+
+      await expect(svc.getUserComments("0xUser")).rejects.toThrow("500");
+    });
+
+    it("URL-encodes the address", async () => {
+      globalThis.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve([]),
+      });
+
+      await svc.getUserComments("0x123+test");
+      const url = vi.mocked(globalThis.fetch).mock.calls[0][0] as string;
+      expect(url).toContain(encodeURIComponent("0x123+test"));
+    });
+  });
 });

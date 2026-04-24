@@ -73,6 +73,60 @@ export interface PolymarketPositionsParams {
   title?: string;
 }
 
+export interface PolymarketLeaderboardEntry {
+  rank: number;
+  address: string;
+  username?: string;
+  volume: string;
+  pnl: string;
+  markets_traded: number;
+}
+
+export interface PolymarketLeaderboardParams {
+  category?: string;
+  timeframe?: string;
+  limit?: number;
+}
+
+export interface PolymarketTopHolder {
+  address: string;
+  position: string;
+  value: string;
+  percentage: string;
+}
+
+export interface PolymarketPublicProfile {
+  address: string;
+  username?: string;
+  bio?: string;
+  profileImage?: string;
+  twitterHandle?: string;
+}
+
+export interface PolymarketOpenInterest {
+  market: string;
+  openInterest: string;
+}
+
+export interface PolymarketLiveVolume {
+  eventId: string;
+  volume: string;
+  timestamp: string;
+}
+
+export interface PolymarketRawReward {
+  address: string;
+  amount: string;
+  epoch: number;
+  conditionId: string;
+}
+
+export interface PolymarketRewardPercentage {
+  market: string;
+  percentage: string;
+  amount: string;
+}
+
 @Injectable()
 export class PolymarketDataApiService {
   private readonly logger = new Logger(PolymarketDataApiService.name);
@@ -293,5 +347,143 @@ export class PolymarketDataApiService {
       return [];
     }
     return (await res.json()) as PolymarketPosition[];
+  }
+
+  // ─── Phase 4: Analytics ─────────────────────────────────────────────────
+
+  async getLeaderboard(
+    opts?: PolymarketLeaderboardParams,
+  ): Promise<PolymarketLeaderboardEntry[]> {
+    const params = new URLSearchParams();
+    if (opts?.category) params.set("category", opts.category);
+    if (opts?.timeframe) params.set("timeframe", opts.timeframe);
+    if (opts?.limit !== undefined)
+      params.set("limit", String(Math.min(Math.max(opts.limit, 1), 50)));
+
+    const query = params.toString();
+    const res = await fetch(
+      `${this.dataApiUrl}/v1/leaderboard${query ? `?${query}` : ""}`,
+      { signal: AbortSignal.timeout(10_000) },
+    );
+    if (!res.ok) {
+      this.logger.warn(`Polymarket leaderboard returned ${res.status}`);
+      return [];
+    }
+    return (await res.json()) as PolymarketLeaderboardEntry[];
+  }
+
+  async getTopHolders(market: string): Promise<PolymarketTopHolder[]> {
+    const res = await fetch(
+      `${this.dataApiUrl}/top-holders?market=${encodeURIComponent(market)}`,
+      { signal: AbortSignal.timeout(10_000) },
+    );
+    if (!res.ok) {
+      this.logger.warn(`Polymarket top-holders returned ${res.status}`);
+      return [];
+    }
+    return (await res.json()) as PolymarketTopHolder[];
+  }
+
+  async getTotalPositionValue(
+    walletAddress: string,
+  ): Promise<{ totalValue: string }> {
+    const res = await fetch(
+      `${this.dataApiUrl}/total-value?user=${encodeURIComponent(walletAddress)}`,
+      { signal: AbortSignal.timeout(10_000) },
+    );
+    if (!res.ok) {
+      this.logger.warn(`Polymarket total-value returned ${res.status}`);
+      return { totalValue: "0" };
+    }
+    return (await res.json()) as { totalValue: string };
+  }
+
+  async getTotalMarketsTraded(
+    walletAddress: string,
+  ): Promise<{ totalMarkets: number }> {
+    const res = await fetch(
+      `${this.dataApiUrl}/total-markets-traded?user=${encodeURIComponent(walletAddress)}`,
+      { signal: AbortSignal.timeout(10_000) },
+    );
+    if (!res.ok) {
+      this.logger.warn(
+        `Polymarket total-markets-traded returned ${res.status}`,
+      );
+      return { totalMarkets: 0 };
+    }
+    return (await res.json()) as { totalMarkets: number };
+  }
+
+  async getPublicProfile(
+    address: string,
+  ): Promise<PolymarketPublicProfile | null> {
+    const res = await fetch(
+      `${this.dataApiUrl}/profile/${encodeURIComponent(address)}`,
+      { signal: AbortSignal.timeout(10_000) },
+    );
+    if (!res.ok) return null;
+    return (await res.json()) as PolymarketPublicProfile;
+  }
+
+  async getOpenInterest(
+    market: string,
+  ): Promise<PolymarketOpenInterest | null> {
+    const res = await fetch(
+      `${this.dataApiUrl}/open-interest?market=${encodeURIComponent(market)}`,
+      { signal: AbortSignal.timeout(10_000) },
+    );
+    if (!res.ok) return null;
+    return (await res.json()) as PolymarketOpenInterest;
+  }
+
+  async getLiveVolume(eventId: string): Promise<PolymarketLiveVolume | null> {
+    const res = await fetch(
+      `${this.dataApiUrl}/live-volume/${encodeURIComponent(eventId)}`,
+      { signal: AbortSignal.timeout(10_000) },
+    );
+    if (!res.ok) return null;
+    return (await res.json()) as PolymarketLiveVolume;
+  }
+
+  async getAccountingSnapshot(
+    walletAddress: string,
+  ): Promise<ArrayBuffer | null> {
+    const res = await fetch(
+      `${this.dataApiUrl}/accounting-snapshot?user=${encodeURIComponent(walletAddress)}`,
+      { signal: AbortSignal.timeout(30_000) },
+    );
+    if (!res.ok) {
+      this.logger.warn(`Polymarket accounting-snapshot returned ${res.status}`);
+      return null;
+    }
+    return res.arrayBuffer();
+  }
+
+  // ─── Phase 4: Rewards Deep Dive ──────────────────────────────────────────
+
+  async getRawRewards(market: string): Promise<PolymarketRawReward[]> {
+    const res = await fetch(
+      `${this.dataApiUrl}/raw-rewards/${encodeURIComponent(market)}`,
+      { signal: AbortSignal.timeout(10_000) },
+    );
+    if (!res.ok) {
+      this.logger.warn(`Polymarket raw-rewards returned ${res.status}`);
+      return [];
+    }
+    return (await res.json()) as PolymarketRawReward[];
+  }
+
+  async getRewardPercentages(
+    walletAddress: string,
+  ): Promise<PolymarketRewardPercentage[]> {
+    const res = await fetch(
+      `${this.dataApiUrl}/reward-percentages/${encodeURIComponent(walletAddress)}`,
+      { signal: AbortSignal.timeout(10_000) },
+    );
+    if (!res.ok) {
+      this.logger.warn(`Polymarket reward-percentages returned ${res.status}`);
+      return [];
+    }
+    return (await res.json()) as PolymarketRewardPercentage[];
   }
 }

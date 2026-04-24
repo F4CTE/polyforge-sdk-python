@@ -80,6 +80,19 @@ export interface ClobMarketInfo {
   [key: string]: unknown;
 }
 
+export interface ClobBuilderLeaderboardEntry {
+  builder: string;
+  volume: string;
+  trades: number;
+  rank: number;
+}
+
+export interface ClobDailyBuilderVolume {
+  date: string;
+  builder: string;
+  volume: string;
+}
+
 const RETRY_DELAYS_MS = [500, 1000, 2000];
 
 @Injectable()
@@ -456,6 +469,24 @@ export class ClobClientService {
     params.set("token_ids", tokenIds.join(","));
     return this.withRetry(() =>
       fetch(`${this.clobUrl}/spreads?${params.toString()}`, {
+        signal: AbortSignal.timeout(10_000),
+      }),
+    );
+  }
+
+  // ─── Phase 4: Builder Analytics ───────────────────────────────────────────
+
+  async getBuilderLeaderboard(): Promise<ClobBuilderLeaderboardEntry[]> {
+    return this.withRetry(() =>
+      fetch(`${this.clobUrl}/builder-leaderboard`, {
+        signal: AbortSignal.timeout(10_000),
+      }),
+    );
+  }
+
+  async getDailyBuilderVolume(): Promise<ClobDailyBuilderVolume[]> {
+    return this.withRetry(() =>
+      fetch(`${this.clobUrl}/daily-builder-volume`, {
         signal: AbortSignal.timeout(10_000),
       }),
     );
