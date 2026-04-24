@@ -27,7 +27,9 @@ from polyforge.models import (
     AccuracyScore,
     AiQueryResponse,
     Alert,
+    ArbitrageAlertSubscription,
     ArbitrageOpportunity,
+    ArbitrageSnapshot,
     Badge,
     BatchOrderItem,
     BatchOrderResult,
@@ -41,9 +43,11 @@ from polyforge.models import (
     ConditionalOrder,
     CopyConfig,
     CopyTrade,
+    CrossVenueOpportunity,
     LeaderboardEntry,
     LpPosition,
     Market,
+    MarketMatch,
     MarketplaceListing,
     MarketplacePurchaseResult,
     MarketplaceSeller,
@@ -69,11 +73,13 @@ from polyforge.models import (
     Position,
     PriceHistoryEntry,
     Rebate,
+    RedeemPositionResponse,
     RewardMarket,
     RiskSettings,
     SmartOrder,
     SmartOrderChildOrder,
     SpreadInfo,
+    SpreadSummary,
     Strategy,
     StrategyBlock,
     StrategyEvent,
@@ -85,6 +91,7 @@ from polyforge.models import (
     TraderScore,
     UserReward,
     UserRewardsTotal,
+    VenuePriceInfo,
     WatchlistItem,
     Webhook,
     WebhookTestResult,
@@ -93,6 +100,10 @@ from polyforge.models import (
 )
 
 T = TypeVar("T")
+
+_FIELD_ALIASES: dict[str, dict[str, str]] = {
+    "PriceHistoryEntry": {"time": "timestamp"},
+}
 
 _MODEL_REGISTRY: dict[str, type] = {
     "Market": Market,
@@ -128,6 +139,12 @@ _MODEL_REGISTRY: dict[str, type] = {
     "PolymarketEarningsEntry": PolymarketEarningsEntry,
     "PolymarketActivity": PolymarketActivity,
     "Alert": Alert,
+    "ArbitrageAlertSubscription": ArbitrageAlertSubscription,
+    "ArbitrageSnapshot": ArbitrageSnapshot,
+    "CrossVenueOpportunity": CrossVenueOpportunity,
+    "MarketMatch": MarketMatch,
+    "SpreadSummary": SpreadSummary,
+    "VenuePriceInfo": VenuePriceInfo,
     "ConditionalOrder": ConditionalOrder,
     "CopyConfig": CopyConfig,
     "PortfolioPnl": PortfolioPnl,
@@ -178,14 +195,17 @@ def _parse(cls: type[T], data: dict[str, Any]) -> T:
     if not isinstance(data, dict):
         return data  # type: ignore[return-value]
 
+    aliases = _FIELD_ALIASES.get(cls.__name__, {})
+    aliased = {aliases.get(k, k): v for k, v in data.items()}
+
     # Build a snake_case lookup so camelCase API keys map to dataclass fields
-    snake_data = {_camel_to_snake(k): v for k, v in data.items()}
+    snake_data = {_camel_to_snake(k): v for k, v in aliased.items()}
 
     hints = get_type_hints(cls)
     kwargs: dict[str, Any] = {}
 
     for f in fields(cls):  # type: ignore[arg-type]
-        raw = data.get(f.name) or snake_data.get(f.name)
+        raw = aliased.get(f.name) or snake_data.get(f.name)
         if raw is None:
             continue
 
@@ -203,6 +223,8 @@ def _parse(cls: type[T], data: dict[str, Any]) -> T:
                 kwargs[f.name] = [_parse(_MODEL_REGISTRY[inner_name], item) for item in raw]
             else:
                 kwargs[f.name] = raw
+        elif hint is float and isinstance(raw, str):
+            kwargs[f.name] = float(raw)
         else:
             kwargs[f.name] = raw
 
@@ -263,9 +285,10 @@ def _validate_enum(name: str, value: str, allowed: frozenset[str]) -> None:
 
 
 _VALID_MODES = frozenset({"live", "paper"})
+_VALID_DEPLOYMENT_MODES = frozenset({"LIVE", "SIMULATION"})
 _VALID_SIDES = frozenset({"BUY", "SELL"})
 _VALID_OUTCOMES = frozenset({"YES", "NO"})
-_VALID_ORDER_TYPES = frozenset({"GTC", "GTD", "FOK", "FAK"})
+_VALID_ORDER_TYPES = frozenset({"GTC", "GTD", "FOK"})
 
 
 def _validate_financial_param(name: str, value: float) -> None:
@@ -643,7 +666,7 @@ class PolyforgeClient:
         category: str | None = None,
         search: str | None = None,
         limit: int | None = None,
-        offset: int | None = None,
+        page: int | None = None,
     ) -> PaginatedResponse[Strategy]:
         """Discover and browse public strategies.
 
@@ -652,14 +675,14 @@ class PolyforgeClient:
             category: Filter by market category.
             search: Full-text search query.
             limit: Maximum number of results.
-            offset: Pagination offset.
+            page: Page number for pagination.
 
         Returns:
             A :class:`PaginatedResponse` of :class:`Strategy` objects.
         """
         raw = self._get("/api/v1/discover", params=_strip_none({
             "sort": sort, "category": category, "search": search,
-            "limit": limit, "offset": offset,
+            "limit": limit, "page": page,
         }))
         items = raw.get("data", raw.get("items", []))
         return PaginatedResponse(
@@ -676,23 +699,30 @@ class PolyforgeClient:
         *,
         period: str | None = None,
         limit: int | None = None,
-        offset: int | None = None,
-    ) -> list[LeaderboardEntry]:
+        page: int | None = None,
+    ) -> PaginatedResponse[LeaderboardEntry]:
         """Fetch the trader leaderboard.
 
         Args:
             period: Time period (e.g. ``"7d"``, ``"30d"``).
             limit: Maximum number of results.
-            offset: Pagination offset.
+            page: Page number for pagination.
 
         Returns:
-            A list of :class:`LeaderboardEntry` objects.
+            A :class:`PaginatedResponse` of :class:`LeaderboardEntry` objects.
         """
-        data = self._get("/api/v1/leaderboard", params=_strip_none({
-            "period": period, "limit": limit, "offset": offset,
+        raw = self._get("/api/v1/leaderboard", params=_strip_none({
+            "period": period, "limit": limit, "page": page,
         }))
-        items = data if isinstance(data, list) else data.get("data", [])
-        return [_parse(LeaderboardEntry, e) for e in items]
+        items = raw if isinstance(raw, list) else raw.get("data", [])
+        return PaginatedResponse(
+            data=[_parse(LeaderboardEntry, e) for e in items],
+            total=raw.get("total", 0) if isinstance(raw, dict) else len(items),
+            page=raw.get("page", 1) if isinstance(raw, dict) else 1,
+            limit=raw.get("limit", len(items)) if isinstance(raw, dict) else len(items),
+            has_more=raw.get("hasNext", False) if isinstance(raw, dict) else False,
+            total_pages=raw.get("totalPages", 0) if isinstance(raw, dict) else 0,
+        )
 
     # -- Strategies --
 
@@ -795,9 +825,13 @@ class PolyforgeClient:
             body["marketId"] = market_id
         return _parse(Strategy, self._post("/api/v1/strategies/from-description", json=body))
 
-    def start_strategy(self, strategy_id: str, mode: str = "paper") -> StrategyStatusResponse:
-        _validate_enum("mode", mode, _VALID_MODES)
-        return _parse(StrategyStatusResponse, self._post(f"/api/v1/strategies/{_encode_path(strategy_id)}/start", json={"mode": mode}))
+    def start_strategy(self, strategy_id: str, paper_mode: bool = True,
+                       deployment_mode: str | None = None) -> StrategyStatusResponse:
+        body: dict[str, Any] = {"paperMode": paper_mode}
+        if deployment_mode is not None:
+            _validate_enum("deploymentMode", deployment_mode, _VALID_DEPLOYMENT_MODES)
+            body["deploymentMode"] = deployment_mode
+        return _parse(StrategyStatusResponse, self._post(f"/api/v1/strategies/{_encode_path(strategy_id)}/start", json=body))
 
     def stop_strategy(self, strategy_id: str) -> StrategyStatusResponse:
         return _parse(StrategyStatusResponse, self._post(f"/api/v1/strategies/{_encode_path(strategy_id)}/stop"))
@@ -811,7 +845,27 @@ class PolyforgeClient:
     def export_strategy(self, strategy_id: str) -> dict:
         return self._get(f"/api/v1/strategies/{_encode_path(strategy_id)}/export")
 
-    def update_strategy(self, strategy_id: str, name: str | None = None, description: str | None = None, market_id: str | None = None) -> Strategy:
+    def update_strategy(
+        self,
+        strategy_id: str,
+        *,
+        name: str | None = None,
+        description: str | None = None,
+        market_id: str | None = None,
+        visibility: str | None = None,
+        exec_mode: str | None = None,
+        tick_ms: int | None = None,
+        triggers: list[dict[str, Any]] | None = None,
+        conditions: list[dict[str, Any]] | None = None,
+        actions: list[dict[str, Any]] | None = None,
+        safety: list[dict[str, Any]] | None = None,
+        logic_blocks: list[dict[str, Any]] | None = None,
+        calc_blocks: list[dict[str, Any]] | None = None,
+        tags: list[str] | None = None,
+        variables: list[dict[str, Any]] | None = None,
+        canvas: dict[str, Any] | None = None,
+        market_slots: list[dict[str, Any]] | None = None,
+    ) -> Strategy:
         body: dict[str, Any] = {}
         if name is not None:
             body["name"] = name
@@ -819,6 +873,32 @@ class PolyforgeClient:
             body["description"] = description
         if market_id is not None:
             body["marketId"] = market_id
+        if visibility is not None:
+            body["visibility"] = visibility
+        if exec_mode is not None:
+            body["execMode"] = exec_mode
+        if tick_ms is not None:
+            body["tickMs"] = tick_ms
+        if triggers is not None:
+            body["triggers"] = triggers
+        if conditions is not None:
+            body["conditions"] = conditions
+        if actions is not None:
+            body["actions"] = actions
+        if safety is not None:
+            body["safety"] = safety
+        if logic_blocks is not None:
+            body["logicBlocks"] = logic_blocks
+        if calc_blocks is not None:
+            body["calcBlocks"] = calc_blocks
+        if tags is not None:
+            body["tags"] = tags
+        if variables is not None:
+            body["variables"] = variables
+        if canvas is not None:
+            body["canvas"] = canvas
+        if market_slots is not None:
+            body["marketSlots"] = market_slots
         return _parse(Strategy, self._patch(f"/api/v1/strategies/{_encode_path(strategy_id)}", json=body))
 
     def delete_strategy(self, strategy_id: str) -> None:
@@ -891,7 +971,7 @@ class PolyforgeClient:
 
         Args:
             strategy_id: Strategy to report.
-            reason: One of ``"SPAM"``, ``"INAPPROPRIATE"``, ``"MISLEADING"``, ``"OTHER"``.
+            reason: One of ``"SPAM"``, ``"HARMFUL"``, ``"MISLEADING"``, ``"OTHER"``.
             description: Optional additional detail.
         """
         body: dict[str, Any] = {"reason": reason}
@@ -1320,7 +1400,7 @@ class PolyforgeClient:
         # Deprecated aliases kept for backward compat — ignored by the platform.
         token_id: str | None = None,
         condition_id: str | None = None,
-    ) -> PlaceOrderResponse:
+    ) -> RedeemPositionResponse:
         """Redeem winning shares after a market resolves.
 
         Args:
@@ -1333,7 +1413,7 @@ class PolyforgeClient:
         if market_id is not None:
             body["marketId"] = market_id
         data = self._post("/api/v1/orders/redeem", json=body)
-        return PlaceOrderResponse(order_id=data["positionId"], intent_id=data["intentId"], status=data["status"])
+        return RedeemPositionResponse(position_id=data["positionId"], intent_id=data["intentId"], status=data["status"])
 
     def split_position(self, token_id: str, amount: float | str, **_kwargs: Any) -> PlaceOrderResponse:
         """Split a position into smaller positions.
@@ -1380,6 +1460,66 @@ class PolyforgeClient:
             cost_per_unit=o.get("costPerUnit", ""),
             profit_per_unit=o.get("profitPerUnit", ""),
         ) for o in data]
+
+    # -- Cross-Venue Arbitrage --
+
+    def get_cross_venue_opportunities(self, *, min_spread: float = 3.0) -> list[CrossVenueOpportunity]:
+        """List cross-venue arbitrage opportunities between Polymarket and Kalshi."""
+        data = self._get("/api/v1/arbitrage/cross-venue", params={"minSpread": min_spread})
+        return [_parse(CrossVenueOpportunity, o) for o in data]
+
+    def get_cross_venue_opportunities_for_market(self, market_id: str, *, min_spread: float = 3.0) -> list[CrossVenueOpportunity]:
+        """Cross-venue arbitrage opportunities involving a specific market."""
+        data = self._get(f"/api/v1/arbitrage/cross-venue/{quote(market_id, safe='')}", params={"minSpread": min_spread})
+        return [_parse(CrossVenueOpportunity, o) for o in data]
+
+    def get_market_matches(self, *, verified: bool | None = None, limit: int = 50, offset: int = 0) -> dict[str, Any]:
+        """List matched market pairs across venues with pagination."""
+        params: dict[str, Any] = {"limit": limit, "offset": offset}
+        if verified is not None:
+            params["verified"] = str(verified).lower()
+        return self._get("/api/v1/arbitrage/matches", params=params)
+
+    def get_market_match(self, match_id: str) -> MarketMatch:
+        """Get a single market match by ID."""
+        data = self._get(f"/api/v1/arbitrage/matches/{quote(match_id, safe='')}")
+        return _parse(MarketMatch, data)
+
+    def get_spread_comparison(self) -> list[SpreadSummary]:
+        """Get bid/ask spread comparison across all matched venues."""
+        data = self._get("/api/v1/arbitrage/spread")
+        results: list[SpreadSummary] = []
+        for o in data:
+            results.append(SpreadSummary(
+                match_id=o.get("matchId", ""),
+                polymarket=_parse(VenuePriceInfo, o["polymarket"]) if o.get("polymarket") else None,
+                kalshi=_parse(VenuePriceInfo, o["kalshi"]) if o.get("kalshi") else None,
+                yes_spread_pct=o.get("yesSpreadPct", 0.0),
+                no_spread_pct=o.get("noSpreadPct"),
+                confidence=o.get("confidence", 0.0),
+                verified=o.get("verified", False),
+            ))
+        return results
+
+    def get_arbitrage_history(self, *, match_id: str | None = None, limit: int = 100, offset: int = 0) -> dict[str, Any]:
+        """Get historical arbitrage opportunity snapshots."""
+        params: dict[str, Any] = {"limit": limit, "offset": offset}
+        if match_id is not None:
+            params["matchId"] = match_id
+        return self._get("/api/v1/arbitrage/history", params=params)
+
+    def get_arbitrage_alerts(self) -> list[ArbitrageAlertSubscription]:
+        """List user's active arbitrage alert subscriptions."""
+        data = self._get("/api/v1/arbitrage/alerts")
+        return [_parse(ArbitrageAlertSubscription, o) for o in data]
+
+    def create_arbitrage_alert(self, *, min_spread_pct: float, market_id: str | None = None) -> ArbitrageAlertSubscription:
+        """Create an arbitrage alert subscription."""
+        body: dict[str, Any] = {"minSpreadPct": str(min_spread_pct)}
+        if market_id is not None:
+            body["marketId"] = market_id
+        data = self._post("/api/v1/arbitrage/alerts", json=body)
+        return _parse(ArbitrageAlertSubscription, data)
 
     # -- Smart Orders --
 
@@ -1651,9 +1791,20 @@ class PolyforgeClient:
 
     # -- Social & Signals --
 
-    def get_whale_feed(self, *, min_size: int = 10000) -> list[WhaleTrade]:
-        data = self._get("/api/v1/whales/feed", params={"minSize": min_size})
-        items = data["data"]
+    def get_whale_feed(
+        self,
+        *,
+        min_size: int | None = None,
+        market_id: str | None = None,
+        wallet_address: str | None = None,
+        page: int | None = None,
+        limit: int | None = None,
+    ) -> list[WhaleTrade]:
+        data = self._get("/api/v1/whales/feed", params=_strip_none({
+            "minSize": min_size, "marketId": market_id,
+            "walletAddress": wallet_address, "page": page, "limit": limit,
+        }))
+        items = data["data"] if isinstance(data, dict) and "data" in data else (data if isinstance(data, list) else [])
         return [_parse(WhaleTrade, w) for w in items]
 
     def get_top_whales(
@@ -1723,9 +1874,20 @@ class PolyforgeClient:
         items = data if isinstance(data, list) else data.get("data", [])
         return [_parse(WhaleProfile, w) for w in items]
 
-    def get_news_signals(self, *, min_confidence: int = 70) -> list[NewsSignal]:
-        data = self._get("/api/v1/news/signals", params={"minConfidence": min_confidence})
-        items = data["data"]
+    def get_news_signals(
+        self,
+        *,
+        min_confidence: int | None = None,
+        market_id: str | None = None,
+        direction: str | None = None,
+        page: int | None = None,
+        limit: int | None = None,
+    ) -> list[NewsSignal]:
+        data = self._get("/api/v1/news/signals", params=_strip_none({
+            "minConfidence": min_confidence, "marketId": market_id,
+            "direction": direction, "page": page, "limit": limit,
+        }))
+        items = data["data"] if isinstance(data, dict) and "data" in data else (data if isinstance(data, list) else [])
         return [_parse(NewsSignal, s) for s in items]
 
     def list_news(
@@ -1790,7 +1952,7 @@ class PolyforgeClient:
         body: dict[str, Any] = {
             "tokenId": token_id,
             "direction": direction,
-            "price": price,
+            "price": str(price),
             "persistent": persistent,
         }
         return _parse(Alert, self._post("/api/v1/alerts", json=body))
@@ -2515,7 +2677,7 @@ class AsyncPolyforgeClient:
         category: str | None = None,
         search: str | None = None,
         limit: int | None = None,
-        offset: int | None = None,
+        page: int | None = None,
     ) -> PaginatedResponse[Strategy]:
         """Discover and browse public strategies.
 
@@ -2524,14 +2686,14 @@ class AsyncPolyforgeClient:
             category: Filter by market category.
             search: Full-text search query.
             limit: Maximum number of results.
-            offset: Pagination offset.
+            page: Page number for pagination.
 
         Returns:
             A :class:`PaginatedResponse` of :class:`Strategy` objects.
         """
         raw = await self._get("/api/v1/discover", params=_strip_none({
             "sort": sort, "category": category, "search": search,
-            "limit": limit, "offset": offset,
+            "limit": limit, "page": page,
         }))
         items = raw.get("data", raw.get("items", []))
         return PaginatedResponse(
@@ -2548,23 +2710,30 @@ class AsyncPolyforgeClient:
         *,
         period: str | None = None,
         limit: int | None = None,
-        offset: int | None = None,
-    ) -> list[LeaderboardEntry]:
+        page: int | None = None,
+    ) -> PaginatedResponse[LeaderboardEntry]:
         """Fetch the trader leaderboard.
 
         Args:
             period: Time period (e.g. ``"7d"``, ``"30d"``).
             limit: Maximum number of results.
-            offset: Pagination offset.
+            page: Page number for pagination.
 
         Returns:
-            A list of :class:`LeaderboardEntry` objects.
+            A :class:`PaginatedResponse` of :class:`LeaderboardEntry` objects.
         """
-        data = await self._get("/api/v1/leaderboard", params=_strip_none({
-            "period": period, "limit": limit, "offset": offset,
+        raw = await self._get("/api/v1/leaderboard", params=_strip_none({
+            "period": period, "limit": limit, "page": page,
         }))
-        items = data if isinstance(data, list) else data.get("data", [])
-        return [_parse(LeaderboardEntry, e) for e in items]
+        items = raw if isinstance(raw, list) else raw.get("data", [])
+        return PaginatedResponse(
+            data=[_parse(LeaderboardEntry, e) for e in items],
+            total=raw.get("total", 0) if isinstance(raw, dict) else len(items),
+            page=raw.get("page", 1) if isinstance(raw, dict) else 1,
+            limit=raw.get("limit", len(items)) if isinstance(raw, dict) else len(items),
+            has_more=raw.get("hasNext", False) if isinstance(raw, dict) else False,
+            total_pages=raw.get("totalPages", 0) if isinstance(raw, dict) else 0,
+        )
 
     # -- Strategies --
 
@@ -2649,9 +2818,13 @@ class AsyncPolyforgeClient:
             body["marketId"] = market_id
         return _parse(Strategy, await self._post("/api/v1/strategies/from-description", json=body))
 
-    async def start_strategy(self, strategy_id: str, mode: str = "paper") -> StrategyStatusResponse:
-        _validate_enum("mode", mode, _VALID_MODES)
-        return _parse(StrategyStatusResponse, await self._post(f"/api/v1/strategies/{_encode_path(strategy_id)}/start", json={"mode": mode}))
+    async def start_strategy(self, strategy_id: str, paper_mode: bool = True,
+                             deployment_mode: str | None = None) -> StrategyStatusResponse:
+        body: dict[str, Any] = {"paperMode": paper_mode}
+        if deployment_mode is not None:
+            _validate_enum("deploymentMode", deployment_mode, _VALID_DEPLOYMENT_MODES)
+            body["deploymentMode"] = deployment_mode
+        return _parse(StrategyStatusResponse, await self._post(f"/api/v1/strategies/{_encode_path(strategy_id)}/start", json=body))
 
     async def stop_strategy(self, strategy_id: str) -> StrategyStatusResponse:
         return _parse(StrategyStatusResponse, await self._post(f"/api/v1/strategies/{_encode_path(strategy_id)}/stop"))
@@ -2665,7 +2838,27 @@ class AsyncPolyforgeClient:
     async def export_strategy(self, strategy_id: str) -> dict:
         return await self._get(f"/api/v1/strategies/{_encode_path(strategy_id)}/export")
 
-    async def update_strategy(self, strategy_id: str, name: str | None = None, description: str | None = None, market_id: str | None = None) -> Strategy:
+    async def update_strategy(
+        self,
+        strategy_id: str,
+        *,
+        name: str | None = None,
+        description: str | None = None,
+        market_id: str | None = None,
+        visibility: str | None = None,
+        exec_mode: str | None = None,
+        tick_ms: int | None = None,
+        triggers: list[dict[str, Any]] | None = None,
+        conditions: list[dict[str, Any]] | None = None,
+        actions: list[dict[str, Any]] | None = None,
+        safety: list[dict[str, Any]] | None = None,
+        logic_blocks: list[dict[str, Any]] | None = None,
+        calc_blocks: list[dict[str, Any]] | None = None,
+        tags: list[str] | None = None,
+        variables: list[dict[str, Any]] | None = None,
+        canvas: dict[str, Any] | None = None,
+        market_slots: list[dict[str, Any]] | None = None,
+    ) -> Strategy:
         body: dict[str, Any] = {}
         if name is not None:
             body["name"] = name
@@ -2673,6 +2866,32 @@ class AsyncPolyforgeClient:
             body["description"] = description
         if market_id is not None:
             body["marketId"] = market_id
+        if visibility is not None:
+            body["visibility"] = visibility
+        if exec_mode is not None:
+            body["execMode"] = exec_mode
+        if tick_ms is not None:
+            body["tickMs"] = tick_ms
+        if triggers is not None:
+            body["triggers"] = triggers
+        if conditions is not None:
+            body["conditions"] = conditions
+        if actions is not None:
+            body["actions"] = actions
+        if safety is not None:
+            body["safety"] = safety
+        if logic_blocks is not None:
+            body["logicBlocks"] = logic_blocks
+        if calc_blocks is not None:
+            body["calcBlocks"] = calc_blocks
+        if tags is not None:
+            body["tags"] = tags
+        if variables is not None:
+            body["variables"] = variables
+        if canvas is not None:
+            body["canvas"] = canvas
+        if market_slots is not None:
+            body["marketSlots"] = market_slots
         return _parse(Strategy, await self._patch(f"/api/v1/strategies/{_encode_path(strategy_id)}", json=body))
 
     async def delete_strategy(self, strategy_id: str) -> None:
@@ -2745,7 +2964,7 @@ class AsyncPolyforgeClient:
 
         Args:
             strategy_id: Strategy to report.
-            reason: One of ``"SPAM"``, ``"INAPPROPRIATE"``, ``"MISLEADING"``, ``"OTHER"``.
+            reason: One of ``"SPAM"``, ``"HARMFUL"``, ``"MISLEADING"``, ``"OTHER"``.
             description: Optional additional detail.
         """
         body: dict[str, Any] = {"reason": reason}
@@ -3154,7 +3373,7 @@ class AsyncPolyforgeClient:
         # Deprecated aliases kept for backward compat — ignored by the platform.
         token_id: str | None = None,
         condition_id: str | None = None,
-    ) -> PlaceOrderResponse:
+    ) -> RedeemPositionResponse:
         """Redeem winning shares after a market resolves.
 
         Args:
@@ -3167,7 +3386,7 @@ class AsyncPolyforgeClient:
         if market_id is not None:
             body["marketId"] = market_id
         data = await self._post("/api/v1/orders/redeem", json=body)
-        return PlaceOrderResponse(order_id=data["positionId"], intent_id=data["intentId"], status=data["status"])
+        return RedeemPositionResponse(position_id=data["positionId"], intent_id=data["intentId"], status=data["status"])
 
     async def split_position(self, token_id: str, amount: float | str, **_kwargs: Any) -> PlaceOrderResponse:
         """Split a position into smaller positions.
@@ -3210,6 +3429,66 @@ class AsyncPolyforgeClient:
             cost_per_unit=o.get("costPerUnit", ""),
             profit_per_unit=o.get("profitPerUnit", ""),
         ) for o in data]
+
+    # -- Cross-Venue Arbitrage --
+
+    async def get_cross_venue_opportunities(self, *, min_spread: float = 3.0) -> list[CrossVenueOpportunity]:
+        """List cross-venue arbitrage opportunities between Polymarket and Kalshi."""
+        data = await self._get("/api/v1/arbitrage/cross-venue", params={"minSpread": min_spread})
+        return [_parse(CrossVenueOpportunity, o) for o in data]
+
+    async def get_cross_venue_opportunities_for_market(self, market_id: str, *, min_spread: float = 3.0) -> list[CrossVenueOpportunity]:
+        """Cross-venue arbitrage opportunities involving a specific market."""
+        data = await self._get(f"/api/v1/arbitrage/cross-venue/{quote(market_id, safe='')}", params={"minSpread": min_spread})
+        return [_parse(CrossVenueOpportunity, o) for o in data]
+
+    async def get_market_matches(self, *, verified: bool | None = None, limit: int = 50, offset: int = 0) -> dict[str, Any]:
+        """List matched market pairs across venues with pagination."""
+        params: dict[str, Any] = {"limit": limit, "offset": offset}
+        if verified is not None:
+            params["verified"] = str(verified).lower()
+        return await self._get("/api/v1/arbitrage/matches", params=params)
+
+    async def get_market_match(self, match_id: str) -> MarketMatch:
+        """Get a single market match by ID."""
+        data = await self._get(f"/api/v1/arbitrage/matches/{quote(match_id, safe='')}")
+        return _parse(MarketMatch, data)
+
+    async def get_spread_comparison(self) -> list[SpreadSummary]:
+        """Get bid/ask spread comparison across all matched venues."""
+        data = await self._get("/api/v1/arbitrage/spread")
+        results: list[SpreadSummary] = []
+        for o in data:
+            results.append(SpreadSummary(
+                match_id=o.get("matchId", ""),
+                polymarket=_parse(VenuePriceInfo, o["polymarket"]) if o.get("polymarket") else None,
+                kalshi=_parse(VenuePriceInfo, o["kalshi"]) if o.get("kalshi") else None,
+                yes_spread_pct=o.get("yesSpreadPct", 0.0),
+                no_spread_pct=o.get("noSpreadPct"),
+                confidence=o.get("confidence", 0.0),
+                verified=o.get("verified", False),
+            ))
+        return results
+
+    async def get_arbitrage_history(self, *, match_id: str | None = None, limit: int = 100, offset: int = 0) -> dict[str, Any]:
+        """Get historical arbitrage opportunity snapshots."""
+        params: dict[str, Any] = {"limit": limit, "offset": offset}
+        if match_id is not None:
+            params["matchId"] = match_id
+        return await self._get("/api/v1/arbitrage/history", params=params)
+
+    async def get_arbitrage_alerts(self) -> list[ArbitrageAlertSubscription]:
+        """List user's active arbitrage alert subscriptions."""
+        data = await self._get("/api/v1/arbitrage/alerts")
+        return [_parse(ArbitrageAlertSubscription, o) for o in data]
+
+    async def create_arbitrage_alert(self, *, min_spread_pct: float, market_id: str | None = None) -> ArbitrageAlertSubscription:
+        """Create an arbitrage alert subscription."""
+        body: dict[str, Any] = {"minSpreadPct": str(min_spread_pct)}
+        if market_id is not None:
+            body["marketId"] = market_id
+        data = await self._post("/api/v1/arbitrage/alerts", json=body)
+        return _parse(ArbitrageAlertSubscription, data)
 
     # -- Smart Orders --
 
@@ -3422,9 +3701,20 @@ class AsyncPolyforgeClient:
 
     # -- Social & Signals --
 
-    async def get_whale_feed(self, *, min_size: int = 10000) -> list[WhaleTrade]:
-        data = await self._get("/api/v1/whales/feed", params={"minSize": min_size})
-        items = data["data"]
+    async def get_whale_feed(
+        self,
+        *,
+        min_size: int | None = None,
+        market_id: str | None = None,
+        wallet_address: str | None = None,
+        page: int | None = None,
+        limit: int | None = None,
+    ) -> list[WhaleTrade]:
+        data = await self._get("/api/v1/whales/feed", params=_strip_none({
+            "minSize": min_size, "marketId": market_id,
+            "walletAddress": wallet_address, "page": page, "limit": limit,
+        }))
+        items = data["data"] if isinstance(data, dict) and "data" in data else (data if isinstance(data, list) else [])
         return [_parse(WhaleTrade, w) for w in items]
 
     async def get_top_whales(
@@ -3460,9 +3750,20 @@ class AsyncPolyforgeClient:
         items = data if isinstance(data, list) else data.get("data", [])
         return [_parse(WhaleProfile, w) for w in items]
 
-    async def get_news_signals(self, *, min_confidence: int = 70) -> list[NewsSignal]:
-        data = await self._get("/api/v1/news/signals", params={"minConfidence": min_confidence})
-        items = data["data"]
+    async def get_news_signals(
+        self,
+        *,
+        min_confidence: int | None = None,
+        market_id: str | None = None,
+        direction: str | None = None,
+        page: int | None = None,
+        limit: int | None = None,
+    ) -> list[NewsSignal]:
+        data = await self._get("/api/v1/news/signals", params=_strip_none({
+            "minConfidence": min_confidence, "marketId": market_id,
+            "direction": direction, "page": page, "limit": limit,
+        }))
+        items = data["data"] if isinstance(data, dict) and "data" in data else (data if isinstance(data, list) else [])
         return [_parse(NewsSignal, s) for s in items]
 
     async def list_news(
@@ -3527,7 +3828,7 @@ class AsyncPolyforgeClient:
         body: dict[str, Any] = {
             "tokenId": token_id,
             "direction": direction,
-            "price": price,
+            "price": str(price),
             "persistent": persistent,
         }
         return _parse(Alert, await self._post("/api/v1/alerts", json=body))

@@ -426,6 +426,15 @@ class PlaceOrderResponse:
     status: str = ""
 
 
+@dataclass
+class RedeemPositionResponse:
+    """Response from redeeming a position."""
+
+    position_id: str = ""
+    intent_id: str = ""
+    status: str = ""
+
+
 # ---------------------------------------------------------------------------
 # Arbitrage
 # ---------------------------------------------------------------------------
@@ -446,6 +455,86 @@ class ArbitrageOpportunity:
     margin_pct: str = ""
     cost_per_unit: str = ""
     profit_per_unit: str = ""
+
+
+@dataclass
+class CrossVenueOpportunity:
+    """A cross-venue arbitrage opportunity between Polymarket and Kalshi."""
+
+    match_id: str = ""
+    polymarket_id: str = ""
+    kalshi_id: str = ""
+    polymarket_title: str = ""
+    kalshi_title: str = ""
+    category: str = ""
+    confidence: float = 0.0
+    polymarket_yes: float = 0.0
+    kalshi_yes: float = 0.0
+    spread_pct: float = 0.0
+    direction: str = ""  # "buy_poly_sell_kalshi" | "buy_kalshi_sell_poly"
+
+
+@dataclass
+class MarketMatch:
+    """A matched pair of markets across venues."""
+
+    id: str = ""
+    polymarket_id: str = ""
+    kalshi_id: str = ""
+    confidence: float = 0.0
+    match_method: str = ""
+    verified: bool = False
+    created_at: str = ""
+    updated_at: str = ""
+
+
+@dataclass
+class VenuePriceInfo:
+    """Bid/ask info for a single venue in a spread comparison."""
+
+    market_id: str = ""
+    title: str = ""
+    yes_bid: float = 0.0
+    no_ask: float = 0.0
+
+
+@dataclass
+class SpreadSummary:
+    """Bid/ask spread comparison between Polymarket and Kalshi for a matched pair."""
+
+    match_id: str = ""
+    polymarket: Optional[VenuePriceInfo] = None
+    kalshi: Optional[VenuePriceInfo] = None
+    yes_spread_pct: float = 0.0
+    no_spread_pct: float | None = None
+    confidence: float = 0.0
+    verified: bool = False
+
+
+@dataclass
+class ArbitrageSnapshot:
+    """A historical record of a cross-venue arbitrage detection."""
+
+    id: str = ""
+    match_id: str = ""
+    spread_pct: float = 0.0
+    direction: str = ""
+    poly_yes: float = 0.0
+    kalshi_yes: float = 0.0
+    confidence: float = 0.0
+    scanned_at: str = ""
+
+
+@dataclass
+class ArbitrageAlertSubscription:
+    """A user subscription for cross-venue arbitrage notifications."""
+
+    id: str = ""
+    min_spread_pct: float = 0.0
+    market_id: str | None = None
+    active: bool = True
+    triggered_at: str | None = None
+    created_at: str = ""
 
 
 # ---------------------------------------------------------------------------
