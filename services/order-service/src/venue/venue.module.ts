@@ -7,6 +7,7 @@ import { ClobClientService } from "../clob-client/clob-client.service";
 import { KalshiClientModule } from "../kalshi-client/kalshi-client.module";
 import { KalshiAdapterService } from "../kalshi-client/kalshi-adapter.service";
 import type { VenueAdapter } from "@polyforge/shared-types";
+import { getVenueConfig } from "@polyforge/shared-types";
 
 @Module({
   imports: [ClobClientModule, KalshiClientModule],
@@ -19,9 +20,18 @@ import type { VenueAdapter } from "@polyforge/shared-types";
         config: ConfigService,
         kalshi: KalshiAdapterService,
       ) => {
-        const adapters: VenueAdapter[] = [new PolymarketAdapter(clob)];
+        const adapters: VenueAdapter[] = [];
 
-        if (config.get<string>("KALSHI_ENABLED") === "true") {
+        const polyConfig = getVenueConfig("polymarket");
+        if (!polyConfig || polyConfig.enabled) {
+          adapters.push(new PolymarketAdapter(clob));
+        }
+
+        const kalshiConfig = getVenueConfig("kalshi");
+        const kalshiEnabled =
+          config.get<string>("KALSHI_ENABLED") === "true" ||
+          kalshiConfig?.enabled === true;
+        if (kalshiEnabled) {
           adapters.push(kalshi);
         }
 

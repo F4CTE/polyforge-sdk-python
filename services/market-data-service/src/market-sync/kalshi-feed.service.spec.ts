@@ -10,9 +10,10 @@ type WsHandler = (...args: any[]) => void;
 
 class MockWebSocket {
   static readonly OPEN = 1;
+  static readonly CONNECTING = 0;
   static readonly CLOSED = 3;
 
-  readyState = MockWebSocket.OPEN;
+  readyState = MockWebSocket.CONNECTING;
   private handlers = new Map<string, WsHandler[]>();
 
   on(event: string, handler: WsHandler) {
@@ -55,6 +56,7 @@ let mockWsInstance: MockWebSocket;
 vi.mock("ws", () => ({
   default: class {
     static OPEN = 1;
+    static CONNECTING = 0;
     static CLOSED = 3;
     constructor() {
       mockWsInstance = new MockWebSocket();
@@ -107,6 +109,10 @@ describe("KalshiFeedService", () => {
     vi.stubGlobal("fetch", fetchSpy);
 
     svc = new KalshiFeedService(emitter, makeJwt(), makeConfig());
+    vi.spyOn(svc as any, "createWebSocket").mockImplementation(() => {
+      mockWsInstance = new MockWebSocket();
+      return mockWsInstance;
+    });
   });
 
   afterEach(() => {

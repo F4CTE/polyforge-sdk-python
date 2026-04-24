@@ -12,9 +12,10 @@ type WsEventHandler = (...args: any[]) => void;
 
 class MockWebSocket {
   static readonly OPEN = 1;
+  static readonly CONNECTING = 0;
   static readonly CLOSED = 3;
 
-  readyState = MockWebSocket.OPEN;
+  readyState = MockWebSocket.CONNECTING;
   private handlers = new Map<string, WsEventHandler[]>();
 
   on(event: string, handler: WsEventHandler) {
@@ -26,6 +27,9 @@ class MockWebSocket {
   send = vi.fn();
   ping = vi.fn();
   close = vi.fn();
+  removeAllListeners = vi.fn(() => {
+    this.handlers.clear();
+  });
 
   // Test helpers
   triggerOpen() {
@@ -56,6 +60,7 @@ vi.mock("ws", () => {
   return {
     default: class {
       static OPEN = 1;
+      static CONNECTING = 0;
       static CLOSED = 3;
 
       constructor() {
@@ -78,6 +83,10 @@ describe("PolymarketWsService", () => {
     vi.spyOn(emitter, "emit");
 
     svc = new PolymarketWsService(emitter);
+    vi.spyOn(svc as any, "createWebSocket").mockImplementation(() => {
+      mockWsInstance = new MockWebSocket();
+      return mockWsInstance;
+    });
   });
 
   afterEach(() => {

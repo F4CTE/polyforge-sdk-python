@@ -5,12 +5,9 @@ import type {
   VenueOrderResponse,
 } from "@polyforge/shared-types";
 
-export type VenueSelection =
-  | "polymarket"
-  | "kalshi"
-  | "best"
-  | undefined
-  | null;
+import type { VenueId } from "@polyforge/shared-types";
+
+export type VenueSelection = VenueId | "best" | undefined | null;
 
 @Injectable()
 export class VenueRouter {

@@ -1,5 +1,6 @@
 import type { VenueId } from "./venues";
 import type { OrderBook, PriceCandle, CandleResolution } from "./markets";
+import type { VenueAuthContext } from "./venue-config";
 
 export type { OrderBook, PriceCandle, CandleResolution };
 
@@ -30,8 +31,8 @@ export interface VenueOrderRequest {
   price: string;
   orderType: "GTC" | "FOK" | "GTD" | "FAK" | "POST_ONLY";
   expiration?: number;
-  /** Venue-specific auth/signing context (opaque to the interface) */
-  authContext: Record<string, unknown>;
+  /** Venue-specific auth/signing context — discriminated by `venue` field */
+  authContext: VenueAuthContext | Record<string, unknown>;
 }
 
 export interface VenueOrderResponse {
@@ -75,9 +76,11 @@ export interface VenueAdapter {
   submitOrder(order: VenueOrderRequest): Promise<VenueOrderResponse>;
   cancelOrder(
     venueOrderId: string,
-    authContext: Record<string, unknown>,
+    authContext: VenueAuthContext | Record<string, unknown>,
   ): Promise<void>;
-  cancelAllOrders(authContext: Record<string, unknown>): Promise<void>;
+  cancelAllOrders(
+    authContext: VenueAuthContext | Record<string, unknown>,
+  ): Promise<void>;
   getPositions(userId: string): Promise<VenuePosition[]>;
   getOrderHistory(userId: string, limit: number): Promise<VenueOrderHistory[]>;
   healthCheck(): Promise<boolean>;

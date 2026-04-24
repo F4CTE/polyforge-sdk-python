@@ -90,6 +90,10 @@ describe("KalshiWsService", () => {
       }),
     } as any;
     svc = new KalshiWsService(emitter, auth, config);
+    vi.spyOn(svc as any, "createWebSocket").mockImplementation(() => {
+      mockWsInstance = new MockWebSocket();
+      return mockWsInstance;
+    });
   });
 
   afterEach(() => {

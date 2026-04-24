@@ -1,6 +1,9 @@
-export type VenueId = "polymarket" | "kalshi";
+export type KnownVenueId = "polymarket" | "kalshi";
 
-export const VENUE_IDS = [
-  "polymarket",
-  "kalshi",
-] as const satisfies readonly VenueId[];
+export type VenueId = KnownVenueId | (string & {});
+
+export const VENUE_IDS: readonly string[] = ["polymarket", "kalshi"] as const;
+
+export function isKnownVenue(id: string): id is KnownVenueId {
+  return id === "polymarket" || id === "kalshi";
+}

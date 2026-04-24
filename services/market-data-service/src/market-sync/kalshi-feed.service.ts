@@ -1,21 +1,12 @@
-import {
-  Injectable,
-  Logger,
-  OnModuleDestroy,
-  OnModuleInit,
-} from "@nestjs/common";
+import { Injectable, OnModuleDestroy, OnModuleInit } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { EventEmitter2 } from "@nestjs/event-emitter";
 import { JwtService } from "@nestjs/jwt";
-import WebSocket from "ws";
 import { randomUUID } from "crypto";
+import { BaseVenueWsService } from "@polyforge/shared-types";
 import type { PriceUpdateEvent } from "./polymarket-ws.service";
 
-const RECONNECT_BASE_MS = 1_000;
-const RECONNECT_MAX_MS = 30_000;
-const RECONNECT_FACTOR = 2;
 const REFRESH_MARGIN_SECS = 300;
-const PING_INTERVAL_MS = 9_000;
 
 let _msgId = 1;
 function nextMsgId(): number {
@@ -28,140 +19,58 @@ interface KalshiTokenCache {
 }
 
 @Injectable()
-export class KalshiFeedService implements OnModuleInit, OnModuleDestroy {
-  private readonly logger = new Logger(KalshiFeedService.name);
-  private readonly enabled: boolean;
+export class KalshiFeedService
+  extends BaseVenueWsService
+  implements OnModuleInit, OnModuleDestroy
+{
   private readonly signerUrl: string;
-  private readonly wsUrl: string;
-
-  private ws: WebSocket | null = null;
-  private reconnectDelay = RECONNECT_BASE_MS;
-  private reconnectTimer: NodeJS.Timeout | null = null;
-  private pingTimer: NodeJS.Timeout | null = null;
-  destroyed = false;
-
   private tokenCache: KalshiTokenCache | null = null;
   private refreshPromise: Promise<KalshiTokenCache> | null = null;
 
-  private readonly subscribedTickers = new Set<string>();
-
   constructor(
-    private readonly emitter: EventEmitter2,
+    emitter: EventEmitter2,
     private readonly jwt: JwtService,
     private readonly config: ConfigService,
   ) {
-    this.enabled =
-      (this.config.get<string>("KALSHI_ENABLED") ?? "false") === "true";
-    this.signerUrl =
-      this.config.get<string>("SIGNER_SERVICE_URL") ??
-      "http://signer-service:3012";
-    this.wsUrl =
-      this.config.get<string>("KALSHI_WS_URL") ??
+    const wsUrl =
+      config.get<string>("KALSHI_WS_URL") ??
       "wss://api.kalshi.com/trade-api/ws/v2";
+    const enabled =
+      (config.get<string>("KALSHI_ENABLED") ?? "false") === "true";
+
+    super(emitter, {
+      venueId: "kalshi",
+      url: wsUrl,
+      enabled,
+      pingIntervalMs: 9_000,
+    });
+
+    this.signerUrl =
+      config.get<string>("SIGNER_SERVICE_URL") ?? "http://signer-service:3012";
   }
 
   onModuleInit() {
-    if (!this.enabled) {
-      this.logger.log("Kalshi feed disabled (KALSHI_ENABLED != true)");
-      return;
-    }
-    void this.connect();
+    this.init();
   }
 
   onModuleDestroy() {
-    this.destroyed = true;
-    if (this.reconnectTimer) clearTimeout(this.reconnectTimer);
-    if (this.pingTimer) {
-      clearInterval(this.pingTimer);
-      this.pingTimer = null;
-    }
-    this.ws?.close();
-    this.ws = null;
+    this.teardown();
   }
 
   // ─── Public subscription API ──────────────────────────────────────────────
 
   subscribeMarkets(tickers: string[]) {
-    tickers.forEach((t) => this.subscribedTickers.add(t));
-    if (this.ws?.readyState === WebSocket.OPEN) {
-      this.sendSubscription(tickers);
-    }
+    this.addSubscriptions(tickers);
   }
 
-  // ─── Connection management ────────────────────────────────────────────────
+  // ─── BaseVenueWsService hooks ─────────────────────────────────────────────
 
-  private async connect() {
-    if (this.destroyed) return;
-    if (this.ws) {
-      this.ws.removeAllListeners();
-      this.ws.close();
-      this.ws = null;
-    }
-    if (this.pingTimer) {
-      clearInterval(this.pingTimer);
-      this.pingTimer = null;
-    }
-
-    let token: string;
-    try {
-      token = await this.getToken();
-    } catch (err) {
-      this.logger.error("Failed to acquire Kalshi JWT for feed", String(err));
-      this.scheduleReconnect();
-      return;
-    }
-
-    this.logger.log(`Connecting Kalshi feed to ${this.wsUrl}`);
-    this.ws = new WebSocket(this.wsUrl, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-
-    this.ws.on("open", () => {
-      this.logger.log("Kalshi feed WebSocket connected");
-      this.reconnectDelay = RECONNECT_BASE_MS;
-      this.pingTimer = setInterval(() => {
-        this.ws?.ping();
-      }, PING_INTERVAL_MS);
-
-      if (this.subscribedTickers.size > 0) {
-        this.sendSubscription([...this.subscribedTickers]);
-      }
-    });
-
-    this.ws.on("message", (data: Buffer) => {
-      const text = data.toString();
-      let msg: Record<string, unknown>;
-      try {
-        msg = JSON.parse(text) as Record<string, unknown>;
-      } catch {
-        this.logger.warn(`Kalshi WS: unparseable frame (${text.length} bytes)`);
-        return;
-      }
-      try {
-        this.handleMessage(msg);
-      } catch (err) {
-        this.logger.error("Kalshi WS: handleMessage threw", String(err));
-      }
-    });
-
-    this.ws.on("close", (code, reason) => {
-      this.logger.warn(
-        `Kalshi feed closed [${code}]: ${reason.toString() || "no reason"}`,
-      );
-      if (this.pingTimer) {
-        clearInterval(this.pingTimer);
-        this.pingTimer = null;
-      }
-      this.scheduleReconnect();
-    });
-
-    this.ws.on("error", (err) => {
-      this.logger.error("Kalshi feed WebSocket error", err.message);
-      this.ws?.close();
-    });
+  protected async getConnectionHeaders(): Promise<Record<string, string>> {
+    const token = await this.getToken();
+    return { Authorization: `Bearer ${token}` };
   }
 
-  private handleMessage(msg: Record<string, unknown>) {
+  protected handleMessage(msg: Record<string, unknown>) {
     if (msg["type"] !== "ticker") return;
 
     const inner = msg["msg"] as Record<string, unknown> | undefined;
@@ -194,27 +103,13 @@ export class KalshiFeedService implements OnModuleInit, OnModuleDestroy {
     } satisfies PriceUpdateEvent);
   }
 
-  private sendSubscription(tickers: string[]) {
-    if (!tickers.length || !this.ws) return;
-    this.ws.send(
-      JSON.stringify({
-        id: nextMsgId(),
-        cmd: "subscribe",
-        params: { channels: ["ticker"], market_tickers: tickers },
-      }),
-    );
-  }
-
-  private scheduleReconnect() {
-    if (this.destroyed) return;
-    this.logger.log(`Kalshi feed reconnecting in ${this.reconnectDelay}ms…`);
-    this.reconnectTimer = setTimeout(() => {
-      void this.connect();
-    }, this.reconnectDelay);
-    this.reconnectDelay = Math.min(
-      this.reconnectDelay * RECONNECT_FACTOR,
-      RECONNECT_MAX_MS,
-    );
+  protected sendSubscriptions(tickers: string[]) {
+    if (!tickers.length) return;
+    this.send({
+      id: nextMsgId(),
+      cmd: "subscribe",
+      params: { channels: ["ticker"], market_tickers: tickers },
+    });
   }
 
   // ─── JWT management ───────────────────────────────────────────────────────

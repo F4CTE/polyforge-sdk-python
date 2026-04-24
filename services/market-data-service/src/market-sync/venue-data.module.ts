@@ -7,6 +7,7 @@ import { PolymarketPriceFeed } from "./polymarket-price-feed";
 import { KalshiPriceFeed } from "./kalshi-price-feed";
 import { KalshiFeedService } from "./kalshi-feed.service";
 import type { VenuePriceFeed } from "./venue-data-router";
+import { getVenueConfig } from "@polyforge/shared-types";
 
 @Module({
   imports: [JwtModule.register({})],
@@ -22,9 +23,18 @@ import type { VenuePriceFeed } from "./venue-data-router";
         emitter: EventEmitter2,
         config: ConfigService,
       ) => {
-        const feeds: VenuePriceFeed[] = [polyFeed];
+        const feeds: VenuePriceFeed[] = [];
 
-        if (config.get<string>("KALSHI_ENABLED") === "true") {
+        const polyConfig = getVenueConfig("polymarket");
+        if (!polyConfig || polyConfig.enabled) {
+          feeds.push(polyFeed);
+        }
+
+        const kalshiConfig = getVenueConfig("kalshi");
+        const kalshiEnabled =
+          config.get<string>("KALSHI_ENABLED") === "true" ||
+          kalshiConfig?.enabled === true;
+        if (kalshiEnabled) {
           feeds.push(kalshiFeed);
         }
 

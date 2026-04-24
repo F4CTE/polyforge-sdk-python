@@ -39,3 +39,6 @@ export * from "./scores";
 // Venue abstraction
 export * from "./venues";
 export * from "./venue-adapter";
+export * from "./venue-config";
+export * from "./venue-configs";
+export * from "./base-venue-ws";
