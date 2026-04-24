@@ -27,7 +27,9 @@ from polyforge.models import (
     AccuracyScore,
     AiQueryResponse,
     Alert,
+    ArbitrageAlertSubscription,
     ArbitrageOpportunity,
+    ArbitrageSnapshot,
     Badge,
     BatchOrderItem,
     BatchOrderResult,
@@ -41,9 +43,11 @@ from polyforge.models import (
     ConditionalOrder,
     CopyConfig,
     CopyTrade,
+    CrossVenueOpportunity,
     LeaderboardEntry,
     LpPosition,
     Market,
+    MarketMatch,
     MarketplaceListing,
     MarketplacePurchaseResult,
     MarketplaceSeller,
@@ -76,6 +80,7 @@ from polyforge.models import (
     SmartOrder,
     SmartOrderChildOrder,
     SpreadInfo,
+    SpreadSummary,
     Strategy,
     StrategyBlock,
     StrategyEvent,
@@ -87,6 +92,7 @@ from polyforge.models import (
     TraderScore,
     UserReward,
     UserRewardsTotal,
+    VenuePriceInfo,
     WatchlistItem,
     Webhook,
     WebhookTestResult,
@@ -134,6 +140,12 @@ _MODEL_REGISTRY: dict[str, type] = {
     "PolymarketEarningsEntry": PolymarketEarningsEntry,
     "PolymarketActivity": PolymarketActivity,
     "Alert": Alert,
+    "ArbitrageAlertSubscription": ArbitrageAlertSubscription,
+    "ArbitrageSnapshot": ArbitrageSnapshot,
+    "CrossVenueOpportunity": CrossVenueOpportunity,
+    "MarketMatch": MarketMatch,
+    "SpreadSummary": SpreadSummary,
+    "VenuePriceInfo": VenuePriceInfo,
     "ConditionalOrder": ConditionalOrder,
     "CopyConfig": CopyConfig,
     "PortfolioPnl": PortfolioPnl,
@@ -1438,6 +1450,66 @@ class PolyforgeClient:
             cost_per_unit=o.get("costPerUnit", ""),
             profit_per_unit=o.get("profitPerUnit", ""),
         ) for o in data]
+
+    # -- Cross-Venue Arbitrage --
+
+    def get_cross_venue_opportunities(self, *, min_spread: float = 3.0) -> list[CrossVenueOpportunity]:
+        """List cross-venue arbitrage opportunities between Polymarket and Kalshi."""
+        data = self._get("/api/v1/arbitrage/cross-venue", params={"minSpread": min_spread})
+        return [_parse(CrossVenueOpportunity, o) for o in data]
+
+    def get_cross_venue_opportunities_for_market(self, market_id: str, *, min_spread: float = 3.0) -> list[CrossVenueOpportunity]:
+        """Cross-venue arbitrage opportunities involving a specific market."""
+        data = self._get(f"/api/v1/arbitrage/cross-venue/{quote(market_id, safe='')}", params={"minSpread": min_spread})
+        return [_parse(CrossVenueOpportunity, o) for o in data]
+
+    def get_market_matches(self, *, verified: bool | None = None, limit: int = 50, offset: int = 0) -> dict[str, Any]:
+        """List matched market pairs across venues with pagination."""
+        params: dict[str, Any] = {"limit": limit, "offset": offset}
+        if verified is not None:
+            params["verified"] = str(verified).lower()
+        return self._get("/api/v1/arbitrage/matches", params=params)
+
+    def get_market_match(self, match_id: str) -> MarketMatch:
+        """Get a single market match by ID."""
+        data = self._get(f"/api/v1/arbitrage/matches/{quote(match_id, safe='')}")
+        return _parse(MarketMatch, data)
+
+    def get_spread_comparison(self) -> list[SpreadSummary]:
+        """Get bid/ask spread comparison across all matched venues."""
+        data = self._get("/api/v1/arbitrage/spread")
+        results: list[SpreadSummary] = []
+        for o in data:
+            results.append(SpreadSummary(
+                match_id=o.get("matchId", ""),
+                polymarket=_parse(VenuePriceInfo, o["polymarket"]) if o.get("polymarket") else None,
+                kalshi=_parse(VenuePriceInfo, o["kalshi"]) if o.get("kalshi") else None,
+                yes_spread_pct=o.get("yesSpreadPct", 0.0),
+                no_spread_pct=o.get("noSpreadPct"),
+                confidence=o.get("confidence", 0.0),
+                verified=o.get("verified", False),
+            ))
+        return results
+
+    def get_arbitrage_history(self, *, match_id: str | None = None, limit: int = 100, offset: int = 0) -> dict[str, Any]:
+        """Get historical arbitrage opportunity snapshots."""
+        params: dict[str, Any] = {"limit": limit, "offset": offset}
+        if match_id is not None:
+            params["matchId"] = match_id
+        return self._get("/api/v1/arbitrage/history", params=params)
+
+    def get_arbitrage_alerts(self) -> list[ArbitrageAlertSubscription]:
+        """List user's active arbitrage alert subscriptions."""
+        data = self._get("/api/v1/arbitrage/alerts")
+        return [_parse(ArbitrageAlertSubscription, o) for o in data]
+
+    def create_arbitrage_alert(self, *, min_spread_pct: float, market_id: str | None = None) -> ArbitrageAlertSubscription:
+        """Create an arbitrage alert subscription."""
+        body: dict[str, Any] = {"minSpreadPct": str(min_spread_pct)}
+        if market_id is not None:
+            body["marketId"] = market_id
+        data = self._post("/api/v1/arbitrage/alerts", json=body)
+        return _parse(ArbitrageAlertSubscription, data)
 
     # -- Smart Orders --
 
@@ -3318,6 +3390,66 @@ class AsyncPolyforgeClient:
             cost_per_unit=o.get("costPerUnit", ""),
             profit_per_unit=o.get("profitPerUnit", ""),
         ) for o in data]
+
+    # -- Cross-Venue Arbitrage --
+
+    async def get_cross_venue_opportunities(self, *, min_spread: float = 3.0) -> list[CrossVenueOpportunity]:
+        """List cross-venue arbitrage opportunities between Polymarket and Kalshi."""
+        data = await self._get("/api/v1/arbitrage/cross-venue", params={"minSpread": min_spread})
+        return [_parse(CrossVenueOpportunity, o) for o in data]
+
+    async def get_cross_venue_opportunities_for_market(self, market_id: str, *, min_spread: float = 3.0) -> list[CrossVenueOpportunity]:
+        """Cross-venue arbitrage opportunities involving a specific market."""
+        data = await self._get(f"/api/v1/arbitrage/cross-venue/{quote(market_id, safe='')}", params={"minSpread": min_spread})
+        return [_parse(CrossVenueOpportunity, o) for o in data]
+
+    async def get_market_matches(self, *, verified: bool | None = None, limit: int = 50, offset: int = 0) -> dict[str, Any]:
+        """List matched market pairs across venues with pagination."""
+        params: dict[str, Any] = {"limit": limit, "offset": offset}
+        if verified is not None:
+            params["verified"] = str(verified).lower()
+        return await self._get("/api/v1/arbitrage/matches", params=params)
+
+    async def get_market_match(self, match_id: str) -> MarketMatch:
+        """Get a single market match by ID."""
+        data = await self._get(f"/api/v1/arbitrage/matches/{quote(match_id, safe='')}")
+        return _parse(MarketMatch, data)
+
+    async def get_spread_comparison(self) -> list[SpreadSummary]:
+        """Get bid/ask spread comparison across all matched venues."""
+        data = await self._get("/api/v1/arbitrage/spread")
+        results: list[SpreadSummary] = []
+        for o in data:
+            results.append(SpreadSummary(
+                match_id=o.get("matchId", ""),
+                polymarket=_parse(VenuePriceInfo, o["polymarket"]) if o.get("polymarket") else None,
+                kalshi=_parse(VenuePriceInfo, o["kalshi"]) if o.get("kalshi") else None,
+                yes_spread_pct=o.get("yesSpreadPct", 0.0),
+                no_spread_pct=o.get("noSpreadPct"),
+                confidence=o.get("confidence", 0.0),
+                verified=o.get("verified", False),
+            ))
+        return results
+
+    async def get_arbitrage_history(self, *, match_id: str | None = None, limit: int = 100, offset: int = 0) -> dict[str, Any]:
+        """Get historical arbitrage opportunity snapshots."""
+        params: dict[str, Any] = {"limit": limit, "offset": offset}
+        if match_id is not None:
+            params["matchId"] = match_id
+        return await self._get("/api/v1/arbitrage/history", params=params)
+
+    async def get_arbitrage_alerts(self) -> list[ArbitrageAlertSubscription]:
+        """List user's active arbitrage alert subscriptions."""
+        data = await self._get("/api/v1/arbitrage/alerts")
+        return [_parse(ArbitrageAlertSubscription, o) for o in data]
+
+    async def create_arbitrage_alert(self, *, min_spread_pct: float, market_id: str | None = None) -> ArbitrageAlertSubscription:
+        """Create an arbitrage alert subscription."""
+        body: dict[str, Any] = {"minSpreadPct": str(min_spread_pct)}
+        if market_id is not None:
+            body["marketId"] = market_id
+        data = await self._post("/api/v1/arbitrage/alerts", json=body)
+        return _parse(ArbitrageAlertSubscription, data)
 
     # -- Smart Orders --
 

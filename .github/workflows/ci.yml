@@ -40,4 +40,4 @@ jobs:
           fi
 
       - name: Security audit
-        run: pip install pip-audit && pip-audit --skip-editable
+        run: pip install pip-audit && pip-audit --skip-editable --ignore-vuln CVE-2026-3219

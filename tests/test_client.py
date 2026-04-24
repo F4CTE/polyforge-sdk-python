@@ -4199,6 +4199,145 @@ class TestRewardsMethods:
             assert "await" in source or "async" in source, f"async {method_name} not using await"
 
 
+class TestCrossVenueArbitrage:
+    """Tests for cross-venue arbitrage endpoints (8 new SDK methods)."""
+
+    def test_sync_get_cross_venue_opportunities(self):
+        from unittest.mock import MagicMock
+        client = PolyforgeClient(api_key="test-key")
+        client._get = MagicMock(return_value=[{
+            "matchId": "m1", "polymarketId": "p1", "kalshiId": "k1",
+            "polymarketTitle": "BTC Poly", "kalshiTitle": "BTC Kalshi",
+            "category": "Crypto", "confidence": 0.9,
+            "polymarketYes": 0.4, "kalshiYes": 0.5,
+            "spreadPct": 10.0, "direction": "buy_poly_sell_kalshi",
+        }])
+        result = client.get_cross_venue_opportunities(min_spread=5.0)
+        assert len(result) == 1
+        assert result[0].match_id == "m1"
+        assert result[0].spread_pct == 10.0
+        client._get.assert_called_once_with("/api/v1/arbitrage/cross-venue", params={"minSpread": 5.0})
+        client.close()
+
+    def test_sync_get_cross_venue_for_market(self):
+        from unittest.mock import MagicMock
+        client = PolyforgeClient(api_key="test-key")
+        client._get = MagicMock(return_value=[{
+            "matchId": "m1", "polymarketId": "p1", "kalshiId": "k1",
+            "polymarketTitle": "BTC", "kalshiTitle": "BTC K",
+            "category": "Crypto", "confidence": 0.85,
+            "polymarketYes": 0.4, "kalshiYes": 0.5,
+            "spreadPct": 10.0, "direction": "buy_poly_sell_kalshi",
+        }])
+        result = client.get_cross_venue_opportunities_for_market("p1")
+        assert len(result) == 1
+        assert result[0].polymarket_id == "p1"
+        client.close()
+
+    def test_sync_get_market_matches(self):
+        from unittest.mock import MagicMock
+        client = PolyforgeClient(api_key="test-key")
+        client._get = MagicMock(return_value={"matches": [{"id": "m1"}], "total": 1})
+        result = client.get_market_matches(verified=True, limit=10)
+        assert result["total"] == 1
+        client._get.assert_called_once_with(
+            "/api/v1/arbitrage/matches",
+            params={"limit": 10, "offset": 0, "verified": "true"},
+        )
+        client.close()
+
+    def test_sync_get_market_match(self):
+        from unittest.mock import MagicMock
+        client = PolyforgeClient(api_key="test-key")
+        client._get = MagicMock(return_value={
+            "id": "m1", "polymarketId": "p1", "kalshiId": "k1",
+            "confidence": 0.9, "matchMethod": "auto_tfidf",
+            "verified": True, "createdAt": "2026-04-24T00:00:00Z",
+            "updatedAt": "2026-04-24T00:00:00Z",
+        })
+        result = client.get_market_match("m1")
+        assert result.id == "m1"
+        assert result.verified is True
+        client.close()
+
+    def test_sync_get_spread_comparison(self):
+        from unittest.mock import MagicMock
+        client = PolyforgeClient(api_key="test-key")
+        client._get = MagicMock(return_value=[{
+            "matchId": "m1",
+            "polymarket": {"marketId": "p1", "title": "BTC Poly", "yesBid": 0.4, "noAsk": 0.6},
+            "kalshi": {"marketId": "k1", "title": "BTC Kalshi", "yesBid": 0.5, "noAsk": 0.5},
+            "yesSpreadPct": 10.0, "noSpreadPct": 10.0,
+            "confidence": 0.9, "verified": True,
+        }])
+        result = client.get_spread_comparison()
+        assert len(result) == 1
+        assert result[0].yes_spread_pct == 10.0
+        assert result[0].polymarket.market_id == "p1"
+        client.close()
+
+    def test_sync_get_arbitrage_history(self):
+        from unittest.mock import MagicMock
+        client = PolyforgeClient(api_key="test-key")
+        client._get = MagicMock(return_value={
+            "snapshots": [{"id": "s1", "matchId": "m1", "spreadPct": 5.0}],
+            "total": 1,
+        })
+        result = client.get_arbitrage_history(match_id="m1", limit=10)
+        assert result["total"] == 1
+        client._get.assert_called_once_with(
+            "/api/v1/arbitrage/history",
+            params={"limit": 10, "offset": 0, "matchId": "m1"},
+        )
+        client.close()
+
+    def test_sync_get_arbitrage_alerts(self):
+        from unittest.mock import MagicMock
+        client = PolyforgeClient(api_key="test-key")
+        client._get = MagicMock(return_value=[{
+            "id": "a1", "minSpreadPct": 5.0, "marketId": None,
+            "active": True, "triggeredAt": None, "createdAt": "2026-04-24T00:00:00Z",
+        }])
+        result = client.get_arbitrage_alerts()
+        assert len(result) == 1
+        assert result[0].min_spread_pct == 5.0
+        assert result[0].active is True
+        client.close()
+
+    def test_sync_create_arbitrage_alert(self):
+        from unittest.mock import MagicMock
+        client = PolyforgeClient(api_key="test-key")
+        client._post = MagicMock(return_value={
+            "id": "a1", "minSpreadPct": 5.0, "marketId": "p1",
+            "active": True, "triggeredAt": None, "createdAt": "2026-04-24T00:00:00Z",
+        })
+        result = client.create_arbitrage_alert(min_spread_pct=5.0, market_id="p1")
+        assert result.id == "a1"
+        assert result.market_id == "p1"
+        client._post.assert_called_once_with(
+            "/api/v1/arbitrage/alerts",
+            json={"minSpreadPct": "5.0", "marketId": "p1"},
+        )
+        client.close()
+
+    def test_async_cross_venue_methods_exist(self):
+        import inspect
+        methods = [
+            "get_cross_venue_opportunities",
+            "get_cross_venue_opportunities_for_market",
+            "get_market_matches",
+            "get_market_match",
+            "get_spread_comparison",
+            "get_arbitrage_history",
+            "get_arbitrage_alerts",
+            "create_arbitrage_alert",
+        ]
+        for method_name in methods:
+            assert hasattr(AsyncPolyforgeClient, method_name), f"AsyncPolyforgeClient missing {method_name}"
+            source = inspect.getsource(getattr(AsyncPolyforgeClient, method_name))
+            assert "await" in source, f"async {method_name} not using await"
+
+
 class TestPositionPlatformContract:
     """Position model must match the platform contract (closes #143)."""
 
