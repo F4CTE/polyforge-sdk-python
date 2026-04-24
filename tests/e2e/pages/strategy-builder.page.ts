@@ -42,15 +42,15 @@ export class StrategyBuilderPage {
     async gotoEdit(strategyId: string): Promise<void> {
         await this.page.goto(`/strategies/${strategyId}/edit`, { waitUntil: 'domcontentloaded' });
         await expect(this.page.locator('.react-flow')).toBeVisible({ timeout: 20_000 });
-        // Ensure the block palette panel is open (may be collapsed in edit mode).
-        // Short timeout: palette is either visible immediately or not at all.
+        // Wait for loadStrategy() to finish — the overlay is removed when
+        // the Zustand store sets loading=false.  toBeHidden() passes
+        // immediately if the overlay was never rendered (fast load).
+        await expect(this.page.getByText('Loading strategy...')).toBeHidden({ timeout: 20_000 });
         const showBtn = this.page.locator('button[title="Show blocks"]');
         if (await showBtn.isVisible({ timeout: 500 }).catch(() => false)) {
             await showBtn.click();
         }
         await expect(this.nameInput).toBeVisible({ timeout: 10_000 });
-        // Dismiss builder tutorial if visible — storage-state suppresses it,
-        // so this is a fast-path safety net, not a real wait.
         const tutorialDismiss = this.page.locator('button[aria-label="Dismiss tutorial"]');
         if (await tutorialDismiss.isVisible({ timeout: 300 }).catch(() => false)) {
             await tutorialDismiss.click();
@@ -102,6 +102,7 @@ export class StrategyBuilderPage {
     }
 
     async save(): Promise<void> {
+        await expect(this.saveButton).toBeEnabled({ timeout: 10_000 });
         await this.saveButton.click();
     }
 
