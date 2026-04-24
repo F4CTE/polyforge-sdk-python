@@ -8,6 +8,7 @@ import { UpdatePasswordDto } from "./dto/update-password.dto";
 import { UpdateNotificationsDto } from "./dto/update-notifications.dto";
 import { UpdateRiskSettingsDto } from "./dto/update-risk-settings.dto";
 import { UpdateEventNotificationsDto } from "./dto/update-event-notifications.dto";
+import { UpdateVenuePreferencesDto } from "./dto/update-venue-preferences.dto";
 import { BETA_LIMITS } from "../common/beta-limits.config";
 
 @Injectable()
@@ -310,5 +311,62 @@ export class SettingsService {
         limit: BETA_LIMITS.maxMarketplaceListings,
       },
     };
+  }
+
+  private static readonly DEFAULT_VENUE_PREFS = {
+    defaultVenue: "polymarket",
+    enabledVenues: ["polymarket"],
+    singlePlatformMode: true,
+  };
+
+  async getVenuePreferences(userId: string): Promise<{
+    defaultVenue: string;
+    enabledVenues: string[];
+    singlePlatformMode: boolean;
+  }> {
+    const user = await this.prisma.user.findUniqueOrThrow({
+      where: { id: userId },
+      select: { venuePreferences: true },
+    });
+
+    const stored = user.venuePreferences as Record<string, unknown> | null;
+    if (!stored) return { ...SettingsService.DEFAULT_VENUE_PREFS };
+
+    return {
+      defaultVenue:
+        typeof stored.defaultVenue === "string"
+          ? stored.defaultVenue
+          : SettingsService.DEFAULT_VENUE_PREFS.defaultVenue,
+      enabledVenues: Array.isArray(stored.enabledVenues)
+        ? (stored.enabledVenues as string[])
+        : SettingsService.DEFAULT_VENUE_PREFS.enabledVenues,
+      singlePlatformMode:
+        typeof stored.singlePlatformMode === "boolean"
+          ? stored.singlePlatformMode
+          : SettingsService.DEFAULT_VENUE_PREFS.singlePlatformMode,
+    };
+  }
+
+  async updateVenuePreferences(
+    userId: string,
+    dto: UpdateVenuePreferencesDto,
+  ): Promise<{
+    defaultVenue: string;
+    enabledVenues: string[];
+    singlePlatformMode: boolean;
+  }> {
+    const current = await this.getVenuePreferences(userId);
+    const merged = {
+      defaultVenue: dto.defaultVenue ?? current.defaultVenue,
+      enabledVenues: dto.enabledVenues ?? current.enabledVenues,
+      singlePlatformMode: dto.singlePlatformMode ?? current.singlePlatformMode,
+    };
+
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { venuePreferences: merged },
+    });
+
+    return merged;
   }
 }

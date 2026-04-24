@@ -854,4 +854,112 @@ describe("SettingsService", () => {
       expect(result).toEqual({ message: "Password updated" });
     });
   });
+
+  // ── getVenuePreferences ─────────────────────────────────────────────────
+
+  describe("getVenuePreferences", () => {
+    it("returns defaults when venuePreferences is null", async () => {
+      db.user.findUniqueOrThrow.mockResolvedValue({
+        venuePreferences: null,
+      } as any);
+
+      const result = await service.getVenuePreferences("user-uuid-1");
+
+      expect(result).toEqual({
+        defaultVenue: "polymarket",
+        enabledVenues: ["polymarket"],
+        singlePlatformMode: true,
+      });
+    });
+
+    it("returns stored preferences", async () => {
+      const stored = {
+        defaultVenue: "kalshi",
+        enabledVenues: ["polymarket", "kalshi"],
+        singlePlatformMode: false,
+      };
+      db.user.findUniqueOrThrow.mockResolvedValue({
+        venuePreferences: stored,
+      } as any);
+
+      const result = await service.getVenuePreferences("user-uuid-1");
+
+      expect(result).toEqual(stored);
+    });
+
+    it("fills in defaults for malformed stored preferences", async () => {
+      db.user.findUniqueOrThrow.mockResolvedValue({
+        venuePreferences: { defaultVenue: "kalshi" },
+      } as any);
+
+      const result = await service.getVenuePreferences("user-uuid-1");
+
+      expect(result.defaultVenue).toBe("kalshi");
+      expect(result.enabledVenues).toEqual(["polymarket"]);
+      expect(result.singlePlatformMode).toBe(true);
+    });
+  });
+
+  // ── updateVenuePreferences ──────────────────────────────────────────────
+
+  describe("updateVenuePreferences", () => {
+    it("merges partial update with existing preferences", async () => {
+      db.user.findUniqueOrThrow.mockResolvedValue({
+        venuePreferences: {
+          defaultVenue: "polymarket",
+          enabledVenues: ["polymarket"],
+          singlePlatformMode: true,
+        },
+      } as any);
+      db.user.update.mockResolvedValue({} as any);
+
+      const result = await service.updateVenuePreferences("user-uuid-1", {
+        defaultVenue: "kalshi",
+      });
+
+      expect(result.defaultVenue).toBe("kalshi");
+      expect(result.enabledVenues).toEqual(["polymarket"]);
+      expect(result.singlePlatformMode).toBe(true);
+    });
+
+    it("persists merged preferences to the database", async () => {
+      db.user.findUniqueOrThrow.mockResolvedValue({
+        venuePreferences: null,
+      } as any);
+      db.user.update.mockResolvedValue({} as any);
+
+      await service.updateVenuePreferences("user-uuid-1", {
+        enabledVenues: ["polymarket", "kalshi"],
+        singlePlatformMode: false,
+      });
+
+      expect(db.user.update).toHaveBeenCalledWith({
+        where: { id: "user-uuid-1" },
+        data: {
+          venuePreferences: {
+            defaultVenue: "polymarket",
+            enabledVenues: ["polymarket", "kalshi"],
+            singlePlatformMode: false,
+          },
+        },
+      });
+    });
+
+    it("returns full merged preferences", async () => {
+      db.user.findUniqueOrThrow.mockResolvedValue({
+        venuePreferences: null,
+      } as any);
+      db.user.update.mockResolvedValue({} as any);
+
+      const result = await service.updateVenuePreferences("user-uuid-1", {
+        singlePlatformMode: false,
+      });
+
+      expect(result).toEqual({
+        defaultVenue: "polymarket",
+        enabledVenues: ["polymarket"],
+        singlePlatformMode: false,
+      });
+    });
+  });
 });

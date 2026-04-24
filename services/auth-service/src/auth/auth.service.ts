@@ -347,6 +347,7 @@ export class AuthService {
       avatarUrl: user.avatarUrl,
       status: deriveUserStatus(user),
       polymarketConnected: user.polymarketConnected,
+      kalshiConnected: user.kalshiConnected,
       emailVerified: user.emailVerified,
       totpEnabled: user.totpEnabled,
       createdAt: user.createdAt,
@@ -565,11 +566,13 @@ export class AuthService {
     id: string;
     email: string;
     username: string;
+    kalshiConnected?: boolean;
   }): string {
     const payload: JwtPayload = {
       sub: user.id,
       email: user.email,
       username: user.username,
+      kalshiConnected: user.kalshiConnected ?? false,
     };
     return this.jwtService.sign(payload, { expiresIn: ACCESS_TOKEN_EXPIRY });
   }

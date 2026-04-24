@@ -5,6 +5,8 @@ import { SharedDbModule } from '@polyforge/shared-db';
 import { SharedAuthModule } from '@polyforge/shared-auth';
 import { CredentialsService } from './credentials.service';
 import { CredentialsController } from './credentials.controller';
+import { KalshiCredentialsService } from './kalshi-credentials.service';
+import { KalshiCredentialsController } from './kalshi-credentials.controller';
 
 @Module({
   imports: [
@@ -13,7 +15,7 @@ import { CredentialsController } from './credentials.controller';
     ConfigModule,
     JwtModule.register({}),
   ],
-  controllers: [CredentialsController],
-  providers: [CredentialsService],
+  controllers: [CredentialsController, KalshiCredentialsController],
+  providers: [CredentialsService, KalshiCredentialsService],
 })
 export class CredentialsModule {}

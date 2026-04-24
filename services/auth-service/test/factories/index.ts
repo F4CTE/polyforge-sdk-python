@@ -10,6 +10,8 @@ export interface UserLike {
     emailVerified: boolean;
     emailVerifiedAt: Date | null;
     polymarketConnected: boolean;
+    kalshiConnected: boolean;
+    kalshiUserId: string | null;
     totpEnabled: boolean;
     suspended: boolean;
     deleted: boolean;
@@ -49,6 +51,8 @@ export function userFactory(overrides: Partial<UserLike> = {}): UserLike {
         emailVerified: true,
         emailVerifiedAt: new Date(),
         polymarketConnected: false,
+        kalshiConnected: false,
+        kalshiUserId: null,
         totpEnabled: false,
         suspended: false,
         deleted: false,
