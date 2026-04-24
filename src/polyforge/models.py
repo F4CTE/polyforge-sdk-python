@@ -54,20 +54,26 @@ class StrategyExecMode(str, Enum):
 # ---------------------------------------------------------------------------
 
 @dataclass
+class Pagination:
+    """Pagination metadata returned by the platform inside every paginated response."""
+
+    page: int = 1
+    limit: int = 10
+    total: int = 0
+    total_pages: int = 0
+
+
+@dataclass
 class PaginatedResponse(Generic[T]):
     """A page of results from a list endpoint.
 
-    The platform returns paginated results under the ``data`` key with a
-    ``hasNext`` boolean. For backward compatibility the ``items`` property
-    is an alias for ``data``.
+    The platform returns paginated results with ``data`` (the items) and
+    ``pagination`` (an object containing page, limit, total, totalPages).
+    The ``items`` property is a backward-compatible alias for ``data``.
     """
 
     data: list[T] = field(default_factory=list)
-    total: int = 0
-    page: int = 1
-    limit: int = 10
-    has_more: bool = False
-    total_pages: int = 0
+    pagination: Pagination = field(default_factory=Pagination)
 
     @property
     def items(self) -> list[T]:
@@ -187,10 +193,11 @@ class Position:
 
     id: str = ""
     market_id: str = ""
-    market_name: str = ""
+    token_id: str = ""
+    outcome: str = ""
     side: str = ""
     size: str = ""
-    entry_price: str = ""
+    avg_price: str = ""
     current_price: str = ""
     unrealized_pnl: str = ""
     realized_pnl: str = ""
@@ -221,7 +228,10 @@ class Order:
 
     id: str = ""
     market_id: str = ""
+    token_id: str = ""
+    outcome: str = ""
     strategy_id: str = ""
+    intent_id: str | None = None
     side: str = ""
     order_type: str = ""
     status: str = ""  # One of OrderStatus values
@@ -428,7 +438,7 @@ class PlaceOrderResponse:
 
 @dataclass
 class RedeemPositionResponse:
-    """Response from redeeming a position."""
+    """Response from redeeming a resolved position."""
 
     position_id: str = ""
     intent_id: str = ""
@@ -682,11 +692,18 @@ class MarketSentiment:
 
 @dataclass
 class PriceHistoryEntry:
-    """A single data point in a market's price history."""
+    """A single OHLCV candle in a market's price history."""
 
     timestamp: str = ""
-    price: float = 0.0
+    open: float = 0.0
+    high: float = 0.0
+    low: float = 0.0
+    close: float = 0.0
     volume: float = 0.0
+
+    @property
+    def price(self) -> float:
+        return self.close
 
 
 @dataclass

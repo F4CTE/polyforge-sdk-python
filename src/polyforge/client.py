@@ -60,6 +60,7 @@ from polyforge.models import (
     OrderBook,
     OrderBookLevel,
     OrderStatus,
+    Pagination,
     PaginatedResponse,
     PaperSummary,
     PlaceOrderResponse,
@@ -168,6 +169,17 @@ _MODEL_REGISTRY: dict[str, type] = {
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
+def _parse_pagination(raw: dict[str, Any]) -> Pagination:
+    """Extract the nested ``pagination`` object from a platform response."""
+    pag = raw.get("pagination", {})
+    return Pagination(
+        page=pag.get("page", 1),
+        limit=pag.get("limit", 10),
+        total=pag.get("total", 0),
+        total_pages=pag.get("totalPages", 0),
+    )
+
 
 def _camel_to_snake(name: str) -> str:
     """Convert camelCase to snake_case (e.g. 'baseToken' -> 'base_token')."""
@@ -288,7 +300,7 @@ _VALID_MODES = frozenset({"live", "paper"})
 _VALID_DEPLOYMENT_MODES = frozenset({"LIVE", "SIMULATION"})
 _VALID_SIDES = frozenset({"BUY", "SELL"})
 _VALID_OUTCOMES = frozenset({"YES", "NO"})
-_VALID_ORDER_TYPES = frozenset({"GTC", "GTD", "FOK"})
+_VALID_ORDER_TYPES = frozenset({"GTC", "GTD", "FOK", "POST_ONLY"})
 
 
 def _validate_financial_param(name: str, value: float) -> None:
@@ -440,8 +452,10 @@ class PolyforgeClient:
         api_key: str,
         api_url: str = "https://api.polyforge.app",
         timeout: float = 15.0,
+        stream_timeout: float = 86400.0,
     ) -> None:
         self._api_url = api_url.rstrip("/")
+        self._stream_timeout = stream_timeout
 
         # Reject non-HTTPS URLs for non-localhost hosts
         parsed = urlparse(self._api_url)
@@ -529,11 +543,7 @@ class PolyforgeClient:
         parsed = [_parse(Market, m) for m in raw["data"]]
         return PaginatedResponse(
             data=parsed,
-            total=raw["total"],
-            page=raw["page"],
-            limit=raw["limit"],
-            has_more=raw["hasNext"],
-            total_pages=raw.get("totalPages", 0),
+            pagination=_parse_pagination(raw),
         )
 
     def get_market(self, market_id: str) -> Market:
@@ -687,11 +697,7 @@ class PolyforgeClient:
         items = raw.get("data", raw.get("items", []))
         return PaginatedResponse(
             data=[_parse(Strategy, s) for s in items],
-            total=raw.get("total", 0),
-            page=raw.get("page", 1),
-            limit=raw.get("limit", 10),
-            has_more=raw.get("hasNext", False),
-            total_pages=raw.get("totalPages", 0),
+            pagination=_parse_pagination(raw),
         )
 
     def get_leaderboard(
@@ -740,11 +746,7 @@ class PolyforgeClient:
         )
         return PaginatedResponse(
             data=[_parse(Strategy, s) for s in raw["data"]],
-            total=raw["total"],
-            page=raw["page"],
-            limit=raw["limit"],
-            has_more=raw["hasNext"],
-            total_pages=raw.get("totalPages", 0),
+            pagination=_parse_pagination(raw),
         )
 
     def get_strategy(self, strategy_id: str) -> Strategy:
@@ -936,11 +938,7 @@ class PolyforgeClient:
         )
         return PaginatedResponse(
             data=raw["data"],
-            total=raw["total"],
-            page=raw["page"],
-            limit=raw["limit"],
-            has_more=raw["hasNext"],
-            total_pages=raw.get("totalPages", 0),
+            pagination=_parse_pagination(raw),
         )
 
     def add_strategy_comment(self, strategy_id: str, content: str) -> dict[str, Any]:
@@ -1108,11 +1106,7 @@ class PolyforgeClient:
         )
         return PaginatedResponse(
             data=raw["data"],
-            total=raw["total"],
-            page=raw["page"],
-            limit=raw["limit"],
-            has_more=raw["hasNext"],
-            total_pages=raw.get("totalPages", 0),
+            pagination=_parse_pagination(raw),
         )
 
     def get_backtest(self, backtest_id: str) -> dict[str, Any]:
@@ -1209,11 +1203,7 @@ class PolyforgeClient:
         })
         return PaginatedResponse(
             data=[_parse(Order, o) for o in raw["data"]],
-            total=raw["total"],
-            page=raw["page"],
-            limit=raw["limit"],
-            has_more=raw["hasNext"],
-            total_pages=raw.get("totalPages", 0),
+            pagination=_parse_pagination(raw),
         )
 
     def get_score(self) -> TraderScore:
@@ -1729,6 +1719,7 @@ class PolyforgeClient:
             "GET",
             f"/api/v1/strategies/{_encode_path(strategy_id)}/events",
             headers={"Accept": "text/event-stream"},
+            timeout=httpx.Timeout(self._stream_timeout, connect=10.0),
         ) as response:
             _raise_for_status(response)
             for line in response.iter_lines():
@@ -1911,11 +1902,7 @@ class PolyforgeClient:
         }))
         return PaginatedResponse(
             data=[_parse(NewsArticle, a) for a in raw.get("data", [])],
-            total=raw.get("total", 0),
-            page=raw.get("page", page),
-            limit=raw.get("limit", limit),
-            has_more=raw.get("hasNext", False),
-            total_pages=raw.get("totalPages", 0),
+            pagination=_parse_pagination(raw),
         )
 
     def get_news_article(self, article_id: str) -> NewsArticle:
@@ -1991,11 +1978,7 @@ class PolyforgeClient:
         })
         return PaginatedResponse(
             data=[_parse(ConditionalOrder, o) for o in raw["data"]],
-            total=raw["total"],
-            page=raw["page"],
-            limit=raw["limit"],
-            has_more=raw["hasNext"],
-            total_pages=raw.get("totalPages", 0),
+            pagination=_parse_pagination(raw),
         )
 
     def create_conditional_order(
@@ -2451,8 +2434,10 @@ class AsyncPolyforgeClient:
         api_key: str,
         api_url: str = "https://api.polyforge.app",
         timeout: float = 15.0,
+        stream_timeout: float = 86400.0,
     ) -> None:
         self._api_url = api_url.rstrip("/")
+        self._stream_timeout = stream_timeout
 
         # Reject non-HTTPS URLs for non-localhost hosts
         parsed = urlparse(self._api_url)
@@ -2540,11 +2525,7 @@ class AsyncPolyforgeClient:
         parsed = [_parse(Market, m) for m in raw["data"]]
         return PaginatedResponse(
             data=parsed,
-            total=raw["total"],
-            page=raw["page"],
-            limit=raw["limit"],
-            has_more=raw["hasNext"],
-            total_pages=raw.get("totalPages", 0),
+            pagination=_parse_pagination(raw),
         )
 
     async def get_market(self, market_id: str) -> Market:
@@ -2698,11 +2679,7 @@ class AsyncPolyforgeClient:
         items = raw.get("data", raw.get("items", []))
         return PaginatedResponse(
             data=[_parse(Strategy, s) for s in items],
-            total=raw.get("total", 0),
-            page=raw.get("page", 1),
-            limit=raw.get("limit", 10),
-            has_more=raw.get("hasNext", False),
-            total_pages=raw.get("totalPages", 0),
+            pagination=_parse_pagination(raw),
         )
 
     async def get_leaderboard(
@@ -2751,11 +2728,7 @@ class AsyncPolyforgeClient:
         )
         return PaginatedResponse(
             data=[_parse(Strategy, s) for s in raw["data"]],
-            total=raw["total"],
-            page=raw["page"],
-            limit=raw["limit"],
-            has_more=raw["hasNext"],
-            total_pages=raw.get("totalPages", 0),
+            pagination=_parse_pagination(raw),
         )
 
     async def get_strategy(self, strategy_id: str) -> Strategy:
@@ -2929,11 +2902,7 @@ class AsyncPolyforgeClient:
         )
         return PaginatedResponse(
             data=raw["data"],
-            total=raw["total"],
-            page=raw["page"],
-            limit=raw["limit"],
-            has_more=raw["hasNext"],
-            total_pages=raw.get("totalPages", 0),
+            pagination=_parse_pagination(raw),
         )
 
     async def add_strategy_comment(self, strategy_id: str, content: str) -> dict[str, Any]:
@@ -3088,11 +3057,7 @@ class AsyncPolyforgeClient:
         )
         return PaginatedResponse(
             data=raw["data"],
-            total=raw["total"],
-            page=raw["page"],
-            limit=raw["limit"],
-            has_more=raw["hasNext"],
-            total_pages=raw.get("totalPages", 0),
+            pagination=_parse_pagination(raw),
         )
 
     async def get_backtest(self, backtest_id: str) -> dict[str, Any]:
@@ -3182,11 +3147,7 @@ class AsyncPolyforgeClient:
         })
         return PaginatedResponse(
             data=[_parse(Order, o) for o in raw["data"]],
-            total=raw["total"],
-            page=raw["page"],
-            limit=raw["limit"],
-            has_more=raw["hasNext"],
-            total_pages=raw.get("totalPages", 0),
+            pagination=_parse_pagination(raw),
         )
 
     async def get_score(self) -> TraderScore:
@@ -3657,6 +3618,7 @@ class AsyncPolyforgeClient:
             "GET",
             f"/api/v1/strategies/{_encode_path(strategy_id)}/events",
             headers={"Accept": "text/event-stream"},
+            timeout=httpx.Timeout(self._stream_timeout, connect=10.0),
         ) as response:
             _raise_for_status(response)
             async for line in response.aiter_lines():
@@ -3787,11 +3749,7 @@ class AsyncPolyforgeClient:
         }))
         return PaginatedResponse(
             data=[_parse(NewsArticle, a) for a in raw.get("data", [])],
-            total=raw.get("total", 0),
-            page=raw.get("page", page),
-            limit=raw.get("limit", limit),
-            has_more=raw.get("hasNext", False),
-            total_pages=raw.get("totalPages", 0),
+            pagination=_parse_pagination(raw),
         )
 
     async def get_news_article(self, article_id: str) -> NewsArticle:
@@ -3867,11 +3825,7 @@ class AsyncPolyforgeClient:
         })
         return PaginatedResponse(
             data=[_parse(ConditionalOrder, o) for o in raw["data"]],
-            total=raw["total"],
-            page=raw["page"],
-            limit=raw["limit"],
-            has_more=raw["hasNext"],
-            total_pages=raw.get("totalPages", 0),
+            pagination=_parse_pagination(raw),
         )
 
     async def create_conditional_order(

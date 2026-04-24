@@ -8,12 +8,14 @@ from polyforge.client import (
     PolyforgeClient,
     AsyncPolyforgeClient,
     _parse,
+    _parse_pagination,
     _raise_for_status,
     _validate_enum,
     _validate_financial_param,
     _validate_webhook_url,
     _is_ip_blocked,
     _resolve_and_validate_ips,
+    _VALID_ORDER_TYPES,
 )
 from polyforge.errors import (
     PolyforgeError,
@@ -37,6 +39,7 @@ from polyforge.models import (
     OrderBook,
     OrderBookLevel,
     OrderStatus,
+    Pagination,
     PaginatedResponse,
     PlaceOrderResponse,
     Portfolio,
@@ -44,6 +47,7 @@ from polyforge.models import (
     Position,
     PriceHistoryEntry,
     Rebate,
+    RedeemPositionResponse,
     RewardMarket,
     Strategy,
     StrategyExecMode,
@@ -745,12 +749,13 @@ class TestPlatformContractCompliance:
         source = inspect.getsource(PolyforgeClient.create_strategy_from_description)
         assert '"description"' in source or "'description'" in source
 
-    def test_start_strategy_sends_lowercase_mode(self):
-        """start_strategy() must not call .upper() on mode (#92)."""
+    def test_start_strategy_sends_paper_mode_field(self):
+        """start_strategy() must send paperMode boolean, not {mode} string (#150)."""
         import inspect
 
         source = inspect.getsource(PolyforgeClient.start_strategy)
-        assert ".upper()" not in source, "start_strategy() must not uppercase the mode value"
+        assert "paperMode" in source, "start_strategy() must send 'paperMode' field to match platform contract"
+        assert '"mode"' not in source and "'mode'" not in source, "start_strategy() must not send legacy 'mode' field"
 
 
 class TestFinancialParamValidation:
@@ -802,10 +807,10 @@ class TestEnumValidation:
         with pytest.raises(ValueError, match="must be one of"):
             _validate_enum("side", "HOLD", frozenset({"BUY", "SELL"}))
 
-    def test_start_strategy_rejects_invalid_mode(self):
+    def test_start_strategy_rejects_invalid_deployment_mode(self):
         client = PolyforgeClient(api_key="test-key")
         with pytest.raises(ValueError, match="must be one of"):
-            client.start_strategy("s-1", mode="turbo")
+            client.start_strategy("s-1", deployment_mode="turbo")
 
     def test_place_order_rejects_invalid_side(self):
         client = PolyforgeClient(api_key="test-key")
@@ -821,6 +826,15 @@ class TestEnumValidation:
         client = PolyforgeClient(api_key="test-key")
         with pytest.raises(ValueError, match="must be one of"):
             client.place_order("tok", "BUY", "YES", 10.0, 0.5, order_type="IOC")
+
+    def test_valid_order_types_match_platform_dto(self):
+        """SDK order types must include all values from platform's OrderTypeDto."""
+        platform_order_types = {"GTC", "GTD", "FOK", "POST_ONLY"}
+        assert _VALID_ORDER_TYPES == platform_order_types
+
+    def test_place_order_accepts_post_only(self):
+        """POST_ONLY is a valid platform order type — SDK must not reject it."""
+        _validate_enum("order_type", "POST_ONLY", _VALID_ORDER_TYPES)
 
 
 class TestPlaceOrderValidation:
@@ -1090,17 +1104,97 @@ class TestCreateStrategyParams:
         assert '"tags"' in source
 
 
+class TestUpdateStrategyParams:
+    """Tests for update_strategy() accepting all platform-supported fields (#144)."""
+
+    def test_update_strategy_accepts_all_params(self):
+        """update_strategy() must accept visibility, exec_mode, blocks, tags, etc."""
+        import inspect
+        sig = inspect.signature(PolyforgeClient.update_strategy)
+        params = set(sig.parameters.keys())
+        for expected in (
+            "name", "description", "market_id", "visibility", "exec_mode",
+            "tick_ms", "triggers", "conditions", "actions", "safety",
+            "logic_blocks", "calc_blocks", "tags", "variables", "canvas",
+            "market_slots",
+        ):
+            assert expected in params, f"missing param: {expected}"
+
+    def test_async_update_strategy_accepts_all_params(self):
+        """Async update_strategy() must also accept the expanded params."""
+        import inspect
+        sig = inspect.signature(AsyncPolyforgeClient.update_strategy)
+        params = set(sig.parameters.keys())
+        for expected in (
+            "name", "description", "market_id", "visibility", "exec_mode",
+            "tick_ms", "triggers", "conditions", "actions", "safety",
+            "logic_blocks", "calc_blocks", "tags", "variables", "canvas",
+            "market_slots",
+        ):
+            assert expected in params, f"missing async param: {expected}"
+
+    def test_update_strategy_sends_camel_case_fields(self):
+        """update_strategy() must send camelCase field names to the API."""
+        import inspect
+        source = inspect.getsource(PolyforgeClient.update_strategy)
+        for camel in (
+            '"visibility"', '"execMode"', '"tickMs"', '"triggers"',
+            '"conditions"', '"actions"', '"safety"', '"logicBlocks"',
+            '"calcBlocks"', '"tags"', '"variables"', '"canvas"',
+            '"marketSlots"',
+        ):
+            assert camel in source, f"missing camelCase key: {camel}"
+
+    def test_update_strategy_params_are_keyword_only(self):
+        """All update params after strategy_id must be keyword-only."""
+        import inspect
+        sig = inspect.signature(PolyforgeClient.update_strategy)
+        for pname, param in sig.parameters.items():
+            if pname == "self":
+                continue
+            if pname == "strategy_id":
+                assert param.kind == inspect.Parameter.POSITIONAL_OR_KEYWORD
+            else:
+                assert param.kind == inspect.Parameter.KEYWORD_ONLY, f"{pname} should be keyword-only"
+
+
+class TestPaginationDataclass:
+    """Tests for the Pagination dataclass (#145)."""
+
+    def test_pagination_defaults(self):
+        """Pagination fields should have sensible defaults."""
+        pag = Pagination()
+        assert pag.page == 1
+        assert pag.limit == 10
+        assert pag.total == 0
+        assert pag.total_pages == 0
+
+    def test_pagination_with_values(self):
+        """Pagination should accept explicit values."""
+        pag = Pagination(page=3, limit=20, total=150, total_pages=8)
+        assert pag.page == 3
+        assert pag.limit == 20
+        assert pag.total == 150
+        assert pag.total_pages == 8
+
+
 class TestPaginatedResponseDataField:
-    """Tests for PaginatedResponse using 'data' field (#33)."""
+    """Tests for PaginatedResponse using nested pagination shape (#33, #145)."""
 
     def test_paginated_response_uses_data_field(self):
         """PaginatedResponse must have a 'data' field, not 'items'."""
-        pr = PaginatedResponse(data=["a", "b", "c"], total=3, page=1, limit=10)
+        pr = PaginatedResponse(
+            data=["a", "b", "c"],
+            pagination=Pagination(total=3, page=1, limit=10),
+        )
         assert pr.data == ["a", "b", "c"]
 
     def test_paginated_response_items_is_alias(self):
         """PaginatedResponse.items must be a backward-compat alias for data."""
-        pr = PaginatedResponse(data=["x", "y"], total=2, page=1, limit=10)
+        pr = PaginatedResponse(
+            data=["x", "y"],
+            pagination=Pagination(total=2, page=1, limit=10),
+        )
         assert pr.items == ["x", "y"]
         assert pr.items is pr.data
 
@@ -1109,6 +1203,59 @@ class TestPaginatedResponseDataField:
         pr = PaginatedResponse()
         assert pr.data == []
         assert pr.items == []
+        assert isinstance(pr.pagination, Pagination)
+
+    def test_paginated_response_no_has_more(self):
+        """PaginatedResponse must NOT have a has_more field (#145)."""
+        assert not hasattr(PaginatedResponse(), "has_more")
+
+    def test_pagination_nested_under_pagination_field(self):
+        """Pagination metadata must be accessed via .pagination, not flat fields."""
+        pr = PaginatedResponse(
+            data=[1, 2, 3],
+            pagination=Pagination(page=2, limit=20, total=50, total_pages=3),
+        )
+        assert pr.pagination.page == 2
+        assert pr.pagination.limit == 20
+        assert pr.pagination.total == 50
+        assert pr.pagination.total_pages == 3
+
+
+class TestParsePagination:
+    """Tests for _parse_pagination helper (#145)."""
+
+    def test_extracts_nested_pagination(self):
+        """_parse_pagination must extract fields from the nested pagination object."""
+        raw = {
+            "data": [1, 2, 3],
+            "pagination": {
+                "page": 2,
+                "limit": 20,
+                "total": 150,
+                "totalPages": 8,
+            },
+        }
+        pag = _parse_pagination(raw)
+        assert isinstance(pag, Pagination)
+        assert pag.page == 2
+        assert pag.limit == 20
+        assert pag.total == 150
+        assert pag.total_pages == 8
+
+    def test_defaults_when_pagination_missing(self):
+        """_parse_pagination must return defaults when pagination key is absent."""
+        raw = {"data": []}
+        pag = _parse_pagination(raw)
+        assert pag.page == 1
+        assert pag.limit == 10
+        assert pag.total == 0
+        assert pag.total_pages == 0
+
+    def test_camel_case_total_pages(self):
+        """_parse_pagination must map totalPages (camelCase) to total_pages."""
+        raw = {"pagination": {"totalPages": 5}}
+        pag = _parse_pagination(raw)
+        assert pag.total_pages == 5
 
 
 class TestOrderMonetaryFields:
@@ -1151,14 +1298,101 @@ class TestOrderMonetaryFields:
         """Position monetary fields must be str."""
         pos = Position(
             size="100.00",
-            entry_price="0.55",
+            avg_price="0.55",
             current_price="0.65",
             unrealized_pnl="10.00",
             realized_pnl="5.00",
         )
         assert isinstance(pos.size, str)
-        assert isinstance(pos.entry_price, str)
+        assert isinstance(pos.avg_price, str)
         assert pos.unrealized_pnl == "10.00"
+
+
+class TestPositionOrderFieldAlignment:
+    """Tests for Position and Order field alignment with platform contract (#143)."""
+
+    def test_position_has_token_id(self):
+        """Position must have token_id field (#143)."""
+        pos = Position(token_id="0xabc123")
+        assert pos.token_id == "0xabc123"
+
+    def test_position_has_outcome(self):
+        """Position must have outcome field for YES/NO (#143)."""
+        pos_yes = Position(outcome="YES")
+        pos_no = Position(outcome="NO")
+        assert pos_yes.outcome == "YES"
+        assert pos_no.outcome == "NO"
+
+    def test_position_uses_avg_price_not_entry_price(self):
+        """Position must use avg_price (platform field), not entry_price (#143)."""
+        import dataclasses
+        field_names = {f.name for f in dataclasses.fields(Position)}
+        assert "avg_price" in field_names
+        assert "entry_price" not in field_names
+
+    def test_position_no_market_name_phantom_field(self):
+        """Position must not have phantom market_name field (#143)."""
+        import dataclasses
+        field_names = {f.name for f in dataclasses.fields(Position)}
+        assert "market_name" not in field_names
+
+    def test_position_parses_from_api(self):
+        """_parse must map camelCase platform fields to Position (#143)."""
+        api_response = {
+            "id": "pos-1",
+            "marketId": "mkt-abc",
+            "tokenId": "0xtoken",
+            "outcome": "YES",
+            "side": "BUY",
+            "size": "50.00",
+            "avgPrice": "0.60",
+            "currentPrice": "0.70",
+            "unrealizedPnl": "5.00",
+            "realizedPnl": "0.00",
+            "openedAt": "2026-01-01T00:00:00Z",
+        }
+        pos = _parse(Position, api_response)
+        assert pos.token_id == "0xtoken"
+        assert pos.outcome == "YES"
+        assert pos.avg_price == "0.60"
+
+    def test_order_has_token_id(self):
+        """Order must have token_id field (#143)."""
+        order = Order(token_id="0xdef456")
+        assert order.token_id == "0xdef456"
+
+    def test_order_has_outcome(self):
+        """Order must have outcome field for YES/NO (#143)."""
+        order = Order(outcome="NO")
+        assert order.outcome == "NO"
+
+    def test_order_has_intent_id(self):
+        """Order must have intent_id field (#143)."""
+        order = Order(intent_id="intent-xyz")
+        assert order.intent_id == "intent-xyz"
+
+    def test_order_intent_id_defaults_none(self):
+        """Order intent_id must default to None (optional field) (#143)."""
+        order = Order()
+        assert order.intent_id is None
+
+    def test_order_parses_token_id_and_outcome_from_api(self):
+        """_parse must map tokenId and outcome to Order (#143)."""
+        api_response = {
+            "id": "ord-2",
+            "marketId": "mkt-abc",
+            "tokenId": "0xtoken",
+            "outcome": "YES",
+            "intentId": "intent-99",
+            "side": "BUY",
+            "price": "0.65",
+            "size": "100.00",
+            "status": "LIVE",
+        }
+        order = _parse(Order, api_response)
+        assert order.token_id == "0xtoken"
+        assert order.outcome == "YES"
+        assert order.intent_id == "intent-99"
 
 
 class TestAlertFields:
@@ -1700,21 +1934,36 @@ class TestWebhookMutationMethods:
 
 
 class TestPriceHistoryEntryModel:
-    """Tests for PriceHistoryEntry model (#51)."""
+    """Tests for PriceHistoryEntry model (#51, #148)."""
 
-    def test_price_history_entry_fields(self):
-        """PriceHistoryEntry must have timestamp, price, volume fields."""
-        entry = PriceHistoryEntry(timestamp="2026-04-13T00:00:00Z", price=0.65, volume=1234.5)
+    def test_price_history_entry_ohlcv_fields(self):
+        """PriceHistoryEntry must have timestamp and OHLCV fields."""
+        entry = PriceHistoryEntry(
+            timestamp="2026-04-13T00:00:00Z",
+            open=0.45, high=0.70, low=0.40, close=0.65, volume=1234.5,
+        )
         assert entry.timestamp == "2026-04-13T00:00:00Z"
-        assert entry.price == 0.65
+        assert entry.open == 0.45
+        assert entry.high == 0.70
+        assert entry.low == 0.40
+        assert entry.close == 0.65
         assert entry.volume == 1234.5
+
+    def test_price_history_entry_price_compat(self):
+        """PriceHistoryEntry.price should alias close for backward compatibility (#148)."""
+        entry = PriceHistoryEntry(close=0.65)
+        assert entry.price == 0.65
 
     def test_price_history_entry_defaults(self):
         """PriceHistoryEntry defaults should be sensible."""
         entry = PriceHistoryEntry()
         assert entry.timestamp == ""
-        assert entry.price == 0.0
+        assert entry.open == 0.0
+        assert entry.high == 0.0
+        assert entry.low == 0.0
+        assert entry.close == 0.0
         assert entry.volume == 0.0
+        assert entry.price == 0.0
 
 
 class TestOrderBookModels:
@@ -1807,6 +2056,44 @@ class TestGetPriceHistory:
         sig = inspect.signature(PolyforgeClient.get_price_history)
         ret = sig.return_annotation
         assert "PriceHistoryEntry" in str(ret)
+
+    def test_parse_ohlcv_candle_from_platform_response(self):
+        """_parse must map platform OHLCV candle shape to PriceHistoryEntry (#148)."""
+        from polyforge.client import _parse
+
+        candle = {
+            "time": "2026-04-13T12:00:00Z",
+            "open": "0.450000",
+            "high": "0.700000",
+            "low": "0.400000",
+            "close": "0.650000",
+            "volume": "1234.560000",
+        }
+        entry = _parse(PriceHistoryEntry, candle)
+        assert entry.timestamp == "2026-04-13T12:00:00Z"
+        assert entry.open == 0.45
+        assert entry.high == 0.70
+        assert entry.low == 0.40
+        assert entry.close == 0.65
+        assert entry.volume == 1234.56
+        assert entry.price == 0.65
+
+    def test_parse_ohlcv_candle_zero_defaults(self):
+        """_parse handles '0' string values from platform correctly (#148)."""
+        from polyforge.client import _parse
+
+        candle = {
+            "time": "2026-04-13T12:00:00Z",
+            "open": "0",
+            "high": "0",
+            "low": "0",
+            "close": "0",
+            "volume": "0",
+        }
+        entry = _parse(PriceHistoryEntry, candle)
+        assert entry.timestamp == "2026-04-13T12:00:00Z"
+        assert entry.open == 0.0
+        assert entry.close == 0.0
 
 
 class TestGetOrderBook:
@@ -1990,6 +2277,26 @@ class TestAlertCrud:
         source = inspect.getsource(AsyncPolyforgeClient.delete_alert)
         assert "/api/v1/alerts/" in source
         assert "_delete" in source
+
+    # -- Regression: price must be sent as string (#162 / POLA-332) --
+
+    def test_sync_create_alert_sends_price_as_string(self):
+        """create_alert() must convert price to str for @IsNumberString."""
+        import inspect
+
+        source = inspect.getsource(PolyforgeClient.create_alert)
+        assert 'str(price)' in source, (
+            "price must be serialised as str(price) — platform requires @IsNumberString"
+        )
+
+    def test_async_create_alert_sends_price_as_string(self):
+        """Async create_alert() must convert price to str for @IsNumberString."""
+        import inspect
+
+        source = inspect.getsource(AsyncPolyforgeClient.create_alert)
+        assert 'str(price)' in source, (
+            "price must be serialised as str(price) — platform requires @IsNumberString"
+        )
 
 
 # ---------------------------------------------------------------------------
@@ -2248,8 +2555,7 @@ class TestPaginatedResponses:
 
         source = inspect.getsource(PolyforgeClient.list_strategies)
         assert "PaginatedResponse(" in source
-        assert 'raw["total"]' in source or "raw['total']" in source
-        assert 'raw["hasNext"]' in source or "raw['hasNext']" in source
+        assert "_parse_pagination(raw)" in source
 
 
 class TestBacktestMethods:
@@ -2341,8 +2647,7 @@ class TestBacktestMethods:
 
         source = inspect.getsource(PolyforgeClient.list_backtests)
         assert "PaginatedResponse(" in source
-        assert 'raw["total"]' in source or "raw['total']" in source
-        assert 'raw["hasNext"]' in source or "raw['hasNext']" in source
+        assert "_parse_pagination(raw)" in source
 
     def test_list_backtests_passes_query_params(self):
         """list_backtests() must pass strategyId and status to the HTTP params."""
@@ -2436,7 +2741,7 @@ class TestDiscoveryAndRanking:
         import inspect
         sig = inspect.signature(PolyforgeClient.discover_strategies)
         params = set(sig.parameters.keys())
-        for name in ("sort", "category", "search", "limit", "offset"):
+        for name in ("sort", "category", "search", "limit", "page"):
             assert name in params, f"Missing param: {name}"
 
     def test_sync_discover_strategies_path(self):
@@ -2467,7 +2772,7 @@ class TestDiscoveryAndRanking:
         import inspect
         sig = inspect.signature(PolyforgeClient.get_leaderboard)
         params = set(sig.parameters.keys())
-        for name in ("period", "limit", "offset"):
+        for name in ("period", "limit", "page"):
             assert name in params, f"Missing param: {name}"
 
     def test_sync_get_leaderboard_path(self):
@@ -3692,9 +3997,10 @@ class TestNewModels:
 
 
 class TestRedeemPosition:
-    """Tests for redeem_position field-name fix (POLA-478).
+    """Tests for redeem_position response type (POLA-478, POLA-488).
 
     The platform returns positionId (not orderId) from /api/v1/orders/redeem.
+    POLA-488: return type must be RedeemPositionResponse (not PlaceOrderResponse).
     """
 
     def test_redeem_position_exists_sync(self):
@@ -3719,6 +4025,28 @@ class TestRedeemPosition:
         source = inspect.getsource(AsyncPolyforgeClient.redeem_position)
         assert 'data["positionId"]' in source
         assert 'data["orderId"]' not in source
+
+    def test_redeem_position_returns_redeem_position_response(self):
+        import typing
+        hints = typing.get_type_hints(PolyforgeClient.redeem_position)
+        assert hints["return"] is RedeemPositionResponse
+
+    def test_redeem_position_async_returns_redeem_position_response(self):
+        import typing
+        hints = typing.get_type_hints(AsyncPolyforgeClient.redeem_position)
+        assert hints["return"] is RedeemPositionResponse
+
+    def test_redeem_position_response_model(self):
+        resp = RedeemPositionResponse(position_id="pos-1", intent_id="int-1", status="REDEEMED")
+        assert resp.position_id == "pos-1"
+        assert resp.intent_id == "int-1"
+        assert resp.status == "REDEEMED"
+
+    def test_redeem_position_response_defaults(self):
+        resp = RedeemPositionResponse()
+        assert resp.position_id == ""
+        assert resp.intent_id == ""
+        assert resp.status == ""
 
 
 
@@ -4008,3 +4336,256 @@ class TestCrossVenueArbitrage:
             assert hasattr(AsyncPolyforgeClient, method_name), f"AsyncPolyforgeClient missing {method_name}"
             source = inspect.getsource(getattr(AsyncPolyforgeClient, method_name))
             assert "await" in source, f"async {method_name} not using await"
+
+
+class TestPositionPlatformContract:
+    """Position model must match the platform contract (closes #143)."""
+
+    def test_position_has_token_id_field(self):
+        pos = Position(token_id="tok-1")
+        assert pos.token_id == "tok-1"
+
+    def test_position_has_outcome_field(self):
+        pos = Position(outcome="YES")
+        assert pos.outcome == "YES"
+
+    def test_position_uses_avg_price_not_entry_price(self):
+        pos = Position(avg_price="0.55")
+        assert pos.avg_price == "0.55"
+
+    def test_position_no_entry_price_field(self):
+        assert not hasattr(Position, "entry_price") or "entry_price" not in {
+            f.name for f in __import__("dataclasses").fields(Position)
+        }
+
+    def test_position_no_market_name_field(self):
+        assert "market_name" not in {
+            f.name for f in __import__("dataclasses").fields(Position)
+        }
+
+    def test_position_token_id_defaults_to_empty(self):
+        pos = Position()
+        assert pos.token_id == ""
+
+    def test_position_outcome_defaults_to_empty(self):
+        pos = Position()
+        assert pos.outcome == ""
+
+    def test_position_avg_price_defaults_to_empty(self):
+        pos = Position()
+        assert pos.avg_price == ""
+
+    def test_position_parses_from_platform_response(self):
+        api_response = {
+            "id": "pos-1",
+            "marketId": "mkt-1",
+            "tokenId": "tok-1",
+            "outcome": "YES",
+            "side": "BUY",
+            "size": "100.00",
+            "avgPrice": "0.55",
+            "currentPrice": "0.65",
+            "unrealizedPnl": "10.00",
+            "realizedPnl": "0.00",
+            "openedAt": "2026-01-01T00:00:00Z",
+        }
+        pos = _parse(Position, api_response)
+        assert pos.id == "pos-1"
+        assert pos.market_id == "mkt-1"
+        assert pos.token_id == "tok-1"
+        assert pos.outcome == "YES"
+        assert pos.avg_price == "0.55"
+        assert pos.current_price == "0.65"
+
+
+class TestOrderPlatformContract:
+    """Order model must match the platform contract (closes #143)."""
+
+    def test_order_has_token_id_field(self):
+        order = Order(token_id="tok-1")
+        assert order.token_id == "tok-1"
+
+    def test_order_has_outcome_field(self):
+        order = Order(outcome="NO")
+        assert order.outcome == "NO"
+
+    def test_order_has_intent_id_field(self):
+        order = Order(intent_id="int-1")
+        assert order.intent_id == "int-1"
+
+    def test_order_token_id_defaults_to_empty(self):
+        order = Order()
+        assert order.token_id == ""
+
+    def test_order_outcome_defaults_to_empty(self):
+        order = Order()
+        assert order.outcome == ""
+
+    def test_order_intent_id_defaults_to_none(self):
+        order = Order()
+        assert order.intent_id is None
+
+    def test_order_parses_from_platform_response(self):
+        api_response = {
+            "id": "ord-1",
+            "marketId": "mkt-1",
+            "tokenId": "tok-1",
+            "outcome": "YES",
+            "strategyId": "str-1",
+            "intentId": "int-1",
+            "side": "BUY",
+            "orderType": "LIMIT",
+            "status": "CONFIRMED",
+            "price": "0.65",
+            "size": "150.00",
+            "fillSize": "100.00",
+            "fillPrice": "0.64",
+            "fee": "0.50",
+            "createdAt": "2026-01-01T00:00:00Z",
+            "updatedAt": "2026-01-01T01:00:00Z",
+        }
+        order = _parse(Order, api_response)
+        assert order.id == "ord-1"
+        assert order.token_id == "tok-1"
+        assert order.outcome == "YES"
+        assert order.intent_id == "int-1"
+        assert order.strategy_id == "str-1"
+
+
+class TestEndpointPathRegression:
+    """Regression tests for issue #149: 12 SDK paths that previously returned 404.
+
+    Each test asserts the exact platform-correct path is present in the method
+    source so a future edit cannot silently revert to the broken path.
+    """
+
+    def test_sync_get_news_signals_path(self):
+        import inspect
+        source = inspect.getsource(PolyforgeClient.get_news_signals)
+        assert "/api/v1/news/signals" in source
+        assert "/api/v1/signals/news" not in source
+
+    def test_async_get_news_signals_path(self):
+        import inspect
+        source = inspect.getsource(AsyncPolyforgeClient.get_news_signals)
+        assert "/api/v1/news/signals" in source
+        assert "/api/v1/signals/news" not in source
+
+    def test_sync_get_accuracy_path(self):
+        import inspect
+        source = inspect.getsource(PolyforgeClient.get_accuracy)
+        assert "/api/v1/accuracy/me" in source
+        assert '"/api/v1/accuracy"' not in source
+
+    def test_async_get_accuracy_path(self):
+        import inspect
+        source = inspect.getsource(AsyncPolyforgeClient.get_accuracy)
+        assert "/api/v1/accuracy/me" in source
+        assert '"/api/v1/accuracy"' not in source
+
+    def test_sync_get_portfolio_review_path(self):
+        import inspect
+        source = inspect.getsource(PolyforgeClient.get_portfolio_review)
+        assert "/api/v1/ai/portfolio-review" in source
+        assert "/api/v1/portfolio/review" not in source
+
+    def test_async_get_portfolio_review_path(self):
+        import inspect
+        source = inspect.getsource(AsyncPolyforgeClient.get_portfolio_review)
+        assert "/api/v1/ai/portfolio-review" in source
+        assert "/api/v1/portfolio/review" not in source
+
+    def test_sync_get_market_sentiment_path(self):
+        import inspect
+        source = inspect.getsource(PolyforgeClient.get_market_sentiment)
+        assert "/api/v1/news/sentiment/" in source
+        assert "/api/v1/market-sentiment/" not in source
+
+    def test_async_get_market_sentiment_path(self):
+        import inspect
+        source = inspect.getsource(AsyncPolyforgeClient.get_market_sentiment)
+        assert "/api/v1/news/sentiment/" in source
+        assert "/api/v1/market-sentiment/" not in source
+
+    def test_sync_provide_liquidity_path(self):
+        import inspect
+        source = inspect.getsource(PolyforgeClient.provide_liquidity)
+        assert "/api/v1/lp/provide" in source
+        assert "/api/v1/liquidity/provide" not in source
+
+    def test_async_provide_liquidity_path(self):
+        import inspect
+        source = inspect.getsource(AsyncPolyforgeClient.provide_liquidity)
+        assert "/api/v1/lp/provide" in source
+        assert "/api/v1/liquidity/provide" not in source
+
+    def test_sync_rollback_strategy_full_path(self):
+        """Platform path is /strategies/{id}/versions/{vid}/rollback, NOT /strategies/{id}/rollback/{vid}."""
+        import inspect
+        import re
+        source = inspect.getsource(PolyforgeClient.rollback_strategy)
+        assert re.search(r"/strategies/.*?/versions/.*?/rollback", source), (
+            "rollback_strategy must use path .../versions/{vid}/rollback, not .../rollback/{vid}"
+        )
+
+    def test_async_rollback_strategy_full_path(self):
+        """Platform path is /strategies/{id}/versions/{vid}/rollback, NOT /strategies/{id}/rollback/{vid}."""
+        import inspect
+        import re
+        source = inspect.getsource(AsyncPolyforgeClient.rollback_strategy)
+        assert re.search(r"/strategies/.*?/versions/.*?/rollback", source), (
+            "rollback_strategy must use path .../versions/{vid}/rollback, not .../rollback/{vid}"
+        )
+
+
+class TestSseStreamTimeout:
+    """Regression tests for SSE stream timeout — POLA-340 / #154."""
+
+    def test_sync_client_accepts_stream_timeout_param(self):
+        """PolyforgeClient.__init__ must accept stream_timeout keyword."""
+        import inspect
+        sig = inspect.signature(PolyforgeClient.__init__)
+        assert "stream_timeout" in sig.parameters
+
+    def test_async_client_accepts_stream_timeout_param(self):
+        """AsyncPolyforgeClient.__init__ must accept stream_timeout keyword."""
+        import inspect
+        sig = inspect.signature(AsyncPolyforgeClient.__init__)
+        assert "stream_timeout" in sig.parameters
+
+    def test_sync_client_default_stream_timeout_is_24h(self):
+        """PolyforgeClient stream_timeout default must be 86400.0 (24 hours)."""
+        import inspect
+        sig = inspect.signature(PolyforgeClient.__init__)
+        assert sig.parameters["stream_timeout"].default == 86400.0
+
+    def test_async_client_default_stream_timeout_is_24h(self):
+        """AsyncPolyforgeClient stream_timeout default must be 86400.0 (24 hours)."""
+        import inspect
+        sig = inspect.signature(AsyncPolyforgeClient.__init__)
+        assert sig.parameters["stream_timeout"].default == 86400.0
+
+    def test_sync_client_stores_stream_timeout(self):
+        """PolyforgeClient must store stream_timeout as _stream_timeout attribute."""
+        client = PolyforgeClient(api_key="test-key", stream_timeout=300.0)
+        assert client._stream_timeout == 300.0
+        client.close()
+
+    def test_async_client_stores_stream_timeout(self):
+        """AsyncPolyforgeClient must store stream_timeout as _stream_timeout attribute."""
+        client = AsyncPolyforgeClient(api_key="test-key", stream_timeout=300.0)
+        assert client._stream_timeout == 300.0
+
+    def test_sync_watch_strategy_uses_stream_timeout(self):
+        """watch_strategy must pass _stream_timeout to httpx, not the default timeout."""
+        import inspect
+        source = inspect.getsource(PolyforgeClient.watch_strategy)
+        assert "self._stream_timeout" in source
+        assert "httpx.Timeout" in source
+
+    def test_async_watch_strategy_uses_stream_timeout(self):
+        """async watch_strategy must pass _stream_timeout to httpx, not the default timeout."""
+        import inspect
+        source = inspect.getsource(AsyncPolyforgeClient.watch_strategy)
+        assert "self._stream_timeout" in source
+        assert "httpx.Timeout" in source
