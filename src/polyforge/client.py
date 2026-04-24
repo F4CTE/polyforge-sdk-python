@@ -101,6 +101,14 @@ from polyforge.models import (
     WhaleLeaderboardEntry,
     WhaleProfile,
     ActionsSchema,
+    UserProfile,
+    FollowResult,
+    NotificationSettings,
+    EventNotificationPref,
+    EventNotificationPreferences,
+    VenuePreferences,
+    SupportTicket,
+    TicketMessage,
 )
 
 T = TypeVar("T")
@@ -166,6 +174,14 @@ _MODEL_REGISTRY: dict[str, type] = {
     "UserReward": UserReward,
     "UserRewardsTotal": UserRewardsTotal,
     "Rebate": Rebate,
+    "UserProfile": UserProfile,
+    "FollowResult": FollowResult,
+    "NotificationSettings": NotificationSettings,
+    "EventNotificationPref": EventNotificationPref,
+    "EventNotificationPreferences": EventNotificationPreferences,
+    "VenuePreferences": VenuePreferences,
+    "SupportTicket": SupportTicket,
+    "TicketMessage": TicketMessage,
 }
 
 
@@ -187,6 +203,11 @@ def _parse_pagination(raw: dict[str, Any]) -> Pagination:
 def _camel_to_snake(name: str) -> str:
     """Convert camelCase to snake_case (e.g. 'baseToken' -> 'base_token')."""
     return re.sub(r"(?<=[a-z0-9])([A-Z])", r"_\1", name).lower()
+
+
+def _snake_to_camel(name: str) -> str:
+    parts = name.split("_")
+    return parts[0] + "".join(p.capitalize() for p in parts[1:])
 
 
 def _resolve_model_name(hint: Any) -> str:
@@ -2479,6 +2500,229 @@ class PolyforgeClient:
         rebates = data.get("rebates", []) if isinstance(data, dict) else []
         return [_parse(Rebate, item) for item in rebates]
 
+    # -- Profile --
+
+    def update_my_profile(
+        self,
+        *,
+        display_name: str | None = None,
+        bio: str | None = None,
+        avatar_url: str | None = None,
+    ) -> dict[str, Any]:
+        body: dict[str, Any] = {}
+        if display_name is not None:
+            body["displayName"] = display_name
+        if bio is not None:
+            body["bio"] = bio
+        if avatar_url is not None:
+            body["avatarUrl"] = avatar_url
+        return self._patch("/api/v1/profile/me", json=body)
+
+    def change_password(
+        self,
+        *,
+        current_password: str,
+        new_password: str,
+    ) -> dict[str, Any]:
+        return self._post(
+            "/api/v1/profile/password",
+            json={
+                "currentPassword": current_password,
+                "newPassword": new_password,
+            },
+        )
+
+    def update_profile_notifications(
+        self,
+        prefs: dict[str, bool],
+    ) -> dict[str, Any]:
+        return self._patch("/api/v1/profile/notifications", json=prefs)
+
+    def get_public_profile(self, username: str) -> UserProfile:
+        return _parse(
+            UserProfile,
+            self._get(f"/api/v1/profile/{_encode_path(username)}"),
+        )
+
+    def toggle_follow(self, username: str) -> FollowResult:
+        return _parse(
+            FollowResult,
+            self._post(f"/api/v1/profile/{_encode_path(username)}/follow"),
+        )
+
+    # -- Settings --
+
+    def update_settings_profile(
+        self,
+        *,
+        display_name: str | None = None,
+        bio: str | None = None,
+        avatar_url: str | None = None,
+        twitter_handle: str | None = None,
+    ) -> dict[str, Any]:
+        body: dict[str, Any] = {}
+        if display_name is not None:
+            body["displayName"] = display_name
+        if bio is not None:
+            body["bio"] = bio
+        if avatar_url is not None:
+            body["avatarUrl"] = avatar_url
+        if twitter_handle is not None:
+            body["twitterHandle"] = twitter_handle
+        return self._patch("/api/v1/settings/profile", json=body)
+
+    def get_notification_settings(self) -> NotificationSettings:
+        return _parse(
+            NotificationSettings,
+            self._get("/api/v1/settings/notifications"),
+        )
+
+    def update_notification_settings(
+        self,
+        **kwargs: bool,
+    ) -> dict[str, Any]:
+        body = {_snake_to_camel(k): v for k, v in kwargs.items()}
+        return self._patch("/api/v1/settings/notifications", json=body)
+
+    def update_settings_password(
+        self,
+        *,
+        current_password: str,
+        new_password: str,
+    ) -> dict[str, Any]:
+        return self._patch(
+            "/api/v1/settings/password",
+            json={
+                "currentPassword": current_password,
+                "newPassword": new_password,
+            },
+        )
+
+    def get_beta_usage(self) -> dict[str, Any]:
+        return self._get("/api/v1/settings/beta-usage")
+
+    def get_gas_settings(self) -> dict[str, Any]:
+        return self._get("/api/v1/settings/gas")
+
+    # -- Support Tickets --
+
+    def list_tickets(
+        self,
+        *,
+        page: int = 1,
+        limit: int = 20,
+    ) -> PaginatedResponse[SupportTicket]:
+        raw = self._get(
+            "/api/v1/tickets",
+            params={"page": page, "limit": limit},
+        )
+        parsed = [_parse(SupportTicket, t) for t in raw.get("data", [])]
+        return PaginatedResponse(
+            data=parsed,
+            pagination=_parse_pagination(raw),
+        )
+
+    def create_ticket(
+        self,
+        *,
+        subject: str,
+        body: str,
+        category: str = "GENERAL",
+        priority: str = "MEDIUM",
+    ) -> SupportTicket:
+        return _parse(
+            SupportTicket,
+            self._post(
+                "/api/v1/tickets",
+                json={
+                    "subject": subject,
+                    "body": body,
+                    "category": category,
+                    "priority": priority,
+                },
+            ),
+        )
+
+    def get_ticket(self, ticket_id: str) -> SupportTicket:
+        return _parse(
+            SupportTicket,
+            self._get(f"/api/v1/tickets/{_encode_path(ticket_id)}"),
+        )
+
+    def add_ticket_message(self, ticket_id: str, *, body: str) -> TicketMessage:
+        return _parse(
+            TicketMessage,
+            self._post(
+                f"/api/v1/tickets/{_encode_path(ticket_id)}/messages",
+                json={"body": body},
+            ),
+        )
+
+    # -- Notification Preferences --
+
+    def get_notification_preferences(self) -> EventNotificationPreferences:
+        data = self._get("/api/v1/users/me/notification-preferences")
+        if isinstance(data, dict):
+            prefs = [
+                _parse(EventNotificationPref, p)
+                for p in data.get("preferences", [])
+            ]
+            return EventNotificationPreferences(
+                preferences=prefs,
+                email_digest=data.get("emailDigest", ""),
+            )
+        return EventNotificationPreferences()
+
+    def update_notification_preferences(
+        self,
+        *,
+        preferences: list[dict[str, Any]] | None = None,
+        email_digest: str | None = None,
+    ) -> EventNotificationPreferences:
+        body: dict[str, Any] = {}
+        if preferences is not None:
+            body["preferences"] = preferences
+        if email_digest is not None:
+            body["emailDigest"] = email_digest
+        data = self._put("/api/v1/users/me/notification-preferences", json=body)
+        if isinstance(data, dict):
+            prefs = [
+                _parse(EventNotificationPref, p)
+                for p in data.get("preferences", [])
+            ]
+            return EventNotificationPreferences(
+                preferences=prefs,
+                email_digest=data.get("emailDigest", ""),
+            )
+        return EventNotificationPreferences()
+
+    # -- Venue Preferences --
+
+    def get_venue_preferences(self) -> VenuePreferences:
+        return _parse(
+            VenuePreferences,
+            self._get("/api/v1/users/me/venue-preferences"),
+        )
+
+    def update_venue_preferences(
+        self,
+        *,
+        default_venue: str | None = None,
+        enabled_venues: list[str] | None = None,
+        single_platform_mode: bool | None = None,
+    ) -> VenuePreferences:
+        body: dict[str, Any] = {}
+        if default_venue is not None:
+            body["defaultVenue"] = default_venue
+        if enabled_venues is not None:
+            body["enabledVenues"] = enabled_venues
+        if single_platform_mode is not None:
+            body["singlePlatformMode"] = single_platform_mode
+        return _parse(
+            VenuePreferences,
+            self._patch("/api/v1/users/me/venue-preferences", json=body),
+        )
+
     # -- Lifecycle --
 
     def close(self) -> None:
@@ -4324,6 +4568,229 @@ class AsyncPolyforgeClient:
         data = await self._get("/api/v1/rewards/rebates")
         rebates = data.get("rebates", []) if isinstance(data, dict) else []
         return [_parse(Rebate, item) for item in rebates]
+
+    # -- Profile --
+
+    async def update_my_profile(
+        self,
+        *,
+        display_name: str | None = None,
+        bio: str | None = None,
+        avatar_url: str | None = None,
+    ) -> dict[str, Any]:
+        body: dict[str, Any] = {}
+        if display_name is not None:
+            body["displayName"] = display_name
+        if bio is not None:
+            body["bio"] = bio
+        if avatar_url is not None:
+            body["avatarUrl"] = avatar_url
+        return await self._patch("/api/v1/profile/me", json=body)
+
+    async def change_password(
+        self,
+        *,
+        current_password: str,
+        new_password: str,
+    ) -> dict[str, Any]:
+        return await self._post(
+            "/api/v1/profile/password",
+            json={
+                "currentPassword": current_password,
+                "newPassword": new_password,
+            },
+        )
+
+    async def update_profile_notifications(
+        self,
+        prefs: dict[str, bool],
+    ) -> dict[str, Any]:
+        return await self._patch("/api/v1/profile/notifications", json=prefs)
+
+    async def get_public_profile(self, username: str) -> UserProfile:
+        return _parse(
+            UserProfile,
+            await self._get(f"/api/v1/profile/{_encode_path(username)}"),
+        )
+
+    async def toggle_follow(self, username: str) -> FollowResult:
+        return _parse(
+            FollowResult,
+            await self._post(f"/api/v1/profile/{_encode_path(username)}/follow"),
+        )
+
+    # -- Settings --
+
+    async def update_settings_profile(
+        self,
+        *,
+        display_name: str | None = None,
+        bio: str | None = None,
+        avatar_url: str | None = None,
+        twitter_handle: str | None = None,
+    ) -> dict[str, Any]:
+        body: dict[str, Any] = {}
+        if display_name is not None:
+            body["displayName"] = display_name
+        if bio is not None:
+            body["bio"] = bio
+        if avatar_url is not None:
+            body["avatarUrl"] = avatar_url
+        if twitter_handle is not None:
+            body["twitterHandle"] = twitter_handle
+        return await self._patch("/api/v1/settings/profile", json=body)
+
+    async def get_notification_settings(self) -> NotificationSettings:
+        return _parse(
+            NotificationSettings,
+            await self._get("/api/v1/settings/notifications"),
+        )
+
+    async def update_notification_settings(
+        self,
+        **kwargs: bool,
+    ) -> dict[str, Any]:
+        body = {_snake_to_camel(k): v for k, v in kwargs.items()}
+        return await self._patch("/api/v1/settings/notifications", json=body)
+
+    async def update_settings_password(
+        self,
+        *,
+        current_password: str,
+        new_password: str,
+    ) -> dict[str, Any]:
+        return await self._patch(
+            "/api/v1/settings/password",
+            json={
+                "currentPassword": current_password,
+                "newPassword": new_password,
+            },
+        )
+
+    async def get_beta_usage(self) -> dict[str, Any]:
+        return await self._get("/api/v1/settings/beta-usage")
+
+    async def get_gas_settings(self) -> dict[str, Any]:
+        return await self._get("/api/v1/settings/gas")
+
+    # -- Support Tickets --
+
+    async def list_tickets(
+        self,
+        *,
+        page: int = 1,
+        limit: int = 20,
+    ) -> PaginatedResponse[SupportTicket]:
+        raw = await self._get(
+            "/api/v1/tickets",
+            params={"page": page, "limit": limit},
+        )
+        parsed = [_parse(SupportTicket, t) for t in raw.get("data", [])]
+        return PaginatedResponse(
+            data=parsed,
+            pagination=_parse_pagination(raw),
+        )
+
+    async def create_ticket(
+        self,
+        *,
+        subject: str,
+        body: str,
+        category: str = "GENERAL",
+        priority: str = "MEDIUM",
+    ) -> SupportTicket:
+        return _parse(
+            SupportTicket,
+            await self._post(
+                "/api/v1/tickets",
+                json={
+                    "subject": subject,
+                    "body": body,
+                    "category": category,
+                    "priority": priority,
+                },
+            ),
+        )
+
+    async def get_ticket(self, ticket_id: str) -> SupportTicket:
+        return _parse(
+            SupportTicket,
+            await self._get(f"/api/v1/tickets/{_encode_path(ticket_id)}"),
+        )
+
+    async def add_ticket_message(self, ticket_id: str, *, body: str) -> TicketMessage:
+        return _parse(
+            TicketMessage,
+            await self._post(
+                f"/api/v1/tickets/{_encode_path(ticket_id)}/messages",
+                json={"body": body},
+            ),
+        )
+
+    # -- Notification Preferences --
+
+    async def get_notification_preferences(self) -> EventNotificationPreferences:
+        data = await self._get("/api/v1/users/me/notification-preferences")
+        if isinstance(data, dict):
+            prefs = [
+                _parse(EventNotificationPref, p)
+                for p in data.get("preferences", [])
+            ]
+            return EventNotificationPreferences(
+                preferences=prefs,
+                email_digest=data.get("emailDigest", ""),
+            )
+        return EventNotificationPreferences()
+
+    async def update_notification_preferences(
+        self,
+        *,
+        preferences: list[dict[str, Any]] | None = None,
+        email_digest: str | None = None,
+    ) -> EventNotificationPreferences:
+        body: dict[str, Any] = {}
+        if preferences is not None:
+            body["preferences"] = preferences
+        if email_digest is not None:
+            body["emailDigest"] = email_digest
+        data = await self._put("/api/v1/users/me/notification-preferences", json=body)
+        if isinstance(data, dict):
+            prefs = [
+                _parse(EventNotificationPref, p)
+                for p in data.get("preferences", [])
+            ]
+            return EventNotificationPreferences(
+                preferences=prefs,
+                email_digest=data.get("emailDigest", ""),
+            )
+        return EventNotificationPreferences()
+
+    # -- Venue Preferences --
+
+    async def get_venue_preferences(self) -> VenuePreferences:
+        return _parse(
+            VenuePreferences,
+            await self._get("/api/v1/users/me/venue-preferences"),
+        )
+
+    async def update_venue_preferences(
+        self,
+        *,
+        default_venue: str | None = None,
+        enabled_venues: list[str] | None = None,
+        single_platform_mode: bool | None = None,
+    ) -> VenuePreferences:
+        body: dict[str, Any] = {}
+        if default_venue is not None:
+            body["defaultVenue"] = default_venue
+        if enabled_venues is not None:
+            body["enabledVenues"] = enabled_venues
+        if single_platform_mode is not None:
+            body["singlePlatformMode"] = single_platform_mode
+        return _parse(
+            VenuePreferences,
+            await self._patch("/api/v1/users/me/venue-preferences", json=body),
+        )
 
     # -- Lifecycle --
 
