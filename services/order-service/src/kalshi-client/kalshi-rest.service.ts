@@ -1,5 +1,62 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
+import axios, { type AxiosInstance } from "axios";
+import {
+  Configuration,
+  MarketApi,
+  OrdersApi,
+  PortfolioApi,
+  EventsApi,
+  ExchangeApi,
+  HistoricalApi,
+  OrderGroupsApi,
+  MultivariateApi,
+  SearchApi,
+  LiveDataApi,
+  MilestoneApi,
+  StructuredTargetsApi,
+  IncentiveProgramsApi,
+  ApiKeysApi,
+  AccountApi,
+  CommunicationsApi,
+  type Market,
+  type Order,
+  type Fill,
+  type Settlement,
+  type MarketPosition,
+  type MarketCandlestick,
+  type MarketCandlestickHistorical,
+  type Trade,
+  type CreateOrderRequest,
+  type AmendOrderRequest,
+  type DecreaseOrderRequest,
+  type BatchCreateOrdersRequest,
+  type BatchCancelOrdersRequest,
+  type CreateOrderGroupRequest,
+  type OrderGroup,
+  type Milestone,
+  type StructuredTarget,
+  type IncentiveProgram,
+  type CreateApiKeyRequest,
+  type GenerateApiKeyRequest,
+  type CreateRFQRequest,
+  type CreateQuoteRequest,
+  type AcceptQuoteRequest,
+  type RFQ,
+  type Quote,
+  type MultivariateEventCollection,
+  type ExchangeStatus,
+  type Schedule,
+  type EventData,
+  type ForecastPercentilesPoint,
+  type LiveData,
+  type TickerPair,
+  type UpdateOrderGroupLimitRequest,
+  type SubaccountNettingConfig,
+  type GetOrderGroupResponse,
+  type BatchCreateOrdersIndividualResponse,
+  type BatchCancelOrdersIndividualResponse,
+} from "kalshi-typescript";
 import { KalshiAuthService } from "./kalshi-auth.service";
 
 const RETRY_DELAYS_MS = [500, 1000, 2000];
@@ -20,48 +77,42 @@ export function parseKalshiDollars(value: unknown): number | undefined {
   return undefined;
 }
 
-export interface KalshiMarket {
-  ticker: string;
-  status: string;
-  title?: string;
-  category?: string;
-  close_time?: string;
-  yes_ask?: number;
-  yes_bid?: number;
-  no_ask?: number;
-  no_bid?: number;
-  last_price?: number;
-  volume?: number;
-  open_interest?: number;
-  yes_ask_dollars?: string;
-  yes_bid_dollars?: string;
-  no_ask_dollars?: string;
-  no_bid_dollars?: string;
-  last_price_dollars?: string;
-}
+// ─── Re-export SDK types for consumers ──────────────────────────────────────
+
+export type {
+  Market as KalshiMarket,
+  Order as KalshiOrder,
+  Fill as KalshiFill,
+  Settlement as KalshiSettlement,
+  MarketPosition as KalshiPosition,
+  MarketCandlestick as KalshiCandlestick,
+  MarketCandlestickHistorical as KalshiCandlestickHistorical,
+  Trade as KalshiTrade,
+  CreateOrderRequest as KalshiPlaceOrderRequest,
+  AmendOrderRequest as KalshiAmendOrderRequest,
+  DecreaseOrderRequest as KalshiDecreaseOrderRequest,
+  OrderGroup as KalshiOrderGroup,
+  Milestone as KalshiMilestone,
+  StructuredTarget as KalshiStructuredTarget,
+  IncentiveProgram as KalshiIncentive,
+  RFQ as KalshiRfq,
+  Quote as KalshiQuote,
+  MultivariateEventCollection as KalshiMultivariateCollection,
+  ExchangeStatus as KalshiExchangeStatus,
+  Schedule as KalshiExchangeSchedule,
+  EventData as KalshiEvent,
+  ForecastPercentilesPoint as KalshiForecastPoint,
+  LiveData as KalshiLiveData,
+};
+
+export type { CreateRFQRequest as KalshiCreateRfqRequest };
+export type { CreateQuoteRequest as KalshiCreateQuoteRequest };
+
+// ─── Legacy type aliases for backward compatibility ─────────────────────────
 
 export interface KalshiOrderBook {
   yes: Array<{ price: number; quantity: number }>;
   no: Array<{ price: number; quantity: number }>;
-}
-
-export interface KalshiPlaceOrderRequest {
-  ticker: string;
-  side: "yes" | "no";
-  action: "buy" | "sell";
-  count: number;
-  count_fp?: string;
-  type: "limit" | "market";
-  yes_price?: number;
-  no_price?: number;
-  yes_price_dollars?: string;
-  no_price_dollars?: string;
-  expiration_ts?: number;
-  client_order_id?: string;
-  self_trade_prevention_type?: "taker_at_cross" | "maker";
-  post_only?: boolean;
-  reduce_only?: boolean;
-  cancel_order_on_pause?: boolean;
 }
 
 export interface KalshiOrderResponse {
@@ -70,44 +121,10 @@ export interface KalshiOrderResponse {
   ticker?: string;
   side?: string;
   action?: string;
-  count?: number;
   count_fp?: string;
-  yes_price?: number;
-  no_price?: number;
   yes_price_dollars?: string;
   no_price_dollars?: string;
   client_order_id?: string;
-}
-
-export interface KalshiPosition {
-  ticker: string;
-  position: number;
-  resting_orders_count: number;
-  market_exposure?: string;
-  realized_pnl?: string;
-  total_cost?: string;
-}
-
-export interface KalshiOrder {
-  order_id: string;
-  ticker: string;
-  side: string;
-  action: string;
-  count: number;
-  count_fp?: string;
-  status: string;
-  yes_price?: number;
-  no_price?: number;
-  yes_price_dollars?: string;
-  no_price_dollars?: string;
-  created_time?: string;
-  client_order_id?: string;
-}
-
-export interface KalshiCandlestick {
-  end_period_ts: number;
-  price: { open: number; close: number; high: number; low: number };
-  volume: number;
 }
 
 export interface KalshiMarketsParams {
@@ -117,29 +134,9 @@ export interface KalshiMarketsParams {
   ticker?: string;
 }
 
-// ─── Phase 2: Cursor-based pagination ─────────────────────────────────────
-
 export interface KalshiCursorParams {
   limit?: number;
   cursor?: string;
-}
-
-// ─── Phase 2: Events API ──────────────────────────────────────────────────
-
-export interface KalshiEvent {
-  event_ticker: string;
-  series_ticker: string;
-  title: string;
-  sub_title: string;
-  mutually_exclusive: boolean;
-  category: string;
-  collateral_return_type?: string;
-  strike_date?: string;
-  strike_period?: string;
-  markets?: KalshiMarket[];
-  available_on_brokers?: boolean;
-  product_metadata?: Record<string, unknown>;
-  last_updated_ts?: string;
 }
 
 export interface KalshiEventsParams extends KalshiCursorParams {
@@ -148,31 +145,6 @@ export interface KalshiEventsParams extends KalshiCursorParams {
   with_nested_markets?: boolean;
   min_close_ts?: number;
   min_updated_ts?: number;
-}
-
-export interface KalshiEventMetadata {
-  image_url: string;
-  featured_image_url?: string;
-  market_details: Array<{
-    market_ticker: string;
-    image_url: string;
-    color_code: string;
-  }>;
-  settlement_sources: Array<{ name?: string; url?: string }>;
-  competition?: string;
-  competition_scope?: string;
-}
-
-export interface KalshiForecastPoint {
-  event_ticker: string;
-  end_period_ts: number;
-  period_interval: number;
-  percentile_points: Array<{
-    percentile: number;
-    raw_numerical_forecast: number;
-    numerical_forecast: number;
-    formatted_forecast: string;
-  }>;
 }
 
 export interface KalshiForecastParams {
@@ -184,108 +156,11 @@ export interface KalshiForecastParams {
   period_interval: number;
 }
 
-export interface KalshiMultivariateCollection {
-  collection_ticker: string;
-  series_ticker: string;
-  title: string;
-  description: string;
-  open_date: string;
-  close_date: string;
-  associated_events: Array<{
-    ticker: string;
-    is_yes_only: boolean;
-    size_max?: number;
-    size_min?: number;
-    active_quoters: string[];
-  }>;
-  is_ordered: boolean;
-  size_min: number;
-  size_max: number;
-  functional_description: string;
-}
-
-// ─── Phase 2: Order amendments ────────────────────────────────────────────
-
-export interface KalshiAmendOrderRequest {
-  ticker: string;
-  side: "yes" | "no";
-  action: "buy" | "sell";
-  client_order_id?: string;
-  updated_client_order_id?: string;
-  yes_price?: number;
-  no_price?: number;
-  yes_price_dollars?: string;
-  no_price_dollars?: string;
-  count?: number;
-  count_fp?: string;
-}
-
-export interface KalshiAmendOrderResponse {
-  old_order: KalshiOrderDetail;
-  order: KalshiOrderDetail;
-}
-
-export interface KalshiDecreaseOrderRequest {
-  reduce_by?: number;
-  reduce_to?: number;
-}
-
-// ─── Phase 2: Batch operations ────────────────────────────────────────────
-
-export interface KalshiBatchOrderResult {
-  client_order_id?: string;
-  order?: KalshiOrderDetail;
-  error?: { code?: string; message?: string };
-}
-
-export interface KalshiBatchCancelResult {
-  order_id: string;
-  order?: KalshiOrderDetail;
-  reduced_by: number;
-  error?: { code?: string; message?: string };
-}
-
-// ─── Phase 2: Fills ───────────────────────────────────────────────────────
-
-export interface KalshiFill {
-  fill_id: string;
-  trade_id: string;
-  order_id: string;
-  ticker: string;
-  side: "yes" | "no";
-  action: "buy" | "sell";
-  count: number;
-  count_fp?: string;
-  yes_price: number;
-  no_price: number;
-  yes_price_dollars?: string;
-  no_price_dollars?: string;
-  is_taker: boolean;
-  created_time?: string;
-  fee_cost?: string;
-}
-
 export interface KalshiFillsParams extends KalshiCursorParams {
   ticker?: string;
   order_id?: string;
   min_ts?: number;
   max_ts?: number;
-}
-
-// ─── Phase 2: Settlements ─────────────────────────────────────────────────
-
-export interface KalshiSettlement {
-  ticker: string;
-  event_ticker: string;
-  market_result: "yes" | "no" | "scalar" | "void";
-  yes_count: number;
-  no_count: number;
-  yes_total_cost: number;
-  no_total_cost: number;
-  revenue: number;
-  settled_time: string;
-  fee_cost?: string;
-  value?: number;
 }
 
 export interface KalshiSettlementsParams extends KalshiCursorParams {
@@ -295,103 +170,11 @@ export interface KalshiSettlementsParams extends KalshiCursorParams {
   max_ts?: number;
 }
 
-// ─── Phase 2: Trades ──────────────────────────────────────────────────────
-
-export interface KalshiTrade {
-  trade_id: string;
-  ticker: string;
-  count: number;
-  count_fp?: string;
-  yes_price: number;
-  no_price: number;
-  yes_price_dollars?: string;
-  no_price_dollars?: string;
-  taker_side: "yes" | "no";
-  created_time?: string;
-}
-
 export interface KalshiTradesParams extends KalshiCursorParams {
   ticker?: string;
   min_ts?: number;
   max_ts?: number;
 }
-
-// ─── Phase 2: Exchange ────────────────────────────────────────────────────
-
-export interface KalshiExchangeStatus {
-  exchange_active: boolean;
-  trading_active: boolean;
-  exchange_estimated_resume_time?: string;
-}
-
-export interface KalshiDailySchedule {
-  open_time: string;
-  close_time: string;
-}
-
-export interface KalshiWeeklySchedule {
-  start_time: string;
-  end_time: string;
-  monday: KalshiDailySchedule[];
-  tuesday: KalshiDailySchedule[];
-  wednesday: KalshiDailySchedule[];
-  thursday: KalshiDailySchedule[];
-  friday: KalshiDailySchedule[];
-  saturday: KalshiDailySchedule[];
-  sunday: KalshiDailySchedule[];
-}
-
-export interface KalshiExchangeSchedule {
-  standard_hours: KalshiWeeklySchedule[];
-  maintenance_windows: Array<{
-    start_datetime: string;
-    end_datetime: string;
-  }>;
-}
-
-// ─── Phase 2: Detailed order (shared by amend, batch, decrease) ───────────
-
-export interface KalshiOrderDetail {
-  order_id: string;
-  ticker: string;
-  side: "yes" | "no";
-  action: "buy" | "sell";
-  type: "limit" | "market";
-  status: "resting" | "canceled" | "executed";
-  yes_price: number;
-  no_price: number;
-  yes_price_dollars?: string;
-  no_price_dollars?: string;
-  fill_count: number;
-  remaining_count: number;
-  initial_count: number;
-  count_fp?: string;
-  taker_fees: number;
-  maker_fees: number;
-  created_time?: string;
-  last_update_time?: string;
-  client_order_id?: string;
-}
-
-// ─── Phase 3: Order groups ──────────────────────────────────────────────────
-
-export interface KalshiOrderGroup {
-  id: string;
-  max_loss: number;
-  created_time?: string;
-  status?: string;
-}
-
-export interface KalshiCreateOrderGroupRequest {
-  max_loss: number;
-  market_tickers?: string[];
-}
-
-export interface KalshiUpdateOrderGroupRequest {
-  max_loss: number;
-}
-
-// ─── Phase 3: Historical data ───────────────────────────────────────────────
 
 export interface KalshiHistoricalMarketsParams extends KalshiCursorParams {
   min_close_ts?: number;
@@ -414,78 +197,8 @@ export interface KalshiHistoricalOrdersParams extends KalshiCursorParams {
   max_ts?: number;
 }
 
-export interface KalshiCutoffTimestamps {
-  markets_cutoff_ts: number;
-  fills_cutoff_ts: number;
-  orders_cutoff_ts: number;
-  trades_cutoff_ts: number;
-}
-
-// ─── Phase 3: Subaccounts ───────────────────────────────────────────────────
-
-export interface KalshiSubaccount {
-  id: string;
-  name?: string;
-  created_time?: string;
-}
-
-export interface KalshiCreateSubaccountRequest {
-  name?: string;
-}
-
-export interface KalshiSubaccountBalance {
-  subaccount_id: string;
-  balance: number;
-  available_balance?: number;
-}
-
-export interface KalshiSubaccountTransferRequest {
-  from_subaccount_id: string;
-  to_subaccount_id: string;
-  amount: number;
-}
-
-export interface KalshiSubaccountNettingConfig {
-  netting_enabled: boolean;
-}
-
-// ─── Phase 3: Search and filters ────────────────────────────────────────────
-
-export interface KalshiSportFilter {
-  sport: string;
-  league?: string;
-  filters: Array<{ key: string; values: string[] }>;
-}
-
-export interface KalshiSeriesTag {
-  tag: string;
-  series_tickers: string[];
-}
-
-// ─── Phase 3: Order queue position ──────────────────────────────────────────
-
-export interface KalshiQueuePosition {
-  order_id: string;
-  queue_position: number;
-  ticker: string;
-}
-
-// ─── Phase 4: RFQ (Request for Quote) ──────────────────────────────────────
-
-export interface KalshiRfq {
-  rfq_id: string;
-  ticker: string;
-  side: "yes" | "no";
-  count: number;
-  status: "open" | "accepted" | "confirmed" | "expired" | "cancelled";
-  created_time?: string;
-  expiration_time?: string;
-}
-
-export interface KalshiCreateRfqRequest {
-  ticker: string;
-  side: "yes" | "no";
-  count: number;
+export interface KalshiMveCollectionsParams extends KalshiCursorParams {
+  series_ticker?: string;
 }
 
 export interface KalshiRfqsParams extends KalshiCursorParams {
@@ -493,66 +206,14 @@ export interface KalshiRfqsParams extends KalshiCursorParams {
   status?: string;
 }
 
-export interface KalshiQuote {
-  quote_id: string;
-  rfq_id: string;
-  price: number;
-  side: "yes" | "no";
-  count: number;
-  status: "open" | "accepted" | "confirmed" | "expired" | "cancelled";
-  created_time?: string;
-  expiration_time?: string;
-}
-
-export interface KalshiCreateQuoteRequest {
-  price: number;
-  side: "yes" | "no";
-  count: number;
-}
-
-export interface KalshiRfqCommunications {
-  communications_id: string;
-}
-
-// ─── Phase 4: Combo / MVE markets ──────────────────────────────────────────
-
-export interface KalshiCreateComboMarketRequest {
-  ticker_components: string[];
-  label?: string;
-}
-
-export interface KalshiComboMarket {
-  ticker: string;
-  components: string[];
-  label?: string;
-  created_time?: string;
-}
-
-export interface KalshiMveCollectionsParams extends KalshiCursorParams {
-  series_ticker?: string;
-}
-
-export interface KalshiTickerLookup {
-  ticker: string;
-  event_ticker: string;
-  series_ticker: string;
-  title?: string;
-}
-
-// ─── Phase 4: Live sports data ─────────────────────────────────────────────
-
-export interface KalshiGameStats {
-  game_id: string;
-  sport: string;
-  league?: string;
-  home_team?: string;
-  away_team?: string;
-  home_score?: number;
-  away_score?: number;
+export interface KalshiMilestonesParams extends KalshiCursorParams {
   status?: string;
-  period?: string;
-  clock?: string;
-  stats?: Record<string, unknown>;
+  event_ticker?: string;
+}
+
+export interface KalshiStructuredTargetsParams extends KalshiCursorParams {
+  type?: string;
+  market_ticker?: string;
 }
 
 export interface KalshiGameStatsParams {
@@ -561,93 +222,11 @@ export interface KalshiGameStatsParams {
   game_id?: string;
 }
 
-export interface KalshiMilestoneData {
-  milestone_id: string;
-  type: string;
-  value?: number;
-  status?: string;
-  timestamp?: string;
-}
-
 export interface KalshiBatchMilestoneParams {
   milestone_ids: string[];
 }
 
-// ─── Phase 4: Milestones and structured targets ────────────────────────────
-
-export interface KalshiMilestone {
-  id: string;
-  title: string;
-  type: string;
-  status: "active" | "resolved" | "cancelled";
-  target_value?: number;
-  current_value?: number;
-  resolved_time?: string;
-  event_ticker?: string;
-}
-
-export interface KalshiMilestonesParams extends KalshiCursorParams {
-  status?: string;
-  event_ticker?: string;
-}
-
-export interface KalshiStructuredTarget {
-  id: string;
-  title: string;
-  type: string;
-  market_ticker?: string;
-  target_value?: number;
-  description?: string;
-}
-
-export interface KalshiStructuredTargetsParams extends KalshiCursorParams {
-  type?: string;
-  market_ticker?: string;
-}
-
-// ─── Phase 4: Incentives ───────────────────────────────────────────────────
-
-export interface KalshiIncentive {
-  id: string;
-  title: string;
-  description?: string;
-  type: string;
-  status: "active" | "expired" | "redeemed";
-  value?: number;
-  expiration_time?: string;
-}
-
-// ─── Phase 4: API key management ───────────────────────────────────────────
-
-export interface KalshiApiKey {
-  api_key_id: string;
-  name?: string;
-  created_time?: string;
-  last_used_time?: string;
-  status?: string;
-}
-
-export interface KalshiCreateApiKeyRequest {
-  name?: string;
-}
-
-export interface KalshiGeneratedApiKey extends KalshiApiKey {
-  secret: string;
-}
-
-// ─── Phase 4: Account rate limits ──────────────────────────────────────────
-
-export interface KalshiAccountLimits {
-  tier: string;
-  order_rate_limit: number;
-  order_rate_remaining: number;
-  combo_creation_limit: number;
-  combo_creation_remaining: number;
-  reset_time?: string;
-}
-
-// ─── Phase 4: WS communications event ──────────────────────────────────────
-
+// WS types kept for kalshi-ws.service.ts consumers
 export interface KalshiCommunicationsEvent {
   rfq_id: string;
   type:
@@ -665,15 +244,82 @@ export interface KalshiCommunicationsEvent {
 @Injectable()
 export class KalshiRestService {
   private readonly logger = new Logger(KalshiRestService.name);
-  private readonly baseUrl: string;
+  private readonly axiosInstance: AxiosInstance;
+
+  private readonly marketApi: MarketApi;
+  private readonly ordersApi: OrdersApi;
+  private readonly portfolioApi: PortfolioApi;
+  private readonly eventsApi: EventsApi;
+  private readonly exchangeApi: ExchangeApi;
+  private readonly historicalApi: HistoricalApi;
+  private readonly orderGroupsApi: OrderGroupsApi;
+  private readonly multivariateApi: MultivariateApi;
+  private readonly searchApi: SearchApi;
+  private readonly liveDataApi: LiveDataApi;
+  private readonly milestoneApi: MilestoneApi;
+  private readonly structuredTargetsApi: StructuredTargetsApi;
+  private readonly incentivesApi: IncentiveProgramsApi;
+  private readonly apiKeysApi: ApiKeysApi;
+  private readonly accountApi: AccountApi;
+  private readonly communicationsApi: CommunicationsApi;
 
   constructor(
     private readonly auth: KalshiAuthService,
     private readonly config: ConfigService,
   ) {
-    this.baseUrl =
+    const basePath =
       this.config.get<string>("KALSHI_BASE_URL") ??
       "https://demo-api.kalshi.co/trade-api/v2";
+
+    this.axiosInstance = axios.create({ timeout: 15_000 });
+    this.axiosInstance.interceptors.request.use(async (reqConfig: import("axios").InternalAxiosRequestConfig) => {
+      const token = await this.auth.getToken("user");
+      reqConfig.headers.set("Authorization", `Bearer ${token}`);
+      return reqConfig;
+    });
+
+    this.axiosInstance.interceptors.response.use(undefined, async (error: unknown) => {
+      const axErr = error as { config?: Record<string, unknown>; response?: { status: number }; code?: string };
+      const cfg = axErr.config;
+      if (!cfg) throw error;
+
+      const retryCount = (cfg.__retryCount as number) ?? 0;
+      const status = axErr.response?.status;
+      const isRetryable =
+        status === 429 ||
+        axErr.code === "ECONNABORTED" ||
+        axErr.code === "ERR_NETWORK";
+
+      if (isRetryable && retryCount < RETRY_DELAYS_MS.length) {
+        const delay = RETRY_DELAYS_MS[retryCount];
+        this.logger.warn(
+          `Kalshi ${status ?? axErr.code} — retrying in ${delay}ms (attempt ${retryCount + 1})`,
+        );
+        cfg.__retryCount = retryCount + 1;
+        await sleep(delay);
+        return this.axiosInstance.request(cfg as import("axios").AxiosRequestConfig);
+      }
+      throw error;
+    });
+
+    const sdkConfig = new Configuration({ basePath });
+
+    this.marketApi = new MarketApi(sdkConfig, basePath, this.axiosInstance);
+    this.ordersApi = new OrdersApi(sdkConfig, basePath, this.axiosInstance);
+    this.portfolioApi = new PortfolioApi(sdkConfig, basePath, this.axiosInstance);
+    this.eventsApi = new EventsApi(sdkConfig, basePath, this.axiosInstance);
+    this.exchangeApi = new ExchangeApi(sdkConfig, basePath, this.axiosInstance);
+    this.historicalApi = new HistoricalApi(sdkConfig, basePath, this.axiosInstance);
+    this.orderGroupsApi = new OrderGroupsApi(sdkConfig, basePath, this.axiosInstance);
+    this.multivariateApi = new MultivariateApi(sdkConfig, basePath, this.axiosInstance);
+    this.searchApi = new SearchApi(sdkConfig, basePath, this.axiosInstance);
+    this.liveDataApi = new LiveDataApi(sdkConfig, basePath, this.axiosInstance);
+    this.milestoneApi = new MilestoneApi(sdkConfig, basePath, this.axiosInstance);
+    this.structuredTargetsApi = new StructuredTargetsApi(sdkConfig, basePath, this.axiosInstance);
+    this.incentivesApi = new IncentiveProgramsApi(sdkConfig, basePath, this.axiosInstance);
+    this.apiKeysApi = new ApiKeysApi(sdkConfig, basePath, this.axiosInstance);
+    this.accountApi = new AccountApi(sdkConfig, basePath, this.axiosInstance);
+    this.communicationsApi = new CommunicationsApi(sdkConfig, basePath, this.axiosInstance);
   }
 
   // ─── Price normalization (pure, static) ──────────────────────────────────
@@ -701,279 +347,209 @@ export class KalshiRestService {
       : 0;
   }
 
-  // ─── REST endpoints ───────────────────────────────────────────────────────
+  // ─── Markets ─────────────────────────────────────────────────────────────
 
-  async getMarkets(params: KalshiMarketsParams): Promise<KalshiMarket[]> {
-    const qs = new URLSearchParams();
-    if (params.limit !== undefined) qs.set("limit", String(params.limit));
-    if (params.offset !== undefined) qs.set("cursor", String(params.offset));
-    if (params.status) qs.set("status", params.status);
-    if (params.ticker) qs.set("ticker", params.ticker);
-
-    const result = await this.withRetry<{ markets: KalshiMarket[] }>(
-      () => this.get(`/markets?${qs.toString()}`),
-      "user",
+  async getMarkets(params: KalshiMarketsParams): Promise<Market[]> {
+    const res = await this.marketApi.getMarkets(
+      params.limit,
+      undefined, // cursor
+      undefined, // eventTicker
+      undefined, // seriesTicker
+      undefined, undefined, undefined, undefined, undefined, undefined, undefined, // ts filters
+      params.ticker ? undefined : (params.status as "open" | "closed" | undefined),
+      params.ticker,
     );
-    return result.markets;
+    return res.data.markets ?? [];
   }
 
-  async getMarket(ticker: string): Promise<KalshiMarket> {
-    const result = await this.withRetry<{ market: KalshiMarket }>(
-      () => this.get(`/markets/${encodeURIComponent(ticker)}`),
-      "user",
-    );
-    return result.market;
+  async getMarket(ticker: string): Promise<Market> {
+    const res = await this.marketApi.getMarket(ticker);
+    return res.data.market;
   }
 
   async getOrderBook(ticker: string): Promise<KalshiOrderBook> {
-    const result = await this.withRetry<{ orderbook: KalshiOrderBook }>(
-      () => this.get(`/markets/${encodeURIComponent(ticker)}/orderbook`),
-      "user",
-    );
-    return result.orderbook;
+    const res = await this.marketApi.getMarketOrderbook(ticker);
+    const fp = res.data.orderbook_fp;
+    const parseLevels = (levels: Array<Array<string>> | undefined) =>
+      (levels ?? []).map(([priceDollars, qtyFp]) => ({
+        price: KalshiRestService.denormalizeKalshiPrice(Number(priceDollars)),
+        quantity: Math.round(Number(qtyFp)),
+      }));
+    return {
+      yes: parseLevels(fp?.yes_dollars),
+      no: parseLevels(fp?.no_dollars),
+    };
   }
 
-  async placeOrder(req: KalshiPlaceOrderRequest): Promise<KalshiOrderResponse> {
-    const result = await this.withRetry<{ order: KalshiOrderResponse }>(
-      () =>
-        this.post(
-          "/portfolio/orders",
-          req as unknown as Record<string, unknown>,
-        ),
-      "user",
-    );
-    return result.order;
+  async placeOrder(req: CreateOrderRequest): Promise<KalshiOrderResponse> {
+    const res = await this.ordersApi.createOrder(req);
+    const o = res.data.order;
+    return {
+      order_id: o.order_id,
+      status: o.status,
+      ticker: o.ticker,
+      side: o.side,
+      action: o.action,
+      count_fp: o.remaining_count_fp,
+      yes_price_dollars: o.yes_price_dollars,
+      no_price_dollars: o.no_price_dollars,
+      client_order_id: o.client_order_id,
+    };
   }
 
   async cancelOrder(orderId: string): Promise<void> {
-    await this.withRetryVoid(
-      () => this.delete(`/portfolio/orders/${encodeURIComponent(orderId)}`),
-      "user",
-    );
+    await this.ordersApi.cancelOrder(orderId);
   }
 
-  async getPositions(_userId: string): Promise<KalshiPosition[]> {
-    const result = await this.withRetry<{
-      market_positions: KalshiPosition[];
-    }>(() => this.get("/portfolio/positions"), "user");
-    return result.market_positions;
+  async getPositions(_userId: string): Promise<MarketPosition[]> {
+    const res = await this.portfolioApi.getPositions();
+    return res.data.market_positions ?? [];
   }
 
-  async getOrders(_userId: string, limit: number): Promise<KalshiOrder[]> {
-    const qs = new URLSearchParams({ limit: String(limit) });
-    const result = await this.withRetry<{ orders: KalshiOrder[] }>(
-      () => this.get(`/portfolio/orders?${qs.toString()}`),
-      "user",
+  async getOrders(_userId: string, limit: number): Promise<Order[]> {
+    const res = await this.ordersApi.getOrders(
+      undefined, // ticker
+      undefined, // eventTicker
+      undefined, // minTs
+      undefined, // maxTs
+      undefined, // status
+      limit,
     );
-    return result.orders;
+    return res.data.orders ?? [];
   }
 
   async getBalance(): Promise<{ balance: number }> {
-    return this.withRetry<{ balance: number }>(
-      () => this.get("/portfolio/balance"),
-      "user",
-    );
+    const res = await this.portfolioApi.getBalance();
+    return { balance: res.data.balance ?? 0 };
   }
 
   async getCandlesticks(
     ticker: string,
     periodInterval: number,
-  ): Promise<KalshiCandlestick[]> {
-    const qs = new URLSearchParams({
-      series_ticker: ticker,
-      period_interval: String(periodInterval),
-    });
-    const result = await this.withRetry<{
-      candlesticks: KalshiCandlestick[];
-    }>(
-      () =>
-        this.get(
-          `/markets/${encodeURIComponent(ticker)}/candlesticks?${qs.toString()}`,
-        ),
-      "user",
+  ): Promise<MarketCandlestick[]> {
+    const now = Math.floor(Date.now() / 1000);
+    const oneWeekAgo = now - 7 * 24 * 60 * 60;
+    const res = await this.marketApi.getMarketCandlesticks(
+      ticker, ticker, oneWeekAgo, now, periodInterval as 1 | 60 | 1440,
     );
-    return result.candlesticks ?? [];
+    return res.data.candlesticks ?? [];
   }
 
-  // ─── Phase 2: Events API ─────────────────────────────────────────────────
+  // ─── Events ──────────────────────────────────────────────────────────────
 
   async getEvents(
     params: KalshiEventsParams = {},
-  ): Promise<{ events: KalshiEvent[]; cursor: string }> {
-    const qs = new URLSearchParams();
-    if (params.limit !== undefined) qs.set("limit", String(params.limit));
-    if (params.cursor) qs.set("cursor", params.cursor);
-    if (params.status) qs.set("status", params.status);
-    if (params.series_ticker) qs.set("series_ticker", params.series_ticker);
-    if (params.with_nested_markets)
-      qs.set("with_nested_markets", String(params.with_nested_markets));
-    if (params.min_close_ts !== undefined)
-      qs.set("min_close_ts", String(params.min_close_ts));
-    if (params.min_updated_ts !== undefined)
-      qs.set("min_updated_ts", String(params.min_updated_ts));
-
-    return this.withRetry<{ events: KalshiEvent[]; cursor: string }>(
-      () => this.get(`/events?${qs.toString()}`),
-      "user",
+  ): Promise<{ events: EventData[]; cursor: string }> {
+    const res = await this.eventsApi.getEvents(
+      params.limit,
+      params.cursor,
+      params.with_nested_markets,
+      undefined, // withMilestones
+      params.status as "open" | "closed" | "settled" | undefined,
+      params.series_ticker,
     );
+    return { events: res.data.events ?? [], cursor: res.data.cursor ?? "" };
   }
 
   async getEvent(
     eventTicker: string,
     withNestedMarkets = false,
-  ): Promise<{ event: KalshiEvent; markets: KalshiMarket[] }> {
-    const qs = new URLSearchParams();
-    if (withNestedMarkets) qs.set("with_nested_markets", "true");
-    return this.withRetry<{ event: KalshiEvent; markets: KalshiMarket[] }>(
-      () =>
-        this.get(`/events/${encodeURIComponent(eventTicker)}?${qs.toString()}`),
-      "user",
-    );
+  ): Promise<{ event: EventData; markets: Market[] }> {
+    const res = await this.eventsApi.getEvent(eventTicker, withNestedMarkets);
+    return { event: res.data.event, markets: res.data.markets ?? [] };
   }
 
-  async getEventMetadata(eventTicker: string): Promise<KalshiEventMetadata> {
-    return this.withRetry<KalshiEventMetadata>(
-      () => this.get(`/events/${encodeURIComponent(eventTicker)}/metadata`),
-      "user",
-    );
+  async getEventMetadata(
+    eventTicker: string,
+  ): Promise<Record<string, unknown>> {
+    const res = await this.eventsApi.getEventMetadata(eventTicker);
+    return res.data as unknown as Record<string, unknown>;
   }
 
   async getForecastPercentileHistory(
     params: KalshiForecastParams,
-  ): Promise<KalshiForecastPoint[]> {
-    const qs = new URLSearchParams({
-      start_ts: String(params.start_ts),
-      end_ts: String(params.end_ts),
-      period_interval: String(params.period_interval),
-    });
-    for (const p of params.percentiles) qs.append("percentiles", String(p));
-
-    const result = await this.withRetry<{
-      forecast_history: KalshiForecastPoint[];
-    }>(
-      () =>
-        this.get(
-          `/series/${encodeURIComponent(params.series_ticker)}/events/${encodeURIComponent(params.event_ticker)}/forecast_percentile_history?${qs.toString()}`,
-        ),
-      "user",
+  ): Promise<ForecastPercentilesPoint[]> {
+    const res = await this.eventsApi.getEventForecastPercentilesHistory(
+      params.event_ticker,
+      params.series_ticker,
+      params.percentiles,
+      params.start_ts,
+      params.end_ts,
+      params.period_interval as 1 | 60 | 1440,
     );
-    return result.forecast_history ?? [];
+    return res.data.forecast_history ?? [];
   }
 
   async getMultivariateCollection(
     collectionTicker: string,
-  ): Promise<KalshiMultivariateCollection> {
-    const result = await this.withRetry<{
-      multivariate_contract: KalshiMultivariateCollection;
-    }>(
-      () =>
-        this.get(
-          `/multivariate_event_collections/${encodeURIComponent(collectionTicker)}`,
-        ),
-      "user",
-    );
-    return result.multivariate_contract;
+  ): Promise<MultivariateEventCollection> {
+    const res = await this.multivariateApi.getMultivariateEventCollection(collectionTicker);
+    return res.data.multivariate_contract;
   }
 
-  // ─── Phase 2: Order amendments ────────────────────────────────────────────
+  // ─── Order amendments ────────────────────────────────────────────────────
 
   async amendOrder(
     orderId: string,
-    req: KalshiAmendOrderRequest,
-  ): Promise<KalshiAmendOrderResponse> {
-    return this.withRetry<KalshiAmendOrderResponse>(
-      () =>
-        this.post(
-          `/portfolio/orders/${encodeURIComponent(orderId)}/amend`,
-          req as unknown as Record<string, unknown>,
-        ),
-      "user",
-    );
+    req: AmendOrderRequest,
+  ): Promise<{ old_order: Order; order: Order }> {
+    const res = await this.ordersApi.amendOrder(orderId, req);
+    return res.data;
   }
 
   async decreaseOrder(
     orderId: string,
-    req: KalshiDecreaseOrderRequest,
-  ): Promise<KalshiOrderDetail> {
-    const result = await this.withRetry<{ order: KalshiOrderDetail }>(
-      () =>
-        this.post(
-          `/portfolio/orders/${encodeURIComponent(orderId)}/decrease`,
-          req as unknown as Record<string, unknown>,
-        ),
-      "user",
-    );
-    return result.order;
+    req: DecreaseOrderRequest,
+  ): Promise<Order> {
+    const res = await this.ordersApi.decreaseOrder(orderId, req);
+    return res.data.order;
   }
 
-  // ─── Phase 2: Batch operations ────────────────────────────────────────────
+  // ─── Batch operations ────────────────────────────────────────────────────
 
   async batchCreateOrders(
-    orders: KalshiPlaceOrderRequest[],
-  ): Promise<KalshiBatchOrderResult[]> {
-    const result = await this.withRetry<{
-      orders: KalshiBatchOrderResult[];
-    }>(
-      () =>
-        this.post("/portfolio/orders/batched", {
-          orders: orders as unknown as Record<string, unknown>[],
-        }),
-      "user",
-    );
-    return result.orders;
+    orders: CreateOrderRequest[],
+  ): Promise<BatchCreateOrdersIndividualResponse[]> {
+    const req: BatchCreateOrdersRequest = { orders };
+    const res = await this.ordersApi.batchCreateOrders(req);
+    return res.data.orders ?? [];
   }
 
   async batchCancelOrders(
     orderIds: string[],
-  ): Promise<KalshiBatchCancelResult[]> {
-    const result = await this.withRetry<{
-      orders: KalshiBatchCancelResult[];
-    }>(
-      () => this.deleteWithBody("/portfolio/orders/batched", { ids: orderIds }),
-      "user",
-    );
-    return result.orders;
+  ): Promise<BatchCancelOrdersIndividualResponse[]> {
+    const req: BatchCancelOrdersRequest = { orders: orderIds.map((id) => ({ order_id: id })) };
+    const res = await this.ordersApi.batchCancelOrders(req);
+    return res.data.orders ?? [];
   }
 
-  // ─── Phase 2: Portfolio fills ─────────────────────────────────────────────
+  // ─── Portfolio fills ─────────────────────────────────────────────────────
 
   async getFills(
     params: KalshiFillsParams = {},
-  ): Promise<{ fills: KalshiFill[]; cursor: string }> {
-    const qs = new URLSearchParams();
-    if (params.limit !== undefined) qs.set("limit", String(params.limit));
-    if (params.cursor) qs.set("cursor", params.cursor);
-    if (params.ticker) qs.set("ticker", params.ticker);
-    if (params.order_id) qs.set("order_id", params.order_id);
-    if (params.min_ts !== undefined) qs.set("min_ts", String(params.min_ts));
-    if (params.max_ts !== undefined) qs.set("max_ts", String(params.max_ts));
-
-    return this.withRetry<{ fills: KalshiFill[]; cursor: string }>(
-      () => this.get(`/portfolio/fills?${qs.toString()}`),
-      "user",
+  ): Promise<{ fills: Fill[]; cursor: string }> {
+    const res = await this.portfolioApi.getFills(
+      params.ticker, params.order_id,
+      params.min_ts, params.max_ts,
+      params.limit, params.cursor,
     );
+    return { fills: res.data.fills ?? [], cursor: res.data.cursor ?? "" };
   }
 
-  // ─── Phase 2: Portfolio settlements ───────────────────────────────────────
+  // ─── Portfolio settlements ───────────────────────────────────────────────
 
   async getSettlements(
     params: KalshiSettlementsParams = {},
-  ): Promise<{ settlements: KalshiSettlement[]; cursor: string }> {
-    const qs = new URLSearchParams();
-    if (params.limit !== undefined) qs.set("limit", String(params.limit));
-    if (params.cursor) qs.set("cursor", params.cursor);
-    if (params.ticker) qs.set("ticker", params.ticker);
-    if (params.event_ticker) qs.set("event_ticker", params.event_ticker);
-    if (params.min_ts !== undefined) qs.set("min_ts", String(params.min_ts));
-    if (params.max_ts !== undefined) qs.set("max_ts", String(params.max_ts));
-
-    return this.withRetry<{
-      settlements: KalshiSettlement[];
-      cursor: string;
-    }>(() => this.get(`/portfolio/settlements?${qs.toString()}`), "user");
+  ): Promise<{ settlements: Settlement[]; cursor: string }> {
+    const res = await this.portfolioApi.getSettlements(
+      params.limit, params.cursor,
+      params.ticker, params.event_ticker,
+      params.min_ts, params.max_ts,
+    );
+    return { settlements: res.data.settlements ?? [], cursor: res.data.cursor ?? "" };
   }
 
-  // ─── Phase 2: Multiple orderbooks ────────────────────────────────────────
+  // ─── Multiple orderbooks ────────────────────────────────────────────────
 
   async getOrderBooks(
     tickers: string[],
@@ -998,744 +574,417 @@ export class KalshiRestService {
     return map;
   }
 
-  // ─── Phase 2: Exchange status ─────────────────────────────────────────────
+  // ─── Exchange status ─────────────────────────────────────────────────────
 
-  async getExchangeStatus(): Promise<KalshiExchangeStatus> {
-    return this.withRetry<KalshiExchangeStatus>(
-      () => this.get("/exchange/status"),
-      "user",
-    );
+  async getExchangeStatus(): Promise<ExchangeStatus> {
+    const res = await this.exchangeApi.getExchangeStatus();
+    return res.data;
   }
 
-  async getExchangeSchedule(): Promise<KalshiExchangeSchedule> {
-    const result = await this.withRetry<{
-      schedule: KalshiExchangeSchedule;
-    }>(() => this.get("/exchange/schedule"), "user");
-    return result.schedule;
+  async getExchangeSchedule(): Promise<Schedule> {
+    const res = await this.exchangeApi.getExchangeSchedule();
+    return res.data.schedule;
   }
 
-  // ─── Phase 2: Market trades ───────────────────────────────────────────────
+  // ─── Market trades ───────────────────────────────────────────────────────
 
   async getTrades(
     params: KalshiTradesParams = {},
-  ): Promise<{ trades: KalshiTrade[]; cursor: string }> {
-    const qs = new URLSearchParams();
-    if (params.limit !== undefined) qs.set("limit", String(params.limit));
-    if (params.cursor) qs.set("cursor", params.cursor);
-    if (params.ticker) qs.set("ticker", params.ticker);
-    if (params.min_ts !== undefined) qs.set("min_ts", String(params.min_ts));
-    if (params.max_ts !== undefined) qs.set("max_ts", String(params.max_ts));
-
-    return this.withRetry<{ trades: KalshiTrade[]; cursor: string }>(
-      () => this.get(`/markets/trades?${qs.toString()}`),
-      "user",
+  ): Promise<{ trades: Trade[]; cursor: string }> {
+    const res = await this.marketApi.getTrades(
+      params.limit, params.cursor,
+      params.ticker, params.min_ts, params.max_ts,
     );
+    return { trades: res.data.trades ?? [], cursor: res.data.cursor ?? "" };
   }
 
-  // ─── Phase 3: Order groups ─────────────────────────────────────────────────
+  // ─── Order groups ─────────────────────────────────────────────────────────
 
   async createOrderGroup(
-    req: KalshiCreateOrderGroupRequest,
-  ): Promise<KalshiOrderGroup> {
-    const result = await this.withRetry<{ order_group: KalshiOrderGroup }>(
-      () =>
-        this.post(
-          "/portfolio/order-groups",
-          req as unknown as Record<string, unknown>,
-        ),
-      "user",
-    );
-    return result.order_group;
+    req: CreateOrderGroupRequest,
+  ): Promise<{ order_group_id: string }> {
+    const res = await this.orderGroupsApi.createOrderGroup(req);
+    return { order_group_id: res.data.order_group_id };
   }
 
-  async getOrderGroups(): Promise<KalshiOrderGroup[]> {
-    const result = await this.withRetry<{ order_groups: KalshiOrderGroup[] }>(
-      () => this.get("/portfolio/order-groups"),
-      "user",
-    );
-    return result.order_groups;
+  async getOrderGroups(): Promise<OrderGroup[]> {
+    const res = await this.orderGroupsApi.getOrderGroups();
+    return res.data.order_groups ?? [];
   }
 
-  async getOrderGroup(groupId: string): Promise<KalshiOrderGroup> {
-    const result = await this.withRetry<{ order_group: KalshiOrderGroup }>(
-      () => this.get(`/portfolio/order-groups/${encodeURIComponent(groupId)}`),
-      "user",
-    );
-    return result.order_group;
+  async getOrderGroup(groupId: string): Promise<GetOrderGroupResponse> {
+    const res = await this.orderGroupsApi.getOrderGroup(groupId);
+    return res.data;
   }
 
   async updateOrderGroup(
     groupId: string,
-    req: KalshiUpdateOrderGroupRequest,
-  ): Promise<KalshiOrderGroup> {
-    const result = await this.withRetry<{ order_group: KalshiOrderGroup }>(
-      () =>
-        this.put(
-          `/portfolio/order-groups/${encodeURIComponent(groupId)}`,
-          req as unknown as Record<string, unknown>,
-        ),
-      "user",
-    );
-    return result.order_group;
+    req: UpdateOrderGroupLimitRequest,
+  ): Promise<void> {
+    await this.orderGroupsApi.updateOrderGroupLimit(groupId, req);
   }
 
   async resetOrderGroup(groupId: string): Promise<void> {
-    await this.withRetryVoid(
-      () =>
-        this.post(
-          `/portfolio/order-groups/${encodeURIComponent(groupId)}/reset`,
-          {},
-        ),
-      "user",
-    );
+    await this.orderGroupsApi.resetOrderGroup(groupId);
   }
 
   async triggerOrderGroup(groupId: string): Promise<void> {
-    await this.withRetryVoid(
-      () =>
-        this.post(
-          `/portfolio/order-groups/${encodeURIComponent(groupId)}/trigger`,
-          {},
-        ),
-      "user",
-    );
+    await this.orderGroupsApi.triggerOrderGroup(groupId);
   }
 
   async deleteOrderGroup(groupId: string): Promise<void> {
-    await this.withRetryVoid(
-      () =>
-        this.delete(`/portfolio/order-groups/${encodeURIComponent(groupId)}`),
-      "user",
-    );
+    await this.orderGroupsApi.deleteOrderGroup(groupId);
   }
 
-  // ─── Phase 3: Historical data ─────────────────────────────────────────────
+  // ─── Historical data ─────────────────────────────────────────────────────
 
   async getHistoricalMarkets(
     params: KalshiHistoricalMarketsParams = {},
-  ): Promise<{ markets: KalshiMarket[]; cursor: string }> {
-    const qs = new URLSearchParams();
-    if (params.limit !== undefined) qs.set("limit", String(params.limit));
-    if (params.cursor) qs.set("cursor", params.cursor);
-    if (params.min_close_ts !== undefined)
-      qs.set("min_close_ts", String(params.min_close_ts));
-    if (params.max_close_ts !== undefined)
-      qs.set("max_close_ts", String(params.max_close_ts));
-    if (params.status) qs.set("status", params.status);
-    if (params.ticker) qs.set("ticker", params.ticker);
-    if (params.event_ticker) qs.set("event_ticker", params.event_ticker);
-
-    return this.withRetry<{ markets: KalshiMarket[]; cursor: string }>(
-      () => this.get(`/markets?${qs.toString()}`),
-      "user",
+  ): Promise<{ markets: Market[]; cursor: string }> {
+    const res = await this.historicalApi.getHistoricalMarkets(
+      params.limit, params.cursor,
+      params.ticker,
+      params.event_ticker,
     );
+    return { markets: res.data.markets ?? [], cursor: res.data.cursor ?? "" };
   }
 
   async getHistoricalMarketCandlesticks(
     ticker: string,
     params: KalshiHistoricalCandlesticksParams = {},
-  ): Promise<KalshiCandlestick[]> {
-    const qs = new URLSearchParams();
-    if (params.start_ts !== undefined)
-      qs.set("start_ts", String(params.start_ts));
-    if (params.end_ts !== undefined) qs.set("end_ts", String(params.end_ts));
-    if (params.period_interval !== undefined)
-      qs.set("period_interval", String(params.period_interval));
-
-    const result = await this.withRetry<{
-      candlesticks: KalshiCandlestick[];
-    }>(
-      () =>
-        this.get(
-          `/markets/${encodeURIComponent(ticker)}/candlesticks?${qs.toString()}`,
-        ),
-      "user",
+  ): Promise<MarketCandlestickHistorical[]> {
+    const res = await this.historicalApi.getMarketCandlesticksHistorical(
+      ticker,
+      params.start_ts ?? Math.floor(Date.now() / 1000) - 7 * 86400,
+      params.end_ts ?? Math.floor(Date.now() / 1000),
+      (params.period_interval ?? 60) as 1 | 60 | 1440,
     );
-    return result.candlesticks ?? [];
+    return res.data.candlesticks ?? [];
   }
 
   async getHistoricalTrades(
     params: KalshiTradesParams = {},
-  ): Promise<{ trades: KalshiTrade[]; cursor: string }> {
-    return this.getTrades(params);
+  ): Promise<{ trades: Trade[]; cursor: string }> {
+    const res = await this.historicalApi.getTradesHistorical(
+      params.ticker, params.min_ts, params.max_ts,
+      params.limit, params.cursor,
+    );
+    return { trades: res.data.trades ?? [], cursor: res.data.cursor ?? "" };
   }
 
   async getHistoricalFills(
     params: KalshiFillsParams = {},
-  ): Promise<{ fills: KalshiFill[]; cursor: string }> {
-    return this.getFills(params);
+  ): Promise<{ fills: Fill[]; cursor: string }> {
+    const res = await this.historicalApi.getFillsHistorical(
+      params.ticker, params.max_ts,
+      params.limit, params.cursor,
+    );
+    return { fills: res.data.fills ?? [], cursor: res.data.cursor ?? "" };
   }
 
   async getHistoricalOrders(
     params: KalshiHistoricalOrdersParams = {},
-  ): Promise<{ orders: KalshiOrder[]; cursor: string }> {
-    const qs = new URLSearchParams();
-    if (params.limit !== undefined) qs.set("limit", String(params.limit));
-    if (params.cursor) qs.set("cursor", params.cursor);
-    if (params.ticker) qs.set("ticker", params.ticker);
-    if (params.status) qs.set("status", params.status);
-    if (params.min_ts !== undefined) qs.set("min_ts", String(params.min_ts));
-    if (params.max_ts !== undefined) qs.set("max_ts", String(params.max_ts));
-
-    return this.withRetry<{ orders: KalshiOrder[]; cursor: string }>(
-      () => this.get(`/portfolio/orders?${qs.toString()}`),
-      "user",
+  ): Promise<{ orders: Order[]; cursor: string }> {
+    const res = await this.historicalApi.getHistoricalOrders(
+      params.ticker, params.max_ts,
+      params.limit, params.cursor,
     );
+    return { orders: res.data.orders ?? [], cursor: res.data.cursor ?? "" };
   }
 
-  async getCutoffTimestamps(): Promise<KalshiCutoffTimestamps> {
-    return this.withRetry<KalshiCutoffTimestamps>(
-      () => this.get("/history/cutoff-timestamps"),
-      "user",
-    );
+  async getCutoffTimestamps(): Promise<Record<string, number>> {
+    const res = await this.historicalApi.getHistoricalCutoff();
+    return res.data as unknown as Record<string, number>;
   }
 
-  // ─── Phase 3: Subaccounts ─────────────────────────────────────────────────
+  // ─── Subaccounts ─────────────────────────────────────────────────────────
 
-  async createSubaccount(
-    req: KalshiCreateSubaccountRequest,
-  ): Promise<KalshiSubaccount> {
-    const result = await this.withRetry<{ subaccount: KalshiSubaccount }>(
-      () =>
-        this.post(
-          "/portfolio/subaccounts",
-          req as unknown as Record<string, unknown>,
-        ),
-      "user",
-    );
-    return result.subaccount;
+  async createSubaccount(): Promise<{ subaccount_number: number }> {
+    const res = await this.portfolioApi.createSubaccount();
+    return res.data as unknown as { subaccount_number: number };
   }
 
-  async getSubaccountBalances(): Promise<KalshiSubaccountBalance[]> {
-    const result = await this.withRetry<{
-      subaccount_balances: KalshiSubaccountBalance[];
-    }>(() => this.get("/portfolio/subaccount-balances"), "user");
-    return result.subaccount_balances;
+  async getSubaccountBalances(): Promise<Array<{ subaccount_number: number; balance: number }>> {
+    const res = await this.portfolioApi.getSubaccountBalances();
+    return (res.data.subaccount_balances ?? []) as unknown as Array<{
+      subaccount_number: number;
+      balance: number;
+    }>;
   }
 
-  async transferSubaccountFunds(
-    req: KalshiSubaccountTransferRequest,
-  ): Promise<void> {
-    await this.withRetryVoid(
-      () =>
-        this.post(
-          "/portfolio/subaccount-transfers",
-          req as unknown as Record<string, unknown>,
-        ),
-      "user",
-    );
+  async transferSubaccountFunds(req: {
+    client_transfer_id: string;
+    from_subaccount: number;
+    to_subaccount: number;
+    amount_cents: number;
+  }): Promise<void> {
+    await this.portfolioApi.applySubaccountTransfer(req);
   }
 
-  async getSubaccountNetting(): Promise<KalshiSubaccountNettingConfig> {
-    return this.withRetry<KalshiSubaccountNettingConfig>(
-      () => this.get("/portfolio/subaccount-netting"),
-      "user",
-    );
+  async getSubaccountNetting(): Promise<SubaccountNettingConfig[]> {
+    const res = await this.portfolioApi.getSubaccountNetting();
+    return res.data.netting_configs ?? [];
   }
 
-  async updateSubaccountNetting(
-    req: KalshiSubaccountNettingConfig,
-  ): Promise<KalshiSubaccountNettingConfig> {
-    return this.withRetry<KalshiSubaccountNettingConfig>(
-      () =>
-        this.put(
-          "/portfolio/subaccount-netting",
-          req as unknown as Record<string, unknown>,
-        ),
-      "user",
-    );
+  async updateSubaccountNetting(req: {
+    subaccount_number: number;
+    enabled: boolean;
+  }): Promise<void> {
+    await this.portfolioApi.updateSubaccountNetting(req);
   }
 
-  // ─── Phase 3: Search and filters ──────────────────────────────────────────
+  // ─── Search and filters ──────────────────────────────────────────────────
 
-  async getSportsFilters(): Promise<KalshiSportFilter[]> {
-    const result = await this.withRetry<{ filters: KalshiSportFilter[] }>(
-      () => this.get("/search/sports/filters"),
-      "user",
-    );
-    return result.filters;
+  async getSportsFilters(): Promise<Record<string, unknown>> {
+    const res = await this.searchApi.getFiltersForSports();
+    return res.data as unknown as Record<string, unknown>;
   }
 
-  async getSeriesTags(): Promise<KalshiSeriesTag[]> {
-    const result = await this.withRetry<{ tags: KalshiSeriesTag[] }>(
-      () => this.get("/search/series/tags"),
-      "user",
-    );
-    return result.tags;
+  async getSeriesTags(): Promise<Record<string, unknown>> {
+    const res = await this.searchApi.getTagsForSeriesCategories();
+    return res.data as unknown as Record<string, unknown>;
   }
 
-  // ─── Phase 3: Order queue position ────────────────────────────────────────
+  // ─── Order queue position ────────────────────────────────────────────────
 
-  async getOrderQueuePosition(orderId: string): Promise<KalshiQueuePosition> {
-    return this.withRetry<KalshiQueuePosition>(
-      () =>
-        this.get(
-          `/portfolio/orders/${encodeURIComponent(orderId)}/queue-position`,
-        ),
-      "user",
-    );
+  async getOrderQueuePosition(
+    orderId: string,
+  ): Promise<{ order_id: string; queue_position: number }> {
+    const res = await this.ordersApi.getOrderQueuePosition(orderId);
+    return res.data as unknown as { order_id: string; queue_position: number };
   }
 
   async getOrderQueuePositions(
-    orderIds: string[],
-  ): Promise<KalshiQueuePosition[]> {
-    const qs = new URLSearchParams();
-    for (const id of orderIds) qs.append("order_ids", id);
-
-    const result = await this.withRetry<{
-      queue_positions: KalshiQueuePosition[];
-    }>(
-      () => this.get(`/portfolio/orders/queue-positions?${qs.toString()}`),
-      "user",
-    );
-    return result.queue_positions;
+    _orderIds: string[],
+  ): Promise<Array<{ order_id: string; queue_position: number }>> {
+    const res = await this.ordersApi.getOrderQueuePositions();
+    return (res.data.queue_positions ?? []) as unknown as Array<{
+      order_id: string;
+      queue_position: number;
+    }>;
   }
 
-  // ─── Phase 4: RFQ system ───────────────────────────────────────────────────
+  // ─── RFQ system ───────────────────────────────────────────────────────────
 
-  async createRfq(req: KalshiCreateRfqRequest): Promise<KalshiRfq> {
-    const result = await this.withRetry<{ rfq: KalshiRfq }>(
-      () => this.post("/rfqs", req as unknown as Record<string, unknown>),
-      "user",
-    );
-    return result.rfq;
+  async createRfq(req: CreateRFQRequest): Promise<{ id: string }> {
+    const res = await this.communicationsApi.createRFQ(req);
+    return { id: res.data.id };
   }
 
   async getRfqs(
     params: KalshiRfqsParams = {},
-  ): Promise<{ rfqs: KalshiRfq[]; cursor: string }> {
-    const qs = new URLSearchParams();
-    if (params.limit !== undefined) qs.set("limit", String(params.limit));
-    if (params.cursor) qs.set("cursor", params.cursor);
-    if (params.ticker) qs.set("ticker", params.ticker);
-    if (params.status) qs.set("status", params.status);
-
-    return this.withRetry<{ rfqs: KalshiRfq[]; cursor: string }>(
-      () => this.get(`/rfqs?${qs.toString()}`),
-      "user",
+  ): Promise<{ rfqs: RFQ[]; cursor: string }> {
+    const res = await this.communicationsApi.getRFQs(
+      params.cursor,
+      undefined, // eventTicker
+      params.ticker,
+      undefined, // subaccount
+      params.limit,
+      params.status,
     );
+    return { rfqs: res.data.rfqs ?? [], cursor: res.data.cursor ?? "" };
   }
 
-  async getRfq(rfqId: string): Promise<KalshiRfq> {
-    const result = await this.withRetry<{ rfq: KalshiRfq }>(
-      () => this.get(`/rfqs/${encodeURIComponent(rfqId)}`),
-      "user",
-    );
-    return result.rfq;
+  async getRfq(rfqId: string): Promise<RFQ> {
+    const res = await this.communicationsApi.getRFQ(rfqId);
+    return res.data.rfq;
   }
 
   async deleteRfq(rfqId: string): Promise<void> {
-    await this.withRetryVoid(
-      () => this.delete(`/rfqs/${encodeURIComponent(rfqId)}`),
-      "user",
-    );
+    await this.communicationsApi.deleteRFQ(rfqId);
   }
 
-  async createQuote(
-    rfqId: string,
-    req: KalshiCreateQuoteRequest,
-  ): Promise<KalshiQuote> {
-    const result = await this.withRetry<{ quote: KalshiQuote }>(
-      () =>
-        this.post(
-          `/rfqs/${encodeURIComponent(rfqId)}/quotes`,
-          req as unknown as Record<string, unknown>,
-        ),
-      "user",
-    );
-    return result.quote;
+  async createQuote(req: CreateQuoteRequest): Promise<{ id: string }> {
+    const res = await this.communicationsApi.createQuote(req);
+    return { id: res.data.id };
   }
 
-  async getQuotes(rfqId: string): Promise<KalshiQuote[]> {
-    const result = await this.withRetry<{ quotes: KalshiQuote[] }>(
-      () => this.get(`/rfqs/${encodeURIComponent(rfqId)}/quotes`),
-      "user",
+  async getQuotes(
+    params: { cursor?: string; rfq_id?: string; limit?: number; status?: string } = {},
+  ): Promise<Quote[]> {
+    const res = await this.communicationsApi.getQuotes(
+      params.cursor,
+      undefined, // eventTicker
+      undefined, // marketTicker
+      params.limit,
+      params.status,
+      undefined, // quoteCreatorUserId
+      undefined, // rfqCreatorUserId
+      undefined, // rfqCreatorSubtraderId
+      params.rfq_id,
     );
-    return result.quotes;
+    return res.data.quotes ?? [];
   }
 
-  async getQuote(rfqId: string, quoteId: string): Promise<KalshiQuote> {
-    const result = await this.withRetry<{ quote: KalshiQuote }>(
-      () =>
-        this.get(
-          `/rfqs/${encodeURIComponent(rfqId)}/quotes/${encodeURIComponent(quoteId)}`,
-        ),
-      "user",
-    );
-    return result.quote;
+  async getQuote(quoteId: string): Promise<Quote> {
+    const res = await this.communicationsApi.getQuote(quoteId);
+    return res.data.quote;
   }
 
-  async deleteQuote(rfqId: string, quoteId: string): Promise<void> {
-    await this.withRetryVoid(
-      () =>
-        this.delete(
-          `/rfqs/${encodeURIComponent(rfqId)}/quotes/${encodeURIComponent(quoteId)}`,
-        ),
-      "user",
-    );
+  async deleteQuote(quoteId: string): Promise<void> {
+    await this.communicationsApi.deleteQuote(quoteId);
   }
 
-  async acceptQuote(rfqId: string, quoteId: string): Promise<KalshiQuote> {
-    const result = await this.withRetry<{ quote: KalshiQuote }>(
-      () =>
-        this.post(
-          `/rfqs/${encodeURIComponent(rfqId)}/quotes/${encodeURIComponent(quoteId)}/accept`,
-          {},
-        ),
-      "user",
-    );
-    return result.quote;
+  async acceptQuote(quoteId: string, req: AcceptQuoteRequest): Promise<void> {
+    await this.communicationsApi.acceptQuote(quoteId, req);
   }
 
-  async confirmQuote(rfqId: string, quoteId: string): Promise<KalshiQuote> {
-    const result = await this.withRetry<{ quote: KalshiQuote }>(
-      () =>
-        this.post(
-          `/rfqs/${encodeURIComponent(rfqId)}/quotes/${encodeURIComponent(quoteId)}/confirm`,
-          {},
-        ),
-      "user",
-    );
-    return result.quote;
+  async confirmQuote(quoteId: string): Promise<void> {
+    await this.communicationsApi.confirmQuote(quoteId);
   }
 
-  async getRfqCommunicationsId(
-    rfqId: string,
-  ): Promise<KalshiRfqCommunications> {
-    return this.withRetry<KalshiRfqCommunications>(
-      () => this.get(`/rfqs/${encodeURIComponent(rfqId)}/communications-id`),
-      "user",
-    );
+  async getRfqCommunicationsId(): Promise<{ communications_id: string }> {
+    const res = await this.communicationsApi.getCommunicationsID();
+    return res.data as unknown as { communications_id: string };
   }
 
-  // ─── Phase 4: Combo / MVE markets ─────────────────────────────────────────
+  // ─── Combo / MVE markets ─────────────────────────────────────────────────
 
   async createComboMarket(
     collectionTicker: string,
-    req: KalshiCreateComboMarketRequest,
-  ): Promise<KalshiComboMarket> {
-    const result = await this.withRetry<{ market: KalshiComboMarket }>(
-      () =>
-        this.post(
-          `/markets/mve/${encodeURIComponent(collectionTicker)}/create`,
-          req as unknown as Record<string, unknown>,
-        ),
-      "user",
+    req: { selected_markets: TickerPair[]; with_market_payload?: boolean },
+  ): Promise<{ event_ticker: string; market_ticker: string; market?: Market }> {
+    const res = await this.multivariateApi.createMarketInMultivariateEventCollection(
+      collectionTicker, req,
     );
-    return result.market;
+    return res.data;
   }
 
   async getMultivariateCollections(
     params: KalshiMveCollectionsParams = {},
-  ): Promise<{
-    collections: KalshiMultivariateCollection[];
-    cursor: string;
-  }> {
-    const qs = new URLSearchParams();
-    if (params.limit !== undefined) qs.set("limit", String(params.limit));
-    if (params.cursor) qs.set("cursor", params.cursor);
-    if (params.series_ticker) qs.set("series_ticker", params.series_ticker);
-
-    return this.withRetry<{
-      collections: KalshiMultivariateCollection[];
-      cursor: string;
-    }>(
-      () => this.get(`/multivariate_event_collections?${qs.toString()}`),
-      "user",
+  ): Promise<{ collections: MultivariateEventCollection[]; cursor: string }> {
+    const res = await this.multivariateApi.getMultivariateEventCollections(
+      undefined, // status
+      undefined, // associatedEventTicker
+      params.series_ticker,
+      params.limit,
+      params.cursor,
     );
+    return {
+      collections: res.data.multivariate_contracts ?? [],
+      cursor: res.data.cursor ?? "",
+    };
   }
 
-  async lookupTicker(ticker: string): Promise<KalshiTickerLookup> {
-    return this.withRetry<KalshiTickerLookup>(
-      () => this.get(`/markets/lookup?ticker=${encodeURIComponent(ticker)}`),
-      "user",
+  async lookupTicker(
+    collectionTicker: string,
+    selectedMarkets: TickerPair[],
+  ): Promise<{ event_ticker: string; market_ticker: string }> {
+    const res = await this.multivariateApi.lookupTickersForMarketInMultivariateEventCollection(
+      collectionTicker, { selected_markets: selectedMarkets },
     );
+    return res.data;
   }
 
-  // ─── Phase 4: Live sports data ────────────────────────────────────────────
+  // ─── Live sports data ────────────────────────────────────────────────────
 
   async getGameStats(
-    params: KalshiGameStatsParams = {},
-  ): Promise<KalshiGameStats[]> {
-    const qs = new URLSearchParams();
-    if (params.sport) qs.set("sport", params.sport);
-    if (params.league) qs.set("league", params.league);
-    if (params.game_id) qs.set("game_id", params.game_id);
-
-    const result = await this.withRetry<{ games: KalshiGameStats[] }>(
-      () => this.get(`/live-data/game-stats?${qs.toString()}`),
-      "user",
-    );
-    return result.games;
+    params: KalshiGameStatsParams & { milestone_id?: string } = {},
+  ): Promise<LiveData[]> {
+    if (params.game_id && params.milestone_id) {
+      const res = await this.liveDataApi.getLiveData(params.game_id, params.milestone_id);
+      return [res.data.live_data];
+    }
+    if (params.milestone_id) {
+      const res = await this.liveDataApi.getLiveDatas([params.milestone_id]);
+      return res.data.live_datas ?? [];
+    }
+    return [];
   }
 
-  async getLiveData(type: string): Promise<KalshiMilestoneData[]> {
-    const result = await this.withRetry<{ milestones: KalshiMilestoneData[] }>(
-      () => this.get(`/live-data/${encodeURIComponent(type)}`),
-      "user",
-    );
-    return result.milestones;
+  async getLiveData(type: string, milestoneId: string): Promise<LiveData> {
+    const res = await this.liveDataApi.getLiveData(type, milestoneId);
+    return res.data.live_data;
   }
 
   async getBatchLiveData(
     params: KalshiBatchMilestoneParams,
-  ): Promise<KalshiMilestoneData[]> {
-    const result = await this.withRetry<{ milestones: KalshiMilestoneData[] }>(
-      () =>
-        this.post("/live-data/batch", {
-          milestone_ids: params.milestone_ids,
-        }),
-      "user",
-    );
-    return result.milestones;
+  ): Promise<LiveData[]> {
+    const res = await this.liveDataApi.getLiveDatas(params.milestone_ids);
+    return res.data.live_datas ?? [];
   }
 
-  // ─── Phase 4: Milestones ──────────────────────────────────────────────────
+  // ─── Milestones ──────────────────────────────────────────────────────────
 
   async getMilestones(
-    params: KalshiMilestonesParams = {},
-  ): Promise<{ milestones: KalshiMilestone[]; cursor: string }> {
-    const qs = new URLSearchParams();
-    if (params.limit !== undefined) qs.set("limit", String(params.limit));
-    if (params.cursor) qs.set("cursor", params.cursor);
-    if (params.status) qs.set("status", params.status);
-    if (params.event_ticker) qs.set("event_ticker", params.event_ticker);
-
-    return this.withRetry<{ milestones: KalshiMilestone[]; cursor: string }>(
-      () => this.get(`/milestones?${qs.toString()}`),
-      "user",
+    params: KalshiMilestonesParams & { limit: number },
+  ): Promise<{ milestones: Milestone[]; cursor: string }> {
+    const res = await this.milestoneApi.getMilestones(
+      params.limit,
+      undefined, // minimumStartDate
+      undefined, // category
+      undefined, // competition
+      undefined, // sourceId
+      undefined, // type
+      params.event_ticker,
+      params.cursor,
     );
+    return { milestones: res.data.milestones ?? [], cursor: res.data.cursor ?? "" };
   }
 
-  async getMilestone(milestoneId: string): Promise<KalshiMilestone> {
-    const result = await this.withRetry<{ milestone: KalshiMilestone }>(
-      () => this.get(`/milestones/${encodeURIComponent(milestoneId)}`),
-      "user",
-    );
-    return result.milestone;
+  async getMilestone(milestoneId: string): Promise<Milestone> {
+    const res = await this.milestoneApi.getMilestone(milestoneId);
+    return res.data.milestone;
   }
 
-  // ─── Phase 4: Structured targets ──────────────────────────────────────────
+  // ─── Structured targets ──────────────────────────────────────────────────
 
   async getStructuredTargets(
     params: KalshiStructuredTargetsParams = {},
-  ): Promise<{ structured_targets: KalshiStructuredTarget[]; cursor: string }> {
-    const qs = new URLSearchParams();
-    if (params.limit !== undefined) qs.set("limit", String(params.limit));
-    if (params.cursor) qs.set("cursor", params.cursor);
-    if (params.type) qs.set("type", params.type);
-    if (params.market_ticker) qs.set("market_ticker", params.market_ticker);
-
-    return this.withRetry<{
-      structured_targets: KalshiStructuredTarget[];
-      cursor: string;
-    }>(() => this.get(`/structured-targets?${qs.toString()}`), "user");
+  ): Promise<{ structured_targets: StructuredTarget[]; cursor: string }> {
+    const res = await this.structuredTargetsApi.getStructuredTargets(
+      undefined, // ids
+      params.type,
+      undefined, // competition
+      params.limit,
+      params.cursor,
+    );
+    return {
+      structured_targets: res.data.structured_targets ?? [],
+      cursor: res.data.cursor ?? "",
+    };
   }
 
-  async getStructuredTarget(targetId: string): Promise<KalshiStructuredTarget> {
-    const result = await this.withRetry<{
-      structured_target: KalshiStructuredTarget;
-    }>(
-      () => this.get(`/structured-targets/${encodeURIComponent(targetId)}`),
-      "user",
-    );
-    return result.structured_target;
+  async getStructuredTarget(targetId: string): Promise<StructuredTarget | undefined> {
+    const res = await this.structuredTargetsApi.getStructuredTarget(targetId);
+    return res.data.structured_target;
   }
 
-  // ─── Phase 4: Incentives ──────────────────────────────────────────────────
+  // ─── Incentives ──────────────────────────────────────────────────────────
 
-  async getIncentives(): Promise<KalshiIncentive[]> {
-    const result = await this.withRetry<{ incentives: KalshiIncentive[] }>(
-      () => this.get("/incentives"),
-      "user",
-    );
-    return result.incentives;
+  async getIncentives(): Promise<IncentiveProgram[]> {
+    const res = await this.incentivesApi.getIncentivePrograms();
+    return res.data.incentive_programs ?? [];
   }
 
-  // ─── Phase 4: API key management ──────────────────────────────────────────
+  // ─── API key management ──────────────────────────────────────────────────
 
-  async createApiKey(req: KalshiCreateApiKeyRequest): Promise<KalshiApiKey> {
-    const result = await this.withRetry<{ api_key: KalshiApiKey }>(
-      () => this.post("/api-keys", req as unknown as Record<string, unknown>),
-      "user",
-    );
-    return result.api_key;
+  async createApiKey(req: CreateApiKeyRequest): Promise<{ api_key_id: string }> {
+    const res = await this.apiKeysApi.createApiKey(req);
+    return { api_key_id: res.data.api_key_id };
   }
 
   async generateApiKey(
-    req: KalshiCreateApiKeyRequest,
-  ): Promise<KalshiGeneratedApiKey> {
-    const result = await this.withRetry<{
-      api_key: KalshiGeneratedApiKey;
-    }>(
-      () =>
-        this.post(
-          "/api-keys/generate",
-          req as unknown as Record<string, unknown>,
-        ),
-      "user",
-    );
-    return result.api_key;
+    req: GenerateApiKeyRequest,
+  ): Promise<{ api_key_id: string; private_key: string }> {
+    const res = await this.apiKeysApi.generateApiKey(req);
+    return { api_key_id: res.data.api_key_id, private_key: res.data.private_key };
   }
 
-  async getApiKeys(): Promise<KalshiApiKey[]> {
-    const result = await this.withRetry<{ api_keys: KalshiApiKey[] }>(
-      () => this.get("/api-keys"),
-      "user",
-    );
-    return result.api_keys;
+  async getApiKeys(): Promise<Record<string, unknown>[]> {
+    const res = await this.apiKeysApi.getApiKeys();
+    return (res.data.api_keys ?? []) as unknown as Record<string, unknown>[];
   }
 
   async deleteApiKey(keyId: string): Promise<void> {
-    await this.withRetryVoid(
-      () => this.delete(`/api-keys/${encodeURIComponent(keyId)}`),
-      "user",
-    );
+    await this.apiKeysApi.deleteApiKey(keyId);
   }
 
-  // ─── Phase 4: Account rate limits ─────────────────────────────────────────
+  // ─── Account rate limits ─────────────────────────────────────────────────
 
-  async getAccountLimits(): Promise<KalshiAccountLimits> {
-    return this.withRetry<KalshiAccountLimits>(
-      () => this.get("/account/limits"),
-      "user",
-    );
-  }
-
-  // ─── HTTP helpers ─────────────────────────────────────────────────────────
-
-  private async get(path: string): Promise<Response> {
-    const token = await this.auth.getToken("user");
-    return fetch(`${this.baseUrl}${path}`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-      signal: AbortSignal.timeout(15_000),
-    });
-  }
-
-  private async post(
-    path: string,
-    body: Record<string, unknown>,
-  ): Promise<Response> {
-    const token = await this.auth.getToken("user");
-    return fetch(`${this.baseUrl}${path}`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(body),
-      signal: AbortSignal.timeout(15_000),
-    });
-  }
-
-  private async put(
-    path: string,
-    body: Record<string, unknown>,
-  ): Promise<Response> {
-    const token = await this.auth.getToken("user");
-    return fetch(`${this.baseUrl}${path}`, {
-      method: "PUT",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(body),
-      signal: AbortSignal.timeout(15_000),
-    });
-  }
-
-  private async delete(path: string): Promise<Response> {
-    const token = await this.auth.getToken("user");
-    return fetch(`${this.baseUrl}${path}`, {
-      method: "DELETE",
-      headers: { Authorization: `Bearer ${token}` },
-      signal: AbortSignal.timeout(10_000),
-    });
-  }
-
-  private async deleteWithBody(
-    path: string,
-    body: Record<string, unknown>,
-  ): Promise<Response> {
-    const token = await this.auth.getToken("user");
-    return fetch(`${this.baseUrl}${path}`, {
-      method: "DELETE",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(body),
-      signal: AbortSignal.timeout(15_000),
-    });
-  }
-
-  // ─── Retry logic ──────────────────────────────────────────────────────────
-
-  private async withRetry<T>(
-    call: () => Promise<Response>,
-    _userId: string,
-  ): Promise<T> {
-    const res = await this.retryOn429(call);
-    let data: unknown;
-    try {
-      data = await res.json();
-    } catch {
-      const rawBody = await res.text().catch(() => "<unreadable>");
-      throw new Error(
-        `Kalshi API returned unparseable response (${res.status}): ${rawBody.slice(0, 200)}`,
-      );
-    }
-    return data as T;
-  }
-
-  private async withRetryVoid(
-    call: () => Promise<Response>,
-    _userId: string,
-  ): Promise<void> {
-    await this.retryOn429(call);
-  }
-
-  private async retryOn429(call: () => Promise<Response>): Promise<Response> {
-    for (let attempt = 0; attempt <= RETRY_DELAYS_MS.length; attempt++) {
-      let res: Response;
-      try {
-        res = await call();
-      } catch (err: unknown) {
-        // Network errors (TypeError) and timeout aborts (AbortError) are retryable
-        if (
-          attempt < RETRY_DELAYS_MS.length &&
-          (err instanceof TypeError ||
-            (err instanceof DOMException && err.name === "AbortError"))
-        ) {
-          this.logger.warn(
-            `Kalshi network error (${(err as Error).message}), retrying in ${RETRY_DELAYS_MS[attempt]}ms (attempt ${attempt + 1})`,
-          );
-          await sleep(RETRY_DELAYS_MS[attempt]);
-          continue;
-        }
-        throw err;
-      }
-
-      if (res.status === 429 && attempt < RETRY_DELAYS_MS.length) {
-        this.logger.warn(
-          `Kalshi 429 rate-limited, retrying in ${RETRY_DELAYS_MS[attempt]}ms (attempt ${attempt + 1})`,
-        );
-        await sleep(RETRY_DELAYS_MS[attempt]);
-        continue;
-      }
-
-      if (!res.ok) {
-        const body = await res.text().catch(() => "");
-        throw new Error(`Kalshi API error ${res.status}: ${body}`);
-      }
-
-      return res;
-    }
-
-    throw new Error("Kalshi API error 429: rate limit exhausted");
+  async getAccountLimits(): Promise<Record<string, unknown>> {
+    const res = await this.accountApi.getAccountApiLimits();
+    return res.data as unknown as Record<string, unknown>;
   }
 }
 

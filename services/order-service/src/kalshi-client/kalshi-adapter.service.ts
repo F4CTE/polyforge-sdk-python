@@ -14,9 +14,9 @@ import type {
   PriceCandle,
   CandleResolution,
 } from "@polyforge/shared-types";
+import type { Market } from "kalshi-typescript";
 import {
   KalshiRestService,
-  type KalshiMarket,
   parseKalshiDollars,
 } from "./kalshi-rest.service";
 
@@ -47,7 +47,6 @@ export class KalshiAdapterService implements VenueAdapter {
         price: String(KalshiRestService.normalizeKalshiPrice(e.price)),
         size: String(e.quantity),
       })),
-      // Kalshi no-side prices = 1 - yes price from the yes perspective
       asks: (raw.no ?? []).map((e) => ({
         price: String(KalshiRestService.normalizeKalshiPrice(100 - e.price)),
         size: String(e.quantity),
@@ -62,8 +61,7 @@ export class KalshiAdapterService implements VenueAdapter {
       parseKalshiDollars(market.yes_bid_dollars) ??
       parseKalshiDollars(market.last_price_dollars);
     if (dollarPrice !== undefined) return String(dollarPrice);
-    const centPrice = market.yes_bid ?? market.last_price ?? 0;
-    return String(KalshiRestService.normalizeKalshiPrice(centPrice));
+    return "0";
   }
 
   private static readonly CANDLE_INTERVAL_MAP: Partial<
@@ -84,11 +82,11 @@ export class KalshiAdapterService implements VenueAdapter {
     const candles = await this.rest.getCandlesticks(outcomeId, interval);
     return candles.map((c) => ({
       bucket: new Date(c.end_period_ts * 1000).toISOString(),
-      open: String(KalshiRestService.normalizeKalshiPrice(c.price.open)),
-      high: String(KalshiRestService.normalizeKalshiPrice(c.price.high)),
-      low: String(KalshiRestService.normalizeKalshiPrice(c.price.low)),
-      close: String(KalshiRestService.normalizeKalshiPrice(c.price.close)),
-      volume: c.volume,
+      open: c.price.open_dollars ?? "0",
+      high: c.price.high_dollars ?? "0",
+      low: c.price.low_dollars ?? "0",
+      close: c.price.close_dollars ?? "0",
+      volume: Number(c.volume_fp),
     }));
   }
 
@@ -97,7 +95,6 @@ export class KalshiAdapterService implements VenueAdapter {
     const kalshiSide: "yes" | "no" = isNo ? "no" : "yes";
     const priceNum = parseFloat(order.price);
     const dollarsStr = KalshiRestService.toDollarsString(priceNum);
-    const centPrice = KalshiRestService.denormalizeKalshiPrice(priceNum);
 
     const sizeNum = parseFloat(order.size);
     const isFractional = !Number.isInteger(sizeNum);
@@ -116,10 +113,9 @@ export class KalshiAdapterService implements VenueAdapter {
       action: order.side === "BUY" ? "buy" : "sell",
       count: Math.floor(sizeNum),
       ...(isFractional && { count_fp: sizeNum.toFixed(2) }),
-      type: order.orderType === "POST_ONLY" ? "limit" : "limit",
       ...(isNo
-        ? { no_price_dollars: dollarsStr, no_price: centPrice }
-        : { yes_price_dollars: dollarsStr, yes_price: centPrice }),
+        ? { no_price_dollars: dollarsStr }
+        : { yes_price_dollars: dollarsStr }),
       expiration_ts: order.expiration,
       ...(ctx.clientOrderId && { client_order_id: ctx.clientOrderId }),
       self_trade_prevention_type:
@@ -149,9 +145,7 @@ export class KalshiAdapterService implements VenueAdapter {
       throw new Error("cancelAllOrders requires authContext.userId");
     }
     const orders = await this.rest.getOrders(ctx.userId, 1000);
-    const active = orders.filter(
-      (o) => o.status === "resting" || o.status === "pending",
-    );
+    const active = orders.filter((o) => o.status === "resting");
 
     const results = await Promise.allSettled(
       active.map((o) => this.rest.cancelOrder(o.order_id)),
@@ -179,19 +173,18 @@ export class KalshiAdapterService implements VenueAdapter {
     );
 
     return positions.map((p, i) => {
-      const isNo = p.position < 0;
-      const absSize = Math.abs(p.position);
+      const positionCount = Number(p.position_fp);
+      const isNo = positionCount < 0;
+      const absSize = Math.abs(positionCount);
       const outcome = isNo ? "no" : "yes";
-      const avgPrice =
-        absSize > 0 ? parseFloat(p.total_cost ?? "0") / absSize : 0;
+      const totalTraded = Number(p.total_traded_dollars ?? "0");
+      const avgPrice = absSize > 0 ? totalTraded / absSize : 0;
 
       const market = markets[i];
       const yesPrice = market
         ? (parseKalshiDollars(market.yes_bid_dollars) ??
           parseKalshiDollars(market.last_price_dollars) ??
-          KalshiRestService.normalizeKalshiPrice(
-            market.yes_bid ?? market.last_price ?? 0,
-          ))
+          0)
         : 0;
       const currentPrice = isNo ? 1 - yesPrice : yesPrice;
 
@@ -221,11 +214,11 @@ export class KalshiAdapterService implements VenueAdapter {
       venueOrderId: o.order_id,
       venueMarketId: o.ticker,
       side: o.action === "buy" ? "BUY" : "SELL",
-      size: o.count_fp ?? String(o.count),
+      size: o.remaining_count_fp ?? o.initial_count_fp ?? "0",
       price: String(
         KalshiRestService.resolvePriceDollars(
           o.yes_price_dollars ?? o.no_price_dollars,
-          o.yes_price ?? o.no_price ?? 0,
+          undefined,
         ),
       ),
       status: o.status,
@@ -245,14 +238,14 @@ export class KalshiAdapterService implements VenueAdapter {
 
   // ─── Mapping helpers ──────────────────────────────────────────────────────
 
-  private mapMarket(m: KalshiMarket): UnifiedMarket {
+  private mapMarket(m: Market): UnifiedMarket {
     return {
       venueId: "kalshi",
       externalId: m.ticker,
-      title: m.title ?? m.ticker,
-      category: m.category,
+      title: m.yes_sub_title ?? m.ticker,
+      category: undefined,
       endDate: m.close_time ? new Date(m.close_time) : undefined,
-      closed: m.status !== "open" && m.status !== "active",
+      closed: m.status !== "active",
       outcomes: ["yes", "no"],
     };
   }

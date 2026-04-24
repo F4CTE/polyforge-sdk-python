@@ -254,9 +254,9 @@ runIntegration("KalshiRestService (sandbox integration)", () => {
       for (const t of result.trades) {
         expect(typeof t.trade_id).toBe("string");
         expect(typeof t.ticker).toBe("string");
-        expect(typeof t.count).toBe("number");
-        expect(typeof t.yes_price).toBe("number");
-        expect(typeof t.no_price).toBe("number");
+        expect(typeof t.count_fp).toBe("string");
+        expect(typeof t.yes_price_dollars).toBe("string");
+        expect(typeof t.no_price_dollars).toBe("string");
         expect(["yes", "no"]).toContain(t.taker_side);
       }
     });
@@ -376,7 +376,7 @@ runIntegration("KalshiRestService (sandbox integration)", () => {
   describe("order lifecycle", () => {
     it("places a limit order, verifies it, then cancels it", async () => {
       const markets = await rest.getMarkets({ limit: 5, status: "open" });
-      const market = markets.find((m) => m.yes_bid && m.yes_bid > 0);
+      const market = markets.find((m) => m.yes_bid_dollars && parseFloat(m.yes_bid_dollars) > 0);
       if (!market) return; // no liquid market in sandbox
 
       const result = await rest.placeOrder({
@@ -384,7 +384,6 @@ runIntegration("KalshiRestService (sandbox integration)", () => {
         side: "yes",
         action: "buy",
         count: 1,
-        type: "limit",
         yes_price: 1,
       });
 
