@@ -269,24 +269,25 @@ export function Component() {
               <p className="text-tertiary text-label mt-1">Markets are efficiently priced. Lower the threshold or check back shortly.</p>
             </div>
           ) : (
-            <div className="bg-elevated border border-default rounded-pf overflow-hidden">
+            <div role="table" aria-label="Arbitrage opportunities" className="bg-elevated border border-default rounded-pf overflow-hidden">
               {/* Header row */}
-              <div className="grid grid-cols-[1fr_auto_auto_auto_auto_auto] gap-4 px-4 py-2 border-b border-default bg-surface">
-                <span className="text-caption font-medium text-tertiary uppercase tracking-wider">Market</span>
-                <span className="text-caption font-medium text-tertiary uppercase tracking-wider text-right">YES</span>
-                <span className="text-caption font-medium text-tertiary uppercase tracking-wider text-right">NO</span>
-                <span className="text-caption font-medium text-tertiary uppercase tracking-wider text-right">Sum</span>
-                <span className="text-caption font-medium text-tertiary uppercase tracking-wider text-right">Margin</span>
-                <span className="text-caption font-medium text-tertiary uppercase tracking-wider text-right">Action</span>
+              <div role="row" className="grid grid-cols-[1fr_auto_auto_auto_auto_auto] gap-4 px-4 py-2 border-b border-default bg-surface">
+                <span role="columnheader" className="text-caption font-medium text-tertiary uppercase tracking-wider">Market</span>
+                <span role="columnheader" className="text-caption font-medium text-tertiary uppercase tracking-wider text-right">YES</span>
+                <span role="columnheader" className="text-caption font-medium text-tertiary uppercase tracking-wider text-right">NO</span>
+                <span role="columnheader" className="text-caption font-medium text-tertiary uppercase tracking-wider text-right">Sum</span>
+                <span role="columnheader" className="text-caption font-medium text-tertiary uppercase tracking-wider text-right">Margin</span>
+                <span role="columnheader" className="text-caption font-medium text-tertiary uppercase tracking-wider text-right">Action</span>
               </div>
 
               {opportunities.map((opp) => (
                 <div
                   key={opp.marketId}
+                  role="row"
                   className="grid grid-cols-[1fr_auto_auto_auto_auto_auto] gap-4 items-center px-4 py-3 border-b border-default/50 last:border-b-0 hover:bg-surface/50 transition-colors"
                 >
                   {/* Market */}
-                  <div className="min-w-0">
+                  <div role="cell" className="min-w-0">
                     <Link
                       to={`/markets/${opp.marketId}`}
                       className="text-body-md text-primary hover:text-accent-text transition-colors line-clamp-1"
@@ -304,33 +305,35 @@ export function Component() {
                   </div>
 
                   {/* YES */}
-                  <span className="font-mono text-body-md text-primary text-right">${opp.yesPrice}</span>
+                  <span role="cell" className="font-mono tabular-nums text-body-md text-primary text-right">${opp.yesPrice}</span>
 
                   {/* NO */}
-                  <span className="font-mono text-body-md text-primary text-right">${opp.noPrice}</span>
+                  <span role="cell" className="font-mono tabular-nums text-body-md text-primary text-right">${opp.noPrice}</span>
 
                   {/* Sum */}
-                  <span className="font-mono text-body-sm text-tertiary text-right">${opp.sum}</span>
+                  <span role="cell" className="font-mono tabular-nums text-body-sm text-tertiary text-right">${opp.sum}</span>
 
                   {/* Margin */}
-                  <span className={`font-mono text-body-md font-semibold text-right ${marginColor(opp.marginPct)}`}>
+                  <span role="cell" className={`font-mono tabular-nums text-body-md font-semibold text-right ${marginColor(opp.marginPct)}`}>
                     +{opp.marginPct}%
                   </span>
 
                   {/* Execute */}
-                  <Button
-                    type="button"
-                    variant="success"
-                    onClick={() => executeArbitrage(opp)}
-                    disabled={executing === opp.marketId}
-                    className="flex items-center gap-2 px-3 py-2 rounded-pf bg-gain text-inverse text-label font-medium hover:bg-gain/80 disabled:opacity-50 transition-colors whitespace-nowrap"
-                  >
-                    {executing === opp.marketId
-                      ? <Loader2 className="size-3 animate-spin" />
-                      : <ArrowRight className="size-3" />
-                    }
-                    Execute
-                  </Button>
+                  <div role="cell">
+                    <Button
+                      type="button"
+                      variant="success"
+                      onClick={() => executeArbitrage(opp)}
+                      disabled={executing === opp.marketId}
+                      className="flex items-center gap-2 px-3 py-2 rounded-pf bg-gain text-inverse text-label font-medium hover:bg-gain/80 disabled:opacity-50 transition-colors whitespace-nowrap"
+                    >
+                      {executing === opp.marketId
+                        ? <Loader2 className="size-3 animate-spin" />
+                        : <ArrowRight className="size-3" />
+                      }
+                      Execute
+                    </Button>
+                  </div>
                 </div>
               ))}
             </div>
@@ -393,24 +396,25 @@ export function Component() {
               <p className="text-tertiary text-label mt-1">Both venues are pricing these markets similarly. Check back later.</p>
             </div>
           ) : (
-            <div className="bg-elevated border border-default rounded-pf overflow-hidden" data-testid="cross-venue-table">
+            <div role="table" aria-label="Cross-venue arbitrage opportunities" data-testid="cross-venue-table" className="bg-elevated border border-default rounded-pf overflow-hidden">
               {/* Header */}
-              <div className="grid grid-cols-[1fr_auto_auto_auto_auto] gap-4 px-4 py-2 border-b border-default bg-surface">
-                <span className="text-caption font-medium text-tertiary uppercase tracking-wider">Markets (Poly ↔ Kalshi)</span>
-                <span className="text-caption font-medium text-tertiary uppercase tracking-wider text-right">Poly YES</span>
-                <span className="text-caption font-medium text-tertiary uppercase tracking-wider text-right">Kalshi YES</span>
-                <span className="text-caption font-medium text-tertiary uppercase tracking-wider text-right">Spread</span>
-                <span className="text-caption font-medium text-tertiary uppercase tracking-wider text-right">Confidence</span>
+              <div role="row" className="grid grid-cols-[1fr_auto_auto_auto_auto] gap-4 px-4 py-2 border-b border-default bg-surface">
+                <span role="columnheader" className="text-caption font-medium text-tertiary uppercase tracking-wider">Markets (Poly ↔ Kalshi)</span>
+                <span role="columnheader" className="text-caption font-medium text-tertiary uppercase tracking-wider text-right">Poly YES</span>
+                <span role="columnheader" className="text-caption font-medium text-tertiary uppercase tracking-wider text-right">Kalshi YES</span>
+                <span role="columnheader" className="text-caption font-medium text-tertiary uppercase tracking-wider text-right">Spread</span>
+                <span role="columnheader" className="text-caption font-medium text-tertiary uppercase tracking-wider text-right">Confidence</span>
               </div>
 
               {crossVenue.map((opp) => (
                 <div
                   key={opp.matchId}
+                  role="row"
                   data-testid="cross-venue-row"
                   className="grid grid-cols-[1fr_auto_auto_auto_auto] gap-4 items-center px-4 py-3 border-b border-default/50 last:border-b-0 hover:bg-surface/50 transition-colors"
                 >
                   {/* Market pair */}
-                  <div className="min-w-0 space-y-0.5">
+                  <div role="cell" className="min-w-0 space-y-0.5">
                     <p className="text-body-sm text-primary line-clamp-1">{opp.polymarketTitle}</p>
                     <p className="text-caption text-tertiary line-clamp-1 flex items-center gap-1">
                       <ArrowLeftRight className="size-3 shrink-0" aria-hidden="true" />
@@ -420,23 +424,23 @@ export function Component() {
                   </div>
 
                   {/* Poly YES */}
-                  <span className="font-mono text-body-md text-primary text-right">
+                  <span role="cell" className="font-mono tabular-nums text-body-md text-primary text-right">
                     ${opp.polymarketYes.toFixed(2)}
                   </span>
 
                   {/* Kalshi YES */}
-                  <span className="font-mono text-body-md text-primary text-right">
+                  <span role="cell" className="font-mono tabular-nums text-body-md text-primary text-right">
                     ${opp.kalshiYes.toFixed(2)}
                   </span>
 
                   {/* Spread */}
-                  <span className={`font-mono text-body-md font-semibold text-right ${spreadColor(opp.spreadPct)}`}>
+                  <span role="cell" className={`font-mono tabular-nums text-body-md font-semibold text-right ${spreadColor(opp.spreadPct)}`}>
                     {opp.spreadPct.toFixed(1)}%
                   </span>
 
                   {/* Confidence bar */}
-                  <div className="flex flex-col items-end gap-1 min-w-[64px]">
-                    <span className="text-caption text-tertiary">{Math.round(opp.confidence * 100)}%</span>
+                  <div role="cell" className="flex flex-col items-end gap-1 min-w-[64px]">
+                    <span className="text-caption tabular-nums text-tertiary">{Math.round(opp.confidence * 100)}%</span>
                     <div className="w-16 h-1.5 rounded-full bg-overlay overflow-hidden">
                       <div
                         className={`h-full rounded-full transition-all ${confidenceBar(opp.confidence)}`}

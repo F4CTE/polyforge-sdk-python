@@ -68,7 +68,7 @@ function VenueBadge({ id }: { id: string }) {
   const isPoly = id.toLowerCase().includes('poly');
   return (
     <span
-      className={`flex items-center justify-center w-8 h-8 rounded-md text-body-sm font-bold shrink-0 ${
+      className={`flex items-center justify-center w-8 h-8 rounded-md text-body-sm font-semibold shrink-0 ${
         isPoly
           ? 'bg-accent/15 text-accent'
           : 'bg-warning/15 text-warning'
@@ -116,7 +116,7 @@ function VenueCard({ venue }: { venue: VenueHealth }) {
       <div className="grid grid-cols-3 gap-3 text-caption">
         <div>
           <span className="text-tertiary block">Latency</span>
-          <span className="text-primary font-medium mt-1 block">
+          <span className="text-primary font-medium mt-1 block tabular-nums">
             {venue.latencyMs !== null ? `${venue.latencyMs}ms` : '—'}
           </span>
         </div>

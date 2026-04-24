@@ -1118,7 +1118,7 @@ export function Component() {
             aria-label="Search markets"
             defaultValue=""
             onChange={(e) => onSearchInput(e.target.value)}
-            className="w-full h-11 pl-11 pr-4 rounded-full bg-elevated border border-default text-body-sm text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:border-accent/50 focus-visible:shadow-focus-ring transition-colors"
+            className="w-full h-11 pl-11 pr-4 rounded-pf bg-elevated border border-default text-body-sm text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:border-accent/50 focus-visible:shadow-focus-ring transition-colors"
           />
         </div>
         {/* Advanced search button */}
@@ -1128,7 +1128,7 @@ export function Component() {
           onClick={() => setShowAdvancedSearch(true)}
           aria-label="Open advanced search"
           title="Advanced Search (Ctrl+F)"
-          className={`relative flex items-center gap-2 h-11 px-4 rounded-full border text-body-md font-medium transition-colors shrink-0 ${
+          className={`relative flex items-center gap-2 h-11 px-4 rounded-pf border text-body-md font-medium transition-colors shrink-0 ${
             countActiveFilters(advancedFilters) > 0
               ? 'bg-accent-subtle text-accent-text border-accent/30 hover:bg-accent/20'
               : 'bg-elevated text-secondary border-default hover:border-strong hover:text-primary'
@@ -1345,17 +1345,17 @@ export function Component() {
                             {market.category}
                           </span>
                         </td>
-                        <td className="px-4 py-3 text-right font-mono text-gain">
+                        <td className="px-4 py-3 text-right font-mono tabular-nums text-gain">
                           {priceCents(market, 'YES')}
                         </td>
-                        <td className="px-4 py-3 text-right font-mono text-loss">
+                        <td className="px-4 py-3 text-right font-mono tabular-nums text-loss">
                           {priceCents(market, 'NO')}
                         </td>
-                        <td className="px-4 py-3 text-right font-mono text-primary">
+                        <td className="px-4 py-3 text-right font-mono tabular-nums text-primary">
                           {formatVolume(market.volume24h)}
                         </td>
                         <td className="px-4 py-3 text-right">
-                          <span className={`font-mono text-label ${isClosingSoon(market.endDate) ? 'text-warning' : 'text-secondary'}`}>
+                          <span className={`font-mono tabular-nums text-label ${isClosingSoon(market.endDate) ? 'text-warning' : 'text-secondary'}`}>
                             {daysUntil(market.endDate)}
                           </span>
                         </td>
@@ -1367,7 +1367,7 @@ export function Component() {
                             onClick={(e) => toggleWatch(market.id, e)}
                             disabled={watchlistLoading.has(market.id)}
                             aria-label={watchedIds.has(market.id) ? 'Remove from watchlist' : 'Add to watchlist'}
-                            className={`p-2 rounded-pf transition-colors ${watchedIds.has(market.id) ? 'text-gold-500 hover:text-gold-400' : 'text-tertiary hover:text-primary'}`}
+                            className={`p-2 rounded-pf transition-colors ${watchedIds.has(market.id) ? 'text-watchlist hover:text-watchlist-muted' : 'text-tertiary hover:text-primary'}`}
                             title={watchedIds.has(market.id) ? 'Remove from watchlist' : 'Add to watchlist'}
                           >
                             <Star size={14} strokeWidth={1.5} fill={watchedIds.has(market.id) ? 'currentColor' : 'none'} />

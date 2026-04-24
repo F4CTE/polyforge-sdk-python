@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router';
 import { Button, Input } from '@polyforge/ui';
 import {
@@ -7,6 +7,77 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuthStore } from '../../stores/auth-store';
+
+/* ─── ConfirmDialog ──────────────────────────────────────────────────── */
+
+interface ConfirmDialogProps {
+  open: boolean;
+  title: string;
+  message: string;
+  confirmLabel?: string;
+  onConfirm: () => void;
+  onCancel: () => void;
+}
+
+function ConfirmDialog({ open, title, message, confirmLabel = 'Confirm', onConfirm, onCancel }: ConfirmDialogProps) {
+  const cancelRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    cancelRef.current?.focus();
+    function onKey(e: KeyboardEvent) {
+      if (e.key === 'Escape') onCancel();
+    }
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [open, onCancel]);
+
+  useEffect(() => {
+    if (open) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => { document.body.style.overflow = ''; };
+  }, [open]);
+
+  if (!open) return null;
+
+  return (
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="confirm-dialog-title"
+      aria-describedby="confirm-dialog-desc"
+      className="fixed inset-0 z-50 flex items-center justify-center px-4 bg-app/70 backdrop-blur-sm"
+      onClick={(e) => { if (e.target === e.currentTarget) onCancel(); }}
+    >
+      <div className="w-full max-w-sm bg-elevated border border-default rounded-pf shadow-elevation-3 p-6 space-y-4">
+        <h2 id="confirm-dialog-title" className="text-body-md font-semibold text-primary">{title}</h2>
+        <p id="confirm-dialog-desc" className="text-body-sm text-secondary leading-relaxed">{message}</p>
+        <div className="flex items-center gap-3 justify-end pt-1">
+          <Button
+            ref={cancelRef}
+            type="button"
+            variant="secondary"
+            onClick={onCancel}
+            className="px-4 py-2 rounded-pf text-body-sm text-secondary hover:text-primary border border-default hover:border-strong transition-colors"
+          >
+            Cancel
+          </Button>
+          <Button
+            type="button"
+            variant="danger"
+            onClick={onConfirm}
+            className="px-4 py-2 rounded-pf text-body-sm font-medium"
+          >
+            {confirmLabel}
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 /* ─── Component ──────────────────────────────────────────────────────── */
 
@@ -37,6 +108,9 @@ export function Component() {
   const [botCodeExpiry, setBotCodeExpiry] = useState<string | null>(null);
   const [botCodeLoading, setBotCodeLoading] = useState(false);
 
+  // Confirm dialog
+  const [confirmDialog, setConfirmDialog] = useState<{ title: string; message: string; confirmLabel: string; onConfirm: () => void } | null>(null);
+
   async function importCredentials() {
     if (importing) return;
     setImporting(true);
@@ -63,15 +137,22 @@ export function Component() {
     setImporting(false);
   }
 
-  async function deleteCredentials() {
+  function deleteCredentials() {
     if (deleting) return;
-    if (!confirm('Disconnect your Polymarket account? Your strategies will stop trading.')) return;
-    setDeleting(true);
-    try {
-      const res = await fetch('/auth/v1/credentials', { method: 'DELETE', credentials: 'include' });
-      if (res.ok) patchUser({ polymarketConnected: false });
-    } catch { toast.error('Failed to disconnect account'); }
-    setDeleting(false);
+    setConfirmDialog({
+      title: 'Disconnect Polymarket account?',
+      message: 'Your strategies will stop trading until you reconnect.',
+      confirmLabel: 'Disconnect',
+      onConfirm: async () => {
+        setConfirmDialog(null);
+        setDeleting(true);
+        try {
+          const res = await fetch('/auth/v1/credentials', { method: 'DELETE', credentials: 'include' });
+          if (res.ok) patchUser({ polymarketConnected: false });
+        } catch { toast.error('Failed to disconnect account'); }
+        setDeleting(false);
+      },
+    });
   }
 
   async function connectKalshi() {
@@ -96,18 +177,25 @@ export function Component() {
     setKalshiImporting(false);
   }
 
-  async function disconnectKalshi() {
+  function disconnectKalshi() {
     if (kalshiDeleting) return;
-    if (!confirm('Disconnect your Kalshi account? Cross-venue arbitrage will be disabled.')) return;
-    setKalshiDeleting(true);
-    try {
-      const res = await fetch('/auth/v1/credentials/kalshi', { method: 'DELETE', credentials: 'include' });
-      if (res.ok) {
-        patchUser({ kalshiConnected: false });
-        toast.success('Kalshi account disconnected');
-      }
-    } catch { toast.error('Failed to disconnect Kalshi'); }
-    setKalshiDeleting(false);
+    setConfirmDialog({
+      title: 'Disconnect Kalshi account?',
+      message: 'Cross-venue arbitrage will be disabled until you reconnect.',
+      confirmLabel: 'Disconnect',
+      onConfirm: async () => {
+        setConfirmDialog(null);
+        setKalshiDeleting(true);
+        try {
+          const res = await fetch('/auth/v1/credentials/kalshi', { method: 'DELETE', credentials: 'include' });
+          if (res.ok) {
+            patchUser({ kalshiConnected: false });
+            toast.success('Kalshi account disconnected');
+          }
+        } catch { toast.error('Failed to disconnect Kalshi'); }
+        setKalshiDeleting(false);
+      },
+    });
   }
 
   async function generateBotCode() {
@@ -321,6 +409,18 @@ export function Component() {
           {botCode ? 'Regenerate Code' : 'Generate Code'}
         </Button>
       </div>
+
+      {/* Accessible confirm dialog — replaces window.confirm() */}
+      {confirmDialog && (
+        <ConfirmDialog
+          open
+          title={confirmDialog.title}
+          message={confirmDialog.message}
+          confirmLabel={confirmDialog.confirmLabel}
+          onConfirm={confirmDialog.onConfirm}
+          onCancel={() => setConfirmDialog(null)}
+        />
+      )}
     </div>
   );
 }
