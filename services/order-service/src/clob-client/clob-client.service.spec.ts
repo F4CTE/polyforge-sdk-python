@@ -807,6 +807,264 @@ describe("ClobClientService", () => {
     });
   });
 
+  // ── getLastTradePrice ─────────────────────────────────────────────────────
+
+  describe("getLastTradePrice()", () => {
+    it("sends GET to /last-trade-price with token_id", async () => {
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue({ price: "0.55" }),
+      });
+      const result = await svc.getLastTradePrice("tok-yes");
+      expect(fetchSpy.mock.calls[0][0]).toBe(
+        "http://clob:3099/last-trade-price?token_id=tok-yes",
+      );
+      expect(result.price).toBe("0.55");
+    });
+
+    it("throws on non-OK response", async () => {
+      fetchSpy.mockResolvedValue({
+        ok: false,
+        status: 404,
+        text: vi.fn().mockResolvedValue("not found"),
+      });
+      await expect(svc.getLastTradePrice("bad")).rejects.toThrow("404");
+    });
+  });
+
+  // ── getLastTradePrices ──────────────────────────────────────────────────
+
+  describe("getLastTradePrices()", () => {
+    it("sends GET to /last-trade-prices with comma-separated token_ids", async () => {
+      const resp = [
+        { token_id: "t1", price: "0.55" },
+        { token_id: "t2", price: "0.45" },
+      ];
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue(resp),
+      });
+      const result = await svc.getLastTradePrices(["t1", "t2"]);
+      expect(fetchSpy.mock.calls[0][0]).toBe(
+        "http://clob:3099/last-trade-prices?token_ids=t1%2Ct2",
+      );
+      expect(result).toHaveLength(2);
+    });
+
+    it("throws on non-OK response", async () => {
+      fetchSpy.mockResolvedValue({
+        ok: false,
+        status: 500,
+        text: vi.fn().mockResolvedValue("error"),
+      });
+      await expect(svc.getLastTradePrices(["t1"])).rejects.toThrow("500");
+    });
+  });
+
+  // ── getLastTradePricesBody ─────────────────────────────────────────────
+
+  describe("getLastTradePricesBody()", () => {
+    it("POSTs to /last-trade-prices with JSON body", async () => {
+      const resp = [{ token_id: "t1", price: "0.55" }];
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue(resp),
+      });
+      const result = await svc.getLastTradePricesBody(["t1", "t2"]);
+      expect(fetchSpy.mock.calls[0][0]).toBe(
+        "http://clob:3099/last-trade-prices",
+      );
+      expect(fetchSpy.mock.calls[0][1].method).toBe("POST");
+      expect(fetchSpy.mock.calls[0][1].headers["Content-Type"]).toBe(
+        "application/json",
+      );
+      const body = JSON.parse(fetchSpy.mock.calls[0][1].body as string);
+      expect(body).toEqual(["t1", "t2"]);
+      expect(result).toHaveLength(1);
+    });
+  });
+
+  // ── getMarketPrice ────────────────────────────────────────────────────
+
+  describe("getMarketPrice()", () => {
+    it("sends GET to /price with token_id", async () => {
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue({ price: "0.62" }),
+      });
+      const result = await svc.getMarketPrice("tok-yes");
+      expect(fetchSpy.mock.calls[0][0]).toBe(
+        "http://clob:3099/price?token_id=tok-yes",
+      );
+      expect(result.price).toBe("0.62");
+    });
+
+    it("throws on non-OK response", async () => {
+      fetchSpy.mockResolvedValue({
+        ok: false,
+        status: 500,
+        text: vi.fn().mockResolvedValue("error"),
+      });
+      await expect(svc.getMarketPrice("bad")).rejects.toThrow("500");
+    });
+  });
+
+  // ── getMarketPrices ────────────────────────────────────────────────────
+
+  describe("getMarketPrices()", () => {
+    it("sends GET to /prices with comma-separated token_ids", async () => {
+      const resp = [{ token_id: "t1", price: "0.55" }];
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue(resp),
+      });
+      const result = await svc.getMarketPrices(["t1", "t2"]);
+      expect(fetchSpy.mock.calls[0][0]).toBe(
+        "http://clob:3099/prices?token_ids=t1%2Ct2",
+      );
+      expect(result).toHaveLength(1);
+    });
+  });
+
+  // ── getMarketPricesBody ───────────────────────────────────────────────
+
+  describe("getMarketPricesBody()", () => {
+    it("POSTs to /prices with JSON body", async () => {
+      const resp = [{ token_id: "t1", price: "0.55" }];
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue(resp),
+      });
+      const result = await svc.getMarketPricesBody(["t1"]);
+      expect(fetchSpy.mock.calls[0][0]).toBe("http://clob:3099/prices");
+      expect(fetchSpy.mock.calls[0][1].method).toBe("POST");
+      expect(result).toHaveLength(1);
+    });
+  });
+
+  // ── getMidpoints ──────────────────────────────────────────────────────
+
+  describe("getMidpoints()", () => {
+    it("sends GET to /midpoints with comma-separated token_ids", async () => {
+      const resp = [{ token_id: "t1", mid: "0.56" }];
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue(resp),
+      });
+      const result = await svc.getMidpoints(["t1", "t2"]);
+      expect(fetchSpy.mock.calls[0][0]).toBe(
+        "http://clob:3099/midpoints?token_ids=t1%2Ct2",
+      );
+      expect(result).toHaveLength(1);
+      expect(result[0].mid).toBe("0.56");
+    });
+
+    it("throws on non-OK response", async () => {
+      fetchSpy.mockResolvedValue({
+        ok: false,
+        status: 500,
+        text: vi.fn().mockResolvedValue("error"),
+      });
+      await expect(svc.getMidpoints(["t1"])).rejects.toThrow("500");
+    });
+  });
+
+  // ── getMidpointsBody ──────────────────────────────────────────────────
+
+  describe("getMidpointsBody()", () => {
+    it("POSTs to /midpoints with JSON body", async () => {
+      const resp = [{ token_id: "t1", mid: "0.56" }];
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue(resp),
+      });
+      const result = await svc.getMidpointsBody(["t1"]);
+      expect(fetchSpy.mock.calls[0][0]).toBe("http://clob:3099/midpoints");
+      expect(fetchSpy.mock.calls[0][1].method).toBe("POST");
+      expect(result[0].mid).toBe("0.56");
+    });
+  });
+
+  // ── getSpreads ────────────────────────────────────────────────────────
+
+  describe("getSpreads()", () => {
+    it("sends GET to /spreads with comma-separated token_ids", async () => {
+      const resp = [{ token_id: "t1", spread: "0.02" }];
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue(resp),
+      });
+      const result = await svc.getSpreads(["t1"]);
+      expect(fetchSpy.mock.calls[0][0]).toBe(
+        "http://clob:3099/spreads?token_ids=t1",
+      );
+      expect(result[0].spread).toBe("0.02");
+    });
+
+    it("throws on non-OK response", async () => {
+      fetchSpy.mockResolvedValue({
+        ok: false,
+        status: 503,
+        text: vi.fn().mockResolvedValue("unavailable"),
+      });
+      await expect(svc.getSpreads(["t1"])).rejects.toThrow("503");
+    });
+  });
+
+  // ── getServerTime ─────────────────────────────────────────────────────
+
+  describe("getServerTime()", () => {
+    it("sends GET to /server-time", async () => {
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue({ time: "1700000000" }),
+      });
+      const result = await svc.getServerTime();
+      expect(fetchSpy.mock.calls[0][0]).toBe("http://clob:3099/server-time");
+      expect(result.time).toBe("1700000000");
+    });
+
+    it("throws on non-OK response", async () => {
+      fetchSpy.mockResolvedValue({
+        ok: false,
+        status: 500,
+        text: vi.fn().mockResolvedValue("error"),
+      });
+      await expect(svc.getServerTime()).rejects.toThrow("500");
+    });
+  });
+
+  // ── getClobMarketInfo ─────────────────────────────────────────────────
+
+  describe("getClobMarketInfo()", () => {
+    it("sends GET to /clob-market-info with condition_id", async () => {
+      const info = {
+        condition_id: "cid-1",
+        min_tick_size: "0.01",
+        min_order_size: "5",
+      };
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue(info),
+      });
+      const result = await svc.getClobMarketInfo("cid-1");
+      expect(fetchSpy.mock.calls[0][0]).toBe(
+        "http://clob:3099/clob-market-info?condition_id=cid-1",
+      );
+      expect(result.condition_id).toBe("cid-1");
+      expect(result.min_tick_size).toBe("0.01");
+    });
+
+    it("throws on non-OK response", async () => {
+      fetchSpy.mockResolvedValue({
+        ok: false,
+        status: 404,
+        text: vi.fn().mockResolvedValue("not found"),
+      });
+      await expect(svc.getClobMarketInfo("bad")).rejects.toThrow("404");
+    });
+  });
+
   // ── 429 retry / backoff ───────────────────────────────────────────────────
 
   describe("429 retry behaviour", () => {

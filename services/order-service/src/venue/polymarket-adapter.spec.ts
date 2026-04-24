@@ -67,19 +67,14 @@ describe("PolymarketAdapter", () => {
   });
 
   describe("getPrice()", () => {
-    it("returns the midpoint from getBook", async () => {
+    it("returns the price from getMarketPrice", async () => {
       fetchSpy.mockResolvedValue({
         ok: true,
-        json: vi.fn().mockResolvedValue({
-          bids: [],
-          asks: [],
-          midpoint: "0.63",
-          spread: "0.02",
-          timestamp: 1,
-        }),
+        json: vi.fn().mockResolvedValue({ price: "0.63" }),
       });
       const price = await adapter.getPrice("tok-1");
       expect(price).toBe("0.63");
+      expect(fetchSpy.mock.calls[0][0]).toContain("/price?token_id=tok-1");
     });
   });
 
@@ -181,6 +176,59 @@ describe("PolymarketAdapter", () => {
       const history = await adapter.getOrderHistory("0xwallet", 50);
       expect(history).toHaveLength(1);
       expect(history[0].venueOrderId).toBe("t-1");
+    });
+  });
+
+  describe("getBatchPrices()", () => {
+    it("delegates to getMarketPricesBody and maps token_id to tokenId", async () => {
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue([
+          { token_id: "t1", price: "0.55" },
+          { token_id: "t2", price: "0.45" },
+        ]),
+      });
+      const result = await adapter.getBatchPrices(["t1", "t2"]);
+      expect(result).toHaveLength(2);
+      expect(result[0].tokenId).toBe("t1");
+      expect(result[0].price).toBe("0.55");
+    });
+  });
+
+  describe("getBatchMidpoints()", () => {
+    it("delegates to getMidpointsBody and maps token_id to tokenId", async () => {
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue([{ token_id: "t1", mid: "0.56" }]),
+      });
+      const result = await adapter.getBatchMidpoints(["t1"]);
+      expect(result).toHaveLength(1);
+      expect(result[0].tokenId).toBe("t1");
+      expect(result[0].mid).toBe("0.56");
+    });
+  });
+
+  describe("getBatchSpreads()", () => {
+    it("delegates to getSpreads and maps token_id to tokenId", async () => {
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue([{ token_id: "t1", spread: "0.02" }]),
+      });
+      const result = await adapter.getBatchSpreads(["t1"]);
+      expect(result).toHaveLength(1);
+      expect(result[0].tokenId).toBe("t1");
+      expect(result[0].spread).toBe("0.02");
+    });
+  });
+
+  describe("getServerTime()", () => {
+    it("returns time string from CLOB server-time endpoint", async () => {
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue({ time: "1700000000" }),
+      });
+      const time = await adapter.getServerTime();
+      expect(time).toBe("1700000000");
     });
   });
 

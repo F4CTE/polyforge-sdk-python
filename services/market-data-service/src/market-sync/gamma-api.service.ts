@@ -48,6 +48,19 @@ interface GammaEvent {
   markets: string[]; // market IDs grouped under this event
 }
 
+interface GammaSimplifiedMarket {
+  id: string;
+  slug: string;
+  question?: string;
+  end_date_iso?: string;
+  game_start_time?: string;
+  active: boolean;
+  closed: boolean;
+  archived: boolean;
+  tokens: Array<{ token_id: string; outcome: string; price: number }>;
+  [key: string]: unknown;
+}
+
 interface KeysetPage {
   data: GammaMarket[];
   next_cursor?: string | null;
@@ -257,6 +270,67 @@ export class GammaApiService implements OnModuleInit {
     );
     if (!res.ok) throw new Error(`Gamma keyset API returned ${res.status}`);
     return res.json() as Promise<KeysetPage>;
+  }
+
+  // ─── Market Lookup (Phase 2) ──────────────────────────────────────────────
+
+  async getMarketById(conditionId: string): Promise<GammaMarket | null> {
+    await GAMMA_LIMITER.acquire();
+    const res = await fetch(
+      `${this.gammaUrl}/markets/${encodeURIComponent(conditionId)}`,
+      { signal: AbortSignal.timeout(10_000) },
+    );
+    if (res.status === 404) return null;
+    if (!res.ok) throw new Error(`Gamma API returned ${res.status}`);
+    return res.json() as Promise<GammaMarket>;
+  }
+
+  async getMarketBySlug(slug: string): Promise<GammaMarket[]> {
+    await GAMMA_LIMITER.acquire();
+    const params = new URLSearchParams({ slug });
+    const res = await fetch(`${this.gammaUrl}/markets?${params.toString()}`, {
+      signal: AbortSignal.timeout(10_000),
+    });
+    if (!res.ok) throw new Error(`Gamma API returned ${res.status}`);
+    const body = (await res.json()) as { data?: unknown[] } | unknown[];
+    const arr = Array.isArray(body)
+      ? body
+      : ((body as { data?: unknown[] }).data ?? []);
+    return arr as GammaMarket[];
+  }
+
+  async getMarketByToken(clobTokenIds: string[]): Promise<GammaMarket[]> {
+    await GAMMA_LIMITER.acquire();
+    const params = new URLSearchParams({
+      clob_token_ids: clobTokenIds.join(","),
+    });
+    const res = await fetch(`${this.gammaUrl}/markets?${params.toString()}`, {
+      signal: AbortSignal.timeout(10_000),
+    });
+    if (!res.ok) throw new Error(`Gamma API returned ${res.status}`);
+    const body = (await res.json()) as { data?: unknown[] } | unknown[];
+    const arr = Array.isArray(body)
+      ? body
+      : ((body as { data?: unknown[] }).data ?? []);
+    return arr as GammaMarket[];
+  }
+
+  async getSimplifiedMarkets(
+    nextCursor?: string,
+    limit = 100,
+  ): Promise<{ data: GammaSimplifiedMarket[]; next_cursor?: string | null }> {
+    await GAMMA_LIMITER.acquire();
+    const params = new URLSearchParams({ limit: String(limit) });
+    if (nextCursor) params.set("next_cursor", nextCursor);
+    const res = await fetch(
+      `${this.gammaUrl}/simplified-markets?${params.toString()}`,
+      { signal: AbortSignal.timeout(10_000) },
+    );
+    if (!res.ok) throw new Error(`Gamma API returned ${res.status}`);
+    return res.json() as Promise<{
+      data: GammaSimplifiedMarket[];
+      next_cursor?: string | null;
+    }>;
   }
 
   // ─── Private ─────────────────────────────────────────────────────────────

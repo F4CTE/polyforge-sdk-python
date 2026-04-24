@@ -44,6 +44,36 @@ export interface ClobOrderScoringResponse {
   scoring: Record<string, unknown>;
 }
 
+export interface ClobLastTradePrice {
+  price: string;
+}
+
+export interface ClobTokenPrice {
+  token_id: string;
+  price: string;
+}
+
+export interface ClobTokenMidpoint {
+  token_id: string;
+  mid: string;
+}
+
+export interface ClobTokenSpread {
+  token_id: string;
+  spread: string;
+}
+
+export interface ClobServerTime {
+  time: string;
+}
+
+export interface ClobMarketInfo {
+  condition_id: string;
+  min_tick_size: string;
+  min_order_size: string;
+  [key: string]: unknown;
+}
+
 const RETRY_DELAYS_MS = [500, 1000, 2000];
 
 /**
@@ -336,6 +366,115 @@ export class ClobClientService {
         headers,
         signal: AbortSignal.timeout(10_000),
       }),
+    );
+  }
+
+  // ─── Market Data (Phase 2) ─────────────────────────────────────────────────
+
+  async getLastTradePrice(tokenId: string): Promise<ClobLastTradePrice> {
+    return this.withRetry(() =>
+      fetch(
+        `${this.clobUrl}/last-trade-price?token_id=${encodeURIComponent(tokenId)}`,
+        { signal: AbortSignal.timeout(10_000) },
+      ),
+    );
+  }
+
+  async getLastTradePrices(tokenIds: string[]): Promise<ClobTokenPrice[]> {
+    const params = new URLSearchParams();
+    params.set("token_ids", tokenIds.join(","));
+    return this.withRetry(() =>
+      fetch(`${this.clobUrl}/last-trade-prices?${params.toString()}`, {
+        signal: AbortSignal.timeout(10_000),
+      }),
+    );
+  }
+
+  async getLastTradePricesBody(tokenIds: string[]): Promise<ClobTokenPrice[]> {
+    return this.withRetry(() =>
+      fetch(`${this.clobUrl}/last-trade-prices`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(tokenIds),
+        signal: AbortSignal.timeout(15_000),
+      }),
+    );
+  }
+
+  async getMarketPrice(tokenId: string): Promise<ClobLastTradePrice> {
+    return this.withRetry(() =>
+      fetch(`${this.clobUrl}/price?token_id=${encodeURIComponent(tokenId)}`, {
+        signal: AbortSignal.timeout(10_000),
+      }),
+    );
+  }
+
+  async getMarketPrices(tokenIds: string[]): Promise<ClobTokenPrice[]> {
+    const params = new URLSearchParams();
+    params.set("token_ids", tokenIds.join(","));
+    return this.withRetry(() =>
+      fetch(`${this.clobUrl}/prices?${params.toString()}`, {
+        signal: AbortSignal.timeout(10_000),
+      }),
+    );
+  }
+
+  async getMarketPricesBody(tokenIds: string[]): Promise<ClobTokenPrice[]> {
+    return this.withRetry(() =>
+      fetch(`${this.clobUrl}/prices`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(tokenIds),
+        signal: AbortSignal.timeout(15_000),
+      }),
+    );
+  }
+
+  async getMidpoints(tokenIds: string[]): Promise<ClobTokenMidpoint[]> {
+    const params = new URLSearchParams();
+    params.set("token_ids", tokenIds.join(","));
+    return this.withRetry(() =>
+      fetch(`${this.clobUrl}/midpoints?${params.toString()}`, {
+        signal: AbortSignal.timeout(10_000),
+      }),
+    );
+  }
+
+  async getMidpointsBody(tokenIds: string[]): Promise<ClobTokenMidpoint[]> {
+    return this.withRetry(() =>
+      fetch(`${this.clobUrl}/midpoints`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(tokenIds),
+        signal: AbortSignal.timeout(15_000),
+      }),
+    );
+  }
+
+  async getSpreads(tokenIds: string[]): Promise<ClobTokenSpread[]> {
+    const params = new URLSearchParams();
+    params.set("token_ids", tokenIds.join(","));
+    return this.withRetry(() =>
+      fetch(`${this.clobUrl}/spreads?${params.toString()}`, {
+        signal: AbortSignal.timeout(10_000),
+      }),
+    );
+  }
+
+  async getServerTime(): Promise<ClobServerTime> {
+    return this.withRetry(() =>
+      fetch(`${this.clobUrl}/server-time`, {
+        signal: AbortSignal.timeout(10_000),
+      }),
+    );
+  }
+
+  async getClobMarketInfo(conditionId: string): Promise<ClobMarketInfo> {
+    return this.withRetry(() =>
+      fetch(
+        `${this.clobUrl}/clob-market-info?condition_id=${encodeURIComponent(conditionId)}`,
+        { signal: AbortSignal.timeout(10_000) },
+      ),
     );
   }
 

@@ -591,6 +591,179 @@ describe("GammaApiService", () => {
     });
   });
 
+  // ── getMarketById ─────────────────────────────────────────────────────────
+
+  describe("getMarketById()", () => {
+    it("sends GET to /markets/{conditionId}", async () => {
+      const market = makeGammaMarket({ id: "cond-abc" });
+      globalThis.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve(market),
+      });
+
+      const result = await svc.getMarketById("cond-abc");
+      const url = vi.mocked(globalThis.fetch).mock.calls[0][0] as string;
+      expect(url).toContain("/markets/cond-abc");
+      expect(result?.id).toBe("cond-abc");
+    });
+
+    it("returns null on 404", async () => {
+      globalThis.fetch = vi.fn().mockResolvedValue({
+        ok: false,
+        status: 404,
+      });
+
+      const result = await svc.getMarketById("nonexistent");
+      expect(result).toBeNull();
+    });
+
+    it("throws on non-404 error", async () => {
+      globalThis.fetch = vi.fn().mockResolvedValue({
+        ok: false,
+        status: 500,
+      });
+
+      await expect(svc.getMarketById("cond-abc")).rejects.toThrow("500");
+    });
+
+    it("URL-encodes the conditionId", async () => {
+      globalThis.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve(makeGammaMarket()),
+      });
+
+      await svc.getMarketById("a+b");
+      const url = vi.mocked(globalThis.fetch).mock.calls[0][0] as string;
+      expect(url).toContain("a%2Bb");
+    });
+  });
+
+  // ── getMarketBySlug ──────────────────────────────────────────────────────
+
+  describe("getMarketBySlug()", () => {
+    it("sends GET to /markets?slug= and returns array", async () => {
+      const markets = [makeGammaMarket({ slug: "will-it-rain" })];
+      globalThis.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve(markets),
+      });
+
+      const result = await svc.getMarketBySlug("will-it-rain");
+      const url = vi.mocked(globalThis.fetch).mock.calls[0][0] as string;
+      expect(url).toContain("slug=will-it-rain");
+      expect(result).toHaveLength(1);
+    });
+
+    it("handles { data: [...] } wrapper response", async () => {
+      const markets = [makeGammaMarket()];
+      globalThis.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve({ data: markets }),
+      });
+
+      const result = await svc.getMarketBySlug("slug");
+      expect(result).toHaveLength(1);
+    });
+
+    it("throws on non-OK response", async () => {
+      globalThis.fetch = vi.fn().mockResolvedValue({
+        ok: false,
+        status: 503,
+      });
+
+      await expect(svc.getMarketBySlug("slug")).rejects.toThrow("503");
+    });
+  });
+
+  // ── getMarketByToken ────────────────────────────────────────────────────
+
+  describe("getMarketByToken()", () => {
+    it("sends GET to /markets?clob_token_ids= with comma-separated IDs", async () => {
+      const markets = [makeGammaMarket()];
+      globalThis.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve(markets),
+      });
+
+      const result = await svc.getMarketByToken(["tok-1", "tok-2"]);
+      const url = vi.mocked(globalThis.fetch).mock.calls[0][0] as string;
+      expect(url).toContain("clob_token_ids=tok-1%2Ctok-2");
+      expect(result).toHaveLength(1);
+    });
+
+    it("handles { data: [...] } wrapper response", async () => {
+      globalThis.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve({ data: [makeGammaMarket()] }),
+      });
+
+      const result = await svc.getMarketByToken(["tok-1"]);
+      expect(result).toHaveLength(1);
+    });
+
+    it("throws on non-OK response", async () => {
+      globalThis.fetch = vi.fn().mockResolvedValue({
+        ok: false,
+        status: 500,
+      });
+
+      await expect(svc.getMarketByToken(["tok-1"])).rejects.toThrow("500");
+    });
+  });
+
+  // ── getSimplifiedMarkets ────────────────────────────────────────────────
+
+  describe("getSimplifiedMarkets()", () => {
+    it("sends GET to /simplified-markets with limit", async () => {
+      const resp = { data: [{ id: "sm-1", slug: "test", active: true }] };
+      globalThis.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve(resp),
+      });
+
+      const result = await svc.getSimplifiedMarkets();
+      const url = vi.mocked(globalThis.fetch).mock.calls[0][0] as string;
+      expect(url).toContain("/simplified-markets?");
+      expect(url).toContain("limit=100");
+      expect(result.data).toHaveLength(1);
+    });
+
+    it("passes next_cursor when provided", async () => {
+      globalThis.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve({ data: [], next_cursor: null }),
+      });
+
+      await svc.getSimplifiedMarkets("cursor-abc", 50);
+      const url = vi.mocked(globalThis.fetch).mock.calls[0][0] as string;
+      expect(url).toContain("next_cursor=cursor-abc");
+      expect(url).toContain("limit=50");
+    });
+
+    it("returns next_cursor for pagination", async () => {
+      const resp = {
+        data: [{ id: "sm-1" }],
+        next_cursor: "next-page",
+      };
+      globalThis.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve(resp),
+      });
+
+      const result = await svc.getSimplifiedMarkets();
+      expect(result.next_cursor).toBe("next-page");
+    });
+
+    it("throws on non-OK response", async () => {
+      globalThis.fetch = vi.fn().mockResolvedValue({
+        ok: false,
+        status: 502,
+      });
+
+      await expect(svc.getSimplifiedMarkets()).rejects.toThrow("502");
+    });
+  });
+
   // ── eventId propagation ───────────────────────────────────────────────────
 
   describe("market eventId propagation", () => {

@@ -56,8 +56,34 @@ export class PolymarketAdapter implements VenueAdapter {
   }
 
   async getPrice(outcomeId: string): Promise<string> {
-    const raw = await this.clob.getBook(outcomeId);
-    return raw.midpoint;
+    const raw = await this.clob.getMarketPrice(outcomeId);
+    return raw.price;
+  }
+
+  async getBatchPrices(
+    tokenIds: string[],
+  ): Promise<Array<{ tokenId: string; price: string }>> {
+    const raw = await this.clob.getMarketPricesBody(tokenIds);
+    return raw.map((r) => ({ tokenId: r.token_id, price: r.price }));
+  }
+
+  async getBatchMidpoints(
+    tokenIds: string[],
+  ): Promise<Array<{ tokenId: string; mid: string }>> {
+    const raw = await this.clob.getMidpointsBody(tokenIds);
+    return raw.map((r) => ({ tokenId: r.token_id, mid: r.mid }));
+  }
+
+  async getBatchSpreads(
+    tokenIds: string[],
+  ): Promise<Array<{ tokenId: string; spread: string }>> {
+    const raw = await this.clob.getSpreads(tokenIds);
+    return raw.map((r) => ({ tokenId: r.token_id, spread: r.spread }));
+  }
+
+  async getServerTime(): Promise<string> {
+    const raw = await this.clob.getServerTime();
+    return raw.time;
   }
 
   async getPriceHistory(
