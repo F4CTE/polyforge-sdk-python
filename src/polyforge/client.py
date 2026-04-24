@@ -91,7 +91,10 @@ from polyforge.models import (
     Webhook,
     WebhookTestResult,
     WhaleTrade,
+    WhaleAlertFilter,
+    WhaleLeaderboardEntry,
     WhaleProfile,
+    ActionsSchema,
 )
 
 T = TypeVar("T")
@@ -483,6 +486,11 @@ class PolyforgeClient:
 
     def _patch(self, path: str, *, json: dict[str, Any] | None = None) -> Any:
         resp = self._client.patch(path, json=json or {})
+        _raise_for_status(resp)
+        return resp.json()
+
+    def _put(self, path: str, *, json: dict[str, Any] | None = None) -> Any:
+        resp = self._client.put(path, json=json or {})
         _raise_for_status(resp)
         return resp.json()
 
@@ -1793,6 +1801,85 @@ class PolyforgeClient:
         items = data if isinstance(data, list) else data.get("data", [])
         return [_parse(WhaleProfile, w) for w in items]
 
+    def get_whale_leaderboard(
+        self,
+        *,
+        period: str | None = None,
+        limit: int | None = None,
+    ) -> list[WhaleLeaderboardEntry]:
+        """Fetch the smart-money whale leaderboard.
+
+        Args:
+            period: Time period filter (``"24h"``, ``"7d"``, ``"30d"``, ``"all"``).
+            limit: Maximum entries (1--100, default 20).
+
+        Returns:
+            A list of :class:`WhaleLeaderboardEntry` objects ranked by score.
+        """
+        data = self._get("/api/v1/whales/leaderboard", params=_strip_none({
+            "period": period, "limit": limit,
+        }))
+        items = data if isinstance(data, list) else data.get("data", [])
+        return [_parse(WhaleLeaderboardEntry, e) for e in items]
+
+    def get_whale_alert_filter(self) -> WhaleAlertFilter | None:
+        """Get the current user's whale alert filter.
+
+        Returns:
+            The :class:`WhaleAlertFilter` if one exists, or ``None``.
+        """
+        data = self._get("/api/v1/whales/alerts/filter")
+        if data is None:
+            return None
+        return _parse(WhaleAlertFilter, data)
+
+    def set_whale_alert_filter(
+        self,
+        *,
+        min_size: str | None = None,
+        market_ids: list[str] | None = None,
+        wallet_addresses: list[str] | None = None,
+        sides: list[str] | None = None,
+        active: bool | None = None,
+    ) -> WhaleAlertFilter:
+        """Create or update the current user's whale alert filter.
+
+        Args:
+            min_size: Minimum trade notional (decimal string).
+            market_ids: Filter to specific market IDs (max 50).
+            wallet_addresses: Filter to specific wallets (max 100).
+            sides: Filter by side (``["BUY"]``, ``["SELL"]``, or both).
+            active: Whether the filter is active.
+
+        Returns:
+            The upserted :class:`WhaleAlertFilter`.
+        """
+        body = _strip_none({
+            "minSize": min_size,
+            "marketIds": market_ids,
+            "walletAddresses": wallet_addresses,
+            "sides": sides,
+            "active": active,
+        })
+        data = self._put("/api/v1/whales/alerts/filter", json=body)
+        return _parse(WhaleAlertFilter, data)
+
+    def delete_whale_alert_filter(self) -> None:
+        """Delete the current user's whale alert filter."""
+        self._delete("/api/v1/whales/alerts/filter")
+
+    def get_actions(self) -> ActionsSchema:
+        """Fetch the full list of available API actions.
+
+        This is a public endpoint (no auth required) that returns a
+        structured capability manifest for AI agents.
+
+        Returns:
+            An :class:`ActionsSchema` with version and action definitions.
+        """
+        data = self._get("/api/v1/actions")
+        return _parse(ActionsSchema, data)
+
     def get_news_signals(
         self,
         *,
@@ -2405,6 +2492,11 @@ class AsyncPolyforgeClient:
 
     async def _patch(self, path: str, *, json: dict[str, Any] | None = None) -> Any:
         resp = await self._client.patch(path, json=json or {})
+        _raise_for_status(resp)
+        return resp.json()
+
+    async def _put(self, path: str, *, json: dict[str, Any] | None = None) -> Any:
+        resp = await self._client.put(path, json=json or {})
         _raise_for_status(resp)
         return resp.json()
 
@@ -3579,6 +3671,55 @@ class AsyncPolyforgeClient:
         data = await self._get("/api/v1/whales/following")
         items = data if isinstance(data, list) else data.get("data", [])
         return [_parse(WhaleProfile, w) for w in items]
+
+    async def get_whale_leaderboard(
+        self,
+        *,
+        period: str | None = None,
+        limit: int | None = None,
+    ) -> list[WhaleLeaderboardEntry]:
+        """Fetch the smart-money whale leaderboard."""
+        data = await self._get("/api/v1/whales/leaderboard", params=_strip_none({
+            "period": period, "limit": limit,
+        }))
+        items = data if isinstance(data, list) else data.get("data", [])
+        return [_parse(WhaleLeaderboardEntry, e) for e in items]
+
+    async def get_whale_alert_filter(self) -> WhaleAlertFilter | None:
+        """Get the current user's whale alert filter."""
+        data = await self._get("/api/v1/whales/alerts/filter")
+        if data is None:
+            return None
+        return _parse(WhaleAlertFilter, data)
+
+    async def set_whale_alert_filter(
+        self,
+        *,
+        min_size: str | None = None,
+        market_ids: list[str] | None = None,
+        wallet_addresses: list[str] | None = None,
+        sides: list[str] | None = None,
+        active: bool | None = None,
+    ) -> WhaleAlertFilter:
+        """Create or update the current user's whale alert filter."""
+        body = _strip_none({
+            "minSize": min_size,
+            "marketIds": market_ids,
+            "walletAddresses": wallet_addresses,
+            "sides": sides,
+            "active": active,
+        })
+        data = await self._put("/api/v1/whales/alerts/filter", json=body)
+        return _parse(WhaleAlertFilter, data)
+
+    async def delete_whale_alert_filter(self) -> None:
+        """Delete the current user's whale alert filter."""
+        await self._delete("/api/v1/whales/alerts/filter")
+
+    async def get_actions(self) -> ActionsSchema:
+        """Fetch the full list of available API actions."""
+        data = await self._get("/api/v1/actions")
+        return _parse(ActionsSchema, data)
 
     async def get_news_signals(
         self,
