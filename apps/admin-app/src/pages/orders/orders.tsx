@@ -13,6 +13,7 @@ interface OrderRow {
   size: string | number;
   price: string | number;
   createdAt: string;
+  venue?: string;
   [key: string]: unknown;
 }
 
@@ -34,6 +35,7 @@ export function Component() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [statusFilter, setStatusFilter] = useState('');
+  const [venueFilter, setVenueFilter] = useState('');
 
   const limit = 20;
 
@@ -42,7 +44,7 @@ export function Component() {
     setError(false);
     try {
       const [ordersRes, dlqRes] = await Promise.all([
-        adminApi.orders({ page, limit, status: statusFilter || undefined }),
+        adminApi.orders({ page, limit, status: statusFilter || undefined, venue: venueFilter || undefined }),
         adminApi.dlq(),
       ]);
       setOrders(((ordersRes.data ?? []) as any[]).map(o => ({ ...o, username: o.user?.username ?? o.username ?? '' })) as OrderRow[]);
@@ -55,7 +57,7 @@ export function Component() {
     } finally {
       setLoading(false);
     }
-  }, [page, statusFilter]);
+  }, [page, statusFilter, venueFilter]);
 
   useEffect(() => {
     load();
@@ -91,20 +93,32 @@ export function Component() {
         <h2 className="text-lg font-semibold text-primary">
           Orders <span className="text-body-sm font-normal text-tertiary">({total})</span>
         </h2>
-        <Select
-          value={statusFilter}
-          onChange={e => { setStatusFilter(e.target.value); setPage(1); }}
-          aria-label="Filter by order status"
-          className="h-8 px-2 rounded-sm bg-elevated border border-default text-label text-primary focus-visible:outline-none focus-visible:border-accent"
-        >
-          <option value="">All statuses</option>
-          <option value="PENDING">Pending</option>
-          <option value="SUBMITTED">Submitted</option>
-          <option value="LIVE">Live</option>
-          <option value="CONFIRMED">Confirmed</option>
-          <option value="CANCELLED">Cancelled</option>
-          <option value="FAILED">Failed</option>
-        </Select>
+        <div className="flex items-center gap-2">
+          <Select
+            value={venueFilter}
+            onChange={e => { setVenueFilter(e.target.value); setPage(1); }}
+            aria-label="Filter by venue"
+            className="h-8 px-2 rounded-sm bg-elevated border border-default text-label text-primary focus-visible:outline-none focus-visible:border-accent"
+          >
+            <option value="">All venues</option>
+            <option value="polymarket">Polymarket</option>
+            <option value="kalshi">Kalshi</option>
+          </Select>
+          <Select
+            value={statusFilter}
+            onChange={e => { setStatusFilter(e.target.value); setPage(1); }}
+            aria-label="Filter by order status"
+            className="h-8 px-2 rounded-sm bg-elevated border border-default text-label text-primary focus-visible:outline-none focus-visible:border-accent"
+          >
+            <option value="">All statuses</option>
+            <option value="PENDING">Pending</option>
+            <option value="SUBMITTED">Submitted</option>
+            <option value="LIVE">Live</option>
+            <option value="CONFIRMED">Confirmed</option>
+            <option value="CANCELLED">Cancelled</option>
+            <option value="FAILED">Failed</option>
+          </Select>
+        </div>
       </div>
 
       {error && (
@@ -203,6 +217,7 @@ export function Component() {
               <tr className="border-b border-default">
                 <th scope="col" className="text-left px-4 py-3 text-label font-medium text-tertiary uppercase tracking-wider">ID</th>
                 <th scope="col" className="text-left px-4 py-3 text-label font-medium text-tertiary uppercase tracking-wider">User</th>
+                <th scope="col" className="text-left px-4 py-3 text-label font-medium text-tertiary uppercase tracking-wider">Venue</th>
                 <th scope="col" className="text-left px-4 py-3 text-label font-medium text-tertiary uppercase tracking-wider">Side</th>
                 <th scope="col" className="text-left px-4 py-3 text-label font-medium text-tertiary uppercase tracking-wider">Status</th>
                 <th scope="col" className="text-right px-4 py-3 text-label font-medium text-tertiary uppercase tracking-wider">Size</th>
@@ -214,7 +229,7 @@ export function Component() {
               {loading ? (
                 Array.from({ length: 3 }).map((_, i) => (
                   <tr key={i}>
-                    {Array.from({ length: 7 }).map((_, j) => (
+                    {Array.from({ length: 8 }).map((_, j) => (
                       <td key={j} className="px-4 py-3">
                         <div className="h-4 bg-surface rounded-sm animate-pulse" />
                       </td>
@@ -223,7 +238,7 @@ export function Component() {
                 ))
               ) : orders.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="text-center py-12">
+                  <td colSpan={8} className="text-center py-12">
                     <ClipboardList className="mx-auto mb-3 text-tertiary opacity-40" size={40} aria-hidden="true" />
                     <p className="text-secondary font-medium">No orders found</p>
                     <p className="text-tertiary text-label mt-1">Orders will appear here once users start trading</p>
@@ -236,6 +251,19 @@ export function Component() {
                       {o.id.slice(0, 8)}
                     </td>
                     <td className="px-4 py-3 text-primary">{o.username}</td>
+                    <td className="px-4 py-3">
+                      {o.venue ? (
+                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-caption font-semibold ${
+                          o.venue.toLowerCase().includes('poly')
+                            ? 'bg-accent/10 text-accent'
+                            : 'bg-warning/10 text-warning'
+                        }`}>
+                          {o.venue.toLowerCase().includes('poly') ? 'Poly' : 'Kalshi'}
+                        </span>
+                      ) : (
+                        <span className="text-tertiary">—</span>
+                      )}
+                    </td>
                     <td className="px-4 py-3">
                       <span className={o.side === 'BUY' ? 'text-gain' : 'text-loss'}>
                         {o.side}

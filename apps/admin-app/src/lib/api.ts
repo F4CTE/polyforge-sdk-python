@@ -93,6 +93,31 @@ export interface StrategyReview {
   verifiedPurchase: boolean;
 }
 
+// ─── Venue Types ──────────────────────────────────────────────────────────────
+
+export interface VenueCapabilities {
+  rfq?: boolean;
+  batchOrders?: boolean;
+  webSocket?: boolean;
+  noSideTrading?: boolean;
+  candlestick?: boolean;
+  [key: string]: boolean | undefined;
+}
+
+export interface VenueHealth {
+  id: string;
+  displayName: string;
+  wsStatus: 'connected' | 'disconnected' | 'error' | 'unknown';
+  lastEventAt: string | null;
+  latencyMs: number | null;
+  config: {
+    restBaseUrl: string;
+    authType: string;
+    enabled: boolean;
+    capabilities: VenueCapabilities;
+  };
+}
+
 // ─── API Response Types ────────────────────────────────────────────────────────
 
 interface HealthData {
@@ -310,6 +335,7 @@ export const adminApi = {
   // Dashboard
   health: () => request<HealthData>(buildUrl(API_BASE, '/dashboard')),
   healthStatus: () => request<HealthStatusData>(buildUrl('/api/admin', '/health')),
+  venueHealth: () => request<VenueHealth[]>(buildUrl('/api/admin', '/v1/venues/health')),
   rateLimits: () => request<RateLimitsData>(buildUrl(API_BASE, '/dashboard/rate-limits')),
   config: () => request<{ inviteOnly: boolean }>(buildUrl(API_BASE, '/config')),
   setInviteOnly: (enabled: boolean) =>

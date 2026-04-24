@@ -3,23 +3,32 @@ import { render } from '@testing-library/react';
 import { App } from '../app';
 import { ErrorBoundary } from '../components/error-boundary';
 
-// Mock the router and stores to avoid initialization issues
+// Mock react-router to avoid RouterProvider initialization in tests
+vi.mock('react-router', () => ({
+  RouterProvider: () => <div data-testid="router-provider" />,
+  createBrowserRouter: vi.fn(() => ({ routes: [] })),
+  Navigate: () => null,
+  NavLink: ({ children }: { children: React.ReactNode }) => <a>{children}</a>,
+  Link: ({ children }: { children: React.ReactNode }) => <a>{children}</a>,
+}));
+
 vi.mock('../router', () => ({
-  router: {
-    routes: [],
+  router: { routes: [] },
+}));
+
+const mockInit = vi.fn();
+vi.mock('../stores/admin-auth-store', () => ({
+  useAdminAuthStore: (selector?: (s: Record<string, unknown>) => unknown) => {
+    const state = { init: mockInit, isSuperAdmin: false, admin: null };
+    return selector ? selector(state) : state;
   },
 }));
 
-vi.mock('../stores/admin-auth-store', () => ({
-  useAdminAuthStore: () => ({
-    init: vi.fn(),
-  }),
-}));
-
 vi.mock('../stores/theme-store', () => ({
-  useThemeStore: () => ({
-    isDark: false,
-  }),
+  useThemeStore: (selector?: (s: Record<string, unknown>) => unknown) => {
+    const state = { isDark: false };
+    return selector ? selector(state) : state;
+  },
 }));
 
 vi.mock('sonner', () => ({

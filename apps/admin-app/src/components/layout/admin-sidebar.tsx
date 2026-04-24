@@ -27,6 +27,7 @@ import {
   Settings2,
   HelpCircle,
   Keyboard,
+  Globe,
 } from 'lucide-react';
 import { useAdminAuthStore } from '@/stores/admin-auth-store';
 import { usePollingStore } from '@/stores/polling-store';
@@ -75,6 +76,7 @@ const navSections: NavSection[] = [
       { label: 'Abuse Detection', path: '/abuse', icon: <ShieldAlert size={iconSize} aria-hidden="true" /> },
       { label: 'Logs', path: '/logs', icon: <ScrollText size={iconSize} aria-hidden="true" /> },
       { label: 'Health', path: '/health', icon: <Activity size={iconSize} aria-hidden="true" /> },
+      { label: 'Venues', path: '/venues', icon: <Globe size={iconSize} aria-hidden="true" /> },
       { label: 'Sentiment', path: '/sentiment', icon: <TrendingUp size={iconSize} aria-hidden="true" /> },
       { label: 'Platform Config', path: '/config', icon: <Settings2 size={iconSize} aria-hidden="true" /> },
     ],
