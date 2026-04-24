@@ -4765,3 +4765,583 @@ class TestSseStreamTimeout:
         source = inspect.getsource(AsyncPolyforgeClient.watch_strategy)
         assert "self._stream_timeout" in source
         assert "httpx.Timeout" in source
+
+
+# ---------------------------------------------------------------------------
+# POLA-830 — User Management P2 (profile/settings/tickets/prefs)
+# ---------------------------------------------------------------------------
+
+class TestProfileMethods:
+    """Tests for profile management endpoints (sync + async)."""
+
+    PROFILE_METHODS = [
+        "update_my_profile",
+        "change_password",
+        "update_profile_notifications",
+        "get_public_profile",
+        "toggle_follow",
+    ]
+
+    @pytest.mark.parametrize("method", PROFILE_METHODS)
+    def test_sync_method_exists(self, method):
+        assert hasattr(PolyforgeClient, method)
+        assert callable(getattr(PolyforgeClient, method))
+
+    @pytest.mark.parametrize("method", PROFILE_METHODS)
+    def test_async_method_exists(self, method):
+        assert hasattr(AsyncPolyforgeClient, method)
+        assert callable(getattr(AsyncPolyforgeClient, method))
+
+    def test_sync_endpoints_use_correct_paths(self):
+        import inspect
+        path_map = {
+            "update_my_profile": "/api/v1/profile/me",
+            "change_password": "/api/v1/profile/password",
+            "update_profile_notifications": "/api/v1/profile/notifications",
+            "get_public_profile": "/api/v1/profile/",
+            "toggle_follow": "/follow",
+        }
+        for method_name, expected_path in path_map.items():
+            source = inspect.getsource(getattr(PolyforgeClient, method_name))
+            assert expected_path in source, f"{method_name} missing path {expected_path}"
+
+    def test_async_endpoints_use_correct_paths(self):
+        import inspect
+        path_map = {
+            "update_my_profile": "/api/v1/profile/me",
+            "change_password": "/api/v1/profile/password",
+            "update_profile_notifications": "/api/v1/profile/notifications",
+            "get_public_profile": "/api/v1/profile/",
+            "toggle_follow": "/follow",
+        }
+        for method_name, expected_path in path_map.items():
+            source = inspect.getsource(getattr(AsyncPolyforgeClient, method_name))
+            assert expected_path in source, f"async {method_name} missing path {expected_path}"
+
+    def test_async_methods_use_await(self):
+        import inspect
+        for method_name in self.PROFILE_METHODS:
+            source = inspect.getsource(getattr(AsyncPolyforgeClient, method_name))
+            assert "await" in source, f"async {method_name} not using await"
+
+    def test_sync_update_my_profile(self):
+        from unittest.mock import MagicMock
+        client = PolyforgeClient(api_key="test-key")
+        client._patch = MagicMock(return_value={"displayName": "Alice", "bio": "hi", "avatarUrl": None})
+        result = client.update_my_profile(display_name="Alice", bio="hi")
+        client._patch.assert_called_once_with(
+            "/api/v1/profile/me",
+            json={"displayName": "Alice", "bio": "hi"},
+        )
+        assert result["displayName"] == "Alice"
+        client.close()
+
+    def test_sync_change_password(self):
+        from unittest.mock import MagicMock
+        client = PolyforgeClient(api_key="test-key")
+        client._post = MagicMock(return_value={"message": "Password changed"})
+        result = client.change_password(current_password="old", new_password="new12345")
+        client._post.assert_called_once_with(
+            "/api/v1/profile/password",
+            json={"currentPassword": "old", "newPassword": "new12345"},
+        )
+        assert result["message"] == "Password changed"
+        client.close()
+
+    def test_sync_get_public_profile(self):
+        from unittest.mock import MagicMock
+        from polyforge.models import UserProfile
+        client = PolyforgeClient(api_key="test-key")
+        client._get = MagicMock(return_value={
+            "username": "alice",
+            "displayName": "Alice",
+            "bio": "builder",
+            "avatarUrl": None,
+            "followersCount": 10,
+            "followingCount": 5,
+            "isFollowing": False,
+            "publicStrategyCount": 3,
+            "joinedAt": "2024-01-01T00:00:00Z",
+        })
+        result = client.get_public_profile("alice")
+        assert isinstance(result, UserProfile)
+        assert result.username == "alice"
+        assert result.followers_count == 10
+        client.close()
+
+    def test_sync_toggle_follow(self):
+        from unittest.mock import MagicMock
+        from polyforge.models import FollowResult
+        client = PolyforgeClient(api_key="test-key")
+        client._post = MagicMock(return_value={"following": True, "followersCount": 11})
+        result = client.toggle_follow("alice")
+        assert isinstance(result, FollowResult)
+        assert result.following is True
+        assert result.followers_count == 11
+        client.close()
+
+    def test_sync_update_profile_notifications(self):
+        from unittest.mock import MagicMock
+        client = PolyforgeClient(api_key="test-key")
+        client._patch = MagicMock(return_value={"message": "Notification preferences updated"})
+        result = client.update_profile_notifications({"emailEnabled": True})
+        client._patch.assert_called_once_with(
+            "/api/v1/profile/notifications",
+            json={"emailEnabled": True},
+        )
+        assert result["message"] == "Notification preferences updated"
+        client.close()
+
+
+class TestSettingsMethods:
+    """Tests for settings endpoints (sync + async)."""
+
+    SETTINGS_METHODS = [
+        "update_settings_profile",
+        "get_notification_settings",
+        "update_notification_settings",
+        "update_settings_password",
+        "get_beta_usage",
+        "get_gas_settings",
+    ]
+
+    @pytest.mark.parametrize("method", SETTINGS_METHODS)
+    def test_sync_method_exists(self, method):
+        assert hasattr(PolyforgeClient, method)
+        assert callable(getattr(PolyforgeClient, method))
+
+    @pytest.mark.parametrize("method", SETTINGS_METHODS)
+    def test_async_method_exists(self, method):
+        assert hasattr(AsyncPolyforgeClient, method)
+        assert callable(getattr(AsyncPolyforgeClient, method))
+
+    def test_sync_endpoints_use_correct_paths(self):
+        import inspect
+        path_map = {
+            "update_settings_profile": "/api/v1/settings/profile",
+            "get_notification_settings": "/api/v1/settings/notifications",
+            "update_notification_settings": "/api/v1/settings/notifications",
+            "update_settings_password": "/api/v1/settings/password",
+            "get_beta_usage": "/api/v1/settings/beta-usage",
+            "get_gas_settings": "/api/v1/settings/gas",
+        }
+        for method_name, expected_path in path_map.items():
+            source = inspect.getsource(getattr(PolyforgeClient, method_name))
+            assert expected_path in source, f"{method_name} missing path {expected_path}"
+
+    def test_async_endpoints_use_correct_paths(self):
+        import inspect
+        path_map = {
+            "update_settings_profile": "/api/v1/settings/profile",
+            "get_notification_settings": "/api/v1/settings/notifications",
+            "update_notification_settings": "/api/v1/settings/notifications",
+            "update_settings_password": "/api/v1/settings/password",
+            "get_beta_usage": "/api/v1/settings/beta-usage",
+            "get_gas_settings": "/api/v1/settings/gas",
+        }
+        for method_name, expected_path in path_map.items():
+            source = inspect.getsource(getattr(AsyncPolyforgeClient, method_name))
+            assert expected_path in source, f"async {method_name} missing path {expected_path}"
+
+    def test_async_methods_use_await(self):
+        import inspect
+        for method_name in self.SETTINGS_METHODS:
+            source = inspect.getsource(getattr(AsyncPolyforgeClient, method_name))
+            assert "await" in source or "async" in source, f"async {method_name} not using await"
+
+    def test_sync_update_settings_profile(self):
+        from unittest.mock import MagicMock
+        client = PolyforgeClient(api_key="test-key")
+        client._patch = MagicMock(return_value={"displayName": "Bob"})
+        result = client.update_settings_profile(display_name="Bob", twitter_handle="@bob")
+        client._patch.assert_called_once_with(
+            "/api/v1/settings/profile",
+            json={"displayName": "Bob", "twitterHandle": "@bob"},
+        )
+        assert result["displayName"] == "Bob"
+        client.close()
+
+    def test_sync_get_notification_settings(self):
+        from unittest.mock import MagicMock
+        from polyforge.models import NotificationSettings
+        client = PolyforgeClient(api_key="test-key")
+        client._get = MagicMock(return_value={
+            "emailEnabled": True,
+            "telegramEnabled": False,
+            "discordEnabled": False,
+            "onOrderFilled": True,
+            "onStrategyError": True,
+            "onBacktestComplete": False,
+            "onDailyLossLimit": False,
+            "onMarketResolved": False,
+            "onSomeoneForked": False,
+            "onSomeoneFollowed": False,
+            "onSomeoneLiked": False,
+            "onSomeoneCommented": False,
+        })
+        result = client.get_notification_settings()
+        assert isinstance(result, NotificationSettings)
+        assert result.email_enabled is True
+        assert result.on_order_filled is True
+        client.close()
+
+    def test_sync_update_notification_settings_kwargs(self):
+        from unittest.mock import MagicMock
+        client = PolyforgeClient(api_key="test-key")
+        client._patch = MagicMock(return_value={"message": "ok"})
+        client.update_notification_settings(email_enabled=True, on_order_filled=False)
+        client._patch.assert_called_once_with(
+            "/api/v1/settings/notifications",
+            json={"emailEnabled": True, "onOrderFilled": False},
+        )
+        client.close()
+
+    def test_sync_get_beta_usage(self):
+        from unittest.mock import MagicMock
+        client = PolyforgeClient(api_key="test-key")
+        client._get = MagicMock(return_value={"betaEnabled": True})
+        result = client.get_beta_usage()
+        client._get.assert_called_once_with("/api/v1/settings/beta-usage")
+        assert result["betaEnabled"] is True
+        client.close()
+
+    def test_sync_get_gas_settings(self):
+        from unittest.mock import MagicMock
+        client = PolyforgeClient(api_key="test-key")
+        client._get = MagicMock(return_value={"gasLevel": "standard"})
+        result = client.get_gas_settings()
+        client._get.assert_called_once_with("/api/v1/settings/gas")
+        assert result["gasLevel"] == "standard"
+        client.close()
+
+
+class TestTicketMethods:
+    """Tests for support tickets endpoints (sync + async)."""
+
+    TICKET_METHODS = [
+        "list_tickets",
+        "create_ticket",
+        "get_ticket",
+        "add_ticket_message",
+    ]
+
+    @pytest.mark.parametrize("method", TICKET_METHODS)
+    def test_sync_method_exists(self, method):
+        assert hasattr(PolyforgeClient, method)
+        assert callable(getattr(PolyforgeClient, method))
+
+    @pytest.mark.parametrize("method", TICKET_METHODS)
+    def test_async_method_exists(self, method):
+        assert hasattr(AsyncPolyforgeClient, method)
+        assert callable(getattr(AsyncPolyforgeClient, method))
+
+    def test_sync_endpoints_use_correct_paths(self):
+        import inspect
+        path_map = {
+            "list_tickets": "/api/v1/tickets",
+            "create_ticket": "/api/v1/tickets",
+            "get_ticket": "/api/v1/tickets/",
+            "add_ticket_message": "/messages",
+        }
+        for method_name, expected_path in path_map.items():
+            source = inspect.getsource(getattr(PolyforgeClient, method_name))
+            assert expected_path in source, f"{method_name} missing path {expected_path}"
+
+    def test_async_endpoints_use_correct_paths(self):
+        import inspect
+        path_map = {
+            "list_tickets": "/api/v1/tickets",
+            "create_ticket": "/api/v1/tickets",
+            "get_ticket": "/api/v1/tickets/",
+            "add_ticket_message": "/messages",
+        }
+        for method_name, expected_path in path_map.items():
+            source = inspect.getsource(getattr(AsyncPolyforgeClient, method_name))
+            assert expected_path in source, f"async {method_name} missing path {expected_path}"
+
+    def test_async_methods_use_await(self):
+        import inspect
+        for method_name in self.TICKET_METHODS:
+            source = inspect.getsource(getattr(AsyncPolyforgeClient, method_name))
+            assert "await" in source, f"async {method_name} not using await"
+
+    def test_sync_list_tickets(self):
+        from unittest.mock import MagicMock
+        from polyforge.models import SupportTicket
+        client = PolyforgeClient(api_key="test-key")
+        client._get = MagicMock(return_value={
+            "data": [{"id": "t1", "subject": "Help", "category": "GENERAL", "priority": "MEDIUM", "status": "OPEN", "body": "Need help", "messages": [], "createdAt": "2024-01-01", "updatedAt": "2024-01-01"}],
+            "pagination": {"total": 1, "page": 1, "limit": 20, "totalPages": 1},
+        })
+        result = client.list_tickets()
+        assert len(result.data) == 1
+        assert isinstance(result.data[0], SupportTicket)
+        assert result.data[0].subject == "Help"
+        client.close()
+
+    def test_sync_create_ticket(self):
+        from unittest.mock import MagicMock
+        from polyforge.models import SupportTicket
+        client = PolyforgeClient(api_key="test-key")
+        client._post = MagicMock(return_value={
+            "id": "t2", "subject": "Bug", "category": "BUG", "priority": "HIGH",
+            "status": "OPEN", "body": "Something broke", "messages": [],
+            "createdAt": "2024-01-01", "updatedAt": "2024-01-01",
+        })
+        result = client.create_ticket(subject="Bug", body="Something broke", category="BUG", priority="HIGH")
+        client._post.assert_called_once_with(
+            "/api/v1/tickets",
+            json={"subject": "Bug", "body": "Something broke", "category": "BUG", "priority": "HIGH"},
+        )
+        assert isinstance(result, SupportTicket)
+        assert result.category == "BUG"
+        client.close()
+
+    def test_sync_get_ticket(self):
+        from unittest.mock import MagicMock
+        from polyforge.models import SupportTicket
+        client = PolyforgeClient(api_key="test-key")
+        client._get = MagicMock(return_value={
+            "id": "t1", "subject": "Help", "category": "GENERAL",
+            "priority": "MEDIUM", "status": "OPEN", "body": "content",
+            "messages": [{"id": "m1", "body": "reply", "author": "agent", "createdAt": "2024-01-02"}],
+            "createdAt": "2024-01-01", "updatedAt": "2024-01-02",
+        })
+        result = client.get_ticket("t1")
+        assert isinstance(result, SupportTicket)
+        assert result.id == "t1"
+        client.close()
+
+    def test_sync_add_ticket_message(self):
+        from unittest.mock import MagicMock
+        from polyforge.models import TicketMessage
+        client = PolyforgeClient(api_key="test-key")
+        client._post = MagicMock(return_value={
+            "id": "m2", "body": "thanks", "author": "user", "createdAt": "2024-01-03",
+        })
+        result = client.add_ticket_message("t1", body="thanks")
+        client._post.assert_called_once_with(
+            "/api/v1/tickets/t1/messages",
+            json={"body": "thanks"},
+        )
+        assert isinstance(result, TicketMessage)
+        assert result.body == "thanks"
+        client.close()
+
+
+class TestNotificationPreferenceMethods:
+    """Tests for notification preference endpoints (sync + async)."""
+
+    PREF_METHODS = [
+        "get_notification_preferences",
+        "update_notification_preferences",
+    ]
+
+    @pytest.mark.parametrize("method", PREF_METHODS)
+    def test_sync_method_exists(self, method):
+        assert hasattr(PolyforgeClient, method)
+        assert callable(getattr(PolyforgeClient, method))
+
+    @pytest.mark.parametrize("method", PREF_METHODS)
+    def test_async_method_exists(self, method):
+        assert hasattr(AsyncPolyforgeClient, method)
+        assert callable(getattr(AsyncPolyforgeClient, method))
+
+    def test_sync_endpoints_use_correct_paths(self):
+        import inspect
+        for method_name in self.PREF_METHODS:
+            source = inspect.getsource(getattr(PolyforgeClient, method_name))
+            assert "/api/v1/users/me/notification-preferences" in source
+
+    def test_async_endpoints_use_correct_paths(self):
+        import inspect
+        for method_name in self.PREF_METHODS:
+            source = inspect.getsource(getattr(AsyncPolyforgeClient, method_name))
+            assert "/api/v1/users/me/notification-preferences" in source
+
+    def test_async_methods_use_await(self):
+        import inspect
+        for method_name in self.PREF_METHODS:
+            source = inspect.getsource(getattr(AsyncPolyforgeClient, method_name))
+            assert "await" in source, f"async {method_name} not using await"
+
+    def test_sync_get_notification_preferences(self):
+        from unittest.mock import MagicMock
+        from polyforge.models import EventNotificationPreferences, EventNotificationPref
+        client = PolyforgeClient(api_key="test-key")
+        client._get = MagicMock(return_value={
+            "preferences": [
+                {"event": "ORDER_FILLED", "inApp": True, "email": False, "push": True},
+            ],
+            "emailDigest": "daily",
+        })
+        result = client.get_notification_preferences()
+        assert isinstance(result, EventNotificationPreferences)
+        assert len(result.preferences) == 1
+        assert result.preferences[0].event == "ORDER_FILLED"
+        assert result.email_digest == "daily"
+        client.close()
+
+    def test_sync_update_notification_preferences(self):
+        from unittest.mock import MagicMock
+        from polyforge.models import EventNotificationPreferences
+        client = PolyforgeClient(api_key="test-key")
+        client._put = MagicMock(return_value={
+            "preferences": [
+                {"event": "ORDER_FILLED", "inApp": True, "email": True, "push": True},
+            ],
+            "emailDigest": "weekly",
+        })
+        prefs = [{"event": "ORDER_FILLED", "inApp": True, "email": True, "push": True}]
+        result = client.update_notification_preferences(preferences=prefs, email_digest="weekly")
+        client._put.assert_called_once_with(
+            "/api/v1/users/me/notification-preferences",
+            json={"preferences": prefs, "emailDigest": "weekly"},
+        )
+        assert isinstance(result, EventNotificationPreferences)
+        assert result.email_digest == "weekly"
+        client.close()
+
+
+class TestVenuePreferenceMethods:
+    """Tests for venue preference endpoints (sync + async)."""
+
+    VENUE_METHODS = [
+        "get_venue_preferences",
+        "update_venue_preferences",
+    ]
+
+    @pytest.mark.parametrize("method", VENUE_METHODS)
+    def test_sync_method_exists(self, method):
+        assert hasattr(PolyforgeClient, method)
+        assert callable(getattr(PolyforgeClient, method))
+
+    @pytest.mark.parametrize("method", VENUE_METHODS)
+    def test_async_method_exists(self, method):
+        assert hasattr(AsyncPolyforgeClient, method)
+        assert callable(getattr(AsyncPolyforgeClient, method))
+
+    def test_sync_endpoints_use_correct_paths(self):
+        import inspect
+        for method_name in self.VENUE_METHODS:
+            source = inspect.getsource(getattr(PolyforgeClient, method_name))
+            assert "/api/v1/users/me/venue-preferences" in source
+
+    def test_async_endpoints_use_correct_paths(self):
+        import inspect
+        for method_name in self.VENUE_METHODS:
+            source = inspect.getsource(getattr(AsyncPolyforgeClient, method_name))
+            assert "/api/v1/users/me/venue-preferences" in source
+
+    def test_sync_get_venue_preferences(self):
+        from unittest.mock import MagicMock
+        from polyforge.models import VenuePreferences
+        client = PolyforgeClient(api_key="test-key")
+        client._get = MagicMock(return_value={
+            "defaultVenue": "polymarket",
+            "enabledVenues": ["polymarket", "kalshi"],
+            "singlePlatformMode": False,
+        })
+        result = client.get_venue_preferences()
+        assert isinstance(result, VenuePreferences)
+        assert result.default_venue == "polymarket"
+        assert "kalshi" in result.enabled_venues
+        client.close()
+
+    def test_sync_update_venue_preferences(self):
+        from unittest.mock import MagicMock
+        from polyforge.models import VenuePreferences
+        client = PolyforgeClient(api_key="test-key")
+        client._patch = MagicMock(return_value={
+            "defaultVenue": "kalshi",
+            "enabledVenues": ["kalshi"],
+            "singlePlatformMode": True,
+        })
+        result = client.update_venue_preferences(default_venue="kalshi", single_platform_mode=True)
+        client._patch.assert_called_once_with(
+            "/api/v1/users/me/venue-preferences",
+            json={"defaultVenue": "kalshi", "singlePlatformMode": True},
+        )
+        assert isinstance(result, VenuePreferences)
+        assert result.single_platform_mode is True
+        client.close()
+
+
+class TestUserManagementModels:
+    """Tests for new user management models."""
+
+    def test_user_profile_defaults(self):
+        from polyforge.models import UserProfile
+        p = UserProfile()
+        assert p.username == ""
+        assert p.followers_count == 0
+        assert p.is_following is False
+
+    def test_follow_result_defaults(self):
+        from polyforge.models import FollowResult
+        f = FollowResult()
+        assert f.following is False
+        assert f.followers_count == 0
+
+    def test_notification_settings_defaults(self):
+        from polyforge.models import NotificationSettings
+        n = NotificationSettings()
+        assert n.email_enabled is False
+        assert n.on_order_filled is False
+
+    def test_event_notification_pref_defaults(self):
+        from polyforge.models import EventNotificationPref
+        e = EventNotificationPref()
+        assert e.event == ""
+        assert e.in_app is False
+
+    def test_event_notification_preferences_defaults(self):
+        from polyforge.models import EventNotificationPreferences
+        e = EventNotificationPreferences()
+        assert e.preferences == []
+        assert e.email_digest == ""
+
+    def test_venue_preferences_defaults(self):
+        from polyforge.models import VenuePreferences
+        v = VenuePreferences()
+        assert v.default_venue == ""
+        assert v.enabled_venues == []
+        assert v.single_platform_mode is False
+
+    def test_support_ticket_defaults(self):
+        from polyforge.models import SupportTicket
+        t = SupportTicket()
+        assert t.subject == ""
+        assert t.category == "GENERAL"
+        assert t.priority == "MEDIUM"
+        assert t.messages == []
+
+    def test_ticket_message_defaults(self):
+        from polyforge.models import TicketMessage
+        m = TicketMessage()
+        assert m.body == ""
+        assert m.author == ""
+
+
+class TestSnakeToCamelHelper:
+    """Tests for the _snake_to_camel helper."""
+
+    def test_basic_conversion(self):
+        from polyforge.client import _snake_to_camel
+        assert _snake_to_camel("email_enabled") == "emailEnabled"
+        assert _snake_to_camel("on_order_filled") == "onOrderFilled"
+        assert _snake_to_camel("single") == "single"
+
+    def test_multi_word(self):
+        from polyforge.client import _snake_to_camel
+        assert _snake_to_camel("drawdown_lookback_hours") == "drawdownLookbackHours"
+
+
+class TestPutHelper:
+    """Tests for _put helper on both clients."""
+
+    def test_sync_put_exists(self):
+        assert hasattr(PolyforgeClient, "_put")
+
+    def test_async_put_exists(self):
+        assert hasattr(AsyncPolyforgeClient, "_put")

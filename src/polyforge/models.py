@@ -1182,3 +1182,108 @@ class ActionsSchema:
 
     version: str = ""
     actions: list[ActionDefinition] = field(default_factory=list)
+
+
+# ---------------------------------------------------------------------------
+# User Profile
+# ---------------------------------------------------------------------------
+
+@dataclass
+class UserProfile:
+    """Public profile for a user."""
+
+    username: str = ""
+    display_name: str = ""
+    bio: str | None = None
+    avatar_url: str | None = None
+    followers_count: int = 0
+    following_count: int = 0
+    is_following: bool = False
+    public_strategy_count: int = 0
+    joined_at: str = ""
+
+
+@dataclass
+class FollowResult:
+    """Result of a follow/unfollow toggle."""
+
+    following: bool = False
+    followers_count: int = 0
+
+
+# ---------------------------------------------------------------------------
+# Settings
+# ---------------------------------------------------------------------------
+
+@dataclass
+class NotificationSettings:
+    """Channel-level notification toggles."""
+
+    email_enabled: bool = False
+    telegram_enabled: bool = False
+    discord_enabled: bool = False
+    on_order_filled: bool = False
+    on_strategy_error: bool = False
+    on_backtest_complete: bool = False
+    on_daily_loss_limit: bool = False
+    on_market_resolved: bool = False
+    on_someone_forked: bool = False
+    on_someone_followed: bool = False
+    on_someone_liked: bool = False
+    on_someone_commented: bool = False
+
+
+@dataclass
+class EventNotificationPref:
+    """Per-event notification preference."""
+
+    event: str = ""
+    in_app: bool = False
+    email: bool = False
+    push: bool = False
+
+
+@dataclass
+class EventNotificationPreferences:
+    """Aggregate event notification preferences."""
+
+    preferences: list[EventNotificationPref] = field(default_factory=list)
+    email_digest: str = ""
+
+
+@dataclass
+class VenuePreferences:
+    """User venue preferences."""
+
+    default_venue: str = ""
+    enabled_venues: list[str] = field(default_factory=list)
+    single_platform_mode: bool = False
+
+
+# ---------------------------------------------------------------------------
+# Support Tickets
+# ---------------------------------------------------------------------------
+
+@dataclass
+class TicketMessage:
+    """A single message within a support ticket."""
+
+    id: str = ""
+    body: str = ""
+    author: str = ""
+    created_at: str = ""
+
+
+@dataclass
+class SupportTicket:
+    """A support ticket."""
+
+    id: str = ""
+    subject: str = ""
+    category: str = "GENERAL"
+    priority: str = "MEDIUM"
+    status: str = ""
+    body: str = ""
+    messages: list[TicketMessage] = field(default_factory=list)
+    created_at: str = ""
+    updated_at: str = ""
