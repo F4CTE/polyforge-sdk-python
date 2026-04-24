@@ -522,6 +522,35 @@ class SpreadSummary:
 
 
 @dataclass
+class VenueComparisonDetail:
+    """Price detail for one venue in a cross-venue comparison."""
+
+    market_id: str = ""
+    title: str = ""
+    yes_price: float = 0.0
+    no_price: float = 0.0
+
+
+@dataclass
+class VenueComparison:
+    """Detailed price comparison for a matched market pair across venues."""
+
+    match_id: str = ""
+    polymarket: Optional[VenueComparisonDetail] = None
+    kalshi: Optional[VenueComparisonDetail] = None
+    spread_pct: float = 0.0
+    confidence: float = 0.0
+    verified: bool = False
+
+
+@dataclass
+class MatchSyncResult:
+    """Result of a manual matching pass."""
+
+    matched: int = 0
+
+
+@dataclass
 class ArbitrageSnapshot:
     """A historical record of a cross-venue arbitrage detection."""
 
