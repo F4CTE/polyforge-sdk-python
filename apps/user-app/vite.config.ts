@@ -14,10 +14,11 @@ export default defineConfig({
   build: {
     rollupOptions: {
       output: {
-        manualChunks: {
-          'vendor-react': ['react', 'react-dom', 'react-router'],
-          'vendor-recharts': ['recharts'],
-          'vendor-xyflow': ['@xyflow/react'],
+        manualChunks(id) {
+          if (id.includes('react-dom') || id.includes('react-router') || (id.includes('/react/') && !id.includes('recharts')))
+            return 'vendor-react';
+          if (id.includes('recharts')) return 'vendor-recharts';
+          if (id.includes('@xyflow/react')) return 'vendor-xyflow';
         },
       },
     },
