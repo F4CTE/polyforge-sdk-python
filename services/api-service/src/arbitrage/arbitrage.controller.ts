@@ -10,8 +10,9 @@ import {
   ParseFloatPipe,
   DefaultValuePipe,
   ParseIntPipe,
-  ParseBoolPipe,
   HttpCode,
+  HttpStatus,
+  ParseUUIDPipe,
 } from "@nestjs/common";
 import {
   ApiTags,
@@ -22,12 +23,18 @@ import {
   ApiParam,
   ApiBody,
 } from "@nestjs/swagger";
-import { JwtAuthGuard } from "@polyforge/shared-auth";
+import {
+  JwtAuthGuard,
+  CurrentUser,
+  RequireScopes,
+  ApiKeyScopeGuard,
+} from "@polyforge/shared-auth";
+import type { JwtPayload } from "@polyforge/shared-types";
 import { ArbitrageService } from "./arbitrage.service";
 import { MarketMatchService } from "./market-match.service";
-import {
-  CrossVenueArbitrageService,
-} from "./cross-venue-arbitrage.service";
+import { CrossVenueArbitrageService } from "./cross-venue-arbitrage.service";
+import { ArbitrageAlertService } from "./arbitrage-alert.service";
+import { CreateArbitrageAlertDto } from "./dto/create-arbitrage-alert.dto";
 
 @ApiTags("Arbitrage")
 @ApiBearerAuth("jwt")
@@ -38,6 +45,7 @@ export class ArbitrageController {
     private readonly arbitrage: ArbitrageService,
     private readonly marketMatch: MarketMatchService,
     private readonly crossVenue: CrossVenueArbitrageService,
+    private readonly alertService: ArbitrageAlertService,
   ) {}
 
   // ─── Single-venue merge arbitrage (existing) ─────────────────────────────
@@ -86,6 +94,27 @@ export class ArbitrageController {
     return this.crossVenue.getOpportunities(minSpread);
   }
 
+  @Get("cross-venue/:marketId")
+  @ApiOperation({
+    summary: "Cross-venue arbitrage opportunities for a specific market",
+    description:
+      "Returns matched cross-venue opportunities where the given market appears on either side.",
+  })
+  @ApiParam({ name: "marketId", description: "Market ID from either venue" })
+  @ApiQuery({
+    name: "minSpread",
+    required: false,
+    type: Number,
+    description: "Minimum price spread % (default 3)",
+  })
+  getCrossVenueForMarket(
+    @Param("marketId") marketId: string,
+    @Query("minSpread", new DefaultValuePipe(3), ParseFloatPipe)
+    minSpread: number,
+  ) {
+    return this.crossVenue.getOpportunitiesForMarket(marketId, minSpread);
+  }
+
   @Get("cross-venue/:matchId/comparison")
   @ApiOperation({
     summary: "Get detailed price comparison for a matched market pair",
@@ -93,6 +122,76 @@ export class ArbitrageController {
   @ApiParam({ name: "matchId", description: "MarketMatch ID" })
   getComparison(@Param("matchId") matchId: string) {
     return this.crossVenue.getComparison(matchId);
+  }
+
+  // ─── Spread comparison ──────────────────────────────────────────────────
+
+  @Get("spread")
+  @ApiOperation({
+    summary: "Bid/ask spread comparison across all matched venues",
+    description:
+      "Returns YES and NO spread percentages for every matched market pair with live pricing.",
+  })
+  getSpreadComparison() {
+    return this.crossVenue.getSpreadComparison();
+  }
+
+  // ─── Historical arbitrage windows ───────────────────────────────────────
+
+  @Get("history")
+  @ApiOperation({
+    summary: "Historical arbitrage opportunity snapshots",
+    description:
+      "Paginated list of past cross-venue arbitrage detections, useful for backtesting.",
+  })
+  @ApiQuery({ name: "matchId", required: false, type: String })
+  @ApiQuery({ name: "limit", required: false, type: Number })
+  @ApiQuery({ name: "offset", required: false, type: Number })
+  getHistory(
+    @Query("matchId") matchId?: string,
+    @Query("limit", new DefaultValuePipe(100), ParseIntPipe) limit?: number,
+    @Query("offset", new DefaultValuePipe(0), ParseIntPipe) offset?: number,
+  ) {
+    return this.crossVenue.getHistory({ matchId, limit, offset });
+  }
+
+  // ─── Arbitrage alerts ───────────────────────────────────────────────────
+
+  @Get("alerts")
+  @ApiOperation({
+    summary: "List user's active arbitrage alert subscriptions",
+  })
+  listAlerts(@CurrentUser() user: JwtPayload) {
+    return this.alertService.list(user.sub);
+  }
+
+  @Post("alerts")
+  @HttpCode(HttpStatus.CREATED)
+  @UseGuards(ApiKeyScopeGuard)
+  @RequireScopes("WRITE")
+  @ApiOperation({
+    summary: "Create an arbitrage alert subscription",
+    description:
+      "Subscribe to notifications when cross-venue spread exceeds the given threshold.",
+  })
+  createAlert(
+    @CurrentUser() user: JwtPayload,
+    @Body() dto: CreateArbitrageAlertDto,
+  ) {
+    return this.alertService.create(user.sub, dto);
+  }
+
+  @Delete("alerts/:id")
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @UseGuards(ApiKeyScopeGuard)
+  @RequireScopes("WRITE")
+  @ApiOperation({ summary: "Deactivate an arbitrage alert" })
+  @ApiParam({ name: "id" })
+  removeAlert(
+    @Param("id", ParseUUIDPipe) id: string,
+    @CurrentUser() user: JwtPayload,
+  ) {
+    return this.alertService.remove(id, user.sub);
   }
 
   // ─── Market matching ─────────────────────────────────────────────────────
@@ -121,6 +220,15 @@ export class ArbitrageController {
   @ApiParam({ name: "marketId", description: "Market ID from either venue" })
   getMatchesByMarket(@Param("marketId") marketId: string) {
     return this.marketMatch.getMatchesByMarketId(marketId);
+  }
+
+  @Get("matches/:matchId")
+  @ApiOperation({ summary: "Get a single market match by ID" })
+  @ApiParam({ name: "matchId", description: "MarketMatch UUID" })
+  @ApiResponse({ status: 200, description: "Match detail" })
+  @ApiResponse({ status: 404, description: "Match not found" })
+  getMatchById(@Param("matchId") matchId: string) {
+    return this.marketMatch.getMatchById(matchId);
   }
 
   @Post("matches")
@@ -166,6 +274,8 @@ export class ArbitrageController {
     description: "Runs the TF-IDF matching algorithm immediately.",
   })
   triggerSync() {
-    return this.marketMatch.runMatchingPass().then((count) => ({ matched: count }));
+    return this.marketMatch
+      .runMatchingPass()
+      .then((count) => ({ matched: count }));
   }
 }

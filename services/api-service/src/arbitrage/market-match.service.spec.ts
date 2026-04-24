@@ -35,8 +35,14 @@ describe("MarketMatchService", () => {
     });
 
     it("creates matches for similar markets above threshold", async () => {
-      const poly = makeMarketRow({ id: "poly-1", title: "Will Bitcoin hit 100k by 2026?" });
-      const kalshi = makeMarketRow({ id: "kalshi-1", title: "Bitcoin above 100000 by end of 2026" });
+      const poly = makeMarketRow({
+        id: "poly-1",
+        title: "Will Bitcoin hit 100k by 2026?",
+      });
+      const kalshi = makeMarketRow({
+        id: "kalshi-1",
+        title: "Bitcoin above 100000 by end of 2026",
+      });
 
       db.market.findMany
         .mockResolvedValueOnce([poly] as any)
@@ -76,8 +82,14 @@ describe("MarketMatchService", () => {
     });
 
     it("handles P2002 unique constraint gracefully", async () => {
-      const poly = makeMarketRow({ id: "poly-1", title: "Will Bitcoin hit 100k by Dec?" });
-      const kalshi = makeMarketRow({ id: "kalshi-1", title: "Bitcoin above 100000 December" });
+      const poly = makeMarketRow({
+        id: "poly-1",
+        title: "Will Bitcoin hit 100k by Dec?",
+      });
+      const kalshi = makeMarketRow({
+        id: "kalshi-1",
+        title: "Bitcoin above 100000 December",
+      });
 
       db.market.findMany
         .mockResolvedValueOnce([poly] as any)
@@ -177,6 +189,35 @@ describe("MarketMatchService", () => {
           OR: [{ polymarketId: "market-x" }, { kalshiId: "market-x" }],
         },
       });
+    });
+  });
+
+  describe("getMatchById", () => {
+    it("returns match by ID", async () => {
+      const match = {
+        id: "match-1",
+        polymarketId: "p1",
+        kalshiId: "k1",
+        confidence: 0.85,
+        matchMethod: "auto_tfidf",
+        verified: false,
+      };
+      db.marketMatch.findUnique.mockResolvedValue(match as any);
+
+      const result = await service.getMatchById("match-1");
+
+      expect(result).toEqual(match);
+      expect(db.marketMatch.findUnique).toHaveBeenCalledWith({
+        where: { id: "match-1" },
+      });
+    });
+
+    it("returns null for non-existent match", async () => {
+      db.marketMatch.findUnique.mockResolvedValue(null);
+
+      const result = await service.getMatchById("nonexistent");
+
+      expect(result).toBeNull();
     });
   });
 });

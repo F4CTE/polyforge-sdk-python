@@ -47,7 +47,9 @@ export class MarketMatchService {
     const existingPairs = new Set(
       existingMatches.map((m) => `${m.polymarketId}|${m.kalshiId}`),
     );
-    const alreadyMatchedKalshi = new Set(existingMatches.map((m) => m.kalshiId));
+    const alreadyMatchedKalshi = new Set(
+      existingMatches.map((m) => m.kalshiId),
+    );
     const alreadyMatchedPoly = new Set(
       existingMatches.map((m) => m.polymarketId),
     );
@@ -94,9 +96,7 @@ export class MarketMatchService {
     if (candidates.length === 0) return 0;
 
     const bestByKalshi = new Map<string, MatchCandidate>();
-    for (const c of candidates.sort(
-      (a, b) => b.confidence - a.confidence,
-    )) {
+    for (const c of candidates.sort((a, b) => b.confidence - a.confidence)) {
       if (!bestByKalshi.has(c.kalshiId)) {
         bestByKalshi.set(c.kalshiId, c);
       }
@@ -166,7 +166,8 @@ export class MarketMatchService {
     limit?: number;
     offset?: number;
   }) {
-    const where = opts.verified !== undefined ? { verified: opts.verified } : {};
+    const where =
+      opts.verified !== undefined ? { verified: opts.verified } : {};
     const [matches, total] = await Promise.all([
       this.prisma.marketMatch.findMany({
         where,
@@ -179,6 +180,10 @@ export class MarketMatchService {
     return { matches, total };
   }
 
+  async getMatchById(matchId: string) {
+    return this.prisma.marketMatch.findUnique({ where: { id: matchId } });
+  }
+
   async getMatchesByMarketId(marketId: string) {
     return this.prisma.marketMatch.findMany({
       where: {
@@ -187,7 +192,9 @@ export class MarketMatchService {
     });
   }
 
-  private async fetchOpenMarkets(venue: "POLYMARKET" | "KALSHI"): Promise<MarketRow[]> {
+  private async fetchOpenMarkets(
+    venue: "POLYMARKET" | "KALSHI",
+  ): Promise<MarketRow[]> {
     return this.prisma.market.findMany({
       where: { venue, closed: false },
       select: {

@@ -240,6 +240,7 @@ model User {
   marketplaceListings  MarketplaceListing[]    @relation("SellerListings")
   marketplacePurchases MarketplacePurchase[]   @relation("BuyerPurchases")
   watchlistItems       WatchlistItem[]
+  arbitrageAlerts      ArbitrageAlert[]
 
   @@map("users")
 }
@@ -1380,4 +1381,34 @@ model KalshiCredential {
   updatedAt      DateTime @updatedAt
 
   @@map("kalshi_credentials")
+}
+
+model ArbitrageSnapshot {
+  id          String   @id @default(uuid())
+  matchId     String   @db.VarChar(255)
+  spreadPct   Decimal  @db.Decimal(8, 4)
+  direction   String   @db.VarChar(30)
+  polyYes     Decimal  @db.Decimal(10, 6)
+  kalshiYes   Decimal  @db.Decimal(10, 6)
+  confidence  Decimal  @db.Decimal(5, 4)
+  scannedAt   DateTime @default(now())
+
+  @@index([matchId])
+  @@index([scannedAt])
+  @@map("arbitrage_snapshots")
+}
+
+model ArbitrageAlert {
+  id            String    @id @default(uuid())
+  userId        String
+  minSpreadPct  Decimal   @db.Decimal(8, 4)
+  marketId      String?   @db.VarChar(255)
+  active        Boolean   @default(true)
+  triggeredAt   DateTime?
+  createdAt     DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, active])
+  @@map("arbitrage_alerts")
 }

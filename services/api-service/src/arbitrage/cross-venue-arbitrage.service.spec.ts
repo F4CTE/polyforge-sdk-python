@@ -180,4 +180,132 @@ describe("CrossVenueArbitrageService", () => {
       expect(result).toBeNull();
     });
   });
+
+  describe("getOpportunitiesForMarket", () => {
+    it("filters opportunities by marketId", async () => {
+      db.marketMatch.findMany.mockResolvedValue([
+        makeMatch({ id: "m1", polymarketId: "p1", kalshiId: "k1" }),
+        makeMatch({ id: "m2", polymarketId: "p2", kalshiId: "k2" }),
+      ] as any);
+      db.market.findMany.mockResolvedValue([
+        makeMarket("p1", "0.40", "0.60"),
+        makeMarket("k1", "0.50", "0.50"),
+        makeMarket("p2", "0.30", "0.70"),
+        makeMarket("k2", "0.60", "0.40"),
+      ] as any);
+      mgetFn.mockResolvedValue(Array(8).fill(null));
+
+      const result = await service.getOpportunitiesForMarket("p1", 5);
+
+      expect(result.length).toBe(1);
+      expect(result[0].polymarketId).toBe("p1");
+    });
+
+    it("returns [] when market not in any opportunities", async () => {
+      db.marketMatch.findMany.mockResolvedValue([makeMatch()] as any);
+      db.market.findMany.mockResolvedValue([
+        makeMarket("poly-1", "0.49", "0.51"),
+        makeMarket("kalshi-1", "0.50", "0.50"),
+      ] as any);
+      mgetFn.mockResolvedValue(Array(4).fill(null));
+
+      const result = await service.getOpportunitiesForMarket("nonexistent", 1);
+
+      expect(result).toEqual([]);
+    });
+  });
+
+  describe("getSpreadComparison", () => {
+    it("returns spread summaries sorted by yesSpreadPct", async () => {
+      db.marketMatch.findMany.mockResolvedValue([
+        makeMatch({ id: "m1", polymarketId: "p1", kalshiId: "k1" }),
+      ] as any);
+      db.market.findMany.mockResolvedValue([
+        makeMarket("p1", "0.40", "0.60", "Bitcoin Poly"),
+        makeMarket("k1", "0.50", "0.50", "Bitcoin Kalshi"),
+      ] as any);
+      mgetFn.mockResolvedValue(Array(4).fill(null));
+
+      const result = await service.getSpreadComparison();
+
+      expect(result).toHaveLength(1);
+      expect(result[0].yesSpreadPct).toBe(10);
+      expect(result[0].polymarket.marketId).toBe("p1");
+      expect(result[0].kalshi.marketId).toBe("k1");
+    });
+
+    it("returns [] when no matches", async () => {
+      db.marketMatch.findMany.mockResolvedValue([]);
+
+      const result = await service.getSpreadComparison();
+
+      expect(result).toEqual([]);
+    });
+  });
+
+  describe("getHistory", () => {
+    it("returns paginated snapshots", async () => {
+      const snapshots = [
+        {
+          id: "s1",
+          matchId: "m1",
+          spreadPct: 5,
+          direction: "buy_poly_sell_kalshi",
+          scannedAt: new Date(),
+        },
+      ];
+      db.arbitrageSnapshot.findMany.mockResolvedValue(snapshots as any);
+      db.arbitrageSnapshot.count.mockResolvedValue(1);
+
+      const result = await service.getHistory({ limit: 10, offset: 0 });
+
+      expect(result.snapshots).toHaveLength(1);
+      expect(result.total).toBe(1);
+    });
+
+    it("filters by matchId", async () => {
+      db.arbitrageSnapshot.findMany.mockResolvedValue([]);
+      db.arbitrageSnapshot.count.mockResolvedValue(0);
+
+      await service.getHistory({ matchId: "m1" });
+
+      expect(db.arbitrageSnapshot.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { matchId: "m1" },
+        }),
+      );
+    });
+  });
+
+  describe("persistSnapshots", () => {
+    it("persists detected opportunities", async () => {
+      db.marketMatch.findMany.mockResolvedValue([makeMatch()] as any);
+      db.market.findMany.mockResolvedValue([
+        makeMarket("poly-1", "0.40", "0.60"),
+        makeMarket("kalshi-1", "0.50", "0.50"),
+      ] as any);
+      mgetFn.mockResolvedValue(Array(4).fill(null));
+      db.arbitrageSnapshot.createMany.mockResolvedValue({ count: 1 } as any);
+
+      const count = await service.persistSnapshots();
+
+      expect(count).toBe(1);
+      expect(db.arbitrageSnapshot.createMany).toHaveBeenCalledWith({
+        data: expect.arrayContaining([
+          expect.objectContaining({
+            matchId: "match-1",
+            direction: "buy_poly_sell_kalshi",
+          }),
+        ]),
+      });
+    });
+
+    it("returns 0 when no opportunities", async () => {
+      db.marketMatch.findMany.mockResolvedValue([]);
+
+      const count = await service.persistSnapshots();
+
+      expect(count).toBe(0);
+    });
+  });
 });

@@ -40,6 +40,21 @@ export interface VenueComparison {
   verified: boolean;
 }
 
+export interface SpreadSummary {
+  matchId: string;
+  polymarket: {
+    marketId: string;
+    title: string;
+    yesBid: number;
+    noAsk: number;
+  };
+  kalshi: { marketId: string; title: string; yesBid: number; noAsk: number };
+  yesSpreadPct: number;
+  noSpreadPct: number | null;
+  confidence: number;
+  verified: boolean;
+}
+
 @Injectable()
 export class CrossVenueArbitrageService {
   private readonly logger = new Logger(CrossVenueArbitrageService.name);
@@ -57,6 +72,9 @@ export class CrossVenueArbitrageService {
       for (const opp of opps) {
         await this.maybeAlert(opp);
       }
+      await this.persistSnapshots().catch((e) =>
+        this.logger.warn("Snapshot persist failed", (e as Error).message),
+      );
     } catch (err) {
       this.logger.error("Cross-venue scan failed", (err as Error).message);
     }
@@ -126,6 +144,118 @@ export class CrossVenueArbitrageService {
     return opportunities.sort((a, b) => b.spreadPct - a.spreadPct);
   }
 
+  async getOpportunitiesForMarket(
+    marketId: string,
+    minSpreadPct = DEFAULT_THRESHOLD_PCT,
+  ): Promise<CrossVenueOpportunity[]> {
+    const allOpps = await this.getOpportunities(minSpreadPct);
+    return allOpps.filter(
+      (o) => o.polymarketId === marketId || o.kalshiId === marketId,
+    );
+  }
+
+  async getSpreadComparison(): Promise<SpreadSummary[]> {
+    const matches = await this.prisma.marketMatch.findMany({
+      where: { confidence: { gte: 0.6 } },
+      orderBy: { confidence: "desc" },
+      take: 200,
+    });
+
+    if (matches.length === 0) return [];
+
+    const allMarketIds = [
+      ...matches.map((m) => m.polymarketId),
+      ...matches.map((m) => m.kalshiId),
+    ];
+    const markets = await this.prisma.market.findMany({
+      where: { id: { in: allMarketIds }, closed: false },
+      select: {
+        id: true,
+        title: true,
+        tokens: { select: { id: true, outcome: true, price: true } },
+      },
+    });
+    const marketMap = new Map(markets.map((m) => [m.id, m]));
+
+    const tokenIds = markets.flatMap((m) => m.tokens.map((t) => t.id));
+    const livePrices = await this.fetchLivePrices(tokenIds);
+
+    const summaries: SpreadSummary[] = [];
+    for (const match of matches) {
+      const poly = marketMap.get(match.polymarketId);
+      const kalshi = marketMap.get(match.kalshiId);
+      if (!poly || !kalshi) continue;
+
+      const polyYes = this.getYesPrice(poly, livePrices);
+      const polyNo = this.getNoPrice(poly, livePrices);
+      const kalshiYes = this.getYesPrice(kalshi, livePrices);
+      const kalshiNo = this.getNoPrice(kalshi, livePrices);
+
+      if (polyYes === null || kalshiYes === null) continue;
+
+      summaries.push({
+        matchId: match.id,
+        polymarket: {
+          marketId: poly.id,
+          title: poly.title,
+          yesBid: polyYes,
+          noAsk: polyNo ?? 0,
+        },
+        kalshi: {
+          marketId: kalshi.id,
+          title: kalshi.title,
+          yesBid: kalshiYes,
+          noAsk: kalshiNo ?? 0,
+        },
+        yesSpreadPct:
+          Math.round(Math.abs(polyYes - kalshiYes) * 100 * 100) / 100,
+        noSpreadPct:
+          polyNo !== null && kalshiNo !== null
+            ? Math.round(Math.abs(polyNo - kalshiNo) * 100 * 100) / 100
+            : null,
+        confidence: Number(match.confidence),
+        verified: match.verified,
+      });
+    }
+
+    return summaries.sort((a, b) => b.yesSpreadPct - a.yesSpreadPct);
+  }
+
+  async getHistory(opts: {
+    matchId?: string;
+    limit?: number;
+    offset?: number;
+  }) {
+    const where = opts.matchId ? { matchId: opts.matchId } : {};
+    const [snapshots, total] = await Promise.all([
+      this.prisma.arbitrageSnapshot.findMany({
+        where,
+        orderBy: { scannedAt: "desc" },
+        take: opts.limit ?? 100,
+        skip: opts.offset ?? 0,
+      }),
+      this.prisma.arbitrageSnapshot.count({ where }),
+    ]);
+    return { snapshots, total };
+  }
+
+  async persistSnapshots(): Promise<number> {
+    const opps = await this.getOpportunities(1);
+    if (opps.length === 0) return 0;
+
+    const data = opps.map((o) => ({
+      matchId: o.matchId,
+      spreadPct: o.spreadPct,
+      direction: o.direction,
+      polyYes: o.polymarketYes,
+      kalshiYes: o.kalshiYes,
+      confidence: o.confidence,
+    }));
+
+    const result = await this.prisma.arbitrageSnapshot.createMany({ data });
+    return result.count;
+  }
+
   async getComparison(matchId: string): Promise<VenueComparison | null> {
     const match = await this.prisma.marketMatch.findUnique({
       where: { id: matchId },
@@ -178,8 +308,7 @@ export class CrossVenueArbitrageService {
         yesPrice: kalshiYes,
         noPrice: kalshiNo,
       },
-      spreadPct:
-        Math.round(Math.abs(polyYes - kalshiYes) * 100 * 100) / 100,
+      spreadPct: Math.round(Math.abs(polyYes - kalshiYes) * 100 * 100) / 100,
       confidence: Number(match.confidence),
       verified: match.verified,
     };
@@ -211,9 +340,7 @@ export class CrossVenueArbitrageService {
     market: { tokens: { id: string; outcome: string; price: any }[] },
     livePrices: Map<string, number>,
   ): number | null {
-    const token = market.tokens.find(
-      (t) => t.outcome.toUpperCase() === "YES",
-    );
+    const token = market.tokens.find((t) => t.outcome.toUpperCase() === "YES");
     if (!token) return null;
     return livePrices.get(token.id) ?? parseFloat(String(token.price));
   }
@@ -222,9 +349,7 @@ export class CrossVenueArbitrageService {
     market: { tokens: { id: string; outcome: string; price: any }[] },
     livePrices: Map<string, number>,
   ): number | null {
-    const token = market.tokens.find(
-      (t) => t.outcome.toUpperCase() === "NO",
-    );
+    const token = market.tokens.find((t) => t.outcome.toUpperCase() === "NO");
     if (!token) return null;
     return livePrices.get(token.id) ?? parseFloat(String(token.price));
   }
@@ -242,7 +367,7 @@ export class CrossVenueArbitrageService {
     tokenIds.forEach((id, i) => {
       if (!raw[i]) return;
       try {
-        const parsed = JSON.parse(raw[i]!) as { price: string | number };
+        const parsed = JSON.parse(raw[i]) as { price: string | number };
         map.set(id, parseFloat(String(parsed.price)));
       } catch {
         /* ignore */
