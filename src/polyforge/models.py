@@ -1104,3 +1104,81 @@ class RiskSettings:
     drawdown_threshold_pct: float = 0.1
     circuit_breaker_tripped: bool = False
     circuit_breaker_tripped_at: str | None = None
+
+
+# ---------------------------------------------------------------------------
+# Whale Leaderboard (Smart Money)
+# ---------------------------------------------------------------------------
+
+@dataclass
+class WhaleLeaderboardEntry:
+    """A single entry in the whale smart-money leaderboard."""
+
+    rank: int = 0
+    wallet_address: str = ""
+    smart_money_score: str = ""
+    total_pnl: str = ""
+    win_rate: str = ""
+    sharpe_ratio: str = ""
+    trade_count: int = 0
+    win_count: int = 0
+    total_volume: str = ""
+    last_trade_at: str | None = None
+
+
+# ---------------------------------------------------------------------------
+# Whale Alert Filter
+# ---------------------------------------------------------------------------
+
+@dataclass
+class WhaleAlertFilter:
+    """User-specific alert filter for whale trade notifications."""
+
+    id: str = ""
+    min_size: str | None = None
+    market_ids: list[str] = field(default_factory=list)
+    wallet_addresses: list[str] = field(default_factory=list)
+    sides: list[str] = field(default_factory=list)
+    active: bool = True
+    created_at: str = ""
+    updated_at: str = ""
+
+
+# ---------------------------------------------------------------------------
+# Actions (API capability discovery)
+# ---------------------------------------------------------------------------
+
+@dataclass
+class ActionParameter:
+    """A parameter accepted by an API action."""
+
+    name: str = ""
+    type: str = ""
+    required: bool = False
+    in_: str = ""
+    description: str = ""
+    enum: list[str] = field(default_factory=list)
+    default: Any = None
+    max: int | None = None
+    min: int | None = None
+
+
+@dataclass
+class ActionDefinition:
+    """A single API action exposed by the platform."""
+
+    name: str = ""
+    description: str = ""
+    method: str = ""
+    path: str = ""
+    scope: str = ""
+    category: str = ""
+    parameters: list[ActionParameter] = field(default_factory=list)
+
+
+@dataclass
+class ActionsSchema:
+    """The complete list of available API actions."""
+
+    version: str = ""
+    actions: list[ActionDefinition] = field(default_factory=list)

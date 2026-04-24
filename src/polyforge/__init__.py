@@ -10,6 +10,9 @@ from polyforge.errors import (
     ServerError,
 )
 from polyforge.models import (
+    ActionDefinition,
+    ActionParameter,
+    ActionsSchema,
     AiQueryResponse,
     Alert,
     ArbitrageAlertSubscription,
@@ -68,6 +71,9 @@ from polyforge.models import (
     WatchlistItem,
     Webhook,
     WebhookTestResult,
+    WhaleAlertFilter,
+    WhaleLeaderboardEntry,
+    WhaleProfile,
     WhaleTrade,
 )
 
@@ -142,7 +148,13 @@ __all__ = [
     "WatchlistItem",
     "Webhook",
     "WebhookTestResult",
+    "WhaleAlertFilter",
+    "WhaleLeaderboardEntry",
+    "WhaleProfile",
     "WhaleTrade",
+    "ActionDefinition",
+    "ActionParameter",
+    "ActionsSchema",
 ]
 
 __version__ = "1.0.0"

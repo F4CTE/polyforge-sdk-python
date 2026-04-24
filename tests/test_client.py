@@ -3025,6 +3025,182 @@ class TestExtendedWhaleIntelligence:
         assert "/api/v1/whales/following" in source
 
 
+class TestWhaleLeaderboardAlertFilterActions:
+    """Tests for whale leaderboard, whale alert filter CRUD, and actions endpoint."""
+
+    # -- get_whale_leaderboard --
+
+    def test_sync_get_whale_leaderboard_exists(self):
+        assert hasattr(PolyforgeClient, "get_whale_leaderboard")
+
+    def test_async_get_whale_leaderboard_exists(self):
+        assert hasattr(AsyncPolyforgeClient, "get_whale_leaderboard")
+
+    def test_sync_get_whale_leaderboard_params(self):
+        import inspect
+        sig = inspect.signature(PolyforgeClient.get_whale_leaderboard)
+        params = set(sig.parameters.keys())
+        assert "period" in params
+        assert "limit" in params
+
+    def test_sync_get_whale_leaderboard_path(self):
+        import inspect
+        source = inspect.getsource(PolyforgeClient.get_whale_leaderboard)
+        assert "/api/v1/whales/leaderboard" in source
+        assert "_get" in source
+
+    def test_async_get_whale_leaderboard_path(self):
+        import inspect
+        source = inspect.getsource(AsyncPolyforgeClient.get_whale_leaderboard)
+        assert "/api/v1/whales/leaderboard" in source
+
+    def test_sync_get_whale_leaderboard_sends_period(self):
+        import inspect
+        source = inspect.getsource(PolyforgeClient.get_whale_leaderboard)
+        assert '"period"' in source
+
+    def test_sync_get_whale_leaderboard_sends_limit(self):
+        import inspect
+        source = inspect.getsource(PolyforgeClient.get_whale_leaderboard)
+        assert '"limit"' in source
+
+    # -- get_whale_alert_filter --
+
+    def test_sync_get_whale_alert_filter_exists(self):
+        assert hasattr(PolyforgeClient, "get_whale_alert_filter")
+
+    def test_async_get_whale_alert_filter_exists(self):
+        assert hasattr(AsyncPolyforgeClient, "get_whale_alert_filter")
+
+    def test_sync_get_whale_alert_filter_path(self):
+        import inspect
+        source = inspect.getsource(PolyforgeClient.get_whale_alert_filter)
+        assert "/api/v1/whales/alerts/filter" in source
+        assert "_get" in source
+
+    def test_async_get_whale_alert_filter_path(self):
+        import inspect
+        source = inspect.getsource(AsyncPolyforgeClient.get_whale_alert_filter)
+        assert "/api/v1/whales/alerts/filter" in source
+
+    # -- set_whale_alert_filter --
+
+    def test_sync_set_whale_alert_filter_exists(self):
+        assert hasattr(PolyforgeClient, "set_whale_alert_filter")
+
+    def test_async_set_whale_alert_filter_exists(self):
+        assert hasattr(AsyncPolyforgeClient, "set_whale_alert_filter")
+
+    def test_sync_set_whale_alert_filter_params(self):
+        import inspect
+        sig = inspect.signature(PolyforgeClient.set_whale_alert_filter)
+        params = set(sig.parameters.keys())
+        assert "min_size" in params
+        assert "market_ids" in params
+        assert "wallet_addresses" in params
+        assert "sides" in params
+        assert "active" in params
+
+    def test_sync_set_whale_alert_filter_path(self):
+        import inspect
+        source = inspect.getsource(PolyforgeClient.set_whale_alert_filter)
+        assert "/api/v1/whales/alerts/filter" in source
+        assert "_put" in source
+
+    def test_async_set_whale_alert_filter_path(self):
+        import inspect
+        source = inspect.getsource(AsyncPolyforgeClient.set_whale_alert_filter)
+        assert "/api/v1/whales/alerts/filter" in source
+        assert "_put" in source
+
+    def test_sync_set_whale_alert_filter_sends_camel_case(self):
+        import inspect
+        source = inspect.getsource(PolyforgeClient.set_whale_alert_filter)
+        assert '"minSize"' in source
+        assert '"marketIds"' in source
+        assert '"walletAddresses"' in source
+
+    # -- delete_whale_alert_filter --
+
+    def test_sync_delete_whale_alert_filter_exists(self):
+        assert hasattr(PolyforgeClient, "delete_whale_alert_filter")
+
+    def test_async_delete_whale_alert_filter_exists(self):
+        assert hasattr(AsyncPolyforgeClient, "delete_whale_alert_filter")
+
+    def test_sync_delete_whale_alert_filter_path(self):
+        import inspect
+        source = inspect.getsource(PolyforgeClient.delete_whale_alert_filter)
+        assert "/api/v1/whales/alerts/filter" in source
+        assert "_delete" in source
+
+    def test_async_delete_whale_alert_filter_path(self):
+        import inspect
+        source = inspect.getsource(AsyncPolyforgeClient.delete_whale_alert_filter)
+        assert "/api/v1/whales/alerts/filter" in source
+        assert "_delete" in source
+
+    # -- get_actions --
+
+    def test_sync_get_actions_exists(self):
+        assert hasattr(PolyforgeClient, "get_actions")
+
+    def test_async_get_actions_exists(self):
+        assert hasattr(AsyncPolyforgeClient, "get_actions")
+
+    def test_sync_get_actions_path(self):
+        import inspect
+        source = inspect.getsource(PolyforgeClient.get_actions)
+        assert "/api/v1/actions" in source
+        assert "_get" in source
+
+    def test_async_get_actions_path(self):
+        import inspect
+        source = inspect.getsource(AsyncPolyforgeClient.get_actions)
+        assert "/api/v1/actions" in source
+
+    # -- model defaults --
+
+    def test_whale_leaderboard_entry_defaults(self):
+        from polyforge.models import WhaleLeaderboardEntry
+        entry = WhaleLeaderboardEntry()
+        assert entry.rank == 0
+        assert entry.wallet_address == ""
+        assert entry.smart_money_score == ""
+        assert entry.total_pnl == ""
+        assert entry.trade_count == 0
+
+    def test_whale_alert_filter_defaults(self):
+        from polyforge.models import WhaleAlertFilter
+        f = WhaleAlertFilter()
+        assert f.id == ""
+        assert f.min_size is None
+        assert f.market_ids == []
+        assert f.wallet_addresses == []
+        assert f.sides == []
+        assert f.active is True
+
+    def test_actions_schema_defaults(self):
+        from polyforge.models import ActionsSchema, ActionDefinition, ActionParameter
+        schema = ActionsSchema()
+        assert schema.version == ""
+        assert schema.actions == []
+        ad = ActionDefinition()
+        assert ad.name == ""
+        assert ad.parameters == []
+        ap = ActionParameter()
+        assert ap.name == ""
+        assert ap.required is False
+
+    # -- _put helper exists --
+
+    def test_sync_put_helper_exists(self):
+        assert hasattr(PolyforgeClient, "_put")
+
+    def test_async_put_helper_exists(self):
+        assert hasattr(AsyncPolyforgeClient, "_put")
+
+
 class TestMarketplaceSellerCrud:
     """Tests for create_marketplace_listing, update, rate, get_my_listings, get_my_purchases."""
 
