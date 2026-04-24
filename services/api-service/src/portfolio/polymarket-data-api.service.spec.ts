@@ -283,4 +283,198 @@ describe("PolymarketDataApiService", () => {
       expect(result).toEqual([]);
     });
   });
+
+  // ── getPositions ──────────────────────────────────────────────────────
+
+  describe("getPositions()", () => {
+    it("fetches from /positions with user query param", async () => {
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue([]),
+      });
+
+      await svc.getPositions("0xWallet");
+
+      expect(fetchSpy.mock.calls[0][0]).toContain("/positions?user=0xWallet");
+    });
+
+    it("returns parsed position entries", async () => {
+      const positions = [
+        {
+          proxyWallet: "0xProxy",
+          asset: "tok-1",
+          conditionId: "cond-1",
+          size: "100",
+          avgPrice: "0.55",
+          currentValue: "60",
+          cashPnl: "5",
+          percentPnl: "9.09",
+          redeemable: false,
+          mergeable: false,
+          negativeRisk: false,
+        },
+      ];
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue(positions),
+      });
+
+      const result = await svc.getPositions("0xWallet");
+      expect(result).toEqual(positions);
+      expect(result[0].conditionId).toBe("cond-1");
+    });
+
+    it("returns empty array on non-ok response (graceful degradation)", async () => {
+      fetchSpy.mockResolvedValue({ ok: false, status: 500 });
+
+      const result = await svc.getPositions("0xWallet");
+      expect(result).toEqual([]);
+    });
+
+    it("includes optional params in query string", async () => {
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue([]),
+      });
+
+      await svc.getPositions("0xWallet", {
+        market: "0xMarket",
+        eventId: "evt-1",
+        sizeThreshold: 10,
+        redeemable: true,
+        limit: 50,
+        sortBy: "CURRENT",
+        sortDirection: "ASC",
+      });
+
+      const url = fetchSpy.mock.calls[0][0] as string;
+      expect(url).toContain("market=0xMarket");
+      expect(url).toContain("eventId=evt-1");
+      expect(url).toContain("sizeThreshold=10");
+      expect(url).toContain("redeemable=true");
+      expect(url).toContain("limit=50");
+      expect(url).toContain("sortBy=CURRENT");
+      expect(url).toContain("sortDirection=ASC");
+    });
+
+    it("caps limit at 500", async () => {
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue([]),
+      });
+
+      await svc.getPositions("0xWallet", { limit: 9999 });
+
+      expect(fetchSpy.mock.calls[0][0]).toContain("limit=500");
+    });
+
+    it("caps offset at 10000", async () => {
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue([]),
+      });
+
+      await svc.getPositions("0xWallet", { offset: 99999 });
+
+      expect(fetchSpy.mock.calls[0][0]).toContain("offset=10000");
+    });
+
+    it("omits optional params when not provided", async () => {
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue([]),
+      });
+
+      await svc.getPositions("0xWallet");
+
+      const url = fetchSpy.mock.calls[0][0] as string;
+      expect(url).not.toContain("market=");
+      expect(url).not.toContain("limit=");
+      expect(url).not.toContain("sortBy=");
+    });
+  });
+
+  // ── getClosedPositions ────────────────────────────────────────────────
+
+  describe("getClosedPositions()", () => {
+    it("fetches from /closed-positions with user query param", async () => {
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue([]),
+      });
+
+      await svc.getClosedPositions("0xWallet");
+
+      expect(fetchSpy.mock.calls[0][0]).toContain(
+        "/closed-positions?user=0xWallet",
+      );
+    });
+
+    it("returns parsed closed position entries", async () => {
+      const positions = [
+        {
+          proxyWallet: "0xProxy",
+          asset: "tok-2",
+          conditionId: "cond-2",
+          size: "0",
+          avgPrice: "0.40",
+          currentValue: "0",
+          cashPnl: "-20",
+          percentPnl: "-100",
+          redeemable: false,
+          mergeable: false,
+          negativeRisk: true,
+        },
+      ];
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue(positions),
+      });
+
+      const result = await svc.getClosedPositions("0xWallet");
+      expect(result).toEqual(positions);
+    });
+
+    it("returns empty array on non-ok response", async () => {
+      fetchSpy.mockResolvedValue({ ok: false, status: 404 });
+
+      const result = await svc.getClosedPositions("0xWallet");
+      expect(result).toEqual([]);
+    });
+
+    it("includes optional params in query string", async () => {
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue([]),
+      });
+
+      await svc.getClosedPositions("0xWallet", {
+        eventId: "evt-2",
+        mergeable: false,
+        limit: 100,
+        offset: 500,
+        sortBy: "CASHPNL",
+      });
+
+      const url = fetchSpy.mock.calls[0][0] as string;
+      expect(url).toContain("eventId=evt-2");
+      expect(url).toContain("mergeable=false");
+      expect(url).toContain("limit=100");
+      expect(url).toContain("offset=500");
+      expect(url).toContain("sortBy=CASHPNL");
+    });
+
+    it("caps limit at 500 and offset at 10000", async () => {
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue([]),
+      });
+
+      await svc.getClosedPositions("0xWallet", { limit: 1000, offset: 50000 });
+
+      const url = fetchSpy.mock.calls[0][0] as string;
+      expect(url).toContain("limit=500");
+      expect(url).toContain("offset=10000");
+    });
+  });
 });

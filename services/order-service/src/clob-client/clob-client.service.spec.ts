@@ -474,6 +474,312 @@ describe("ClobClientService", () => {
     });
   });
 
+  // ── sendHeartbeat ────────────────────────────────────────────────────────
+
+  describe("sendHeartbeat()", () => {
+    const HMAC_HEADERS = {
+      POLY_API_KEY: "key",
+      POLY_ADDRESS: "0xaddr",
+      POLY_SIGNATURE: "sig",
+      POLY_PASSPHRASE: "pass",
+      POLY_TIMESTAMP: "12345",
+    };
+
+    it("POSTs to /heartbeats with HMAC headers", async () => {
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue({ status: "ok" }),
+      });
+      await svc.sendHeartbeat(HMAC_HEADERS);
+      expect(fetchSpy.mock.calls[0][0]).toBe("http://clob:3099/heartbeats");
+      expect(fetchSpy.mock.calls[0][1].method).toBe("POST");
+      expect(fetchSpy.mock.calls[0][1].headers.POLY_API_KEY).toBe("key");
+    });
+
+    it("includes orderIds in body when provided", async () => {
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue({ status: "ok" }),
+      });
+      await svc.sendHeartbeat(HMAC_HEADERS, ["o1", "o2"]);
+      const body = JSON.parse(fetchSpy.mock.calls[0][1].body as string);
+      expect(body.orderIds).toEqual(["o1", "o2"]);
+    });
+
+    it("sends no body when orderIds not provided", async () => {
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue({ status: "ok" }),
+      });
+      await svc.sendHeartbeat(HMAC_HEADERS);
+      expect(fetchSpy.mock.calls[0][1].body).toBeUndefined();
+    });
+
+    it("returns parsed response", async () => {
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue({ status: "ok" }),
+      });
+      const result = await svc.sendHeartbeat(HMAC_HEADERS);
+      expect(result.status).toBe("ok");
+    });
+
+    it("throws on non-OK response", async () => {
+      fetchSpy.mockResolvedValue({
+        ok: false,
+        status: 401,
+        text: vi.fn().mockResolvedValue("Unauthorized"),
+      });
+      await expect(svc.sendHeartbeat(HMAC_HEADERS)).rejects.toThrow("401");
+    });
+  });
+
+  // ── getUserOrders ─────────────────────────────────────────────────────────
+
+  describe("getUserOrders()", () => {
+    const HMAC_HEADERS = {
+      POLY_API_KEY: "key",
+      POLY_SIGNATURE: "sig",
+    };
+
+    it("sends GET to /data/orders with query params", async () => {
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue({
+          limit: 100,
+          count: 1,
+          next_cursor: "",
+          data: [],
+        }),
+      });
+      await svc.getUserOrders({ market: "0xmarket" }, HMAC_HEADERS);
+      expect(fetchSpy.mock.calls[0][0]).toContain("/data/orders?");
+      expect(fetchSpy.mock.calls[0][0]).toContain("market=0xmarket");
+    });
+
+    it("sends GET without query string when no params", async () => {
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue({
+          limit: 100,
+          count: 0,
+          next_cursor: "",
+          data: [],
+        }),
+      });
+      await svc.getUserOrders({}, HMAC_HEADERS);
+      expect(fetchSpy.mock.calls[0][0]).toBe("http://clob:3099/data/orders");
+    });
+
+    it("includes HMAC headers in request", async () => {
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue({
+          limit: 100,
+          count: 0,
+          next_cursor: "",
+          data: [],
+        }),
+      });
+      await svc.getUserOrders({}, HMAC_HEADERS);
+      expect(fetchSpy.mock.calls[0][1].headers.POLY_API_KEY).toBe("key");
+    });
+
+    it("includes next_cursor for pagination", async () => {
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue({
+          limit: 100,
+          count: 0,
+          next_cursor: "",
+          data: [],
+        }),
+      });
+      await svc.getUserOrders({ next_cursor: "abc123" }, HMAC_HEADERS);
+      expect(fetchSpy.mock.calls[0][0]).toContain("next_cursor=abc123");
+    });
+
+    it("returns paginated response", async () => {
+      const resp = {
+        limit: 100,
+        count: 1,
+        next_cursor: "next",
+        data: [{ id: "o1", market: "0xm", status: "LIVE" }],
+      };
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue(resp),
+      });
+      const result = await svc.getUserOrders({}, HMAC_HEADERS);
+      expect(result.count).toBe(1);
+      expect(result.data).toHaveLength(1);
+      expect(result.next_cursor).toBe("next");
+    });
+
+    it("throws on non-OK response", async () => {
+      fetchSpy.mockResolvedValue({
+        ok: false,
+        status: 403,
+        text: vi.fn().mockResolvedValue("Forbidden"),
+      });
+      await expect(svc.getUserOrders({}, HMAC_HEADERS)).rejects.toThrow("403");
+    });
+  });
+
+  // ── getOrder ──────────────────────────────────────────────────────────────
+
+  describe("getOrder()", () => {
+    const HMAC_HEADERS = { POLY_API_KEY: "key", POLY_SIGNATURE: "sig" };
+
+    it("sends GET to /order/{orderId}", async () => {
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue({ id: "o1", status: "LIVE" }),
+      });
+      await svc.getOrder("order-abc", HMAC_HEADERS);
+      expect(fetchSpy.mock.calls[0][0]).toBe(
+        "http://clob:3099/order/order-abc",
+      );
+    });
+
+    it("does not set method (defaults to GET)", async () => {
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue({ id: "o1", status: "LIVE" }),
+      });
+      await svc.getOrder("order-abc", HMAC_HEADERS);
+      expect(fetchSpy.mock.calls[0][1].method).toBeUndefined();
+    });
+
+    it("includes HMAC headers", async () => {
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue({ id: "o1", status: "LIVE" }),
+      });
+      await svc.getOrder("order-abc", HMAC_HEADERS);
+      expect(fetchSpy.mock.calls[0][1].headers.POLY_API_KEY).toBe("key");
+    });
+
+    it("URL-encodes the orderId", async () => {
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue({ id: "o+1", status: "LIVE" }),
+      });
+      await svc.getOrder("o+1", HMAC_HEADERS);
+      expect(fetchSpy.mock.calls[0][0]).toContain("o%2B1");
+    });
+
+    it("returns parsed order", async () => {
+      const order = { id: "o1", market: "m1", status: "FILLED", price: "0.55" };
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue(order),
+      });
+      const result = await svc.getOrder("o1", HMAC_HEADERS);
+      expect(result.id).toBe("o1");
+      expect(result.status).toBe("FILLED");
+    });
+
+    it("throws on non-OK response", async () => {
+      fetchSpy.mockResolvedValue({
+        ok: false,
+        status: 404,
+        text: vi.fn().mockResolvedValue("Not found"),
+      });
+      await expect(svc.getOrder("bad", HMAC_HEADERS)).rejects.toThrow("404");
+    });
+  });
+
+  // ── getOrderScoring ───────────────────────────────────────────────────────
+
+  describe("getOrderScoring()", () => {
+    const HMAC_HEADERS = { POLY_API_KEY: "key", POLY_SIGNATURE: "sig" };
+
+    it("sends GET to /order-scoring", async () => {
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue({ scoring: {} }),
+      });
+      await svc.getOrderScoring(HMAC_HEADERS);
+      expect(fetchSpy.mock.calls[0][0]).toBe("http://clob:3099/order-scoring");
+    });
+
+    it("includes HMAC headers", async () => {
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue({ scoring: {} }),
+      });
+      await svc.getOrderScoring(HMAC_HEADERS);
+      expect(fetchSpy.mock.calls[0][1].headers.POLY_API_KEY).toBe("key");
+    });
+
+    it("returns scoring response", async () => {
+      const scoring = { scoring: { score: 0.95, tier: "A" } };
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue(scoring),
+      });
+      const result = await svc.getOrderScoring(HMAC_HEADERS);
+      expect(result.scoring).toBeDefined();
+    });
+
+    it("throws on non-OK response", async () => {
+      fetchSpy.mockResolvedValue({
+        ok: false,
+        status: 500,
+        text: vi.fn().mockResolvedValue("error"),
+      });
+      await expect(svc.getOrderScoring(HMAC_HEADERS)).rejects.toThrow("500");
+    });
+  });
+
+  // ── getBuilderTrades ──────────────────────────────────────────────────────
+
+  describe("getBuilderTrades()", () => {
+    const HMAC_HEADERS = { POLY_API_KEY: "key", POLY_SIGNATURE: "sig" };
+
+    it("sends GET to /builder-trades", async () => {
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue([]),
+      });
+      await svc.getBuilderTrades(HMAC_HEADERS);
+      expect(fetchSpy.mock.calls[0][0]).toBe("http://clob:3099/builder-trades");
+    });
+
+    it("includes HMAC headers", async () => {
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue([]),
+      });
+      await svc.getBuilderTrades(HMAC_HEADERS);
+      expect(fetchSpy.mock.calls[0][1].headers.POLY_API_KEY).toBe("key");
+    });
+
+    it("returns parsed trades array", async () => {
+      const trades = [
+        { id: "t1", volume: "100" },
+        { id: "t2", volume: "200" },
+      ];
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue(trades),
+      });
+      const result = await svc.getBuilderTrades(HMAC_HEADERS);
+      expect(result).toHaveLength(2);
+      expect(result[0].id).toBe("t1");
+    });
+
+    it("throws on non-OK response", async () => {
+      fetchSpy.mockResolvedValue({
+        ok: false,
+        status: 403,
+        text: vi.fn().mockResolvedValue("Forbidden"),
+      });
+      await expect(svc.getBuilderTrades(HMAC_HEADERS)).rejects.toThrow("403");
+    });
+  });
+
   // ── URL config ────────────────────────────────────────────────────────────
 
   describe("URL configuration", () => {

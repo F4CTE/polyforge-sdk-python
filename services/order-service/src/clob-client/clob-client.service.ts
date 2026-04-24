@@ -12,6 +12,38 @@ export interface ClobOrderResponse {
   transactionHash?: string;
 }
 
+export interface ClobOrder {
+  id: string;
+  market: string;
+  asset_id: string;
+  side: string;
+  original_size: string;
+  size_matched: string;
+  price: string;
+  status: string;
+  type: string;
+  created_at: string;
+  expiration: string;
+}
+
+export interface ClobUserOrdersParams {
+  id?: string;
+  market?: string;
+  asset_id?: string;
+  next_cursor?: string;
+}
+
+export interface ClobUserOrdersResponse {
+  limit: number;
+  count: number;
+  next_cursor: string;
+  data: ClobOrder[];
+}
+
+export interface ClobOrderScoringResponse {
+  scoring: Record<string, unknown>;
+}
+
 const RETRY_DELAYS_MS = [500, 1000, 2000];
 
 /**
@@ -237,6 +269,71 @@ export class ClobClientService {
   async getFeeRate(tokenId: string): Promise<string> {
     return this.withRetry<string>(() =>
       fetch(`${this.clobUrl}/fee-rate/${encodeURIComponent(tokenId)}`, {
+        signal: AbortSignal.timeout(10_000),
+      }),
+    );
+  }
+
+  async sendHeartbeat(
+    headers: Record<string, string>,
+    orderIds?: string[],
+  ): Promise<{ status: string }> {
+    return this.withRetry(() =>
+      fetch(`${this.clobUrl}/heartbeats`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...headers },
+        body: orderIds ? JSON.stringify({ orderIds }) : undefined,
+        signal: AbortSignal.timeout(10_000),
+      }),
+    );
+  }
+
+  async getUserOrders(
+    params: ClobUserOrdersParams,
+    headers: Record<string, string>,
+  ): Promise<ClobUserOrdersResponse> {
+    const qs = new URLSearchParams();
+    if (params.id) qs.set("id", params.id);
+    if (params.market) qs.set("market", params.market);
+    if (params.asset_id) qs.set("asset_id", params.asset_id);
+    if (params.next_cursor) qs.set("next_cursor", params.next_cursor);
+
+    const query = qs.toString();
+    const url = `${this.clobUrl}/data/orders${query ? `?${query}` : ""}`;
+    return this.withRetry(() =>
+      fetch(url, { headers, signal: AbortSignal.timeout(10_000) }),
+    );
+  }
+
+  async getOrder(
+    orderId: string,
+    headers: Record<string, string>,
+  ): Promise<ClobOrder> {
+    return this.withRetry(() =>
+      fetch(`${this.clobUrl}/order/${encodeURIComponent(orderId)}`, {
+        headers,
+        signal: AbortSignal.timeout(10_000),
+      }),
+    );
+  }
+
+  async getOrderScoring(
+    headers: Record<string, string>,
+  ): Promise<ClobOrderScoringResponse> {
+    return this.withRetry(() =>
+      fetch(`${this.clobUrl}/order-scoring`, {
+        headers,
+        signal: AbortSignal.timeout(10_000),
+      }),
+    );
+  }
+
+  async getBuilderTrades(
+    headers: Record<string, string>,
+  ): Promise<Array<Record<string, unknown>>> {
+    return this.withRetry(() =>
+      fetch(`${this.clobUrl}/builder-trades`, {
+        headers,
         signal: AbortSignal.timeout(10_000),
       }),
     );

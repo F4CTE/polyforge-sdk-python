@@ -46,6 +46,33 @@ export interface PolymarketRebate {
   feesPaid: string;
 }
 
+export interface PolymarketPosition {
+  proxyWallet: string;
+  asset: string;
+  conditionId: string;
+  size: string;
+  avgPrice: string;
+  currentValue: string;
+  cashPnl: string;
+  percentPnl: string;
+  redeemable: boolean;
+  mergeable: boolean;
+  negativeRisk: boolean;
+}
+
+export interface PolymarketPositionsParams {
+  market?: string;
+  eventId?: string;
+  sizeThreshold?: number;
+  redeemable?: boolean;
+  mergeable?: boolean;
+  limit?: number;
+  offset?: number;
+  sortBy?: string;
+  sortDirection?: string;
+  title?: string;
+}
+
 @Injectable()
 export class PolymarketDataApiService {
   private readonly logger = new Logger(PolymarketDataApiService.name);
@@ -194,5 +221,77 @@ export class PolymarketDataApiService {
       return [];
     }
     return (await res.json()) as PolymarketActivity[];
+  }
+
+  async getPositions(
+    walletAddress: string,
+    opts?: PolymarketPositionsParams,
+  ): Promise<PolymarketPosition[]> {
+    const params = new URLSearchParams({
+      user: encodeURIComponent(walletAddress),
+    });
+    if (opts?.market) params.set("market", opts.market);
+    if (opts?.eventId) params.set("eventId", opts.eventId);
+    if (opts?.sizeThreshold !== undefined)
+      params.set("sizeThreshold", String(opts.sizeThreshold));
+    if (opts?.redeemable !== undefined)
+      params.set("redeemable", String(opts.redeemable));
+    if (opts?.mergeable !== undefined)
+      params.set("mergeable", String(opts.mergeable));
+    if (opts?.limit !== undefined)
+      params.set("limit", String(Math.min(opts.limit, 500)));
+    if (opts?.offset !== undefined)
+      params.set("offset", String(Math.min(opts.offset, 10_000)));
+    if (opts?.sortBy) params.set("sortBy", opts.sortBy);
+    if (opts?.sortDirection) params.set("sortDirection", opts.sortDirection);
+    if (opts?.title) params.set("title", opts.title);
+
+    const res = await fetch(
+      `${this.dataApiUrl}/positions?${params.toString()}`,
+      { signal: AbortSignal.timeout(10_000) },
+    );
+    if (!res.ok) {
+      this.logger.warn(
+        `Polymarket Data API positions returned ${res.status} for ${walletAddress}`,
+      );
+      return [];
+    }
+    return (await res.json()) as PolymarketPosition[];
+  }
+
+  async getClosedPositions(
+    walletAddress: string,
+    opts?: PolymarketPositionsParams,
+  ): Promise<PolymarketPosition[]> {
+    const params = new URLSearchParams({
+      user: encodeURIComponent(walletAddress),
+    });
+    if (opts?.market) params.set("market", opts.market);
+    if (opts?.eventId) params.set("eventId", opts.eventId);
+    if (opts?.sizeThreshold !== undefined)
+      params.set("sizeThreshold", String(opts.sizeThreshold));
+    if (opts?.redeemable !== undefined)
+      params.set("redeemable", String(opts.redeemable));
+    if (opts?.mergeable !== undefined)
+      params.set("mergeable", String(opts.mergeable));
+    if (opts?.limit !== undefined)
+      params.set("limit", String(Math.min(opts.limit, 500)));
+    if (opts?.offset !== undefined)
+      params.set("offset", String(Math.min(opts.offset, 10_000)));
+    if (opts?.sortBy) params.set("sortBy", opts.sortBy);
+    if (opts?.sortDirection) params.set("sortDirection", opts.sortDirection);
+    if (opts?.title) params.set("title", opts.title);
+
+    const res = await fetch(
+      `${this.dataApiUrl}/closed-positions?${params.toString()}`,
+      { signal: AbortSignal.timeout(10_000) },
+    );
+    if (!res.ok) {
+      this.logger.warn(
+        `Polymarket Data API closed-positions returned ${res.status} for ${walletAddress}`,
+      );
+      return [];
+    }
+    return (await res.json()) as PolymarketPosition[];
   }
 }
