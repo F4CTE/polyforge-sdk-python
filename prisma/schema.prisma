@@ -292,7 +292,7 @@ model NotificationPreference {
   onDailyLossLimit   Boolean               @default(true)
   onBacktestComplete Boolean               @default(true)
   onMarketResolved   Boolean               @default(true)
-  onSomeoneFelked    Boolean               @default(false)
+  onSomeoneForked    Boolean               @default(false)
   onSomeoneFollowed  Boolean               @default(false)
   onSomeoneLiked     Boolean               @default(false)
   onSomeoneCommented Boolean               @default(false)

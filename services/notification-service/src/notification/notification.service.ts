@@ -16,7 +16,7 @@ const EVENT_TO_PREF_FIELD: Record<string, keyof DispatchOptions | null> = {
   DAILY_LOSS_LIMIT: "onDailyLossLimit",
   CIRCUIT_BREAKER_TRIGGERED: "onDailyLossLimit", // uses same opt-in as daily loss
   MARKET_RESOLVED: "onMarketResolved",
-  SOMEONE_FORKED: "onSomeoneFelked",
+  SOMEONE_FORKED: "onSomeoneForked",
   SOMEONE_FOLLOWED: "onSomeoneFollowed",
   SOMEONE_LIKED: "onSomeoneLiked",
   SOMEONE_COMMENTED: "onSomeoneCommented",
@@ -34,7 +34,7 @@ interface DispatchOptions {
   onBacktestComplete: boolean;
   onDailyLossLimit: boolean;
   onMarketResolved: boolean;
-  onSomeoneFelked: boolean;
+  onSomeoneForked: boolean;
   onSomeoneFollowed: boolean;
   onSomeoneLiked: boolean;
   onSomeoneCommented: boolean;

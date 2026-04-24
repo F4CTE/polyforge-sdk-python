@@ -9,7 +9,7 @@ export class UpdateNotificationsDto {
   @IsOptional() @IsBoolean() onBacktestComplete?: boolean;
   @IsOptional() @IsBoolean() onDailyLossLimit?: boolean;
   @IsOptional() @IsBoolean() onMarketResolved?: boolean;
-  @IsOptional() @IsBoolean() onSomeoneFelked?: boolean;
+  @IsOptional() @IsBoolean() onSomeoneForked?: boolean;
   @IsOptional() @IsBoolean() onSomeoneFollowed?: boolean;
   @IsOptional() @IsBoolean() onSomeoneLiked?: boolean;
   @IsOptional() @IsBoolean() onSomeoneCommented?: boolean;

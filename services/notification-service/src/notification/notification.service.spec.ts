@@ -19,7 +19,7 @@ function makePrefs(overrides: Partial<FullPrefs> = {}): FullPrefs {
     onBacktestComplete: true,
     onDailyLossLimit: true,
     onMarketResolved: true,
-    onSomeoneFelked: true,
+    onSomeoneForked: true,
     onSomeoneFollowed: true,
     onSomeoneLiked: true,
     onSomeoneCommented: true,
@@ -40,7 +40,7 @@ interface FullPrefs {
   onBacktestComplete: boolean;
   onDailyLossLimit: boolean;
   onMarketResolved: boolean;
-  onSomeoneFelked: boolean;
+  onSomeoneForked: boolean;
   onSomeoneFollowed: boolean;
   onSomeoneLiked: boolean;
   onSomeoneCommented: boolean;

@@ -504,7 +504,7 @@ describe("SettingsService", () => {
         onBacktestComplete: true,
         onDailyLossLimit: false,
         onMarketResolved: true,
-        onSomeoneFelked: false,
+        onSomeoneForked: false,
         onSomeoneFollowed: true,
         onSomeoneLiked: false,
         onSomeoneCommented: true,
@@ -529,7 +529,7 @@ describe("SettingsService", () => {
       expect(result.onBacktestComplete).toBe(true);
       expect(result.onDailyLossLimit).toBe(true);
       expect(result.onMarketResolved).toBe(true);
-      expect(result.onSomeoneFelked).toBe(false);
+      expect(result.onSomeoneForked).toBe(false);
       expect(result.onSomeoneFollowed).toBe(false);
       expect(result.onSomeoneLiked).toBe(false);
       expect(result.onSomeoneCommented).toBe(false);

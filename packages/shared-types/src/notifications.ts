@@ -46,7 +46,7 @@ export interface NotificationPreferences {
   onDailyLossLimit: boolean;
   onBacktestComplete: boolean;
   onMarketResolved: boolean;
-  onSomeoneFelked: boolean;
+  onSomeoneForked: boolean;
   onSomeoneFollowed: boolean;
   onSomeoneLiked: boolean;
   onSomeoneCommented: boolean;

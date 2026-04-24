@@ -64,7 +64,7 @@ export class SettingsService {
         onBacktestComplete: true,
         onDailyLossLimit: true,
         onMarketResolved: true,
-        onSomeoneFelked: false,
+        onSomeoneForked: false,
         onSomeoneFollowed: false,
         onSomeoneLiked: false,
         onSomeoneCommented: false,

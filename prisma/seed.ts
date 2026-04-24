@@ -541,7 +541,7 @@ async function main() {
         onDailyLossLimit: true,
         onBacktestComplete: true,
         onMarketResolved: true,
-        onSomeoneFelked: false,
+        onSomeoneForked: false,
         onSomeoneFollowed: true,
         onSomeoneLiked: false,
         onSomeoneCommented: true,
