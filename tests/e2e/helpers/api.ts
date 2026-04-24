@@ -125,7 +125,7 @@ export async function apiRegisterAndVerify(
     const result = await apiRegister(email, username, password);
 
     // 2. Extract verification token from Mailpit email
-    const msg  = await waitForEmail(email, 15_000);
+    const msg  = await waitForEmail(email);
     const body = msg.HTML || msg.Text || '';
 
     // Token is a 64-char hex string in the verify-email URL query param
