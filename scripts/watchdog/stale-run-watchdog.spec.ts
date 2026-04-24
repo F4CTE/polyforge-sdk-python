@@ -97,24 +97,28 @@ describe('matchesPatterns', () => {
 // --- classifyCommentAge ---
 
 describe('classifyCommentAge', () => {
-  it('returns "recent" for comment <2h old', () => {
-    expect(classifyCommentAge(hoursAgo(1, NOW), NOW)).toBe('recent');
+  it('returns "recent" for comment <6h old', () => {
+    expect(classifyCommentAge(hoursAgo(3, NOW), NOW)).toBe('recent');
   });
 
-  it('returns "warn" for comment exactly 2h old', () => {
-    expect(classifyCommentAge(hoursAgo(2, NOW), NOW)).toBe('warn');
+  it('returns "recent" for comment 5h old', () => {
+    expect(classifyCommentAge(hoursAgo(5, NOW), NOW)).toBe('recent');
   });
 
-  it('returns "warn" for comment 4h old', () => {
-    expect(classifyCommentAge(hoursAgo(4, NOW), NOW)).toBe('warn');
+  it('returns "warn" for comment exactly 6h old', () => {
+    expect(classifyCommentAge(hoursAgo(6, NOW), NOW)).toBe('warn');
   });
 
-  it('returns "auto_close" for comment exactly 6h old', () => {
-    expect(classifyCommentAge(hoursAgo(6, NOW), NOW)).toBe('auto_close');
+  it('returns "warn" for comment 9h old', () => {
+    expect(classifyCommentAge(hoursAgo(9, NOW), NOW)).toBe('warn');
   });
 
-  it('returns "auto_close" for comment 12h old', () => {
+  it('returns "auto_close" for comment exactly 12h old', () => {
     expect(classifyCommentAge(hoursAgo(12, NOW), NOW)).toBe('auto_close');
+  });
+
+  it('returns "auto_close" for comment 24h old', () => {
+    expect(classifyCommentAge(hoursAgo(24, NOW), NOW)).toBe('auto_close');
   });
 });
 
@@ -194,7 +198,7 @@ describe('shouldSkipIssue', () => {
 describe('determineAction', () => {
   it('returns null for issue with blockers', () => {
     const issue = makeIssue({ blockedBy: [{ id: 'b1', status: 'in_progress' }] });
-    const comments = [makeComment({ body: 'PR merged', createdAt: hoursAgo(8, NOW) })];
+    const comments = [makeComment({ body: 'PR merged', createdAt: hoursAgo(14, NOW) })];
     expect(determineAction(issue, comments, NOW)).toBeNull();
   });
 
@@ -207,51 +211,51 @@ describe('determineAction', () => {
   it('returns null when comments exist after the completion comment', () => {
     const issue = makeIssue();
     const comments = [
-      makeComment({ id: 'c1', body: 'PR merged', createdAt: hoursAgo(8, NOW) }),
-      makeComment({ id: 'c2', body: 'Wait, found a bug', createdAt: hoursAgo(7, NOW), authorAgentId: 'reviewer' }),
+      makeComment({ id: 'c1', body: 'PR merged', createdAt: hoursAgo(14, NOW) }),
+      makeComment({ id: 'c2', body: 'Wait, found a bug', createdAt: hoursAgo(13, NOW), authorAgentId: 'reviewer' }),
     ];
     expect(determineAction(issue, comments, NOW)).toBeNull();
   });
 
-  it('returns null for recent comments (<2h)', () => {
+  it('returns null for recent comments (<6h)', () => {
     const issue = makeIssue();
-    const comments = [makeComment({ body: 'PR merged', createdAt: hoursAgo(1, NOW) })];
+    const comments = [makeComment({ body: 'PR merged', createdAt: hoursAgo(3, NOW) })];
     expect(determineAction(issue, comments, NOW)).toBeNull();
   });
 
   it('returns null for non-matching comment text', () => {
     const issue = makeIssue();
-    const comments = [makeComment({ body: 'Investigating the issue', createdAt: hoursAgo(8, NOW) })];
+    const comments = [makeComment({ body: 'Investigating the issue', createdAt: hoursAgo(14, NOW) })];
     expect(determineAction(issue, comments, NOW)).toBeNull();
   });
 
-  it('auto-closes for high-confidence + >6h', () => {
+  it('auto-closes for high-confidence + >12h', () => {
     const issue = makeIssue();
-    const comments = [makeComment({ body: 'PR merged to main', createdAt: hoursAgo(8, NOW) })];
+    const comments = [makeComment({ body: 'PR merged to main', createdAt: hoursAgo(14, NOW) })];
     const action = determineAction(issue, comments, NOW);
     expect(action).not.toBeNull();
     expect(action!.action).toBe('auto_closed');
   });
 
-  it('escalates for low-confidence + >6h', () => {
+  it('escalates for low-confidence + >12h', () => {
     const issue = makeIssue();
-    const comments = [makeComment({ body: 'pushed the fix', createdAt: hoursAgo(8, NOW) })];
+    const comments = [makeComment({ body: 'pushed the fix', createdAt: hoursAgo(14, NOW) })];
     const action = determineAction(issue, comments, NOW);
     expect(action).not.toBeNull();
     expect(action!.action).toBe('escalated');
   });
 
-  it('warns for high-confidence + 2-6h', () => {
+  it('warns for high-confidence + 6-12h', () => {
     const issue = makeIssue();
-    const comments = [makeComment({ body: 'Work is completed', createdAt: hoursAgo(3, NOW) })];
+    const comments = [makeComment({ body: 'Work is completed', createdAt: hoursAgo(8, NOW) })];
     const action = determineAction(issue, comments, NOW);
     expect(action).not.toBeNull();
     expect(action!.action).toBe('warned');
   });
 
-  it('warns for low-confidence + 2-6h', () => {
+  it('warns for low-confidence + 6-12h', () => {
     const issue = makeIssue();
-    const comments = [makeComment({ body: 'done', createdAt: hoursAgo(4, NOW) })];
+    const comments = [makeComment({ body: 'done', createdAt: hoursAgo(9, NOW) })];
     const action = determineAction(issue, comments, NOW);
     expect(action).not.toBeNull();
     expect(action!.action).toBe('warned');
@@ -259,7 +263,7 @@ describe('determineAction', () => {
 
   it('auto-closes for "resolved" keyword (high-confidence)', () => {
     const issue = makeIssue();
-    const comments = [makeComment({ body: 'Resolved', createdAt: hoursAgo(7, NOW) })];
+    const comments = [makeComment({ body: 'Resolved', createdAt: hoursAgo(13, NOW) })];
     const action = determineAction(issue, comments, NOW);
     expect(action).not.toBeNull();
     expect(action!.action).toBe('auto_closed');
@@ -267,7 +271,7 @@ describe('determineAction', () => {
 
   it('auto-closes for "fixed the issue" keyword (high-confidence)', () => {
     const issue = makeIssue();
-    const comments = [makeComment({ body: 'Fixed the flaky test', createdAt: hoursAgo(7, NOW) })];
+    const comments = [makeComment({ body: 'Fixed the flaky test', createdAt: hoursAgo(13, NOW) })];
     const action = determineAction(issue, comments, NOW);
     expect(action).not.toBeNull();
     expect(action!.action).toBe('auto_closed');
@@ -275,7 +279,7 @@ describe('determineAction', () => {
 
   it('auto-closes for "deployed" without "to prod" (high-confidence)', () => {
     const issue = makeIssue();
-    const comments = [makeComment({ body: 'Deployed', createdAt: hoursAgo(7, NOW) })];
+    const comments = [makeComment({ body: 'Deployed', createdAt: hoursAgo(13, NOW) })];
     const action = determineAction(issue, comments, NOW);
     expect(action).not.toBeNull();
     expect(action!.action).toBe('auto_closed');
@@ -283,7 +287,7 @@ describe('determineAction', () => {
 
   it('works with in_review status', () => {
     const issue = makeIssue({ status: 'in_review' });
-    const comments = [makeComment({ body: 'Shipped!', createdAt: hoursAgo(8, NOW) })];
+    const comments = [makeComment({ body: 'Shipped!', createdAt: hoursAgo(14, NOW) })];
     const action = determineAction(issue, comments, NOW);
     expect(action).not.toBeNull();
     expect(action!.action).toBe('auto_closed');

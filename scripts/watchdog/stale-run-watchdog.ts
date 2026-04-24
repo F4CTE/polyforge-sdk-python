@@ -4,8 +4,8 @@
  * where the agent posted a completion comment but never transitioned status.
  *
  * Tiered actions:
- *   >6h since completion comment → auto-close (high confidence) or escalate (low)
- *   2–6h since completion comment → post warning
+ *   >12h since completion comment → auto-close (high confidence) or escalate (low)
+ *   6–12h since completion comment → post warning
  *
  * Edge cases:
  *   - Skips issues with blockedByIssueIds set
@@ -14,8 +14,8 @@
 
 // --- Exported constants & types (testable) ---
 
-export const WARN_THRESHOLD_MS = 2 * 60 * 60 * 1000;
-export const AUTO_CLOSE_THRESHOLD_MS = 6 * 60 * 60 * 1000;
+export const WARN_THRESHOLD_MS = 6 * 60 * 60 * 1000;
+export const AUTO_CLOSE_THRESHOLD_MS = 12 * 60 * 60 * 1000;
 
 export const HIGH_CONFIDENCE_PATTERNS: RegExp[] = [
   /\bmarked\s+(as\s+)?done\b/i,
@@ -136,14 +136,14 @@ export function determineAction(
       return {
         issue,
         action: 'auto_closed',
-        reason: `Last agent comment (${lastAgentComment.createdAt}) contains high-confidence completion signal and is >6h old.`,
+        reason: `Last agent comment (${lastAgentComment.createdAt}) contains high-confidence completion signal and is >12h old.`,
         lastComment: lastAgentComment,
       };
     }
     return {
       issue,
       action: 'escalated',
-      reason: `Last agent comment (${lastAgentComment.createdAt}) contains possible completion signal (low confidence) and is >6h old.`,
+      reason: `Last agent comment (${lastAgentComment.createdAt}) contains possible completion signal (low confidence) and is >12h old.`,
       lastComment: lastAgentComment,
     };
   }
@@ -152,7 +152,7 @@ export function determineAction(
   return {
     issue,
     action: 'warned',
-    reason: `Last agent comment (${lastAgentComment.createdAt}) may indicate completion but status was not updated. Comment is 2–6h old.`,
+    reason: `Last agent comment (${lastAgentComment.createdAt}) may indicate completion but status was not updated. Comment is 6–12h old.`,
     lastComment: lastAgentComment,
   };
 }
