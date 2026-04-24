@@ -2,7 +2,11 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { ConfigService } from "@nestjs/config";
 import { JwtService } from "@nestjs/jwt";
 import { KalshiAuthService } from "./kalshi-auth.service";
-import { KalshiRestService } from "./kalshi-rest.service";
+import {
+  KalshiRestService,
+  parseKalshiTimestamp,
+  parseKalshiDollars,
+} from "./kalshi-rest.service";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -1838,5 +1842,104 @@ describe("KalshiRestService", () => {
     it("denormalizes 0.99 → 99", () => {
       expect(KalshiRestService.denormalizeKalshiPrice(0.99)).toBe(99);
     });
+  });
+
+  // ── Phase 5b: toDollarsString ─────────────────────────────────────────────
+
+  describe("toDollarsString()", () => {
+    it("formats to 4 decimal places", () => {
+      expect(KalshiRestService.toDollarsString(0.45)).toBe("0.4500");
+    });
+
+    it("preserves subpenny precision", () => {
+      expect(KalshiRestService.toDollarsString(0.4567)).toBe("0.4567");
+    });
+
+    it("formats 0 correctly", () => {
+      expect(KalshiRestService.toDollarsString(0)).toBe("0.0000");
+    });
+
+    it("formats 1 correctly", () => {
+      expect(KalshiRestService.toDollarsString(1)).toBe("1.0000");
+    });
+  });
+
+  // ── Phase 5b: resolvePriceDollars ─────────────────────────────────────────
+
+  describe("resolvePriceDollars()", () => {
+    it("prefers dollars string over cents", () => {
+      expect(KalshiRestService.resolvePriceDollars("0.4567", 45)).toBe(0.4567);
+    });
+
+    it("falls back to cents when dollars is undefined", () => {
+      expect(KalshiRestService.resolvePriceDollars(undefined, 45)).toBe(0.45);
+    });
+
+    it("returns 0 when both are undefined", () => {
+      expect(KalshiRestService.resolvePriceDollars(undefined, undefined)).toBe(
+        0,
+      );
+    });
+
+    it("ignores empty string dollars", () => {
+      expect(KalshiRestService.resolvePriceDollars("", 45)).toBe(0.45);
+    });
+  });
+});
+
+// ── Phase 5b: parseKalshiTimestamp ─────────────────────────────────────────
+
+describe("parseKalshiTimestamp()", () => {
+  it("returns ts_ms when present", () => {
+    expect(parseKalshiTimestamp({ ts_ms: 1700000000123, ts: 1700000000 })).toBe(
+      1700000000123,
+    );
+  });
+
+  it("converts ts seconds to ms when ts_ms is absent", () => {
+    expect(parseKalshiTimestamp({ ts: 1700000000 })).toBe(1700000000000);
+  });
+
+  it("falls back to Date.now() when both are absent", () => {
+    const now = Date.now();
+    const result = parseKalshiTimestamp({});
+    expect(result).toBeGreaterThanOrEqual(now);
+    expect(result).toBeLessThanOrEqual(now + 100);
+  });
+
+  it("prefers ts_ms over ts even when ts_ms is 0", () => {
+    expect(parseKalshiTimestamp({ ts_ms: 0, ts: 1700000000 })).toBe(0);
+  });
+});
+
+// ── Phase 5b: parseKalshiDollars ──────────────────────────────────────────
+
+describe("parseKalshiDollars()", () => {
+  it("parses valid dollar string", () => {
+    expect(parseKalshiDollars("0.4567")).toBe(0.4567);
+  });
+
+  it("returns undefined for undefined input", () => {
+    expect(parseKalshiDollars(undefined)).toBeUndefined();
+  });
+
+  it("returns undefined for empty string", () => {
+    expect(parseKalshiDollars("")).toBeUndefined();
+  });
+
+  it("returns undefined for non-string input", () => {
+    expect(parseKalshiDollars(42)).toBeUndefined();
+  });
+
+  it("returns undefined for NaN string", () => {
+    expect(parseKalshiDollars("not-a-number")).toBeUndefined();
+  });
+
+  it("parses integer dollar string", () => {
+    expect(parseKalshiDollars("1")).toBe(1);
+  });
+
+  it("parses zero", () => {
+    expect(parseKalshiDollars("0")).toBe(0);
   });
 });

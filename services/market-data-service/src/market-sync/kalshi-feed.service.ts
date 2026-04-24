@@ -168,14 +168,28 @@ export class KalshiFeedService implements OnModuleInit, OnModuleDestroy {
     if (!inner) return;
 
     const ticker = inner["market_ticker"] as string | undefined;
-    const yesPrice = inner["yes_price"] as number | undefined;
-    if (!ticker || yesPrice === undefined) return;
+    const dollarStr = inner["yes_price_dollars"] as string | undefined;
+    const centPrice = inner["yes_price"] as number | undefined;
+    if (!ticker || (dollarStr === undefined && centPrice === undefined)) return;
 
-    const ts = typeof inner["ts"] === "number" ? inner["ts"] : Date.now();
+    let price: number;
+    if (typeof dollarStr === "string" && dollarStr.length > 0) {
+      const parsed = Number(dollarStr);
+      price = Number.isNaN(parsed) ? (centPrice ?? 0) / 100 : parsed;
+    } else {
+      price = (centPrice ?? 0) / 100;
+    }
+
+    const ts =
+      typeof inner["ts_ms"] === "number"
+        ? inner["ts_ms"]
+        : typeof inner["ts"] === "number"
+          ? inner["ts"] * 1000
+          : Date.now();
 
     this.emitter.emit("market-data.price.raw.kalshi", {
       tokenId: ticker,
-      price: yesPrice / 100,
+      price,
       timestamp: ts,
     } satisfies PriceUpdateEvent);
   }

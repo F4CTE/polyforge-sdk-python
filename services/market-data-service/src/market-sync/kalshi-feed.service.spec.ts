@@ -192,6 +192,88 @@ describe("KalshiFeedService", () => {
         expect.anything(),
       );
     });
+
+    it("prefers yes_price_dollars over yes_price", async () => {
+      svc.onModuleInit();
+      await vi.runAllTimersAsync();
+      mockWsInstance.triggerOpen();
+
+      mockWsInstance.triggerMessage({
+        type: "ticker",
+        msg: {
+          market_ticker: "BTC-USD",
+          yes_price_dollars: "0.4567",
+          yes_price: 45,
+          ts_ms: 1700000000000,
+        },
+      });
+
+      expect(emitter.emit).toHaveBeenCalledWith(
+        "market-data.price.raw.kalshi",
+        expect.objectContaining({ price: 0.4567 }),
+      );
+    });
+
+    it("falls back to yes_price cents when yes_price_dollars is absent", async () => {
+      svc.onModuleInit();
+      await vi.runAllTimersAsync();
+      mockWsInstance.triggerOpen();
+
+      mockWsInstance.triggerMessage({
+        type: "ticker",
+        msg: {
+          market_ticker: "BTC-USD",
+          yes_price: 67,
+          ts_ms: 1700000000000,
+        },
+      });
+
+      expect(emitter.emit).toHaveBeenCalledWith(
+        "market-data.price.raw.kalshi",
+        expect.objectContaining({ price: 0.67 }),
+      );
+    });
+
+    it("uses ts_ms for timestamp when available", async () => {
+      svc.onModuleInit();
+      await vi.runAllTimersAsync();
+      mockWsInstance.triggerOpen();
+
+      mockWsInstance.triggerMessage({
+        type: "ticker",
+        msg: {
+          market_ticker: "BTC-USD",
+          yes_price: 45,
+          ts_ms: 1700000000123,
+          ts: 1700000000,
+        },
+      });
+
+      expect(emitter.emit).toHaveBeenCalledWith(
+        "market-data.price.raw.kalshi",
+        expect.objectContaining({ timestamp: 1700000000123 }),
+      );
+    });
+
+    it("converts ts seconds to milliseconds as fallback", async () => {
+      svc.onModuleInit();
+      await vi.runAllTimersAsync();
+      mockWsInstance.triggerOpen();
+
+      mockWsInstance.triggerMessage({
+        type: "ticker",
+        msg: {
+          market_ticker: "BTC-USD",
+          yes_price: 45,
+          ts: 1700000000,
+        },
+      });
+
+      expect(emitter.emit).toHaveBeenCalledWith(
+        "market-data.price.raw.kalshi",
+        expect.objectContaining({ timestamp: 1700000000000 }),
+      );
+    });
   });
 
   // ── Reconnection ──────────────────────────────────────────────────────────

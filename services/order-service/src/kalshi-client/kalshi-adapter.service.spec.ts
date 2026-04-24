@@ -596,4 +596,310 @@ describe("KalshiAdapterService", () => {
       expect(url).toContain("period_interval=1440");
     });
   });
+
+  // ── Phase 5b: _dollars field support in submitOrder ───────────────────────
+
+  describe("submitOrder() modern fields", () => {
+    it("sends yes_price_dollars alongside yes_price", async () => {
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue({
+          order: { order_id: "ord-d1", status: "resting" },
+        }),
+      });
+      const req: VenueOrderRequest = {
+        venueMarketId: "BTC-USD",
+        venueOutcomeId: "yes",
+        side: "BUY",
+        size: "5",
+        price: "0.4567",
+        orderType: "GTC",
+        authContext: { userId: "u1" },
+      };
+      await adapter.submitOrder(req);
+      const body = JSON.parse(fetchSpy.mock.calls[0][1].body as string);
+      expect(body.yes_price_dollars).toBe("0.4567");
+      expect(body.yes_price).toBe(46);
+    });
+
+    it("sends no_price_dollars for no-side orders", async () => {
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue({
+          order: { order_id: "ord-nd1", status: "resting" },
+        }),
+      });
+      const req: VenueOrderRequest = {
+        venueMarketId: "BTC-USD",
+        venueOutcomeId: "no",
+        side: "BUY",
+        size: "5",
+        price: "0.35",
+        orderType: "GTC",
+        authContext: { userId: "u1" },
+      };
+      await adapter.submitOrder(req);
+      const body = JSON.parse(fetchSpy.mock.calls[0][1].body as string);
+      expect(body.no_price_dollars).toBe("0.3500");
+      expect(body.no_price).toBe(35);
+      expect(body.yes_price_dollars).toBeUndefined();
+    });
+
+    it("sends self_trade_prevention_type defaulting to taker_at_cross", async () => {
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue({
+          order: { order_id: "ord-stp", status: "resting" },
+        }),
+      });
+      const req: VenueOrderRequest = {
+        venueMarketId: "BTC-USD",
+        venueOutcomeId: "yes",
+        side: "BUY",
+        size: "5",
+        price: "0.45",
+        orderType: "GTC",
+        authContext: { userId: "u1" },
+      };
+      await adapter.submitOrder(req);
+      const body = JSON.parse(fetchSpy.mock.calls[0][1].body as string);
+      expect(body.self_trade_prevention_type).toBe("taker_at_cross");
+    });
+
+    it("sends maker self_trade_prevention_type from authContext", async () => {
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue({
+          order: { order_id: "ord-stpm", status: "resting" },
+        }),
+      });
+      const req: VenueOrderRequest = {
+        venueMarketId: "BTC-USD",
+        venueOutcomeId: "yes",
+        side: "BUY",
+        size: "5",
+        price: "0.45",
+        orderType: "GTC",
+        authContext: { userId: "u1", selfTradePreventionType: "maker" },
+      };
+      await adapter.submitOrder(req);
+      const body = JSON.parse(fetchSpy.mock.calls[0][1].body as string);
+      expect(body.self_trade_prevention_type).toBe("maker");
+    });
+
+    it("sends post_only=true for POST_ONLY orderType", async () => {
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue({
+          order: { order_id: "ord-po", status: "resting" },
+        }),
+      });
+      const req: VenueOrderRequest = {
+        venueMarketId: "BTC-USD",
+        venueOutcomeId: "yes",
+        side: "BUY",
+        size: "5",
+        price: "0.45",
+        orderType: "POST_ONLY",
+        authContext: { userId: "u1" },
+      };
+      await adapter.submitOrder(req);
+      const body = JSON.parse(fetchSpy.mock.calls[0][1].body as string);
+      expect(body.post_only).toBe(true);
+    });
+
+    it("sends reduce_only from authContext", async () => {
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue({
+          order: { order_id: "ord-ro", status: "resting" },
+        }),
+      });
+      const req: VenueOrderRequest = {
+        venueMarketId: "BTC-USD",
+        venueOutcomeId: "yes",
+        side: "SELL",
+        size: "3",
+        price: "0.60",
+        orderType: "GTC",
+        authContext: { userId: "u1", reduceOnly: true },
+      };
+      await adapter.submitOrder(req);
+      const body = JSON.parse(fetchSpy.mock.calls[0][1].body as string);
+      expect(body.reduce_only).toBe(true);
+    });
+
+    it("sends cancel_order_on_pause from authContext", async () => {
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue({
+          order: { order_id: "ord-cop", status: "resting" },
+        }),
+      });
+      const req: VenueOrderRequest = {
+        venueMarketId: "BTC-USD",
+        venueOutcomeId: "yes",
+        side: "BUY",
+        size: "5",
+        price: "0.45",
+        orderType: "GTC",
+        authContext: { userId: "u1", cancelOrderOnPause: true },
+      };
+      await adapter.submitOrder(req);
+      const body = JSON.parse(fetchSpy.mock.calls[0][1].body as string);
+      expect(body.cancel_order_on_pause).toBe(true);
+    });
+
+    it("sends client_order_id from authContext", async () => {
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue({
+          order: { order_id: "ord-coi", status: "resting" },
+        }),
+      });
+      const req: VenueOrderRequest = {
+        venueMarketId: "BTC-USD",
+        venueOutcomeId: "yes",
+        side: "BUY",
+        size: "5",
+        price: "0.45",
+        orderType: "GTC",
+        authContext: {
+          userId: "u1",
+          clientOrderId: "550e8400-e29b-41d4-a716-446655440000",
+        },
+      };
+      await adapter.submitOrder(req);
+      const body = JSON.parse(fetchSpy.mock.calls[0][1].body as string);
+      expect(body.client_order_id).toBe("550e8400-e29b-41d4-a716-446655440000");
+    });
+
+    it("sends count_fp for fractional contract sizes", async () => {
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue({
+          order: { order_id: "ord-fp", status: "resting" },
+        }),
+      });
+      const req: VenueOrderRequest = {
+        venueMarketId: "BTC-USD",
+        venueOutcomeId: "yes",
+        side: "BUY",
+        size: "5.50",
+        price: "0.45",
+        orderType: "GTC",
+        authContext: { userId: "u1" },
+      };
+      await adapter.submitOrder(req);
+      const body = JSON.parse(fetchSpy.mock.calls[0][1].body as string);
+      expect(body.count_fp).toBe("5.50");
+      expect(body.count).toBe(5);
+    });
+
+    it("omits count_fp for integer contract sizes", async () => {
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue({
+          order: { order_id: "ord-int", status: "resting" },
+        }),
+      });
+      const req: VenueOrderRequest = {
+        venueMarketId: "BTC-USD",
+        venueOutcomeId: "yes",
+        side: "BUY",
+        size: "10",
+        price: "0.45",
+        orderType: "GTC",
+        authContext: { userId: "u1" },
+      };
+      await adapter.submitOrder(req);
+      const body = JSON.parse(fetchSpy.mock.calls[0][1].body as string);
+      expect(body.count_fp).toBeUndefined();
+      expect(body.count).toBe(10);
+    });
+  });
+
+  // ── Phase 5b: _dollars field support in getPrice ──────────────────────────
+
+  describe("getPrice() _dollars support", () => {
+    it("prefers yes_bid_dollars over integer yes_bid", async () => {
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue({
+          market: {
+            ticker: "BTC-USD",
+            yes_bid: 45,
+            yes_bid_dollars: "0.4567",
+            status: "active",
+          },
+        }),
+      });
+      const price = await adapter.getPrice("BTC-USD");
+      expect(price).toBe("0.4567");
+    });
+
+    it("prefers last_price_dollars when yes_bid_dollars is absent", async () => {
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue({
+          market: {
+            ticker: "X",
+            yes_bid: null,
+            last_price: 60,
+            last_price_dollars: "0.6050",
+            status: "active",
+          },
+        }),
+      });
+      expect(await adapter.getPrice("X")).toBe("0.605");
+    });
+  });
+
+  // ── Phase 5b: count_fp in getOrderHistory ─────────────────────────────────
+
+  describe("getOrderHistory() modern fields", () => {
+    it("uses count_fp for order size when available", async () => {
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue({
+          orders: [
+            {
+              order_id: "o-fp",
+              ticker: "BTC-USD",
+              action: "buy",
+              count: 5,
+              count_fp: "5.50",
+              yes_price: 45,
+              yes_price_dollars: "0.4567",
+              status: "filled",
+              created_time: "2024-01-01T00:00:00Z",
+            },
+          ],
+        }),
+      });
+      const history = await adapter.getOrderHistory("user-1", 50);
+      expect(history[0].size).toBe("5.50");
+      expect(history[0].price).toBe("0.4567");
+    });
+
+    it("falls back to integer count when count_fp is absent", async () => {
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue({
+          orders: [
+            {
+              order_id: "o-int",
+              ticker: "BTC-USD",
+              action: "buy",
+              count: 10,
+              yes_price: 45,
+              status: "filled",
+            },
+          ],
+        }),
+      });
+      const history = await adapter.getOrderHistory("user-1", 50);
+      expect(history[0].size).toBe("10");
+    });
+  });
 });

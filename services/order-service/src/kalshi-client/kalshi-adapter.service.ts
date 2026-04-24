@@ -14,7 +14,11 @@ import type {
   PriceCandle,
   CandleResolution,
 } from "@polyforge/shared-types";
-import { KalshiRestService, type KalshiMarket } from "./kalshi-rest.service";
+import {
+  KalshiRestService,
+  type KalshiMarket,
+  parseKalshiDollars,
+} from "./kalshi-rest.service";
 
 @Injectable()
 export class KalshiAdapterService implements VenueAdapter {
@@ -54,6 +58,10 @@ export class KalshiAdapterService implements VenueAdapter {
 
   async getPrice(outcomeId: string): Promise<string> {
     const market = await this.rest.getMarket(outcomeId);
+    const dollarPrice =
+      parseKalshiDollars(market.yes_bid_dollars) ??
+      parseKalshiDollars(market.last_price_dollars);
+    if (dollarPrice !== undefined) return String(dollarPrice);
     const centPrice = market.yes_bid ?? market.last_price ?? 0;
     return String(KalshiRestService.normalizeKalshiPrice(centPrice));
   }
@@ -87,18 +95,39 @@ export class KalshiAdapterService implements VenueAdapter {
   async submitOrder(order: VenueOrderRequest): Promise<VenueOrderResponse> {
     const isNo = order.venueOutcomeId === "no";
     const kalshiSide: "yes" | "no" = isNo ? "no" : "yes";
-    const centPrice = KalshiRestService.denormalizeKalshiPrice(
-      parseFloat(order.price),
-    );
+    const priceNum = parseFloat(order.price);
+    const dollarsStr = KalshiRestService.toDollarsString(priceNum);
+    const centPrice = KalshiRestService.denormalizeKalshiPrice(priceNum);
+
+    const sizeNum = parseFloat(order.size);
+    const isFractional = !Number.isInteger(sizeNum);
+
+    const ctx = order.authContext as {
+      clientOrderId?: string;
+      selfTradePreventionType?: "taker_at_cross" | "maker";
+      postOnly?: boolean;
+      reduceOnly?: boolean;
+      cancelOrderOnPause?: boolean;
+    };
 
     const result = await this.rest.placeOrder({
       ticker: order.venueMarketId,
       side: kalshiSide,
       action: order.side === "BUY" ? "buy" : "sell",
-      count: parseInt(order.size, 10),
-      type: "limit",
-      ...(isNo ? { no_price: centPrice } : { yes_price: centPrice }),
+      count: Math.floor(sizeNum),
+      ...(isFractional && { count_fp: sizeNum.toFixed(2) }),
+      type: order.orderType === "POST_ONLY" ? "limit" : "limit",
+      ...(isNo
+        ? { no_price_dollars: dollarsStr, no_price: centPrice }
+        : { yes_price_dollars: dollarsStr, yes_price: centPrice }),
       expiration_ts: order.expiration,
+      ...(ctx.clientOrderId && { client_order_id: ctx.clientOrderId }),
+      self_trade_prevention_type:
+        ctx.selfTradePreventionType ?? "taker_at_cross",
+      ...(order.orderType === "POST_ONLY" && { post_only: true }),
+      ...(ctx.postOnly && { post_only: true }),
+      ...(ctx.reduceOnly && { reduce_only: true }),
+      ...(ctx.cancelOrderOnPause && { cancel_order_on_pause: true }),
     });
 
     return {
@@ -158,9 +187,11 @@ export class KalshiAdapterService implements VenueAdapter {
 
       const market = markets[i];
       const yesPrice = market
-        ? KalshiRestService.normalizeKalshiPrice(
+        ? (parseKalshiDollars(market.yes_bid_dollars) ??
+          parseKalshiDollars(market.last_price_dollars) ??
+          KalshiRestService.normalizeKalshiPrice(
             market.yes_bid ?? market.last_price ?? 0,
-          )
+          ))
         : 0;
       const currentPrice = isNo ? 1 - yesPrice : yesPrice;
 
@@ -190,9 +221,12 @@ export class KalshiAdapterService implements VenueAdapter {
       venueOrderId: o.order_id,
       venueMarketId: o.ticker,
       side: o.action === "buy" ? "BUY" : "SELL",
-      size: String(o.count),
+      size: o.count_fp ?? String(o.count),
       price: String(
-        KalshiRestService.normalizeKalshiPrice(o.yes_price ?? o.no_price ?? 0),
+        KalshiRestService.resolvePriceDollars(
+          o.yes_price_dollars ?? o.no_price_dollars,
+          o.yes_price ?? o.no_price ?? 0,
+        ),
       ),
       status: o.status,
       filledAt: o.created_time ? new Date(o.created_time) : undefined,

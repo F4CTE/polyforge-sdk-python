@@ -9,7 +9,11 @@ import { EventEmitter2 } from "@nestjs/event-emitter";
 import WebSocket from "ws";
 import { KalshiAuthService } from "./kalshi-auth.service";
 import type { KalshiCommunicationsEvent } from "./kalshi-rest.service";
-import { KalshiRestService } from "./kalshi-rest.service";
+import {
+  KalshiRestService,
+  parseKalshiTimestamp,
+  parseKalshiDollars,
+} from "./kalshi-rest.service";
 
 interface PriceUpdateEvent {
   tokenId: string;
@@ -284,15 +288,18 @@ export class KalshiWsService implements OnModuleInit, OnModuleDestroy {
 
   private handleTickerMessage(inner: Record<string, unknown>) {
     const ticker = inner["market_ticker"] as string | undefined;
-    const yesPrice = inner["yes_price"] as number | undefined;
-    if (!ticker || yesPrice === undefined) return;
+    const dollarPrice = parseKalshiDollars(inner["yes_price_dollars"]);
+    const centPrice = inner["yes_price"] as number | undefined;
+    if (!ticker || (dollarPrice === undefined && centPrice === undefined))
+      return;
 
-    const ts = typeof inner["ts"] === "number" ? inner["ts"] : Date.now();
+    const price =
+      dollarPrice ?? KalshiRestService.normalizeKalshiPrice(centPrice!);
 
     this.emitter.emit("market-data.price", {
       tokenId: ticker,
-      price: KalshiRestService.normalizeKalshiPrice(yesPrice),
-      timestamp: ts,
+      price,
+      timestamp: parseKalshiTimestamp(inner),
     } satisfies PriceUpdateEvent);
   }
 
@@ -310,19 +317,26 @@ export class KalshiWsService implements OnModuleInit, OnModuleDestroy {
     this.orderbookSeq.set(ticker, seq);
 
     const side = inner["side"] as "yes" | "no" | undefined;
-    const price = inner["price"] as number | undefined;
+    const dollarPrice = parseKalshiDollars(inner["price_dollars"]);
+    const centPrice = inner["price"] as number | undefined;
     const delta = inner["delta"] as number | undefined;
-    if (!side || price === undefined || delta === undefined) return;
+    if (
+      !side ||
+      (dollarPrice === undefined && centPrice === undefined) ||
+      delta === undefined
+    )
+      return;
 
-    const ts = typeof inner["ts"] === "number" ? inner["ts"] : Date.now();
+    const price =
+      dollarPrice ?? KalshiRestService.normalizeKalshiPrice(centPrice!);
 
     this.emitter.emit("kalshi.orderbook.delta", {
       ticker,
       side,
-      price: KalshiRestService.normalizeKalshiPrice(price),
+      price,
       delta,
       seq,
-      timestamp: ts,
+      timestamp: parseKalshiTimestamp(inner),
     } satisfies OrderbookDeltaEvent);
   }
 
@@ -332,8 +346,13 @@ export class KalshiWsService implements OnModuleInit, OnModuleDestroy {
     const ticker = inner["ticker"] as string | undefined;
     if (!fillId || !orderId || !ticker) return;
 
-    const ts = typeof inner["ts"] === "number" ? inner["ts"] : Date.now();
-    const price = inner["yes_price"] as number | undefined;
+    const dollarPrice = parseKalshiDollars(inner["yes_price_dollars"]);
+    const centPrice = inner["yes_price"] as number | undefined;
+    const price =
+      dollarPrice ??
+      (centPrice !== undefined
+        ? KalshiRestService.normalizeKalshiPrice(centPrice)
+        : 0);
 
     this.emitter.emit("kalshi.fill", {
       fill_id: fillId,
@@ -342,10 +361,9 @@ export class KalshiWsService implements OnModuleInit, OnModuleDestroy {
       side: (inner["side"] as "yes" | "no") ?? "yes",
       action: (inner["action"] as "buy" | "sell") ?? "buy",
       count: (inner["count"] as number) ?? 0,
-      price:
-        price !== undefined ? KalshiRestService.normalizeKalshiPrice(price) : 0,
+      price,
       is_taker: (inner["is_taker"] as boolean) ?? false,
-      timestamp: ts,
+      timestamp: parseKalshiTimestamp(inner),
     } satisfies FillEvent);
   }
 
@@ -355,8 +373,6 @@ export class KalshiWsService implements OnModuleInit, OnModuleDestroy {
     const status = inner["status"] as string | undefined;
     if (!orderId || !ticker || !status) return;
 
-    const ts = typeof inner["ts"] === "number" ? inner["ts"] : Date.now();
-
     this.emitter.emit("kalshi.order", {
       order_id: orderId,
       ticker,
@@ -365,7 +381,7 @@ export class KalshiWsService implements OnModuleInit, OnModuleDestroy {
       action: (inner["action"] as "buy" | "sell") ?? "buy",
       remaining_count: (inner["remaining_count"] as number) ?? 0,
       fill_count: (inner["fill_count"] as number) ?? 0,
-      timestamp: ts,
+      timestamp: parseKalshiTimestamp(inner),
     } satisfies UserOrderEvent);
   }
 
@@ -373,14 +389,12 @@ export class KalshiWsService implements OnModuleInit, OnModuleDestroy {
     const ticker = inner["ticker"] as string | undefined;
     if (!ticker) return;
 
-    const ts = typeof inner["ts"] === "number" ? inner["ts"] : Date.now();
-
     this.emitter.emit("kalshi.position", {
       ticker,
       position: (inner["position"] as number) ?? 0,
       market_exposure: (inner["market_exposure"] as number) ?? 0,
       realized_pnl: (inner["realized_pnl"] as number) ?? 0,
-      timestamp: ts,
+      timestamp: parseKalshiTimestamp(inner),
     } satisfies MarketPositionEvent);
   }
 
@@ -389,15 +403,15 @@ export class KalshiWsService implements OnModuleInit, OnModuleDestroy {
     const type = inner["type"] as string | undefined;
     if (!rfqId || !type) return;
 
-    const ts = typeof inner["ts"] === "number" ? inner["ts"] : Date.now();
+    const dollarPrice = parseKalshiDollars(inner["price_dollars"]);
 
     this.emitter.emit("kalshi.communications", {
       rfq_id: rfqId,
       type: type as KalshiCommunicationsEvent["type"],
       quote_id: (inner["quote_id"] as string) ?? undefined,
-      price: (inner["price"] as number) ?? undefined,
+      price: dollarPrice ?? (inner["price"] as number) ?? undefined,
       count: (inner["count"] as number) ?? undefined,
-      timestamp: ts,
+      timestamp: parseKalshiTimestamp(inner),
     } satisfies KalshiCommunicationsEvent);
   }
 

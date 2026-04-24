@@ -221,6 +221,226 @@ describe("KalshiWsService", () => {
     });
   });
 
+  // ── Phase 5b: ts_ms migration ──────────────────────────────────────────
+
+  describe("ts_ms migration", () => {
+    it("prefers ts_ms over ts for ticker messages", async () => {
+      svc.onModuleInit();
+      await vi.runAllTimersAsync();
+      mockWsInstance!.triggerOpen();
+
+      mockWsInstance!.triggerMessage({
+        type: "ticker",
+        msg: {
+          market_ticker: "BTC-USD",
+          yes_price: 45,
+          ts_ms: 1700000000123,
+          ts: 1700000000,
+        },
+      });
+
+      expect(emitter.emit).toHaveBeenCalledWith(
+        "market-data.price",
+        expect.objectContaining({ timestamp: 1700000000123 }),
+      );
+    });
+
+    it("falls back to ts*1000 when ts_ms is absent", async () => {
+      svc.onModuleInit();
+      await vi.runAllTimersAsync();
+      mockWsInstance!.triggerOpen();
+
+      mockWsInstance!.triggerMessage({
+        type: "ticker",
+        msg: { market_ticker: "BTC-USD", yes_price: 45, ts: 1700000000 },
+      });
+
+      expect(emitter.emit).toHaveBeenCalledWith(
+        "market-data.price",
+        expect.objectContaining({ timestamp: 1700000000000 }),
+      );
+    });
+
+    it("uses Date.now() when neither ts_ms nor ts is present", async () => {
+      svc.onModuleInit();
+      await vi.runAllTimersAsync();
+      mockWsInstance!.triggerOpen();
+
+      vi.setSystemTime(1700099999000);
+      mockWsInstance!.triggerMessage({
+        type: "ticker",
+        msg: { market_ticker: "BTC-USD", yes_price: 45 },
+      });
+
+      expect(emitter.emit).toHaveBeenCalledWith(
+        "market-data.price",
+        expect.objectContaining({ timestamp: 1700099999000 }),
+      );
+    });
+
+    it("uses ts_ms for orderbook_delta messages", async () => {
+      svc.onModuleInit();
+      await vi.runAllTimersAsync();
+      mockWsInstance!.triggerOpen();
+
+      mockWsInstance!.triggerMessage({
+        type: "orderbook_delta",
+        msg: {
+          market_ticker: "BTC-USD",
+          side: "yes",
+          price: 45,
+          delta: 10,
+          seq: 1,
+          ts_ms: 1700000000555,
+        },
+      });
+
+      expect(emitter.emit).toHaveBeenCalledWith(
+        "kalshi.orderbook.delta",
+        expect.objectContaining({ timestamp: 1700000000555 }),
+      );
+    });
+
+    it("uses ts_ms for fill messages", async () => {
+      svc.onModuleInit();
+      await vi.runAllTimersAsync();
+      mockWsInstance!.triggerOpen();
+
+      mockWsInstance!.triggerMessage({
+        type: "fill",
+        msg: {
+          fill_id: "f-ts",
+          order_id: "o-ts",
+          ticker: "BTC-USD",
+          yes_price: 45,
+          ts_ms: 1700000000777,
+        },
+      });
+
+      expect(emitter.emit).toHaveBeenCalledWith(
+        "kalshi.fill",
+        expect.objectContaining({ timestamp: 1700000000777 }),
+      );
+    });
+  });
+
+  // ── Phase 5b: _dollars field migration ────────────────────────────────────
+
+  describe("_dollars field migration", () => {
+    it("prefers yes_price_dollars over yes_price for ticker messages", async () => {
+      svc.onModuleInit();
+      await vi.runAllTimersAsync();
+      mockWsInstance!.triggerOpen();
+
+      mockWsInstance!.triggerMessage({
+        type: "ticker",
+        msg: {
+          market_ticker: "BTC-USD",
+          yes_price_dollars: "0.4567",
+          yes_price: 45,
+          ts_ms: 1700000000000,
+        },
+      });
+
+      expect(emitter.emit).toHaveBeenCalledWith(
+        "market-data.price",
+        expect.objectContaining({ price: 0.4567 }),
+      );
+    });
+
+    it("falls back to yes_price cents when yes_price_dollars is absent", async () => {
+      svc.onModuleInit();
+      await vi.runAllTimersAsync();
+      mockWsInstance!.triggerOpen();
+
+      mockWsInstance!.triggerMessage({
+        type: "ticker",
+        msg: {
+          market_ticker: "BTC-USD",
+          yes_price: 45,
+          ts_ms: 1700000000000,
+        },
+      });
+
+      expect(emitter.emit).toHaveBeenCalledWith(
+        "market-data.price",
+        expect.objectContaining({ price: 0.45 }),
+      );
+    });
+
+    it("prefers price_dollars for orderbook_delta", async () => {
+      svc.onModuleInit();
+      await vi.runAllTimersAsync();
+      mockWsInstance!.triggerOpen();
+
+      mockWsInstance!.triggerMessage({
+        type: "orderbook_delta",
+        msg: {
+          market_ticker: "BTC-USD",
+          side: "yes",
+          price_dollars: "0.4500",
+          price: 45,
+          delta: 10,
+          seq: 1,
+          ts_ms: 1700000000000,
+        },
+      });
+
+      expect(emitter.emit).toHaveBeenCalledWith(
+        "kalshi.orderbook.delta",
+        expect.objectContaining({ price: 0.45 }),
+      );
+    });
+
+    it("prefers yes_price_dollars for fill messages", async () => {
+      svc.onModuleInit();
+      await vi.runAllTimersAsync();
+      mockWsInstance!.triggerOpen();
+
+      mockWsInstance!.triggerMessage({
+        type: "fill",
+        msg: {
+          fill_id: "f-d",
+          order_id: "o-d",
+          ticker: "BTC-USD",
+          yes_price_dollars: "0.4567",
+          yes_price: 45,
+          ts_ms: 1700000000000,
+        },
+      });
+
+      expect(emitter.emit).toHaveBeenCalledWith(
+        "kalshi.fill",
+        expect.objectContaining({ price: 0.4567 }),
+      );
+    });
+
+    it("prefers price_dollars for communications messages", async () => {
+      const emitSpy = vi.fn();
+      emitter.emit = emitSpy;
+      svc.onModuleInit();
+      await vi.runAllTimersAsync();
+      mockWsInstance!.triggerOpen();
+
+      mockWsInstance!.triggerMessage({
+        type: "communications",
+        msg: {
+          rfq_id: "rfq-d",
+          type: "quote_received",
+          price_dollars: "0.5500",
+          price: 55,
+          ts_ms: 1700000000000,
+        },
+      });
+
+      const commCall = emitSpy.mock.calls.find(
+        (c: any[]) => c[0] === "kalshi.communications",
+      );
+      expect(commCall).toBeDefined();
+      expect(commCall![1]).toMatchObject({ price: 0.55 });
+    });
+  });
+
   // ── Phase 3: orderbook_delta channel ────────────────────────────────────
 
   describe("orderbook_delta channel", () => {
@@ -590,7 +810,7 @@ describe("KalshiWsService", () => {
         quote_id: "q-1",
         price: 50,
         count: 100,
-        timestamp: 1700000000,
+        timestamp: 1700000000000,
       });
     });
 

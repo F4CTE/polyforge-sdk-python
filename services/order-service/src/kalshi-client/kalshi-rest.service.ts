@@ -4,6 +4,22 @@ import { KalshiAuthService } from "./kalshi-auth.service";
 
 const RETRY_DELAYS_MS = [500, 1000, 2000];
 
+// ─── Shared format helpers (ts_ms / _dollars migration) ─────────────────────
+
+export function parseKalshiTimestamp(msg: Record<string, unknown>): number {
+  if (typeof msg["ts_ms"] === "number") return msg["ts_ms"];
+  if (typeof msg["ts"] === "number") return msg["ts"] * 1000;
+  return Date.now();
+}
+
+export function parseKalshiDollars(value: unknown): number | undefined {
+  if (typeof value === "string" && value.length > 0) {
+    const n = Number(value);
+    if (!Number.isNaN(n)) return n;
+  }
+  return undefined;
+}
+
 export interface KalshiMarket {
   ticker: string;
   status: string;
@@ -17,6 +33,11 @@ export interface KalshiMarket {
   last_price?: number;
   volume?: number;
   open_interest?: number;
+  yes_ask_dollars?: string;
+  yes_bid_dollars?: string;
+  no_ask_dollars?: string;
+  no_bid_dollars?: string;
+  last_price_dollars?: string;
 }
 
 export interface KalshiOrderBook {
@@ -29,10 +50,18 @@ export interface KalshiPlaceOrderRequest {
   side: "yes" | "no";
   action: "buy" | "sell";
   count: number;
+  count_fp?: string;
   type: "limit" | "market";
   yes_price?: number;
   no_price?: number;
+  yes_price_dollars?: string;
+  no_price_dollars?: string;
   expiration_ts?: number;
+  client_order_id?: string;
+  self_trade_prevention_type?: "taker_at_cross" | "maker";
+  post_only?: boolean;
+  reduce_only?: boolean;
+  cancel_order_on_pause?: boolean;
 }
 
 export interface KalshiOrderResponse {
@@ -42,8 +71,12 @@ export interface KalshiOrderResponse {
   side?: string;
   action?: string;
   count?: number;
+  count_fp?: string;
   yes_price?: number;
   no_price?: number;
+  yes_price_dollars?: string;
+  no_price_dollars?: string;
+  client_order_id?: string;
 }
 
 export interface KalshiPosition {
@@ -61,10 +94,14 @@ export interface KalshiOrder {
   side: string;
   action: string;
   count: number;
+  count_fp?: string;
   status: string;
   yes_price?: number;
   no_price?: number;
+  yes_price_dollars?: string;
+  no_price_dollars?: string;
   created_time?: string;
+  client_order_id?: string;
 }
 
 export interface KalshiCandlestick {
@@ -177,7 +214,10 @@ export interface KalshiAmendOrderRequest {
   updated_client_order_id?: string;
   yes_price?: number;
   no_price?: number;
+  yes_price_dollars?: string;
+  no_price_dollars?: string;
   count?: number;
+  count_fp?: string;
 }
 
 export interface KalshiAmendOrderResponse {
@@ -215,8 +255,11 @@ export interface KalshiFill {
   side: "yes" | "no";
   action: "buy" | "sell";
   count: number;
+  count_fp?: string;
   yes_price: number;
   no_price: number;
+  yes_price_dollars?: string;
+  no_price_dollars?: string;
   is_taker: boolean;
   created_time?: string;
   fee_cost?: string;
@@ -258,8 +301,11 @@ export interface KalshiTrade {
   trade_id: string;
   ticker: string;
   count: number;
+  count_fp?: string;
   yes_price: number;
   no_price: number;
+  yes_price_dollars?: string;
+  no_price_dollars?: string;
   taker_side: "yes" | "no";
   created_time?: string;
 }
@@ -314,9 +360,12 @@ export interface KalshiOrderDetail {
   status: "resting" | "canceled" | "executed";
   yes_price: number;
   no_price: number;
+  yes_price_dollars?: string;
+  no_price_dollars?: string;
   fill_count: number;
   remaining_count: number;
   initial_count: number;
+  count_fp?: string;
   taker_fees: number;
   maker_fees: number;
   created_time?: string;
@@ -635,6 +684,21 @@ export class KalshiRestService {
 
   static denormalizeKalshiPrice(normalizedPrice: number): number {
     return Math.round(normalizedPrice * 100);
+  }
+
+  static toDollarsString(normalizedPrice: number): string {
+    return normalizedPrice.toFixed(4);
+  }
+
+  static resolvePriceDollars(
+    dollarsField: string | undefined,
+    centsField: number | undefined,
+  ): number {
+    const d = parseKalshiDollars(dollarsField);
+    if (d !== undefined) return d;
+    return centsField !== undefined
+      ? KalshiRestService.normalizeKalshiPrice(centsField)
+      : 0;
   }
 
   // ─── REST endpoints ───────────────────────────────────────────────────────
