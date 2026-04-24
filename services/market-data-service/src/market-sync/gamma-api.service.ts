@@ -98,6 +98,62 @@ export interface GammaCommentsParams {
   offset?: number;
 }
 
+export interface GammaTag {
+  id: string;
+  label: string;
+  slug: string;
+  forceShow?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+  [key: string]: unknown;
+}
+
+export interface GammaSeries {
+  id: string;
+  title: string;
+  slug: string;
+  description?: string;
+  image?: string;
+  markets?: string[];
+  [key: string]: unknown;
+}
+
+export interface GammaSportsMetadata {
+  leagues: Array<{
+    abbreviation: string;
+    name: string;
+    [key: string]: unknown;
+  }>;
+  [key: string]: unknown;
+}
+
+export interface GammaSportsMarketType {
+  type: string;
+  label: string;
+  [key: string]: unknown;
+}
+
+export interface GammaTeam {
+  id: string;
+  name: string;
+  abbreviation?: string;
+  league?: string;
+  [key: string]: unknown;
+}
+
+export interface GammaSamplingMarket {
+  id: string;
+  slug: string;
+  question?: string;
+  tokens: Array<{ token_id: string; outcome: string; price: number }>;
+  [key: string]: unknown;
+}
+
+interface EventKeysetPage {
+  data: GammaEvent[];
+  next_cursor?: string | null;
+}
+
 const SYNC_INTERVAL_MS = 60_000; // poll for new markets every minute
 
 /**
@@ -433,7 +489,151 @@ export class GammaApiService implements OnModuleInit {
     ) as GammaComment[];
   }
 
+  // ─── Tags API (Phase 5) ──────────────────────────────────────────────────
+
+  async listTags(): Promise<GammaTag[]> {
+    await GAMMA_LIMITER.acquire();
+    const res = await fetch(`${this.gammaUrl}/tags`, {
+      signal: AbortSignal.timeout(10_000),
+    });
+    if (!res.ok) throw new Error(`Gamma tags API returned ${res.status}`);
+    return this.parseArray<GammaTag>(await res.json());
+  }
+
+  async getTagById(id: string): Promise<GammaTag | null> {
+    await GAMMA_LIMITER.acquire();
+    const res = await fetch(`${this.gammaUrl}/tags/${encodeURIComponent(id)}`, {
+      signal: AbortSignal.timeout(10_000),
+    });
+    if (res.status === 404) return null;
+    if (!res.ok) throw new Error(`Gamma tags API returned ${res.status}`);
+    return res.json() as Promise<GammaTag>;
+  }
+
+  async getTagBySlug(slug: string): Promise<GammaTag | null> {
+    await GAMMA_LIMITER.acquire();
+    const res = await fetch(
+      `${this.gammaUrl}/tags/slug/${encodeURIComponent(slug)}`,
+      { signal: AbortSignal.timeout(10_000) },
+    );
+    if (res.status === 404) return null;
+    if (!res.ok) throw new Error(`Gamma tags API returned ${res.status}`);
+    return res.json() as Promise<GammaTag>;
+  }
+
+  async getRelatedTags(id: string): Promise<GammaTag[]> {
+    await GAMMA_LIMITER.acquire();
+    const res = await fetch(
+      `${this.gammaUrl}/tags/${encodeURIComponent(id)}/related`,
+      { signal: AbortSignal.timeout(10_000) },
+    );
+    if (!res.ok) throw new Error(`Gamma tags API returned ${res.status}`);
+    return this.parseArray<GammaTag>(await res.json());
+  }
+
+  // ─── Series API (Phase 5) ────────────────────────────────────────────────
+
+  async getSeriesById(id: string): Promise<GammaSeries | null> {
+    await GAMMA_LIMITER.acquire();
+    const res = await fetch(
+      `${this.gammaUrl}/series/${encodeURIComponent(id)}`,
+      { signal: AbortSignal.timeout(10_000) },
+    );
+    if (res.status === 404) return null;
+    if (!res.ok) throw new Error(`Gamma series API returned ${res.status}`);
+    return res.json() as Promise<GammaSeries>;
+  }
+
+  async listSeries(): Promise<GammaSeries[]> {
+    await GAMMA_LIMITER.acquire();
+    const res = await fetch(`${this.gammaUrl}/series`, {
+      signal: AbortSignal.timeout(10_000),
+    });
+    if (!res.ok) throw new Error(`Gamma series API returned ${res.status}`);
+    return this.parseArray<GammaSeries>(await res.json());
+  }
+
+  // ─── Sports API (Phase 5) ────────────────────────────────────────────────
+
+  async getSportsMetadata(): Promise<GammaSportsMetadata> {
+    await GAMMA_LIMITER.acquire();
+    const res = await fetch(`${this.gammaUrl}/sports-metadata`, {
+      signal: AbortSignal.timeout(10_000),
+    });
+    if (!res.ok)
+      throw new Error(`Gamma sports-metadata API returned ${res.status}`);
+    return res.json() as Promise<GammaSportsMetadata>;
+  }
+
+  async getSportsMarketTypes(): Promise<GammaSportsMarketType[]> {
+    await GAMMA_LIMITER.acquire();
+    const res = await fetch(`${this.gammaUrl}/sports-market-types`, {
+      signal: AbortSignal.timeout(10_000),
+    });
+    if (!res.ok)
+      throw new Error(`Gamma sports-market-types API returned ${res.status}`);
+    return this.parseArray<GammaSportsMarketType>(await res.json());
+  }
+
+  async listTeams(): Promise<GammaTeam[]> {
+    await GAMMA_LIMITER.acquire();
+    const res = await fetch(`${this.gammaUrl}/teams`, {
+      signal: AbortSignal.timeout(10_000),
+    });
+    if (!res.ok) throw new Error(`Gamma teams API returned ${res.status}`);
+    return this.parseArray<GammaTeam>(await res.json());
+  }
+
+  // ─── Events Keyset Pagination (Phase 5) ──────────────────────────────────
+
+  async fetchEventsKeyset(
+    afterCursor: string | null,
+    limit: number,
+  ): Promise<EventKeysetPage> {
+    await GAMMA_LIMITER.acquire();
+    const params = new URLSearchParams({ limit: String(limit) });
+    if (afterCursor) params.set("cursor", afterCursor);
+    const res = await fetch(`${this.gammaUrl}/events?${params.toString()}`, {
+      signal: AbortSignal.timeout(10_000),
+    });
+    if (!res.ok)
+      throw new Error(`Gamma events keyset API returned ${res.status}`);
+    return res.json() as Promise<EventKeysetPage>;
+  }
+
+  // ─── Sampling Markets (Phase 5) ──────────────────────────────────────────
+
+  async getSamplingMarkets(): Promise<GammaSamplingMarket[]> {
+    await GAMMA_LIMITER.acquire();
+    const res = await fetch(`${this.gammaUrl}/sampling-markets`, {
+      signal: AbortSignal.timeout(10_000),
+    });
+    if (!res.ok)
+      throw new Error(`Gamma sampling-markets API returned ${res.status}`);
+    return this.parseArray<GammaSamplingMarket>(await res.json());
+  }
+
+  async getSamplingSimplifiedMarkets(): Promise<GammaSamplingMarket[]> {
+    await GAMMA_LIMITER.acquire();
+    const res = await fetch(`${this.gammaUrl}/sampling-simplified-markets`, {
+      signal: AbortSignal.timeout(10_000),
+    });
+    if (!res.ok)
+      throw new Error(
+        `Gamma sampling-simplified-markets API returned ${res.status}`,
+      );
+    return this.parseArray<GammaSamplingMarket>(await res.json());
+  }
+
   // ─── Private ─────────────────────────────────────────────────────────────
+
+  private parseArray<T>(body: unknown): T[] {
+    if (Array.isArray(body)) return body as T[];
+    if (body && typeof body === "object" && "data" in body) {
+      return ((body as Record<string, unknown>).data as T[]) ?? [];
+    }
+    return [];
+  }
 
   async fetchMarkets(offset: number, limit: number): Promise<GammaMarket[]> {
     await GAMMA_LIMITER.acquire();

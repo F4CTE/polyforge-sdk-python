@@ -1038,4 +1038,363 @@ describe("GammaApiService", () => {
       expect(url).toContain(encodeURIComponent("0x123+test"));
     });
   });
+
+  // ── Phase 5: Tags API ───────────────────────────────────────────────────
+
+  describe("listTags()", () => {
+    it("fetches /tags and returns array", async () => {
+      const tags = [{ id: "t1", label: "Crypto", slug: "crypto" }];
+      globalThis.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve(tags),
+      });
+
+      const result = await svc.listTags();
+      const url = vi.mocked(globalThis.fetch).mock.calls[0][0] as string;
+      expect(url).toContain("/tags");
+      expect(result).toHaveLength(1);
+      expect(result[0].slug).toBe("crypto");
+    });
+
+    it("handles { data: [...] } wrapper", async () => {
+      globalThis.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: () =>
+          Promise.resolve({ data: [{ id: "t1", label: "X", slug: "x" }] }),
+      });
+
+      const result = await svc.listTags();
+      expect(result).toHaveLength(1);
+    });
+
+    it("throws on non-OK response", async () => {
+      globalThis.fetch = vi.fn().mockResolvedValue({ ok: false, status: 500 });
+      await expect(svc.listTags()).rejects.toThrow("500");
+    });
+  });
+
+  describe("getTagById()", () => {
+    it("fetches /tags/{id} and returns tag", async () => {
+      const tag = { id: "t1", label: "Sports", slug: "sports" };
+      globalThis.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve(tag),
+      });
+
+      const result = await svc.getTagById("t1");
+      const url = vi.mocked(globalThis.fetch).mock.calls[0][0] as string;
+      expect(url).toContain("/tags/t1");
+      expect(result?.label).toBe("Sports");
+    });
+
+    it("returns null on 404", async () => {
+      globalThis.fetch = vi.fn().mockResolvedValue({ ok: false, status: 404 });
+      const result = await svc.getTagById("missing");
+      expect(result).toBeNull();
+    });
+
+    it("throws on non-404 error", async () => {
+      globalThis.fetch = vi.fn().mockResolvedValue({ ok: false, status: 503 });
+      await expect(svc.getTagById("t1")).rejects.toThrow("503");
+    });
+
+    it("URL-encodes the id", async () => {
+      globalThis.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve({ id: "a+b" }),
+      });
+      await svc.getTagById("a+b");
+      const url = vi.mocked(globalThis.fetch).mock.calls[0][0] as string;
+      expect(url).toContain("a%2Bb");
+    });
+  });
+
+  describe("getTagBySlug()", () => {
+    it("fetches /tags/slug/{slug} and returns tag", async () => {
+      const tag = { id: "t1", label: "Crypto", slug: "crypto" };
+      globalThis.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve(tag),
+      });
+
+      const result = await svc.getTagBySlug("crypto");
+      const url = vi.mocked(globalThis.fetch).mock.calls[0][0] as string;
+      expect(url).toContain("/tags/slug/crypto");
+      expect(result?.id).toBe("t1");
+    });
+
+    it("returns null on 404", async () => {
+      globalThis.fetch = vi.fn().mockResolvedValue({ ok: false, status: 404 });
+      expect(await svc.getTagBySlug("nope")).toBeNull();
+    });
+
+    it("throws on non-404 error", async () => {
+      globalThis.fetch = vi.fn().mockResolvedValue({ ok: false, status: 500 });
+      await expect(svc.getTagBySlug("x")).rejects.toThrow("500");
+    });
+  });
+
+  describe("getRelatedTags()", () => {
+    it("fetches /tags/{id}/related and returns array", async () => {
+      const tags = [{ id: "r1", label: "Related", slug: "related" }];
+      globalThis.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve(tags),
+      });
+
+      const result = await svc.getRelatedTags("t1");
+      const url = vi.mocked(globalThis.fetch).mock.calls[0][0] as string;
+      expect(url).toContain("/tags/t1/related");
+      expect(result).toHaveLength(1);
+    });
+
+    it("handles { data: [...] } wrapper", async () => {
+      globalThis.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve({ data: [{ id: "r1" }] }),
+      });
+      expect(await svc.getRelatedTags("t1")).toHaveLength(1);
+    });
+
+    it("throws on non-OK response", async () => {
+      globalThis.fetch = vi.fn().mockResolvedValue({ ok: false, status: 502 });
+      await expect(svc.getRelatedTags("t1")).rejects.toThrow("502");
+    });
+  });
+
+  // ── Phase 5: Series API ─────────────────────────────────────────────────
+
+  describe("getSeriesById()", () => {
+    it("fetches /series/{id} and returns series", async () => {
+      const series = { id: "s1", title: "Elections", slug: "elections" };
+      globalThis.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve(series),
+      });
+
+      const result = await svc.getSeriesById("s1");
+      const url = vi.mocked(globalThis.fetch).mock.calls[0][0] as string;
+      expect(url).toContain("/series/s1");
+      expect(result?.title).toBe("Elections");
+    });
+
+    it("returns null on 404", async () => {
+      globalThis.fetch = vi.fn().mockResolvedValue({ ok: false, status: 404 });
+      expect(await svc.getSeriesById("missing")).toBeNull();
+    });
+
+    it("throws on non-404 error", async () => {
+      globalThis.fetch = vi.fn().mockResolvedValue({ ok: false, status: 500 });
+      await expect(svc.getSeriesById("s1")).rejects.toThrow("500");
+    });
+  });
+
+  describe("listSeries()", () => {
+    it("fetches /series and returns array", async () => {
+      const series = [{ id: "s1", title: "NBA", slug: "nba" }];
+      globalThis.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve(series),
+      });
+
+      const result = await svc.listSeries();
+      const url = vi.mocked(globalThis.fetch).mock.calls[0][0] as string;
+      expect(url).toContain("/series");
+      expect(result).toHaveLength(1);
+    });
+
+    it("handles { data: [...] } wrapper", async () => {
+      globalThis.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve({ data: [{ id: "s1" }] }),
+      });
+      expect(await svc.listSeries()).toHaveLength(1);
+    });
+
+    it("throws on non-OK response", async () => {
+      globalThis.fetch = vi.fn().mockResolvedValue({ ok: false, status: 503 });
+      await expect(svc.listSeries()).rejects.toThrow("503");
+    });
+  });
+
+  // ── Phase 5: Sports API ─────────────────────────────────────────────────
+
+  describe("getSportsMetadata()", () => {
+    it("fetches /sports-metadata", async () => {
+      const meta = {
+        leagues: [
+          { abbreviation: "NBA", name: "National Basketball Association" },
+        ],
+      };
+      globalThis.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve(meta),
+      });
+
+      const result = await svc.getSportsMetadata();
+      const url = vi.mocked(globalThis.fetch).mock.calls[0][0] as string;
+      expect(url).toContain("/sports-metadata");
+      expect(result.leagues).toHaveLength(1);
+      expect(result.leagues[0].abbreviation).toBe("NBA");
+    });
+
+    it("throws on non-OK response", async () => {
+      globalThis.fetch = vi.fn().mockResolvedValue({ ok: false, status: 500 });
+      await expect(svc.getSportsMetadata()).rejects.toThrow("500");
+    });
+  });
+
+  describe("getSportsMarketTypes()", () => {
+    it("fetches /sports-market-types and returns array", async () => {
+      const types = [{ type: "moneyline", label: "Moneyline" }];
+      globalThis.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve(types),
+      });
+
+      const result = await svc.getSportsMarketTypes();
+      expect(result).toHaveLength(1);
+      expect(result[0].type).toBe("moneyline");
+    });
+
+    it("handles { data: [...] } wrapper", async () => {
+      globalThis.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: () =>
+          Promise.resolve({ data: [{ type: "spread", label: "Spread" }] }),
+      });
+      expect(await svc.getSportsMarketTypes()).toHaveLength(1);
+    });
+
+    it("throws on non-OK response", async () => {
+      globalThis.fetch = vi.fn().mockResolvedValue({ ok: false, status: 502 });
+      await expect(svc.getSportsMarketTypes()).rejects.toThrow("502");
+    });
+  });
+
+  describe("listTeams()", () => {
+    it("fetches /teams and returns array", async () => {
+      const teams = [{ id: "team-1", name: "Lakers", league: "NBA" }];
+      globalThis.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve(teams),
+      });
+
+      const result = await svc.listTeams();
+      const url = vi.mocked(globalThis.fetch).mock.calls[0][0] as string;
+      expect(url).toContain("/teams");
+      expect(result).toHaveLength(1);
+      expect(result[0].name).toBe("Lakers");
+    });
+
+    it("handles { data: [...] } wrapper", async () => {
+      globalThis.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve({ data: [{ id: "t1", name: "Celtics" }] }),
+      });
+      expect(await svc.listTeams()).toHaveLength(1);
+    });
+
+    it("throws on non-OK response", async () => {
+      globalThis.fetch = vi.fn().mockResolvedValue({ ok: false, status: 500 });
+      await expect(svc.listTeams()).rejects.toThrow("500");
+    });
+  });
+
+  // ── Phase 5: Events keyset pagination ───────────────────────────────────
+
+  describe("fetchEventsKeyset()", () => {
+    it("fetches /events with cursor param", async () => {
+      const page = {
+        data: [{ id: "e1", slug: "ev-1", title: "Event 1", markets: [] }],
+        next_cursor: "c2",
+      };
+      globalThis.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve(page),
+      });
+
+      const result = await svc.fetchEventsKeyset("c1", 50);
+      const url = vi.mocked(globalThis.fetch).mock.calls[0][0] as string;
+      expect(url).toContain("/events?");
+      expect(url).toContain("cursor=c1");
+      expect(url).toContain("limit=50");
+      expect(result.data).toHaveLength(1);
+      expect(result.next_cursor).toBe("c2");
+    });
+
+    it("omits cursor param when null", async () => {
+      globalThis.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve({ data: [], next_cursor: null }),
+      });
+
+      await svc.fetchEventsKeyset(null, 100);
+      const url = vi.mocked(globalThis.fetch).mock.calls[0][0] as string;
+      expect(url).not.toContain("cursor=");
+    });
+
+    it("throws on non-OK response", async () => {
+      globalThis.fetch = vi.fn().mockResolvedValue({ ok: false, status: 503 });
+      await expect(svc.fetchEventsKeyset(null, 100)).rejects.toThrow("503");
+    });
+  });
+
+  // ── Phase 5: Sampling markets ──────────────────────────────────────────
+
+  describe("getSamplingMarkets()", () => {
+    it("fetches /sampling-markets and returns array", async () => {
+      const markets = [{ id: "sm-1", slug: "sample" }];
+      globalThis.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve(markets),
+      });
+
+      const result = await svc.getSamplingMarkets();
+      const url = vi.mocked(globalThis.fetch).mock.calls[0][0] as string;
+      expect(url).toContain("/sampling-markets");
+      expect(result).toHaveLength(1);
+    });
+
+    it("handles { data: [...] } wrapper", async () => {
+      globalThis.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve({ data: [{ id: "sm-1" }] }),
+      });
+      expect(await svc.getSamplingMarkets()).toHaveLength(1);
+    });
+
+    it("throws on non-OK response", async () => {
+      globalThis.fetch = vi.fn().mockResolvedValue({ ok: false, status: 500 });
+      await expect(svc.getSamplingMarkets()).rejects.toThrow("500");
+    });
+  });
+
+  describe("getSamplingSimplifiedMarkets()", () => {
+    it("fetches /sampling-simplified-markets and returns array", async () => {
+      const markets = [{ id: "ssm-1", slug: "simple" }];
+      globalThis.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve(markets),
+      });
+
+      const result = await svc.getSamplingSimplifiedMarkets();
+      const url = vi.mocked(globalThis.fetch).mock.calls[0][0] as string;
+      expect(url).toContain("/sampling-simplified-markets");
+      expect(result).toHaveLength(1);
+    });
+
+    it("handles { data: [...] } wrapper", async () => {
+      globalThis.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve({ data: [{ id: "ssm-1" }] }),
+      });
+      expect(await svc.getSamplingSimplifiedMarkets()).toHaveLength(1);
+    });
+
+    it("throws on non-OK response", async () => {
+      globalThis.fetch = vi.fn().mockResolvedValue({ ok: false, status: 502 });
+      await expect(svc.getSamplingSimplifiedMarkets()).rejects.toThrow("502");
+    });
+  });
 });
