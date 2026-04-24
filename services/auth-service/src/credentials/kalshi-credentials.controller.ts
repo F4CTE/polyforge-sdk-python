@@ -51,6 +51,12 @@ export class KalshiCredentialsController {
 
   @Delete()
   @HttpCode(HttpStatus.NO_CONTENT)
+  @Throttle({
+    default: {
+      limit: throttleLimit(5),
+      ttl: 3600000,
+    },
+  })
   @ApiOperation({
     summary: 'Disconnect Kalshi account and remove credentials',
   })
