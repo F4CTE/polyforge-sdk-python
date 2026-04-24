@@ -5,6 +5,7 @@ process.env.INTERNAL_JWT_SECRET = "test-internal-jwt-secret-for-bot-service";
 process.env.BOT_JWT_SECRET = "test-bot-jwt-secret-for-bot-service";
 
 import { CommandsService } from "./commands.service";
+import { InternalApiClient } from "./internal-api-client.service";
 
 // ─── Mock helpers ─────────────────────────────────────────────────────────────
 
@@ -40,10 +41,13 @@ function makeRedisMock() {
   } as any;
 }
 
-function makeJwtMock() {
-  return {
-    sign: vi.fn().mockReturnValue("mock-jwt-token"),
+function makeClientMock(): InternalApiClient {
+  const jwt = { sign: vi.fn().mockReturnValue("mock-jwt-token") } as any;
+  const config = {
+    get: vi.fn((key: string) => `test-${key}`),
+    getOrThrow: vi.fn((key: string) => `test-${key}`),
   } as any;
+  return new InternalApiClient(jwt, config);
 }
 
 // ─── Tests ────────────────────────────────────────────────────────────────────
@@ -51,15 +55,14 @@ function makeJwtMock() {
 describe("CommandsService", () => {
   let prisma: ReturnType<typeof makePrismaMock>;
   let redis: ReturnType<typeof makeRedisMock>;
-  let jwt: ReturnType<typeof makeJwtMock>;
+  let client: InternalApiClient;
   let svc: CommandsService;
 
   beforeEach(() => {
     prisma = makePrismaMock();
     redis = makeRedisMock();
-    jwt = makeJwtMock();
-    const config = { getOrThrow: vi.fn((key: string) => `test-${key}`) } as any;
-    svc = new CommandsService(prisma, redis, jwt, config);
+    client = makeClientMock();
+    svc = new CommandsService(prisma, redis, client);
   });
 
   afterEach(() => {

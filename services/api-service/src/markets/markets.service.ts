@@ -14,11 +14,11 @@ import {
   PriceHistoryQueryDto,
   ClobPriceHistoryQueryDto,
 } from "./dto/market-query.dto";
+import { ClobReadService } from "../common/services/clob-read.service";
 
 @Injectable()
 export class MarketsService implements OnModuleInit {
   private readonly logger = new Logger(MarketsService.name);
-  private readonly clobUrl: string;
   private readonly gammaUrl: string;
 
   // Whitelist of allowed ORDER BY expressions - SQL injection protection
@@ -35,8 +35,8 @@ export class MarketsService implements OnModuleInit {
     private readonly prisma: PrismaService,
     private readonly redis: RedisService,
     private readonly config: ConfigService,
+    private readonly clob: ClobReadService,
   ) {
-    this.clobUrl = this.config.getOrThrow<string>("CLOB_API_URL");
     this.gammaUrl =
       this.config.get<string>("GAMMA_API_URL") ?? "http://localhost:3096";
   }
@@ -346,17 +346,10 @@ export class MarketsService implements OnModuleInit {
       }
     }
 
-    const [tickRes, feeRes] = await Promise.all([
-      fetch(`${this.clobUrl}/tick-size/${encodeURIComponent(tokenId)}`, {
-        signal: AbortSignal.timeout(10_000),
-      }),
-      fetch(`${this.clobUrl}/fee-rate/${encodeURIComponent(tokenId)}`, {
-        signal: AbortSignal.timeout(10_000),
-      }),
+    const [tickSize, feeRate] = await Promise.all([
+      this.clob.getTickSize(tokenId),
+      this.clob.getFeeRate(tokenId),
     ]);
-
-    const tickSize = tickRes.ok ? String(await tickRes.json()) : "0.01";
-    const feeRate = feeRes.ok ? String(await feeRes.json()) : "0";
 
     const result = { tokenId, tickSize, feeRate };
     await this.redis.set(cacheKey, JSON.stringify(result), 600);
@@ -375,18 +368,8 @@ export class MarketsService implements OnModuleInit {
       }
     }
 
-    const res = await fetch(
-      `${this.clobUrl}/spread?token_id=${encodeURIComponent(tokenId)}`,
-      { signal: AbortSignal.timeout(10_000) },
-    );
-
-    if (!res.ok) {
-      this.logger.warn(`CLOB spread returned ${res.status}`);
-      return { tokenId, spread: "0" };
-    }
-
-    const data = (await res.json()) as { spread: string };
-    const result = { tokenId, spread: data.spread ?? "0" };
+    const data = await this.clob.getSpread(tokenId);
+    const result = { tokenId, spread: data.spread };
     await this.redis.set(cacheKey, JSON.stringify(result), 10);
     return result;
   }
@@ -404,18 +387,8 @@ export class MarketsService implements OnModuleInit {
       }
     }
 
-    const res = await fetch(
-      `${this.clobUrl}/midpoint?token_id=${encodeURIComponent(tokenId)}`,
-      { signal: AbortSignal.timeout(10_000) },
-    );
-
-    if (!res.ok) {
-      this.logger.warn(`CLOB midpoint returned ${res.status}`);
-      return { tokenId, midpoint: "0" };
-    }
-
-    const data = (await res.json()) as { mid: string };
-    const result = { tokenId, midpoint: data.mid ?? "0" };
+    const data = await this.clob.getMidpoint(tokenId);
+    const result = { tokenId, midpoint: data.mid };
     await this.redis.set(cacheKey, JSON.stringify(result), 10);
     return result;
   }
@@ -438,38 +411,15 @@ export class MarketsService implements OnModuleInit {
       }
     }
 
-    const res = await fetch(
-      `${this.clobUrl}/book?token_id=${encodeURIComponent(tokenId)}`,
-      { signal: AbortSignal.timeout(10_000) },
-    );
-
-    if (!res.ok) {
-      this.logger.warn(`CLOB book returned ${res.status}`);
-      return {
-        tokenId,
-        bids: [],
-        asks: [],
-        spread: "0",
-        midpoint: "0",
-        timestamp: Date.now(),
-      };
-    }
-
-    const data = (await res.json()) as {
-      bids?: unknown[];
-      asks?: unknown[];
-      spread?: string;
-      midpoint?: string;
-      timestamp?: number;
-    };
+    const data = await this.clob.getBook(tokenId);
 
     const result = {
       tokenId,
-      bids: data.bids ?? [],
-      asks: data.asks ?? [],
-      spread: data.spread ?? "0",
-      midpoint: data.midpoint ?? "0",
-      timestamp: data.timestamp ?? Date.now(),
+      bids: data.bids,
+      asks: data.asks,
+      spread: data.spread,
+      midpoint: data.midpoint,
+      timestamp: data.timestamp,
     };
 
     await this.redis.set(cacheKey, JSON.stringify(result), 5);
@@ -491,29 +441,11 @@ export class MarketsService implements OnModuleInit {
       }
     }
 
-    const params = new URLSearchParams({
-      token_id: tokenId,
-      interval,
-      fidelity: String(fidelity),
-    });
-
-    const res = await fetch(
-      `${this.clobUrl}/prices-history?${params.toString()}`,
-      {
-        signal: AbortSignal.timeout(10_000),
-      },
-    );
-
-    if (!res.ok) {
-      this.logger.warn(`CLOB prices-history returned ${res.status}`);
-      return { tokenId, interval, history: [] };
-    }
-
-    const data = (await res.json()) as { history?: unknown[] };
+    const data = await this.clob.getPricesHistory(tokenId, interval, fidelity);
     const result = {
       tokenId,
       interval,
-      history: data.history ?? [],
+      history: data.history,
     };
 
     await this.redis.set(cacheKey, JSON.stringify(result), 30);

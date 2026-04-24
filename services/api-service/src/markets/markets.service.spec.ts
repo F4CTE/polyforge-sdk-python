@@ -4,6 +4,7 @@ import { MarketsService } from "./markets.service";
 import { createMockDb, MockDb } from "../../test/helpers/mock-db";
 import { RedisService } from "@polyforge/shared-redis";
 import { ConfigService } from "@nestjs/config";
+import { ClobReadService } from "../common/services/clob-read.service";
 
 // ─── Factories ────────────────────────────────────────────────────────────────
 
@@ -72,7 +73,8 @@ describe("MarketsService", () => {
       get: vi.fn().mockReturnValue(undefined),
       getOrThrow: vi.fn().mockReturnValue("http://clob-api.test:3099"),
     } as unknown as ConfigService;
-    service = new MarketsService(db as any, redis, config);
+    const clob = new ClobReadService(config);
+    service = new MarketsService(db as any, redis, config, clob);
   });
 
   afterEach(() => {

@@ -1,9 +1,9 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { Cron } from "@nestjs/schedule";
-import { ConfigService } from "@nestjs/config";
 import { PrismaService } from "@polyforge/shared-db";
 import { RedisService } from "@polyforge/shared-redis";
 import { EventsGateway } from "../gateway/events.gateway";
+import { ClobReadService } from "../common/services/clob-read.service";
 import { ResolutionStatus } from "@prisma/client";
 
 @Injectable()
@@ -13,7 +13,7 @@ export class PositionReconcilerService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly redis: RedisService,
-    private readonly config: ConfigService,
+    private readonly clob: ClobReadService,
     private readonly gateway: EventsGateway,
   ) {}
 
@@ -62,20 +62,8 @@ export class PositionReconcilerService {
   }
 
   async reconcileUser(userId: string, walletAddress: string): Promise<void> {
-    const clobUrl = this.config.getOrThrow<string>("CLOB_API_URL");
-
-    const res = await fetch(`${clobUrl}/positions?user=${walletAddress}`, {
-      signal: AbortSignal.timeout(10_000),
-    });
-
-    if (!res.ok) return;
-
-    const polyPositions = (await res.json()) as Array<{
-      asset: string;
-      size: string;
-      avgPrice: string;
-      realizedPnl: string;
-    }>;
+    const polyPositions = await this.clob.getPositions(walletAddress);
+    if (polyPositions.length === 0) return;
 
     const localPositions = await this.prisma.position.findMany({
       where: { userId, resolutionStatus: ResolutionStatus.UNRESOLVED },

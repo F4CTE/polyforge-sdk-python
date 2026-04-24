@@ -1,14 +1,8 @@
 import { Injectable, Logger } from "@nestjs/common";
-import { ConfigService } from "@nestjs/config";
-import { JwtService } from "@nestjs/jwt";
 import { OrderStatus, ResolutionStatus, StrategyStatus } from "@prisma/client";
 import { PrismaService } from "@polyforge/shared-db";
 import { RedisService } from "@polyforge/shared-redis";
-import { randomUUID } from "crypto";
-
-const ENGINE_URL =
-  process.env.STRATEGY_ENGINE_URL ?? "http://strategy-engine:3006";
-const API_URL = process.env.API_SERVICE_URL ?? "http://api-service:3002";
+import { InternalApiClient } from "./internal-api-client.service";
 
 const HELP_TEXT = `
 📖 Polyforge Bot Commands
@@ -57,8 +51,7 @@ export class CommandsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly redis: RedisService,
-    private readonly jwt: JwtService,
-    private readonly config: ConfigService,
+    private readonly client: InternalApiClient,
   ) {}
 
   // ─── Router ───────────────────────────────────────────────────────────────
@@ -163,22 +156,16 @@ export class CommandsService {
     }
 
     try {
-      const token = this.issueInternalToken();
-      let url: string;
-      let method: string;
-
+      let res: Response;
       if (action === "stop") {
-        url = `${ENGINE_URL}/internal/strategies/${strategy.id}`;
-        method = "DELETE";
+        res = await this.client.delete(
+          `${this.client.engineUrl}/internal/strategies/${strategy.id}`,
+        );
       } else {
-        url = `${ENGINE_URL}/internal/strategies/${strategy.id}/${action}`;
-        method = "POST";
+        res = await this.client.post(
+          `${this.client.engineUrl}/internal/strategies/${strategy.id}/${action}`,
+        );
       }
-
-      const res = await fetch(url, {
-        method,
-        headers: { Authorization: `Bearer ${token}` },
-      });
       if (!res.ok && res.status !== 204) {
         this.logger.warn(
           `Engine ${action} returned ${res.status} for strategy ${strategy.id}`,
@@ -202,14 +189,12 @@ export class CommandsService {
     userId: string,
     strategyName: string | null,
   ): Promise<string> {
-    // Real realized P&L: sum from positions
     const agg = await this.prisma.position.aggregate({
       where: { userId },
       _sum: { realizedPnl: true },
     });
     const realizedPnl = Number(agg._sum.realizedPnl ?? 0);
 
-    // Paper P&L from Redis
     const paperRaw = await this.redis.get(`paper:${userId}:pnl`);
     const paperPnl = parseFloat(paperRaw ?? "0");
 
@@ -332,10 +317,9 @@ export class CommandsService {
 
   private async whales(_userId: string): Promise<string> {
     try {
-      const token = this.issueInternalToken();
-      const res = await fetch(`${API_URL}/internal/whales/top?limit=5`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await this.client.get(
+        `${this.client.apiUrl}/internal/whales/top?limit=5`,
+      );
 
       if (!res.ok) {
         return "⚠️ Could not fetch whale data. Try again shortly.";
@@ -386,10 +370,8 @@ export class CommandsService {
     if (!address) return "Usage: /whale <wallet address>";
 
     try {
-      const token = this.issueInternalToken();
-      const res = await fetch(
-        `${API_URL}/internal/whales/${encodeURIComponent(address)}`,
-        { headers: { Authorization: `Bearer ${token}` } },
+      const res = await this.client.get(
+        `${this.client.apiUrl}/internal/whales/${encodeURIComponent(address)}`,
       );
 
       if (!res.ok) {
@@ -425,10 +407,8 @@ export class CommandsService {
 
   private async copies(userId: string): Promise<string> {
     try {
-      const token = this.issueInternalToken();
-      const res = await fetch(
-        `${API_URL}/internal/copy-configs?userId=${encodeURIComponent(userId)}`,
-        { headers: { Authorization: `Bearer ${token}` } },
+      const res = await this.client.get(
+        `${this.client.apiUrl}/internal/copy-configs?userId=${encodeURIComponent(userId)}`,
       );
 
       if (!res.ok) {
@@ -475,21 +455,16 @@ export class CommandsService {
     if (!wallet) return "Usage: /copy <wallet address>";
 
     try {
-      const token = this.issueInternalToken();
-      const res = await fetch(`${API_URL}/internal/copy-configs`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
+      const res = await this.client.post(
+        `${this.client.apiUrl}/internal/copy-configs`,
+        {
           userId,
           targetWallet: wallet,
           mode: "PERCENTAGE",
           percentage: 10,
           maxExposureUsdc: 500,
-        }),
-      });
+        },
+      );
 
       if (!res.ok) {
         const body = await res.text().catch(() => "");
@@ -520,17 +495,9 @@ export class CommandsService {
     if (!configId) return "Usage: /stopcopy <config id>";
 
     try {
-      const token = this.issueInternalToken();
-      const res = await fetch(
-        `${API_URL}/internal/copy-configs/${encodeURIComponent(configId)}/stop`,
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ userId }),
-        },
+      const res = await this.client.post(
+        `${this.client.apiUrl}/internal/copy-configs/${encodeURIComponent(configId)}/stop`,
+        { userId },
       );
 
       if (!res.ok) {
@@ -551,10 +518,8 @@ export class CommandsService {
 
   private async signals(_userId: string): Promise<string> {
     try {
-      const token = this.issueInternalToken();
-      const res = await fetch(
-        `${API_URL}/internal/signals?limit=5&minConfidence=0.7`,
-        { headers: { Authorization: `Bearer ${token}` } },
+      const res = await this.client.get(
+        `${this.client.apiUrl}/internal/signals?limit=5&minConfidence=0.7`,
       );
 
       if (!res.ok) {
@@ -600,10 +565,9 @@ export class CommandsService {
 
   private async news(_userId: string): Promise<string> {
     try {
-      const token = this.issueInternalToken();
-      const res = await fetch(`${API_URL}/internal/news?limit=3`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await this.client.get(
+        `${this.client.apiUrl}/internal/news?limit=3`,
+      );
 
       if (!res.ok) {
         return "⚠️ Could not fetch news. Try again shortly.";
@@ -676,20 +640,10 @@ export class CommandsService {
     }
 
     try {
-      const token = this.issueInternalToken();
-      const res = await fetch(`${API_URL}/internal/conditional-orders`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          userId,
-          market,
-          triggerPrice: price,
-          type,
-        }),
-      });
+      const res = await this.client.post(
+        `${this.client.apiUrl}/internal/conditional-orders`,
+        { userId, market, triggerPrice: price, type },
+      );
 
       if (!res.ok) {
         if (res.status === 404) {
@@ -712,18 +666,5 @@ export class CommandsService {
       this.logger.error(`${cmd} failed: ${message}`);
       return `⚠️ Could not set ${label.toLowerCase()}. Try again shortly.`;
     }
-  }
-
-  // ─── Internal JWT ─────────────────────────────────────────────────────────
-
-  private issueInternalToken(): string {
-    return this.jwt.sign(
-      { sub: "bot-service", jti: randomUUID() },
-      {
-        secret: this.config.getOrThrow<string>("INTERNAL_JWT_SECRET"),
-        audience: "strategy-engine",
-        expiresIn: "30s",
-      },
-    );
   }
 }

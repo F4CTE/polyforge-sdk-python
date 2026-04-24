@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { PositionReconcilerService } from "./position-reconciler.service";
+import { ClobReadService } from "../common/services/clob-read.service";
 
 // ─── Mocks ───────────────────────────────────────────────────────────────────
 
@@ -43,7 +44,8 @@ describe("PositionReconcilerService", () => {
   beforeEach(() => {
     const m = makeMocks();
     ({ prisma, redis, config, gateway } = m);
-    svc = new PositionReconcilerService(prisma, redis, config, gateway);
+    const clob = new ClobReadService(config);
+    svc = new PositionReconcilerService(prisma, redis, clob, gateway);
 
     vi.stubGlobal(
       "fetch",

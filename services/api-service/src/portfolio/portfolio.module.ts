@@ -5,6 +5,7 @@ import { PortfolioService } from "./portfolio.service";
 import { PositionReconcilerService } from "./position-reconciler.service";
 import { DrawdownCircuitBreakerService } from "./drawdown-circuit-breaker.service";
 import { PolymarketDataApiService } from "./polymarket-data-api.service";
+import { ClobReadService } from "../common/services/clob-read.service";
 import { EventsModule } from "../gateway/events.module";
 
 @Module({
@@ -15,6 +16,7 @@ import { EventsModule } from "../gateway/events.module";
     PositionReconcilerService,
     DrawdownCircuitBreakerService,
     PolymarketDataApiService,
+    ClobReadService,
   ],
 })
 export class PortfolioModule {}
