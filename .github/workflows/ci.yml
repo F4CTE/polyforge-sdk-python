@@ -286,6 +286,7 @@ jobs:
                 --project=chromium \
                 --reporter=list \
                 --shard="${shard}/5" \
+                --output="test-results/shard-${shard}" \
                 --global-timeout=2100000
           }
 
