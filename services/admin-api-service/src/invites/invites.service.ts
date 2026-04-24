@@ -1,3 +1,4 @@
+import { randomInt } from "node:crypto";
 import { Injectable, HttpException, HttpStatus } from "@nestjs/common";
 import { RedisService } from "@polyforge/shared-redis";
 import { GenerateInvitesDto } from "./dto/generate-invites.dto";
@@ -9,7 +10,7 @@ function generateCode(): string {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // no ambiguous 0/O/1/I
   let code = "POLY-";
   for (let i = 0; i < 6; i++) {
-    code += chars[Math.floor(Math.random() * chars.length)];
+    code += chars[randomInt(chars.length)];
   }
   return code;
 }

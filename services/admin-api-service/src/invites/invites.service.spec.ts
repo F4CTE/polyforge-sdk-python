@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from "vitest";
+import { randomInt } from "node:crypto";
 import { HttpStatus } from "@nestjs/common";
 import { InvitesService } from "./invites.service";
 
@@ -114,6 +115,15 @@ describe("InvitesService", () => {
         "5",
         undefined,
       );
+    });
+
+    it("uses crypto.randomInt instead of Math.random for code generation", async () => {
+      const spy = vi.spyOn(Math, "random");
+
+      await service.generate({ count: 5 });
+
+      expect(spy).not.toHaveBeenCalled();
+      spy.mockRestore();
     });
   });
 
