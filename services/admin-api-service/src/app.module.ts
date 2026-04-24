@@ -27,6 +27,7 @@ import { AuditModule } from "./common/audit/audit.module";
 import { AdminsModule } from "./admins/admins.module";
 import { TicketsModule } from "./tickets/tickets.module";
 import { KeyRotationModule } from "./key-rotation/key-rotation.module";
+import { VenuesModule } from "./venues/venues.module";
 
 @Module({
   imports: [
@@ -62,6 +63,7 @@ import { KeyRotationModule } from "./key-rotation/key-rotation.module";
     AdminsModule,
     TicketsModule,
     KeyRotationModule,
+    VenuesModule,
   ],
   controllers: [HealthController],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],

@@ -1,15 +1,11 @@
-import { Controller, Get, Put, Body, UseGuards } from "@nestjs/common";
+import { Controller, Get, Put, Patch, Body, UseGuards } from "@nestjs/common";
 import { ApiTags, ApiBearerAuth } from "@nestjs/swagger";
 import { JwtAuthGuard, CurrentUser } from "@polyforge/shared-auth";
 import { SettingsService } from "./settings.service";
 import { UpdateEventNotificationsDto } from "./dto/update-event-notifications.dto";
+import { UpdateVenuePreferencesDto } from "./dto/update-venue-preferences.dto";
 import { JwtPayload } from "@polyforge/shared-types";
 
-/**
- * Exposes the `/users/me/notification-preferences` endpoints consumed by the
- * user-app settings page.  Stored as per-event × per-channel JSON so the UI
- * can toggle inApp / email / push independently for each event type.
- */
 @ApiTags("users")
 @ApiBearerAuth("jwt")
 @Controller("users")
@@ -28,5 +24,18 @@ export class UsersController {
     @Body() dto: UpdateEventNotificationsDto,
   ) {
     return this.settings.updateEventNotifications(user.sub, dto);
+  }
+
+  @Get("me/venue-preferences")
+  getVenuePreferences(@CurrentUser() user: JwtPayload) {
+    return this.settings.getVenuePreferences(user.sub);
+  }
+
+  @Patch("me/venue-preferences")
+  updateVenuePreferences(
+    @CurrentUser() user: JwtPayload,
+    @Body() dto: UpdateVenuePreferencesDto,
+  ) {
+    return this.settings.updateVenuePreferences(user.sub, dto);
   }
 }
