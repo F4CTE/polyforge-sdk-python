@@ -104,6 +104,15 @@ All encryption keys are **required** — services will fail to start if unset. G
 | `POLY_BUILDER_PASSPHRASE` | `dev-builder-passphrase` | Builder program passphrase. |
 | `POLYMARKET_BUILDER_CODE` | _(empty)_ | Builder address (0x…) embedded in EIP-712 order struct for volume attribution. Obtain from Polymarket Builder Profile. |
 
+### Bridge & Relayer
+
+| Variable | Dev default | Description |
+|---|---|---|
+| `POLYMARKET_BRIDGE_URL` | `https://bridge.polymarket.com` | Polymarket Bridge API for deposits/withdrawals across chains. |
+| `POLYMARKET_RELAYER_URL` | `https://relayer-v2.polymarket.com` | Polymarket Relayer API for gasless transaction execution. |
+| `RELAYER_API_KEY` | _(empty)_ | Relayer API key for authenticated endpoints (submit, recent-transactions, api-keys). |
+| `RELAYER_API_KEY_ADDRESS` | _(empty)_ | Ethereum address associated with the Relayer API key. |
+
 ---
 
 ## Blockchain
