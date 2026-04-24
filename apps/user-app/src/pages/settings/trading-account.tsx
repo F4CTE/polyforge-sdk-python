@@ -13,8 +13,9 @@ import { useAuthStore } from '../../stores/auth-store';
 export function Component() {
   const { user, patchUser } = useAuthStore();
   const isConnected = user?.polymarketConnected === true;
+  const isKalshiConnected = user?.kalshiConnected === true;
 
-  // Credentials form
+  // Polymarket credentials form
   const [privateKey, setPrivateKey] = useState('');
   const [apiKey, setApiKey] = useState('');
   const [apiSecret, setApiSecret] = useState('');
@@ -25,6 +26,11 @@ export function Component() {
   const [showPrivateKey, setShowPrivateKey] = useState(false);
   const [showApiSecret, setShowApiSecret] = useState(false);
   const [showPassphrase, setShowPassphrase] = useState(false);
+
+  // Kalshi credentials form
+  const [kalshiUserId, setKalshiUserId] = useState('');
+  const [kalshiImporting, setKalshiImporting] = useState(false);
+  const [kalshiDeleting, setKalshiDeleting] = useState(false);
 
   // Bot link code
   const [botCode, setBotCode] = useState<string | null>(null);
@@ -66,6 +72,42 @@ export function Component() {
       if (res.ok) patchUser({ polymarketConnected: false });
     } catch { toast.error('Failed to disconnect account'); }
     setDeleting(false);
+  }
+
+  async function connectKalshi() {
+    if (kalshiImporting || !kalshiUserId.trim()) return;
+    setKalshiImporting(true);
+    try {
+      const res = await fetch('/auth/v1/credentials/kalshi', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ userId: kalshiUserId.trim() }),
+      });
+      if (res.ok) {
+        patchUser({ kalshiConnected: true });
+        setKalshiUserId('');
+        toast.success('Kalshi account connected');
+      } else {
+        const err = await res.json().catch(() => ({}));
+        toast.error(err?.message ?? 'Failed to connect Kalshi');
+      }
+    } catch { toast.error('Failed to connect Kalshi'); }
+    setKalshiImporting(false);
+  }
+
+  async function disconnectKalshi() {
+    if (kalshiDeleting) return;
+    if (!confirm('Disconnect your Kalshi account? Cross-venue arbitrage will be disabled.')) return;
+    setKalshiDeleting(true);
+    try {
+      const res = await fetch('/auth/v1/credentials/kalshi', { method: 'DELETE', credentials: 'include' });
+      if (res.ok) {
+        patchUser({ kalshiConnected: false });
+        toast.success('Kalshi account disconnected');
+      }
+    } catch { toast.error('Failed to disconnect Kalshi'); }
+    setKalshiDeleting(false);
   }
 
   async function generateBotCode() {
@@ -111,7 +153,7 @@ export function Component() {
         </span>
       </div>
 
-      {/* Credentials panel */}
+      {/* Polymarket credentials panel */}
       <div className="bg-elevated border border-default rounded-pf p-6 space-y-5">
         {isConnected ? (
           <>
@@ -178,6 +220,78 @@ export function Component() {
             <Button type="button" variant="default" onClick={importCredentials} disabled={!canImport} className="flex items-center gap-2">
               {importing ? <Loader2 className="size-4 animate-spin" /> : <Link2 className="size-4" />}
               Connect Account
+            </Button>
+          </>
+        )}
+      </div>
+
+      {/* Kalshi credentials panel */}
+      <div data-testid="kalshi-panel" className="bg-elevated border border-default rounded-pf p-6 space-y-5">
+        <div className="flex items-center justify-between">
+          <h2 className="text-body-md font-semibold text-primary uppercase tracking-wider">Kalshi</h2>
+          <span data-testid="kalshi-status" className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-label font-medium border ${
+            isKalshiConnected
+              ? 'bg-gain/10 text-gain border-gain/20'
+              : 'bg-overlay text-tertiary border-default'
+          }`}>
+            {isKalshiConnected ? <CheckCircle className="size-3.5" /> : <XCircle className="size-3.5" />}
+            {isKalshiConnected ? 'Connected' : 'Not Connected'}
+          </span>
+        </div>
+
+        {isKalshiConnected ? (
+          <>
+            <p className="text-body-sm text-secondary">
+              Your Kalshi account is connected. Cross-venue arbitrage and Kalshi market data are active.
+            </p>
+            <div className="flex items-center gap-3 bg-surface rounded-pf p-3 border border-default">
+              <span className="text-label text-tertiary">User ID</span>
+              <code data-testid="kalshi-user-id-display" className="flex-1 font-mono text-body-sm text-primary">
+                {user?.id ? `${user.id.slice(0, 4)}${'•'.repeat(8)}` : '••••••••••••'}
+              </code>
+            </div>
+            <Button
+              type="button"
+              variant="danger"
+              onClick={disconnectKalshi}
+              disabled={kalshiDeleting}
+              data-testid="kalshi-disconnect-btn"
+              className="flex items-center gap-2"
+            >
+              {kalshiDeleting ? <Loader2 className="size-4 animate-spin" /> : <Unlink className="size-4" />}
+              Disconnect Kalshi
+            </Button>
+          </>
+        ) : (
+          <>
+            <p className="text-body-sm text-secondary">
+              Connect your Kalshi account to enable cross-venue market data and arbitrage opportunities.
+            </p>
+            <div>
+              <label htmlFor="kalshi-user-id" className="text-label text-secondary mb-2 block">
+                Kalshi User ID <span className="text-loss">*</span>
+              </label>
+              <Input
+                id="kalshi-user-id"
+                type="text"
+                value={kalshiUserId}
+                onChange={e => setKalshiUserId(e.target.value)}
+                placeholder="your-kalshi-user-id"
+                aria-required="true"
+                data-testid="kalshi-user-id-input"
+                className="w-full"
+              />
+            </div>
+            <Button
+              type="button"
+              variant="default"
+              onClick={connectKalshi}
+              disabled={!kalshiUserId.trim() || kalshiImporting}
+              data-testid="kalshi-connect-btn"
+              className="flex items-center gap-2"
+            >
+              {kalshiImporting ? <Loader2 className="size-4 animate-spin" /> : <Link2 className="size-4" />}
+              Connect Kalshi
             </Button>
           </>
         )}

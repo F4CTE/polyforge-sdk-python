@@ -26,6 +26,7 @@ import {
   Gift,
 } from 'lucide-react';
 import { OnboardingDashboardChecklist } from '../../components/onboarding/onboarding-dashboard-checklist';
+import { useVenueStore } from '../../stores/venue-store';
 
 /* ─── Types ──────────────────────────────────────────────────────────── */
 
@@ -926,10 +927,12 @@ export function Component() {
   const [advancedFilters, setAdvancedFilters] = useState<MarketSearchFilters>(DEFAULT_ADVANCED_FILTERS);
   const [rewardsMarketIds, setRewardsMarketIds] = useState<Set<string>>(new Set());
 
+  const { activeFilter: venueFilter, setActiveFilter: setVenueFilter } = useVenueStore();
+
   const searchTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const load = useCallback(
-    async (p: number, s: string, so: SortOption, cat: string, edf: EndDateFilter) => {
+    async (p: number, s: string, so: SortOption, cat: string, edf: EndDateFilter, venue: string) => {
       setLoading(true);
       try {
         const params = new URLSearchParams();
@@ -938,6 +941,7 @@ export function Component() {
         if (s) params.set('search', s);
         params.set('sort', so);
         if (cat !== 'all') params.set('category', cat);
+        if (venue !== 'all') params.set('venue', venue);
         if (edf === 'today') params.set('endsBefore', new Date(Date.now() + 86400000).toISOString());
         else if (edf === 'week') params.set('endsBefore', new Date(Date.now() + 7 * 86400000).toISOString());
         else if (edf === 'month') params.set('endsBefore', new Date(Date.now() + 30 * 86400000).toISOString());
@@ -961,8 +965,8 @@ export function Component() {
   searchRef.current = search;
 
   useEffect(() => {
-    load(page, search, sort, category, endDateFilter);
-  }, [page, search, sort, category, endDateFilter, load]);
+    load(page, search, sort, category, endDateFilter, venueFilter);
+  }, [page, search, sort, category, endDateFilter, venueFilter, load]);
 
   // Fetch trending markets once on mount — separate from main paginated fetch
   useEffect(() => {
@@ -1138,6 +1142,27 @@ export function Component() {
             </span>
           )}
         </Button>
+      </div>
+
+      {/* Venue filter pills */}
+      <div className="flex gap-2" data-testid="venue-filter-pills" role="group" aria-label="Filter by venue">
+        {(['all', 'polymarket', 'kalshi'] as const).map((v) => (
+          <Button
+            key={v}
+            type="button"
+            variant="ghost"
+            data-testid={`venue-pill-${v}`}
+            aria-pressed={venueFilter === v}
+            onClick={() => { setVenueFilter(v); setPage(1); }}
+            className={`px-3 py-1.5 rounded-full text-label font-medium border transition-colors ${
+              venueFilter === v
+                ? 'bg-accent-subtle text-accent-text border-accent/30'
+                : 'bg-elevated text-secondary border-default hover:border-strong'
+            }`}
+          >
+            {v === 'all' ? 'All' : v === 'polymarket' ? 'Polymarket' : 'Kalshi'}
+          </Button>
+        ))}
       </div>
 
       {/* Category chips */}
