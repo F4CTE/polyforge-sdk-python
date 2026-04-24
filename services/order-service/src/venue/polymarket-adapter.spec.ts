@@ -29,10 +29,11 @@ function makeFetchOk(body: unknown) {
 
 describe("PolymarketAdapter", () => {
   let adapter: PolymarketAdapter;
+  let clob: ClobClientService;
   let fetchSpy: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
-    const clob = new ClobClientService(makeConfig());
+    clob = new ClobClientService(makeConfig());
     adapter = new PolymarketAdapter(clob);
     fetchSpy = vi.fn();
     vi.stubGlobal("fetch", fetchSpy);
@@ -48,16 +49,12 @@ describe("PolymarketAdapter", () => {
 
   describe("getOrderBook()", () => {
     it("delegates to ClobClientService.getBook() and maps to OrderBook shape", async () => {
-      const raw = {
+      vi.spyOn(clob, "getBook").mockResolvedValue({
         bids: [{ price: "0.45", size: "100" }],
         asks: [{ price: "0.55", size: "80" }],
         midpoint: "0.50",
         spread: "0.10",
         timestamp: 1_700_000_000,
-      };
-      fetchSpy.mockResolvedValue({
-        ok: true,
-        json: vi.fn().mockResolvedValue(raw),
       });
       const result = await adapter.getOrderBook("tok-1");
       expect(result.tokenId).toBe("tok-1");
@@ -130,10 +127,8 @@ describe("PolymarketAdapter", () => {
 
   describe("getPriceHistory()", () => {
     it("maps resolution to CLOB interval and returns candles", async () => {
-      const history = [{ t: 1_700_000_000, p: "0.50" }];
-      fetchSpy.mockResolvedValue({
-        ok: true,
-        json: vi.fn().mockResolvedValue({ history }),
+      vi.spyOn(clob, "getPricesHistory").mockResolvedValue({
+        history: [{ t: 1_700_000_000, p: "0.50" }],
       });
       const candles = await adapter.getPriceHistory("tok-1", "1h");
       expect(candles).toHaveLength(1);
@@ -223,10 +218,7 @@ describe("PolymarketAdapter", () => {
 
   describe("getServerTime()", () => {
     it("returns time string from CLOB server-time endpoint", async () => {
-      fetchSpy.mockResolvedValue({
-        ok: true,
-        json: vi.fn().mockResolvedValue({ time: "1700000000" }),
-      });
+      vi.spyOn(clob, "getServerTime").mockResolvedValue({ time: "1700000000" });
       const time = await adapter.getServerTime();
       expect(time).toBe("1700000000");
     });
@@ -234,16 +226,15 @@ describe("PolymarketAdapter", () => {
 
   describe("healthCheck()", () => {
     it("returns true when CLOB responds with book data", async () => {
-      fetchSpy.mockResolvedValue({
-        ok: true,
-        json: vi.fn().mockResolvedValue({ mid: "0.50" }),
-      });
+      vi.spyOn(clob, "getMidpoint").mockResolvedValue({ mid: "0.50" });
       const healthy = await adapter.healthCheck();
       expect(healthy).toBe(true);
     });
 
     it("returns false when CLOB throws", async () => {
-      fetchSpy.mockRejectedValue(new Error("Network error"));
+      vi.spyOn(clob, "getMidpoint").mockRejectedValue(
+        new Error("Network error"),
+      );
       const healthy = await adapter.healthCheck();
       expect(healthy).toBe(false);
     });

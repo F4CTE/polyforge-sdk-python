@@ -1,5 +1,25 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
+import {
+  ClobClient,
+  type OrderBookSummary,
+  type OpenOrder,
+  type Trade,
+  type MarketPrice,
+  type OrderScoring,
+  type OrdersScoring,
+  type BuilderTrade,
+  type HeartbeatResponse,
+  type TickSize,
+  Chain,
+} from "@polymarket/clob-client";
+
+// ─── Re-export SDK types for downstream consumers ───────────────────────────
+
+export type { OrderBookSummary, OpenOrder, Trade, MarketPrice, TickSize };
+export type { BuilderTrade, HeartbeatResponse, OrderScoring, OrdersScoring };
+
+// ─── Legacy interfaces kept for backward compatibility ──────────────────────
 
 export interface ClobSubmitRequest {
   order: Record<string, unknown>;
@@ -10,20 +30,6 @@ export interface ClobOrderResponse {
   orderID: string;
   status: string;
   transactionHash?: string;
-}
-
-export interface ClobOrder {
-  id: string;
-  market: string;
-  asset_id: string;
-  side: string;
-  original_size: string;
-  size_matched: string;
-  price: string;
-  status: string;
-  type: string;
-  created_at: string;
-  expiration: string;
 }
 
 export interface ClobUserOrdersParams {
@@ -37,7 +43,7 @@ export interface ClobUserOrdersResponse {
   limit: number;
   count: number;
   next_cursor: string;
-  data: ClobOrder[];
+  data: OpenOrder[];
 }
 
 export interface ClobOrderScoringResponse {
@@ -76,17 +82,93 @@ export interface ClobMarketInfo {
 
 const RETRY_DELAYS_MS = [500, 1000, 2000];
 
-/**
- * HTTP client for the Polymarket CLOB API.
- */
 @Injectable()
 export class ClobClientService {
   private readonly logger = new Logger(ClobClientService.name);
   private readonly clobUrl: string;
+  readonly sdk: ClobClient;
 
   constructor(private readonly config: ConfigService) {
     this.clobUrl = this.config.getOrThrow<string>("CLOB_API_URL");
+    const chainId =
+      this.config.get<number>("POLYMARKET_CHAIN_ID") ?? Chain.POLYGON;
+    this.sdk = new ClobClient(this.clobUrl, chainId);
   }
+
+  // ─── SDK-backed market data (unauthenticated) ─────────────────────────────
+
+  async getBook(tokenId: string): Promise<{
+    bids: Array<{ price: string; size: string }>;
+    asks: Array<{ price: string; size: string }>;
+    spread: string;
+    midpoint: string;
+    timestamp: number;
+  }> {
+    const ob: OrderBookSummary = await this.sdk.getOrderBook(tokenId);
+    const bids = ob.bids.map((b) => ({ price: b.price, size: b.size }));
+    const asks = ob.asks.map((a) => ({ price: a.price, size: a.size }));
+    const midNum =
+      bids.length > 0 && asks.length > 0
+        ? (parseFloat(bids[0].price) + parseFloat(asks[0].price)) / 2
+        : 0;
+    const spreadNum =
+      asks.length > 0 && bids.length > 0
+        ? parseFloat(asks[0].price) - parseFloat(bids[0].price)
+        : 0;
+    return {
+      bids,
+      asks,
+      spread: spreadNum.toFixed(4),
+      midpoint: midNum.toFixed(4),
+      timestamp: parseInt(ob.timestamp, 10) || Date.now(),
+    };
+  }
+
+  async getSpread(tokenId: string): Promise<{ spread: string }> {
+    return this.sdk.getSpread(tokenId);
+  }
+
+  async getMidpoint(tokenId: string): Promise<{ mid: string }> {
+    return this.sdk.getMidpoint(tokenId);
+  }
+
+  async getTickSize(tokenId: string): Promise<string> {
+    const ts: TickSize = await this.sdk.getTickSize(tokenId);
+    return ts;
+  }
+
+  async getFeeRate(tokenId: string): Promise<string> {
+    const bps: number = await this.sdk.getFeeRateBps(tokenId);
+    return String(bps);
+  }
+
+  async getLastTradePrice(tokenId: string): Promise<ClobLastTradePrice> {
+    return this.sdk.getLastTradePrice(tokenId);
+  }
+
+  async getServerTime(): Promise<ClobServerTime> {
+    const ts: number = await this.sdk.getServerTime();
+    return { time: String(ts) };
+  }
+
+  async getClobMarketInfo(conditionId: string): Promise<ClobMarketInfo> {
+    return this.sdk.getMarket(conditionId);
+  }
+
+  async getPricesHistory(
+    tokenId: string,
+    interval?: string,
+    fidelity?: number,
+  ): Promise<{ history: Array<{ t: number; p: string }> }> {
+    const prices: MarketPrice[] = await this.sdk.getPricesHistory({
+      market: tokenId,
+      ...(interval ? { interval: interval as any } : {}),
+      ...(fidelity !== undefined ? { fidelity } : {}),
+    });
+    return { history: prices.map((mp) => ({ t: mp.t, p: String(mp.p) })) };
+  }
+
+  // ─── Fetch-based methods (auth headers from caller) ───────────────────────
 
   async submitOrder(req: ClobSubmitRequest): Promise<ClobOrderResponse> {
     return this.withRetry(() =>
@@ -112,9 +194,6 @@ export class ClobClientService {
     );
   }
 
-  /**
-   * Cancel all open orders for a user via the Polymarket CLOB bulk cancel endpoint.
-   */
   async cancelAll(apiKey: string): Promise<void> {
     await this.withRetryVoid(() =>
       fetch(`${this.clobUrl}/cancel-all`, {
@@ -125,9 +204,6 @@ export class ClobClientService {
     );
   }
 
-  /**
-   * Cancel all open orders for a user in a specific market.
-   */
   async cancelByMarket(apiKey: string, marketId: string): Promise<void> {
     await this.withRetryVoid(() =>
       fetch(
@@ -141,10 +217,6 @@ export class ClobClientService {
     );
   }
 
-  /**
-   * Fetch trades for a user from the Polymarket CLOB API.
-   * limit capped at 500, offset capped at 1,000 per API enforcement.
-   */
   async fetchTrades(
     walletAddress: string,
     limit = 500,
@@ -164,20 +236,6 @@ export class ClobClientService {
     );
   }
 
-  async getBook(tokenId: string): Promise<{
-    bids: Array<{ price: string; size: string }>;
-    asks: Array<{ price: string; size: string }>;
-    spread: string;
-    midpoint: string;
-    timestamp: number;
-  }> {
-    return this.withRetry(() =>
-      fetch(`${this.clobUrl}/book?token_id=${encodeURIComponent(tokenId)}`, {
-        signal: AbortSignal.timeout(10_000),
-      }),
-    );
-  }
-
   async getBooks(tokenIds: string[]): Promise<
     Array<{
       tokenId: string;
@@ -191,39 +249,6 @@ export class ClobClientService {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(tokenIds),
         signal: AbortSignal.timeout(15_000),
-      }),
-    );
-  }
-
-  async getSpread(tokenId: string): Promise<{ spread: string }> {
-    return this.withRetry(() =>
-      fetch(`${this.clobUrl}/spread?token_id=${encodeURIComponent(tokenId)}`, {
-        signal: AbortSignal.timeout(10_000),
-      }),
-    );
-  }
-
-  async getMidpoint(tokenId: string): Promise<{ mid: string }> {
-    return this.withRetry(() =>
-      fetch(
-        `${this.clobUrl}/midpoint?token_id=${encodeURIComponent(tokenId)}`,
-        { signal: AbortSignal.timeout(10_000) },
-      ),
-    );
-  }
-
-  async getPricesHistory(
-    tokenId: string,
-    interval?: string,
-    fidelity?: number,
-  ): Promise<{ history: Array<{ t: number; p: string }> }> {
-    const params = new URLSearchParams({ token_id: tokenId });
-    if (interval) params.set("interval", interval);
-    if (fidelity !== undefined) params.set("fidelity", String(fidelity));
-
-    return this.withRetry(() =>
-      fetch(`${this.clobUrl}/prices-history?${params.toString()}`, {
-        signal: AbortSignal.timeout(10_000),
       }),
     );
   }
@@ -288,22 +313,6 @@ export class ClobClientService {
     );
   }
 
-  async getTickSize(tokenId: string): Promise<string> {
-    return this.withRetry<string>(() =>
-      fetch(`${this.clobUrl}/tick-size/${encodeURIComponent(tokenId)}`, {
-        signal: AbortSignal.timeout(10_000),
-      }),
-    );
-  }
-
-  async getFeeRate(tokenId: string): Promise<string> {
-    return this.withRetry<string>(() =>
-      fetch(`${this.clobUrl}/fee-rate/${encodeURIComponent(tokenId)}`, {
-        signal: AbortSignal.timeout(10_000),
-      }),
-    );
-  }
-
   async sendHeartbeat(
     headers: Record<string, string>,
     orderIds?: string[],
@@ -338,7 +347,7 @@ export class ClobClientService {
   async getOrder(
     orderId: string,
     headers: Record<string, string>,
-  ): Promise<ClobOrder> {
+  ): Promise<OpenOrder> {
     return this.withRetry(() =>
       fetch(`${this.clobUrl}/order/${encodeURIComponent(orderId)}`, {
         headers,
@@ -369,16 +378,7 @@ export class ClobClientService {
     );
   }
 
-  // ─── Market Data (Phase 2) ─────────────────────────────────────────────────
-
-  async getLastTradePrice(tokenId: string): Promise<ClobLastTradePrice> {
-    return this.withRetry(() =>
-      fetch(
-        `${this.clobUrl}/last-trade-price?token_id=${encodeURIComponent(tokenId)}`,
-        { signal: AbortSignal.timeout(10_000) },
-      ),
-    );
-  }
+  // ─── Market Data (batch) — fetch-based (SDK uses BookParams with side) ────
 
   async getLastTradePrices(tokenIds: string[]): Promise<ClobTokenPrice[]> {
     const params = new URLSearchParams();
@@ -461,30 +461,8 @@ export class ClobClientService {
     );
   }
 
-  async getServerTime(): Promise<ClobServerTime> {
-    return this.withRetry(() =>
-      fetch(`${this.clobUrl}/server-time`, {
-        signal: AbortSignal.timeout(10_000),
-      }),
-    );
-  }
-
-  async getClobMarketInfo(conditionId: string): Promise<ClobMarketInfo> {
-    return this.withRetry(() =>
-      fetch(
-        `${this.clobUrl}/clob-market-info?condition_id=${encodeURIComponent(conditionId)}`,
-        { signal: AbortSignal.timeout(10_000) },
-      ),
-    );
-  }
-
   // ─── Private ───────────────────────────────────────────────────────────────
 
-  /**
-   * Execute a fetch call with exponential backoff on 429 responses.
-   * Retries up to RETRY_DELAYS_MS.length times (max 3 attempts total).
-   * Only 429 triggers a retry — other errors propagate immediately.
-   */
   private async withRetry<T>(call: () => Promise<Response>): Promise<T> {
     for (let attempt = 0; attempt <= RETRY_DELAYS_MS.length; attempt++) {
       const res = await call();

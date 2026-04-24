@@ -1,12 +1,18 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { ConfigService } from "@nestjs/config";
 import { ClobClientService } from "./clob-client.service";
+import { ClobClient } from "@polymarket/clob-client";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function makeConfig(url = "http://clob:3099"): ConfigService {
   return {
-    get: (k: string, d?: string) => (k === "CLOB_API_URL" ? url : (d ?? "")),
+    get: (k: string, d?: unknown) =>
+      k === "CLOB_API_URL"
+        ? url
+        : k === "POLYMARKET_CHAIN_ID"
+          ? 137
+          : (d ?? ""),
     getOrThrow: (k: string) => {
       if (k === "CLOB_API_URL") return url;
       throw new Error(`Missing ${k}`);
@@ -38,9 +44,182 @@ describe("ClobClientService", () => {
 
   afterEach(() => {
     vi.unstubAllGlobals();
+    vi.restoreAllMocks();
   });
 
-  // ── submitOrder ───────────────────────────────────────────────────────────
+  // ── SDK-backed methods ──────────────────────────────────────────────────
+
+  describe("getBook() — SDK-backed", () => {
+    it("delegates to sdk.getOrderBook and maps OrderBookSummary shape", async () => {
+      vi.spyOn(svc.sdk, "getOrderBook").mockResolvedValue({
+        market: "0xcond",
+        asset_id: "tok-yes",
+        timestamp: "1700000000",
+        bids: [{ price: "0.55", size: "100" }],
+        asks: [{ price: "0.57", size: "200" }],
+        min_order_size: "5",
+        tick_size: "0.01",
+        neg_risk: false,
+        last_trade_price: "0.56",
+        hash: "0xabc",
+      });
+      const result = await svc.getBook("tok-yes");
+      expect(svc.sdk.getOrderBook).toHaveBeenCalledWith("tok-yes");
+      expect(result.bids).toEqual([{ price: "0.55", size: "100" }]);
+      expect(result.asks).toEqual([{ price: "0.57", size: "200" }]);
+      expect(result.timestamp).toBe(1700000000);
+      expect(parseFloat(result.spread)).toBeCloseTo(0.02, 2);
+      expect(parseFloat(result.midpoint)).toBeCloseTo(0.56, 2);
+    });
+
+    it("handles empty order book gracefully", async () => {
+      vi.spyOn(svc.sdk, "getOrderBook").mockResolvedValue({
+        market: "0xcond",
+        asset_id: "tok",
+        timestamp: "0",
+        bids: [],
+        asks: [],
+        min_order_size: "5",
+        tick_size: "0.01",
+        neg_risk: false,
+        last_trade_price: "0",
+        hash: "0x0",
+      });
+      const result = await svc.getBook("tok");
+      expect(result.spread).toBe("0.0000");
+      expect(result.midpoint).toBe("0.0000");
+    });
+
+    it("propagates SDK errors", async () => {
+      vi.spyOn(svc.sdk, "getOrderBook").mockRejectedValue(
+        new Error("Network error"),
+      );
+      await expect(svc.getBook("bad")).rejects.toThrow("Network error");
+    });
+  });
+
+  describe("getSpread() — SDK-backed", () => {
+    it("delegates to sdk.getSpread", async () => {
+      vi.spyOn(svc.sdk, "getSpread").mockResolvedValue({ spread: "0.0200" });
+      const result = await svc.getSpread("tok-yes");
+      expect(svc.sdk.getSpread).toHaveBeenCalledWith("tok-yes");
+      expect(result.spread).toBe("0.0200");
+    });
+
+    it("propagates SDK errors", async () => {
+      vi.spyOn(svc.sdk, "getSpread").mockRejectedValue(new Error("timeout"));
+      await expect(svc.getSpread("bad")).rejects.toThrow("timeout");
+    });
+  });
+
+  describe("getMidpoint() — SDK-backed", () => {
+    it("delegates to sdk.getMidpoint", async () => {
+      vi.spyOn(svc.sdk, "getMidpoint").mockResolvedValue({ mid: "0.5500" });
+      const result = await svc.getMidpoint("tok-yes");
+      expect(svc.sdk.getMidpoint).toHaveBeenCalledWith("tok-yes");
+      expect(result.mid).toBe("0.5500");
+    });
+  });
+
+  describe("getTickSize() — SDK-backed", () => {
+    it("delegates to sdk.getTickSize and returns as string", async () => {
+      vi.spyOn(svc.sdk, "getTickSize").mockResolvedValue("0.01");
+      const result = await svc.getTickSize("tok-yes");
+      expect(svc.sdk.getTickSize).toHaveBeenCalledWith("tok-yes");
+      expect(result).toBe("0.01");
+    });
+  });
+
+  describe("getFeeRate() — SDK-backed", () => {
+    it("delegates to sdk.getFeeRateBps and returns as string", async () => {
+      vi.spyOn(svc.sdk, "getFeeRateBps").mockResolvedValue(200);
+      const result = await svc.getFeeRate("tok-yes");
+      expect(svc.sdk.getFeeRateBps).toHaveBeenCalledWith("tok-yes");
+      expect(result).toBe("200");
+    });
+  });
+
+  describe("getLastTradePrice() — SDK-backed", () => {
+    it("delegates to sdk.getLastTradePrice", async () => {
+      vi.spyOn(svc.sdk, "getLastTradePrice").mockResolvedValue({
+        price: "0.55",
+      });
+      const result = await svc.getLastTradePrice("tok-yes");
+      expect(svc.sdk.getLastTradePrice).toHaveBeenCalledWith("tok-yes");
+      expect(result.price).toBe("0.55");
+    });
+
+    it("propagates SDK errors", async () => {
+      vi.spyOn(svc.sdk, "getLastTradePrice").mockRejectedValue(
+        new Error("not found"),
+      );
+      await expect(svc.getLastTradePrice("bad")).rejects.toThrow("not found");
+    });
+  });
+
+  describe("getServerTime() — SDK-backed", () => {
+    it("delegates to sdk.getServerTime and wraps in ClobServerTime shape", async () => {
+      vi.spyOn(svc.sdk, "getServerTime").mockResolvedValue(1700000000);
+      const result = await svc.getServerTime();
+      expect(svc.sdk.getServerTime).toHaveBeenCalled();
+      expect(result.time).toBe("1700000000");
+    });
+
+    it("propagates SDK errors", async () => {
+      vi.spyOn(svc.sdk, "getServerTime").mockRejectedValue(
+        new Error("unavailable"),
+      );
+      await expect(svc.getServerTime()).rejects.toThrow("unavailable");
+    });
+  });
+
+  describe("getClobMarketInfo() — SDK-backed", () => {
+    it("delegates to sdk.getMarket", async () => {
+      const info = {
+        condition_id: "cid-1",
+        min_tick_size: "0.01",
+        min_order_size: "5",
+      };
+      vi.spyOn(svc.sdk, "getMarket").mockResolvedValue(info);
+      const result = await svc.getClobMarketInfo("cid-1");
+      expect(svc.sdk.getMarket).toHaveBeenCalledWith("cid-1");
+      expect(result.condition_id).toBe("cid-1");
+      expect(result.min_tick_size).toBe("0.01");
+    });
+
+    it("propagates SDK errors", async () => {
+      vi.spyOn(svc.sdk, "getMarket").mockRejectedValue(new Error("not found"));
+      await expect(svc.getClobMarketInfo("bad")).rejects.toThrow("not found");
+    });
+  });
+
+  describe("getPricesHistory() — SDK-backed", () => {
+    it("delegates to sdk.getPricesHistory and maps MarketPrice to legacy shape", async () => {
+      vi.spyOn(svc.sdk, "getPricesHistory").mockResolvedValue([
+        { t: 123, p: 0.55 },
+        { t: 456, p: 0.6 },
+      ]);
+      const result = await svc.getPricesHistory("tok-yes", "1h", 60);
+      expect(svc.sdk.getPricesHistory).toHaveBeenCalledWith({
+        market: "tok-yes",
+        interval: "1h",
+        fidelity: 60,
+      });
+      expect(result.history).toHaveLength(2);
+      expect(result.history[0]).toEqual({ t: 123, p: "0.55" });
+      expect(result.history[1]).toEqual({ t: 456, p: "0.6" });
+    });
+
+    it("omits optional params when not provided", async () => {
+      vi.spyOn(svc.sdk, "getPricesHistory").mockResolvedValue([]);
+      await svc.getPricesHistory("tok-yes");
+      expect(svc.sdk.getPricesHistory).toHaveBeenCalledWith({
+        market: "tok-yes",
+      });
+    });
+  });
+
+  // ── submitOrder (fetch-based) ──────────────────────────────────────────
 
   describe("submitOrder()", () => {
     it("POSTs to /order on the configured CLOB URL", async () => {
@@ -143,7 +322,6 @@ describe("ClobClientService", () => {
         status: 500,
         text: vi.fn().mockRejectedValue(new Error("read error")),
       });
-      // Should still throw an Error even when body is unreadable
       await expect(svc.submitOrder(SUBMIT_REQ)).rejects.toThrow("500");
     });
   });
@@ -286,38 +464,6 @@ describe("ClobClientService", () => {
     });
   });
 
-  // ── getBook ──────────────────────────────────────────────────────────────
-
-  describe("getBook()", () => {
-    it("sends GET to /book with token_id query param", async () => {
-      fetchSpy.mockResolvedValue({
-        ok: true,
-        json: vi.fn().mockResolvedValue({
-          bids: [{ price: "0.55", size: "100" }],
-          asks: [{ price: "0.57", size: "200" }],
-          spread: "0.0200",
-          midpoint: "0.5600",
-          timestamp: 1234567890,
-        }),
-      });
-      const result = await svc.getBook("tok-yes");
-      expect(fetchSpy.mock.calls[0][0]).toBe(
-        "http://clob:3099/book?token_id=tok-yes",
-      );
-      expect(result.bids).toHaveLength(1);
-      expect(result.spread).toBe("0.0200");
-    });
-
-    it("throws on non-OK response", async () => {
-      fetchSpy.mockResolvedValue({
-        ok: false,
-        status: 404,
-        text: vi.fn().mockResolvedValue("not found"),
-      });
-      await expect(svc.getBook("bad")).rejects.toThrow("404");
-    });
-  });
-
   // ── getBooks ────────────────────────────────────────────────────────────
 
   describe("getBooks()", () => {
@@ -332,75 +478,6 @@ describe("ClobClientService", () => {
       expect(fetchSpy.mock.calls[0][0]).toBe("http://clob:3099/books");
       expect(fetchSpy.mock.calls[0][1].method).toBe("POST");
       expect(result).toHaveLength(1);
-    });
-  });
-
-  // ── getSpread ──────────────────────────────────────────────────────────
-
-  describe("getSpread()", () => {
-    it("sends GET to /spread with token_id query param", async () => {
-      fetchSpy.mockResolvedValue({
-        ok: true,
-        json: vi.fn().mockResolvedValue({ spread: "0.0200" }),
-      });
-      const result = await svc.getSpread("tok-yes");
-      expect(fetchSpy.mock.calls[0][0]).toBe(
-        "http://clob:3099/spread?token_id=tok-yes",
-      );
-      expect(result.spread).toBe("0.0200");
-    });
-
-    it("throws on non-OK response", async () => {
-      fetchSpy.mockResolvedValue({
-        ok: false,
-        status: 500,
-        text: vi.fn().mockResolvedValue("error"),
-      });
-      await expect(svc.getSpread("bad")).rejects.toThrow("500");
-    });
-  });
-
-  // ── getMidpoint ────────────────────────────────────────────────────────
-
-  describe("getMidpoint()", () => {
-    it("sends GET to /midpoint with token_id query param", async () => {
-      fetchSpy.mockResolvedValue({
-        ok: true,
-        json: vi.fn().mockResolvedValue({ mid: "0.5500" }),
-      });
-      const result = await svc.getMidpoint("tok-yes");
-      expect(fetchSpy.mock.calls[0][0]).toBe(
-        "http://clob:3099/midpoint?token_id=tok-yes",
-      );
-      expect(result.mid).toBe("0.5500");
-    });
-  });
-
-  // ── getPricesHistory ───────────────────────────────────────────────────
-
-  describe("getPricesHistory()", () => {
-    it("sends GET to /prices-history with params", async () => {
-      fetchSpy.mockResolvedValue({
-        ok: true,
-        json: vi.fn().mockResolvedValue({
-          history: [{ t: 123, p: "0.55" }],
-        }),
-      });
-      const result = await svc.getPricesHistory("tok-yes", "1h", 60);
-      expect(fetchSpy.mock.calls[0][0]).toContain("/prices-history?");
-      expect(fetchSpy.mock.calls[0][0]).toContain("token_id=tok-yes");
-      expect(fetchSpy.mock.calls[0][0]).toContain("interval=1h");
-      expect(fetchSpy.mock.calls[0][0]).toContain("fidelity=60");
-      expect(result.history).toHaveLength(1);
-    });
-
-    it("omits optional params when not provided", async () => {
-      fetchSpy.mockResolvedValue({
-        ok: true,
-        json: vi.fn().mockResolvedValue({ history: [] }),
-      });
-      await svc.getPricesHistory("tok-yes");
-      expect(fetchSpy.mock.calls[0][0]).not.toContain("interval=");
     });
   });
 
@@ -805,34 +882,14 @@ describe("ClobClientService", () => {
         "Missing CLOB_API_URL",
       );
     });
-  });
 
-  // ── getLastTradePrice ─────────────────────────────────────────────────────
-
-  describe("getLastTradePrice()", () => {
-    it("sends GET to /last-trade-price with token_id", async () => {
-      fetchSpy.mockResolvedValue({
-        ok: true,
-        json: vi.fn().mockResolvedValue({ price: "0.55" }),
-      });
-      const result = await svc.getLastTradePrice("tok-yes");
-      expect(fetchSpy.mock.calls[0][0]).toBe(
-        "http://clob:3099/last-trade-price?token_id=tok-yes",
-      );
-      expect(result.price).toBe("0.55");
-    });
-
-    it("throws on non-OK response", async () => {
-      fetchSpy.mockResolvedValue({
-        ok: false,
-        status: 404,
-        text: vi.fn().mockResolvedValue("not found"),
-      });
-      await expect(svc.getLastTradePrice("bad")).rejects.toThrow("404");
+    it("creates ClobClient SDK instance with configured URL", () => {
+      expect(svc.sdk).toBeInstanceOf(ClobClient);
+      expect(svc.sdk.host).toBe("http://clob:3099");
     });
   });
 
-  // ── getLastTradePrices ──────────────────────────────────────────────────
+  // ── Market Data Phase 2 (fetch-based batch) ──────────────────────────────
 
   describe("getLastTradePrices()", () => {
     it("sends GET to /last-trade-prices with comma-separated token_ids", async () => {
@@ -861,8 +918,6 @@ describe("ClobClientService", () => {
     });
   });
 
-  // ── getLastTradePricesBody ─────────────────────────────────────────────
-
   describe("getLastTradePricesBody()", () => {
     it("POSTs to /last-trade-prices with JSON body", async () => {
       const resp = [{ token_id: "t1", price: "0.55" }];
@@ -883,8 +938,6 @@ describe("ClobClientService", () => {
       expect(result).toHaveLength(1);
     });
   });
-
-  // ── getMarketPrice ────────────────────────────────────────────────────
 
   describe("getMarketPrice()", () => {
     it("sends GET to /price with token_id", async () => {
@@ -909,8 +962,6 @@ describe("ClobClientService", () => {
     });
   });
 
-  // ── getMarketPrices ────────────────────────────────────────────────────
-
   describe("getMarketPrices()", () => {
     it("sends GET to /prices with comma-separated token_ids", async () => {
       const resp = [{ token_id: "t1", price: "0.55" }];
@@ -926,8 +977,6 @@ describe("ClobClientService", () => {
     });
   });
 
-  // ── getMarketPricesBody ───────────────────────────────────────────────
-
   describe("getMarketPricesBody()", () => {
     it("POSTs to /prices with JSON body", async () => {
       const resp = [{ token_id: "t1", price: "0.55" }];
@@ -941,8 +990,6 @@ describe("ClobClientService", () => {
       expect(result).toHaveLength(1);
     });
   });
-
-  // ── getMidpoints ──────────────────────────────────────────────────────
 
   describe("getMidpoints()", () => {
     it("sends GET to /midpoints with comma-separated token_ids", async () => {
@@ -969,8 +1016,6 @@ describe("ClobClientService", () => {
     });
   });
 
-  // ── getMidpointsBody ──────────────────────────────────────────────────
-
   describe("getMidpointsBody()", () => {
     it("POSTs to /midpoints with JSON body", async () => {
       const resp = [{ token_id: "t1", mid: "0.56" }];
@@ -984,8 +1029,6 @@ describe("ClobClientService", () => {
       expect(result[0].mid).toBe("0.56");
     });
   });
-
-  // ── getSpreads ────────────────────────────────────────────────────────
 
   describe("getSpreads()", () => {
     it("sends GET to /spreads with comma-separated token_ids", async () => {
@@ -1011,61 +1054,7 @@ describe("ClobClientService", () => {
     });
   });
 
-  // ── getServerTime ─────────────────────────────────────────────────────
-
-  describe("getServerTime()", () => {
-    it("sends GET to /server-time", async () => {
-      fetchSpy.mockResolvedValue({
-        ok: true,
-        json: vi.fn().mockResolvedValue({ time: "1700000000" }),
-      });
-      const result = await svc.getServerTime();
-      expect(fetchSpy.mock.calls[0][0]).toBe("http://clob:3099/server-time");
-      expect(result.time).toBe("1700000000");
-    });
-
-    it("throws on non-OK response", async () => {
-      fetchSpy.mockResolvedValue({
-        ok: false,
-        status: 500,
-        text: vi.fn().mockResolvedValue("error"),
-      });
-      await expect(svc.getServerTime()).rejects.toThrow("500");
-    });
-  });
-
-  // ── getClobMarketInfo ─────────────────────────────────────────────────
-
-  describe("getClobMarketInfo()", () => {
-    it("sends GET to /clob-market-info with condition_id", async () => {
-      const info = {
-        condition_id: "cid-1",
-        min_tick_size: "0.01",
-        min_order_size: "5",
-      };
-      fetchSpy.mockResolvedValue({
-        ok: true,
-        json: vi.fn().mockResolvedValue(info),
-      });
-      const result = await svc.getClobMarketInfo("cid-1");
-      expect(fetchSpy.mock.calls[0][0]).toBe(
-        "http://clob:3099/clob-market-info?condition_id=cid-1",
-      );
-      expect(result.condition_id).toBe("cid-1");
-      expect(result.min_tick_size).toBe("0.01");
-    });
-
-    it("throws on non-OK response", async () => {
-      fetchSpy.mockResolvedValue({
-        ok: false,
-        status: 404,
-        text: vi.fn().mockResolvedValue("not found"),
-      });
-      await expect(svc.getClobMarketInfo("bad")).rejects.toThrow("404");
-    });
-  });
-
-  // ── 429 retry / backoff ───────────────────────────────────────────────────
+  // ── 429 retry / backoff (fetch-based methods) ────────────────────────────
 
   describe("429 retry behaviour", () => {
     beforeEach(() => {
@@ -1091,7 +1080,6 @@ describe("ClobClientService", () => {
         });
 
       const promise = svc.submitOrder(SUBMIT_REQ);
-      // Advance past first retry delay (500ms)
       await vi.advanceTimersByTimeAsync(600);
       const result = await promise;
 
@@ -1107,13 +1095,10 @@ describe("ClobClientService", () => {
       });
 
       const promise = svc.submitOrder(SUBMIT_REQ);
-      // Attach rejects assertion before advancing timers to avoid unhandled rejection
       const assertion = expect(promise).rejects.toThrow("429");
-      // Advance past all three retry delays (500 + 1000 + 2000 = 3500ms)
       await vi.advanceTimersByTimeAsync(4000);
       await assertion;
 
-      // Called: initial + 3 retries = 4 times (index 0,1,2 trigger retries; index 3 exhausts)
       expect(fetchSpy).toHaveBeenCalledTimes(4);
     });
 
