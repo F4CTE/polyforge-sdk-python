@@ -1,2 +1,2 @@
 -- RenameColumn
-ALTER TABLE "NotificationPreference" RENAME COLUMN "onSomeoneFelked" TO "onSomeoneForked";
+ALTER TABLE "notification_preferences" RENAME COLUMN "onSomeoneFelked" TO "onSomeoneForked";
