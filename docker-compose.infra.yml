@@ -114,6 +114,7 @@ services:
       POOL_MODE: transaction
       MAX_CLIENT_CONN: 20
       DEFAULT_POOL_SIZE: 5
+      SERVER_IDLE_TIMEOUT: 0
       SERVER_RESET_QUERY: DISCARD ALL
     depends_on:
       postgres-admin: { condition: service_healthy }
@@ -396,7 +397,7 @@ services:
     environment:
       DATABASE_URL: postgresql://poly:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}@postgres:5432/polyforge
       DIRECT_DATABASE_URL: postgresql://poly:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}@postgres:5432/polyforge
-      ADMIN_DATABASE_URL: postgresql://poly_admin:${POSTGRES_ADMIN_PASSWORD:?POSTGRES_ADMIN_PASSWORD is required}@pgbouncer-admin:5432/polyforge_admin
+      ADMIN_DATABASE_URL: postgresql://poly_admin:${POSTGRES_ADMIN_PASSWORD:?POSTGRES_ADMIN_PASSWORD is required}@pgbouncer-admin:5432/polyforge_admin?connect_timeout=10
       ADMIN_DIRECT_DATABASE_URL: postgresql://poly_admin:${POSTGRES_ADMIN_PASSWORD:?POSTGRES_ADMIN_PASSWORD is required}@postgres-admin:5432/polyforge_admin
       REDIS_URL: redis://:${REDIS_PASSWORD:?REDIS_PASSWORD is required}@redis:6379
       ADMIN_JWT_SECRET: "${ADMIN_JWT_SECRET:?ADMIN_JWT_SECRET is required}"
@@ -470,7 +471,7 @@ services:
     environment:
       DATABASE_URL: postgresql://poly:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}@postgres:5432/polyforge
       DIRECT_DATABASE_URL: postgresql://poly:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}@postgres:5432/polyforge
-      ADMIN_DATABASE_URL: postgresql://poly_admin:${POSTGRES_ADMIN_PASSWORD:?POSTGRES_ADMIN_PASSWORD is required}@pgbouncer-admin:5432/polyforge_admin
+      ADMIN_DATABASE_URL: postgresql://poly_admin:${POSTGRES_ADMIN_PASSWORD:?POSTGRES_ADMIN_PASSWORD is required}@pgbouncer-admin:5432/polyforge_admin?connect_timeout=10
       ADMIN_DIRECT_DATABASE_URL: postgresql://poly_admin:${POSTGRES_ADMIN_PASSWORD:?POSTGRES_ADMIN_PASSWORD is required}@postgres-admin:5432/polyforge_admin
       REDIS_URL: redis://:${REDIS_PASSWORD:?REDIS_PASSWORD is required}@redis:6379
       ADMIN_JWT_SECRET: "${ADMIN_JWT_SECRET:?ADMIN_JWT_SECRET is required}"
