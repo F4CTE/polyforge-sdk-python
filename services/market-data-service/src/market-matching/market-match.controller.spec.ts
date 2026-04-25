@@ -1,4 +1,33 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
+
+vi.mock("@polyforge/shared-auth", () => ({
+  AdminJwtGuard: class {
+    canActivate() {
+      return true;
+    }
+  },
+  RolesGuard: class {
+    canActivate() {
+      return true;
+    }
+  },
+  Roles:
+    (..._roles: string[]) =>
+    (_target: any, _key?: string, _desc?: PropertyDescriptor) => {},
+}));
+vi.mock("@polyforge/shared-types", () => ({
+  AdminRole: { SUPER_ADMIN: "SUPER_ADMIN", ADMIN: "ADMIN" },
+}));
+vi.mock("@polyforge/shared-db", () => ({
+  PrismaService: class {},
+}));
+vi.mock("@polyforge/shared-redis", () => ({
+  RedisService: class {},
+}));
+vi.mock("@prisma/client", () => ({
+  Venue: {},
+}));
+
 import { MarketMatchController } from "./market-match.controller";
 import { BadRequestException, NotFoundException } from "@nestjs/common";
 

@@ -25,11 +25,15 @@ import {
 } from "@nestjs/swagger";
 import {
   JwtAuthGuard,
+  AdminJwtGuard,
+  RolesGuard,
+  Roles,
   CurrentUser,
   RequireScopes,
   ApiKeyScopeGuard,
 } from "@polyforge/shared-auth";
 import type { JwtPayload } from "@polyforge/shared-types";
+import { AdminRole } from "@polyforge/shared-types";
 import { ArbitrageService } from "./arbitrage.service";
 import { MarketMatchService } from "./market-match.service";
 import { CrossVenueArbitrageService } from "./cross-venue-arbitrage.service";
@@ -38,7 +42,6 @@ import { CreateArbitrageAlertDto } from "./dto/create-arbitrage-alert.dto";
 
 @ApiTags("Arbitrage")
 @ApiBearerAuth("jwt")
-@UseGuards(JwtAuthGuard)
 @Controller("arbitrage")
 export class ArbitrageController {
   constructor(
@@ -51,6 +54,7 @@ export class ArbitrageController {
   // ─── Single-venue merge arbitrage (existing) ─────────────────────────────
 
   @Get()
+  @UseGuards(JwtAuthGuard)
   @ApiOperation({
     summary: "Scan live markets for merge arbitrage opportunities",
     description:
@@ -76,6 +80,7 @@ export class ArbitrageController {
   // ─── Cross-venue arbitrage ────────────────────────────────────────────────
 
   @Get("cross-venue")
+  @UseGuards(JwtAuthGuard)
   @ApiOperation({
     summary: "List cross-venue arbitrage opportunities",
     description:
@@ -95,6 +100,7 @@ export class ArbitrageController {
   }
 
   @Get("cross-venue/:marketId")
+  @UseGuards(JwtAuthGuard)
   @ApiOperation({
     summary: "Cross-venue arbitrage opportunities for a specific market",
     description:
@@ -116,6 +122,7 @@ export class ArbitrageController {
   }
 
   @Get("cross-venue/:matchId/comparison")
+  @UseGuards(JwtAuthGuard)
   @ApiOperation({
     summary: "Get detailed price comparison for a matched market pair",
   })
@@ -127,6 +134,7 @@ export class ArbitrageController {
   // ─── Spread comparison ──────────────────────────────────────────────────
 
   @Get("spread")
+  @UseGuards(JwtAuthGuard)
   @ApiOperation({
     summary: "Bid/ask spread comparison across all matched venues",
     description:
@@ -139,6 +147,7 @@ export class ArbitrageController {
   // ─── Historical arbitrage windows ───────────────────────────────────────
 
   @Get("history")
+  @UseGuards(JwtAuthGuard)
   @ApiOperation({
     summary: "Historical arbitrage opportunity snapshots",
     description:
@@ -158,6 +167,7 @@ export class ArbitrageController {
   // ─── Arbitrage alerts ───────────────────────────────────────────────────
 
   @Get("alerts")
+  @UseGuards(JwtAuthGuard)
   @ApiOperation({
     summary: "List user's active arbitrage alert subscriptions",
   })
@@ -167,7 +177,7 @@ export class ArbitrageController {
 
   @Post("alerts")
   @HttpCode(HttpStatus.CREATED)
-  @UseGuards(ApiKeyScopeGuard)
+  @UseGuards(JwtAuthGuard, ApiKeyScopeGuard)
   @RequireScopes("WRITE")
   @ApiOperation({
     summary: "Create an arbitrage alert subscription",
@@ -183,7 +193,7 @@ export class ArbitrageController {
 
   @Delete("alerts/:id")
   @HttpCode(HttpStatus.NO_CONTENT)
-  @UseGuards(ApiKeyScopeGuard)
+  @UseGuards(JwtAuthGuard, ApiKeyScopeGuard)
   @RequireScopes("WRITE")
   @ApiOperation({ summary: "Deactivate an arbitrage alert" })
   @ApiParam({ name: "id" })
@@ -197,6 +207,7 @@ export class ArbitrageController {
   // ─── Market matching ─────────────────────────────────────────────────────
 
   @Get("matches")
+  @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: "List market matches across venues" })
   @ApiQuery({ name: "verified", required: false, type: Boolean })
   @ApiQuery({ name: "limit", required: false, type: Number })
@@ -214,6 +225,7 @@ export class ArbitrageController {
   }
 
   @Get("matches/market/:marketId")
+  @UseGuards(JwtAuthGuard)
   @ApiOperation({
     summary: "Get all matches for a specific market (either venue)",
   })
@@ -223,6 +235,7 @@ export class ArbitrageController {
   }
 
   @Get("matches/:matchId")
+  @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: "Get a single market match by ID" })
   @ApiParam({ name: "matchId", description: "MarketMatch UUID" })
   @ApiResponse({ status: 200, description: "Match detail" })
@@ -233,7 +246,9 @@ export class ArbitrageController {
 
   @Post("matches")
   @HttpCode(201)
-  @ApiOperation({ summary: "Manually match two markets across venues" })
+  @UseGuards(AdminJwtGuard, RolesGuard)
+  @Roles(AdminRole.SUPER_ADMIN, AdminRole.ADMIN)
+  @ApiOperation({ summary: "Manually match two markets across venues (admin)" })
   @ApiBody({
     schema: {
       type: "object",
@@ -253,7 +268,11 @@ export class ArbitrageController {
 
   @Post("matches/:matchId/verify")
   @HttpCode(200)
-  @ApiOperation({ summary: "Verify/confirm an auto-matched market pair" })
+  @UseGuards(AdminJwtGuard, RolesGuard)
+  @Roles(AdminRole.SUPER_ADMIN, AdminRole.ADMIN)
+  @ApiOperation({
+    summary: "Verify/confirm an auto-matched market pair (admin)",
+  })
   @ApiParam({ name: "matchId" })
   verifyMatch(@Param("matchId") matchId: string) {
     return this.marketMatch.verifyMatch(matchId);
@@ -261,7 +280,9 @@ export class ArbitrageController {
 
   @Delete("matches/:matchId")
   @HttpCode(204)
-  @ApiOperation({ summary: "Remove a market match (unmatch)" })
+  @UseGuards(AdminJwtGuard, RolesGuard)
+  @Roles(AdminRole.SUPER_ADMIN, AdminRole.ADMIN)
+  @ApiOperation({ summary: "Remove a market match (admin)" })
   @ApiParam({ name: "matchId" })
   deleteMatch(@Param("matchId") matchId: string) {
     return this.marketMatch.manualUnmatch(matchId);
@@ -269,6 +290,8 @@ export class ArbitrageController {
 
   @Post("matches/sync")
   @HttpCode(200)
+  @UseGuards(AdminJwtGuard, RolesGuard)
+  @Roles(AdminRole.SUPER_ADMIN, AdminRole.ADMIN)
   @ApiOperation({
     summary: "Trigger a manual matching pass (admin)",
     description: "Runs the TF-IDF matching algorithm immediately.",

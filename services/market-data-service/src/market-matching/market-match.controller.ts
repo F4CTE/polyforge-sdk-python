@@ -9,13 +9,18 @@ import {
   Query,
   HttpCode,
   HttpStatus,
+  UseGuards,
   BadRequestException,
   NotFoundException,
 } from "@nestjs/common";
+import { AdminJwtGuard, RolesGuard, Roles } from "@polyforge/shared-auth";
+import { AdminRole } from "@polyforge/shared-types";
 import { MarketMatchService } from "./market-match.service";
 import { ArbitrageService } from "./arbitrage.service";
 
 @Controller()
+@UseGuards(AdminJwtGuard, RolesGuard)
+@Roles(AdminRole.SUPER_ADMIN, AdminRole.ADMIN)
 export class MarketMatchController {
   constructor(
     private readonly matchService: MarketMatchService,

@@ -6,6 +6,7 @@ import { ScheduleModule } from "@nestjs/schedule";
 import { EventEmitterModule } from "@nestjs/event-emitter";
 import { SharedDbModule } from "@polyforge/shared-db";
 import { RedisModule } from "@polyforge/shared-redis";
+import { SharedAuthModule } from "@polyforge/shared-auth";
 import { LoggerModule } from "@polyforge/logger";
 import { PolymarketWsService } from "./market-sync/polymarket-ws.service";
 import { PolymarketUserWsService } from "./market-sync/polymarket-user-ws.service";
@@ -26,6 +27,7 @@ import { HealthController } from "./health/health.controller";
     LoggerModule,
     SharedDbModule,
     RedisModule,
+    SharedAuthModule,
     VenueDataModule,
     MarketMatchingModule,
   ],
