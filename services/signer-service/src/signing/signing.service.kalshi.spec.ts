@@ -96,7 +96,11 @@ describe("SigningService.signKalshiJwt()", () => {
     const valid = crypto.verify(
       "sha256",
       data,
-      { key: TEST_RSA_PUBLIC, padding: crypto.constants.RSA_PKCS1_PSS_PADDING, saltLength: crypto.constants.RSA_PSS_SALTLEN_DIGEST },
+      {
+        key: TEST_RSA_PUBLIC,
+        padding: crypto.constants.RSA_PKCS1_PSS_PADDING,
+        saltLength: crypto.constants.RSA_PSS_SALTLEN_DIGEST,
+      },
       sig,
     );
     expect(valid).toBe(true);
