@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useParams, useNavigate, Link } from 'react-router';
 import { toast } from 'sonner';
 import { Button, Input, Select } from '@polyforge/ui';
+import { MarketRewardsCard } from '@/components/rewards/market-rewards-card';
 import { resolveChartTheme } from '@polyforge/ui/lib/chart-colors';
 import { chartTooltipContentStyle, chartTooltipLabelStyle, chartAxisTick, chartLegendStyle } from '@polyforge/ui/lib/chart-styles';
 import { wsManager, WebSocketManager } from '@/lib/websocket';
@@ -2186,6 +2187,10 @@ export function Component() {
                 )}
               </div>
             </div>
+
+            {/* Liquidity Rewards */}
+            <MarketRewardsCard marketId={market.id} />
+
             </div>{/* end right column wrapper */}
           </div>
 
