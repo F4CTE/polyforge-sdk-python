@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import {
   NotFoundException,
+  ForbiddenException,
   UnprocessableEntityException,
 } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
@@ -964,6 +965,90 @@ describe("OrdersService", () => {
 
       expect(result.data[0].marketQuestion).toBeNull();
       expect(result.data[0].marketCategory).toBeNull();
+    });
+  });
+
+  // ── updateJournal ────────────────────────────────────────────────────────
+
+  describe("updateJournal", () => {
+    it("updates mood and note on the order", async () => {
+      const order = makeOrder();
+      const updated = { ...order, mood: "CONFIDENT", note: "solid entry" };
+      db.order.findUnique.mockResolvedValue(order as any);
+      db.order.update.mockResolvedValue(updated as any);
+
+      const result = await service.updateJournal(
+        "user-uuid-1",
+        "order-uuid-1",
+        {
+          mood: "CONFIDENT",
+          note: "solid entry",
+        },
+      );
+
+      expect(result.mood).toBe("CONFIDENT");
+      expect(result.note).toBe("solid entry");
+      expect(db.order.update).toHaveBeenCalledWith({
+        where: { id: "order-uuid-1" },
+        data: { mood: "CONFIDENT", note: "solid entry" },
+      });
+    });
+
+    it("updates mood only when note is not provided", async () => {
+      const order = makeOrder();
+      db.order.findUnique.mockResolvedValue(order as any);
+      db.order.update.mockResolvedValue({ ...order, mood: "FOMO" } as any);
+
+      await service.updateJournal("user-uuid-1", "order-uuid-1", {
+        mood: "FOMO",
+      });
+
+      expect(db.order.update).toHaveBeenCalledWith({
+        where: { id: "order-uuid-1" },
+        data: { mood: "FOMO" },
+      });
+    });
+
+    it("throws NotFoundException when order does not exist", async () => {
+      db.order.findUnique.mockResolvedValue(null);
+
+      await expect(
+        service.updateJournal("user-uuid-1", "missing-id", {
+          mood: "CONFIDENT",
+        }),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it("throws ForbiddenException when order belongs to another user", async () => {
+      db.order.findUnique.mockResolvedValue(
+        makeOrder({ userId: "other-user" }) as any,
+      );
+
+      await expect(
+        service.updateJournal("user-uuid-1", "order-uuid-1", {
+          mood: "CONFIDENT",
+        }),
+      ).rejects.toThrow(ForbiddenException);
+    });
+
+    it("allows setting note to empty string", async () => {
+      const order = makeOrder();
+      db.order.findUnique.mockResolvedValue(order as any);
+      db.order.update.mockResolvedValue({
+        ...order,
+        mood: "DISCIPLINED",
+        note: "",
+      } as any);
+
+      await service.updateJournal("user-uuid-1", "order-uuid-1", {
+        mood: "DISCIPLINED",
+        note: "",
+      });
+
+      expect(db.order.update).toHaveBeenCalledWith({
+        where: { id: "order-uuid-1" },
+        data: { mood: "DISCIPLINED", note: "" },
+      });
     });
   });
 

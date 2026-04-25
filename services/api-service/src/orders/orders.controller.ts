@@ -2,6 +2,7 @@ import {
   Controller,
   Get,
   Post,
+  Patch,
   Delete,
   Query,
   Body,
@@ -35,6 +36,7 @@ import { PlaceOrderDto } from "./dto/place-order.dto";
 import { BatchPlaceOrderDto, BulkCancelDto } from "./dto/batch-order.dto";
 import { RedeemPositionDto } from "./dto/redeem-position.dto";
 import { RedeemPositionResponseDto } from "./dto/redeem-position-response.dto";
+import { UpdateOrderJournalDto } from "./dto/update-order-journal.dto";
 import { GeoBlockGuard } from "../common/guards/geo.guard";
 import { PaginationDto } from "../common/dto/pagination.dto";
 import { JwtPayload } from "@polyforge/shared-types";
@@ -201,6 +203,17 @@ export class OrdersController {
     @Body() dto: PlaceOrderDto,
   ) {
     return this.orders.placeOrder(req.user.sub, dto);
+  }
+
+  @Patch(":id/journal")
+  @UseGuards(ApiKeyScopeGuard)
+  @RequireScopes("WRITE")
+  updateJournal(
+    @CurrentUser() user: JwtPayload,
+    @Param("id") id: string,
+    @Body() dto: UpdateOrderJournalDto,
+  ) {
+    return this.orders.updateJournal(user.sub, id, dto);
   }
 
   @Delete(":id")

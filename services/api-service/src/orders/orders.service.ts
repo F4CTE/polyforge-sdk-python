@@ -592,6 +592,26 @@ export class OrdersService {
     return header + rows.join("\n");
   }
 
+  async updateJournal(
+    userId: string,
+    orderId: string,
+    dto: { mood: string; note?: string },
+  ) {
+    const order = await this.prisma.order.findUnique({
+      where: { id: orderId },
+    });
+    if (!order) throw new NotFoundException("Order not found");
+    if (order.userId !== userId) throw new ForbiddenException("Not your order");
+
+    return this.prisma.order.update({
+      where: { id: orderId },
+      data: {
+        mood: dto.mood,
+        ...(dto.note !== undefined && { note: dto.note }),
+      },
+    });
+  }
+
   async cancelOrder(userId: string, orderId: string) {
     const order = await this.prisma.order.findUniqueOrThrow({
       where: { id: orderId },

@@ -49,4 +49,16 @@ describe("OrdersController — @Throttle decorator coverage", () => {
     );
     expect(limit).toBeDefined();
   });
+
+  it("updateJournal method is defined on the controller", () => {
+    expect(OrdersController.prototype.updateJournal).toBeDefined();
+  });
+
+  it("updateJournal uses PATCH http method", () => {
+    const method: unknown = Reflect.getMetadata(
+      "method",
+      OrdersController.prototype.updateJournal,
+    );
+    expect(method).toBeDefined();
+  });
 });

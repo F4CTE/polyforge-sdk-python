@@ -598,6 +598,8 @@ model Order {
   fillPrice     Decimal?     @db.Decimal(10, 6)
   fee           Decimal?     @db.Decimal(20, 6)
   errorMessage  String?
+  mood          String?      @db.VarChar(12)
+  note          String?      @db.Text
   placedAt      DateTime?
   filledAt      DateTime?
   createdAt     DateTime     @default(now())
@@ -614,6 +616,7 @@ model Order {
   @@index([createdAt])
   @@index([venue])
   @@index([venueOrderId])
+  @@index([userId, mood])
   @@map("orders")
 }
 

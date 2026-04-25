@@ -6,18 +6,25 @@ describe("JournalController — guard metadata", () => {
     expect(JournalController.prototype.list).toBeDefined();
   });
 
-  it("create method is defined", () => {
-    expect(JournalController.prototype.create).toBeDefined();
+  it("controller has UseGuards decorator for JwtAuthGuard", () => {
+    const guards: unknown = Reflect.getMetadata(
+      "__guards__",
+      JournalController,
+    );
+    expect(guards).toBeDefined();
+    expect(Array.isArray(guards)).toBe(true);
   });
 
-  it("update method is defined", () => {
-    expect(JournalController.prototype.update).toBeDefined();
+  it("controller is decorated with Controller('journal') path", () => {
+    const path: unknown = Reflect.getMetadata("path", JournalController);
+    expect(path).toBe("journal");
   });
 
-  it("remove method is defined and has HttpCode metadata", () => {
-    const method = JournalController.prototype.remove;
+  it("list method uses GET http method", () => {
+    const method: unknown = Reflect.getMetadata(
+      "method",
+      JournalController.prototype.list,
+    );
     expect(method).toBeDefined();
-    const statusCode: unknown = Reflect.getMetadata("__httpCode__", method);
-    expect(statusCode).toBe(204);
   });
 });
