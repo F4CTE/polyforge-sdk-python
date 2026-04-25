@@ -266,24 +266,24 @@ export function Component() {
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <StatCard
           label="Invited"
-          value={loading ? '—' : (data?.stats.invited ?? 0)}
+          value={loading ? '—' : (data?.stats?.invited ?? 0)}
           icon={Users}
         />
         <StatCard
           label="Signed Up"
-          value={loading ? '—' : (data?.stats.signedUp ?? 0)}
+          value={loading ? '—' : (data?.stats?.signedUp ?? 0)}
           icon={Users}
           valueClass="text-info"
         />
         <StatCard
           label="Active Traders"
-          value={loading ? '—' : (data?.stats.active ?? 0)}
+          value={loading ? '—' : (data?.stats?.active ?? 0)}
           icon={TrendingUp}
           valueClass="text-gain"
         />
         <StatCard
           label="Credits Earned"
-          value={loading ? '—' : `$${(data?.stats.creditsEarned ?? 0).toFixed(2)}`}
+          value={loading ? '—' : `$${(data?.stats?.creditsEarned ?? 0).toFixed(2)}`}
           icon={DollarSign}
           valueClass="text-accent-text"
         />

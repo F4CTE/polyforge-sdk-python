@@ -10,12 +10,16 @@ import { JwtPayload } from "@polyforge/shared-types";
 export class ReferralsController {
   @Get("me")
   getMyReferrals(@CurrentUser() user: JwtPayload) {
+    const referralCode = user.sub.slice(0, 8).toUpperCase();
     return {
-      userId: user.sub,
-      referralCode: null,
-      totalReferred: 0,
-      activeReferred: 0,
-      earnings: "0",
+      referralCode,
+      referralLink: `https://polyforge.trade/ref/${referralCode}`,
+      stats: {
+        invited: 0,
+        signedUp: 0,
+        active: 0,
+        creditsEarned: 0,
+      },
       referrals: [],
     };
   }
