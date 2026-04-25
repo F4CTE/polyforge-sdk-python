@@ -27,28 +27,33 @@ const ALICE_PASSWORD = 'TestPass123!';
 
 let aliceToken = '';
 
+async function cleanupE2EStrategies() {
+    if (!aliceToken) return;
+    const strategies = await apiGetStrategies(aliceToken);
+    for (const s of strategies.filter(s => s.name.startsWith('E2E-'))) {
+        try {
+            if (s.status === 'RUNNING' || s.status === 'PAUSED') {
+                await apiStopStrategy(aliceToken, s.id);
+            }
+            await apiDeleteStrategy(aliceToken, s.id);
+        } catch { /* best-effort */ }
+    }
+}
+
 test.beforeAll(async () => {
     const resp = await apiLogin(ALICE_EMAIL, ALICE_PASSWORD);
     aliceToken = resp.token;
+    await cleanupE2EStrategies();
+});
+
+test.afterEach(async () => {
+    try { await cleanupE2EStrategies(); } catch { /* ignore */ }
 });
 
 test.afterAll(async () => {
-    // Best-effort cleanup with a hard 30s timeout to prevent afterAll from
-    // exceeding the 60s hook limit and failing the last test.
-    if (!aliceToken) return;
-    const cleanup = async () => {
-        const strategies = await apiGetStrategies(aliceToken);
-        for (const s of strategies.filter(s => s.name.startsWith('E2E-'))) {
-            try {
-                if (s.status === 'RUNNING' || s.status === 'PAUSED') {
-                    await apiStopStrategy(aliceToken, s.id);
-                }
-                await apiDeleteStrategy(aliceToken, s.id);
-            } catch { /* ignore individual cleanup errors */ }
-        }
-    };
+    const cleanup = cleanupE2EStrategies();
     const timeout = new Promise((_r, reject) => setTimeout(() => reject(new Error('cleanup timeout')), 30_000));
-    await Promise.race([cleanup(), timeout]).catch(() => { /* ignore */ });
+    await Promise.race([cleanup, timeout]).catch(() => { /* ignore */ });
 });
 
 test.describe('Strategy lifecycle', () => {
