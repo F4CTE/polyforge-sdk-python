@@ -59,3 +59,21 @@ export interface PriceCandle {
 }
 
 export type CandleResolution = "1m" | "5m" | "15m" | "1h" | "1d";
+
+// ─── Kalshi combo/multivariate market types ───────────────────────────────────
+// Note: snake_case fields reflect the raw Kalshi REST API JSON — intentionally
+// separate from the camelCase sports.ts ComboCollection (ORM-layer model).
+
+export interface KalshiComboCollection {
+  collection_ticker: string;
+  title: string;
+  category: string;
+  status: "active" | "settled" | "expired" | string;
+  markets_count: number;
+  series_ticker?: string;
+}
+
+export interface KalshiComboLookupResult {
+  event_ticker: string;
+  market_ticker: string;
+}

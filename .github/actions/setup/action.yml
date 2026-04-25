@@ -36,6 +36,11 @@ runs:
         pnpm prisma generate --schema prisma/schema.prisma --config prisma/prisma.config.ts
         pnpm prisma generate --schema prisma/schema.admin.prisma --config prisma/prisma.admin.config.ts
 
+    - name: Clean stale incremental build caches
+      if: inputs.build-packages == 'true'
+      shell: bash
+      run: find packages -name "tsconfig.tsbuildinfo" -delete || true
+
     - name: Build shared packages
       if: inputs.build-packages == 'true'
       shell: bash
