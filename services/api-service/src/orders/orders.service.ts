@@ -334,7 +334,9 @@ export class OrdersService {
   async placeBatch(
     userId: string,
     dto: { orders: PlaceOrderDto[] },
-  ): Promise<{ results: Array<{ orderId: string; intentId: string; status: string }> }> {
+  ): Promise<{
+    results: Array<{ orderId: string; intentId: string; status: string }>;
+  }> {
     const user = await this.prisma.user.findUniqueOrThrow({
       where: { id: userId },
     });
@@ -372,7 +374,11 @@ export class OrdersService {
       });
     }
 
-    const results: Array<{ orderId: string; intentId: string; status: string }> = [];
+    const results: Array<{
+      orderId: string;
+      intentId: string;
+      status: string;
+    }> = [];
 
     for (const orderDto of dto.orders) {
       const token = await this.prisma.token.findUniqueOrThrow({
@@ -419,7 +425,10 @@ export class OrdersService {
   async cancelBulk(
     userId: string,
     dto: { orderIds: string[] },
-  ): Promise<{ cancelled: string[]; errors: Array<{ orderId: string; reason: string }> }> {
+  ): Promise<{
+    cancelled: string[];
+    errors: Array<{ orderId: string; reason: string }>;
+  }> {
     if (dto.orderIds.length > 3000) {
       throw new BadRequestException({
         code: "BULK_CANCEL_LIMIT_EXCEEDED",

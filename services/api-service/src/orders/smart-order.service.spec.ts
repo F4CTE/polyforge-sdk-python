@@ -108,10 +108,7 @@ describe("SmartOrderService", () => {
       } as any);
       db.smartOrder.create.mockResolvedValue(makeSmartOrder() as any);
 
-      const result = await service.create(
-        "user-uuid-1",
-        makeTwapDto() as any,
-      );
+      const result = await service.create("user-uuid-1", makeTwapDto() as any);
 
       expect(result.status).toBe("PENDING");
       expect(result.type).toBe("TWAP");
@@ -201,10 +198,7 @@ describe("SmartOrderService", () => {
       db.order.create.mockResolvedValue({} as any);
       db.smartOrder.update.mockResolvedValue({} as any);
 
-      const result = await service.create(
-        "user-uuid-1",
-        makeOcoDto() as any,
-      );
+      const result = await service.create("user-uuid-1", makeOcoDto() as any);
 
       expect(result.slicesTotal).toBe(2);
       // OCO publishes 2 legs to stream:orders

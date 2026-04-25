@@ -439,7 +439,9 @@ describe("OrdersService", () => {
       );
       db.order.aggregate.mockResolvedValue({ _sum: { size: 0 } } as any);
       db.token.findUniqueOrThrow.mockResolvedValue(makeToken() as any);
-      db.order.create.mockResolvedValue(makeOrder({ id: "order-placed-1" }) as any);
+      db.order.create.mockResolvedValue(
+        makeOrder({ id: "order-placed-1" }) as any,
+      );
 
       const result = await service.placeOrder(
         "user-uuid-1",

@@ -185,11 +185,7 @@ describe("DrawdownCircuitBreakerService", () => {
       );
 
       // Should set dedup key
-      expect(redis.set).toHaveBeenCalledWith(
-        "cb:tripped:user-1",
-        "1",
-        120,
-      );
+      expect(redis.set).toHaveBeenCalledWith("cb:tripped:user-1", "1", 120);
     });
 
     it("skips if dedup key already set (already fired recently)", async () => {

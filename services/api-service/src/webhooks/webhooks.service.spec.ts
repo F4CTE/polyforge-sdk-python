@@ -509,9 +509,7 @@ describe("WebhooksService", () => {
       const webhook = makeWebhook({ userId: "user-1" });
       db.webhook.findUnique.mockResolvedValue(webhook as any);
 
-      const mockFetch = vi
-        .fn()
-        .mockResolvedValue({ ok: false, status: 503 });
+      const mockFetch = vi.fn().mockResolvedValue({ ok: false, status: 503 });
       vi.stubGlobal("fetch", mockFetch);
 
       const result = await service.test(webhook.id, "user-1");
@@ -557,9 +555,7 @@ describe("WebhooksService", () => {
       const webhook = makeWebhook({ userId: "user-1" });
       db.webhook.findUnique.mockResolvedValue(webhook as any);
 
-      const mockFetch = vi
-        .fn()
-        .mockRejectedValue("some string error");
+      const mockFetch = vi.fn().mockRejectedValue("some string error");
       vi.stubGlobal("fetch", mockFetch);
 
       const result = await service.test(webhook.id, "user-1");
@@ -712,9 +708,7 @@ describe("WebhooksService", () => {
       db.webhook.findMany.mockResolvedValue([webhook] as any);
 
       // First attempt fails, retry also fails
-      const mockFetch = vi
-        .fn()
-        .mockRejectedValue(new Error("Network timeout"));
+      const mockFetch = vi.fn().mockRejectedValue(new Error("Network timeout"));
       vi.stubGlobal("fetch", mockFetch);
 
       // Should not throw

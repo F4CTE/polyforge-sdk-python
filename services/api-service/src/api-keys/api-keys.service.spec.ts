@@ -37,7 +37,10 @@ describe("ApiKeysService", () => {
 
   describe("list", () => {
     it("returns non-revoked keys for the given user", async () => {
-      const keys = [makeApiKey(), makeApiKey({ id: "key-uuid-2", name: "Second" })];
+      const keys = [
+        makeApiKey(),
+        makeApiKey({ id: "key-uuid-2", name: "Second" }),
+      ];
       db.apiKey.findMany.mockResolvedValue(keys as any);
 
       const result = await service.list("user-1");

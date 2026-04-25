@@ -280,7 +280,9 @@ describe("PortfolioService", () => {
     });
 
     it("returns emptyResult when $queryRaw throws (table missing)", async () => {
-      db.$queryRaw.mockRejectedValue(new Error("relation pnl_snapshots does not exist"));
+      db.$queryRaw.mockRejectedValue(
+        new Error("relation pnl_snapshots does not exist"),
+      );
 
       const result = await service.getPnl("user-uuid-1", "30d");
 
@@ -312,7 +314,9 @@ describe("PortfolioService", () => {
 
       const csv = await service.exportCsv("user-uuid-1");
 
-      expect(csv).toContain("Market ID,Outcome,Size,Avg Price,Unrealized P&L,Realized P&L,Status,Updated");
+      expect(csv).toContain(
+        "Market ID,Outcome,Size,Avg Price,Unrealized P&L,Realized P&L,Status,Updated",
+      );
     });
 
     it("returns CSV rows for positions", async () => {
@@ -409,10 +413,17 @@ describe("PortfolioService", () => {
 
   describe("getPortfolio enrichment", () => {
     it("enriches positions with marketTitle from market lookup", async () => {
-      const position = makePosition({ marketId: "market-uuid-1", tokenId: "token-uuid-1" });
+      const position = makePosition({
+        marketId: "market-uuid-1",
+        tokenId: "token-uuid-1",
+      });
       db.position.findMany.mockResolvedValue([position] as any);
       db.market.findMany.mockResolvedValue([
-        { id: "market-uuid-1", title: "Will BTC reach 100k?", category: "CRYPTO" },
+        {
+          id: "market-uuid-1",
+          title: "Will BTC reach 100k?",
+          category: "CRYPTO",
+        },
       ] as any);
 
       const result = await service.getPortfolio("user-uuid-1");
@@ -441,10 +452,7 @@ describe("PortfolioService", () => {
       db.market.findMany.mockResolvedValue([
         { id: "market-1", title: "Test Market", category: null },
       ] as any);
-      (redis.getClient() as any).mget.mockResolvedValue([
-        null,
-        null,
-      ]);
+      (redis.getClient() as any).mget.mockResolvedValue([null, null]);
 
       const result = await service.getPortfolio("user-uuid-1");
 

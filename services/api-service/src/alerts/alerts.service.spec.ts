@@ -503,11 +503,7 @@ describe("AlertsService", () => {
         set: vi.fn(),
         getClient: vi.fn().mockReturnValue({ mget: vi.fn() }),
       };
-      const svc = new AlertsService(
-        db as any,
-        mockRedis as any,
-        {} as any,
-      );
+      const svc = new AlertsService(db as any, mockRedis as any, {} as any);
 
       svc.onModuleInit();
 

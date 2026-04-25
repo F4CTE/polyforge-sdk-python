@@ -54,7 +54,9 @@ describe("LpService", () => {
   });
 
   it("throws UnprocessableEntityException if user not polymarket connected", async () => {
-    db.user.findUnique.mockResolvedValue(makeUser({ polymarketConnected: false }) as any);
+    db.user.findUnique.mockResolvedValue(
+      makeUser({ polymarketConnected: false }) as any,
+    );
 
     await expect(
       service.provideLiquidity("user-1", makeDto() as any),
@@ -141,10 +143,7 @@ describe("LpService", () => {
     db.market.findUnique.mockResolvedValue(makeMarket() as any);
     db.order.create.mockResolvedValue({ id: "order-id" } as any);
 
-    const result = await service.provideLiquidity(
-      "user-1",
-      makeDto() as any,
-    );
+    const result = await service.provideLiquidity("user-1", makeDto() as any);
 
     expect(result.targetSpread).toBe(0.02);
     // yesPrice = 0.50, spread = 0.02 => buy=0.49, sell=0.51
@@ -159,10 +158,10 @@ describe("LpService", () => {
 
     const result = await service.provideLiquidity(
       "user-1",
-      makeDto({ targetSpread: 0.10 }) as any,
+      makeDto({ targetSpread: 0.1 }) as any,
     );
 
-    expect(result.targetSpread).toBe(0.10);
+    expect(result.targetSpread).toBe(0.1);
     // yesPrice=0.50, spread=0.10 => buy=0.45, sell=0.55
     expect(result.buyQuote).toBeCloseTo(0.45, 4);
     expect(result.sellQuote).toBeCloseTo(0.55, 4);
@@ -181,10 +180,7 @@ describe("LpService", () => {
     );
     db.order.create.mockResolvedValue({ id: "order-id" } as any);
 
-    const result = await service.provideLiquidity(
-      "user-1",
-      makeDto() as any,
-    );
+    const result = await service.provideLiquidity("user-1", makeDto() as any);
 
     expect(result.buyQuote).toBeGreaterThanOrEqual(0.01);
   });
@@ -202,10 +198,7 @@ describe("LpService", () => {
     );
     db.order.create.mockResolvedValue({ id: "order-id" } as any);
 
-    const result = await service.provideLiquidity(
-      "user-1",
-      makeDto() as any,
-    );
+    const result = await service.provideLiquidity("user-1", makeDto() as any);
 
     expect(result.sellQuote).toBeLessThanOrEqual(0.99);
   });

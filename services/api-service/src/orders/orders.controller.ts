@@ -176,10 +176,7 @@ export class OrdersController {
   @HttpCode(HttpStatus.ACCEPTED)
   @UseGuards(ApiKeyScopeGuard, GeoBlockGuard)
   @RequireScopes("TRADE")
-  placeBatch(
-    @CurrentUser() user: JwtPayload,
-    @Body() dto: BatchPlaceOrderDto,
-  ) {
+  placeBatch(@CurrentUser() user: JwtPayload, @Body() dto: BatchPlaceOrderDto) {
     return this.orders.placeBatch(user.sub, dto);
   }
 
@@ -187,10 +184,7 @@ export class OrdersController {
   @HttpCode(HttpStatus.OK)
   @UseGuards(ApiKeyScopeGuard)
   @RequireScopes("TRADE")
-  cancelBulk(
-    @CurrentUser() user: JwtPayload,
-    @Body() dto: BulkCancelDto,
-  ) {
+  cancelBulk(@CurrentUser() user: JwtPayload, @Body() dto: BulkCancelDto) {
     return this.orders.cancelBulk(user.sub, dto);
   }
 

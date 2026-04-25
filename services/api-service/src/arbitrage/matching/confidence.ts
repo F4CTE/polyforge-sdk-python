@@ -33,7 +33,10 @@ const WEIGHTS = {
 const AUTO_MATCH_THRESHOLD = 0.75;
 
 function normalizeOutcome(outcome: string): string {
-  return outcome.trim().toLowerCase().replace(/[^a-z0-9]/g, "");
+  return outcome
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, "");
 }
 
 function outcomeOverlap(a: string[], b: string[]): number {

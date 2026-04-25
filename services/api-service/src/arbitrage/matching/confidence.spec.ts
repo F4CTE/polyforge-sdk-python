@@ -1,5 +1,9 @@
 import { describe, it, expect } from "vitest";
-import { computeConfidence, AUTO_MATCH_THRESHOLD, buildIdf } from "./confidence";
+import {
+  computeConfidence,
+  AUTO_MATCH_THRESHOLD,
+  buildIdf,
+} from "./confidence";
 
 function makeMarket(overrides: Record<string, unknown> = {}) {
   return {

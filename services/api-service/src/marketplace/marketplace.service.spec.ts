@@ -337,7 +337,9 @@ describe("MarketplaceService", () => {
       db.strategy.findFirst.mockResolvedValue(makeStrategy() as any);
       db.marketplaceListing.findUnique.mockResolvedValue(null);
       db.marketplaceListing.count.mockResolvedValue(0);
-      db.marketplaceListing.create.mockResolvedValue(makeListing({ priceUsdc: 0 }) as any);
+      db.marketplaceListing.create.mockResolvedValue(
+        makeListing({ priceUsdc: 0 }) as any,
+      );
 
       const result = await service.createListing("seller-1", {
         strategyId: "strategy-1",
@@ -422,7 +424,9 @@ describe("MarketplaceService", () => {
 
   describe("rateListing", () => {
     it("rates a listing successfully", async () => {
-      db.marketplacePurchase.findUnique.mockResolvedValue(makePurchase() as any);
+      db.marketplacePurchase.findUnique.mockResolvedValue(
+        makePurchase() as any,
+      );
       db.marketplacePurchase.update.mockResolvedValue({} as any);
       db.marketplacePurchase.aggregate.mockResolvedValue({
         _avg: { rating: 4.5 },
@@ -477,7 +481,9 @@ describe("MarketplaceService", () => {
     });
 
     it("updates aggregate rating on the listing after rating", async () => {
-      db.marketplacePurchase.findUnique.mockResolvedValue(makePurchase() as any);
+      db.marketplacePurchase.findUnique.mockResolvedValue(
+        makePurchase() as any,
+      );
       db.marketplacePurchase.update.mockResolvedValue({} as any);
       db.marketplacePurchase.aggregate.mockResolvedValue({
         _avg: { rating: 3.5 },

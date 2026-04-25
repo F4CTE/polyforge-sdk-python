@@ -12,12 +12,12 @@ describe("OrdersController — @Throttle decorator coverage", () => {
       `${THROTTLER_LIMIT}default`,
       method,
     );
-    const ttl: unknown = Reflect.getMetadata(
-      `${THROTTLER_TTL}default`,
-      method,
-    );
+    const ttl: unknown = Reflect.getMetadata(`${THROTTLER_TTL}default`, method);
 
-    expect(limit, "@Throttle limit must be set on redeemPosition").toBeDefined();
+    expect(
+      limit,
+      "@Throttle limit must be set on redeemPosition",
+    ).toBeDefined();
     expect(ttl, "@Throttle ttl must be set on redeemPosition").toBeDefined();
     // ttl should be 60 000 ms
     expect(ttl).toBe(60000);

@@ -143,10 +143,7 @@ describe("ConditionalController", () => {
         makeConditionalOrder() as any,
       );
 
-      await controller.create(
-        makeJwtPayload() as any,
-        makeCreateDto() as any,
-      );
+      await controller.create(makeJwtPayload() as any, makeCreateDto() as any);
 
       expect(db.conditionalOrder.create).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -163,10 +160,7 @@ describe("ConditionalController", () => {
         makeConditionalOrder() as any,
       );
 
-      await controller.create(
-        makeJwtPayload() as any,
-        makeCreateDto() as any,
-      );
+      await controller.create(makeJwtPayload() as any, makeCreateDto() as any);
 
       expect(db.conditionalOrder.create).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -187,10 +181,13 @@ describe("ConditionalController", () => {
       db.conditionalOrder.findMany.mockResolvedValue(orders as any);
       db.conditionalOrder.count.mockResolvedValue(1);
 
-      const result = await controller.list(makeJwtPayload() as any, {
-        page: 1,
-        limit: 20,
-      } as any);
+      const result = await controller.list(
+        makeJwtPayload() as any,
+        {
+          page: 1,
+          limit: 20,
+        } as any,
+      );
 
       expect(result.data).toHaveLength(1);
       expect(result.total).toBe(1);
@@ -201,10 +198,13 @@ describe("ConditionalController", () => {
       db.conditionalOrder.findMany.mockResolvedValue([]);
       db.conditionalOrder.count.mockResolvedValue(0);
 
-      await controller.list(makeJwtPayload({ sub: "user-99" }) as any, {
-        page: 1,
-        limit: 20,
-      } as any);
+      await controller.list(
+        makeJwtPayload({ sub: "user-99" }) as any,
+        {
+          page: 1,
+          limit: 20,
+        } as any,
+      );
 
       expect(db.conditionalOrder.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -217,11 +217,14 @@ describe("ConditionalController", () => {
       db.conditionalOrder.findMany.mockResolvedValue([]);
       db.conditionalOrder.count.mockResolvedValue(0);
 
-      await controller.list(makeJwtPayload() as any, {
-        page: 1,
-        limit: 20,
-        status: "TRIGGERED",
-      } as any);
+      await controller.list(
+        makeJwtPayload() as any,
+        {
+          page: 1,
+          limit: 20,
+          status: "TRIGGERED",
+        } as any,
+      );
 
       expect(db.conditionalOrder.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -236,11 +239,14 @@ describe("ConditionalController", () => {
       db.conditionalOrder.findMany.mockResolvedValue([]);
       db.conditionalOrder.count.mockResolvedValue(0);
 
-      await controller.list(makeJwtPayload() as any, {
-        page: 1,
-        limit: 20,
-        type: "STOP_LOSS",
-      } as any);
+      await controller.list(
+        makeJwtPayload() as any,
+        {
+          page: 1,
+          limit: 20,
+          type: "STOP_LOSS",
+        } as any,
+      );
 
       expect(db.conditionalOrder.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -255,10 +261,13 @@ describe("ConditionalController", () => {
       db.conditionalOrder.findMany.mockResolvedValue([]);
       db.conditionalOrder.count.mockResolvedValue(0);
 
-      await controller.list(makeJwtPayload() as any, {
-        page: 3,
-        limit: 10,
-      } as any);
+      await controller.list(
+        makeJwtPayload() as any,
+        {
+          page: 3,
+          limit: 10,
+        } as any,
+      );
 
       expect(db.conditionalOrder.findMany).toHaveBeenCalledWith(
         expect.objectContaining({ skip: 20, take: 10 }),

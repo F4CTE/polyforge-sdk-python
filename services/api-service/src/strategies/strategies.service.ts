@@ -111,7 +111,10 @@ export class StrategiesService {
     const [strategy, childCount] = await Promise.all([
       this.prisma.strategy.findUnique({ where: { id } }),
       this.prisma.strategy.count({
-        where: { parentStrategyId: id, status: { not: StrategyStatus.ARCHIVED } },
+        where: {
+          parentStrategyId: id,
+          status: { not: StrategyStatus.ARCHIVED },
+        },
       }),
     ]);
     if (!strategy || strategy.status === StrategyStatus.ARCHIVED) {

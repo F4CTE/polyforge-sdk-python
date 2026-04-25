@@ -6,6 +6,8 @@ import { ArbitrageService } from "./arbitrage.service";
 import { MarketMatchService } from "./market-match.service";
 import { CrossVenueArbitrageService } from "./cross-venue-arbitrage.service";
 import { ArbitrageAlertService } from "./arbitrage-alert.service";
+import { ArbExecutionService } from "./arb-execution.service";
+import { ArbRiskService } from "./arb-risk.service";
 
 @Module({
   imports: [ScheduleModule.forRoot(), SharedAuthModule],
@@ -15,7 +17,13 @@ import { ArbitrageAlertService } from "./arbitrage-alert.service";
     MarketMatchService,
     CrossVenueArbitrageService,
     ArbitrageAlertService,
+    ArbExecutionService,
+    ArbRiskService,
   ],
-  exports: [MarketMatchService, CrossVenueArbitrageService],
+  exports: [
+    MarketMatchService,
+    CrossVenueArbitrageService,
+    ArbExecutionService,
+  ],
 })
 export class ArbitrageModule {}

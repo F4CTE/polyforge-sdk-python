@@ -38,7 +38,11 @@ import { ArbitrageService } from "./arbitrage.service";
 import { MarketMatchService } from "./market-match.service";
 import { CrossVenueArbitrageService } from "./cross-venue-arbitrage.service";
 import { ArbitrageAlertService } from "./arbitrage-alert.service";
+import { ArbExecutionService } from "./arb-execution.service";
+import { ArbRiskService } from "./arb-risk.service";
 import { CreateArbitrageAlertDto } from "./dto/create-arbitrage-alert.dto";
+import { ExecuteArbDto } from "./dto/execute-arb.dto";
+import type { ArbPositionStatus } from "@prisma/client";
 
 @ApiTags("Arbitrage")
 @ApiBearerAuth("jwt")
@@ -49,6 +53,8 @@ export class ArbitrageController {
     private readonly marketMatch: MarketMatchService,
     private readonly crossVenue: CrossVenueArbitrageService,
     private readonly alertService: ArbitrageAlertService,
+    private readonly arbExecution: ArbExecutionService,
+    private readonly arbRisk: ArbRiskService,
   ) {}
 
   // ─── Single-venue merge arbitrage (existing) ─────────────────────────────
@@ -202,6 +208,109 @@ export class ArbitrageController {
     @CurrentUser() user: JwtPayload,
   ) {
     return this.alertService.remove(id, user.sub);
+  }
+
+  // ─── Arb execution ──────────────────────────────────────────────────────
+
+  @Post("execute")
+  @HttpCode(HttpStatus.CREATED)
+  @UseGuards(JwtAuthGuard, ApiKeyScopeGuard)
+  @RequireScopes("WRITE")
+  @ApiOperation({
+    summary: "Execute a cross-venue arbitrage trade",
+    description:
+      "Places simultaneous offsetting orders on Polymarket and Kalshi for a matched market pair.",
+  })
+  executeArb(@CurrentUser() user: JwtPayload, @Body() dto: ExecuteArbDto) {
+    return this.arbExecution.execute(user.sub, dto);
+  }
+
+  @Get("positions")
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({
+    summary: "List user's arbitrage positions",
+    description: "Returns paginated list of cross-venue arb positions.",
+  })
+  @ApiQuery({ name: "status", required: false, type: String })
+  @ApiQuery({ name: "limit", required: false, type: Number })
+  @ApiQuery({ name: "offset", required: false, type: Number })
+  listPositions(
+    @CurrentUser() user: JwtPayload,
+    @Query("status") status?: string,
+    @Query("limit", new DefaultValuePipe(50), ParseIntPipe) limit?: number,
+    @Query("offset", new DefaultValuePipe(0), ParseIntPipe) offset?: number,
+  ) {
+    return this.arbExecution.listPositions(user.sub, {
+      status: status as ArbPositionStatus | undefined,
+      limit,
+      offset,
+    });
+  }
+
+  @Get("positions/:id")
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: "Get a specific arb position" })
+  @ApiParam({ name: "id", description: "ArbPosition UUID" })
+  getPosition(
+    @Param("id", ParseUUIDPipe) id: string,
+    @CurrentUser() user: JwtPayload,
+  ) {
+    return this.arbExecution.getPosition(user.sub, id);
+  }
+
+  @Post("positions/:id/close")
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(JwtAuthGuard, ApiKeyScopeGuard)
+  @RequireScopes("WRITE")
+  @ApiOperation({
+    summary: "Close an open arb position",
+    description:
+      "Submits reverse orders on both venues to unwind the arbitrage position.",
+  })
+  @ApiParam({ name: "id", description: "ArbPosition UUID" })
+  closePosition(
+    @Param("id", ParseUUIDPipe) id: string,
+    @CurrentUser() user: JwtPayload,
+  ) {
+    return this.arbExecution.closePosition(user.sub, id);
+  }
+
+  // ─── Risk dashboard ───────────────────────────────────────────────────
+
+  @Get("risk/dashboard")
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({
+    summary: "Arb risk dashboard",
+    description:
+      "Returns net exposure, P&L, and position breakdown across venues.",
+  })
+  getRiskDashboard(@CurrentUser() user: JwtPayload) {
+    return this.arbRisk.getDashboard(user.sub);
+  }
+
+  @Get("risk/settlement")
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({
+    summary: "Settlement risk analysis",
+    description:
+      "Identifies resolution criteria mismatches between venues for open arb positions.",
+  })
+  getSettlementRisks(@CurrentUser() user: JwtPayload) {
+    return this.arbRisk.getSettlementRisks(user.sub);
+  }
+
+  @Post("risk/refresh-pnl")
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({
+    summary: "Refresh unrealized P&L for open arb positions",
+    description:
+      "Fetches latest prices and updates unrealized P&L on all open positions.",
+  })
+  refreshPnl(@CurrentUser() user: JwtPayload) {
+    return this.arbRisk.refreshUnrealizedPnl(user.sub).then((count) => ({
+      updated: count,
+    }));
   }
 
   // ─── Market matching ─────────────────────────────────────────────────────

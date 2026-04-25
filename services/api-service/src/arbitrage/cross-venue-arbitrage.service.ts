@@ -18,6 +18,7 @@ export interface CrossVenueOpportunity {
   polymarketYes: number;
   kalshiYes: number;
   spreadPct: number;
+  profitPerDollar: number;
   direction: "buy_poly_sell_kalshi" | "buy_kalshi_sell_poly";
 }
 
@@ -126,6 +127,13 @@ export class CrossVenueArbitrageService {
       const direction =
         polyYes < kalshiYes ? "buy_poly_sell_kalshi" : "buy_kalshi_sell_poly";
 
+      const buyPrice = Math.min(polyYes, kalshiYes);
+      const profitPerUnit = Math.abs(polyYes - kalshiYes);
+      const profitPerDollar =
+        buyPrice > 0
+          ? Math.round((profitPerUnit / buyPrice) * 100 * 100) / 100
+          : 0;
+
       opportunities.push({
         matchId: match.id,
         polymarketId: match.polymarketId,
@@ -137,11 +145,12 @@ export class CrossVenueArbitrageService {
         polymarketYes: polyYes,
         kalshiYes: kalshiYes,
         spreadPct: Math.round(spreadPct * 100) / 100,
+        profitPerDollar,
         direction,
       });
     }
 
-    return opportunities.sort((a, b) => b.spreadPct - a.spreadPct);
+    return opportunities.sort((a, b) => b.profitPerDollar - a.profitPerDollar);
   }
 
   async getOpportunitiesForMarket(

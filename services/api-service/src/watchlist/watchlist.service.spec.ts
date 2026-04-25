@@ -83,7 +83,12 @@ describe("WatchlistService", () => {
 
   describe("add", () => {
     it("upserts a watchlist item for the user and market", async () => {
-      const item = { id: "wl-1", userId: "user-1", marketId: "market-1", createdAt: new Date() };
+      const item = {
+        id: "wl-1",
+        userId: "user-1",
+        marketId: "market-1",
+        createdAt: new Date(),
+      };
       db.watchlistItem.upsert.mockResolvedValue(item as any);
 
       const result = await service.add("user-1", "market-1");
@@ -127,7 +132,9 @@ describe("WatchlistService", () => {
     });
 
     it("re-throws non-Prisma errors", async () => {
-      db.watchlistItem.upsert.mockRejectedValue(new Error("DB connection lost"));
+      db.watchlistItem.upsert.mockRejectedValue(
+        new Error("DB connection lost"),
+      );
 
       await expect(service.add("user-1", "market-1")).rejects.toThrow(
         "DB connection lost",
@@ -151,7 +158,9 @@ describe("WatchlistService", () => {
     it("does not throw when no items match", async () => {
       db.watchlistItem.deleteMany.mockResolvedValue({ count: 0 } as any);
 
-      await expect(service.remove("user-1", "nonexistent")).resolves.toBeUndefined();
+      await expect(
+        service.remove("user-1", "nonexistent"),
+      ).resolves.toBeUndefined();
     });
   });
 

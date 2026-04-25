@@ -71,6 +71,7 @@ describe("CrossVenueArbitrageService", () => {
 
       expect(result).toHaveLength(1);
       expect(result[0].spreadPct).toBe(10);
+      expect(result[0].profitPerDollar).toBe(25);
       expect(result[0].direction).toBe("buy_poly_sell_kalshi");
     });
 
@@ -108,7 +109,7 @@ describe("CrossVenueArbitrageService", () => {
       expect(result[0].spreadPct).toBe(20);
     });
 
-    it("sorts by spreadPct descending", async () => {
+    it("sorts by profitPerDollar descending", async () => {
       db.marketMatch.findMany.mockResolvedValue([
         makeMatch({ id: "m1", polymarketId: "p1", kalshiId: "k1" }),
         makeMatch({ id: "m2", polymarketId: "p2", kalshiId: "k2" }),
@@ -124,7 +125,9 @@ describe("CrossVenueArbitrageService", () => {
       const result = await service.getOpportunities(5);
 
       expect(result.length).toBeGreaterThanOrEqual(2);
-      expect(result[0].spreadPct).toBeGreaterThanOrEqual(result[1].spreadPct);
+      expect(result[0].profitPerDollar).toBeGreaterThanOrEqual(
+        result[1].profitPerDollar,
+      );
     });
 
     it("skips matches where one market is closed", async () => {
