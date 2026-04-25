@@ -99,16 +99,17 @@ async function bootstrap() {
               "http://localhost:4300",
               "http://localhost:8080",
               "http://127.0.0.1:8080",
+              "https://localhost:8443",
+              "https://localhost:8080",
             ]
           : []),
       ];
       if (!origin) {
-        // Server-to-server requests (no Origin header) — allow without CORS credentials
         cb(null, false);
       } else if (allowed.includes(origin)) {
         cb(null, true);
       } else {
-        cb(new Error(`CORS: origin ${origin} not allowed`), false);
+        cb(null, false);
       }
     },
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
