@@ -4,7 +4,7 @@ import {
   Settings, Wallet, Code, ChevronRight, Mail, Link2, Shield,
   TrendingUp, Award, Target, Flame, Hexagon, DollarSign, Users, Eye,
 } from 'lucide-react';
-import { useAuthStore } from '../../stores/auth-store';
+import { useAuthStore, authedFetch } from '../../stores/auth-store';
 
 /* ─── Types ──────────────────────────────────────────────────────────── */
 
@@ -64,8 +64,8 @@ export function Component() {
     (async () => {
       try {
         const [scoreRes, badgeRes] = await Promise.all([
-          fetch('/api/v1/scores/me', { credentials: 'include' }),
-          fetch('/api/v1/scores/me/badges', { credentials: 'include' }),
+          authedFetch('/api/v1/scores/me'),
+          authedFetch('/api/v1/scores/me/badges'),
         ]);
         if (scoreRes.ok) setScoreData(await scoreRes.json());
         if (badgeRes.ok) setBadges(await badgeRes.json());

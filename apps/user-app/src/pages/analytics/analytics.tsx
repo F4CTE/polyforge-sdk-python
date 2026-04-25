@@ -18,6 +18,7 @@ import {
   Download,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { authedFetch } from '../../stores/auth-store';
 
 /* ─── Types ──────────────────────────────────────────────────────────── */
 
@@ -240,7 +241,7 @@ export function Component() {
   const loadScore = useCallback(async () => {
     setLoadingScore(true);
     try {
-      const res = await fetch('/api/v1/scores/me', { credentials: 'include' });
+      const res = await authedFetch('/api/v1/scores/me');
       if (!res.ok) throw new Error('Failed to load score data');
       const json = await res.json();
       setScoreData(json.score ?? null);

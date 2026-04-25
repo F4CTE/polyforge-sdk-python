@@ -36,6 +36,7 @@ import {
   Activity,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
+import { authedFetch } from '../../stores/auth-store';
 
 interface NavItem {
   label: string;
@@ -118,7 +119,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
   useEffect(() => {
     (async () => {
       try {
-        const res = await fetch('/api/v1/scores/me', { credentials: 'include' });
+        const res = await authedFetch('/api/v1/scores/me');
         if (res.ok) {
           const data = await res.json();
           if (data.score) setMyScore(data.score.score);

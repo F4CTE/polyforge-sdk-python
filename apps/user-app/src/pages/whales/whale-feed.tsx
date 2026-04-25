@@ -7,6 +7,7 @@ import {
 import { Button, Input, Select, CardSkeleton, SkeletonLine, SkeletonBadge } from '@polyforge/ui';
 import { wsManager, type WsMessage } from '../../lib/websocket';
 import { useWhaleNotifications } from '../../hooks/use-whale-notifications';
+import { authedFetch } from '../../stores/auth-store';
 
 /* ─── Types ──────────────────────────────────────────────────────────── */
 
@@ -135,7 +136,7 @@ export function Component() {
       const params = new URLSearchParams({ page: String(p), minSize: min });
       if (cat) params.set('category', cat);
       if (wallet) params.set('wallet', wallet);
-      const res = await fetch(`/api/v1/whales/feed?${params}`, { credentials: 'include', signal: controller.signal });
+      const res = await authedFetch(`/api/v1/whales/feed?${params}`, { signal: controller.signal });
       if (res.ok) {
         const json: WhaleFeedResponse = await res.json();
         const normalized: WhaleTrade[] = (json.data ?? []).map((t: WhaleTrade & { market?: { title?: string; category?: string }; detectedAt?: string; createdAt?: string }) => ({
@@ -216,9 +217,8 @@ export function Component() {
   async function toggleFollow(address: string) {
     const isFollowing = followingSet.has(address);
     try {
-      const res = await fetch(`/api/v1/whales/${address}/${isFollowing ? 'unfollow' : 'follow'}`, {
+      const res = await authedFetch(`/api/v1/whales/${address}/${isFollowing ? 'unfollow' : 'follow'}`, {
         method: 'POST',
-        credentials: 'include',
       });
       if (res.ok) {
         setFollowingSet(prev => {

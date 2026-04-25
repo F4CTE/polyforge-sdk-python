@@ -15,7 +15,7 @@ import {
 import { wsManager } from '@/lib/websocket';
 import { toast } from 'sonner';
 import { useThemeStore } from '@/stores/theme-store';
-import { useAuthStore } from '@/stores/auth-store';
+import { useAuthStore, authedFetch } from '@/stores/auth-store';
 import { Button, Input, Select, CardSkeleton } from '@polyforge/ui';
 import { useBetaUsage } from '@/hooks/use-beta-usage';
 import { BetaUsageBar } from '@/components/beta-usage-bar';
@@ -680,7 +680,7 @@ export function Component() {
       fetch('/api/v1/portfolio/pnl?period=today', { credentials: 'include' }).then(r => r.ok ? r.json() : null),
       fetch('/api/v1/users/me/risk-settings', { credentials: 'include' }).then(r => r.ok ? r.json() : null),
       fetch('/api/v1/portfolio/stats', { credentials: 'include' }).then(r => r.ok ? r.json() : null),
-      fetch('/api/v1/scores/me', { credentials: 'include' }).then(r => r.ok ? r.json() : null),
+      authedFetch('/api/v1/scores/me').then(r => r.ok ? r.json() : null),
       fetch('/api/v1/portfolio/daily-pnl?months=12', { credentials: 'include' }).then(r => r.ok ? r.json() : null),
       fetch('/api/v1/portfolio/risk-heatmap', { credentials: 'include' }).then(r => r.ok ? r.json() : null),
     ]).then(([pnlData, riskData, statsData, scoreData, heatmapRes, riskHeatmapRes]) => {
