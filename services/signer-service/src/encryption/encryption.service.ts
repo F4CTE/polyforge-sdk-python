@@ -218,4 +218,18 @@ export class EncryptionService {
     decipher.setAuthTag(tag);
     return Buffer.concat([decipher.update(ct), decipher.final()]);
   }
+
+  // ─── Direct master-key encryption (single-field models without DEK) ────────
+
+  encryptWithMasterKey(plaintext: string): EncryptedField {
+    return this.encryptField(plaintext, this.kek);
+  }
+
+  decryptWithMasterKey(
+    ctRaw: Uint8Array,
+    ivRaw: Uint8Array,
+    tagRaw: Uint8Array,
+  ): Buffer {
+    return this.decryptField(ctRaw, ivRaw, tagRaw, this.kek);
+  }
 }

@@ -8,8 +8,10 @@ import {
 } from "@nestjs/common";
 import { Throttle } from "@nestjs/throttler";
 import { SigningService } from "./signing.service";
+import { Ed25519SigningService } from "./ed25519-signing.service";
 import { SignOrderDto } from "./dto/sign-order.dto";
 import { SignKalshiJwtDto } from "./dto/sign-kalshi-jwt.dto";
+import { SignPolymarketUsRequestDto } from "./dto/sign-polymarket-us-request.dto";
 import { InternalAuthGuard } from "../common/internal-auth.guard";
 
 @Controller("sign")
@@ -21,7 +23,10 @@ import { InternalAuthGuard } from "../common/internal-auth.guard";
   },
 })
 export class SigningController {
-  constructor(private readonly signing: SigningService) {}
+  constructor(
+    private readonly signing: SigningService,
+    private readonly ed25519: Ed25519SigningService,
+  ) {}
 
   @Post("order")
   @HttpCode(200)
@@ -39,5 +44,14 @@ export class SigningController {
     dto: SignKalshiJwtDto,
   ) {
     return this.signing.signKalshiJwt(dto.userId, dto.requestId);
+  }
+
+  @Post("polymarket-us")
+  @HttpCode(200)
+  async signPolymarketUs(
+    @Body(new ValidationPipe({ whitelist: true }))
+    dto: SignPolymarketUsRequestDto,
+  ) {
+    return this.ed25519.signRequest(dto.userId, dto.method, dto.path, dto.body);
   }
 }

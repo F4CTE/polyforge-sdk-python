@@ -187,4 +187,28 @@ export class NativeEncryptionService {
     );
     return Buffer.from(plaintext, "utf8");
   }
+
+  encryptWithMasterKey(plaintext: string): EncryptedField {
+    const resultJson = nativeCrypto.encryptAes256Gcm(plaintext, this.kekHex);
+    const parsed = JSON.parse(resultJson);
+    return {
+      ciphertext: toBytes(parsed.ciphertext),
+      iv: toBytes(parsed.iv),
+      tag: toBytes(parsed.tag),
+    };
+  }
+
+  decryptWithMasterKey(
+    ctRaw: Uint8Array,
+    ivRaw: Uint8Array,
+    tagRaw: Uint8Array,
+  ): Buffer {
+    const plaintext: string = nativeCrypto.decryptAes256Gcm(
+      toHex(ctRaw),
+      toHex(ivRaw),
+      toHex(tagRaw),
+      this.kekHex,
+    );
+    return Buffer.from(plaintext, "utf8");
+  }
 }
