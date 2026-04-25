@@ -25,7 +25,6 @@ import {
   Star,
   Gift,
 } from 'lucide-react';
-import { OnboardingDashboardChecklist } from '../../components/onboarding/onboarding-dashboard-checklist';
 import { useVenueStore } from '../../stores/venue-store';
 
 /* ─── Types ──────────────────────────────────────────────────────────── */
@@ -1077,9 +1076,6 @@ export function Component() {
 
   return (
     <div className="animate-fade-in p-6 max-w-7xl mx-auto space-y-6">
-      {/* Onboarding checklist — shown to new users until dismissed or complete */}
-      <OnboardingDashboardChecklist />
-
       {/* Header */}
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold text-primary">Markets</h1>
