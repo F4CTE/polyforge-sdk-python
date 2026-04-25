@@ -58,6 +58,9 @@ function makeIntent(
     price,
     orderType,
     ...(ctx.venue !== undefined ? { venue: ctx.venue } : {}),
+    ...(ctx.kalshiSubaccount != null
+      ? { kalshiSubaccount: ctx.kalshiSubaccount }
+      : {}),
   };
 }
 

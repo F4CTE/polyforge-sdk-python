@@ -90,4 +90,54 @@ describe("Action blocks — venue propagation", () => {
       expect(intents[0].venue).toBe("kalshi");
     });
   });
+
+  // ── kalshiSubaccount propagation ──────────────────────────────────────────
+
+  describe("kalshiSubaccount propagation", () => {
+    it("propagates kalshiSubaccount from ctx to BuyYes intent", async () => {
+      const prisma = makePrisma();
+      prisma.token.findUnique.mockResolvedValue(TOKEN);
+      const ctx = makeCtx({}, Date.now(), "kalshi", 5);
+
+      const { intents } = await BuyYesAction.execute(
+        block("buy_yes", { tokenId: "tok-yes", size: "10" }),
+        ctx,
+        makeRedis({ getJson: vi.fn().mockResolvedValue({ price: 0.6 }) }),
+        prisma,
+      );
+
+      expect(intents[0].kalshiSubaccount).toBe(5);
+      expect(intents[0].venue).toBe("kalshi");
+    });
+
+    it("omits kalshiSubaccount when ctx has no subaccount", async () => {
+      const prisma = makePrisma();
+      prisma.token.findUnique.mockResolvedValue(TOKEN);
+      const ctx = makeCtx({}, Date.now(), "kalshi");
+
+      const { intents } = await BuyYesAction.execute(
+        block("buy_yes", { tokenId: "tok-yes", size: "10" }),
+        ctx,
+        makeRedis({ getJson: vi.fn().mockResolvedValue({ price: 0.6 }) }),
+        prisma,
+      );
+
+      expect(intents[0].kalshiSubaccount).toBeUndefined();
+    });
+
+    it("propagates kalshiSubaccount=0 (primary account)", async () => {
+      const prisma = makePrisma();
+      prisma.token.findUnique.mockResolvedValue(TOKEN);
+      const ctx = makeCtx({}, Date.now(), "kalshi", 0);
+
+      const { intents } = await BuyYesAction.execute(
+        block("buy_yes", { tokenId: "tok-yes", size: "10" }),
+        ctx,
+        makeRedis({ getJson: vi.fn().mockResolvedValue({ price: 0.6 }) }),
+        prisma,
+      );
+
+      expect(intents[0].kalshiSubaccount).toBe(0);
+    });
+  });
 });

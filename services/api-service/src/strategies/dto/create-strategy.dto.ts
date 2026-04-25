@@ -156,4 +156,10 @@ export class CreateStrategyDto {
   @ValidateNested({ each: true })
   @Type(() => MarketSlotDto)
   marketSlots?: MarketSlotDto[];
+
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  @Max(99)
+  kalshiSubaccount?: number;
 }

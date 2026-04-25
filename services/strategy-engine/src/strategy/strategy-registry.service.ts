@@ -175,6 +175,9 @@ export class StrategyRegistryService implements OnApplicationBootstrap {
             (childId, parentId, mode, context) =>
               this.startAsChild(childId, parentId, mode, context),
             mapVenue((strategy as Record<string, unknown>).venue as string),
+            (strategy as Record<string, unknown>).kalshiSubaccount as
+              | number
+              | undefined,
           );
 
           this.runners.set(strategy.id, runner);
@@ -254,6 +257,9 @@ export class StrategyRegistryService implements OnApplicationBootstrap {
       (childId, parentId, mode, context) =>
         this.startAsChild(childId, parentId, mode, context),
       mapVenue((strategy as Record<string, unknown>).venue as string),
+      (strategy as Record<string, unknown>).kalshiSubaccount as
+        | number
+        | undefined,
     );
 
     this.runners.set(strategyId, runner);
@@ -503,6 +509,7 @@ export class StrategyRegistryService implements OnApplicationBootstrap {
       (grandchildId, pId, m, ctx) =>
         this.startAsChild(grandchildId, pId, m, ctx),
       mapVenue((child as Record<string, unknown>).venue as string),
+      (child as Record<string, unknown>).kalshiSubaccount as number | undefined,
     );
 
     this.runners.set(childStrategyId, runner);
@@ -586,6 +593,10 @@ export class StrategyRegistryService implements OnApplicationBootstrap {
         price: intent.price,
         orderType: intent.orderType,
         expiration: String(intent.expiration ?? ""),
+        ...(intent.venue ? { venue: intent.venue } : {}),
+        ...(intent.kalshiSubaccount != null
+          ? { kalshiSubaccount: String(intent.kalshiSubaccount) }
+          : {}),
         ts: String(Date.now()),
       });
     }

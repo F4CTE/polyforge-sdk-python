@@ -109,6 +109,47 @@ describe("StreamConsumerService (order-service)", () => {
 
       expect(result?.orderType).toBe("GTC");
     });
+
+    it("parses venue field from Redis stream", () => {
+      const result = parseIntent(service, [
+        "intentId",
+        "int-1",
+        "userId",
+        "user-1",
+        "venue",
+        "kalshi",
+      ]);
+
+      expect(result?.venue).toBe("kalshi");
+    });
+
+    it("parses kalshiSubaccount field from Redis stream", () => {
+      const result = parseIntent(service, [
+        "intentId",
+        "int-1",
+        "userId",
+        "user-1",
+        "venue",
+        "kalshi",
+        "kalshiSubaccount",
+        "3",
+      ]);
+
+      expect(result?.venue).toBe("kalshi");
+      expect(result?.kalshiSubaccount).toBe(3);
+    });
+
+    it("omits venue and kalshiSubaccount when not in stream fields", () => {
+      const result = parseIntent(service, [
+        "intentId",
+        "int-1",
+        "userId",
+        "user-1",
+      ]);
+
+      expect(result?.venue).toBeUndefined();
+      expect(result?.kalshiSubaccount).toBeUndefined();
+    });
   });
 
   // ── pollOnce ──────────────────────────────────────────────────────────

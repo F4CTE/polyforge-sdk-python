@@ -376,7 +376,9 @@ runIntegration("KalshiRestService (sandbox integration)", () => {
   describe("order lifecycle", () => {
     it("places a limit order, verifies it, then cancels it", async () => {
       const markets = await rest.getMarkets({ limit: 5, status: "open" });
-      const market = markets.find((m) => m.yes_bid_dollars && parseFloat(m.yes_bid_dollars) > 0);
+      const market = markets.find(
+        (m) => m.yes_bid_dollars && parseFloat(m.yes_bid_dollars) > 0,
+      );
       if (!market) return; // no liquid market in sandbox
 
       const result = await rest.placeOrder({

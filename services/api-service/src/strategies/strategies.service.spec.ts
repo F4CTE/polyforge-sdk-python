@@ -298,6 +298,31 @@ describe("StrategiesService", () => {
       ).rejects.toBeInstanceOf(UnprocessableEntityException);
     });
 
+    it("passes kalshiSubaccount to prisma.create when provided", async () => {
+      const dto: CreateStrategyDto = {
+        name: "Kalshi strategy",
+        kalshiSubaccount: 3,
+      } as any;
+      db.strategy.count.mockResolvedValue(0);
+      db.strategy.create.mockResolvedValue(makeStrategy() as any);
+
+      await service.create("user-1", dto);
+
+      const dataArg = (db.strategy.create as any).mock.calls[0][0].data;
+      expect(dataArg.kalshiSubaccount).toBe(3);
+    });
+
+    it("omits kalshiSubaccount from prisma.create when not provided", async () => {
+      const dto: CreateStrategyDto = { name: "No subaccount" } as any;
+      db.strategy.count.mockResolvedValue(0);
+      db.strategy.create.mockResolvedValue(makeStrategy() as any);
+
+      await service.create("user-1", dto);
+
+      const dataArg = (db.strategy.create as any).mock.calls[0][0].data;
+      expect("kalshiSubaccount" in dataArg).toBe(false);
+    });
+
     it("allows creation when count is 2 (under beta limit)", async () => {
       db.strategy.count.mockResolvedValue(2);
       db.strategy.create.mockResolvedValue(makeStrategy() as any);
@@ -538,6 +563,41 @@ describe("StrategiesService", () => {
       expect(dataArg.name).toBe("Only name");
       // Description was not in dto, should not appear
       expect("description" in dataArg).toBe(false);
+    });
+
+    it("updates kalshiSubaccount when provided", async () => {
+      const strategy = makeStrategy({
+        userId: "user-1",
+        status: StrategyStatus.IDLE,
+      });
+      db.strategy.findUnique.mockResolvedValue(strategy as any);
+      db.strategy.update.mockResolvedValue({
+        ...strategy,
+        kalshiSubaccount: 5,
+      } as any);
+
+      await service.update(strategy.id, "user-1", {
+        kalshiSubaccount: 5,
+      } as any);
+
+      const dataArg = (db.strategy.update as any).mock.calls[0][0].data;
+      expect(dataArg.kalshiSubaccount).toBe(5);
+    });
+
+    it("allows kalshiSubaccount update while strategy is RUNNING (non-block field)", async () => {
+      const strategy = makeStrategy({
+        userId: "user-1",
+        status: StrategyStatus.RUNNING,
+      });
+      db.strategy.findUnique.mockResolvedValue(strategy as any);
+      db.strategy.update.mockResolvedValue({
+        ...strategy,
+        kalshiSubaccount: 2,
+      } as any);
+
+      await expect(
+        service.update(strategy.id, "user-1", { kalshiSubaccount: 2 } as any),
+      ).resolves.toBeDefined();
     });
   });
 

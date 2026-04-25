@@ -1,5 +1,12 @@
 import { BlockEvaluator, BlockResult } from "./block.types";
-import { sma, ema, macd, bollingerBands, vwap, rsiWilder } from "../ta/indicators";
+import {
+  sma,
+  ema,
+  macd,
+  bollingerBands,
+  vwap,
+  rsiWilder,
+} from "../ta/indicators";
 import { readPriceWindow } from "../ta/price-window";
 
 type BlockParams = Record<string, string | number | undefined>;

@@ -96,6 +96,7 @@ export class StrategyRunner {
       context?: { userId: string },
     ) => Promise<void>,
     private readonly venue?: VenueId | "best",
+    private readonly kalshiSubaccount?: number,
   ) {
     this.logger = new Logger(`StrategyRunner:${strategyId}`);
   }
@@ -205,6 +206,9 @@ export class StrategyRunner {
       state: stateData,
       now: Date.now(),
       ...(this.venue !== undefined ? { venue: this.venue } : {}),
+      ...(this.kalshiSubaccount != null
+        ? { kalshiSubaccount: this.kalshiSubaccount }
+        : {}),
     };
 
     // 0. Evaluate user-defined calculation variables

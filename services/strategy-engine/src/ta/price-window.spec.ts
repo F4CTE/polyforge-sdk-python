@@ -37,19 +37,17 @@ function makeFakeRedis() {
       set.set(member, score);
       return isNew ? 1 : 0;
     }),
-    zremrangebyrank: vi.fn(
-      async (k: string, start: number, stop: number) => {
-        const entries = sorted(k);
-        const len = entries.length;
-        const normStart = start < 0 ? Math.max(0, len + start) : start;
-        const normStop = stop < 0 ? len + stop : Math.min(stop, len - 1);
-        // Empty range when stop resolves before start (set smaller than window)
-        if (normStop < normStart) return 0;
-        const toRemove = entries.slice(normStart, normStop + 1);
-        for (const [m] of toRemove) getSet(k).delete(m);
-        return toRemove.length;
-      },
-    ),
+    zremrangebyrank: vi.fn(async (k: string, start: number, stop: number) => {
+      const entries = sorted(k);
+      const len = entries.length;
+      const normStart = start < 0 ? Math.max(0, len + start) : start;
+      const normStop = stop < 0 ? len + stop : Math.min(stop, len - 1);
+      // Empty range when stop resolves before start (set smaller than window)
+      if (normStop < normStart) return 0;
+      const toRemove = entries.slice(normStart, normStop + 1);
+      for (const [m] of toRemove) getSet(k).delete(m);
+      return toRemove.length;
+    }),
     expire: vi.fn(async (k: string, ttl: number) => {
       ttls.set(k, ttl);
       return 1;
@@ -164,8 +162,8 @@ describe("readPriceWindow", () => {
   });
 
   it("returns prices in ascending timestamp order (oldest first)", async () => {
-    await writePricePoint(redis, "tok1", 0.50, 3000);
-    await writePricePoint(redis, "tok1", 0.60, 1000);
+    await writePricePoint(redis, "tok1", 0.5, 3000);
+    await writePricePoint(redis, "tok1", 0.6, 1000);
     await writePricePoint(redis, "tok1", 0.55, 2000);
     const result = await readPriceWindow(redis, "tok1", 10);
     expect(result.map((p) => p.timestamp)).toEqual([1000, 2000, 3000]);

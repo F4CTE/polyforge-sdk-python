@@ -238,7 +238,10 @@ describe("KalshiAdapterService", () => {
         }),
       );
       // yes_price_dollars should not be present
-      const callArgs = spy.mock.calls[0][0] as unknown as Record<string, unknown>;
+      const callArgs = spy.mock.calls[0][0] as unknown as Record<
+        string,
+        unknown
+      >;
       expect(callArgs.yes_price_dollars).toBeUndefined();
     });
 
@@ -263,8 +266,53 @@ describe("KalshiAdapterService", () => {
           yes_price_dollars: "0.6500",
         }),
       );
-      const callArgs = spy.mock.calls[0][0] as unknown as Record<string, unknown>;
+      const callArgs = spy.mock.calls[0][0] as unknown as Record<
+        string,
+        unknown
+      >;
       expect(callArgs.no_price_dollars).toBeUndefined();
+    });
+
+    it("passes subaccount from authContext to placeOrder", async () => {
+      const spy = vi.spyOn(rest, "placeOrder").mockResolvedValue({
+        order_id: "ord-sub",
+        status: "resting",
+      });
+      const req: VenueOrderRequest = {
+        venueMarketId: "BTC-USD",
+        venueOutcomeId: "BTC-USD",
+        side: "BUY",
+        size: "5",
+        price: "0.55",
+        orderType: "GTC",
+        authContext: { userId: "user-1", subaccount: 3 },
+      };
+      await adapter.submitOrder(req);
+      expect(spy).toHaveBeenCalledWith(
+        expect.objectContaining({ subaccount: 3 }),
+      );
+    });
+
+    it("omits subaccount when not in authContext", async () => {
+      const spy = vi.spyOn(rest, "placeOrder").mockResolvedValue({
+        order_id: "ord-nosub",
+        status: "resting",
+      });
+      const req: VenueOrderRequest = {
+        venueMarketId: "BTC-USD",
+        venueOutcomeId: "BTC-USD",
+        side: "BUY",
+        size: "5",
+        price: "0.55",
+        orderType: "GTC",
+        authContext: { userId: "user-1" },
+      };
+      await adapter.submitOrder(req);
+      const callArgs = spy.mock.calls[0][0] as unknown as Record<
+        string,
+        unknown
+      >;
+      expect(callArgs.subaccount).toBeUndefined();
     });
   });
 
@@ -541,7 +589,10 @@ describe("KalshiAdapterService", () => {
       expect(spy).toHaveBeenCalledWith(
         expect.objectContaining({ no_price_dollars: "0.3500" }),
       );
-      const callArgs = spy.mock.calls[0][0] as unknown as Record<string, unknown>;
+      const callArgs = spy.mock.calls[0][0] as unknown as Record<
+        string,
+        unknown
+      >;
       expect(callArgs.yes_price_dollars).toBeUndefined();
     });
 
@@ -707,10 +758,11 @@ describe("KalshiAdapterService", () => {
         authContext: { userId: "u1" },
       };
       await adapter.submitOrder(req);
-      expect(spy).toHaveBeenCalledWith(
-        expect.objectContaining({ count: 10 }),
-      );
-      const callArgs = spy.mock.calls[0][0] as unknown as Record<string, unknown>;
+      expect(spy).toHaveBeenCalledWith(expect.objectContaining({ count: 10 }));
+      const callArgs = spy.mock.calls[0][0] as unknown as Record<
+        string,
+        unknown
+      >;
       expect(callArgs.count_fp).toBeUndefined();
     });
   });

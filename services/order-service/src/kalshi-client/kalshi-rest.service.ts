@@ -272,54 +272,97 @@ export class KalshiRestService {
       "https://demo-api.kalshi.co/trade-api/v2";
 
     this.axiosInstance = axios.create({ timeout: 15_000 });
-    this.axiosInstance.interceptors.request.use(async (reqConfig: import("axios").InternalAxiosRequestConfig) => {
-      const token = await this.auth.getToken("user");
-      reqConfig.headers.set("Authorization", `Bearer ${token}`);
-      return reqConfig;
-    });
+    this.axiosInstance.interceptors.request.use(
+      async (reqConfig: import("axios").InternalAxiosRequestConfig) => {
+        const token = await this.auth.getToken("user");
+        reqConfig.headers.set("Authorization", `Bearer ${token}`);
+        return reqConfig;
+      },
+    );
 
-    this.axiosInstance.interceptors.response.use(undefined, async (error: unknown) => {
-      const axErr = error as { config?: Record<string, unknown>; response?: { status: number }; code?: string };
-      const cfg = axErr.config;
-      if (!cfg) throw error;
+    this.axiosInstance.interceptors.response.use(
+      undefined,
+      async (error: unknown) => {
+        const axErr = error as {
+          config?: Record<string, unknown>;
+          response?: { status: number };
+          code?: string;
+        };
+        const cfg = axErr.config;
+        if (!cfg) throw error;
 
-      const retryCount = (cfg.__retryCount as number) ?? 0;
-      const status = axErr.response?.status;
-      const isRetryable =
-        status === 429 ||
-        axErr.code === "ECONNABORTED" ||
-        axErr.code === "ERR_NETWORK";
+        const retryCount = (cfg.__retryCount as number) ?? 0;
+        const status = axErr.response?.status;
+        const isRetryable =
+          status === 429 ||
+          axErr.code === "ECONNABORTED" ||
+          axErr.code === "ERR_NETWORK";
 
-      if (isRetryable && retryCount < RETRY_DELAYS_MS.length) {
-        const delay = RETRY_DELAYS_MS[retryCount];
-        this.logger.warn(
-          `Kalshi ${status ?? axErr.code} — retrying in ${delay}ms (attempt ${retryCount + 1})`,
-        );
-        cfg.__retryCount = retryCount + 1;
-        await sleep(delay);
-        return this.axiosInstance.request(cfg as import("axios").AxiosRequestConfig);
-      }
-      throw error;
-    });
+        if (isRetryable && retryCount < RETRY_DELAYS_MS.length) {
+          const delay = RETRY_DELAYS_MS[retryCount];
+          this.logger.warn(
+            `Kalshi ${status ?? axErr.code} — retrying in ${delay}ms (attempt ${retryCount + 1})`,
+          );
+          cfg.__retryCount = retryCount + 1;
+          await sleep(delay);
+          return this.axiosInstance.request(
+            cfg as import("axios").AxiosRequestConfig,
+          );
+        }
+        throw error;
+      },
+    );
 
     const sdkConfig = new Configuration({ basePath });
 
     this.marketApi = new MarketApi(sdkConfig, basePath, this.axiosInstance);
     this.ordersApi = new OrdersApi(sdkConfig, basePath, this.axiosInstance);
-    this.portfolioApi = new PortfolioApi(sdkConfig, basePath, this.axiosInstance);
+    this.portfolioApi = new PortfolioApi(
+      sdkConfig,
+      basePath,
+      this.axiosInstance,
+    );
     this.eventsApi = new EventsApi(sdkConfig, basePath, this.axiosInstance);
     this.exchangeApi = new ExchangeApi(sdkConfig, basePath, this.axiosInstance);
-    this.historicalApi = new HistoricalApi(sdkConfig, basePath, this.axiosInstance);
-    this.orderGroupsApi = new OrderGroupsApi(sdkConfig, basePath, this.axiosInstance);
-    this.multivariateApi = new MultivariateApi(sdkConfig, basePath, this.axiosInstance);
+    this.historicalApi = new HistoricalApi(
+      sdkConfig,
+      basePath,
+      this.axiosInstance,
+    );
+    this.orderGroupsApi = new OrderGroupsApi(
+      sdkConfig,
+      basePath,
+      this.axiosInstance,
+    );
+    this.multivariateApi = new MultivariateApi(
+      sdkConfig,
+      basePath,
+      this.axiosInstance,
+    );
     this.searchApi = new SearchApi(sdkConfig, basePath, this.axiosInstance);
     this.liveDataApi = new LiveDataApi(sdkConfig, basePath, this.axiosInstance);
-    this.milestoneApi = new MilestoneApi(sdkConfig, basePath, this.axiosInstance);
-    this.structuredTargetsApi = new StructuredTargetsApi(sdkConfig, basePath, this.axiosInstance);
-    this.incentivesApi = new IncentiveProgramsApi(sdkConfig, basePath, this.axiosInstance);
+    this.milestoneApi = new MilestoneApi(
+      sdkConfig,
+      basePath,
+      this.axiosInstance,
+    );
+    this.structuredTargetsApi = new StructuredTargetsApi(
+      sdkConfig,
+      basePath,
+      this.axiosInstance,
+    );
+    this.incentivesApi = new IncentiveProgramsApi(
+      sdkConfig,
+      basePath,
+      this.axiosInstance,
+    );
     this.apiKeysApi = new ApiKeysApi(sdkConfig, basePath, this.axiosInstance);
     this.accountApi = new AccountApi(sdkConfig, basePath, this.axiosInstance);
-    this.communicationsApi = new CommunicationsApi(sdkConfig, basePath, this.axiosInstance);
+    this.communicationsApi = new CommunicationsApi(
+      sdkConfig,
+      basePath,
+      this.axiosInstance,
+    );
   }
 
   // ─── Price normalization (pure, static) ──────────────────────────────────
@@ -355,8 +398,16 @@ export class KalshiRestService {
       undefined, // cursor
       undefined, // eventTicker
       undefined, // seriesTicker
-      undefined, undefined, undefined, undefined, undefined, undefined, undefined, // ts filters
-      params.ticker ? undefined : (params.status as "open" | "closed" | undefined),
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined, // ts filters
+      params.ticker
+        ? undefined
+        : (params.status as "open" | "closed" | undefined),
       params.ticker,
     );
     return res.data.markets ?? [];
@@ -401,8 +452,18 @@ export class KalshiRestService {
     await this.ordersApi.cancelOrder(orderId);
   }
 
-  async getPositions(_userId: string): Promise<MarketPosition[]> {
-    const res = await this.portfolioApi.getPositions();
+  async getPositions(
+    _userId: string,
+    subaccount?: number,
+  ): Promise<MarketPosition[]> {
+    const res = await this.portfolioApi.getPositions(
+      undefined, // cursor
+      undefined, // limit
+      undefined, // countFilter
+      undefined, // ticker
+      undefined, // eventTicker
+      subaccount,
+    );
     return res.data.market_positions ?? [];
   }
 
@@ -430,7 +491,11 @@ export class KalshiRestService {
     const now = Math.floor(Date.now() / 1000);
     const oneWeekAgo = now - 7 * 24 * 60 * 60;
     const res = await this.marketApi.getMarketCandlesticks(
-      ticker, ticker, oneWeekAgo, now, periodInterval as 1 | 60 | 1440,
+      ticker,
+      ticker,
+      oneWeekAgo,
+      now,
+      periodInterval as 1 | 60 | 1440,
     );
     return res.data.candlesticks ?? [];
   }
@@ -445,7 +510,7 @@ export class KalshiRestService {
       params.cursor,
       params.with_nested_markets,
       undefined, // withMilestones
-      params.status as "open" | "closed" | "settled" | undefined,
+      params.status,
       params.series_ticker,
     );
     return { events: res.data.events ?? [], cursor: res.data.cursor ?? "" };
@@ -483,7 +548,10 @@ export class KalshiRestService {
   async getMultivariateCollection(
     collectionTicker: string,
   ): Promise<MultivariateEventCollection> {
-    const res = await this.multivariateApi.getMultivariateEventCollection(collectionTicker);
+    const res =
+      await this.multivariateApi.getMultivariateEventCollection(
+        collectionTicker,
+      );
     return res.data.multivariate_contract;
   }
 
@@ -518,7 +586,9 @@ export class KalshiRestService {
   async batchCancelOrders(
     orderIds: string[],
   ): Promise<BatchCancelOrdersIndividualResponse[]> {
-    const req: BatchCancelOrdersRequest = { orders: orderIds.map((id) => ({ order_id: id })) };
+    const req: BatchCancelOrdersRequest = {
+      orders: orderIds.map((id) => ({ order_id: id })),
+    };
     const res = await this.ordersApi.batchCancelOrders(req);
     return res.data.orders ?? [];
   }
@@ -527,11 +597,16 @@ export class KalshiRestService {
 
   async getFills(
     params: KalshiFillsParams = {},
+    subaccount?: number,
   ): Promise<{ fills: Fill[]; cursor: string }> {
     const res = await this.portfolioApi.getFills(
-      params.ticker, params.order_id,
-      params.min_ts, params.max_ts,
-      params.limit, params.cursor,
+      params.ticker,
+      params.order_id,
+      params.min_ts,
+      params.max_ts,
+      params.limit,
+      params.cursor,
+      subaccount,
     );
     return { fills: res.data.fills ?? [], cursor: res.data.cursor ?? "" };
   }
@@ -540,13 +615,21 @@ export class KalshiRestService {
 
   async getSettlements(
     params: KalshiSettlementsParams = {},
+    subaccount?: number,
   ): Promise<{ settlements: Settlement[]; cursor: string }> {
     const res = await this.portfolioApi.getSettlements(
-      params.limit, params.cursor,
-      params.ticker, params.event_ticker,
-      params.min_ts, params.max_ts,
+      params.limit,
+      params.cursor,
+      params.ticker,
+      params.event_ticker,
+      params.min_ts,
+      params.max_ts,
+      subaccount,
     );
-    return { settlements: res.data.settlements ?? [], cursor: res.data.cursor ?? "" };
+    return {
+      settlements: res.data.settlements ?? [],
+      cursor: res.data.cursor ?? "",
+    };
   }
 
   // ─── Multiple orderbooks ────────────────────────────────────────────────
@@ -592,8 +675,11 @@ export class KalshiRestService {
     params: KalshiTradesParams = {},
   ): Promise<{ trades: Trade[]; cursor: string }> {
     const res = await this.marketApi.getTrades(
-      params.limit, params.cursor,
-      params.ticker, params.min_ts, params.max_ts,
+      params.limit,
+      params.cursor,
+      params.ticker,
+      params.min_ts,
+      params.max_ts,
     );
     return { trades: res.data.trades ?? [], cursor: res.data.cursor ?? "" };
   }
@@ -642,7 +728,8 @@ export class KalshiRestService {
     params: KalshiHistoricalMarketsParams = {},
   ): Promise<{ markets: Market[]; cursor: string }> {
     const res = await this.historicalApi.getHistoricalMarkets(
-      params.limit, params.cursor,
+      params.limit,
+      params.cursor,
       params.ticker,
       params.event_ticker,
     );
@@ -666,8 +753,11 @@ export class KalshiRestService {
     params: KalshiTradesParams = {},
   ): Promise<{ trades: Trade[]; cursor: string }> {
     const res = await this.historicalApi.getTradesHistorical(
-      params.ticker, params.min_ts, params.max_ts,
-      params.limit, params.cursor,
+      params.ticker,
+      params.min_ts,
+      params.max_ts,
+      params.limit,
+      params.cursor,
     );
     return { trades: res.data.trades ?? [], cursor: res.data.cursor ?? "" };
   }
@@ -676,8 +766,10 @@ export class KalshiRestService {
     params: KalshiFillsParams = {},
   ): Promise<{ fills: Fill[]; cursor: string }> {
     const res = await this.historicalApi.getFillsHistorical(
-      params.ticker, params.max_ts,
-      params.limit, params.cursor,
+      params.ticker,
+      params.max_ts,
+      params.limit,
+      params.cursor,
     );
     return { fills: res.data.fills ?? [], cursor: res.data.cursor ?? "" };
   }
@@ -686,8 +778,10 @@ export class KalshiRestService {
     params: KalshiHistoricalOrdersParams = {},
   ): Promise<{ orders: Order[]; cursor: string }> {
     const res = await this.historicalApi.getHistoricalOrders(
-      params.ticker, params.max_ts,
-      params.limit, params.cursor,
+      params.ticker,
+      params.max_ts,
+      params.limit,
+      params.cursor,
     );
     return { orders: res.data.orders ?? [], cursor: res.data.cursor ?? "" };
   }
@@ -704,7 +798,9 @@ export class KalshiRestService {
     return res.data as unknown as { subaccount_number: number };
   }
 
-  async getSubaccountBalances(): Promise<Array<{ subaccount_number: number; balance: number }>> {
+  async getSubaccountBalances(): Promise<
+    Array<{ subaccount_number: number; balance: number }>
+  > {
     const res = await this.portfolioApi.getSubaccountBalances();
     return (res.data.subaccount_balances ?? []) as unknown as Array<{
       subaccount_number: number;
@@ -800,7 +896,12 @@ export class KalshiRestService {
   }
 
   async getQuotes(
-    params: { cursor?: string; rfq_id?: string; limit?: number; status?: string } = {},
+    params: {
+      cursor?: string;
+      rfq_id?: string;
+      limit?: number;
+      status?: string;
+    } = {},
   ): Promise<Quote[]> {
     const res = await this.communicationsApi.getQuotes(
       params.cursor,
@@ -844,9 +945,11 @@ export class KalshiRestService {
     collectionTicker: string,
     req: { selected_markets: TickerPair[]; with_market_payload?: boolean },
   ): Promise<{ event_ticker: string; market_ticker: string; market?: Market }> {
-    const res = await this.multivariateApi.createMarketInMultivariateEventCollection(
-      collectionTicker, req,
-    );
+    const res =
+      await this.multivariateApi.createMarketInMultivariateEventCollection(
+        collectionTicker,
+        req,
+      );
     return res.data;
   }
 
@@ -870,9 +973,11 @@ export class KalshiRestService {
     collectionTicker: string,
     selectedMarkets: TickerPair[],
   ): Promise<{ event_ticker: string; market_ticker: string }> {
-    const res = await this.multivariateApi.lookupTickersForMarketInMultivariateEventCollection(
-      collectionTicker, { selected_markets: selectedMarkets },
-    );
+    const res =
+      await this.multivariateApi.lookupTickersForMarketInMultivariateEventCollection(
+        collectionTicker,
+        { selected_markets: selectedMarkets },
+      );
     return res.data;
   }
 
@@ -882,7 +987,10 @@ export class KalshiRestService {
     params: KalshiGameStatsParams & { milestone_id?: string } = {},
   ): Promise<LiveData[]> {
     if (params.game_id && params.milestone_id) {
-      const res = await this.liveDataApi.getLiveData(params.game_id, params.milestone_id);
+      const res = await this.liveDataApi.getLiveData(
+        params.game_id,
+        params.milestone_id,
+      );
       return [res.data.live_data];
     }
     if (params.milestone_id) {
@@ -919,7 +1027,10 @@ export class KalshiRestService {
       params.event_ticker,
       params.cursor,
     );
-    return { milestones: res.data.milestones ?? [], cursor: res.data.cursor ?? "" };
+    return {
+      milestones: res.data.milestones ?? [],
+      cursor: res.data.cursor ?? "",
+    };
   }
 
   async getMilestone(milestoneId: string): Promise<Milestone> {
@@ -945,7 +1056,9 @@ export class KalshiRestService {
     };
   }
 
-  async getStructuredTarget(targetId: string): Promise<StructuredTarget | undefined> {
+  async getStructuredTarget(
+    targetId: string,
+  ): Promise<StructuredTarget | undefined> {
     const res = await this.structuredTargetsApi.getStructuredTarget(targetId);
     return res.data.structured_target;
   }
@@ -959,7 +1072,9 @@ export class KalshiRestService {
 
   // ─── API key management ──────────────────────────────────────────────────
 
-  async createApiKey(req: CreateApiKeyRequest): Promise<{ api_key_id: string }> {
+  async createApiKey(
+    req: CreateApiKeyRequest,
+  ): Promise<{ api_key_id: string }> {
     const res = await this.apiKeysApi.createApiKey(req);
     return { api_key_id: res.data.api_key_id };
   }
@@ -968,7 +1083,10 @@ export class KalshiRestService {
     req: GenerateApiKeyRequest,
   ): Promise<{ api_key_id: string; private_key: string }> {
     const res = await this.apiKeysApi.generateApiKey(req);
-    return { api_key_id: res.data.api_key_id, private_key: res.data.private_key };
+    return {
+      api_key_id: res.data.api_key_id,
+      private_key: res.data.private_key,
+    };
   }
 
   async getApiKeys(): Promise<Record<string, unknown>[]> {

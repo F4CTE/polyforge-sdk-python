@@ -152,6 +152,12 @@ export class StreamConsumerService implements OnModuleInit, OnModuleDestroy {
         expiration: obj["expiration"]
           ? parseInt(obj["expiration"], 10)
           : undefined,
+        ...(obj["venue"]
+          ? { venue: obj["venue"] as OrderIntent["venue"] }
+          : {}),
+        ...(obj["kalshiSubaccount"]
+          ? { kalshiSubaccount: parseInt(obj["kalshiSubaccount"], 10) }
+          : {}),
       };
     } catch {
       return null;

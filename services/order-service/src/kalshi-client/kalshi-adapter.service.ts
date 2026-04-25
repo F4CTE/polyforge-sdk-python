@@ -15,10 +15,7 @@ import type {
   CandleResolution,
 } from "@polyforge/shared-types";
 import type { Market } from "kalshi-typescript";
-import {
-  KalshiRestService,
-  parseKalshiDollars,
-} from "./kalshi-rest.service";
+import { KalshiRestService, parseKalshiDollars } from "./kalshi-rest.service";
 
 @Injectable()
 export class KalshiAdapterService implements VenueAdapter {
@@ -105,6 +102,7 @@ export class KalshiAdapterService implements VenueAdapter {
       postOnly?: boolean;
       reduceOnly?: boolean;
       cancelOrderOnPause?: boolean;
+      subaccount?: number;
     };
 
     const result = await this.rest.placeOrder({
@@ -124,6 +122,7 @@ export class KalshiAdapterService implements VenueAdapter {
       ...(ctx.postOnly && { post_only: true }),
       ...(ctx.reduceOnly && { reduce_only: true }),
       ...(ctx.cancelOrderOnPause && { cancel_order_on_pause: true }),
+      ...(ctx.subaccount != null && { subaccount: ctx.subaccount }),
     });
 
     return {
@@ -158,8 +157,11 @@ export class KalshiAdapterService implements VenueAdapter {
     }
   }
 
-  async getPositions(userId: string): Promise<VenuePosition[]> {
-    const positions = await this.rest.getPositions(userId);
+  async getPositions(
+    userId: string,
+    subaccount?: number,
+  ): Promise<VenuePosition[]> {
+    const positions = await this.rest.getPositions(userId, subaccount);
 
     const markets = await Promise.all(
       positions.map((p) =>

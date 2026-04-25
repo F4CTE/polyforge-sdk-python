@@ -23,6 +23,7 @@ export function makeCtx(
   state: Partial<StrategyState> = {},
   now = Date.now(),
   venue?: EvalContext["venue"],
+  kalshiSubaccount?: number,
 ): EvalContext {
   return {
     strategyId: "strat-test",
@@ -30,6 +31,7 @@ export function makeCtx(
     now,
     state: { ...DEFAULT_STATE, ...state },
     ...(venue !== undefined ? { venue } : {}),
+    ...(kalshiSubaccount != null ? { kalshiSubaccount } : {}),
   };
 }
 

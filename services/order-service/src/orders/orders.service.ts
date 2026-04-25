@@ -30,6 +30,8 @@ export interface OrderIntent {
   negRisk?: boolean;
   /** Target venue for this order. Defaults to POLYMARKET when absent. */
   venue?: VenueId | "best";
+  /** Kalshi subaccount number (0 = primary). Passed through to Kalshi API for P&L attribution. */
+  kalshiSubaccount?: number;
 }
 
 @Injectable()
@@ -137,6 +139,8 @@ export class OrdersService {
             order: signed.order,
             builderHeaders: signed.builderHeaders,
           };
+        } else if (venue === "kalshi" && intent.kalshiSubaccount != null) {
+          authContext = { subaccount: intent.kalshiSubaccount };
         }
 
         const resp = await this.venueRouter.route(venue, {

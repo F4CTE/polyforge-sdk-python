@@ -97,6 +97,9 @@ export class StrategiesService {
         tags: dto.tags ?? [],
         canvas: dto.canvas as unknown as Prisma.InputJsonValue | undefined,
         ...(dto.marketId ? { marketId: dto.marketId } : {}),
+        ...(dto.kalshiSubaccount != null
+          ? { kalshiSubaccount: dto.kalshiSubaccount }
+          : {}),
         status: StrategyStatus.IDLE,
         version: 1,
         template: false,
@@ -181,6 +184,8 @@ export class StrategiesService {
         ? { connect: { id: dto.marketId } }
         : { disconnect: true };
     }
+    if (dto.kalshiSubaccount !== undefined)
+      data.kalshiSubaccount = dto.kalshiSubaccount;
 
     return this.prisma.strategy.update({ where: { id }, data });
   }

@@ -37,6 +37,8 @@ export interface EvalContext {
   variables?: Record<string, number>;
   /** Target venue for all OrderIntents generated in this evaluation cycle. */
   venue?: VenueId | "best";
+  /** Kalshi subaccount number for P&L attribution (0 = primary). */
+  kalshiSubaccount?: number;
 }
 
 export interface BlockResult {
@@ -59,6 +61,7 @@ export interface OrderIntent {
   orderType: "GTC" | "FOK" | "GTD" | "FAK" | "POST_ONLY";
   expiration?: number;
   venue?: VenueId | "best";
+  kalshiSubaccount?: number;
 }
 
 export interface BlockEvaluator {

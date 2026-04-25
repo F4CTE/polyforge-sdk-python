@@ -457,6 +457,7 @@ model Strategy {
   schedule         Json?
   settings         Json?
   venue            Venue              @default(POLYMARKET)
+  kalshiSubaccount Int?               @db.SmallInt
   createdAt        DateTime           @default(now())
   updatedAt        DateTime           @updatedAt
 
