@@ -52,6 +52,7 @@ export interface SignedOrder {
 export class SigningService implements OnModuleInit {
   private readonly logger = new Logger(SigningService.name);
   private readonly chainId: number;
+  private readonly nodeEnv: string;
   private readonly isStubMode: boolean;
   private readonly clobApiUrl: string;
   private readonly builderCode: string;
@@ -65,7 +66,8 @@ export class SigningService implements OnModuleInit {
   ) {
     this.chainId = parseInt(this.config.get<string>("CHAIN_ID") ?? "137", 10);
 
-    const nodeEnv = this.config.get<string>("NODE_ENV");
+    this.nodeEnv = this.config.get<string>("NODE_ENV") ?? "";
+    const nodeEnv = this.nodeEnv;
     const signingMode =
       this.config.get<string>("SIGNING_MODE") ??
       (nodeEnv === "development" ? "stub" : "production");
@@ -80,8 +82,7 @@ export class SigningService implements OnModuleInit {
     this.isStubMode = signingMode === "stub";
     this.clobApiUrl =
       this.config.get<string>("CLOB_API_URL") ?? "https://clob.polymarket.com";
-    this.builderCode =
-      this.config.get<string>("POLYMARKET_BUILDER_CODE") ?? "";
+    this.builderCode = this.config.get<string>("POLYMARKET_BUILDER_CODE") ?? "";
     this.rpcUrl = this.config.get<string>("POLYGON_RPC_URL") ?? "";
   }
 
@@ -117,7 +118,6 @@ export class SigningService implements OnModuleInit {
     }
 
     if (!this.isStubMode) {
-      // Verify CLOB credentials are configured for production
       if (!this.clobApiUrl || this.clobApiUrl.includes("mock")) {
         throw new Error("Production requires real CLOB_API_URL");
       }
@@ -132,13 +132,21 @@ export class SigningService implements OnModuleInit {
           "POLYMARKET_BUILDER_CODE is not set — orders will not be attributed to a builder",
         );
       }
-      if (
+
+      const isUnsafeRpc =
         !this.rpcUrl ||
         this.rpcUrl.includes("localhost") ||
-        this.rpcUrl === "https://polygon-rpc.com"
-      ) {
+        this.rpcUrl === "https://polygon-rpc.com";
+
+      if (isUnsafeRpc && this.nodeEnv === "production") {
         throw new Error(
           "Production requires a private POLYGON_RPC_URL — public RPCs leak server IP and are unreliable",
+        );
+      }
+      if (isUnsafeRpc) {
+        if (!this.rpcUrl) this.rpcUrl = "https://polygon-rpc.com";
+        this.logger.warn(
+          `POLYGON_RPC_URL is not set to a private RPC (current: "${this.rpcUrl}") — acceptable for dev, not for production`,
         );
       }
     } else if (!this.rpcUrl) {

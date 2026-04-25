@@ -450,6 +450,54 @@ describe("SigningService (CLOB V2)", () => {
 
       expect(() => devSvc.onModuleInit()).not.toThrow();
     });
+
+    it("allows localhost RPC in dev with SIGNING_MODE=production (POLA-916)", () => {
+      const devProdSvc = new SigningService(
+        credentials,
+        makeConfig({
+          NODE_ENV: "development",
+          SIGNING_MODE: "production",
+          CLOB_API_URL: "https://clob.polymarket.com",
+          POLYGON_RPC_URL: "http://localhost:8545",
+        }),
+        nativeEip712,
+        nativeCtf,
+      );
+
+      expect(() => devProdSvc.onModuleInit()).not.toThrow();
+    });
+
+    it("falls back to public RPC in dev with production signing and no URL (POLA-916)", () => {
+      const devProdSvc = new SigningService(
+        credentials,
+        makeConfig({
+          NODE_ENV: "development",
+          SIGNING_MODE: "production",
+          CLOB_API_URL: "https://clob.polymarket.com",
+          POLYGON_RPC_URL: "",
+        }),
+        nativeEip712,
+        nativeCtf,
+      );
+
+      expect(() => devProdSvc.onModuleInit()).not.toThrow();
+    });
+
+    it("allows localhost RPC in test env with production signing (POLA-916)", () => {
+      const testSvc = new SigningService(
+        credentials,
+        makeConfig({
+          NODE_ENV: "test",
+          SIGNING_MODE: "production",
+          CLOB_API_URL: "https://clob.polymarket.com",
+          POLYGON_RPC_URL: "http://localhost:8545",
+        }),
+        nativeEip712,
+        nativeCtf,
+      );
+
+      expect(() => testSvc.onModuleInit()).not.toThrow();
+    });
   });
 
   // ── Regression: private key must never become a JS string (POLA-136 / #671) ──
