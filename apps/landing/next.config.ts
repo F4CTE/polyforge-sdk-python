@@ -8,7 +8,6 @@ const isStaticExport = process.env.NEXT_STATIC_EXPORT === 'true';
 const nextConfig: NextConfig = {
   output: isStaticExport ? 'export' : 'standalone',
   transpilePackages: ['@polyforge/ui'],
-  eslint: { ignoreDuringBuilds: true },
   // redirects/rewrites are not supported by output:'export' and are redundant
   // in all docker setups (nginx handles /auth and /api-docs routing).
   ...(!isStaticExport && {
