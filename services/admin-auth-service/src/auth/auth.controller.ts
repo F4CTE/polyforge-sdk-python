@@ -70,6 +70,7 @@ export class AuthController {
   }
 
   @Get("me")
+  @Throttle({ default: { limit: 120, ttl: 60000 } })
   @ApiOperation({
     summary: "Get current admin profile (requires valid session cookie)",
   })
