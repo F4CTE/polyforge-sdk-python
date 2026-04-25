@@ -6,6 +6,7 @@ import { APP_GUARD } from "@nestjs/core";
 import { LoggerModule } from "@polyforge/logger";
 import { RedisModule } from "@polyforge/shared-redis";
 import { SharedDbModule } from "@polyforge/shared-db";
+import { EventEmitterModule } from "@nestjs/event-emitter";
 import { ScheduleModule } from "@nestjs/schedule";
 import { OrdersModule } from "./orders/orders.module";
 import { StreamModule } from "./stream/stream.module";
@@ -24,6 +25,7 @@ import { HeartbeatService } from "./heartbeat/heartbeat.service";
     LoggerModule,
     RedisModule,
     SharedDbModule,
+    EventEmitterModule.forRoot(),
     ScheduleModule.forRoot(),
     OrdersModule,
     StreamModule,
