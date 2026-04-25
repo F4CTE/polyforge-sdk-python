@@ -4,6 +4,7 @@ import { X, GripVertical, Shield, Zap, Filter, Play, Unlink, Globe, AlertTriangl
 import type { BlockNodeData } from '../../../stores/builder-store';
 import { useBuilderStore } from '../../../stores/builder-store';
 import { useExecutionStore } from '../../../stores/execution-store';
+import { ComboMarketCard } from '../combo/combo-market-card';
 
 type BlockNode = Node<BlockNodeData, 'blockNode'>;
 
@@ -90,6 +91,9 @@ function BlockNodeInner({ id, data }: NodeProps<BlockNode>) {
   // Fetch user strategies for RUN_STRATEGY block's strategyId selector
   const [strategies, setStrategies] = useState<StrategyOption[]>([]);
   const isRunStrategy = d.type === 'RUN_STRATEGY';
+
+  // Track which combo_slot field (if any) is currently open in picker mode
+  const [openComboFieldKey, setOpenComboFieldKey] = useState<string | null>(null);
 
   useEffect(() => {
     if (!isRunStrategy) return;
@@ -316,7 +320,33 @@ function BlockNodeInner({ id, data }: NodeProps<BlockNode>) {
                       {field.label}
                       {isEmpty && <span className="text-loss/80 normal-case tracking-normal font-normal">— required</span>}
                     </label>
-                    {field.type === 'market_slot' ? (
+                    {field.type === 'combo_slot' ? (
+                      openComboFieldKey === field.key ? (
+                        <ComboMarketCard
+                          value={d.config[field.key] ?? ''}
+                          onConfirm={(ticker) => {
+                            onFieldChange(field.key, ticker);
+                            setOpenComboFieldKey(null);
+                          }}
+                          onCancel={() => setOpenComboFieldKey(null)}
+                        />
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => setOpenComboFieldKey(field.key)}
+                          className={`w-full h-7 px-2 rounded text-label text-left truncate focus-visible:outline-none transition-colors ${
+                            isEmpty
+                              ? 'bg-loss-subtle border border-loss/40 text-tertiary/70 focus-visible:border-loss/60'
+                              : d.config[field.key]
+                              ? 'bg-accent/10 border border-accent/25 text-accent font-mono'
+                              : 'bg-surface border border-subtle text-tertiary hover:border-accent/40'
+                          }`}
+                          aria-label={`${field.label}: ${d.config[field.key] || field.placeholder}`}
+                        >
+                          {d.config[field.key] || field.placeholder}
+                        </button>
+                      )
+                    ) : field.type === 'market_slot' ? (
                       <select
                         value={d.config[field.key] ?? ''}
                         onChange={(e) => onFieldChange(field.key, e.target.value)}

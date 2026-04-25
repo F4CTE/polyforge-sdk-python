@@ -64,6 +64,9 @@ export enum BlockType {
   DAILY_LOSS_LIMIT = "DAILY_LOSS_LIMIT",
   MAX_POSITION_SIZE = "MAX_POSITION_SIZE",
   MAX_BETS_PER_DAY = "MAX_BETS_PER_DAY",
+
+  // Kalshi combo/multivariate
+  COMBO_LEG = "COMBO_LEG",
 }
 
 export interface Block {

@@ -5,7 +5,7 @@ export type BlockSection = 'safety' | 'triggers' | 'conditions' | 'actions' | 'l
 export interface BlockField {
   key: string;
   label: string;
-  type: 'text' | 'number' | 'select' | 'market_slot';
+  type: 'text' | 'number' | 'select' | 'market_slot' | 'combo_slot';
   placeholder: string;
   /** Options for 'select' type fields */
   options?: string[];
@@ -515,6 +515,18 @@ export const BLOCK_DEFS: Record<BlockSection, BlockDef[]> = {
       fields: [
         { key: 'strategyId', label: 'Strategy', type: 'select', placeholder: 'Select a strategy' },
         { key: 'mode', label: 'Mode', type: 'select', placeholder: 'Select mode', options: ['fire_and_forget', 'managed', 'scoped'] },
+      ],
+    },
+    {
+      type: 'combo_leg',
+      label: 'Combo Market',
+      description: 'Trade a Kalshi combo/multivariate event across multiple legs.',
+      group: 'Kalshi',
+      fields: [
+        { key: 'marketTicker', label: 'Combo Market', type: 'combo_slot', placeholder: 'Select combo market...' },
+        { key: 'side', label: 'Side', type: 'select', placeholder: 'yes', options: ['yes', 'no'] },
+        { key: 'size', label: 'Size (USDC)', type: 'number', placeholder: '50' },
+        { key: 'orderType', label: 'Order Type', type: 'select', placeholder: 'GTC', options: ['GTC', 'GTD', 'FOK', 'FAK'] },
       ],
     },
   ],
