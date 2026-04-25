@@ -4,12 +4,12 @@ import type {
   VenueOrderRequest,
   VenueOrderResponse,
 } from "@polyforge/shared-types";
-import { VenueRouter } from "./venue-router";
+import { VenueRouter, type UserRailContext } from "./venue-router";
 
 // ─── Stub adapters ────────────────────────────────────────────────────────────
 
 function makeAdapter(
-  venueId: "polymarket" | "kalshi",
+  venueId: "polymarket" | "polymarket_us" | "kalshi",
   bidPrice = "0.45",
 ): VenueAdapter {
   return {
@@ -154,6 +154,169 @@ describe("VenueRouter", () => {
   describe("getAdapters()", () => {
     it("returns all registered adapters", () => {
       expect(router.getAdapters()).toHaveLength(2);
+    });
+  });
+});
+
+// ─── Phase 5: Jurisdiction-aware routing ─────────────────────────────────────
+
+describe("VenueRouter — jurisdiction-aware routing (Phase 5)", () => {
+  let polyAdapter: VenueAdapter;
+  let polyUsAdapter: VenueAdapter;
+  let kalshiAdapter: VenueAdapter;
+
+  beforeEach(() => {
+    polyAdapter = makeAdapter("polymarket", "0.45");
+    polyUsAdapter = makeAdapter("polymarket_us", "0.45");
+    kalshiAdapter = makeAdapter("kalshi", "0.44");
+  });
+
+  // ── resolve() with UserRailContext ────────────────────────────────────────
+
+  describe("resolve() — auto rail mode", () => {
+    it("redirects US user with US credentials from polymarket to polymarket_us", () => {
+      const r = new VenueRouter([polyAdapter, polyUsAdapter, kalshiAdapter]);
+      const userCtx: UserRailContext = {
+        country: "US",
+        polymarketUsConnected: true,
+      };
+      expect(r.resolve("polymarket", userCtx)).toBe(polyUsAdapter);
+    });
+
+    it("redirects undefined venue to polymarket_us for US user with credentials", () => {
+      const r = new VenueRouter([polyAdapter, polyUsAdapter]);
+      const userCtx: UserRailContext = {
+        country: "US",
+        polymarketUsConnected: true,
+      };
+      expect(r.resolve(undefined, userCtx)).toBe(polyUsAdapter);
+    });
+
+    it("does not redirect non-US user to polymarket_us", () => {
+      const r = new VenueRouter([polyAdapter, polyUsAdapter]);
+      const userCtx: UserRailContext = {
+        country: "GB",
+        polymarketUsConnected: false,
+      };
+      expect(r.resolve("polymarket", userCtx)).toBe(polyAdapter);
+    });
+
+    it("does not redirect US user without US credentials", () => {
+      const r = new VenueRouter([polyAdapter, polyUsAdapter]);
+      const userCtx: UserRailContext = {
+        country: "US",
+        polymarketUsConnected: false,
+      };
+      expect(r.resolve("polymarket", userCtx)).toBe(polyAdapter);
+    });
+
+    it("does not redirect when polymarket_us adapter is not registered", () => {
+      const r = new VenueRouter([polyAdapter]);
+      const userCtx: UserRailContext = {
+        country: "US",
+        polymarketUsConnected: true,
+      };
+      expect(r.resolve("polymarket", userCtx)).toBe(polyAdapter);
+    });
+
+    it("still routes kalshi directly regardless of US context", () => {
+      const r = new VenueRouter([polyAdapter, polyUsAdapter, kalshiAdapter]);
+      const userCtx: UserRailContext = {
+        country: "US",
+        polymarketUsConnected: true,
+      };
+      expect(r.resolve("kalshi", userCtx)).toBe(kalshiAdapter);
+    });
+
+    it("routes to polymarket when userCtx is absent (backward compat)", () => {
+      const r = new VenueRouter([polyAdapter, polyUsAdapter]);
+      expect(r.resolve("polymarket")).toBe(polyAdapter);
+    });
+  });
+
+  // ── POLYMARKET_RAIL override modes ────────────────────────────────────────
+
+  describe("resolve() — rail mode overrides", () => {
+    it("forces global polymarket even for US user when railMode is 'global'", () => {
+      const r = new VenueRouter([polyAdapter, polyUsAdapter], "global");
+      const userCtx: UserRailContext = {
+        country: "US",
+        polymarketUsConnected: true,
+      };
+      expect(r.resolve("polymarket", userCtx)).toBe(polyAdapter);
+    });
+
+    it("forces polymarket_us when railMode is 'us'", () => {
+      const r = new VenueRouter([polyAdapter, polyUsAdapter], "us");
+      expect(r.resolve("polymarket")).toBe(polyUsAdapter);
+    });
+
+    it("defaults to auto when no railMode is provided", () => {
+      const r = new VenueRouter([polyAdapter, polyUsAdapter]);
+      const nonUsCtx: UserRailContext = {
+        country: "CA",
+        polymarketUsConnected: false,
+      };
+      expect(r.resolve("polymarket", nonUsCtx)).toBe(polyAdapter);
+    });
+  });
+
+  // ── resolveBest() with UserRailContext ────────────────────────────────────
+
+  describe("resolveBest() — user eligibility filtering", () => {
+    it("excludes polymarket_us from resolveBest for non-US users", async () => {
+      const r = new VenueRouter([polyAdapter, polyUsAdapter]);
+      const userCtx: UserRailContext = {
+        country: "GB",
+        polymarketUsConnected: false,
+      };
+      const best = await r.resolveBest("tok-abc", undefined, userCtx);
+      expect(best.venueId).toBe("polymarket");
+    });
+
+    it("excludes global polymarket from resolveBest for US users in auto mode", async () => {
+      const r = new VenueRouter([polyAdapter, polyUsAdapter]);
+      const userCtx: UserRailContext = {
+        country: "US",
+        polymarketUsConnected: true,
+      };
+      const best = await r.resolveBest("tok-abc", undefined, userCtx);
+      expect(best.venueId).toBe("polymarket_us");
+    });
+
+    it("includes only global polymarket in resolveBest when railMode is 'global'", async () => {
+      const r = new VenueRouter([polyAdapter, polyUsAdapter], "global");
+      const usCtx: UserRailContext = {
+        country: "US",
+        polymarketUsConnected: true,
+      };
+      const best = await r.resolveBest("tok-abc", undefined, usCtx);
+      expect(best.venueId).toBe("polymarket");
+    });
+
+    it("includes only polymarket_us in resolveBest when railMode is 'us'", async () => {
+      const r = new VenueRouter([polyAdapter, polyUsAdapter], "us");
+      const best = await r.resolveBest("tok-abc");
+      expect(best.venueId).toBe("polymarket_us");
+    });
+
+    it("falls back to global polymarket when all eligible adapters fail getOrderBook", async () => {
+      const failingUsAdapter = {
+        ...polyUsAdapter,
+        getOrderBook: vi.fn().mockRejectedValue(new Error("timeout")),
+      };
+      const failingKalshi = {
+        ...kalshiAdapter,
+        getOrderBook: vi.fn().mockRejectedValue(new Error("timeout")),
+      };
+      // US user: polymarket excluded, polymarket_us + kalshi eligible but both fail
+      const r = new VenueRouter([polyAdapter, failingUsAdapter, failingKalshi]);
+      const usCtx: UserRailContext = {
+        country: "US",
+        polymarketUsConnected: true,
+      };
+      const best = await r.resolveBest("tok-abc", undefined, usCtx);
+      expect(best.venueId).toBe("polymarket");
     });
   });
 });

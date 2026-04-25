@@ -139,6 +139,16 @@ export class OrdersService {
             order: signed.order,
             builderHeaders: signed.builderHeaders,
           };
+        } else if (venue === "polymarket_us") {
+          // Phase 2 (POLA-957) adds GET /internal/v1/credentials/:userId/us to signer-service.
+          const usCreds = await this.signer.getPolymarketUsCredentials(
+            intent.userId,
+          );
+          authContext = {
+            venue: "polymarket_us",
+            keyId: usCreds.keyId,
+            secretKey: usCreds.secretKey,
+          };
         } else if (venue === "kalshi" && intent.kalshiSubaccount != null) {
           authContext = { subaccount: intent.kalshiSubaccount };
         }

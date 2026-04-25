@@ -28,11 +28,15 @@ export class GeoBlockGuard implements CanActivate {
   private readonly blockedCountries: string[];
   private readonly closeOnlyCountries: string[];
   private readonly blockedRegions: Record<string, string[]>;
+  private readonly usRailEnabled: boolean;
 
   constructor(
     private readonly config: ConfigService,
     private readonly reflector: Reflector,
   ) {
+    this.usRailEnabled =
+      this.config.get<string>("POLYMARKET_US_ENABLED") === "true";
+
     const rawBlocked =
       this.config.get<string>("GEO_BLOCKED_COUNTRIES") ??
       "US,AU,BE,BY,BI,CF,CG,CU,DE,ET,FR,GB,IR,IQ,IT,KP,LB,LY,MM,NI,NL,RU,SO,SS,SD,SY,VE,YE,ZW,UM";
@@ -68,7 +72,11 @@ export class GeoBlockGuard implements CanActivate {
     }
 
     // 1. Fully blocked countries — HTTP 451
+    // US is exempt when the US rail is enabled: VenueRouter routes them to polymarket_us.
     if (this.blockedCountries.includes(country)) {
+      if (country === "US" && this.usRailEnabled) {
+        return true;
+      }
       throw new HttpException(
         {
           code: "GEO_BLOCKED",

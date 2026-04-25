@@ -30,6 +30,11 @@ export interface SignedOrder {
   };
 }
 
+export interface PolymarketUsCredentials {
+  keyId: string;
+  secretKey: string;
+}
+
 /**
  * HTTP client for signer-service.
  * Attaches a fresh internal service JWT (30s TTL, unique jti) to every request.
@@ -74,6 +79,39 @@ export class SignerClientService {
     }
 
     return res.json() as Promise<SignedOrder>;
+  }
+
+  /**
+   * Fetch decrypted Polymarket US credentials (keyId + secretKey) from signer-service.
+   * Added by Phase 2 (POLA-957): GET /internal/v1/credentials/:userId/us
+   */
+  async getPolymarketUsCredentials(
+    userId: string,
+  ): Promise<PolymarketUsCredentials> {
+    const token = this.makeServiceJwt();
+
+    let res: Response;
+    try {
+      res = await fetch(
+        `${this.signerUrl}/internal/v1/credentials/${encodeURIComponent(userId)}/us`,
+        {
+          method: "GET",
+          headers: { Authorization: `Bearer ${token}` },
+          signal: AbortSignal.timeout(10_000),
+        },
+      );
+    } catch {
+      throw new ServiceUnavailableException("signer-service unavailable");
+    }
+
+    if (!res.ok) {
+      const body = await res.text().catch(() => "");
+      throw new ServiceUnavailableException(
+        `signer-service error ${res.status}: ${body}`,
+      );
+    }
+
+    return res.json() as Promise<PolymarketUsCredentials>;
   }
 
   private makeServiceJwt(): string {

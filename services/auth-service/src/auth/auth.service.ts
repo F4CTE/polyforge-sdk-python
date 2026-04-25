@@ -338,6 +338,12 @@ export class AuthService {
       );
     }
 
+    // Phase 1 (POLA-956) adds polymarketUsConnected + country to User — cast until migration lands
+    const u = user as any;
+    const polymarketUsConnected: boolean = !!u.polymarketUsConnected;
+    const activeRail: 'us' | 'global' =
+      u.country === 'US' && polymarketUsConnected ? 'us' : 'global';
+
     return {
       id: user.id,
       email: user.email,
@@ -347,11 +353,13 @@ export class AuthService {
       avatarUrl: user.avatarUrl,
       status: deriveUserStatus(user),
       polymarketConnected: user.polymarketConnected,
+      polymarketUsConnected,
       kalshiConnected: user.kalshiConnected,
       emailVerified: user.emailVerified,
       totpEnabled: user.totpEnabled,
       createdAt: user.createdAt,
       lastSeen: user.lastSeen,
+      activeRail,
     };
   }
 

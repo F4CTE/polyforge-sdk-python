@@ -81,6 +81,23 @@ export class StrategiesService {
       });
     }
 
+    // Auto-assign US rail venue when user is a verified US participant with US credentials.
+    // Phase 1 (POLA-956) adds POLYMARKET_US to the Venue enum and
+    // polymarketUsConnected/country to User — cast until that migration lands.
+    let autoVenue: string | undefined;
+    if (!dto.kalshiSubaccount) {
+      const user = await this.prisma.user.findUnique({
+        where: { id: userId },
+        select: { country: true, polymarketUsConnected: true } as any,
+      });
+      if (
+        (user as any)?.country === "US" &&
+        (user as any)?.polymarketUsConnected
+      ) {
+        autoVenue = "POLYMARKET_US";
+      }
+    }
+
     return this.prisma.strategy.create({
       data: {
         userId,
@@ -100,6 +117,7 @@ export class StrategiesService {
         ...(dto.kalshiSubaccount != null
           ? { kalshiSubaccount: dto.kalshiSubaccount }
           : {}),
+        ...(autoVenue ? { venue: autoVenue as any } : {}),
         status: StrategyStatus.IDLE,
         version: 1,
         template: false,
@@ -243,19 +261,35 @@ export class StrategiesService {
     }
 
     if (dto.mode === "live") {
+      const strategy = await this.prisma.strategy.findUnique({
+        where: { id },
+        select: { venue: true },
+      });
+      // Phase 1 (POLA-956) adds POLYMARKET_US to Venue enum — cast until migration lands
+      const isUsRailStrategy = (strategy?.venue as any) === "POLYMARKET_US";
+
       const user = await this.prisma.user.findUnique({
         where: { id: userId },
-        select: { polymarketConnected: true },
+        select: {
+          polymarketConnected: true,
+          polymarketUsConnected: true,
+        } as any,
       });
-      if (!user?.polymarketConnected) {
-        // Roll back status since we already set it
+
+      const hasCredentials = isUsRailStrategy
+        ? !!(user as any)?.polymarketUsConnected
+        : !!user?.polymarketConnected;
+
+      if (!hasCredentials) {
         await this.prisma.strategy.update({
           where: { id },
           data: { status: StrategyStatus.IDLE },
         });
         throw new UnprocessableEntityException({
           code: "NOT_CONNECTED",
-          message: "Polymarket credentials required for live mode",
+          message: isUsRailStrategy
+            ? "Polymarket US credentials required for live mode"
+            : "Polymarket credentials required for live mode",
         });
       }
     }

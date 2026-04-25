@@ -1,6 +1,6 @@
 import { Module } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
-import { VenueRouter } from "./venue-router";
+import { VenueRouter, type RailMode } from "./venue-router";
 import { PolymarketAdapter } from "./polymarket-adapter";
 import { PolymarketUsAdapter } from "./polymarket-us-adapter";
 import { ClobClientModule } from "../clob-client/clob-client.module";
@@ -46,7 +46,11 @@ import { getVenueConfig } from "@polyforge/shared-types";
           adapters.push(new PolymarketUsAdapter(polyUs));
         }
 
-        return new VenueRouter(adapters);
+        const rawRail = config.get<string>("POLYMARKET_RAIL") ?? "auto";
+        const railMode: RailMode =
+          rawRail === "global" || rawRail === "us" ? rawRail : "auto";
+
+        return new VenueRouter(adapters, railMode);
       },
       inject: [
         ClobClientService,
