@@ -587,9 +587,9 @@ export function Component() {
   return (
     <div className="animate-fade-in p-6 max-w-7xl mx-auto space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <h1 className="text-2xl font-semibold text-primary">My Strategies</h1>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           {/* Compare toggle */}
           {!compareMode ? (
             <Button
