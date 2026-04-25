@@ -28,6 +28,7 @@ import { AdminsModule } from "./admins/admins.module";
 import { TicketsModule } from "./tickets/tickets.module";
 import { KeyRotationModule } from "./key-rotation/key-rotation.module";
 import { VenuesModule } from "./venues/venues.module";
+import { SentimentModule } from "./sentiment/sentiment.module";
 
 @Module({
   imports: [
@@ -64,6 +65,7 @@ import { VenuesModule } from "./venues/venues.module";
     TicketsModule,
     KeyRotationModule,
     VenuesModule,
+    SentimentModule,
   ],
   controllers: [HealthController],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],

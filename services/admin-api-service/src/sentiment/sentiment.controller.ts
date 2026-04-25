@@ -8,7 +8,10 @@ export class SentimentController {
   constructor(private readonly sentiment: SentimentService) {}
 
   @Get()
-  getOverview(@Query("limit") limit?: string) {
-    return this.sentiment.getOverview(limit ? parseInt(limit) : 20);
+  getOverview(
+    @Query("limit") limit?: string,
+    @Query("period") period?: "1h" | "24h" | "7d",
+  ) {
+    return this.sentiment.getOverview(limit ? parseInt(limit) : 20, period);
   }
 }
