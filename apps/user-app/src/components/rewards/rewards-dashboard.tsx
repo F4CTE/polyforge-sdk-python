@@ -1,9 +1,10 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { Link } from 'react-router';
 import { toast } from 'sonner';
 import { Button, CardSkeleton } from '@polyforge/ui';
 import {
   Trophy, Gift, TrendingUp, RefreshCw, ChevronDown, ChevronUp,
-  Coins, Award,
+  Coins, Award, Zap,
 } from 'lucide-react';
 
 /* ─── Types ──────────────────────────────────────────────────────────── */
@@ -44,6 +45,14 @@ interface RebateSummary {
   entries: RebateEntry[];
 }
 
+interface SponsoredMarket {
+  marketId: string;
+  conditionId: string;
+  marketQuestion: string;
+  ratePerDay: string;
+  remainingReward: string;
+}
+
 /* ─── Helpers ────────────────────────────────────────────────────────── */
 
 function formatUsd(val: string): string {
@@ -65,9 +74,12 @@ export function RewardsDashboard() {
   const [perMarket, setPerMarket] = useState<RewardEntry[]>([]);
   const [percentages, setPercentages] = useState<RewardsPercentage[]>([]);
   const [rebates, setRebates] = useState<RebateSummary | null>(null);
+  const [sponsoredMarkets, setSponsoredMarkets] = useState<SponsoredMarket[]>([]);
+  const [loadingSponsored, setLoadingSponsored] = useState(true);
   const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = useState(false);
   const [showRebates, setShowRebates] = useState(false);
+  const [showSponsored, setShowSponsored] = useState(true);
 
   const loadRewards = useCallback(async () => {
     setLoading(true);
@@ -90,7 +102,38 @@ export function RewardsDashboard() {
     }
   }, []);
 
+  const loadSponsoredMarkets = useCallback(async () => {
+    setLoadingSponsored(true);
+    try {
+      const res = await fetch('/api/v1/rewards/user/sponsored-markets', {
+        credentials: 'include',
+      });
+      if (res.ok) setSponsoredMarkets(await res.json());
+    } catch {
+      // silent — not a blocking error for the overall dashboard
+    } finally {
+      setLoadingSponsored(false);
+    }
+  }, []);
+
   useEffect(() => { loadRewards(); }, [loadRewards]);
+
+  // Initial load + polling (30s) + refresh on tab focus for sponsored markets
+  const sponsoredIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  useEffect(() => {
+    loadSponsoredMarkets();
+
+    sponsoredIntervalRef.current = setInterval(loadSponsoredMarkets, 30_000);
+
+    const onFocus = () => { loadSponsoredMarkets(); };
+    window.addEventListener('focus', onFocus);
+
+    return () => {
+      if (sponsoredIntervalRef.current) clearInterval(sponsoredIntervalRef.current);
+      window.removeEventListener('focus', onFocus);
+    };
+  }, [loadSponsoredMarkets]);
 
   if (loading) {
     return (
@@ -269,9 +312,82 @@ export function RewardsDashboard() {
         </div>
       )}
 
+      {/* ─── Sponsored Markets ─────────────────────────────────────── */}
+      <div className="bg-elevated border border-default rounded-xl p-4">
+        <button
+          type="button"
+          onClick={() => setShowSponsored(!showSponsored)}
+          className="flex items-center justify-between w-full"
+        >
+          <span className="flex items-center gap-2">
+            <Zap className="size-4 text-accent-text" />
+            <span className="text-body-md font-semibold text-primary">
+              Sponsored Markets
+              {sponsoredMarkets.length > 0 && (
+                <span className="ml-1.5 text-tertiary font-normal">({sponsoredMarkets.length})</span>
+              )}
+            </span>
+          </span>
+          {showSponsored
+            ? <ChevronUp className="size-4 text-tertiary" />
+            : <ChevronDown className="size-4 text-tertiary" />}
+        </button>
+
+        {showSponsored && (
+          <div className="mt-3">
+            {loadingSponsored ? (
+              <div className="space-y-2">
+                {Array.from({ length: 2 }, (_, i) => (
+                  <div key={i} className="h-8 bg-overlay rounded-sm animate-pulse" />
+                ))}
+              </div>
+            ) : sponsoredMarkets.length === 0 ? (
+              <div className="flex flex-col items-center py-4 text-center">
+                <Zap className="mx-auto mb-2 text-tertiary opacity-30" size={24} />
+                <p className="text-label text-tertiary">No sponsored markets yet.</p>
+                <p className="text-caption text-tertiary mt-1">
+                  Visit a market and click &ldquo;Sponsor this Market&rdquo; to get started.
+                </p>
+              </div>
+            ) : (
+              <ul className="space-y-2" aria-label="Sponsored markets list">
+                {sponsoredMarkets.map((sm) => (
+                  <li
+                    key={sm.conditionId}
+                    className="flex items-start justify-between gap-3 px-3 py-2.5 rounded-sm bg-surface border border-subtle hover:border-default transition-colors"
+                  >
+                    <Link
+                      to={`/markets/${sm.marketId}`}
+                      className="text-body-sm text-primary hover:text-accent-text transition-colors truncate"
+                      title={sm.marketQuestion}
+                    >
+                      {sm.marketQuestion}
+                    </Link>
+                    <div className="shrink-0 text-right space-y-0.5">
+                      <div className="text-caption font-mono text-gain whitespace-nowrap">
+                        ${parseFloat(sm.ratePerDay).toFixed(2)}/day
+                      </div>
+                      <div className="text-caption text-tertiary whitespace-nowrap">
+                        ${parseFloat(sm.remainingReward).toFixed(0)} left
+                      </div>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        )}
+      </div>
+
       {/* ─── Refresh ───────────────────────────────────────────────── */}
       <div className="flex justify-end">
-        <Button type="button" variant="ghost" size="sm" onClick={loadRewards} className="flex items-center gap-1.5">
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          onClick={() => { loadRewards(); loadSponsoredMarkets(); }}
+          className="flex items-center gap-1.5"
+        >
           <RefreshCw className="size-3" />
           Refresh
         </Button>
