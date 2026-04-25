@@ -51,6 +51,14 @@ export enum BlockType {
   WAIT = "WAIT",
   RUN_STRATEGY = "RUN_STRATEGY",
 
+  // Sports triggers
+  GAME_STARTED = "GAME_STARTED",
+  PREGAME_WINDOW = "PREGAME_WINDOW",
+  HALFTIME = "HALFTIME",
+
+  // Sports conditions
+  SPORT_SCORE_ABOVE = "SPORT_SCORE_ABOVE",
+
   // Safety
   DAILY_LOSS_LIMIT = "DAILY_LOSS_LIMIT",
   MAX_POSITION_SIZE = "MAX_POSITION_SIZE",

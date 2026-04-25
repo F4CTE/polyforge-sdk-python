@@ -67,6 +67,13 @@ import {
 } from "./calc.blocks";
 
 import {
+  GameStartedBlock,
+  PregameWindowBlock,
+  HalftimeBlock,
+  SportScoreAboveBlock,
+} from "./sports.blocks";
+
+import {
   BuyYesAction,
   BuyNoAction,
   SetStopLossAction,
@@ -123,6 +130,12 @@ export const TRIGGER_REGISTRY: Record<string, BlockEvaluator> = {
   BOLLINGER_BREAKOUT: BollingerBreakoutTickBlock,
   vwap_cross_tick: VwapCrossTickBlock,
   VWAP_CROSS: VwapCrossTickBlock,
+  GAME_STARTED: GameStartedBlock,
+  game_started: GameStartedBlock,
+  PREGAME_WINDOW: PregameWindowBlock,
+  pregame_window: PregameWindowBlock,
+  HALFTIME: HalftimeBlock,
+  halftime: HalftimeBlock,
 };
 
 export const CONDITION_REGISTRY: Record<string, BlockEvaluator> = {
@@ -139,6 +152,8 @@ export const CONDITION_REGISTRY: Record<string, BlockEvaluator> = {
   no_reentry: NoReentryBlock,
   no_existing_position: NoExistingPositionBlock,
   time_window: TimeWindowBlock,
+  SPORT_SCORE_ABOVE: SportScoreAboveBlock,
+  sport_score_above: SportScoreAboveBlock,
 };
 
 export const ACTION_REGISTRY: Record<string, ActionEvaluator> = {
