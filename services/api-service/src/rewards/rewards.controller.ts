@@ -45,4 +45,19 @@ export class RewardsController {
   getRebates(@CurrentUser() user: JwtPayload) {
     return this.rewards.getRebates(user.sub);
   }
+
+  @Get("market/:marketId")
+  getMarketRewardsDetail(@Param("marketId") marketId: string) {
+    return this.rewards.getMarketRewardsDetail(marketId);
+  }
+
+  @Get("user/sponsored-markets")
+  getUserSponsoredMarkets(@CurrentUser() user: JwtPayload) {
+    return this.rewards.getUserSponsoredMarkets(user.sub);
+  }
+
+  @Get("sponsor-url/:marketId")
+  getSponsorUrl(@Param("marketId") marketId: string) {
+    return this.rewards.getSponsorUrl(marketId);
+  }
 }
