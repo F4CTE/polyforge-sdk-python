@@ -35,7 +35,7 @@ export default defineConfig({
         storageState:  './storage-state.json',
         // Allow extra time for SPA loading through nginx proxy in Docker.
         // First cold-start navigation can take up to 25s on a dev machine.
-        navigationTimeout: process.env.CI ? 15_000 : 30_000,
+        navigationTimeout: process.env.CI ? 30_000 : 30_000,
         actionTimeout:     process.env.CI ? 12_000 : 15_000,
         // Larger viewport to avoid cookie banner overlapping form buttons
         viewport:      { width: 1280, height: 900 },

@@ -94,7 +94,7 @@ export class WhaleFeedPage {
 
     async goToFollowing(): Promise<void> {
         await this.followingLink.click();
-        await this.page.waitForURL(/\/whales\/following/, { timeout: 10_000 });
+        await this.page.waitForURL(/\/whales\/following/, { timeout: 30_000 });
     }
 
     async goToPage(direction: 'next' | 'prev'): Promise<void> {

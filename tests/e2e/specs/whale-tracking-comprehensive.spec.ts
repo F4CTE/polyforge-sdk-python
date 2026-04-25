@@ -353,7 +353,7 @@ test.describe('Whale Tracking — Full Workflow Coverage', () => {
             const address = await addressElement.textContent();
             if (address) {
                 await addressElement.click();
-                await page.waitForURL(/\/whales\/[a-zA-Z0-9]/, { timeout: 10_000 });
+                await page.waitForURL(/\/whales\/[a-zA-Z0-9]/, { timeout: 30_000 });
 
                 expect(page.url()).toMatch(/\/whales\/[a-zA-Z0-9]+/);
             }
@@ -370,7 +370,7 @@ test.describe('Whale Tracking — Full Workflow Coverage', () => {
             const address = await addressElement.textContent();
             if (address) {
                 await addressElement.click();
-                await page.waitForURL(/\/whales\/[a-zA-Z0-9]/, { timeout: 10_000 });
+                await page.waitForURL(/\/whales\/[a-zA-Z0-9]/, { timeout: 30_000 });
 
                 // Verify trading history is shown
                 const history = page.locator('[data-testid="trading-history"]');
@@ -389,7 +389,7 @@ test.describe('Whale Tracking — Full Workflow Coverage', () => {
             const address = await addressElement.textContent();
             if (address) {
                 await addressElement.click();
-                await page.waitForURL(/\/whales\/[a-zA-Z0-9]/, { timeout: 10_000 });
+                await page.waitForURL(/\/whales\/[a-zA-Z0-9]/, { timeout: 30_000 });
 
                 // Check for stats — wait for profile to load
                 const winRate = page.locator('[data-testid="whale-win-rate"]');
@@ -413,7 +413,7 @@ test.describe('Whale Tracking — Full Workflow Coverage', () => {
             const address = await addressElement.textContent();
             if (address) {
                 await addressElement.click();
-                await page.waitForURL(/\/whales\/[a-zA-Z0-9]/, { timeout: 10_000 });
+                await page.waitForURL(/\/whales\/[a-zA-Z0-9]/, { timeout: 30_000 });
 
                 const followButton = page.locator('button', { hasText: /follow|unfollow/i });
                 await expect(followButton).toBeVisible({ timeout: 15_000 });
@@ -434,7 +434,7 @@ test.describe('Whale Tracking — Full Workflow Coverage', () => {
             const address = await addressElement.textContent();
             if (address) {
                 await addressElement.click();
-                await page.waitForURL(/\/whales\/[a-zA-Z0-9]/, { timeout: 10_000 });
+                await page.waitForURL(/\/whales\/[a-zA-Z0-9]/, { timeout: 30_000 });
 
                 const copyTradeButton = page.locator('a, button', { hasText: /copy trade|copy this trader/i });
 

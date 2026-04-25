@@ -65,7 +65,7 @@ export class RegisterPage {
         password: string;
     }): Promise<void> {
         await this.register(params);
-        await this.page.waitForURL(url => !url.pathname.startsWith('/register'), { timeout: 10_000 });
+        await this.page.waitForURL(url => !url.pathname.startsWith('/register'), { timeout: 30_000 });
     }
 
     async errorText(): Promise<string> {

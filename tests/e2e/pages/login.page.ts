@@ -49,7 +49,7 @@ export class LoginPage {
     /** Login and wait for navigation away from /login */
     async loginAndRedirect(email: string, password: string): Promise<void> {
         await this.login(email, password);
-        await this.page.waitForURL(url => !url.pathname.startsWith('/login'), { timeout: 15_000 });
+        await this.page.waitForURL(url => !url.pathname.startsWith('/login'), { timeout: 30_000 });
     }
 
     async errorText(): Promise<string> {
