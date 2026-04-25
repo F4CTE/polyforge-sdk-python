@@ -2,20 +2,14 @@ import {
   IsString,
   IsNotEmpty,
   IsOptional,
+  IsUUID,
   MaxLength,
   IsIn,
 } from "class-validator";
 
 export class SignPolymarketUsRequestDto {
-  @IsString()
-  @IsNotEmpty()
-  @MaxLength(255)
+  @IsUUID()
   userId!: string;
-
-  @IsString()
-  @IsNotEmpty()
-  @MaxLength(255)
-  requestId!: string;
 
   @IsIn(["GET", "POST", "PUT", "DELETE", "PATCH"])
   method!: string;

@@ -1,9 +1,13 @@
-import { IsString, IsNotEmpty, MaxLength, Matches } from "class-validator";
+import {
+  IsString,
+  IsNotEmpty,
+  IsUUID,
+  MaxLength,
+  Matches,
+} from "class-validator";
 
 export class ImportUsCredentialsDto {
-  @IsString()
-  @IsNotEmpty()
-  @MaxLength(255)
+  @IsUUID()
   userId!: string;
 
   @IsString()

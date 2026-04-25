@@ -5,27 +5,67 @@ import { Ed25519SigningService } from "./ed25519-signing.service";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function makeEd25519Seed(): { seedHex: string; publicKey: crypto.KeyObject } {
+function makeEd25519Seed(): {
+  seedHex: string;
+  seedRaw: Buffer;
+  publicKey: crypto.KeyObject;
+} {
   const { privateKey, publicKey } = crypto.generateKeyPairSync("ed25519");
   const pkcs8Der = privateKey.export({ type: "pkcs8", format: "der" });
-  const seed = (pkcs8Der as Buffer).subarray(pkcs8Der.byteLength - 32);
-  return { seedHex: Buffer.from(seed).toString("hex"), publicKey };
+  const seedRaw = Buffer.from(
+    (pkcs8Der as Buffer).subarray(pkcs8Der.byteLength - 32),
+  );
+  return { seedHex: seedRaw.toString("hex"), seedRaw, publicKey };
 }
 
 function makeMockEncryption() {
-  const store = new Map<string, { ct: Buffer; iv: Buffer; tag: Buffer }>();
+  const dekStore = new Map<
+    string,
+    { dek: Buffer; encDek: Buffer; dekIv: Buffer }
+  >();
+  const fieldStore = new Map<
+    string,
+    { plainBuf: Buffer; ct: Buffer; iv: Buffer; tag: Buffer }
+  >();
+  let callId = 0;
 
   return {
-    encryptWithMasterKey(plaintext: string) {
+    generateDek() {
+      const dek = crypto.randomBytes(32);
+      const encDek = crypto.randomBytes(48);
+      const dekIv = crypto.randomBytes(12);
+      const id = `dek-${callId++}`;
+      dekStore.set(id, { dek: Buffer.from(dek), encDek, dekIv });
+      return {
+        dek,
+        encryptedDek: new Uint8Array(encDek),
+        dekIv: new Uint8Array(dekIv),
+        kekVersion: 1,
+      };
+    },
+
+    decryptDek(
+      encryptedDekRaw: Uint8Array,
+      dekIvRaw: Uint8Array,
+      _kekVersion?: number,
+    ): Buffer {
+      const encBuf = Buffer.from(encryptedDekRaw);
+      for (const entry of dekStore.values()) {
+        if (encBuf.equals(entry.encDek)) {
+          return Buffer.from(entry.dek);
+        }
+      }
+      throw new Error("DEK not found in mock store");
+    },
+
+    encryptField(plaintext: string, dek: Buffer) {
+      const plainBuf = Buffer.from(plaintext, "binary");
       const iv = crypto.randomBytes(12);
-      const key = crypto.randomBytes(32);
-      const cipher = crypto.createCipheriv("aes-256-gcm", key, iv);
-      const ct = Buffer.concat([
-        cipher.update(plaintext, "utf8"),
-        cipher.final(),
-      ]);
+      const cipher = crypto.createCipheriv("aes-256-gcm", dek, iv);
+      const ct = Buffer.concat([cipher.update(plainBuf), cipher.final()]);
       const tag = cipher.getAuthTag();
-      store.set(plaintext, { ct, iv, tag });
+      const fid = `field-${callId++}`;
+      fieldStore.set(fid, { plainBuf: Buffer.from(plainBuf), ct, iv, tag });
       return {
         ciphertext: new Uint8Array(ct),
         iv: new Uint8Array(iv),
@@ -33,17 +73,25 @@ function makeMockEncryption() {
       };
     },
 
-    decryptWithMasterKey(
-      _ct: Uint8Array,
-      _iv: Uint8Array,
-      _tag: Uint8Array,
+    decryptField(
+      ctRaw: Uint8Array,
+      ivRaw: Uint8Array,
+      tagRaw: Uint8Array,
+      dek: Buffer,
     ): Buffer {
-      for (const [plaintext, { ct }] of store.entries()) {
-        if (Buffer.from(_ct).equals(ct)) {
-          return Buffer.from(plaintext, "utf8");
+      const ctBuf = Buffer.from(ctRaw);
+      for (const entry of fieldStore.values()) {
+        if (ctBuf.equals(entry.ct)) {
+          return Buffer.from(entry.plainBuf);
         }
       }
-      throw new Error("decryption failed — key not in mock store");
+      const iv = Buffer.from(ivRaw);
+      const tag = Buffer.from(tagRaw);
+      const decipher = crypto.createDecipheriv("aes-256-gcm", dek, iv, {
+        authTagLength: 16,
+      });
+      decipher.setAuthTag(tag);
+      return Buffer.concat([decipher.update(ctBuf), decipher.final()]);
     },
 
     currentKekVersion: 1,
@@ -88,6 +136,8 @@ function makeService() {
   return { svc, encryption, prisma };
 }
 
+const TEST_UUID = "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d";
+
 // ─── Suite ────────────────────────────────────────────────────────────────────
 
 describe("Ed25519SigningService", () => {
@@ -105,55 +155,48 @@ describe("Ed25519SigningService", () => {
   // ─── importUsCredentials ────────────────────────────────────────────
 
   describe("importUsCredentials()", () => {
-    it("stores encrypted credentials via prisma upsert", async () => {
+    it("stores credentials with DEK/KEK envelope via prisma upsert", async () => {
       const { seedHex } = makeEd25519Seed();
       await svc.importUsCredentials({
-        userId: "user-1",
+        userId: TEST_UUID,
         keyId: "key-001",
         secretKey: seedHex,
       });
 
       expect(prisma.polymarketUsCredential.upsert).toHaveBeenCalledOnce();
       const call = prisma.polymarketUsCredential.upsert.mock.calls[0][0];
-      expect(call.where.userId).toBe("user-1");
+      expect(call.where.userId).toBe(TEST_UUID);
       expect(call.create.keyId).toBe("key-001");
+      expect(call.create.encryptedDek).toBeInstanceOf(Uint8Array);
+      expect(call.create.dekIv).toBeInstanceOf(Uint8Array);
+      expect(call.create.kekVersion).toBe(1);
       expect(call.create.secretKeyCt).toBeInstanceOf(Uint8Array);
       expect(call.create.secretKeyIv).toBeInstanceOf(Uint8Array);
       expect(call.create.secretKeyTag).toBeInstanceOf(Uint8Array);
     });
 
-    it("round-trips: import then retrieve returns original keyId", async () => {
+    it("calls generateDek() for per-user key isolation", async () => {
+      const genDekSpy = vi.spyOn(encryption, "generateDek");
       const { seedHex } = makeEd25519Seed();
       await svc.importUsCredentials({
-        userId: "user-rt",
-        keyId: "key-rt",
+        userId: TEST_UUID,
+        keyId: "key-dek",
         secretKey: seedHex,
       });
 
-      const creds = await svc.getDecryptedUsCredentials("user-rt");
-      expect(creds.keyId).toBe("key-rt");
+      expect(genDekSpy).toHaveBeenCalledOnce();
     });
 
-    it("round-trips: import then retrieve returns decrypted secretKey", async () => {
+    it("encrypts secretKey via encryptField with DEK (not encryptWithMasterKey)", async () => {
+      const encFieldSpy = vi.spyOn(encryption, "encryptField");
       const { seedHex } = makeEd25519Seed();
       await svc.importUsCredentials({
-        userId: "user-rt2",
-        keyId: "key-rt2",
+        userId: TEST_UUID,
+        keyId: "key-field",
         secretKey: seedHex,
       });
 
-      const creds = await svc.getDecryptedUsCredentials("user-rt2");
-      expect(creds.secretKey.toString("utf8")).toBe(seedHex);
-    });
-  });
-
-  // ─── getDecryptedUsCredentials ──────────────────────────────────────
-
-  describe("getDecryptedUsCredentials()", () => {
-    it("throws NotFoundException when no credentials exist", async () => {
-      await expect(
-        svc.getDecryptedUsCredentials("nonexistent"),
-      ).rejects.toThrow(NotFoundException);
+      expect(encFieldSpy).toHaveBeenCalledOnce();
     });
   });
 
@@ -163,14 +206,14 @@ describe("Ed25519SigningService", () => {
     it("deletes credentials from DB", async () => {
       const { seedHex } = makeEd25519Seed();
       await svc.importUsCredentials({
-        userId: "user-del",
+        userId: TEST_UUID,
         keyId: "key-del",
         secretKey: seedHex,
       });
 
-      await svc.deleteUsCredentials("user-del");
+      await svc.deleteUsCredentials(TEST_UUID);
       expect(prisma.polymarketUsCredential.delete).toHaveBeenCalledWith({
-        where: { userId: "user-del" },
+        where: { userId: TEST_UUID },
       });
     });
 
@@ -185,12 +228,12 @@ describe("Ed25519SigningService", () => {
     it("returns all three Polymarket US auth headers", async () => {
       const { seedHex } = makeEd25519Seed();
       await svc.importUsCredentials({
-        userId: "user-sign",
+        userId: TEST_UUID,
         keyId: "key-sign",
         secretKey: seedHex,
       });
 
-      const headers = await svc.signRequest("user-sign", "GET", "/v1/markets");
+      const headers = await svc.signRequest(TEST_UUID, "GET", "/v1/markets");
 
       expect(headers).toHaveProperty("X-PM-Key-Id");
       expect(headers).toHaveProperty("X-PM-Timestamp");
@@ -200,13 +243,13 @@ describe("Ed25519SigningService", () => {
     it("X-PM-Key-Id matches the stored keyId", async () => {
       const { seedHex } = makeEd25519Seed();
       await svc.importUsCredentials({
-        userId: "user-kid",
+        userId: TEST_UUID,
         keyId: "my-key-id",
         secretKey: seedHex,
       });
 
       const headers = await svc.signRequest(
-        "user-kid",
+        TEST_UUID,
         "POST",
         "/v1/orders",
         '{"side":"buy"}',
@@ -218,13 +261,13 @@ describe("Ed25519SigningService", () => {
     it("X-PM-Timestamp is a recent unix timestamp in seconds", async () => {
       const { seedHex } = makeEd25519Seed();
       await svc.importUsCredentials({
-        userId: "user-ts",
+        userId: TEST_UUID,
         keyId: "key-ts",
         secretKey: seedHex,
       });
 
       const before = Math.floor(Date.now() / 1000);
-      const headers = await svc.signRequest("user-ts", "GET", "/v1/markets");
+      const headers = await svc.signRequest(TEST_UUID, "GET", "/v1/markets");
       const after = Math.floor(Date.now() / 1000);
 
       const ts = parseInt(headers["X-PM-Timestamp"], 10);
@@ -235,7 +278,7 @@ describe("Ed25519SigningService", () => {
     it("produces a valid Ed25519 signature verifiable with the public key", async () => {
       const { seedHex, publicKey } = makeEd25519Seed();
       await svc.importUsCredentials({
-        userId: "user-verify",
+        userId: TEST_UUID,
         keyId: "key-verify",
         secretKey: seedHex,
       });
@@ -244,7 +287,7 @@ describe("Ed25519SigningService", () => {
       const path = "/v1/orders";
       const body = '{"slug":"PRES-2028","side":"buy","qty":10}';
 
-      const headers = await svc.signRequest("user-verify", method, path, body);
+      const headers = await svc.signRequest(TEST_UUID, method, path, body);
 
       const message = `${headers["X-PM-Timestamp"]}${method}${path}${body}`;
       const sig = Buffer.from(headers["X-PM-Signature"], "base64");
@@ -256,12 +299,12 @@ describe("Ed25519SigningService", () => {
     it("uppercases the HTTP method in the signed message", async () => {
       const { seedHex, publicKey } = makeEd25519Seed();
       await svc.importUsCredentials({
-        userId: "user-case",
+        userId: TEST_UUID,
         keyId: "key-case",
         secretKey: seedHex,
       });
 
-      const headers = await svc.signRequest("user-case", "get", "/v1/markets");
+      const headers = await svc.signRequest(TEST_UUID, "get", "/v1/markets");
 
       const message = `${headers["X-PM-Timestamp"]}GET/v1/markets`;
       const sig = Buffer.from(headers["X-PM-Signature"], "base64");
@@ -272,13 +315,13 @@ describe("Ed25519SigningService", () => {
     it("handles empty body (treated as empty string)", async () => {
       const { seedHex, publicKey } = makeEd25519Seed();
       await svc.importUsCredentials({
-        userId: "user-nobody",
+        userId: TEST_UUID,
         keyId: "key-nobody",
         secretKey: seedHex,
       });
 
       const headers = await svc.signRequest(
-        "user-nobody",
+        TEST_UUID,
         "DELETE",
         "/v1/orders/abc",
       );
@@ -298,33 +341,51 @@ describe("Ed25519SigningService", () => {
     it("zeroes the decrypted secret key buffer after signing", async () => {
       const { seedHex } = makeEd25519Seed();
       await svc.importUsCredentials({
-        userId: "user-zero",
+        userId: TEST_UUID,
         keyId: "key-zero",
         secretKey: seedHex,
       });
 
-      const decryptSpy = vi.spyOn(encryption, "decryptWithMasterKey");
-      await svc.signRequest("user-zero", "GET", "/v1/markets");
+      const decryptFieldSpy = vi.spyOn(encryption, "decryptField");
+      await svc.signRequest(TEST_UUID, "GET", "/v1/markets");
 
-      const returnedBuf = decryptSpy.mock.results[0]?.value as Buffer;
+      const returnedBuf = decryptFieldSpy.mock.results[0]?.value as Buffer;
       expect(returnedBuf.every((b) => b === 0)).toBe(true);
     });
 
-    it("zeroes the secret key even if signing throws", async () => {
+    it("zeroes the DEK after decrypting the secret key", async () => {
+      const { seedHex } = makeEd25519Seed();
       await svc.importUsCredentials({
-        userId: "user-throw",
-        keyId: "key-throw",
-        secretKey: "ab".repeat(8),
+        userId: TEST_UUID,
+        keyId: "key-dek-zero",
+        secretKey: seedHex,
       });
 
-      const decryptSpy = vi.spyOn(encryption, "decryptWithMasterKey");
+      const decryptDekSpy = vi.spyOn(encryption, "decryptDek");
+      await svc.signRequest(TEST_UUID, "GET", "/v1/markets");
+
+      const dekBuf = decryptDekSpy.mock.results[0]?.value as Buffer;
+      expect(dekBuf.every((b) => b === 0)).toBe(true);
+    });
+
+    it("zeroes the secret key even if signing throws", async () => {
+      const { seedHex } = makeEd25519Seed();
+      await svc.importUsCredentials({
+        userId: TEST_UUID,
+        keyId: "key-throw",
+        secretKey: seedHex,
+      });
+
+      const badBuf = Buffer.alloc(16, 0xab);
+      const decryptFieldSpy = vi
+        .spyOn(encryption, "decryptField")
+        .mockReturnValueOnce(badBuf);
 
       await expect(
-        svc.signRequest("user-throw", "GET", "/v1/markets"),
+        svc.signRequest(TEST_UUID, "GET", "/v1/markets"),
       ).rejects.toThrow();
 
-      const returnedBuf = decryptSpy.mock.results[0]?.value as Buffer;
-      expect(returnedBuf.every((b) => b === 0)).toBe(true);
+      expect(badBuf.every((b) => b === 0)).toBe(true);
     });
   });
 });

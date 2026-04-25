@@ -1391,6 +1391,9 @@ model KalshiCredential {
 // Accessible ONLY by signer-service — Ed25519 keys for Polymarket US API auth
 model PolymarketUsCredential {
   userId         String   @id
+  encryptedDek   Bytes
+  dekIv          Bytes
+  kekVersion     Int      @default(1) @db.SmallInt
   secretKeyCt    Bytes
   secretKeyIv    Bytes
   secretKeyTag   Bytes

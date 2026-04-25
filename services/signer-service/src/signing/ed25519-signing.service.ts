@@ -25,21 +25,43 @@ export class Ed25519SigningService {
   ) {}
 
   async importUsCredentials(dto: ImportUsCredentialsDto): Promise<void> {
-    const encrypted = this.encryption.encryptWithMasterKey(dto.secretKey);
+    const { dek, encryptedDek, dekIv, kekVersion } =
+      this.encryption.generateDek();
+
+    let secretKeyEnc: ReturnType<typeof this.encryption.encryptField>;
+    try {
+      const rawSeed = Buffer.from(dto.secretKey, "hex");
+      try {
+        secretKeyEnc = this.encryption.encryptField(
+          rawSeed.toString("binary"),
+          dek,
+        );
+      } finally {
+        rawSeed.fill(0);
+      }
+    } finally {
+      dek.fill(0);
+    }
 
     await this.prisma.polymarketUsCredential.upsert({
       where: { userId: dto.userId },
       create: {
         userId: dto.userId,
-        secretKeyCt: encrypted.ciphertext,
-        secretKeyIv: encrypted.iv,
-        secretKeyTag: encrypted.tag,
+        encryptedDek,
+        dekIv,
+        kekVersion,
+        secretKeyCt: secretKeyEnc.ciphertext,
+        secretKeyIv: secretKeyEnc.iv,
+        secretKeyTag: secretKeyEnc.tag,
         keyId: dto.keyId,
       },
       update: {
-        secretKeyCt: encrypted.ciphertext,
-        secretKeyIv: encrypted.iv,
-        secretKeyTag: encrypted.tag,
+        encryptedDek,
+        dekIv,
+        kekVersion,
+        secretKeyCt: secretKeyEnc.ciphertext,
+        secretKeyIv: secretKeyEnc.iv,
+        secretKeyTag: secretKeyEnc.tag,
         keyId: dto.keyId,
       },
     });
@@ -49,7 +71,7 @@ export class Ed25519SigningService {
     );
   }
 
-  async getDecryptedUsCredentials(
+  private async getDecryptedSecretKey(
     userId: string,
   ): Promise<{ keyId: string; secretKey: Buffer }> {
     const row = await this.prisma.polymarketUsCredential.findUnique({
@@ -59,13 +81,23 @@ export class Ed25519SigningService {
       throw new NotFoundException("No Polymarket US credentials for user");
     }
 
-    const secretKey = this.encryption.decryptWithMasterKey(
-      row.secretKeyCt,
-      row.secretKeyIv,
-      row.secretKeyTag,
+    const dek = this.encryption.decryptDek(
+      row.encryptedDek,
+      row.dekIv,
+      row.kekVersion,
     );
 
-    return { keyId: row.keyId, secretKey };
+    try {
+      const secretKey = this.encryption.decryptField(
+        row.secretKeyCt,
+        row.secretKeyIv,
+        row.secretKeyTag,
+        dek,
+      );
+      return { keyId: row.keyId, secretKey };
+    } finally {
+      dek.fill(0);
+    }
   }
 
   async signRequest(
@@ -74,13 +106,13 @@ export class Ed25519SigningService {
     path: string,
     body?: string,
   ): Promise<PolymarketUsSignedHeaders> {
-    const creds = await this.getDecryptedUsCredentials(userId);
+    const creds = await this.getDecryptedSecretKey(userId);
 
     try {
       const timestamp = String(Math.floor(Date.now() / 1000));
       const message = `${timestamp}${method.toUpperCase()}${path}${body ?? ""}`;
 
-      const seedBytes = Buffer.from(creds.secretKey.toString("utf8"), "hex");
+      const seedBytes = Buffer.from(creds.secretKey);
       const pkcs8Der = Buffer.concat([ED25519_PKCS8_PREFIX, seedBytes]);
 
       let privateKey: crypto.KeyObject;
