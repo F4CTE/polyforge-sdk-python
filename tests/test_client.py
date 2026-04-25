@@ -749,13 +749,13 @@ class TestPlatformContractCompliance:
         source = inspect.getsource(PolyforgeClient.create_strategy_from_description)
         assert '"description"' in source or "'description'" in source
 
-    def test_start_strategy_sends_paper_mode_field(self):
-        """start_strategy() must send paperMode boolean, not {mode} string (#150)."""
+    def test_start_strategy_sends_mode_field(self):
+        """start_strategy() must send {mode: 'live'|'paper'} to match platform contract (#196)."""
         import inspect
 
         source = inspect.getsource(PolyforgeClient.start_strategy)
-        assert "paperMode" in source, "start_strategy() must send 'paperMode' field to match platform contract"
-        assert '"mode"' not in source and "'mode'" not in source, "start_strategy() must not send legacy 'mode' field"
+        assert '"mode"' in source or "'mode'" in source, "start_strategy() must send 'mode' field"
+        assert "paperMode" not in source, "start_strategy() must not send obsolete 'paperMode' field"
 
 
 class TestFinancialParamValidation:
@@ -807,10 +807,10 @@ class TestEnumValidation:
         with pytest.raises(ValueError, match="must be one of"):
             _validate_enum("side", "HOLD", frozenset({"BUY", "SELL"}))
 
-    def test_start_strategy_rejects_invalid_deployment_mode(self):
+    def test_start_strategy_rejects_invalid_mode(self):
         client = PolyforgeClient(api_key="test-key")
         with pytest.raises(ValueError, match="must be one of"):
-            client.start_strategy("s-1", deployment_mode="turbo")
+            client.start_strategy("s-1", mode="turbo")
 
     def test_place_order_rejects_invalid_side(self):
         client = PolyforgeClient(api_key="test-key")
