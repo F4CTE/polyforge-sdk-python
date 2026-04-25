@@ -408,6 +408,7 @@ services:
       MAILHOG_PORT: ${MAILHOG_PORT:-1025}
       AWS_SES_REGION: ${AWS_SES_REGION:-us-east-1}
       FRONTEND_URL: ${FRONTEND_URL:-http://localhost}
+      ADMIN_CORS_ORIGINS: ${ADMIN_CORS_ORIGINS:-https://localhost:8443,https://polyforge-lab:8443}
       PORT: "3004"
       NODE_ENV: ${NODE_ENV:?NODE_ENV must be set}
     ports:
