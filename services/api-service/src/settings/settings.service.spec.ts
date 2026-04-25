@@ -900,6 +900,134 @@ describe("SettingsService", () => {
     });
   });
 
+  // ── getFollowing ────────────────────────────────────────────────────────
+
+  describe("getFollowing", () => {
+    const mockFollows = [
+      {
+        followerId: "user-uuid-1",
+        followingId: "user-uuid-2",
+        createdAt: new Date("2026-04-01"),
+        following: {
+          id: "user-uuid-2",
+          username: "bob",
+          displayName: "Bob",
+          avatarUrl: "https://example.com/bob.png",
+        },
+      },
+      {
+        followerId: "user-uuid-1",
+        followingId: "user-uuid-3",
+        createdAt: new Date("2026-03-15"),
+        following: {
+          id: "user-uuid-3",
+          username: "charlie",
+          displayName: null,
+          avatarUrl: null,
+        },
+      },
+    ];
+
+    it("returns paginated following list", async () => {
+      db.follow.findMany.mockResolvedValue(mockFollows as any);
+      db.follow.count.mockResolvedValue(2);
+
+      const result = await service.getFollowing("user-uuid-1", 1, 20);
+
+      expect(result.data).toEqual([
+        {
+          id: "user-uuid-2",
+          username: "bob",
+          displayName: "Bob",
+          avatarUrl: "https://example.com/bob.png",
+        },
+        {
+          id: "user-uuid-3",
+          username: "charlie",
+          displayName: null,
+          avatarUrl: null,
+        },
+      ]);
+      expect(result.total).toBe(2);
+      expect(result.page).toBe(1);
+      expect(result.limit).toBe(20);
+      expect(result.hasNext).toBe(false);
+    });
+
+    it("queries follow table with correct followerId", async () => {
+      db.follow.findMany.mockResolvedValue([]);
+      db.follow.count.mockResolvedValue(0);
+
+      await service.getFollowing("user-uuid-1", 1, 10);
+
+      expect(db.follow.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { followerId: "user-uuid-1" },
+          skip: 0,
+          take: 10,
+          orderBy: { createdAt: "desc" },
+        }),
+      );
+      expect(db.follow.count).toHaveBeenCalledWith({
+        where: { followerId: "user-uuid-1" },
+      });
+    });
+
+    it("calculates skip correctly for page > 1", async () => {
+      db.follow.findMany.mockResolvedValue([]);
+      db.follow.count.mockResolvedValue(25);
+
+      await service.getFollowing("user-uuid-1", 3, 10);
+
+      expect(db.follow.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ skip: 20, take: 10 }),
+      );
+    });
+
+    it("returns empty data when user follows nobody", async () => {
+      db.follow.findMany.mockResolvedValue([]);
+      db.follow.count.mockResolvedValue(0);
+
+      const result = await service.getFollowing("user-uuid-1", 1, 20);
+
+      expect(result.data).toEqual([]);
+      expect(result.total).toBe(0);
+      expect(result.hasNext).toBe(false);
+    });
+
+    it("sets hasNext=true when more pages exist", async () => {
+      db.follow.findMany.mockResolvedValue([mockFollows[0]] as any);
+      db.follow.count.mockResolvedValue(5);
+
+      const result = await service.getFollowing("user-uuid-1", 1, 2);
+
+      expect(result.hasNext).toBe(true);
+      expect(result.totalPages).toBe(3);
+    });
+
+    it("includes following user select fields", async () => {
+      db.follow.findMany.mockResolvedValue([]);
+      db.follow.count.mockResolvedValue(0);
+
+      await service.getFollowing("user-uuid-1", 1, 10);
+
+      expect(db.follow.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          include: {
+            following: {
+              select: {
+                id: true,
+                username: true,
+                displayName: true,
+                avatarUrl: true,
+              },
+            },
+          },
+        }),
+      );
+    });
+  });
+
   // ── updateVenuePreferences ──────────────────────────────────────────────
 
   describe("updateVenuePreferences", () => {

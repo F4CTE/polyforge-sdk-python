@@ -10,6 +10,7 @@ import { UpdateRiskSettingsDto } from "./dto/update-risk-settings.dto";
 import { UpdateEventNotificationsDto } from "./dto/update-event-notifications.dto";
 import { UpdateVenuePreferencesDto } from "./dto/update-venue-preferences.dto";
 import { BETA_LIMITS } from "../common/beta-limits.config";
+import { PaginatedResponse, paginate } from "../common/dto/pagination.dto";
 
 @Injectable()
 export class SettingsService {
@@ -311,6 +312,44 @@ export class SettingsService {
         limit: BETA_LIMITS.maxMarketplaceListings,
       },
     };
+  }
+
+  async getFollowing(
+    userId: string,
+    page: number,
+    limit: number,
+  ): Promise<
+    PaginatedResponse<{
+      id: string;
+      username: string;
+      displayName: string | null;
+      avatarUrl: string | null;
+    }>
+  > {
+    const skip = (page - 1) * limit;
+
+    const [follows, total] = await Promise.all([
+      this.prisma.follow.findMany({
+        where: { followerId: userId },
+        skip,
+        take: limit,
+        orderBy: { createdAt: "desc" },
+        include: {
+          following: {
+            select: {
+              id: true,
+              username: true,
+              displayName: true,
+              avatarUrl: true,
+            },
+          },
+        },
+      }),
+      this.prisma.follow.count({ where: { followerId: userId } }),
+    ]);
+
+    const data = follows.map((f) => f.following);
+    return paginate(data, total, page, limit);
   }
 
   private static readonly DEFAULT_VENUE_PREFS = {
