@@ -143,6 +143,67 @@ describe("NewsService", () => {
     });
   });
 
+  describe("getMarketSentiment", () => {
+    it("returns neutral sentiment when no signals exist", async () => {
+      prisma.newsSignal.findMany.mockResolvedValue([]);
+
+      const result = await service.getMarketSentiment("some-uuid-id");
+
+      expect(result.marketId).toBe("some-uuid-id");
+      expect(result.score).toBe(0);
+      expect(result.direction).toBe("NEUTRAL");
+      expect(result.signalCount).toBe(0);
+    });
+
+    it("accepts non-UUID market IDs (Kalshi tickers)", async () => {
+      prisma.newsSignal.findMany.mockResolvedValue([]);
+
+      const result = await service.getMarketSentiment("KXBTCD-25APR18-T85000");
+
+      expect(result.marketId).toBe("KXBTCD-25APR18-T85000");
+      expect(result.score).toBe(0);
+      expect(result.direction).toBe("NEUTRAL");
+    });
+
+    it("computes bullish sentiment from BUY signals", async () => {
+      prisma.newsSignal.findMany.mockResolvedValue([
+        { direction: "BUY", confidence: 90, createdAt: new Date() },
+        { direction: "BUY", confidence: 80, createdAt: new Date() },
+      ]);
+
+      const result = await service.getMarketSentiment("mkt-1");
+
+      expect(result.score).toBe(100);
+      expect(result.direction).toBe("BULLISH");
+      expect(result.signalCount).toBe(2);
+      expect(result.avgConfidence).toBe(85);
+    });
+
+    it("computes bearish sentiment from SELL signals", async () => {
+      prisma.newsSignal.findMany.mockResolvedValue([
+        { direction: "SELL", confidence: 85, createdAt: new Date() },
+        { direction: "SELL", confidence: 75, createdAt: new Date() },
+      ]);
+
+      const result = await service.getMarketSentiment("mkt-2");
+
+      expect(result.score).toBe(-100);
+      expect(result.direction).toBe("BEARISH");
+    });
+
+    it("computes neutral sentiment from balanced signals", async () => {
+      prisma.newsSignal.findMany.mockResolvedValue([
+        { direction: "BUY", confidence: 80, createdAt: new Date() },
+        { direction: "SELL", confidence: 80, createdAt: new Date() },
+      ]);
+
+      const result = await service.getMarketSentiment("mkt-3");
+
+      expect(result.score).toBe(0);
+      expect(result.direction).toBe("NEUTRAL");
+    });
+  });
+
   describe("getSignals", () => {
     it("returns paginated signals", async () => {
       const signals = [

@@ -29,7 +29,7 @@ export class NewsController {
   }
 
   @Get("sentiment/:marketId")
-  getMarketSentiment(@Param("marketId", ParseUUIDPipe) marketId: string) {
+  getMarketSentiment(@Param("marketId") marketId: string) {
     return this.news.getMarketSentiment(marketId);
   }
 
