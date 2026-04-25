@@ -322,9 +322,10 @@ export class AiService {
   }
 
   async portfolioReview(userId: string): Promise<{
-    summary: string;
-    riskLevel: string;
-    suggestions: Array<{ type: string; priority: string; description: string }>;
+    review: string;
+    keyInsights: string[];
+    riskFactors: string[];
+    opportunities: string[];
     generatedAt: string;
   }> {
     const [positions, orders] = await Promise.all([
@@ -379,16 +380,13 @@ Positions:
 ${positionSummary || "No open positions"}
 
 Return ONLY a JSON object with this structure (no markdown, no explanation):
-{"summary":"2-3 sentence overview","riskLevel":"low|medium|high","suggestions":[{"type":"rebalance|hedge|reduce|opportunity","priority":"high|medium|low","description":"actionable suggestion"}]}`;
+{"review":"2-3 sentence overview","keyInsights":["insight1","insight2"],"riskFactors":["risk1","risk2"],"opportunities":["opportunity1","opportunity2"]}`;
 
     type ParsedReview = {
-      summary?: string;
-      riskLevel?: string;
-      suggestions?: Array<{
-        type: string;
-        priority: string;
-        description: string;
-      }>;
+      review?: string;
+      keyInsights?: string[];
+      riskFactors?: string[];
+      opportunities?: string[];
     };
     let parsed: ParsedReview | null = null;
     try {
@@ -399,18 +397,15 @@ Return ONLY a JSON object with this structure (no markdown, no explanation):
       // fall through to fallback
     }
 
-    const summary =
-      parsed?.summary ??
-      `You have ${positions.length} open positions. Unrealized P&L: $${totalUnrealized.toFixed(2)}.`;
-    const riskLevel =
-      parsed?.riskLevel ??
-      (positions.length > 5 ? "high" : positions.length > 2 ? "medium" : "low");
-    const suggestions = parsed?.suggestions ?? [];
+    const review =
+      parsed?.review ??
+      `You have ${positions.length} open position${positions.length !== 1 ? "s" : ""}. Unrealized P&L: $${totalUnrealized.toFixed(2)}.`;
 
     return {
-      summary,
-      riskLevel,
-      suggestions,
+      review,
+      keyInsights: parsed?.keyInsights ?? [],
+      riskFactors: parsed?.riskFactors ?? [],
+      opportunities: parsed?.opportunities ?? [],
       generatedAt: new Date().toISOString(),
     };
   }

@@ -38,6 +38,9 @@ export type ExecMode = (typeof ExecMode)[keyof typeof ExecMode];
 export const ReportReason = { SPAM: 'SPAM', INAPPROPRIATE: 'INAPPROPRIATE', MISLEADING: 'MISLEADING', OTHER: 'OTHER' } as const;
 export type ReportReason = (typeof ReportReason)[keyof typeof ReportReason];
 
+export const ResolutionStatus = { UNRESOLVED: 'UNRESOLVED', RESOLVED_YES: 'RESOLVED_YES', RESOLVED_NO: 'RESOLVED_NO' } as const;
+export type ResolutionStatus = (typeof ResolutionStatus)[keyof typeof ResolutionStatus];
+
 // Stub types used by the strategies service
 export type Strategy = Record<string, unknown>;
 export type InputJsonValue = string | number | boolean | null | Record<string, unknown> | unknown[];

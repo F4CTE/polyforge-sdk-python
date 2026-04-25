@@ -98,4 +98,96 @@ describe("AiService", () => {
       expect(result.summary).toContain("error");
     });
   });
+
+  // ── Portfolio review ───────────────────────────────────────────────────────
+
+  describe("portfolioReview", () => {
+    let mockLlm: { analyze: ReturnType<typeof vi.fn> };
+
+    beforeEach(() => {
+      mockLlm = { analyze: vi.fn() };
+      service = new AiService(db as unknown as PrismaService, mockLlm as any);
+    });
+
+    it("returns review, keyInsights, riskFactors, opportunities, generatedAt", async () => {
+      db.position.findMany.mockResolvedValue([]);
+      db.order.findMany.mockResolvedValue([]);
+      mockLlm.analyze.mockResolvedValue(
+        JSON.stringify({
+          review: "Portfolio looks balanced.",
+          keyInsights: ["Diversified across 5 markets"],
+          riskFactors: ["High exposure to crypto"],
+          opportunities: ["Arbitrage on market X"],
+        }),
+      );
+
+      const result = await service.portfolioReview("user-1");
+
+      expect(result).toHaveProperty("review");
+      expect(result).toHaveProperty("keyInsights");
+      expect(result).toHaveProperty("riskFactors");
+      expect(result).toHaveProperty("opportunities");
+      expect(result).toHaveProperty("generatedAt");
+      expect(result.review).toBe("Portfolio looks balanced.");
+      expect(result.keyInsights).toEqual(["Diversified across 5 markets"]);
+      expect(result.riskFactors).toEqual(["High exposure to crypto"]);
+      expect(result.opportunities).toEqual(["Arbitrage on market X"]);
+      expect(result).not.toHaveProperty("summary");
+      expect(result).not.toHaveProperty("riskLevel");
+      expect(result).not.toHaveProperty("suggestions");
+    });
+
+    it("returns fallback arrays when LLM fails", async () => {
+      db.position.findMany.mockResolvedValue([
+        {
+          marketId: "m1",
+          outcome: "YES",
+          size: 10,
+          avgPrice: 0.6,
+          unrealizedPnl: 5.0,
+          realizedPnl: 0,
+          userId: "user-1",
+          resolutionStatus: "UNRESOLVED",
+        },
+      ] as any);
+      db.order.findMany.mockResolvedValue([]);
+      mockLlm.analyze.mockRejectedValue(new Error("LLM down"));
+
+      const result = await service.portfolioReview("user-1");
+
+      expect(result.review).toContain("1 open position");
+      expect(Array.isArray(result.keyInsights)).toBe(true);
+      expect(Array.isArray(result.riskFactors)).toBe(true);
+      expect(Array.isArray(result.opportunities)).toBe(true);
+      expect(result.generatedAt).toBeDefined();
+    });
+
+    it("returns empty arrays for missing optional LLM fields", async () => {
+      db.position.findMany.mockResolvedValue([]);
+      db.order.findMany.mockResolvedValue([]);
+      mockLlm.analyze.mockResolvedValue(
+        JSON.stringify({ review: "All good." }),
+      );
+
+      const result = await service.portfolioReview("user-1");
+
+      expect(result.review).toBe("All good.");
+      expect(result.keyInsights).toEqual([]);
+      expect(result.riskFactors).toEqual([]);
+      expect(result.opportunities).toEqual([]);
+    });
+
+    it("handles malformed LLM JSON gracefully", async () => {
+      db.position.findMany.mockResolvedValue([]);
+      db.order.findMany.mockResolvedValue([]);
+      mockLlm.analyze.mockResolvedValue("not valid json at all");
+
+      const result = await service.portfolioReview("user-1");
+
+      expect(result.review).toBeDefined();
+      expect(Array.isArray(result.keyInsights)).toBe(true);
+      expect(Array.isArray(result.riskFactors)).toBe(true);
+      expect(Array.isArray(result.opportunities)).toBe(true);
+    });
+  });
 });
