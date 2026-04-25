@@ -242,6 +242,19 @@ Disable 2FA. Requires current password.
 
 ---
 
+### POST /auth/v1/totp/backup-codes
+
+Regenerate TOTP backup codes. Invalidates any previously issued backup codes.
+
+**Auth:** User JWT
+
+**Response `200`:**
+```json
+{ "backupCodes": ["abc123", "def456", "ghi789", "..."] }
+```
+
+---
+
 ### POST /auth/v1/credentials
 
 Import Polymarket API credentials. Transitions user to CONNECTED status.
@@ -277,6 +290,43 @@ Import Polymarket API credentials. Transitions user to CONNECTED status.
 ### DELETE /auth/v1/credentials
 
 Remove Polymarket credentials. Stops all running strategies first.
+
+**Auth:** User JWT
+
+**Response `200`:**
+```json
+{ "connected": false }
+```
+
+---
+
+### POST /auth/v1/credentials/kalshi
+
+Import Kalshi API credentials. Enables cross-venue trading.
+
+**Auth:** User JWT
+**Rate limit:** 3 req/hour per user
+
+**Request:**
+```json
+{
+  "apiKey": "kalshi-api-key",
+  "privateKey": "kalshi-private-key-pem"
+}
+```
+
+**Response `201`:**
+```json
+{ "connected": true, "importedAt": "2026-03-12T10:00:00Z" }
+```
+
+**Errors:** `400 VALIDATION_ERROR` · `422 CREDENTIALS_ALREADY_IMPORTED` · `422 INVALID_KALSHI_CREDENTIALS`
+
+---
+
+### DELETE /auth/v1/credentials/kalshi
+
+Remove Kalshi credentials. Stops any Kalshi-specific strategies.
 
 **Auth:** User JWT
 
@@ -579,6 +629,160 @@ Current order book (bid/ask spread).
 
 ---
 
+#### GET /api/v1/markets/search
+
+Full-text search across market titles and descriptions.
+
+**Auth:** User JWT
+
+**Query params:** `q` (string, required, max 255), `limit` (int, default 20, max 100)
+
+**Response `200`:** Array of matching market objects with relevance scoring.
+
+---
+
+#### GET /api/v1/markets/:marketId/alerts
+
+List the authenticated user's price alerts for a specific market.
+
+**Auth:** User JWT
+
+**Response `200`:** Array of alert objects for the given market.
+
+---
+
+#### POST /api/v1/markets/:marketId/alerts
+
+Create a price alert for a market outcome.
+
+**Auth:** JWT or API Key (WRITE scope)
+
+**Request:**
+```json
+{ "outcome": "YES", "condition": "above", "threshold": 0.75 }
+```
+
+**Response `201`:** Alert object.
+
+**Errors:** `422 ALERT_LIMIT_REACHED`
+
+---
+
+#### DELETE /api/v1/markets/:marketId/alerts/:alertId
+
+Delete a market-specific price alert.
+
+**Auth:** JWT or API Key (WRITE scope)
+
+**Response `204`:** No body.
+
+---
+
+#### GET /api/v1/markets/:marketId/sentiment
+
+Get community sentiment votes for a market.
+
+**Auth:** User JWT
+
+**Response `200`:**
+```json
+{ "marketId": "uuid", "yesVotes": 142, "noVotes": 58, "userVote": "YES" }
+```
+
+---
+
+#### POST /api/v1/markets/:marketId/sentiment
+
+Cast a sentiment vote on a market.
+
+**Auth:** User JWT
+
+**Request:**
+```json
+{ "vote": "YES" }
+```
+
+**Response `200`:** Updated sentiment object.
+
+---
+
+#### GET /api/v1/markets/:tokenId/tick-size
+
+Get the minimum tick size for a token.
+
+**Auth:** User JWT
+
+**Response `200`:**
+```json
+{ "tokenId": "...", "tickSize": "0.01" }
+```
+
+---
+
+#### GET /api/v1/markets/:tokenId/spread
+
+Get the current bid-ask spread for a token.
+
+**Auth:** User JWT
+
+**Response `200`:**
+```json
+{ "tokenId": "...", "bid": 0.71, "ask": 0.73, "spread": 0.02, "spreadBps": 278 }
+```
+
+---
+
+#### GET /api/v1/markets/:tokenId/midpoint
+
+Get the market midpoint price for a token.
+
+**Auth:** User JWT
+
+**Response `200`:**
+```json
+{ "tokenId": "...", "midpoint": 0.72, "timestamp": 1234567890123 }
+```
+
+---
+
+#### GET /api/v1/markets/:tokenId/clob-book
+
+Get the full CLOB order book for a token.
+
+**Auth:** User JWT
+
+**Response `200`:**
+```json
+{
+  "tokenId": "...",
+  "bids": [{ "price": "0.71", "size": "500", "orders": 3 }],
+  "asks": [{ "price": "0.73", "size": "450", "orders": 2 }],
+  "timestamp": 1234567890123
+}
+```
+
+---
+
+#### GET /api/v1/markets/:tokenId/clob-prices-history
+
+Get CLOB price history with configurable interval and fidelity.
+
+**Auth:** User JWT
+
+**Query params:** `interval` (`1m`|`5m`|`1h`|`4h`|`1d`|`1w`|`max`, default `1h`), `fidelity` (1–500, default 60)
+
+**Response `200`:**
+```json
+{
+  "tokenId": "...",
+  "interval": "1h",
+  "fidelity": 60,
+  "candles": [{ "time": "2026-03-12T09:00:00Z", "open": "0.70", "high": "0.74", "low": "0.69", "close": "0.72" }]
+}
+```
+
+---
+
 ### Strategies
 
 #### GET /api/v1/strategies
@@ -850,6 +1054,37 @@ List platform strategy templates.
 
 ---
 
+#### GET /api/v1/strategies/:id/export
+
+Export a strategy as a JSON file. Returns a downloadable attachment.
+
+**Auth:** User JWT
+
+**Response `200`:** `application/json` with `Content-Disposition: attachment` header. Contains full strategy definition.
+
+---
+
+#### POST /api/v1/strategies/import
+
+Import a strategy from a previously exported JSON file.
+
+**Auth:** User JWT
+
+**Request:**
+```json
+{
+  "polyforge": "1.0",
+  "exportedAt": "2026-03-12T10:00:00Z",
+  "strategy": { "name": "...", "triggers": [...], "conditions": [...], "actions": [...], "safety": [...] }
+}
+```
+
+**Response `201`:** New strategy object (imported as a private copy).
+
+**Errors:** `400 INVALID_EXPORT_FORMAT`
+
+---
+
 ### Discover
 
 #### GET /api/v1/discover
@@ -993,6 +1228,140 @@ Or alternatively:
 
 ---
 
+#### POST /api/v1/orders/split
+
+Split USDC.e into Yes + No outcome tokens for a market.
+
+**Auth:** JWT or API Key (TRADE scope) + GeoBlockGuard
+**Rate limit:** 30 req/min
+
+**Request:**
+```json
+{ "tokenId": "...", "amount": "100.000000" }
+```
+
+**Response `200`:**
+```json
+{ "tokenIds": ["yes-token-id", "no-token-id"], "amounts": ["100.000000", "100.000000"] }
+```
+
+---
+
+#### POST /api/v1/orders/merge
+
+Merge Yes + No outcome tokens back into USDC.e.
+
+**Auth:** JWT or API Key (TRADE scope) + GeoBlockGuard
+**Rate limit:** 30 req/min
+
+**Request:**
+```json
+{ "tokenId": "...", "amount": "100.000000" }
+```
+
+**Response `200`:**
+```json
+{ "balance": 100.0 }
+```
+
+---
+
+#### POST /api/v1/orders/batch
+
+Place multiple orders in a single request (1–15 orders per batch).
+
+**Auth:** JWT or API Key (TRADE scope) + GeoBlockGuard
+**Rate limit:** 10 req/min
+
+**Request:**
+```json
+{
+  "orders": [
+    { "tokenId": "...", "side": "BUY", "outcome": "YES", "size": 50, "price": 0.45 }
+  ]
+}
+```
+
+**Response `202`:**
+```json
+{ "batchId": "uuid", "orders": [{ "orderId": "uuid", "status": "PENDING" }] }
+```
+
+---
+
+#### DELETE /api/v1/orders/bulk
+
+Cancel multiple orders by ID (up to 3000 per request).
+
+**Auth:** JWT or API Key (TRADE scope)
+
+**Request:**
+```json
+{ "orderIds": ["uuid-1", "uuid-2"] }
+```
+
+**Response `200`:**
+```json
+{ "cancelled": 2, "failed": 0, "details": [] }
+```
+
+---
+
+#### POST /api/v1/orders/place
+
+Place a single order.
+
+**Auth:** User JWT
+**Rate limit:** 30 req/min
+
+**Request:**
+```json
+{
+  "tokenId": "...",
+  "side": "BUY",
+  "outcome": "YES",
+  "size": 100,
+  "price": 0.55,
+  "orderType": "GTC"
+}
+```
+
+`orderType`: `GTC` (default) | `FOK` | `GTD` | `FAK` | `POST_ONLY`
+
+**Response `200`:**
+```json
+{ "orderId": "uuid", "status": "OPEN", "remainingSize": 100 }
+```
+
+**Errors:** `400 VALIDATION_ERROR` · `403 NOT_CONNECTED` · `451 GEO_BLOCKED`
+
+---
+
+#### DELETE /api/v1/orders/:id
+
+Cancel a single order by ID.
+
+**Auth:** User JWT
+
+**Response `200`:**
+```json
+{ "orderId": "uuid", "status": "CANCELLED" }
+```
+
+**Errors:** `404 ORDER_NOT_FOUND`
+
+---
+
+#### GET /api/v1/orders/export/csv
+
+Export all user orders as a CSV file.
+
+**Auth:** JWT or API Key (READ scope)
+
+**Response `200`:** `text/csv` attachment.
+
+---
+
 ### Portfolio & Positions
 
 #### GET /api/v1/portfolio
@@ -1040,6 +1409,48 @@ P&L over time (for charts).
   "winRate": "0.67"
 }
 ```
+
+---
+
+#### GET /api/v1/portfolio/export/csv
+
+Export portfolio data as a CSV file.
+
+**Auth:** User JWT
+
+**Response `200`:** `text/csv` attachment.
+
+---
+
+#### GET /api/v1/portfolio/polymarket/portfolio
+
+Get Polymarket portfolio for the user's connected wallet.
+
+**Auth:** User JWT
+
+**Response `200`:** Array of portfolio entries from the Polymarket Data API. Empty array if wallet not connected.
+
+---
+
+#### GET /api/v1/portfolio/polymarket/earnings
+
+Get Polymarket earnings for the user's connected wallet.
+
+**Auth:** User JWT
+
+**Response `200`:** Array of earnings entries from Polymarket.
+
+---
+
+#### GET /api/v1/portfolio/polymarket/activity
+
+Get Polymarket activity log for the user's connected wallet.
+
+**Auth:** User JWT
+
+**Query params:** `type` (`TRADE`|`SPLIT`|`MERGE`|`REDEEM`|`REWARD`|`CONVERSION`|`MAKER_REBATE`|`REFERRAL_REWARD`, optional)
+
+**Response `200`:** Array of activity records, filtered by type if provided.
 
 ---
 
@@ -2884,6 +3295,199 @@ Scan all active prediction markets for merge arbitrage opportunities — situati
 
 ---
 
+### Cross-Venue Arbitrage
+
+#### GET /api/v1/arbitrage/cross-venue
+
+List cross-venue arbitrage opportunities between Polymarket and Kalshi.
+
+**Auth:** User JWT
+
+**Query params:** `minSpread` (number, default 3 — minimum spread percentage)
+
+**Response `200`:** Array of `CrossVenueOpportunity` objects with `matchId`, `polymarketId`, `kalshiId`, `polymarketTitle`, `kalshiTitle`, `category`, `confidence`, `polymarketYes`, `kalshiYes`, `spreadPct`, `direction`.
+
+---
+
+#### GET /api/v1/arbitrage/cross-venue/:marketId
+
+Cross-venue opportunities for a specific market (either venue).
+
+**Auth:** User JWT
+
+**Query params:** `minSpread` (number, default 3)
+
+**Response `200`:** Array of `CrossVenueOpportunity` objects.
+
+---
+
+#### GET /api/v1/arbitrage/cross-venue/:matchId/comparison
+
+Detailed price comparison for a matched market pair across venues.
+
+**Auth:** User JWT
+
+**Response `200`:**
+```json
+{
+  "matchId": "match-1",
+  "polymarket": { "marketId": "pm-1", "title": "...", "yesPrice": 0.55, "noPrice": 0.45 },
+  "kalshi": { "marketId": "k-1", "title": "...", "yesPrice": 0.48, "noPrice": 0.52 },
+  "spreadPct": 7.0,
+  "confidence": 0.95,
+  "verified": true
+}
+```
+
+---
+
+#### GET /api/v1/arbitrage/spread
+
+Bid/ask spread comparison across all matched venues.
+
+**Auth:** User JWT
+
+**Response `200`:** Array of `SpreadSummary` objects with `matchId`, per-venue `yesBid`/`noAsk`, `yesSpreadPct`, `noSpreadPct`, `confidence`, `verified`.
+
+---
+
+#### GET /api/v1/arbitrage/history
+
+Historical arbitrage opportunity snapshots.
+
+**Auth:** User JWT
+
+**Query params:** `matchId` (string, optional), `limit` (number, default 100), `offset` (number, default 0)
+
+**Response `200`:** Paginated array of historical records.
+
+---
+
+### Arbitrage Alerts
+
+#### GET /api/v1/arbitrage/alerts
+
+List the authenticated user's arbitrage alert subscriptions.
+
+**Auth:** User JWT
+
+**Response `200`:** Array of `ArbitrageAlertSubscription` objects.
+
+---
+
+#### POST /api/v1/arbitrage/alerts
+
+Create an arbitrage alert subscription — triggered when spread exceeds threshold.
+
+**Auth:** JWT or API Key (WRITE scope)
+
+**Request:**
+```json
+{ "minSpreadPct": "5", "marketId": "optional-market-id" }
+```
+
+**Response `201`:** Alert subscription object.
+
+---
+
+#### DELETE /api/v1/arbitrage/alerts/:id
+
+Deactivate an arbitrage alert.
+
+**Auth:** JWT or API Key (WRITE scope)
+
+**Response `204`:** No body.
+
+---
+
+### Market Matches
+
+#### GET /api/v1/arbitrage/matches
+
+List market matches across venues.
+
+**Auth:** User JWT
+
+**Query params:** `verified` (boolean, optional), `limit` (number, default 50), `offset` (number, default 0)
+
+**Response `200`:**
+```json
+{ "matches": [{ "id": "match-1", "polymarketId": "...", "kalshiId": "...", "confidence": 0.92, "matchMethod": "AUTO", "verified": true }], "total": 42 }
+```
+
+---
+
+#### GET /api/v1/arbitrage/matches/market/:marketId
+
+Get all matches for a specific market (from either venue).
+
+**Auth:** User JWT
+
+**Response `200`:** Array of `MarketMatch` objects.
+
+---
+
+#### GET /api/v1/arbitrage/matches/:matchId
+
+Get a single market match by ID.
+
+**Auth:** User JWT
+
+**Response `200`:** `MarketMatch` object.
+
+---
+
+#### POST /api/v1/arbitrage/matches
+
+Manually match two markets across venues.
+
+**Auth:** User JWT
+
+**Request:**
+```json
+{ "polymarketId": "pm-1", "kalshiId": "k-1" }
+```
+
+**Response `201`:**
+```json
+{ "id": "match-uuid" }
+```
+
+---
+
+#### POST /api/v1/arbitrage/matches/:matchId/verify
+
+Verify/confirm an auto-matched market pair.
+
+**Auth:** User JWT
+
+**Response `200`:** Updated match object with `verified: true`.
+
+---
+
+#### DELETE /api/v1/arbitrage/matches/:matchId
+
+Remove a market match (unmatch).
+
+**Auth:** User JWT
+
+**Response `204`:** No body.
+
+---
+
+#### POST /api/v1/arbitrage/matches/sync
+
+Trigger a manual matching pass to auto-discover new market pairs.
+
+**Auth:** User JWT
+
+**Response `200`:**
+```json
+{ "matched": 12 }
+```
+
+---
+
 ## Smart Orders  (`/api/v1/orders/smart`)
 
 Advanced execution orders that split large trades across time or set conditional trigger logic.
@@ -3406,6 +4010,586 @@ Public accuracy statistics for a trader (Brier score, calibration curve, win rat
   "calibration": [{ "bucket": "0.6-0.7", "predicted": 0.65, "actual": 0.63 }],
   "byCategory": [{ "category": "crypto", "winRate": 0.71, "brierScore": 0.14 }]
 }
+```
+
+---
+
+## API Service — Rewards (`/api/v1/rewards`)
+
+### GET /api/v1/rewards/markets
+
+Get all markets with available liquidity rewards.
+
+**Auth:** User JWT
+
+**Response `200`:** Array of reward-eligible market objects (cached 300s from Polymarket Data API).
+
+---
+
+### GET /api/v1/rewards/markets/:conditionId
+
+Get reward details for a specific market by condition ID.
+
+**Auth:** User JWT
+
+**Response `200`:** Reward details object (cached 300s).
+
+---
+
+### GET /api/v1/rewards/user
+
+Get the authenticated user's available rewards. Empty if wallet not connected.
+
+**Auth:** User JWT
+
+**Response `200`:**
+```json
+{ "rewards": [{ "type": "MAKER_REBATE", "amount": "12.50", "claimedAt": null }] }
+```
+
+---
+
+### GET /api/v1/rewards/user/total
+
+Get the user's total rewards with daily breakdown.
+
+**Auth:** User JWT
+
+**Response `200`:**
+```json
+{ "total": "125.00", "byDate": [{ "date": "2026-03-12", "amount": "4.50" }] }
+```
+
+---
+
+### GET /api/v1/rewards/user/percentages
+
+Get rewards breakdown by category as percentages.
+
+**Auth:** User JWT
+
+**Response `200`:**
+```json
+{ "MAKER_REBATE": "45.2", "REFERRAL": "30.1", "LIQUIDITY": "24.7" }
+```
+
+---
+
+### GET /api/v1/rewards/user/markets
+
+Get user's rewards grouped by market.
+
+**Auth:** User JWT
+
+**Response `200`:**
+```json
+{ "markets": [{ "marketId": "...", "marketTitle": "...", "amount": "5.25" }] }
+```
+
+---
+
+### GET /api/v1/rewards/rebates
+
+Get user's maker rebates.
+
+**Auth:** User JWT
+
+**Response `200`:**
+```json
+{ "rebates": [{ "tokenId": "...", "amount": "0.50", "date": "2026-03-12T10:00:00Z" }] }
+```
+
+---
+
+## API Service — Notifications (`/api/v1/notifications`)
+
+### GET /api/v1/notifications
+
+List the authenticated user's in-app notifications with pagination.
+
+**Auth:** User JWT
+
+**Query params:** `page` (int, default 1), `limit` (int, default 20, max 100)
+
+**Response `200`:** `PaginatedResponse<Notification>` — notification objects with `type`, `title`, `body`, `read`, `createdAt`.
+
+---
+
+## API Service — Activity Feed (`/api/v1/feed`)
+
+### GET /api/v1/feed
+
+Get whale activity feed (same data as `/api/v1/whales/feed` — legacy alias).
+
+**Auth:** User JWT
+
+**Query params:** `minSize` (number), `marketId` (string), `walletAddress` (string), `side` (`BUY`|`SELL`), `page`, `limit`
+
+**Response `200`:** `PaginatedResponse<WhaleTrade>`
+
+---
+
+## API Service — Referrals (`/api/v1/referrals`)
+
+### GET /api/v1/referrals/me
+
+Get the authenticated user's referral code, statistics, and earnings.
+
+**Auth:** User JWT
+
+**Response `200`:**
+```json
+{
+  "userId": "uuid",
+  "referralCode": "ABC123",
+  "totalReferred": 5,
+  "activeReferred": 3,
+  "earnings": "25.00",
+  "referrals": [{ "userId": "uuid", "joinedAt": "...", "active": true }]
+}
+```
+
+---
+
+## API Service — Analytics (`/api/v1/analytics`)
+
+### GET /api/v1/analytics/correlation/categories
+
+Get market correlation data grouped by category.
+
+**Auth:** User JWT
+
+**Response `200`:**
+```json
+{ "categories": [{ "name": "crypto", "correlation": 0.82, "markets": ["mkt-1", "mkt-2"] }] }
+```
+
+---
+
+## API Service — User Preferences (`/api/v1/users/me`)
+
+### GET /api/v1/users/me/notification-preferences
+
+Get per-event notification channel preferences.
+
+**Auth:** User JWT
+
+**Response `200`:**
+```json
+{
+  "ORDER_FILLED": { "inApp": true, "email": true, "push": false },
+  "STRATEGY_ERROR": { "inApp": true, "email": true, "push": true }
+}
+```
+
+---
+
+### PUT /api/v1/users/me/notification-preferences
+
+Replace per-event notification channel preferences.
+
+**Auth:** User JWT
+
+**Request:**
+```json
+{
+  "preferences": {
+    "ORDER_FILLED": { "inApp": true, "email": false, "push": true }
+  }
+}
+```
+
+**Response `200`:** Updated preferences object.
+
+---
+
+### GET /api/v1/users/me/venue-preferences
+
+Get venue preferences (default venue, enabled venues, single-platform mode).
+
+**Auth:** User JWT
+
+**Response `200`:**
+```json
+{ "defaultVenue": "POLYMARKET", "enabledVenues": ["POLYMARKET", "KALSHI"], "singlePlatformMode": false }
+```
+
+---
+
+### PATCH /api/v1/users/me/venue-preferences
+
+Update venue preferences.
+
+**Auth:** User JWT
+
+**Request:**
+```json
+{ "defaultVenue": "KALSHI", "enabledVenues": ["POLYMARKET", "KALSHI"], "singlePlatformMode": false }
+```
+
+**Response `200`:** Updated venue preferences.
+
+---
+
+## API Service — Profile & Settings (additional)
+
+### PATCH /api/v1/profile/me
+
+Update the authenticated user's display profile.
+
+**Auth:** User JWT
+
+**Request:** Any subset of `displayName` (max 50), `bio` (max 500), `avatarUrl` (valid URL, max 2048).
+
+**Response `200`:** Updated user profile object.
+
+---
+
+### POST /api/v1/profile/password
+
+Change the authenticated user's password.
+
+**Auth:** User JWT
+
+**Request:**
+```json
+{ "currentPassword": "Old1234!", "newPassword": "New1234!" }
+```
+
+**Response `200`:**
+```json
+{ "message": "Password changed" }
+```
+
+**Errors:** `400 INVALID_PASSWORD`
+
+---
+
+### PATCH /api/v1/profile/notifications
+
+Update notification preference flags.
+
+**Auth:** User JWT
+
+**Request:** Object of notification key → boolean (e.g. `{ "onOrderFilled": true, "onStrategyError": false }`).
+
+**Response `200`:**
+```json
+{ "message": "Notification preferences updated" }
+```
+
+---
+
+### GET /api/v1/settings/notifications
+
+Get the user's notification preferences.
+
+**Auth:** User JWT
+
+**Response `200`:** Object with `emailEnabled`, `telegramEnabled`, `discordEnabled`, and per-event booleans.
+
+---
+
+### GET /api/v1/settings/beta-usage
+
+Get beta feature usage statistics for the authenticated user.
+
+**Auth:** User JWT
+
+**Response `200`:**
+```json
+{ "betaFeaturesEnabled": ["cross-venue", "smart-orders"], "usageCount": 42, "lastUsed": "2026-03-12T10:00:00Z" }
+```
+
+---
+
+### GET /api/v1/accuracy
+
+Get prediction accuracy leaderboard. Unlike `/accuracy/me` which returns the authenticated user's stats, this returns a ranked list.
+
+**Auth:** User JWT
+
+**Response `200`:** Array of accuracy score objects with ranking.
+
+---
+
+## API Service — Whale Tracking (additional)
+
+### GET /api/v1/whales/leaderboard
+
+Get the smart money leaderboard — whales ranked by performance.
+
+**Auth:** User JWT
+
+**Query params:** `period` (`24h`|`7d`|`30d`|`all`, default `all`), `limit` (number, default 20, max 100)
+
+**Response `200`:** Array of `WhaleProfile` objects ranked by performance.
+
+---
+
+### GET /api/v1/whales/alerts/filter
+
+Get the authenticated user's whale alert filter settings.
+
+**Auth:** User JWT
+
+**Response `200`:**
+```json
+{ "userId": "uuid", "minSize": "1000", "marketIds": ["m-1"], "walletAddresses": ["0xabc"], "sides": ["BUY"], "active": true }
+```
+
+---
+
+### PUT /api/v1/whales/alerts/filter
+
+Create or update whale alert filter settings.
+
+**Auth:** User JWT
+
+**Request:**
+```json
+{ "minSize": "1000", "marketIds": ["m-1"], "walletAddresses": ["0xabc"], "sides": ["BUY"], "active": true }
+```
+
+**Response `200`:** Updated filter object.
+
+---
+
+### DELETE /api/v1/whales/alerts/filter
+
+Delete the user's whale alert filter.
+
+**Auth:** User JWT
+
+**Response `204`:** No body.
+
+---
+
+### POST /api/v1/whales/:address/unfollow
+
+Unfollow a whale address.
+
+**Auth:** User JWT
+
+**Response `200`:**
+```json
+{ "followed": false }
+```
+
+---
+
+## API Service — Watchlist (additional)
+
+### GET /api/v1/watchlist/:marketId/status
+
+Check whether a specific market is on the user's watchlist (alternative path format).
+
+**Auth:** JWT or API Key (READ scope)
+
+**Response `200`:**
+```json
+{ "marketId": "uuid", "watched": true }
+```
+
+---
+
+## API Service — API Keys (User)
+
+These endpoints are also accessible via the gateway at `/api/v1/api-keys` (in addition to the auth-service paths at `/auth/v1/api-keys`).
+
+### GET /api/v1/api-keys
+
+List the authenticated user's API keys.
+
+**Auth:** User JWT
+
+**Response `200`:** Array of API key objects.
+
+---
+
+### POST /api/v1/api-keys
+
+Create a new API key.
+
+**Auth:** User JWT
+
+**Request:**
+```json
+{ "name": "My Bot", "scopes": ["READ", "WRITE", "TRADE"], "expiresInDays": 90 }
+```
+
+**Response `201`:** API key object with plaintext `key` (shown only once).
+
+---
+
+### DELETE /api/v1/api-keys/:id
+
+Revoke an API key.
+
+**Auth:** User JWT
+
+**Response `204`:** No body.
+
+---
+
+## Admin API Service (additional)
+
+### Dashboard
+
+#### GET /api/v1/dashboard
+
+System health overview — all services and dependencies.
+
+**Auth:** Admin JWT
+
+**Response `200`:**
+```json
+{ "status": "healthy", "services": { "auth-service": { "status": "healthy", "latencyMs": 2 } }, "db": { "status": "healthy" }, "redis": { "status": "healthy" } }
+```
+
+---
+
+#### GET /api/v1/dashboard/rate-limits
+
+Current rate limit usage statistics.
+
+**Auth:** Admin JWT
+
+**Response `200`:** Array of rate limit status objects per endpoint.
+
+---
+
+#### GET /api/v1/dashboard/platform-stats
+
+Platform-wide statistics (users, strategies, volume).
+
+**Auth:** Admin JWT
+
+**Response `200`:**
+```json
+{ "totalUsers": 1200, "activeUsers": 450, "totalStrategies": 3400, "activeStrategies": 280, "totalVolume": "1250000.00" }
+```
+
+---
+
+#### GET /api/v1/dashboard/marketplace-stats
+
+Strategy marketplace statistics.
+
+**Auth:** Admin JWT
+
+**Response `200`:**
+```json
+{ "totalListings": 85, "activeListings": 42, "avgPrice": "35.00", "totalSales": 312 }
+```
+
+---
+
+#### GET /api/v1/dashboard/beta-usage
+
+Beta feature adoption statistics.
+
+**Auth:** Admin JWT
+
+**Response `200`:** Array of feature objects with `name`, `enabledCount`, `totalCount`, `adoptionRate`.
+
+---
+
+### Builder Program (additional)
+
+#### GET /api/v1/builder/leaderboard
+
+Get the builder leaderboard — top strategy creators by volume and performance.
+
+**Auth:** Admin JWT
+
+**Response `200`:** Array of ranked builder objects.
+
+---
+
+#### GET /api/v1/builder/volume
+
+Get builder trading volume metrics and breakdown.
+
+**Auth:** Admin JWT
+
+**Response `200`:**
+```json
+{ "totalVolume": "1250000.00", "volumeByPeriod": { "today": "45000", "week": "310000", "month": "1250000" } }
+```
+
+---
+
+### Cache (additional)
+
+#### GET /api/v1/cache/streams
+
+Get Redis stream statistics.
+
+**Auth:** Admin JWT (Admin or SuperAdmin only)
+
+**Response `200`:** Array of stream objects with `pattern`, `keyCount`, `memoryUsed`, `lastAccessed`.
+
+---
+
+### Sentiment
+
+#### GET /api/v1/sentiment
+
+Get platform-wide sentiment analysis overview for admin monitoring.
+
+**Auth:** Admin JWT
+
+**Query params:** `limit` (number, default 20)
+
+**Response `200`:** Sentiment entries with top positive and negative markets.
+
+---
+
+### Users (additional)
+
+#### PATCH /api/v1/users/:id/approve
+
+Approve a pending user's registration.
+
+**Auth:** Admin JWT
+
+**Response `200`:**
+```json
+{ "id": "uuid", "status": "ACTIVE", "approvedAt": "2026-03-12T10:00:00Z" }
+```
+
+---
+
+#### PATCH /api/v1/users/:id/reject
+
+Reject a pending user's registration.
+
+**Auth:** Admin JWT
+
+**Request:**
+```json
+{ "reason": "Incomplete verification" }
+```
+
+**Response `200`:**
+```json
+{ "id": "uuid", "status": "REJECTED", "rejectionReason": "..." }
+```
+
+---
+
+### Venues
+
+#### GET /api/v1/venues/health
+
+Get exchange venue connection health status.
+
+**Auth:** Admin JWT (Admin or SuperAdmin only)
+
+**Response `200`:**
+```json
+{ "venues": [{ "name": "polymarket", "status": "healthy", "latency": 45 }, { "name": "kalshi", "status": "healthy", "latency": 62 }] }
 ```
 
 ---
