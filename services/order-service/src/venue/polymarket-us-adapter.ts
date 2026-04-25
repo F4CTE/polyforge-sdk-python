@@ -8,6 +8,7 @@ import type {
   VenueOrderResponse,
   VenuePosition,
   VenueOrderHistory,
+  PolymarketUsAuthContext,
 } from "@polyforge/shared-types";
 import type {
   OrderBook,
@@ -19,9 +20,9 @@ import {
   type PolymarketUsCreds,
 } from "../polymarket-us-client/polymarket-us-client.service";
 
-export interface PolymarketUsAuthContext {
-  venue: "polymarket_us";
-  keyId: string;
+// Extends the shared-types context with secretKey for pre-Phase-2 direct auth.
+// Phase 2 (signer-service) will absorb signing so callers no longer need to pass it.
+interface PolymarketUsCredsContext extends PolymarketUsAuthContext {
   secretKey: string;
 }
 
@@ -76,7 +77,7 @@ export class PolymarketUsAdapter implements VenueAdapter {
   }
 
   async submitOrder(order: VenueOrderRequest): Promise<VenueOrderResponse> {
-    const ctx = order.authContext as unknown as PolymarketUsAuthContext;
+    const ctx = order.authContext as unknown as PolymarketUsCredsContext;
     const creds: PolymarketUsCreds = {
       keyId: ctx.keyId,
       secretKey: ctx.secretKey,
@@ -111,7 +112,7 @@ export class PolymarketUsAdapter implements VenueAdapter {
     venueOrderId: string,
     authContext: Record<string, unknown>,
   ): Promise<void> {
-    const ctx = authContext as unknown as PolymarketUsAuthContext;
+    const ctx = authContext as unknown as PolymarketUsCredsContext;
     const creds: PolymarketUsCreds = {
       keyId: ctx.keyId,
       secretKey: ctx.secretKey,
@@ -122,7 +123,7 @@ export class PolymarketUsAdapter implements VenueAdapter {
   }
 
   async cancelAllOrders(authContext: Record<string, unknown>): Promise<void> {
-    const ctx = authContext as unknown as PolymarketUsAuthContext;
+    const ctx = authContext as unknown as PolymarketUsCredsContext;
     const creds: PolymarketUsCreds = {
       keyId: ctx.keyId,
       secretKey: ctx.secretKey,
