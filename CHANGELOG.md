@@ -5,6 +5,13 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [Unreleased] — 2026-04-25
+
+### Fixed
+- **gateway: /terms and /privacy pages completely unstyled — Next.js static build artifacts missing (POLA-877)** — The gateway Dockerfile was copying old flat static files from `apps/landing/` instead of building the Next.js app; `nginx.prod.conf` had no `location /_next/` block so all JS/CSS chunks 404'd. Fix: added `landing-builder` stage to `services/gateway/Dockerfile` that builds the landing app with `NEXT_STATIC_EXPORT=true` (triggers `output: 'export'` in `next.config.ts`), copies `out/` into `/usr/share/nginx/html/landing`; added `location /_next/ { root /usr/share/nginx/html/landing; expires 1y; }` to `nginx.prod.conf`; added same `location /_next/` proxy block to `nginx.dev-ssl.conf` and fixed its landing upstream port from `:80` → `:3000`. Dev (`docker-compose.infra.yml`) is unaffected — landing still runs as a standalone Next.js server.
+
+---
+
 ## [Unreleased] — 2026-04-18
 
 ### Added
