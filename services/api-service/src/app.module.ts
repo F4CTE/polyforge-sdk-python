@@ -41,6 +41,7 @@ import { NotificationsModule } from "./notifications/notifications.module";
 import { FeedModule } from "./feed/feed.module";
 import { ReferralsModule } from "./referrals/referrals.module";
 import { AnalyticsModule } from "./analytics/analytics.module";
+import { UsersModule } from "./users/users.module";
 
 @Module({
   imports: [
@@ -94,6 +95,7 @@ import { AnalyticsModule } from "./analytics/analytics.module";
     FeedModule,
     ReferralsModule,
     AnalyticsModule,
+    UsersModule,
   ],
   controllers: [HealthController, StatusController],
   providers: [{ provide: APP_GUARD, useClass: ApiKeyThrottlerGuard }],
