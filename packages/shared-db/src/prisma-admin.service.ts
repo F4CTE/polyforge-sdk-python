@@ -18,8 +18,10 @@ export class PrismaAdminService
     const adapter = new PrismaPg({
       connectionString: process.env.ADMIN_DATABASE_URL,
       max: parseInt(process.env.PRISMA_ADMIN_POOL_SIZE ?? "5", 10),
-      idleTimeoutMillis: 30_000,
+      idleTimeoutMillis: 0,
       connectionTimeoutMillis: 10_000,
+      keepAlive: true,
+      keepAliveInitialDelayMillis: 10_000,
     });
     super({ adapter });
   }
