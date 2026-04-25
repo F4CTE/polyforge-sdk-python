@@ -37,6 +37,7 @@ function makePrisma() {
       update: vi.fn(),
     },
     userLimit: {
+      findUnique: vi.fn(),
       upsert: vi.fn(),
     },
     apiKey: {
@@ -342,6 +343,59 @@ describe("UsersService", () => {
       prisma.user.findUnique.mockResolvedValue(null);
 
       await expect(service.updateLimits("ghost", {})).rejects.toMatchObject({
+        response: { code: "NOT_FOUND" },
+      });
+    });
+  });
+
+  // ── getRiskSettings ────────────────────────────────────────────────────────
+
+  describe("getRiskSettings", () => {
+    it("returns mapped risk settings when limits exist", async () => {
+      const user = makeUser();
+      prisma.user.findUnique.mockResolvedValue(user as any);
+      prisma.userLimit.findUnique.mockResolvedValue({
+        userId: "user-1",
+        maxRunningStrategies: 3,
+        maxOrdersPerDay: 200,
+        maxOrderSizeUsdc: "500.000000",
+        maxBacktestRunsPerDay: 5,
+        circuitBreakerErrors: 10,
+        drawdownEnabled: true,
+        drawdownLookbackHours: 12,
+        drawdownThresholdPct: "0.0500",
+        circuitBreakerTripped: false,
+        circuitBreakerTrippedAt: null,
+        updatedAt: new Date(),
+      } as any);
+
+      const result = await service.getRiskSettings("user-1");
+
+      expect(result.enabled).toBe(true);
+      expect(result.maxPositionSize).toBe(500);
+      expect(result.maxOpenPositions).toBe(3);
+      expect(result.maxOrdersPerDay).toBe(200);
+      expect(result.drawdownThresholdPct).toBe(0.05);
+      expect(result.circuitBreakerTripped).toBe(false);
+    });
+
+    it("returns defaults when no limits record exists", async () => {
+      const user = makeUser();
+      prisma.user.findUnique.mockResolvedValue(user as any);
+      prisma.userLimit.findUnique.mockResolvedValue(null);
+
+      const result = await service.getRiskSettings("user-1");
+
+      expect(result.enabled).toBe(false);
+      expect(result.maxPositionSize).toBe(1000);
+      expect(result.maxOpenPositions).toBe(5);
+      expect(result.maxOrdersPerDay).toBe(500);
+    });
+
+    it("throws NOT_FOUND when user does not exist", async () => {
+      prisma.user.findUnique.mockResolvedValue(null);
+
+      await expect(service.getRiskSettings("ghost")).rejects.toMatchObject({
         response: { code: "NOT_FOUND" },
       });
     });

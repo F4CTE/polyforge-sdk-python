@@ -77,6 +77,23 @@ export class UsersController {
     return result;
   }
 
+  @Get(":id/risk-settings")
+  async getRiskSettings(
+    @Param("id", ParseUUIDPipe) id: string,
+    @CurrentAdmin() admin: AdminJwtPayload,
+    @AdminIp() ip: string,
+  ) {
+    const result = await this.users.getRiskSettings(id);
+    await this.audit.log({
+      adminId: admin.sub,
+      action: "VIEW_USER_RISK_SETTINGS",
+      targetType: "user",
+      targetId: id,
+      ip,
+    });
+    return result;
+  }
+
   @Patch(":id/suspend")
   async suspend(
     @Param("id", ParseUUIDPipe) id: string,

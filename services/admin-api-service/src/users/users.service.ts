@@ -215,6 +215,32 @@ export class UsersService {
     return { rejected: true, email: user.email };
   }
 
+  async getRiskSettings(userId: string) {
+    await this.findUserOrFail(userId);
+
+    const limits = await this.prisma.userLimit.findUnique({
+      where: { userId },
+    });
+
+    return {
+      enabled: limits?.drawdownEnabled ?? false,
+      maxPositionSize: limits
+        ? parseFloat(String(limits.maxOrderSizeUsdc))
+        : 1000,
+      maxOpenPositions: limits?.maxRunningStrategies ?? 5,
+      maxOrdersPerDay: limits?.maxOrdersPerDay ?? 500,
+      maxBacktestRunsPerDay: limits?.maxBacktestRunsPerDay ?? 10,
+      circuitBreakerErrors: limits?.circuitBreakerErrors ?? 5,
+      drawdownEnabled: limits?.drawdownEnabled ?? false,
+      drawdownLookbackHours: limits?.drawdownLookbackHours ?? 24,
+      drawdownThresholdPct: limits
+        ? parseFloat(String(limits.drawdownThresholdPct))
+        : 0.1,
+      circuitBreakerTripped: limits?.circuitBreakerTripped ?? false,
+      circuitBreakerTrippedAt: limits?.circuitBreakerTrippedAt ?? null,
+    };
+  }
+
   async updateLimits(id: string, dto: UpdateLimitsDto) {
     await this.findUserOrFail(id);
 
