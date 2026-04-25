@@ -1505,3 +1505,26 @@ model VenueFeeSchedule {
   @@index([venue, effectiveAt])
   @@map("venue_fee_schedules")
 }
+
+// ─── Journal ─────────────────────────────────────────────────────────────────
+
+model JournalEntry {
+  id          String   @id @default(cuid())
+  userId      String
+  orderId     String
+  marketTitle String
+  outcome     String   @db.VarChar(3)
+  side        String   @db.VarChar(4)
+  price       Float
+  size        Float
+  pnl         Float?
+  note        String   @default("")
+  tags        String[] @default([])
+  mood        String   @default("neutral") @db.VarChar(12)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([userId])
+  @@index([userId, createdAt])
+  @@map("journal_entries")
+}

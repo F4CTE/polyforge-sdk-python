@@ -44,6 +44,7 @@ import { AnalyticsModule } from "./analytics/analytics.module";
 import { UsersModule } from "./users/users.module";
 import { SportsModule } from "./sports/sports.module";
 import { FeesModule } from "./fees/fees.module";
+import { JournalModule } from "./journal/journal.module";
 
 @Module({
   imports: [
@@ -100,6 +101,7 @@ import { FeesModule } from "./fees/fees.module";
     UsersModule,
     SportsModule,
     FeesModule,
+    JournalModule,
   ],
   controllers: [HealthController, StatusController],
   providers: [{ provide: APP_GUARD, useClass: ApiKeyThrottlerGuard }],
