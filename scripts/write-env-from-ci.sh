@@ -185,7 +185,7 @@ GEO_CLOSE_ONLY_COUNTRIES=PL,SG,TH,TW
 
 FRONTEND_URL=https://localhost
 ADMIN_URL=https://admin.polyforge.app
-CORS_ORIGINS=https://localhost,http://localhost
+CORS_ORIGINS=https://localhost,http://localhost,https://polyforge-lab,http://polyforge-lab
 ADMIN_CORS_ORIGINS=https://admin.polyforge.app
 ADMIN_ALLOWED_IPS=
 
