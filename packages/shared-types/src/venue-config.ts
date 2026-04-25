@@ -15,6 +15,11 @@ export interface PolymarketAuthContext {
   funderAddress?: string;
 }
 
+export interface PolymarketUsAuthContext {
+  venue: "polymarket_us";
+  keyId: string;
+}
+
 export interface GenericAuthContext {
   venue: string;
   [key: string]: unknown;
@@ -23,6 +28,7 @@ export interface GenericAuthContext {
 export type VenueAuthContext =
   | KalshiAuthContext
   | PolymarketAuthContext
+  | PolymarketUsAuthContext
   | GenericAuthContext;
 
 // ─── Venue Capabilities ──────────────────────────────────────────────────────
@@ -44,7 +50,13 @@ export interface VenueCapabilities {
 
 // ─── Venue Configuration ─────────────────────────────────────────────────────
 
-export type VenueAuthType = "jwt" | "api_key" | "hmac" | "rsa_pss" | "none";
+export type VenueAuthType =
+  | "jwt"
+  | "api_key"
+  | "hmac"
+  | "rsa_pss"
+  | "ed25519"
+  | "none";
 
 export interface VenueConfig {
   venueId: string;

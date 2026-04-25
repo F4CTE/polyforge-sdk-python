@@ -167,6 +167,7 @@ enum ConditionalOrderStatus {
 enum Venue {
   POLYMARKET
   KALSHI
+  POLYMARKET_US
 }
 
 // ─────────────────────────────────────────────
@@ -193,6 +194,8 @@ model User {
   polymarketAddress   String?   @db.VarChar(42)
   kalshiConnected     Boolean   @default(false) @map("kalshi_connected")
   kalshiUserId        String?   @db.VarChar(255) @map("kalshi_user_id")
+  polymarketUsConnected Boolean @default(false) @map("polymarket_us_connected")
+  country             String?   @db.VarChar(2)
   venuePreferences    Json?     @db.JsonB @map("venue_preferences")
   tosAcceptedAt       DateTime?
   emailVerified       Boolean   @default(false)
@@ -1383,6 +1386,19 @@ model KalshiCredential {
   updatedAt      DateTime @updatedAt
 
   @@map("kalshi_credentials")
+}
+
+// Accessible ONLY by signer-service — Ed25519 keys for Polymarket US API auth
+model PolymarketUsCredential {
+  userId         String   @id
+  secretKeyCt    Bytes
+  secretKeyIv    Bytes
+  secretKeyTag   Bytes
+  keyId          String   @db.VarChar(255)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@map("polymarket_us_credentials")
 }
 
 model ArbitrageSnapshot {

@@ -4,13 +4,14 @@ import type { VenueId, KnownVenueId } from "./venues";
 
 describe("VenueId type system", () => {
   describe("VENUE_IDS", () => {
-    it("contains polymarket and kalshi", () => {
+    it("contains polymarket, kalshi, and polymarket_us", () => {
       expect(VENUE_IDS).toContain("polymarket");
       expect(VENUE_IDS).toContain("kalshi");
+      expect(VENUE_IDS).toContain("polymarket_us");
     });
 
-    it("has exactly 2 known venues", () => {
-      expect(VENUE_IDS).toHaveLength(2);
+    it("has exactly 3 known venues", () => {
+      expect(VENUE_IDS).toHaveLength(3);
     });
   });
 
@@ -21,6 +22,10 @@ describe("VenueId type system", () => {
 
     it("returns true for kalshi", () => {
       expect(isKnownVenue("kalshi")).toBe(true);
+    });
+
+    it("returns true for polymarket_us", () => {
+      expect(isKnownVenue("polymarket_us")).toBe(true);
     });
 
     it("returns false for unknown venue", () => {
@@ -36,8 +41,10 @@ describe("VenueId type system", () => {
     it("accepts known venues", () => {
       const poly: VenueId = "polymarket";
       const kalshi: VenueId = "kalshi";
+      const polyUs: VenueId = "polymarket_us";
       expect(poly).toBe("polymarket");
       expect(kalshi).toBe("kalshi");
+      expect(polyUs).toBe("polymarket_us");
     });
 
     it("accepts arbitrary string venues (extensible)", () => {

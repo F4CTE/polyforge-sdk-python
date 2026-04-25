@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach } from "vitest";
 import { clearVenueRegistry, getVenueConfig } from "../venue-config";
 import { KALSHI_DEFAULTS } from "./kalshi.config";
 import { POLYMARKET_DEFAULTS } from "./polymarket.config";
+import { POLYMARKET_US_DEFAULTS } from "./polymarket-us.config";
 
 describe("Venue Config Definitions", () => {
   beforeEach(() => {
@@ -89,6 +90,49 @@ describe("Venue Config Definitions", () => {
 
     it("is enabled by default", () => {
       expect(POLYMARKET_DEFAULTS.enabled).toBe(true);
+    });
+  });
+
+  describe("Polymarket US config", () => {
+    it("has correct venueId", () => {
+      expect(POLYMARKET_US_DEFAULTS.venueId).toBe("polymarket_us");
+    });
+
+    it("has correct display name", () => {
+      expect(POLYMARKET_US_DEFAULTS.displayName).toBe("Polymarket US");
+    });
+
+    it("uses Ed25519 auth", () => {
+      expect(POLYMARKET_US_DEFAULTS.authType).toBe("ed25519");
+    });
+
+    it("supports GTC and FOK order types", () => {
+      expect(POLYMARKET_US_DEFAULTS.capabilities.supportedOrderTypes).toEqual([
+        "GTC",
+        "FOK",
+      ]);
+    });
+
+    it("supports fractional contracts", () => {
+      expect(
+        POLYMARKET_US_DEFAULTS.capabilities.supportsFractionalContracts,
+      ).toBe(true);
+    });
+
+    it("does not support batch orders", () => {
+      expect(POLYMARKET_US_DEFAULTS.capabilities.supportsBatchOrders).toBe(
+        false,
+      );
+    });
+
+    it("is disabled by default", () => {
+      expect(POLYMARKET_US_DEFAULTS.enabled).toBe(false);
+    });
+
+    it("points to polymarket.us API", () => {
+      expect(POLYMARKET_US_DEFAULTS.restBaseUrl).toBe(
+        "https://api.polymarket.us",
+      );
     });
   });
 });
