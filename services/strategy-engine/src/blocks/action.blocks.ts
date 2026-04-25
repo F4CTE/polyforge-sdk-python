@@ -305,6 +305,51 @@ export const SkipBetAction: ActionEvaluator = {
   },
 };
 
+// ─── combo_leg — Kalshi combo/multivariate event order ────────────────────────
+export const ComboLegAction: ActionEvaluator = {
+  async execute(block, ctx, redis, _prisma): Promise<ActionResult> {
+    const params = (block["params"] as BlockParams) ?? {};
+    const marketTicker = String(params.marketTicker ?? "");
+    const side = String(params.side ?? "BUY") as "BUY" | "SELL";
+    const size = String(params.size ?? "0");
+    const orderType = toOrderType(params.orderType);
+
+    if (!marketTicker) return { intents: [] };
+
+    const priceData = await redis.getJson<{ price: number }>(
+      `cache:price:kalshi:${marketTicker}`,
+    );
+    const price = priceData ? String(priceData.price) : "0.5";
+
+    const sizeNum = parseFloat(size);
+    const priceNum = parseFloat(price);
+    if (isNaN(sizeNum) || sizeNum <= 0 || sizeNum > 10000) {
+      return { intents: [] };
+    }
+    if (isNaN(priceNum) || priceNum < 0.001 || priceNum > 0.999) {
+      return { intents: [] };
+    }
+
+    return {
+      intents: [
+        {
+          intentId: uuidv4(),
+          userId: ctx.userId,
+          strategyId: ctx.strategyId,
+          marketId: marketTicker,
+          tokenId: marketTicker,
+          side,
+          outcome: side === "BUY" ? "YES" : "NO",
+          size,
+          price,
+          orderType,
+          venue: "kalshi",
+        },
+      ],
+    };
+  },
+};
+
 // ─── run_strategy — launches a sub-strategy (handled by strategy runner) ───────
 // This is a marker evaluator; the actual sub-strategy launch is handled by
 // the StrategyRunner when it detects a RUN_STRATEGY action block. The evaluator

@@ -8,6 +8,7 @@ import {
   ScaleOutAction,
   CancelAllOrdersAction,
   SkipBetAction,
+  ComboLegAction,
 } from "./action.blocks";
 import { block, makeCtx, makePrisma, makeRedis } from "./__helpers__";
 
@@ -355,5 +356,163 @@ describe("SkipBetAction", () => {
       makePrisma(),
     );
     expect(intents).toHaveLength(0);
+  });
+});
+
+describe("ComboLegAction", () => {
+  it("produces a Kalshi combo order intent with cached price", async () => {
+    const redis = makeRedis({
+      getJson: vi.fn().mockResolvedValue({ price: 0.35 }),
+    });
+    const ctx = makeCtx();
+
+    const { intents } = await ComboLegAction.execute(
+      block("COMBO_LEG", {
+        marketTicker: "NBA-COMBO-1234",
+        side: "BUY",
+        size: "10",
+        orderType: "GTC",
+      }),
+      ctx,
+      redis,
+      makePrisma(),
+    );
+
+    expect(intents).toHaveLength(1);
+    const intent = intents[0];
+    expect(intent.marketId).toBe("NBA-COMBO-1234");
+    expect(intent.tokenId).toBe("NBA-COMBO-1234");
+    expect(intent.side).toBe("BUY");
+    expect(intent.outcome).toBe("YES");
+    expect(intent.size).toBe("10");
+    expect(intent.price).toBe("0.35");
+    expect(intent.orderType).toBe("GTC");
+    expect(intent.venue).toBe("kalshi");
+    expect(intent.userId).toBe(ctx.userId);
+    expect(intent.strategyId).toBe(ctx.strategyId);
+    expect(intent.intentId).toBeTruthy();
+  });
+
+  it("uses Kalshi-specific Redis cache key", async () => {
+    const getJson = vi.fn().mockResolvedValue({ price: 0.42 });
+    const redis = makeRedis({ getJson });
+
+    await ComboLegAction.execute(
+      block("COMBO_LEG", {
+        marketTicker: "NBA-COMBO-5678",
+        side: "BUY",
+        size: "5",
+      }),
+      makeCtx(),
+      redis,
+      makePrisma(),
+    );
+
+    expect(getJson).toHaveBeenCalledWith("cache:price:kalshi:NBA-COMBO-5678");
+  });
+
+  it("defaults price to 0.5 when no cached price", async () => {
+    const { intents } = await ComboLegAction.execute(
+      block("COMBO_LEG", {
+        marketTicker: "NFL-COMBO-001",
+        side: "BUY",
+        size: "10",
+      }),
+      makeCtx(),
+      makeRedis(),
+      makePrisma(),
+    );
+    expect(intents[0].price).toBe("0.5");
+  });
+
+  it("returns empty intents when marketTicker is missing", async () => {
+    const { intents } = await ComboLegAction.execute(
+      block("COMBO_LEG", { side: "BUY", size: "10" }),
+      makeCtx(),
+      makeRedis(),
+      makePrisma(),
+    );
+    expect(intents).toHaveLength(0);
+  });
+
+  it("returns empty intents when size is zero", async () => {
+    const { intents } = await ComboLegAction.execute(
+      block("COMBO_LEG", {
+        marketTicker: "NBA-COMBO-001",
+        side: "BUY",
+        size: "0",
+      }),
+      makeCtx(),
+      makeRedis(),
+      makePrisma(),
+    );
+    expect(intents).toHaveLength(0);
+  });
+
+  it("returns empty intents when size is negative", async () => {
+    const { intents } = await ComboLegAction.execute(
+      block("COMBO_LEG", {
+        marketTicker: "NBA-COMBO-001",
+        side: "BUY",
+        size: "-5",
+      }),
+      makeCtx(),
+      makeRedis(),
+      makePrisma(),
+    );
+    expect(intents).toHaveLength(0);
+  });
+
+  it("sets outcome to NO when side is SELL", async () => {
+    const redis = makeRedis({
+      getJson: vi.fn().mockResolvedValue({ price: 0.6 }),
+    });
+    const { intents } = await ComboLegAction.execute(
+      block("COMBO_LEG", {
+        marketTicker: "NBA-COMBO-001",
+        side: "SELL",
+        size: "10",
+      }),
+      makeCtx(),
+      redis,
+      makePrisma(),
+    );
+    expect(intents[0].side).toBe("SELL");
+    expect(intents[0].outcome).toBe("NO");
+  });
+
+  it("defaults orderType to GTC", async () => {
+    const redis = makeRedis({
+      getJson: vi.fn().mockResolvedValue({ price: 0.5 }),
+    });
+    const { intents } = await ComboLegAction.execute(
+      block("COMBO_LEG", {
+        marketTicker: "NBA-COMBO-001",
+        side: "BUY",
+        size: "10",
+      }),
+      makeCtx(),
+      redis,
+      makePrisma(),
+    );
+    expect(intents[0].orderType).toBe("GTC");
+  });
+
+  it("supports FOK order type", async () => {
+    const redis = makeRedis({
+      getJson: vi.fn().mockResolvedValue({ price: 0.5 }),
+    });
+    const { intents } = await ComboLegAction.execute(
+      block("COMBO_LEG", {
+        marketTicker: "NBA-COMBO-001",
+        side: "BUY",
+        size: "10",
+        orderType: "FOK",
+      }),
+      makeCtx(),
+      redis,
+      makePrisma(),
+    );
+    expect(intents[0].orderType).toBe("FOK");
   });
 });

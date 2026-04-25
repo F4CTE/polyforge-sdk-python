@@ -50,6 +50,7 @@ export enum BlockType {
   SELL = "SELL",
   WAIT = "WAIT",
   RUN_STRATEGY = "RUN_STRATEGY",
+  COMBO_LEG = "COMBO_LEG",
 
   // Sports triggers
   GAME_STARTED = "GAME_STARTED",
