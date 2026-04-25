@@ -54,4 +54,12 @@ export class EventsGateway {
   pushNotification(userId: string, data: unknown): void {
     this.sendToUser(userId, "NOTIFICATION", data);
   }
+
+  pushMarketSettlement(data: {
+    ticker: string;
+    settlementValue: string;
+    result: string | null;
+  }): void {
+    this.broadcast("MARKET_SETTLEMENT", data);
+  }
 }

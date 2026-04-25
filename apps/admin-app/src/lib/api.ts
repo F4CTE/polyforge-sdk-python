@@ -244,9 +244,25 @@ export interface Report {
 type ReportData = Report;
 
 interface BuilderStatsData {
-  activeBuilders: number;
-  totalStrategies: number;
+  attributedVolumeUsdc: number;
+  totalOrders: number;
+  activeStrategies: number;
+  connectedUsers: number;
+  currentTier: string;
+  relayLimit: number;
+  weeklyRewardUsdc: number | null;
   [key: string]: unknown;
+}
+
+interface BuilderLeaderboardData {
+  rank: number | null;
+  totalBuilders: number;
+  entries: { name?: string; volume?: number; rank?: number }[];
+}
+
+interface BuilderVolumeData {
+  daily: { date: string; volume: number }[];
+  totalVolume: number;
 }
 
 interface AuditLogData {
@@ -450,6 +466,8 @@ export const adminApi = {
 
   // Builder
   builderStats: () => request<BuilderStatsData>(buildUrl(API_BASE, '/builder/stats')),
+  builderLeaderboard: () => request<BuilderLeaderboardData>(buildUrl(API_BASE, '/builder/leaderboard')),
+  builderVolume: () => request<BuilderVolumeData>(buildUrl(API_BASE, '/builder/volume')),
 
   // Logs
   auditLogs: (params?: QueryParams) =>
