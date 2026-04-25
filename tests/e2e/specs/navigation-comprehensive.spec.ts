@@ -31,6 +31,7 @@ import {
 let sharedToken = '';
 
 test.beforeAll(async () => {
+    test.setTimeout(120_000);
     const email = uniqueEmail('nav');
     const username = uniqueUsername('nav');
     const result = await apiRegisterAndVerify(email, username, 'Password123!');

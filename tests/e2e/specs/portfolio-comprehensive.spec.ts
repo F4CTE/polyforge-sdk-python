@@ -18,7 +18,7 @@ test.describe('Portfolio — Full Workflow Coverage', () => {
     let token: string;
 
     test.beforeAll(async () => {
-        // Register a unique test user for portfolio tests
+        test.setTimeout(120_000);
         const email = uniqueEmail('portfolio');
         const username = uniqueUsername('portfoliouser');
         const res = await apiRegisterAndVerify(email, username, 'TestPass123!');

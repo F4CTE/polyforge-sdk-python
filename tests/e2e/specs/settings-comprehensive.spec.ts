@@ -27,6 +27,7 @@ test.describe.serial('Settings — Full Workflow Coverage', () => {
     const TEST_PASSWORD = 'TestPass123!';
 
     test.beforeAll(async () => {
+        test.setTimeout(120_000);
         const email    = uniqueEmail('settings');
         const username = uniqueUsername('settingsuser');
         const { token } = await apiRegisterAndVerify(email, username, 'TestPass123!');

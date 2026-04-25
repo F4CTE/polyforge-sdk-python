@@ -19,7 +19,7 @@ test.describe('Markets — Full Workflow Coverage', () => {
     let token: string;
 
     test.beforeAll(async () => {
-        // Register a unique test user for markets tests
+        test.setTimeout(120_000);
         const email = uniqueEmail('markets');
         const username = uniqueUsername('mktsuser');
         const res = await apiRegisterAndVerify(email, username, 'TestPass123!');

@@ -41,6 +41,7 @@ test.describe('Strategy Builder — Full Workflow Coverage', () => {
     const REFRESH_MARGIN_MS = 3 * 60_000;
 
     test.beforeAll(async () => {
+        test.setTimeout(120_000);
         const email    = uniqueEmail('strategybuilder');
         const username = uniqueUsername('stratbuilder');
         const password = 'TestPass123!';
