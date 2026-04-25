@@ -43,6 +43,7 @@ import { ReferralsModule } from "./referrals/referrals.module";
 import { AnalyticsModule } from "./analytics/analytics.module";
 import { UsersModule } from "./users/users.module";
 import { SportsModule } from "./sports/sports.module";
+import { FeesModule } from "./fees/fees.module";
 
 @Module({
   imports: [
@@ -98,6 +99,7 @@ import { SportsModule } from "./sports/sports.module";
     AnalyticsModule,
     UsersModule,
     SportsModule,
+    FeesModule,
   ],
   controllers: [HealthController, StatusController],
   providers: [{ provide: APP_GUARD, useClass: ApiKeyThrottlerGuard }],

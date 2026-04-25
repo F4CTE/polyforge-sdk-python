@@ -66,6 +66,8 @@ import {
   AtrBlockEvaluator,
 } from "./calc.blocks";
 
+import { VenueSelectBlock } from "./venue-select.block";
+
 import {
   GameStartedBlock,
   PregameWindowBlock,
@@ -154,6 +156,9 @@ export const CONDITION_REGISTRY: Record<string, BlockEvaluator> = {
   time_window: TimeWindowBlock,
   SPORT_SCORE_ABOVE: SportScoreAboveBlock,
   sport_score_above: SportScoreAboveBlock,
+  VENUE_SELECT: VenueSelectBlock,
+  venue_select: VenueSelectBlock,
+  minimize_fees: VenueSelectBlock,
 };
 
 export const ACTION_REGISTRY: Record<string, ActionEvaluator> = {

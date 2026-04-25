@@ -9,6 +9,10 @@ import type { VenueId } from "@polyforge/shared-types";
 
 export type VenueSelection = VenueId | "best" | undefined | null;
 
+export interface FeeContext {
+  feeBpsByVenue: Record<string, number>;
+}
+
 @Injectable()
 export class VenueRouter {
   private readonly logger = new Logger(VenueRouter.name);
@@ -29,11 +33,15 @@ export class VenueRouter {
   }
 
   /**
-   * Compares asks across all registered adapters for a given outcomeId and
-   * returns the adapter offering the best (lowest) ask price.
+   * Compares total cost (ask + fees) across all registered adapters for a
+   * given outcomeId. When feeContext is provided, the fee in bps is added to
+   * each ask price so the cheapest *effective* venue wins.
    * Falls back to polymarket if all other adapters fail.
    */
-  async resolveBest(outcomeId: string): Promise<VenueAdapter> {
+  async resolveBest(
+    outcomeId: string,
+    feeContext?: FeeContext,
+  ): Promise<VenueAdapter> {
     const adapters = Array.from(this.registry.values());
     if (adapters.length === 1) return adapters[0];
 
@@ -41,13 +49,19 @@ export class VenueRouter {
       adapters.map(async (a) => {
         const book = await a.getOrderBook(outcomeId);
         const bestAsk = book.asks[0];
-        return { adapter: a, ask: bestAsk ? Number(bestAsk.price) : Infinity };
+        const askPrice = bestAsk ? Number(bestAsk.price) : Infinity;
+        const feeBps = feeContext?.feeBpsByVenue[a.venueId] ?? 0;
+        const effectiveCost = askPrice * (1 + feeBps / 10000);
+        return { adapter: a, effectiveCost };
       }),
     );
 
-    let best: { adapter: VenueAdapter; ask: number } | null = null;
+    let best: { adapter: VenueAdapter; effectiveCost: number } | null = null;
     for (const r of results) {
-      if (r.status === "fulfilled" && (!best || r.value.ask < best.ask)) {
+      if (
+        r.status === "fulfilled" &&
+        (!best || r.value.effectiveCost < best.effectiveCost)
+      ) {
         best = r.value;
       }
     }
@@ -66,10 +80,11 @@ export class VenueRouter {
   async route(
     venue: VenueSelection,
     req: VenueOrderRequest,
+    feeContext?: FeeContext,
   ): Promise<VenueOrderResponse> {
     const adapter =
       venue === "best"
-        ? await this.resolveBest(req.venueOutcomeId)
+        ? await this.resolveBest(req.venueOutcomeId, feeContext)
         : this.resolve(venue);
     return adapter.submitOrder(req);
   }

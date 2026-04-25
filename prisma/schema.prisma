@@ -1466,3 +1466,22 @@ model ArbPosition {
   @@index([createdAt])
   @@map("arb_positions")
 }
+
+model VenueFeeSchedule {
+  id          String    @id @default(uuid())
+  venue       Venue
+  category    String?   @db.VarChar(100)
+  role        String    @db.VarChar(10) // "maker" or "taker"
+  feeBps      Int // basis points: 200 = 2%
+  minPrice    Decimal?  @db.Decimal(10, 6)
+  maxPrice    Decimal?  @db.Decimal(10, 6)
+  effectiveAt DateTime  @default(now())
+  expiresAt   DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@unique([venue, category, role, minPrice, maxPrice])
+  @@index([venue])
+  @@index([venue, effectiveAt])
+  @@map("venue_fee_schedules")
+}
