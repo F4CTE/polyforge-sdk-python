@@ -837,6 +837,157 @@ describe("KalshiWsService", () => {
     });
   });
 
+  // ── Market lifecycle v2 channel ────────────────────────────────────────────
+
+  describe("subscribeMarketLifecycle()", () => {
+    it("sends channel subscription when socket is open", async () => {
+      svc.onModuleInit();
+      await vi.runAllTimersAsync();
+      mockWsInstance!.triggerOpen();
+      svc.subscribeMarketLifecycle(["BTC-USD"]);
+      const calls = mockWsInstance!.send.mock.calls;
+      const frame = JSON.parse(calls[calls.length - 1][0] as string);
+      expect(frame.cmd).toBe("subscribe");
+      expect(frame.params.channels).toContain("market_lifecycle_v2");
+      expect(frame.params.market_tickers).toContain("BTC-USD");
+    });
+
+    it("queues subscription if socket not yet open", async () => {
+      svc.subscribeMarketLifecycle();
+      svc.onModuleInit();
+      await vi.runAllTimersAsync();
+      mockWsInstance!.triggerOpen();
+      const calls = mockWsInstance!.send.mock.calls;
+      const lifecycleFrame = calls.find((c: any) => {
+        const f = JSON.parse(c[0] as string);
+        return f.params.channels?.includes("market_lifecycle_v2");
+      });
+      expect(lifecycleFrame).toBeDefined();
+    });
+
+    it("emits kalshi.market.lifecycle on market_determined event", async () => {
+      const emitSpy = vi.fn();
+      emitter.emit = emitSpy;
+      svc.onModuleInit();
+      await vi.runAllTimersAsync();
+      mockWsInstance!.triggerOpen();
+
+      mockWsInstance!.triggerMessage({
+        type: "market_lifecycle_v2",
+        msg: {
+          market_ticker: "PRES-2028",
+          event_type: "market_determined",
+          status: "settled",
+          settlement_value: "yes",
+          result: "Yes",
+          ts_ms: 1700000000999,
+        },
+      });
+
+      const call = emitSpy.mock.calls.find(
+        (c: any[]) => c[0] === "kalshi.market.lifecycle",
+      );
+      expect(call).toBeDefined();
+      expect(call![1]).toMatchObject({
+        ticker: "PRES-2028",
+        eventType: "market_determined",
+        status: "settled",
+        settlementValue: "yes",
+        result: "Yes",
+        timestamp: 1700000000999,
+      });
+    });
+
+    it("emits lifecycle event with null settlement for non-determined events", async () => {
+      const emitSpy = vi.fn();
+      emitter.emit = emitSpy;
+      svc.onModuleInit();
+      await vi.runAllTimersAsync();
+      mockWsInstance!.triggerOpen();
+
+      mockWsInstance!.triggerMessage({
+        type: "market_lifecycle_v2",
+        msg: {
+          market_ticker: "ETH-MERGE",
+          event_type: "market_closed",
+          status: "closed",
+          ts: 1700000000,
+        },
+      });
+
+      const call = emitSpy.mock.calls.find(
+        (c: any[]) => c[0] === "kalshi.market.lifecycle",
+      );
+      expect(call).toBeDefined();
+      expect(call![1]).toMatchObject({
+        ticker: "ETH-MERGE",
+        eventType: "market_closed",
+        settlementValue: null,
+        result: null,
+      });
+    });
+
+    it("skips lifecycle messages with missing ticker", async () => {
+      const emitSpy = vi.fn();
+      emitter.emit = emitSpy;
+      svc.onModuleInit();
+      await vi.runAllTimersAsync();
+      mockWsInstance!.triggerOpen();
+
+      mockWsInstance!.triggerMessage({
+        type: "market_lifecycle_v2",
+        msg: { event_type: "market_determined" },
+      });
+
+      const call = emitSpy.mock.calls.find(
+        (c: any[]) => c[0] === "kalshi.market.lifecycle",
+      );
+      expect(call).toBeUndefined();
+    });
+
+    it("skips lifecycle messages with missing event_type", async () => {
+      const emitSpy = vi.fn();
+      emitter.emit = emitSpy;
+      svc.onModuleInit();
+      await vi.runAllTimersAsync();
+      mockWsInstance!.triggerOpen();
+
+      mockWsInstance!.triggerMessage({
+        type: "market_lifecycle_v2",
+        msg: { market_ticker: "BTC-USD" },
+      });
+
+      const call = emitSpy.mock.calls.find(
+        (c: any[]) => c[0] === "kalshi.market.lifecycle",
+      );
+      expect(call).toBeUndefined();
+    });
+
+    it("re-subscribes market_lifecycle_v2 on reconnect", async () => {
+      svc.onModuleInit();
+      await vi.runAllTimersAsync();
+      const firstInstance = mockWsInstance!;
+      firstInstance.triggerOpen();
+
+      svc.subscribeMarketLifecycle();
+
+      firstInstance.triggerClose(1006, "lost");
+      await vi.advanceTimersByTimeAsync(1100);
+      await vi.runAllTimersAsync();
+
+      const secondInstance = mockWsInstance!;
+      secondInstance.triggerOpen();
+
+      const calls = secondInstance.send.mock.calls.map((c: unknown[]) =>
+        JSON.parse(c[0] as string),
+      );
+      const channels = calls.flatMap(
+        (f: { params?: { channels?: string[] } }) => f.params?.channels ?? [],
+      );
+      expect(channels).toContain("market_lifecycle_v2");
+    });
+  });
+
   // ── Error handling branches ───────────────────────────────────────────────
 
   describe("error handling", () => {

@@ -17,6 +17,7 @@ export enum WsEvent {
   STRATEGY_UPDATE = "strategy:update",
   NOTIFICATION = "notification",
   NEWS_SIGNAL = "news:signal",
+  MARKET_SETTLEMENT = "market:settlement",
   ERROR = "error",
 }
 
@@ -67,6 +68,14 @@ export interface WsStrategyUpdate {
 export interface WsNotification {
   eventType: string;
   data: Record<string, unknown>;
+  timestamp: number;
+}
+
+export interface WsMarketSettlement {
+  ticker: string;
+  settlementValue: string;
+  result: string | null;
+  estimatedPayout: string | null;
   timestamp: number;
 }
 

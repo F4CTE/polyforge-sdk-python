@@ -56,6 +56,15 @@ interface MarketPositionEvent {
   timestamp: number;
 }
 
+interface MarketLifecycleEvent {
+  ticker: string;
+  eventType: string;
+  status: string;
+  settlementValue: string | null;
+  result: string | null;
+  timestamp: number;
+}
+
 let _msgId = 1;
 function nextMsgId(): number {
   return _msgId++;
@@ -138,6 +147,13 @@ export class KalshiWsService
     }
   }
 
+  subscribeMarketLifecycle(tickers?: string[]) {
+    this.privateChannels.add("market_lifecycle_v2");
+    if (this.isConnected) {
+      this.sendChannelSubscription("market_lifecycle_v2", tickers);
+    }
+  }
+
   getOrderbookSeq(ticker: string): number | undefined {
     return this.orderbookSeq.get(ticker);
   }
@@ -180,6 +196,9 @@ export class KalshiWsService
         break;
       case "communications":
         this.handleCommunicationsMessage(inner);
+        break;
+      case "market_lifecycle_v2":
+        this.handleMarketLifecycleMessage(inner);
         break;
     }
   }
@@ -335,5 +354,20 @@ export class KalshiWsService
       count: (inner["count"] as number) ?? undefined,
       timestamp: parseKalshiTimestamp(inner),
     } satisfies KalshiCommunicationsEvent);
+  }
+
+  private handleMarketLifecycleMessage(inner: Record<string, unknown>) {
+    const ticker = inner["market_ticker"] as string | undefined;
+    const eventType = inner["event_type"] as string | undefined;
+    if (!ticker || !eventType) return;
+
+    this.emitter.emit("kalshi.market.lifecycle", {
+      ticker,
+      eventType,
+      status: (inner["status"] as string) ?? "unknown",
+      settlementValue: (inner["settlement_value"] as string) ?? null,
+      result: (inner["result"] as string) ?? null,
+      timestamp: parseKalshiTimestamp(inner),
+    } satisfies MarketLifecycleEvent);
   }
 }
