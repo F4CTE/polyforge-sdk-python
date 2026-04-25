@@ -1,13 +1,33 @@
-import { Controller, Get, Param, Query, UseGuards } from "@nestjs/common";
+import {
+  Controller,
+  Get,
+  Post,
+  Delete,
+  Param,
+  Query,
+  Body,
+  UseGuards,
+  HttpCode,
+  HttpStatus,
+  ParseUUIDPipe,
+} from "@nestjs/common";
 import { ApiTags, ApiBearerAuth } from "@nestjs/swagger";
 import { Throttle } from "@nestjs/throttler";
-import { JwtAuthGuard } from "@polyforge/shared-auth";
+import {
+  JwtAuthGuard,
+  CurrentUser,
+  RequireScopes,
+  ApiKeyScopeGuard,
+} from "@polyforge/shared-auth";
+import { JwtPayload } from "@polyforge/shared-types";
 import { MarketsService } from "./markets.service";
 import {
   MarketQueryDto,
   PriceHistoryQueryDto,
   SearchQueryDto,
   ClobPriceHistoryQueryDto,
+  MarketHistoryQueryDto,
+  CreateMarketAlertDto,
 } from "./dto/market-query.dto";
 import { BETA_LIMITS } from "../common/beta-limits.config";
 
@@ -37,6 +57,62 @@ export class MarketsController {
   @Get(":marketId")
   findOne(@Param("marketId") marketId: string) {
     return this.markets.findOne(marketId);
+  }
+
+  @Get(":marketId/history")
+  marketHistory(
+    @Param("marketId") marketId: string,
+    @Query() query: MarketHistoryQueryDto,
+  ) {
+    return this.markets.marketHistory(marketId, query.period ?? "7d");
+  }
+
+  @Get(":marketId/alerts")
+  listMarketAlerts(
+    @Param("marketId") marketId: string,
+    @CurrentUser() user: JwtPayload,
+  ) {
+    return this.markets.listMarketAlerts(marketId, user.sub);
+  }
+
+  @Post(":marketId/alerts")
+  @HttpCode(HttpStatus.CREATED)
+  @UseGuards(ApiKeyScopeGuard)
+  @RequireScopes("WRITE")
+  createMarketAlert(
+    @Param("marketId") marketId: string,
+    @CurrentUser() user: JwtPayload,
+    @Body() dto: CreateMarketAlertDto,
+  ) {
+    return this.markets.createMarketAlert(marketId, user.sub, dto);
+  }
+
+  @Delete(":marketId/alerts/:alertId")
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @UseGuards(ApiKeyScopeGuard)
+  @RequireScopes("WRITE")
+  deleteMarketAlert(
+    @Param("alertId", ParseUUIDPipe) alertId: string,
+    @CurrentUser() user: JwtPayload,
+  ) {
+    return this.markets.deleteMarketAlert(alertId, user.sub);
+  }
+
+  @Get(":marketId/sentiment")
+  getMarketSentiment(
+    @Param("marketId") marketId: string,
+    @CurrentUser() user: JwtPayload,
+  ) {
+    return this.markets.getMarketSentiment(marketId, user.sub);
+  }
+
+  @Post(":marketId/sentiment")
+  @HttpCode(HttpStatus.OK)
+  voteMarketSentiment(
+    @Param("marketId") marketId: string,
+    @CurrentUser() user: JwtPayload,
+  ) {
+    return this.markets.getMarketSentiment(marketId, user.sub);
   }
 
   @Get(":tokenId/price-history")

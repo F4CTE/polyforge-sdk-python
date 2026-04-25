@@ -8,6 +8,7 @@ import {
   Max,
   MaxLength,
   IsISO8601,
+  IsNumber,
 } from "class-validator";
 import { Type, Transform } from "class-transformer";
 import { PaginationDto } from "../../common/dto/pagination.dto";
@@ -87,4 +88,24 @@ export class SearchQueryDto {
   @Min(1)
   @Max(100)
   limit?: number = 20;
+}
+
+export class MarketHistoryQueryDto {
+  @IsOptional()
+  @IsIn(["1d", "7d", "30d", "90d"])
+  period?: string = "7d";
+}
+
+export class CreateMarketAlertDto {
+  @IsIn(["YES", "NO", "Yes", "No"])
+  outcome!: string;
+
+  @IsIn(["above", "below"])
+  condition!: string;
+
+  @IsNumber()
+  @Type(() => Number)
+  @Min(0.01)
+  @Max(0.99)
+  threshold!: number;
 }

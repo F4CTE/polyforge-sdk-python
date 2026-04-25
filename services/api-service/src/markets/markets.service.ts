@@ -452,6 +452,218 @@ export class MarketsService implements OnModuleInit {
     return result;
   }
 
+  async marketHistory(
+    marketId: string,
+    period: string,
+  ): Promise<{
+    data: Array<{
+      timestamp: string;
+      yesPrice: number;
+      noPrice: number;
+      volume: number;
+    }>;
+  }> {
+    const tokens = await this.prisma.token.findMany({
+      where: { marketId },
+      select: { id: true, outcome: true },
+    });
+
+    if (tokens.length === 0) {
+      return { data: [] };
+    }
+
+    const periodMs: Record<string, number> = {
+      "1d": 86400_000,
+      "7d": 7 * 86400_000,
+      "30d": 30 * 86400_000,
+      "90d": 90 * 86400_000,
+    };
+    const ms = periodMs[period] ?? periodMs["7d"];
+    const fromDate = new Date(Date.now() - ms);
+
+    const yesToken = tokens.find(
+      (t) => t.outcome === "Yes" || t.outcome === "YES",
+    );
+    const noToken = tokens.find(
+      (t) => t.outcome === "No" || t.outcome === "NO",
+    );
+    const tokenIds = tokens.map((t) => t.id);
+
+    type SnapshotRow = {
+      time: Date;
+      tokenId: string;
+      close: string | null;
+      volume: string | null;
+    };
+    const rows: SnapshotRow[] = await this.prisma.$queryRaw`
+      SELECT
+        time_bucket('1 hour'::interval, time) AS time,
+        "tokenId",
+        last(close, time) AS close,
+        sum(volume) AS volume
+      FROM price_snapshots
+      WHERE "tokenId" = ANY(${tokenIds})
+        AND time >= ${fromDate}
+      GROUP BY 1, 2
+      ORDER BY 1 ASC
+      LIMIT 2000
+    `;
+
+    const timeMap = new Map<
+      string,
+      { yesPrice: number; noPrice: number; volume: number }
+    >();
+    for (const row of rows) {
+      const ts = row.time.toISOString();
+      const entry = timeMap.get(ts) ?? { yesPrice: 0, noPrice: 0, volume: 0 };
+      const price = parseFloat(row.close ?? "0");
+      const vol = parseFloat(row.volume ?? "0");
+
+      if (yesToken && row.tokenId === yesToken.id) entry.yesPrice = price;
+      else if (noToken && row.tokenId === noToken.id) entry.noPrice = price;
+      entry.volume += vol;
+      timeMap.set(ts, entry);
+    }
+
+    return {
+      data: Array.from(timeMap.entries()).map(([ts, v]) => ({
+        timestamp: ts,
+        ...v,
+      })),
+    };
+  }
+
+  async listMarketAlerts(
+    marketId: string,
+    userId: string,
+  ): Promise<{
+    data: Array<{
+      id: string;
+      marketId: string;
+      outcome: string;
+      condition: string;
+      threshold: number;
+      triggered: boolean;
+      createdAt: Date;
+    }>;
+  }> {
+    const tokenIds = await this.prisma.token.findMany({
+      where: { marketId },
+      select: { id: true, outcome: true },
+    });
+    const tokenIdList = tokenIds.map((t) => t.id);
+    const tokenOutcomeMap = new Map(tokenIds.map((t) => [t.id, t.outcome]));
+
+    const alerts = await this.prisma.priceAlert.findMany({
+      where: { userId, tokenId: { in: tokenIdList } },
+      orderBy: { createdAt: "desc" },
+    });
+
+    return {
+      data: alerts.map((a) => ({
+        id: a.id,
+        marketId,
+        outcome: tokenOutcomeMap.get(a.tokenId) ?? "YES",
+        condition: a.direction,
+        threshold: parseFloat(String(a.price)),
+        triggered: a.triggered,
+        createdAt: a.createdAt,
+      })),
+    };
+  }
+
+  async createMarketAlert(
+    marketId: string,
+    userId: string,
+    dto: { outcome: string; condition: string; threshold: number },
+  ): Promise<{
+    id: string;
+    marketId: string;
+    outcome: string;
+    condition: string;
+    threshold: number;
+    triggered: boolean;
+    createdAt: Date;
+  }> {
+    const token = await this.prisma.token.findFirst({
+      where: {
+        marketId,
+        outcome: { equals: dto.outcome, mode: "insensitive" },
+      },
+    });
+    if (!token) {
+      throw new NotFoundException({
+        code: "TOKEN_NOT_FOUND",
+        message: `No ${dto.outcome} token for this market`,
+      });
+    }
+
+    const alert = await this.prisma.priceAlert.create({
+      data: {
+        userId,
+        tokenId: token.id,
+        direction: dto.condition,
+        price: dto.threshold,
+      },
+    });
+
+    return {
+      id: alert.id,
+      marketId,
+      outcome: dto.outcome,
+      condition: dto.condition,
+      threshold: dto.threshold,
+      triggered: false,
+      createdAt: alert.createdAt,
+    };
+  }
+
+  async deleteMarketAlert(alertId: string, userId: string): Promise<void> {
+    const alert = await this.prisma.priceAlert.findUnique({
+      where: { id: alertId },
+    });
+    if (!alert)
+      throw new NotFoundException({
+        code: "NOT_FOUND",
+        message: "Alert not found",
+      });
+    if (alert.userId !== userId)
+      throw new NotFoundException({
+        code: "NOT_FOUND",
+        message: "Alert not found",
+      });
+    await this.prisma.priceAlert.delete({ where: { id: alertId } });
+  }
+
+  async getMarketSentiment(
+    marketId: string,
+    userId?: string,
+  ): Promise<{
+    yesPercent: number;
+    noPercent: number;
+    totalVotes: number;
+    userVote: { direction: string; confidence: number } | null;
+  }> {
+    const signals = await this.prisma.newsSignal.findMany({
+      where: {
+        marketId,
+        createdAt: { gte: new Date(Date.now() - 30 * 86400_000) },
+      },
+      select: { direction: true, confidence: true },
+    });
+
+    const buys = signals.filter((s) => s.direction === "BUY");
+    const sells = signals.filter((s) => s.direction === "SELL");
+    const total = signals.length || 1;
+
+    return {
+      yesPercent: Math.round((buys.length / total) * 100),
+      noPercent: Math.round((sells.length / total) * 100),
+      totalVotes: signals.length,
+      userVote: null,
+    };
+  }
+
   async search(query: {
     q: string;
     limit?: number;

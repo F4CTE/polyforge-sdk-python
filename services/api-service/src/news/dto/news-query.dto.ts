@@ -12,6 +12,11 @@ import { Type } from "class-transformer";
 export class NewsArticleQueryDto {
   @IsOptional()
   @IsString()
+  @MaxLength(255)
+  marketId?: string;
+
+  @IsOptional()
+  @IsString()
   @MaxLength(100)
   source?: string;
 

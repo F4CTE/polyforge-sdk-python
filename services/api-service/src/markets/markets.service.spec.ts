@@ -42,6 +42,46 @@ function makePriceHistoryQuery(overrides: Record<string, unknown> = {}) {
   };
 }
 
+function makeToken(overrides: Record<string, unknown> = {}) {
+  return {
+    id: "token-uuid-1",
+    marketId: "market-uuid-1",
+    outcome: "YES",
+    price: { toNumber: () => 0.65 } as any,
+    liquidity: { toNumber: () => 1000 } as any,
+    ...overrides,
+  };
+}
+
+function makePriceAlert(overrides: Record<string, unknown> = {}) {
+  return {
+    id: "alert-1",
+    tokenId: "token-uuid-1",
+    userId: "user-1",
+    direction: "above",
+    price: { toNumber: () => 0.75 } as any,
+    persistent: false,
+    triggered: false,
+    triggeredAt: null,
+    createdAt: new Date("2026-01-01"),
+    ...overrides,
+  };
+}
+
+function makeNewsSignal(overrides: Record<string, unknown> = {}) {
+  return {
+    id: "signal-1",
+    marketId: "market-1",
+    articleId: "article-1",
+    outcome: "YES",
+    direction: "BUY",
+    confidence: 80,
+    reasoning: null,
+    createdAt: new Date("2026-01-01"),
+    ...overrides,
+  };
+}
+
 // Helper: extract the full SQL text from a Prisma.Sql tagged template call.
 // $queryRaw receives a single Prisma.Sql argument whose `.strings` array holds
 // the static SQL fragments. Joining them gives us the template text for assertions.
@@ -749,6 +789,240 @@ describe("MarketsService", () => {
 
       const result = await service.clobBook("token-1");
       expect(result).toEqual(cached);
+    });
+  });
+
+  // ── marketHistory ────────────────────────────────────────────────────
+
+  describe("marketHistory", () => {
+    it("returns empty data when market has no tokens", async () => {
+      db.token.findMany.mockResolvedValue([]);
+
+      const result = await service.marketHistory("market-1", "7d");
+
+      expect(result).toEqual({ data: [] });
+    });
+
+    it("aggregates YES and NO token snapshots into history points", async () => {
+      db.token.findMany.mockResolvedValue([
+        makeToken({ id: "t-yes", outcome: "YES" }),
+        makeToken({ id: "t-no", outcome: "NO" }),
+      ] as any);
+      const ts = new Date("2026-01-01T12:00:00Z");
+      db.$queryRaw.mockResolvedValue([
+        { time: ts, tokenId: "t-yes", close: "0.65", volume: "500" },
+        { time: ts, tokenId: "t-no", close: "0.35", volume: "300" },
+      ] as any);
+
+      const result = await service.marketHistory("market-1", "7d");
+
+      expect(result.data).toHaveLength(1);
+      expect(result.data[0].yesPrice).toBe(0.65);
+      expect(result.data[0].noPrice).toBe(0.35);
+      expect(result.data[0].volume).toBe(800);
+    });
+
+    it("handles case-insensitive outcome matching (Yes/No)", async () => {
+      db.token.findMany.mockResolvedValue([
+        makeToken({ id: "t-yes", outcome: "Yes" }),
+        makeToken({ id: "t-no", outcome: "No" }),
+      ] as any);
+      db.$queryRaw.mockResolvedValue([
+        {
+          time: new Date("2026-01-01"),
+          tokenId: "t-yes",
+          close: "0.70",
+          volume: "100",
+        },
+      ] as any);
+
+      const result = await service.marketHistory("market-1", "1d");
+
+      expect(result.data[0].yesPrice).toBe(0.7);
+    });
+
+    it("defaults null close/volume to 0", async () => {
+      db.token.findMany.mockResolvedValue([
+        makeToken({ id: "t1", outcome: "YES" }),
+      ] as any);
+      db.$queryRaw.mockResolvedValue([
+        {
+          time: new Date("2026-01-01"),
+          tokenId: "t1",
+          close: null,
+          volume: null,
+        },
+      ] as any);
+
+      const result = await service.marketHistory("market-1", "7d");
+
+      expect(result.data[0].yesPrice).toBe(0);
+      expect(result.data[0].volume).toBe(0);
+    });
+  });
+
+  // ── listMarketAlerts ──────────────────────────────────────────────────
+
+  describe("listMarketAlerts", () => {
+    it("returns alerts mapped with outcome from token", async () => {
+      db.token.findMany.mockResolvedValue([
+        makeToken({ id: "t-yes", outcome: "YES" }),
+        makeToken({ id: "t-no", outcome: "NO" }),
+      ] as any);
+      db.priceAlert.findMany.mockResolvedValue([
+        makePriceAlert({
+          id: "alert-1",
+          tokenId: "t-yes",
+          userId: "user-1",
+          direction: "above",
+          price: "0.75",
+        }),
+      ] as any);
+
+      const result = await service.listMarketAlerts("market-1", "user-1");
+
+      expect(result.data).toHaveLength(1);
+      expect(result.data[0].outcome).toBe("YES");
+      expect(result.data[0].condition).toBe("above");
+      expect(result.data[0].threshold).toBe(0.75);
+    });
+
+    it("returns empty array when no alerts exist", async () => {
+      db.token.findMany.mockResolvedValue([
+        makeToken({ id: "t1", outcome: "YES" }),
+      ] as any);
+      db.priceAlert.findMany.mockResolvedValue([]);
+
+      const result = await service.listMarketAlerts("market-1", "user-1");
+
+      expect(result.data).toEqual([]);
+    });
+  });
+
+  // ── createMarketAlert ─────────────────────────────────────────────────
+
+  describe("createMarketAlert", () => {
+    it("creates alert by resolving outcome to token", async () => {
+      db.token.findFirst.mockResolvedValue(
+        makeToken({ id: "t-yes", marketId: "market-1", outcome: "YES" }) as any,
+      );
+      db.priceAlert.create.mockResolvedValue(
+        makePriceAlert({
+          id: "alert-new",
+          userId: "user-1",
+          tokenId: "t-yes",
+          direction: "above",
+          price: 0.8,
+        }) as any,
+      );
+
+      const result = await service.createMarketAlert("market-1", "user-1", {
+        outcome: "YES",
+        condition: "above",
+        threshold: 0.8,
+      });
+
+      expect(result.id).toBe("alert-new");
+      expect(result.outcome).toBe("YES");
+      expect(result.threshold).toBe(0.8);
+      expect(db.priceAlert.create).toHaveBeenCalledWith({
+        data: {
+          userId: "user-1",
+          tokenId: "t-yes",
+          direction: "above",
+          price: 0.8,
+        },
+      });
+    });
+
+    it("throws NotFoundException when token for outcome does not exist", async () => {
+      db.token.findFirst.mockResolvedValue(null);
+
+      await expect(
+        service.createMarketAlert("market-1", "user-1", {
+          outcome: "YES",
+          condition: "above",
+          threshold: 0.5,
+        }),
+      ).rejects.toThrow(NotFoundException);
+    });
+  });
+
+  // ── deleteMarketAlert ─────────────────────────────────────────────────
+
+  describe("deleteMarketAlert", () => {
+    it("deletes alert when owned by user", async () => {
+      db.priceAlert.findUnique.mockResolvedValue(
+        makePriceAlert({ id: "alert-1", userId: "user-1" }) as any,
+      );
+      db.priceAlert.delete.mockResolvedValue(
+        makePriceAlert({ id: "alert-1" }) as any,
+      );
+
+      await service.deleteMarketAlert("alert-1", "user-1");
+
+      expect(db.priceAlert.delete).toHaveBeenCalledWith({
+        where: { id: "alert-1" },
+      });
+    });
+
+    it("throws NotFoundException when alert does not exist", async () => {
+      db.priceAlert.findUnique.mockResolvedValue(null);
+
+      await expect(
+        service.deleteMarketAlert("alert-x", "user-1"),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it("throws NotFoundException when alert belongs to a different user", async () => {
+      db.priceAlert.findUnique.mockResolvedValue(
+        makePriceAlert({ id: "alert-1", userId: "other-user" }) as any,
+      );
+
+      await expect(
+        service.deleteMarketAlert("alert-1", "user-1"),
+      ).rejects.toThrow(NotFoundException);
+    });
+  });
+
+  // ── getMarketSentiment ────────────────────────────────────────────────
+
+  describe("getMarketSentiment", () => {
+    it("returns vote percentages from news signals", async () => {
+      db.newsSignal.findMany.mockResolvedValue([
+        makeNewsSignal({ id: "s1", direction: "BUY", confidence: 80 }),
+        makeNewsSignal({ id: "s2", direction: "BUY", confidence: 70 }),
+        makeNewsSignal({ id: "s3", direction: "SELL", confidence: 60 }),
+      ] as any);
+
+      const result = await service.getMarketSentiment("market-1");
+
+      expect(result.yesPercent).toBe(67); // 2/3
+      expect(result.noPercent).toBe(33); // 1/3
+      expect(result.totalVotes).toBe(3);
+      expect(result.userVote).toBeNull();
+    });
+
+    it("returns zero percentages when no signals exist", async () => {
+      db.newsSignal.findMany.mockResolvedValue([]);
+
+      const result = await service.getMarketSentiment("market-1");
+
+      expect(result.yesPercent).toBe(0);
+      expect(result.noPercent).toBe(0);
+      expect(result.totalVotes).toBe(0);
+    });
+
+    it("returns 100% yes when all signals are BUY", async () => {
+      db.newsSignal.findMany.mockResolvedValue([
+        makeNewsSignal({ id: "s1", direction: "BUY", confidence: 90 }),
+        makeNewsSignal({ id: "s2", direction: "BUY", confidence: 80 }),
+      ] as any);
+
+      const result = await service.getMarketSentiment("market-1");
+
+      expect(result.yesPercent).toBe(100);
+      expect(result.noPercent).toBe(0);
     });
   });
 

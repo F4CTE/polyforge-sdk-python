@@ -19,6 +19,9 @@ export class NewsService {
 
     const where: Prisma.NewsArticleWhereInput = {};
 
+    if (query.marketId) {
+      where.signals = { some: { marketId: query.marketId } };
+    }
     if (query.source) {
       where.source = query.source;
     }
