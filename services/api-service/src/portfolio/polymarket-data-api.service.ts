@@ -238,6 +238,20 @@ export class PolymarketDataApiService {
     return (await res.json()) as unknown[];
   }
 
+  async getUserSponsoredMarkets(walletAddress: string): Promise<unknown[]> {
+    const res = await fetch(
+      `${this.dataApiUrl}/rewards/user/markets?user=${encodeURIComponent(walletAddress)}&sponsored=true`,
+      { signal: AbortSignal.timeout(10_000) },
+    );
+    if (!res.ok) {
+      this.logger.warn(
+        `Polymarket rewards/user/markets?sponsored returned ${res.status}`,
+      );
+      return [];
+    }
+    return (await res.json()) as unknown[];
+  }
+
   async getUserRewardsPercentages(walletAddress: string): Promise<unknown> {
     const res = await fetch(
       `${this.dataApiUrl}/rewards/user/percentages?user=${encodeURIComponent(walletAddress)}`,

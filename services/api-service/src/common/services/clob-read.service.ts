@@ -1,6 +1,17 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 
+export interface ClobRewardsMarketDetail {
+  conditionId: string;
+  rate_per_day: string;
+  total_rewards: string;
+  remaining_reward_amount: string;
+  max_spread: string;
+  min_size: string;
+  start_date?: string;
+  end_date?: string;
+}
+
 @Injectable()
 export class ClobReadService {
   private readonly logger = new Logger(ClobReadService.name);
@@ -117,6 +128,21 @@ export class ClobReadService {
         realizedPnl: string;
       }>
     >;
+  }
+
+  async getRewardsForMarkets(
+    marketIds: string[],
+  ): Promise<ClobRewardsMarketDetail[]> {
+    const params = new URLSearchParams();
+    for (const id of marketIds) {
+      params.append("markets[]", id);
+    }
+    const res = await this.fetch(`/rewards/markets/multi?${params.toString()}`);
+    if (!res.ok) {
+      this.logger.warn(`CLOB rewards/markets/multi returned ${res.status}`);
+      return [];
+    }
+    return (await res.json()) as ClobRewardsMarketDetail[];
   }
 
   private fetch(path: string): Promise<Response> {
