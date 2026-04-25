@@ -9,6 +9,7 @@ interface User {
   bio?: string;
   status: 'UNVERIFIED' | 'VERIFIED' | 'CONNECTED';
   polymarketConnected: boolean;
+  polymarketRail?: 'global' | 'us';
   kalshiConnected: boolean;
   emailVerified: boolean;
   totpEnabled: boolean;

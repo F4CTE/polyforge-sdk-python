@@ -5,6 +5,7 @@ import {
   TrendingUp, Award, Target, Flame, Hexagon, DollarSign, Users, Eye,
 } from 'lucide-react';
 import { useAuthStore, authedFetch } from '../../stores/auth-store';
+import { RailIndicatorBadge } from '../../components/rail-indicator-badge';
 
 /* ─── Types ──────────────────────────────────────────────────────────── */
 
@@ -147,6 +148,9 @@ export function Component() {
             <Link2 className="size-3" />
             {user.polymarketConnected ? 'Polymarket Connected' : 'Not Connected'}
           </span>
+          {user.polymarketRail && (
+            <RailIndicatorBadge rail={user.polymarketRail} />
+          )}
           <span data-testid="status-chip" className={`flex items-center gap-2 px-3 py-1 rounded-full text-label font-medium border ${
             user.totpEnabled
               ? 'bg-gain/10 text-gain border-gain/20'

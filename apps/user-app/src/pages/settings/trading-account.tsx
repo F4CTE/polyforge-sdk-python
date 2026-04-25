@@ -7,6 +7,8 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuthStore } from '../../stores/auth-store';
+import { USLegalDisclaimerBanner, clearDismissal } from '../../components/us-legal-disclaimer-banner';
+import { RailIndicatorBadge } from '../../components/rail-indicator-badge';
 
 /* ─── ConfirmDialog ──────────────────────────────────────────────────── */
 
@@ -85,8 +87,9 @@ export function Component() {
   const { user, patchUser } = useAuthStore();
   const isConnected = user?.polymarketConnected === true;
   const isKalshiConnected = user?.kalshiConnected === true;
+  const isUsRail = user?.polymarketRail === 'us';
 
-  // Polymarket credentials form
+  // Polymarket credentials form — global rail
   const [privateKey, setPrivateKey] = useState('');
   const [apiKey, setApiKey] = useState('');
   const [apiSecret, setApiSecret] = useState('');
@@ -97,6 +100,11 @@ export function Component() {
   const [showPrivateKey, setShowPrivateKey] = useState(false);
   const [showApiSecret, setShowApiSecret] = useState(false);
   const [showPassphrase, setShowPassphrase] = useState(false);
+
+  // Polymarket credentials form — US rail
+  const [usKeyId, setUsKeyId] = useState('');
+  const [usSecretKey, setUsSecretKey] = useState('');
+  const [showUsSecretKey, setShowUsSecretKey] = useState(false);
 
   // Kalshi credentials form
   const [kalshiUserId, setKalshiUserId] = useState('');
@@ -127,6 +135,7 @@ export function Component() {
       if (res.ok) {
         const data = await res.json();
         patchUser({ polymarketConnected: data.connected });
+        if (user?.id) clearDismissal(user.id);
         setPrivateKey('');
         setApiKey('');
         setApiSecret('');
@@ -134,6 +143,31 @@ export function Component() {
         setSafeAddress('');
       }
     } catch { toast.error('Failed to import credentials'); }
+    setImporting(false);
+  }
+
+  async function importUsCredentials() {
+    if (importing || !usKeyId.trim() || !usSecretKey.trim()) return;
+    setImporting(true);
+    try {
+      const res = await fetch('/auth/v1/credentials/us', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ keyId: usKeyId.trim(), secretKey: usSecretKey.trim() }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        patchUser({ polymarketConnected: data.connected });
+        if (user?.id) clearDismissal(user.id);
+        setUsKeyId('');
+        setUsSecretKey('');
+        toast.success('US credentials connected');
+      } else {
+        const err = await res.json().catch(() => ({}));
+        toast.error(err?.message ?? 'Failed to import US credentials');
+      }
+    } catch { toast.error('Failed to import US credentials'); }
     setImporting(false);
   }
 
@@ -220,6 +254,7 @@ export function Component() {
   }
 
   const canImport = privateKey && apiKey && apiSecret && apiPassphrase && !importing;
+  const canImportUs = usKeyId.trim().length > 0 && usSecretKey.trim().length > 0 && !importing;
 
   return (
     <div className="animate-fade-in p-6 max-w-2xl mx-auto space-y-6">
@@ -231,15 +266,25 @@ export function Component() {
           </Link>
           <h1 className="text-2xl font-semibold text-primary">Trading Account</h1>
         </div>
-        <span data-testid="trading-status" className={`flex items-center gap-2 px-3 py-2 rounded-full text-label font-medium border ${
-          isConnected
-            ? 'bg-gain/10 text-gain border-gain/20'
-            : 'bg-overlay text-tertiary border-default'
-        }`}>
-          {isConnected ? <CheckCircle className="size-4" /> : <XCircle className="size-4" />}
-          {isConnected ? 'Connected' : 'Not Connected'}
-        </span>
+        <div className="flex items-center gap-2">
+          {user?.polymarketRail && (
+            <RailIndicatorBadge rail={user.polymarketRail} />
+          )}
+          <span data-testid="trading-status" className={`flex items-center gap-2 px-3 py-2 rounded-full text-label font-medium border ${
+            isConnected
+              ? 'bg-gain/10 text-gain border-gain/20'
+              : 'bg-overlay text-tertiary border-default'
+          }`}>
+            {isConnected ? <CheckCircle className="size-4" /> : <XCircle className="size-4" />}
+            {isConnected ? 'Connected' : 'Not Connected'}
+          </span>
+        </div>
       </div>
+
+      {/* US legal disclaimer — only for US rail users */}
+      {isUsRail && user?.id && (
+        <USLegalDisclaimerBanner userId={user.id} />
+      )}
 
       {/* Polymarket credentials panel */}
       <div className="bg-elevated border border-default rounded-pf p-6 space-y-5">
@@ -254,7 +299,70 @@ export function Component() {
               Disconnect Account
             </Button>
           </>
+        ) : isUsRail ? (
+          /* US rail: simplified form — keyId + secretKey only */
+          <>
+            <h2 className="text-body-md font-semibold text-primary uppercase tracking-wider">Import Polymarket US Credentials</h2>
+            <p className="text-body-sm text-secondary">
+              Enter your Polymarket US API credentials. These are issued directly by Polymarket for
+              the CFTC-regulated US endpoint and are encrypted at rest.
+            </p>
+            <div>
+              <label htmlFor="us-key-id" className="text-label text-secondary mb-2 block">
+                Key ID <span className="text-loss">*</span>
+              </label>
+              <Input
+                id="us-key-id"
+                type="text"
+                value={usKeyId}
+                onChange={e => setUsKeyId(e.target.value)}
+                placeholder="Key ID"
+                aria-required="true"
+                data-testid="us-key-id-input"
+                className="w-full font-mono"
+              />
+            </div>
+            <div>
+              <label htmlFor="us-secret-key" className="text-label text-secondary mb-2 block">
+                Secret Key <span className="text-loss">*</span>
+              </label>
+              <div className="relative">
+                <Input
+                  id="us-secret-key"
+                  type={showUsSecretKey ? 'text' : 'password'}
+                  value={usSecretKey}
+                  onChange={e => setUsSecretKey(e.target.value)}
+                  placeholder="Secret Key"
+                  aria-required="true"
+                  data-testid="us-secret-key-input"
+                  className="w-full pr-10 font-mono"
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon-sm"
+                  onClick={() => setShowUsSecretKey(!showUsSecretKey)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2"
+                  aria-label={showUsSecretKey ? 'Hide secret key' : 'Show secret key'}
+                >
+                  {showUsSecretKey ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                </Button>
+              </div>
+            </div>
+            <Button
+              type="button"
+              variant="default"
+              onClick={importUsCredentials}
+              disabled={!canImportUs}
+              data-testid="us-connect-btn"
+              className="flex items-center gap-2"
+            >
+              {importing ? <Loader2 className="size-4 animate-spin" /> : <Link2 className="size-4" />}
+              Connect US Account
+            </Button>
+          </>
         ) : (
+          /* Global rail: full wallet-derived credential form */
           <>
             <h2 className="text-body-md font-semibold text-primary uppercase tracking-wider">Import Polymarket Credentials</h2>
             <p className="text-body-sm text-secondary">

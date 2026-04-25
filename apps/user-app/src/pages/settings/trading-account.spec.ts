@@ -5,6 +5,7 @@ import { describe, it, expect } from 'vitest';
 interface User {
   id: string;
   polymarketConnected: boolean;
+  polymarketRail?: 'global' | 'us';
   kalshiConnected: boolean;
 }
 
@@ -15,6 +16,14 @@ function maskUserId(id: string): string {
 
 function canConnectKalshi(userId: string, importing: boolean): boolean {
   return userId.trim().length > 0 && !importing;
+}
+
+function canImportUs(keyId: string, secretKey: string, importing: boolean): boolean {
+  return keyId.trim().length > 0 && secretKey.trim().length > 0 && !importing;
+}
+
+function dismissalKey(userId: string): string {
+  return `polyforge:us-disclaimer-dismissed:${userId}`;
 }
 
 // ─── Tests ─────────────────────────────────────────────────────────────────
@@ -81,6 +90,72 @@ describe('Kalshi credentials panel', () => {
         kalshiConnected: true,
       };
       expect(user.polymarketConnected && user.kalshiConnected).toBe(true);
+    });
+  });
+});
+
+// ─── US rail ───────────────────────────────────────────────────────────────
+
+describe('US rail credential form', () => {
+  describe('canImportUs', () => {
+    it('returns true when both keyId and secretKey are provided and not importing', () => {
+      expect(canImportUs('key-123', 'secret-456', false)).toBe(true);
+    });
+
+    it('returns false when keyId is blank', () => {
+      expect(canImportUs('   ', 'secret-456', false)).toBe(false);
+    });
+
+    it('returns false when secretKey is blank', () => {
+      expect(canImportUs('key-123', '', false)).toBe(false);
+    });
+
+    it('returns false while importing', () => {
+      expect(canImportUs('key-123', 'secret-456', true)).toBe(false);
+    });
+
+    it('returns false when both fields are blank', () => {
+      expect(canImportUs('', '', false)).toBe(false);
+    });
+  });
+
+  describe('User polymarketRail field', () => {
+    it('defaults to undefined (global users without rail field)', () => {
+      const user: User = { id: 'u1', polymarketConnected: false, kalshiConnected: false };
+      expect(user.polymarketRail).toBeUndefined();
+    });
+
+    it('can be set to "us" for US-rail users', () => {
+      const user: User = { id: 'u1', polymarketConnected: true, kalshiConnected: false, polymarketRail: 'us' };
+      expect(user.polymarketRail).toBe('us');
+    });
+
+    it('can be set to "global" explicitly', () => {
+      const user: User = { id: 'u1', polymarketConnected: true, kalshiConnected: false, polymarketRail: 'global' };
+      expect(user.polymarketRail).toBe('global');
+    });
+
+    it('US rail is independent of connection status', () => {
+      const disconnectedUs: User = {
+        id: 'u2',
+        polymarketConnected: false,
+        kalshiConnected: false,
+        polymarketRail: 'us',
+      };
+      expect(disconnectedUs.polymarketRail).toBe('us');
+      expect(disconnectedUs.polymarketConnected).toBe(false);
+    });
+  });
+});
+
+describe('USLegalDisclaimerBanner', () => {
+  describe('dismissalKey', () => {
+    it('namespaces key with user id', () => {
+      expect(dismissalKey('user-abc')).toBe('polyforge:us-disclaimer-dismissed:user-abc');
+    });
+
+    it('produces distinct keys per user', () => {
+      expect(dismissalKey('alice')).not.toBe(dismissalKey('bob'));
     });
   });
 });
