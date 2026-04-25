@@ -34,6 +34,7 @@ import {
   Library,
   GitMerge,
   Activity,
+  Tv2,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { authedFetch } from '../../stores/auth-store';
@@ -61,6 +62,7 @@ const navSections: NavSection[] = [
       { label: 'Notifications', icon: Bell, route: '/notifications' },
       { label: 'Alerts', icon: BellRing, route: '/alerts' },
       { label: 'Smart Orders', icon: Layers, route: '/orders/smart' },
+      { label: 'Sports', icon: Tv2, route: '/sports' },
       { label: 'Activity', icon: Activity, route: '/activity' },
     ],
   },

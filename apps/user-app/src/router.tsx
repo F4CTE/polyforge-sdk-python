@@ -68,6 +68,8 @@ export const router = createBrowserRouter([
               { path: 'support/:id', lazy: () => import('./pages/support/ticket-detail') },
               { path: 'referrals', lazy: () => import('./pages/referrals/referrals') },
               { path: 'activity', lazy: () => import('./pages/activity/activity') },
+              { path: 'sports', lazy: () => import('./pages/sports/sports') },
+              { path: 'sports/events/:eventTicker', lazy: () => import('./pages/sports/event-detail') },
             ],
           },
           { path: 'settings', lazy: () => import('./pages/settings/settings') },

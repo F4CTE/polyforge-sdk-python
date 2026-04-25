@@ -4,7 +4,7 @@ import { describe, it, expect } from 'vitest';
 // lightweight parse of the source constants. We test the exported component
 // indirectly through structural invariants that matter for UX.
 
-const MAX_SECTION_ITEMS = 9;
+const MAX_SECTION_ITEMS = 10;
 
 // Inline the navSections mirror so the tests are self-contained and catch
 // regressions in the sidebar source without requiring DOM rendering.
@@ -20,6 +20,7 @@ const navSections = [
       { label: 'Notifications', route: '/notifications' },
       { label: 'Alerts', route: '/alerts' },
       { label: 'Smart Orders', route: '/orders/smart' },
+      { label: 'Sports', route: '/sports' },
       { label: 'Activity', route: '/activity' },
     ],
   },
@@ -109,5 +110,12 @@ describe('Sidebar navSections', () => {
   it('AI Optimizer routes to /optimizer', () => {
     const item = allItems.find((i) => i.label === 'AI Optimizer');
     expect(item?.route).toBe('/optimizer');
+  });
+
+  it('Sports is in the Trade section at /sports', () => {
+    const trade = navSections.find((s) => s.title === 'Trade')!;
+    const sports = trade.items.find((i) => i.label === 'Sports');
+    expect(sports).toBeDefined();
+    expect(sports?.route).toBe('/sports');
   });
 });
