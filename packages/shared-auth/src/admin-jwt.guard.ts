@@ -10,22 +10,24 @@ import { AdminJwtPayload } from "@polyforge/shared-types";
 
 @Injectable()
 export class AdminJwtGuard implements CanActivate {
-  private readonly adminSecret: string;
-
   constructor(
     private readonly jwtService: JwtService,
     private readonly redis: RedisService,
-  ) {
+  ) {}
+
+  private getAdminSecret(): string {
     const secret = process.env.ADMIN_JWT_SECRET;
     if (!secret) {
-      throw new Error("ADMIN_JWT_SECRET environment variable is required");
+      throw new UnauthorizedException(
+        "ADMIN_JWT_SECRET environment variable is required",
+      );
     }
     if (secret.length < 32) {
-      throw new Error(
+      throw new UnauthorizedException(
         `ADMIN_JWT_SECRET must be at least 32 characters long (current length: ${secret.length})`,
       );
     }
-    this.adminSecret = secret;
+    return secret;
   }
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -42,10 +44,12 @@ export class AdminJwtGuard implements CanActivate {
       throw new UnauthorizedException("Missing admin token");
     }
 
+    const adminSecret = this.getAdminSecret();
+
     let payload: AdminJwtPayload;
     try {
       payload = this.jwtService.verify<AdminJwtPayload>(token, {
-        secret: this.adminSecret,
+        secret: adminSecret,
       });
     } catch {
       throw new UnauthorizedException("Invalid or expired admin token");
