@@ -9,6 +9,6 @@ import { SmartMoneyService } from "./smart-money.service";
   imports: [ScheduleModule.forRoot()],
   controllers: [WhalesController],
   providers: [WhalesService, WhaleDetectorService, SmartMoneyService],
-  exports: [SmartMoneyService],
+  exports: [WhalesService, SmartMoneyService],
 })
 export class WhalesModule {}

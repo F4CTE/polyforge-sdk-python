@@ -16,6 +16,13 @@ import { JwtPayload } from "@polyforge/shared-types";
 export class AccuracyController {
   constructor(private readonly accuracy: AccuracyService) {}
 
+  @Get()
+  @UseGuards(ApiKeyScopeGuard)
+  @RequireScopes("READ")
+  getAccuracy(@CurrentUser() user: JwtPayload) {
+    return this.accuracy.getMyAccuracy(user.sub);
+  }
+
   @Get("me")
   @UseGuards(ApiKeyScopeGuard)
   @RequireScopes("READ")

@@ -37,6 +37,10 @@ import { WatchlistModule } from "./watchlist/watchlist.module";
 import { AccuracyModule } from "./accuracy/accuracy.module";
 import { LpModule } from "./lp/lp.module";
 import { RewardsModule } from "./rewards/rewards.module";
+import { NotificationsModule } from "./notifications/notifications.module";
+import { FeedModule } from "./feed/feed.module";
+import { ReferralsModule } from "./referrals/referrals.module";
+import { AnalyticsModule } from "./analytics/analytics.module";
 
 @Module({
   imports: [
@@ -86,6 +90,10 @@ import { RewardsModule } from "./rewards/rewards.module";
     AccuracyModule,
     LpModule,
     RewardsModule,
+    NotificationsModule,
+    FeedModule,
+    ReferralsModule,
+    AnalyticsModule,
   ],
   controllers: [HealthController, StatusController],
   providers: [{ provide: APP_GUARD, useClass: ApiKeyThrottlerGuard }],
