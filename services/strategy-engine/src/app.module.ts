@@ -1,4 +1,5 @@
 import { Module } from "@nestjs/common";
+import { SentryModule } from "@sentry/nestjs/setup";
 import { ConfigModule } from "@nestjs/config";
 import { JwtModule } from "@nestjs/jwt";
 import { ThrottlerModule, ThrottlerGuard } from "@nestjs/throttler";
@@ -9,6 +10,7 @@ import { InternalModule } from "./internal/internal.module";
 import { HealthController } from "./health/health.controller";
 @Module({
   imports: [
+    SentryModule.forRoot(),
     ConfigModule.forRoot({ isGlobal: true }),
     JwtModule.register({}),
     ThrottlerModule.forRoot([{ ttl: 60000, limit: 200 }]),

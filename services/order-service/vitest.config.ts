@@ -18,6 +18,7 @@ export default defineConfig({
             exclude: [
                 'src/**/*.module.ts',
                 'src/main.ts',
+                'src/instrument.ts',
                 'src/health/**',
                 'src/common/**',
                 'src/**/*.dto.ts',

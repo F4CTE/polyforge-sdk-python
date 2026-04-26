@@ -12,7 +12,7 @@ export default defineConfig({
             reporter: ['text', 'lcov', 'json-summary'],
             include: ['src/**/*.ts'],
             exclude: [
-                'src/**/*.module.ts', 'src/main.ts', 'src/**/*.dto.ts',
+                'src/**/*.module.ts', 'src/main.ts', 'src/instrument.ts', 'src/**/*.dto.ts',
                 'src/**/*.filter.ts', 'src/health/**', 'src/common/health*',
                 'src/retention/**',    // cron job — integration test territory
                 'src/dashboard/**',    // cron + external health polling

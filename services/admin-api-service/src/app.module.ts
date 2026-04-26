@@ -1,4 +1,5 @@
 import { Module } from "@nestjs/common";
+import { SentryModule } from "@sentry/nestjs/setup";
 import { ConfigModule } from "@nestjs/config";
 import { ScheduleModule } from "@nestjs/schedule";
 import { ThrottlerModule, ThrottlerGuard } from "@nestjs/throttler";
@@ -34,6 +35,7 @@ import { RevenueModule } from "./revenue/revenue.module";
 
 @Module({
   imports: [
+    SentryModule.forRoot(),
     ConfigModule.forRoot({ isGlobal: true }),
     ScheduleModule.forRoot(),
     ThrottlerModule.forRootAsync({

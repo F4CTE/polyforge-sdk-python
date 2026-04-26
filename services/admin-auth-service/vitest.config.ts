@@ -12,6 +12,7 @@ export default defineConfig({
             exclude: [
                 'src/**/*.module.ts',
                 'src/main.ts',
+                'src/instrument.ts',
                 'src/generate-swagger.ts',
                 'src/**/*.dto.ts',
                 'src/**/*.filter.ts',

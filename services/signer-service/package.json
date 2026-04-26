@@ -25,6 +25,7 @@
     "@polyforge/shared-auth": "workspace:*",
     "@polyforge/shared-db": "workspace:*",
     "@polyforge/shared-redis": "workspace:*",
+    "@sentry/nestjs": "^10.50.0",
     "class-transformer": "^0.5.0",
     "class-validator": "^0.15.1",
     "fastify": "^5.8.2",

@@ -6,6 +6,7 @@ import {
   HttpStatus,
   Logger,
 } from "@nestjs/common";
+import { SentryExceptionCaptured } from "@sentry/nestjs";
 import { FastifyReply, FastifyRequest } from "fastify";
 import { randomUUID } from "crypto";
 
@@ -13,6 +14,7 @@ import { randomUUID } from "crypto";
 export class GlobalExceptionFilter implements ExceptionFilter {
   private readonly logger = new Logger(GlobalExceptionFilter.name);
 
+  @SentryExceptionCaptured()
   catch(exception: unknown, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
     const reply = ctx.getResponse<FastifyReply>();

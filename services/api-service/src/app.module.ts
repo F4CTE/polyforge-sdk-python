@@ -1,10 +1,12 @@
 import { Module } from "@nestjs/common";
+import { SentryModule } from "@sentry/nestjs/setup";
 import { ConfigModule } from "@nestjs/config";
 import { APP_GUARD, APP_INTERCEPTOR } from "@nestjs/core";
 import { ThrottlerModule } from "@nestjs/throttler";
 import { ThrottlerStorageRedisService } from "@nest-lab/throttler-storage-redis";
 import { ApiKeyThrottlerGuard } from "./common/api-key-throttler.guard";
 import { NoCacheInterceptor } from "./common/interceptors/no-cache.interceptor";
+import { SentryContextInterceptor } from "./common/interceptors/sentry-context.interceptor";
 import { JwtModule } from "@nestjs/jwt";
 import { SharedDbModule } from "@polyforge/shared-db";
 import { RedisModule, RedisService } from "@polyforge/shared-redis";
@@ -49,6 +51,7 @@ import { JournalModule } from "./journal/journal.module";
 
 @Module({
   imports: [
+    SentryModule.forRoot(),
     ConfigModule.forRoot({ isGlobal: true }),
     ThrottlerModule.forRootAsync({
       imports: [RedisModule],
@@ -108,6 +111,7 @@ import { JournalModule } from "./journal/journal.module";
   providers: [
     { provide: APP_GUARD, useClass: ApiKeyThrottlerGuard },
     { provide: APP_INTERCEPTOR, useClass: NoCacheInterceptor },
+    { provide: APP_INTERCEPTOR, useClass: SentryContextInterceptor },
   ],
 })
 export class AppModule {}

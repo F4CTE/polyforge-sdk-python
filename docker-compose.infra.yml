@@ -181,6 +181,7 @@ services:
       DIRECT_DATABASE_URL: postgresql://poly:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}@postgres:5432/polyforge
       REDIS_URL: redis://:${REDIS_PASSWORD:?REDIS_PASSWORD is required}@redis:6379
       INTERNAL_JWT_SECRET: "${INTERNAL_JWT_SECRET:?INTERNAL_JWT_SECRET is required}"
+      SENTRY_DSN: ${SENTRY_DSN:-}
       ENCRYPTION_KEY: "${MASTER_ENCRYPTION_KEY:?MASTER_ENCRYPTION_KEY is required}"
       MASTER_ENCRYPTION_KEY: "${MASTER_ENCRYPTION_KEY:?MASTER_ENCRYPTION_KEY is required}"
       POLY_BUILDER_API_KEY: ${POLY_BUILDER_API_KEY:?POLY_BUILDER_API_KEY is required}
@@ -210,6 +211,7 @@ services:
       DIRECT_DATABASE_URL: postgresql://poly:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}@postgres:5432/polyforge
       REDIS_URL: redis://:${REDIS_PASSWORD:?REDIS_PASSWORD is required}@redis:6379
       INTERNAL_JWT_SECRET: "${INTERNAL_JWT_SECRET:?INTERNAL_JWT_SECRET is required}"
+      SENTRY_DSN: ${SENTRY_DSN:-}
       PORT: "3006"
     ports:
       - "127.0.0.1:3006:3006"
@@ -230,6 +232,7 @@ services:
       DIRECT_DATABASE_URL: postgresql://poly:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}@postgres:5432/polyforge
       REDIS_URL: redis://:${REDIS_PASSWORD:?REDIS_PASSWORD is required}@redis:6379
       INTERNAL_JWT_SECRET: "${INTERNAL_JWT_SECRET:?INTERNAL_JWT_SECRET is required}"
+      SENTRY_DSN: ${SENTRY_DSN:-}
       SIGNER_SERVICE_URL: http://signer-service:3012
       CLOB_API_URL: ${CLOB_API_URL:-https://clob.polymarket.com}
       PORT: "3007"
@@ -263,6 +266,7 @@ services:
       GEO_BLOCKED_COUNTRIES: ${GEO_BLOCKED_COUNTRIES:-US,AU,BE,BY,BI,CF,CG,CU,DE,ET,FR,GB,IR,IQ,IT,KP,LB,LY,MM,NI,NL,RU,SO,SS,SD,SY,VE,YE,ZW,UM}
       GEO_CLOSE_ONLY_COUNTRIES: ${GEO_CLOSE_ONLY_COUNTRIES:-PL,SG,TH,TW}
       CORS_ORIGINS: ${CORS_ORIGINS:-http://polyforge-lab,http://polyforge-lab:8080,https://polyforge-lab,https://polyforge-lab:8443,https://localhost}
+      SENTRY_DSN: ${SENTRY_DSN:-}
       PORT: "3002"
       NODE_ENV: ${NODE_ENV:?NODE_ENV must be set}
       CI: "${CI:-false}"
@@ -410,6 +414,7 @@ services:
       AWS_SES_REGION: ${AWS_SES_REGION:-us-east-1}
       FRONTEND_URL: ${FRONTEND_URL:-http://localhost}
       ADMIN_CORS_ORIGINS: ${ADMIN_CORS_ORIGINS:-https://localhost:8443,https://polyforge-lab:8443}
+      SENTRY_DSN: ${SENTRY_DSN:-}
       PORT: "3004"
       NODE_ENV: ${NODE_ENV:?NODE_ENV must be set}
     ports:
@@ -449,6 +454,7 @@ services:
       INVITE_ONLY: ${INVITE_ONLY:-false}
       COOKIE_SECURE: ${COOKIE_SECURE:-false}
       CORS_ORIGINS: ${CORS_ORIGINS:-http://polyforge-lab,http://polyforge-lab:8080,https://polyforge-lab,https://polyforge-lab:8443,https://localhost}
+      SENTRY_DSN: ${SENTRY_DSN:-}
       AUTH_SERVICE_PORT: "3001"
       NODE_ENV: ${NODE_ENV:?NODE_ENV must be set}
       CI: "${CI:-false}"
@@ -478,6 +484,7 @@ services:
       TOTP_ENCRYPTION_KEY: "${TOTP_ENCRYPTION_KEY:?TOTP_ENCRYPTION_KEY is required}"
       COOKIE_SECURE: ${COOKIE_SECURE:-false}
       CORS_ORIGINS: ${CORS_ORIGINS:-http://polyforge-lab,http://polyforge-lab:8080,https://polyforge-lab,https://polyforge-lab:8443,https://localhost}
+      SENTRY_DSN: ${SENTRY_DSN:-}
       ADMIN_AUTH_SERVICE_PORT: "3003"
       NODE_ENV: ${NODE_ENV:?NODE_ENV must be set}
       CI: "${CI:-false}"

@@ -1,4 +1,5 @@
 import { Module } from "@nestjs/common";
+import { SentryModule } from "@sentry/nestjs/setup";
 import { APP_GUARD } from "@nestjs/core";
 import { ThrottlerModule, ThrottlerGuard } from "@nestjs/throttler";
 import { ThrottlerStorageRedisService } from "@nest-lab/throttler-storage-redis";
@@ -10,6 +11,7 @@ import { HealthController } from "./common/health.controller";
 
 @Module({
   imports: [
+    SentryModule.forRoot(),
     LoggerModule,
     SharedDbModule,
     RedisModule,

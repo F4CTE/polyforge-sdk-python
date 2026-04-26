@@ -12,6 +12,7 @@ export default defineConfig({
             exclude: [
                 'src/**/*.module.ts',
                 'src/main.ts',
+                'src/instrument.ts',
                 'src/health/**',
                 'src/common/**',
                 'src/canary/**',          // honeypot startup logic — no testable units

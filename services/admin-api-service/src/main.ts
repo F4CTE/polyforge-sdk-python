@@ -1,3 +1,5 @@
+import "./instrument";
+
 // BigInt JSON serialization (Prisma returns BigInt for @id @default(autoincrement()))
 // Use toString() to avoid silent precision loss for values > Number.MAX_SAFE_INTEGER
 (BigInt.prototype as any).toJSON = function () {
