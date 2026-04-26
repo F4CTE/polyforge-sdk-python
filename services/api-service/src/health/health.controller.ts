@@ -83,9 +83,6 @@ export class StatusController {
   @Get()
   @ApiOperation({ summary: "Aggregated service health status" })
   async status() {
-    const start = Date.now();
-
-    /* ── Core dependency checks ── */
     const [dbResult, redisResult] = await Promise.allSettled([
       this.prisma.$queryRaw<[{ one: number }]>`SELECT 1 AS one`.then(
         () => true,
@@ -100,33 +97,17 @@ export class StatusController {
     const redisOk =
       redisResult.status === "fulfilled" && redisResult.value === true;
 
-    /* ── Internal service checks (parallel, 2 s timeout each) ── */
     const svcResults = await Promise.all(
       INTERNAL_SERVICES.map(async (svc) => {
-        const { ok, latencyMs } = await pingService(svc.url);
-        return { name: svc.name, label: svc.label, ok, latencyMs };
+        const { ok } = await pingService(svc.url);
+        return ok;
       }),
     );
 
-    /* ── Assemble response ── */
-    const allOk = dbOk && redisOk && svcResults.every((s) => s.ok);
+    const allOk = dbOk && redisOk && svcResults.every(Boolean);
 
     return {
       status: allOk ? "operational" : "degraded",
-      uptime: Math.floor(process.uptime()),
-      timestamp: new Date().toISOString(),
-      latencyMs: Date.now() - start,
-      services: [
-        { name: "api", label: "API Service", ok: true, latencyMs: 0 },
-        { name: "database", label: "Database", ok: dbOk, latencyMs: null },
-        { name: "cache", label: "Cache (Redis)", ok: redisOk, latencyMs: null },
-        ...svcResults.map((s) => ({
-          name: s.name,
-          label: s.label,
-          ok: s.ok,
-          latencyMs: s.latencyMs,
-        })),
-      ],
     };
   }
 }

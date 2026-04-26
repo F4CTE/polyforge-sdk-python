@@ -153,6 +153,13 @@ services:
   auth-service:
     image: "${ECR_REGISTRY}/polyforge-auth-service:${IMAGE_TAG}"
     <<: *common
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m,noexec,nosuid
+    ulimits:
+      nofile:
+        soft: 4096
+        hard: 8192
     networks: [public, internal, signer-only]
     depends_on:
       pgbouncer: { condition: service_healthy }
@@ -167,12 +174,20 @@ services:
         limits:
           cpus: "0.5"
           memory: 512M
+          pids: 100
 
   # ─── API Service ───────────────────────────────────────────────────────────
 
   api-service:
     image: "${ECR_REGISTRY}/polyforge-api-service:${IMAGE_TAG}"
     <<: *common
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m,noexec,nosuid
+    ulimits:
+      nofile:
+        soft: 8192
+        hard: 16384
     networks: [public, internal]
     depends_on:
       pgbouncer: { condition: service_healthy }
@@ -187,12 +202,20 @@ services:
         limits:
           cpus: "1.0"
           memory: 1G
+          pids: 200
 
   # ─── Admin Auth Service ────────────────────────────────────────────────────
 
   admin-auth-service:
     image: "${ECR_REGISTRY}/polyforge-admin-auth-service:${IMAGE_TAG}"
     <<: *common
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m,noexec,nosuid
+    ulimits:
+      nofile:
+        soft: 4096
+        hard: 8192
     networks: [admin-only, internal]
     depends_on:
       pgbouncer-admin: { condition: service_healthy }
@@ -207,12 +230,20 @@ services:
         limits:
           cpus: "0.25"
           memory: 256M
+          pids: 100
 
   # ─── Admin API Service ─────────────────────────────────────────────────────
 
   admin-api-service:
     image: "${ECR_REGISTRY}/polyforge-admin-api-service:${IMAGE_TAG}"
     <<: *common
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m,noexec,nosuid
+    ulimits:
+      nofile:
+        soft: 8192
+        hard: 16384
     networks: [admin-only, internal]
     depends_on:
       pgbouncer:       { condition: service_healthy }
@@ -228,12 +259,20 @@ services:
         limits:
           cpus: "0.5"
           memory: 512M
+          pids: 200
 
   # ─── Market Data Service ───────────────────────────────────────────────────
 
   market-data-service:
     image: "${ECR_REGISTRY}/polyforge-market-data-service:${IMAGE_TAG}"
     <<: *common
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m,noexec,nosuid
+    ulimits:
+      nofile:
+        soft: 8192
+        hard: 16384
     networks: [internal]
     depends_on:
       pgbouncer: { condition: service_healthy }
@@ -248,6 +287,7 @@ services:
         limits:
           cpus: "0.5"
           memory: 512M
+          pids: 100
 
   # ─── Strategy Engine ───────────────────────────────────────────────────────
   # Most CPU-intensive service — gets the most resources.
@@ -256,6 +296,13 @@ services:
   strategy-engine:
     image: "${ECR_REGISTRY}/polyforge-strategy-engine:${IMAGE_TAG}"
     <<: *common
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m,noexec,nosuid
+    ulimits:
+      nofile:
+        soft: 8192
+        hard: 16384
     networks: [internal]
     depends_on:
       pgbouncer: { condition: service_healthy }
@@ -270,12 +317,20 @@ services:
         limits:
           cpus: "2.0"
           memory: 2G
+          pids: 200
 
   # ─── Order Service ─────────────────────────────────────────────────────────
 
   order-service:
     image: "${ECR_REGISTRY}/polyforge-order-service:${IMAGE_TAG}"
     <<: *common
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m,noexec,nosuid
+    ulimits:
+      nofile:
+        soft: 4096
+        hard: 8192
     networks: [internal, signer-only]
     depends_on:
       pgbouncer:       { condition: service_healthy }
@@ -291,12 +346,20 @@ services:
         limits:
           cpus: "0.5"
           memory: 512M
+          pids: 100
 
   # ─── Paper Order Service ───────────────────────────────────────────────────
 
   paper-order-service:
     image: "${ECR_REGISTRY}/polyforge-paper-order-service:${IMAGE_TAG}"
     <<: *common
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m,noexec,nosuid
+    ulimits:
+      nofile:
+        soft: 4096
+        hard: 8192
     networks: [internal]
     depends_on:
       pgbouncer: { condition: service_healthy }
@@ -311,12 +374,20 @@ services:
         limits:
           cpus: "0.5"
           memory: 512M
+          pids: 100
 
   # ─── Backtest Service ──────────────────────────────────────────────────────
 
   backtest-service:
     image: "${ECR_REGISTRY}/polyforge-backtest-service:${IMAGE_TAG}"
     <<: *common
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m,noexec,nosuid
+    ulimits:
+      nofile:
+        soft: 4096
+        hard: 8192
     networks: [internal]
     depends_on:
       pgbouncer: { condition: service_healthy }
@@ -331,12 +402,20 @@ services:
         limits:
           cpus: "1.0"
           memory: 1G
+          pids: 100
 
   # ─── Notification Service ──────────────────────────────────────────────────
 
   notification-service:
     image: "${ECR_REGISTRY}/polyforge-notification-service:${IMAGE_TAG}"
     <<: *common
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m,noexec,nosuid
+    ulimits:
+      nofile:
+        soft: 2048
+        hard: 4096
     networks: [internal]
     depends_on:
       pgbouncer: { condition: service_healthy }
@@ -351,12 +430,20 @@ services:
         limits:
           cpus: "0.25"
           memory: 256M
+          pids: 50
 
   # ─── Bot Service ───────────────────────────────────────────────────────────
 
   bot-service:
     image: "${ECR_REGISTRY}/polyforge-bot-service:${IMAGE_TAG}"
     <<: *common
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m,noexec,nosuid
+    ulimits:
+      nofile:
+        soft: 2048
+        hard: 4096
     networks: [internal]
     depends_on:
       pgbouncer: { condition: service_healthy }
@@ -371,6 +458,7 @@ services:
         limits:
           cpus: "0.25"
           memory: 256M
+          pids: 50
 
   # ─── Signer Service ────────────────────────────────────────────────────────
   # SECURITY: Most hardened service — handles private keys.
@@ -387,10 +475,10 @@ services:
     read_only: true
     tmpfs:
       - /tmp:size=64m,noexec,nosuid
-    security_opt:
-      - no-new-privileges:true
-    cap_drop:
-      - ALL
+    ulimits:
+      nofile:
+        soft: 4096
+        hard: 8192
     depends_on:
       pgbouncer: { condition: service_healthy }
     healthcheck:
@@ -404,3 +492,4 @@ services:
         limits:
           cpus: "0.5"
           memory: 512M
+          pids: 100

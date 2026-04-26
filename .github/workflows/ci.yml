@@ -117,8 +117,7 @@ jobs:
 
       - name: Security audit
         if: success() || failure()
-        continue-on-error: true
-        run: pnpm audit --audit-level=high || echo "::warning::Dependency audit found issues"
+        run: pnpm audit --audit-level=high
 
   # ── 3. Deploy + E2E (polyforge-lab) ─────────────────────────────────
   # Single job: deploy → setup → E2E shards (sequential).

@@ -38,10 +38,13 @@ variable "ec2_key_name" {
 }
 
 variable "admin_cidr_blocks" {
-  description = "CIDR blocks allowed to SSH into EC2 and access admin.polyforge.app"
+  description = "CIDR blocks allowed to SSH into EC2 and access admin.polyforge.app. Must be explicit office/VPN CIDRs."
   type        = list(string)
-  # Replace with real office/VPN CIDR(s) before deploying
-  default     = ["0.0.0.0/0"]
+
+  validation {
+    condition     = length(var.admin_cidr_blocks) > 0 && !contains(var.admin_cidr_blocks, "0.0.0.0/0")
+    error_message = "admin_cidr_blocks must contain at least one specific CIDR and must not include 0.0.0.0/0."
+  }
 }
 
 variable "ec2_root_volume_size_gb" {
