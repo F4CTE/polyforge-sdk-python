@@ -50,6 +50,7 @@ export class AdminJwtGuard implements CanActivate {
     try {
       payload = this.jwtService.verify<AdminJwtPayload>(token, {
         secret: adminSecret,
+        algorithms: ["HS256"],
       });
     } catch {
       throw new UnauthorizedException("Invalid or expired admin token");

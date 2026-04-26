@@ -78,6 +78,7 @@ export class LinkingService {
     const token = this.jwt.sign(tokenPayload, {
       secret: this.config.getOrThrow<string>("BOT_JWT_SECRET"),
       expiresIn: BOT_JWT_EXPIRES,
+      algorithm: "HS256",
     });
     const tokenHash = createHash("sha256").update(token).digest("hex");
 

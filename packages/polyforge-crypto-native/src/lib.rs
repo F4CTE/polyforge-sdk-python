@@ -296,6 +296,13 @@ fn sign_secp256k1_raw(raw_key: &[u8], digest: &[u8]) -> Result<Buffer> {
         .sign_prehash(digest_arr)
         .map_err(|e| Error::from_reason(format!("signing failed: {e}")))?;
 
+    // EIP-2 / BIP-146: enforce low-S to prevent signature malleability.
+    let (sig, recovery_id) = match sig.normalize_s() {
+        Some(normalized) => (normalized, RecoveryId::from_byte(recovery_id.to_byte() ^ 1)
+            .expect("flipped recovery_id must be valid")),
+        None => (sig, recovery_id),
+    };
+
     // Build Ethereum-style 65-byte signature: r | s | v (v = recovery_id + 27)
     let sig_bytes = sig.to_bytes();
     let mut result = [0u8; 65];

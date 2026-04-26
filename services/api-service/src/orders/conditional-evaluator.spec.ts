@@ -61,17 +61,14 @@ describe("ConditionalEvaluatorService", () => {
         triggerPrice: "0.75",
       });
       db.conditionalOrder.findMany.mockResolvedValue([order] as any);
-      db.conditionalOrder.update.mockResolvedValue({
-        ...order,
-        status: "TRIGGERED",
-      } as any);
+      db.conditionalOrder.updateMany.mockResolvedValue({ count: 1 } as any);
       mgetMock.mockResolvedValue(["0.80"]);
 
       await service.processOrders();
 
-      expect(db.conditionalOrder.update).toHaveBeenCalledWith(
+      expect(db.conditionalOrder.updateMany).toHaveBeenCalledWith(
         expect.objectContaining({
-          where: { id: "cond-uuid-1" },
+          where: { id: "cond-uuid-1", status: "PENDING" },
           data: expect.objectContaining({ status: "TRIGGERED" }),
         }),
       );
@@ -98,16 +95,14 @@ describe("ConditionalEvaluatorService", () => {
         triggerPrice: "0.30",
       });
       db.conditionalOrder.findMany.mockResolvedValue([order] as any);
-      db.conditionalOrder.update.mockResolvedValue({
-        ...order,
-        status: "TRIGGERED",
-      } as any);
+      db.conditionalOrder.updateMany.mockResolvedValue({ count: 1 } as any);
       mgetMock.mockResolvedValue(["0.25"]);
 
       await service.processOrders();
 
-      expect(db.conditionalOrder.update).toHaveBeenCalledWith(
+      expect(db.conditionalOrder.updateMany).toHaveBeenCalledWith(
         expect.objectContaining({
+          where: expect.objectContaining({ status: "PENDING" }),
           data: expect.objectContaining({ status: "TRIGGERED" }),
         }),
       );
@@ -124,16 +119,14 @@ describe("ConditionalEvaluatorService", () => {
         triggerPrice: "0.40",
       });
       db.conditionalOrder.findMany.mockResolvedValue([order] as any);
-      db.conditionalOrder.update.mockResolvedValue({
-        ...order,
-        status: "TRIGGERED",
-      } as any);
+      db.conditionalOrder.updateMany.mockResolvedValue({ count: 1 } as any);
       mgetMock.mockResolvedValue(["0.35"]);
 
       await service.processOrders();
 
-      expect(db.conditionalOrder.update).toHaveBeenCalledWith(
+      expect(db.conditionalOrder.updateMany).toHaveBeenCalledWith(
         expect.objectContaining({
+          where: expect.objectContaining({ status: "PENDING" }),
           data: expect.objectContaining({ status: "TRIGGERED" }),
         }),
       );
@@ -160,16 +153,14 @@ describe("ConditionalEvaluatorService", () => {
         triggerPrice: "0.60",
       });
       db.conditionalOrder.findMany.mockResolvedValue([order] as any);
-      db.conditionalOrder.update.mockResolvedValue({
-        ...order,
-        status: "TRIGGERED",
-      } as any);
+      db.conditionalOrder.updateMany.mockResolvedValue({ count: 1 } as any);
       mgetMock.mockResolvedValue(["0.65"]);
 
       await service.processOrders();
 
-      expect(db.conditionalOrder.update).toHaveBeenCalledWith(
+      expect(db.conditionalOrder.updateMany).toHaveBeenCalledWith(
         expect.objectContaining({
+          where: expect.objectContaining({ status: "PENDING" }),
           data: expect.objectContaining({ status: "TRIGGERED" }),
         }),
       );
@@ -207,17 +198,15 @@ describe("ConditionalEvaluatorService", () => {
         peakPrice: "1.00",
       });
       db.conditionalOrder.findMany.mockResolvedValue([order] as any);
-      db.conditionalOrder.update.mockResolvedValue({
-        ...order,
-        status: "TRIGGERED",
-      } as any);
+      db.conditionalOrder.updateMany.mockResolvedValue({ count: 1 } as any);
       mgetMock.mockResolvedValue(["0.89"]); // 11% drop from 1.00
 
       await service.processOrders();
 
       // Should be called twice: once for peak update check (peak stays 1.00), once for trigger
-      expect(db.conditionalOrder.update).toHaveBeenCalledWith(
+      expect(db.conditionalOrder.updateMany).toHaveBeenCalledWith(
         expect.objectContaining({
+          where: expect.objectContaining({ status: "PENDING" }),
           data: expect.objectContaining({ status: "TRIGGERED" }),
         }),
       );
@@ -236,12 +225,7 @@ describe("ConditionalEvaluatorService", () => {
 
       await service.processOrders();
 
-      // Should not have a TRIGGERED update
-      const calls = db.conditionalOrder.update.mock.calls;
-      const triggeredCall = calls.find(
-        (c: any) => c[0]?.data?.status === "TRIGGERED",
-      );
-      expect(triggeredCall).toBeUndefined();
+      expect(db.conditionalOrder.updateMany).not.toHaveBeenCalled();
     });
   });
 
@@ -255,16 +239,14 @@ describe("ConditionalEvaluatorService", () => {
         triggerPrice: "0.50",
       });
       db.conditionalOrder.findMany.mockResolvedValue([order] as any);
-      db.conditionalOrder.update.mockResolvedValue({
-        ...order,
-        status: "TRIGGERED",
-      } as any);
+      db.conditionalOrder.updateMany.mockResolvedValue({ count: 1 } as any);
       mgetMock.mockResolvedValue(["0.45"]);
 
       await service.processOrders();
 
-      expect(db.conditionalOrder.update).toHaveBeenCalledWith(
+      expect(db.conditionalOrder.updateMany).toHaveBeenCalledWith(
         expect.objectContaining({
+          where: expect.objectContaining({ status: "PENDING" }),
           data: expect.objectContaining({ status: "TRIGGERED" }),
         }),
       );
@@ -277,16 +259,14 @@ describe("ConditionalEvaluatorService", () => {
         triggerPrice: "0.70",
       });
       db.conditionalOrder.findMany.mockResolvedValue([order] as any);
-      db.conditionalOrder.update.mockResolvedValue({
-        ...order,
-        status: "TRIGGERED",
-      } as any);
+      db.conditionalOrder.updateMany.mockResolvedValue({ count: 1 } as any);
       mgetMock.mockResolvedValue(["0.75"]);
 
       await service.processOrders();
 
-      expect(db.conditionalOrder.update).toHaveBeenCalledWith(
+      expect(db.conditionalOrder.updateMany).toHaveBeenCalledWith(
         expect.objectContaining({
+          where: expect.objectContaining({ status: "PENDING" }),
           data: expect.objectContaining({ status: "TRIGGERED" }),
         }),
       );
@@ -315,12 +295,7 @@ describe("ConditionalEvaluatorService", () => {
         }),
       );
 
-      // Should NOT trigger (no TRIGGERED status update)
-      const calls = db.conditionalOrder.update.mock.calls;
-      const triggeredCall = calls.find(
-        (c: any) => c[0]?.data?.status === "TRIGGERED",
-      );
-      expect(triggeredCall).toBeUndefined();
+      expect(db.conditionalOrder.updateMany).not.toHaveBeenCalled();
     });
 
     it("clamps limitPrice between 0.01 and 0.99", async () => {
@@ -389,10 +364,7 @@ describe("ConditionalEvaluatorService", () => {
         size: "100.00",
       });
       db.conditionalOrder.findMany.mockResolvedValue([order] as any);
-      db.conditionalOrder.update.mockResolvedValue({
-        ...order,
-        status: "TRIGGERED",
-      } as any);
+      db.conditionalOrder.updateMany.mockResolvedValue({ count: 1 } as any);
       mgetMock.mockResolvedValue(["0.75"]);
 
       await service.processOrders();
@@ -416,10 +388,7 @@ describe("ConditionalEvaluatorService", () => {
         triggerPrice: "0.40",
       });
       db.conditionalOrder.findMany.mockResolvedValue([order] as any);
-      db.conditionalOrder.update.mockResolvedValue({
-        ...order,
-        status: "TRIGGERED",
-      } as any);
+      db.conditionalOrder.updateMany.mockResolvedValue({ count: 1 } as any);
       mgetMock.mockResolvedValue(["0.35"]);
 
       await service.processOrders();
@@ -441,19 +410,19 @@ describe("ConditionalEvaluatorService", () => {
         triggerPrice: "0.50",
       });
       db.conditionalOrder.findMany.mockResolvedValue([order] as any);
-      db.conditionalOrder.update.mockResolvedValue({
-        ...order,
-        status: "TRIGGERED",
-      } as any);
+      db.conditionalOrder.updateMany.mockResolvedValue({ count: 1 } as any);
       mgetMock.mockResolvedValue(["0.45"]);
 
       await service.processOrders();
 
-      const updateCall = db.conditionalOrder.update.mock.calls.find(
-        (c: any) => c[0]?.data?.status === "TRIGGERED",
+      expect(db.conditionalOrder.updateMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            status: "TRIGGERED",
+            orderId: expect.stringMatching(/^[0-9a-f-]{36}$/),
+          }),
+        }),
       );
-      expect(updateCall).toBeDefined();
-      expect(updateCall![0].data.orderId).toMatch(/^[0-9a-f-]{36}$/);
     });
   });
 });

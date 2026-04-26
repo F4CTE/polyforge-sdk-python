@@ -21,7 +21,13 @@ export class InternalClientService {
   private issueToken(audience: string): string {
     return this.jwt.sign(
       { sub: "api-service", jti: randomUUID() },
-      { secret: this.secret, audience, expiresIn: "30s" },
+      {
+        secret: this.secret,
+        audience,
+        issuer: "api-service",
+        expiresIn: "30s",
+        algorithm: "HS256",
+      },
     );
   }
 

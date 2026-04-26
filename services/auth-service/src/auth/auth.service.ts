@@ -32,6 +32,18 @@ function hashToken(token: string): string {
   return createHash('sha256').update(token).digest('hex');
 }
 
+// Lua: atomically GET + DEL both refresh keys. Returns the stored value if the
+// primary key existed; returns false (nil) if already consumed by another caller.
+const ATOMIC_REFRESH_CONSUME_LUA = `
+  local val = redis.call('GET', KEYS[1])
+  if val then
+    redis.call('DEL', KEYS[1])
+    redis.call('DEL', KEYS[2])
+    return val
+  end
+  return false
+`;
+
 function deriveUserStatus(user: {
   emailVerified: boolean;
   polymarketConnected: boolean;
@@ -420,11 +432,10 @@ export class AuthService {
 
   async refresh(refreshToken: string) {
     const tokenHash = hashToken(refreshToken);
+    const lookupKey = `refresh_lookup:${tokenHash}`;
 
-    // Look up the stored refresh token across all users by checking the token's embedded userId
-    // We stored the userId inside the value, so we need to find the key first
-    const keys = await this.scanRefreshKeys(refreshToken);
-    if (!keys) {
+    const userId = await this.redis.get(lookupKey);
+    if (!userId) {
       throw new HttpException(
         {
           code: 'INVALID_REFRESH_TOKEN',
@@ -434,12 +445,30 @@ export class AuthService {
       );
     }
 
-    const { userId, key } = keys;
+    const refreshKey = REFRESH_KEY(userId, tokenHash);
 
-    // Validate the user still exists and is active
+    // Atomic consume via Lua — only the first concurrent caller wins.
+    const consumed = await this.atomicConsumeRefreshToken(
+      refreshKey,
+      lookupKey,
+    );
+
+    if (!consumed) {
+      this.logger.warn(
+        `Refresh token replay detected for user ${userId} — revoking all tokens`,
+      );
+      await this.revokeAllRefreshTokens(userId);
+      throw new HttpException(
+        {
+          code: 'REFRESH_TOKEN_REPLAY',
+          message: 'Refresh token replay detected — please re-authenticate',
+        },
+        HttpStatus.UNAUTHORIZED,
+      );
+    }
+
     const user = await this.usersService.findById(userId);
     if (!user || user.deleted || user.suspended) {
-      await this.redis.del(key);
       throw new HttpException(
         {
           code: 'INVALID_REFRESH_TOKEN',
@@ -448,15 +477,25 @@ export class AuthService {
         HttpStatus.UNAUTHORIZED,
       );
     }
-
-    // SECURITY: Rotate refresh token — revoke old one, issue new one
-    // Prevents compromised refresh tokens from being reused for the full TTL
-    await this.redis.del(key);
-    await this.redis.del(`refresh_lookup:${tokenHash}`);
 
     const accessToken = this.generateAccessToken(user);
     const newRefreshToken = await this.createRefreshToken(userId);
     return { token: accessToken, refreshToken: newRefreshToken };
+  }
+
+  private async atomicConsumeRefreshToken(
+    refreshKey: string,
+    lookupKey: string,
+  ): Promise<string | null> {
+    const client = this.redis.getClient();
+    const result = await (client as any).call(
+      'EVAL',
+      ATOMIC_REFRESH_CONSUME_LUA,
+      2,
+      refreshKey,
+      lookupKey,
+    );
+    return typeof result === 'string' ? result : null;
   }
 
   /** Revoke a single refresh token (used on logout) */
@@ -632,7 +671,10 @@ export class AuthService {
       username: user.username,
       kalshiConnected: user.kalshiConnected ?? false,
     };
-    return this.jwtService.sign(payload, { expiresIn: ACCESS_TOKEN_EXPIRY });
+    return this.jwtService.sign(payload, {
+      expiresIn: ACCESS_TOKEN_EXPIRY,
+      algorithm: 'HS256',
+    });
   }
 
   /** Create a refresh token (random UUID), store its hash in Redis with TTL.

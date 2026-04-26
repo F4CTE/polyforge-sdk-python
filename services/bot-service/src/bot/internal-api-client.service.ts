@@ -25,7 +25,13 @@ export class InternalApiClient {
   private issueToken(): string {
     return this.jwt.sign(
       { sub: "bot-service", jti: randomUUID() },
-      { secret: this.secret, audience: "strategy-engine", expiresIn: "30s" },
+      {
+        secret: this.secret,
+        audience: "strategy-engine",
+        issuer: "bot-service",
+        expiresIn: "30s",
+        algorithm: "HS256",
+      },
     );
   }
 

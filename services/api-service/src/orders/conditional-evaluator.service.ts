@@ -165,7 +165,21 @@ export class ConditionalEvaluatorService {
   async triggerOrder(order: ConditionalOrder): Promise<void> {
     const intentId = randomUUID();
 
-    // Publish OrderIntent to stream:orders
+    // DB first: atomically claim the trigger so concurrent evaluator ticks
+    // cannot double-trigger. If the row is no longer PENDING, skip silently.
+    const claimed = await this.prisma.conditionalOrder.updateMany({
+      where: { id: order.id, status: "PENDING" },
+      data: {
+        status: "TRIGGERED",
+        triggeredAt: new Date(),
+        orderId: intentId,
+      },
+    });
+    if (claimed.count === 0) return;
+
+    // Only after the DB records the trigger, publish to the stream.
+    // A crash between DB and stream leaves the condition as TRIGGERED with
+    // no order — the next evaluator tick skips it (status !== PENDING).
     await this.redis.xadd(STREAM_ORDERS, {
       intentId,
       userId: order.userId,
@@ -179,18 +193,8 @@ export class ConditionalEvaluatorService {
         ? String(order.limitPrice)
         : String(order.triggerPrice),
       orderType: "GTC",
-      expiration: "",
+      expiration: "0",
       ts: String(Date.now()),
-    });
-
-    // Update status to TRIGGERED
-    await this.prisma.conditionalOrder.update({
-      where: { id: order.id },
-      data: {
-        status: "TRIGGERED",
-        triggeredAt: new Date(),
-        orderId: intentId,
-      },
     });
 
     // Emit notification

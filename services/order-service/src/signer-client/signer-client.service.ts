@@ -122,6 +122,7 @@ export class SignerClientService {
         issuer: "order-service",
         audience: "signer-service",
         expiresIn: 30,
+        algorithm: "HS256",
       },
     );
   }

@@ -150,10 +150,13 @@ export class StrategiesService {
 
   private issueInternalToken(): string {
     return this.jwtService.sign(
-      { iss: "admin-api-service", aud: "strategy-engine", jti: randomUUID() },
+      { jti: randomUUID() },
       {
         secret: this.config.getOrThrow<string>("INTERNAL_JWT_SECRET"),
+        issuer: "admin-api-service",
+        audience: "strategy-engine",
         expiresIn: "30s",
+        algorithm: "HS256",
       },
     );
   }

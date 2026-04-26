@@ -592,7 +592,7 @@ export class StrategyRegistryService implements OnApplicationBootstrap {
         size: intent.size,
         price: intent.price,
         orderType: intent.orderType,
-        expiration: String(intent.expiration ?? ""),
+        expiration: String(intent.expiration ?? 0),
         ...(intent.venue ? { venue: intent.venue } : {}),
         ...(intent.kalshiSubaccount != null
           ? { kalshiSubaccount: String(intent.kalshiSubaccount) }

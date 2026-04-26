@@ -10,6 +10,7 @@ import {
   Req,
   Res,
   UseGuards,
+  UseInterceptors,
   HttpCode,
   HttpStatus,
 } from "@nestjs/common";
@@ -38,6 +39,7 @@ import { RedeemPositionDto } from "./dto/redeem-position.dto";
 import { RedeemPositionResponseDto } from "./dto/redeem-position-response.dto";
 import { UpdateOrderJournalDto } from "./dto/update-order-journal.dto";
 import { GeoBlockGuard } from "../common/guards/geo.guard";
+import { IdempotencyInterceptor } from "../common/interceptors/idempotency.interceptor";
 import { PaginationDto } from "../common/dto/pagination.dto";
 import { JwtPayload } from "@polyforge/shared-types";
 
@@ -106,6 +108,7 @@ export class OrdersController {
   })
   @HttpCode(HttpStatus.ACCEPTED)
   @UseGuards(ApiKeyScopeGuard, GeoBlockGuard)
+  @UseInterceptors(IdempotencyInterceptor)
   @RequireScopes("TRADE")
   closePosition(
     @CurrentUser() user: JwtPayload,
@@ -124,6 +127,7 @@ export class OrdersController {
   @HttpCode(HttpStatus.OK)
   @ApiResponse({ status: 200, type: RedeemPositionResponseDto })
   @UseGuards(ApiKeyScopeGuard, GeoBlockGuard)
+  @UseInterceptors(IdempotencyInterceptor)
   @RequireScopes("TRADE")
   redeemPosition(
     @CurrentUser() user: JwtPayload,
@@ -192,6 +196,7 @@ export class OrdersController {
 
   @Post("place")
   @UseGuards(JwtAuthGuard)
+  @UseInterceptors(IdempotencyInterceptor)
   @Throttle({
     default: {
       limit: process.env.NODE_ENV === "production" ? 30 : 10000,

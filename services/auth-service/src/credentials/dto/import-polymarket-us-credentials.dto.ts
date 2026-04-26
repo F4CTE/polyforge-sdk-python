@@ -20,7 +20,8 @@ export class ImportPolymarketUsCredentialsDto {
   @IsString()
   @IsNotEmpty()
   @Matches(/^[0-9a-fA-F]{64}$/, {
-    message: 'secretKey must be a 64-character hex string (32-byte Ed25519 seed)',
+    message:
+      'secretKey must be a 64-character hex string (32-byte Ed25519 seed)',
   })
   secretKey!: string;
 }

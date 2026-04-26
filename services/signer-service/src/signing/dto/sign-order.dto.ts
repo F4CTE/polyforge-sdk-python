@@ -7,7 +7,41 @@ import {
   IsBoolean,
   Min,
   MaxLength,
+  registerDecorator,
+  type ValidationOptions,
+  type ValidationArguments,
 } from "class-validator";
+
+function OrderTypeExpirationRule(validationOptions?: ValidationOptions) {
+  return function (object: object, propertyName: string) {
+    registerDecorator({
+      name: "orderTypeExpirationRule",
+      target: object.constructor,
+      propertyName,
+      options: validationOptions,
+      validator: {
+        validate(value: unknown, args: ValidationArguments) {
+          const dto = args.object as SignOrderDto;
+          if (dto.orderType === "GTD") {
+            return (
+              typeof value === "number" &&
+              Number.isFinite(value) &&
+              value > Math.floor(Date.now() / 1000) + 30
+            );
+          }
+          return value === undefined || value === 0;
+        },
+        defaultMessage(args: ValidationArguments) {
+          const dto = args.object as SignOrderDto;
+          if (dto.orderType === "GTD") {
+            return "GTD orders require expiration as a future Unix epoch (at least 30s ahead)";
+          }
+          return `${dto.orderType} orders must have expiration = 0 or undefined`;
+        },
+      },
+    });
+  };
+}
 
 export class SignOrderDto {
   @IsString()
@@ -20,7 +54,6 @@ export class SignOrderDto {
   @MaxLength(255)
   requestId!: string;
 
-  /** Token ID (Polymarket condition ID + outcome index) */
   @IsString()
   @IsNotEmpty()
   @MaxLength(255)
@@ -29,14 +62,12 @@ export class SignOrderDto {
   @IsIn(["BUY", "SELL"])
   side!: "BUY" | "SELL";
 
-  /** Size in shares — minimum enforced per Polymarket CLOB requirements */
   @IsNumber()
   @Min(1, {
     message: "Order size must be at least 1 share (Polymarket minimum)",
   })
   size!: number;
 
-  /** Limit price (0-1) */
   @IsNumber()
   @Min(0)
   price!: number;
@@ -44,22 +75,19 @@ export class SignOrderDto {
   @IsIn(["GTC", "FOK", "GTD", "FAK"])
   orderType!: "GTC" | "FOK" | "GTD" | "FAK";
 
-  /** GTD expiry (Unix ms), required when orderType = GTD */
-  @IsNumber()
   @IsOptional()
+  @IsNumber()
+  @OrderTypeExpirationRule()
   expiration?: number;
 
-  /** Tick size for the market (e.g. "0.01" or "0.001") */
   @IsOptional()
   @IsString()
   tickSize?: string;
 
-  /** Whether this is a neg-risk market */
   @IsOptional()
   @IsBoolean()
   negRisk?: boolean;
 
-  /** If true, order must be maker-only (rejected if it would cross) */
   @IsOptional()
   @IsBoolean()
   postOnly?: boolean;

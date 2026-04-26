@@ -146,6 +146,7 @@ export class KalshiFeedService
         issuer: "market-data-service",
         audience: "signer-service",
         expiresIn: 30,
+        algorithm: "HS256",
       },
     );
 

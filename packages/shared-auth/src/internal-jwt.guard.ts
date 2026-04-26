@@ -45,9 +45,13 @@ export class InternalJwtGuard implements CanActivate {
     try {
       const payload = this.jwtService.verify<InternalJwtPayload>(token, {
         secret: process.env.INTERNAL_JWT_SECRET,
+        algorithms: ["HS256"],
       });
 
-      // Replay protection — check jti not already used
+      if (!payload.iss) {
+        throw new UnauthorizedException("Missing issuer claim");
+      }
+
       const jtiKey = `jti:${payload.jti}`;
       const used = await this.redisService.exists(jtiKey);
       if (used) {

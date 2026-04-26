@@ -21,6 +21,9 @@ export interface AdminJwtPayload {
 }
 
 export interface InternalJwtPayload {
+  sub?: string;
+  iss?: string;
+  aud?: string;
   service: string; // e.g. 'auth-service', 'order-service'
   jti: string; // unique token id for replay protection
   iat?: number;

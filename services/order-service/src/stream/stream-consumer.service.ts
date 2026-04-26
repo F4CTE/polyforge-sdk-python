@@ -149,9 +149,10 @@ export class StreamConsumerService implements OnModuleInit, OnModuleDestroy {
         size: obj["size"] ?? "0",
         price: obj["price"] ?? "0",
         orderType: (obj["orderType"] as "GTC" | "FOK" | "GTD") ?? "GTC",
-        expiration: obj["expiration"]
-          ? parseInt(obj["expiration"], 10)
-          : undefined,
+        expiration:
+          obj["expiration"] && obj["expiration"] !== "0"
+            ? parseInt(obj["expiration"], 10) || undefined
+            : undefined,
         ...(obj["venue"]
           ? { venue: obj["venue"] as OrderIntent["venue"] }
           : {}),

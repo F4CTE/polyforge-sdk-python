@@ -42,7 +42,9 @@ export class CredentialsService {
       {
         secret: this.internalJwtSecret,
         audience: 'signer-service',
+        issuer: 'auth-service',
         expiresIn: '30s',
+        algorithm: 'HS256',
       },
     );
   }

@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import {
   NotFoundException,
   ForbiddenException,
+  ConflictException,
   UnprocessableEntityException,
 } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
@@ -89,6 +90,11 @@ describe("OrdersService", () => {
       capture: vi.fn(),
       identify: vi.fn(),
     } as unknown as PosthogService;
+    db.position.updateMany.mockResolvedValue({ count: 1 } as any);
+    db.order.updateMany.mockResolvedValue({ count: 1 } as any);
+    db.order.findUnique.mockResolvedValue(
+      makeOrder({ clobOrderId: null }) as any,
+    );
     service = new OrdersService(db as any, redis, config, {} as any, posthog);
   });
 
@@ -592,13 +598,6 @@ describe("OrdersService", () => {
 
   describe("cancelOrder", () => {
     it("cancels a PENDING order and returns CANCELLED status", async () => {
-      db.order.findUniqueOrThrow.mockResolvedValue(
-        makeOrder({ status: "PENDING", clobOrderId: null }) as any,
-      );
-      db.order.update.mockResolvedValue(
-        makeOrder({ status: "CANCELLED" }) as any,
-      );
-
       const result = await service.cancelOrder("user-uuid-1", "order-uuid-1");
 
       expect(result).toEqual({
@@ -608,43 +607,39 @@ describe("OrdersService", () => {
     });
 
     it("throws ForbiddenException when cancelling another user's order", async () => {
-      db.order.findUniqueOrThrow.mockResolvedValue(
+      db.order.updateMany.mockResolvedValue({ count: 0 } as any);
+      db.order.findUnique.mockResolvedValue(
         makeOrder({ userId: "other-user" }) as any,
       );
 
       await expect(
         service.cancelOrder("user-uuid-1", "order-uuid-1"),
-      ).rejects.toThrow("Not your order");
+      ).rejects.toThrow(ForbiddenException);
     });
 
-    it("throws BadRequestException for FILLED order", async () => {
-      db.order.findUniqueOrThrow.mockResolvedValue(
+    it("throws ConflictException for FILLED order", async () => {
+      db.order.updateMany.mockResolvedValue({ count: 0 } as any);
+      db.order.findUnique.mockResolvedValue(
         makeOrder({ status: "FILLED" }) as any,
       );
 
       await expect(
         service.cancelOrder("user-uuid-1", "order-uuid-1"),
-      ).rejects.toThrow("Cannot cancel order in FILLED status");
+      ).rejects.toThrow(ConflictException);
     });
 
-    it("throws BadRequestException for CANCELLED order", async () => {
-      db.order.findUniqueOrThrow.mockResolvedValue(
+    it("throws ConflictException for CANCELLED order", async () => {
+      db.order.updateMany.mockResolvedValue({ count: 0 } as any);
+      db.order.findUnique.mockResolvedValue(
         makeOrder({ status: "CANCELLED" }) as any,
       );
 
       await expect(
         service.cancelOrder("user-uuid-1", "order-uuid-1"),
-      ).rejects.toThrow("Cannot cancel order in CANCELLED status");
+      ).rejects.toThrow(ConflictException);
     });
 
     it("allows cancelling SUBMITTED orders", async () => {
-      db.order.findUniqueOrThrow.mockResolvedValue(
-        makeOrder({ status: "SUBMITTED", clobOrderId: null }) as any,
-      );
-      db.order.update.mockResolvedValue(
-        makeOrder({ status: "CANCELLED" }) as any,
-      );
-
       const result = await service.cancelOrder("user-uuid-1", "order-uuid-1");
 
       expect(result.status).toBe("CANCELLED");
@@ -664,14 +659,8 @@ describe("OrdersService", () => {
     });
 
     it("publishes to stream:cancellations when order has clobOrderId", async () => {
-      db.order.findUniqueOrThrow.mockResolvedValue(
-        makeOrder({
-          status: "LIVE",
-          clobOrderId: "clob-123",
-        }) as any,
-      );
-      db.order.update.mockResolvedValue(
-        makeOrder({ status: "CANCELLED" }) as any,
+      db.order.findUnique.mockResolvedValue(
+        makeOrder({ status: "CANCELLED", clobOrderId: "clob-123" }) as any,
       );
 
       await service.cancelOrder("user-uuid-1", "order-uuid-1");
@@ -684,30 +673,20 @@ describe("OrdersService", () => {
     });
 
     it("does NOT publish to stream:cancellations when order has no clobOrderId", async () => {
-      db.order.findUniqueOrThrow.mockResolvedValue(
-        makeOrder({ status: "PENDING", clobOrderId: null }) as any,
-      );
-      db.order.update.mockResolvedValue(
-        makeOrder({ status: "CANCELLED" }) as any,
-      );
-
       await service.cancelOrder("user-uuid-1", "order-uuid-1");
 
       expect(redis.xadd).not.toHaveBeenCalled();
     });
 
-    it("updates order status to CANCELLED in the database", async () => {
-      db.order.findUniqueOrThrow.mockResolvedValue(
-        makeOrder({ status: "PENDING", clobOrderId: null }) as any,
-      );
-      db.order.update.mockResolvedValue(
-        makeOrder({ status: "CANCELLED" }) as any,
-      );
-
+    it("atomically updates order via updateMany with status guard", async () => {
       await service.cancelOrder("user-uuid-1", "order-uuid-1");
 
-      expect(db.order.update).toHaveBeenCalledWith({
-        where: { id: "order-uuid-1" },
+      expect(db.order.updateMany).toHaveBeenCalledWith({
+        where: {
+          id: "order-uuid-1",
+          userId: "user-uuid-1",
+          status: { in: ["PENDING", "SUBMITTED", "LIVE"] },
+        },
         data: { status: "CANCELLED" },
       });
     });

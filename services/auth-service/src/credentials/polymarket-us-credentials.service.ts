@@ -36,7 +36,9 @@ export class PolymarketUsCredentialsService {
       {
         secret: this.internalJwtSecret,
         audience: 'signer-service',
+        issuer: 'auth-service',
         expiresIn: '30s',
+        algorithm: 'HS256',
       },
     );
   }
@@ -166,7 +168,9 @@ export class PolymarketUsCredentialsService {
       });
 
       if (!res.ok) {
-        this.logger.error(`signer-service rejected US credentials: ${res.status}`);
+        this.logger.error(
+          `signer-service rejected US credentials: ${res.status}`,
+        );
         throw new HttpException(
           {
             code: 'SIGNER_ERROR',

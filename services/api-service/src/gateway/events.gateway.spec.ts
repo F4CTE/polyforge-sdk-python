@@ -254,7 +254,7 @@ describe("EventsGateway", () => {
 
     it("does not broadcast to unauthenticated sockets in server.clients", () => {
       const unauthSocket = makeSocket();
-      (gateway.server.clients as Set<WebSocket>).add(unauthSocket);
+      gateway.server.clients.add(unauthSocket);
 
       gateway.broadcast("PRICE_UPDATE", { tokenId: "t1", price: 0.5 });
 

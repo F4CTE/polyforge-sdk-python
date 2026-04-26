@@ -85,6 +85,7 @@ describe("AdminJwtGuard", () => {
     expect(result).toBe(true);
     expect(jwtService.verify).toHaveBeenCalledWith("admin-token", {
       secret: TEST_SECRET,
+      algorithms: ["HS256"],
     });
   });
 
@@ -95,6 +96,7 @@ describe("AdminJwtGuard", () => {
     expect(result).toBe(true);
     expect(jwtService.verify).toHaveBeenCalledWith("cookie-token", {
       secret: TEST_SECRET,
+      algorithms: ["HS256"],
     });
   });
 
@@ -107,6 +109,7 @@ describe("AdminJwtGuard", () => {
 
     expect(jwtService.verify).toHaveBeenCalledWith("cookie-token", {
       secret: TEST_SECRET,
+      algorithms: ["HS256"],
     });
   });
 

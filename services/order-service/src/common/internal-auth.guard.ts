@@ -32,6 +32,8 @@ export class InternalAuthGuard implements CanActivate {
       payload = this.jwt.verify(token, {
         secret: this.config.get<string>("INTERNAL_JWT_SECRET"),
         audience: "order-service",
+        issuer: ["api-service"],
+        algorithms: ["HS256"],
       });
     } catch {
       throw new UnauthorizedException("Invalid service token");

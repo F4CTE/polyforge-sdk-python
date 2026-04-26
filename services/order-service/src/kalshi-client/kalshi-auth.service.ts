@@ -91,6 +91,7 @@ export class KalshiAuthService {
         issuer: "order-service",
         audience: "signer-service",
         expiresIn: 30,
+        algorithm: "HS256",
       },
     );
   }

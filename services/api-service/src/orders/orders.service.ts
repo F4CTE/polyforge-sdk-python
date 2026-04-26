@@ -4,6 +4,7 @@ import {
   UnprocessableEntityException,
   ForbiddenException,
   BadRequestException,
+  ConflictException,
 } from "@nestjs/common";
 import { BETA_LIMITS } from "../common/beta-limits.config";
 import { ConfigService } from "@nestjs/config";
@@ -126,6 +127,23 @@ export class OrdersService {
       });
     }
 
+    // Atomic close-once guard: transition UNRESOLVED → RESOLVING.
+    // A double-click will see count=0 and get a 409 Conflict.
+    const claimed = await this.prisma.position.updateMany({
+      where: {
+        id: position.id,
+        userId,
+        resolutionStatus: ResolutionStatus.UNRESOLVED,
+      },
+      data: { resolutionStatus: ResolutionStatus.RESOLVING },
+    });
+    if (claimed.count === 0) {
+      throw new ConflictException({
+        code: "POSITION_ALREADY_CLOSING",
+        message: "This position is already being closed",
+      });
+    }
+
     const intentId = randomUUID();
     const size = dto.size ?? String(position.size);
 
@@ -141,7 +159,7 @@ export class OrdersService {
       size,
       price: "0.01",
       orderType: "FOK",
-      expiration: "",
+      expiration: "0",
       ts: String(Date.now()),
     });
 
@@ -254,7 +272,9 @@ export class OrdersService {
       {
         secret: this.config.getOrThrow<string>("INTERNAL_JWT_SECRET"),
         audience: "signer-service",
+        issuer: "api-service",
         expiresIn: "30s",
+        algorithm: "HS256",
       },
     );
     const res = await fetch(`${signerUrl}/internal/split-position`, {
@@ -307,7 +327,9 @@ export class OrdersService {
       {
         secret: this.config.getOrThrow<string>("INTERNAL_JWT_SECRET"),
         audience: "signer-service",
+        issuer: "api-service",
         expiresIn: "30s",
+        algorithm: "HS256",
       },
     );
     const res = await fetch(`${signerUrl}/internal/merge-position`, {
@@ -626,28 +648,37 @@ export class OrdersService {
   }
 
   async cancelOrder(userId: string, orderId: string) {
-    const order = await this.prisma.order.findUniqueOrThrow({
-      where: { id: orderId },
-    });
-
-    if (order.userId !== userId) {
-      throw new ForbiddenException("Not your order");
-    }
-
-    if (!["PENDING", "SUBMITTED", "LIVE"].includes(order.status)) {
-      throw new BadRequestException(
-        `Cannot cancel order in ${order.status} status`,
-      );
-    }
-
-    // Update status to CANCELLED
-    await this.prisma.order.update({
-      where: { id: orderId },
+    // Atomic status-guarded cancel — only transitions from cancellable states.
+    // Prevents race with trade-reconciler moving the order to CONFIRMED/MATCHED.
+    const updated = await this.prisma.order.updateMany({
+      where: {
+        id: orderId,
+        userId,
+        status: {
+          in: [OrderStatus.PENDING, OrderStatus.SUBMITTED, OrderStatus.LIVE],
+        },
+      },
       data: { status: OrderStatus.CANCELLED },
     });
 
-    // If order has a CLOB ID, publish cancel to stream
-    if (order.clobOrderId) {
+    if (updated.count === 0) {
+      const order = await this.prisma.order.findUnique({
+        where: { id: orderId },
+      });
+      if (!order) throw new NotFoundException("Order not found");
+      if (order.userId !== userId)
+        throw new ForbiddenException("Not your order");
+      throw new ConflictException({
+        code: "ORDER_NOT_CANCELLABLE",
+        message: `Order is already in ${order.status} state`,
+      });
+    }
+
+    const order = await this.prisma.order.findUnique({
+      where: { id: orderId },
+    });
+
+    if (order?.clobOrderId) {
       await this.redis.xadd("stream:cancellations", {
         orderId,
         clobOrderId: order.clobOrderId,

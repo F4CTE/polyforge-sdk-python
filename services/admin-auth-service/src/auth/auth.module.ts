@@ -11,7 +11,8 @@ import { AuthController } from "./auth.controller";
       imports: [ConfigModule],
       useFactory: (cfg: ConfigService) => ({
         secret: cfg.getOrThrow<string>("ADMIN_JWT_SECRET"),
-        signOptions: { expiresIn: "1h" },
+        signOptions: { expiresIn: "1h", algorithm: "HS256" as const },
+        verifyOptions: { algorithms: ["HS256" as const] },
       }),
       inject: [ConfigService],
     }),
