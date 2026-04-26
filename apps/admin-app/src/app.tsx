@@ -5,6 +5,7 @@ import { router } from './router';
 import { useAdminAuthStore } from './stores/admin-auth-store';
 import { useThemeStore } from './stores/theme-store';
 import { ErrorBoundary } from './components/error-boundary';
+import { capture } from './lib/analytics';
 
 export function App() {
   const init = useAdminAuthStore((s) => s.init);
@@ -12,6 +13,16 @@ export function App() {
 
   useEffect(() => {
     init();
+
+    const unsubRouter = router.subscribe((state) => {
+      if (state.navigation.state === 'idle') {
+        capture('page_viewed', { path: state.location.pathname, app: 'admin' });
+      }
+    });
+
+    return () => {
+      unsubRouter();
+    };
   }, [init]);
 
   return (

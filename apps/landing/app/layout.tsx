@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { GeistSans } from "geist/font/sans";
 import { GeistMono } from "geist/font/mono";
 import Script from "next/script";
+import { PostHogProvider } from "./providers";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -132,7 +133,9 @@ export default function RootLayout({
         >
           Skip to main content
         </a>
-        {children}
+        <PostHogProvider>
+          {children}
+        </PostHogProvider>
         <Script
           defer
           data-domain="polyforge.app"

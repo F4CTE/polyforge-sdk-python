@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { identifyUser, resetAnalytics } from '../lib/analytics';
 
 interface User {
   id: string;
@@ -125,6 +126,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
       if (res.ok) {
         const user = await res.json();
+        identifyUser(user.id, { email: user.email, username: user.username });
         set({ user, loading: false });
       } else {
         set({ user: null, loading: false });
@@ -146,6 +148,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       throw err;
     }
     const user = await res.json();
+    identifyUser(user.id, { email: user.email, username: user.username });
     set({ user });
   },
 
@@ -170,6 +173,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   logout: async () => {
     await fetch('/auth/v1/logout', { method: 'POST', credentials: 'include' });
+    resetAnalytics();
     set({ user: null });
     window.location.href = '/login';
   },

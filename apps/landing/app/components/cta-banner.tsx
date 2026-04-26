@@ -1,9 +1,11 @@
 "use client";
 
+import { usePostHog } from "posthog-js/react";
 import { useInViewAnimation } from "../hooks/use-in-view-animation";
 
 export function CtaBanner() {
   const { ref, inView } = useInViewAnimation({ threshold: 0.2 });
+  const ph = usePostHog();
 
   return (
     <section className="py-20 md:py-28" aria-labelledby="cta-heading">
@@ -40,6 +42,7 @@ export function CtaBanner() {
           <div className="relative inline-flex gap-2.5 flex-wrap justify-center">
             <a
               href="/signup"
+              onClick={() => ph?.capture('cta_clicked', { label: 'start_free', location: 'cta_banner' })}
               className="inline-flex items-center gap-1.5 px-6 py-3 rounded-pf bg-accent hover:bg-accent-text text-inverse font-semibold text-sm transition-colors duration-micro focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-text"
             >
               start free
@@ -59,6 +62,7 @@ export function CtaBanner() {
             </a>
             <a
               href="/demo"
+              onClick={() => ph?.capture('cta_clicked', { label: 'book_walkthrough', location: 'cta_banner' })}
               className="inline-flex items-center px-6 py-3 rounded-pf border border-subtle bg-surface hover:bg-elevated text-primary font-semibold text-sm transition-colors duration-micro focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-text"
             >
               book a walkthrough

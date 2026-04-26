@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { authApi } from '@/lib/api';
+import { identifyUser, resetAnalytics } from '@/lib/analytics';
 
 interface Admin {
   id: string;
@@ -27,6 +28,7 @@ export const useAdminAuthStore = create<AdminAuthState>((set) => ({
   init: async () => {
     try {
       const admin = await authApi.me();
+      identifyUser(admin.id, { email: admin.email });
       set({
         admin,
         loading: false,
@@ -40,6 +42,7 @@ export const useAdminAuthStore = create<AdminAuthState>((set) => ({
 
   login: async (email: string, password: string, totpCode?: string) => {
     const admin = await authApi.login({ email, password, ...(totpCode ? { totpCode } : {}) });
+    identifyUser(admin.id, { email: admin.email });
     set({
       admin,
       isAuthenticated: true,
@@ -53,6 +56,7 @@ export const useAdminAuthStore = create<AdminAuthState>((set) => ({
     } catch {
       // ignore
     }
+    resetAnalytics();
     set({ admin: null, isAuthenticated: false, isSuperAdmin: false });
   },
 }));

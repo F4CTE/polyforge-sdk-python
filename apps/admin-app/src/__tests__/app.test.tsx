@@ -13,7 +13,7 @@ vi.mock('react-router', () => ({
 }));
 
 vi.mock('../router', () => ({
-  router: { routes: [] },
+  router: { routes: [], subscribe: vi.fn(() => vi.fn()) },
 }));
 
 const mockInit = vi.fn();

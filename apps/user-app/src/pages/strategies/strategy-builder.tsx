@@ -14,6 +14,7 @@ import { BlockPalette } from '../../components/builder/block-palette';
 import { BuilderTutorial } from '../../components/builder/builder-tutorial';
 import { ExecutionPanel } from '../../components/builder/execution-panel';
 import { useBuilderStore } from '../../stores/builder-store';
+import { capture } from '@/lib/analytics';
 
 // ─── Strategy Template Library ───────────────────────────────────────────────
 
@@ -1049,6 +1050,7 @@ export function Component() {
       });
     } else {
       reset();
+      capture('strategy_form_opened');
     }
 
     // Cleanup on unmount
