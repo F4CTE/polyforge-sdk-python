@@ -17,7 +17,7 @@ import {
   OrderStatus,
 } from "@prisma/client";
 import { PrismaService } from "@polyforge/shared-db";
-import { RedisService } from "@polyforge/shared-redis";
+import { RedisService, runOncePerCluster } from "@polyforge/shared-redis";
 import {
   PlaceSmartOrderDto,
   SmartOrderTypeDto,
@@ -167,25 +167,32 @@ export class SmartOrderService {
 
   @Interval(30_000) // check every 30s
   async executeSlices(): Promise<void> {
-    const now = new Date();
-    const due = await this.prisma.smartOrder.findMany({
-      where: {
-        status: { in: [SmartOrderStatus.PENDING, SmartOrderStatus.ACTIVE] },
-        type: { in: [SmartOrderType.TWAP, SmartOrderType.DCA] },
-        nextExecuteAt: { lte: now },
-      },
-      take: 50,
-    });
+    await runOncePerCluster({
+      redis: this.redis,
+      key: "lock:cron:smart-order:executeSlices",
+      ttlMs: 25_000,
+      job: async () => {
+        const now = new Date();
+        const due = await this.prisma.smartOrder.findMany({
+          where: {
+            status: { in: [SmartOrderStatus.PENDING, SmartOrderStatus.ACTIVE] },
+            type: { in: [SmartOrderType.TWAP, SmartOrderType.DCA] },
+            nextExecuteAt: { lte: now },
+          },
+          take: 50,
+        });
 
-    await Promise.allSettled(
-      due.map((so) =>
-        this.executeNextSlice(so).catch((err: unknown) =>
-          this.logger.warn(
-            `Slice execution failed for ${so.id}: ${(err as Error).message}`,
+        await Promise.allSettled(
+          due.map((so) =>
+            this.executeNextSlice(so).catch((err: unknown) =>
+              this.logger.warn(
+                `Slice execution failed for ${so.id}: ${(err as Error).message}`,
+              ),
+            ),
           ),
-        ),
-      ),
-    );
+        );
+      },
+    });
   }
 
   // ── Internal helpers ─────────────────────────────────────────────────────

@@ -48,6 +48,13 @@ function createMockPrisma() {
   } as any;
 }
 
+const makeRedis = () => ({
+  getClient: () => ({
+    set: vi.fn().mockResolvedValue("OK"),
+    del: vi.fn().mockResolvedValue(1),
+  }),
+});
+
 // ─── ScoreCalculatorService ──────────────────────────────────────────────────
 
 describe("ScoreCalculatorService", () => {
@@ -56,7 +63,7 @@ describe("ScoreCalculatorService", () => {
 
   beforeEach(() => {
     prisma = createMockPrisma();
-    calculator = new ScoreCalculatorService(prisma);
+    calculator = new ScoreCalculatorService(prisma, makeRedis() as any);
   });
 
   describe("computeScore", () => {
@@ -283,7 +290,7 @@ describe("BadgeService", () => {
 
   beforeEach(() => {
     prisma = createMockPrisma();
-    badge = new BadgeService(prisma);
+    badge = new BadgeService(prisma, makeRedis() as any);
   });
 
   describe("evaluateForUser", () => {

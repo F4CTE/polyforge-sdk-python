@@ -19,6 +19,10 @@ function makeMocks() {
     get: vi.fn().mockResolvedValue(null),
     set: vi.fn().mockResolvedValue("OK"),
     xadd: vi.fn().mockResolvedValue("ok"),
+    getClient: vi.fn().mockReturnValue({
+      set: vi.fn().mockResolvedValue("OK"),
+      del: vi.fn().mockResolvedValue(1),
+    }),
   } as any;
 
   return { prisma, redis };

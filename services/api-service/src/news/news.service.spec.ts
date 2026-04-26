@@ -267,7 +267,12 @@ describe("NewsIngestionService", () => {
     const signalGenerator = {
       generateSignals: vi.fn().mockResolvedValue(undefined),
     } as any;
-    ingestion = new NewsIngestionService(config, prisma, signalGenerator);
+    ingestion = new NewsIngestionService(
+      config,
+      prisma,
+      createMockRedis(),
+      signalGenerator,
+    );
   });
 
   describe("parseRss", () => {

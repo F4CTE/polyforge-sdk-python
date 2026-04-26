@@ -7,13 +7,21 @@ function makeMatchService() {
   } as any;
 }
 
+function makeRedis() {
+  const client = {
+    set: vi.fn().mockResolvedValue("OK"),
+    del: vi.fn().mockResolvedValue(1),
+  };
+  return { getClient: () => client } as any;
+}
+
 describe("MarketMatchScheduler", () => {
   let scheduler: MarketMatchScheduler;
   let matchService: ReturnType<typeof makeMatchService>;
 
   beforeEach(() => {
     matchService = makeMatchService();
-    scheduler = new MarketMatchScheduler(matchService);
+    scheduler = new MarketMatchScheduler(matchService, makeRedis());
   });
 
   it("delegates to matchService.runAutoMatch", async () => {

@@ -1,6 +1,7 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { Cron } from "@nestjs/schedule";
 import { PrismaService } from "@polyforge/shared-db";
+import { RedisService, runOncePerCluster } from "@polyforge/shared-redis";
 import { ClobClientService } from "../clob-client/clob-client.service";
 
 export interface ClobTrade {
@@ -21,6 +22,7 @@ export class TradeReconcilerService {
 
   constructor(
     private readonly prisma: PrismaService,
+    private readonly redis: RedisService,
     private readonly clob: ClobClientService,
   ) {}
 
@@ -30,25 +32,34 @@ export class TradeReconcilerService {
    */
   @Cron("*/2 * * * *")
   async reconcile(): Promise<void> {
-    try {
-      const users = await this.getConnectedUsersWithLiveOrders();
-      const eligible = users.filter(
-        (u): u is typeof u & { polymarketAddress: string } =>
-          u.polymarketAddress != null,
-      );
+    await runOncePerCluster({
+      redis: this.redis,
+      key: "lock:cron:trade-reconciler:reconcile",
+      ttlMs: 100_000,
+      job: async () => {
+        try {
+          const users = await this.getConnectedUsersWithLiveOrders();
+          const eligible = users.filter(
+            (u): u is typeof u & { polymarketAddress: string } =>
+              u.polymarketAddress != null,
+          );
 
-      // Parallel with concurrency limit of 5
-      const CONCURRENCY = 5;
-      for (let i = 0; i < eligible.length; i += CONCURRENCY) {
-        await Promise.allSettled(
-          eligible
-            .slice(i, i + CONCURRENCY)
-            .map((u) => this.reconcileUserTrades(u.id, u.polymarketAddress)),
-        );
-      }
-    } catch (err) {
-      this.logger.error("Trade reconciliation failed", err);
-    }
+          // Parallel with concurrency limit of 5
+          const CONCURRENCY = 5;
+          for (let i = 0; i < eligible.length; i += CONCURRENCY) {
+            await Promise.allSettled(
+              eligible
+                .slice(i, i + CONCURRENCY)
+                .map((u) =>
+                  this.reconcileUserTrades(u.id, u.polymarketAddress),
+                ),
+            );
+          }
+        } catch (err) {
+          this.logger.error("Trade reconciliation failed", err);
+        }
+      },
+    });
   }
 
   async reconcileUserTrades(

@@ -52,7 +52,14 @@ function makeMocks() {
     subscribeTokens: vi.fn(),
   } as any;
 
-  return { prisma, ws };
+  const redis = {
+    getClient: () => ({
+      set: vi.fn().mockResolvedValue("OK"),
+      del: vi.fn().mockResolvedValue(1),
+    }),
+  } as any;
+
+  return { prisma, ws, redis };
 }
 
 // ── Suite ──────────────────────────────────────────────────────────────────────
@@ -66,7 +73,7 @@ describe("GammaApiService", () => {
   beforeEach(() => {
     const m = makeMocks();
     ({ prisma, ws } = m);
-    svc = new GammaApiService(prisma, ws);
+    svc = new GammaApiService(prisma, m.redis, ws);
     // Force offset mode in all existing tests — keyset is tested separately below
     vi.spyOn(svc, "probeKeysetSupport").mockResolvedValue(false);
   });

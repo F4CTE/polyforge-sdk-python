@@ -2,6 +2,7 @@ import { Injectable, Logger } from "@nestjs/common";
 import { Cron } from "@nestjs/schedule";
 import { Prisma } from "@prisma/client";
 import { PrismaService } from "@polyforge/shared-db";
+import { RedisService, runOncePerCluster } from "@polyforge/shared-redis";
 
 // NOTE: `waitlist:emails` (Redis ZSET) and `config:invite_only` (Redis string) are
 // intentionally excluded from automated retention jobs. Waitlist entries are managed
@@ -14,7 +15,10 @@ const DAY_MS = 86400_000;
 export class RetentionService {
   private readonly logger = new Logger(RetentionService.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly redis: RedisService,
+  ) {}
 
   // ─── Analytics Endpoints ──────────────────────────────────────────────────
 
@@ -183,15 +187,22 @@ export class RetentionService {
   // Nightly at 3am UTC
   @Cron("0 3 * * *")
   async runRetentionJobs() {
-    this.logger.log("Starting nightly retention jobs");
-    await Promise.allSettled([
-      this.purgeUserLoginHistory(),
-      this.purgeNotificationHistory(),
-      this.purgePaperOrders(),
-      this.purgeStrategyEvents(),
-      this.purgeOldEventLogs(),
-    ]);
-    this.logger.log("Nightly retention jobs complete");
+    await runOncePerCluster({
+      redis: this.redis,
+      key: "lock:cron:retention:runRetentionJobs",
+      ttlMs: 3_600_000,
+      job: async () => {
+        this.logger.log("Starting nightly retention jobs");
+        await Promise.allSettled([
+          this.purgeUserLoginHistory(),
+          this.purgeNotificationHistory(),
+          this.purgePaperOrders(),
+          this.purgeStrategyEvents(),
+          this.purgeOldEventLogs(),
+        ]);
+        this.logger.log("Nightly retention jobs complete");
+      },
+    });
   }
 
   private async purgeUserLoginHistory() {

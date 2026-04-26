@@ -28,6 +28,10 @@ function makePrisma() {
 function makeRedis() {
   return {
     get: vi.fn().mockResolvedValue(null),
+    getClient: () => ({
+      set: vi.fn().mockResolvedValue("OK"),
+      del: vi.fn().mockResolvedValue(1),
+    }),
   };
 }
 

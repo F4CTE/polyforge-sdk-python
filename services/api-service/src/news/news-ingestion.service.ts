@@ -2,6 +2,7 @@ import { Injectable, Logger, OnModuleInit } from "@nestjs/common";
 import { Cron } from "@nestjs/schedule";
 import { ConfigService } from "@nestjs/config";
 import { PrismaService } from "@polyforge/shared-db";
+import { RedisService, runOncePerCluster } from "@polyforge/shared-redis";
 import { SignalGeneratorService } from "./signal-generator.service";
 
 interface ParsedArticle {
@@ -21,6 +22,7 @@ export class NewsIngestionService implements OnModuleInit {
   constructor(
     private readonly config: ConfigService,
     private readonly prisma: PrismaService,
+    private readonly redis: RedisService,
     private readonly signalGenerator: SignalGeneratorService,
   ) {
     const feedsEnv = this.config.get<string>("NEWS_RSS_FEEDS", "");
@@ -47,18 +49,25 @@ export class NewsIngestionService implements OnModuleInit {
    */
   @Cron("*/5 * * * *")
   async pollFeeds(): Promise<void> {
-    if (this.feeds.length === 0) return;
+    await runOncePerCluster({
+      redis: this.redis,
+      key: "lock:cron:news-ingestion:pollFeeds",
+      ttlMs: 240_000,
+      job: async () => {
+        if (this.feeds.length === 0) return;
 
-    this.logger.debug(`Polling ${this.feeds.length} RSS feed(s)...`);
+        this.logger.debug(`Polling ${this.feeds.length} RSS feed(s)...`);
 
-    for (const feedUrl of this.feeds) {
-      try {
-        await this.ingestFeed(feedUrl);
-      } catch (err: unknown) {
-        const msg = err instanceof Error ? err.message : String(err);
-        this.logger.error(`Failed to ingest feed ${feedUrl}: ${msg}`);
-      }
-    }
+        for (const feedUrl of this.feeds) {
+          try {
+            await this.ingestFeed(feedUrl);
+          } catch (err: unknown) {
+            const msg = err instanceof Error ? err.message : String(err);
+            this.logger.error(`Failed to ingest feed ${feedUrl}: ${msg}`);
+          }
+        }
+      },
+    });
   }
 
   async ingestFeed(feedUrl: string): Promise<number> {

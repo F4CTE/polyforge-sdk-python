@@ -2,6 +2,13 @@ import { describe, it, expect, beforeEach, vi } from "vitest";
 import { MarketMatchService } from "./market-match.service";
 import { createMockDb, MockDb } from "../../test/helpers/mock-db";
 
+const makeRedis = () => ({
+  getClient: () => ({
+    set: vi.fn().mockResolvedValue("OK"),
+    del: vi.fn().mockResolvedValue(1),
+  }),
+});
+
 function makeMarketRow(overrides: Record<string, unknown> = {}) {
   return {
     id: "poly-1",
@@ -19,7 +26,7 @@ describe("MarketMatchService", () => {
 
   beforeEach(() => {
     db = createMockDb();
-    service = new MarketMatchService(db as any);
+    service = new MarketMatchService(db as any, makeRedis() as any);
   });
 
   describe("runMatchingPass", () => {

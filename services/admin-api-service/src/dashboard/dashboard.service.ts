@@ -1,6 +1,6 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { Cron, CronExpression } from "@nestjs/schedule";
-import { RedisService } from "@polyforge/shared-redis";
+import { RedisService, runOncePerCluster } from "@polyforge/shared-redis";
 import { PrismaService } from "@polyforge/shared-db";
 import { BETA_LIMITS } from "../common/beta-limits.config";
 
@@ -66,7 +66,14 @@ export class DashboardService {
 
   @Cron("*/10 * * * * *") // every 10 seconds
   async pollHealthChecks() {
-    await Promise.allSettled(SERVICES.map((svc) => this.checkService(svc)));
+    await runOncePerCluster({
+      redis: this.redis,
+      key: "lock:cron:dashboard:pollHealthChecks",
+      ttlMs: 8000,
+      job: async () => {
+        await Promise.allSettled(SERVICES.map((svc) => this.checkService(svc)));
+      },
+    });
   }
 
   private async checkService(svc: { name: string; url: string }) {

@@ -1,6 +1,7 @@
 import { Injectable, HttpException, HttpStatus, Logger } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { PrismaService } from '@polyforge/shared-db';
+import { RedisService, runOncePerCluster } from '@polyforge/shared-redis';
 import { createHash, randomBytes } from 'crypto';
 import { CreateApiKeyDto } from './dto/create-api-key.dto';
 
@@ -11,7 +12,10 @@ const DEPRECATION_GRACE_PERIOD_MS = 24 * 60 * 60 * 1000; // 24 hours
 export class ApiKeysService {
   private readonly logger = new Logger(ApiKeysService.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly redis: RedisService,
+  ) {}
 
   async create(userId: string, dto: CreateApiKeyDto) {
     // Enforce max active keys
@@ -177,33 +181,42 @@ export class ApiKeysService {
    */
   @Cron('0 * * * *')
   async revokeExpiredDeprecatedKeys(): Promise<number> {
-    const now = new Date();
+    return (
+      (await runOncePerCluster({
+        redis: this.redis,
+        key: 'lock:cron:api-keys:revokeExpiredDeprecatedKeys',
+        ttlMs: 3_000_000,
+        job: async () => {
+          const now = new Date();
 
-    const expiredKeys = await this.prisma.apiKey.findMany({
-      where: {
-        deprecated: true,
-        revoked: false,
-        deprecatedExpiresAt: { lte: now },
-      } as any,
-      select: { id: true },
-    });
+          const expiredKeys = await this.prisma.apiKey.findMany({
+            where: {
+              deprecated: true,
+              revoked: false,
+              deprecatedExpiresAt: { lte: now },
+            } as any,
+            select: { id: true },
+          });
 
-    if (expiredKeys.length === 0) return 0;
+          if (expiredKeys.length === 0) return 0;
 
-    await this.prisma.apiKey.updateMany({
-      where: {
-        id: { in: expiredKeys.map((k) => k.id) },
-      },
-      data: {
-        revoked: true,
-        revokedAt: now,
-      },
-    });
+          await this.prisma.apiKey.updateMany({
+            where: {
+              id: { in: expiredKeys.map((k) => k.id) },
+            },
+            data: {
+              revoked: true,
+              revokedAt: now,
+            },
+          });
 
-    this.logger.log(
-      `Revoked ${expiredKeys.length} deprecated API key(s) past grace period`,
+          this.logger.log(
+            `Revoked ${expiredKeys.length} deprecated API key(s) past grace period`,
+          );
+
+          return expiredKeys.length;
+        },
+      })) ?? 0
     );
-
-    return expiredKeys.length;
   }
 }

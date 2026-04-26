@@ -1,7 +1,7 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { Cron } from "@nestjs/schedule";
 import { PrismaService } from "@polyforge/shared-db";
-import { RedisService } from "@polyforge/shared-redis";
+import { RedisService, runOncePerCluster } from "@polyforge/shared-redis";
 import { EventsGateway } from "../gateway/events.gateway";
 import { ClobReadService } from "../common/services/clob-read.service";
 import { ResolutionStatus } from "@prisma/client";
@@ -19,46 +19,53 @@ export class PositionReconcilerService {
 
   @Cron("*/5 * * * *")
   async reconcile(): Promise<void> {
-    // Only reconcile users who actually have unresolved positions
-    const usersWithPositions = await this.prisma.position.findMany({
-      where: { resolutionStatus: ResolutionStatus.UNRESOLVED },
-      select: { userId: true },
-      distinct: ["userId"],
-    });
+    await runOncePerCluster({
+      redis: this.redis,
+      key: "lock:cron:position-reconciler:reconcile",
+      ttlMs: 240_000,
+      job: async () => {
+        // Only reconcile users who actually have unresolved positions
+        const usersWithPositions = await this.prisma.position.findMany({
+          where: { resolutionStatus: ResolutionStatus.UNRESOLVED },
+          select: { userId: true },
+          distinct: ["userId"],
+        });
 
-    if (usersWithPositions.length === 0) return;
+        if (usersWithPositions.length === 0) return;
 
-    const userIds = usersWithPositions.map((u) => u.userId);
-    const connectedUsers = await this.prisma.user.findMany({
-      where: {
-        id: { in: userIds },
-        polymarketConnected: true,
-        suspended: false,
-        deleted: false,
-      },
-      select: { id: true, polymarketAddress: true },
-    });
+        const userIds = usersWithPositions.map((u) => u.userId);
+        const connectedUsers = await this.prisma.user.findMany({
+          where: {
+            id: { in: userIds },
+            polymarketConnected: true,
+            suspended: false,
+            deleted: false,
+          },
+          select: { id: true, polymarketAddress: true },
+        });
 
-    // Parallel with concurrency limit of 10
-    const CONCURRENCY = 10;
-    for (let i = 0; i < connectedUsers.length; i += CONCURRENCY) {
-      const batch = connectedUsers.slice(i, i + CONCURRENCY);
-      await Promise.allSettled(
-        batch
-          .filter(
-            (u): u is typeof u & { polymarketAddress: string } =>
-              u.polymarketAddress != null,
-          )
-          .map((u) =>
-            this.reconcileUser(u.id, u.polymarketAddress).catch(
-              (err: unknown) =>
-                this.logger.warn(
-                  `Reconciliation failed for ${u.id}: ${(err as Error).message}`,
+        // Parallel with concurrency limit of 10
+        const CONCURRENCY = 10;
+        for (let i = 0; i < connectedUsers.length; i += CONCURRENCY) {
+          const batch = connectedUsers.slice(i, i + CONCURRENCY);
+          await Promise.allSettled(
+            batch
+              .filter(
+                (u): u is typeof u & { polymarketAddress: string } =>
+                  u.polymarketAddress != null,
+              )
+              .map((u) =>
+                this.reconcileUser(u.id, u.polymarketAddress).catch(
+                  (err: unknown) =>
+                    this.logger.warn(
+                      `Reconciliation failed for ${u.id}: ${(err as Error).message}`,
+                    ),
                 ),
-            ),
-          ),
-      );
-    }
+              ),
+          );
+        }
+      },
+    });
   }
 
   async reconcileUser(userId: string, walletAddress: string): Promise<void> {

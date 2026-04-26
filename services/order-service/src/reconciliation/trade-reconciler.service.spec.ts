@@ -21,6 +21,14 @@ function makeClob() {
   } as any;
 }
 
+function makeRedis() {
+  const client = {
+    set: vi.fn().mockResolvedValue("OK"),
+    del: vi.fn().mockResolvedValue(1),
+  };
+  return { getClient: () => client } as any;
+}
+
 // ─── Suite ────────────────────────────────────────────────────────────────────
 
 describe("TradeReconcilerService", () => {
@@ -31,7 +39,7 @@ describe("TradeReconcilerService", () => {
   beforeEach(() => {
     prisma = makePrisma();
     clob = makeClob();
-    svc = new TradeReconcilerService(prisma, clob);
+    svc = new TradeReconcilerService(prisma, makeRedis(), clob);
   });
 
   afterEach(() => {

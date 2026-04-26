@@ -1,7 +1,7 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { Cron } from "@nestjs/schedule";
 import { PrismaService } from "@polyforge/shared-db";
-import { RedisService } from "@polyforge/shared-redis";
+import { RedisService, runOncePerCluster } from "@polyforge/shared-redis";
 
 const STREAM = "stream:events";
 const DEFAULT_THRESHOLD_PCT = 3;
@@ -68,17 +68,24 @@ export class CrossVenueArbitrageService {
 
   @Cron("*/2 * * * *")
   async scanOpportunities(): Promise<void> {
-    try {
-      const opps = await this.getOpportunities(DEFAULT_THRESHOLD_PCT);
-      for (const opp of opps) {
-        await this.maybeAlert(opp);
-      }
-      await this.persistSnapshots().catch((e) =>
-        this.logger.warn("Snapshot persist failed", (e as Error).message),
-      );
-    } catch (err) {
-      this.logger.error("Cross-venue scan failed", (err as Error).message);
-    }
+    await runOncePerCluster({
+      redis: this.redis,
+      key: "lock:cron:cross-venue-arbitrage:scanOpportunities",
+      ttlMs: 100_000,
+      job: async () => {
+        try {
+          const opps = await this.getOpportunities(DEFAULT_THRESHOLD_PCT);
+          for (const opp of opps) {
+            await this.maybeAlert(opp);
+          }
+          await this.persistSnapshots().catch((e) =>
+            this.logger.warn("Snapshot persist failed", (e as Error).message),
+          );
+        } catch (err) {
+          this.logger.error("Cross-venue scan failed", (err as Error).message);
+        }
+      },
+    });
   }
 
   async getOpportunities(

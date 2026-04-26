@@ -9,6 +9,14 @@ function makeConfig() {
   return { get: vi.fn().mockReturnValue("3") } as any;
 }
 
+function makeRedis() {
+  const client = {
+    set: vi.fn().mockResolvedValue("OK"),
+    del: vi.fn().mockResolvedValue(1),
+  };
+  return { getClient: () => client } as any;
+}
+
 describe("ArbitrageScheduler", () => {
   let scheduler: ArbitrageScheduler;
   let arbitrageService: ReturnType<typeof makeArbitrageService>;
@@ -17,7 +25,7 @@ describe("ArbitrageScheduler", () => {
   beforeEach(() => {
     arbitrageService = makeArbitrageService();
     config = makeConfig();
-    scheduler = new ArbitrageScheduler(arbitrageService, config);
+    scheduler = new ArbitrageScheduler(arbitrageService, config, makeRedis());
   });
 
   it("delegates to arbitrageService.scanAndAlert with configured threshold", async () => {

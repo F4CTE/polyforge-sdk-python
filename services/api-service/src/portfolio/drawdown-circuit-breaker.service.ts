@@ -1,7 +1,7 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { Interval } from "@nestjs/schedule";
 import { PrismaService } from "@polyforge/shared-db";
-import { RedisService } from "@polyforge/shared-redis";
+import { RedisService, runOncePerCluster } from "@polyforge/shared-redis";
 import { StrategyStatus } from ".prisma/client";
 
 const DEBOUNCE_KEY = (userId: string) => `cb:tripped:${userId}`;
@@ -25,27 +25,34 @@ export class DrawdownCircuitBreakerService {
    */
   @Interval(60_000)
   async check(): Promise<void> {
-    // Only fetch limits rows where the feature is on and not already tripped
-    const limits = await this.prisma.userLimit.findMany({
-      where: { drawdownEnabled: true, circuitBreakerTripped: false },
-      select: {
-        userId: true,
-        drawdownLookbackHours: true,
-        drawdownThresholdPct: true,
+    await runOncePerCluster({
+      redis: this.redis,
+      key: "lock:cron:drawdown-circuit-breaker:check",
+      ttlMs: 50_000,
+      job: async () => {
+        // Only fetch limits rows where the feature is on and not already tripped
+        const limits = await this.prisma.userLimit.findMany({
+          where: { drawdownEnabled: true, circuitBreakerTripped: false },
+          select: {
+            userId: true,
+            drawdownLookbackHours: true,
+            drawdownThresholdPct: true,
+          },
+        });
+
+        if (limits.length === 0) return;
+
+        await Promise.allSettled(
+          limits.map((limit) =>
+            this.checkUser(limit).catch((err: unknown) => {
+              this.logger.warn(
+                `Drawdown check failed for ${limit.userId}: ${(err as Error).message}`,
+              );
+            }),
+          ),
+        );
       },
     });
-
-    if (limits.length === 0) return;
-
-    await Promise.allSettled(
-      limits.map((limit) =>
-        this.checkUser(limit).catch((err: unknown) => {
-          this.logger.warn(
-            `Drawdown check failed for ${limit.userId}: ${(err as Error).message}`,
-          );
-        }),
-      ),
-    );
   }
 
   private async checkUser(limit: {

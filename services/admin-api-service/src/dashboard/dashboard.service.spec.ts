@@ -20,6 +20,7 @@ function createMockRedis() {
         }),
       }),
       ttl: vi.fn().mockResolvedValue(60),
+      del: vi.fn().mockResolvedValue(1),
     }),
   } as any;
 }

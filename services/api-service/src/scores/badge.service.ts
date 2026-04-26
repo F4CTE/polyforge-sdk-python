@@ -1,6 +1,7 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { Cron } from "@nestjs/schedule";
 import { PrismaService } from "@polyforge/shared-db";
+import { RedisService, runOncePerCluster } from "@polyforge/shared-redis";
 
 // ─── Badge definitions ──────────────────────────────────────────────────────
 
@@ -30,34 +31,44 @@ const BETA_CUTOFF = new Date("2026-06-01T00:00:00Z");
 export class BadgeService {
   private readonly logger = new Logger(BadgeService.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly redis: RedisService,
+  ) {}
 
   /** Run daily at 4:00 AM (after score recalculation at 3 AM) */
   @Cron("0 4 * * *")
   async evaluateAll(): Promise<void> {
-    this.logger.log("Starting daily badge evaluation...");
+    await runOncePerCluster({
+      redis: this.redis,
+      key: "lock:cron:badge:evaluateAll",
+      ttlMs: 3_600_000,
+      job: async () => {
+        this.logger.log("Starting daily badge evaluation...");
 
-    const users = await this.prisma.user.findMany({
-      select: { id: true, createdAt: true },
-      where: { deleted: false, suspended: false },
-    });
+        const users = await this.prisma.user.findMany({
+          select: { id: true, createdAt: true },
+          where: { deleted: false, suspended: false },
+        });
 
-    let awarded = 0;
+        let awarded = 0;
 
-    for (const user of users) {
-      try {
-        const count = await this.evaluateForUser(user.id, user.createdAt);
-        awarded += count;
-      } catch (err) {
-        this.logger.error(
-          `Badge evaluation failed for user ${user.id}: ${String(err)}`,
+        for (const user of users) {
+          try {
+            const count = await this.evaluateForUser(user.id, user.createdAt);
+            awarded += count;
+          } catch (err) {
+            this.logger.error(
+              `Badge evaluation failed for user ${user.id}: ${String(err)}`,
+            );
+          }
+        }
+
+        this.logger.log(
+          `Badge evaluation complete — ${awarded} new badges awarded`,
         );
-      }
-    }
-
-    this.logger.log(
-      `Badge evaluation complete — ${awarded} new badges awarded`,
-    );
+      },
+    });
   }
 
   /** Evaluate all badge criteria for a user. Returns number of newly awarded badges. */

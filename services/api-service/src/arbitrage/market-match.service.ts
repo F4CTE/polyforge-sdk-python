@@ -1,6 +1,7 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { Cron } from "@nestjs/schedule";
 import { PrismaService } from "@polyforge/shared-db";
+import { RedisService, runOncePerCluster } from "@polyforge/shared-redis";
 import {
   computeConfidence,
   AUTO_MATCH_THRESHOLD,
@@ -20,16 +21,31 @@ interface MarketRow {
 export class MarketMatchService {
   private readonly logger = new Logger(MarketMatchService.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly redis: RedisService,
+  ) {}
 
   @Cron("*/5 * * * *")
   async syncMatches(): Promise<number> {
-    try {
-      return await this.runMatchingPass();
-    } catch (err) {
-      this.logger.error("Market matching pass failed", (err as Error).message);
-      return 0;
-    }
+    return (
+      (await runOncePerCluster({
+        redis: this.redis,
+        key: "lock:cron:market-match:syncMatches",
+        ttlMs: 240_000,
+        job: async () => {
+          try {
+            return await this.runMatchingPass();
+          } catch (err) {
+            this.logger.error(
+              "Market matching pass failed",
+              (err as Error).message,
+            );
+            return 0;
+          }
+        },
+      })) ?? 0
+    );
   }
 
   async runMatchingPass(): Promise<number> {

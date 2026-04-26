@@ -44,7 +44,11 @@ describe("CrossVenueArbitrageService", () => {
     mgetFn = vi.fn().mockResolvedValue([]);
     xaddFn = vi.fn().mockResolvedValue("ok");
     redis = {
-      getClient: vi.fn().mockReturnValue({ mget: mgetFn }),
+      getClient: vi.fn().mockReturnValue({
+        mget: mgetFn,
+        set: vi.fn().mockResolvedValue("OK"),
+        del: vi.fn().mockResolvedValue(1),
+      }),
       xadd: xaddFn,
     } as unknown as RedisService;
     service = new CrossVenueArbitrageService(db as any, redis);

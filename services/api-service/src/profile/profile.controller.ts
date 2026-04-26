@@ -8,6 +8,7 @@ import {
   UseGuards,
 } from "@nestjs/common";
 import { ApiTags, ApiBearerAuth } from "@nestjs/swagger";
+import { Throttle } from "@nestjs/throttler";
 import { JwtAuthGuard, CurrentUser } from "@polyforge/shared-auth";
 import { ProfileService } from "./profile.service";
 import { UpdateProfileDto } from "./dto/update-profile.dto";
@@ -30,6 +31,12 @@ export class ProfileController {
   }
 
   @Post("password")
+  @Throttle({
+    default: {
+      limit: process.env.NODE_ENV === "production" ? 5 : 10000,
+      ttl: 3_600_000,
+    },
+  })
   changePassword(
     @CurrentUser() user: JwtPayload,
     @Body() dto: ChangePasswordDto,
@@ -54,6 +61,12 @@ export class ProfileController {
   }
 
   @Post(":username/follow")
+  @Throttle({
+    default: {
+      limit: process.env.NODE_ENV === "production" ? 60 : 10000,
+      ttl: 60_000,
+    },
+  })
   toggleFollow(
     @Param("username") username: string,
     @CurrentUser() user: JwtPayload,

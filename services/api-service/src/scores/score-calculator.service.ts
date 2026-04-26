@@ -1,6 +1,7 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { Cron } from "@nestjs/schedule";
 import { PrismaService } from "@polyforge/shared-db";
+import { RedisService, runOncePerCluster } from "@polyforge/shared-redis";
 import { Prisma } from "@prisma/client";
 
 // ─── Weight constants ────────────────────────────────────────────────────────
@@ -34,33 +35,45 @@ function normalizeInverse(value: number, min: number, max: number): number {
 export class ScoreCalculatorService {
   private readonly logger = new Logger(ScoreCalculatorService.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly redis: RedisService,
+  ) {}
 
   /** Run daily at 3:00 AM */
   @Cron("0 3 * * *")
   async recalculateAll(): Promise<void> {
-    this.logger.log("Starting daily score recalculation...");
+    await runOncePerCluster({
+      redis: this.redis,
+      key: "lock:cron:score-calculator:recalculateAll",
+      ttlMs: 3_600_000,
+      job: async () => {
+        this.logger.log("Starting daily score recalculation...");
 
-    const usersWithTrades = await this.prisma.order.groupBy({
-      by: ["userId"],
-      where: { status: { in: ["CONFIRMED", "MATCHED", "MINED"] } },
-      _count: { id: true },
-    });
+        const usersWithTrades = await this.prisma.order.groupBy({
+          by: ["userId"],
+          where: { status: { in: ["CONFIRMED", "MATCHED", "MINED"] } },
+          _count: { id: true },
+        });
 
-    let updated = 0;
+        let updated = 0;
 
-    for (const row of usersWithTrades) {
-      try {
-        await this.calculateForUser(row.userId);
-        updated++;
-      } catch (err) {
-        this.logger.error(
-          `Failed to calculate score for user ${row.userId}: ${String(err)}`,
+        for (const row of usersWithTrades) {
+          try {
+            await this.calculateForUser(row.userId);
+            updated++;
+          } catch (err) {
+            this.logger.error(
+              `Failed to calculate score for user ${row.userId}: ${String(err)}`,
+            );
+          }
+        }
+
+        this.logger.log(
+          `Score recalculation complete — ${updated} users updated`,
         );
-      }
-    }
-
-    this.logger.log(`Score recalculation complete — ${updated} users updated`);
+      },
+    });
   }
 
   /** Calculate and upsert the score for a single user. */

@@ -89,6 +89,10 @@ describe("SmartOrderService", () => {
     db = createMockDb();
     redis = {
       xadd: vi.fn().mockResolvedValue("stream-entry-id"),
+      getClient: vi.fn().mockReturnValue({
+        set: vi.fn().mockResolvedValue("OK"),
+        del: vi.fn().mockResolvedValue(1),
+      }),
     } as unknown as RedisService;
     service = new SmartOrderService(db as any, redis);
   });

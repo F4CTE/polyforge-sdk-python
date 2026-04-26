@@ -28,9 +28,9 @@ export async function readPriceWindow(
   const result: PricePoint[] = [];
   // Members are stored as "timestamp:price" — parse price from the member
   for (let i = 0; i < raw.length; i += 2) {
-    const colonIdx = (raw[i] as string).indexOf(":");
+    const colonIdx = raw[i].indexOf(":");
     result.push({
-      price: Number((raw[i] as string).slice(colonIdx + 1)),
+      price: Number(raw[i].slice(colonIdx + 1)),
       timestamp: Number(raw[i + 1]),
     });
   }

@@ -7,6 +7,8 @@ import { RedisService } from "@polyforge/shared-redis";
 import { createHash, randomUUID } from "crypto";
 
 const BOT_JWT_EXPIRES = "30d";
+const BOT_LINK_FAIL_MAX = 5;
+const BOT_LINK_FAIL_WINDOW_SECONDS = 900; // 15 minutes
 
 export type BotChannelType = "TELEGRAM" | "DISCORD" | "WHATSAPP";
 
@@ -48,6 +50,13 @@ export class LinkingService {
     chatId: string,
     code: string,
   ): Promise<string> {
+    // Rate-limit invalid attempts per (channel, chatId) to prevent brute-force of 6-digit codes
+    const failKey = `bot:link:fail:${channel}:${chatId}`;
+    const failCount = await this.redis.getClient().get(failKey);
+    if (failCount && parseInt(failCount, 10) >= BOT_LINK_FAIL_MAX) {
+      return "❌ Too many invalid attempts — please wait 15 minutes and try again.";
+    }
+
     // Already linked?
     const existing = await this.prisma.botConnection.findFirst({
       where: {
@@ -63,9 +72,16 @@ export class LinkingService {
     // Consume the one-time link code from Redis
     const userId = await this.redis.get(`bot:link:${code}`);
     if (!userId) {
+      const fails = await this.redis.getClient().incr(failKey);
+      if (fails === 1) {
+        await this.redis
+          .getClient()
+          .expire(failKey, BOT_LINK_FAIL_WINDOW_SECONDS);
+      }
       return "❌ Invalid or expired code. Generate a new one in Polyforge Settings → Bots.";
     }
     await this.redis.del(`bot:link:${code}`);
+    await this.redis.del(failKey);
 
     // Issue a 30-day bot JWT
     const tokenPayload = {

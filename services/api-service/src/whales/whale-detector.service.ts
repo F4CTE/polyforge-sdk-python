@@ -6,7 +6,7 @@ import {
 } from "@nestjs/common";
 import { Cron } from "@nestjs/schedule";
 import { PrismaService } from "@polyforge/shared-db";
-import { RedisService } from "@polyforge/shared-redis";
+import { RedisService, runOncePerCluster } from "@polyforge/shared-redis";
 import { Prisma, OrderSide, OrderOutcome } from "@prisma/client";
 
 const STREAM = "stream:events";
@@ -200,43 +200,50 @@ export class WhaleDetectorService implements OnModuleInit, OnModuleDestroy {
 
   @Cron("0 * * * *")
   async aggregateProfiles() {
-    this.logger.log("Running hourly whale profile aggregation");
+    await runOncePerCluster({
+      redis: this.redis,
+      key: "lock:cron:whale-detector:aggregateProfiles",
+      ttlMs: 3_000_000,
+      job: async () => {
+        this.logger.log("Running hourly whale profile aggregation");
 
-    try {
-      // Single aggregation query: group alerts by wallet
-      const aggregations = await this.prisma.whaleAlert.groupBy({
-        by: ["walletAddress"],
-        _sum: { notional: true },
-        _count: true,
-      });
+        try {
+          // Single aggregation query: group alerts by wallet
+          const aggregations = await this.prisma.whaleAlert.groupBy({
+            by: ["walletAddress"],
+            _sum: { notional: true },
+            _count: true,
+          });
 
-      if (aggregations.length === 0) return;
+          if (aggregations.length === 0) return;
 
-      // Batch fetch all closed markets for win rate calculation
-      const closedMarkets = await this.prisma.market.findMany({
-        where: { closed: true },
-        select: { id: true },
-      });
-      const _closedMarketIds = new Set(closedMarkets.map((m) => m.id));
+          // Batch fetch all closed markets for win rate calculation
+          const closedMarkets = await this.prisma.market.findMany({
+            where: { closed: true },
+            select: { id: true },
+          });
+          const _closedMarketIds = new Set(closedMarkets.map((m) => m.id));
 
-      // Batch update all profiles in a transaction
-      await this.prisma.$transaction(
-        aggregations.map((agg) =>
-          this.prisma.whaleProfile.update({
-            where: { walletAddress: agg.walletAddress },
-            data: {
-              // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-              totalVolume: agg._sum.notional ?? 0,
-              tradeCount: agg._count,
-            },
-          }),
-        ),
-      );
+          // Batch update all profiles in a transaction
+          await this.prisma.$transaction(
+            aggregations.map((agg) =>
+              this.prisma.whaleProfile.update({
+                where: { walletAddress: agg.walletAddress },
+                data: {
+                  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+                  totalVolume: agg._sum.notional ?? 0,
+                  tradeCount: agg._count,
+                },
+              }),
+            ),
+          );
 
-      this.logger.log(`Aggregated ${aggregations.length} whale profiles`);
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : String(err);
-      this.logger.error("Whale profile aggregation failed", msg);
-    }
+          this.logger.log(`Aggregated ${aggregations.length} whale profiles`);
+        } catch (err: unknown) {
+          const msg = err instanceof Error ? err.message : String(err);
+          this.logger.error("Whale profile aggregation failed", msg);
+        }
+      },
+    });
   }
 }

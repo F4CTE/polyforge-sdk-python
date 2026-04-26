@@ -49,6 +49,8 @@ function createMockRedis() {
       xgroup: vi.fn(),
       xreadgroup: vi.fn(),
       xack: vi.fn(),
+      set: vi.fn().mockResolvedValue("OK"),
+      del: vi.fn().mockResolvedValue(1),
     }),
   } as any;
 }

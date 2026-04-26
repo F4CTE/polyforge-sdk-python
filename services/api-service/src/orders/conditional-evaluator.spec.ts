@@ -42,7 +42,11 @@ describe("ConditionalEvaluatorService", () => {
     redis = {
       get: vi.fn().mockResolvedValue(null),
       xadd: vi.fn().mockResolvedValue("stream-entry-id"),
-      getClient: vi.fn().mockReturnValue({ mget: mgetMock }),
+      getClient: vi.fn().mockReturnValue({
+        mget: mgetMock,
+        set: vi.fn().mockResolvedValue("OK"),
+        del: vi.fn().mockResolvedValue(1),
+      }),
     } as unknown as RedisService;
     service = new ConditionalEvaluatorService(db as any, redis);
   });

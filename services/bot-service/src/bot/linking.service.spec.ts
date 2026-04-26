@@ -18,9 +18,16 @@ function makePrismaMock() {
 }
 
 function makeRedisMock() {
+  const clientMock = {
+    get: vi.fn().mockResolvedValue(null),
+    incr: vi.fn().mockResolvedValue(1),
+    expire: vi.fn().mockResolvedValue(1),
+  };
   return {
     get: vi.fn().mockResolvedValue(null),
     del: vi.fn().mockResolvedValue(1),
+    getClient: vi.fn().mockReturnValue(clientMock),
+    _client: clientMock,
   } as any;
 }
 
@@ -100,6 +107,38 @@ describe("LinkingService", () => {
 
       const result = await svc.connect("TELEGRAM", "chat-1", "999999");
       expect(result).toContain("Invalid or expired code");
+    });
+
+    it("increments failure counter on invalid code", async () => {
+      prisma.botConnection.findFirst.mockResolvedValue(null);
+      redis.get.mockResolvedValue(null);
+
+      await svc.connect("TELEGRAM", "chat-1", "999999");
+
+      expect(redis._client.incr).toHaveBeenCalledWith(
+        "bot:link:fail:TELEGRAM:chat-1",
+      );
+      expect(redis._client.expire).toHaveBeenCalledWith(
+        "bot:link:fail:TELEGRAM:chat-1",
+        900,
+      );
+    });
+
+    it("blocks after 5 failed attempts", async () => {
+      redis._client.get.mockResolvedValue("5");
+
+      const result = await svc.connect("TELEGRAM", "chat-1", "123456");
+      expect(result).toContain("Too many invalid attempts");
+      expect(prisma.botConnection.findFirst).not.toHaveBeenCalled();
+    });
+
+    it("resets failure counter on successful link", async () => {
+      prisma.botConnection.findFirst.mockResolvedValue(null);
+      redis.get.mockResolvedValue("user-new");
+
+      await svc.connect("TELEGRAM", "chat-1", "123456");
+
+      expect(redis.del).toHaveBeenCalledWith("bot:link:fail:TELEGRAM:chat-1");
     });
 
     it("successfully links account when valid code exists", async () => {

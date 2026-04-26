@@ -7,9 +7,16 @@ describe('ApiKeysService', () => {
   let service: ApiKeysService;
   let db: MockDb;
 
+  const makeRedis = () => ({
+    getClient: () => ({
+      set: vi.fn().mockResolvedValue('OK'),
+      del: vi.fn().mockResolvedValue(1),
+    }),
+  });
+
   beforeEach(() => {
     db = createMockDb();
-    service = new ApiKeysService(db as any);
+    service = new ApiKeysService(db as any, makeRedis() as any);
   });
 
   afterEach(() => {

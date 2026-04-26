@@ -1,7 +1,7 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { Cron } from "@nestjs/schedule";
 import { PrismaService } from "@polyforge/shared-db";
-import { RedisService } from "@polyforge/shared-redis";
+import { RedisService, runOncePerCluster } from "@polyforge/shared-redis";
 import { Prisma } from "@prisma/client";
 
 interface TradeOutcome {
@@ -21,61 +21,68 @@ export class SmartMoneyService {
 
   @Cron("15 * * * *")
   async computeScores() {
-    this.logger.log("Computing smart money scores");
+    await runOncePerCluster({
+      redis: this.redis,
+      key: "lock:cron:smart-money:computeScores",
+      ttlMs: 3_000_000,
+      job: async () => {
+        this.logger.log("Computing smart money scores");
 
-    try {
-      const profiles = await this.prisma.whaleProfile.findMany({
-        where: { tradeCount: { gte: 5 } },
-        select: { walletAddress: true },
-      });
+        try {
+          const profiles = await this.prisma.whaleProfile.findMany({
+            where: { tradeCount: { gte: 5 } },
+            select: { walletAddress: true },
+          });
 
-      if (profiles.length === 0) return;
+          if (profiles.length === 0) return;
 
-      const addresses = profiles.map((p) => p.walletAddress);
+          const addresses = profiles.map((p) => p.walletAddress);
 
-      const outcomes = await this.computeTradeOutcomes(addresses);
+          const outcomes = await this.computeTradeOutcomes(addresses);
 
-      const scoreUpdates = this.buildScoreUpdates(outcomes);
+          const scoreUpdates = this.buildScoreUpdates(outcomes);
 
-      if (scoreUpdates.length === 0) return;
+          if (scoreUpdates.length === 0) return;
 
-      await this.prisma.$transaction(
-        scoreUpdates.map(
-          ({
-            walletAddress,
-            totalPnl,
-            winCount,
-            tradeCount: _tradeCount,
-            winRate,
-            sharpeRatio,
-            score,
-          }) =>
-            this.prisma.whaleProfile.update({
-              where: { walletAddress },
-              data: {
-                totalPnl: new Prisma.Decimal(totalPnl.toFixed(6)),
+          await this.prisma.$transaction(
+            scoreUpdates.map(
+              ({
+                walletAddress,
+                totalPnl,
                 winCount,
-                winRate: new Prisma.Decimal(winRate.toFixed(2)),
-                sharpeRatio: new Prisma.Decimal(sharpeRatio.toFixed(4)),
-                smartMoneyScore: new Prisma.Decimal(score.toFixed(2)),
-              },
-            }),
-        ),
-      );
+                tradeCount: _tradeCount,
+                winRate,
+                sharpeRatio,
+                score,
+              }) =>
+                this.prisma.whaleProfile.update({
+                  where: { walletAddress },
+                  data: {
+                    totalPnl: new Prisma.Decimal(totalPnl.toFixed(6)),
+                    winCount,
+                    winRate: new Prisma.Decimal(winRate.toFixed(2)),
+                    sharpeRatio: new Prisma.Decimal(sharpeRatio.toFixed(4)),
+                    smartMoneyScore: new Prisma.Decimal(score.toFixed(2)),
+                  },
+                }),
+            ),
+          );
 
-      await this.redis.set(
-        "smart_money:last_computed",
-        new Date().toISOString(),
-        3600,
-      );
+          await this.redis.set(
+            "smart_money:last_computed",
+            new Date().toISOString(),
+            3600,
+          );
 
-      this.logger.log(
-        `Updated smart money scores for ${scoreUpdates.length} wallets`,
-      );
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : String(err);
-      this.logger.error("Smart money score computation failed", msg);
-    }
+          this.logger.log(
+            `Updated smart money scores for ${scoreUpdates.length} wallets`,
+          );
+        } catch (err: unknown) {
+          const msg = err instanceof Error ? err.message : String(err);
+          this.logger.error("Smart money score computation failed", msg);
+        }
+      },
+    });
   }
 
   async getLeaderboard(limit = 20, period?: string) {

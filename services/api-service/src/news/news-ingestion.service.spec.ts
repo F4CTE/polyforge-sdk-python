@@ -24,6 +24,13 @@ function createMockSignalGenerator() {
   } as any;
 }
 
+const makeRedis = () => ({
+  getClient: () => ({
+    set: vi.fn().mockResolvedValue("OK"),
+    del: vi.fn().mockResolvedValue(1),
+  }),
+});
+
 // ─── Suite ──────────────────────────────────────────────────────────────────
 
 describe("NewsIngestionService", () => {
@@ -35,6 +42,7 @@ describe("NewsIngestionService", () => {
     service = new NewsIngestionService(
       createMockConfig(),
       prisma,
+      makeRedis() as any,
       createMockSignalGenerator(),
     );
   });

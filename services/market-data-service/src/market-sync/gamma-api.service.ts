@@ -1,6 +1,7 @@
 import { Injectable, Logger, OnModuleInit } from "@nestjs/common";
 import { Interval } from "@nestjs/schedule";
 import { PrismaService } from "@polyforge/shared-db";
+import { RedisService, runOncePerCluster } from "@polyforge/shared-redis";
 import { PolymarketWsService } from "./polymarket-ws.service";
 import { GAMMA_LIMITER } from "../common/rate-limiter";
 
@@ -242,6 +243,7 @@ export class GammaApiService implements OnModuleInit {
 
   constructor(
     private readonly prisma: PrismaService,
+    private readonly redis: RedisService,
     private readonly ws: PolymarketWsService,
   ) {
     this.gammaUrl = process.env.GAMMA_API_URL ?? "http://localhost:3096";
@@ -256,12 +258,19 @@ export class GammaApiService implements OnModuleInit {
 
   @Interval(SYNC_INTERVAL_MS)
   async syncMarkets() {
-    try {
-      await this.syncEvents();
-      await this.syncAllMarkets();
-    } catch (err) {
-      this.logger.error("Failed to sync markets from Gamma API", err);
-    }
+    await runOncePerCluster({
+      redis: this.redis,
+      key: "lock:cron:gamma-api:syncMarkets",
+      ttlMs: 50_000,
+      job: async () => {
+        try {
+          await this.syncEvents();
+          await this.syncAllMarkets();
+        } catch (err) {
+          this.logger.error("Failed to sync markets from Gamma API", err);
+        }
+      },
+    });
   }
 
   /**

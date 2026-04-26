@@ -9,6 +9,7 @@ import {
   UseGuards,
 } from "@nestjs/common";
 import { ApiTags, ApiBearerAuth } from "@nestjs/swagger";
+import { Throttle } from "@nestjs/throttler";
 import { JwtAuthGuard, CurrentUser } from "@polyforge/shared-auth";
 import { ApiKeysService } from "./api-keys.service";
 import { CreateApiKeyDto } from "./dto/create-api-key.dto";
@@ -27,6 +28,12 @@ export class ApiKeysController {
   }
 
   @Post()
+  @Throttle({
+    default: {
+      limit: process.env.NODE_ENV === "production" ? 5 : 10000,
+      ttl: 3_600_000,
+    },
+  })
   create(@CurrentUser() user: JwtPayload, @Body() dto: CreateApiKeyDto) {
     return this.keys.create(user.sub, dto);
   }

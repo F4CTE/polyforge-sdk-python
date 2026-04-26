@@ -33,9 +33,16 @@ describe("RetentionService", () => {
   let service: RetentionService;
   let prisma: ReturnType<typeof createMockPrisma>;
 
+  const makeRedis = () => ({
+    getClient: () => ({
+      set: vi.fn().mockResolvedValue("OK"),
+      del: vi.fn().mockResolvedValue(1),
+    }),
+  });
+
   beforeEach(() => {
     prisma = createMockPrisma();
-    service = new RetentionService(prisma);
+    service = new RetentionService(prisma, makeRedis() as any);
   });
 
   // ── Purge Jobs ──────────────────────────────────────────────────────

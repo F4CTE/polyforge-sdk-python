@@ -1,7 +1,7 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { Interval, Cron } from "@nestjs/schedule";
 import { PrismaService } from "@polyforge/shared-db";
-import { RedisService } from "@polyforge/shared-redis";
+import { RedisService, runOncePerCluster } from "@polyforge/shared-redis";
 import { type ConditionalOrder } from "@prisma/client";
 import { randomUUID } from "crypto";
 
@@ -19,11 +19,18 @@ export class ConditionalEvaluatorService {
 
   @Interval(5000)
   async evaluate(): Promise<void> {
-    try {
-      await this.processOrders();
-    } catch (err) {
-      this.logger.error("Conditional evaluator tick failed", err);
-    }
+    await runOncePerCluster({
+      redis: this.redis,
+      key: "lock:cron:conditional-evaluator:evaluate",
+      ttlMs: 4_000,
+      job: async () => {
+        try {
+          await this.processOrders();
+        } catch (err) {
+          this.logger.error("Conditional evaluator tick failed", err);
+        }
+      },
+    });
   }
 
   async processOrders(): Promise<void> {
@@ -218,19 +225,25 @@ export class ConditionalEvaluatorService {
   // L-03: Separate expiration check on its own schedule (every 30 seconds)
   @Cron("*/30 * * * * *")
   async checkExpiredOrders(): Promise<void> {
-    try {
-      // Single updateMany instead of sequential updates per order
-      const { count } = await this.prisma.conditionalOrder.updateMany({
-        where: {
-          status: "PENDING",
-          expiresAt: { not: null, lte: new Date() },
-        },
-        data: { status: "CANCELLED" },
-      });
-      if (count > 0)
-        this.logger.log(`Cancelled ${count} expired conditional order(s)`);
-    } catch (err) {
-      this.logger.error("Expiration check failed", err);
-    }
+    await runOncePerCluster({
+      redis: this.redis,
+      key: "lock:cron:conditional-evaluator:checkExpiredOrders",
+      ttlMs: 25_000,
+      job: async () => {
+        try {
+          const { count } = await this.prisma.conditionalOrder.updateMany({
+            where: {
+              status: "PENDING",
+              expiresAt: { not: null, lte: new Date() },
+            },
+            data: { status: "CANCELLED" },
+          });
+          if (count > 0)
+            this.logger.log(`Cancelled ${count} expired conditional order(s)`);
+        } catch (err) {
+          this.logger.error("Expiration check failed", err);
+        }
+      },
+    });
   }
 }
