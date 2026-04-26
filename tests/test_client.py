@@ -39,7 +39,6 @@ from polyforge.models import (
     OrderBook,
     OrderBookLevel,
     OrderStatus,
-    Pagination,
     PaginatedResponse,
     PlaceOrderResponse,
     Portfolio,
@@ -1158,34 +1157,14 @@ class TestUpdateStrategyParams:
                 assert param.kind == inspect.Parameter.KEYWORD_ONLY, f"{pname} should be keyword-only"
 
 
-class TestPaginationDataclass:
-    """Tests for the Pagination dataclass (#145)."""
-
-    def test_pagination_defaults(self):
-        """Pagination fields should have sensible defaults."""
-        pag = Pagination()
-        assert pag.page == 1
-        assert pag.limit == 10
-        assert pag.total == 0
-        assert pag.total_pages == 0
-
-    def test_pagination_with_values(self):
-        """Pagination should accept explicit values."""
-        pag = Pagination(page=3, limit=20, total=150, total_pages=8)
-        assert pag.page == 3
-        assert pag.limit == 20
-        assert pag.total == 150
-        assert pag.total_pages == 8
-
-
 class TestPaginatedResponseDataField:
-    """Tests for PaginatedResponse using nested pagination shape (#33, #145)."""
+    """Tests for PaginatedResponse using flat pagination shape matching platform."""
 
     def test_paginated_response_uses_data_field(self):
         """PaginatedResponse must have a 'data' field, not 'items'."""
         pr = PaginatedResponse(
             data=["a", "b", "c"],
-            pagination=Pagination(total=3, page=1, limit=10),
+            total=3, page=1, limit=10,
         )
         assert pr.data == ["a", "b", "c"]
 
@@ -1193,7 +1172,7 @@ class TestPaginatedResponseDataField:
         """PaginatedResponse.items must be a backward-compat alias for data."""
         pr = PaginatedResponse(
             data=["x", "y"],
-            pagination=Pagination(total=2, page=1, limit=10),
+            total=2, page=1, limit=10,
         )
         assert pr.items == ["x", "y"]
         assert pr.items is pr.data
@@ -1203,59 +1182,70 @@ class TestPaginatedResponseDataField:
         pr = PaginatedResponse()
         assert pr.data == []
         assert pr.items == []
-        assert isinstance(pr.pagination, Pagination)
+        assert pr.page == 1
+        assert pr.limit == 10
+        assert pr.total == 0
+        assert pr.total_pages == 0
+        assert pr.has_next is False
 
     def test_paginated_response_no_has_more(self):
-        """PaginatedResponse must NOT have a has_more field (#145)."""
+        """PaginatedResponse must NOT have a has_more field."""
         assert not hasattr(PaginatedResponse(), "has_more")
 
-    def test_pagination_nested_under_pagination_field(self):
-        """Pagination metadata must be accessed via .pagination, not flat fields."""
+    def test_pagination_flat_fields(self):
+        """Pagination metadata must be accessed as flat fields on PaginatedResponse."""
         pr = PaginatedResponse(
             data=[1, 2, 3],
-            pagination=Pagination(page=2, limit=20, total=50, total_pages=3),
+            page=2, limit=20, total=50, total_pages=3, has_next=True,
         )
-        assert pr.pagination.page == 2
-        assert pr.pagination.limit == 20
-        assert pr.pagination.total == 50
-        assert pr.pagination.total_pages == 3
+        assert pr.page == 2
+        assert pr.limit == 20
+        assert pr.total == 50
+        assert pr.total_pages == 3
+        assert pr.has_next is True
+
+    def test_paginated_response_has_no_pagination_attr(self):
+        """PaginatedResponse must NOT have a nested pagination object."""
+        pr = PaginatedResponse()
+        assert not hasattr(pr, "pagination")
 
 
 class TestParsePagination:
-    """Tests for _parse_pagination helper (#145)."""
+    """Tests for _parse_pagination helper — flat field extraction."""
 
-    def test_extracts_nested_pagination(self):
-        """_parse_pagination must extract fields from the nested pagination object."""
+    def test_extracts_flat_pagination(self):
+        """_parse_pagination must extract flat fields from the response root."""
         raw = {
             "data": [1, 2, 3],
-            "pagination": {
-                "page": 2,
-                "limit": 20,
-                "total": 150,
-                "totalPages": 8,
-            },
+            "page": 2,
+            "limit": 20,
+            "total": 150,
+            "totalPages": 8,
+            "hasNext": True,
         }
         pag = _parse_pagination(raw)
-        assert isinstance(pag, Pagination)
-        assert pag.page == 2
-        assert pag.limit == 20
-        assert pag.total == 150
-        assert pag.total_pages == 8
+        assert isinstance(pag, dict)
+        assert pag["page"] == 2
+        assert pag["limit"] == 20
+        assert pag["total"] == 150
+        assert pag["total_pages"] == 8
+        assert pag["has_next"] is True
 
-    def test_defaults_when_pagination_missing(self):
-        """_parse_pagination must return defaults when pagination key is absent."""
+    def test_defaults_when_fields_missing(self):
+        """_parse_pagination must return defaults when fields are absent."""
         raw = {"data": []}
         pag = _parse_pagination(raw)
-        assert pag.page == 1
-        assert pag.limit == 10
-        assert pag.total == 0
-        assert pag.total_pages == 0
+        assert pag["page"] == 1
+        assert pag["limit"] == 10
+        assert pag["total"] == 0
+        assert pag["total_pages"] == 0
+        assert pag["has_next"] is False
 
     def test_camel_case_total_pages(self):
         """_parse_pagination must map totalPages (camelCase) to total_pages."""
-        raw = {"pagination": {"totalPages": 5}}
+        raw = {"totalPages": 5}
         pag = _parse_pagination(raw)
-        assert pag.total_pages == 5
+        assert pag["total_pages"] == 5
 
 
 class TestOrderMonetaryFields:
