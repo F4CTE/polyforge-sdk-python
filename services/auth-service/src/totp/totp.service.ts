@@ -140,7 +140,11 @@ export class TotpService {
 
   // ─── Disable ──────────────────────────────────────────────────────────────────
 
-  async disable(userId: string, password: string): Promise<void> {
+  async disable(
+    userId: string,
+    password: string,
+    totpCode: string,
+  ): Promise<void> {
     const user = await this.prisma.user.findUniqueOrThrow({
       where: { id: userId },
     });
@@ -160,6 +164,31 @@ export class TotpService {
       throw new HttpException(
         { code: 'INVALID_CREDENTIALS', message: 'Invalid password' },
         HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    if (!user.totpSecret) {
+      throw new HttpException(
+        { code: 'INVALID_TOTP', message: 'TOTP secret not found' },
+        HttpStatus.UNAUTHORIZED,
+      );
+    }
+
+    const secret = this.decrypt(user.totpSecret);
+    let totpValid = false;
+    try {
+      totpValid = verifySync({
+        token: totpCode,
+        secret,
+        strategy: 'totp',
+      }).valid;
+    } catch {
+      // malformed code — treat as invalid
+    }
+    if (!totpValid) {
+      throw new HttpException(
+        { code: 'INVALID_TOTP', message: 'Invalid TOTP code' },
+        HttpStatus.UNAUTHORIZED,
       );
     }
 

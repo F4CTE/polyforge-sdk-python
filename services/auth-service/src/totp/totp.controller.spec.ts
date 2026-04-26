@@ -42,11 +42,16 @@ describe('TotpController', () => {
     expect(result).toMatchObject({ backupCodes: expect.any(Array) });
   });
 
-  it('disable delegates to totpService.disable and returns message', async () => {
+  it('disable delegates to totpService.disable with password and totpCode', async () => {
     const result = await controller.disable(user as any, {
       password: 'MyPass1!',
+      totpCode: '123456',
     });
-    expect(totpService.disable).toHaveBeenCalledWith(user.sub, 'MyPass1!');
+    expect(totpService.disable).toHaveBeenCalledWith(
+      user.sub,
+      'MyPass1!',
+      '123456',
+    );
     expect(result).toMatchObject({
       message: expect.stringContaining('disabled'),
     });

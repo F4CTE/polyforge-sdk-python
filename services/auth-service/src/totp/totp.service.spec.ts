@@ -162,7 +162,9 @@ describe('TotpService', () => {
       const user = userFactory({ totpEnabled: false });
       db.user.findUniqueOrThrow.mockResolvedValue(user as any);
 
-      await expect(service.disable(user.id, 'password')).rejects.toMatchObject({
+      await expect(
+        service.disable(user.id, 'password', '123456'),
+      ).rejects.toMatchObject({
         response: { code: 'TOTP_NOT_ENABLED' },
         status: HttpStatus.BAD_REQUEST,
       });
@@ -176,21 +178,68 @@ describe('TotpService', () => {
       db.user.findUniqueOrThrow.mockResolvedValue(user as any);
 
       await expect(
-        service.disable(user.id, 'wrong_password'),
+        service.disable(user.id, 'wrong_password', '123456'),
       ).rejects.toMatchObject({
         response: { code: 'INVALID_CREDENTIALS' },
         status: HttpStatus.BAD_REQUEST,
       });
     });
 
-    it('clears TOTP fields on success', async () => {
+    it('throws INVALID_TOTP (401) when totpCode is missing', async () => {
       const bcrypt = await import('bcrypt');
       const hash = await bcrypt.hash('correct_password', 10);
-      const user = userFactory({ totpEnabled: true, passwordHash: hash });
+      const secret = generateSecret({ length: 20 });
+      const encrypted = (service as any).encrypt(secret);
+      const user = userFactory({
+        totpEnabled: true,
+        passwordHash: hash,
+        totpSecret: encrypted,
+      } as any);
+      db.user.findUniqueOrThrow.mockResolvedValue(user as any);
+
+      await expect(
+        service.disable(user.id, 'correct_password', ''),
+      ).rejects.toMatchObject({
+        response: { code: 'INVALID_TOTP' },
+        status: HttpStatus.UNAUTHORIZED,
+      });
+    });
+
+    it('throws INVALID_TOTP (401) when totpCode is wrong', async () => {
+      const bcrypt = await import('bcrypt');
+      const hash = await bcrypt.hash('correct_password', 10);
+      const secret = generateSecret({ length: 20 });
+      const encrypted = (service as any).encrypt(secret);
+      const user = userFactory({
+        totpEnabled: true,
+        passwordHash: hash,
+        totpSecret: encrypted,
+      } as any);
+      db.user.findUniqueOrThrow.mockResolvedValue(user as any);
+
+      await expect(
+        service.disable(user.id, 'correct_password', '000000'),
+      ).rejects.toMatchObject({
+        response: { code: 'INVALID_TOTP' },
+        status: HttpStatus.UNAUTHORIZED,
+      });
+    });
+
+    it('clears TOTP fields on success with correct password + TOTP code', async () => {
+      const bcrypt = await import('bcrypt');
+      const hash = await bcrypt.hash('correct_password', 10);
+      const secret = generateSecret({ length: 20 });
+      const validCode = generateSync({ secret, strategy: 'totp' });
+      const encrypted = (service as any).encrypt(secret);
+      const user = userFactory({
+        totpEnabled: true,
+        passwordHash: hash,
+        totpSecret: encrypted,
+      } as any);
       db.user.findUniqueOrThrow.mockResolvedValue(user as any);
       db.user.update.mockResolvedValue(user as any);
 
-      await service.disable(user.id, 'correct_password');
+      await service.disable(user.id, 'correct_password', validCode);
 
       expect(db.user.update).toHaveBeenCalledWith({
         where: { id: user.id },

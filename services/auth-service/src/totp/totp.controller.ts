@@ -85,15 +85,18 @@ export class TotpController {
       limit: throttleLimit(10),
     },
   })
-  @ApiOperation({ summary: 'Disable 2FA — requires password confirmation' })
+  @ApiOperation({
+    summary: 'Disable 2FA — requires password and current TOTP code',
+  })
   @ApiResponse({ status: 200, description: '2FA disabled.' })
   @ApiResponse({
     status: 400,
     description: 'Wrong password or 2FA not enabled.',
   })
+  @ApiResponse({ status: 401, description: 'Invalid TOTP code.' })
   @ApiResponse({ status: 429, description: 'Too many attempts.' })
   async disable(@CurrentUser() user: JwtPayload, @Body() dto: TotpDisableDto) {
-    await this.totpService.disable(user.sub, dto.password);
+    await this.totpService.disable(user.sub, dto.password, dto.totpCode);
     return { message: '2FA has been disabled' };
   }
 }

@@ -20,6 +20,14 @@ export class TotpDisableDto {
   @MinLength(8)
   @MaxLength(100)
   password!: string;
+
+  @ApiProperty({
+    example: '123456',
+    description: '6-digit TOTP code from authenticator app',
+  })
+  @IsString()
+  @Length(6, 6)
+  totpCode!: string;
 }
 
 export class TotpLoginDto {

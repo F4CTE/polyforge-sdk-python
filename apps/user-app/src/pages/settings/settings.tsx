@@ -194,6 +194,7 @@ export function Component() {
   const [twoFaVerifying, setTwoFaVerifying] = useState(false);
   const [twoFaSetupLoading, setTwoFaSetupLoading] = useState(false);
   const [twoFaDisableToken, setTwoFaDisableToken] = useState('');
+  const [twoFaDisableTotpCode, setTwoFaDisableTotpCode] = useState('');
   const [twoFaDisabling, setTwoFaDisabling] = useState(false);
   const [twoFaShowDisableForm, setTwoFaShowDisableForm] = useState(false);
   const [twoFaRegenCodes, setTwoFaRegenCodes] = useState<string[]>([]);
@@ -675,18 +676,19 @@ export function Component() {
   }
 
   async function disableTotp() {
-    if (totpSaving || !totpDisablePassword) return;
+    if (totpSaving || !totpDisablePassword || !twoFaDisableTotpCode) return;
     setTotpSaving(true);
     try {
       const res = await fetch('/auth/v1/totp', {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ password: totpDisablePassword }),
+        body: JSON.stringify({ password: totpDisablePassword, totpCode: twoFaDisableTotpCode }),
       });
       if (res.ok) {
         patchUser({ totpEnabled: false });
         setTotpDisablePassword('');
+        setTwoFaDisableTotpCode('');
         toast.success('Two-factor authentication disabled');
       } else {
         const err = await res.json().catch(() => null);
@@ -754,19 +756,19 @@ export function Component() {
   }
 
   async function twoFaDisable() {
-    if (twoFaDisabling || !twoFaDisableToken) return;
+    if (twoFaDisabling || !twoFaDisableToken || !twoFaDisableTotpCode) return;
     setTwoFaDisabling(true);
     try {
-      // auth-service disable endpoint requires password confirmation
       const res = await fetch('/auth/v1/totp', {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ password: twoFaDisableToken }),
+        body: JSON.stringify({ password: twoFaDisableToken, totpCode: twoFaDisableTotpCode }),
       });
       if (res.ok) {
         patchUser({ totpEnabled: false });
         setTwoFaDisableToken('');
+        setTwoFaDisableTotpCode('');
         setTwoFaShowDisableForm(false);
         setTwoFaRegenCodes([]);
         setTwoFaView('disabled');
@@ -775,6 +777,8 @@ export function Component() {
         const err = await res.json().catch(() => ({}));
         if (err?.code === 'INVALID_CREDENTIALS') {
           toast.error('Incorrect password. Please try again.');
+        } else if (err?.code === 'INVALID_TOTP') {
+          toast.error('Invalid authenticator code. Please try again.');
         } else {
           toast.error('Failed to disable 2FA. Please try again.');
         }
@@ -1569,7 +1573,7 @@ export function Component() {
                 ) : (
                   <div className="space-y-3 p-4 bg-surface border border-loss/20 rounded-pf">
                     <label htmlFor="2fa-disable-password" className="block text-body-md font-medium text-primary">
-                      Enter your account password to disable 2FA
+                      Enter your password and authenticator code to disable 2FA
                     </label>
                     <Input
                       id="2fa-disable-password"
@@ -1581,12 +1585,23 @@ export function Component() {
                       placeholder="Your password"
                       className="w-full max-w-xs"
                     />
+                    <Input
+                      id="2fa-disable-totp-code"
+                      type="text"
+                      inputMode="numeric"
+                      autoComplete="one-time-code"
+                      maxLength={6}
+                      value={twoFaDisableTotpCode}
+                      onChange={e => setTwoFaDisableTotpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                      placeholder="6-digit authenticator code"
+                      className="w-full max-w-xs"
+                    />
                     <div className="flex items-center gap-3">
                       <Button
                         type="button"
                         variant="danger"
                         onClick={twoFaDisable}
-                        disabled={twoFaDisabling || !twoFaDisableToken}
+                        disabled={twoFaDisabling || !twoFaDisableToken || twoFaDisableTotpCode.length !== 6}
                         className="flex items-center gap-2"
                       >
                         {twoFaDisabling ? <Loader2 className="size-4 animate-spin" /> : <ShieldOff className="size-4" />}
@@ -1595,7 +1610,7 @@ export function Component() {
                       <Button
                         type="button"
                         variant="ghost"
-                        onClick={() => { setTwoFaShowDisableForm(false); setTwoFaDisableToken(''); }}
+                        onClick={() => { setTwoFaShowDisableForm(false); setTwoFaDisableToken(''); setTwoFaDisableTotpCode(''); }}
                       >
                         Cancel
                       </Button>
