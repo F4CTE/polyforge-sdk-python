@@ -5433,3 +5433,200 @@ class TestPutHelper:
 
     def test_async_put_exists(self):
         assert hasattr(AsyncPolyforgeClient, "_put")
+
+
+class TestParseNonFiniteFloats:
+    """_parse() must reject non-finite float strings (#201)."""
+
+    def test_parse_rejects_nan_string(self):
+        """float('nan') should be rejected during parsing."""
+        import dataclasses
+
+        @dataclasses.dataclass
+        class FakeModel:
+            price: float = 0.0
+
+        with pytest.raises(ValueError, match="Non-finite"):
+            _parse(FakeModel, {"price": "nan"})
+
+    def test_parse_rejects_inf_string(self):
+        """float('inf') should be rejected during parsing."""
+        import dataclasses
+
+        @dataclasses.dataclass
+        class FakeModel:
+            price: float = 0.0
+
+        with pytest.raises(ValueError, match="Non-finite"):
+            _parse(FakeModel, {"price": "inf"})
+
+    def test_parse_rejects_negative_inf_string(self):
+        """float('-inf') should be rejected during parsing."""
+        import dataclasses
+
+        @dataclasses.dataclass
+        class FakeModel:
+            price: float = 0.0
+
+        with pytest.raises(ValueError, match="Non-finite"):
+            _parse(FakeModel, {"price": "-inf"})
+
+    def test_parse_accepts_normal_float_string(self):
+        """Normal numeric strings should still parse correctly."""
+        import dataclasses
+
+        @dataclasses.dataclass
+        class FakeModel:
+            price: float = 0.0
+
+        result = _parse(FakeModel, {"price": "1.23"})
+        assert result.price == 1.23
+
+
+class TestArbitrageParamValidation:
+    """Arbitrage and risk-settings methods must validate financial params (#200)."""
+
+    def test_get_arbitrage_opportunities_rejects_nan(self):
+        client = PolyforgeClient(api_key="test-key")
+        with pytest.raises(ValueError, match="NaN"):
+            client.get_arbitrage_opportunities(min_margin=float("nan"))
+        client.close()
+
+    def test_get_arbitrage_opportunities_rejects_inf(self):
+        client = PolyforgeClient(api_key="test-key")
+        with pytest.raises(ValueError, match="Infinity"):
+            client.get_arbitrage_opportunities(min_margin=float("inf"))
+        client.close()
+
+    def test_get_arbitrage_opportunities_rejects_negative(self):
+        client = PolyforgeClient(api_key="test-key")
+        with pytest.raises(ValueError, match="positive"):
+            client.get_arbitrage_opportunities(min_margin=-1.0)
+        client.close()
+
+    def test_get_cross_venue_opportunities_rejects_inf(self):
+        client = PolyforgeClient(api_key="test-key")
+        with pytest.raises(ValueError, match="Infinity"):
+            client.get_cross_venue_opportunities(min_spread=float("inf"))
+        client.close()
+
+    def test_get_cross_venue_opportunities_rejects_nan(self):
+        client = PolyforgeClient(api_key="test-key")
+        with pytest.raises(ValueError, match="NaN"):
+            client.get_cross_venue_opportunities(min_spread=float("nan"))
+        client.close()
+
+    def test_get_cross_venue_opportunities_for_market_rejects_nan(self):
+        client = PolyforgeClient(api_key="test-key")
+        with pytest.raises(ValueError, match="NaN"):
+            client.get_cross_venue_opportunities_for_market("m1", min_spread=float("nan"))
+        client.close()
+
+    def test_create_arbitrage_alert_rejects_negative(self):
+        client = PolyforgeClient(api_key="test-key")
+        with pytest.raises(ValueError, match="positive"):
+            client.create_arbitrage_alert(min_spread_pct=-1.0)
+        client.close()
+
+    def test_create_arbitrage_alert_rejects_nan(self):
+        client = PolyforgeClient(api_key="test-key")
+        with pytest.raises(ValueError, match="NaN"):
+            client.create_arbitrage_alert(min_spread_pct=float("nan"))
+        client.close()
+
+    def test_update_risk_settings_rejects_nan_threshold(self):
+        client = PolyforgeClient(api_key="test-key")
+        with pytest.raises(ValueError, match="NaN"):
+            client.update_risk_settings(drawdown_threshold_pct=float("nan"))
+        client.close()
+
+    def test_update_risk_settings_rejects_inf_threshold(self):
+        client = PolyforgeClient(api_key="test-key")
+        with pytest.raises(ValueError, match="Infinity"):
+            client.update_risk_settings(drawdown_threshold_pct=float("inf"))
+        client.close()
+
+    def test_update_risk_settings_rejects_negative_threshold(self):
+        client = PolyforgeClient(api_key="test-key")
+        with pytest.raises(ValueError, match="positive"):
+            client.update_risk_settings(drawdown_threshold_pct=-5.0)
+        client.close()
+
+    def test_update_risk_settings_skips_validation_when_none(self):
+        """None values should not trigger validation — only supplied fields are validated."""
+        from unittest.mock import MagicMock
+        client = PolyforgeClient(api_key="test-key")
+        client._patch = MagicMock(return_value={
+            "drawdownEnabled": True,
+            "drawdownLookbackHours": 24,
+            "drawdownThresholdPct": "0.1",
+            "circuitBreakerTripped": False,
+            "circuitBreakerTrippedAt": None,
+        })
+        result = client.update_risk_settings(drawdown_enabled=True)
+        assert result.drawdown_enabled is True
+        client.close()
+
+    def test_async_get_arbitrage_opportunities_rejects_nan(self):
+        import asyncio
+
+        async def _run():
+            client = AsyncPolyforgeClient(api_key="test-key")
+            with pytest.raises(ValueError, match="NaN"):
+                await client.get_arbitrage_opportunities(min_margin=float("nan"))
+            await client.close()
+
+        asyncio.run(_run())
+
+    def test_async_get_cross_venue_opportunities_rejects_inf(self):
+        import asyncio
+
+        async def _run():
+            client = AsyncPolyforgeClient(api_key="test-key")
+            with pytest.raises(ValueError, match="Infinity"):
+                await client.get_cross_venue_opportunities(min_spread=float("inf"))
+            await client.close()
+
+        asyncio.run(_run())
+
+    def test_async_create_arbitrage_alert_rejects_negative(self):
+        import asyncio
+
+        async def _run():
+            client = AsyncPolyforgeClient(api_key="test-key")
+            with pytest.raises(ValueError, match="positive"):
+                await client.create_arbitrage_alert(min_spread_pct=-1.0)
+            await client.close()
+
+        asyncio.run(_run())
+
+    def test_async_update_risk_settings_rejects_nan_threshold(self):
+        import asyncio
+
+        async def _run():
+            client = AsyncPolyforgeClient(api_key="test-key")
+            with pytest.raises(ValueError, match="NaN"):
+                await client.update_risk_settings(drawdown_threshold_pct=float("nan"))
+            await client.close()
+
+        asyncio.run(_run())
+
+    def test_async_update_risk_settings_skips_validation_when_none(self):
+        """None drawdown_threshold_pct must not trigger validation in async client."""
+        import asyncio
+        from unittest.mock import AsyncMock
+
+        async def _run():
+            client = AsyncPolyforgeClient(api_key="test-key")
+            client._patch = AsyncMock(return_value={
+                "drawdownEnabled": True,
+                "drawdownLookbackHours": 24,
+                "drawdownThresholdPct": "0.1",
+                "circuitBreakerTripped": False,
+                "circuitBreakerTrippedAt": None,
+            })
+            result = await client.update_risk_settings(drawdown_enabled=True)
+            assert result.drawdown_enabled is True
+            await client.close()
+
+        asyncio.run(_run())

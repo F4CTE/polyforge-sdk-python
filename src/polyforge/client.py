@@ -262,7 +262,12 @@ def _parse(cls: type[T], data: dict[str, Any]) -> T:
             else:
                 kwargs[f.name] = raw
         elif hint is float and isinstance(raw, str):
-            kwargs[f.name] = float(raw)
+            val = float(raw)
+            if not math.isfinite(val):
+                raise ValueError(
+                    f"Non-finite float value for {f.name}: {raw!r}"
+                )
+            kwargs[f.name] = val
         else:
             kwargs[f.name] = raw
 
@@ -1294,6 +1299,7 @@ class PolyforgeClient:
         if drawdown_lookback_hours is not None:
             body["drawdownLookbackHours"] = drawdown_lookback_hours
         if drawdown_threshold_pct is not None:
+            _validate_financial_param("drawdown_threshold_pct", drawdown_threshold_pct)
             body["drawdownThresholdPct"] = drawdown_threshold_pct
         data = self._patch("/api/v1/settings/risk", json=body)
         return RiskSettings(
@@ -1461,6 +1467,7 @@ class PolyforgeClient:
         Args:
             min_margin: Minimum profit margin percentage to include (default 0.5%).
         """
+        _validate_financial_param("min_margin", min_margin)
         data = self._get("/api/v1/arbitrage", params={"minMargin": min_margin})
         return [ArbitrageOpportunity(
             market_id=o.get("marketId", ""),
@@ -1481,11 +1488,13 @@ class PolyforgeClient:
 
     def get_cross_venue_opportunities(self, *, min_spread: float = 3.0) -> list[CrossVenueOpportunity]:
         """List cross-venue arbitrage opportunities between Polymarket and Kalshi."""
+        _validate_financial_param("min_spread", min_spread)
         data = self._get("/api/v1/arbitrage/cross-venue", params={"minSpread": min_spread})
         return [_parse(CrossVenueOpportunity, o) for o in data]
 
     def get_cross_venue_opportunities_for_market(self, market_id: str, *, min_spread: float = 3.0) -> list[CrossVenueOpportunity]:
         """Cross-venue arbitrage opportunities involving a specific market."""
+        _validate_financial_param("min_spread", min_spread)
         data = self._get(f"/api/v1/arbitrage/cross-venue/{quote(market_id, safe='')}", params={"minSpread": min_spread})
         return [_parse(CrossVenueOpportunity, o) for o in data]
 
@@ -1531,6 +1540,7 @@ class PolyforgeClient:
 
     def create_arbitrage_alert(self, *, min_spread_pct: float, market_id: str | None = None) -> ArbitrageAlertSubscription:
         """Create an arbitrage alert subscription."""
+        _validate_financial_param("min_spread_pct", min_spread_pct)
         body: dict[str, Any] = {"minSpreadPct": str(min_spread_pct)}
         if market_id is not None:
             body["marketId"] = market_id
@@ -3584,6 +3594,7 @@ class AsyncPolyforgeClient:
         if drawdown_lookback_hours is not None:
             body["drawdownLookbackHours"] = drawdown_lookback_hours
         if drawdown_threshold_pct is not None:
+            _validate_financial_param("drawdown_threshold_pct", drawdown_threshold_pct)
             body["drawdownThresholdPct"] = drawdown_threshold_pct
         data = await self._patch("/api/v1/settings/risk", json=body)
         return RiskSettings(
@@ -3747,6 +3758,7 @@ class AsyncPolyforgeClient:
 
     async def get_arbitrage_opportunities(self, *, min_margin: float = 0.5) -> list[ArbitrageOpportunity]:
         """Scan all markets for merge arbitrage opportunities (YES + NO < $1.00)."""
+        _validate_financial_param("min_margin", min_margin)
         data = await self._get("/api/v1/arbitrage", params={"minMargin": min_margin})
         return [ArbitrageOpportunity(
             market_id=o.get("marketId", ""),
@@ -3767,11 +3779,13 @@ class AsyncPolyforgeClient:
 
     async def get_cross_venue_opportunities(self, *, min_spread: float = 3.0) -> list[CrossVenueOpportunity]:
         """List cross-venue arbitrage opportunities between Polymarket and Kalshi."""
+        _validate_financial_param("min_spread", min_spread)
         data = await self._get("/api/v1/arbitrage/cross-venue", params={"minSpread": min_spread})
         return [_parse(CrossVenueOpportunity, o) for o in data]
 
     async def get_cross_venue_opportunities_for_market(self, market_id: str, *, min_spread: float = 3.0) -> list[CrossVenueOpportunity]:
         """Cross-venue arbitrage opportunities involving a specific market."""
+        _validate_financial_param("min_spread", min_spread)
         data = await self._get(f"/api/v1/arbitrage/cross-venue/{quote(market_id, safe='')}", params={"minSpread": min_spread})
         return [_parse(CrossVenueOpportunity, o) for o in data]
 
@@ -3817,6 +3831,7 @@ class AsyncPolyforgeClient:
 
     async def create_arbitrage_alert(self, *, min_spread_pct: float, market_id: str | None = None) -> ArbitrageAlertSubscription:
         """Create an arbitrage alert subscription."""
+        _validate_financial_param("min_spread_pct", min_spread_pct)
         body: dict[str, Any] = {"minSpreadPct": str(min_spread_pct)}
         if market_id is not None:
             body["marketId"] = market_id
