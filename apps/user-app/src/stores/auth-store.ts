@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { identifyUser, resetAnalytics } from '../lib/analytics';
+import { setSentryUser, clearSentryUser } from '../lib/sentry';
 
 interface User {
   id: string;
@@ -128,6 +129,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         const user = await res.json();
         identifyUser(user.id, { email: user.email, username: user.username });
         set({ user, loading: false });
+        setSentryUser(user.id, user.email, user.username);
       } else {
         set({ user: null, loading: false });
       }
@@ -150,6 +152,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     const user = await res.json();
     identifyUser(user.id, { email: user.email, username: user.username });
     set({ user });
+    setSentryUser(user.id, user.email, user.username);
   },
 
   register: async (body) => {
@@ -174,6 +177,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   logout: async () => {
     await fetch('/auth/v1/logout', { method: 'POST', credentials: 'include' });
     resetAnalytics();
+    clearSentryUser();
     set({ user: null });
     window.location.href = '/login';
   },

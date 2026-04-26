@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { authApi } from '@/lib/api';
 import { identifyUser, resetAnalytics } from '@/lib/analytics';
+import { setSentryUser, clearSentryUser } from '@/lib/sentry';
 
 interface Admin {
   id: string;
@@ -35,6 +36,7 @@ export const useAdminAuthStore = create<AdminAuthState>((set) => ({
         isAuthenticated: true,
         isSuperAdmin: admin.role === 'SUPER_ADMIN',
       });
+      setSentryUser(admin.id, admin.email);
     } catch {
       set({ admin: null, loading: false, isAuthenticated: false, isSuperAdmin: false });
     }
@@ -48,6 +50,7 @@ export const useAdminAuthStore = create<AdminAuthState>((set) => ({
       isAuthenticated: true,
       isSuperAdmin: admin.role === 'SUPER_ADMIN',
     });
+    setSentryUser(admin.id, admin.email);
   },
 
   logout: async () => {
@@ -57,6 +60,7 @@ export const useAdminAuthStore = create<AdminAuthState>((set) => ({
       // ignore
     }
     resetAnalytics();
+    clearSentryUser();
     set({ admin: null, isAuthenticated: false, isSuperAdmin: false });
   },
 }));

@@ -2,9 +2,11 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { App } from './app';
 import { initAnalytics } from './lib/analytics';
+import { initSentry } from './lib/sentry';
 import './globals.css';
 
 initAnalytics();
+initSentry();
 
 // ─── Global 401 interceptor with token refresh ───────────────────────────────
 // On a 401 from any /api/ call, attempts POST /auth/v1/refresh first.

@@ -1,11 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render } from '@testing-library/react';
-import { createMemoryRouter } from 'react-router';
 import { App } from '../app';
 import { ErrorBoundary } from '../components/error-boundary';
 
 vi.mock('../router', () => ({
-  router: createMemoryRouter([{ path: '/', element: <div>Home</div> }]),
+  router: { routes: [], subscribe: vi.fn(() => vi.fn()) },
 }));
 
 const mockInit = vi.fn();
@@ -34,6 +33,19 @@ vi.mock('../lib/websocket', () => ({
     connect: vi.fn(),
     destroy: vi.fn(),
   },
+}));
+
+vi.mock('../lib/sentry', () => ({
+  initSentry: vi.fn(),
+  setSentryUser: vi.fn(),
+  clearSentryUser: vi.fn(),
+  captureError: vi.fn(),
+}));
+
+vi.mock('@sentry/react', () => ({
+  init: vi.fn(),
+  setUser: vi.fn(),
+  captureException: vi.fn(),
 }));
 
 vi.mock('sonner', () => ({

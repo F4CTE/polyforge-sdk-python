@@ -35,6 +35,19 @@ vi.mock('sonner', () => ({
   Toaster: () => <div data-testid="toaster">Toaster</div>,
 }));
 
+vi.mock('../lib/sentry', () => ({
+  initSentry: vi.fn(),
+  setSentryUser: vi.fn(),
+  clearSentryUser: vi.fn(),
+  captureError: vi.fn(),
+}));
+
+vi.mock('@sentry/react', () => ({
+  init: vi.fn(),
+  setUser: vi.fn(),
+  captureException: vi.fn(),
+}));
+
 describe('App Component', () => {
   beforeEach(() => {
     vi.clearAllMocks();
