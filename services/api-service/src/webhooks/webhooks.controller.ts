@@ -11,6 +11,7 @@ import {
   ParseUUIDPipe,
 } from "@nestjs/common";
 import { ApiTags, ApiBearerAuth } from "@nestjs/swagger";
+import { Throttle } from "@nestjs/throttler";
 import {
   JwtAuthGuard,
   CurrentUser,
@@ -42,6 +43,12 @@ export class WebhooksController {
   }
 
   @Delete(":id")
+  @Throttle({
+    default: {
+      limit: process.env.NODE_ENV === "production" ? 20 : 10000,
+      ttl: 60_000,
+    },
+  })
   @HttpCode(HttpStatus.NO_CONTENT)
   @UseGuards(ApiKeyScopeGuard)
   @RequireScopes("WEBHOOK")

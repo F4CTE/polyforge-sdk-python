@@ -128,7 +128,9 @@ describe("BatchService", () => {
     expect(results).toHaveLength(1);
     expect(results[0].id).toBe("fail");
     expect(results[0].status).toBe(502);
-    expect(results[0].body.error).toBe("Upstream request failed");
+    expect((results[0].body as Record<string, unknown>).error).toBe(
+      "Upstream request failed",
+    );
   });
 
   it("should handle non-JSON responses", async () => {

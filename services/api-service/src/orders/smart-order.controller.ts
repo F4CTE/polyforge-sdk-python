@@ -49,6 +49,12 @@ export class SmartOrderController {
   }
 
   @Delete(":id")
+  @Throttle({
+    default: {
+      limit: process.env.NODE_ENV === "production" ? 20 : 10000,
+      ttl: 60_000,
+    },
+  })
   @HttpCode(HttpStatus.OK)
   cancel(@CurrentUser() user: JwtPayload, @Param("id") id: string) {
     return this.smart.cancel(user.sub, id);

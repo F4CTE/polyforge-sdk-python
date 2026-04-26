@@ -39,6 +39,12 @@ export class ApiKeysController {
   }
 
   @Delete(":id")
+  @Throttle({
+    default: {
+      limit: process.env.NODE_ENV === "production" ? 20 : 10000,
+      ttl: 60_000,
+    },
+  })
   revoke(
     @CurrentUser() user: JwtPayload,
     @Param("id", ParseUUIDPipe) id: string,

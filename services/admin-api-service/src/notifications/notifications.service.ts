@@ -1,7 +1,9 @@
-import { Injectable, Logger } from "@nestjs/common";
+import { Injectable, Logger, BadRequestException } from "@nestjs/common";
 import { PrismaService } from "@polyforge/shared-db";
 import { RedisService } from "@polyforge/shared-redis";
 import { BroadcastDto } from "./dto/broadcast.dto";
+
+const MAX_BROADCAST_RECIPIENTS = 5000;
 
 @Injectable()
 export class NotificationsAdminService {
@@ -26,9 +28,13 @@ export class NotificationsAdminService {
       targetIds = users.map((u) => u.id);
     }
 
-    // Publish broadcast event to stream:events for each user
-    // In a real implementation, notification-service would handle this via a BROADCAST event type
-    // For now, publish individual NOTIFICATION events
+    if (targetIds.length > MAX_BROADCAST_RECIPIENTS) {
+      throw new BadRequestException({
+        code: "BROADCAST_TOO_LARGE",
+        message: `Broadcast exceeds the ${MAX_BROADCAST_RECIPIENTS}-recipient cap. Segment your audience or use multiple batches.`,
+      });
+    }
+
     const ts = Date.now();
     let queued = 0;
 

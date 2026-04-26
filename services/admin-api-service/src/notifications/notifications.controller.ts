@@ -1,4 +1,5 @@
 import { Controller, Post, Get, Body, UseGuards } from "@nestjs/common";
+import { Throttle } from "@nestjs/throttler";
 import { NotificationsAdminService } from "./notifications.service";
 import { BroadcastDto } from "./dto/broadcast.dto";
 import { AdminJwtGuard } from "../common/guard/admin-jwt.guard";
@@ -13,6 +14,8 @@ export class NotificationsAdminController {
   constructor(private readonly notifications: NotificationsAdminService) {}
 
   @Post("broadcast")
+  @Roles(AdminRole.SUPER_ADMIN)
+  @Throttle({ default: { limit: 5, ttl: 3_600_000 } })
   broadcast(@Body() dto: BroadcastDto) {
     return this.notifications.broadcast(dto);
   }

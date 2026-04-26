@@ -1,6 +1,7 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { createHmac } from "crypto";
 import { isIP } from "net";
+import { lookup as dnsLookup } from "dns/promises";
 import { PrismaService } from "@polyforge/shared-db";
 
 /**
@@ -110,31 +111,60 @@ export class WebhookDispatcherService {
     return false;
   }
 
+  /**
+   * Resolve hostname via DNS and verify the resolved IP is not private/reserved.
+   * Closes the TOCTOU gap where fetch() could re-resolve to a different IP.
+   */
+  private async resolveAndValidate(
+    webhookId: string,
+    url: string,
+  ): Promise<{ parsed: URL; resolvedAddress: string } | null> {
+    let parsed: URL;
+    try {
+      parsed = new URL(url);
+    } catch {
+      this.logger.warn(`Webhook ${webhookId} blocked — invalid URL`);
+      return null;
+    }
+
+    if (parsed.protocol !== "https:") {
+      this.logger.warn(`Webhook ${webhookId} blocked — non-HTTPS URL`);
+      return null;
+    }
+
+    if (this.isBlockedHost(parsed.hostname)) {
+      this.logger.warn(
+        `Webhook ${webhookId} blocked — internal/reserved hostname`,
+      );
+      return null;
+    }
+
+    // Resolve DNS and check the actual IP
+    try {
+      const { address } = await dnsLookup(parsed.hostname);
+      if (this.isBlockedHost(address)) {
+        this.logger.warn(
+          `Webhook ${webhookId} blocked — resolved IP ${address} is private/reserved`,
+        );
+        return null;
+      }
+      return { parsed, resolvedAddress: address };
+    } catch (err: any) {
+      this.logger.warn(
+        `Webhook ${webhookId} blocked — DNS resolution failed: ${err?.message}`,
+      );
+      return null;
+    }
+  }
+
   private async deliverWithRetry(
     webhookId: string,
     url: string,
     secret: string,
     payload: unknown,
   ): Promise<void> {
-    // SECURITY: Re-validate URL at dispatch time to prevent SSRF / DNS rebinding
-    try {
-      const parsed = new URL(url);
-
-      if (parsed.protocol !== "https:") {
-        this.logger.warn(`Webhook ${webhookId} blocked — non-HTTPS URL`);
-        return;
-      }
-
-      if (this.isBlockedHost(parsed.hostname)) {
-        this.logger.warn(
-          `Webhook ${webhookId} blocked — internal/reserved URL`,
-        );
-        return;
-      }
-    } catch {
-      this.logger.warn(`Webhook ${webhookId} blocked — invalid URL`);
-      return;
-    }
+    const validated = await this.resolveAndValidate(webhookId, url);
+    if (!validated) return;
 
     const body = JSON.stringify(payload);
     const signature = createHmac("sha256", secret).update(body).digest("hex");
@@ -164,7 +194,10 @@ export class WebhookDispatcherService {
       );
     }
 
-    // Single retry
+    // Re-validate before retry to prevent DNS rebinding between attempts
+    const revalidated = await this.resolveAndValidate(webhookId, url);
+    if (!revalidated) return;
+
     try {
       const res = await fetch(url, {
         method: "POST",

@@ -25,7 +25,7 @@ export class BatchItemDto {
 
   @IsOptional()
   @IsObject()
-  body?: any;
+  body?: Record<string, unknown>;
 }
 
 export class BatchRequestDto {
@@ -40,5 +40,5 @@ export class BatchRequestDto {
 export interface BatchResponseItem {
   id: string;
   status: number;
-  body: any;
+  body: unknown;
 }

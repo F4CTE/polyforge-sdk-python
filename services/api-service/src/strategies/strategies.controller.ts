@@ -17,6 +17,7 @@ import {
 import type { FastifyReply } from "fastify";
 type Response = FastifyReply;
 import { ApiTags, ApiBearerAuth } from "@nestjs/swagger";
+import { Throttle } from "@nestjs/throttler";
 import {
   JwtAuthGuard,
   CurrentUser,
@@ -95,6 +96,12 @@ export class StrategiesController {
   }
 
   @Delete(":id")
+  @Throttle({
+    default: {
+      limit: process.env.NODE_ENV === "production" ? 20 : 10000,
+      ttl: 60_000,
+    },
+  })
   @HttpCode(HttpStatus.NO_CONTENT)
   @UseGuards(ApiKeyScopeGuard)
   @RequireScopes("STRATEGY")
@@ -263,6 +270,12 @@ export class StrategiesController {
   }
 
   @Delete(":strategyId/comments/:commentId")
+  @Throttle({
+    default: {
+      limit: process.env.NODE_ENV === "production" ? 60 : 10000,
+      ttl: 60_000,
+    },
+  })
   @HttpCode(HttpStatus.NO_CONTENT)
   deleteComment(
     @Param("strategyId", ParseUUIDPipe) strategyId: string,

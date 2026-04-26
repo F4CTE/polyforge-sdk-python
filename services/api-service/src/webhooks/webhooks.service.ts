@@ -6,6 +6,7 @@ import {
   Logger,
 } from "@nestjs/common";
 import { isIPv4 } from "net";
+import { lookup as dnsLookup } from "dns/promises";
 import { randomBytes, createHmac } from "crypto";
 import { PrismaService } from "@polyforge/shared-db";
 import { CreateWebhookDto } from "./dto/create-webhook.dto";
@@ -63,6 +64,30 @@ export class WebhooksService {
       throw new UnprocessableEntityException({
         code: "WEBHOOK_LIMIT_REACHED",
         message: `Maximum ${MAX_WEBHOOKS_PER_USER} webhooks per user`,
+      });
+    }
+
+    // DNS-level SSRF check: resolve hostname and verify the IP is not private
+    try {
+      const parsed = new URL(dto.url);
+      if (isPrivateHost(parsed.hostname)) {
+        throw new UnprocessableEntityException({
+          code: "WEBHOOK_URL_BLOCKED",
+          message: "Webhook URL resolves to a blocked address",
+        });
+      }
+      const { address } = await dnsLookup(parsed.hostname);
+      if (isPrivateHost(address)) {
+        throw new UnprocessableEntityException({
+          code: "WEBHOOK_URL_BLOCKED",
+          message: "Webhook URL resolves to a blocked address",
+        });
+      }
+    } catch (err) {
+      if (err instanceof UnprocessableEntityException) throw err;
+      throw new UnprocessableEntityException({
+        code: "WEBHOOK_URL_INVALID",
+        message: "Could not resolve webhook URL hostname",
       });
     }
 

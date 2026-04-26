@@ -4,6 +4,7 @@ import {
   IsArray,
   IsIn,
   MaxLength,
+  ArrayMaxSize,
 } from "class-validator";
 
 const MOODS = [
@@ -22,7 +23,9 @@ export class UpdateJournalEntryDto {
 
   @IsOptional()
   @IsArray()
+  @ArrayMaxSize(20)
   @IsString({ each: true })
+  @MaxLength(50, { each: true })
   tags?: string[];
 
   @IsOptional()

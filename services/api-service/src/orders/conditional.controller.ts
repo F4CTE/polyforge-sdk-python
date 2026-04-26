@@ -15,6 +15,7 @@ import {
   ParseUUIDPipe,
 } from "@nestjs/common";
 import { ApiTags, ApiBearerAuth } from "@nestjs/swagger";
+import { Throttle } from "@nestjs/throttler";
 import { JwtAuthGuard, CurrentUser } from "@polyforge/shared-auth";
 import { IsOptional, IsIn } from "class-validator";
 import { PrismaService } from "@polyforge/shared-db";
@@ -134,6 +135,12 @@ export class ConditionalController {
   }
 
   @Delete(":id")
+  @Throttle({
+    default: {
+      limit: process.env.NODE_ENV === "production" ? 20 : 10000,
+      ttl: 60_000,
+    },
+  })
   @HttpCode(HttpStatus.OK)
   async cancel(
     @CurrentUser() user: JwtPayload,

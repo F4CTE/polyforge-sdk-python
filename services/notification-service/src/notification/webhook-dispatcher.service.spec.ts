@@ -3,6 +3,11 @@ import { PrismaService } from "@polyforge/shared-db";
 import { WebhookDispatcherService } from "./webhook-dispatcher.service";
 import { createHmac } from "crypto";
 
+const mockDnsLookup = vi.fn();
+vi.mock("dns/promises", () => ({
+  lookup: (...args: unknown[]) => mockDnsLookup(...args),
+}));
+
 // ─── Helpers ────────────────────────────────────────────────────────────────────
 
 function makeWebhook(overrides: Record<string, unknown> = {}) {
@@ -31,6 +36,7 @@ describe("WebhookDispatcherService", () => {
   beforeEach(() => {
     prisma = makeMockPrisma();
     service = new WebhookDispatcherService(prisma as unknown as PrismaService);
+    mockDnsLookup.mockResolvedValue({ address: "93.184.216.34", family: 4 });
   });
 
   afterEach(() => {
@@ -119,6 +125,88 @@ describe("WebhookDispatcherService", () => {
       await service.dispatch("user-1", "NONEXISTENT_EVENT", {});
 
       expect(mockFetch).not.toHaveBeenCalled();
+    });
+  });
+
+  // ── DNS rebinding SSRF protection ──────────────────────────────────────────
+
+  describe("DNS rebinding protection", () => {
+    it("blocks delivery when DNS resolves to loopback (127.0.0.1)", async () => {
+      mockDnsLookup.mockResolvedValue({ address: "127.0.0.1", family: 4 });
+
+      const webhook = makeWebhook();
+      prisma.webhook.findMany.mockResolvedValue([webhook]);
+
+      const mockFetch = vi.fn();
+      vi.stubGlobal("fetch", mockFetch);
+
+      await service.dispatch("user-1", "ORDER_FILLED", { test: true });
+      await new Promise((r) => setTimeout(r, 50));
+
+      expect(mockFetch).not.toHaveBeenCalled();
+    });
+
+    it("blocks delivery when DNS resolves to private range (10.x)", async () => {
+      mockDnsLookup.mockResolvedValue({ address: "10.0.0.1", family: 4 });
+
+      const webhook = makeWebhook();
+      prisma.webhook.findMany.mockResolvedValue([webhook]);
+
+      const mockFetch = vi.fn();
+      vi.stubGlobal("fetch", mockFetch);
+
+      await service.dispatch("user-1", "ORDER_FILLED", {});
+      await new Promise((r) => setTimeout(r, 50));
+
+      expect(mockFetch).not.toHaveBeenCalled();
+    });
+
+    it("blocks delivery when DNS resolves to 169.254.x.x (link-local)", async () => {
+      mockDnsLookup.mockResolvedValue({
+        address: "169.254.169.254",
+        family: 4,
+      });
+
+      const webhook = makeWebhook();
+      prisma.webhook.findMany.mockResolvedValue([webhook]);
+
+      const mockFetch = vi.fn();
+      vi.stubGlobal("fetch", mockFetch);
+
+      await service.dispatch("user-1", "ORDER_FILLED", {});
+      await new Promise((r) => setTimeout(r, 50));
+
+      expect(mockFetch).not.toHaveBeenCalled();
+    });
+
+    it("blocks delivery when DNS resolution fails", async () => {
+      mockDnsLookup.mockRejectedValue(new Error("ENOTFOUND"));
+
+      const webhook = makeWebhook();
+      prisma.webhook.findMany.mockResolvedValue([webhook]);
+
+      const mockFetch = vi.fn();
+      vi.stubGlobal("fetch", mockFetch);
+
+      await service.dispatch("user-1", "ORDER_FILLED", {});
+      await new Promise((r) => setTimeout(r, 50));
+
+      expect(mockFetch).not.toHaveBeenCalled();
+    });
+
+    it("allows delivery when DNS resolves to public IP", async () => {
+      mockDnsLookup.mockResolvedValue({ address: "93.184.216.34", family: 4 });
+
+      const webhook = makeWebhook();
+      prisma.webhook.findMany.mockResolvedValue([webhook]);
+
+      const mockFetch = vi.fn().mockResolvedValue({ ok: true, status: 200 });
+      vi.stubGlobal("fetch", mockFetch);
+
+      await service.dispatch("user-1", "ORDER_FILLED", { test: true });
+      await new Promise((r) => setTimeout(r, 50));
+
+      expect(mockFetch).toHaveBeenCalled();
     });
   });
 });

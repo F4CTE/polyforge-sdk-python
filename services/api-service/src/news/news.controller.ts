@@ -5,11 +5,25 @@ import {
   Query,
   UseGuards,
   ParseUUIDPipe,
+  BadRequestException,
+  PipeTransform,
+  Injectable,
 } from "@nestjs/common";
 import { ApiTags, ApiBearerAuth } from "@nestjs/swagger";
 import { JwtAuthGuard } from "@polyforge/shared-auth";
 import { NewsService } from "./news.service";
 import { NewsArticleQueryDto, NewsSignalQueryDto } from "./dto/news-query.dto";
+
+@Injectable()
+class MarketIdPipe implements PipeTransform<string, string> {
+  private readonly pattern = /^[A-Za-z0-9_\-:.]{1,255}$/;
+  transform(value: string): string {
+    if (!this.pattern.test(value)) {
+      throw new BadRequestException("Invalid marketId format");
+    }
+    return value;
+  }
+}
 
 @ApiTags("news")
 @ApiBearerAuth("jwt")
@@ -29,7 +43,7 @@ export class NewsController {
   }
 
   @Get("sentiment/:marketId")
-  getMarketSentiment(@Param("marketId") marketId: string) {
+  getMarketSentiment(@Param("marketId", MarketIdPipe) marketId: string) {
     return this.news.getMarketSentiment(marketId);
   }
 

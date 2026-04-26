@@ -11,8 +11,8 @@ export class UpdateProfileDto {
   @MaxLength(500)
   bio?: string;
 
-  @IsUrl()
   @IsOptional()
+  @IsUrl({ require_protocol: true, protocols: ["https"] })
   @MaxLength(2048)
   avatarUrl?: string;
 }

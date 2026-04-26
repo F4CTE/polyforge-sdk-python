@@ -58,7 +58,21 @@ export class ProfileService {
 
   async updateNotifications(
     userId: string,
-    prefs: Record<string, boolean>,
+    prefs: Partial<{
+      emailEnabled: boolean;
+      telegramEnabled: boolean;
+      discordEnabled: boolean;
+      onStrategyError: boolean;
+      onOrderFilled: boolean;
+      onDailyLossLimit: boolean;
+      onBacktestComplete: boolean;
+      onMarketResolved: boolean;
+      onSomeoneForked: boolean;
+      onSomeoneFollowed: boolean;
+      onSomeoneLiked: boolean;
+      onSomeoneCommented: boolean;
+      onTicketReply: boolean;
+    }>,
   ): Promise<{ message: string }> {
     await this.prisma.notificationPreference.upsert({
       where: { userId },

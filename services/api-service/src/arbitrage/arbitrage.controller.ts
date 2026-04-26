@@ -23,6 +23,7 @@ import {
   ApiParam,
   ApiBody,
 } from "@nestjs/swagger";
+import { Throttle } from "@nestjs/throttler";
 import {
   JwtAuthGuard,
   AdminJwtGuard,
@@ -60,6 +61,12 @@ export class ArbitrageController {
   // ─── Single-venue merge arbitrage (existing) ─────────────────────────────
 
   @Get()
+  @Throttle({
+    default: {
+      limit: process.env.NODE_ENV === "production" ? 30 : 10000,
+      ttl: 60_000,
+    },
+  })
   @UseGuards(JwtAuthGuard)
   @ApiOperation({
     summary: "Scan live markets for merge arbitrage opportunities",
@@ -86,6 +93,12 @@ export class ArbitrageController {
   // ─── Cross-venue arbitrage ────────────────────────────────────────────────
 
   @Get("cross-venue")
+  @Throttle({
+    default: {
+      limit: process.env.NODE_ENV === "production" ? 30 : 10000,
+      ttl: 60_000,
+    },
+  })
   @UseGuards(JwtAuthGuard)
   @ApiOperation({
     summary: "List cross-venue arbitrage opportunities",
@@ -106,6 +119,12 @@ export class ArbitrageController {
   }
 
   @Get("cross-venue/:marketId")
+  @Throttle({
+    default: {
+      limit: process.env.NODE_ENV === "production" ? 30 : 10000,
+      ttl: 60_000,
+    },
+  })
   @UseGuards(JwtAuthGuard)
   @ApiOperation({
     summary: "Cross-venue arbitrage opportunities for a specific market",
@@ -140,6 +159,12 @@ export class ArbitrageController {
   // ─── Spread comparison ──────────────────────────────────────────────────
 
   @Get("spread")
+  @Throttle({
+    default: {
+      limit: process.env.NODE_ENV === "production" ? 30 : 10000,
+      ttl: 60_000,
+    },
+  })
   @UseGuards(JwtAuthGuard)
   @ApiOperation({
     summary: "Bid/ask spread comparison across all matched venues",
@@ -153,6 +178,12 @@ export class ArbitrageController {
   // ─── Historical arbitrage windows ───────────────────────────────────────
 
   @Get("history")
+  @Throttle({
+    default: {
+      limit: process.env.NODE_ENV === "production" ? 30 : 10000,
+      ttl: 60_000,
+    },
+  })
   @UseGuards(JwtAuthGuard)
   @ApiOperation({
     summary: "Historical arbitrage opportunity snapshots",

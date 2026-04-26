@@ -184,6 +184,34 @@ describe("NotificationsAdminService", () => {
 
       expect(result.queued).toBe(0);
     });
+
+    it("rejects broadcast exceeding 5000 recipients", async () => {
+      const bigList = Array.from({ length: 5001 }, (_, i) => `user-${i}`);
+      const dto = {
+        userIds: bigList,
+        channel: "EMAIL",
+        templateId: "tpl-1",
+        subject: "Spam",
+      };
+
+      await expect(service.broadcast(dto as any)).rejects.toThrow(
+        /5000-recipient cap/,
+      );
+      expect(redis.xadd).not.toHaveBeenCalled();
+    });
+
+    it("allows broadcast with exactly 5000 recipients", async () => {
+      const exactList = Array.from({ length: 5000 }, (_, i) => `user-${i}`);
+      const dto = {
+        userIds: exactList,
+        channel: "EMAIL",
+        templateId: "tpl-1",
+        subject: "Legit",
+      };
+
+      const result = await service.broadcast(dto as any);
+      expect(result.queued).toBe(5000);
+    });
   });
 
   // ── getStats ──────────────────────────────────────────────────────────────

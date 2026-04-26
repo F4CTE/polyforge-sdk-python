@@ -13,6 +13,7 @@ import { JwtAuthGuard, CurrentUser } from "@polyforge/shared-auth";
 import { ProfileService } from "./profile.service";
 import { UpdateProfileDto } from "./dto/update-profile.dto";
 import { ChangePasswordDto } from "./dto/change-password.dto";
+import { UpdateProfileNotificationsDto } from "./dto/update-profile-notifications.dto";
 import { JwtPayload } from "@polyforge/shared-types";
 
 @ApiTags("profile")
@@ -47,7 +48,7 @@ export class ProfileController {
   @Patch("notifications")
   updateNotifications(
     @CurrentUser() user: JwtPayload,
-    @Body() dto: Record<string, boolean>,
+    @Body() dto: UpdateProfileNotificationsDto,
   ) {
     return this.profile.updateNotifications(user.sub, dto);
   }
