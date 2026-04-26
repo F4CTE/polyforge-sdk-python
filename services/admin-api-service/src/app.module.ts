@@ -3,10 +3,11 @@ import { ConfigModule } from "@nestjs/config";
 import { ScheduleModule } from "@nestjs/schedule";
 import { ThrottlerModule, ThrottlerGuard } from "@nestjs/throttler";
 import { ThrottlerStorageRedisService } from "@nest-lab/throttler-storage-redis";
-import { APP_GUARD } from "@nestjs/core";
+import { APP_GUARD, APP_INTERCEPTOR } from "@nestjs/core";
 import { SharedDbModule } from "@polyforge/shared-db";
 import { RedisModule, RedisService } from "@polyforge/shared-redis";
 import { LoggerModule } from "@polyforge/logger";
+import { NoCacheInterceptor } from "./common/interceptors/no-cache.interceptor";
 import { HealthController } from "./common/health.controller";
 import { AdminGuardModule } from "./common/guard/admin-guard.module";
 import { DashboardModule } from "./dashboard/dashboard.module";
@@ -70,6 +71,9 @@ import { RevenueModule } from "./revenue/revenue.module";
     RevenueModule,
   ],
   controllers: [HealthController],
-  providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
+  providers: [
+    { provide: APP_GUARD, useClass: ThrottlerGuard },
+    { provide: APP_INTERCEPTOR, useClass: NoCacheInterceptor },
+  ],
 })
 export class AppModule {}
