@@ -1,14 +1,21 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 
+export class LlmServiceError extends Error {
+  constructor(
+    message: string,
+    public readonly meta: { provider: string; statusCode?: number },
+  ) {
+    super(message);
+    this.name = "LlmServiceError";
+  }
+}
+
 @Injectable()
 export class LlmService {
   private readonly logger = new Logger(LlmService.name);
 
   constructor(private readonly config: ConfigService) {
-    // M-04: Validate at startup that at least one API key is configured.
-    // Keys are read on-demand via ConfigService (not cached as class fields)
-    // to minimize credential exposure window in V8 heap memory.
     if (
       !this.config.get<string>("ANTHROPIC_API_KEY") &&
       !this.config.get<string>("OPENAI_API_KEY")
@@ -19,9 +26,6 @@ export class LlmService {
     }
   }
 
-  /**
-   * Analyze a prompt using LLM. Tries Claude first, falls back to GPT-4o.
-   */
   async analyze(prompt: string): Promise<string> {
     const claudeApiKey = this.config.get<string>("ANTHROPIC_API_KEY", "");
     const openaiApiKey = this.config.get<string>("OPENAI_API_KEY", "");
@@ -30,9 +34,11 @@ export class LlmService {
       try {
         return await this.callClaude(prompt, claudeApiKey);
       } catch (err: unknown) {
-        const msg = err instanceof Error ? err.message : String(err);
+        const status =
+          err instanceof LlmServiceError ? err.meta.statusCode : undefined;
         this.logger.warn(
-          `Claude API call failed, falling back to OpenAI: ${msg}`,
+          { provider: "claude", statusCode: status },
+          "Claude API call failed, falling back to OpenAI",
         );
       }
     }
@@ -41,14 +47,22 @@ export class LlmService {
       try {
         return await this.callOpenAI(prompt, openaiApiKey);
       } catch (err: unknown) {
-        const msg = err instanceof Error ? err.message : String(err);
-        this.logger.error(`OpenAI API call also failed: ${msg}`);
-        throw new Error("All LLM providers failed", { cause: err });
+        const status =
+          err instanceof LlmServiceError ? err.meta.statusCode : undefined;
+        this.logger.error(
+          { provider: "openai", statusCode: status },
+          "OpenAI API call also failed",
+        );
+        throw new LlmServiceError("All LLM providers failed", {
+          provider: "all",
+          statusCode: status,
+        });
       }
     }
 
-    throw new Error(
+    throw new LlmServiceError(
       "No LLM API keys configured. Set ANTHROPIC_API_KEY or OPENAI_API_KEY.",
+      { provider: "none" },
     );
   }
 
@@ -68,8 +82,17 @@ export class LlmService {
     });
 
     if (!res.ok) {
-      const text = await res.text();
-      throw new Error(`Claude API error ${res.status}: ${text}`);
+      // Consume body to release the connection but never propagate it —
+      // upstream error bodies may echo the user's prompt.
+      await res.text();
+      this.logger.error(
+        { provider: "claude", statusCode: res.status },
+        "LLM call failed",
+      );
+      throw new LlmServiceError("LLM request failed", {
+        provider: "claude",
+        statusCode: res.status,
+      });
     }
 
     const data = (await res.json()) as { content: { text: string }[] };
@@ -91,8 +114,15 @@ export class LlmService {
     });
 
     if (!res.ok) {
-      const text = await res.text();
-      throw new Error(`OpenAI API error ${res.status}: ${text}`);
+      await res.text();
+      this.logger.error(
+        { provider: "openai", statusCode: res.status },
+        "LLM call failed",
+      );
+      throw new LlmServiceError("LLM request failed", {
+        provider: "openai",
+        statusCode: res.status,
+      });
     }
 
     const data = (await res.json()) as {

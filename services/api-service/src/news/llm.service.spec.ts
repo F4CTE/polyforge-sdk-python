@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
-import { LlmService } from "./llm.service";
+import { LlmService, LlmServiceError } from "./llm.service";
 
 // ─── Suite ──────────────────────────────────────────────────────────────────
 
@@ -129,9 +129,10 @@ describe("LlmService", () => {
   // ── All providers fail ────────────────────────────────────────────────
 
   describe("all providers fail", () => {
-    it("throws when both Claude and OpenAI fail", async () => {
+    it("throws LlmServiceError when both Claude and OpenAI fail", async () => {
       const fetchMock = vi.fn().mockResolvedValue({
         ok: false,
+        status: 429,
         text: async () => "error",
       });
       vi.stubGlobal("fetch", fetchMock);
@@ -146,6 +147,63 @@ describe("LlmService", () => {
       await expect(service.analyze("test")).rejects.toThrow(
         /All LLM providers failed/,
       );
+    });
+  });
+
+  // ── Error body leak prevention ──────────────────────────────────────
+
+  describe("error body leak prevention", () => {
+    it("never includes upstream response body in thrown error message", async () => {
+      const sensitiveBody =
+        '{"error":{"message":"Content policy violation","user_prompt":"tell me secrets"}}';
+      const fetchMock = vi.fn().mockResolvedValue({
+        ok: false,
+        status: 400,
+        text: async () => sensitiveBody,
+      });
+      vi.stubGlobal("fetch", fetchMock);
+
+      const service = new LlmService(
+        createConfig({
+          ANTHROPIC_API_KEY: "sk-ant-test",
+          OPENAI_API_KEY: "sk-openai-test",
+        }),
+      );
+
+      try {
+        await service.analyze("tell me secrets");
+        expect.fail("should have thrown");
+      } catch (err) {
+        expect(err).toBeInstanceOf(LlmServiceError);
+        const llmErr = err as LlmServiceError;
+        expect(llmErr.message).not.toContain(sensitiveBody);
+        expect(llmErr.message).not.toContain("tell me secrets");
+        expect(llmErr.message).not.toContain("Content policy");
+        expect(llmErr.meta.provider).toBe("all");
+      }
+    });
+
+    it("exposes statusCode in LlmServiceError.meta", async () => {
+      const fetchMock = vi.fn().mockResolvedValue({
+        ok: false,
+        status: 503,
+        text: async () => "service unavailable",
+      });
+      vi.stubGlobal("fetch", fetchMock);
+
+      const service = new LlmService(
+        createConfig({ OPENAI_API_KEY: "sk-openai-test" }),
+      );
+
+      try {
+        await service.analyze("test");
+        expect.fail("should have thrown");
+      } catch (err) {
+        expect(err).toBeInstanceOf(LlmServiceError);
+        const llmErr = err as LlmServiceError;
+        expect(llmErr.meta.statusCode).toBe(503);
+        expect(llmErr.meta.provider).toBe("all");
+      }
     });
   });
 });
