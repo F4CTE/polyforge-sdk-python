@@ -708,7 +708,7 @@ export const adminApi = {
         change: number;
         transactionCount: number;
       }>;
-    }>(buildUrl('/api/admin', '/revenue/breakdown', { period })),
+    }>(buildUrl(API_BASE, '/admin/revenue/breakdown', { period })),
 
   revenueTopUsers: (period: '7d' | '30d' | '90d', limit: number) =>
     request<{
@@ -719,7 +719,7 @@ export const adminApi = {
         tradeVolume: string;
         primarySource: string;
       }>;
-    }>(buildUrl('/api/admin', '/revenue/top-users', { period, limit })),
+    }>(buildUrl(API_BASE, '/admin/revenue/top-users', { period, limit })),
 
   // ---- Strategy Reviews -------------------------------------------------------
 
