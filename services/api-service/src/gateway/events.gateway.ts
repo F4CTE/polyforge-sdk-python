@@ -31,6 +31,7 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
     const token = this.extractToken(request);
     if (!token) {
       client.close(4001, "Authentication required");
+      client.terminate();
       return;
     }
 
@@ -41,6 +42,7 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
       const userId: string = payload.sub;
       if (!userId) {
         client.close(4003, "Invalid token");
+        client.terminate();
         return;
       }
 
@@ -55,6 +57,7 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
       client.send(JSON.stringify({ type: "AUTH_OK", timestamp: Date.now() }));
     } catch {
       client.close(4003, "Invalid token");
+      client.terminate();
     }
   }
 
@@ -97,7 +100,7 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
       timestamp: Date.now(),
     });
     for (const client of this.server.clients) {
-      if (client.readyState === 1) {
+      if (client.readyState === 1 && this.socketUsers.has(client)) {
         client.send(message);
       }
     }

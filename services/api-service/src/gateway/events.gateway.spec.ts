@@ -122,6 +122,25 @@ describe("EventsGateway", () => {
       gateway.handleConnection(client, req);
 
       expect(client.close).toHaveBeenCalledWith(4003, "Invalid token");
+      expect(client.terminate).toHaveBeenCalled();
+    });
+
+    it("closes and terminates when token has no sub claim", () => {
+      vi.mocked(jwtService.verify).mockReturnValue({ email: "a@b.com" });
+
+      const client = makeSocket();
+      gateway.handleConnection(client, makeRequest("?token=no-sub-jwt"));
+
+      expect(client.close).toHaveBeenCalledWith(4003, "Invalid token");
+      expect(client.terminate).toHaveBeenCalled();
+      expect(client.send).not.toHaveBeenCalled();
+    });
+
+    it("terminates rejected sockets to prevent broadcast leakage", () => {
+      const client = makeSocket();
+      gateway.handleConnection(client, makeRequest());
+
+      expect(client.terminate).toHaveBeenCalled();
     });
   });
 
@@ -203,8 +222,8 @@ describe("EventsGateway", () => {
     });
   });
 
-  describe("broadcast — still sends to all", () => {
-    it("broadcasts to all connected clients regardless of user", () => {
+  describe("broadcast — sends to authenticated clients only", () => {
+    it("broadcasts to all authenticated clients", () => {
       vi.mocked(jwtService.verify)
         .mockReturnValueOnce({ sub: "user-A", email: "a@b.com", username: "a" })
         .mockReturnValueOnce({
@@ -231,6 +250,15 @@ describe("EventsGateway", () => {
       expect(socketB.send).toHaveBeenCalledWith(
         expect.stringContaining("PRICE_UPDATE"),
       );
+    });
+
+    it("does not broadcast to unauthenticated sockets in server.clients", () => {
+      const unauthSocket = makeSocket();
+      (gateway.server.clients as Set<WebSocket>).add(unauthSocket);
+
+      gateway.broadcast("PRICE_UPDATE", { tokenId: "t1", price: 0.5 });
+
+      expect(unauthSocket.send).not.toHaveBeenCalled();
     });
   });
 
