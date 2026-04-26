@@ -17,10 +17,11 @@ export class PrismaService
   constructor() {
     const adapter = new PrismaPg({
       connectionString: process.env.DATABASE_URL,
-      // Connection pool: up to 10 connections, 10s timeout waiting for a connection
       max: parseInt(process.env.PRISMA_POOL_SIZE ?? "10", 10),
-      idleTimeoutMillis: 30_000,
+      idleTimeoutMillis: 0,
       connectionTimeoutMillis: 10_000,
+      keepAlive: true,
+      keepAliveInitialDelayMillis: 10_000,
     });
     super({
       adapter,
