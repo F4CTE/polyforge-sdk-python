@@ -98,6 +98,21 @@ describe('AuthService', () => {
       userLoginHistory: {
         create: vi.fn().mockResolvedValue({}),
       },
+      strategy: {
+        updateMany: vi.fn().mockResolvedValue({ count: 0 }),
+      },
+      apiKey: {
+        updateMany: vi.fn().mockResolvedValue({ count: 0 }),
+      },
+      webhook: {
+        updateMany: vi.fn().mockResolvedValue({ count: 0 }),
+      },
+      botConnection: {
+        updateMany: vi.fn().mockResolvedValue({ count: 0 }),
+      },
+      user: {
+        update: vi.fn().mockResolvedValue({}),
+      },
     } as unknown as PrismaService;
 
     service = new AuthService(
@@ -690,6 +705,98 @@ describe('AuthService', () => {
         const result = await service.register(makeRegisterDto() as any);
         expect(result.user.status).toBe(expected);
       });
+    });
+  });
+
+  // ── deleteAccount (GDPR erasure) ──────────────────────────────────────────
+
+  describe('deleteAccount', () => {
+    const PASSWORD = 'Passw0rd!';
+
+    it('anonymizes PII fields and emits USER_DELETED event', async () => {
+      const user = userFactory();
+      vi.mocked(usersService.findById).mockResolvedValue(user as any);
+      vi.mocked(usersService.validatePassword).mockResolvedValue(true);
+
+      await service.deleteAccount(user.id, PASSWORD);
+
+      const updateCall = vi.mocked(prisma.user.update).mock.calls[0][0];
+      expect(updateCall.where).toEqual({ id: user.id });
+      expect(updateCall.data.email).toMatch(/^deleted-[a-f0-9]+@anon\.local$/);
+      expect(updateCall.data.username).toMatch(/^del_[a-f0-9]+$/);
+      expect(updateCall.data.passwordHash).toBe('');
+      expect(updateCall.data.displayName).toBeNull();
+      expect(updateCall.data.bio).toBeNull();
+      expect(updateCall.data.avatarUrl).toBeNull();
+      expect(updateCall.data.twitterHandle).toBeNull();
+      expect(updateCall.data.totpSecret).toBeNull();
+      expect(updateCall.data.totpEnabled).toBe(false);
+      expect(updateCall.data.totpBackupCodes).toEqual([]);
+      expect(updateCall.data.deleted).toBe(true);
+      expect(updateCall.data.deletedAt).toBeInstanceOf(Date);
+
+      const xaddMock = redis.getClient().xadd;
+      expect(xaddMock).toHaveBeenCalledWith(
+        'stream:auth:events',
+        '*',
+        'event',
+        'USER_DELETED',
+        'userId',
+        user.id,
+        'ts',
+        expect.any(String),
+      );
+    });
+
+    it('stops strategies and revokes API keys before erasing', async () => {
+      const user = userFactory();
+      vi.mocked(usersService.findById).mockResolvedValue(user as any);
+      vi.mocked(usersService.validatePassword).mockResolvedValue(true);
+
+      await service.deleteAccount(user.id, PASSWORD);
+
+      expect(prisma.strategy.updateMany).toHaveBeenCalledWith(
+        expect.objectContaining({ where: { userId: user.id, status: 'RUNNING' } }),
+      );
+      expect(prisma.apiKey.updateMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { userId: user.id, revoked: false },
+          data: expect.objectContaining({ revoked: true }),
+        }),
+      );
+    });
+
+    it('deactivates webhooks and bot connections', async () => {
+      const user = userFactory();
+      vi.mocked(usersService.findById).mockResolvedValue(user as any);
+      vi.mocked(usersService.validatePassword).mockResolvedValue(true);
+
+      await service.deleteAccount(user.id, PASSWORD);
+
+      expect(prisma.webhook.updateMany).toHaveBeenCalledWith({
+        where: { userId: user.id, active: true },
+        data: { active: false },
+      });
+      expect(prisma.botConnection.updateMany).toHaveBeenCalledWith({
+        where: { userId: user.id, active: true },
+        data: { active: false },
+      });
+    });
+
+    it('throws INVALID_PASSWORD when password is wrong', async () => {
+      const user = userFactory();
+      vi.mocked(usersService.findById).mockResolvedValue(user as any);
+      vi.mocked(usersService.validatePassword).mockResolvedValue(false);
+
+      await expect(service.deleteAccount(user.id, 'wrong')).rejects.toThrow();
+      expect(prisma.user.update).not.toHaveBeenCalled();
+    });
+
+    it('throws when user not found or already deleted', async () => {
+      vi.mocked(usersService.findById).mockResolvedValue(null as any);
+
+      await expect(service.deleteAccount('nope', PASSWORD)).rejects.toThrow();
+      expect(prisma.user.update).not.toHaveBeenCalled();
     });
   });
 });

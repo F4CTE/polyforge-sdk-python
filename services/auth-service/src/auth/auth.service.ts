@@ -536,7 +536,7 @@ export class AuthService {
       );
     }
 
-    // SECURITY: Stop all financial operations BEFORE soft-deleting the account.
+    // SECURITY: Stop all financial operations BEFORE erasing the account.
     // These must be synchronous to prevent strategies from trading after deletion.
 
     // 1. Stop all running strategies
@@ -548,7 +548,7 @@ export class AuthService {
     // 2. Revoke all API keys
     await this.prisma.apiKey.updateMany({
       where: { userId, revoked: false },
-      data: { revoked: true },
+      data: { revoked: true, revokedAt: new Date() },
     });
 
     // 3. Revoke all refresh tokens
@@ -559,13 +559,63 @@ export class AuthService {
       ),
     );
 
-    // 4. FINALLY soft-delete the user (after all cleanup is done)
+    // 4. Deactivate webhooks and bot connections
+    await Promise.all([
+      this.prisma.webhook.updateMany({
+        where: { userId, active: true },
+        data: { active: false },
+      }),
+      this.prisma.botConnection.updateMany({
+        where: { userId, active: true },
+        data: { active: false },
+      }),
+    ]);
+
+    // 5. GDPR right-to-erasure: anonymize PII fields
+    const anonId = randomUUID().replace(/-/g, '').slice(0, 12);
     await this.prisma.user.update({
       where: { id: userId },
-      data: { deleted: true, deletedAt: new Date() },
+      data: {
+        email: `deleted-${anonId}@anon.local`,
+        username: `del_${anonId}`,
+        passwordHash: '',
+        displayName: null,
+        bio: null,
+        avatarUrl: null,
+        twitterHandle: null,
+        totpSecret: null,
+        totpEnabled: false,
+        totpBackupCodes: [],
+        polymarketAddress: null,
+        polymarketConnected: false,
+        kalshiUserId: null,
+        kalshiConnected: false,
+        polymarketUsConnected: false,
+        country: null,
+        venuePreferences: undefined,
+        deleted: true,
+        deletedAt: new Date(),
+      },
     });
 
-    this.logger.log(`Account soft-deleted: userId=${userId}`);
+    // 6. Emit domain event for downstream service purging
+    this.redis
+      .getClient()
+      .xadd(
+        'stream:auth:events',
+        '*',
+        'event',
+        'USER_DELETED',
+        'userId',
+        userId,
+        'ts',
+        Date.now().toString(),
+      )
+      .catch((err) =>
+        this.logger.error('Failed to emit USER_DELETED event to stream', err),
+      );
+
+    this.logger.log(`Account erased (GDPR): userId=${userId}`);
   }
 
   // ─── Token helpers ──────────────────────────────────────────────────────────
