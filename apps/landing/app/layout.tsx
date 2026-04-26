@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { GeistSans } from "geist/font/sans";
 import { GeistMono } from "geist/font/mono";
+import Script from "next/script";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -132,6 +133,12 @@ export default function RootLayout({
           Skip to main content
         </a>
         {children}
+        <Script
+          defer
+          data-domain="polyforge.app"
+          src="https://plausible.io/js/script.js"
+          strategy="afterInteractive"
+        />
       </body>
     </html>
   );

@@ -8,6 +8,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased] — 2026-04-26
 
 ### Added
+- **landing: Plausible Analytics — privacy-first, cookieless page-view tracking (POLA-1026)** — Added `next/script` import and a `<Script>` component with `strategy="afterInteractive"` and `data-domain="polyforge.app"` pointing to `https://plausible.io/js/script.js`. Plausible is GDPR/CCPA-compliant out of the box (no cookies, no PII), so no cookie-consent banner is required. The script loads after hydration and picks up App Router navigations via `history.pushState` listeners automatically. Zero additional runtime dependencies added.
 - **user-app: regression test suite for New Strategy CTA mobile visibility (POLA-990)** — Added `strategies-list.spec.tsx` with 18 tests covering: (1) helper-function unit tests (`execLabel`, `blocksCount`, `formatPnl`, `statusGradient`), and (2) source-code invariant assertions that guard against re-introducing the flex overflow bug (POLA-990 / GitHub #1001). The CSS regression tests assert that the header uses `flex flex-col sm:flex-row` (mobile-first column stacking), the button group has `flex-wrap`, `justify-between` is only applied at `sm:` breakpoint, both the enabled `<Link>` and the `aria-disabled` span for the capped state render correctly, and filter tabs keep `overflow-x-auto`.
 
 ### Fixed
