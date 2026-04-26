@@ -4,6 +4,7 @@ import { toast } from 'sonner';
 import {
   ArrowLeft, ExternalLink, Newspaper, ArrowUpRight, ArrowDownRight,
 } from 'lucide-react';
+import { safeHref } from '@/lib/url';
 
 /* ─── Types ──────────────────────────────────────────────────────────── */
 
@@ -168,7 +169,7 @@ export function Component() {
 
             {/* External link */}
             <a
-              href={article.url?.startsWith('https://') ? article.url : '#'}
+              href={safeHref(article.url)}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 px-3 py-2 rounded-sm text-label font-medium border border-accent/30 text-accent-text hover:bg-accent/10 focus-visible:outline-none focus-visible:shadow-focus-ring transition-colors"

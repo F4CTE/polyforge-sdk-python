@@ -6,6 +6,7 @@ import { MarketRewardsCard } from '@/components/rewards/market-rewards-card';
 import { resolveChartTheme } from '@polyforge/ui/lib/chart-colors';
 import { chartTooltipContentStyle, chartTooltipLabelStyle, chartAxisTick, chartLegendStyle } from '@polyforge/ui/lib/chart-styles';
 import { wsManager, WebSocketManager } from '@/lib/websocket';
+import { safeHref } from '@/lib/url';
 import { useAuthStore } from '@/stores/auth-store';
 import {
   ArrowLeft,
@@ -2245,7 +2246,7 @@ export function Component() {
                 {relatedNewsArticles.map(article => (
                   <a
                     key={article.id}
-                    href={article.url}
+                    href={safeHref(article.url)}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center gap-3 px-6 py-3 hover:bg-surface transition-colors"

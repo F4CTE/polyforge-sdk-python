@@ -6,6 +6,7 @@ import {
   ExternalLink, ArrowUpRight, ArrowDownRight, X, Search,
 } from 'lucide-react';
 import { Button, Input, Select } from '@polyforge/ui';
+import { safeHref } from '@/lib/url';
 
 /* ─── Types ──────────────────────────────────────────────────────────── */
 
@@ -412,7 +413,7 @@ export function Component() {
 
                     {/* Title */}
                     <a
-                      href={article.url}
+                      href={safeHref(article.url)}
                       target="_blank"
                       rel="noopener noreferrer"
                       data-testid="news-title"
