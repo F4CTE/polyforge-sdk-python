@@ -49,6 +49,8 @@ export class ApiKeysService {
       },
     });
 
+    this.logger.log(`API key created: id=${apiKey.id} user=${userId}`);
+
     return {
       id: apiKey.id,
       name: apiKey.name,

@@ -1,10 +1,12 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
+import { Injectable, Logger, NotFoundException } from "@nestjs/common";
 import { PrismaService } from "@polyforge/shared-db";
 import { ApiKeyScope } from "@prisma/client";
 import { randomBytes, createHash } from "crypto";
 
 @Injectable()
 export class ApiKeysService {
+  private readonly logger = new Logger(ApiKeysService.name);
+
   constructor(private readonly prisma: PrismaService) {}
 
   async list(userId: string) {
@@ -44,6 +46,8 @@ export class ApiKeysService {
         createdAt: true,
       },
     });
+
+    this.logger.log(`API key created: id=${key.id} user=${userId}`);
 
     // Return the full token only on creation — it's never shown again
     return { ...key, token: raw };
