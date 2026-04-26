@@ -645,7 +645,7 @@ export function Component() {
                         <div className="flex flex-col gap-1">
                           <Button
                             variant="ghost"
-                            onClick={() => navigate(`/markets/${market.slug}`)}
+                            onClick={() => navigate(`/markets/${market.id}`)}
                             className="text-left text-primary font-medium hover:text-accent-text transition-colors duration-micro focus-visible:outline-none focus-visible:shadow-focus-ring rounded-sm leading-snug max-w-xs"
                           >
                             {market.title}
@@ -866,7 +866,7 @@ export function Component() {
                               <Button
                                 variant="ghost"
                                 aria-label="Open full market detail"
-                                onClick={() => navigate(`/markets/${market.slug}`)}
+                                onClick={() => navigate(`/markets/${market.id}`)}
                                 className="inline-flex items-center gap-1 text-label text-tertiary hover:text-accent-text transition-colors duration-micro focus-visible:outline-none focus-visible:shadow-focus-ring rounded-sm"
                               >
                                 <ExternalLink className="w-3 h-3" aria-hidden="true" />
@@ -1113,7 +1113,7 @@ export function Component() {
                             <div className="mt-3 pt-3 border-t border-default/40">
                               <Button
                                 variant="ghost"
-                                onClick={() => navigate(`/markets/${market.slug}`)}
+                                onClick={() => navigate(`/markets/${market.id}`)}
                                 className="inline-flex items-center gap-1 text-label text-tertiary hover:text-accent-text transition-colors duration-micro focus-visible:outline-none focus-visible:shadow-focus-ring rounded-sm"
                               >
                                 <BarChart2 className="w-3 h-3" aria-hidden="true" />

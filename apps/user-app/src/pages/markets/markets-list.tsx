@@ -402,7 +402,7 @@ function TrendingCard({ market }: { market: Market }) {
 
   return (
     <Link
-      to={`/markets/${market.slug || market.id}`}
+      to={`/markets/${market.id}`}
       className="group block bg-elevated border border-default rounded-pf p-4 space-y-3 transition-all duration-panel hover:border-accent/30 hover:shadow-sm hover:-translate-y-1"
     >
       {/* Question */}
