@@ -33,6 +33,7 @@
     "@polyforge/logger": "workspace:*",
     "@polyforge/shared-auth": "workspace:*",
     "@polyforge/shared-db": "workspace:*",
+    "@polyforge/shared-posthog": "workspace:^",
     "@polyforge/shared-redis": "workspace:*",
     "@polyforge/shared-types": "workspace:*",
     "@sentry/nestjs": "^10.50.0",

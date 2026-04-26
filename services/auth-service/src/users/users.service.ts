@@ -1,6 +1,7 @@
 import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import { PrismaService } from '@polyforge/shared-db';
 import { RedisService } from '@polyforge/shared-redis';
+import { PosthogService } from '@polyforge/shared-posthog';
 import * as bcrypt from 'bcrypt';
 import { hashPassword, comparePassword } from '../auth/bcrypt.util';
 import { randomBytes, createHash } from 'crypto';
@@ -10,6 +11,7 @@ export class UsersService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly redis: RedisService,
+    private readonly posthog: PosthogService,
   ) {}
 
   // ─── Finders ─────────────────────────────────────────────────────────────────
@@ -52,7 +54,7 @@ export class UsersService {
 
     const passwordHash = await hashPassword(data.password, 12);
 
-    return this.prisma.user.create({
+    const user = await this.prisma.user.create({
       data: {
         email: data.email,
         passwordHash,
@@ -62,6 +64,14 @@ export class UsersService {
         approvedAt: (data.approved ?? true) ? new Date() : undefined,
       },
     });
+
+    this.posthog.capture(user.id, 'user_registered', { source: 'web' });
+    this.posthog.identify(user.id, {
+      email: user.email,
+      username: user.username,
+    });
+
+    return user;
   }
 
   async validatePassword(

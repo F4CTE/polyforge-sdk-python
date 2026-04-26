@@ -16,6 +16,7 @@ import {
   ExecMode,
 } from ".prisma/client";
 import { PrismaService } from "@polyforge/shared-db";
+import { PosthogService } from "@polyforge/shared-posthog";
 import { paginate, PaginatedResponse } from "../common/dto/pagination.dto";
 import { InternalClientService } from "../common/services/internal-client.service";
 import { CreateStrategyDto } from "./dto/create-strategy.dto";
@@ -40,6 +41,7 @@ export class StrategiesService {
     private readonly config: ConfigService,
     private readonly client: InternalClientService,
     private readonly llm: LlmService,
+    private readonly posthog: PosthogService,
   ) {
     this.engineUrl = this.config.get<string>(
       "STRATEGY_ENGINE_URL",
@@ -98,7 +100,7 @@ export class StrategiesService {
       }
     }
 
-    return this.prisma.strategy.create({
+    const strategy = await this.prisma.strategy.create({
       data: {
         userId,
         name: dto.name,
@@ -123,6 +125,14 @@ export class StrategiesService {
         template: false,
       },
     });
+
+    this.posthog.capture(userId, "strategy_created", {
+      strategyId: strategy.id,
+      type: strategy.execMode,
+      market: strategy.marketId ?? undefined,
+    });
+
+    return strategy;
   }
 
   async findOne(
@@ -315,6 +325,11 @@ export class StrategiesService {
       });
     }
 
+    this.posthog.capture(userId, "strategy_started", {
+      strategyId: id,
+      mode: dto.mode,
+    });
+
     return { status: newStatus, startedAt: new Date().toISOString() };
   }
 
@@ -379,6 +394,9 @@ export class StrategiesService {
     if (!res.ok && res.status !== 204) {
       this.logger.warn(`Engine stop returned ${res.status} for ${id}`);
     }
+
+    this.posthog.capture(userId, "strategy_stopped", { strategyId: id });
+
     return { status: "IDLE", stoppedAt: new Date().toISOString() };
   }
 

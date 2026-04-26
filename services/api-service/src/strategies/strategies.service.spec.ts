@@ -19,6 +19,7 @@ import { ReportStrategyDto } from "./dto/report-strategy.dto";
 import { StrategyQueryDto } from "./dto/strategy-query.dto";
 import { PaginationDto } from "../common/dto/pagination.dto";
 import { LlmService } from "../news/llm.service";
+import { PosthogService } from "@polyforge/shared-posthog";
 
 // ─── Factories ────────────────────────────────────────────────────────────────
 
@@ -113,6 +114,7 @@ describe("StrategiesService", () => {
   let config: ConfigService;
   let client: InternalClientService;
   let llm: LlmService;
+  let posthog: PosthogService;
 
   beforeEach(() => {
     db = createMockDb();
@@ -136,12 +138,18 @@ describe("StrategiesService", () => {
       analyze: vi.fn(),
     } as unknown as LlmService;
 
+    posthog = {
+      capture: vi.fn(),
+      identify: vi.fn(),
+    } as unknown as PosthogService;
+
     // Wire db into PrismaService shape (PrismaService extends PrismaClient)
     service = new StrategiesService(
       db as unknown as PrismaService,
       config,
       client,
       llm,
+      posthog,
     );
   });
 

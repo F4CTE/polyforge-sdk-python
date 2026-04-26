@@ -8,6 +8,7 @@ import { SharedDbModule } from '@polyforge/shared-db';
 import { RedisModule, RedisService } from '@polyforge/shared-redis';
 import { SharedAuthModule } from '@polyforge/shared-auth';
 import { LoggerModule } from '@polyforge/logger';
+import { PosthogModule } from '@polyforge/shared-posthog';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { TotpModule } from './totp/totp.module';
@@ -39,6 +40,7 @@ import { throttleLimit } from './common/throttle-limit';
     SharedDbModule,
     RedisModule,
     SharedAuthModule,
+    PosthogModule,
     AuthModule,
     UsersModule,
     TotpModule,

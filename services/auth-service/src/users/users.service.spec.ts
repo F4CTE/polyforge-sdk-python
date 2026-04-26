@@ -55,15 +55,21 @@ function createMockRedis() {
 
 // ─── Suite ───────────────────────────────────────────────────────────────────
 
+function createMockPosthog() {
+  return { capture: vi.fn(), identify: vi.fn() };
+}
+
 describe('UsersService', () => {
   let service: UsersService;
   let db: MockDb;
   let redis: ReturnType<typeof createMockRedis>;
+  let posthog: ReturnType<typeof createMockPosthog>;
 
   beforeEach(() => {
     db = createMockDb();
     redis = createMockRedis();
-    service = new UsersService(db as any, redis as any);
+    posthog = createMockPosthog();
+    service = new UsersService(db as any, redis as any, posthog as any);
   });
 
   // ── findByEmail ───────────────────────────────────────────────────────────

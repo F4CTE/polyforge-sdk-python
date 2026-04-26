@@ -10,6 +10,7 @@ import { ConfigService } from "@nestjs/config";
 import { JwtService } from "@nestjs/jwt";
 import { PrismaService } from "@polyforge/shared-db";
 import { RedisService } from "@polyforge/shared-redis";
+import { PosthogService } from "@polyforge/shared-posthog";
 import {
   paginate,
   PaginatedResponse,
@@ -42,6 +43,7 @@ export class OrdersService {
     private readonly redis: RedisService,
     private readonly config: ConfigService,
     private readonly jwtService: JwtService,
+    private readonly posthog: PosthogService,
   ) {}
 
   async list(
@@ -565,6 +567,13 @@ export class OrdersService {
       },
     });
 
+    this.posthog.capture(userId, "order_placed", {
+      orderId: order.id,
+      marketId: token.marketId,
+      side: dto.side,
+      amount: dto.size,
+    });
+
     return { orderId: order.id, intentId, status: "PENDING" };
   }
 
@@ -603,13 +612,17 @@ export class OrdersService {
     if (!order) throw new NotFoundException("Order not found");
     if (order.userId !== userId) throw new ForbiddenException("Not your order");
 
-    return this.prisma.order.update({
+    const updated = await this.prisma.order.update({
       where: { id: orderId },
       data: {
         mood: dto.mood,
         ...(dto.note !== undefined && { note: dto.note }),
       },
     });
+
+    this.posthog.capture(userId, "journal_entry_added", { entryId: orderId });
+
+    return updated;
   }
 
   async cancelOrder(userId: string, orderId: string) {

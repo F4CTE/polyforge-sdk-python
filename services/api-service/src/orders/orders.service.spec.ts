@@ -8,6 +8,7 @@ import { ConfigService } from "@nestjs/config";
 import { OrdersService } from "./orders.service";
 import { createMockDb, MockDb } from "../../test/helpers/mock-db";
 import { RedisService } from "@polyforge/shared-redis";
+import { PosthogService } from "@polyforge/shared-posthog";
 
 // ─── Factories ────────────────────────────────────────────────────────────────
 
@@ -84,7 +85,11 @@ describe("OrdersService", () => {
     config = {
       get: vi.fn().mockReturnValue(undefined),
     } as unknown as ConfigService;
-    service = new OrdersService(db as any, redis, config, {} as any);
+    const posthog = {
+      capture: vi.fn(),
+      identify: vi.fn(),
+    } as unknown as PosthogService;
+    service = new OrdersService(db as any, redis, config, {} as any, posthog);
   });
 
   afterEach(() => {

@@ -375,6 +375,28 @@ importers:
         specifier: ^5.9.2
         version: 5.9.3
 
+  packages/shared-posthog:
+    dependencies:
+      posthog-node:
+        specifier: ^4.18.0
+        version: 4.18.0
+    devDependencies:
+      '@nestjs/common':
+        specifier: ^11.1.19
+        version: 11.1.19(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2)
+      '@nestjs/core':
+        specifier: ^11.1.19
+        version: 11.1.19(@nestjs/common@11.1.19(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/websockets@11.1.19)(reflect-metadata@0.2.2)(rxjs@7.8.2)
+      '@types/node':
+        specifier: ^25.5.0
+        version: 25.5.0
+      typescript:
+        specifier: ^5.9.2
+        version: 5.9.3
+      vitest:
+        specifier: ^4.1.5
+        version: 4.1.5(@opentelemetry/api@1.9.1)(@types/node@25.5.0)(@vitest/coverage-v8@4.1.5)(happy-dom@20.9.0)(jsdom@29.0.2(@noble/hashes@2.0.1))(vite@8.0.10(@types/node@25.5.0)(esbuild@0.25.12)(jiti@2.6.1)(terser@5.46.2)(yaml@2.8.3))
+
   packages/shared-redis:
     dependencies:
       '@polyforge/shared-types':
@@ -803,6 +825,9 @@ importers:
       '@polyforge/shared-db':
         specifier: workspace:*
         version: link:../../packages/shared-db
+      '@polyforge/shared-posthog':
+        specifier: workspace:^
+        version: link:../../packages/shared-posthog
       '@polyforge/shared-redis':
         specifier: workspace:*
         version: link:../../packages/shared-redis
@@ -939,6 +964,9 @@ importers:
       '@polyforge/shared-db':
         specifier: workspace:*
         version: link:../../packages/shared-db
+      '@polyforge/shared-posthog':
+        specifier: workspace:^
+        version: link:../../packages/shared-posthog
       '@polyforge/shared-redis':
         specifier: workspace:*
         version: link:../../packages/shared-redis
@@ -6575,6 +6603,10 @@ packages:
   postgres@3.4.7:
     resolution: {integrity: sha512-Jtc2612XINuBjIl/QTWsV5UvE8UHuNblcO3vVADSrKsrc6RqGX6lOW1cEo3CM2v0XG4Nat8nI+YM7/f26VxXLw==}
     engines: {node: '>=12'}
+
+  posthog-node@4.18.0:
+    resolution: {integrity: sha512-XROs1h+DNatgKh/AlIlCtDxWzwrKdYDb2mOs58n4yN8BkGN9ewqeQwG5ApS4/IzwCb7HPttUkOVulkYatd2PIw==}
+    engines: {node: '>=15.0.0'}
 
   powershell-utils@0.1.0:
     resolution: {integrity: sha512-dM0jVuXJPsDN6DvRpea484tCUaMiXWjuCn++HGTqUWzGDjv5tZkEZldAJ/UMlqRYGFrD/etByo4/xOuC/snX2A==}
@@ -12616,6 +12648,12 @@ snapshots:
       xtend: 4.0.2
 
   postgres@3.4.7: {}
+
+  posthog-node@4.18.0:
+    dependencies:
+      axios: 1.15.2
+    transitivePeerDependencies:
+      - debug
 
   powershell-utils@0.1.0: {}
 

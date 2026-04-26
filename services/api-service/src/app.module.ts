@@ -12,6 +12,7 @@ import { SharedDbModule } from "@polyforge/shared-db";
 import { RedisModule, RedisService } from "@polyforge/shared-redis";
 import { SharedAuthModule } from "@polyforge/shared-auth";
 import { LoggerModule } from "@polyforge/logger";
+import { PosthogModule } from "@polyforge/shared-posthog";
 import { HealthController, StatusController } from "./health/health.controller";
 import { MarketsModule } from "./markets/markets.module";
 import { StrategiesModule } from "./strategies/strategies.module";
@@ -71,6 +72,7 @@ import { JournalModule } from "./journal/journal.module";
     SharedDbModule,
     RedisModule,
     SharedAuthModule,
+    PosthogModule,
     MarketsModule,
     StrategiesModule,
     DiscoverModule,
