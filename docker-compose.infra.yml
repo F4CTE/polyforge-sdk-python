@@ -634,7 +634,7 @@ services:
     restart: unless-stopped
 
   posthog-kafka:
-    image: redpanda-data/redpanda:v24.1.1
+    image: redpandadata/redpanda:v24.1.1
     command:
       - redpanda
       - start
