@@ -14,6 +14,7 @@ COPY packages/shared-db/package.json        ./packages/shared-db/
 COPY packages/shared-redis/package.json     ./packages/shared-redis/
 COPY packages/shared-auth/package.json      ./packages/shared-auth/
 COPY packages/shared-types/package.json     ./packages/shared-types/
+COPY packages/shared-posthog/package.json   ./packages/shared-posthog/
 COPY packages/logger/package.json           ./packages/logger/
 COPY services/api-service/package.json      ./services/api-service/
 
@@ -23,6 +24,7 @@ RUN echo "shamefully-hoist=true" > .npmrc && \
     --filter @polyforge/shared-redis \
     --filter @polyforge/shared-auth \
     --filter @polyforge/shared-types \
+    --filter @polyforge/shared-posthog \
     --filter @polyforge/logger \
     --filter @polyforge/api-service... \
     --frozen-lockfile
@@ -31,6 +33,7 @@ COPY packages/shared-db/        ./packages/shared-db/
 COPY packages/shared-redis/     ./packages/shared-redis/
 COPY packages/shared-auth/      ./packages/shared-auth/
 COPY packages/shared-types/     ./packages/shared-types/
+COPY packages/shared-posthog/   ./packages/shared-posthog/
 COPY packages/logger/           ./packages/logger/
 COPY services/api-service/      ./services/api-service/
 COPY prisma/                    ./prisma/
@@ -44,6 +47,7 @@ RUN DIRECT_DATABASE_URL=placeholder ADMIN_DIRECT_DATABASE_URL=placeholder \
     (cd packages/shared-redis  && /usr/local/bin/tsc -p tsconfig.json) && \
     (cd packages/logger        && /usr/local/bin/tsc -p tsconfig.json) && \
     (cd packages/shared-auth   && /usr/local/bin/tsc -p tsconfig.json) && \
+    (cd packages/shared-posthog && /usr/local/bin/tsc -p tsconfig.json) && \
     (cd services/api-service && /usr/local/bin/tsc -p tsconfig.build.json)
 
 # ── Runtime ──────────────────────────────────────────────────────────────────
@@ -59,6 +63,7 @@ COPY packages/shared-db/package.json        ./packages/shared-db/
 COPY packages/shared-redis/package.json     ./packages/shared-redis/
 COPY packages/shared-auth/package.json      ./packages/shared-auth/
 COPY packages/shared-types/package.json     ./packages/shared-types/
+COPY packages/shared-posthog/package.json   ./packages/shared-posthog/
 COPY packages/logger/package.json           ./packages/logger/
 COPY services/api-service/package.json      ./services/api-service/
 
@@ -69,6 +74,7 @@ COPY --from=builder /app/packages/shared-db/dist/       ./packages/shared-db/dis
 COPY --from=builder /app/packages/shared-redis/dist/    ./packages/shared-redis/dist/
 COPY --from=builder /app/packages/shared-auth/dist/     ./packages/shared-auth/dist/
 COPY --from=builder /app/packages/shared-types/dist/    ./packages/shared-types/dist/
+COPY --from=builder /app/packages/shared-posthog/dist/  ./packages/shared-posthog/dist/
 COPY --from=builder /app/packages/logger/dist/          ./packages/logger/dist/
 COPY --from=builder /app/services/api-service/dist      ./services/api-service/dist
 
