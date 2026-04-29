@@ -474,7 +474,7 @@ Join the early-access waitlist.
 
 ### POST /auth/v1/refresh
 
-Refresh the access token using the refresh token cookie. No request body needed — reads the `pf_refresh` HTTP-only cookie.
+Refresh the access token using the refresh token cookie. No request body needed for browser clients — reads the `pf_refresh` HTTP-only cookie. API clients may provide `{ "refreshToken": "..." }` in the request body.
 
 **Auth:** None (cookie-based)
 **Rate limit:** 30 req/15min per user
@@ -485,9 +485,9 @@ Refresh the access token using the refresh token cookie. No request body needed 
   "token": "eyJ..."
 }
 ```
-Sets a new `pf_token` cookie on the response.
+Atomically consumes the old refresh token, rotates it, and sets new `pf_token` and `pf_refresh` cookies on the response.
 
-**Errors:** `401 REFRESH_TOKEN_INVALID` · `401 REFRESH_TOKEN_EXPIRED`
+**Errors:** `401 INVALID_REFRESH_TOKEN` · `401 REFRESH_TOKEN_REPLAY`
 
 ---
 

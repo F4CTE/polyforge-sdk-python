@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import { HttpStatus } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
+import { createHash } from 'crypto';
 import { AuthService } from './auth.service';
 import { UsersService } from '../users/users.service';
 import { MailService } from '../mail/mail.service';
@@ -25,6 +26,10 @@ function makeRegisterDto(overrides: Record<string, unknown> = {}) {
 
 function makeLoginDto(overrides: Record<string, unknown> = {}) {
   return { email: 'alice@example.com', password: 'Passw0rd!', ...overrides };
+}
+
+function hashTokenForTest(token: string): string {
+  return createHash('sha256').update(token).digest('hex');
 }
 
 // ─── Suite ───────────────────────────────────────────────────────────────────
@@ -496,6 +501,133 @@ describe('AuthService', () => {
     });
   });
 
+  // ── refresh ───────────────────────────────────────────────────────────────
+
+  describe('refresh', () => {
+    it('atomically consumes a refresh token so only one concurrent caller succeeds', async () => {
+      const rawRefreshToken = 'existing-refresh-token';
+      const tokenHash = hashTokenForTest(rawRefreshToken);
+      const user = userFactory({
+        id: 'user-1',
+        deleted: false,
+        suspended: false,
+      });
+      const lookupKey = `refresh_lookup:${tokenHash}`;
+      const refreshKey = `refresh:${user.id}:${tokenHash}`;
+
+      vi.mocked(redis.get).mockImplementation((key: string) =>
+        key === lookupKey ? Promise.resolve(user.id) : Promise.resolve(null),
+      );
+      vi.mocked(usersService.findById).mockResolvedValue(user as any);
+
+      let consumed = false;
+      const evalCall = vi.fn().mockImplementation(async () => {
+        if (consumed) return null;
+        consumed = true;
+        return user.id;
+      });
+      const scanStream = vi.fn().mockReturnValue({
+        on: vi.fn().mockImplementation(function (
+          this: any,
+          event: string,
+          cb: (...args: unknown[]) => unknown,
+        ) {
+          if (event === 'end') cb();
+          return this;
+        }),
+      });
+      const pipelineExec = vi.fn().mockResolvedValue([]);
+      const pipeline = vi.fn().mockReturnValue({
+        del: vi.fn(),
+        exec: pipelineExec,
+      });
+      vi.mocked(redis.getClient).mockReturnValue({
+        call: evalCall,
+        scanStream,
+        pipeline,
+        xadd: vi.fn().mockResolvedValue('stream-id'),
+      } as any);
+
+      const [first, second] = await Promise.allSettled([
+        service.refresh(rawRefreshToken),
+        service.refresh(rawRefreshToken),
+      ]);
+
+      expect(first.status).toBe('fulfilled');
+      expect(second.status).toBe('rejected');
+      if (first.status === 'fulfilled') {
+        expect(first.value.token).toBe('signed-jwt-token');
+        expect(first.value.refreshToken).toEqual(expect.any(String));
+      }
+      if (second.status === 'rejected') {
+        expect(second.reason).toMatchObject({
+          response: { code: 'REFRESH_TOKEN_REPLAY' },
+          status: HttpStatus.UNAUTHORIZED,
+        });
+      }
+      expect(evalCall).toHaveBeenCalledTimes(2);
+      expect(evalCall).toHaveBeenCalledWith(
+        'EVAL',
+        expect.any(String),
+        2,
+        refreshKey,
+        lookupKey,
+      );
+      expect(usersService.findById).toHaveBeenCalledTimes(1);
+      expect(redis.set).toHaveBeenCalledTimes(2);
+      expect(scanStream).toHaveBeenCalledWith({
+        match: `refresh:${user.id}:*`,
+        count: 100,
+      });
+      expect(pipeline).toHaveBeenCalledTimes(1);
+      expect(pipelineExec).not.toHaveBeenCalled();
+    });
+
+    it('rejects a replayed refresh token without issuing a replacement token', async () => {
+      const rawRefreshToken = 'replayed-refresh-token';
+      const tokenHash = hashTokenForTest(rawRefreshToken);
+      const userId = 'user-1';
+
+      vi.mocked(redis.get).mockResolvedValue(userId);
+
+      const evalCall = vi.fn().mockResolvedValue(null);
+      vi.mocked(redis.getClient).mockReturnValue({
+        call: evalCall,
+        scanStream: vi.fn().mockReturnValue({
+          on: vi.fn().mockImplementation(function (
+            this: any,
+            event: string,
+            cb: (...args: unknown[]) => unknown,
+          ) {
+            if (event === 'end') cb();
+            return this;
+          }),
+        }),
+        pipeline: vi.fn().mockReturnValue({
+          del: vi.fn(),
+          exec: vi.fn().mockResolvedValue([]),
+        }),
+        xadd: vi.fn().mockResolvedValue('stream-id'),
+      } as any);
+
+      await expect(service.refresh(rawRefreshToken)).rejects.toMatchObject({
+        response: { code: 'REFRESH_TOKEN_REPLAY' },
+        status: HttpStatus.UNAUTHORIZED,
+      });
+
+      expect(evalCall).toHaveBeenCalledWith(
+        'EVAL',
+        expect.any(String),
+        2,
+        `refresh:${userId}:${tokenHash}`,
+        `refresh_lookup:${tokenHash}`,
+      );
+      expect(usersService.findById).not.toHaveBeenCalled();
+      expect(jwtService.sign).not.toHaveBeenCalled();
+      expect(redis.set).not.toHaveBeenCalled();
+    });
+  });
+
   // ── me ────────────────────────────────────────────────────────────────────
 
   describe('me', () => {
@@ -756,7 +888,9 @@ describe('AuthService', () => {
       await service.deleteAccount(user.id, PASSWORD);
 
       expect(prisma.strategy.updateMany).toHaveBeenCalledWith(
-        expect.objectContaining({ where: { userId: user.id, status: 'RUNNING' } }),
+        expect.objectContaining({
+          where: { userId: user.id, status: 'RUNNING' },
+        }),
       );
       expect(prisma.apiKey.updateMany).toHaveBeenCalledWith(
         expect.objectContaining({
