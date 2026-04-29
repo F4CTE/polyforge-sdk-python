@@ -133,6 +133,20 @@ All encryption keys are **required** — services will fail to start if unset. G
 
 ---
 
+## Observability
+
+| Variable | Dev default | Description |
+|---|---|---|
+| `NEXT_PUBLIC_SENTRY_DSN` | _(empty)_ | Public Sentry/GlitchTip-compatible DSN for the Next.js landing app. When unset, landing Sentry initialization drops events before send so local builds do not report. |
+| `NEXT_PUBLIC_SENTRY_TUNNEL` | _(build-derived)_ | Public landing Sentry tunnel path injected by `apps/landing/next.config.ts`. Server-backed builds set `/monitoring`; static export builds set an empty value so browser events go directly to the DSN because no Next.js tunnel route exists. |
+| `SENTRY_AUTH_TOKEN` | _(empty)_ | Enables landing source-map upload during `next build` when paired with `SENTRY_ORG` and `SENTRY_PROJECT`. Leave unset for local builds and static export builds. |
+| `SENTRY_ORG` | _(empty)_ | Sentry organization slug used by the landing `withSentryConfig` source-map upload step. |
+| `SENTRY_PROJECT` | _(empty)_ | Sentry project slug used by the landing `withSentryConfig` source-map upload step. |
+
+Landing Sentry runs on `@sentry/nextjs` v10. The SDK now uses OpenTelemetry v2 internally and should be paired with a Sentry-compatible backend that supports self-hosted Sentry 24.4.2 or newer. The landing app keeps the existing `/monitoring` tunnel route for server-backed builds through both the client SDK `tunnel` option and a Next.js rewrite; static export mode disables the tunnel and server function instrumentation because there is no Next.js runtime.
+
+---
+
 ## CORS & Domains
 
 | Variable | Dev default | Description |

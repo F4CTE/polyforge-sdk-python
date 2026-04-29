@@ -5,10 +5,42 @@ import { withSentryConfig } from '@sentry/nextjs';
 // out/ directory for nginx file serving. Dev and the landing Dockerfile keep
 // standalone mode so the Next.js server runs normally.
 const isStaticExport = process.env.NEXT_STATIC_EXPORT === 'true';
+const sentryEnvelopeEndpoint = getSentryEnvelopeEndpoint(process.env.NEXT_PUBLIC_SENTRY_DSN);
+
+function getSentryEnvelopeEndpoint(dsn: string | undefined) {
+  if (!dsn) return undefined;
+
+  try {
+    const dsnUrl = new URL(dsn);
+    const segments = dsnUrl.pathname.split('/').filter(Boolean);
+    const apiIndex = segments.lastIndexOf('api');
+    const projectId = apiIndex >= 0 ? segments[apiIndex + 1] : segments.at(-1);
+
+    if (!projectId) return undefined;
+
+    const envelopeUrl = new URL(dsn);
+    envelopeUrl.username = '';
+    envelopeUrl.password = '';
+    envelopeUrl.pathname = `/api/${projectId}/envelope/`;
+    envelopeUrl.search = '';
+    envelopeUrl.searchParams.set('sentry_version', '7');
+
+    if (dsnUrl.username) {
+      envelopeUrl.searchParams.set('sentry_key', dsnUrl.username);
+    }
+
+    return envelopeUrl.toString();
+  } catch {
+    return undefined;
+  }
+}
 
 const nextConfig: NextConfig = {
   output: isStaticExport ? 'export' : 'standalone',
   transpilePackages: ['@polyforge/ui'],
+  env: {
+    NEXT_PUBLIC_SENTRY_TUNNEL: isStaticExport ? '' : '/monitoring',
+  },
   // redirects/rewrites are not supported by output:'export' and are redundant
   // in all docker setups (nginx handles /auth and /api-docs routing).
   ...(!isStaticExport && {
@@ -23,6 +55,14 @@ const nextConfig: NextConfig = {
     },
     async rewrites() {
       return [
+        ...(sentryEnvelopeEndpoint
+          ? [
+              {
+                source: '/monitoring',
+                destination: sentryEnvelopeEndpoint,
+              },
+            ]
+          : []),
         {
           source: '/auth/:path*',
           destination: `${process.env.API_URL ?? 'http://localhost:4000'}/auth/:path*`,
@@ -44,7 +84,10 @@ module.exports = withSentryConfig(nextConfig, {
   project: process.env.SENTRY_PROJECT,
   widenClientFileUpload: true,
   // Disable server-side Sentry tracing in static export mode — no Node.js runtime.
-  autoInstrumentServerFunctions: !isStaticExport,
-  tunnelRoute: isStaticExport ? undefined : '/monitoring',
-  disableLogger: true,
+  webpack: {
+    autoInstrumentServerFunctions: !isStaticExport,
+    treeshake: {
+      removeDebugLogging: true,
+    },
+  },
 });
