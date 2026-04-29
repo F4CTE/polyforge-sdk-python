@@ -37,7 +37,7 @@
     "prettier": "^3.8.3",
     "prisma": "7.8.0",
     "ts-node": "^10.9.0",
-    "turbo": "^2.8.17",
+    "turbo": "^2.9.6",
     "typescript": "^5.9.2",
     "typescript-eslint": "^8.59.1"
   },
