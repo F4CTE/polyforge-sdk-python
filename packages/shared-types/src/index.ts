@@ -45,3 +45,6 @@ export * from "./venue-adapter";
 export * from "./venue-config";
 export * from "./venue-configs";
 export * from "./base-venue-ws";
+
+// Legal acceptance contracts
+export * from "./us-rail-terms";

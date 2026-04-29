@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { CURRENT_US_RAIL_TERMS_VERSION } from "@polyforge/shared-types";
 import { OrdersService, OrderIntent } from "./orders.service";
 
 // ─── Factories ────────────────────────────────────────────────────────────────
@@ -40,6 +41,12 @@ function makeMocks() {
       create: vi.fn().mockResolvedValue({}),
       update: vi.fn().mockResolvedValue({}),
     },
+    user: {
+      findUnique: vi.fn().mockResolvedValue({
+        usRailTermsAcceptedAt: new Date("2026-04-29T00:00:00.000Z"),
+        usRailTermsVersion: CURRENT_US_RAIL_TERMS_VERSION,
+      }),
+    },
   } as any;
 
   const redis = {
@@ -48,6 +55,10 @@ function makeMocks() {
 
   const signer = {
     signOrder: vi.fn().mockResolvedValue(SIGNED_ORDER),
+    getPolymarketUsCredentials: vi.fn().mockResolvedValue({
+      keyId: "us-key",
+      secretKey: "us-secret",
+    }),
   } as any;
 
   const clob = {
@@ -347,6 +358,129 @@ describe("OrdersService", () => {
       const payload = dlqCall[1];
       expect(payload.intentId).toBe("intent-dlq");
       expect(payload.userId).toBe("user-1");
+    });
+  });
+
+  // ── processIntent — US-rail terms gate ───────────────────────────────────
+
+  describe("processIntent() — US-rail terms gate", () => {
+    it("blocks polymarket_us intents with missing terms before signer credentials or venue routing", async () => {
+      prisma.user.findUnique.mockResolvedValue({
+        usRailTermsAcceptedAt: null,
+        usRailTermsVersion: null,
+      });
+      const venueRouter = { route: vi.fn() } as any;
+      svc = new OrdersService(prisma, redis, signer, clob, events, venueRouter);
+
+      const p = svc.processIntent(makeIntent({ venue: "polymarket_us" }));
+      await vi.runAllTimersAsync();
+      await p;
+
+      expect(signer.getPolymarketUsCredentials).not.toHaveBeenCalled();
+      expect(venueRouter.route).not.toHaveBeenCalled();
+      expect(redis.xadd).toHaveBeenCalledWith(
+        "stream:orders:dlq",
+        expect.objectContaining({ reason: "US_RAIL_TERMS_REQUIRED" }),
+      );
+    });
+
+    it("blocks polymarket_us intents with stale terms before signer credentials or venue routing", async () => {
+      prisma.user.findUnique.mockResolvedValue({
+        usRailTermsAcceptedAt: new Date("2026-04-01T00:00:00.000Z"),
+        usRailTermsVersion: "us-rail-2026-01-01",
+      });
+      const venueRouter = { route: vi.fn() } as any;
+      svc = new OrdersService(prisma, redis, signer, clob, events, venueRouter);
+
+      const p = svc.processIntent(makeIntent({ venue: "polymarket_us" }));
+      await vi.runAllTimersAsync();
+      await p;
+
+      expect(signer.getPolymarketUsCredentials).not.toHaveBeenCalled();
+      expect(venueRouter.route).not.toHaveBeenCalled();
+      expect(redis.xadd).toHaveBeenCalledWith(
+        "stream:orders:dlq",
+        expect.objectContaining({ reason: "US_RAIL_TERMS_REQUIRED" }),
+      );
+    });
+
+    it("does not leave a pending order when retry idempotency sees a stale terms rejection", async () => {
+      prisma.order.findFirst
+        .mockResolvedValueOnce(null)
+        .mockResolvedValueOnce({ id: "order-created-before-gate" });
+      prisma.user.findUnique.mockResolvedValue({
+        usRailTermsAcceptedAt: null,
+        usRailTermsVersion: null,
+      });
+      const venueRouter = { route: vi.fn() } as any;
+      svc = new OrdersService(prisma, redis, signer, clob, events, venueRouter);
+
+      const p = svc.processIntent(makeIntent({ venue: "polymarket_us" }));
+      await vi.runAllTimersAsync();
+      await p;
+
+      expect(prisma.order.create).not.toHaveBeenCalled();
+      expect(prisma.order.update).not.toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: "order-created-before-gate" },
+          data: expect.objectContaining({ status: "FAILED" }),
+        }),
+      );
+      expect(signer.getPolymarketUsCredentials).not.toHaveBeenCalled();
+      expect(venueRouter.route).not.toHaveBeenCalled();
+      expect(redis.xadd).toHaveBeenCalledWith(
+        "stream:orders:dlq",
+        expect.objectContaining({ reason: "US_RAIL_TERMS_REQUIRED" }),
+      );
+    });
+
+    it("blocks default polymarket intents when the router resolves them to the US rail", async () => {
+      prisma.user.findUnique.mockResolvedValue({
+        usRailTermsAcceptedAt: null,
+        usRailTermsVersion: null,
+      });
+      const venueRouter = {
+        resolve: vi.fn().mockReturnValue({ venueId: "polymarket_us" }),
+        route: vi.fn(),
+      } as any;
+      svc = new OrdersService(prisma, redis, signer, clob, events, venueRouter);
+
+      const p = svc.processIntent(makeIntent({ venue: "polymarket" }));
+      await vi.runAllTimersAsync();
+      await p;
+
+      expect(prisma.order.create).not.toHaveBeenCalled();
+      expect(signer.signOrder).not.toHaveBeenCalled();
+      expect(signer.getPolymarketUsCredentials).not.toHaveBeenCalled();
+      expect(venueRouter.route).not.toHaveBeenCalled();
+      expect(redis.xadd).toHaveBeenCalledWith(
+        "stream:orders:dlq",
+        expect.objectContaining({ reason: "US_RAIL_TERMS_REQUIRED" }),
+      );
+    });
+
+    it("uses US credentials when an accepted default polymarket intent resolves to the US rail", async () => {
+      const venueRouter = {
+        resolve: vi.fn().mockReturnValue({ venueId: "polymarket_us" }),
+        route: vi.fn().mockResolvedValue({
+          venueOrderId: "us-order-1",
+          status: "LIVE",
+        }),
+      } as any;
+      svc = new OrdersService(prisma, redis, signer, clob, events, venueRouter);
+
+      const p = svc.processIntent(makeIntent({ venue: "polymarket" }));
+      await vi.runAllTimersAsync();
+      await p;
+
+      expect(signer.signOrder).not.toHaveBeenCalled();
+      expect(signer.getPolymarketUsCredentials).toHaveBeenCalledWith("user-1");
+      expect(venueRouter.route).toHaveBeenCalledWith(
+        "polymarket_us",
+        expect.objectContaining({
+          authContext: expect.objectContaining({ venue: "polymarket_us" }),
+        }),
+      );
     });
   });
 

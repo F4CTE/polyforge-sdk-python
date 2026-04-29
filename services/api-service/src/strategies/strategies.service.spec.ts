@@ -823,6 +823,38 @@ describe("StrategiesService", () => {
       });
     });
 
+    it("throws US_RAIL_TERMS_REQUIRED and rolls back before starting a US-rail live strategy when acceptance is stale", async () => {
+      const strategy = makeStrategy({
+        userId: "user-1",
+        status: StrategyStatus.IDLE,
+        venue: "POLYMARKET_US",
+      });
+      db.strategy.updateMany.mockResolvedValue({ count: 1 } as any);
+      db.strategy.findUnique.mockResolvedValue({ venue: "POLYMARKET_US" } as any);
+      db.user.findUnique.mockResolvedValue({
+        polymarketConnected: true,
+        polymarketUsConnected: true,
+        usRailTermsAcceptedAt: new Date("2026-04-01T00:00:00.000Z"),
+        usRailTermsVersion: "us-rail-2026-01-01",
+      } as any);
+      db.strategy.update.mockResolvedValue(strategy as any);
+
+      await expect(
+        service.start(strategy.id, "user-1", {
+          mode: "live",
+        } as StartStrategyDto),
+      ).rejects.toMatchObject({
+        response: { code: "US_RAIL_TERMS_REQUIRED" },
+        status: 428,
+      });
+
+      expect(db.strategy.update).toHaveBeenCalledWith({
+        where: { id: strategy.id },
+        data: { status: StrategyStatus.IDLE },
+      });
+      expect(client.post).not.toHaveBeenCalled();
+    });
+
     it("throws ENGINE_ERROR when engine returns non-ok and non-204", async () => {
       const strategy = makeStrategy({
         userId: "user-1",

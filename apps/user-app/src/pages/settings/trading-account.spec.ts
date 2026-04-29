@@ -18,12 +18,20 @@ function canConnectKalshi(userId: string, importing: boolean): boolean {
   return userId.trim().length > 0 && !importing;
 }
 
-function canImportUs(keyId: string, secretKey: string, importing: boolean): boolean {
-  return keyId.trim().length > 0 && secretKey.trim().length > 0 && !importing;
-}
-
-function dismissalKey(userId: string): string {
-  return `polyforge:us-disclaimer-dismissed:${userId}`;
+function canImportUs(
+  keyId: string,
+  secretKey: string,
+  termsAccepted: boolean,
+  termsVersion: string,
+  importing: boolean,
+): boolean {
+  return (
+    keyId.trim().length > 0 &&
+    secretKey.trim().length > 0 &&
+    termsAccepted &&
+    termsVersion === 'us-rail-2026-04-29' &&
+    !importing
+  );
 }
 
 // ─── Tests ─────────────────────────────────────────────────────────────────
@@ -99,23 +107,31 @@ describe('Kalshi credentials panel', () => {
 describe('US rail credential form', () => {
   describe('canImportUs', () => {
     it('returns true when both keyId and secretKey are provided and not importing', () => {
-      expect(canImportUs('key-123', 'secret-456', false)).toBe(true);
+      expect(canImportUs('key-123', 'secret-456', true, 'us-rail-2026-04-29', false)).toBe(true);
     });
 
     it('returns false when keyId is blank', () => {
-      expect(canImportUs('   ', 'secret-456', false)).toBe(false);
+      expect(canImportUs('   ', 'secret-456', true, 'us-rail-2026-04-29', false)).toBe(false);
     });
 
     it('returns false when secretKey is blank', () => {
-      expect(canImportUs('key-123', '', false)).toBe(false);
+      expect(canImportUs('key-123', '', true, 'us-rail-2026-04-29', false)).toBe(false);
+    });
+
+    it('returns false when US-rail terms are not accepted', () => {
+      expect(canImportUs('key-123', 'secret-456', false, 'us-rail-2026-04-29', false)).toBe(false);
+    });
+
+    it('returns false when US-rail terms version is stale', () => {
+      expect(canImportUs('key-123', 'secret-456', true, 'us-rail-2026-01-01', false)).toBe(false);
     });
 
     it('returns false while importing', () => {
-      expect(canImportUs('key-123', 'secret-456', true)).toBe(false);
+      expect(canImportUs('key-123', 'secret-456', true, 'us-rail-2026-04-29', true)).toBe(false);
     });
 
     it('returns false when both fields are blank', () => {
-      expect(canImportUs('', '', false)).toBe(false);
+      expect(canImportUs('', '', true, 'us-rail-2026-04-29', false)).toBe(false);
     });
   });
 
@@ -144,18 +160,6 @@ describe('US rail credential form', () => {
       };
       expect(disconnectedUs.polymarketRail).toBe('us');
       expect(disconnectedUs.polymarketConnected).toBe(false);
-    });
-  });
-});
-
-describe('USLegalDisclaimerBanner', () => {
-  describe('dismissalKey', () => {
-    it('namespaces key with user id', () => {
-      expect(dismissalKey('user-abc')).toBe('polyforge:us-disclaimer-dismissed:user-abc');
-    });
-
-    it('produces distinct keys per user', () => {
-      expect(dismissalKey('alice')).not.toBe(dismissalKey('bob'));
     });
   });
 });

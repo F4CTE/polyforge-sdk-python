@@ -12,6 +12,7 @@ import { JwtService } from "@nestjs/jwt";
 import { PrismaService } from "@polyforge/shared-db";
 import { RedisService } from "@polyforge/shared-redis";
 import { PosthogService } from "@polyforge/shared-posthog";
+import { assertCurrentUsRailTermsAccepted } from "../common/us-rail-terms";
 import {
   paginate,
   PaginatedResponse,
@@ -514,6 +515,9 @@ export class OrdersService {
         code: "WALLET_NOT_CONNECTED",
         message: "Connect your Polymarket wallet first",
       });
+    }
+    if ((user as any).country === "US" && (user as any).polymarketUsConnected) {
+      assertCurrentUsRailTermsAccepted(user as any);
     }
 
     // 2a. Enforce max position size per order

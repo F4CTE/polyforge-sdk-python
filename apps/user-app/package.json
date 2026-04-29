@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@polyforge/api-client": "workspace:*",
+    "@polyforge/shared-types": "workspace:*",
     "@polyforge/ui": "workspace:*",
     "@sentry/react": "^9.0.0",
     "@tanstack/react-table": "^8.20.0",

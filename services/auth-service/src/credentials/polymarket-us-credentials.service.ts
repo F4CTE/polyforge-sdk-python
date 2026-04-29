@@ -2,6 +2,7 @@ import { Injectable, HttpException, HttpStatus, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '@polyforge/shared-db';
+import { CURRENT_US_RAIL_TERMS_VERSION } from '@polyforge/shared-types';
 import { randomUUID } from 'crypto';
 import { ImportPolymarketUsCredentialsDto } from './dto/import-polymarket-us-credentials.dto';
 
@@ -49,8 +50,11 @@ export class PolymarketUsCredentialsService {
     userId: string,
     dto: ImportPolymarketUsCredentialsDto,
     countryCode: string | undefined,
+    requestIp?: string,
+    userAgent?: string,
   ): Promise<void> {
     await this.prisma.user.findUniqueOrThrow({ where: { id: userId } });
+    this.assertCurrentUsRailTermsAccepted(dto);
 
     // Forward to signer-service — encrypts Ed25519 secret via existing DEK/KEK envelope
     await this.forwardToSigner(userId, dto);
@@ -60,11 +64,33 @@ export class PolymarketUsCredentialsService {
       where: { id: userId },
       data: {
         polymarketUsConnected: true,
+        usRailTermsAcceptedAt: new Date(),
+        usRailTermsVersion: CURRENT_US_RAIL_TERMS_VERSION,
+        usRailTermsAcceptedIp: requestIp,
+        usRailTermsAcceptedUserAgent: userAgent?.slice(0, 512),
         ...(countryCode ? { country: countryCode } : {}),
       },
     });
 
     this.logger.log(`Polymarket US credentials imported for user ${userId}`);
+  }
+
+  private assertCurrentUsRailTermsAccepted(
+    dto: ImportPolymarketUsCredentialsDto,
+  ): void {
+    if (
+      dto.usRailTermsAccepted !== true ||
+      dto.usRailTermsVersion !== CURRENT_US_RAIL_TERMS_VERSION
+    ) {
+      throw new HttpException(
+        {
+          code: 'US_RAIL_TERMS_REQUIRED',
+          message: 'Accept the current US-rail legal terms before continuing.',
+          requiredVersion: CURRENT_US_RAIL_TERMS_VERSION,
+        },
+        HttpStatus.PRECONDITION_REQUIRED,
+      );
+    }
   }
 
   // ─── Delete ───────────────────────────────────────────────────────────────────

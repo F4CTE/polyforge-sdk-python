@@ -200,6 +200,9 @@ importers:
       '@polyforge/api-client':
         specifier: workspace:*
         version: link:../../packages/api-client
+      '@polyforge/shared-types':
+        specifier: workspace:*
+        version: link:../../packages/shared-types
       '@polyforge/ui':
         specifier: workspace:*
         version: link:../../packages/ui

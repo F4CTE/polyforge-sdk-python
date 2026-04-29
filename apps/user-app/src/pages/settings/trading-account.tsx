@@ -6,8 +6,8 @@ import {
   Copy, QrCode, Eye, EyeOff,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { CURRENT_US_RAIL_TERMS_VERSION } from '@polyforge/shared-types/us-rail-terms';
 import { useAuthStore } from '../../stores/auth-store';
-import { USLegalDisclaimerBanner, clearDismissal } from '../../components/us-legal-disclaimer-banner';
 import { RailIndicatorBadge } from '../../components/rail-indicator-badge';
 
 /* ─── ConfirmDialog ──────────────────────────────────────────────────── */
@@ -105,6 +105,7 @@ export function Component() {
   const [usKeyId, setUsKeyId] = useState('');
   const [usSecretKey, setUsSecretKey] = useState('');
   const [showUsSecretKey, setShowUsSecretKey] = useState(false);
+  const [usRailTermsAccepted, setUsRailTermsAccepted] = useState(false);
 
   // Kalshi credentials form
   const [kalshiUserId, setKalshiUserId] = useState('');
@@ -135,7 +136,6 @@ export function Component() {
       if (res.ok) {
         const data = await res.json();
         patchUser({ polymarketConnected: data.connected });
-        if (user?.id) clearDismissal(user.id);
         setPrivateKey('');
         setApiKey('');
         setApiSecret('');
@@ -154,14 +154,22 @@ export function Component() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ keyId: usKeyId.trim(), secretKey: usSecretKey.trim() }),
+        body: JSON.stringify({
+          keyId: usKeyId.trim(),
+          secretKey: usSecretKey.trim(),
+          usRailTermsAccepted,
+          usRailTermsVersion: CURRENT_US_RAIL_TERMS_VERSION,
+        }),
       });
       if (res.ok) {
-        const data = await res.json();
-        patchUser({ polymarketConnected: data.connected });
-        if (user?.id) clearDismissal(user.id);
+        const data = res.status === 204 ? {} : await res.json().catch(() => ({}));
+        patchUser({
+          polymarketConnected: data.connected ?? true,
+          polymarketRail: 'us',
+        });
         setUsKeyId('');
         setUsSecretKey('');
+        setUsRailTermsAccepted(false);
         toast.success('US credentials connected');
       } else {
         const err = await res.json().catch(() => ({}));
@@ -254,7 +262,11 @@ export function Component() {
   }
 
   const canImport = privateKey && apiKey && apiSecret && apiPassphrase && !importing;
-  const canImportUs = usKeyId.trim().length > 0 && usSecretKey.trim().length > 0 && !importing;
+  const canImportUs =
+    usKeyId.trim().length > 0 &&
+    usSecretKey.trim().length > 0 &&
+    usRailTermsAccepted &&
+    !importing;
 
   return (
     <div className="animate-fade-in p-6 max-w-2xl mx-auto space-y-6">
@@ -281,11 +293,6 @@ export function Component() {
         </div>
       </div>
 
-      {/* US legal disclaimer — only for US rail users */}
-      {isUsRail && user?.id && (
-        <USLegalDisclaimerBanner userId={user.id} />
-      )}
-
       {/* Polymarket credentials panel */}
       <div className="bg-elevated border border-default rounded-pf p-6 space-y-5">
         {isConnected ? (
@@ -307,6 +314,21 @@ export function Component() {
               Enter your Polymarket US API credentials. These are issued directly by Polymarket for
               the CFTC-regulated US endpoint and are encrypted at rest.
             </p>
+            <label className="flex items-start gap-3 rounded-pf border border-info/30 bg-info/8 px-4 py-3 text-body-sm text-info-text">
+              <input
+                type="checkbox"
+                checked={usRailTermsAccepted}
+                onChange={e => setUsRailTermsAccepted(e.target.checked)}
+                data-testid="us-rail-terms-checkbox"
+                className="mt-1 size-4 rounded border-default accent-current"
+              />
+              <span className="leading-relaxed">
+                <span className="font-semibold">US Regulatory Notice — Polymarket US Rail.</span>{' '}
+                I confirm I am eligible to use the CFTC-regulated Polymarket US endpoint, accept
+                the current US-rail terms ({CURRENT_US_RAIL_TERMS_VERSION}), and understand
+                prediction markets involve risk.
+              </span>
+            </label>
             <div>
               <label htmlFor="us-key-id" className="text-label text-secondary mb-2 block">
                 Key ID <span className="text-loss">*</span>

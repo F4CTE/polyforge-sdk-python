@@ -25,6 +25,11 @@ const validDto = {
   // 64-char hex string (32-byte Ed25519 seed)
   secretKey: 'a'.repeat(64),
 };
+const acceptedDto = {
+  ...validDto,
+  usRailTermsAccepted: true,
+  usRailTermsVersion: 'us-rail-2026-04-29',
+};
 
 describe('PolymarketUsCredentialsService', () => {
   let service: PolymarketUsCredentialsService;
@@ -59,7 +64,13 @@ describe('PolymarketUsCredentialsService', () => {
       } as any);
       fetchSpy.mockResolvedValue({ ok: true });
 
-      await service.import(user.id, validDto, 'US');
+      await service.import(
+        user.id,
+        acceptedDto as any,
+        'US',
+        '203.0.113.10',
+        'Vitest UA',
+      );
 
       expect(fetchSpy).toHaveBeenCalledWith(
         expect.stringContaining('/internal/us-credentials'),
@@ -71,6 +82,10 @@ describe('PolymarketUsCredentialsService', () => {
           data: expect.objectContaining({
             polymarketUsConnected: true,
             country: 'US',
+            usRailTermsAcceptedAt: expect.any(Date),
+            usRailTermsVersion: 'us-rail-2026-04-29',
+            usRailTermsAcceptedIp: '203.0.113.10',
+            usRailTermsAcceptedUserAgent: 'Vitest UA',
           }),
         }),
       );
@@ -82,13 +97,51 @@ describe('PolymarketUsCredentialsService', () => {
       db.user.update.mockResolvedValue(user as any);
       fetchSpy.mockResolvedValue({ ok: true });
 
-      await service.import(user.id, validDto, undefined);
+      await service.import(user.id, acceptedDto as any, undefined);
 
       expect(db.user.update).toHaveBeenCalledWith(
         expect.objectContaining({
           data: expect.not.objectContaining({ country: expect.anything() }),
         }),
       );
+    });
+
+    it('rejects import without explicit current US-rail terms acceptance before signer call', async () => {
+      const user = userFactory({ polymarketUsConnected: false } as any);
+      db.user.findUniqueOrThrow.mockResolvedValue(user as any);
+
+      await expect(
+        service.import(user.id, validDto as any, 'US'),
+      ).rejects.toMatchObject({
+        response: { code: 'US_RAIL_TERMS_REQUIRED' },
+        status: HttpStatus.PRECONDITION_REQUIRED,
+      });
+
+      expect(fetchSpy).not.toHaveBeenCalled();
+      expect(db.user.update).not.toHaveBeenCalled();
+    });
+
+    it('rejects stale US-rail terms version before signer call', async () => {
+      const user = userFactory({ polymarketUsConnected: false } as any);
+      db.user.findUniqueOrThrow.mockResolvedValue(user as any);
+
+      await expect(
+        service.import(
+          user.id,
+          {
+            ...validDto,
+            usRailTermsAccepted: true,
+            usRailTermsVersion: 'us-rail-2026-01-01',
+          } as any,
+          'US',
+        ),
+      ).rejects.toMatchObject({
+        response: { code: 'US_RAIL_TERMS_REQUIRED' },
+        status: HttpStatus.PRECONDITION_REQUIRED,
+      });
+
+      expect(fetchSpy).not.toHaveBeenCalled();
+      expect(db.user.update).not.toHaveBeenCalled();
     });
 
     it('throws BAD_GATEWAY when signer-service returns error', async () => {
@@ -101,7 +154,7 @@ describe('PolymarketUsCredentialsService', () => {
       });
 
       await expect(
-        service.import(user.id, validDto, 'US'),
+        service.import(user.id, acceptedDto as any, 'US'),
       ).rejects.toMatchObject({
         status: HttpStatus.BAD_GATEWAY,
       });
@@ -114,7 +167,7 @@ describe('PolymarketUsCredentialsService', () => {
       fetchSpy.mockRejectedValue(new TypeError('fetch failed'));
 
       await expect(
-        service.import(user.id, validDto, 'US'),
+        service.import(user.id, acceptedDto as any, 'US'),
       ).rejects.toMatchObject({
         status: HttpStatus.SERVICE_UNAVAILABLE,
       });
@@ -126,7 +179,7 @@ describe('PolymarketUsCredentialsService', () => {
       );
 
       await expect(
-        service.import('nonexistent', validDto, 'US'),
+        service.import('nonexistent', acceptedDto as any, 'US'),
       ).rejects.toThrow();
     });
   });

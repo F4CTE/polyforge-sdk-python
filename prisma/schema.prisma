@@ -196,6 +196,10 @@ model User {
   kalshiUserId        String?   @db.VarChar(255) @map("kalshi_user_id")
   polymarketUsConnected Boolean @default(false) @map("polymarket_us_connected")
   country             String?   @db.VarChar(2)
+  usRailTermsAcceptedAt DateTime? @map("us_rail_terms_accepted_at")
+  usRailTermsVersion String?   @db.VarChar(64) @map("us_rail_terms_version")
+  usRailTermsAcceptedIp String? @db.VarChar(45) @map("us_rail_terms_accepted_ip")
+  usRailTermsAcceptedUserAgent String? @db.VarChar(512) @map("us_rail_terms_accepted_user_agent")
   venuePreferences    Json?     @db.JsonB @map("venue_preferences")
   tosAcceptedAt       DateTime?
   emailVerified       Boolean   @default(false)

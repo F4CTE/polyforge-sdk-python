@@ -31,6 +31,7 @@ import { CreateFromDescriptionDto } from "./dto/create-from-description.dto";
 import { PaginationDto } from "../common/dto/pagination.dto";
 import { LlmService } from "../news/llm.service";
 import { BETA_LIMITS } from "../common/beta-limits.config";
+import { assertCurrentUsRailTermsAccepted } from "../common/us-rail-terms";
 
 const MAX_COMMENTS_PER_USER_PER_STRATEGY = 50;
 
@@ -286,6 +287,8 @@ export class StrategiesService {
         select: {
           polymarketConnected: true,
           polymarketUsConnected: true,
+          usRailTermsAcceptedAt: true,
+          usRailTermsVersion: true,
         } as any,
       });
 
@@ -304,6 +307,18 @@ export class StrategiesService {
             ? "Polymarket US credentials required for live mode"
             : "Polymarket credentials required for live mode",
         });
+      }
+
+      if (isUsRailStrategy) {
+        try {
+          assertCurrentUsRailTermsAccepted(user as any);
+        } catch (err) {
+          await this.prisma.strategy.update({
+            where: { id },
+            data: { status: StrategyStatus.IDLE },
+          });
+          throw err;
+        }
       }
     }
 

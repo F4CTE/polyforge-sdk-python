@@ -4,6 +4,7 @@ import {
   Delete,
   Body,
   Headers,
+  Ip,
   UseGuards,
   HttpCode,
   HttpStatus,
@@ -60,8 +61,18 @@ export class PolymarketUsCredentialsController {
     @CurrentUser() user: JwtPayload,
     @Body() dto: ImportPolymarketUsCredentialsDto,
     @Headers('x-country-code') countryCode: string | undefined,
+    @Headers('user-agent') userAgent: string | undefined,
+    @Headers('x-forwarded-for') forwardedFor: string | undefined,
+    @Ip() ip: string | undefined,
   ): Promise<void> {
-    await this.usCredentials.import(user.sub, dto, countryCode);
+    const requestIp = forwardedFor?.split(',')[0]?.trim() || ip;
+    await this.usCredentials.import(
+      user.sub,
+      dto,
+      countryCode,
+      requestIp,
+      userAgent,
+    );
   }
 
   @Delete()

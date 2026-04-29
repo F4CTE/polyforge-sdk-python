@@ -16,6 +16,8 @@ describe('PolymarketUsCredentialsController', () => {
   const validDto = {
     keyId: 'test-key-id-abc123',
     secretKey: 'a'.repeat(64),
+    usRailTermsAccepted: true,
+    usRailTermsVersion: 'us-rail-2026-04-29',
   };
 
   beforeEach(() => {
@@ -28,16 +30,38 @@ describe('PolymarketUsCredentialsController', () => {
   });
 
   describe('import', () => {
-    it('delegates to usCredentials.import with userId, dto, and country code', async () => {
-      await controller.import(user as any, validDto, 'US');
-      expect(service.import).toHaveBeenCalledWith(user.sub, validDto, 'US');
-    });
-
-    it('passes undefined country code when header is absent', async () => {
-      await controller.import(user as any, validDto, undefined);
+    it('delegates to usCredentials.import with userId, dto, country code, and request metadata', async () => {
+      await controller.import(
+        user as any,
+        validDto,
+        'US',
+        'Mozilla/5.0',
+        '203.0.113.10, 10.0.0.1',
+        '10.0.0.2',
+      );
       expect(service.import).toHaveBeenCalledWith(
         user.sub,
         validDto,
+        'US',
+        '203.0.113.10',
+        'Mozilla/5.0',
+      );
+    });
+
+    it('passes undefined country code when header is absent', async () => {
+      await controller.import(
+        user as any,
+        validDto,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+      );
+      expect(service.import).toHaveBeenCalledWith(
+        user.sub,
+        validDto,
+        undefined,
+        undefined,
         undefined,
       );
     });

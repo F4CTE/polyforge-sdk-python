@@ -6,7 +6,10 @@ import { RedisService } from "@polyforge/shared-redis";
 import { SignerClientService } from "../signer-client/signer-client.service";
 import { ClobClientService } from "../clob-client/clob-client.service";
 import { EventsService } from "../events/events.service";
-import type { VenueId } from "@polyforge/shared-types";
+import {
+  hasAcceptedCurrentUsRailTerms,
+  type VenueId,
+} from "@polyforge/shared-types";
 import { VenueRouter } from "../venue/venue-router";
 
 const MAX_BATCH_SIZE = 15;
@@ -64,6 +67,8 @@ export class OrdersService {
 
   async processIntent(intent: OrderIntent, attempt = 1): Promise<void> {
     const orderId = uuidv4();
+    const requestedVenue = intent.venue ?? "polymarket";
+    const targetVenue = await this.resolveTargetVenue(intent);
 
     // SECURITY: Idempotency guard — skip if this intent was already processed
     const existingOrder = await this.prisma.order.findFirst({
@@ -75,6 +80,18 @@ export class OrdersService {
         `Duplicate intent ${intent.intentId} — skipping (already processed as order ${existingOrder.id})`,
       );
       return;
+    }
+
+    if (targetVenue === "polymarket_us") {
+      const hasAcceptedTerms = await this.hasCurrentUsRailTerms(intent.userId);
+
+      if (!hasAcceptedTerms) {
+        this.logger.warn(
+          `US rail terms required for intent ${intent.intentId} — rejecting before order creation`,
+        );
+        await this.moveToDlq(intent, "US_RAIL_TERMS_REQUIRED");
+        return;
+      }
     }
 
     // Create DB record in PENDING state
@@ -119,7 +136,7 @@ export class OrdersService {
         // ── Venue-routed path ─────────────────────────────────────────────────
         // For Polymarket, pre-sign and pass auth context. For other venues
         // (e.g. Kalshi), the adapter handles its own auth via authContext.
-        const venue = intent.venue ?? "polymarket";
+        const venue = targetVenue === "best" ? requestedVenue : targetVenue;
         let authContext: Record<string, unknown> = {};
 
         if (venue === "polymarket" || venue === "best") {
@@ -257,6 +274,37 @@ export class OrdersService {
   }
 
   // ─── Helpers ─────────────────────────────────────────────────────────────
+
+  private async resolveTargetVenue(
+    intent: OrderIntent,
+  ): Promise<VenueId | "best"> {
+    const venue = intent.venue ?? "polymarket";
+
+    if (!this.venueRouter) return venue;
+
+    try {
+      if (venue === "best") {
+        const adapter = await this.venueRouter.resolveBest(intent.tokenId);
+        return adapter.venueId as VenueId;
+      }
+
+      return this.venueRouter.resolve(venue).venueId as VenueId;
+    } catch {
+      return venue;
+    }
+  }
+
+  private async hasCurrentUsRailTerms(userId: string): Promise<boolean> {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        usRailTermsAcceptedAt: true,
+        usRailTermsVersion: true,
+      } as any,
+    });
+
+    return hasAcceptedCurrentUsRailTerms(user as any);
+  }
 
   private mapClobStatus(clobStatus: string): string {
     switch (clobStatus?.toUpperCase()) {

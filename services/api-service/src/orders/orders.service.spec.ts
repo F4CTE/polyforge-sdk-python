@@ -17,6 +17,10 @@ function makeUser(overrides: Record<string, unknown> = {}) {
   return {
     id: "user-uuid-1",
     polymarketConnected: true,
+    polymarketUsConnected: false,
+    country: null,
+    usRailTermsAcceptedAt: null,
+    usRailTermsVersion: null,
     ...overrides,
   };
 }
@@ -475,6 +479,48 @@ describe("OrdersService", () => {
       ).rejects.toMatchObject({
         response: { code: "WALLET_NOT_CONNECTED" },
       });
+    });
+
+    it("throws US_RAIL_TERMS_REQUIRED before publishing a US-rail order when acceptance is missing", async () => {
+      db.user.findUniqueOrThrow.mockResolvedValue(
+        makeUser({
+          country: "US",
+          polymarketUsConnected: true,
+          usRailTermsAcceptedAt: null,
+          usRailTermsVersion: null,
+        }) as any,
+      );
+
+      await expect(
+        service.placeOrder("user-uuid-1", makePlaceOrderDto() as any),
+      ).rejects.toMatchObject({
+        response: { code: "US_RAIL_TERMS_REQUIRED" },
+        status: 428,
+      });
+
+      expect(redis.xadd).not.toHaveBeenCalled();
+      expect(db.order.create).not.toHaveBeenCalled();
+    });
+
+    it("throws US_RAIL_TERMS_REQUIRED before publishing a US-rail order when acceptance version is stale", async () => {
+      db.user.findUniqueOrThrow.mockResolvedValue(
+        makeUser({
+          country: "US",
+          polymarketUsConnected: true,
+          usRailTermsAcceptedAt: new Date("2026-04-01T00:00:00.000Z"),
+          usRailTermsVersion: "us-rail-2026-01-01",
+        }) as any,
+      );
+
+      await expect(
+        service.placeOrder("user-uuid-1", makePlaceOrderDto() as any),
+      ).rejects.toMatchObject({
+        response: { code: "US_RAIL_TERMS_REQUIRED" },
+        status: 428,
+      });
+
+      expect(redis.xadd).not.toHaveBeenCalled();
+      expect(db.order.create).not.toHaveBeenCalled();
     });
 
     it("throws POSITION_SIZE_EXCEEDED when size exceeds beta limit", async () => {
