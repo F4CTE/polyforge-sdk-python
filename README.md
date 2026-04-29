@@ -179,6 +179,51 @@ with PolyforgeClient(api_key="pk_live_...") as client:
 | `RateLimitError` | 429 |
 | `ServerError` | 5xx |
 
+### Rate limits and retries
+
+The SDK raises `RateLimitError` for HTTP 429 responses and does not retry
+requests automatically. This is intentional for trading APIs, where retrying a
+mutation without an idempotency strategy can duplicate work or place unintended
+orders.
+
+Catch `RateLimitError` separately from other API errors and back off before
+retrying safe read requests:
+
+```python
+import random
+import time
+
+from polyforge import PolyforgeClient, RateLimitError
+
+max_attempts = 5
+base_delay = 1.0
+max_delay = 30.0
+
+with PolyforgeClient(api_key="pk_live_...") as client:
+    for attempt in range(max_attempts):
+        try:
+            markets = client.list_markets(limit=20)
+            break
+        except RateLimitError:
+            if attempt == max_attempts - 1:
+                raise
+
+            delay = min(max_delay, base_delay * (2**attempt))
+            time.sleep(random.uniform(0, delay))
+```
+
+Operational guidance:
+
+- Respect server-provided retry timing, such as `Retry-After`, whenever it is
+  exposed to your client or infrastructure.
+- Use bounded exponential backoff with jitter instead of tight retry loops.
+- Retry idempotent reads only; avoid automatic retries for trading mutations
+  such as `place_order()` unless your caller supplies an idempotency key or
+  other duplicate-order protection.
+- For polling market data or strategy state, use a fixed minimum interval and
+  increase it after each `RateLimitError`; prefer streaming APIs such as
+  `watch_strategy()` where they fit the workflow.
+
 ## Testing
 
 ```bash
