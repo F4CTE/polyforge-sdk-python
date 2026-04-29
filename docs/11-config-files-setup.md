@@ -162,6 +162,12 @@ USER_JWT_SECRET=dev-user-jwt-secret-change-in-production
 ADMIN_JWT_SECRET=dev-admin-jwt-secret-change-in-production
 BOT_JWT_SECRET=dev-bot-jwt-secret-change-in-production
 INTERNAL_JWT_SECRET=dev-internal-jwt-secret-change-in-production
+API_SERVICE_INTERNAL_JWT_AUDIENCE=api-service
+API_SERVICE_INTERNAL_JWT_ISSUERS=auth-service,admin-api-service,bot-service,market-data-service,order-service
+AUTH_SERVICE_INTERNAL_JWT_AUDIENCE=auth-service
+AUTH_SERVICE_INTERNAL_JWT_ISSUERS=api-service,admin-api-service,bot-service,market-data-service,order-service
+MARKET_DATA_SERVICE_INTERNAL_JWT_AUDIENCE=market-data-service
+MARKET_DATA_SERVICE_INTERNAL_JWT_ISSUERS=api-service,auth-service,admin-api-service,bot-service,order-service
 
 # ─────────────────────────────────────────────────────────────
 # ENCRYPTION — dev values only (32-byte hex zeroes)

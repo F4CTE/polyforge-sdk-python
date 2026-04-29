@@ -51,6 +51,12 @@ Edit `prod.tfvars` and fill in every `CHANGE_ME` / `GENERATE_WITH` value:
 | `app_secrets.JWT_SECRET` | `openssl rand -base64 64` |
 | `app_secrets.ADMIN_JWT_SECRET` | `openssl rand -base64 64` |
 | `app_secrets.INTERNAL_JWT_SECRET` | `openssl rand -base64 64` |
+| `app_secrets.API_SERVICE_INTERNAL_JWT_AUDIENCE` | `api-service` |
+| `app_secrets.API_SERVICE_INTERNAL_JWT_ISSUERS` | `auth-service,admin-api-service,bot-service,market-data-service,order-service` |
+| `app_secrets.AUTH_SERVICE_INTERNAL_JWT_AUDIENCE` | `auth-service` |
+| `app_secrets.AUTH_SERVICE_INTERNAL_JWT_ISSUERS` | `api-service,admin-api-service,bot-service,market-data-service,order-service` |
+| `app_secrets.MARKET_DATA_SERVICE_INTERNAL_JWT_AUDIENCE` | `market-data-service` |
+| `app_secrets.MARKET_DATA_SERVICE_INTERNAL_JWT_ISSUERS` | `api-service,auth-service,admin-api-service,bot-service,order-service` |
 | `app_secrets.ENCRYPTION_KEK` | `openssl rand -hex 32` (32 bytes = 64 hex chars) |
 | `app_secrets.POLYMARKET_API_KEY` | From Builder Program dashboard |
 | `app_secrets.POLYMARKET_SECRET` | From Builder Program dashboard |

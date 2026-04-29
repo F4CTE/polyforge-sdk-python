@@ -72,6 +72,12 @@ USER_JWT_SECRET=${USER_JWT_SECRET}
 ADMIN_JWT_SECRET=${ADMIN_JWT_SECRET}
 BOT_JWT_SECRET=${BOT_JWT_SECRET}
 INTERNAL_JWT_SECRET=${INTERNAL_JWT_SECRET}
+API_SERVICE_INTERNAL_JWT_AUDIENCE=api-service
+API_SERVICE_INTERNAL_JWT_ISSUERS=auth-service,admin-api-service,bot-service,market-data-service,order-service
+AUTH_SERVICE_INTERNAL_JWT_AUDIENCE=auth-service
+AUTH_SERVICE_INTERNAL_JWT_ISSUERS=api-service,admin-api-service,bot-service,market-data-service,order-service
+MARKET_DATA_SERVICE_INTERNAL_JWT_AUDIENCE=market-data-service
+MARKET_DATA_SERVICE_INTERNAL_JWT_ISSUERS=api-service,auth-service,admin-api-service,bot-service,order-service
 
 # ─────────────────────────────────────────────────────────────────────────────
 # ENCRYPTION KEYS

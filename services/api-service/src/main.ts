@@ -18,7 +18,10 @@ import etag from "@fastify/etag";
 import helmet from "@fastify/helmet";
 import { AppModule } from "./app.module";
 import { GlobalExceptionFilter } from "./common/filters/http-exception.filter";
-import { rejectPlaceholderSecrets } from "@polyforge/shared-auth";
+import {
+  rejectPlaceholderSecrets,
+  validateInternalJwtConfig,
+} from "@polyforge/shared-auth";
 
 type FastifyPlugin = Parameters<NestFastifyApplication["register"]>[0];
 
@@ -29,6 +32,8 @@ const REQUIRED_ENV = [
   "DATABASE_URL",
   "REDIS_URL",
   "INTERNAL_JWT_SECRET",
+  "INTERNAL_JWT_AUDIENCE",
+  "INTERNAL_JWT_ISSUERS",
 ];
 
 function validateEnv() {
@@ -71,6 +76,8 @@ function validateEnv() {
     "POLY_BUILDER_SECRET",
     "POLY_BUILDER_PASSPHRASE",
   ]);
+
+  validateInternalJwtConfig("api-service");
 }
 
 async function bootstrap() {

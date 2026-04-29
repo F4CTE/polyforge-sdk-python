@@ -151,6 +151,12 @@ variable "app_secrets" {
     ADMIN_JWT_SECRET         = string
     BOT_JWT_SECRET           = string
     INTERNAL_JWT_SECRET      = string
+    API_SERVICE_INTERNAL_JWT_AUDIENCE         = string
+    API_SERVICE_INTERNAL_JWT_ISSUERS          = string
+    AUTH_SERVICE_INTERNAL_JWT_AUDIENCE        = string
+    AUTH_SERVICE_INTERNAL_JWT_ISSUERS         = string
+    MARKET_DATA_SERVICE_INTERNAL_JWT_AUDIENCE = string
+    MARKET_DATA_SERVICE_INTERNAL_JWT_ISSUERS  = string
     MASTER_ENCRYPTION_KEY    = string  # 64 hex chars (32 bytes)
     TOTP_ENCRYPTION_KEY      = string  # 64 hex chars (32 bytes)
     POLY_BUILDER_API_KEY     = string

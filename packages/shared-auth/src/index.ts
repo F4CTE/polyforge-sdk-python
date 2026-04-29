@@ -6,6 +6,11 @@ export { RolesGuard, ROLES_KEY } from "./roles.guard";
 export { Roles } from "./roles.decorator";
 export { CurrentUser } from "./current-user.decorator";
 export { SharedAuthModule } from "./shared-auth.module";
+export {
+  getInternalJwtConfig,
+  validateInternalJwtConfig,
+} from "./internal-jwt-config";
+export type { InternalJwtConfig } from "./internal-jwt-config";
 export { RequireScopes, REQUIRED_SCOPES } from "./api-key-scopes.decorator";
 export { ApiKeyScopeGuard } from "./api-key-scopes.guard";
 export { rejectPlaceholderSecrets } from "./reject-placeholder-secrets";

@@ -5,13 +5,22 @@ import {
 } from "@nestjs/platform-fastify";
 import { Logger, RequestMethod, ValidationPipe } from "@nestjs/common";
 import helmet from "@fastify/helmet";
-import { rejectPlaceholderSecrets } from "@polyforge/shared-auth";
+import {
+  rejectPlaceholderSecrets,
+  validateInternalJwtConfig,
+} from "@polyforge/shared-auth";
 import { AppModule } from "./app.module";
 
 const PORT = parseInt(process.env.PORT ?? "3005", 10);
 const logger = new Logger("Bootstrap");
 
-const REQUIRED_ENV = ["DATABASE_URL", "REDIS_URL"];
+const REQUIRED_ENV = [
+  "DATABASE_URL",
+  "REDIS_URL",
+  "INTERNAL_JWT_SECRET",
+  "INTERNAL_JWT_AUDIENCE",
+  "INTERNAL_JWT_ISSUERS",
+];
 
 function validateEnv() {
   const missing = REQUIRED_ENV.filter((k) => !process.env[k]);
@@ -32,6 +41,7 @@ function validateEnv() {
   }
 
   rejectPlaceholderSecrets("market-data-service", ["INTERNAL_JWT_SECRET"]);
+  validateInternalJwtConfig("market-data-service");
 }
 
 async function bootstrap() {

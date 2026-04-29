@@ -226,6 +226,9 @@ Every internal HTTP call must carry a short-lived service JWT:
 
 - Sign with `INTERNAL_JWT_SECRET`
 - 30 second expiry, enforced
+- Verifiers must configure their own `INTERNAL_JWT_AUDIENCE` and allowed
+  comma-separated `INTERNAL_JWT_ISSUERS`; services using the shared guard fail
+  startup if either value is missing or blank.
 - `jti` stored in Redis on first use (TTL 60s) — replay attack protection
 - Wrong `aud` → reject immediately
 

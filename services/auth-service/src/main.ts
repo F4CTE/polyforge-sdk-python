@@ -16,9 +16,16 @@ import { GlobalExceptionFilter } from './common/filters/http-exception.filter';
 import {
   rejectPlaceholderSecrets,
   rejectInsecureCookies,
+  validateInternalJwtConfig,
 } from '@polyforge/shared-auth';
 
-const REQUIRED_ENV = ['USER_JWT_SECRET', 'INTERNAL_JWT_SECRET', 'DATABASE_URL'];
+const REQUIRED_ENV = [
+  'USER_JWT_SECRET',
+  'INTERNAL_JWT_SECRET',
+  'INTERNAL_JWT_AUDIENCE',
+  'INTERNAL_JWT_ISSUERS',
+  'DATABASE_URL',
+];
 
 function validateEnv() {
   const missing = REQUIRED_ENV.filter((k) => !process.env[k]);
@@ -66,6 +73,7 @@ function validateEnv() {
   ]);
 
   rejectInsecureCookies('auth-service');
+  validateInternalJwtConfig('auth-service');
 }
 
 async function bootstrap() {

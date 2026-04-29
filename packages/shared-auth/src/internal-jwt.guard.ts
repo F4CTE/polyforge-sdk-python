@@ -8,6 +8,7 @@ import {
 import { JwtService } from "@nestjs/jwt";
 import { InternalJwtPayload } from "@polyforge/shared-types";
 import { RedisService } from "@polyforge/shared-redis";
+import { getInternalJwtConfig } from "./internal-jwt-config";
 
 @Injectable()
 export class InternalJwtGuard implements CanActivate {
@@ -43,13 +44,19 @@ export class InternalJwtGuard implements CanActivate {
     }
 
     try {
+      const { audience, issuer } = getInternalJwtConfig();
       const payload = this.jwtService.verify<InternalJwtPayload>(token, {
         secret: process.env.INTERNAL_JWT_SECRET,
+        audience,
+        issuer,
         algorithms: ["HS256"],
       });
 
       if (!payload.iss) {
         throw new UnauthorizedException("Missing issuer claim");
+      }
+      if (!payload.aud) {
+        throw new UnauthorizedException("Missing audience claim");
       }
 
       const jtiKey = `jti:${payload.jti}`;

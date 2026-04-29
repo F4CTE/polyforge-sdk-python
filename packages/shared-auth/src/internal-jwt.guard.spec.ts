@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from "vitest";
 import { UnauthorizedException } from "@nestjs/common";
+import { JwtService } from "@nestjs/jwt";
 
 vi.mock("@polyforge/shared-redis", () => ({
   RedisService: vi.fn(),
@@ -30,6 +31,8 @@ describe("InternalJwtGuard", () => {
   const validPayload = {
     sub: "api-service",
     iss: "api-service",
+    aud: "api-service",
+    service: "api-service",
     jti: "unique-token-id",
     iat: 1000,
     exp: 1030,
@@ -37,6 +40,8 @@ describe("InternalJwtGuard", () => {
 
   beforeEach(async () => {
     process.env.INTERNAL_JWT_SECRET = TEST_SECRET;
+    process.env.INTERNAL_JWT_AUDIENCE = "api-service";
+    process.env.INTERNAL_JWT_ISSUERS = "api-service,auth-service";
     vi.resetModules();
     const mod = await import("./internal-jwt.guard");
     InternalJwtGuard = mod.InternalJwtGuard;
@@ -51,6 +56,8 @@ describe("InternalJwtGuard", () => {
 
   afterEach(() => {
     process.env.INTERNAL_JWT_SECRET = TEST_SECRET;
+    delete process.env.INTERNAL_JWT_AUDIENCE;
+    delete process.env.INTERNAL_JWT_ISSUERS;
   });
 
   it("throws at construction when INTERNAL_JWT_SECRET is missing", async () => {
@@ -81,14 +88,35 @@ describe("InternalJwtGuard", () => {
     await expect(guard.canActivate(ctx)).rejects.toThrow(UnauthorizedException);
   });
 
-  it("verifies token with algorithms: HS256", async () => {
+  it("verifies token with audience, issuer, and HS256", async () => {
     const ctx = makeContext({ authorization: "Bearer valid-token" });
     await guard.canActivate(ctx);
 
     expect(jwtService.verify).toHaveBeenCalledWith("valid-token", {
       secret: TEST_SECRET,
+      audience: "api-service",
+      issuer: ["api-service", "auth-service"],
       algorithms: ["HS256"],
     });
+  });
+
+  it("rejects a real internal token issued for a different audience", async () => {
+    const realJwtService = new JwtService();
+    const token = realJwtService.sign(
+      { sub: "api-service", service: "api-service", jti: "wrong-audience" },
+      {
+        secret: TEST_SECRET,
+        algorithm: "HS256",
+        audience: "signer-service",
+        issuer: "api-service",
+        expiresIn: "30s",
+      },
+    );
+    guard = new InternalJwtGuard(realJwtService as any, redis as any);
+
+    const ctx = makeContext({ authorization: `Bearer ${token}` });
+
+    await expect(guard.canActivate(ctx)).rejects.toThrow(UnauthorizedException);
   });
 
   it("rejects tokens with missing iss claim", async () => {

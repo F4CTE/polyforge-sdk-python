@@ -56,6 +56,8 @@ All JWT secrets are **required** — services will fail to start if unset. Gener
 | `ADMIN_JWT_SECRET` | Signs admin JWTs (1 hour TTL). Used by `admin-auth-service` and `admin-api-service`. |
 | `BOT_JWT_SECRET` | Signs bot JWTs (30 day TTL). Used by `auth-service` and `bot-service`. |
 | `INTERNAL_JWT_SECRET` | Signs service-to-service JWTs (30 second TTL). Used by every service for internal calls. |
+| `*_INTERNAL_JWT_AUDIENCE` | Service-specific expected `aud` value for services using the shared internal guard, mapped to `INTERNAL_JWT_AUDIENCE` inside each container. |
+| `*_INTERNAL_JWT_ISSUERS` | Comma-separated allowed `iss` values for services using the shared internal guard, mapped to `INTERNAL_JWT_ISSUERS` inside each container. |
 
 ---
 
@@ -191,6 +193,12 @@ polyforge/USER_JWT_SECRET
 polyforge/ADMIN_JWT_SECRET
 polyforge/BOT_JWT_SECRET
 polyforge/INTERNAL_JWT_SECRET
+polyforge/API_SERVICE_INTERNAL_JWT_AUDIENCE
+polyforge/API_SERVICE_INTERNAL_JWT_ISSUERS
+polyforge/AUTH_SERVICE_INTERNAL_JWT_AUDIENCE
+polyforge/AUTH_SERVICE_INTERNAL_JWT_ISSUERS
+polyforge/MARKET_DATA_SERVICE_INTERNAL_JWT_AUDIENCE
+polyforge/MARKET_DATA_SERVICE_INTERNAL_JWT_ISSUERS
 polyforge/MASTER_ENCRYPTION_KEY
 polyforge/TOTP_ENCRYPTION_KEY
 polyforge/DATABASE_URL
