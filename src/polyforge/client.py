@@ -350,6 +350,46 @@ def _validate_financial_param(name: str, value: float) -> None:
         raise ValueError(f"{name} must be positive, got {value}")
 
 
+def _numberish_to_float(name: str, value: Any) -> float:
+    try:
+        return float(value)
+    except (TypeError, ValueError) as exc:
+        raise TypeError(f"{name} must be a number, got {type(value).__name__}") from exc
+
+
+def _validate_positive_numberish_param(name: str, value: float | str) -> None:
+    _validate_financial_param(name, _numberish_to_float(name, value))
+
+
+def _validate_finite_numberish_param(name: str, value: float | str) -> None:
+    number = _numberish_to_float(name, value)
+    if math.isnan(number):
+        raise ValueError(f"{name} must not be NaN")
+    if math.isinf(number):
+        raise ValueError(f"{name} must not be Infinity")
+
+
+def _validate_batch_order(order: dict[str, Any]) -> None:
+    if "side" in order:
+        _validate_enum("side", order["side"], _VALID_SIDES)
+    if "outcome" in order:
+        _validate_enum("outcome", order["outcome"], _VALID_OUTCOMES)
+    if "orderType" in order:
+        _validate_enum("order_type", order["orderType"], _VALID_ORDER_TYPES)
+    if "size" in order:
+        _validate_positive_numberish_param("size", order["size"])
+    if "price" in order:
+        _validate_positive_numberish_param("price", order["price"])
+
+
+def _validate_copy_config_numeric_fields(fields: dict[str, Any]) -> None:
+    for name in ("sizeValue", "maxExposure", "maxDailyLoss"):
+        if name in fields and fields[name] is not None:
+            _validate_positive_numberish_param(name, fields[name])
+    if "priceOffset" in fields and fields["priceOffset"] is not None:
+        _validate_finite_numberish_param("priceOffset", fields["priceOffset"])
+
+
 _BLOCKED_HOSTNAMES: set[str] = {
     "localhost",
     "metadata.google.internal",
@@ -1378,6 +1418,8 @@ class PolyforgeClient:
             raise ValueError("batch_orders requires at least 1 order")
         if len(orders) > 15:
             raise ValueError("batch_orders accepts at most 15 orders per call")
+        for order in orders:
+            _validate_batch_order(order)
         data = self._post("/api/v1/orders/batch", json={"orders": orders})
         items = [
             BatchOrderItem(
@@ -1410,6 +1452,7 @@ class PolyforgeClient:
         """Close an open position (sell all shares at market price)."""
         body: dict[str, Any] = {"tokenId": token_id}
         if size is not None:
+            _validate_positive_numberish_param("size", size)
             body["size"] = str(size)
         data = self._post("/api/v1/orders/close-position", json=body)
         return PlaceOrderResponse(order_id=data["orderId"], intent_id=data["intentId"], status=data["status"])
@@ -1444,6 +1487,7 @@ class PolyforgeClient:
             token_id: The token to split.
             amount: The amount to split (sent as a NumberString).
         """
+        _validate_positive_numberish_param("amount", amount)
         amount_str = str(amount)
         data = self._post("/api/v1/orders/split", json={"tokenId": token_id, "amount": amount_str})
         return PlaceOrderResponse(order_id=data["orderId"], intent_id=data["intentId"], status=data["status"])
@@ -1455,6 +1499,7 @@ class PolyforgeClient:
             token_id: The token to merge.
             amount: The amount to merge (sent as a NumberString).
         """
+        _validate_positive_numberish_param("amount", amount)
         amount_str = str(amount)
         data = self._post("/api/v1/orders/merge", json={"tokenId": token_id, "amount": amount_str})
         return PlaceOrderResponse(order_id=data["orderId"], intent_id=data["intentId"], status=data["status"])
@@ -1997,6 +2042,8 @@ class PolyforgeClient:
         Returns:
             The upserted :class:`WhaleAlertFilter`.
         """
+        if min_size is not None:
+            _validate_positive_numberish_param("min_size", min_size)
         body = _strip_none({
             "minSize": min_size,
             "marketIds": market_ids,
@@ -2287,6 +2334,7 @@ class PolyforgeClient:
             body["maxDailyLoss"] = max_daily_loss
         if price_offset is not None:
             body["priceOffset"] = price_offset
+        _validate_copy_config_numeric_fields(body)
         return _parse(CopyConfig, self._post("/api/v1/copy", json=body))
 
     def get_copy_config(self, copy_id: str) -> CopyConfig:
@@ -2314,6 +2362,7 @@ class PolyforgeClient:
         Returns:
             The updated :class:`CopyConfig`.
         """
+        _validate_copy_config_numeric_fields(kwargs)
         return _parse(
             CopyConfig,
             self._patch(f"/api/v1/copy/{_encode_path(copy_id)}", json=kwargs),
@@ -3673,6 +3722,8 @@ class AsyncPolyforgeClient:
             raise ValueError("batch_orders requires at least 1 order")
         if len(orders) > 15:
             raise ValueError("batch_orders accepts at most 15 orders per call")
+        for order in orders:
+            _validate_batch_order(order)
         data = await self._post("/api/v1/orders/batch", json={"orders": orders})
         items = [
             BatchOrderItem(
@@ -3705,6 +3756,7 @@ class AsyncPolyforgeClient:
         """Close an open position (sell all shares at market price)."""
         body: dict[str, Any] = {"tokenId": token_id}
         if size is not None:
+            _validate_positive_numberish_param("size", size)
             body["size"] = str(size)
         data = await self._post("/api/v1/orders/close-position", json=body)
         return PlaceOrderResponse(order_id=data["orderId"], intent_id=data["intentId"], status=data["status"])
@@ -3739,6 +3791,7 @@ class AsyncPolyforgeClient:
             token_id: The token to split.
             amount: The amount to split (sent as a NumberString).
         """
+        _validate_positive_numberish_param("amount", amount)
         amount_str = str(amount)
         data = await self._post("/api/v1/orders/split", json={"tokenId": token_id, "amount": amount_str})
         return PlaceOrderResponse(order_id=data["orderId"], intent_id=data["intentId"], status=data["status"])
@@ -3750,6 +3803,7 @@ class AsyncPolyforgeClient:
             token_id: The token to merge.
             amount: The amount to merge (sent as a NumberString).
         """
+        _validate_positive_numberish_param("amount", amount)
         amount_str = str(amount)
         data = await self._post("/api/v1/orders/merge", json={"tokenId": token_id, "amount": amount_str})
         return PlaceOrderResponse(order_id=data["orderId"], intent_id=data["intentId"], status=data["status"])
@@ -4172,6 +4226,8 @@ class AsyncPolyforgeClient:
         active: bool | None = None,
     ) -> WhaleAlertFilter:
         """Create or update the current user's whale alert filter."""
+        if min_size is not None:
+            _validate_positive_numberish_param("min_size", min_size)
         body = _strip_none({
             "minSize": min_size,
             "marketIds": market_ids,
@@ -4443,6 +4499,7 @@ class AsyncPolyforgeClient:
             body["maxDailyLoss"] = max_daily_loss
         if price_offset is not None:
             body["priceOffset"] = price_offset
+        _validate_copy_config_numeric_fields(body)
         return _parse(CopyConfig, await self._post("/api/v1/copy", json=body))
 
     async def get_copy_config(self, copy_id: str) -> CopyConfig:
@@ -4452,6 +4509,7 @@ class AsyncPolyforgeClient:
 
     async def update_copy_config(self, copy_id: str, **kwargs: Any) -> CopyConfig:
         """Update an existing copy-trading configuration."""
+        _validate_copy_config_numeric_fields(kwargs)
         return _parse(
             CopyConfig,
             await self._patch(f"/api/v1/copy/{_encode_path(copy_id)}", json=kwargs),
