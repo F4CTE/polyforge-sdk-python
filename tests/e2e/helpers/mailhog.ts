@@ -87,9 +87,48 @@ async function getMessage(id: string): Promise<MailpitMessage> {
     return res.json() as Promise<MailpitMessage>;
 }
 
-/** Clears all messages from Mailpit. */
+function isSharedCiMailbox(): boolean {
+    return process.env.CI === 'true' && process.env.E2E_SHARED_MAILBOX === 'true';
+}
+
+function escapeSearchValue(value: string): string {
+    return value.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+}
+
+async function getMessagesForRecipient(toEmail: string): Promise<MailpitSummary[]> {
+    const query = `to:"${escapeSearchValue(toEmail)}"`;
+    const res = await fetch(
+        `${MAILHOG_URL}/api/v1/search?query=${encodeURIComponent(query)}&limit=200&start=0`,
+    );
+    if (!res.ok) {
+        throw new Error(`Mailpit search error: ${res.status} ${await res.text()}`);
+    }
+    const body = await res.json() as MailpitListResponse;
+    const normalized = toEmail.toLowerCase();
+    return (body.messages ?? []).filter(m =>
+        m.To.some(r => r.Address.toLowerCase() === normalized),
+    );
+}
+
+/** Clears all messages from Mailpit. Skipped in shared CI shard mode. */
 export async function clearAllMessages(): Promise<void> {
+    if (isSharedCiMailbox()) return;
     await fetch(`${MAILHOG_URL}/api/v1/messages`, { method: 'DELETE' });
+}
+
+/** Clears only messages addressed to a specific recipient. */
+export async function clearMessagesForRecipient(toEmail: string): Promise<void> {
+    const matches = await getMessagesForRecipient(toEmail);
+    if (matches.length === 0) return;
+
+    const res = await fetch(`${MAILHOG_URL}/api/v1/messages`, {
+        method:  'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ IDs: matches.map(m => m.ID) }),
+    });
+    if (!res.ok) {
+        throw new Error(`Mailpit recipient delete error: ${res.status} ${await res.text()}`);
+    }
 }
 
 /**
@@ -103,10 +142,8 @@ export async function waitForEmail(
     const deadline = Date.now() + timeoutMs;
 
     while (Date.now() < deadline) {
-        const summaries = await getAllMessages();
-        const match = summaries.find(m =>
-            m.To.some(r => r.Address.toLowerCase() === toEmail.toLowerCase()),
-        );
+        const summaries = await getMessagesForRecipient(toEmail);
+        const match = summaries[0];
         if (match) {
             // Fetch the full message to get the body (HTML/Text)
             return getMessage(match.ID);

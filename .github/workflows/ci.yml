@@ -271,44 +271,12 @@ jobs:
       # inside the single deploy-and-e2e job preserves the concurrency group
       # lock so no other PR can deploy while E2E is running. The self-hosted
       # runner (Ryzen 9 9950X, 32GB RAM) handles 5 Playwright workers well.
+      # The script exits on the first failed shard and terminates siblings.
       - name: Run E2E shards 1-5 in parallel
         timeout-minutes: 40
         run: |
-          set -uo pipefail
           cd ~/PolyForge/tests/e2e
-
-          run_shard() {
-            local shard=$1
-            echo "=== Starting E2E shard ${shard}/5 ==="
-            BASE_URL=https://localhost CI=true PLAYWRIGHT_SKIP_GLOBAL_SETUP=true \
-              timeout --kill-after=10s 2100 npx playwright test \
-                --project=chromium \
-                --reporter=list \
-                --shard="${shard}/5" \
-                --output="test-results/shard-${shard}" \
-                --global-timeout=2100000
-          }
-
-          run_shard 1 &
-          pid1=$!
-          run_shard 2 &
-          pid2=$!
-          run_shard 3 &
-          pid3=$!
-          run_shard 4 &
-          pid4=$!
-          run_shard 5 &
-          pid5=$!
-
-          fail=0
-          for pid in $pid1 $pid2 $pid3 $pid4 $pid5; do
-            if ! wait "$pid"; then
-              fail=1
-            fi
-          done
-
-          echo "=== All E2E shards complete (exit: $fail) ==="
-          exit "$fail"
+          ../../scripts/e2e/run-shards.sh
 
   # ── 5. Deploy to AWS (Production) ──────────────────────────────────────
   deploy:

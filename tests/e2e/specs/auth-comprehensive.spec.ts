@@ -9,6 +9,7 @@ import {
 } from '../helpers/api';
 import {
     clearAllMessages,
+    clearMessagesForRecipient,
     getVerificationUrl,
     getPasswordResetUrl,
     waitForEmail,
@@ -223,7 +224,7 @@ test.describe('Authentication — Full Workflow Coverage', () => {
         expect(verifyUrl1).toContain('/verify-email');
 
         // Clear messages and request resend (if UI allows)
-        await clearAllMessages();
+        await clearMessagesForRecipient(email);
         const resendBtn = page.locator('button', { hasText: /resend|again/i });
         if (await resendBtn.isVisible({ timeout: 2000 }).catch(() => false)) {
             await resendBtn.click();
@@ -460,7 +461,7 @@ test.describe('Authentication — Full Workflow Coverage', () => {
         await expect(page.locator('h1', { hasText: /verified/i })).toBeVisible({ timeout: 15_000 });
 
         // Clear messages
-        await clearAllMessages();
+        await clearMessagesForRecipient(email);
 
         // Go to login and click "Forgot password"
         await loginPage.goto();
@@ -502,7 +503,7 @@ test.describe('Authentication — Full Workflow Coverage', () => {
         await expect(page.locator('h1', { hasText: /verified/i })).toBeVisible({ timeout: 15_000 });
 
         // Request password reset via API (bypasses SPA form fill race condition)
-        await clearAllMessages();
+        await clearMessagesForRecipient(email);
         const AUTH_URL = process.env.AUTH_URL ?? 'http://localhost:3001';
         await fetch(`${AUTH_URL}/auth/v1/forgot-password`, {
             method: 'POST',
@@ -559,7 +560,7 @@ test.describe('Authentication — Full Workflow Coverage', () => {
         await expect(page.locator('h1', { hasText: /verified/i })).toBeVisible({ timeout: 15_000 });
 
         // Request reset link via API (bypasses SPA form fill race condition)
-        await clearAllMessages();
+        await clearMessagesForRecipient(email);
         const AUTH_URL = process.env.AUTH_URL ?? 'http://localhost:3001';
         await fetch(`${AUTH_URL}/auth/v1/forgot-password`, {
             method: 'POST',

@@ -8,6 +8,7 @@ import {
 } from '../helpers/api';
 import {
     clearAllMessages,
+    clearMessagesForRecipient,
     getVerificationUrl,
     getPasswordResetUrl,
 } from '../helpers/mailhog';
@@ -163,7 +164,7 @@ test.describe('Auth flow', () => {
 
         // Wait for the verification email to arrive, then clear all
         await new Promise(r => setTimeout(r, 2000));
-        await clearAllMessages();
+        await clearMessagesForRecipient(email);
 
         // Navigate to forgot-password page
         const loginPage = new LoginPage(page);
