@@ -459,7 +459,7 @@ jobs:
         run: |
           docker run --rm \
             -e DATABASE_URL="${{ secrets.DIRECT_DATABASE_URL }}" \
-            -v $(pwd)/prisma:/app/prisma -w /app node:20-alpine \
+            -v $(pwd)/prisma:/app/prisma -w /app node:24-alpine \
             sh -c "npm install prisma && npx prisma migrate deploy"
 
       - name: Deploy to EC2

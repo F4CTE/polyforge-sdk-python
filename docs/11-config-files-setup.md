@@ -60,10 +60,10 @@ Create this file at the **root of the repository**.
     "@hey-api/openapi-ts": "0.x.y",
     "ts-node":                             "^10.9.0",
     "prisma":                              "^5.12.0",
-    "@types/node":                         "^20.0.0"
+    "@types/node":                         "25.6.0"
   },
   "engines": {
-    "node": ">=20.0.0",
+    "node": ">=24.0.0 <25.0.0",
     "pnpm": ">=9.0.0"
   }
 }
