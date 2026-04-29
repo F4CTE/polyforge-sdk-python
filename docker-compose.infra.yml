@@ -626,7 +626,7 @@ services:
       - posthog-clickhouse-data:/var/lib/clickhouse
     networks: [posthog]
     healthcheck:
-      test: ["CMD-SHELL", "wget --spider -q http://localhost:8123/ping || exit 1"]
+      test: ["CMD-SHELL", "wget --spider -q http://127.0.0.1:8123/ping || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 5
