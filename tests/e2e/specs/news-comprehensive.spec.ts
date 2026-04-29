@@ -197,6 +197,7 @@ test.describe('News — Full Workflow Coverage', () => {
             await newsPage.goto();
 
             const initialCount = await newsPage.getNewsCount();
+            if (initialCount === 0) return; // No seeded articles in this environment
 
             // Pick the first non-"All" source available in the dropdown
             const options = newsPage.sourceSelect.locator('option');
@@ -218,8 +219,8 @@ test.describe('News — Full Workflow Coverage', () => {
             }
             const clearedCount = await newsPage.getNewsCount();
 
-            // Accept if count is back to at least 1 (API timing may cause mismatch)
-            expect(clearedCount).toBeGreaterThanOrEqual(1);
+            // Clearing should restore the unfiltered data set when data exists.
+            expect(clearedCount).toBeGreaterThanOrEqual(initialCount);
         });
     });
 

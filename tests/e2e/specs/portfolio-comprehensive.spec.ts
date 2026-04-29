@@ -172,20 +172,10 @@ test.describe('Portfolio — Full Workflow Coverage', () => {
 
         // Switch to Paper tab
         await portfolio.switchToPaper();
+        await portfolio.waitForPaperLoaded();
 
-        // Wait for paper loading skeleton to disappear before asserting content.
-        // The component shows a CardSkeleton / TableSkeleton while loadingPaper is
-        // true, then renders either a positions table or the "No paper positions"
-        // empty state.  We wait for at least one of those to appear.
         const paperPositionsHeading = page.locator('text="Paper Positions"');
         const emptyState = page.locator('text="No paper positions"');
-        const paperPnlLabel = page.locator('text="Paper P&L"');
-
-        // Wait up to 15 s (CI is slow) for the paper data to load — indicated by
-        // either the summary card ("Paper P&L") or the empty-state message appearing.
-        // NOTE: Both can be visible simultaneously (paper data loaded + 0 positions),
-        // so we use .first() to avoid Playwright strict-mode violation.
-        await expect(paperPnlLabel.or(emptyState).first()).toBeVisible({ timeout: 15_000 });
 
         // Now assert that the page shows either positions or the empty state.
         const hasPositions = await paperPositionsHeading.isVisible().catch(() => false);
@@ -223,10 +213,11 @@ test.describe('Portfolio — Full Workflow Coverage', () => {
 
         // Switch to Paper
         await portfolio.switchToPaper();
+        await portfolio.waitForPaperLoaded();
 
         // Paper tab should render its own content (Paper P&L or No paper positions)
         const paperContent = page.locator('text="Paper P&L"').or(page.locator('text="No paper positions"'));
-        await expect(paperContent.first()).toBeVisible({ timeout: 15_000 });
+        await expect(paperContent.first()).toBeVisible();
 
         // At least some content should exist
         expect(liveText).toBeTruthy();
@@ -574,12 +565,7 @@ test.describe('Portfolio — Full Workflow Coverage', () => {
 
         // Switch to Paper tab
         await portfolio.switchToPaper();
-
-        // Wait for paper data to finish loading (skeleton cleared) before
-        // checking for the reset button — it only renders after data loads.
-        const paperPnlLabel = page.locator('text="Paper P&L"');
-        const emptyState = page.locator('text="No paper positions"');
-        await expect(paperPnlLabel.or(emptyState).first()).toBeVisible({ timeout: 15_000 });
+        await portfolio.waitForPaperLoaded();
 
         // Verify reset button exists (it renders in both loaded states)
         const resetButton = portfolio.resetPaperButton;
@@ -592,11 +578,7 @@ test.describe('Portfolio — Full Workflow Coverage', () => {
 
         // Switch to Paper tab
         await portfolio.switchToPaper();
-
-        // Wait for paper data to load before interacting with reset button
-        const paperPnlLabel = page.locator('text="Paper P&L"');
-        const emptyState = page.locator('text="No paper positions"');
-        await expect(paperPnlLabel.or(emptyState).first()).toBeVisible({ timeout: 15_000 });
+        await portfolio.waitForPaperLoaded();
 
         // Click reset button
         const resetButton = portfolio.resetPaperButton;
@@ -618,13 +600,9 @@ test.describe('Portfolio — Full Workflow Coverage', () => {
 
         // Switch to Paper tab
         await portfolio.switchToPaper();
+        await portfolio.waitForPaperLoaded();
 
-        // Wait for paper data to finish loading (skeleton cleared).
-        // The component shows "Paper P&L" once data arrives, or
-        // "No paper positions" if the account is empty.
-        const paperPnlLabel = page.locator('text="Paper P&L"');
         const emptyState = page.locator('text="No paper positions"');
-        await expect(paperPnlLabel.or(emptyState).first()).toBeVisible({ timeout: 15_000 });
 
         // The "Reset Paper Account" button only renders when paper data is loaded
         // (not during skeleton). Wait for it explicitly.
@@ -663,11 +641,7 @@ test.describe('Portfolio — Full Workflow Coverage', () => {
 
         // Switch to Paper tab
         await portfolio.switchToPaper();
-
-        // Wait for paper data to load before interacting
-        const paperPnlLabel = page.locator('text="Paper P&L"');
-        const emptyState = page.locator('text="No paper positions"');
-        await expect(paperPnlLabel.or(emptyState).first()).toBeVisible({ timeout: 15_000 });
+        await portfolio.waitForPaperLoaded();
 
         // Store initial positions
         const initialPositions = page.locator('tr[data-testid*="position"]');
@@ -702,6 +676,7 @@ test.describe('Portfolio — Full Workflow Coverage', () => {
 
         // Switch to Paper tab
         await portfolio.switchToPaper();
+        await portfolio.waitForPaperLoaded();
 
         // Get initial stats
         const initialStats = await portfolio.getSummaryStats();
@@ -740,6 +715,7 @@ test.describe('Portfolio — Full Workflow Coverage', () => {
 
         // Switch to Paper tab
         await portfolio.switchToPaper();
+        await portfolio.waitForPaperLoaded();
 
         // Verify reset button and info message
         const resetButton = portfolio.resetPaperButton;

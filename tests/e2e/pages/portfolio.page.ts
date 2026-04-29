@@ -61,6 +61,39 @@ export class PortfolioPage {
         await expect(this.paperTab).toHaveAttribute('aria-selected', 'true', { timeout: 10_000 });
     }
 
+    async waitForPaperLoaded(): Promise<void> {
+        // The Paper tab renders skeletons while /paper/summary is loading, then
+        // shows either summary cards or the empty-state. Local gateway runs can
+        // transiently fail this request with net::ERR_NETWORK_CHANGED, leaving
+        // the tab selected but without Paper content. Re-clicking the selected
+        // tab re-invokes the same load path because `paper` is still null.
+        const ready = this.page.locator('text="Paper P&L"')
+            .or(this.page.locator('text="No paper positions"'))
+            .first();
+        const isPaperRequest = (url: string) => url.includes('/api/v1/paper/summary');
+
+        for (let attempt = 0; attempt < 5; attempt += 1) {
+            if (await ready.isVisible({ timeout: 500 }).catch(() => false)) return;
+
+            const paperRequestSettled = Promise.race([
+                this.page.waitForResponse(response => isPaperRequest(response.url()), { timeout: 8_000 })
+                    .then(response => response.ok()),
+                this.page.waitForEvent('requestfailed', {
+                    predicate: request => isPaperRequest(request.url()),
+                    timeout:   8_000,
+                }).then(() => false),
+            ]).catch(() => false);
+
+            await this.paperTab.click();
+            await expect(this.paperTab).toHaveAttribute('aria-selected', 'true', { timeout: 5_000 });
+
+            const responseOk = await paperRequestSettled;
+            if (responseOk && await ready.isVisible({ timeout: 5_000 }).catch(() => false)) return;
+        }
+
+        await expect(ready).toBeVisible({ timeout: 15_000 });
+    }
+
     getClosePositionButton(marketId: string): Locator {
         return this.page.locator(`[data-testid="close-position-${marketId}"]`);
     }
@@ -88,19 +121,40 @@ export class PortfolioPage {
     }
 
     async getSummaryStats(): Promise<{ pnl: string; return: string; win_rate: string }> {
-        // Stats may not exist for a fresh user (still loading or no data).
-        // Use a short timeout and fallback to empty string.
-        const safeText = async (selector: string) => {
-            try {
-                return (await this.page.locator(selector).textContent({ timeout: 5_000 })) ?? '';
-            } catch {
-                return '';
+        // The route heading appears before /portfolio and /portfolio/pnl settle.
+        // Wait for the summary-card contract so slow CI does not read during the
+        // skeleton state and incorrectly treat a fresh zero-value account as empty.
+        await this.page.locator('[data-testid="stat-pnl"]')
+            .or(this.page.locator('text="Unrealized P&L"'))
+            .or(this.page.locator('text="Failed to load portfolio"'))
+            .first()
+            .waitFor({ state: 'visible', timeout: 20_000 })
+            .catch(() => {});
+
+        const safeText = async (...selectors: string[]) => {
+            for (const selector of selectors) {
+                try {
+                    const text = (await this.page.locator(selector).first().textContent({ timeout: 1_000 })) ?? '';
+                    if (text.trim().length > 0) return text;
+                } catch {
+                    // Try the next selector.
+                }
             }
+            return '';
         };
         return {
-            pnl: await safeText('[data-testid="stat-pnl"]'),
-            return: await safeText('[data-testid="stat-return"]'),
-            win_rate: await safeText('[data-testid="stat-win-rate"]'),
+            pnl: await safeText(
+                '[data-testid="stat-pnl"]',
+                'xpath=//*[normalize-space()="Unrealized P&L"]/following-sibling::*[1]',
+            ),
+            return: await safeText(
+                '[data-testid="stat-return"]',
+                'xpath=//*[normalize-space()="Realized P&L"]/following-sibling::*[1]',
+            ),
+            win_rate: await safeText(
+                '[data-testid="stat-win-rate"]',
+                'xpath=//*[normalize-space()="Win Rate"]/following-sibling::*[1]',
+            ),
         };
     }
 }

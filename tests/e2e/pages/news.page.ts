@@ -60,11 +60,29 @@ export class NewsPage {
     }
 
     async filterBySource(source: string): Promise<void> {
-        // Filtering triggers a server-side fetch; wait for the /api/v1/news response
-        await Promise.all([
-            this.page.waitForResponse(res => res.url().includes('/api/v1/news') && res.status() === 200),
+        // Filtering triggers a server-side fetch; wait for the article endpoint
+        // specifically. The page also polls /api/v1/news/signals, which can
+        // otherwise satisfy this wait and let assertions read stale/empty DOM.
+        const [response] = await Promise.all([
+            this.page.waitForResponse(
+                res => res.url().includes('/api/v1/news')
+                    && !res.url().includes('/signals')
+                    && res.status() === 200,
+                { timeout: 15_000 },
+            ),
             this.sourceSelect.selectOption(source),
         ]);
+        const json = await response.json().catch(() => null) as { data?: unknown[] } | null;
+        const expectedCount = json?.data?.length ?? 0;
+        if (expectedCount > 0) {
+            await expect(this.newsCards.first()).toBeVisible({ timeout: 10_000 });
+        } else {
+            await expect(
+                this.page.locator('text=No news articles found')
+                    .or(this.page.locator('text=Adjust filters'))
+                    .first(),
+            ).toBeVisible({ timeout: 10_000 });
+        }
     }
 
     async getNewsCount(): Promise<number> {
