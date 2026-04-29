@@ -1,4 +1,4 @@
-ALTER TABLE "User"
+ALTER TABLE "users"
   ADD COLUMN "us_rail_terms_accepted_at" TIMESTAMP(3),
   ADD COLUMN "us_rail_terms_version" VARCHAR(64),
   ADD COLUMN "us_rail_terms_accepted_ip" VARCHAR(45),
