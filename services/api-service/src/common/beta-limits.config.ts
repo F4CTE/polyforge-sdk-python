@@ -30,13 +30,20 @@ function envInt(key: string, defaultValue: number): number {
   return Number.isNaN(parsed) ? defaultValue : parsed;
 }
 
+function ciAwareLimit(defaultValue: number): number {
+  return process.env.CI === "true" ? 10_000 : defaultValue;
+}
+
 export const BETA_LIMITS: BetaLimits = {
   maxActiveStrategies: envInt("BETA_MAX_ACTIVE_STRATEGIES", 3),
   maxConcurrentBacktests: envInt("BETA_MAX_CONCURRENT_BACKTESTS", 1),
   maxBacktestHistoryDays: envInt("BETA_MAX_BACKTEST_HISTORY_DAYS", 90),
   maxMonthlyVolumeUsdc: envInt("BETA_MAX_MONTHLY_VOLUME_USDC", 5000),
   maxPositionSizeUsdc: envInt("BETA_MAX_POSITION_SIZE_USDC", 500),
-  marketDataRateLimitPerMinute: envInt("BETA_MARKET_DATA_RATE_LIMIT", 100),
+  marketDataRateLimitPerMinute: envInt(
+    "BETA_MARKET_DATA_RATE_LIMIT",
+    ciAwareLimit(100),
+  ),
   maxMarketplaceListings: envInt("BETA_MAX_MARKETPLACE_LISTINGS", 2),
   maxDailyStrategyExecutions: envInt("BETA_MAX_DAILY_STRATEGY_EXECUTIONS", 500),
 };

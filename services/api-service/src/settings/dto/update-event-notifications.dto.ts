@@ -12,18 +12,34 @@ import { Type } from "class-transformer";
 const VALID_EVENTS = [
   "ORDER_FILLED",
   "ORDER_CANCELLED",
+  "ORDER_REJECTED",
+  "POSITION_CLOSED",
   "STRATEGY_ERROR",
+  "STRATEGY_PAUSED",
   "BACKTEST_COMPLETE",
   "DAILY_LOSS_LIMIT",
   "MARKET_RESOLVED",
   "PRICE_ALERT",
   "WHALE_TRADE",
   "NEWS_SIGNAL",
+  "COPY_TRADE",
   "NEW_FOLLOWER",
+  "FOLLOWER_NEW",
   "NEW_LIKE",
   "NEW_COMMENT",
   "NEW_FORK",
+  "REVIEW_RECEIVED",
   "TICKET_REPLY",
+] as const;
+
+const VALID_EMAIL_DIGESTS = [
+  "off",
+  "daily",
+  "weekly",
+  "NONE",
+  "DAILY",
+  "WEEKLY",
+  "INSTANT",
 ] as const;
 
 export class EventPrefDto {
@@ -53,6 +69,6 @@ export class UpdateEventNotificationsDto {
 
   @IsOptional()
   @IsString()
-  @IsIn(["off", "daily", "weekly"])
+  @IsIn(VALID_EMAIL_DIGESTS)
   emailDigest?: string;
 }

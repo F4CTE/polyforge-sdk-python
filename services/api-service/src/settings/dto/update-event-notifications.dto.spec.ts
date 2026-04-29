@@ -53,6 +53,22 @@ describe("UpdateEventNotificationsDto validation", () => {
     expect(errors).toHaveLength(0);
   });
 
+  it("accepts the notification events and digest values emitted by the user app", async () => {
+    const dto = plainToInstance(UpdateEventNotificationsDto, {
+      preferences: [
+        { event: "ORDER_REJECTED", inApp: true, email: true, push: false },
+        { event: "POSITION_CLOSED", inApp: true, email: false, push: false },
+        { event: "STRATEGY_PAUSED", inApp: true, email: false, push: false },
+        { event: "COPY_TRADE", inApp: true, email: false, push: false },
+        { event: "FOLLOWER_NEW", inApp: true, email: false, push: false },
+        { event: "REVIEW_RECEIVED", inApp: true, email: false, push: false },
+      ],
+      emailDigest: "DAILY",
+    });
+    const errors = await validate(dto);
+    expect(errors).toHaveLength(0);
+  });
+
   it("rejects preferences array exceeding 50 elements", async () => {
     const prefs = Array.from({ length: 51 }, (_, i) => ({
       event: "ORDER_FILLED",
