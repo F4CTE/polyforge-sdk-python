@@ -190,6 +190,10 @@ export class SigningService implements OnModuleInit {
       negRisk,
       postOnly,
     } = dto;
+    const normalizedExpiration = this.resolveOrderExpiration(
+      orderType,
+      expiration,
+    );
 
     // Retrieve decrypted credentials (never logs them)
     const creds = await this.credentials.getDecryptedCredentials(userId);
@@ -207,7 +211,7 @@ export class SigningService implements OnModuleInit {
           size,
           price,
           orderType,
-          expiration,
+          expiration: normalizedExpiration,
           sigType: creds.sigType,
           builder: this.builderCode || undefined,
         });
@@ -218,7 +222,7 @@ export class SigningService implements OnModuleInit {
           size,
           price,
           orderType,
-          expiration,
+          expiration: normalizedExpiration,
           tickSize,
           negRisk,
           postOnly,
@@ -236,6 +240,32 @@ export class SigningService implements OnModuleInit {
     } finally {
       zeroCredentials(creds);
     }
+  }
+
+  private resolveOrderExpiration(
+    orderType: SignOrderDto["orderType"],
+    expiration?: number,
+  ): number {
+    if (orderType === "GTD") {
+      const minExpiration = Math.floor(Date.now() / 1000) + 30;
+      if (
+        typeof expiration !== "number" ||
+        !Number.isFinite(expiration) ||
+        expiration <= minExpiration
+      ) {
+        throw new BadRequestException(
+          `GTD order requires expiration > now+30s (got ${expiration})`,
+        );
+      }
+      return expiration;
+    }
+
+    if (expiration !== undefined && expiration !== 0) {
+      throw new BadRequestException(
+        `${orderType} orders require expiration=0 or undefined`,
+      );
+    }
+    return 0;
   }
 
   // ─── Kalshi JWT signing ───────────────────────────────────────────────────
@@ -286,7 +316,7 @@ export class SigningService implements OnModuleInit {
     size: number;
     price: number;
     orderType: string;
-    expiration?: number;
+    expiration: number;
     sigType: number;
     builder?: string;
   }): Record<string, unknown> {
@@ -318,7 +348,7 @@ export class SigningService implements OnModuleInit {
       size: number;
       price: number;
       orderType: string;
-      expiration?: number;
+      expiration: number;
       tickSize?: string;
       negRisk?: boolean;
       postOnly?: boolean;
@@ -339,7 +369,7 @@ export class SigningService implements OnModuleInit {
       side: params.side,
       size: params.size,
       price: params.price,
-      expiration: params.expiration ?? 0,
+      expiration: params.expiration,
       timestamp: Date.now(),
       negRisk: params.negRisk,
       builder: params.builder,

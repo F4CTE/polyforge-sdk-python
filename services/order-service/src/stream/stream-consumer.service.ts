@@ -137,6 +137,8 @@ export class StreamConsumerService implements OnModuleInit, OnModuleDestroy {
       }
 
       if (!obj["intentId"] || !obj["userId"]) return null;
+      const expiration = this.parseExpiration(obj["expiration"]);
+      if (expiration === null) return null;
 
       return {
         intentId: obj["intentId"],
@@ -149,10 +151,7 @@ export class StreamConsumerService implements OnModuleInit, OnModuleDestroy {
         size: obj["size"] ?? "0",
         price: obj["price"] ?? "0",
         orderType: (obj["orderType"] as "GTC" | "FOK" | "GTD") ?? "GTC",
-        expiration:
-          obj["expiration"] && obj["expiration"] !== "0"
-            ? parseInt(obj["expiration"], 10) || undefined
-            : undefined,
+        expiration,
         ...(obj["venue"]
           ? { venue: obj["venue"] as OrderIntent["venue"] }
           : {}),
@@ -163,6 +162,13 @@ export class StreamConsumerService implements OnModuleInit, OnModuleDestroy {
     } catch {
       return null;
     }
+  }
+
+  private parseExpiration(value: string | undefined): number | undefined | null {
+    if (value === undefined || value === "" || value === "0") return undefined;
+    const expiration = Number(value);
+    if (!Number.isFinite(expiration) || expiration < 0) return null;
+    return expiration;
   }
 
   private sleep(ms: number): Promise<void> {

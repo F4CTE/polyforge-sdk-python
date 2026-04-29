@@ -182,12 +182,24 @@ describe("SigningService (CLOB V2)", () => {
       expect(order.expiration).toBe("0");
     });
 
-    it("sets expiration to the provided value", async () => {
+    it("sets expiration to the provided value for GTD", async () => {
+      const futureExpiration = Math.floor(Date.now() / 1000) + 60;
       const { order } = await svc.signOrder({
         ...BASE_REQ,
-        expiration: 1_700_000_000,
+        orderType: "GTD",
+        expiration: futureExpiration,
       });
-      expect(order.expiration).toBe("1700000000");
+      expect(order.expiration).toBe(String(futureExpiration));
+    });
+
+    it("rejects FOK with non-zero expiration", async () => {
+      await expect(
+        svc.signOrder({
+          ...BASE_REQ,
+          orderType: "FOK",
+          expiration: Math.floor(Date.now() / 1000) + 60,
+        }),
+      ).rejects.toThrow("FOK orders require expiration=0");
     });
 
     it("sets makerAmount = round(size * 1_000_000)", async () => {
@@ -592,6 +604,33 @@ describe("SigningService (CLOB V2)", () => {
       const [, , params] = (nativeEip712.signOrder as ReturnType<typeof vi.fn>)
         .mock.calls[0];
       expect(params.builder).toBe(builderCode);
+    });
+
+    it("rejects GTD without expiration before credentials are decrypted", async () => {
+      await expect(
+        prodSvc.signOrder({
+          ...BASE_REQ,
+          orderType: "GTD",
+          expiration: undefined,
+        }),
+      ).rejects.toThrow("GTD order requires expiration");
+
+      expect(prodCredentials.getDecryptedCredentials).not.toHaveBeenCalled();
+      expect(nativeEip712.signOrder).not.toHaveBeenCalled();
+    });
+
+    it("passes validated GTD expiration to NativeEip712Service.signOrder", async () => {
+      const futureExpiration = Math.floor(Date.now() / 1000) + 60;
+
+      await prodSvc.signOrder({
+        ...BASE_REQ,
+        orderType: "GTD",
+        expiration: futureExpiration,
+      });
+
+      const [, , params] = (nativeEip712.signOrder as ReturnType<typeof vi.fn>)
+        .mock.calls[0];
+      expect(params.expiration).toBe(futureExpiration);
     });
 
     it("redeemPosition delegates to NativeCtfService in production (POLA-148)", async () => {

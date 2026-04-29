@@ -80,6 +80,9 @@ export class SignOrderDto {
   @OrderTypeExpirationRule()
   expiration?: number;
 
+  @OrderTypeExpirationRule()
+  expirationRule?: never;
+
   @IsOptional()
   @IsString()
   tickSize?: string;

@@ -110,6 +110,45 @@ describe("StreamConsumerService (order-service)", () => {
       expect(result?.orderType).toBe("GTC");
     });
 
+    it("returns null when expiration is not numeric", () => {
+      const result = parseIntent(service, [
+        "intentId",
+        "int-1",
+        "userId",
+        "user-1",
+        "expiration",
+        "not-a-number",
+      ]);
+
+      expect(result).toBeNull();
+    });
+
+    it("returns null when expiration is negative", () => {
+      const result = parseIntent(service, [
+        "intentId",
+        "int-1",
+        "userId",
+        "user-1",
+        "expiration",
+        "-1",
+      ]);
+
+      expect(result).toBeNull();
+    });
+
+    it("parses expiration as a finite non-negative number", () => {
+      const result = parseIntent(service, [
+        "intentId",
+        "int-1",
+        "userId",
+        "user-1",
+        "expiration",
+        "1800000000",
+      ]);
+
+      expect(result?.expiration).toBe(1_800_000_000);
+    });
+
     it("parses venue field from Redis stream", () => {
       const result = parseIntent(service, [
         "intentId",
