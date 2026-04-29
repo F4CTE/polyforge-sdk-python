@@ -3,6 +3,9 @@ import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 import path from 'path';
 
+const adminAuthApiUrl = process.env.ADMIN_AUTH_API_URL || 'http://localhost:3003';
+const adminApiUrl = process.env.ADMIN_API_URL || 'http://localhost:3004';
+
 export default defineConfig({
   plugins: [react(), tailwindcss()],
   resolve: {
@@ -23,8 +26,8 @@ export default defineConfig({
   server: {
     port: 5174,
     proxy: {
-      '/auth': process.env.AUTH_API_URL || 'http://localhost:3001',
-      '/api': process.env.API_URL || 'http://localhost:3002',
+      '/auth': adminAuthApiUrl,
+      '/api': adminApiUrl,
     },
   },
 });
