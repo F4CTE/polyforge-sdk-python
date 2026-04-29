@@ -1,22 +1,38 @@
 # Self-Hosted GitHub Actions Runners
 
-PolyForge CI runs on 15 self-hosted runners hosted on `polyforge-lab` — the
-on-premise Linux server. All runners are registered as systemd services and start
-automatically on boot.
+PolyForge's runner estate has 15 local GitHub Actions runner installations on
+`polyforge-lab`, the on-premise Linux server. The runners are registered at the
+repository level: each managed repository has 3 GitHub-registered runners, and
+the host has 15 systemd services total across the 5 repositories.
+
+Health checks must compare the same inventory layer:
+
+- Host inventory: expect 15 `actions.runner.*.service` units and 15
+  `Runner.Listener` processes on `polyforge-lab`.
+- GitHub repository inventory: expect 3 registered runners per repository.
+- Fleet inventory: expect 15 total GitHub runners only after summing the 5
+  managed repositories below.
+
+A single GitHub API query for `F4CTE/PolyForge` should return 3 runners, not 15.
+That is healthy as long as the corresponding 3 local services are running.
 
 ---
 
 ## Runner Inventory
 
-| Runner Group | Repo | Count | Systemd service pattern |
-|---|---|---|---|
-| PolyForge main | `F4CTE/PolyForge` | 3 | `actions.runner.F4CTE-PolyForge.polyforge-lab*.service` |
-| polyforge-mcp | `F4CTE/polyforge-mcp` | 3 | `actions.runner.F4CTE-polyforge-mcp.polyforge-lab*.service` |
-| polyforge-sdk-ts | `F4CTE/polyforge-sdk-ts` | 3 | `actions.runner.F4CTE-polyforge-sdk-ts.polyforge-lab*.service` |
-| polyforge-sdk-python | `F4CTE/polyforge-sdk-python` | 3 | `actions.runner.F4CTE-polyforge-sdk-python.polyforge-lab*.service` |
-| polyforge-sdk-rust | `F4CTE/polyforge-sdk-rust` | 3 | `actions.runner.F4CTE-polyforge-sdk-rust.polyforge-lab*.service` |
+| Runner Group | Repo | GitHub repo count | Host service count | Systemd service pattern |
+|---|---|---|---|---|
+| PolyForge main | `F4CTE/PolyForge` | 3 | 3 | `actions.runner.F4CTE-PolyForge.polyforge-lab*.service` |
+| polyforge-mcp | `F4CTE/polyforge-mcp` | 3 | 3 | `actions.runner.F4CTE-polyforge-mcp.polyforge-lab*.service` |
+| polyforge-sdk-ts | `F4CTE/polyforge-sdk-ts` | 3 | 3 | `actions.runner.F4CTE-polyforge-sdk-ts.polyforge-lab*.service` |
+| polyforge-sdk-python | `F4CTE/polyforge-sdk-python` | 3 | 3 | `actions.runner.F4CTE-polyforge-sdk-python.polyforge-lab*.service` |
+| polyforge-sdk-rust | `F4CTE/polyforge-sdk-rust` | 3 | 3 | `actions.runner.F4CTE-polyforge-sdk-rust.polyforge-lab*.service` |
 
 **Runner directories:** `/home/f4cte/actions-runner*` (15 directories total)
+
+The runner names are reused per repository (`polyforge-lab`,
+`polyforge-lab-2`, `polyforge-lab-3`). This is expected because runner names are
+scoped to a repository registration, not globally across the organization.
 
 ---
 
@@ -36,15 +52,50 @@ automatically on boot.
 ## Runner Status
 
 ```bash
-# Check all runner services at once
-systemctl list-units --type=service | grep "actions.runner"
+# Check all host runner services at once
+systemctl list-units --type=service --all "actions.runner*" --no-pager
 
 # Check a specific runner
 systemctl status "actions.runner.F4CTE-PolyForge.polyforge-lab.service"
 
-# Check if all 15 are active
-systemctl list-units --type=service | grep "actions.runner" | grep -c "active running"
+# Check if all 15 host services are active
+systemctl list-units --type=service --all "actions.runner*" --no-pager \
+  | grep -c "active running"
+
+# Check if all 15 listener processes are running
+pgrep -fc "Runner[.]Listener"
 ```
+
+---
+
+## Inventory Reconciliation
+
+Use both host-level and GitHub-level checks when investigating runner drift:
+
+```bash
+# Host layer: 15 local runner services across all managed repos
+systemctl list-units --type=service --all "actions.runner*" --no-pager
+pgrep -af "Runner[.]Listener"
+
+# GitHub layer: 3 registered runners per repository
+for repo in PolyForge polyforge-mcp polyforge-sdk-ts polyforge-sdk-python polyforge-sdk-rust; do
+  echo "## F4CTE/$repo"
+  gh api "repos/F4CTE/$repo/actions/runners" \
+    --jq '.total_count as $total | "total=\($total)", (.runners[] | [.name,.status,.busy] | @tsv)'
+done
+```
+
+Interpretation:
+
+- Healthy host inventory is 15 active systemd units and 15 listener processes.
+- Healthy GitHub inventory is 3 online runners for each managed repository.
+- Do not flag "15 local vs 3 GitHub" as drift when the GitHub data came from
+  one repository. Flag it only when the per-repo expected count is not 3, a
+  runner is offline, or the host total is not 15.
+- `polyforge-mcp` and SDK repositories are public and their normal CI workflows
+  use GitHub-hosted runners. Their self-hosted registrations may appear idle in
+  GitHub; that is not a queue or capacity problem unless a trusted workflow is
+  explicitly configured to use `runs-on: [self-hosted, linux]`.
 
 ---
 
@@ -63,10 +114,15 @@ sudo systemctl restart "actions.runner.F4CTE-PolyForge.polyforge-lab.service"
 # View logs
 journalctl -u "actions.runner.F4CTE-PolyForge.polyforge-lab.service" -n 50 -f
 
-# Restart all PolyForge runners
+# Restart all runners registered to the PolyForge main repository
 for i in "" "-2" "-3"; do
   sudo systemctl restart "actions.runner.F4CTE-PolyForge.polyforge-lab${i}.service"
 done
+
+# Restart the full 15-runner host fleet
+systemctl list-unit-files "actions.runner*.service" --no-legend \
+  | awk '{print $1}' \
+  | xargs -r -n1 sudo systemctl restart
 ```
 
 ---
