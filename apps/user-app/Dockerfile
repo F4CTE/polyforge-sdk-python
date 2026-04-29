@@ -9,6 +9,7 @@ COPY pnpm-workspace.yaml package.json pnpm-lock.yaml ./
 # Copy package.json files for dependency resolution
 COPY packages/ui/package.json packages/ui/
 COPY packages/api-client/package.json packages/api-client/
+COPY packages/shared-types/package.json packages/shared-types/
 COPY apps/user-app/package.json apps/user-app/
 
 RUN pnpm install --frozen-lockfile
@@ -16,11 +17,13 @@ RUN pnpm install --frozen-lockfile
 # Copy source
 COPY packages/ui/ packages/ui/
 COPY packages/api-client/ packages/api-client/
+COPY packages/shared-types/ packages/shared-types/
 COPY tsconfig.json ./
 COPY apps/user-app/ apps/user-app/
 
 # Build (uses resolve.dedupe in vite.config.ts to unify zustand versions)
-RUN pnpm --filter @polyforge/user-app build
+RUN pnpm --filter @polyforge/shared-types build && \
+    pnpm --filter @polyforge/user-app build
 
 # Runtime
 # NOTE: Production should pin to a specific digest, e.g. nginx:1.27-alpine@sha256:...
