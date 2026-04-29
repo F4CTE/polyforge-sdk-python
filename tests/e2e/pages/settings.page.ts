@@ -187,7 +187,20 @@ export class SettingsPage {
     }
 
     async goToAPIKeysTab(): Promise<void> {
+        const listResponse = this.page.waitForResponse(
+            response =>
+                response.request().method() === 'GET' &&
+                new URL(response.url()).pathname === '/api/v1/api-keys',
+            { timeout: 20_000 },
+        );
+
         await this.apiKeysTab.click();
+        await expect(this.keyNameInput).toBeVisible({ timeout: 10_000 });
+
+        const response = await listResponse;
+        if (!response.ok()) {
+            throw new Error(`GET /api/v1/api-keys failed with ${response.status()}`);
+        }
     }
 
     async goToGasTab(): Promise<void> {
@@ -265,7 +278,24 @@ export class SettingsPage {
             await this.expirationInput.fill(params.expirationDays);
         }
 
-        await this.createKeyButton.click();
+        await expect(this.createKeyButton).toBeEnabled({ timeout: 10_000 });
+
+        const [response] = await Promise.all([
+            this.page.waitForResponse(
+                response =>
+                    response.request().method() === 'POST' &&
+                    new URL(response.url()).pathname === '/api/v1/api-keys',
+                { timeout: 30_000 },
+            ),
+            this.createKeyButton.click(),
+        ]);
+
+        if (!response.ok()) {
+            const body = await response.text().catch(() => '');
+            throw new Error(
+                `POST /api/v1/api-keys failed with ${response.status()}${body ? `: ${body}` : ''}`,
+            );
+        }
     }
 
     async getCreatedApiKey(): Promise<string> {
