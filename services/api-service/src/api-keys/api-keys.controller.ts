@@ -30,7 +30,12 @@ export class ApiKeysController {
   @Post()
   @Throttle({
     default: {
-      limit: process.env.NODE_ENV === "production" ? 5 : 10000,
+      limit:
+        process.env.CI === "true"
+          ? 10000
+          : process.env.NODE_ENV === "production"
+            ? 5
+            : 10000,
       ttl: 3_600_000,
     },
   })
