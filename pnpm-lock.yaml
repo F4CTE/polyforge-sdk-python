@@ -1477,8 +1477,8 @@ importers:
         specifier: '>=5.8.3'
         version: 5.8.5
       kalshi-typescript:
-        specifier: ^3.13.0
-        version: 3.13.0
+        specifier: ^3.14.0
+        version: 3.14.0
       nestjs-pino:
         specifier: ^4.6.1
         version: 4.6.1(@nestjs/common@11.1.19(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2))(pino-http@11.0.0)(pino@10.3.1)(rxjs@7.8.2)
@@ -6597,8 +6597,8 @@ packages:
   jws@4.0.1:
     resolution: {integrity: sha512-EKI/M/yqPncGUUh44xz0PxSidXFr/+r0pA70+gIYhjv+et7yxM+s29Y+VGDkovRofQem0fs7Uvf4+YmAdyRduA==}
 
-  kalshi-typescript@3.13.0:
-    resolution: {integrity: sha512-m66BBdOfBJImB6bhxka5NRob/oW/AygENUyx5ONftdEKCYxlKhIBPF7cFd0UOQsTFO1xApBEPdOlrrp9MAdTwQ==}
+  kalshi-typescript@3.14.0:
+    resolution: {integrity: sha512-a8lRECcc6/ACYm6Uwi29Dypul5I5Rh6OvA1y2PPp3RvkBiI7/55RiA/dH9JBC/AYdH01tlqimCFXvWWU02p/Ng==}
 
   keyv@4.5.4:
     resolution: {integrity: sha512-oxVHkHR/EJf2CNXnWxRLW6mg7JyCCUcG0DtEGmL2ctUo1PNTin1PUil+r/+4r5MpVgC/fn1kjsx7mjSujKqIpw==}
@@ -13427,7 +13427,7 @@ snapshots:
       jwa: 2.0.1
       safe-buffer: 5.2.1
 
-  kalshi-typescript@3.13.0:
+  kalshi-typescript@3.14.0:
     dependencies:
       axios: 1.15.2
     transitivePeerDependencies:
