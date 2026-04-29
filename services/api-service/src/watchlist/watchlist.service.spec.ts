@@ -101,6 +101,18 @@ describe("WatchlistService", () => {
       });
     });
 
+    it("throws MAX_WATCHLIST_ITEMS when the user has reached the item cap", async () => {
+      db.watchlistItem.findUnique.mockResolvedValue(null);
+      db.watchlistItem.count.mockResolvedValue(500);
+
+      await expect(service.add("user-1", "market-1")).rejects.toMatchObject({
+        response: {
+          code: "MAX_WATCHLIST_ITEMS",
+        },
+      });
+      expect(db.watchlistItem.upsert).not.toHaveBeenCalled();
+    });
+
     it("throws NotFoundException with MARKET_NOT_FOUND when P2003 error occurs", async () => {
       const prismaError = new Prisma.PrismaClientKnownRequestError(
         "Foreign key constraint failed",

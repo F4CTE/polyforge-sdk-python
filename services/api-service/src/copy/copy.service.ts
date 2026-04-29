@@ -13,6 +13,7 @@ import { CreateCopyDto } from "./dto/create-copy.dto";
 import { UpdateCopyDto } from "./dto/update-copy.dto";
 
 const MAX_ACTIVE_CONFIGS = 10;
+const MAX_ACTIVE_CONFIGS_PER_TARGET = 25;
 
 @Injectable()
 export class CopyService {
@@ -32,6 +33,20 @@ export class CopyService {
       throw new BadRequestException(
         `Maximum of ${MAX_ACTIVE_CONFIGS} active copy configs allowed`,
       );
+    }
+
+    const targetSubscriberCount = await this.prisma.copyConfig.count({
+      where: {
+        targetWallet: dto.targetWallet,
+        status: { in: ["ACTIVE", "PAUSED"] },
+      },
+    });
+    if (targetSubscriberCount >= MAX_ACTIVE_CONFIGS_PER_TARGET) {
+      throw new BadRequestException({
+        code: "TARGET_AT_CAPACITY",
+        message:
+          "This wallet already has the maximum number of copy subscribers; try again later",
+      });
     }
 
     // Check duplicate wallet

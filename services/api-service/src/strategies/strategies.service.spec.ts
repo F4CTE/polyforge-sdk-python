@@ -1372,6 +1372,7 @@ describe("StrategiesService", () => {
       const strategy = makeStrategy({ userId: "user-1", visibility: "PUBLIC" });
       db.strategy.findUnique.mockResolvedValue(strategy as any);
       db.strategy.count.mockResolvedValue(0);
+      db.strategyComment.count.mockResolvedValue(0);
       db.strategyComment.create.mockResolvedValue(makeComment() as any);
 
       await service.addComment(strategy.id, "user-1", {
@@ -1384,6 +1385,24 @@ describe("StrategiesService", () => {
           user: { select: { id: true, username: true, displayName: true } },
         },
       });
+    });
+
+    it("throws TOO_MANY_COMMENTS when user reaches the per-strategy comment cap", async () => {
+      const strategy = makeStrategy({ userId: "user-1", visibility: "PUBLIC" });
+      db.strategy.findUnique.mockResolvedValue(strategy as any);
+      db.strategy.count.mockResolvedValue(0);
+      db.strategyComment.count.mockResolvedValue(50);
+
+      await expect(
+        service.addComment(strategy.id, "user-1", {
+          content: "extra",
+        } as CreateCommentDto),
+      ).rejects.toMatchObject({
+        response: {
+          code: "TOO_MANY_COMMENTS",
+        },
+      });
+      expect(db.strategyComment.create).not.toHaveBeenCalled();
     });
 
     it("throws NotFoundException when strategy does not exist", async () => {
@@ -2159,6 +2178,7 @@ describe("StrategiesService", () => {
       const strategy = makeStrategy({ userId: "user-1", visibility: "PUBLIC" });
       db.strategy.findUnique.mockResolvedValue(strategy as any);
       db.strategy.count.mockResolvedValue(0);
+      db.strategyComment.count.mockResolvedValue(0);
       db.strategyComment.create.mockResolvedValue(
         makeComment({ content: "Clean text" }) as any,
       );

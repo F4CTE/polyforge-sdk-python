@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Injectable,
   Logger,
   NotFoundException,
@@ -24,6 +25,7 @@ import {
 } from "./dto/place-smart-order.dto";
 
 const STREAM_ORDERS = "stream:orders";
+const MAX_ACTIVE_SMART_ORDERS_PER_USER = 25;
 
 @Injectable()
 export class SmartOrderService {
@@ -56,6 +58,19 @@ export class SmartOrderService {
       throw new NotFoundException({
         code: "TOKEN_NOT_FOUND",
         message: "Token not found",
+      });
+    }
+
+    const activeSmartOrders = await this.prisma.smartOrder.count({
+      where: {
+        userId,
+        status: { in: [SmartOrderStatus.PENDING, SmartOrderStatus.ACTIVE] },
+      },
+    });
+    if (activeSmartOrders >= MAX_ACTIVE_SMART_ORDERS_PER_USER) {
+      throw new BadRequestException({
+        code: "MAX_SMART_ORDERS",
+        message: "Cancel an existing smart order first",
       });
     }
 

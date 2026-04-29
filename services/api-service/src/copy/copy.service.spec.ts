@@ -80,6 +80,21 @@ describe("CopyService", () => {
       ).rejects.toThrow("Maximum of 10 active copy configs allowed");
     });
 
+    it("rejects when target wallet has reached global subscriber cap", async () => {
+      prisma.copyConfig.count
+        .mockResolvedValueOnce(0)
+        .mockResolvedValueOnce(25);
+
+      await expect(
+        service.create("user-1", { targetWallet: "0xabc" }),
+      ).rejects.toMatchObject({
+        response: {
+          code: "TARGET_AT_CAPACITY",
+        },
+      });
+      expect(prisma.copyConfig.findUnique).not.toHaveBeenCalled();
+    });
+
     it("rejects duplicate wallet with non-stopped config", async () => {
       prisma.copyConfig.count.mockResolvedValue(1);
       prisma.copyConfig.findUnique.mockResolvedValue({

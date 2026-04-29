@@ -1,6 +1,12 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from "@nestjs/common";
 import { Prisma } from "@prisma/client";
 import { PrismaService } from "@polyforge/shared-db";
+
+const MAX_WATCHLIST_ITEMS_PER_USER = 500;
 
 @Injectable()
 export class WatchlistService {
@@ -33,6 +39,21 @@ export class WatchlistService {
 
   async add(userId: string, marketId: string) {
     try {
+      const existing = await this.prisma.watchlistItem.findUnique({
+        where: { userId_marketId: { userId, marketId } },
+      });
+      if (!existing) {
+        const count = await this.prisma.watchlistItem.count({
+          where: { userId },
+        });
+        if (count >= MAX_WATCHLIST_ITEMS_PER_USER) {
+          throw new BadRequestException({
+            code: "MAX_WATCHLIST_ITEMS",
+            message: "Remove a watchlist item before adding another market",
+          });
+        }
+      }
+
       const item = await this.prisma.watchlistItem.upsert({
         where: { userId_marketId: { userId, marketId } },
         create: { userId, marketId },

@@ -168,6 +168,24 @@ describe("SmartOrderService", () => {
       ).rejects.toThrow(NotFoundException);
     });
 
+    it("throws MAX_SMART_ORDERS when the user already has 25 active smart orders", async () => {
+      db.user.findUnique.mockResolvedValue(makeUser() as any);
+      db.token.findUnique.mockResolvedValue({
+        id: "token-uuid-1",
+        marketId: "market-uuid-1",
+      } as any);
+      db.smartOrder.count.mockResolvedValue(25);
+
+      await expect(
+        service.create("user-uuid-1", makeTwapDto() as any),
+      ).rejects.toMatchObject({
+        response: {
+          code: "MAX_SMART_ORDERS",
+        },
+      });
+      expect(db.smartOrder.create).not.toHaveBeenCalled();
+    });
+
     it("creates BRACKET order with slicesTotal = 3", async () => {
       db.user.findUnique.mockResolvedValue(makeUser() as any);
       db.token.findUnique.mockResolvedValue({

@@ -5,6 +5,7 @@ import {
   OnModuleInit,
 } from "@nestjs/common";
 import { EventEmitter2 } from "@nestjs/event-emitter";
+import { MAX_VENUE_WS_FRAME_BYTES } from "@polyforge/shared-types";
 import WebSocket from "ws";
 
 const RECONNECT_BASE_MS = 1_000;
@@ -62,7 +63,7 @@ export class PolymarketSportsWsService
       process.env.SPORTS_WS_URL ?? "wss://sports-api.polymarket.com/ws";
     this.logger.log(`Connecting to Sports WebSocket: ${url}`);
 
-    this.ws = new WebSocket(url);
+    this.ws = new WebSocket(url, { maxPayload: MAX_VENUE_WS_FRAME_BYTES });
 
     this.ws.on("open", () => {
       this.logger.log("Sports WebSocket connected");
@@ -75,6 +76,13 @@ export class PolymarketSportsWsService
     });
 
     this.ws.on("message", (data: Buffer) => {
+      if (data.length > MAX_VENUE_WS_FRAME_BYTES) {
+        this.logger.warn(
+          `Sports WebSocket oversized frame dropped (${data.length} bytes)`,
+        );
+        return;
+      }
+
       const text = data.toString();
       if (text === "PONG" || text === "PING") return;
 

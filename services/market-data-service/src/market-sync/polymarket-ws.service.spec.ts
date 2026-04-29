@@ -101,6 +101,10 @@ describe("PolymarketWsService", () => {
     it("creates a WebSocket on onModuleInit", () => {
       svc.onModuleInit();
       expect(mockWsInstance).toBeDefined();
+      expect((svc as any).createWebSocket).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.objectContaining({ maxPayload: 1048576 }),
+      );
     });
 
     it("reports isConnected=true after open", () => {

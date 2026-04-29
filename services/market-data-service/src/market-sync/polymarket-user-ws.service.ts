@@ -1,6 +1,7 @@
 import { Injectable, Logger, OnModuleDestroy } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { RedisService } from "@polyforge/shared-redis";
+import { MAX_VENUE_WS_FRAME_BYTES } from "@polyforge/shared-types";
 import WebSocket from "ws";
 
 const RECONNECT_DELAYS_MS = [1_000, 2_000, 5_000, 10_000, 30_000];
@@ -64,7 +65,9 @@ export class PolymarketUserWsService implements OnModuleDestroy {
       this.config.get<string>("CLOB_WS_URL") ??
       "wss://ws-subscriptions-clob.polymarket.com/ws/user";
 
-    const ws = new WebSocket(`${wsUrl}?address=${walletAddress}`);
+    const ws = new WebSocket(`${wsUrl}?address=${walletAddress}`, {
+      maxPayload: MAX_VENUE_WS_FRAME_BYTES,
+    });
 
     const conn: UserConnection = {
       ws,
@@ -75,6 +78,13 @@ export class PolymarketUserWsService implements OnModuleDestroy {
     this.connections.set(userId, conn);
 
     ws.on("message", (data: Buffer) => {
+      if (data.length > MAX_VENUE_WS_FRAME_BYTES) {
+        this.logger.warn(
+          `User WS oversized frame dropped for ${userId} (${data.length} bytes)`,
+        );
+        return;
+      }
+
       (async () => {
         try {
           const msg = JSON.parse(data.toString());

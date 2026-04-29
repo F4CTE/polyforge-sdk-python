@@ -11,10 +11,12 @@ class MockWebSocket {
 
   readyState = MockWebSocket.OPEN;
   url: string;
+  options: unknown;
   private handlers = new Map<string, WsEventHandler[]>();
 
-  constructor(url: string) {
+  constructor(url: string, options?: unknown) {
     this.url = url;
+    this.options = options;
     mockWsInstances.push(this);
   }
 
@@ -50,8 +52,8 @@ let mockWsInstances: MockWebSocket[] = [];
 vi.mock("ws", () => {
   return {
     default: class {
-      constructor(url: string) {
-        return new MockWebSocket(url);
+      constructor(url: string, options?: unknown) {
+        return new MockWebSocket(url, options);
       }
     },
   };
@@ -101,6 +103,7 @@ describe("PolymarketUserWsService", () => {
 
     expect(mockWsInstances).toHaveLength(1);
     expect(mockWsInstances[0].url).toContain("address=0xWallet");
+    expect(mockWsInstances[0].options).toMatchObject({ maxPayload: 1048576 });
   });
 
   // ── Does not create duplicate connection ───────────────────────────────

@@ -15,6 +15,8 @@ export interface VenueWsConfig {
   headers?: Record<string, string>;
 }
 
+export const MAX_VENUE_WS_FRAME_BYTES = 1 * 1024 * 1024;
+
 const DEFAULT_PING_MS = 9_000;
 const DEFAULT_RECONNECT_BASE_MS = 1_000;
 const DEFAULT_RECONNECT_MAX_MS = 30_000;
@@ -111,9 +113,12 @@ export abstract class BaseVenueWsService {
 
   protected createWebSocket(
     url: string,
-    opts?: { headers: Record<string, string> },
+    opts?: WebSocket.ClientOptions,
   ): WebSocket {
-    return opts ? new WebSocket(url, opts) : new WebSocket(url);
+    return new WebSocket(url, {
+      ...(opts ?? {}),
+      maxPayload: opts?.maxPayload ?? MAX_VENUE_WS_FRAME_BYTES,
+    });
   }
 
   // ─── Connection internals ────────────────────────────────────────────────
@@ -145,7 +150,10 @@ export abstract class BaseVenueWsService {
     const url = this.wsConfig.url;
     this.logger.log(`Connecting to ${this.wsConfig.venueId} WebSocket: ${url}`);
 
-    const opts = Object.keys(headers).length > 0 ? { headers } : undefined;
+    const opts: WebSocket.ClientOptions = {
+      ...(Object.keys(headers).length > 0 ? { headers } : {}),
+      maxPayload: MAX_VENUE_WS_FRAME_BYTES,
+    };
     this.ws = this.createWebSocket(url, opts);
 
     this.ws.on("open", () => {
@@ -160,6 +168,13 @@ export abstract class BaseVenueWsService {
     });
 
     this.ws.on("message", (raw: any) => {
+      if (Buffer.byteLength(raw) > MAX_VENUE_WS_FRAME_BYTES) {
+        this.logger.warn(
+          `${this.wsConfig.venueId} WS: oversized frame dropped (${Buffer.byteLength(raw)} bytes)`,
+        );
+        return;
+      }
+
       const text = raw.toString();
       if (text === "PONG") return;
 

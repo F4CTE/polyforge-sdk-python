@@ -1,5 +1,9 @@
 import { Logger } from "@nestjs/common";
 import { createRequire } from "node:module";
+import {
+  assertWasmEvaluationBudget,
+  MAX_WASM_EVALUATION_MS,
+} from "./wasm-evaluation-limits";
 
 const logger = new Logger("WasmEvaluator");
 
@@ -70,13 +74,22 @@ export function wasmEvaluateTick(
   actions: any[],
   context: WasmEvalContext,
 ): WasmEvalResult {
-  return wasmEngine.evaluateTick(
+  assertWasmEvaluationBudget([safety, triggers, conditions, actions]);
+  const startedAt = Date.now();
+  const result = wasmEngine.evaluateTick(
     safety,
     triggers,
     conditions,
     actions,
     context,
   );
+  const elapsedMs = Date.now() - startedAt;
+  if (elapsedMs > MAX_WASM_EVALUATION_MS) {
+    throw new Error(
+      `WASM tick deadline exceeded: ${elapsedMs}ms/${MAX_WASM_EVALUATION_MS}ms`,
+    );
+  }
+  return result;
 }
 
 /** Always true — WASM engine is mandatory */

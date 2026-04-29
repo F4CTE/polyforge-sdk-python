@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Injectable,
   NotFoundException,
   ForbiddenException,
@@ -30,6 +31,8 @@ import { CreateFromDescriptionDto } from "./dto/create-from-description.dto";
 import { PaginationDto } from "../common/dto/pagination.dto";
 import { LlmService } from "../news/llm.service";
 import { BETA_LIMITS } from "../common/beta-limits.config";
+
+const MAX_COMMENTS_PER_USER_PER_STRATEGY = 50;
 
 @Injectable()
 export class StrategiesService {
@@ -598,6 +601,16 @@ export class StrategiesService {
 
     // R5-03: Strip HTML tags from comment content to prevent XSS
     const sanitizedContent = dto.content.replace(/<[^>]*>/g, "");
+
+    const userCommentCount = await this.prisma.strategyComment.count({
+      where: { strategyId: id, userId, deleted: false },
+    });
+    if (userCommentCount >= MAX_COMMENTS_PER_USER_PER_STRATEGY) {
+      throw new BadRequestException({
+        code: "TOO_MANY_COMMENTS",
+        message: "Delete an existing comment before adding another one",
+      });
+    }
 
     return this.prisma.strategyComment.create({
       data: { strategyId: id, userId, content: sanitizedContent },

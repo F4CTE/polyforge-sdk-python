@@ -141,6 +141,10 @@ describe("KalshiFeedService", () => {
       svc.onModuleInit();
       await vi.runAllTimersAsync();
       expect(mockWsInstance).toBeDefined();
+      expect((svc as any).createWebSocket).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.objectContaining({ maxPayload: 1048576 }),
+      );
     });
   });
 

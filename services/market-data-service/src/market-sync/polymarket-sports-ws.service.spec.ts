@@ -55,6 +55,7 @@ class MockWebSocket {
 }
 
 let mockWsInstance: MockWebSocket;
+let mockWsConstructorArgs: unknown[] = [];
 
 vi.mock("ws", () => {
   return {
@@ -62,7 +63,8 @@ vi.mock("ws", () => {
       static OPEN = 1;
       static CLOSED = 3;
 
-      constructor() {
+      constructor(...args: unknown[]) {
+        mockWsConstructorArgs = args;
         mockWsInstance = new MockWebSocket();
         return mockWsInstance;
       }
@@ -80,6 +82,7 @@ describe("PolymarketSportsWsService", () => {
     vi.useFakeTimers();
     emitter = new EventEmitter2();
     vi.spyOn(emitter, "emit");
+    mockWsConstructorArgs = [];
 
     svc = new PolymarketSportsWsService(emitter);
   });
@@ -96,6 +99,7 @@ describe("PolymarketSportsWsService", () => {
     it("creates a WebSocket on onModuleInit", () => {
       svc.onModuleInit();
       expect(mockWsInstance).toBeDefined();
+      expect(mockWsConstructorArgs[1]).toMatchObject({ maxPayload: 1048576 });
     });
 
     it("reports isConnected=true after open", () => {

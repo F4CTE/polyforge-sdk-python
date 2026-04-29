@@ -5,6 +5,7 @@ import {
   OnModuleInit,
 } from "@nestjs/common";
 import { EventEmitter2 } from "@nestjs/event-emitter";
+import { MAX_VENUE_WS_FRAME_BYTES } from "@polyforge/shared-types";
 import WebSocket from "ws";
 
 const RECONNECT_BASE_MS = 1_000;
@@ -104,7 +105,7 @@ export class PolymarketRtdsWsService implements OnModuleInit, OnModuleDestroy {
     const url = process.env.RTDS_WS_URL ?? "wss://ws-live-data.polymarket.com";
     this.logger.log(`Connecting to RTDS WebSocket: ${url}`);
 
-    this.ws = new WebSocket(url);
+    this.ws = new WebSocket(url, { maxPayload: MAX_VENUE_WS_FRAME_BYTES });
 
     this.ws.on("open", () => {
       this.logger.log("RTDS WebSocket connected");
@@ -122,6 +123,13 @@ export class PolymarketRtdsWsService implements OnModuleInit, OnModuleDestroy {
     });
 
     this.ws.on("message", (data: Buffer) => {
+      if (data.length > MAX_VENUE_WS_FRAME_BYTES) {
+        this.logger.warn(
+          `RTDS WebSocket oversized frame dropped (${data.length} bytes)`,
+        );
+        return;
+      }
+
       const text = data.toString();
       if (text === "PONG") return;
 
