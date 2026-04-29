@@ -3829,6 +3829,30 @@ class TestBulkOrderEndpoints:
             client.batch_orders([{"tokenId": f"t{i}"} for i in range(16)])
         client.close()
 
+    def test_batch_orders_rejects_nan_order_size(self):
+        client = PolyforgeClient(api_key="test")
+        with pytest.raises(ValueError, match="NaN"):
+            client.batch_orders([{
+                "tokenId": "tok",
+                "side": "BUY",
+                "outcome": "YES",
+                "size": float("nan"),
+                "price": 0.5,
+            }])
+        client.close()
+
+    def test_batch_orders_rejects_invalid_order_enum(self):
+        client = PolyforgeClient(api_key="test")
+        with pytest.raises(ValueError, match="must be one of"):
+            client.batch_orders([{
+                "tokenId": "tok",
+                "side": "HOLD",
+                "outcome": "YES",
+                "size": 10,
+                "price": 0.5,
+            }])
+        client.close()
+
     def test_bulk_cancel_orders_validates_minimum(self):
         client = PolyforgeClient(api_key="test")
         with pytest.raises(ValueError, match="at least 1"):
@@ -5627,6 +5651,152 @@ class TestArbitrageParamValidation:
             })
             result = await client.update_risk_settings(drawdown_enabled=True)
             assert result.drawdown_enabled is True
+            await client.close()
+
+        asyncio.run(_run())
+
+
+class TestTradingCopyNumericValidation:
+    """Trading and copy endpoints reject malformed numeric request fields (#204)."""
+
+    @pytest.mark.parametrize("method_name,arg_name", [
+        ("close_position", "size"),
+        ("split_position", "amount"),
+        ("merge_positions", "amount"),
+    ])
+    def test_position_methods_reject_non_finite_number_strings(self, method_name, arg_name):
+        client = PolyforgeClient(api_key="test")
+        kwargs = {arg_name: "Infinity"}
+        with pytest.raises(ValueError, match="Infinity"):
+            getattr(client, method_name)("tok", **kwargs)
+        client.close()
+
+    @pytest.mark.parametrize("method_name,arg_name", [
+        ("close_position", "size"),
+        ("split_position", "amount"),
+        ("merge_positions", "amount"),
+    ])
+    def test_position_methods_reject_negative_number_strings(self, method_name, arg_name):
+        client = PolyforgeClient(api_key="test")
+        kwargs = {arg_name: "-1"}
+        with pytest.raises(ValueError, match="positive"):
+            getattr(client, method_name)("tok", **kwargs)
+        client.close()
+
+    def test_set_whale_alert_filter_rejects_nan_min_size(self):
+        client = PolyforgeClient(api_key="test")
+        with pytest.raises(ValueError, match="NaN"):
+            client.set_whale_alert_filter(min_size="NaN")
+        client.close()
+
+    @pytest.mark.parametrize("field,kwargs", [
+        ("size_value", {"size_value": float("nan")}),
+        ("max_exposure", {"max_exposure": float("inf")}),
+        ("max_daily_loss", {"max_daily_loss": -1.0}),
+    ])
+    def test_create_copy_config_rejects_invalid_positive_numeric_fields(self, field, kwargs):
+        client = PolyforgeClient(api_key="test")
+        with pytest.raises(ValueError, match="NaN|Infinity|positive"):
+            client.create_copy_config("0x0000000000000000000000000000000000000001", **kwargs)
+        client.close()
+
+    def test_create_copy_config_rejects_non_finite_price_offset(self):
+        client = PolyforgeClient(api_key="test")
+        with pytest.raises(ValueError, match="Infinity"):
+            client.create_copy_config(
+                "0x0000000000000000000000000000000000000001",
+                price_offset=float("-inf"),
+            )
+        client.close()
+
+    def test_create_copy_config_allows_negative_price_offset(self):
+        from unittest.mock import MagicMock
+
+        client = PolyforgeClient(api_key="test")
+        client._post = MagicMock(return_value={
+            "id": "copy-1",
+            "userId": "user-1",
+            "targetWallet": "0x0000000000000000000000000000000000000001",
+            "mode": "PERCENTAGE",
+            "sizeValue": "10",
+            "maxExposure": "500",
+            "maxDailyLoss": "100",
+            "priceOffset": "-0.5",
+            "status": "ACTIVE",
+            "totalCopied": 0,
+            "totalPnl": "0",
+            "createdAt": "2026-04-29T00:00:00Z",
+            "updatedAt": "2026-04-29T00:00:00Z",
+        })
+        client.create_copy_config(
+            "0x0000000000000000000000000000000000000001",
+            price_offset=-0.5,
+        )
+        client._post.assert_called_once()
+        assert client._post.call_args.kwargs["json"]["priceOffset"] == -0.5
+        client.close()
+
+    def test_update_copy_config_rejects_invalid_numeric_kwargs(self):
+        client = PolyforgeClient(api_key="test")
+        with pytest.raises(ValueError, match="Infinity"):
+            client.update_copy_config("copy-1", maxExposure="Infinity")
+        client.close()
+
+    def test_update_copy_config_allows_negative_price_offset(self):
+        from unittest.mock import MagicMock
+
+        client = PolyforgeClient(api_key="test")
+        client._patch = MagicMock(return_value={
+            "id": "copy-1",
+            "userId": "user-1",
+            "targetWallet": "0x0000000000000000000000000000000000000001",
+            "mode": "PERCENTAGE",
+            "sizeValue": "10",
+            "maxExposure": "500",
+            "maxDailyLoss": "100",
+            "priceOffset": "-0.5",
+            "status": "ACTIVE",
+            "totalCopied": 0,
+            "totalPnl": "0",
+            "createdAt": "2026-04-29T00:00:00Z",
+            "updatedAt": "2026-04-29T00:00:00Z",
+        })
+        client.update_copy_config("copy-1", priceOffset=-0.5)
+        client._patch.assert_called_once()
+        assert client._patch.call_args.kwargs["json"]["priceOffset"] == -0.5
+        client.close()
+
+    def test_async_batch_orders_rejects_infinite_order_price(self):
+        import asyncio
+
+        async def _run():
+            client = AsyncPolyforgeClient(api_key="test")
+            with pytest.raises(ValueError, match="Infinity"):
+                await client.batch_orders([{
+                    "tokenId": "tok",
+                    "side": "BUY",
+                    "outcome": "YES",
+                    "size": 10,
+                    "price": float("inf"),
+                }])
+            await client.close()
+
+        asyncio.run(_run())
+
+    def test_async_copy_and_whale_paths_validate_before_awaiting(self):
+        import asyncio
+
+        async def _run():
+            client = AsyncPolyforgeClient(api_key="test")
+            with pytest.raises(ValueError, match="NaN"):
+                await client.set_whale_alert_filter(min_size="NaN")
+            with pytest.raises(ValueError, match="positive"):
+                await client.create_copy_config(
+                    "0x0000000000000000000000000000000000000001",
+                    max_daily_loss=0,
+                )
+            with pytest.raises(ValueError, match="Infinity"):
+                await client.update_copy_config("copy-1", priceOffset="Infinity")
             await client.close()
 
         asyncio.run(_run())
