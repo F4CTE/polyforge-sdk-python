@@ -28,7 +28,6 @@
     "@polyforge/shared-redis": "workspace:*",
     "@polyforge/shared-types": "workspace:*",
     "@polymarket/clob-client": "^5.8.1",
-    "@polymarket/order-utils": "^3.0.1",
     "@sentry/nestjs": "^10.50.0",
     "axios": "^1.15.2",
     "class-transformer": "^0.5.0",
