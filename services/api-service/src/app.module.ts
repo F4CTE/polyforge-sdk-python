@@ -49,6 +49,7 @@ import { UsersModule } from "./users/users.module";
 import { SportsModule } from "./sports/sports.module";
 import { FeesModule } from "./fees/fees.module";
 import { JournalModule } from "./journal/journal.module";
+import { getApiRateLimit } from "./common/api-rate-limit";
 
 @Module({
   imports: [
@@ -61,7 +62,7 @@ import { JournalModule } from "./journal/journal.module";
         throttlers: [
           {
             ttl: 60000,
-            limit: process.env.NODE_ENV === "production" ? 120 : 1200,
+            limit: getApiRateLimit(),
           },
         ],
         storage: new ThrottlerStorageRedisService(redis.getClient()),
