@@ -173,6 +173,17 @@ export class NativeEncryptionService {
     };
   }
 
+  encryptFieldBytes(plaintext: Buffer, dek: Buffer): EncryptedField {
+    const dekHex = dek.toString("hex");
+    const resultJson = nativeCrypto.encryptAes256GcmBytes(plaintext, dekHex);
+    const parsed = JSON.parse(resultJson);
+    return {
+      ciphertext: toBytes(parsed.ciphertext),
+      iv: toBytes(parsed.iv),
+      tag: toBytes(parsed.tag),
+    };
+  }
+
   decryptField(
     ctRaw: Uint8Array,
     ivRaw: Uint8Array,
@@ -186,6 +197,20 @@ export class NativeEncryptionService {
       dek.toString("hex"),
     );
     return Buffer.from(plaintext, "utf8");
+  }
+
+  decryptFieldBytes(
+    ctRaw: Uint8Array,
+    ivRaw: Uint8Array,
+    tagRaw: Uint8Array,
+    dek: Buffer,
+  ): Buffer {
+    return nativeCrypto.decryptAes256GcmBytes(
+      toHex(ctRaw),
+      toHex(ivRaw),
+      toHex(tagRaw),
+      dek.toString("hex"),
+    );
   }
 
   encryptWithMasterKey(plaintext: string): EncryptedField {

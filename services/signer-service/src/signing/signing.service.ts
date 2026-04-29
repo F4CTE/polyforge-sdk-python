@@ -1,4 +1,9 @@
-import { Injectable, Logger, OnModuleInit } from "@nestjs/common";
+import {
+  BadRequestException,
+  Injectable,
+  Logger,
+  OnModuleInit,
+} from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import * as crypto from "crypto";
 import { privateKeyHexBytesToEthAddress } from "@polyforge/crypto-native";
@@ -31,6 +36,23 @@ export interface SignedOrder {
     POLY_BUILDER_PASSPHRASE: string;
     POLY_BUILDER_SIGNATURE: string;
   };
+}
+
+const MAX_UINT256 = 2n ** 256n - 1n;
+const POSITIVE_DECIMAL_UINT256 = /^[1-9][0-9]*$/;
+
+function parsePositiveUint256(value: string, fieldName: string): bigint {
+  if (!POSITIVE_DECIMAL_UINT256.test(value)) {
+    throw new BadRequestException(
+      `${fieldName} must be a positive decimal uint256 string`,
+    );
+  }
+
+  const parsed = BigInt(value);
+  if (parsed > MAX_UINT256) {
+    throw new BadRequestException(`${fieldName} exceeds uint256 max`);
+  }
+  return parsed;
 }
 
 /**
@@ -330,6 +352,10 @@ export class SigningService implements OnModuleInit {
   async redeemPosition(dto: RedeemPositionDto): Promise<{ txHash: string }> {
     const { userId } = dto;
 
+    const indexSets = dto.indexSets.map((s, index) =>
+      parsePositiveUint256(s, `indexSets[${index}]`),
+    );
+
     if (this.isStubMode) {
       this.logger.warn(
         "DEV MODE: Using stub redemption — positions will NOT be redeemed on Polymarket",
@@ -347,7 +373,7 @@ export class SigningService implements OnModuleInit {
         this.rpcUrl,
         {
           conditionId: dto.conditionId,
-          indexSets: dto.indexSets.map((s) => BigInt(s)),
+          indexSets,
           collateralToken: dto.collateralToken,
           parentCollectionId: dto.parentCollectionId,
         },
@@ -362,6 +388,11 @@ export class SigningService implements OnModuleInit {
   async splitPosition(dto: SplitPositionDto): Promise<{ txHash: string }> {
     const { userId } = dto;
 
+    const partition = dto.partition.map((s, index) =>
+      parsePositiveUint256(s, `partition[${index}]`),
+    );
+    const amount = parsePositiveUint256(dto.amount, "amount");
+
     if (this.isStubMode) {
       this.logger.warn("DEV MODE: Stub split");
       return { txHash: `dev-split-${Date.now()}` };
@@ -375,8 +406,8 @@ export class SigningService implements OnModuleInit {
         this.rpcUrl,
         {
           conditionId: dto.conditionId,
-          partition: dto.partition.map((s) => BigInt(s)),
-          amount: BigInt(dto.amount),
+          partition,
+          amount,
           collateralToken: dto.collateralToken,
           parentCollectionId: dto.parentCollectionId,
         },
@@ -388,6 +419,11 @@ export class SigningService implements OnModuleInit {
 
   async mergePosition(dto: MergePositionDto): Promise<{ txHash: string }> {
     const { userId } = dto;
+
+    const partition = dto.partition.map((s, index) =>
+      parsePositiveUint256(s, `partition[${index}]`),
+    );
+    const amount = parsePositiveUint256(dto.amount, "amount");
 
     if (this.isStubMode) {
       this.logger.warn("DEV MODE: Stub merge");
@@ -402,8 +438,8 @@ export class SigningService implements OnModuleInit {
         this.rpcUrl,
         {
           conditionId: dto.conditionId,
-          partition: dto.partition.map((s) => BigInt(s)),
-          amount: BigInt(dto.amount),
+          partition,
+          amount,
           collateralToken: dto.collateralToken,
           parentCollectionId: dto.parentCollectionId,
         },

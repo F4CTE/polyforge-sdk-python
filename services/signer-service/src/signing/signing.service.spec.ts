@@ -4,7 +4,7 @@ import { SigningService } from "./signing.service";
 import { CredentialsService } from "../credentials/credentials.service";
 import { NativeEip712Service } from "./native-eip712.service";
 import { NativeCtfService } from "./native-ctf.service";
-import { NotFoundException } from "@nestjs/common";
+import { BadRequestException, NotFoundException } from "@nestjs/common";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -604,6 +604,18 @@ describe("SigningService (CLOB V2)", () => {
       expect(result).toHaveProperty("txHash");
     });
 
+    it("redeemPosition rejects negative index sets before loading credentials", async () => {
+      await expect(
+        prodSvc["redeemPosition"]({
+          userId: "user-1",
+          conditionId: "0x" + "ab".repeat(32),
+          indexSets: ["-1"],
+        }),
+      ).rejects.toThrow(BadRequestException);
+      expect(prodCredentials.getDecryptedCredentials).not.toHaveBeenCalled();
+      expect(nativeCtf.redeemPosition).not.toHaveBeenCalled();
+    });
+
     it("splitPosition delegates to NativeCtfService in production (POLA-148)", async () => {
       const result = await prodSvc["splitPosition"]({
         userId: "user-1",
@@ -615,6 +627,32 @@ describe("SigningService (CLOB V2)", () => {
       expect(result).toHaveProperty("txHash");
     });
 
+    it("splitPosition rejects negative amount before loading credentials", async () => {
+      await expect(
+        prodSvc["splitPosition"]({
+          userId: "user-1",
+          conditionId: "0x" + "ab".repeat(32),
+          partition: ["1", "2"],
+          amount: "-1",
+        }),
+      ).rejects.toThrow(BadRequestException);
+      expect(prodCredentials.getDecryptedCredentials).not.toHaveBeenCalled();
+      expect(nativeCtf.splitPosition).not.toHaveBeenCalled();
+    });
+
+    it("splitPosition rejects uint256 overflow before loading credentials", async () => {
+      await expect(
+        prodSvc["splitPosition"]({
+          userId: "user-1",
+          conditionId: "0x" + "ab".repeat(32),
+          partition: ["1", "2"],
+          amount: (2n ** 256n).toString(),
+        }),
+      ).rejects.toThrow(BadRequestException);
+      expect(prodCredentials.getDecryptedCredentials).not.toHaveBeenCalled();
+      expect(nativeCtf.splitPosition).not.toHaveBeenCalled();
+    });
+
     it("mergePosition delegates to NativeCtfService in production (POLA-148)", async () => {
       const result = await prodSvc["mergePosition"]({
         userId: "user-1",
@@ -624,6 +662,19 @@ describe("SigningService (CLOB V2)", () => {
       });
       expect(nativeCtf.mergePosition).toHaveBeenCalledOnce();
       expect(result).toHaveProperty("txHash");
+    });
+
+    it("mergePosition rejects negative partition values before loading credentials", async () => {
+      await expect(
+        prodSvc["mergePosition"]({
+          userId: "user-1",
+          conditionId: "0x" + "ab".repeat(32),
+          partition: ["1", "-2"],
+          amount: "1000000",
+        }),
+      ).rejects.toThrow(BadRequestException);
+      expect(prodCredentials.getDecryptedCredentials).not.toHaveBeenCalled();
+      expect(nativeCtf.mergePosition).not.toHaveBeenCalled();
     });
 
     it("redeemPosition passes privateKey as Buffer (not string) to NativeCtfService (POLA-148)", async () => {

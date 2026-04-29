@@ -28,6 +28,17 @@ pub fn generate_dek() -> String {
 /// Key material is zeroized after use.
 #[napi]
 pub fn encrypt_aes256gcm(plaintext: String, key_hex: String) -> Result<String> {
+    encrypt_aes256gcm_bytes_inner(plaintext.as_bytes(), key_hex)
+}
+
+/// Encrypt arbitrary bytes using AES-256-GCM. Returns JSON { ciphertext, iv, tag } as hex.
+/// Key material is zeroized after use.
+#[napi]
+pub fn encrypt_aes256gcm_bytes(plaintext: Buffer, key_hex: String) -> Result<String> {
+    encrypt_aes256gcm_bytes_inner(plaintext.as_ref(), key_hex)
+}
+
+fn encrypt_aes256gcm_bytes_inner(plaintext: &[u8], key_hex: String) -> Result<String> {
     let key_bytes = Zeroizing::new(
         hex::decode(&key_hex).map_err(|e| Error::from_reason(format!("Invalid key hex: {}", e)))?
     );
@@ -38,7 +49,7 @@ pub fn encrypt_aes256gcm(plaintext: String, key_hex: String) -> Result<String> {
     OsRng.try_fill_bytes(&mut iv_bytes).expect("OS RNG failed");
     let nonce = Nonce::from_slice(&iv_bytes);
 
-    let ciphertext = cipher.encrypt(nonce, plaintext.as_bytes())
+    let ciphertext = cipher.encrypt(nonce, plaintext)
         .map_err(|e| Error::from_reason(format!("Encryption failed: {}", e)))?;
 
     let (ct, tag) = ciphertext.split_at(ciphertext.len() - 16);
@@ -53,6 +64,29 @@ pub fn encrypt_aes256gcm(plaintext: String, key_hex: String) -> Result<String> {
 /// Decrypt AES-256-GCM ciphertext. Key material is zeroized after use.
 #[napi]
 pub fn decrypt_aes256gcm(ciphertext_hex: String, iv_hex: String, tag_hex: String, key_hex: String) -> Result<String> {
+    let mut plaintext = decrypt_aes256gcm_bytes_inner(ciphertext_hex, iv_hex, tag_hex, key_hex)?;
+    let result = String::from_utf8(plaintext.to_vec())
+        .map_err(|e| Error::from_reason(format!("Invalid UTF-8: {}", e)))?;
+
+    // Zeroize plaintext buffer
+    plaintext.iter_mut().for_each(|b| *b = 0);
+
+    Ok(result)
+}
+
+/// Decrypt AES-256-GCM ciphertext as arbitrary bytes. Key material is zeroized after use.
+#[napi]
+pub fn decrypt_aes256gcm_bytes(ciphertext_hex: String, iv_hex: String, tag_hex: String, key_hex: String) -> Result<Buffer> {
+    let mut plaintext = decrypt_aes256gcm_bytes_inner(ciphertext_hex, iv_hex, tag_hex, key_hex)?;
+    let result = Buffer::from(plaintext.to_vec());
+
+    // Zeroize plaintext buffer
+    plaintext.iter_mut().for_each(|b| *b = 0);
+
+    Ok(result)
+}
+
+fn decrypt_aes256gcm_bytes_inner(ciphertext_hex: String, iv_hex: String, tag_hex: String, key_hex: String) -> Result<Zeroizing<Vec<u8>>> {
     let key_bytes = Zeroizing::new(
         hex::decode(&key_hex).map_err(|e| Error::from_reason(format!("Invalid key: {}", e)))?
     );
@@ -68,18 +102,12 @@ pub fn decrypt_aes256gcm(ciphertext_hex: String, iv_hex: String, tag_hex: String
     let mut combined = ct;
     combined.extend_from_slice(&tag);
 
-    let mut plaintext = Zeroizing::new(
+    let plaintext = Zeroizing::new(
         cipher.decrypt(nonce, combined.as_ref())
             .map_err(|e| Error::from_reason(format!("Decryption failed: {}", e)))?
     );
 
-    let result = String::from_utf8(plaintext.to_vec())
-        .map_err(|e| Error::from_reason(format!("Invalid UTF-8: {}", e)))?;
-
-    // Zeroize plaintext buffer
-    plaintext.iter_mut().for_each(|b| *b = 0);
-
-    Ok(result)
+    Ok(plaintext)
 }
 
 /// Encrypt a DEK with a KEK (envelope encryption layer)

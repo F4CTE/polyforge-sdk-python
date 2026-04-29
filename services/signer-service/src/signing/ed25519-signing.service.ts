@@ -28,14 +28,11 @@ export class Ed25519SigningService {
     const { dek, encryptedDek, dekIv, kekVersion } =
       this.encryption.generateDek();
 
-    let secretKeyEnc: ReturnType<typeof this.encryption.encryptField>;
+    let secretKeyEnc: ReturnType<typeof this.encryption.encryptFieldBytes>;
     try {
       const rawSeed = Buffer.from(dto.secretKey, "hex");
       try {
-        secretKeyEnc = this.encryption.encryptField(
-          rawSeed.toString("binary"),
-          dek,
-        );
+        secretKeyEnc = this.encryption.encryptFieldBytes(rawSeed, dek);
       } finally {
         rawSeed.fill(0);
       }
@@ -88,7 +85,7 @@ export class Ed25519SigningService {
     );
 
     try {
-      const secretKey = this.encryption.decryptField(
+      const secretKey = this.encryption.decryptFieldBytes(
         row.secretKeyCt,
         row.secretKeyIv,
         row.secretKeyTag,

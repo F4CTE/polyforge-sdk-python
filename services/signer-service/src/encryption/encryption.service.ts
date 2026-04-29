@@ -199,6 +199,18 @@ export class EncryptionService {
     };
   }
 
+  encryptFieldBytes(plaintext: Buffer, dek: Buffer): EncryptedField {
+    const iv = crypto.randomBytes(IV_LEN);
+    const cipher = crypto.createCipheriv("aes-256-gcm", dek, iv);
+    const ciphertext = Buffer.concat([cipher.update(plaintext), cipher.final()]);
+    const tag = cipher.getAuthTag();
+    return {
+      ciphertext: toBytes(ciphertext),
+      iv: toBytes(iv),
+      tag: toBytes(tag),
+    };
+  }
+
   /**
    * Decrypt a field and return as Buffer so callers can .fill(0) when done.
    * Avoids materializing secrets as immutable JS strings in memory.
@@ -217,6 +229,15 @@ export class EncryptionService {
     });
     decipher.setAuthTag(tag);
     return Buffer.concat([decipher.update(ct), decipher.final()]);
+  }
+
+  decryptFieldBytes(
+    ctRaw: Uint8Array,
+    ivRaw: Uint8Array,
+    tagRaw: Uint8Array,
+    dek: Buffer,
+  ): Buffer {
+    return this.decryptField(ctRaw, ivRaw, tagRaw, dek);
   }
 
   // ─── Direct master-key encryption (single-field models without DEK) ────────

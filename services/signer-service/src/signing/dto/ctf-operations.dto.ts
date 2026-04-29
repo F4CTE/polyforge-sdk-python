@@ -10,6 +10,7 @@ import {
 
 const BYTES32_REGEX = /^0x[0-9a-fA-F]{64}$/;
 const ADDRESS_REGEX = /^0x[0-9a-fA-F]{40}$/;
+const POSITIVE_DECIMAL_REGEX = /^[1-9][0-9]*$/;
 
 export class RedeemPositionDto {
   @IsUUID()
@@ -27,6 +28,10 @@ export class RedeemPositionDto {
   @IsArray()
   @ArrayNotEmpty()
   @IsString({ each: true })
+  @Matches(POSITIVE_DECIMAL_REGEX, {
+    each: true,
+    message: "indexSets must contain positive decimal uint256 strings",
+  })
   indexSets!: string[];
 
   /** Collateral token address (defaults to USDC for the configured chain). */
@@ -62,11 +67,18 @@ export class SplitPositionDto {
   @IsArray()
   @ArrayNotEmpty()
   @IsString({ each: true })
+  @Matches(POSITIVE_DECIMAL_REGEX, {
+    each: true,
+    message: "partition must contain positive decimal uint256 strings",
+  })
   partition!: string[];
 
   /** Amount of collateral to split (in token base units). */
   @IsString()
   @IsNotEmpty()
+  @Matches(POSITIVE_DECIMAL_REGEX, {
+    message: "amount must be a positive decimal uint256 string",
+  })
   amount!: string;
 
   @IsOptional()
@@ -100,11 +112,18 @@ export class MergePositionDto {
   @IsArray()
   @ArrayNotEmpty()
   @IsString({ each: true })
+  @Matches(POSITIVE_DECIMAL_REGEX, {
+    each: true,
+    message: "partition must contain positive decimal uint256 strings",
+  })
   partition!: string[];
 
   /** Amount of conditional tokens to merge (in token base units). */
   @IsString()
   @IsNotEmpty()
+  @Matches(POSITIVE_DECIMAL_REGEX, {
+    message: "amount must be a positive decimal uint256 string",
+  })
   amount!: string;
 
   @IsOptional()

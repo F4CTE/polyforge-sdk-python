@@ -1,5 +1,6 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { EncryptionService } from "./encryption.service";
+import { NativeEncryptionService } from "./native-encryption.service";
 
 // 64 hex chars = 32 bytes (valid KEK)
 const TEST_KEK = "a".repeat(64);
@@ -20,6 +21,23 @@ function makeService(opts?: {
     },
   } as any;
   return new EncryptionService(config);
+}
+
+function makeNativeService(opts?: {
+  kek?: string;
+  kekPrevious?: string;
+  kekVersion?: string;
+}): NativeEncryptionService {
+  const { kek = TEST_KEK, kekPrevious, kekVersion } = opts ?? {};
+  const config = {
+    get: (key: string) => {
+      if (key === "MASTER_ENCRYPTION_KEY") return kek;
+      if (key === "MASTER_ENCRYPTION_KEY_PREVIOUS") return kekPrevious;
+      if (key === "MASTER_ENCRYPTION_KEY_VERSION") return kekVersion;
+      return undefined;
+    },
+  } as any;
+  return new NativeEncryptionService(config);
 }
 
 describe("EncryptionService", () => {
@@ -413,6 +431,33 @@ describe("EncryptionService", () => {
           .decryptField(apEnc.ciphertext, apEnc.iv, apEnc.tag, recoveredDek)
           .toString("utf8"),
       ).toBe(apiPassphrase);
+    });
+  });
+});
+
+describe("NativeEncryptionService", () => {
+  describe("encryptFieldBytes()", () => {
+    it("round-trips high-bit seed bytes without stringifying the plaintext buffer", () => {
+      const svc = makeNativeService();
+      const { dek } = svc.generateDek();
+      const seed = Buffer.from([
+        0x80, 0x81, 0xfe, 0xff, 0x00, 0x01, 0x7f, 0x42, 0x99, 0xaa, 0xbb,
+        0xcc, 0xdd, 0xee, 0x10, 0x20, 0x30, 0x40, 0x50, 0x60, 0x70, 0x71,
+        0x72, 0x73, 0x74, 0x75, 0x76, 0x77, 0x78, 0x79, 0x7a, 0x7b,
+      ]);
+      const expectedSeed = Buffer.from(seed);
+      const toStringSpy = vi.spyOn(seed, "toString");
+
+      const enc = svc.encryptFieldBytes(seed, dek);
+      const recovered = svc.decryptFieldBytes(
+        enc.ciphertext,
+        enc.iv,
+        enc.tag,
+        dek,
+      );
+
+      expect(toStringSpy).not.toHaveBeenCalled();
+      expect(recovered).toEqual(expectedSeed);
     });
   });
 });

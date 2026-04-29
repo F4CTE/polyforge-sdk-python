@@ -161,7 +161,7 @@ export class CredentialsService {
     userId: string,
     dto: ImportCredentialsDto,
   ): Promise<void> {
-    const url = `${this.signerUrl}/internal/v1/credentials`;
+    const url = `${this.signerUrl}/credentials`;
 
     try {
       const token = this.issueInternalToken();
@@ -203,7 +203,7 @@ export class CredentialsService {
   }
 
   private async deleteFromSigner(userId: string): Promise<void> {
-    const url = `${this.signerUrl}/internal/v1/credentials/${userId}`;
+    const url = `${this.signerUrl}/credentials/${userId}`;
 
     try {
       const token = this.issueInternalToken();
@@ -213,7 +213,7 @@ export class CredentialsService {
         signal: AbortSignal.timeout(10_000),
       });
 
-      if (!res.ok && res.status !== 404) {
+      if (!res.ok) {
         this.logger.error(
           `signer-service credential delete failed: ${res.status}`,
         );

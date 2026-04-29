@@ -73,6 +73,21 @@ function makeMockEncryption() {
       };
     },
 
+    encryptFieldBytes(plaintext: Buffer, dek: Buffer) {
+      const plainBuf = Buffer.from(plaintext);
+      const iv = crypto.randomBytes(12);
+      const cipher = crypto.createCipheriv("aes-256-gcm", dek, iv);
+      const ct = Buffer.concat([cipher.update(plainBuf), cipher.final()]);
+      const tag = cipher.getAuthTag();
+      const fid = `field-${callId++}`;
+      fieldStore.set(fid, { plainBuf: Buffer.from(plainBuf), ct, iv, tag });
+      return {
+        ciphertext: new Uint8Array(ct),
+        iv: new Uint8Array(iv),
+        tag: new Uint8Array(tag),
+      };
+    },
+
     decryptField(
       ctRaw: Uint8Array,
       ivRaw: Uint8Array,
@@ -92,6 +107,15 @@ function makeMockEncryption() {
       });
       decipher.setAuthTag(tag);
       return Buffer.concat([decipher.update(ctBuf), decipher.final()]);
+    },
+
+    decryptFieldBytes(
+      ctRaw: Uint8Array,
+      ivRaw: Uint8Array,
+      tagRaw: Uint8Array,
+      dek: Buffer,
+    ): Buffer {
+      return this.decryptField(ctRaw, ivRaw, tagRaw, dek);
     },
 
     currentKekVersion: 1,
@@ -188,7 +212,7 @@ describe("Ed25519SigningService", () => {
     });
 
     it("encrypts secretKey via encryptField with DEK (not encryptWithMasterKey)", async () => {
-      const encFieldSpy = vi.spyOn(encryption, "encryptField");
+      const encFieldSpy = vi.spyOn(encryption, "encryptFieldBytes");
       const { seedHex } = makeEd25519Seed();
       await svc.importUsCredentials({
         userId: TEST_UUID,
@@ -197,6 +221,31 @@ describe("Ed25519SigningService", () => {
       });
 
       expect(encFieldSpy).toHaveBeenCalledOnce();
+    });
+
+    it("passes raw seed bytes to encryption without converting them through a JS string", async () => {
+      const seedRaw = Buffer.from([
+        0x80, 0x81, 0xfe, 0xff, 0x00, 0x01, 0x7f, 0x42, 0x99, 0xaa, 0xbb,
+        0xcc, 0xdd, 0xee, 0x10, 0x20, 0x30, 0x40, 0x50, 0x60, 0x70, 0x71,
+        0x72, 0x73, 0x74, 0x75, 0x76, 0x77, 0x78, 0x79, 0x7a, 0x7b,
+      ]);
+      const encryptFieldBytes = encryption.encryptFieldBytes.bind(encryption);
+      let capturedSeed: Buffer | undefined;
+      const encFieldSpy = vi
+        .spyOn(encryption, "encryptFieldBytes")
+        .mockImplementationOnce((plaintext: Buffer, dek: Buffer) => {
+          capturedSeed = Buffer.from(plaintext);
+          return encryptFieldBytes(plaintext, dek);
+        });
+
+      await svc.importUsCredentials({
+        userId: TEST_UUID,
+        keyId: "key-raw",
+        secretKey: seedRaw.toString("hex"),
+      });
+
+      expect(encFieldSpy).toHaveBeenCalledOnce();
+      expect(capturedSeed).toEqual(seedRaw);
     });
   });
 

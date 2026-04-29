@@ -91,7 +91,7 @@ describe('CredentialsService', () => {
       await service.import(user.id, validDto);
 
       expect(fetchSpy).toHaveBeenCalledWith(
-        expect.stringContaining('/internal/v1/credentials'),
+        expect.stringContaining('/credentials'),
         expect.objectContaining({ method: 'POST' }),
       );
       expect(db.user.update).toHaveBeenCalledWith(
@@ -198,6 +198,10 @@ describe('CredentialsService', () => {
 
       await service.delete(user.id);
 
+      expect(fetchSpy).toHaveBeenCalledWith(
+        expect.stringContaining(`/credentials/${user.id}`),
+        expect.objectContaining({ method: 'DELETE' }),
+      );
       expect(db.user.update).toHaveBeenCalledWith(
         expect.objectContaining({
           data: expect.objectContaining({ polymarketConnected: false }),
@@ -217,7 +221,7 @@ describe('CredentialsService', () => {
       await expect(service.delete(user.id)).resolves.toBeUndefined();
     });
 
-    it('succeeds even if signer returns 404 (credentials already gone)', async () => {
+    it('throws SIGNER_ERROR when signer returns 404 so stale routes cannot mask undeleted credentials', async () => {
       const user = connectedUser();
       db.user.findUniqueOrThrow.mockResolvedValue(user as any);
       db.user.update.mockResolvedValue(user as any);
@@ -228,7 +232,11 @@ describe('CredentialsService', () => {
         })
         .mockResolvedValueOnce({ ok: false, status: 404 });
 
-      await expect(service.delete(user.id)).resolves.toBeUndefined();
+      await expect(service.delete(user.id)).rejects.toMatchObject({
+        response: { code: 'SIGNER_ERROR' },
+        status: HttpStatus.BAD_GATEWAY,
+      });
+      expect(db.user.update).not.toHaveBeenCalled();
     });
 
     it('throws SIGNER_ERROR (502) when signer-service DELETE returns non-OK non-404', async () => {

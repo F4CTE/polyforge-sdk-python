@@ -10,8 +10,15 @@ export declare function generateDek(): string
  * Key material is zeroized after use.
  */
 export declare function encryptAes256Gcm(plaintext: string, keyHex: string): string
+/**
+ * Encrypt arbitrary bytes using AES-256-GCM. Returns JSON { ciphertext, iv, tag } as hex.
+ * Key material is zeroized after use.
+ */
+export declare function encryptAes256GcmBytes(plaintext: Buffer, keyHex: string): string
 /** Decrypt AES-256-GCM ciphertext. Key material is zeroized after use. */
 export declare function decryptAes256Gcm(ciphertextHex: string, ivHex: string, tagHex: string, keyHex: string): string
+/** Decrypt AES-256-GCM ciphertext as arbitrary bytes. Key material is zeroized after use. */
+export declare function decryptAes256GcmBytes(ciphertextHex: string, ivHex: string, tagHex: string, keyHex: string): Buffer
 /** Encrypt a DEK with a KEK (envelope encryption layer) */
 export declare function wrapDek(dekHex: string, kekHex: string): string
 /** Decrypt a DEK with a KEK */
@@ -28,8 +35,8 @@ export declare function keccak256(input: Buffer): Buffer
 /**
  * Derive an Ethereum address (20 bytes) from a secp256k1 private key (32 bytes).
  *
- * Algorithm: privateKey → uncompressed public key (64 bytes, strip 04 prefix)
- * → keccak256 → take last 20 bytes.
+ * Algorithm: privateKey -> uncompressed public key (64 bytes, strip 04 prefix)
+ * -> keccak256 -> take last 20 bytes.
  *
  * SECURITY: The private key bytes are held in a `Zeroizing` wrapper and are
  * wiped from Rust memory as soon as this function returns.
