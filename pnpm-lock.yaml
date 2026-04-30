@@ -88,8 +88,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/ui
       '@sentry/react':
-        specifier: ^9.0.0
-        version: 9.47.1(react@19.2.5)
+        specifier: ^10.51.0
+        version: 10.51.0(react@19.2.5)
       lucide-react:
         specifier: ^1.14.0
         version: 1.14.0(react@19.2.5)
@@ -207,8 +207,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/ui
       '@sentry/react':
-        specifier: ^9.0.0
-        version: 9.47.1(react@19.2.5)
+        specifier: ^10.51.0
+        version: 10.51.0(react@19.2.5)
       '@tanstack/react-table':
         specifier: ^8.20.0
         version: 8.21.3(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
