@@ -79,7 +79,7 @@
 
 /* ─── Controls polish ────────────────────────────────────────────────────── */
 .react-flow__controls {
-  border-radius: 10px !important;
+  border-radius: var(--radius-pf) !important;
   border: 1px solid var(--border-subtle) !important;
   box-shadow: 0 4px 16px color-mix(in srgb, black 20%, transparent) !important;
   overflow: hidden !important;
@@ -234,7 +234,7 @@
   position: relative;
   z-index: 9999 !important;
   box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent-default) 30%, transparent), 0 0 20px color-mix(in srgb, var(--accent-default) 10%, transparent) !important;
-  border-radius: 8px;
+  border-radius: var(--radius-pf);
 }
 
 /* ─── Reduced motion ─────────────────────────────────────────────────── */

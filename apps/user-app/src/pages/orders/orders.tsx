@@ -355,10 +355,10 @@ function JournalEntryCard({ entry, onEdit, onDelete }: { entry: JournalEntry; on
         <div className="flex-1 min-w-0">
           <p className="text-body-md font-medium text-primary line-clamp-1">{entry.marketTitle || `Order ${entry.orderId.slice(0, 8)}`}</p>
           <div className="flex items-center gap-2 mt-1 flex-wrap">
-            <span className={`inline-flex px-2 py-1 rounded text-caption font-medium ${entry.side === 'BUY' ? 'bg-gain/10 text-gain' : 'bg-loss/10 text-loss'}`}>
+            <span className={`inline-flex px-2 py-1 rounded-sm text-caption font-medium ${entry.side === 'BUY' ? 'bg-gain/10 text-gain' : 'bg-loss/10 text-loss'}`}>
               {entry.side}
             </span>
-            <span className={`inline-flex px-2 py-1 rounded text-caption font-medium ${entry.outcome === 'YES' ? 'bg-gain/10 text-gain' : 'bg-loss/10 text-loss'}`}>
+            <span className={`inline-flex px-2 py-1 rounded-sm text-caption font-medium ${entry.outcome === 'YES' ? 'bg-gain/10 text-gain' : 'bg-loss/10 text-loss'}`}>
               {entry.outcome}
             </span>
             <span className="font-mono text-caption text-tertiary">{entry.size} @ {entry.price}</span>
@@ -478,10 +478,10 @@ function JournalTab({ entries, loading, onEdit, onDelete }: JournalTabProps) {
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {Array.from({ length: 6 }, (_, i) => (
             <div key={i} className="bg-elevated border border-default rounded-pf p-4 space-y-3 animate-pulse">
-              <div className="h-3 bg-overlay rounded w-3/4" />
-              <div className="h-3 bg-overlay rounded w-1/2" />
-              <div className="h-8 bg-overlay rounded" />
-              <div className="h-3 bg-overlay rounded w-1/3" />
+              <div className="h-3 bg-overlay rounded-sm w-3/4" />
+              <div className="h-3 bg-overlay rounded-sm w-1/2" />
+              <div className="h-8 bg-overlay rounded-sm" />
+              <div className="h-3 bg-overlay rounded-sm w-1/3" />
             </div>
           ))}
         </div>
@@ -527,7 +527,7 @@ function CategoryBadge({ category }: { category?: string | null }) {
   const key = category.toLowerCase();
   const cls = colors[key] ?? 'bg-surface text-tertiary border-default';
   return (
-    <span className={`inline-flex items-center px-2 py-1 rounded text-caption font-medium border ${cls}`}>
+    <span className={`inline-flex items-center px-2 py-1 rounded-sm text-caption font-medium border ${cls}`}>
       {category}
     </span>
   );
@@ -1031,7 +1031,7 @@ export function Component() {
           {/* Table */}
           <div className="bg-elevated border border-default rounded-pf overflow-hidden">
             <div className="overflow-x-auto">
-              <table className="w-full min-w-[800px] text-body-sm" aria-label="Orders">
+              <table className="w-full min-w-200 text-body-sm" aria-label="Orders">
                 <caption className="sr-only">Orders</caption>
                 <thead>
                   <tr className="bg-surface text-left text-label text-secondary uppercase tracking-wider">
@@ -1054,7 +1054,7 @@ export function Component() {
                     Array.from({ length: 8 }, (_, i) => (
                       <tr key={i}>
                         {Array.from({ length: 12 }, (_, j) => (
-                          <td key={j} className="px-4 py-3"><div className="h-3 bg-overlay rounded animate-pulse" /></td>
+                          <td key={j} className="px-4 py-3"><div className="h-3 bg-overlay rounded-sm animate-pulse" /></td>
                         ))}
                       </tr>
                     ))
@@ -1086,21 +1086,21 @@ export function Component() {
                           <td className="px-4 py-3">
                             <span className="font-mono text-label text-tertiary">{(page - 1) * 25 + i + 1}</span>
                           </td>
-                          <td className="px-4 py-3 max-w-[180px]">
+                          <td className="px-4 py-3 max-w-col-sm">
                             <span className="text-primary text-label line-clamp-1" title={order.marketQuestion ?? order.marketId ?? ''}>
                               {order.marketQuestion || (order.marketId?.slice(0, 12)) || '—'}
                             </span>
                             <CategoryBadge category={order.marketCategory} />
                           </td>
                           <td className="px-4 py-3">
-                            <span className={`inline-flex px-2 py-1 rounded text-label font-medium ${
+                            <span className={`inline-flex px-2 py-1 rounded-sm text-label font-medium ${
                               order.side === 'BUY' ? 'bg-gain/10 text-gain' : 'bg-loss/10 text-loss'
                             }`}>
                               {order.side}
                             </span>
                           </td>
                           <td className="px-4 py-3">
-                            <span className={`inline-flex px-2 py-1 rounded text-label font-medium ${
+                            <span className={`inline-flex px-2 py-1 rounded-sm text-label font-medium ${
                               order.outcome === 'YES' ? 'bg-gain/10 text-gain' : 'bg-loss/10 text-loss'
                             }`}>
                               {order.outcome}
@@ -1114,7 +1114,7 @@ export function Component() {
                             <span className="font-mono text-label text-tertiary">{order.orderType}</span>
                           </td>
                           <td className="px-4 py-3">
-                            <span data-testid="status-cell" className={`inline-flex px-2 py-1 rounded text-label font-medium ${ss.bg} ${ss.text}`}>
+                            <span data-testid="status-cell" className={`inline-flex px-2 py-1 rounded-sm text-label font-medium ${ss.bg} ${ss.text}`}>
                               {order.status}
                             </span>
                           </td>
@@ -1130,7 +1130,7 @@ export function Component() {
                                 onClick={() => setOpenJournalOrderId(isJournalOpen ? null : order.id)}
                                 title={hasNote ? 'Edit journal note' : 'Add journal note'}
                                 aria-label={hasNote ? 'Edit journal note' : 'Add journal note'}
-                                className={`p-1 rounded transition-colors focus-visible:outline-none focus-visible:shadow-focus-ring ${
+                                className={`p-1 rounded-sm transition-colors focus-visible:outline-none focus-visible:shadow-focus-ring ${
                                   hasNote
                                     ? 'text-accent-text hover:text-accent-text'
                                     : 'text-tertiary hover:text-accent-text'
@@ -1146,7 +1146,7 @@ export function Component() {
                                   onClick={() => cancelOrder(order.id)}
                                   title="Cancel order"
                                   aria-label="Cancel order"
-                                  className="p-1 rounded text-tertiary hover:text-loss transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-loss/40"
+                                  className="p-1 rounded-sm text-tertiary hover:text-loss transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-loss/40"
                                 >
                                   <Trash2 className="size-4" />
                                 </Button>
@@ -1230,7 +1230,7 @@ export function Component() {
                     Array.from({ length: 5 }, (_, i) => (
                       <tr key={i}>
                         {Array.from({ length: 10 }, (_, j) => (
-                          <td key={j} className="px-4 py-3"><div className="h-3 bg-overlay rounded animate-pulse" /></td>
+                          <td key={j} className="px-4 py-3"><div className="h-3 bg-overlay rounded-sm animate-pulse" /></td>
                         ))}
                       </tr>
                     ))
@@ -1251,7 +1251,7 @@ export function Component() {
                       return (
                         <tr key={co.id} data-testid="order-row" data-order-id={co.id} className="hover:bg-surface/50 transition-colors">
                           <td className="px-4 py-3">
-                            <span className={`inline-flex px-2 py-1 rounded text-label font-medium ${ts.bg} ${ts.text}`}>
+                            <span className={`inline-flex px-2 py-1 rounded-sm text-label font-medium ${ts.bg} ${ts.text}`}>
                               {ts.label}
                             </span>
                           </td>
@@ -1261,21 +1261,21 @@ export function Component() {
                           <td className="px-4 py-3 text-right font-mono text-primary">{co.triggerPrice}</td>
                           <td className="px-4 py-3 text-right font-mono text-primary">{co.size}</td>
                           <td className="px-4 py-3">
-                            <span className={`inline-flex px-2 py-1 rounded text-label font-medium ${
+                            <span className={`inline-flex px-2 py-1 rounded-sm text-label font-medium ${
                               co.side === 'BUY' ? 'bg-gain/10 text-gain' : 'bg-loss/10 text-loss'
                             }`}>
                               {co.side}
                             </span>
                           </td>
                           <td className="px-4 py-3">
-                            <span className={`inline-flex px-2 py-1 rounded text-label font-medium ${
+                            <span className={`inline-flex px-2 py-1 rounded-sm text-label font-medium ${
                               co.outcome === 'YES' ? 'bg-gain/10 text-gain' : 'bg-loss/10 text-loss'
                             }`}>
                               {co.outcome}
                             </span>
                           </td>
                           <td className="px-4 py-3">
-                            <span className={`inline-flex px-2 py-1 rounded text-label font-medium ${cs.bg} ${cs.text}`}>
+                            <span className={`inline-flex px-2 py-1 rounded-sm text-label font-medium ${cs.bg} ${cs.text}`}>
                               {co.status}
                             </span>
                           </td>
@@ -1369,12 +1369,12 @@ export function Component() {
               {([
                 { label: 'Order ID', value: <span className="font-mono text-label">{selectedOrder.id.slice(0, 8)}...</span> },
                 { label: 'Side', value: (
-                  <span className={`inline-flex px-2 py-1 rounded text-label font-medium ${
+                  <span className={`inline-flex px-2 py-1 rounded-sm text-label font-medium ${
                     selectedOrder.side === 'BUY' ? 'bg-gain/10 text-gain' : 'bg-loss/10 text-loss'
                   }`}>{selectedOrder.side}</span>
                 )},
                 { label: 'Outcome', value: (
-                  <span className={`inline-flex px-2 py-1 rounded text-label font-medium ${
+                  <span className={`inline-flex px-2 py-1 rounded-sm text-label font-medium ${
                     selectedOrder.outcome === 'YES' ? 'bg-gain/10 text-gain' : 'bg-loss/10 text-loss'
                   }`}>{selectedOrder.outcome}</span>
                 )},
@@ -1385,7 +1385,7 @@ export function Component() {
                 { label: 'Type', value: selectedOrder.orderType },
                 { label: 'Status', value: (() => {
                   const ss = STATUS_STYLES[selectedOrder.status] ?? STATUS_STYLES.PENDING;
-                  return <span className={`inline-flex px-2 py-1 rounded text-label font-medium ${ss.bg} ${ss.text}`}>{selectedOrder.status}</span>;
+                  return <span className={`inline-flex px-2 py-1 rounded-sm text-label font-medium ${ss.bg} ${ss.text}`}>{selectedOrder.status}</span>;
                 })() },
                 { label: 'Created', value: <span className="font-mono text-caption">{formatDate(selectedOrder.placedAt ?? selectedOrder.createdAt)}</span> },
               ] as { label: string; value: React.ReactNode }[]).map(row => (

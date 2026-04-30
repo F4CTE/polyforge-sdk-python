@@ -125,7 +125,7 @@ function DashboardMock() {
 
         {/* Markets table */}
         <div className="border border-subtle rounded-lg">
-          <div className="grid grid-cols-[1fr_70px_70px] gap-3 px-3.5 py-2 font-mono text-caption tracking-widest uppercase text-tertiary border-b border-subtle">
+          <div className="grid hero-terminal-grid gap-3 px-3.5 py-2 font-mono text-caption tracking-widest uppercase text-tertiary border-b border-subtle">
             <span>Market</span>
             <span className="text-right">Yes</span>
             <span className="text-right">Δ</span>
@@ -133,7 +133,7 @@ function DashboardMock() {
           {live.map((m, i) => (
             <div
               key={m.sym}
-              className={`grid grid-cols-[1fr_70px_70px] gap-3 px-3.5 py-2.5 text-body-sm items-center ${
+              className={`grid hero-terminal-grid gap-3 px-3.5 py-2.5 text-body-sm items-center ${
                 i < live.length - 1 ? "border-b border-subtle" : ""
               }`}
             >
@@ -179,8 +179,8 @@ function CanvasNode({ top, left, cat, title, detail }: NodeProps) {
   const color = NODE_COLORS[cat];
   return (
     <div
-      className="absolute w-[140px] bg-surface border border-default rounded-lg p-2 shadow-elevation-2"
-      style={{ top, left, borderLeftWidth: 2, borderLeftColor: color }}
+      className="absolute bg-surface border border-default rounded-lg p-2 shadow-elevation-2"
+      style={{ top, left, width: 140, borderLeftWidth: 2, borderLeftColor: color }}
     >
       <div
         className="font-mono text-caption tracking-widest uppercase"
@@ -200,7 +200,7 @@ function CanvasNode({ top, left, cat, title, detail }: NodeProps) {
 
 function BuilderCanvas() {
   return (
-    <div className="relative bg-surface border border-subtle rounded-xl h-[440px] overflow-hidden builder-dot-grid">
+    <div className="relative bg-surface border border-subtle rounded-xl builder-canvas overflow-hidden builder-dot-grid">
       {/* Chrome bar */}
       <div className="flex items-center gap-2 px-3.5 py-2.5 border-b border-subtle bg-surface">
         <span className="font-mono text-caption text-secondary">
@@ -222,7 +222,7 @@ function BuilderCanvas() {
       <svg
         width="100%"
         height={398}
-        className="absolute top-[42px] left-0 pointer-events-none"
+        className="absolute builder-canvas-edges left-0 pointer-events-none"
         aria-hidden="true"
       >
         <defs>
@@ -331,7 +331,7 @@ export function Hero() {
     >
       {/* Background effects */}
       <div
-        className="hero-glow absolute top-[-200px] left-1/2 -translate-x-1/2 pointer-events-none z-0"
+        className="hero-glow absolute -top-50 left-1/2 -translate-x-1/2 pointer-events-none z-0"
         aria-hidden="true"
       />
       <div
@@ -339,8 +339,8 @@ export function Hero() {
         aria-hidden="true"
       />
 
-      <div className="relative z-10 max-w-[1200px] mx-auto px-6 md:px-8 py-20 md:py-28 lg:py-[112px] lg:pb-[120px]">
-        <div className="grid grid-cols-1 min-[960px]:grid-cols-[minmax(0,1fr)_minmax(0,55%)] items-center gap-12 min-[960px]:gap-14">
+      <div className="landing-hero-shell relative z-10 max-w-container-landing mx-auto px-6 md:px-8">
+        <div className="landing-hero-layout items-center">
           {/* Text column */}
           <div className="flex flex-col items-start">
             {/* Eyebrow badge */}
@@ -354,15 +354,15 @@ export function Hero() {
 
             <h1
               id="hero-heading"
-              className="text-[clamp(36px,5.2vw,60px)] font-semibold leading-[1.05] tracking-[-0.03em] text-primary"
+              className="text-4xl md:text-5xl font-semibold leading-tight tracking-tight text-primary"
             >
               {copy.h}
-              <em className="not-italic text-secondary tracking-[-0.03em]">
+              <em className="not-italic text-secondary tracking-tight">
                 {copy.hEm}
               </em>
             </h1>
 
-            <p className="text-sm text-secondary leading-relaxed max-w-[480px] mt-5 mb-7">
+            <p className="text-sm text-secondary leading-relaxed max-w-content-xs mt-5 mb-7">
               {copy.sub}
             </p>
 

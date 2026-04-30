@@ -21,10 +21,10 @@
   font-weight: 600;
   color: var(--text-primary);
   background: var(--accent-default);
-  border-radius: 0 0 0.375rem 0.375rem;
+  border-radius: 0 0 var(--radius-sm) var(--radius-sm);
   transition: top var(--transition-duration-micro);
 }
-.skip-to-content:focus {
+.skip-to-content:focus-visible {
   top: 0;
 }
 

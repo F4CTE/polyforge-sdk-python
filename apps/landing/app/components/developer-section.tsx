@@ -70,7 +70,7 @@ export function DeveloperSection() {
             >
               Built for the API-first trader.
             </h2>
-            <p className="text-base text-secondary leading-relaxed max-w-[480px] mb-5">
+            <p className="text-base text-secondary leading-relaxed max-w-content-xs mb-5">
               Everything in the product ships as REST, WebSocket, and MCP.
               TypeScript, Python, and Rust SDKs. Strategies are JSON you can
               version in git. Builder attribution baked into every order.

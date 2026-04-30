@@ -268,7 +268,7 @@ function CategoryBadge({ category }: { category?: string | null }) {
   const key = category.toLowerCase();
   const cls = colors[key] ?? 'bg-surface text-tertiary border-default';
   return (
-    <span className={`inline-flex items-center px-2 py-1 rounded text-caption font-medium border ${cls}`}>
+    <span className={`inline-flex items-center px-2 py-1 rounded-sm text-caption font-medium border ${cls}`}>
       {category}
     </span>
   );
@@ -284,7 +284,7 @@ function TableSkeleton() {
   return (
     <div className="space-y-2 p-4">
       {[1, 2, 3].map(i => (
-        <div key={i} className="h-10 bg-overlay rounded animate-pulse" />
+        <div key={i} className="h-10 bg-overlay rounded-sm animate-pulse" />
       ))}
     </div>
   );
@@ -1176,7 +1176,7 @@ export function Component() {
               <span className="text-label text-secondary">Total P&L</span>
               <span
                 key={pnlFlashKey}
-                className={`text-body-md font-mono font-semibold px-1 rounded ${colorClass(totalPnlNum)} ${
+                className={`text-body-md font-mono font-semibold px-1 rounded-sm ${colorClass(totalPnlNum)} ${
                   pnlFlashing
                     ? pnlFlashDir === 'gain'
                       ? 'animate-value-flash-gain'
@@ -1394,12 +1394,12 @@ export function Component() {
                         {(taxExpanded ? sorted : preview).map(entry => (
                           <tr key={entry.id} className="border-b border-subtle last:border-0 hover:bg-overlay/50 transition-colors">
                             <td className="px-3 py-2 font-mono text-secondary whitespace-nowrap">{entry.closeDate}</td>
-                            <td className="px-3 py-2 text-primary max-w-[200px] truncate" title={entry.marketQuestion}>{entry.marketQuestion}</td>
+                            <td className="px-3 py-2 text-primary max-w-col-md truncate" title={entry.marketQuestion}>{entry.marketQuestion}</td>
                             <td className={`px-3 py-2 text-right font-mono font-medium whitespace-nowrap ${entry.realizedGain >= 0 ? 'text-gain' : 'text-loss'}`}>
                               {entry.realizedGain >= 0 ? '+' : ''}{entry.realizedGain.toFixed(2)}
                             </td>
                             <td className="px-3 py-2 text-center">
-                              <span className={`inline-flex items-center px-2 py-1 rounded text-caption font-medium border ${entry.type === 'SHORT_TERM' ? 'bg-gold-500/10 text-gold-500 border-gold-500/25' : 'bg-gain/10 text-gain border-gain/25'}`}>
+                              <span className={`inline-flex items-center px-2 py-1 rounded-sm text-caption font-medium border ${entry.type === 'SHORT_TERM' ? 'bg-gold-500/10 text-gold-500 border-gold-500/25' : 'bg-gain/10 text-gain border-gain/25'}`}>
                                 {entry.type === 'SHORT_TERM' ? 'Short' : 'Long'}
                               </span>
                             </td>
@@ -1846,9 +1846,9 @@ export function Component() {
 
                 {loadingDailyPnl ? (
                   <div className="space-y-2">
-                    <div className="h-8 bg-overlay rounded animate-pulse w-32" />
-                    <div className="h-3 bg-overlay rounded animate-pulse w-full" />
-                    <div className="h-3 bg-overlay rounded animate-pulse w-2/3" />
+                    <div className="h-8 bg-overlay rounded-sm animate-pulse w-32" />
+                    <div className="h-3 bg-overlay rounded-sm animate-pulse w-full" />
+                    <div className="h-3 bg-overlay rounded-sm animate-pulse w-2/3" />
                   </div>
                 ) : (
                   <>
@@ -1919,7 +1919,7 @@ export function Component() {
               </div>
             </div>
             {loadingChart ? (
-              <div className="h-64 animate-pulse bg-overlay m-4 rounded" />
+              <div className="h-64 animate-pulse bg-overlay m-4 rounded-sm" />
             ) : chartData.length > 0 ? (
               <div className="h-64 px-2 py-4">
                 <ResponsiveContainer width="100%" height="100%">
@@ -2021,7 +2021,7 @@ export function Component() {
                             className="hover:bg-surface/50 transition-colors cursor-pointer"
                             onClick={() => setExpandedId(isExpanded ? null : pos.id)}
                           >
-                            <td className="px-4 py-3 max-w-[200px]">
+                            <td className="px-4 py-3 max-w-col-md">
                               <div className="flex items-center gap-2">
                                 {isExpanded
                                   ? <ChevronUp className="size-3 text-tertiary shrink-0" />
@@ -2031,19 +2031,19 @@ export function Component() {
                               <div className="flex items-center gap-1 mt-1 flex-wrap">
                                 <CategoryBadge category={(pos as any).marketCategory} />
                                 {hasRule && rule.stopLoss != null && (
-                                  <span className="inline-flex items-center px-2 py-1 rounded text-caption font-mono font-medium bg-loss/10 text-loss border border-loss/20">
+                                  <span className="inline-flex items-center px-2 py-1 rounded-sm text-caption font-mono font-medium bg-loss/10 text-loss border border-loss/20">
                                     SL: {rule.stopLoss.toFixed(2)}
                                   </span>
                                 )}
                                 {hasRule && rule.takeProfit != null && (
-                                  <span className="inline-flex items-center px-2 py-1 rounded text-caption font-mono font-medium bg-gain/10 text-gain border border-gain/20">
+                                  <span className="inline-flex items-center px-2 py-1 rounded-sm text-caption font-mono font-medium bg-gain/10 text-gain border border-gain/20">
                                     TP: {rule.takeProfit.toFixed(2)}
                                   </span>
                                 )}
                               </div>
                             </td>
                             <td className="px-4 py-3">
-                              <span className={`inline-flex px-2 py-1 rounded text-label font-medium ${
+                              <span className={`inline-flex px-2 py-1 rounded-sm text-label font-medium ${
                                 pos.side === 'BUY' ? 'bg-gain/10 text-gain' : 'bg-loss/10 text-loss'
                               }`}>
                                 {pos.side}
@@ -2071,7 +2071,7 @@ export function Component() {
                                 if (livePrice != null && flash != null) {
                                   const isUp = flash === 'up';
                                   return (
-                                    <span className={`inline-flex items-center gap-1 px-2 py-1 rounded text-label font-mono font-medium ${
+                                    <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-sm text-label font-mono font-medium ${
                                       isUp
                                         ? 'text-gain animate-value-flash-gain'
                                         : 'text-loss animate-value-flash-loss'
@@ -2107,7 +2107,7 @@ export function Component() {
                             </td>
                             <td className="px-4 py-3 text-right">
                               <span
-                                className={`inline-flex px-2 py-1 rounded text-label font-medium ${
+                                className={`inline-flex px-2 py-1 rounded-sm text-label font-medium ${
                                   pos.resolutionStatus === 'UNRESOLVED'
                                     ? 'bg-accent/10 text-accent-text'
                                     : 'bg-overlay text-tertiary'
@@ -2171,7 +2171,7 @@ export function Component() {
                                       <span className="text-body-md font-semibold text-primary">
                                         Auto-Close Rules
                                       </span>
-                                      <span className="text-label text-tertiary truncate max-w-[200px]" title={pos.marketTitle}>
+                                      <span className="text-label text-tertiary truncate max-w-col-md" title={pos.marketTitle}>
                                         — {pos.marketTitle}
                                       </span>
                                     </div>
@@ -2204,7 +2204,7 @@ export function Component() {
                                               setAcSlEnabled(prev => ({ ...prev, [pos.id]: e.target.checked }));
                                             }}
                                             onClick={e => e.stopPropagation()}
-                                            className="rounded border-default accent-accent-text"
+                                            className="rounded-xs border-default accent-accent-text"
                                           />
                                           <span className="text-body-md font-medium text-primary">Stop Loss</span>
                                         </label>
@@ -2243,7 +2243,7 @@ export function Component() {
                                               setAcTpEnabled(prev => ({ ...prev, [pos.id]: e.target.checked }));
                                             }}
                                             onClick={e => e.stopPropagation()}
-                                            className="rounded border-default accent-accent-text"
+                                            className="rounded-xs border-default accent-accent-text"
                                           />
                                           <span className="text-body-md font-medium text-primary">Take Profit</span>
                                         </label>
@@ -2593,7 +2593,7 @@ export function Component() {
                             : CATEGORY_COLORS.Other;
                           return (
                             <tr key={pos.id} className="hover:bg-surface/40 transition-colors">
-                              <td className="py-2 pr-3 max-w-[140px]">
+                              <td className="py-2 pr-3 max-w-col-sm">
                                 <span className="truncate block text-primary" title={pos.marketTitle}>{pos.marketTitle}</span>
                               </td>
                               <td className="py-2 pr-3">
@@ -2608,7 +2608,7 @@ export function Component() {
                                 )}
                               </td>
                               <td className="py-2 pr-3">
-                                <span className={`inline-flex px-2 py-1 rounded font-medium ${
+                                <span className={`inline-flex px-2 py-1 rounded-sm font-medium ${
                                   pos.side === 'BUY' ? 'bg-gain/10 text-gain' : 'bg-loss/10 text-loss'
                                 }`}>
                                   {pos.side}
@@ -2727,7 +2727,7 @@ export function Component() {
               <span className="text-body-md font-medium text-primary">Daily Returns (12 months)</span>
             </div>
             {loadingHeatmap ? (
-              <div className="h-32 bg-overlay rounded animate-pulse" />
+              <div className="h-32 bg-overlay rounded-sm animate-pulse" />
             ) : heatmapData.length === 0 ? (
               <p className="text-body-sm text-tertiary">No trading data yet</p>
             ) : (
@@ -2765,13 +2765,13 @@ export function Component() {
                     {/* header row spacer */}
                     <div />
                     {RISK_CATEGORIES.map(c => (
-                      <div key={c} className="h-4 bg-overlay rounded animate-pulse" />
+                      <div key={c} className="h-4 bg-overlay rounded-sm animate-pulse" />
                     ))}
                     {RISK_OUTCOMES.map(o => (
                       <>
-                        <div key={`lbl-${o}`} className="h-12 w-8 bg-overlay rounded animate-pulse" />
+                        <div key={`lbl-${o}`} className="h-12 w-8 bg-overlay rounded-sm animate-pulse" />
                         {RISK_CATEGORIES.map(c => (
-                          <div key={`${o}-${c}`} className="h-12 bg-overlay rounded animate-pulse" />
+                          <div key={`${o}-${c}`} className="h-12 bg-overlay rounded-sm animate-pulse" />
                         ))}
                       </>
                     ))}
@@ -2871,7 +2871,7 @@ export function Component() {
                           key={`row-lbl-${outcome}`}
                           className="flex items-center justify-center"
                         >
-                          <span className={`text-label font-semibold px-2 py-1 rounded ${
+                          <span className={`text-label font-semibold px-2 py-1 rounded-sm ${
                             outcome === 'YES'
                               ? 'text-gain bg-gain/10'
                               : 'text-loss bg-loss/10'
@@ -2990,7 +2990,7 @@ export function Component() {
                 'bg-gain/10 text-gain';
               const label = priority === 'high' ? 'High' : priority === 'medium' ? 'Medium' : 'Low';
               return (
-                <span className={`inline-flex items-center px-2 py-1 rounded text-caption font-semibold uppercase tracking-wide ${cls}`}>
+                <span className={`inline-flex items-center px-2 py-1 rounded-sm text-caption font-semibold uppercase tracking-wide ${cls}`}>
                   {label}
                 </span>
               );
@@ -3301,7 +3301,7 @@ export function Component() {
                               <span className="text-primary" title={pos.tokenId}>{formatTokenId(pos.tokenId)}</span>
                             </td>
                             <td className="px-4 py-3">
-                              <span className={`inline-flex px-2 py-1 rounded text-label font-medium ${
+                              <span className={`inline-flex px-2 py-1 rounded-sm text-label font-medium ${
                                 pos.side === 'BUY' ? 'bg-gain/10 text-gain' : 'bg-loss/10 text-loss'
                               }`}>
                                 {pos.side}

@@ -10,7 +10,7 @@ function EquityCurveCard() {
       <div className="font-mono text-caption text-tertiary uppercase tracking-widest">
         Equity curve · 30d
       </div>
-      <div className="font-mono text-[28px] font-semibold text-gain tracking-tight mt-1 tabular-nums">
+      <div className="font-mono text-3xl font-semibold text-gain tracking-tight mt-1 tabular-nums">
         +34.2%
       </div>
       <svg

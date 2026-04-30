@@ -129,7 +129,7 @@ function MonthlyTooltip({ active, payload, label }: MonthlyTooltipProps) {
   const fees = payload.find(p => p.name === 'Fees')?.value ?? 0;
   const purchases = payload.find(p => p.name === 'Purchases')?.value ?? 0;
   return (
-    <div className="bg-surface border border-default rounded px-3 py-2 text-label">
+    <div className="bg-surface border border-default rounded-sm px-3 py-2 text-label">
       <div className="font-semibold text-primary mb-1">{label}</div>
       <div className="text-secondary">Revenue: <span className="text-primary font-mono">{fmtDollar(revenue)}</span></div>
       <div className="text-secondary">Fees: <span className="text-primary font-mono">{fmtDollar(fees)}</span></div>
@@ -147,7 +147,7 @@ interface CompareTooltipProps {
 function CompareTooltip({ active, payload, label }: CompareTooltipProps) {
   if (!active || !payload?.length) return null;
   return (
-    <div className="bg-surface border border-default rounded px-3 py-2 text-label">
+    <div className="bg-surface border border-default rounded-sm px-3 py-2 text-label">
       <div className="font-semibold text-primary mb-1">{label}</div>
       {payload.map(p => (
         <div key={p.name} className="text-secondary">
@@ -194,7 +194,7 @@ function PeriodPills({ periods, active, onChange }: PeriodPillProps) {
           type="button"
           variant="ghost"
           onClick={() => onChange(p.value)}
-          className={`px-3 py-1 rounded text-label font-medium transition-colors ${
+          className={`px-3 py-1 rounded-sm text-label font-medium transition-colors ${
             active === p.value
               ? 'bg-accent/20 text-accent-text border border-accent/40'
               : 'text-tertiary hover:text-primary border border-transparent'
@@ -620,7 +620,7 @@ export function Component() {
                   type="button"
                   variant="ghost"
                   onClick={() => setMonthlyPeriod(p)}
-                  className={`px-3 py-1 rounded text-label font-medium transition-colors ${
+                  className={`px-3 py-1 rounded-sm text-label font-medium transition-colors ${
                     monthlyPeriod === p
                       ? 'bg-accent/20 text-accent-text border border-accent/40'
                       : 'text-tertiary hover:text-primary border border-transparent'
@@ -635,7 +635,7 @@ export function Component() {
               variant="ghost"
               onClick={() => loadMonthly(monthlyPeriod)}
               disabled={loadingMonthly}
-              className="flex items-center gap-2 px-3 py-1 rounded text-label text-secondary hover:text-primary border border-default bg-app transition-colors disabled:opacity-50"
+              className="flex items-center gap-2 px-3 py-1 rounded-sm text-label text-secondary hover:text-primary border border-default bg-app transition-colors disabled:opacity-50"
             >
               <RefreshCw className={`size-3 ${loadingMonthly ? 'animate-spin' : ''}`} />
               Refresh
@@ -820,7 +820,7 @@ export function Component() {
             variant="ghost"
             onClick={() => loadTopUsers(period)}
             disabled={loadingTopUsers}
-            className="flex items-center gap-2 px-3 py-1 rounded text-label text-secondary hover:text-primary border border-default bg-app transition-colors disabled:opacity-50"
+            className="flex items-center gap-2 px-3 py-1 rounded-sm text-label text-secondary hover:text-primary border border-default bg-app transition-colors disabled:opacity-50"
           >
             <RefreshCw className={`size-3 ${loadingTopUsers ? 'animate-spin' : ''}`} />
             Refresh

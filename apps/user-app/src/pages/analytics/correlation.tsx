@@ -124,7 +124,7 @@ function deriveInsights(data: CorrelationData): Insight[] {
 /* ─── Skeleton ───────────────────────────────────────────────────────── */
 
 function Skeleton({ className }: { className?: string }) {
-  return <div className={`bg-overlay rounded animate-pulse ${className ?? ''}`} />;
+  return <div className={`bg-overlay rounded-sm animate-pulse ${className ?? ''}`} />;
 }
 
 function HeatmapSkeleton() {
@@ -135,7 +135,7 @@ function HeatmapSkeleton() {
       <div className="mt-4 overflow-x-auto">
         <div className="inline-grid gap-1 correlation-grid" style={{ '--correlation-col-count': 6 } as React.CSSProperties}>
           {Array.from({ length: 7 * 7 }).map((_, i) => (
-            <Skeleton key={i} className="h-[72px] w-full" />
+            <Skeleton key={i} className="h-18 w-full" />
           ))}
         </div>
       </div>
@@ -311,19 +311,19 @@ export function Component() {
               aria-label="Category correlation matrix"
             >
               {/* Top-left empty corner */}
-              <div className="h-[72px] w-20" aria-hidden="true" />
+              <div className="h-18 w-20" aria-hidden="true" />
 
               {/* Column headers */}
               {categories.map((cat, j) => (
                 <div
                   key={`col-${cat}`}
-                  className={`h-[72px] w-[72px] flex items-end justify-center pb-2 transition-colors duration-micro ${
+                  className={`h-18 w-18 flex items-end justify-center pb-2 transition-colors duration-micro ${
                     highlightCol === j ? 'text-accent-text' : 'text-secondary'
                   }`}
                   aria-hidden="true"
                 >
                   <span
-                    className="text-caption font-semibold uppercase tracking-wider truncate max-w-[64px] block text-center correlation-header-cell"
+                    className="text-caption font-semibold uppercase tracking-wider truncate max-w-16 block text-center correlation-header-cell"
                   >
                     {capitalize(cat)}
                   </span>
@@ -336,7 +336,7 @@ export function Component() {
                   {/* Row header */}
                   <div
                     key={`row-label-${rowCat}`}
-                    className={`h-[72px] w-20 flex items-center justify-end pr-2 transition-colors duration-micro ${
+                    className={`h-18 w-20 flex items-center justify-end pr-2 transition-colors duration-micro ${
                       highlightRow === i ? 'text-accent-text' : 'text-secondary'
                     }`}
                     aria-hidden="true"
@@ -355,7 +355,7 @@ export function Component() {
                       return (
                         <div
                           key={`cell-${i}-${j}`}
-                          className="h-[72px] w-[72px] rounded bg-accent/20 flex items-center justify-center"
+                          className="h-18 w-18 rounded-sm bg-accent/20 flex items-center justify-center"
                           aria-label={`${capitalize(rowCat)} self-correlation`}
                           role="gridcell"
                         >
@@ -371,8 +371,8 @@ export function Component() {
                     return (
                       <div
                         key={`cell-${i}-${j}`}
-                        className={`h-[72px] w-[72px] rounded flex items-center justify-center cursor-default transition-all duration-micro ${cellBg} ${
-                          isHighlighted ? 'ring-1 ring-accent-text/50 scale-[1.04]' : ''
+                        className={`h-18 w-18 rounded-sm flex items-center justify-center cursor-default transition-all duration-micro ${cellBg} ${
+                          isHighlighted ? 'ring-1 ring-accent-text/50 scale-105' : ''
                         }`}
                         role="gridcell"
                         aria-label={`${capitalize(rowCat)} to ${capitalize(colCat)}: ${formatCorr(val)}`}
@@ -495,7 +495,7 @@ export function Component() {
                       </Link>
                     </td>
                     <td className="px-6 py-3 text-right">
-                      <span className={`inline-flex items-center gap-1 px-2 py-1 rounded text-label font-mono font-semibold ${correlationBadgeClass(pair.correlation)}`}>
+                      <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-sm text-label font-mono font-semibold ${correlationBadgeClass(pair.correlation)}`}>
                         {pair.correlation >= 0.3 && <TrendingUp className="size-3" aria-hidden="true" />}
                         {pair.correlation <= -0.3 && <TrendingDown className="size-3" aria-hidden="true" />}
                         {formatCorr(pair.correlation)}
@@ -516,7 +516,7 @@ export function Component() {
       {tooltip.visible && (
         <div
           ref={tooltipRef}
-          className="fixed z-50 pointer-events-none px-3 py-2 rounded-pf bg-elevated border border-default text-label text-primary shadow-elevation-2 max-w-[240px]"
+          className="fixed z-50 pointer-events-none px-3 py-2 rounded-pf bg-elevated border border-default text-label text-primary shadow-elevation-2 max-w-60"
           style={{ left: tooltip.x + 12, top: tooltip.y - 40 }} /* computed position: intentional */
           aria-hidden="true"
         >
@@ -574,7 +574,7 @@ function CategorySelect({
   disabled?: boolean;
 }) {
   return (
-    <div className="flex flex-col gap-1 min-w-[160px]">
+    <div className="flex flex-col gap-1 min-w-dropdown-min">
       <label htmlFor={id} className="text-label font-medium text-secondary">
         {label}
       </label>

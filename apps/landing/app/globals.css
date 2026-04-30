@@ -25,6 +25,49 @@
   -webkit-mask-image: radial-gradient(ellipse 70% 55% at 50% 30%, rgba(0, 0, 0, 0.35), transparent 75%);
 }
 
+.hero-terminal-grid {
+  grid-template-columns: 1fr 70px 70px;
+}
+
+.landing-hero-shell {
+  padding-top: 80px;
+  padding-bottom: 80px;
+}
+
+.landing-hero-layout {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 48px;
+}
+
+.builder-canvas {
+  height: 440px;
+}
+
+.builder-canvas-edges {
+  top: 42px;
+}
+
+@media (min-width: 768px) {
+  .landing-hero-shell {
+    padding-top: 112px;
+    padding-bottom: 112px;
+  }
+}
+
+@media (min-width: 960px) {
+  .landing-hero-layout {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 55%);
+    gap: 56px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .landing-hero-shell {
+    padding-bottom: 120px;
+  }
+}
+
 /* CTA banner backgrounds */
 .cta-glow {
   width: 800px;
