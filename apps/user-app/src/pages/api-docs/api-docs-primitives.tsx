@@ -102,6 +102,7 @@ export function FieldTable({ fields }: { fields: EndpointField[] }) {
   return (
     <div className="border border-default rounded-pf overflow-hidden">
       <table className="w-full text-body-sm" aria-label="Field definitions">
+        <caption className="sr-only">Field definitions</caption>
         <thead>
           <tr className="bg-surface text-left text-label text-secondary uppercase tracking-wider border-b border-default">
             <th scope="col" className="px-4 py-3 font-medium">Field</th>

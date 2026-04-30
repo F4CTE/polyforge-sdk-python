@@ -415,6 +415,7 @@ export function Component() {
         {loading ? (
           <div className="overflow-x-auto">
             <table className="w-full text-body-sm" aria-label="Loading broadcasts">
+              <caption className="sr-only">Loading broadcasts</caption>
               <tbody>
                 {Array.from({ length: 4 }).map((_, i) => (
                   <SkeletonRow key={i} />

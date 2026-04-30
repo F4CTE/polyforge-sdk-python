@@ -228,6 +228,7 @@ export function RewardsDashboard() {
           {expanded && (
             <div className="mt-4 overflow-x-auto">
               <table className="w-full text-body-sm" aria-label="Rewards by market">
+                <caption className="sr-only">Rewards by market</caption>
                 <thead>
                   <tr className="text-left text-secondary text-caption uppercase tracking-wider border-b border-subtle">
                     <th className="px-3 py-2">Market</th>
@@ -280,6 +281,7 @@ export function RewardsDashboard() {
           {showRebates && (
             <div className="mt-4 overflow-x-auto">
               <table className="w-full text-body-sm" aria-label="Maker rebates history">
+                <caption className="sr-only">Maker rebates history</caption>
                 <thead>
                   <tr className="text-left text-secondary text-caption uppercase tracking-wider border-b border-subtle">
                     <th className="px-3 py-2">Market</th>

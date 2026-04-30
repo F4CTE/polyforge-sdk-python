@@ -149,6 +149,7 @@ export function Component() {
           <div className="max-w-4xl">
             <div className="overflow-x-auto">
               <table className="w-full border-collapse">
+                <caption className="sr-only">Strategy comparison metrics</caption>
                 <thead>
                   <tr className="border-b border-default">
                     <th className="py-2.5 px-3 text-left text-caption font-medium text-tertiary uppercase tracking-wider w-40">

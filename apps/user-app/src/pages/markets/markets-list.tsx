@@ -1311,6 +1311,7 @@ export function Component() {
           ) : (
             <div className="border border-default rounded-pf overflow-hidden">
               <table className="w-full text-body-sm" aria-label="Markets">
+                <caption className="sr-only">Markets</caption>
                 <thead>
                   <tr className="bg-surface text-left text-label text-secondary uppercase tracking-wider">
                     <th scope="col" className="px-4 py-3 font-medium">Market</th>

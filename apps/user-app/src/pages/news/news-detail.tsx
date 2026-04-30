@@ -191,6 +191,7 @@ export function Component() {
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-label" role="table" aria-label="Trading signals">
+                  <caption className="sr-only">Trading signals</caption>
                   <thead>
                     <tr className="border-b border-subtle">
                       <th scope="col" className="text-left py-2 px-3 text-tertiary font-medium">Market</th>

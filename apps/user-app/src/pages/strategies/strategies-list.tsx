@@ -306,6 +306,7 @@ function ComparisonPanel({ perfData, loading, onBack }: ComparisonPanelProps) {
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-body-sm" aria-label="Strategy performance metrics">
+            <caption className="sr-only">Strategy performance metrics</caption>
             <thead>
               <tr className="border-t border-default">
                 <th className="text-left px-5 py-3 text-tertiary font-medium text-label w-36">Metric</th>

@@ -316,6 +316,7 @@ export function Component() {
       {/* Table */}
       <div className="rounded-pf border border-default overflow-x-auto bg-surface">
         <table className="w-full text-body-sm" aria-label="Markets list">
+          <caption className="sr-only">Markets list</caption>
           <thead>
             <tr className="border-b border-default">
               <th className="px-4 py-3 text-left text-label font-semibold uppercase tracking-wider text-tertiary">

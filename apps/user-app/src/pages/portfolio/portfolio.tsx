@@ -1364,6 +1364,7 @@ export function Component() {
                 <div className="mb-3">
                   <div className="overflow-x-auto rounded-pf border border-subtle">
                     <table className="w-full text-label" aria-label="Capital gains and losses">
+                      <caption className="sr-only">Capital gains and losses</caption>
                       <thead>
                         <tr className="border-b border-subtle bg-overlay">
                           <th className="px-3 py-2 text-left text-secondary font-medium">Close Date</th>
@@ -1957,6 +1958,7 @@ export function Component() {
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-body-sm" aria-label="Open positions">
+                  <caption className="sr-only">Open positions</caption>
                   <thead>
                     <tr className="bg-surface text-left text-label text-secondary uppercase tracking-wider">
                       <th scope="col" className="px-4 py-3 font-medium">Market</th>
@@ -2405,6 +2407,7 @@ export function Component() {
                 <h2 className="text-base font-semibold text-primary mb-3">Resolved Positions</h2>
                 <div className="rounded-pf border border-default overflow-hidden">
                   <table className="w-full text-body-sm" aria-label="Resolved positions">
+                    <caption className="sr-only">Resolved positions</caption>
                     <thead>
                       <tr className="border-b border-default bg-surface-elevated">
                         <th className="text-left px-4 py-3 text-label font-medium text-tertiary">Market</th>
@@ -2550,6 +2553,7 @@ export function Component() {
                   <p className="text-label text-secondary uppercase tracking-wider mb-2">Largest Positions</p>
                   <div className="overflow-x-auto">
                     <table className="w-full text-label" aria-label="Largest positions">
+                      <caption className="sr-only">Largest positions</caption>
                       <thead>
                         <tr className="text-left text-tertiary border-b border-subtle">
                           <th className="pb-2 font-medium pr-3">Market</th>
@@ -3264,6 +3268,7 @@ export function Component() {
                   </div>
                   <div className="overflow-x-auto">
                     <table className="w-full text-body-sm" aria-label="Paper positions">
+                      <caption className="sr-only">Paper positions</caption>
                       <thead>
                         <tr className="bg-surface text-left text-label text-secondary uppercase tracking-wider">
                           <th scope="col" className="px-4 py-3 font-medium">Token</th>

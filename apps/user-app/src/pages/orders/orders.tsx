@@ -1023,6 +1023,7 @@ export function Component() {
           <div className="bg-elevated border border-default rounded-pf overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full min-w-[800px] text-body-sm" aria-label="Orders">
+                <caption className="sr-only">Orders</caption>
                 <thead>
                   <tr className="bg-surface text-left text-label text-secondary uppercase tracking-wider">
                     <th scope="col" className="px-4 py-3 font-medium w-10">#</th>
@@ -1200,6 +1201,7 @@ export function Component() {
           <div className="bg-elevated border border-default rounded-pf overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-body-sm" aria-label="Conditional orders">
+                <caption className="sr-only">Conditional orders</caption>
                 <thead>
                   <tr className="bg-surface text-left text-label text-secondary uppercase tracking-wider">
                     <th scope="col" className="px-4 py-3 font-medium">Type</th>

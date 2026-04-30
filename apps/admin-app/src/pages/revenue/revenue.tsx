@@ -547,6 +547,7 @@ export function Component() {
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-label" aria-label="Revenue by source">
+                  <caption className="sr-only">Revenue by source</caption>
                   <thead>
                     <tr className="text-tertiary border-b border-default">
                       <th className="text-left pb-2 font-medium">Source</th>
@@ -828,6 +829,7 @@ export function Component() {
 
         <div className="overflow-x-auto">
           <table className="w-full text-body-sm" aria-label="Top users by volume">
+            <caption className="sr-only">Top users by volume</caption>
             <thead>
               <tr className="text-label text-tertiary border-b border-default">
                 <th className="text-left px-4 py-3 font-medium w-10">#</th>

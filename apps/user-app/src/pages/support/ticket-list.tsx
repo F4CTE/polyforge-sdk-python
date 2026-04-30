@@ -94,6 +94,7 @@ export function Component() {
       <div data-testid="ticket-list" className="bg-elevated border border-default rounded-pf overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-body-sm" aria-label="Support tickets">
+            <caption className="sr-only">Support tickets</caption>
             <thead>
               <tr className="bg-surface text-left text-label text-secondary uppercase tracking-wider">
                 <th scope="col" className="px-4 py-3 font-medium">Subject</th>

@@ -269,7 +269,9 @@ export function Component() {
               <p className="text-tertiary text-label mt-1">Markets are efficiently priced. Lower the threshold or check back shortly.</p>
             </div>
           ) : (
-            <div role="table" aria-label="Arbitrage opportunities" className="bg-elevated border border-default rounded-pf overflow-hidden">
+            <>
+              <span id="arbitrage-opportunities-table-label" className="sr-only">Arbitrage opportunities</span>
+              <div role="table" aria-labelledby="arbitrage-opportunities-table-label" className="bg-elevated border border-default rounded-pf overflow-hidden">
               {/* Header row */}
               <div role="row" className="grid grid-cols-[1fr_auto_auto_auto_auto_auto] gap-4 px-4 py-2 border-b border-default bg-surface">
                 <span role="columnheader" className="text-caption font-medium text-tertiary uppercase tracking-wider">Market</span>
@@ -336,7 +338,8 @@ export function Component() {
                   </div>
                 </div>
               ))}
-            </div>
+              </div>
+            </>
           )}
 
           <p className="text-caption text-tertiary text-center">
@@ -396,7 +399,9 @@ export function Component() {
               <p className="text-tertiary text-label mt-1">Both venues are pricing these markets similarly. Check back later.</p>
             </div>
           ) : (
-            <div role="table" aria-label="Cross-venue arbitrage opportunities" data-testid="cross-venue-table" className="bg-elevated border border-default rounded-pf overflow-hidden">
+            <>
+              <span id="cross-venue-arbitrage-table-label" className="sr-only">Cross-venue arbitrage opportunities</span>
+              <div role="table" aria-labelledby="cross-venue-arbitrage-table-label" data-testid="cross-venue-table" className="bg-elevated border border-default rounded-pf overflow-hidden">
               {/* Header */}
               <div role="row" className="grid grid-cols-[1fr_auto_auto_auto_auto] gap-4 px-4 py-2 border-b border-default bg-surface">
                 <span role="columnheader" className="text-caption font-medium text-tertiary uppercase tracking-wider">Markets (Poly ↔ Kalshi)</span>
@@ -455,7 +460,8 @@ export function Component() {
                   </div>
                 </div>
               ))}
-            </div>
+              </div>
+            </>
           )}
 
           <p className="text-caption text-tertiary text-center">

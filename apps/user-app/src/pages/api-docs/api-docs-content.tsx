@@ -281,6 +281,7 @@ export function renderContent({
       <Sub title="Inbound event types">
         <div className="border border-default rounded-pf overflow-hidden">
           <table className="w-full text-body-sm" aria-label="Inbound event types">
+            <caption className="sr-only">Inbound event types</caption>
             <thead>
               <tr className="bg-surface text-left text-label text-secondary uppercase tracking-wider border-b border-default">
                 <th scope="col" className="px-4 py-3 font-medium">Event</th>
@@ -375,6 +376,7 @@ export function renderContent({
       />
       <div className="border border-default rounded-pf overflow-hidden">
         <table className="w-full text-body-sm" aria-label="Rate limit headers">
+          <caption className="sr-only">Rate limit headers</caption>
           <thead>
             <tr className="bg-surface text-left text-label text-secondary uppercase tracking-wider border-b border-default">
               <th scope="col" className="px-4 py-3 font-medium">Header</th>
@@ -416,6 +418,7 @@ export function renderContent({
       <Sub title="HTTP status codes">
         <div className="border border-default rounded-pf overflow-hidden">
           <table className="w-full text-body-sm" aria-label="HTTP status codes">
+            <caption className="sr-only">HTTP status codes</caption>
             <thead>
               <tr className="bg-surface text-left text-label text-secondary uppercase tracking-wider border-b border-default">
                 <th scope="col" className="px-4 py-3 font-medium w-16">Code</th>

@@ -1863,6 +1863,7 @@ export function Component() {
                 <>
                   <div className="overflow-x-auto rounded-pf border border-default">
                     <table className="w-full text-label" aria-label="Strategy trade history">
+                      <caption className="sr-only">Strategy trade history</caption>
                       <thead>
                         <tr className="border-b border-default bg-surface">
                           <th className="px-3 py-3 text-left font-medium text-tertiary">Date</th>

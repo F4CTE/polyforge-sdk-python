@@ -2041,6 +2041,7 @@ export function Component() {
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-body-sm" aria-label="API keys">
+                  <caption className="sr-only">API keys</caption>
                   <thead>
                     <tr className="text-left text-label text-secondary uppercase tracking-wider border-b border-subtle">
                       <th scope="col" className="pb-2 pr-4 font-medium">Name</th>
@@ -2329,6 +2330,7 @@ export function Component() {
                           ) : (
                             <div className="overflow-x-auto">
                               <table className="w-full text-label" aria-label="Webhook deliveries">
+                                <caption className="sr-only">Webhook deliveries</caption>
                                 <thead>
                                   <tr className="text-tertiary border-b border-subtle">
                                     <th className="text-left px-4 py-2 font-medium">Time</th>

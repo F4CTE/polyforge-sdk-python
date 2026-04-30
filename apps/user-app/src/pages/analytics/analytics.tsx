@@ -523,6 +523,7 @@ export function Component() {
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-body-sm" aria-label="Category performance">
+                <caption className="sr-only">Category performance</caption>
                 <thead>
                   <tr className="bg-surface text-left text-label text-secondary uppercase tracking-wider">
                     <th scope="col" className="px-6 py-3 font-medium">Category</th>

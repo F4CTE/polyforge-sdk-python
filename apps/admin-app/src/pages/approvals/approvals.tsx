@@ -97,6 +97,7 @@ export function Component() {
           </div>
         ) : (
           <table className="w-full text-body-sm" aria-label="Pending users">
+            <caption className="sr-only">Pending users</caption>
             <thead>
               <tr className="bg-surface text-left text-label text-secondary uppercase tracking-wider">
                 <th scope="col" className="px-4 py-3 font-medium">User</th>

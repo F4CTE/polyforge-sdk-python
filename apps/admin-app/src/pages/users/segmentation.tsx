@@ -435,6 +435,7 @@ function DrillDown({ cohortId, onBack }: DrillDownProps) {
 
         <div className="overflow-x-auto">
           <table className="w-full text-body-sm" aria-label="User segmentation data">
+            <caption className="sr-only">User segmentation data</caption>
             <thead>
               <tr className="border-b border-default bg-surface">
                 <th className="px-4 py-3 text-left text-label font-semibold text-tertiary uppercase tracking-wider">

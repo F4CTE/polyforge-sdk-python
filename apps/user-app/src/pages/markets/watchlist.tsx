@@ -532,6 +532,7 @@ export function Component() {
       {displayedMarkets.length > 0 && (
         <div className="max-w-screen-xl mx-auto px-6 py-4 overflow-x-auto">
           <table className="w-full border-collapse text-body-sm" aria-label="Watchlist markets">
+            <caption className="sr-only">Watchlist markets</caption>
             {/* Head */}
             <thead>
               <tr className="border-b border-default">

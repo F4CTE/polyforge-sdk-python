@@ -480,6 +480,7 @@ export function Component() {
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-body-sm" aria-label="Backtest history">
+            <caption className="sr-only">Backtest history</caption>
             <thead>
               <tr className="bg-surface text-left text-label text-secondary uppercase tracking-wider">
                 <th scope="col" className="px-4 py-3 font-medium">Strategy</th>
@@ -630,6 +631,7 @@ export function Component() {
                 )}
                 <div className="overflow-x-auto">
                   <table className="w-full text-label" aria-label="Backtest results">
+                    <caption className="sr-only">Backtest results</caption>
                     <thead>
                       <tr className="border-b border-default">
                         <th className="text-left py-2 pr-4 font-medium text-tertiary">Metric</th>

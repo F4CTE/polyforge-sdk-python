@@ -882,6 +882,7 @@ function LiveTab({
           <span className="text-caption text-secondary uppercase tracking-wider mb-2 block">Recent Trades</span>
           <div className="bg-surface rounded-sm overflow-hidden max-h-[120px] overflow-y-auto">
             <table className="w-full text-label" aria-label="Trade history">
+              <caption className="sr-only">Trade history</caption>
               <thead>
                 <tr className="text-tertiary text-left">
                   <th scope="col" className="px-2 py-1 font-medium">Time</th>

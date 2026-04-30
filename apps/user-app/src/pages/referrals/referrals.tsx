@@ -306,6 +306,7 @@ export function Component() {
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-body-sm" aria-label="Referral entries">
+              <caption className="sr-only">Referral entries</caption>
               <thead>
                 <tr className="border-b border-default text-left text-secondary text-label">
                   <th className="px-4 py-2 font-medium">User</th>

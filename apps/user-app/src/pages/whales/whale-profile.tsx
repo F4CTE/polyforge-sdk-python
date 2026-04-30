@@ -293,6 +293,7 @@ export function Component() {
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-body-sm" aria-label="Recent whale trades">
+            <caption className="sr-only">Recent whale trades</caption>
             <thead>
               <tr className="bg-surface text-left text-label text-secondary uppercase tracking-wider">
                 <th scope="col" className="px-4 py-3 font-medium">Market</th>

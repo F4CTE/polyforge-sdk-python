@@ -300,6 +300,7 @@ function AnalyticsSkeleton() {
   return (
     <div className="mt-3 overflow-x-auto animate-shimmer rounded-pf">
       <table className="w-full text-body-sm" aria-label="Copy trader analytics loading">
+        <caption className="sr-only">Copy trader analytics loading</caption>
         <thead>
           <tr className="border-b border-default text-left">
             {['Trader', 'Copied P&L', 'Correlation', 'Max Drawdown', 'Win Rate', 'Trend'].map((h) => (
@@ -429,6 +430,7 @@ function AnalyticsPanel({ analytics, loading, expanded, onToggle }: AnalyticsPan
           {!loading && analytics && analytics.traders.length > 0 && (
             <div className="mt-3 overflow-x-auto">
               <table className="w-full text-body-sm" aria-label="Per-trader copy analytics">
+                <caption className="sr-only">Per-trader copy analytics</caption>
                 <thead>
                   <tr className="border-b border-default text-left">
                     <th className="pb-2 pr-4 font-medium text-tertiary text-label whitespace-nowrap">Trader</th>

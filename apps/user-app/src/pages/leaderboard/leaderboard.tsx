@@ -229,6 +229,7 @@ export function Component() {
       <div data-testid="leaderboard-table" className="bg-elevated border border-default rounded-pf overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-body-sm" aria-label="Leaderboard rankings">
+            <caption className="sr-only">Leaderboard rankings</caption>
             <thead>
               <tr className="bg-surface text-left text-label text-secondary uppercase tracking-wider">
                 <th scope="col" data-testid="column-rank" className="px-4 py-3 font-medium text-right w-16">Rank</th>

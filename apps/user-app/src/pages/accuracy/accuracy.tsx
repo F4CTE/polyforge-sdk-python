@@ -290,6 +290,7 @@ export function Component() {
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-body-sm" aria-label="Accuracy by category">
+              <caption className="sr-only">Accuracy by category</caption>
               <thead>
                 <tr className="bg-surface text-left text-label text-secondary uppercase tracking-wider">
                   <th scope="col" className="px-6 py-3 font-medium">Category</th>
