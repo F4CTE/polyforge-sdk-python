@@ -16,7 +16,7 @@
     "migrate:dev:admin": "prisma migrate dev --schema prisma/schema.admin.prisma --config prisma/prisma.admin.config.ts",
     "seed": "dotenv -e .env -- ts-node prisma/seed.ts",
     "seed:admin": "dotenv -e .env -- ts-node prisma/seed.admin.ts",
-    "generate:api": "openapi-ts --config openapi-ts.react.config.ts && openapi-ts --config openapi-ts.react.admin.config.ts",
+    "generate:api": "openapi-ts --file openapi-ts.config.ts && openapi-ts --file openapi-ts.admin.config.ts",
     "load-test": "k6 run tests/load/spike.js"
   },
   "dependencies": {
@@ -24,7 +24,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
-    "@hey-api/openapi-ts": "0.96.1",
+    "@hey-api/openapi-ts": "0.97.0",
     "@types/bcrypt": "^6.0.0",
     "@types/node": "25.6.0",
     "bcrypt": "^6.0.0",

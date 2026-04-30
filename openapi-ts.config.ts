@@ -1,6 +1,4 @@
-import { defineConfig } from '@hey-api/openapi-ts';
-
-export default defineConfig({
+const config = {
   input: 'services/api-service/dist/swagger.json',
   output: 'packages/api-client/src/generated/user',
   plugins: [
@@ -8,4 +6,6 @@ export default defineConfig({
     { name: '@hey-api/sdk' },
     { name: '@hey-api/client-fetch' },
   ],
-});
+} satisfies import('@hey-api/openapi-ts').UserConfig;
+
+export default config;
