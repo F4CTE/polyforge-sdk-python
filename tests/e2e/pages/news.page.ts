@@ -60,14 +60,21 @@ export class NewsPage {
     }
 
     async filterBySource(source: string): Promise<void> {
+        const expectedSource = source.toLowerCase();
+
         // Filtering triggers a server-side fetch; wait for the article endpoint
-        // specifically. The page also polls /api/v1/news/signals, which can
-        // otherwise satisfy this wait and let assertions read stale/empty DOM.
+        // with the matching source query. The initial unfiltered article request
+        // can still be in flight when the select changes, and treating that as
+        // the filtered response leaves stale cards in the DOM on slow CI runs.
         const [response] = await Promise.all([
             this.page.waitForResponse(
-                res => res.url().includes('/api/v1/news')
-                    && !res.url().includes('/signals')
-                    && res.status() === 200,
+                res => {
+                    if (res.status() !== 200) return false;
+                    const url = new URL(res.url());
+                    if (!url.pathname.endsWith('/api/v1/news')) return false;
+                    const responseSource = url.searchParams.get('source');
+                    return source === 'All' ? responseSource === null : responseSource === source;
+                },
                 { timeout: 15_000 },
             ),
             this.sourceSelect.selectOption(source),
@@ -76,6 +83,22 @@ export class NewsPage {
         const expectedCount = json?.data?.length ?? 0;
         if (expectedCount > 0) {
             await expect(this.newsCards.first()).toBeVisible({ timeout: 10_000 });
+            if (source !== 'All') {
+                await expect.poll(
+                    async () => {
+                        const sources = (await this.newsCards.locator('[data-testid="news-source"]').allTextContents())
+                            .map(text => text.trim().toLowerCase());
+                        return sources.length === expectedCount
+                            && sources.every(sourceText => sourceText.includes(expectedSource));
+                    },
+                    { timeout: 10_000 },
+                ).toBe(true);
+            } else {
+                await expect.poll(
+                    async () => this.newsCards.count(),
+                    { timeout: 10_000 },
+                ).toBe(expectedCount);
+            }
         } else {
             await expect(
                 this.page.locator('text=No news articles found')
