@@ -45,7 +45,7 @@ var __importStar = (this && this.__importStar) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 const crypto_1 = require("crypto");
-if (process.env.NODE_ENV && process.env.NODE_ENV !== 'development') {
+if (process.env.NODE_ENV && process.env.NODE_ENV !== 'development' && process.env.CI !== 'true') {
     console.error('ERROR: Seed scripts must only run in development environment');
     process.exit(1);
 }
@@ -60,14 +60,20 @@ const adminAdapter = new PrismaPg({ connectionString: process.env.ADMIN_DIRECT_D
 const prisma = new admin_client_1.PrismaClient({ adapter: adminAdapter });
 async function main() {
     console.log('🌱 Seeding admin database...\n');
-    const adminPassword = generateSeedPassword();
-    console.log(`🔑 Generated admin password: ${adminPassword}\n`);
+    const adminPassword =
+        process.env.SEED_ADMIN_PASSWORD ?? generateSeedPassword();
+    console.log('🔑 Admin password prepared and stored (not printed).');
+    if (!process.env.SEED_ADMIN_PASSWORD) {
+        console.log('  Set SEED_ADMIN_PASSWORD before running seed:admin if you need a known local admin password.');
+    }
+    console.log('');
+    const adminPasswordHash = await bcrypt.hash(adminPassword, 12);
     const superAdmin = await prisma.admin.upsert({
         where: { email: 'superadmin@dev.local' },
-        update: {},
+        update: { passwordHash: adminPasswordHash },
         create: {
             email: 'superadmin@dev.local',
-            passwordHash: await bcrypt.hash(adminPassword, 12),
+            passwordHash: adminPasswordHash,
             displayName: 'Super Admin',
             role: 'SUPER_ADMIN',
             active: true,
@@ -76,7 +82,7 @@ async function main() {
     console.log(`  ✓ superadmin (id: ${superAdmin.id}) — SUPER_ADMIN`);
     console.log('\n✅ Done!\n');
     console.log('  Email:    superadmin@dev.local');
-    console.log(`  Password: ${adminPassword}\n`);
+    console.log('  Password: not printed\n');
     console.log('  ⚠️  Dev-only password. Change in production.\n');
 }
 main()

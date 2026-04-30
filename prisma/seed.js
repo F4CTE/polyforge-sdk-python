@@ -230,15 +230,20 @@ const scalperActions = [
 // ─────────────────────────────────────────────────────────────────────────────
 async function main() {
     console.log('🌱 Seeding user database...\n');
-    const seedPassword = generateSeedPassword();
-    console.log(`🔑 Generated seed password for all users: ${seedPassword}\n`);
+    const seedPassword =
+        process.env.SEED_USER_PASSWORD ?? (process.env.CI === 'true' ? 'TestPass123!' : generateSeedPassword());
+    console.log('🔑 Seed user password prepared and stored (not printed).');
+    if (!process.env.SEED_USER_PASSWORD && process.env.CI !== 'true') {
+        console.log('  Set SEED_USER_PASSWORD before running the seed if you need a known local password.');
+    }
+    console.log('');
     // ───────────────────────────────────────────────
     // USERS
     // ───────────────────────────────────────────────
     console.log('👤 Creating users...');
     const alice = await prisma.user.upsert({
         where: { email: 'alice@dev.local' },
-        update: {},
+        update: { passwordHash: await hashPassword(seedPassword) },
         create: {
             email: 'alice@dev.local',
             passwordHash: await hashPassword(seedPassword),
@@ -259,7 +264,7 @@ async function main() {
     });
     const bob = await prisma.user.upsert({
         where: { email: 'bob@dev.local' },
-        update: {},
+        update: { passwordHash: await hashPassword(seedPassword) },
         create: {
             email: 'bob@dev.local',
             passwordHash: await hashPassword(seedPassword),
@@ -277,7 +282,7 @@ async function main() {
     });
     const charlie = await prisma.user.upsert({
         where: { email: 'charlie@dev.local' },
-        update: {},
+        update: { passwordHash: await hashPassword(seedPassword) },
         create: {
             email: 'charlie@dev.local',
             passwordHash: await hashPassword(seedPassword),
@@ -294,7 +299,7 @@ async function main() {
     // carol — VERIFIED, paper trading only (no polymarket connection)
     const carol = await prisma.user.upsert({
         where: { email: 'carol@dev.local' },
-        update: {},
+        update: { passwordHash: await hashPassword(seedPassword) },
         create: {
             email: 'carol@dev.local',
             passwordHash: await hashPassword(seedPassword),
@@ -311,7 +316,7 @@ async function main() {
     // dave — VERIFIED but SUSPENDED
     const dave = await prisma.user.upsert({
         where: { email: 'dave@dev.local' },
-        update: {},
+        update: { passwordHash: await hashPassword(seedPassword) },
         create: {
             email: 'dave@dev.local',
             passwordHash: await hashPassword(seedPassword),
@@ -1652,9 +1657,9 @@ async function main() {
     // DONE
     // ───────────────────────────────────────────────
     console.log('\n✅ User database seed complete!\n');
-    console.log('  Dev credentials (password shown at seed start):');
+    console.log('  Dev accounts seeded:');
     console.log('  ┌──────────────────────────────────────────────────────┐');
-    console.log(`  │  All users share the generated password above     │`);
+    console.log(`  │  Password was stored but intentionally not printed │`);
     console.log(`  │  alice@dev.local   (connected)                    │`);
     console.log(`  │  bob@dev.local     (verified)                     │`);
     console.log(`  │  charlie@dev.local (verified)                     │`);
