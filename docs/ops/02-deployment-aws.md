@@ -469,7 +469,7 @@ jobs:
             sh -c "npm install prisma && npx prisma migrate deploy"
 
       - name: Deploy to EC2
-        uses: appleboy/ssh-action@v1
+        uses: appleboy/ssh-action@0ff4204d59e8e51228ff73bce53f80d53301dee2
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ubuntu
