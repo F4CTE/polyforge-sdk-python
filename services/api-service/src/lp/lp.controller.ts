@@ -3,11 +3,12 @@ import {
   Post,
   Body,
   UseGuards,
+  UseInterceptors,
   HttpCode,
   HttpStatus,
 } from "@nestjs/common";
 import { Throttle } from "@nestjs/throttler";
-import { ApiTags, ApiBearerAuth } from "@nestjs/swagger";
+import { ApiTags, ApiBearerAuth, ApiHeader } from "@nestjs/swagger";
 import {
   JwtAuthGuard,
   ApiKeyScopeGuard,
@@ -16,6 +17,7 @@ import {
 } from "@polyforge/shared-auth";
 import { LpService } from "./lp.service";
 import { ProvideLiquidityDto } from "./dto/provide-liquidity.dto";
+import { IdempotencyInterceptor } from "../common/interceptors/idempotency.interceptor";
 import { JwtPayload } from "@polyforge/shared-types";
 
 @ApiTags("lp")
@@ -33,7 +35,13 @@ export class LpController {
       ttl: 60000,
     },
   })
+  @ApiHeader({
+    name: "Idempotency-Key",
+    required: true,
+    schema: { type: "string", minLength: 8, maxLength: 128 },
+  })
   @UseGuards(ApiKeyScopeGuard)
+  @UseInterceptors(IdempotencyInterceptor)
   @RequireScopes("TRADE")
   provideLiquidity(
     @CurrentUser() user: JwtPayload,

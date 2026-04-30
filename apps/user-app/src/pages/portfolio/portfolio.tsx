@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import {
   AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer,
   PieChart as RechartsPieChart, Pie, Cell, Legend,
@@ -20,6 +20,11 @@ import { Button, Input, Select, CardSkeleton } from '@polyforge/ui';
 import { useBetaUsage } from '@/hooks/use-beta-usage';
 import { BetaUsageBar } from '@/components/beta-usage-bar';
 import { RewardsDashboard } from '@/components/rewards/rewards-dashboard';
+import {
+  clearPendingIdempotencyKeyForId,
+  getOrCreatePendingIdempotencyKeyForId,
+  idempotencyHeaders,
+} from '@/lib/idempotency';
 import { resolveChartTheme } from '@polyforge/ui/lib/chart-colors';
 import { chartTooltipContentStyle, chartTooltipLabelStyle, chartAxisTick } from '@polyforge/ui/lib/chart-styles';
 
@@ -484,6 +489,8 @@ export function Component() {
   const [redeemingPosition, setRedeemingPosition] = useState<Record<string, boolean | undefined>>({});
   const [resettingPaper, setResettingPaper] = useState(false);
   const [closingId, setClosingId] = useState<string | null>(null);
+  const closePositionIdempotencyKeysRef = useRef<Record<string, string | undefined>>({});
+  const redeemPositionIdempotencyKeysRef = useRef<Record<string, string | undefined>>({});
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   // Auto-close rules
@@ -765,9 +772,10 @@ export function Component() {
     setClosingId(pos.id);
     setClosingPosition(prev => ({ ...prev, [pos.id]: true }));
     try {
+      const idempotencyKey = getOrCreatePendingIdempotencyKeyForId(closePositionIdempotencyKeysRef, pos.id, 'close-position');
       const res = await fetch('/api/v1/orders/place', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...idempotencyHeaders(idempotencyKey) },
         credentials: 'include',
         body: JSON.stringify({
           tokenId: pos.tokenId,
@@ -793,17 +801,22 @@ export function Component() {
           toast.error(err.message ?? 'Failed to place close order');
         }
       }
-    } catch { toast.error('Failed to place close order'); }
-    setClosingId(null);
-    setClosingPosition(prev => ({ ...prev, [pos.id]: false }));
+    } catch {
+      toast.error('Failed to place close order');
+    } finally {
+      clearPendingIdempotencyKeyForId(closePositionIdempotencyKeysRef, pos.id);
+      setClosingId(null);
+      setClosingPosition(prev => ({ ...prev, [pos.id]: false }));
+    }
   }
 
   async function redeemPosition(pos: Position) {
     setRedeemingPosition(prev => ({ ...prev, [pos.id]: true }));
     try {
+      const idempotencyKey = getOrCreatePendingIdempotencyKeyForId(redeemPositionIdempotencyKeysRef, pos.id, 'redeem-position');
       const res = await fetch('/api/v1/orders/redeem', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...idempotencyHeaders(idempotencyKey) },
         credentials: 'include',
         body: JSON.stringify({ positionId: pos.id }),
       });
@@ -818,8 +831,12 @@ export function Component() {
           toast.error(err.message ?? 'Failed to redeem position');
         }
       }
-    } catch { toast.error('Failed to redeem position'); }
-    setRedeemingPosition(prev => ({ ...prev, [pos.id]: false }));
+    } catch {
+      toast.error('Failed to redeem position');
+    } finally {
+      clearPendingIdempotencyKeyForId(redeemPositionIdempotencyKeysRef, pos.id);
+      setRedeemingPosition(prev => ({ ...prev, [pos.id]: false }));
+    }
   }
 
   async function loadAutoCloseRule(positionId: string) {

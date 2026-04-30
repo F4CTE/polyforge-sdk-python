@@ -16,7 +16,12 @@ import {
 } from "@nestjs/common";
 import type { FastifyReply } from "fastify";
 type Response = FastifyReply;
-import { ApiTags, ApiBearerAuth, ApiResponse } from "@nestjs/swagger";
+import {
+  ApiTags,
+  ApiBearerAuth,
+  ApiHeader,
+  ApiResponse,
+} from "@nestjs/swagger";
 import { Throttle } from "@nestjs/throttler";
 import {
   JwtAuthGuard,
@@ -180,7 +185,13 @@ export class OrdersController {
     },
   })
   @HttpCode(HttpStatus.ACCEPTED)
+  @ApiHeader({
+    name: "Idempotency-Key",
+    required: true,
+    schema: { type: "string", minLength: 8, maxLength: 128 },
+  })
   @UseGuards(ApiKeyScopeGuard, GeoBlockGuard)
+  @UseInterceptors(IdempotencyInterceptor)
   @RequireScopes("TRADE")
   placeBatch(@CurrentUser() user: JwtPayload, @Body() dto: BatchPlaceOrderDto) {
     return this.orders.placeBatch(user.sub, dto);

@@ -2,6 +2,11 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { toast } from 'sonner';
 import { Button, Input, Select, Textarea } from '@polyforge/ui';
 import {
+  clearPendingIdempotencyKey,
+  getOrCreatePendingIdempotencyKey,
+  idempotencyHeaders,
+} from '@/lib/idempotency';
+import {
   ChevronLeft, ChevronRight, ClipboardList, X, Plus, Trash2, Download, Loader2,
   BookOpen, Tag, Edit2, Search,
 } from 'lucide-react';
@@ -556,6 +561,7 @@ function CreateConditionalDialog({ onClose, onCreated }: { onClose: () => void; 
     expiresAt: '',
   });
   const [submitting, setSubmitting] = useState(false);
+  const idempotencyKeyRef = useRef<string | null>(null);
   const [positions, setPositions] = useState<Array<{ id: string; marketId: string; tokenId: string; marketTitle: string; outcome: string; size: string }>>([]);
 
   useEffect(() => {
@@ -582,9 +588,10 @@ function CreateConditionalDialog({ onClose, onCreated }: { onClose: () => void; 
       if (form.trailingPct) body.trailingPct = form.trailingPct;
       if (form.expiresAt) body.expiresAt = new Date(form.expiresAt).toISOString();
 
+      const idempotencyKey = getOrCreatePendingIdempotencyKey(idempotencyKeyRef, 'orders-conditional-order');
       const res = await fetch('/api/v1/orders/conditional', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...idempotencyHeaders(idempotencyKey) },
         credentials: 'include',
         body: JSON.stringify(body),
       });
@@ -597,8 +604,10 @@ function CreateConditionalDialog({ onClose, onCreated }: { onClose: () => void; 
       }
     } catch {
       toast.error('Failed to create conditional order');
+    } finally {
+      clearPendingIdempotencyKey(idempotencyKeyRef);
+      setSubmitting(false);
     }
-    setSubmitting(false);
   }
 
   function updateField(field: string, value: string) {

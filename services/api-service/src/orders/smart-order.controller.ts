@@ -8,8 +8,9 @@ import {
   HttpCode,
   HttpStatus,
   UseGuards,
+  UseInterceptors,
 } from "@nestjs/common";
-import { ApiTags, ApiBearerAuth } from "@nestjs/swagger";
+import { ApiTags, ApiBearerAuth, ApiHeader } from "@nestjs/swagger";
 import { Throttle } from "@nestjs/throttler";
 import {
   JwtAuthGuard,
@@ -18,6 +19,7 @@ import {
   ApiKeyScopeGuard,
 } from "@polyforge/shared-auth";
 import { GeoBlockGuard } from "../common/guards/geo.guard";
+import { IdempotencyInterceptor } from "../common/interceptors/idempotency.interceptor";
 import { SmartOrderService } from "./smart-order.service";
 import { PlaceSmartOrderDto } from "./dto/place-smart-order.dto";
 import { JwtPayload } from "@polyforge/shared-types";
@@ -42,7 +44,13 @@ export class SmartOrderController {
     },
   })
   @HttpCode(HttpStatus.ACCEPTED)
+  @ApiHeader({
+    name: "Idempotency-Key",
+    required: true,
+    schema: { type: "string", minLength: 8, maxLength: 128 },
+  })
   @UseGuards(ApiKeyScopeGuard, GeoBlockGuard)
+  @UseInterceptors(IdempotencyInterceptor)
   @RequireScopes("TRADE")
   create(@CurrentUser() user: JwtPayload, @Body() dto: PlaceSmartOrderDto) {
     return this.smart.create(user.sub, dto);

@@ -7,6 +7,7 @@ import {
   Param,
   Body,
   UseGuards,
+  UseInterceptors,
   HttpCode,
   HttpStatus,
   NotFoundException,
@@ -14,7 +15,7 @@ import {
   UnprocessableEntityException,
   ParseUUIDPipe,
 } from "@nestjs/common";
-import { ApiTags, ApiBearerAuth } from "@nestjs/swagger";
+import { ApiTags, ApiBearerAuth, ApiHeader } from "@nestjs/swagger";
 import { Throttle } from "@nestjs/throttler";
 import { JwtAuthGuard, CurrentUser } from "@polyforge/shared-auth";
 import { IsOptional, IsIn } from "class-validator";
@@ -28,6 +29,7 @@ import {
 } from "@prisma/client";
 import { PaginationDto, paginate } from "../common/dto/pagination.dto";
 import { CreateConditionalOrderDto } from "./dto/create-conditional-order.dto";
+import { IdempotencyInterceptor } from "../common/interceptors/idempotency.interceptor";
 import { JwtPayload } from "@polyforge/shared-types";
 
 class ConditionalOrderQueryDto extends PaginationDto {
@@ -49,6 +51,12 @@ export class ConditionalController {
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
+  @ApiHeader({
+    name: "Idempotency-Key",
+    required: true,
+    schema: { type: "string", minLength: 8, maxLength: 128 },
+  })
+  @UseInterceptors(IdempotencyInterceptor)
   async create(
     @CurrentUser() user: JwtPayload,
     @Body() dto: CreateConditionalOrderDto,

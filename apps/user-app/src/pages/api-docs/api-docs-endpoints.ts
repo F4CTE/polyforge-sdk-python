@@ -214,7 +214,7 @@ export const TRADING: EndpointDef[] = [
     ],
     responseNote: 'Returns { orderId, intentId, status: "PENDING" }. The order is submitted async; subscribe to WebSocket or SSE for the final fill/cancel event.',
     examples: {
-      curl: `curl -X POST "${BASE}/api/v1/orders/place" \\\n  -H "Authorization: Bearer pf_live_..." \\\n  -H "Content-Type: application/json" \\\n  -d '{"tokenId":"tok_yes_abc","side":"BUY","outcome":"YES","size":25,"price":0.65}'`,
+      curl: `curl -X POST "${BASE}/api/v1/orders/place" \\\n  -H "Authorization: Bearer pf_live_..." \\\n  -H "Content-Type: application/json" \\\n  -H "Idempotency-Key: place-order-uuid" \\\n  -d '{"tokenId":"tok_yes_abc","side":"BUY","outcome":"YES","size":25,"price":0.65}'`,
       ts: `const order = await client.placeOrder({\n  tokenId: 'tok_yes_abc',\n  side: 'BUY',\n  outcome: 'YES',\n  size: 25,\n  price: 0.65,\n});\nconsole.log('Order ID:', order.orderId);`,
       py: `order = client.place_order(\n    token_id='tok_yes_abc',\n    side='BUY',\n    outcome='YES',\n    size=25,\n    price=0.65,\n)\nprint('Order ID:', order.order_id)`,
       rust: `let order = client.place_order(PlaceOrderParams {\n    token_id: "tok_yes_abc".into(),\n    side: "BUY".into(),\n    outcome: "YES".into(),\n    size: 25.0,\n    price: Some(0.65),\n    ..Default::default()\n}).await?;`,
@@ -239,7 +239,7 @@ export const TRADING: EndpointDef[] = [
       { name: 'tokenId', type: 'string', required: true, description: 'The token whose position to close' },
     ],
     examples: {
-      curl: `curl -X POST "${BASE}/api/v1/orders/close-position" \\\n  -H "Authorization: Bearer pf_live_..." \\\n  -H "Content-Type: application/json" \\\n  -d '{"tokenId":"tok_yes_abc"}'`,
+      curl: `curl -X POST "${BASE}/api/v1/orders/close-position" \\\n  -H "Authorization: Bearer pf_live_..." \\\n  -H "Content-Type: application/json" \\\n  -H "Idempotency-Key: close-position-uuid" \\\n  -d '{"tokenId":"tok_yes_abc"}'`,
     },
   },
 ];
@@ -285,7 +285,7 @@ export const CONDITIONAL_ORDERS: EndpointDef[] = [
       { name: 'trailAmount',  type: 'number', required: false, description: 'Trail distance (required for TRAILING_STOP)' },
     ],
     examples: {
-      curl: `curl -X POST "${BASE}/api/v1/orders/conditional" \\\n  -H "Authorization: Bearer pf_live_..." \\\n  -H "Content-Type: application/json" \\\n  -d '{"tokenId":"tok_yes_abc","type":"STOP_LOSS","side":"SELL","outcome":"YES","size":25,"triggerPrice":0.40}'`,
+      curl: `curl -X POST "${BASE}/api/v1/orders/conditional" \\\n  -H "Authorization: Bearer pf_live_..." \\\n  -H "Content-Type: application/json" \\\n  -H "Idempotency-Key: conditional-order-uuid" \\\n  -d '{"tokenId":"tok_yes_abc","type":"STOP_LOSS","side":"SELL","outcome":"YES","size":25,"triggerPrice":0.40}'`,
     },
   },
   {

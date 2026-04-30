@@ -1,10 +1,15 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Link } from 'react-router';
 import { toast } from 'sonner';
 import {
   TrendingDown, RefreshCw, Loader2, ArrowRight, AlertTriangle, Info, ArrowLeftRight,
 } from 'lucide-react';
 import { Button } from '@polyforge/ui';
+import {
+  clearPendingIdempotencyKeyForId,
+  getOrCreatePendingIdempotencyKeyForId,
+  idempotencyHeaders,
+} from '@/lib/idempotency';
 
 /* ─── Types ──────────────────────────────────────────────────────────── */
 
@@ -72,6 +77,7 @@ export function Component() {
   const [loading, setLoading] = useState(true);
   const [minMargin, setMinMargin] = useState(0.5);
   const [executing, setExecuting] = useState<string | null>(null);
+  const arbitrageIdempotencyKeysRef = useRef<Record<string, string | undefined>>({});
 
   // Cross-venue state
   const [crossVenue, setCrossVenue] = useState<CrossVenueOpportunity[]>([]);
@@ -117,11 +123,16 @@ export function Component() {
   async function executeArbitrage(opp: Opportunity) {
     setExecuting(opp.marketId);
     try {
+      const yesKeyId = `${opp.marketId}:yes`;
+      const noKeyId = `${opp.marketId}:no`;
+      const yesIdempotencyKey = getOrCreatePendingIdempotencyKeyForId(arbitrageIdempotencyKeysRef, yesKeyId, 'arbitrage-yes');
+      const noIdempotencyKey = getOrCreatePendingIdempotencyKeyForId(arbitrageIdempotencyKeysRef, noKeyId, 'arbitrage-no');
+
       // Place YES buy
       const [yesRes, noRes] = await Promise.all([
         fetch('/api/v1/orders/place', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', ...idempotencyHeaders(yesIdempotencyKey) },
           credentials: 'include',
           body: JSON.stringify({
             tokenId: opp.yesTokenId,
@@ -134,7 +145,7 @@ export function Component() {
         }),
         fetch('/api/v1/orders/place', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', ...idempotencyHeaders(noIdempotencyKey) },
           credentials: 'include',
           body: JSON.stringify({
             tokenId: opp.noTokenId,
@@ -154,8 +165,11 @@ export function Component() {
       }
     } catch {
       toast.error('Failed to place arbitrage orders');
+    } finally {
+      clearPendingIdempotencyKeyForId(arbitrageIdempotencyKeysRef, `${opp.marketId}:yes`);
+      clearPendingIdempotencyKeyForId(arbitrageIdempotencyKeysRef, `${opp.marketId}:no`);
+      setExecuting(null);
     }
-    setExecuting(null);
   }
 
   return (

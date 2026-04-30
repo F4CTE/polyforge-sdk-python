@@ -1,8 +1,29 @@
 import { describe, it, expect } from "vitest";
+import { INTERCEPTORS_METADATA } from "@nestjs/common/constants";
+import { IdempotencyInterceptor } from "../common/interceptors/idempotency.interceptor";
 import { OrdersController } from "./orders.controller";
 
 const THROTTLER_LIMIT = "THROTTLER:LIMIT";
 const THROTTLER_TTL = "THROTTLER:TTL";
+const API_PARAMETERS = "swagger/apiParameters";
+
+function expectRequiredIdempotencyKey(method: object) {
+  const interceptors: unknown[] =
+    Reflect.getMetadata(INTERCEPTORS_METADATA, method) ?? [];
+  const parameters: Array<Record<string, unknown>> =
+    Reflect.getMetadata(API_PARAMETERS, method) ?? [];
+
+  expect(interceptors).toContain(IdempotencyInterceptor);
+  expect(parameters).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({
+        in: "header",
+        name: "Idempotency-Key",
+        required: true,
+      }),
+    ]),
+  );
+}
 
 describe("OrdersController — @Throttle decorator coverage", () => {
   it("redeemPosition has @Throttle with limit and ttl matching sibling endpoints", () => {
@@ -60,5 +81,9 @@ describe("OrdersController — @Throttle decorator coverage", () => {
       OrdersController.prototype.updateJournal,
     );
     expect(method).toBeDefined();
+  });
+
+  it("placeBatch requires Idempotency-Key", () => {
+    expectRequiredIdempotencyKey(OrdersController.prototype.placeBatch);
   });
 });

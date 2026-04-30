@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router';
 import { toast } from 'sonner';
 import { Button, Input, Select } from '@polyforge/ui';
@@ -6,6 +6,11 @@ import { MarketRewardsCard } from '@/components/rewards/market-rewards-card';
 import { resolveChartTheme } from '@polyforge/ui/lib/chart-colors';
 import { chartTooltipContentStyle, chartTooltipLabelStyle, chartAxisTick, chartLegendStyle } from '@polyforge/ui/lib/chart-styles';
 import { wsManager, WebSocketManager } from '@/lib/websocket';
+import {
+  clearPendingIdempotencyKey,
+  getOrCreatePendingIdempotencyKey,
+  idempotencyHeaders,
+} from '@/lib/idempotency';
 import { safeHref } from '@/lib/url';
 import { useAuthStore } from '@/stores/auth-store';
 import {
@@ -309,6 +314,7 @@ export function Component() {
   const [condSize, setCondSize] = useState('');
   const [condTriggerPrice, setCondTriggerPrice] = useState('');
   const [condSubmitting, setCondSubmitting] = useState(false);
+  const conditionalIdempotencyKeyRef = useRef<string | null>(null);
 
   const [relatedNews, setRelatedNews] = useState<RelatedNewsSignal[]>([]);
   const [loadingNews, setLoadingNews] = useState(true);
@@ -323,6 +329,7 @@ export function Component() {
   const [tradePrice, setTradePrice] = useState('');
   const [isMarketOrder, setIsMarketOrder] = useState(false);
   const [placingOrder, setPlacingOrder] = useState(false);
+  const placeOrderIdempotencyKeyRef = useRef<string | null>(null);
   const [tradeSuccess, setTradeSuccess] = useState('');
   const [tradeError, setTradeError] = useState('');
   const [myOrders, setMyOrders] = useState<Array<{ id: string; side: string; outcome: string; size: string; price: string; status: string }>>([]);
@@ -352,6 +359,7 @@ export function Component() {
   const [lpSpread, setLpSpread] = useState('0.02');
   const [lpSize, setLpSize] = useState('10');
   const [lpSubmitting, setLpSubmitting] = useState(false);
+  const lpIdempotencyKeyRef = useRef<string | null>(null);
   const [lpError, setLpError] = useState('');
 
   // Tick size & fee state
@@ -551,9 +559,10 @@ export function Component() {
     const token = (market.tokens ?? []).find((t) => t.outcome?.toUpperCase() === condOutcome);
     if (!token) { setCondSubmitting(false); return; }
     try {
+      const idempotencyKey = getOrCreatePendingIdempotencyKey(conditionalIdempotencyKeyRef, 'market-conditional-order');
       const res = await fetch('/api/v1/orders/conditional', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...idempotencyHeaders(idempotencyKey) },
         credentials: 'include',
         body: JSON.stringify({
           marketId: market.id,
@@ -573,8 +582,10 @@ export function Component() {
       }
     } catch {
       toast.error('Failed to create conditional order');
+    } finally {
+      clearPendingIdempotencyKey(conditionalIdempotencyKeyRef);
+      setCondSubmitting(false);
     }
-    setCondSubmitting(false);
   }
 
   // Trade panel: load my orders
@@ -739,10 +750,12 @@ export function Component() {
     setLpError('');
     const token = localStorage.getItem('access_token');
     try {
+      const idempotencyKey = getOrCreatePendingIdempotencyKey(lpIdempotencyKeyRef, 'provide-liquidity');
       const res = await fetch('/api/v1/lp/provide', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          ...idempotencyHeaders(idempotencyKey),
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
         credentials: 'include',
@@ -763,6 +776,7 @@ export function Component() {
     } catch (e: unknown) {
       setLpError(e instanceof Error ? e.message : 'Failed to provide liquidity');
     } finally {
+      clearPendingIdempotencyKey(lpIdempotencyKeyRef);
       setLpSubmitting(false);
     }
   };
@@ -778,9 +792,10 @@ export function Component() {
       );
       if (!token) throw new Error('Token not found for ' + tradeOutcome);
 
+      const idempotencyKey = getOrCreatePendingIdempotencyKey(placeOrderIdempotencyKeyRef, 'place-order');
       const res = await fetch('/api/v1/orders/place', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...idempotencyHeaders(idempotencyKey) },
         credentials: 'include',
         body: JSON.stringify({
           tokenId: token.id,
@@ -799,6 +814,7 @@ export function Component() {
     } catch (err: unknown) {
       setTradeError(err instanceof Error ? err.message : 'Order failed');
     } finally {
+      clearPendingIdempotencyKey(placeOrderIdempotencyKeyRef);
       setPlacingOrder(false);
     }
   };

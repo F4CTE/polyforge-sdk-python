@@ -1,11 +1,33 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import { INTERCEPTORS_METADATA } from "@nestjs/common/constants";
 import {
   NotFoundException,
   ForbiddenException,
   UnprocessableEntityException,
 } from "@nestjs/common";
 import { ConditionalController } from "./conditional.controller";
+import { IdempotencyInterceptor } from "../common/interceptors/idempotency.interceptor";
 import { createMockDb, MockDb } from "../../test/helpers/mock-db";
+
+const API_PARAMETERS = "swagger/apiParameters";
+
+function expectRequiredIdempotencyKey(method: object) {
+  const interceptors: unknown[] =
+    Reflect.getMetadata(INTERCEPTORS_METADATA, method) ?? [];
+  const parameters: Array<Record<string, unknown>> =
+    Reflect.getMetadata(API_PARAMETERS, method) ?? [];
+
+  expect(interceptors).toContain(IdempotencyInterceptor);
+  expect(parameters).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({
+        in: "header",
+        name: "Idempotency-Key",
+        required: true,
+      }),
+    ]),
+  );
+}
 
 // ─── Factories ────────────────────────────────────────────────────────────────
 
@@ -67,6 +89,10 @@ describe("ConditionalController", () => {
   // ── create ───────────────────────────────────────────────────────────────
 
   describe("create", () => {
+    it("requires Idempotency-Key", () => {
+      expectRequiredIdempotencyKey(ConditionalController.prototype.create);
+    });
+
     it("creates a conditional order and returns it", async () => {
       db.conditionalOrder.count.mockResolvedValue(0);
       db.conditionalOrder.create.mockResolvedValue(
