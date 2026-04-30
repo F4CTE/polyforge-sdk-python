@@ -62,7 +62,7 @@ services:
       start_period: 30s
 
   pgbouncer:
-    image: edoburu/pgbouncer:1.23.1  # pinned — keep aligned with docker-compose.prod.yml
+    image: edoburu/pgbouncer:v1.23.1-p3  # pinned — keep aligned with docker-compose.prod.yml
     environment:
       DATABASE_URL: postgres://${POSTGRES_USER:-poly}:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}@postgres:5432/${POSTGRES_DB:-polyforge}
       AUTH_TYPE: scram-sha-256
@@ -111,7 +111,7 @@ services:
       start_period: 20s
 
   pgbouncer-admin:
-    image: edoburu/pgbouncer:1.23.1  # pinned — keep aligned with docker-compose.prod.yml
+    image: edoburu/pgbouncer:v1.23.1-p3  # pinned — keep aligned with docker-compose.prod.yml
     environment:
       DATABASE_URL: postgres://${POSTGRES_ADMIN_USER:-poly_admin}:${POSTGRES_ADMIN_PASSWORD:?POSTGRES_ADMIN_PASSWORD is required}@postgres-admin:5432/${POSTGRES_ADMIN_DB:-polyforge_admin}
       AUTH_TYPE: scram-sha-256

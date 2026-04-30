@@ -284,7 +284,7 @@ services:
       retries: 10
 
   pgbouncer:
-    image: edoburu/pgbouncer:1.23.1
+    image: edoburu/pgbouncer:v1.23.1-p3
     environment:
       DATABASE_URL: postgres://poly:devpass@postgres:5432/polyforge
       POOL_MODE: transaction
@@ -317,7 +317,7 @@ services:
       retries: 10
 
   pgbouncer-admin:
-    image: edoburu/pgbouncer:1.23.1
+    image: edoburu/pgbouncer:v1.23.1-p3
     environment:
       DATABASE_URL: postgres://poly_admin:devpass_admin@postgres-admin:5432/polyforge_admin
       POOL_MODE: transaction

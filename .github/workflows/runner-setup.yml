@@ -107,7 +107,7 @@ jobs:
             "redis:7-alpine"
             "postgres:16-alpine"
             "timescale/timescaledb:2.17.2-pg16"
-            "edoburu/pgbouncer:1.23.1"
+            "edoburu/pgbouncer:v1.23.1-p3"
             "axllent/mailpit:v1.23"
           )
           for img in "${IMAGES[@]}"; do

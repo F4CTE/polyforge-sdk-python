@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
 
-const EXPECTED_PGBOUNCER_IMAGE = "edoburu/pgbouncer:1.23.1";
+const EXPECTED_PGBOUNCER_IMAGE = "edoburu/pgbouncer:v1.23.1-p3";
 const FORBIDDEN_PGBOUNCER_IMAGE = "edoburu/pgbouncer:latest";
 
 const PGBOUNCER_PINNED_FILES = [
