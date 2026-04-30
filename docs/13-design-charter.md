@@ -830,7 +830,14 @@ Equity curve:       <UsrEquityCurve> SVG with gradient fill + live dot
 | Docs / Guides | Marketing | Electric blue | `apps/landing/` |
 | Auth | Marketing | Electric blue | `apps/user-app/` |
 | User trading app | Admin/App B | Electric blue | `apps/user-app/` |
-| Admin panel | Admin/App B | Violet `#8B5CF6` | `apps/admin-app/` |
+| Admin panel | Admin/App B | Electric blue | `apps/admin-app/` |
+
+### Admin-specific notes
+
+- **Accent inheritance**: admin inherits the shared PolyForge Electric Blue accent tokens from `@polyforge/ui/globals.css` and must not redeclare app-level `--accent-*` tokens
+- **Layout**: same inverted-L structure, sidebar may include admin-specific sections (Users, Tickets, Config Flags)
+- **Tables**: admin tables tend toward `data-density="compact"` (28px rows) since admins scan more data
+- **Danger zone**: destructive admin actions (delete user, reset credentials) use a confirmation modal with a typed-confirmation input, not just a button
 
 ---
 
