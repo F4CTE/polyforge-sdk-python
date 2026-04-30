@@ -218,6 +218,9 @@
   /* Elevation shadows (charter §4) */
   --shadow-elevation-2: 0 1px 3px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.2);
   --shadow-elevation-3: 0 4px 24px rgba(0, 0, 0, 0.4), 0 1px 4px rgba(0, 0, 0, 0.3);
+  /* Short aliases — match design prototype (styles.css --shadow-2/3) */
+  --shadow-2: var(--shadow-elevation-2);
+  --shadow-3: var(--shadow-elevation-3);
 
   /* Glow / ring shadows — Electric Blue accent */
   --shadow-ring-accent: 0 0 0 2px color-mix(in srgb, var(--accent-default) 20%, transparent);
@@ -300,10 +303,24 @@ body {
 
 /* ─── Custom Scrollbars ────────────────────────────────────────────── */
 
+/* Scrollbar tokens — override per-theme below */
+:root {
+  --sb-track:        transparent;
+  --sb-thumb:        rgba(255, 255, 255, 0.15);
+  --sb-thumb-hover:  rgba(255, 255, 255, 0.30);
+  --sb-thumb-active: rgba(255, 255, 255, 0.45);
+}
+
+:root[data-theme="light"] {
+  --sb-thumb:        rgba(0, 0, 0, 0.15);
+  --sb-thumb-hover:  rgba(0, 0, 0, 0.30);
+  --sb-thumb-active: rgba(0, 0, 0, 0.45);
+}
+
 /* Thin, dark scrollbars for all scrollable elements */
 * {
   scrollbar-width: thin;
-  scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
+  scrollbar-color: var(--sb-thumb) var(--sb-track);
 }
 
 /* WebKit (Chrome, Safari, Edge) */
@@ -313,34 +330,27 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-  background: transparent;
+  background: var(--sb-track);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.15);
+  background: var(--sb-thumb);
   border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.3);
+  background: var(--sb-thumb-hover);
+}
+
+::-webkit-scrollbar-thumb:active {
+  background: var(--sb-thumb-active);
 }
 
 ::-webkit-scrollbar-corner {
   background: transparent;
 }
 
-/* Light theme scrollbars */
-[data-theme="light"] ::-webkit-scrollbar-thumb {
-  background: rgba(0, 0, 0, 0.15);
-}
-
-[data-theme="light"] ::-webkit-scrollbar-thumb:hover {
-  background: rgba(0, 0, 0, 0.3);
-}
-
-[data-theme="light"] * {
-  scrollbar-color: rgba(0, 0, 0, 0.15) transparent;
-}
+/* Light theme handled via :root[data-theme="light"] token overrides above */
 
 /* ─── Animations ───────────────────────────────────────────────────── */
 
@@ -694,6 +704,8 @@ body {
   --shadow-2xl: 0 24px 60px rgba(0, 0, 0, 0.2);
   --shadow-elevation-2: 0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.06);
   --shadow-elevation-3: 0 4px 24px rgba(0, 0, 0, 0.12), 0 1px 4px rgba(0, 0, 0, 0.08);
+  --shadow-2: var(--shadow-elevation-2);
+  --shadow-3: var(--shadow-elevation-3);
 
   /* Glow — reduced intensity for light mode */
   --shadow-ring-accent: 0 0 0 2px color-mix(in srgb, var(--accent-default) 15%, transparent);

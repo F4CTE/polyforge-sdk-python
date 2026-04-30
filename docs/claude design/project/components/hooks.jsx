@@ -12,12 +12,32 @@ function useTicker(initial, { volatility = 0.008, interval = 1400 } = {}) {
         const drift = (Math.random() - 0.5) * volatility;
         const next = Math.max(0.01, Math.min(0.99, row.px + drift));
         const chg = +(row.chg + drift * 10).toFixed(1);
-        return { ...row, px: +next.toFixed(2), chg, _pulse: drift > 0 ? 'up' : 'down', _pulseAt: Date.now() + i };
+        return { ...row, px: +next.toFixed(2), chg, _flash: drift > 0 ? 'gain' : 'loss', _flashAt: Date.now() + i };
       }));
     }, interval);
     return () => clearInterval(id);
   }, []);
   return data;
+}
+
+function useCountUp(target, { duration = 1400, start = false } = {}) {
+  const [val, setVal] = useState(0);
+  useEffect(() => {
+    if (!start) return;
+    const prefersReduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (prefersReduced) { setVal(target); return; }
+    let raf, t0;
+    const ease = (t) => 1 - Math.pow(1 - t, 3);
+    const step = (ts) => {
+      if (!t0) t0 = ts;
+      const p = Math.min(1, (ts - t0) / duration);
+      setVal(target * ease(p));
+      if (p < 1) raf = requestAnimationFrame(step);
+    };
+    raf = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(raf);
+  }, [target, duration, start]);
+  return val;
 }
 
 function useClock() {
@@ -35,7 +55,7 @@ function useTweak(key) {
     window.__TWEAKS__[key] = next;
     setVal(next);
     try {
-      window.parent.postMessage({ type: '__edit_mode_set_keys', edits: { [key]: next } }, window.location.origin);
+      window.parent.postMessage({ type: '__edit_mode_set_keys', edits: { [key]: next } }, '*');
     } catch (e) {}
     // Apply side effects
     if (key === 'theme') document.documentElement.setAttribute('data-theme', next);
@@ -57,4 +77,4 @@ function useInView(threshold = 0.12) {
   return [ref, inView];
 }
 
-Object.assign(window, { useTicker, useClock, useTweak, useInView });
+Object.assign(window, { useTicker, useClock, useTweak, useInView, useCountUp });

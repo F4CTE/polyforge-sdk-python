@@ -34,7 +34,7 @@ function BuilderSection() {
         </div>
 
         {/* Category counts strip */}
-        <div style={{
+        <div className="builder-cat-strip" style={{
           display: 'grid', gap: 1,
           gridTemplateColumns: 'repeat(4, 1fr)',
           background: 'var(--border-subtle)',
@@ -78,6 +78,14 @@ function WhaleSection() {
           </div>
           <div className="showcase-visual" style={{ padding: 0 }}>
             <div className="feed">
+              <div className="feed-status">
+                <span className="status-dot-wrap">
+                  <span className="status-dot status-dot-live" />
+                  <span className="mono" style={{ fontSize: 11, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>streaming</span>
+                </span>
+                <span style={{ fontSize: 11, color: 'var(--text-tertiary)' }}>· 2,341 wallets tracked</span>
+                <span className="mono tabnum" style={{ marginLeft: 'auto', fontSize: 11, color: 'var(--text-tertiary)' }}>47 events / min</span>
+              </div>
               <div className="feed-head">
                 <span></span>
                 <span>Wallet · Market</span>
@@ -184,21 +192,127 @@ function BacktestSection() {
 }
 
 /* -------- 04 · Developer API -------- */
+const DEV_SAMPLES = {
+  'typescript sdk': {
+    filename: 'strategy-watcher.ts',
+    install: '$ npm install @polyforge/sdk',
+    versionLabel: '✓ v1.4.2 · 18kb gzipped',
+    lines: [
+      [1, [['cm', '// TypeScript SDK']]],
+      [2, [['kw', 'import'], ['tx', ' { PolyforgeClient } '], ['kw', 'from'], ['tx', ' '], ['str', "'@polyforge/sdk'"], ['tx', ';']]],
+      [3, [['tx', '']]],
+      [4, [['kw', 'const'], ['tx', ' client = '], ['kw', 'new'], ['tx', ' '], ['fn', 'PolyforgeClient'], ['tx', '({']]],
+      [5, [['tx', '  apiKey: process.env.POLYFORGE_KEY,']]],
+      [6, [['tx', '});']]],
+      [7, [['tx', '']]],
+      [8, [['kw', 'for await'], ['tx', ' ('], ['kw', 'const'], ['tx', ' event '], ['kw', 'of']]],
+      [9, [['tx', '  client.'], ['fn', 'watchStrategy'], ['tx', '(strategyId)) {']]],
+      [10,[['cm', '  // ORDER_FILLED · +$412 · sharpe 1.84']]],
+      [11,[['tx', '  console.'], ['fn', 'log'], ['tx', '(event.type, event.payload);']]],
+      [12,[['tx', '}']]],
+    ],
+  },
+  'python sdk': {
+    filename: 'strategy_watcher.py',
+    install: '$ pip install polyforge',
+    versionLabel: '✓ v1.4.2 · py ≥ 3.10',
+    lines: [
+      [1, [['cm', '# Python SDK']]],
+      [2, [['kw', 'from'], ['tx', ' polyforge '], ['kw', 'import'], ['tx', ' '], ['fn', 'PolyforgeClient']]],
+      [3, [['kw', 'import'], ['tx', ' os']]],
+      [4, [['tx', '']]],
+      [5, [['tx', 'client = '], ['fn', 'PolyforgeClient'], ['tx', '(api_key=os.environ['], ['str', "'POLYFORGE_KEY'"], ['tx', '])']]],
+      [6, [['tx', '']]],
+      [7, [['kw', 'async for'], ['tx', ' event '], ['kw', 'in'], ['tx', ' client.'], ['fn', 'watch_strategy'], ['tx', '(strategy_id):']]],
+      [8, [['cm', '    # ORDER_FILLED · +$412 · sharpe 1.84']]],
+      [9, [['fn', '    print'], ['tx', '(event.type, event.payload)']]],
+    ],
+  },
+  'rust sdk': {
+    filename: 'strategy_watcher.rs',
+    install: '$ cargo add polyforge',
+    versionLabel: '✓ v1.4.2 · tokio · rustls',
+    lines: [
+      [1, [['cm', '// Rust SDK']]],
+      [2, [['kw', 'use'], ['tx', ' polyforge::{PolyforgeClient, Event};']]],
+      [3, [['kw', 'use'], ['tx', ' futures::StreamExt;']]],
+      [4, [['tx', '']]],
+      [5, [['attr', '#[tokio::main]']]],
+      [6, [['kw', 'async fn'], ['tx', ' '], ['fn', 'main'], ['tx', '() -> anyhow::Result<()> {']]],
+      [7, [['kw', '  let'], ['tx', ' client = PolyforgeClient::'], ['fn', 'from_env'], ['tx', '()?;']]],
+      [8, [['kw', '  let mut'], ['tx', ' stream = client.'], ['fn', 'watch_strategy'], ['tx', '(&id).'], ['fn', 'await'], ['tx', '?;']]],
+      [9, [['kw', '  while let'], ['tx', ' Some(event) = stream.'], ['fn', 'next'], ['tx', '().'], ['fn', 'await'], ['tx', ' {']]],
+      [10,[['cm', '    // ORDER_FILLED · +$412 · sharpe 1.84']]],
+      [11,[['fn', '    println!'], ['tx', '('], ['str', '"{:?}"'], ['tx', ', event);']]],
+      [12,[['tx', '  }']]],
+      [13,[['kw', '  Ok'], ['tx', '(())']]],
+      [14,[['tx', '}']]],
+    ],
+  },
+  'mcp server': {
+    filename: 'mcp-prompt.txt',
+    install: '$ polyforge mcp serve --port 7421',
+    versionLabel: '✓ MCP 1.2 · 11 tools',
+    lines: [
+      [1, [['cm', '# Natural-language prototyping via MCP']]],
+      [2, [['tx', '']]],
+      [3, [['kw', '> '], ['tx', 'Claude, build me a momentum strategy for']]],
+      [4, [['tx', '  "Will BTC close above $80k this Friday?"']]],
+      [5, [['tx', '  — 5-min EMA cross, 2% stop, 4% target.']]],
+      [6, [['tx', '']]],
+      [7, [['cm', '  → create_strategy(name="btc-ema-cross")']]],
+      [8, [['cm', '  → add_block(type="ema_cross", fast=12, slow=26)']]],
+      [9, [['cm', '  → add_stop_loss(pct=2.0)']]],
+      [10,[['cm', '  → add_take_profit(pct=4.0)']]],
+      [11,[['cm', '  → run_backtest(from="2025-10-01")']]],
+      [12,[['tx', '']]],
+      [13,[['str', '  ✓ sharpe 1.84 · 412 trades · +18.2%']]],
+    ],
+  },
+  'openapi 3.1': {
+    filename: 'openapi.yaml',
+    install: '$ curl https://api.polyforge.app/openapi.yaml',
+    versionLabel: '✓ OpenAPI 3.1.0 · 84 ops',
+    lines: [
+      [1, [['kw', 'openapi'], ['tx', ': '], ['str', '3.1.0']]],
+      [2, [['kw', 'info'], ['tx', ':']]],
+      [3, [['kw', '  title'], ['tx', ': '], ['str', 'PolyForge API']]],
+      [4, [['kw', '  version'], ['tx', ': '], ['str', '1.4.2']]],
+      [5, [['kw', 'servers'], ['tx', ':']]],
+      [6, [['tx', '  - '], ['kw', 'url'], ['tx', ': '], ['str', 'https://api.polyforge.app/v1']]],
+      [7, [['kw', 'paths'], ['tx', ':']]],
+      [8, [['kw', '  /strategies'], ['tx', ':']]],
+      [9, [['kw', '    get'], ['tx', ': '], ['cm', '{ summary: "List strategies" }']]],
+      [10,[['kw', '    post'], ['tx', ': '], ['cm', '{ summary: "Create strategy" }']]],
+      [11,[['kw', '  /strategies/{id}/backtest'], ['tx', ':']]],
+      [12,[['kw', '    post'], ['tx', ': '], ['cm', '{ summary: "Run backtest" }']]],
+    ],
+  },
+  'webhooks': {
+    filename: 'order-filled.json',
+    install: '$ # POST to your endpoint',
+    versionLabel: '✓ HMAC-SHA256 signed',
+    lines: [
+      [1, [['cm', '// Webhook: ORDER_FILLED']]],
+      [2, [['tx', '{']]],
+      [3, [['kw', '  "event"'], ['tx', ': '], ['str', '"ORDER_FILLED"'], ['tx', ',']]],
+      [4, [['kw', '  "delivery_id"'], ['tx', ': '], ['str', '"whk_01HRJ8..."'], ['tx', ',']]],
+      [5, [['kw', '  "strategy_id"'], ['tx', ': '], ['str', '"str_b4c8a21"'], ['tx', ',']]],
+      [6, [['kw', '  "payload"'], ['tx', ': {']]],
+      [7, [['kw', '    "side"'], ['tx', ': '], ['str', '"BUY"'], ['tx', ',']]],
+      [8, [['kw', '    "size"'], ['tx', ': '], ['str', '412'], ['tx', ',']]],
+      [9, [['kw', '    "price"'], ['tx', ': '], ['str', '0.62'], ['tx', ',']]],
+      [10,[['kw', '    "pnl"'], ['tx', ': '], ['str', '+412.00'], ['tx', '']]],
+      [11,[['tx', '  },']]],
+      [12,[['kw', '  "sig"'], ['tx', ': '], ['str', '"sha256=9f2a3b..."']]],
+      [13,[['tx', '}']]],
+    ],
+  },
+};
+
 function DeveloperSection() {
-  const lines = [
-    [1, [['cm', '// TypeScript SDK']]],
-    [2, [['kw', 'import'], ['tx', ' { PolyforgeClient } '], ['kw', 'from'], ['tx', ' '], ['str', "'@polyforge/sdk'"], ['tx', ';']]],
-    [3, [['tx', '']]],
-    [4, [['kw', 'const'], ['tx', ' client = '], ['kw', 'new'], ['tx', ' '], ['fn', 'PolyforgeClient'], ['tx', '({']]],
-    [5, [['tx', '  apiKey: process.env.POLYFORGE_KEY,']]],
-    [6, [['tx', '});']]],
-    [7, [['tx', '']]],
-    [8, [['kw', 'for await'], ['tx', ' ('], ['kw', 'const'], ['tx', ' event '], ['kw', 'of']]],
-    [9, [['tx', '  client.'], ['fn', 'watchStrategy'], ['tx', '(strategyId)) {']]],
-    [10,[['cm', '  // ORDER_FILLED · +$412 · sharpe 1.84']]],
-    [11,[['tx', '  console.'], ['fn', 'log'], ['tx', '(event.type, event.payload);']]],
-    [12,[['tx', '}']]],
-  ];
+  const [tab, setTab] = React.useState('typescript sdk');
+  const sample = DEV_SAMPLES[tab];
   return (
     <section className="pf-section" id="developers" style={{ background: 'var(--bg-surface)' }}>
       <div className="container">
@@ -207,9 +321,17 @@ function DeveloperSection() {
             <div className="eyebrow">04 · Developer API</div>
             <h2 className="h2">Built for the API-first trader.</h2>
             <p className="section-body">Everything in the product ships as REST, WebSocket, and MCP. TypeScript, Python, and Rust SDKs. Strategies are JSON you can version in git. Builder attribution baked into every order.</p>
-            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 20 }}>
-              {['typescript sdk', 'python sdk', 'rust sdk', 'mcp server', 'openapi 3.1', 'webhooks'].map(l => (
-                <span key={l} className="chip">{l}</span>
+            <div role="tablist" aria-label="API surface" style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 20 }}>
+              {Object.keys(DEV_SAMPLES).map(l => (
+                <button
+                  key={l}
+                  role="tab"
+                  aria-selected={tab === l}
+                  className={'chip chip-toggle' + (tab === l ? ' chip-active' : '')}
+                  onClick={() => setTab(l)}
+                >
+                  {l}
+                </button>
               ))}
             </div>
             <ul className="bullets" style={{ marginTop: 24 }}>
@@ -233,11 +355,11 @@ function DeveloperSection() {
             <div className="code-frame">
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 14px', borderBottom: '1px solid var(--border-default)', background: 'var(--bg-surface)' }}>
                 <div className="browser-dots"><span/><span/><span/></div>
-                <span className="mono" style={{ fontSize: 11, color: 'var(--text-tertiary)', marginLeft: 8 }}>strategy-watcher.ts</span>
-                <button className="btn btn-ghost btn-xs" style={{ marginLeft: 'auto' }}><Icon name="copy" size={12}/></button>
+                <span className="mono" style={{ fontSize: 11, color: 'var(--text-tertiary)', marginLeft: 8 }}>{sample.filename}</span>
+                <button className="btn btn-ghost btn-xs" style={{ marginLeft: 'auto' }} aria-label="Copy code"><Icon name="copy" size={12}/></button>
               </div>
-              <pre>
-                {lines.map(([n, tokens]) => (
+              <pre key={tab} className="code-fade">
+                {sample.lines.map(([n, tokens]) => (
                   <div className="code-line" key={n}>
                     <span className="code-ln">{n}</span>
                     <span>{tokens.map((tok, i) => {
@@ -250,8 +372,8 @@ function DeveloperSection() {
               </pre>
             </div>
             <div style={{ marginTop: 12, display: 'flex', gap: 12, justifyContent: 'space-between', fontSize: 11 }} className="mono">
-              <span style={{ color: 'var(--text-tertiary)' }}>$ npm install @polyforge/sdk</span>
-              <span style={{ color: 'var(--gain-text)' }}>✓ v1.4.2 · 18kb gzipped</span>
+              <span style={{ color: 'var(--text-tertiary)' }}>{sample.install}</span>
+              <span style={{ color: 'var(--gain-text)' }}>{sample.versionLabel}</span>
             </div>
           </div>
         </div>
@@ -302,10 +424,10 @@ function CTA() {
           <div className="glow"/>
           <div className="eyebrow" style={{ marginBottom: 14 }}>Ready for live</div>
           <h2 className="h2" style={{ fontSize: 'clamp(32px, 4.5vw, 48px)', maxWidth: 640, margin: '0 auto 14px' }}>Forge your edge on prediction markets.</h2>
-          <p className="section-body" style={{ margin: '0 auto 28px', textAlign: 'center' }}>Paper-trade unlimited. Go live with your Polymarket keys whenever you're ready.</p>
+          <p className="section-body" style={{ margin: '0 auto 28px', textAlign: 'center' }}>Paper-trade unlimited. Go live on Polymarket or Kalshi whenever you're ready.</p>
           <div style={{ display: 'inline-flex', gap: 10, flexWrap: 'wrap', justifyContent: 'center' }}>
-            <a className="btn btn-primary btn-lg" href="#">start free <Icon name="arrow-right" size={14}/></a>
-            <a className="btn btn-secondary btn-lg" href="#">book a walkthrough</a>
+            <a className="btn btn-primary btn-lg" href="Sign Up.html">start free <Icon name="arrow-right" size={14}/></a>
+            <a className="btn btn-secondary btn-lg" href="Contact.html">book a walkthrough</a>
           </div>
           <div className="mono" style={{ fontSize: 11, color: 'var(--text-tertiary)', marginTop: 24, letterSpacing: '0.1em' }}>
             NO CARD · FREE FOREVER FOR PAPER · EU-WEST-2 · 99.97% UPTIME YTD

@@ -17,8 +17,8 @@ function Hero() {
             <h1 className="t-hero">{copy.h}</h1>
             <p className="hero-sub">{copy.sub}</p>
             <div className="hero-cta">
-              <a className="btn btn-primary btn-lg" href="#">start free <Icon name="arrow-right" size={14}/></a>
-              <a className="btn btn-secondary btn-lg" href="#">read the docs</a>
+              <a className="btn btn-primary btn-lg" href="Sign Up.html">start free <Icon name="arrow-right" size={14}/></a>
+              <a className="btn btn-secondary btn-lg" href="Docs.html">read the docs</a>
             </div>
             <div style={{ display: 'flex', gap: 10, alignItems: 'center', marginTop: 20 }}>
               <span style={{ fontSize: 12, color: 'var(--text-tertiary)' }}>No credit card · Paper trade unlimited · Polymarket builder program</span>

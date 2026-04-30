@@ -1,0 +1,715 @@
+/* =========================================================
+   Polyforge — Design System reference page
+   Layout: sidebar TOC + long scrollable content
+   Tone: editorial-docs + Admin chrome (matches the system itself)
+   ========================================================= */
+
+.ds-root {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  min-height: 100vh;
+  background: var(--bg-app);
+  color: var(--text-primary);
+}
+@media (max-width: 900px) {
+  .ds-root { grid-template-columns: 1fr; }
+  .ds-side { display: none; }
+}
+
+/* ---- Sidebar TOC ---- */
+.ds-side {
+  position: sticky; top: 0;
+  height: 100vh;
+  overflow-y: auto;
+  border-right: 1px solid var(--border-subtle);
+  background: var(--bg-surface);
+  padding: 18px 14px 24px;
+  display: flex; flex-direction: column;
+}
+.ds-side-brand {
+  display: flex; align-items: center; gap: 10px;
+  padding: 4px 8px 14px;
+  border-bottom: 1px solid var(--border-subtle);
+  margin-bottom: 12px;
+}
+.ds-side-brand-logo {
+  width: 28px; height: 28px;
+  border-radius: 7px;
+  display: grid; place-items: center;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-default);
+  color: var(--accent-text);
+  flex-shrink: 0;
+}
+.ds-side-brand-text { line-height: 1.15; min-width: 0; }
+.ds-side-brand-title { font-size: 13px; font-weight: 600; color: var(--text-primary); letter-spacing: -0.01em; }
+.ds-side-brand-sub { font-size: 11px; color: var(--text-tertiary); font-family: 'Geist Mono', monospace; }
+
+.ds-side-search {
+  display: flex; align-items: center; gap: 8px;
+  height: 30px; padding: 0 10px; margin-bottom: 14px;
+  background: var(--bg-app);
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px;
+}
+.ds-side-search input {
+  flex: 1; background: transparent; border: 0; outline: 0;
+  color: var(--text-primary); font-size: 12px; font-family: inherit;
+}
+.ds-side-search input::placeholder { color: var(--text-tertiary); }
+
+.ds-toc { flex: 1; overflow-y: auto; }
+.ds-toc-group { margin-bottom: 10px; }
+.ds-toc-label {
+  font-size: 10px; font-weight: 600;
+  letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--text-tertiary);
+  padding: 8px 8px 4px;
+}
+.ds-toc-link {
+  display: flex; align-items: center; gap: 8px;
+  height: 28px; padding: 0 8px;
+  border-radius: 5px;
+  font-size: 12.5px;
+  color: var(--text-secondary);
+  text-decoration: none;
+  cursor: pointer;
+}
+.ds-toc-link:hover { color: var(--text-primary); background: var(--bg-elevated); }
+.ds-toc-link.is-active { background: var(--accent-subtle); color: var(--accent-text); font-weight: 500; }
+.ds-toc-link .num {
+  font-family: 'Geist Mono', monospace;
+  font-size: 10px;
+  color: var(--text-tertiary);
+  min-width: 18px;
+}
+.ds-toc-link.is-active .num { color: var(--accent-text); }
+
+/* ---- Main column ---- */
+.ds-main { min-width: 0; }
+.ds-top {
+  position: sticky; top: 0; z-index: 5;
+  height: 56px;
+  padding: 0 28px;
+  display: flex; align-items: center; gap: 12px;
+  background: color-mix(in srgb, var(--bg-app) 92%, transparent);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--border-subtle);
+}
+.ds-top-crumbs {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 12px; color: var(--text-tertiary);
+}
+.ds-top-crumbs .sep { color: var(--border-default); }
+.ds-top-crumbs .here { color: var(--text-primary); font-weight: 500; }
+.ds-top-actions { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+
+.ds-content {
+  max-width: 1320px;
+  margin: 0 auto;
+  padding: 32px 40px 96px;
+}
+@media (max-width: 1200px) {
+  .ds-content { max-width: 1080px; padding: 32px 28px 96px; }
+}
+@media (max-width: 640px) { .ds-content { padding: 24px 16px 72px; } }
+
+/* ---- Hero ---- */
+.ds-hero {
+  padding: 16px 0 56px;
+  border-bottom: 1px solid var(--border-subtle);
+  margin-bottom: 56px;
+}
+.ds-hero-eyebrow {
+  display: inline-flex; align-items: center; gap: 8px;
+  height: 22px; padding: 0 10px;
+  border-radius: 99px;
+  background: var(--accent-subtle);
+  border: 1px solid var(--accent-border);
+  color: var(--accent-text);
+  font-family: 'Geist Mono', monospace;
+  font-size: 10.5px; letter-spacing: 0.06em; text-transform: uppercase;
+  margin-bottom: 18px;
+}
+.ds-hero h1 {
+  font-size: clamp(32px, 4.4vw, 48px);
+  font-weight: 600;
+  line-height: 1.05;
+  letter-spacing: -0.025em;
+  color: var(--text-primary);
+  margin: 0 0 16px;
+  max-width: 720px;
+}
+.ds-hero h1 em {
+  font-style: normal;
+  color: var(--text-tertiary);
+}
+.ds-hero p {
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--text-secondary);
+  max-width: 640px;
+  margin: 0;
+}
+.ds-hero-meta {
+  display: flex; align-items: center; gap: 14px;
+  margin-top: 28px;
+  flex-wrap: wrap;
+  font-family: 'Geist Mono', monospace;
+  font-size: 11px;
+  color: var(--text-tertiary);
+}
+.ds-hero-meta .sep { color: var(--border-default); }
+
+/* ---- Section ---- */
+.ds-section {
+  padding: 36px 0 48px;
+  border-top: 1px solid var(--border-subtle);
+  scroll-margin-top: 72px;
+}
+.ds-section:first-of-type { border-top: none; padding-top: 0; }
+
+.ds-section-head { margin-bottom: 28px; max-width: 720px; }
+.ds-section-eyebrow {
+  font-family: 'Geist Mono', monospace;
+  font-size: 11px; font-weight: 500;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--accent-text);
+  margin-bottom: 10px;
+  display: flex; align-items: center; gap: 10px;
+}
+.ds-section-eyebrow .num {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 22px; height: 22px; padding: 0 6px;
+  border-radius: 5px;
+  background: var(--accent-subtle);
+  border: 1px solid var(--accent-border);
+}
+.ds-section-title {
+  font-size: 28px; font-weight: 600;
+  letter-spacing: -0.02em; line-height: 1.15;
+  color: var(--text-primary);
+  margin: 0 0 10px;
+}
+.ds-section-sub {
+  font-size: 14px; line-height: 1.6;
+  color: var(--text-secondary);
+  margin: 0;
+  max-width: 640px;
+}
+
+.ds-sub {
+  font-size: 11px; font-weight: 600;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--text-tertiary);
+  margin: 32px 0 12px;
+  display: flex; align-items: center; gap: 10px;
+}
+.ds-sub::after { content: ''; flex: 1; height: 1px; background: var(--border-subtle); }
+
+/* ---- Cards ---- */
+.ds-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: 10px;
+  overflow: hidden;
+}
+.ds-card-head {
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border-subtle);
+  background: var(--bg-app);
+}
+.ds-card-title { font-size: 12px; font-weight: 600; color: var(--text-primary); }
+.ds-card-sub  { font-size: 11px; color: var(--text-tertiary); margin-left: auto; font-family: 'Geist Mono', monospace; }
+.ds-card-body { padding: 18px; }
+
+/* ---- Color swatches ---- */
+.ds-palette {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 12px;
+}
+.ds-swatch {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: border-color 120ms ease, transform 120ms ease;
+}
+.ds-swatch:hover { border-color: var(--border-default); transform: translateY(-1px); }
+.ds-swatch-fill {
+  height: 76px;
+  position: relative;
+  background-image:
+    linear-gradient(45deg, rgba(255,255,255,0.04) 25%, transparent 25%),
+    linear-gradient(-45deg, rgba(255,255,255,0.04) 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, rgba(255,255,255,0.04) 75%),
+    linear-gradient(-45deg, transparent 75%, rgba(255,255,255,0.04) 75%);
+  background-size: 12px 12px;
+  background-position: 0 0, 0 6px, 6px -6px, -6px 0;
+}
+.ds-swatch-fill > .fill {
+  position: absolute; inset: 0;
+}
+.ds-swatch-meta {
+  padding: 10px 12px;
+  border-top: 1px solid var(--border-subtle);
+}
+.ds-swatch-name {
+  font-size: 12px; font-weight: 500;
+  color: var(--text-primary);
+  margin-bottom: 2px;
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+}
+.ds-swatch-token {
+  font-family: 'Geist Mono', monospace;
+  font-size: 10.5px;
+  color: var(--text-tertiary);
+}
+.ds-swatch-hex {
+  font-family: 'Geist Mono', monospace;
+  font-size: 11px;
+  color: var(--text-secondary);
+  display: flex; align-items: center; gap: 6px;
+  margin-top: 2px;
+}
+.ds-swatch-hex .copy {
+  opacity: 0; transition: opacity 120ms;
+  color: var(--text-tertiary);
+}
+.ds-swatch:hover .copy { opacity: 1; }
+.ds-swatch.is-copied .copy { opacity: 1; color: var(--gain-text); }
+
+/* ---- Type specimens ---- */
+.ds-type-row {
+  display: grid;
+  grid-template-columns: 200px 1fr;
+  gap: 24px;
+  padding: 18px 0;
+  border-bottom: 1px solid var(--border-subtle);
+  align-items: baseline;
+}
+.ds-type-row:last-child { border-bottom: none; }
+.ds-type-meta {
+  font-family: 'Geist Mono', monospace;
+  font-size: 11px;
+  color: var(--text-tertiary);
+}
+.ds-type-meta .role {
+  display: block; font-weight: 600; color: var(--text-primary); font-family: 'Geist', sans-serif; font-size: 12px; margin-bottom: 2px;
+}
+.ds-type-spec { color: var(--text-primary); }
+
+/* ---- Spacing scale ---- */
+.ds-spacing {
+  display: flex; flex-direction: column; gap: 8px;
+}
+.ds-spacing-row {
+  display: grid;
+  grid-template-columns: 80px 1fr 60px;
+  gap: 16px;
+  align-items: center;
+  padding: 8px 12px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px;
+  background: var(--bg-surface);
+}
+.ds-spacing-bar {
+  height: 14px;
+  background: var(--accent-subtle);
+  border-left: 2px solid var(--accent-default);
+}
+.ds-spacing-token, .ds-spacing-px {
+  font-family: 'Geist Mono', monospace; font-size: 12px;
+}
+.ds-spacing-token { color: var(--text-primary); }
+.ds-spacing-px { color: var(--text-tertiary); text-align: right; }
+
+/* ---- Radii / shadow examples ---- */
+.ds-grid-3 {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 14px;
+}
+.ds-tile {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  padding: 18px;
+  text-align: center;
+}
+.ds-tile-preview {
+  height: 80px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-default);
+  margin: 0 auto 14px;
+  width: 100%;
+}
+.ds-tile-name { font-size: 12px; font-weight: 500; color: var(--text-primary); margin-bottom: 2px; }
+.ds-tile-token { font-family: 'Geist Mono', monospace; font-size: 11px; color: var(--text-tertiary); }
+
+/* ---- Icon grid ---- */
+.ds-icons {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 4px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  padding: 8px;
+  background: var(--bg-surface);
+}
+.ds-icon-cell {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
+  padding: 14px 8px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  color: var(--text-secondary);
+  transition: background 100ms, color 100ms;
+}
+.ds-icon-cell:hover { background: var(--bg-elevated); color: var(--text-primary); }
+.ds-icon-cell.is-copied { background: var(--accent-subtle); color: var(--accent-text); }
+.ds-icon-cell-name { font-family: 'Geist Mono', monospace; font-size: 10.5px; color: var(--text-tertiary); }
+.ds-icon-cell:hover .ds-icon-cell-name { color: var(--text-secondary); }
+
+/* ---- Component blocks ---- */
+.ds-component {
+  margin-bottom: 24px;
+}
+.ds-component-head {
+  display: flex; align-items: baseline; gap: 12px;
+  margin-bottom: 12px;
+}
+.ds-component-name { font-size: 14px; font-weight: 600; color: var(--text-primary); }
+.ds-component-token { font-family: 'Geist Mono', monospace; font-size: 11px; color: var(--text-tertiary); }
+.ds-component-stage {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  padding: 24px;
+  display: flex; flex-wrap: wrap; gap: 12px; align-items: center;
+}
+.ds-component-stage.is-tight { padding: 16px; gap: 8px; }
+.ds-component-stage.is-block { display: block; }
+.ds-component-stage.is-grid { display: grid; }
+
+/* Code snippet under examples */
+.ds-snippet {
+  margin-top: 8px;
+  background: var(--bg-app);
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px;
+  padding: 10px 12px;
+  font-family: 'Geist Mono', monospace;
+  font-size: 11.5px;
+  color: var(--text-secondary);
+  overflow-x: auto;
+  white-space: pre;
+}
+.ds-snippet .tag { color: var(--accent-text); }
+.ds-snippet .attr { color: var(--color-purple-400); }
+.ds-snippet .str { color: var(--gain-text); }
+
+/* ---- Toast (preview) ---- */
+.ds-toast {
+  display: inline-flex; align-items: center; gap: 10px;
+  padding: 10px 14px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-default);
+  border-radius: 8px;
+  box-shadow: var(--shadow-2);
+  font-size: 13px;
+  color: var(--text-primary);
+}
+.ds-toast.is-gain { border-color: color-mix(in srgb, var(--gain) 35%, transparent); }
+.ds-toast.is-gain .ds-toast-icon { background: var(--gain-subtle); color: var(--gain-text); }
+.ds-toast.is-loss { border-color: color-mix(in srgb, var(--loss) 35%, transparent); }
+.ds-toast.is-loss .ds-toast-icon { background: var(--loss-subtle); color: var(--loss-text); }
+.ds-toast.is-warn .ds-toast-icon { background: var(--warning-subtle); color: var(--warning); }
+.ds-toast-icon {
+  width: 22px; height: 22px;
+  border-radius: 5px;
+  background: var(--bg-app);
+  display: grid; place-items: center;
+}
+
+/* ---- Form sample ---- */
+.ds-input {
+  display: flex; align-items: center; gap: 8px;
+  height: 32px; padding: 0 10px;
+  background: var(--bg-app);
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px;
+  min-width: 220px;
+  transition: border-color 120ms;
+}
+.ds-input:focus-within { border-color: var(--accent-border); box-shadow: 0 0 0 3px var(--accent-subtle); }
+.ds-input input {
+  flex: 1; background: transparent; border: 0; outline: 0;
+  color: var(--text-primary); font-size: 13px; font-family: inherit;
+}
+.ds-input input::placeholder { color: var(--text-tertiary); }
+.ds-input.has-error { border-color: color-mix(in srgb, var(--loss) 50%, transparent); }
+.ds-input.has-error:focus-within { box-shadow: 0 0 0 3px var(--loss-subtle); }
+.ds-input.is-disabled { opacity: 0.5; pointer-events: none; }
+
+.ds-switch {
+  width: 30px; height: 18px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-default);
+  border-radius: 99px;
+  position: relative;
+  cursor: pointer;
+  transition: background 120ms;
+}
+.ds-switch::after {
+  content: ''; position: absolute; top: 1px; left: 1px;
+  width: 14px; height: 14px;
+  border-radius: 99px;
+  background: var(--text-tertiary);
+  transition: transform 160ms ease, background 160ms ease;
+}
+.ds-switch.is-on { background: var(--accent-subtle); border-color: var(--accent-border); }
+.ds-switch.is-on::after { transform: translateX(12px); background: var(--accent-default); }
+
+.ds-radio {
+  width: 16px; height: 16px;
+  border: 1.5px solid var(--border-default);
+  border-radius: 99px;
+  display: inline-grid; place-items: center;
+  cursor: pointer;
+}
+.ds-radio.is-on::after {
+  content: '';
+  width: 8px; height: 8px;
+  border-radius: 99px;
+  background: var(--accent-default);
+}
+
+/* ---- Tabs ---- */
+.ds-tabs {
+  display: flex; gap: 4px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+.ds-tab {
+  position: relative;
+  padding: 8px 12px;
+  font-size: 13px; color: var(--text-secondary);
+  background: transparent; border: 0; cursor: pointer;
+  font-family: inherit;
+}
+.ds-tab:hover { color: var(--text-primary); }
+.ds-tab.is-active { color: var(--text-primary); font-weight: 500; }
+.ds-tab.is-active::after {
+  content: ''; position: absolute; left: 0; right: 0; bottom: -1px;
+  height: 2px; background: var(--accent-default);
+  border-radius: 2px 2px 0 0;
+}
+
+/* ---- Voice principles ---- */
+.ds-voice {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+@media (max-width: 720px) { .ds-voice { grid-template-columns: 1fr; } }
+.ds-voice-card {
+  padding: 16px 18px;
+  border-radius: 8px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+}
+.ds-voice-card.is-do {
+  border-color: color-mix(in srgb, var(--gain) 30%, var(--border-subtle));
+}
+.ds-voice-card.is-dont {
+  border-color: color-mix(in srgb, var(--loss) 30%, var(--border-subtle));
+}
+.ds-voice-tag {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-family: 'Geist Mono', monospace;
+  font-size: 10.5px;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.ds-voice-card.is-do .ds-voice-tag { color: var(--gain-text); }
+.ds-voice-card.is-dont .ds-voice-tag { color: var(--loss-text); }
+.ds-voice-quote {
+  font-size: 14px; color: var(--text-primary);
+  line-height: 1.5;
+  margin: 0 0 6px;
+}
+.ds-voice-note {
+  font-size: 12px; color: var(--text-tertiary);
+  line-height: 1.5; margin: 0;
+}
+
+/* ---- Brand specimens ---- */
+.ds-brand-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 12px;
+}
+.ds-brand-tile {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: 10px;
+  overflow: hidden;
+}
+.ds-brand-stage {
+  height: 140px;
+  display: grid; place-items: center;
+  background: var(--bg-elevated);
+  position: relative;
+  overflow: hidden;
+}
+.ds-brand-stage.is-light { background: #FAFAFA; color: #0E0F11; }
+.ds-brand-stage.is-dark  { background: #0E0F11; color: #F0F1F5; }
+.ds-brand-stage.is-accent { background: var(--accent-default); color: #fff; }
+.ds-brand-stage.is-grid {
+  background-image:
+    linear-gradient(to right, var(--border-subtle) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--border-subtle) 1px, transparent 1px);
+  background-size: 16px 16px;
+}
+.ds-brand-foot {
+  padding: 10px 14px;
+  border-top: 1px solid var(--border-subtle);
+  font-family: 'Geist Mono', monospace;
+  font-size: 11px;
+  color: var(--text-tertiary);
+}
+.ds-brand-foot strong { color: var(--text-primary); font-weight: 500; font-family: 'Geist', sans-serif; font-size: 12px; }
+
+/* ---- Wordmark ---- */
+.ds-wordmark {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-family: 'Geist', sans-serif;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+.ds-wordmark .mark { display: grid; place-items: center; flex-shrink: 0; }
+
+/* ---- Motion ---- */
+.ds-motion-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 12px;
+}
+.ds-motion-tile {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  padding: 14px;
+  cursor: pointer;
+}
+.ds-motion-stage {
+  height: 60px;
+  background: var(--bg-app);
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px;
+  position: relative;
+  overflow: hidden;
+  margin-bottom: 10px;
+}
+.ds-motion-puck {
+  position: absolute; top: 50%; left: 12px;
+  width: 28px; height: 28px;
+  margin-top: -14px;
+  border-radius: 6px;
+  background: var(--accent-default);
+}
+.ds-motion-name { font-size: 12px; font-weight: 500; color: var(--text-primary); }
+.ds-motion-token { font-family: 'Geist Mono', monospace; font-size: 11px; color: var(--text-tertiary); }
+
+/* ---- Construction grid for prism ---- */
+.ds-construct {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+}
+@media (max-width: 720px) { .ds-construct { grid-template-columns: 1fr; } }
+
+/* ---- Copy toast ---- */
+.ds-copytoast {
+  position: fixed;
+  bottom: 28px; left: 50%;
+  transform: translateX(-50%) translateY(100px);
+  z-index: 100;
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 10px 16px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-default);
+  border-radius: 99px;
+  box-shadow: var(--shadow-3);
+  font-size: 12px; font-weight: 500;
+  color: var(--text-primary);
+  pointer-events: none;
+  transition: transform 200ms ease;
+}
+.ds-copytoast.is-shown { transform: translateX(-50%) translateY(0); }
+.ds-copytoast .ok { color: var(--gain-text); }
+
+/* ---- Legend / inline tag ---- */
+.ds-tag {
+  display: inline-flex; align-items: center; gap: 6px;
+  height: 20px; padding: 0 8px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: 99px;
+  font-family: 'Geist Mono', monospace;
+  font-size: 10.5px;
+  color: var(--text-secondary);
+}
+.ds-tag.is-marketing { color: var(--accent-text); border-color: var(--accent-border); background: var(--accent-subtle); }
+.ds-tag.is-admin    { color: var(--color-purple-400); border-color: color-mix(in srgb, var(--color-purple-400) 35%, transparent); background: color-mix(in srgb, var(--color-purple-400) 10%, transparent); }
+
+.ds-row { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+
+/* ---- "Anatomy" callout ---- */
+.ds-anatomy {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
+  padding: 18px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+}
+@media (max-width: 720px) { .ds-anatomy { grid-template-columns: 1fr; } }
+.ds-anatomy ul { margin: 0; padding-left: 18px; font-size: 13px; color: var(--text-secondary); line-height: 1.75; }
+.ds-anatomy li::marker { color: var(--accent-text); }
+
+/* ---- "Don't" example background hint ---- */
+.ds-bad {
+  position: relative;
+  background:
+    repeating-linear-gradient(
+      135deg,
+      transparent 0 12px,
+      color-mix(in srgb, var(--loss) 5%, transparent) 12px 14px
+    );
+}
+.ds-bad-label {
+  position: absolute; top: 6px; right: 8px;
+  font-family: 'Geist Mono', monospace;
+  font-size: 10px;
+  color: var(--loss-text);
+  letter-spacing: 0.1em; text-transform: uppercase;
+}
+
+/* ---- KBD spec ---- */
+.ds-kbd {
+  display: inline-flex; align-items: center; gap: 4px;
+}
+.ds-kbd kbd {
+  font-family: 'Geist Mono', monospace;
+  font-size: 11px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-default);
+  border-radius: 4px;
+  padding: 1px 6px;
+  color: var(--text-secondary);
+  box-shadow: 0 1px 0 0 rgba(0,0,0,0.18);
+}
+
+/* ---- Misc helpers ---- */
+.ds-mono { font-family: 'Geist Mono', monospace; }
+.ds-muted { color: var(--text-tertiary); }
+.ds-divider { height: 1px; background: var(--border-subtle); margin: 32px 0; }

@@ -11,7 +11,7 @@ function TrustStrip() {
   return (
     <section style={{ background: 'var(--bg-surface)', borderTop: '1px solid var(--border-subtle)', borderBottom: '1px solid var(--border-subtle)' }}>
       <div className="container" style={{ padding: '56px 24px' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 0, border: '1px solid var(--border-subtle)', borderRadius: 12, overflow: 'hidden', background: 'var(--border-subtle)' }}>
+        <div className="registry-grid" style={{ display: 'grid', gap: 0, border: '1px solid var(--border-subtle)', borderRadius: 12, overflow: 'hidden', background: 'var(--border-subtle)' }}>
           {items.map(it => (
             <div key={it.title} style={{ background: 'var(--bg-surface)', padding: '22px 24px', display: 'flex', flexDirection: 'column', gap: 8 }}>
               <span style={{ color: 'var(--accent-text)' }}><Icon name={it.icon} size={18}/></span>

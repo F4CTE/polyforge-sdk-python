@@ -1,6 +1,11 @@
 # PolyForge Design Charter
 > Inspired by Linear.app — adapted for a professional prediction market terminal
 
+> **Design bundle:** `docs/claude design/` contains the full reference prototype
+> (landing, admin app, user app, docs, auth, legal, design system). Browse
+> `docs/claude design/project/Design System.html` for the interactive token/
+> component reference. All five surfaces share this charter.
+
 ---
 
 ## 0. Philosophy
@@ -758,14 +763,74 @@ The landing page (`apps/landing/`) uses a distinct spacing system derived from t
 
 ---
 
-## 16. Admin Panel
+## 16. Two-Layer Component System
 
-The admin panel (`apps/admin-app/`) uses the same design system with minor adjustments:
+Polyforge ships across **five surfaces** that all share the same token set but use
+two distinct component layers:
 
-- **Accent override**: admin uses `--accent-default: #8B5CF6` (purple) to visually distinguish it from the user app
-- **Layout**: same inverted-L structure, sidebar may include admin-specific sections (Users, Tickets, Config Flags)
-- **Tables**: admin tables tend toward `data-density="compact"` (28px rows) since admins scan more data
-- **Danger zone**: destructive admin actions (delete user, reset credentials) use a confirmation modal with a typed-confirmation input, not just a button
+### Layer A — Marketing layer (`.btn`, `.chip`, `.card`, `.badge`)
+Used on: `apps/landing/`, docs pages, auth pages, legal pages.
+
+```css
+.btn           /* 36px height, 8px radius, gap 6px */
+.btn-primary   /* accent-default fill */
+.btn-secondary /* transparent + border-default */
+.btn-ghost     /* transparent, text-secondary */
+.btn-sm        /* 28px */  .btn-lg /* 40px */  .btn-xs /* 24px */
+
+.chip          /* inline tag: bg-elevated, border-default, 4px radius */
+.chip-accent   /* accent tint */  .chip-gain  .chip-loss  .chip-warn
+
+.card          /* bg-surface, border-subtle, 8px radius, 20px padding */
+.card-hover    /* pointer cursor + bg-elevated on hover */
+```
+
+### Layer B — Admin/App layer (`.adm-*`, `.usr-*`)
+Used on: `apps/admin-app/`, `apps/user-app/`.
+Lives in the Claude Design prototype CSS (`admin.css`, `user.css`). The React
+apps use Tailwind + shadcn/ui instead, but the visual spec is the same.
+
+```
+Shell:    .adm-root → .adm-sidebar + .adm-main
+Sidebar:  220px expanded / 64px collapsed. Sticky. bg-surface + border-right.
+Topbar:   56px. Holds search (.adm-search) + UTC clock + actions.
+Brand:    24px chip logo + 13px/600 wordmark + collapse toggle.
+Nav:      .adm-nav-section → .adm-nav-link (active: bg-hover + text-primary)
+Foot:     User row (avatar + name + role pill + settings icon), pinned bottom.
+```
+
+```
+Cards:    .adm-card  — bg-surface, border-subtle, 8px radius, 18–22px padding
+Tables:   .adm-table — thead th 11px/600/uppercase/tracking-wide/tertiary
+          Row heights: cozy 40px / compact 32px (data-density attr)
+Buttons:  .adm-btn  .adm-btn-primary  .adm-btn-secondary  .adm-btn-ghost
+          .adm-btn-danger (loss tint)
+Inputs:   .adm-input — 32px height, bg-app, border-default, 6px radius
+Pills:    .adm-pill  .adm-pill.is-gain  .adm-pill.is-loss  .adm-pill.has-dot
+Stats:    .adm-stat — metric card with value + delta + optional sparkline
+```
+
+### User App additions (`.usr-*`)
+Layered on top of admin layer. Adds trader-specific affordances:
+
+```
+Paper/Live toggle:  .usr-mode-toggle → .usr-mode-btn (.is-active / .is-live)
+Live dot pulse:     .usr-mode-btn.is-active.is-live .usr-mode-dot
+Ticker strip:       .usr-ticker → .usr-ticker-track (60s scroll animation)
+Venue badge:        .usr-venue-badge — colored mini-chip per venue
+Role pill:          .role-pill.is-pro — accent tint in sidebar user row
+Equity curve:       <UsrEquityCurve> SVG with gradient fill + live dot
+```
+
+### Surface reference
+
+| Surface | Layer | Accent | App |
+|---------|-------|--------|-----|
+| Landing | Marketing | Electric blue `#4F6EF7` | `apps/landing/` |
+| Docs / Guides | Marketing | Electric blue | `apps/landing/` |
+| Auth | Marketing | Electric blue | `apps/user-app/` |
+| User trading app | Admin/App B | Electric blue | `apps/user-app/` |
+| Admin panel | Admin/App B | Violet `#8B5CF6` | `apps/admin-app/` |
 
 ---
 
