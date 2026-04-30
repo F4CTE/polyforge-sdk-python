@@ -2,7 +2,6 @@ import { describe, it, expect, beforeEach, vi, afterEach } from "vitest";
 import { HttpStatus } from "@nestjs/common";
 import * as bcrypt from "bcrypt";
 import { AuthService } from "./auth.service";
-import { faker } from "@faker-js/faker";
 
 // ─── Factories ────────────────────────────────────────────────────────────────
 
@@ -18,13 +17,22 @@ interface AdminLike {
   createdAt: Date;
 }
 
+let fakeUuidSequence = 0;
+
+function fakeUuid(): string {
+  fakeUuidSequence += 1;
+  return `00000000-0000-4000-8000-${String(fakeUuidSequence).padStart(12, "0")}`;
+}
+
 async function adminFactory(
   overrides: Partial<AdminLike> = {},
 ): Promise<AdminLike> {
+  const id = fakeUuid();
+
   return {
-    id: faker.string.uuid(),
-    email: faker.internet.email().toLowerCase(),
-    displayName: faker.person.fullName(),
+    id,
+    email: `admin-${id.slice(-12)}@example.com`,
+    displayName: "Admin User",
     passwordHash: await bcrypt.hash("Passw0rd!", 10),
     role: "SUPER_ADMIN",
     active: true,
@@ -301,7 +309,7 @@ describe("AdminAuthService", () => {
 
   describe("confirmTotp", () => {
     it("enables TOTP and updates admin record on valid code", async () => {
-      const adminId = faker.string.uuid();
+      const adminId = fakeUuid();
       redis.get.mockResolvedValue("JBSWY3DPEHPK3PXP");
 
       const result = await service.confirmTotp(adminId, "123456");
@@ -411,7 +419,7 @@ describe("AdminAuthService", () => {
   describe("getMe", () => {
     it("returns admin profile when token and session are valid", async () => {
       const admin = await adminFactory();
-      const sessionId = faker.string.uuid();
+      const sessionId = fakeUuid();
       jwtService.verify.mockReturnValue({
         sub: admin.id,
         email: admin.email,
@@ -441,7 +449,7 @@ describe("AdminAuthService", () => {
     });
 
     it("throws UNAUTHORIZED (401) when Redis session does not exist", async () => {
-      const sessionId = faker.string.uuid();
+      const sessionId = fakeUuid();
       jwtService.verify.mockReturnValue({ sub: "admin-id", sessionId });
       redis.get.mockResolvedValue(null);
 
@@ -453,7 +461,7 @@ describe("AdminAuthService", () => {
 
     it("throws ACCOUNT_INACTIVE (403) when admin is inactive", async () => {
       const admin = await adminFactory({ active: false });
-      const sessionId = faker.string.uuid();
+      const sessionId = fakeUuid();
       jwtService.verify.mockReturnValue({ sub: admin.id, sessionId });
       redis.get.mockResolvedValue(admin.id);
       adminDb.admin.findUnique.mockResolvedValue(admin);
@@ -465,9 +473,9 @@ describe("AdminAuthService", () => {
     });
 
     it("throws ACCOUNT_INACTIVE (403) when admin is not found", async () => {
-      const sessionId = faker.string.uuid();
+      const sessionId = fakeUuid();
       jwtService.verify.mockReturnValue({
-        sub: faker.string.uuid(),
+        sub: fakeUuid(),
         sessionId,
       });
       redis.get.mockResolvedValue("some-admin-id");
@@ -484,7 +492,7 @@ describe("AdminAuthService", () => {
 
   describe("logout", () => {
     it("deletes the Redis session for a valid Bearer token", async () => {
-      const sessionId = faker.string.uuid();
+      const sessionId = fakeUuid();
       jwtService.verify.mockReturnValue({
         sessionId,
         sub: "admin-id",

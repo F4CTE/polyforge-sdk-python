@@ -1,4 +1,5 @@
-import { create, all } from "mathjs";
+// eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-unsafe-assignment
+const { create, all } = require("mathjs");
 
 /**
  * Restricted mathjs instance — primary security layer.

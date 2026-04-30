@@ -4,7 +4,11 @@ import {
   OnModuleInit,
   OnModuleDestroy,
 } from "@nestjs/common";
-import type { Client as DiscordClient, Message, DMChannel } from "discord.js";
+import type {
+  Client as DiscordClient,
+  Message,
+  DMChannel,
+} from "discord.js" with { "resolution-mode": "import" };
 import { CommandsService } from "./commands.service";
 import { LinkingService } from "./linking.service";
 
@@ -38,14 +42,14 @@ export class DiscordService implements OnModuleInit, OnModuleDestroy {
     try {
       const { Client, GatewayIntentBits, Events } = await import("discord.js");
 
-      this.client = new Client({
+      const client = new Client({
         intents: [
           GatewayIntentBits.DirectMessages,
           GatewayIntentBits.GuildMessages,
           GatewayIntentBits.MessageContent,
         ],
-      });
-      const client = this.client;
+      }) as DiscordClient;
+      this.client = client;
 
       client.on(Events.MessageCreate, (message: Message): void => {
         // Ignore bot messages and non-command messages

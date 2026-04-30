@@ -1,5 +1,3 @@
-import { faker } from '@faker-js/faker';
-
 // Shape matching Prisma User model fields used in auth flows
 export interface UserLike {
     id: string;
@@ -41,12 +39,25 @@ export interface PasswordResetTokenLike {
     createdAt: Date;
 }
 
+let fakeIdSequence = 0;
+
+function fakeUuid(): string {
+    fakeIdSequence += 1;
+    return `00000000-0000-4000-8000-${String(fakeIdSequence).padStart(12, '0')}`;
+}
+
+function fakeHex(length: number): string {
+    return 'a'.repeat(length);
+}
+
 export function userFactory(overrides: Partial<UserLike> = {}): UserLike {
+    const id = fakeUuid();
+
     return {
-        id: faker.string.uuid(),
-        email: faker.internet.email().toLowerCase(),
-        username: faker.internet.username().toLowerCase().replace(/[^a-z0-9_]/g, '_').slice(0, 20),
-        displayName: faker.person.fullName(),
+        id,
+        email: `user-${id.slice(-12)}@example.com`,
+        username: `user_${id.slice(-12)}`,
+        displayName: 'Test User',
         passwordHash: '$2b$12$hashedpassword',
         emailVerified: true,
         emailVerifiedAt: new Date(),
@@ -68,9 +79,9 @@ export function userFactory(overrides: Partial<UserLike> = {}): UserLike {
 
 export function emailVerificationFactory(overrides: Partial<EmailVerificationLike> = {}): EmailVerificationLike {
     return {
-        id: faker.string.uuid(),
-        userId: faker.string.uuid(),
-        tokenHash: faker.string.hexadecimal({ length: 64, casing: 'lower', prefix: '' }),
+        id: fakeUuid(),
+        userId: fakeUuid(),
+        tokenHash: fakeHex(64),
         expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
         usedAt: null,
         createdAt: new Date(),
@@ -80,9 +91,9 @@ export function emailVerificationFactory(overrides: Partial<EmailVerificationLik
 
 export function passwordResetTokenFactory(overrides: Partial<PasswordResetTokenLike> = {}): PasswordResetTokenLike {
     return {
-        id: faker.string.uuid(),
-        userId: faker.string.uuid(),
-        tokenHash: faker.string.hexadecimal({ length: 64, casing: 'lower', prefix: '' }),
+        id: fakeUuid(),
+        userId: fakeUuid(),
+        tokenHash: fakeHex(64),
         expiresAt: new Date(Date.now() + 60 * 60 * 1000),
         usedAt: null,
         createdAt: new Date(),
@@ -92,5 +103,5 @@ export function passwordResetTokenFactory(overrides: Partial<PasswordResetTokenL
 
 /** Returns a raw 64-char hex token (as sent in email links) */
 export function rawToken(): string {
-    return faker.string.hexadecimal({ length: 64, casing: 'lower', prefix: '' });
+    return fakeHex(64);
 }

@@ -1,14 +1,13 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { ApiKeysController } from './api-keys.controller';
 import { ApiKeysService } from './api-keys.service';
-import { faker } from '@faker-js/faker';
 
 describe('ApiKeysController', () => {
   let controller: ApiKeysController;
   let apiKeysService: ApiKeysService;
 
   const user = {
-    sub: faker.string.uuid(),
+    sub: '00000000-0000-4000-8000-000000000001',
     email: 'alice@example.com',
     username: 'alice',
   };
@@ -55,7 +54,7 @@ describe('ApiKeysController', () => {
   });
 
   it('DELETE /api-keys/:id delegates to service.revoke with correct id and userId', async () => {
-    const keyId = faker.string.uuid();
+    const keyId = '00000000-0000-4000-8000-000000000002';
 
     await controller.revoke(user as any, keyId);
 

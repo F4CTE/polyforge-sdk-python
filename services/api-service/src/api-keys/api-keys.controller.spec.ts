@@ -9,7 +9,7 @@ async function loadCreateThrottleMetadata(env: NodeJS.ProcessEnv = {}) {
   vi.resetModules();
   process.env = { ...ORIGINAL_ENV, ...env };
 
-  const { ApiKeysController } = await import("./api-keys.controller");
+  const { ApiKeysController } = await import("./api-keys.controller.js");
   const method = ApiKeysController.prototype.create;
 
   return {

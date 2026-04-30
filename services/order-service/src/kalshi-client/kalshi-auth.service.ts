@@ -5,7 +5,7 @@ import {
 } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
 import { ConfigService } from "@nestjs/config";
-import { v4 as uuidv4 } from "uuid";
+import { randomUUID } from "node:crypto";
 
 const REFRESH_MARGIN_SECS = 300; // refresh when ≤5 min left (TTL=30min, so ≤25 min elapsed)
 
@@ -64,7 +64,7 @@ export class KalshiAuthService {
           "Content-Type": "application/json",
           Authorization: `Bearer ${serviceJwt}`,
         },
-        body: JSON.stringify({ userId, requestId: uuidv4() }),
+        body: JSON.stringify({ userId, requestId: randomUUID() }),
         signal: AbortSignal.timeout(10_000),
       });
     } catch {
@@ -85,7 +85,7 @@ export class KalshiAuthService {
 
   private makeServiceJwt(): string {
     return this.jwt.sign(
-      { jti: uuidv4() },
+      { jti: randomUUID() },
       {
         secret: this.config.get<string>("INTERNAL_JWT_SECRET"),
         issuer: "order-service",

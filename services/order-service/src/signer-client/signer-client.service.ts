@@ -5,7 +5,7 @@ import {
 } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
 import { ConfigService } from "@nestjs/config";
-import { v4 as uuidv4 } from "uuid";
+import { randomUUID } from "node:crypto";
 
 export interface SignOrderRequest {
   userId: string;
@@ -116,7 +116,7 @@ export class SignerClientService {
 
   private makeServiceJwt(): string {
     return this.jwt.sign(
-      { jti: uuidv4() },
+      { jti: randomUUID() },
       {
         secret: this.config.get<string>("INTERNAL_JWT_SECRET"),
         issuer: "order-service",

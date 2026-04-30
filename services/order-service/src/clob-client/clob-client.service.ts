@@ -1,18 +1,19 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
-import {
-  ClobClient,
-  type OrderBookSummary,
-  type OpenOrder,
-  type Trade,
-  type MarketPrice,
-  type OrderScoring,
-  type OrdersScoring,
-  type BuilderTrade,
-  type HeartbeatResponse,
-  type TickSize,
-  Chain,
-} from "@polymarket/clob-client";
+import type {
+  OrderBookSummary,
+  OpenOrder,
+  Trade,
+  MarketPrice,
+  OrderScoring,
+  OrdersScoring,
+  BuilderTrade,
+  HeartbeatResponse,
+  TickSize,
+} from "@polymarket/clob-client" with { "resolution-mode": "import" };
+
+// eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-unsafe-assignment
+const { ClobClient, Chain } = require("@polymarket/clob-client");
 
 // ─── Re-export SDK types for downstream consumers ───────────────────────────
 
@@ -99,7 +100,7 @@ const RETRY_DELAYS_MS = [500, 1000, 2000];
 export class ClobClientService {
   private readonly logger = new Logger(ClobClientService.name);
   private readonly clobUrl: string;
-  readonly sdk: ClobClient;
+  readonly sdk: any;
 
   constructor(private readonly config: ConfigService) {
     this.clobUrl = this.config.getOrThrow<string>("CLOB_API_URL");

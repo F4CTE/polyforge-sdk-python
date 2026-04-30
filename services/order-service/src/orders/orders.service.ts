@@ -1,5 +1,5 @@
 import { Injectable, Logger, Optional } from "@nestjs/common";
-import { v4 as uuidv4 } from "uuid";
+import { randomUUID } from "node:crypto";
 import { OrderOutcome, OrderStatus } from ".prisma/client";
 import { PrismaService } from "@polyforge/shared-db";
 import { RedisService } from "@polyforge/shared-redis";
@@ -66,7 +66,7 @@ export class OrdersService {
   }
 
   async processIntent(intent: OrderIntent, attempt = 1): Promise<void> {
-    const orderId = uuidv4();
+    const orderId = randomUUID();
     const requestedVenue = intent.venue ?? "polymarket";
     const targetVenue = await this.resolveTargetVenue(intent);
 
@@ -258,7 +258,7 @@ export class OrdersService {
   ): Promise<void> {
     // Close = FOK SELL at current market price (price ~0 = market order)
     const intent: OrderIntent = {
-      intentId: uuidv4(),
+      intentId: randomUUID(),
       userId,
       strategyId: strategyId ?? "manual-close",
       marketId,

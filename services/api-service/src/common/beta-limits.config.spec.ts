@@ -12,7 +12,7 @@ describe("BETA_LIMITS", () => {
     delete process.env.CI;
     delete process.env.BETA_MARKET_DATA_RATE_LIMIT;
 
-    const { BETA_LIMITS } = await import("./beta-limits.config");
+    const { BETA_LIMITS } = await import("./beta-limits.config.js");
 
     expect(BETA_LIMITS.marketDataRateLimitPerMinute).toBe(100);
   });
@@ -21,7 +21,7 @@ describe("BETA_LIMITS", () => {
     process.env.CI = "true";
     delete process.env.BETA_MARKET_DATA_RATE_LIMIT;
 
-    const { BETA_LIMITS } = await import("./beta-limits.config");
+    const { BETA_LIMITS } = await import("./beta-limits.config.js");
 
     expect(BETA_LIMITS.marketDataRateLimitPerMinute).toBe(10_000);
   });
@@ -30,7 +30,7 @@ describe("BETA_LIMITS", () => {
     process.env.CI = "true";
     process.env.BETA_MARKET_DATA_RATE_LIMIT = "250";
 
-    const { BETA_LIMITS } = await import("./beta-limits.config");
+    const { BETA_LIMITS } = await import("./beta-limits.config.js");
 
     expect(BETA_LIMITS.marketDataRateLimitPerMinute).toBe(250);
   });

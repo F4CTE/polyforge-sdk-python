@@ -1,14 +1,13 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { PolymarketUsCredentialsController } from './polymarket-us-credentials.controller';
 import { PolymarketUsCredentialsService } from './polymarket-us-credentials.service';
-import { faker } from '@faker-js/faker';
 
 describe('PolymarketUsCredentialsController', () => {
   let controller: PolymarketUsCredentialsController;
   let service: PolymarketUsCredentialsService;
 
   const user = {
-    sub: faker.string.uuid(),
+    sub: '00000000-0000-4000-8000-000000000001',
     email: 'alice@example.com',
     username: 'alice',
   };

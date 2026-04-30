@@ -1,4 +1,4 @@
-import { v4 as uuidv4 } from "uuid";
+import { randomUUID } from "node:crypto";
 import {
   ActionEvaluator,
   ActionResult,
@@ -47,7 +47,7 @@ function makeIntent(
   }
 
   return {
-    intentId: uuidv4(),
+    intentId: randomUUID(),
     userId: ctx.userId,
     strategyId: ctx.strategyId,
     marketId,
@@ -285,7 +285,7 @@ export const CancelAllOrdersAction: ActionEvaluator = {
     return Promise.resolve({
       intents: [
         {
-          intentId: uuidv4(),
+          intentId: randomUUID(),
           userId: ctx.userId,
           strategyId: ctx.strategyId,
           marketId,
@@ -336,7 +336,7 @@ export const ComboLegAction: ActionEvaluator = {
     return {
       intents: [
         {
-          intentId: uuidv4(),
+          intentId: randomUUID(),
           userId: ctx.userId,
           strategyId: ctx.strategyId,
           marketId: marketTicker,
@@ -379,7 +379,7 @@ export const RunStrategyAction: ActionEvaluator = {
     return {
       intents: [
         {
-          intentId: uuidv4(),
+          intentId: randomUUID(),
           userId: ctx.userId,
           strategyId: ctx.strategyId,
           marketId: "__run_strategy__",

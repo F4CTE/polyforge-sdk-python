@@ -1,14 +1,13 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { KalshiCredentialsController } from './kalshi-credentials.controller';
 import { KalshiCredentialsService } from './kalshi-credentials.service';
-import { faker } from '@faker-js/faker';
 
 describe('KalshiCredentialsController', () => {
   let controller: KalshiCredentialsController;
   let service: KalshiCredentialsService;
 
   const user = {
-    sub: faker.string.uuid(),
+    sub: '00000000-0000-4000-8000-000000000001',
     email: 'alice@example.com',
     username: 'alice',
   };

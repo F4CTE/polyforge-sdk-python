@@ -1,14 +1,13 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { BotLinkController } from './bot-link.controller';
 import { BotLinkService } from './bot-link.service';
-import { faker } from '@faker-js/faker';
 
 describe('BotLinkController', () => {
   let controller: BotLinkController;
   let botLinkService: BotLinkService;
 
   const user = {
-    sub: faker.string.uuid(),
+    sub: '00000000-0000-4000-8000-000000000001',
     email: 'alice@example.com',
     username: 'alice',
   };

@@ -1,7 +1,7 @@
 {
   "extends": "../../tsconfig.json",
   "compilerOptions": {
-    "module": "commonjs",
+    "module": "Node16",
     "removeComments": true,
     "allowSyntheticDefaultImports": true,
     "target": "ES2023",

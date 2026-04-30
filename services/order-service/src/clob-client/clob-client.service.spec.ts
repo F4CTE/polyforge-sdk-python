@@ -1,7 +1,9 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { ConfigService } from "@nestjs/config";
 import { ClobClientService } from "./clob-client.service";
-import { ClobClient } from "@polymarket/clob-client";
+
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const { ClobClient } = require("@polymarket/clob-client");
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 

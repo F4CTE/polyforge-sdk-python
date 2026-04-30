@@ -1,14 +1,13 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { CredentialsController } from './credentials.controller';
 import { CredentialsService } from './credentials.service';
-import { faker } from '@faker-js/faker';
 
 describe('CredentialsController', () => {
   let controller: CredentialsController;
   let credentialsService: CredentialsService;
 
   const user = {
-    sub: faker.string.uuid(),
+    sub: '00000000-0000-4000-8000-000000000001',
     email: 'alice@example.com',
     username: 'alice',
   };

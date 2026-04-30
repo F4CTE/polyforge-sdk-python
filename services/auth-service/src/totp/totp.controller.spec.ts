@@ -1,14 +1,13 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { TotpController } from './totp.controller';
 import { TotpService } from './totp.service';
-import { faker } from '@faker-js/faker';
 
 describe('TotpController', () => {
   let controller: TotpController;
   let totpService: TotpService;
 
   const user = {
-    sub: faker.string.uuid(),
+    sub: '00000000-0000-4000-8000-000000000001',
     email: 'alice@example.com',
     username: 'alice',
   };
