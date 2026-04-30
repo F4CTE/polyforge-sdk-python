@@ -11,7 +11,7 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "posthog-node": "^5.30.8"
+    "posthog-node": "^5.31.0"
   },
   "devDependencies": {
     "@nestjs/common": "^11.1.19",

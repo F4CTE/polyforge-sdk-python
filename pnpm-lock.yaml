@@ -402,8 +402,8 @@ importers:
   packages/shared-posthog:
     dependencies:
       posthog-node:
-        specifier: ^5.30.8
-        version: 5.30.8(rxjs@7.8.2)
+        specifier: ^5.31.0
+        version: 5.31.0(rxjs@7.8.2)
     devDependencies:
       '@nestjs/common':
         specifier: ^11.1.19
@@ -6668,8 +6668,8 @@ packages:
   posthog-js@1.372.5:
     resolution: {integrity: sha512-0Wq4yRTX8rg2/SOTo3T/0tt2EIE0usBDJKxWPY6eRTGxWAajNmPWZwK4vREn2ANZGdPhUHQ+hg4kLEUdQnzs/Q==}
 
-  posthog-node@5.30.8:
-    resolution: {integrity: sha512-9NLSgI/Mdlh/F4MAyP8S4BoHR+JjCgZlzZc0OlFovS5M3SVyydQBs9AZmGvFIpNUI+woGDbvyoPFv4l89BxOtw==}
+  posthog-node@5.31.0:
+    resolution: {integrity: sha512-vRhLERIOG6gIrfz5zfSUTiIrf4G8yWZPuEUP8TyvIusedMwxUXitCU9HN3uZfzkkOgvgC5MUAr/eN3reO9WQMA==}
     engines: {node: ^20.20.0 || >=22.22.0}
     peerDependencies:
       rxjs: ^7.0.0
@@ -12602,7 +12602,7 @@ snapshots:
       query-selector-shadow-dom: 1.0.1
       web-vitals: 5.2.0
 
-  posthog-node@5.30.8(rxjs@7.8.2):
+  posthog-node@5.31.0(rxjs@7.8.2):
     dependencies:
       '@posthog/core': 1.27.9
     optionalDependencies:
