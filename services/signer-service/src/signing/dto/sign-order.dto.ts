@@ -22,14 +22,15 @@ function OrderTypeExpirationRule(validationOptions?: ValidationOptions) {
       validator: {
         validate(value: unknown, args: ValidationArguments) {
           const dto = args.object as SignOrderDto;
+          const expiration = dto.expiration;
           if (dto.orderType === "GTD") {
             return (
-              typeof value === "number" &&
-              Number.isFinite(value) &&
-              value > Math.floor(Date.now() / 1000) + 30
+              typeof expiration === "number" &&
+              Number.isFinite(expiration) &&
+              expiration > Math.floor(Date.now() / 1000) + 30
             );
           }
-          return value === undefined || value === 0;
+          return expiration === undefined || expiration === 0;
         },
         defaultMessage(args: ValidationArguments) {
           const dto = args.object as SignOrderDto;

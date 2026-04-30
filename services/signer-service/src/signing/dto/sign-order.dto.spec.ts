@@ -39,6 +39,17 @@ describe("SignOrderDto orderType/expiration validation", () => {
     );
   });
 
+  it("accepts GTD with a future expiration", async () => {
+    vi.setSystemTime(new Date("2026-04-29T12:00:00Z"));
+
+    await expect(
+      validateDto({
+        orderType: "GTD",
+        expiration: Math.floor(Date.now() / 1000) + 60,
+      }),
+    ).resolves.toHaveLength(0);
+  });
+
   it("rejects GTD with a past expiration", async () => {
     vi.setSystemTime(new Date("2026-04-29T12:00:00Z"));
 
