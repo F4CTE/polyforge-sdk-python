@@ -169,9 +169,12 @@ export function Component() {
   const [loadingSignals, setLoadingSignals] = useState(true);
 
   const refreshRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const articleRequestSeqRef = useRef(0);
 
   /* ─── Load articles ─── */
   const loadArticles = useCallback(async (p: number, src: string, sent: SentimentFilter, minConf: number, mktId: string | null) => {
+    const requestSeq = articleRequestSeqRef.current + 1;
+    articleRequestSeqRef.current = requestSeq;
     setLoading(true);
     try {
       const params = new URLSearchParams({ page: String(p), limit: '10' });
@@ -183,6 +186,7 @@ export function Component() {
       const res = await fetch(`/api/v1/news?${params}`, { credentials: 'include' });
       if (res.ok) {
         const json: NewsFeedResponse = await res.json();
+        if (requestSeq !== articleRequestSeqRef.current) return;
         // Normalise: signals may include nested market object — flatten marketName
         const articles = (json.data ?? []).map(a => ({
           ...a,
@@ -195,8 +199,11 @@ export function Component() {
         setTotal(json.meta?.total ?? 0);
         setTotalPages(json.meta?.totalPages ?? 0);
       }
-    } catch { toast.error('Failed to load news articles'); }
-    setLoading(false);
+    } catch {
+      if (requestSeq === articleRequestSeqRef.current) toast.error('Failed to load news articles');
+    } finally {
+      if (requestSeq === articleRequestSeqRef.current) setLoading(false);
+    }
   }, [marketFilter]);
 
   /* ─── Load top signals ─── */
