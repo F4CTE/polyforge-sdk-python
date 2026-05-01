@@ -3,6 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router';
 import { toast } from 'sonner';
 import { Button, Input, Select } from '@polyforge/ui';
 import { MarketRewardsCard } from '@/components/rewards/market-rewards-card';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { resolveChartTheme } from '@polyforge/ui/lib/chart-colors';
 import { chartTooltipContentStyle, chartTooltipLabelStyle, chartAxisTick, chartLegendStyle } from '@polyforge/ui/lib/chart-styles';
 import { wsManager, WebSocketManager } from '@/lib/websocket';
@@ -329,11 +330,14 @@ export function Component() {
   const [tradePrice, setTradePrice] = useState('');
   const [isMarketOrder, setIsMarketOrder] = useState(false);
   const [placingOrder, setPlacingOrder] = useState(false);
+  const [pendingPlaceOrderConfirm, setPendingPlaceOrderConfirm] = useState(false);
   const placeOrderIdempotencyKeyRef = useRef<string | null>(null);
   const [tradeSuccess, setTradeSuccess] = useState('');
   const [tradeError, setTradeError] = useState('');
   const [myOrders, setMyOrders] = useState<Array<{ id: string; side: string; outcome: string; size: string; price: string; status: string }>>([]);
   const [loadingMyOrders, setLoadingMyOrders] = useState(false);
+  const [pendingCancelOrderId, setPendingCancelOrderId] = useState<string | null>(null);
+  const [cancellingMyOrderId, setCancellingMyOrderId] = useState<string | null>(null);
 
   // Price History chart state
   const [historyPeriod, setHistoryPeriod] = useState<'7d' | '30d' | 'allTime'>('7d');
@@ -779,6 +783,12 @@ export function Component() {
     }
   };
 
+  function openPlaceOrderConfirmation() {
+    if (!tradeAmount || (!isMarketOrder && !tradePrice)) return;
+    setTradeError('');
+    setPendingPlaceOrderConfirm(true);
+  }
+
   const placeOrder = async () => {
     if (!tradeAmount || (!isMarketOrder && !tradePrice)) return;
     setPlacingOrder(true);
@@ -808,6 +818,7 @@ export function Component() {
       if (!res.ok) throw new Error(data.message || 'Order failed');
       setTradeSuccess(`Order placed (${data.orderId.slice(0, 8)}...)`);
       setTradeAmount('');
+      setPendingPlaceOrderConfirm(false);
       loadMyOrders();
     } catch (err: unknown) {
       setTradeError(err instanceof Error ? err.message : 'Order failed');
@@ -818,19 +829,41 @@ export function Component() {
   };
 
   const cancelMyOrder = async (orderId: string) => {
+    setCancellingMyOrderId(orderId);
     try {
       const res = await fetch(`/api/v1/orders/${orderId}`, {
         method: 'DELETE',
         credentials: 'include',
       });
-      if (res.ok) loadMyOrders();
+      if (res.ok) {
+        setPendingCancelOrderId(null);
+        loadMyOrders();
+      }
     } catch {}
+    finally {
+      setCancellingMyOrderId(null);
+    }
   };
+
+  function openCancelOrderConfirmation(orderId: string) {
+    setPendingCancelOrderId(orderId);
+  }
+
+  async function confirmPlaceOrder() {
+    await placeOrder();
+    setPendingPlaceOrderConfirm(false);
+  }
+
+  async function confirmCancelOrder() {
+    if (!pendingCancelOrderId) return;
+    await cancelMyOrder(pendingCancelOrderId);
+  }
 
   const estPrice = isMarketOrder ? (tradeSide === 'BUY' ? 0.999 : 0.001) : parseFloat(tradePrice) || 0;
   const estShares = estPrice > 0 ? parseFloat(tradeAmount || '0') / estPrice : 0;
   const estCost = parseFloat(tradeAmount || '0');
   const estPayout = estShares * 1.0;
+  const pendingCancelOrder = myOrders.find((order) => order.id === pendingCancelOrderId) ?? null;
 
   const yesToken = (market?.tokens ?? []).find((t) => t.outcome?.toUpperCase() === 'YES');
   const noToken = (market?.tokens ?? []).find((t) => t.outcome?.toUpperCase() === 'NO');
@@ -1665,7 +1698,7 @@ export function Component() {
               {/* Place order button */}
               <Button
                 type="button"
-                onClick={placeOrder}
+                onClick={openPlaceOrderConfirmation}
                 disabled={placingOrder || !tradeAmount || parseFloat(tradeAmount || '0') <= 0 || (!isMarketOrder && (!tradePrice || parseFloat(tradePrice || '0') <= 0))}
                 className={`w-full mt-3 py-3 min-h-[44px] rounded-pf text-body-md font-semibold text-primary transition-opacity disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 ${
                   tradeSide === 'BUY'
@@ -1717,7 +1750,8 @@ export function Component() {
                           type="button"
                           variant="ghost"
                           size="icon-sm"
-                          onClick={() => cancelMyOrder(order.id)}
+                          onClick={() => openCancelOrderConfirmation(order.id)}
+                          disabled={cancellingMyOrderId === order.id}
                           className="shrink-0 p-1 rounded text-tertiary hover:text-loss transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50"
                           title="Cancel order"
                           aria-label="Cancel order"
@@ -2449,6 +2483,61 @@ export function Component() {
               </div>
             </div>
           )}
+
+          <ConfirmDialog
+            open={pendingPlaceOrderConfirm}
+            title="Place live order?"
+            description="This will submit a live order to the market. Review the side, outcome, amount, and price before continuing."
+            confirmLabel="Place live order"
+            tone="danger"
+            delayMs={2000}
+            isLoading={placingOrder}
+            onConfirm={confirmPlaceOrder}
+            onCancel={() => setPendingPlaceOrderConfirm(false)}
+          >
+            <div className="rounded-sm border border-subtle bg-surface px-3 py-2 text-body-sm">
+              <div className="flex justify-between gap-3">
+                <span className="text-secondary">Order</span>
+                <span className="font-medium text-primary">{tradeSide} {tradeOutcome}</span>
+              </div>
+              <div className="mt-1 flex justify-between gap-3">
+                <span className="text-secondary">Amount</span>
+                <span className="font-mono text-primary">${estCost.toFixed(2)}</span>
+              </div>
+              <div className="mt-1 flex justify-between gap-3">
+                <span className="text-secondary">Price</span>
+                <span className="font-mono text-primary">{estPrice.toFixed(3)}</span>
+              </div>
+            </div>
+          </ConfirmDialog>
+
+          <ConfirmDialog
+            open={pendingCancelOrderId !== null}
+            title="Cancel order?"
+            description="This cancels the selected open order. If it has already filled or is being matched, cancellation may not complete."
+            confirmLabel="Cancel order"
+            tone="danger"
+            isLoading={cancellingMyOrderId !== null}
+            onConfirm={confirmCancelOrder}
+            onCancel={() => setPendingCancelOrderId(null)}
+          >
+            {pendingCancelOrder && (
+              <div className="rounded-sm border border-subtle bg-surface px-3 py-2 text-body-sm">
+                <div className="flex justify-between gap-3">
+                  <span className="text-secondary">Order</span>
+                  <span className="font-medium text-primary">{pendingCancelOrder.side} {pendingCancelOrder.outcome}</span>
+                </div>
+                <div className="mt-1 flex justify-between gap-3">
+                  <span className="text-secondary">Size</span>
+                  <span className="font-mono text-primary">{pendingCancelOrder.size}</span>
+                </div>
+                <div className="mt-1 flex justify-between gap-3">
+                  <span className="text-secondary">Price</span>
+                  <span className="font-mono text-primary">{pendingCancelOrder.price}</span>
+                </div>
+              </div>
+            )}
+          </ConfirmDialog>
         </>
       ) : null}
     </div>

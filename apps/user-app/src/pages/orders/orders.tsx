@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { toast } from 'sonner';
 import { Button, Input, Select, Textarea } from '@polyforge/ui';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import {
   clearPendingIdempotencyKey,
   getOrCreatePendingIdempotencyKey,
@@ -731,6 +732,8 @@ export function Component() {
   const [page, setPage] = useState(1);
   const [filter, setFilter] = useState<FilterStatus>('ALL');
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [pendingCancelOrderId, setPendingCancelOrderId] = useState<string | null>(null);
+  const [cancellingOrderId, setCancellingOrderId] = useState<string | null>(null);
 
   // ── Conditional orders state ──
   const [condOrders, setCondOrders] = useState<ConditionalOrder[]>([]);
@@ -740,6 +743,8 @@ export function Component() {
   const [condPage, setCondPage] = useState(1);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [exportingCsv, setExportingCsv] = useState(false);
+  const [pendingCancelConditionalId, setPendingCancelConditionalId] = useState<string | null>(null);
+  const [cancellingConditionalId, setCancellingConditionalId] = useState<string | null>(null);
 
   // ── Journal state ──
   const [journalEntries, setJournalEntries] = useState<JournalEntry[]>([]);
@@ -890,6 +895,7 @@ export function Component() {
   }
 
   async function cancelOrder(id: string) {
+    setCancellingOrderId(id);
     try {
       const res = await fetch(`/api/v1/orders/${id}`, {
         method: 'DELETE',
@@ -898,14 +904,17 @@ export function Component() {
       if (res.ok) {
         toast.success('Order cancelled');
         setOrders(prev => prev.map(o => o.id === id ? { ...o, status: 'CANCELLED' } : o));
+        setPendingCancelOrderId(null);
       } else {
         const err = await res.json().catch(() => ({}));
         toast.error((err as { message?: string }).message ?? 'Failed to cancel order');
       }
     } catch { toast.error('Failed to cancel order'); }
+    finally { setCancellingOrderId(null); }
   }
 
   async function cancelConditional(id: string) {
+    setCancellingConditionalId(id);
     try {
       const res = await fetch(`/api/v1/orders/conditional/${id}`, {
         method: 'DELETE',
@@ -913,12 +922,35 @@ export function Component() {
       });
       if (res.ok) {
         toast.success('Conditional order cancelled');
+        setPendingCancelConditionalId(null);
         loadConditional(condPage);
       } else {
         toast.error('Failed to cancel order');
       }
     } catch { toast.error('Failed to cancel order'); }
+    finally { setCancellingConditionalId(null); }
   }
+
+  function openCancelOrderConfirmation(id: string) {
+    setPendingCancelOrderId(id);
+  }
+
+  function openCancelConditionalConfirmation(id: string) {
+    setPendingCancelConditionalId(id);
+  }
+
+  async function confirmCancelOrder() {
+    if (!pendingCancelOrderId) return;
+    await cancelOrder(pendingCancelOrderId);
+  }
+
+  async function confirmCancelConditional() {
+    if (!pendingCancelConditionalId) return;
+    await cancelConditional(pendingCancelConditionalId);
+  }
+
+  const pendingCancelOrder = orders.find(order => order.id === pendingCancelOrderId) ?? null;
+  const pendingCancelConditionalOrder = condOrders.find(order => order.id === pendingCancelConditionalId) ?? null;
 
   return (
     <div className="animate-fade-in p-6 max-w-7xl mx-auto space-y-6">
@@ -1143,7 +1175,8 @@ export function Component() {
                                   type="button"
                                   variant="ghost"
                                   size="icon-sm"
-                                  onClick={() => cancelOrder(order.id)}
+                                  onClick={() => openCancelOrderConfirmation(order.id)}
+                                  disabled={cancellingOrderId === order.id}
                                   title="Cancel order"
                                   aria-label="Cancel order"
                                   className="p-1 rounded-sm text-tertiary hover:text-loss transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-loss/40"
@@ -1294,7 +1327,8 @@ export function Component() {
                                 variant="ghost"
                                 size="icon-sm"
                                 data-testid={`cancel-order-${co.id}`}
-                                onClick={() => cancelConditional(co.id)}
+                                onClick={() => openCancelConditionalConfirmation(co.id)}
+                                disabled={cancellingConditionalId === co.id}
                                 aria-label="Cancel conditional order"
                               >
                                 <Trash2 className="size-4" />
@@ -1355,6 +1389,62 @@ export function Component() {
       )}
 
       {/* Order detail dialog */}
+      <ConfirmDialog
+        open={pendingCancelOrderId !== null}
+        title="Cancel order?"
+        description="This cancels the selected open order. If it has already filled or is being matched, cancellation may not complete."
+        confirmLabel="Cancel order"
+        tone="danger"
+        isLoading={cancellingOrderId !== null}
+        onConfirm={confirmCancelOrder}
+        onCancel={() => setPendingCancelOrderId(null)}
+      >
+        {pendingCancelOrder && (
+          <div className="rounded-sm border border-subtle bg-surface px-3 py-2 text-body-sm">
+            <div className="flex justify-between gap-3">
+              <span className="text-secondary">Order</span>
+              <span className="font-medium text-primary">{pendingCancelOrder.side} {pendingCancelOrder.outcome}</span>
+            </div>
+            <div className="mt-1 flex justify-between gap-3">
+              <span className="text-secondary">Size</span>
+              <span className="font-mono text-primary">{pendingCancelOrder.size}</span>
+            </div>
+            <div className="mt-1 flex justify-between gap-3">
+              <span className="text-secondary">Price</span>
+              <span className="font-mono text-primary">{pendingCancelOrder.price}</span>
+            </div>
+          </div>
+        )}
+      </ConfirmDialog>
+
+      <ConfirmDialog
+        open={pendingCancelConditionalId !== null}
+        title="Cancel conditional order?"
+        description="This cancels the selected conditional order before it triggers. Active market orders already created from a trigger are not cancelled here."
+        confirmLabel="Cancel order"
+        tone="danger"
+        isLoading={cancellingConditionalId !== null}
+        onConfirm={confirmCancelConditional}
+        onCancel={() => setPendingCancelConditionalId(null)}
+      >
+        {pendingCancelConditionalOrder && (
+          <div className="rounded-sm border border-subtle bg-surface px-3 py-2 text-body-sm">
+            <div className="flex justify-between gap-3">
+              <span className="text-secondary">Order</span>
+              <span className="font-medium text-primary">{pendingCancelConditionalOrder.side} {pendingCancelConditionalOrder.outcome}</span>
+            </div>
+            <div className="mt-1 flex justify-between gap-3">
+              <span className="text-secondary">Type</span>
+              <span className="font-mono text-primary">{pendingCancelConditionalOrder.type}</span>
+            </div>
+            <div className="mt-1 flex justify-between gap-3">
+              <span className="text-secondary">Trigger</span>
+              <span className="font-mono text-primary">{pendingCancelConditionalOrder.triggerPrice}</span>
+            </div>
+          </div>
+        )}
+      </ConfirmDialog>
+
       {selectedOrder && (
         <div className="fixed inset-0 z-50 flex items-center justify-end" role="dialog" aria-modal="true" aria-label="Order Details">
           <div className="absolute inset-0 bg-black/50" onClick={() => setSelectedOrder(null)} />
