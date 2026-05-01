@@ -14,8 +14,8 @@
     "generate": "dotenv -e .env -- prisma generate --schema prisma/schema.prisma --config prisma/prisma.config.ts && dotenv -e .env -- prisma generate --schema prisma/schema.admin.prisma --config prisma/prisma.admin.config.ts",
     "migrate:dev": "prisma migrate dev --schema prisma/schema.prisma --config prisma/prisma.config.ts",
     "migrate:dev:admin": "prisma migrate dev --schema prisma/schema.admin.prisma --config prisma/prisma.admin.config.ts",
-    "seed": "dotenv -e .env -- ts-node prisma/seed.ts",
-    "seed:admin": "dotenv -e .env -- ts-node prisma/seed.admin.ts",
+    "seed": "dotenv -e .env -- ts-node --transpile-only -P prisma/tsconfig.seed.json prisma/seed.ts",
+    "seed:admin": "dotenv -e .env -- ts-node --transpile-only -P prisma/tsconfig.seed.json prisma/seed.admin.ts",
     "generate:api": "openapi-ts --file openapi-ts.config.ts && openapi-ts --file openapi-ts.admin.config.ts",
     "load-test": "k6 run tests/load/spike.js"
   },

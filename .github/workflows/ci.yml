@@ -236,8 +236,8 @@ jobs:
             echo "=== 7. Migrate + seed ==="
             npx prisma migrate deploy --schema prisma/schema.prisma --config prisma/prisma.config.ts
             npx prisma migrate deploy --schema prisma/schema.admin.prisma --config prisma/prisma.admin.config.ts
-            npx ts-node prisma/seed.ts
-            npx ts-node prisma/seed.admin.ts
+            npx ts-node --transpile-only -P prisma/tsconfig.seed.json prisma/seed.ts
+            npx ts-node --transpile-only -P prisma/tsconfig.seed.json prisma/seed.admin.ts
 
             echo "=== 8. Flush throttle counters ==="
             docker exec polyforge-dev-redis-1 redis-cli -a "$REDIS_PASSWORD" --no-auth-warning SET config:invite_only false

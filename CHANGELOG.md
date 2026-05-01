@@ -5,6 +5,11 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [Unreleased] — 2026-05-01
+
+### Fixed
+- **ci/prisma: Deploy to Dev seed step compiling under TypeScript 6 (POLA-1865)** — `Migrate PolyForge to TypeScript 6 (#1141)` changed the root `tsconfig.json` to `module: Node16 / moduleResolution: node16` with `composite: true`. The deploy step then runs `npx ts-node prisma/seed.ts` from the repo root, which picked up that root tsconfig under TS 6.0.3 and emitted `TS2591/TS2584` (Node ambient types missing) plus `TS5011` (rootDir) before any seeding could happen. Added a dedicated `prisma/tsconfig.seed.json` that targets only `seed.ts`/`seed.admin.ts` with `types: ["node"]`, classic Node module resolution, and `composite: false`. Both `package.json` `seed`/`seed:admin` scripts and `.github/workflows/ci.yml` now invoke ts-node with `--transpile-only -P prisma/tsconfig.seed.json` so seeds only get transpiled (typechecking remains the dedicated CI typecheck job's responsibility). Verified locally: seed compiles and reaches DB, no TS errors.
+
 ## [Unreleased] — 2026-04-26
 
 ### Added
