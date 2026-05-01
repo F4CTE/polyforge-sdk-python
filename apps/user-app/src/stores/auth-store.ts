@@ -178,6 +178,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     await fetch('/auth/v1/logout', { method: 'POST', credentials: 'include' });
     resetAnalytics();
     clearSentryUser();
+    try {
+      localStorage.removeItem('access_token');
+    } catch {
+      // ignore — defensive scrub of any residual token from prior versions
+    }
     set({ user: null });
     window.location.href = '/login';
   },

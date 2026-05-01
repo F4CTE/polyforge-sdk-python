@@ -62,5 +62,8 @@ export const useAdminAuthStore = create<AdminAuthState>((set) => ({
     resetAnalytics();
     clearSentryUser();
     set({ admin: null, isAuthenticated: false, isSuperAdmin: false });
+    // Hard-redirect so any cached privileged page state is dropped before
+    // a different admin can sign in on the same browser.
+    window.location.href = '/login';
   },
 }));

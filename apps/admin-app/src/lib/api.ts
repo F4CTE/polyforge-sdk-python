@@ -20,6 +20,36 @@ function buildUrl(base: string, path: string, params?: QueryParams): string {
   return url.pathname + url.search;
 }
 
+// Mutex to prevent concurrent refresh calls from issuing a thundering herd
+// when many requests 401 in parallel. All concurrent callers await the same
+// in-flight refresh promise.
+let isRefreshing = false;
+let refreshPromise: Promise<boolean> | null = null;
+
+async function refreshSession(): Promise<boolean> {
+  if (isRefreshing && refreshPromise) {
+    return refreshPromise;
+  }
+  isRefreshing = true;
+  refreshPromise = (async () => {
+    try {
+      const res = await fetch(`${AUTH_BASE}/refresh`, {
+        method: 'POST',
+        credentials: 'include',
+      });
+      return res.ok;
+    } catch {
+      return false;
+    }
+  })();
+  try {
+    return await refreshPromise;
+  } finally {
+    isRefreshing = false;
+    refreshPromise = null;
+  }
+}
+
 async function request<T>(url: string, options?: RequestInit): Promise<T> {
   const res = await fetch(url, {
     credentials: 'include',
@@ -29,18 +59,11 @@ async function request<T>(url: string, options?: RequestInit): Promise<T> {
   if (!res.ok) {
     // Redirect to login on 401 Unauthorized (expired/invalid session)
     if (res.status === 401 && !url.includes('/auth/')) {
-      // Try to refresh the session first
-      try {
-        const refreshRes = await fetch(`${AUTH_BASE}/refresh`, {
-          method: 'POST',
-          credentials: 'include',
-        });
-        if (refreshRes.ok) {
-          // Retry the original request
-          return request<T>(url, options);
-        }
-      } catch {
-        // refresh failed, fall through to redirect
+      // Try to refresh the session first (mutex-guarded — concurrent 401s
+      // share a single refresh request)
+      const refreshed = await refreshSession();
+      if (refreshed) {
+        return request<T>(url, options);
       }
       // Import dynamically to avoid circular deps; show toast before redirect
       const { toast } = await import('sonner');

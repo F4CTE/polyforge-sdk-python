@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
 import { CardSkeleton, Button } from '@polyforge/ui';
 import { Coins, ExternalLink, TrendingUp, Shield, ChevronDown } from 'lucide-react';
+import { isSafeExternalUrl } from '@/lib/url';
 
 /* ─── Types ──────────────────────────────────────────────────────────── */
 
@@ -73,6 +74,10 @@ export function MarketRewardsCard({ marketId }: MarketRewardsCardProps) {
       });
       if (!res.ok) throw new Error('Could not get sponsor URL');
       const { url } = await res.json() as { url: string };
+      if (!isSafeExternalUrl(url)) {
+        toast.error('Sponsor link is invalid');
+        return;
+      }
       window.open(url, '_blank', 'noopener,noreferrer');
     } catch {
       toast.error('Failed to get sponsor link');

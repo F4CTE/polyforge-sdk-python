@@ -86,11 +86,9 @@ export function Component() {
   const load = useCallback(async () => {
     setLoading(true);
     setError('');
-    const token = localStorage.getItem('access_token');
     try {
       const res = await fetch('/api/v1/ai/portfolio-review', {
         credentials: 'include',
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
       if (!res.ok) throw new Error('Failed to load portfolio review');
       const d: PortfolioReview = await res.json();

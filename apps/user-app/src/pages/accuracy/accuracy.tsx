@@ -116,10 +116,8 @@ export function Component() {
     let cancelled = false;
     setLoading(true);
     setError('');
-    const token = localStorage.getItem('access_token');
     fetch('/api/v1/accuracy/me', {
       credentials: 'include',
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
     })
       .then((r) => {
         if (!r.ok) throw new Error('Failed to load accuracy data');

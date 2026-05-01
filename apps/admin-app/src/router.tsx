@@ -1,5 +1,8 @@
 import { createBrowserRouter, Navigate } from 'react-router';
 import { AuthGuard } from '@/components/guards/auth-guard';
+import { RoleGuard } from '@/components/guards/role-guard';
+
+const SUPER_ADMIN_ONLY = ['SUPER_ADMIN'] as const;
 
 export const router = createBrowserRouter([
   {
@@ -31,7 +34,6 @@ export const router = createBrowserRouter([
           { path: 'invites', lazy: () => import('@/pages/invites/invites') },
           { path: 'tickets', lazy: () => import('@/pages/tickets/tickets') },
           { path: 'tickets/:id', lazy: () => import('@/pages/tickets/ticket-detail') },
-          { path: 'admins', lazy: () => import('@/pages/admins/admins') },
           { path: 'sentiment', lazy: () => import('@/pages/sentiment/sentiment') },
           { path: 'abuse', lazy: () => import('@/pages/abuse/abuse') },
           { path: 'approvals', lazy: () => import('@/pages/approvals/approvals') },
@@ -39,7 +41,13 @@ export const router = createBrowserRouter([
           { path: 'revenue', lazy: () => import('@/pages/revenue/revenue') },
           { path: 'retention', lazy: () => import('@/pages/retention/retention') },
           { path: 'broadcasts', lazy: () => import('@/pages/broadcasts/broadcasts') },
-          { path: 'config', lazy: () => import('@/pages/config/config') },
+          {
+            element: <RoleGuard allowed={SUPER_ADMIN_ONLY} />,
+            children: [
+              { path: 'admins', lazy: () => import('@/pages/admins/admins') },
+              { path: 'config', lazy: () => import('@/pages/config/config') },
+            ],
+          },
         ],
       },
     ],

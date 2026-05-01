@@ -748,7 +748,6 @@ export function Component() {
     if (!lpTokenId || !lpSpread || !lpSize) return;
     setLpSubmitting(true);
     setLpError('');
-    const token = localStorage.getItem('access_token');
     try {
       const idempotencyKey = getOrCreatePendingIdempotencyKey(lpIdempotencyKeyRef, 'provide-liquidity');
       const res = await fetch('/api/v1/lp/provide', {
@@ -756,7 +755,6 @@ export function Component() {
         headers: {
           'Content-Type': 'application/json',
           ...idempotencyHeaders(idempotencyKey),
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
         credentials: 'include',
         body: JSON.stringify({
