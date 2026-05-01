@@ -6,3 +6,13 @@
 **/*.tsbuildinfo
 .git
 .gitignore
+
+# Defense-in-depth: never ship .env* files inside the build context.
+# Today no Dockerfile uses `COPY .`, but if one is added the secrets in
+# .env / .env.prod / .env.local would otherwise be baked into image layers.
+.env
+.env.*
+**/.env
+**/.env.*
+!.env.example
+!.env.*.example
