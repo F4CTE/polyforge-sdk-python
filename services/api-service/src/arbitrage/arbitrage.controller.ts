@@ -7,6 +7,7 @@ import {
   Query,
   Body,
   UseGuards,
+  UseInterceptors,
   ParseFloatPipe,
   DefaultValuePipe,
   ParseIntPipe,
@@ -22,8 +23,10 @@ import {
   ApiResponse,
   ApiParam,
   ApiBody,
+  ApiHeader,
 } from "@nestjs/swagger";
 import { Throttle } from "@nestjs/throttler";
+import { IdempotencyInterceptor } from "../common/interceptors/idempotency.interceptor";
 import {
   JwtAuthGuard,
   AdminJwtGuard,
@@ -245,12 +248,26 @@ export class ArbitrageController {
 
   @Post("execute")
   @HttpCode(HttpStatus.CREATED)
+  @Throttle({
+    default: {
+      limit: process.env.NODE_ENV === "production" ? 5 : 10000,
+      ttl: 60_000,
+    },
+  })
   @UseGuards(JwtAuthGuard, ApiKeyScopeGuard)
   @RequireScopes("WRITE")
+  @ApiHeader({
+    name: "Idempotency-Key",
+    required: true,
+    schema: { type: "string", minLength: 8, maxLength: 128 },
+    description:
+      "Required to dedupe retries. A repeat call with the same key returns the cached response and never opens a duplicate position.",
+  })
+  @UseInterceptors(IdempotencyInterceptor)
   @ApiOperation({
     summary: "Execute a cross-venue arbitrage trade",
     description:
-      "Places simultaneous offsetting orders on Polymarket and Kalshi for a matched market pair.",
+      "Places simultaneous offsetting orders on Polymarket and Kalshi for a matched market pair. Replay-safe via the required Idempotency-Key header.",
   })
   executeArb(@CurrentUser() user: JwtPayload, @Body() dto: ExecuteArbDto) {
     return this.arbExecution.execute(user.sub, dto);
@@ -291,12 +308,27 @@ export class ArbitrageController {
 
   @Post("positions/:id/close")
   @HttpCode(HttpStatus.OK)
+  @Throttle({
+    default: {
+      limit: process.env.NODE_ENV === "production" ? 5 : 10000,
+      ttl: 60_000,
+    },
+  })
   @UseGuards(JwtAuthGuard, ApiKeyScopeGuard)
   @RequireScopes("WRITE")
+  @ApiHeader({
+    name: "Idempotency-Key",
+    required: true,
+    schema: { type: "string", minLength: 8, maxLength: 128 },
+    description:
+      "Required to dedupe retries. A repeat call with the same key returns the cached response and never sends a second pair of unwind orders.",
+  })
+  @UseInterceptors(IdempotencyInterceptor)
   @ApiOperation({
     summary: "Close an open arb position",
     description:
-      "Submits reverse orders on both venues to unwind the arbitrage position.",
+      "Submits reverse orders on both venues to unwind the arbitrage position. " +
+      "The unwind orders are GTC limit orders priced at extreme tick boundaries (0.001 SELL / 0.999 BUY) so they sweep the order book like a market order — any fills happen at the prevailing best price, not at the literal limit. Treat this as 'market-equivalent sweep, not a limit order'. Replay-safe via the required Idempotency-Key header.",
   })
   @ApiParam({ name: "id", description: "ArbPosition UUID" })
   closePosition(

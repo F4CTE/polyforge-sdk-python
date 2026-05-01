@@ -1,11 +1,12 @@
-import { IsString, IsNumber, IsOptional, Min, Max } from "class-validator";
+import { IsUUID, IsNumber, IsOptional, Min, Max } from "class-validator";
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 
 export class ExecuteArbDto {
   @ApiProperty({
-    description: "MarketMatch ID identifying the cross-venue pair",
+    description: "MarketMatch UUID identifying the cross-venue pair",
+    format: "uuid",
   })
-  @IsString()
+  @IsUUID()
   matchId: string;
 
   @ApiProperty({ description: "Position size in USDC (applied to both legs)" })

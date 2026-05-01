@@ -231,6 +231,20 @@ export class ArbExecutionService {
     return position;
   }
 
+  /**
+   * Close an open cross-venue arb position by submitting unwind orders on both venues.
+   *
+   * Sweep semantics: the unwind legs are sent as GTC orders priced at extreme tick
+   * boundaries — `0.001` for the SELL leg and `0.999` for the BUY leg. These prices
+   * are intentional: they make the orders cross the entire available depth and fill
+   * at the best available counter-price, behaving as a market sweep rather than a
+   * resting limit order. They will not stay on the book at the literal `0.001` /
+   * `0.999` levels in the steady state — any unfilled remainder simply expires when
+   * the venue clears stale GTCs.
+   *
+   * Treat this as **market-equivalent sweep, not a limit order**. Slippage is
+   * bounded only by venue depth at call time, not by the on-paper price.
+   */
   async closePosition(userId: string, positionId: string) {
     const position = await this.prisma.arbPosition.findFirst({
       where: { id: positionId, userId },

@@ -3488,6 +3488,79 @@ Trigger a manual matching pass to auto-discover new market pairs.
 
 ---
 
+### Arbitrage Execution
+
+Money-moving routes. Both endpoints below are **rate limited** (5 req/min/user in
+production) and **require an `Idempotency-Key` header**. A repeat call with the
+same key returns the cached response and never re-fires venue orders.
+
+#### POST /api/v1/arbitrage/execute
+
+Execute a cross-venue arbitrage trade. Places simultaneous offsetting orders on
+Polymarket and Kalshi for a matched market pair.
+
+**Auth:** User JWT or API Key (WRITE scope)
+**Rate limit:** 5 requests / 60 s (production)
+**Required headers:**
+
+| Header | Type | Description |
+|---|---|---|
+| `Idempotency-Key` | string (8–128 chars) | Required. Replay-safe dedupe key. Re-using a key returns the original response and never opens a duplicate position. |
+
+**Request:**
+```json
+{
+  "matchId": "11111111-2222-3333-4444-555555555555",
+  "size": 100,
+  "maxSlippagePct": 0.5
+}
+```
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `matchId` | UUID | yes | MarketMatch UUID identifying the cross-venue pair (validated as UUID v4). |
+| `size` | number | yes | Position size in USDC, applied to both legs (1–10000). |
+| `maxSlippagePct` | number | no | Max acceptable slippage % from quoted prices (0–5, default 0.5). |
+
+**Response `201`:** ArbPosition object with both leg intent IDs.
+
+**Errors:**
+- `400 BAD_REQUEST` — `MISSING_IDEMPOTENCY_KEY` if header absent or wrong length; `matchId must be a UUID` if not a UUID.
+- `409 CONFLICT` — `IDEMPOTENT_REQUEST_IN_FLIGHT` if a request with the same key is still executing.
+- `429 TOO_MANY_REQUESTS` — exceeded 5/min throttle.
+
+---
+
+#### POST /api/v1/arbitrage/positions/:id/close
+
+Close an open arb position by submitting reverse orders on both venues.
+
+**Auth:** User JWT or API Key (WRITE scope)
+**Rate limit:** 5 requests / 60 s (production)
+**Required headers:**
+
+| Header | Type | Description |
+|---|---|---|
+| `Idempotency-Key` | string (8–128 chars) | Required. Replay-safe dedupe key. Re-using a key returns the original response and never sends a second pair of unwind orders. |
+
+**Path:** `:id` — ArbPosition UUID.
+
+**Sweep semantics — important:** The unwind legs are submitted as **GTC orders priced at the extreme tick boundaries** of the orderbook (`0.001` for the SELL leg, `0.999` for the BUY leg). These prices are **deliberate** — they make the orders cross the entire available counter-side depth and fill at the best available price, behaving as a **market-equivalent sweep, not a resting limit order**. The literal `0.001` / `0.999` levels are never the actual fill price in the steady state; any unfilled remainder simply expires when the venue clears stale GTCs. **Slippage is bounded only by venue depth at call time, not by the on-paper price.** If you need a true limit-priced unwind, use the `/orders/place` endpoint directly per leg.
+
+**Response `200`:**
+```json
+{ "status": "CLOSING", "positionId": "..." }
+```
+
+**Errors:**
+- `400 BAD_REQUEST` — `MISSING_IDEMPOTENCY_KEY` if header absent or wrong length; non-UUID `:id`.
+- `404 NOT_FOUND` — `ARB_POSITION_NOT_FOUND` if the position does not belong to the caller.
+- `409 CONFLICT` — `IDEMPOTENT_REQUEST_IN_FLIGHT` if a request with the same key is still executing.
+- `422 UNPROCESSABLE_ENTITY` — `INVALID_STATUS` if the position is not currently `OPEN`.
+- `429 TOO_MANY_REQUESTS` — exceeded 5/min throttle.
+
+---
+
 ## Smart Orders  (`/api/v1/orders/smart`)
 
 Advanced execution orders that split large trades across time or set conditional trigger logic.
