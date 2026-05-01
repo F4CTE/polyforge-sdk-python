@@ -115,6 +115,11 @@ from polyforge.models import (
     ActionsSchema,
     UserProfile,
     FollowResult,
+    UserPerformancePoint,
+    UserStrategySummary,
+    UserActivityEntry,
+    UserProfileBadge,
+    FollowedUser,
     NotificationSettings,
     EventNotificationPref,
     EventNotificationPreferences,
@@ -2859,6 +2864,85 @@ class PolyforgeClient:
             self._post(f"/api/v1/profile/{_encode_path(username)}/follow"),
         )
 
+    # -- Public user profile lookups (POLA-1844) --
+
+    def get_user_performance(
+        self,
+        username: str,
+        period: str = "30d",
+    ) -> list[UserPerformancePoint]:
+        """Fetch a public user's PnL curve over ``period`` (default ``"30d"``).
+
+        Each entry has ``date`` (``YYYY-MM-DD``), daily ``pnl``, and running
+        ``cum_pnl``. Raises :class:`NotFoundError` if the username is unknown.
+        """
+        data = self._get(
+            f"/api/v1/users/{_encode_path(username)}/performance",
+            params={"period": period},
+        )
+        items = data.get("data", []) if isinstance(data, dict) else data
+        return [_parse(UserPerformancePoint, p) for p in items]
+
+    def get_user_strategies(
+        self,
+        username: str,
+        *,
+        visibility: str = "PUBLIC",
+        limit: int | None = None,
+    ) -> list[UserStrategySummary]:
+        """List a public user's strategies. Server caps ``limit`` at 50; default 6."""
+        params: dict[str, Any] = {"visibility": visibility}
+        if limit is not None:
+            params["limit"] = limit
+        data = self._get(
+            f"/api/v1/users/{_encode_path(username)}/strategies",
+            params=params,
+        )
+        items = data.get("data", []) if isinstance(data, dict) else data
+        return [_parse(UserStrategySummary, s) for s in items]
+
+    def get_user_activity(
+        self,
+        username: str,
+        *,
+        limit: int | None = None,
+    ) -> list[UserActivityEntry]:
+        """Recent resolved-position activity for a public user. Server caps ``limit`` at 50."""
+        params: dict[str, Any] = {}
+        if limit is not None:
+            params["limit"] = limit
+        data = self._get(
+            f"/api/v1/users/{_encode_path(username)}/activity",
+            params=params or None,
+        )
+        items = data.get("data", []) if isinstance(data, dict) else data
+        return [_parse(UserActivityEntry, a) for a in items]
+
+    def get_user_profile_badges(self, username: str) -> list[UserProfileBadge]:
+        """Badges earned by a public user (id is the badge type)."""
+        data = self._get(f"/api/v1/users/{_encode_path(username)}/badges")
+        items = data.get("data", []) if isinstance(data, dict) else data
+        return [_parse(UserProfileBadge, b) for b in items]
+
+    def get_my_following(
+        self,
+        *,
+        page: int | None = None,
+        limit: int | None = None,
+    ) -> PaginatedResponse[FollowedUser]:
+        """Paginated list of users the authenticated user follows."""
+        params: dict[str, Any] = {}
+        if page is not None:
+            params["page"] = page
+        if limit is not None:
+            params["limit"] = limit
+        raw = self._get("/api/v1/users/me/following", params=params or None)
+        items = raw.get("data", []) if isinstance(raw, dict) else []
+        return PaginatedResponse(
+            data=[_parse(FollowedUser, u) for u in items],
+            **_parse_pagination(raw if isinstance(raw, dict) else {}),
+        )
+
     # -- Settings --
 
     def update_settings_profile(
@@ -5267,6 +5351,81 @@ class AsyncPolyforgeClient:
         return _parse(
             FollowResult,
             await self._post(f"/api/v1/profile/{_encode_path(username)}/follow"),
+        )
+
+    # -- Public user profile lookups (POLA-1844) --
+
+    async def get_user_performance(
+        self,
+        username: str,
+        period: str = "30d",
+    ) -> list[UserPerformancePoint]:
+        """Fetch a public user's PnL curve over ``period`` (default ``"30d"``)."""
+        data = await self._get(
+            f"/api/v1/users/{_encode_path(username)}/performance",
+            params={"period": period},
+        )
+        items = data.get("data", []) if isinstance(data, dict) else data
+        return [_parse(UserPerformancePoint, p) for p in items]
+
+    async def get_user_strategies(
+        self,
+        username: str,
+        *,
+        visibility: str = "PUBLIC",
+        limit: int | None = None,
+    ) -> list[UserStrategySummary]:
+        """List a public user's strategies."""
+        params: dict[str, Any] = {"visibility": visibility}
+        if limit is not None:
+            params["limit"] = limit
+        data = await self._get(
+            f"/api/v1/users/{_encode_path(username)}/strategies",
+            params=params,
+        )
+        items = data.get("data", []) if isinstance(data, dict) else data
+        return [_parse(UserStrategySummary, s) for s in items]
+
+    async def get_user_activity(
+        self,
+        username: str,
+        *,
+        limit: int | None = None,
+    ) -> list[UserActivityEntry]:
+        """Recent resolved-position activity for a public user."""
+        params: dict[str, Any] = {}
+        if limit is not None:
+            params["limit"] = limit
+        data = await self._get(
+            f"/api/v1/users/{_encode_path(username)}/activity",
+            params=params or None,
+        )
+        items = data.get("data", []) if isinstance(data, dict) else data
+        return [_parse(UserActivityEntry, a) for a in items]
+
+    async def get_user_profile_badges(self, username: str) -> list[UserProfileBadge]:
+        """Badges earned by a public user (id is the badge type)."""
+        data = await self._get(f"/api/v1/users/{_encode_path(username)}/badges")
+        items = data.get("data", []) if isinstance(data, dict) else data
+        return [_parse(UserProfileBadge, b) for b in items]
+
+    async def get_my_following(
+        self,
+        *,
+        page: int | None = None,
+        limit: int | None = None,
+    ) -> PaginatedResponse[FollowedUser]:
+        """Paginated list of users the authenticated user follows."""
+        params: dict[str, Any] = {}
+        if page is not None:
+            params["page"] = page
+        if limit is not None:
+            params["limit"] = limit
+        raw = await self._get("/api/v1/users/me/following", params=params or None)
+        items = raw.get("data", []) if isinstance(raw, dict) else []
+        return PaginatedResponse(
+            data=[_parse(FollowedUser, u) for u in items],
+            **_parse_pagination(raw if isinstance(raw, dict) else {}),
         )
 
     # -- Settings --

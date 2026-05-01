@@ -6731,3 +6731,154 @@ class TestArbHttpErrorMapping:
         finally:
             client.close()
         assert calls["n"] == 1, f"close_arb_position auto-retried (saw {calls['n']} calls)"
+
+# ── POLA-1844: Public user profile lookups ────────────────────────────────
+
+
+class TestPublicUserProfileEndpoints:
+    """Five public profile endpoints sourced from the weekly SDK audit."""
+
+    def test_get_user_performance_exists_sync(self):
+        assert callable(getattr(PolyforgeClient, "get_user_performance", None))
+
+    def test_get_user_performance_exists_async(self):
+        assert callable(getattr(AsyncPolyforgeClient, "get_user_performance", None))
+
+    def test_get_user_performance_uses_correct_path(self):
+        import inspect
+        source = inspect.getsource(PolyforgeClient.get_user_performance)
+        assert "/api/v1/users/" in source
+        assert "/performance" in source
+
+    def test_get_user_performance_default_period_is_30d(self):
+        import inspect
+        sig = inspect.signature(PolyforgeClient.get_user_performance)
+        assert sig.parameters["period"].default == "30d"
+
+    def test_get_user_performance_encodes_username(self):
+        import inspect
+        source = inspect.getsource(PolyforgeClient.get_user_performance)
+        assert "_encode_path(username)" in source
+
+    def test_get_user_strategies_exists_sync(self):
+        assert callable(getattr(PolyforgeClient, "get_user_strategies", None))
+
+    def test_get_user_strategies_exists_async(self):
+        assert callable(getattr(AsyncPolyforgeClient, "get_user_strategies", None))
+
+    def test_get_user_strategies_uses_correct_path(self):
+        import inspect
+        source = inspect.getsource(PolyforgeClient.get_user_strategies)
+        assert "/api/v1/users/" in source
+        assert "/strategies" in source
+
+    def test_get_user_strategies_default_visibility_public(self):
+        import inspect
+        sig = inspect.signature(PolyforgeClient.get_user_strategies)
+        assert sig.parameters["visibility"].default == "PUBLIC"
+
+    def test_get_user_activity_exists_sync(self):
+        assert callable(getattr(PolyforgeClient, "get_user_activity", None))
+
+    def test_get_user_activity_exists_async(self):
+        assert callable(getattr(AsyncPolyforgeClient, "get_user_activity", None))
+
+    def test_get_user_activity_uses_correct_path(self):
+        import inspect
+        source = inspect.getsource(PolyforgeClient.get_user_activity)
+        assert "/api/v1/users/" in source
+        assert "/activity" in source
+
+    def test_get_user_profile_badges_exists_sync(self):
+        assert callable(getattr(PolyforgeClient, "get_user_profile_badges", None))
+
+    def test_get_user_profile_badges_exists_async(self):
+        assert callable(getattr(AsyncPolyforgeClient, "get_user_profile_badges", None))
+
+    def test_get_user_profile_badges_uses_correct_path(self):
+        import inspect
+        source = inspect.getsource(PolyforgeClient.get_user_profile_badges)
+        assert "/api/v1/users/" in source
+        assert "/badges" in source
+
+    def test_get_my_following_exists_sync(self):
+        assert callable(getattr(PolyforgeClient, "get_my_following", None))
+
+    def test_get_my_following_exists_async(self):
+        assert callable(getattr(AsyncPolyforgeClient, "get_my_following", None))
+
+    def test_get_my_following_uses_correct_path(self):
+        import inspect
+        source = inspect.getsource(PolyforgeClient.get_my_following)
+        assert "/api/v1/users/me/following" in source
+
+    def test_get_my_following_returns_paginated_response(self):
+        import inspect
+        sig = inspect.signature(PolyforgeClient.get_my_following)
+        assert "PaginatedResponse" in str(sig.return_annotation)
+
+    def test_get_user_performance_unwraps_data_envelope(self, monkeypatch):
+        client = PolyforgeClient(api_key="test")
+        captured: dict = {}
+
+        def fake_get(path: str, params=None):
+            captured["path"] = path
+            captured["params"] = params
+            return {"data": [{"date": "2026-04-01", "pnl": 12.5, "cumPnl": 12.5}]}
+
+        monkeypatch.setattr(client, "_get", fake_get)
+        result = client.get_user_performance("alice", "7d")
+
+        assert captured["path"] == "/api/v1/users/alice/performance"
+        assert captured["params"] == {"period": "7d"}
+        assert len(result) == 1
+        assert result[0].date == "2026-04-01"
+        assert result[0].pnl == 12.5
+        assert result[0].cum_pnl == 12.5
+
+    def test_get_user_activity_url_encodes_username(self, monkeypatch):
+        client = PolyforgeClient(api_key="test")
+        captured: dict = {}
+
+        def fake_get(path: str, params=None):
+            captured["path"] = path
+            return {"data": []}
+
+        monkeypatch.setattr(client, "_get", fake_get)
+        client.get_user_activity("john doe")
+        assert captured["path"] == "/api/v1/users/john%20doe/activity"
+
+    def test_get_my_following_returns_full_pagination(self, monkeypatch):
+        client = PolyforgeClient(api_key="test")
+
+        def fake_get(path: str, params=None):
+            return {
+                "data": [
+                    {"id": "u1", "username": "alice", "displayName": "Alice", "avatarUrl": None},
+                ],
+                "total": 1, "page": 1, "limit": 20, "totalPages": 1, "hasNext": False,
+            }
+
+        monkeypatch.setattr(client, "_get", fake_get)
+        result = client.get_my_following(page=1, limit=20)
+
+        assert result.total == 1
+        assert result.page == 1
+        assert result.limit == 20
+        assert result.total_pages == 1
+        assert result.has_next is False
+        assert len(result.data) == 1
+        assert result.data[0].username == "alice"
+        assert result.data[0].display_name == "Alice"
+
+    def test_get_user_profile_badges_propagates_404(self, monkeypatch):
+        from polyforge.errors import NotFoundError
+
+        client = PolyforgeClient(api_key="test")
+
+        def fake_get(path: str, params=None):
+            raise NotFoundError("User not found", status_code=404, code="NOT_FOUND")
+
+        monkeypatch.setattr(client, "_get", fake_get)
+        with pytest.raises(NotFoundError):
+            client.get_user_profile_badges("ghost")
