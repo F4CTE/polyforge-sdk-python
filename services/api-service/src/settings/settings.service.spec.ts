@@ -28,6 +28,7 @@ function createMockRedis() {
   return {
     get: vi.fn().mockResolvedValue(null),
     set: vi.fn().mockResolvedValue("OK"),
+    del: vi.fn().mockResolvedValue(undefined),
     getClient: vi.fn().mockReturnValue({
       scanStream: vi.fn().mockReturnValue({ on: vi.fn() }),
       del: vi.fn(),
@@ -794,6 +795,34 @@ describe("SettingsService", () => {
           status: { notIn: ["DELISTED"] },
         },
       });
+    });
+
+    it("uses cached monthly volume and skips order aggregate on cache hit", async () => {
+      db.strategy.count.mockResolvedValue(0);
+      db.backtestRun.count.mockResolvedValue(0);
+      db.marketplaceListing.count.mockResolvedValue(0);
+      mockRedis.get.mockResolvedValue("2750");
+
+      const result = await service.getBetaUsage("user-uuid-1");
+
+      expect(result.monthlyVolume.usedUsdc).toBe(2750);
+      expect(db.order.aggregate).not.toHaveBeenCalled();
+    });
+
+    it("populates Redis cache after a DB aggregate miss", async () => {
+      db.strategy.count.mockResolvedValue(0);
+      db.order.aggregate.mockResolvedValue({ _sum: { size: 999 } } as any);
+      db.backtestRun.count.mockResolvedValue(0);
+      db.marketplaceListing.count.mockResolvedValue(0);
+      mockRedis.get.mockResolvedValue(null);
+
+      await service.getBetaUsage("user-uuid-1");
+
+      expect(mockRedis.set).toHaveBeenCalledWith(
+        expect.stringContaining("beta:monthly_volume:user-uuid-1:"),
+        "999",
+        60,
+      );
     });
   });
 

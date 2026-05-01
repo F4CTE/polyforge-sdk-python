@@ -86,6 +86,9 @@ describe("OrdersService", () => {
     db = createMockDb();
     redis = {
       xadd: vi.fn().mockResolvedValue("stream-entry-id"),
+      get: vi.fn().mockResolvedValue(null),
+      set: vi.fn().mockResolvedValue(undefined),
+      del: vi.fn().mockResolvedValue(undefined),
     } as unknown as RedisService;
     config = {
       get: vi.fn().mockReturnValue(undefined),
@@ -637,6 +640,78 @@ describe("OrdersService", () => {
       );
 
       expect(result.status).toBe("PENDING");
+    });
+
+    it("uses cached monthly volume from Redis and skips DB aggregate on hit", async () => {
+      db.user.findUniqueOrThrow.mockResolvedValue(
+        makeUser({ polymarketConnected: true }) as any,
+      );
+      db.token.findUniqueOrThrow.mockResolvedValue(makeToken() as any);
+      db.order.create.mockResolvedValue(makeOrder() as any);
+      // Redis cache HIT returns "1234" — DB aggregate should NOT be called
+      (redis.get as any).mockResolvedValue("1234");
+
+      await service.placeOrder("user-uuid-1", makePlaceOrderDto() as any);
+
+      expect(redis.get).toHaveBeenCalledWith(
+        expect.stringContaining("beta:monthly_volume:user-uuid-1:"),
+      );
+      expect(db.order.aggregate).not.toHaveBeenCalled();
+    });
+
+    it("falls through to DB aggregate and populates cache on miss", async () => {
+      db.user.findUniqueOrThrow.mockResolvedValue(
+        makeUser({ polymarketConnected: true }) as any,
+      );
+      db.token.findUniqueOrThrow.mockResolvedValue(makeToken() as any);
+      db.order.create.mockResolvedValue(makeOrder() as any);
+      (redis.get as any).mockResolvedValue(null);
+      db.order.aggregate.mockResolvedValue({ _sum: { size: 250 } } as any);
+
+      await service.placeOrder("user-uuid-1", makePlaceOrderDto() as any);
+
+      expect(db.order.aggregate).toHaveBeenCalledTimes(1);
+      expect(redis.set).toHaveBeenCalledWith(
+        expect.stringContaining("beta:monthly_volume:user-uuid-1:"),
+        "250",
+        60,
+      );
+    });
+
+    it("falls back to DB when Redis get throws", async () => {
+      db.user.findUniqueOrThrow.mockResolvedValue(
+        makeUser({ polymarketConnected: true }) as any,
+      );
+      db.token.findUniqueOrThrow.mockResolvedValue(makeToken() as any);
+      db.order.create.mockResolvedValue(makeOrder() as any);
+      (redis.get as any).mockRejectedValue(new Error("redis down"));
+      db.order.aggregate.mockResolvedValue({ _sum: { size: 100 } } as any);
+
+      const result = await service.placeOrder(
+        "user-uuid-1",
+        makePlaceOrderDto() as any,
+      );
+
+      expect(result.status).toBe("PENDING");
+      expect(db.order.aggregate).toHaveBeenCalledTimes(1);
+    });
+
+    it("enforces monthly cap using cached value", async () => {
+      db.user.findUniqueOrThrow.mockResolvedValue(
+        makeUser({ polymarketConnected: true }) as any,
+      );
+      // Cached value already at the cap minus a tiny remainder
+      (redis.get as any).mockResolvedValue("4990");
+
+      await expect(
+        service.placeOrder(
+          "user-uuid-1",
+          makePlaceOrderDto({ size: 50 }) as any,
+        ),
+      ).rejects.toMatchObject({
+        response: { code: "MONTHLY_VOLUME_EXCEEDED" },
+      });
+      expect(db.order.aggregate).not.toHaveBeenCalled();
     });
   });
 

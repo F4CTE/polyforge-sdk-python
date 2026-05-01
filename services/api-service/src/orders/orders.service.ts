@@ -7,6 +7,7 @@ import {
   ConflictException,
 } from "@nestjs/common";
 import { BETA_LIMITS } from "../common/beta-limits.config";
+import { getMonthlyConfirmedVolume } from "../common/monthly-volume";
 import { ConfigService } from "@nestjs/config";
 import { JwtService } from "@nestjs/jwt";
 import { PrismaService } from "@polyforge/shared-db";
@@ -381,17 +382,11 @@ export class OrdersService {
 
     const totalSize = dto.orders.reduce((sum, o) => sum + Number(o.size), 0);
 
-    const now = new Date();
-    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-    const monthlyVolumeAgg = await this.prisma.order.aggregate({
-      where: {
-        userId,
-        status: OrderStatus.CONFIRMED,
-        createdAt: { gte: monthStart },
-      },
-      _sum: { size: true },
-    });
-    const currentMonthlyVolume = Number(monthlyVolumeAgg._sum.size ?? 0);
+    const currentMonthlyVolume = await getMonthlyConfirmedVolume(
+      this.prisma,
+      this.redis,
+      userId,
+    );
     if (currentMonthlyVolume + totalSize > BETA_LIMITS.maxMonthlyVolumeUsdc) {
       throw new UnprocessableEntityException({
         code: "MONTHLY_VOLUME_EXCEEDED",
@@ -529,18 +524,12 @@ export class OrdersService {
       });
     }
 
-    // 2b. Enforce monthly volume cap
-    const now = new Date();
-    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-    const monthlyVolumeAgg = await this.prisma.order.aggregate({
-      where: {
-        userId,
-        status: OrderStatus.CONFIRMED,
-        createdAt: { gte: monthStart },
-      },
-      _sum: { size: true },
-    });
-    const currentMonthlyVolume = Number(monthlyVolumeAgg._sum.size ?? 0);
+    // 2b. Enforce monthly volume cap (cached in Redis with 60s TTL)
+    const currentMonthlyVolume = await getMonthlyConfirmedVolume(
+      this.prisma,
+      this.redis,
+      userId,
+    );
     if (currentMonthlyVolume + orderSize > BETA_LIMITS.maxMonthlyVolumeUsdc) {
       const remaining = Math.max(
         0,

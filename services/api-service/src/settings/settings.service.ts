@@ -10,6 +10,7 @@ import { UpdateRiskSettingsDto } from "./dto/update-risk-settings.dto";
 import { UpdateEventNotificationsDto } from "./dto/update-event-notifications.dto";
 import { UpdateVenuePreferencesDto } from "./dto/update-venue-preferences.dto";
 import { BETA_LIMITS } from "../common/beta-limits.config";
+import { getMonthlyConfirmedVolume } from "../common/monthly-volume";
 import { PaginatedResponse, paginate } from "../common/dto/pagination.dto";
 
 @Injectable()
@@ -269,22 +270,16 @@ export class SettingsService {
     backtests: { runningOrQueued: number; maxConcurrent: number };
     marketplaceListings: { used: number; limit: number };
   }> {
-    const now = new Date();
-    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-
     const [
       activeStrategyCount,
-      monthlyVolumeAgg,
+      monthlyVolumeUsedUsdc,
       activeBacktestCount,
       activeListingCount,
     ] = await Promise.all([
       this.prisma.strategy.count({
         where: { userId, status: { not: "ARCHIVED" } },
       }),
-      this.prisma.order.aggregate({
-        where: { userId, status: "CONFIRMED", createdAt: { gte: monthStart } },
-        _sum: { size: true },
-      }),
+      getMonthlyConfirmedVolume(this.prisma, this.redis, userId),
       this.prisma.backtestRun.count({
         where: { userId, status: { in: ["RUNNING", "QUEUED"] } },
       }),
@@ -299,7 +294,7 @@ export class SettingsService {
         limit: BETA_LIMITS.maxActiveStrategies,
       },
       monthlyVolume: {
-        usedUsdc: Number(monthlyVolumeAgg._sum?.size ?? 0),
+        usedUsdc: monthlyVolumeUsedUsdc,
         limitUsdc: BETA_LIMITS.maxMonthlyVolumeUsdc,
       },
       positionSize: { maxUsdc: BETA_LIMITS.maxPositionSizeUsdc },
