@@ -17,6 +17,7 @@ import { AuthService } from "./auth.service";
 import { AdminLoginDto } from "./dto/login.dto";
 import { TotpConfirmDto } from "./dto/totp-confirm.dto";
 import { TotpDisableDto } from "./dto/totp-disable.dto";
+import { throttleLimit } from "../common/throttle-limit";
 
 const ADMIN_COOKIE = "pf_admin_token";
 
@@ -109,9 +110,13 @@ export class AuthController {
 
   @Post("totp/setup")
   @HttpCode(HttpStatus.OK)
+  @Throttle({
+    default: { limit: throttleLimit(10), ttl: 3_600_000 },
+  })
   @ApiOperation({ summary: "Setup TOTP 2FA — returns QR code URL + secret" })
   @ApiResponse({ status: 200, description: "QR code and secret returned." })
   @ApiResponse({ status: 409, description: "TOTP_ALREADY_ENABLED" })
+  @ApiResponse({ status: 429, description: "Too many setup attempts." })
   async setupTotp(@Req() req: FastifyRequest) {
     const adminId = extractAdminId(req, this.authService);
     return this.authService.setupTotp(adminId);
@@ -119,12 +124,16 @@ export class AuthController {
 
   @Post("totp/confirm")
   @HttpCode(HttpStatus.OK)
+  @Throttle({
+    default: { limit: throttleLimit(5), ttl: 900_000 },
+  })
   @ApiOperation({ summary: "Confirm TOTP setup — enables 2FA" })
   @ApiResponse({ status: 200, description: "2FA enabled." })
   @ApiResponse({
     status: 400,
     description: "TOTP_INVALID or TOTP_SETUP_EXPIRED",
   })
+  @ApiResponse({ status: 429, description: "Too many TOTP attempts." })
   async confirmTotp(@Req() req: FastifyRequest, @Body() body: TotpConfirmDto) {
     const adminId = extractAdminId(req, this.authService);
     return this.authService.confirmTotp(adminId, body.code);
@@ -132,6 +141,9 @@ export class AuthController {
 
   @Delete("totp")
   @HttpCode(HttpStatus.NO_CONTENT)
+  @Throttle({
+    default: { limit: throttleLimit(5), ttl: 900_000 },
+  })
   @ApiOperation({
     summary:
       "Disable TOTP 2FA — requires password + current TOTP code for re-authentication",
@@ -141,6 +153,10 @@ export class AuthController {
   @ApiResponse({
     status: 401,
     description: "RE_AUTH_FAILED — invalid password or TOTP code",
+  })
+  @ApiResponse({
+    status: 429,
+    description: "Too many disable attempts — wait 15 minutes.",
   })
   async disableTotp(@Req() req: FastifyRequest, @Body() body: TotpDisableDto) {
     const token = req.cookies[ADMIN_COOKIE];

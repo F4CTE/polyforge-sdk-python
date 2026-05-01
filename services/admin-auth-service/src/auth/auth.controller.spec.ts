@@ -144,3 +144,48 @@ describe("AdminAuthController", () => {
     });
   });
 });
+
+describe("AdminAuthController — @Throttle decorator coverage", () => {
+  const THROTTLER_LIMIT = "THROTTLER:LIMIT";
+  const THROTTLER_TTL = "THROTTLER:TTL";
+
+  function readThrottle(method: unknown) {
+    return {
+      limit: Reflect.getMetadata(`${THROTTLER_LIMIT}default`, method as object),
+      ttl: Reflect.getMetadata(`${THROTTLER_TTL}default`, method as object),
+    };
+  }
+
+  it("disableTotp has @Throttle with 15-minute window (brute-force lockout)", () => {
+    const { limit, ttl } = readThrottle(AuthController.prototype.disableTotp);
+    expect(limit, "@Throttle limit must be set on disableTotp").toBeDefined();
+    expect(ttl, "@Throttle ttl must be set on disableTotp").toBeDefined();
+    expect(ttl).toBe(900_000);
+  });
+
+  it("confirmTotp has @Throttle with 15-minute window (brute-force lockout)", () => {
+    const { limit, ttl } = readThrottle(AuthController.prototype.confirmTotp);
+    expect(limit, "@Throttle limit must be set on confirmTotp").toBeDefined();
+    expect(ttl, "@Throttle ttl must be set on confirmTotp").toBeDefined();
+    expect(ttl).toBe(900_000);
+  });
+
+  it("setupTotp has @Throttle with 1-hour window", () => {
+    const { limit, ttl } = readThrottle(AuthController.prototype.setupTotp);
+    expect(limit, "@Throttle limit must be set on setupTotp").toBeDefined();
+    expect(ttl, "@Throttle ttl must be set on setupTotp").toBeDefined();
+    expect(ttl).toBe(3_600_000);
+  });
+
+  it("login has @Throttle (regression guard)", () => {
+    const { limit, ttl } = readThrottle(AuthController.prototype.login);
+    expect(limit, "@Throttle limit must be set on login").toBeDefined();
+    expect(ttl, "@Throttle ttl must be set on login").toBeDefined();
+  });
+
+  it("me has @Throttle (regression guard)", () => {
+    const { limit, ttl } = readThrottle(AuthController.prototype.me);
+    expect(limit, "@Throttle limit must be set on me").toBeDefined();
+    expect(ttl, "@Throttle ttl must be set on me").toBeDefined();
+  });
+});
