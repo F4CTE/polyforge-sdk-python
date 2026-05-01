@@ -25,7 +25,6 @@ export const router = createBrowserRouter([
           { path: 'orders', lazy: () => import('@/pages/orders/orders') },
           { path: 'markets', lazy: () => import('./pages/markets/markets') },
           { path: 'backtests', lazy: () => import('@/pages/backtests/backtests') },
-          { path: 'cache', lazy: () => import('@/pages/cache/cache') },
           { path: 'reports', lazy: () => import('@/pages/reports/reports') },
           { path: 'logs', lazy: () => import('@/pages/logs/logs') },
           { path: 'health', lazy: () => import('./pages/health/health') },
@@ -45,6 +44,7 @@ export const router = createBrowserRouter([
             element: <RoleGuard allowed={SUPER_ADMIN_ONLY} />,
             children: [
               { path: 'admins', lazy: () => import('@/pages/admins/admins') },
+              { path: 'cache', lazy: () => import('@/pages/cache/cache') },
               { path: 'config', lazy: () => import('@/pages/config/config') },
             ],
           },
