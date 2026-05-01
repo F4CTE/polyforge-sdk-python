@@ -115,12 +115,7 @@ export class TicketsAdminService {
     };
   }
 
-  async addReply(
-    ticketId: string,
-    adminId: string,
-    adminName: string,
-    dto: AdminMessageDto,
-  ) {
+  async addReply(ticketId: string, adminId: string, dto: AdminMessageDto) {
     const ticket = await this.prisma.ticket.findUnique({
       where: { id: ticketId },
       select: { id: true, userId: true, subject: true, assignedTo: true },
@@ -132,6 +127,9 @@ export class TicketsAdminService {
         message: "Ticket not found",
       });
     }
+
+    const adminNames = await this.resolveAdminNames([adminId]);
+    const adminName = adminNames[adminId] ?? "Admin";
 
     const message = await this.prisma.ticketMessage.create({
       data: {

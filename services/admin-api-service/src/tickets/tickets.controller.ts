@@ -56,12 +56,7 @@ export class TicketsAdminController {
     @CurrentAdmin() admin: AdminJwtPayload,
     @AdminIp() ip: string,
   ) {
-    const result = await this.tickets.addReply(
-      id,
-      admin.sub,
-      (admin as any).displayName ?? admin.email,
-      dto,
-    );
+    const result = await this.tickets.addReply(id, admin.sub, dto);
     await this.audit.log({
       adminId: admin.sub,
       action: "TICKET_REPLY",

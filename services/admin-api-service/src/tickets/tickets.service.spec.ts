@@ -54,7 +54,9 @@ function makePrisma() {
 function makeAdminDb() {
   return {
     admin: {
-      findMany: vi.fn().mockResolvedValue([]),
+      findMany: vi
+        .fn()
+        .mockResolvedValue([{ id: "admin-1", displayName: "Support Agent" }]),
     },
   };
 }
@@ -219,14 +221,15 @@ describe("TicketsAdminService", () => {
       prisma.ticketMessage.create.mockResolvedValue(msg as any);
       prisma.ticket.update.mockResolvedValue({} as any);
 
-      const result = await service.addReply(
-        "ticket-1",
-        "admin-1",
-        "Support Agent",
-        { body: "We're looking into it" } as any,
-      );
+      const result = await service.addReply("ticket-1", "admin-1", {
+        body: "We're looking into it",
+      });
 
       expect(result).toEqual(msg);
+      expect(adminDb.admin.findMany).toHaveBeenCalledWith({
+        where: { id: { in: ["admin-1"] } },
+        select: { id: true, displayName: true },
+      });
       expect(prisma.ticketMessage.create).toHaveBeenCalledWith({
         data: expect.objectContaining({
           ticketId: "ticket-1",
@@ -245,9 +248,9 @@ describe("TicketsAdminService", () => {
       prisma.ticketMessage.create.mockResolvedValue(makeMessage() as any);
       prisma.ticket.update.mockResolvedValue({} as any);
 
-      await service.addReply("ticket-1", "admin-1", "Agent", {
+      await service.addReply("ticket-1", "admin-1", {
         body: "hi",
-      } as any);
+      });
 
       expect(prisma.ticket.update).toHaveBeenCalledWith({
         where: { id: "ticket-1" },
@@ -262,9 +265,9 @@ describe("TicketsAdminService", () => {
       prisma.ticketMessage.create.mockResolvedValue(makeMessage() as any);
       prisma.ticket.update.mockResolvedValue({} as any);
 
-      await service.addReply("ticket-1", "admin-1", "Agent", {
+      await service.addReply("ticket-1", "admin-1", {
         body: "hi",
-      } as any);
+      });
 
       expect(prisma.ticket.update).toHaveBeenCalledWith({
         where: { id: "ticket-1" },
@@ -277,9 +280,9 @@ describe("TicketsAdminService", () => {
       prisma.ticketMessage.create.mockResolvedValue(makeMessage() as any);
       prisma.ticket.update.mockResolvedValue({} as any);
 
-      await service.addReply("ticket-1", "admin-1", "Support Agent", {
+      await service.addReply("ticket-1", "admin-1", {
         body: "hi",
-      } as any);
+      });
 
       expect(redis.xadd).toHaveBeenCalledWith(
         "stream:events",
@@ -296,7 +299,7 @@ describe("TicketsAdminService", () => {
       prisma.ticket.findUnique.mockResolvedValue(null);
 
       await expect(
-        service.addReply("ghost", "admin-1", "Agent", { body: "hi" } as any),
+        service.addReply("ghost", "admin-1", { body: "hi" } as any),
       ).rejects.toThrow(NotFoundException);
     });
 
@@ -307,13 +310,28 @@ describe("TicketsAdminService", () => {
       prisma.ticketMessage.create.mockResolvedValue(makeMessage() as any);
       prisma.ticket.update.mockResolvedValue({} as any);
 
-      await service.addReply("ticket-1", "admin-1", "Agent", {
+      await service.addReply("ticket-1", "admin-1", {
         body: "hi",
-      } as any);
+      });
 
       expect(prisma.ticket.update).toHaveBeenCalledWith({
         where: { id: "ticket-1" },
         data: expect.objectContaining({ reminderSentAt: null }),
+      });
+    });
+
+    it("falls back to generic admin name when display name is unavailable", async () => {
+      adminDb.admin.findMany.mockResolvedValue([]);
+      prisma.ticket.findUnique.mockResolvedValue(makeTicket() as any);
+      prisma.ticketMessage.create.mockResolvedValue(
+        makeMessage({ senderName: "Admin" }) as any,
+      );
+      prisma.ticket.update.mockResolvedValue({} as any);
+
+      await service.addReply("ticket-1", "admin-1", { body: "hi" });
+
+      expect(prisma.ticketMessage.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({ senderName: "Admin" }),
       });
     });
   });
