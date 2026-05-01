@@ -331,6 +331,10 @@ _VALID_MODES = frozenset({"live", "paper"})
 _VALID_SIDES = frozenset({"BUY", "SELL"})
 _VALID_OUTCOMES = frozenset({"YES", "NO"})
 _VALID_ORDER_TYPES = frozenset({"GTC", "GTD", "FOK", "POST_ONLY"})
+_VALID_SPORTS_SORTS = frozenset({"volume", "closing_soon", "newest"})
+_VALID_SPORTS_EVENT_STATUSES = frozenset(
+    {"SCHEDULED", "PREGAME", "LIVE", "HALFTIME", "FINAL"}
+)
 
 
 def _validate_financial_param(name: str, value: float) -> None:
@@ -2822,6 +2826,218 @@ class PolyforgeClient:
             self._patch("/api/v1/users/me/venue-preferences", json=body),
         )
 
+    # -- Sports Markets --
+
+    def list_sports_categories(self) -> list[dict[str, Any]]:
+        """List sports market categories.
+
+        Returns:
+            A list of category descriptors. Each item carries at least
+            ``category``, ``label``, ``seriesTickers`` (list of strings) and
+            ``marketCount``. Additional fields may be present and are returned
+            as-is to mirror the controller's permissive shape.
+        """
+        data = self._get("/api/v1/sports/categories")
+        return list(data) if isinstance(data, list) else []
+
+    def list_sports_markets(
+        self,
+        *,
+        page: int = 1,
+        limit: int = 10,
+        category: str | None = None,
+        search: str | None = None,
+        series_ticker: str | None = None,
+        event_ticker: str | None = None,
+        live_only: bool | None = None,
+        sort: str | None = None,
+    ) -> PaginatedResponse[dict[str, Any]]:
+        """List sports markets with optional filters.
+
+        Args:
+            page: 1-based page index (default ``1``).
+            limit: Page size (default ``10``).
+            category: Filter by category slug (max length 50).
+            search: Free-text search across title/slug.
+            series_ticker: Filter by Kalshi series ticker.
+            event_ticker: Filter by Kalshi event ticker.
+            live_only: When ``True``, restrict to live games.
+            sort: One of ``"volume"`` (default), ``"closing_soon"``, ``"newest"``.
+        """
+        if sort is not None:
+            _validate_enum("sort", sort, _VALID_SPORTS_SORTS)
+        raw = self._get(
+            "/api/v1/sports/markets",
+            params={
+                "page": page,
+                "limit": limit,
+                "category": category,
+                "search": search,
+                "seriesTicker": series_ticker,
+                "eventTicker": event_ticker,
+                "liveOnly": live_only,
+                "sort": sort,
+            },
+        )
+        return PaginatedResponse(
+            data=list(raw.get("data", [])),
+            **_parse_pagination(raw),
+        )
+
+    def list_sports_events(
+        self,
+        *,
+        page: int = 1,
+        limit: int = 10,
+        category: str | None = None,
+        series_ticker: str | None = None,
+        status: str | None = None,
+    ) -> PaginatedResponse[dict[str, Any]]:
+        """List sports events with optional filters.
+
+        Args:
+            page: 1-based page index (default ``1``).
+            limit: Page size (default ``10``).
+            category: Filter by category slug.
+            series_ticker: Filter by Kalshi series ticker.
+            status: One of ``"SCHEDULED"``, ``"PREGAME"``, ``"LIVE"``,
+                ``"HALFTIME"``, ``"FINAL"``.
+        """
+        if status is not None:
+            _validate_enum("status", status, _VALID_SPORTS_EVENT_STATUSES)
+        raw = self._get(
+            "/api/v1/sports/events",
+            params={
+                "page": page,
+                "limit": limit,
+                "category": category,
+                "seriesTicker": series_ticker,
+                "status": status,
+            },
+        )
+        return PaginatedResponse(
+            data=list(raw.get("data", [])),
+            **_parse_pagination(raw),
+        )
+
+    def get_sports_event(self, event_ticker: str) -> dict[str, Any]:
+        """Fetch a single sports event with its associated markets.
+
+        Args:
+            event_ticker: Kalshi event ticker (URL-encoded).
+
+        Returns:
+            ``{"event": {...}, "markets": [...]}`` mirroring the controller.
+        """
+        return self._get(f"/api/v1/sports/events/{_encode_path(event_ticker)}")
+
+    def list_sports_milestones(
+        self,
+        *,
+        page: int = 1,
+        limit: int = 10,
+        event_ticker: str | None = None,
+        status: str | None = None,
+    ) -> dict[str, Any]:
+        """List in-game milestones (cursor-paginated).
+
+        Args:
+            page: 1-based page index (default ``1``).
+            limit: Page size (default ``10``).
+            event_ticker: Optional event ticker filter.
+            status: Optional status filter (free-form per upstream Kalshi feed).
+
+        Returns:
+            ``{"milestones": [...], "cursor": str | None}``.
+        """
+        return self._get(
+            "/api/v1/sports/milestones",
+            params={
+                "page": page,
+                "limit": limit,
+                "eventTicker": event_ticker,
+                "status": status,
+            },
+        )
+
+    def get_sports_live_data(self, milestone_id: str) -> dict[str, Any]:
+        """Fetch live data attached to a specific milestone.
+
+        Args:
+            milestone_id: Milestone identifier (URL-encoded).
+
+        Returns:
+            ``{"liveData": object | None}``.
+        """
+        return self._get(
+            f"/api/v1/sports/live-data/{_encode_path(milestone_id)}",
+        )
+
+    def list_sports_combos(
+        self,
+        *,
+        page: int = 1,
+        limit: int = 10,
+        series_ticker: str | None = None,
+    ) -> dict[str, Any]:
+        """List combo collections (cursor-paginated).
+
+        Args:
+            page: 1-based page index (default ``1``).
+            limit: Page size (default ``10``).
+            series_ticker: Optional series ticker filter.
+
+        Returns:
+            ``{"collections": [...], "cursor": str | None}``.
+        """
+        return self._get(
+            "/api/v1/sports/combos",
+            params={
+                "page": page,
+                "limit": limit,
+                "seriesTicker": series_ticker,
+            },
+        )
+
+    def get_sports_combo_collection(self, collection_ticker: str) -> dict[str, Any]:
+        """Fetch a combo collection by ticker.
+
+        Note:
+            The upstream controller currently ignores ``collectionTicker`` and
+            delegates to ``listComboCollections({page:1, limit:1})``. The SDK
+            wraps the endpoint as-is; tracked for follow-up under
+            `POLA-1841 </POLA/issues/POLA-1841>`_.
+        """
+        return self._get(
+            f"/api/v1/sports/combos/{_encode_path(collection_ticker)}",
+        )
+
+    def lookup_sports_combo(
+        self,
+        collection_ticker: str,
+        selected_markets: list[dict[str, Any]],
+    ) -> dict[str, Any] | None:
+        """Resolve a combo selection to a single ``(eventTicker, marketTicker)``.
+
+        Args:
+            collection_ticker: Collection ticker the combo belongs to.
+            selected_markets: List of ``{"marketTicker", "eventTicker", "side"}``
+                entries where ``side`` is ``"yes"`` or ``"no"``. Passed through
+                to the server unchanged (server enforces shape and side enum).
+
+        Returns:
+            ``{"eventTicker", "marketTicker"}`` on a hit, or ``None`` if the
+            combo cannot be resolved.
+        """
+        result = self._post(
+            "/api/v1/sports/combos/lookup",
+            json={
+                "collectionTicker": collection_ticker,
+                "selectedMarkets": selected_markets,
+            },
+        )
+        return result if isinstance(result, dict) else None
+
     # -- Lifecycle --
 
     def close(self) -> None:
@@ -4943,6 +5159,145 @@ class AsyncPolyforgeClient:
             VenuePreferences,
             await self._patch("/api/v1/users/me/venue-preferences", json=body),
         )
+
+    # -- Sports Markets --
+
+    async def list_sports_categories(self) -> list[dict[str, Any]]:
+        """List sports market categories. See sync version for details."""
+        data = await self._get("/api/v1/sports/categories")
+        return list(data) if isinstance(data, list) else []
+
+    async def list_sports_markets(
+        self,
+        *,
+        page: int = 1,
+        limit: int = 10,
+        category: str | None = None,
+        search: str | None = None,
+        series_ticker: str | None = None,
+        event_ticker: str | None = None,
+        live_only: bool | None = None,
+        sort: str | None = None,
+    ) -> PaginatedResponse[dict[str, Any]]:
+        """List sports markets with optional filters. See sync version."""
+        if sort is not None:
+            _validate_enum("sort", sort, _VALID_SPORTS_SORTS)
+        raw = await self._get(
+            "/api/v1/sports/markets",
+            params={
+                "page": page,
+                "limit": limit,
+                "category": category,
+                "search": search,
+                "seriesTicker": series_ticker,
+                "eventTicker": event_ticker,
+                "liveOnly": live_only,
+                "sort": sort,
+            },
+        )
+        return PaginatedResponse(
+            data=list(raw.get("data", [])),
+            **_parse_pagination(raw),
+        )
+
+    async def list_sports_events(
+        self,
+        *,
+        page: int = 1,
+        limit: int = 10,
+        category: str | None = None,
+        series_ticker: str | None = None,
+        status: str | None = None,
+    ) -> PaginatedResponse[dict[str, Any]]:
+        """List sports events with optional filters. See sync version."""
+        if status is not None:
+            _validate_enum("status", status, _VALID_SPORTS_EVENT_STATUSES)
+        raw = await self._get(
+            "/api/v1/sports/events",
+            params={
+                "page": page,
+                "limit": limit,
+                "category": category,
+                "seriesTicker": series_ticker,
+                "status": status,
+            },
+        )
+        return PaginatedResponse(
+            data=list(raw.get("data", [])),
+            **_parse_pagination(raw),
+        )
+
+    async def get_sports_event(self, event_ticker: str) -> dict[str, Any]:
+        """Fetch a single sports event with markets. See sync version."""
+        return await self._get(
+            f"/api/v1/sports/events/{_encode_path(event_ticker)}",
+        )
+
+    async def list_sports_milestones(
+        self,
+        *,
+        page: int = 1,
+        limit: int = 10,
+        event_ticker: str | None = None,
+        status: str | None = None,
+    ) -> dict[str, Any]:
+        """List in-game milestones. See sync version."""
+        return await self._get(
+            "/api/v1/sports/milestones",
+            params={
+                "page": page,
+                "limit": limit,
+                "eventTicker": event_ticker,
+                "status": status,
+            },
+        )
+
+    async def get_sports_live_data(self, milestone_id: str) -> dict[str, Any]:
+        """Fetch live data for a milestone. See sync version."""
+        return await self._get(
+            f"/api/v1/sports/live-data/{_encode_path(milestone_id)}",
+        )
+
+    async def list_sports_combos(
+        self,
+        *,
+        page: int = 1,
+        limit: int = 10,
+        series_ticker: str | None = None,
+    ) -> dict[str, Any]:
+        """List combo collections. See sync version."""
+        return await self._get(
+            "/api/v1/sports/combos",
+            params={
+                "page": page,
+                "limit": limit,
+                "seriesTicker": series_ticker,
+            },
+        )
+
+    async def get_sports_combo_collection(
+        self, collection_ticker: str
+    ) -> dict[str, Any]:
+        """Fetch a combo collection by ticker. See sync version for the
+        upstream-controller caveat."""
+        return await self._get(
+            f"/api/v1/sports/combos/{_encode_path(collection_ticker)}",
+        )
+
+    async def lookup_sports_combo(
+        self,
+        collection_ticker: str,
+        selected_markets: list[dict[str, Any]],
+    ) -> dict[str, Any] | None:
+        """Resolve a combo selection. See sync version for the payload shape."""
+        result = await self._post(
+            "/api/v1/sports/combos/lookup",
+            json={
+                "collectionTicker": collection_ticker,
+                "selectedMarkets": selected_markets,
+            },
+        )
+        return result if isinstance(result, dict) else None
 
     # -- Lifecycle --
 

@@ -5800,3 +5800,343 @@ class TestTradingCopyNumericValidation:
             await client.close()
 
         asyncio.run(_run())
+
+
+# ── POLA-1847: 9 sports markets endpoints ────────────────────────────────────
+
+
+class TestSportsEndpointsPresence:
+    """Surface check: all 9 sports methods exist on both clients (POLA-1847)."""
+
+    METHODS = (
+        "list_sports_categories",
+        "list_sports_markets",
+        "list_sports_events",
+        "get_sports_event",
+        "list_sports_milestones",
+        "get_sports_live_data",
+        "list_sports_combos",
+        "get_sports_combo_collection",
+        "lookup_sports_combo",
+    )
+
+    def test_all_methods_present_on_sync_client(self):
+        for name in self.METHODS:
+            assert callable(getattr(PolyforgeClient, name, None)), name
+
+    def test_all_methods_present_on_async_client(self):
+        for name in self.METHODS:
+            assert callable(getattr(AsyncPolyforgeClient, name, None)), name
+
+
+class TestSportsEndpointsPaths:
+    """Verify each sports method targets the correct controller path."""
+
+    def test_list_sports_categories_path(self):
+        import inspect
+        src = inspect.getsource(PolyforgeClient.list_sports_categories)
+        assert '"/api/v1/sports/categories"' in src
+
+    def test_list_sports_markets_path(self):
+        import inspect
+        src = inspect.getsource(PolyforgeClient.list_sports_markets)
+        assert '"/api/v1/sports/markets"' in src
+
+    def test_list_sports_events_path(self):
+        import inspect
+        src = inspect.getsource(PolyforgeClient.list_sports_events)
+        assert '"/api/v1/sports/events"' in src
+
+    def test_get_sports_event_path(self):
+        import inspect
+        src = inspect.getsource(PolyforgeClient.get_sports_event)
+        assert "/api/v1/sports/events/" in src
+
+    def test_list_sports_milestones_path(self):
+        import inspect
+        src = inspect.getsource(PolyforgeClient.list_sports_milestones)
+        assert '"/api/v1/sports/milestones"' in src
+
+    def test_get_sports_live_data_path(self):
+        import inspect
+        src = inspect.getsource(PolyforgeClient.get_sports_live_data)
+        assert "/api/v1/sports/live-data/" in src
+
+    def test_list_sports_combos_path(self):
+        import inspect
+        src = inspect.getsource(PolyforgeClient.list_sports_combos)
+        assert '"/api/v1/sports/combos"' in src
+
+    def test_get_sports_combo_collection_path(self):
+        import inspect
+        src = inspect.getsource(PolyforgeClient.get_sports_combo_collection)
+        assert "/api/v1/sports/combos/" in src
+
+    def test_lookup_sports_combo_path(self):
+        import inspect
+        src = inspect.getsource(PolyforgeClient.lookup_sports_combo)
+        assert '"/api/v1/sports/combos/lookup"' in src
+
+
+class TestSportsEndpointsParams:
+    """Verify each sports method exposes the expected keyword parameters."""
+
+    def test_list_sports_markets_signature(self):
+        import inspect
+        params = set(inspect.signature(PolyforgeClient.list_sports_markets).parameters)
+        for required in (
+            "page", "limit", "category", "search", "series_ticker",
+            "event_ticker", "live_only", "sort",
+        ):
+            assert required in params, required
+
+    def test_list_sports_markets_passes_camel_case_query_keys(self):
+        import inspect
+        src = inspect.getsource(PolyforgeClient.list_sports_markets)
+        # Server expects camelCase query keys, not snake_case.
+        for key in ('"seriesTicker"', '"eventTicker"', '"liveOnly"', '"sort"'):
+            assert key in src, key
+
+    def test_list_sports_events_signature(self):
+        import inspect
+        params = set(inspect.signature(PolyforgeClient.list_sports_events).parameters)
+        for required in ("page", "limit", "category", "series_ticker", "status"):
+            assert required in params, required
+
+    def test_list_sports_milestones_signature(self):
+        import inspect
+        params = set(inspect.signature(PolyforgeClient.list_sports_milestones).parameters)
+        for required in ("page", "limit", "event_ticker", "status"):
+            assert required in params, required
+
+    def test_list_sports_combos_signature(self):
+        import inspect
+        params = set(inspect.signature(PolyforgeClient.list_sports_combos).parameters)
+        for required in ("page", "limit", "series_ticker"):
+            assert required in params, required
+
+    def test_async_list_sports_markets_signature(self):
+        import inspect
+        params = set(inspect.signature(AsyncPolyforgeClient.list_sports_markets).parameters)
+        assert {"sort", "live_only", "series_ticker", "event_ticker"} <= params
+
+
+class TestSportsEnumValidation:
+    """Reject invalid enum values without making a network call."""
+
+    def test_invalid_sort_rejected(self):
+        client = PolyforgeClient(api_key="test")
+        try:
+            with pytest.raises(ValueError, match="sort"):
+                client.list_sports_markets(sort="trending")
+        finally:
+            client.close()
+
+    def test_invalid_event_status_rejected(self):
+        client = PolyforgeClient(api_key="test")
+        try:
+            with pytest.raises(ValueError, match="status"):
+                client.list_sports_events(status="POSTGAME")
+        finally:
+            client.close()
+
+    def test_async_invalid_sort_rejected(self):
+        import asyncio
+
+        async def _run():
+            client = AsyncPolyforgeClient(api_key="test")
+            try:
+                with pytest.raises(ValueError, match="sort"):
+                    await client.list_sports_markets(sort="garbage")
+            finally:
+                await client.close()
+
+        asyncio.run(_run())
+
+
+class TestSportsEndpointRoundtrips:
+    """Stub the HTTP layer with httpx.MockTransport and exercise each method."""
+
+    @staticmethod
+    def _client_with(handler):
+        transport = httpx.MockTransport(handler)
+        client = PolyforgeClient(api_key="test", api_url="http://localhost:9999")
+        client._client = httpx.Client(
+            base_url="http://localhost:9999",
+            headers={"Authorization": "Bearer test"},
+            transport=transport,
+        )
+        return client
+
+    def test_list_sports_categories_returns_array(self):
+        def handler(request):
+            assert request.method == "GET"
+            assert request.url.path == "/api/v1/sports/categories"
+            return httpx.Response(200, json=[
+                {"category": "nba", "label": "NBA",
+                 "seriesTickers": ["KXNBAGAME"], "marketCount": 12}
+            ])
+        client = self._client_with(handler)
+        try:
+            cats = client.list_sports_categories()
+            assert isinstance(cats, list)
+            assert cats[0]["category"] == "nba"
+            assert cats[0]["marketCount"] == 12
+        finally:
+            client.close()
+
+    def test_list_sports_markets_sends_params_and_parses_pagination(self):
+        captured = {}
+
+        def handler(request):
+            captured["url"] = request.url
+            return httpx.Response(200, json={
+                "data": [{"ticker": "KXNBAGAME-1"}],
+                "total": 1, "page": 1, "limit": 10,
+                "totalPages": 1, "hasNext": False,
+            })
+
+        client = self._client_with(handler)
+        try:
+            res = client.list_sports_markets(
+                category="nba",
+                series_ticker="KXNBAGAME",
+                live_only=True,
+                sort="closing_soon",
+                page=2,
+                limit=5,
+            )
+            qp = dict(captured["url"].params)
+            assert qp["category"] == "nba"
+            assert qp["seriesTicker"] == "KXNBAGAME"
+            # httpx lowercases booleans → "true"; the controller DTO maps "true" → True.
+            assert qp["liveOnly"] == "true"
+            assert qp["sort"] == "closing_soon"
+            assert qp["page"] == "2"
+            assert qp["limit"] == "5"
+            assert "search" not in qp  # None values stripped
+            assert isinstance(res, PaginatedResponse)
+            assert res.total == 1
+            assert res.page == 1
+            assert res.data[0]["ticker"] == "KXNBAGAME-1"
+        finally:
+            client.close()
+
+    def test_list_sports_events_sends_params(self):
+        captured = {}
+
+        def handler(request):
+            captured["url"] = request.url
+            return httpx.Response(200, json={
+                "data": [], "total": 0, "page": 1, "limit": 10, "totalPages": 0,
+            })
+        client = self._client_with(handler)
+        try:
+            client.list_sports_events(status="LIVE", series_ticker="KXNBAGAME")
+            qp = dict(captured["url"].params)
+            assert qp["status"] == "LIVE"
+            assert qp["seriesTicker"] == "KXNBAGAME"
+        finally:
+            client.close()
+
+    def test_get_sports_event_url_encodes_ticker(self):
+        captured = {}
+
+        def handler(request):
+            # httpx.URL.path is decoded; raw_path keeps the percent-encoding.
+            captured["raw_path"] = request.url.raw_path
+            return httpx.Response(200, json={"event": {"ticker": "T/1"}, "markets": []})
+        client = self._client_with(handler)
+        try:
+            res = client.get_sports_event("T/1")
+            assert captured["raw_path"] == b"/api/v1/sports/events/T%2F1"
+            assert res["event"]["ticker"] == "T/1"
+            assert res["markets"] == []
+        finally:
+            client.close()
+
+    def test_list_sports_milestones_returns_cursor_dict(self):
+        def handler(request):
+            assert request.url.path == "/api/v1/sports/milestones"
+            return httpx.Response(200, json={
+                "milestones": [{"id": "m1"}],
+                "cursor": "next-page-token",
+            })
+        client = self._client_with(handler)
+        try:
+            res = client.list_sports_milestones(event_ticker="EVT", limit=20)
+            assert res["cursor"] == "next-page-token"
+            assert res["milestones"][0]["id"] == "m1"
+        finally:
+            client.close()
+
+    def test_get_sports_live_data_returns_payload(self):
+        def handler(request):
+            assert request.url.path == "/api/v1/sports/live-data/abc"
+            return httpx.Response(200, json={"liveData": {"score": "10-7"}})
+        client = self._client_with(handler)
+        try:
+            assert client.get_sports_live_data("abc") == {"liveData": {"score": "10-7"}}
+        finally:
+            client.close()
+
+    def test_list_sports_combos_sends_series_ticker(self):
+        captured = {}
+
+        def handler(request):
+            captured["url"] = request.url
+            return httpx.Response(200, json={"collections": [], "cursor": None})
+        client = self._client_with(handler)
+        try:
+            client.list_sports_combos(series_ticker="KXNBAGAME")
+            assert captured["url"].params["seriesTicker"] == "KXNBAGAME"
+        finally:
+            client.close()
+
+    def test_get_sports_combo_collection_url_encodes_ticker(self):
+        captured = {}
+
+        def handler(request):
+            captured["raw_path"] = request.url.raw_path
+            return httpx.Response(200, json={"collections": [], "cursor": None})
+        client = self._client_with(handler)
+        try:
+            client.get_sports_combo_collection("KX/COMBO 1")
+            assert captured["raw_path"] == b"/api/v1/sports/combos/KX%2FCOMBO%201"
+        finally:
+            client.close()
+
+    def test_lookup_sports_combo_posts_payload(self):
+        captured = {}
+
+        def handler(request):
+            captured["method"] = request.method
+            captured["path"] = request.url.path
+            captured["body"] = json.loads(request.content)
+            return httpx.Response(200, json={
+                "eventTicker": "EVT", "marketTicker": "MKT",
+            })
+        client = self._client_with(handler)
+        try:
+            res = client.lookup_sports_combo(
+                "COL",
+                [{"marketTicker": "M1", "eventTicker": "E1", "side": "yes"}],
+            )
+            assert captured["method"] == "POST"
+            assert captured["path"] == "/api/v1/sports/combos/lookup"
+            assert captured["body"]["collectionTicker"] == "COL"
+            assert captured["body"]["selectedMarkets"][0]["side"] == "yes"
+            assert res == {"eventTicker": "EVT", "marketTicker": "MKT"}
+        finally:
+            client.close()
+
+    def test_lookup_sports_combo_returns_none_on_null_body(self):
+        # Server returns JSON `null` when no match — SDK must surface as None.
+        def handler(request):
+            return httpx.Response(200, content=b"null", headers={"content-type": "application/json"})
+        client = self._client_with(handler)
+        try:
+            res = client.lookup_sports_combo("COL", [])
+            assert res is None
+        finally:
+            client.close()

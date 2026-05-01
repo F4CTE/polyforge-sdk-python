@@ -1,5 +1,31 @@
 # Changelog
 
+## [Unreleased]
+
+### Added
+
+**Sports API (POLA-1847)** — nine endpoints wrapping the `/api/v1/sports/*`
+controller, available on both `PolyforgeClient` and `AsyncPolyforgeClient`:
+
+- `list_sports_categories()` → `list[dict[str, Any]]`
+- `list_sports_markets(*, page, limit, category, search, series_ticker, event_ticker, live_only, sort)` → `PaginatedResponse[dict[str, Any]]`
+- `list_sports_events(*, page, limit, category, series_ticker, status)` → `PaginatedResponse[dict[str, Any]]`
+- `get_sports_event(event_ticker)` → `dict[str, Any]` shaped `{event, markets[]}`
+- `list_sports_milestones(*, page, limit, event_ticker, status)` → `dict[str, Any]` shaped `{milestones, cursor}`
+- `get_sports_live_data(milestone_id)` → `dict[str, Any]` shaped `{liveData}`
+- `list_sports_combos(*, page, limit, series_ticker)` → `dict[str, Any]` shaped `{collections, cursor}`
+- `get_sports_combo_collection(collection_ticker)` → `dict[str, Any]` (server currently ignores the ticker — wrapped as-is)
+- `lookup_sports_combo(collection_ticker, selected_markets)` → `dict[str, Any] | None`
+
+`sort` and event `status` are validated client-side against the controller enums
+(`{"volume", "closing_soon", "newest"}` and
+`{"SCHEDULED", "PREGAME", "LIVE", "HALFTIME", "FINAL"}` respectively). Path
+parameters (`event_ticker`, `milestone_id`, `collection_ticker`) are URL-encoded
+via `_encode_path` to prevent path-traversal injection.
+
+Responses mirror the upstream controller's permissive shape (`Record<string,
+unknown>` → `dict[str, Any]`) intentionally — see parent issue for the rationale.
+
 ## [2.0.0] — 2026-04-16
 
 ### Added
