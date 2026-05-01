@@ -131,6 +131,20 @@ asyncio.run(main())
 | `get_whale_feed(min_size)` | Get large on-chain trades |
 | `get_news_signals(min_confidence)` | Get AI-generated news trading signals |
 
+### Sports Markets
+
+| Method | Description |
+|--------|-------------|
+| `list_sports_categories()` | List sports categories with series tickers and market counts |
+| `list_sports_markets(page, limit, category, search, series_ticker, event_ticker, live_only, sort)` | List sports markets — `sort` ∈ `{"volume", "closing_soon", "newest"}` |
+| `list_sports_events(page, limit, category, series_ticker, status)` | List sports events — `status` ∈ `{"SCHEDULED", "PREGAME", "LIVE", "HALFTIME", "FINAL"}` |
+| `get_sports_event(event_ticker)` | Fetch one event with its markets |
+| `list_sports_milestones(page, limit, event_ticker, status)` | List in-game milestones (cursor-paginated) |
+| `get_sports_live_data(milestone_id)` | Fetch live data for a milestone |
+| `list_sports_combos(page, limit, series_ticker)` | List combo collections (cursor-paginated) |
+| `get_sports_combo_collection(collection_ticker)` | Fetch a combo collection by ticker |
+| `lookup_sports_combo(collection_ticker, selected_markets)` | Resolve `(eventTicker, marketTicker)` for a combo selection |
+
 ### Configuration
 
 | Method | Description |
