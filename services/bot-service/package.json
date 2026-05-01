@@ -26,7 +26,7 @@
     "@polyforge/shared-redis": "workspace:*",
     "@polyforge/shared-types": "workspace:*",
     "@sentry/nestjs": "^10.50.0",
-    "discord.js": "^14.26.3",
+    "discord.js": "^14.26.4",
     "fastify": "^5.8.2",
     "nestjs-pino": "^4.6.1",
     "pino": "^10.3.1",
