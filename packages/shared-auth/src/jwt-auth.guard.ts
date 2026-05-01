@@ -135,10 +135,10 @@ export class JwtAuthGuard extends AuthGuard("jwt") {
         throw new UnauthorizedException("Account not found");
       }
 
-      // Set request.user to match JWT shape
+      // Set request.user to match JWT shape. Email is intentionally
+      // excluded — JwtPayload no longer carries PII (GDPR).
       request.user = {
         sub: apiKey.user.id,
-        email: apiKey.user.email,
         username: apiKey.user.username,
       };
 

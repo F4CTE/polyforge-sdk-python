@@ -368,9 +368,11 @@ export class AuthService implements OnModuleInit {
     // Store session in Redis — TTL matches JWT expiry (1h = 3600s)
     await this.redis.set(`admin:session:${sessionId}`, admin.id, 3600);
 
+    // Email intentionally omitted from the JWT payload: JWTs are routinely
+    // logged by infra and SDKs. Look up admin email server-side via `sub`
+    // when needed (see `getMe`). Keeps PII out of logs (GDPR).
     const payload: AdminJwtPayload = {
       sub: admin.id,
-      email: admin.email,
       role: admin.role as AdminRole,
       sessionId,
     };

@@ -2,9 +2,12 @@
 // Auth types
 // ─────────────────────────────────────────────────────────────────────────────
 
+// JWT payloads MUST NOT contain PII (email, real name, address, etc.).
+// JWTs are routinely logged by reverse proxies, APMs, browser devtools, and
+// third-party SDKs, so any PII placed here leaks broadly and creates a
+// GDPR exposure risk. Look up PII server-side from `sub` when needed.
 export interface JwtPayload {
   sub: string; // user id
-  email: string;
   username: string;
   kalshiConnected?: boolean;
   iat?: number;
@@ -13,7 +16,6 @@ export interface JwtPayload {
 
 export interface AdminJwtPayload {
   sub: string; // admin id
-  email: string;
   role: AdminRole;
   sessionId: string;
   iat?: number;

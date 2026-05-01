@@ -145,7 +145,7 @@ describe('AuthService', () => {
       });
       vi.mocked(usersService.create).mockResolvedValue(user as any);
 
-      const result = await service.register(makeRegisterDto() as any);
+      const result = await service.register(makeRegisterDto());
 
       expect(result.token).toBe('signed-jwt-token');
       expect(result.user.id).toBe(user.id);
@@ -154,11 +154,33 @@ describe('AuthService', () => {
       expect(result.user.status).toBe('UNVERIFIED');
     });
 
+    // Regression for POLA-1978 / PolyForge#1160 — JWT payloads MUST NOT carry
+    // PII (email) because they get logged broadly by infra and SDKs.
+    // The user object on the response body is allowed to carry email; only
+    // the signed JWT payload is restricted.
+    it('does NOT include email or other PII in the signed JWT payload (GDPR)', async () => {
+      const user = userFactory();
+      vi.mocked(usersService.create).mockResolvedValue(user as any);
+
+      await service.register(makeRegisterDto());
+
+      const jwtPayload = vi.mocked(jwtService.sign).mock.calls[0][0] as Record<
+        string,
+        unknown
+      >;
+      expect(jwtPayload).not.toHaveProperty('email');
+      expect(jwtPayload).not.toHaveProperty('phone');
+      expect(jwtPayload).not.toHaveProperty('displayName');
+      // Sanity: the non-PII identifiers we expect ARE present.
+      expect(jwtPayload).toHaveProperty('sub', user.id);
+      expect(jwtPayload).toHaveProperty('username', user.username);
+    });
+
     it('never exposes passwordHash in the response', async () => {
       const user = userFactory();
       vi.mocked(usersService.create).mockResolvedValue(user as any);
 
-      const result = await service.register(makeRegisterDto() as any);
+      const result = await service.register(makeRegisterDto());
 
       expect(JSON.stringify(result)).not.toContain('passwordHash');
       expect(JSON.stringify(result)).not.toContain('$2b$');
@@ -168,7 +190,7 @@ describe('AuthService', () => {
       const user = userFactory();
       vi.mocked(usersService.create).mockResolvedValue(user as any);
 
-      await service.register(makeRegisterDto() as any);
+      await service.register(makeRegisterDto());
 
       // Fire-and-forget: email is queued but may not be awaited yet
       await vi.waitFor(() => {
@@ -195,7 +217,7 @@ describe('AuthService', () => {
       const user = userFactory({ suspended: true, emailVerified: true });
       vi.mocked(usersService.create).mockResolvedValue(user as any);
 
-      const result = await service.register(makeRegisterDto() as any);
+      const result = await service.register(makeRegisterDto());
       expect(result.user.status).toBe('SUSPENDED');
     });
 
@@ -206,7 +228,7 @@ describe('AuthService', () => {
       });
       vi.mocked(usersService.create).mockResolvedValue(user as any);
 
-      const result = await service.register(makeRegisterDto() as any);
+      const result = await service.register(makeRegisterDto());
       expect(result.user.status).toBe('CONNECTED');
     });
 
@@ -217,7 +239,7 @@ describe('AuthService', () => {
       });
       vi.mocked(usersService.create).mockResolvedValue(user as any);
 
-      const result = await service.register(makeRegisterDto() as any);
+      const result = await service.register(makeRegisterDto());
       expect(result.user.status).toBe('VERIFIED');
     });
   });
@@ -238,7 +260,7 @@ describe('AuthService', () => {
       const user = userFactory({ approved: false });
       vi.mocked(usersService.create).mockResolvedValue(user as any);
 
-      const result = await service.register(makeRegisterDto() as any);
+      const result = await service.register(makeRegisterDto());
 
       expect(result.pending).toBe(true);
       expect(result.user.status).toBe('PENDING');
@@ -270,9 +292,7 @@ describe('AuthService', () => {
       const user = userFactory();
       vi.mocked(usersService.create).mockResolvedValue(user as any);
 
-      await service.register(
-        makeRegisterDto({ inviteCode: 'POLY-AAAAAA' }) as any,
-      );
+      await service.register(makeRegisterDto({ inviteCode: 'POLY-AAAAAA' }));
 
       // Lua script handles deletion atomically; eval was called with the invite key
       expect(evalMock).toHaveBeenCalled();
@@ -288,9 +308,7 @@ describe('AuthService', () => {
       const user = userFactory();
       vi.mocked(usersService.create).mockResolvedValue(user as any);
 
-      await service.register(
-        makeRegisterDto({ inviteCode: 'POLY-AAAAAA' }) as any,
-      );
+      await service.register(makeRegisterDto({ inviteCode: 'POLY-AAAAAA' }));
 
       expect(evalMock).toHaveBeenCalled();
     });
@@ -302,7 +320,7 @@ describe('AuthService', () => {
       const user = userFactory({ approved: false });
       vi.mocked(usersService.create).mockResolvedValue(user as any);
 
-      const result = await service.register(makeRegisterDto() as any);
+      const result = await service.register(makeRegisterDto());
 
       expect(result.pending).toBe(true);
       expect(result.user.status).toBe('PENDING');
@@ -317,7 +335,7 @@ describe('AuthService', () => {
       vi.mocked(usersService.findByEmail).mockResolvedValue(user as any);
       vi.mocked(usersService.validatePassword).mockResolvedValue(true);
 
-      const result = await service.login(makeLoginDto() as any);
+      const result = await service.login(makeLoginDto());
 
       expect(result.token).toBe('signed-jwt-token');
       expect(result.user.id).toBe(user.id);
@@ -382,9 +400,7 @@ describe('AuthService', () => {
       vi.mocked(totpService.verify).mockResolvedValue(true);
 
       // Provide a totpCode so the TOTP_REQUIRED guard passes
-      const result = await service.login(
-        makeLoginDto({ totpCode: '123456' }) as any,
-      );
+      const result = await service.login(makeLoginDto({ totpCode: '123456' }));
       expect(result.requiresTotp).toBe(true);
     });
 
@@ -407,7 +423,7 @@ describe('AuthService', () => {
       vi.mocked(usersService.findByEmail).mockResolvedValue(user as any);
       vi.mocked(usersService.validatePassword).mockResolvedValue(true);
 
-      const result = await service.login(makeLoginDto() as any);
+      const result = await service.login(makeLoginDto());
       expect(JSON.stringify(result)).not.toContain('passwordHash');
     });
 
@@ -430,7 +446,7 @@ describe('AuthService', () => {
       vi.mocked(usersService.findByEmail).mockResolvedValue(user as any);
       vi.mocked(usersService.validatePassword).mockResolvedValue(true);
 
-      const result = await service.login(makeLoginDto() as any);
+      const result = await service.login(makeLoginDto());
       expect(result.user.status).toBeDefined();
       expect(result.user.polymarketConnected).toBe(false);
       expect(result.user.emailVerified).toBe(true);
@@ -443,7 +459,7 @@ describe('AuthService', () => {
 
       const xaddMock = redis.getClient().xadd;
 
-      await service.login(makeLoginDto({ ip: '192.168.1.1' }) as any);
+      await service.login(makeLoginDto({ ip: '192.168.1.1' }));
 
       // xadd is fire-and-forget, so wait for it to be called
       await vi.waitFor(() => {
@@ -482,7 +498,7 @@ describe('AuthService', () => {
 
       const xaddMock = redis.getClient().xadd;
 
-      await service.login(makeLoginDto() as any);
+      await service.login(makeLoginDto());
 
       await vi.waitFor(() => {
         expect(xaddMock).toHaveBeenCalledWith(
@@ -762,7 +778,7 @@ describe('AuthService', () => {
       vi.mocked(usersService.resetPassword).mockResolvedValue('user-1');
       const dto = { token: 'a'.repeat(64), newPassword: 'NewPassw0rd!' };
 
-      const result = await service.resetPassword(dto as any);
+      const result = await service.resetPassword(dto);
       expect(result.message).toContain('reset');
       expect(usersService.resetPassword).toHaveBeenCalledWith(
         dto.token,
@@ -834,7 +850,7 @@ describe('AuthService', () => {
         const user = userFactory(overrides);
         vi.mocked(usersService.create).mockResolvedValue(user as any);
 
-        const result = await service.register(makeRegisterDto() as any);
+        const result = await service.register(makeRegisterDto());
         expect(result.user.status).toBe(expected);
       });
     });
@@ -927,7 +943,7 @@ describe('AuthService', () => {
     });
 
     it('throws when user not found or already deleted', async () => {
-      vi.mocked(usersService.findById).mockResolvedValue(null as any);
+      vi.mocked(usersService.findById).mockResolvedValue(null);
 
       await expect(service.deleteAccount('nope', PASSWORD)).rejects.toThrow();
       expect(prisma.user.update).not.toHaveBeenCalled();

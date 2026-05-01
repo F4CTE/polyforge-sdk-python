@@ -105,11 +105,12 @@ describe("JwtAuthGuard", () => {
       const result = await guard.canActivate(ctx);
 
       expect(result).toBe(true);
+      // request.user MUST mirror the JWT payload shape (no email — GDPR).
       expect(request.user).toEqual({
         sub: "user-1",
-        email: "u@t.co",
         username: "test",
       });
+      expect(request.user).not.toHaveProperty("email");
       expect(request.apiKeyMeta).toEqual({
         keyId: "key-1",
         scopes: ["read"],
@@ -179,7 +180,7 @@ describe("JwtAuthGuard", () => {
       const { ctx, request } = makeContext({
         authorization: "Bearer jwt-token",
       });
-      request.user = { sub: "user-1", email: "u@t.co", username: "test" };
+      request.user = { sub: "user-1", username: "test" };
 
       // First call caches + checks pwchange — should reject
       await expect(guard.canActivate(ctx)).rejects.toThrow(

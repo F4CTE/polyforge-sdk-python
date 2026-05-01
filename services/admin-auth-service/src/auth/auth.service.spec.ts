@@ -146,8 +146,20 @@ describe("AdminAuthService", () => {
       const jwtPayload = jwtService.sign.mock.calls[0][0];
       expect(jwtPayload.sessionId).toBeTruthy();
       expect(jwtPayload.sub).toBe(admin.id);
-      expect(jwtPayload.email).toBe(admin.email);
       expect(jwtPayload.role).toBe(admin.role);
+    });
+
+    // Regression for POLA-1978 / PolyForge#1160 — JWT payloads MUST NOT carry
+    // PII because they get logged broadly by infra and third-party SDKs.
+    it("does NOT include email or other PII in the JWT payload (GDPR)", async () => {
+      const admin = await adminFactory();
+      adminDb.admin.findUnique.mockResolvedValue(admin);
+
+      await service.login({ email: admin.email, password: "Passw0rd!" });
+
+      const jwtPayload = jwtService.sign.mock.calls[0][0];
+      expect(jwtPayload).not.toHaveProperty("email");
+      expect(jwtPayload).not.toHaveProperty("displayName");
     });
 
     it("throws INVALID_CREDENTIALS (400) when admin does not exist", async () => {

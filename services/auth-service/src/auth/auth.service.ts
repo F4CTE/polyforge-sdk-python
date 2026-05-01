@@ -661,13 +661,13 @@ export class AuthService {
 
   private generateAccessToken(user: {
     id: string;
-    email: string;
     username: string;
     kalshiConnected?: boolean;
   }): string {
+    // Email intentionally omitted: JWTs are routinely logged by infra and
+    // third-party SDKs. Keep PII out of the signed payload (GDPR).
     const payload: JwtPayload = {
       sub: user.id,
-      email: user.email,
       username: user.username,
       kalshiConnected: user.kalshiConnected ?? false,
     };

@@ -40,7 +40,7 @@ describe("JwtStrategy", () => {
 
   it("validate() returns the payload as-is", () => {
     const strategy = new JwtStrategy();
-    const payload = { sub: "user-1", email: "u@t.co", username: "user" };
+    const payload = { sub: "user-1", username: "user" };
     expect(strategy.validate(payload)).toEqual(payload);
   });
 });

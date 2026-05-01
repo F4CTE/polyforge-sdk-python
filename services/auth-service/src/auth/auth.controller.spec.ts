@@ -48,7 +48,7 @@ describe('AuthController', () => {
       };
       const reply = makeReply();
 
-      const result = await controller.register(dto as any, reply);
+      const result = await controller.register(dto, reply);
       expect(result).toBe(serviceResult.user);
       expect(reply.setCookie).toHaveBeenCalledWith(
         'pf_token',
@@ -72,7 +72,7 @@ describe('AuthController', () => {
       const request = makeRequest();
       const reply = makeReply();
 
-      const result = await controller.login(dto as any, request, reply);
+      const result = await controller.login(dto, request, reply);
       expect(result).toBe(serviceResult.user);
       expect(reply.setCookie).toHaveBeenCalledWith(
         'pf_token',
@@ -94,11 +94,10 @@ describe('AuthController', () => {
       vi.mocked(authService.me).mockResolvedValue(expected as any);
       const jwtPayload = {
         sub: user.id,
-        email: user.email,
         username: user.username,
       };
 
-      const result = await controller.me(jwtPayload as any);
+      const result = await controller.me(jwtPayload);
       expect(result).toBe(expected);
       expect(authService.me).toHaveBeenCalledWith(user.id);
     });
@@ -153,7 +152,7 @@ describe('AuthController', () => {
       vi.mocked(authService.verifyEmail).mockResolvedValue(expected);
       const dto = { token: 'a'.repeat(64) };
 
-      const result = await controller.verifyEmail(dto as any);
+      const result = await controller.verifyEmail(dto);
       expect(result).toBe(expected);
       expect(authService.verifyEmail).toHaveBeenCalledWith(dto);
     });
@@ -167,7 +166,7 @@ describe('AuthController', () => {
       vi.mocked(authService.forgotPassword).mockResolvedValue(expected);
       const dto = { email: 'a@b.com' };
 
-      const result = await controller.forgotPassword(dto as any);
+      const result = await controller.forgotPassword(dto);
       expect(result).toBe(expected);
     });
   });
@@ -178,7 +177,7 @@ describe('AuthController', () => {
       vi.mocked(authService.resetPassword).mockResolvedValue(expected);
       const dto = { token: 'a'.repeat(64), newPassword: 'NewPassw0rd!' };
 
-      const result = await controller.resetPassword(dto as any);
+      const result = await controller.resetPassword(dto);
       expect(result).toBe(expected);
       expect(authService.resetPassword).toHaveBeenCalledWith(dto);
     });
