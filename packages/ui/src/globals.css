@@ -36,10 +36,13 @@
   --border-default: #2C2F3A;
   --border-strong: #3D4152;
 
-  /* Text */
+  /* Text — WCAG 2.1 AA (4.5:1 minimum on --bg-app #0E0F11) */
   --text-primary: #F0F1F5;
   --text-secondary: #8B8FA8;
-  --text-tertiary: #545770;
+  /* Tertiary bumped from #545770 (3.2:1 — failing AA) to #7E8298 (~5.0:1).
+     Sits between AA threshold and secondary so visual hierarchy is preserved.
+     Used for timestamps, helper text, axis labels. */
+  --text-tertiary: #7E8298;
   --text-disabled: #3A3D50;
   --text-inverse: #0E0F11;
 
@@ -638,7 +641,8 @@ body {
 
   --text-primary: #111216;
   --text-secondary: #5A5E72;
-  --text-tertiary: #9094AA;
+  /* Tertiary bumped from #9094AA (2.9:1 — failing AA on light bg) to #65687D (~5.2:1). */
+  --text-tertiary: #65687D;
   --text-disabled: #BBBDCC;
   --text-inverse: #FFFFFF;
 

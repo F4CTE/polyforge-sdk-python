@@ -1,10 +1,21 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback } from "react";
 import {
-  AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceDot,
-} from 'recharts';
-import { TrendingUp, Loader2, AlertTriangle } from 'lucide-react';
-import { resolveChartTheme } from '@polyforge/ui/lib/chart-colors';
-import { chartTooltipContentStyle, chartTooltipLabelStyle, chartAxisTick } from '@polyforge/ui/lib/chart-styles';
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+  ReferenceDot,
+} from "recharts";
+import { TrendingUp, Loader2, AlertTriangle } from "lucide-react";
+import { resolveChartTheme } from "@polyforge/ui/lib/chart-colors";
+import {
+  chartTooltipContentStyle,
+  chartTooltipLabelStyle,
+  chartAxisTick,
+} from "@polyforge/ui/lib/chart-styles";
+import { LoadingAnnouncer } from "@polyforge/ui";
 
 /* ─── Types ──────────────────────────────────────────────────────────── */
 
@@ -37,27 +48,29 @@ interface StrategyChartProps {
 
 function formatTickLabel(ts: number): string {
   const d = new Date(ts);
-  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
 
 function formatTooltipDate(ts: number): string {
-  return new Date(ts).toLocaleString('en-US', {
-    month: 'short', day: 'numeric',
-    hour: '2-digit', minute: '2-digit',
+  return new Date(ts).toLocaleString("en-US", {
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
   });
 }
 
 function getTheme() {
   const t = resolveChartTheme();
   return {
-    cyan:       t.cyan500,
+    cyan: t.cyan500,
     bgElevated: t.bgElevated,
-    border:     t.borderColor,
-    textMuted:  t.textMuted,
-    textSec:    t.textSecondary,
-    success:    t.success,
-    danger:     t.danger,
-    base:       t.base,
+    border: t.borderColor,
+    textMuted: t.textMuted,
+    textSec: t.textSecondary,
+    success: t.success,
+    danger: t.danger,
+    base: t.base,
   };
 }
 
@@ -73,7 +86,14 @@ const REPLAY_DURATION_MS = 2000;
 /** Live poll interval in ms */
 const LIVE_POLL_MS = 30_000;
 
-export function StrategyChart({ tokenId, label, trades, dateFrom, dateTo, live = false }: StrategyChartPropsExtended) {
+export function StrategyChart({
+  tokenId,
+  label,
+  trades,
+  dateFrom,
+  dateTo,
+  live = false,
+}: StrategyChartPropsExtended) {
   const [allCandles, setAllCandles] = useState<PriceCandle[]>([]);
   const [displayedCount, setDisplayedCount] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -82,37 +102,53 @@ export function StrategyChart({ tokenId, label, trades, dateFrom, dateTo, live =
   const rafRef = useRef<number | null>(null);
   const animStartRef = useRef<number | null>(null);
 
-  const fetchCandles = useCallback((append = false) => {
-    if (!tokenId) return;
-    if (!append) { setLoading(true); setError(null); }
+  const fetchCandles = useCallback(
+    (append = false) => {
+      if (!tokenId) return;
+      if (!append) {
+        setLoading(true);
+        setError(null);
+      }
 
-    const params = new URLSearchParams({ resolution: '1h', limit: '200' });
-    if (dateFrom) params.set('from', new Date(dateFrom).toISOString());
-    if (dateTo)   params.set('to',   new Date(dateTo).toISOString());
+      const params = new URLSearchParams({ resolution: "1h", limit: "200" });
+      if (dateFrom) params.set("from", new Date(dateFrom).toISOString());
+      if (dateTo) params.set("to", new Date(dateTo).toISOString());
 
-    fetch(`/api/v1/markets/${tokenId}/price-history?${params}`, { credentials: 'include' })
-      .then(r => r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`)))
-      .then((body: { data?: { time: string; close: string }[] }) => {
-        const data = body?.data ?? [];
-        const parsed = data.map(c => ({
-          ts: new Date(c.time).getTime(),
-          label: formatTickLabel(new Date(c.time).getTime()),
-          close: parseFloat(c.close),
-        }));
-        setAllCandles(prev => {
-          if (!append) return parsed;
-          // Merge: keep existing, append only genuinely new candles
-          const lastTs = prev.at(-1)?.ts ?? 0;
-          const fresh = parsed.filter(c => c.ts > lastTs);
-          return fresh.length ? [...prev, ...fresh] : prev;
-        });
+      fetch(`/api/v1/markets/${tokenId}/price-history?${params}`, {
+        credentials: "include",
       })
-      .catch(() => { if (!append) setError('Failed to load price data'); })
-      .finally(() => { if (!append) setLoading(false); });
-  }, [tokenId, dateFrom, dateTo]);
+        .then((r) =>
+          r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`)),
+        )
+        .then((body: { data?: { time: string; close: string }[] }) => {
+          const data = body?.data ?? [];
+          const parsed = data.map((c) => ({
+            ts: new Date(c.time).getTime(),
+            label: formatTickLabel(new Date(c.time).getTime()),
+            close: parseFloat(c.close),
+          }));
+          setAllCandles((prev) => {
+            if (!append) return parsed;
+            // Merge: keep existing, append only genuinely new candles
+            const lastTs = prev.at(-1)?.ts ?? 0;
+            const fresh = parsed.filter((c) => c.ts > lastTs);
+            return fresh.length ? [...prev, ...fresh] : prev;
+          });
+        })
+        .catch(() => {
+          if (!append) setError("Failed to load price data");
+        })
+        .finally(() => {
+          if (!append) setLoading(false);
+        });
+    },
+    [tokenId, dateFrom, dateTo],
+  );
 
   // Initial fetch
-  useEffect(() => { fetchCandles(false); }, [fetchCandles]);
+  useEffect(() => {
+    fetchCandles(false);
+  }, [fetchCandles]);
 
   // Live polling
   useEffect(() => {
@@ -148,7 +184,9 @@ export function StrategyChart({ tokenId, label, trades, dateFrom, dateTo, live =
     };
 
     rafRef.current = requestAnimationFrame(step);
-    return () => { if (rafRef.current) cancelAnimationFrame(rafRef.current); };
+    return () => {
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    };
   }, [allCandles, live]);
 
   const candles = live ? allCandles : allCandles.slice(0, displayedCount);
@@ -156,18 +194,46 @@ export function StrategyChart({ tokenId, label, trades, dateFrom, dateTo, live =
   const fullDomainMin = allCandles[0]?.ts ?? 0;
   const fullDomainMax = allCandles.at(-1)?.ts ?? 0;
 
-  const { cyan, bgElevated, border, textMuted, success, danger, base } = theme.current;
+  const { cyan, bgElevated, border, textMuted, success, danger, base } =
+    theme.current;
 
   // Trade markers — only show those the playhead has reached
-  const visibleBuyDots  = trades.filter(t => t.side === 'BUY'  && new Date(t.time).getTime() <= playheadTs);
-  const visibleSellDots = trades.filter(t => t.side === 'SELL' && new Date(t.time).getTime() <= playheadTs);
-  const buyDots  = trades.filter(t => t.side === 'BUY');
-  const sellDots = trades.filter(t => t.side === 'SELL');
+  const visibleBuyDots = trades.filter(
+    (t) => t.side === "BUY" && new Date(t.time).getTime() <= playheadTs,
+  );
+  const visibleSellDots = trades.filter(
+    (t) => t.side === "SELL" && new Date(t.time).getTime() <= playheadTs,
+  );
+  const buyDots = trades.filter((t) => t.side === "BUY");
+  const sellDots = trades.filter((t) => t.side === "SELL");
 
   const gradId = `cg-${tokenId.slice(0, 8)}`;
 
+  // Build an accessible summary for screen readers (WCAG 1.1.1).
+  const latestPrice = (candles.at(-1) ?? allCandles.at(-1))?.close;
+  const firstPrice = allCandles[0]?.close;
+  const change =
+    latestPrice !== undefined && firstPrice !== undefined && firstPrice !== 0
+      ? ((latestPrice - firstPrice) / firstPrice) * 100
+      : undefined;
+  const changeLabel =
+    change === undefined
+      ? ""
+      : `, change ${change >= 0 ? "up" : "down"} ${Math.abs(change).toFixed(2)} percent`;
+  const ariaLabel =
+    !loading && !error && allCandles.length > 0 && latestPrice !== undefined
+      ? `${label} price chart. Latest price ${latestPrice.toFixed(3)}${changeLabel}. ${trades.length} trade markers.`
+      : `${label} price chart`;
+
   return (
-    <div className="rounded-sm bg-elevated border border-default overflow-hidden">
+    <div
+      className="rounded-sm bg-elevated border border-default overflow-hidden"
+      role="region"
+      aria-label={ariaLabel}
+    >
+      {/* WCAG 4.1.3 — announce loading transitions to assistive tech */}
+      <LoadingAnnouncer loading={loading} label={`${label} chart`} />
+
       {/* Header */}
       <div className="flex items-center justify-between px-3 py-2 border-b border-default">
         <span className="text-caption font-medium text-secondary uppercase tracking-wider truncate max-w-[70%]">
@@ -176,13 +242,21 @@ export function StrategyChart({ tokenId, label, trades, dateFrom, dateTo, live =
         {!loading && !error && allCandles.length > 0 && (
           <span className="text-caption font-mono text-tertiary">
             {(candles.at(-1) ?? allCandles.at(-1))?.close.toFixed(3)}
-            {live && <span className="ml-1 text-accent-text animate-pulse">●</span>}
+            {live && (
+              <span
+                className="ml-1 text-accent-text animate-pulse"
+                aria-hidden="true"
+              >
+                ●
+              </span>
+            )}
+            {live && <span className="sr-only"> (live)</span>}
           </span>
         )}
       </div>
 
       {/* Body */}
-      <div className="h-[140px] w-full">
+      <div className="h-[140px] w-full" role="img" aria-label={ariaLabel}>
         {loading && (
           <div className="h-full flex items-center justify-center">
             <Loader2 className="size-4 animate-spin text-accent-text opacity-60" />
@@ -202,11 +276,14 @@ export function StrategyChart({ tokenId, label, trades, dateFrom, dateTo, live =
         )}
         {!loading && !error && allCandles.length > 0 && (
           <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={candles} margin={{ top: 6, right: 8, bottom: 0, left: 0 }}>
+            <AreaChart
+              data={candles}
+              margin={{ top: 6, right: 8, bottom: 0, left: 0 }}
+            >
               <defs>
                 <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%"   stopColor={cyan} stopOpacity={0.18} />
-                  <stop offset="100%" stopColor={cyan} stopOpacity={0}    />
+                  <stop offset="0%" stopColor={cyan} stopOpacity={0.18} />
+                  <stop offset="100%" stopColor={cyan} stopOpacity={0} />
                 </linearGradient>
               </defs>
 
@@ -235,7 +312,7 @@ export function StrategyChart({ tokenId, label, trades, dateFrom, dateTo, live =
                 labelFormatter={(ts: number) => formatTooltipDate(ts)}
                 labelStyle={chartTooltipLabelStyle}
                 itemStyle={{ color: cyan }}
-                formatter={(v: number) => [v.toFixed(3), 'Price']}
+                formatter={(v: number) => [v.toFixed(3), "Price"]}
               />
               <Area
                 type="monotone"
@@ -285,17 +362,52 @@ export function StrategyChart({ tokenId, label, trades, dateFrom, dateTo, live =
         <div className="flex items-center gap-3 px-3 py-1 border-t border-default">
           {buyDots.length > 0 && (
             <span className="flex items-center gap-1 text-caption text-tertiary">
-              <span className="size-2 rounded-full bg-gain inline-block" />
+              <span
+                className="size-2 rounded-full bg-gain inline-block"
+                aria-hidden="true"
+              />
               {visibleBuyDots.length}/{buyDots.length} BUY
             </span>
           )}
           {sellDots.length > 0 && (
             <span className="flex items-center gap-1 text-caption text-tertiary">
-              <span className="size-2 rounded-full bg-loss inline-block" />
+              <span
+                className="size-2 rounded-full bg-loss inline-block"
+                aria-hidden="true"
+              />
               {visibleSellDots.length}/{sellDots.length} SELL
             </span>
           )}
         </div>
+      )}
+
+      {/* WCAG 1.1.1 — non-visual data table fallback for the price series. */}
+      {!loading && !error && allCandles.length > 0 && (
+        <table className="sr-only">
+          <caption>{label} price history with trade markers</caption>
+          <thead>
+            <tr>
+              <th scope="col">Time</th>
+              <th scope="col">Price</th>
+            </tr>
+          </thead>
+          <tbody>
+            {allCandles.map((c) => (
+              <tr key={c.ts}>
+                <td>{formatTooltipDate(c.ts)}</td>
+                <td>{c.close.toFixed(3)}</td>
+              </tr>
+            ))}
+            {trades.map((t, i) => (
+              <tr key={`trade-${i}`}>
+                <td>{formatTooltipDate(new Date(t.time).getTime())}</td>
+                <td>
+                  {t.side} at {parseFloat(t.price).toFixed(3)}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       )}
     </div>
   );

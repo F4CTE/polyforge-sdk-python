@@ -56,6 +56,11 @@ export type { DialogProps } from './components/ui/dialog';
 
 export { Skeleton } from './components/ui/skeleton';
 
+export { LoadingAnnouncer } from './components/ui/loading-announcer';
+export type { LoadingAnnouncerProps } from './components/ui/loading-announcer';
+
+export { useFocusTrap } from './lib/use-focus-trap';
+
 export {
   CardSkeleton,
   SkeletonLine,

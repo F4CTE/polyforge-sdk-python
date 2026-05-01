@@ -4,6 +4,7 @@ import * as React from "react";
 import { X } from "lucide-react";
 import { cn } from "../../lib/utils";
 import { useDelayedUnmount } from "../../lib/use-delayed-unmount";
+import { useFocusTrap } from "../../lib/use-focus-trap";
 
 const DialogStateContext = React.createContext<"open" | "closed">("open");
 
@@ -15,6 +16,7 @@ export interface DialogProps {
 
 function Dialog({ open, onOpenChange, children }: DialogProps) {
   const { mounted, visible } = useDelayedUnmount(open, 120);
+  const containerRef = React.useRef<HTMLDivElement>(null);
 
   React.useEffect(() => {
     if (!open) return;
@@ -29,6 +31,10 @@ function Dialog({ open, onOpenChange, children }: DialogProps) {
     };
   }, [open, onOpenChange]);
 
+  // WCAG 2.4.3 / 2.1.2 — trap focus inside the dialog while it's visible
+  // and restore focus to the trigger element on close.
+  useFocusTrap(mounted && visible, containerRef);
+
   if (!mounted) return null;
 
   const state = visible ? "open" : "closed";
@@ -36,6 +42,7 @@ function Dialog({ open, onOpenChange, children }: DialogProps) {
   return (
     <DialogStateContext.Provider value={state}>
       <div
+        ref={containerRef}
         role="presentation"
         className="fixed inset-0 z-50 flex items-center justify-center"
       >
@@ -65,7 +72,7 @@ const DialogContent = React.forwardRef<
       className={cn(
         "relative z-10 w-full max-w-lg bg-overlay border border-strong rounded-lg [box-shadow:var(--shadow-elevation-3)]",
         "animate-dialog-content",
-        className
+        className,
       )}
       {...props}
     >
@@ -79,12 +86,17 @@ interface DialogHeaderProps extends React.HTMLAttributes<HTMLDivElement> {
   onClose?: () => void;
 }
 
-function DialogHeader({ className, children, onClose, ...props }: DialogHeaderProps) {
+function DialogHeader({
+  className,
+  children,
+  onClose,
+  ...props
+}: DialogHeaderProps) {
   return (
     <div
       className={cn(
         "flex items-center justify-between px-6 py-4 border-b border-default",
-        className
+        className,
       )}
       {...props}
     >
@@ -143,7 +155,7 @@ const DialogFooter = React.forwardRef<
     ref={ref}
     className={cn(
       "flex items-center justify-end gap-2 px-6 py-4 border-t border-default",
-      className
+      className,
     )}
     {...props}
   />
