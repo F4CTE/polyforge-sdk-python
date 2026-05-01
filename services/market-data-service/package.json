@@ -27,7 +27,7 @@
     "@polyforge/shared-db": "workspace:*",
     "@polyforge/shared-redis": "workspace:*",
     "@polyforge/shared-types": "workspace:*",
-    "@sentry/nestjs": "^10.50.0",
+    "@sentry/nestjs": "^10.51.0",
     "fastify": "^5.8.2",
     "nestjs-pino": "^4.6.1",
     "pino": "^10.3.1",
