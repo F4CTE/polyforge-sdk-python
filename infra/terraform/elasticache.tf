@@ -80,6 +80,7 @@ resource "aws_elasticache_replication_group" "main" {
 
   # Encryption
   transit_encryption_enabled = true
+  at_rest_encryption_enabled = true
   auth_token                 = var.redis_auth_token
 
   # Snapshots — daily at 4 AM UTC (after RDS backup window)

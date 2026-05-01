@@ -39,6 +39,18 @@ resource "aws_sns_topic_policy" "alerts" {
         Action    = "sns:Publish"
         Resource  = aws_sns_topic.alerts.arn
       },
+      {
+        Sid       = "AllowEventBridgePublish"
+        Effect    = "Allow"
+        Principal = { Service = "events.amazonaws.com" }
+        Action    = "SNS:Publish"
+        Resource  = aws_sns_topic.alerts.arn
+        Condition = {
+          ArnEquals = {
+            "aws:SourceArn" = aws_cloudwatch_event_rule.rds_backup_failed.arn
+          }
+        }
+      },
     ]
   })
 }
@@ -197,26 +209,29 @@ resource "aws_cloudwatch_metric_alarm" "rds_storage_low" {
 }
 
 # ── RDS: backup failed ────────────────────────────────────────────────────────
-# RDS emits a metric when backups fail — any non-zero count triggers the alarm.
+# PostgreSQL RDS backup failures are emitted as RDS events, not SQL Server job
+# metrics. RDS-EVENT-0009 is "Automated backup failed".
 
-resource "aws_cloudwatch_metric_alarm" "rds_backup_failed" {
-  alarm_name          = "${local.name}-rds-backup-failed"
-  alarm_description   = "RDS automated backup failed"
-  namespace           = "AWS/RDS"
-  metric_name         = "FailedSQLServerAgentJobsCount"  # Non-zero if backup job fails
-  statistic           = "Sum"
-  period              = 86400  # Daily
-  evaluation_periods  = 1
-  threshold           = 0
-  comparison_operator = "GreaterThanThreshold"
-  treat_missing_data  = "notBreaching"
+resource "aws_cloudwatch_event_rule" "rds_backup_failed" {
+  name        = "${local.name}-rds-backup-failed"
+  description = "RDS automated backup failed"
 
-  dimensions = {
-    DBInstanceIdentifier = aws_db_instance.main.identifier
-  }
+  event_pattern = jsonencode({
+    source        = ["aws.rds"]
+    "detail-type" = ["RDS DB Instance Event"]
+    detail = {
+      EventID          = ["RDS-EVENT-0009"]
+      SourceIdentifier = [aws_db_instance.main.identifier]
+    }
+  })
 
-  alarm_actions = [aws_sns_topic.alerts.arn]
-  tags          = { Name = "${local.name}-rds-backup-failed" }
+  tags = { Name = "${local.name}-rds-backup-failed" }
+}
+
+resource "aws_cloudwatch_event_target" "rds_backup_failed_alert" {
+  rule      = aws_cloudwatch_event_rule.rds_backup_failed.name
+  target_id = "sns-alerts"
+  arn       = aws_sns_topic.alerts.arn
 }
 
 # ── Redis (Multi-AZ Replication Group) ───────────────────────────────────────
