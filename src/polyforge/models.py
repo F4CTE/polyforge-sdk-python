@@ -571,6 +571,145 @@ class ArbitrageAlertSubscription:
 
 
 # ---------------------------------------------------------------------------
+# Cross-Venue Arb Execution / Positions / Risk
+# ---------------------------------------------------------------------------
+#
+# These models describe the trading-impact-bearing arbitrage execution
+# surface (`POST /api/v1/arbitrage/execute`, the position lifecycle, and
+# the risk dashboards). Decimal columns from the Prisma backend serialize
+# as strings; we keep them as ``str`` so callers convert with full
+# precision instead of relying on float coercion.
+
+# Status values mirror the server-side ``ArbPositionStatus`` enum.
+ArbPositionStatus = str  # Literal: "PENDING" | "PARTIAL" | "OPEN" | "CLOSING" | "CLOSED" | "FAILED"
+
+# Venue identifiers mirror the server-side ``Venue`` enum.
+Venue = str  # Literal: "POLYMARKET" | "KALSHI"
+
+
+@dataclass
+class ArbExecutionLeg:
+    """A single leg of an arbitrage execution result."""
+
+    venue: str = ""
+    intent_id: str = ""
+    token_id: str = ""
+    price: float = 0.0
+
+
+@dataclass
+class ArbExecutionResult:
+    """Server response for ``POST /api/v1/arbitrage/execute``."""
+
+    arb_position_id: str = ""
+    buy_leg: ArbExecutionLeg | None = None
+    sell_leg: ArbExecutionLeg | None = None
+    entry_spread_pct: float = 0.0
+    status: str = ""
+
+
+@dataclass
+class ArbPosition:
+    """A cross-venue arbitrage position.
+
+    Mirrors the Prisma ``ArbPosition`` row. Decimal columns
+    (``buy_price``, ``buy_size``, P&L fields, etc.) arrive as strings
+    when the backend serializes Decimals through JSON.
+    """
+
+    id: str = ""
+    user_id: str = ""
+    match_id: str = ""
+    status: str = ""
+
+    buy_venue: str = ""
+    buy_order_id: str | None = None
+    buy_token_id: str = ""
+    buy_price: str = "0"
+    buy_size: str = "0"
+    buy_fill_price: str | None = None
+    buy_fill_size: str | None = None
+
+    sell_venue: str = ""
+    sell_order_id: str | None = None
+    sell_token_id: str = ""
+    sell_price: str = "0"
+    sell_size: str = "0"
+    sell_fill_price: str | None = None
+    sell_fill_size: str | None = None
+
+    entry_spread_pct: str = "0"
+    current_spread_pct: str | None = None
+    realized_pnl: str | None = None
+    unrealized_pnl: str | None = None
+
+    opened_at: str | None = None
+    closed_at: str | None = None
+    created_at: str = ""
+    updated_at: str = ""
+
+
+@dataclass
+class ArbPositionsResponse:
+    """Paginated response for ``GET /api/v1/arbitrage/positions``."""
+
+    positions: list[ArbPosition] = field(default_factory=list)
+    total: int = 0
+
+
+@dataclass
+class ArbCloseResponse:
+    """Server response for ``POST /api/v1/arbitrage/positions/:id/close``."""
+
+    status: str = ""
+    position_id: str = ""
+
+
+@dataclass
+class ArbNetExposure:
+    """Net deployed capital broken out by venue."""
+
+    polymarket: float = 0.0
+    kalshi: float = 0.0
+
+
+@dataclass
+class ArbRiskDashboard:
+    """Server response for ``GET /api/v1/arbitrage/risk/dashboard``."""
+
+    open_positions: int = 0
+    pending_positions: int = 0
+    total_deployed: float = 0.0
+    net_exposure: ArbNetExposure = field(default_factory=ArbNetExposure)
+    total_realized_pnl: float = 0.0
+    total_unrealized_pnl: float = 0.0
+    avg_spread_pct: float = 0.0
+    positions_by_status: Dict[str, int] = field(default_factory=dict)
+
+
+@dataclass
+class ArbSettlementRisk:
+    """An entry from ``GET /api/v1/arbitrage/risk/settlement``."""
+
+    match_id: str = ""
+    polymarket_title: str = ""
+    kalshi_title: str = ""
+    polymarket_end_date: str | None = None
+    kalshi_end_date: str | None = None
+    end_date_diff_days: float | None = None
+    confidence: float = 0.0
+    risk_level: str = "LOW"  # "LOW" | "MEDIUM" | "HIGH"
+    reason: str = ""
+
+
+@dataclass
+class ArbPnlRefreshResult:
+    """Server response for ``POST /api/v1/arbitrage/risk/refresh-pnl``."""
+
+    updated: int = 0
+
+
+# ---------------------------------------------------------------------------
 # Smart Orders
 # ---------------------------------------------------------------------------
 

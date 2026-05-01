@@ -6140,3 +6140,484 @@ class TestSportsEndpointRoundtrips:
             assert res is None
         finally:
             client.close()
+
+
+# ---------------------------------------------------------------------------
+# Cross-Venue Arb Execution / Positions / Risk (POLA-1851)
+# ---------------------------------------------------------------------------
+
+
+def _arb_position_payload(**overrides):
+    """Server-shaped ArbPosition row (Decimals serialize as strings)."""
+    base = {
+        "id": "pos-1",
+        "userId": "u1",
+        "matchId": "m1",
+        "status": "OPEN",
+        "buyVenue": "POLYMARKET",
+        "buyOrderId": "po-buy",
+        "buyTokenId": "tok-buy",
+        "buyPrice": "0.42",
+        "buySize": "100.0",
+        "buyFillPrice": "0.42",
+        "buyFillSize": "100.0",
+        "sellVenue": "KALSHI",
+        "sellOrderId": "po-sell",
+        "sellTokenId": "tok-sell",
+        "sellPrice": "0.50",
+        "sellSize": "100.0",
+        "sellFillPrice": "0.50",
+        "sellFillSize": "100.0",
+        "entrySpreadPct": "8.0000",
+        "currentSpreadPct": "7.5",
+        "realizedPnl": None,
+        "unrealizedPnl": "1.50",
+        "openedAt": "2026-05-01T00:00:00Z",
+        "closedAt": None,
+        "createdAt": "2026-04-30T23:55:00Z",
+        "updatedAt": "2026-05-01T00:00:01Z",
+    }
+    base.update(overrides)
+    return base
+
+
+class TestArbValidationHelpers:
+    """Client-side guards for trading-impact arb endpoints (POLA-1851)."""
+
+    def test_size_below_one_rejected(self):
+        from polyforge.client import _validate_arb_size
+        with pytest.raises(ValueError, match="between 1 and 10000"):
+            _validate_arb_size(0.5)
+
+    def test_size_above_ten_thousand_rejected(self):
+        from polyforge.client import _validate_arb_size
+        with pytest.raises(ValueError, match="between 1 and 10000"):
+            _validate_arb_size(10001)
+
+    def test_size_nan_rejected(self):
+        from polyforge.client import _validate_arb_size
+        with pytest.raises(ValueError, match="finite"):
+            _validate_arb_size(float("nan"))
+
+    def test_size_inf_rejected(self):
+        from polyforge.client import _validate_arb_size
+        with pytest.raises(ValueError, match="finite"):
+            _validate_arb_size(float("inf"))
+
+    def test_size_non_number_rejected(self):
+        from polyforge.client import _validate_arb_size
+        with pytest.raises(TypeError):
+            _validate_arb_size("100")  # type: ignore[arg-type]
+
+    def test_size_bool_rejected(self):
+        from polyforge.client import _validate_arb_size
+        with pytest.raises(TypeError):
+            _validate_arb_size(True)  # type: ignore[arg-type]
+
+    def test_slippage_below_zero_rejected(self):
+        from polyforge.client import _validate_arb_slippage
+        with pytest.raises(ValueError, match="between 0 and 5"):
+            _validate_arb_slippage(-0.1)
+
+    def test_slippage_above_five_rejected(self):
+        from polyforge.client import _validate_arb_slippage
+        with pytest.raises(ValueError, match="between 0 and 5"):
+            _validate_arb_slippage(5.01)
+
+    def test_slippage_nan_rejected(self):
+        from polyforge.client import _validate_arb_slippage
+        with pytest.raises(ValueError, match="finite"):
+            _validate_arb_slippage(float("nan"))
+
+
+class TestArbExecutionSync:
+    """Happy-path coverage for the 7 PolyforgeClient arb methods (POLA-1851)."""
+
+    def test_execute_arb_sends_only_provided_fields(self):
+        from unittest.mock import MagicMock
+        from polyforge.models import ArbExecutionLeg, ArbExecutionResult
+        client = PolyforgeClient(api_key="test-key")
+        client._post = MagicMock(return_value={
+            "arbPositionId": "pos-1",
+            "buyLeg": {"venue": "POLYMARKET", "intentId": "i1", "tokenId": "tok-b", "price": 0.42},
+            "sellLeg": {"venue": "KALSHI", "intentId": "i2", "tokenId": "tok-s", "price": 0.50},
+            "entrySpreadPct": 8.0,
+            "status": "PENDING",
+        })
+        result = client.execute_arb(match_id="m1", size=100.0)
+        assert isinstance(result, ArbExecutionResult)
+        assert result.arb_position_id == "pos-1"
+        assert isinstance(result.buy_leg, ArbExecutionLeg)
+        assert result.buy_leg.venue == "POLYMARKET"
+        assert result.sell_leg is not None and result.sell_leg.intent_id == "i2"
+        assert result.entry_spread_pct == 8.0
+        assert result.status == "PENDING"
+        # max_slippage_pct omitted -> body must not include it
+        client._post.assert_called_once_with(
+            "/api/v1/arbitrage/execute",
+            json={"matchId": "m1", "size": 100.0},
+        )
+        client.close()
+
+    def test_execute_arb_includes_max_slippage(self):
+        from unittest.mock import MagicMock
+        client = PolyforgeClient(api_key="test-key")
+        client._post = MagicMock(return_value={
+            "arbPositionId": "pos-2", "buyLeg": None, "sellLeg": None,
+            "entrySpreadPct": 0.0, "status": "PENDING",
+        })
+        client.execute_arb(match_id="m1", size=100.0, max_slippage_pct=1.5)
+        client._post.assert_called_once_with(
+            "/api/v1/arbitrage/execute",
+            json={"matchId": "m1", "size": 100.0, "maxSlippagePct": 1.5},
+        )
+        client.close()
+
+    def test_execute_arb_validates_size_before_post(self):
+        from unittest.mock import MagicMock
+        client = PolyforgeClient(api_key="test-key")
+        client._post = MagicMock()
+        with pytest.raises(ValueError, match="between 1 and 10000"):
+            client.execute_arb(match_id="m1", size=10001)
+        client._post.assert_not_called()
+        client.close()
+
+    def test_execute_arb_validates_slippage_before_post(self):
+        from unittest.mock import MagicMock
+        client = PolyforgeClient(api_key="test-key")
+        client._post = MagicMock()
+        with pytest.raises(ValueError, match="between 0 and 5"):
+            client.execute_arb(match_id="m1", size=100, max_slippage_pct=10)
+        client._post.assert_not_called()
+        client.close()
+
+    def test_list_arb_positions_default_pagination(self):
+        from unittest.mock import MagicMock
+        from polyforge.models import ArbPosition
+        client = PolyforgeClient(api_key="test-key")
+        client._get = MagicMock(return_value={
+            "positions": [_arb_position_payload()],
+            "total": 1,
+        })
+        result = client.list_arb_positions()
+        assert result.total == 1
+        assert len(result.positions) == 1
+        assert isinstance(result.positions[0], ArbPosition)
+        assert result.positions[0].id == "pos-1"
+        assert result.positions[0].buy_venue == "POLYMARKET"
+        client._get.assert_called_once_with(
+            "/api/v1/arbitrage/positions",
+            params={"limit": 50, "offset": 0},
+        )
+        client.close()
+
+    def test_list_arb_positions_with_status_filter(self):
+        from unittest.mock import MagicMock
+        client = PolyforgeClient(api_key="test-key")
+        client._get = MagicMock(return_value={"positions": [], "total": 0})
+        result = client.list_arb_positions(status="OPEN", limit=25, offset=10)
+        assert result.total == 0
+        assert result.positions == []
+        client._get.assert_called_once_with(
+            "/api/v1/arbitrage/positions",
+            params={"limit": 25, "offset": 10, "status": "OPEN"},
+        )
+        client.close()
+
+    def test_get_arb_position_url_encodes_id(self):
+        from unittest.mock import MagicMock
+        client = PolyforgeClient(api_key="test-key")
+        client._get = MagicMock(return_value=_arb_position_payload(id="pos with space"))
+        result = client.get_arb_position("pos with space")
+        assert result.id == "pos with space"
+        # Path-segment encoding must escape spaces, not pass them raw.
+        client._get.assert_called_once_with("/api/v1/arbitrage/positions/pos%20with%20space")
+        client.close()
+
+    def test_close_arb_position_returns_typed_response(self):
+        from unittest.mock import MagicMock
+        from polyforge.models import ArbCloseResponse
+        client = PolyforgeClient(api_key="test-key")
+        client._post = MagicMock(return_value={"status": "CLOSING", "positionId": "pos-1"})
+        result = client.close_arb_position("pos-1")
+        assert isinstance(result, ArbCloseResponse)
+        assert result.status == "CLOSING"
+        assert result.position_id == "pos-1"
+        client._post.assert_called_once_with("/api/v1/arbitrage/positions/pos-1/close")
+        client.close()
+
+    def test_get_arb_risk_dashboard_parses_nested_exposure(self):
+        from unittest.mock import MagicMock
+        from polyforge.models import ArbNetExposure
+        client = PolyforgeClient(api_key="test-key")
+        client._get = MagicMock(return_value={
+            "openPositions": 3,
+            "pendingPositions": 1,
+            "totalDeployed": 1234.56,
+            "netExposure": {"polymarket": 600.0, "kalshi": 634.56},
+            "totalRealizedPnl": 12.5,
+            "totalUnrealizedPnl": -3.25,
+            "avgSpreadPct": 6.5,
+            "positionsByStatus": {"OPEN": 3, "PENDING": 1, "CLOSED": 5},
+        })
+        result = client.get_arb_risk_dashboard()
+        assert result.open_positions == 3
+        assert result.pending_positions == 1
+        assert result.total_deployed == 1234.56
+        assert isinstance(result.net_exposure, ArbNetExposure)
+        assert result.net_exposure.polymarket == 600.0
+        assert result.net_exposure.kalshi == 634.56
+        assert result.positions_by_status == {"OPEN": 3, "PENDING": 1, "CLOSED": 5}
+        client._get.assert_called_once_with("/api/v1/arbitrage/risk/dashboard")
+        client.close()
+
+    def test_get_arb_settlement_risks_returns_list(self):
+        from unittest.mock import MagicMock
+        from polyforge.models import ArbSettlementRisk
+        client = PolyforgeClient(api_key="test-key")
+        client._get = MagicMock(return_value=[
+            {
+                "matchId": "m1",
+                "polymarketTitle": "BTC > 100k by EOY",
+                "kalshiTitle": "BTC over 100k 2026",
+                "polymarketEndDate": "2026-12-31T00:00:00Z",
+                "kalshiEndDate": "2027-01-15T00:00:00Z",
+                "endDateDiffDays": 15.0,
+                "confidence": 0.92,
+                "riskLevel": "MEDIUM",
+                "reason": "Resolution windows differ by 15 days.",
+            },
+        ])
+        result = client.get_arb_settlement_risks()
+        assert len(result) == 1
+        assert isinstance(result[0], ArbSettlementRisk)
+        assert result[0].risk_level == "MEDIUM"
+        assert result[0].end_date_diff_days == 15.0
+        client._get.assert_called_once_with("/api/v1/arbitrage/risk/settlement")
+        client.close()
+
+    def test_refresh_arb_pnl_returns_updated_count(self):
+        from unittest.mock import MagicMock
+        from polyforge.models import ArbPnlRefreshResult
+        client = PolyforgeClient(api_key="test-key")
+        client._post = MagicMock(return_value={"updated": 7})
+        result = client.refresh_arb_pnl()
+        assert isinstance(result, ArbPnlRefreshResult)
+        assert result.updated == 7
+        client._post.assert_called_once_with("/api/v1/arbitrage/risk/refresh-pnl")
+        client.close()
+
+
+class TestArbExecutionAsync:
+    """Async coverage mirror for the 7 AsyncPolyforgeClient arb methods (POLA-1851)."""
+
+    def test_async_methods_are_coroutines(self):
+        import inspect
+        ac = AsyncPolyforgeClient(api_key="test-key")
+        for name in (
+            "execute_arb",
+            "list_arb_positions",
+            "get_arb_position",
+            "close_arb_position",
+            "get_arb_risk_dashboard",
+            "get_arb_settlement_risks",
+            "refresh_arb_pnl",
+        ):
+            method = getattr(ac, name)
+            assert inspect.iscoroutinefunction(method), f"{name} must be async"
+
+    def test_async_execute_arb_validates_before_awaiting(self):
+        import asyncio
+        from unittest.mock import AsyncMock
+
+        async def _run():
+            client = AsyncPolyforgeClient(api_key="test-key")
+            client._post = AsyncMock()
+            with pytest.raises(ValueError, match="between 1 and 10000"):
+                await client.execute_arb(match_id="m1", size=0)
+            client._post.assert_not_awaited()
+            await client.close()
+
+        asyncio.run(_run())
+
+    def test_async_execute_arb_happy_path(self):
+        import asyncio
+        from unittest.mock import AsyncMock
+        from polyforge.models import ArbExecutionResult
+
+        async def _run():
+            client = AsyncPolyforgeClient(api_key="test-key")
+            client._post = AsyncMock(return_value={
+                "arbPositionId": "pos-9",
+                "buyLeg": {"venue": "KALSHI", "intentId": "i9", "tokenId": "t9", "price": 0.31},
+                "sellLeg": {"venue": "POLYMARKET", "intentId": "i10", "tokenId": "t10", "price": 0.40},
+                "entrySpreadPct": 9.0,
+                "status": "PENDING",
+            })
+            result = await client.execute_arb(match_id="m1", size=200.0, max_slippage_pct=2.0)
+            assert isinstance(result, ArbExecutionResult)
+            assert result.arb_position_id == "pos-9"
+            assert result.buy_leg is not None and result.buy_leg.price == 0.31
+            client._post.assert_awaited_once_with(
+                "/api/v1/arbitrage/execute",
+                json={"matchId": "m1", "size": 200.0, "maxSlippagePct": 2.0},
+            )
+            await client.close()
+
+        asyncio.run(_run())
+
+    def test_async_close_arb_position_happy_path(self):
+        import asyncio
+        from unittest.mock import AsyncMock
+        from polyforge.models import ArbCloseResponse
+
+        async def _run():
+            client = AsyncPolyforgeClient(api_key="test-key")
+            client._post = AsyncMock(return_value={"status": "CLOSING", "positionId": "pos-9"})
+            result = await client.close_arb_position("pos-9")
+            assert isinstance(result, ArbCloseResponse)
+            assert result.status == "CLOSING"
+            client._post.assert_awaited_once_with("/api/v1/arbitrage/positions/pos-9/close")
+            await client.close()
+
+        asyncio.run(_run())
+
+    def test_async_list_arb_positions_default_pagination(self):
+        import asyncio
+        from unittest.mock import AsyncMock
+
+        async def _run():
+            client = AsyncPolyforgeClient(api_key="test-key")
+            client._get = AsyncMock(return_value={"positions": [], "total": 0})
+            result = await client.list_arb_positions()
+            assert result.total == 0
+            client._get.assert_awaited_once_with(
+                "/api/v1/arbitrage/positions",
+                params={"limit": 50, "offset": 0},
+            )
+            await client.close()
+
+        asyncio.run(_run())
+
+
+class TestArbHttpErrorMapping:
+    """4xx responses on ``execute_arb``/``close_arb_position`` MUST raise typed
+    PolyforgeError subclasses with the backend ``code`` preserved verbatim.
+
+    Trading-impact paths must surface server validation immediately — never
+    swallow, never auto-retry.
+    """
+
+    @staticmethod
+    def _client_with_transport(handler):
+        transport = httpx.MockTransport(handler)
+        client = PolyforgeClient(api_key="test-key")
+        client._client = httpx.Client(
+            base_url=client._api_url,
+            headers={"Authorization": "Bearer test-key", "Content-Type": "application/json"},
+            transport=transport,
+        )
+        return client
+
+    def test_execute_arb_404_raises_not_found_with_code(self):
+        def handler(request):
+            assert request.url.path == "/api/v1/arbitrage/execute"
+            return httpx.Response(
+                404,
+                json={"message": "match not found", "code": "MATCH_NOT_FOUND", "requestId": "req-1"},
+            )
+
+        client = self._client_with_transport(handler)
+        try:
+            with pytest.raises(NotFoundError) as exc_info:
+                client.execute_arb(match_id="missing", size=100)
+            assert exc_info.value.code == "MATCH_NOT_FOUND"
+            assert exc_info.value.request_id == "req-1"
+        finally:
+            client.close()
+
+    def test_execute_arb_400_raises_polyforge_error_with_code(self):
+        # 400 maps to base PolyforgeError (no dedicated subclass for 400).
+        def handler(request):
+            return httpx.Response(
+                400,
+                json={"message": "venues not connected", "code": "VENUES_NOT_CONNECTED"},
+            )
+
+        client = self._client_with_transport(handler)
+        try:
+            with pytest.raises(PolyforgeError) as exc_info:
+                client.execute_arb(match_id="m1", size=100)
+            assert exc_info.value.code == "VENUES_NOT_CONNECTED"
+            assert exc_info.value.status_code == 400
+        finally:
+            client.close()
+
+    def test_execute_arb_401_raises_authentication_error(self):
+        def handler(request):
+            return httpx.Response(
+                401,
+                json={"message": "missing token", "code": "UNAUTHENTICATED"},
+            )
+
+        client = self._client_with_transport(handler)
+        try:
+            with pytest.raises(AuthenticationError) as exc_info:
+                client.execute_arb(match_id="m1", size=100)
+            assert exc_info.value.code == "UNAUTHENTICATED"
+        finally:
+            client.close()
+
+    def test_execute_arb_does_not_retry_on_5xx(self):
+        # If the SDK ever started auto-retrying, this counter would exceed 1.
+        # Trading-impact endpoints must fail fast on the very first error.
+        calls = {"n": 0}
+
+        def handler(request):
+            calls["n"] += 1
+            return httpx.Response(
+                500,
+                json={"message": "boom", "code": "INTERNAL"},
+            )
+
+        client = self._client_with_transport(handler)
+        try:
+            with pytest.raises(ServerError):
+                client.execute_arb(match_id="m1", size=100)
+        finally:
+            client.close()
+        assert calls["n"] == 1, f"execute_arb auto-retried (saw {calls['n']} calls)"
+
+    def test_close_arb_position_404_raises_not_found_with_code(self):
+        def handler(request):
+            assert request.url.path == "/api/v1/arbitrage/positions/missing/close"
+            return httpx.Response(
+                404,
+                json={"message": "no such position", "code": "ARB_POSITION_NOT_FOUND"},
+            )
+
+        client = self._client_with_transport(handler)
+        try:
+            with pytest.raises(NotFoundError) as exc_info:
+                client.close_arb_position("missing")
+            assert exc_info.value.code == "ARB_POSITION_NOT_FOUND"
+        finally:
+            client.close()
+
+    def test_close_arb_position_does_not_retry_on_5xx(self):
+        calls = {"n": 0}
+
+        def handler(request):
+            calls["n"] += 1
+            return httpx.Response(
+                503,
+                json={"message": "downstream broken", "code": "DOWNSTREAM_UNAVAILABLE"},
+            )
+
+        client = self._client_with_transport(handler)
+        try:
+            with pytest.raises(ServerError):
+                client.close_arb_position("pos-1")
+        finally:
+            client.close()
+        assert calls["n"] == 1, f"close_arb_position auto-retried (saw {calls['n']} calls)"

@@ -27,6 +27,15 @@ from polyforge.models import (
     AccuracyScore,
     AiQueryResponse,
     Alert,
+    ArbCloseResponse,
+    ArbExecutionLeg,
+    ArbExecutionResult,
+    ArbNetExposure,
+    ArbPnlRefreshResult,
+    ArbPosition,
+    ArbPositionsResponse,
+    ArbRiskDashboard,
+    ArbSettlementRisk,
     ArbitrageAlertSubscription,
     ArbitrageOpportunity,
     ArbitrageSnapshot,
@@ -153,6 +162,15 @@ _MODEL_REGISTRY: dict[str, type] = {
     "PolymarketEarningsEntry": PolymarketEarningsEntry,
     "PolymarketActivity": PolymarketActivity,
     "Alert": Alert,
+    "ArbCloseResponse": ArbCloseResponse,
+    "ArbExecutionLeg": ArbExecutionLeg,
+    "ArbExecutionResult": ArbExecutionResult,
+    "ArbNetExposure": ArbNetExposure,
+    "ArbPnlRefreshResult": ArbPnlRefreshResult,
+    "ArbPosition": ArbPosition,
+    "ArbPositionsResponse": ArbPositionsResponse,
+    "ArbRiskDashboard": ArbRiskDashboard,
+    "ArbSettlementRisk": ArbSettlementRisk,
     "ArbitrageAlertSubscription": ArbitrageAlertSubscription,
     "ArbitrageSnapshot": ArbitrageSnapshot,
     "CrossVenueOpportunity": CrossVenueOpportunity,
@@ -371,6 +389,36 @@ def _validate_finite_numberish_param(name: str, value: float | str) -> None:
         raise ValueError(f"{name} must not be NaN")
     if math.isinf(number):
         raise ValueError(f"{name} must not be Infinity")
+
+
+def _validate_arb_size(value: float) -> None:
+    """Reject arb sizes outside the server-enforced 1..10000 range.
+
+    Mirrors `class-validator` bounds in `ExecuteArbDto` so the SDK rejects
+    bad inputs before any real-money order ever hits the wire.
+    """
+    if not isinstance(value, (int, float)) or isinstance(value, bool):
+        raise TypeError(f"size must be a number, got {type(value).__name__}")
+    if math.isnan(value) or math.isinf(value):
+        raise ValueError(f"size must be a finite number, got {value}")
+    if value < 1 or value > 10000:
+        raise ValueError(f"size must be between 1 and 10000, got {value}")
+
+
+def _validate_arb_slippage(value: float) -> None:
+    """Reject slippage outside the server-enforced 0..5 range."""
+    if not isinstance(value, (int, float)) or isinstance(value, bool):
+        raise TypeError(
+            f"max_slippage_pct must be a number, got {type(value).__name__}"
+        )
+    if math.isnan(value) or math.isinf(value):
+        raise ValueError(
+            f"max_slippage_pct must be a finite number, got {value}"
+        )
+    if value < 0 or value > 5:
+        raise ValueError(
+            f"max_slippage_pct must be between 0 and 5, got {value}"
+        )
 
 
 def _validate_batch_order(order: dict[str, Any]) -> None:
@@ -1638,6 +1686,101 @@ class PolyforgeClient:
         """Trigger a manual TF-IDF matching pass."""
         data = self._post("/api/v1/arbitrage/matches/sync")
         return _parse(MatchSyncResult, data)
+
+    # -- Cross-Venue Arb Execution / Positions / Risk --
+    #
+    # SAFETY: ``execute_arb`` and ``close_arb_position`` place real orders on
+    # both Polymarket and Kalshi. The underlying httpx client has no auto-retry
+    # middleware (see ``_post`` above), so a 4xx or 5xx surfaces immediately as
+    # a typed ``PolyforgeError`` subclass with the backend ``code`` preserved.
+    # Do NOT add retry wrappers around these methods at the SDK layer.
+
+    def execute_arb(
+        self,
+        *,
+        match_id: str,
+        size: float,
+        max_slippage_pct: float | None = None,
+    ) -> ArbExecutionResult:
+        """Execute a cross-venue arbitrage trade (places real orders on both venues).
+
+        Args:
+            match_id: ``MarketMatch`` UUID identifying the cross-venue pair.
+            size: Position size in USDC, applied to both legs (1..10000).
+            max_slippage_pct: Optional max acceptable slippage % from quoted
+                prices (0..5). Server defaults to 0.5 when omitted.
+
+        Returns:
+            :class:`ArbExecutionResult` with ``arb_position_id``, both leg
+            descriptors, and the entry spread.
+
+        Raises:
+            ValueError: if ``size`` or ``max_slippage_pct`` is out of range.
+            PolyforgeError: surfaces backend error codes verbatim
+                (``VENUES_NOT_CONNECTED``, ``MATCH_NOT_FOUND``,
+                ``COMPARISON_UNAVAILABLE``, ``SPREAD_TOO_LOW``,
+                ``TOKEN_RESOLUTION_FAILED``).
+        """
+        _validate_arb_size(size)
+        body: dict[str, Any] = {"matchId": match_id, "size": size}
+        if max_slippage_pct is not None:
+            _validate_arb_slippage(max_slippage_pct)
+            body["maxSlippagePct"] = max_slippage_pct
+        data = self._post("/api/v1/arbitrage/execute", json=body)
+        return _parse(ArbExecutionResult, data)
+
+    def list_arb_positions(
+        self,
+        *,
+        status: str | None = None,
+        limit: int = 50,
+        offset: int = 0,
+    ) -> ArbPositionsResponse:
+        """List the user's arbitrage positions with pagination.
+
+        Args:
+            status: Optional :class:`ArbPositionStatus` filter.
+            limit: Page size (default 50).
+            offset: Page offset (default 0).
+        """
+        params: dict[str, Any] = {"limit": limit, "offset": offset}
+        if status is not None:
+            params["status"] = status
+        data = self._get("/api/v1/arbitrage/positions", params=params)
+        positions = [_parse(ArbPosition, p) for p in (data.get("positions") or [])]
+        return ArbPositionsResponse(positions=positions, total=int(data.get("total", 0)))
+
+    def get_arb_position(self, position_id: str) -> ArbPosition:
+        """Fetch a single arbitrage position by UUID."""
+        data = self._get(f"/api/v1/arbitrage/positions/{_encode_path(position_id)}")
+        return _parse(ArbPosition, data)
+
+    def close_arb_position(self, position_id: str) -> ArbCloseResponse:
+        """Close an open arbitrage position (places real reverse orders on both venues).
+
+        Raises:
+            PolyforgeError: surfaces backend error codes verbatim
+                (``ARB_POSITION_NOT_FOUND``, ``INVALID_STATUS``).
+        """
+        data = self._post(
+            f"/api/v1/arbitrage/positions/{_encode_path(position_id)}/close"
+        )
+        return _parse(ArbCloseResponse, data)
+
+    def get_arb_risk_dashboard(self) -> ArbRiskDashboard:
+        """Get net exposure, P&L, and position breakdown across venues."""
+        data = self._get("/api/v1/arbitrage/risk/dashboard")
+        return _parse(ArbRiskDashboard, data)
+
+    def get_arb_settlement_risks(self) -> list[ArbSettlementRisk]:
+        """List resolution-criteria mismatches between venues for open arb positions."""
+        data = self._get("/api/v1/arbitrage/risk/settlement")
+        return [_parse(ArbSettlementRisk, entry) for entry in data]
+
+    def refresh_arb_pnl(self) -> ArbPnlRefreshResult:
+        """Recompute unrealized P&L for all open arb positions."""
+        data = self._post("/api/v1/arbitrage/risk/refresh-pnl")
+        return _parse(ArbPnlRefreshResult, data)
 
     # -- Smart Orders --
 
@@ -4150,6 +4293,75 @@ class AsyncPolyforgeClient:
         """Trigger a manual TF-IDF matching pass."""
         data = await self._post("/api/v1/arbitrage/matches/sync")
         return _parse(MatchSyncResult, data)
+
+    # -- Cross-Venue Arb Execution / Positions / Risk --
+    #
+    # SAFETY: ``execute_arb`` and ``close_arb_position`` place real orders on
+    # both Polymarket and Kalshi. The underlying httpx client has no auto-retry
+    # middleware (see ``_post`` above), so a 4xx or 5xx surfaces immediately as
+    # a typed ``PolyforgeError`` subclass with the backend ``code`` preserved.
+    # Do NOT add retry wrappers around these methods at the SDK layer.
+
+    async def execute_arb(
+        self,
+        *,
+        match_id: str,
+        size: float,
+        max_slippage_pct: float | None = None,
+    ) -> ArbExecutionResult:
+        """Execute a cross-venue arbitrage trade (places real orders on both venues).
+
+        See :meth:`PolyforgeClient.execute_arb` for parameter contract.
+        """
+        _validate_arb_size(size)
+        body: dict[str, Any] = {"matchId": match_id, "size": size}
+        if max_slippage_pct is not None:
+            _validate_arb_slippage(max_slippage_pct)
+            body["maxSlippagePct"] = max_slippage_pct
+        data = await self._post("/api/v1/arbitrage/execute", json=body)
+        return _parse(ArbExecutionResult, data)
+
+    async def list_arb_positions(
+        self,
+        *,
+        status: str | None = None,
+        limit: int = 50,
+        offset: int = 0,
+    ) -> ArbPositionsResponse:
+        """List the user's arbitrage positions with pagination."""
+        params: dict[str, Any] = {"limit": limit, "offset": offset}
+        if status is not None:
+            params["status"] = status
+        data = await self._get("/api/v1/arbitrage/positions", params=params)
+        positions = [_parse(ArbPosition, p) for p in (data.get("positions") or [])]
+        return ArbPositionsResponse(positions=positions, total=int(data.get("total", 0)))
+
+    async def get_arb_position(self, position_id: str) -> ArbPosition:
+        """Fetch a single arbitrage position by UUID."""
+        data = await self._get(f"/api/v1/arbitrage/positions/{_encode_path(position_id)}")
+        return _parse(ArbPosition, data)
+
+    async def close_arb_position(self, position_id: str) -> ArbCloseResponse:
+        """Close an open arbitrage position (places real reverse orders on both venues)."""
+        data = await self._post(
+            f"/api/v1/arbitrage/positions/{_encode_path(position_id)}/close"
+        )
+        return _parse(ArbCloseResponse, data)
+
+    async def get_arb_risk_dashboard(self) -> ArbRiskDashboard:
+        """Get net exposure, P&L, and position breakdown across venues."""
+        data = await self._get("/api/v1/arbitrage/risk/dashboard")
+        return _parse(ArbRiskDashboard, data)
+
+    async def get_arb_settlement_risks(self) -> list[ArbSettlementRisk]:
+        """List resolution-criteria mismatches between venues for open arb positions."""
+        data = await self._get("/api/v1/arbitrage/risk/settlement")
+        return [_parse(ArbSettlementRisk, entry) for entry in data]
+
+    async def refresh_arb_pnl(self) -> ArbPnlRefreshResult:
+        """Recompute unrealized P&L for all open arb positions."""
+        data = await self._post("/api/v1/arbitrage/risk/refresh-pnl")
+        return _parse(ArbPnlRefreshResult, data)
 
     # -- Smart Orders --
 
