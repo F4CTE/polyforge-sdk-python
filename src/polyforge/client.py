@@ -54,16 +54,21 @@ from polyforge.models import (
     ConditionalOrder,
     CopyConfig,
     CopyTrade,
+    CorrelationCategoriesReport,
     CrossVenueOpportunity,
+    FeeMarketMatch,
     LeaderboardEntry,
     LpPosition,
     Market,
+    MarketAlert,
+    MarketHistoryPoint,
     MarketMatch,
     MarketplaceListing,
     MarketplacePurchaseResult,
     MarketplaceSeller,
     MarketplaceStrategy,
     MarketSentiment,
+    MarketSentimentReport,
     MidpointInfo,
     NewsArticle,
     NewsSignal,
@@ -71,6 +76,7 @@ from polyforge.models import (
     OrderBook,
     OrderBookLevel,
     OrderStatus,
+    OrderPreviewResponse,
     PaginatedResponse,
     PaperSummary,
     PlaceOrderResponse,
@@ -85,8 +91,11 @@ from polyforge.models import (
     PriceHistoryEntry,
     Rebate,
     RedeemPositionResponse,
+    ReferralInfo,
+    ReferralStats,
     RewardMarket,
     RiskSettings,
+    SentimentUserVote,
     SmartOrder,
     SmartOrderChildOrder,
     SpreadInfo,
@@ -104,6 +113,7 @@ from polyforge.models import (
     UserRewardsTotal,
     VenueComparison,
     VenueComparisonDetail,
+    VenueFeeEstimate,
     VenuePriceInfo,
     MatchSyncResult,
     WatchlistItem,
@@ -209,6 +219,16 @@ _MODEL_REGISTRY: dict[str, type] = {
     "VenuePreferences": VenuePreferences,
     "SupportTicket": SupportTicket,
     "TicketMessage": TicketMessage,
+    "CorrelationCategoriesReport": CorrelationCategoriesReport,
+    "FeeMarketMatch": FeeMarketMatch,
+    "MarketAlert": MarketAlert,
+    "MarketHistoryPoint": MarketHistoryPoint,
+    "MarketSentimentReport": MarketSentimentReport,
+    "OrderPreviewResponse": OrderPreviewResponse,
+    "ReferralInfo": ReferralInfo,
+    "ReferralStats": ReferralStats,
+    "SentimentUserVote": SentimentUserVote,
+    "VenueFeeEstimate": VenueFeeEstimate,
 }
 
 
@@ -379,6 +399,13 @@ _VALID_SPORTS_SORTS = frozenset({"volume", "closing_soon", "newest"})
 _VALID_SPORTS_EVENT_STATUSES = frozenset(
     {"SCHEDULED", "PREGAME", "LIVE", "HALFTIME", "FINAL"}
 )
+_VALID_MARKET_ALERT_OUTCOMES = frozenset({"YES", "NO", "Yes", "No"})
+_VALID_MARKET_ALERT_CONDITIONS = frozenset({"above", "below"})
+_VALID_MARKET_HISTORY_PERIODS = frozenset({"1d", "7d", "30d", "90d"})
+_VALID_ORDER_MOODS = frozenset(
+    {"CONFIDENT", "UNCERTAIN", "FOMO", "DISCIPLINED", "REVENGE"}
+)
+_VALID_COMBO_LEG_OUTCOMES = frozenset({"yes", "no"})
 
 
 def _validate_financial_param(name: str, value: float) -> None:
@@ -3473,6 +3500,407 @@ class PolyforgeClient:
         )
         return result if isinstance(result, dict) else None
 
+    # -- Misc public utility endpoints (POLA-1857) --
+
+    def get_accuracy_overview(self) -> AccuracyScore:
+        """Fetch the current user's accuracy score via the root endpoint.
+
+        Mirrors ``GET /api/v1/accuracy``. The controller delegates to the
+        same service as :meth:`get_accuracy` (``GET /api/v1/accuracy/me``);
+        both are exposed for parity with the platform surface.
+        """
+        data = self._get("/api/v1/accuracy")
+        calibration = [
+            CalibrationBucket(
+                bucket_mid=b.get("bucketMid", 0.0),
+                frequency=b.get("frequency", 0.0),
+                count=b.get("count", 0),
+            )
+            for b in data.get("calibration", [])
+        ]
+        by_category = {
+            k: CategoryAccuracy(count=v.get("count", 0), brier_score=v.get("brierScore", 0.0))
+            for k, v in data.get("byCategory", {}).items()
+        }
+        return AccuracyScore(
+            brier_score=data.get("brierScore"),
+            total_predictions=data.get("totalPredictions", 0),
+            correct_predictions=data.get("correctPredictions", 0),
+            win_rate=data.get("winRate", ""),
+            calibration=calibration,
+            by_category=by_category,
+        )
+
+    def list_feed(
+        self,
+        *,
+        page: int = 1,
+        limit: int = 20,
+        min_size: str | None = None,
+        market_id: str | None = None,
+        wallet_address: str | None = None,
+        side: str | None = None,
+    ) -> PaginatedResponse[dict[str, Any]]:
+        """List the global whale-activity feed.
+
+        Mirrors ``GET /api/v1/feed`` (delegates to ``WhalesService.getFeed``).
+        Returns the platform's flat-paginated wrapper around ``WhaleAlert``
+        records (with ``market`` summary embedded). Items are returned as
+        permissive dicts to mirror the controller's pass-through shape.
+
+        Args:
+            page: 1-based page index (default ``1``).
+            limit: Page size (1–100, default ``20``).
+            min_size: Minimum notional, sent as a numeric string.
+            market_id: Filter by market id.
+            wallet_address: Filter by trader wallet.
+            side: Filter by ``"BUY"`` or ``"SELL"``.
+        """
+        if side is not None:
+            _validate_enum("side", side, _VALID_SIDES)
+        raw = self._get(
+            "/api/v1/feed",
+            params={
+                "page": page,
+                "limit": limit,
+                "minSize": min_size,
+                "marketId": market_id,
+                "walletAddress": wallet_address,
+                "side": side,
+            },
+        )
+        return PaginatedResponse(
+            data=list(raw.get("data", [])),
+            **_parse_pagination(raw),
+        )
+
+    def list_journal(
+        self,
+        *,
+        page: int = 1,
+        limit: int = 20,
+        mood: str | None = None,
+    ) -> PaginatedResponse[dict[str, Any]]:
+        """List the user's order-journal entries.
+
+        Mirrors ``GET /api/v1/journal``. Each entry is a slim Order projection
+        ``{id, marketId, mood, note, side, outcome, price, size, status,
+        createdAt}`` and is returned as a dict for permissive forward
+        compatibility.
+
+        Args:
+            page: 1-based page index (default ``1``).
+            limit: Page size (1–100, default ``20``).
+            mood: Optional mood filter — one of the platform moods
+                (``CONFIDENT``, ``UNCERTAIN``, ``FOMO``, ``DISCIPLINED``,
+                ``REVENGE``).
+        """
+        if mood is not None:
+            _validate_enum("mood", mood, _VALID_ORDER_MOODS)
+        raw = self._get(
+            "/api/v1/journal",
+            params={"page": page, "limit": limit, "mood": mood},
+        )
+        return PaginatedResponse(
+            data=list(raw.get("data", [])),
+            **_parse_pagination(raw),
+        )
+
+    def list_notifications(
+        self,
+        *,
+        page: int = 1,
+        limit: int = 20,
+    ) -> PaginatedResponse[dict[str, Any]]:
+        """List notification-history records for the current user.
+
+        Mirrors ``GET /api/v1/notifications``. Distinct from the existing
+        :meth:`get_notification_settings` (``/settings/notifications``) and
+        :meth:`update_profile_notifications` (``/profile/notifications``);
+        this endpoint returns delivered notifications, not preferences.
+
+        Args:
+            page: 1-based page index (default ``1``).
+            limit: Page size (1–100, default ``20``).
+        """
+        raw = self._get(
+            "/api/v1/notifications",
+            params={"page": page, "limit": limit},
+        )
+        return PaginatedResponse(
+            data=list(raw.get("data", [])),
+            **_parse_pagination(raw),
+        )
+
+    def get_my_referrals(self) -> ReferralInfo:
+        """Fetch the current user's referral code, link, stats, and list.
+
+        Mirrors ``GET /api/v1/referrals/me``.
+        """
+        return _parse(ReferralInfo, self._get("/api/v1/referrals/me"))
+
+    def preview_fees(
+        self,
+        *,
+        token_id: str,
+        side: str,
+        size: float,
+        price: float,
+        order_type: str | None = None,
+    ) -> OrderPreviewResponse:
+        """Preview cross-venue order fees.
+
+        Mirrors ``POST /api/v1/fees/preview``. Returns Polymarket and
+        (optionally) Kalshi fee estimates with the recommended venue and
+        savings.
+
+        Args:
+            token_id: Token to price.
+            side: ``"BUY"`` or ``"SELL"``.
+            size: Order size (must be ``>= 1``).
+            price: Limit price (``0.001 <= price <= 0.999``).
+            order_type: Optional order type (e.g. ``"POST_ONLY"`` to flag
+                maker fees).
+        """
+        _validate_enum("side", side, _VALID_SIDES)
+        _validate_financial_param("size", size)
+        _validate_financial_param("price", price)
+        if order_type is not None:
+            _validate_enum("order_type", order_type, _VALID_ORDER_TYPES)
+        body: dict[str, Any] = {
+            "tokenId": token_id,
+            "side": side,
+            "size": size,
+            "price": price,
+        }
+        if order_type is not None:
+            body["orderType"] = order_type
+        return _parse(
+            OrderPreviewResponse, self._post("/api/v1/fees/preview", json=body)
+        )
+
+    def list_fee_schedules(self) -> dict[str, Any]:
+        """List active fee schedules for all supported venues.
+
+        Mirrors ``GET /api/v1/fees/schedules``. Returns
+        ``{"polymarket": [...], "kalshi": [...]}`` (entries are pass-through
+        dicts since the inner shape varies by venue).
+        """
+        return self._get("/api/v1/fees/schedules")
+
+    def list_market_alerts(self, market_id: str) -> list[MarketAlert]:
+        """List the current user's price alerts on a single market.
+
+        Mirrors ``GET /api/v1/markets/:marketId/alerts``. Distinct from
+        :meth:`list_alerts`, which returns top-level alerts across all
+        markets.
+        """
+        raw = self._get(
+            f"/api/v1/markets/{_encode_path(market_id)}/alerts",
+        )
+        items = raw.get("data", []) if isinstance(raw, dict) else raw
+        return [_parse(MarketAlert, a) for a in items]
+
+    def create_market_alert(
+        self,
+        market_id: str,
+        *,
+        outcome: str,
+        condition: str,
+        threshold: float,
+    ) -> MarketAlert:
+        """Create a per-market price alert.
+
+        Mirrors ``POST /api/v1/markets/:marketId/alerts``.
+
+        Args:
+            market_id: The market id.
+            outcome: ``"YES"`` or ``"NO"`` (case-insensitive against the
+                controller, which accepts both ``"YES"``/``"NO"`` and
+                ``"Yes"``/``"No"``).
+            condition: ``"above"`` or ``"below"``.
+            threshold: Trigger price in the inclusive range
+                ``[0.01, 0.99]`` (matches the controller validator).
+        """
+        _validate_enum("outcome", outcome, _VALID_MARKET_ALERT_OUTCOMES)
+        _validate_enum("condition", condition, _VALID_MARKET_ALERT_CONDITIONS)
+        _validate_financial_param("threshold", threshold)
+        if not (0.01 <= threshold <= 0.99):
+            raise ValueError(
+                f"threshold must be between 0.01 and 0.99, got {threshold!r}"
+            )
+        body: dict[str, Any] = {
+            "outcome": outcome,
+            "condition": condition,
+            "threshold": threshold,
+        }
+        return _parse(
+            MarketAlert,
+            self._post(
+                f"/api/v1/markets/{_encode_path(market_id)}/alerts",
+                json=body,
+            ),
+        )
+
+    def delete_market_alert(self, market_id: str, alert_id: str) -> None:
+        """Delete a per-market alert.
+
+        Mirrors ``DELETE /api/v1/markets/:marketId/alerts/:alertId``.
+        """
+        self._delete(
+            f"/api/v1/markets/{_encode_path(market_id)}/alerts/{_encode_path(alert_id)}",
+        )
+
+    def get_market_history(
+        self,
+        market_id: str,
+        *,
+        period: str = "7d",
+    ) -> list[MarketHistoryPoint]:
+        """Fetch a market's hourly YES/NO price history.
+
+        Mirrors ``GET /api/v1/markets/:marketId/history``.
+
+        Args:
+            market_id: The market id.
+            period: One of ``"1d"``, ``"7d"`` (default), ``"30d"``, ``"90d"``.
+        """
+        _validate_enum("period", period, _VALID_MARKET_HISTORY_PERIODS)
+        raw = self._get(
+            f"/api/v1/markets/{_encode_path(market_id)}/history",
+            params={"period": period},
+        )
+        items = raw.get("data", []) if isinstance(raw, dict) else raw
+        return [_parse(MarketHistoryPoint, p) for p in items]
+
+    def get_market_sentiment_report(
+        self, market_id: str
+    ) -> MarketSentimentReport:
+        """Fetch the aggregate sentiment report for a single market.
+
+        Mirrors ``GET /api/v1/markets/:marketId/sentiment``. Distinct from
+        :meth:`get_market_sentiment` (which mirrors the older
+        ``/news/sentiment/:marketId`` endpoint).
+        """
+        return _parse(
+            MarketSentimentReport,
+            self._get(f"/api/v1/markets/{_encode_path(market_id)}/sentiment"),
+        )
+
+    def vote_market_sentiment(self, market_id: str) -> MarketSentimentReport:
+        """Submit (or refresh) the current user's sentiment for a market.
+
+        Mirrors ``POST /api/v1/markets/:marketId/sentiment``. The controller
+        currently returns the same payload shape as the GET variant.
+        """
+        return _parse(
+            MarketSentimentReport,
+            self._post(f"/api/v1/markets/{_encode_path(market_id)}/sentiment"),
+        )
+
+    def update_order_journal(
+        self,
+        order_id: str,
+        *,
+        mood: str,
+        note: str | None = None,
+    ) -> Order:
+        """Attach a journal mood (and optional note) to an order.
+
+        Mirrors ``PATCH /api/v1/orders/:id/journal``. The controller exposes
+        only ``PATCH`` for this resource — there is no ``GET`` variant.
+
+        Args:
+            order_id: The order id to journal.
+            mood: One of ``CONFIDENT``, ``UNCERTAIN``, ``FOMO``,
+                ``DISCIPLINED``, ``REVENGE``.
+            note: Optional free-form note (``<= 2000`` characters).
+        """
+        _validate_enum("mood", mood, _VALID_ORDER_MOODS)
+        body: dict[str, Any] = {"mood": mood}
+        if note is not None:
+            body["note"] = note
+        return _parse(
+            Order,
+            self._patch(
+                f"/api/v1/orders/{_encode_path(order_id)}/journal",
+                json=body,
+            ),
+        )
+
+    def list_combo_collections(
+        self,
+        *,
+        series_ticker: str | None = None,
+        limit: int | None = None,
+        cursor: str | None = None,
+    ) -> dict[str, Any]:
+        """List Kalshi combo-market collections.
+
+        Mirrors ``GET /api/v1/markets/combo/collections``. The response shape
+        is forwarded from Kalshi unchanged and exposed as a permissive dict.
+        """
+        return self._get(
+            "/api/v1/markets/combo/collections",
+            params={
+                "seriesTicker": series_ticker,
+                "limit": limit,
+                "cursor": cursor,
+            },
+        )
+
+    def get_combo_collection(self, ticker: str) -> dict[str, Any]:
+        """Fetch a single combo-market collection by ticker.
+
+        Mirrors ``GET /api/v1/markets/combo/collections/:ticker``.
+        """
+        return self._get(
+            f"/api/v1/markets/combo/collections/{_encode_path(ticker)}",
+        )
+
+    def lookup_combo_market(
+        self,
+        collection_ticker: str,
+        legs: list[dict[str, Any]],
+    ) -> dict[str, Any]:
+        """Resolve a combo-market by its constituent legs.
+
+        Mirrors ``POST /api/v1/markets/combo/lookup``.
+
+        Args:
+            collection_ticker: The combo collection's ticker.
+            legs: A list of leg descriptors, each ``{"ticker": str,
+                "outcome": "yes"|"no"}``. Validated client-side: each leg
+                must include a ``ticker`` and a valid ``outcome``.
+        """
+        for i, leg in enumerate(legs):
+            if not isinstance(leg, dict):
+                raise TypeError(f"legs[{i}] must be a dict, got {type(leg).__name__}")
+            ticker = leg.get("ticker")
+            outcome = leg.get("outcome")
+            if not isinstance(ticker, str) or not ticker:
+                raise ValueError(f"legs[{i}].ticker must be a non-empty string")
+            if not isinstance(outcome, str):
+                raise ValueError(f"legs[{i}].outcome is required")
+            _validate_enum(
+                f"legs[{i}].outcome", outcome, _VALID_COMBO_LEG_OUTCOMES
+            )
+        return self._post(
+            "/api/v1/markets/combo/lookup",
+            json={"collectionTicker": collection_ticker, "legs": legs},
+        )
+
+    def get_correlation_categories(self) -> CorrelationCategoriesReport:
+        """Fetch the category-correlation matrix used by the analytics tab.
+
+        Mirrors ``GET /api/v1/analytics/correlation/categories``.
+        """
+        return _parse(
+            CorrelationCategoriesReport,
+            self._get("/api/v1/analytics/correlation/categories"),
+        )
+
+
     # -- Lifecycle --
 
     def close(self) -> None:
@@ -6009,6 +6437,286 @@ class AsyncPolyforgeClient:
             },
         )
         return result if isinstance(result, dict) else None
+
+    # -- Misc public utility endpoints (POLA-1857) --
+
+    async def get_accuracy_overview(self) -> AccuracyScore:
+        """Async variant of :meth:`PolyforgeClient.get_accuracy_overview`."""
+        data = await self._get("/api/v1/accuracy")
+        calibration = [
+            CalibrationBucket(
+                bucket_mid=b.get("bucketMid", 0.0),
+                frequency=b.get("frequency", 0.0),
+                count=b.get("count", 0),
+            )
+            for b in data.get("calibration", [])
+        ]
+        by_category = {
+            k: CategoryAccuracy(count=v.get("count", 0), brier_score=v.get("brierScore", 0.0))
+            for k, v in data.get("byCategory", {}).items()
+        }
+        return AccuracyScore(
+            brier_score=data.get("brierScore"),
+            total_predictions=data.get("totalPredictions", 0),
+            correct_predictions=data.get("correctPredictions", 0),
+            win_rate=data.get("winRate", ""),
+            calibration=calibration,
+            by_category=by_category,
+        )
+
+    async def list_feed(
+        self,
+        *,
+        page: int = 1,
+        limit: int = 20,
+        min_size: str | None = None,
+        market_id: str | None = None,
+        wallet_address: str | None = None,
+        side: str | None = None,
+    ) -> PaginatedResponse[dict[str, Any]]:
+        """Async variant of :meth:`PolyforgeClient.list_feed`."""
+        if side is not None:
+            _validate_enum("side", side, _VALID_SIDES)
+        raw = await self._get(
+            "/api/v1/feed",
+            params={
+                "page": page,
+                "limit": limit,
+                "minSize": min_size,
+                "marketId": market_id,
+                "walletAddress": wallet_address,
+                "side": side,
+            },
+        )
+        return PaginatedResponse(
+            data=list(raw.get("data", [])),
+            **_parse_pagination(raw),
+        )
+
+    async def list_journal(
+        self,
+        *,
+        page: int = 1,
+        limit: int = 20,
+        mood: str | None = None,
+    ) -> PaginatedResponse[dict[str, Any]]:
+        """Async variant of :meth:`PolyforgeClient.list_journal`."""
+        if mood is not None:
+            _validate_enum("mood", mood, _VALID_ORDER_MOODS)
+        raw = await self._get(
+            "/api/v1/journal",
+            params={"page": page, "limit": limit, "mood": mood},
+        )
+        return PaginatedResponse(
+            data=list(raw.get("data", [])),
+            **_parse_pagination(raw),
+        )
+
+    async def list_notifications(
+        self,
+        *,
+        page: int = 1,
+        limit: int = 20,
+    ) -> PaginatedResponse[dict[str, Any]]:
+        """Async variant of :meth:`PolyforgeClient.list_notifications`."""
+        raw = await self._get(
+            "/api/v1/notifications",
+            params={"page": page, "limit": limit},
+        )
+        return PaginatedResponse(
+            data=list(raw.get("data", [])),
+            **_parse_pagination(raw),
+        )
+
+    async def get_my_referrals(self) -> ReferralInfo:
+        """Async variant of :meth:`PolyforgeClient.get_my_referrals`."""
+        return _parse(ReferralInfo, await self._get("/api/v1/referrals/me"))
+
+    async def preview_fees(
+        self,
+        *,
+        token_id: str,
+        side: str,
+        size: float,
+        price: float,
+        order_type: str | None = None,
+    ) -> OrderPreviewResponse:
+        """Async variant of :meth:`PolyforgeClient.preview_fees`."""
+        _validate_enum("side", side, _VALID_SIDES)
+        _validate_financial_param("size", size)
+        _validate_financial_param("price", price)
+        if order_type is not None:
+            _validate_enum("order_type", order_type, _VALID_ORDER_TYPES)
+        body: dict[str, Any] = {
+            "tokenId": token_id,
+            "side": side,
+            "size": size,
+            "price": price,
+        }
+        if order_type is not None:
+            body["orderType"] = order_type
+        return _parse(
+            OrderPreviewResponse,
+            await self._post("/api/v1/fees/preview", json=body),
+        )
+
+    async def list_fee_schedules(self) -> dict[str, Any]:
+        """Async variant of :meth:`PolyforgeClient.list_fee_schedules`."""
+        return await self._get("/api/v1/fees/schedules")
+
+    async def list_market_alerts(self, market_id: str) -> list[MarketAlert]:
+        """Async variant of :meth:`PolyforgeClient.list_market_alerts`."""
+        raw = await self._get(
+            f"/api/v1/markets/{_encode_path(market_id)}/alerts",
+        )
+        items = raw.get("data", []) if isinstance(raw, dict) else raw
+        return [_parse(MarketAlert, a) for a in items]
+
+    async def create_market_alert(
+        self,
+        market_id: str,
+        *,
+        outcome: str,
+        condition: str,
+        threshold: float,
+    ) -> MarketAlert:
+        """Async variant of :meth:`PolyforgeClient.create_market_alert`."""
+        _validate_enum("outcome", outcome, _VALID_MARKET_ALERT_OUTCOMES)
+        _validate_enum("condition", condition, _VALID_MARKET_ALERT_CONDITIONS)
+        _validate_financial_param("threshold", threshold)
+        if not (0.01 <= threshold <= 0.99):
+            raise ValueError(
+                f"threshold must be between 0.01 and 0.99, got {threshold!r}"
+            )
+        body: dict[str, Any] = {
+            "outcome": outcome,
+            "condition": condition,
+            "threshold": threshold,
+        }
+        return _parse(
+            MarketAlert,
+            await self._post(
+                f"/api/v1/markets/{_encode_path(market_id)}/alerts",
+                json=body,
+            ),
+        )
+
+    async def delete_market_alert(self, market_id: str, alert_id: str) -> None:
+        """Async variant of :meth:`PolyforgeClient.delete_market_alert`."""
+        await self._delete(
+            f"/api/v1/markets/{_encode_path(market_id)}/alerts/{_encode_path(alert_id)}",
+        )
+
+    async def get_market_history(
+        self,
+        market_id: str,
+        *,
+        period: str = "7d",
+    ) -> list[MarketHistoryPoint]:
+        """Async variant of :meth:`PolyforgeClient.get_market_history`."""
+        _validate_enum("period", period, _VALID_MARKET_HISTORY_PERIODS)
+        raw = await self._get(
+            f"/api/v1/markets/{_encode_path(market_id)}/history",
+            params={"period": period},
+        )
+        items = raw.get("data", []) if isinstance(raw, dict) else raw
+        return [_parse(MarketHistoryPoint, p) for p in items]
+
+    async def get_market_sentiment_report(
+        self, market_id: str
+    ) -> MarketSentimentReport:
+        """Async variant of :meth:`PolyforgeClient.get_market_sentiment_report`."""
+        return _parse(
+            MarketSentimentReport,
+            await self._get(
+                f"/api/v1/markets/{_encode_path(market_id)}/sentiment"
+            ),
+        )
+
+    async def vote_market_sentiment(
+        self, market_id: str
+    ) -> MarketSentimentReport:
+        """Async variant of :meth:`PolyforgeClient.vote_market_sentiment`."""
+        return _parse(
+            MarketSentimentReport,
+            await self._post(
+                f"/api/v1/markets/{_encode_path(market_id)}/sentiment"
+            ),
+        )
+
+    async def update_order_journal(
+        self,
+        order_id: str,
+        *,
+        mood: str,
+        note: str | None = None,
+    ) -> Order:
+        """Async variant of :meth:`PolyforgeClient.update_order_journal`."""
+        _validate_enum("mood", mood, _VALID_ORDER_MOODS)
+        body: dict[str, Any] = {"mood": mood}
+        if note is not None:
+            body["note"] = note
+        return _parse(
+            Order,
+            await self._patch(
+                f"/api/v1/orders/{_encode_path(order_id)}/journal",
+                json=body,
+            ),
+        )
+
+    async def list_combo_collections(
+        self,
+        *,
+        series_ticker: str | None = None,
+        limit: int | None = None,
+        cursor: str | None = None,
+    ) -> dict[str, Any]:
+        """Async variant of :meth:`PolyforgeClient.list_combo_collections`."""
+        return await self._get(
+            "/api/v1/markets/combo/collections",
+            params={
+                "seriesTicker": series_ticker,
+                "limit": limit,
+                "cursor": cursor,
+            },
+        )
+
+    async def get_combo_collection(self, ticker: str) -> dict[str, Any]:
+        """Async variant of :meth:`PolyforgeClient.get_combo_collection`."""
+        return await self._get(
+            f"/api/v1/markets/combo/collections/{_encode_path(ticker)}",
+        )
+
+    async def lookup_combo_market(
+        self,
+        collection_ticker: str,
+        legs: list[dict[str, Any]],
+    ) -> dict[str, Any]:
+        """Async variant of :meth:`PolyforgeClient.lookup_combo_market`."""
+        for i, leg in enumerate(legs):
+            if not isinstance(leg, dict):
+                raise TypeError(f"legs[{i}] must be a dict, got {type(leg).__name__}")
+            ticker = leg.get("ticker")
+            outcome = leg.get("outcome")
+            if not isinstance(ticker, str) or not ticker:
+                raise ValueError(f"legs[{i}].ticker must be a non-empty string")
+            if not isinstance(outcome, str):
+                raise ValueError(f"legs[{i}].outcome is required")
+            _validate_enum(
+                f"legs[{i}].outcome", outcome, _VALID_COMBO_LEG_OUTCOMES
+            )
+        return await self._post(
+            "/api/v1/markets/combo/lookup",
+            json={"collectionTicker": collection_ticker, "legs": legs},
+        )
+
+    async def get_correlation_categories(self) -> CorrelationCategoriesReport:
+        """Async variant of :meth:`PolyforgeClient.get_correlation_categories`."""
+        return _parse(
+            CorrelationCategoriesReport,
+            await self._get("/api/v1/analytics/correlation/categories"),
+        )
+
 
     # -- Lifecycle --
 

@@ -4,6 +4,40 @@
 
 ### Added
 
+**Misc public utility endpoints (POLA-1857)** — eighteen endpoint methods
+filling gaps surfaced by the weekly SDK + MCP compatibility audit. All are
+available on both `PolyforgeClient` and `AsyncPolyforgeClient`:
+
+- `get_accuracy_overview()` → `AccuracyScore` (root `GET /accuracy`, companion to `get_accuracy()` which targets `/accuracy/me`)
+- `list_feed(*, page, limit, min_size, market_id, wallet_address, side)` → `PaginatedResponse[dict[str, Any]]` — global whale-activity feed
+- `list_journal(*, page, limit, mood)` → `PaginatedResponse[dict[str, Any]]` — order-journal entries with optional mood filter
+- `list_notifications(*, page, limit)` → `PaginatedResponse[dict[str, Any]]` — delivered notifications (distinct from notification *settings*)
+- `get_my_referrals()` → `ReferralInfo` — referral code, link, stats
+- `preview_fees(*, token_id, side, size, price, order_type)` → `OrderPreviewResponse` — cross-venue fee comparison
+- `list_fee_schedules()` → `dict[str, Any]` — active fee schedules grouped by venue
+- `list_market_alerts(market_id)` → `list[MarketAlert]` — per-market price alerts (distinct from `list_alerts()`)
+- `create_market_alert(market_id, *, outcome, condition, threshold)` → `MarketAlert`
+- `delete_market_alert(market_id, alert_id)` → `None`
+- `get_market_history(market_id, *, period)` → `list[MarketHistoryPoint]` — hourly YES/NO price history (`1d`/`7d`/`30d`/`90d`)
+- `get_market_sentiment_report(market_id)` → `MarketSentimentReport` — aggregate sentiment (distinct from `get_market_sentiment()` which mirrors `/news/sentiment/:id`)
+- `vote_market_sentiment(market_id)` → `MarketSentimentReport`
+- `update_order_journal(order_id, *, mood, note)` → `Order` — `PATCH`-only on the platform; no `GET` variant exists
+- `list_combo_collections(*, series_ticker, limit, cursor)` → `dict[str, Any]`
+- `get_combo_collection(ticker)` → `dict[str, Any]`
+- `lookup_combo_market(collection_ticker, legs)` → `dict[str, Any]` — `POST`-only on the platform
+- `get_correlation_categories()` → `CorrelationCategoriesReport`
+
+New typed models: `CorrelationCategoriesReport`, `FeeMarketMatch`,
+`MarketAlert`, `MarketHistoryPoint`, `MarketSentimentReport`,
+`OrderPreviewResponse`, `ReferralInfo`, `ReferralStats`,
+`SentimentUserVote`, `VenueFeeEstimate`.
+
+Client-side validation guards reject obvious bad input before network IO:
+sides (`BUY`/`SELL`), market-alert outcomes (`YES`/`NO`), conditions
+(`above`/`below`), thresholds in `[0.01, 0.99]`, market-history periods,
+order-journal moods, and combo-leg outcomes (`yes`/`no`). Path parameters
+are URL-encoded via `_encode_path` to prevent path-traversal injection.
+
 **Sports API (POLA-1847)** — nine endpoints wrapping the `/api/v1/sports/*`
 controller, available on both `PolyforgeClient` and `AsyncPolyforgeClient`:
 

@@ -101,6 +101,16 @@ from polyforge.models import (
     VenuePreferences,
     SupportTicket,
     TicketMessage,
+    CorrelationCategoriesReport,
+    FeeMarketMatch,
+    MarketAlert,
+    MarketHistoryPoint,
+    MarketSentimentReport,
+    OrderPreviewResponse,
+    ReferralInfo,
+    ReferralStats,
+    SentimentUserVote,
+    VenueFeeEstimate,
 )
 
 __all__ = [
@@ -207,6 +217,17 @@ __all__ = [
     "ActionDefinition",
     "ActionParameter",
     "ActionsSchema",
+    # POLA-1857 misc utility models
+    "CorrelationCategoriesReport",
+    "FeeMarketMatch",
+    "MarketAlert",
+    "MarketHistoryPoint",
+    "MarketSentimentReport",
+    "OrderPreviewResponse",
+    "ReferralInfo",
+    "ReferralStats",
+    "SentimentUserVote",
+    "VenueFeeEstimate",
 ]
 
 __version__ = "1.0.0"

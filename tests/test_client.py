@@ -6143,6 +6143,619 @@ class TestSportsEndpointRoundtrips:
 
 
 # ---------------------------------------------------------------------------
+# ── POLA-1857: misc public utility endpoints ────────────────────────────────
+
+
+class TestMiscUtilityEndpointsPresence:
+    """Surface check: all 18 misc utility methods exist on both clients."""
+
+    METHODS = (
+        "get_accuracy_overview",
+        "list_feed",
+        "list_journal",
+        "list_notifications",
+        "get_my_referrals",
+        "preview_fees",
+        "list_fee_schedules",
+        "list_market_alerts",
+        "create_market_alert",
+        "delete_market_alert",
+        "get_market_history",
+        "get_market_sentiment_report",
+        "vote_market_sentiment",
+        "update_order_journal",
+        "list_combo_collections",
+        "get_combo_collection",
+        "lookup_combo_market",
+        "get_correlation_categories",
+    )
+
+    def test_all_methods_present_on_sync_client(self):
+        for name in self.METHODS:
+            assert callable(getattr(PolyforgeClient, name, None)), name
+
+    def test_all_methods_present_on_async_client(self):
+        for name in self.METHODS:
+            assert callable(getattr(AsyncPolyforgeClient, name, None)), name
+
+
+class TestMiscUtilityEndpointPaths:
+    """Verify each new method targets the correct controller path."""
+
+    def _src(self, method):
+        import inspect
+        return inspect.getsource(method)
+
+    def test_get_accuracy_overview_path(self):
+        assert '"/api/v1/accuracy"' in self._src(PolyforgeClient.get_accuracy_overview)
+
+    def test_list_feed_path(self):
+        assert '"/api/v1/feed"' in self._src(PolyforgeClient.list_feed)
+
+    def test_list_journal_path(self):
+        assert '"/api/v1/journal"' in self._src(PolyforgeClient.list_journal)
+
+    def test_list_notifications_path(self):
+        assert '"/api/v1/notifications"' in self._src(PolyforgeClient.list_notifications)
+
+    def test_get_my_referrals_path(self):
+        assert '"/api/v1/referrals/me"' in self._src(PolyforgeClient.get_my_referrals)
+
+    def test_preview_fees_path(self):
+        assert '"/api/v1/fees/preview"' in self._src(PolyforgeClient.preview_fees)
+
+    def test_list_fee_schedules_path(self):
+        assert '"/api/v1/fees/schedules"' in self._src(PolyforgeClient.list_fee_schedules)
+
+    def test_list_market_alerts_path(self):
+        assert "/api/v1/markets/" in self._src(PolyforgeClient.list_market_alerts)
+        assert "/alerts" in self._src(PolyforgeClient.list_market_alerts)
+
+    def test_create_market_alert_path(self):
+        src = self._src(PolyforgeClient.create_market_alert)
+        assert "/api/v1/markets/" in src and "/alerts" in src
+
+    def test_delete_market_alert_path(self):
+        src = self._src(PolyforgeClient.delete_market_alert)
+        assert "/api/v1/markets/" in src and "/alerts/" in src
+
+    def test_get_market_history_path(self):
+        assert "/history" in self._src(PolyforgeClient.get_market_history)
+
+    def test_market_sentiment_report_path(self):
+        assert "/sentiment" in self._src(PolyforgeClient.get_market_sentiment_report)
+        assert "/sentiment" in self._src(PolyforgeClient.vote_market_sentiment)
+
+    def test_update_order_journal_path(self):
+        src = self._src(PolyforgeClient.update_order_journal)
+        assert "/api/v1/orders/" in src and "/journal" in src
+
+    def test_combo_collection_paths(self):
+        assert '"/api/v1/markets/combo/collections"' in self._src(
+            PolyforgeClient.list_combo_collections
+        )
+        assert "/api/v1/markets/combo/collections/" in self._src(
+            PolyforgeClient.get_combo_collection
+        )
+
+    def test_lookup_combo_market_path(self):
+        assert '"/api/v1/markets/combo/lookup"' in self._src(
+            PolyforgeClient.lookup_combo_market
+        )
+
+    def test_correlation_categories_path(self):
+        assert '"/api/v1/analytics/correlation/categories"' in self._src(
+            PolyforgeClient.get_correlation_categories
+        )
+
+
+class TestMiscUtilityEnumValidation:
+    """Pre-network validation guards reject obvious garbage inputs."""
+
+    def test_invalid_market_alert_outcome_rejected(self):
+        client = PolyforgeClient(api_key="test")
+        try:
+            with pytest.raises(ValueError, match="outcome"):
+                client.create_market_alert(
+                    "m1", outcome="MAYBE", condition="above", threshold=0.5
+                )
+        finally:
+            client.close()
+
+    def test_invalid_market_alert_condition_rejected(self):
+        client = PolyforgeClient(api_key="test")
+        try:
+            with pytest.raises(ValueError, match="condition"):
+                client.create_market_alert(
+                    "m1", outcome="YES", condition="across", threshold=0.5
+                )
+        finally:
+            client.close()
+
+    def test_threshold_out_of_range_rejected(self):
+        client = PolyforgeClient(api_key="test")
+        try:
+            with pytest.raises(ValueError, match="threshold"):
+                client.create_market_alert(
+                    "m1", outcome="YES", condition="above", threshold=0.999
+                )
+            with pytest.raises(ValueError, match="threshold"):
+                client.create_market_alert(
+                    "m1", outcome="YES", condition="above", threshold=0.0
+                )
+        finally:
+            client.close()
+
+    def test_invalid_market_history_period_rejected(self):
+        client = PolyforgeClient(api_key="test")
+        try:
+            with pytest.raises(ValueError, match="period"):
+                client.get_market_history("m1", period="365d")
+        finally:
+            client.close()
+
+    def test_invalid_journal_mood_rejected(self):
+        client = PolyforgeClient(api_key="test")
+        try:
+            with pytest.raises(ValueError, match="mood"):
+                client.list_journal(mood="HAPPY")
+        finally:
+            client.close()
+
+    def test_invalid_order_journal_mood_rejected(self):
+        client = PolyforgeClient(api_key="test")
+        try:
+            with pytest.raises(ValueError, match="mood"):
+                client.update_order_journal("ord-1", mood="ANGRY")
+        finally:
+            client.close()
+
+    def test_invalid_feed_side_rejected(self):
+        client = PolyforgeClient(api_key="test")
+        try:
+            with pytest.raises(ValueError, match="side"):
+                client.list_feed(side="LONG")
+        finally:
+            client.close()
+
+    def test_preview_fees_rejects_invalid_side_and_finance(self):
+        client = PolyforgeClient(api_key="test")
+        try:
+            with pytest.raises(ValueError, match="side"):
+                client.preview_fees(
+                    token_id="t1", side="LONG", size=1, price=0.5
+                )
+            with pytest.raises(ValueError, match="size"):
+                client.preview_fees(
+                    token_id="t1", side="BUY", size=0, price=0.5
+                )
+            with pytest.raises(ValueError, match="price"):
+                client.preview_fees(
+                    token_id="t1", side="BUY", size=1, price=float("nan")
+                )
+        finally:
+            client.close()
+
+    def test_lookup_combo_validates_legs(self):
+        client = PolyforgeClient(api_key="test")
+        try:
+            with pytest.raises(ValueError, match="ticker"):
+                client.lookup_combo_market("col", [{"ticker": "", "outcome": "yes"}])
+            with pytest.raises(ValueError, match="outcome"):
+                client.lookup_combo_market("col", [{"ticker": "T1", "outcome": "buy"}])
+            with pytest.raises(TypeError, match="dict"):
+                client.lookup_combo_market("col", ["not-a-dict"])  # type: ignore[list-item]
+        finally:
+            client.close()
+
+
+class TestMiscUtilityEndpointRoundtrips:
+    """Stub the HTTP layer with httpx.MockTransport and exercise each method."""
+
+    @staticmethod
+    def _client_with(handler):
+        transport = httpx.MockTransport(handler)
+        client = PolyforgeClient(api_key="test", api_url="http://localhost:9999")
+        client._client = httpx.Client(
+            base_url="http://localhost:9999",
+            headers={"Authorization": "Bearer test"},
+            transport=transport,
+        )
+        return client
+
+    def test_get_accuracy_overview_parses_payload(self):
+        def handler(request):
+            assert request.url.path == "/api/v1/accuracy"
+            return httpx.Response(200, json={
+                "brierScore": 0.21, "totalPredictions": 12,
+                "correctPredictions": 9, "winRate": "0.75",
+                "calibration": [
+                    {"bucketMid": 0.5, "frequency": 0.6, "count": 4},
+                ],
+                "byCategory": {
+                    "Politics": {"count": 5, "brierScore": 0.18},
+                },
+            })
+        client = self._client_with(handler)
+        try:
+            score = client.get_accuracy_overview()
+            assert score.total_predictions == 12
+            assert score.correct_predictions == 9
+            assert score.calibration[0].count == 4
+            assert score.by_category["Politics"].brier_score == 0.18
+        finally:
+            client.close()
+
+    def test_list_feed_strips_none_and_validates_side(self):
+        captured = {}
+
+        def handler(request):
+            captured["url"] = request.url
+            return httpx.Response(200, json={
+                "data": [{"id": "wh1"}], "total": 1, "page": 1, "limit": 20,
+                "totalPages": 1, "hasNext": False,
+            })
+        client = self._client_with(handler)
+        try:
+            res = client.list_feed(side="BUY", min_size="100", page=1, limit=20)
+            qp = dict(captured["url"].params)
+            assert qp["side"] == "BUY"
+            assert qp["minSize"] == "100"
+            assert "marketId" not in qp
+            assert isinstance(res, PaginatedResponse)
+            assert res.data[0]["id"] == "wh1"
+        finally:
+            client.close()
+
+    def test_list_journal_passes_mood_and_paginates(self):
+        captured = {}
+
+        def handler(request):
+            captured["url"] = request.url
+            return httpx.Response(200, json={
+                "data": [{"id": "ord-1", "mood": "CONFIDENT"}],
+                "total": 1, "page": 1, "limit": 20,
+                "totalPages": 1, "hasNext": False,
+            })
+        client = self._client_with(handler)
+        try:
+            res = client.list_journal(mood="CONFIDENT")
+            qp = dict(captured["url"].params)
+            assert qp["mood"] == "CONFIDENT"
+            assert res.data[0]["mood"] == "CONFIDENT"
+        finally:
+            client.close()
+
+    def test_list_notifications_returns_paginated(self):
+        def handler(request):
+            assert request.url.path == "/api/v1/notifications"
+            return httpx.Response(200, json={
+                "data": [{"id": "n1"}],
+                "total": 1, "page": 1, "limit": 20,
+                "totalPages": 1, "hasNext": False,
+            })
+        client = self._client_with(handler)
+        try:
+            res = client.list_notifications()
+            assert res.total == 1
+            assert res.data[0]["id"] == "n1"
+        finally:
+            client.close()
+
+    def test_get_my_referrals_parses_nested_stats(self):
+        def handler(request):
+            assert request.url.path == "/api/v1/referrals/me"
+            return httpx.Response(200, json={
+                "referralCode": "ABC12345",
+                "referralLink": "https://polyforge.trade/ref/ABC12345",
+                "stats": {
+                    "invited": 3, "signedUp": 2, "active": 1, "creditsEarned": 10,
+                },
+                "referrals": [],
+            })
+        client = self._client_with(handler)
+        try:
+            info = client.get_my_referrals()
+            assert info.referral_code == "ABC12345"
+            assert info.stats.signed_up == 2
+            assert info.stats.credits_earned == 10
+        finally:
+            client.close()
+
+    def test_preview_fees_posts_camel_body_and_parses_response(self):
+        captured = {}
+
+        def handler(request):
+            captured["body"] = json.loads(request.content)
+            return httpx.Response(200, json={
+                "polymarket": {
+                    "venue": "POLYMARKET", "feeBps": 0, "feeUsd": 0,
+                    "totalCostUsd": 50, "isMaker": False,
+                },
+                "kalshi": None,
+                "savings": 0,
+                "recommendedVenue": "POLYMARKET",
+                "marketMatch": None,
+            })
+        client = self._client_with(handler)
+        try:
+            res = client.preview_fees(
+                token_id="t1", side="BUY", size=100, price=0.5,
+                order_type="POST_ONLY",
+            )
+            assert captured["body"]["tokenId"] == "t1"
+            assert captured["body"]["orderType"] == "POST_ONLY"
+            assert res.polymarket.venue == "POLYMARKET"
+            assert res.kalshi is None
+            assert res.recommended_venue == "POLYMARKET"
+        finally:
+            client.close()
+
+    def test_list_fee_schedules_passthrough(self):
+        def handler(request):
+            assert request.url.path == "/api/v1/fees/schedules"
+            return httpx.Response(200, json={
+                "polymarket": [{"role": "MAKER", "feeBps": 0}],
+                "kalshi": [],
+            })
+        client = self._client_with(handler)
+        try:
+            res = client.list_fee_schedules()
+            assert res["polymarket"][0]["feeBps"] == 0
+        finally:
+            client.close()
+
+    def test_list_and_create_and_delete_market_alert(self):
+        captured = {}
+
+        def handler(request):
+            captured["method"] = request.method
+            captured["raw_path"] = request.url.raw_path
+            if request.method == "GET":
+                return httpx.Response(200, json={
+                    "data": [{
+                        "id": "a1", "marketId": "m1", "outcome": "YES",
+                        "condition": "above", "threshold": 0.5,
+                        "triggered": False, "createdAt": "2026-05-01T00:00:00Z",
+                    }],
+                })
+            if request.method == "POST":
+                captured["body"] = json.loads(request.content)
+                return httpx.Response(201, json={
+                    "id": "a2", "marketId": "m1", "outcome": "YES",
+                    "condition": "below", "threshold": 0.6,
+                    "triggered": False, "createdAt": "2026-05-01T00:00:00Z",
+                })
+            if request.method == "DELETE":
+                return httpx.Response(204)
+            return httpx.Response(405)
+
+        client = self._client_with(handler)
+        try:
+            alerts = client.list_market_alerts("m 1")
+            assert captured["raw_path"] == b"/api/v1/markets/m%201/alerts"
+            assert alerts[0].id == "a1"
+            assert alerts[0].threshold == 0.5
+
+            created = client.create_market_alert(
+                "m1", outcome="YES", condition="below", threshold=0.6,
+            )
+            assert captured["body"]["threshold"] == 0.6
+            assert created.id == "a2"
+
+            client.delete_market_alert("m1", "a/2")
+            assert captured["raw_path"] == b"/api/v1/markets/m1/alerts/a%2F2"
+        finally:
+            client.close()
+
+    def test_get_market_history_sends_period_and_parses_points(self):
+        captured = {}
+
+        def handler(request):
+            captured["url"] = request.url
+            return httpx.Response(200, json={
+                "data": [
+                    {"timestamp": "2026-05-01T00:00:00Z",
+                     "yesPrice": 0.51, "noPrice": 0.49, "volume": 1000},
+                ],
+            })
+        client = self._client_with(handler)
+        try:
+            points = client.get_market_history("m1", period="30d")
+            assert dict(captured["url"].params)["period"] == "30d"
+            assert points[0].yes_price == 0.51
+            assert points[0].volume == 1000
+        finally:
+            client.close()
+
+    def test_market_sentiment_report_get_and_post_parse(self):
+        captured = {}
+
+        def handler(request):
+            captured["method"] = request.method
+            return httpx.Response(200, json={
+                "yesPercent": 60, "noPercent": 40, "totalVotes": 5,
+                "userVote": {"direction": "BUY", "confidence": 0.8},
+            })
+        client = self._client_with(handler)
+        try:
+            report = client.get_market_sentiment_report("m1")
+            assert captured["method"] == "GET"
+            assert report.user_vote is not None
+            assert report.user_vote.direction == "BUY"
+
+            voted = client.vote_market_sentiment("m1")
+            assert captured["method"] == "POST"
+            assert voted.total_votes == 5
+        finally:
+            client.close()
+
+    def test_update_order_journal_patches_with_optional_note(self):
+        captured = {}
+
+        def handler(request):
+            captured["method"] = request.method
+            captured["raw_path"] = request.url.raw_path
+            captured["body"] = json.loads(request.content)
+            return httpx.Response(200, json={
+                "id": "ord-1", "mood": "CONFIDENT", "note": "good entry",
+            })
+        client = self._client_with(handler)
+        try:
+            order = client.update_order_journal(
+                "ord 1", mood="CONFIDENT", note="good entry",
+            )
+            assert captured["method"] == "PATCH"
+            assert captured["raw_path"] == b"/api/v1/orders/ord%201/journal"
+            assert captured["body"] == {"mood": "CONFIDENT", "note": "good entry"}
+            assert order.id == "ord-1"
+        finally:
+            client.close()
+
+    def test_update_order_journal_omits_note_when_none(self):
+        captured = {}
+
+        def handler(request):
+            captured["body"] = json.loads(request.content)
+            return httpx.Response(200, json={"id": "ord-1", "mood": "FOMO"})
+        client = self._client_with(handler)
+        try:
+            client.update_order_journal("ord-1", mood="FOMO")
+            assert captured["body"] == {"mood": "FOMO"}
+        finally:
+            client.close()
+
+    def test_combo_collection_endpoints_passthrough(self):
+        captured = {}
+
+        def handler(request):
+            captured["path"] = request.url.path
+            captured["raw_path"] = request.url.raw_path
+            captured["params"] = dict(request.url.params)
+            return httpx.Response(200, json={"collections": [], "cursor": None})
+        client = self._client_with(handler)
+        try:
+            client.list_combo_collections(series_ticker="KX", limit=10)
+            assert captured["path"] == "/api/v1/markets/combo/collections"
+            assert captured["params"]["seriesTicker"] == "KX"
+            assert captured["params"]["limit"] == "10"
+
+            client.get_combo_collection("KX/COLL 1")
+            assert captured["raw_path"] == b"/api/v1/markets/combo/collections/KX%2FCOLL%201"
+        finally:
+            client.close()
+
+    def test_lookup_combo_market_posts_legs(self):
+        captured = {}
+
+        def handler(request):
+            captured["body"] = json.loads(request.content)
+            return httpx.Response(200, json={
+                "ticker": "MK1", "yesTicker": "MK1Y",
+            })
+        client = self._client_with(handler)
+        try:
+            res = client.lookup_combo_market(
+                "COL", [{"ticker": "T1", "outcome": "yes"}],
+            )
+            assert captured["body"]["collectionTicker"] == "COL"
+            assert captured["body"]["legs"][0]["outcome"] == "yes"
+            assert res["ticker"] == "MK1"
+        finally:
+            client.close()
+
+    def test_get_correlation_categories_parses_matrix(self):
+        def handler(request):
+            assert request.url.path == "/api/v1/analytics/correlation/categories"
+            return httpx.Response(200, json={
+                "categories": ["Politics", "Sports"],
+                "matrix": [[1.0, 0.3], [0.3, 1.0]],
+                "updatedAt": "2026-05-01T00:00:00Z",
+            })
+        client = self._client_with(handler)
+        try:
+            report = client.get_correlation_categories()
+            assert report.categories == ["Politics", "Sports"]
+            assert report.matrix[0][1] == 0.3
+            assert report.updated_at == "2026-05-01T00:00:00Z"
+        finally:
+            client.close()
+
+
+class TestMiscUtilityEndpointsAsync:
+    """Smoke-check that the async client mirrors the sync surface end-to-end."""
+
+    @staticmethod
+    def _async_client_with(handler):
+        transport = httpx.MockTransport(handler)
+        client = AsyncPolyforgeClient(api_key="test", api_url="http://localhost:9999")
+        client._client = httpx.AsyncClient(
+            base_url="http://localhost:9999",
+            headers={"Authorization": "Bearer test"},
+            transport=transport,
+        )
+        return client
+
+    def test_async_create_and_delete_market_alert(self):
+        import asyncio
+
+        captured = {}
+
+        def handler(request):
+            captured["method"] = request.method
+            if request.method == "POST":
+                captured["body"] = json.loads(request.content)
+                return httpx.Response(201, json={
+                    "id": "a1", "marketId": "m1", "outcome": "YES",
+                    "condition": "above", "threshold": 0.5,
+                    "triggered": False, "createdAt": "2026-05-01T00:00:00Z",
+                })
+            if request.method == "DELETE":
+                return httpx.Response(204)
+            return httpx.Response(405)
+
+        async def _run():
+            client = self._async_client_with(handler)
+            created = await client.create_market_alert(
+                "m1", outcome="YES", condition="above", threshold=0.5,
+            )
+            assert captured["body"]["condition"] == "above"
+            assert created.id == "a1"
+
+            await client.delete_market_alert("m1", "a1")
+            assert captured["method"] == "DELETE"
+            await client.close()
+
+        asyncio.run(_run())
+
+    def test_async_invalid_market_history_period_rejected(self):
+        import asyncio
+
+        async def _run():
+            client = AsyncPolyforgeClient(api_key="test")
+            try:
+                with pytest.raises(ValueError, match="period"):
+                    await client.get_market_history("m1", period="garbage")
+            finally:
+                await client.close()
+
+        asyncio.run(_run())
+
+    def test_async_lookup_combo_validates_legs_before_request(self):
+        import asyncio
+
+        async def _run():
+            client = AsyncPolyforgeClient(api_key="test")
+            try:
+                with pytest.raises(ValueError, match="outcome"):
+                    await client.lookup_combo_market(
+                        "COL", [{"ticker": "T1", "outcome": "buy"}],
+                    )
+            finally:
+                await client.close()
+
+        asyncio.run(_run())
+
 # Cross-Venue Arb Execution / Positions / Risk (POLA-1851)
 # ---------------------------------------------------------------------------
 
