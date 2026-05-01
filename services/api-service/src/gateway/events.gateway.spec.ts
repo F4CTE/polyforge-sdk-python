@@ -70,6 +70,7 @@ describe("EventsGateway", () => {
             get: vi.fn((key: string) => {
               if (key === "USER_JWT_SECRET")
                 return "test-secret-32-chars-minimum-ok!";
+              if (key === "WS_MAX_CONNECTIONS_PER_USER") return 3;
               return undefined;
             }),
           },
@@ -148,7 +149,7 @@ describe("EventsGateway", () => {
       expect(client.terminate).toHaveBeenCalled();
     });
 
-    it("limits concurrent sockets per user", () => {
+    it("closes the oldest socket when a user exceeds the configured limit", () => {
       vi.mocked(jwtService.verify).mockReturnValue({
         sub: "user-A",
         email: "a@b.com",
@@ -167,14 +168,15 @@ describe("EventsGateway", () => {
       gateway.handleConnection(socket1, makeRequest("?token=t1"));
       gateway.handleConnection(socket2, makeRequest("?token=t2"));
 
-      expect(socket1.send).toHaveBeenCalledWith(
-        expect.stringContaining('"type":"AUTH_OK"'),
-      );
-      expect(socket2.close).toHaveBeenCalledWith(
+      expect(socket1.close).toHaveBeenCalledWith(
         4008,
         "Connection limit exceeded",
       );
-      expect(socket2.terminate).toHaveBeenCalled();
+      expect(socket1.terminate).toHaveBeenCalled();
+      expect(socket2.send).toHaveBeenCalledWith(
+        expect.stringContaining('"type":"AUTH_OK"'),
+      );
+      expect(socket2.close).not.toHaveBeenCalled();
     });
 
     it("closes connection when JWT verification fails", () => {
@@ -379,6 +381,147 @@ describe("EventsGateway", () => {
 
       expect(socket.send).toHaveBeenCalledWith(
         expect.stringContaining('"type":"PONG"'),
+      );
+    });
+  });
+
+  describe("per-user connection limit", () => {
+    function authAs(userId: string) {
+      vi.mocked(jwtService.verify).mockReturnValueOnce({
+        sub: userId,
+        email: `${userId}@b.com`,
+        username: userId,
+      });
+    }
+
+    it("accepts connections up to the configured per-user max", () => {
+      const sockets = Array.from({ length: 3 }, () => makeSocket());
+      sockets.forEach((s, i) => {
+        authAs("user-A");
+        gateway.handleConnection(s, makeRequest(`?token=t${i}`));
+      });
+
+      sockets.forEach((s) => {
+        expect(s.send).toHaveBeenCalledWith(
+          expect.stringContaining('"type":"AUTH_OK"'),
+        );
+        expect(s.close).not.toHaveBeenCalled();
+        expect(s.terminate).not.toHaveBeenCalled();
+      });
+    });
+
+    it("closes the oldest socket and accepts the next connection past the limit", () => {
+      const sockets: ReturnType<typeof makeSocket>[] = [];
+      for (let i = 0; i < 3; i++) {
+        authAs("user-A");
+        const socket = makeSocket();
+        gateway.handleConnection(socket, makeRequest(`?token=t${i}`));
+        sockets.push(socket);
+      }
+
+      authAs("user-A");
+      const replacement = makeSocket();
+      gateway.handleConnection(replacement, makeRequest("?token=t4"));
+
+      expect(sockets[0].close).toHaveBeenCalledWith(
+        4008,
+        "Connection limit exceeded",
+      );
+      expect(sockets[0].terminate).toHaveBeenCalled();
+      expect(replacement.send).toHaveBeenCalledWith(
+        expect.stringContaining('"type":"AUTH_OK"'),
+      );
+      expect(replacement.close).not.toHaveBeenCalled();
+    });
+
+    it("frees a slot on disconnect so a new connection is accepted", () => {
+      const filled: ReturnType<typeof makeSocket>[] = [];
+      for (let i = 0; i < 3; i++) {
+        authAs("user-A");
+        const s = makeSocket();
+        gateway.handleConnection(s, makeRequest(`?token=t${i}`));
+        filled.push(s);
+      }
+
+      gateway.handleDisconnect(filled[0]);
+
+      authAs("user-A");
+      const fresh = makeSocket();
+      gateway.handleConnection(fresh, makeRequest("?token=tFresh"));
+
+      expect(fresh.send).toHaveBeenCalledWith(
+        expect.stringContaining('"type":"AUTH_OK"'),
+      );
+      expect(fresh.close).not.toHaveBeenCalled();
+    });
+
+    it("isolates the limit per user", () => {
+      for (let i = 0; i < 3; i++) {
+        authAs("user-A");
+        gateway.handleConnection(makeSocket(), makeRequest(`?token=tA${i}`));
+      }
+
+      authAs("user-B");
+      const bSocket = makeSocket();
+      gateway.handleConnection(bSocket, makeRequest("?token=tB"));
+
+      expect(bSocket.send).toHaveBeenCalledWith(
+        expect.stringContaining('"type":"AUTH_OK"'),
+      );
+      expect(bSocket.close).not.toHaveBeenCalled();
+    });
+
+    it("falls back to the default cap when WS_MAX_CONNECTIONS_PER_USER is unset", async () => {
+      const localModule = await Test.createTestingModule({
+        providers: [
+          EventsGateway,
+          {
+            provide: JwtService,
+            useValue: {
+              verify: vi.fn().mockReturnValue({
+                sub: "user-X",
+                email: "x@b.com",
+                username: "x",
+              }),
+            },
+          },
+          {
+            provide: ConfigService,
+            useValue: {
+              get: vi.fn((key: string) => {
+                if (key === "USER_JWT_SECRET")
+                  return "test-secret-32-chars-minimum-ok!";
+                return undefined;
+              }),
+            },
+          },
+        ],
+      }).compile();
+
+      const localGateway = localModule.get(EventsGateway);
+      localGateway.server = {
+        clients: new Set(),
+      } as unknown as import("ws").Server;
+
+      const sockets: ReturnType<typeof makeSocket>[] = [];
+      for (let i = 0; i < 5; i++) {
+        const socket = makeSocket();
+        localGateway.handleConnection(
+          socket,
+          makeRequest(`?token=t${i}`),
+        );
+        sockets.push(socket);
+      }
+      const replacement = makeSocket();
+      localGateway.handleConnection(replacement, makeRequest("?token=t6"));
+
+      expect(sockets[0].close).toHaveBeenCalledWith(
+        4008,
+        "Connection limit exceeded",
+      );
+      expect(sockets[0].terminate).toHaveBeenCalled();
+      expect(replacement.send).toHaveBeenCalledWith(
+        expect.stringContaining('"type":"AUTH_OK"'),
       );
     });
   });
