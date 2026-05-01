@@ -29,16 +29,26 @@ output "rds_port" {
   value       = aws_db_instance.main.port
 }
 
-# ── ElastiCache ───────────────────────────────────────────────────────────────
+# ── ElastiCache (Multi-AZ Replication Group) ─────────────────────────────────
+# The replication group exposes two DNS endpoints:
+#   - primary_endpoint_address: always points to the current writer; AWS
+#     transparently swings DNS to the new primary on failover (RTO < 2 min).
+#   - reader_endpoint_address: round-robins across read replicas.
+# Application services use the primary endpoint via REDIS_URL.
 
-output "redis_endpoint" {
-  description = "Redis primary endpoint"
-  value       = aws_elasticache_cluster.main.cache_nodes[0].address
+output "redis_primary_endpoint" {
+  description = "Redis primary endpoint (writer) — DNS swings on failover"
+  value       = aws_elasticache_replication_group.main.primary_endpoint_address
+}
+
+output "redis_reader_endpoint" {
+  description = "Redis reader endpoint (round-robin across replicas)"
+  value       = aws_elasticache_replication_group.main.reader_endpoint_address
 }
 
 output "redis_port" {
   description = "Redis port"
-  value       = aws_elasticache_cluster.main.port
+  value       = aws_elasticache_replication_group.main.port
 }
 
 # ── ECR ───────────────────────────────────────────────────────────────────────

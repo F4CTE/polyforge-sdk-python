@@ -51,13 +51,24 @@ resource "aws_elasticache_parameter_group" "redis7" {
 
 # ── ElastiCache Replication Group (Multi-AZ) ──────────────────────────────────
 
+locals {
+  redis_replication_group_id = "${local.name}-redis"
+  redis_num_cache_clusters   = 2
+  # AWS auto-names members "<rg-id>-001", "<rg-id>-002", ... — deterministic
+  # at plan time so we can use them for_each without "known after apply".
+  redis_member_cluster_ids = [
+    for i in range(1, local.redis_num_cache_clusters + 1) :
+    format("%s-%03d", local.redis_replication_group_id, i)
+  ]
+}
+
 resource "aws_elasticache_replication_group" "main" {
-  replication_group_id = "${local.name}-redis"
+  replication_group_id = local.redis_replication_group_id
   description          = "Polyforge Redis 7 — multi-AZ replication group"
   engine               = "redis"
   engine_version       = "7.1"
   node_type            = var.redis_node_type
-  num_cache_clusters   = 2
+  num_cache_clusters   = local.redis_num_cache_clusters
   parameter_group_name = aws_elasticache_parameter_group.redis7.name
   subnet_group_name    = aws_elasticache_subnet_group.main.name
   security_group_ids   = [aws_security_group.redis.id]
@@ -77,6 +88,10 @@ resource "aws_elasticache_replication_group" "main" {
 
   # Maintenance
   maintenance_window = "sun:05:00-sun:06:00"
+
+  # Publish node lifecycle events (failover, replica promotion, snapshot
+  # success/failure, maintenance) to SNS — same topic as RDS/EC2 alarms.
+  notification_topic_arn = aws_sns_topic.alerts.arn
 
   # CloudWatch logs
   log_delivery_configuration {

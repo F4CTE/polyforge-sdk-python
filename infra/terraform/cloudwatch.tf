@@ -13,6 +13,36 @@ resource "aws_sns_topic_subscription" "email" {
   endpoint  = var.alert_email
 }
 
+# Allow ElastiCache to publish node lifecycle events (failover, replica
+# promotion, snapshots, maintenance) to the alerts topic. Required because
+# the replication group sets notification_topic_arn to this topic.
+resource "aws_sns_topic_policy" "alerts" {
+  arn = aws_sns_topic.alerts.arn
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid       = "AllowOwnerFullControl"
+        Effect    = "Allow"
+        Principal = { AWS = "*" }
+        Action    = "sns:*"
+        Resource  = aws_sns_topic.alerts.arn
+        Condition = {
+          StringEquals = { "AWS:SourceOwner" = data.aws_caller_identity.current.account_id }
+        }
+      },
+      {
+        Sid       = "AllowElastiCachePublish"
+        Effect    = "Allow"
+        Principal = { Service = "elasticache.amazonaws.com" }
+        Action    = "sns:Publish"
+        Resource  = aws_sns_topic.alerts.arn
+      },
+    ]
+  })
+}
+
 # ── Log groups ────────────────────────────────────────────────────────────────
 
 resource "aws_cloudwatch_log_group" "app" {
@@ -189,11 +219,20 @@ resource "aws_cloudwatch_metric_alarm" "rds_backup_failed" {
   tags          = { Name = "${local.name}-rds-backup-failed" }
 }
 
-# ── Redis: memory usage > 80% ─────────────────────────────────────────────────
+# ── Redis (Multi-AZ Replication Group) ───────────────────────────────────────
+# ElastiCache emits CloudWatch metrics per cache node, not per replication
+# group. We iterate the replication group's member clusters so each node gets
+# its own alarm and we can identify the breaching node during an incident.
+#
+# Replication group members are auto-named: "<rg-id>-001" (primary) and
+# "<rg-id>-002" (replica). On failover the role swaps but the IDs persist.
 
+# Memory usage > 80% — per node
 resource "aws_cloudwatch_metric_alarm" "redis_memory_high" {
-  alarm_name          = "${local.name}-redis-memory-high"
-  alarm_description   = "Redis memory usage > 80% for 5 minutes"
+  for_each = toset(local.redis_member_cluster_ids)
+
+  alarm_name          = "${local.name}-redis-memory-high-${each.key}"
+  alarm_description   = "Redis memory usage > 80% for 5 minutes (node ${each.key})"
   namespace           = "AWS/ElastiCache"
   metric_name         = "DatabaseMemoryUsagePercentage"
   statistic           = "Average"
@@ -204,19 +243,20 @@ resource "aws_cloudwatch_metric_alarm" "redis_memory_high" {
   treat_missing_data  = "notBreaching"
 
   dimensions = {
-    CacheClusterId = aws_elasticache_cluster.main.id
+    CacheClusterId = each.key
   }
 
   alarm_actions = [aws_sns_topic.alerts.arn]
   ok_actions    = [aws_sns_topic.alerts.arn]
-  tags          = { Name = "${local.name}-redis-memory-high" }
+  tags          = { Name = "${local.name}-redis-memory-high-${each.key}" }
 }
 
-# ── Redis: connection count > 1000 ────────────────────────────────────────────
-
+# Connection count > 1000 — per node
 resource "aws_cloudwatch_metric_alarm" "redis_connections_high" {
-  alarm_name          = "${local.name}-redis-connections-high"
-  alarm_description   = "Redis connection count > 1000 for 5 minutes"
+  for_each = toset(local.redis_member_cluster_ids)
+
+  alarm_name          = "${local.name}-redis-connections-high-${each.key}"
+  alarm_description   = "Redis connection count > 1000 for 5 minutes (node ${each.key})"
   namespace           = "AWS/ElastiCache"
   metric_name         = "CurrConnections"
   statistic           = "Maximum"
@@ -227,11 +267,63 @@ resource "aws_cloudwatch_metric_alarm" "redis_connections_high" {
   treat_missing_data  = "notBreaching"
 
   dimensions = {
-    CacheClusterId = aws_elasticache_cluster.main.id
+    CacheClusterId = each.key
   }
 
   alarm_actions = [aws_sns_topic.alerts.arn]
-  tags          = { Name = "${local.name}-redis-connections-high" }
+  tags          = { Name = "${local.name}-redis-connections-high-${each.key}" }
+}
+
+# Engine CPU > 75% — per node. EngineCPUUtilization measures only the Redis
+# engine thread (more accurate than CPUUtilization on multi-vCPU nodes where
+# the engine is single-threaded but the OS reports total CPU).
+resource "aws_cloudwatch_metric_alarm" "redis_engine_cpu_high" {
+  for_each = toset(local.redis_member_cluster_ids)
+
+  alarm_name          = "${local.name}-redis-engine-cpu-high-${each.key}"
+  alarm_description   = "Redis engine CPU > 75% for 10 minutes (node ${each.key})"
+  namespace           = "AWS/ElastiCache"
+  metric_name         = "EngineCPUUtilization"
+  statistic           = "Average"
+  period              = 300
+  evaluation_periods  = 2
+  threshold           = 75
+  comparison_operator = "GreaterThanThreshold"
+  treat_missing_data  = "notBreaching"
+
+  dimensions = {
+    CacheClusterId = each.key
+  }
+
+  alarm_actions = [aws_sns_topic.alerts.arn]
+  ok_actions    = [aws_sns_topic.alerts.arn]
+  tags          = { Name = "${local.name}-redis-engine-cpu-high-${each.key}" }
+}
+
+# Replication lag > 10s — replica is falling behind primary. High lag means
+# RPO degrades and reads against the reader endpoint return stale data.
+# Only the replica node emits this metric (primary value is always 0).
+resource "aws_cloudwatch_metric_alarm" "redis_replication_lag_high" {
+  for_each = toset(local.redis_member_cluster_ids)
+
+  alarm_name          = "${local.name}-redis-replication-lag-${each.key}"
+  alarm_description   = "Redis replication lag > 10s for 5 minutes (node ${each.key}) — RPO degraded"
+  namespace           = "AWS/ElastiCache"
+  metric_name         = "ReplicationLag"
+  statistic           = "Maximum"
+  period              = 60
+  evaluation_periods  = 5
+  threshold           = 10
+  comparison_operator = "GreaterThanThreshold"
+  treat_missing_data  = "notBreaching"
+
+  dimensions = {
+    CacheClusterId = each.key
+  }
+
+  alarm_actions = [aws_sns_topic.alerts.arn]
+  ok_actions    = [aws_sns_topic.alerts.arn]
+  tags          = { Name = "${local.name}-redis-replication-lag-${each.key}" }
 }
 
 # ── SES: bounce rate > 5% ─────────────────────────────────────────────────────
@@ -324,9 +416,12 @@ resource "aws_cloudwatch_dashboard" "main" {
         type       = "metric"
         x          = 18; y = 0; width = 6; height = 6
         properties = {
-          title   = "Redis Memory %"
-          metrics = [["AWS/ElastiCache", "DatabaseMemoryUsagePercentage", "CacheClusterId", aws_elasticache_cluster.main.id]]
-          period  = 60; stat = "Average"; view = "timeSeries"
+          title   = "Redis Memory % (per node)"
+          metrics = [
+            for cluster_id in local.redis_member_cluster_ids :
+            ["AWS/ElastiCache", "DatabaseMemoryUsagePercentage", "CacheClusterId", cluster_id]
+          ]
+          period = 60; stat = "Average"; view = "timeSeries"
         }
       },
       {
@@ -342,9 +437,36 @@ resource "aws_cloudwatch_dashboard" "main" {
         type       = "metric"
         x          = 12; y = 6; width = 12; height = 6
         properties = {
-          title   = "Redis Connections"
-          metrics = [["AWS/ElastiCache", "CurrConnections", "CacheClusterId", aws_elasticache_cluster.main.id]]
-          period  = 60; stat = "Maximum"; view = "timeSeries"
+          title   = "Redis Connections (per node)"
+          metrics = [
+            for cluster_id in local.redis_member_cluster_ids :
+            ["AWS/ElastiCache", "CurrConnections", "CacheClusterId", cluster_id]
+          ]
+          period = 60; stat = "Maximum"; view = "timeSeries"
+        }
+      },
+      {
+        type       = "metric"
+        x          = 0; y = 12; width = 12; height = 6
+        properties = {
+          title   = "Redis Replication Lag (s)"
+          metrics = [
+            for cluster_id in local.redis_member_cluster_ids :
+            ["AWS/ElastiCache", "ReplicationLag", "CacheClusterId", cluster_id]
+          ]
+          period = 60; stat = "Maximum"; view = "timeSeries"
+        }
+      },
+      {
+        type       = "metric"
+        x          = 12; y = 12; width = 12; height = 6
+        properties = {
+          title   = "Redis Engine CPU % (per node)"
+          metrics = [
+            for cluster_id in local.redis_member_cluster_ids :
+            ["AWS/ElastiCache", "EngineCPUUtilization", "CacheClusterId", cluster_id]
+          ]
+          period = 60; stat = "Average"; view = "timeSeries"
         }
       },
     ]

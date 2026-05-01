@@ -386,10 +386,35 @@ SELECT add_retention_policy('cache_stats', INTERVAL '30 days');
 
 ## 5. Redis Architecture
 
-**Deployment:** ElastiCache replication group with automatic failover (primary + 1 replica across AZs).  
-**Persistence:** AOF mode with `fsync every second` — maximum 1 second data loss on crash.  
-**Resilience:** `RedisService` includes automatic reconnection with exponential backoff and health tracking (`isHealthy` / `ping()`).  
-**Shared by:** all services (user and admin alike access the same Redis instance via the `internal` network).
+**Deployment (prod):** ElastiCache replication group with automatic failover — primary + 1 replica across two AZs (`eu-west-2a` / `eu-west-2b`).
+**Deployment (dev):** Single `redis:7-alpine` container in `docker-compose.infra.yml`. HA is intentionally not replicated locally; the dev container exists only for fast iteration.
+**Persistence:** AOF (`appendonly yes`, `appendfsync everysec`) — bounded to ≤ 1 s data loss on a single-node crash, and effectively zero on Multi-AZ failover (the replica is in sync).
+**Resilience:** `RedisService` (`packages/shared-redis`) uses ioredis with automatic reconnection, exponential backoff, and health tracking (`isHealthy` / `ping()`). On failover the primary endpoint DNS is swung by AWS; ioredis reconnects through `retryStrategy` without code changes.
+**Shared by:** all backend services (user and admin) over the `internal` network.
+
+### High availability and failover
+
+| Property | Value |
+|---|---|
+| Topology | 1 primary + 1 replica, Multi-AZ |
+| Automatic failover | Enabled (`automatic_failover_enabled = true`) |
+| RTO | ≤ 2 min (typical 30–60 s; bounded by DNS swing + ioredis reconnect) |
+| RPO | ≤ 1 s under steady state (async replication) |
+| In-transit encryption | Enabled (`rediss://`, AUTH token) |
+| Backup | Daily snapshot 04:00–05:00 UTC, 7-day retention |
+| Notifications | SNS topic `polyforge-prod-alerts` (failover, replica promotion, snapshots, maintenance) |
+
+**Connection string contract.** All services read `REDIS_URL` from Secrets Manager. The URL targets the **primary endpoint** of the replication group, which AWS keeps pointing at the current writer. Services do **not** need Sentinel or Cluster client mode — the failover is invisible at the URL layer.
+
+```
+REDIS_URL=rediss://:<auth-token>@<replication-group-primary-endpoint>:6379/0
+```
+
+The Terraform output `redis_reader_endpoint` is also exposed. It is currently unused; future read-heavy paths (leaderboards, market history) may opt in by reading from the reader endpoint while continuing to write through the primary endpoint, but most of our workload is dominated by streams + cache writes and is not read-replica-friendly.
+
+**Failover runbook (one-pager):** see `docs/ops/05-incident-response.md` § "Redis primary failover".
+
+### Cache Keys
 
 ### Cache Keys
 

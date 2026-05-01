@@ -159,6 +159,48 @@ docker exec polyforge_api-service sh -c \
   "redis-cli -u \$REDIS_URL SET config:invite_only true"
 ```
 
+### Redis primary failover
+
+ElastiCache runs as a Multi-AZ replication group with automatic failover. In normal operation no human intervention is required: AWS promotes the replica, swings the primary endpoint DNS, and emails the alerts SNS topic. Application services reconnect via ioredis `retryStrategy` within 30–60 s.
+
+**Detection signals (any of):**
+
+- SNS email/Slack: `ElastiCache:NodeReplacementScheduled`, `ElastiCache:FailoverComplete`, `ElastiCache:CacheNodeReplaceStarted`.
+- CloudWatch alarm `polyforge-prod-redis-replication-lag-*` firing for several minutes prior.
+- App-error rate spike on the dashboard (~30 s window during DNS swing).
+- Service logs showing `Redis error` / `Redis connection closed` followed by `Redis ready`.
+
+**During failover (first 5 minutes — usually no action needed):**
+
+1. Confirm the failover SNS event names the replication group `polyforge-prod-redis`.
+2. Watch the CloudWatch Redis dashboard panels — both nodes should remain visible; the role swap is invisible to the dashboard.
+3. Watch app-error rate panel. A short bump is normal; sustained bump = clients failed to reconnect.
+
+**If services do not reconnect within 2 minutes:**
+
+```bash
+# 1. Confirm the new primary endpoint is reachable from the EC2 host
+docker exec polyforge_api-service sh -c \
+  "redis-cli -u \$REDIS_URL --tls PING"
+
+# 2. If PONG: restart only the affected service so a fresh DNS lookup happens
+docker compose -f docker-compose.prod.yml restart api-service
+
+# 3. If still failing: check the security group allows the new node's ENI
+aws elasticache describe-replication-groups \
+  --replication-group-id polyforge-prod-redis \
+  --query 'ReplicationGroups[0].MemberClusters'
+```
+
+**Recovery verification:**
+
+- All services emit `Redis ready` in their logs.
+- `ReplicationLag` alarm returns to OK on both nodes.
+- App-error rate drops to baseline.
+- Trade flow: place a paper order via `/api/v1/paper/orders` and confirm it lands in `stream:paper_orders`.
+
+**Post-incident:** open a SEV3 retro within 48 h documenting failover trigger (planned maintenance vs hardware failure), DNS swing duration, and total client reconnect time.
+
 ---
 
 ## Known Remediated Security Findings

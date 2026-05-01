@@ -56,8 +56,10 @@ resource "aws_secretsmanager_secret_version" "db" {
     DATABASE_DIRECT_URL       = "postgresql://${var.db_user_username}:${var.db_user_password}@${aws_db_instance.main.endpoint}/polyforge"
     ADMIN_DATABASE_DIRECT_URL = "postgresql://${var.db_admin_username}:${var.db_admin_password}@${aws_db_instance.main.endpoint}/polyforge_admin"
 
-    # ElastiCache — TLS + AUTH token
-    REDIS_URL = "rediss://:${var.redis_auth_token}@${aws_elasticache_cluster.main.cache_nodes[0].address}:6379/0"
+    # ElastiCache — TLS + AUTH token. Uses the replication group's primary
+    # endpoint, whose DNS is automatically updated on failover (RTO < 2 min)
+    # so application services reconnect transparently via ioredis retryStrategy.
+    REDIS_URL = "rediss://:${var.redis_auth_token}@${aws_elasticache_replication_group.main.primary_endpoint_address}:6379/0"
   })
 
   lifecycle {
