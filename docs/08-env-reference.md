@@ -139,6 +139,7 @@ All encryption keys are **required** — services will fail to start if unset. G
 
 | Variable | Dev default | Description |
 |---|---|---|
+| `SENTRY_DSN` | _(empty)_ | Backend Sentry DSN. When set, all NestJS services (api, auth, admin-api, admin-auth, order, paper-order, signer, strategy-engine, backtest, bot, market-data, notification) initialise `@sentry/nestjs` and register `SentryGlobalFilter`. When unset, Sentry is inactive (`beforeSend` returns null, zero overhead). |
 | `VITE_SENTRY_DSN` | _(empty)_ | Public Sentry/GlitchTip-compatible DSN for the Vite user and admin apps. When unset, their `@sentry/react` browser wrappers initialize with a `beforeSend` drop guard and skip user/error reporting calls. |
 | `NEXT_PUBLIC_SENTRY_DSN` | _(empty)_ | Public Sentry/GlitchTip-compatible DSN for the Next.js landing app. When unset, landing Sentry initialization drops events before send so local builds do not report. |
 | `NEXT_PUBLIC_SENTRY_TUNNEL` | _(build-derived)_ | Public landing Sentry tunnel path injected by `apps/landing/next.config.ts`. Server-backed builds set `/monitoring`; static export builds set an empty value so browser events go directly to the DSN because no Next.js tunnel route exists. |
@@ -149,6 +150,15 @@ All encryption keys are **required** — services will fail to start if unset. G
 Landing Sentry runs on `@sentry/nextjs` v10. The SDK now uses OpenTelemetry v2 internally and should be paired with a Sentry-compatible backend that supports self-hosted Sentry 24.4.2 or newer. The landing app keeps the existing `/monitoring` tunnel route for server-backed builds through both the client SDK `tunnel` option and a Next.js rewrite; static export mode disables the tunnel and server function instrumentation because there is no Next.js runtime.
 
 The Vite user and admin apps run on `@sentry/react` v10 without Replay, BrowserTracing, a Sentry Vite plugin, a tunnel route, or source-map upload. Add those pieces in a dedicated observability change if frontend release artifact upload or tunneling becomes required.
+
+### Redis Stream observability
+
+Every NestJS service that hosts a Redis Stream consumer (`order-service`, `paper-order-service`, `backtest-service`, `notification-service`) registers a **`StreamMonitorService`** and **`PelReclaimService`** from `@polyforge/shared-redis` on boot. No env vars control these — defaults are encoded in the helpers:
+
+- **Monitor**: polls `XLEN` + `XPENDING` + `XINFO CONSUMERS` every 30 s. Emits a `Logger.warn` line and a `redis-stream` Sentry breadcrumb when stream length exceeds 10 000, pending count exceeds 500, or oldest pending age exceeds 5 minutes.
+- **PEL reclaim**: runs every 60 s. Calls `XAUTOCLAIM` (Redis 6.2+) with a 5-minute idle threshold so abandoned entries from a crashed pod are reassigned to the live consumer, optionally re-run through the consumer's handler, and ACKed only on success.
+
+Both helpers degrade silently when the host process has no `@sentry/nestjs` initialised (the breadcrumb path uses a runtime require with a try/catch).
 
 ---
 

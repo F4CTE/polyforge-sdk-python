@@ -4,7 +4,11 @@ import {
   OnModuleInit,
   OnModuleDestroy,
 } from "@nestjs/common";
-import { RedisService } from "@polyforge/shared-redis";
+import {
+  PelReclaimService,
+  RedisService,
+  StreamMonitorService,
+} from "@polyforge/shared-redis";
 import { BacktestService } from "../backtest/backtest.service";
 
 const STREAM = "stream:backtests";
@@ -20,10 +24,26 @@ export class StreamConsumerService implements OnModuleInit, OnModuleDestroy {
   constructor(
     private readonly redis: RedisService,
     private readonly backtest: BacktestService,
+    private readonly streamMonitor: StreamMonitorService,
+    private readonly pelReclaim: PelReclaimService,
   ) {}
 
   async onModuleInit() {
     await this.ensureGroup();
+    this.streamMonitor.register({ stream: STREAM, group: GROUP });
+    // Backtest's normal loop ACKs before running, so any entry left in
+    // PEL is from a producer-side delivery that never made it past the
+    // ACK call. Reclaim simply ACKs it — the run, if it ever started,
+    // is tracked in DB and an admin can re-queue it explicitly.
+    this.pelReclaim.register({
+      stream: STREAM,
+      group: GROUP,
+      consumer: CONSUMER,
+      handler: async () => {
+        // No-op — drain and ACK. Re-running silently is unsafe because
+        // it could double up on partial DB writes from a prior attempt.
+      },
+    });
     this.running = true;
     this.loopPromise = this.consumeLoop();
     this.logger.log("Backtest stream consumer started");

@@ -19,6 +19,14 @@ function createMockFills() {
   } as any;
 }
 
+function createMockStreamMonitor() {
+  return { register: vi.fn() } as any;
+}
+
+function createMockPelReclaim() {
+  return { register: vi.fn() } as any;
+}
+
 // ─── Suite ──────────────────────────────────────────────────────────────────
 
 describe("StreamConsumerService (paper-order-service)", () => {
@@ -29,7 +37,12 @@ describe("StreamConsumerService (paper-order-service)", () => {
   beforeEach(() => {
     redis = createMockRedis();
     fills = createMockFills();
-    service = new StreamConsumerService(redis, fills);
+    service = new StreamConsumerService(
+      redis,
+      fills,
+      createMockStreamMonitor(),
+      createMockPelReclaim(),
+    );
   });
 
   // ── parseFields ─────────────────────────────────────────────────────────

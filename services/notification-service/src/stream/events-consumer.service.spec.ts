@@ -33,7 +33,12 @@ describe("EventsConsumerService", () => {
   beforeEach(() => {
     redis = createMockRedis();
     notification = createMockNotification();
-    service = new EventsConsumerService(redis, notification);
+    service = new EventsConsumerService(
+      redis,
+      notification,
+      { register: vi.fn() } as any,
+      { register: vi.fn() } as any,
+    );
   });
 
   // ── parseFields ─────────────────────────────────────────────────────────

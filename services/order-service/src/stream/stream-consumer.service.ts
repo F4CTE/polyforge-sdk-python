@@ -5,7 +5,11 @@ import {
   OnModuleDestroy,
 } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
-import { RedisService } from "@polyforge/shared-redis";
+import {
+  PelReclaimService,
+  RedisService,
+  StreamMonitorService,
+} from "@polyforge/shared-redis";
 import { OrdersService, OrderIntent } from "../orders/orders.service";
 
 const STREAM = "stream:orders";
@@ -30,10 +34,23 @@ export class StreamConsumerService implements OnModuleInit, OnModuleDestroy {
     private readonly redis: RedisService,
     private readonly orders: OrdersService,
     private readonly config: ConfigService,
+    private readonly streamMonitor: StreamMonitorService,
+    private readonly pelReclaim: PelReclaimService,
   ) {}
 
   async onModuleInit() {
     await this.ensureConsumerGroup();
+    this.streamMonitor.register({ stream: STREAM, group: GROUP });
+    this.pelReclaim.register({
+      stream: STREAM,
+      group: GROUP,
+      consumer: CONSUMER,
+      handler: async (entry) => {
+        const intent = this.parseIntent(this.fieldsToArray(entry.fields));
+        if (!intent) return;
+        await this.orders.processBatch([intent]);
+      },
+    });
     this.running = true;
     this.loopPromise = this.consumeLoop();
   }
@@ -164,11 +181,21 @@ export class StreamConsumerService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
-  private parseExpiration(value: string | undefined): number | undefined | null {
+  private parseExpiration(
+    value: string | undefined,
+  ): number | undefined | null {
     if (value === undefined || value === "" || value === "0") return undefined;
     const expiration = Number(value);
     if (!Number.isFinite(expiration) || expiration < 0) return null;
     return expiration;
+  }
+
+  private fieldsToArray(fields: Record<string, string>): string[] {
+    const out: string[] = [];
+    for (const [k, v] of Object.entries(fields)) {
+      out.push(k, v);
+    }
+    return out;
   }
 
   private sleep(ms: number): Promise<void> {

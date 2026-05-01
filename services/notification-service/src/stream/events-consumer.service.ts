@@ -4,7 +4,11 @@ import {
   OnModuleInit,
   OnModuleDestroy,
 } from "@nestjs/common";
-import { RedisService } from "@polyforge/shared-redis";
+import {
+  PelReclaimService,
+  RedisService,
+  StreamMonitorService,
+} from "@polyforge/shared-redis";
 import { NotificationService } from "../notification/notification.service";
 
 const STREAM = "stream:events";
@@ -61,10 +65,25 @@ export class EventsConsumerService implements OnModuleInit, OnModuleDestroy {
   constructor(
     private readonly redis: RedisService,
     private readonly notification: NotificationService,
+    private readonly streamMonitor: StreamMonitorService,
+    private readonly pelReclaim: PelReclaimService,
   ) {}
 
   async onModuleInit() {
     await this.ensureGroup();
+    this.streamMonitor.register({ stream: STREAM, group: GROUP });
+    this.pelReclaim.register({
+      stream: STREAM,
+      group: GROUP,
+      consumer: CONSUMER,
+      handler: async (entry) => {
+        const event = entry.fields;
+        const notifType = toNotifType(event.type ?? "", event);
+        if (notifType) {
+          await this.notification.handle(notifType, event);
+        }
+      },
+    });
     this.running = true;
     this.loopPromise = this.consumeLoop();
     this.logger.log("Events consumer started");

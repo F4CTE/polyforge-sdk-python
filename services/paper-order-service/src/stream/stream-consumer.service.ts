@@ -4,7 +4,11 @@ import {
   OnModuleInit,
   OnModuleDestroy,
 } from "@nestjs/common";
-import { RedisService } from "@polyforge/shared-redis";
+import {
+  PelReclaimService,
+  RedisService,
+  StreamMonitorService,
+} from "@polyforge/shared-redis";
 import { FillsService, OrderIntent } from "../fills/fills.service";
 
 const STREAM = "stream:paper_orders";
@@ -20,10 +24,22 @@ export class StreamConsumerService implements OnModuleInit, OnModuleDestroy {
   constructor(
     private readonly redis: RedisService,
     private readonly fills: FillsService,
+    private readonly streamMonitor: StreamMonitorService,
+    private readonly pelReclaim: PelReclaimService,
   ) {}
 
   async onModuleInit() {
     await this.ensureGroup();
+    this.streamMonitor.register({ stream: STREAM, group: GROUP });
+    this.pelReclaim.register({
+      stream: STREAM,
+      group: GROUP,
+      consumer: CONSUMER,
+      handler: async (entry) => {
+        const intent = entry.fields as unknown as OrderIntent;
+        await this.fills.simulate(intent);
+      },
+    });
     this.running = true;
     this.loopPromise = this.consumeLoop();
     this.logger.log("Stream consumer started");

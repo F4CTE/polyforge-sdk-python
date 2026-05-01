@@ -31,7 +31,12 @@ describe("StreamConsumerService", () => {
   beforeEach(() => {
     redis = makeRedisMock();
     backtest = makeBacktestMock();
-    svc = new StreamConsumerService(redis as any, backtest as any);
+    svc = new StreamConsumerService(
+      redis as any,
+      backtest as any,
+      { register: vi.fn() } as any,
+      { register: vi.fn() } as any,
+    );
   });
 
   afterEach(async () => {
