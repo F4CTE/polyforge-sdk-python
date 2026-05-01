@@ -13,6 +13,8 @@ export function initAnalytics(): void {
       maskAllInputs: true,
       maskTextSelector: '[data-sensitive]',
     },
+    mask_all_text: true,
+    mask_all_element_attributes: true,
     loaded: (ph) => {
       ph.register_once({ $initial_referrer: document.referrer });
     },

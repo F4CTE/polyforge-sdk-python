@@ -6,7 +6,7 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y --no-install-recommends python3 make g++ && \
     rm -rf /var/lib/apt/lists/* && \
     corepack enable && corepack prepare pnpm@9.0.0 --activate && \
-    npm install -g typescript@5
+    npm install -g typescript@5.9.3
 
 COPY package.json pnpm-workspace.yaml pnpm-lock.yaml turbo.json tsconfig.json ./
 

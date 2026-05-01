@@ -13,8 +13,8 @@ export function initAnalytics(): void {
       maskAllInputs: true,
       maskTextSelector: '[data-sensitive]',
     },
-    mask_all_text: false,
-    mask_all_element_attributes: false,
+    mask_all_text: true,
+    mask_all_element_attributes: true,
     loaded: (ph) => {
       // Mask password and card fields by default
       ph.register_once({ $initial_referrer: document.referrer });

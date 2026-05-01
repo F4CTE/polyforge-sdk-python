@@ -16,6 +16,8 @@ if (typeof window !== 'undefined' && POSTHOG_KEY) {
       maskAllInputs: true,
       maskTextSelector: '[data-sensitive]',
     },
+    mask_all_text: true,
+    mask_all_element_attributes: true,
     capture_pageview: false,
   });
 }
