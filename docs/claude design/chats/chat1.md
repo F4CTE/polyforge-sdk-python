@@ -942,7 +942,7 @@ _[tool: done]_
 
 Added three restrained status indicators:
 
-1. **Top utility bar** — `● All systems operational · 12ms p50 · 847 live strategies · v6.32 · changelog →` with dismissible × 
+1. **Top utility bar** — `● All systems operational · 12ms p50 · 847 live strategies · v6.32 · changelog →` with dismissible ×
 2. **Hero dashboard** — green-tinted `● LIVE` pill with pulse animation (was flat accent before)
 3. **Whale feed header** — `● streaming · 2,341 wallets tracked · 47 events/min`
 
@@ -4946,7 +4946,7 @@ _[tool: grep]_
 
 OK, focused list of files with crypto leftovers to clean up:
 1. `admin-strategies-app.jsx` — has `orderbook-imbalance` (1 line) — minor
-2. `admin-reports-app.jsx` — has `Bybit` reference  
+2. `admin-reports-app.jsx` — has `Bybit` reference
 3. `admin-login-app.jsx` — has `OKX connector`, `$SOL stale`
 4. `admin-logs-app.jsx` — has `BTC-PERP`, `OKX`, `binance`, `whale-mirror`, `pump-frontrun`, `sentiment-pulse v2`, `0.42 BTC @ $67…`
 5. `admin-listings-app.jsx` — heavy crypto leftovers (whale-mirror, gamma-scalp-eth-v2, btc-grid-bot, mean-reversion-eth, etc.)
@@ -5694,7 +5694,7 @@ Tweaks panel mounted, defaults are right, and the visible panel has 30 elements.
 _[tool: save_screenshot]_
 
 Now let me also verify - was there originally a "ghost tweaks panel" the user was concerned about? Earlier they had two panels rendering. With my changes:
-- `admin-tweaks-app.jsx` mounts ONE `<TweaksPanel>` 
+- `admin-tweaks-app.jsx` mounts ONE `<TweaksPanel>`
 - `admin-shell.jsx` no longer renders any tweaks panel
 
 So no ghosting. Let me check the screenshot:
@@ -6639,7 +6639,7 @@ _[tool: view_image]_
 
 Excellent — fixes applied:
 - ✅ "Mission control" no longer wraps
-- ✅ Topbar buttons no underline  
+- ✅ Topbar buttons no underline
 - ✅ Footer "Guide"/"Docs" no underline
 - ⚠️ "New strategy" button is being clipped by topbar overflow
 
@@ -7303,7 +7303,7 @@ _[tool: fork_verifier_agent]_
 Added `motion.css` — a centralized stylesheet covering all animation surfaces:
 
 - **Entrance**: page fade-up, sidebar slide-in with staggered nav items, topbar fade-down
-- **Cards/KPIs/rows**: staggered fade-up on mount  
+- **Cards/KPIs/rows**: staggered fade-up on mount
 - **Buttons**: hover lift + press-down with accent glow on primary
 - **Modals/dropdowns/menus**: scale-fade pop-in
 - **Toggles/switches**: spring-driven thumb travel
@@ -7527,7 +7527,7 @@ _[tool: grep]_
 Good — typography variant exists. The issue is just preview width. Let me focus on the actual refinement work. I'll improve the landing further by:
 
 1. Add visual rhythm with section dividers/separators
-2. Tighten Hero spacing — reduce excessive top padding 
+2. Tighten Hero spacing — reduce excessive top padding
 3. Add a hero "social proof" row showing logos (or "trusted by" with placeholder companies)
 4. Make sections more visually distinct (alternating subtle backgrounds)
 
@@ -7656,7 +7656,7 @@ Now I can see clearly. Issues to fix in this pass:
 
 1. **Hero**: massive empty top space (170px gap above the eyebrow pill); narrow viewport hides the right visual; "Then automate it." is too dim, hard to read
 2. **Hero → Metrics gap**: huge dark void between hero CTA row and the metrics strip
-3. **Metric values**: still using accent purple in mono — looks dated/loud. Should be tabular numerals in primary text color  
+3. **Metric values**: still using accent purple in mono — looks dated/loud. Should be tabular numerals in primary text color
 4. **Metric label spacing**: too cramped, all-caps tracking is OK but line-height feels off
 5. **Builder cat strip**: numbers in primary color is good but the eyebrow color (purple/green/yellow) feels arbitrary — they're all same category type
 6. **Card icons** (Self-custodial, AES-256...): generic Lucide icons feel weak and disconnected from the brand. Maybe just remove them or use a numbered list
@@ -7785,7 +7785,7 @@ Let me look at where the tape sits in the page flow:
 
 _[tool: read_file]_
 
-Order: Hero → MetricsStrip → TrustStrip → Tape → ... 
+Order: Hero → MetricsStrip → TrustStrip → Tape → ...
 
 The tape is right after the trust strip. Let me look at the Tape component to find the spacing:
 
@@ -8120,7 +8120,7 @@ _[tool: grep]_
 
 _[tool: snip]_
 
-So at 960px the second column appears. The screenshot was at 914px (just below). That's why it collapsed. That's actually fine — the page is responsive. But it means the headline text "Forge an edge. Then automate it." is taking the full width — which actually looks great in the screenshot. 
+So at 960px the second column appears. The screenshot was at 914px (just below). That's why it collapsed. That's actually fine — the page is responsive. But it means the headline text "Forge an edge. Then automate it." is taking the full width — which actually looks great in the screenshot.
 
 So the "regression" is just responsive design. Looking at that screenshot I see what's still weak:
 
@@ -8204,7 +8204,7 @@ Now I can see all three big new pieces. They're working. Let me identify what's 
 Let me focus this 4th pass on:
 
 1. **Fix hero top spacing** — reduce 88px → 56px above eyebrow
-2. **Fix the ethos ¶ symbol** — replace with something that renders consistently 
+2. **Fix the ethos ¶ symbol** — replace with something that renders consistently
 3. **Fix the tape "LIVE · POLYMARKET" overlap** — the label needs to be more compact/inline
 4. **Add more weight/character to the Whale section visual** since I can see it's text-heavy
 5. **Add a subtle hairline rule under the hero** to anchor it
@@ -8310,7 +8310,7 @@ Apply drawing
 
 _[tool: view_image]_
 
-I see the screenshot but no visible drawing/annotations on it — it looks like a plain capture of the bottom of the landing page (testimonials → CTA → footer). 
+I see the screenshot but no visible drawing/annotations on it — it looks like a plain capture of the bottom of the landing page (testimonials → CTA → footer).
 
 Could you re-upload with the markup visible? Sometimes the drawing layer doesn't get flattened into the export. Or, if you can describe what you wanted me to address — too much empty space between testimonials and CTA, the CTA banner itself, the fine-print row, etc. — I can act on it directly.
 
@@ -8467,7 +8467,7 @@ The page IS rendering correctly — sidebar is at x=-12 (off-screen by 12px whic
 
 _[tool: eval_js]_
 
-Page renders perfectly. Mission control / 14,827 users / $487K MRR / 3,142 strategies / $182.4M GMV. Screenshot tool simply has trouble with this complex layout (html2canvas limitation). 
+Page renders perfectly. Mission control / 14,827 users / $487K MRR / 3,142 strategies / $182.4M GMV. Screenshot tool simply has trouble with this complex layout (html2canvas limitation).
 
 Let me move to programmatic auditing instead. Let me look at all the key pages and check for inconsistencies via the DOM and source code rather than relying on screenshots:
 
@@ -8698,7 +8698,7 @@ _[tool: grep]_
 The asset review system is server-side; I can't see it directly. Let me focus on what's actually here. With screenshots broken, let me pivot to reviewing what's already good and answering the user. Looking back, my last task was a 4th-pass polish review across the surfaces. The earlier screenshots that DID succeed (p4-hero, p4-trust, p4-ethos, p4-cta) showed **strong, polished work**:
 
 - Hero: tight type, clear hierarchy, eyebrow pill rendering correctly
-- Ethos: blue accent emphasis on `describe / backtest / automate` 
+- Ethos: blue accent emphasis on `describe / backtest / automate`
 - CTA: "Open the terminal. Forge an edge." with proper button hierarchy
 - Trust strip: numerical metrics with good rhythm
 
@@ -10735,7 +10735,7 @@ Most remaining hits are legitimate (filter chips, tabs, classed buttons). The re
 
 - `app-strategy-compare.jsx:51` — bare close button on a chip
 - `app-whales-profile.jsx:151-152` — `.adm-tab` with `background: 'none', border: 'none'` overrides
-- `components/auth-shell.jsx:439` — close button in tweaks panel  
+- `components/auth-shell.jsx:439` — close button in tweaks panel
 - `app-feed.jsx:124` — tab buttons (legitimate, but bare)
 - `admin-user-segmentation.jsx:98` — `adm-btn` without modifier (now safe due to default)
 
@@ -10845,7 +10845,7 @@ Done with the button audit. Summary:
 
 **System-level fixes (refinements.css):**
 - `.adm-btn` (no modifier) now defaults to secondary look — was rendering invisible before
-- Added proper `.adm-btn-ghost` and `.adm-btn-danger` definitions  
+- Added proper `.adm-btn-ghost` and `.adm-btn-danger` definitions
 - New `.adm-btn-icon` class for square 28×28 icon-only buttons
 - New `.adm-tab` / `.usr-tab` baseline so tab strips don't need inline `background:none, border:none, color:...`
 
@@ -11235,7 +11235,7 @@ _[tool: grep]_
 _[tool: snip]_
 
 Issues:
-1. The Pause/Resume/Restart button has `flex: 1` — making it stretch full-width  
+1. The Pause/Resume/Restart button has `flex: 1` — making it stretch full-width
 2. Details uses `name="arrow-right"` which probably exists. Let me check `play` and `pause`:
 
 _[tool: grep]_
@@ -11536,7 +11536,7 @@ _[tool: grep]_
 
 Good, clock is unique. Done. Three icon swaps:
 - **Orders & fills**: cart → receipt
-- **Positions**: pie → wallet  
+- **Positions**: pie → wallet
 - **Smart orders**: cart (was clashing) → clock (fits the time/condition trigger)
 
 _[tool: done]_
@@ -11789,7 +11789,7 @@ _[tool: sleep]_
 
 _[tool: eval_js_user_view]_
 
-Analytics page IS rendering correctly with title "Analytics". So the URLs ARE different and pages ARE different. 
+Analytics page IS rendering correctly with title "Analytics". So the URLs ARE different and pages ARE different.
 
 Maybe the user means the LEFT MENU shows them as the same active state? Let me check active highlighting:
 
@@ -11811,7 +11811,7 @@ _[tool: eval_js_user_view]_
 
 Analytics renders its own content (Equity curve, P&L by category, Factor exposure) — completely different from the Correlation matrix.
 
-The pages **are** different. They share the same nav and shell so they look similar at a glance, but the content is unrelated. Possibly the user's browser was caching the previous file or they didn't notice the page change. 
+The pages **are** different. They share the same nav and shell so they look similar at a glance, but the content is unrelated. Possibly the user's browser was caching the previous file or they didn't notice the page change.
 
 The links are correctly wired: `Analytics → App-Analytics.html` (perf/attribution) and `Correlation → App-Correlation.html` (matrix). No issue to fix.
 
@@ -11986,7 +11986,7 @@ Three closes is too many. Let me check if the third is part of the outer grid:
 _[tool: read_file]_
 
 The Controls card ends `</div></div>` — the second `</div>` is closing the outer grid. So back at line 153-156, the structure should be:
-- `</svg>` 
+- `</svg>`
 - `</div>` (close inner row 180/1fr) ← my added
 - `</div>` (close Efficient frontier card)
 
@@ -12720,7 +12720,7 @@ Cleanest fix: align both cards to start on the grid:
 
 _[tool: str_replace_edit]_
 
-Wait — looking at the screenshot, the Top referrers card is what's tall (6 rows). If I just align-items: start, the right card still uses its full height; the left chart card hugs its content (which is the dead space we want to remove). 
+Wait — looking at the screenshot, the Top referrers card is what's tall (6 rows). If I just align-items: start, the right card still uses its full height; the left chart card hugs its content (which is the dead space we want to remove).
 
 Actually that's exactly what we want — the chart card will shrink to its natural height, eliminating the dead space below it. The right card stays as-is since it has real content.
 
@@ -12776,7 +12776,7 @@ Apply drawing
 
 Three issues to fix:
 1. **Audience radio list** — doesn't follow new design (raw radios)
-2. **Channel cards** — icon style off-spec  
+2. **Channel cards** — icon style off-spec
 3. **Preview banner** — color isn't from the design system
 
 _[tool: grep]_
@@ -13676,7 +13676,7 @@ Or — you might mean the three FACE EDGES, which are the boundaries: the top di
 
 Looking at the path data: the prism uses `M12 2 2 7v10l10 5 10-5V7L12 2z` (outer hex) followed by `m0 2.3 7.5 3.7L12 11.7 4.5 8 12 4.3z` (top face cutout) etc. These cutouts via even-odd fill create the seams as hairline gaps where the inner path's edges meet the outer hex's interior.
 
-To "make the sides thinner" we'd need to thicken the seams (make the cutout shapes slightly larger, creating a wider gap = thinner-looking face panels). 
+To "make the sides thinner" we'd need to thicken the seams (make the cutout shapes slightly larger, creating a wider gap = thinner-looking face panels).
 
 Let me confirm with you — could you point at the part you mean, or do you mean the prism's outer silhouette edges?
 
@@ -13870,7 +13870,7 @@ Now let me cross-check carefully. **All routes** vs what we have:
 
 _[tool: list_files]_
 
-`Admin.html` is the dashboard (admin index). 
+`Admin.html` is the dashboard (admin index).
 
 Missing pages relative to repo:
 1. **Pending Approval** auth screen (post-register, awaiting admin approval)
@@ -13930,7 +13930,7 @@ App.html doesn't list auth pages — fine. Let me also check site-map.jsx or wha
 
 _[tool: grep]_
 
-Sign-up flow currently redirects to "Check Email" — but the repo has post-register going to either verify-email or pending-approval. Let me wire the sign-up redirect to Check Email by default (current behavior is fine; pending-approval is for already-confirmed-but-not-yet-approved accounts). 
+Sign-up flow currently redirects to "Check Email" — but the repo has post-register going to either verify-email or pending-approval. Let me wire the sign-up redirect to Check Email by default (current behavior is fine; pending-approval is for already-confirmed-but-not-yet-approved accounts).
 
 Now let me verify the new page renders cleanly:
 
