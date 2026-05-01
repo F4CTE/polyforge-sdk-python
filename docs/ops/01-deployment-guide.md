@@ -315,7 +315,7 @@ This will:
 1. Log in to ECR
 2. Create all ECR repositories (idempotent)
 3. Build all service images (gateway + 12 NestJS services)
-4. Tag each image with the current git SHA and `latest`
+4. Tag each image with the current git SHA only
 5. Push all images to ECR
 
 Expected time: 15-25 minutes on first push (layers are not cached). The `signer-service` and `strategy-engine` builds take longer (~5min each) because their Dockerfiles include Rust compilation stages:
@@ -727,7 +727,7 @@ docker logs polyforge_migrations --tail 50
 
 # Run migrations manually
 docker run --rm --env-file .env.prod \
-  <ecr_registry>/polyforge-auth-service:latest \
+  <ecr_registry>/polyforge-auth-service:<image-tag> \
   npx prisma migrate deploy
 ```
 

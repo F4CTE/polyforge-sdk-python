@@ -4,6 +4,9 @@
 **/.turbo
 **/coverage
 **/*.tsbuildinfo
+.env*
+!.env.example
+!.env.dev.example
 .git
 .gitignore
 

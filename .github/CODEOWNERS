@@ -1,0 +1,8 @@
+# Security-sensitive ownership
+/.github/workflows/ @F4CTE
+/.github/actions/ @F4CTE
+/scripts/deploy.sh @F4CTE
+/scripts/write-env-from-ci.sh @F4CTE
+/services/auth-service/ @F4CTE
+/services/admin-auth-service/ @F4CTE
+/services/signer-service/ @F4CTE

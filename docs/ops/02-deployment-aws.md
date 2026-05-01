@@ -357,11 +357,9 @@ for service in auth-service api-service admin-auth-service admin-api-service \
   market-data-service strategy-engine order-service paper-order-service \
   backtest-service notification-service bot-service signer-service; do
   docker build \
-    -t $ECR_BASE/polyforge/$service:$GIT_SHA \
-    -t $ECR_BASE/polyforge/$service:latest \
+    -t $ECR_BASE/polyforge-$service:$GIT_SHA \
     -f services/$service/Dockerfile .
-  docker push $ECR_BASE/polyforge/$service:$GIT_SHA
-  docker push $ECR_BASE/polyforge/$service:latest
+  docker push $ECR_BASE/polyforge-$service:$GIT_SHA
 done
 ```
 
@@ -454,11 +452,9 @@ jobs:
             market-data-service strategy-engine order-service paper-order-service \
             backtest-service notification-service bot-service signer-service; do
             docker build \
-              -t $ECR_BASE/polyforge/$service:${{ github.sha }} \
-              -t $ECR_BASE/polyforge/$service:latest \
+              -t $ECR_BASE/polyforge-$service:${{ github.sha }} \
               -f services/$service/Dockerfile .
-            docker push $ECR_BASE/polyforge/$service:${{ github.sha }}
-            docker push $ECR_BASE/polyforge/$service:latest
+            docker push $ECR_BASE/polyforge-$service:${{ github.sha }}
           done
 
       - name: Run migrations

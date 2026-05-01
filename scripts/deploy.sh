@@ -18,6 +18,7 @@
 #   EC2_HOST         — EC2 instance hostname / IP (required for remote deploy)
 #   EC2_USER         — SSH user (default: ec2-user)
 #   EC2_KEY          — Path to SSH private key (default: ~/.ssh/polyforge.pem)
+#   EC2_KNOWN_HOSTS_FILE — known_hosts file for strict SSH host verification
 #   IMAGE_TAG        — Docker image tag (default: git SHA)
 
 set -euo pipefail
@@ -27,10 +28,12 @@ set -euo pipefail
 AWS_ACCOUNT_ID="${AWS_ACCOUNT_ID:?AWS_ACCOUNT_ID must be set}"
 AWS_REGION="${AWS_REGION:-us-east-1}"
 ECR_REGISTRY="${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
-IMAGE_TAG="${IMAGE_TAG:-$(git rev-parse --short HEAD 2>/dev/null || echo 'latest')}"
+DEFAULT_IMAGE_TAG="$(git rev-parse --short HEAD 2>/dev/null || true)"
+IMAGE_TAG="${IMAGE_TAG:-$DEFAULT_IMAGE_TAG}"
 EC2_HOST="${EC2_HOST:-}"
 EC2_USER="${EC2_USER:-ec2-user}"
 EC2_KEY="${EC2_KEY:-$HOME/.ssh/polyforge.pem}"
+EC2_KNOWN_HOSTS_FILE="${EC2_KNOWN_HOSTS_FILE:-$HOME/.ssh/known_hosts}"
 COMPOSE_FILE="docker-compose.prod.yml"
 
 PUSH_ONLY=0
@@ -44,6 +47,16 @@ while [[ $# -gt 0 ]]; do
         *)              echo "Unknown: $1"; exit 1 ;;
     esac
 done
+
+if [[ -z "$IMAGE_TAG" ]]; then
+    echo "IMAGE_TAG must be set when git SHA detection is unavailable" >&2
+    exit 1
+fi
+
+if [[ ! "$IMAGE_TAG" =~ ^[A-Za-z0-9_.-]+$ ]]; then
+    echo "IMAGE_TAG contains unsupported characters for an ECR tag: $IMAGE_TAG" >&2
+    exit 1
+fi
 
 log() { echo "[$(date -u +%H:%M:%SZ)] $*"; }
 bold() { echo -e "\033[1m$*\033[0m"; }
@@ -88,19 +101,16 @@ build_and_push() {
             docker build \
                 --file "services/gateway/Dockerfile" \
                 --tag "$image" \
-                --tag "${ECR_REGISTRY}/polyforge-${svc}:latest" \
                 .
         else
             docker build \
                 --file "services/${svc}/Dockerfile" \
                 --tag "$image" \
-                --tag "${ECR_REGISTRY}/polyforge-${svc}:latest" \
                 .
         fi
 
         log "Pushing ${svc} → ECR…"
         docker push "$image"
-        docker push "${ECR_REGISTRY}/polyforge-${svc}:latest"
     done
 
     bold "=== All images pushed ==="
@@ -136,72 +146,102 @@ remote_deploy() {
         return
     fi
 
+    if [[ ! -f "$EC2_KNOWN_HOSTS_FILE" ]]; then
+        log "Known hosts file not found: $EC2_KNOWN_HOSTS_FILE"
+        log "Seed it before deploy, for example: ssh-keyscan -H \"$EC2_HOST\" >> \"$EC2_KNOWN_HOSTS_FILE\""
+        exit 1
+    fi
+
+    local -a ssh_opts=(
+        -i "$EC2_KEY"
+        -o BatchMode=yes
+        -o StrictHostKeyChecking=yes
+        -o UserKnownHostsFile="$EC2_KNOWN_HOSTS_FILE"
+    )
+
     bold "=== Deploying to ${EC2_USER}@${EC2_HOST} ==="
 
     # Ensure .env.prod is up to date on the server
     log "Refreshing secrets on EC2…"
-    ssh -i "$EC2_KEY" -o StrictHostKeyChecking=no \
+    ssh "${ssh_opts[@]}" \
         "${EC2_USER}@${EC2_HOST}" \
         "sudo bash /opt/polyforge/scripts/fetch-secrets.sh --region ${AWS_REGION}"
 
     # Copy compose file to server
     log "Uploading compose file…"
-    scp -i "$EC2_KEY" -o StrictHostKeyChecking=no \
+    scp "${ssh_opts[@]}" \
         "$COMPOSE_FILE" \
         "${EC2_USER}@${EC2_HOST}:/opt/polyforge/${COMPOSE_FILE}"
 
     # Pull and restart on the server
     log "Pulling images + rolling update on EC2…"
-    ssh -i "$EC2_KEY" -o StrictHostKeyChecking=no \
+    ssh "${ssh_opts[@]}" \
         "${EC2_USER}@${EC2_HOST}" \
-        "
+        "AWS_REGION='${AWS_REGION}' ECR_REGISTRY='${ECR_REGISTRY}' IMAGE_TAG='${IMAGE_TAG}' COMPOSE_FILE='${COMPOSE_FILE}' bash -s" <<'REMOTE_DEPLOY'
         set -e
         cd /opt/polyforge
 
-        # Log in to ECR from the server (uses instance IAM role)
-        aws ecr get-login-password --region ${AWS_REGION} \
-            | docker login --username AWS --password-stdin ${ECR_REGISTRY}
+        PREVIOUS_IMAGE_TAG="$(cat .last-successful-image-tag 2>/dev/null || true)"
+        rollback() {
+            status=$?
+            trap - ERR
+            if [[ -n "$PREVIOUS_IMAGE_TAG" ]]; then
+                echo "Deploy failed; rolling back to image tag $PREVIOUS_IMAGE_TAG"
+                export IMAGE_TAG="$PREVIOUS_IMAGE_TAG"
+                docker compose -f "$COMPOSE_FILE" --env-file .env.prod pull
+                docker compose -f "$COMPOSE_FILE" --env-file .env.prod up -d --remove-orphans
+            else
+                echo "Deploy failed and no previous successful image tag was recorded; manual rollback required."
+            fi
+            exit "$status"
+        }
+        trap rollback ERR
 
-        # Export variables for compose
-        export ECR_REGISTRY='${ECR_REGISTRY}'
-        export IMAGE_TAG='${IMAGE_TAG}'
+        # Log in to ECR from the server (uses instance IAM role)
+        aws ecr get-login-password --region "$AWS_REGION" \
+            | docker login --username AWS --password-stdin "$ECR_REGISTRY"
 
         # Pull all new images first (no downtime yet)
-        docker compose -f ${COMPOSE_FILE} --env-file .env.prod pull
+        docker compose -f "$COMPOSE_FILE" --env-file .env.prod pull
 
         # Restart services one by one, critical ones last
         # Non-critical (background workers) first
         for svc in notification-service bot-service backtest-service paper-order-service; do
-            echo \"Restarting \$svc…\"
-            docker compose -f ${COMPOSE_FILE} --env-file .env.prod up -d --no-deps \"\$svc\"
+            echo "Restarting $svc..."
+            docker compose -f "$COMPOSE_FILE" --env-file .env.prod up -d --no-deps "$svc"
             sleep 3
         done
 
         # Strategy + order pipeline
         for svc in market-data-service strategy-engine order-service; do
-            echo \"Restarting \$svc…\"
-            docker compose -f ${COMPOSE_FILE} --env-file .env.prod up -d --no-deps \"\$svc\"
+            echo "Restarting $svc..."
+            docker compose -f "$COMPOSE_FILE" --env-file .env.prod up -d --no-deps "$svc"
             sleep 5
         done
 
         # Signer last (order-service depends on it)
-        docker compose -f ${COMPOSE_FILE} --env-file .env.prod up -d --no-deps signer-service
+        docker compose -f "$COMPOSE_FILE" --env-file .env.prod up -d --no-deps signer-service
         sleep 5
 
         # User-facing services (cause brief reconnects)
-        docker compose -f ${COMPOSE_FILE} --env-file .env.prod up -d --no-deps auth-service api-service
+        docker compose -f "$COMPOSE_FILE" --env-file .env.prod up -d --no-deps auth-service api-service
         sleep 5
 
         # Admin services
-        docker compose -f ${COMPOSE_FILE} --env-file .env.prod up -d --no-deps admin-auth-service admin-api-service
+        docker compose -f "$COMPOSE_FILE" --env-file .env.prod up -d --no-deps admin-auth-service admin-api-service
         sleep 3
 
         # Gateway last
-        docker compose -f ${COMPOSE_FILE} --env-file .env.prod up -d --no-deps gateway
+        docker compose -f "$COMPOSE_FILE" --env-file .env.prod up -d --no-deps gateway
+
+        sleep 20
+        curl -f https://polyforge.app/api/v1/health
+        echo "$IMAGE_TAG" > .last-successful-image-tag
+        trap - ERR
 
         echo 'Deploy complete.'
-        docker compose -f ${COMPOSE_FILE} --env-file .env.prod ps
-        "
+        docker compose -f "$COMPOSE_FILE" --env-file .env.prod ps
+REMOTE_DEPLOY
 }
 
 # ── Main ──────────────────────────────────────────────────────────────────────

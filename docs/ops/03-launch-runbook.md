@@ -131,7 +131,7 @@ bash scripts/deploy.sh --push-only
 This will:
 1. Log in to ECR
 2. Create all 13 ECR repos (idempotent)
-3. Build and push all service images tagged `latest`
+3. Build and push all service images tagged with the current git SHA only
 
 Expected time: ~10–20 minutes (first push, layers not cached).
 
@@ -225,7 +225,7 @@ docker logs polyforge_migrations --tail 50
 # If needed, run manually:
 cd /opt/polyforge
 docker run --rm --env-file .env.prod \
-  <ecr_registry>/polyforge-auth-service:latest \
+  <ecr_registry>/polyforge-auth-service:<image-tag> \
   npx prisma migrate deploy
 ```
 

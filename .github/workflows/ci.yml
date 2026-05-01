@@ -29,13 +29,52 @@ env:
   ADMIN_DIRECT_DATABASE_URL: 'postgresql://ci:ci@localhost:5432/ci_admin'
 
 jobs:
+  external-pr-guard:
+    name: External PR approval required
+    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 1
+    steps:
+      - name: Block external fork PRs from self-hosted CI
+        run: |
+          echo "::error::External fork PRs do not run on PolyForge self-hosted runners. A maintainer must review the diff and run trusted CI from a repository branch."
+          exit 1
+
+  secret-scan:
+    name: Secret scan
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          persist-credentials: false
+
+      - name: Install gitleaks
+        env:
+          GITLEAKS_VERSION: 8.30.1
+          GITLEAKS_SHA256: 551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb
+        run: |
+          set -euo pipefail
+          archive="$RUNNER_TEMP/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
+          curl -fsSL "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz" -o "$archive"
+          echo "${GITLEAKS_SHA256}  ${archive}" | sha256sum -c -
+          mkdir -p "$RUNNER_TEMP/gitleaks-bin"
+          tar -xzf "$archive" -C "$RUNNER_TEMP/gitleaks-bin" gitleaks
+          echo "$RUNNER_TEMP/gitleaks-bin" >> "$GITHUB_PATH"
+
+      - name: Run gitleaks
+        run: gitleaks detect --no-git --redact --no-banner --config .gitleaks.toml --source .
+
   # ── 1a. Lint (parallel) ─────────────────────────────────────────────────
   lint:
     name: Lint
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on: [self-hosted, linux]
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          persist-credentials: false
 
       - uses: ./.github/actions/setup
         with:
@@ -47,10 +86,13 @@ jobs:
   # ── 1a-2. Nginx security (parallel) ──────────────────────────────────────
   nginx-security:
     name: Nginx H2C check
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on: [self-hosted, linux]
     timeout-minutes: 2
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          persist-credentials: false
 
       - name: Check for H2C smuggling patterns
         run: bash scripts/check-nginx-h2c.sh
@@ -58,10 +100,13 @@ jobs:
   # ── 1b. Typecheck (parallel) ────────────────────────────────────────────
   typecheck:
     name: Typecheck
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on: [self-hosted, linux]
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          persist-credentials: false
 
       - uses: ./.github/actions/setup
         with:
@@ -73,10 +118,13 @@ jobs:
   # ── 1c. Test (parallel) ─────────────────────────────────────────────────
   test:
     name: Test
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on: [self-hosted, linux]
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          persist-credentials: false
 
       - uses: ./.github/actions/setup
         with:
@@ -92,11 +140,14 @@ jobs:
   # ── 2. Build ─────────────────────────────────────────────────────────────
   build:
     name: Build
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on: [self-hosted, linux]
-    needs: [lint, typecheck, test, nginx-security]
+    needs: [secret-scan, lint, typecheck, test, nginx-security]
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          persist-credentials: false
 
       - uses: ./.github/actions/setup
         with:
@@ -117,8 +168,7 @@ jobs:
           test -d packages/shared-schemas/dist
           echo "All build artifacts present"
 
-      - name: Security audit
-        if: success() || failure()
+      - name: Dependency audit gate
         run: pnpm audit --audit-level=high
 
   # ── 3. Deploy + E2E (polyforge-lab) ─────────────────────────────────
@@ -134,6 +184,7 @@ jobs:
     runs-on: [self-hosted, linux]
     needs: [build]
     timeout-minutes: 150
+    environment: development
     concurrency:
       group: deploy-polyforge-lab
       cancel-in-progress: false
@@ -143,27 +194,18 @@ jobs:
         env:
           HEAD_REF: ${{ github.head_ref }}
           COMMIT_SHA: ${{ github.sha }}
-          USER_JWT_SECRET: ${{ secrets.USER_JWT_SECRET }}
-          ADMIN_JWT_SECRET: ${{ secrets.ADMIN_JWT_SECRET }}
-          BOT_JWT_SECRET: ${{ secrets.BOT_JWT_SECRET }}
-          INTERNAL_JWT_SECRET: ${{ secrets.INTERNAL_JWT_SECRET }}
-          MASTER_ENCRYPTION_KEY: ${{ secrets.MASTER_ENCRYPTION_KEY }}
-          TOTP_ENCRYPTION_KEY: ${{ secrets.TOTP_ENCRYPTION_KEY }}
-          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-          ADMIN_DB_PASSWORD: ${{ secrets.ADMIN_DB_PASSWORD }}
-          REDIS_PASSWORD: ${{ secrets.REDIS_PASSWORD }}
-          POLY_BUILDER_API_KEY: ${{ secrets.POLY_BUILDER_API_KEY }}
-          POLY_BUILDER_SECRET: ${{ secrets.POLY_BUILDER_SECRET }}
-          POLY_BUILDER_PASSPHRASE: ${{ secrets.POLY_BUILDER_PASSPHRASE }}
-          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          DISCORD_BOT_TOKEN: ${{ secrets.DISCORD_BOT_TOKEN }}
-          WHATSAPP_TOKEN: ${{ secrets.WHATSAPP_TOKEN }}
-          WHATSAPP_PHONE_ID: ${{ secrets.WHATSAPP_PHONE_ID }}
-          WHATSAPP_VERIFY_TOKEN: ${{ secrets.WHATSAPP_VERIFY_TOKEN }}
-          WHATSAPP_APP_SECRET: ${{ secrets.WHATSAPP_APP_SECRET }}
-          GAS_SPONSOR_PRIVATE_KEY: ${{ secrets.GAS_SPONSOR_PRIVATE_KEY }}
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          USER_JWT_SECRET: ${{ secrets.DEV_USER_JWT_SECRET }}
+          ADMIN_JWT_SECRET: ${{ secrets.DEV_ADMIN_JWT_SECRET }}
+          BOT_JWT_SECRET: ${{ secrets.DEV_BOT_JWT_SECRET }}
+          INTERNAL_JWT_SECRET: ${{ secrets.DEV_INTERNAL_JWT_SECRET }}
+          MASTER_ENCRYPTION_KEY: ${{ secrets.DEV_MASTER_ENCRYPTION_KEY }}
+          TOTP_ENCRYPTION_KEY: ${{ secrets.DEV_TOTP_ENCRYPTION_KEY }}
+          DB_PASSWORD: ${{ secrets.DEV_DB_PASSWORD }}
+          ADMIN_DB_PASSWORD: ${{ secrets.DEV_ADMIN_DB_PASSWORD }}
+          REDIS_PASSWORD: ${{ secrets.DEV_REDIS_PASSWORD }}
+          POLY_BUILDER_API_KEY: ${{ secrets.DEV_POLY_BUILDER_API_KEY }}
+          POLY_BUILDER_SECRET: ${{ secrets.DEV_POLY_BUILDER_SECRET }}
+          POLY_BUILDER_PASSPHRASE: ${{ secrets.DEV_POLY_BUILDER_PASSPHRASE }}
         with:
           host: ${{ secrets.LAB_HOST }}
           username: f4cte
@@ -177,11 +219,7 @@ jobs:
             USER_JWT_SECRET,ADMIN_JWT_SECRET,BOT_JWT_SECRET,INTERNAL_JWT_SECRET,
             MASTER_ENCRYPTION_KEY,TOTP_ENCRYPTION_KEY,
             DB_PASSWORD,ADMIN_DB_PASSWORD,REDIS_PASSWORD,
-            POLY_BUILDER_API_KEY,POLY_BUILDER_SECRET,POLY_BUILDER_PASSPHRASE,
-            TELEGRAM_BOT_TOKEN,DISCORD_BOT_TOKEN,
-            WHATSAPP_TOKEN,WHATSAPP_PHONE_ID,WHATSAPP_VERIFY_TOKEN,WHATSAPP_APP_SECRET,
-            GAS_SPONSOR_PRIVATE_KEY,
-            ANTHROPIC_API_KEY,OPENAI_API_KEY
+            POLY_BUILDER_API_KEY,POLY_BUILDER_SECRET,POLY_BUILDER_PASSPHRASE
           script: |
             set -euo pipefail
             cd ~/PolyForge
@@ -287,23 +325,31 @@ jobs:
     needs: [deploy-and-e2e]
     if: github.ref == 'refs/heads/main' && github.event_name == 'workflow_dispatch'
     environment: production
+    permissions:
+      contents: read
+      id-token: write
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          persist-credentials: false
 
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v6
+        uses: aws-actions/configure-aws-credentials@ec61189d14ec14c8efccab744f656cffd0e33f37
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
 
       - name: Login to Amazon ECR
-        uses: aws-actions/amazon-ecr-login@v2
+        uses: aws-actions/amazon-ecr-login@19d944daaa35f0fa1d3f7f8af1d3f2e5de25c5b7
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v4
+        uses: docker/setup-buildx-action@4d04d5d9486b7bd6fa91e7baf45bbb4f8b9deedd
 
-      - name: Build and push all service images
+      - name: Install cosign
+        uses: sigstore/cosign-installer@d58896d6a1865668819e1d91763c7751a165e159
+
+      - name: Build, push, and sign all service images
         env:
           ECR_BASE: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
           IMAGE_TAG: ${{ github.sha }}
@@ -314,13 +360,13 @@ jobs:
             backtest-service notification-service bot-service signer-service
           )
           for service in "${SERVICES[@]}"; do
+            image="$ECR_BASE/polyforge-$service:$IMAGE_TAG"
             echo "Building $service..."
             docker build \
-              -t $ECR_BASE/polyforge/$service:$IMAGE_TAG \
-              -t $ECR_BASE/polyforge/$service:latest \
+              -t "$image" \
               -f services/$service/Dockerfile .
-            docker push $ECR_BASE/polyforge/$service:$IMAGE_TAG
-            docker push $ECR_BASE/polyforge/$service:latest
+            docker push "$image"
+            cosign sign --yes "$image"
           done
 
       - name: Run database migrations
@@ -339,8 +385,27 @@ jobs:
           username: ubuntu
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
+            set -euo pipefail
             cd /opt/polyforge
-            git pull origin main
+
+            PREVIOUS_IMAGE_TAG="$(cat .last-successful-image-tag 2>/dev/null || true)"
+            rollback() {
+              status=$?
+              trap - ERR
+              if [ -n "$PREVIOUS_IMAGE_TAG" ]; then
+                echo "Deploy failed; rolling back to image tag $PREVIOUS_IMAGE_TAG"
+                export IMAGE_TAG="$PREVIOUS_IMAGE_TAG"
+                docker compose -f docker-compose.prod.yml --env-file .env.prod pull
+                docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --remove-orphans
+              else
+                echo "::warning::Deploy failed and no previous successful image tag was recorded; manual rollback required."
+              fi
+              exit "$status"
+            }
+            trap rollback ERR
+
+            git fetch origin main
+            git checkout --detach origin/main
 
             bash scripts/fetch-secrets.sh
 
@@ -354,6 +419,8 @@ jobs:
 
             sleep 20
             curl -f https://polyforge.app/api/v1/health || exit 1
+            echo "$IMAGE_TAG" > .last-successful-image-tag
+            trap - ERR
 
             docker logs polyforge-prod-signer-service-1 2>&1 | grep -q "Rust NAPI-RS encryption active" || \
               echo "WARNING: Rust NAPI not confirmed in signer-service logs"

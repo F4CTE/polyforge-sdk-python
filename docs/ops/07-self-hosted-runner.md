@@ -263,9 +263,9 @@ cd ~/actions-runner && ./config.sh --version
 
 ## Security Notes
 
-- Runners execute code from PRs. `F4CTE/PolyForge` is **private** so this is safe.
+- Self-hosted CI runs only for pushes and same-repository PRs. External fork PRs are blocked by the `External PR approval required` guard job and must be reviewed before a trusted branch runs CI. Keep the repository Actions setting at **Require approval for all outside collaborators** so modified PR workflow files cannot be approved casually.
 - SDK repos (`polyforge-sdk-*`, `polyforge-mcp`) are **public** — their workflows use `ubuntu-latest` (GitHub-hosted) intentionally to avoid running untrusted PR code on `polyforge-lab`.
-- Never store production secrets on the runner machine. Use GitHub Encrypted Secrets for deploy credentials.
+- Never store production secrets on the runner machine. Dev deployment uses `DEV_*` GitHub secrets; production deployment uses the `production` environment gate and AWS Secrets Manager on EC2.
 - The runners run as the `f4cte` user. They have access to the local Docker daemon and the `~/PolyForge` working directory.
 
 ---
@@ -276,6 +276,18 @@ cd ~/actions-runner && ./config.sh --version
 |---|---|
 | `LAB_HOST` | polyforge-lab hostname/IP for SSH deploy |
 | `LAB_SSH_KEY` | ED25519 private key for `f4cte@polyforge-lab` |
+| `DEV_USER_JWT_SECRET` | Dev deploy user JWT secret |
+| `DEV_ADMIN_JWT_SECRET` | Dev deploy admin JWT secret |
+| `DEV_BOT_JWT_SECRET` | Dev deploy bot JWT secret |
+| `DEV_INTERNAL_JWT_SECRET` | Dev deploy internal JWT secret |
+| `DEV_MASTER_ENCRYPTION_KEY` | Dev deploy encryption key, distinct from prod |
+| `DEV_TOTP_ENCRYPTION_KEY` | Dev deploy TOTP encryption key, distinct from prod |
+| `DEV_DB_PASSWORD` | Dev deploy user database password |
+| `DEV_ADMIN_DB_PASSWORD` | Dev deploy admin database password |
+| `DEV_REDIS_PASSWORD` | Dev deploy Redis password |
+| `DEV_POLY_BUILDER_API_KEY` | Dev deploy Polymarket builder API key |
+| `DEV_POLY_BUILDER_SECRET` | Dev deploy Polymarket builder secret |
+| `DEV_POLY_BUILDER_PASSPHRASE` | Dev deploy Polymarket builder passphrase |
 | `DOCKERHUB_USERNAME` | Docker Hub credentials for pull-through proxy |
 | `DOCKERHUB_TOKEN` | Docker Hub token for pull-through proxy |
 | `AWS_ACCESS_KEY_ID` | Production deploy (workflow_dispatch only) |
