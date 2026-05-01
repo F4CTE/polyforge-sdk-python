@@ -1,0 +1,233 @@
+/* =========================================================
+   Polyforge Admin login — bits unique to the admin variant
+   that aren't in auth.css. Always loaded AFTER auth.css.
+   ========================================================= */
+
+/* ADMIN tag next to wordmark */
+.admlog-tag {
+  font-family: 'Geist Mono', monospace;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  padding: 2px 7px;
+  border-radius: 4px;
+  background: var(--accent-subtle);
+  color: var(--accent-text);
+  border: 1px solid var(--accent-border);
+}
+
+/* Restricted-network pill in the form-pane footer */
+.admlog-restricted {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: 'Geist Mono', monospace;
+  font-size: 10.5px;
+  color: var(--text-tertiary);
+}
+.admlog-restricted-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--gain);
+}
+
+/* Lost-access callout under the OTP input */
+.admlog-callout {
+  margin-top: 18px;
+  padding: 12px 14px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  background: var(--bg-elevated);
+  font-size: 11.5px;
+  color: var(--text-secondary);
+  line-height: 1.55;
+}
+.admlog-callout a {
+  color: var(--accent-text);
+  text-decoration: none;
+  font-weight: 500;
+}
+.admlog-callout a:hover { text-decoration: underline; }
+
+/* Subtle "Back to consumer app" link in form pane footer */
+.admlog-foot-link {
+  color: var(--text-tertiary);
+  text-decoration: none;
+  font-size: 11.5px;
+}
+.admlog-foot-link:hover { color: var(--text-secondary); }
+
+/* ---- Right pane: status panel ---- */
+.admlog-status-card {
+  position: relative;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-default, var(--border-subtle));
+  border-radius: 12px;
+  overflow: hidden;
+  margin-top: 16px;
+  box-shadow:
+    0 1px 0 rgba(255,255,255,0.02) inset,
+    0 12px 32px -16px rgba(0,0,0,0.6),
+    0 4px 12px -6px rgba(0,0,0,0.4);
+}
+/* Subtle vignette behind the card so the grid fades against it */
+.admlog-status-card::before {
+  content: '';
+  position: absolute;
+  inset: -40px;
+  border-radius: 24px;
+  background: radial-gradient(ellipse at center, var(--bg-surface) 30%, transparent 75%);
+  z-index: -1;
+  pointer-events: none;
+}
+.admlog-status-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 14px;
+  border-top: 1px solid var(--border-subtle);
+}
+.admlog-status-row:first-child { border-top: 0; }
+.admlog-status-row:hover { background: var(--bg-elevated); }
+
+.admlog-status-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.admlog-status-dot.is-op   { background: var(--gain); }
+.admlog-status-dot.is-deg  { background: var(--warning); }
+.admlog-status-dot.is-down {
+  background: var(--loss);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--loss) 22%, transparent);
+}
+
+.admlog-status-svc {
+  flex: 1;
+  font-size: 12.5px;
+  color: var(--text-primary);
+  min-width: 0;
+}
+.admlog-status-meta {
+  font-family: 'Geist Mono', monospace;
+  font-size: 10.5px;
+  color: var(--text-tertiary);
+}
+
+.admlog-status-pill {
+  font-family: 'Geist Mono', monospace;
+  font-size: 9.5px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  padding: 2px 7px;
+  border-radius: 4px;
+  border: 1px solid transparent;
+}
+.admlog-status-pill.is-op {
+  background: color-mix(in srgb, var(--gain) 14%, transparent);
+  color: var(--gain-text);
+  border-color: color-mix(in srgb, var(--gain) 30%, transparent);
+}
+.admlog-status-pill.is-deg {
+  background: color-mix(in srgb, var(--warning) 14%, transparent);
+  color: var(--warn-text, var(--warning));
+  border-color: color-mix(in srgb, var(--warning) 30%, transparent);
+}
+.admlog-status-pill.is-down {
+  background: color-mix(in srgb, var(--loss) 16%, transparent);
+  color: var(--loss-text);
+  border-color: color-mix(in srgb, var(--loss) 32%, transparent);
+}
+
+/* Status-pane header strip */
+.admlog-status-headline {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-bottom: 8px;
+}
+.admlog-status-headline-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.admlog-status-headline-row .auth-brand-eyebrow { white-space: nowrap; margin: 0; flex: 1; min-width: 0; }
+.admlog-status-headline-row .admlog-status-link { margin-left: 0; }
+.admlog-status-incident {
+  font-family: 'Geist Mono', monospace;
+  font-size: 11px;
+  color: var(--loss-text);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+.admlog-status-link {
+  margin-left: auto;
+  font-family: 'Geist Mono', monospace;
+  font-size: 11px;
+  color: var(--accent-text);
+  text-decoration: none;
+}
+.admlog-status-link:hover { text-decoration: underline; }
+
+.admlog-status-foot {
+  margin-top: 16px;
+  font-size: 11.5px;
+  color: var(--text-tertiary);
+  line-height: 1.6;
+  padding: 10px 12px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+}
+
+/* IP allow-list bottom strip */
+.admlog-ip-strip {
+  margin-top: auto;
+  padding-top: 18px;
+  border-top: 1px solid var(--border-subtle);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-family: 'Geist Mono', monospace;
+  font-size: 10.5px;
+  color: var(--text-tertiary);
+}
+.admlog-ip-host { color: var(--text-secondary); }
+.admlog-ip-ok {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-left: auto;
+  color: var(--gain-text);
+}
+
+/* Override brand pane to fit the status content (taller, scrolls if needed) */
+.admlog-brand-pane {
+  padding: 40px 48px;
+  display: flex;
+  flex-direction: column;
+}
+.admlog-brand-inner {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  max-width: 520px;
+  width: 100%;
+}
+
+@media (max-width: 860px) {
+  .admlog-brand-pane { display: none; }
+}
+
+/* Soften the grid pattern so it doesn't clash with the status card.
+   Reduce contrast and concentrate the mask near the corners only. */
+.auth-brand-pane.grid-bg.admlog-brand-pane::before {
+  opacity: 0.18;
+  background-size: 64px 64px;
+  mask-image:
+    radial-gradient(ellipse 80% 90% at center, transparent 0%, transparent 35%, black 90%);
+  -webkit-mask-image:
+    radial-gradient(ellipse 80% 90% at center, transparent 0%, transparent 35%, black 90%);
+}

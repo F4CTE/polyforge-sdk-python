@@ -48,13 +48,12 @@ function DesignSystemApp() {
       <aside className="ds-side">
         <div className="ds-side-brand">
           <div className="ds-side-brand-logo">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-              <path d="M12 2 3 7v10l9 5 9-5V7l-9-5z" stroke="currentColor" strokeWidth="1.5"/>
-              <path d="m3 7 9 5 9-5" stroke="currentColor" strokeWidth="1.5"/>
-              <path d="M12 12v10" stroke="currentColor" strokeWidth="1.5"/>
-              <path d="M12 5.5v3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-              <path d="M6.15 15.25l2.7-1.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-              <path d="M17.85 15.25l-2.7-1.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 2 L22 7 V17 L12 22 L2 17 V7 Z" fill="none" stroke="currentColor" strokeWidth="0.9" strokeLinejoin="round"/>
+          <path d="M12 11.7 L4.5 8 M12 11.7 L19.5 8 M12 11.7 V22" fill="none" stroke="currentColor" strokeWidth="0.9" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M12 5.5v3" stroke="currentColor" strokeWidth="0.9" strokeLinecap="round"/>
+              <path d="M6.15 15.25l2.7-1.5" stroke="currentColor" strokeWidth="0.9" strokeLinecap="round"/>
+              <path d="M17.85 15.25l-2.7-1.5" stroke="currentColor" strokeWidth="0.9" strokeLinecap="round"/>
             </svg>
           </div>
           <div className="ds-side-brand-text">

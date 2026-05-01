@@ -104,7 +104,7 @@ function App() {
         </div>
 
         {/* Focused inspector */}
-        <div className="adm-card">
+        <div className="adm-card" style={{ alignSelf: 'start', position: 'sticky', top: 16 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
             <div className={`adm-stat-icon ${KIND_META[focused.kind].tone}`} style={{ width: 32, height: 32 }}><AdmIcon name={KIND_META[focused.kind].icon} size={15} /></div>
             <div style={{ flex: 1 }}>

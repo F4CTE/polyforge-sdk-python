@@ -236,7 +236,7 @@ function App() {
               <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>Risk flags</div>
               <span className="adm-pill is-loss" style={{ marginLeft: 4 }}>5 OPEN</span>
             </div>
-            <a href="Admin-Flags.html" style={{ marginLeft: 'auto', fontSize: 11, color: 'var(--accent-text)', textDecoration: 'none' }}>Open queue →</a>
+            <a href="Admin-Abuse.html" style={{ marginLeft: 'auto', fontSize: 11, color: 'var(--accent-text)', textDecoration: 'none' }}>Open queue →</a>
           </div>
           <div>
             {RISK_FLAGS.map((f, i) => (

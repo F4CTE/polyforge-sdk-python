@@ -43,14 +43,14 @@ function BuilderSection() {
           marginTop: 16,
         }}>
           {[
-            ['Triggers', '13', 'event + tick', 'var(--accent-text)'],
-            ['Conditions', '9', 'liquidity · limits · windows', 'var(--color-purple-400)'],
-            ['Actions', '8', 'GTC · FOK · stops · scales', 'var(--gain-text)'],
-            ['Safety', '6', 'circuit breakers', 'var(--warning)'],
-          ].map(([label, n, sub, color]) => (
+            ['Triggers', '13', 'event + tick'],
+            ['Conditions', '9', 'liquidity · limits · windows'],
+            ['Actions', '8', 'GTC · FOK · stops · scales'],
+            ['Safety', '6', 'circuit breakers'],
+          ].map(([label, n, sub]) => (
             <div key={label} style={{ background: 'var(--bg-surface)', padding: '20px 22px' }}>
-              <div className="mono" style={{ fontSize: 10, color, textTransform: 'uppercase', letterSpacing: '0.12em' }}>{label}</div>
-              <div className="tabnum" style={{ fontSize: 28, fontWeight: 600, letterSpacing: '-0.02em', marginTop: 4, color: 'var(--text-primary)' }}>{n}</div>
+              <div className="mono" style={{ fontSize: 10, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.14em', fontWeight: 600 }}>{label}</div>
+              <div className="tabnum" style={{ fontSize: 28, fontWeight: 600, letterSpacing: '-0.025em', marginTop: 6, color: 'var(--text-primary)' }}>{n}</div>
               <div style={{ fontSize: 12, color: 'var(--text-tertiary)', marginTop: 2 }}>{sub}</div>
             </div>
           ))}
@@ -422,15 +422,21 @@ function CTA() {
         <div className="cta-banner">
           <div className="dots"/>
           <div className="glow"/>
-          <div className="eyebrow" style={{ marginBottom: 14 }}>Ready for live</div>
-          <h2 className="h2" style={{ fontSize: 'clamp(32px, 4.5vw, 48px)', maxWidth: 640, margin: '0 auto 14px' }}>Forge your edge on prediction markets.</h2>
-          <p className="section-body" style={{ margin: '0 auto 28px', textAlign: 'center' }}>Paper-trade unlimited. Go live on Polymarket or Kalshi whenever you're ready.</p>
-          <div style={{ display: 'inline-flex', gap: 10, flexWrap: 'wrap', justifyContent: 'center' }}>
+          <div className="eyebrow" style={{ marginBottom: 14 }}>09 · Get started</div>
+          <h2 className="h2" style={{ fontSize: 'clamp(32px, 4.5vw, 48px)', maxWidth: 720, margin: '0 auto 14px' }}>Open the terminal. Forge an edge.</h2>
+          <p className="section-body" style={{ margin: '0 auto 28px', textAlign: 'center', maxWidth: 540 }}>Paper-trade unlimited. Connect Polymarket whenever the strategy clears your bar.</p>
+          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', justifyContent: 'center' }}>
             <a className="btn btn-primary btn-lg" href="Sign Up.html">start free <Icon name="arrow-right" size={14}/></a>
             <a className="btn btn-secondary btn-lg" href="Contact.html">book a walkthrough</a>
           </div>
-          <div className="mono" style={{ fontSize: 11, color: 'var(--text-tertiary)', marginTop: 24, letterSpacing: '0.1em' }}>
-            NO CARD · FREE FOREVER FOR PAPER · EU-WEST-2 · 99.97% UPTIME YTD
+          <div className="cta-fineprint">
+            <span>No card required</span>
+            <span className="cta-fineprint-sep"/>
+            <span>SOC 2 in flight</span>
+            <span className="cta-fineprint-sep"/>
+            <span>EU&#8209;West&#8209;2 · 99.97% YTD</span>
+            <span className="cta-fineprint-sep"/>
+            <span>Cancel any time</span>
           </div>
         </div>
       </div>

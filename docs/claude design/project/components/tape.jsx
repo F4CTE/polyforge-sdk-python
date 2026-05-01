@@ -3,24 +3,48 @@ function Tape() {
   const tape = useTicker(MARKETS, { interval: 2000 });
   const items = [...tape, ...tape];
   return (
-    <div aria-hidden="true" style={{
+    <div aria-hidden="true" className="pf-tape" style={{
       borderTop: '1px solid var(--border-subtle)',
       borderBottom: '1px solid var(--border-subtle)',
       background: 'var(--bg-surface)',
       overflow: 'hidden',
-      padding: '12px 0',
+      padding: '0',
+      display: 'flex',
+      alignItems: 'stretch',
+      position: 'relative',
     }}>
-      <div className="tape-track" style={{ display: 'flex', gap: 40, whiteSpace: 'nowrap', willChange: 'transform' }}>
-        {items.map((m, i) => (
-          <div key={i} className={`mono ${m._flash ? 'flash-' + m._flash : ''}`} style={{ display: 'inline-flex', alignItems: 'center', gap: 10, fontSize: 12, padding: '2px 8px', borderRadius: 4 }}>
-            <span style={{ color: 'var(--text-primary)', fontWeight: 500 }}>{m.sym}</span>
-            <span className="tabnum" style={{ color: 'var(--text-secondary)' }}>¢{Math.round(m.px * 100)}</span>
-            <span className={`tabnum ${m.chg >= 0 ? 'text-gain' : 'text-loss'}`}>
-              {m.chg >= 0 ? '+' : ''}{m.chg.toFixed(1)}%
-            </span>
-            <span style={{ color: 'var(--text-tertiary)' }}>{m.vol}</span>
-          </div>
-        ))}
+      <div className="pf-tape-label mono" style={{
+        flex: '0 0 auto',
+        padding: '0 18px',
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: 8,
+        fontSize: 10.5,
+        fontWeight: 600,
+        letterSpacing: '0.16em',
+        textTransform: 'uppercase',
+        color: 'var(--text-tertiary)',
+        background: 'var(--bg-subtle)',
+        borderRight: '1px solid var(--border-subtle)',
+        zIndex: 2,
+        whiteSpace: 'nowrap',
+      }}>
+        <span className="dot dot-pulse" style={{ background: 'var(--gain)', flex: '0 0 auto' }}/>
+        <span>Live · Polymarket</span>
+      </div>
+      <div className="pf-tape-mask" style={{ position: 'relative', overflow: 'hidden', flex: '1 1 auto', minWidth: 0 }}>
+        <div className="tape-track" style={{ display: 'flex', gap: 40, whiteSpace: 'nowrap', willChange: 'transform', padding: '12px 0' }}>
+          {items.map((m, i) => (
+            <div key={i} className={`mono ${m._flash ? 'flash-' + m._flash : ''}`} style={{ display: 'inline-flex', alignItems: 'center', gap: 10, fontSize: 12, padding: '2px 8px', borderRadius: 4 }}>
+              <span style={{ color: 'var(--text-primary)', fontWeight: 500 }}>{m.sym}</span>
+              <span className="tabnum" style={{ color: 'var(--text-secondary)' }}>¢{Math.round(m.px * 100)}</span>
+              <span className={`tabnum ${m.chg >= 0 ? 'text-gain' : 'text-loss'}`}>
+                {m.chg >= 0 ? '+' : ''}{m.chg.toFixed(1)}%
+              </span>
+              <span style={{ color: 'var(--text-tertiary)' }}>{m.vol}</span>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );

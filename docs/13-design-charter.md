@@ -2,9 +2,30 @@
 > Inspired by Linear.app — adapted for a professional prediction market terminal
 
 > **Design bundle:** `docs/claude design/` contains the full reference prototype
-> (landing, admin app, user app, docs, auth, legal, design system). Browse
+> (landing, admin app, user app, docs, auth, legal, design system — 254 files
+> covering ~105 HTML pages and all supporting JSX/CSS). Browse
 > `docs/claude design/project/Design System.html` for the interactive token/
-> component reference. All five surfaces share this charter.
+> component reference. All surfaces share this charter.
+>
+> **User app pages covered:** Dashboard, Markets, Market Detail, Positions,
+> Orders, Smart Orders, Strategies, Strategy Detail, Strategy Compare,
+> Strategy Templates, Builder, Backtests, Optimizer, Marketplace, Collections,
+> Collection Detail, Copy (list, discover, setup, detail), Whales (list,
+> following, heatmap, profile), Sports (list, event detail), Analytics,
+> Accuracy, Correlation, Arbitrage, Feed, News (list, article), Journal,
+> Leaderboard, Watchlist, Trading Account, Discover, Alerts, Notifications,
+> Activity, Wallet, Keys, Team, Referrals, My Profile, Public Profile, Settings,
+> Onboarding, Support (list, new, detail).
+>
+> **Admin pages covered:** Dashboard, Users, User Detail, User Segmentation,
+> Strategies, Orders, Markets, Listings, Venues, Revenue, Retention, Reports,
+> Backtests, Tickets, Ticket Detail, Abuse, Invites, Admins, Builder, Broadcasts,
+> Sentiment, Config, Cache, Health, Logs, Approvals, Login.
+>
+> **Shared pages:** Landing, Pricing, Roadmap, Changelog, Status, Docs
+> (Quickstart/API/SDK/MCP), Guides (9 pages), Auth (Login/Signup/2FA/Forgot/
+> Reset/Check Email/Pending Approval), Legal (Terms/Privacy/Cookies/Risk
+> Disclosure), Contact, About, 404, 500, Design System.
 
 ---
 
@@ -165,16 +186,30 @@ Numeric values (prices, PnL, percentages) always use `font-variant-numeric: tabu
 [Logo / Workspace]
 ─────────────────
 [Dashboard]
-[Markets]
+[Markets]           ← includes Discover, Watchlist, Sports
 [Positions]
-[Strategies]
-[Automations]
+[Orders]            ← includes Smart Orders
 ─────────────────
-[Activity]
-[Analytics]
+[Strategies]        ← includes Templates, Compare, Optimizer
+[Builder]
+[Backtests]
+[Collections]
+─────────────────
+[Copy Trading]      ← discover, follow, detail
+[Whales]            ← following, heatmap, profile
+─────────────────
+[Analytics]         ← includes Accuracy, Correlation, Arbitrage
+[Feed]
+[News]
+[Journal]
+[Leaderboard]
+─────────────────
+[Wallet]
+[Trading Account]
+[Referrals]
 ─────────────────
 [Settings]
-[Docs]
+[Support]
 
   ↕ mt-auto (fills remaining space)
 
@@ -822,6 +857,24 @@ Role pill:          .role-pill.is-pro — accent tint in sidebar user row
 Equity curve:       <UsrEquityCurve> SVG with gradient fill + live dot
 ```
 
+### CSS file map (`docs/claude design/project/`)
+
+| File | Scope | Purpose |
+|------|-------|---------|
+| `styles.css` | Global | Base reset, tokens, root variables |
+| `user.css` | User app | `.usr-*` component layer |
+| `admin.css` | Admin app | `.adm-*` component layer |
+| `auth.css` | Auth pages | Login/signup/2FA flows |
+| `admin-login.css` | Admin login | Admin-specific login surface (violet accent) |
+| `design-system.css` | Design System page | Interactive token/component viewer |
+| `docs.css` | Docs/Guides | Documentation surface |
+| `legal.css` | Legal pages | Terms/Privacy/Cookies/Risk Disclosure |
+| `company.css` | About/Contact | Marketing company pages |
+| `pricing.css` | Pricing | Pricing page with tier comparison |
+| `error.css` | 404/500 | Error page styles |
+| `motion.css` | Global | Keyframe library: `float`, `pulse`, `blockFired`, `safetyPulse`, etc. |
+| `refinements.css` | Global | Cross-surface polish: scrollbar tokens, minimap overrides, builder node utilities |
+
 ### Surface reference
 
 | Surface | Layer | Accent | App |
@@ -841,7 +894,87 @@ Equity curve:       <UsrEquityCurve> SVG with gradient fill + live dot
 
 ---
 
-## 17. Trading-Specific Patterns
+## 17. Feature Module Design Patterns
+
+This section documents visual and interaction patterns for the major feature
+modules added in the expanded design bundle.
+
+### Copy Trading (`App-Copy*`)
+
+Four-page flow: **list** (followed traders) → **discover** (leaderboard with
+filters) → **setup** (configure allocation, risk limits) → **detail** (single
+trader stats, allocation chart, position mirror).
+
+- Trader cards: avatar + handle + 30d ROI badge (gain-text) + follower count
+- Allocation input: uses the trading-account balance pill to cap input
+- Risk controls: `--warning` tinted section; stop-loss/max drawdown inputs
+- Correlation indicator (copy detail): min/max range slider, accent fill
+
+### Whale Tracking (`App-Whales*`)
+
+Three sub-pages: **list** (ranked whale wallets) → **following** (subscribed
+whales) → **heatmap** (activity grid) → **profile** (single whale detail).
+
+- Heatmap grid: 7×52 cells like GitHub contribution graph; `--gain` fill scaled
+  by activity intensity; `--bg-elevated` for zero-activity cells
+- Whale profile: equity curve (`<UsrEquityCurve>`), position table, similar-
+  traders widget
+
+### Sports Markets (`App-Sports*`)
+
+Two pages: **list** (sports category tabs + event cards) → **event detail**
+(team matchup, probability bar, order entry).
+
+- Sport category tabs: icon + label chips, accent underline on active
+- Team pill: team color as `--node-color` equivalent for `.builder-badge`
+- Probability bar: dual-fill (team A left, team B right) on a shared track
+
+### Analytics Suite
+
+| Page | Key component |
+|------|--------------|
+| `App-Analytics` | Multi-panel: equity curve + win-rate ring + venue breakdown |
+| `App-Accuracy` | Calibration chart — actual vs predicted probabilities |
+| `App-Correlation` | `correlation-grid` CSS utility; heat-mapped cells |
+| `App-Arbitrage` | Spread table with `--gain`/`--loss` colored spread column |
+
+### Social / Discovery
+
+| Page | Key component |
+|------|--------------|
+| `App-Discover` | Market card grid with trend/volume sort; category filter pills |
+| `App-Feed` | Activity timeline; action type chips (`.chip-accent`, `.chip-gain`) |
+| `App-News` | Article list with category tag + estimated read time |
+| `App-News-Article` | Full-width prose layout; market-price chip inline |
+| `App-Journal` | Trade log with editable notes; mood tag selector |
+| `App-Leaderboard` | Ranked table; top-3 podium cards with medal coloring |
+
+### Support System (`App-Support*`)
+
+Three pages: **list** (ticket table) → **new** (form) → **detail** (thread).
+
+- Ticket status: maps to standard order status colors
+  (`OPEN` → warning, `IN_PROGRESS` → accent, `RESOLVED` → gain, `CLOSED` → default)
+- Thread messages: user messages right-aligned, agent messages left-aligned;
+  both use `--bg-elevated` bubbles
+
+### User Segmentation (`Admin-User-Segmentation`)
+
+- Segment builder: condition rows (field + operator + value) with AND/OR logic
+- Segment preview: user count badge, sample user list
+- Export action: primary button, async job status badge
+
+### Strategy Enhancement Pages
+
+| Page | Key component |
+|------|--------------|
+| `App-Strategy-Compare` | Side-by-side equity curve overlay; stat diff badges |
+| `App-Strategy-Templates` | Template card grid; category filter; fork button |
+| `App-Optimizer` | Parameter sweep matrix; profit/drawdown heatmap cell grid |
+
+---
+
+## 18. Trading-Specific Patterns
 
 ### PnL Display
 
@@ -899,7 +1032,7 @@ $0.00        // neutral: --text-secondary
 
 ---
 
-## 18. File Naming & Organization
+## 19. File Naming & Organization
 
 ### CSS / Token Files
 
@@ -922,7 +1055,7 @@ packages/ui/src/
 
 ---
 
-## 19. Design Review Checklist
+## 20. Design Review Checklist
 
 Before merging any UI PR, verify:
 

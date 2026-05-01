@@ -79,9 +79,24 @@ function App() {
                 <div><div style={{ fontSize: 9.5, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>1y return</div><div style={{ fontSize: 13, fontFamily: 'Geist Mono, monospace', fontWeight: 600, color: 'var(--gain-text)' }}>+{s.ret1y}%</div></div>
                 <div><div style={{ fontSize: 9.5, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Max DD</div><div style={{ fontSize: 13, fontFamily: 'Geist Mono, monospace', fontWeight: 600, color: 'var(--loss-text)' }}>{s.dd}%</div></div>
               </div>
-              <div style={{ padding: '12px 16px', display: 'flex', gap: 8, borderTop: '1px solid var(--border-subtle)' }}>
-                <button className="adm-btn adm-btn-primary" style={{ flex: 1 }}>{s.price === 'free' ? 'Clone to paper' : 'Subscribe'}</button>
-                <button className="adm-btn adm-btn-ghost"><AdmIcon name="info" size={12} /></button>
+              <div style={{ padding: '12px 16px', display: 'flex', gap: 8, alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid var(--border-subtle)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 11, color: 'var(--text-tertiary)' }}>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                    <AdmIcon name="users" size={11} />
+                    <span className="mono">{s.users.toLocaleString()}</span>
+                  </span>
+                  <span style={{ width: 1, height: 10, background: 'var(--border-subtle)' }} />
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                    <AdmIcon name="heart" size={11} />
+                    <span className="mono">98%</span>
+                  </span>
+                </div>
+                <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                  <button className="adm-btn adm-btn-ghost adm-btn-icon" title="Strategy details"><AdmIcon name="arrow-up-right" size={12} /></button>
+                  <button className={`adm-btn ${s.price === 'free' ? 'adm-btn-secondary' : 'adm-btn-primary'}`}>
+                    {s.price === 'free' ? <><AdmIcon name="copy" size={11} />Clone to paper</> : <><AdmIcon name="zap" size={11} />Subscribe · {s.price}</>}
+                  </button>
+                </div>
               </div>
             </div>
           ))}

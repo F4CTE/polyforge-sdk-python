@@ -87,7 +87,7 @@ function Nav() {
     <nav className="pf-nav">
       <div className="container nav-inner">
         <a href={homeHref} style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--text-primary)', textDecoration: 'none', fontWeight: 600, fontSize: 15, letterSpacing: '-0.01em' }}>
-          <span style={{ color: 'var(--accent-text)', display: 'inline-flex' }}><Icon name="logo" size={20} /></span>
+          <span style={{ color: 'var(--accent-text)', display: 'inline-flex' }}><Icon name="logo" size={22} /></span>
           polyforge
           <span className="chip" style={{ marginLeft: 6, height: 18, fontSize: 10 }}>beta</span>
         </a>

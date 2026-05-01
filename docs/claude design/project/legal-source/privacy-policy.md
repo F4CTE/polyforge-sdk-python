@@ -54,7 +54,7 @@ This Policy applies to all users of the PolyForge website, platform, APIs, and a
 For the purposes of GDPR and comparable data protection laws, the data controller is:
 
 **PolyForge, Inc.**
-Legal contact: [legal@polyforge.io](mailto:legal@polyforge.io)
+Legal contact: [legal@polyforge.app](mailto:legal@polyforge.app)
 
 As controller, we determine the purposes and means of processing personal data collected through the Service.
 
@@ -65,7 +65,7 @@ As controller, we determine the purposes and means of processing personal data c
 PolyForge has designated a Data Protection Officer (DPO) to oversee our data protection strategy and compliance.
 
 **DPO Contact:**
-Email: [dpo@polyforge.io](mailto:dpo@polyforge.io)
+Email: [dpo@polyforge.app](mailto:dpo@polyforge.app)
 Postal: PolyForge, Inc. — Attn: Data Protection Officer
 
 EEA and UK users may contact the DPO directly for any privacy-related concern. We aim to respond within 72 hours for urgent matters and within 30 days for all formal requests.
@@ -187,7 +187,7 @@ For EEA, UK, and Swiss users, every processing activity must have a lawful basis
 | Compliance with legal obligations | **Legal Obligation** (Art. 6(1)(c)) | Tax records, regulatory requests, court orders |
 | Dispute resolution and legal claims | **Legitimate Interests** / **Legal Claims** (Art. 6(1)(f) / Art. 9(2)(f)) | Defending or pursuing legal claims |
 
-Where we rely on **Legitimate Interests**, we have conducted a balancing test and determined that our interests do not override your fundamental rights and freedoms. You may request our Legitimate Interests Assessment by contacting [dpo@polyforge.io](mailto:dpo@polyforge.io).
+Where we rely on **Legitimate Interests**, we have conducted a balancing test and determined that our interests do not override your fundamental rights and freedoms. You may request our Legitimate Interests Assessment by contacting [dpo@polyforge.app](mailto:dpo@polyforge.app).
 
 ---
 
@@ -276,7 +276,7 @@ For transfers of EEA/UK personal data to third countries that do not have an ade
 - **Standard Contractual Clauses (SCCs)** — the European Commission's 2021 SCCs or UK IDTA as applicable, incorporated into our data processing agreements with each processor.
 - **Adequacy decisions** — where the destination country has been recognised by the European Commission or UK ICO as providing adequate protection.
 
-You may request a copy of the applicable SCCs by emailing [dpo@polyforge.io](mailto:dpo@polyforge.io).
+You may request a copy of the applicable SCCs by emailing [dpo@polyforge.app](mailto:dpo@polyforge.app).
 
 ---
 
@@ -346,7 +346,7 @@ No method of transmission or storage is completely secure. We cannot guarantee a
 
 The Service is not directed at, and we do not knowingly collect personal data from, anyone under the age of **18** (or the applicable age of majority in your jurisdiction, if higher).
 
-If you are a parent or guardian and believe your child has provided us with personal data, please contact [privacy@polyforge.io](mailto:privacy@polyforge.io) immediately. We will delete any such data promptly upon verification.
+If you are a parent or guardian and believe your child has provided us with personal data, please contact [privacy@polyforge.app](mailto:privacy@polyforge.app) immediately. We will delete any such data promptly upon verification.
 
 ---
 
@@ -460,11 +460,11 @@ You may exercise any of your rights (GDPR or CCPA) through the following channel
 - **Manage cookie preferences:** Cookie Settings (footer)
 
 **Direct requests:**
-- Email: [privacy@polyforge.io](mailto:privacy@polyforge.io)
+- Email: [privacy@polyforge.app](mailto:privacy@polyforge.app)
 - Subject line: `Privacy Request — [Right Name] — [Your Username]`
 
 **DPO contact (EEA/UK/Switzerland):**
-- Email: [dpo@polyforge.io](mailto:dpo@polyforge.io)
+- Email: [dpo@polyforge.app](mailto:dpo@polyforge.app)
 
 We may need to verify your identity before fulfilling a request. For account holders, we will verify via your registered email. We will not request more information than is necessary for verification.
 
@@ -480,7 +480,7 @@ We fulfil requests **free of charge** unless they are manifestly unfounded or ex
 
 ## 17. Complaints and Supervisory Authority
 
-**Internal complaints:** If you have a concern about how we handle your personal data, please contact us at [privacy@polyforge.io](mailto:privacy@polyforge.io) first. We aim to resolve all complaints promptly and fairly.
+**Internal complaints:** If you have a concern about how we handle your personal data, please contact us at [privacy@polyforge.app](mailto:privacy@polyforge.app) first. We aim to resolve all complaints promptly and fairly.
 
 **GDPR supervisory authority:** If you are located in the EEA, you have the right to lodge a complaint with the supervisory authority in your Member State. A list of EU supervisory authorities is available at [edpb.europa.eu/about-edpb/about-edpb/members_en](https://edpb.europa.eu/about-edpb/about-edpb/members_en).
 
@@ -505,13 +505,13 @@ Your continued use of the Service after the effective date of any updated Policy
 For all privacy-related questions, requests, or concerns:
 
 **Privacy Team**
-Email: [privacy@polyforge.io](mailto:privacy@polyforge.io)
+Email: [privacy@polyforge.app](mailto:privacy@polyforge.app)
 
 **Data Protection Officer**
-Email: [dpo@polyforge.io](mailto:dpo@polyforge.io)
+Email: [dpo@polyforge.app](mailto:dpo@polyforge.app)
 
 **General Legal Enquiries**
-Email: [legal@polyforge.io](mailto:legal@polyforge.io)
+Email: [legal@polyforge.app](mailto:legal@polyforge.app)
 
 ---
 

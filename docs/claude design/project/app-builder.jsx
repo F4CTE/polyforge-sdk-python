@@ -66,7 +66,7 @@ function App() {
         <span style={{ marginLeft: 'auto', fontSize: 11, color: 'var(--text-tertiary)', fontFamily: 'Geist Mono, monospace' }}>autosave 8s ago</span>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '240px 1fr 280px', gap: 14, height: 'calc(100vh - 220px)', minHeight: 620 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '240px 1fr 280px', gap: 14, height: 'calc(100dvh - 180px)', minHeight: 480 }}>
         {/* Palette */}
         <div className="adm-card" style={{ padding: 0, overflowY: 'auto' }}>
           <div style={{ padding: '12px 14px', borderBottom: '1px solid var(--border-subtle)', position: 'sticky', top: 0, background: 'var(--bg-surface)', zIndex: 1 }}>

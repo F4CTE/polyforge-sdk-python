@@ -12,7 +12,7 @@ function Hero() {
           <div>
             <div className="hero-eyebrow">
               <span className="dot dot-pulse"/>
-              now in early access · v6.32
+              early access · cohort 04
             </div>
             <h1 className="t-hero">{copy.h}</h1>
             <p className="hero-sub">{copy.sub}</p>
@@ -20,8 +20,19 @@ function Hero() {
               <a className="btn btn-primary btn-lg" href="Sign Up.html">start free <Icon name="arrow-right" size={14}/></a>
               <a className="btn btn-secondary btn-lg" href="Docs.html">read the docs</a>
             </div>
-            <div style={{ display: 'flex', gap: 10, alignItems: 'center', marginTop: 20 }}>
-              <span style={{ fontSize: 12, color: 'var(--text-tertiary)' }}>No credit card · Paper trade unlimited · Polymarket builder program</span>
+            <div className="hero-microbar">
+              <div className="hero-microbar-cell">
+                <span className="hero-microbar-k">No card</span>
+                <span className="hero-microbar-v">free forever for paper</span>
+              </div>
+              <div className="hero-microbar-cell">
+                <span className="hero-microbar-k">Paper</span>
+                <span className="hero-microbar-v">unlimited backtests</span>
+              </div>
+              <div className="hero-microbar-cell">
+                <span className="hero-microbar-k">Builder</span>
+                <span className="hero-microbar-v">Polymarket program member</span>
+              </div>
             </div>
           </div>
           <div>{visual}</div>

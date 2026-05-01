@@ -48,20 +48,20 @@ function App() {
       </div>
 
       <div className="adm-grid-2" style={{gridTemplateColumns:'1.4fr 1fr',marginBottom:20}}>
-        <div className="adm-card">
+        <div className="adm-card" style={{ display: 'flex', flexDirection: 'column' }}>
           <div className="adm-card-head">
             <div className="adm-card-icon"><AdmIcon name="trending" size={14} /></div>
             <h3 className="adm-card-title">Redemptions · 30d</h3>
           </div>
-          <svg viewBox="0 0 600 120" style={{width:'100%',height:120}}>
-            {[20,50,80].map(y => <line key={y} x1="0" x2="600" y1={y} y2={y} stroke="var(--border-subtle)" strokeWidth="0.5" strokeDasharray="2 4" />)}
+          <svg viewBox="0 0 600 240" preserveAspectRatio="none" style={{width:'100%',flex:1,minHeight:200}}>
+            {[40,100,160,200].map(y => <line key={y} x1="0" x2="600" y1={y} y2={y} stroke="var(--border-subtle)" strokeWidth="0.5" strokeDasharray="2 4" />)}
             {Array.from({length:30}).map((_, i) => {
-              const h = 14 + Math.sin(i*0.4)*22 + Math.random()*30 + (i > 18 ? 18 : 0);
-              return <rect key={i} x={i*20+2} y={100-h} width="14" height={h} fill="var(--accent-default)" rx="1.5" />;
+              const h = 28 + Math.sin(i*0.4)*44 + Math.random()*60 + (i > 18 ? 36 : 0);
+              return <rect key={i} x={i*20+2} y={210-h} width="14" height={h} fill="var(--accent-default)" rx="1.5" />;
             })}
-            <text x="0"  y="118" fontSize="9" fill="var(--text-tertiary)" fontFamily="Geist Mono, monospace">−30d</text>
-            <text x="280" y="118" fontSize="9" fill="var(--text-tertiary)" fontFamily="Geist Mono, monospace">−15d</text>
-            <text x="580" y="118" fontSize="9" fill="var(--text-tertiary)" fontFamily="Geist Mono, monospace" textAnchor="end">today</text>
+            <text x="0"  y="232" fontSize="10" fill="var(--text-tertiary)" fontFamily="Geist Mono, monospace">−30d</text>
+            <text x="280" y="232" fontSize="10" fill="var(--text-tertiary)" fontFamily="Geist Mono, monospace">−15d</text>
+            <text x="580" y="232" fontSize="10" fill="var(--text-tertiary)" fontFamily="Geist Mono, monospace" textAnchor="end">today</text>
           </svg>
           <div style={{display:'flex',justifyContent:'space-between',marginTop:12,paddingTop:12,borderTop:'1px solid var(--border-subtle)',fontFamily:'Geist Mono, monospace',fontSize:11}}>
             <div><span style={{color:'var(--text-tertiary)'}}>peak day</span> <span style={{color:'var(--text-primary)',fontWeight:600,marginLeft:4}}>284</span></div>

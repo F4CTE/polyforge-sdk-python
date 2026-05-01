@@ -252,8 +252,8 @@ function App() {
               <div style={{ display: 'flex', alignItems: 'stretch', border: '1px solid var(--border-default)', borderRadius: 6, background: 'var(--bg-app)', overflow: 'hidden' }}>
                 <span style={{ padding: '0 10px', display: 'grid', placeItems: 'center', color: 'var(--text-tertiary)', fontFamily: 'Geist Mono, monospace', fontSize: 12, borderRight: '1px solid var(--border-subtle)' }}>¢</span>
                 <input defaultValue="73" style={{ flex: 1, padding: '0 10px', border: 0, background: 'transparent', color: 'var(--text-primary)', fontSize: 13, fontFamily: 'Geist Mono, monospace', outline: 'none' }} />
-                <button style={{ padding: '0 10px', border: 0, borderLeft: '1px solid var(--border-subtle)', background: 'transparent', color: 'var(--text-tertiary)', cursor: 'pointer' }}>−</button>
-                <button style={{ padding: '0 10px', border: 0, borderLeft: '1px solid var(--border-subtle)', background: 'transparent', color: 'var(--text-tertiary)', cursor: 'pointer' }}>+</button>
+                <button className="adm-btn-ghost" style={{ padding: '0 10px', borderLeft: '1px solid var(--border-subtle)', borderRadius: 0, height: '100%', cursor: 'pointer' }} aria-label="Decrease">−</button>
+                <button className="adm-btn-ghost" style={{ padding: '0 10px', borderLeft: '1px solid var(--border-subtle)', borderRadius: 0, height: '100%', cursor: 'pointer' }} aria-label="Increase">+</button>
               </div>
             </div>
             <div style={{ marginBottom: 10 }}>

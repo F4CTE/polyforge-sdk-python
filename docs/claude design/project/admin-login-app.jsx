@@ -1,10 +1,16 @@
 /* Polyforge — Admin Login
-   Single-screen sign-in for admin console. SSO + WebAuthn + IP allow-list note. */
+   Single-screen sign-in for admin console.
+   Uses auth.css design language with admin-specific status panel + restricted-network footer. */
 
-function App() {
-  const [code, setCode] = React.useState(['', '', '', '', '', '']);
-  const [stage, setStage] = React.useState('cred'); // cred | mfa
-  const refs = React.useRef([]);
+const { useState, useRef } = React;
+
+function AdminLogin() {
+  const [stage, setStage] = useState('cred'); // cred | mfa
+  const [email, setEmail] = useState('priya@polyforge.app');
+  const [password, setPassword] = useState('hunter2hunter2');
+  const [showPw, setShowPw] = useState(false);
+  const [code, setCode] = useState(['', '', '', '', '', '']);
+  const refs = useRef([]);
 
   function setDigit(i, v) {
     const next = [...code];
@@ -12,124 +18,201 @@ function App() {
     setCode(next);
     if (next[i] && i < 5) refs.current[i + 1]?.focus();
   }
+  function onKey(i, e) {
+    if (e.key === 'Backspace' && !code[i] && i > 0) refs.current[i - 1]?.focus();
+  }
 
   return (
-    <div style={{minHeight:'100vh',background:'var(--bg-canvas)',display:'grid',gridTemplateColumns:'1fr 1fr'}}>
-      {/* Left: form */}
-      <div style={{display:'flex',flexDirection:'column',padding:'40px 56px',gap:32}}>
-        <div style={{display:'flex',alignItems:'center',gap:10}}>
-          <div style={{width:30,height:30,borderRadius:7,background:'var(--accent-default)',display:'grid',placeItems:'center',color:'#fff'}}>
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 11L7 2L12 11" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" /><path d="M4.5 7H9.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" /></svg>
-          </div>
-          <span style={{fontSize:15,fontWeight:600,letterSpacing:'-0.01em',color:'var(--text-primary)'}}>polyforge</span>
-          <span style={{fontSize:11,padding:'2px 7px',borderRadius:3,background:'var(--bg-elevated)',color:'var(--accent-text)',border:'1px solid var(--border-subtle)',fontFamily:'Geist Mono, monospace',fontWeight:600,letterSpacing:'0.04em'}}>ADMIN</span>
+    <div className="auth-shell split">
+      {/* ---- Left: form pane ---- */}
+      <div className="auth-form-pane">
+        <a href="App-Index.html" className="auth-wordmark" onClick={e => { e.preventDefault(); window.location.href = 'App-Index.html'; }}>
+          <span className="auth-wordmark-mark" aria-hidden>
+            <svg viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 2 L22 7 V17 L12 22 L2 17 V7 Z" fill="none" stroke="currentColor" strokeWidth="0.9" strokeLinejoin="round"/>
+          <path d="M12 11.7 L4.5 8 M12 11.7 L19.5 8 M12 11.7 V22" fill="none" stroke="currentColor" strokeWidth="0.9" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M12 5.5v3" stroke="currentColor" strokeWidth="0.9" strokeLinecap="round"/>
+              <path d="M6.15 15.25l2.7-1.5" stroke="currentColor" strokeWidth="0.9" strokeLinecap="round"/>
+              <path d="M17.85 15.25l-2.7-1.5" stroke="currentColor" strokeWidth="0.9" strokeLinecap="round"/>
+            </svg>
+          </span>
+          polyforge
+          <span className="admlog-tag">ADMIN</span>
+        </a>
+
+        <div className="auth-form-inner">
+          {stage === 'cred' ? (
+            <>
+              <span className="auth-eyebrow">SIGN IN</span>
+              <h1 className="auth-title">Admin console.</h1>
+              <p className="auth-subtitle">
+                Restricted to internal staff. Every action is logged and audited. Trouble? <a href="#">#admin-help</a>
+              </p>
+
+              <form onSubmit={e => { e.preventDefault(); setStage('mfa'); }}>
+                <div className="auth-field">
+                  <div className="auth-field-label"><span>Work email</span></div>
+                  <div className="auth-input-wrap">
+                    <input
+                      type="email"
+                      className="auth-input"
+                      value={email}
+                      onChange={e => setEmail(e.target.value)}
+                      autoComplete="email"
+                      style={{fontFamily: 'Geist Mono, monospace'}}
+                    />
+                  </div>
+                </div>
+
+                <div className="auth-field">
+                  <div className="auth-field-label">
+                    <span>Password</span>
+                    <a href="#">Forgot?</a>
+                  </div>
+                  <div className="auth-input-wrap">
+                    <input
+                      type={showPw ? 'text' : 'password'}
+                      className="auth-input has-icon"
+                      value={password}
+                      onChange={e => setPassword(e.target.value)}
+                      autoComplete="current-password"
+                      style={{fontFamily: 'Geist Mono, monospace', letterSpacing: showPw ? 0 : '0.1em'}}
+                    />
+                    <button type="button" className="auth-input-btn" aria-label={showPw ? 'Hide password' : 'Show password'} onClick={() => setShowPw(!showPw)}>
+                      {showPw
+                        ? <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><line x1="2" y1="2" x2="22" y2="22"/></svg>
+                        : <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>
+                      }
+                    </button>
+                  </div>
+                </div>
+
+                <button type="submit" className="auth-submit">
+                  Continue
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                </button>
+              </form>
+
+              <div className="auth-divider">or</div>
+
+              <div className="auth-providers">
+                <button type="button" className="auth-provider wide" onClick={e => e.preventDefault()}>
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M12 2L2 7v10c0 5.5 3.8 10.7 10 12 6.2-1.3 10-6.5 10-12V7L12 2z" /></svg>
+                  Continue with Okta SSO
+                </button>
+                <button type="button" className="auth-provider wide" onClick={e => e.preventDefault()}>
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="10" cy="8" r="4" /><path d="M10.3 14H10a7 7 0 0 0-7 7h9" /><circle cx="18" cy="17" r="3" /><path d="M18 20v2M18 14v-1" /></svg>
+                  Use security key (WebAuthn)
+                </button>
+              </div>
+            </>
+          ) : (
+            <>
+              <span className="auth-eyebrow">TWO-FACTOR</span>
+              <h1 className="auth-title">Verify your identity.</h1>
+              <p className="auth-subtitle">
+                Enter the 6-digit code from your authenticator app. Codes refresh every 30 seconds.
+              </p>
+
+              <div className="auth-otp">
+                {code.map((d, i) => (
+                  <input
+                    key={i}
+                    ref={el => refs.current[i] = el}
+                    value={d}
+                    onChange={e => setDigit(i, e.target.value)}
+                    onKeyDown={e => onKey(i, e)}
+                    maxLength={1}
+                    inputMode="numeric"
+                    autoFocus={i === 0}
+                  />
+                ))}
+              </div>
+
+              <a href="Admin.html" className="auth-submit" style={{textDecoration: 'none'}}>
+                Verify & sign in
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+              </a>
+
+              <div style={{display: 'flex', justifyContent: 'center', marginTop: 14}}>
+                <button type="button" onClick={() => setStage('cred')} style={{background: 'none', border: 0, color: 'var(--text-tertiary)', fontSize: 12, fontFamily: 'inherit', cursor: 'pointer', padding: 4}}>
+                  ← Use a different account
+                </button>
+              </div>
+
+              <div className="admlog-callout">
+                <strong style={{color: 'var(--text-primary)', fontWeight: 500}}>Lost access?</strong> Use a <a href="#">backup code</a> or ping <a href="#">#admin-help</a>. Backup-code use is paged to the security on-call.
+              </div>
+            </>
+          )}
         </div>
 
-        <div style={{flex:1,display:'flex',alignItems:'center',justifyContent:'center'}}>
-          <div style={{width:'100%',maxWidth:380}}>
-            {stage === 'cred' ? (
-              <>
-                <h1 style={{fontSize:26,fontWeight:600,letterSpacing:'-0.02em',color:'var(--text-primary)',margin:'0 0 8px'}}>Sign in to admin console</h1>
-                <p style={{fontSize:13,color:'var(--text-secondary)',margin:'0 0 32px',lineHeight:1.5}}>This console is restricted to internal staff. Access is logged and audited.</p>
-
-                <div style={{display:'grid',gap:14}}>
-                  <div>
-                    <label style={{fontSize:11,color:'var(--text-tertiary)',display:'block',marginBottom:6}}>Email</label>
-                    <input type="email" defaultValue="priya@polyforge.app" autoComplete="email" style={{width:'100%',padding:'11px 14px',background:'var(--bg-elevated)',border:'1px solid var(--border-subtle)',borderRadius:7,fontFamily:'Geist Mono, monospace',fontSize:13,color:'var(--text-primary)',outline:'none'}} />
-                  </div>
-                  <div>
-                    <label style={{fontSize:11,color:'var(--text-tertiary)',display:'block',marginBottom:6}}>Password</label>
-                    <input type="password" defaultValue="••••••••••••" autoComplete="current-password" style={{width:'100%',padding:'11px 14px',background:'var(--bg-elevated)',border:'1px solid var(--border-subtle)',borderRadius:7,fontFamily:'Geist Mono, monospace',fontSize:13,color:'var(--text-primary)',outline:'none',letterSpacing:'0.1em'}} />
-                  </div>
-                  <button onClick={() => setStage('mfa')} className="adm-btn adm-btn-primary" style={{padding:'11px 14px',fontSize:13,marginTop:6,justifyContent:'center'}}>Continue →</button>
-                </div>
-
-                <div style={{display:'flex',alignItems:'center',gap:10,margin:'24px 0',color:'var(--text-tertiary)',fontSize:11}}>
-                  <div style={{flex:1,height:1,background:'var(--border-subtle)'}} /> or <div style={{flex:1,height:1,background:'var(--border-subtle)'}} />
-                </div>
-
-                <div style={{display:'grid',gap:8}}>
-                  <button className="adm-btn adm-btn-secondary" style={{padding:'11px 14px',fontSize:12.5,justifyContent:'center'}}>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L2 7v10c0 5.5 3.8 10.7 10 12 6.2-1.3 10-6.5 10-12V7L12 2z" /></svg>
-                    Continue with SSO · Okta
-                  </button>
-                  <button className="adm-btn adm-btn-secondary" style={{padding:'11px 14px',fontSize:12.5,justifyContent:'center'}}>
-                    <AdmIcon name="key" size={13} />
-                    Use security key (WebAuthn)
-                  </button>
-                </div>
-              </>
-            ) : (
-              <>
-                <h1 style={{fontSize:26,fontWeight:600,letterSpacing:'-0.02em',color:'var(--text-primary)',margin:'0 0 8px'}}>Two-factor</h1>
-                <p style={{fontSize:13,color:'var(--text-secondary)',margin:'0 0 32px',lineHeight:1.5}}>Enter the 6-digit code from your authenticator. Codes refresh every 30 seconds.</p>
-                <div style={{display:'flex',gap:8,marginBottom:18}}>
-                  {code.map((d, i) => (
-                    <input key={i} ref={el => refs.current[i] = el} value={d} onChange={e => setDigit(i, e.target.value)} maxLength={1} style={{width:48,height:56,textAlign:'center',background:'var(--bg-elevated)',border:`1px solid ${d ? 'var(--accent-default)' : 'var(--border-subtle)'}`,borderRadius:7,fontFamily:'Geist Mono, monospace',fontSize:22,fontWeight:600,color:'var(--text-primary)',outline:'none'}} />
-                  ))}
-                </div>
-                <a href="Admin.html" className="adm-btn adm-btn-primary" style={{padding:'11px 14px',fontSize:13,justifyContent:'center',width:'100%',textDecoration:'none'}}>Verify & sign in →</a>
-                <button onClick={() => setStage('cred')} style={{marginTop:14,background:'transparent',border:'none',color:'var(--text-tertiary)',fontSize:11,cursor:'pointer'}}>← Back</button>
-                <div style={{marginTop:24,padding:12,background:'var(--bg-elevated)',border:'1px solid var(--border-subtle)',borderRadius:6,fontSize:11,color:'var(--text-secondary)',lineHeight:1.6}}>
-                  Lost access? <a href="#" style={{color:'var(--accent-text)',textDecoration:'none'}}>Use a backup code</a> or <a href="#" style={{color:'var(--accent-text)',textDecoration:'none'}}>contact #admin-help</a>.
-                </div>
-              </>
-            )}
-          </div>
-        </div>
-
-        <div style={{display:'flex',alignItems:'center',gap:14,fontSize:10.5,color:'var(--text-tertiary)',fontFamily:'Geist Mono, monospace'}}>
-          <span><AdmIcon name="shield" size={11} /> Audited & logged</span>
-          <span>·</span>
-          <span>Session 30 min idle</span>
-          <span>·</span>
-          <span>v8.4.2</span>
-          <div style={{flex:1}} />
-          <a href="App-Index.html" style={{color:'var(--text-tertiary)',textDecoration:'none'}}>← Back to consumer app</a>
+        <div className="auth-trust" style={{marginTop: 24}}>
+          <span className="auth-trust-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            Audited &amp; logged
+          </span>
+          <span className="auth-trust-item" style={{color: 'var(--text-tertiary)'}}>30 min idle timeout</span>
+          <span className="auth-trust-item" style={{color: 'var(--text-tertiary)', fontFamily: 'Geist Mono, monospace'}}>v8.4.2</span>
+          <span style={{flex: 1}} />
+          <a href="App-Index.html" className="admlog-foot-link">← Consumer app</a>
         </div>
       </div>
 
-      {/* Right: status panel */}
-      <div style={{background:'linear-gradient(135deg, color-mix(in srgb, var(--accent-default) 8%, var(--bg-canvas)) 0%, var(--bg-canvas) 60%)',display:'flex',flexDirection:'column',padding:'40px 48px',borderLeft:'1px solid var(--border-subtle)'}}>
-        <div style={{flex:1,display:'flex',flexDirection:'column',justifyContent:'center',gap:18}}>
-          <div style={{maxWidth:420}}>
-            <div style={{fontSize:11,color:'var(--accent-text)',fontFamily:'Geist Mono, monospace',marginBottom:10,letterSpacing:'0.08em'}}>SYSTEM STATUS · LIVE</div>
-            <h2 style={{fontSize:22,fontWeight:600,letterSpacing:'-0.01em',color:'var(--text-primary)',margin:'0 0 20px',lineHeight:1.3}}>1 active incident, 4 services degraded.</h2>
-
-            <div className="adm-card" style={{padding:0,overflow:'hidden'}}>
-              {[
-                { svc: 'Edge / API gateway',     state: 'op',   meta: 'p99 122ms',  c: 'var(--gain)' },
-                { svc: 'Order router · primary', state: 'op',   meta: '14,820 rps', c: 'var(--gain)' },
-                { svc: 'Polymarket CLOB',        state: 'down', meta: 'INC-2014',   c: 'var(--loss)' },
-                { svc: 'Backtest fleet',          state: 'deg',  meta: 'p95 4.8s',   c: 'var(--warning)' },
-                { svc: 'Resolution oracle',      state: 'deg',  meta: 'UMA lag',    c: 'var(--warning)' },
-                { svc: 'Postgres · primary',     state: 'op',   meta: 'lag 0.2s',   c: 'var(--gain)' },
-                { svc: 'Webhook delivery',       state: 'op',   meta: '99.94%',     c: 'var(--gain)' },
-                { svc: 'Auth · WebAuthn',        state: 'op',   meta: '—',          c: 'var(--gain)' },
-              ].map((s, i) => (
-                <div key={s.svc} style={{padding:'10px 14px',display:'flex',alignItems:'center',gap:10,borderTop: i > 0 ? '1px solid var(--border-subtle)' : 'none'}}>
-                  <span style={{width:7,height:7,borderRadius:'50%',background:s.c,boxShadow: s.state === 'down' ? '0 0 0 3px color-mix(in srgb, var(--loss) 24%, transparent)' : 'none'}} />
-                  <span style={{flex:1,fontSize:12,color:'var(--text-primary)'}}>{s.svc}</span>
-                  <span className="mono" style={{fontSize:10.5,color:'var(--text-tertiary)'}}>{s.meta}</span>
-                  <span className="mono" style={{fontSize:10,padding:'1px 6px',borderRadius:3,background: s.state === 'down' ? 'color-mix(in srgb, var(--loss) 25%, transparent)' : s.state === 'deg' ? 'color-mix(in srgb, var(--warning) 25%, transparent)' : 'color-mix(in srgb, var(--gain) 25%, transparent)',color: s.state === 'down' ? 'var(--loss-text)' : s.state === 'deg' ? 'var(--warn-text)' : 'var(--gain-text)',fontWeight:600,letterSpacing:'0.04em'}}>{s.state.toUpperCase()}</span>
-                </div>
-              ))}
+      {/* ---- Right: status panel ---- */}
+      <aside className="auth-brand-pane grid-bg admlog-brand-pane">
+        <div className="admlog-brand-inner">
+          <div className="admlog-status-headline">
+            <div className="admlog-status-headline-row">
+              <span className="auth-brand-eyebrow">
+                <span className="auth-brand-eyebrow-dot" style={{background: 'var(--loss)'}} />
+                SYSTEM STATUS · LIVE
+              </span>
+              <a href="#" className="admlog-status-link">status.polyforge.app ↗</a>
             </div>
+            <h2 className="auth-brand-title" style={{margin: 0}}>1 active incident · 2 services degraded.</h2>
+            <p className="auth-brand-sub" style={{margin: 0}}>
+              <span className="admlog-status-incident">INC-2014</span> &nbsp;·&nbsp; Polymarket CLOB connection unstable since 14:32 UTC. Order routing failing over to Kalshi automatically; reads unaffected.
+            </p>
+          </div>
 
-            <div style={{marginTop:20,fontSize:11.5,color:'var(--text-tertiary)',lineHeight:1.7}}>
-              Sign-in continues to work during incidents. Read-only views are still available — write actions on affected services are gated.
-            </div>
+          <div className="admlog-status-card">
+            {[
+              { svc: 'Edge / API gateway',     state: 'op',   meta: 'p99 122ms' },
+              { svc: 'Order router · primary', state: 'op',   meta: '14,820 rps' },
+              { svc: 'Polymarket CLOB',        state: 'down', meta: 'INC-2014' },
+              { svc: 'Backtest fleet',         state: 'deg',  meta: 'p95 4.8s' },
+              { svc: 'Resolution oracle',      state: 'deg',  meta: 'UMA lag' },
+              { svc: 'Postgres · primary',     state: 'op',   meta: 'lag 0.2s' },
+              { svc: 'Webhook delivery',       state: 'op',   meta: '99.94%' },
+              { svc: 'Auth · WebAuthn',        state: 'op',   meta: '—' },
+            ].map(s => (
+              <div key={s.svc} className="admlog-status-row">
+                <span className={`admlog-status-dot is-${s.state}`} />
+                <span className="admlog-status-svc">{s.svc}</span>
+                <span className="admlog-status-meta">{s.meta}</span>
+                <span className={`admlog-status-pill is-${s.state}`}>{s.state.toUpperCase()}</span>
+              </div>
+            ))}
+          </div>
+
+          <div className="admlog-status-foot">
+            Sign-in stays available during incidents. Read-only views are still served — write actions on affected services are gated.
           </div>
         </div>
 
-        <div style={{paddingTop:20,borderTop:'1px solid var(--border-subtle)',display:'flex',alignItems:'center',gap:14,fontSize:10.5,color:'var(--text-tertiary)',fontFamily:'Geist Mono, monospace'}}>
-          <span style={{width:6,height:6,borderRadius:'50%',background:'var(--loss)'}} />
-          <span>Restricted network · admin.polyforge.app</span>
-          <div style={{flex:1}} />
-          <span>IP allow-list · ✓ matched</span>
+        <div className="admlog-ip-strip">
+          <span className="admlog-ip-host">admin.polyforge.app</span>
+          <span>·</span>
+          <span>restricted network</span>
+          <span className="admlog-ip-ok">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            IP allow-list matched
+          </span>
         </div>
-      </div>
+      </aside>
     </div>
   );
 }
-ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+
+ReactDOM.createRoot(document.getElementById('root')).render(<AdminLogin />);

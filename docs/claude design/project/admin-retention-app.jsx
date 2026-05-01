@@ -2,13 +2,21 @@
    Cohort retention grid, DAU/MAU stickiness, expansion, key activation events */
 
 function CohortCell({ pct }) {
-  if (pct == null) return <td style={{background:'transparent'}}></td>;
-  const op = pct / 100;
-  const bg = pct >= 80 ? `color-mix(in srgb, var(--gain) ${pct}%, transparent)` :
-             pct >= 50 ? `color-mix(in srgb, var(--info) ${pct + 20}%, transparent)` :
-             pct >= 25 ? `color-mix(in srgb, var(--accent-default) ${pct + 30}%, transparent)` :
-                         `color-mix(in srgb, var(--warning) ${pct + 30}%, transparent)`;
-  return <td style={{background:bg,textAlign:'center',fontFamily:'Geist Mono, monospace',fontSize:11,fontWeight:600,color: pct > 60 ? '#fff' : 'var(--text-primary)',padding:'8px 4px'}}>{pct}%</td>;
+  if (pct == null) return <td style={{ padding: '6px 4px' }}></td>;
+  const color = pct >= 80 ? 'var(--gain-text)'
+              : pct >= 50 ? 'var(--info-text, var(--accent-text))'
+              : pct >= 25 ? 'var(--text-secondary)'
+              :             'var(--text-tertiary)';
+  const weight = pct >= 80 ? 700 : pct >= 50 ? 600 : 500;
+  return (
+    <td className="mono tabnum" style={{
+      textAlign: 'center',
+      fontSize: 11.5,
+      fontWeight: weight,
+      color,
+      padding: '7px 4px',
+    }}>{pct}%</td>
+  );
 }
 
 const COHORTS = [
@@ -52,21 +60,21 @@ function App() {
           <span style={{marginLeft:'auto',fontSize:10.5,color:'var(--text-tertiary)'}}>% of cohort still active in month N</span>
         </div>
         <div style={{overflowX:'auto'}}>
-          <table style={{width:'100%',borderCollapse:'separate',borderSpacing:'2px 2px',fontSize:11}}>
+          <table style={{width:'100%',borderCollapse:'collapse',fontSize:11}}>
             <thead>
-              <tr>
-                <th style={{textAlign:'left',padding:'6px 8px',fontSize:10,fontWeight:500,color:'var(--text-tertiary)',width:80}}>Cohort</th>
-                <th style={{textAlign:'right',padding:'6px 8px',fontSize:10,fontWeight:500,color:'var(--text-tertiary)',width:50}}>Size</th>
+              <tr style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+                <th style={{textAlign:'left',padding:'8px 8px',fontSize:10,fontWeight:500,color:'var(--text-tertiary)',width:80,letterSpacing:'0.04em',textTransform:'uppercase'}}>Cohort</th>
+                <th style={{textAlign:'right',padding:'8px 8px',fontSize:10,fontWeight:500,color:'var(--text-tertiary)',width:50,letterSpacing:'0.04em',textTransform:'uppercase'}}>Size</th>
                 {Array.from({length:13}).map((_, i) => (
-                  <th key={i} style={{padding:'6px 4px',fontSize:10,fontWeight:500,color:'var(--text-tertiary)',textAlign:'center'}}>M{i}</th>
+                  <th key={i} className="mono" style={{padding:'8px 4px',fontSize:10,fontWeight:500,color:'var(--text-tertiary)',textAlign:'center',letterSpacing:'0.04em'}}>M{i}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
               {COHORTS.map(c => (
-                <tr key={c.m}>
-                  <td style={{padding:'6px 8px',color:'var(--text-secondary)',fontSize:11,whiteSpace:'nowrap'}}>{c.m}</td>
-                  <td style={{padding:'6px 8px',textAlign:'right',fontFamily:'Geist Mono, monospace',color:'var(--text-tertiary)',fontSize:10.5}}>{c.size.toLocaleString()}</td>
+                <tr key={c.m} style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+                  <td style={{padding:'7px 8px',color:'var(--text-secondary)',fontSize:11.5,whiteSpace:'nowrap'}}>{c.m}</td>
+                  <td className="mono tabnum" style={{padding:'7px 8px',textAlign:'right',color:'var(--text-tertiary)',fontSize:11}}>{c.size.toLocaleString()}</td>
                   {Array.from({length:13}).map((_, i) => <CohortCell key={i} pct={c.vals[i]} />)}
                 </tr>
               ))}
@@ -74,10 +82,10 @@ function App() {
           </table>
         </div>
         <div style={{display:'flex',gap:18,marginTop:12,paddingTop:12,borderTop:'1px solid var(--border-subtle)',fontSize:10.5,color:'var(--text-tertiary)',flexWrap:'wrap'}}>
-          <span style={{display:'flex',alignItems:'center',gap:6}}><span style={{width:14,height:10,background:'color-mix(in srgb, var(--gain) 80%, transparent)',borderRadius:2}} /> ≥80%</span>
-          <span style={{display:'flex',alignItems:'center',gap:6}}><span style={{width:14,height:10,background:'color-mix(in srgb, var(--info) 60%, transparent)',borderRadius:2}} /> 50–79%</span>
-          <span style={{display:'flex',alignItems:'center',gap:6}}><span style={{width:14,height:10,background:'color-mix(in srgb, var(--accent-default) 50%, transparent)',borderRadius:2}} /> 25–49%</span>
-          <span style={{display:'flex',alignItems:'center',gap:6}}><span style={{width:14,height:10,background:'color-mix(in srgb, var(--warning) 40%, transparent)',borderRadius:2}} /> &lt;25%</span>
+          <span style={{display:'flex',alignItems:'center',gap:6}}><span className="mono" style={{ color: 'var(--gain-text)', fontWeight: 700 }}>80%</span> ≥ strong</span>
+          <span style={{display:'flex',alignItems:'center',gap:6}}><span className="mono" style={{ color: 'var(--info-text, var(--accent-text))', fontWeight: 600 }}>60%</span> 50–79%</span>
+          <span style={{display:'flex',alignItems:'center',gap:6}}><span className="mono" style={{ color: 'var(--text-secondary)', fontWeight: 500 }}>40%</span> 25–49%</span>
+          <span style={{display:'flex',alignItems:'center',gap:6}}><span className="mono" style={{ color: 'var(--text-tertiary)', fontWeight: 500 }}>15%</span> &lt;25%</span>
         </div>
       </div>
 

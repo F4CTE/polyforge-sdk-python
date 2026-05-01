@@ -105,13 +105,16 @@ function App() {
 
       {/* Roles overview */}
       <div style={{ marginTop: 28 }}>
-        <h2 style={{ fontSize: 14, fontWeight: 600, margin: 0, marginBottom: 12 }}>Roles & permissions</h2>
+        <h2 style={{ fontSize: 13, fontWeight: 600, margin: 0, marginBottom: 12 }}>Roles & permissions</h2>
         <div className="adm-grid-3">
           {Object.entries(roleMeta).map(([role, m]) => (
-            <div key={role} className="adm-card" style={{ padding: 16, borderLeft: `3px solid ${m.color}` }}>
-              <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 4 }}>{role}</div>
-              <div style={{ fontSize: 11.5, color: 'var(--text-secondary)' }}>{m.desc}</div>
-              <div style={{ fontSize: 10.5, fontFamily: 'Geist Mono, monospace', color: 'var(--text-tertiary)', marginTop: 8 }}>
+            <div key={role} className="adm-card" style={{ padding: 16 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+                <span style={{ width: 8, height: 8, borderRadius: '50%', background: m.color, flexShrink: 0 }} />
+                <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>{role}</span>
+              </div>
+              <div style={{ fontSize: 11.5, color: 'var(--text-secondary)', lineHeight: 1.45, marginBottom: 10 }}>{m.desc}</div>
+              <div className="mono" style={{ fontSize: 10.5, color: 'var(--text-tertiary)', letterSpacing: '0.02em', paddingTop: 10, borderTop: '1px solid var(--border-subtle)' }}>
                 {role === 'Owner' && 'billing.* · members.* · trade.*'}
                 {role === 'Admin' && 'members.read · trade.* · strategy.*'}
                 {role === 'Trader' && 'trade.* · strategy.run · portfolio.read'}

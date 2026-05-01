@@ -12,19 +12,14 @@ function copyToClipboard(text) {
 }
 
 /* ---- Hex prism mark ---- */
-function PrismMark({ size = 32, withCenters = true }) {
+function PrismMark({ size = 32 }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-      <path d="M12 2 3 7v10l9 5 9-5V7l-9-5z" stroke="currentColor" strokeWidth="1.5"/>
-      <path d="m3 7 9 5 9-5" stroke="currentColor" strokeWidth="1.5"/>
-      <path d="M12 12v10" stroke="currentColor" strokeWidth="1.5"/>
-      {withCenters && (
-        <React.Fragment>
-          <path d="M12 5.5v3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-          <path d="M6.15 15.25l2.7-1.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-          <path d="M17.85 15.25l-2.7-1.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-        </React.Fragment>
-      )}
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor">
+      <path d="M12 2 L22 7 V17 L12 22 L2 17 V7 Z" fill="none" stroke="currentColor" strokeWidth="0.9" strokeLinejoin="round"/>
+          <path d="M12 11.7 L4.5 8 M12 11.7 L19.5 8 M12 11.7 V22" fill="none" stroke="currentColor" strokeWidth="0.9" strokeLinecap="round" strokeLinejoin="round"/>
+      <path d="M12 5.5v3" stroke="currentColor" strokeWidth="0.9" strokeLinecap="round"/>
+      <path d="M6.15 15.25l2.7-1.5" stroke="currentColor" strokeWidth="0.9" strokeLinecap="round"/>
+      <path d="M17.85 15.25l-2.7-1.5" stroke="currentColor" strokeWidth="0.9" strokeLinecap="round"/>
     </svg>
   );
 }
@@ -97,7 +92,7 @@ function OverviewSection() {
 function BrandSection() {
   return (
     <Section id="brand" num="01" eyebrow="Brand" title="Mark, wordmark, and lockups"
-      sub="The Polyforge mark is a hexagonal prism — a forge of converging facets. Three center strokes mark each visible face, reinforcing convergence at the center without crowding the silhouette.">
+      sub="The Polyforge mark is a hexagonal prism — a forge of converging facets. Three short center marks reinforce the meeting point of the three visible faces, reading as a moment of convergence at any size.">
       <Sub>Primary mark</Sub>
       <div className="ds-brand-grid">
         <div className="ds-brand-tile">
@@ -137,7 +132,7 @@ function BrandSection() {
         </div>
         <div className="ds-brand-tile">
           <div className="ds-brand-stage is-dark">
-            <span style={{ fontFamily: 'Geist Mono, monospace', fontSize: 18, color: 'var(--text-secondary)', letterSpacing: '0.02em' }}>polyforge.io</span>
+            <span style={{ fontFamily: 'Geist Mono, monospace', fontSize: 18, color: 'var(--text-secondary)', letterSpacing: '0.02em' }}>polyforge.app</span>
           </div>
           <div className="ds-brand-foot"><strong>URL form</strong> · Geist Mono in tertiary text</div>
         </div>
@@ -152,23 +147,23 @@ function BrandSection() {
                 <line x1="3" y1="0" x2="3" y2="24" /><line x1="12" y1="0" x2="12" y2="24" /><line x1="21" y1="0" x2="21" y2="24" />
                 <line x1="0" y1="2" x2="24" y2="2" /><line x1="0" y1="7" x2="24" y2="7" /><line x1="0" y1="12" x2="24" y2="12" /><line x1="0" y1="17" x2="24" y2="17" /><line x1="0" y1="22" x2="24" y2="22" />
               </g>
-              <path d="M12 2 3 7v10l9 5 9-5V7l-9-5z" stroke="currentColor" strokeWidth="1.5" />
-              <path d="m3 7 9 5 9-5" stroke="currentColor" strokeWidth="1.5" />
-              <path d="M12 12v10" stroke="currentColor" strokeWidth="1.5" />
-              <path d="M12 5.5v3" stroke="var(--accent-text)" strokeWidth="1.5" strokeLinecap="round" />
-              <path d="M6.15 15.25l2.7-1.5" stroke="var(--accent-text)" strokeWidth="1.5" strokeLinecap="round" />
-              <path d="M17.85 15.25l-2.7-1.5" stroke="var(--accent-text)" strokeWidth="1.5" strokeLinecap="round" />
+              <path d="M12 2 L22 7 V17 L12 22 L2 17 V7 Z" fill="none" stroke="currentColor" strokeWidth="0.9" strokeLinejoin="round"/>
+          <path d="M12 11.7 L4.5 8 M12 11.7 L19.5 8 M12 11.7 V22" fill="none" stroke="currentColor" strokeWidth="0.9" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M12 5.5v3" stroke="var(--accent-text)" strokeWidth="0.9" strokeLinecap="round" />
+              <path d="M6.15 15.25l2.7-1.5" stroke="var(--accent-text)" strokeWidth="0.9" strokeLinecap="round" />
+              <path d="M17.85 15.25l-2.7-1.5" stroke="var(--accent-text)" strokeWidth="0.9" strokeLinecap="round" />
             </svg>
           </div>
         </div>
         <div>
           <ul>
-            <li><strong style={{ color: 'var(--text-primary)' }}>Geometry.</strong> 24×24 box. Apex (12,2); base apexes at (3,7), (3,17), (12,22), (21,17), (21,7).</li>
-            <li><strong style={{ color: 'var(--text-primary)' }}>Stroke.</strong> 1.5 — same as the icon set. Outline + face seams + stub strokes only.</li>
-            <li><strong style={{ color: 'var(--text-primary)' }}>Center stubs.</strong> Top (12,5.5)→(12,8.5). Lower stubs run ~35–50% from face center toward (12,12).</li>
-            <li><strong style={{ color: 'var(--text-primary)' }}>Color.</strong> currentColor. <span className="ds-mono">var(--text-primary)</span> in chrome, <span className="ds-mono">var(--accent-text)</span> brand-forward.</li>
+            <li><strong style={{ color: 'var(--text-primary)' }}>Geometry.</strong> 24×24 box. Apex (12,2); base apexes at (2,7), (2,17), (12,22), (22,17), (22,7).</li>
+            <li><strong style={{ color: 'var(--text-primary)' }}>Form.</strong> Wireframe silhouette — outer hex outline plus three Y-seams meeting at (12,11.7). Stroked, not filled.</li>
+            <li><strong style={{ color: 'var(--text-primary)' }}>Convergence stubs.</strong> Top (12,5.5)→(12,8.5). Lower stubs run from face center 30–50% toward (12,12). Always rendered in <span className="ds-mono">var(--accent-text)</span> when over the mark on neutral surfaces.</li>
+            <li><strong style={{ color: 'var(--text-primary)' }}>Stub stroke.</strong> 0.9 — fine, hairline weight. Round caps.</li>
+            <li><strong style={{ color: 'var(--text-primary)' }}>Color.</strong> Mark is <span className="ds-mono">currentColor</span> — inherits from chrome. Use <span className="ds-mono">var(--text-primary)</span> in surfaces, <span className="ds-mono">var(--accent-text)</span> for brand-forward placements.</li>
             <li><strong style={{ color: 'var(--text-primary)' }}>Clear space.</strong> ½× mark height on every side.</li>
-            <li><strong style={{ color: 'var(--text-primary)' }}>Min size.</strong> 16px (favicon). Below — drop center stubs, outline only.</li>
+            <li><strong style={{ color: 'var(--text-primary)' }}>Min size.</strong> 16px (favicon). Below 14px — drop the convergence stubs, silhouette only.</li>
           </ul>
         </div>
       </div>
@@ -468,7 +463,7 @@ function ButtonsSection() {
 
 /* ===== 11 INPUTS ===== */
 function InputsSection() {
-  const [text, setText] = useState('maya@polyforge.io');
+  const [text, setText] = useState('maya@polyforge.app');
   const [sw1, setSw1] = useState(true);
   const [sw2, setSw2] = useState(false);
   const [radio, setRadio] = useState('cozy');
@@ -565,7 +560,7 @@ function CardsSection() {
             <button className="adm-btn adm-btn-ghost adm-btn-sm" style={{ marginLeft: 'auto' }}>View all →</button>
           </div>
           <div style={{ display: 'grid', gap: 10 }}>
-            {['Resolution settled · 2024-elect', 'Strategy paused · breakout-momentum', 'New approval · maya@polyforge.io'].map((t, i) => (
+            {['Resolution settled · 2024-elect', 'Strategy paused · breakout-momentum', 'New approval · maya@polyforge.app'].map((t, i) => (
               <div key={t} style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 13 }}>
                 <span className={`adm-dot ${i === 0 ? 'is-gain' : i === 1 ? 'is-warn' : ''}`} />
                 <span style={{ color: 'var(--text-primary)' }}>{t}</span>

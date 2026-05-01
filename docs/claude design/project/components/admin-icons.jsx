@@ -12,6 +12,8 @@ function AdmIcon({ name, size = 16, className = '' }) {
     case 'blocks':      return <svg {...c}><rect x="3" y="3" width="8" height="8" rx="1"/><rect x="13" y="3" width="8" height="8" rx="1"/><rect x="3" y="13" width="8" height="8" rx="1"/><rect x="13" y="13" width="8" height="8" rx="1"/></svg>;
     case 'shopping-bag':return <svg {...c}><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>;
     case 'cart':        return <svg {...c}><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.7 13.4a2 2 0 0 0 2 1.6h9.7a2 2 0 0 0 2-1.6L23 6H6"/></svg>;
+    case 'receipt':     return <svg {...c}><path d="M4 2h16v20l-3-2-2 2-3-2-3 2-2-2-3 2z"/><line x1="8" y1="8" x2="16" y2="8"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="8" y1="16" x2="12" y2="16"/></svg>;
+    case 'wallet':      return <svg {...c}><path d="M21 12V7a2 2 0 0 0-2-2H5a2 2 0 0 0 0 4h16v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7"/><circle cx="17" cy="13" r="1.2" fill="currentColor"/></svg>;
     case 'bar-chart':   return <svg {...c}><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/><line x1="3" y1="20" x2="21" y2="20"/></svg>;
     case 'flask':       return <svg {...c}><path d="M9 2v6.5L4 18a2 2 0 0 0 1.7 3h12.6a2 2 0 0 0 1.7-3L15 8.5V2"/><path d="M8 2h8"/><path d="M7 14h10"/></svg>;
     case 'database':    return <svg {...c}><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>;
@@ -44,6 +46,8 @@ function AdmIcon({ name, size = 16, className = '' }) {
     case 'arrow-up':    return <svg {...c}><path d="M12 19V5"/><path d="m5 12 7-7 7 7"/></svg>;
     case 'arrow-down':  return <svg {...c}><path d="M12 5v14"/><path d="m19 12-7 7-7-7"/></svg>;
     case 'arrow-up-right':return <svg {...c}><path d="M7 17 17 7"/><path d="M7 7h10v10"/></svg>;
+    case 'arrow-right': return <svg {...c}><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>;
+    case 'arrow-left':  return <svg {...c}><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg>;
     case 'more':        return <svg {...c}><circle cx="5" cy="12" r="1" fill="currentColor"/><circle cx="12" cy="12" r="1" fill="currentColor"/><circle cx="19" cy="12" r="1" fill="currentColor"/></svg>;
     case 'filter':      return <svg {...c}><polygon points="22 3 2 3 10 12.5 10 19 14 21 14 12.5 22 3"/></svg>;
     case 'download':    return <svg {...c}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>;
@@ -78,7 +82,21 @@ function AdmIcon({ name, size = 16, className = '' }) {
     case 'smartphone':  return <svg {...c}><rect x="6" y="2" width="12" height="20" rx="2"/><line x1="11" y1="18" x2="13" y2="18"/></svg>;
     case 'calendar':    return <svg {...c}><rect x="3" y="4" width="18" height="17" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg>;
     case 'user':        return <svg {...c}><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v1"/></svg>;
-    case 'logo':        return <svg width={s} height={s} viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden="true"><path d="M12 2 2 7v10l10 5 10-5V7L12 2zm0 2.3 7.5 3.7L12 11.7 4.5 8 12 4.3zM4 9.6l7 3.5v6.6L4 16.2V9.6zm9 10.1v-6.6l7-3.5v6.6l-7 3.5z"/></svg>;
+    case 'compass':     return <svg {...c}><circle cx="12" cy="12" r="9"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>;
+    case 'trophy':      return <svg {...c}><path d="M6 9V4h12v5a6 6 0 0 1-12 0z"/><path d="M6 5H3a3 3 0 0 0 3 4"/><path d="M18 5h3a3 3 0 0 1-3 4"/><path d="M9 17h6"/><path d="M12 13v4"/><path d="M9 21h6"/></svg>;
+    case 'feed':        return <svg {...c}><path d="M3 5a16 16 0 0 1 16 16"/><path d="M3 11a10 10 0 0 1 10 10"/><circle cx="5" cy="19" r="1.5" fill="currentColor"/></svg>;
+    case 'chart':       return <svg {...c}><line x1="3" y1="20" x2="21" y2="20"/><rect x="6" y="11" width="3" height="8"/><rect x="11" y="6" width="3" height="13"/><rect x="16" y="14" width="3" height="5"/></svg>;
+    case 'sliders':     return <svg {...c}><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/><circle cx="9" cy="6" r="2" fill="var(--bg-canvas, #000)"/><circle cx="15" cy="12" r="2" fill="var(--bg-canvas, #000)"/><circle cx="7" cy="18" r="2" fill="var(--bg-canvas, #000)"/></svg>;
+    case 'book':        return <svg {...c}><path d="M4 4a2 2 0 0 1 2-2h12v18H6a2 2 0 0 0-2 2V4z"/><path d="M4 20a2 2 0 0 0 2 2h12"/><line x1="9" y1="7" x2="15" y2="7"/><line x1="9" y1="11" x2="13" y2="11"/></svg>;
+    case 'compare':     return <svg {...c}><path d="M4 4h7v16H4z"/><path d="M13 8h7v12h-7z"/></svg>;
+    case 'gift':        return <svg {...c}><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg>;
+    case 'folder':      return <svg {...c}><path d="M3 7a2 2 0 0 1 2-2h4l2 3h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>;
+    case 'flag':        return <svg {...c}><path d="M4 21V4h11l-2 4 2 4H4"/><line x1="4" y1="21" x2="4" y2="13"/></svg>;
+    case 'logo':        return <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="0.9" strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden="true"><path d="M12 2 L22 7 V17 L12 22 L2 17 V7 Z"/><path d="M12 11.7 L4.5 8 M12 11.7 L19.5 8 M12 11.7 V22"/><path d="M12 5.5v3"/><path d="M6.15 15.25l2.7-1.5"/><path d="M17.85 15.25l-2.7-1.5"/></svg>;
+    case 'comment':     return <svg {...c}><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>;
+    case 'repeat':      return <svg {...c}><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>;
+    case 'heart':       return <svg {...c}><path d="M20.84 4.6a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.07a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.79 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>;
+    case 'link':        return <svg {...c}><path d="M10 13a5 5 0 0 0 7.07 0l3-3a5 5 0 0 0-7.07-7.07l-1.5 1.5"/><path d="M14 11a5 5 0 0 0-7.07 0l-3 3a5 5 0 0 0 7.07 7.07l1.5-1.5"/></svg>;
     default:            return <svg {...c}><circle cx="12" cy="12" r="9"/></svg>;
   }
 }

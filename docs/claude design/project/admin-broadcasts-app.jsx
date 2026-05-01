@@ -44,18 +44,18 @@ function App() {
                   {[
                     { k: 'banner', name: 'In-app banner', sub: 'Shown on next page load · dismissable',  ic: 'bell' },
                     { k: 'push',   name: 'Push notification', sub: 'iOS + Android · ~3,420 devices',     ic: 'zap' },
-                    { k: 'email',  name: 'Email', sub: '8,164 recipients matching audience',              ic: 'message' },
-                    { k: 'sys',    name: 'System message', sub: 'Persisted in /messages tab',             ic: 'newspaper' },
+                    { k: 'email',  name: 'Email', sub: '8,164 recipients matching audience',              ic: 'mail' },
+                    { k: 'sys',    name: 'System message', sub: 'Persisted in /messages tab',             ic: 'message' },
                   ].map(c => {
                     const on = channels[c.k];
                     return (
-                      <button key={c.k} onClick={() => setChannels({...channels, [c.k]: !on})} style={{textAlign:'left',padding:11,borderRadius:7,border:`1px solid ${on ? 'var(--accent-default)' : 'var(--border-subtle)'}`,background: on ? 'color-mix(in srgb, var(--accent-default) 8%, transparent)' : 'var(--bg-elevated)',cursor:'pointer',display:'flex',gap:10,alignItems:'flex-start'}}>
-                        <div style={{width:24,height:24,borderRadius:5,background: on ? 'var(--accent-default)' : 'var(--bg-surface)',display:'grid',placeItems:'center',color: on ? '#fff' : 'var(--text-secondary)',flexShrink:0,marginTop:1}}><AdmIcon name={c.ic} size={12} /></div>
+                      <button key={c.k} onClick={() => setChannels({...channels, [c.k]: !on})} style={{textAlign:'left',padding:12,borderRadius:8,border:`1px solid ${on ? 'var(--accent-border)' : 'var(--border-subtle)'}`,background: on ? 'var(--accent-subtle)' : 'var(--bg-elevated)',cursor:'pointer',display:'flex',gap:10,alignItems:'flex-start',font:'inherit',color:'inherit'}}>
+                        <div style={{width:30,height:30,borderRadius:6,flexShrink:0,background:'var(--bg-surface)',border:'1px solid var(--border-subtle)',display:'grid',placeItems:'center',color: on ? 'var(--accent-text)' : 'var(--text-secondary)'}}><AdmIcon name={c.ic} size={14} /></div>
                         <div style={{flex:1,minWidth:0}}>
-                          <div style={{fontSize:12,fontWeight:600,color:'var(--text-primary)'}}>{c.name}</div>
-                          <div style={{fontSize:10.5,color:'var(--text-tertiary)',marginTop:2}}>{c.sub}</div>
+                          <div style={{fontSize:12.5,fontWeight:600,color:'var(--text-primary)'}}>{c.name}</div>
+                          <div style={{fontSize:11,color:'var(--text-tertiary)',marginTop:2}}>{c.sub}</div>
                         </div>
-                        {on && <div style={{width:14,height:14,borderRadius:3,background:'var(--accent-default)',display:'grid',placeItems:'center',color:'#fff',marginTop:2}}><AdmIcon name="check" size={9} /></div>}
+                        <div style={{width:16,height:16,borderRadius:4,border:`1px solid ${on ? 'var(--accent-default)' : 'var(--border-default)'}`,background: on ? 'var(--accent-default)' : 'transparent',display:'grid',placeItems:'center',color:'#fff',flexShrink:0,marginTop:1}}>{on && <AdmIcon name="check" size={10} />}</div>
                       </button>
                     );
                   })}
@@ -110,14 +110,14 @@ function App() {
               ].map(a => {
                 const on = aud === a.k;
                 return (
-                  <label key={a.k} style={{display:'flex',alignItems:'center',gap:8,padding:'8px 6px',borderRadius:5,cursor:'pointer',background: on ? 'color-mix(in srgb, var(--accent-default) 8%, transparent)' : 'transparent'}}>
+                  <label key={a.k} style={{display:'flex',alignItems:'center',gap:8,padding:'8px 6px',borderRadius:5,cursor:'pointer',background: on ? 'var(--accent-subtle)' : 'transparent'}}>
                     <input type="radio" name="aud" checked={on} onChange={() => setAud(a.k)} style={{accentColor:'var(--accent-default)'}} />
                     <span style={{fontSize:12,color:'var(--text-primary)',flex:1}}>{a.label}</span>
                     <span style={{fontFamily:'Geist Mono, monospace',fontSize:11,color:'var(--text-tertiary)'}}>{a.count.toLocaleString()}</span>
                   </label>
                 );
               })}
-              <button style={{width:'100%',marginTop:8,padding:'7px 10px',fontSize:11,background:'var(--bg-elevated)',border:'1px dashed var(--border-default)',borderRadius:5,color:'var(--text-secondary)',cursor:'pointer'}}>+ Custom segment…</button>
+              <button className="adm-btn adm-btn-secondary adm-btn-sm" style={{width:'100%',marginTop:8,justifyContent:'center',borderStyle:'dashed'}}>+ Custom segment…</button>
               <div style={{marginTop:12,paddingTop:12,borderTop:'1px solid var(--border-subtle)',fontSize:11,color:'var(--text-secondary)',lineHeight:1.6}}>
                 Estimated reach: <span style={{fontFamily:'Geist Mono, monospace',color:'var(--accent-text)',fontWeight:600}}>~2,266</span> users<br />
                 Push-eligible: <span className="mono">1,820</span> · email: <span className="mono">2,266</span>
@@ -136,7 +136,7 @@ function App() {
                     <div style={{fontSize:12,fontWeight:600,color:'var(--text-primary)',marginBottom:3}}>PredictIt maintenance window — Apr 30, 22:00 UTC</div>
                     <div style={{fontSize:11,color:'var(--text-secondary)',lineHeight:1.5}}>Order routing to PredictIt will pause from 22:00–22:30 UTC. Open exposure moves to Polymarket / Kalshi fallback. Sentiment, data, backtests unaffected.</div>
                   </div>
-                  <button style={{background:'transparent',border:'none',color:'var(--text-tertiary)',cursor:'pointer',padding:0}}><AdmIcon name="circle-x" size={14} /></button>
+                  <button className="adm-icon-btn" aria-label="Dismiss"><AdmIcon name="circle-x" size={14} /></button>
                 </div>
               </div>
             </div>

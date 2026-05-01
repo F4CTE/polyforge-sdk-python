@@ -12,18 +12,57 @@ const USR_NAV = [
       { id: 'strategies',    icon: 'blocks',        label: 'Strategies',      href: 'App-Strategies.html' },
       { id: 'strategy',      icon: 'blocks',        label: 'Strategy detail', href: 'App-Strategy-Detail.html', hidden: true },
       { id: 'builder',       icon: 'hammer',        label: 'Builder',         href: 'App-Builder.html' },
-      { id: 'orders',        icon: 'cart',          label: 'Orders & fills',  href: 'App-Orders.html' },
-      { id: 'positions',     icon: 'pie',           label: 'Positions',       href: 'App-Positions.html' },
+      { id: 'orders',        icon: 'receipt',       label: 'Orders & fills',  href: 'App-Orders.html' },
+      { id: 'positions',     icon: 'wallet',        label: 'Positions',       href: 'App-Positions.html' },
     ],
   },
   {
     label: 'Discover',
     items: [
+      { id: 'discover',      icon: 'compass',       label: 'Discover',        href: 'App-Discover.html' },
       { id: 'markets',       icon: 'bar-chart',     label: 'Markets',         href: 'App-Markets.html' },
       { id: 'market',        icon: 'bar-chart',     label: 'Market detail',   href: 'App-Market-Detail.html', hidden: true },
+      { id: 'sports',        icon: 'trophy',        label: 'Sports',          href: 'App-Sports.html' },
+      { id: 'sports-event',  icon: 'trophy',        label: 'Sports event',    href: 'App-Sports-Event.html', hidden: true },
+      { id: 'news',          icon: 'newspaper',     label: 'News',            href: 'App-News.html' },
+      { id: 'news-article',  icon: 'newspaper',     label: 'News article',    href: 'App-News-Article.html', hidden: true },
       { id: 'whales',        icon: 'trending',      label: 'Whales',          href: 'App-Whales.html' },
+      { id: 'whales-heatmap',icon: 'trending',      label: 'Whale heatmap',   href: 'App-Whales-Heatmap.html', hidden: true },
+      { id: 'whales-following',icon: 'trending',    label: 'Following',       href: 'App-Whales-Following.html', hidden: true },
+      { id: 'whale-profile', icon: 'trending',      label: 'Whale profile',   href: 'App-Whale-Profile.html', hidden: true },
+      { id: 'arbitrage',     icon: 'zap',           label: 'Arbitrage',       href: 'App-Arbitrage.html' },
+      { id: 'watchlist',     icon: 'bookmark',      label: 'Watchlist',       href: 'App-Watchlist.html' },
       { id: 'backtests',     icon: 'flask',         label: 'Backtests',       href: 'App-Backtests.html' },
       { id: 'marketplace',   icon: 'shopping-bag',  label: 'Marketplace',     href: 'App-Marketplace.html' },
+      { id: 'collections',   icon: 'folder',        label: 'Collections',     href: 'App-Collections.html' },
+      { id: 'collection',    icon: 'folder',        label: 'Collection',      href: 'App-Collection-Detail.html', hidden: true },
+    ],
+  },
+  {
+    label: 'Social',
+    items: [
+      { id: 'feed',          icon: 'feed',          label: 'Feed',            href: 'App-Feed.html' },
+      { id: 'leaderboard',   icon: 'trophy',        label: 'Leaderboard',     href: 'App-Leaderboard.html' },
+      { id: 'copy',          icon: 'copy',          label: 'Copy trading',    href: 'App-Copy.html' },
+      { id: 'copy-discover', icon: 'compass',       label: 'Discover traders',href: 'App-Copy-Discover.html', hidden: true },
+      { id: 'copy-setup',    icon: 'copy',          label: 'New copy',        href: 'App-Copy-Setup.html', hidden: true },
+      { id: 'copy-detail',   icon: 'copy',          label: 'Copy detail',     href: 'App-Copy-Detail.html', hidden: true },
+      { id: 'profile',       icon: 'user',          label: 'My profile',      href: 'App-My-Profile.html' },
+      { id: 'profile-public',icon: 'user',          label: 'Public profile',  href: 'App-Public-Profile.html', hidden: true },
+    ],
+  },
+  {
+    label: 'Research',
+    items: [
+      { id: 'analytics',     icon: 'chart',         label: 'Analytics',       href: 'App-Analytics.html' },
+      { id: 'correlation',   icon: 'layers',        label: 'Correlation',     href: 'App-Correlation.html' },
+      { id: 'accuracy',      icon: 'target',        label: 'Forecast accuracy', href: 'App-Accuracy.html' },
+      { id: 'optimizer',     icon: 'sliders',       label: 'Optimizer',       href: 'App-Optimizer.html' },
+      { id: 'journal',       icon: 'book',          label: 'Trade journal',   href: 'App-Journal.html' },
+      { id: 'alerts',        icon: 'alert',         label: 'Alerts',          href: 'App-Alerts.html' },
+      { id: 'smart-orders',  icon: 'clock',         label: 'Smart orders',    href: 'App-Smart-Orders.html' },
+      { id: 'templates',     icon: 'blocks',        label: 'Strategy templates', href: 'App-Strategy-Templates.html' },
+      { id: 'compare',       icon: 'compare',       label: 'Compare strategies',href: 'App-Strategy-Compare.html' },
     ],
   },
   {
@@ -34,7 +73,12 @@ const USR_NAV = [
       { id: 'activity',      icon: 'scroll',        label: 'Activity log',    href: 'App-Activity.html' },
       { id: 'team',          icon: 'users',         label: 'Team',            href: 'App-Team.html' },
       { id: 'keys',          icon: 'lock',          label: 'API keys',        href: 'App-Keys.html' },
+      { id: 'referrals',     icon: 'gift',          label: 'Referrals',       href: 'App-Referrals.html' },
+      { id: 'support',       icon: 'help',          label: 'Support',         href: 'App-Support.html' },
+      { id: 'support-detail',icon: 'help',          label: 'Ticket',          href: 'App-Support-Detail.html', hidden: true },
+      { id: 'support-new',   icon: 'help',          label: 'New ticket',      href: 'App-Support-New.html', hidden: true },
       { id: 'settings',      icon: 'settings',      label: 'Settings',        href: 'App-Settings.html' },
+      { id: 'trading-account',icon: 'settings',     label: 'Trading account', href: 'App-Trading-Account.html', hidden: true },
     ],
   },
 ];
@@ -89,6 +133,7 @@ function UsrShell({ active, title, crumbs = [], actions = null, mode = 'paper', 
   return (
     <div className={`adm-root usr-root ${className}`} data-density={density} data-sidebar={sidebar}>
       <UsrSidebar active={active} sidebar={sidebar} onCollapse={() => setSidebar(sidebar === 'collapsed' ? 'expanded' : 'collapsed')} mobileOpen={mobileNav} onMobileClose={() => setMobileNav(false)} tradeMode={tradeMode} setTradeMode={setTradeMode} />
+      {mobileNav && <div className="adm-mobile-backdrop" onClick={() => setMobileNav(false)} aria-hidden="true" />}
       <div className="adm-main">
         <UsrTopbar title={title} crumbs={crumbs} actions={actions} now={now} onMobileNav={() => setMobileNav(true)} theme={theme} onThemeToggle={() => setTheme(theme === 'dark' ? 'light' : 'dark')} tradeMode={tradeMode} />
         <main className="adm-content">
@@ -104,13 +149,12 @@ function UsrSidebar({ active, sidebar, onCollapse, mobileOpen, tradeMode, setTra
     <aside className={`adm-sidebar usr-sidebar${mobileOpen ? ' is-mobile-open' : ''}`}>
       <div className="adm-brand">
         <div className="adm-brand-logo" aria-hidden="true">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-            <path d="M12 2 3 7v10l9 5 9-5V7l-9-5z" stroke="currentColor" strokeWidth="1.5"/>
-            <path d="m3 7 9 5 9-5" stroke="currentColor" strokeWidth="1.5"/>
-            <path d="M12 12v10" stroke="currentColor" strokeWidth="1.5"/>
-            <path d="M12 5.5v3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-            <path d="M6.15 15.25l2.7-1.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-            <path d="M17.85 15.25l-2.7-1.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 2 L22 7 V17 L12 22 L2 17 V7 Z" fill="none" stroke="currentColor" strokeWidth="0.9" strokeLinejoin="round"/>
+          <path d="M12 11.7 L4.5 8 M12 11.7 L19.5 8 M12 11.7 V22" fill="none" stroke="currentColor" strokeWidth="0.9" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M12 5.5v3" stroke="currentColor" strokeWidth="0.9" strokeLinecap="round"/>
+            <path d="M6.15 15.25l2.7-1.5" stroke="currentColor" strokeWidth="0.9" strokeLinecap="round"/>
+            <path d="M17.85 15.25l-2.7-1.5" stroke="currentColor" strokeWidth="0.9" strokeLinecap="round"/>
           </svg>
         </div>
         <span className="adm-brand-text">Polyforge</span>

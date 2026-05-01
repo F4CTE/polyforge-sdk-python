@@ -34,10 +34,13 @@ function Wiz() {
       <header style={{ borderBottom: '1px solid var(--border-subtle)', padding: '14px 28px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <a href="App.html" style={{ display: 'flex', alignItems: 'center', gap: 10, color: 'var(--text-primary)', textDecoration: 'none' }}>
           <div style={{ width: 28, height: 28, background: 'var(--accent-default)', borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white' }}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-              <path d="M12 2 3 7v10l9 5 9-5V7l-9-5z" stroke="currentColor" strokeWidth="1.6"/>
-              <path d="m3 7 9 5 9-5" stroke="currentColor" strokeWidth="1.6"/>
-              <path d="M12 12v10" stroke="currentColor" strokeWidth="1.6"/>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 2 L22 7 V17 L12 22 L2 17 V7 Z" fill="none" stroke="currentColor" strokeWidth="0.9" strokeLinejoin="round"/>
+          <path d="M12 11.7 L4.5 8 M12 11.7 L19.5 8 M12 11.7 V22" fill="none" stroke="currentColor" strokeWidth="0.9" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M12 5.5v3" stroke="currentColor" strokeWidth="0.9" strokeLinecap="round"/>
+              <path d="M6.15 15.25l2.7-1.5" stroke="currentColor" strokeWidth="0.9" strokeLinecap="round"/>
+              <path d="M17.85 15.25l-2.7-1.5" stroke="currentColor" strokeWidth="0.9" strokeLinecap="round"/>
+            </svg>
             </svg>
           </div>
           <span style={{ fontWeight: 600, fontSize: 14 }}>Polyforge</span>

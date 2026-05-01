@@ -53,26 +53,28 @@ function App() {
       </div>
 
       <div className="adm-grid-2" style={{gridTemplateColumns:'1.4fr 1fr',marginBottom:20}}>
-        <div className="adm-card" style={{borderLeft:'2px solid var(--loss)'}}>
+        <div className="adm-card">
           <div className="adm-card-head">
             <div className="adm-card-icon is-loss"><AdmIcon name="shield-alert" size={14} /></div>
             <h3 className="adm-card-title">Kill switches</h3>
+            <div style={{marginLeft:'auto'}}><AdmPill kind="loss">1 armed</AdmPill></div>
           </div>
           {FLAGS.filter(f => f.kind === 'kill').map((f, i) => (
-            <div key={f.key} style={{padding:'14px 0',borderTop: i > 0 ? '1px solid var(--border-subtle)' : 'none',display:'flex',alignItems:'center',gap:14}}>
-              <div style={{width:14,height:14,borderRadius:'50%',background: f.state === 'kill' ? 'var(--loss)' : 'var(--gain)',boxShadow: f.state === 'kill' ? '0 0 0 4px color-mix(in srgb, var(--loss) 30%, transparent)' : 'none'}} />
-              <div style={{flex:1}}>
-                <div style={{fontSize:13,fontWeight:600,color:'var(--text-primary)'}}>{f.label}</div>
-                <div style={{fontSize:11,color:'var(--text-tertiary)',marginTop:2}}>{f.desc}</div>
+            <div key={f.key} style={{padding:'14px 0',borderTop: i > 0 ? '1px solid var(--border-subtle)' : 'none',display:'flex',alignItems:'center',gap:12}}>
+              <div style={{width:8,height:8,borderRadius:'50%',background: f.state === 'kill' ? 'var(--loss)' : 'var(--gain)',flexShrink:0}} />
+              <div style={{flex:1,minWidth:0}}>
+                <div style={{display:'flex',alignItems:'center',gap:8}}>
+                  <span style={{fontSize:13,fontWeight:600,color:'var(--text-primary)'}}>{f.label}</span>
+                  {f.state === 'kill'
+                    ? <AdmPill kind="loss">armed</AdmPill>
+                    : <AdmPill kind="gain">safe</AdmPill>}
+                </div>
+                <div style={{fontSize:11.5,color:'var(--text-secondary)',marginTop:3}}>{f.desc}</div>
                 <div className="mono" style={{fontSize:10.5,color:'var(--text-tertiary)',marginTop:4}}>{f.key} · last touched {f.updated} by {f.owner}</div>
               </div>
-              <div style={{textAlign:'right'}}>
-                {f.state === 'kill' && <div style={{fontSize:11,color:'var(--loss-text)',fontWeight:700,letterSpacing:'0.04em',marginBottom:4}}>ARMED</div>}
-                {f.state !== 'kill' && <div style={{fontSize:11,color:'var(--gain-text)',fontWeight:600,marginBottom:4}}>safe</div>}
-                <button className={`adm-btn ${f.state === 'kill' ? 'adm-btn-secondary' : 'adm-btn-secondary is-loss'}`}>
-                  {f.state === 'kill' ? 'Disarm' : 'Arm'}
-                </button>
-              </div>
+              <button className={`adm-btn ${f.state === 'kill' ? 'adm-btn-secondary' : 'adm-btn-danger'}`}>
+                {f.state === 'kill' ? 'Disarm' : 'Arm'}
+              </button>
             </div>
           ))}
         </div>
@@ -93,7 +95,7 @@ function App() {
                 <button className="adm-btn adm-btn-secondary" style={{flex:1,padding:'4px 8px',fontSize:10}}>+10%</button>
                 <button className="adm-btn adm-btn-secondary" style={{flex:1,padding:'4px 8px',fontSize:10}}>+25%</button>
                 <button className="adm-btn adm-btn-secondary" style={{flex:1,padding:'4px 8px',fontSize:10}}>100%</button>
-                <button className="adm-btn adm-btn-secondary is-loss" style={{flex:1,padding:'4px 8px',fontSize:10}}>rollback</button>
+                <button className="adm-btn adm-btn-danger" style={{flex:1,padding:'4px 8px',fontSize:10}}>rollback</button>
               </div>
             </div>
           ))}

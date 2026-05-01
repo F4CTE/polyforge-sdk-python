@@ -40,7 +40,7 @@ function App() {
         <AdmStat label="Reconnects · 24h" value="38" delta="IEM 14 · others 24" deltaKind="warn" icon="circle-x" iconKind="is-warn" />
       </div>
 
-      <div className="adm-grid-3" style={{gridTemplateColumns:'1.6fr 1fr 1fr',marginBottom:20}}>
+      <div className="adm-grid-3" style={{gridTemplateColumns:'1.5fr 1.1fr 1fr',marginBottom:20}}>
         <div className="adm-card">
           <div className="adm-card-head">
             <div className="adm-card-icon"><AdmIcon name="bar-chart" size={14} /></div>
@@ -61,36 +61,27 @@ function App() {
             );
           })}
         </div>
-        <div className="adm-card" style={{borderLeft:'2px solid var(--loss)'}}>
+        <div className="adm-card">
           <div className="adm-card-head">
             <div className="adm-card-icon is-loss"><AdmIcon name="shield-alert" size={14} /></div>
             <h3 className="adm-card-title">IEM · incident</h3>
+            <div style={{marginLeft:'auto'}}><AdmPill kind="loss">active</AdmPill></div>
           </div>
-          <div style={{fontSize:12,color:'var(--text-secondary)',lineHeight:1.6}}>
-            <div style={{display:'flex',justifyContent:'space-between',padding:'6px 0',borderBottom:'1px solid var(--border-subtle)'}}>
-              <span style={{color:'var(--text-tertiary)'}}>Down for</span>
-              <span className="mono" style={{color:'var(--loss-text)',fontWeight:600}}>14m 22s</span>
+          {[
+            { k:'Down for',    v:'14m 22s',          mono:true, color:'var(--loss-text)', bold:true },
+            { k:'Error',       v:'http 503',          mono:true },
+            { k:'Reconnects',  v:'14 · backoff 32s',  mono:true, color:'var(--warning)' },
+            { k:'Open orders', v:'82 · pinned to alt',mono:true },
+            { k:'Failover',    v:'auto · Polymarket', color:'var(--gain-text)' },
+          ].map((row, i, arr) => (
+            <div key={row.k} style={{padding:'9px 0',borderTop: i > 0 ? '1px solid var(--border-subtle)' : 'none',display:'flex',alignItems:'center',gap:8}}>
+              <span style={{fontSize:12,color:'var(--text-tertiary)',flex:1}}>{row.k}</span>
+              <span className={row.mono ? 'mono' : ''} style={{fontSize:row.mono ? 11.5 : 12, color: row.color || 'var(--text-primary)', fontWeight: row.bold ? 600 : 500, whiteSpace:'nowrap'}}>{row.v}</span>
             </div>
-            <div style={{display:'flex',justifyContent:'space-between',padding:'6px 0',borderBottom:'1px solid var(--border-subtle)'}}>
-              <span style={{color:'var(--text-tertiary)'}}>Error</span>
-              <span className="mono" style={{fontSize:10.5}}>http 503</span>
-            </div>
-            <div style={{display:'flex',justifyContent:'space-between',padding:'6px 0',borderBottom:'1px solid var(--border-subtle)'}}>
-              <span style={{color:'var(--text-tertiary)'}}>Reconnects</span>
-              <span className="mono" style={{color:'var(--warning)'}}>14 · backoff 32s</span>
-            </div>
-            <div style={{display:'flex',justifyContent:'space-between',padding:'6px 0',borderBottom:'1px solid var(--border-subtle)'}}>
-              <span style={{color:'var(--text-tertiary)'}}>Open orders</span>
-              <span className="mono">82 · pinned to alt</span>
-            </div>
-            <div style={{display:'flex',justifyContent:'space-between',padding:'6px 0'}}>
-              <span style={{color:'var(--text-tertiary)'}}>Failover</span>
-              <span style={{color:'var(--gain-text)'}}>auto · Polymarket</span>
-            </div>
-          </div>
-          <div style={{display:'flex',gap:6,marginTop:12}}>
-            <button className="adm-btn adm-btn-secondary" style={{flex:1}}><AdmIcon name="play" size={12} />Reconnect</button>
-            <button className="adm-btn adm-btn-secondary is-loss" style={{flex:1}}><AdmIcon name="circle-x" size={12} />Force off</button>
+          ))}
+          <div style={{display:'flex',gap:6,marginTop:12,paddingTop:12,borderTop:'1px solid var(--border-subtle)'}}>
+            <button className="adm-btn adm-btn-secondary" style={{flex:1,justifyContent:'center'}}><AdmIcon name="play" size={12} />Reconnect</button>
+            <button className="adm-btn adm-btn-danger" style={{flex:1,justifyContent:'center'}}><AdmIcon name="circle-x" size={12} />Force off</button>
           </div>
         </div>
         <div className="adm-card">

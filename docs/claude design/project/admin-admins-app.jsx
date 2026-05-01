@@ -1,14 +1,14 @@
 /* Polyforge — Admin team management */
 
 const ADMINS = [
-  { id: 'adm_01', name: 'Maya Chen',         email: 'maya@polyforge.io',     role: 'Root',         twofa: 'Yubikey', last: 'now',      ip: '198.51.100.4', sessions: 2, joined: 'Aug 2023', actions7d: 184, you: true },
-  { id: 'adm_02', name: 'Kenji Tanaka',      email: 'kenji@polyforge.io',    role: 'Compliance',   twofa: 'TOTP',    last: '4m ago',   ip: '198.51.100.7', sessions: 1, joined: 'Sep 2023', actions7d: 142 },
-  { id: 'adm_03', name: 'Aria Patel',        email: 'aria@polyforge.io',     role: 'Trust & Safety', twofa: 'Yubikey', last: '12m ago', ip: '203.0.113.18', sessions: 1, joined: 'Nov 2023', actions7d: 98 },
-  { id: 'adm_04', name: 'Sven Volkov',       email: 'sven@polyforge.io',     role: 'Engineering',  twofa: 'Yubikey', last: '1h ago',   ip: '198.51.100.11', sessions: 3, joined: 'Aug 2023', actions7d: 67 },
-  { id: 'adm_05', name: 'Linnea Bergquist',  email: 'linnea@polyforge.io',   role: 'Support',      twofa: 'TOTP',    last: '2h ago',   ip: '198.51.100.4', sessions: 1, joined: 'Feb 2024', actions7d: 312 },
-  { id: 'adm_06', name: 'Owen Mbeki',        email: 'owen@polyforge.io',     role: 'Support',      twofa: 'TOTP',    last: '6h ago',   ip: '203.0.113.22', sessions: 0, joined: 'May 2024', actions7d: 248 },
-  { id: 'adm_07', name: 'Chiara Rossi',      email: 'chiara@polyforge.io',   role: 'Finance',      twofa: 'TOTP',    last: '1d ago',   ip: '198.51.100.4', sessions: 0, joined: 'Mar 2024', actions7d: 41 },
-  { id: 'adm_08', name: 'Diego Silva',       email: 'diego@polyforge.io',    role: 'Read-only',    twofa: 'Email',   last: '4d ago',   ip: '203.0.113.40', sessions: 0, joined: 'Jan 2025', actions7d: 0, weak: true },
+  { id: 'adm_01', name: 'Maya Chen',         email: 'maya@polyforge.app',     role: 'Root',         twofa: 'Yubikey', last: 'now',      ip: '198.51.100.4', sessions: 2, joined: 'Aug 2023', actions7d: 184, you: true },
+  { id: 'adm_02', name: 'Kenji Tanaka',      email: 'kenji@polyforge.app',    role: 'Compliance',   twofa: 'TOTP',    last: '4m ago',   ip: '198.51.100.7', sessions: 1, joined: 'Sep 2023', actions7d: 142 },
+  { id: 'adm_03', name: 'Aria Patel',        email: 'aria@polyforge.app',     role: 'Trust & Safety', twofa: 'Yubikey', last: '12m ago', ip: '203.0.113.18', sessions: 1, joined: 'Nov 2023', actions7d: 98 },
+  { id: 'adm_04', name: 'Sven Volkov',       email: 'sven@polyforge.app',     role: 'Engineering',  twofa: 'Yubikey', last: '1h ago',   ip: '198.51.100.11', sessions: 3, joined: 'Aug 2023', actions7d: 67 },
+  { id: 'adm_05', name: 'Linnea Bergquist',  email: 'linnea@polyforge.app',   role: 'Support',      twofa: 'TOTP',    last: '2h ago',   ip: '198.51.100.4', sessions: 1, joined: 'Feb 2024', actions7d: 312 },
+  { id: 'adm_06', name: 'Owen Mbeki',        email: 'owen@polyforge.app',     role: 'Support',      twofa: 'TOTP',    last: '6h ago',   ip: '203.0.113.22', sessions: 0, joined: 'May 2024', actions7d: 248 },
+  { id: 'adm_07', name: 'Chiara Rossi',      email: 'chiara@polyforge.app',   role: 'Finance',      twofa: 'TOTP',    last: '1d ago',   ip: '198.51.100.4', sessions: 0, joined: 'Mar 2024', actions7d: 41 },
+  { id: 'adm_08', name: 'Diego Silva',       email: 'diego@polyforge.app',    role: 'Read-only',    twofa: 'Email',   last: '4d ago',   ip: '203.0.113.40', sessions: 0, joined: 'Jan 2025', actions7d: 0, weak: true },
 ];
 
 const ROLES = [
@@ -151,8 +151,8 @@ function App() {
         <div className="adm-drawer-body">
           <div style={{marginBottom:14}}>
             <label style={{fontSize:11,fontWeight:600,color:'var(--text-secondary)',letterSpacing:'0.04em',textTransform:'uppercase',display:'block',marginBottom:6}}>Email</label>
-            <input type="email" placeholder="name@polyforge.io" style={{width:'100%',background:'var(--bg-app)',border:'1px solid var(--border-default)',borderRadius:6,padding:'10px 12px',color:'var(--text-primary)',fontSize:13,fontFamily:'inherit'}} />
-            <div style={{fontSize:10.5,color:'var(--text-tertiary)',marginTop:4}}>Must be on @polyforge.io · Google SSO required</div>
+            <input type="email" placeholder="name@polyforge.app" style={{width:'100%',background:'var(--bg-app)',border:'1px solid var(--border-default)',borderRadius:6,padding:'10px 12px',color:'var(--text-primary)',fontSize:13,fontFamily:'inherit'}} />
+            <div style={{fontSize:10.5,color:'var(--text-tertiary)',marginTop:4}}>Must be on @polyforge.app · Google SSO required</div>
           </div>
 
           <div style={{marginBottom:14}}>

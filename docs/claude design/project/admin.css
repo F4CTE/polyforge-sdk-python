@@ -461,6 +461,24 @@
 }
 .adm-table-tools-search input::placeholder { color: var(--text-tertiary); }
 
+.adm-filter-group {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 3px;
+  background: var(--bg-app);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+}
+.adm-filter-group > .adm-filter {
+  height: 26px; padding: 0 10px;
+  background: transparent; border: 0;
+}
+.adm-filter-group > .adm-filter:hover { background: var(--bg-elevated); border: 0; }
+.adm-filter-group > .adm-filter.is-active {
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+  border: 0;
+}
+
 .adm-filter {
   display: inline-flex; align-items: center; gap: 6px;
   height: 30px; padding: 0 10px;
@@ -540,6 +558,41 @@
   display: inline-grid; place-items: center;
 }
 .adm-table .row-action:hover { color: var(--text-primary); background: var(--bg-elevated); }
+
+/* Compact table for inside cards (Recent deliveries, Top earners, etc.) — */
+/* lighter than .adm-table: smaller text, no card chrome, no row hover.    */
+.adm-mini-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+.adm-mini-table thead th {
+  text-align: left;
+  padding: 8px 10px;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+  border-bottom: 1px solid var(--border-subtle);
+  white-space: nowrap;
+}
+.adm-mini-table tbody td {
+  padding: 9px 10px;
+  border-bottom: 1px solid var(--border-subtle);
+  color: var(--text-primary);
+  vertical-align: middle;
+}
+.adm-mini-table tbody tr:last-child td { border-bottom: 0; }
+.adm-mini-table .col-num {
+  font-family: 'Geist Mono', monospace;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.adm-mini-table thead th.col-num { text-align: right; }
+.adm-mini-table .col-tertiary { color: var(--text-tertiary); white-space: nowrap; font-size: 11.5px; }
+.adm-mini-table .col-mono { font-family: 'Geist Mono', monospace; color: var(--text-secondary); }
 
 .adm-table-foot {
   display: flex; align-items: center; justify-content: space-between;
@@ -802,8 +855,11 @@ input.adm-input[type="number"] { font-variant-numeric: tabular-nums; font-family
 .adm-grid-3 {
   display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px;
 }
+.adm-grid-4 {
+  display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px;
+}
 @media (max-width: 1100px) {
-  .adm-grid-2, .adm-grid-3 { grid-template-columns: 1fr; }
+  .adm-grid-2, .adm-grid-3, .adm-grid-4 { grid-template-columns: 1fr; }
 }
 
 /* ---- Avatars ---- */

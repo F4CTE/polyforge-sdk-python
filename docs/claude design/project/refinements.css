@@ -1,0 +1,1546 @@
+/* =========================================================
+   refinements.css — Polish layer
+   Sits on top of styles.css + admin.css + user.css + motion.css.
+   Goal: tighten typography, calm down loud surfaces,
+   unify card/header/CTA rhythm across all surfaces.
+   Loaded LAST so it can override drift.
+   ========================================================= */
+
+/* ---------------------------------------------------------
+   1. Typography — slightly tighter tracking, real hierarchy
+   --------------------------------------------------------- */
+:root {
+  /* refined spacing scale (8pt grid) */
+  --rf-1:  4px;
+  --rf-2:  8px;
+  --rf-3:  12px;
+  --rf-4:  16px;
+  --rf-5:  20px;
+  --rf-6:  24px;
+  --rf-7:  32px;
+  --rf-8:  48px;
+  --rf-9:  64px;
+  --rf-10: 80px;
+  --rf-11: 112px;
+
+  /* refined radii */
+  --rf-radius-sm: 6px;
+  --rf-radius-md: 8px;
+  --rf-radius-lg: 12px;
+  --rf-radius-xl: 16px;
+
+  /* refined elevation — subtle, not glossy */
+  --rf-shadow-1: 0 1px 2px rgba(0,0,0,0.18);
+  --rf-shadow-2: 0 2px 8px rgba(0,0,0,0.16), 0 1px 2px rgba(0,0,0,0.10);
+  --rf-shadow-3: 0 8px 28px rgba(0,0,0,0.32), 0 2px 6px rgba(0,0,0,0.18);
+  --rf-shadow-glow: 0 0 0 1px var(--accent-border), 0 8px 24px -8px color-mix(in srgb, var(--accent-default) 32%, transparent);
+}
+:root[data-theme="light"] {
+  --rf-shadow-1: 0 1px 2px rgba(15,20,40,0.06);
+  --rf-shadow-2: 0 2px 8px rgba(15,20,40,0.06), 0 1px 2px rgba(15,20,40,0.04);
+  --rf-shadow-3: 0 8px 28px rgba(15,20,40,0.10), 0 2px 6px rgba(15,20,40,0.06);
+}
+
+/* Tighten headings consistently */
+h1, h2, h3, h4 {
+  letter-spacing: -0.018em;
+  font-feature-settings: "ss01", "ss03", "cv11";
+}
+h1 { letter-spacing: -0.025em; }
+
+/* Hero display — sharper rhythm */
+.t-hero {
+  font-size: clamp(40px, 5.6vw, 64px) !important;
+  line-height: 1.04 !important;
+  letter-spacing: -0.035em !important;
+  font-weight: 600 !important;
+}
+.t-hero em {
+  /* Make secondary clause subtler — don't compete with primary */
+  color: var(--text-tertiary) !important;
+}
+
+/* Body copy a touch quieter */
+.section-body, .hero-sub {
+  color: var(--text-secondary) !important;
+}
+.hero-sub {
+  font-size: 17px !important;
+  line-height: 1.55 !important;
+  max-width: 520px;
+  margin-top: 16px !important;
+}
+
+/* Section heads — eyebrow + h2 + body share one rhythm */
+.section-head .eyebrow,
+.eyebrow {
+  font-size: 11px !important;
+  letter-spacing: 0.14em !important;
+  font-weight: 600 !important;
+  color: var(--text-tertiary) !important;
+  text-transform: uppercase !important;
+  margin-bottom: 14px !important;
+}
+.section-head .h2,
+.h2 {
+  font-size: clamp(28px, 3.4vw, 38px) !important;
+  letter-spacing: -0.025em !important;
+  line-height: 1.12 !important;
+  margin-top: 0 !important;
+  margin-bottom: 16px !important;
+}
+
+/* ---------------------------------------------------------
+   2. Buttons — clearer hierarchy, calmer hover.
+   `.adm-btn` (no modifier) now defaults to a secondary look so
+   any <button class="adm-btn"> renders correctly without a
+   modifier. Modifiers below override it.
+   --------------------------------------------------------- */
+.adm-btn,
+.btn-secondary,
+.adm-btn-secondary,
+.usr-btn-secondary {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  color: var(--text-primary);
+}
+.adm-btn:hover,
+.btn-secondary:hover,
+.adm-btn-secondary:hover,
+.usr-btn-secondary:hover {
+  background: var(--bg-elevated);
+  border-color: var(--border-strong);
+}
+
+.btn-primary,
+.adm-btn-primary,
+.usr-btn-primary {
+  font-weight: 600;
+  background: var(--accent-default);
+  color: #fff;
+  border: 1px solid color-mix(in srgb, var(--accent-default) 80%, #000);
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, #fff 16%, transparent),
+    var(--rf-shadow-1);
+}
+.btn-primary:hover,
+.adm-btn-primary:hover,
+.usr-btn-primary:hover {
+  background: var(--accent-hover);
+  border-color: color-mix(in srgb, var(--accent-default) 80%, #000);
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, #fff 18%, transparent),
+    0 4px 14px -4px color-mix(in srgb, var(--accent-default) 50%, transparent);
+}
+
+/* Ghost: transparent, secondary text — for low-emphasis actions */
+.adm-btn-ghost {
+  background: transparent !important;
+  border: 1px solid transparent !important;
+  color: var(--text-secondary);
+}
+.adm-btn-ghost:hover {
+  background: var(--bg-elevated) !important;
+  border-color: transparent !important;
+  color: var(--text-primary);
+}
+
+/* Danger */
+.adm-btn-danger {
+  background: var(--loss);
+  border: 1px solid color-mix(in srgb, var(--loss) 80%, #000);
+  color: #fff;
+}
+.adm-btn-danger:hover {
+  background: color-mix(in srgb, var(--loss) 85%, #000);
+  border-color: color-mix(in srgb, var(--loss) 70%, #000);
+}
+
+/* Square icon-only buttons (28×28). Add `.adm-btn-icon` to any
+   adm-btn that contains only an icon. */
+.adm-btn-icon {
+  width: 28px;
+  height: 28px;
+  padding: 0 !important;
+  display: inline-grid;
+  place-items: center;
+}
+.adm-btn-icon.adm-btn-sm { width: 24px; height: 24px; }
+
+/* Inline icon color utilities. Apply to <AdmIcon className=...> or any
+   wrapping element to set the SVG's currentColor. Useful for trailing
+   chevrons, decorative leading icons inside text rows, etc. */
+.adm-icon-tertiary  { color: var(--text-tertiary); }
+.adm-icon-secondary { color: var(--text-secondary); }
+.adm-icon-accent    { color: var(--accent-text); }
+.adm-icon-gain      { color: var(--gain-text); }
+.adm-icon-loss      { color: var(--loss-text); }
+.adm-icon-warn      { color: var(--warn-text); }
+/* When the class is on the SVG itself (AdmIcon does this), it still works
+   because the SVG strokes via currentColor and these rules set color. */
+
+/* Remove the default lift on micro buttons inside dense tables */
+.adm-table .adm-btn:hover,
+.adm-table .adm-btn-primary:hover,
+.adm-table .adm-btn-secondary:hover { transform: none !important; }
+
+/* Tab buttons — used in card headers / page-level tab strips.
+   These are <button class="adm-tab"> elements that don't inherit
+   from .adm-btn, so we give them their own clean baseline. */
+.adm-tab,
+.usr-tab {
+  appearance: none;
+  background: transparent;
+  border: 0;
+  padding: 12px 14px;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  white-space: nowrap;
+}
+.adm-tab:hover,
+.usr-tab:hover { color: var(--text-secondary); }
+.adm-tab.is-active,
+.usr-tab.is-active { color: var(--text-primary); }
+
+/* ---------------------------------------------------------
+   3. Cards — unified surface
+   --------------------------------------------------------- */
+.card,
+.adm-card,
+.usr-card {
+  border-radius: var(--rf-radius-lg);
+  border-color: var(--border-subtle);
+  transition:
+    border-color 160ms var(--ease-out),
+    background 160ms var(--ease-out),
+    box-shadow 160ms var(--ease-out);
+}
+
+/* Interactive cards (links wrapped around card) get a hover lift */
+a.adm-card:hover,
+a.usr-card:hover,
+.adm-card.is-interactive:hover {
+  border-color: var(--border-default);
+  background: color-mix(in srgb, var(--bg-surface) 92%, var(--accent-default) 4%);
+}
+
+/* ---------------------------------------------------------
+   4. Tables — calmer rows, sharper headers
+   --------------------------------------------------------- */
+.adm-table thead th {
+  font-size: 10px !important;
+  letter-spacing: 0.14em;
+  color: var(--text-tertiary);
+  font-weight: 600;
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--border-subtle);
+  background: transparent;
+}
+.adm-table tbody tr {
+  transition: background 120ms var(--ease-out);
+}
+.adm-table tbody tr:hover {
+  background: color-mix(in srgb, var(--bg-elevated) 60%, transparent);
+}
+.adm-table tbody td {
+  border-bottom: 1px solid color-mix(in srgb, var(--border-subtle) 60%, transparent);
+}
+.adm-table tbody tr:last-child td { border-bottom: 0; }
+
+/* ---------------------------------------------------------
+   5. Pills / chips — consistent height, calmer fills
+   --------------------------------------------------------- */
+.adm-pill,
+.usr-pill,
+.chip {
+  font-feature-settings: "ss01", "tnum";
+  letter-spacing: 0.02em;
+}
+.adm-pill {
+  height: 20px;
+  padding: 0 7px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+/* ---------------------------------------------------------
+   6. Hero (landing) — refine glow + grid
+   --------------------------------------------------------- */
+.hero-glow {
+  /* Calmer, larger, lower opacity — atmosphere not advertising */
+  width: 1400px !important;
+  height: 1100px !important;
+  background: radial-gradient(ellipse,
+    color-mix(in srgb, var(--accent-default) 10%, transparent) 0%,
+    color-mix(in srgb, var(--accent-default)  3%, transparent) 36%,
+    transparent 62%) !important;
+  filter: blur(8px) !important;
+}
+.hero-grid-bg {
+  /* tighter grid, subtler lines */
+  background-size: 56px 56px !important;
+  opacity: 0.6 !important;
+}
+
+.hero-container {
+  padding: 40px 0 64px !important;
+}
+@media (min-width: 768px) {
+  .hero-container { padding: 56px 0 96px !important; }
+}
+
+/* Bring secondary clause back into reading range */
+.t-hero em {
+  color: color-mix(in srgb, var(--text-primary) 55%, transparent) !important;
+  font-style: normal !important;
+}
+
+.hero-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 28px;
+  padding: 0 14px;
+  border-radius: 99px;
+  background: color-mix(in srgb, var(--bg-surface) 80%, transparent);
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--border-subtle);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  margin-bottom: 26px;
+  letter-spacing: 0;
+}
+.hero-eyebrow .dot {
+  background: var(--gain);
+  width: 7px;
+  height: 7px;
+  box-shadow:
+    0 0 0 3px color-mix(in srgb, var(--gain) 18%, transparent),
+    0 0 12px color-mix(in srgb, var(--gain) 50%, transparent);
+}
+
+.hero-cta {
+  display: flex;
+  gap: 10px;
+  margin-top: 28px;
+  flex-wrap: wrap;
+}
+
+/* ---------------------------------------------------------
+   7. Metrics strip — refined separators + tighter type
+   --------------------------------------------------------- */
+.metrics {
+  border-top: 1px solid var(--border-subtle);
+  border-bottom: 1px solid var(--border-subtle);
+  background: var(--bg-subtle);
+}
+.metrics .container,
+.metrics-inner {
+  padding-top: 28px !important;
+  padding-bottom: 28px !important;
+}
+.metric-value {
+  font-size: 28px !important;
+  letter-spacing: -0.025em !important;
+  font-weight: 600 !important;
+  color: var(--text-primary) !important;
+  font-family: inherit !important;
+  font-feature-settings: "tnum", "ss01" !important;
+}
+.metric-label {
+  font-size: 10.5px !important;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-tertiary) !important;
+  margin-top: 6px !important;
+  font-weight: 600;
+}
+.metric-sep {
+  background: var(--border-subtle) !important;
+  width: 1px !important;
+  align-self: stretch !important;
+  margin: 4px 0 !important;
+}
+
+/* ---------------------------------------------------------
+   8. App Dashboard hero — bigger equity, calmer chart
+   --------------------------------------------------------- */
+.usr-hero {
+  border-radius: var(--rf-radius-lg);
+  background: linear-gradient(180deg,
+    color-mix(in srgb, var(--bg-surface) 92%, var(--accent-default) 6%) 0%,
+    var(--bg-surface) 60%);
+}
+.usr-hero-equity {
+  font-size: 44px !important;
+  letter-spacing: -0.03em !important;
+  font-weight: 600 !important;
+  font-feature-settings: "tnum", "ss01";
+}
+.usr-hero-eyebrow {
+  letter-spacing: 0.14em !important;
+  font-size: 10.5px !important;
+}
+
+/* "LIVE" recording dot — unify across pages */
+.usr-rec, .adm-rec {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--gain-text);
+}
+.usr-rec::before, .adm-rec::before {
+  content: '';
+  width: 6px; height: 6px;
+  border-radius: 99px;
+  background: var(--gain);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--gain) 18%, transparent);
+  animation: dot-pulse 2s ease-in-out infinite;
+}
+
+/* ---------------------------------------------------------
+   9. Section heads (admin/user) — consistent rhythm
+   --------------------------------------------------------- */
+.adm-section-head,
+.usr-section-head {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  margin: 28px 0 14px;
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+.adm-section-head .adm-section-title,
+.usr-section-head .usr-section-title,
+.adm-section-head h2,
+.usr-section-head h2 {
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+  color: var(--text-primary);
+  margin: 0;
+}
+.adm-section-head .adm-section-sub,
+.usr-section-head .usr-section-sub {
+  font-size: 12px;
+  color: var(--text-tertiary);
+  margin: 0;
+}
+
+/* ---------------------------------------------------------
+   10. Page heads — make subtitle quieter, title taller
+   --------------------------------------------------------- */
+.adm-page-head h1,
+.usr-page-head h1 {
+  font-size: 22px !important;
+  font-weight: 600 !important;
+  letter-spacing: -0.018em !important;
+  color: var(--text-primary);
+  margin: 0 0 4px !important;
+}
+.adm-page-head .adm-page-sub,
+.usr-page-head .usr-page-sub,
+.adm-page-head p,
+.usr-page-head p {
+  color: var(--text-tertiary) !important;
+  font-size: 13px !important;
+  margin: 0 !important;
+}
+
+/* ---------------------------------------------------------
+   11. Sidebar — calm hover, sharper active state
+   --------------------------------------------------------- */
+.adm-nav-link {
+  border-radius: var(--rf-radius-sm);
+  margin: 1px 0;
+  padding: 6px 10px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  transition: background 120ms var(--ease-out), color 120ms var(--ease-out);
+}
+.adm-nav-link:hover {
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+}
+.adm-nav-link.is-active,
+.adm-nav-item.is-active .adm-nav-link {
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+/* ---------------------------------------------------------
+   12. Inputs — unify focus ring with motion.css
+   --------------------------------------------------------- */
+.adm-input,
+.adm-search input,
+.usr-input,
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="number"],
+input[type="search"],
+textarea,
+select {
+  font-family: inherit;
+  letter-spacing: -0.005em;
+}
+
+/* ---------------------------------------------------------
+   13. Code blocks (docs) — better contrast, monospace polish
+   --------------------------------------------------------- */
+code, pre, .mono {
+  font-feature-settings: "zero", "ss02";
+}
+
+/* ---------------------------------------------------------
+   14. Selection — accent tint, readable
+   --------------------------------------------------------- */
+::selection {
+  background: color-mix(in srgb, var(--accent-default) 28%, transparent);
+  color: var(--text-primary);
+}
+
+/* ---------------------------------------------------------
+   15. Focus rings — uniform across the app
+   --------------------------------------------------------- */
+:focus-visible {
+  outline: none;
+  box-shadow:
+    0 0 0 2px var(--bg-app),
+    0 0 0 4px color-mix(in srgb, var(--accent-default) 60%, transparent) !important;
+  border-radius: var(--rf-radius-sm);
+}
+
+/* ---------------------------------------------------------
+   16. Empty/zero/separator polish
+   --------------------------------------------------------- */
+hr, .adm-divider, .usr-divider {
+  border: 0;
+  border-top: 1px solid var(--border-subtle);
+  margin: var(--rf-6) 0;
+}
+
+/* ---------------------------------------------------------
+   17. Footer — quieter, more space
+   --------------------------------------------------------- */
+.pf-footer, .footer {
+  border-top: 1px solid var(--border-subtle);
+  padding-top: var(--rf-9) !important;
+  padding-bottom: var(--rf-8) !important;
+  background: linear-gradient(180deg, var(--bg-app), var(--bg-subtle));
+}
+
+/* ---------------------------------------------------------
+   17b. Section rhythm — calm spacing, subtle alternation
+   --------------------------------------------------------- */
+.pf-section {
+  padding-top: var(--rf-10) !important;
+  padding-bottom: var(--rf-10) !important;
+  position: relative;
+}
+@media (min-width: 768px) {
+  .pf-section {
+    padding-top: var(--rf-11) !important;
+    padding-bottom: var(--rf-11) !important;
+  }
+}
+/* alternating subtle wash so adjacent sections don't merge */
+.pf-section:nth-of-type(even) {
+  background: linear-gradient(180deg,
+    color-mix(in srgb, var(--bg-app) 96%, var(--accent-default) 0%),
+    var(--bg-app));
+}
+/* hairline divider between section blocks */
+.pf-section + .pf-section {
+  border-top: 1px solid color-mix(in srgb, var(--border-subtle) 70%, transparent);
+}
+
+.section-head {
+  margin-bottom: var(--rf-8) !important;
+}
+
+.showcase-row {
+  gap: var(--rf-8) !important;
+  align-items: center;
+}
+@media (min-width: 960px) {
+  .showcase-row { gap: var(--rf-10) !important; }
+}
+
+/* Eyebrow on showcase rows — match section-head rhythm */
+.showcase-text .eyebrow {
+  margin-bottom: 14px !important;
+}
+
+/* Bullets — calmer, tighter rhythm */
+.bullets {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 18px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.bullets li {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+.bullets li svg {
+  flex: 0 0 auto;
+  margin-top: 4px;
+  color: var(--accent-text);
+}
+
+/* ---------------------------------------------------------
+   17c. CTA banner — calmer, more confident
+   --------------------------------------------------------- */
+.cta-banner {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--rf-radius-xl);
+  border: 1px solid var(--border-subtle);
+  background:
+    radial-gradient(ellipse at top,
+      color-mix(in srgb, var(--accent-default) 8%, transparent) 0%,
+      transparent 60%),
+    var(--bg-surface);
+  padding: 64px 32px !important;
+  text-align: center;
+}
+@media (min-width: 768px) {
+  .cta-banner { padding: 96px 48px !important; }
+}
+
+/* ---------------------------------------------------------
+   17d. Hero CTA — just the right amount of weight
+   --------------------------------------------------------- */
+.hero-cta .btn-lg {
+  height: 44px;
+  padding: 0 20px;
+  font-size: 14.5px;
+  border-radius: var(--rf-radius-md);
+}
+
+/* ---------------------------------------------------------
+   17e. Code frame — sharper monospace look
+   --------------------------------------------------------- */
+.code-frame {
+  border-radius: var(--rf-radius-lg);
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-app);
+  overflow: hidden;
+  box-shadow: var(--rf-shadow-2);
+}
+.code-line {
+  display: flex;
+  gap: 14px;
+  font-size: 13px;
+  line-height: 1.7;
+  font-family: 'Geist Mono', monospace;
+}
+.code-ln {
+  display: inline-block;
+  width: 24px;
+  color: var(--text-quaternary);
+  text-align: right;
+  user-select: none;
+  font-size: 11px;
+}
+
+/* ---------------------------------------------------------
+   17f. Feed (whale section) — tighter rows
+   --------------------------------------------------------- */
+.feed {
+  border-radius: var(--rf-radius-lg);
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-surface);
+  overflow: hidden;
+}
+.feed-row {
+  transition: background 120ms var(--ease-out);
+}
+.feed-row:hover {
+  background: color-mix(in srgb, var(--bg-elevated) 50%, transparent);
+}
+
+/* ---------------------------------------------------------
+   17g. Trust strip (security/why)
+   --------------------------------------------------------- */
+.trust-strip {
+  background: var(--bg-surface);
+  border-top: 1px solid var(--border-subtle);
+  border-bottom: 1px solid var(--border-subtle);
+}
+.trust-strip .container {
+  padding-top: 64px !important;
+  padding-bottom: 64px !important;
+}
+.trust-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0;
+}
+@media (max-width: 760px) {
+  .trust-grid { grid-template-columns: 1fr 1fr; }
+}
+.trust-item {
+  padding: 4px 32px 4px 0;
+  border-left: 1px solid var(--border-subtle);
+  padding-left: 20px;
+  position: relative;
+}
+.trust-item:first-child { border-left: 0; padding-left: 0; }
+.trust-num {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  color: var(--text-quaternary);
+  margin-bottom: 14px;
+  font-feature-settings: "tnum";
+}
+.trust-title {
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+}
+.trust-desc {
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--text-secondary);
+}
+
+/* ---------------------------------------------------------
+   17h. Tape — fade edges, label
+   --------------------------------------------------------- */
+.pf-tape-mask::before,
+.pf-tape-mask::after {
+  content: '';
+  position: absolute;
+  top: 0; bottom: 0;
+  width: 80px;
+  pointer-events: none;
+  z-index: 1;
+}
+.pf-tape-mask::before {
+  left: 0;
+  background: linear-gradient(90deg, var(--bg-surface), transparent);
+}
+.pf-tape-mask::after {
+  right: 0;
+  background: linear-gradient(270deg, var(--bg-surface), transparent);
+}
+
+/* ---------------------------------------------------------
+   18. Light theme — gentler contrast, less stark white
+   --------------------------------------------------------- */
+:root[data-theme="light"] {
+  --bg-app: #FAFAFB;
+  --bg-surface: #FFFFFF;
+  --bg-elevated: #F4F5F8;
+  --bg-subtle: #F7F8FA;
+  --border-subtle: #ECEEF3;
+  --border-default: #DCDEE6;
+}
+
+/* ---------------------------------------------------------
+   19. Hero microbar — replaces "no credit card" line
+   --------------------------------------------------------- */
+.hero-microbar {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0;
+  margin-top: 36px;
+  max-width: 540px;
+  border-top: 1px solid var(--border-subtle);
+  padding-top: 18px;
+}
+.hero-microbar-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding-right: 16px;
+  border-right: 1px solid var(--border-subtle);
+}
+.hero-microbar-cell:last-child { border-right: 0; }
+.hero-microbar-cell:first-child { padding-left: 0; }
+.hero-microbar-cell:not(:first-child) { padding-left: 16px; }
+.hero-microbar-k {
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+.hero-microbar-v {
+  font-size: 12px;
+  color: var(--text-tertiary);
+  line-height: 1.4;
+}
+@media (max-width: 600px) {
+  .hero-microbar { grid-template-columns: 1fr; gap: 12px; }
+  .hero-microbar-cell { border-right: 0; padding-left: 0 !important; padding-right: 0; }
+}
+
+/* ---------------------------------------------------------
+   20. Ethos band — full-bleed editorial pull-quote
+   --------------------------------------------------------- */
+.ethos-band {
+  position: relative;
+  background:
+    radial-gradient(ellipse 80% 60% at 50% 0%,
+      color-mix(in srgb, var(--accent-default) 10%, transparent) 0%,
+      transparent 70%),
+    var(--bg-app);
+  border-top: 1px solid var(--border-subtle);
+  border-bottom: 1px solid var(--border-subtle);
+  padding: 80px 0;
+  overflow: hidden;
+  margin: 32px 0;
+}
+.ethos-band::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(var(--border-subtle) 1px, transparent 1px),
+    linear-gradient(90deg, var(--border-subtle) 1px, transparent 1px);
+  background-size: 96px 96px;
+  opacity: 0.35;
+  pointer-events: none;
+  mask-image: radial-gradient(ellipse at center, black 30%, transparent 75%);
+  -webkit-mask-image: radial-gradient(ellipse at center, black 30%, transparent 75%);
+}
+.ethos-band > .container { position: relative; z-index: 1; }
+.ethos-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+  margin-bottom: 32px;
+}
+.ethos-mark {
+  display: inline-flex;
+  width: 22px;
+  height: 22px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border-default);
+  border-radius: 50%;
+  color: var(--accent-text);
+  background: var(--bg-surface);
+}
+.ethos-quote {
+  font-size: clamp(28px, 4.2vw, 52px) !important;
+  line-height: 1.18 !important;
+  letter-spacing: -0.028em !important;
+  font-weight: 500 !important;
+  color: var(--text-primary) !important;
+  max-width: 1040px;
+  margin: 0 0 56px !important;
+  text-wrap: balance;
+}
+.ethos-quote em {
+  font-style: normal;
+  color: var(--accent-text);
+  font-weight: 600;
+  position: relative;
+  white-space: nowrap;
+}
+.ethos-meta {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0;
+  border-top: 1px solid var(--border-subtle);
+  padding-top: 28px;
+  max-width: 720px;
+}
+.ethos-meta-cell {
+  padding-right: 24px;
+  border-right: 1px solid var(--border-subtle);
+}
+.ethos-meta-cell:last-child { border-right: 0; }
+.ethos-meta-cell:not(:first-child) { padding-left: 24px; }
+.ethos-meta-k {
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent-text);
+  margin-bottom: 6px;
+}
+.ethos-meta-v {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+@media (max-width: 700px) {
+  .ethos-band { padding: 64px 0; }
+  .ethos-meta { grid-template-columns: 1fr; gap: 16px; }
+  .ethos-meta-cell { border-right: 0; padding-left: 0 !important; padding-right: 0; padding-bottom: 16px; border-bottom: 1px solid var(--border-subtle); }
+  .ethos-meta-cell:last-child { padding-bottom: 0; border-bottom: 0; }
+}
+
+/* ---------------------------------------------------------
+   21. CTA fine-print — replace mono ALL CAPS line
+   --------------------------------------------------------- */
+.cta-fineprint {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin: 28px auto 0;
+  font-size: 12px;
+  color: var(--text-tertiary);
+  letter-spacing: 0;
+  text-transform: none;
+}
+.cta-fineprint-sep {
+  width: 4px;
+  height: 4px;
+  border-radius: 99px;
+  background: var(--border-default);
+  display: inline-block;
+}
+
+/* ---------------------------------------------------------
+   22. Section rhythm — slightly more air on landing
+   --------------------------------------------------------- */
+.pf-section { padding: 88px 0 !important; }
+@media (max-width: 760px) {
+  .pf-section { padding: 56px 0 !important; }
+}
+
+/* Bring metrics + trust + tape closer (one connected band) */
+.metrics + .trust-strip { border-top: 0; }
+.trust-strip + .pf-tape-wrap, .trust-strip + section { border-top: 0; }
+
+/* =========================================================
+   23. Mobile responsive — App (user) surfaces + tables
+   The admin shell already collapses sidebar at 900px.
+   This patches App-specific structures + makes tables scroll
+   horizontally on narrow viewports (preserving column widths).
+   ========================================================= */
+
+/* Tables: scroll horizontally on narrow viewports.
+   The wrap was `overflow: hidden` — switch to scroll under 900px
+   so admin/app data tables stay legible on tablet/phone. */
+@media (max-width: 900px) {
+  .adm-table-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .adm-table {
+    min-width: 720px;  /* preserves column rhythm */
+  }
+  /* The toolbar above the table shouldn't scroll with it */
+  .adm-table-tools {
+    position: sticky; left: 0;
+    flex-wrap: wrap;
+  }
+  .adm-table-tools > .adm-search {
+    width: 100%; order: -1;
+  }
+}
+
+/* App hero (equity + today) — already 1fr by default,
+   but tighten internal padding so it fits 375px viewports. */
+@media (max-width: 600px) {
+  .usr-hero {
+    border-radius: 8px;
+  }
+  .usr-hero-left, .usr-hero-right {
+    padding: 22px 18px !important;
+  }
+  .usr-hero-equity {
+    font-size: 32px !important;
+  }
+  /* Stack stat grid 1-up on narrow */
+  .usr-hero-right > div[style*="grid-template-columns"],
+  .usr-stat-grid {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 12px !important;
+  }
+}
+
+/* Order book on App-Market-Detail — 2-col is tight on phone.
+   Keep 2-col but shrink type so it fits. */
+@media (max-width: 520px) {
+  .usr-book {
+    font-size: 10.5px !important;
+  }
+  .usr-book-row {
+    padding: 4px 8px !important;
+    grid-template-columns: 1fr 1fr 1fr !important;
+  }
+  .usr-book-row .ttl { display: none; }
+  .usr-book-row {
+    grid-template-columns: 1fr 1fr !important;
+  }
+}
+
+/* Ticket side (yes/no buttons) keeps its 2-col layout —
+   already optimal for thumb reach */
+
+/* Page header on app — let actions wrap below title on narrow */
+@media (max-width: 720px) {
+  .adm-page-head {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .adm-page-head-actions {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+  .adm-page-title {
+    font-size: 22px !important;
+  }
+  .adm-page-subtitle {
+    font-size: 13px !important;
+  }
+}
+
+/* Topbar mobile menu trigger — show on narrow */
+@media (max-width: 900px) {
+  .adm-topbar > .adm-icon-btn:first-child {
+    display: inline-flex !important;
+  }
+  .adm-topbar-crumbs {
+    font-size: 11px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    max-width: 200px;
+  }
+}
+
+/* Sidebar mobile drawer — slide in when .is-mobile-open */
+@media (max-width: 900px) {
+  .adm-sidebar.is-mobile-open,
+  .usr-sidebar.is-mobile-open {
+    display: flex !important;
+    position: fixed;
+    inset: 0 auto 0 0;
+    width: 280px;
+    z-index: 101;
+    box-shadow: var(--rf-shadow-3);
+    animation: adm-drawer-in 220ms cubic-bezier(0.32, 0.72, 0, 1);
+  }
+  .adm-mobile-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 100;
+    animation: adm-backdrop-in 180ms ease-out;
+    cursor: pointer;
+  }
+  @keyframes adm-drawer-in {
+    from { transform: translateX(-100%); }
+    to { transform: translateX(0); }
+  }
+  @keyframes adm-backdrop-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+}
+/* Hide backdrop element on desktop even if rendered */
+@media (min-width: 901px) {
+  .adm-mobile-backdrop { display: none !important; }
+}
+
+/* Stat tiles (4-up) → 2-up on tablet, 1-up on phone */
+@media (max-width: 1100px) {
+  .adm-stat-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}
+@media (max-width: 520px) {
+  .adm-stat-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* Cards inside grids — let them wrap cleanly */
+@media (max-width: 760px) {
+  .adm-grid-2, .adm-grid-3, .adm-grid-4 {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* Marketing hero already responsive — but ensure the live tape
+   doesn't push horizontal scroll on phone */
+@media (max-width: 520px) {
+  .pf-tape-wrap, .live-tape {
+    margin-left: -16px;
+    margin-right: -16px;
+    border-radius: 0;
+  }
+}
+
+/* Footer grid — 4 cols → 2 → 1 */
+@media (max-width: 520px) {
+  .footer-grid {
+    grid-template-columns: 1fr !important;
+    gap: 20px !important;
+  }
+}
+
+/* CTA banner buttons — stack on narrow */
+@media (max-width: 520px) {
+  .cta-banner [class*="btn-row"],
+  section[class*="cta"] > div > div:has(.btn) {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  section[class*="cta"] .btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* Whale feed — hide non-essential columns */
+@media (max-width: 600px) {
+  .feed-head > :nth-child(n+3),
+  .feed-row > :nth-child(n+3) {
+    display: none;
+  }
+  .feed-head, .feed-row {
+    grid-template-columns: 32px 1fr !important;
+  }
+}
+
+/* Pricing table — already collapses; reinforce */
+@media (max-width: 760px) {
+  .pricing-grid {
+    grid-template-columns: 1fr !important;
+    gap: 16px !important;
+  }
+  .pricing-card.is-featured {
+    transform: none !important;
+  }
+}
+
+/* Type scale — pull headlines down on phone */
+@media (max-width: 520px) {
+  .t-hero { font-size: clamp(28px, 8vw, 36px) !important; line-height: 1.08 !important; }
+  .h1, h1 { font-size: clamp(24px, 6.5vw, 32px) !important; }
+  .h2, h2 { font-size: clamp(22px, 5.5vw, 28px) !important; }
+  .h3, h3 { font-size: clamp(18px, 4.5vw, 22px) !important; }
+}
+
+/* Prevent horizontal overflow at the document level.
+   `overflow-x: clip` clips horizontally without creating a scroll container
+   (unlike `hidden`), so it doesn't break sticky positioning or wheel events. */
+body {
+  overflow-x: clip;
+}
+@media (max-width: 520px) {
+  /* Defensive: any element trying to push wider than viewport gets clipped */
+  body > * {
+    max-width: 100vw;
+  }
+}
+
+/* row-action — small icon button used in tables and inline lists.
+   The original rule was scoped to .adm-table so it was missing for
+   uses outside tables (e.g. the builder's input list). Define a
+   global default that table contexts can override. */
+.row-action {
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  color: var(--text-tertiary);
+  padding: 4px;
+  border-radius: 5px;
+  display: inline-grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  transition: background 120ms ease, color 120ms ease;
+}
+.row-action:hover {
+  color: var(--text-primary);
+  background: var(--bg-elevated);
+}
+.row-action:focus-visible {
+  outline: 2px solid var(--accent-default);
+  outline-offset: 1px;
+}
+
+/* =========================================================
+   Arbitrage scanner — App-Arbitrage.html
+   ========================================================= */
+.arb-tabs {
+  display: inline-flex;
+  gap: 2px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  padding: 3px;
+  margin-bottom: 16px;
+}
+.arb-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background: transparent;
+  border: 0;
+  color: var(--text-tertiary);
+  padding: 7px 14px;
+  border-radius: 6px;
+  font-size: 12.5px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: color 120ms ease, background 120ms ease;
+  font-family: inherit;
+}
+.arb-tab:hover { color: var(--text-secondary); }
+.arb-tab.is-active {
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.18);
+}
+.arb-tab-count {
+  font-family: 'Geist Mono', monospace;
+  font-size: 10.5px;
+  color: var(--text-tertiary);
+  padding: 1px 6px;
+  border-radius: 99px;
+  background: var(--bg-app);
+  border: 1px solid var(--border-subtle);
+  min-width: 18px;
+  text-align: center;
+}
+.arb-tab.is-active .arb-tab-count {
+  color: var(--accent-text);
+  background: var(--accent-subtle);
+  border-color: transparent;
+}
+
+/* How-it-works callout */
+.arb-callout {
+  display: flex;
+  gap: 12px;
+  padding: 14px 16px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  margin-bottom: 14px;
+}
+.arb-callout-icon {
+  flex: 0 0 auto;
+  color: var(--accent-text);
+  background: var(--accent-subtle);
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  display: grid;
+  place-items: center;
+  margin-top: 1px;
+}
+.arb-callout-body { flex: 1; }
+.arb-callout-body p {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--text-secondary);
+}
+.arb-callout-body strong { color: var(--text-primary); font-weight: 600; }
+.arb-callout-body .mono {
+  font-family: 'Geist Mono', monospace;
+  font-size: 12px;
+  color: var(--text-primary);
+  padding: 1px 5px;
+  background: var(--bg-elevated);
+  border-radius: 4px;
+}
+
+/* Filter row */
+.arb-filter {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+.arb-filter-label {
+  font-size: 11.5px;
+  color: var(--text-secondary);
+  margin-right: 4px;
+  letter-spacing: 0.01em;
+}
+.arb-chip {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
+  padding: 5px 11px;
+  border-radius: 99px;
+  font-size: 11.5px;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 120ms ease;
+}
+.arb-chip:hover {
+  border-color: var(--border-default);
+  color: var(--text-primary);
+}
+.arb-chip.is-active {
+  background: var(--accent-subtle);
+  color: var(--accent-text);
+  border-color: var(--accent-default);
+}
+.arb-filter-count {
+  margin-left: auto;
+  font-size: 11.5px;
+  color: var(--text-tertiary);
+  font-family: 'Geist Mono', monospace;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.arb-dot {
+  width: 6px; height: 6px;
+  border-radius: 99px;
+  background: var(--accent-default);
+  display: inline-block;
+}
+.arb-dot.pulsing { animation: arbPulse 1.2s ease-in-out infinite; }
+@keyframes arbPulse {
+  0%, 100% { opacity: 0.3; transform: scale(1); }
+  50%      { opacity: 1;   transform: scale(1.25); }
+}
+
+/* Tables */
+.arb-table-wrap { margin-bottom: 14px; }
+.arb-table .arb-mkt-title {
+  font-size: 13px;
+  color: var(--text-primary);
+  text-decoration: none;
+  font-weight: 500;
+  display: block;
+  line-height: 1.35;
+}
+.arb-table .arb-mkt-title:hover { color: var(--accent-text); }
+.arb-table .arb-mkt-meta {
+  font-size: 10.5px;
+  color: var(--text-tertiary);
+  font-family: 'Geist Mono', monospace;
+  margin-top: 3px;
+  display: flex;
+  gap: 6px;
+}
+.arb-margin {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.arb-margin.is-gain { color: var(--gain-text); }
+.arb-margin.is-warn { color: var(--warn-text, #d99a3e); }
+
+/* Cross-venue: paired markets cell */
+.arb-pair {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.arb-pair-venue {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12.5px;
+  color: var(--text-primary);
+  line-height: 1.3;
+}
+.arb-pair-venue-sub {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  font-family: 'Geist Mono', monospace;
+}
+.arb-venue-dot {
+  width: 7px; height: 7px; border-radius: 2px;
+  flex: 0 0 auto;
+}
+.arb-venue-dot[data-venue="poly"] { background: #5d8ee0; }
+.arb-venue-dot[data-venue="kal"]  { background: #c97455; }
+
+/* Confidence bar */
+.arb-conf {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.arb-conf-num {
+  font-size: 11px;
+  color: var(--text-secondary);
+  min-width: 32px;
+  text-align: right;
+}
+.arb-conf-bar {
+  flex: 1;
+  height: 4px;
+  background: var(--bg-app);
+  border-radius: 99px;
+  overflow: hidden;
+  min-width: 60px;
+}
+.arb-conf-fill {
+  display: block;
+  height: 100%;
+  border-radius: 99px;
+  transition: width 200ms ease;
+}
+.arb-conf-fill.is-gain { background: var(--gain-text); }
+.arb-conf-fill.is-warn { background: var(--warn-text, #d99a3e); }
+.arb-conf-fill.is-loss { background: var(--loss-text); }
+
+/* Execute button — small */
+.arb-exec { white-space: nowrap; }
+.arb-spinner {
+  width: 11px;
+  height: 11px;
+  border: 1.5px solid currentColor;
+  border-top-color: transparent;
+  border-radius: 99px;
+  animation: arbSpin 600ms linear infinite;
+  display: inline-block;
+}
+@keyframes arbSpin {
+  to { transform: rotate(360deg); }
+}
+
+/* Empty / footer states */
+.arb-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 56px 20px;
+  border: 1px dashed var(--border-subtle);
+  border-radius: 10px;
+  background: var(--bg-surface);
+  color: var(--text-tertiary);
+  text-align: center;
+}
+.arb-empty .arb-empty-title {
+  margin: 12px 0 4px;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+.arb-empty .arb-empty-sub {
+  margin: 0;
+  font-size: 11.5px;
+}
+.arb-foot {
+  text-align: center;
+  font-size: 11px;
+  color: var(--text-tertiary);
+  margin: 22px 0 0;
+  font-family: 'Geist Mono', monospace;
+  line-height: 1.6;
+}
+
+/* Mobile: simplify table & callout */
+@media (max-width: 720px) {
+  .arb-tabs { width: 100%; display: flex; }
+  .arb-tab { flex: 1; justify-content: center; }
+  .arb-filter-count { margin-left: 0; flex-basis: 100%; }
+  .arb-callout { padding: 12px; }
+  .arb-callout-body p { font-size: 12px; }
+}
+
+/* ============== usr-range — design-system slider ============== */
+.usr-range {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 4px;
+  background: var(--bg-canvas);
+  border: 1px solid var(--border-subtle);
+  border-radius: 99px;
+  outline: none;
+  cursor: pointer;
+  margin: 6px 0;
+}
+.usr-range::-webkit-slider-runnable-track {
+  height: 4px;
+  border-radius: 99px;
+  background: transparent;
+}
+.usr-range::-moz-range-track {
+  height: 4px;
+  border-radius: 99px;
+  background: transparent;
+  border: none;
+}
+.usr-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--bg-elev-1);
+  border: 2px solid var(--accent-text);
+  cursor: grab;
+  margin-top: -6px;
+  transition: transform 120ms ease, box-shadow 120ms ease;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.25);
+}
+.usr-range::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--bg-elev-1);
+  border: 2px solid var(--accent-text);
+  cursor: grab;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.25);
+  transition: transform 120ms ease;
+}
+.usr-range:hover::-webkit-slider-thumb {
+  transform: scale(1.15);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent-text) 18%, transparent);
+}
+.usr-range:hover::-moz-range-thumb {
+  transform: scale(1.15);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent-text) 18%, transparent);
+}
+.usr-range:active::-webkit-slider-thumb { cursor: grabbing; transform: scale(1.1); }
+.usr-range:active::-moz-range-thumb { cursor: grabbing; transform: scale(1.1); }
+.usr-range:focus-visible::-webkit-slider-thumb {
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent-text) 30%, transparent);
+}
+.usr-range:focus-visible::-moz-range-thumb {
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent-text) 30%, transparent);
+}
+
+/* Track-fill variant — apply --val (0..1) inline to color the left half */
+.usr-range[style*="--val"] {
+  background: linear-gradient(
+    to right,
+    var(--accent-default) 0%,
+    var(--accent-default) calc(var(--val) * 100%),
+    var(--bg-canvas) calc(var(--val) * 100%),
+    var(--bg-canvas) 100%
+  );
+}

@@ -18,6 +18,7 @@ const ADM_NAV = [
     items: [
       { id: 'users',       icon: 'users',         label: 'Users',          href: 'Admin-Users.html' },
       { id: 'user-detail', icon: 'user-check',    label: 'User profile',   href: 'Admin-User-Detail.html', hidden: true },
+      { id: 'user-segmentation', icon: 'filter', label: 'Segmentation', href: 'Admin-User-Segmentation.html' },
       { id: 'approvals',   icon: 'shield-check',  label: 'Approvals',      href: 'Admin-Approvals.html', badge: '12', badgeKind: 'warn' },
       { id: 'invites',     icon: 'mail',          label: 'Invites & referrals', href: 'Admin-Invites.html' },
       { id: 'admins',      icon: 'lock',          label: 'Admin team',     href: 'Admin-Admins.html' },
@@ -50,7 +51,6 @@ const ADM_NAV = [
   {
     label: 'Trust & Safety',
     items: [
-      { id: 'flags',       icon: 'flag',       label: 'Risk flags',      href: 'Admin-Flags.html', badge: '5', badgeKind: 'loss' },
       { id: 'abuse',       icon: 'shield-alert', label: 'Abuse queue',   href: 'Admin-Abuse.html', badge: '23' },
       { id: 'config',      icon: 'settings',   label: 'Feature flags',   href: 'Admin-Config.html' },
     ],
@@ -115,6 +115,7 @@ function AdmShell({ active, title, crumbs = [], actions = null, children, classN
   return (
     <div className={`adm-root ${className}`} data-density={density} data-sidebar={sidebar} data-severity={severity}>
       <AdmSidebar active={active} sidebar={sidebar} onCollapse={() => setSidebar(sidebar === 'collapsed' ? 'expanded' : 'collapsed')} mobileOpen={mobileNav} onMobileClose={() => setMobileNav(false)} />
+      {mobileNav && <div className="adm-mobile-backdrop" onClick={() => setMobileNav(false)} aria-hidden="true" />}
       <div className="adm-main">
         <AdmTopbar title={title} crumbs={crumbs} actions={actions} now={now} onMobileNav={() => setMobileNav(true)} theme={theme} onThemeToggle={() => setTheme(theme === 'dark' ? 'light' : 'dark')} />
         <main className="adm-content">
@@ -131,17 +132,16 @@ function AdmSidebar({ active, sidebar, onCollapse, mobileOpen, onMobileClose }) 
     <aside className={`adm-sidebar${mobileOpen ? ' is-mobile-open' : ''}`}>
       <div className="adm-brand">
         <div className="adm-brand-logo" aria-hidden="true">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-            <path d="M12 2 3 7v10l9 5 9-5V7l-9-5z" stroke="currentColor" strokeWidth="1.5"/>
-            <path d="m3 7 9 5 9-5" stroke="currentColor" strokeWidth="1.5"/>
-            <path d="M12 12v10" stroke="currentColor" strokeWidth="1.5"/>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 2 L22 7 V17 L12 22 L2 17 V7 Z" fill="none" stroke="currentColor" strokeWidth="0.9" strokeLinejoin="round"/>
+          <path d="M12 11.7 L4.5 8 M12 11.7 L19.5 8 M12 11.7 V22" fill="none" stroke="currentColor" strokeWidth="0.9" strokeLinecap="round" strokeLinejoin="round"/>
             {/* Short center marks on each face: outer-corner → inner meeting
                 point (12,12), rendered as a short central segment of each
                 diagonal (35%–65% of the way). Reinforces the "convergence"
                 feel of the prism mark without crowding the silhouette. */}
-            <path d="M12 5.5v3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-            <path d="M6.15 15.25l2.7-1.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-            <path d="M17.85 15.25l-2.7-1.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+            <path d="M12 5.5v3" stroke="currentColor" strokeWidth="0.9" strokeLinecap="round"/>
+            <path d="M6.15 15.25l2.7-1.5" stroke="currentColor" strokeWidth="0.9" strokeLinecap="round"/>
+            <path d="M17.85 15.25l-2.7-1.5" stroke="currentColor" strokeWidth="0.9" strokeLinecap="round"/>
           </svg>
         </div>
         <span className="adm-brand-text">Polyforge <em>· Admin</em></span>

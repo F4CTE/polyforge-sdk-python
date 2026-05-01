@@ -3,20 +3,20 @@
 /* --- 03 Trust strip --- */
 function TrustStrip() {
   const items = [
-    { icon: 'key',   title: 'Self-custodial',  desc: 'Your Polymarket credentials — imported, never generated. You keep full control.' },
-    { icon: 'lock',  title: 'AES-256 encryption', desc: 'Envelope encryption with keys in AWS Secrets Manager. Quarterly rotation.' },
-    { icon: 'shield', title: 'Isolated signer',  desc: 'Zero public exposure. Every trade signed in a locked-down service.' },
-    { icon: 'check', title: 'Open APIs',        desc: 'OpenAPI 3.1 spec, HMAC webhooks, TOTP 2FA, JWT auth. No cookies.' },
+    { num: '01', title: 'Self-custodial',  desc: 'Your Polymarket credentials — imported, never generated. You keep full control.' },
+    { num: '02', title: 'AES-256 encryption', desc: 'Envelope encryption with keys in AWS Secrets Manager. Quarterly rotation.' },
+    { num: '03', title: 'Isolated signer',  desc: 'Zero public exposure. Every trade signed in a locked-down service.' },
+    { num: '04', title: 'Open APIs',        desc: 'OpenAPI 3.1 spec, HMAC webhooks, TOTP 2FA, JWT auth. No cookies.' },
   ];
   return (
-    <section style={{ background: 'var(--bg-surface)', borderTop: '1px solid var(--border-subtle)', borderBottom: '1px solid var(--border-subtle)' }}>
-      <div className="container" style={{ padding: '56px 24px' }}>
-        <div className="registry-grid" style={{ display: 'grid', gap: 0, border: '1px solid var(--border-subtle)', borderRadius: 12, overflow: 'hidden', background: 'var(--border-subtle)' }}>
+    <section className="trust-strip">
+      <div className="container">
+        <div className="trust-grid">
           {items.map(it => (
-            <div key={it.title} style={{ background: 'var(--bg-surface)', padding: '22px 24px', display: 'flex', flexDirection: 'column', gap: 8 }}>
-              <span style={{ color: 'var(--accent-text)' }}><Icon name={it.icon} size={18}/></span>
-              <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)' }}>{it.title}</div>
-              <div style={{ fontSize: 12.5, color: 'var(--text-secondary)', lineHeight: 1.5 }}>{it.desc}</div>
+            <div key={it.title} className="trust-item">
+              <span className="trust-num mono">{it.num}</span>
+              <div className="trust-title">{it.title}</div>
+              <div className="trust-desc">{it.desc}</div>
             </div>
           ))}
         </div>
@@ -133,4 +133,40 @@ function FeatureMatrix() {
   );
 }
 
-Object.assign(window, { TrustStrip, SmartExecutionSection, FeatureMatrix });
+Object.assign(window, { TrustStrip, SmartExecutionSection, FeatureMatrix, EthosBand });
+
+/* --- Editorial pull-quote band: full-bleed, breaks vertical rhythm --- */
+function EthosBand() {
+  return (
+    <section className="ethos-band" aria-label="Operating principles">
+      <div className="container">
+        <div className="ethos-eyebrow">
+          <span className="ethos-mark" aria-hidden="true">
+            <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+              <circle cx="5" cy="5" r="4" stroke="currentColor" strokeWidth="1.4"/>
+              <circle cx="5" cy="5" r="1.6" fill="currentColor"/>
+            </svg>
+          </span>
+          <span>Operating principle · 01</span>
+        </div>
+        <p className="ethos-quote">
+          A market edge that you can&apos;t <em>describe</em>, <em>backtest</em>, and <em>automate</em> isn&apos;t an edge — it&apos;s a feeling.
+        </p>
+        <div className="ethos-meta">
+          <div className="ethos-meta-cell">
+            <div className="ethos-meta-k">Describe</div>
+            <div className="ethos-meta-v">36 visual blocks. No code.</div>
+          </div>
+          <div className="ethos-meta-cell">
+            <div className="ethos-meta-k">Backtest</div>
+            <div className="ethos-meta-v">2 yrs of book-level data.</div>
+          </div>
+          <div className="ethos-meta-cell">
+            <div className="ethos-meta-k">Automate</div>
+            <div className="ethos-meta-v">Paper → live, one toggle.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}

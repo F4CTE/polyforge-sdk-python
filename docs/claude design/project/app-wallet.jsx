@@ -30,55 +30,74 @@ function App() {
       <AdmPageHead title="Wallet" subtitle="Funding, transfers, and account ledger across paper and live wallets." />
 
       {/* Account balance hero */}
-      <div className="adm-card" style={{ padding: 24, marginBottom: 20, background: 'linear-gradient(135deg, color-mix(in srgb, var(--accent-default) 8%, var(--bg-card)) 0%, var(--bg-card) 60%)', borderColor: 'color-mix(in srgb, var(--accent-default) 25%, var(--border-default))' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 16 }}>
+      <div className="adm-card" style={{ padding: 20, marginBottom: 16 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 280px', gap: 24, alignItems: 'center' }}>
           <div>
-            <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--text-tertiary)', marginBottom: 8 }}>Total balance · live</div>
-            <div style={{ fontFamily: 'Geist Mono, monospace', fontSize: 38, fontWeight: 600, lineHeight: 1, marginBottom: 8 }}>$12,847.42</div>
-            <div style={{ display: 'flex', gap: 16, fontSize: 12, color: 'var(--text-secondary)' }}>
-              <span>Available <span style={{ fontFamily: 'Geist Mono, monospace', color: 'var(--text-primary)' }}>$8,806.42</span></span>
-              <span>Deployed <span style={{ fontFamily: 'Geist Mono, monospace', color: 'var(--text-primary)' }}>$4,041.00</span></span>
-              <span>30d P&L <span style={{ fontFamily: 'Geist Mono, monospace', color: 'var(--gain-text)' }}>+$1,847.20 (16.8%)</span></span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+              <span style={{ fontSize: 10.5, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--text-tertiary)' }}>Total balance</span>
+              <span className="adm-pill is-gain has-dot is-pulse" style={{ fontSize: 9.5, height: 16 }}>live</span>
+            </div>
+            <div className="mono tabnum" style={{ fontSize: 34, fontWeight: 600, lineHeight: 1.1, marginBottom: 10, letterSpacing: '-0.02em' }}>$12,847.42</div>
+            <div style={{ display: 'flex', gap: 18, fontSize: 11.5, color: 'var(--text-tertiary)', flexWrap: 'wrap' }}>
+              <span>Available <span className="mono tabnum" style={{ color: 'var(--text-primary)', fontWeight: 500, marginLeft: 4 }}>$8,806.42</span></span>
+              <span style={{ width: 1, background: 'var(--border-subtle)' }} />
+              <span>Deployed <span className="mono tabnum" style={{ color: 'var(--text-primary)', fontWeight: 500, marginLeft: 4 }}>$4,041.00</span></span>
+              <span style={{ width: 1, background: 'var(--border-subtle)' }} />
+              <span>30d P&L <span className="mono tabnum" style={{ color: 'var(--gain-text)', fontWeight: 500, marginLeft: 4 }}>+$1,847.20 (16.8%)</span></span>
             </div>
           </div>
-          <div style={{ minWidth: 260 }}>
-            <UsrEquityCurve points={[10800, 11020, 10980, 11250, 11400, 11680, 11420, 11890, 12100, 12340, 12290, 12520, 12700, 12847]} height={84} kind="gain" label="+18.9%" />
+          <div>
+            <UsrEquityCurve points={[10800, 11020, 10980, 11250, 11400, 11680, 11420, 11890, 12100, 12340, 12290, 12520, 12700, 12847]} height={72} kind="gain" label="+18.9%" />
           </div>
         </div>
 
         {/* Sub-balances */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginTop: 20, paddingTop: 20, borderTop: '1px solid var(--border-subtle)' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 0, marginTop: 18, paddingTop: 16, borderTop: '1px solid var(--border-subtle)' }}>
           {[
             { label: 'Polymarket', bal: '$4,892.18', curr: 'USDC', color: '#4F6EF7' },
             { label: 'Kalshi',     bal: '$3,914.24', curr: 'USD',  color: '#16A34A' },
             { label: 'Paper',      bal: '$50,000.00', curr: 'PAPER', color: 'var(--accent-default)' },
             { label: 'In transit', bal: '$500.00', curr: 'pending', color: 'var(--warn)' },
           ].map((b, i) => (
-            <div key={i} style={{ paddingLeft: 12, borderLeft: `2px solid ${b.color}` }}>
-              <div style={{ fontSize: 11, color: 'var(--text-tertiary)', marginBottom: 4 }}>{b.label}</div>
-              <div style={{ fontFamily: 'Geist Mono, monospace', fontSize: 16, fontWeight: 600 }}>{b.bal}</div>
-              <div style={{ fontSize: 10.5, color: 'var(--text-tertiary)', fontFamily: 'Geist Mono, monospace' }}>{b.curr}</div>
+            <div key={i} style={{ padding: '0 16px', borderLeft: i === 0 ? 'none' : '1px solid var(--border-subtle)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
+                <span style={{ width: 6, height: 6, borderRadius: '50%', background: b.color, flexShrink: 0 }} />
+                <span style={{ fontSize: 11, color: 'var(--text-tertiary)' }}>{b.label}</span>
+              </div>
+              <div className="mono tabnum" style={{ fontSize: 15, fontWeight: 600, color: 'var(--text-primary)' }}>{b.bal}</div>
+              <div className="mono" style={{ fontSize: 10, color: 'var(--text-tertiary)', marginTop: 2, letterSpacing: '0.04em' }}>{b.curr}</div>
             </div>
           ))}
         </div>
       </div>
 
       <div className="adm-grid-3" style={{ marginBottom: 20 }}>
-        <button className="adm-card" style={{ padding: 18, textAlign: 'left', cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: 8, border: '1px dashed var(--border-default)', background: 'transparent' }}>
-          <AdmIcon name="arrow-down" size={18} />
-          <div style={{ fontSize: 13, fontWeight: 600 }}>Deposit USDC</div>
-          <div style={{ fontSize: 11.5, color: 'var(--text-secondary)' }}>From Coinbase, Binance, MetaMask, or any chain. Avg confirmation 2 min.</div>
-        </button>
-        <button className="adm-card" style={{ padding: 18, textAlign: 'left', cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: 8, border: '1px dashed var(--border-default)', background: 'transparent' }}>
-          <AdmIcon name="dollar" size={18} />
-          <div style={{ fontSize: 13, fontWeight: 600 }}>Deposit USD (ACH)</div>
-          <div style={{ fontSize: 11.5, color: 'var(--text-secondary)' }}>For Kalshi balance. Free, takes 1–3 business days.</div>
-        </button>
-        <button className="adm-card" style={{ padding: 18, textAlign: 'left', cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: 8, border: '1px dashed var(--border-default)', background: 'transparent' }}>
-          <AdmIcon name="arrow-up" size={18} />
-          <div style={{ fontSize: 13, fontWeight: 600 }}>Withdraw funds</div>
-          <div style={{ fontSize: 11.5, color: 'var(--text-secondary)' }}>To linked bank or crypto wallet. Settlement within 24 hours.</div>
-        </button>
+        {[
+          { icon: 'arrow-down', title: 'Deposit USDC',     body: 'From Coinbase, Binance, MetaMask, or any chain. Avg confirmation 2 min.' },
+          { icon: 'dollar',     title: 'Deposit USD (ACH)', body: 'For Kalshi balance. Free, takes 1–3 business days.' },
+          { icon: 'arrow-up',   title: 'Withdraw funds',    body: 'To linked bank or crypto wallet. Settlement within 24 hours.' },
+        ].map(c => (
+          <button
+            key={c.title}
+            className="adm-card"
+            style={{ padding: 16, textAlign: 'left', cursor: 'pointer', display: 'flex', alignItems: 'flex-start', gap: 12 }}
+          >
+            <div style={{
+              width: 32, height: 32, borderRadius: 6, flexShrink: 0,
+              background: 'var(--bg-elevated)', border: '1px solid var(--border-subtle)',
+              display: 'grid', placeItems: 'center', color: 'var(--accent-text)'
+            }}>
+              <AdmIcon name={c.icon} size={14} />
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: 4 }}>
+                <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>{c.title}</span>
+                <AdmIcon name="arrow-right" size={12} className="adm-icon-tertiary" />
+              </div>
+              <div style={{ fontSize: 11.5, color: 'var(--text-secondary)', lineHeight: 1.45 }}>{c.body}</div>
+            </div>
+          </button>
+        ))}
       </div>
 
       <div className="adm-table-wrap">
