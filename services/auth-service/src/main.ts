@@ -19,6 +19,7 @@ import {
   validateInternalJwtConfig,
   validateSesSmtpConfig,
 } from '@polyforge/shared-auth';
+import { PrismaExceptionFilter } from '@polyforge/shared-db';
 
 const REQUIRED_ENV = [
   'USER_JWT_SECRET',
@@ -97,7 +98,7 @@ async function bootstrap() {
   await app.register(etag as any);
 
   // Security headers via helmet (restrictive CSP — API-only, no HTML served)
-  await app.register(helmet as any, {
+  await app.register(helmet, {
     contentSecurityPolicy: {
       directives: {
         defaultSrc: ["'none'"],
@@ -119,7 +120,10 @@ async function bootstrap() {
   );
 
   // Global exception filter
-  app.useGlobalFilters(new GlobalExceptionFilter());
+  app.useGlobalFilters(
+    new GlobalExceptionFilter(),
+    new PrismaExceptionFilter(),
+  );
 
   // CORS
   app.enableCors({

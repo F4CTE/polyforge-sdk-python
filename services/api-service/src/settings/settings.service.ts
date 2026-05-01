@@ -1,4 +1,9 @@
-import { Injectable, UnauthorizedException, Logger } from "@nestjs/common";
+import {
+  Injectable,
+  InternalServerErrorException,
+  UnauthorizedException,
+  Logger,
+} from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { PrismaService } from "@polyforge/shared-db";
 import { RedisService } from "@polyforge/shared-redis";
@@ -139,7 +144,9 @@ export class SettingsService {
       data: { passwordHash: hash },
     });
 
-    // R5-02: Mark password change timestamp so JWT guard can reject stale tokens
+    // R5-02: Mark password change timestamp so JWT guard can reject stale tokens.
+    // Security-critical: if Redis is unavailable, old access tokens remain valid,
+    // so we MUST fail-fast rather than swallow the error.
     try {
       await this.redis.set(
         `pwchange:${userId}`,
@@ -148,33 +155,60 @@ export class SettingsService {
       );
     } catch (err) {
       this.logger.error(`Failed to set pwchange key for user ${userId}`, err);
+      throw new InternalServerErrorException({
+        code: "PASSWORD_CHANGE_INCOMPLETE",
+        message:
+          "Password updated but session invalidation failed; sign out of all devices manually.",
+      });
     }
 
-    // Revoke all refresh tokens + their reverse-lookup keys for this user
+    // Revoke all refresh tokens + their reverse-lookup keys for this user.
+    // Security-critical: if any of this fails, old refresh tokens remain valid,
+    // so we MUST fail-fast rather than swallow the error.
     try {
-      const client = this.redis.getClient();
-      const stream = client.scanStream({
-        match: `refresh:${userId}:*`,
-        count: 100,
-      });
-      stream.on("data", (keys: string[]) => {
-        if (keys.length > 0) {
-          // Also delete the corresponding refresh_lookup: keys
-          const lookupKeys = keys.map((k) => {
-            const tokenHash = k.split(":").pop();
-            return `refresh_lookup:${tokenHash}`;
-          });
-          void client.del(...keys, ...lookupKeys);
-        }
-      });
+      await this.revokeAllRefreshTokens(userId);
     } catch (err) {
       this.logger.error(
         `Failed to revoke refresh tokens for user ${userId}`,
         err,
       );
+      throw new InternalServerErrorException({
+        code: "PASSWORD_CHANGE_INCOMPLETE",
+        message:
+          "Password updated but refresh-token revocation failed; sign out of all devices manually.",
+      });
     }
 
     return { message: "Password updated" };
+  }
+
+  /**
+   * Scan and delete all refresh-token keys for a user, plus their reverse-lookup
+   * entries. Returns once the scan stream completes; rejects on any error so
+   * security-critical callers (password change) can fail-fast.
+   */
+  private revokeAllRefreshTokens(userId: string): Promise<void> {
+    const client = this.redis.getClient();
+    return new Promise((resolve, reject) => {
+      const stream = client.scanStream({
+        match: `refresh:${userId}:*`,
+        count: 100,
+      });
+      const pendingDels: Promise<unknown>[] = [];
+      stream.on("data", (keys: string[]) => {
+        if (keys.length === 0) return;
+        const lookupKeys = keys.map(
+          (k) => `refresh_lookup:${k.split(":").pop()}`,
+        );
+        pendingDels.push(client.del(...keys, ...lookupKeys));
+      });
+      stream.on("error", reject);
+      stream.on("end", () => {
+        Promise.all(pendingDels)
+          .then(() => resolve())
+          .catch(reject);
+      });
+    });
   }
 
   async getRiskSettings(userId: string): Promise<any> {

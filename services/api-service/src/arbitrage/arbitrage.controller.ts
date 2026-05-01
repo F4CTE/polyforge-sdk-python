@@ -46,6 +46,7 @@ import { ArbExecutionService } from "./arb-execution.service";
 import { ArbRiskService } from "./arb-risk.service";
 import { CreateArbitrageAlertDto } from "./dto/create-arbitrage-alert.dto";
 import { ExecuteArbDto } from "./dto/execute-arb.dto";
+import { ManualMarketMatchDto } from "./dto/manual-market-match.dto";
 import type { ArbPositionStatus } from "@prisma/client";
 
 @ApiTags("Arbitrage")
@@ -421,21 +422,9 @@ export class ArbitrageController {
   @UseGuards(AdminJwtGuard, RolesGuard)
   @Roles(AdminRole.SUPER_ADMIN, AdminRole.ADMIN)
   @ApiOperation({ summary: "Manually match two markets across venues (admin)" })
-  @ApiBody({
-    schema: {
-      type: "object",
-      required: ["polymarketId", "kalshiId"],
-      properties: {
-        polymarketId: { type: "string" },
-        kalshiId: { type: "string" },
-      },
-    },
-  })
-  createMatch(
-    @Body("polymarketId") polymarketId: string,
-    @Body("kalshiId") kalshiId: string,
-  ) {
-    return this.marketMatch.manualMatch(polymarketId, kalshiId);
+  @ApiBody({ type: ManualMarketMatchDto })
+  createMatch(@Body() dto: ManualMarketMatchDto) {
+    return this.marketMatch.manualMatch(dto.polymarketId, dto.kalshiId);
   }
 
   @Post("matches/:matchId/verify")

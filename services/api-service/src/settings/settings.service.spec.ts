@@ -25,13 +25,27 @@ function makeUpdatePasswordDto(overrides: Record<string, unknown> = {}) {
 }
 
 function createMockRedis() {
+  // Default scanStream mock: emits 'end' on next tick so awaited Promise resolves.
+  const makeScanStream = () => {
+    const handlers: Record<string, ((...args: unknown[]) => void)[]> = {};
+    const stream = {
+      on: vi.fn((evt: string, fn: (...args: unknown[]) => void) => {
+        (handlers[evt] ||= []).push(fn);
+        if (evt === "end") {
+          setImmediate(() => fn());
+        }
+        return stream;
+      }),
+    };
+    return stream;
+  };
   return {
     get: vi.fn().mockResolvedValue(null),
     set: vi.fn().mockResolvedValue("OK"),
     del: vi.fn().mockResolvedValue(undefined),
     getClient: vi.fn().mockReturnValue({
-      scanStream: vi.fn().mockReturnValue({ on: vi.fn() }),
-      del: vi.fn(),
+      scanStream: vi.fn(makeScanStream),
+      del: vi.fn().mockResolvedValue(0),
     }),
   };
 }
@@ -84,7 +98,7 @@ describe("SettingsService", () => {
 
       const result = await service.updateProfile(
         "user-uuid-1",
-        makeUpdateProfileDto() as any,
+        makeUpdateProfileDto(),
       );
 
       expect(result).toEqual(updatedUser);
@@ -93,7 +107,7 @@ describe("SettingsService", () => {
     it("calls prisma.user.update with the correct where and data", async () => {
       db.user.update.mockResolvedValue({} as any);
 
-      await service.updateProfile("user-uuid-1", makeUpdateProfileDto() as any);
+      await service.updateProfile("user-uuid-1", makeUpdateProfileDto());
 
       expect(db.user.update).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -109,7 +123,7 @@ describe("SettingsService", () => {
     it("only includes fields that are defined in the dto", async () => {
       db.user.update.mockResolvedValue({} as any);
 
-      await service.updateProfile("user-uuid-1", { displayName: "Bob" } as any);
+      await service.updateProfile("user-uuid-1", { displayName: "Bob" });
 
       const dataArg = db.user.update.mock.calls[0][0]?.data;
       expect(dataArg).toHaveProperty("displayName", "Bob");
@@ -121,7 +135,7 @@ describe("SettingsService", () => {
     it("includes bio when explicitly set to empty string", async () => {
       db.user.update.mockResolvedValue({} as any);
 
-      await service.updateProfile("user-uuid-1", { bio: "" } as any);
+      await service.updateProfile("user-uuid-1", { bio: "" });
 
       const dataArg = db.user.update.mock.calls[0][0]?.data;
       expect(dataArg).toHaveProperty("bio", "");
@@ -130,7 +144,7 @@ describe("SettingsService", () => {
     it("does NOT include displayName when it is undefined", async () => {
       db.user.update.mockResolvedValue({} as any);
 
-      await service.updateProfile("user-uuid-1", { bio: "trader" } as any);
+      await service.updateProfile("user-uuid-1", { bio: "trader" });
 
       const dataArg = db.user.update.mock.calls[0][0]?.data;
       expect(dataArg).not.toHaveProperty("displayName");
@@ -139,7 +153,7 @@ describe("SettingsService", () => {
     it("selects only safe fields (no passwordHash)", async () => {
       db.user.update.mockResolvedValue({} as any);
 
-      await service.updateProfile("user-uuid-1", makeUpdateProfileDto() as any);
+      await service.updateProfile("user-uuid-1", makeUpdateProfileDto());
 
       expect(db.user.update).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -159,7 +173,7 @@ describe("SettingsService", () => {
 
       await service.updateProfile("user-uuid-1", {
         twitterHandle: "@alice",
-      } as any);
+      });
 
       const dataArg = db.user.update.mock.calls[0][0]?.data;
       expect(dataArg).toHaveProperty("twitterHandle", "@alice");
@@ -219,7 +233,7 @@ describe("SettingsService", () => {
 
       const result = await service.updatePassword(
         "user-uuid-1",
-        makeUpdatePasswordDto() as any,
+        makeUpdatePasswordDto(),
       );
 
       expect(result).toEqual({ message: "Password updated" });
@@ -232,10 +246,7 @@ describe("SettingsService", () => {
       } as any);
       db.user.update.mockResolvedValue({} as any);
 
-      await service.updatePassword(
-        "user-uuid-1",
-        makeUpdatePasswordDto() as any,
-      );
+      await service.updatePassword("user-uuid-1", makeUpdatePasswordDto());
 
       const dataArg = db.user.update.mock.calls[0][0]?.data;
       expect(dataArg.passwordHash).toBeDefined();
@@ -300,10 +311,7 @@ describe("SettingsService", () => {
       } as any);
       db.user.update.mockResolvedValue({} as any);
 
-      await service.updatePassword(
-        "user-uuid-1",
-        makeUpdatePasswordDto() as any,
-      );
+      await service.updatePassword("user-uuid-1", makeUpdatePasswordDto());
 
       expect(db.user.findUniqueOrThrow).toHaveBeenCalledWith({
         where: { id: "user-uuid-1" },
@@ -318,10 +326,7 @@ describe("SettingsService", () => {
       } as any);
       db.user.update.mockResolvedValue({} as any);
 
-      await service.updatePassword(
-        "user-uuid-1",
-        makeUpdatePasswordDto() as any,
-      );
+      await service.updatePassword("user-uuid-1", makeUpdatePasswordDto());
 
       const updateCall = db.user.update.mock.calls[0][0];
       const newHash = updateCall.data.passwordHash as string;
@@ -836,10 +841,7 @@ describe("SettingsService", () => {
       } as any);
       db.user.update.mockResolvedValue({} as any);
 
-      await service.updatePassword(
-        "user-uuid-1",
-        makeUpdatePasswordDto() as any,
-      );
+      await service.updatePassword("user-uuid-1", makeUpdatePasswordDto());
 
       expect(mockRedis.set).toHaveBeenCalledWith(
         "pwchange:user-uuid-1",
@@ -855,10 +857,7 @@ describe("SettingsService", () => {
       } as any);
       db.user.update.mockResolvedValue({} as any);
 
-      await service.updatePassword(
-        "user-uuid-1",
-        makeUpdatePasswordDto() as any,
-      );
+      await service.updatePassword("user-uuid-1", makeUpdatePasswordDto());
 
       const client = mockRedis.getClient();
       expect(client.scanStream).toHaveBeenCalledWith({
@@ -867,7 +866,7 @@ describe("SettingsService", () => {
       });
     });
 
-    it("still returns success when Redis set fails", async () => {
+    it("fails fast when Redis pwchange set fails (security-critical)", async () => {
       const hash = await bcrypt.hash("OldPassw0rd!", 10);
       db.user.findUniqueOrThrow.mockResolvedValue({
         passwordHash: hash,
@@ -875,12 +874,41 @@ describe("SettingsService", () => {
       db.user.update.mockResolvedValue({} as any);
       mockRedis.set.mockRejectedValue(new Error("Redis down"));
 
-      const result = await service.updatePassword(
-        "user-uuid-1",
-        makeUpdatePasswordDto() as any,
-      );
+      await expect(
+        service.updatePassword("user-uuid-1", makeUpdatePasswordDto() as any),
+      ).rejects.toMatchObject({
+        response: expect.objectContaining({
+          code: "PASSWORD_CHANGE_INCOMPLETE",
+        }),
+      });
+    });
 
-      expect(result).toEqual({ message: "Password updated" });
+    it("fails fast when refresh-token scan emits an error", async () => {
+      const hash = await bcrypt.hash("OldPassw0rd!", 10);
+      db.user.findUniqueOrThrow.mockResolvedValue({
+        passwordHash: hash,
+      } as any);
+      db.user.update.mockResolvedValue({} as any);
+
+      const errorStream = {
+        on: vi.fn((evt: string, fn: (...args: unknown[]) => void) => {
+          if (evt === "error") {
+            setImmediate(() => fn(new Error("scan failed")));
+          }
+          return errorStream;
+        }),
+      };
+      (
+        mockRedis.getClient() as { scanStream: ReturnType<typeof vi.fn> }
+      ).scanStream.mockReturnValueOnce(errorStream);
+
+      await expect(
+        service.updatePassword("user-uuid-1", makeUpdatePasswordDto() as any),
+      ).rejects.toMatchObject({
+        response: expect.objectContaining({
+          code: "PASSWORD_CHANGE_INCOMPLETE",
+        }),
+      });
     });
   });
 
@@ -958,7 +986,7 @@ describe("SettingsService", () => {
     ];
 
     it("returns paginated following list", async () => {
-      db.follow.findMany.mockResolvedValue(mockFollows as any);
+      db.follow.findMany.mockResolvedValue(mockFollows);
       db.follow.count.mockResolvedValue(2);
 
       const result = await service.getFollowing("user-uuid-1", 1, 20);
@@ -1025,7 +1053,7 @@ describe("SettingsService", () => {
     });
 
     it("sets hasNext=true when more pages exist", async () => {
-      db.follow.findMany.mockResolvedValue([mockFollows[0]] as any);
+      db.follow.findMany.mockResolvedValue([mockFollows[0]]);
       db.follow.count.mockResolvedValue(5);
 
       const result = await service.getFollowing("user-uuid-1", 1, 2);

@@ -151,6 +151,7 @@ export class OrdersController {
   })
   @HttpCode(HttpStatus.OK)
   @UseGuards(ApiKeyScopeGuard, GeoBlockGuard)
+  @UseInterceptors(IdempotencyInterceptor)
   @RequireScopes("TRADE")
   splitPosition(
     @CurrentUser() user: JwtPayload,
@@ -169,6 +170,7 @@ export class OrdersController {
   })
   @HttpCode(HttpStatus.OK)
   @UseGuards(ApiKeyScopeGuard, GeoBlockGuard)
+  @UseInterceptors(IdempotencyInterceptor)
   @RequireScopes("TRADE")
   mergePosition(
     @CurrentUser() user: JwtPayload,

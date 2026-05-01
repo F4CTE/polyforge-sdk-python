@@ -11,7 +11,10 @@ import fastifyCookie from "@fastify/cookie";
 import helmet from "@fastify/helmet";
 import { AppModule } from "./app.module";
 import { GlobalExceptionFilter } from "./common/filters/http-exception.filter";
-import { PrismaAdminService } from "@polyforge/shared-db";
+import {
+  PrismaAdminService,
+  PrismaExceptionFilter,
+} from "@polyforge/shared-db";
 import {
   rejectPlaceholderSecrets,
   rejectInsecureCookies,
@@ -69,7 +72,7 @@ async function bootstrap() {
   await app.register(fastifyCookie as any);
 
   // Security headers via helmet (restrictive CSP — API-only, no HTML served)
-  await app.register(helmet as any, {
+  await app.register(helmet, {
     contentSecurityPolicy: {
       directives: {
         defaultSrc: ["'none'"],
@@ -88,7 +91,10 @@ async function bootstrap() {
     }),
   );
 
-  app.useGlobalFilters(new GlobalExceptionFilter());
+  app.useGlobalFilters(
+    new GlobalExceptionFilter(),
+    new PrismaExceptionFilter(),
+  );
 
   // CORS — admin subdomain only
   app.enableCors({

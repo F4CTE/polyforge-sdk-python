@@ -18,6 +18,7 @@ import etag from "@fastify/etag";
 import helmet from "@fastify/helmet";
 import { AppModule } from "./app.module";
 import { GlobalExceptionFilter } from "./common/filters/http-exception.filter";
+import { PrismaExceptionFilter } from "@polyforge/shared-db";
 import {
   rejectPlaceholderSecrets,
   validateInternalJwtConfig,
@@ -88,18 +89,18 @@ async function bootstrap() {
     { bufferLogs: true },
   );
 
-  await app.register(fastifyCookie as FastifyPlugin);
+  await app.register(fastifyCookie);
 
   // Response compression (brotli preferred, gzip fallback)
-  await app.register(compress as FastifyPlugin, {
+  await app.register(compress, {
     encodings: ["gzip", "deflate"],
   });
 
   // ETag support for conditional requests (304 Not Modified)
-  await app.register(etag as FastifyPlugin);
+  await app.register(etag);
 
   // Security headers via helmet (restrictive CSP — API-only, no HTML served)
-  await app.register(helmet as FastifyPlugin, {
+  await app.register(helmet, {
     contentSecurityPolicy: {
       directives: {
         defaultSrc: ["'none'"],
@@ -119,7 +120,10 @@ async function bootstrap() {
     }),
   );
 
-  app.useGlobalFilters(new GlobalExceptionFilter());
+  app.useGlobalFilters(
+    new GlobalExceptionFilter(),
+    new PrismaExceptionFilter(),
+  );
 
   // CORS
   app.enableCors({

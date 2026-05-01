@@ -15,6 +15,8 @@ import { Throttle } from "@nestjs/throttler";
 import { FastifyRequest, FastifyReply } from "fastify";
 import { AuthService } from "./auth.service";
 import { AdminLoginDto } from "./dto/login.dto";
+import { TotpConfirmDto } from "./dto/totp-confirm.dto";
+import { TotpDisableDto } from "./dto/totp-disable.dto";
 
 const ADMIN_COOKIE = "pf_admin_token";
 
@@ -123,10 +125,7 @@ export class AuthController {
     status: 400,
     description: "TOTP_INVALID or TOTP_SETUP_EXPIRED",
   })
-  async confirmTotp(
-    @Req() req: FastifyRequest,
-    @Body() body: { code: string },
-  ) {
+  async confirmTotp(@Req() req: FastifyRequest, @Body() body: TotpConfirmDto) {
     const adminId = extractAdminId(req, this.authService);
     return this.authService.confirmTotp(adminId, body.code);
   }
@@ -143,10 +142,7 @@ export class AuthController {
     status: 401,
     description: "RE_AUTH_FAILED — invalid password or TOTP code",
   })
-  async disableTotp(
-    @Req() req: FastifyRequest,
-    @Body() body: { password: string; totpCode: string },
-  ) {
+  async disableTotp(@Req() req: FastifyRequest, @Body() body: TotpDisableDto) {
     const token = req.cookies[ADMIN_COOKIE];
     if (!token) throw new UnauthorizedException("Not authenticated");
     const payload = this.authService.verifyToken(token);

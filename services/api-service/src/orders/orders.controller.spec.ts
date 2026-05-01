@@ -86,4 +86,22 @@ describe("OrdersController — @Throttle decorator coverage", () => {
   it("placeBatch requires Idempotency-Key", () => {
     expectRequiredIdempotencyKey(OrdersController.prototype.placeBatch);
   });
+
+  it("splitPosition is wrapped with IdempotencyInterceptor", () => {
+    const interceptors: unknown = Reflect.getMetadata(
+      INTERCEPTORS_METADATA,
+      OrdersController.prototype.splitPosition,
+    );
+    expect(Array.isArray(interceptors)).toBe(true);
+    expect(interceptors as unknown[]).toContain(IdempotencyInterceptor);
+  });
+
+  it("mergePosition is wrapped with IdempotencyInterceptor", () => {
+    const interceptors: unknown = Reflect.getMetadata(
+      INTERCEPTORS_METADATA,
+      OrdersController.prototype.mergePosition,
+    );
+    expect(Array.isArray(interceptors)).toBe(true);
+    expect(interceptors as unknown[]).toContain(IdempotencyInterceptor);
+  });
 });

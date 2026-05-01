@@ -30,6 +30,7 @@ import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { ResendVerificationDto } from './dto/resend-verification.dto';
 import { DeleteAccountDto } from './dto/delete-account.dto';
+import { RefreshTokenDto } from './dto/refresh-token.dto';
 
 const USER_COOKIE = 'pf_token';
 const REFRESH_COOKIE = 'pf_refresh';
@@ -161,7 +162,7 @@ export class AuthController {
   })
   @ApiResponse({ status: 204, description: 'Logged out.' })
   async logout(
-    @Body() body: { refreshToken?: string },
+    @Body() body: RefreshTokenDto,
     @Req() request: FastifyRequest,
     @Res({ passthrough: true }) reply: FastifyReply,
   ) {
@@ -191,7 +192,7 @@ export class AuthController {
   })
   @ApiResponse({ status: 401, description: 'INVALID_REFRESH_TOKEN' })
   async refresh(
-    @Body() body: { refreshToken?: string },
+    @Body() body: RefreshTokenDto,
     @Req() request: FastifyRequest,
     @Res({ passthrough: true }) reply: FastifyReply,
   ) {
