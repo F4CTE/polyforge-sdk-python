@@ -62,6 +62,16 @@ mapper: `VENUES_NOT_CONNECTED`, `MATCH_NOT_FOUND`, `COMPARISON_UNAVAILABLE`,
 `ServerError`, all other 4xx → `PolyforgeError` with `code` and `request_id`
 preserved.
 
+**Public user profile lookups (POLA-1844)** — five endpoints backing the public profile / leaderboard UX, available on both `PolyforgeClient` and `AsyncPolyforgeClient`:
+
+- `get_user_performance(username, period="30d")` → `list[UserPerformancePoint]` — daily PnL curve.
+- `get_user_strategies(username, *, visibility="PUBLIC", limit=None)` → `list[UserStrategySummary]` — server caps `limit` at 50.
+- `get_user_activity(username, *, limit=None)` → `list[UserActivityEntry]` — resolved positions, server caps `limit` at 50.
+- `get_user_profile_badges(username)` → `list[UserProfileBadge]`.
+- `get_my_following(*, page=None, limit=None)` → `PaginatedResponse[FollowedUser]` — authenticated users only.
+
+All four public-profile lookups raise `NotFoundError` when the username is unknown. The `username` path segment is URL-encoded via the existing `_encode_path` helper.
+
 ## [2.0.0] — 2026-04-16
 
 ### Added

@@ -1451,3 +1451,63 @@ class SupportTicket:
     messages: list[TicketMessage] = field(default_factory=list)
     created_at: str = ""
     updated_at: str = ""
+
+
+# ---------------------------------------------------------------------------
+# Public user profile lookups (POLA-1844)
+# ---------------------------------------------------------------------------
+
+
+@dataclass
+class UserPerformancePoint:
+    """One day on a public user's PnL curve."""
+
+    date: str = ""
+    pnl: float = 0.0
+    cum_pnl: float = 0.0
+
+
+@dataclass
+class UserStrategySummary:
+    """Public summary of one of a user's strategies."""
+
+    id: str = ""
+    name: str = ""
+    description: str = ""
+    win_rate: float = 0.0
+    trade_count: int = 0
+    price_usdc: float = 0.0
+    fork_count: int = 0
+    like_count: int = 0
+    is_liked: bool = False
+
+
+@dataclass
+class UserActivityEntry:
+    """Resolved-position activity entry shown on a user's profile."""
+
+    id: str = ""
+    market_question: str = ""
+    outcome: str = ""
+    side: str = ""
+    size: float = 0.0
+    pnl: float = 0.0
+    resolved_at: str = ""
+
+
+@dataclass
+class UserProfileBadge:
+    """Badge entry returned by the public-profile endpoint (id is the badge type)."""
+
+    id: str = ""
+    unlocked_at: str = ""
+
+
+@dataclass
+class FollowedUser:
+    """Pared-down user record returned by ``me/following``."""
+
+    id: str = ""
+    username: str = ""
+    display_name: str | None = None
+    avatar_url: str | None = None
