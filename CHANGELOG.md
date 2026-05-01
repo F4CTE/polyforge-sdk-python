@@ -26,6 +26,42 @@ via `_encode_path` to prevent path-traversal injection.
 Responses mirror the upstream controller's permissive shape (`Record<string,
 unknown>` → `dict[str, Any]`) intentionally — see parent issue for the rationale.
 
+### Added — Cross-Venue Arb Execute / Positions / Risk (POLA-1851)
+
+> ⚠️ **Trading-impact severity: HIGH.** `execute_arb` and `close_arb_position`
+> place real orders on both Polymarket and Kalshi. The SDK must never auto-retry
+> these endpoints — a duplicate request can open or close two arb positions
+> instead of one. The httpx client used by the SDK has no retry middleware, and
+> tests in `TestArbHttpErrorMapping` assert that any 4xx/5xx surfaces on the
+> first call.
+
+Seven new methods on both `PolyforgeClient` (sync) and `AsyncPolyforgeClient`
+(async), mirroring `services/api-service/src/arbitrage/arbitrage.controller.ts`:
+
+- `execute_arb(*, match_id, size, max_slippage_pct=None) -> ArbExecutionResult`
+  — `POST /api/v1/arbitrage/execute`. Validates `size ∈ [1, 10000]` and
+  `max_slippage_pct ∈ [0, 5]` client-side before any network call.
+- `list_arb_positions(*, status=None, limit=50, offset=0) -> ArbPositionsResponse`
+  — `GET /api/v1/arbitrage/positions`.
+- `get_arb_position(position_id) -> ArbPosition` — `GET /api/v1/arbitrage/positions/:id`.
+- `close_arb_position(position_id) -> ArbCloseResponse` — `POST /api/v1/arbitrage/positions/:id/close`.
+- `get_arb_risk_dashboard() -> ArbRiskDashboard` — `GET /api/v1/arbitrage/risk/dashboard`.
+- `get_arb_settlement_risks() -> list[ArbSettlementRisk]` — `GET /api/v1/arbitrage/risk/settlement`.
+- `refresh_arb_pnl() -> ArbPnlRefreshResult` — `POST /api/v1/arbitrage/risk/refresh-pnl`.
+
+**New dataclasses** (re-exported from `polyforge`): `ArbExecutionLeg`,
+`ArbExecutionResult`, `ArbPosition`, `ArbPositionsResponse`, `ArbCloseResponse`,
+`ArbNetExposure`, `ArbRiskDashboard`, `ArbSettlementRisk`, `ArbPnlRefreshResult`,
+plus type aliases `ArbPositionStatus` and `Venue`.
+
+**Backend error codes surfaced verbatim** via the existing `_raise_for_status`
+mapper: `VENUES_NOT_CONNECTED`, `MATCH_NOT_FOUND`, `COMPARISON_UNAVAILABLE`,
+`SPREAD_TOO_LOW`, `TOKEN_RESOLUTION_FAILED`, `ARB_POSITION_NOT_FOUND`,
+`INVALID_STATUS`. Status-code mapping unchanged: 401 → `AuthenticationError`,
+403 → `PermissionError`, 404 → `NotFoundError`, 429 → `RateLimitError`, 5xx →
+`ServerError`, all other 4xx → `PolyforgeError` with `code` and `request_id`
+preserved.
+
 ## [2.0.0] — 2026-04-16
 
 ### Added
