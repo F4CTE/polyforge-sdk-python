@@ -6,6 +6,7 @@ import {
   IsOptional,
   IsBoolean,
   Min,
+  Max,
   MaxLength,
   registerDecorator,
   type ValidationOptions,
@@ -70,7 +71,12 @@ export class SignOrderDto {
   size!: number;
 
   @IsNumber()
-  @Min(0)
+  @Min(0, {
+    message: "Price must be >= 0 (Polymarket probability lower bound)",
+  })
+  @Max(1, {
+    message: "Price must be <= 1 (Polymarket probability upper bound)",
+  })
   price!: number;
 
   @IsIn(["GTC", "FOK", "GTD", "FAK"])
