@@ -63,7 +63,7 @@ function App() {
     }>
       <AdmPageHead
         title="Arbitrage Scanner"
-        sub="Risk-free profit windows · live scan across Polymarket & Kalshi · refresh every 10s"
+        sub="Potential spread windows · live scan across Polymarket & Kalshi · refresh every 10s"
       />
 
       {/* Stat row */}
@@ -126,7 +126,7 @@ function App() {
             <p>
               <strong>Cross-venue arbitrage.</strong> When the same real-world event trades at different prices on Polymarket vs Kalshi,
               buy the underpriced side on one venue and sell (or hedge) on the other. Match confidence reflects how closely the two
-              listings track the same underlying outcome — <span className="mono">≥80%</span> is generally safe.
+              listings track the same underlying outcome — <span className="mono">≥80%</span> indicates a stronger match.
             </p>
           )}
         </div>
