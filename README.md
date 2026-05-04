@@ -124,6 +124,20 @@ asyncio.run(main())
 | `place_order(token_id, side, outcome, size, price, order_type)` | Place a direct buy/sell order |
 | `cancel_order(order_id)` | Cancel a pending or live order |
 
+### Arbitrage
+
+| Method | Description |
+|--------|-------------|
+| `get_cross_venue_opportunities(min_spread)` | List cross-venue Polymarket/Kalshi opportunities |
+| `get_cross_venue_comparison(match_id)` | Compare prices for a matched cross-venue market |
+| `execute_arb(match_id, size, max_slippage_pct)` | Execute a real cross-venue arbitrage trade; validates `match_id` length, `size` 1..10000, and optional slippage 0..5 |
+| `list_arb_positions(status, limit, offset)` | List arbitrage positions; validates status and `limit` 1..100 |
+| `get_arb_position(position_id)` | Fetch one arbitrage position |
+| `close_arb_position(position_id)` | Close an open arbitrage position with real reverse orders |
+| `get_arb_risk_dashboard()` | Get aggregate arbitrage exposure and P&L |
+| `get_arb_settlement_risks()` | List settlement-date and resolution-criteria risks |
+| `refresh_arb_pnl()` | Recompute unrealized arbitrage P&L |
+
 ### Social & Signals
 
 | Method | Description |

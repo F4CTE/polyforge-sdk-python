@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Dict, Generic, List, Optional, TypeVar
+from typing import Any, Dict, Generic, List, Literal, Optional, TypeVar
 
 T = TypeVar("T")
 
@@ -581,10 +581,12 @@ class ArbitrageAlertSubscription:
 # precision instead of relying on float coercion.
 
 # Status values mirror the server-side ``ArbPositionStatus`` enum.
-ArbPositionStatus = str  # Literal: "PENDING" | "PARTIAL" | "OPEN" | "CLOSING" | "CLOSED" | "FAILED"
+ArbPositionStatus = Literal[
+    "PENDING", "PARTIAL", "OPEN", "CLOSING", "CLOSED", "FAILED"
+]
 
 # Venue identifiers mirror the server-side ``Venue`` enum.
-Venue = str  # Literal: "POLYMARKET" | "KALSHI"
+Venue = Literal["POLYMARKET", "KALSHI"]
 
 
 @dataclass

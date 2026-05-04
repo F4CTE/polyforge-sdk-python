@@ -6230,6 +6230,96 @@ class TestArbValidationHelpers:
             _validate_arb_slippage(float("nan"))
 
 
+class TestArbValidators_POLA_1873:
+    """Validator parity with the MCP shim (POLA-1853) and TS SDK (POLA-1850).
+
+    These tests guard the additions from POLA-1873: ``match_id`` length,
+    ``ArbPositionStatus`` allowlist, and the ``limit``/``offset`` page bounds.
+    """
+
+    def test_match_id_empty_rejected(self):
+        from polyforge.client import _validate_arb_match_id
+        with pytest.raises(ValueError, match="between 1 and 255"):
+            _validate_arb_match_id("")
+
+    def test_match_id_too_long_rejected(self):
+        from polyforge.client import _validate_arb_match_id
+        with pytest.raises(ValueError, match="between 1 and 255"):
+            _validate_arb_match_id("x" * 256)
+
+    def test_match_id_at_max_length_accepted(self):
+        from polyforge.client import _validate_arb_match_id
+        _validate_arb_match_id("x" * 255)  # boundary, must not raise
+
+    def test_match_id_non_string_rejected(self):
+        from polyforge.client import _validate_arb_match_id
+        with pytest.raises(TypeError, match="must be a string"):
+            _validate_arb_match_id(123)  # type: ignore[arg-type]
+
+    def test_position_status_unknown_rejected(self):
+        from polyforge.client import _validate_arb_position_status
+        with pytest.raises(ValueError, match="status must be one of"):
+            _validate_arb_position_status("EXPIRED")
+
+    def test_position_status_all_six_accepted(self):
+        from polyforge.client import _validate_arb_position_status
+        for value in ("PENDING", "PARTIAL", "OPEN", "CLOSING", "CLOSED", "FAILED"):
+            _validate_arb_position_status(value)
+
+    def test_arb_literal_types_exported_from_package(self):
+        from polyforge import ArbPositionStatus, Venue
+        assert "PENDING" in ArbPositionStatus.__args__
+        assert "POLYMARKET" in Venue.__args__
+
+    def test_limit_below_one_rejected(self):
+        from polyforge.client import _validate_arb_limit
+        with pytest.raises(ValueError, match="between 1 and 100"):
+            _validate_arb_limit(0)
+
+    def test_limit_above_hundred_rejected(self):
+        from polyforge.client import _validate_arb_limit
+        with pytest.raises(ValueError, match="between 1 and 100"):
+            _validate_arb_limit(101)
+
+    def test_limit_bool_rejected(self):
+        from polyforge.client import _validate_arb_limit
+        # ``bool`` is a subclass of ``int`` in Python — guard against it.
+        with pytest.raises(TypeError, match="limit must be an int"):
+            _validate_arb_limit(True)  # type: ignore[arg-type]
+
+    def test_offset_negative_rejected(self):
+        from polyforge.client import _validate_arb_offset
+        with pytest.raises(ValueError, match="must be >= 0"):
+            _validate_arb_offset(-1)
+
+    def test_execute_arb_validates_match_id_before_post(self):
+        from unittest.mock import MagicMock
+        client = PolyforgeClient(api_key="test-key")
+        client._post = MagicMock()
+        with pytest.raises(ValueError, match="between 1 and 255"):
+            client.execute_arb(match_id="x" * 256, size=100.0)
+        client._post.assert_not_called()
+        client.close()
+
+    def test_list_arb_positions_validates_limit_before_get(self):
+        from unittest.mock import MagicMock
+        client = PolyforgeClient(api_key="test-key")
+        client._get = MagicMock()
+        with pytest.raises(ValueError, match="between 1 and 100"):
+            client.list_arb_positions(limit=200)
+        client._get.assert_not_called()
+        client.close()
+
+    def test_list_arb_positions_validates_status_before_get(self):
+        from unittest.mock import MagicMock
+        client = PolyforgeClient(api_key="test-key")
+        client._get = MagicMock()
+        with pytest.raises(ValueError, match="status must be one of"):
+            client.list_arb_positions(status="EXPIRED")  # type: ignore[arg-type]
+        client._get.assert_not_called()
+        client.close()
+
+
 class TestArbExecutionSync:
     """Happy-path coverage for the 7 PolyforgeClient arb methods (POLA-1851)."""
 

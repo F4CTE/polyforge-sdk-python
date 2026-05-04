@@ -34,6 +34,7 @@ from polyforge.models import (
     ArbPnlRefreshResult,
     ArbPosition,
     ArbPositionsResponse,
+    ArbPositionStatus,
     ArbRiskDashboard,
     ArbSettlementRisk,
     ArbitrageAlertSubscription,
@@ -419,6 +420,54 @@ def _validate_arb_slippage(value: float) -> None:
         raise ValueError(
             f"max_slippage_pct must be between 0 and 5, got {value}"
         )
+
+
+_VALID_ARB_POSITION_STATUSES = frozenset(
+    {"PENDING", "PARTIAL", "OPEN", "CLOSING", "CLOSED", "FAILED"}
+)
+
+
+def _validate_arb_match_id(value: str) -> None:
+    """Reject match_id values outside the server's 1..255 char range.
+
+    Mirrors `class-validator` `@IsString()` plus the MCP zod schema
+    `z.string().min(1).max(255)` enforced in `polyforge-mcp` (POLA-1853).
+    """
+    if not isinstance(value, str):
+        raise TypeError(f"match_id must be a string, got {type(value).__name__}")
+    if len(value) < 1 or len(value) > 255:
+        raise ValueError(
+            f"match_id must be between 1 and 255 characters, got {len(value)}"
+        )
+
+
+def _validate_arb_position_status(value: str) -> None:
+    """Reject statuses outside the server-side ``ArbPositionStatus`` enum."""
+    if not isinstance(value, str):
+        raise TypeError(
+            f"status must be a string, got {type(value).__name__}"
+        )
+    if value not in _VALID_ARB_POSITION_STATUSES:
+        raise ValueError(
+            "status must be one of "
+            f"{sorted(_VALID_ARB_POSITION_STATUSES)}, got {value!r}"
+        )
+
+
+def _validate_arb_limit(value: int) -> None:
+    """Reject limit values outside the MCP-enforced 1..100 range."""
+    if not isinstance(value, int) or isinstance(value, bool):
+        raise TypeError(f"limit must be an int, got {type(value).__name__}")
+    if value < 1 or value > 100:
+        raise ValueError(f"limit must be between 1 and 100, got {value}")
+
+
+def _validate_arb_offset(value: int) -> None:
+    """Reject offset values below 0 (the MCP schema enforces ``int >= 0``)."""
+    if not isinstance(value, int) or isinstance(value, bool):
+        raise TypeError(f"offset must be an int, got {type(value).__name__}")
+    if value < 0:
+        raise ValueError(f"offset must be >= 0, got {value}")
 
 
 def _validate_batch_order(order: dict[str, Any]) -> None:
@@ -1715,12 +1764,14 @@ class PolyforgeClient:
             descriptors, and the entry spread.
 
         Raises:
-            ValueError: if ``size`` or ``max_slippage_pct`` is out of range.
+            ValueError: if ``match_id``, ``size``, or ``max_slippage_pct`` is
+                out of range.
             PolyforgeError: surfaces backend error codes verbatim
                 (``VENUES_NOT_CONNECTED``, ``MATCH_NOT_FOUND``,
                 ``COMPARISON_UNAVAILABLE``, ``SPREAD_TOO_LOW``,
                 ``TOKEN_RESOLUTION_FAILED``).
         """
+        _validate_arb_match_id(match_id)
         _validate_arb_size(size)
         body: dict[str, Any] = {"matchId": match_id, "size": size}
         if max_slippage_pct is not None:
@@ -1732,7 +1783,7 @@ class PolyforgeClient:
     def list_arb_positions(
         self,
         *,
-        status: str | None = None,
+        status: ArbPositionStatus | None = None,
         limit: int = 50,
         offset: int = 0,
     ) -> ArbPositionsResponse:
@@ -1740,11 +1791,18 @@ class PolyforgeClient:
 
         Args:
             status: Optional :class:`ArbPositionStatus` filter.
-            limit: Page size (default 50).
-            offset: Page offset (default 0).
+            limit: Page size (default 50, range 1..100).
+            offset: Page offset (default 0, must be >= 0).
+
+        Raises:
+            ValueError: if ``status``, ``limit``, or ``offset`` falls outside
+                the MCP-canonical bounds.
         """
+        _validate_arb_limit(limit)
+        _validate_arb_offset(offset)
         params: dict[str, Any] = {"limit": limit, "offset": offset}
         if status is not None:
+            _validate_arb_position_status(status)
             params["status"] = status
         data = self._get("/api/v1/arbitrage/positions", params=params)
         positions = [_parse(ArbPosition, p) for p in (data.get("positions") or [])]
@@ -4313,6 +4371,7 @@ class AsyncPolyforgeClient:
 
         See :meth:`PolyforgeClient.execute_arb` for parameter contract.
         """
+        _validate_arb_match_id(match_id)
         _validate_arb_size(size)
         body: dict[str, Any] = {"matchId": match_id, "size": size}
         if max_slippage_pct is not None:
@@ -4324,13 +4383,19 @@ class AsyncPolyforgeClient:
     async def list_arb_positions(
         self,
         *,
-        status: str | None = None,
+        status: ArbPositionStatus | None = None,
         limit: int = 50,
         offset: int = 0,
     ) -> ArbPositionsResponse:
-        """List the user's arbitrage positions with pagination."""
+        """List the user's arbitrage positions with pagination.
+
+        See :meth:`PolyforgeClient.list_arb_positions` for parameter bounds.
+        """
+        _validate_arb_limit(limit)
+        _validate_arb_offset(offset)
         params: dict[str, Any] = {"limit": limit, "offset": offset}
         if status is not None:
+            _validate_arb_position_status(status)
             params["status"] = status
         data = await self._get("/api/v1/arbitrage/positions", params=params)
         positions = [_parse(ArbPosition, p) for p in (data.get("positions") or [])]
