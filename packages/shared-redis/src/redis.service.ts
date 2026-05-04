@@ -1,12 +1,20 @@
 import { Injectable, OnModuleDestroy, Logger } from "@nestjs/common";
 import Redis from "ioredis";
 
-const DEFAULT_STREAM_MAXLEN = 100_000;
+const STREAM_EVENTS = "stream:events";
+const DEFAULT_STREAM_EVENTS_MAXLEN = 100_000;
 
 function parsePositiveInteger(value: string | undefined): number | null {
   if (!value) return null;
   const parsed = Number.parseInt(value, 10);
   return Number.isSafeInteger(parsed) && parsed > 0 ? parsed : null;
+}
+
+function streamEventsMaxLen(): number {
+  return (
+    parsePositiveInteger(process.env.REDIS_STREAM_EVENTS_MAXLEN) ??
+    DEFAULT_STREAM_EVENTS_MAXLEN
+  );
 }
 
 @Injectable()
@@ -115,25 +123,30 @@ export class RedisService implements OnModuleDestroy {
 
   // ─── Streams ───────────────────────────────────────────────────────────────
 
-  async xadd(stream: string, fields: Record<string, string>): Promise<string> {
+  async xadd(
+    stream: string,
+    fields: Record<string, string>,
+    maxLen?: number,
+  ): Promise<string> {
     const args: string[] = [];
     for (const [key, value] of Object.entries(fields)) {
       args.push(key, value);
     }
-    const maxLen =
-      stream === "stream:events"
-        ? (parsePositiveInteger(process.env.REDIS_STREAM_EVENTS_MAXLEN) ??
-          DEFAULT_STREAM_MAXLEN)
-        : DEFAULT_STREAM_MAXLEN;
 
-    return this.client.xadd(
-      stream,
-      "MAXLEN",
-      "~",
-      maxLen,
-      "*",
-      ...args,
-    ) as Promise<string>;
+    const trimMaxLen =
+      maxLen ?? (stream === STREAM_EVENTS ? streamEventsMaxLen() : undefined);
+    if (trimMaxLen && trimMaxLen > 0) {
+      return this.client.xadd(
+        stream,
+        "MAXLEN",
+        "~",
+        trimMaxLen,
+        "*",
+        ...args,
+      ) as Promise<string>;
+    }
+
+    return this.client.xadd(stream, "*", ...args) as Promise<string>;
   }
 
   async xread(

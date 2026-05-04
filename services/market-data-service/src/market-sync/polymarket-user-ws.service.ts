@@ -128,13 +128,6 @@ export class PolymarketUserWsService implements OnModuleDestroy {
       if (NORMAL_CLOSE_CODES.has(code)) return;
 
       const nextAttempts = attempts + 1;
-      if (nextAttempts > RECONNECT_DELAYS_MS.length) {
-        this.logger.warn(
-          `User WS ${userId}: max reconnect attempts reached, giving up`,
-        );
-        return;
-      }
-
       const delay =
         RECONNECT_DELAYS_MS[attempts] ??
         RECONNECT_DELAYS_MS[RECONNECT_DELAYS_MS.length - 1];
@@ -161,6 +154,7 @@ export class PolymarketUserWsService implements OnModuleDestroy {
 
     ws.on("error", (err) => {
       this.logger.error(`User WS error for ${userId}: ${err.message}`);
+      ws.close();
     });
   }
 }

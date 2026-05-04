@@ -8,26 +8,51 @@ import type WebSocket from "ws";
 
 function makeSocket(overrides: Partial<WebSocket> = {}): WebSocket {
   const sent: string[] = [];
+  const handlers = new Map<string, Array<(...args: unknown[]) => void>>();
   return {
     readyState: 1,
     send: vi.fn((msg: string) => sent.push(msg)),
     close: vi.fn(),
     terminate: vi.fn(),
+    on: vi.fn((event: string, handler: (...args: unknown[]) => void) => {
+      const arr = handlers.get(event) ?? [];
+      arr.push(handler);
+      handlers.set(event, arr);
+      return undefined;
+    }),
     _sent: sent,
+    _handlers: handlers,
     ...overrides,
-  } as unknown as WebSocket & { _sent: string[] };
+  } as unknown as WebSocket & {
+    _sent: string[];
+    _handlers: Map<string, Array<(...args: unknown[]) => void>>;
+  };
 }
 
-function makeRequest(query = "", cookie = ""): IncomingMessage {
+function makeRequest(
+  query = "",
+  cookie = "",
+  origin?: string,
+): IncomingMessage {
   return {
     url: `/ws${query}`,
-    headers: { cookie },
+    headers: { cookie, ...(origin ? { origin } : {}) },
   } as unknown as IncomingMessage;
+}
+
+function sendClientMessage(client: WebSocket, message: unknown): void {
+  const handlers = (
+    client as unknown as {
+      _handlers: Map<string, Array<(...args: unknown[]) => void>>;
+    }
+  )._handlers.get("message");
+  handlers?.forEach((handler) => handler(Buffer.from(JSON.stringify(message))));
 }
 
 describe("EventsGateway", () => {
   let gateway: EventsGateway;
   let jwtService: JwtService;
+  let configService: ConfigService;
 
   beforeEach(async () => {
     const module = await Test.createTestingModule({
@@ -54,6 +79,7 @@ describe("EventsGateway", () => {
 
     gateway = module.get(EventsGateway);
     jwtService = module.get(JwtService);
+    configService = module.get(ConfigService);
 
     gateway.server = { clients: new Set() } as unknown as import("ws").Server;
   });
@@ -109,6 +135,46 @@ describe("EventsGateway", () => {
         4001,
         "Authentication required",
       );
+    });
+
+    it("rejects cross-origin cookie-authenticated sockets", () => {
+      const client = makeSocket();
+      const req = makeRequest("", "pf_token=cookie-jwt", "https://evil.test");
+
+      gateway.handleConnection(client, req);
+
+      expect(jwtService.verify).not.toHaveBeenCalled();
+      expect(client.close).toHaveBeenCalledWith(4003, "Origin not allowed");
+      expect(client.terminate).toHaveBeenCalled();
+    });
+
+    it("limits concurrent sockets per user", () => {
+      vi.mocked(jwtService.verify).mockReturnValue({
+        sub: "user-A",
+        email: "a@b.com",
+        username: "a",
+      });
+      vi.mocked(configService.get).mockImplementation((key: string) => {
+        if (key === "USER_JWT_SECRET")
+          return "test-secret-32-chars-minimum-ok!";
+        if (key === "WS_MAX_CONNECTIONS_PER_USER") return "1";
+        return undefined;
+      });
+
+      const socket1 = makeSocket();
+      const socket2 = makeSocket();
+
+      gateway.handleConnection(socket1, makeRequest("?token=t1"));
+      gateway.handleConnection(socket2, makeRequest("?token=t2"));
+
+      expect(socket1.send).toHaveBeenCalledWith(
+        expect.stringContaining('"type":"AUTH_OK"'),
+      );
+      expect(socket2.close).toHaveBeenCalledWith(
+        4008,
+        "Connection limit exceeded",
+      );
+      expect(socket2.terminate).toHaveBeenCalled();
     });
 
     it("closes connection when JWT verification fails", () => {
@@ -259,6 +325,61 @@ describe("EventsGateway", () => {
       gateway.broadcast("PRICE_UPDATE", { tokenId: "t1", price: 0.5 });
 
       expect(unauthSocket.send).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("subscriptions", () => {
+    it("pushes price updates only to sockets subscribed to the token", () => {
+      vi.mocked(jwtService.verify)
+        .mockReturnValueOnce({ sub: "user-A", email: "a@b.com", username: "a" })
+        .mockReturnValueOnce({
+          sub: "user-B",
+          email: "b@c.com",
+          username: "b",
+        });
+
+      const socketA = makeSocket();
+      const socketB = makeSocket();
+      gateway.handleConnection(socketA, makeRequest("?token=tA"));
+      gateway.handleConnection(socketB, makeRequest("?token=tB"));
+      gateway.server.clients.add(socketA);
+      gateway.server.clients.add(socketB);
+
+      sendClientMessage(socketA, {
+        type: "SUBSCRIBE_PRICES",
+        tokenIds: ["token-1"],
+      });
+      sendClientMessage(socketB, {
+        type: "SUBSCRIBE_PRICES",
+        tokenIds: ["token-2"],
+      });
+
+      vi.mocked(socketA.send).mockClear();
+      vi.mocked(socketB.send).mockClear();
+
+      gateway.pushPriceUpdate("token-1", 0.65, 123);
+
+      expect(socketA.send).toHaveBeenCalledWith(
+        expect.stringContaining("PRICE_UPDATE"),
+      );
+      expect(socketB.send).not.toHaveBeenCalled();
+    });
+
+    it("responds to client pings", () => {
+      vi.mocked(jwtService.verify).mockReturnValue({
+        sub: "user-A",
+        email: "a@b.com",
+        username: "a",
+      });
+      const socket = makeSocket();
+      gateway.handleConnection(socket, makeRequest("?token=tA"));
+      vi.mocked(socket.send).mockClear();
+
+      sendClientMessage(socket, { type: "PING" });
+
+      expect(socket.send).toHaveBeenCalledWith(
+        expect.stringContaining('"type":"PONG"'),
+      );
     });
   });
 

@@ -12,6 +12,7 @@ import {
   HttpStatus,
   ParseUUIDPipe,
   Res,
+  HttpException,
 } from "@nestjs/common";
 // Using FastifyReply type — the NestJS Fastify adapter supports express-like res.set()/res.json()
 import type { FastifyReply } from "fastify";
@@ -25,7 +26,10 @@ import {
   ApiKeyScopeGuard,
 } from "@polyforge/shared-auth";
 import { StrategiesService } from "./strategies.service";
-import { StrategyEventsService } from "../gateway/strategy-events.service";
+import {
+  StrategyEventsService,
+  TooManyStrategyEventSubscribersError,
+} from "../gateway/strategy-events.service";
 import { CreateStrategyDto } from "./dto/create-strategy.dto";
 import { UpdateStrategyDto } from "./dto/update-strategy.dto";
 import { StartStrategyDto } from "./dto/start-strategy.dto";
@@ -142,6 +146,22 @@ export class StrategiesController {
 
     const raw = (res as unknown as { raw: import("http").ServerResponse }).raw;
 
+    const send = (payload: unknown): void => {
+      raw.write(`data: ${JSON.stringify(payload)}\n\n`);
+    };
+
+    let unsub: () => void;
+    try {
+      unsub = this.strategyEvents.subscribe(id, user.sub, (event) =>
+        send(event),
+      );
+    } catch (err) {
+      if (err instanceof TooManyStrategyEventSubscribersError) {
+        throw new HttpException(err.message, HttpStatus.TOO_MANY_REQUESTS);
+      }
+      throw err;
+    }
+
     raw.statusCode = 200;
     raw.setHeader("Content-Type", "text/event-stream");
     raw.setHeader("Cache-Control", "no-cache, no-transform");
@@ -149,14 +169,8 @@ export class StrategiesController {
     raw.setHeader("Connection", "keep-alive");
     raw.flushHeaders();
 
-    const send = (payload: unknown): void => {
-      raw.write(`data: ${JSON.stringify(payload)}\n\n`);
-    };
-
     // Initial connected event so clients know the stream is live
     send({ type: "CONNECTED", strategyId: id, timestamp: Date.now() });
-
-    const unsub = this.strategyEvents.subscribe(id, (event) => send(event));
 
     // Keepalive comment every 15 s (prevents proxy timeouts)
     const heartbeat = setInterval(() => {

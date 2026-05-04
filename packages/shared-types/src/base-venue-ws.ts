@@ -18,6 +18,7 @@ export interface VenueWsConfig {
 export const MAX_VENUE_WS_FRAME_BYTES = 1 * 1024 * 1024;
 
 const DEFAULT_PING_MS = 9_000;
+const DEFAULT_PONG_TIMEOUT_MS = 30_000;
 const DEFAULT_RECONNECT_BASE_MS = 1_000;
 const DEFAULT_RECONNECT_MAX_MS = 30_000;
 const DEFAULT_RECONNECT_FACTOR = 2;
@@ -31,6 +32,7 @@ export abstract class BaseVenueWsService {
   private reconnectDelay: number;
   private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
   private pingTimer: ReturnType<typeof setInterval> | null = null;
+  private pongTimer: ReturnType<typeof setTimeout> | null = null;
 
   private readonly pingIntervalMs: number;
   private readonly reconnectBaseMs: number;
@@ -176,7 +178,10 @@ export abstract class BaseVenueWsService {
       }
 
       const text = raw.toString();
-      if (text === "PONG") return;
+      if (text === "PONG") {
+        this.clearPongTimeout();
+        return;
+      }
 
       let msg: Record<string, unknown>;
       try {
@@ -212,11 +217,16 @@ export abstract class BaseVenueWsService {
       );
       this.ws?.close();
     });
+
+    this.ws.on("pong", () => {
+      this.clearPongTimeout();
+    });
   }
 
   private startPing(): void {
     this.pingTimer = setInterval(() => {
       if (this.ws?.readyState === WebSocket.OPEN) {
+        this.startPongTimeout();
         this.ws.ping();
       }
     }, this.pingIntervalMs);
@@ -238,6 +248,7 @@ export abstract class BaseVenueWsService {
   }
 
   private clearTimers(): void {
+    this.clearPongTimeout();
     if (this.pingTimer) {
       clearInterval(this.pingTimer);
       this.pingTimer = null;
@@ -245,6 +256,25 @@ export abstract class BaseVenueWsService {
     if (this.reconnectTimer) {
       clearTimeout(this.reconnectTimer);
       this.reconnectTimer = null;
+    }
+  }
+
+  private startPongTimeout(): void {
+    if (this.pongTimer) {
+      return;
+    }
+    this.pongTimer = setTimeout(() => {
+      this.logger.warn(
+        `${this.wsConfig.venueId} WS pong timeout; closing stale socket`,
+      );
+      this.ws?.close();
+    }, DEFAULT_PONG_TIMEOUT_MS);
+  }
+
+  private clearPongTimeout(): void {
+    if (this.pongTimer) {
+      clearTimeout(this.pongTimer);
+      this.pongTimer = null;
     }
   }
 

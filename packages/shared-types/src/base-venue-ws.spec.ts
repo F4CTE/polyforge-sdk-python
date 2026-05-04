@@ -3,6 +3,34 @@ import { EventEmitter2 } from "@nestjs/event-emitter";
 import WebSocket from "ws";
 import { BaseVenueWsService, type VenueWsConfig } from "./base-venue-ws";
 
+type WsHandler = (...args: any[]) => void;
+
+class MockVenueSocket {
+  readyState = WebSocket.CONNECTING;
+  private readonly handlers = new Map<string, WsHandler[]>();
+
+  on(event: string, handler: WsHandler) {
+    const handlers = this.handlers.get(event) ?? [];
+    handlers.push(handler);
+    this.handlers.set(event, handlers);
+    return this;
+  }
+
+  removeAllListeners = vi.fn();
+  ping = vi.fn();
+  close = vi.fn();
+  send = vi.fn();
+
+  triggerOpen() {
+    this.readyState = WebSocket.OPEN;
+    (this.handlers.get("open") ?? []).forEach((handler) => handler());
+  }
+
+  triggerPong() {
+    (this.handlers.get("pong") ?? []).forEach((handler) => handler());
+  }
+}
+
 // ─── Concrete test subclass ──────────────────────────────────────────────────
 
 class TestWsService extends BaseVenueWsService {
@@ -10,13 +38,14 @@ class TestWsService extends BaseVenueWsService {
   public sentSubscriptions: string[][] = [];
   public sentUnsubscriptions: string[][] = [];
   public connectedCount = 0;
+  public mockSocket: MockVenueSocket | null = null;
 
   constructor(emitter: EventEmitter2, config: Partial<VenueWsConfig> = {}) {
     super(emitter, {
       venueId: "test-venue",
       url: "ws://localhost:9999",
       enabled: true,
-      pingIntervalMs: 100_000,
+      pingIntervalMs: 5_000,
       reconnectBaseMs: 50,
       reconnectMaxMs: 200,
       ...config,
@@ -37,6 +66,11 @@ class TestWsService extends BaseVenueWsService {
 
   protected onConnected(): void {
     this.connectedCount++;
+  }
+
+  protected createWebSocket(): WebSocket {
+    this.mockSocket = new MockVenueSocket();
+    return this.mockSocket as unknown as WebSocket;
   }
 
   public exposeConnect() {
@@ -115,6 +149,44 @@ describe("BaseVenueWsService", () => {
     it("does not throw when no ws connection", () => {
       const svc = new TestWsService(emitter);
       expect(() => svc["send"]({ test: true })).not.toThrow();
+      svc.teardown();
+    });
+  });
+
+  describe("pong timeout", () => {
+    beforeEach(() => {
+      vi.useFakeTimers();
+    });
+
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it("closes a stale socket when ping pongs stop", () => {
+      const svc = new TestWsService(emitter);
+      svc.init();
+      svc.mockSocket?.triggerOpen();
+
+      vi.advanceTimersByTime(5_000);
+      expect(svc.mockSocket?.ping).toHaveBeenCalledTimes(1);
+
+      vi.advanceTimersByTime(30_000);
+      expect(svc.mockSocket?.close).toHaveBeenCalled();
+
+      svc.teardown();
+    });
+
+    it("keeps the socket open when pong clears the timeout", () => {
+      const svc = new TestWsService(emitter);
+      svc.init();
+      svc.mockSocket?.triggerOpen();
+
+      vi.advanceTimersByTime(5_000);
+      svc.mockSocket?.triggerPong();
+      vi.advanceTimersByTime(25_000);
+
+      expect(svc.mockSocket?.close).not.toHaveBeenCalled();
+
       svc.teardown();
     });
   });

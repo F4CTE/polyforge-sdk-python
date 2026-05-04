@@ -228,24 +228,28 @@ describe("PolymarketUserWsService", () => {
     expect(mockWsInstances).toHaveLength(3);
   });
 
-  // ── Stops reconnecting after max attempts ──────────────────────────────
+  // ── Keeps reconnecting with capped backoff ─────────────────────────────
 
-  it("stops reconnecting after max attempts (5)", async () => {
+  it("keeps reconnecting after five failures using the capped delay", async () => {
     svc.subscribeUser("user-1", "0xWallet");
 
-    // Trigger 5 closes to exhaust all reconnect attempts
-    for (let i = 0; i < 5; i++) {
+    // Trigger more failures than the explicit delay table length.
+    for (let i = 0; i < 7; i++) {
       const ws = mockWsInstances[mockWsInstances.length - 1];
       ws.triggerClose(1006);
-      // Advance past the delay for this attempt (max 30s for last ones)
       await vi.advanceTimersByTimeAsync(35_000);
     }
 
-    const countAfterExhaustion = mockWsInstances.length;
+    expect(mockWsInstances.length).toBeGreaterThan(7);
+  });
 
-    // One more large advance should not create more WS instances
-    await vi.advanceTimersByTimeAsync(60_000);
-    expect(mockWsInstances).toHaveLength(countAfterExhaustion);
+  it("closes on socket error so the close handler can reconnect", () => {
+    svc.subscribeUser("user-1", "0xWallet");
+    const ws = mockWsInstances[0];
+
+    ws.triggerError(new Error("broken socket"));
+
+    expect(ws.close).toHaveBeenCalled();
   });
 
   // ── Cancels pending reconnect on explicit unsubscribe ──────────────────

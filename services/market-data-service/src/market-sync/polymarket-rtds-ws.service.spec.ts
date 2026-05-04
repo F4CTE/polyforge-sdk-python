@@ -39,6 +39,10 @@ class MockWebSocket {
     (this.handlers.get("message") ?? []).forEach((h) => h(buf));
   }
 
+  triggerPong() {
+    (this.handlers.get("pong") ?? []).forEach((h) => h());
+  }
+
   triggerClose(code = 1000, reason = "") {
     this.readyState = MockWebSocket.CLOSED;
     (this.handlers.get("close") ?? []).forEach((h) =>
@@ -121,6 +125,28 @@ describe("PolymarketRtdsWsService", () => {
 
       vi.advanceTimersByTime(5_000);
       expect(mockWsInstance.ping).toHaveBeenCalledTimes(2);
+    });
+
+    it("closes stale sockets when pongs stop arriving", () => {
+      svc.onModuleInit();
+      mockWsInstance.triggerOpen();
+
+      vi.advanceTimersByTime(5_000);
+      expect(mockWsInstance.ping).toHaveBeenCalledTimes(1);
+
+      vi.advanceTimersByTime(15_000);
+      expect(mockWsInstance.close).toHaveBeenCalled();
+    });
+
+    it("clears the pong timeout when a pong arrives", () => {
+      svc.onModuleInit();
+      mockWsInstance.triggerOpen();
+
+      vi.advanceTimersByTime(5_000);
+      mockWsInstance.triggerPong();
+      vi.advanceTimersByTime(15_000);
+
+      expect(mockWsInstance.close).not.toHaveBeenCalled();
     });
 
     it("does not reconnect after onModuleDestroy", () => {
@@ -484,13 +510,14 @@ describe("PolymarketRtdsWsService", () => {
   // ── Error handling ─────────────────────────────────────────────────────
 
   describe("error handling", () => {
-    it("logs error but does not crash on WebSocket error", () => {
+    it("closes the socket on WebSocket error so reconnect can run", () => {
       svc.onModuleInit();
       mockWsInstance.triggerOpen();
 
       expect(() => {
         mockWsInstance.triggerError(new Error("connection refused"));
       }).not.toThrow();
+      expect(mockWsInstance.close).toHaveBeenCalled();
     });
   });
 });

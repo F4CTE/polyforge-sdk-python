@@ -23,7 +23,7 @@ describe("RedisService", () => {
     on.mockClear();
   });
 
-  it("adds stream entries with approximate MAXLEN trimming by default", async () => {
+  it("adds stream:events entries with approximate MAXLEN trimming by default", async () => {
     const { RedisService } = await import("./redis.service");
     const service = new RedisService();
 
@@ -57,6 +57,32 @@ describe("RedisService", () => {
       "*",
       "type",
       "PRICE",
+    );
+  });
+
+  it("keeps non-events streams untrimmed by default", async () => {
+    const { RedisService } = await import("./redis.service");
+    const service = new RedisService();
+
+    await service.xadd("stream:orders", { type: "ORDER" });
+
+    expect(xadd).toHaveBeenCalledWith("stream:orders", "*", "type", "ORDER");
+  });
+
+  it("allows callers to opt into approximate MAXLEN trimming", async () => {
+    const { RedisService } = await import("./redis.service");
+    const service = new RedisService();
+
+    await service.xadd("stream:orders", { type: "ORDER" }, 500);
+
+    expect(xadd).toHaveBeenCalledWith(
+      "stream:orders",
+      "MAXLEN",
+      "~",
+      500,
+      "*",
+      "type",
+      "ORDER",
     );
   });
 });

@@ -1,11 +1,21 @@
 import { Injectable } from "@nestjs/common";
 import { EventEmitter } from "events";
 
+export const MAX_SSE_SUBSCRIBERS_PER_STRATEGY = 100;
+export const MAX_SSE_SUBSCRIBERS_PER_USER_STRATEGY = 3;
+
 export interface StrategyEventPayload {
   type: string;
   strategyId: string;
   data: unknown;
   timestamp: number;
+}
+
+export class TooManyStrategyEventSubscribersError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "TooManyStrategyEventSubscribersError";
+  }
 }
 
 /**
@@ -18,10 +28,11 @@ export interface StrategyEventPayload {
 @Injectable()
 export class StrategyEventsService {
   private readonly emitter = new EventEmitter();
+  private readonly strategySubscriberCounts = new Map<string, number>();
+  private readonly userStrategySubscriberCounts = new Map<string, number>();
 
   constructor() {
-    // Allow many concurrent SSE subscribers per strategy
-    this.emitter.setMaxListeners(500);
+    this.emitter.setMaxListeners(MAX_SSE_SUBSCRIBERS_PER_STRATEGY + 1);
   }
 
   /** Emit an event for a specific strategy (called from EventsService). */
@@ -41,10 +52,45 @@ export class StrategyEventsService {
    */
   subscribe(
     strategyId: string,
+    userId: string,
     handler: (event: StrategyEventPayload) => void,
   ): () => void {
     const key = `s:${strategyId}`;
+    const userKey = `${userId}:${strategyId}`;
+    const strategyCount = this.strategySubscriberCounts.get(strategyId) ?? 0;
+    const userStrategyCount =
+      this.userStrategySubscriberCounts.get(userKey) ?? 0;
+
+    if (strategyCount >= MAX_SSE_SUBSCRIBERS_PER_STRATEGY) {
+      throw new TooManyStrategyEventSubscribersError(
+        "Too many subscribers for this strategy",
+      );
+    }
+    if (userStrategyCount >= MAX_SSE_SUBSCRIBERS_PER_USER_STRATEGY) {
+      throw new TooManyStrategyEventSubscribersError(
+        "Too many subscribers for this user and strategy",
+      );
+    }
+
+    this.strategySubscriberCounts.set(strategyId, strategyCount + 1);
+    this.userStrategySubscriberCounts.set(userKey, userStrategyCount + 1);
     this.emitter.on(key, handler);
-    return () => this.emitter.off(key, handler);
+    let unsubscribed = false;
+    return () => {
+      if (unsubscribed) return;
+      unsubscribed = true;
+      this.emitter.off(key, handler);
+      this.decrement(this.strategySubscriberCounts, strategyId);
+      this.decrement(this.userStrategySubscriberCounts, userKey);
+    };
+  }
+
+  private decrement(map: Map<string, number>, key: string): void {
+    const next = (map.get(key) ?? 0) - 1;
+    if (next > 0) {
+      map.set(key, next);
+    } else {
+      map.delete(key);
+    }
   }
 }

@@ -12,6 +12,7 @@ const RECONNECT_BASE_MS = 1_000;
 const RECONNECT_MAX_MS = 30_000;
 const RECONNECT_FACTOR = 2;
 const PING_INTERVAL_MS = 5_000;
+const PONG_TIMEOUT_MS = 15_000;
 
 export type RtdsStreamType = "crypto" | "equity" | "comments";
 
@@ -50,6 +51,7 @@ export class PolymarketRtdsWsService implements OnModuleInit, OnModuleDestroy {
   private reconnectDelay = RECONNECT_BASE_MS;
   private reconnectTimer: NodeJS.Timeout | null = null;
   private pingTimer: NodeJS.Timeout | null = null;
+  private pongTimer: NodeJS.Timeout | null = null;
   private destroyed = false;
 
   private readonly subscriptions = new Map<string, RtdsSubscription>();
@@ -117,9 +119,14 @@ export class PolymarketRtdsWsService implements OnModuleInit, OnModuleDestroy {
 
       this.pingTimer = setInterval(() => {
         if (this.ws?.readyState === WebSocket.OPEN) {
+          this.startPongTimeout();
           this.ws.ping();
         }
       }, PING_INTERVAL_MS);
+    });
+
+    this.ws.on("pong", () => {
+      this.clearPongTimeout();
     });
 
     this.ws.on("message", (data: Buffer) => {
@@ -131,7 +138,10 @@ export class PolymarketRtdsWsService implements OnModuleInit, OnModuleDestroy {
       }
 
       const text = data.toString();
-      if (text === "PONG") return;
+      if (text === "PONG") {
+        this.clearPongTimeout();
+        return;
+      }
 
       try {
         const msg = JSON.parse(text);
@@ -151,6 +161,7 @@ export class PolymarketRtdsWsService implements OnModuleInit, OnModuleDestroy {
 
     this.ws.on("error", (err) => {
       this.logger.error("RTDS WebSocket error", err.message);
+      this.ws?.close();
     });
   }
 
@@ -222,6 +233,7 @@ export class PolymarketRtdsWsService implements OnModuleInit, OnModuleDestroy {
   }
 
   private clearTimers() {
+    this.clearPongTimeout();
     if (this.pingTimer) {
       clearInterval(this.pingTimer);
       this.pingTimer = null;
@@ -229,6 +241,23 @@ export class PolymarketRtdsWsService implements OnModuleInit, OnModuleDestroy {
     if (this.reconnectTimer) {
       clearTimeout(this.reconnectTimer);
       this.reconnectTimer = null;
+    }
+  }
+
+  private startPongTimeout(): void {
+    if (this.pongTimer) {
+      return;
+    }
+    this.pongTimer = setTimeout(() => {
+      this.logger.warn("RTDS WebSocket pong timeout; closing stale socket");
+      this.ws?.close();
+    }, PONG_TIMEOUT_MS);
+  }
+
+  private clearPongTimeout(): void {
+    if (this.pongTimer) {
+      clearTimeout(this.pongTimer);
+      this.pongTimer = null;
     }
   }
 }
