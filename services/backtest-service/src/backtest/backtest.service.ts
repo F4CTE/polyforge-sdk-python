@@ -287,6 +287,18 @@ export class BacktestService {
       const existing = positions.get(tokenId);
       if (existing) {
         const totalSize = existing.size + size;
+        if (totalSize <= 0) {
+          positions.delete(tokenId);
+          state.betsToday++;
+          state.totalOrders++;
+          state.lastTradeAt = simulatedAt.getTime();
+          return {
+            side,
+            pnl,
+            equityCurve,
+            simulatedAt,
+          };
+        }
         const avgPrice =
           (existing.avgPrice * existing.size + price * size) / totalSize;
         positions.set(tokenId, { size: totalSize, avgPrice });

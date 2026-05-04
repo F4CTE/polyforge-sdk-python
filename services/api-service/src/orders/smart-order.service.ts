@@ -19,6 +19,7 @@ import {
 } from "@prisma/client";
 import { PrismaService } from "@polyforge/shared-db";
 import { RedisService, runOncePerCluster } from "@polyforge/shared-redis";
+import { safeDecimalToNumber } from "@polyforge/shared-types";
 import {
   PlaceSmartOrderDto,
   SmartOrderTypeDto,
@@ -229,9 +230,29 @@ export class SmartOrderService {
   ) {
     const config = smart.config as Record<string, string | number | null>;
     const intervalMs = parseInt(String(config.intervalMinutes ?? 1)) * 60_000;
-    const sliceSize = parseFloat(String(smart.totalSize)) / smart.slicesTotal;
+    const totalSize = safeDecimalToNumber(smart.totalSize, Number.NaN);
+    if (
+      !Number.isFinite(totalSize) ||
+      totalSize <= 0 ||
+      smart.slicesTotal <= 0
+    ) {
+      await this.prisma.smartOrder.update({
+        where: { id: smart.id },
+        data: { status: SmartOrderStatus.FAILED, completedAt: new Date() },
+      });
+      return;
+    }
+
+    const sliceSize = totalSize / smart.slicesTotal;
+    if (!Number.isFinite(sliceSize) || sliceSize <= 0) {
+      await this.prisma.smartOrder.update({
+        where: { id: smart.id },
+        data: { status: SmartOrderStatus.FAILED, completedAt: new Date() },
+      });
+      return;
+    }
     const limitPrice = config.limitPrice
-      ? parseFloat(String(config.limitPrice))
+      ? safeDecimalToNumber(config.limitPrice, 0)
       : 0;
 
     const intentId = randomUUID();

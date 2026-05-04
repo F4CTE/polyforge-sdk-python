@@ -36,6 +36,9 @@ export * from "./news";
 // Scores & Badges
 export * from "./scores";
 
+// Numeric parsing
+export * from "./numeric";
+
 // Sports
 export * from "./sports";
 

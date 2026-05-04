@@ -66,6 +66,30 @@ describe("StopIfDailyLossBlock", () => {
     );
     expect(res.fired).toBe(false); // -1 > -0 is false
   });
+
+  it("fails closed when maxLossUsdc is NaN", async () => {
+    const ctx = makeCtx({ dailyPnl: -1 });
+    const res = await StopIfDailyLossBlock.evaluate(
+      block("stop_if_daily_loss", { maxLossUsdc: "NaN" }),
+      ctx,
+      makeRedis(),
+      makePrisma(),
+    );
+    expect(res.fired).toBe(false);
+    expect(res.reason).toMatch(/SAFETY STOP/);
+  });
+
+  it("fails closed when dailyPnl is NaN", async () => {
+    const ctx = makeCtx({ dailyPnl: Number.NaN });
+    const res = await StopIfDailyLossBlock.evaluate(
+      block("stop_if_daily_loss", { maxLossUsdc: "10" }),
+      ctx,
+      makeRedis(),
+      makePrisma(),
+    );
+    expect(res.fired).toBe(false);
+    expect(res.reason).toMatch(/SAFETY STOP/);
+  });
 });
 
 describe("StopIfOrdersPerMinBlock", () => {

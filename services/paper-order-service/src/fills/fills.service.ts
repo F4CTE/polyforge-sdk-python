@@ -1,6 +1,7 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { PrismaService } from "@polyforge/shared-db";
 import { RedisService } from "@polyforge/shared-redis";
+import { isFiniteDecimal, safeDecimalToNumber } from "@polyforge/shared-types";
 import {
   OrderSide,
   OrderOutcome,
@@ -48,8 +49,17 @@ export class FillsService {
   ) {}
 
   async simulate(intent: OrderIntent): Promise<void> {
+    if (!isFiniteDecimal(intent.size) || !isFiniteDecimal(intent.price)) {
+      throw new Error("Invalid paper order numeric input");
+    }
+
+    const fillSize = safeDecimalToNumber(intent.size);
+    if (fillSize <= 0) throw new Error("Invalid paper order numeric input");
+
     const fillPrice = await this.resolveFillPrice(intent);
-    const fillSize = parseFloat(intent.size);
+    if (!Number.isFinite(fillPrice) || fillPrice < 0) {
+      throw new Error("Invalid paper order numeric input");
+    }
 
     // 1. Write paper_order record
     const order = await this.prisma.paperOrder.create({
@@ -102,14 +112,14 @@ export class FillsService {
 
   private async resolveFillPrice(intent: OrderIntent): Promise<number> {
     const bookRaw = await this.redis.get(`cache:book:${intent.tokenId}`);
-    const intentPrice = parseFloat(intent.price);
+    const intentPrice = safeDecimalToNumber(intent.price);
 
     if (!bookRaw) {
       // No book data — fall back to current price cache or intent price
       const priceRaw = await this.redis.get(`cache:price:${intent.tokenId}`);
       if (priceRaw) {
         const priceData = JSON.parse(priceRaw) as PriceData;
-        return parseFloat(priceData.price ?? String(intentPrice));
+        return safeDecimalToNumber(priceData.price ?? String(intentPrice));
       }
       return intentPrice;
     }
@@ -120,14 +130,14 @@ export class FillsService {
       // Buying: if best ask is lower than our limit price, fill at best ask (price improvement)
       const bestAsk = book.asks?.[0]?.price;
       if (bestAsk) {
-        const ask = parseFloat(bestAsk);
+        const ask = safeDecimalToNumber(bestAsk, intentPrice);
         return ask < intentPrice ? ask : intentPrice;
       }
     } else {
       // Selling: if best bid is higher than our limit price, fill at best bid (price improvement)
       const bestBid = book.bids?.[0]?.price;
       if (bestBid) {
-        const bid = parseFloat(bestBid);
+        const bid = safeDecimalToNumber(bestBid, intentPrice);
         return bid > intentPrice ? bid : intentPrice;
       }
     }
@@ -167,13 +177,21 @@ export class FillsService {
         },
       });
     } else {
-      const existingSize = parseFloat(String(existing.size));
-      const existingAvg = parseFloat(String(existing.avgPrice));
-      const existingReal = parseFloat(String(existing.realizedPnl));
+      const existingSize = safeDecimalToNumber(existing.size);
+      const existingAvg = safeDecimalToNumber(existing.avgPrice);
+      const existingReal = safeDecimalToNumber(existing.realizedPnl, 0);
 
       if (intent.side === "BUY") {
         // Add to position — weighted average price
         const newSize = existingSize + fillSize;
+        if (newSize <= 0) {
+          await this.prisma.paperPosition.delete({
+            where: {
+              userId_tokenId: { userId: intent.userId, tokenId: intent.tokenId },
+            },
+          });
+          return 0;
+        }
         const newAvg =
           (existingSize * existingAvg + fillSize * fillPrice) / newSize;
         await this.prisma.paperPosition.update({

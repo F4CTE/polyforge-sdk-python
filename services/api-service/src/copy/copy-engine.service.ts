@@ -12,6 +12,7 @@ import {
   OrderSide,
   OrderOutcome,
 } from "@prisma/client";
+import { isFiniteDecimal, safeDecimalToNumber } from "@polyforge/shared-types";
 
 const STREAM = "stream:events";
 const ORDER_STREAM = "stream:orders";
@@ -125,8 +126,16 @@ export class CopyEngineService implements OnModuleInit, OnModuleDestroy {
       `Processing whale trade from ${walletAddress} for ${configs.length} copy config(s)`,
     );
 
-    const sourceSize = parseFloat(event.notional ?? "0");
-    const sourcePrice = parseFloat(event.price ?? "0.5");
+    if (!isFiniteDecimal(event.notional) || !isFiniteDecimal(event.price)) {
+      this.logger.warn(
+        `Skipping whale trade from ${walletAddress}: invalid numeric input`,
+      );
+      return;
+    }
+
+    const sourceSize = safeDecimalToNumber(event.notional);
+    const sourcePrice = safeDecimalToNumber(event.price);
+    if (sourceSize <= 0 || sourcePrice < 0) return;
 
     for (const config of configs) {
       try {
@@ -156,13 +165,21 @@ export class CopyEngineService implements OnModuleInit, OnModuleDestroy {
   ) {
     // 1. Check daily loss limit (H-02: use Redis atomic operations to prevent race condition)
     const notional = sourceSize * sourcePrice;
-    const maxDailyLoss = parseFloat(String(config.maxDailyLoss));
+    if (!Number.isFinite(notional) || notional <= 0) return;
+
+    const maxDailyLoss = safeDecimalToNumber(config.maxDailyLoss, Number.NaN);
+    if (!Number.isFinite(maxDailyLoss) || maxDailyLoss < 0) {
+      this.logger.warn(`Config ${config.id} has invalid daily loss limit`);
+      return;
+    }
+
     const dailyKey = `copy:${config.id}:daily_loss`;
     const client = this.redis.getClient();
     const newLoss = await client.incrbyfloat(dailyKey, notional);
     // Set TTL to expire at end of day (24h) — ensures counter resets daily
     await client.expire(dailyKey, 86400);
-    if (parseFloat(String(newLoss)) > maxDailyLoss) {
+    const newLossAmount = safeDecimalToNumber(newLoss, Number.POSITIVE_INFINITY);
+    if (newLossAmount > maxDailyLoss) {
       // Rollback the increment
       await client.incrbyfloat(dailyKey, -notional);
       this.logger.warn(`Config ${config.id} exceeded daily loss limit`);
@@ -171,7 +188,11 @@ export class CopyEngineService implements OnModuleInit, OnModuleDestroy {
 
     // 2. Check max exposure
     const currentExposure = await this.getCurrentExposure(config.id);
-    const maxExposure = parseFloat(String(config.maxExposure));
+    const maxExposure = safeDecimalToNumber(config.maxExposure, Number.NaN);
+    if (!Number.isFinite(maxExposure) || maxExposure < 0) {
+      this.logger.warn(`Config ${config.id} has invalid max exposure`);
+      return;
+    }
     if (currentExposure >= maxExposure) {
       this.logger.warn(
         `Config ${config.id} at max exposure (${currentExposure} >= ${maxExposure})`,
@@ -182,15 +203,16 @@ export class CopyEngineService implements OnModuleInit, OnModuleDestroy {
     // 3. Calculate copy size based on mode
     const copiedSize = this.calculateCopySize(
       config.mode,
-      parseFloat(String(config.sizeValue)),
+      safeDecimalToNumber(config.sizeValue, Number.NaN),
       sourceSize,
     );
 
-    if (copiedSize <= 0) return;
+    if (!Number.isFinite(copiedSize) || copiedSize <= 0) return;
 
     // 4. Apply price offset
-    const priceOffset = parseFloat(String(config.priceOffset));
+    const priceOffset = safeDecimalToNumber(config.priceOffset, 0);
     const copiedPrice = this.applyPriceOffset(sourcePrice, priceOffset);
+    if (!Number.isFinite(copiedPrice) || copiedPrice < 0) return;
 
     // 5. Create CopyTrade record
     const trade = await this.prisma.copyTrade.create({
@@ -261,6 +283,8 @@ export class CopyEngineService implements OnModuleInit, OnModuleDestroy {
     sizeValue: number,
     sourceSize: number,
   ): number {
+    if (!Number.isFinite(sizeValue) || !Number.isFinite(sourceSize)) return 0;
+
     switch (mode) {
       case "PERCENTAGE":
         return (sizeValue / 100) * sourceSize;
@@ -276,6 +300,9 @@ export class CopyEngineService implements OnModuleInit, OnModuleDestroy {
   // ─── Price Offset ────────────────────────────────────────────────────────────
 
   applyPriceOffset(sourcePrice: number, offsetPercent: number): number {
+    if (!Number.isFinite(sourcePrice) || !Number.isFinite(offsetPercent)) {
+      return Number.NaN;
+    }
     return sourcePrice * (1 + offsetPercent / 100);
   }
 
@@ -284,8 +311,8 @@ export class CopyEngineService implements OnModuleInit, OnModuleDestroy {
   private async getDailyPnl(configId: string): Promise<number> {
     const cached = await this.redis.get(`copy:${configId}:daily_pnl`);
     if (cached) {
-      const parsed = parseFloat(cached);
-      if (!isNaN(parsed)) return parsed;
+      const parsed = safeDecimalToNumber(cached, Number.NaN);
+      if (Number.isFinite(parsed)) return parsed;
     }
 
     // Fallback: calculate from today's trades
@@ -301,7 +328,10 @@ export class CopyEngineService implements OnModuleInit, OnModuleDestroy {
       select: { pnl: true },
     });
 
-    const total = trades.reduce((acc, t) => acc + parseFloat(String(t.pnl)), 0);
+    const total = trades.reduce(
+      (acc, t) => acc + safeDecimalToNumber(t.pnl, 0),
+      0,
+    );
 
     // Cache for 5 minutes
     await this.redis.set(`copy:${configId}:daily_pnl`, total.toString(), 300);
@@ -312,7 +342,7 @@ export class CopyEngineService implements OnModuleInit, OnModuleDestroy {
   private async getCurrentExposure(configId: string): Promise<number> {
     // Check Redis cache first (updated atomically on trade events)
     const cached = await this.redis.get(`copy:${configId}:exposure`);
-    if (cached) return parseFloat(cached);
+    if (cached) return safeDecimalToNumber(cached, 0);
 
     // Fallback: compute from DB and cache
     const pendingTrades = await this.prisma.copyTrade.findMany({
@@ -324,7 +354,7 @@ export class CopyEngineService implements OnModuleInit, OnModuleDestroy {
     });
 
     const total = pendingTrades.reduce(
-      (acc, t) => acc + parseFloat(String(t.copiedSize)),
+      (acc, t) => acc + safeDecimalToNumber(t.copiedSize, 0),
       0,
     );
 

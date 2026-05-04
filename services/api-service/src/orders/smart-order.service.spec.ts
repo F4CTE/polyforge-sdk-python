@@ -611,5 +611,25 @@ describe("SmartOrderService", () => {
         expect.objectContaining({ size: "25.000000" }),
       );
     });
+
+    it("marks invalid zero-slice orders failed without emitting Infinity size", async () => {
+      const smart = makeSmartOrder({
+        totalSize: 100,
+        slicesFilled: 0,
+        slicesTotal: 0,
+        config: { slices: 0, intervalMinutes: 5, limitPrice: null },
+      });
+      db.smartOrder.findMany.mockResolvedValue([smart] as any);
+      db.smartOrder.update.mockResolvedValue({} as any);
+
+      await service.executeSlices();
+
+      expect(redis.xadd).not.toHaveBeenCalled();
+      expect(db.order.create).not.toHaveBeenCalled();
+      expect(db.smartOrder.update).toHaveBeenCalledWith({
+        where: { id: "smart-uuid-1" },
+        data: expect.objectContaining({ status: "FAILED" }),
+      });
+    });
   });
 });

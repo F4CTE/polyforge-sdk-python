@@ -227,6 +227,53 @@ describe("CopyEngineService", () => {
       // Should have emitted failure for first config and attempted second
       expect(redis.xadd).toHaveBeenCalled();
     });
+
+    it("skips invalid whale trade numerics before copying", async () => {
+      const config = {
+        id: "cfg1",
+        userId: "user1",
+        mode: "MIRROR",
+        sizeValue: "0",
+        maxDailyLoss: "10000",
+        maxExposure: "50000",
+        priceOffset: "0",
+      };
+      prisma.copyConfig.findMany.mockResolvedValue([config]);
+
+      await service.handleWhaleTrade({
+        type: "WHALE_TRADE",
+        walletAddress: "0xabc",
+        notional: "NaN",
+        price: "0.5",
+      });
+
+      expect(redis.getClient().incrbyfloat).not.toHaveBeenCalled();
+      expect(prisma.copyTrade.create).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("processCopyForConfig", () => {
+    it("fails closed before Redis incrbyfloat when maxDailyLoss is NaN", async () => {
+      const config = {
+        id: "cfg1",
+        userId: "user1",
+        mode: "MIRROR",
+        sizeValue: "0",
+        maxDailyLoss: "NaN",
+        maxExposure: "50000",
+        priceOffset: "0",
+      };
+
+      await service.processCopyForConfig(
+        config as any,
+        { walletAddress: "0xabc", side: "BUY", outcome: "YES" },
+        100,
+        0.5,
+      );
+
+      expect(redis.getClient().incrbyfloat).not.toHaveBeenCalled();
+      expect(prisma.copyTrade.create).not.toHaveBeenCalled();
+    });
   });
 
   // ── parseFields ──────────────────────────────────────────────────────

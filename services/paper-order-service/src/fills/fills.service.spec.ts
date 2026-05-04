@@ -89,6 +89,15 @@ describe("FillsService", () => {
   // ─── simulate() ──────────────────────────────────────────────────────────
 
   describe("simulate", () => {
+    it("rejects non-finite fill sizes before writing paper order data", async () => {
+      await expect(service.simulate(makeIntent({ size: "" }))).rejects.toThrow(
+        /Invalid paper order numeric input/,
+      );
+
+      expect(prisma.paperOrder.create).not.toHaveBeenCalled();
+      expect(redis.xadd).not.toHaveBeenCalled();
+    });
+
     describe("BUY — new position", () => {
       beforeEach(() => {
         (prisma.paperOrder.create as any).mockResolvedValue(makePaperOrder());
@@ -206,6 +215,18 @@ describe("FillsService", () => {
           "stream:events",
           expect.objectContaining({ type: "PAPER_ORDER_FILLED" }),
         );
+      });
+
+      it("does not write Infinity when an existing position nets to zero size", async () => {
+        (prisma.paperPosition.findUnique as any).mockResolvedValue(
+          makePosition({ size: "-100", avgPrice: "0.60" }),
+        );
+        (prisma.paperPosition.delete as any).mockResolvedValue({});
+
+        await service.simulate(makeIntent({ size: "100", price: "0.80" }));
+
+        expect(prisma.paperPosition.update).not.toHaveBeenCalled();
+        expect(prisma.paperPosition.delete).toHaveBeenCalledOnce();
       });
     });
 

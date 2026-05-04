@@ -258,6 +258,21 @@ describe("OrdersService", () => {
     });
   });
 
+  describe("processIntent() — numeric validation", () => {
+    it("moves invalid numeric intents to the DLQ before signing", async () => {
+      const p = svc.processIntent(makeIntent({ size: "", price: "0.6" }));
+      await vi.runAllTimersAsync();
+      await p;
+
+      expect(prisma.order.create).not.toHaveBeenCalled();
+      expect(signer.signOrder).not.toHaveBeenCalled();
+      expect(redis.xadd).toHaveBeenCalledWith(
+        "stream:orders:dlq",
+        expect.objectContaining({ reason: "INVALID_NUMERIC_ORDER_INTENT" }),
+      );
+    });
+  });
+
   // ── processIntent — retry logic ───────────────────────────────────────────
 
   describe("processIntent() — retry / DLQ", () => {

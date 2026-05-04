@@ -242,6 +242,28 @@ describe("BacktestService — applyFill", () => {
     expect(pos.avgPrice).toBeCloseTo(0.6, 6);
   });
 
+  it("BUY deletes an invalid zero-net position instead of storing Infinity avgPrice", () => {
+    const state = createSimState();
+    const positions = new Map([["tok-a", { size: -10, avgPrice: 0.5 }]]);
+
+    svc.applyFill(
+      {
+        side: "BUY",
+        outcome: "YES",
+        size: 10,
+        price: 0.5,
+        tokenId: "tok-a",
+        type: "buy_yes",
+      },
+      positions,
+      state,
+      0,
+      new Date(),
+    );
+
+    expect(positions.has("tok-a")).toBe(false);
+  });
+
   it("SELL computes realized PnL = (price - avgPrice) * size", () => {
     const state = createSimState();
     const positions = new Map([["tok-a", { size: 10, avgPrice: 0.5 }]]);

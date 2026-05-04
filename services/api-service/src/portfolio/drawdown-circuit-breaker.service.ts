@@ -3,6 +3,7 @@ import { Interval } from "@nestjs/schedule";
 import { PrismaService } from "@polyforge/shared-db";
 import { RedisService, runOncePerCluster } from "@polyforge/shared-redis";
 import { StrategyStatus } from ".prisma/client";
+import { safeDecimalToNumber } from "@polyforge/shared-types";
 
 const DEBOUNCE_KEY = (userId: string) => `cb:tripped:${userId}`;
 const STREAM = "stream:events";
@@ -61,7 +62,10 @@ export class DrawdownCircuitBreakerService {
     drawdownThresholdPct: unknown;
   }): Promise<void> {
     const { userId, drawdownLookbackHours } = limit;
-    const thresholdPct = parseFloat(String(limit.drawdownThresholdPct));
+    const thresholdPct = Math.max(
+      0,
+      safeDecimalToNumber(limit.drawdownThresholdPct, 0),
+    );
 
     // Find the most recent PnL snapshot that falls at or before the lookback start
     const lookbackStart = new Date(
@@ -99,20 +103,35 @@ export class DrawdownCircuitBreakerService {
 
     if (latestPortfolio.length === 0) return;
 
-    const latestPnl = parseFloat(latestPortfolio[0].pnl ?? "0");
+    const latestPnl =
+      latestPortfolio[0].pnl == null
+        ? 0
+        : safeDecimalToNumber(latestPortfolio[0].pnl, Number.NaN);
     const baselinePnl =
-      snapshots.length > 0 ? parseFloat(snapshots[0].pnl ?? "0") : 0;
+      snapshots.length > 0
+        ? snapshots[0].pnl == null
+          ? 0
+          : safeDecimalToNumber(snapshots[0].pnl, Number.NaN)
+        : 0;
+    const invalidPnl =
+      !Number.isFinite(latestPnl) ||
+      (snapshots.length > 0 && !Number.isFinite(baselinePnl));
 
     // If no meaningful baseline, skip
-    if (baselinePnl === 0) return;
+    if (!invalidPnl && baselinePnl === 0) return;
 
-    const drawdownPct = (baselinePnl - latestPnl) / Math.abs(baselinePnl);
+    const drawdownPct = invalidPnl
+      ? Number.POSITIVE_INFINITY
+      : (baselinePnl - latestPnl) / Math.abs(baselinePnl);
 
     if (drawdownPct < thresholdPct) return;
+    const drawdownPctText = Number.isFinite(drawdownPct)
+      ? (drawdownPct * 100).toFixed(2)
+      : "invalid";
 
     // Threshold breached — trip the breaker
     this.logger.warn(
-      `Circuit breaker tripped for ${userId}: drawdown=${(drawdownPct * 100).toFixed(2)}% (threshold=${(thresholdPct * 100).toFixed(2)}%)`,
+      `Circuit breaker tripped for ${userId}: drawdown=${drawdownPctText}% (threshold=${(thresholdPct * 100).toFixed(2)}%)`,
     );
 
     // Deduplicate — skip if already fired in this interval via Redis
@@ -144,7 +163,7 @@ export class DrawdownCircuitBreakerService {
       await this.redis.xadd(STREAM, {
         type: "CIRCUIT_BREAKER_TRIGGERED",
         userId,
-        drawdownPct: (drawdownPct * 100).toFixed(2),
+        drawdownPct: drawdownPctText,
         thresholdPct: (thresholdPct * 100).toFixed(2),
         strategiesPaused: String(pausedCount.count),
         lookbackHours: String(limit.drawdownLookbackHours),

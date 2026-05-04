@@ -260,5 +260,30 @@ describe("DrawdownCircuitBreakerService", () => {
       // baselinePnl = 0 -> skip
       expect(prisma.strategy.updateMany).not.toHaveBeenCalled();
     });
+
+    it("trips breaker when latest PnL is NaN instead of bypassing threshold", async () => {
+      prisma.$queryRaw
+        .mockResolvedValueOnce([]) // _result
+        .mockResolvedValueOnce([{ pnl: "1000" }])
+        .mockResolvedValueOnce([{ pnl: "NaN" }]);
+
+      redis.get.mockResolvedValue(null);
+
+      await (svc as any).checkUser({
+        userId: "user-1",
+        drawdownLookbackHours: 24,
+        drawdownThresholdPct: "0.10",
+      });
+
+      expect(prisma.strategy.updateMany).toHaveBeenCalled();
+      expect(prisma.userLimit.update).toHaveBeenCalledWith({
+        where: { userId: "user-1" },
+        data: expect.objectContaining({ circuitBreakerTripped: true }),
+      });
+      expect(redis.xadd).toHaveBeenCalledWith(
+        "stream:events",
+        expect.objectContaining({ drawdownPct: "invalid" }),
+      );
+    });
   });
 });
