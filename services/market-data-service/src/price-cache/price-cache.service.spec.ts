@@ -196,6 +196,23 @@ describe("PriceCacheService", () => {
   // ── Snapshot flushing ─────────────────────────────────────────────────────
 
   describe("flushSnapshots()", () => {
+    it("flushes a high-throughput snapshot batch after 1 second", async () => {
+      for (let i = 0; i < 250; i += 1) {
+        await svc.handlePriceUpdate({
+          tokenId: `token-${i}`,
+          price: 0.5,
+          timestamp: i,
+        });
+      }
+
+      await vi.advanceTimersByTimeAsync(1_000);
+
+      expect(prisma.priceSnapshot.createMany).toHaveBeenCalledTimes(1);
+      expect(
+        prisma.priceSnapshot.createMany.mock.calls[0][0].data,
+      ).toHaveLength(250);
+    });
+
     it("does nothing when buffer is empty", () => {
       // Advance past flush interval with no data
       vi.advanceTimersByTime(5_500);
@@ -232,6 +249,18 @@ describe("PriceCacheService", () => {
 
       // Should not throw
       expect(() => vi.advanceTimersByTime(5_500)).not.toThrow();
+    });
+  });
+
+  // ── Lifecycle cleanup ────────────────────────────────────────────────────
+
+  describe("onModuleDestroy()", () => {
+    it("clears all owned timers", async () => {
+      const clearIntervalSpy = vi.spyOn(globalThis, "clearInterval");
+
+      svc.onModuleDestroy();
+
+      expect(clearIntervalSpy).toHaveBeenCalledTimes(3);
     });
   });
 

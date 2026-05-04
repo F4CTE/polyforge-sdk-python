@@ -5,6 +5,7 @@ import {
   UnprocessableEntityException,
   Logger,
   OnModuleInit,
+  OnModuleDestroy,
 } from "@nestjs/common";
 import { PrismaService } from "@polyforge/shared-db";
 import { RedisService } from "@polyforge/shared-redis";
@@ -14,7 +15,7 @@ import { CreateAlertDto } from "./dto/create-alert.dto";
 const MAX_ALERTS = 50;
 
 @Injectable()
-export class AlertsService implements OnModuleInit {
+export class AlertsService implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(AlertsService.name);
   private checkInterval: ReturnType<typeof setInterval> | null = null;
 
@@ -31,6 +32,13 @@ export class AlertsService implements OnModuleInit {
         this.logger.error("checkAndFireAlerts error", err);
       });
     }, 15_000);
+  }
+
+  onModuleDestroy() {
+    if (this.checkInterval) {
+      clearInterval(this.checkInterval);
+      this.checkInterval = null;
+    }
   }
 
   /** Check all untriggered alerts against current Redis prices */

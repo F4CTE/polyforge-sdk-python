@@ -1,4 +1,4 @@
-import { Injectable, Logger } from "@nestjs/common";
+import { Injectable, Logger, OnModuleDestroy } from "@nestjs/common";
 import { OnEvent } from "@nestjs/event-emitter";
 import { PrismaService } from "@polyforge/shared-db";
 import { RedisService } from "@polyforge/shared-redis";
@@ -12,9 +12,9 @@ const BOOK_TTL = 5; // seconds
 const TA_PRICE_TTL = 86_400; // 24h
 const TA_MAX_WINDOW = 250;
 
-// Batch price snapshots to TimescaleDB — flush every 5 seconds
-const SNAPSHOT_FLUSH_MS = 5_000;
-const SNAPSHOT_BATCH_SIZE = 200;
+// Batch price snapshots to TimescaleDB at production tick volume.
+const SNAPSHOT_FLUSH_MS = 1_000;
+const SNAPSHOT_BATCH_SIZE = 5_000;
 
 interface PendingSnapshot {
   tokenId: string;
@@ -27,7 +27,7 @@ interface PendingSnapshot {
 }
 
 @Injectable()
-export class PriceCacheService {
+export class PriceCacheService implements OnModuleDestroy {
   private readonly logger = new Logger(PriceCacheService.name);
 
   // Buffer for batching TimescaleDB writes
@@ -41,6 +41,7 @@ export class PriceCacheService {
   // Data gap detection: tracks last update per tokenId
   private readonly lastUpdateMs = new Map<string, number>();
   private readonly GAP_THRESHOLD_MS = 30_000; // 30s without update = gap
+  private gapDetectionTimer: NodeJS.Timeout | null = null;
 
   constructor(
     private readonly redis: RedisService,
@@ -124,6 +125,21 @@ export class PriceCacheService {
     );
   }
 
+  onModuleDestroy() {
+    if (this.flushTimer) {
+      clearInterval(this.flushTimer);
+      this.flushTimer = null;
+    }
+    if (this.priceFlushTimer) {
+      clearInterval(this.priceFlushTimer);
+      this.priceFlushTimer = null;
+    }
+    if (this.gapDetectionTimer) {
+      clearInterval(this.gapDetectionTimer);
+      this.gapDetectionTimer = null;
+    }
+  }
+
   /** Batch-flush buffered token prices to DB every 5s instead of per-tick */
   private async flushPriceUpdates() {
     if (this.priceUpdateBuffer.size === 0) return;
@@ -178,7 +194,7 @@ export class PriceCacheService {
   // ─── Data gap detection ───────────────────────────────────────────────────
 
   private startGapDetection() {
-    setInterval(() => void this.detectGaps(), 15_000);
+    this.gapDetectionTimer = setInterval(() => void this.detectGaps(), 15_000);
   }
 
   private async detectGaps() {

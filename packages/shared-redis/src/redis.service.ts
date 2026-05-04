@@ -1,6 +1,14 @@
 import { Injectable, OnModuleDestroy, Logger } from "@nestjs/common";
 import Redis from "ioredis";
 
+const DEFAULT_STREAM_MAXLEN = 100_000;
+
+function parsePositiveInteger(value: string | undefined): number | null {
+  if (!value) return null;
+  const parsed = Number.parseInt(value, 10);
+  return Number.isSafeInteger(parsed) && parsed > 0 ? parsed : null;
+}
+
 @Injectable()
 export class RedisService implements OnModuleDestroy {
   private readonly logger = new Logger(RedisService.name);
@@ -112,7 +120,20 @@ export class RedisService implements OnModuleDestroy {
     for (const [key, value] of Object.entries(fields)) {
       args.push(key, value);
     }
-    return this.client.xadd(stream, "*", ...args) as Promise<string>;
+    const maxLen =
+      stream === "stream:events"
+        ? (parsePositiveInteger(process.env.REDIS_STREAM_EVENTS_MAXLEN) ??
+          DEFAULT_STREAM_MAXLEN)
+        : DEFAULT_STREAM_MAXLEN;
+
+    return this.client.xadd(
+      stream,
+      "MAXLEN",
+      "~",
+      maxLen,
+      "*",
+      ...args,
+    ) as Promise<string>;
   }
 
   async xread(

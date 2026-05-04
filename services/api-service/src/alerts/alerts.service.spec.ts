@@ -45,6 +45,7 @@ describe("AlertsService", () => {
   });
 
   afterEach(() => {
+    vi.useRealTimers();
     vi.restoreAllMocks();
   });
 
@@ -512,6 +513,18 @@ describe("AlertsService", () => {
       expect(() => svc.onModuleInit()).not.toThrow();
 
       vi.useRealTimers();
+    });
+  });
+
+  describe("onModuleDestroy", () => {
+    it("clears the periodic alert check interval", () => {
+      vi.useFakeTimers();
+      const clearIntervalSpy = vi.spyOn(globalThis, "clearInterval");
+
+      service.onModuleInit();
+      service.onModuleDestroy();
+
+      expect(clearIntervalSpy).toHaveBeenCalledTimes(1);
     });
   });
 });
