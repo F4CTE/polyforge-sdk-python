@@ -10,6 +10,7 @@ import { wsManager, type WsMessage } from '../../lib/websocket';
 import { useBuilderStore } from '../../stores/builder-store';
 import { useExecutionStore } from '../../stores/execution-store';
 import { StrategyChartGrid } from '../charts/strategy-chart-grid';
+import { ConfirmDialog } from '../ui/confirm-dialog';
 
 /* ─── Types ──────────────────────────────────────────────────────────── */
 
@@ -99,6 +100,7 @@ export function ExecutionPanel({ strategyId, expanded, onToggle, activeTab, onTa
 
   // ─── Live state ────────────────────────────────────────────────────
   const [live, setLive] = useState<LiveState>(INITIAL_LIVE);
+  const [pendingStartLiveMode, setPendingStartLiveMode] = useState<'LIVE' | null>(null);
 
   // ─── Sync execution state to global store (for block highlights) ───
   const setExecBtRunning = useExecutionStore((s) => s.setBacktestRunning);
@@ -377,6 +379,20 @@ export function ExecutionPanel({ strategyId, expanded, onToggle, activeTab, onTa
     }
   }, [strategyId, marketBindings]);
 
+  const openStartLiveConfirmation = useCallback((mode: 'PAPER' | 'LIVE') => {
+    if (mode === 'LIVE') {
+      setPendingStartLiveMode('LIVE');
+      return;
+    }
+    void startLive(mode);
+  }, [startLive]);
+
+  const confirmStartLive = useCallback(async () => {
+    if (!pendingStartLiveMode) return;
+    await startLive(pendingStartLiveMode);
+    setPendingStartLiveMode(null);
+  }, [pendingStartLiveMode, startLive]);
+
   const stopLive = useCallback(async () => {
     if (!strategyId) return;
     setLive(prev => ({ ...prev, status: 'STOPPING' }));
@@ -501,7 +517,7 @@ export function ExecutionPanel({ strategyId, expanded, onToggle, activeTab, onTa
             <LiveTab
               live={live}
               strategyId={strategyId}
-              onStart={startLive}
+              onStart={openStartLiveConfirmation}
               onStop={stopLive}
               onPause={pauseLive}
               onResume={resumeLive}
@@ -517,6 +533,31 @@ export function ExecutionPanel({ strategyId, expanded, onToggle, activeTab, onTa
           )}
         </div>
       )}
+
+      <ConfirmDialog
+        open={pendingStartLiveMode === 'LIVE'}
+        title="Start live strategy?"
+        description="This starts live strategy execution and may place real orders on Polymarket using the current market bindings."
+        confirmLabel="Start live strategy"
+        tone="danger"
+        delayMs={2000}
+        isLoading={live.status === 'STARTING'}
+        onConfirm={confirmStartLive}
+        onCancel={() => setPendingStartLiveMode(null)}
+      >
+        <div className="space-y-2 rounded-sm border border-subtle bg-surface px-3 py-2 text-body-sm">
+          <div className="flex items-center justify-between gap-3">
+            <span className="text-secondary">Execution mode</span>
+            <span className="font-semibold text-loss">LIVE</span>
+          </div>
+          <div className="flex items-center justify-between gap-3">
+            <span className="text-secondary">Market bindings</span>
+            <span className="font-mono text-primary">
+              {Object.values(marketBindings).filter(Boolean).length} active
+            </span>
+          </div>
+        </div>
+      </ConfirmDialog>
     </div>
   );
 }

@@ -55,4 +55,19 @@ describe('trading safety confirmations', () => {
     expect(src).not.toContain('onClick={() => cancelOrder(order.id)}');
     expect(src).not.toContain('onClick={() => cancelConditional(co.id)}');
   });
+
+  it('gates live strategy execution behind the shared delayed danger confirmation', () => {
+    const file = 'apps/user-app/src/components/builder/execution-panel.tsx';
+    const src = source(file);
+
+    expect(src).toContain("import { ConfirmDialog } from '../ui/confirm-dialog';");
+    expect(src).toContain('openStartLiveConfirmation');
+    expect(src).toContain("setPendingStartLiveMode('LIVE')");
+    expect(src).toContain('onStart={openStartLiveConfirmation}');
+    expect(src).toContain('title="Start live strategy?"');
+    expect(src).toContain('confirmLabel="Start live strategy"');
+    expect(src).toContain('delayMs={2000}');
+    expect(src).toContain('tone="danger"');
+    expect(src).not.toContain('onStart={startLive}');
+  });
 });
