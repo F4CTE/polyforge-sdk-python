@@ -405,8 +405,8 @@ importers:
   packages/shared-posthog:
     dependencies:
       posthog-node:
-        specifier: ^5.32.1
-        version: 5.32.1(rxjs@7.8.2)
+        specifier: ^5.33.2
+        version: 5.33.2(rxjs@7.8.2)
     devDependencies:
       '@nestjs/common':
         specifier: ^11.1.19
@@ -3634,8 +3634,14 @@ packages:
   '@posthog/core@1.28.0':
     resolution: {integrity: sha512-753giUMWuk602UtS101tDZuNcwiKkr+3UEhLgfOwHAk2W32n53knOxAjyWT0JwMq5/+0uSQ2y4uaZXQAxwvBSw==}
 
+  '@posthog/core@1.28.2':
+    resolution: {integrity: sha512-Dii3pxDheG1WioztvV/MqHQMnb16jSFrl2HkDR1T5yf5/R7lPqJCFYt+eXkEdp/oAv/PD+1joyG6Ap/2quFmtQ==}
+
   '@posthog/types@1.372.6':
     resolution: {integrity: sha512-sqI36LBvuo8xcYsXIlVa0q3IXJJjqtatM2LrXlyOM7kgHrldBwS4ldzaTXrTdpe/TiIl1b4ZHxtSHMzPig+DnQ==}
+
+  '@posthog/types@1.372.8':
+    resolution: {integrity: sha512-ALpfCnWsMSM9Cw/6kyLPVpd81ZReEdZwmDxOi+DTJuIo7wDxBiu2cAsjOuA6D/AL22v7HOJrHsmBAPAWqS5X7Q==}
 
   '@prisma/adapter-pg@7.8.0':
     resolution: {integrity: sha512-ygb3UkerK3v8MDpXVgCISdRNDozpxh6+JVJgiIGbSr5KBgz10LLf5ejUskPGoXlsIjxsOu6nuy1JVQr2EKGSlg==}
@@ -6639,8 +6645,8 @@ packages:
   posthog-js@1.372.6:
     resolution: {integrity: sha512-+Fy9fwWni5WDKQXiUBIzFvdmnZSR6OBxGC/4wj09JvvK5JE4dhI9ZlKO1+b887PowjeAx0sx1Tf+S1eAjDvzqg==}
 
-  posthog-node@5.32.1:
-    resolution: {integrity: sha512-xO9ux41jZS1ZlXSGsQGzFVLtLkHbg7ss8+F9nWAtaliu+MFhR4J3FYOor688GNvuYwY8WNNdJjp9ASP7dDJk7w==}
+  posthog-node@5.33.2:
+    resolution: {integrity: sha512-QZOT2uoEue4BGh/mrBUc7zfddtuLgCU7tTmW0MH8sTr8iK6argv82M7pQbJP/ENsiRYZa/ojpOIjTM9vO1xa6Q==}
     engines: {node: ^20.20.0 || >=22.22.0}
     peerDependencies:
       rxjs: ^7.0.0
@@ -9497,7 +9503,13 @@ snapshots:
     dependencies:
       '@posthog/types': 1.372.6
 
+  '@posthog/core@1.28.2':
+    dependencies:
+      '@posthog/types': 1.372.8
+
   '@posthog/types@1.372.6': {}
+
+  '@posthog/types@1.372.8': {}
 
   '@prisma/adapter-pg@7.8.0':
     dependencies:
@@ -12512,9 +12524,9 @@ snapshots:
       query-selector-shadow-dom: 1.0.1
       web-vitals: 5.2.0
 
-  posthog-node@5.32.1(rxjs@7.8.2):
+  posthog-node@5.33.2(rxjs@7.8.2):
     dependencies:
-      '@posthog/core': 1.28.0
+      '@posthog/core': 1.28.2
     optionalDependencies:
       rxjs: 7.8.2
 
