@@ -11,6 +11,7 @@ function validEnv(overrides: Record<string, string | undefined> = {}) {
     REDIS_URL: "redis://localhost:6379",
     MASTER_ENCRYPTION_KEY: "b".repeat(64),
     CLOB_API_URL: "https://clob.polymarket.com",
+    POLYGON_RPC_URL: "https://polygon-rpc.com",
     POLY_BUILDER_API_KEY: "test-api-key",
     POLY_BUILDER_SECRET: "test-secret-value",
     POLY_BUILDER_PASSPHRASE: "test-passphrase",

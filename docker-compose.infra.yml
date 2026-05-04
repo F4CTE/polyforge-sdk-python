@@ -210,6 +210,7 @@ services:
       POLY_BUILDER_PASSPHRASE: ${POLY_BUILDER_PASSPHRASE:?POLY_BUILDER_PASSPHRASE is required}
       POLYMARKET_BUILDER_CODE: ${POLYMARKET_BUILDER_CODE:-}
       CHAIN_ID: ${CHAIN_ID:-137}
+      POLYGON_RPC_URL: ${POLYGON_RPC_URL:?POLYGON_RPC_URL is required}
       GAS_SPONSOR_PRIVATE_KEY: ${GAS_SPONSOR_PRIVATE_KEY:-}
       GAS_SPONSOR_ENABLED: ${GAS_SPONSOR_ENABLED:-false}
       GAS_DAILY_LIMIT_MATIC: ${GAS_DAILY_LIMIT_MATIC:-0.5}
@@ -365,6 +366,8 @@ services:
       MAILHOG_PORT: ${MAILHOG_PORT:-1025}
       AWS_SES_REGION: ${AWS_SES_REGION:-us-east-1}
       AWS_SES_FROM_EMAIL: noreply@polyforge.app
+      AWS_SES_SMTP_USER: ${AWS_SES_SMTP_USER:-}
+      AWS_SES_SMTP_PASSWORD: ${AWS_SES_SMTP_PASSWORD:-}
       # NOTE: Production should use Docker secrets or an external secret manager
       # (e.g. Vault, AWS Secrets Manager) instead of plain environment variables
       # for bot tokens and other sensitive credentials.
@@ -403,7 +406,7 @@ services:
       DISCORD_BOT_TOKEN: ${DISCORD_BOT_TOKEN:-dev-disabled}
       WHATSAPP_TOKEN: ${WHATSAPP_TOKEN:-dev-disabled}
       WHATSAPP_PHONE_ID: ${WHATSAPP_PHONE_ID:-}
-      WHATSAPP_VERIFY_TOKEN: ${WHATSAPP_VERIFY_TOKEN:-polyforge-verify}
+      WHATSAPP_VERIFY_TOKEN: ${WHATSAPP_VERIFY_TOKEN:-}
       WHATSAPP_APP_SECRET: ${WHATSAPP_APP_SECRET:-}
       API_SERVICE_URL: http://api-service:3002
       PORT: "3011"
@@ -437,6 +440,9 @@ services:
       MAILHOG_HOST: ${MAILHOG_HOST:-mailhog}
       MAILHOG_PORT: ${MAILHOG_PORT:-1025}
       AWS_SES_REGION: ${AWS_SES_REGION:-us-east-1}
+      AWS_SES_FROM_EMAIL: ${AWS_SES_FROM_EMAIL:-noreply@polyforge.app}
+      AWS_SES_SMTP_USER: ${AWS_SES_SMTP_USER:-}
+      AWS_SES_SMTP_PASSWORD: ${AWS_SES_SMTP_PASSWORD:-}
       FRONTEND_URL: ${FRONTEND_URL:-http://localhost}
       ADMIN_CORS_ORIGINS: ${ADMIN_CORS_ORIGINS:-https://localhost:8443,https://polyforge-lab:8443}
       SENTRY_DSN: ${SENTRY_DSN:-}
@@ -477,6 +483,9 @@ services:
       MAILHOG_HOST: ${MAILHOG_HOST:-mailhog}
       MAILHOG_PORT: ${MAILHOG_PORT:-1025}
       AWS_SES_REGION: ${AWS_SES_REGION:-us-east-1}
+      AWS_SES_FROM_EMAIL: ${AWS_SES_FROM_EMAIL:-noreply@polyforge.app}
+      AWS_SES_SMTP_USER: ${AWS_SES_SMTP_USER:-}
+      AWS_SES_SMTP_PASSWORD: ${AWS_SES_SMTP_PASSWORD:-}
       FRONTEND_URL: ${FRONTEND_URL:-http://localhost}
       INVITE_ONLY: ${INVITE_ONLY:-false}
       COOKIE_SECURE: ${COOKIE_SECURE:-false}

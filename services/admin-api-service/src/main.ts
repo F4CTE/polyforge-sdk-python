@@ -19,7 +19,10 @@ import etag from "@fastify/etag";
 import helmet from "@fastify/helmet";
 import { AppModule } from "./app.module";
 import { GlobalExceptionFilter } from "./common/filters/http-exception.filter";
-import { rejectPlaceholderSecrets } from "@polyforge/shared-auth";
+import {
+  rejectPlaceholderSecrets,
+  validateSesSmtpConfig,
+} from "@polyforge/shared-auth";
 import { PrismaAdminService } from "@polyforge/shared-db";
 
 const REQUIRED_ENV = [
@@ -54,6 +57,7 @@ function validateEnv() {
     "ADMIN_JWT_SECRET",
     "INTERNAL_JWT_SECRET",
   ]);
+  validateSesSmtpConfig("admin-api-service");
 }
 
 async function bootstrap() {

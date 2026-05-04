@@ -13,7 +13,7 @@ import { AppModule } from "./app.module";
 
 const PORT = parseInt(process.env.PORT ?? "3009", 10);
 
-const REQUIRED_ENV = ["DATABASE_URL", "REDIS_URL"];
+const REQUIRED_ENV = ["DATABASE_URL", "REDIS_URL", "INTERNAL_JWT_SECRET"];
 
 function validateEnv() {
   const missing = REQUIRED_ENV.filter((k) => !process.env[k]);

@@ -8,12 +8,15 @@ import {
 } from "@nestjs/platform-fastify";
 import { Logger } from "nestjs-pino";
 import helmet from "@fastify/helmet";
-import { rejectPlaceholderSecrets } from "@polyforge/shared-auth";
+import {
+  rejectPlaceholderSecrets,
+  validateSesSmtpConfig,
+} from "@polyforge/shared-auth";
 import { AppModule } from "./app.module";
 
 const PORT = parseInt(process.env.PORT ?? "3010", 10);
 
-const REQUIRED_ENV = ["DATABASE_URL", "REDIS_URL"];
+const REQUIRED_ENV = ["DATABASE_URL", "REDIS_URL", "INTERNAL_JWT_SECRET"];
 
 function validateEnv() {
   const missing = REQUIRED_ENV.filter((k) => !process.env[k]);
@@ -25,6 +28,7 @@ function validateEnv() {
   }
 
   rejectPlaceholderSecrets("notification-service", ["INTERNAL_JWT_SECRET"]);
+  validateSesSmtpConfig("notification-service");
 }
 
 async function bootstrap() {

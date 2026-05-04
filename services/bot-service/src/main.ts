@@ -42,6 +42,12 @@ function validateEnv() {
     );
     process.exit(1);
   }
+  if (whatsappEnabled && !process.env.WHATSAPP_VERIFY_TOKEN) {
+    process.stderr.write(
+      "[bot-service] WHATSAPP_VERIFY_TOKEN is required when WhatsApp integration is enabled (WHATSAPP_TOKEN is set)\n",
+    );
+    process.exit(1);
+  }
 }
 
 async function bootstrap() {

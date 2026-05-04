@@ -14,7 +14,7 @@ import { GlobalExceptionFilter } from "./common/filters/http-exception.filter";
 const PORT = parseInt(process.env.PORT ?? "3006", 10);
 const logger = new Logger("Bootstrap");
 
-const REQUIRED_ENV = ["INTERNAL_JWT_SECRET"];
+const REQUIRED_ENV = ["DATABASE_URL", "REDIS_URL", "INTERNAL_JWT_SECRET"];
 
 function validateEnv() {
   const missing = REQUIRED_ENV.filter((k) => !process.env[k]);

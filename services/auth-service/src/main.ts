@@ -17,6 +17,7 @@ import {
   rejectPlaceholderSecrets,
   rejectInsecureCookies,
   validateInternalJwtConfig,
+  validateSesSmtpConfig,
 } from '@polyforge/shared-auth';
 
 const REQUIRED_ENV = [
@@ -72,6 +73,7 @@ function validateEnv() {
     'TOTP_ENCRYPTION_KEY',
   ]);
 
+  validateSesSmtpConfig('auth-service');
   rejectInsecureCookies('auth-service');
   validateInternalJwtConfig('auth-service');
 }
