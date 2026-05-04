@@ -318,11 +318,13 @@ REDIS_URL=rediss://:<redis-password>@<elasticache-endpoint>:6379
 GAMMA_API_URL=https://gamma-api.polymarket.com
 CLOB_API_URL=https://clob.polymarket.com
 CLOB_WS_URL=wss://ws-subscriptions-clob.polymarket.com/ws/market
-DATA_API_URL=https://data-api.polymarket.com
+POLYMARKET_DATA_API_URL=https://data-api.polymarket.com
 
 EMAIL_DRIVER=ses
 AWS_SES_REGION=us-east-1
 AWS_SES_FROM_EMAIL=noreply@polyforge.app
+AWS_SES_SMTP_USER=<ses-smtp-user>
+AWS_SES_SMTP_PASSWORD=<ses-smtp-password>
 
 FRONTEND_URL=https://polyforge.app
 ADMIN_URL=https://admin.polyforge.app

@@ -98,6 +98,7 @@ cat >> "$OUTPUT_FILE" << 'EOF'
 CHAIN_ID=137
 EMAIL_DRIVER=ses
 AWS_SES_FROM_EMAIL=noreply@polyforge.app
+# AWS_SES_REGION, AWS_SES_SMTP_USER, and AWS_SES_SMTP_PASSWORD are fetched from polyforge/prod/app.
 FRONTEND_URL=https://polyforge.app
 ADMIN_URL=https://admin.polyforge.app
 CORS_ORIGINS=https://polyforge.app
@@ -107,7 +108,7 @@ ADMIN_CORS_ORIGINS=https://admin.polyforge.app
 GAMMA_API_URL=https://gamma-api.polymarket.com
 CLOB_API_URL=https://clob.polymarket.com
 CLOB_WS_URL=wss://ws-subscriptions-clob.polymarket.com
-DATA_API_URL=https://data-api.polymarket.com
+POLYMARKET_DATA_API_URL=https://data-api.polymarket.com
 
 # ── PgBouncer connection strings (services connect through pgbouncer on internal network) ──
 # DATABASE_URL uses pgbouncer — overrides the direct RDS URL from Secrets Manager
@@ -171,6 +172,8 @@ log "Done."
 #   "GEO_BLOCKED_COUNTRIES":     "US,AU,BE,BY,BI,CF,CG,CU,DE,ET,FR,GB,IR,IQ,IT,KP,LB,LY,MM,NI,NL,RU,SO,SS,SD,SY,VE,YE,ZW,UM",
 #   "GEO_CLOSE_ONLY_COUNTRIES":  "PL,SG,TH,TW",
 #   "AWS_SES_REGION":            "us-east-1",
+#   "AWS_SES_SMTP_USER":         "<SES SMTP user>",
+#   "AWS_SES_SMTP_PASSWORD":     "<SES SMTP password>",
 #   "ECR_REGISTRY":              "<account-id>.dkr.ecr.us-east-1.amazonaws.com"
 # }
 #

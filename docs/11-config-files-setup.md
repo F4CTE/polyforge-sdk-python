@@ -183,6 +183,8 @@ MAILHOG_HOST=mailhog
 MAILHOG_PORT=1025
 AWS_SES_REGION=us-east-1
 AWS_SES_FROM_EMAIL=noreply@polyforge.app
+AWS_SES_SMTP_USER=
+AWS_SES_SMTP_PASSWORD=
 
 # ─────────────────────────────────────────────────────────────
 # POLYMARKET APIs
@@ -190,7 +192,7 @@ AWS_SES_FROM_EMAIL=noreply@polyforge.app
 GAMMA_API_URL=https://gamma-api.polymarket.com
 CLOB_API_URL=https://clob.polymarket.com
 CLOB_WS_URL=wss://ws-subscriptions-clob.polymarket.com/ws/market
-DATA_API_URL=https://data-api.polymarket.com
+POLYMARKET_DATA_API_URL=https://data-api.polymarket.com
 
 # ─────────────────────────────────────────────────────────────
 # POLYMARKET BUILDER PROGRAM
