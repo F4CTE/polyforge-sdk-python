@@ -44,12 +44,12 @@ export class OrdersPage {
         this.conditionalTab = page.locator('[role="tab"]', { hasText: 'Conditional' });
 
         this.statusFilter = {
-            All: page.locator('button', { hasText: 'All' }),
-            Confirmed: page.locator('button', { hasText: 'Confirmed' }),
-            Live: page.locator('button', { hasText: 'Live' }),
-            Pending: page.locator('button', { hasText: 'Pending' }),
-            Cancelled: page.locator('button', { hasText: 'Cancelled' }),
-            Failed: page.locator('button', { hasText: 'Failed' }),
+            All: page.getByRole('button', { name: 'All', exact: true }),
+            Confirmed: page.getByRole('button', { name: 'Confirmed', exact: true }),
+            Live: page.getByRole('button', { name: 'Live', exact: true }),
+            Pending: page.getByRole('button', { name: 'Pending', exact: true }),
+            Cancelled: page.getByRole('button', { name: 'Cancelled', exact: true }),
+            Failed: page.getByRole('button', { name: 'Failed', exact: true }),
         };
 
         this.newConditionalButton = page.locator('button', { hasText: 'New Conditional' });
