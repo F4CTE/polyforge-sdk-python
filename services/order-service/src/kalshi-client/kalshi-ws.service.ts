@@ -1,7 +1,10 @@
 import { Injectable, OnModuleDestroy, OnModuleInit } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { EventEmitter2 } from "@nestjs/event-emitter";
-import { BaseVenueWsService } from "@polyforge/shared-types";
+import {
+  BaseVenueWsService,
+  parseFiniteDecimal,
+} from "@polyforge/shared-types";
 import { KalshiAuthService } from "./kalshi-auth.service";
 import type { KalshiCommunicationsEvent } from "./kalshi-rest.service";
 import {
@@ -68,6 +71,13 @@ interface MarketLifecycleEvent {
 let _msgId = 1;
 function nextMsgId(): number {
   return _msgId++;
+}
+
+function normalizeKalshiCentPrice(value: unknown): number | undefined {
+  const cents = parseFiniteDecimal(value);
+  return cents === null
+    ? undefined
+    : KalshiRestService.normalizeKalshiPrice(cents);
 }
 
 @Injectable()
@@ -230,12 +240,11 @@ export class KalshiWsService
   private handleTickerMessage(inner: Record<string, unknown>) {
     const ticker = inner["market_ticker"] as string | undefined;
     const dollarPrice = parseKalshiDollars(inner["yes_price_dollars"]);
-    const centPrice = inner["yes_price"] as number | undefined;
+    const centPrice = normalizeKalshiCentPrice(inner["yes_price"]);
     if (!ticker || (dollarPrice === undefined && centPrice === undefined))
       return;
 
-    const price =
-      dollarPrice ?? KalshiRestService.normalizeKalshiPrice(centPrice!);
+    const price = dollarPrice ?? centPrice!;
 
     this.emitter.emit("market-data.price", {
       tokenId: ticker,
@@ -259,17 +268,16 @@ export class KalshiWsService
 
     const side = inner["side"] as "yes" | "no" | undefined;
     const dollarPrice = parseKalshiDollars(inner["price_dollars"]);
-    const centPrice = inner["price"] as number | undefined;
-    const delta = inner["delta"] as number | undefined;
+    const centPrice = normalizeKalshiCentPrice(inner["price"]);
+    const delta = parseFiniteDecimal(inner["delta"]);
     if (
       !side ||
       (dollarPrice === undefined && centPrice === undefined) ||
-      delta === undefined
+      delta === null
     )
       return;
 
-    const price =
-      dollarPrice ?? KalshiRestService.normalizeKalshiPrice(centPrice!);
+    const price = dollarPrice ?? centPrice!;
 
     this.emitter.emit("kalshi.orderbook.delta", {
       ticker,
@@ -288,12 +296,8 @@ export class KalshiWsService
     if (!fillId || !orderId || !ticker) return;
 
     const dollarPrice = parseKalshiDollars(inner["yes_price_dollars"]);
-    const centPrice = inner["yes_price"] as number | undefined;
-    const price =
-      dollarPrice ??
-      (centPrice !== undefined
-        ? KalshiRestService.normalizeKalshiPrice(centPrice)
-        : 0);
+    const centPrice = normalizeKalshiCentPrice(inner["yes_price"]);
+    const price = dollarPrice ?? centPrice ?? 0;
 
     this.emitter.emit("kalshi.fill", {
       fill_id: fillId,

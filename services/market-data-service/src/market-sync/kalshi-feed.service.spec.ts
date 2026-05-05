@@ -224,6 +224,27 @@ describe("KalshiFeedService", () => {
       );
     });
 
+    it("falls back to yes_price when yes_price_dollars is non-finite", async () => {
+      svc.onModuleInit();
+      await vi.runAllTimersAsync();
+      mockWsInstance.triggerOpen();
+
+      mockWsInstance.triggerMessage({
+        type: "ticker",
+        msg: {
+          market_ticker: "BTC-USD",
+          yes_price_dollars: "Infinity",
+          yes_price: 45,
+          ts_ms: 1700000000000,
+        },
+      });
+
+      expect(emitter.emit).toHaveBeenCalledWith(
+        "market-data.price.raw.kalshi",
+        expect.objectContaining({ price: 0.45 }),
+      );
+    });
+
     it("falls back to yes_price cents when yes_price_dollars is absent", async () => {
       svc.onModuleInit();
       await vi.runAllTimersAsync();

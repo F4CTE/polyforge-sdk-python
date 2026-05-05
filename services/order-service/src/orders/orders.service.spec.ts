@@ -228,6 +228,36 @@ describe("OrdersService", () => {
       );
       expect(dlqCalls).toHaveLength(0);
     });
+
+    it("rejects non-finite order size before signing", async () => {
+      const p = svc.processIntent(makeIntent({ size: "Infinity" }));
+      await vi.runAllTimersAsync();
+      await p;
+
+      expect(prisma.order.create).not.toHaveBeenCalled();
+      expect(signer.signOrder).not.toHaveBeenCalled();
+      expect(redis.xadd).toHaveBeenCalledWith(
+        "stream:orders:dlq",
+        expect.objectContaining({
+          reason: "INVALID_ORDER_NUMERIC",
+        }),
+      );
+    });
+
+    it("rejects non-finite order price before signing", async () => {
+      const p = svc.processIntent(makeIntent({ price: "NaN" }));
+      await vi.runAllTimersAsync();
+      await p;
+
+      expect(prisma.order.create).not.toHaveBeenCalled();
+      expect(signer.signOrder).not.toHaveBeenCalled();
+      expect(redis.xadd).toHaveBeenCalledWith(
+        "stream:orders:dlq",
+        expect.objectContaining({
+          reason: "INVALID_ORDER_NUMERIC",
+        }),
+      );
+    });
   });
 
   // ── processIntent — DB create failure → immediate DLQ ─────────────────────

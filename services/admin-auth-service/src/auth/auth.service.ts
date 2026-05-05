@@ -11,6 +11,8 @@ import { PrismaAdminService } from "@polyforge/shared-db";
 import { RedisService } from "@polyforge/shared-redis";
 import { AdminJwtPayload, AdminRole } from "@polyforge/shared-types";
 import * as bcrypt from "bcrypt";
+import { generateSecret, generateURI, verifySync } from "otplib";
+import * as QRCode from "qrcode";
 import {
   randomUUID,
   randomBytes,
@@ -61,7 +63,7 @@ export class AuthService implements OnModuleInit {
       );
     }
 
-    if ((admin as any).totpEnabled) {
+    if (admin.totpEnabled) {
       throw new HttpException(
         {
           code: "TOTP_ALREADY_ENABLED",
@@ -71,16 +73,13 @@ export class AuthService implements OnModuleInit {
       );
     }
 
-    // Dynamic import to match user-facing auth service pattern
-    const otplib = await import("otplib");
-    const authenticator =
-      (otplib as any).authenticator ??
-      (otplib as any).default?.authenticator ??
-      otplib;
-    const QRCode = await import("qrcode");
-
-    const secret = authenticator.generateSecret(20);
-    const uri = authenticator.keyuri(admin.email, "Polyforge Admin", secret);
+    const secret = generateSecret({ length: 20 });
+    const uri = generateURI({
+      label: admin.email,
+      issuer: "Polyforge Admin",
+      secret,
+      strategy: "totp",
+    });
     const qrCode = await QRCode.toDataURL(uri);
 
     // Store pending secret in Redis with TTL — not yet committed to DB
@@ -128,14 +127,13 @@ export class AuthService implements OnModuleInit {
       );
     }
 
-    const otplib = await import("otplib");
-    const authenticator =
-      (otplib as any).authenticator ??
-      (otplib as any).default?.authenticator ??
-      otplib;
     let isValid = false;
     try {
-      isValid = authenticator.check(code, pendingSecret);
+      isValid = verifySync({
+        token: code,
+        secret: pendingSecret,
+        strategy: "totp",
+      }).valid;
     } catch {
       // malformed code — treat as invalid
     }
@@ -161,7 +159,8 @@ export class AuthService implements OnModuleInit {
       data: {
         totpSecret: encryptedSecret,
         totpEnabled: true,
-      } as any,
+        totpEnabledAt: new Date(),
+      },
     });
 
     await this.redis.del(`totp:pending:admin:${adminId}`);
@@ -172,7 +171,7 @@ export class AuthService implements OnModuleInit {
   // ─── TOTP Disable ────────────────────────────────────────────────────────────
 
   /** Cryptographically verify an admin JWT and return the payload */
-  verifyToken(token: string): { sub: string; [key: string]: any } {
+  verifyToken(token: string): { sub: string } & Record<string, unknown> {
     try {
       return this.jwtService.verify(token, {
         secret: this.config.getOrThrow<string>("ADMIN_JWT_SECRET"),
@@ -213,7 +212,7 @@ export class AuthService implements OnModuleInit {
       );
     }
 
-    if (!(admin as any).totpEnabled) {
+    if (!admin.totpEnabled) {
       throw new HttpException(
         {
           code: "TOTP_NOT_ENABLED",
@@ -233,15 +232,14 @@ export class AuthService implements OnModuleInit {
     }
 
     // Re-authenticate: verify current TOTP code
-    const secret = this.decrypt((admin as any).totpSecret);
-    const otplib = await import("otplib");
-    const authenticator =
-      (otplib as any).authenticator ??
-      (otplib as any).default?.authenticator ??
-      otplib;
+    const secret = this.decrypt(admin.totpSecret!);
     let totpValid = false;
     try {
-      totpValid = authenticator.check(totpCode, secret);
+      totpValid = verifySync({
+        token: totpCode,
+        secret,
+        strategy: "totp",
+      }).valid;
     } catch {
       // malformed code
     }
@@ -257,7 +255,8 @@ export class AuthService implements OnModuleInit {
       data: {
         totpSecret: null,
         totpEnabled: false,
-      } as any,
+        totpEnabledAt: null,
+      },
     });
 
     this.logger.log(`Admin ${adminId} disabled 2FA (re-authenticated)`);
@@ -310,7 +309,7 @@ export class AuthService implements OnModuleInit {
     await this.redis.del(loginLockKey).catch(() => {});
 
     // If TOTP is enabled, require a valid code
-    if ((admin as any).totpEnabled) {
+    if (admin.totpEnabled) {
       if (!dto.totpCode) {
         throw new HttpException(
           { code: "TOTP_REQUIRED", message: "2FA code is required" },
@@ -334,15 +333,14 @@ export class AuthService implements OnModuleInit {
         );
       }
 
-      const secret = this.decrypt((admin as any).totpSecret);
-      const otplib = await import("otplib");
-      const authenticator =
-        (otplib as any).authenticator ??
-        (otplib as any).default?.authenticator ??
-        otplib;
+      const secret = this.decrypt(admin.totpSecret!);
       let totpValid = false;
       try {
-        totpValid = authenticator.check(dto.totpCode, secret);
+        totpValid = verifySync({
+          token: dto.totpCode,
+          secret,
+          strategy: "totp",
+        }).valid;
       } catch {
         // malformed code
       }

@@ -1,20 +1,20 @@
 {
   "$schema": "https://turborepo.dev/schema.json",
   "ui": "tui",
-  "globalDependencies": ["wasm-pack", "cargo"],
+  "globalDependencies": ["tsconfig.json"],
   "tasks": {
     "generate": {
       "cache": false,
       "inputs": ["prisma/**"]
     },
     "build": {
-      "dependsOn": ["^build", "generate"],
+      "dependsOn": ["^build", "build:wasm", "generate"],
       "inputs": ["$TURBO_DEFAULT$"],
       "outputs": ["dist/**"]
     },
     "build:wasm": {
-      "outputs": ["pkg/**", "*.node"],
-      "cache": false
+      "inputs": ["$TURBO_DEFAULT$", "!target/**"],
+      "outputs": ["pkg/**", "*.node"]
     },
     "build:swagger": {
       "dependsOn": ["^build"],
@@ -38,11 +38,12 @@
       "persistent": true
     },
     "lint": {
-      "dependsOn": ["^lint"]
+      "dependsOn": ["^lint"],
+      "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/eslint.config.mjs"]
     },
     "typecheck": {
       "dependsOn": ["^typecheck"],
-      "inputs": ["src/**", "tsconfig*.json"]
+      "inputs": ["$TURBO_DEFAULT$", "**/*.d.ts", "$TURBO_ROOT$/tsconfig.json"]
     },
     "test": {
       "dependsOn": ["^build"],

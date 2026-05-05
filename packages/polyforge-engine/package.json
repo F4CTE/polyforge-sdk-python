@@ -12,7 +12,7 @@
     }
   },
   "scripts": {
-    "build:wasm": "bash build.sh",
-    "build": "node -e \"if(process.env.CI){console.log('CI: using pre-built WASM artifacts');process.exit(0)}\" || bash build.sh"
+    "build:wasm": "if [ \"$CI\" = \"true\" ]; then echo 'CI: using pre-built WASM artifacts'; else bash build.sh; fi",
+    "build": "if [ \"$CI\" = \"true\" ]; then echo 'CI: using pre-built WASM artifacts'; else bash build.sh; fi"
   }
 }

@@ -58,6 +58,7 @@ import {
   type BatchCancelOrdersIndividualResponse,
 } from "kalshi-typescript";
 import { KalshiAuthService } from "./kalshi-auth.service";
+import { parseFiniteDecimal } from "@polyforge/shared-types";
 
 const RETRY_DELAYS_MS = [500, 1000, 2000];
 
@@ -70,11 +71,8 @@ export function parseKalshiTimestamp(msg: Record<string, unknown>): number {
 }
 
 export function parseKalshiDollars(value: unknown): number | undefined {
-  if (typeof value === "string" && value.length > 0) {
-    const n = Number(value);
-    if (!Number.isNaN(n)) return n;
-  }
-  return undefined;
+  if (typeof value !== "string") return undefined;
+  return parseFiniteDecimal(value) ?? undefined;
 }
 
 // ─── Re-export SDK types for consumers ──────────────────────────────────────
@@ -422,10 +420,17 @@ export class KalshiRestService {
     const res = await this.marketApi.getMarketOrderbook(ticker);
     const fp = res.data.orderbook_fp;
     const parseLevels = (levels: Array<Array<string>> | undefined) =>
-      (levels ?? []).map(([priceDollars, qtyFp]) => ({
-        price: KalshiRestService.denormalizeKalshiPrice(Number(priceDollars)),
-        quantity: Math.round(Number(qtyFp)),
-      }));
+      (levels ?? []).flatMap(([priceDollars, qtyFp]) => {
+        const price = parseFiniteDecimal(priceDollars);
+        const quantity = parseFiniteDecimal(qtyFp);
+        if (price === null || quantity === null) return [];
+        return [
+          {
+            price: KalshiRestService.denormalizeKalshiPrice(price),
+            quantity: Math.round(quantity),
+          },
+        ];
+      });
     return {
       yes: parseLevels(fp?.yes_dollars),
       no: parseLevels(fp?.no_dollars),

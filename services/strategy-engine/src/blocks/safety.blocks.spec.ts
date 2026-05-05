@@ -90,6 +90,18 @@ describe("StopIfDailyLossBlock", () => {
     expect(res.fired).toBe(false);
     expect(res.reason).toMatch(/SAFETY STOP/);
   });
+
+  it("fails closed when maxLossUsdc is not finite", async () => {
+    const res = await StopIfDailyLossBlock.evaluate(
+      block("stop_if_daily_loss", { maxLossUsdc: "Infinity" }),
+      makeCtx({ dailyPnl: -1 }),
+      makeRedis(),
+      makePrisma(),
+    );
+
+    expect(res.fired).toBe(false);
+    expect(res.reason).toMatch(/invalid maxLossUsdc/);
+  });
 });
 
 describe("StopIfOrdersPerMinBlock", () => {
@@ -260,6 +272,18 @@ describe("StopIfExposureExceedsBlock", () => {
     expect(prisma.position.findMany).toHaveBeenCalledWith(
       expect.objectContaining({ where: { userId: ctx.userId } }),
     );
+  });
+
+  it("fails closed when maxUsdc is not finite", async () => {
+    const res = await StopIfExposureExceedsBlock.evaluate(
+      block("stop_if_exposure_exceeds", { maxUsdc: "Infinity" }),
+      makeCtx(),
+      makeRedis(),
+      makePrisma(),
+    );
+
+    expect(res.fired).toBe(false);
+    expect(res.reason).toMatch(/invalid maxUsdc/);
   });
 });
 

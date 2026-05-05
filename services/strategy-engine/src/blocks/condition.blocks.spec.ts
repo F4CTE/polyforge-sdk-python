@@ -64,6 +64,32 @@ describe("MinLiquidityBlock", () => {
     );
     expect(res.fired).toBe(true);
   });
+
+  it("fails closed when bid liquidity data is not finite decimal", async () => {
+    const book = { bids: [{ price: "0.5", size: "10abc" }] };
+    const redis = makeRedis({ getJson: vi.fn().mockResolvedValue(book) });
+    const res = await MinLiquidityBlock.evaluate(
+      block("min_liquidity", { tokenId: "tok1", minUsdc: "1" }),
+      makeCtx(),
+      redis,
+      makePrisma(),
+    );
+    expect(res.fired).toBe(false);
+    expect(res.reason).toMatch(/invalid bid size/);
+  });
+
+  it("fails closed when minimum liquidity is not finite decimal", async () => {
+    const book = { bids: [{ price: "0.5", size: "250" }] };
+    const redis = makeRedis({ getJson: vi.fn().mockResolvedValue(book) });
+    const res = await MinLiquidityBlock.evaluate(
+      block("min_liquidity", { tokenId: "tok1", minUsdc: "Infinity" }),
+      makeCtx(),
+      redis,
+      makePrisma(),
+    );
+    expect(res.fired).toBe(false);
+    expect(res.reason).toMatch(/invalid minUsdc/);
+  });
 });
 
 describe("MaxPositionBlock", () => {
@@ -123,6 +149,33 @@ describe("MaxPositionBlock", () => {
         where: { userId_tokenId: { userId: ctx.userId, tokenId: "tok-abc" } },
       }),
     );
+  });
+
+  it("fails closed when max position is not finite decimal", async () => {
+    const res = await MaxPositionBlock.evaluate(
+      block("max_position", { tokenId: "tok1", maxUsdc: "NaN" }),
+      makeCtx(),
+      makeRedis(),
+      makePrisma(),
+    );
+    expect(res.fired).toBe(false);
+    expect(res.reason).toMatch(/invalid maxUsdc/);
+  });
+
+  it("fails closed when position valuation data is not finite decimal", async () => {
+    const prisma = makePrisma();
+    prisma.position.findUnique.mockResolvedValue({
+      size: "100",
+      currentPrice: "0.3abc",
+    });
+    const res = await MaxPositionBlock.evaluate(
+      block("max_position", { tokenId: "tok1", maxUsdc: "100" }),
+      makeCtx(),
+      makeRedis(),
+      prisma,
+    );
+    expect(res.fired).toBe(false);
+    expect(res.reason).toMatch(/invalid position currentPrice/);
   });
 });
 
@@ -193,6 +246,18 @@ describe("DailyLossLimitBlock", () => {
       makePrisma(),
     );
     expect(res.fired).toBe(true);
+  });
+
+  it("fails closed when max loss is not finite decimal", async () => {
+    const ctx = makeCtx({ dailyPnl: -1 });
+    const res = await DailyLossLimitBlock.evaluate(
+      block("daily_loss_limit", { maxLossUsdc: "10loss" }),
+      ctx,
+      makeRedis(),
+      makePrisma(),
+    );
+    expect(res.fired).toBe(false);
+    expect(res.reason).toMatch(/invalid maxLossUsdc/);
   });
 });
 
@@ -295,6 +360,34 @@ describe("PriceInRangeBlock", () => {
     );
     expect(res.fired).toBe(false);
   });
+
+  it("fails closed when price range bounds are not finite decimal", async () => {
+    const redis = makeRedis({
+      getJson: vi.fn().mockResolvedValue({ price: 0.55 }),
+    });
+    const res = await PriceInRangeBlock.evaluate(
+      block("price_in_range", { tokenId: "tok1", min: "0.40", max: "NaN" }),
+      makeCtx(),
+      redis,
+      makePrisma(),
+    );
+    expect(res.fired).toBe(false);
+    expect(res.reason).toMatch(/invalid max/);
+  });
+
+  it("fails closed when cached price is not finite decimal", async () => {
+    const redis = makeRedis({
+      getJson: vi.fn().mockResolvedValue({ price: Number.POSITIVE_INFINITY }),
+    });
+    const res = await PriceInRangeBlock.evaluate(
+      block("price_in_range", { tokenId: "tok1", min: "0.40", max: "0.60" }),
+      makeCtx(),
+      redis,
+      makePrisma(),
+    );
+    expect(res.fired).toBe(false);
+    expect(res.reason).toMatch(/invalid price/);
+  });
 });
 
 describe("NoReentryBlock", () => {
@@ -388,6 +481,19 @@ describe("NoExistingPositionBlock", () => {
       makePrisma(),
     );
     expect(res.fired).toBe(true);
+  });
+
+  it("fails closed when position size is not finite decimal", async () => {
+    const prisma = makePrisma();
+    prisma.position.findUnique.mockResolvedValue({ size: "1e309" });
+    const res = await NoExistingPositionBlock.evaluate(
+      block("no_existing_position", { tokenId: "tok1" }),
+      makeCtx(),
+      makeRedis(),
+      prisma,
+    );
+    expect(res.fired).toBe(false);
+    expect(res.reason).toMatch(/invalid position size/);
   });
 });
 

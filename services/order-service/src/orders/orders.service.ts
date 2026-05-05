@@ -8,7 +8,7 @@ import { ClobClientService } from "../clob-client/clob-client.service";
 import { EventsService } from "../events/events.service";
 import {
   hasAcceptedCurrentUsRailTerms,
-  isFiniteDecimal,
+  parseFiniteDecimal,
   type VenueId,
 } from "@polyforge/shared-types";
 import { VenueRouter } from "../venue/venue-router";
@@ -83,6 +83,33 @@ export class OrdersService {
       return;
     }
 
+    const intentSize = parseFiniteDecimal(intent.size);
+    const intentPrice = parseFiniteDecimal(intent.price);
+
+    if (intentSize === null || intentPrice === null) {
+      const hasBlankNumericInput = [intent.size, intent.price].some(
+        (value) => String(value).trim() === "",
+      );
+      this.logger.warn(
+        `Invalid numeric order intent ${intent.intentId} — rejecting before order creation`,
+      );
+      await this.moveToDlq(
+        intent,
+        hasBlankNumericInput
+          ? "INVALID_NUMERIC_ORDER_INTENT"
+          : "INVALID_ORDER_NUMERIC",
+      );
+      return;
+    }
+
+    if (intentSize <= 0 || intentPrice < 0) {
+      this.logger.warn(
+        `Invalid numeric order intent ${intent.intentId} — rejecting before order creation`,
+      );
+      await this.moveToDlq(intent, "INVALID_NUMERIC_ORDER_INTENT");
+      return;
+    }
+
     if (targetVenue === "polymarket_us") {
       const hasAcceptedTerms = await this.hasCurrentUsRailTerms(intent.userId);
 
@@ -93,14 +120,6 @@ export class OrdersService {
         await this.moveToDlq(intent, "US_RAIL_TERMS_REQUIRED");
         return;
       }
-    }
-
-    if (!this.hasValidNumericIntent(intent)) {
-      this.logger.warn(
-        `Invalid numeric order intent ${intent.intentId} — rejecting before order creation`,
-      );
-      await this.moveToDlq(intent, "INVALID_NUMERIC_ORDER_INTENT");
-      return;
     }
 
     // Create DB record in PENDING state
@@ -154,8 +173,8 @@ export class OrdersService {
             requestId: orderId,
             tokenId: intent.tokenId,
             side: intent.side,
-            size: parseFloat(intent.size),
-            price: parseFloat(intent.price),
+            size: intentSize,
+            price: intentPrice,
             orderType: intent.orderType,
             expiration: intent.expiration,
             tickSize: intent.tickSize,
@@ -199,8 +218,8 @@ export class OrdersService {
           requestId: orderId,
           tokenId: intent.tokenId,
           side: intent.side,
-          size: parseFloat(intent.size),
-          price: parseFloat(intent.price),
+          size: intentSize,
+          price: intentPrice,
           orderType: intent.orderType,
           expiration: intent.expiration,
           tickSize: intent.tickSize,
@@ -313,16 +332,6 @@ export class OrdersService {
     });
 
     return hasAcceptedCurrentUsRailTerms(user as any);
-  }
-
-  private hasValidNumericIntent(intent: OrderIntent): boolean {
-    if (!isFiniteDecimal(intent.size) || !isFiniteDecimal(intent.price)) {
-      return false;
-    }
-
-    const size = Number(intent.size);
-    const price = Number(intent.price);
-    return size > 0 && price >= 0;
   }
 
   private mapClobStatus(clobStatus: string): string {

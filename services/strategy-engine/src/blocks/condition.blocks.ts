@@ -1,6 +1,11 @@
 import { BlockEvaluator, BlockResult } from "./block.types";
+import { parseFiniteDecimal } from "@polyforge/shared-types";
 
 type BlockParams = Record<string, string | number | undefined>;
+
+function invalidNumeric(name: string, value: unknown): BlockResult {
+  return { fired: false, reason: `invalid ${name}: ${String(value)}` };
+}
 
 // min_liquidity — passes if total bid liquidity >= minUsdc
 export const MinLiquidityBlock: BlockEvaluator = {
@@ -13,11 +18,18 @@ export const MinLiquidityBlock: BlockEvaluator = {
     }>(`cache:book:${tokenId}`);
     if (!book) return { fired: false, reason: "no book data" };
 
-    const liquidity = book.bids.reduce(
-      (sum, b) => sum + parseFloat(b.price) * parseFloat(b.size),
-      0,
-    );
-    const min = parseFloat(minUsdc);
+    const min = parseFiniteDecimal(minUsdc);
+    if (min === null) return invalidNumeric("minUsdc", minUsdc);
+
+    let liquidity = 0;
+    for (const bid of book.bids) {
+      const price = parseFiniteDecimal(bid.price);
+      const size = parseFiniteDecimal(bid.size);
+      if (price === null) return invalidNumeric("bid price", bid.price);
+      if (size === null) return invalidNumeric("bid size", bid.size);
+      liquidity += price * size;
+    }
+
     const fired = liquidity >= min;
     return {
       fired,
@@ -32,16 +44,21 @@ export const MaxPositionBlock: BlockEvaluator = {
     const params = (block["params"] as BlockParams) ?? {};
     const tokenId = String(params.tokenId ?? "");
     const maxUsdc = String(params.maxUsdc ?? "0");
-    const max = parseFloat(maxUsdc);
+    const max = parseFiniteDecimal(maxUsdc);
+    if (max === null) return invalidNumeric("maxUsdc", maxUsdc);
 
     const position = await prisma.position.findUnique({
       where: { userId_tokenId: { userId: ctx.userId, tokenId } },
     });
     if (!position) return { fired: true, reason: "no existing position" };
 
-    const value =
-      parseFloat(String(position.size)) *
-      parseFloat(String(position.currentPrice));
+    const size = parseFiniteDecimal(position.size);
+    const currentPrice = parseFiniteDecimal(position.currentPrice);
+    if (size === null) return invalidNumeric("position size", position.size);
+    if (currentPrice === null)
+      return invalidNumeric("position currentPrice", position.currentPrice);
+
+    const value = size * currentPrice;
     const fired = value < max;
     return { fired, reason: `position $${value.toFixed(2)} < max $${max}` };
   },
@@ -64,7 +81,11 @@ export const MaxBetsPerDayBlock: BlockEvaluator = {
 export const DailyLossLimitBlock: BlockEvaluator = {
   evaluate(block, ctx, _redis, _prisma): Promise<BlockResult> {
     const params = (block["params"] as BlockParams) ?? {};
-    const maxLoss = parseFloat(String(params.maxLossUsdc ?? "0"));
+    const maxLossUsdc = String(params.maxLossUsdc ?? "0");
+    const maxLoss = parseFiniteDecimal(maxLossUsdc);
+    if (maxLoss === null)
+      return Promise.resolve(invalidNumeric("maxLossUsdc", maxLossUsdc));
+
     const fired = ctx.state.dailyPnl > -maxLoss;
     return Promise.resolve({
       fired,
@@ -99,11 +120,17 @@ export const PriceInRangeBlock: BlockEvaluator = {
     );
     if (!data) return { fired: false, reason: "no price data" };
 
-    const fired =
-      data.price >= parseFloat(min) && data.price <= parseFloat(max);
+    const price = parseFiniteDecimal(data.price);
+    const minValue = parseFiniteDecimal(min);
+    const maxValue = parseFiniteDecimal(max);
+    if (price === null) return invalidNumeric("price", data.price);
+    if (minValue === null) return invalidNumeric("min", min);
+    if (maxValue === null) return invalidNumeric("max", max);
+
+    const fired = price >= minValue && price <= maxValue;
     return {
       fired,
-      reason: `price ${data.price} in [${min}, ${max}]: ${fired}`,
+      reason: `price ${price} in [${minValue}, ${maxValue}]: ${fired}`,
     };
   },
 };
@@ -136,7 +163,10 @@ export const NoExistingPositionBlock: BlockEvaluator = {
     const position = await prisma.position.findUnique({
       where: { userId_tokenId: { userId: ctx.userId, tokenId } },
     });
-    const hasPosition = !!position && parseFloat(String(position.size)) > 0;
+    const size = position ? parseFiniteDecimal(position.size) : 0;
+    if (size === null) return invalidNumeric("position size", position?.size);
+
+    const hasPosition = !!position && size > 0;
     return {
       fired: !hasPosition,
       reason: hasPosition ? `existing position on ${tokenId}` : "no position",
