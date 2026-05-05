@@ -48,23 +48,23 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
       return;
     }
 
-    const token = this.extractToken(request);
-    if (!token) {
+    const credential = this.extractToken(request);
+    if (!credential) {
       client.close(4001, "Authentication required");
       client.terminate();
       return;
     }
 
     try {
-      const payload = this.jwt.verify<{ sub?: unknown }>(token, {
+      const payload = this.jwt.verify<{ sub?: unknown }>(credential.token, {
         secret: this.config.get<string>("USER_JWT_SECRET"),
       });
-      if (typeof payload.sub !== "string" || payload.sub.length === 0) {
+      const userId = payload.sub;
+      if (typeof userId !== "string" || !userId) {
         client.close(4003, "Invalid token");
         client.terminate();
         return;
       }
-      const userId = payload.sub;
 
       let sockets = this.userSockets.get(userId);
       if (!sockets) {
@@ -113,19 +113,26 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
     this.whaleSubscriptions.delete(client);
   }
 
-  private extractToken(request: IncomingMessage): string | null {
-    try {
-      const url = new URL(request.url ?? "", "http://localhost");
-      const queryToken = url.searchParams.get("token");
-      if (queryToken) return queryToken;
-    } catch {
-      // malformed URL — fall through to cookie
-    }
-
+  private extractToken(
+    request: IncomingMessage,
+  ): { token: string; source: "cookie" | "query" } | null {
     const cookie = request.headers.cookie;
     if (cookie) {
       const match = cookie.match(/(?:^|;\s*)pf_token=([^;]+)/);
-      if (match) return match[1];
+      if (match) return { token: match[1], source: "cookie" };
+    }
+
+    try {
+      const url = new URL(request.url ?? "", "http://localhost");
+      const queryToken = url.searchParams.get("token");
+      if (queryToken) {
+        this.logger.warn(
+          `Deprecated WebSocket query token used from ${request.socket.remoteAddress ?? "unknown"}`,
+        );
+        return { token: queryToken, source: "query" };
+      }
+    } catch {
+      // malformed URL — no query token fallback
     }
 
     return null;
