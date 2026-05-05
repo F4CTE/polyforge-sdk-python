@@ -90,3 +90,44 @@ describe("SignOrderDto orderType/expiration validation", () => {
     );
   });
 });
+
+describe("SignOrderDto price bounds", () => {
+  it("accepts price = 0 (probability lower bound)", async () => {
+    await expect(validateDto({ price: 0 })).resolves.toHaveLength(0);
+  });
+
+  it("accepts price = 1 (probability upper bound)", async () => {
+    await expect(validateDto({ price: 1 })).resolves.toHaveLength(0);
+  });
+
+  it("accepts mid-range price (0 < price < 1)", async () => {
+    await expect(validateDto({ price: 0.42 })).resolves.toHaveLength(0);
+  });
+
+  it("rejects price > 1", async () => {
+    const errors = await validateDto({ price: 1.0001 });
+    expect(errors.map((error) => error.constraints)).toContainEqual(
+      expect.objectContaining({
+        max: "Price must be <= 1 (Polymarket probability upper bound)",
+      }),
+    );
+  });
+
+  it("rejects price = 999 (issue example)", async () => {
+    const errors = await validateDto({ price: 999 });
+    expect(errors.map((error) => error.constraints)).toContainEqual(
+      expect.objectContaining({
+        max: "Price must be <= 1 (Polymarket probability upper bound)",
+      }),
+    );
+  });
+
+  it("rejects negative price", async () => {
+    const errors = await validateDto({ price: -0.01 });
+    expect(errors.map((error) => error.constraints)).toContainEqual(
+      expect.objectContaining({
+        min: "Price must be >= 0 (Polymarket probability lower bound)",
+      }),
+    );
+  });
+});
