@@ -82,3 +82,32 @@ test("service Docker builders install the project TypeScript compiler exactly", 
     );
   }
 });
+
+test("service Docker production installs skip root prepare scripts", () => {
+  const dockerfiles = readdirSync("services", { withFileTypes: true })
+    .filter((entry) => entry.isDirectory())
+    .map((entry) => join("services", entry.name, "Dockerfile"))
+    .filter((filePath) => {
+      try {
+        readFileSync(filePath, "utf8");
+        return true;
+      } catch {
+        return false;
+      }
+    });
+
+  for (const filePath of dockerfiles) {
+    const content = readFileSync(filePath, "utf8");
+    const prodInstalls = [
+      ...content.matchAll(/pnpm install --filter [^\n]+ --prod[^\n]*/g),
+    ].map((match) => match[0]);
+
+    for (const installCommand of prodInstalls) {
+      assert.match(
+        installCommand,
+        /--ignore-scripts\b/,
+        `${filePath} production install must not run the root prepare script`,
+      );
+    }
+  }
+});

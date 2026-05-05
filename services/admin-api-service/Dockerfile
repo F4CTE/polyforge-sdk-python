@@ -63,7 +63,7 @@ COPY packages/shared-auth/package.json       ./packages/shared-auth/
 COPY services/admin-api-service/package.json ./services/admin-api-service/
 
 RUN echo "shamefully-hoist=true" > .npmrc && \
-    pnpm install --filter @polyforge/admin-api-service... --frozen-lockfile --prod
+    pnpm install --filter @polyforge/admin-api-service... --frozen-lockfile --prod --ignore-scripts
 
 COPY --from=builder /app/packages/shared-db/dist/         ./packages/shared-db/dist/
 COPY --from=builder /app/packages/shared-redis/dist/      ./packages/shared-redis/dist/
