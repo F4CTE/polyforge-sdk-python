@@ -167,6 +167,25 @@ describe("PriceCrossesUpBlock", () => {
     );
     expect(res.fired).toBe(false); // 0.65 < 0.60 is false
   });
+
+  it("does not fire when threshold is not finite", async () => {
+    const redis = makeRedis({
+      getJson: vi
+        .fn()
+        .mockResolvedValueOnce({ price: 0.65, timestamp: Date.now() })
+        .mockResolvedValueOnce({ price: 0.55 }),
+    });
+
+    const res = await PriceCrossesUpBlock.evaluate(
+      block("price_crosses_up", { tokenId: "tok1", threshold: "Infinity" }),
+      makeCtx(),
+      redis,
+      makePrisma(),
+    );
+
+    expect(res.fired).toBe(false);
+    expect(res.reason).toMatch(/invalid threshold/);
+  });
 });
 
 describe("PriceCrossesDownBlock", () => {
@@ -461,6 +480,22 @@ describe("SpreadBelowTickBlock", () => {
       makePrisma(),
     );
     expect(res.fired).toBe(false);
+  });
+
+  it("does not fire when spread is not finite", async () => {
+    const redis = makeRedis({
+      getJson: vi.fn().mockResolvedValue({ spread: "Infinity" }),
+    });
+
+    const res = await SpreadBelowTickBlock.evaluate(
+      block("spread_below_tick", { tokenId: "tok1", minSpread: "0.05" }),
+      makeCtx(),
+      redis,
+      makePrisma(),
+    );
+
+    expect(res.fired).toBe(false);
+    expect(res.reason).toMatch(/invalid spread/);
   });
 });
 

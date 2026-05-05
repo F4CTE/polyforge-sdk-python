@@ -8,6 +8,7 @@ import {
   rsiWilder,
 } from "../ta/indicators";
 import { readPriceWindow } from "../ta/price-window";
+import { parseFiniteDecimal } from "@polyforge/shared-types";
 
 type BlockParams = Record<string, string | number | undefined>;
 
@@ -51,7 +52,8 @@ export const PriceCrossesUpBlock: BlockEvaluator = {
 
     if (!current) return { fired: false, reason: "no price data" };
 
-    const thresh = parseFloat(String(threshold));
+    const thresh = parseFiniteDecimal(threshold);
+    if (thresh === null) return { fired: false, reason: "invalid threshold" };
     const prevPrice = prev?.price ?? current.price;
     const fired = prevPrice < thresh && current.price >= thresh;
 
@@ -83,7 +85,8 @@ export const PriceCrossesDownBlock: BlockEvaluator = {
 
     if (!current) return { fired: false, reason: "no price data" };
 
-    const thresh = parseFloat(String(threshold));
+    const thresh = parseFiniteDecimal(threshold);
+    if (thresh === null) return { fired: false, reason: "invalid threshold" };
     const prevPrice = prev?.price ?? current.price;
     const fired = prevPrice > thresh && current.price <= thresh;
 
@@ -162,7 +165,9 @@ export const PriceAboveTickBlock: BlockEvaluator = {
       `cache:price:${tokenId}`,
     );
     if (!data) return { fired: false, reason: "no price data" };
-    const fired = data.price > parseFloat(threshold);
+    const thresh = parseFiniteDecimal(threshold);
+    if (thresh === null) return { fired: false, reason: "invalid threshold" };
+    const fired = data.price > thresh;
     return { fired, reason: `price ${data.price} > ${threshold}: ${fired}` };
   },
 };
@@ -177,7 +182,9 @@ export const PriceBelowTickBlock: BlockEvaluator = {
       `cache:price:${tokenId}`,
     );
     if (!data) return { fired: false, reason: "no price data" };
-    const fired = data.price < parseFloat(threshold);
+    const thresh = parseFiniteDecimal(threshold);
+    if (thresh === null) return { fired: false, reason: "invalid threshold" };
+    const fired = data.price < thresh;
     return { fired, reason: `price ${data.price} < ${threshold}: ${fired}` };
   },
 };
@@ -192,8 +199,12 @@ export const SpreadBelowTickBlock: BlockEvaluator = {
       `cache:book:${tokenId}`,
     );
     if (!book) return { fired: false, reason: "no book data" };
-    const spread = parseFloat(book.spread);
-    const fired = spread < parseFloat(minSpread);
+    const spread = parseFiniteDecimal(book.spread);
+    const minSpreadNum = parseFiniteDecimal(minSpread);
+    if (spread === null) return { fired: false, reason: "invalid spread" };
+    if (minSpreadNum === null)
+      return { fired: false, reason: "invalid minSpread" };
+    const fired = spread < minSpreadNum;
     return { fired, reason: `spread ${spread} < ${minSpread}: ${fired}` };
   },
 };
@@ -208,10 +219,16 @@ export const VolumeRateTickBlock: BlockEvaluator = {
       `cache:book:${tokenId}`,
     );
     if (!book) return { fired: false, reason: "no book data" };
-    const volume = book.bids
-      .slice(0, 5)
-      .reduce((s: number, b: { size: string }) => s + parseFloat(b.size), 0);
-    const fired = volume >= parseFloat(minRate);
+    const bidSizes: number[] = [];
+    for (const bid of book.bids.slice(0, 5)) {
+      const size = parseFiniteDecimal(bid.size);
+      if (size === null) return { fired: false, reason: "invalid bid size" };
+      bidSizes.push(size);
+    }
+    const minRateNum = parseFiniteDecimal(minRate);
+    if (minRateNum === null) return { fired: false, reason: "invalid minRate" };
+    const volume = bidSizes.reduce((s, size) => s + size!, 0);
+    const fired = volume >= minRateNum;
     return {
       fired,
       reason: `top-5 bid volume ${volume.toFixed(2)} vs ${minRate}`,
@@ -236,7 +253,8 @@ export const PriceMomentumTickBlock: BlockEvaluator = {
       return { fired: false, reason: "insufficient price history" };
 
     const delta = current.price - prev.price;
-    const thresh = parseFloat(threshold);
+    const thresh = parseFiniteDecimal(threshold);
+    if (thresh === null) return { fired: false, reason: "invalid threshold" };
 
     let fired = false;
     if (direction === "up") fired = delta >= thresh;
@@ -257,7 +275,9 @@ export const RsiThresholdTickBlock: BlockEvaluator = {
     const tokenId = String(params.tokenId ?? "");
     const level = String(params.level ?? "70");
     const direction = String(params.direction ?? "");
-    const period = Number(params.period ?? 14);
+    const period = parseFiniteDecimal(params.period ?? 14);
+    if (period === null || period < 1)
+      return { fired: false, reason: "invalid config" };
 
     // Primary: sorted set written by market-data-service via writePricePoint
     const points = await readPriceWindow(redis, tokenId, period + 50);
@@ -281,7 +301,9 @@ export const RsiThresholdTickBlock: BlockEvaluator = {
     const rsi = rsiWilder(prices, period);
     if (isNaN(rsi)) return { fired: false, reason: "RSI returned NaN" };
 
-    const threshold = parseFloat(level);
+    const threshold = parseFiniteDecimal(level);
+    if (threshold === null)
+      return { fired: false, reason: "invalid threshold" };
     let fired = false;
     if (direction === "above") fired = rsi > threshold;
     if (direction === "below") fired = rsi < threshold;
@@ -398,10 +420,10 @@ export const BollingerBreakoutTickBlock: BlockEvaluator = {
     const params = (block["params"] as BlockParams) ?? {};
     const tokenId = String(params.tokenId ?? "");
     const period = parseInt(String(params.period ?? "20"), 10);
-    const stdDevMultiplier = parseFloat(String(params.stdDevMultiplier ?? "2"));
+    const stdDevMultiplier = parseFiniteDecimal(params.stdDevMultiplier ?? "2");
     const direction = String(params.direction ?? "");
 
-    if (!tokenId || !direction)
+    if (!tokenId || !direction || stdDevMultiplier === null)
       return { fired: false, reason: "invalid config" };
 
     const points = await readPriceWindow(redis, tokenId, period + 1);

@@ -3,7 +3,10 @@ import { ConfigService } from "@nestjs/config";
 import { EventEmitter2 } from "@nestjs/event-emitter";
 import { JwtService } from "@nestjs/jwt";
 import { randomUUID } from "crypto";
-import { BaseVenueWsService } from "@polyforge/shared-types";
+import {
+  BaseVenueWsService,
+  parseFiniteDecimal,
+} from "@polyforge/shared-types";
 import type { PriceUpdateEvent } from "./polymarket-ws.service";
 
 const REFRESH_MARGIN_SECS = 300;
@@ -77,17 +80,11 @@ export class KalshiFeedService
     if (!inner) return;
 
     const ticker = inner["market_ticker"] as string | undefined;
-    const dollarStr = inner["yes_price_dollars"] as string | undefined;
-    const centPrice = inner["yes_price"] as number | undefined;
-    if (!ticker || (dollarStr === undefined && centPrice === undefined)) return;
+    const dollarPrice = parseFiniteDecimal(inner["yes_price_dollars"]);
+    const centPrice = parseFiniteDecimal(inner["yes_price"]);
+    if (!ticker || (dollarPrice === null && centPrice === null)) return;
 
-    let price: number;
-    if (typeof dollarStr === "string" && dollarStr.length > 0) {
-      const parsed = Number(dollarStr);
-      price = Number.isNaN(parsed) ? (centPrice ?? 0) / 100 : parsed;
-    } else {
-      price = (centPrice ?? 0) / 100;
-    }
+    const price = dollarPrice ?? centPrice! / 100;
 
     const ts =
       typeof inner["ts_ms"] === "number"

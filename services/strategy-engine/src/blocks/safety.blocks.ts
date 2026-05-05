@@ -1,5 +1,6 @@
 import { BlockEvaluator, BlockResult } from "./block.types";
 import { PrismaService } from "@polyforge/shared-db";
+import { parseFiniteDecimal } from "@polyforge/shared-types";
 
 type BlockParams = Record<string, string | number | undefined>;
 
@@ -13,9 +14,10 @@ async function getUserExposure(
     select: { size: true, currentPrice: true },
   });
   return positions.reduce((sum, p) => {
-    return (
-      sum + parseFloat(String(p.size)) * parseFloat(String(p.currentPrice))
-    );
+    const size = parseFiniteDecimal(p.size);
+    const currentPrice = parseFiniteDecimal(p.currentPrice);
+    if (size === null || currentPrice === null) return Number.POSITIVE_INFINITY;
+    return sum + size * currentPrice;
   }, 0);
 }
 
@@ -23,7 +25,13 @@ async function getUserExposure(
 export const StopIfDailyLossBlock: BlockEvaluator = {
   evaluate(block, ctx, _redis, _prisma): Promise<BlockResult> {
     const params = (block["params"] as BlockParams) ?? {};
-    const maxLoss = parseFloat(String(params.maxLossUsdc ?? "0"));
+    const maxLoss = parseFiniteDecimal(params.maxLossUsdc ?? "0");
+    if (maxLoss === null) {
+      return Promise.resolve({
+        fired: false,
+        reason: "SAFETY STOP: invalid maxLossUsdc",
+      });
+    }
     const passed = ctx.state.dailyPnl > -maxLoss;
     return Promise.resolve({
       fired: passed,
@@ -71,7 +79,13 @@ export const StopIfConsecutiveLossBlock: BlockEvaluator = {
 export const StopIfExposureExceedsBlock: BlockEvaluator = {
   async evaluate(block, ctx, _redis, prisma): Promise<BlockResult> {
     const params = (block["params"] as BlockParams) ?? {};
-    const maxUsdc = parseFloat(String(params.maxUsdc ?? "0"));
+    const maxUsdc = parseFiniteDecimal(params.maxUsdc ?? "0");
+    if (maxUsdc === null) {
+      return {
+        fired: false,
+        reason: "SAFETY STOP: invalid maxUsdc",
+      };
+    }
     const exposure = await getUserExposure(ctx.userId, prisma);
     const passed = exposure < maxUsdc;
     return {

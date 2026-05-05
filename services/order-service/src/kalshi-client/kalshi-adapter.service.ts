@@ -9,6 +9,7 @@ import type {
   VenuePosition,
   VenueOrderHistory,
 } from "@polyforge/shared-types";
+import { parseFiniteDecimal } from "@polyforge/shared-types";
 import type {
   OrderBook,
   PriceCandle,
@@ -83,17 +84,23 @@ export class KalshiAdapterService implements VenueAdapter {
       high: c.price.high_dollars ?? "0",
       low: c.price.low_dollars ?? "0",
       close: c.price.close_dollars ?? "0",
-      volume: Number(c.volume_fp),
+      volume: parseFiniteDecimal(c.volume_fp) ?? 0,
     }));
   }
 
   async submitOrder(order: VenueOrderRequest): Promise<VenueOrderResponse> {
     const isNo = order.venueOutcomeId === "no";
     const kalshiSide: "yes" | "no" = isNo ? "no" : "yes";
-    const priceNum = parseFloat(order.price);
+    const priceNum = parseFiniteDecimal(order.price);
+    if (priceNum === null) {
+      throw new Error(`Invalid Kalshi order price: ${order.price}`);
+    }
     const dollarsStr = KalshiRestService.toDollarsString(priceNum);
 
-    const sizeNum = parseFloat(order.size);
+    const sizeNum = parseFiniteDecimal(order.size);
+    if (sizeNum === null) {
+      throw new Error(`Invalid Kalshi order size: ${order.size}`);
+    }
     const isFractional = !Number.isInteger(sizeNum);
 
     const ctx = order.authContext as {
@@ -175,11 +182,11 @@ export class KalshiAdapterService implements VenueAdapter {
     );
 
     return positions.map((p, i) => {
-      const positionCount = Number(p.position_fp);
+      const positionCount = parseFiniteDecimal(p.position_fp) ?? 0;
       const isNo = positionCount < 0;
       const absSize = Math.abs(positionCount);
       const outcome = isNo ? "no" : "yes";
-      const totalTraded = Number(p.total_traded_dollars ?? "0");
+      const totalTraded = parseFiniteDecimal(p.total_traded_dollars) ?? 0;
       const avgPrice = absSize > 0 ? totalTraded / absSize : 0;
 
       const market = markets[i];

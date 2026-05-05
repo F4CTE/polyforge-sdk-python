@@ -5,6 +5,9 @@
   "scripts": {
     "dev": "next dev -p 3000",
     "build": "next build",
+    "lint": "eslint \"app/**/*.{ts,tsx}\" *.ts --fix",
+    "typecheck": "tsc --noEmit",
+    "test": "pnpm run typecheck",
     "start": "next start -p 3000"
   },
   "dependencies": {

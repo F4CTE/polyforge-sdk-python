@@ -98,6 +98,37 @@ describe("BuyYesAction", () => {
     ]);
     expect(r1.intents[0].intentId).not.toBe(r2.intents[0].intentId);
   });
+
+  it("rejects non-finite cached prices before emitting an intent", async () => {
+    const prisma = makePrisma();
+    prisma.token.findUnique.mockResolvedValue(TOKEN);
+    const redis = makeRedis({
+      getJson: vi.fn().mockResolvedValue({ price: Number.POSITIVE_INFINITY }),
+    });
+
+    await expect(
+      BuyYesAction.execute(
+        block("buy_yes", { tokenId: "tok-yes", size: "50" }),
+        makeCtx(),
+        redis,
+        prisma,
+      ),
+    ).rejects.toThrow(/Invalid order price/);
+  });
+
+  it("rejects partial decimal order sizes", async () => {
+    const prisma = makePrisma();
+    prisma.token.findUnique.mockResolvedValue(TOKEN);
+
+    await expect(
+      BuyYesAction.execute(
+        block("buy_yes", { tokenId: "tok-yes", size: "10abc" }),
+        makeCtx(),
+        makeRedis(),
+        prisma,
+      ),
+    ).rejects.toThrow(/Invalid order size/);
+  });
 });
 
 describe("BuyNoAction", () => {

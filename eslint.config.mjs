@@ -32,7 +32,8 @@ export default tseslint.config(
     },
     rules: {
       '@typescript-eslint/no-explicit-any': 'off',
-      '@typescript-eslint/no-floating-promises': 'warn',
+      '@typescript-eslint/no-floating-promises': 'error',
+      'no-console': ['warn', { allow: ['warn', 'error'] }],
       // Downgrade unsafe-any rules to warnings for production code — Fastify
       // internals and Prisma internals legitimately use `any` in a few places
       '@typescript-eslint/no-unsafe-argument': 'warn',
@@ -49,10 +50,7 @@ export default tseslint.config(
       '@typescript-eslint/no-redundant-type-constituents': 'warn',
       '@typescript-eslint/prefer-promise-reject-errors': 'warn',
       '@typescript-eslint/restrict-template-expressions': 'warn',
-      '@typescript-eslint/no-base-to-string': 'warn',
-      '@typescript-eslint/no-explicit-any': 'off',
       '@typescript-eslint/no-unsafe-enum-comparison': 'warn',
-      '@typescript-eslint/unbound-method': ['warn', { ignoreStatic: true }],
       'prettier/prettier': ['error', { endOfLine: 'auto' }],
     },
   },

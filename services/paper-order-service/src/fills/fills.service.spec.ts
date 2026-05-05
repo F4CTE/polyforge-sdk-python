@@ -202,6 +202,24 @@ describe("FillsService", () => {
         );
       });
 
+      it("rejects non-finite intent size before creating a paper order", async () => {
+        await expect(
+          service.simulate(makeIntent({ size: "Infinity" })),
+        ).rejects.toThrow(/Invalid paper fill size/);
+
+        expect(prisma.paperOrder.create).not.toHaveBeenCalled();
+        expect(redis.xadd).not.toHaveBeenCalled();
+      });
+
+      it("rejects non-finite intent price before creating a paper order", async () => {
+        await expect(
+          service.simulate(makeIntent({ price: "NaN" })),
+        ).rejects.toThrow(/Invalid paper fill price/);
+
+        expect(prisma.paperOrder.create).not.toHaveBeenCalled();
+        expect(redis.xadd).not.toHaveBeenCalled();
+      });
+
       it("retries once when the serializable transaction reports P2034", async () => {
         const conflict = Object.assign(new Error("write conflict"), {
           code: "P2034",

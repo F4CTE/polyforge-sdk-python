@@ -765,6 +765,48 @@ describe("KalshiAdapterService", () => {
       >;
       expect(callArgs.count_fp).toBeUndefined();
     });
+
+    it("rejects non-finite submit price before placing the order", async () => {
+      const spy = vi.spyOn(rest, "placeOrder").mockResolvedValue({
+        order_id: "ord-bad",
+        status: "resting",
+      });
+      const req: VenueOrderRequest = {
+        venueMarketId: "BTC-USD",
+        venueOutcomeId: "yes",
+        side: "BUY",
+        size: "10",
+        price: "Infinity",
+        orderType: "GTC",
+        authContext: { userId: "u1" },
+      };
+
+      await expect(adapter.submitOrder(req)).rejects.toThrow(
+        /Invalid Kalshi order price/,
+      );
+      expect(spy).not.toHaveBeenCalled();
+    });
+
+    it("rejects non-finite submit size before placing the order", async () => {
+      const spy = vi.spyOn(rest, "placeOrder").mockResolvedValue({
+        order_id: "ord-bad",
+        status: "resting",
+      });
+      const req: VenueOrderRequest = {
+        venueMarketId: "BTC-USD",
+        venueOutcomeId: "yes",
+        side: "BUY",
+        size: "NaN",
+        price: "0.45",
+        orderType: "GTC",
+        authContext: { userId: "u1" },
+      };
+
+      await expect(adapter.submitOrder(req)).rejects.toThrow(
+        /Invalid Kalshi order size/,
+      );
+      expect(spy).not.toHaveBeenCalled();
+    });
   });
 
   // ── Phase 5b: _dollars field support in getPrice ──────────────────────────

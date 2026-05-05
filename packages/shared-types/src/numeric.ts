@@ -13,3 +13,7 @@ export function safeDecimalToNumber(value: unknown, fallback?: number): number {
   if (fallback !== undefined) return fallback;
   throw new Error(`Invalid finite decimal: ${String(value)}`);
 }
+
+export function parseFiniteDecimal(value: unknown): number | null {
+  return isFiniteDecimal(value) ? Number(String(value).trim()) : null;
+}

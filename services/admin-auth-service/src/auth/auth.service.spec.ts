@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from "vitest";
 import { HttpStatus } from "@nestjs/common";
 import * as bcrypt from "bcrypt";
+import { verifySync } from "otplib";
 import { AuthService } from "./auth.service";
 
 // ─── Factories ────────────────────────────────────────────────────────────────
@@ -14,6 +15,7 @@ interface AdminLike {
   active: boolean;
   totpEnabled: boolean;
   totpSecret: string | null;
+  totpEnabledAt: Date | null;
   createdAt: Date;
 }
 
@@ -38,6 +40,7 @@ async function adminFactory(
     active: true,
     totpEnabled: false,
     totpSecret: null,
+    totpEnabledAt: null,
     createdAt: new Date(),
     ...overrides,
   };
@@ -46,15 +49,13 @@ async function adminFactory(
 // ─── Mock otplib ──────────────────────────────────────────────────────────────
 
 vi.mock("otplib", () => ({
-  authenticator: {
-    generateSecret: vi.fn().mockReturnValue("JBSWY3DPEHPK3PXP"),
-    keyuri: vi
-      .fn()
-      .mockReturnValue(
-        "otpauth://totp/Polyforge%20Admin:admin@test.com?secret=JBSWY3DPEHPK3PXP&issuer=Polyforge%20Admin",
-      ),
-    check: vi.fn().mockReturnValue(true),
-  },
+  generateSecret: vi.fn().mockReturnValue("JBSWY3DPEHPK3PXP"),
+  generateURI: vi
+    .fn()
+    .mockReturnValue(
+      "otpauth://totp/Polyforge%20Admin:admin@test.com?secret=JBSWY3DPEHPK3PXP&issuer=Polyforge%20Admin",
+    ),
+  verifySync: vi.fn().mockReturnValue({ valid: true }),
 }));
 
 vi.mock("qrcode", () => ({
@@ -213,9 +214,7 @@ describe("AdminAuthService", () => {
     });
 
     it("throws TOTP_INVALID (400) when admin TOTP code is wrong", async () => {
-      const otplib = await import("otplib");
-      const authenticator = (otplib as any).authenticator;
-      vi.mocked(authenticator.check).mockReturnValueOnce(false);
+      vi.mocked(verifySync).mockReturnValueOnce({ valid: false });
 
       const admin = await adminFactory({
         totpEnabled: true,
@@ -352,9 +351,7 @@ describe("AdminAuthService", () => {
       redis.get.mockResolvedValue("JBSWY3DPEHPK3PXP");
 
       // Override mock to return false for this test
-      const otplib = await import("otplib");
-      const authenticator = (otplib as any).authenticator;
-      vi.mocked(authenticator.check).mockReturnValueOnce(false);
+      vi.mocked(verifySync).mockReturnValueOnce({ valid: false });
 
       await expect(
         service.confirmTotp("admin-1", "000000"),

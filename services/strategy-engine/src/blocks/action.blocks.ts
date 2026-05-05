@@ -6,6 +6,7 @@ import {
   OrderIntent,
 } from "./block.types";
 import { PrismaService } from "@polyforge/shared-db";
+import { parseFiniteDecimal } from "@polyforge/shared-types";
 
 type BlockParams = Record<string, string | number | undefined>;
 type OrderType = "GTC" | "FOK" | "GTD" | "FAK";
@@ -34,12 +35,12 @@ function makeIntent(
   orderType: OrderType,
 ): OrderIntent {
   // SECURITY: Validate financial parameters before generating order intents
-  const sizeNum = parseFloat(size);
-  const priceNum = parseFloat(price);
-  if (isNaN(sizeNum) || sizeNum <= 0 || sizeNum > 10000) {
+  const sizeNum = parseFiniteDecimal(size);
+  const priceNum = parseFiniteDecimal(price);
+  if (sizeNum === null || sizeNum <= 0 || sizeNum > 10000) {
     throw new Error(`Invalid order size: ${size} (must be 0 < size <= 10000)`);
   }
-  if (isNaN(priceNum) || priceNum < 0.001 || priceNum > 0.999) {
+  if (priceNum === null || priceNum < 0.001 || priceNum > 0.999) {
     throw new Error(`Invalid order price: ${price} (must be 0.001-0.999)`);
   }
   if (!tokenId || typeof tokenId !== "string") {
@@ -150,11 +151,16 @@ export const SetStopLossAction: ActionEvaluator = {
     const position = await prisma.position.findUnique({
       where: { userId_tokenId: { userId: ctx.userId, tokenId } },
     });
-    if (!position || parseFloat(String(position.size)) === 0)
+    const positionSize = parseFiniteDecimal(position?.size);
+    if (!position || positionSize === null || positionSize === 0)
       return { intents: [] };
 
+    const avgPrice = parseFiniteDecimal(position.avgPrice);
+    const pctNum = parseFiniteDecimal(pct);
     const stopPrice =
-      parseFloat(String(position.avgPrice)) * (1 - parseFloat(pct));
+      avgPrice === null || pctNum === null
+        ? Number.NaN
+        : avgPrice * (1 - pctNum);
     const resolved = await resolveMarket(tokenId, prisma);
     if (!resolved) return { intents: [] };
 
@@ -166,7 +172,7 @@ export const SetStopLossAction: ActionEvaluator = {
           resolved.marketId,
           resolved.outcome,
           "SELL",
-          String(position.size),
+          String(positionSize),
           String(stopPrice.toFixed(4)),
           "GTC",
         ),
@@ -184,11 +190,16 @@ export const TakeProfitAction: ActionEvaluator = {
     const position = await prisma.position.findUnique({
       where: { userId_tokenId: { userId: ctx.userId, tokenId } },
     });
-    if (!position || parseFloat(String(position.size)) === 0)
+    const positionSize = parseFiniteDecimal(position?.size);
+    if (!position || positionSize === null || positionSize === 0)
       return { intents: [] };
 
+    const avgPrice = parseFiniteDecimal(position.avgPrice);
+    const pctNum = parseFiniteDecimal(pct);
     const tpPrice =
-      parseFloat(String(position.avgPrice)) * (1 + parseFloat(pct));
+      avgPrice === null || pctNum === null
+        ? Number.NaN
+        : avgPrice * (1 + pctNum);
     const resolved = await resolveMarket(tokenId, prisma);
     if (!resolved) return { intents: [] };
 
@@ -200,7 +211,7 @@ export const TakeProfitAction: ActionEvaluator = {
           resolved.marketId,
           resolved.outcome,
           "SELL",
-          String(position.size),
+          String(positionSize),
           String(Math.min(tpPrice, 0.99).toFixed(4)),
           "GTC",
         ),
@@ -324,12 +335,12 @@ export const ComboLegAction: ActionEvaluator = {
     );
     const price = priceData ? String(priceData.price) : "0.5";
 
-    const sizeNum = parseFloat(size);
-    const priceNum = parseFloat(price);
-    if (isNaN(sizeNum) || sizeNum <= 0 || sizeNum > 10000) {
+    const sizeNum = parseFiniteDecimal(size);
+    const priceNum = parseFiniteDecimal(price);
+    if (sizeNum === null || sizeNum <= 0 || sizeNum > 10000) {
       return { intents: [] };
     }
-    if (isNaN(priceNum) || priceNum < 0.001 || priceNum > 0.999) {
+    if (priceNum === null || priceNum < 0.001 || priceNum > 0.999) {
       return { intents: [] };
     }
 

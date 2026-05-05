@@ -7,8 +7,8 @@
     "target": "ES2023",
     "outDir": "./dist",
     "rootDir": ".",
-    "noImplicitAny": false,
-    "strictBindCallApply": false,
+    "noImplicitAny": true,
+    "strictBindCallApply": true,
     "noFallthroughCasesInSwitch": false
   },
   "include": ["src/**/*", "test/**/*"],

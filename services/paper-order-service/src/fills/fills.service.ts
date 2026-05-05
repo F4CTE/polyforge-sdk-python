@@ -1,7 +1,7 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { PrismaService } from "@polyforge/shared-db";
 import { RedisService } from "@polyforge/shared-redis";
-import { isFiniteDecimal, safeDecimalToNumber } from "@polyforge/shared-types";
+import { parseFiniteDecimal } from "@polyforge/shared-types";
 import {
   OrderSide,
   OrderOutcome,
@@ -53,15 +53,16 @@ export class FillsService {
   ) {}
 
   async simulate(intent: OrderIntent): Promise<void> {
-    if (!isFiniteDecimal(intent.size) || !isFiniteDecimal(intent.price)) {
+    const fillPrice = await this.resolveFillPrice(intent);
+    if (!Number.isFinite(fillPrice) || fillPrice < 0) {
       throw new Error("Invalid paper order numeric input");
     }
 
-    const fillSize = safeDecimalToNumber(intent.size);
-    if (fillSize <= 0) throw new Error("Invalid paper order numeric input");
-
-    const fillPrice = await this.resolveFillPrice(intent);
-    if (!Number.isFinite(fillPrice) || fillPrice < 0) {
+    const fillSize = parseFiniteDecimal(intent.size);
+    if (fillSize === null || fillSize <= 0) {
+      if (fillSize === null && String(intent.size).trim() !== "") {
+        throw new Error(`Invalid paper fill size: ${intent.size}`);
+      }
       throw new Error("Invalid paper order numeric input");
     }
 
@@ -125,14 +126,17 @@ export class FillsService {
 
   private async resolveFillPrice(intent: OrderIntent): Promise<number> {
     const bookRaw = await this.redis.get(`cache:book:${intent.tokenId}`);
-    const intentPrice = safeDecimalToNumber(intent.price);
+    const intentPrice = parseFiniteDecimal(intent.price);
+    if (intentPrice === null) {
+      throw new Error(`Invalid paper fill price: ${intent.price}`);
+    }
 
     if (!bookRaw) {
       // No book data — fall back to current price cache or intent price
       const priceRaw = await this.redis.get(`cache:price:${intent.tokenId}`);
       if (priceRaw) {
         const priceData = JSON.parse(priceRaw) as PriceData;
-        return safeDecimalToNumber(priceData.price ?? String(intentPrice));
+        return parseFiniteDecimal(priceData.price) ?? intentPrice;
       }
       return intentPrice;
     }
@@ -143,14 +147,16 @@ export class FillsService {
       // Buying: if best ask is lower than our limit price, fill at best ask (price improvement)
       const bestAsk = book.asks?.[0]?.price;
       if (bestAsk) {
-        const ask = safeDecimalToNumber(bestAsk, intentPrice);
+        const ask = parseFiniteDecimal(bestAsk);
+        if (ask === null) return intentPrice;
         return ask < intentPrice ? ask : intentPrice;
       }
     } else {
       // Selling: if best bid is higher than our limit price, fill at best bid (price improvement)
       const bestBid = book.bids?.[0]?.price;
       if (bestBid) {
-        const bid = safeDecimalToNumber(bestBid, intentPrice);
+        const bid = parseFiniteDecimal(bestBid);
+        if (bid === null) return intentPrice;
         return bid > intentPrice ? bid : intentPrice;
       }
     }
@@ -191,9 +197,16 @@ export class FillsService {
         },
       });
     } else {
-      const existingSize = safeDecimalToNumber(existing.size);
-      const existingAvg = safeDecimalToNumber(existing.avgPrice);
-      const existingReal = safeDecimalToNumber(existing.realizedPnl, 0);
+      const existingSize = parseFiniteDecimal(existing.size);
+      const existingAvg = parseFiniteDecimal(existing.avgPrice);
+      const existingReal = parseFiniteDecimal(existing.realizedPnl);
+      if (
+        existingSize === null ||
+        existingAvg === null ||
+        existingReal === null
+      ) {
+        throw new Error("Invalid existing paper position numeric value");
+      }
 
       if (intent.side === "BUY") {
         // Add to position — weighted average price
@@ -201,7 +214,10 @@ export class FillsService {
         if (newSize <= 0) {
           await this.prisma.paperPosition.delete({
             where: {
-              userId_tokenId: { userId: intent.userId, tokenId: intent.tokenId },
+              userId_tokenId: {
+                userId: intent.userId,
+                tokenId: intent.tokenId,
+              },
             },
           });
           return 0;
