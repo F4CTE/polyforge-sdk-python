@@ -35,9 +35,9 @@ function OrderTypeExpirationRule(validationOptions?: ValidationOptions) {
         defaultMessage(args: ValidationArguments) {
           const dto = args.object as SignOrderDto;
           if (dto.orderType === "GTD") {
-            return "GTD orders require expiration as a future Unix epoch (at least 30s ahead)";
+            return "Choose an expiration time at least 30 seconds in the future.";
           }
-          return `${dto.orderType} orders must have expiration = 0 or undefined`;
+          return "Remove the expiration time for this order type.";
         },
       },
     });

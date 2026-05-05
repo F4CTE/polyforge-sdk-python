@@ -24,6 +24,12 @@ import { OrderIntent } from "../blocks/block.types";
 const ORDER_STREAM = "stream:orders";
 const PAPER_ORDER_STREAM = "stream:paper_orders";
 
+const STRATEGY_ALREADY_RUNNING_ERROR = {
+  code: "STRATEGY_ALREADY_RUNNING",
+  message: "This strategy is already running.",
+  suggestion: "Stop the strategy before starting it again.",
+} as const;
+
 /**
  * Filter blocks based on graph connectivity before passing to the runner.
  * Safety blocks always pass through — they are global guards on every tick.
@@ -200,7 +206,7 @@ export class StrategyRegistryService implements OnApplicationBootstrap {
 
   async start(strategyId: string): Promise<void> {
     if (this.runners.has(strategyId)) {
-      throw new ConflictException(`Strategy ${strategyId} is already running`);
+      throw new ConflictException(STRATEGY_ALREADY_RUNNING_ERROR);
     }
 
     const strategy = await this.prisma.strategy.findUnique({
@@ -402,9 +408,7 @@ export class StrategyRegistryService implements OnApplicationBootstrap {
   ): Promise<void> {
     // Already running check
     if (this.runners.has(childStrategyId)) {
-      throw new ConflictException(
-        `Strategy ${childStrategyId} is already running`,
-      );
+      throw new ConflictException(STRATEGY_ALREADY_RUNNING_ERROR);
     }
 
     const child = await this.prisma.strategy.findUnique({

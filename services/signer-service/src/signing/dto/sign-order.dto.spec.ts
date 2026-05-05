@@ -34,7 +34,7 @@ describe("SignOrderDto orderType/expiration validation", () => {
     expect(errors.map((error) => error.constraints)).toContainEqual(
       expect.objectContaining({
         orderTypeExpirationRule:
-          "GTD orders require expiration as a future Unix epoch (at least 30s ahead)",
+          "Choose an expiration time at least 30 seconds in the future.",
       }),
     );
   });
@@ -61,7 +61,7 @@ describe("SignOrderDto orderType/expiration validation", () => {
     expect(errors.map((error) => error.constraints)).toContainEqual(
       expect.objectContaining({
         orderTypeExpirationRule:
-          "GTD orders require expiration as a future Unix epoch (at least 30s ahead)",
+          "Choose an expiration time at least 30 seconds in the future.",
       }),
     );
   });
@@ -75,8 +75,18 @@ describe("SignOrderDto orderType/expiration validation", () => {
     expect(errors.map((error) => error.constraints)).toContainEqual(
       expect.objectContaining({
         orderTypeExpirationRule:
-          "FOK orders must have expiration = 0 or undefined",
+          "Remove the expiration time for this order type.",
       }),
+    );
+  });
+
+  it("does not expose protocol terms in expiration validation messages", async () => {
+    vi.setSystemTime(new Date("2026-04-29T12:00:00Z"));
+
+    const errors = await validateDto({ orderType: "GTD" });
+
+    expect(JSON.stringify(errors.map((error) => error.constraints))).not.toMatch(
+      /GTD|GTC|FOK|FAK|Unix epoch|expiration\s*=\s*0|undefined|now\+30s/i,
     );
   });
 });

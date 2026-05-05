@@ -253,17 +253,22 @@ export class SigningService implements OnModuleInit {
         !Number.isFinite(expiration) ||
         expiration <= minExpiration
       ) {
-        throw new BadRequestException(
-          `GTD order requires expiration > now+30s (got ${expiration})`,
-        );
+        throw new BadRequestException({
+          code: "ORDER_EXPIRATION_REQUIRED",
+          message:
+            "Choose an expiration time at least 30 seconds in the future.",
+          suggestion: "Pick a later expiration time and try again.",
+        });
       }
       return expiration;
     }
 
     if (expiration !== undefined && expiration !== 0) {
-      throw new BadRequestException(
-        `${orderType} orders require expiration=0 or undefined`,
-      );
+      throw new BadRequestException({
+        code: "ORDER_EXPIRATION_NOT_ALLOWED",
+        message: "Remove the expiration time for this order type.",
+        suggestion: "Clear the expiration field and try again.",
+      });
     }
     return 0;
   }

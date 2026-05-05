@@ -199,7 +199,12 @@ describe("SigningService (CLOB V2)", () => {
           orderType: "FOK",
           expiration: Math.floor(Date.now() / 1000) + 60,
         }),
-      ).rejects.toThrow("FOK orders require expiration=0");
+      ).rejects.toMatchObject({
+        response: expect.objectContaining({
+          code: "ORDER_EXPIRATION_NOT_ALLOWED",
+          message: "Remove the expiration time for this order type.",
+        }),
+      });
     });
 
     it("sets makerAmount = round(size * 1_000_000)", async () => {
@@ -613,10 +618,32 @@ describe("SigningService (CLOB V2)", () => {
           orderType: "GTD",
           expiration: undefined,
         }),
-      ).rejects.toThrow("GTD order requires expiration");
+      ).rejects.toMatchObject({
+        response: expect.objectContaining({
+          code: "ORDER_EXPIRATION_REQUIRED",
+          message: "Choose an expiration time at least 30 seconds in the future.",
+        }),
+      });
 
       expect(prodCredentials.getDecryptedCredentials).not.toHaveBeenCalled();
       expect(nativeEip712.signOrder).not.toHaveBeenCalled();
+    });
+
+    it("does not expose protocol terms when rejecting signer expiration", async () => {
+      try {
+        await prodSvc.signOrder({
+          ...BASE_REQ,
+          orderType: "GTD",
+          expiration: undefined,
+        });
+        throw new Error("Expected invalid expiration to fail");
+      } catch (error) {
+        expect(error).toBeInstanceOf(BadRequestException);
+        const response = (error as BadRequestException).getResponse();
+        expect(JSON.stringify(response)).not.toMatch(
+          /GTD|GTC|FOK|FAK|Unix epoch|expiration\s*=\s*0|undefined|now\+30s/i,
+        );
+      }
     });
 
     it("passes validated GTD expiration to NativeEip712Service.signOrder", async () => {

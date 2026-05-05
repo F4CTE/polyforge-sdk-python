@@ -105,6 +105,28 @@ describe("StrategyRegistryService — start()", () => {
     await expect(svc.start("strat-1")).rejects.toThrow(ConflictException);
   });
 
+  it("returns a stable duplicate-running error without exposing the strategy id", async () => {
+    const strategyId = "0f5f63c8-1ed8-493f-8b6d-1a2ef156d5e9";
+    const strategy = makeDbStrategy({ id: strategyId });
+    prisma.strategy.findUnique.mockResolvedValue(strategy);
+
+    await svc.start(strategyId);
+
+    try {
+      await svc.start(strategyId);
+      throw new Error("Expected duplicate start to fail");
+    } catch (error) {
+      expect(error).toBeInstanceOf(ConflictException);
+      const response = (error as ConflictException).getResponse();
+      expect(response).toMatchObject({
+        code: "STRATEGY_ALREADY_RUNNING",
+        message: "This strategy is already running.",
+        suggestion: "Stop the strategy before starting it again.",
+      });
+      expect(JSON.stringify(response)).not.toContain(strategyId);
+    }
+  });
+
   it("updates strategy status to RUNNING for a TICK strategy", async () => {
     const strategy = makeDbStrategy({
       status: StrategyStatus.IDLE,
