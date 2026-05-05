@@ -35,6 +35,7 @@ function createMockRedis() {
       xgroup: vi.fn(),
       xreadgroup: vi.fn(),
       xack: vi.fn(),
+      eval: vi.fn().mockResolvedValue("0.1"),
       incrbyfloat: vi.fn().mockResolvedValue("0.1"),
       expire: vi.fn().mockResolvedValue(1),
     }),
@@ -574,7 +575,7 @@ describe("CopyEngineService", () => {
 
       // Daily PnL is -150, which exceeds -100 limit
       redis.get.mockResolvedValue("-150");
-      redis.getClient().incrbyfloat.mockResolvedValue("250");
+      redis.getClient().eval.mockResolvedValue("250");
       prisma.copyTrade.findMany.mockResolvedValue([]);
 
       const event = {
@@ -811,8 +812,8 @@ describe("CopyEngineService", () => {
       };
 
       prisma.copyConfig.findMany.mockResolvedValue([config]);
-      // Force processCopyForConfig to throw by making incrbyfloat reject
-      redis.getClient().incrbyfloat.mockRejectedValue(new Error("Redis down"));
+      // Force processCopyForConfig to throw by making daily-loss reservation fail
+      redis.getClient().eval.mockRejectedValue(new Error("Redis down"));
       redis.xadd.mockResolvedValue("ok");
 
       await engine.handleWhaleTrade({
@@ -869,7 +870,7 @@ describe("CopyEngineService", () => {
       prisma.copyConfig.findMany.mockResolvedValue([config1, config2]);
 
       let callCount = 0;
-      redis.getClient().incrbyfloat.mockImplementation(async () => {
+      redis.getClient().eval.mockImplementation(async () => {
         callCount++;
         if (callCount === 1) throw new Error("Redis error");
         return "50";
@@ -911,7 +912,7 @@ describe("CopyEngineService", () => {
       };
 
       redis.get.mockResolvedValue("0");
-      redis.getClient().incrbyfloat.mockResolvedValue("0.1");
+      redis.getClient().eval.mockResolvedValue("0.1");
 
       await engine.processCopyForConfig(
         config as unknown as CopyConfig,
@@ -1041,8 +1042,8 @@ describe("CopyEngineService", () => {
         status: "ACTIVE",
       };
 
-      // incrbyfloat returns value above daily loss limit
-      redis.getClient().incrbyfloat.mockResolvedValue("250");
+      // Atomic daily-loss reservation returns value above daily loss limit
+      redis.getClient().eval.mockResolvedValue("250");
 
       await engine.processCopyForConfig(
         config as unknown as CopyConfig,
@@ -1059,9 +1060,9 @@ describe("CopyEngineService", () => {
 
       // Should have rolled back the increment
       const incrbyfloatCalls = redis.getClient().incrbyfloat.mock.calls;
-      expect(incrbyfloatCalls.length).toBeGreaterThanOrEqual(2);
-      // Second call should be a negative rollback
-      expect(incrbyfloatCalls[1][1]).toBeLessThan(0);
+      expect(incrbyfloatCalls.length).toBeGreaterThanOrEqual(1);
+      expect(incrbyfloatCalls[0][0]).toBe("copy:cfg-1:daily_loss");
+      expect(incrbyfloatCalls[0][1]).toBeLessThan(0);
       expect(prisma.copyTrade.create).not.toHaveBeenCalled();
     });
   });

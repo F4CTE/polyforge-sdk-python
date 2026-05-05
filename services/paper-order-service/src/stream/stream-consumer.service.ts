@@ -14,6 +14,7 @@ import { FillsService, OrderIntent } from "../fills/fills.service";
 const STREAM = "stream:paper_orders";
 const GROUP = "paper-order-service";
 const CONSUMER = `paper-${process.pid}`;
+const PEL_MIN_IDLE_MS = 30_000;
 
 @Injectable()
 export class StreamConsumerService implements OnModuleInit, OnModuleDestroy {
@@ -35,6 +36,7 @@ export class StreamConsumerService implements OnModuleInit, OnModuleDestroy {
       stream: STREAM,
       group: GROUP,
       consumer: CONSUMER,
+      minIdleMs: PEL_MIN_IDLE_MS,
       handler: async (entry) => {
         const intent = entry.fields as unknown as OrderIntent;
         await this.fills.simulate(intent);

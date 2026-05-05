@@ -5,7 +5,11 @@ import {
   OnModuleDestroy,
 } from "@nestjs/common";
 import { PrismaService } from "@polyforge/shared-db";
-import { RedisService } from "@polyforge/shared-redis";
+import {
+  PelReclaimService,
+  RedisService,
+  StreamMonitorService,
+} from "@polyforge/shared-redis";
 import {
   type CopyConfig,
   Prisma,
@@ -18,6 +22,16 @@ const STREAM = "stream:events";
 const ORDER_STREAM = "stream:orders";
 const GROUP = "copy-engine";
 const CONSUMER = `copy-${process.pid}`;
+const PEL_MIN_IDLE_MS = 30_000;
+const DAILY_LOSS_TTL_SECONDS = 86_400;
+const DAILY_LOSS_RESERVE_SCRIPT = `
+local value = redis.call("INCRBYFLOAT", KEYS[1], ARGV[1])
+local ttl = redis.call("TTL", KEYS[1])
+if ttl < 0 then
+  redis.call("EXPIRE", KEYS[1], ARGV[2])
+end
+return value
+`;
 
 @Injectable()
 export class CopyEngineService implements OnModuleInit, OnModuleDestroy {
@@ -28,10 +42,22 @@ export class CopyEngineService implements OnModuleInit, OnModuleDestroy {
   constructor(
     private readonly prisma: PrismaService,
     private readonly redis: RedisService,
+    private readonly streamMonitor?: StreamMonitorService,
+    private readonly pelReclaim?: PelReclaimService,
   ) {}
 
   async onModuleInit() {
     await this.ensureGroup();
+    this.streamMonitor?.register({ stream: STREAM, group: GROUP });
+    this.pelReclaim?.register({
+      stream: STREAM,
+      group: GROUP,
+      consumer: CONSUMER,
+      minIdleMs: PEL_MIN_IDLE_MS,
+      handler: async (entry) => {
+        await this.processStreamEvent(entry.fields);
+      },
+    });
     this.running = true;
     this.loopPromise = this.consumeLoop();
   }
@@ -78,13 +104,7 @@ export class CopyEngineService implements OnModuleInit, OnModuleDestroy {
         ][]) {
           for (const [id, fields] of messages) {
             const event = this.parseFields(fields);
-            if (event.type === "WHALE_TRADE") {
-              await this.handleWhaleTrade(event);
-            } else if (event.type === "ORDER_FILLED" && event.copyTradeId) {
-              await this.reconcileCopyTrade(event);
-            } else if (event.type === "ORDER_CANCELLED" && event.copyTradeId) {
-              await this.handleCopyTradeCancelled(event);
-            }
+            await this.processStreamEvent(event);
             await this.redis.getClient().xack(STREAM, GROUP, id);
           }
         }
@@ -104,6 +124,16 @@ export class CopyEngineService implements OnModuleInit, OnModuleDestroy {
       obj[fields[i]] = fields[i + 1];
     }
     return obj;
+  }
+
+  private async processStreamEvent(event: Record<string, string>) {
+    if (event.type === "WHALE_TRADE") {
+      await this.handleWhaleTrade(event);
+    } else if (event.type === "ORDER_FILLED" && event.copyTradeId) {
+      await this.reconcileCopyTrade(event);
+    } else if (event.type === "ORDER_CANCELLED" && event.copyTradeId) {
+      await this.handleCopyTradeCancelled(event);
+    }
   }
 
   // ─── Handle Whale Trade ──────────────────────────────────────────────────────
@@ -175,10 +205,17 @@ export class CopyEngineService implements OnModuleInit, OnModuleDestroy {
 
     const dailyKey = `copy:${config.id}:daily_loss`;
     const client = this.redis.getClient();
-    const newLoss = await client.incrbyfloat(dailyKey, notional);
-    // Set TTL to expire at end of day (24h) — ensures counter resets daily
-    await client.expire(dailyKey, 86400);
-    const newLossAmount = safeDecimalToNumber(newLoss, Number.POSITIVE_INFINITY);
+    const newLoss = await client.eval(
+      DAILY_LOSS_RESERVE_SCRIPT,
+      1,
+      dailyKey,
+      String(notional),
+      String(DAILY_LOSS_TTL_SECONDS),
+    );
+    const newLossAmount = safeDecimalToNumber(
+      newLoss,
+      Number.POSITIVE_INFINITY,
+    );
     if (newLossAmount > maxDailyLoss) {
       // Rollback the increment
       await client.incrbyfloat(dailyKey, -notional);

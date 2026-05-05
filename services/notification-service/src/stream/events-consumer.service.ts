@@ -14,6 +14,7 @@ import { NotificationService } from "../notification/notification.service";
 const STREAM = "stream:events";
 const GROUP = "notification-service";
 const CONSUMER = `notif-${process.pid}`;
+const PEL_MIN_IDLE_MS = 30_000;
 
 /**
  * Maps stream:events types to the canonical event type used by NotificationService.
@@ -76,6 +77,7 @@ export class EventsConsumerService implements OnModuleInit, OnModuleDestroy {
       stream: STREAM,
       group: GROUP,
       consumer: CONSUMER,
+      minIdleMs: PEL_MIN_IDLE_MS,
       handler: async (entry) => {
         const event = entry.fields;
         const notifType = toNotifType(event.type ?? "", event);

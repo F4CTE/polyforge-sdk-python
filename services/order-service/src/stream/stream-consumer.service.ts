@@ -17,6 +17,7 @@ const GROUP = "order-service";
 const CONSUMER = `order-service-${process.pid}`;
 const BLOCK_MS = 2_000; // block XREADGROUP for 2s
 const BATCH_COUNT = 50; // read up to 50 messages per poll
+const PEL_MIN_IDLE_MS = 30_000;
 
 /**
  * Reads OrderIntents from `stream:orders` using Redis Consumer Groups.
@@ -45,6 +46,7 @@ export class StreamConsumerService implements OnModuleInit, OnModuleDestroy {
       stream: STREAM,
       group: GROUP,
       consumer: CONSUMER,
+      minIdleMs: PEL_MIN_IDLE_MS,
       handler: async (entry) => {
         const intent = this.parseIntent(this.fieldsToArray(entry.fields));
         if (!intent) return;
@@ -55,8 +57,9 @@ export class StreamConsumerService implements OnModuleInit, OnModuleDestroy {
     this.loopPromise = this.consumeLoop();
   }
 
-  onModuleDestroy() {
+  async onModuleDestroy() {
     this.running = false;
+    await this.loopPromise;
   }
 
   // ─── Consumer group setup ─────────────────────────────────────────────────

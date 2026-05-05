@@ -27,6 +27,7 @@ function createMockRedis() {
     del: vi.fn().mockResolvedValue(1),
     getClient: vi.fn().mockReturnValue({
       xgroup: vi.fn().mockResolvedValue("OK"),
+      eval: vi.fn().mockResolvedValue("100"),
       incrbyfloat: vi.fn().mockResolvedValue("100"),
       expire: vi.fn().mockResolvedValue(1),
     }),
@@ -158,7 +159,7 @@ describe("CopyEngineService", () => {
         totalCopied: 0,
       };
       prisma.copyConfig.findMany.mockResolvedValue([config]);
-      redis.getClient().incrbyfloat.mockRejectedValue(new Error("Redis down"));
+      redis.getClient().eval.mockRejectedValue(new Error("Redis down"));
 
       await service.handleWhaleTrade({
         type: "WHALE_TRADE",
@@ -204,7 +205,7 @@ describe("CopyEngineService", () => {
       prisma.copyConfig.findMany.mockResolvedValue([config1, config2]);
 
       let callCount = 0;
-      redis.getClient().incrbyfloat.mockImplementation(async () => {
+      redis.getClient().eval.mockImplementation(async () => {
         callCount++;
         if (callCount === 1) throw new Error("Redis fail");
         return "100";
@@ -247,13 +248,13 @@ describe("CopyEngineService", () => {
         price: "0.5",
       });
 
-      expect(redis.getClient().incrbyfloat).not.toHaveBeenCalled();
+      expect(redis.getClient().eval).not.toHaveBeenCalled();
       expect(prisma.copyTrade.create).not.toHaveBeenCalled();
     });
   });
 
   describe("processCopyForConfig", () => {
-    it("fails closed before Redis incrbyfloat when maxDailyLoss is NaN", async () => {
+    it("fails closed before Redis daily-loss reservation when maxDailyLoss is NaN", async () => {
       const config = {
         id: "cfg1",
         userId: "user1",
@@ -271,8 +272,40 @@ describe("CopyEngineService", () => {
         0.5,
       );
 
-      expect(redis.getClient().incrbyfloat).not.toHaveBeenCalled();
+      expect(redis.getClient().eval).not.toHaveBeenCalled();
       expect(prisma.copyTrade.create).not.toHaveBeenCalled();
+    });
+
+    it("reserves daily loss and TTL in one Redis script", async () => {
+      const config = {
+        id: "cfg1",
+        userId: "user1",
+        mode: "UNKNOWN",
+        sizeValue: "100",
+        maxDailyLoss: "10000",
+        maxExposure: "50000",
+        priceOffset: "0",
+      };
+
+      redis.getClient().eval.mockResolvedValue("50");
+      redis.get.mockResolvedValue("0");
+      prisma.copyTrade.findMany.mockResolvedValue([]);
+
+      await service.processCopyForConfig(
+        config as any,
+        { walletAddress: "0xabc", side: "BUY", outcome: "YES" },
+        100,
+        0.5,
+      );
+
+      expect(redis.getClient().eval).toHaveBeenCalledWith(
+        expect.stringContaining('redis.call("INCRBYFLOAT"'),
+        1,
+        "copy:cfg1:daily_loss",
+        "50",
+        "86400",
+      );
+      expect(redis.getClient().expire).not.toHaveBeenCalled();
     });
   });
 
@@ -419,7 +452,7 @@ describe("CopyEngineService", () => {
         priceOffset: "0",
       };
 
-      redis.getClient().incrbyfloat.mockResolvedValue("250"); // Exceeds 50
+      redis.getClient().eval.mockResolvedValue("250"); // Exceeds 50
 
       await service.processCopyForConfig(
         config as any,
@@ -434,9 +467,10 @@ describe("CopyEngineService", () => {
         0.5,
       );
 
-      // Should rollback (second incrbyfloat call with negative value)
       const calls = redis.getClient().incrbyfloat.mock.calls;
-      expect(calls.length).toBeGreaterThanOrEqual(2);
+      expect(calls.length).toBeGreaterThanOrEqual(1);
+      expect(calls[0][0]).toBe("copy:cfg1:daily_loss");
+      expect(calls[0][1]).toBe(-500);
       expect(prisma.copyTrade.create).not.toHaveBeenCalled();
     });
 
@@ -451,7 +485,7 @@ describe("CopyEngineService", () => {
         priceOffset: "0",
       };
 
-      redis.getClient().incrbyfloat.mockResolvedValue("50"); // Daily loss OK
+      redis.getClient().eval.mockResolvedValue("50"); // Daily loss OK
       redis.get.mockResolvedValue("100"); // Exposure at limit
 
       await service.processCopyForConfig(
@@ -481,7 +515,7 @@ describe("CopyEngineService", () => {
         priceOffset: "0",
       };
 
-      redis.getClient().incrbyfloat.mockResolvedValue("50");
+      redis.getClient().eval.mockResolvedValue("50");
       redis.get.mockResolvedValue("0");
 
       await service.processCopyForConfig(
@@ -511,7 +545,7 @@ describe("CopyEngineService", () => {
         priceOffset: "5",
       };
 
-      redis.getClient().incrbyfloat.mockResolvedValue("50");
+      redis.getClient().eval.mockResolvedValue("50");
       redis.get.mockResolvedValue("0");
       prisma.copyTrade.findMany.mockResolvedValue([]);
       prisma.copyTrade.create.mockResolvedValue({ id: "trade-1" });

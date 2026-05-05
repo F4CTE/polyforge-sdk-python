@@ -5,7 +5,11 @@ import {
   OnModuleDestroy,
 } from "@nestjs/common";
 import { PrismaService } from "@polyforge/shared-db";
-import { RedisService } from "@polyforge/shared-redis";
+import {
+  PelReclaimService,
+  RedisService,
+  StreamMonitorService,
+} from "@polyforge/shared-redis";
 import { WebhooksService } from "../webhooks/webhooks.service";
 import { EventsGateway } from "./events.gateway";
 import { StrategyEventsService } from "./strategy-events.service";
@@ -13,6 +17,7 @@ import { StrategyEventsService } from "./strategy-events.service";
 const STREAM = "stream:events";
 const GROUP = "api-service";
 const CONSUMER = `api-${process.pid}`;
+const PEL_MIN_IDLE_MS = 30_000;
 
 /**
  * Consumes stream:events from Redis and dispatches to connected WebSocket clients.
@@ -34,10 +39,22 @@ export class EventsService implements OnModuleInit, OnModuleDestroy {
     private readonly gateway: EventsGateway,
     private readonly strategyEvents: StrategyEventsService,
     private readonly webhooks: WebhooksService,
+    private readonly streamMonitor?: StreamMonitorService,
+    private readonly pelReclaim?: PelReclaimService,
   ) {}
 
   async onModuleInit() {
     await this.ensureGroup();
+    this.streamMonitor?.register({ stream: STREAM, group: GROUP });
+    this.pelReclaim?.register({
+      stream: STREAM,
+      group: GROUP,
+      consumer: CONSUMER,
+      minIdleMs: PEL_MIN_IDLE_MS,
+      handler: (entry) => {
+        this.dispatch(entry.fields);
+      },
+    });
     this.running = true;
     this.loopPromise = this.consumeLoop();
   }

@@ -6,13 +6,19 @@ import {
 } from "@nestjs/common";
 import { Cron } from "@nestjs/schedule";
 import { PrismaService } from "@polyforge/shared-db";
-import { RedisService, runOncePerCluster } from "@polyforge/shared-redis";
+import {
+  PelReclaimService,
+  RedisService,
+  runOncePerCluster,
+  StreamMonitorService,
+} from "@polyforge/shared-redis";
 import { Prisma, OrderSide, OrderOutcome } from "@prisma/client";
 
 const STREAM = "stream:events";
 const GROUP = "whale-detector";
 const CONSUMER = `whale-${process.pid}`;
 const DEFAULT_THRESHOLD = 5000;
+const PEL_MIN_IDLE_MS = 30_000;
 
 @Injectable()
 export class WhaleDetectorService implements OnModuleInit, OnModuleDestroy {
@@ -23,10 +29,22 @@ export class WhaleDetectorService implements OnModuleInit, OnModuleDestroy {
   constructor(
     private readonly prisma: PrismaService,
     private readonly redis: RedisService,
+    private readonly streamMonitor?: StreamMonitorService,
+    private readonly pelReclaim?: PelReclaimService,
   ) {}
 
   async onModuleInit() {
     await this.ensureGroup();
+    this.streamMonitor?.register({ stream: STREAM, group: GROUP });
+    this.pelReclaim?.register({
+      stream: STREAM,
+      group: GROUP,
+      consumer: CONSUMER,
+      minIdleMs: PEL_MIN_IDLE_MS,
+      handler: async (entry) => {
+        await this.processEvent(entry.fields);
+      },
+    });
     this.running = true;
     this.loopPromise = this.consumeLoop();
   }

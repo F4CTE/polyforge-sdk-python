@@ -14,6 +14,7 @@ import { BacktestService } from "../backtest/backtest.service";
 const STREAM = "stream:backtests";
 const GROUP = "backtest-service";
 const CONSUMER = `backtest-${process.pid}`;
+const PEL_MIN_IDLE_MS = 30_000;
 
 @Injectable()
 export class StreamConsumerService implements OnModuleInit, OnModuleDestroy {
@@ -39,6 +40,7 @@ export class StreamConsumerService implements OnModuleInit, OnModuleDestroy {
       stream: STREAM,
       group: GROUP,
       consumer: CONSUMER,
+      minIdleMs: PEL_MIN_IDLE_MS,
       handler: async () => {
         // No-op — drain and ACK. Re-running silently is unsafe because
         // it could double up on partial DB writes from a prior attempt.

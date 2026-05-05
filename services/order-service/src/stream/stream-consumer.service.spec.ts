@@ -272,4 +272,20 @@ describe("StreamConsumerService (order-service)", () => {
       );
     });
   });
+
+  describe("onModuleDestroy", () => {
+    it("waits for the active consume loop to stop", async () => {
+      let resolved = false;
+      const loopPromise = Promise.resolve().then(() => {
+        resolved = true;
+      });
+      (service as any).running = true;
+      (service as any).loopPromise = loopPromise;
+
+      await service.onModuleDestroy();
+
+      expect((service as any).running).toBe(false);
+      expect(resolved).toBe(true);
+    });
+  });
 });
