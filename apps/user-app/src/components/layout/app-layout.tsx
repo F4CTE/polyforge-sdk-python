@@ -12,6 +12,7 @@ import { TooltipTour } from "../onboarding/tooltip-tour";
 import { ShortcutsModal } from "../shortcuts/shortcuts-modal";
 import { OnboardingModal } from "../onboarding/onboarding-modal";
 import { LiveTradingSafetyBanner } from "../trading/live-trading-safety-banner";
+import { WebSocketStatusBanner } from "./websocket-status-banner";
 
 const ONBOARDING_KEY = "pf-onboarding-complete";
 
@@ -152,6 +153,7 @@ export function AppLayout() {
         </div>
         <BetaBanner />
         <LiveTradingSafetyBanner />
+        <WebSocketStatusBanner />
         <main
           className="flex-1 overflow-y-auto pb-16 sm:pb-0"
           id="main-content"

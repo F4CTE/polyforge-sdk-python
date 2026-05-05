@@ -107,4 +107,41 @@ describe("trading safety confirmations", () => {
     expect(bannerSrc).toContain('msg.type === "STRATEGY_STARTED"');
     expect(bannerSrc).toContain('msg.type === "STRATEGY_STOPPED"');
   });
+
+  it("shows WebSocket disconnect visibility instead of silent reconnect", () => {
+    const websocketSrc = source("apps/user-app/src/lib/websocket.ts");
+    const hookSrc = source(
+      "apps/user-app/src/hooks/use-websocket-connection-state.ts",
+    );
+    const layoutSrc = source(
+      "apps/user-app/src/components/layout/app-layout.tsx",
+    );
+    const topbarSrc = source("apps/user-app/src/components/layout/topbar.tsx");
+    const bannerSrc = source(
+      "apps/user-app/src/components/layout/websocket-status-banner.tsx",
+    );
+
+    expect(websocketSrc).toContain("export type ConnectionState");
+    expect(websocketSrc).toContain("addConnectionListener");
+    expect(websocketSrc).toContain("getConnectionState");
+    expect(websocketSrc).toContain('this.setConnectionState("reconnecting")');
+
+    expect(hookSrc).toContain("useWebSocketConnectionState");
+    expect(hookSrc).toContain("wsManager.addConnectionListener");
+    expect(layoutSrc).toContain(
+      'import { WebSocketStatusBanner } from "./websocket-status-banner";',
+    );
+    expect(layoutSrc).toContain("<WebSocketStatusBanner />");
+
+    expect(topbarSrc).toContain("useWebSocketConnectionState");
+    expect(topbarSrc).toContain("connectionDotClass");
+    expect(topbarSrc).not.toContain(
+      '<span className="sr-only">Connected</span>',
+    );
+
+    expect(bannerSrc).toContain('data-testid="websocket-disconnect-banner"');
+    expect(bannerSrc).toContain("Connection lost");
+    expect(bannerSrc).toContain("reconnecting");
+    expect(bannerSrc).toContain("Live prices and strategy events may be stale");
+  });
 });

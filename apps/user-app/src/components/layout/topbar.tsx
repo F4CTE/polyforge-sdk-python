@@ -1,16 +1,41 @@
-import { useState, useRef, useEffect } from 'react';
-import { useNavigate } from 'react-router';
-import { Sun, Moon, Bell, ChevronDown, User, Settings, LogOut, Keyboard } from 'lucide-react';
-import { useAuthStore } from '@/stores/auth-store';
-import { useThemeStore } from '@/stores/theme-store';
-import { useNotificationStore } from '@/stores/notification-store';
+import { useState, useRef, useEffect } from "react";
+import { useNavigate } from "react-router";
+import {
+  Sun,
+  Moon,
+  Bell,
+  ChevronDown,
+  User,
+  Settings,
+  LogOut,
+  Keyboard,
+} from "lucide-react";
+import { useAuthStore } from "@/stores/auth-store";
+import { useThemeStore } from "@/stores/theme-store";
+import { useNotificationStore } from "@/stores/notification-store";
+import { useWebSocketConnectionState } from "@/hooks/use-websocket-connection-state";
+import type { ConnectionState } from "@/lib/websocket";
 
 function timeAgo(ts: number): string {
   const diff = Date.now() - ts;
-  if (diff < 60_000) return 'just now';
+  if (diff < 60_000) return "just now";
   if (diff < 3_600_000) return `${Math.floor(diff / 60_000)}m ago`;
   if (diff < 86_400_000) return `${Math.floor(diff / 3_600_000)}h ago`;
   return `${Math.floor(diff / 86_400_000)}d ago`;
+}
+
+function connectionDotClass(state: ConnectionState): string {
+  if (state === "connected") return "bg-gain animate-pulse-dot";
+  if (state === "connecting" || state === "reconnecting")
+    return "bg-warning animate-pulse-dot";
+  return "bg-loss";
+}
+
+function connectionLabel(state: ConnectionState): string {
+  if (state === "connected") return "Live updates connected";
+  if (state === "connecting") return "Live updates connecting";
+  if (state === "reconnecting") return "Live updates reconnecting";
+  return "Live updates disconnected";
 }
 
 export function Topbar() {
@@ -20,6 +45,7 @@ export function Topbar() {
   const unreadCount = useNotificationStore((s) => s.unreadCount);
   const markAllRead = useNotificationStore((s) => s.markAllRead);
   const markRead = useNotificationStore((s) => s.markRead);
+  const connectionState = useWebSocketConnectionState();
   const navigate = useNavigate();
 
   const [notifOpen, setNotifOpen] = useState(false);
@@ -38,24 +64,24 @@ export function Topbar() {
       }
     }
     function handleEscape(e: KeyboardEvent) {
-      if (e.key === 'Escape') {
+      if (e.key === "Escape") {
         setNotifOpen(false);
         setMenuOpen(false);
       }
     }
-    document.addEventListener('mousedown', handleClick);
-    document.addEventListener('keydown', handleEscape);
+    document.addEventListener("mousedown", handleClick);
+    document.addEventListener("keydown", handleEscape);
     return () => {
-      document.removeEventListener('mousedown', handleClick);
-      document.removeEventListener('keydown', handleEscape);
+      document.removeEventListener("mousedown", handleClick);
+      document.removeEventListener("keydown", handleEscape);
     };
   }, []);
 
   const initials = user
     ? (user.displayName ?? user.username).slice(0, 2).toUpperCase()
-    : '?';
+    : "?";
 
-  const displayName = user?.displayName ?? user?.username ?? '';
+  const displayName = user?.displayName ?? user?.username ?? "";
   const unread = unreadCount();
 
   return (
@@ -65,7 +91,7 @@ export function Topbar() {
       {/* Keyboard shortcuts button */}
       <button
         type="button"
-        onClick={() => window.dispatchEvent(new CustomEvent('open-shortcuts'))}
+        onClick={() => window.dispatchEvent(new CustomEvent("open-shortcuts"))}
         className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-sm text-secondary hover:bg-elevated hover:text-primary active:bg-surface transition-colors focus-visible:outline-none focus-visible:shadow-focus-ring"
         aria-label="Keyboard shortcuts"
         title="Keyboard shortcuts (?)"
@@ -79,7 +105,7 @@ export function Topbar() {
         data-tour="theme-toggle"
         onClick={toggleTheme}
         className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-sm text-secondary hover:bg-elevated hover:text-primary active:bg-surface transition-colors focus-visible:outline-none focus-visible:shadow-focus-ring"
-        aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+        aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
       >
         {isDark ? <Sun size={18} /> : <Moon size={18} />}
       </button>
@@ -96,19 +122,31 @@ export function Topbar() {
         >
           <Bell size={18} />
           {unread > 0 && (
-            <span className="absolute top-1 right-1 flex items-center justify-center min-w-[16px] h-4 px-1 text-caption font-semibold text-primary bg-loss rounded-full" aria-label={`${unread} unread notifications`}>
-              {unread > 9 ? '9+' : unread}
+            <span
+              className="absolute top-1 right-1 flex items-center justify-center min-w-[16px] h-4 px-1 text-caption font-semibold text-primary bg-loss rounded-full"
+              aria-label={`${unread} unread notifications`}
+            >
+              {unread > 9 ? "9+" : unread}
             </span>
           )}
-          {/* WebSocket active indicator */}
-          <span className="absolute bottom-1 right-1 w-2 h-2 rounded-full bg-gain animate-pulse-dot" aria-hidden="true" />
-          <span className="sr-only">Connected</span>
+          {/* WebSocket live-updates indicator */}
+          <span
+            className={`absolute bottom-1 right-1 w-2 h-2 rounded-full ${connectionDotClass(connectionState)}`}
+            aria-hidden="true"
+          />
+          <span className="sr-only">{connectionLabel(connectionState)}</span>
         </button>
 
         {notifOpen && (
-          <div role="dialog" aria-label="Notifications" className="animate-slide-up absolute right-0 top-12 w-80 bg-elevated border border-default rounded-pf shadow-elevation-2 z-50">
+          <div
+            role="dialog"
+            aria-label="Notifications"
+            className="animate-slide-up absolute right-0 top-12 w-80 bg-elevated border border-default rounded-pf shadow-elevation-2 z-50"
+          >
             <div className="flex items-center justify-between px-4 py-3 border-b border-default">
-              <strong className="text-body-md text-primary">Notifications</strong>
+              <strong className="text-body-md text-primary">
+                Notifications
+              </strong>
               <button
                 type="button"
                 onClick={markAllRead}
@@ -129,19 +167,19 @@ export function Topbar() {
                     key={n.id}
                     onClick={() => markRead(n.id)}
                     className={`w-full flex items-start gap-3 px-4 py-3 cursor-pointer hover:bg-surface transition-colors focus-visible:outline-none focus-visible:shadow-focus-ring ${
-                      !n.read ? 'bg-accent-subtle' : ''
+                      !n.read ? "bg-accent-subtle" : ""
                     }`}
-                    aria-label={`${n.read ? '' : 'Unread: '}${n.title}`}
+                    aria-label={`${n.read ? "" : "Unread: "}${n.title}`}
                   >
                     <span
                       className={`mt-2 w-2 h-2 rounded-full shrink-0 ${
-                        n.severity === 'error'
-                          ? 'bg-loss'
-                          : n.severity === 'warning'
-                            ? 'bg-warning'
-                            : n.severity === 'success'
-                              ? 'bg-gain'
-                              : 'bg-accent'
+                        n.severity === "error"
+                          ? "bg-loss"
+                          : n.severity === "warning"
+                            ? "bg-warning"
+                            : n.severity === "success"
+                              ? "bg-gain"
+                              : "bg-accent"
                       }`}
                     />
                     <div className="min-w-0 flex-1">
@@ -151,7 +189,10 @@ export function Topbar() {
                       <p className="text-label text-tertiary truncate">
                         {n.body}
                       </p>
-                      <span className="text-caption text-tertiary/70" title={new Date(n.timestamp).toLocaleString()}>
+                      <span
+                        className="text-caption text-tertiary/70"
+                        title={new Date(n.timestamp).toLocaleString()}
+                      >
                         {timeAgo(n.timestamp)}
                       </span>
                     </div>
@@ -163,7 +204,7 @@ export function Topbar() {
               type="button"
               onClick={() => {
                 setNotifOpen(false);
-                navigate('/settings');
+                void navigate("/settings");
               }}
               className="block w-full text-center text-label text-accent-text py-3 border-t border-default hover:bg-surface transition-colors focus-visible:outline-none focus-visible:shadow-focus-ring"
             >
@@ -194,13 +235,16 @@ export function Topbar() {
         </button>
 
         {menuOpen && (
-          <div role="menu" className="animate-slide-up absolute right-0 top-12 w-48 bg-elevated border border-default rounded-pf shadow-elevation-2 z-50 py-1">
+          <div
+            role="menu"
+            className="animate-slide-up absolute right-0 top-12 w-48 bg-elevated border border-default rounded-pf shadow-elevation-2 z-50 py-1"
+          >
             <button
               type="button"
               role="menuitem"
               onClick={() => {
                 setMenuOpen(false);
-                navigate('/profile/me');
+                void navigate("/profile/me");
               }}
               className="flex items-center gap-2 w-full px-4 py-2 text-body-md text-primary hover:bg-surface transition-colors focus-visible:outline-none focus-visible:shadow-focus-ring"
             >
@@ -212,7 +256,7 @@ export function Topbar() {
               role="menuitem"
               onClick={() => {
                 setMenuOpen(false);
-                navigate('/settings');
+                void navigate("/settings");
               }}
               className="flex items-center gap-2 w-full px-4 py-2 text-body-md text-primary hover:bg-surface transition-colors focus-visible:outline-none focus-visible:shadow-focus-ring"
             >
@@ -223,7 +267,9 @@ export function Topbar() {
             <button
               type="button"
               role="menuitem"
-              onClick={logout}
+              onClick={() => {
+                void logout();
+              }}
               className="flex items-center gap-2 w-full px-4 py-2 text-body-md text-loss hover:bg-surface transition-colors focus-visible:outline-none focus-visible:shadow-focus-ring"
             >
               <LogOut size={16} />
