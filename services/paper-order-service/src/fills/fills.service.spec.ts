@@ -192,6 +192,77 @@ describe("FillsService", () => {
           }),
         );
       });
+
+      it("retries once when the serializable transaction reports P2034", async () => {
+        const conflict = Object.assign(new Error("write conflict"), {
+          code: "P2034",
+        });
+        (prisma.$transaction as any)
+          .mockRejectedValueOnce(conflict)
+          .mockImplementationOnce(
+            async (callback: (tx: PrismaService) => Promise<unknown>) =>
+              callback(prisma),
+          );
+
+        await service.simulate(makeIntent());
+
+        expect(prisma.$transaction).toHaveBeenCalledTimes(2);
+        expect(prisma.paperOrder.create).toHaveBeenCalledOnce();
+        expect(prisma.paperPosition.create).toHaveBeenCalledOnce();
+        expect(redis.xadd).toHaveBeenCalledOnce();
+      });
+
+      it("rethrows a P2034 conflict after exhausting serializable retries", async () => {
+        const conflict = Object.assign(new Error("write conflict"), {
+          code: "P2034",
+        });
+        (prisma.$transaction as any).mockRejectedValue(conflict);
+
+        await expect(service.simulate(makeIntent())).rejects.toMatchObject({
+          code: "P2034",
+        });
+
+        expect(prisma.$transaction).toHaveBeenCalledTimes(3);
+        expect(prisma.paperOrder.create).not.toHaveBeenCalled();
+        expect(redis.xadd).not.toHaveBeenCalled();
+      });
+
+      it("does not retry non-serializable transaction errors", async () => {
+        const err = Object.assign(new Error("unique violation"), {
+          code: "P2002",
+        });
+        (prisma.$transaction as any).mockRejectedValueOnce(err);
+
+        await expect(service.simulate(makeIntent())).rejects.toThrow(
+          "unique violation",
+        );
+
+        expect(prisma.$transaction).toHaveBeenCalledOnce();
+        expect(prisma.paperOrder.create).not.toHaveBeenCalled();
+        expect(redis.xadd).not.toHaveBeenCalled();
+      });
+
+      it("does not retry plain thrown values from the transaction", async () => {
+        (prisma.$transaction as any).mockRejectedValueOnce("redis unavailable");
+
+        await expect(service.simulate(makeIntent())).rejects.toBe(
+          "redis unavailable",
+        );
+
+        expect(prisma.$transaction).toHaveBeenCalledOnce();
+        expect(prisma.paperOrder.create).not.toHaveBeenCalled();
+        expect(redis.xadd).not.toHaveBeenCalled();
+      });
+
+      it("does not retry null transaction rejections", async () => {
+        (prisma.$transaction as any).mockRejectedValueOnce(null);
+
+        await expect(service.simulate(makeIntent())).rejects.toBeNull();
+
+        expect(prisma.$transaction).toHaveBeenCalledOnce();
+        expect(prisma.paperOrder.create).not.toHaveBeenCalled();
+        expect(redis.xadd).not.toHaveBeenCalled();
+      });
     });
 
     describe("BUY — adding to existing position", () => {
