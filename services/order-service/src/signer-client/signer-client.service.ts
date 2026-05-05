@@ -8,6 +8,84 @@ import { ConfigService } from "@nestjs/config";
 import { logCloudWatchMetric } from "@polyforge/logger";
 import { randomUUID } from "node:crypto";
 
+type CircuitBreakerState = "CLOSED" | "OPEN" | "HALF_OPEN";
+
+class CircuitBreakerOpenError extends Error {
+  constructor() {
+    super("circuit breaker open");
+    this.name = "CircuitBreakerOpenError";
+  }
+}
+
+class CircuitBreaker {
+  private state: CircuitBreakerState = "CLOSED";
+  private failures = 0;
+  private openedAt = 0;
+  private halfOpenProbeInFlight = false;
+
+  constructor(
+    private readonly failureThreshold: number,
+    private readonly resetTimeoutMs: number,
+  ) {}
+
+  async execute<T>(
+    operation: () => Promise<T>,
+    isFailure: (result: T) => boolean,
+  ): Promise<T> {
+    const halfOpenProbe = this.beforeRequest();
+
+    try {
+      const result = await operation();
+      if (isFailure(result)) {
+        this.recordFailure();
+      } else {
+        this.recordSuccess();
+      }
+      return result;
+    } catch (err) {
+      this.recordFailure();
+      throw err;
+    } finally {
+      if (halfOpenProbe) {
+        this.halfOpenProbeInFlight = false;
+      }
+    }
+  }
+
+  private beforeRequest(): boolean {
+    if (this.state === "OPEN") {
+      if (Date.now() - this.openedAt < this.resetTimeoutMs) {
+        throw new CircuitBreakerOpenError();
+      }
+      this.state = "HALF_OPEN";
+    }
+
+    if (this.state === "HALF_OPEN") {
+      if (this.halfOpenProbeInFlight) {
+        throw new CircuitBreakerOpenError();
+      }
+      this.halfOpenProbeInFlight = true;
+      return true;
+    }
+
+    return false;
+  }
+
+  private recordSuccess(): void {
+    this.failures = 0;
+    this.openedAt = 0;
+    this.state = "CLOSED";
+  }
+
+  private recordFailure(): void {
+    this.failures += 1;
+    if (this.state === "HALF_OPEN" || this.failures >= this.failureThreshold) {
+      this.state = "OPEN";
+      this.openedAt = Date.now();
+    }
+  }
+}
+
 export interface SignOrderRequest {
   userId: string;
   requestId: string;
@@ -49,6 +127,7 @@ export interface CancelPolymarketOrderRequest {
 export class SignerClientService {
   private readonly logger = new Logger(SignerClientService.name);
   private readonly signerUrl: string;
+  private readonly breaker: CircuitBreaker;
 
   constructor(
     private readonly jwt: JwtService,
@@ -57,6 +136,16 @@ export class SignerClientService {
     this.signerUrl =
       this.config.get<string>("SIGNER_SERVICE_URL") ??
       "http://signer-service:3012";
+    this.breaker = new CircuitBreaker(
+      this.getPositiveInteger(
+        "SIGNER_SERVICE_CIRCUIT_BREAKER_FAILURE_THRESHOLD",
+        3,
+      ),
+      this.getPositiveInteger(
+        "SIGNER_SERVICE_CIRCUIT_BREAKER_RESET_MS",
+        30_000,
+      ),
+    );
   }
 
   async signOrder(req: SignOrderRequest): Promise<SignedOrder> {
@@ -65,26 +154,34 @@ export class SignerClientService {
 
     let res: Response;
     try {
-      res = await fetch(`${this.signerUrl}/sign/order`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(req),
-        signal: AbortSignal.timeout(10_000),
-      });
-    } catch (err) {
-      this.logger.error(
-        {
-          event: "SIGNER_REQUEST_FAILED",
-          operation: "signOrder",
-          userId: req.userId,
-          requestId: req.requestId,
-          err,
-        },
-        "signer-service request failed",
+      res = await this.breaker.execute(
+        () =>
+          fetch(`${this.signerUrl}/sign/order`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify(req),
+            signal: AbortSignal.timeout(10_000),
+          }),
+        (response) => !response.ok,
       );
+    } catch (err) {
+      if (err instanceof CircuitBreakerOpenError) {
+        this.logger.warn("signer-service circuit breaker is open");
+      } else {
+        this.logger.error(
+          {
+            event: "SIGNER_REQUEST_FAILED",
+            operation: "signOrder",
+            userId: req.userId,
+            requestId: req.requestId,
+            err,
+          },
+          "signer-service request failed",
+        );
+      }
       throw new ServiceUnavailableException("signer-service unavailable");
     }
 
@@ -135,15 +232,22 @@ export class SignerClientService {
 
     let res: Response;
     try {
-      res = await fetch(
-        `${this.signerUrl}/internal/v1/credentials/${encodeURIComponent(userId)}/us`,
-        {
-          method: "GET",
-          headers: { Authorization: `Bearer ${token}` },
-          signal: AbortSignal.timeout(10_000),
-        },
+      res = await this.breaker.execute(
+        () =>
+          fetch(
+            `${this.signerUrl}/internal/v1/credentials/${encodeURIComponent(userId)}/us`,
+            {
+              method: "GET",
+              headers: { Authorization: `Bearer ${token}` },
+              signal: AbortSignal.timeout(10_000),
+            },
+          ),
+        (response) => !response.ok,
       );
-    } catch {
+    } catch (err) {
+      if (err instanceof CircuitBreakerOpenError) {
+        this.logger.warn("signer-service circuit breaker is open");
+      }
       throw new ServiceUnavailableException("signer-service unavailable");
     }
 
@@ -165,16 +269,23 @@ export class SignerClientService {
 
     let res: Response;
     try {
-      res = await fetch(`${this.signerUrl}/sign/cancel-order`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ userId, venueOrderId }),
-        signal: AbortSignal.timeout(10_000),
-      });
-    } catch {
+      res = await this.breaker.execute(
+        () =>
+          fetch(`${this.signerUrl}/sign/cancel-order`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({ userId, venueOrderId }),
+            signal: AbortSignal.timeout(10_000),
+          }),
+        (response) => !response.ok,
+      );
+    } catch (err) {
+      if (err instanceof CircuitBreakerOpenError) {
+        this.logger.warn("signer-service circuit breaker is open");
+      }
       throw new ServiceUnavailableException("signer-service unavailable");
     }
 
@@ -184,6 +295,14 @@ export class SignerClientService {
         `signer-service error ${res.status}: ${body}`,
       );
     }
+  }
+
+  private getPositiveInteger(key: string, fallback: number): number {
+    const value = this.config.get<string | number>(key);
+    const parsed = typeof value === "number" ? value : Number(value);
+    return Number.isFinite(parsed) && parsed > 0
+      ? Math.floor(parsed)
+      : fallback;
   }
 
   private makeServiceJwt(): string {

@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import {
   NotFoundException,
   ForbiddenException,
+  ServiceUnavailableException,
   UnprocessableEntityException,
   ConflictException,
 } from "@nestjs/common";
@@ -906,6 +907,29 @@ describe("StrategiesService", () => {
           message: "Failed to start strategy",
         },
       });
+    });
+
+    it("rolls back status when engine start throws before returning a response", async () => {
+      const strategy = makeStrategy({
+        userId: "user-1",
+        status: StrategyStatus.IDLE,
+      });
+      const err = new ServiceUnavailableException("strategy-engine unavailable");
+      db.strategy.updateMany.mockResolvedValue({ count: 1 } as any);
+      db.strategy.update.mockResolvedValue(strategy as any);
+      vi.mocked(client.post).mockRejectedValue(err);
+
+      await expect(
+        service.start(strategy.id, "user-1", {
+          mode: "paper",
+        } as StartStrategyDto),
+      ).rejects.toBe(err);
+
+      expect(db.strategy.update).toHaveBeenCalledWith({
+        where: { id: strategy.id },
+        data: { status: StrategyStatus.IDLE },
+      });
+      expect(posthog.capture).not.toHaveBeenCalled();
     });
 
     it("succeeds when engine returns 204", async () => {

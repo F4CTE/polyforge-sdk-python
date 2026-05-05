@@ -322,11 +322,21 @@ export class StrategiesService {
       }
     }
 
-    const res = await this.client.post(
-      this.engineUrl,
-      "strategy-engine",
-      `/internal/strategies/${id}/start`,
-    );
+    let res: Response;
+    try {
+      res = await this.client.post(
+        this.engineUrl,
+        "strategy-engine",
+        `/internal/strategies/${id}/start`,
+      );
+    } catch (err) {
+      await this.prisma.strategy.update({
+        where: { id },
+        data: { status: StrategyStatus.IDLE },
+      });
+      throw err;
+    }
+
     if (!res.ok && res.status !== 204) {
       // Roll back status on engine failure
       await this.prisma.strategy.update({

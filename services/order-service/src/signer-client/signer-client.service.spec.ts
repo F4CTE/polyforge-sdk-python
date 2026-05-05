@@ -6,12 +6,16 @@ import { SignerClientService } from "./signer-client.service";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function makeConfig(url = "http://signer:3012"): ConfigService {
+function makeConfig(
+  url = "http://signer:3012",
+  overrides: Record<string, string> = {},
+): ConfigService {
   return {
     get: (key: string, def?: string) => {
       const map: Record<string, string> = {
         SIGNER_SERVICE_URL: url,
         INTERNAL_JWT_SECRET: "test-secret",
+        ...overrides,
       };
       return map[key] ?? def ?? "";
     },
@@ -218,6 +222,71 @@ describe("SignerClientService", () => {
       await expect(svc.signOrder(SIGN_REQ)).rejects.toBeInstanceOf(
         ServiceUnavailableException,
       );
+    });
+  });
+
+  // ── circuit breaker ──────────────────────────────────────────────────────
+
+  describe("signer-service circuit breaker", () => {
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it("opens after repeated signer failures and fails credentials fast without fetch", async () => {
+      vi.useFakeTimers();
+      vi.setSystemTime(new Date("2026-05-05T00:00:00.000Z"));
+      svc = new SignerClientService(
+        jwt,
+        makeConfig("http://signer:3012", {
+          SIGNER_SERVICE_CIRCUIT_BREAKER_FAILURE_THRESHOLD: "2",
+          SIGNER_SERVICE_CIRCUIT_BREAKER_RESET_MS: "30000",
+        }),
+      );
+      fetchSpy.mockRejectedValue(new Error("ECONNREFUSED"));
+
+      await expect(svc.signOrder(SIGN_REQ)).rejects.toBeInstanceOf(
+        ServiceUnavailableException,
+      );
+      await expect(svc.signOrder(SIGN_REQ)).rejects.toBeInstanceOf(
+        ServiceUnavailableException,
+      );
+      fetchSpy.mockClear();
+
+      await expect(
+        svc.getPolymarketUsCredentials("user-1"),
+      ).rejects.toBeInstanceOf(ServiceUnavailableException);
+      expect(fetchSpy).not.toHaveBeenCalled();
+    });
+
+    it("allows a half-open signer probe after reset and closes on success", async () => {
+      vi.useFakeTimers();
+      vi.setSystemTime(new Date("2026-05-05T00:00:00.000Z"));
+      svc = new SignerClientService(
+        jwt,
+        makeConfig("http://signer:3012", {
+          SIGNER_SERVICE_CIRCUIT_BREAKER_FAILURE_THRESHOLD: "1",
+          SIGNER_SERVICE_CIRCUIT_BREAKER_RESET_MS: "1000",
+        }),
+      );
+      fetchSpy.mockRejectedValueOnce(new Error("ECONNREFUSED"));
+
+      await expect(svc.signOrder(SIGN_REQ)).rejects.toBeInstanceOf(
+        ServiceUnavailableException,
+      );
+      fetchSpy.mockClear();
+
+      vi.setSystemTime(new Date("2026-05-05T00:00:01.001Z"));
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue(SIGN_RESPONSE),
+      });
+
+      await expect(svc.signOrder(SIGN_REQ)).resolves.toEqual(SIGN_RESPONSE);
+      expect(fetchSpy).toHaveBeenCalledTimes(1);
+
+      fetchSpy.mockClear();
+      await expect(svc.signOrder(SIGN_REQ)).resolves.toEqual(SIGN_RESPONSE);
+      expect(fetchSpy).toHaveBeenCalledTimes(1);
     });
   });
 
