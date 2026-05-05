@@ -38,6 +38,10 @@ export interface OrderIntent {
 }
 
 const PAPER_PNL_KEY = (userId: string) => `paper:${userId}:pnl`;
+const SERIALIZABLE_TRANSACTION = { isolationLevel: "Serializable" as const };
+const MAX_SERIALIZABLE_RETRIES = 3;
+
+type PrismaTx = Pick<PrismaService, "paperOrder" | "paperPosition">;
 
 @Injectable()
 export class FillsService {
@@ -61,26 +65,35 @@ export class FillsService {
       throw new Error("Invalid paper order numeric input");
     }
 
-    // 1. Write paper_order record
-    const order = await this.prisma.paperOrder.create({
-      data: {
-        userId: intent.userId,
-        strategyId: intent.strategyId || null,
-        marketId: intent.marketId,
-        tokenId: intent.tokenId,
-        side: intent.side as OrderSide,
-        outcome: intent.outcome as OrderOutcome,
-        size: intent.size,
-        price: intent.price,
-        orderType: intent.orderType as OrderType,
-        status: OrderStatus.CONFIRMED,
-        fillSize: String(fillSize),
-        fillPrice: String(fillPrice),
-      },
-    });
+    const { orderId, realizedPnl } = await this.withSerializableRetry(
+      async (tx) => {
+        const order = await tx.paperOrder.create({
+          data: {
+            userId: intent.userId,
+            strategyId: intent.strategyId || null,
+            marketId: intent.marketId,
+            tokenId: intent.tokenId,
+            side: intent.side as OrderSide,
+            outcome: intent.outcome as OrderOutcome,
+            size: intent.size,
+            price: intent.price,
+            orderType: intent.orderType as OrderType,
+            status: OrderStatus.CONFIRMED,
+            fillSize: String(fillSize),
+            fillPrice: String(fillPrice),
+          },
+        });
 
-    // 2. Upsert paper_position
-    const realizedPnl = await this.upsertPosition(intent, fillPrice, fillSize);
+        const realized = await this.upsertPosition(
+          tx,
+          intent,
+          fillPrice,
+          fillSize,
+        );
+
+        return { orderId: order.id, realizedPnl: realized };
+      },
+    );
 
     // 3. Update running Redis P&L counter (real-time)
     if (realizedPnl !== 0) {
@@ -92,7 +105,7 @@ export class FillsService {
     // 4. Emit PAPER_ORDER_FILLED to stream:events
     await this.redis.xadd("stream:events", {
       type: "PAPER_ORDER_FILLED",
-      orderId: order.id,
+      orderId,
       intentId: intent.intentId,
       userId: intent.userId,
       strategyId: intent.strategyId,
@@ -148,11 +161,12 @@ export class FillsService {
   // ─── Position accounting ──────────────────────────────────────────────────
 
   private async upsertPosition(
+    tx: PrismaTx,
     intent: OrderIntent,
     fillPrice: number,
     fillSize: number,
   ): Promise<number> {
-    const existing = await this.prisma.paperPosition.findUnique({
+    const existing = await tx.paperPosition.findUnique({
       where: {
         userId_tokenId: { userId: intent.userId, tokenId: intent.tokenId },
       },
@@ -163,7 +177,7 @@ export class FillsService {
     if (!existing) {
       if (intent.side === "SELL") return 0; // No position to sell
 
-      await this.prisma.paperPosition.create({
+      await tx.paperPosition.create({
         data: {
           userId: intent.userId,
           marketId: intent.marketId,
@@ -194,7 +208,7 @@ export class FillsService {
         }
         const newAvg =
           (existingSize * existingAvg + fillSize * fillPrice) / newSize;
-        await this.prisma.paperPosition.update({
+        await tx.paperPosition.update({
           where: {
             userId_tokenId: { userId: intent.userId, tokenId: intent.tokenId },
           },
@@ -212,7 +226,7 @@ export class FillsService {
         const newSize = existingSize - closedSize;
 
         if (newSize <= 0) {
-          await this.prisma.paperPosition.delete({
+          await tx.paperPosition.delete({
             where: {
               userId_tokenId: {
                 userId: intent.userId,
@@ -221,7 +235,7 @@ export class FillsService {
             },
           });
         } else {
-          await this.prisma.paperPosition.update({
+          await tx.paperPosition.update({
             where: {
               userId_tokenId: {
                 userId: intent.userId,
@@ -240,5 +254,36 @@ export class FillsService {
     }
 
     return realizedPnl;
+  }
+
+  private async withSerializableRetry<T>(
+    operation: (tx: PrismaTx) => Promise<T>,
+  ): Promise<T> {
+    for (let attempt = 1; attempt <= MAX_SERIALIZABLE_RETRIES; attempt++) {
+      try {
+        return await this.prisma.$transaction(
+          async (tx) => operation(tx as PrismaTx),
+          SERIALIZABLE_TRANSACTION,
+        );
+      } catch (err) {
+        if (
+          !this.isSerializableConflict(err) ||
+          attempt === MAX_SERIALIZABLE_RETRIES
+        ) {
+          throw err;
+        }
+      }
+    }
+
+    throw new Error("Serializable transaction retry exhausted");
+  }
+
+  private isSerializableConflict(err: unknown): boolean {
+    return (
+      typeof err === "object" &&
+      err !== null &&
+      "code" in err &&
+      (err as { code?: unknown }).code === "P2034"
+    );
   }
 }

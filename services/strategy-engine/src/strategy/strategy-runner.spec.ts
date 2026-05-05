@@ -60,6 +60,9 @@ function makeState(patch: Record<string, unknown> = {}) {
     get: vi.fn().mockResolvedValue({ ...DEFAULT_STATE, ...patch }),
     set: vi.fn().mockResolvedValue(undefined),
     update: vi.fn().mockResolvedValue({ ...DEFAULT_STATE, ...patch }),
+    incrementOrderCounters: vi
+      .fn()
+      .mockResolvedValue({ ...DEFAULT_STATE, ...patch }),
     clear: vi.fn().mockResolvedValue(undefined),
     getPriceAge: vi.fn().mockResolvedValue(0), // fresh by default
   } as any;
@@ -421,7 +424,7 @@ describe("StrategyRunner — ACTION execution + state update", () => {
     expect(intents[0].size).toBe("10");
   });
 
-  it("updates state betsToday and totalOrders when intents are produced", async () => {
+  it("atomically increments state betsToday and totalOrders when intents are produced", async () => {
     const state = makeState();
     const prisma = makePrisma();
     prisma.token.findUnique.mockResolvedValue({
@@ -449,10 +452,12 @@ describe("StrategyRunner — ACTION execution + state update", () => {
 
     await runner.onPriceEvent("tok-yes", 0.7);
 
-    expect(state.update).toHaveBeenCalledWith(
+    expect(state.incrementOrderCounters).toHaveBeenCalledWith(
       "strat-test",
-      expect.objectContaining({ betsToday: 1, totalOrders: 1 }),
+      1,
+      expect.any(Number),
     );
+    expect(state.update).not.toHaveBeenCalled();
   });
 
   it("does NOT call onIntents when actions produce no intents (skip_bet)", async () => {

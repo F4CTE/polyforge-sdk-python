@@ -17,6 +17,9 @@ function makeRedisMock(overrides: Record<string, unknown> = {}) {
     set: vi.fn().mockResolvedValue("OK"),
     del: vi.fn().mockResolvedValue(1),
     getJson: vi.fn().mockResolvedValue(null),
+    getClient: vi.fn().mockReturnValue({
+      eval: vi.fn().mockResolvedValue(JSON.stringify(DEFAULT_STATE)),
+    }),
     ...overrides,
   } as any;
 }
@@ -91,6 +94,41 @@ describe("StateService", () => {
       expect(redis.set).toHaveBeenCalled();
       const stored = JSON.parse(redis.set.mock.calls[0][1]);
       expect(stored.totalOrders).toBe(10);
+    });
+  });
+
+  describe("incrementOrderCounters()", () => {
+    it("increments order counters with a single Redis script", async () => {
+      const redisClient = {
+        eval: vi.fn().mockResolvedValue(
+          JSON.stringify({
+            ...DEFAULT_STATE,
+            betsToday: 3,
+            totalOrders: 7,
+            lastTradeAt: 12345,
+          }),
+        ),
+      };
+      redis = makeRedisMock({
+        getClient: vi.fn().mockReturnValue(redisClient),
+      });
+      svc = new StateService(redis);
+
+      const updated = await svc.incrementOrderCounters("strat-1", 2, 12345);
+
+      expect(redisClient.eval).toHaveBeenCalledWith(
+        expect.stringContaining("redis.call"),
+        1,
+        "strategy:strat-1:state",
+        "2",
+        "12345",
+        expect.any(String),
+      );
+      expect(updated).toMatchObject({
+        betsToday: 3,
+        totalOrders: 7,
+        lastTradeAt: 12345,
+      });
     });
   });
 
