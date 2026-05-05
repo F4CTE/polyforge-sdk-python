@@ -10,18 +10,66 @@ use rand::rngs::OsRng;
 use zeroize::Zeroizing;
 use k256::ecdsa::{SigningKey, signature::hazmat::PrehashSigner, RecoveryId};
 use k256::FieldBytes;
+use std::sync::{Mutex, OnceLock};
 
 type HmacSha256 = Hmac<Sha256>;
 
+struct KekStore {
+    current: Zeroizing<Vec<u8>>,
+    previous: Option<Zeroizing<Vec<u8>>>,
+}
+
+static KEK_STORE: OnceLock<Mutex<KekStore>> = OnceLock::new();
+
+fn parse_hex_key(hex_key: &str, label: &str) -> Result<Zeroizing<Vec<u8>>> {
+    let key = hex::decode(hex_key)
+        .map_err(|e| Error::from_reason(format!("Invalid {label}: {e}")))?;
+    if key.len() != 32 {
+        return Err(Error::from_reason(format!(
+            "{label} must decode to exactly 32 bytes, got {}",
+            key.len()
+        )));
+    }
+    Ok(Zeroizing::new(key))
+}
+
+fn kek_store() -> Result<&'static Mutex<KekStore>> {
+    KEK_STORE
+        .get()
+        .ok_or_else(|| Error::from_reason("KEKs have not been configured"))
+}
+
+/// Store signer-service KEKs in Rust memory instead of retaining JS string fields.
+#[napi]
+pub fn configure_keks(current_kek_hex: String, previous_kek_hex: Option<String>) -> Result<()> {
+    let current = parse_hex_key(&current_kek_hex, "current KEK")?;
+    let previous = previous_kek_hex
+        .as_deref()
+        .filter(|s| !s.is_empty())
+        .map(|s| parse_hex_key(s, "previous KEK"))
+        .transpose()?;
+
+    let store = KEK_STORE.get_or_init(|| {
+        Mutex::new(KekStore {
+            current: Zeroizing::new(Vec::new()),
+            previous: None,
+        })
+    });
+    let mut guard = store
+        .lock()
+        .map_err(|_| Error::from_reason("KEK store lock poisoned"))?;
+    *guard = KekStore { current, previous };
+    Ok(())
+}
+
 // ─── Envelope Encryption (DEK/KEK) ─────────────────────────────────────────
 
-/// Generate a random 32-byte Data Encryption Key (DEK) as hex
+/// Generate a random 32-byte Data Encryption Key (DEK) as raw bytes.
 #[napi]
-pub fn generate_dek() -> String {
+pub fn generate_dek() -> Buffer {
     let mut dek = Zeroizing::new([0u8; 32]);
     OsRng.try_fill_bytes(dek.as_mut()).expect("OS RNG failed");
-    let hex = hex::encode(dek.as_ref());
-    hex
+    Buffer::from(dek.as_ref().to_vec())
 }
 
 /// Encrypt plaintext using AES-256-GCM. Returns JSON { ciphertext, iv, tag } as hex.
@@ -42,6 +90,10 @@ fn encrypt_aes256gcm_bytes_inner(plaintext: &[u8], key_hex: String) -> Result<St
     let key_bytes = Zeroizing::new(
         hex::decode(&key_hex).map_err(|e| Error::from_reason(format!("Invalid key hex: {}", e)))?
     );
+    encrypt_aes256gcm_with_key_bytes_inner(plaintext, &key_bytes)
+}
+
+fn encrypt_aes256gcm_with_key_bytes_inner(plaintext: &[u8], key_bytes: &[u8]) -> Result<String> {
     let key = Key::<Aes256Gcm>::from_slice(&key_bytes);
     let cipher = Aes256Gcm::new(key);
 
@@ -59,6 +111,28 @@ fn encrypt_aes256gcm_bytes_inner(plaintext: &[u8], key_hex: String) -> Result<St
         "iv": hex::encode(iv_bytes),
         "tag": hex::encode(tag)
     }).to_string())
+}
+
+/// Encrypt arbitrary bytes using a raw 32-byte key Buffer.
+#[napi]
+pub fn encrypt_aes256gcm_bytes_with_raw_key(plaintext: Buffer, key: Buffer) -> Result<String> {
+    if key.len() != 32 {
+        return Err(Error::from_reason(format!(
+            "key must be exactly 32 bytes, got {}",
+            key.len()
+        )));
+    }
+    encrypt_aes256gcm_with_key_bytes_inner(plaintext.as_ref(), key.as_ref())
+}
+
+/// Encrypt arbitrary bytes using the configured current KEK.
+#[napi]
+pub fn encrypt_aes256gcm_bytes_with_configured_kek(plaintext: Buffer) -> Result<String> {
+    let store = kek_store()?;
+    let guard = store
+        .lock()
+        .map_err(|_| Error::from_reason("KEK store lock poisoned"))?;
+    encrypt_aes256gcm_with_key_bytes_inner(plaintext.as_ref(), &guard.current)
 }
 
 /// Decrypt AES-256-GCM ciphertext. Key material is zeroized after use.
@@ -90,6 +164,10 @@ fn decrypt_aes256gcm_bytes_inner(ciphertext_hex: String, iv_hex: String, tag_hex
     let key_bytes = Zeroizing::new(
         hex::decode(&key_hex).map_err(|e| Error::from_reason(format!("Invalid key: {}", e)))?
     );
+    decrypt_aes256gcm_with_key_bytes_inner(ciphertext_hex, iv_hex, tag_hex, &key_bytes)
+}
+
+fn decrypt_aes256gcm_with_key_bytes_inner(ciphertext_hex: String, iv_hex: String, tag_hex: String, key_bytes: &[u8]) -> Result<Zeroizing<Vec<u8>>> {
     let key = Key::<Aes256Gcm>::from_slice(&key_bytes);
     let cipher = Aes256Gcm::new(key);
 
@@ -110,6 +188,34 @@ fn decrypt_aes256gcm_bytes_inner(ciphertext_hex: String, iv_hex: String, tag_hex
     Ok(plaintext)
 }
 
+/// Decrypt AES-256-GCM ciphertext as bytes using a raw 32-byte key Buffer.
+#[napi]
+pub fn decrypt_aes256gcm_bytes_with_raw_key(ciphertext_hex: String, iv_hex: String, tag_hex: String, key: Buffer) -> Result<Buffer> {
+    if key.len() != 32 {
+        return Err(Error::from_reason(format!(
+            "key must be exactly 32 bytes, got {}",
+            key.len()
+        )));
+    }
+    let mut plaintext = decrypt_aes256gcm_with_key_bytes_inner(ciphertext_hex, iv_hex, tag_hex, key.as_ref())?;
+    let result = Buffer::from(plaintext.to_vec());
+    plaintext.iter_mut().for_each(|b| *b = 0);
+    Ok(result)
+}
+
+/// Decrypt AES-256-GCM ciphertext as bytes using the configured current KEK.
+#[napi]
+pub fn decrypt_aes256gcm_bytes_with_configured_kek(ciphertext_hex: String, iv_hex: String, tag_hex: String) -> Result<Buffer> {
+    let store = kek_store()?;
+    let guard = store
+        .lock()
+        .map_err(|_| Error::from_reason("KEK store lock poisoned"))?;
+    let mut plaintext = decrypt_aes256gcm_with_key_bytes_inner(ciphertext_hex, iv_hex, tag_hex, &guard.current)?;
+    let result = Buffer::from(plaintext.to_vec());
+    plaintext.iter_mut().for_each(|b| *b = 0);
+    Ok(result)
+}
+
 /// Encrypt a DEK with a KEK (envelope encryption layer)
 #[napi]
 pub fn wrap_dek(dek_hex: String, kek_hex: String) -> Result<String> {
@@ -125,6 +231,43 @@ pub fn unwrap_dek(wrapped_json: String, kek_hex: String) -> Result<String> {
     let iv = parsed["iv"].as_str().unwrap_or_default().to_string();
     let tag = parsed["tag"].as_str().unwrap_or_default().to_string();
     decrypt_aes256gcm(ct, iv, tag, kek_hex)
+}
+
+/// Encrypt a raw DEK Buffer with the configured current KEK.
+#[napi]
+pub fn wrap_dek_with_current_kek(dek: Buffer) -> Result<String> {
+    if dek.len() != 32 {
+        return Err(Error::from_reason(format!(
+            "DEK must be exactly 32 bytes, got {}",
+            dek.len()
+        )));
+    }
+    let store = kek_store()?;
+    let guard = store
+        .lock()
+        .map_err(|_| Error::from_reason("KEK store lock poisoned"))?;
+    encrypt_aes256gcm_with_key_bytes_inner(dek.as_ref(), &guard.current)
+}
+
+/// Decrypt a stored DEK using the configured current or previous KEK.
+#[napi]
+pub fn decrypt_dek_with_stored_kek(ciphertext_hex: String, iv_hex: String, tag_hex: String, use_previous: bool) -> Result<Buffer> {
+    let store = kek_store()?;
+    let guard = store
+        .lock()
+        .map_err(|_| Error::from_reason("KEK store lock poisoned"))?;
+    let key = if use_previous {
+        guard
+            .previous
+            .as_ref()
+            .ok_or_else(|| Error::from_reason("Previous KEK is not configured"))?
+    } else {
+        &guard.current
+    };
+    let mut plaintext = decrypt_aes256gcm_with_key_bytes_inner(ciphertext_hex, iv_hex, tag_hex, key)?;
+    let result = Buffer::from(plaintext.to_vec());
+    plaintext.iter_mut().for_each(|b| *b = 0);
+    Ok(result)
 }
 
 // ─── Hashing & HMAC ────────────────────────────────────────────────────────

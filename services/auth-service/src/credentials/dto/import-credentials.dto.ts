@@ -64,4 +64,15 @@ export class ImportCredentialsDto {
   @IsString()
   @MaxLength(500)
   apiPassphrase?: string;
+
+  @ApiPropertyOptional({
+    example: '0xabcdef1234567890abcdef1234567890abcdef12',
+    description: 'Safe address (required for Gnosis Safe signature type)',
+  })
+  @IsOptional()
+  @IsString()
+  @Matches(/^0x[0-9a-fA-F]{40}$/, {
+    message: 'safeAddress must be a valid Ethereum address',
+  })
+  safeAddress?: string;
 }

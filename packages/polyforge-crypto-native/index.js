@@ -310,15 +310,22 @@ if (!nativeBinding) {
   throw new Error(`Failed to load native binding`)
 }
 
-const { generateDek, encryptAes256Gcm, encryptAes256GcmBytes, decryptAes256Gcm, decryptAes256GcmBytes, wrapDek, unwrapDek, sha256Hash, hmacSha256Sign, hmacSha256Verify, randomBytesHex, keccak256, privateKeyToEthAddress, privateKeyHexBytesToEthAddress, signSecp256K1HexKey, signSecp256K1 } = nativeBinding
+const { configureKeks, generateDek, encryptAes256Gcm, encryptAes256GcmBytes, encryptAes256GcmBytesWithRawKey, encryptAes256GcmBytesWithConfiguredKek, decryptAes256Gcm, decryptAes256GcmBytes, decryptAes256GcmBytesWithRawKey, decryptAes256GcmBytesWithConfiguredKek, wrapDek, unwrapDek, wrapDekWithCurrentKek, decryptDekWithStoredKek, sha256Hash, hmacSha256Sign, hmacSha256Verify, randomBytesHex, keccak256, privateKeyToEthAddress, privateKeyHexBytesToEthAddress, signSecp256K1HexKey, signSecp256K1 } = nativeBinding
 
+module.exports.configureKeks = configureKeks
 module.exports.generateDek = generateDek
 module.exports.encryptAes256Gcm = encryptAes256Gcm
 module.exports.encryptAes256GcmBytes = encryptAes256GcmBytes
+module.exports.encryptAes256GcmBytesWithRawKey = encryptAes256GcmBytesWithRawKey
+module.exports.encryptAes256GcmBytesWithConfiguredKek = encryptAes256GcmBytesWithConfiguredKek
 module.exports.decryptAes256Gcm = decryptAes256Gcm
 module.exports.decryptAes256GcmBytes = decryptAes256GcmBytes
+module.exports.decryptAes256GcmBytesWithRawKey = decryptAes256GcmBytesWithRawKey
+module.exports.decryptAes256GcmBytesWithConfiguredKek = decryptAes256GcmBytesWithConfiguredKek
 module.exports.wrapDek = wrapDek
 module.exports.unwrapDek = unwrapDek
+module.exports.wrapDekWithCurrentKek = wrapDekWithCurrentKek
+module.exports.decryptDekWithStoredKek = decryptDekWithStoredKek
 module.exports.sha256Hash = sha256Hash
 module.exports.hmacSha256Sign = hmacSha256Sign
 module.exports.hmacSha256Verify = hmacSha256Verify

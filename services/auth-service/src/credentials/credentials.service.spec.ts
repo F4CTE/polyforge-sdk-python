@@ -101,6 +101,25 @@ describe('CredentialsService', () => {
       );
     });
 
+    it('forwards the private key to signer-service as bytes, not as a JSON string', async () => {
+      const user = verifiedUser();
+      db.user.findUniqueOrThrow.mockResolvedValue(user as any);
+      db.user.update.mockResolvedValue({
+        ...user,
+        polymarketConnected: true,
+      } as any);
+      fetchSpy.mockResolvedValue({ ok: true });
+
+      await service.import(user.id, validDto);
+
+      const body = JSON.parse(fetchSpy.mock.calls[0][1].body);
+      expect(body.privateKey).toEqual(
+        Array.from(Buffer.from(validDto.privateKey, 'utf8')),
+      );
+      expect(typeof body.privateKey).not.toBe('string');
+      expect(JSON.stringify(body)).not.toContain(validDto.privateKey);
+    });
+
     it('throws SIGNER_ERROR (502) when signer-service returns non-OK', async () => {
       const user = verifiedUser();
       db.user.findUniqueOrThrow.mockResolvedValue(user as any);

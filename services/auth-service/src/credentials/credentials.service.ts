@@ -162,6 +162,7 @@ export class CredentialsService {
     dto: ImportCredentialsDto,
   ): Promise<void> {
     const url = `${this.signerUrl}/credentials`;
+    const privateKeyBytes = Buffer.from(dto.privateKey, 'utf8');
 
     try {
       const token = this.issueInternalToken();
@@ -171,7 +172,15 @@ export class CredentialsService {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ userId, ...dto }),
+        body: JSON.stringify({
+          userId,
+          privateKey: Array.from(privateKeyBytes),
+          apiKey: dto.apiKey,
+          apiSecret: dto.apiSecret,
+          apiPassphrase: dto.apiPassphrase,
+          safeAddress: dto.safeAddress,
+          sigType: dto.sigType,
+        }),
         signal: AbortSignal.timeout(10_000),
       });
 
@@ -199,6 +208,8 @@ export class CredentialsService {
         },
         HttpStatus.SERVICE_UNAVAILABLE,
       );
+    } finally {
+      privateKeyBytes.fill(0);
     }
   }
 

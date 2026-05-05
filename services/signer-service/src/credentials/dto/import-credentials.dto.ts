@@ -1,4 +1,5 @@
 import {
+  IsArray,
   IsString,
   IsNotEmpty,
   IsOptional,
@@ -8,6 +9,8 @@ import {
   Max,
   Matches,
   MaxLength,
+  ArrayMinSize,
+  ArrayMaxSize,
 } from "class-validator";
 
 export class ImportCredentialsDto {
@@ -16,11 +19,14 @@ export class ImportCredentialsDto {
   @MaxLength(255)
   userId!: string;
 
-  /** Polymarket EOA private key (hex, 0x-prefixed) */
-  @IsString()
-  @IsNotEmpty()
-  @MaxLength(132)
-  privateKey!: string;
+  /** Polymarket EOA private key as ASCII hex bytes (0x-prefixed). */
+  @IsArray()
+  @ArrayMinSize(66)
+  @ArrayMaxSize(66)
+  @IsInt({ each: true })
+  @Min(0, { each: true })
+  @Max(255, { each: true })
+  privateKey!: number[];
 
   /** L2 API key */
   @IsString()

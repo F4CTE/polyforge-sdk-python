@@ -30,6 +30,42 @@ export function zeroCredentials(creds: DecryptedCredentials): void {
   creds.apiPassphrase.fill(0);
 }
 
+function copyPrivateKeyBytes(input: unknown): Buffer {
+  if (Buffer.isBuffer(input)) {
+    return input;
+  }
+  if (input instanceof Uint8Array) {
+    return Buffer.from(input);
+  }
+  if (Array.isArray(input)) {
+    return Buffer.from(input);
+  }
+  throw new BadRequestException("Invalid private key format");
+}
+
+function isAsciiHexByte(byte: number): boolean {
+  return (
+    (byte >= 0x30 && byte <= 0x39) ||
+    (byte >= 0x41 && byte <= 0x46) ||
+    (byte >= 0x61 && byte <= 0x66)
+  );
+}
+
+function assertPrivateKeyBytes(privateKey: Buffer): void {
+  if (
+    privateKey.length !== 66 ||
+    privateKey[0] !== 0x30 ||
+    (privateKey[1] !== 0x78 && privateKey[1] !== 0x58)
+  ) {
+    throw new BadRequestException("Invalid private key format");
+  }
+  for (let i = 2; i < privateKey.length; i += 1) {
+    if (!isAsciiHexByte(privateKey[i])) {
+      throw new BadRequestException("Invalid private key format");
+    }
+  }
+}
+
 /**
  * Stores and retrieves encrypted Polymarket credentials.
  *
@@ -59,9 +95,12 @@ export class CredentialsService {
       sigType,
     } = dto;
 
-    // Validate private key format (0x + 64 hex chars)
-    if (!/^0x[0-9a-fA-F]{64}$/.test(privateKey)) {
-      throw new BadRequestException("Invalid private key format");
+    const privateKeyBytes = copyPrivateKeyBytes(privateKey);
+    try {
+      assertPrivateKeyBytes(privateKeyBytes);
+    } catch (err) {
+      privateKeyBytes.fill(0);
+      throw err;
     }
 
     // Generate per-user DEK (always uses current KEK version)
@@ -75,13 +114,14 @@ export class CredentialsService {
     let asEnc: ReturnType<typeof this.encryption.encryptField>;
     let apEnc: ReturnType<typeof this.encryption.encryptField>;
     try {
-      pkEnc = this.encryption.encryptField(privateKey, dek);
+      pkEnc = this.encryption.encryptFieldBytes(privateKeyBytes, dek);
       akEnc = this.encryption.encryptField(apiKey, dek);
       asEnc = this.encryption.encryptField(apiSecret, dek);
       apEnc = this.encryption.encryptField(apiPassphrase, dek);
     } finally {
       // Zero out plaintext DEK from memory (best-effort in JS)
       dek.fill(0);
+      privateKeyBytes.fill(0);
     }
 
     await this.prisma.userCredential.upsert({

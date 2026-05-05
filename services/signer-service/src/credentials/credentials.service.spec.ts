@@ -30,10 +30,11 @@ function makePrisma() {
 }
 
 const VALID_PK = "0x" + "f".repeat(64);
+const VALID_PK_BYTES = Buffer.from(VALID_PK, "utf8");
 
 const VALID_DTO = {
   userId: "user-1",
-  privateKey: VALID_PK,
+  privateKey: Array.from(VALID_PK_BYTES),
   apiKey: "ak-value",
   apiSecret: "as-value",
   apiPassphrase: "ap-value",
@@ -57,9 +58,39 @@ describe("CredentialsService", () => {
   // ── importCredentials ─────────────────────────────────────────────────────
 
   describe("importCredentials()", () => {
+    it("rejects private key strings at the signer boundary", async () => {
+      await expect(
+        svc.importCredentials({ ...VALID_DTO, privateKey: VALID_PK } as any),
+      ).rejects.toBeInstanceOf(BadRequestException);
+      expect(prisma.userCredential.upsert).not.toHaveBeenCalled();
+    });
+
+    it("encrypts private key bytes without sending them through string encryption and then zeroes them", async () => {
+      const privateKey = Buffer.from(VALID_PK_BYTES);
+      const encryptFieldSpy = vi.spyOn(encryption, "encryptField");
+      const encryptFieldBytesSpy = vi.spyOn(encryption, "encryptFieldBytes");
+
+      await svc.importCredentials({
+        ...VALID_DTO,
+        privateKey,
+      } as any);
+
+      expect(encryptFieldBytesSpy).toHaveBeenCalledWith(privateKey, expect.any(Buffer));
+      expect(encryptFieldSpy.mock.calls.map(([plaintext]) => plaintext)).not.toContain(
+        privateKey,
+      );
+      expect(encryptFieldSpy.mock.calls.map(([plaintext]) => plaintext)).not.toContain(
+        VALID_PK,
+      );
+      expect(privateKey.every((b) => b === 0)).toBe(true);
+    });
+
     it("rejects a private key without 0x prefix", async () => {
       await expect(
-        svc.importCredentials({ ...VALID_DTO, privateKey: "f".repeat(64) }),
+        svc.importCredentials({
+          ...VALID_DTO,
+          privateKey: Array.from(Buffer.from("f".repeat(64), "utf8")),
+        }),
       ).rejects.toBeInstanceOf(BadRequestException);
     });
 
@@ -67,7 +98,7 @@ describe("CredentialsService", () => {
       await expect(
         svc.importCredentials({
           ...VALID_DTO,
-          privateKey: "0x" + "f".repeat(63),
+          privateKey: Array.from(Buffer.from("0x" + "f".repeat(63), "utf8")),
         }),
       ).rejects.toBeInstanceOf(BadRequestException);
     });
@@ -76,7 +107,7 @@ describe("CredentialsService", () => {
       await expect(
         svc.importCredentials({
           ...VALID_DTO,
-          privateKey: "0x" + "g".repeat(64),
+          privateKey: Array.from(Buffer.from("0x" + "g".repeat(64), "utf8")),
         }),
       ).rejects.toBeInstanceOf(BadRequestException);
     });

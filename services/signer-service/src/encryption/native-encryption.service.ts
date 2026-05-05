@@ -53,8 +53,7 @@ const nativeCrypto = (() => {
 @Injectable()
 export class NativeEncryptionService {
   private readonly logger = new Logger(NativeEncryptionService.name);
-  private readonly kekHex: string;
-  private readonly kekPreviousHex: string | null;
+  private readonly hasPreviousKek: boolean;
   readonly currentKekVersion: number;
 
   constructor(private readonly config: ConfigService) {
@@ -64,11 +63,12 @@ export class NativeEncryptionService {
         "MASTER_ENCRYPTION_KEY must be a 64-char hex string (32 bytes)",
       );
     }
-    this.kekHex = keyHex;
 
     // Previous KEK is optional — only present during rotation grace period
     const prevHex = this.config.get<string>("MASTER_ENCRYPTION_KEY_PREVIOUS");
-    this.kekPreviousHex = prevHex && prevHex.length === 64 ? prevHex : null;
+    const previousKekHex = prevHex && prevHex.length === 64 ? prevHex : null;
+    this.hasPreviousKek = previousKekHex !== null;
+    nativeCrypto.configureKeks(keyHex, previousKekHex);
 
     this.currentKekVersion = Number(
       this.config.get<string>("MASTER_ENCRYPTION_KEY_VERSION") ?? "1",
@@ -77,19 +77,19 @@ export class NativeEncryptionService {
     this.logger.log(
       "Rust NAPI-RS encryption active — memory-safe key handling enabled",
     );
-    if (this.kekPreviousHex) {
+    if (this.hasPreviousKek) {
       this.logger.log(
         `KEK rotation active: current version=${this.currentKekVersion}, previous KEK loaded`,
       );
     }
   }
 
-  private resolveKekHex(kekVersion: number): string {
+  private shouldUsePreviousKek(kekVersion: number): boolean {
     if (kekVersion === this.currentKekVersion) {
-      return this.kekHex;
+      return false;
     }
-    if (kekVersion === this.currentKekVersion - 1 && this.kekPreviousHex) {
-      return this.kekPreviousHex;
+    if (kekVersion === this.currentKekVersion - 1 && this.hasPreviousKek) {
+      return true;
     }
     throw new Error(
       `No KEK available for version ${kekVersion} (current=${this.currentKekVersion})`,
@@ -102,11 +102,11 @@ export class NativeEncryptionService {
     dekIv: PrismaBytes;
     kekVersion: number;
   } {
-    const dekHex = nativeCrypto.generateDek();
-    const wrappedJson = nativeCrypto.wrapDek(dekHex, this.kekHex);
+    const dek = nativeCrypto.generateDek();
+    const wrappedJson = nativeCrypto.wrapDekWithCurrentKek(dek);
     const parsed = JSON.parse(wrappedJson);
     return {
-      dek: Buffer.from(dekHex, "hex"),
+      dek,
       encryptedDek: toBytes(parsed.ciphertext + parsed.tag),
       dekIv: toBytes(parsed.iv),
       kekVersion: this.currentKekVersion,
@@ -118,13 +118,14 @@ export class NativeEncryptionService {
     dekIvRaw: Uint8Array,
     kekVersion?: number,
   ): Buffer {
-    const kek = this.resolveKekHex(kekVersion ?? this.currentKekVersion);
+    const usePrevious = this.shouldUsePreviousKek(
+      kekVersion ?? this.currentKekVersion,
+    );
     const combined = toHex(encryptedDekRaw);
     const ct = combined.slice(0, combined.length - 32);
     const tag = combined.slice(combined.length - 32);
     const iv = toHex(dekIvRaw);
-    const dekHex = nativeCrypto.decryptAes256Gcm(ct, iv, tag, kek);
-    return Buffer.from(dekHex, "hex");
+    return nativeCrypto.decryptDekWithStoredKek(ct, iv, tag, usePrevious);
   }
 
   rotateUserDek(
@@ -142,40 +143,41 @@ export class NativeEncryptionService {
 
     // Decrypt with old KEK
     const dekBuf = this.decryptDek(encryptedDekRaw, dekIvRaw, oldKekVersion);
-    const dekHex = dekBuf.toString("hex");
 
-    // Re-encrypt with current KEK
-    const wrappedJson = nativeCrypto.wrapDek(dekHex, this.kekHex);
-    const parsed = JSON.parse(wrappedJson);
+    try {
+      // Re-encrypt with current KEK
+      const wrappedJson = nativeCrypto.wrapDekWithCurrentKek(dekBuf);
+      const parsed = JSON.parse(wrappedJson);
 
-    // Zero out the JS-side DEK buffer (best-effort)
-    dekBuf.fill(0);
-
-    return {
-      encryptedDek: toBytes(parsed.ciphertext + parsed.tag),
-      dekIv: toBytes(parsed.iv),
-      kekVersion: this.currentKekVersion,
-    };
+      return {
+        encryptedDek: toBytes(parsed.ciphertext + parsed.tag),
+        dekIv: toBytes(parsed.iv),
+        kekVersion: this.currentKekVersion,
+      };
+    } finally {
+      // Zero out the JS-side DEK buffer (best-effort)
+      dekBuf.fill(0);
+    }
   }
 
   get isRotationActive(): boolean {
-    return this.kekPreviousHex !== null;
+    return this.hasPreviousKek;
   }
 
   encryptField(plaintext: string, dek: Buffer): EncryptedField {
-    const dekHex = dek.toString("hex");
-    const resultJson = nativeCrypto.encryptAes256Gcm(plaintext, dekHex);
-    const parsed = JSON.parse(resultJson);
-    return {
-      ciphertext: toBytes(parsed.ciphertext),
-      iv: toBytes(parsed.iv),
-      tag: toBytes(parsed.tag),
-    };
+    const plaintextBytes = Buffer.from(plaintext, "utf8");
+    try {
+      return this.encryptFieldBytes(plaintextBytes, dek);
+    } finally {
+      plaintextBytes.fill(0);
+    }
   }
 
   encryptFieldBytes(plaintext: Buffer, dek: Buffer): EncryptedField {
-    const dekHex = dek.toString("hex");
-    const resultJson = nativeCrypto.encryptAes256GcmBytes(plaintext, dekHex);
+    const resultJson = nativeCrypto.encryptAes256GcmBytesWithRawKey(
+      plaintext,
+      dek,
+    );
     const parsed = JSON.parse(resultJson);
     return {
       ciphertext: toBytes(parsed.ciphertext),
@@ -190,13 +192,7 @@ export class NativeEncryptionService {
     tagRaw: Uint8Array,
     dek: Buffer,
   ): Buffer {
-    const plaintext: string = nativeCrypto.decryptAes256Gcm(
-      toHex(ctRaw),
-      toHex(ivRaw),
-      toHex(tagRaw),
-      dek.toString("hex"),
-    );
-    return Buffer.from(plaintext, "utf8");
+    return this.decryptFieldBytes(ctRaw, ivRaw, tagRaw, dek);
   }
 
   decryptFieldBytes(
@@ -205,22 +201,28 @@ export class NativeEncryptionService {
     tagRaw: Uint8Array,
     dek: Buffer,
   ): Buffer {
-    return nativeCrypto.decryptAes256GcmBytes(
+    return nativeCrypto.decryptAes256GcmBytesWithRawKey(
       toHex(ctRaw),
       toHex(ivRaw),
       toHex(tagRaw),
-      dek.toString("hex"),
+      dek,
     );
   }
 
   encryptWithMasterKey(plaintext: string): EncryptedField {
-    const resultJson = nativeCrypto.encryptAes256Gcm(plaintext, this.kekHex);
-    const parsed = JSON.parse(resultJson);
-    return {
-      ciphertext: toBytes(parsed.ciphertext),
-      iv: toBytes(parsed.iv),
-      tag: toBytes(parsed.tag),
-    };
+    const plaintextBytes = Buffer.from(plaintext, "utf8");
+    try {
+      const resultJson =
+        nativeCrypto.encryptAes256GcmBytesWithConfiguredKek(plaintextBytes);
+      const parsed = JSON.parse(resultJson);
+      return {
+        ciphertext: toBytes(parsed.ciphertext),
+        iv: toBytes(parsed.iv),
+        tag: toBytes(parsed.tag),
+      };
+    } finally {
+      plaintextBytes.fill(0);
+    }
   }
 
   decryptWithMasterKey(
@@ -228,12 +230,10 @@ export class NativeEncryptionService {
     ivRaw: Uint8Array,
     tagRaw: Uint8Array,
   ): Buffer {
-    const plaintext: string = nativeCrypto.decryptAes256Gcm(
+    return nativeCrypto.decryptAes256GcmBytesWithConfiguredKek(
       toHex(ctRaw),
       toHex(ivRaw),
       toHex(tagRaw),
-      this.kekHex,
     );
-    return Buffer.from(plaintext, "utf8");
   }
 }

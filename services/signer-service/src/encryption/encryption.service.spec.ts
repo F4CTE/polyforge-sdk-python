@@ -436,6 +436,22 @@ describe("EncryptionService", () => {
 });
 
 describe("NativeEncryptionService", () => {
+  describe("KEK residency", () => {
+    it("does not retain KEK material as JavaScript string properties", () => {
+      const svc = makeNativeService({
+        kekPrevious: TEST_KEK_V2,
+        kekVersion: "2",
+      });
+
+      expect(Object.prototype.hasOwnProperty.call(svc, "kekHex")).toBe(false);
+      expect(Object.prototype.hasOwnProperty.call(svc, "kekPreviousHex")).toBe(
+        false,
+      );
+      expect(Object.values(svc as any)).not.toContain(TEST_KEK);
+      expect(Object.values(svc as any)).not.toContain(TEST_KEK_V2);
+    });
+  });
+
   describe("encryptFieldBytes()", () => {
     it("round-trips high-bit seed bytes without stringifying the plaintext buffer", () => {
       const svc = makeNativeService();
