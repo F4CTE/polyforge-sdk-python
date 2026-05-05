@@ -425,13 +425,16 @@ def _validate_arb_slippage(value: float) -> None:
 _VALID_ARB_POSITION_STATUSES = frozenset(
     {"PENDING", "PARTIAL", "OPEN", "CLOSING", "CLOSED", "FAILED"}
 )
+_UUID_RE = re.compile(
+    r"^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-"
+    r"[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+)
 
 
 def _validate_arb_match_id(value: str) -> None:
-    """Reject match_id values outside the server's 1..255 char range.
+    """Reject match_id values outside the server's UUID-shaped contract.
 
-    Mirrors `class-validator` `@IsString()` plus the MCP zod schema
-    `z.string().min(1).max(255)` enforced in `polyforge-mcp` (POLA-1853).
+    Mirrors backend `class-validator` `@IsUUID()` and the MCP/TS SDK contract.
     """
     if not isinstance(value, str):
         raise TypeError(f"match_id must be a string, got {type(value).__name__}")
@@ -439,6 +442,8 @@ def _validate_arb_match_id(value: str) -> None:
         raise ValueError(
             f"match_id must be between 1 and 255 characters, got {len(value)}"
         )
+    if _UUID_RE.fullmatch(value) is None:
+        raise ValueError(f"match_id must be a valid UUID, got {value!r}")
 
 
 def _validate_arb_position_status(value: str) -> None:

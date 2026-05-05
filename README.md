@@ -130,7 +130,7 @@ asyncio.run(main())
 |--------|-------------|
 | `get_cross_venue_opportunities(min_spread)` | List cross-venue Polymarket/Kalshi opportunities |
 | `get_cross_venue_comparison(match_id)` | Compare prices for a matched cross-venue market |
-| `execute_arb(match_id, size, max_slippage_pct)` | Execute a real cross-venue arbitrage trade; validates `match_id` length, `size` 1..10000, and optional slippage 0..5 |
+| `execute_arb(match_id, size, max_slippage_pct)` | Execute a real cross-venue arbitrage trade; validates UUID `match_id`, `size` 1..10000, and optional slippage 0..5 |
 | `list_arb_positions(status, limit, offset)` | List arbitrage positions; validates status and `limit` 1..100 |
 | `get_arb_position(position_id)` | Fetch one arbitrage position |
 | `close_arb_position(position_id)` | Close an open arbitrage position with real reverse orders |
