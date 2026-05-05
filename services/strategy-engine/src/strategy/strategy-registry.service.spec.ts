@@ -191,6 +191,64 @@ describe("StrategyRegistryService — start()", () => {
   });
 });
 
+describe("StrategyRegistryService — publishIntents()", () => {
+  let redis: ReturnType<typeof makeRedisMock>;
+  let prisma: ReturnType<typeof makePrismaMock>;
+  let state: ReturnType<typeof makeStateMock>;
+  let svc: StrategyRegistryService;
+
+  beforeEach(() => {
+    redis = makeRedisMock();
+    prisma = makePrismaMock();
+    state = makeStateMock();
+    svc = new StrategyRegistryService(prisma, redis, state);
+  });
+
+  it("logs the stream, strategyId, and intent count after publishing", async () => {
+    const logSpy = vi
+      .spyOn((svc as any).logger, "log")
+      .mockImplementation(() => undefined);
+
+    await (svc as any).publishIntents(
+      [
+        {
+          intentId: "intent-1",
+          userId: "user-1",
+          strategyId: "strat-1",
+          marketId: "market-1",
+          tokenId: "token-1",
+          side: "BUY",
+          outcome: "YES",
+          size: "10",
+          price: "0.5",
+          orderType: "GTC",
+        },
+      ],
+      "stream:orders",
+    );
+
+    expect(logSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        event: "ORDER_INTENTS_PUBLISHED",
+        stream: "stream:orders",
+        strategyId: "strat-1",
+        intentCount: 1,
+      }),
+      "Published order intents to Redis stream",
+    );
+    expect(logSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        _aws: expect.any(Object),
+        Service: "strategy-engine",
+        OrderIntentsPublished: 1,
+        StrategyId: "strat-1",
+        Stream: "stream:orders",
+      }),
+      "cloudwatch metric",
+    );
+  });
+});
+
 describe("StrategyRegistryService — stop()", () => {
   let redis: ReturnType<typeof makeRedisMock>;
   let prisma: ReturnType<typeof makePrismaMock>;

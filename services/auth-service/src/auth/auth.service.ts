@@ -184,6 +184,15 @@ export class AuthService {
     const user = await this.usersService.findByEmail(dto.email);
 
     if (!user || user.deleted) {
+      this.logger.warn(
+        {
+          event: 'LOGIN_FAILED',
+          ...(user ? { userId: user.id } : {}),
+          ip: dto.ip ?? 'unknown',
+          reason: 'unknown_or_deleted_user',
+        },
+        'User login failed',
+      );
       throw new HttpException(
         { code: 'INVALID_CREDENTIALS', message: 'Invalid email or password' },
         HttpStatus.BAD_REQUEST,
@@ -215,6 +224,15 @@ export class AuthService {
     const lockKey = `login:fail:${user.id}`;
     const failCount = parseInt((await this.redis.get(lockKey)) ?? '0', 10);
     if (failCount >= 10) {
+      this.logger.warn(
+        {
+          event: 'LOGIN_LOCKED',
+          userId: user.id,
+          ip: dto.ip ?? 'unknown',
+          failCount,
+        },
+        'User login locked',
+      );
       throw new HttpException(
         {
           code: 'ACCOUNT_LOCKED',
@@ -245,6 +263,15 @@ export class AuthService {
           },
         })
         .catch(() => {}); // Fire and forget
+      this.logger.warn(
+        {
+          event: 'LOGIN_FAILED',
+          userId: user.id,
+          ip: dto.ip ?? 'unknown',
+          reason: 'invalid_password',
+        },
+        'User login failed',
+      );
       throw new HttpException(
         { code: 'INVALID_CREDENTIALS', message: 'Invalid email or password' },
         HttpStatus.BAD_REQUEST,
@@ -265,6 +292,15 @@ export class AuthService {
       }
       const totpValid = await this.totpService.verify(user.id, dto.totpCode);
       if (!totpValid) {
+        this.logger.warn(
+          {
+            event: 'TOTP_FAILED',
+            userId: user.id,
+            ip: dto.ip ?? 'unknown',
+            reason: 'invalid_totp',
+          },
+          'User TOTP verification failed',
+        );
         throw new HttpException(
           { code: 'TOTP_INVALID', message: 'Invalid 2FA code' },
           HttpStatus.BAD_REQUEST,
@@ -295,12 +331,13 @@ export class AuthService {
 
     // SECURITY: Do not log email (PII) — userId is sufficient for audit correlation
     this.logger.log(
-      JSON.stringify({
+      {
         event: 'LOGIN_SUCCESS',
         userId: user.id,
         ip,
         timestamp: new Date().toISOString(),
-      }),
+      },
+      'User login succeeded',
     );
 
     // Emit LOGIN event to Redis stream for notification-service / audit consumers

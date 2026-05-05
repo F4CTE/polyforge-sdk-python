@@ -48,7 +48,10 @@ export class StreamConsumerService implements OnModuleInit, OnModuleDestroy {
       consumer: CONSUMER,
       minIdleMs: PEL_MIN_IDLE_MS,
       handler: async (entry) => {
-        const intent = this.parseIntent(this.fieldsToArray(entry.fields));
+        const intent = this.parseIntent(
+          this.fieldsToArray(entry.fields),
+          entry.id,
+        );
         if (!intent) return;
         await this.orders.processBatch([intent]);
       },
@@ -122,7 +125,7 @@ export class StreamConsumerService implements OnModuleInit, OnModuleDestroy {
     >();
 
     for (const [msgId, fields] of entries) {
-      const intent = this.parseIntent(fields);
+      const intent = this.parseIntent(fields, msgId);
       if (!intent) {
         await client.xack(STREAM, GROUP, msgId);
         continue;
@@ -149,16 +152,22 @@ export class StreamConsumerService implements OnModuleInit, OnModuleDestroy {
 
   // ─── Helpers ─────────────────────────────────────────────────────────────
 
-  private parseIntent(fields: string[]): OrderIntent | null {
+  private parseIntent(fields: string[], msgId = "unknown"): OrderIntent | null {
+    const obj: Record<string, string> = {};
     try {
-      const obj: Record<string, string> = {};
       for (let i = 0; i < fields.length; i += 2) {
         obj[fields[i]] = fields[i + 1];
       }
 
-      if (!obj["intentId"] || !obj["userId"]) return null;
+      if (!obj["intentId"] || !obj["userId"]) {
+        this.logDroppedIntent(msgId, "missing_required_fields", obj);
+        return null;
+      }
       const expiration = this.parseExpiration(obj["expiration"]);
-      if (expiration === null) return null;
+      if (expiration === null) {
+        this.logDroppedIntent(msgId, "invalid_expiration", obj);
+        return null;
+      }
 
       return {
         intentId: obj["intentId"],
@@ -179,8 +188,39 @@ export class StreamConsumerService implements OnModuleInit, OnModuleDestroy {
           ? { kalshiSubaccount: parseInt(obj["kalshiSubaccount"], 10) }
           : {}),
       };
-    } catch {
+    } catch (err) {
+      this.logDroppedIntent(msgId, "parse_error", obj, err);
       return null;
+    }
+  }
+
+  private logDroppedIntent(
+    msgId: string,
+    reason: string,
+    fields: Record<string, string>,
+    err?: unknown,
+  ): void {
+    this.logger.warn(
+      {
+        event: "ORDER_INTENT_DROPPED",
+        stream: STREAM,
+        group: GROUP,
+        consumer: CONSUMER,
+        msgId,
+        reason,
+        fields,
+      },
+      "Dropped invalid order intent from Redis stream",
+    );
+    if (err) {
+      this.logger.error(
+        {
+          event: "ORDER_INTENT_PARSE_ERROR",
+          stream: STREAM,
+          msgId,
+        },
+        err,
+      );
     }
   }
 

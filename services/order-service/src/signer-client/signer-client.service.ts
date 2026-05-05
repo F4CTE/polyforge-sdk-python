@@ -5,6 +5,7 @@ import {
 } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
 import { ConfigService } from "@nestjs/config";
+import { logCloudWatchMetric } from "@polyforge/logger";
 import { randomUUID } from "node:crypto";
 
 export interface SignOrderRequest {
@@ -54,6 +55,7 @@ export class SignerClientService {
   }
 
   async signOrder(req: SignOrderRequest): Promise<SignedOrder> {
+    const startedAt = Date.now();
     const token = this.makeServiceJwt();
 
     let res: Response;
@@ -67,18 +69,51 @@ export class SignerClientService {
         body: JSON.stringify(req),
         signal: AbortSignal.timeout(10_000),
       });
-    } catch {
+    } catch (err) {
+      this.logger.error(
+        {
+          event: "SIGNER_REQUEST_FAILED",
+          operation: "signOrder",
+          userId: req.userId,
+          requestId: req.requestId,
+        },
+        err,
+      );
       throw new ServiceUnavailableException("signer-service unavailable");
     }
 
     if (!res.ok) {
       const body = await res.text().catch(() => "");
+      this.logger.error(
+        {
+          event: "SIGNER_REQUEST_FAILED",
+          operation: "signOrder",
+          userId: req.userId,
+          requestId: req.requestId,
+          status: res.status,
+        },
+        new Error(`signer-service error ${res.status}`),
+      );
       throw new ServiceUnavailableException(
         `signer-service error ${res.status}: ${body}`,
       );
     }
 
-    return res.json() as Promise<SignedOrder>;
+    const signed = (await res.json()) as SignedOrder;
+    logCloudWatchMetric(this.logger, {
+      name: "SignerLatencyMs",
+      value: Date.now() - startedAt,
+      unit: "Milliseconds",
+      dimensions: {
+        Service: "order-service",
+        Operation: "signOrder",
+      },
+      properties: {
+        requestId: req.requestId,
+        userId: req.userId,
+      },
+    });
+    return signed;
   }
 
   /**

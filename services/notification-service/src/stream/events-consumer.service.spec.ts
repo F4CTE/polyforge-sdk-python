@@ -149,4 +149,26 @@ describe("EventsConsumerService", () => {
       expect(notification.handle).not.toHaveBeenCalled();
     });
   });
+
+  describe("consumeLoop", () => {
+    it("logs full error objects when the stream read fails", async () => {
+      const client = redis.getClient();
+      const err = new Error("redis down");
+      const errorSpy = vi
+        .spyOn((service as any).logger, "error")
+        .mockImplementation(() => undefined);
+      client.xreadgroup.mockImplementationOnce(async () => {
+        (service as any).running = false;
+        throw err;
+      });
+
+      (service as any).running = true;
+      await (service as any).consumeLoop();
+
+      expect(errorSpy).toHaveBeenCalledWith(
+        "stream:events consume error",
+        err,
+      );
+    });
+  });
 });

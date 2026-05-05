@@ -244,6 +244,14 @@ export class TotpService {
     // Reject immediately if account is locked out
     const failCount = parseInt((await client.get(failKey(userId))) ?? '0', 10);
     if (failCount >= TOTP_FAIL_MAX) {
+      this.logger.warn(
+        {
+          event: 'TOTP_LOCKED',
+          userId,
+          failCount,
+        },
+        'TOTP verification locked',
+      );
       throw new HttpException(
         {
           code: 'TOTP_LOCKED',
@@ -308,6 +316,14 @@ export class TotpService {
     if (valid) {
       // Clear failure counter on success
       await client.del(failKey(userId));
+      this.logger.log(
+        {
+          event: 'TOTP_SUCCESS',
+          userId,
+          method: 'totp',
+        },
+        'TOTP verification succeeded',
+      );
       return true;
     }
 
@@ -317,6 +333,14 @@ export class TotpService {
     if (newCount === 1) {
       await client.expire(failKey(userId), TOTP_FAIL_WINDOW);
     }
+    this.logger.warn(
+      {
+        event: 'TOTP_FAILED',
+        userId,
+        failCount: newCount,
+      },
+      'TOTP verification failed',
+    );
     return false;
   }
 

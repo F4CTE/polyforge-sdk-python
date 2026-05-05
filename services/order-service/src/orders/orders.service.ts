@@ -1,6 +1,7 @@
 import { Injectable, Logger, Optional } from "@nestjs/common";
 import { randomUUID } from "node:crypto";
 import { OrderOutcome, OrderStatus } from ".prisma/client";
+import { logCloudWatchMetric } from "@polyforge/logger";
 import { PrismaService } from "@polyforge/shared-db";
 import { RedisService } from "@polyforge/shared-redis";
 import { SignerClientService } from "../signer-client/signer-client.service";
@@ -67,6 +68,7 @@ export class OrdersService {
   }
 
   async processIntent(intent: OrderIntent, attempt = 1): Promise<void> {
+    const startedAt = Date.now();
     const orderId = randomUUID();
     const requestedVenue = intent.venue ?? "polymarket";
     const targetVenue = await this.resolveTargetVenue(intent);
@@ -251,12 +253,43 @@ export class OrdersService {
         intent.intentId,
       );
       this.logger.log(
-        `Order placed: ${orderId} (venue order: ${venueOrderId})`,
+        {
+          event: "ORDER_PLACED",
+          orderId,
+          venueOrderId,
+          intentId: intent.intentId,
+          strategyId: intent.strategyId,
+          userId: intent.userId,
+          venue: targetVenue,
+        },
+        "Order placed",
       );
+      logCloudWatchMetric(this.logger, {
+        name: "OrderLatencyMs",
+        value: Date.now() - startedAt,
+        unit: "Milliseconds",
+        dimensions: {
+          Service: "order-service",
+          Venue: targetVenue,
+        },
+        properties: {
+          orderId,
+          intentId: intent.intentId,
+          strategyId: intent.strategyId,
+        },
+      });
     } catch (err) {
       const errMsg = err instanceof Error ? err.message : String(err);
       this.logger.warn(
-        `Order attempt ${attempt}/${MAX_ATTEMPTS} failed for intent ${intent.intentId}: ${errMsg}`,
+        {
+          event: "ORDER_ATTEMPT_FAILED",
+          attempt,
+          maxAttempts: MAX_ATTEMPTS,
+          intentId: intent.intentId,
+          strategyId: intent.strategyId,
+          userId: intent.userId,
+        },
+        err,
       );
 
       if (attempt < MAX_ATTEMPTS) {
@@ -270,7 +303,16 @@ export class OrdersService {
           where: { id: orderId },
           data: { status: OrderStatus.FAILED },
         })
-        .catch(() => {});
+        .catch((updateErr) => {
+          this.logger.error(
+            {
+              event: "ORDER_FAILED_STATUS_UPDATE_FAILED",
+              orderId,
+              intentId: intent.intentId,
+            },
+            updateErr,
+          );
+        });
 
       await this.events.emitOrderFailed(intent.userId, orderId, errMsg);
       await this.moveToDlq(intent, errMsg);
@@ -369,6 +411,17 @@ export class OrdersService {
         ),
         failedAt: String(Date.now()),
         reason,
+      });
+      const dlqDepth = await this.redis
+        .getClient()
+        .xlen(DLQ_STREAM)
+        .catch(() => undefined);
+      logCloudWatchMetric(this.logger, {
+        name: "OrderDlqDepth",
+        value: dlqDepth ?? 1,
+        unit: "Count",
+        dimensions: { Service: "order-service", Stream: DLQ_STREAM },
+        properties: { intentId: intent.intentId, reason },
       });
     } catch (dlqErr) {
       this.logger.error("Failed to write to DLQ", dlqErr);

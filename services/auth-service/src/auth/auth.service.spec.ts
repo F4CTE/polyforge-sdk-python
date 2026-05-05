@@ -343,22 +343,45 @@ describe('AuthService', () => {
     });
 
     it('throws INVALID_CREDENTIALS (400) when user does not exist', async () => {
+      const warnSpy = vi
+        .spyOn((service as any).logger, 'warn')
+        .mockImplementation(() => undefined);
       vi.mocked(usersService.findByEmail).mockResolvedValue(null);
 
       await expect(service.login(makeLoginDto() as any)).rejects.toMatchObject({
         response: { code: 'INVALID_CREDENTIALS' },
         status: HttpStatus.BAD_REQUEST,
       });
+      expect(warnSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          event: 'LOGIN_FAILED',
+          ip: 'unknown',
+          reason: 'unknown_or_deleted_user',
+        }),
+        'User login failed',
+      );
     });
 
     it('throws INVALID_CREDENTIALS (400) when user is soft-deleted', async () => {
       const user = userFactory({ deleted: true });
+      const warnSpy = vi
+        .spyOn((service as any).logger, 'warn')
+        .mockImplementation(() => undefined);
       vi.mocked(usersService.findByEmail).mockResolvedValue(user as any);
 
       await expect(service.login(makeLoginDto() as any)).rejects.toMatchObject({
         response: { code: 'INVALID_CREDENTIALS' },
         status: HttpStatus.BAD_REQUEST,
       });
+      expect(warnSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          event: 'LOGIN_FAILED',
+          userId: user.id,
+          ip: 'unknown',
+          reason: 'unknown_or_deleted_user',
+        }),
+        'User login failed',
+      );
     });
 
     it('throws ACCOUNT_SUSPENDED (403) when user is suspended', async () => {
@@ -371,8 +394,34 @@ describe('AuthService', () => {
       });
     });
 
+    it('logs account lockouts with the fail count', async () => {
+      const user = userFactory({ suspended: false });
+      const warnSpy = vi
+        .spyOn((service as any).logger, 'warn')
+        .mockImplementation(() => undefined);
+      vi.mocked(usersService.findByEmail).mockResolvedValue(user as any);
+      vi.mocked(redis.get).mockResolvedValue('10');
+
+      await expect(service.login(makeLoginDto() as any)).rejects.toMatchObject({
+        response: { code: 'ACCOUNT_LOCKED' },
+        status: HttpStatus.TOO_MANY_REQUESTS,
+      });
+      expect(warnSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          event: 'LOGIN_LOCKED',
+          userId: user.id,
+          ip: 'unknown',
+          failCount: 10,
+        }),
+        'User login locked',
+      );
+    });
+
     it('throws INVALID_CREDENTIALS (400) on wrong password', async () => {
       const user = userFactory({ suspended: false });
+      const warnSpy = vi
+        .spyOn((service as any).logger, 'warn')
+        .mockImplementation(() => undefined);
       vi.mocked(usersService.findByEmail).mockResolvedValue(user as any);
       vi.mocked(usersService.validatePassword).mockResolvedValue(false);
 
@@ -380,6 +429,15 @@ describe('AuthService', () => {
         response: { code: 'INVALID_CREDENTIALS' },
         status: HttpStatus.BAD_REQUEST,
       });
+      expect(warnSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          event: 'LOGIN_FAILED',
+          userId: user.id,
+          ip: 'unknown',
+          reason: 'invalid_password',
+        }),
+        'User login failed',
+      );
     });
 
     it('throws TOTP_REQUIRED (400) when 2FA is enabled but no code provided', async () => {
@@ -406,6 +464,9 @@ describe('AuthService', () => {
 
     it('throws TOTP_INVALID (400) when 2FA code is wrong', async () => {
       const user = userFactory({ totpEnabled: true });
+      const warnSpy = vi
+        .spyOn((service as any).logger, 'warn')
+        .mockImplementation(() => undefined);
       vi.mocked(usersService.findByEmail).mockResolvedValue(user as any);
       vi.mocked(usersService.validatePassword).mockResolvedValue(true);
       vi.mocked(totpService.verify).mockResolvedValue(false);
@@ -416,6 +477,15 @@ describe('AuthService', () => {
         response: { code: 'TOTP_INVALID' },
         status: HttpStatus.BAD_REQUEST,
       });
+      expect(warnSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          event: 'TOTP_FAILED',
+          userId: user.id,
+          ip: 'unknown',
+          reason: 'invalid_totp',
+        }),
+        'User TOTP verification failed',
+      );
     });
 
     it('never exposes passwordHash in the response', async () => {

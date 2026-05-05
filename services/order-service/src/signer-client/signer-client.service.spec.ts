@@ -102,9 +102,21 @@ describe("SignerClientService", () => {
     });
 
     it("returns the parsed JSON response", async () => {
+      const logSpy = vi
+        .spyOn((svc as any).logger, "log")
+        .mockImplementation(() => undefined);
       const result = await svc.signOrder(SIGN_REQ);
       expect(result.order.signature).toBe("0x1234");
       expect(result.builderHeaders.POLY_BUILDER_API_KEY).toBe("k");
+      expect(logSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          _aws: expect.any(Object),
+          Service: "order-service",
+          SignerLatencyMs: expect.any(Number),
+          Operation: "signOrder",
+        }),
+        "cloudwatch metric",
+      );
     });
 
     it("requests a fresh service JWT on every call", async () => {
@@ -126,9 +138,19 @@ describe("SignerClientService", () => {
 
   describe("signOrder() — errors", () => {
     it("throws ServiceUnavailableException when fetch rejects (ECONNREFUSED)", async () => {
+      const errorSpy = vi
+        .spyOn((svc as any).logger, "error")
+        .mockImplementation(() => undefined);
       fetchSpy.mockRejectedValue(new Error("ECONNREFUSED"));
       await expect(svc.signOrder(SIGN_REQ)).rejects.toBeInstanceOf(
         ServiceUnavailableException,
+      );
+      expect(errorSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          event: "SIGNER_REQUEST_FAILED",
+          operation: "signOrder",
+        }),
+        expect.any(Error),
       );
     });
 

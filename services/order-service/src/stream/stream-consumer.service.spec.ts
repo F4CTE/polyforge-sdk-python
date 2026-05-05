@@ -253,6 +253,9 @@ describe("StreamConsumerService (order-service)", () => {
 
     it("acks and skips messages with invalid intent", async () => {
       const client = redis.getClient();
+      const warnSpy = vi
+        .spyOn((service as any).logger, "warn")
+        .mockImplementation(() => undefined);
       client.xreadgroup.mockResolvedValueOnce([
         [
           "stream:orders",
@@ -269,6 +272,16 @@ describe("StreamConsumerService (order-service)", () => {
         "stream:orders",
         "order-service",
         "msg-1",
+      );
+      expect(warnSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          event: "ORDER_INTENT_DROPPED",
+          msgId: "msg-1",
+          stream: "stream:orders",
+          reason: "missing_required_fields",
+          fields: { badField: "badValue" },
+        }),
+        "Dropped invalid order intent from Redis stream",
       );
     });
   });

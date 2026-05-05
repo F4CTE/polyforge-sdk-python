@@ -110,6 +110,7 @@ export class EventsConsumerService implements OnModuleInit, OnModuleDestroy {
   private async consumeLoop() {
     const client = this.redis.getClient();
     while (this.running) {
+      const wasRunning = this.running;
       try {
         const results: any = await client.xreadgroup(
           "GROUP",
@@ -145,9 +146,9 @@ export class EventsConsumerService implements OnModuleInit, OnModuleDestroy {
             await client.xack(STREAM, GROUP, id);
           }
         }
-      } catch (err: any) {
-        if (this.running) {
-          this.logger.error("stream:events consume error", err?.message);
+      } catch (err) {
+        if (wasRunning) {
+          this.logger.error("stream:events consume error", err);
           await new Promise((r) => setTimeout(r, 1000));
         }
       }

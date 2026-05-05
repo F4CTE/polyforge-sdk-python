@@ -321,15 +321,29 @@ describe('TotpService', () => {
     });
 
     it('throws TOTP_LOCKED (429) when fail counter is at or above threshold', async () => {
+      const warnSpy = vi
+        .spyOn((service as any).logger, 'warn')
+        .mockImplementation(() => undefined);
       redis._ioClient.get.mockResolvedValue('5');
 
       await expect(service.verify('user-id', '123456')).rejects.toMatchObject({
         response: { code: 'TOTP_LOCKED' },
         status: HttpStatus.TOO_MANY_REQUESTS,
       });
+      expect(warnSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          event: 'TOTP_LOCKED',
+          userId: 'user-id',
+          failCount: 5,
+        }),
+        'TOTP verification locked',
+      );
     });
 
     it('increments fail counter on a bad code and sets TTL on first failure', async () => {
+      const warnSpy = vi
+        .spyOn((service as any).logger, 'warn')
+        .mockImplementation(() => undefined);
       redis._ioClient.get.mockResolvedValue(null); // no prior failures
       redis._ioClient.incr.mockResolvedValue(1); // first failure
 
@@ -347,6 +361,14 @@ describe('TotpService', () => {
       expect(redis._ioClient.expire).toHaveBeenCalledWith(
         `totp:fail:${user.id}`,
         900,
+      );
+      expect(warnSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          event: 'TOTP_FAILED',
+          userId: user.id,
+          failCount: 1,
+        }),
+        'TOTP verification failed',
       );
     });
 
@@ -367,6 +389,9 @@ describe('TotpService', () => {
     });
 
     it('returns true and clears fail counter when TOTP code matches', async () => {
+      const logSpy = vi
+        .spyOn((service as any).logger, 'log')
+        .mockImplementation(() => undefined);
       redis._ioClient.get.mockResolvedValue('2'); // had 2 prior failures
 
       const secret = generateSecret({ length: 20 });
@@ -383,6 +408,14 @@ describe('TotpService', () => {
       const result = await service.verify(user.id, validCode);
       expect(result).toBe(true);
       expect(redis._ioClient.del).toHaveBeenCalledWith(`totp:fail:${user.id}`);
+      expect(logSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          event: 'TOTP_SUCCESS',
+          userId: user.id,
+          method: 'totp',
+        }),
+        'TOTP verification succeeded',
+      );
     });
 
     it('burns a backup code on successful backup code usage', async () => {

@@ -7,6 +7,7 @@ import {
   OnApplicationBootstrap,
 } from "@nestjs/common";
 import { StrategyStatus } from ".prisma/client";
+import { logCloudWatchMetric } from "@polyforge/logger";
 import { PrismaService } from "@polyforge/shared-db";
 import { RedisService } from "@polyforge/shared-redis";
 import { SubStrategyMode, StrategyVariable } from "@polyforge/shared-types";
@@ -584,7 +585,9 @@ export class StrategyRegistryService implements OnApplicationBootstrap {
     intents: OrderIntent[],
     stream: string,
   ): Promise<void> {
+    const strategyIds = new Set<string>();
     for (const intent of intents) {
+      strategyIds.add(intent.strategyId);
       await this.redis.xadd(stream, {
         intentId: intent.intentId,
         userId: intent.userId,
@@ -604,6 +607,31 @@ export class StrategyRegistryService implements OnApplicationBootstrap {
         ts: String(Date.now()),
       });
     }
+
+    for (const strategyId of strategyIds) {
+      const intentCount = intents.filter(
+        (intent) => intent.strategyId === strategyId,
+      ).length;
+      this.logger.log(
+        {
+          event: "ORDER_INTENTS_PUBLISHED",
+          stream,
+          strategyId,
+          intentCount,
+        },
+        "Published order intents to Redis stream",
+      );
+      logCloudWatchMetric(this.logger, {
+        name: "OrderIntentsPublished",
+        value: intentCount,
+        unit: "Count",
+        dimensions: {
+          Service: "strategy-engine",
+          StrategyId: strategyId,
+          Stream: stream,
+        },
+      });
+    }
   }
 
   private onRunnerStatusChange(
@@ -612,6 +640,26 @@ export class StrategyRegistryService implements OnApplicationBootstrap {
     status: StrategyRunnerStatus,
     _reason?: string,
   ): Promise<void> {
+    if (_reason?.includes("SAFETY")) {
+      this.logger.warn(
+        {
+          event: "STRATEGY_SAFETY_BLOCK_TRIGGERED",
+          strategyId,
+          status,
+          reason: _reason,
+        },
+        "Strategy safety block triggered",
+      );
+      logCloudWatchMetric(this.logger, {
+        name: "StrategySafetyStops",
+        value: 1,
+        unit: "Count",
+        dimensions: {
+          Service: "strategy-engine",
+          StrategyId: strategyId,
+        },
+      });
+    }
     if (status === "STOPPED") {
       this.runners.delete(strategyId);
     }
@@ -630,6 +678,15 @@ export class StrategyRegistryService implements OnApplicationBootstrap {
       userId,
       reason: reason ?? "",
       ts: String(Date.now()),
+    });
+    logCloudWatchMetric(this.logger, {
+      name: "ActiveStrategies",
+      value: this.runners.size,
+      unit: "Count",
+      dimensions: {
+        Service: "strategy-engine",
+      },
+      properties: { eventType: type },
     });
   }
 
