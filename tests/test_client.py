@@ -3953,6 +3953,28 @@ class TestScoresBadgeEndpoints:
 class TestPolymarketPortfolioEndpoints:
     """Tests for the 3 new Polymarket-native portfolio endpoints (POLA-476)."""
 
+    @staticmethod
+    def _client_with(handler):
+        transport = httpx.MockTransport(handler)
+        client = PolyforgeClient(api_key="test", api_url="http://localhost:9999")
+        client._client = httpx.Client(
+            base_url="http://localhost:9999",
+            headers={"Authorization": "Bearer test"},
+            transport=transport,
+        )
+        return client
+
+    @staticmethod
+    def _async_client_with(handler):
+        transport = httpx.MockTransport(handler)
+        client = AsyncPolyforgeClient(api_key="test", api_url="http://localhost:9999")
+        client._client = httpx.AsyncClient(
+            base_url="http://localhost:9999",
+            headers={"Authorization": "Bearer test"},
+            transport=transport,
+        )
+        return client
+
     def test_get_polymarket_portfolio_exists_sync(self):
         assert callable(getattr(PolyforgeClient, "get_polymarket_portfolio", None))
 
@@ -3991,6 +4013,104 @@ class TestPolymarketPortfolioEndpoints:
         sig = inspect.signature(PolyforgeClient.get_polymarket_activity)
         params = set(sig.parameters.keys())
         assert "activity_type" in params
+
+    def test_get_polymarket_portfolio_reads_entries_wrapper(self):
+        def handler(request):
+            assert request.url.path == "/api/v1/portfolio/polymarket/portfolio"
+            return httpx.Response(200, json={
+                "entries": [
+                    {"asset": "BTC", "size": "10", "avgPrice": "0.50"},
+                ],
+            })
+
+        client = self._client_with(handler)
+        try:
+            entries = client.get_polymarket_portfolio()
+            assert len(entries) == 1
+            assert entries[0].asset == "BTC"
+            assert entries[0].size == "10"
+            assert entries[0].avg_price == "0.50"
+        finally:
+            client.close()
+
+    def test_get_polymarket_earnings_reads_entries_wrapper(self):
+        def handler(request):
+            assert request.url.path == "/api/v1/portfolio/polymarket/earnings"
+            return httpx.Response(200, json={
+                "entries": [
+                    {
+                        "date": "2026-01-01",
+                        "earnings": "50.0",
+                        "volume": "1000.0",
+                        "winRate": "0.6",
+                    },
+                ],
+            })
+
+        client = self._client_with(handler)
+        try:
+            entries = client.get_polymarket_earnings()
+            assert len(entries) == 1
+            assert entries[0].date == "2026-01-01"
+            assert entries[0].earnings == "50.0"
+            assert entries[0].win_rate == "0.6"
+        finally:
+            client.close()
+
+    def test_get_polymarket_activity_reads_activities_wrapper_and_filter(self):
+        captured = {}
+
+        def handler(request):
+            captured["params"] = dict(request.url.params)
+            assert request.url.path == "/api/v1/portfolio/polymarket/activity"
+            return httpx.Response(200, json={
+                "activities": [
+                    {"id": "act-1", "type": "trade", "amount": "12.5"},
+                ],
+            })
+
+        client = self._client_with(handler)
+        try:
+            activities = client.get_polymarket_activity(activity_type="trade")
+            assert captured["params"] == {"type": "trade"}
+            assert len(activities) == 1
+            assert activities[0].id == "act-1"
+            assert activities[0].type == "trade"
+            assert activities[0].amount == "12.5"
+        finally:
+            client.close()
+
+    def test_async_polymarket_wrappers_match_sync_fields(self):
+        import asyncio
+
+        def handler(request):
+            if request.url.path.endswith("/portfolio"):
+                return httpx.Response(200, json={
+                    "entries": [{"asset": "ETH", "size": "2"}],
+                })
+            if request.url.path.endswith("/earnings"):
+                return httpx.Response(200, json={
+                    "entries": [{"date": "2026-01-02", "earnings": "5"}],
+                })
+            if request.url.path.endswith("/activity"):
+                return httpx.Response(200, json={
+                    "activities": [{"id": "act-2", "type": "deposit"}],
+                })
+            return httpx.Response(404)
+
+        async def _run():
+            client = self._async_client_with(handler)
+            try:
+                portfolio = await client.get_polymarket_portfolio()
+                earnings = await client.get_polymarket_earnings()
+                activity = await client.get_polymarket_activity()
+                assert portfolio[0].asset == "ETH"
+                assert earnings[0].date == "2026-01-02"
+                assert activity[0].id == "act-2"
+            finally:
+                await client.close()
+
+        asyncio.run(_run())
 
 
 class TestNewModels:
