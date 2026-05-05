@@ -1511,3 +1511,112 @@ class FollowedUser:
     username: str = ""
     display_name: str | None = None
     avatar_url: str | None = None
+
+
+# ---------------------------------------------------------------------------
+# Misc public utility endpoints (POLA-1857)
+# ---------------------------------------------------------------------------
+
+
+@dataclass
+class ReferralStats:
+    """Aggregate referral counts for the current user."""
+
+    invited: int = 0
+    signed_up: int = 0
+    active: int = 0
+    credits_earned: int = 0
+
+
+@dataclass
+class ReferralInfo:
+    """Referral overview returned by ``GET /api/v1/referrals/me``."""
+
+    referral_code: str = ""
+    referral_link: str = ""
+    stats: ReferralStats = field(default_factory=ReferralStats)
+    referrals: list[Any] = field(default_factory=list)
+
+
+@dataclass
+class VenueFeeEstimate:
+    """Per-venue fee breakdown returned by the fee preview endpoint."""
+
+    venue: str = ""
+    fee_bps: float = 0.0
+    fee_usd: float = 0.0
+    total_cost_usd: float = 0.0
+    is_maker: bool = False
+
+
+@dataclass
+class FeeMarketMatch:
+    """Match descriptor linking a Polymarket and Kalshi market."""
+
+    match_id: str = ""
+    confidence: float = 0.0
+
+
+@dataclass
+class OrderPreviewResponse:
+    """Fee preview comparing Polymarket and Kalshi for a hypothetical order."""
+
+    polymarket: VenueFeeEstimate = field(default_factory=VenueFeeEstimate)
+    kalshi: Optional[VenueFeeEstimate] = None
+    savings: float = 0.0
+    recommended_venue: str = ""
+    market_match: Optional[FeeMarketMatch] = None
+
+
+@dataclass
+class MarketAlert:
+    """A per-market price alert."""
+
+    id: str = ""
+    market_id: str = ""
+    outcome: str = ""
+    condition: str = ""
+    threshold: float = 0.0
+    triggered: bool = False
+    created_at: str = ""
+
+
+@dataclass
+class MarketHistoryPoint:
+    """A single timestamped point in a market's price history."""
+
+    timestamp: str = ""
+    yes_price: float = 0.0
+    no_price: float = 0.0
+    volume: float = 0.0
+
+
+@dataclass
+class SentimentUserVote:
+    """Optional per-user sentiment vote returned alongside the report."""
+
+    direction: str = ""
+    confidence: float = 0.0
+
+
+@dataclass
+class MarketSentimentReport:
+    """Aggregate sentiment report for a single market.
+
+    Distinct from :class:`MarketSentiment` (which mirrors ``/news/sentiment/:id``)
+    — this one mirrors ``/markets/:marketId/sentiment``.
+    """
+
+    yes_percent: float = 0.0
+    no_percent: float = 0.0
+    total_votes: int = 0
+    user_vote: Optional[SentimentUserVote] = None
+
+
+@dataclass
+class CorrelationCategoriesReport:
+    """Category correlation matrix returned by the analytics endpoint."""
+
+    categories: list[str] = field(default_factory=list)
+    matrix: list[list[float]] = field(default_factory=list)
+    updated_at: str = ""
