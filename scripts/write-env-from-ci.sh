@@ -98,7 +98,10 @@ POSTGRES_USER=poly
 POSTGRES_PASSWORD=${DB_PASSWORD}
 POSTGRES_DB=polyforge
 DATABASE_URL=postgresql://poly:${DB_PASSWORD}@pgbouncer:5432/polyforge?pgbouncer=true&connection_limit=1
-DIRECT_DATABASE_URL=postgresql://poly:${DB_PASSWORD}@localhost:5432/polyforge
+# docker-compose.infra.yml publishes database ports on 127.0.0.1 only.
+# Use the same IPv4 address for host-side deploy migrations to avoid localhost
+# resolving to ::1 on self-hosted runners.
+DIRECT_DATABASE_URL=postgresql://poly:${DB_PASSWORD}@127.0.0.1:5432/polyforge
 
 # ─────────────────────────────────────────────────────────────────────────────
 # ADMIN DATABASE
@@ -108,7 +111,7 @@ POSTGRES_ADMIN_USER=poly_admin
 POSTGRES_ADMIN_PASSWORD=${ADMIN_DB_PASSWORD}
 POSTGRES_ADMIN_DB=polyforge_admin
 ADMIN_DATABASE_URL=postgresql://poly_admin:${ADMIN_DB_PASSWORD}@pgbouncer-admin:5433/polyforge_admin?pgbouncer=true&connection_limit=1
-ADMIN_DIRECT_DATABASE_URL=postgresql://poly_admin:${ADMIN_DB_PASSWORD}@localhost:5434/polyforge_admin
+ADMIN_DIRECT_DATABASE_URL=postgresql://poly_admin:${ADMIN_DB_PASSWORD}@127.0.0.1:5434/polyforge_admin
 
 # ─────────────────────────────────────────────────────────────────────────────
 # REDIS
