@@ -1022,7 +1022,7 @@ export function Component() {
   });
 
   // Count canvas issues: unwired trigger/action blocks + active blocks with empty required fields.
-  const canvasIssues = useBuilderStore((s) => {
+  const canvasIssueSummary = useBuilderStore((s) => {
     const connectedIds = new Set<string>([
       ...s.edges.map((e) => e.source),
       ...s.edges.map((e) => e.target),
@@ -1038,8 +1038,14 @@ export function Component() {
       const hasEmpty = nd.fields.some((f) => !(nd.config[f.key] ?? ''));
       if (hasEmpty) misconfigured++;
     }
-    return { orphaned, misconfigured };
+    return `${orphaned}:${misconfigured}`;
   });
+  const canvasIssues = useMemo(() => {
+    const [orphaned = 0, misconfigured = 0] = canvasIssueSummary
+      .split(':')
+      .map((value) => Number.parseInt(value, 10) || 0);
+    return { orphaned, misconfigured };
+  }, [canvasIssueSummary]);
 
   // Load or reset on mount
   useEffect(() => {
