@@ -138,6 +138,28 @@ asyncio.run(main())
 | `get_arb_settlement_risks()` | List settlement-date and resolution-criteria risks |
 | `refresh_arb_pnl()` | Recompute unrealized arbitrage P&L |
 
+### Trading idempotency
+
+Trading write methods automatically send an `Idempotency-Key` header accepted
+by the PolyForge API. Pass your own `idempotency_key` when retrying the same
+logical mutation so the platform can deduplicate the retry:
+
+```python
+with PolyforgeClient(api_key="pk_live_...") as client:
+    client.place_order(
+        "token-1",
+        "BUY",
+        "YES",
+        10.0,
+        0.5,
+        idempotency_key="strategy-run-42-order-1",
+    )
+```
+
+If omitted, the SDK generates a fresh 32-character key for each order,
+position, smart-order, conditional-order, bulk cancel, and arbitrage write.
+Caller-provided keys must be 8-128 characters.
+
 ### Social & Signals
 
 | Method | Description |

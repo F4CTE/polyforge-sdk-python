@@ -6328,6 +6328,159 @@ class TestArbValidators_POLA_1873:
 VALID_ARB_MATCH_ID = "550e8400-e29b-41d4-a716-446655440000"
 
 
+def _assert_valid_idempotency_key(value: object) -> None:
+    assert isinstance(value, str)
+    assert 8 <= len(value) <= 128
+
+
+class TestIdempotencyKeyHeaders:
+    """Trading writes must satisfy the platform IdempotencyInterceptor."""
+
+    def test_sync_trading_writes_generate_idempotency_key(self):
+        from unittest.mock import MagicMock
+
+        place_order_payload = {"orderId": "ord-1", "intentId": "int-1", "status": "PENDING"}
+        smart_payload = {"smartOrderId": "smart-1", "type": "TWAP", "status": "PENDING", "slicesTotal": 1}
+        conditional_payload = {
+            "id": "co-1",
+            "marketId": "m-1",
+            "tokenId": "tok",
+            "type": "STOP_LOSS",
+            "side": "SELL",
+            "outcome": "YES",
+            "size": "1",
+            "triggerPrice": "0.4",
+            "status": "PENDING",
+        }
+        arb_payload = {
+            "arbPositionId": "arb-1",
+            "buyLeg": None,
+            "sellLeg": None,
+            "entrySpreadPct": 0.0,
+            "status": "PENDING",
+        }
+
+        cases = [
+            ("_post", place_order_payload, lambda c: c.place_order("tok", "BUY", "YES", 1.0, 0.5)),
+            ("_delete", {}, lambda c: c.cancel_order("ord-1")),
+            ("_post", {"results": []}, lambda c: c.batch_orders([{
+                "tokenId": "tok", "side": "BUY", "outcome": "YES", "size": 1.0, "price": 0.5,
+            }])),
+            ("_delete_json", {"cancelled": [], "errors": []}, lambda c: c.bulk_cancel_orders(["ord-1"])),
+            ("_post", place_order_payload, lambda c: c.close_position("tok")),
+            ("_post", {"positionId": "pos-1", "intentId": "int-1", "status": "REDEEMED"}, lambda c: c.redeem_position(position_id="pos-1")),
+            ("_post", place_order_payload, lambda c: c.split_position("tok", 1)),
+            ("_post", place_order_payload, lambda c: c.merge_positions("tok", 1)),
+            ("_post", smart_payload, lambda c: c.place_smart_order(type="TWAP", token_id="tok", side="BUY", outcome="YES", total_size=1.0)),
+            ("_delete", {}, lambda c: c.cancel_smart_order("smart-1")),
+            ("_post", conditional_payload, lambda c: c.create_conditional_order("m-1", "tok", "STOP_LOSS", "SELL", "YES", 1.0, 0.4)),
+            ("_delete", None, lambda c: c.cancel_conditional_order("co-1")),
+            ("_post", arb_payload, lambda c: c.execute_arb(match_id=VALID_ARB_MATCH_ID, size=1.0)),
+            ("_post", {"status": "CLOSING", "positionId": "arb-1"}, lambda c: c.close_arb_position("arb-1")),
+        ]
+
+        for helper_name, response, call in cases:
+            client = PolyforgeClient(api_key="test-key")
+            helper = MagicMock(return_value=response)
+            setattr(client, helper_name, helper)
+            call(client)
+            _assert_valid_idempotency_key(helper.call_args.kwargs.get("idempotency_key"))
+            client.close()
+
+    def test_sync_trading_write_preserves_explicit_idempotency_key(self):
+        from unittest.mock import MagicMock
+
+        client = PolyforgeClient(api_key="test-key")
+        client._post = MagicMock(return_value={"orderId": "ord-1", "intentId": "int-1", "status": "PENDING"})
+        client.place_order(
+            "tok",
+            "BUY",
+            "YES",
+            1.0,
+            0.5,
+            idempotency_key="order-submit-123",
+        )
+        assert client._post.call_args.kwargs["idempotency_key"] == "order-submit-123"
+        client.close()
+
+    def test_async_trading_writes_generate_idempotency_key(self):
+        import asyncio
+        from unittest.mock import AsyncMock
+
+        async def _run():
+            place_order_payload = {"orderId": "ord-1", "intentId": "int-1", "status": "PENDING"}
+            smart_payload = {"smartOrderId": "smart-1", "type": "TWAP", "status": "PENDING", "slicesTotal": 1}
+            conditional_payload = {
+                "id": "co-1",
+                "marketId": "m-1",
+                "tokenId": "tok",
+                "type": "STOP_LOSS",
+                "side": "SELL",
+                "outcome": "YES",
+                "size": "1",
+                "triggerPrice": "0.4",
+                "status": "PENDING",
+            }
+            arb_payload = {
+                "arbPositionId": "arb-1",
+                "buyLeg": None,
+                "sellLeg": None,
+                "entrySpreadPct": 0.0,
+                "status": "PENDING",
+            }
+            cases = [
+                ("_post", place_order_payload, lambda c: c.place_order("tok", "BUY", "YES", 1.0, 0.5)),
+                ("_delete", {}, lambda c: c.cancel_order("ord-1")),
+                ("_post", {"results": []}, lambda c: c.batch_orders([{
+                    "tokenId": "tok", "side": "BUY", "outcome": "YES", "size": 1.0, "price": 0.5,
+                }])),
+                ("_delete_json", {"cancelled": [], "errors": []}, lambda c: c.bulk_cancel_orders(["ord-1"])),
+                ("_post", place_order_payload, lambda c: c.close_position("tok")),
+                ("_post", {"positionId": "pos-1", "intentId": "int-1", "status": "REDEEMED"}, lambda c: c.redeem_position(position_id="pos-1")),
+                ("_post", place_order_payload, lambda c: c.split_position("tok", 1)),
+                ("_post", place_order_payload, lambda c: c.merge_positions("tok", 1)),
+                ("_post", smart_payload, lambda c: c.place_smart_order(type="TWAP", token_id="tok", side="BUY", outcome="YES", total_size=1.0)),
+                ("_delete", {}, lambda c: c.cancel_smart_order("smart-1")),
+                ("_post", conditional_payload, lambda c: c.create_conditional_order("m-1", "tok", "STOP_LOSS", "SELL", "YES", 1.0, 0.4)),
+                ("_delete", None, lambda c: c.cancel_conditional_order("co-1")),
+                ("_post", arb_payload, lambda c: c.execute_arb(match_id=VALID_ARB_MATCH_ID, size=1.0)),
+                ("_post", {"status": "CLOSING", "positionId": "arb-1"}, lambda c: c.close_arb_position("arb-1")),
+            ]
+
+            for helper_name, response, call in cases:
+                client = AsyncPolyforgeClient(api_key="test-key")
+                helper = AsyncMock(return_value=response)
+                setattr(client, helper_name, helper)
+                await call(client)
+                _assert_valid_idempotency_key(helper.call_args.kwargs.get("idempotency_key"))
+                await client.close()
+
+        asyncio.run(_run())
+
+    def test_async_trading_write_preserves_explicit_idempotency_key(self):
+        import asyncio
+        from unittest.mock import AsyncMock
+
+        async def _run():
+            client = AsyncPolyforgeClient(api_key="test-key")
+            client._post = AsyncMock(return_value={
+                "arbPositionId": "arb-1",
+                "buyLeg": None,
+                "sellLeg": None,
+                "entrySpreadPct": 0.0,
+                "status": "PENDING",
+            })
+            await client.execute_arb(
+                match_id=VALID_ARB_MATCH_ID,
+                size=1.0,
+                idempotency_key="arb-submit-123",
+            )
+            assert client._post.call_args.kwargs["idempotency_key"] == "arb-submit-123"
+            await client.close()
+
+        asyncio.run(_run())
+
+
 class TestArbExecutionSync:
     """Happy-path coverage for the 7 PolyforgeClient arb methods (POLA-1851)."""
 
@@ -6351,10 +6504,10 @@ class TestArbExecutionSync:
         assert result.entry_spread_pct == 8.0
         assert result.status == "PENDING"
         # max_slippage_pct omitted -> body must not include it
-        client._post.assert_called_once_with(
-            "/api/v1/arbitrage/execute",
-            json={"matchId": VALID_ARB_MATCH_ID, "size": 100.0},
-        )
+        client._post.assert_called_once()
+        assert client._post.call_args.args == ("/api/v1/arbitrage/execute",)
+        assert client._post.call_args.kwargs["json"] == {"matchId": VALID_ARB_MATCH_ID, "size": 100.0}
+        _assert_valid_idempotency_key(client._post.call_args.kwargs["idempotency_key"])
         client.close()
 
     def test_execute_arb_includes_max_slippage(self):
@@ -6369,10 +6522,14 @@ class TestArbExecutionSync:
             size=100.0,
             max_slippage_pct=1.5,
         )
-        client._post.assert_called_once_with(
-            "/api/v1/arbitrage/execute",
-            json={"matchId": VALID_ARB_MATCH_ID, "size": 100.0, "maxSlippagePct": 1.5},
-        )
+        client._post.assert_called_once()
+        assert client._post.call_args.args == ("/api/v1/arbitrage/execute",)
+        assert client._post.call_args.kwargs["json"] == {
+            "matchId": VALID_ARB_MATCH_ID,
+            "size": 100.0,
+            "maxSlippagePct": 1.5,
+        }
+        _assert_valid_idempotency_key(client._post.call_args.kwargs["idempotency_key"])
         client.close()
 
     def test_execute_arb_validates_size_before_post(self):
@@ -6449,7 +6606,9 @@ class TestArbExecutionSync:
         assert isinstance(result, ArbCloseResponse)
         assert result.status == "CLOSING"
         assert result.position_id == "pos-1"
-        client._post.assert_called_once_with("/api/v1/arbitrage/positions/pos-1/close")
+        client._post.assert_called_once()
+        assert client._post.call_args.args == ("/api/v1/arbitrage/positions/pos-1/close",)
+        _assert_valid_idempotency_key(client._post.call_args.kwargs["idempotency_key"])
         client.close()
 
     def test_get_arb_risk_dashboard_parses_nested_exposure(self):
@@ -6568,10 +6727,14 @@ class TestArbExecutionAsync:
             assert isinstance(result, ArbExecutionResult)
             assert result.arb_position_id == "pos-9"
             assert result.buy_leg is not None and result.buy_leg.price == 0.31
-            client._post.assert_awaited_once_with(
-                "/api/v1/arbitrage/execute",
-                json={"matchId": VALID_ARB_MATCH_ID, "size": 200.0, "maxSlippagePct": 2.0},
-            )
+            client._post.assert_awaited_once()
+            assert client._post.await_args.args == ("/api/v1/arbitrage/execute",)
+            assert client._post.await_args.kwargs["json"] == {
+                "matchId": VALID_ARB_MATCH_ID,
+                "size": 200.0,
+                "maxSlippagePct": 2.0,
+            }
+            _assert_valid_idempotency_key(client._post.await_args.kwargs["idempotency_key"])
             await client.close()
 
         asyncio.run(_run())
@@ -6587,7 +6750,9 @@ class TestArbExecutionAsync:
             result = await client.close_arb_position("pos-9")
             assert isinstance(result, ArbCloseResponse)
             assert result.status == "CLOSING"
-            client._post.assert_awaited_once_with("/api/v1/arbitrage/positions/pos-9/close")
+            client._post.assert_awaited_once()
+            assert client._post.await_args.args == ("/api/v1/arbitrage/positions/pos-9/close",)
+            _assert_valid_idempotency_key(client._post.await_args.kwargs["idempotency_key"])
             await client.close()
 
         asyncio.run(_run())

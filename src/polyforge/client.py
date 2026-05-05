@@ -8,6 +8,7 @@ import logging as _log
 import math
 import re
 import socket
+import uuid
 from dataclasses import fields
 from typing import Any, AsyncIterator, Iterator, TypeVar, get_type_hints
 
@@ -333,6 +334,25 @@ def _raise_for_status(response: httpx.Response) -> None:
 def _strip_none(params: dict[str, Any]) -> dict[str, Any]:
     """Remove None values so they are not sent as query parameters."""
     return {k: v for k, v in params.items() if v is not None}
+
+
+def _idempotency_headers(idempotency_key: str | None) -> dict[str, str] | None:
+    """Build the optional idempotency header expected by trading writes."""
+    if idempotency_key is None:
+        return None
+    if not isinstance(idempotency_key, str):
+        raise TypeError("idempotency_key must be a string")
+    if not 8 <= len(idempotency_key) <= 128:
+        raise ValueError("idempotency_key must be between 8 and 128 characters")
+    return {"Idempotency-Key": idempotency_key}
+
+
+def _new_idempotency_key(idempotency_key: str | None = None) -> str:
+    """Return a caller-provided key or a generated 32-character key."""
+    if idempotency_key is not None:
+        _idempotency_headers(idempotency_key)
+        return idempotency_key
+    return uuid.uuid4().hex
 
 
 def _encode_path(segment: str) -> str:
@@ -669,8 +689,18 @@ class PolyforgeClient:
         _raise_for_status(resp)
         return resp.json()
 
-    def _post(self, path: str, *, json: dict[str, Any] | None = None) -> Any:
-        resp = self._client.post(path, json=json or {})
+    def _post(
+        self,
+        path: str,
+        *,
+        json: dict[str, Any] | None = None,
+        idempotency_key: str | None = None,
+    ) -> Any:
+        resp = self._client.post(
+            path,
+            json=json or {},
+            headers=_idempotency_headers(idempotency_key),
+        )
         _raise_for_status(resp)
         return resp.json()
 
@@ -684,15 +714,26 @@ class PolyforgeClient:
         _raise_for_status(resp)
         return resp.json()
 
-    def _delete(self, path: str) -> Any:
-        resp = self._client.delete(path)
+    def _delete(self, path: str, *, idempotency_key: str | None = None) -> Any:
+        resp = self._client.delete(path, headers=_idempotency_headers(idempotency_key))
         _raise_for_status(resp)
         if resp.status_code == 204:
             return None
         return resp.json()
 
-    def _delete_json(self, path: str, *, json: dict[str, Any]) -> Any:
-        resp = self._client.request("DELETE", path, json=json)
+    def _delete_json(
+        self,
+        path: str,
+        *,
+        json: dict[str, Any],
+        idempotency_key: str | None = None,
+    ) -> Any:
+        resp = self._client.request(
+            "DELETE",
+            path,
+            json=json,
+            headers=_idempotency_headers(idempotency_key),
+        )
         _raise_for_status(resp)
         if resp.status_code == 204:
             return None
@@ -1492,6 +1533,8 @@ class PolyforgeClient:
         size: float,
         price: float,
         order_type: str = "GTC",
+        *,
+        idempotency_key: str | None = None,
     ) -> PlaceOrderResponse:
         """Place a direct buy or sell order on a prediction market."""
         _validate_enum("side", side, _VALID_SIDES)
@@ -1499,25 +1542,37 @@ class PolyforgeClient:
         _validate_enum("order_type", order_type, _VALID_ORDER_TYPES)
         _validate_financial_param("size", size)
         _validate_financial_param("price", price)
-        data = self._post("/api/v1/orders/place", json={
-            "tokenId": token_id,
-            "side": side,
-            "outcome": outcome,
-            "size": size,
-            "price": price,
-            "orderType": order_type,
-        })
+        data = self._post(
+            "/api/v1/orders/place",
+            json={
+                "tokenId": token_id,
+                "side": side,
+                "outcome": outcome,
+                "size": size,
+                "price": price,
+                "orderType": order_type,
+            },
+            idempotency_key=_new_idempotency_key(idempotency_key),
+        )
         return PlaceOrderResponse(
             order_id=data["orderId"],
             intent_id=data["intentId"],
             status=data["status"],
         )
 
-    def cancel_order(self, order_id: str) -> dict:
+    def cancel_order(self, order_id: str, *, idempotency_key: str | None = None) -> dict:
         """Cancel a pending or live order."""
-        return self._delete(f"/api/v1/orders/{_encode_path(order_id)}")
+        return self._delete(
+            f"/api/v1/orders/{_encode_path(order_id)}",
+            idempotency_key=_new_idempotency_key(idempotency_key),
+        )
 
-    def batch_orders(self, orders: list[dict[str, Any]]) -> BatchOrderResult:
+    def batch_orders(
+        self,
+        orders: list[dict[str, Any]],
+        *,
+        idempotency_key: str | None = None,
+    ) -> BatchOrderResult:
         """Place up to 15 orders in a single request.
 
         Args:
@@ -1531,7 +1586,11 @@ class PolyforgeClient:
             raise ValueError("batch_orders accepts at most 15 orders per call")
         for order in orders:
             _validate_batch_order(order)
-        data = self._post("/api/v1/orders/batch", json={"orders": orders})
+        data = self._post(
+            "/api/v1/orders/batch",
+            json={"orders": orders},
+            idempotency_key=_new_idempotency_key(idempotency_key),
+        )
         items = [
             BatchOrderItem(
                 order_id=r.get("orderId", ""),
@@ -1542,7 +1601,12 @@ class PolyforgeClient:
         ]
         return BatchOrderResult(results=items)
 
-    def bulk_cancel_orders(self, order_ids: list[str]) -> BulkCancelResult:
+    def bulk_cancel_orders(
+        self,
+        order_ids: list[str],
+        *,
+        idempotency_key: str | None = None,
+    ) -> BulkCancelResult:
         """Cancel up to 3000 orders in a single request.
 
         Args:
@@ -1552,20 +1616,34 @@ class PolyforgeClient:
             raise ValueError("bulk_cancel_orders requires at least 1 order ID")
         if len(order_ids) > 3000:
             raise ValueError("bulk_cancel_orders accepts at most 3000 order IDs")
-        data = self._delete_json("/api/v1/orders/bulk", json={"orderIds": order_ids})
+        data = self._delete_json(
+            "/api/v1/orders/bulk",
+            json={"orderIds": order_ids},
+            idempotency_key=_new_idempotency_key(idempotency_key),
+        )
         errors = [
             BulkCancelError(order_id=e.get("orderId", ""), reason=e.get("reason", ""))
             for e in data.get("errors", [])
         ]
         return BulkCancelResult(cancelled=data.get("cancelled", []), errors=errors)
 
-    def close_position(self, token_id: str, size: float | str | None = None) -> PlaceOrderResponse:
+    def close_position(
+        self,
+        token_id: str,
+        size: float | str | None = None,
+        *,
+        idempotency_key: str | None = None,
+    ) -> PlaceOrderResponse:
         """Close an open position (sell all shares at market price)."""
         body: dict[str, Any] = {"tokenId": token_id}
         if size is not None:
             _validate_positive_numberish_param("size", size)
             body["size"] = str(size)
-        data = self._post("/api/v1/orders/close-position", json=body)
+        data = self._post(
+            "/api/v1/orders/close-position",
+            json=body,
+            idempotency_key=_new_idempotency_key(idempotency_key),
+        )
         return PlaceOrderResponse(order_id=data["orderId"], intent_id=data["intentId"], status=data["status"])
 
     def redeem_position(
@@ -1576,6 +1654,7 @@ class PolyforgeClient:
         # Deprecated aliases kept for backward compat — ignored by the platform.
         token_id: str | None = None,
         condition_id: str | None = None,
+        idempotency_key: str | None = None,
     ) -> RedeemPositionResponse:
         """Redeem winning shares after a market resolves.
 
@@ -1588,10 +1667,21 @@ class PolyforgeClient:
             body["positionId"] = position_id
         if market_id is not None:
             body["marketId"] = market_id
-        data = self._post("/api/v1/orders/redeem", json=body)
+        data = self._post(
+            "/api/v1/orders/redeem",
+            json=body,
+            idempotency_key=_new_idempotency_key(idempotency_key),
+        )
         return RedeemPositionResponse(position_id=data["positionId"], intent_id=data["intentId"], status=data["status"])
 
-    def split_position(self, token_id: str, amount: float | str, **_kwargs: Any) -> PlaceOrderResponse:
+    def split_position(
+        self,
+        token_id: str,
+        amount: float | str,
+        *,
+        idempotency_key: str | None = None,
+        **_kwargs: Any,
+    ) -> PlaceOrderResponse:
         """Split a position into smaller positions.
 
         Args:
@@ -1600,10 +1690,21 @@ class PolyforgeClient:
         """
         _validate_positive_numberish_param("amount", amount)
         amount_str = str(amount)
-        data = self._post("/api/v1/orders/split", json={"tokenId": token_id, "amount": amount_str})
+        data = self._post(
+            "/api/v1/orders/split",
+            json={"tokenId": token_id, "amount": amount_str},
+            idempotency_key=_new_idempotency_key(idempotency_key),
+        )
         return PlaceOrderResponse(order_id=data["orderId"], intent_id=data["intentId"], status=data["status"])
 
-    def merge_positions(self, token_id: str, amount: float | str, **_kwargs: Any) -> PlaceOrderResponse:
+    def merge_positions(
+        self,
+        token_id: str,
+        amount: float | str,
+        *,
+        idempotency_key: str | None = None,
+        **_kwargs: Any,
+    ) -> PlaceOrderResponse:
         """Merge positions.
 
         Args:
@@ -1612,7 +1713,11 @@ class PolyforgeClient:
         """
         _validate_positive_numberish_param("amount", amount)
         amount_str = str(amount)
-        data = self._post("/api/v1/orders/merge", json={"tokenId": token_id, "amount": amount_str})
+        data = self._post(
+            "/api/v1/orders/merge",
+            json={"tokenId": token_id, "amount": amount_str},
+            idempotency_key=_new_idempotency_key(idempotency_key),
+        )
         return PlaceOrderResponse(order_id=data["orderId"], intent_id=data["intentId"], status=data["status"])
 
     # -- Arbitrage --
@@ -1760,6 +1865,7 @@ class PolyforgeClient:
         match_id: str,
         size: float,
         max_slippage_pct: float | None = None,
+        idempotency_key: str | None = None,
     ) -> ArbExecutionResult:
         """Execute a cross-venue arbitrage trade (places real orders on both venues).
 
@@ -1787,7 +1893,11 @@ class PolyforgeClient:
         if max_slippage_pct is not None:
             _validate_arb_slippage(max_slippage_pct)
             body["maxSlippagePct"] = max_slippage_pct
-        data = self._post("/api/v1/arbitrage/execute", json=body)
+        data = self._post(
+            "/api/v1/arbitrage/execute",
+            json=body,
+            idempotency_key=_new_idempotency_key(idempotency_key),
+        )
         return _parse(ArbExecutionResult, data)
 
     def list_arb_positions(
@@ -1823,7 +1933,12 @@ class PolyforgeClient:
         data = self._get(f"/api/v1/arbitrage/positions/{_encode_path(position_id)}")
         return _parse(ArbPosition, data)
 
-    def close_arb_position(self, position_id: str) -> ArbCloseResponse:
+    def close_arb_position(
+        self,
+        position_id: str,
+        *,
+        idempotency_key: str | None = None,
+    ) -> ArbCloseResponse:
         """Close an open arbitrage position (places real reverse orders on both venues).
 
         Raises:
@@ -1831,7 +1946,8 @@ class PolyforgeClient:
                 (``ARB_POSITION_NOT_FOUND``, ``INVALID_STATUS``).
         """
         data = self._post(
-            f"/api/v1/arbitrage/positions/{_encode_path(position_id)}/close"
+            f"/api/v1/arbitrage/positions/{_encode_path(position_id)}/close",
+            idempotency_key=_new_idempotency_key(idempotency_key),
         )
         return _parse(ArbCloseResponse, data)
 
@@ -1868,6 +1984,7 @@ class PolyforgeClient:
         stop_loss_price: float | None = None,
         price_a: float | None = None,
         price_b: float | None = None,
+        idempotency_key: str | None = None,
     ) -> PlaceSmartOrderResponse:
         """Place an advanced smart order (TWAP, DCA, BRACKET, or OCO)."""
         _validate_financial_param("total_size", total_size)
@@ -1898,7 +2015,11 @@ class PolyforgeClient:
         if stop_loss_price is not None: body["stopLossPrice"] = stop_loss_price
         if price_a is not None: body["priceA"] = price_a
         if price_b is not None: body["priceB"] = price_b
-        data = self._post("/api/v1/orders/smart", json=body)
+        data = self._post(
+            "/api/v1/orders/smart",
+            json=body,
+            idempotency_key=_new_idempotency_key(idempotency_key),
+        )
         return PlaceSmartOrderResponse(
             smart_order_id=data["smartOrderId"],
             type=data["type"],
@@ -1919,9 +2040,17 @@ class PolyforgeClient:
             created_at=o.get("createdAt", ""),
         ) for o in data]
 
-    def cancel_smart_order(self, smart_order_id: str) -> dict:
+    def cancel_smart_order(
+        self,
+        smart_order_id: str,
+        *,
+        idempotency_key: str | None = None,
+    ) -> dict:
         """Cancel a pending or active smart order."""
-        return self._delete(f"/api/v1/orders/smart/{_encode_path(smart_order_id)}")
+        return self._delete(
+            f"/api/v1/orders/smart/{_encode_path(smart_order_id)}",
+            idempotency_key=_new_idempotency_key(idempotency_key),
+        )
 
     # -- Marketplace --
 
@@ -2412,6 +2541,7 @@ class PolyforgeClient:
         trigger_price: float,
         *,
         limit_price: float | None = None,
+        idempotency_key: str | None = None,
     ) -> ConditionalOrder:
         """Create a conditional order.
 
@@ -2442,7 +2572,14 @@ class PolyforgeClient:
         if limit_price is not None:
             _validate_financial_param("limit_price", limit_price)
             body["limitPrice"] = limit_price
-        return _parse(ConditionalOrder, self._post("/api/v1/orders/conditional", json=body))
+        return _parse(
+            ConditionalOrder,
+            self._post(
+                "/api/v1/orders/conditional",
+                json=body,
+                idempotency_key=_new_idempotency_key(idempotency_key),
+            ),
+        )
 
     def get_conditional_order(self, order_id: str) -> ConditionalOrder:
         """Get a conditional order by ID.
@@ -2456,13 +2593,21 @@ class PolyforgeClient:
         data = self._get(f"/api/v1/orders/conditional/{_encode_path(order_id)}")
         return _parse(ConditionalOrder, data)
 
-    def cancel_conditional_order(self, order_id: str) -> None:
+    def cancel_conditional_order(
+        self,
+        order_id: str,
+        *,
+        idempotency_key: str | None = None,
+    ) -> None:
         """Cancel a conditional order by ID.
 
         Args:
             order_id: The conditional order ID to cancel.
         """
-        self._delete(f"/api/v1/orders/conditional/{_encode_path(order_id)}")
+        self._delete(
+            f"/api/v1/orders/conditional/{_encode_path(order_id)}",
+            idempotency_key=_new_idempotency_key(idempotency_key),
+        )
 
     # -- Portfolio PnL --
 
@@ -3406,8 +3551,18 @@ class AsyncPolyforgeClient:
         _raise_for_status(resp)
         return resp.json()
 
-    async def _post(self, path: str, *, json: dict[str, Any] | None = None) -> Any:
-        resp = await self._client.post(path, json=json or {})
+    async def _post(
+        self,
+        path: str,
+        *,
+        json: dict[str, Any] | None = None,
+        idempotency_key: str | None = None,
+    ) -> Any:
+        resp = await self._client.post(
+            path,
+            json=json or {},
+            headers=_idempotency_headers(idempotency_key),
+        )
         _raise_for_status(resp)
         return resp.json()
 
@@ -3421,15 +3576,26 @@ class AsyncPolyforgeClient:
         _raise_for_status(resp)
         return resp.json()
 
-    async def _delete(self, path: str) -> Any:
-        resp = await self._client.delete(path)
+    async def _delete(self, path: str, *, idempotency_key: str | None = None) -> Any:
+        resp = await self._client.delete(path, headers=_idempotency_headers(idempotency_key))
         _raise_for_status(resp)
         if resp.status_code == 204:
             return None
         return resp.json()
 
-    async def _delete_json(self, path: str, *, json: dict[str, Any]) -> Any:
-        resp = await self._client.request("DELETE", path, json=json)
+    async def _delete_json(
+        self,
+        path: str,
+        *,
+        json: dict[str, Any],
+        idempotency_key: str | None = None,
+    ) -> Any:
+        resp = await self._client.request(
+            "DELETE",
+            path,
+            json=json,
+            headers=_idempotency_headers(idempotency_key),
+        )
         _raise_for_status(resp)
         if resp.status_code == 204:
             return None
@@ -4191,6 +4357,8 @@ class AsyncPolyforgeClient:
         size: float,
         price: float,
         order_type: str = "GTC",
+        *,
+        idempotency_key: str | None = None,
     ) -> PlaceOrderResponse:
         """Place a direct buy or sell order on a prediction market."""
         _validate_enum("side", side, _VALID_SIDES)
@@ -4198,25 +4366,37 @@ class AsyncPolyforgeClient:
         _validate_enum("order_type", order_type, _VALID_ORDER_TYPES)
         _validate_financial_param("size", size)
         _validate_financial_param("price", price)
-        data = await self._post("/api/v1/orders/place", json={
-            "tokenId": token_id,
-            "side": side,
-            "outcome": outcome,
-            "size": size,
-            "price": price,
-            "orderType": order_type,
-        })
+        data = await self._post(
+            "/api/v1/orders/place",
+            json={
+                "tokenId": token_id,
+                "side": side,
+                "outcome": outcome,
+                "size": size,
+                "price": price,
+                "orderType": order_type,
+            },
+            idempotency_key=_new_idempotency_key(idempotency_key),
+        )
         return PlaceOrderResponse(
             order_id=data["orderId"],
             intent_id=data["intentId"],
             status=data["status"],
         )
 
-    async def cancel_order(self, order_id: str) -> dict:
+    async def cancel_order(self, order_id: str, *, idempotency_key: str | None = None) -> dict:
         """Cancel a pending or live order."""
-        return await self._delete(f"/api/v1/orders/{_encode_path(order_id)}")
+        return await self._delete(
+            f"/api/v1/orders/{_encode_path(order_id)}",
+            idempotency_key=_new_idempotency_key(idempotency_key),
+        )
 
-    async def batch_orders(self, orders: list[dict[str, Any]]) -> BatchOrderResult:
+    async def batch_orders(
+        self,
+        orders: list[dict[str, Any]],
+        *,
+        idempotency_key: str | None = None,
+    ) -> BatchOrderResult:
         """Place up to 15 orders in a single request.
 
         Args:
@@ -4230,7 +4410,11 @@ class AsyncPolyforgeClient:
             raise ValueError("batch_orders accepts at most 15 orders per call")
         for order in orders:
             _validate_batch_order(order)
-        data = await self._post("/api/v1/orders/batch", json={"orders": orders})
+        data = await self._post(
+            "/api/v1/orders/batch",
+            json={"orders": orders},
+            idempotency_key=_new_idempotency_key(idempotency_key),
+        )
         items = [
             BatchOrderItem(
                 order_id=r.get("orderId", ""),
@@ -4241,7 +4425,12 @@ class AsyncPolyforgeClient:
         ]
         return BatchOrderResult(results=items)
 
-    async def bulk_cancel_orders(self, order_ids: list[str]) -> BulkCancelResult:
+    async def bulk_cancel_orders(
+        self,
+        order_ids: list[str],
+        *,
+        idempotency_key: str | None = None,
+    ) -> BulkCancelResult:
         """Cancel up to 3000 orders in a single request.
 
         Args:
@@ -4251,20 +4440,34 @@ class AsyncPolyforgeClient:
             raise ValueError("bulk_cancel_orders requires at least 1 order ID")
         if len(order_ids) > 3000:
             raise ValueError("bulk_cancel_orders accepts at most 3000 order IDs")
-        data = await self._delete_json("/api/v1/orders/bulk", json={"orderIds": order_ids})
+        data = await self._delete_json(
+            "/api/v1/orders/bulk",
+            json={"orderIds": order_ids},
+            idempotency_key=_new_idempotency_key(idempotency_key),
+        )
         errors = [
             BulkCancelError(order_id=e.get("orderId", ""), reason=e.get("reason", ""))
             for e in data.get("errors", [])
         ]
         return BulkCancelResult(cancelled=data.get("cancelled", []), errors=errors)
 
-    async def close_position(self, token_id: str, size: float | str | None = None) -> PlaceOrderResponse:
+    async def close_position(
+        self,
+        token_id: str,
+        size: float | str | None = None,
+        *,
+        idempotency_key: str | None = None,
+    ) -> PlaceOrderResponse:
         """Close an open position (sell all shares at market price)."""
         body: dict[str, Any] = {"tokenId": token_id}
         if size is not None:
             _validate_positive_numberish_param("size", size)
             body["size"] = str(size)
-        data = await self._post("/api/v1/orders/close-position", json=body)
+        data = await self._post(
+            "/api/v1/orders/close-position",
+            json=body,
+            idempotency_key=_new_idempotency_key(idempotency_key),
+        )
         return PlaceOrderResponse(order_id=data["orderId"], intent_id=data["intentId"], status=data["status"])
 
     async def redeem_position(
@@ -4275,6 +4478,7 @@ class AsyncPolyforgeClient:
         # Deprecated aliases kept for backward compat — ignored by the platform.
         token_id: str | None = None,
         condition_id: str | None = None,
+        idempotency_key: str | None = None,
     ) -> RedeemPositionResponse:
         """Redeem winning shares after a market resolves.
 
@@ -4287,10 +4491,21 @@ class AsyncPolyforgeClient:
             body["positionId"] = position_id
         if market_id is not None:
             body["marketId"] = market_id
-        data = await self._post("/api/v1/orders/redeem", json=body)
+        data = await self._post(
+            "/api/v1/orders/redeem",
+            json=body,
+            idempotency_key=_new_idempotency_key(idempotency_key),
+        )
         return RedeemPositionResponse(position_id=data["positionId"], intent_id=data["intentId"], status=data["status"])
 
-    async def split_position(self, token_id: str, amount: float | str, **_kwargs: Any) -> PlaceOrderResponse:
+    async def split_position(
+        self,
+        token_id: str,
+        amount: float | str,
+        *,
+        idempotency_key: str | None = None,
+        **_kwargs: Any,
+    ) -> PlaceOrderResponse:
         """Split a position into smaller positions.
 
         Args:
@@ -4299,10 +4514,21 @@ class AsyncPolyforgeClient:
         """
         _validate_positive_numberish_param("amount", amount)
         amount_str = str(amount)
-        data = await self._post("/api/v1/orders/split", json={"tokenId": token_id, "amount": amount_str})
+        data = await self._post(
+            "/api/v1/orders/split",
+            json={"tokenId": token_id, "amount": amount_str},
+            idempotency_key=_new_idempotency_key(idempotency_key),
+        )
         return PlaceOrderResponse(order_id=data["orderId"], intent_id=data["intentId"], status=data["status"])
 
-    async def merge_positions(self, token_id: str, amount: float | str, **_kwargs: Any) -> PlaceOrderResponse:
+    async def merge_positions(
+        self,
+        token_id: str,
+        amount: float | str,
+        *,
+        idempotency_key: str | None = None,
+        **_kwargs: Any,
+    ) -> PlaceOrderResponse:
         """Merge positions.
 
         Args:
@@ -4311,7 +4537,11 @@ class AsyncPolyforgeClient:
         """
         _validate_positive_numberish_param("amount", amount)
         amount_str = str(amount)
-        data = await self._post("/api/v1/orders/merge", json={"tokenId": token_id, "amount": amount_str})
+        data = await self._post(
+            "/api/v1/orders/merge",
+            json={"tokenId": token_id, "amount": amount_str},
+            idempotency_key=_new_idempotency_key(idempotency_key),
+        )
         return PlaceOrderResponse(order_id=data["orderId"], intent_id=data["intentId"], status=data["status"])
 
     # -- Arbitrage --
@@ -4455,6 +4685,7 @@ class AsyncPolyforgeClient:
         match_id: str,
         size: float,
         max_slippage_pct: float | None = None,
+        idempotency_key: str | None = None,
     ) -> ArbExecutionResult:
         """Execute a cross-venue arbitrage trade (places real orders on both venues).
 
@@ -4466,7 +4697,11 @@ class AsyncPolyforgeClient:
         if max_slippage_pct is not None:
             _validate_arb_slippage(max_slippage_pct)
             body["maxSlippagePct"] = max_slippage_pct
-        data = await self._post("/api/v1/arbitrage/execute", json=body)
+        data = await self._post(
+            "/api/v1/arbitrage/execute",
+            json=body,
+            idempotency_key=_new_idempotency_key(idempotency_key),
+        )
         return _parse(ArbExecutionResult, data)
 
     async def list_arb_positions(
@@ -4495,10 +4730,16 @@ class AsyncPolyforgeClient:
         data = await self._get(f"/api/v1/arbitrage/positions/{_encode_path(position_id)}")
         return _parse(ArbPosition, data)
 
-    async def close_arb_position(self, position_id: str) -> ArbCloseResponse:
+    async def close_arb_position(
+        self,
+        position_id: str,
+        *,
+        idempotency_key: str | None = None,
+    ) -> ArbCloseResponse:
         """Close an open arbitrage position (places real reverse orders on both venues)."""
         data = await self._post(
-            f"/api/v1/arbitrage/positions/{_encode_path(position_id)}/close"
+            f"/api/v1/arbitrage/positions/{_encode_path(position_id)}/close",
+            idempotency_key=_new_idempotency_key(idempotency_key),
         )
         return _parse(ArbCloseResponse, data)
 
@@ -4535,6 +4776,7 @@ class AsyncPolyforgeClient:
         stop_loss_price: float | None = None,
         price_a: float | None = None,
         price_b: float | None = None,
+        idempotency_key: str | None = None,
     ) -> PlaceSmartOrderResponse:
         """Place an advanced smart order (TWAP, DCA, BRACKET, or OCO)."""
         _validate_financial_param("total_size", total_size)
@@ -4565,7 +4807,11 @@ class AsyncPolyforgeClient:
         if stop_loss_price is not None: body["stopLossPrice"] = stop_loss_price
         if price_a is not None: body["priceA"] = price_a
         if price_b is not None: body["priceB"] = price_b
-        data = await self._post("/api/v1/orders/smart", json=body)
+        data = await self._post(
+            "/api/v1/orders/smart",
+            json=body,
+            idempotency_key=_new_idempotency_key(idempotency_key),
+        )
         return PlaceSmartOrderResponse(
             smart_order_id=data["smartOrderId"],
             type=data["type"],
@@ -4586,9 +4832,17 @@ class AsyncPolyforgeClient:
             created_at=o.get("createdAt", ""),
         ) for o in data]
 
-    async def cancel_smart_order(self, smart_order_id: str) -> dict:
+    async def cancel_smart_order(
+        self,
+        smart_order_id: str,
+        *,
+        idempotency_key: str | None = None,
+    ) -> dict:
         """Cancel a pending or active smart order."""
-        return await self._delete(f"/api/v1/orders/smart/{_encode_path(smart_order_id)}")
+        return await self._delete(
+            f"/api/v1/orders/smart/{_encode_path(smart_order_id)}",
+            idempotency_key=_new_idempotency_key(idempotency_key),
+        )
 
     # -- Marketplace --
 
@@ -4956,6 +5210,7 @@ class AsyncPolyforgeClient:
         trigger_price: float,
         *,
         limit_price: float | None = None,
+        idempotency_key: str | None = None,
     ) -> ConditionalOrder:
         """Create a conditional order.
 
@@ -4986,7 +5241,14 @@ class AsyncPolyforgeClient:
         if limit_price is not None:
             _validate_financial_param("limit_price", limit_price)
             body["limitPrice"] = limit_price
-        return _parse(ConditionalOrder, await self._post("/api/v1/orders/conditional", json=body))
+        return _parse(
+            ConditionalOrder,
+            await self._post(
+                "/api/v1/orders/conditional",
+                json=body,
+                idempotency_key=_new_idempotency_key(idempotency_key),
+            ),
+        )
 
     async def get_conditional_order(self, order_id: str) -> ConditionalOrder:
         """Get a conditional order by ID.
@@ -5000,13 +5262,21 @@ class AsyncPolyforgeClient:
         data = await self._get(f"/api/v1/orders/conditional/{_encode_path(order_id)}")
         return _parse(ConditionalOrder, data)
 
-    async def cancel_conditional_order(self, order_id: str) -> None:
+    async def cancel_conditional_order(
+        self,
+        order_id: str,
+        *,
+        idempotency_key: str | None = None,
+    ) -> None:
         """Cancel a conditional order by ID.
 
         Args:
             order_id: The conditional order ID to cancel.
         """
-        await self._delete(f"/api/v1/orders/conditional/{_encode_path(order_id)}")
+        await self._delete(
+            f"/api/v1/orders/conditional/{_encode_path(order_id)}",
+            idempotency_key=_new_idempotency_key(idempotency_key),
+        )
 
     # -- Portfolio PnL --
 
