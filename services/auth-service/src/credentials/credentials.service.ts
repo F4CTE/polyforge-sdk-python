@@ -163,6 +163,7 @@ export class CredentialsService {
   ): Promise<void> {
     const url = `${this.signerUrl}/credentials`;
     const privateKeyBytes = Buffer.from(dto.privateKey, 'utf8');
+    const privateKeyPayload = Array.from(privateKeyBytes);
 
     try {
       const token = this.issueInternalToken();
@@ -174,7 +175,7 @@ export class CredentialsService {
         },
         body: JSON.stringify({
           userId,
-          privateKey: Array.from(privateKeyBytes),
+          privateKey: privateKeyPayload,
           apiKey: dto.apiKey,
           apiSecret: dto.apiSecret,
           apiPassphrase: dto.apiPassphrase,
@@ -209,6 +210,7 @@ export class CredentialsService {
         HttpStatus.SERVICE_UNAVAILABLE,
       );
     } finally {
+      privateKeyPayload.fill(0);
       privateKeyBytes.fill(0);
     }
   }

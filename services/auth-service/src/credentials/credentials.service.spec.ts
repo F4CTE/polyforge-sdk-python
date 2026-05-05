@@ -120,6 +120,37 @@ describe('CredentialsService', () => {
       expect(JSON.stringify(body)).not.toContain(validDto.privateKey);
     });
 
+    it('zeroes the forwarded private key byte array after JSON serialization', async () => {
+      const user = verifiedUser();
+      let forwardedPrivateKey: number[] | undefined;
+      const originalStringify = JSON.stringify;
+      const stringifySpy = vi
+        .spyOn(JSON, 'stringify')
+        .mockImplementation((value: unknown) => {
+          if (
+            value &&
+            typeof value === 'object' &&
+            Array.isArray((value as { privateKey?: unknown }).privateKey)
+          ) {
+            forwardedPrivateKey = (value as { privateKey: number[] }).privateKey;
+          }
+          return originalStringify(value);
+        });
+
+      db.user.findUniqueOrThrow.mockResolvedValue(user as any);
+      db.user.update.mockResolvedValue({
+        ...user,
+        polymarketConnected: true,
+      } as any);
+      fetchSpy.mockResolvedValue({ ok: true });
+
+      await service.import(user.id, validDto);
+
+      expect(stringifySpy).toHaveBeenCalled();
+      expect(forwardedPrivateKey).toBeDefined();
+      expect(forwardedPrivateKey!.every((byte) => byte === 0)).toBe(true);
+    });
+
     it('throws SIGNER_ERROR (502) when signer-service returns non-OK', async () => {
       const user = verifiedUser();
       db.user.findUniqueOrThrow.mockResolvedValue(user as any);

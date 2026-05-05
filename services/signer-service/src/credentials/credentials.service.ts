@@ -35,10 +35,18 @@ function copyPrivateKeyBytes(input: unknown): Buffer {
     return input;
   }
   if (input instanceof Uint8Array) {
-    return Buffer.from(input);
+    try {
+      return Buffer.from(input);
+    } finally {
+      input.fill(0);
+    }
   }
   if (Array.isArray(input)) {
-    return Buffer.from(input);
+    try {
+      return Buffer.from(input);
+    } finally {
+      input.fill(0);
+    }
   }
   throw new BadRequestException("Invalid private key format");
 }

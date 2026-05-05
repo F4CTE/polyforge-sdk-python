@@ -34,7 +34,9 @@ const VALID_PK_BYTES = Buffer.from(VALID_PK, "utf8");
 
 const VALID_DTO = {
   userId: "user-1",
-  privateKey: Array.from(VALID_PK_BYTES),
+  get privateKey() {
+    return Array.from(VALID_PK_BYTES);
+  },
   apiKey: "ak-value",
   apiSecret: "as-value",
   apiPassphrase: "ap-value",
@@ -83,6 +85,28 @@ describe("CredentialsService", () => {
         VALID_PK,
       );
       expect(privateKey.every((b) => b === 0)).toBe(true);
+    });
+
+    it("zeroes the original JSON private key byte array after copying it", async () => {
+      const privateKey = Array.from(VALID_PK_BYTES);
+
+      await svc.importCredentials({
+        ...VALID_DTO,
+        privateKey,
+      } as any);
+
+      expect(privateKey.every((byte) => byte === 0)).toBe(true);
+    });
+
+    it("zeroes the original Uint8Array private key after copying it", async () => {
+      const privateKey = new Uint8Array(VALID_PK_BYTES);
+
+      await svc.importCredentials({
+        ...VALID_DTO,
+        privateKey,
+      } as any);
+
+      expect(privateKey.every((byte) => byte === 0)).toBe(true);
     });
 
     it("rejects a private key without 0x prefix", async () => {
