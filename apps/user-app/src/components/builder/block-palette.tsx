@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useEffect } from 'react';
+import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import {
   Shield,
   Zap,
@@ -35,6 +35,7 @@ const SECTIONS: { key: PaletteTab; icon: React.ReactNode }[] = [
   { key: 'calc', icon: <Calculator className="size-3" /> },
   { key: 'actions', icon: <Play className="size-3" /> },
 ];
+const SECTION_COUNT_KEYS = SECTIONS.map((section) => section.key);
 
 const VARIABLE_TAB_META = { label: 'Variables', color: 'var(--chart-category-2)' };
 
@@ -66,8 +67,10 @@ export function BlockPalette({ open, onClose }: BlockPaletteProps) {
   const tickMs = useBuilderStore((s) => s.tickMs);
   const visibility = useBuilderStore((s) => s.visibility);
   const tags = useBuilderStore((s) => s.tags);
-  // Derive only node count per section to avoid re-renders on every node drag
-  const nodeCountBySection = useBuilderStore((s) => {
+  // Derive only node count per section to avoid re-renders on every node drag.
+  // Zustand selectors must return a stable value under React 19, so keep this
+  // selector primitive and materialize the lookup below.
+  const nodeCountSummary = useBuilderStore((s) => {
     const counts: Record<string, number> = {};
     for (const n of s.nodes) {
       const section = n.type === 'variableNode' ? 'variables'
@@ -76,8 +79,12 @@ export function BlockPalette({ open, onClose }: BlockPaletteProps) {
         : (n.data as Record<string, unknown>)?.section as string ?? 'unknown';
       counts[section] = (counts[section] ?? 0) + 1;
     }
-    return counts;
+    return SECTION_COUNT_KEYS.map((section) => counts[section] ?? 0).join(':');
   });
+  const nodeCountBySection = useMemo(() => {
+    const counts = nodeCountSummary.split(':').map((value) => Number.parseInt(value, 10) || 0);
+    return Object.fromEntries(SECTION_COUNT_KEYS.map((section, index) => [section, counts[index] ?? 0])) as Record<PaletteTab, number>;
+  }, [nodeCountSummary]);
   const setName = useBuilderStore((s) => s.setName);
   const setDescription = useBuilderStore((s) => s.setDescription);
   const setExecMode = useBuilderStore((s) => s.setExecMode);
