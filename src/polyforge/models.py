@@ -1519,23 +1519,25 @@ class FollowedUser:
 
 
 @dataclass
-class ReferralStats:
-    """Aggregate referral counts for the current user."""
-
-    invited: int = 0
-    signed_up: int = 0
-    active: int = 0
-    credits_earned: int = 0
-
-
-@dataclass
-class ReferralInfo:
+class MyReferralsResponse:
     """Referral overview returned by ``GET /api/v1/referrals/me``."""
 
     referral_code: str = ""
     referral_link: str = ""
-    stats: ReferralStats = field(default_factory=ReferralStats)
+    invited: int = 0
+    signed_up: int = 0
+    active: int = 0
+    credits_earned: int = 0
     referrals: list[Any] = field(default_factory=list)
+
+    @property
+    def stats(self) -> MyReferralsResponse:
+        """Deprecated stats alias returning this combined response."""
+        return self
+
+
+ReferralInfo = MyReferralsResponse
+ReferralStats = MyReferralsResponse
 
 
 @dataclass

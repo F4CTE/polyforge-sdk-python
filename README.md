@@ -164,8 +164,20 @@ Caller-provided keys must be 8-128 characters.
 
 | Method | Description |
 |--------|-------------|
+| `get_feed(page, limit, min_size, market_id, wallet_address, side)` | Get the global whale-activity feed |
 | `get_whale_feed(min_size)` | Get large on-chain trades |
 | `get_news_signals(min_confidence)` | Get AI-generated news trading signals |
+| `get_my_referrals()` | Get your referral code, link, stats, and referred users |
+
+### Public Profiles
+
+| Method | Description |
+|--------|-------------|
+| `get_user_badges_by_username(username)` | Get badges earned by a public user |
+| `get_user_performance(username, period)` | Get a public user's PnL curve |
+| `get_user_strategies(username, visibility, limit)` | List a public user's strategies |
+| `get_user_activity(username, limit)` | List a public user's recent resolved-position activity |
+| `get_my_following(page, limit)` | List users followed by the authenticated user |
 
 ### Utility Endpoints
 

@@ -9,6 +9,7 @@ import math
 import re
 import socket
 import uuid
+import warnings
 from dataclasses import fields
 from typing import Any, AsyncIterator, Iterator, TypeVar, get_type_hints
 
@@ -91,6 +92,7 @@ from polyforge.models import (
     PriceHistoryEntry,
     Rebate,
     RedeemPositionResponse,
+    MyReferralsResponse,
     ReferralInfo,
     ReferralStats,
     RewardMarket,
@@ -225,6 +227,7 @@ _MODEL_REGISTRY: dict[str, type] = {
     "MarketHistoryPoint": MarketHistoryPoint,
     "MarketSentimentReport": MarketSentimentReport,
     "OrderPreviewResponse": OrderPreviewResponse,
+    "MyReferralsResponse": MyReferralsResponse,
     "ReferralInfo": ReferralInfo,
     "ReferralStats": ReferralStats,
     "SentimentUserVote": SentimentUserVote,
@@ -245,6 +248,16 @@ def _parse_pagination(raw: dict[str, Any]) -> dict[str, Any]:
         "total_pages": raw.get("totalPages", 0),
         "has_next": raw.get("hasNext", False),
     }
+
+
+def _parse_my_referrals_response(raw: dict[str, Any]) -> MyReferralsResponse:
+    """Flatten the legacy nested stats object into the canonical response DTO."""
+    if isinstance(raw, dict):
+        stats = raw.get("stats")
+        if isinstance(stats, dict):
+            raw = {**raw, **stats}
+            raw.pop("stats", None)
+    return _parse(MyReferralsResponse, raw)
 
 
 def _camel_to_snake(name: str) -> str:
@@ -3068,11 +3081,21 @@ class PolyforgeClient:
         items = data.get("data", []) if isinstance(data, dict) else data
         return [_parse(UserActivityEntry, a) for a in items]
 
-    def get_user_profile_badges(self, username: str) -> list[UserProfileBadge]:
+    def get_user_badges_by_username(self, username: str) -> list[UserProfileBadge]:
         """Badges earned by a public user (id is the badge type)."""
         data = self._get(f"/api/v1/users/{_encode_path(username)}/badges")
         items = data.get("data", []) if isinstance(data, dict) else data
         return [_parse(UserProfileBadge, b) for b in items]
+
+    def get_user_profile_badges(self, username: str) -> list[UserProfileBadge]:
+        """Deprecated alias for :meth:`get_user_badges_by_username`."""
+        warnings.warn(
+            "get_user_profile_badges() is deprecated; use "
+            "get_user_badges_by_username() instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return self.get_user_badges_by_username(username)
 
     def get_my_following(
         self,
@@ -3509,7 +3532,7 @@ class PolyforgeClient:
             by_category=by_category,
         )
 
-    def list_feed(
+    def get_feed(
         self,
         *,
         page: int = 1,
@@ -3519,7 +3542,7 @@ class PolyforgeClient:
         wallet_address: str | None = None,
         side: str | None = None,
     ) -> PaginatedResponse[dict[str, Any]]:
-        """List the global whale-activity feed.
+        """Get the global whale-activity feed.
 
         Mirrors ``GET /api/v1/feed`` (delegates to ``WhalesService.getFeed``).
         Returns the platform's flat-paginated wrapper around ``WhaleAlert``
@@ -3552,7 +3575,7 @@ class PolyforgeClient:
             **_parse_pagination(raw),
         )
 
-    def get_feed(
+    def list_feed(
         self,
         *,
         page: int = 1,
@@ -3562,8 +3585,13 @@ class PolyforgeClient:
         wallet_address: str | None = None,
         side: str | None = None,
     ) -> PaginatedResponse[dict[str, Any]]:
-        """Alias for :meth:`list_feed` kept for cross-SDK naming parity."""
-        return self.list_feed(
+        """Deprecated alias for :meth:`get_feed`."""
+        warnings.warn(
+            "list_feed() is deprecated; use get_feed() instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return self.get_feed(
             page=page,
             limit=limit,
             min_size=min_size,
@@ -3630,12 +3658,12 @@ class PolyforgeClient:
             **_parse_pagination(raw),
         )
 
-    def get_my_referrals(self) -> ReferralInfo:
+    def get_my_referrals(self) -> MyReferralsResponse:
         """Fetch the current user's referral code, link, stats, and list.
 
         Mirrors ``GET /api/v1/referrals/me``.
         """
-        return _parse(ReferralInfo, self._get("/api/v1/referrals/me"))
+        return _parse_my_referrals_response(self._get("/api/v1/referrals/me"))
 
     def preview_fees(
         self,
@@ -6089,11 +6117,21 @@ class AsyncPolyforgeClient:
         items = data.get("data", []) if isinstance(data, dict) else data
         return [_parse(UserActivityEntry, a) for a in items]
 
-    async def get_user_profile_badges(self, username: str) -> list[UserProfileBadge]:
+    async def get_user_badges_by_username(self, username: str) -> list[UserProfileBadge]:
         """Badges earned by a public user (id is the badge type)."""
         data = await self._get(f"/api/v1/users/{_encode_path(username)}/badges")
         items = data.get("data", []) if isinstance(data, dict) else data
         return [_parse(UserProfileBadge, b) for b in items]
+
+    async def get_user_profile_badges(self, username: str) -> list[UserProfileBadge]:
+        """Deprecated alias for :meth:`get_user_badges_by_username`."""
+        warnings.warn(
+            "get_user_profile_badges() is deprecated; use "
+            "get_user_badges_by_username() instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return await self.get_user_badges_by_username(username)
 
     async def get_my_following(
         self,
@@ -6452,7 +6490,7 @@ class AsyncPolyforgeClient:
             by_category=by_category,
         )
 
-    async def list_feed(
+    async def get_feed(
         self,
         *,
         page: int = 1,
@@ -6462,7 +6500,7 @@ class AsyncPolyforgeClient:
         wallet_address: str | None = None,
         side: str | None = None,
     ) -> PaginatedResponse[dict[str, Any]]:
-        """Async variant of :meth:`PolyforgeClient.list_feed`."""
+        """Async variant of :meth:`PolyforgeClient.get_feed`."""
         if side is not None:
             _validate_enum("side", side, _VALID_SIDES)
         raw = await self._get(
@@ -6481,7 +6519,7 @@ class AsyncPolyforgeClient:
             **_parse_pagination(raw),
         )
 
-    async def get_feed(
+    async def list_feed(
         self,
         *,
         page: int = 1,
@@ -6491,8 +6529,13 @@ class AsyncPolyforgeClient:
         wallet_address: str | None = None,
         side: str | None = None,
     ) -> PaginatedResponse[dict[str, Any]]:
-        """Async alias for :meth:`PolyforgeClient.get_feed`."""
-        return await self.list_feed(
+        """Deprecated alias for :meth:`get_feed`."""
+        warnings.warn(
+            "list_feed() is deprecated; use get_feed() instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return await self.get_feed(
             page=page,
             limit=limit,
             min_size=min_size,
@@ -6536,9 +6579,9 @@ class AsyncPolyforgeClient:
             **_parse_pagination(raw),
         )
 
-    async def get_my_referrals(self) -> ReferralInfo:
+    async def get_my_referrals(self) -> MyReferralsResponse:
         """Async variant of :meth:`PolyforgeClient.get_my_referrals`."""
-        return _parse(ReferralInfo, await self._get("/api/v1/referrals/me"))
+        return _parse_my_referrals_response(await self._get("/api/v1/referrals/me"))
 
     async def preview_fees(
         self,
