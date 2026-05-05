@@ -294,6 +294,14 @@ Docker Compose sets most of these to internal service DNS names. Override only w
 
 ---
 
+## WebSocket Gateway
+
+| Variable | Dev default | Description |
+|---|---|---|
+| `WS_MAX_CONNECTIONS_PER_USER` | `5` | Max simultaneous WebSocket connections kept per authenticated user against `api-service` `/ws`. When a new authenticated connection exceeds the cap, the oldest socket is closed with code `4008` and the message `Connection limit exceeded`, then the replacement connection is accepted. Protects against resource-exhaustion abuse and runaway client reconnect loops. |
+
+---
+
 ## Service Ports
 
 Internal Docker network ports. No need to change these in dev or production.

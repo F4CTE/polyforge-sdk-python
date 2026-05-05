@@ -11,7 +11,7 @@ import WebSocket, { Server } from "ws";
 import type { IncomingMessage } from "http";
 import { URL } from "url";
 
-const DEFAULT_MAX_CONNECTIONS_PER_USER = 20;
+const DEFAULT_MAX_CONNECTIONS_PER_USER = 5;
 const MAX_PRICE_SUBSCRIPTIONS_PER_SOCKET = 200;
 const DEV_ORIGINS = new Set([
   "http://localhost",
@@ -71,10 +71,9 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
         sockets = new Set();
         this.userSockets.set(userId, sockets);
       }
-      if (sockets.size >= this.maxConnectionsPerUser()) {
-        client.close(4008, "Connection limit exceeded");
-        client.terminate();
-        return;
+      const maxConnections = this.maxConnectionsPerUser();
+      while (sockets.size >= maxConnections) {
+        this.closeOldestUserSocket(userId, sockets, maxConnections);
       }
 
       sockets.add(client);
@@ -167,6 +166,26 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
     return Number.isFinite(configured) && configured > 0
       ? configured
       : DEFAULT_MAX_CONNECTIONS_PER_USER;
+  }
+
+  private closeOldestUserSocket(
+    userId: string,
+    sockets: Set<WebSocket>,
+    maxConnections: number,
+  ): void {
+    const oldest = sockets.values().next().value;
+    if (!oldest) return;
+
+    this.logger.warn(
+      `WS connection cap reached for user ${userId}; closing oldest socket at limit ${maxConnections}`,
+    );
+    sockets.delete(oldest);
+    this.socketUsers.delete(oldest);
+    this.priceSubscriptions.delete(oldest);
+    this.strategySubscriptions.delete(oldest);
+    this.whaleSubscriptions.delete(oldest);
+    oldest.close(4008, "Connection limit exceeded");
+    oldest.terminate();
   }
 
   private handleClientMessage(client: WebSocket, raw: WebSocket.RawData): void {
