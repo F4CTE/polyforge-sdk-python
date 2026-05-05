@@ -25,36 +25,71 @@ export class StrategyBuilderPage {
         this.cancelButton = page.locator('a', { hasText: 'Cancel' });
     }
 
-    async gotoNew(): Promise<void> {
-        await this.page.goto('/strategies/new');
-        await this.page.waitForLoadState('domcontentloaded');
-        const blankBtn = this.page.locator('button', { hasText: 'Start from Scratch' });
-        await expect(blankBtn).toBeVisible({ timeout: 20_000 });
-        await blankBtn.click();
-        // Wait for the BlockPalette name input to confirm the builder canvas is ready
-        await expect(this.nameInput).toBeVisible({ timeout: 10_000 });
+    private async anyVisible(locators: Locator[]): Promise<boolean> {
+        for (const locator of locators) {
+            const count = await locator.count().catch(() => 0);
+            for (let i = 0; i < count; i++) {
+                if (await locator.nth(i).isVisible().catch(() => false)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private async waitForAnyVisible(label: string, locators: Locator[], timeout = 20_000): Promise<void> {
+        const deadline = Date.now() + timeout;
+        while (Date.now() < deadline) {
+            if (await this.anyVisible(locators)) return;
+            await this.page.waitForTimeout(250);
+        }
+        throw new Error(`Timed out waiting for ${label} at ${this.page.url()}`);
+    }
+
+    private async dismissTutorialIfPresent(): Promise<void> {
         const tutorialDismiss = this.page.locator('button[aria-label="Dismiss tutorial"]');
         if (await tutorialDismiss.isVisible({ timeout: 300 }).catch(() => false)) {
             await tutorialDismiss.click();
         }
     }
 
-    async gotoEdit(strategyId: string): Promise<void> {
-        await this.page.goto(`/strategies/${strategyId}/edit`, { waitUntil: 'domcontentloaded' });
-        await expect(this.page.locator('.react-flow')).toBeVisible({ timeout: 20_000 });
-        // Wait for loadStrategy() to finish — the overlay is removed when
-        // the Zustand store sets loading=false.  toBeHidden() passes
-        // immediately if the overlay was never rendered (fast load).
-        await expect(this.page.getByText('Loading strategy...')).toBeHidden({ timeout: 20_000 });
-        const showBtn = this.page.locator('button[title="Show blocks"]');
+    private async ensurePaletteOpen(): Promise<void> {
+        const showBtn = this.page.locator('button[title="Show blocks"], button[aria-label="Show blocks panel"]').first();
         if (await showBtn.isVisible({ timeout: 500 }).catch(() => false)) {
             await showBtn.click();
         }
         await expect(this.nameInput).toBeVisible({ timeout: 10_000 });
-        const tutorialDismiss = this.page.locator('button[aria-label="Dismiss tutorial"]');
-        if (await tutorialDismiss.isVisible({ timeout: 300 }).catch(() => false)) {
-            await tutorialDismiss.click();
+    }
+
+    async gotoNew(): Promise<void> {
+        await this.page.goto('/strategies/new');
+        await this.page.waitForLoadState('domcontentloaded');
+        const blankBtn = this.page.getByRole('button', { name: /Start from Scratch/i }).first();
+        const canvas = this.page.locator('.react-flow, .strategy-builder-flow');
+
+        await this.waitForAnyVisible('strategy builder or template picker', [this.nameInput, blankBtn, canvas]);
+        if (await blankBtn.isVisible().catch(() => false)) {
+            await blankBtn.click();
         }
+
+        // Wait for the BlockPalette name input to confirm the builder canvas is ready
+        await this.waitForAnyVisible('strategy builder canvas', [this.nameInput, canvas], 15_000);
+        await this.ensurePaletteOpen();
+        await this.dismissTutorialIfPresent();
+    }
+
+    async gotoEdit(strategyId: string): Promise<void> {
+        await this.page.goto(`/strategies/${strategyId}/edit`, { waitUntil: 'domcontentloaded' });
+        await this.waitForAnyVisible('strategy builder edit surface', [
+            this.nameInput,
+            this.page.locator('.react-flow, .strategy-builder-flow'),
+        ]);
+        // Wait for loadStrategy() to finish — the overlay is removed when
+        // the Zustand store sets loading=false.  toBeHidden() passes
+        // immediately if the overlay was never rendered (fast load).
+        await expect(this.page.getByText('Loading strategy...')).toBeHidden({ timeout: 20_000 });
+        await this.ensurePaletteOpen();
+        await this.dismissTutorialIfPresent();
     }
 
     async fillName(name: string): Promise<void> {
