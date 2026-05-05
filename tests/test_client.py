@@ -6152,11 +6152,13 @@ class TestMiscUtilityEndpointsPresence:
     METHODS = (
         "get_accuracy_overview",
         "list_feed",
+        "get_feed",
         "list_journal",
         "list_notifications",
         "get_my_referrals",
         "preview_fees",
         "list_fee_schedules",
+        "get_fee_schedules",
         "list_market_alerts",
         "create_market_alert",
         "delete_market_alert",
@@ -6167,6 +6169,7 @@ class TestMiscUtilityEndpointsPresence:
         "list_combo_collections",
         "get_combo_collection",
         "lookup_combo_market",
+        "lookup_combo_ticker",
         "get_correlation_categories",
     )
 
@@ -6191,6 +6194,7 @@ class TestMiscUtilityEndpointPaths:
 
     def test_list_feed_path(self):
         assert '"/api/v1/feed"' in self._src(PolyforgeClient.list_feed)
+        assert "list_feed" in self._src(PolyforgeClient.get_feed)
 
     def test_list_journal_path(self):
         assert '"/api/v1/journal"' in self._src(PolyforgeClient.list_journal)
@@ -6206,6 +6210,7 @@ class TestMiscUtilityEndpointPaths:
 
     def test_list_fee_schedules_path(self):
         assert '"/api/v1/fees/schedules"' in self._src(PolyforgeClient.list_fee_schedules)
+        assert "list_fee_schedules" in self._src(PolyforgeClient.get_fee_schedules)
 
     def test_list_market_alerts_path(self):
         assert "/api/v1/markets/" in self._src(PolyforgeClient.list_market_alerts)
@@ -6242,6 +6247,7 @@ class TestMiscUtilityEndpointPaths:
         assert '"/api/v1/markets/combo/lookup"' in self._src(
             PolyforgeClient.lookup_combo_market
         )
+        assert "lookup_combo_market" in self._src(PolyforgeClient.lookup_combo_ticker)
 
     def test_correlation_categories_path(self):
         assert '"/api/v1/analytics/correlation/categories"' in self._src(
@@ -6407,6 +6413,27 @@ class TestMiscUtilityEndpointRoundtrips:
         finally:
             client.close()
 
+    def test_get_feed_alias_delegates_to_list_feed(self):
+        captured = {}
+
+        def handler(request):
+            captured["path"] = request.url.path
+            captured["params"] = dict(request.url.params)
+            return httpx.Response(200, json={
+                "data": [{"id": "wh1"}], "total": 1, "page": 2, "limit": 10,
+                "totalPages": 1, "hasNext": False,
+            })
+        client = self._client_with(handler)
+        try:
+            res = client.get_feed(side="SELL", min_size="250", page=2, limit=10)
+            assert captured["path"] == "/api/v1/feed"
+            assert captured["params"]["side"] == "SELL"
+            assert captured["params"]["minSize"] == "250"
+            assert res.page == 2
+            assert res.data[0]["id"] == "wh1"
+        finally:
+            client.close()
+
     def test_list_journal_passes_mood_and_paginates(self):
         captured = {}
 
@@ -6502,6 +6529,20 @@ class TestMiscUtilityEndpointRoundtrips:
         try:
             res = client.list_fee_schedules()
             assert res["polymarket"][0]["feeBps"] == 0
+        finally:
+            client.close()
+
+    def test_get_fee_schedules_alias_delegates_to_list_fee_schedules(self):
+        def handler(request):
+            assert request.url.path == "/api/v1/fees/schedules"
+            return httpx.Response(200, json={
+                "polymarket": [],
+                "kalshi": [{"role": "TAKER", "feeBps": 7}],
+            })
+        client = self._client_with(handler)
+        try:
+            res = client.get_fee_schedules()
+            assert res["kalshi"][0]["feeBps"] == 7
         finally:
             client.close()
 
@@ -6664,6 +6705,27 @@ class TestMiscUtilityEndpointRoundtrips:
         finally:
             client.close()
 
+    def test_lookup_combo_ticker_alias_delegates_to_lookup_combo_market(self):
+        captured = {}
+
+        def handler(request):
+            captured["path"] = request.url.path
+            captured["body"] = json.loads(request.content)
+            return httpx.Response(200, json={
+                "ticker": "MK2", "yesTicker": "MK2Y",
+            })
+        client = self._client_with(handler)
+        try:
+            res = client.lookup_combo_ticker(
+                "COL", [{"ticker": "T2", "outcome": "no"}],
+            )
+            assert captured["path"] == "/api/v1/markets/combo/lookup"
+            assert captured["body"]["collectionTicker"] == "COL"
+            assert captured["body"]["legs"][0]["outcome"] == "no"
+            assert res["ticker"] == "MK2"
+        finally:
+            client.close()
+
     def test_get_correlation_categories_parses_matrix(self):
         def handler(request):
             assert request.url.path == "/api/v1/analytics/correlation/categories"
@@ -6755,6 +6817,42 @@ class TestMiscUtilityEndpointsAsync:
                 await client.close()
 
         asyncio.run(_run())
+
+    def test_async_aliases_delegate_to_canonical_methods(self):
+        import asyncio
+
+        calls = []
+
+        def handler(request):
+            calls.append((request.method, request.url.path))
+            if request.url.path == "/api/v1/feed":
+                return httpx.Response(200, json={
+                    "data": [], "total": 0, "page": 1, "limit": 20,
+                    "totalPages": 0, "hasNext": False,
+                })
+            if request.url.path == "/api/v1/fees/schedules":
+                return httpx.Response(200, json={"polymarket": [], "kalshi": []})
+            if request.url.path == "/api/v1/markets/combo/lookup":
+                return httpx.Response(200, json={"ticker": "MK1"})
+            return httpx.Response(404)
+
+        async def _run():
+            client = self._async_client_with(handler)
+            try:
+                await client.get_feed(side="BUY")
+                await client.get_fee_schedules()
+                await client.lookup_combo_ticker(
+                    "COL", [{"ticker": "T1", "outcome": "yes"}],
+                )
+            finally:
+                await client.close()
+
+        asyncio.run(_run())
+        assert calls == [
+            ("GET", "/api/v1/feed"),
+            ("GET", "/api/v1/fees/schedules"),
+            ("POST", "/api/v1/markets/combo/lookup"),
+        ]
 
 # Cross-Venue Arb Execution / Positions / Risk (POLA-1851)
 # ---------------------------------------------------------------------------
