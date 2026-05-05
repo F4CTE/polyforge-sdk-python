@@ -6247,9 +6247,14 @@ class TestArbValidators_POLA_1873:
         with pytest.raises(ValueError, match="between 1 and 255"):
             _validate_arb_match_id("x" * 256)
 
-    def test_match_id_at_max_length_accepted(self):
+    def test_match_id_non_uuid_rejected(self):
         from polyforge.client import _validate_arb_match_id
-        _validate_arb_match_id("x" * 255)  # boundary, must not raise
+        with pytest.raises(ValueError, match="valid UUID"):
+            _validate_arb_match_id("match-1")
+
+    def test_match_id_uuid_accepted(self):
+        from polyforge.client import _validate_arb_match_id
+        _validate_arb_match_id("550e8400-e29b-41d4-a716-446655440000")
 
     def test_match_id_non_string_rejected(self):
         from polyforge.client import _validate_arb_match_id
@@ -6320,6 +6325,9 @@ class TestArbValidators_POLA_1873:
         client.close()
 
 
+VALID_ARB_MATCH_ID = "550e8400-e29b-41d4-a716-446655440000"
+
+
 class TestArbExecutionSync:
     """Happy-path coverage for the 7 PolyforgeClient arb methods (POLA-1851)."""
 
@@ -6334,7 +6342,7 @@ class TestArbExecutionSync:
             "entrySpreadPct": 8.0,
             "status": "PENDING",
         })
-        result = client.execute_arb(match_id="m1", size=100.0)
+        result = client.execute_arb(match_id=VALID_ARB_MATCH_ID, size=100.0)
         assert isinstance(result, ArbExecutionResult)
         assert result.arb_position_id == "pos-1"
         assert isinstance(result.buy_leg, ArbExecutionLeg)
@@ -6345,7 +6353,7 @@ class TestArbExecutionSync:
         # max_slippage_pct omitted -> body must not include it
         client._post.assert_called_once_with(
             "/api/v1/arbitrage/execute",
-            json={"matchId": "m1", "size": 100.0},
+            json={"matchId": VALID_ARB_MATCH_ID, "size": 100.0},
         )
         client.close()
 
@@ -6356,10 +6364,14 @@ class TestArbExecutionSync:
             "arbPositionId": "pos-2", "buyLeg": None, "sellLeg": None,
             "entrySpreadPct": 0.0, "status": "PENDING",
         })
-        client.execute_arb(match_id="m1", size=100.0, max_slippage_pct=1.5)
+        client.execute_arb(
+            match_id=VALID_ARB_MATCH_ID,
+            size=100.0,
+            max_slippage_pct=1.5,
+        )
         client._post.assert_called_once_with(
             "/api/v1/arbitrage/execute",
-            json={"matchId": "m1", "size": 100.0, "maxSlippagePct": 1.5},
+            json={"matchId": VALID_ARB_MATCH_ID, "size": 100.0, "maxSlippagePct": 1.5},
         )
         client.close()
 
@@ -6368,7 +6380,7 @@ class TestArbExecutionSync:
         client = PolyforgeClient(api_key="test-key")
         client._post = MagicMock()
         with pytest.raises(ValueError, match="between 1 and 10000"):
-            client.execute_arb(match_id="m1", size=10001)
+            client.execute_arb(match_id=VALID_ARB_MATCH_ID, size=10001)
         client._post.assert_not_called()
         client.close()
 
@@ -6377,7 +6389,11 @@ class TestArbExecutionSync:
         client = PolyforgeClient(api_key="test-key")
         client._post = MagicMock()
         with pytest.raises(ValueError, match="between 0 and 5"):
-            client.execute_arb(match_id="m1", size=100, max_slippage_pct=10)
+            client.execute_arb(
+                match_id=VALID_ARB_MATCH_ID,
+                size=100,
+                max_slippage_pct=10,
+            )
         client._post.assert_not_called()
         client.close()
 
@@ -6524,7 +6540,7 @@ class TestArbExecutionAsync:
             client = AsyncPolyforgeClient(api_key="test-key")
             client._post = AsyncMock()
             with pytest.raises(ValueError, match="between 1 and 10000"):
-                await client.execute_arb(match_id="m1", size=0)
+                await client.execute_arb(match_id=VALID_ARB_MATCH_ID, size=0)
             client._post.assert_not_awaited()
             await client.close()
 
@@ -6544,13 +6560,17 @@ class TestArbExecutionAsync:
                 "entrySpreadPct": 9.0,
                 "status": "PENDING",
             })
-            result = await client.execute_arb(match_id="m1", size=200.0, max_slippage_pct=2.0)
+            result = await client.execute_arb(
+                match_id=VALID_ARB_MATCH_ID,
+                size=200.0,
+                max_slippage_pct=2.0,
+            )
             assert isinstance(result, ArbExecutionResult)
             assert result.arb_position_id == "pos-9"
             assert result.buy_leg is not None and result.buy_leg.price == 0.31
             client._post.assert_awaited_once_with(
                 "/api/v1/arbitrage/execute",
-                json={"matchId": "m1", "size": 200.0, "maxSlippagePct": 2.0},
+                json={"matchId": VALID_ARB_MATCH_ID, "size": 200.0, "maxSlippagePct": 2.0},
             )
             await client.close()
 
@@ -6620,7 +6640,7 @@ class TestArbHttpErrorMapping:
         client = self._client_with_transport(handler)
         try:
             with pytest.raises(NotFoundError) as exc_info:
-                client.execute_arb(match_id="missing", size=100)
+                client.execute_arb(match_id=VALID_ARB_MATCH_ID, size=100)
             assert exc_info.value.code == "MATCH_NOT_FOUND"
             assert exc_info.value.request_id == "req-1"
         finally:
@@ -6637,7 +6657,7 @@ class TestArbHttpErrorMapping:
         client = self._client_with_transport(handler)
         try:
             with pytest.raises(PolyforgeError) as exc_info:
-                client.execute_arb(match_id="m1", size=100)
+                client.execute_arb(match_id=VALID_ARB_MATCH_ID, size=100)
             assert exc_info.value.code == "VENUES_NOT_CONNECTED"
             assert exc_info.value.status_code == 400
         finally:
@@ -6653,7 +6673,7 @@ class TestArbHttpErrorMapping:
         client = self._client_with_transport(handler)
         try:
             with pytest.raises(AuthenticationError) as exc_info:
-                client.execute_arb(match_id="m1", size=100)
+                client.execute_arb(match_id=VALID_ARB_MATCH_ID, size=100)
             assert exc_info.value.code == "UNAUTHENTICATED"
         finally:
             client.close()
@@ -6673,7 +6693,7 @@ class TestArbHttpErrorMapping:
         client = self._client_with_transport(handler)
         try:
             with pytest.raises(ServerError):
-                client.execute_arb(match_id="m1", size=100)
+                client.execute_arb(match_id=VALID_ARB_MATCH_ID, size=100)
         finally:
             client.close()
         assert calls["n"] == 1, f"execute_arb auto-retried (saw {calls['n']} calls)"
