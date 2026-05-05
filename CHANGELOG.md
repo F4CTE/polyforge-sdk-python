@@ -27,6 +27,10 @@ available on both `PolyforgeClient` and `AsyncPolyforgeClient`:
 - `lookup_combo_market(collection_ticker, legs)` → `dict[str, Any]` — `POST`-only on the platform
 - `get_correlation_categories()` → `CorrelationCategoriesReport`
 
+Cross-SDK naming aliases are also available: `get_feed()`,
+`get_fee_schedules()`, and `lookup_combo_ticker()` delegate to the canonical
+`list_feed()`, `list_fee_schedules()`, and `lookup_combo_market()` methods.
+
 New typed models: `CorrelationCategoriesReport`, `FeeMarketMatch`,
 `MarketAlert`, `MarketHistoryPoint`, `MarketSentimentReport`,
 `OrderPreviewResponse`, `ReferralInfo`, `ReferralStats`,

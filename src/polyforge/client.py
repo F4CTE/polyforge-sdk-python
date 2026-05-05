@@ -3574,6 +3574,26 @@ class PolyforgeClient:
             **_parse_pagination(raw),
         )
 
+    def get_feed(
+        self,
+        *,
+        page: int = 1,
+        limit: int = 20,
+        min_size: str | None = None,
+        market_id: str | None = None,
+        wallet_address: str | None = None,
+        side: str | None = None,
+    ) -> PaginatedResponse[dict[str, Any]]:
+        """Alias for :meth:`list_feed` kept for cross-SDK naming parity."""
+        return self.list_feed(
+            page=page,
+            limit=limit,
+            min_size=min_size,
+            market_id=market_id,
+            wallet_address=wallet_address,
+            side=side,
+        )
+
     def list_journal(
         self,
         *,
@@ -3687,6 +3707,10 @@ class PolyforgeClient:
         dicts since the inner shape varies by venue).
         """
         return self._get("/api/v1/fees/schedules")
+
+    def get_fee_schedules(self) -> dict[str, Any]:
+        """Alias for :meth:`list_fee_schedules` kept for cross-SDK naming parity."""
+        return self.list_fee_schedules()
 
     def list_market_alerts(self, market_id: str) -> list[MarketAlert]:
         """List the current user's price alerts on a single market.
@@ -3889,6 +3913,14 @@ class PolyforgeClient:
             "/api/v1/markets/combo/lookup",
             json={"collectionTicker": collection_ticker, "legs": legs},
         )
+
+    def lookup_combo_ticker(
+        self,
+        collection_ticker: str,
+        legs: list[dict[str, Any]],
+    ) -> dict[str, Any]:
+        """Alias for :meth:`lookup_combo_market` kept for cross-SDK naming parity."""
+        return self.lookup_combo_market(collection_ticker, legs)
 
     def get_correlation_categories(self) -> CorrelationCategoriesReport:
         """Fetch the category-correlation matrix used by the analytics tab.
@@ -6493,6 +6525,26 @@ class AsyncPolyforgeClient:
             **_parse_pagination(raw),
         )
 
+    async def get_feed(
+        self,
+        *,
+        page: int = 1,
+        limit: int = 20,
+        min_size: str | None = None,
+        market_id: str | None = None,
+        wallet_address: str | None = None,
+        side: str | None = None,
+    ) -> PaginatedResponse[dict[str, Any]]:
+        """Async alias for :meth:`PolyforgeClient.get_feed`."""
+        return await self.list_feed(
+            page=page,
+            limit=limit,
+            min_size=min_size,
+            market_id=market_id,
+            wallet_address=wallet_address,
+            side=side,
+        )
+
     async def list_journal(
         self,
         *,
@@ -6563,6 +6615,10 @@ class AsyncPolyforgeClient:
     async def list_fee_schedules(self) -> dict[str, Any]:
         """Async variant of :meth:`PolyforgeClient.list_fee_schedules`."""
         return await self._get("/api/v1/fees/schedules")
+
+    async def get_fee_schedules(self) -> dict[str, Any]:
+        """Async alias for :meth:`PolyforgeClient.get_fee_schedules`."""
+        return await self.list_fee_schedules()
 
     async def list_market_alerts(self, market_id: str) -> list[MarketAlert]:
         """Async variant of :meth:`PolyforgeClient.list_market_alerts`."""
@@ -6709,6 +6765,14 @@ class AsyncPolyforgeClient:
             "/api/v1/markets/combo/lookup",
             json={"collectionTicker": collection_ticker, "legs": legs},
         )
+
+    async def lookup_combo_ticker(
+        self,
+        collection_ticker: str,
+        legs: list[dict[str, Any]],
+    ) -> dict[str, Any]:
+        """Async alias for :meth:`PolyforgeClient.lookup_combo_ticker`."""
+        return await self.lookup_combo_market(collection_ticker, legs)
 
     async def get_correlation_categories(self) -> CorrelationCategoriesReport:
         """Async variant of :meth:`PolyforgeClient.get_correlation_categories`."""

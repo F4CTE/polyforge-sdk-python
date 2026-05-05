@@ -167,6 +167,20 @@ Caller-provided keys must be 8-128 characters.
 | `get_whale_feed(min_size)` | Get large on-chain trades |
 | `get_news_signals(min_confidence)` | Get AI-generated news trading signals |
 
+### Utility Endpoints
+
+| Method | Description |
+|--------|-------------|
+| `list_feed(...)` / `get_feed(...)` | Global whale-activity feed |
+| `list_journal(...)` / `update_order_journal(...)` | Trading journal entries and order mood notes |
+| `list_notifications(...)` | Notification history records |
+| `get_my_referrals()` | Referral code, link, stats, and referred users |
+| `preview_fees(...)` / `list_fee_schedules()` / `get_fee_schedules()` | Cross-venue fee previews and active fee schedules |
+| `list_market_alerts(...)` / `create_market_alert(...)` / `delete_market_alert(...)` | Per-market price alerts |
+| `get_market_history(...)` / `get_market_sentiment_report(...)` / `vote_market_sentiment(...)` | Market history and user-sentiment report endpoints |
+| `list_combo_collections(...)` / `get_combo_collection(...)` / `lookup_combo_market(...)` / `lookup_combo_ticker(...)` | Kalshi combo collection lookup endpoints |
+| `get_correlation_categories()` | Category correlation matrix |
+
 ### Sports Markets
 
 | Method | Description |
