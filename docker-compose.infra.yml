@@ -318,6 +318,7 @@ services:
       DATABASE_URL: postgresql://poly:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}@postgres:5432/polyforge
       DIRECT_DATABASE_URL: postgresql://poly:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}@postgres:5432/polyforge
       REDIS_URL: redis://:${REDIS_PASSWORD:?REDIS_PASSWORD is required}@redis:6379
+      INTERNAL_JWT_SECRET: "${INTERNAL_JWT_SECRET:?INTERNAL_JWT_SECRET is required}"
       PORT: "3008"
       NODE_ENV: ${NODE_ENV:?NODE_ENV must be set}
     ports:
@@ -339,6 +340,7 @@ services:
       DATABASE_URL: postgresql://poly:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}@postgres:5432/polyforge
       DIRECT_DATABASE_URL: postgresql://poly:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}@postgres:5432/polyforge
       REDIS_URL: redis://:${REDIS_PASSWORD:?REDIS_PASSWORD is required}@redis:6379
+      INTERNAL_JWT_SECRET: "${INTERNAL_JWT_SECRET:?INTERNAL_JWT_SECRET is required}"
       PORT: "3009"
       NODE_ENV: ${NODE_ENV:?NODE_ENV must be set}
     ports:
