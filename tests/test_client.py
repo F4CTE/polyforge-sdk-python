@@ -47,6 +47,7 @@ from polyforge.models import (
     PriceHistoryEntry,
     Rebate,
     RedeemPositionResponse,
+    MyReferralsResponse,
     RewardMarket,
     Strategy,
     StrategyExecMode,
@@ -6230,7 +6231,6 @@ class TestMiscUtilityEndpointsPresence:
 
     METHODS = (
         "get_accuracy_overview",
-        "list_feed",
         "get_feed",
         "list_journal",
         "list_notifications",
@@ -6260,6 +6260,10 @@ class TestMiscUtilityEndpointsPresence:
         for name in self.METHODS:
             assert callable(getattr(AsyncPolyforgeClient, name, None)), name
 
+    def test_deprecated_method_aliases_remain_present(self):
+        assert callable(getattr(PolyforgeClient, "list_feed", None))
+        assert callable(getattr(AsyncPolyforgeClient, "list_feed", None))
+
 
 class TestMiscUtilityEndpointPaths:
     """Verify each new method targets the correct controller path."""
@@ -6271,9 +6275,11 @@ class TestMiscUtilityEndpointPaths:
     def test_get_accuracy_overview_path(self):
         assert '"/api/v1/accuracy"' in self._src(PolyforgeClient.get_accuracy_overview)
 
-    def test_list_feed_path(self):
-        assert '"/api/v1/feed"' in self._src(PolyforgeClient.list_feed)
-        assert "list_feed" in self._src(PolyforgeClient.get_feed)
+    def test_get_feed_path(self):
+        assert '"/api/v1/feed"' in self._src(PolyforgeClient.get_feed)
+
+    def test_list_feed_deprecated_alias_points_to_get_feed(self):
+        assert "get_feed" in self._src(PolyforgeClient.list_feed)
 
     def test_list_journal_path(self):
         assert '"/api/v1/journal"' in self._src(PolyforgeClient.list_journal)
@@ -6399,7 +6405,7 @@ class TestMiscUtilityEnumValidation:
         client = PolyforgeClient(api_key="test")
         try:
             with pytest.raises(ValueError, match="side"):
-                client.list_feed(side="LONG")
+                client.get_feed(side="LONG")
         finally:
             client.close()
 
@@ -6471,7 +6477,7 @@ class TestMiscUtilityEndpointRoundtrips:
         finally:
             client.close()
 
-    def test_list_feed_strips_none_and_validates_side(self):
+    def test_get_feed_strips_none_and_validates_side(self):
         captured = {}
 
         def handler(request):
@@ -6482,7 +6488,7 @@ class TestMiscUtilityEndpointRoundtrips:
             })
         client = self._client_with(handler)
         try:
-            res = client.list_feed(side="BUY", min_size="100", page=1, limit=20)
+            res = client.get_feed(side="BUY", min_size="100", page=1, limit=20)
             qp = dict(captured["url"].params)
             assert qp["side"] == "BUY"
             assert qp["minSize"] == "100"
@@ -6492,24 +6498,11 @@ class TestMiscUtilityEndpointRoundtrips:
         finally:
             client.close()
 
-    def test_get_feed_alias_delegates_to_list_feed(self):
-        captured = {}
-
-        def handler(request):
-            captured["path"] = request.url.path
-            captured["params"] = dict(request.url.params)
-            return httpx.Response(200, json={
-                "data": [{"id": "wh1"}], "total": 1, "page": 2, "limit": 10,
-                "totalPages": 1, "hasNext": False,
-            })
-        client = self._client_with(handler)
+    def test_list_feed_deprecated_alias_uses_get_feed(self):
+        client = PolyforgeClient(api_key="test")
         try:
-            res = client.get_feed(side="SELL", min_size="250", page=2, limit=10)
-            assert captured["path"] == "/api/v1/feed"
-            assert captured["params"]["side"] == "SELL"
-            assert captured["params"]["minSize"] == "250"
-            assert res.page == 2
-            assert res.data[0]["id"] == "wh1"
+            with pytest.warns(DeprecationWarning), pytest.raises(ValueError, match="side"):
+                client.list_feed(side="LONG")
         finally:
             client.close()
 
@@ -6562,11 +6555,23 @@ class TestMiscUtilityEndpointRoundtrips:
         client = self._client_with(handler)
         try:
             info = client.get_my_referrals()
+            assert isinstance(info, MyReferralsResponse)
             assert info.referral_code == "ABC12345"
+            assert info.signed_up == 2
             assert info.stats.signed_up == 2
             assert info.stats.credits_earned == 10
         finally:
             client.close()
+
+    def test_my_referrals_response_is_canonical_public_type(self):
+        from polyforge import MyReferralsResponse as ExportedResponse
+        from polyforge import ReferralInfo, ReferralStats
+
+        response = ExportedResponse(referral_code="ABC12345")
+        assert isinstance(response, MyReferralsResponse)
+        assert response.referral_code == "ABC12345"
+        assert ReferralInfo is ExportedResponse
+        assert ReferralStats is ExportedResponse
 
     def test_preview_fees_posts_camel_body_and_parses_response(self):
         captured = {}
@@ -7750,9 +7755,21 @@ class TestPublicUserProfileEndpoints:
     def test_get_user_profile_badges_exists_async(self):
         assert callable(getattr(AsyncPolyforgeClient, "get_user_profile_badges", None))
 
+    def test_get_user_badges_by_username_exists_sync(self):
+        assert callable(getattr(PolyforgeClient, "get_user_badges_by_username", None))
+
+    def test_get_user_badges_by_username_exists_async(self):
+        assert callable(getattr(AsyncPolyforgeClient, "get_user_badges_by_username", None))
+
+    def test_get_user_badges_by_username_uses_correct_path(self):
+        import inspect
+        source = inspect.getsource(PolyforgeClient.get_user_badges_by_username)
+        assert "/api/v1/users/" in source
+        assert "/badges" in source
+
     def test_get_user_profile_badges_uses_correct_path(self):
         import inspect
-        source = inspect.getsource(PolyforgeClient.get_user_profile_badges)
+        source = inspect.getsource(PolyforgeClient.get_user_badges_by_username)
         assert "/api/v1/users/" in source
         assert "/badges" in source
 
@@ -7835,5 +7852,17 @@ class TestPublicUserProfileEndpoints:
             raise NotFoundError("User not found", status_code=404, code="NOT_FOUND")
 
         monkeypatch.setattr(client, "_get", fake_get)
-        with pytest.raises(NotFoundError):
+        with pytest.warns(DeprecationWarning), pytest.raises(NotFoundError):
             client.get_user_profile_badges("ghost")
+
+    def test_get_user_badges_by_username_propagates_404(self, monkeypatch):
+        from polyforge.errors import NotFoundError
+
+        client = PolyforgeClient(api_key="test")
+
+        def fake_get(path: str, params=None):
+            raise NotFoundError("User not found", status_code=404, code="NOT_FOUND")
+
+        monkeypatch.setattr(client, "_get", fake_get)
+        with pytest.raises(NotFoundError):
+            client.get_user_badges_by_username("ghost")

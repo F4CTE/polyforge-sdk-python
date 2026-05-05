@@ -9,10 +9,10 @@ filling gaps surfaced by the weekly SDK + MCP compatibility audit. All are
 available on both `PolyforgeClient` and `AsyncPolyforgeClient`:
 
 - `get_accuracy_overview()` → `AccuracyScore` (root `GET /accuracy`, companion to `get_accuracy()` which targets `/accuracy/me`)
-- `list_feed(*, page, limit, min_size, market_id, wallet_address, side)` → `PaginatedResponse[dict[str, Any]]` — global whale-activity feed
+- `get_feed(*, page, limit, min_size, market_id, wallet_address, side)` → `PaginatedResponse[dict[str, Any]]` — global whale-activity feed
 - `list_journal(*, page, limit, mood)` → `PaginatedResponse[dict[str, Any]]` — order-journal entries with optional mood filter
 - `list_notifications(*, page, limit)` → `PaginatedResponse[dict[str, Any]]` — delivered notifications (distinct from notification *settings*)
-- `get_my_referrals()` → `ReferralInfo` — referral code, link, stats
+- `get_my_referrals()` → `MyReferralsResponse` — referral code, link, stats
 - `preview_fees(*, token_id, side, size, price, order_type)` → `OrderPreviewResponse` — cross-venue fee comparison
 - `list_fee_schedules()` → `dict[str, Any]` — active fee schedules grouped by venue
 - `list_market_alerts(market_id)` → `list[MarketAlert]` — per-market price alerts (distinct from `list_alerts()`)
@@ -33,8 +33,9 @@ Cross-SDK naming aliases are also available: `get_feed()`,
 
 New typed models: `CorrelationCategoriesReport`, `FeeMarketMatch`,
 `MarketAlert`, `MarketHistoryPoint`, `MarketSentimentReport`,
-`OrderPreviewResponse`, `ReferralInfo`, `ReferralStats`,
-`SentimentUserVote`, `VenueFeeEstimate`.
+`OrderPreviewResponse`, `MyReferralsResponse`, `SentimentUserVote`,
+`VenueFeeEstimate`. Deprecated referral aliases `ReferralInfo` and
+`ReferralStats` remain importable for one minor release.
 
 Client-side validation guards reject obvious bad input before network IO:
 sides (`BUY`/`SELL`), market-alert outcomes (`YES`/`NO`), conditions
@@ -105,10 +106,25 @@ preserved.
 - `get_user_performance(username, period="30d")` → `list[UserPerformancePoint]` — daily PnL curve.
 - `get_user_strategies(username, *, visibility="PUBLIC", limit=None)` → `list[UserStrategySummary]` — server caps `limit` at 50.
 - `get_user_activity(username, *, limit=None)` → `list[UserActivityEntry]` — resolved positions, server caps `limit` at 50.
-- `get_user_profile_badges(username)` → `list[UserProfileBadge]`.
+- `get_user_badges_by_username(username)` → `list[UserProfileBadge]`.
 - `get_my_following(*, page=None, limit=None)` → `PaginatedResponse[FollowedUser]` — authenticated users only.
 
 All four public-profile lookups raise `NotFoundError` when the username is unknown. The `username` path segment is URL-encoded via the existing `_encode_path` helper.
+
+### Changed
+
+**Cross-SDK naming normalization (POLA-1913)** — renamed feed, referral, and
+public-profile badge surfaces to match the MCP and Rust SDK naming:
+
+| Deprecated name | Replacement | Planned removal |
+|---|---|---|
+| `list_feed(...)` | `get_feed(...)` | `2.2.0` |
+| `ReferralInfo` / `ReferralStats` | `MyReferralsResponse` | `2.2.0` |
+| `get_user_profile_badges(username)` | `get_user_badges_by_username(username)` | `2.2.0` |
+
+The deprecated sync and async method aliases remain callable for one minor
+release and emit `DeprecationWarning`; deprecated referral type names remain
+importable for the same window.
 
 ## [2.0.0] — 2026-04-16
 
