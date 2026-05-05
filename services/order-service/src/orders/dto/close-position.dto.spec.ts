@@ -73,9 +73,14 @@ describe("ClosePositionDto.size validation", () => {
     expect(sizeConstraintsFor(errors)).toHaveProperty("maxLength");
   });
 
-  it("accepts a 30-character size string (at MaxLength boundary)", async () => {
-    await expect(validateDto({ size: "1".repeat(30) })).resolves.toHaveLength(
-      0,
-    );
+  it('rejects oversized issue example "99999999999"', async () => {
+    const errors = await validateDto({ size: "99999999999" });
+    expect(sizeConstraintsFor(errors)).toHaveProperty("matches");
+  });
+
+  it("accepts a 30-character decimal size string at MaxLength boundary", async () => {
+    await expect(
+      validateDto({ size: `9999999999.${"1".repeat(19)}` }),
+    ).resolves.toHaveLength(0);
   });
 });
