@@ -1,14 +1,22 @@
 const SAFE_PROTOCOLS = new Set(['https:', 'http:']);
 
-export function isSafeExternalUrl(url: string | null | undefined): boolean {
-  if (!url) return false;
+function parseSafeExternalUrl(url: string | null | undefined): URL | null {
+  if (!url) return null;
+  const candidate = url.trim();
+  if (!candidate) return null;
+
   try {
-    return SAFE_PROTOCOLS.has(new URL(url).protocol);
+    const parsed = new URL(candidate);
+    return SAFE_PROTOCOLS.has(parsed.protocol) ? parsed : null;
   } catch {
-    return false;
+    return null;
   }
 }
 
+export function isSafeExternalUrl(url: string | null | undefined): boolean {
+  return parseSafeExternalUrl(url) !== null;
+}
+
 export function safeHref(url: string | null | undefined): string {
-  return isSafeExternalUrl(url) ? (url as string) : '#';
+  return parseSafeExternalUrl(url)?.href ?? '#';
 }

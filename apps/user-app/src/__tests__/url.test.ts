@@ -6,12 +6,24 @@ describe('isSafeExternalUrl', () => {
     expect(isSafeExternalUrl('https://example.com/article')).toBe(true);
   });
 
+  it('allows https URLs with surrounding whitespace', () => {
+    expect(isSafeExternalUrl('  https://example.com/article  ')).toBe(true);
+  });
+
   it('allows http URLs', () => {
     expect(isSafeExternalUrl('http://example.com/article')).toBe(true);
   });
 
   it('blocks javascript: protocol', () => {
     expect(isSafeExternalUrl('javascript:alert(1)')).toBe(false);
+  });
+
+  it('blocks javascript: protocol with surrounding whitespace', () => {
+    expect(isSafeExternalUrl('  javascript:alert(1)  ')).toBe(false);
+  });
+
+  it('blocks javascript: protocol with embedded control characters', () => {
+    expect(isSafeExternalUrl('java\nscript:alert(1)')).toBe(false);
   });
 
   it('blocks data: protocol', () => {
@@ -44,8 +56,12 @@ describe('isSafeExternalUrl', () => {
 });
 
 describe('safeHref', () => {
-  it('returns the URL when safe', () => {
-    expect(safeHref('https://example.com')).toBe('https://example.com');
+  it('returns the normalized URL when safe', () => {
+    expect(safeHref('https://example.com')).toBe('https://example.com/');
+  });
+
+  it('trims surrounding whitespace from safe URLs', () => {
+    expect(safeHref('  https://example.com/article  ')).toBe('https://example.com/article');
   });
 
   it('returns # for javascript: protocol (XSS vector)', () => {
