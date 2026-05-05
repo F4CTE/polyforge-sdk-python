@@ -18,6 +18,7 @@ import {
 import {
   rejectPlaceholderSecrets,
   rejectInsecureCookies,
+  createCorsOriginDelegate,
 } from "@polyforge/shared-auth";
 
 const REQUIRED_ENV = ["ADMIN_JWT_SECRET", "ADMIN_DATABASE_URL"];
@@ -98,28 +99,17 @@ async function bootstrap() {
 
   // CORS — admin subdomain only
   app.enableCors({
-    origin: (origin, cb) => {
-      const allowed = [
-        ...(process.env.ADMIN_CORS_ORIGINS?.split(",").map((s) => s.trim()) ??
-          []),
-        ...(process.env.NODE_ENV !== "production"
-          ? [
-              "http://localhost:4300",
-              "http://localhost:8080",
-              "http://127.0.0.1:8080",
-              "https://localhost:8443",
-              "https://localhost:8080",
-            ]
-          : []),
-      ];
-      if (!origin) {
-        cb(null, false);
-      } else if (allowed.includes(origin)) {
-        cb(null, true);
-      } else {
-        cb(null, false);
-      }
-    },
+    origin: createCorsOriginDelegate({
+      configuredOrigins: process.env.ADMIN_CORS_ORIGINS,
+      includeDevOrigins: process.env.NODE_ENV !== "production",
+      devOrigins: [
+        "http://localhost:4300",
+        "http://localhost:8080",
+        "http://127.0.0.1:8080",
+        "https://localhost:8443",
+        "https://localhost:8080",
+      ],
+    }),
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
     credentials: true,

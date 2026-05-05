@@ -22,9 +22,8 @@ import { PrismaExceptionFilter } from "@polyforge/shared-db";
 import {
   rejectPlaceholderSecrets,
   validateInternalJwtConfig,
+  createCorsOriginDelegate,
 } from "@polyforge/shared-auth";
-
-type FastifyPlugin = Parameters<NestFastifyApplication["register"]>[0];
 
 const PORT = parseInt(process.env.PORT ?? "3002", 10);
 
@@ -127,27 +126,11 @@ async function bootstrap() {
 
   // CORS
   app.enableCors({
-    origin: (origin, cb) => {
-      const allowed = [
-        ...(process.env.CORS_ORIGINS?.split(",").map((s) => s.trim()) ?? []),
-        ...(process.env.NODE_ENV !== "production" || process.env.CI === "true"
-          ? [
-              "http://localhost",
-              "http://localhost:4200",
-              "http://localhost:5173",
-              "http://127.0.0.1",
-            ] // gateway + vite dev + IP
-          : []),
-      ];
-      if (!origin) {
-        // Server-to-server requests (no Origin header) — allow without CORS credentials
-        cb(null, false);
-      } else if (allowed.includes(origin)) {
-        cb(null, true);
-      } else {
-        cb(new Error(`CORS: origin ${origin} not allowed`), false);
-      }
-    },
+    origin: createCorsOriginDelegate({
+      configuredOrigins: process.env.CORS_ORIGINS,
+      includeDevOrigins:
+        process.env.NODE_ENV !== "production" || process.env.CI === "true",
+    }),
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
     credentials: true,
