@@ -78,6 +78,10 @@ describe("FillsService", () => {
     redis.getClient.mockReturnValue(redisClient as any);
     redis.get.mockResolvedValue(null); // no book or price cache by default
     redis.xadd.mockResolvedValue("1-0");
+    (prisma.$transaction as any).mockImplementation(
+      async (callback: (tx: PrismaService) => Promise<unknown>) =>
+        callback(prisma),
+    );
 
     service = new FillsService(prisma, redis);
   });
@@ -109,6 +113,16 @@ describe("FillsService", () => {
             }),
           }),
         );
+      });
+
+      it("creates the order and updates the position inside a serializable transaction", async () => {
+        await service.simulate(makeIntent());
+
+        expect(prisma.$transaction).toHaveBeenCalledWith(expect.any(Function), {
+          isolationLevel: "Serializable",
+        });
+        expect(prisma.paperOrder.create).toHaveBeenCalledOnce();
+        expect(prisma.paperPosition.create).toHaveBeenCalledOnce();
       });
 
       it("stores fillPrice and fillSize on the created order", async () => {

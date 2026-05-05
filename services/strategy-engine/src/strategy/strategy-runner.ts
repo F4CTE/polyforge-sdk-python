@@ -508,12 +508,11 @@ export class StrategyRunner {
     }
 
     if (orderIntents.length > 0) {
-      // Update state: increment betsToday
-      await this.state.update(this.strategyId, {
-        betsToday: stateData.betsToday + orderIntents.length,
-        totalOrders: stateData.totalOrders + orderIntents.length,
-        lastTradeAt: ctx.now,
-      });
+      await this.state.incrementOrderCounters(
+        this.strategyId,
+        orderIntents.length,
+        ctx.now,
+      );
 
       await this.onIntents(orderIntents);
     }
