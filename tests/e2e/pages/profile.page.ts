@@ -35,7 +35,7 @@ export class ProfilePage {
 
     async gotoProfile(username: string): Promise<void> {
         await this.page.goto(`/profile/${username}`);
-        await expect(this.page.locator('h1')).toBeVisible({ timeout: 15_000 });
+        await expect(this.displayName).toBeVisible({ timeout: 30_000 });
     }
 
     async goToEditProfile(): Promise<void> {

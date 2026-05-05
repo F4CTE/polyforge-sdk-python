@@ -175,16 +175,31 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   logout: async () => {
-    await fetch('/auth/v1/logout', { method: 'POST', credentials: 'include' });
-    resetAnalytics();
-    clearSentryUser();
     try {
-      localStorage.removeItem('access_token');
-    } catch {
-      // ignore — defensive scrub of any residual token from prior versions
+      const controller = new AbortController();
+      const timeoutId = window.setTimeout(() => controller.abort(), 10_000);
+      try {
+        await fetch('/auth/v1/logout', {
+          method: 'POST',
+          credentials: 'include',
+          signal: controller.signal,
+        });
+      } catch {
+        // Continue local logout even if the network request is slow or fails.
+      } finally {
+        window.clearTimeout(timeoutId);
+      }
+    } finally {
+      resetAnalytics();
+      clearSentryUser();
+      try {
+        localStorage.removeItem('access_token');
+      } catch {
+        // ignore — defensive scrub of any residual token from prior versions
+      }
+      set({ user: null, loading: false });
+      window.location.assign('/login');
     }
-    set({ user: null });
-    window.location.href = '/login';
   },
 
   patchUser: (partial) => {

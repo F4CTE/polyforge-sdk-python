@@ -312,6 +312,7 @@ export function Component() {
   if (loading) {
     return (
       <div className="p-6 max-w-2xl mx-auto">
+        <h1 className="sr-only">Profile</h1>
         <div className="bg-elevated border border-default rounded-pf p-6">
           <div className="flex items-center gap-4">
             <div className="size-20 rounded-full bg-overlay animate-pulse" />
@@ -331,7 +332,7 @@ export function Component() {
       <div className="p-6 max-w-2xl mx-auto">
         <div className="flex flex-col items-center justify-center py-20 text-center">
           <User className="size-10 text-tertiary mb-3" />
-          <p className="text-body-md font-medium text-primary">User not found</p>
+          <h1 className="text-body-md font-medium text-primary">User not found</h1>
           <p className="text-label text-tertiary mt-1">This profile doesn't exist or has been removed.</p>
         </div>
       </div>
