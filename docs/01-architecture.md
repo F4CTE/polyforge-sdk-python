@@ -105,9 +105,9 @@ Four isolated networks control exactly which services can communicate:
 
 | Network | Services | Internet | Purpose |
 |---|---|---|---|
-| `public` | gateway, auth-service, api-service | Yes | User-facing traffic |
+| `public` | gateway | Yes | User-facing HTTP(S) entry point |
 | `internal` | all services, Redis, Postgres, PgBouncer | No | Backend bus |
-| `signer-only` | signer-service, order-service, auth-service, Redis | No | Key isolation |
+| `signer-only` | signer-service, order-service, Redis | No | Key isolation |
 | `admin-only` | admin-auth-service, admin-api-service | No | Admin isolation |
 
 **Security properties to enforce:**
@@ -124,8 +124,8 @@ Four isolated networks control exactly which services can communicate:
 | Service | Runtime | Networks | Responsibility |
 |---|---|---|---|
 | `gateway` | Nginx | public, admin-only | SSL, routing, IP allowlist, WS upgrade |
-| `auth-service` | NestJS | public, internal, signer-only | Email/password auth, 2FA, credential import |
-| `api-service` | NestJS | public, internal | User REST /api/v1/*, WebSocket gateway |
+| `auth-service` | NestJS | internal | Email/password auth, 2FA, credential import |
+| `api-service` | NestJS | internal | User REST /api/v1/*, WebSocket gateway |
 | `admin-auth-service` | NestJS | admin-only, internal | Admin email/password, admin JWT |
 | `admin-api-service` | NestJS | admin-only, internal | Admin REST /api/v1/* |
 | `market-data-service` | NestJS | internal | Polymarket WS+REST, cache writer, gap detection |
@@ -135,7 +135,7 @@ Four isolated networks control exactly which services can communicate:
 | `backtest-service` | NestJS | internal | Historical replay, equity curve |
 | `notification-service` | NestJS | internal | AWS SES, Telegram, Discord outbound |
 | `bot-service` | NestJS | internal | Interactive Telegram + Discord bots |
-| `signer-service` | NestJS | signer-only | Key vault, EIP712, Builder HMAC |
+| `signer-service` | NestJS | internal, signer-only | Key vault, EIP712, Builder HMAC |
 
 
 ### Inter-Service Communication
@@ -306,7 +306,6 @@ The design system uses Shadcn UI components for consistent styling and accessibi
 | Admin JWT | ADMIN_JWT_SECRET | 1 hour | Admins → admin-api-service |
 | Bot JWT | BOT_JWT_SECRET | 30 days | Bots → api-service (scoped) |
 | Internal JWT | INTERNAL_JWT_SECRET | 30 seconds | Service → service |
-| 2FA temp | USER_JWT_SECRET | 5 minutes | Login 2FA challenge |
 | API Key | — (SHA256 hashed at rest) | Configurable expiry (optional) | External tools → api-service (scoped: READ/WRITE/TRADE) |
 
 ### User Auth Flow
@@ -320,13 +319,15 @@ Registration:
 
 Login (no 2FA):
   POST /auth/v1/login { email, password }
-  → return { token: JWT(7d) }
+  → set pf_token + pf_refresh HttpOnly cookies and return user profile
 
 Login (with 2FA):
-  POST /auth/v1/login { email, password }
-  → return { requires2FA: true, tempToken: JWT(5min) }
-  POST /auth/v1/2fa/verify { code }
-  → return { token: JWT(7d) }
+  POST /auth/v1/login { email, password, totpCode }
+  → set pf_token + pf_refresh HttpOnly cookies and return user profile
+
+If 2FA is enabled and `totpCode` is omitted, auth-service returns
+`400 TOTP_REQUIRED`. Invalid codes return `400 TOTP_INVALID`. There is no
+separate 2FA verification endpoint in the implemented login flow.
 ```
 
 ### Refresh Token Revocation
@@ -951,6 +952,16 @@ Every service must expose `GET /health`:
 | RDS CPU | > 70% | Alert admin |
 | RDS backup failed | any | Alert admin |
 
+### PostHog Product Analytics
+
+PostHog Community Edition runs in `docker-compose.infra.yml` with its own
+`posthog-db`, `posthog-redis`, `posthog-web`, and `posthog-worker` services.
+Server-side capture is provided by `@polyforge/shared-posthog`; backend
+services enable it when `POSTHOG_API_KEY` is set and default to no-op behavior
+when the key is absent. The React user/admin apps use `VITE_POSTHOG_KEY` and
+`VITE_POSTHOG_HOST`; the Next.js landing app uses `NEXT_PUBLIC_POSTHOG_KEY` and
+`NEXT_PUBLIC_POSTHOG_HOST`.
+
 ### Admin Audit Trail
 
 Admin actions are captured in `audit_logs`. The table is immutable — no updates or deletes, ever. Retention: forever.
@@ -1025,12 +1036,18 @@ polyforge/
 │   ├── bot-service/       NestJS
 │   ├── signer-service/    NestJS
 └── packages/
-    ├── shared-types/      All interfaces, enums, WebSocket messages
-    ├── shared-schemas/    Zod validation schemas
-    ├── shared-auth/       JWT guards, internal service client
-    ├── shared-db/         Prisma client NestJS module
-    ├── shared-redis/      ioredis factory, stream helpers
-    └── logger/            pino + nestjs-pino
+    ├── api-client/              Generated @hey-api client
+    ├── logger/                  pino + nestjs-pino
+    ├── polyforge-crypto/        WASM crypto package
+    ├── polyforge-crypto-native/ Native crypto package
+    ├── polyforge-engine/        Rust/WASM strategy engine helpers
+    ├── shared-auth/             JWT guards, internal service client
+    ├── shared-db/               Prisma client NestJS module
+    ├── shared-posthog/          PostHog NestJS integration
+    ├── shared-redis/            ioredis factory, stream helpers
+    ├── shared-schemas/          Zod validation schemas
+    ├── shared-types/            Interfaces, enums, WebSocket messages
+    └── ui/                      Shared React UI components
 ```
 
 ### Build Order
@@ -1075,7 +1092,7 @@ See `03-openapi-codegen.md` for the full OpenAPI generation pipeline.
 | Frontend (User & Admin) | React 19 |
 | Frontend (Landing) | Next.js 15 |
 | UI library | Shadcn UI + Tailwind CSS |
-| Real-time | Socket.io (WebSocket) |
+| Real-time | Native WebSocket via `@nestjs/platform-ws` |
 | Build system | Turborepo 2 + pnpm workspaces |
 | Containers | Docker + Docker Compose |
 | Runtime | Node.js 24 |

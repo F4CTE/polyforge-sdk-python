@@ -204,7 +204,7 @@ curl -s https://admin.polyforge.app/api/v1/health | jq .
 echo | openssl s_client -connect polyforge.app:443 -servername polyforge.app 2>/dev/null \
   | openssl x509 -noout -dates
 
-# Angular apps load
+# React apps load
 curl -sI https://polyforge.app/ | grep -E "HTTP|Content-Type"
 curl -sI https://admin.polyforge.app/ | grep -E "HTTP|Content-Type"
 ```

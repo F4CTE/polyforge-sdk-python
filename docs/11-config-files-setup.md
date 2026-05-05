@@ -12,7 +12,7 @@
 | 1 | `package.json` (root) | Defines the monorepo workspace and all `pnpm` scripts |
 | 2 | `turbo.json` | Defines the Turborepo task graph (build order, caching) |
 | 3 | `.env.example` | Environment variable template — copied to `.env` before running |
-| 4 | `docker-compose.dev.yml` | Spins up all 20 containers for local development |
+| 4 | `docker-compose.infra.yml` | Spins up the local infrastructure and service stack |
 | 5 | `prisma/schema.prisma` | User database schema (polyforge) |
 | 6 | `prisma/schema.admin.prisma` | Admin database schema (polyforge_admin) |
 | 7 | `openapi-ts.config.ts` | hey-api codegen config for user-app |
@@ -153,7 +153,8 @@ ADMIN_DIRECT_DATABASE_URL=postgresql://poly_admin:devpass_admin@postgres-admin:5
 # ─────────────────────────────────────────────────────────────
 # REDIS
 # ─────────────────────────────────────────────────────────────
-REDIS_URL=redis://redis:6379
+REDIS_PASSWORD=dev-redis-password-change-in-production
+REDIS_URL=redis://:dev-redis-password-change-in-production@redis:6379
 
 # ─────────────────────────────────────────────────────────────
 # JWT SECRETS — dev values only, never use in production
@@ -246,11 +247,13 @@ cp .env.example .env
 
 ---
 
-## Step 4 — `docker-compose.dev.yml`
+## Step 4 — `docker-compose.infra.yml`
 
 Create this file at the **root of the repository**.
 
-This file defines **19 containers**: 2 Postgres instances, 2 PgBouncers, Redis, MailHog, 13 NestJS services, and Nginx.
+This file defines the local stack: PostgreSQL/TimescaleDB, admin PostgreSQL,
+PgBouncer, Redis with password auth, MailHog, PostHog CE, NestJS services, and
+Nginx.
 
 ```yaml
 name: polyforge-dev
@@ -290,8 +293,8 @@ services:
     environment:
       DATABASE_URL: postgres://poly:devpass@postgres:5432/polyforge
       POOL_MODE: transaction
-      MAX_CLIENT_CONN: 100
-      DEFAULT_POOL_SIZE: 20
+      MAX_CLIENT_CONN: 200
+      DEFAULT_POOL_SIZE: 40
       SERVER_RESET_QUERY: DISCARD ALL
     depends_on:
       postgres: { condition: service_healthy }
@@ -703,7 +706,7 @@ polyforge/
 ├── turbo.json                    ✅ Step 2
 ├── .env.example                  ✅ Step 3
 ├── .env                          ← copy of .env.example (gitignored)
-├── docker-compose.dev.yml        ✅ Step 4
+├── docker-compose.infra.yml      ✅ Step 4
 ├── openapi-ts.config.ts          ✅ Step 7 — hey-api user-app
 ├── openapi-ts.admin.config.ts    ✅ Step 8 — hey-api admin-app
 └── prisma/
@@ -723,14 +726,14 @@ pnpm install
 # 3. Generate both Prisma clients
 pnpm generate
 
-# 4. Generate Angular API clients (requires swagger.json — run after first build:swagger)
+# 4. Generate React API clients (requires swagger.json — run after first build:swagger)
 pnpm generate:api
 
 # 4. Generate SSL certs for localhost HTTPS
 pnpm dev:certs
 
-# 5. Start all 20 containers
-docker compose -f docker-compose.dev.yml up --build
+# 5. Start the local stack
+docker compose -f docker-compose.infra.yml up --build
 
 # 6. Run user DB migrations (in a new terminal)
 pnpm migrate

@@ -1,7 +1,7 @@
 # Polyforge — Build Status
 
 > Living tracker. Update this file as each item ships.
-> Full detail per phase: [`docs/11-roadmap.md`](./docs/11-roadmap.md)
+> Full detail per phase: [`docs/10-roadmap.md`](./docs/10-roadmap.md)
 
 ---
 
@@ -124,8 +124,8 @@ Next: deploy to AWS eu-west-2, then submit Polymarket Builders Program grant app
 
 ### Future Features Documentation
 
-- [x] `docs/19-future-features.md` covering 7 planned features
-- [x] Roadmap Phase 9 added to `docs/11-roadmap.md`
+- [x] `docs/14-future-features.md` covering 7 planned features
+- [x] Roadmap Phase 9 added to `docs/10-roadmap.md`
 
 ---
 
@@ -340,7 +340,7 @@ Next: deploy to AWS eu-west-2, then submit Polymarket Builders Program grant app
 
 ### Docs
 
-- [x] Competitor audit: 199-platform analysis (`docs/polyforge_competitor_audit.md`)
+- [x] Competitor audit: 199-platform analysis (source artifact not tracked in this repo)
 - [x] Roadmap Phase 8: copy trading, whale tracking, AI news pipeline, advanced orders, multi-platform, mobile, social reputation, gasless
 
 ---
@@ -394,7 +394,7 @@ Next: deploy to AWS eu-west-2, then submit Polymarket Builders Program grant app
 
 ### Auth and Guards
 
-- [x] `AuthGuard` component (replaces Angular route guard)
+- [x] `AuthGuard` component (route protection wrapper)
 - [x] `VerifiedGuard` component (email verification check)
 - [x] `useAuth` hook
 
@@ -490,7 +490,7 @@ Next: deploy to AWS eu-west-2, then submit Polymarket Builders Program grant app
 
 ### UI Enhancements
 
-- [x] OnPush change detection on key Angular components
+- [x] React render performance pass on key frontend components
 - [x] Character counter on length-limited text inputs
 - [x] Polling indicator on ticket detail view
 - [x] Design tokens: section colors (`--pf-section-*`), status colors (`--pf-status-*`), typography scale (`--pf-text-*`)
@@ -660,7 +660,7 @@ Next: deploy to AWS eu-west-2, then submit Polymarket Builders Program grant app
 
 - [x] Prisma 7.5.0 configured (two schemas: `polyforge` + `polyforge_admin`)
 - [x] Initial migration applied
-- [x] Complete schema (all 29 tables per [`Polyforge-Database-Schema.pdf`](./Polyforge-Database-Schema.pdf))
+- [x] Complete schema (all 29 tables; schema source is `prisma/schema.prisma`)
 - [x] TimescaleDB hypertables (`price_snapshots`, `pnl_snapshots`)
 - [x] Critical indexes (31 indexes across 10 tables)
 - [x] `seed.ts` (alice, bob, charlie, carol, dave + strategies, orders, positions, social, backtest)
@@ -785,17 +785,16 @@ Next: deploy to AWS eu-west-2, then submit Polymarket Builders Program grant app
 
 ---
 
-## Phase 5 — Angular User App
+## Phase 5 — React User App
 
 ### Scaffold + Auth (done)
 
-- [x] Angular 21 + PrimeNG 21 standalone app (`apps/user-app/`)
-- [x] Aura theme preset with custom dark surface palette (`#0d1117` base)
-- [x] `app.config.ts` — `provideRouter` (view transitions), `provideHttpClient` (fetch + interceptors), `provideAnimationsAsync`, `providePrimeNG`
-- [x] `AuthStore` — signals (`user`, `loading`, `isAuthenticated`, `isVerified`, `isConnected`), bootstraps from token on init
-- [x] `TokenService` — localStorage JWT, decode/expiry check
-- [x] `AuthApiService` — all auth-service endpoints (login, register, logout, me, verify-email, forgot/reset-password, TOTP, credentials, bot-link)
-- [x] `authInterceptor` — attaches Bearer token to all requests
+- [x] React 19 + Vite app (`apps/user-app/`)
+- [x] Tailwind + shadcn/ui theme using shared design tokens
+- [x] React Router route protection components for auth, verification, and connected-account gates
+- [x] Auth store bootstraps from `/auth/v1/me` and HttpOnly cookies
+- [x] Generated `@polyforge/api-client` services cover auth-service endpoints
+- [x] Fetch client sends credentials for authenticated requests
 - [x] `errorInterceptor` — redirects to /login on 401
 - [x] Guards: `authGuard`, `verifiedGuard`, `connectedGuard`
 - [x] `LayoutComponent` — collapsible sidebar nav (Trade + Social sections), top bar with user menu, `<router-outlet>`
@@ -913,14 +912,13 @@ Next: deploy to AWS eu-west-2, then submit Polymarket Builders Program grant app
 - [x] AuditService — writes to audit_logs (admin DB) for all destructive admin actions
 - [x] Docker image + docker-compose integration
 
-### Angular admin-app
+### React admin-app
 
-- [x] Angular 21 + PrimeNG 21 standalone app (`apps/admin-app/`)
-- [x] `AdminTheme` — same dark blue-night palette, cyan primary, always-dark
-- [x] `AdminAuthStore` — decodes JWT payload to restore session (no server call, 1h JWT)
-- [x] `AdminAuthApiService` — login/logout → `/auth/v1` (port 3003)
-- [x] `AdminApiService` — all admin API methods (health, users, strategies, orders, DLQ, backtests, cache, rate limits, reports, builder stats, audit/event/login logs, invites, waitlist, config flags, admin management)
-- [x] `TokenService`, `authInterceptor`, `errorInterceptor`, `authGuard`
+- [x] React 19 + Vite app (`apps/admin-app/`)
+- [x] Shared dark design token palette and admin-specific layout
+- [x] Admin auth store restores session through `/auth/v1/me`
+- [x] Generated admin API client covers health, users, strategies, orders, DLQ, backtests, cache, rate limits, reports, builder stats, audit/event/login logs, invites, waitlist, config flags, and admin management
+- [x] HttpOnly cookie auth with fetch credentials and route protection components
 - [x] `LayoutComponent` — collapsible sidebar (Monitor / Manage / Moderation / System sections); System section visible to SUPER_ADMIN only
 - [x] `LoginComponent` — email + password, IP restriction note
 - [x] `DashboardComponent` — health status banner + service grid + infra cards (DB/Redis), auto-refresh 15s, Launch Control card (invite-only toggle)
@@ -964,7 +962,7 @@ Next: deploy to AWS eu-west-2, then submit Polymarket Builders Program grant app
 - [x] Admin send-invite — `POST /api/v1/waitlist/:email/send-invite` generates 1-use code + emails it via `AdminMailService`
 - [x] Branded email templates — shared `emailLayout()` function (dark header + bolt logo + footer); verification, password reset, waitlist confirmation, invite emails all using layout
 - [x] CORS — `app.enableCors()` in auth-service `main.ts` with allowed origins: `polyforge.app`, `www.polyforge.app`, dev `localhost:42xx`
-- [x] nginx landing routing — `location = /` serves `apps/landing/index.html`; regex block for landing static assets; Angular SPA as fallback
+- [x] nginx landing routing — `location = /` serves the landing app; regex block for landing static assets; React SPA as fallback
 - [x] INVITE_ONLY runtime toggle — `config:invite_only` Redis key; `GET /api/v1/config` + `PATCH /api/v1/config/invite-only`; auth-service checks Redis first, falls back to env var; admin dashboard "Launch Control" card
 - [x] Retention docs — `waitlist:emails` and `config:invite_only` noted as excluded from retention jobs
 - [x] CORS — api-service, admin-auth-service, admin-api-service all have `app.enableCors()` with correct origin allowlists
@@ -1055,7 +1053,7 @@ Next: deploy to AWS eu-west-2, then submit Polymarket Builders Program grant app
 - [x] **L1** — Security headers (`X-Content-Type-Options`, `X-Frame-Options`, `X-XSS-Protection`, `Referrer-Policy`) added to all services via Fastify `onSend` hook, and globally in nginx gateway
 - [x] **L2** — Swagger `persistAuthorization` set to `false`
 - [x] **L4** — Replaced `console.error` in bootstrap catch handlers with `process.stderr.write`; all `main.ts` files use `bootstrap().catch(...)` pattern
-- [x] **C2** — HttpOnly `pf_token` / `pf_admin_token` cookies replace localStorage; `@fastify/cookie` registered in all 4 services; JWT strategy and admin guard accept cookie OR Bearer header; WebSocket gateway authenticates from upgrade-request cookie; Angular interceptors send `withCredentials: true` instead of injecting Bearer header; auth stores call `/me` on init; admin-auth-service gains `GET /auth/v1/me` endpoint
+- [x] **C2** — HttpOnly `pf_token` / `pf_admin_token` cookies replace localStorage; `@fastify/cookie` registered in all 4 services; JWT strategy and admin guard accept cookie OR Bearer header; WebSocket gateway authenticates from upgrade-request cookie; React fetch clients send credentials instead of injecting Bearer header; auth stores call `/me` on init; admin-auth-service gains `GET /auth/v1/me` endpoint
 - [x] **C3** — HSTS already present in `nginx.prod.conf` (`max-age=63072000; includeSubDomains; preload`); confirmed
 - [x] **H3** — CSRF: `SameSite=Lax` cookies prevent cross-origin state-changing requests in all modern browsers; no additional CSRF token needed
 - [x] **L3** — JWT secret rotation SOP documented in `docs/07-deployment.md` (zero-downtime procedure, grace period, per-secret TTL guidance)

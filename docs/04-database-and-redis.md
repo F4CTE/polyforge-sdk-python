@@ -26,7 +26,7 @@ Polyforge runs **two physically separate PostgreSQL instances** — one for user
 │  paper-order-service, backtest-service, notification-service,  │
 │  bot-service, signer-service, market-data-service              │
 │                │                                                │
-│         PgBouncer :5432 (transaction mode, 20 connections)     │
+│         PgBouncer :5432 (transaction mode, 40 connections)     │
 │                │                                                │
 │    PostgreSQL 16 + TimescaleDB — polyforge                      │
 │    ├── users, credentials, strategies, orders, positions...     │
@@ -73,7 +73,7 @@ Polyforge runs **two physically separate PostgreSQL instances** — one for user
 
 **Instance:** `polyforge`  
 **Version:** PostgreSQL 16 + TimescaleDB  
-**Connection pooler:** PgBouncer (transaction mode, 20 real connections max)
+**Connection pooler:** PgBouncer (transaction mode, 40 real connections max)
 
 ### users
 
@@ -143,13 +143,21 @@ Encrypted Polymarket credentials. **Accessible only by signer-service.** No othe
 | safety | jsonb | Block[], default [] |
 | status | enum | IDLE, RUNNING, PAUSED, ERROR, PAPER, ARCHIVED |
 | error_message | text nullable | |
+| parent_strategy_id | uuid nullable FK → strategies | sub-strategy lineage |
 | forked_from_id | uuid nullable FK → strategies | self-reference |
 | forked_from_user_id | uuid nullable | |
+| market_id | varchar(255) nullable FK → markets | optional default market |
 | fork_count | int | default 0, denormalized |
 | like_count | int | default 0, denormalized |
 | template | boolean | default false |
 | tags | text[] | |
+| canvas | jsonb nullable | visual builder layout and connections |
 | version | int | default 1, increments on edit |
+| warmup_ticks | int | default 0 |
+| schedule | jsonb nullable | execution schedule settings |
+| settings | jsonb nullable | strategy-level execution controls |
+| venue | enum | POLYMARKET by default |
+| kalshi_subaccount | smallint nullable | Kalshi subaccount selector |
 | created_at | timestamptz | |
 | updated_at | timestamptz | |
 

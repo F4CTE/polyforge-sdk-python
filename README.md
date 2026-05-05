@@ -114,8 +114,9 @@ polyforge/
     ├── shared-types/              # All TypeScript interfaces and enums
     ├── shared-schemas/            # Zod schemas (streams, WebSocket, orders)
     ├── shared-auth/               # JWT guards + internal service client
-    ├── shared-db/                 # Prisma client NestJS module
-    ├── shared-redis/              # ioredis factory + stream helpers
+	    ├── shared-db/                 # Prisma client NestJS module
+	    ├── shared-posthog/            # PostHog NestJS integration
+	    ├── shared-redis/              # ioredis factory + stream helpers
     ├── logger/                    # pino + nestjs-pino
     ├── polyforge-engine/          # Rust WASM strategy engine
     ├── polyforge-crypto-native/   # NAPI-RS native crypto addon
@@ -305,7 +306,7 @@ The MCP server provides **33 tools** covering markets, strategies, portfolio, or
 | [`docs/ops/04-backup-recovery.md`](./docs/ops/04-backup-recovery.md) | Backup and recovery procedures |
 | [`docs/ops/05-incident-response.md`](./docs/ops/05-incident-response.md) | Incident response playbook (P0–P3) |
 | [`docs/ops/06-performance-tuning.md`](./docs/ops/06-performance-tuning.md) | Performance tuning guide |
-| [`docs/polyforge_competitor_audit.md`](./docs/polyforge_competitor_audit.md) | 199-platform competitor analysis |
+| Competitor audit | 199-platform competitor analysis; source artifact is not tracked in this repo |
 | [`CHANGELOG.md`](./CHANGELOG.md) | Release history |
 | [`SECURITY.md`](./SECURITY.md) | Security policy, architecture, production checklist |
 | [`CONTRIBUTING.md`](./CONTRIBUTING.md) | Development guidelines and code conventions |

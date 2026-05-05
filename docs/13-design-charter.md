@@ -776,7 +776,7 @@ The landing page (`apps/landing/`) and the trading app (`apps/user-app/`) share 
 | Decorative gradients | Forbidden | Allowed (hero section only) |
 | Scroll animations | Forbidden | Allowed (fade-in on scroll, subtle) |
 | Font sizes | 11–24px (type scale) | Up to 48px for hero headlines |
-| Border-radius | 4/6/8px strict | Up to 16px for hero cards |
+| Border-radius | 2/4/8px semantic tokens | Up to 16px for hero cards |
 | Imagery | No stock photos | Allowed for social proof |
 | CTA style | Standard accent buttons | Can use gradient accent buttons |
 

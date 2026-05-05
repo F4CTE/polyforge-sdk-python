@@ -313,7 +313,7 @@ Use this checklist when scaling becomes necessary (sustained high load, latency 
 ```
 Database
   ☐ RDS read replicas for read-heavy queries (leaderboard, discover, market data)
-  ☐ PgBouncer pool size tuning (default: 20 connections per service)
+  ☐ PgBouncer pool size tuning (default: 40 connections)
   ☐ TimescaleDB compression on old chunks (> 7 days)
   ☐ Partition large tables if row count exceeds 100M
 

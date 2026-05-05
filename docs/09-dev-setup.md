@@ -11,7 +11,7 @@
 3. [Configure Environment](#3-configure-environment)
 4. [Start the Stack](#4-start-the-stack)
 5. [Verify Everything Works](#5-verify-everything-works)
-6. [Run the Angular Apps](#6-run-the-angular-apps)
+6. [Run the Frontend Apps](#6-frontend-apps)
 7. [Daily Development Commands](#7-daily-development-commands)
 8. [Volume-Mount Dev Mode (no rebuild)](#8-volume-mount-dev-mode-no-rebuild)
 9. [Mock Scenarios](#9-mock-scenarios)
@@ -66,7 +66,7 @@ The `.env.dev` file has dev-safe defaults that work out of the box for local dev
 docker compose -f docker-compose.infra.yml up --build
 ```
 
-This starts everything: databases, Redis, MailHog, migrations, all NestJS services, Angular frontends, and the nginx gateway.
+This starts everything: databases, Redis, MailHog, migrations, all NestJS services, React frontends, and the nginx gateway.
 
 **First run** takes 5–10 minutes to build all images. Subsequent runs start in ~30 seconds.
 
@@ -74,7 +74,7 @@ This starts everything: databases, Redis, MailHog, migrations, all NestJS servic
 
 | URL | What you see |
 |---|---|
-| http://localhost | User app (landing page at `/`, Angular SPA at all other paths) |
+| http://localhost | User app (landing page at `/`, React SPA at all other paths) |
 | http://localhost:8080 | Admin console |
 | http://localhost:8025 | MailHog — all outbound emails |
 
@@ -129,7 +129,7 @@ Check http://localhost:8025 — the verification email should appear in MailHog.
 
 ## 6. Frontend Apps
 
-The Angular apps are built and served by Docker — **no separate `ng serve` needed**.
+The React apps are built and served by Docker — **no separate Vite dev server needed**.
 
 After `docker compose up`:
 
@@ -142,16 +142,19 @@ The nginx gateway (`services/gateway/nginx.dev.conf`) handles routing:
 - `/auth/v1/*` → auth-service (port 3001)
 - `/api/v1/*` → api-service (port 3002)
 - `/ws` → api-service WebSocket
-- All other paths → Angular SPA (`try_files`)
+- All other paths → React SPA (`try_files`)
 
-**If you need live-reload during frontend development**, you can still run `ng serve` locally:
+**If you need live-reload during frontend development**, run the Vite/Next dev servers locally:
 
 ```bash
-# User app with proxy (http://localhost:4200)
-cd apps/user-app && npm start
+# User app with proxy (http://localhost:5173)
+pnpm --filter @polyforge/user-app dev
 
-# Admin app with proxy (http://localhost:4300)
-cd apps/admin-app && npm start
+# Admin app with proxy (http://localhost:5174)
+pnpm --filter @polyforge/admin-app dev
+
+# Landing app (http://localhost:3000)
+pnpm --filter @polyforge/landing dev
 ```
 
 Both apps include a `proxy.conf.json` that forwards API calls to the Docker services.
@@ -236,7 +239,7 @@ docker compose -f docker-compose.infra.yml up -d
 # 3. Edit code, then rebuild whichever part you changed:
 pnpm --filter @polyforge/auth-service build          # single NestJS service
 pnpm --filter "./packages/**" build                  # all shared packages
-pnpm --filter @polyforge/user-app build              # Angular user app
+pnpm --filter @polyforge/user-app build              # React user app
 
 # The running container picks up the new dist/ files — no docker build needed.
 ```
@@ -303,7 +306,7 @@ nginx caches container IPs at startup. After a rebuild the container gets a new 
 docker compose -f docker-compose.infra.yml restart gateway
 ```
 
-### Angular app shows "proxy error"
+### Frontend app shows "proxy error"
 
 The corresponding NestJS service isn't running. Check:
 ```bash
@@ -371,48 +374,49 @@ docker compose -f docker-compose.infra.yml up -d
 
 ---
 
-## React Development (v3.0)
+## React Development
 
-> Starting with v3.0, the React apps run alongside the Angular apps during the migration period. Each has its own dev server on a distinct port.
+React is the current user/admin frontend stack. Each app has its own dev server
+for live-reload development.
 
 ### Start React Dev Servers
 
 ```bash
 # User app (React) — Vite dev server on port 5173
-pnpm --filter @polyforge/user-app-react dev
+pnpm --filter @polyforge/user-app dev
 
 # Admin app (React) — Vite dev server on port 5174
-pnpm --filter @polyforge/admin-app-react dev
+pnpm --filter @polyforge/admin-app dev
 
 # Landing page (Next.js) — Next.js dev server on port 3000
-pnpm --filter @polyforge/landing-next dev
+pnpm --filter @polyforge/landing dev
 ```
 
-### Parallel Development (Angular + React)
+### Frontend Dev Servers
 
-During the migration, both Angular and React frontends can run simultaneously:
+Run these when you want frontend live reload against the Docker backend:
 
 | App | Stack | Port | Command |
 |---|---|---|---|
-| User app (Angular) | Angular CLI | 4200 | `cd apps/user-app && npm start` |
-| User app (React) | Vite | 5173 | `pnpm --filter @polyforge/user-app-react dev` |
-| Admin app (Angular) | Angular CLI | 4300 | `cd apps/admin-app && npm start` |
-| Admin app (React) | Vite | 5174 | `pnpm --filter @polyforge/admin-app-react dev` |
-| Landing page | Next.js | 3000 | `pnpm --filter @polyforge/landing-next dev` |
+| User app | Vite + React | 5173 | `pnpm --filter @polyforge/user-app dev` |
+| Admin app | Vite + React | 5174 | `pnpm --filter @polyforge/admin-app dev` |
+| Landing page | Next.js | 3000 | `pnpm --filter @polyforge/landing dev` |
 
-Both Angular and React dev servers proxy API calls to the Docker backend services. The React apps use Vite's `server.proxy` configuration (in `vite.config.ts`) to forward `/api/v1/*`, `/auth/v1/*`, and `/ws` to the same backend ports.
+The Vite dev servers proxy API calls to the Docker backend services. Their
+`server.proxy` configuration forwards `/api/v1/*`, `/auth/v1/*`, and `/ws` to
+the same backend ports.
 
 ### React Build
 
 ```bash
 # Build user app (React)
-pnpm --filter @polyforge/user-app-react build
+pnpm --filter @polyforge/user-app build
 
 # Build admin app (React)
-pnpm --filter @polyforge/admin-app-react build
+pnpm --filter @polyforge/admin-app build
 
 # Build landing page (Next.js)
-pnpm --filter @polyforge/landing-next build
+pnpm --filter @polyforge/landing build
 ```
 
 ---

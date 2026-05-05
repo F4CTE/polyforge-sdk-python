@@ -44,7 +44,8 @@ Used **exclusively** by `admin-auth-service` and `admin-api-service`. No user-fa
 
 | Variable | Dev default | Description |
 |---|---|---|
-| `REDIS_URL` | `redis://redis:6379` | Shared Redis instance. Used by all services. |
+| `REDIS_PASSWORD` | **required** (`<GENERATE_ME>` in `.env.example`) | Password configured on the shared Redis service via `--requirepass`. Required by `docker-compose.infra.yml`. |
+| `REDIS_URL` | `redis://:<REDIS_PASSWORD>@redis:6379` | Shared Redis instance. Used by all services. Must include the Redis password in Docker Compose environments. |
 
 ---
 
@@ -230,8 +231,6 @@ These values are read from the environment at service startup.
 | `SENTRY_AUTH_TOKEN` | _(empty)_ | Enables landing source-map upload during `next build` when paired with `SENTRY_ORG` and `SENTRY_PROJECT`. Leave unset for local builds and static export builds. |
 | `SENTRY_ORG` | _(empty)_ | Sentry organization slug used by the landing `withSentryConfig` source-map upload step. |
 | `SENTRY_PROJECT` | _(empty)_ | Sentry project slug used by the landing `withSentryConfig` source-map upload step. |
-| `SENTRY_DSN` | _(empty)_ | Backend Sentry DSN used by Nest services. When unset, backend instrumentation drops events before send. |
-| `VITE_SENTRY_DSN` | _(empty)_ | Browser Sentry DSN for Vite apps. |
 | `POSTHOG_API_KEY` | _(empty)_ | Server-side PostHog project API key. When unset, shared PostHog capture is a no-op. |
 | `POSTHOG_HOST` | `http://posthog:8000` | PostHog host for server-side capture. |
 | `POSTHOG_DB_PASSWORD` | generated value | PostHog CE database password used by `docker-compose.infra.yml`. |
@@ -336,6 +335,7 @@ polyforge/BOT_JWT_SECRET
 polyforge/INTERNAL_JWT_SECRET
 polyforge/AWS_SES_SMTP_USER
 polyforge/AWS_SES_SMTP_PASSWORD
+polyforge/REDIS_PASSWORD
 polyforge/API_SERVICE_INTERNAL_JWT_AUDIENCE
 polyforge/API_SERVICE_INTERNAL_JWT_ISSUERS
 polyforge/AUTH_SERVICE_INTERNAL_JWT_AUDIENCE
@@ -359,7 +359,9 @@ polyforge/POSTHOG_API_KEY
 polyforge/TELEGRAM_BOT_TOKEN
 polyforge/DISCORD_BOT_TOKEN
 polyforge/WHATSAPP_TOKEN
+polyforge/WHATSAPP_VERIFY_TOKEN
 polyforge/WHATSAPP_APP_SECRET
+polyforge/POSTHOG_SECRET_KEY
 ```
 
 Non-sensitive config (`NODE_ENV`, `LOG_LEVEL`, `SCENARIO`, ports, URLs) can remain in the production `.env` or be passed via Docker environment.

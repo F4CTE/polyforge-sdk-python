@@ -12,7 +12,8 @@
 
 | JWT type | Header | Lifetime | Issued by |
 |---|---|---|---|
-| User JWT | `Authorization: Bearer <token>` | 7 days | auth-service |
+| User access JWT | `Authorization: Bearer <token>` or `pf_token` cookie | 15 minutes | auth-service |
+| User refresh token | `pf_refresh` cookie or refresh body | 7 days | auth-service |
 | Admin JWT | `Authorization: Bearer <token>` | 1 hour | admin-auth-service |
 | Bot JWT | `Authorization: Bearer <token>` | 30 days | auth-service |
 | Internal JWT | `Authorization: Bearer <token>` | 30 seconds | each service (for service-to-service calls) |
@@ -72,16 +73,15 @@ Create a new user account.
 **Response `201`:**
 ```json
 {
-  "token": "eyJ...",
-  "user": {
-    "id": "uuid",
-    "email": "alice@example.com",
-    "username": "alice",
-    "status": "UNVERIFIED",
-    "createdAt": "2026-03-12T10:00:00Z"
-  }
+  "id": "uuid",
+  "email": "alice@example.com",
+  "username": "alice",
+  "status": "UNVERIFIED",
+  "createdAt": "2026-03-12T10:00:00Z"
 }
 ```
+Sets `pf_token` and `pf_refresh` HttpOnly cookies unless invite-only approval
+returns a pending account.
 
 **Errors:** `400 VALIDATION_ERROR` · `409 EMAIL_TAKEN` · `409 USERNAME_TAKEN`
 
@@ -100,24 +100,23 @@ Create a new user account.
   "totpCode": "123456"
 }
 ```
-`totpCode` required only if 2FA is enabled.
+`totpCode` is required in the same request only when 2FA is enabled. If it is
+omitted for a 2FA-enabled account, auth-service returns `400 TOTP_REQUIRED`.
+There is no separate login challenge or temp-token verification endpoint.
 
 **Response `200`:**
 ```json
 {
-  "token": "eyJ...",
-  "user": {
-    "id": "uuid",
-    "email": "alice@example.com",
-    "username": "alice",
-    "displayName": "Alice",
-    "status": "CONNECTED",
-    "polymarketConnected": true,
-    "emailVerified": true
-  },
-  "requiresTotp": false
+  "id": "uuid",
+  "email": "alice@example.com",
+  "username": "alice",
+  "displayName": "Alice",
+  "status": "CONNECTED",
+  "polymarketConnected": true,
+  "emailVerified": true
 }
 ```
+Sets `pf_token` and `pf_refresh` HttpOnly cookies on success.
 
 **Errors:** `400 INVALID_CREDENTIALS` · `400 TOTP_REQUIRED` · `400 TOTP_INVALID` · `403 ACCOUNT_SUSPENDED`
 
@@ -3938,6 +3937,107 @@ Clear the triggered circuit breaker and re-enable strategy execution.
 
 ---
 
+## Gas Settings
+
+### GET /api/v1/settings/gas
+
+Return the authenticated user's gas sponsorship usage and daily budget.
+
+**Auth:** User JWT
+
+**Response `200`:**
+```json
+{
+  "gaslessEnabled": false,
+  "dailyLimitMatic": "0.5",
+  "usedTodayMatic": "0",
+  "remainingTodayMatic": "0.5"
+}
+```
+
+---
+
+## Sports Markets
+
+### GET /api/v1/sports/categories
+
+List supported sports market categories.
+
+### GET /api/v1/sports/markets
+
+List sports-linked markets. Supports pagination and filters from
+`SportsMarketsQueryDto`.
+
+### GET /api/v1/sports/events
+
+List sports events. Supports filters from `SportsEventsQueryDto`.
+
+### GET /api/v1/sports/events/:eventTicker
+
+Return one sports event by ticker.
+
+### GET /api/v1/sports/milestones
+
+List event milestones.
+
+### GET /api/v1/sports/live-data/:milestoneId
+
+Return live data for one milestone.
+
+### GET /api/v1/sports/combos
+
+List combo market collections.
+
+### GET /api/v1/sports/combos/:collectionTicker
+
+Return combo collection details.
+
+### POST /api/v1/sports/combos/lookup
+
+Resolve a combo collection ticker from selected markets.
+
+**Auth:** User JWT for all sports endpoints.
+
+---
+
+## Fees
+
+### POST /api/v1/fees/preview
+
+Preview venue fees for an order and return a fee comparison.
+
+**Auth:** User JWT or API key with `READ` scope
+
+**Request:**
+```json
+{
+  "tokenId": "...",
+  "side": "BUY",
+  "size": 100,
+  "price": 0.55,
+  "orderType": "POST_ONLY"
+}
+```
+
+### GET /api/v1/fees/schedules
+
+Return active Polymarket and Kalshi fee schedules grouped by venue.
+
+**Auth:** User JWT
+
+---
+
+## Journal
+
+### GET /api/v1/journal
+
+List the authenticated user's order journal entries. Supports pagination and
+optional `mood` filtering.
+
+**Auth:** User JWT
+
+---
+
 ## Strategy Versions
 
 ### GET /api/v1/strategies/:id/versions
@@ -4667,4 +4767,4 @@ Get exchange venue connection health status.
 
 ---
 
-*See also: [Architecture Addendum A3](./Polyforge-Architecture-Addendum.pdf) for the complete stream:events event taxonomy.*
+*See also: `services/api-service/src/gateway/events.gateway.ts` and `packages/shared-types/src/websocket.ts` for the implemented WebSocket event taxonomy.*

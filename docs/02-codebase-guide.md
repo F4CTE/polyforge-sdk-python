@@ -548,19 +548,19 @@ docker compose -f docker-compose.test.yml down
 
 ```bash
 # Follow logs in real-time
-docker compose -f docker-compose.dev.yml logs -f strategy-engine
+docker compose -f docker-compose.infra.yml logs -f strategy-engine
 
 # Last 100 lines
-docker compose -f docker-compose.dev.yml logs --tail=100 auth-service
+docker compose -f docker-compose.infra.yml logs --tail=100 auth-service
 
 # All services, last 50 lines each
-docker compose -f docker-compose.dev.yml logs --tail=50
+docker compose -f docker-compose.infra.yml logs --tail=50
 ```
 
 ### Inspect Redis
 
 ```bash
-docker compose -f docker-compose.dev.yml exec redis redis-cli
+docker compose -f docker-compose.infra.yml exec redis sh -lc 'redis-cli -a "$REDIS_PASSWORD"'
 
 # Useful commands:
 KEYS cache:price:*                     # list all price cache keys
@@ -573,8 +573,8 @@ XREVRANGE stream:events + - COUNT 10   # last 10 events
 ### Query the database directly
 
 ```bash
-docker compose -f docker-compose.dev.yml exec postgres \
-  psql -U poly -d polymarket
+docker compose -f docker-compose.infra.yml exec postgres \
+  psql -U poly -d polyforge
 
 # Useful queries:
 \dt trading.*           -- list trading schema tables
@@ -588,14 +588,14 @@ SELECT * FROM analytics.price_history ORDER BY time DESC LIMIT 10;
 ### Inspect a running strategy's state
 
 ```bash
-docker compose -f docker-compose.dev.yml exec redis redis-cli \
-  GET strategy:<strategyId>:state
+docker compose -f docker-compose.infra.yml exec redis sh -lc \
+  'redis-cli -a "$REDIS_PASSWORD" GET strategy:<strategyId>:state'
 ```
 
 ### Check service health manually
 
 ```bash
-docker compose -f docker-compose.dev.yml exec api-service \
+docker compose -f docker-compose.infra.yml exec api-service \
   curl -s localhost:3002/health | jq
 ```
 
@@ -618,8 +618,8 @@ DATABASE_URL=$DIRECT_DATABASE_URL npx prisma migrate dev --name add_volume_spike
 **Step 3 — Verify:**
 
 ```bash
-docker compose -f docker-compose.dev.yml exec postgres \
-  psql -U poly -d polymarket -c "\d trading.strategies"
+docker compose -f docker-compose.infra.yml exec postgres \
+  psql -U poly -d polyforge -c "\d strategies"
 ```
 
 **Step 4 — Regenerate the Prisma client:**
@@ -743,9 +743,16 @@ apps/
 packages/
 ├── ui/                       # Shared shadcn/ui components + Tailwind theme
 ├── api-client/               # Shared @hey-api/client-fetch generated client
-├── shared-types/             # TypeScript interfaces and enums
+├── logger/                   # pino + nestjs-pino
+├── polyforge-crypto/         # Rust WASM crypto package
+├── polyforge-crypto-native/  # NAPI-RS native crypto addon
+├── polyforge-engine/         # Rust/WASM strategy engine helpers
+├── shared-auth/              # JWT guards + internal service client
+├── shared-db/                # Prisma client NestJS module
+├── shared-posthog/           # PostHog NestJS integration
+├── shared-redis/             # ioredis factory + stream helpers
 ├── shared-schemas/           # Zod schemas
-└── ...
+└── shared-types/             # TypeScript interfaces and enums
 ```
 
 ### `packages/ui/` — Shared Component Library
@@ -802,7 +809,7 @@ Custom hooks encapsulate common patterns:
 
 ### Guard Components
 
-Route protection uses wrapper components instead of Angular route guards:
+Route protection uses React wrapper components:
 
 ```tsx
 // Requires authenticated user
