@@ -135,6 +135,9 @@ GAMMA_API_URL=https://gamma-api.polymarket.com
 CLOB_API_URL=https://clob.polymarket.com
 CLOB_WS_URL=wss://ws-subscriptions-clob.polymarket.com/ws/market
 DATA_API_URL=https://data-api.polymarket.com
+POLYMARKET_US_ENABLED=false
+POLYMARKET_US_API_URL=https://api.polymarket.us
+POLYMARKET_US_WS_URL=wss://ws.polymarket.us
 SCENARIO=normal
 
 # ─────────────────────────────────────────────────────────────────────────────

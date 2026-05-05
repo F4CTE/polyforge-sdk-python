@@ -257,6 +257,9 @@ services:
       SENTRY_DSN: ${SENTRY_DSN:-}
       SIGNER_SERVICE_URL: http://signer-service:3012
       CLOB_API_URL: ${CLOB_API_URL:-https://clob.polymarket.com}
+      POLYMARKET_US_ENABLED: ${POLYMARKET_US_ENABLED:-false}
+      POLYMARKET_US_API_URL: ${POLYMARKET_US_API_URL:-https://api.polymarket.us}
+      POLYMARKET_US_WS_URL: ${POLYMARKET_US_WS_URL:-wss://ws.polymarket.us}
       PORT: "3007"
     ports:
       - "127.0.0.1:3007:3007"
