@@ -206,6 +206,7 @@ jobs:
           POLY_BUILDER_API_KEY: ${{ secrets.DEV_POLY_BUILDER_API_KEY }}
           POLY_BUILDER_SECRET: ${{ secrets.DEV_POLY_BUILDER_SECRET }}
           POLY_BUILDER_PASSPHRASE: ${{ secrets.DEV_POLY_BUILDER_PASSPHRASE }}
+          POSTHOG_SECRET_KEY: ${{ secrets.DEV_POSTHOG_SECRET_KEY }}
         with:
           host: ${{ secrets.LAB_HOST }}
           username: f4cte
@@ -219,7 +220,8 @@ jobs:
             USER_JWT_SECRET,ADMIN_JWT_SECRET,BOT_JWT_SECRET,INTERNAL_JWT_SECRET,
             MASTER_ENCRYPTION_KEY,TOTP_ENCRYPTION_KEY,
             DB_PASSWORD,ADMIN_DB_PASSWORD,REDIS_PASSWORD,
-            POLY_BUILDER_API_KEY,POLY_BUILDER_SECRET,POLY_BUILDER_PASSPHRASE
+            POLY_BUILDER_API_KEY,POLY_BUILDER_SECRET,POLY_BUILDER_PASSPHRASE,
+            POSTHOG_SECRET_KEY
           script: |
             set -euo pipefail
             cd ~/PolyForge

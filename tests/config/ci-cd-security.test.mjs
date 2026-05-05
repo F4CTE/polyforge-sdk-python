@@ -7,6 +7,7 @@ const GITHUB_DIR = ".github";
 const CI_WORKFLOW = ".github/workflows/ci.yml";
 const SETUP_ACTION = ".github/actions/setup/action.yml";
 const DEPLOY_SCRIPT = "scripts/deploy.sh";
+const WRITE_ENV_SCRIPT = "scripts/write-env-from-ci.sh";
 
 function read(filePath) {
   return readFileSync(filePath, "utf8");
@@ -108,6 +109,7 @@ test("dev deployment uses dedicated dev secrets only", () => {
     "DEV_POLY_BUILDER_API_KEY",
     "DEV_POLY_BUILDER_SECRET",
     "DEV_POLY_BUILDER_PASSPHRASE",
+    "DEV_POSTHOG_SECRET_KEY",
   ]) {
     assert.ok(deployBlock.includes(`secrets.${secretName}`), `deploy-dev must use ${secretName}`);
   }
@@ -125,6 +127,7 @@ test("dev deployment uses dedicated dev secrets only", () => {
     "POLY_BUILDER_API_KEY",
     "POLY_BUILDER_SECRET",
     "POLY_BUILDER_PASSPHRASE",
+    "POSTHOG_SECRET_KEY",
     "GAS_SPONSOR_PRIVATE_KEY",
     "ANTHROPIC_API_KEY",
     "OPENAI_API_KEY",
@@ -134,6 +137,15 @@ test("dev deployment uses dedicated dev secrets only", () => {
       `deploy-dev must not use production secret ${prodSecretName}`,
     );
   }
+});
+
+test("CI-generated dev env stays in non-production signing mode", () => {
+  const envWriter = read(WRITE_ENV_SCRIPT);
+
+  assert.ok(envWriter.includes("NODE_ENV=development"));
+  assert.ok(envWriter.includes("SIGNING_MODE=stub"));
+  assert.ok(envWriter.includes("POLYGON_RPC_URL=${POLYGON_RPC_URL:-https://polygon-rpc.com}"));
+  assert.ok(envWriter.includes("POSTHOG_SECRET_KEY=${POSTHOG_SECRET_KEY}"));
 });
 
 test("deployment hardening controls remain enabled", () => {

@@ -9,6 +9,7 @@
 #   MASTER_ENCRYPTION_KEY, TOTP_ENCRYPTION_KEY
 #   DB_PASSWORD, ADMIN_DB_PASSWORD, REDIS_PASSWORD
 #   POLY_BUILDER_API_KEY, POLY_BUILDER_SECRET, POLY_BUILDER_PASSPHRASE
+#   POSTHOG_SECRET_KEY
 #
 # Optional env vars (use placeholder/disabled defaults when not supplied):
 #   TELEGRAM_BOT_TOKEN, DISCORD_BOT_TOKEN
@@ -45,6 +46,7 @@ log() { echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] $*"; }
 : "${POLY_BUILDER_API_KEY:?POLY_BUILDER_API_KEY is required}"
 : "${POLY_BUILDER_SECRET:?POLY_BUILDER_SECRET is required}"
 : "${POLY_BUILDER_PASSPHRASE:?POLY_BUILDER_PASSPHRASE is required}"
+: "${POSTHOG_SECRET_KEY:?POSTHOG_SECRET_KEY is required}"
 
 log "All required secrets present — writing $ENV_FILE"
 
@@ -59,7 +61,7 @@ cat > "$TMPFILE" << ENV_HEREDOC
 # RUNTIME
 # ─────────────────────────────────────────────────────────────────────────────
 
-NODE_ENV=production
+NODE_ENV=development
 CI=true
 LOG_LEVEL=info
 ENABLE_SWAGGER=false
@@ -149,6 +151,8 @@ BUILDER_TIER=UNVERIFIED
 # ─────────────────────────────────────────────────────────────────────────────
 
 CHAIN_ID=137
+POLYGON_RPC_URL=${POLYGON_RPC_URL:-https://polygon-rpc.com}
+SIGNING_MODE=stub
 
 # ─────────────────────────────────────────────────────────────────────────────
 # GAS SPONSORSHIP
@@ -166,6 +170,12 @@ GAS_ESTIMATE_MATIC=0.002
 ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
 OPENAI_API_KEY=${OPENAI_API_KEY:-}
 NEWS_RSS_FEEDS=https://feeds.reuters.com/reuters/topNews,https://rss.cnn.com/rss/money_latest.rss
+
+# ─────────────────────────────────────────────────────────────────────────────
+# POSTHOG CE
+# ─────────────────────────────────────────────────────────────────────────────
+
+POSTHOG_SECRET_KEY=${POSTHOG_SECRET_KEY}
 
 # ─────────────────────────────────────────────────────────────────────────────
 # BOTS
