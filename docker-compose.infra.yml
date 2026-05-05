@@ -36,6 +36,12 @@ networks:
   admin-only:
     driver: bridge
     internal: true
+  # Docker does not make host-published ports reachable for containers attached
+  # only to an internal network on the lab runner. Attach postgres-admin to this
+  # otherwise-empty bridge so its 127.0.0.1:5434 publish is active while keeping
+  # admin service traffic isolated on admin-only.
+  admin-host-publish:
+    driver: bridge
   posthog:
 
 volumes:
@@ -119,7 +125,7 @@ services:
       - "127.0.0.1:5434:5432"
     volumes:
       - postgres-admin-data:/var/lib/postgresql/data
-    networks: [admin-only]
+    networks: [admin-only, admin-host-publish]
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U poly_admin -d polyforge_admin"]
       interval: 5s
