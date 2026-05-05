@@ -2638,13 +2638,13 @@ class PolyforgeClient:
     def get_polymarket_portfolio(self) -> list[PolymarketPortfolioEntry]:
         """Fetch the Polymarket-native portfolio positions for the connected wallet."""
         data = self._get("/api/v1/portfolio/polymarket/portfolio")
-        items = data if isinstance(data, list) else data.get("data", [])
+        items = data if isinstance(data, list) else data.get("entries", data.get("data", []))
         return [_parse(PolymarketPortfolioEntry, e) for e in items]
 
     def get_polymarket_earnings(self) -> list[PolymarketEarningsEntry]:
         """Fetch daily earnings from the Polymarket rewards programme."""
         data = self._get("/api/v1/portfolio/polymarket/earnings")
-        items = data if isinstance(data, list) else data.get("data", [])
+        items = data if isinstance(data, list) else data.get("entries", data.get("data", []))
         return [_parse(PolymarketEarningsEntry, e) for e in items]
 
     def get_polymarket_activity(self, *, activity_type: str | None = None) -> list[PolymarketActivity]:
@@ -2657,7 +2657,7 @@ class PolyforgeClient:
             "/api/v1/portfolio/polymarket/activity",
             params=_strip_none({"type": activity_type}),
         )
-        items = data if isinstance(data, list) else data.get("data", [])
+        items = data if isinstance(data, list) else data.get("activities", data.get("data", []))
         return [_parse(PolymarketActivity, a) for a in items]
 
     def list_copy_configs(self) -> list[CopyConfig]:
@@ -5718,13 +5718,13 @@ class AsyncPolyforgeClient:
     async def get_polymarket_portfolio(self) -> list[PolymarketPortfolioEntry]:
         """Fetch the Polymarket-native portfolio positions for the connected wallet."""
         data = await self._get("/api/v1/portfolio/polymarket/portfolio")
-        items = data if isinstance(data, list) else data.get("data", [])
+        items = data if isinstance(data, list) else data.get("entries", data.get("data", []))
         return [_parse(PolymarketPortfolioEntry, e) for e in items]
 
     async def get_polymarket_earnings(self) -> list[PolymarketEarningsEntry]:
         """Fetch daily earnings from the Polymarket rewards programme."""
         data = await self._get("/api/v1/portfolio/polymarket/earnings")
-        items = data if isinstance(data, list) else data.get("data", [])
+        items = data if isinstance(data, list) else data.get("entries", data.get("data", []))
         return [_parse(PolymarketEarningsEntry, e) for e in items]
 
     async def get_polymarket_activity(self, *, activity_type: str | None = None) -> list[PolymarketActivity]:
@@ -5737,7 +5737,7 @@ class AsyncPolyforgeClient:
             "/api/v1/portfolio/polymarket/activity",
             params=_strip_none({"type": activity_type}),
         )
-        items = data if isinstance(data, list) else data.get("data", [])
+        items = data if isinstance(data, list) else data.get("activities", data.get("data", []))
         return [_parse(PolymarketActivity, a) for a in items]
 
     async def list_copy_configs(self) -> list[CopyConfig]:
