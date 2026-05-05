@@ -270,10 +270,10 @@ export function renderContent({
     <div className="space-y-6">
       <PageTitle
         title="WebSocket"
-        subtitle="Real-time push events for orders, strategies, and notifications. Connect with a valid JWT."
+        subtitle="Real-time push events for orders, strategies, and notifications. Browser clients authenticate with the HttpOnly session cookie."
       />
       <Sub title="Connection">
-        <Code code={'wss://api.polyforge.app/ws?token=<JWT>'} lang="curl" />
+        <Code code={'wss://api.polyforge.app/ws'} lang="curl" />
       </Sub>
       <Sub title="Subscribe to a strategy">
         <Code code={`// Send after connection opens\n{ "event": "subscribe", "data": { "strategyId": "strat-uuid" } }`} lang="ts" />

@@ -37,6 +37,7 @@ function makeRequest(
   return {
     url: `/ws${query}`,
     headers: { cookie, ...(origin ? { origin } : {}) },
+    socket: { remoteAddress: "203.0.113.9" },
   } as unknown as IncomingMessage;
 }
 
@@ -123,6 +124,55 @@ describe("EventsGateway", () => {
       });
       expect(client.send).toHaveBeenCalledWith(
         expect.stringContaining('"type":"AUTH_OK"'),
+      );
+    });
+
+    it("prefers the pf_token cookie when a query token is also present", () => {
+      vi.mocked(jwtService.verify).mockReturnValue({
+        sub: "user-2",
+        email: "b@c.com",
+        username: "bob",
+      });
+      const warnSpy = vi.spyOn(
+        gateway["logger"] as { warn: (message: string) => void },
+        "warn",
+      );
+
+      const client = makeSocket();
+      const req = makeRequest("?token=query-jwt", "pf_token=cookie-jwt");
+
+      gateway.handleConnection(client, req);
+
+      expect(jwtService.verify).toHaveBeenCalledWith("cookie-jwt", {
+        secret: "test-secret-32-chars-minimum-ok!",
+      });
+      expect(warnSpy).not.toHaveBeenCalled();
+    });
+
+    it("warns without leaking token material when legacy query auth is used", () => {
+      vi.mocked(jwtService.verify).mockReturnValue({
+        sub: "user-1",
+        email: "a@b.com",
+        username: "alice",
+      });
+      const warnSpy = vi.spyOn(
+        gateway["logger"] as { warn: (message: string) => void },
+        "warn",
+      );
+
+      const client = makeSocket();
+      const req = makeRequest("?token=legacy-secret-token");
+
+      gateway.handleConnection(client, req);
+
+      expect(jwtService.verify).toHaveBeenCalledWith("legacy-secret-token", {
+        secret: "test-secret-32-chars-minimum-ok!",
+      });
+      expect(warnSpy).toHaveBeenCalledWith(
+        "Deprecated WebSocket query token used from 203.0.113.9",
+      );
+      expect(warnSpy.mock.calls.flat().join(" ")).not.toContain(
+        "legacy-secret-token",
       );
     });
 
@@ -506,10 +556,7 @@ describe("EventsGateway", () => {
       const sockets: ReturnType<typeof makeSocket>[] = [];
       for (let i = 0; i < 5; i++) {
         const socket = makeSocket();
-        localGateway.handleConnection(
-          socket,
-          makeRequest(`?token=t${i}`),
-        );
+        localGateway.handleConnection(socket, makeRequest(`?token=t${i}`));
         sockets.push(socket);
       }
       const replacement = makeSocket();
