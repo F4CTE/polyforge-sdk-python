@@ -151,8 +151,13 @@ export class OrdersService {
         return;
       }
       this.logger.error(
-        `Failed to create order record for intent ${intent.intentId}`,
-        err,
+        {
+          event: "ORDER_CREATE_FAILED",
+          intentId: intent.intentId,
+          userId: intent.userId,
+          err,
+        },
+        "Failed to create order record",
       );
       await this.moveToDlq(intent, "DB_CREATE_FAILED");
       return;
@@ -288,8 +293,9 @@ export class OrdersService {
           intentId: intent.intentId,
           strategyId: intent.strategyId,
           userId: intent.userId,
+          err,
         },
-        err,
+        "Order attempt failed",
       );
 
       if (attempt < MAX_ATTEMPTS) {
@@ -309,8 +315,9 @@ export class OrdersService {
               event: "ORDER_FAILED_STATUS_UPDATE_FAILED",
               orderId,
               intentId: intent.intentId,
+              err: updateErr,
             },
-            updateErr,
+            "Failed to mark order as failed",
           );
         });
 
@@ -424,7 +431,16 @@ export class OrdersService {
         properties: { intentId: intent.intentId, reason },
       });
     } catch (dlqErr) {
-      this.logger.error("Failed to write to DLQ", dlqErr);
+      this.logger.error(
+        {
+          event: "ORDER_DLQ_WRITE_FAILED",
+          stream: DLQ_STREAM,
+          intentId: intent.intentId,
+          reason,
+          err: dlqErr,
+        },
+        "Failed to write order intent to DLQ",
+      );
     }
   }
 

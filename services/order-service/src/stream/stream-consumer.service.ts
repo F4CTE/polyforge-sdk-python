@@ -218,8 +218,9 @@ export class StreamConsumerService implements OnModuleInit, OnModuleDestroy {
           event: "ORDER_INTENT_PARSE_ERROR",
           stream: STREAM,
           msgId,
+          err,
         },
-        err,
+        "Failed to parse order intent from Redis stream",
       );
     }
   }

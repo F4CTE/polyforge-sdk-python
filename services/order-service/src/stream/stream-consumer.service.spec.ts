@@ -284,6 +284,26 @@ describe("StreamConsumerService (order-service)", () => {
         "Dropped invalid order intent from Redis stream",
       );
     });
+
+    it("logs parse exceptions with a structured err field", () => {
+      const errorSpy = vi
+        .spyOn((service as any).logger, "error")
+        .mockImplementation(() => undefined);
+      const err = new Error("bad parse");
+      err.stack = "Error: bad parse\n    at parseIntent (stream.ts:42:7)";
+
+      (service as any).logDroppedIntent("msg-parse", "parse_error", {}, err);
+
+      expect(errorSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          event: "ORDER_INTENT_PARSE_ERROR",
+          stream: "stream:orders",
+          msgId: "msg-parse",
+          err,
+        }),
+        "Failed to parse order intent from Redis stream",
+      );
+    });
   });
 
   describe("onModuleDestroy", () => {

@@ -1,4 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
+import { Writable } from "node:stream";
+import pino from "pino";
 import { logCloudWatchMetric } from "./cloudwatch-metrics";
 
 describe("logCloudWatchMetric", () => {
@@ -30,5 +32,37 @@ describe("logCloudWatchMetric", () => {
       }),
       "cloudwatch metric",
     );
+  });
+
+  it("preserves Error details when logs use a structured err field", () => {
+    const lines: string[] = [];
+    const stream = new Writable({
+      write(chunk, _encoding, callback) {
+        lines.push(chunk.toString("utf8"));
+        callback();
+      },
+    });
+    const logger = pino(stream);
+    const err = new Error("redis down");
+    err.stack = "Error: redis down\n    at consumeLoop (stream.ts:42:7)";
+
+    logger.error(
+      {
+        event: "STREAM_CONSUME_ERROR",
+        err,
+      },
+      "stream consume error",
+    );
+
+    const entry = JSON.parse(lines.join(""));
+    expect(entry).toMatchObject({
+      event: "STREAM_CONSUME_ERROR",
+      msg: "stream consume error",
+      err: {
+        type: "Error",
+        message: "redis down",
+        stack: expect.stringContaining("consumeLoop"),
+      },
+    });
   });
 });

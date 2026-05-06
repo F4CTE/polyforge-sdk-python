@@ -76,14 +76,16 @@ export class SignerClientService {
           operation: "signOrder",
           userId: req.userId,
           requestId: req.requestId,
+          err,
         },
-        err,
+        "signer-service request failed",
       );
       throw new ServiceUnavailableException("signer-service unavailable");
     }
 
     if (!res.ok) {
       const body = await res.text().catch(() => "");
+      const err = new Error(`signer-service error ${res.status}`);
       this.logger.error(
         {
           event: "SIGNER_REQUEST_FAILED",
@@ -91,8 +93,9 @@ export class SignerClientService {
           userId: req.userId,
           requestId: req.requestId,
           status: res.status,
+          err,
         },
-        new Error(`signer-service error ${res.status}`),
+        "signer-service returned an error response",
       );
       throw new ServiceUnavailableException(
         `signer-service error ${res.status}: ${body}`,

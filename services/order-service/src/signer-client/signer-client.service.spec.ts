@@ -141,7 +141,9 @@ describe("SignerClientService", () => {
       const errorSpy = vi
         .spyOn((svc as any).logger, "error")
         .mockImplementation(() => undefined);
-      fetchSpy.mockRejectedValue(new Error("ECONNREFUSED"));
+      const err = new Error("ECONNREFUSED");
+      err.stack = "Error: ECONNREFUSED\n    at signOrder (signer.ts:42:7)";
+      fetchSpy.mockRejectedValue(err);
       await expect(svc.signOrder(SIGN_REQ)).rejects.toBeInstanceOf(
         ServiceUnavailableException,
       );
@@ -149,8 +151,9 @@ describe("SignerClientService", () => {
         expect.objectContaining({
           event: "SIGNER_REQUEST_FAILED",
           operation: "signOrder",
+          err,
         }),
-        expect.any(Error),
+        "signer-service request failed",
       );
     });
 
@@ -164,6 +167,9 @@ describe("SignerClientService", () => {
     });
 
     it("throws ServiceUnavailableException on HTTP 500", async () => {
+      const errorSpy = vi
+        .spyOn((svc as any).logger, "error")
+        .mockImplementation(() => undefined);
       fetchSpy.mockResolvedValue({
         ok: false,
         status: 500,
@@ -171,6 +177,15 @@ describe("SignerClientService", () => {
       });
       await expect(svc.signOrder(SIGN_REQ)).rejects.toBeInstanceOf(
         ServiceUnavailableException,
+      );
+      expect(errorSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          event: "SIGNER_REQUEST_FAILED",
+          operation: "signOrder",
+          status: 500,
+          err: expect.any(Error),
+        }),
+        "signer-service returned an error response",
       );
     });
 

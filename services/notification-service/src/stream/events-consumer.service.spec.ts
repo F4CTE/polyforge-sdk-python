@@ -151,9 +151,45 @@ describe("EventsConsumerService", () => {
   });
 
   describe("consumeLoop", () => {
+    it("logs notification handler failures with a structured err field", async () => {
+      const client = redis.getClient();
+      const err = new Error("template render failed");
+      err.stack =
+        "Error: template render failed\n    at handleNotification (events.ts:12:3)";
+      const errorSpy = vi
+        .spyOn((service as any).logger, "error")
+        .mockImplementation(() => undefined);
+      notification.handle.mockRejectedValueOnce(err);
+      client.xreadgroup
+        .mockResolvedValueOnce([
+          [
+            "stream:events",
+            [["msg-1", ["type", "ORDER_FILLED", "userId", "user-1"]]],
+          ],
+        ])
+        .mockImplementationOnce(async () => {
+          (service as any).running = false;
+          return null;
+        });
+
+      (service as any).running = true;
+      await (service as any).consumeLoop();
+
+      expect(errorSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          event: "NOTIFICATION_HANDLE_FAILED",
+          notifType: "ORDER_FILLED",
+          userId: "user-1",
+          err,
+        }),
+        "Failed to handle stream notification",
+      );
+    });
+
     it("logs full error objects when the stream read fails", async () => {
       const client = redis.getClient();
       const err = new Error("redis down");
+      err.stack = "Error: redis down\n    at consumeLoop (events.ts:42:7)";
       const errorSpy = vi
         .spyOn((service as any).logger, "error")
         .mockImplementation(() => undefined);
@@ -166,8 +202,13 @@ describe("EventsConsumerService", () => {
       await (service as any).consumeLoop();
 
       expect(errorSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          event: "STREAM_CONSUME_ERROR",
+          stream: "stream:events",
+          group: "notification-service",
+          err,
+        }),
         "stream:events consume error",
-        err,
       );
     });
   });

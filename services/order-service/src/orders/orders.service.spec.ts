@@ -307,8 +307,13 @@ describe("OrdersService", () => {
 
   describe("processIntent() — retry / DLQ", () => {
     it("retries when signer fails on first attempt (succeeds on attempt 2)", async () => {
+      const warnSpy = vi
+        .spyOn((svc as any).logger, "warn")
+        .mockImplementation(() => undefined);
+      const err = new Error("timeout");
+      err.stack = "Error: timeout\n    at processIntent (orders.ts:42:7)";
       signer.signOrder
-        .mockRejectedValueOnce(new Error("timeout"))
+        .mockRejectedValueOnce(err)
         .mockResolvedValue(SIGNED_ORDER);
 
       const p = svc.processIntent(makeIntent());
@@ -317,6 +322,15 @@ describe("OrdersService", () => {
 
       expect(signer.signOrder).toHaveBeenCalledTimes(2);
       expect(events.emitOrderPlaced).toHaveBeenCalledOnce();
+      expect(warnSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          event: "ORDER_ATTEMPT_FAILED",
+          attempt: 1,
+          intentId: "intent-1",
+          err,
+        }),
+        "Order attempt failed",
+      );
     });
 
     it("retries up to 3 times when signer keeps failing", async () => {
@@ -719,6 +733,30 @@ describe("OrdersService", () => {
       const p = svc.processIntent(makeIntent());
       await vi.runAllTimersAsync();
       await expect(p).resolves.toBeUndefined();
+    });
+
+    it("logs DLQ write errors with a structured err field", async () => {
+      const errorSpy = vi
+        .spyOn((svc as any).logger, "error")
+        .mockImplementation(() => undefined);
+      const err = new Error("Redis down");
+      err.stack = "Error: Redis down\n    at moveToDlq (orders.ts:42:7)";
+      signer.signOrder.mockRejectedValue(new Error("sign fail"));
+      redis.xadd.mockRejectedValue(err);
+
+      const p = svc.processIntent(makeIntent());
+      await vi.runAllTimersAsync();
+      await p;
+
+      expect(errorSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          event: "ORDER_DLQ_WRITE_FAILED",
+          stream: "stream:orders:dlq",
+          intentId: "intent-1",
+          err,
+        }),
+        "Failed to write order intent to DLQ",
+      );
     });
   });
 

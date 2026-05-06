@@ -137,8 +137,15 @@ export class EventsConsumerService implements OnModuleInit, OnModuleDestroy {
                 await this.notification.handle(notifType, event);
               } catch (err) {
                 this.logger.error(
-                  `Failed to handle notification ${notifType} for user ${event.userId}`,
-                  err,
+                  {
+                    event: "NOTIFICATION_HANDLE_FAILED",
+                    notifType,
+                    userId: event.userId,
+                    stream: STREAM,
+                    msgId: id,
+                    err,
+                  },
+                  "Failed to handle stream notification",
                 );
               }
             }
@@ -148,7 +155,16 @@ export class EventsConsumerService implements OnModuleInit, OnModuleDestroy {
         }
       } catch (err) {
         if (wasRunning) {
-          this.logger.error("stream:events consume error", err);
+          this.logger.error(
+            {
+              event: "STREAM_CONSUME_ERROR",
+              stream: STREAM,
+              group: GROUP,
+              consumer: CONSUMER,
+              err,
+            },
+            "stream:events consume error",
+          );
           await new Promise((r) => setTimeout(r, 1000));
         }
       }
