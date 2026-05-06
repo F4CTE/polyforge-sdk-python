@@ -102,7 +102,9 @@ describe("StrategyRegistryService — start()", () => {
     await svc.start("strat-1");
 
     // Second start must throw
-    await expect(svc.start("strat-1")).rejects.toThrow(ConflictException);
+    await expect(svc.start("strat-1")).rejects.toThrow(
+      "Strategy is already running",
+    );
   });
 
   it("returns a stable duplicate-running error without exposing the strategy id", async () => {
@@ -120,7 +122,7 @@ describe("StrategyRegistryService — start()", () => {
       const response = (error as ConflictException).getResponse();
       expect(response).toMatchObject({
         code: "STRATEGY_ALREADY_RUNNING",
-        message: "This strategy is already running.",
+        message: "Strategy is already running",
         suggestion: "Stop the strategy before starting it again.",
       });
       expect(JSON.stringify(response)).not.toContain(strategyId);

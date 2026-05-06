@@ -27,7 +27,7 @@ const PAPER_ORDER_STREAM = "stream:paper_orders";
 
 const STRATEGY_ALREADY_RUNNING_ERROR = {
   code: "STRATEGY_ALREADY_RUNNING",
-  message: "This strategy is already running.",
+  message: "Strategy is already running",
   suggestion: "Stop the strategy before starting it again.",
 } as const;
 

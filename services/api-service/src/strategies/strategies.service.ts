@@ -335,11 +335,10 @@ export class StrategiesService {
       });
       const body = (await res.json().catch(() => ({}))) as {
         code?: string;
-        message?: string;
       };
       throw new UnprocessableEntityException({
         code: body.code ?? "ENGINE_ERROR",
-        message: body.message ?? "Failed to start strategy",
+        message: "Failed to start strategy",
       });
     }
 

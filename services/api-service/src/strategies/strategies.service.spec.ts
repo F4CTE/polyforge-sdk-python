@@ -874,12 +874,15 @@ describe("StrategiesService", () => {
           mode: "paper",
         } as StartStrategyDto),
       ).rejects.toMatchObject({
-        response: { code: "ENGINE_ERROR" },
+        response: {
+          code: "ENGINE_ERROR",
+          message: "Failed to start strategy",
+        },
         status: 422,
       });
     });
 
-    it("uses code from engine error body when available", async () => {
+    it("uses code from engine error body without exposing engine message", async () => {
       const strategy = makeStrategy({
         userId: "user-1",
         status: StrategyStatus.IDLE,
@@ -898,7 +901,10 @@ describe("StrategiesService", () => {
           mode: "paper",
         } as StartStrategyDto),
       ).rejects.toMatchObject({
-        response: { code: "STRATEGY_TIMEOUT" },
+        response: {
+          code: "STRATEGY_TIMEOUT",
+          message: "Failed to start strategy",
+        },
       });
     });
 

@@ -261,7 +261,7 @@ describe("StrategyRegistryService — startAsChild()", () => {
     // so it throws ConflictException (already running), not UnprocessableEntityException
     await expect(
       svc.startAsChild("parent-1", "parent-1", "managed", { userId: "user-1" }),
-    ).rejects.toThrow(ConflictException);
+    ).rejects.toThrow("Strategy is already running");
   });
 
   it("rejects child not found", async () => {
@@ -387,7 +387,7 @@ describe("StrategyRegistryService — startAsChild()", () => {
       svc.startAsChild("child-1", "parent-1", "managed", {
         userId: "user-1",
       }),
-    ).rejects.toThrow(ConflictException);
+    ).rejects.toThrow("Strategy is already running");
   });
 });
 
