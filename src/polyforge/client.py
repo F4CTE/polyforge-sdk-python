@@ -407,7 +407,7 @@ def _validate_enum(name: str, value: str, allowed: frozenset[str]) -> None:
 _VALID_MODES = frozenset({"live", "paper"})
 _VALID_SIDES = frozenset({"BUY", "SELL"})
 _VALID_OUTCOMES = frozenset({"YES", "NO"})
-_VALID_ORDER_TYPES = frozenset({"GTC", "GTD", "FOK", "POST_ONLY"})
+_VALID_ORDER_TYPES = frozenset({"GTC", "GTD", "FOK", "FAK", "POST_ONLY"})
 _VALID_SPORTS_SORTS = frozenset({"volume", "closing_soon", "newest"})
 _VALID_SPORTS_EVENT_STATUSES = frozenset(
     {"SCHEDULED", "PREGAME", "LIVE", "HALFTIME", "FINAL"}
