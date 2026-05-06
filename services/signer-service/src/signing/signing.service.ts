@@ -42,6 +42,15 @@ export interface SignedOrder {
 const MAX_UINT256 = 2n ** 256n - 1n;
 const POSITIVE_DECIMAL_UINT256 = /^[1-9][0-9]*$/;
 
+interface PolyL2Headers {
+  [key: string]: string;
+  POLY_ADDRESS: string;
+  POLY_SIGNATURE: string;
+  POLY_TIMESTAMP: string;
+  POLY_API_KEY: string;
+  POLY_PASSPHRASE: string;
+}
+
 function parsePositiveUint256(value: string, fieldName: string): bigint {
   if (!POSITIVE_DECIMAL_UINT256.test(value)) {
     throw new BadRequestException(
@@ -246,16 +255,12 @@ export class SigningService implements OnModuleInit {
   async cancelOrder(dto: CancelOrderDto): Promise<void> {
     const creds = await this.credentials.getDecryptedCredentials(dto.userId);
     try {
-      const res = await fetch(
-        `${this.clobApiUrl}/order/${encodeURIComponent(dto.venueOrderId)}`,
-        {
-          method: "DELETE",
-          headers: {
-            "POLY-API-KEY": creds.apiKey.toString("utf8"),
-          },
-          signal: AbortSignal.timeout(10_000),
-        },
-      );
+      const requestPath = `/order/${encodeURIComponent(dto.venueOrderId)}`;
+      const res = await fetch(`${this.clobApiUrl}${requestPath}`, {
+        method: "DELETE",
+        headers: this.buildClobL2Headers(creds, "DELETE", requestPath),
+        signal: AbortSignal.timeout(10_000),
+      });
 
       if (!res.ok) {
         const body = await res.text().catch(() => "");
@@ -266,6 +271,36 @@ export class SigningService implements OnModuleInit {
     } finally {
       zeroCredentials(creds);
     }
+  }
+
+  private buildClobL2Headers(
+    creds: DecryptedCredentials,
+    method: string,
+    requestPath: string,
+    body?: string,
+  ): PolyL2Headers {
+    const timestamp = String(Math.floor(Date.now() / 1000));
+    const signingMessage = `${timestamp}${method}${requestPath}${body ?? ""}`;
+    const apiSecret = creds.apiSecret.toString("utf8");
+    const normalizedSecret = apiSecret
+      .replace(/-/g, "+")
+      .replace(/_/g, "/")
+      .replace(/[^A-Za-z0-9+/=]/g, "");
+    const signature = crypto
+      .createHmac("sha256", Buffer.from(normalizedSecret, "base64"))
+      .update(signingMessage)
+      .digest("base64")
+      .replace(/\+/g, "-")
+      .replace(/\//g, "_");
+    const eoaBytes = privateKeyHexBytesToEthAddress(creds.privateKey);
+
+    return {
+      POLY_ADDRESS: "0x" + eoaBytes.toString("hex"),
+      POLY_SIGNATURE: signature,
+      POLY_TIMESTAMP: timestamp,
+      POLY_API_KEY: creds.apiKey.toString("utf8"),
+      POLY_PASSPHRASE: creds.apiPassphrase.toString("utf8"),
+    };
   }
 
   private resolveOrderExpiration(

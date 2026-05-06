@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { ConfigService } from "@nestjs/config";
+import * as crypto from "crypto";
 import { SigningService } from "./signing.service";
 import { CredentialsService } from "../credentials/credentials.service";
 import { NativeEip712Service } from "./native-eip712.service";
@@ -37,7 +38,10 @@ function makeFreshCreds(sigType = 0) {
   return {
     privateKey: Buffer.from(TEST_PK_HEX, "utf8"),
     apiKey: Buffer.from("ak", "utf8"),
-    apiSecret: Buffer.from("as", "utf8"),
+    apiSecret: Buffer.from(
+      Buffer.from("test-api-secret", "utf8").toString("base64url"),
+      "utf8",
+    ),
     apiPassphrase: Buffer.from("ap", "utf8"),
     safeAddress: null,
     sigType,
@@ -144,10 +148,11 @@ describe("SigningService (CLOB V2)", () => {
       );
     });
 
-    it("cancelOrder deletes the CLOB order with the user's API key", async () => {
+    it("cancelOrder deletes the CLOB order with full user L2 auth headers", async () => {
       vi.mocked(credentials.getDecryptedCredentials).mockResolvedValueOnce(
         makeFreshCreds(),
       );
+      const dateSpy = vi.spyOn(Date, "now").mockReturnValue(1_700_000_000_000);
       const fetchMock = vi.fn().mockResolvedValue({
         ok: true,
         status: 204,
@@ -157,17 +162,37 @@ describe("SigningService (CLOB V2)", () => {
 
       try {
         await svc.cancelOrder({ userId: "user-1", venueOrderId: "clob-123" });
+
+        expect(fetchMock).toHaveBeenCalledWith(
+          "http://clob-api.test:3099/order/clob-123",
+          expect.objectContaining({
+            method: "DELETE",
+            headers: {
+              POLY_ADDRESS: "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266",
+              POLY_API_KEY: "ak",
+              POLY_PASSPHRASE: "ap",
+              POLY_TIMESTAMP: "1700000000",
+              POLY_SIGNATURE: crypto
+                .createHmac(
+                  "sha256",
+                  Buffer.from(
+                    Buffer.from("test-api-secret", "utf8").toString(
+                      "base64url",
+                    ),
+                    "base64",
+                  ),
+                )
+                .update("1700000000DELETE/order/clob-123")
+                .digest("base64")
+                .replace(/\+/g, "-")
+                .replace(/\//g, "_"),
+            },
+          }),
+        );
       } finally {
         vi.unstubAllGlobals();
+        dateSpy.mockRestore();
       }
-
-      expect(fetchMock).toHaveBeenCalledWith(
-        "http://clob-api.test:3099/order/clob-123",
-        expect.objectContaining({
-          method: "DELETE",
-          headers: { "POLY-API-KEY": "ak" },
-        }),
-      );
     });
 
     it("propagates error when credentials are not found", async () => {
@@ -647,7 +672,8 @@ describe("SigningService (CLOB V2)", () => {
       ).rejects.toMatchObject({
         response: expect.objectContaining({
           code: "ORDER_EXPIRATION_REQUIRED",
-          message: "Choose an expiration time at least 30 seconds in the future.",
+          message:
+            "Choose an expiration time at least 30 seconds in the future.",
         }),
       });
 
