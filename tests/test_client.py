@@ -829,8 +829,12 @@ class TestEnumValidation:
 
     def test_valid_order_types_match_platform_dto(self):
         """SDK order types must include all values from platform's OrderTypeDto."""
-        platform_order_types = {"GTC", "GTD", "FOK", "POST_ONLY"}
+        platform_order_types = {"GTC", "GTD", "FOK", "FAK", "POST_ONLY"}
         assert _VALID_ORDER_TYPES == platform_order_types
+
+    def test_place_order_accepts_fak(self):
+        """FAK is a valid platform order type — SDK must not reject it."""
+        _validate_enum("order_type", "FAK", _VALID_ORDER_TYPES)
 
     def test_place_order_accepts_post_only(self):
         """POST_ONLY is a valid platform order type — SDK must not reject it."""
