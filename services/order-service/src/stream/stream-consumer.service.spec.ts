@@ -16,6 +16,7 @@ function createMockRedis() {
 function createMockOrders() {
   return {
     processBatch: vi.fn().mockResolvedValue(undefined),
+    processCancellation: vi.fn().mockResolvedValue(undefined),
   } as any;
 }
 
@@ -207,6 +208,63 @@ describe("StreamConsumerService (order-service)", () => {
       expect(result?.venue).toBeUndefined();
       expect(result?.kalshiSubaccount).toBeUndefined();
     });
+
+    it("omits empty strategyId instead of defaulting to an empty relation id", () => {
+      const result = parseIntent(service, [
+        "intentId",
+        "int-1",
+        "userId",
+        "user-1",
+        "strategyId",
+        "",
+      ]);
+
+      expect(result?.strategyId).toBeUndefined();
+    });
+
+    it("parses API-provided orderId and copyTradeId", () => {
+      const result = parseIntent(service, [
+        "intentId",
+        "int-1",
+        "orderId",
+        "order-1",
+        "userId",
+        "user-1",
+        "copyTradeId",
+        "copy-1",
+      ]);
+
+      expect(result?.orderId).toBe("order-1");
+      expect(result?.copyTradeId).toBe("copy-1");
+    });
+  });
+
+  describe("parseCancellation", () => {
+    it("parses valid cancellation fields", () => {
+      const result = (service as any)["parseCancellation"]([
+        "orderId",
+        "order-1",
+        "userId",
+        "user-1",
+        "venueOrderId",
+        "venue-1",
+      ]);
+
+      expect(result).toEqual({
+        orderId: "order-1",
+        userId: "user-1",
+        venueOrderId: "venue-1",
+      });
+    });
+
+    it("returns null when cancellation is missing orderId", () => {
+      const result = (service as any)["parseCancellation"]([
+        "userId",
+        "user-1",
+      ]);
+
+      expect(result).toBeNull();
+    });
   });
 
   // ── pollOnce ──────────────────────────────────────────────────────────
@@ -319,6 +377,31 @@ describe("StreamConsumerService (order-service)", () => {
 
       expect((service as any).running).toBe(false);
       expect(resolved).toBe(true);
+    });
+
+    it("processes cancellation messages from stream:cancellations", async () => {
+      const client = redis.getClient();
+      client.xreadgroup
+        .mockResolvedValueOnce(null)
+        .mockResolvedValueOnce([
+          [
+            "stream:cancellations",
+            [["msg-2", ["orderId", "o1", "userId", "u1", "clobOrderId", "c1"]]],
+          ],
+        ]);
+
+      await (service as any).pollOnce();
+
+      expect(orders.processCancellation).toHaveBeenCalledWith({
+        orderId: "o1",
+        userId: "u1",
+        clobOrderId: "c1",
+      });
+      expect(client.xack).toHaveBeenCalledWith(
+        "stream:cancellations",
+        "order-service",
+        "msg-2",
+      );
     });
   });
 });

@@ -10,6 +10,7 @@ import {
   RedisService,
   StreamMonitorService,
 } from "@polyforge/shared-redis";
+import { randomUUID } from "node:crypto";
 import {
   type CopyConfig,
   Prisma,
@@ -274,8 +275,10 @@ export class CopyEngineService implements OnModuleInit, OnModuleDestroy {
     });
 
     // 6. Publish OrderIntent to stream:orders
+    const intentId = randomUUID();
     await this.redis.xadd(ORDER_STREAM, {
       type: "ORDER_INTENT",
+      intentId,
       userId: config.userId,
       source: "copy-engine",
       copyTradeId: trade.id,

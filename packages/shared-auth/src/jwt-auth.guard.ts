@@ -27,6 +27,8 @@ interface HttpRequest {
 const JWT_CACHE = new Map<string, { user: JwtPayload; expiresAt: number }>();
 const JWT_CACHE_TTL = 5_000; // 5 seconds (reduced from 30s for security)
 const MAX_CACHE_SIZE = 10_000;
+const SUSPENDED_USER_KEY = (userId: string) => `suspended:${userId}`;
+const PASSWORD_CHANGED_KEY = (userId: string) => `pwchange:${userId}`;
 
 function getCachedJwtUser(token: string): JwtPayload | null {
   const cached = JWT_CACHE.get(token);
@@ -90,16 +92,7 @@ export class JwtAuthGuard extends AuthGuard("jwt") {
       const token = authHeader.slice(7);
       const cachedUser = getCachedJwtUser(token);
       if (cachedUser) {
-        // Check if the user's password was changed (invalidates all tokens)
-        if (this.redis && cachedUser.sub) {
-          const pwChanged = await this.redis.get(`pwchange:${cachedUser.sub}`);
-          if (pwChanged) {
-            JWT_CACHE.delete(token);
-            throw new UnauthorizedException(
-              "Password was changed — please re-authenticate",
-            );
-          }
-        }
+        await this.assertJwtUserActive(cachedUser, token);
         request.user = cachedUser;
         return true;
       }
@@ -182,16 +175,7 @@ export class JwtAuthGuard extends AuthGuard("jwt") {
     ) {
       const token = authHeader.slice(7);
 
-      // Pwchange check on cache-miss path — mirrors the cache-hit check above.
-      // Without this, a fresh token (not yet cached) bypasses invalidation entirely.
-      if (this.redis && request.user.sub) {
-        const pwChanged = await this.redis.get(`pwchange:${request.user.sub}`);
-        if (pwChanged) {
-          throw new UnauthorizedException(
-            "Password was changed — please re-authenticate",
-          );
-        }
-      }
+      await this.assertJwtUserActive(request.user, token);
 
       setCachedJwtUser(token, request.user);
     }
@@ -204,5 +188,48 @@ export class JwtAuthGuard extends AuthGuard("jwt") {
       throw new UnauthorizedException("Invalid or expired token");
     }
     return user;
+  }
+
+  private async assertJwtUserActive(
+    user: JwtPayload,
+    token?: string,
+  ): Promise<void> {
+    if (!user?.sub) {
+      throw new UnauthorizedException("Invalid or expired token");
+    }
+
+    if (this.redis) {
+      const [pwChanged, suspended] = await Promise.all([
+        this.redis.get(PASSWORD_CHANGED_KEY(user.sub)),
+        this.redis.get(SUSPENDED_USER_KEY(user.sub)),
+      ]);
+
+      if (pwChanged) {
+        if (token) JWT_CACHE.delete(token);
+        throw new UnauthorizedException(
+          "Password was changed — please re-authenticate",
+        );
+      }
+
+      if (suspended) {
+        if (token) JWT_CACHE.delete(token);
+        throw new UnauthorizedException("Account is suspended");
+      }
+    }
+
+    const dbUser = await this.prisma.user.findUnique({
+      where: { id: user.sub },
+      select: { suspended: true, deleted: true },
+    });
+
+    if (!dbUser || dbUser.deleted) {
+      if (token) JWT_CACHE.delete(token);
+      throw new UnauthorizedException("Account not found");
+    }
+
+    if (dbUser.suspended) {
+      if (token) JWT_CACHE.delete(token);
+      throw new UnauthorizedException("Account is suspended");
+    }
   }
 }

@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from "vitest";
-import { NotFoundException, HttpStatus } from "@nestjs/common";
+import { HttpStatus, NotFoundException } from "@nestjs/common";
+import { EventEmitter } from "node:events";
 import { UsersService } from "./users.service";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -44,6 +45,14 @@ function makePrisma() {
       findMany: vi.fn(),
       findUnique: vi.fn(),
       update: vi.fn(),
+      updateMany: vi.fn().mockResolvedValue({ count: 0 }),
+    },
+    strategy: {
+      findMany: vi.fn().mockResolvedValue([]),
+      updateMany: vi.fn().mockResolvedValue({ count: 0 }),
+    },
+    order: {
+      findMany: vi.fn().mockResolvedValue([]),
     },
   };
 }
@@ -53,13 +62,52 @@ function makePrisma() {
 describe("UsersService", () => {
   let service: UsersService;
   let prisma: ReturnType<typeof makePrisma>;
+  let redis: any;
+  let redisClient: any;
+  let redisPipeline: any;
+  let refreshKeys: string[];
+  let config: any;
+  let jwt: any;
 
   beforeEach(() => {
     prisma = makePrisma();
-    service = new UsersService(prisma as any, {} as any);
+    refreshKeys = [];
+    redisPipeline = {
+      del: vi.fn().mockReturnThis(),
+      exec: vi.fn().mockResolvedValue([]),
+    };
+    redisClient = {
+      del: vi.fn().mockResolvedValue(1),
+      pipeline: vi.fn().mockReturnValue(redisPipeline),
+      scanStream: vi.fn().mockImplementation(() => {
+        const stream = new EventEmitter();
+        queueMicrotask(() => {
+          stream.emit("data", refreshKeys);
+          stream.emit("end");
+        });
+        return stream;
+      }),
+    };
+    redis = {
+      getClient: vi.fn().mockReturnValue(redisClient),
+      set: vi.fn().mockResolvedValue(undefined),
+      del: vi.fn().mockResolvedValue(1),
+      xadd: vi.fn().mockResolvedValue("1-0"),
+    };
+    config = {
+      get: vi.fn().mockReturnValue("http://strategy-engine"),
+      getOrThrow: vi.fn().mockReturnValue("internal-secret"),
+    };
+    jwt = { sign: vi.fn(() => `token-${jwt.sign.mock.calls.length}`) };
+    service = new UsersService(prisma as any, {} as any, redis, config, jwt);
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({ ok: true, status: 204, text: vi.fn() }),
+    );
   });
 
   afterEach(() => {
+    vi.unstubAllGlobals();
     vi.restoreAllMocks();
   });
 
@@ -231,15 +279,102 @@ describe("UsersService", () => {
       );
     });
 
-    it("throws CONFLICT/ALREADY_SUSPENDED when user is already suspended", async () => {
+    it("replays suspend enforcement when user is already suspended", async () => {
       const user = makeUser({ suspended: true });
       prisma.user.findUnique.mockResolvedValue(user as any);
 
-      await expect(
-        service.suspend("user-1", { reason: "again" }),
-      ).rejects.toMatchObject({
-        response: { code: "ALREADY_SUSPENDED" },
-        status: HttpStatus.CONFLICT,
+      const result = await service.suspend("user-1", { reason: "again" });
+
+      expect(result.suspended).toBe(true);
+      expect(prisma.user.update).not.toHaveBeenCalled();
+      expect(prisma.apiKey.updateMany).toHaveBeenCalled();
+      expect(redis.xadd).toHaveBeenCalledWith(
+        "stream:events",
+        expect.objectContaining({ type: "USER_SUSPENDED", userId: "user-1" }),
+      );
+    });
+
+    it("sets a suspended-user marker so existing access JWTs are rejected immediately", async () => {
+      const user = makeUser({ suspended: false });
+      prisma.user.findUnique.mockResolvedValue(user as any);
+      prisma.user.update.mockResolvedValue({
+        ...user,
+        suspended: true,
+        suspendedReason: "Violation",
+      } as any);
+
+      await service.suspend("user-1", { reason: "Violation" });
+
+      expect(redis.set).toHaveBeenCalledWith(
+        "suspended:user-1",
+        expect.any(String),
+      );
+    });
+
+    it("revokes token-specific refresh keys and their reverse lookup keys", async () => {
+      refreshKeys = ["refresh:user-1:hash-a", "refresh:user-1:hash-b"];
+      const user = makeUser({ suspended: false });
+      prisma.user.findUnique.mockResolvedValue(user as any);
+      prisma.user.update.mockResolvedValue({
+        ...user,
+        suspended: true,
+        suspendedReason: "Violation",
+      } as any);
+
+      await service.suspend("user-1", { reason: "Violation" });
+
+      expect(redisClient.scanStream).toHaveBeenCalledWith({
+        match: "refresh:user-1:*",
+        count: 100,
+      });
+      expect(redisPipeline.del).toHaveBeenCalledWith("refresh:user-1:hash-a");
+      expect(redisPipeline.del).toHaveBeenCalledWith("refresh_lookup:hash-a");
+      expect(redisPipeline.del).toHaveBeenCalledWith("refresh:user-1:hash-b");
+      expect(redisPipeline.del).toHaveBeenCalledWith("refresh_lookup:hash-b");
+      expect(redisPipeline.exec).toHaveBeenCalledOnce();
+      expect(redisClient.del).not.toHaveBeenCalledWith("refresh:user-1");
+    });
+
+    it("mints a fresh internal JWT for each active strategy runner stop", async () => {
+      const user = makeUser({ suspended: false });
+      prisma.user.findUnique.mockResolvedValue(user as any);
+      prisma.user.update.mockResolvedValue({
+        ...user,
+        suspended: true,
+        suspendedReason: "Violation",
+      } as any);
+      prisma.strategy.findMany.mockResolvedValue([{ id: "s1" }, { id: "s2" }]);
+
+      await service.suspend("user-1", { reason: "Violation" });
+
+      expect(jwt.sign).toHaveBeenCalledTimes(2);
+      const fetchCalls = vi.mocked(fetch).mock.calls;
+      expect(fetchCalls).toHaveLength(2);
+      expect(fetchCalls[0][1]?.headers).not.toEqual(fetchCalls[1][1]?.headers);
+      expect(prisma.strategy.updateMany).toHaveBeenCalledWith({
+        where: { id: { in: ["s1", "s2"] } },
+        data: { status: "IDLE" },
+      });
+    });
+
+    it("publishes cancellable orders without marking them cancelled in admin-api", async () => {
+      const user = makeUser({ suspended: false });
+      prisma.user.findUnique.mockResolvedValue(user as any);
+      prisma.user.update.mockResolvedValue({
+        ...user,
+        suspended: true,
+        suspendedReason: "Violation",
+      } as any);
+      prisma.order.findMany.mockResolvedValue([
+        { id: "o1", clobOrderId: "c1", venueOrderId: null },
+      ]);
+
+      await service.suspend("user-1", { reason: "Violation" });
+
+      expect(redis.xadd).toHaveBeenCalledWith("stream:cancellations", {
+        orderId: "o1",
+        userId: "user-1",
+        clobOrderId: "c1",
       });
     });
 
@@ -296,6 +431,20 @@ describe("UsersService", () => {
           data: { suspended: false, suspendedReason: null },
         }),
       );
+    });
+
+    it("clears the suspended-user marker on unsuspend", async () => {
+      const user = makeUser({ suspended: true });
+      prisma.user.findUnique.mockResolvedValue(user as any);
+      prisma.user.update.mockResolvedValue({
+        ...user,
+        suspended: false,
+        suspendedReason: null,
+      } as any);
+
+      await service.unsuspend("user-1");
+
+      expect(redis.del).toHaveBeenCalledWith("suspended:user-1");
     });
 
     it("throws NotFoundException when user does not exist", async () => {

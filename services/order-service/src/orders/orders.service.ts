@@ -21,8 +21,10 @@ const DLQ_STREAM = "stream:orders:dlq";
 
 export interface OrderIntent {
   intentId: string;
+  orderId?: string;
   userId: string;
-  strategyId: string;
+  strategyId?: string;
+  copyTradeId?: string;
   marketId: string;
   tokenId: string;
   side: "BUY" | "SELL";
@@ -37,6 +39,13 @@ export interface OrderIntent {
   venue?: VenueId | "best";
   /** Kalshi subaccount number (0 = primary). Passed through to Kalshi API for P&L attribution. */
   kalshiSubaccount?: number;
+}
+
+export interface CancellationIntent {
+  orderId: string;
+  userId: string;
+  clobOrderId?: string;
+  venueOrderId?: string;
 }
 
 @Injectable()
@@ -69,9 +78,11 @@ export class OrdersService {
 
   async processIntent(intent: OrderIntent, attempt = 1): Promise<void> {
     const startedAt = Date.now();
-    const orderId = randomUUID();
+    const orderId = intent.orderId ?? randomUUID();
     const requestedVenue = intent.venue ?? "polymarket";
     const targetVenue = await this.resolveTargetVenue(intent);
+    const prismaVenue = this.toPrismaVenue(targetVenue);
+    const strategyId = this.normalizeStrategyId(intent.strategyId);
 
     // SECURITY: Idempotency guard — skip if this intent was already processed
     const existingOrder = await this.prisma.order.findFirst({
@@ -130,8 +141,9 @@ export class OrdersService {
         data: {
           id: orderId,
           intentId: intent.intentId,
+          venue: prismaVenue,
           userId: intent.userId,
-          strategyId: intent.strategyId,
+          strategyId,
           marketId: intent.marketId,
           tokenId: intent.tokenId,
           side: intent.side,
@@ -240,23 +252,51 @@ export class OrdersService {
         venueStatus = clobResponse.status;
       }
 
+      const filledAt = this.isFilledStatus(venueStatus) ? new Date() : null;
+
       // Single DB update: PENDING → final status (consolidates 2 updates into 1)
       await this.prisma.order.update({
         where: { id: orderId },
         data: {
           clobOrderId: venueOrderId,
           venueOrderId,
+          venue: prismaVenue,
           clobStatus: venueStatus,
           status: this.mapClobStatus(venueStatus) as OrderStatus,
           placedAt: new Date(),
+          ...(filledAt
+            ? {
+                fillPrice: intent.price,
+                fillSize: intent.size,
+                fee: "0",
+                filledAt,
+              }
+            : {}),
         },
       });
+
+      if (intent.copyTradeId) {
+        await this.prisma.copyTrade.update({
+          where: { id: intent.copyTradeId },
+          data: { orderId },
+        });
+      }
 
       await this.events.emitOrderPlaced(
         intent.userId,
         orderId,
         intent.intentId,
       );
+      if (this.isFilledStatus(venueStatus)) {
+        await this.events.emitOrderFilled(
+          intent.userId,
+          orderId,
+          intent.price,
+          intent.size,
+          "0",
+          intent.copyTradeId,
+        );
+      }
       this.logger.log(
         {
           event: "ORDER_PLACED",
@@ -326,6 +366,44 @@ export class OrdersService {
     }
   }
 
+  async processCancellation(intent: CancellationIntent): Promise<void> {
+    const order = await this.prisma.order.findUnique({
+      where: { id: intent.orderId },
+    });
+
+    if (!order || order.userId !== intent.userId) {
+      this.logger.warn(
+        `Cancellation ignored for unknown order ${intent.orderId}`,
+      );
+      return;
+    }
+
+    const venueOrderId =
+      intent.venueOrderId ??
+      intent.clobOrderId ??
+      order.venueOrderId ??
+      order.clobOrderId;
+    if (!venueOrderId) {
+      await this.markCancelled(order.id, order.userId);
+      return;
+    }
+
+    const venue = this.fromPrismaVenue(
+      (order as { venue?: string | null }).venue,
+    );
+    if (this.venueRouter && venue !== "polymarket") {
+      const adapter = this.venueRouter.resolve(venue);
+      await adapter.cancelOrder(
+        venueOrderId,
+        await this.buildCancelAuthContext(venue, order),
+      );
+    } else {
+      await this.signer.cancelPolymarketOrder(order.userId, venueOrderId);
+    }
+
+    await this.markCancelled(order.id, order.userId);
+  }
+
   async closePosition(
     userId: string,
     tokenId: string,
@@ -369,6 +447,79 @@ export class OrdersService {
     } catch {
       return venue;
     }
+  }
+
+  private normalizeStrategyId(strategyId: string | undefined): string | null {
+    const trimmed = strategyId?.trim();
+    return trimmed ? trimmed : null;
+  }
+
+  private toPrismaVenue(
+    venue: VenueId | "best",
+  ): "POLYMARKET" | "POLYMARKET_US" | "KALSHI" {
+    switch (venue) {
+      case "polymarket_us":
+        return "POLYMARKET_US";
+      case "kalshi":
+        return "KALSHI";
+      default:
+        return "POLYMARKET";
+    }
+  }
+
+  private fromPrismaVenue(venue: string | null | undefined): VenueId {
+    switch (venue) {
+      case "POLYMARKET_US":
+        return "polymarket_us";
+      case "KALSHI":
+        return "kalshi";
+      default:
+        return "polymarket";
+    }
+  }
+
+  private isFilledStatus(status: string): boolean {
+    const normalized = status.toUpperCase();
+    return normalized === "FILLED" || normalized === "MATCHED";
+  }
+
+  private async buildCancelAuthContext(
+    venue: VenueId,
+    order: {
+      userId: string;
+      marketId: string;
+    },
+  ): Promise<Record<string, unknown>> {
+    if (venue === "polymarket_us") {
+      const usCreds = await this.signer.getPolymarketUsCredentials(
+        order.userId,
+      );
+      return {
+        venue: "polymarket_us",
+        keyId: usCreds.keyId,
+        secretKey: usCreds.secretKey,
+        marketSlug: order.marketId,
+      };
+    }
+    if (venue === "kalshi") {
+      return { userId: order.userId };
+    }
+    return {};
+  }
+
+  private async markCancelled(orderId: string, userId: string): Promise<void> {
+    await this.prisma.order.update({
+      where: { id: orderId },
+      data: {
+        status: OrderStatus.CANCELLED,
+        clobStatus: "CANCELLED",
+      },
+    });
+    const copyTrade = await this.prisma.copyTrade.findFirst({
+      where: { orderId },
+      select: { id: true },
+    });
+    await this.events.emitOrderCancelled(userId, orderId, copyTrade?.id);
   }
 
   private async hasCurrentUsRailTerms(userId: string): Promise<boolean> {

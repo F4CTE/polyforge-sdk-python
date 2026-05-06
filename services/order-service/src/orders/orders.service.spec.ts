@@ -38,8 +38,13 @@ function makeMocks() {
   const prisma = {
     order: {
       findFirst: vi.fn().mockResolvedValue(null), // idempotency check — no existing order
+      findUnique: vi.fn().mockResolvedValue(null),
       create: vi.fn().mockResolvedValue({}),
       update: vi.fn().mockResolvedValue({}),
+    },
+    copyTrade: {
+      update: vi.fn().mockResolvedValue({}),
+      findFirst: vi.fn().mockResolvedValue(null),
     },
     user: {
       findUnique: vi.fn().mockResolvedValue({
@@ -55,6 +60,7 @@ function makeMocks() {
 
   const signer = {
     signOrder: vi.fn().mockResolvedValue(SIGNED_ORDER),
+    cancelPolymarketOrder: vi.fn().mockResolvedValue(undefined),
     getPolymarketUsCredentials: vi.fn().mockResolvedValue({
       keyId: "us-key",
       secretKey: "us-secret",
@@ -67,6 +73,7 @@ function makeMocks() {
 
   const events = {
     emitOrderPlaced: vi.fn().mockResolvedValue(undefined),
+    emitOrderFilled: vi.fn().mockResolvedValue(undefined),
     emitOrderFailed: vi.fn().mockResolvedValue(undefined),
     emitOrderCancelled: vi.fn().mockResolvedValue(undefined),
   } as any;
@@ -180,6 +187,24 @@ describe("OrdersService", () => {
       expect(finalUpdate.data.clobStatus).toBe("LIVE");
     });
 
+    it("uses caller-provided orderId when intent carries one", async () => {
+      const p = svc.processIntent(makeIntent({ orderId: "order-from-api" }));
+      await vi.runAllTimersAsync();
+      await p;
+
+      expect(prisma.order.create.mock.calls[0][0].data.id).toBe(
+        "order-from-api",
+      );
+    });
+
+    it("normalizes empty strategyId to null", async () => {
+      const p = svc.processIntent(makeIntent({ strategyId: "" }));
+      await vi.runAllTimersAsync();
+      await p;
+
+      expect(prisma.order.create.mock.calls[0][0].data.strategyId).toBeNull();
+    });
+
     it("emits ORDER_PLACED event after successful submission", async () => {
       const p = svc.processIntent(makeIntent());
       await vi.runAllTimersAsync();
@@ -190,6 +215,63 @@ describe("OrdersService", () => {
         "user-1",
         expect.any(String),
         "intent-1",
+      );
+    });
+
+    it("emits ORDER_FILLED when venue returns a filled status", async () => {
+      clob.submitOrder.mockResolvedValue(CLOB_FILLED);
+
+      const p = svc.processIntent(makeIntent({ copyTradeId: "copy-1" }));
+      await vi.runAllTimersAsync();
+      await p;
+
+      expect(events.emitOrderFilled).toHaveBeenCalledWith(
+        "user-1",
+        expect.any(String),
+        "0.6",
+        "10",
+        "0",
+        "copy-1",
+      );
+    });
+
+    it("persists fill metadata when CLOB immediately returns FILLED", async () => {
+      clob.submitOrder.mockResolvedValue(CLOB_FILLED);
+
+      const p = svc.processIntent(makeIntent());
+      await vi.runAllTimersAsync();
+      await p;
+
+      const confirmedCall = prisma.order.update.mock.calls.find(
+        ([args]: any[]) => args.data?.status === "CONFIRMED",
+      )![0];
+      expect(confirmedCall.data).toEqual(
+        expect.objectContaining({
+          fillPrice: "0.6",
+          fillSize: "10",
+          fee: "0",
+          filledAt: expect.any(Date),
+        }),
+      );
+    });
+
+    it("persists fill metadata when CLOB immediately returns MATCHED", async () => {
+      clob.submitOrder.mockResolvedValue(CLOB_MATCHED);
+
+      const p = svc.processIntent(makeIntent());
+      await vi.runAllTimersAsync();
+      await p;
+
+      const matchedCall = prisma.order.update.mock.calls.find(
+        ([args]: any[]) => args.data?.status === "MATCHED",
+      )![0];
+      expect(matchedCall.data).toEqual(
+        expect.objectContaining({
+          fillPrice: "0.6",
+          fillSize: "10",
+          fee: "0",
+          filledAt: expect.any(Date),
+        }),
       );
     });
 
@@ -819,6 +901,39 @@ describe("OrdersService", () => {
 
       const signerCall = signer.signOrder.mock.calls[0][0];
       expect(signerCall.size).toBe(7.5);
+    });
+  });
+
+  describe("processCancellation()", () => {
+    it("routes Kalshi cancellations through the stored venue adapter", async () => {
+      const venueRouter = {
+        resolve: vi.fn().mockReturnValue({
+          cancelOrder: vi.fn().mockResolvedValue(undefined),
+        }),
+      } as any;
+      svc = new OrdersService(prisma, redis, signer, clob, events, venueRouter);
+      prisma.order.findUnique.mockResolvedValue({
+        id: "order-1",
+        userId: "user-1",
+        venue: "KALSHI",
+        venueOrderId: "kalshi-order-1",
+        clobOrderId: null,
+        marketId: "market-1",
+      });
+
+      await svc.processCancellation({ orderId: "order-1", userId: "user-1" });
+
+      expect(venueRouter.resolve).toHaveBeenCalledWith("kalshi");
+      expect(venueRouter.resolve().cancelOrder).toHaveBeenCalledWith(
+        "kalshi-order-1",
+        { userId: "user-1" },
+      );
+      expect(signer.cancelPolymarketOrder).not.toHaveBeenCalled();
+      expect(prisma.order.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({ status: "CANCELLED" }),
+        }),
+      );
     });
   });
 });

@@ -5,11 +5,18 @@ import {
   HttpStatus,
   Logger,
 } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
+import { JwtService } from "@nestjs/jwt";
 import { PrismaService } from "@polyforge/shared-db";
+import { RedisService } from "@polyforge/shared-redis";
 import { SuspendUserDto } from "./dto/suspend.dto";
 import { UpdateLimitsDto } from "./dto/update-limits.dto";
 import { Prisma } from "@prisma/client";
 import { AdminMailService } from "../mail/mail.service";
+import { randomUUID } from "node:crypto";
+
+const REFRESH_KEY_PATTERN = (userId: string) => `refresh:${userId}:*`;
+const SUSPENDED_USER_KEY = (userId: string) => `suspended:${userId}`;
 
 @Injectable()
 export class UsersService {
@@ -18,6 +25,9 @@ export class UsersService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly mailService: AdminMailService,
+    private readonly redis: RedisService,
+    private readonly config: ConfigService,
+    private readonly jwt: JwtService,
   ) {}
 
   async findAll(params: {
@@ -140,20 +150,17 @@ export class UsersService {
   async suspend(id: string, dto: SuspendUserDto) {
     const user = await this.findUserOrFail(id);
 
-    if (user.suspended) {
-      throw new HttpException(
-        { code: "ALREADY_SUSPENDED", message: "User is already suspended" },
-        HttpStatus.CONFLICT,
-      );
-    }
+    await this.replaySuspendSideEffects(id);
 
-    const updated = await this.prisma.user.update({
-      where: { id },
-      data: {
-        suspended: true,
-        suspendedReason: dto.reason,
-      },
-    });
+    const updated = user.suspended
+      ? user
+      : await this.prisma.user.update({
+          where: { id },
+          data: {
+            suspended: true,
+            suspendedReason: dto.reason,
+          },
+        });
 
     return {
       suspended: true,
@@ -172,6 +179,7 @@ export class UsersService {
         suspendedReason: null,
       },
     });
+    await this.redis.del(SUSPENDED_USER_KEY(id));
 
     return { suspended: false };
   }
@@ -377,5 +385,124 @@ export class UsersService {
       });
     }
     return user;
+  }
+
+  private async replaySuspendSideEffects(userId: string): Promise<void> {
+    await this.stopStrategyRunners(userId);
+    await this.publishOrderCancellations(userId);
+    await this.prisma.apiKey.updateMany({
+      where: { userId, revoked: false },
+      data: { revoked: true, revokedAt: new Date() },
+    });
+    await this.redis.set(SUSPENDED_USER_KEY(userId), String(Date.now()));
+    await this.revokeRefreshTokensForUser(userId);
+    await this.redis.xadd("stream:events", {
+      type: "USER_SUSPENDED",
+      userId,
+      ts: String(Date.now()),
+    });
+  }
+
+  private async revokeRefreshTokensForUser(userId: string): Promise<void> {
+    const client = this.redis.getClient();
+    const stream = client.scanStream({
+      match: REFRESH_KEY_PATTERN(userId),
+      count: 100,
+    });
+    const pipeline = client.pipeline();
+    let count = 0;
+
+    await new Promise<void>((resolve, reject) => {
+      stream.on("data", (keys: string[]) => {
+        for (const key of keys) {
+          pipeline.del(key);
+          const tokenHash = key.split(":").at(-1);
+          if (tokenHash) pipeline.del(`refresh_lookup:${tokenHash}`);
+          count++;
+        }
+      });
+      stream.on("end", () => resolve());
+      stream.on("error", (err: Error) => reject(err));
+    });
+
+    if (count > 0) {
+      await pipeline.exec();
+    }
+  }
+
+  private async stopStrategyRunners(userId: string): Promise<void> {
+    const strategies = await this.prisma.strategy.findMany({
+      where: {
+        userId,
+        status: { in: ["RUNNING", "PAUSED"] as any[] },
+      },
+      select: { id: true },
+    });
+    if (strategies.length === 0) return;
+
+    const strategyEngineUrl =
+      this.config.get<string>("STRATEGY_ENGINE_URL") ??
+      "http://strategy-engine:3011";
+    for (const strategy of strategies) {
+      const res = await fetch(
+        `${strategyEngineUrl}/internal/strategies/${encodeURIComponent(strategy.id)}`,
+        {
+          method: "DELETE",
+          headers: { Authorization: `Bearer ${this.issueInternalToken()}` },
+          signal: AbortSignal.timeout(10_000),
+        },
+      );
+      if (!res.ok && res.status !== 404) {
+        const body = await res.text().catch(() => "");
+        throw new HttpException(
+          {
+            code: "STRATEGY_STOP_FAILED",
+            message: `Failed to stop strategy runner ${strategy.id}: ${res.status} ${body}`,
+          },
+          HttpStatus.BAD_GATEWAY,
+        );
+      }
+    }
+
+    await this.prisma.strategy.updateMany({
+      where: { id: { in: strategies.map((s: { id: string }) => s.id) } },
+      data: { status: "IDLE" as any },
+    });
+  }
+
+  private async publishOrderCancellations(userId: string): Promise<void> {
+    const orders = await this.prisma.order.findMany({
+      where: {
+        userId,
+        status: { in: ["PENDING", "SUBMITTED", "LIVE"] as any[] },
+      },
+      select: {
+        id: true,
+        clobOrderId: true,
+        venueOrderId: true,
+      },
+    });
+
+    for (const order of orders) {
+      await this.redis.xadd("stream:cancellations", {
+        orderId: order.id,
+        userId,
+        ...(order.clobOrderId ? { clobOrderId: order.clobOrderId } : {}),
+        ...(order.venueOrderId ? { venueOrderId: order.venueOrderId } : {}),
+      });
+    }
+  }
+
+  private issueInternalToken(): string {
+    return this.jwt.sign(
+      { sub: "admin-api-service", jti: randomUUID() },
+      {
+        secret: this.config.getOrThrow<string>("INTERNAL_JWT_SECRET"),
+        audience: "strategy-engine",
+        issuer: "admin-api-service",
+        expiresIn: "30s",
+        algorithm: "HS256",
+      },
+    );
   }
 }

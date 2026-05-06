@@ -3,6 +3,7 @@ import { Cron } from "@nestjs/schedule";
 import { PrismaService } from "@polyforge/shared-db";
 import { RedisService, runOncePerCluster } from "@polyforge/shared-redis";
 import { ClobClientService } from "../clob-client/clob-client.service";
+import { EventsService } from "../events/events.service";
 
 export interface ClobTrade {
   id: string;
@@ -24,6 +25,7 @@ export class TradeReconcilerService {
     private readonly prisma: PrismaService,
     private readonly redis: RedisService,
     private readonly clob: ClobClientService,
+    private readonly events: EventsService,
   ) {}
 
   /**
@@ -72,9 +74,12 @@ export class TradeReconcilerService {
       const rawTrades = await this.clob.fetchTrades(walletAddress);
       const trades = rawTrades as unknown as ClobTrade[];
 
-      // Get all LIVE orders for this user
+      // Get all active orders for this user
       const liveOrders = await this.prisma.order.findMany({
-        where: { userId, status: "LIVE" },
+        where: {
+          userId,
+          status: { in: ["PENDING", "SUBMITTED", "MATCHED", "LIVE"] },
+        },
       });
 
       if (liveOrders.length === 0) return 0;
@@ -96,8 +101,26 @@ export class TradeReconcilerService {
         if (clobStatus === "MATCHED" || clobStatus === "FILLED") {
           await this.prisma.order.update({
             where: { id: order.id },
-            data: { status: "CONFIRMED", clobStatus: trade.status },
+            data: {
+              status: "CONFIRMED",
+              clobStatus: trade.status,
+              fillPrice: trade.price,
+              fillSize: trade.size,
+              filledAt: new Date(trade.match_time),
+            },
           });
+          const copyTrade = await this.prisma.copyTrade.findFirst({
+            where: { orderId: order.id },
+            select: { id: true },
+          });
+          await this.events.emitOrderFilled(
+            order.userId,
+            order.id,
+            trade.price,
+            trade.size,
+            "0",
+            copyTrade?.id,
+          );
           updatedCount++;
           this.logger.warn(
             `Reconciled missed fill: order=${order.id} clobOrder=${order.clobOrderId} status=LIVE->CONFIRMED`,
@@ -114,7 +137,7 @@ export class TradeReconcilerService {
   private async getConnectedUsersWithLiveOrders() {
     // Find users who have LIVE orders and are connected to Polymarket
     const usersWithLiveOrders = await this.prisma.order.findMany({
-      where: { status: "LIVE" },
+      where: { status: { in: ["PENDING", "SUBMITTED", "MATCHED", "LIVE"] } },
       select: { userId: true },
       distinct: ["userId"],
     });

@@ -33,6 +33,7 @@ export class EventsService {
     fillPrice: string,
     fillSize: string,
     pnl: string,
+    copyTradeId?: string | null,
   ): Promise<void> {
     await this.redis.xadd(STREAM, {
       type: "ORDER_FILLED",
@@ -41,15 +42,21 @@ export class EventsService {
       fillPrice,
       fillSize,
       pnl,
+      ...(copyTradeId ? { copyTradeId } : {}),
       ts: String(Date.now()),
     });
   }
 
-  async emitOrderCancelled(userId: string, orderId: string): Promise<void> {
+  async emitOrderCancelled(
+    userId: string,
+    orderId: string,
+    copyTradeId?: string | null,
+  ): Promise<void> {
     await this.redis.xadd(STREAM, {
       type: "ORDER_CANCELLED",
       userId,
       orderId,
+      ...(copyTradeId ? { copyTradeId } : {}),
       ts: String(Date.now()),
     });
   }

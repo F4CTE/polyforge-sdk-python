@@ -144,6 +144,32 @@ describe("SigningService (CLOB V2)", () => {
       );
     });
 
+    it("cancelOrder deletes the CLOB order with the user's API key", async () => {
+      vi.mocked(credentials.getDecryptedCredentials).mockResolvedValueOnce(
+        makeFreshCreds(),
+      );
+      const fetchMock = vi.fn().mockResolvedValue({
+        ok: true,
+        status: 204,
+        text: vi.fn(),
+      });
+      vi.stubGlobal("fetch", fetchMock);
+
+      try {
+        await svc.cancelOrder({ userId: "user-1", venueOrderId: "clob-123" });
+      } finally {
+        vi.unstubAllGlobals();
+      }
+
+      expect(fetchMock).toHaveBeenCalledWith(
+        "http://clob-api.test:3099/order/clob-123",
+        expect.objectContaining({
+          method: "DELETE",
+          headers: { "POLY-API-KEY": "ak" },
+        }),
+      );
+    });
+
     it("propagates error when credentials are not found", async () => {
       vi.mocked(credentials.getDecryptedCredentials).mockRejectedValue(
         new NotFoundException("No credentials"),

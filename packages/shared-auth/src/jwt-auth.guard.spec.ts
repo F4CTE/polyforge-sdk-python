@@ -53,6 +53,9 @@ describe("JwtAuthGuard", () => {
       findUnique: ReturnType<typeof vi.fn>;
       update: ReturnType<typeof vi.fn>;
     };
+    user: {
+      findUnique: ReturnType<typeof vi.fn>;
+    };
   };
   let redis: { get: ReturnType<typeof vi.fn> };
 
@@ -66,6 +69,12 @@ describe("JwtAuthGuard", () => {
       apiKey: {
         findUnique: vi.fn(),
         update: vi.fn().mockResolvedValue({}),
+      },
+      user: {
+        findUnique: vi.fn().mockResolvedValue({
+          suspended: false,
+          deleted: false,
+        }),
       },
     };
     redis = { get: vi.fn().mockResolvedValue(null) };
@@ -185,6 +194,43 @@ describe("JwtAuthGuard", () => {
       // First call caches + checks pwchange — should reject
       await expect(guard.canActivate(ctx)).rejects.toThrow(
         "Password was changed",
+      );
+    });
+  });
+
+  describe("JWT user status enforcement", () => {
+    it("rejects a verified JWT when the database user is suspended", async () => {
+      prisma.user.findUnique.mockResolvedValue({
+        suspended: true,
+        deleted: false,
+      });
+      const { ctx, request } = makeContext({
+        authorization: "Bearer jwt-token",
+      });
+      request.user = { sub: "user-1", username: "test" };
+
+      await expect(guard.canActivate(ctx)).rejects.toThrow(
+        "Account is suspended",
+      );
+    });
+
+    it("rejects a cached JWT when the suspended-user marker exists in Redis", async () => {
+      const { ctx, request } = makeContext({
+        authorization: "Bearer cached-jwt-token",
+      });
+      request.user = { sub: "user-1", username: "test" };
+
+      await guard.canActivate(ctx);
+
+      redis.get.mockImplementation((key: string) =>
+        key === "suspended:user-1" ? "1" : null,
+      );
+      const { ctx: cachedCtx } = makeContext({
+        authorization: "Bearer cached-jwt-token",
+      });
+
+      await expect(guard.canActivate(cachedCtx)).rejects.toThrow(
+        "Account is suspended",
       );
     });
   });

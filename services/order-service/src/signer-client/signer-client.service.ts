@@ -36,6 +36,11 @@ export interface PolymarketUsCredentials {
   secretKey: string;
 }
 
+export interface CancelPolymarketOrderRequest {
+  userId: string;
+  venueOrderId: string;
+}
+
 /**
  * HTTP client for signer-service.
  * Attaches a fresh internal service JWT (30s TTL, unique jti) to every request.
@@ -150,6 +155,35 @@ export class SignerClientService {
     }
 
     return res.json() as Promise<PolymarketUsCredentials>;
+  }
+
+  async cancelPolymarketOrder(
+    userId: string,
+    venueOrderId: string,
+  ): Promise<void> {
+    const token = this.makeServiceJwt();
+
+    let res: Response;
+    try {
+      res = await fetch(`${this.signerUrl}/sign/cancel-order`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ userId, venueOrderId }),
+        signal: AbortSignal.timeout(10_000),
+      });
+    } catch {
+      throw new ServiceUnavailableException("signer-service unavailable");
+    }
+
+    if (!res.ok) {
+      const body = await res.text().catch(() => "");
+      throw new ServiceUnavailableException(
+        `signer-service error ${res.status}: ${body}`,
+      );
+    }
   }
 
   private makeServiceJwt(): string {

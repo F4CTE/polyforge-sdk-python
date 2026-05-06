@@ -24,12 +24,7 @@ import { PlaceOrderDto } from "./dto/place-order.dto";
 import { RedeemPositionDto } from "./dto/redeem-position.dto";
 import { RedeemPositionResponseDto } from "./dto/redeem-position-response.dto";
 import { randomUUID } from "crypto";
-import {
-  OrderSide,
-  OrderType,
-  OrderStatus,
-  ResolutionStatus,
-} from "@prisma/client";
+import { OrderStatus, ResolutionStatus } from "@prisma/client";
 
 export interface OrderQueryDto extends PaginationDto {
   status?: string;
@@ -147,11 +142,13 @@ export class OrdersService {
     }
 
     const intentId = randomUUID();
+    const orderId = randomUUID();
     const size = dto.size ?? String(position.size);
 
     // Publish close intent to stream:orders
     await this.redis.xadd("stream:orders", {
       intentId,
+      orderId,
       userId,
       strategyId: "",
       marketId: position.marketId,
@@ -165,24 +162,7 @@ export class OrdersService {
       ts: String(Date.now()),
     });
 
-    // Create a pending order record
-    const order = await this.prisma.order.create({
-      data: {
-        intentId,
-        userId,
-        strategyId: null,
-        marketId: position.marketId,
-        tokenId: dto.tokenId,
-        side: OrderSide.SELL,
-        outcome: position.outcome,
-        size: size,
-        price: "0.01",
-        orderType: OrderType.FOK,
-        status: OrderStatus.PENDING,
-      },
-    });
-
-    return { orderId: order.id, intentId, status: "PENDING" };
+    return { orderId, intentId, status: "PENDING" };
   }
 
   async redeemPosition(
@@ -407,8 +387,10 @@ export class OrdersService {
       });
 
       const intentId = randomUUID();
+      const orderId = randomUUID();
       await this.redis.xadd("stream:orders", {
         intentId,
+        orderId,
         userId,
         strategyId: "",
         marketId: token.marketId,
@@ -420,23 +402,7 @@ export class OrdersService {
         orderType: orderDto.orderType || "GTC",
       });
 
-      const order = await this.prisma.order.create({
-        data: {
-          intentId,
-          userId,
-          strategyId: null,
-          marketId: token.marketId,
-          tokenId: orderDto.tokenId,
-          side: orderDto.side as OrderSide,
-          outcome: orderDto.outcome,
-          size: String(orderDto.size),
-          price: String(orderDto.price),
-          orderType: (orderDto.orderType || "GTC") as OrderType,
-          status: OrderStatus.PENDING,
-        },
-      });
-
-      results.push({ orderId: order.id, intentId, status: "PENDING" });
+      results.push({ orderId, intentId, status: "PENDING" });
     }
 
     return { results };
@@ -549,8 +515,10 @@ export class OrdersService {
 
     // 5. Create intent
     const intentId = randomUUID();
+    const orderId = randomUUID();
     const intent = {
       intentId,
+      orderId,
       userId,
       strategyId: "",
       marketId: token.marketId,
@@ -565,31 +533,14 @@ export class OrdersService {
     // 6. Publish to Redis stream
     await this.redis.xadd("stream:orders", intent);
 
-    // 7. Create order record
-    const order = await this.prisma.order.create({
-      data: {
-        intentId,
-        userId,
-        strategyId: null,
-        marketId: token.marketId,
-        tokenId: dto.tokenId,
-        side: dto.side as OrderSide,
-        outcome: dto.outcome,
-        size: String(dto.size),
-        price: String(dto.price),
-        orderType: (dto.orderType || "GTC") as OrderType,
-        status: OrderStatus.PENDING,
-      },
-    });
-
     this.posthog.capture(userId, "order_placed", {
-      orderId: order.id,
+      orderId,
       marketId: token.marketId,
       side: dto.side,
       amount: dto.size,
     });
 
-    return { orderId: order.id, intentId, status: "PENDING" };
+    return { orderId, intentId, status: "PENDING" };
   }
 
   async exportCsv(userId: string): Promise<string> {

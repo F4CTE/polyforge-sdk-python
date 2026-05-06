@@ -10,6 +10,7 @@ import { Throttle } from "@nestjs/throttler";
 import { SigningService } from "./signing.service";
 import { Ed25519SigningService } from "./ed25519-signing.service";
 import { SignOrderDto } from "./dto/sign-order.dto";
+import { CancelOrderDto } from "./dto/cancel-order.dto";
 import { SignKalshiJwtDto } from "./dto/sign-kalshi-jwt.dto";
 import { SignPolymarketUsRequestDto } from "./dto/sign-polymarket-us-request.dto";
 import { InternalAuthGuard } from "../common/internal-auth.guard";
@@ -35,6 +36,15 @@ export class SigningController {
     dto: SignOrderDto,
   ) {
     return this.signing.signOrder(dto);
+  }
+
+  @Post("cancel-order")
+  @HttpCode(204)
+  async cancelOrder(
+    @Body(new ValidationPipe({ whitelist: true }))
+    dto: CancelOrderDto,
+  ) {
+    await this.signing.cancelOrder(dto);
   }
 
   @Post("kalshi-jwt")

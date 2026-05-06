@@ -15,6 +15,7 @@ import {
 import { NativeEip712Service } from "./native-eip712.service";
 import { NativeCtfService } from "./native-ctf.service";
 import { SignOrderDto } from "./dto/sign-order.dto";
+import { CancelOrderDto } from "./dto/cancel-order.dto";
 import {
   RedeemPositionDto,
   SplitPositionDto,
@@ -237,6 +238,31 @@ export class SigningService implements OnModuleInit {
       );
 
       return { order, builderHeaders };
+    } finally {
+      zeroCredentials(creds);
+    }
+  }
+
+  async cancelOrder(dto: CancelOrderDto): Promise<void> {
+    const creds = await this.credentials.getDecryptedCredentials(dto.userId);
+    try {
+      const res = await fetch(
+        `${this.clobApiUrl}/order/${encodeURIComponent(dto.venueOrderId)}`,
+        {
+          method: "DELETE",
+          headers: {
+            "POLY-API-KEY": creds.apiKey.toString("utf8"),
+          },
+          signal: AbortSignal.timeout(10_000),
+        },
+      );
+
+      if (!res.ok) {
+        const body = await res.text().catch(() => "");
+        throw new BadRequestException(
+          `Polymarket cancel failed ${res.status}: ${body}`,
+        );
+      }
     } finally {
       zeroCredentials(creds);
     }

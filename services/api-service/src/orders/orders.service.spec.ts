@@ -256,12 +256,11 @@ describe("OrdersService", () => {
   // ── closePosition ─────────────────────────────────────────────────────────
 
   describe("closePosition", () => {
-    it("publishes to Redis stream and creates a PENDING order", async () => {
+    it("publishes to Redis stream and returns generated order metadata", async () => {
       db.user.findUnique.mockResolvedValue(
         makeUser({ polymarketConnected: true }) as any,
       );
       db.position.findFirst.mockResolvedValue(makePosition() as any);
-      db.order.create.mockResolvedValue(makeOrder() as any);
 
       const result = await service.closePosition(
         "user-uuid-1",
@@ -269,8 +268,9 @@ describe("OrdersService", () => {
       );
 
       expect(result.status).toBe("PENDING");
-      expect(result.orderId).toBe("order-uuid-1");
+      expect(result.orderId).toMatch(/^[0-9a-f-]{36}$/);
       expect(result.intentId).toBeDefined();
+      expect(db.order.create).not.toHaveBeenCalled();
     });
 
     it("throws NOT_CONNECTED (422) when user is not connected to Polymarket", async () => {
@@ -326,7 +326,6 @@ describe("OrdersService", () => {
     it("publishes close intent to stream:orders", async () => {
       db.user.findUnique.mockResolvedValue(makeUser() as any);
       db.position.findFirst.mockResolvedValue(makePosition() as any);
-      db.order.create.mockResolvedValue(makeOrder() as any);
 
       await service.closePosition("user-uuid-1", makeClosePositionDto() as any);
 
@@ -345,7 +344,6 @@ describe("OrdersService", () => {
       const position = makePosition({ size: "100.00" });
       db.user.findUnique.mockResolvedValue(makeUser() as any);
       db.position.findFirst.mockResolvedValue(position as any);
-      db.order.create.mockResolvedValue(makeOrder() as any);
 
       await service.closePosition("user-uuid-1", makeClosePositionDto() as any);
 
@@ -357,7 +355,6 @@ describe("OrdersService", () => {
     it("uses dto.size when explicitly provided", async () => {
       db.user.findUnique.mockResolvedValue(makeUser() as any);
       db.position.findFirst.mockResolvedValue(makePosition() as any);
-      db.order.create.mockResolvedValue(makeOrder() as any);
 
       await service.closePosition(
         "user-uuid-1",
@@ -369,20 +366,18 @@ describe("OrdersService", () => {
       expect(streamPayload.size).toBe("25.00");
     });
 
-    it("creates the order with status PENDING and orderType FOK", async () => {
+    it("publishes close intent with generated orderId and FOK order type", async () => {
       db.user.findUnique.mockResolvedValue(makeUser() as any);
       db.position.findFirst.mockResolvedValue(makePosition() as any);
-      db.order.create.mockResolvedValue(makeOrder() as any);
 
       await service.closePosition("user-uuid-1", makeClosePositionDto() as any);
 
-      expect(db.order.create).toHaveBeenCalledWith(
+      expect(redis.xadd).toHaveBeenCalledWith(
+        "stream:orders",
         expect.objectContaining({
-          data: expect.objectContaining({
-            status: "PENDING",
-            orderType: "FOK",
-            side: "SELL",
-          }),
+          orderId: expect.stringMatching(/^[0-9a-f-]{36}$/),
+          orderType: "FOK",
+          side: "SELL",
         }),
       );
     });
@@ -390,7 +385,6 @@ describe("OrdersService", () => {
     it("looks up open position with UNRESOLVED resolutionStatus", async () => {
       db.user.findUnique.mockResolvedValue(makeUser() as any);
       db.position.findFirst.mockResolvedValue(makePosition() as any);
-      db.order.create.mockResolvedValue(makeOrder() as any);
 
       await service.closePosition("user-uuid-1", makeClosePositionDto() as any);
 
@@ -406,15 +400,10 @@ describe("OrdersService", () => {
     it("generates a unique intentId for each call", async () => {
       db.user.findUnique.mockResolvedValue(makeUser() as any);
       db.position.findFirst.mockResolvedValue(makePosition() as any);
-      db.order.create.mockResolvedValue(makeOrder() as any);
 
       const result1 = await service.closePosition(
         "user-uuid-1",
         makeClosePositionDto() as any,
-      );
-
-      db.order.create.mockResolvedValue(
-        makeOrder({ id: "order-uuid-2", intentId: "intent-uuid-2" }) as any,
       );
 
       const result2 = await service.closePosition(
@@ -452,15 +441,12 @@ describe("OrdersService", () => {
       };
     }
 
-    it("creates a PENDING order and returns orderId + intentId", async () => {
+    it("publishes an order intent and returns orderId + intentId", async () => {
       db.user.findUniqueOrThrow.mockResolvedValue(
         makeUser({ polymarketConnected: true }) as any,
       );
       db.order.aggregate.mockResolvedValue({ _sum: { size: 0 } } as any);
       db.token.findUniqueOrThrow.mockResolvedValue(makeToken() as any);
-      db.order.create.mockResolvedValue(
-        makeOrder({ id: "order-placed-1" }) as any,
-      );
 
       const result = await service.placeOrder(
         "user-uuid-1",
@@ -468,8 +454,9 @@ describe("OrdersService", () => {
       );
 
       expect(result.status).toBe("PENDING");
-      expect(result.orderId).toBe("order-placed-1");
+      expect(result.orderId).toMatch(/^[0-9a-f-]{36}$/);
       expect(result.intentId).toMatch(/^[0-9a-f-]{36}$/);
+      expect(db.order.create).not.toHaveBeenCalled();
     });
 
     it("throws WALLET_NOT_CONNECTED (403) when user is not connected", async () => {
@@ -565,7 +552,6 @@ describe("OrdersService", () => {
       );
       db.order.aggregate.mockResolvedValue({ _sum: { size: 0 } } as any);
       db.token.findUniqueOrThrow.mockResolvedValue(makeToken() as any);
-      db.order.create.mockResolvedValue(makeOrder() as any);
 
       await service.placeOrder("user-uuid-1", makePlaceOrderDto() as any);
 
@@ -589,7 +575,6 @@ describe("OrdersService", () => {
       );
       db.order.aggregate.mockResolvedValue({ _sum: { size: 0 } } as any);
       db.token.findUniqueOrThrow.mockResolvedValue(makeToken() as any);
-      db.order.create.mockResolvedValue(makeOrder() as any);
 
       await service.placeOrder(
         "user-uuid-1",
@@ -602,26 +587,24 @@ describe("OrdersService", () => {
       );
     });
 
-    it("creates order record with correct fields", async () => {
+    it("publishes order stream payload with correct fields", async () => {
       db.user.findUniqueOrThrow.mockResolvedValue(
         makeUser({ polymarketConnected: true }) as any,
       );
       db.order.aggregate.mockResolvedValue({ _sum: { size: 0 } } as any);
       db.token.findUniqueOrThrow.mockResolvedValue(makeToken() as any);
-      db.order.create.mockResolvedValue(makeOrder() as any);
 
       await service.placeOrder("user-uuid-1", makePlaceOrderDto() as any);
 
-      expect(db.order.create).toHaveBeenCalledWith(
+      expect(redis.xadd).toHaveBeenCalledWith(
+        "stream:orders",
         expect.objectContaining({
-          data: expect.objectContaining({
-            userId: "user-uuid-1",
-            tokenId: "token-uuid-1",
-            side: "BUY",
-            outcome: "YES",
-            status: "PENDING",
-            marketId: "market-uuid-1",
-          }),
+          orderId: expect.stringMatching(/^[0-9a-f-]{36}$/),
+          userId: "user-uuid-1",
+          tokenId: "token-uuid-1",
+          side: "BUY",
+          outcome: "YES",
+          marketId: "market-uuid-1",
         }),
       );
     });
@@ -632,7 +615,6 @@ describe("OrdersService", () => {
       );
       db.order.aggregate.mockResolvedValue({ _sum: { size: 100 } } as any);
       db.token.findUniqueOrThrow.mockResolvedValue(makeToken() as any);
-      db.order.create.mockResolvedValue(makeOrder() as any);
 
       const result = await service.placeOrder(
         "user-uuid-1",
@@ -647,7 +629,6 @@ describe("OrdersService", () => {
         makeUser({ polymarketConnected: true }) as any,
       );
       db.token.findUniqueOrThrow.mockResolvedValue(makeToken() as any);
-      db.order.create.mockResolvedValue(makeOrder() as any);
       // Redis cache HIT returns "1234" — DB aggregate should NOT be called
       (redis.get as any).mockResolvedValue("1234");
 
@@ -664,7 +645,6 @@ describe("OrdersService", () => {
         makeUser({ polymarketConnected: true }) as any,
       );
       db.token.findUniqueOrThrow.mockResolvedValue(makeToken() as any);
-      db.order.create.mockResolvedValue(makeOrder() as any);
       (redis.get as any).mockResolvedValue(null);
       db.order.aggregate.mockResolvedValue({ _sum: { size: 250 } } as any);
 
@@ -683,7 +663,6 @@ describe("OrdersService", () => {
         makeUser({ polymarketConnected: true }) as any,
       );
       db.token.findUniqueOrThrow.mockResolvedValue(makeToken() as any);
-      db.order.create.mockResolvedValue(makeOrder() as any);
       (redis.get as any).mockRejectedValue(new Error("redis down"));
       db.order.aggregate.mockResolvedValue({ _sum: { size: 100 } } as any);
 

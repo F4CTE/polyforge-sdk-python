@@ -9,6 +9,9 @@ function makePrisma() {
       findMany: vi.fn().mockResolvedValue([]),
       update: vi.fn().mockResolvedValue({}),
     },
+    copyTrade: {
+      findFirst: vi.fn().mockResolvedValue(null),
+    },
     user: {
       findMany: vi.fn().mockResolvedValue([]),
     },
@@ -35,11 +38,13 @@ describe("TradeReconcilerService", () => {
   let svc: TradeReconcilerService;
   let prisma: ReturnType<typeof makePrisma>;
   let clob: ReturnType<typeof makeClob>;
+  let events: any;
 
   beforeEach(() => {
     prisma = makePrisma();
     clob = makeClob();
-    svc = new TradeReconcilerService(prisma, makeRedis(), clob);
+    events = { emitOrderFilled: vi.fn().mockResolvedValue(undefined) };
+    svc = new TradeReconcilerService(prisma, makeRedis(), clob, events);
   });
 
   afterEach(() => {
@@ -66,8 +71,22 @@ describe("TradeReconcilerService", () => {
       ]);
 
       clob.fetchTrades.mockResolvedValue([
-        { id: "trade-1", order_id: "clob-1", status: "FILLED" },
-        { id: "trade-2", order_id: "clob-2", status: "MATCHED" },
+        {
+          id: "trade-1",
+          order_id: "clob-1",
+          status: "FILLED",
+          price: "0.61",
+          size: "10",
+          match_time: "2026-05-06T00:00:00.000Z",
+        },
+        {
+          id: "trade-2",
+          order_id: "clob-2",
+          status: "MATCHED",
+          price: "0.62",
+          size: "20",
+          match_time: "2026-05-06T00:00:01.000Z",
+        },
       ]);
 
       const updated = await svc.reconcileUserTrades("user-1", "0xwallet");
@@ -76,12 +95,23 @@ describe("TradeReconcilerService", () => {
       expect(prisma.order.update).toHaveBeenCalledTimes(2);
       expect(prisma.order.update).toHaveBeenCalledWith({
         where: { id: "order-1" },
-        data: { status: "CONFIRMED", clobStatus: "FILLED" },
+        data: expect.objectContaining({
+          status: "CONFIRMED",
+          clobStatus: "FILLED",
+          fillPrice: "0.61",
+          fillSize: "10",
+        }),
       });
       expect(prisma.order.update).toHaveBeenCalledWith({
         where: { id: "order-2" },
-        data: { status: "CONFIRMED", clobStatus: "MATCHED" },
+        data: expect.objectContaining({
+          status: "CONFIRMED",
+          clobStatus: "MATCHED",
+          fillPrice: "0.62",
+          fillSize: "20",
+        }),
       });
+      expect(events.emitOrderFilled).toHaveBeenCalledTimes(2);
     });
 
     it("does not update orders that are still LIVE on the CLOB", async () => {

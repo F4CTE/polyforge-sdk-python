@@ -10,9 +10,14 @@ import {
   RedisService,
   StreamMonitorService,
 } from "@polyforge/shared-redis";
-import { OrdersService, OrderIntent } from "../orders/orders.service";
+import {
+  CancellationIntent,
+  OrdersService,
+  OrderIntent,
+} from "../orders/orders.service";
 
 const STREAM = "stream:orders";
+const CANCELLATION_STREAM = "stream:cancellations";
 const GROUP = "order-service";
 const CONSUMER = `order-service-${process.pid}`;
 const BLOCK_MS = 2_000; // block XREADGROUP for 2s
@@ -40,8 +45,10 @@ export class StreamConsumerService implements OnModuleInit, OnModuleDestroy {
   ) {}
 
   async onModuleInit() {
-    await this.ensureConsumerGroup();
+    await this.ensureConsumerGroup(STREAM);
+    await this.ensureConsumerGroup(CANCELLATION_STREAM);
     this.streamMonitor.register({ stream: STREAM, group: GROUP });
+    this.streamMonitor.register({ stream: CANCELLATION_STREAM, group: GROUP });
     this.pelReclaim.register({
       stream: STREAM,
       group: GROUP,
@@ -56,6 +63,16 @@ export class StreamConsumerService implements OnModuleInit, OnModuleDestroy {
         await this.orders.processBatch([intent]);
       },
     });
+    this.pelReclaim.register({
+      stream: CANCELLATION_STREAM,
+      group: GROUP,
+      consumer: CONSUMER,
+      handler: async (entry) => {
+        const intent = this.parseCancellation(this.fieldsToArray(entry.fields));
+        if (!intent) return;
+        await this.orders.processCancellation(intent);
+      },
+    });
     this.running = true;
     this.loopPromise = this.consumeLoop();
   }
@@ -67,12 +84,12 @@ export class StreamConsumerService implements OnModuleInit, OnModuleDestroy {
 
   // ─── Consumer group setup ─────────────────────────────────────────────────
 
-  private async ensureConsumerGroup() {
+  private async ensureConsumerGroup(stream: string) {
     const client = this.redis.getClient();
     try {
-      await client.xgroup("CREATE", STREAM, GROUP, "$", "MKSTREAM");
+      await client.xgroup("CREATE", stream, GROUP, "$", "MKSTREAM");
       this.logger.log(
-        `Consumer group '${GROUP}' created on stream '${STREAM}'`,
+        `Consumer group '${GROUP}' created on stream '${stream}'`,
       );
     } catch (err: any) {
       if (err?.message?.includes("BUSYGROUP")) {
@@ -97,6 +114,11 @@ export class StreamConsumerService implements OnModuleInit, OnModuleDestroy {
   }
 
   private async pollOnce(): Promise<void> {
+    await this.pollOrderIntentsOnce();
+    await this.pollCancellationsOnce();
+  }
+
+  private async pollOrderIntentsOnce(): Promise<void> {
     const client = this.redis.getClient();
 
     // '>' means "only new messages not yet delivered to this consumer"
@@ -150,6 +172,39 @@ export class StreamConsumerService implements OnModuleInit, OnModuleDestroy {
     );
   }
 
+  private async pollCancellationsOnce(): Promise<void> {
+    const client = this.redis.getClient();
+
+    const results = (await client.xreadgroup(
+      "GROUP",
+      GROUP,
+      CONSUMER,
+      "COUNT",
+      BATCH_COUNT,
+      "BLOCK",
+      BLOCK_MS,
+      "STREAMS",
+      CANCELLATION_STREAM,
+      ">",
+    )) as Array<[string, Array<[string, string[]]>]> | null;
+
+    if (!results) return;
+
+    const [, entries] = results[0];
+    if (!entries?.length) return;
+
+    for (const [msgId, fields] of entries) {
+      const intent = this.parseCancellation(fields);
+      if (!intent) {
+        await client.xack(CANCELLATION_STREAM, GROUP, msgId);
+        continue;
+      }
+
+      await this.orders.processCancellation(intent);
+      await client.xack(CANCELLATION_STREAM, GROUP, msgId);
+    }
+  }
+
   // ─── Helpers ─────────────────────────────────────────────────────────────
 
   private parseIntent(fields: string[], msgId = "unknown"): OrderIntent | null {
@@ -171,15 +226,20 @@ export class StreamConsumerService implements OnModuleInit, OnModuleDestroy {
 
       return {
         intentId: obj["intentId"],
+        ...(obj["orderId"] ? { orderId: obj["orderId"] } : {}),
         userId: obj["userId"],
-        strategyId: obj["strategyId"] ?? "",
+        ...(obj["strategyId"]?.trim()
+          ? { strategyId: obj["strategyId"].trim() }
+          : {}),
+        ...(obj["copyTradeId"] ? { copyTradeId: obj["copyTradeId"] } : {}),
         marketId: obj["marketId"] ?? "",
         tokenId: obj["tokenId"] ?? "",
         side: (obj["side"] as "BUY" | "SELL") ?? "BUY",
         outcome: obj["outcome"] ?? "YES",
         size: obj["size"] ?? "0",
         price: obj["price"] ?? "0",
-        orderType: (obj["orderType"] as "GTC" | "FOK" | "GTD") ?? "GTC",
+        orderType:
+          (obj["orderType"] as OrderIntent["orderType"] | undefined) ?? "GTC",
         expiration,
         ...(obj["venue"]
           ? { venue: obj["venue"] as OrderIntent["venue"] }
@@ -222,6 +282,26 @@ export class StreamConsumerService implements OnModuleInit, OnModuleDestroy {
         },
         "Failed to parse order intent from Redis stream",
       );
+    }
+  }
+
+  private parseCancellation(fields: string[]): CancellationIntent | null {
+    try {
+      const obj: Record<string, string> = {};
+      for (let i = 0; i < fields.length; i += 2) {
+        obj[fields[i]] = fields[i + 1];
+      }
+
+      if (!obj["orderId"] || !obj["userId"]) return null;
+
+      return {
+        orderId: obj["orderId"],
+        userId: obj["userId"],
+        ...(obj["clobOrderId"] ? { clobOrderId: obj["clobOrderId"] } : {}),
+        ...(obj["venueOrderId"] ? { venueOrderId: obj["venueOrderId"] } : {}),
+      };
+    } catch {
+      return null;
     }
   }
 
