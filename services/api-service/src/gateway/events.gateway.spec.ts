@@ -71,6 +71,7 @@ describe("EventsGateway", () => {
             get: vi.fn((key: string) => {
               if (key === "USER_JWT_SECRET")
                 return "test-secret-32-chars-minimum-ok!";
+              if (key === "CORS_ORIGINS") return "https://app.polyforge.test";
               if (key === "WS_MAX_CONNECTIONS_PER_USER") return 3;
               return undefined;
             }),
@@ -105,6 +106,42 @@ describe("EventsGateway", () => {
       expect(client.send).toHaveBeenCalledWith(
         expect.stringContaining('"type":"AUTH_OK"'),
       );
+    });
+
+    it("authenticates a WebSocket upgrade from an allowed Origin", () => {
+      vi.mocked(jwtService.verify).mockReturnValue({
+        sub: "user-1",
+        email: "a@b.com",
+        username: "alice",
+      });
+
+      const client = makeSocket();
+      const req = makeRequest(
+        "?token=valid-jwt",
+        "",
+        "https://app.polyforge.test",
+      );
+
+      gateway.handleConnection(client, req);
+
+      expect(jwtService.verify).toHaveBeenCalledWith("valid-jwt", {
+        secret: "test-secret-32-chars-minimum-ok!",
+      });
+      expect(client.send).toHaveBeenCalledWith(
+        expect.stringContaining('"type":"AUTH_OK"'),
+      );
+    });
+
+    it("rejects WebSocket upgrades from untrusted Origins before JWT verification", () => {
+      const client = makeSocket();
+      const req = makeRequest("", "pf_token=cookie-jwt", "https://evil.test");
+
+      gateway.handleConnection(client, req);
+
+      expect(jwtService.verify).not.toHaveBeenCalled();
+      expect(client.close).toHaveBeenCalledWith(4003, "Origin not allowed");
+      expect(client.terminate).toHaveBeenCalled();
+      expect(client.send).not.toHaveBeenCalled();
     });
 
     it("authenticates via pf_token cookie", () => {
