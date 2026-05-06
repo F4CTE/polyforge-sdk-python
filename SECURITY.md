@@ -84,6 +84,9 @@ If you discover a security vulnerability in Polyforge, please report it responsi
 - [ ] Remove Swagger/OpenAPI docs access (auto-gated by NODE_ENV)
 - [ ] Configure HSTS header in production nginx
 - [ ] Run `pnpm audit` and resolve critical/high CVEs
+- [ ] Verify GitHub security scanning posture in `docs/ops/08-github-security-scanning.md`;
+      enable GitHub-native code/secret scanning when the private-repo entitlement is available,
+      otherwise keep the documented CI replacement controls active
 - [ ] Enable AWS CloudTrail / audit logging
 - [ ] Configure WAF rules for API endpoints
 - [ ] Set up alerting for failed auth attempts and anomalous patterns
