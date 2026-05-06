@@ -148,6 +148,56 @@ describe("EventsConsumerService", () => {
 
       expect(notification.handle).not.toHaveBeenCalled();
     });
+
+    it("acks a notification message only after the handler succeeds", async () => {
+      const client = redis.getClient();
+      client.xreadgroup
+        .mockResolvedValueOnce([
+          [
+            "stream:events",
+            [["msg-1", ["type", "ORDER_FILLED", "userId", "u1"]]],
+          ],
+        ])
+        .mockImplementationOnce(async () => {
+          (service as any).running = false;
+          return null;
+        });
+      (service as any).running = true;
+
+      await (service as any).consumeLoop();
+
+      expect(notification.handle).toHaveBeenCalledWith(
+        "ORDER_FILLED",
+        expect.objectContaining({ type: "ORDER_FILLED", userId: "u1" }),
+      );
+      expect(client.xack).toHaveBeenCalledWith(
+        "stream:events",
+        "notification-service",
+        "msg-1",
+      );
+    });
+
+    it("does not ack a notification message when the handler fails", async () => {
+      const client = redis.getClient();
+      notification.handle.mockRejectedValueOnce(new Error("database down"));
+      client.xreadgroup
+        .mockResolvedValueOnce([
+          [
+            "stream:events",
+            [["msg-1", ["type", "ORDER_FILLED", "userId", "u1"]]],
+          ],
+        ])
+        .mockImplementationOnce(async () => {
+          (service as any).running = false;
+          return null;
+        });
+      (service as any).running = true;
+
+      await (service as any).consumeLoop();
+
+      expect(notification.handle).toHaveBeenCalledOnce();
+      expect(client.xack).not.toHaveBeenCalled();
+    });
   });
 
   describe("consumeLoop", () => {

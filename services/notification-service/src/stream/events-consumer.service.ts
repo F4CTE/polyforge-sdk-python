@@ -132,25 +132,27 @@ export class EventsConsumerService implements OnModuleInit, OnModuleDestroy {
             const event = this.parseFields(fields);
             const notifType = toNotifType(event.type ?? "", event);
 
-            if (notifType) {
-              try {
-                await this.notification.handle(notifType, event);
-              } catch (err) {
-                this.logger.error(
-                  {
-                    event: "NOTIFICATION_HANDLE_FAILED",
-                    notifType,
-                    userId: event.userId,
-                    stream: STREAM,
-                    msgId: id,
-                    err,
-                  },
-                  "Failed to handle stream notification",
-                );
-              }
+            if (!notifType) {
+              await client.xack(STREAM, GROUP, id);
+              continue;
             }
 
-            await client.xack(STREAM, GROUP, id);
+            try {
+              await this.notification.handle(notifType, event);
+              await client.xack(STREAM, GROUP, id);
+            } catch (err) {
+              this.logger.error(
+                {
+                  event: "NOTIFICATION_HANDLE_FAILED",
+                  notifType,
+                  userId: event.userId,
+                  stream: STREAM,
+                  msgId: id,
+                  err,
+                },
+                "Failed to handle stream notification",
+              );
+            }
           }
         }
       } catch (err) {

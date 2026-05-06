@@ -908,6 +908,35 @@ describe("NotificationService", () => {
       await expect(service.flushDigest("HOURLY")).resolves.toBeUndefined();
       expect(mail.send).toHaveBeenCalledOnce();
     });
+
+    it("escapes stored digest title and body before building email HTML", async () => {
+      const prefs = makePrefs({ emailEnabled: true });
+      redisClient.scan.mockResolvedValueOnce(["0", ["digest:hourly:user-1"]]);
+      redisClient.lrange.mockResolvedValueOnce([
+        makeDigestItem({
+          title: '<img src=x onerror="alert(1)">',
+          body: '<script>alert("x")</script>',
+        }),
+      ]);
+      (prisma.notificationPreference.findUnique as any).mockResolvedValue(
+        prefs,
+      );
+      (prisma.user.findUnique as any).mockResolvedValue({
+        email: "u@example.com",
+      });
+
+      await service.flushDigest("HOURLY");
+
+      expect(templates.toHtml).toHaveBeenCalledWith(
+        expect.objectContaining({
+          body: expect.stringContaining("&lt;img"),
+        }),
+      );
+      const digestHtmlInput = templates.toHtml.mock.calls[0][0].body;
+      expect(digestHtmlInput).not.toContain("<img");
+      expect(digestHtmlInput).not.toContain("<script>");
+      expect(digestHtmlInput).toContain("&lt;script&gt;");
+    });
   });
 
   // ─── Email send failure handling ──────────────────────────────────────────

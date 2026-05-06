@@ -50,6 +50,15 @@ interface DispatchOptions {
 const PREFS_CACHE_KEY = (userId: string) => `cache:notif-prefs:${userId}`;
 const PREFS_TTL = 300;
 
+function escapeHtml(value: unknown): string {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
 @Injectable()
 export class NotificationService {
   private readonly logger = new Logger(NotificationService.name);
@@ -211,10 +220,13 @@ export class NotificationService {
           : `Polyforge — Daily digest (${parsed.length} notification${parsed.length > 1 ? "s" : ""})`;
 
       const lines = parsed.map((p: any) => `• ${p.title}: ${p.body}`);
+      const htmlLines = parsed.map(
+        (p: any) => `<p>&bull; ${escapeHtml(`${p.title}: ${p.body}`)}</p>`,
+      );
       const bodyText = lines.join("\n");
       const html = this.templates.toHtml({
         title: subject,
-        body: lines.map((l: string) => `<p>${l}</p>`).join(""),
+        body: htmlLines.join(""),
         severity: "info",
       });
 

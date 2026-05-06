@@ -35,77 +35,64 @@ const SEVERITY_LABEL: Record<NotificationContent["severity"], string> = {
 @Injectable()
 export class TemplatesService {
   build(eventType: string, data: Record<string, string>): NotificationContent {
-    // Escape user-controlled fields to prevent HTML injection
-    const safe = { ...data };
-    const fieldsToEscape = [
-      "forkerUsername",
-      "followerUsername",
-      "likerUsername",
-      "commenterUsername",
-      "strategyName",
-      "adminName",
-      "subject",
-      "articleTitle",
-      "marketTitle",
-    ];
-    for (const field of fieldsToEscape) {
-      if (safe[field]) safe[field] = escapeHtml(safe[field]);
-    }
+    const safe = Object.fromEntries(
+      Object.entries(data).map(([key, value]) => [key, escapeHtml(value)]),
+    ) as Record<string, string>;
 
     switch (eventType) {
       case "ORDER_FILLED":
         return {
           title: "Order Filled",
-          body: `Your order on token ${data.tokenId ?? "unknown"} was filled at ${data.fillPrice ?? data.price ?? "unknown"}.${data.pnl ? ` P&L: ${data.pnl} USDC.` : ""}`,
+          body: `Your order on token ${safe.tokenId ?? "unknown"} was filled at ${safe.fillPrice ?? safe.price ?? "unknown"}.${safe.pnl ? ` P&L: ${safe.pnl} USDC.` : ""}`,
           severity: "success",
         };
 
       case "STRATEGY_ERROR":
         return {
           title: "Strategy Error",
-          body: `Strategy ${data.strategyId ?? "unknown"} encountered an error: ${data.reason ?? "unknown error"}.`,
+          body: `Strategy ${safe.strategyId ?? "unknown"} encountered an error: ${safe.reason ?? "unknown error"}.`,
           severity: "error",
         };
 
       case "BACKTEST_COMPLETE":
         return {
           title: "Backtest Complete",
-          body: `Your backtest run ${data.runId ?? "unknown"} has finished.${data.totalPnl ? ` Total P&L: ${data.totalPnl} USDC.` : ""}`,
+          body: `Your backtest run ${safe.runId ?? "unknown"} has finished.${safe.totalPnl ? ` Total P&L: ${safe.totalPnl} USDC.` : ""}`,
           severity: "info",
         };
 
       case "PRICE_ALERT":
         return {
           title: "Price Alert Triggered",
-          body: `Token ${data.tokenId ?? "unknown"} reached your price alert threshold of ${data.threshold ?? data.price ?? "unknown"}.`,
+          body: `Token ${safe.tokenId ?? "unknown"} reached your price alert threshold of ${safe.threshold ?? safe.price ?? "unknown"}.`,
           severity: "warning",
         };
 
       case "DAILY_LOSS_LIMIT":
         return {
           title: "Daily Loss Limit Reached",
-          body: `Strategy ${data.strategyId ?? "unknown"} hit its daily loss limit and has been stopped.`,
+          body: `Strategy ${safe.strategyId ?? "unknown"} hit its daily loss limit and has been stopped.`,
           severity: "error",
         };
 
       case "CIRCUIT_BREAKER_TRIGGERED":
         return {
           title: "Circuit Breaker Triggered",
-          body: `Your portfolio dropped ${data.drawdownPct ?? "?"}% within ${data.lookbackHours ?? "?"}h (threshold: ${data.thresholdPct ?? "?"}%). ${data.strategiesPaused ?? "0"} strategy/ies paused.`,
+          body: `Your portfolio dropped ${safe.drawdownPct ?? "?"}% within ${safe.lookbackHours ?? "?"}h (threshold: ${safe.thresholdPct ?? "?"}%). ${safe.strategiesPaused ?? "0"} strategy/ies paused.`,
           severity: "error",
         };
 
       case "MARKET_RESOLVED":
         return {
           title: "Market Resolved",
-          body: `Market ${data.marketId ?? "unknown"} has resolved with outcome ${data.outcome ?? "unknown"}.`,
+          body: `Market ${safe.marketId ?? "unknown"} has resolved with outcome ${safe.outcome ?? "unknown"}.`,
           severity: "info",
         };
 
       case "SOMEONE_FORKED":
         return {
           title: "Strategy Forked",
-          body: `${safe.forkerUsername ?? "Someone"} forked your strategy "${safe.strategyName ?? data.strategyId ?? "unknown"}".`,
+          body: `${safe.forkerUsername ?? "Someone"} forked your strategy "${safe.strategyName ?? safe.strategyId ?? "unknown"}".`,
           severity: "info",
         };
 
@@ -119,14 +106,14 @@ export class TemplatesService {
       case "SOMEONE_LIKED":
         return {
           title: "Strategy Liked",
-          body: `${safe.likerUsername ?? "Someone"} liked your strategy "${safe.strategyName ?? data.strategyId ?? "unknown"}".`,
+          body: `${safe.likerUsername ?? "Someone"} liked your strategy "${safe.strategyName ?? safe.strategyId ?? "unknown"}".`,
           severity: "info",
         };
 
       case "SOMEONE_COMMENTED":
         return {
           title: "New Comment",
-          body: `${safe.commenterUsername ?? "Someone"} commented on your strategy "${safe.strategyName ?? data.strategyId ?? "unknown"}".`,
+          body: `${safe.commenterUsername ?? "Someone"} commented on your strategy "${safe.strategyName ?? safe.strategyId ?? "unknown"}".`,
           severity: "info",
         };
 
@@ -154,35 +141,35 @@ export class TemplatesService {
       case "COPY_TRADE_EXECUTED":
         return {
           title: "Copy Trade Executed",
-          body: `Copied ${data.side ?? "trade"} of $${data.copiedSize ?? "?"} on market ${data.marketId ?? "unknown"} from wallet ${data.targetWallet?.slice(0, 8) ?? "?"}...`,
+          body: `Copied ${safe.side ?? "trade"} of $${safe.copiedSize ?? "?"} on market ${safe.marketId ?? "unknown"} from wallet ${safe.targetWallet?.slice(0, 8) ?? "?"}...`,
           severity: "success",
         };
 
       case "COPY_TRADE_FAILED":
         return {
           title: "Copy Trade Failed",
-          body: `Failed to copy trade from wallet ${data.targetWallet?.slice(0, 8) ?? "?"}...: ${data.reason ?? "unknown error"}.`,
+          body: `Failed to copy trade from wallet ${safe.targetWallet?.slice(0, 8) ?? "?"}...: ${safe.reason ?? "unknown error"}.`,
           severity: "error",
         };
 
       case "ORDER_CONDITIONAL_TRIGGERED":
         return {
           title: "Conditional Order Triggered",
-          body: `Your ${data.conditionalType ?? "conditional"} order on token ${data.tokenId ?? "unknown"} triggered at ${data.triggerPrice ?? "unknown"}. ${data.side ?? ""} ${data.size ?? ""} shares.`,
+          body: `Your ${safe.conditionalType ?? "conditional"} order on token ${safe.tokenId ?? "unknown"} triggered at ${safe.triggerPrice ?? "unknown"}. ${safe.side ?? ""} ${safe.size ?? ""} shares.`,
           severity: "success",
         };
 
       case "WHALE_TRADE":
         return {
           title: "\u{1F40B} Whale Alert",
-          body: `Whale ${data.walletAddress?.slice(0, 8)}... ${data.side} ${data.outcome} $${data.notional} on ${data.marketTitle ?? "a market"}`,
+          body: `Whale ${safe.walletAddress?.slice(0, 8) ?? "?"}... ${safe.side ?? "trade"} ${safe.outcome ?? "unknown"} $${safe.notional ?? "?"} on ${safe.marketTitle ?? "a market"}`,
           severity: "info",
         };
 
       case "NEWS_SIGNAL":
         return {
           title: "News Signal",
-          body: `${data.confidence ?? "?"}% confidence ${data.direction ?? "?"} ${data.outcome ?? "?"} signal on "${safe.marketTitle ?? data.marketId ?? "unknown"}" based on article "${safe.articleTitle ?? "unknown"}".`,
+          body: `${safe.confidence ?? "?"}% confidence ${safe.direction ?? "?"} ${safe.outcome ?? "?"} signal on "${safe.marketTitle ?? safe.marketId ?? "unknown"}" based on article "${safe.articleTitle ?? "unknown"}".`,
           severity:
             parseInt(data.confidence ?? "0", 10) >= 80 ? "warning" : "info",
         };
@@ -190,14 +177,14 @@ export class TemplatesService {
       case "ARBITRAGE_CROSS_VENUE":
         return {
           title: "Cross-Venue Arbitrage",
-          body: `${data.spreadPct ?? "?"}% spread detected between Polymarket and Kalshi. Direction: ${data.direction ?? "unknown"}.`,
+          body: `${safe.spreadPct ?? "?"}% spread detected between Polymarket and Kalshi. Direction: ${safe.direction ?? "unknown"}.`,
           severity: "warning",
         };
 
       default:
         return {
           title: "Polyforge Notification",
-          body: `New event: ${eventType}`,
+          body: `New event: ${escapeHtml(eventType)}`,
           severity: "info",
         };
     }

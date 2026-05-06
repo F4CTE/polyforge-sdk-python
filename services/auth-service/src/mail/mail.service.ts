@@ -2,6 +2,15 @@ import { Injectable, Logger } from '@nestjs/common';
 import * as nodemailer from 'nodemailer';
 import { emailLayout } from './email-layout';
 
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
 @Injectable()
 export class MailService {
   private readonly logger = new Logger(MailService.name);
@@ -134,13 +143,14 @@ export class MailService {
   async sendAccountApprovedEmail(to: string, username: string): Promise<void> {
     const base = this.frontendUrl;
     const loginUrl = `${base}/login`;
+    const safeUsername = escapeHtml(username);
 
     const html = emailLayout({
       preheader:
         'Your Polyforge beta access has been approved — you can now sign in!',
       body: `
                 <h2 style="margin:0 0 16px;font-size:22px;font-weight:700;color:#111827">
-                  You're in, ${username}! 🎉
+                  You're in, ${safeUsername}! 🎉
                 </h2>
                 <p style="margin:0 0 16px;color:#4b5563">
                   Your Polyforge account has been approved for beta access!

@@ -326,6 +326,49 @@ describe("TemplatesService", () => {
         expect(result.body).toContain("SOME_UNKNOWN_EVENT");
       });
     });
+
+    it("escapes user-controlled data fields before HTML email rendering", () => {
+      const payload = '<img src=x onerror="alert(1)">';
+      const cases = [
+        service.build("ORDER_FILLED", {
+          tokenId: payload,
+          fillPrice: payload,
+          pnl: payload,
+        }),
+        service.build("STRATEGY_ERROR", {
+          strategyId: payload,
+          reason: payload,
+        }),
+        service.build("MARKET_RESOLVED", {
+          marketId: payload,
+          outcome: payload,
+        }),
+        service.build("COPY_TRADE_FAILED", {
+          targetWallet: payload,
+          reason: payload,
+        }),
+        service.build("WHALE_TRADE", {
+          walletAddress: payload,
+          side: payload,
+          outcome: payload,
+          notional: payload,
+          marketTitle: payload,
+        }),
+        service.build("NEWS_SIGNAL", {
+          confidence: "90",
+          direction: payload,
+          outcome: payload,
+          marketTitle: payload,
+          articleTitle: payload,
+        }),
+      ];
+
+      for (const result of cases) {
+        expect(result.body).not.toContain("<img");
+        expect(result.body).not.toContain('onerror="alert(1)"');
+        expect(result.body).toContain("&lt;");
+      }
+    });
   });
 
   // ─── toHtml() ──────────────────────────────────────────────────────────────
