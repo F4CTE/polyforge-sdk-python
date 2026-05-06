@@ -708,6 +708,49 @@ describe("StrategyRunner — calculation variables", () => {
     expect(Number(intents[0].size)).toBe(35);
   });
 
+  it("skips non-finite variable results instead of storing them as zero", async () => {
+    const state = makeState();
+    state.get.mockResolvedValue({ ...DEFAULT_STATE });
+    state.getPrice = vi.fn().mockResolvedValue(null);
+
+    const prisma = makePrisma();
+    prisma.token.findUnique.mockResolvedValue({
+      id: "tok-yes",
+      marketId: "mkt-1",
+      outcome: "YES",
+    });
+    const redis = makeRedis({
+      getJson: vi.fn().mockResolvedValue({ price: 0.7 }),
+    });
+    const onIntents = vi
+      .fn<(intents: OrderIntent[]) => Promise<void>>()
+      .mockResolvedValue(undefined);
+
+    const runner = makeRunner({
+      execMode: "EVENT",
+      state,
+      redis,
+      prisma,
+      onIntents,
+      variables: [{ id: "v1", name: "badSize", expression: "parse('2+2')" }],
+      actions: [
+        {
+          id: "a1",
+          type: "buy_yes",
+          params: { tokenId: "tok-yes", size: "$badSize" },
+        },
+      ],
+    });
+
+    await runner.onPriceEvent("tok-yes", 0.7);
+
+    expect(onIntents).not.toHaveBeenCalled();
+    expect(state.update).not.toHaveBeenCalledWith(
+      "strat-test",
+      expect.objectContaining({ betsToday: 1 }),
+    );
+  });
+
   it("empty variables array works (backward compat)", async () => {
     const state = makeState();
     const runner = makeRunner({
@@ -826,6 +869,30 @@ describe("StrategyRunner — safeEvaluate edge cases", () => {
     });
 
     await expect(runner.onPriceEvent("tok1", 0.5)).resolves.not.toThrow();
+  });
+});
+
+describe("StrategyRunner — sentinel intents", () => {
+  it("does not publish __cancel_all__ sentinel intents as orders", async () => {
+    const state = makeState();
+    const onIntents = vi
+      .fn<(intents: OrderIntent[]) => Promise<void>>()
+      .mockResolvedValue(undefined);
+
+    const runner = makeRunner({
+      execMode: "EVENT",
+      state,
+      onIntents,
+      actions: [{ id: "a1", type: "cancel_all_orders", params: {} }],
+    });
+
+    await runner.onPriceEvent("tok1", 0.5);
+
+    expect(onIntents).not.toHaveBeenCalled();
+    expect(state.update).not.toHaveBeenCalledWith(
+      "strat-test",
+      expect.objectContaining({ betsToday: 1 }),
+    );
   });
 });
 

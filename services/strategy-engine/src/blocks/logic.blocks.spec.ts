@@ -146,6 +146,16 @@ describe("IfThenElseBlock", () => {
     expect(result.activeOutput).toBe("false");
   });
 
+  it("does not treat NaN expression results as truthy", () => {
+    const result = IfThenElseBlock.evaluate(
+      { condition: "parse('2+2')" },
+      [],
+      makeCtx(),
+    );
+    expect(result.value).toBe(false);
+    expect(result.activeOutput).toBe("false");
+  });
+
   it("reads condition from params.condition", () => {
     const result = IfThenElseBlock.evaluate(
       { params: { condition: "2 + 2 == 4" } },

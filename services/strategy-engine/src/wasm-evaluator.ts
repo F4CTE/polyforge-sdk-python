@@ -37,6 +37,7 @@ const wasmEngine = (() => {
 
 export interface WasmEvalContext {
   current_price: number;
+  previous_price?: number;
   best_bid: number;
   best_ask: number;
   spread: number;

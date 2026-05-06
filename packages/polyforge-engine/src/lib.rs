@@ -18,6 +18,7 @@ pub struct Block {
 #[derive(Deserialize)]
 pub struct EvalContext {
     pub current_price: f64,
+    pub previous_price: Option<f64>,
     pub best_bid: f64,
     pub best_ask: f64,
     pub spread: f64,
@@ -113,11 +114,13 @@ fn check_triggers(blocks: &[Block], ctx: &EvalContext) -> bool {
             }
             "PRICE_CROSSES_UP" => {
                 let threshold = resolve_f64(&block.config, "threshold", ctx);
-                ctx.current_price > threshold // Simplified — full version needs previous price
+                let previous_price = ctx.previous_price.unwrap_or(ctx.current_price);
+                previous_price < threshold && ctx.current_price >= threshold
             }
             "PRICE_CROSSES_DOWN" => {
                 let threshold = resolve_f64(&block.config, "threshold", ctx);
-                ctx.current_price < threshold
+                let previous_price = ctx.previous_price.unwrap_or(ctx.current_price);
+                previous_price > threshold && ctx.current_price <= threshold
             }
             "SPREAD_BELOW" => {
                 let threshold = resolve_f64(&block.config, "threshold", ctx);

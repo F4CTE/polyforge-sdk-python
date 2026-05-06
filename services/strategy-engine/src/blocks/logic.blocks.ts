@@ -28,7 +28,7 @@ export const IfThenElseBlock: LogicBlockEvaluator = {
       };
 
       const result = safeEvaluate(condition, scope);
-      const truthy = Boolean(result);
+      const truthy = Number.isFinite(result) && result !== 0;
       return { value: truthy, activeOutput: truthy ? "true" : "false" };
     } catch {
       return { value: false, activeOutput: "false" };

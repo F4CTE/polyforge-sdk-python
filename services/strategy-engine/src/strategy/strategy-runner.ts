@@ -231,10 +231,13 @@ export class StrategyRunner {
 
       for (const v of this.variables) {
         try {
-          variables[v.name] = safeEvaluate(v.expression, {
+          const value = safeEvaluate(v.expression, {
             ...scope,
             ...variables,
           });
+          if (Number.isFinite(value)) {
+            variables[v.name] = value;
+          }
         } catch {
           this.logger.warn(
             `Variable "${v.name}" evaluation failed: ${v.expression}`,
@@ -466,7 +469,8 @@ export class StrategyRunner {
       (i) => i.marketId === "__run_strategy__",
     );
     const orderIntents = allIntents.filter(
-      (i) => i.marketId !== "__run_strategy__",
+      (i) =>
+        i.marketId !== "__run_strategy__" && i.tokenId !== "__cancel_all__",
     );
 
     // Handle sub-strategy launches

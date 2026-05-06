@@ -7,6 +7,7 @@ const wasmModule = require('./pkg/polyforge_engine');
 
 export interface EvalContext {
   current_price: number;
+  previous_price?: number;
   best_bid: number;
   best_ask: number;
   spread: number;

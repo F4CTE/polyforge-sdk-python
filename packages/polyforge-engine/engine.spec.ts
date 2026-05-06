@@ -123,6 +123,66 @@ describe('Trigger evaluators', () => {
 
     expect(result.triggered).toBe(true);
   });
+
+  it('should fire PRICE_CROSSES_UP only on an upward edge', () => {
+    const triggers = [makeBlock('PRICE_CROSSES_UP', { threshold: 0.60 })];
+
+    expect(
+      evaluateTick(
+        [],
+        triggers,
+        [],
+        [],
+        makeContext({ previous_price: 0.55, current_price: 0.60 }),
+      ).triggered,
+    ).toBe(true);
+    expect(
+      evaluateTick(
+        [],
+        triggers,
+        [],
+        [],
+        makeContext({ previous_price: 0.65, current_price: 0.70 }),
+      ).triggered,
+    ).toBe(false);
+  });
+
+  it('should fire PRICE_CROSSES_DOWN only on a downward edge', () => {
+    const triggers = [makeBlock('PRICE_CROSSES_DOWN', { threshold: 0.60 })];
+
+    expect(
+      evaluateTick(
+        [],
+        triggers,
+        [],
+        [],
+        makeContext({ previous_price: 0.65, current_price: 0.60 }),
+      ).triggered,
+    ).toBe(true);
+    expect(
+      evaluateTick(
+        [],
+        triggers,
+        [],
+        [],
+        makeContext({ previous_price: 0.55, current_price: 0.50 }),
+      ).triggered,
+    ).toBe(false);
+  });
+
+  it('does not fire crossing triggers on first tick without previous price', () => {
+    const up = [makeBlock('PRICE_CROSSES_UP', { threshold: 0.60 })];
+    const down = [makeBlock('PRICE_CROSSES_DOWN', { threshold: 0.60 })];
+
+    expect(
+      evaluateTick([], up, [], [], makeContext({ current_price: 0.70 }))
+        .triggered,
+    ).toBe(false);
+    expect(
+      evaluateTick([], down, [], [], makeContext({ current_price: 0.50 }))
+        .triggered,
+    ).toBe(false);
+  });
 });
 
 // ─── Condition Tests ────────────────────────────────────
