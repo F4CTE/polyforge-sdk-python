@@ -23,8 +23,8 @@ packages/api-client/src/generated/
 apps/user-app and apps/admin-app
 ```
 
-Generated files are committed. CI regenerates them and fails if controller/DTO
-changes are not reflected in the generated client.
+Generated files are committed. Current CI typechecks and builds the committed
+client output, but it does not regenerate clients or diff generated files.
 
 ---
 
@@ -95,7 +95,10 @@ pnpm --filter @polyforge/admin-app build
 
 ## 5. Turborepo Wiring
 
-`generate:api` depends on Swagger generation and is intentionally not cached:
+`generate:api` is wired as an uncached Turborepo task for explicit client
+generation runs. The normal `build` task does not depend on `generate:api`, so
+API clients must be regenerated manually when controller or DTO contracts
+change.
 
 ```json
 {
@@ -107,6 +110,12 @@ pnpm --filter @polyforge/admin-app build
     },
     "generate:api": {
       "dependsOn": ["build:swagger"],
+      "inputs": [
+        "services/api-service/dist/swagger.json",
+        "services/admin-api-service/dist/swagger-admin.json",
+        "openapi-ts.config.ts",
+        "openapi-ts.admin.config.ts"
+      ],
       "outputs": ["packages/api-client/src/generated/**"],
       "cache": false
     }
@@ -155,7 +164,7 @@ test -f services/api-service/dist/swagger.json
 test -f services/admin-api-service/dist/swagger-admin.json
 ```
 
-### Generated client changed in CI
+### Generated client changed locally
 
 Run `pnpm generate:api`, review the generated diff, and commit it with the API
 change.

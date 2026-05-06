@@ -94,12 +94,12 @@ Create this file at the **root of the repository**, next to `package.json`.
     "build:swagger": {
       "dependsOn": ["^build"],
       "inputs":    ["src/**"],
-      "outputs":   ["../../swagger.json", "../../swagger-admin.json"],
+      "outputs":   ["dist/swagger.json", "dist/swagger-admin.json"],
       "cache":     false
     },
     "generate:api": {
       "dependsOn": ["build:swagger"],
-      "inputs":    ["../../swagger.json", "../../swagger-admin.json", "../../openapi-ts.config.ts", "../../openapi-ts.admin.config.ts"],
+      "inputs":    ["services/api-service/dist/swagger.json", "services/admin-api-service/dist/swagger-admin.json", "openapi-ts.config.ts", "openapi-ts.admin.config.ts"],
       "outputs":   ["packages/api-client/src/generated/**"],
       "cache":     false
     },

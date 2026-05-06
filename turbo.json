@@ -25,11 +25,12 @@
     "generate:api": {
       "dependsOn": ["build:swagger"],
       "inputs": [
-        "dist/swagger.json",
-        "../../openapi-ts.config.ts",
-        "../../openapi-ts.admin.config.ts"
+        "services/api-service/dist/swagger.json",
+        "services/admin-api-service/dist/swagger-admin.json",
+        "openapi-ts.config.ts",
+        "openapi-ts.admin.config.ts"
       ],
-      "outputs": ["src/app/api/**"],
+      "outputs": ["packages/api-client/src/generated/**"],
       "cache": false
     },
     "dev": {

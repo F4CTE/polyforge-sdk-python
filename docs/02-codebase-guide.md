@@ -266,32 +266,56 @@ export const BLOCK_REGISTRY: BlockRegistry = {
 
 The strategy builder uses an SVG-based 2D canvas (not a tab-based list). Blocks are rendered as color-coded rectangles that can be freely dragged, with bezier connection lines between them. The canvas supports pan/zoom and auto-layout in section columns. A floating action button (FAB) opens the block picker.
 
-To register a new block, add its definition to the appropriate category file:
+To register a new block, add its definition to the appropriate section in the
+React builder definitions file:
 
 ```typescript
-// apps/user-app/src/app/strategy-builder/blocks/trigger-blocks.ts
-export const TRIGGER_BLOCKS: BlockDefinition[] = [
+// apps/user-app/src/components/builder/block-definitions.ts
+export const BLOCK_DEFS: Record<BlockSection, BlockDef[]> = {
   // ... existing blocks ...
-  {
-    type:        BlockType.VOLUME_SPIKE,
-    label:       'Volume Spike',
-    description: 'Fire when volume is N times above average',
-    icon:        'pi pi-chart-bar',
-    category:    'trigger',
-    configFields: [
-      { key: 'tokenId',    label: 'Market Token',         type: 'market-picker' },
-      { key: 'multiplier', label: 'Spike multiplier',     type: 'number', min: 1.1, max: 100, step: 0.1 },
-      { key: 'windowMins', label: 'Rolling window (min)', type: 'number', min: 1, max: 60 },
-    ],
-  },
-];
+  triggers: [
+    // ... existing trigger blocks ...
+    {
+      type: 'volume_spike',
+      label: 'Volume Spike',
+      description: 'Fire when volume is N times above average.',
+      fields: [
+        { key: 'marketSlot', label: 'Market', type: 'market_slot', placeholder: '$MARKET_A' },
+        { key: 'multiplier', label: 'Spike multiplier', type: 'number', placeholder: '2' },
+        { key: 'windowMs', label: 'Rolling window (ms)', type: 'number', placeholder: '60000' },
+      ],
+      group: 'Technical Analysis',
+    },
+  ],
+  safety: [
+    // ...
+  ],
+  conditions: [
+    // ...
+  ],
+  actions: [
+    // ...
+  ],
+  logic: [
+    // ...
+  ],
+  calc: [
+    // ...
+  ],
+};
 ```
 
-The canvas will automatically render the new block with the correct category color (Safety=red, Triggers=amber, Conditions=blue, Actions=green) and make it available in the FAB block picker.
+The builder palette reads `BLOCK_DEFS` directly. Section labels, colors, and
+icon names live in `SECTION_META` in the same file. The canvas will
+automatically render the new block with the section color and make it available
+in the block picker.
 
 ### Block Wiring Interaction
 
-Blocks have output ports (right edge) and input ports (left edge). Users drag from an output port to an input port to create an explicit connection. Connections are stored in the component's `connections` signal as `{ id, fromBlockId, toBlockId }` objects and rendered as dashed Bezier curves in the SVG canvas.
+Blocks have output ports (right edge) and input ports (left edge). Users drag
+from an output port to an input port to create an explicit connection.
+Connections are stored in React Flow edge state and rendered as Bezier curves in
+the canvas.
 
 When no explicit connections exist, the canvas falls back to auto-wiring: all blocks in adjacent section columns (safety -> triggers -> conditions -> actions) are connected automatically for backward compatibility.
 
@@ -495,7 +519,10 @@ TypeScript errors here mean the frontend was using a field that has changed. Fix
 
 **Step 8 — Commit the generated files:**
 
-Always commit `swagger.json` and the generated `api/` files alongside your backend change. CI will regenerate and diff — a stale generated file will fail the build.
+Always commit the updated OpenAPI JSON and `packages/api-client/src/generated/`
+files alongside your backend change. CI typechecks and builds the committed
+client output, but it does not currently regenerate clients or diff generated
+files for you.
 
 ---
 
@@ -690,8 +717,8 @@ This is the most critical workflow to internalize:
 4. Fix any React code that broke
    └─► The compiler tells you exactly what changed
 
-5. Commit swagger.json + generated api/ files with your backend change
-   └─► CI enforces this — it regenerates and diffs
+5. Commit swagger.json + generated client files with your backend change
+   └─► CI typechecks and builds the committed generated output
 ```
 
 This flow makes API changes safe: you cannot silently break the frontend because the TypeScript compiler catches mismatches.
