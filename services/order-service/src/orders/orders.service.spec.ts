@@ -275,8 +275,13 @@ describe("OrdersService", () => {
       );
     });
 
-    it("calls signer with correct parameters", async () => {
-      const p = svc.processIntent(makeIntent());
+    it("passes order size and price to signer as decimal strings", async () => {
+      const p = svc.processIntent(
+        makeIntent({
+          size: "12345678901234.123456",
+          price: "0.123456",
+        }),
+      );
       await vi.runAllTimersAsync();
       await p;
 
@@ -284,8 +289,8 @@ describe("OrdersService", () => {
       expect(signerCall.userId).toBe("user-1");
       expect(signerCall.tokenId).toBe("token-1");
       expect(signerCall.side).toBe("BUY");
-      expect(signerCall.size).toBe(10); // parsed from string '10'
-      expect(signerCall.price).toBe(0.6); // parsed from string '0.6'
+      expect(signerCall.size).toBe("12345678901234.123456");
+      expect(signerCall.price).toBe("0.123456");
       expect(signerCall.orderType).toBe("GTC");
     });
 
@@ -867,7 +872,7 @@ describe("OrdersService", () => {
       await p;
 
       const signerCall = signer.signOrder.mock.calls[0][0];
-      expect(signerCall.price).toBeLessThanOrEqual(0.1);
+      expect(signerCall.price).toBe("0.01");
     });
 
     it('uses "manual-close" as strategyId when not provided', async () => {
@@ -900,7 +905,7 @@ describe("OrdersService", () => {
       await p;
 
       const signerCall = signer.signOrder.mock.calls[0][0];
-      expect(signerCall.size).toBe(7.5);
+      expect(signerCall.size).toBe("7.5");
     });
   });
 

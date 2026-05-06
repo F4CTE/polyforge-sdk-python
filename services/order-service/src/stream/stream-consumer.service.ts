@@ -23,6 +23,24 @@ const CONSUMER = `order-service-${process.pid}`;
 const BLOCK_MS = 2_000; // block XREADGROUP for 2s
 const BATCH_COUNT = 50; // read up to 50 messages per poll
 const PEL_MIN_IDLE_MS = 30_000;
+const DECIMAL_6_RE = /^(?:0|[1-9]\d*)(?:\.\d{1,6})?$/;
+
+function decimalToUnits(value: string): bigint | null {
+  if (!DECIMAL_6_RE.test(value)) return null;
+
+  const [integer, fractional = ""] = value.split(".");
+  return BigInt(integer) * 1_000_000n + BigInt(fractional.padEnd(6, "0"));
+}
+
+function isPositiveDecimal(value: string): boolean {
+  const units = decimalToUnits(value);
+  return units !== null && units > 0n;
+}
+
+function isPriceInRange(value: string): boolean {
+  const units = decimalToUnits(value);
+  return units !== null && units > 0n && units <= 1_000_000n;
+}
 
 /**
  * Reads OrderIntents from `stream:orders` using Redis Consumer Groups.
@@ -223,6 +241,16 @@ export class StreamConsumerService implements OnModuleInit, OnModuleDestroy {
         this.logDroppedIntent(msgId, "invalid_expiration", obj);
         return null;
       }
+      const size = obj["size"] ?? "0";
+      const price = obj["price"] ?? "0";
+      if (!isPositiveDecimal(size)) {
+        this.logDroppedIntent(msgId, "invalid_size", obj);
+        return null;
+      }
+      if (!isPriceInRange(price)) {
+        this.logDroppedIntent(msgId, "invalid_price", obj);
+        return null;
+      }
 
       return {
         intentId: obj["intentId"],
@@ -236,8 +264,8 @@ export class StreamConsumerService implements OnModuleInit, OnModuleDestroy {
         tokenId: obj["tokenId"] ?? "",
         side: (obj["side"] as "BUY" | "SELL") ?? "BUY",
         outcome: obj["outcome"] ?? "YES",
-        size: obj["size"] ?? "0",
-        price: obj["price"] ?? "0",
+        size,
+        price,
         orderType:
           (obj["orderType"] as OrderIntent["orderType"] | undefined) ?? "GTC",
         expiration,

@@ -33,8 +33,8 @@ function makeTestCreds(
 const BASE_PARAMS = {
   tokenId: "12345678901234567890",
   side: "BUY" as "BUY" | "SELL",
-  size: 10,
-  price: 0.6,
+  size: "10",
+  price: "0.6",
   expiration: 0,
   timestamp: 1_714_000_000_000, // fixed ms timestamp for deterministic tests
 };
@@ -188,25 +188,25 @@ describe("NativeEip712Service (CLOB V2)", () => {
   // ── Amount calculation ────────────────────────────────────────────────────
 
   describe("signOrder() — amount computation", () => {
-    it("makerAmount = round(size × 1_000_000)", async () => {
+    it("makerAmount = size decimal string scaled by 1_000_000", async () => {
       const creds = makeTestCreds();
       const order = await svc.signOrder(creds, 80002, {
         ...BASE_PARAMS,
-        size: 10,
-        price: 0.5,
+        size: "12345678901234.123456",
+        price: "0.5",
       });
-      expect(order.makerAmount).toBe("10000000");
+      expect(order.makerAmount).toBe("12345678901234123456");
       zeroCredentials(creds);
     });
 
-    it("takerAmount = round(size × price × 1_000_000)", async () => {
+    it("takerAmount = size × price decimal strings scaled by 1_000_000 without IEEE-754 rounding", async () => {
       const creds = makeTestCreds();
       const order = await svc.signOrder(creds, 80002, {
         ...BASE_PARAMS,
-        size: 10,
-        price: 0.6,
+        size: "12345678901234.123456",
+        price: "0.123456",
       });
-      expect(order.takerAmount).toBe("6000000");
+      expect(order.takerAmount).toBe("1524148134430759945");
       zeroCredentials(creds);
     });
 

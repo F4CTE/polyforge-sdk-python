@@ -91,8 +91,8 @@ export interface SignOrderRequest {
   requestId: string;
   tokenId: string;
   side: "BUY" | "SELL";
-  size: number;
-  price: number;
+  size: string;
+  price: string;
   orderType: "GTC" | "FOK" | "GTD" | "FAK" | "POST_ONLY";
   expiration?: number;
   tickSize?: string;

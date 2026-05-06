@@ -41,6 +41,8 @@ export interface SignedOrder {
 
 const MAX_UINT256 = 2n ** 256n - 1n;
 const POSITIVE_DECIMAL_UINT256 = /^[1-9][0-9]*$/;
+const DECIMAL_6_RE = /^(?:0|[1-9][0-9]*)(?:\.[0-9]{1,6})?$/;
+const FIXED_POINT_SCALE = 1_000_000n;
 
 interface PolyL2Headers {
   [key: string]: string;
@@ -63,6 +65,24 @@ function parsePositiveUint256(value: string, fieldName: string): bigint {
     throw new BadRequestException(`${fieldName} exceeds uint256 max`);
   }
   return parsed;
+}
+
+function decimalToFixedUnits(value: string): bigint {
+  if (!DECIMAL_6_RE.test(value)) {
+    throw new BadRequestException(
+      "Decimal value must use at most 6 fractional digits",
+    );
+  }
+
+  const [integer, fractional = ""] = value.split(".");
+  return (
+    BigInt(integer) * FIXED_POINT_SCALE + BigInt(fractional.padEnd(6, "0"))
+  );
+}
+
+function roundedMulFixedPoint(leftUnits: bigint, rightUnits: bigint): bigint {
+  const product = leftUnits * rightUnits;
+  return (product + FIXED_POINT_SCALE / 2n) / FIXED_POINT_SCALE;
 }
 
 /**
@@ -379,8 +399,8 @@ export class SigningService implements OnModuleInit {
   private stubSign(params: {
     tokenId: string;
     side: string;
-    size: number;
-    price: number;
+    size: string;
+    price: string;
     orderType: string;
     expiration: number;
     sigType: number;
@@ -391,8 +411,13 @@ export class SigningService implements OnModuleInit {
       maker: "0x0000000000000000000000000000000000000001",
       signer: "0x0000000000000000000000000000000000000001",
       tokenId: params.tokenId,
-      makerAmount: String(Math.round(params.size * 1_000_000)),
-      takerAmount: String(Math.round(params.size * params.price * 1_000_000)),
+      makerAmount: String(decimalToFixedUnits(params.size)),
+      takerAmount: String(
+        roundedMulFixedPoint(
+          decimalToFixedUnits(params.size),
+          decimalToFixedUnits(params.price),
+        ),
+      ),
       expiration: String(params.expiration ?? 0),
       timestamp: String(Date.now()),
       metadata: "0x",
@@ -411,8 +436,8 @@ export class SigningService implements OnModuleInit {
     params: {
       tokenId: string;
       side: "BUY" | "SELL";
-      size: number;
-      price: number;
+      size: string;
+      price: string;
       orderType: string;
       expiration: number;
       tickSize?: string;

@@ -56,8 +56,8 @@ const BASE_REQ = {
   requestId: "req-abc",
   tokenId: "token-xyz",
   side: "BUY" as "BUY" | "SELL",
-  size: 10,
-  price: 0.6,
+  size: "10",
+  price: "0.6",
   orderType: "GTC" as "GTC" | "FOK" | "GTD",
 };
 
@@ -258,20 +258,20 @@ describe("SigningService (CLOB V2)", () => {
       });
     });
 
-    it("sets makerAmount = round(size * 1_000_000)", async () => {
+    it("sets makerAmount = size decimal string scaled by 1_000_000", async () => {
       const { order } = await svc.signOrder({
         ...BASE_REQ,
-        size: 10,
-        price: 0.6,
+        size: "10",
+        price: "0.6",
       });
       expect(Number(order.makerAmount)).toBe(10_000_000);
     });
 
-    it("sets takerAmount = round(size * price * 1_000_000)", async () => {
+    it("sets takerAmount = size × price decimal strings scaled by 1_000_000", async () => {
       const { order } = await svc.signOrder({
         ...BASE_REQ,
-        size: 10,
-        price: 0.6,
+        size: "10",
+        price: "0.6",
       });
       expect(Number(order.takerAmount)).toBe(6_000_000);
     });

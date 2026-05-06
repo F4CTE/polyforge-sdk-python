@@ -96,6 +96,62 @@ describe("StreamConsumerService (order-service)", () => {
       });
     });
 
+    it("returns null when size is zero or negative", () => {
+      expect(
+        parseIntent(service, [
+          "intentId",
+          "int-1",
+          "userId",
+          "user-1",
+          "size",
+          "0",
+          "price",
+          "0.55",
+        ]),
+      ).toBeNull();
+
+      expect(
+        parseIntent(service, [
+          "intentId",
+          "int-2",
+          "userId",
+          "user-1",
+          "size",
+          "-100",
+          "price",
+          "0.55",
+        ]),
+      ).toBeNull();
+    });
+
+    it("returns null when price is outside (0, 1]", () => {
+      expect(
+        parseIntent(service, [
+          "intentId",
+          "int-1",
+          "userId",
+          "user-1",
+          "size",
+          "10",
+          "price",
+          "0",
+        ]),
+      ).toBeNull();
+
+      expect(
+        parseIntent(service, [
+          "intentId",
+          "int-2",
+          "userId",
+          "user-1",
+          "size",
+          "10",
+          "price",
+          "999",
+        ]),
+      ).toBeNull();
+    });
+
     it("returns null when intentId is missing", () => {
       const result = parseIntent(service, [
         "userId",
@@ -124,6 +180,10 @@ describe("StreamConsumerService (order-service)", () => {
         "int-1",
         "userId",
         "user-1",
+        "size",
+        "10",
+        "price",
+        "0.55",
       ]);
 
       expect(result?.orderType).toBe("GTC");
@@ -161,6 +221,10 @@ describe("StreamConsumerService (order-service)", () => {
         "int-1",
         "userId",
         "user-1",
+        "size",
+        "10",
+        "price",
+        "0.55",
         "expiration",
         "1800000000",
       ]);
@@ -174,6 +238,10 @@ describe("StreamConsumerService (order-service)", () => {
         "int-1",
         "userId",
         "user-1",
+        "size",
+        "10",
+        "price",
+        "0.55",
         "venue",
         "kalshi",
       ]);
@@ -187,6 +255,10 @@ describe("StreamConsumerService (order-service)", () => {
         "int-1",
         "userId",
         "user-1",
+        "size",
+        "10",
+        "price",
+        "0.55",
         "venue",
         "kalshi",
         "kalshiSubaccount",
@@ -203,6 +275,10 @@ describe("StreamConsumerService (order-service)", () => {
         "int-1",
         "userId",
         "user-1",
+        "size",
+        "10",
+        "price",
+        "0.55",
       ]);
 
       expect(result?.venue).toBeUndefined();
@@ -232,6 +308,10 @@ describe("StreamConsumerService (order-service)", () => {
         "user-1",
         "copyTradeId",
         "copy-1",
+        "size",
+        "1",
+        "price",
+        "0.5",
       ]);
 
       expect(result?.orderId).toBe("order-1");

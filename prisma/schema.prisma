@@ -1522,9 +1522,9 @@ model JournalEntry {
   marketTitle String
   outcome     String   @db.VarChar(3)
   side        String   @db.VarChar(4)
-  price       Float
-  size        Float
-  pnl         Float?
+  price       Decimal  @db.Decimal(20, 6)
+  size        Decimal  @db.Decimal(20, 6)
+  pnl         Decimal? @db.Decimal(20, 6)
   note        String   @default("")
   tags        String[] @default([])
   mood        String   @default("neutral") @db.VarChar(12)

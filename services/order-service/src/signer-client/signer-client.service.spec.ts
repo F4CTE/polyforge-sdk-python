@@ -31,8 +31,8 @@ const SIGN_REQ = {
   requestId: "req-abc",
   tokenId: "token-xyz",
   side: "BUY" as const,
-  size: 10,
-  price: 0.6,
+  size: "12345678901234.123456",
+  price: "0.123456",
   orderType: "GTC" as const,
 };
 
@@ -103,6 +103,8 @@ describe("SignerClientService", () => {
       const body = JSON.parse(fetchSpy.mock.calls[0][1].body as string);
       expect(body.userId).toBe("user-1");
       expect(body.tokenId).toBe("token-xyz");
+      expect(body.size).toBe("12345678901234.123456");
+      expect(body.price).toBe("0.123456");
     });
 
     it("returns the parsed JSON response", async () => {

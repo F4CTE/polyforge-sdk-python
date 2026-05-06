@@ -1,17 +1,48 @@
 import {
   IsString,
   IsNotEmpty,
-  IsNumber,
   IsIn,
+  IsNumber,
   IsOptional,
   IsBoolean,
-  Min,
-  Max,
   MaxLength,
+  Matches,
   registerDecorator,
   type ValidationOptions,
   type ValidationArguments,
 } from "class-validator";
+
+const DECIMAL_6_RE = /^(?:0|[1-9][0-9]*)(?:\.[0-9]{1,6})?$/;
+
+function decimalToUnits(value: string): bigint | null {
+  if (!DECIMAL_6_RE.test(value)) return null;
+
+  const [integer, fractional = ""] = value.split(".");
+  return BigInt(integer) * 1_000_000n + BigInt(fractional.padEnd(6, "0"));
+}
+
+function DecimalUnitsRange(
+  minExclusive: bigint,
+  maxInclusive: bigint | null,
+  validationOptions?: ValidationOptions,
+) {
+  return function (object: object, propertyName: string) {
+    registerDecorator({
+      name: "decimalUnitsRange",
+      target: object.constructor,
+      propertyName,
+      options: validationOptions,
+      validator: {
+        validate(value: unknown) {
+          if (typeof value !== "string") return false;
+          const units = decimalToUnits(value);
+          if (units === null || units <= minExclusive) return false;
+          return maxInclusive === null || units <= maxInclusive;
+        },
+      },
+    });
+  };
+}
 
 function OrderTypeExpirationRule(validationOptions?: ValidationOptions) {
   return function (object: object, propertyName: string) {
@@ -64,20 +95,23 @@ export class SignOrderDto {
   @IsIn(["BUY", "SELL"])
   side!: "BUY" | "SELL";
 
-  @IsNumber()
-  @Min(1, {
-    message: "Order size must be at least 1 share (Polymarket minimum)",
+  @IsString()
+  @Matches(DECIMAL_6_RE, {
+    message: "Order size must be a decimal string with at most 6 decimals",
   })
-  size!: number;
+  @DecimalUnitsRange(0n, null, {
+    message: "Order size must be greater than 0",
+  })
+  size!: string;
 
-  @IsNumber()
-  @Min(0, {
-    message: "Price must be >= 0 (Polymarket probability lower bound)",
+  @IsString()
+  @Matches(DECIMAL_6_RE, {
+    message: "Order price must be a decimal string with at most 6 decimals",
   })
-  @Max(1, {
-    message: "Price must be <= 1 (Polymarket probability upper bound)",
+  @DecimalUnitsRange(0n, 1_000_000n, {
+    message: "Order price must be greater than 0 and at most 1",
   })
-  price!: number;
+  price!: string;
 
   @IsIn(["GTC", "FOK", "GTD", "FAK"])
   orderType!: "GTC" | "FOK" | "GTD" | "FAK";

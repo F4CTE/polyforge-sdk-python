@@ -7,8 +7,8 @@ const BASE_DTO = {
   requestId: "req-1",
   tokenId: "token-1",
   side: "BUY" as const,
-  size: 10,
-  price: 0.5,
+  size: "10.000001",
+  price: "0.500001",
   orderType: "GTC" as const,
 };
 
@@ -92,42 +92,64 @@ describe("SignOrderDto orderType/expiration validation", () => {
 });
 
 describe("SignOrderDto price bounds", () => {
-  it("accepts price = 0 (probability lower bound)", async () => {
-    await expect(validateDto({ price: 0 })).resolves.toHaveLength(0);
+  it("rejects price = 0", async () => {
+    const errors = await validateDto({ price: "0" });
+    expect(errors.map((error) => error.constraints)).toContainEqual(
+      expect.objectContaining({
+        decimalUnitsRange: "Order price must be greater than 0 and at most 1",
+      }),
+    );
   });
 
   it("accepts price = 1 (probability upper bound)", async () => {
-    await expect(validateDto({ price: 1 })).resolves.toHaveLength(0);
+    await expect(validateDto({ price: "1" })).resolves.toHaveLength(0);
   });
 
   it("accepts mid-range price (0 < price < 1)", async () => {
-    await expect(validateDto({ price: 0.42 })).resolves.toHaveLength(0);
+    await expect(validateDto({ price: "0.42" })).resolves.toHaveLength(0);
   });
 
   it("rejects price > 1", async () => {
-    const errors = await validateDto({ price: 1.0001 });
+    const errors = await validateDto({ price: "1.0001" });
     expect(errors.map((error) => error.constraints)).toContainEqual(
       expect.objectContaining({
-        max: "Price must be <= 1 (Polymarket probability upper bound)",
+        decimalUnitsRange: "Order price must be greater than 0 and at most 1",
       }),
     );
   });
 
   it("rejects price = 999 (issue example)", async () => {
-    const errors = await validateDto({ price: 999 });
+    const errors = await validateDto({ price: "999" });
     expect(errors.map((error) => error.constraints)).toContainEqual(
       expect.objectContaining({
-        max: "Price must be <= 1 (Polymarket probability upper bound)",
+        decimalUnitsRange: "Order price must be greater than 0 and at most 1",
       }),
     );
   });
 
   it("rejects negative price", async () => {
-    const errors = await validateDto({ price: -0.01 });
+    const errors = await validateDto({ price: "-0.01" });
     expect(errors.map((error) => error.constraints)).toContainEqual(
       expect.objectContaining({
-        min: "Price must be >= 0 (Polymarket probability lower bound)",
+        matches: "Order price must be a decimal string with at most 6 decimals",
       }),
+    );
+  });
+
+  it("accepts size and price as decimal strings", async () => {
+    await expect(
+      validateDto({
+        size: "12345678901234.123456",
+        price: "0.123456",
+      }),
+    ).resolves.toHaveLength(0);
+  });
+
+  it("rejects non-positive size and out-of-range price strings", async () => {
+    await expect(validateDto({ size: "0" })).resolves.not.toHaveLength(0);
+    await expect(validateDto({ price: "0" })).resolves.not.toHaveLength(0);
+    await expect(validateDto({ price: "1.000001" })).resolves.not.toHaveLength(
+      0,
     );
   });
 });

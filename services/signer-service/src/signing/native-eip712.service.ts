@@ -57,8 +57,8 @@ const DOMAIN_VERSION_HASH = keccak256(Buffer.from("2", "utf8"));
 export interface PolymarketOrderParams {
   tokenId: string;
   side: "BUY" | "SELL";
-  size: number;
-  price: number;
+  size: string;
+  price: string;
   expiration: number;
   /** Milliseconds since epoch — included in V2 struct */
   timestamp: number;
@@ -98,6 +98,25 @@ function encodeUint256(value: bigint | number): Buffer {
     v >>= 8n;
   }
   return buf;
+}
+
+const DECIMAL_6_RE = /^(?:0|[1-9][0-9]*)(?:\.[0-9]{1,6})?$/;
+const FIXED_POINT_SCALE = 1_000_000n;
+
+function decimalToFixedUnits(value: string): bigint {
+  if (!DECIMAL_6_RE.test(value)) {
+    throw new Error("Decimal value must use at most 6 fractional digits");
+  }
+
+  const [integer, fractional = ""] = value.split(".");
+  return (
+    BigInt(integer) * FIXED_POINT_SCALE + BigInt(fractional.padEnd(6, "0"))
+  );
+}
+
+function roundedMulFixedPoint(leftUnits: bigint, rightUnits: bigint): bigint {
+  const product = leftUnits * rightUnits;
+  return (product + FIXED_POINT_SCALE / 2n) / FIXED_POINT_SCALE;
 }
 
 /**
@@ -233,10 +252,11 @@ export class NativeEip712Service {
     const builder = params.builder ?? ZERO_ADDRESS;
     const metadata = params.metadata ?? Buffer.alloc(0);
 
-    // Compute amounts (Polymarket uses 6-decimal fixed-point: 1 share = 1_000_000)
-    const makerAmount = BigInt(Math.round(params.size * 1_000_000));
-    const takerAmount = BigInt(
-      Math.round(params.size * params.price * 1_000_000),
+    // Compute amounts without IEEE-754 rounding. Polymarket uses 6-decimal fixed point.
+    const makerAmount = decimalToFixedUnits(params.size);
+    const takerAmount = roundedMulFixedPoint(
+      makerAmount,
+      decimalToFixedUnits(params.price),
     );
 
     // Generate a cryptographically random 32-byte salt
