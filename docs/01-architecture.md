@@ -955,7 +955,8 @@ Every service must expose `GET /health`:
 ### PostHog Product Analytics
 
 PostHog Community Edition runs in `docker-compose.infra.yml` with its own
-`posthog-db`, `posthog-redis`, `posthog-web`, and `posthog-worker` services.
+`posthog-db`, `posthog-redis`, `posthog-clickhouse`, `posthog-kafka`,
+`posthog`, and `posthog-worker` services.
 Server-side capture is provided by `@polyforge/shared-posthog`; backend
 services enable it when `POSTHOG_API_KEY` is set and default to no-op behavior
 when the key is absent. The React user/admin apps use `VITE_POSTHOG_KEY` and
@@ -1068,7 +1069,9 @@ api-service build:swagger     admin-api-service build:swagger
                ↓
      @hey-api/openapi-ts + @hey-api/client-fetch
                ↓
-both React apps (parallel — import generated src/api/ clients)
+packages/api-client generated user/admin clients
+               ↓
+both React apps import @polyforge/api-client
 ```
 
 See `03-openapi-codegen.md` for the full OpenAPI generation pipeline.
@@ -1084,7 +1087,7 @@ See `03-openapi-codegen.md` for the full OpenAPI generation pipeline.
 | ORM | Prisma 7.5.0 (schema-first, type-safe) |
 | Validation | Zod (streams/internal) + class-validator (HTTP controllers) |
 | API documentation | @nestjs/swagger — OpenAPI 3.1 spec generated at build time |
-| API client generation | @hey-api/openapi-ts (typescript-fetch generator) |
+| API client generation | @hey-api/openapi-ts + @hey-api/client-fetch |
 | Redis client | ioredis |
 | Logging | pino + nestjs-pino |
 | Testing | Vitest + Supertest |

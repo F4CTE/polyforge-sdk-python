@@ -15,8 +15,8 @@
 | 4 | `docker-compose.infra.yml` | Spins up the local infrastructure and service stack |
 | 5 | `prisma/schema.prisma` | User database schema (polyforge) |
 | 6 | `prisma/schema.admin.prisma` | Admin database schema (polyforge_admin) |
-| 7 | `openapi-ts.config.ts` | hey-api codegen config for user-app |
-| 8 | `openapi-ts.admin.config.ts` | hey-api codegen config for admin-app |
+| 7 | `openapi-ts.config.ts` | hey-api codegen config for user API client |
+| 8 | `openapi-ts.admin.config.ts` | hey-api codegen config for admin API client |
 
 ---
 
@@ -49,7 +49,7 @@ Create this file at the **root of the repository**.
     "seed:admin":          "dotenv -e .env -- ts-node prisma/seed.admin.ts",
     "reset":               "bash scripts/reset.sh",
     "health-check":        "bash scripts/health-check.sh",
-    "generate:api":        "openapi-ts --config openapi-ts.config.ts && openapi-ts --config openapi-ts.admin.config.ts",
+    "generate:api":        "openapi-ts --file openapi-ts.config.ts && openapi-ts --file openapi-ts.admin.config.ts",
     "format":              "prettier --write \"**/*.{ts,json,md}\""
   },
   "devDependencies": {
@@ -100,7 +100,7 @@ Create this file at the **root of the repository**, next to `package.json`.
     "generate:api": {
       "dependsOn": ["build:swagger"],
       "inputs":    ["../../swagger.json", "../../swagger-admin.json", "../../openapi-ts.config.ts", "../../openapi-ts.admin.config.ts"],
-      "outputs":   ["src/app/api/**"],
+      "outputs":   ["packages/api-client/src/generated/**"],
       "cache":     false
     },
     "test": {
@@ -648,7 +648,7 @@ model AuditLog {
 
 ---
 
-## Step 7 — `openapi-ts.config.ts` (user-app)
+## Step 7 — `openapi-ts.config.ts` (user API client)
 
 Create this file at the **root of the repository**.
 
@@ -658,20 +658,20 @@ import { defineConfig } from '@hey-api/openapi-ts';
 export default defineConfig({
   input:  'services/api-service/dist/swagger.json',
   output: {
-    path:   'apps/user-app/src/app/api',
+    path:   'packages/api-client/src/generated/user',
     format: 'prettier',
   },
   plugins: [
     { name: '@hey-api/typescript', enums: 'javascript' },
     { name: '@hey-api/sdk' },
-    { name: '@hey-api/client-angular' },
+    { name: '@hey-api/client-fetch' },
   ],
 });
 ```
 
 ---
 
-## Step 8 — `openapi-ts.admin.config.ts` (admin-app)
+## Step 8 — `openapi-ts.admin.config.ts` (admin API client)
 
 Create this file at the **root of the repository**.
 
@@ -681,13 +681,13 @@ import { defineConfig } from '@hey-api/openapi-ts';
 export default defineConfig({
   input:  'services/admin-api-service/dist/swagger-admin.json',
   output: {
-    path:   'apps/admin-app/src/app/api',
+    path:   'packages/api-client/src/generated/admin',
     format: 'prettier',
   },
   plugins: [
     { name: '@hey-api/typescript', enums: 'javascript' },
     { name: '@hey-api/sdk' },
-    { name: '@hey-api/client-angular' },
+    { name: '@hey-api/client-fetch' },
   ],
 });
 ```
@@ -707,8 +707,8 @@ polyforge/
 ├── .env.example                  ✅ Step 3
 ├── .env                          ← copy of .env.example (gitignored)
 ├── docker-compose.infra.yml      ✅ Step 4
-├── openapi-ts.config.ts          ✅ Step 7 — hey-api user-app
-├── openapi-ts.admin.config.ts    ✅ Step 8 — hey-api admin-app
+├── openapi-ts.config.ts          ✅ Step 7 — hey-api user client
+├── openapi-ts.admin.config.ts    ✅ Step 8 — hey-api admin client
 └── prisma/
     ├── schema.prisma             ✅ Step 5 — user database
     └── schema.admin.prisma       ✅ Step 6 — admin database

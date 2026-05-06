@@ -469,7 +469,7 @@ Next: deploy to AWS eu-west-2, then submit Polymarket Builders Program grant app
 
 ### Bug Fixes
 
-- [x] Admin dialog dark theme fix (all PrimeNG dialogs use dark overrides)
+- [x] Admin dialog dark theme fix (React dialogs use dark design tokens)
 - [x] Landing page feature card hover inconsistency
 - [x] Strategy builder palette closing on tab switch
 
@@ -542,7 +542,7 @@ Next: deploy to AWS eu-west-2, then submit Polymarket Builders Program grant app
 ### Bug Fixes
 
 - [x] Strategy detail 404: contextual error messages (403/404/other)
-- [x] PrimeNG loading overlays dark-themed
+- [x] React loading overlays dark-themed
 
 ### Data
 
@@ -603,18 +603,18 @@ Next: deploy to AWS eu-west-2, then submit Polymarket Builders Program grant app
 - [x] Order detail dialog — click any order row for full details
 - [x] Notification bell in user-app topbar with unread count badge + dropdown
 - [x] Sparkline mini-charts on market rows (24h price trend via Chart.js)
-- [x] Drag & drop block reordering in strategy builder (via @angular/cdk DragDrop)
+- [x] Drag & drop block reordering in strategy builder (via `@xyflow/react`)
 - [x] Cross-app live updates: orders refresh on WS events, ticket detail polls every 15s
 - [x] Admin sidebar badge for open ticket count + toast on new tickets
 
 ### Design Polish
 
 - [x] Dark-themed auth card with cyan gradient heading
-- [x] Global dark input overrides for all PrimeNG components
+- [x] Global dark input overrides for shared React form controls
 - [x] Input-specific design tokens (`--pf-input-bg`, `--pf-input-border`, etc.)
 - [x] Fixed Discover page (user to author remapping)
 - [x] Fixed Orders page (fillSize/fillPrice field names corrected)
-- [x] PrimeNG DatePicker for backtest date inputs (replaces native date inputs)
+- [x] Date picker styling for backtest date inputs
 - [x] Admin dashboard stat cards (Users, Strategies, Orders, Tickets) with icons
 - [x] Avatar initial badges for ticket assignment (deterministic color by name hash)
 
@@ -627,10 +627,10 @@ Next: deploy to AWS eu-west-2, then submit Polymarket Builders Program grant app
 
 ## Post-Launch — E2E Test Fixes (v2.1.1)
 
-- [x] Fixed error interceptor: 401 on `/me` no longer redirects from public routes
+- [x] Fixed global fetch 401 handler: `/me` no longer redirects from public routes
 - [x] Dev rate limits relaxed (effectively unlimited in non-production)
 - [x] E2E helpers: cookie-based auth, quoted-printable email decoding
-- [x] E2E page objects: PrimeNG icon-based selectors, confirmPassword field, cookie banner dismissal
+- [x] E2E page objects: icon-based selectors, confirmPassword field, cookie banner dismissal
 - [x] E2E test assertions aligned with actual component behavior (verify-email, strategy builder redirect)
 - [x] Playwright config: global setup, increased timeouts, larger viewport
 - [x] Result: 60 passed, 4 skipped, 0 failed (was 38 failures)
@@ -795,61 +795,61 @@ Next: deploy to AWS eu-west-2, then submit Polymarket Builders Program grant app
 - [x] Auth store bootstraps from `/auth/v1/me` and HttpOnly cookies
 - [x] Generated `@polyforge/api-client` services cover auth-service endpoints
 - [x] Fetch client sends credentials for authenticated requests
-- [x] `errorInterceptor` — redirects to /login on 401
+- [x] Global fetch 401 handler — redirects to /login on 401
 - [x] Guards: `authGuard`, `verifiedGuard`, `connectedGuard`
-- [x] `LayoutComponent` — collapsible sidebar nav (Trade + Social sections), top bar with user menu, `<router-outlet>`
-- [x] `LoginComponent` — email+password form, inline TOTP step on `TOTP_REQUIRED` error
-- [x] `RegisterComponent` — email/username/password/ToS form with inline validation
-- [x] `VerifyEmailComponent` — auto-verifies from `?token=` query param, waiting/resend state
-- [x] `ForgotPasswordComponent` — email form, always-200 response handling
-- [x] `ResetPasswordComponent` — password+confirm form with match validation, reads `?token=`
-- [x] Dev proxy (`proxy.conf.json`) — `/auth/v1` → `:3001`, `/api/v1` → `:3002` (with WS)
+- [x] `AppLayout` — collapsible sidebar nav (Trade + Social sections), top bar with user menu, React Router `<Outlet />`
+- [x] `login.tsx` — email+password form, inline TOTP step on `TOTP_REQUIRED` error
+- [x] `register.tsx` — email/username/password/ToS form with inline validation
+- [x] `verify-email.tsx` — auto-verifies from `?token=` query param, waiting/resend state
+- [x] `forgot-password.tsx` — email form, always-200 response handling
+- [x] `reset-password.tsx` — password+confirm form with match validation, reads `?token=`
+- [x] Vite dev proxy (`vite.config.ts`) — `/auth/v1` → `:3001`, `/api/v1` → `:3002` (with WS)
 - [x] Lazy-loaded route skeleton for all features (markets, strategies, portfolio, orders, backtest, discover, leaderboard, profile, settings)
 
 ### Design System (done)
 
-- [x] `PolyforgeTheme` PrimeNG preset (cyan primary, dark blue-night surface, component overrides)
+- [x] Shared Tailwind/shadcn theme (cyan primary, dark blue-night surface, component overrides)
 - [x] `tokens.css` — all `--pf-*` CSS custom properties
 - [x] `chart.config.ts` — Chart.js defaults (Polyforge palette)
-- [x] `styles.scss` — Outfit + JetBrains Mono fonts, `--pf-*` variables, all global utilities
+- [x] `globals.css` — Outfit + JetBrains Mono fonts, `--pf-*` variables, all global utilities
 - [x] Always-dark mode (`darkModeSelector: false`)
 
 ### Markets (done)
 
 - [x] `MarketsApiService` — list, get, price-history, order-book
 - [x] `WebSocketService` — connect, reconnect, subscribe/unsubscribe prices, ping
-- [x] `MarketsListComponent` — searchable/sortable table, live YES/NO prices, pagination
-- [x] `MarketDetailComponent` — OHLCV line chart (1m/1h/1d), order book depth, live prices, market info
+- [x] `markets-list.tsx` — searchable/sortable table, live YES/NO prices, pagination
+- [x] `market-detail.tsx` — OHLCV line chart (1m/1h/1d), order book depth, live prices, market info
 
 ### Strategies (done)
 
 - [x] `StrategiesApiService` — list, get, create, update, delete, start/stop/pause/resume, fork
 - [x] `WebSocketService` — strategy event subscription (STARTED/STOPPED/PAUSED/RESUMED/ERROR)
-- [x] `StrategiesListComponent` — filter tabs, status badges with pulse dot, inline start/stop/pause/resume actions
-- [x] `StrategyDetailComponent` — block summary, live event log via WebSocket, action buttons
-- [x] `StrategyBuilderComponent` — all 36 blocks (safety/triggers/conditions/actions), config forms, create + edit mode
+- [x] `strategies-list.tsx` — filter tabs, status badges with pulse dot, inline start/stop/pause/resume actions
+- [x] `strategy-detail.tsx` — block summary, live event log via WebSocket, action buttons
+- [x] `strategy-builder.tsx` — all 36 blocks (safety/triggers/conditions/actions), config forms, create + edit mode
 
 ### Portfolio + Orders (done)
 
 - [x] `PortfolioApiService` — portfolio, pnl, paper summary/reset, orders, close-position
-- [x] `PortfolioComponent` — Live/Paper tabs, P&L chart (color-coded), positions table with close button, paper summary
-- [x] `OrdersComponent` — status filter tabs, full order table (side/outcome/size/price/fill/status), pagination
+- [x] `portfolio.tsx` — Live/Paper tabs, P&L chart (color-coded), positions table with close button, paper summary
+- [x] `orders.tsx` — status filter tabs, full order table (side/outcome/size/price/fill/status), pagination
 
 ### Social + Settings (done)
 
 - [x] `SocialApiService` — discover, leaderboard, profile, follow, update profile/notifications/password
-- [x] `DiscoverComponent` — public strategy grid with sort tabs (popular/newest/top_pnl/most_forked), pagination
-- [x] `LeaderboardComponent` — trader rank table (7d/30d/allTime), P&L/win-rate/trade count, profile links
-- [x] `MyProfileComponent` — own profile view (avatar, display name, bio, status chips, quick links)
-- [x] `PublicProfileComponent` — any user profile with follow/unfollow, follower/following/strategy counts
-- [x] `SettingsComponent` — tabbed: Profile (displayName/bio/avatar/twitter), Security (password + TOTP enable/disable), Notifications (toggle list)
-- [x] `TradingAccountComponent` — Polymarket credentials import/delete, bot link code generator
+- [x] `discover.tsx` — public strategy grid with sort tabs (popular/newest/top_pnl/most_forked), pagination
+- [x] `leaderboard.tsx` — trader rank table (7d/30d/allTime), P&L/win-rate/trade count, profile links
+- [x] `my-profile.tsx` — own profile view (avatar, display name, bio, status chips, quick links)
+- [x] `public-profile.tsx` — any user profile with follow/unfollow, follower/following/strategy counts
+- [x] `settings.tsx` — tabbed: Profile (displayName/bio/avatar/twitter), Security (password + TOTP enable/disable), Notifications (toggle list)
+- [x] `trading-account.tsx` — Polymarket credentials import/delete, bot link code generator
 
 ### Backtest (done)
 
 - [x] `BacktestApiService` — list, run, get
 - [x] `WebSocketService` — backtest event types (PROGRESS/COMPLETED/FAILED)
-- [x] `BacktestComponent` — run panel (strategy picker, date range), live progress via WS, history table with expandable results (P&L/win-rate/order counts)
+- [x] `backtest.tsx` — run panel (strategy picker, date range), live progress via WS, history table with expandable results (P&L/win-rate/order counts)
 
 ---
 
@@ -919,21 +919,21 @@ Next: deploy to AWS eu-west-2, then submit Polymarket Builders Program grant app
 - [x] Admin auth store restores session through `/auth/v1/me`
 - [x] Generated admin API client covers health, users, strategies, orders, DLQ, backtests, cache, rate limits, reports, builder stats, audit/event/login logs, invites, waitlist, config flags, and admin management
 - [x] HttpOnly cookie auth with fetch credentials and route protection components
-- [x] `LayoutComponent` — collapsible sidebar (Monitor / Manage / Moderation / System sections); System section visible to SUPER_ADMIN only
-- [x] `LoginComponent` — email + password, IP restriction note
-- [x] `DashboardComponent` — health status banner + service grid + infra cards (DB/Redis), auto-refresh 15s, Launch Control card (invite-only toggle)
-- [x] `UsersListComponent` — search + status + suspended filters, paginated table with user detail links
-- [x] `UserDetailComponent` — identity / security / limits / activity cards; suspend/unsuspend + edit limits dialogs
-- [x] `StrategiesComponent` — all strategies table with force-stop (ConfirmationService) + unpublish
-- [x] `OrdersComponent` — orders table + DLQ tab (replay/discard per entry)
-- [x] `BacktestsComponent` — all backtest runs with status badges and progress bars
-- [x] `CacheComponent` — cache stats + pattern hit-rate breakdown + manual flush + rate limits table
-- [x] `ReportsComponent` — moderation queue; approve/dismiss with admin note dialog
-- [x] `LogsComponent` — three tabs: Audit / Events / Logins, paginated
-- [x] `BuilderComponent` — tier card + weekly reward + attributed volume + bar chart + weekly breakdown table
-- [x] `InvitesComponent` — invite code generation + active codes table + waitlist management (send invite, remove); correct admin CSS class names
-- [x] `AdminsComponent` — SUPER_ADMIN-only; list all admins, create admin (dialog), edit name/role/active/password (dialog), deactivate/reactivate; every action audit-logged
-- [x] `styles.scss` — all admin-specific utility classes and component styles
+- [x] `admin-layout.tsx` — collapsible sidebar (Monitor / Manage / Moderation / System sections); System section visible to SUPER_ADMIN only
+- [x] `login.tsx` — email + password, IP restriction note
+- [x] `dashboard.tsx` — health status banner + service grid + infra cards (DB/Redis), auto-refresh 15s, Launch Control card (invite-only toggle)
+- [x] `users-list.tsx` — search + status + suspended filters, paginated table with user detail links
+- [x] `user-detail.tsx` — identity / security / limits / activity cards; suspend/unsuspend + edit limits dialogs
+- [x] `strategies.tsx` — all strategies table with force-stop confirmation + unpublish
+- [x] `orders.tsx` — orders table + DLQ tab (replay/discard per entry)
+- [x] `backtests.tsx` — all backtest runs with status badges and progress bars
+- [x] `cache.tsx` — cache stats + pattern hit-rate breakdown + manual flush + rate limits table
+- [x] `reports.tsx` — moderation queue; approve/dismiss with admin note dialog
+- [x] `logs.tsx` — three tabs: Audit / Events / Logins, paginated
+- [x] `builder.tsx` — tier card + weekly reward + attributed volume + bar chart + weekly breakdown table
+- [x] `invites.tsx` — invite code generation + active codes table + waitlist management (send invite, remove); correct admin CSS class names
+- [x] `admins.tsx` — SUPER_ADMIN-only; list all admins, create admin (dialog), edit name/role/active/password (dialog), deactivate/reactivate; every action audit-logged
+- [x] `globals.css` — all admin-specific utility classes and component styles
 
 ---
 
@@ -953,7 +953,7 @@ Next: deploy to AWS eu-west-2, then submit Polymarket Builders Program grant app
 ## Pre-launch Polish
 
 - [x] Legal pages — `/terms` (Terms of Service, 14 sections) and `/privacy` (Privacy Policy, 12 sections) in user-app
-- [x] 404 page — `NotFoundComponent` with gradient "404", bolt icon, links to `/markets` and `/strategies`
+- [x] 404 page — `not-found.tsx` with gradient "404", bolt icon, links to `/markets` and `/strategies`
 - [x] Landing page (`apps/landing/`) — full SEO static page: OG meta, Twitter Card, JSON-LD, hero + feature grid + how-it-works + CTA, zero-JS waitlist form
 - [x] Favicon — SVG favicon (32×32 dark rounded square + cyan bolt) in landing, user-app, admin-app
 - [x] OG image — `og-image.png` (1200×630) generated from SVG via `@resvg/resvg-js` script
@@ -968,7 +968,7 @@ Next: deploy to AWS eu-west-2, then submit Polymarket Builders Program grant app
 - [x] CORS — api-service, admin-auth-service, admin-api-service all have `app.enableCors()` with correct origin allowlists
 - [x] Register page invite-code field — reads `?invite=CODE` query param, auto-fills + uppercases, shows on `INVITE_REQUIRED`/`INVITE_INVALID` errors
 - [x] `robots.txt` — user-app serves `public/robots.txt` blocking `/login`, `/register`, `/settings`, `/portfolio` from crawlers
-- [x] Cookie consent banner — `CookieBannerComponent` fixed-bottom bar, localStorage-dismissed, links to Privacy Policy
+- [x] Cookie consent banner — React fixed-bottom bar, localStorage-dismissed, links to Privacy Policy
 - [x] Launch runbook updated — Step 12 uses runtime toggle via admin panel / API instead of env var + restart; waitlist send-invite steps added
 
 ---
@@ -983,7 +983,7 @@ Next: deploy to AWS eu-west-2, then submit Polymarket Builders Program grant app
 - [x] `.npmrc` `public-hoist-pattern` entries for eslint so all packages can resolve the root binary
 - [x] `prisma generate` added to lint, typecheck, test, and build jobs in CI
 - [x] `FORCE_JAVASCRIPT_ACTIONS_TO_NODE24=true` — GitHub Actions runner opts into Node 24 early
-- [x] `gitignore` `/logs/` fixed (was `logs/`, incorrectly excluded `services/admin-api-service/src/logs/` and `apps/admin-app/src/app/features/logs/`)
+- [x] `gitignore` `/logs/` fixed (was `logs/`, incorrectly excluded `services/admin-api-service/src/logs/` and `apps/admin-app/src/pages/logs/`)
 
 ### Test Coverage
 
@@ -1007,11 +1007,11 @@ Next: deploy to AWS eu-west-2, then submit Polymarket Builders Program grant app
 
 ### Docker Frontend Serving
 
-- [x] `apps/user-app/Dockerfile` — multi-stage (Node 24 + `npm install` + `ng build --configuration production`) → nginx:1.27-alpine serving `dist/user-app/browser/`
-- [x] `apps/admin-app/Dockerfile` — same pattern, serves `dist/admin-app/browser/`
+- [x] `apps/user-app/Dockerfile` — multi-stage Node 24 + pnpm workspace build → nginx serving `apps/user-app/dist/`
+- [x] `apps/admin-app/Dockerfile` — multi-stage Node 24 + pnpm workspace build → nginx serving `apps/admin-app/dist/`
 - [x] `apps/landing/Dockerfile` — nginx:1.27-alpine serving static files directly (no build step)
 - [x] `apps/user-app/nginx.conf` + `apps/admin-app/nginx.conf` + `apps/landing/nginx.conf` — per-app nginx configs with `try_files $uri $uri/ /index.html` for SPA routing
-- [x] `.dockerignore` — excludes `**/node_modules`, `**/dist`, `**/.angular`, `**/.turbo` from Docker build context
+- [x] `.dockerignore` — excludes dependency, build-output, and tool-cache directories from Docker build context
 - [x] `docker-compose.infra.yml` — added `user-app`, `admin-app`, `landing` services; all on `internal` network
 - [x] `services/gateway/nginx.dev.conf` — dev nginx gateway: port 80 → user app (landing + SPA + api-service + auth-service + WebSocket), port 8080 → admin app (admin-app + admin-api-service + admin-auth-service)
 - [x] Docker DNS auto-resolution — `resolver 127.0.0.11 valid=10s ipv6=off` + `set $upstream` variables in all nginx location blocks; no manual reload needed after service rebuilds
@@ -1019,18 +1019,18 @@ Next: deploy to AWS eu-west-2, then submit Polymarket Builders Program grant app
 
 ### Bug Fixes
 
-- [x] `environment.prod.ts` (user-app) — `authApiUrl`, `apiUrl`, `wsUrl` set to `''` (relative) so API calls route through the gateway in Docker dev
-- [x] `app.config.ts` (user-app) — `MessageService` added to global providers, fixing `NG0201` crash that caused blank pages
+- [x] Vite/nginx relative routing (user-app) — `/auth/v1`, `/api/v1`, and `/ws` calls resolve through the gateway in Docker dev
+- [x] React app shell (user-app) — `App` wires the router, error boundary, and Sonner toaster so global UI state renders before routes mount
 - [x] CORS — `http://localhost` added to allowed origins in `auth-service` + `api-service`; `http://localhost:8080` added to `admin-auth-service` + `admin-api-service`
 - [x] `.env` — `FRONTEND_URL` changed from `http://localhost:4200` to `http://localhost` so invite email links work through the gateway
 - [x] `admin-api-service` docker-compose env — added `EMAIL_DRIVER`, `MAILHOG_HOST`, `MAILHOG_PORT`, `FRONTEND_URL`, `mailhog` depends_on (fixes send-invite)
-- [x] `InvitesComponent` — corrected CSS class names from user-app style to admin-app style (`admin-card`, `admin-section-title`, `admin-form-field`, `admin-form-label`, `strategy-filter-tabs`, `filter-tab`)
-- [x] `RegisterComponent` — added "Confirm password" field with cross-field validator; blocks submission if passwords don't match
+- [x] `invites.tsx` — corrected CSS class names from user-app style to admin-app style (`admin-card`, `admin-section-title`, `admin-form-field`, `admin-form-label`, `strategy-filter-tabs`, `filter-tab`)
+- [x] `register.tsx` — added "Confirm password" field with cross-field validator; blocks submission if passwords don't match
 
 ### Admin Management Feature
 
 - [x] `services/admin-api-service/src/admins/` — new module: `GET/POST /api/v1/admins`, `PATCH/DELETE /api/v1/admins/:id`; SUPER_ADMIN-only; bcryptjs password hashing; every action audit-logged
-- [x] `apps/admin-app/features/admins/` — `AdminsComponent`: table of all admins, create dialog, edit dialog (name/role/active/password reset), deactivate/reactivate with confirmation; SUPER_ADMIN sidebar item only
+- [x] `apps/admin-app/src/pages/admins/` — `admins.tsx`: table of all admins, create dialog, edit dialog (name/role/active/password reset), deactivate/reactivate with confirmation; SUPER_ADMIN sidebar item only
 - [x] `admin.model.ts` — added `AdminView` interface
 - [x] `AdminApiService` — added `listAdmins`, `createAdmin`, `updateAdmin`, `deactivateAdmin` methods
 

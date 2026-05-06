@@ -157,7 +157,8 @@ pnpm --filter @polyforge/admin-app dev
 pnpm --filter @polyforge/landing dev
 ```
 
-Both apps include a `proxy.conf.json` that forwards API calls to the Docker services.
+Both apps configure dev-server proxying in `vite.config.ts`, forwarding API calls
+to the Docker services during local live-reload development.
 
 **Default accounts:**
 
@@ -223,7 +224,7 @@ The `docker-compose.override.yml` file mounts local `dist/` directories into run
 **How it works:**
 
 - **NestJS services**: the override mounts each service's `dist/` folder and all shared package `dist/` folders into the container, then overrides the command to `node --watch dist/main.js`. When you rebuild locally, Node detects the changed files and restarts automatically.
-- **Frontend apps** (user-app, admin-app): the override mounts the local build output (`dist/<app>/browser`) into the nginx html root. After a local `pnpm build --filter @polyforge/user-app`, refresh the browser to see changes.
+- **Frontend apps** (user-app, admin-app): the override mounts each app's local Vite build output (`apps/<app>/dist`) into the nginx html root. After a local `pnpm build --filter @polyforge/user-app`, refresh the browser to see changes.
 - **Landing page**: the override mounts the `apps/landing/` directory directly into nginx.
 
 **Quick start:**
