@@ -1,4 +1,16 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
+
+vi.mock("@polyforge/shared-db", () => ({
+  PrismaService: class PrismaService {},
+}));
+
+vi.mock("@polyforge/shared-redis", () => ({
+  RedisService: class RedisService {},
+  runOncePerCluster: vi.fn(async ({ job }: { job: () => Promise<unknown> }) =>
+    job(),
+  ),
+}));
+
 import { ScoreCalculatorService } from "./score-calculator.service";
 import { ScoresService } from "./scores.service";
 import { BadgeService } from "./badge.service";
@@ -422,6 +434,99 @@ describe("BadgeService", () => {
 
       // Should get TOP_10 and TOP_50
       expect(awarded).toBe(2);
+    });
+
+    it("awards WINNING_STREAK_5 when resolved positions include five consecutive profitable outcomes", async () => {
+      prisma.traderBadge.findMany.mockResolvedValue([]);
+      prisma.order.count.mockResolvedValue(0);
+      prisma.position.findMany.mockResolvedValue([
+        { realizedPnl: new Prisma.Decimal(10) },
+        { realizedPnl: new Prisma.Decimal(8) },
+        { realizedPnl: new Prisma.Decimal(6) },
+        { realizedPnl: new Prisma.Decimal(4) },
+        { realizedPnl: new Prisma.Decimal(2) },
+      ]);
+      prisma.whaleFollow.count.mockResolvedValue(0);
+      prisma.strategy.count.mockResolvedValue(0);
+      prisma.user.findUnique.mockResolvedValue({ polymarketAddress: null });
+      prisma.traderScore.findUnique.mockResolvedValue(null);
+      prisma.paperPosition.findMany.mockResolvedValue([]);
+      prisma.traderBadge.upsert.mockResolvedValue({});
+
+      const awarded = await badge.evaluateForUser(
+        "user-1",
+        new Date("2027-01-01"),
+      );
+
+      expect(awarded).toBe(1);
+      expect(prisma.traderBadge.upsert).toHaveBeenCalledWith(
+        expect.objectContaining({
+          create: expect.objectContaining({
+            type: "WINNING_STREAK_5",
+            name: "5-Win Streak",
+          }),
+        }),
+      );
+    });
+
+    it("awards COPY_LEADER when at least five active or paused configs copy the user's wallet", async () => {
+      prisma.traderBadge.findMany.mockResolvedValue([]);
+      prisma.order.count.mockResolvedValue(0);
+      prisma.position.findMany.mockResolvedValue([]);
+      prisma.whaleFollow.count.mockResolvedValue(0);
+      prisma.strategy.count.mockResolvedValue(0);
+      prisma.user.findUnique.mockResolvedValue({
+        polymarketAddress: "0xLeader",
+      });
+      prisma.copyConfig.count.mockResolvedValue(5);
+      prisma.traderScore.findUnique.mockResolvedValue(null);
+      prisma.paperPosition.findMany.mockResolvedValue([]);
+      prisma.traderBadge.upsert.mockResolvedValue({});
+
+      const awarded = await badge.evaluateForUser(
+        "user-1",
+        new Date("2027-01-01"),
+      );
+
+      expect(awarded).toBe(1);
+      expect(prisma.copyConfig.count).toHaveBeenCalledWith({
+        where: {
+          targetWallet: "0xLeader",
+          status: { in: ["ACTIVE", "PAUSED"] },
+        },
+      });
+      expect(prisma.traderBadge.upsert).toHaveBeenCalledWith(
+        expect.objectContaining({
+          create: expect.objectContaining({
+            type: "COPY_LEADER",
+            name: "Copy Leader",
+          }),
+        }),
+      );
+    });
+
+    it("does not award EARLY_ADOPTER at the exact beta cutoff", async () => {
+      prisma.traderBadge.findMany.mockResolvedValue([]);
+      prisma.order.count.mockResolvedValue(0);
+      prisma.position.findMany.mockResolvedValue([]);
+      prisma.whaleFollow.count.mockResolvedValue(0);
+      prisma.strategy.count.mockResolvedValue(0);
+      prisma.user.findUnique.mockResolvedValue({ polymarketAddress: null });
+      prisma.traderScore.findUnique.mockResolvedValue(null);
+      prisma.paperPosition.findMany.mockResolvedValue([]);
+      prisma.traderBadge.upsert.mockResolvedValue({});
+
+      const awarded = await badge.evaluateForUser(
+        "user-1",
+        new Date("2026-06-01T00:00:00Z"),
+      );
+
+      expect(awarded).toBe(0);
+      expect(prisma.traderBadge.upsert).not.toHaveBeenCalledWith(
+        expect.objectContaining({
+          create: expect.objectContaining({ type: "EARLY_ADOPTER" }),
+        }),
+      );
     });
 
     it("skips badges user already has", async () => {

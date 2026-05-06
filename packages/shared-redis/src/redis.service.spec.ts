@@ -1,35 +1,84 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const xadd = vi.fn().mockResolvedValue("1-0");
-const quit = vi.fn().mockResolvedValue("OK");
-const on = vi.fn();
-
-vi.mock("ioredis", () => ({
-  default: vi.fn().mockImplementation(function RedisMock() {
-    return {
-      xadd,
-      quit,
-      on,
-    };
-  }),
+const redisClient = vi.hoisted(() => ({
+  on: vi.fn(),
+  quit: vi.fn().mockResolvedValue("OK"),
+  get: vi.fn(),
+  set: vi.fn(),
+  xadd: vi.fn().mockResolvedValue("1-0"),
 }));
 
+const RedisMock = vi.hoisted(() =>
+  vi.fn(function Redis() {
+    return redisClient;
+  }),
+);
+
+vi.mock("ioredis", () => ({
+  default: RedisMock,
+}));
+
+import Redis from "ioredis";
+import { RedisService } from "./redis.service";
+
 describe("RedisService", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
   afterEach(() => {
-    vi.resetModules();
     vi.unstubAllEnvs();
-    xadd.mockClear();
-    quit.mockClear();
-    on.mockClear();
+  });
+
+  it("returns parsed JSON values", async () => {
+    redisClient.get.mockResolvedValue(JSON.stringify({ ok: true, count: 2 }));
+    const service = new RedisService();
+
+    const result = await service.getJson<{ ok: boolean; count: number }>(
+      "cache:key",
+    );
+
+    expect(result).toEqual({ ok: true, count: 2 });
+    expect(redisClient.get).toHaveBeenCalledWith("cache:key");
+  });
+
+  it("returns null for missing JSON values", async () => {
+    redisClient.get.mockResolvedValue(null);
+    const service = new RedisService();
+
+    await expect(service.getJson("missing:key")).resolves.toBeNull();
+  });
+
+  it("adds stream entries with Redis XADD field-value arguments", async () => {
+    redisClient.xadd.mockResolvedValue("1700000000000-0");
+    const service = new RedisService();
+
+    const id = await service.xadd("stream:orders", {
+      type: "ORDER_FILLED",
+      userId: "user-1",
+      orderId: "order-1",
+    });
+
+    expect(id).toBe("1700000000000-0");
+    expect(redisClient.xadd).toHaveBeenCalledWith(
+      "stream:orders",
+      "*",
+      "type",
+      "ORDER_FILLED",
+      "userId",
+      "user-1",
+      "orderId",
+      "order-1",
+    );
+    expect(Redis).toHaveBeenCalled();
   });
 
   it("adds stream:events entries with approximate MAXLEN trimming by default", async () => {
-    const { RedisService } = await import("./redis.service");
     const service = new RedisService();
 
     await service.xadd("stream:events", { type: "PRICE", tokenId: "token-1" });
 
-    expect(xadd).toHaveBeenCalledWith(
+    expect(redisClient.xadd).toHaveBeenCalledWith(
       "stream:events",
       "MAXLEN",
       "~",
@@ -44,12 +93,11 @@ describe("RedisService", () => {
 
   it("uses REDIS_STREAM_EVENTS_MAXLEN for stream:events when configured", async () => {
     vi.stubEnv("REDIS_STREAM_EVENTS_MAXLEN", "250000");
-    const { RedisService } = await import("./redis.service");
     const service = new RedisService();
 
     await service.xadd("stream:events", { type: "PRICE" });
 
-    expect(xadd).toHaveBeenCalledWith(
+    expect(redisClient.xadd).toHaveBeenCalledWith(
       "stream:events",
       "MAXLEN",
       "~",
@@ -61,21 +109,24 @@ describe("RedisService", () => {
   });
 
   it("keeps non-events streams untrimmed by default", async () => {
-    const { RedisService } = await import("./redis.service");
     const service = new RedisService();
 
     await service.xadd("stream:orders", { type: "ORDER" });
 
-    expect(xadd).toHaveBeenCalledWith("stream:orders", "*", "type", "ORDER");
+    expect(redisClient.xadd).toHaveBeenCalledWith(
+      "stream:orders",
+      "*",
+      "type",
+      "ORDER",
+    );
   });
 
   it("allows callers to opt into approximate MAXLEN trimming", async () => {
-    const { RedisService } = await import("./redis.service");
     const service = new RedisService();
 
     await service.xadd("stream:orders", { type: "ORDER" }, 500);
 
-    expect(xadd).toHaveBeenCalledWith(
+    expect(redisClient.xadd).toHaveBeenCalledWith(
       "stream:orders",
       "MAXLEN",
       "~",
