@@ -15,7 +15,7 @@
 # ─── Stage 1: user-app build ─────────────────────────────────────────────────
 
 # SECURITY: Pin to digest in production. Run: docker inspect --format='{{index .RepoDigests 0}}' node:24-alpine
-FROM node:24-alpine@sha256:01743339035a5c3c11a373cd7c83aeab6ed1457b55da6a69e014a95ac4e4700b AS user-app-builder
+FROM node:26-alpine@sha256:30f5a66e7265ef70aac56b4753ffa7905e54eca1084bc25503893ad8e9273f05 AS user-app-builder
 
 WORKDIR /build
 
@@ -39,7 +39,7 @@ RUN pnpm --filter @polyforge/shared-types run build && \
 # ─── Stage 2: admin-app build ────────────────────────────────────────────────
 
 # SECURITY: Pin to digest in production. Run: docker inspect --format='{{index .RepoDigests 0}}' node:24-alpine
-FROM node:24-alpine@sha256:01743339035a5c3c11a373cd7c83aeab6ed1457b55da6a69e014a95ac4e4700b AS admin-app-builder
+FROM node:26-alpine@sha256:30f5a66e7265ef70aac56b4753ffa7905e54eca1084bc25503893ad8e9273f05 AS admin-app-builder
 
 WORKDIR /build
 
@@ -64,7 +64,7 @@ RUN pnpm --filter @polyforge/shared-types run build && \
 # server is needed in production — nginx serves everything as static files.
 
 # SECURITY: Pin to digest in production. Run: docker inspect --format='{{index .RepoDigests 0}}' node:24-alpine
-FROM node:24-alpine@sha256:01743339035a5c3c11a373cd7c83aeab6ed1457b55da6a69e014a95ac4e4700b AS landing-builder
+FROM node:26-alpine@sha256:30f5a66e7265ef70aac56b4753ffa7905e54eca1084bc25503893ad8e9273f05 AS landing-builder
 
 WORKDIR /build
 
