@@ -153,7 +153,7 @@ test("deployment hardening controls remain enabled", () => {
   const deployScript = read(DEPLOY_SCRIPT);
 
   assert.ok(workflow.includes("id-token: write"), "production deploy needs OIDC for cosign keyless signing");
-  assert.ok(workflow.includes("sigstore/cosign-installer@d58896d6a1865668819e1d91763c7751a165e159"));
+  assert.ok(workflow.includes("sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6"));
   assert.ok(workflow.includes('cosign sign --yes "$image"'));
   assert.ok(workflow.includes("PREVIOUS_IMAGE_TAG"));
   assert.ok(workflow.includes(".last-successful-image-tag"));
