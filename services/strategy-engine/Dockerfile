@@ -11,7 +11,7 @@ RUN cd packages/polyforge-engine && wasm-pack build --target nodejs --release
 
 # ── TypeScript build stage ────────────────────────────────────────────────────
 # SECURITY: Pin to digest in production. Run: docker inspect --format='{{index .RepoDigests 0}}' node:24-alpine
-FROM node:26-alpine@sha256:30f5a66e7265ef70aac56b4753ffa7905e54eca1084bc25503893ad8e9273f05 AS builder
+FROM node:24-alpine AS builder
 
 WORKDIR /app
 
@@ -59,7 +59,7 @@ RUN DIRECT_DATABASE_URL=placeholder ADMIN_DIRECT_DATABASE_URL=placeholder \
 
 # ── Runtime ──────────────────────────────────────────────────────────────────
 # SECURITY: Pin to digest in production. Run: docker inspect --format='{{index .RepoDigests 0}}' node:24-alpine
-FROM node:26-alpine@sha256:30f5a66e7265ef70aac56b4753ffa7905e54eca1084bc25503893ad8e9273f05
+FROM node:24-alpine
 
 WORKDIR /app
 
