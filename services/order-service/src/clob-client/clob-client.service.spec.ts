@@ -1,5 +1,8 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { ConfigService } from "@nestjs/config";
+import type { ClobClient as PolymarketClobClient } from "@polymarket/clob-client" with {
+  "resolution-mode": "import",
+};
 import { ClobClientService } from "./clob-client.service";
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -31,6 +34,14 @@ const SUBMIT_REQ = {
     POLY_BUILDER_SIGNATURE: "s",
   },
 };
+
+type IsAny<T> = 0 extends 1 & T ? true : false;
+type AssertFalse<T extends false> = T;
+type AssertTrue<T extends true> = T;
+type _ClobClientSdkIsNotAny = AssertFalse<IsAny<ClobClientService["sdk"]>>;
+type _ClobClientSdkUsesPolymarketSdk = AssertTrue<
+  ClobClientService["sdk"] extends PolymarketClobClient ? true : false
+>;
 
 // ─── Suite ────────────────────────────────────────────────────────────────────
 

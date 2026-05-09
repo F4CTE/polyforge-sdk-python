@@ -1,6 +1,8 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import type {
+  Chain as PolymarketChain,
+  ClobClient as PolymarketClobClient,
   OrderBookSummary,
   OpenOrder,
   Trade,
@@ -12,8 +14,19 @@ import type {
   TickSize,
 } from "@polymarket/clob-client" with { "resolution-mode": "import" };
 
-// eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-unsafe-assignment
-const { ClobClient, Chain } = require("@polymarket/clob-client");
+type PolymarketClobClientModule = {
+  ClobClient: new (...args: any[]) => PolymarketClobClient;
+  Chain: {
+    readonly POLYGON: PolymarketChain;
+    readonly AMOY: PolymarketChain;
+  };
+};
+
+/* eslint-disable @typescript-eslint/no-require-imports */
+const polymarketClobClient =
+  require("@polymarket/clob-client") as PolymarketClobClientModule;
+/* eslint-enable @typescript-eslint/no-require-imports */
+const { ClobClient, Chain } = polymarketClobClient;
 
 // ─── Re-export SDK types for downstream consumers ───────────────────────────
 
@@ -100,12 +113,12 @@ const RETRY_DELAYS_MS = [500, 1000, 2000];
 export class ClobClientService {
   private readonly logger = new Logger(ClobClientService.name);
   private readonly clobUrl: string;
-  readonly sdk: any;
+  readonly sdk: PolymarketClobClient;
 
   constructor(private readonly config: ConfigService) {
     this.clobUrl = this.config.getOrThrow<string>("CLOB_API_URL");
     const chainId =
-      this.config.get<number>("POLYMARKET_CHAIN_ID") ?? Chain.POLYGON;
+      this.config.get<PolymarketChain>("POLYMARKET_CHAIN_ID") ?? Chain.POLYGON;
     this.sdk = new ClobClient(this.clobUrl, chainId);
   }
 
