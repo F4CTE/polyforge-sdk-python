@@ -34,7 +34,12 @@ runs:
 
     - name: Install dependencies
       shell: bash
-      run: pnpm install --frozen-lockfile
+      run: |
+        pnpm install --frozen-lockfile || {
+          echo "::warning::pnpm install failed, clearing corrupted store and retrying..."
+          rm -rf "$(pnpm store path 2>/dev/null)"
+          pnpm install --frozen-lockfile
+        }
 
     - name: Generate Prisma clients
       shell: bash
