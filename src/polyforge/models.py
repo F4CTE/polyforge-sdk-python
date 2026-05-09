@@ -542,6 +542,8 @@ class MatchSyncResult:
     """Result of a manual matching pass."""
 
     matched: int = 0
+    created: int | None = None
+    updated: int | None = None
 
 
 @dataclass
@@ -1644,3 +1646,20 @@ class CorrelationCategoriesReport:
     categories: list[str] = field(default_factory=list)
     matrix: list[list[float]] = field(default_factory=list)
     updated_at: str = ""
+
+
+@dataclass
+class SystemHealthAuthenticated:
+    """Authenticated health/status response for GET /api/v1/status.
+
+    Includes operational metrics not exposed on the public /health endpoint.
+    """
+
+    status: str = ""
+    service: str | None = None
+    version: str | None = None
+    uptime: float | None = None
+    db: dict[str, Any] | None = None
+    redis: dict[str, Any] | None = None
+    queue_depth: int | None = None
+    services: dict[str, Any] | None = None
