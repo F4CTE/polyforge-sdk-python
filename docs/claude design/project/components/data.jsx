@@ -67,9 +67,9 @@ const WHALES = [
 ];
 
 const TESTIMONIALS = [
-  { who: "Alex K.", role: "Quant, ex-Jane Street", quote: "The block registry is the cleanest IF/THEN I've used outside of our internal tooling. Paper mode → live in one click." },
-  { who: "Sarah R.", role: "Discretionary trader", quote: "I mirror two whale wallets with Kelly sizing. Alerts hit Telegram before I'd even see the tweet. Edge, finally legible." },
-  { who: "Marcus C.", role: "Crypto fund analyst", quote: "Replaced three internal scripts and a Notion page. The backtest-compare view alone earned the subscription." },
+  { who: "Alex K.", role: "Quant, ex-Jane Street", quote: "The block registry is the cleanest IF/THEN I've used outside of our internal tooling. Paper mode → live in one click.", stat: "+34.2%", statLabel: "90d return", strategies: 12, since: "Jan 2026" },
+  { who: "Sarah R.", role: "Discretionary trader", quote: "I mirror two whale wallets with Kelly sizing. Alerts hit Telegram before I'd even see the tweet. Edge, finally legible.", stat: "2.41", statLabel: "Sharpe ratio", strategies: 5, since: "Feb 2026" },
+  { who: "Marcus C.", role: "Crypto fund analyst", quote: "Replaced three internal scripts and a Notion page. The backtest-compare view alone earned the subscription.", stat: "847", statLabel: "Backtests run", strategies: 23, since: "Dec 2025" },
 ];
 
 const HEADLINES = {

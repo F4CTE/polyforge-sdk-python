@@ -8,11 +8,12 @@
   display: grid;
   grid-template-columns: 260px 1fr;
   min-height: 100vh;
+  height: 100vh;
   background: var(--bg-app);
   color: var(--text-primary);
 }
 @media (max-width: 900px) {
-  .ds-root { grid-template-columns: 1fr; }
+  .ds-root { grid-template-columns: 1fr; height: auto; }
   .ds-side { display: none; }
 }
 
@@ -25,6 +26,7 @@
   background: var(--bg-surface);
   padding: 18px 14px 24px;
   display: flex; flex-direction: column;
+  flex-shrink: 0;
 }
 .ds-side-brand {
   display: flex; align-items: center; gap: 10px;
@@ -83,7 +85,7 @@
 .ds-toc-link.is-active .num { color: var(--accent-text); }
 
 /* ---- Main column ---- */
-.ds-main { min-width: 0; }
+.ds-main { min-width: 0; overflow-y: auto; height: 100vh; }
 .ds-top {
   position: sticky; top: 0; z-index: 5;
   height: 56px;
@@ -407,28 +409,23 @@
 .ds-snippet .attr { color: var(--color-purple-400); }
 .ds-snippet .str { color: var(--gain-text); }
 
-/* ---- Toast (preview) ---- */
+/* ---- Toast (preview) — Linear style ---- */
 .ds-toast {
-  display: inline-flex; align-items: center; gap: 10px;
-  padding: 10px 14px;
-  background: var(--bg-elevated);
-  border: 1px solid var(--border-default);
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 14px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
   border-radius: 8px;
-  box-shadow: var(--shadow-2);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.25), 0 0 0 1px rgba(0,0,0,0.08);
   font-size: 13px;
   color: var(--text-primary);
+  min-width: 280px;
+  max-width: 420px;
 }
-.ds-toast.is-gain { border-color: color-mix(in srgb, var(--gain) 35%, transparent); }
-.ds-toast.is-gain .ds-toast-icon { background: var(--gain-subtle); color: var(--gain-text); }
-.ds-toast.is-loss { border-color: color-mix(in srgb, var(--loss) 35%, transparent); }
-.ds-toast.is-loss .ds-toast-icon { background: var(--loss-subtle); color: var(--loss-text); }
-.ds-toast.is-warn .ds-toast-icon { background: var(--warning-subtle); color: var(--warning); }
-.ds-toast-icon {
-  width: 22px; height: 22px;
-  border-radius: 5px;
-  background: var(--bg-app);
-  display: grid; place-items: center;
-}
+.ds-toast > svg { flex-shrink: 0; color: var(--text-tertiary); }
+.ds-toast.is-gain > svg { color: var(--gain-text); }
+.ds-toast.is-loss > svg { color: var(--loss-text); }
+.ds-toast.is-warn > svg { color: var(--warning); }
 
 /* ---- Form sample ---- */
 .ds-input {
@@ -592,6 +589,13 @@
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   gap: 12px;
+}
+
+/* Respect reduced-motion preference: disable motion demos */
+@media (prefers-reduced-motion: reduce) {
+  .ds-motion-puck {
+    transition: none !important;
+  }
 }
 .ds-motion-tile {
   background: var(--bg-surface);

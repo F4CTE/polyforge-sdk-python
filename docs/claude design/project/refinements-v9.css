@@ -1,0 +1,885 @@
+/* =========================================================
+   refinements-v9.css — Polish pass 9 (May 2026)
+   Loaded AFTER refinements-v8.css.
+   Focus: interactive surfaces — context menus, popovers,
+   command palette, multi-select, dropzones, scroll spies,
+   plus a few finishing primitives.
+   ========================================================= */
+
+
+/* ---------------------------------------------------------
+   1. Context menu — right-click style menu.
+   Markup:
+   <ul class="ctx-menu">
+     <li class="ctx-item">Open</li>
+     <li class="ctx-item">Edit</li>
+     <li class="ctx-divider"></li>
+     <li class="ctx-item ctx-danger">Delete</li>
+   </ul>
+   --------------------------------------------------------- */
+.ctx-menu {
+  position: absolute;
+  list-style: none;
+  margin: 0;
+  padding: 4px;
+  min-width: 180px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-default);
+  border-radius: 8px;
+  box-shadow: 0 14px 40px rgba(0,0,0,0.45), 0 1px 0 rgba(255,255,255,0.04) inset;
+  z-index: 1100;
+  font-size: 12.5px;
+}
+.ctx-item {
+  display: flex; align-items: center; gap: 8px;
+  padding: 6px 10px; border-radius: 5px; cursor: pointer;
+  color: var(--text-secondary);
+  user-select: none;
+}
+.ctx-item:hover { background: var(--surface-hover); color: var(--text-primary); }
+.ctx-item .ctx-icon { width: 14px; height: 14px; opacity: 0.7; }
+.ctx-item .ctx-shortcut {
+  margin-left: auto; font-family: 'Geist Mono', monospace; font-size: 10.5px;
+  color: var(--text-tertiary); letter-spacing: 0.04em;
+}
+.ctx-divider {
+  height: 1px; background: var(--border-subtle); margin: 4px 6px;
+  list-style: none;
+}
+.ctx-danger { color: var(--loss-text, #ef6f4f); }
+.ctx-danger:hover { background: rgba(239,111,79,0.1); color: var(--loss-text, #ef6f4f); }
+.ctx-item[aria-disabled="true"] { opacity: 0.4; pointer-events: none; }
+
+
+/* ---------------------------------------------------------
+   2. Command palette — ⌘K modal.
+   Markup:
+   <div class="cmdk-backdrop">
+     <div class="cmdk">
+       <div class="cmdk-input-wrap"><input class="cmdk-input"/></div>
+       <div class="cmdk-list">
+         <div class="cmdk-section">Markets</div>
+         <button class="cmdk-item is-active">…</button>
+         <button class="cmdk-item">…</button>
+       </div>
+       <div class="cmdk-foot">↑↓ navigate · ↵ select · esc close</div>
+     </div>
+   </div>
+   --------------------------------------------------------- */
+.cmdk-backdrop {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.55);
+  backdrop-filter: blur(3px);
+  z-index: 1200;
+  display: flex; align-items: flex-start; justify-content: center;
+  padding-top: 12vh;
+}
+.cmdk {
+  width: min(640px, 92vw);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-default);
+  border-radius: 12px;
+  box-shadow: 0 30px 80px rgba(0,0,0,0.6);
+  overflow: hidden;
+  display: flex; flex-direction: column;
+  max-height: 60vh;
+}
+.cmdk-input-wrap {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border-subtle);
+  display: flex; align-items: center; gap: 10px;
+}
+.cmdk-input-wrap::before {
+  content: '⌕'; font-size: 16px; color: var(--text-tertiary);
+}
+.cmdk-input {
+  flex: 1; background: transparent; border: 0; outline: 0;
+  font-size: 14px; color: var(--text-primary);
+  font-family: inherit;
+}
+.cmdk-input::placeholder { color: var(--text-tertiary); }
+.cmdk-list {
+  flex: 1; overflow: auto; padding: 6px;
+}
+.cmdk-section {
+  font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.06em;
+  color: var(--text-tertiary); padding: 10px 10px 4px; font-weight: 600;
+}
+.cmdk-item {
+  display: flex; align-items: center; gap: 10px;
+  width: 100%; padding: 8px 10px; border-radius: 6px;
+  background: transparent; border: 0; cursor: pointer;
+  font-size: 13px; color: var(--text-secondary);
+  text-align: left; font-family: inherit;
+}
+.cmdk-item:hover, .cmdk-item.is-active {
+  background: var(--surface-hover); color: var(--text-primary);
+}
+.cmdk-item.is-active { background: var(--accent-subtle); color: var(--accent-default); }
+.cmdk-item .cmdk-icon { width: 16px; height: 16px; opacity: 0.8; flex-shrink: 0; }
+.cmdk-item .cmdk-meta {
+  margin-left: auto; font-size: 11px; color: var(--text-tertiary);
+  font-family: 'Geist Mono', monospace;
+}
+.cmdk-item .cmdk-kbd {
+  margin-left: auto;
+  font-family: 'Geist Mono', monospace; font-size: 10.5px;
+  padding: 1px 6px; border-radius: 3px;
+  background: var(--surface-subtle); color: var(--text-tertiary);
+  border: 1px solid var(--border-subtle);
+}
+.cmdk-foot {
+  border-top: 1px solid var(--border-subtle);
+  padding: 8px 14px; font-size: 11px; color: var(--text-tertiary);
+  font-family: 'Geist Mono', monospace; letter-spacing: 0.02em;
+}
+.cmdk-empty {
+  padding: 28px 16px; text-align: center;
+  color: var(--text-tertiary); font-size: 13px;
+}
+
+
+/* ---------------------------------------------------------
+   3. Multi-select dropdown — checkbox list inside a popover.
+   Markup:
+   <div class="multi-select">
+     <button class="ms-trigger">Categories <span class="ms-count">3</span> ▾</button>
+     <div class="ms-pop">
+       <div class="ms-search"><input placeholder="Filter…"/></div>
+       <ul class="ms-list">
+         <li><label><input type="checkbox" checked/> Politics</label></li>
+       </ul>
+       <div class="ms-foot">
+         <button class="ms-clear">Clear</button>
+         <button class="ms-apply">Apply</button>
+       </div>
+     </div>
+   </div>
+   --------------------------------------------------------- */
+.multi-select { position: relative; display: inline-block; }
+.ms-trigger {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 5px 10px; height: 28px;
+  background: var(--bg-elevated); border: 1px solid var(--border-default);
+  border-radius: 6px; cursor: pointer;
+  font-size: 12.5px; color: var(--text-primary); font-family: inherit;
+}
+.ms-trigger:hover { border-color: var(--border-strong, var(--text-tertiary)); }
+.ms-count {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 18px; height: 16px; padding: 0 5px;
+  background: var(--accent-subtle); color: var(--accent-default);
+  border-radius: 999px; font-size: 10px; font-weight: 600;
+  font-family: 'Geist Mono', monospace;
+}
+.ms-pop {
+  position: absolute; top: calc(100% + 4px); left: 0;
+  width: 240px; max-height: 320px;
+  background: var(--bg-elevated); border: 1px solid var(--border-default);
+  border-radius: 8px; box-shadow: 0 14px 40px rgba(0,0,0,0.45);
+  z-index: 200; display: flex; flex-direction: column;
+}
+.ms-search {
+  padding: 8px; border-bottom: 1px solid var(--border-subtle);
+}
+.ms-search input {
+  width: 100%; box-sizing: border-box;
+  padding: 5px 8px; background: var(--bg-canvas);
+  border: 1px solid var(--border-subtle); border-radius: 5px;
+  font-size: 12px; color: var(--text-primary); outline: 0;
+}
+.ms-list {
+  list-style: none; margin: 0; padding: 4px;
+  overflow: auto; flex: 1;
+}
+.ms-list li label {
+  display: flex; align-items: center; gap: 8px;
+  padding: 6px 8px; border-radius: 5px; cursor: pointer;
+  font-size: 12.5px; color: var(--text-secondary);
+}
+.ms-list li label:hover { background: var(--surface-hover); color: var(--text-primary); }
+.ms-foot {
+  border-top: 1px solid var(--border-subtle);
+  padding: 8px; display: flex; gap: 6px; justify-content: flex-end;
+}
+.ms-clear, .ms-apply {
+  padding: 4px 10px; border-radius: 5px; font-size: 11.5px;
+  border: 1px solid var(--border-subtle); cursor: pointer;
+  background: transparent; color: var(--text-secondary); font-family: inherit;
+}
+.ms-apply { background: var(--accent-default); color: var(--accent-fg, white); border-color: var(--accent-default); }
+
+
+/* ---------------------------------------------------------
+   4. Dropzone — drag-and-drop file upload area.
+   Markup:
+   <div class="dropzone">
+     <div class="dz-icon">↑</div>
+     <div class="dz-title">Drop a CSV here</div>
+     <div class="dz-desc">or <button class="dz-browse">browse</button></div>
+   </div>
+   --------------------------------------------------------- */
+.dropzone {
+  border: 1.5px dashed var(--border-default);
+  border-radius: 10px;
+  padding: 28px 16px;
+  text-align: center;
+  transition: border-color 120ms ease, background 120ms ease;
+  cursor: pointer;
+  background: var(--bg-canvas);
+}
+.dropzone:hover, .dropzone.is-over {
+  border-color: var(--accent-default);
+  background: var(--accent-subtle);
+}
+.dz-icon {
+  width: 36px; height: 36px;
+  margin: 0 auto 8px;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--surface-subtle); border-radius: 50%;
+  font-size: 18px; color: var(--text-tertiary);
+}
+.dz-title {
+  font-size: 13px; font-weight: 600; color: var(--text-primary);
+  margin-bottom: 4px;
+}
+.dz-desc { font-size: 12px; color: var(--text-secondary); }
+.dz-browse {
+  background: transparent; border: 0; padding: 0;
+  color: var(--accent-default); cursor: pointer;
+  text-decoration: underline; font-size: inherit; font-family: inherit;
+}
+.dz-list {
+  display: flex; flex-direction: column; gap: 6px;
+  margin-top: 12px;
+}
+.dz-file {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 12px; border: 1px solid var(--border-subtle);
+  border-radius: 6px; background: var(--bg-elevated);
+  font-size: 12.5px;
+}
+.dz-file .dz-fname { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dz-file .dz-fsize { font-family: 'Geist Mono', monospace; font-size: 11px; color: var(--text-tertiary); }
+.dz-file .dz-fremove {
+  background: transparent; border: 0; cursor: pointer;
+  color: var(--text-tertiary); font-size: 14px;
+}
+.dz-file .dz-fremove:hover { color: var(--loss-text, #ef6f4f); }
+
+
+/* ---------------------------------------------------------
+   5. Popover — pointed bubble with arrow.
+   Markup:
+   <div class="popover" data-arrow="bottom">
+     <div class="po-title">Edge</div>
+     <div class="po-body">Expected return / capital, annualized.</div>
+   </div>
+   --------------------------------------------------------- */
+.popover {
+  position: absolute; z-index: 100;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-default);
+  border-radius: 8px;
+  padding: 10px 12px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+  font-size: 12.5px; color: var(--text-secondary);
+  max-width: 260px;
+}
+.popover .po-title {
+  font-size: 12.5px; font-weight: 600; color: var(--text-primary);
+  margin-bottom: 4px;
+}
+.popover .po-body { line-height: 1.45; }
+.popover::before, .popover::after {
+  content: ''; position: absolute;
+  border: 6px solid transparent;
+}
+.popover[data-arrow="bottom"]::before {
+  bottom: -12px; left: 16px;
+  border-top-color: var(--border-default);
+}
+.popover[data-arrow="bottom"]::after {
+  bottom: -10px; left: 16px;
+  border-top-color: var(--bg-elevated);
+}
+.popover[data-arrow="top"]::before {
+  top: -12px; left: 16px;
+  border-bottom-color: var(--border-default);
+}
+.popover[data-arrow="top"]::after {
+  top: -10px; left: 16px;
+  border-bottom-color: var(--bg-elevated);
+}
+
+
+/* ---------------------------------------------------------
+   6. Donut chart — pure CSS conic-gradient.
+   Markup:
+   <div class="donut" style="--p: 73; --c: var(--gain);">
+     <span class="donut-label">73%</span>
+   </div>
+   --------------------------------------------------------- */
+.donut {
+  --p: 0; --c: var(--accent-default);
+  --t: 8px;
+  width: 64px; height: 64px;
+  border-radius: 50%;
+  background:
+    conic-gradient(var(--c) calc(var(--p) * 1%), var(--surface-subtle) 0);
+  display: grid; place-items: center;
+  position: relative;
+}
+.donut::before {
+  content: '';
+  position: absolute; inset: var(--t);
+  background: var(--bg-elevated);
+  border-radius: 50%;
+}
+.donut-label {
+  position: relative;
+  font-family: 'Geist Mono', monospace;
+  font-size: 13px; font-weight: 600;
+  color: var(--text-primary);
+}
+.donut-sm { width: 40px; height: 40px; --t: 5px; }
+.donut-sm .donut-label { font-size: 10px; }
+.donut-lg { width: 100px; height: 100px; --t: 12px; }
+.donut-lg .donut-label { font-size: 18px; }
+
+
+/* ---------------------------------------------------------
+   7. Bar chart row — inline horizontal bar with value.
+   Markup:
+   <div class="bar-row">
+     <span class="bar-label">Politics</span>
+     <span class="bar-track"><span class="bar-fill" style="width: 72%"></span></span>
+     <span class="bar-val">72%</span>
+   </div>
+   --------------------------------------------------------- */
+.bar-row {
+  display: grid;
+  grid-template-columns: 100px 1fr 60px;
+  gap: 10px; align-items: center;
+  padding: 4px 0; font-size: 12px;
+}
+.bar-row + .bar-row { border-top: 1px solid var(--border-subtle); }
+.bar-label { color: var(--text-secondary); }
+.bar-track {
+  height: 6px; background: var(--surface-subtle); border-radius: 99px; overflow: hidden;
+  position: relative;
+}
+.bar-fill {
+  display: block; height: 100%;
+  background: var(--accent-default);
+  border-radius: 99px;
+  transition: width 240ms ease;
+}
+.bar-fill.is-gain { background: var(--gain); }
+.bar-fill.is-loss { background: var(--loss); }
+.bar-fill.is-warn { background: var(--warn, #d4a04a); }
+.bar-val {
+  text-align: right;
+  font-family: 'Geist Mono', monospace; font-size: 11.5px;
+  color: var(--text-primary); font-variant-numeric: tabular-nums;
+}
+
+
+/* ---------------------------------------------------------
+   8. Calendar grid — month-at-a-glance heatmap.
+   Markup:
+   <div class="cal-grid">
+     <div class="cal-cell" data-intensity="3">12</div>
+     ...
+   </div>
+   --------------------------------------------------------- */
+.cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 3px;
+}
+.cal-head {
+  font-size: 10px; text-transform: uppercase; letter-spacing: 0.04em;
+  color: var(--text-tertiary); text-align: center; padding: 4px 0;
+  font-family: 'Geist Mono', monospace;
+}
+.cal-cell {
+  aspect-ratio: 1;
+  border-radius: 4px;
+  background: var(--surface-subtle);
+  font-size: 10.5px; color: var(--text-tertiary);
+  display: flex; align-items: flex-start; justify-content: flex-end;
+  padding: 4px 5px; cursor: pointer;
+  transition: transform 80ms ease;
+  font-family: 'Geist Mono', monospace;
+}
+.cal-cell:hover { transform: scale(1.05); }
+.cal-cell[data-intensity="0"] { background: var(--surface-subtle); }
+.cal-cell[data-intensity="1"] { background: color-mix(in oklab, var(--accent-default) 16%, var(--bg-elevated)); color: var(--text-secondary); }
+.cal-cell[data-intensity="2"] { background: color-mix(in oklab, var(--accent-default) 32%, var(--bg-elevated)); color: var(--text-primary); }
+.cal-cell[data-intensity="3"] { background: color-mix(in oklab, var(--accent-default) 50%, var(--bg-elevated)); color: var(--text-primary); }
+.cal-cell[data-intensity="4"] { background: color-mix(in oklab, var(--accent-default) 70%, var(--bg-elevated)); color: white; }
+.cal-cell.is-today {
+  outline: 1.5px solid var(--accent-default);
+  outline-offset: -1px;
+}
+.cal-cell.is-other-month { opacity: 0.35; }
+
+
+/* ---------------------------------------------------------
+   9. Code block with copy button + line numbers.
+   Markup:
+   <pre class="code-block" data-lang="python">
+     <button class="code-copy">Copy</button>
+     <code>...</code>
+   </pre>
+   --------------------------------------------------------- */
+.code-block {
+  position: relative;
+  background: var(--bg-canvas);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  padding: 14px 16px 14px;
+  margin: 14px 0;
+  font-family: 'Geist Mono', monospace;
+  font-size: 12.5px; line-height: 1.55;
+  color: var(--text-secondary);
+  overflow-x: auto;
+}
+.code-block[data-lang]::before {
+  content: attr(data-lang);
+  position: absolute; top: 8px; right: 56px;
+  font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em;
+  color: var(--text-tertiary); font-weight: 600;
+}
+.code-copy {
+  position: absolute; top: 8px; right: 8px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
+  padding: 3px 8px; border-radius: 5px;
+  font-size: 10.5px; cursor: pointer;
+  font-family: inherit;
+  opacity: 0; transition: opacity 120ms ease;
+}
+.code-block:hover .code-copy { opacity: 1; }
+.code-copy:hover { color: var(--text-primary); border-color: var(--border-default); }
+.code-copy.is-copied { color: var(--gain-text); border-color: var(--gain); }
+
+
+/* ---------------------------------------------------------
+   10. Notification bell — badge dot.
+   Markup:
+   <button class="bell-btn">
+     <svg>…</svg>
+     <span class="bell-dot"></span>
+   </button>
+   --------------------------------------------------------- */
+.bell-btn { position: relative; }
+.bell-dot {
+  position: absolute; top: 4px; right: 4px;
+  width: 7px; height: 7px;
+  background: var(--loss);
+  border: 1.5px solid var(--bg-elevated);
+  border-radius: 50%;
+  pointer-events: none;
+}
+.bell-dot.is-active::after {
+  content: ''; position: absolute; inset: -3px;
+  border-radius: 50%;
+  border: 1px solid var(--loss);
+  animation: bellPulse 1.6s ease-out infinite;
+}
+@keyframes bellPulse {
+  0%   { transform: scale(0.8); opacity: 0.8; }
+  100% { transform: scale(2); opacity: 0; }
+}
+
+
+/* ---------------------------------------------------------
+   11. Inline progress meter — labeled track.
+   Markup:
+   <div class="meter">
+     <div class="meter-head">
+       <span>Daily limit</span>
+       <span class="meter-val">$8,420 / $10,000</span>
+     </div>
+     <div class="meter-bar"><span style="width: 84%"></span></div>
+   </div>
+   --------------------------------------------------------- */
+.meter { font-size: 12px; }
+.meter-head {
+  display: flex; justify-content: space-between;
+  color: var(--text-secondary); margin-bottom: 4px;
+}
+.meter-val {
+  font-family: 'Geist Mono', monospace; font-size: 11.5px;
+  color: var(--text-primary); font-variant-numeric: tabular-nums;
+}
+.meter-bar {
+  height: 5px; background: var(--surface-subtle); border-radius: 99px; overflow: hidden;
+}
+.meter-bar > span {
+  display: block; height: 100%;
+  background: var(--accent-default); border-radius: 99px;
+  transition: width 220ms ease;
+}
+.meter.is-warn .meter-bar > span { background: var(--warn, #d4a04a); }
+.meter.is-danger .meter-bar > span { background: var(--loss); }
+
+
+/* ---------------------------------------------------------
+   12. Stat group — small dl row used in cards.
+   Markup:
+   <dl class="stat-group">
+     <div><dt>P&L</dt><dd class="num num-pos">+$248</dd></div>
+     <div><dt>Fills</dt><dd>12</dd></div>
+   </dl>
+   --------------------------------------------------------- */
+.stat-group {
+  display: flex; gap: 18px; flex-wrap: wrap;
+  margin: 0; padding: 0;
+}
+.stat-group > div { display: flex; flex-direction: column; gap: 2px; }
+.stat-group dt {
+  font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.04em;
+  color: var(--text-tertiary); font-weight: 500;
+}
+.stat-group dd {
+  margin: 0;
+  font-family: 'Geist Mono', monospace; font-size: 14px; font-weight: 600;
+  color: var(--text-primary); font-variant-numeric: tabular-nums;
+}
+
+
+/* ---------------------------------------------------------
+   13. Card group — connected horizontal cards with shared edges.
+   Markup:
+   <div class="card-group">
+     <div class="card-cell">…</div>
+     <div class="card-cell">…</div>
+   </div>
+   --------------------------------------------------------- */
+.card-group {
+  display: flex;
+  border: 1px solid var(--border-subtle);
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--bg-elevated);
+}
+.card-group > .card-cell {
+  flex: 1; padding: 14px 18px;
+  position: relative;
+}
+.card-group > .card-cell + .card-cell {
+  border-left: 1px solid var(--border-subtle);
+}
+.card-cell-label {
+  font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.04em;
+  color: var(--text-tertiary); margin-bottom: 4px;
+}
+.card-cell-value {
+  font-family: 'Geist Mono', monospace; font-size: 22px; font-weight: 600;
+  color: var(--text-primary); letter-spacing: -0.01em;
+}
+.card-cell-meta {
+  font-size: 11px; color: var(--text-secondary); margin-top: 4px;
+}
+
+
+/* ---------------------------------------------------------
+   14. Anchor underline — animated link underline (marketing).
+   Markup: <a class="anchor-link" href="…">Read more</a>
+   --------------------------------------------------------- */
+.anchor-link {
+  position: relative;
+  color: var(--accent-default);
+  text-decoration: none;
+  background-image: linear-gradient(currentColor, currentColor);
+  background-size: 0% 1px;
+  background-position: 0 100%;
+  background-repeat: no-repeat;
+  transition: background-size 220ms ease;
+  padding-bottom: 1px;
+}
+.anchor-link:hover { background-size: 100% 1px; }
+
+
+/* ---------------------------------------------------------
+   15. Backdrop spotlight — radial glow behind a hero element.
+   Markup: parent has class="spot-bg"; inner content above it.
+   --------------------------------------------------------- */
+.spot-bg {
+  position: relative;
+  isolation: isolate;
+}
+.spot-bg::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse at center, var(--accent-subtle) 0%, transparent 60%);
+  z-index: -1;
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+
+/* ---------------------------------------------------------
+   16. Inline mini-table — data labels with values, no borders.
+   Markup:
+   <table class="mini-table">
+     <tr><th>Volume</th><td class="num">$1.2M</td></tr>
+   </table>
+   --------------------------------------------------------- */
+.mini-table {
+  width: 100%; border-collapse: collapse;
+  font-size: 12.5px;
+}
+.mini-table th, .mini-table td {
+  padding: 5px 0;
+  text-align: left;
+  vertical-align: baseline;
+}
+.mini-table th {
+  font-weight: 400; color: var(--text-tertiary);
+  width: 40%;
+}
+.mini-table td {
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
+.mini-table tr + tr th, .mini-table tr + tr td {
+  border-top: 1px solid var(--border-subtle);
+}
+
+
+/* ---------------------------------------------------------
+   17. Glow border — accent-tinted border + soft outer glow.
+   Markup: any element with class="glow-border".
+   --------------------------------------------------------- */
+.glow-border {
+  border: 1px solid var(--accent-default);
+  box-shadow:
+    0 0 0 1px var(--accent-subtle),
+    0 8px 24px -8px var(--accent-subtle);
+}
+
+
+/* ---------------------------------------------------------
+   18. Skeleton block — content-shape placeholder.
+   Already had skeleton-line in v2; this adds a content-block variant.
+   --------------------------------------------------------- */
+.skeleton-block {
+  background: linear-gradient(90deg,
+    var(--surface-subtle) 0%,
+    color-mix(in oklab, var(--surface-subtle) 50%, var(--bg-elevated)) 50%,
+    var(--surface-subtle) 100%);
+  background-size: 200% 100%;
+  animation: skBlock 1.6s ease infinite;
+  border-radius: 6px;
+  min-height: 60px;
+}
+@keyframes skBlock {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+
+/* ---------------------------------------------------------
+   19. Pill button — small colored CTA pill.
+   Markup: <button class="pill-btn pill-btn-accent">Mirror</button>
+   --------------------------------------------------------- */
+.pill-btn {
+  display: inline-flex; align-items: center; gap: 5px;
+  height: 22px; padding: 0 10px; border-radius: 999px;
+  font-size: 11px; font-weight: 600;
+  cursor: pointer; font-family: inherit;
+  border: 1px solid var(--border-default);
+  background: var(--bg-elevated); color: var(--text-secondary);
+  transition: background 120ms ease, color 120ms ease, border-color 120ms ease;
+}
+.pill-btn:hover { color: var(--text-primary); border-color: var(--border-strong, var(--text-tertiary)); }
+.pill-btn-accent { background: var(--accent-default); border-color: var(--accent-default); color: var(--accent-fg, white); }
+.pill-btn-accent:hover { filter: brightness(1.08); color: var(--accent-fg, white); }
+.pill-btn-ghost { background: transparent; border-color: transparent; }
+.pill-btn-ghost:hover { background: var(--surface-hover); border-color: var(--border-subtle); }
+
+
+/* ---------------------------------------------------------
+   20. Tab badge — number indicator next to a tab label.
+   Markup: <button class="tab">Orders <span class="tab-badge">12</span></button>
+   --------------------------------------------------------- */
+.tab-badge {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 16px; height: 16px; padding: 0 5px;
+  margin-left: 4px;
+  background: var(--surface-subtle); color: var(--text-secondary);
+  border-radius: 999px; font-size: 10px; font-weight: 600;
+  font-family: 'Geist Mono', monospace;
+}
+.tab.is-active .tab-badge,
+[aria-selected="true"] .tab-badge {
+  background: var(--accent-subtle); color: var(--accent-default);
+}
+.tab-badge.is-attention {
+  background: var(--loss); color: white;
+}
+
+
+/* ---------------------------------------------------------
+   21. Section grouping — labeled fieldset alt.
+   Markup:
+   <section class="group">
+     <header class="group-head">
+       <span class="group-eyebrow">Section 02</span>
+       <h2 class="group-title">Markets</h2>
+       <p class="group-desc">Live across all venues.</p>
+     </header>
+     <div class="group-body">…</div>
+   </section>
+   --------------------------------------------------------- */
+.group { margin: 28px 0; }
+.group-head {
+  border-bottom: 1px solid var(--border-subtle);
+  padding-bottom: 14px; margin-bottom: 18px;
+}
+.group-eyebrow {
+  display: block;
+  font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.08em;
+  color: var(--text-tertiary); font-weight: 600;
+  font-family: 'Geist Mono', monospace;
+  margin-bottom: 4px;
+}
+.group-title {
+  font-size: 18px; font-weight: 600; color: var(--text-primary);
+  letter-spacing: -0.01em; margin: 0 0 4px;
+}
+.group-desc {
+  font-size: 13px; color: var(--text-secondary);
+  max-width: 60ch; margin: 0;
+}
+
+
+/* ---------------------------------------------------------
+   22. Quick action grid — square tiles with icon + label.
+   Markup:
+   <div class="qa-grid">
+     <button class="qa-tile">
+       <span class="qa-icon">⚡</span>
+       <span class="qa-label">New order</span>
+       <span class="qa-kbd">⌘N</span>
+     </button>
+   </div>
+   --------------------------------------------------------- */
+.qa-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 8px;
+}
+.qa-tile {
+  display: flex; flex-direction: column; align-items: flex-start; gap: 8px;
+  padding: 12px 14px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  cursor: pointer; font-family: inherit;
+  text-align: left;
+  transition: border-color 120ms ease, transform 120ms ease;
+}
+.qa-tile:hover {
+  border-color: var(--accent-default);
+  transform: translateY(-1px);
+}
+.qa-icon {
+  width: 28px; height: 28px;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--accent-subtle); color: var(--accent-default);
+  border-radius: 6px; font-size: 14px;
+}
+.qa-label {
+  font-size: 12.5px; font-weight: 600; color: var(--text-primary);
+  line-height: 1.3;
+}
+.qa-kbd {
+  margin-top: 2px;
+  font-family: 'Geist Mono', monospace; font-size: 10px;
+  color: var(--text-tertiary);
+  padding: 1px 5px; border-radius: 3px;
+  background: var(--surface-subtle);
+  border: 1px solid var(--border-subtle);
+}
+
+
+/* ---------------------------------------------------------
+   23. Inline diff — old → new value transition.
+   Markup: <span class="inline-diff"><span class="d-old">$120</span> → <span class="d-new">$140</span></span>
+   --------------------------------------------------------- */
+.inline-diff {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-family: 'Geist Mono', monospace; font-variant-numeric: tabular-nums;
+}
+.inline-diff .d-old {
+  color: var(--text-tertiary);
+  text-decoration: line-through;
+  text-decoration-color: var(--text-tertiary);
+}
+.inline-diff .d-new { color: var(--text-primary); font-weight: 600; }
+.inline-diff::before { content: '→'; color: var(--text-tertiary); }
+.inline-diff::before { display: none; }
+.inline-diff .d-arrow { color: var(--text-tertiary); }
+
+
+/* ---------------------------------------------------------
+   24. Sticky footer bar — bulk-action / save bar.
+   Markup:
+   <div class="sticky-foot">
+     <div class="sf-message">3 unsaved changes</div>
+     <div class="sf-actions"><button>Discard</button><button class="primary">Save</button></div>
+   </div>
+   --------------------------------------------------------- */
+.sticky-foot {
+  position: sticky; bottom: 0;
+  display: flex; align-items: center; gap: 14px;
+  padding: 12px 18px;
+  background: var(--bg-elevated);
+  border-top: 1px solid var(--border-default);
+  box-shadow: 0 -8px 24px rgba(0,0,0,0.25);
+  z-index: 50;
+}
+.sf-message { font-size: 13px; color: var(--text-secondary); }
+.sf-actions { margin-left: auto; display: flex; gap: 8px; }
+.sf-actions button {
+  padding: 6px 14px; border-radius: 6px;
+  border: 1px solid var(--border-default);
+  background: var(--bg-canvas); color: var(--text-primary);
+  font-size: 12.5px; cursor: pointer; font-family: inherit;
+}
+.sf-actions button:hover { border-color: var(--text-tertiary); }
+.sf-actions button.primary {
+  background: var(--accent-default);
+  border-color: var(--accent-default);
+  color: var(--accent-fg, white);
+}
+.sf-actions button.primary:hover { filter: brightness(1.08); }
+
+
+/* ---------------------------------------------------------
+   25. Activity dot — colored dot with optional count badge.
+   Markup: <span class="act-dot act-dot-warn">3</span>
+   --------------------------------------------------------- */
+.act-dot {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 18px; height: 18px; padding: 0 5px;
+  border-radius: 999px;
+  font-size: 10px; font-weight: 700;
+  font-family: 'Geist Mono', monospace;
+  background: var(--surface-subtle); color: var(--text-secondary);
+  line-height: 1;
+}
+.act-dot-info    { background: rgba(89,128,255,0.18);  color: #6f8eff; }
+.act-dot-success { background: rgba(80,204,128,0.18);  color: #50cc80; }
+.act-dot-warn    { background: rgba(212,160,74,0.20);  color: #d4a04a; }
+.act-dot-danger  { background: rgba(239,111,79,0.20);  color: #ef6f4f; }
+.act-dot-accent  { background: var(--accent-subtle);   color: var(--accent-default); }
+
+
+/* End of v9. Loaded after v8. */

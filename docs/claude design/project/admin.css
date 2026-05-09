@@ -11,6 +11,7 @@
   display: grid;
   grid-template-columns: var(--adm-sidebar-w, 240px) 1fr;
   min-height: 100vh;
+  height: 100vh;
   background: var(--bg-app);
   color: var(--text-primary);
   --adm-row-h: 40px;
@@ -183,9 +184,12 @@
 .adm-main {
   display: flex; flex-direction: column;
   min-width: 0;
+  overflow-y: auto;
+  height: 100vh;
 }
 .adm-topbar {
   height: 56px;
+  flex-shrink: 0;
   padding: 0 24px;
   display: flex; align-items: center; gap: 16px;
   background: var(--bg-app);

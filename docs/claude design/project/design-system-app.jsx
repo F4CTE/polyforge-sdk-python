@@ -108,11 +108,11 @@ function DesignSystemApp() {
         <div className="ds-content">
           {/* Hero */}
           <header className="ds-hero">
-            <span className="ds-hero-eyebrow">DESIGN SYSTEM · v1.0</span>
+            <span className="ds-hero-eyebrow">DESIGN SYSTEM · v2.0</span>
             <h1>The system <em>behind</em> Polyforge — tokens, components, and the voice that ties them together.</h1>
             <p>Polyforge ships across five surfaces — Marketing, Docs, User Guide, Auth, and the Admin control room — that share one set of tokens and two complementary component layers. This document is the canonical reference.</p>
             <div className="ds-hero-meta">
-              <span>21 sections</span><span className="sep">·</span>
+              <span>31 sections</span><span className="sep">·</span>
               <span>~70 tokens</span><span className="sep">·</span>
               <span>{DS.DS_ADMIN_ICONS.length + DS.DS_MARKETING_ICONS.length} icons</span><span className="sep">·</span>
               <span>2 surface layers</span>
@@ -141,6 +141,20 @@ function DesignSystemApp() {
           <S.FeedbackSection />
           <S.VoiceSection />
           <S.ImplementationSection />
+
+          {/* Extended components (v2) */}
+          {window.DSSectionsV2 && <>
+            <DSSectionsV2.AvatarsSection />
+            <DSSectionsV2.DropdownsSection />
+            <DSSectionsV2.ModalSection />
+            <DSSectionsV2.CmdKSection />
+            <DSSectionsV2.BreadcrumbsSection />
+            <DSSectionsV2.PaginationSection />
+            <DSSectionsV2.ProgressSection />
+            <DSSectionsV2.LayoutSection />
+            <DSSectionsV2.FontFeaturesSection />
+            <DSSectionsV2.AccessibilitySection />
+          </>}
         </div>
       </main>
 

@@ -294,13 +294,24 @@ function ShadowsSection() {
 
 /* ===== 07 MOTION ===== */
 function MotionTile({ name, token, ease, use }) {
-  const [on, setOn] = useState(false);
-  useEffect(() => { const id = setTimeout(() => setOn(true), 100); return () => clearTimeout(id); }, []);
-  const transform = on ? 'translateX(140px)' : 'translateX(0)';
+  const [phase, setPhase] = useState('idle');
+  const puckRef = useRef(null);
+  useEffect(() => { const id = setTimeout(() => setPhase('go'), 100); return () => clearTimeout(id); }, []);
+  const replay = () => {
+    setPhase('reset');
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => setPhase('go'));
+    });
+  };
+  const puckStyle = phase === 'reset'
+    ? { transform: 'translateX(0)', transition: 'none', '--ds-motion-dur': token, '--ds-motion-ease': ease }
+    : phase === 'go'
+    ? { transform: 'translateX(140px)', transition: `transform ${token} ${ease}`, '--ds-motion-dur': token, '--ds-motion-ease': ease }
+    : { transform: 'translateX(0)', transition: 'none', '--ds-motion-dur': token, '--ds-motion-ease': ease };
   return (
-    <div className="ds-motion-tile" onClick={() => { setOn(false); setTimeout(() => setOn(true), 30); }}>
+    <div className="ds-motion-tile" onClick={replay}>
       <div className="ds-motion-stage">
-        <div className="ds-motion-puck" style={{ transform, transition: `transform ${token} ${ease}` }} />
+        <div className="ds-motion-puck" ref={puckRef} style={puckStyle} />
       </div>
       <div className="ds-motion-name">{name}</div>
       <div className="ds-motion-token">{token} · {ease}</div>
@@ -425,6 +436,7 @@ function DataVizSection() {
 
 /* ===== 10 BUTTONS ===== */
 function ButtonsSection() {
+  const [loading, setLoading] = useState(false);
   return (
     <Section id="buttons" num="10" eyebrow="Buttons" title="Actions in two scales"
       sub="Marketing site uses .btn (36/40/28/24px). Admin uses .adm-btn (30/26px). Same intent ladder: primary, secondary, ghost, danger.">
@@ -450,6 +462,54 @@ function ButtonsSection() {
         <button className="adm-btn adm-btn-danger">Kill switch</button>
         <button className="adm-btn adm-btn-secondary" disabled>Disabled</button>
       </div>
+
+      <Sub>State matrix</Sub>
+      <div className="ds-card"><div className="ds-card-body" style={{ overflowX: 'auto' }}>
+        <table className="adm-table" style={{ fontSize: 12 }}>
+          <thead><tr>
+            <th>Variant</th><th>Default</th><th>Hover</th><th>Active</th><th>Focus</th><th>Disabled</th>
+          </tr></thead>
+          <tbody>
+            {[
+              { name: 'Primary', cls: 'adm-btn-primary' },
+              { name: 'Secondary', cls: 'adm-btn-secondary' },
+              { name: 'Ghost', cls: 'adm-btn-ghost' },
+              { name: 'Danger', cls: 'adm-btn-danger' },
+            ].map(v => (
+              <tr key={v.name}>
+                <td style={{ fontWeight: 600 }}>{v.name}</td>
+                <td><button className={`adm-btn ${v.cls} adm-btn-sm`}>{v.name}</button></td>
+                <td><button className={`adm-btn ${v.cls} adm-btn-sm`} style={{ opacity: 0.85 }}>{v.name}</button></td>
+                <td><button className={`adm-btn ${v.cls} adm-btn-sm`} style={{ transform: 'scale(0.98)', opacity: 0.9 }}>{v.name}</button></td>
+                <td><button className={`adm-btn ${v.cls} adm-btn-sm`} style={{ outline: '2px solid var(--accent-default)', outlineOffset: 2 }}>{v.name}</button></td>
+                <td><button className={`adm-btn ${v.cls} adm-btn-sm`} disabled>{v.name}</button></td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div></div>
+
+      <Sub>Loading state</Sub>
+      <div className="ds-component-stage">
+        <button className="adm-btn adm-btn-primary" disabled style={{ display: 'inline-flex', alignItems: 'center', gap: 8, opacity: 0.7 }}>
+          <span style={{ width: 12, height: 12, border: '2px solid currentColor', borderTopColor: 'transparent', borderRadius: '50%', animation: 'rs-spin 0.8s linear infinite', display: 'inline-block' }} />
+          Saving…
+        </button>
+        <button className="adm-btn adm-btn-secondary" disabled style={{ display: 'inline-flex', alignItems: 'center', gap: 8, opacity: 0.7 }}>
+          <span style={{ width: 12, height: 12, border: '2px solid currentColor', borderTopColor: 'transparent', borderRadius: '50%', animation: 'rs-spin 0.8s linear infinite', display: 'inline-block' }} />
+          Deploying…
+        </button>
+        <style>{`@keyframes rs-spin { to { transform: rotate(360deg); } }`}</style>
+      </div>
+
+      <Sub>Icon + text</Sub>
+      <div className="ds-component-stage">
+        <button className="adm-btn adm-btn-primary" style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><AdmIcon name="plus" size={14} /> New strategy</button>
+        <button className="adm-btn adm-btn-secondary" style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><AdmIcon name="download" size={14} /> Export CSV</button>
+        <button className="adm-btn adm-btn-ghost" style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><AdmIcon name="refresh" size={14} /> Refresh</button>
+        <button className="adm-btn adm-btn-danger" style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><AdmIcon name="trash" size={14} /> Delete</button>
+      </div>
+
       <Sub>Keyboard hint</Sub>
       <div className="ds-component-stage">
         <span className="ds-kbd"><kbd>⌘</kbd><kbd>K</kbd></span>
@@ -551,7 +611,7 @@ function PillsSection() {
 function CardsSection() {
   return (
     <Section id="cards" num="14" eyebrow="Cards" title="Surface · Stat · Showcase"
-      sub="Three card families. Use .adm-stat for KPI tiles in admin grids; .adm-card for general containers.">
+      sub="Three card families. Use .adm-stat for KPI tiles in admin grids; .adm-card for general containers; browser-chrome for marketing showcases.">
       <Sub>Surface card</Sub>
       <div className="ds-component-stage is-block">
         <div className="adm-card">
@@ -570,15 +630,65 @@ function CardsSection() {
           </div>
         </div>
       </div>
+
+      <Sub>Stat card</Sub>
+      <div className="ds-grid-3" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))' }}>
+        {[
+          { label: 'Total volume', value: '$4.2M', delta: '+12.4%', kind: 'gain' },
+          { label: 'Active strategies', value: '88', delta: '+3', kind: 'gain' },
+          { label: 'Max drawdown', value: '−8.2%', delta: '', kind: 'loss' },
+          { label: 'Sharpe ratio', value: '1.84', delta: '−0.12', kind: 'warn' },
+        ].map(s => (
+          <div key={s.label} className="adm-card" style={{ padding: 16 }}>
+            <div style={{ fontSize: 11, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 8 }}>{s.label}</div>
+            <div style={{ fontSize: 24, fontFamily: 'Geist Mono, monospace', fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>{s.value}</div>
+            {s.delta && <div style={{ fontSize: 12, fontFamily: 'Geist Mono, monospace', color: s.kind === 'gain' ? 'var(--gain-text)' : s.kind === 'loss' ? 'var(--loss-text)' : 'var(--warning)', marginTop: 4 }}>{s.delta}</div>}
+          </div>
+        ))}
+      </div>
+
+      <Sub>Browser chrome (showcase)</Sub>
+      <div className="ds-component-stage is-block">
+        <div style={{ border: '1px solid var(--border-subtle)', borderRadius: 10, overflow: 'hidden', maxWidth: 480 }}>
+          <div style={{ padding: '8px 12px', background: 'var(--bg-elevated)', borderBottom: '1px solid var(--border-subtle)', display: 'flex', alignItems: 'center', gap: 8 }}>
+            <div style={{ display: 'flex', gap: 6 }}>
+              <span style={{ width: 10, height: 10, borderRadius: 99, background: '#FF5F57' }} />
+              <span style={{ width: 10, height: 10, borderRadius: 99, background: '#FEBC2E' }} />
+              <span style={{ width: 10, height: 10, borderRadius: 99, background: '#28C840' }} />
+            </div>
+            <div style={{ flex: 1, height: 22, background: 'var(--bg-app)', borderRadius: 4, display: 'flex', alignItems: 'center', padding: '0 8px', fontSize: 11, color: 'var(--text-tertiary)', fontFamily: 'Geist Mono, monospace' }}>app.polyforge.app/strategies</div>
+          </div>
+          <div style={{ height: 120, background: 'var(--bg-app)', display: 'grid', placeItems: 'center', color: 'var(--text-tertiary)', fontSize: 13 }}>Content area</div>
+        </div>
+      </div>
+
+      <Sub>Card spec</Sub>
+      <div className="ds-card"><div className="ds-card-body" style={{ display: 'grid', gap: 8 }}>
+        {[
+          ['Background', 'var(--bg-surface)'],
+          ['Border', '1px solid var(--border-subtle)'],
+          ['Radius', '10px (LG)'],
+          ['Padding', '18–20px body, 14–16px head/foot'],
+          ['Hover', 'border-color → accent-border (optional, for clickable cards)'],
+          ['Head', 'Flex row: title (14px/600) + action button, border-bottom'],
+        ].map(([k, v]) => (
+          <div key={k} style={{ display: 'grid', gridTemplateColumns: '100px 1fr', gap: 12 }}>
+            <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-primary)' }}>{k}</span>
+            <span style={{ fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.5 }}>{v}</span>
+          </div>
+        ))}
+      </div></div>
     </Section>
   );
 }
 
 /* ===== 15 TABLES ===== */
 function TablesSection() {
+  const [sel, setSel] = useState([1]);
   return (
     <Section id="tables" num="15" eyebrow="Tables" title=".adm-table"
       sub="The heart of the admin app. Every list view follows the same pattern: tools row (search + filters), table, footer.">
+      <Sub>Full table with tools</Sub>
       <div className="adm-table-wrap">
         <div className="adm-table-tools">
           <div className="adm-table-tools-search">
@@ -592,11 +702,12 @@ function TablesSection() {
         <table className="adm-table">
           <thead>
             <tr>
-              <th>Strategy</th>
+              <th style={{ width: 32 }}></th>
+              <th>Strategy <span style={{ color: 'var(--text-tertiary)', fontSize: 10 }}>▲</span></th>
               <th>7d PnL</th>
               <th>Status</th>
               <th>Owner</th>
-              <th>Updated</th>
+              <th>Updated <span style={{ color: 'var(--text-tertiary)', fontSize: 10 }}>▼</span></th>
             </tr>
           </thead>
           <tbody>
@@ -605,8 +716,20 @@ function TablesSection() {
               { name: 'sentiment-pulse',   pnl: '+$8,402',  kind: 'gain', tone: 'gain', text: 'Live', dot: true,  owner: 'J. Park',  when: '14m ago' },
               { name: 'whale-mirror',      pnl: '−$1,209',  kind: 'loss', tone: 'warn', text: 'Paused',           owner: 'A. Reyes', when: '1h ago' },
               { name: 'pump-frontrun',     pnl: '−$3,884',  kind: 'loss', tone: 'loss', text: 'Failed', dot: true, pulse: true, owner: 'M. Chen', when: '3h ago' },
-            ].map((r) => (
-              <tr key={r.name}>
+            ].map((r, i) => (
+              <tr key={r.name} style={sel.includes(i) ? { background: 'var(--accent-subtle)' } : {}}
+                onClick={() => setSel(sel.includes(i) ? sel.filter(x => x !== i) : [...sel, i])}>
+                <td>
+                  <div style={{
+                    width: 16, height: 16, borderRadius: 4,
+                    border: sel.includes(i) ? 'none' : '1px solid var(--border-strong)',
+                    background: sel.includes(i) ? 'var(--accent-default)' : 'transparent',
+                    display: 'grid', placeItems: 'center', cursor: 'pointer', flexShrink: 0,
+                    transition: 'all 120ms ease'
+                  }}>
+                    {sel.includes(i) && <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>}
+                  </div>
+                </td>
                 <td><span className="col-mono" style={{ color: 'var(--text-primary)' }}>{r.name}</span></td>
                 <td className="col-num" style={{ color: r.kind === 'gain' ? 'var(--gain-text)' : 'var(--loss-text)' }}>{r.pnl}</td>
                 <td><span className={`adm-pill is-${r.tone}${r.dot ? ' has-dot' : ''}${r.pulse ? ' is-pulse' : ''}`}>{r.text}</span></td>
@@ -614,6 +737,46 @@ function TablesSection() {
                 <td className="col-tertiary col-mono">{r.when}</td>
               </tr>
             ))}
+          </tbody>
+        </table>
+        <div style={{ padding: '10px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid var(--border-subtle)', fontSize: 12 }}>
+          <span style={{ color: 'var(--text-tertiary)' }}>{sel.length} selected · Showing 1–4 of 130</span>
+          <div style={{ display: 'flex', gap: 4 }}>
+            <button style={{ width: 26, height: 26, border: '1px solid var(--border-default)', borderRadius: 4, background: 'var(--bg-app)', color: 'var(--text-secondary)', cursor: 'pointer', display: 'grid', placeItems: 'center' }}>◀</button>
+            <span style={{ fontFamily: 'Geist Mono, monospace', color: 'var(--text-tertiary)', lineHeight: '26px', padding: '0 6px' }}>1 / 33</span>
+            <button style={{ width: 26, height: 26, border: '1px solid var(--border-default)', borderRadius: 4, background: 'var(--bg-app)', color: 'var(--text-secondary)', cursor: 'pointer', display: 'grid', placeItems: 'center' }}>▶</button>
+          </div>
+        </div>
+      </div>
+
+      <Sub>Row states</Sub>
+      <div className="ds-card"><div className="ds-card-body" style={{ display: 'grid', gap: 8 }}>
+        {[
+          ['Default', 'bg-surface, text-primary'],
+          ['Hover', 'bg-subtle (via refinements.css tr:hover)'],
+          ['Selected', 'accent-subtle background, checkbox checked'],
+          ['Sorted column', 'th gets ▲/▼ indicator, col text slightly bolder'],
+          ['Sticky header', 'thead position: sticky, top: 0, bg-surface, z-index 2'],
+          ['Empty', 'Single merged cell: centered message + action button'],
+        ].map(([k, v]) => (
+          <div key={k} style={{ display: 'grid', gridTemplateColumns: '120px 1fr', gap: 12 }}>
+            <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-primary)' }}>{k}</span>
+            <span style={{ fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.5 }}>{v}</span>
+          </div>
+        ))}
+      </div></div>
+
+      <Sub>Empty state</Sub>
+      <div className="adm-table-wrap">
+        <table className="adm-table">
+          <thead><tr><th>Strategy</th><th>7d PnL</th><th>Status</th></tr></thead>
+          <tbody>
+            <tr>
+              <td colSpan={3} style={{ textAlign: 'center', padding: '40px 20px' }}>
+                <div style={{ color: 'var(--text-tertiary)', fontSize: 13, marginBottom: 12 }}>No strategies match your filters.</div>
+                <button className="adm-btn adm-btn-secondary adm-btn-sm">Clear filters</button>
+              </td>
+            </tr>
           </tbody>
         </table>
       </div>
@@ -624,9 +787,74 @@ function TablesSection() {
 /* ===== 16 NAVIGATION ===== */
 function NavigationSection() {
   const [tab, setTab] = useState('overview');
+  const [navItem, setNavItem] = useState('dashboard');
   return (
     <Section id="navigation" num="16" eyebrow="Navigation" title="Sidebar, tabs, breadcrumbs"
       sub="Admin uses 240px sidebar; docs/design-system uses 260px. Marketing sits on a sticky top nav.">
+      <Sub>Admin sidebar (240px)</Sub>
+      <div className="ds-component-stage is-block" style={{ padding: 0 }}>
+        <div style={{ width: 240, background: 'var(--bg-surface)', borderRight: '1px solid var(--border-subtle)', borderRadius: 8, overflow: 'hidden', padding: '12px 10px' }}>
+          <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.06em', padding: '6px 10px 4px', marginBottom: 2 }}>Overview</div>
+          {[
+            { icon: 'dashboard', label: 'Dashboard', id: 'dashboard' },
+            { icon: 'dollar', label: 'Revenue', id: 'revenue' },
+            { icon: 'users', label: 'Users', id: 'users' },
+          ].map(item => (
+            <button key={item.id} onClick={() => setNavItem(item.id)} style={{
+              width: '100%', height: 30, padding: '0 10px',
+              display: 'flex', alignItems: 'center', gap: 8,
+              border: 0, borderRadius: 6, cursor: 'pointer', fontSize: 13,
+              background: navItem === item.id ? 'var(--bg-elevated)' : 'transparent',
+              color: navItem === item.id ? 'var(--text-primary)' : 'var(--text-secondary)',
+              fontWeight: navItem === item.id ? 500 : 400,
+              fontFamily: 'inherit', textAlign: 'left',
+            }}>
+              <AdmIcon name={item.icon} size={15} />
+              {item.label}
+            </button>
+          ))}
+          <div style={{ height: 1, background: 'var(--border-subtle)', margin: '8px 10px' }} />
+          <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.06em', padding: '6px 10px 4px', marginBottom: 2 }}>Strategy</div>
+          {[
+            { icon: 'blocks', label: 'Strategies', id: 'strategies' },
+            { icon: 'bar-chart', label: 'Backtests', id: 'backtests' },
+            { icon: 'hammer', label: 'Builder', id: 'builder' },
+          ].map(item => (
+            <button key={item.id} onClick={() => setNavItem(item.id)} style={{
+              width: '100%', height: 30, padding: '0 10px',
+              display: 'flex', alignItems: 'center', gap: 8,
+              border: 0, borderRadius: 6, cursor: 'pointer', fontSize: 13,
+              background: navItem === item.id ? 'var(--bg-elevated)' : 'transparent',
+              color: navItem === item.id ? 'var(--text-primary)' : 'var(--text-secondary)',
+              fontWeight: navItem === item.id ? 500 : 400,
+              fontFamily: 'inherit', textAlign: 'left',
+            }}>
+              <AdmIcon name={item.icon} size={15} />
+              {item.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <Sub>Sidebar spec</Sub>
+      <div className="ds-card"><div className="ds-card-body" style={{ display: 'grid', gap: 8 }}>
+        {[
+          ['Width', '240px admin, 260px docs/DS'],
+          ['Background', 'var(--bg-surface)'],
+          ['Item height', '30px, radius 6, padding 0 10px'],
+          ['Active', 'bg-elevated, text-primary, weight 500'],
+          ['Inactive', 'transparent bg, text-secondary, weight 400'],
+          ['Section label', '10px uppercase, text-tertiary, 0.06em tracking'],
+          ['Divider', '1px border-subtle, 8px margin'],
+          ['Position', 'sticky, top: 0, height: 100vh, overflow-y: auto'],
+        ].map(([k, v]) => (
+          <div key={k} style={{ display: 'grid', gridTemplateColumns: '120px 1fr', gap: 12 }}>
+            <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-primary)' }}>{k}</span>
+            <span style={{ fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.5 }}>{v}</span>
+          </div>
+        ))}
+      </div></div>
+
       <Sub>Tabs</Sub>
       <div className="ds-component-stage is-block" style={{ paddingBottom: 0 }}>
         <div className="ds-tabs">
@@ -635,6 +863,7 @@ function NavigationSection() {
           ))}
         </div>
       </div>
+
       <Sub>Status pill (top nav)</Sub>
       <div className="ds-component-stage">
         <button className="status-pill"><span className="status-dot status-dot-live" /><span className="status-pill-label">All systems operational</span></button>
@@ -650,12 +879,47 @@ function OverlaysSection() {
     <Section id="overlays" num="17" eyebrow="Overlays" title="Modals & toasts"
       sub="Modals interrupt; toasts confirm. Use a modal only for destructive or irreversible actions. Toasts are passing — never put primary actions in them.">
       <Sub>Toasts</Sub>
-      <div className="ds-component-stage">
-        <div className="ds-toast is-gain"><div className="ds-toast-icon">✓</div>Strategy saved</div>
-        <div className="ds-toast is-loss"><div className="ds-toast-icon">×</div>Order rejected · insufficient balance</div>
-        <div className="ds-toast is-warn"><div className="ds-toast-icon">!</div>Approaching daily risk limit</div>
-        <div className="ds-toast"><div className="ds-toast-icon">i</div>3 markets resolve in 24h</div>
+      <div className="ds-component-stage" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: 10 }}>
+        <div className="ds-toast is-gain">
+          <AdmIcon name="circle-check" size={16} />
+          <span>Strategy saved</span>
+          <span style={{ marginLeft: 'auto', fontSize: 11, color: 'var(--text-tertiary)' }}>just now</span>
+        </div>
+        <div className="ds-toast is-loss">
+          <AdmIcon name="circle-x" size={16} />
+          <span>Order rejected · insufficient balance</span>
+        </div>
+        <div className="ds-toast is-warn">
+          <AdmIcon name="alert" size={16} />
+          <span>Approaching daily risk limit</span>
+        </div>
+        <div className="ds-toast">
+          <AdmIcon name="bell" size={16} />
+          <span>3 markets resolve in 24h</span>
+        </div>
       </div>
+
+      <Sub>Toast spec</Sub>
+      <div className="ds-card"><div className="ds-card-body" style={{ display: 'grid', gap: 8 }}>
+        {[
+          ['Container', 'bg-elevated, border-subtle, left 3px accent border, radius 8'],
+          ['Shadow', '0 4px 16px rgba(0,0,0,0.3)'],
+          ['Icon', '16px AdmIcon, color inherits from border accent'],
+          ['Text', '13px, text-primary'],
+          ['Timestamp', '11px, text-tertiary, right-aligned (optional)'],
+          ['Dismiss', 'Auto-dismiss 4s, or swipe/click to close'],
+          ['Position', 'Bottom-right, 16px from edge, stacked 8px apart'],
+          ['Gain', 'Left border var(--gain), icon circle-check'],
+          ['Loss', 'Left border var(--loss), icon circle-x'],
+          ['Warn', 'Left border var(--warning), icon alert'],
+          ['Neutral', 'Left border var(--border-default), icon bell'],
+        ].map(([k, v]) => (
+          <div key={k} style={{ display: 'grid', gridTemplateColumns: '100px 1fr', gap: 12 }}>
+            <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-primary)' }}>{k}</span>
+            <span style={{ fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.5 }}>{v}</span>
+          </div>
+        ))}
+      </div></div>
     </Section>
   );
 }
@@ -663,22 +927,83 @@ function OverlaysSection() {
 /* ===== 18 FEEDBACK ===== */
 function FeedbackSection() {
   return (
-    <Section id="feedback" num="18" eyebrow="Feedback" title="Empty & loading"
-      sub="No animations on first paint. Empty states are quiet, instructive, and offer the next action.">
+    <Section id="feedback" num="18" eyebrow="Feedback" title="Empty, loading, error"
+      sub="No animations on first paint. Empty states are quiet, instructive, and offer the next action. Loading states use skeletons for layout and spinners for actions.">
       <Sub>Skeleton</Sub>
       <div className="ds-component-stage is-block">
-        <div className="adm-card"><div style={{ display: 'grid', gap: 10 }}>
-          {[80, 60, 92, 70].map((w, i) => (
+        <div className="adm-card"><div style={{ display: 'grid', gap: 12 }}>
+          {[85, 60, 92, 45].map((w, i) => (
             <div key={i} style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-              <div style={{ width: 28, height: 28, borderRadius: 99, background: 'var(--bg-elevated)' }} />
+              <div style={{ width: 32, height: 32, borderRadius: 99, background: 'var(--bg-elevated)', animation: 'ds-shimmer 1.4s ease-in-out infinite', backgroundSize: '200% 100%', backgroundImage: 'linear-gradient(90deg, var(--bg-elevated) 0%, var(--bg-surface) 50%, var(--bg-elevated) 100%)' }} />
               <div style={{ flex: 1 }}>
-                <div style={{ height: 10, width: `${w}%`, background: 'var(--bg-elevated)', borderRadius: 4, marginBottom: 6 }} />
-                <div style={{ height: 8, width: `${w * 0.6}%`, background: 'var(--bg-subtle)', borderRadius: 4 }} />
+                <div style={{ height: 10, width: w+'%', borderRadius: 4, marginBottom: 6, background: 'var(--bg-elevated)', animation: 'ds-shimmer 1.4s ease-in-out infinite', backgroundSize: '200% 100%', backgroundImage: 'linear-gradient(90deg, var(--bg-elevated) 0%, var(--bg-surface) 50%, var(--bg-elevated) 100%)' }} />
+                <div style={{ height: 8, width: (w*0.6)+'%', borderRadius: 4, background: 'var(--bg-subtle)', animation: 'ds-shimmer 1.4s ease-in-out infinite', animationDelay: '0.2s', backgroundSize: '200% 100%', backgroundImage: 'linear-gradient(90deg, var(--bg-subtle) 0%, var(--bg-surface) 50%, var(--bg-subtle) 100%)' }} />
               </div>
             </div>
           ))}
         </div></div>
+        <style>{`@keyframes ds-shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }`}</style>
       </div>
+
+      <Sub>Spinner</Sub>
+      <div className="ds-component-stage">
+        {[14, 18, 24, 32].map(s => (
+          <div key={s} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <div style={{ width: s, height: s, border: '2px solid var(--border-default)', borderTopColor: 'var(--accent-default)', borderRadius: '50%', animation: 'ds-spin 0.8s linear infinite' }} />
+            <span style={{ fontSize: 12, color: 'var(--text-tertiary)' }}>{s}px</span>
+          </div>
+        ))}
+        <style>{`@keyframes ds-spin { to { transform: rotate(360deg); } }`}</style>
+      </div>
+
+      <Sub>Empty state — with action</Sub>
+      <div className="ds-component-stage is-block">
+        <div style={{ border: '1px dashed var(--border-default)', borderRadius: 10, padding: '40px 24px', textAlign: 'center', maxWidth: 420, margin: '0 auto' }}>
+          <div style={{ width: 40, height: 40, borderRadius: 99, background: 'var(--bg-elevated)', display: 'grid', placeItems: 'center', margin: '0 auto 14px', color: 'var(--text-tertiary)' }}><AdmIcon name="blocks" size={20} /></div>
+          <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 6 }}>No strategies yet</div>
+          <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 16, lineHeight: 1.55 }}>Build your first strategy with the visual builder. Drag blocks, wire conditions, backtest against 90 days of data.</div>
+          <button className="adm-btn adm-btn-primary" style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><AdmIcon name="plus" size={14} /> New strategy</button>
+        </div>
+      </div>
+
+      <Sub>Empty state — minimal</Sub>
+      <div className="ds-component-stage is-block">
+        <div style={{ padding: '32px 20px', textAlign: 'center' }}>
+          <div style={{ fontSize: 13, color: 'var(--text-tertiary)' }}>No results match “xyz”</div>
+          <button className="adm-btn adm-btn-ghost adm-btn-sm" style={{ marginTop: 8 }}>Clear search</button>
+        </div>
+      </div>
+
+      <Sub>Error state</Sub>
+      <div className="ds-component-stage is-block">
+        <div style={{ background: 'color-mix(in srgb, var(--loss) 6%, var(--bg-surface))', border: '1px solid color-mix(in srgb, var(--loss) 20%, var(--border-subtle))', borderRadius: 8, padding: '14px 16px', maxWidth: 420, display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+          <AdmIcon name="alert" size={16} style={{ color: 'var(--loss-text)', flexShrink: 0, marginTop: 1 }} />
+          <div>
+            <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-primary)', marginBottom: 4 }}>Failed to load strategies</div>
+            <div style={{ fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.55 }}>Connection to strategy service timed out. This usually resolves within a few minutes.</div>
+            <button className="adm-btn adm-btn-ghost adm-btn-sm" style={{ marginTop: 10, display: 'inline-flex', alignItems: 'center', gap: 6, color: 'var(--loss-text)' }}><AdmIcon name="refresh" size={12} /> Retry</button>
+          </div>
+        </div>
+      </div>
+
+      <Sub>Spec</Sub>
+      <div className="ds-card"><div className="ds-card-body" style={{ display: 'grid', gap: 8 }}>
+        {[
+          ['Skeleton shimmer', '1.4s ease-in-out infinite, bg-elevated → bg-surface gradient'],
+          ['Spinner', '0.8s linear infinite, border-default + accent-default top'],
+          ['Empty icon', '40px circle, bg-elevated, centered'],
+          ['Empty title', '14px/600, text-primary'],
+          ['Empty body', '13px/400, text-secondary, max ~2 lines'],
+          ['Empty CTA', 'Primary or ghost button below body'],
+          ['Error container', 'bg-surface, border-subtle, radius 8, subtle shadow'],
+          ['Error icon', '16px AdmIcon alert, loss-text color, no background'],
+        ].map(([k, v]) => (
+          <div key={k} style={{ display: 'grid', gridTemplateColumns: '140px 1fr', gap: 12 }}>
+            <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-primary)' }}>{k}</span>
+            <span style={{ fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.5 }}>{v}</span>
+          </div>
+        ))}
+      </div></div>
     </Section>
   );
 }

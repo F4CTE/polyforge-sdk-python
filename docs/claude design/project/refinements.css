@@ -810,7 +810,6 @@ hr, .adm-divider, .usr-divider {
       transparent 70%),
     var(--bg-app);
   border-top: 1px solid var(--border-subtle);
-  border-bottom: 1px solid var(--border-subtle);
   padding: 80px 0;
   overflow: hidden;
   margin: 32px 0;

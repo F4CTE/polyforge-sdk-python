@@ -1,0 +1,1048 @@
+/* =========================================================
+   refinements-v7.css — Polish pass 7 (May 2026)
+   Loaded AFTER refinements-v6.css.
+   Practical components for data-heavy product UI:
+     - sticky table head, scroll-shadow, sparkline
+     - inline edit, tag input, drag handle, splitter
+     - timeline (vertical), diff view, avatar stack
+     - top loading bar, banner, validation summary
+     - comparison columns, ToC rail, density toggle
+     - help tooltip with arrow, carousel row
+     - print styles + a11y motion safeguards
+   ========================================================= */
+
+/* ---------------------------------------------------------
+   1. Sticky table header — keeps headers visible on scroll.
+   Add class .table-sticky to a wrapping container that
+   provides the scroll, OR data-sticky="true" on a <table>.
+   --------------------------------------------------------- */
+.table-sticky {
+  overflow: auto;
+  max-height: 70vh;
+}
+.table-sticky thead th,
+table[data-sticky="true"] thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: var(--surface-0, #ffffff);
+  box-shadow: inset 0 -1px 0 var(--border-default, #e2e8f0);
+}
+.table-sticky tfoot td,
+table[data-sticky="true"] tfoot td {
+  position: sticky;
+  bottom: 0;
+  background: var(--surface-1, #f8fafc);
+  box-shadow: inset 0 1px 0 var(--border-default, #e2e8f0);
+}
+
+/* ---------------------------------------------------------
+   2. Scroll shadow — fade indicators on horizontally
+      scrollable strips so users see there's more content.
+   Markup: <div class="scroll-shadow"><div class="scroll-shadow__inner">…</div></div>
+   --------------------------------------------------------- */
+.scroll-shadow {
+  position: relative;
+}
+.scroll-shadow::before,
+.scroll-shadow::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 24px;
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0;
+  transition: opacity var(--dur-base, 180ms) var(--ease-out-soft);
+}
+.scroll-shadow::before {
+  left: 0;
+  background: linear-gradient(to right, var(--surface-0, #fff), transparent);
+}
+.scroll-shadow::after {
+  right: 0;
+  background: linear-gradient(to left, var(--surface-0, #fff), transparent);
+}
+.scroll-shadow[data-scroll-left="true"]::before,
+.scroll-shadow[data-scroll-right="true"]::after {
+  opacity: 1;
+}
+.scroll-shadow__inner {
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+/* ---------------------------------------------------------
+   3. Sparkline — inline tiny chart slot.
+   Markup: <span class="sparkline"><svg viewBox="0 0 60 18">…</svg></span>
+   --------------------------------------------------------- */
+.sparkline {
+  display: inline-block;
+  vertical-align: middle;
+  width: 60px;
+  height: 18px;
+  line-height: 0;
+}
+.sparkline svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+.sparkline svg path,
+.sparkline svg polyline {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.25;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.sparkline--up {
+  color: var(--accent-success, #16a34a);
+}
+.sparkline--down {
+  color: var(--accent-danger, #dc2626);
+}
+.sparkline--flat {
+  color: var(--text-tertiary, #94a3b8);
+}
+
+/* ---------------------------------------------------------
+   4. Inline edit — click-to-edit text affordance.
+   Markup:
+     <span class="inline-edit" tabindex="0">
+       <span class="inline-edit__value">Untitled</span>
+       <span class="inline-edit__pencil">✎</span>
+     </span>
+   --------------------------------------------------------- */
+.inline-edit {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 6px;
+  margin: -2px -6px;
+  border-radius: 6px;
+  cursor: text;
+  transition: background var(--dur-fast, 120ms) var(--ease-out-soft);
+}
+.inline-edit:hover,
+.inline-edit:focus-within {
+  background: var(--surface-1, #f8fafc);
+}
+.inline-edit__pencil {
+  opacity: 0;
+  font-size: 11px;
+  color: var(--text-tertiary, #94a3b8);
+  transition: opacity var(--dur-fast, 120ms) var(--ease-out-soft);
+}
+.inline-edit:hover .inline-edit__pencil,
+.inline-edit:focus-within .inline-edit__pencil {
+  opacity: 1;
+}
+.inline-edit[data-editing="true"] {
+  background: var(--surface-0, #fff);
+  outline: 2px solid var(--accent-default, #2563eb);
+  outline-offset: -2px;
+}
+
+/* ---------------------------------------------------------
+   5. Tag input — chips inside an input field.
+   Markup: <div class="tag-input">
+             <span class="tag-chip">react <button>×</button></span>
+             <input placeholder="Add tag…">
+           </div>
+   --------------------------------------------------------- */
+.tag-input {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  min-height: 36px;
+  padding: 6px 8px;
+  border-radius: 8px;
+  border: 1px solid var(--border-default, #e2e8f0);
+  background: var(--surface-0, #fff);
+  cursor: text;
+  transition: border-color var(--dur-fast, 120ms) var(--ease-out-soft),
+              box-shadow var(--dur-fast, 120ms) var(--ease-out-soft);
+}
+.tag-input:focus-within {
+  border-color: var(--accent-default, #2563eb);
+  box-shadow: 0 0 0 3px var(--accent-default-soft, rgba(37, 99, 235, 0.12));
+}
+.tag-input input {
+  flex: 1 1 100px;
+  min-width: 60px;
+  border: none;
+  outline: none;
+  background: transparent;
+  font: inherit;
+  color: inherit;
+  padding: 0;
+}
+.tag-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 22px;
+  padding: 0 4px 0 8px;
+  border-radius: 11px;
+  background: var(--surface-2, #f1f5f9);
+  color: var(--text-primary, #0f172a);
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+.tag-chip button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border: none;
+  background: transparent;
+  color: var(--text-tertiary, #94a3b8);
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 12px;
+  line-height: 1;
+  padding: 0;
+}
+.tag-chip button:hover {
+  background: rgba(0, 0, 0, 0.06);
+  color: var(--text-primary, #0f172a);
+}
+
+/* ---------------------------------------------------------
+   6. Drag handle — visual affordance for re-orderable rows.
+   Markup: <button class="drag-handle" aria-label="Reorder"></button>
+   --------------------------------------------------------- */
+.drag-handle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border: none;
+  background: transparent;
+  color: var(--text-tertiary, #94a3b8);
+  cursor: grab;
+  padding: 0;
+  border-radius: 4px;
+  opacity: 0.5;
+  transition: opacity var(--dur-fast, 120ms) var(--ease-out-soft),
+              background var(--dur-fast, 120ms) var(--ease-out-soft);
+}
+.drag-handle::before {
+  content: "";
+  width: 8px;
+  height: 12px;
+  background-image:
+    radial-gradient(circle, currentColor 1px, transparent 1.2px),
+    radial-gradient(circle, currentColor 1px, transparent 1.2px);
+  background-size: 4px 4px;
+  background-position: 0 0, 4px 0;
+  background-repeat: repeat-y;
+}
+*:hover > .drag-handle,
+.drag-handle:hover,
+.drag-handle:focus-visible {
+  opacity: 1;
+}
+.drag-handle:active {
+  cursor: grabbing;
+  background: var(--surface-1, #f8fafc);
+}
+
+/* ---------------------------------------------------------
+   7. Splitter / resizer — between two panes.
+   Markup: <div class="splitter splitter--v" role="separator"></div>
+   --------------------------------------------------------- */
+.splitter {
+  flex: 0 0 auto;
+  background: var(--border-default, #e2e8f0);
+  position: relative;
+  transition: background var(--dur-fast, 120ms) var(--ease-out-soft);
+}
+.splitter--v {
+  width: 1px;
+  cursor: col-resize;
+}
+.splitter--h {
+  height: 1px;
+  cursor: row-resize;
+}
+.splitter::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  margin: -3px;
+}
+.splitter:hover,
+.splitter[aria-grabbed="true"] {
+  background: var(--accent-default, #2563eb);
+}
+
+/* ---------------------------------------------------------
+   8. Vertical timeline — events down the left.
+   Markup:
+     <ol class="timeline">
+       <li><span class="timeline-time">10:24</span><div class="timeline-body">…</div></li>
+     </ol>
+   --------------------------------------------------------- */
+.timeline {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  position: relative;
+}
+.timeline::before {
+  content: "";
+  position: absolute;
+  left: 7px;
+  top: 6px;
+  bottom: 6px;
+  width: 1px;
+  background: var(--border-default, #e2e8f0);
+}
+.timeline > li {
+  position: relative;
+  padding: 0 0 16px 28px;
+  display: grid;
+  grid-template-columns: 64px 1fr;
+  gap: 12px;
+}
+.timeline > li::before {
+  content: "";
+  position: absolute;
+  left: 4px;
+  top: 6px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--surface-0, #fff);
+  border: 1.5px solid var(--text-tertiary, #94a3b8);
+}
+.timeline > li[data-state="active"]::before {
+  background: var(--accent-default, #2563eb);
+  border-color: var(--accent-default, #2563eb);
+  box-shadow: 0 0 0 3px var(--accent-default-soft, rgba(37, 99, 235, 0.18));
+}
+.timeline > li[data-state="success"]::before {
+  background: var(--accent-success, #16a34a);
+  border-color: var(--accent-success, #16a34a);
+}
+.timeline > li[data-state="danger"]::before {
+  background: var(--accent-danger, #dc2626);
+  border-color: var(--accent-danger, #dc2626);
+}
+.timeline-time {
+  font-size: 12px;
+  color: var(--text-tertiary, #94a3b8);
+  font-variant-numeric: tabular-nums;
+  padding-top: 1px;
+  grid-column: 1;
+}
+.timeline-body {
+  font-size: 13px;
+  color: var(--text-primary, #0f172a);
+  grid-column: 2;
+}
+
+/* ---------------------------------------------------------
+   9. Diff view — added/removed/context lines.
+   Markup: <pre class="diff"><span class="diff-line diff-add">+ added</span>…</pre>
+   --------------------------------------------------------- */
+.diff {
+  font-family: var(--font-mono, ui-monospace, SFMono-Regular, monospace);
+  font-size: 12.5px;
+  line-height: 1.55;
+  background: var(--surface-0, #fff);
+  border: 1px solid var(--border-default, #e2e8f0);
+  border-radius: 8px;
+  overflow: auto;
+  padding: 0;
+  margin: 0;
+}
+.diff-line {
+  display: block;
+  padding: 0 12px 0 28px;
+  position: relative;
+  white-space: pre;
+}
+.diff-line::before {
+  position: absolute;
+  left: 10px;
+  width: 12px;
+  text-align: center;
+  color: var(--text-tertiary, #94a3b8);
+}
+.diff-add {
+  background: rgba(22, 163, 74, 0.08);
+  color: var(--accent-success-strong, #15803d);
+}
+.diff-add::before { content: "+"; color: var(--accent-success, #16a34a); }
+.diff-del {
+  background: rgba(220, 38, 38, 0.08);
+  color: var(--accent-danger-strong, #b91c1c);
+}
+.diff-del::before { content: "−"; color: var(--accent-danger, #dc2626); }
+.diff-ctx { color: var(--text-secondary, #475569); }
+.diff-ctx::before { content: " "; }
+.diff-hunk {
+  background: var(--surface-1, #f8fafc);
+  color: var(--text-tertiary, #94a3b8);
+  padding: 2px 12px;
+  border-top: 1px solid var(--border-default, #e2e8f0);
+  border-bottom: 1px solid var(--border-default, #e2e8f0);
+}
+.diff-hunk::before { content: "@"; }
+
+/* ---------------------------------------------------------
+   10. Avatar stack — overlapping circles.
+   Markup: <div class="avatar-stack"><img class="avatar"…> …</div>
+   --------------------------------------------------------- */
+.avatar-stack {
+  display: inline-flex;
+  align-items: center;
+}
+.avatar-stack > .avatar,
+.avatar-stack > .avatar-stack__more {
+  border: 2px solid var(--surface-0, #fff);
+  margin-left: -8px;
+  background: var(--surface-2, #f1f5f9);
+}
+.avatar-stack > :first-child {
+  margin-left: 0;
+}
+.avatar-stack__more {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary, #475569);
+}
+
+/* ---------------------------------------------------------
+   11. Top loading bar — global page progress.
+   Markup: <div class="top-loader" data-state="loading"></div>
+   --------------------------------------------------------- */
+.top-loader {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: transparent;
+  z-index: 100;
+  pointer-events: none;
+  overflow: hidden;
+}
+.top-loader::after {
+  content: "";
+  display: block;
+  width: 30%;
+  height: 100%;
+  background: linear-gradient(90deg,
+    transparent,
+    var(--accent-default, #2563eb),
+    transparent);
+  transform: translateX(-100%);
+  animation: top-loader-slide 1.4s ease-in-out infinite;
+}
+.top-loader[data-state="idle"] {
+  display: none;
+}
+@keyframes top-loader-slide {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(400%); }
+}
+
+/* ---------------------------------------------------------
+   12. Page banner — top-of-page announcement / system msg.
+   Markup: <div class="page-banner page-banner--info">…</div>
+   --------------------------------------------------------- */
+.page-banner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 500;
+  text-align: center;
+  border-bottom: 1px solid var(--border-default, #e2e8f0);
+  background: var(--surface-1, #f8fafc);
+  color: var(--text-primary, #0f172a);
+}
+.page-banner--info {
+  background: var(--accent-info-soft, rgba(37, 99, 235, 0.08));
+  color: var(--accent-info-strong, #1d4ed8);
+  border-bottom-color: var(--accent-info-soft, rgba(37, 99, 235, 0.18));
+}
+.page-banner--warning {
+  background: var(--accent-warning-soft, rgba(217, 119, 6, 0.10));
+  color: var(--accent-warning-strong, #92400e);
+  border-bottom-color: rgba(217, 119, 6, 0.20);
+}
+.page-banner--danger {
+  background: var(--accent-danger-soft, rgba(220, 38, 38, 0.10));
+  color: var(--accent-danger-strong, #b91c1c);
+  border-bottom-color: rgba(220, 38, 38, 0.20);
+}
+.page-banner__close {
+  margin-left: auto;
+  border: none;
+  background: transparent;
+  color: inherit;
+  opacity: 0.6;
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+  padding: 4px;
+}
+.page-banner__close:hover { opacity: 1; }
+
+/* ---------------------------------------------------------
+   13. Validation summary — list of form errors at top.
+   Markup: <div class="validation-summary" role="alert">
+             <p class="validation-summary__title">…</p>
+             <ul>…</ul>
+           </div>
+   --------------------------------------------------------- */
+.validation-summary {
+  border: 1px solid var(--accent-danger, #dc2626);
+  background: var(--accent-danger-soft, rgba(220, 38, 38, 0.06));
+  border-radius: 8px;
+  padding: 12px 14px;
+  margin-bottom: 16px;
+  color: var(--accent-danger-strong, #b91c1c);
+}
+.validation-summary__title {
+  margin: 0 0 6px;
+  font-size: 13px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.validation-summary__title::before {
+  content: "!";
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--accent-danger, #dc2626);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.validation-summary ul {
+  margin: 0;
+  padding-left: 22px;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--text-primary, #0f172a);
+}
+.validation-summary a {
+  color: var(--accent-danger-strong, #b91c1c);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* ---------------------------------------------------------
+   14. Comparison columns — pricing / feature compare.
+   Markup: <div class="compare"><div class="compare-col">…</div>…</div>
+   --------------------------------------------------------- */
+.compare {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0;
+  border: 1px solid var(--border-default, #e2e8f0);
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--surface-0, #fff);
+}
+.compare-col {
+  padding: 24px 20px;
+  border-right: 1px solid var(--border-default, #e2e8f0);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.compare-col:last-child { border-right: none; }
+.compare-col[data-featured="true"] {
+  background: var(--surface-1, #f8fafc);
+  position: relative;
+}
+.compare-col[data-featured="true"]::before {
+  content: "Most popular";
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--accent-default, #2563eb);
+  background: var(--accent-default-soft, rgba(37, 99, 235, 0.10));
+  padding: 3px 8px;
+  border-radius: 99px;
+}
+.compare-col__name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary, #475569);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.compare-col__price {
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--text-primary, #0f172a);
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+.compare-col__price small {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-tertiary, #94a3b8);
+}
+.compare-col ul {
+  list-style: none;
+  padding: 0;
+  margin: 8px 0 0;
+  display: grid;
+  gap: 6px;
+  font-size: 13px;
+}
+.compare-col li {
+  padding-left: 22px;
+  position: relative;
+  color: var(--text-secondary, #475569);
+}
+.compare-col li::before {
+  content: "✓";
+  position: absolute;
+  left: 0;
+  color: var(--accent-success, #16a34a);
+  font-weight: 700;
+}
+.compare-col li[data-no="true"] {
+  color: var(--text-tertiary, #94a3b8);
+}
+.compare-col li[data-no="true"]::before {
+  content: "—";
+  color: var(--text-tertiary, #94a3b8);
+}
+
+/* ---------------------------------------------------------
+   15. Table of contents rail — sticky right side for docs.
+   Markup: <nav class="toc"><ol>…</ol></nav>
+   --------------------------------------------------------- */
+.toc {
+  position: sticky;
+  top: 80px;
+  align-self: start;
+  font-size: 13px;
+  line-height: 1.55;
+  max-height: calc(100vh - 100px);
+  overflow-y: auto;
+  padding: 0 0 0 16px;
+  border-left: 1px solid var(--border-default, #e2e8f0);
+}
+.toc ol {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 4px;
+}
+.toc li ol {
+  padding-left: 12px;
+  margin-top: 4px;
+}
+.toc a {
+  color: var(--text-secondary, #475569);
+  text-decoration: none;
+  display: block;
+  padding: 2px 0;
+  border-left: 2px solid transparent;
+  margin-left: -16px;
+  padding-left: 14px;
+  transition: color var(--dur-fast, 120ms) var(--ease-out-soft),
+              border-color var(--dur-fast, 120ms) var(--ease-out-soft);
+}
+.toc a:hover { color: var(--text-primary, #0f172a); }
+.toc a[aria-current="true"],
+.toc a.is-active {
+  color: var(--accent-default, #2563eb);
+  border-left-color: var(--accent-default, #2563eb);
+  font-weight: 500;
+}
+.toc__title {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-tertiary, #94a3b8);
+  margin: 0 0 8px;
+}
+
+/* ---------------------------------------------------------
+   16. Density toggle — segmented "Cozy / Compact".
+   Markup: <div class="density-toggle" role="group">
+             <button data-density="cozy" aria-pressed="true">Cozy</button>
+             <button data-density="compact">Compact</button>
+           </div>
+   Pages can react to [data-density="compact"] on a parent.
+   --------------------------------------------------------- */
+.density-toggle {
+  display: inline-flex;
+  padding: 2px;
+  background: var(--surface-2, #f1f5f9);
+  border-radius: 8px;
+  gap: 0;
+}
+.density-toggle button {
+  padding: 4px 10px;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary, #475569);
+  font-size: 12px;
+  font-weight: 500;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background var(--dur-fast, 120ms) var(--ease-out-soft),
+              color var(--dur-fast, 120ms) var(--ease-out-soft);
+}
+.density-toggle button[aria-pressed="true"] {
+  background: var(--surface-0, #fff);
+  color: var(--text-primary, #0f172a);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
+}
+[data-density="compact"] .table-row,
+[data-density="compact"] tbody tr {
+  --density-pad-y: 6px;
+}
+[data-density="compact"] tbody td,
+[data-density="compact"] tbody th {
+  padding-top: var(--density-pad-y, 6px);
+  padding-bottom: var(--density-pad-y, 6px);
+}
+
+/* ---------------------------------------------------------
+   17. Help tooltip with arrow — small "?" with popover.
+   Markup: <span class="help-tip" data-tip="Explanation here">?</span>
+   --------------------------------------------------------- */
+.help-tip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--surface-2, #f1f5f9);
+  color: var(--text-tertiary, #94a3b8);
+  font-size: 9px;
+  font-weight: 700;
+  cursor: help;
+  position: relative;
+  vertical-align: middle;
+  margin: 0 2px;
+  transition: background var(--dur-fast, 120ms) var(--ease-out-soft),
+              color var(--dur-fast, 120ms) var(--ease-out-soft);
+}
+.help-tip:hover {
+  background: var(--text-tertiary, #94a3b8);
+  color: var(--surface-0, #fff);
+}
+.help-tip::after {
+  content: attr(data-tip);
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%) translateY(4px);
+  background: var(--text-primary, #0f172a);
+  color: var(--surface-0, #fff);
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.4;
+  padding: 6px 8px;
+  border-radius: 6px;
+  white-space: nowrap;
+  max-width: 220px;
+  white-space: normal;
+  width: max-content;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity var(--dur-base, 180ms) var(--ease-out-soft),
+              transform var(--dur-base, 180ms) var(--ease-out-soft);
+  z-index: 50;
+}
+.help-tip::before {
+  content: "";
+  position: absolute;
+  bottom: calc(100% + 4px);
+  left: 50%;
+  transform: translateX(-50%) translateY(4px);
+  border: 4px solid transparent;
+  border-top-color: var(--text-primary, #0f172a);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity var(--dur-base, 180ms) var(--ease-out-soft),
+              transform var(--dur-base, 180ms) var(--ease-out-soft);
+  z-index: 50;
+}
+.help-tip:hover::after,
+.help-tip:hover::before,
+.help-tip:focus::after,
+.help-tip:focus::before {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* ---------------------------------------------------------
+   18. Carousel row — horizontal scroll-snap strip.
+   Markup: <div class="carousel"><div class="carousel-item">…</div></div>
+   --------------------------------------------------------- */
+.carousel {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scroll-padding: 16px;
+  padding: 4px 0 12px;
+  scrollbar-width: thin;
+  -webkit-overflow-scrolling: touch;
+}
+.carousel-item {
+  flex: 0 0 auto;
+  scroll-snap-align: start;
+}
+
+/* ---------------------------------------------------------
+   19. Skeleton variants — text line, avatar, card.
+   --------------------------------------------------------- */
+.skeleton-line {
+  display: block;
+  height: 12px;
+  border-radius: 4px;
+  background: linear-gradient(90deg,
+    var(--surface-2, #f1f5f9) 25%,
+    var(--surface-1, #f8fafc) 50%,
+    var(--surface-2, #f1f5f9) 75%);
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.4s linear infinite;
+}
+.skeleton-line + .skeleton-line { margin-top: 8px; }
+.skeleton-line--sm { height: 10px; }
+.skeleton-line--lg { height: 16px; }
+.skeleton-line--w50 { width: 50%; }
+.skeleton-line--w70 { width: 70%; }
+.skeleton-line--w90 { width: 90%; }
+.skeleton-circle {
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(90deg,
+    var(--surface-2, #f1f5f9) 25%,
+    var(--surface-1, #f8fafc) 50%,
+    var(--surface-2, #f1f5f9) 75%);
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.4s linear infinite;
+}
+@keyframes skeleton-shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ---------------------------------------------------------
+   20. Toolbar / actionbar — row of grouped controls.
+   Markup: <div class="toolbar"><div class="toolbar-group">…</div></div>
+   --------------------------------------------------------- */
+.toolbar {
+  display: inline-flex;
+  align-items: center;
+  gap: 0;
+  padding: 4px;
+  background: var(--surface-1, #f8fafc);
+  border: 1px solid var(--border-default, #e2e8f0);
+  border-radius: 10px;
+}
+.toolbar-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+.toolbar-group + .toolbar-group {
+  margin-left: 6px;
+  padding-left: 6px;
+  border-left: 1px solid var(--border-default, #e2e8f0);
+}
+.toolbar-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 28px;
+  min-width: 28px;
+  padding: 0 8px;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary, #475569);
+  font-size: 13px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background var(--dur-fast, 120ms) var(--ease-out-soft),
+              color var(--dur-fast, 120ms) var(--ease-out-soft);
+}
+.toolbar-btn:hover {
+  background: var(--surface-0, #fff);
+  color: var(--text-primary, #0f172a);
+}
+.toolbar-btn[aria-pressed="true"],
+.toolbar-btn.is-active {
+  background: var(--surface-0, #fff);
+  color: var(--accent-default, #2563eb);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
+}
+
+/* ---------------------------------------------------------
+   21. Print styles — hide chrome, neutralize backgrounds,
+       break-avoid rules for cards/tables/figures.
+   --------------------------------------------------------- */
+@media print {
+  body {
+    background: #fff !important;
+    color: #000 !important;
+  }
+  .no-print,
+  .top-loader,
+  .page-banner__close,
+  .toolbar,
+  nav.sidebar,
+  aside.sidebar,
+  .topbar,
+  header.topbar,
+  .footer-cta,
+  .pagination,
+  .density-toggle,
+  .dismiss-layer,
+  .floating-action,
+  .composer-toolbar,
+  .help-tip::after,
+  .help-tip::before {
+    display: none !important;
+  }
+  a {
+    color: #000 !important;
+    text-decoration: underline;
+  }
+  .card,
+  .panel,
+  figure,
+  table,
+  pre,
+  blockquote {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+  h1, h2, h3, h4 {
+    break-after: avoid-page;
+    page-break-after: avoid;
+  }
+  thead { display: table-header-group; }
+  tfoot { display: table-footer-group; }
+  .toc, aside.toc { display: none !important; }
+  /* Make all surfaces flat */
+  .card, .panel, .surface, .table-wrap {
+    box-shadow: none !important;
+    border-color: #ccc !important;
+  }
+}
+
+/* ---------------------------------------------------------
+   22. Reduced motion — final safety net.
+   v2 may have set this; reinforce for new animations above.
+   --------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  .top-loader::after,
+  .skeleton-line,
+  .skeleton-circle {
+    animation: none !important;
+  }
+  .carousel { scroll-behavior: auto; }
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
+
+/* ---------------------------------------------------------
+   23. Focus-visible polish — uniform ring across components
+       added in v7 (avoids double rings on the wrapper).
+   --------------------------------------------------------- */
+.tag-input input:focus-visible,
+.toolbar-btn:focus-visible,
+.density-toggle button:focus-visible,
+.pagination a:focus-visible,
+.pagination button:focus-visible,
+.tag-chip button:focus-visible,
+.drag-handle:focus-visible {
+  outline: 2px solid var(--accent-default, #2563eb);
+  outline-offset: 2px;
+}
+.tag-input:focus-within input:focus-visible {
+  outline: none;
+}
+
+/* ---------------------------------------------------------
+   24. Empty-table row — when a table has no data.
+   Markup: <tr class="table-empty"><td colspan="N">No results</td></tr>
+   --------------------------------------------------------- */
+.table-empty td {
+  text-align: center !important;
+  padding: 36px 16px !important;
+  color: var(--text-tertiary, #94a3b8);
+  font-size: 13px;
+  font-style: italic;
+  background: repeating-linear-gradient(
+    45deg,
+    var(--surface-1, #f8fafc),
+    var(--surface-1, #f8fafc) 8px,
+    var(--surface-0, #fff) 8px,
+    var(--surface-0, #fff) 16px
+  );
+}
+
+/* ---------------------------------------------------------
+   25. Numeric delta — green/red arrow before a number.
+   Markup: <span class="delta delta--up">+2.4%</span>
+   --------------------------------------------------------- */
+.delta {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 500;
+}
+.delta::before {
+  font-size: 0.85em;
+  line-height: 1;
+}
+.delta--up   { color: var(--accent-success, #16a34a); }
+.delta--up::before   { content: "▲"; }
+.delta--down { color: var(--accent-danger, #dc2626); }
+.delta--down::before { content: "▼"; }
+.delta--flat { color: var(--text-tertiary, #94a3b8); }
+.delta--flat::before { content: "■"; font-size: 0.7em; }

@@ -2,9 +2,9 @@
 
 # PolyForge Legal Risk Assessment
 
-**Prepared by:** Lex — Chief Legal & Compliance Officer  
-**Date:** April 15, 2026  
-**Classification:** Internal — Confidential  
+**Prepared by:** Lex — Chief Legal & Compliance Officer
+**Date:** April 15, 2026
+**Classification:** Internal — Confidential
 **Scope:** Regulatory exposure for PolyForge as a SaaS strategy automation platform for Polymarket prediction markets.
 
 > **Note:** This document constitutes internal legal analysis only and does not constitute legal advice. PolyForge should engage licensed legal counsel in relevant jurisdictions before making material business decisions based on this assessment.
@@ -344,5 +344,5 @@ The following disclaimer language is legally required and must appear in specifi
 
 ---
 
-*Prepared by Lex — Chief Legal & Compliance Officer @ PolyForge*  
+*Prepared by Lex — Chief Legal & Compliance Officer @ PolyForge*
 *Sign-off required from CEO (R0b1n) before distribution outside the company.*

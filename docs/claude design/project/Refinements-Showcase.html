@@ -1,0 +1,1759 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Polyforge · Refinements Showcase v1–v11</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&display=swap">
+
+  <link rel="stylesheet" href="styles.css?v=13" />
+  <link rel="stylesheet" href="admin.css?v=8" />
+  <link rel="stylesheet" href="user.css?v=1" />
+  <link rel="stylesheet" href="motion.css?v=2">
+  <link rel="stylesheet" href="refinements.css?v=11">
+  <link rel="stylesheet" href="refinements-v2.css?v=2">
+  <link rel="stylesheet" href="refinements-v4.css?v=1">
+  <link rel="stylesheet" href="refinements-v5.css?v=3">
+  <link rel="stylesheet" href="refinements-v6.css?v=2">
+  <link rel="stylesheet" href="refinements-v7.css?v=1">
+  <link rel="stylesheet" href="refinements-v8.css?v=1">
+  <link rel="stylesheet" href="refinements-v9.css?v=1">
+  <link rel="stylesheet" href="refinements-v10.css?v=1">
+  <link rel="stylesheet" href="refinements-v11.css?v=1">
+  <link rel="stylesheet" href="refinements-showcase-fix.css?v=2">
+
+  <style>
+    :root { color-scheme: dark; }
+    body {
+      margin: 0;
+      font-family: 'Geist', -apple-system, sans-serif;
+      background: var(--bg-canvas, #0a0b0d);
+      color: var(--text-primary, #e8e9ec);
+    }
+    .rs-shell {
+      min-height: 100vh;
+      padding-left: 240px;
+      background: linear-gradient(
+        to right,
+        var(--bg-elevated) 0,
+        var(--bg-elevated) 240px,
+        var(--border-subtle) 240px,
+        var(--border-subtle) 241px,
+        transparent 241px
+      );
+      box-sizing: border-box;
+    }
+    .rs-side {
+      position: fixed; top: 0; left: 0;
+      width: 240px; height: 100vh; overflow-y: auto;
+      border-right: 1px solid var(--border-subtle);
+      background: var(--bg-elevated);
+      padding: 20px 14px;
+      box-sizing: border-box;
+      z-index: 10;
+    }
+    .rs-side h1 { font-size: 14px; margin: 0 0 4px; letter-spacing: -0.01em; }
+    .rs-side .rs-sub { font-size: 12px; color: var(--text-tertiary); margin-bottom: 16px; }
+    .rs-side nav { display: flex; flex-direction: column; gap: 1px; }
+    .rs-side details { margin-bottom: 4px; }
+    .rs-side summary {
+      cursor: pointer; padding: 6px 8px; font-size: 12px; font-weight: 600;
+      color: var(--text-secondary); border-radius: 6px;
+      letter-spacing: 0.04em; text-transform: uppercase;
+    }
+    .rs-side summary:hover { background: var(--surface-hover); color: var(--text-primary); }
+    .rs-side .rs-link {
+      display: block; padding: 5px 10px 5px 22px; font-size: 12.5px;
+      color: var(--text-secondary); text-decoration: none; border-radius: 6px;
+      line-height: 1.4;
+    }
+    .rs-side .rs-link:hover { background: var(--surface-hover); color: var(--text-primary); }
+    .rs-side .rs-link.is-active { background: var(--accent-subtle); color: var(--accent-default); }
+
+    .rs-main { padding: 32px 40px 120px; max-width: 1100px; }
+    .rs-page-head { margin-bottom: 28px; }
+    .rs-page-head .rs-eyebrow {
+      font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase;
+      color: var(--text-tertiary); margin: 0 0 6px;
+    }
+    .rs-page-head h1 { font-size: 28px; margin: 0; letter-spacing: -0.02em; }
+    .rs-page-head p { color: var(--text-secondary); margin: 8px 0 0; max-width: 640px; }
+
+    /* Inline code — readable on dark surfaces. */
+    .rs-main code,
+    .rs-desc code {
+      font-family: 'Geist Mono', ui-monospace, monospace;
+      font-size: 0.9em;
+      padding: 1px 6px;
+      border-radius: 4px;
+      background: color-mix(in oklab, var(--bg-canvas) 60%, transparent);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-primary);
+      white-space: nowrap;
+    }
+
+    .rs-section { margin: 36px 0; scroll-margin-top: 24px; }
+    .rs-section h2 {
+      font-size: 13px; text-transform: uppercase; letter-spacing: 0.08em;
+      color: var(--text-tertiary); margin: 0 0 14px; font-weight: 600;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .rs-section h2::after {
+      content: ''; flex: 1; height: 1px; background: var(--border-subtle);
+    }
+
+    .rs-item {
+      border: 1px solid var(--border-subtle);
+      border-radius: 10px;
+      background: var(--bg-elevated);
+      margin-bottom: 14px;
+      overflow: hidden;
+    }
+    .rs-item-head {
+      padding: 14px 18px; border-bottom: 1px solid var(--border-subtle);
+      display: flex; justify-content: space-between; align-items: flex-start; gap: 12px;
+      background: linear-gradient(180deg, transparent, rgba(255,255,255,0.01));
+    }
+    .rs-item-head > div { flex: 1 1 auto; min-width: 0; }
+    .rs-item-head h3 { font-size: 14px; margin: 0; letter-spacing: -0.005em; line-height: 1.4; }
+    .rs-item-head .rs-meta { font-family: 'Geist Mono', monospace; font-size: 11px; color: var(--text-tertiary); }
+    .rs-item-head .rs-desc { font-size: 12.5px; color: var(--text-secondary); margin: 4px 0 0; line-height: 1.45; }
+    .rs-item-body {
+      padding: 22px 18px;
+      background:
+        repeating-linear-gradient(45deg, rgba(255,255,255,0.012) 0 1px, transparent 1px 14px),
+        var(--bg-canvas);
+    }
+    .rs-item-body[data-flat] { background: var(--bg-canvas); }
+    .rs-item-row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+    .rs-item-row + .rs-item-row { margin-top: 10px; }
+
+    .rs-tag {
+      display: inline-flex; align-items: center; gap: 4px;
+      font-family: 'Geist Mono', monospace; font-size: 10.5px;
+      padding: 2px 7px; border-radius: 4px;
+      background: var(--surface-subtle); color: var(--text-tertiary);
+      border: 1px solid var(--border-subtle);
+    }
+    .rs-version-pill {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-family: 'Geist Mono', monospace; font-size: 10px;
+      padding: 2px 8px; border-radius: 999px;
+      background: var(--accent-subtle); color: var(--accent-default);
+      letter-spacing: 0.04em; text-transform: uppercase; font-weight: 600;
+    }
+
+    .rs-overview {
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px;
+      margin: 18px 0 36px;
+    }
+    .rs-overview-card {
+      padding: 14px 16px; border: 1px solid var(--border-subtle);
+      border-radius: 10px; background: var(--bg-elevated);
+    }
+    .rs-overview-card .v { font-family: 'Geist Mono', monospace; font-size: 10px; color: var(--accent-default); letter-spacing: 0.04em; }
+    .rs-overview-card .n { font-size: 22px; font-weight: 600; margin: 4px 0; letter-spacing: -0.02em; }
+    .rs-overview-card .t { font-size: 12px; color: var(--text-secondary); }
+
+    .rs-mini-rule {
+      height: 1px; background: var(--border-subtle); margin: 4px 0 14px;
+    }
+
+    /* sample blocks */
+    .demo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 10px; }
+    .demo-stack { display: flex; flex-direction: column; gap: 10px; }
+    .demo-mini-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+    .demo-mini-table th, .demo-mini-table td { padding: 7px 10px; border-bottom: 1px solid var(--border-subtle); text-align: left; }
+    .demo-mini-table th { color: var(--text-tertiary); font-weight: 500; font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; }
+
+    /* footer */
+    .rs-foot {
+      border-top: 1px solid var(--border-subtle);
+      margin-top: 40px; padding-top: 20px;
+      display: flex; justify-content: space-between;
+      font-size: 12px; color: var(--text-tertiary);
+    }
+    .rs-foot a { color: var(--accent-default); text-decoration: none; }
+  </style>
+</head>
+<body data-screen-label="Refinements Showcase">
+  <div class="rs-shell">
+    <aside class="rs-side">
+      <h1>Refinements</h1>
+      <div class="rs-sub">v1 – v11 component library</div>
+      <nav>
+        <details open>
+          <summary>Overview</summary>
+          <a class="rs-link" href="#overview">Coverage at a glance</a>
+        </details>
+        <details open>
+          <summary>v2 · Final polish</summary>
+          <a class="rs-link" href="#v2-numerics">Tabular numerics</a>
+          <a class="rs-link" href="#v2-pills">Pills &amp; badges</a>
+          <a class="rs-link" href="#v2-toasts">Toasts &amp; alerts</a>
+          <a class="rs-link" href="#v2-segmented">Segmented controls</a>
+          <a class="rs-link" href="#v2-tooltip">Tooltips</a>
+          <a class="rs-link" href="#v2-skeleton">Skeleton loaders</a>
+          <a class="rs-link" href="#v2-empty">Empty states</a>
+        </details>
+        <details>
+          <summary>v3 · Cross-page sweep</summary>
+          <a class="rs-link" href="#v3-sticky">Sticky headers</a>
+          <a class="rs-link" href="#v3-buttons">Button tiers</a>
+          <a class="rs-link" href="#v3-charts">Chart gridlines</a>
+          <a class="rs-link" href="#v3-modal">Modal chrome</a>
+          <a class="rs-link" href="#v3-pricing">Pricing grid</a>
+        </details>
+        <details>
+          <summary>v4 · Motion + signal</summary>
+          <a class="rs-link" href="#v4-status">Status dots</a>
+          <a class="rs-link" href="#v4-signed">Signed numbers</a>
+          <a class="rs-link" href="#v4-currency">Currency tone</a>
+          <a class="rs-link" href="#v4-surfaces">Surface tiers</a>
+          <a class="rs-link" href="#v4-kbd">Keyboard hint row</a>
+        </details>
+        <details>
+          <summary>v5 · Forms + UI</summary>
+          <a class="rs-link" href="#v5-validation">Validation states</a>
+          <a class="rs-link" href="#v5-controls">Switch / range / radio</a>
+          <a class="rs-link" href="#v5-progress">Progress &amp; loading btn</a>
+          <a class="rs-link" href="#v5-stepper">Stepper</a>
+          <a class="rs-link" href="#v5-kpi">KPI tiles</a>
+          <a class="rs-link" href="#v5-heatmap">Heatmap cells</a>
+        </details>
+        <details>
+          <summary>v6 · Density + edges</summary>
+          <a class="rs-link" href="#v6-pagination">Pagination</a>
+          <a class="rs-link" href="#v6-sortable">Sortable headers</a>
+          <a class="rs-link" href="#v6-filterchips">Filter chips</a>
+          <a class="rs-link" href="#v6-tabpills">Tab pills</a>
+          <a class="rs-link" href="#v6-flash">Value-update flash</a>
+          <a class="rs-link" href="#v6-confirm">Confirm prompt</a>
+          <a class="rs-link" href="#v6-cmd">Command hint</a>
+        </details>
+        <details>
+          <summary>v7 · Tables + structure</summary>
+          <a class="rs-link" href="#v7-sparkline">Sparkline</a>
+          <a class="rs-link" href="#v7-tagsinput">Tag input</a>
+          <a class="rs-link" href="#v7-timeline">Vertical timeline</a>
+          <a class="rs-link" href="#v7-diff">Diff view</a>
+          <a class="rs-link" href="#v7-avatarstack">Avatar stack</a>
+          <a class="rs-link" href="#v7-pagebanner">Page banner</a>
+          <a class="rs-link" href="#v7-validation">Validation summary</a>
+          <a class="rs-link" href="#v7-compare">Comparison columns</a>
+          <a class="rs-link" href="#v7-toc">ToC rail</a>
+          <a class="rs-link" href="#v7-density">Density toggle</a>
+          <a class="rs-link" href="#v7-help">Help tooltip</a>
+          <a class="rs-link" href="#v7-toolbar">Toolbar</a>
+          <a class="rs-link" href="#v7-empty-table">Empty table row</a>
+          <a class="rs-link" href="#v7-numeric-delta">Numeric delta</a>
+        </details>
+        <details>
+          <summary>v8 · Domain primitives</summary>
+          <a class="rs-link" href="#v8-mkt-chip">Market chip</a>
+          <a class="rs-link" href="#v8-venue">Venue tag</a>
+          <a class="rs-link" href="#v8-side">YES/NO side badge</a>
+          <a class="rs-link" href="#v8-mode">Mode badge</a>
+          <a class="rs-link" href="#v8-pnl">P&amp;L coloring</a>
+          <a class="rs-link" href="#v8-edge">Edge pill</a>
+          <a class="rs-link" href="#v8-resolution">Resolution timer</a>
+          <a class="rs-link" href="#v8-posbar">Position bar</a>
+          <a class="rs-link" href="#v8-fresh">Fresh dot</a>
+          <a class="rs-link" href="#v8-statrow">Stat row</a>
+          <a class="rs-link" href="#v8-eyebrow">Eyebrow + divider</a>
+          <a class="rs-link" href="#v8-segv2">Segmented v2</a>
+          <a class="rs-link" href="#v8-emptyhero">Empty hero</a>
+          <a class="rs-link" href="#v8-locked">Locked scrim</a>
+          <a class="rs-link" href="#v8-trend">Trend arrow</a>
+        </details>
+        <details open>
+          <summary>v10 · States</summary>
+          <a class="rs-link" href="#v10-empty">Empty states</a>
+          <a class="rs-link" href="#v10-skeleton">Skeleton</a>
+          <a class="rs-link" href="#v10-spinner">Spinner / loading</a>
+          <a class="rs-link" href="#v10-progress">Progress bars</a>
+          <a class="rs-link" href="#v10-error">Error / success</a>
+          <a class="rs-link" href="#v10-toast">Toasts / snackbar</a>
+          <a class="rs-link" href="#v10-status">Status pills</a>
+          <a class="rs-link" href="#v10-noresults">No-results / offline</a>
+          <a class="rs-link" href="#v10-extras">Confirms, diff, hint</a>
+        </details>
+        <details open>
+          <summary>v11 · Motion</summary>
+          <a class="rs-link" href="#v11-reveal">Reveal animations</a>
+          <a class="rs-link" href="#v11-shimmer">Shimmer + type-out</a>
+          <a class="rs-link" href="#v11-hover">Hover lift / glow</a>
+          <a class="rs-link" href="#v11-rowactions">Row actions</a>
+          <a class="rs-link" href="#v11-gradient">Gradient border</a>
+          <a class="rs-link" href="#v11-accordion">Accordion + drag</a>
+          <a class="rs-link" href="#v11-marquee">Marquee ticker</a>
+          <a class="rs-link" href="#v11-tooltip">Tooltip pop</a>
+        </details>
+      </nav>
+    </aside>
+
+    <main class="rs-main">
+      <header class="rs-page-head">
+        <p class="rs-eyebrow">Polyforge / Design System</p>
+        <h1>Refinements showcase</h1>
+        <p>Every reusable utility added in polish passes v2 → v8, on one page. Click any item to see markup, in-context demo, and the version it shipped in. Useful as a reference when extending pages — most of these are <em>already</em> wired into the cascade and just need the right class name.</p>
+      </header>
+
+      <!-- OVERVIEW -->
+      <section class="rs-section" id="overview">
+        <h2>Coverage</h2>
+        <div class="rs-overview">
+          <div class="rs-overview-card"><div class="v">v2</div><div class="n">27</div><div class="t">Final polish: numerics, scrollbars, sidebars, tabs, tooltips</div></div>
+          <div class="rs-overview-card"><div class="v">v3</div><div class="n">25</div><div class="t">Cross-page sweep: buttons, modals, charts, focus rings</div></div>
+          <div class="rs-overview-card"><div class="v">v4</div><div class="n">20</div><div class="t">Motion + signal: status dots, signed numbers, surfaces</div></div>
+          <div class="rs-overview-card"><div class="v">v5</div><div class="n">25</div><div class="t">Forms + UI primitives: switches, sliders, KPIs, steppers</div></div>
+          <div class="rs-overview-card"><div class="v">v6</div><div class="n">25</div><div class="t">Density + edges: pagination, filters, flash, command hints</div></div>
+          <div class="rs-overview-card"><div class="v">v7</div><div class="n">25</div><div class="t">Table + structure: sparklines, timelines, diffs, ToC rails</div></div>
+          <div class="rs-overview-card"><div class="v">v8</div><div class="n">26</div><div class="t">Polymarket primitives: YES/NO badges, edge pills, posbars</div></div>
+          <div class="rs-overview-card"><div class="v">Σ</div><div class="n">173</div><div class="t">Total reusable refinements available across the codebase</div></div>
+        </div>
+      </section>
+
+      <!-- ============== v2 ============== -->
+      <section class="rs-section" id="v2-numerics">
+        <h2>v2 · Tabular numerics</h2>
+        <div class="rs-item">
+          <div class="rs-item-head">
+            <div>
+              <h3>Aligned numeric cells</h3>
+              <p class="rs-desc">All currency/numeric cells use <code>tabular-nums + ss01</code> so columns line up.</p>
+            </div>
+            <span class="rs-version-pill">v2</span>
+          </div>
+          <div class="rs-item-body">
+            <table class="demo-mini-table">
+              <thead><tr><th>Market</th><th class="col-num">Volume</th><th class="col-num">Edge</th></tr></thead>
+              <tbody>
+                <tr><td>Trump-2028-DEM</td><td class="col-num num">$1,284,902</td><td class="col-num num">+4.18%</td></tr>
+                <tr><td>SuperBowl-CHI</td><td class="col-num num">$928,114</td><td class="col-num num">+0.92%</td></tr>
+                <tr><td>FedRate-DEC</td><td class="col-num num">$612,003</td><td class="col-num num">−1.41%</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section class="rs-section" id="v2-pills">
+        <h2>v2 · Pills &amp; badges</h2>
+        <div class="rs-item">
+          <div class="rs-item-head">
+            <div><h3>Semantic pill set</h3><p class="rs-desc">Calmer borders, sharper type rhythm.</p></div>
+            <span class="rs-version-pill">v2</span>
+          </div>
+          <div class="rs-item-body" data-flat>
+            <div class="rs-item-row">
+              <span class="pill pill-success">Resolved</span>
+              <span class="pill pill-warn">Pending</span>
+              <span class="pill pill-danger">Halted</span>
+              <span class="pill pill-info">Listed</span>
+              <span class="pill pill-neutral">Draft</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="rs-section" id="v2-toasts">
+        <h2>v2 · Toasts &amp; alerts</h2>
+        <div class="rs-item">
+          <div class="rs-item-head">
+            <div><h3>Callout fills</h3><p class="rs-desc">Softer fills, accent-tinted left border.</p></div>
+            <span class="rs-version-pill">v2</span>
+          </div>
+          <div class="rs-item-body" data-flat>
+            <div class="demo-stack">
+              <div class="callout callout-info"><strong>Heads-up.</strong> Resolution date moved to Dec 15.</div>
+              <div class="callout callout-warn"><strong>Slow API.</strong> Polymarket REST p99 → 480ms.</div>
+              <div class="callout callout-danger"><strong>Halted.</strong> Market frozen pending oracle review.</div>
+              <div class="callout callout-success"><strong>Filled.</strong> 200 YES @ $0.34 on ELEC-2028.</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="rs-section" id="v2-segmented">
+        <h2>v2 · Segmented controls</h2>
+        <div class="rs-item">
+          <div class="rs-item-head"><div><h3>Chip group</h3><p class="rs-desc">Calmer background, single-pixel divider on hover.</p></div><span class="rs-version-pill">v2</span></div>
+          <div class="rs-item-body" data-flat>
+            <div class="chip-group" role="tablist">
+              <button class="chip is-active">All</button>
+              <button class="chip">Politics</button>
+              <button class="chip">Sports</button>
+              <button class="chip">Crypto</button>
+              <button class="chip">Macro</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="rs-section" id="v2-tooltip">
+        <h2>v2 · Tooltips</h2>
+        <div class="rs-item">
+          <div class="rs-item-head"><div><h3>Neutral tooltip</h3><p class="rs-desc">Hover the badge to see the tooltip.</p></div><span class="rs-version-pill">v2</span></div>
+          <div class="rs-item-body" data-flat>
+            <span class="tooltip" data-tooltip="Edge = expected return / capital, annualized">
+              <span class="pill pill-info">Hover me</span>
+            </span>
+          </div>
+        </div>
+      </section>
+
+      <section class="rs-section" id="v2-skeleton">
+        <h2>v2 · Skeleton loaders (with v7 variants)</h2>
+        <div class="rs-item">
+          <div class="rs-item-head"><div><h3>Skeleton primitives</h3><p class="rs-desc">Sizes: line / sm / lg / circle / w50 / w70 / w90.</p></div><span class="rs-version-pill">v2 + v7</span></div>
+          <div class="rs-item-body" data-flat>
+            <div class="demo-stack">
+              <div class="skeleton skeleton-line"></div>
+              <div class="skeleton skeleton-line skeleton-w70"></div>
+              <div class="skeleton skeleton-line skeleton-w50"></div>
+              <div class="rs-item-row">
+                <div class="skeleton skeleton-circle"></div>
+                <div style="flex:1" class="demo-stack">
+                  <div class="skeleton skeleton-line skeleton-sm skeleton-w50"></div>
+                  <div class="skeleton skeleton-line skeleton-sm skeleton-w90"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="rs-section" id="v2-empty">
+        <h2>v2 · Empty / placeholder states</h2>
+        <div class="rs-item">
+          <div class="rs-item-head"><div><h3>Empty state</h3><p class="rs-desc">Unified visual.</p></div><span class="rs-version-pill">v2</span></div>
+          <div class="rs-item-body" data-flat>
+            <div class="empty">
+              <div class="empty-title">No backtests yet</div>
+              <div class="empty-desc">Run a backtest from the Strategy detail page to see results here.</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============== v3 ============== -->
+      <section class="rs-section" id="v3-sticky">
+        <h2>v3 · Sticky table headers</h2>
+        <div class="rs-item">
+          <div class="rs-item-head"><div><h3>Frozen <code>thead</code></h3><p class="rs-desc">Add <code>.table-sticky</code> to a wrapper that scrolls.</p></div><span class="rs-version-pill">v3 + v7</span></div>
+          <div class="rs-item-body" data-flat>
+            <div class="adm-table-wrap" style="max-height: 220px; overflow: auto;">
+              <table class="demo-mini-table">
+                <thead><tr><th>Market</th><th>Side</th><th class="col-num">Size</th><th class="col-num">Px</th></tr></thead>
+                <tbody id="rs-sticky-body"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="rs-section" id="v3-buttons">
+        <h2>v3 · Button tiers</h2>
+        <div class="rs-item">
+          <div class="rs-item-head"><div><h3>Uniform heights + focus</h3></div><span class="rs-version-pill">v3</span></div>
+          <div class="rs-item-body" data-flat>
+            <div class="rs-item-row">
+              <button class="btn btn-primary">Primary</button>
+              <button class="btn btn-secondary">Secondary</button>
+              <button class="btn btn-ghost">Ghost</button>
+              <button class="btn btn-danger">Halt market</button>
+              <button class="btn btn-primary" disabled>Disabled</button>
+            </div>
+            <div class="rs-item-row">
+              <button class="btn btn-sm btn-secondary">Small</button>
+              <button class="btn btn-secondary">Default</button>
+              <button class="btn btn-lg btn-secondary">Large</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="rs-section" id="v3-charts">
+        <h2>v3 · Chart gridlines</h2>
+        <div class="rs-item">
+          <div class="rs-item-head"><div><h3>Soft baselines</h3><p class="rs-desc">Inline SVG charts in cards now use a softer gridline tone.</p></div><span class="rs-version-pill">v3</span></div>
+          <div class="rs-item-body" data-flat>
+            <svg viewBox="0 0 320 80" width="320" height="80">
+              <g class="chart-grid">
+                <line x1="0" y1="20" x2="320" y2="20"/>
+                <line x1="0" y1="40" x2="320" y2="40"/>
+                <line x1="0" y1="60" x2="320" y2="60"/>
+              </g>
+              <polyline class="chart-line" fill="none" stroke="var(--accent-default)" stroke-width="1.5"
+                points="0,55 32,42 64,48 96,30 128,38 160,22 192,28 224,18 256,24 288,12 320,16"/>
+            </svg>
+          </div>
+        </div>
+      </section>
+
+      <section class="rs-section" id="v3-modal">
+        <h2>v3 · Modal chrome</h2>
+        <div class="rs-item">
+          <div class="rs-item-head"><div><h3>Dialog look</h3><p class="rs-desc">Backdrop blur + uniform chrome.</p></div><span class="rs-version-pill">v3</span></div>
+          <div class="rs-item-body" data-flat>
+            <div style="position: relative; height: 220px; border-radius: 8px; overflow: hidden; background: linear-gradient(135deg, #1a1d24, #0f1116);">
+              <div style="position:absolute; inset: 0; backdrop-filter: blur(2px); background: rgba(0,0,0,0.45);"></div>
+              <div style="position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 320px; padding: 18px; background: var(--bg-elevated); border: 1px solid var(--border-default); border-radius: 10px; box-shadow: 0 18px 40px rgba(0,0,0,0.5);">
+                <div style="font-size: 14px; font-weight: 600; margin-bottom: 4px;">Halt this market?</div>
+                <div style="font-size: 12.5px; color: var(--text-secondary); margin-bottom: 14px;">Open positions will remain. Resolution timer pauses until you resume.</div>
+                <div class="rs-item-row" style="justify-content: flex-end;">
+                  <button class="btn btn-ghost btn-sm">Cancel</button>
+                  <button class="btn btn-danger btn-sm">Halt</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="rs-section" id="v3-pricing">
+        <h2>v3 · Pricing / plan grid</h2>
+        <div class="rs-item">
+          <div class="rs-item-head"><div><h3>Equal-height cards</h3></div><span class="rs-version-pill">v3</span></div>
+          <div class="rs-item-body" data-flat>
+            <div class="plan-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;">
+              <div class="plan-card" style="padding: 16px; border:1px solid var(--border-subtle); border-radius:10px; background: var(--bg-elevated);">
+                <div style="font-size: 12px; color: var(--text-tertiary);">Starter</div>
+                <div style="font-size: 24px; font-weight: 600; margin: 4px 0;">$0</div>
+                <div style="font-size: 12px; color: var(--text-secondary);">Up to 3 strategies</div>
+              </div>
+              <div class="plan-card is-featured" style="padding: 16px; border:1px solid var(--accent-default); border-radius:10px; background: var(--bg-elevated);">
+                <div style="font-size: 12px; color: var(--accent-default);">Pro</div>
+                <div style="font-size: 24px; font-weight: 600; margin: 4px 0;">$49<span style="font-size: 12px; color: var(--text-tertiary);">/mo</span></div>
+                <div style="font-size: 12px; color: var(--text-secondary);">Unlimited strategies + live mode</div>
+              </div>
+              <div class="plan-card" style="padding: 16px; border:1px solid var(--border-subtle); border-radius:10px; background: var(--bg-elevated);">
+                <div style="font-size: 12px; color: var(--text-tertiary);">Team</div>
+                <div style="font-size: 24px; font-weight: 600; margin: 4px 0;">Custom</div>
+                <div style="font-size: 12px; color: var(--text-secondary);">SSO + dedicated support</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============== v4 ============== -->
+      <section class="rs-section" id="v4-status">
+        <h2>v4 · Status dots</h2>
+        <div class="rs-item">
+          <div class="rs-item-head"><div><h3>Live indicator</h3><p class="rs-desc">Pulsing dot for connected services.</p></div><span class="rs-version-pill">v4</span></div>
+          <div class="rs-item-body" data-flat>
+            <div class="rs-item-row">
+              <span><span class="status-dot status-dot-live"></span> Polymarket REST</span>
+              <span><span class="status-dot status-dot-warn"></span> Kalshi REST</span>
+              <span><span class="status-dot status-dot-danger"></span> Oracle pipeline</span>
+              <span><span class="status-dot status-dot-idle"></span> Backfill worker</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="rs-section" id="v4-signed">
+        <h2>v4 · Signed numbers</h2>
+        <div class="rs-item">
+          <div class="rs-item-head"><div><h3>+/- coloring</h3><p class="rs-desc">Class-driven, no inline styles.</p></div><span class="rs-version-pill">v4</span></div>
+          <div class="rs-item-body" data-flat>
+            <div class="rs-item-row">
+              <span class="num num-pos">+12.4%</span>
+              <span class="num num-neg">−3.1%</span>
+              <span class="num num-flat">0.0%</span>
+              <span class="num num-pos">+$1,284</span>
+              <span class="num num-neg">−$902</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="rs-section" id="v4-currency">
+        <h2>v4 · Currency tone</h2>
+        <div class="rs-item">
+          <div class="rs-item-head"><div><h3>Dimmed symbol, weighted value</h3></div><span class="rs-version-pill">v4</span></div>
+          <div class="rs-item-body" data-flat>
+            <div class="rs-item-row" style="font-size: 24px;">
+              <span class="ccy"><span class="ccy-sym">$</span><span class="ccy-val">12,492</span></span>
+              <span class="ccy"><span class="ccy-sym">$</span><span class="ccy-val">948.20</span></span>
+              <span class="ccy"><span class="ccy-sym">$</span><span class="ccy-val">3.14</span></span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="rs-section" id="v4-surfaces">
+        <h2>v4 · Surface tiers</h2>
+        <div class="rs-item">
+          <div class="rs-item-head"><div><h3>Depth hierarchy</h3><p class="rs-desc">surface-0 → surface-2.</p></div><span class="rs-version-pill">v4</span></div>
+          <div class="rs-item-body" data-flat>
+            <div class="rs-item-row">
+              <div class="surface-0" style="padding: 14px 18px; border-radius: 8px;">surface-0</div>
+              <div class="surface-1" style="padding: 14px 18px; border-radius: 8px;">surface-1</div>
+              <div class="surface-2" style="padding: 14px 18px; border-radius: 8px;">surface-2</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="rs-section" id="v4-kbd">
+        <h2>v4 · Keyboard hint footer</h2>
+        <div class="rs-item">
+          <div class="rs-item-head"><div><h3>Bottom-of-page shortcut row</h3></div><span class="rs-version-pill">v4</span></div>
+          <div class="rs-item-body" data-flat>
+            <div class="kbd-row">
+              <span><kbd>⌘</kbd><kbd>K</kbd> search</span>
+              <span><kbd>G</kbd> then <kbd>D</kbd> dashboard</span>
+              <span><kbd>Esc</kbd> close</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============== v5 ============== -->
+      <section class="rs-section" id="v5-validation">
+        <h2>v5 · Validation states</h2>
+        <div class="rs-item">
+          <div class="rs-item-head"><div><h3>Field error / success</h3></div><span class="rs-version-pill">v5</span></div>
+          <div class="rs-item-body" data-flat>
+            <div class="demo-stack" style="max-width: 420px;">
+              <div class="form-group is-error">
+                <label>Order size</label>
+                <input type="text" value="999999999"/>
+                <div class="form-hint form-error-msg">Exceeds available collateral.</div>
+              </div>
+              <div class="form-group is-success">
+                <label>Wallet address</label>
+                <input type="text" value="0x9c4F…3a91"/>
+                <div class="form-hint form-success-msg">Verified on-chain.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="rs-section" id="v5-controls">
+        <h2>v5 · Switch / range / radio / checkbox</h2>
+        <div class="rs-item">
+          <div class="rs-item-head"><div><h3>Native form primitives</h3></div><span class="rs-version-pill">v5</span></div>
+          <div class="rs-item-body" data-flat>
+            <div class="demo-stack">
+              <div class="rs-item-row"><label class="switch"><input type="checkbox" checked/><span></span></label><span>Live trading</span></div>
+              <div class="rs-item-row"><label class="switch"><input type="checkbox"/><span></span></label><span>Auto-rebalance</span></div>
+              <input type="range" min="0" max="100" value="65" style="max-width: 320px;"/>
+              <div class="rs-item-row">
+                <label><input type="radio" name="r1" checked/> Paper</label>
+                <label><input type="radio" name="r1"/> Live</label>
+                <label><input type="radio" name="r1"/> Sandbox</label>
+              </div>
+              <div class="rs-item-row">
+                <label><input type="checkbox" checked/> Polymarket</label>
+                <label><input type="checkbox"/> Kalshi</label>
+                <label><input type="checkbox" checked/> Predictit</label>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="rs-section" id="v5-progress">
+        <h2>v5 · Progress + loading button</h2>
+        <div class="rs-item">
+          <div class="rs-item-head"><div><h3>Track + fill</h3></div><span class="rs-version-pill">v5</span></div>
+          <div class="rs-item-body" data-flat>
+            <div class="demo-stack">
+              <div class="progress"><div class="progress-fill" style="width: 25%"></div></div>
+              <div class="progress"><div class="progress-fill" style="width: 60%"></div></div>
+              <div class="progress"><div class="progress-fill is-success" style="width: 100%"></div></div>
+              <div class="rs-item-row">
+                <button class="btn btn-primary is-loading">Running backtest</button>
+                <button class="btn btn-secondary">Idle</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="rs-section" id="v5-stepper">
+        <h2>v5 · Stepper / wizard</h2>
+        <div class="rs-item">
+          <div class="rs-item-head"><div><h3>Horizontal step indicator</h3></div><span class="rs-version-pill">v5</span></div>
+          <div class="rs-item-body" data-flat>
+            <ol class="stepper">
+              <li class="step is-done"><span class="step-dot">✓</span><span class="step-label">Connect wallet</span></li>
+              <li class="step is-done"><span class="step-dot">✓</span><span class="step-label">Fund account</span></li>
+              <li class="step is-active"><span class="step-dot">3</span><span class="step-label">Pick strategy</span></li>
+              <li class="step"><span class="step-dot">4</span><span class="step-label">Go live</span></li>
+            </ol>
+          </div>
+        </div>
+      </section>
+
+      <section class="rs-section" id="v5-kpi">
+        <h2>v5 · KPI tiles</h2>
+        <div class="rs-item">
+          <div class="rs-item-head"><div><h3>Mini stat cards</h3></div><span class="rs-version-pill">v5</span></div>
+          <div class="rs-item-body" data-flat>
+            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;">
+              <div class="kpi-tile"><div class="kpi-label">Equity</div><div class="kpi-value num">$24,184</div><div class="kpi-delta num num-pos">+4.2%</div></div>
+              <div class="kpi-tile"><div class="kpi-label">Open positions</div><div class="kpi-value num">12</div><div class="kpi-delta num num-flat">0</div></div>
+              <div class="kpi-tile"><div class="kpi-label">Win rate</div><div class="kpi-value num">63%</div><div class="kpi-delta num num-pos">+2.1%</div></div>
+              <div class="kpi-tile"><div class="kpi-label">Avg edge</div><div class="kpi-value num">3.4%</div><div class="kpi-delta num num-neg">−0.3%</div></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="rs-section" id="v5-heatmap">
+        <h2>v5 · Heatmap cells</h2>
+        <div class="rs-item">
+          <div class="rs-item-head"><div><h3>Intensity scale</h3><p class="rs-desc">heat-1 → heat-10</p></div><span class="rs-version-pill">v5</span></div>
+          <div class="rs-item-body" data-flat>
+            <div style="display: grid; grid-template-columns: repeat(10, 28px); gap: 2px;">
+              <span class="heat heat-1"></span><span class="heat heat-2"></span><span class="heat heat-3"></span><span class="heat heat-4"></span><span class="heat heat-5"></span>
+              <span class="heat heat-6"></span><span class="heat heat-7"></span><span class="heat heat-8"></span><span class="heat heat-9"></span><span class="heat heat-10"></span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============== v6 ============== -->
+      <section class="rs-section" id="v6-pagination">
+        <h2>v6 · Pagination</h2>
+        <div class="rs-item">
+          <div class="rs-item-head"><div><h3>Paged-list controls</h3></div><span class="rs-version-pill">v6</span></div>
+          <div class="rs-item-body" data-flat>
+            <nav class="pagination">
+              <button class="pg-btn" disabled>‹ Prev</button>
+              <button class="pg-btn">1</button>
+              <button class="pg-btn is-active">2</button>
+              <button class="pg-btn">3</button>
+              <button class="pg-btn">4</button>
+              <span class="pg-ellipsis">…</span>
+              <button class="pg-btn">42</button>
+              <button class="pg-btn">Next ›</button>
+            </nav>
+          </div>
+        </div>
+      </section>
+
+      <section class="rs-section" id="v6-sortable">
+        <h2>v6 · Sortable column headers</h2>
+        <div class="rs-item">
+          <div class="rs-item-head"><div><h3>Caret affordance</h3></div><span class="rs-version-pill">v6</span></div>
+          <div class="rs-item-body" data-flat>
+            <table class="demo-mini-table">
+              <thead><tr>
+                <th class="sortable" aria-sort="ascending">Market ▲</th>
+                <th class="sortable">Volume</th>
+                <th class="sortable" aria-sort="descending">Edge ▼</th>
+              </tr></thead>
+              <tbody>
+                <tr><td>ELEC-2028</td><td class="num">$1.2M</td><td class="num num-pos">+4.2%</td></tr>
+                <tr><td>SBOWL-CHI</td><td class="num">$0.9M</td><td class="num num-pos">+0.9%</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section class="rs-section" id="v6-filterchips">
+        <h2>v6 · Filter chips bar</h2>
+        <div class="rs-item">
+          <div class="rs-item-head"><div><h3>Applied filters</h3></div><span class="rs-version-pill">v6</span></div>
+          <div class="rs-item-body" data-flat>
+            <div class="filter-bar">
+              <span class="filter-chip">Politics <button>×</button></span>
+              <span class="filter-chip">Edge &gt; 2% <button>×</button></span>
+              <span class="filter-chip">YES side <button>×</button></span>
+              <button class="filter-clear">Clear all</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="rs-section" id="v6-tabpills">
+        <h2>v6 · Tab pills</h2>
+        <div class="rs-item">
+          <div class="rs-item-head"><div><h3>Segmented alt to underline</h3></div><span class="rs-version-pill">v6</span></div>
+          <div class="rs-item-body" data-flat>
+            <div class="tab-pills">
+              <button class="tab-pill is-active">Overview</button>
+              <button class="tab-pill">Positions</button>
+              <button class="tab-pill">Orders</button>
+              <button class="tab-pill">Activity</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="rs-section" id="v6-flash">
+        <h2>v6 · Value-update flash</h2>
+        <div class="rs-item">
+          <div class="rs-item-head"><div><h3>When a number changes</h3><p class="rs-desc">Click to flash green/red.</p></div><span class="rs-version-pill">v6</span></div>
+          <div class="rs-item-body" data-flat>
+            <div class="rs-item-row">
+              <span id="rs-flash-val" class="num" style="font-size: 22px;">$24,184.20</span>
+              <button class="btn btn-secondary btn-sm" onclick="rsFlash(true)">+$12 flash</button>
+              <button class="btn btn-secondary btn-sm" onclick="rsFlash(false)">−$8 flash</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="rs-section" id="v6-confirm">
+        <h2>v6 · Destructive confirm prompt</h2>
+        <div class="rs-item">
+          <div class="rs-item-head"><div><h3>Inline danger row</h3></div><span class="rs-version-pill">v6</span></div>
+          <div class="rs-item-body" data-flat>
+            <div class="danger-confirm">
+              <div>
+                <div style="font-weight: 600;">Halt this strategy?</div>
+                <div style="font-size: 12px; color: var(--text-secondary);">All open orders will be cancelled. This cannot be undone.</div>
+              </div>
+              <div class="rs-item-row">
+                <button class="btn btn-ghost btn-sm">Cancel</button>
+                <button class="btn btn-danger btn-sm">Halt</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="rs-section" id="v6-cmd">
+        <h2>v6 · Command hint</h2>
+        <div class="rs-item">
+          <div class="rs-item-head"><div><h3>Inline shortcut row</h3></div><span class="rs-version-pill">v6</span></div>
+          <div class="rs-item-body" data-flat>
+            <span class="cmd-hint">Search <kbd>⌘</kbd><kbd>K</kbd></span>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============== v7 ============== -->
+      <section class="rs-section" id="v7-sparkline">
+        <h2>v7 · Sparkline</h2>
+        <div class="rs-item">
+          <div class="rs-item-head"><div><h3>Inline 60×18 chart</h3></div><span class="rs-version-pill">v7</span></div>
+          <div class="rs-item-body" data-flat>
+            <div class="rs-item-row">
+              <span class="sparkline">
+                <svg viewBox="0 0 60 18" preserveAspectRatio="none"><polyline class="up" fill="none" stroke="currentColor" stroke-width="1.4" points="0,12 10,10 20,11 30,8 40,5 50,7 60,3"/></svg>
+              </span>
+              <span class="sparkline">
+                <svg viewBox="0 0 60 18" preserveAspectRatio="none"><polyline class="down" fill="none" stroke="currentColor" stroke-width="1.4" points="0,4 10,6 20,5 30,9 40,11 50,13 60,15"/></svg>
+              </span>
+              <span class="sparkline">
+                <svg viewBox="0 0 60 18" preserveAspectRatio="none"><polyline class="flat" fill="none" stroke="currentColor" stroke-width="1.4" points="0,9 10,8 20,10 30,9 40,9 50,10 60,9"/></svg>
+              </span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="rs-section" id="v7-tagsinput">
+        <h2>v7 · Tag input</h2>
+        <div class="rs-item">
+          <div class="rs-item-head"><div><h3>Chips inside an input</h3></div><span class="rs-version-pill">v7</span></div>
+          <div class="rs-item-body" data-flat>
+            <div class="tag-input" style="max-width: 480px;">
+              <span class="tag-chip">politics <button>×</button></span>
+              <span class="tag-chip">macro <button>×</button></span>
+              <span class="tag-chip">elections <button>×</button></span>
+              <input type="text" placeholder="Add tag…"/>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="rs-section" id="v7-timeline">
+        <h2>v7 · Vertical timeline</h2>
+        <div class="rs-item">
+          <div class="rs-item-head"><div><h3>Events down the left</h3></div><span class="rs-version-pill">v7</span></div>
+          <div class="rs-item-body" data-flat>
+            <ol class="timeline">
+              <li><span class="t-time">14:02</span><span class="t-dot"></span><div><strong>Filled</strong> 200 YES @ $0.34 on ELEC-2028</div></li>
+              <li><span class="t-time">13:58</span><span class="t-dot t-dot-warn"></span><div><strong>Slippage warn</strong> $0.36 → $0.34 (−5.5%)</div></li>
+              <li><span class="t-time">13:51</span><span class="t-dot t-dot-success"></span><div><strong>Strategy started</strong> whale-mirror live</div></li>
+              <li><span class="t-time">13:42</span><span class="t-dot"></span><div><strong>Backtest complete</strong> 67% win rate, $4,200 PnL</div></li>
+            </ol>
+          </div>
+        </div>
+      </section>
+
+      <section class="rs-section" id="v7-diff">
+        <h2>v7 · Diff view</h2>
+        <div class="rs-item">
+          <div class="rs-item-head"><div><h3>Add / del / context lines</h3></div><span class="rs-version-pill">v7</span></div>
+          <div class="rs-item-body" data-flat>
+            <pre class="diff" style="margin: 0;"><span class="d-hunk">@@ strategy.yaml</span>
+<span class="d-ctx">  trigger: whale-buy</span>
+<span class="d-del">- min_size: 5000</span>
+<span class="d-add">+ min_size: 10000</span>
+<span class="d-add">+ max_slippage: 0.02</span>
+<span class="d-ctx">  side: mirror</span></pre>
+          </div>
+        </div>
+      </section>
+
+      <section class="rs-section" id="v7-avatarstack">
+        <h2>v7 · Avatar stack</h2>
+        <div class="rs-item">
+          <div class="rs-item-head"><div><h3>Overlapping circles + +N</h3></div><span class="rs-version-pill">v7</span></div>
+          <div class="rs-item-body" data-flat>
+            <div class="avatar-stack">
+              <span class="avatar avatar-fallback" style="background: #4f6cef;">JK</span>
+              <span class="avatar avatar-fallback" style="background: #ef6f4f;">SR</span>
+              <span class="avatar avatar-fallback" style="background: #4fef9f;">MN</span>
+              <span class="avatar avatar-fallback" style="background: #af4fef;">AY</span>
+              <span class="avatar-more">+12</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="rs-section" id="v7-pagebanner">
+        <h2>v7 · Page banner</h2>
+        <div class="rs-item">
+          <div class="rs-item-head"><div><h3>Top-of-page system message</h3></div><span class="rs-version-pill">v7</span></div>
+          <div class="rs-item-body" data-flat>
+            <div class="demo-stack">
+              <div class="page-banner page-banner-info">Resolution date moved to <strong>Dec 15, 2026</strong>. <a href="#">View notice</a></div>
+              <div class="page-banner page-banner-warn">Polymarket REST p99 elevated. Some quotes may be stale.</div>
+              <div class="page-banner page-banner-danger">Live trading halted by admin. <a href="#">Read incident</a></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="rs-section" id="v7-validation">
+        <h2>v7 · Validation summary</h2>
+        <div class="rs-item">
+          <div class="rs-item-head"><div><h3>Form errors at top</h3></div><span class="rs-version-pill">v7</span></div>
+          <div class="rs-item-body" data-flat>
+            <div class="validation-summary">
+              <div class="vs-title">3 fields need attention</div>
+              <ul>
+                <li>Order size exceeds available collateral</li>
+                <li>Wallet must be connected before going live</li>
+                <li>Strategy missing exit rule</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="rs-section" id="v7-compare">
+        <h2>v7 · Comparison columns</h2>
+        <div class="rs-item">
+          <div class="rs-item-head"><div><h3>Pricing / feature compare</h3></div><span class="rs-version-pill">v7</span></div>
+          <div class="rs-item-body" data-flat>
+            <div class="compare-grid">
+              <div class="compare-col">
+                <div class="compare-name">Starter</div>
+                <div class="compare-price">$0</div>
+                <ul class="compare-feats">
+                  <li>3 strategies</li>
+                  <li>Paper trading</li>
+                  <li class="is-off">Live mode</li>
+                </ul>
+              </div>
+              <div class="compare-col is-featured">
+                <span class="compare-tag">Most popular</span>
+                <div class="compare-name">Pro</div>
+                <div class="compare-price">$49<span>/mo</span></div>
+                <ul class="compare-feats">
+                  <li>Unlimited strategies</li>
+                  <li>Live mode</li>
+                  <li>Whale signals</li>
+                </ul>
+              </div>
+              <div class="compare-col">
+                <div class="compare-name">Team</div>
+                <div class="compare-price">Custom</div>
+                <ul class="compare-feats">
+                  <li>SSO + audit log</li>
+                  <li>Dedicated support</li>
+                  <li>SLA</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="rs-section" id="v7-toc">
+        <h2>v7 · ToC rail</h2>
+        <div class="rs-item">
+          <div class="rs-item-head"><div><h3>Sticky right-side anchor list</h3></div><span class="rs-version-pill">v7</span></div>
+          <div class="rs-item-body" data-flat>
+            <nav class="toc-rail" style="max-width: 240px;">
+              <div class="toc-title">On this page</div>
+              <a href="#" class="toc-link is-active">Getting started</a>
+              <a href="#" class="toc-link">Connect a wallet</a>
+              <a href="#" class="toc-link toc-link-sub">Polymarket</a>
+              <a href="#" class="toc-link toc-link-sub">Kalshi</a>
+              <a href="#" class="toc-link">First strategy</a>
+              <a href="#" class="toc-link">Going live</a>
+            </nav>
+          </div>
+        </div>
+      </section>
+
+      <section class="rs-section" id="v7-density">
+        <h2>v7 · Density toggle</h2>
+        <div class="rs-item">
+          <div class="rs-item-head"><div><h3>Cozy / Compact</h3></div><span class="rs-version-pill">v7</span></div>
+          <div class="rs-item-body" data-flat>
+            <div class="density-toggle">
+              <button class="dt-btn is-active">Cozy</button>
+              <button class="dt-btn">Compact</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="rs-section" id="v7-help">
+        <h2>v7 · Help tooltip</h2>
+        <div class="rs-item">
+          <div class="rs-item-head"><div><h3>"?" with arrow popover</h3></div><span class="rs-version-pill">v7</span></div>
+          <div class="rs-item-body" data-flat>
+            <span>Edge <span class="help-tip" data-help="Edge = expected return / capital, annualized">?</span></span>
+          </div>
+        </div>
+      </section>
+
+      <section class="rs-section" id="v7-toolbar">
+        <h2>v7 · Toolbar</h2>
+        <div class="rs-item">
+          <div class="rs-item-head"><div><h3>Grouped action bar</h3></div><span class="rs-version-pill">v7</span></div>
+          <div class="rs-item-body" data-flat>
+            <div class="toolbar">
+              <div class="tb-group">
+                <button class="tb-btn">Bold</button>
+                <button class="tb-btn">Italic</button>
+                <button class="tb-btn">Underline</button>
+              </div>
+              <div class="tb-group">
+                <button class="tb-btn">H1</button>
+                <button class="tb-btn">H2</button>
+                <button class="tb-btn">H3</button>
+              </div>
+              <div class="tb-group">
+                <button class="tb-btn">List</button>
+                <button class="tb-btn">Quote</button>
+                <button class="tb-btn">Code</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="rs-section" id="v7-empty-table">
+        <h2>v7 · Empty table row</h2>
+        <div class="rs-item">
+          <div class="rs-item-head"><div><h3>"No results" placeholder</h3></div><span class="rs-version-pill">v7</span></div>
+          <div class="rs-item-body" data-flat>
+            <table class="demo-mini-table">
+              <thead><tr><th>Market</th><th>Side</th><th>Size</th></tr></thead>
+              <tbody>
+                <tr class="table-empty"><td colspan="3">No matching positions for the current filters.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section class="rs-section" id="v7-numeric-delta">
+        <h2>v7 · Numeric delta arrows</h2>
+        <div class="rs-item">
+          <div class="rs-item-head"><div><h3>Up / down / flat</h3></div><span class="rs-version-pill">v7</span></div>
+          <div class="rs-item-body" data-flat>
+            <div class="rs-item-row">
+              <span class="delta delta-up">▲ 4.2%</span>
+              <span class="delta delta-down">▼ 1.8%</span>
+              <span class="delta delta-flat">— 0.0%</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============== v8 ============== -->
+      <section class="rs-section" id="v8-mkt-chip">
+        <h2>v8 · Market chip</h2>
+        <div class="rs-item">
+          <div class="rs-item-head"><div><h3>Code/symbol pill</h3></div><span class="rs-version-pill">v8</span></div>
+          <div class="rs-item-body" data-flat>
+            <div class="rs-item-row">
+              <span class="mkt-chip">ELEC-2028-DEM</span>
+              <span class="mkt-chip">SBOWL-CHI</span>
+              <span class="mkt-chip">FED-DEC-RATE</span>
+              <span class="mkt-chip">OSCAR-BP-2026</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="rs-section" id="v8-venue">
+        <h2>v8 · Venue tag</h2>
+        <div class="rs-item">
+          <div class="rs-item-head"><div><h3>Exchange origin</h3></div><span class="rs-version-pill">v8</span></div>
+          <div class="rs-item-body" data-flat>
+            <div class="rs-item-row">
+              <span class="venue-tag venue-polymarket">Polymarket</span>
+              <span class="venue-tag venue-kalshi">Kalshi</span>
+              <span class="venue-tag venue-predictit">PredictIt</span>
+              <span class="venue-tag venue-manifold">Manifold</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="rs-section" id="v8-side">
+        <h2>v8 · YES / NO side badge</h2>
+        <div class="rs-item">
+          <div class="rs-item-head"><div><h3>Directional pill</h3></div><span class="rs-version-pill">v8</span></div>
+          <div class="rs-item-body" data-flat>
+            <div class="rs-item-row">
+              <span class="side-badge side-yes">YES</span>
+              <span class="side-badge side-no">NO</span>
+              <span class="side-badge side-yes">YES · 200</span>
+              <span class="side-badge side-no">NO · 50</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="rs-section" id="v8-mode">
+        <h2>v8 · Mode badge</h2>
+        <div class="rs-item">
+          <div class="rs-item-head"><div><h3>Paper vs live execution</h3></div><span class="rs-version-pill">v8</span></div>
+          <div class="rs-item-body" data-flat>
+            <div class="rs-item-row">
+              <span class="mode-badge mode-paper">PAPER</span>
+              <span class="mode-badge mode-live">LIVE</span>
+              <span class="mode-badge mode-sandbox">SANDBOX</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="rs-section" id="v8-pnl">
+        <h2>v8 · P&amp;L coloring</h2>
+        <div class="rs-item">
+          <div class="rs-item-head"><div><h3>Class-driven gain/loss</h3></div><span class="rs-version-pill">v8</span></div>
+          <div class="rs-item-body" data-flat>
+            <div class="rs-item-row" style="font-size: 18px;">
+              <span class="pnl pnl-pos">+$1,284.20</span>
+              <span class="pnl pnl-neg">−$902.40</span>
+              <span class="pnl pnl-flat">$0.00</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="rs-section" id="v8-edge">
+        <h2>v8 · Edge pill</h2>
+        <div class="rs-item">
+          <div class="rs-item-head"><div><h3>Quantified statistical edge</h3></div><span class="rs-version-pill">v8</span></div>
+          <div class="rs-item-body" data-flat>
+            <div class="rs-item-row">
+              <span class="edge-pill edge-strong">+4.2% edge</span>
+              <span class="edge-pill edge-mid">+1.8% edge</span>
+              <span class="edge-pill edge-weak">+0.4% edge</span>
+              <span class="edge-pill edge-negative">−0.9% edge</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="rs-section" id="v8-resolution">
+        <h2>v8 · Resolution timer</h2>
+        <div class="rs-item">
+          <div class="rs-item-head"><div><h3>Countdown affordance</h3></div><span class="rs-version-pill">v8</span></div>
+          <div class="rs-item-body" data-flat>
+            <div class="rs-item-row">
+              <span class="res-timer">14h 22m</span>
+              <span class="res-timer res-soon">2h 04m</span>
+              <span class="res-timer res-imminent">12m</span>
+              <span class="res-timer res-resolved">Resolved</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="rs-section" id="v8-posbar">
+        <h2>v8 · Position bar</h2>
+        <div class="rs-item">
+          <div class="rs-item-head"><div><h3>YES/NO probability bar inline</h3></div><span class="rs-version-pill">v8</span></div>
+          <div class="rs-item-body" data-flat>
+            <div class="demo-stack">
+              <div class="rs-item-row"><span style="width: 180px;">Trump 2028</span><span class="pos-bar"><span class="pos-yes" style="width: 62%"></span></span><span class="num">62¢</span></div>
+              <div class="rs-item-row"><span style="width: 180px;">Fed cut December</span><span class="pos-bar"><span class="pos-yes" style="width: 38%"></span></span><span class="num">38¢</span></div>
+              <div class="rs-item-row"><span style="width: 180px;">SuperBowl Chiefs</span><span class="pos-bar"><span class="pos-yes" style="width: 22%"></span></span><span class="num">22¢</span></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="rs-section" id="v8-fresh">
+        <h2>v8 · Fresh pulse dot</h2>
+        <div class="rs-item">
+          <div class="rs-item-head"><div><h3>"Just happened" indicator</h3></div><span class="rs-version-pill">v8</span></div>
+          <div class="rs-item-body" data-flat>
+            <div class="rs-item-row">
+              <span><span class="fresh-dot"></span> 0.4s ago — 200 YES @ $0.34</span>
+              <span class="mins-ago">4m ago</span>
+              <span class="mins-ago">22m ago</span>
+              <span class="mins-ago">3h ago</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="rs-section" id="v8-statrow">
+        <h2>v8 · Stat row + key-value list</h2>
+        <div class="rs-item">
+          <div class="rs-item-head"><div><h3>Horizontal label/value pairs</h3></div><span class="rs-version-pill">v8</span></div>
+          <div class="rs-item-body" data-flat>
+            <dl class="stat-row">
+              <div><dt>Volume</dt><dd class="num">$1.28M</dd></div>
+              <div><dt>Edge</dt><dd class="num num-pos">+4.2%</dd></div>
+              <div><dt>Fills</dt><dd class="num">412</dd></div>
+              <div><dt>Win rate</dt><dd class="num">63%</dd></div>
+            </dl>
+            <div class="rs-mini-rule"></div>
+            <dl class="kv-list" style="max-width: 360px;">
+              <div><dt>Strategy</dt><dd>whale-mirror</dd></div>
+              <div><dt>Mode</dt><dd><span class="mode-badge mode-live">LIVE</span></dd></div>
+              <div><dt>Venue</dt><dd><span class="venue-tag venue-polymarket">Polymarket</span></dd></div>
+              <div><dt>Created</dt><dd>2 days ago</dd></div>
+            </dl>
+          </div>
+        </div>
+      </section>
+
+      <section class="rs-section" id="v8-eyebrow">
+        <h2>v8 · Eyebrow + section divider</h2>
+        <div class="rs-item">
+          <div class="rs-item-head"><div><h3>Labeled rule between sections</h3></div><span class="rs-version-pill">v8</span></div>
+          <div class="rs-item-body" data-flat>
+            <p class="eyebrow">SECTION 02 · MARKETS</p>
+            <h3 style="margin: 0 0 12px;">Top movers in the last hour</h3>
+            <div class="section-divider"><span>Politics</span></div>
+            <div style="height: 12px;"></div>
+            <div class="section-divider"><span>Macro &amp; Fed</span></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="rs-section" id="v8-segv2">
+        <h2>v8 · Segmented selector v2</h2>
+        <div class="rs-item">
+          <div class="rs-item-head"><div><h3>Bigger, with optional icons</h3></div><span class="rs-version-pill">v8</span></div>
+          <div class="rs-item-body" data-flat>
+            <div class="seg-v2">
+              <button class="seg-v2-btn is-active">1H</button>
+              <button class="seg-v2-btn">24H</button>
+              <button class="seg-v2-btn">7D</button>
+              <button class="seg-v2-btn">30D</button>
+              <button class="seg-v2-btn">All</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="rs-section" id="v8-emptyhero">
+        <h2>v8 · Empty hero (+ error variant)</h2>
+        <div class="rs-item">
+          <div class="rs-item-head"><div><h3>Large illustrated empty state</h3></div><span class="rs-version-pill">v8</span></div>
+          <div class="rs-item-body" data-flat>
+            <div class="empty-hero">
+              <div class="empty-hero-glyph">◇</div>
+              <div class="empty-hero-title">No strategies yet</div>
+              <div class="empty-hero-desc">Build your first strategy from a template, or start from scratch in the visual builder.</div>
+              <div class="rs-item-row" style="justify-content: center; margin-top: 14px;">
+                <button class="btn btn-primary">Browse templates</button>
+                <button class="btn btn-secondary">Open builder</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="rs-section" id="v8-locked">
+        <h2>v8 · Locked feature scrim</h2>
+        <div class="rs-item">
+          <div class="rs-item-head"><div><h3>Frosted overlay with upgrade CTA</h3></div><span class="rs-version-pill">v8</span></div>
+          <div class="rs-item-body" data-flat>
+            <div class="locked-scrim" style="position: relative; padding: 22px; border-radius: 10px; border: 1px solid var(--border-subtle); background: var(--bg-elevated);">
+              <div class="locked-content">
+                <div style="font-size: 14px; font-weight: 600; margin-bottom: 6px;">Whale signals</div>
+                <div style="font-size: 12.5px; color: var(--text-secondary); margin-bottom: 12px;">Real-time alerts on traders &gt; $50k volume.</div>
+                <table class="demo-mini-table"><tbody>
+                  <tr><td>0x9c…3a91</td><td class="num">$48,200</td><td>YES ELEC-2028</td></tr>
+                  <tr><td>0xa1…8d20</td><td class="num">$22,400</td><td>NO FED-DEC</td></tr>
+                </tbody></table>
+              </div>
+              <div class="locked-overlay">
+                <div class="locked-pad">
+                  <div class="locked-icon">🔒</div>
+                  <div class="locked-title">Pro feature</div>
+                  <div class="locked-desc">Upgrade to unlock whale signals and large-trade alerts.</div>
+                  <button class="btn btn-primary btn-sm">Upgrade</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="rs-section" id="v8-trend">
+        <h2>v8 · Trend arrow + value</h2>
+        <div class="rs-item">
+          <div class="rs-item-head"><div><h3>Inline cell affordance</h3></div><span class="rs-version-pill">v8</span></div>
+          <div class="rs-item-body" data-flat>
+            <table class="demo-mini-table">
+              <thead><tr><th>Market</th><th>Last</th><th>Δ 1h</th></tr></thead>
+              <tbody>
+                <tr><td>ELEC-2028-DEM</td><td class="num">$0.62</td><td><span class="trend trend-up">▲ +0.04</span></td></tr>
+                <tr><td>FED-DEC-CUT</td><td class="num">$0.38</td><td><span class="trend trend-down">▼ −0.02</span></td></tr>
+                <tr><td>SBOWL-CHI</td><td class="num">$0.22</td><td><span class="trend trend-flat">— 0.00</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============== v10 ============== -->
+      <section class="rs-section" id="v10-empty">
+        <h2>v10 · Empty states</h2>
+        <div class="rs-item">
+          <div class="rs-item-head"><div><h3>Standard empty state</h3><p class="rs-desc">Icon + title + body + actions. Use <code>.empty-state</code>.</p></div><span class="rs-version-pill">v10</span></div>
+          <div class="rs-item-body" data-flat>
+            <div class="empty-state">
+              <div class="empty-state-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+              </div>
+              <h3 class="empty-state-title">No backtests yet</h3>
+              <p class="empty-state-body">Run your first backtest to see how a strategy would have performed across historical markets.</p>
+              <div class="empty-state-actions">
+                <button class="btn btn-primary btn-sm">New backtest</button>
+                <button class="btn btn-ghost btn-sm">View examples</button>
+              </div>
+              <div class="empty-state-tip">tip: ⌘K → "new backtest"</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="rs-section" id="v10-skeleton">
+        <h2>v10 · Skeleton screens</h2>
+        <div class="rs-item">
+          <div class="rs-item-head"><div><h3>Loading placeholders</h3><p class="rs-desc">Shimmer animation; respects reduced motion.</p></div><span class="rs-version-pill">v10</span></div>
+          <div class="rs-item-body" data-flat>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+              <div>
+                <div class="skeleton skeleton-title"></div>
+                <div class="skeleton skeleton-line long"></div>
+                <div class="skeleton skeleton-line medium"></div>
+                <div class="skeleton skeleton-line short"></div>
+              </div>
+              <div>
+                <div class="skeleton-row"><div class="skeleton skeleton-avatar"></div><div class="skeleton"></div><div class="skeleton narrow"></div></div>
+                <div class="skeleton-row"><div class="skeleton skeleton-avatar"></div><div class="skeleton"></div><div class="skeleton narrow"></div></div>
+                <div class="skeleton-row"><div class="skeleton skeleton-avatar"></div><div class="skeleton"></div><div class="skeleton narrow"></div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="rs-section" id="v10-spinner">
+        <h2>v10 · Spinner + loading button</h2>
+        <div class="rs-item">
+          <div class="rs-item-head"><div><h3>Inline progress indicators</h3></div><span class="rs-version-pill">v10</span></div>
+          <div class="rs-item-body" data-flat>
+            <div class="rs-item-row" style="gap: 24px; align-items: center;">
+              <div class="spinner spinner-sm"></div>
+              <div class="spinner"></div>
+              <div class="spinner spinner-md"></div>
+              <div class="spinner spinner-lg"></div>
+              <button class="btn btn-primary is-loading">Submit</button>
+              <button class="btn is-loading">Saving…</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="rs-section" id="v10-progress">
+        <h2>v10 · Progress bars</h2>
+        <div class="rs-item">
+          <div class="rs-item-head"><div><h3>Determinate &amp; indeterminate</h3></div><span class="rs-version-pill">v10</span></div>
+          <div class="rs-item-body" data-flat>
+            <div style="display: flex; flex-direction: column; gap: 14px; max-width: 420px;">
+              <div class="progress-labeled">
+                <div class="progress-labeled-row"><span class="progress-labeled-name">Backtest progress</span><span class="progress-labeled-value">62%</span></div>
+                <div class="progress"><div class="progress-bar" style="width: 62%"></div></div>
+              </div>
+              <div class="progress-labeled">
+                <div class="progress-labeled-row"><span class="progress-labeled-name">Sync</span><span class="progress-labeled-value">streaming</span></div>
+                <div class="progress thin"><div class="progress-bar indeterminate"></div></div>
+              </div>
+              <div class="progress-labeled">
+                <div class="progress-labeled-row"><span class="progress-labeled-name">Quota used</span><span class="progress-labeled-value">94%</span></div>
+                <div class="progress"><div class="progress-bar warning" style="width: 94%"></div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="rs-section" id="v10-error">
+        <h2>v10 · Error &amp; success states</h2>
+        <div class="rs-item">
+          <div class="rs-item-head"><div><h3>Failed load + completed action</h3></div><span class="rs-version-pill">v10</span></div>
+          <div class="rs-item-body" data-flat>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+              <div class="error-state">
+                <div class="error-state-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg></div>
+                <h3 class="error-state-title">Couldn't load markets</h3>
+                <p class="error-state-body">The data feed is temporarily unavailable. Try again in a moment.</p>
+                <div class="error-state-detail">net::ERR_CONNECTION_TIMED_OUT · req-3a91f</div>
+                <div class="error-state-actions"><button class="btn btn-sm">Retry</button></div>
+              </div>
+              <div class="success-state">
+                <div class="success-state-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M5 13l4 4L19 7"/></svg></div>
+                <h3 class="success-state-title">Strategy live</h3>
+                <p class="success-state-body">Whale-mirror is now running on 4 markets. Fills will appear in your activity feed.</p>
+                <div class="success-state-actions"><button class="btn btn-sm">View activity</button></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="rs-section" id="v10-toast">
+        <h2>v10 · Toasts &amp; snackbar</h2>
+        <div class="rs-item">
+          <div class="rs-item-head"><div><h3>Action feedback</h3></div><span class="rs-version-pill">v10</span></div>
+          <div class="rs-item-body" data-flat>
+            <div style="display: flex; flex-direction: column; gap: 10px; max-width: 440px;">
+              <div class="toast toast-success">
+                <svg class="toast-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 13l4 4L19 7"/></svg>
+                <div class="toast-content"><div class="toast-title">Order placed</div><div class="toast-body">125 YES @ $0.62 on ELEC-2028-DEM</div></div>
+                <button class="toast-close">×</button>
+              </div>
+              <div class="toast toast-error">
+                <svg class="toast-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M15 9l-6 6M9 9l6 6"/></svg>
+                <div class="toast-content"><div class="toast-title">Insufficient balance</div><div class="toast-body">You need $42.18 more in USDC to fund this trade.</div></div>
+                <button class="toast-close">×</button>
+              </div>
+              <div class="toast toast-info">
+                <svg class="toast-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+                <div class="toast-content"><div class="toast-title">Backtest queued</div><div class="toast-body">Position #4 in queue. Estimated 12s.</div></div>
+                <button class="toast-close">×</button>
+              </div>
+              <div class="snackbar">
+                <div class="snackbar-content">Strategy archived.</div>
+                <div class="snackbar-actions"><button>Undo</button></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="rs-section" id="v10-status">
+        <h2>v10 · Status pills &amp; live indicators</h2>
+        <div class="rs-item">
+          <div class="rs-item-head"><div><h3>Row-level state</h3></div><span class="rs-version-pill">v10</span></div>
+          <div class="rs-item-body" data-flat>
+            <div class="rs-item-row" style="gap: 6px;">
+              <span class="status-pill status-pill-active">Active</span>
+              <span class="status-pill status-pill-pending">Pending</span>
+              <span class="status-pill status-pill-error">Failed</span>
+              <span class="status-pill status-pill-paused">Paused</span>
+              <span class="status-pill status-pill-info">Running</span>
+            </div>
+            <div class="rs-item-row" style="gap: 16px; margin-top: 14px;">
+              <span class="stale-overlay live">live · streaming</span>
+              <span class="stale-overlay">last sync 2m ago</span>
+              <span class="connection-meter" data-bars="4"><span></span><span></span><span></span><span></span></span>
+              <span class="connection-meter" data-bars="2"><span></span><span></span><span></span><span></span></span>
+              <span class="connection-meter" data-bars="1"><span></span><span></span><span></span><span></span></span>
+              <span style="display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-secondary);">
+                <span class="activity-dot live"></span> 3 unread
+              </span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="rs-section" id="v10-noresults">
+        <h2>v10 · No-results &amp; offline</h2>
+        <div class="rs-item">
+          <div class="rs-item-head"><div><h3>Search miss + connection lost</h3></div><span class="rs-version-pill">v10</span></div>
+          <div class="rs-item-body" data-flat>
+            <div class="offline-banner" style="position: relative; border-radius: 6px;">
+              <span class="offline-pulse"></span>
+              You're offline. Changes will sync when reconnected.
+            </div>
+            <div class="no-results">
+              <div class="no-results-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg></div>
+              <h3 class="no-results-title">No markets match your filters</h3>
+              <p class="no-results-body">No results for <strong>"FED rate &amp; volume &gt; $1M"</strong></p>
+              <button class="btn btn-ghost btn-sm" style="margin-top: 6px;">Clear filters</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="rs-section" id="v10-extras">
+        <h2>v10 · Inline confirms, diff, hint</h2>
+        <div class="rs-item">
+          <div class="rs-item-head"><div><h3>Affordances for action review</h3></div><span class="rs-version-pill">v10</span></div>
+          <div class="rs-item-body" data-flat>
+            <div style="display: flex; flex-direction: column; gap: 12px;">
+              <div class="confirm-inline">
+                <span><strong>Delete</strong> whale-mirror strategy? This can't be undone.</span>
+                <button class="btn btn-sm" style="background: var(--loss-text); color: white; border: none;">Delete</button>
+                <button class="btn btn-ghost btn-sm">Cancel</button>
+              </div>
+              <div class="rs-item-row" style="gap: 10px;">
+                <span style="font-size: 12.5px; color: var(--text-secondary);">Volume:</span>
+                <span class="num">$2.4M</span>
+                <span class="diff diff-add">+12.3%</span>
+                <span style="font-size: 12.5px; color: var(--text-secondary); margin-left: 16px;">PnL:</span>
+                <span class="num">$18,420</span>
+                <span class="diff diff-remove">−$240</span>
+              </div>
+              <div style="display: inline-block;">
+                <div class="hint-balloon hint-balloon-bottom">
+                  <span><strong>New:</strong> drag any block from the sidebar to start building a strategy.</span>
+                  <button class="hint-dismiss">Got it</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============== v11 ============== -->
+      <section class="rs-section" id="v11-reveal">
+        <h2>v11 · Reveal animations</h2>
+        <div class="rs-item">
+          <div class="rs-item-head"><div><h3>Mount entrances</h3><p class="rs-desc">Click to replay. Stagger delays children by 50ms.</p></div><span class="rs-version-pill">v11</span></div>
+          <div class="rs-item-body" data-flat>
+            <button class="btn btn-sm" onclick="document.getElementById('rs-stagger').classList.remove('reveal-stagger'); void document.getElementById('rs-stagger').offsetWidth; document.getElementById('rs-stagger').classList.add('reveal-stagger');">Replay</button>
+            <div id="rs-stagger" class="reveal-stagger" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 12px;">
+              <div class="card" style="padding: 14px; background: var(--bg-elevated); border: 1px solid var(--border-subtle); border-radius: 8px; text-align: center; font-size: 13px;">Markets</div>
+              <div class="card" style="padding: 14px; background: var(--bg-elevated); border: 1px solid var(--border-subtle); border-radius: 8px; text-align: center; font-size: 13px;">Strategies</div>
+              <div class="card" style="padding: 14px; background: var(--bg-elevated); border: 1px solid var(--border-subtle); border-radius: 8px; text-align: center; font-size: 13px;">Whales</div>
+              <div class="card" style="padding: 14px; background: var(--bg-elevated); border: 1px solid var(--border-subtle); border-radius: 8px; text-align: center; font-size: 13px;">Backtests</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="rs-section" id="v11-shimmer">
+        <h2>v11 · Shimmer text + type-out</h2>
+        <div class="rs-item">
+          <div class="rs-item-head"><div><h3>Hero treatments</h3></div><span class="rs-version-pill">v11</span></div>
+          <div class="rs-item-body" data-flat>
+            <div style="font-size: 32px; font-weight: 700; letter-spacing: -0.02em;">
+              <span class="shimmer-text">PolyForge — build alpha.</span>
+            </div>
+            <div style="margin-top: 16px; font-family: 'Geist Mono', monospace; font-size: 14px;">
+              <span class="type-out">$ polyforge run --strategy=whale-mirror</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="rs-section" id="v11-hover">
+        <h2>v11 · Hover lift + glow</h2>
+        <div class="rs-item">
+          <div class="rs-item-head"><div><h3>Card affordances</h3><p class="rs-desc">Hover the cards.</p></div><span class="rs-version-pill">v11</span></div>
+          <div class="rs-item-body" data-flat>
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;">
+              <div class="hover-lift" style="padding: 18px; background: var(--bg-elevated); border: 1px solid var(--border-subtle); border-radius: 10px;">
+                <div style="font-size: 12px; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.06em;">hover-lift</div>
+                <div style="font-size: 18px; font-weight: 600; margin-top: 4px;">Subtle rise</div>
+              </div>
+              <div class="hover-lift-md" style="padding: 18px; background: var(--bg-elevated); border: 1px solid var(--border-subtle); border-radius: 10px;">
+                <div style="font-size: 12px; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.06em;">hover-lift-md</div>
+                <div style="font-size: 18px; font-weight: 600; margin-top: 4px;">Stronger</div>
+              </div>
+              <div class="hover-glow" style="padding: 18px; background: var(--bg-elevated); border: 1px solid var(--border-subtle); border-radius: 10px; overflow: hidden;">
+                <div style="font-size: 12px; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.06em;">hover-glow</div>
+                <div style="font-size: 18px; font-weight: 600; margin-top: 4px;">Radial bloom</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="rs-section" id="v11-rowactions">
+        <h2>v11 · Row-hover actions</h2>
+        <div class="rs-item">
+          <div class="rs-item-head"><div><h3>Quick actions reveal on hover</h3></div><span class="rs-version-pill">v11</span></div>
+          <div class="rs-item-body" data-flat>
+            <table class="demo-mini-table" style="width: 100%;">
+              <thead><tr><th>Strategy</th><th>Status</th><th>PnL</th><th></th></tr></thead>
+              <tbody>
+                <tr><td>whale-mirror</td><td><span class="status-pill status-pill-active">Live</span></td><td class="num">+$420</td><td><span class="row-actions"><button class="btn btn-sm btn-ghost">Edit</button><button class="btn btn-sm btn-ghost">Pause</button></span></td></tr>
+                <tr><td>breakout-momentum</td><td><span class="status-pill status-pill-paused">Paused</span></td><td class="num">+$112</td><td><span class="row-actions"><button class="btn btn-sm btn-ghost">Edit</button><button class="btn btn-sm btn-ghost">Resume</button></span></td></tr>
+                <tr><td>sentiment-pulse</td><td><span class="status-pill status-pill-active">Live</span></td><td class="num loss">−$36</td><td><span class="row-actions"><button class="btn btn-sm btn-ghost">Edit</button><button class="btn btn-sm btn-ghost">Pause</button></span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section class="rs-section" id="v11-gradient">
+        <h2>v11 · Gradient border + scroll progress</h2>
+        <div class="rs-item">
+          <div class="rs-item-head"><div><h3>Animated chrome</h3></div><span class="rs-version-pill">v11</span></div>
+          <div class="rs-item-body" data-flat>
+            <div class="gradient-border" style="max-width: 300px;">
+              <div style="padding: 20px; border-radius: 9px; background: var(--bg-elevated);">
+                <div style="font-size: 11px; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.08em;">Featured</div>
+                <div style="font-size: 16px; font-weight: 600; margin: 6px 0;">Whale Mirror Pro</div>
+                <div style="font-size: 12.5px; color: var(--text-secondary);">Mirror trades from top-100 wallets in real time.</div>
+              </div>
+            </div>
+            <hr class="hr-draw" />
+            <div style="font-size: 12.5px; color: var(--text-secondary);">A <code>scroll-progress</code> bar would normally pin to the top of the viewport.</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="rs-section" id="v11-accordion">
+        <h2>v11 · Accordion + drag handles</h2>
+        <div class="rs-item">
+          <div class="rs-item-head"><div><h3>Smooth expand + reorder affordance</h3></div><span class="rs-version-pill">v11</span></div>
+          <div class="rs-item-body" data-flat>
+            <div style="border: 1px solid var(--border-subtle); border-radius: 8px; overflow: hidden;">
+              <div class="accordion-item">
+                <button class="accordion-trigger" aria-expanded="true" onclick="this.setAttribute('aria-expanded', this.getAttribute('aria-expanded') === 'true' ? 'false' : 'true')">
+                  <span><span class="drag-handle" style="margin-right: 8px;"></span>Whale-mirror trigger</span>
+                </button>
+                <div class="accordion-content"><div><p style="font-size: 12.5px; color: var(--text-secondary); margin: 8px 0;">Fires when a wallet with &gt; $50k 30-day volume opens a position larger than $5k.</p></div></div>
+              </div>
+              <div class="accordion-item">
+                <button class="accordion-trigger" aria-expanded="false" onclick="this.setAttribute('aria-expanded', this.getAttribute('aria-expanded') === 'true' ? 'false' : 'true')">
+                  <span><span class="drag-handle" style="margin-right: 8px;"></span>Position sizing rule</span>
+                </button>
+                <div class="accordion-content"><div><p style="font-size: 12.5px; color: var(--text-secondary); margin: 8px 0;">Allocates 2% of bankroll, capped at $250 per signal.</p></div></div>
+              </div>
+              <div class="accordion-item">
+                <button class="accordion-trigger" aria-expanded="false" onclick="this.setAttribute('aria-expanded', this.getAttribute('aria-expanded') === 'true' ? 'false' : 'true')">
+                  <span><span class="drag-handle" style="margin-right: 8px;"></span>Exit conditions</span>
+                </button>
+                <div class="accordion-content"><div><p style="font-size: 12.5px; color: var(--text-secondary); margin: 8px 0;">Take-profit at +35%, stop-loss at −20%, time-stop at 96 hours.</p></div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="rs-section" id="v11-marquee">
+        <h2>v11 · Marquee ticker</h2>
+        <div class="rs-item">
+          <div class="rs-item-head"><div><h3>Continuously scrolling row</h3><p class="rs-desc">Hover to pause.</p></div><span class="rs-version-pill">v11</span></div>
+          <div class="rs-item-body" data-flat>
+            <div class="marquee" style="padding: 8px 0;">
+              <div class="marquee-track" style="font-family: 'Geist Mono', monospace; font-size: 12.5px;">
+                <span>ELEC-2028-DEM <span class="trend trend-up">▲ $0.62</span></span>
+                <span>FED-DEC-CUT <span class="trend trend-down">▼ $0.38</span></span>
+                <span>OSCAR-BP <span class="trend trend-up">▲ $0.71</span></span>
+                <span>SBOWL-CHI <span class="trend trend-flat">— $0.22</span></span>
+                <span>GDP-Q4 <span class="trend trend-up">▲ $0.55</span></span>
+                <span>RATE-MAR <span class="trend trend-down">▼ $0.41</span></span>
+                <span>HOUSE-2026 <span class="trend trend-up">▲ $0.68</span></span>
+                <!-- duplicate for seamless loop -->
+                <span>ELEC-2028-DEM <span class="trend trend-up">▲ $0.62</span></span>
+                <span>FED-DEC-CUT <span class="trend trend-down">▼ $0.38</span></span>
+                <span>OSCAR-BP <span class="trend trend-up">▲ $0.71</span></span>
+                <span>SBOWL-CHI <span class="trend trend-flat">— $0.22</span></span>
+                <span>GDP-Q4 <span class="trend trend-up">▲ $0.55</span></span>
+                <span>RATE-MAR <span class="trend trend-down">▼ $0.41</span></span>
+                <span>HOUSE-2026 <span class="trend trend-up">▲ $0.68</span></span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="rs-section" id="v11-tooltip">
+        <h2>v11 · Tooltip pop</h2>
+        <div class="rs-item">
+          <div class="rs-item-head"><div><h3>Animated tooltip on hover</h3></div><span class="rs-version-pill">v11</span></div>
+          <div class="rs-item-body" data-flat>
+            <div class="rs-item-row" style="gap: 32px; padding: 20px 8px;">
+              <button class="btn btn-sm tooltip-pop" data-tooltip="Run a quick backtest">Backtest</button>
+              <button class="btn btn-sm tooltip-pop" data-tooltip="Pause this strategy">Pause</button>
+              <button class="btn btn-sm tooltip-pop" data-tooltip="View execution log">Logs</button>
+              <span class="tooltip-pop" data-tooltip="Probability of YES outcome" style="font-family: 'Geist Mono', monospace; cursor: help; border-bottom: 1px dashed var(--text-tertiary);">$0.62</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <footer class="rs-foot">
+        <span>v2 → v11 · loaded in cascade order</span>
+        <a href="Design System.html">→ See design system</a>
+      </footer>
+    </main>
+  </div>
+
+  <script>
+    // sticky-header demo data
+    (function () {
+      const tbody = document.getElementById('rs-sticky-body');
+      const mkts = ['ELEC-2028-DEM','SBOWL-CHI','FED-DEC-CUT','OSCAR-BP','GDP-Q4','TRUMP-INDICT','RATE-MAR','HOUSE-2026','POPVOTE-DEM','SUPCOURT-CASE'];
+      let html = '';
+      for (let i = 0; i < 30; i++) {
+        const m = mkts[i % mkts.length];
+        const side = i % 3 === 0 ? 'NO' : 'YES';
+        const size = (50 + i * 7).toString();
+        const px = (0.10 + ((i * 7) % 90) / 100).toFixed(2);
+        html += `<tr><td>${m}</td><td><span class="side-badge side-${side.toLowerCase()}">${side}</span></td><td class="col-num num">${size}</td><td class="col-num num">$${px}</td></tr>`;
+      }
+      tbody.innerHTML = html;
+    })();
+
+    // flash demo
+    function rsFlash(up) {
+      const el = document.getElementById('rs-flash-val');
+      el.classList.remove('flash-up','flash-down');
+      // force reflow so re-adding the class restarts the animation
+      void el.offsetWidth;
+      el.classList.add(up ? 'flash-up' : 'flash-down');
+      const cur = parseFloat(el.textContent.replace(/[$,]/g,''));
+      const next = (cur + (up ? 12 : -8)).toFixed(2);
+      el.textContent = '$' + Number(next).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    }
+    window.rsFlash = rsFlash;
+
+    // active toc highlight on scroll
+    (function () {
+      const links = [...document.querySelectorAll('.rs-side .rs-link')];
+      const sections = links
+        .map(a => ({ a, sec: document.querySelector(a.getAttribute('href')) }))
+        .filter(x => x.sec);
+      const set = (id) => links.forEach(l => l.classList.toggle('is-active', l.getAttribute('href') === '#' + id));
+      const io = new IntersectionObserver(es => {
+        const visible = es.filter(e => e.isIntersecting).sort((a,b) => a.boundingClientRect.top - b.boundingClientRect.top);
+        if (visible[0]) set(visible[0].target.id);
+      }, { rootMargin: '-30% 0px -55% 0px', threshold: 0 });
+      sections.forEach(s => io.observe(s.sec));
+    })();
+  </script>
+</body>
+</html>

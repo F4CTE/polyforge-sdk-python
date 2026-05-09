@@ -386,8 +386,15 @@
    ============================================================ */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
+    animation: none !important;
     transition-duration: 0.01ms !important;
+  }
+}
+
+/* Print: no entrance animations either — they leave content invisible
+   when the print/screenshot pipeline pauses them at the 0% frame. */
+@media print {
+  *, *::before, *::after {
+    animation: none !important;
   }
 }

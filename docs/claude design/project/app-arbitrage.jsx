@@ -126,7 +126,7 @@ function App() {
             <p>
               <strong>Cross-venue arbitrage.</strong> When the same real-world event trades at different prices on Polymarket vs Kalshi,
               buy the underpriced side on one venue and sell (or hedge) on the other. Match confidence reflects how closely the two
-              listings track the same underlying outcome — <span className="mono">≥80%</span> indicates a stronger match.
+              listings track the same underlying outcome — <span className="mono">≥80%</span> match confidence suggests a reliable mapping. Always verify execution, liquidity, and counterparty risk before trading.
             </p>
           )}
         </div>

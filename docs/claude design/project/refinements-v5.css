@@ -1,0 +1,859 @@
+/* =========================================================
+   refinements-v5.css — Polish pass 5 (May 2026)
+   Loaded AFTER refinements-v4.css.
+   Targets form chrome, micro-components, and last-mile
+   details not addressed in v1–v4.
+   ========================================================= */
+
+/* ---------------------------------------------------------
+   1. Form validation states — consistent error / success.
+   --------------------------------------------------------- */
+.usr-input.is-error,
+.adm-input.is-error,
+input.is-error,
+textarea.is-error,
+select.is-error,
+.form-group.is-error > input,
+.form-group.is-error > textarea,
+.form-group.is-error > select {
+  border-color: var(--danger, #ef4444) !important;
+  background: color-mix(in srgb, var(--danger, #ef4444) 8%, var(--surface-1, #1a1a1a)) !important;
+}
+.usr-input.is-error:focus,
+.adm-input.is-error:focus,
+input.is-error:focus,
+.form-group.is-error > input:focus,
+.form-group.is-error > textarea:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--danger, #ef4444) 18%, transparent);
+}
+.usr-input.is-success,
+.adm-input.is-success,
+input.is-success,
+.form-group.is-success > input,
+.form-group.is-success > textarea,
+.form-group.is-success > select {
+  border-color: var(--success, #10b981) !important;
+}
+.form-error-msg,
+.form-group.is-error > .form-hint {
+  color: var(--danger, #ef4444) !important;
+}
+
+/* Base form-group styling — so bare <input> inherits dark theme */
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+.form-group > label {
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  letter-spacing: 0.01em;
+}
+.form-group > input:not([type=checkbox]):not([type=radio]):not([type=range]),
+.form-group > textarea,
+.form-group > select {
+  background: var(--bg-canvas);
+  color: var(--text-primary);
+  border: 1px solid var(--border-default);
+  border-radius: 6px;
+  padding: 8px 10px;
+  font-size: 13px;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 120ms ease, box-shadow 120ms ease;
+}
+.form-group > input:focus,
+.form-group > textarea:focus,
+.form-group > select:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent);
+}
+.form-group > .form-hint {
+  font-size: 11.5px;
+  color: var(--text-tertiary);
+  margin-top: 2px;
+}
+
+/* Native range slider — track + thumb so the thumb doesn't float orphan */
+input[type=range] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 24px;
+  background: transparent;
+  cursor: pointer;
+}
+input[type=range]::-webkit-slider-runnable-track {
+  height: 6px;
+  border-radius: 3px;
+  background: linear-gradient(to right, var(--accent) 0%, var(--accent) var(--range-fill, 50%), var(--bg-elevated) var(--range-fill, 50%), var(--bg-elevated) 100%);
+  border: 1px solid var(--border-default);
+}
+input[type=range]::-moz-range-track {
+  height: 6px;
+  border-radius: 3px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-default);
+}
+input[type=range]::-moz-range-progress {
+  height: 6px;
+  border-radius: 3px 0 0 3px;
+  background: var(--accent);
+}
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  margin-top: -6px;
+  border-radius: 50%;
+  background: var(--bg-app);
+  border: 2px solid var(--accent);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.4);
+}
+input[type=range]::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: 2px solid var(--bg-app);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.4);
+}
+.form-success-msg,
+.form-group.is-success > .form-hint {
+  color: var(--success, #10b981) !important;
+}
+.field-error,
+.input-error {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--danger, #dc2626);
+  margin-top: 6px;
+}
+.field-error::before,
+.input-error::before {
+  content: "⚠";
+  font-size: 11px;
+}
+.field-help,
+.input-help {
+  display: block;
+  font-size: 12px;
+  color: var(--text-tertiary, #64748b);
+  margin-top: 6px;
+}
+
+/* ---------------------------------------------------------
+   2. Range slider — uniform across Chrome/Safari/Firefox.
+   --------------------------------------------------------- */
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+  width: 100%;
+  height: 24px;
+  cursor: pointer;
+}
+input[type="range"]::-webkit-slider-runnable-track {
+  height: 4px;
+  border-radius: 4px;
+  background: var(--border-default, #e2e8f0);
+}
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--accent-default, #2563eb);
+  border: 2px solid var(--surface-0, #fff);
+  box-shadow: 0 1px 3px rgba(15,23,42,0.15);
+  margin-top: -6px;
+  transition: transform var(--dur-fast, 120ms) var(--ease-out-soft);
+}
+input[type="range"]::-webkit-slider-thumb:hover {
+  transform: scale(1.1);
+}
+input[type="range"]::-moz-range-track {
+  height: 4px;
+  border-radius: 4px;
+  background: var(--border-default, #e2e8f0);
+  border: none;
+}
+input[type="range"]::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--accent-default, #2563eb);
+  border: 2px solid var(--surface-0, #fff);
+  box-shadow: 0 1px 3px rgba(15,23,42,0.15);
+}
+
+/* ---------------------------------------------------------
+   3. Checkboxes / radios — Linear-style custom design.
+   Uses appearance: none + custom rendering.
+   --------------------------------------------------------- */
+input[type="checkbox"] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  border: 1px solid var(--border-strong, #3D4152);
+  background: transparent;
+  cursor: pointer;
+  position: relative;
+  flex-shrink: 0;
+  transition: background 120ms ease, border-color 120ms ease;
+}
+input[type="checkbox"]:checked {
+  background: var(--accent-default, #4F6EF7);
+  border-color: var(--accent-default, #4F6EF7);
+}
+input[type="checkbox"]:checked::after {
+  content: '';
+  position: absolute;
+  left: 4.5px;
+  top: 1.5px;
+  width: 5px;
+  height: 9px;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+input[type="checkbox"]:focus-visible {
+  outline: 2px solid var(--accent-default, #4F6EF7);
+  outline-offset: 2px;
+}
+input[type="checkbox"]:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+input[type="radio"] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 99px;
+  border: 1px solid var(--border-strong, #3D4152);
+  background: transparent;
+  cursor: pointer;
+  position: relative;
+  flex-shrink: 0;
+  transition: border-color 120ms ease;
+}
+input[type="radio"]:checked {
+  border-color: var(--accent-default, #4F6EF7);
+}
+input[type="radio"]:checked::after {
+  content: '';
+  position: absolute;
+  left: 3px;
+  top: 3px;
+  width: 8px;
+  height: 8px;
+  border-radius: 99px;
+  background: var(--accent-default, #4F6EF7);
+}
+input[type="radio"]:focus-visible {
+  outline: 2px solid var(--accent-default, #4F6EF7);
+  outline-offset: 2px;
+}
+
+/* ---------------------------------------------------------
+   3b. Select — unified dark-theme styling.
+   --------------------------------------------------------- */
+select {
+  height: 34px;
+  padding: 0 10px;
+  background: var(--bg-app, #0E0F11);
+  border: 1px solid var(--border-default, #2C2F3A);
+  border-radius: 6px;
+  color: var(--text-primary, #F0F1F5);
+  font-family: inherit;
+  font-size: 13px;
+  cursor: pointer;
+  transition: border-color 120ms ease;
+}
+select:hover { border-color: var(--border-strong, #3D4152); }
+select:focus {
+  outline: 2px solid var(--accent-default, #4F6EF7);
+  outline-offset: 1px;
+  border-color: var(--accent-default, #4F6EF7);
+}
+select:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+select option {
+  background: var(--bg-elevated, #1C1E24);
+  color: var(--text-primary, #F0F1F5);
+}
+
+/* ---------------------------------------------------------
+   4. Switch / toggle — pure CSS pattern.
+   Markup: <label class="switch"><input type="checkbox"><span></span></label>
+   --------------------------------------------------------- */
+.switch {
+  display: inline-block;
+  position: relative;
+  width: 36px;
+  height: 20px;
+  flex-shrink: 0;
+  vertical-align: middle;
+}
+.switch input {
+  position: absolute;
+  opacity: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  cursor: pointer;
+  z-index: 2;
+}
+.switch span {
+  position: absolute;
+  inset: 0;
+  background: var(--border-default, #cbd5e1);
+  border-radius: 999px;
+  transition: background var(--dur-base, 180ms) var(--ease-out-soft);
+  cursor: pointer;
+  display: block;
+}
+.switch span::after {
+  content: "";
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  left: 2px;
+  top: 2px;
+  right: auto;
+  bottom: auto;
+  background: #fff;
+  border-radius: 50%;
+  box-shadow: 0 1px 2px rgba(15,23,42,0.35);
+  transition: transform var(--dur-base, 180ms) var(--ease-out-soft);
+  display: block;
+}
+.switch input:checked + span {
+  background: var(--accent-default, #2563eb);
+}
+.switch input:checked + span::after {
+  transform: translateX(16px);
+}
+.switch input:focus-visible + span {
+  outline: 2px solid var(--accent-default, #2563eb);
+  outline-offset: 2px;
+}
+
+/* ---------------------------------------------------------
+   5. Number input — hide spinner arrows by default.
+   Add .has-spinner to opt in.
+   --------------------------------------------------------- */
+input[type="number"]:not(.has-spinner)::-webkit-outer-spin-button,
+input[type="number"]:not(.has-spinner)::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type="number"]:not(.has-spinner) {
+  -moz-appearance: textfield;
+}
+
+/* ---------------------------------------------------------
+   6. Diff coloring — code blocks / changelog rows.
+   --------------------------------------------------------- */
+.diff-add,
+ins {
+  background: color-mix(in srgb, var(--success, #10b981) 12%, transparent);
+  color: color-mix(in srgb, var(--success, #059669) 80%, var(--text-primary, #0f172a));
+  text-decoration: none;
+  padding: 1px 3px;
+  border-radius: 3px;
+}
+.diff-remove,
+del {
+  background: color-mix(in srgb, var(--danger, #ef4444) 10%, transparent);
+  color: color-mix(in srgb, var(--danger, #b91c1c) 80%, var(--text-primary, #0f172a));
+  text-decoration: line-through;
+  padding: 1px 3px;
+  border-radius: 3px;
+}
+.diff-context {
+  color: var(--text-tertiary, #94a3b8);
+}
+
+/* ---------------------------------------------------------
+   7. Progress bars — uniform track + fill.
+   --------------------------------------------------------- */
+.progress,
+progress {
+  display: block;
+  width: 100%;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--border-subtle, #e2e8f0);
+  overflow: hidden;
+  position: relative;
+  border: none;
+}
+.progress > .progress-fill,
+.progress > span {
+  display: block;
+  height: 100%;
+  background: var(--accent-default, #2563eb);
+  border-radius: inherit;
+  transition: width var(--dur-slow, 280ms) var(--ease-out-soft);
+}
+progress::-webkit-progress-bar {
+  background: var(--border-subtle, #e2e8f0);
+  border-radius: 999px;
+}
+progress::-webkit-progress-value {
+  background: var(--accent-default, #2563eb);
+  border-radius: 999px;
+}
+progress::-moz-progress-bar {
+  background: var(--accent-default, #2563eb);
+  border-radius: 999px;
+}
+
+/* ---------------------------------------------------------
+   8. Loading button — inline spinner, dim label.
+   Markup: <button class="btn is-loading">…</button>
+   --------------------------------------------------------- */
+.btn.is-loading,
+.usr-btn.is-loading,
+.adm-btn.is-loading {
+  position: relative;
+  color: transparent !important;
+  pointer-events: none;
+}
+.btn.is-loading::after,
+.usr-btn.is-loading::after,
+.adm-btn.is-loading::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: 14px;
+  height: 14px;
+  border: 2px solid currentColor;
+  border-top-color: transparent;
+  border-radius: 50%;
+  color: var(--surface-0, #fff);
+  animation: btn-spin 0.7s linear infinite;
+}
+.btn.is-loading.btn--ghost::after,
+.btn.is-loading.btn-secondary::after,
+.usr-btn.is-loading.usr-btn--ghost::after,
+.adm-btn.is-loading.adm-btn--ghost::after {
+  color: var(--text-secondary, #475569);
+}
+@keyframes btn-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ---------------------------------------------------------
+   9. Tag / chip with removable X.
+   Markup: <span class="chip"><span>Label</span><button class="chip-x">×</button></span>
+   --------------------------------------------------------- */
+.chip-x,
+.tag-x {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  margin-left: 4px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  opacity: 0.55;
+  border-radius: 999px;
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+  transition: opacity var(--dur-fast, 120ms) var(--ease-out-soft),
+              background var(--dur-fast, 120ms) var(--ease-out-soft);
+}
+.chip-x:hover,
+.tag-x:hover {
+  opacity: 1;
+  background: rgba(15, 23, 42, 0.08);
+}
+
+/* ---------------------------------------------------------
+   10. Avatar group — stacked ring overlap.
+   --------------------------------------------------------- */
+.avatar-group {
+  display: inline-flex;
+  align-items: center;
+}
+.avatar-group > * {
+  margin-left: -8px;
+  border: 2px solid var(--surface-0, #fff);
+  border-radius: 50%;
+  position: relative;
+  z-index: 1;
+  transition: transform var(--dur-fast, 120ms) var(--ease-out-soft);
+}
+.avatar-group > *:first-child {
+  margin-left: 0;
+}
+.avatar-group > *:hover {
+  transform: translateY(-2px);
+  z-index: 2;
+}
+.avatar-group .more,
+.avatar-group .avatar-more {
+  background: var(--surface-2, #f1f5f9);
+  color: var(--text-secondary, #475569);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+/* ---------------------------------------------------------
+   11. Stepper / wizard — horizontal step indicator.
+   --------------------------------------------------------- */
+.stepper {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  margin: 24px 0;
+}
+.stepper-step {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  font-size: 13px;
+  color: var(--text-tertiary, #94a3b8);
+}
+.stepper-step .step-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--surface-2, #f1f5f9);
+  color: var(--text-secondary, #475569);
+  font-size: 12px;
+  font-weight: 600;
+  flex-shrink: 0;
+  border: 1px solid var(--border-subtle, #e2e8f0);
+}
+.stepper-step.is-active {
+  color: var(--text-primary, #0f172a);
+  font-weight: 500;
+}
+.stepper-step.is-active .step-num {
+  background: var(--accent-default, #2563eb);
+  border-color: var(--accent-default, #2563eb);
+  color: #fff;
+}
+.stepper-step.is-done .step-num {
+  background: var(--success, #10b981);
+  border-color: var(--success, #10b981);
+  color: #fff;
+}
+.stepper-step.is-done .step-num::before {
+  content: "✓";
+  font-size: 12px;
+}
+.stepper-step.is-done .step-num > * {
+  display: none;
+}
+.stepper-step + .stepper-step::before {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--border-subtle, #e2e8f0);
+  margin: 0 12px;
+}
+.stepper-step.is-done + .stepper-step::before {
+  background: var(--success, #10b981);
+}
+
+/* ---------------------------------------------------------
+   12. Drag / resize handles — uniform affordance.
+   --------------------------------------------------------- */
+.drag-handle,
+[data-drag-handle] {
+  cursor: grab;
+  color: var(--text-tertiary, #94a3b8);
+  user-select: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: color var(--dur-fast, 120ms), background var(--dur-fast, 120ms);
+}
+.drag-handle:hover,
+[data-drag-handle]:hover {
+  color: var(--text-secondary, #475569);
+  background: var(--surface-1, #f8fafc);
+}
+.drag-handle:active,
+[data-drag-handle]:active {
+  cursor: grabbing;
+}
+.resize-handle {
+  cursor: ew-resize;
+  width: 4px;
+  background: transparent;
+  transition: background var(--dur-fast, 120ms);
+}
+.resize-handle:hover,
+.resize-handle.is-dragging {
+  background: var(--accent-default, #2563eb);
+}
+
+/* ---------------------------------------------------------
+   13. Banner / announcement bar — full-width thin row.
+   --------------------------------------------------------- */
+.announcement,
+.banner-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 8px 16px;
+  font-size: 13px;
+  background: var(--surface-1, #f8fafc);
+  border-bottom: 1px solid var(--border-subtle, #e2e8f0);
+  color: var(--text-secondary, #475569);
+}
+.announcement strong,
+.banner-bar strong {
+  color: var(--text-primary, #0f172a);
+}
+.announcement a,
+.banner-bar a {
+  color: var(--accent-default, #2563eb);
+  text-decoration: none;
+}
+
+/* ---------------------------------------------------------
+   14. Notification toast positioning — bottom-right stack.
+   Markup: <div class="toast-stack"><div class="toast">…</div></div>
+   --------------------------------------------------------- */
+.toast-stack {
+  position: fixed;
+  bottom: 16px;
+  right: 16px;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  pointer-events: none;
+}
+.toast-stack > .toast {
+  pointer-events: auto;
+  min-width: 280px;
+  max-width: 360px;
+  padding: 12px 14px;
+  background: var(--surface-0, #fff);
+  border: 1px solid var(--border-subtle, #e2e8f0);
+  border-radius: 8px;
+  box-shadow: 0 8px 24px -8px rgba(15,23,42,0.15);
+  animation: toast-slide-in 240ms var(--ease-out-soft);
+}
+@keyframes toast-slide-in {
+  from { transform: translateY(8px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+/* ---------------------------------------------------------
+   15. Modal scroll lock — preventing layout shift.
+   Add class to <body> when modal opens.
+   --------------------------------------------------------- */
+body.has-modal-open {
+  overflow: hidden;
+  padding-right: var(--scrollbar-width, 0);
+}
+
+/* ---------------------------------------------------------
+   16. KPI tile — unified mini stat card.
+   Markup: <div class="kpi-tile"><div class="kpi-label">…</div><div class="kpi-value">…</div><div class="kpi-delta num-pos">…</div></div>
+   --------------------------------------------------------- */
+.kpi-tile {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.kpi-tile .kpi-label {
+  font-size: 12px;
+  color: var(--text-tertiary, #64748b);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  font-weight: 500;
+}
+.kpi-tile .kpi-value {
+  font-size: 24px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-primary, #0f172a);
+}
+.kpi-tile .kpi-delta {
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+
+/* ---------------------------------------------------------
+   17. Heatmap cell tone — opacity scale.
+   Use data-intensity="0..10" or .heat-1 through .heat-10.
+   --------------------------------------------------------- */
+[data-heat] {
+  background: color-mix(in srgb,
+    var(--accent-default, #2563eb) calc(attr(data-heat number) * 10%),
+    var(--surface-1, #f8fafc));
+}
+.heat-0 { background: var(--surface-1, #f8fafc); }
+.heat-1 { background: color-mix(in srgb, var(--accent-default, #2563eb) 8%, var(--surface-1)); }
+.heat-2 { background: color-mix(in srgb, var(--accent-default, #2563eb) 16%, var(--surface-1)); }
+.heat-3 { background: color-mix(in srgb, var(--accent-default, #2563eb) 24%, var(--surface-1)); }
+.heat-4 { background: color-mix(in srgb, var(--accent-default, #2563eb) 32%, var(--surface-1)); }
+.heat-5 { background: color-mix(in srgb, var(--accent-default, #2563eb) 42%, var(--surface-1)); }
+.heat-6 { background: color-mix(in srgb, var(--accent-default, #2563eb) 54%, var(--surface-1)); }
+.heat-7 { background: color-mix(in srgb, var(--accent-default, #2563eb) 68%, var(--surface-1)); }
+.heat-8 { background: color-mix(in srgb, var(--accent-default, #2563eb) 80%, var(--surface-1)); }
+.heat-9 { background: color-mix(in srgb, var(--accent-default, #2563eb) 90%, var(--surface-1)); }
+.heat-10 { background: var(--accent-default, #2563eb); }
+
+/* ---------------------------------------------------------
+   18. Chart legend rhythm — uniform dot + label spacing.
+   --------------------------------------------------------- */
+.legend,
+.chart-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  font-size: 12px;
+  color: var(--text-secondary, #475569);
+}
+.legend > *,
+.chart-legend > * {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.legend > * > .dot,
+.chart-legend > * > .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: currentColor;
+  flex-shrink: 0;
+}
+
+/* ---------------------------------------------------------
+   19. Embedded media (video/iframe) — uniform radius/border.
+   --------------------------------------------------------- */
+video,
+iframe.embed,
+.embed iframe {
+  border-radius: 8px;
+  border: 1px solid var(--border-subtle, #e2e8f0);
+  max-width: 100%;
+}
+
+/* ---------------------------------------------------------
+   20. Print — keep table rows together when possible.
+   --------------------------------------------------------- */
+@media print {
+  table, .adm-table, .usr-table { page-break-inside: auto; }
+  tr { page-break-inside: avoid; page-break-after: auto; }
+  thead { display: table-header-group; }
+  tfoot { display: table-footer-group; }
+  .toast-stack, .announcement, .banner-bar { display: none !important; }
+}
+
+/* ---------------------------------------------------------
+   21. Smooth scroll + scroll-margin for in-page anchors.
+   --------------------------------------------------------- */
+html {
+  scroll-behavior: smooth;
+}
+[id] {
+  scroll-margin-top: calc(var(--topbar-h, 56px) + 16px);
+}
+
+/* ---------------------------------------------------------
+   22. Tabular numerals everywhere by default for .num and .stat.
+   --------------------------------------------------------- */
+.num,
+.stat,
+.figure,
+[data-num] {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------------------------------------------------------
+   23. Focus-within hint on form groups.
+   --------------------------------------------------------- */
+.field:focus-within > .field-label,
+.form-group:focus-within > label {
+  color: var(--text-primary, #0f172a);
+}
+
+/* ---------------------------------------------------------
+   24. List of metric pills — uniform inline row.
+   --------------------------------------------------------- */
+.metric-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 16px;
+  font-size: 12px;
+  color: var(--text-secondary, #475569);
+}
+.metric-row > .metric {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+}
+.metric-row > .metric > .metric-label {
+  color: var(--text-tertiary, #94a3b8);
+}
+.metric-row > .metric > .metric-value {
+  font-weight: 500;
+  color: var(--text-primary, #0f172a);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------------------------------------------------------
+   25. <details>/<summary> uniform chrome.
+   --------------------------------------------------------- */
+details > summary {
+  cursor: pointer;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 500;
+  padding: 8px 0;
+  user-select: none;
+}
+details > summary::-webkit-details-marker { display: none; }
+details > summary::before {
+  content: "›";
+  font-size: 14px;
+  color: var(--text-tertiary, #94a3b8);
+  transition: transform var(--dur-fast, 120ms) var(--ease-out-soft);
+  display: inline-block;
+}
+details[open] > summary::before {
+  transform: rotate(90deg);
+}

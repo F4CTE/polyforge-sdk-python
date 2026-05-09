@@ -1,0 +1,1070 @@
+/* =========================================================
+   refinements-v10.css — Polish pass 10 (May 2026)
+   Loaded AFTER refinements-v9.css.
+   Focus: STATES — empty, loading, error, success, offline,
+   skeleton screens, retry patterns, and feedback motion.
+   ========================================================= */
+
+/* ---------------------------------------------------------
+   1. Empty state — primary pattern.
+   Markup: <div class="empty-state">
+             <div class="empty-state-icon">📊</div>
+             <h3 class="empty-state-title">No data yet</h3>
+             <p class="empty-state-body">...</p>
+             <div class="empty-state-actions">...</div>
+           </div>
+   --------------------------------------------------------- */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 48px 32px;
+  gap: 12px;
+  max-width: 480px;
+  margin: 0 auto;
+}
+.empty-state-icon {
+  width: 56px; height: 56px;
+  border-radius: 14px;
+  background: var(--bg-canvas);
+  border: 1px solid var(--border-subtle);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--text-tertiary);
+  font-size: 22px;
+  margin-bottom: 4px;
+}
+.empty-state-icon svg {
+  width: 24px; height: 24px;
+  stroke-width: 1.5;
+}
+.empty-state-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+  letter-spacing: -0.005em;
+}
+.empty-state-body {
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--text-secondary);
+  margin: 0;
+  max-width: 360px;
+  text-wrap: pretty;
+}
+.empty-state-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.empty-state-tip {
+  margin-top: 16px;
+  padding: 10px 12px;
+  background: var(--bg-canvas);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  font-size: 11.5px;
+  color: var(--text-tertiary);
+  font-family: 'Geist Mono', monospace;
+  max-width: 360px;
+}
+
+/* Compact variant — for inline empty in cards */
+.empty-state.compact {
+  padding: 24px 16px;
+  max-width: none;
+}
+.empty-state.compact .empty-state-icon {
+  width: 40px; height: 40px;
+  border-radius: 10px;
+}
+.empty-state.compact .empty-state-icon svg {
+  width: 18px; height: 18px;
+}
+.empty-state.compact .empty-state-title {
+  font-size: 14px;
+}
+.empty-state.compact .empty-state-body {
+  font-size: 12px;
+}
+
+/* Full-page variant — for routes with no data at all */
+.empty-state.full {
+  min-height: 60vh;
+  padding: 80px 32px;
+}
+.empty-state.full .empty-state-icon {
+  width: 72px; height: 72px;
+  border-radius: 18px;
+}
+.empty-state.full .empty-state-icon svg {
+  width: 32px; height: 32px;
+}
+.empty-state.full .empty-state-title {
+  font-size: 20px;
+}
+
+/* ---------------------------------------------------------
+   2. Skeleton screens — loading placeholders.
+   Markup: <div class="skeleton skeleton-line"></div>
+           <div class="skeleton skeleton-block"></div>
+   --------------------------------------------------------- */
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--bg-canvas) 0%,
+    var(--bg-elevated) 50%,
+    var(--bg-canvas) 100%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.4s ease-in-out infinite;
+  border-radius: 4px;
+  display: block;
+}
+@keyframes skeleton-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+.skeleton-line {
+  height: 12px;
+  margin: 6px 0;
+}
+.skeleton-line.short { width: 40%; }
+.skeleton-line.medium { width: 65%; }
+.skeleton-line.long { width: 90%; }
+.skeleton-line.full { width: 100%; }
+
+.skeleton-title {
+  height: 18px;
+  width: 50%;
+  margin: 8px 0 12px;
+}
+.skeleton-block {
+  height: 80px;
+  border-radius: 8px;
+  margin: 8px 0;
+}
+.skeleton-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+}
+.skeleton-button {
+  height: 32px;
+  width: 96px;
+  border-radius: 6px;
+}
+.skeleton-card {
+  height: 140px;
+  border-radius: 10px;
+}
+
+/* Skeleton table row */
+.skeleton-row {
+  display: flex;
+  gap: 16px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border-subtle);
+  align-items: center;
+}
+.skeleton-row .skeleton {
+  flex: 1;
+  height: 12px;
+}
+.skeleton-row .skeleton.narrow { flex: 0 0 80px; }
+.skeleton-row .skeleton.tiny { flex: 0 0 32px; }
+
+/* Skeleton chart — animated bars */
+.skeleton-chart {
+  display: flex;
+  align-items: flex-end;
+  gap: 4px;
+  height: 120px;
+  padding: 8px 0;
+}
+.skeleton-chart::before,
+.skeleton-chart::after {
+  content: '';
+  flex: 1;
+  background: var(--bg-elevated);
+  border-radius: 2px 2px 0 0;
+  animation: skeleton-pulse 1.4s ease-in-out infinite;
+}
+.skeleton-chart::before { height: 60%; animation-delay: 0s; }
+.skeleton-chart::after { height: 80%; animation-delay: 0.2s; }
+@keyframes skeleton-pulse {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}
+
+/* Disable skeleton animation when motion-reduced */
+@media (prefers-reduced-motion: reduce) {
+  .skeleton,
+  .skeleton-chart::before,
+  .skeleton-chart::after {
+    animation: none !important;
+    background: var(--bg-elevated) !important;
+  }
+}
+
+/* ---------------------------------------------------------
+   3. Loading spinner — small inline indicator.
+   Markup: <div class="spinner"></div>
+           <button class="btn"><div class="spinner spinner-sm"></div> Loading...</button>
+   --------------------------------------------------------- */
+.spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--border-subtle);
+  border-top-color: var(--accent-default);
+  border-radius: 50%;
+  animation: spin 600ms linear infinite;
+  display: inline-block;
+  vertical-align: middle;
+}
+.spinner-sm { width: 12px; height: 12px; border-width: 1.5px; }
+.spinner-md { width: 20px; height: 20px; border-width: 2px; }
+.spinner-lg { width: 32px; height: 32px; border-width: 3px; }
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .spinner { animation: none !important; }
+}
+
+/* Loading button state */
+.btn.is-loading {
+  position: relative;
+  pointer-events: none;
+  color: transparent !important;
+}
+.btn.is-loading::after {
+  content: '';
+  position: absolute;
+  top: 50%; left: 50%;
+  width: 14px; height: 14px;
+  margin: -7px 0 0 -7px;
+  border: 2px solid currentColor;
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: spin 600ms linear infinite;
+  color: var(--text-secondary);
+}
+.btn-primary.is-loading::after { color: var(--accent-fg, #fff); }
+
+/* Loading overlay — inside cards */
+.loading-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: color-mix(in oklab, var(--bg-canvas) 70%, transparent);
+  backdrop-filter: blur(2px);
+  border-radius: inherit;
+  z-index: 5;
+  gap: 10px;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+/* ---------------------------------------------------------
+   4. Progress bar — determinate progress.
+   Markup: <div class="progress"><div class="progress-bar" style="width:60%"></div></div>
+           Or with sub-pieces for multi-part progress.
+   --------------------------------------------------------- */
+.progress {
+  height: 6px;
+  background: var(--bg-canvas);
+  border-radius: 4px;
+  overflow: hidden;
+  position: relative;
+  width: 100%;
+}
+.progress-bar {
+  height: 100%;
+  background: var(--accent-default);
+  border-radius: inherit;
+  transition: width 240ms ease;
+  position: relative;
+}
+.progress-bar.indeterminate {
+  width: 30% !important;
+  animation: progress-slide 1.4s ease-in-out infinite;
+}
+@keyframes progress-slide {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(330%); }
+}
+
+/* Progress sizes */
+.progress.tall { height: 8px; }
+.progress.thin { height: 3px; }
+
+/* Progress with label */
+.progress-labeled {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.progress-labeled-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 11px;
+}
+.progress-labeled-name {
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+.progress-labeled-value {
+  color: var(--text-primary);
+  font-family: 'Geist Mono', monospace;
+  font-feature-settings: 'tnum' 1;
+}
+
+/* Variants */
+.progress-bar.success { background: var(--gain-text); }
+.progress-bar.warning { background: var(--warning-text, #d97706); }
+.progress-bar.danger { background: var(--loss-text); }
+
+/* ---------------------------------------------------------
+   5. Error state — failed load / fetch error.
+   Markup: <div class="error-state">
+             <div class="error-state-icon"><svg>...</svg></div>
+             <h3>Couldn't load data</h3>
+             <p>...</p>
+             <button class="btn">Try again</button>
+           </div>
+   --------------------------------------------------------- */
+.error-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 40px 32px;
+  gap: 10px;
+  max-width: 440px;
+  margin: 0 auto;
+}
+.error-state-icon {
+  width: 48px; height: 48px;
+  border-radius: 12px;
+  background: var(--loss-subtle);
+  border: 1px solid color-mix(in oklab, var(--loss-text) 30%, transparent);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--loss-text);
+  margin-bottom: 4px;
+}
+.error-state-icon svg { width: 20px; height: 20px; stroke-width: 1.75; }
+.error-state-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+.error-state-body {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin: 0;
+  line-height: 1.5;
+  text-wrap: pretty;
+}
+.error-state-detail {
+  margin-top: 8px;
+  padding: 8px 10px;
+  background: var(--bg-canvas);
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px;
+  font-family: 'Geist Mono', monospace;
+  font-size: 11px;
+  color: var(--text-tertiary);
+  text-align: left;
+  width: 100%;
+  max-width: 360px;
+  word-break: break-all;
+}
+.error-state-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+/* Inline error — small format for partial failures */
+.error-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  background: var(--loss-subtle);
+  border: 1px solid color-mix(in oklab, var(--loss-text) 30%, transparent);
+  border-radius: 6px;
+  color: var(--loss-text);
+  font-size: 12px;
+  font-weight: 500;
+}
+.error-inline svg { width: 14px; height: 14px; stroke-width: 2; flex-shrink: 0; }
+
+/* ---------------------------------------------------------
+   6. Success state — confirmation pattern (post-action).
+   Markup: <div class="success-state">
+             <div class="success-state-icon">✓</div>
+             <h3>All set</h3>
+             ...
+           </div>
+   --------------------------------------------------------- */
+.success-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 40px 32px;
+  gap: 10px;
+  max-width: 440px;
+  margin: 0 auto;
+}
+.success-state-icon {
+  width: 56px; height: 56px;
+  border-radius: 50%;
+  background: var(--gain-subtle);
+  border: 1.5px solid color-mix(in oklab, var(--gain-text) 40%, transparent);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--gain-text);
+  margin-bottom: 4px;
+  animation: success-pop 320ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+.success-state-icon svg { width: 22px; height: 22px; stroke-width: 2.25; }
+@keyframes success-pop {
+  0% { transform: scale(0.6); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .success-state-icon { animation: none !important; }
+}
+
+.success-state-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+.success-state-body {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin: 0;
+  line-height: 1.5;
+}
+.success-state-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+/* ---------------------------------------------------------
+   7. Offline / connection-lost banner.
+   Markup: <div class="offline-banner">
+             <span class="offline-pulse"></span>
+             You're offline. Changes will sync when reconnected.
+           </div>
+   --------------------------------------------------------- */
+.offline-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  background: var(--warning-subtle, #2a1f0a);
+  border-bottom: 1px solid var(--warning-text, #d97706);
+  color: var(--warning-text, #d97706);
+  font-size: 12.5px;
+  font-weight: 500;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.offline-pulse {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: currentColor;
+  position: relative;
+}
+.offline-pulse::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: currentColor;
+  animation: offline-ping 1.6s ease-out infinite;
+}
+@keyframes offline-ping {
+  0% { transform: scale(1); opacity: 0.6; }
+  100% { transform: scale(2.5); opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .offline-pulse::after { animation: none !important; }
+}
+
+/* Reconnected — success variant */
+.offline-banner.reconnected {
+  background: var(--gain-subtle);
+  border-bottom-color: var(--gain-text);
+  color: var(--gain-text);
+}
+
+/* ---------------------------------------------------------
+   8. Stale data indicator — when content is being refetched.
+   Markup: <div class="stale-overlay">last updated 2m ago</div>
+   --------------------------------------------------------- */
+.stale-overlay {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10.5px;
+  color: var(--text-tertiary);
+  font-family: 'Geist Mono', monospace;
+  letter-spacing: 0.02em;
+}
+.stale-overlay::before {
+  content: '';
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--text-tertiary);
+  opacity: 0.5;
+}
+.stale-overlay.live::before {
+  background: var(--gain-text);
+  opacity: 1;
+  box-shadow: 0 0 0 0 currentColor;
+  animation: live-pulse 2s ease-out infinite;
+}
+@keyframes live-pulse {
+  0% { box-shadow: 0 0 0 0 color-mix(in oklab, var(--gain-text) 60%, transparent); }
+  100% { box-shadow: 0 0 0 6px transparent; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .stale-overlay.live::before { animation: none !important; }
+}
+
+/* ---------------------------------------------------------
+   9. No-results — search/filter returned nothing.
+   Markup: <div class="no-results">
+             <div class="no-results-icon">...</div>
+             <p>No results for "<strong>...</strong>"</p>
+             <button class="btn-link">Clear filters</button>
+           </div>
+   --------------------------------------------------------- */
+.no-results {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 40px 24px;
+  gap: 8px;
+  color: var(--text-secondary);
+}
+.no-results-icon {
+  color: var(--text-tertiary);
+  margin-bottom: 4px;
+}
+.no-results-icon svg { width: 28px; height: 28px; stroke-width: 1.5; }
+.no-results-title {
+  font-size: 14px;
+  color: var(--text-primary);
+  font-weight: 500;
+  margin: 0;
+}
+.no-results-body {
+  font-size: 12.5px;
+  color: var(--text-secondary);
+  margin: 0;
+}
+.no-results-body strong {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+/* ---------------------------------------------------------
+  10. Toast notification — feedback after action.
+   Markup: <div class="toast toast-success">
+             <div class="toast-icon">...</div>
+             <div class="toast-content">
+               <div class="toast-title">Order placed</div>
+               <div class="toast-body">...</div>
+             </div>
+             <button class="toast-close">×</button>
+           </div>
+   Note: refinements.css/v2 may already have basic toast.
+   This adds variants + entry animation.
+   --------------------------------------------------------- */
+.toast {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 14px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: 10px;
+  box-shadow:
+    0 8px 24px rgba(0, 0, 0, 0.24),
+    0 2px 6px rgba(0, 0, 0, 0.16);
+  min-width: 280px;
+  max-width: 420px;
+  animation: toast-in 240ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+@keyframes toast-in {
+  from { transform: translateY(8px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+.toast-icon {
+  flex-shrink: 0;
+  width: 18px; height: 18px;
+  margin-top: 1px;
+}
+.toast-content {
+  flex: 1;
+  min-width: 0;
+}
+.toast-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 2px;
+}
+.toast-body {
+  font-size: 12.5px;
+  color: var(--text-secondary);
+  margin: 0;
+  line-height: 1.45;
+}
+.toast-close {
+  background: none;
+  border: none;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  padding: 0;
+  width: 18px; height: 18px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px;
+  line-height: 1;
+  transition: color 120ms;
+}
+.toast-close:hover { color: var(--text-primary); }
+
+/* Toast variants — Linear style: icon color only, no left border */
+.toast-success .toast-icon { color: var(--gain-text); }
+.toast-error .toast-icon { color: var(--loss-text); }
+.toast-warning .toast-icon { color: var(--warning-text, #d97706); }
+.toast-info .toast-icon { color: var(--accent-default); }
+
+/* Toast container — bottom-right stack */
+.toast-container {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 200;
+  display: flex;
+  flex-direction: column-reverse;
+  gap: 8px;
+  pointer-events: none;
+}
+.toast-container .toast {
+  pointer-events: auto;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .toast { animation: none !important; }
+}
+
+/* ---------------------------------------------------------
+  11. Inline status pill — for row-level state.
+   Markup: <span class="status-pill status-pill-active">Active</span>
+   --------------------------------------------------------- */
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 7px;
+  border-radius: 4px;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  border: 1px solid transparent;
+  font-family: 'Geist Mono', monospace;
+}
+.status-pill::before {
+  content: '';
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: currentColor;
+}
+.status-pill-active {
+  background: var(--gain-subtle);
+  color: var(--gain-text);
+  border-color: color-mix(in oklab, var(--gain-text) 30%, transparent);
+}
+.status-pill-pending {
+  background: var(--warning-subtle, #2a1f0a);
+  color: var(--warning-text, #d97706);
+  border-color: color-mix(in oklab, var(--warning-text, #d97706) 30%, transparent);
+}
+.status-pill-pending::before {
+  animation: pending-pulse 1.4s ease-in-out infinite;
+}
+@keyframes pending-pulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 1; }
+}
+.status-pill-error {
+  background: var(--loss-subtle);
+  color: var(--loss-text);
+  border-color: color-mix(in oklab, var(--loss-text) 30%, transparent);
+}
+.status-pill-paused {
+  background: var(--bg-canvas);
+  color: var(--text-tertiary);
+  border-color: var(--border-subtle);
+}
+.status-pill-info {
+  background: color-mix(in oklab, var(--accent-default) 10%, transparent);
+  color: var(--accent-default);
+  border-color: color-mix(in oklab, var(--accent-default) 30%, transparent);
+}
+
+/* ---------------------------------------------------------
+  12. Animated count-up — for numbers on mount.
+   Use class="count-up" + JS that increments to target.
+   Style only ensures monospaced rendering.
+   --------------------------------------------------------- */
+.count-up {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum' 1, 'ss01' 1;
+  display: inline-block;
+  min-width: 1ch;
+}
+
+/* ---------------------------------------------------------
+  13. Snackbar — bottom-anchored full-width feedback.
+   Different from toast — more for app-wide actions.
+   Markup: <div class="snackbar">
+             <div class="snackbar-content">...</div>
+             <div class="snackbar-actions"><button>Undo</button></div>
+           </div>
+   --------------------------------------------------------- */
+.snackbar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 16px 12px 20px;
+  background: var(--text-primary);
+  color: var(--bg-app);
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  min-width: 320px;
+  max-width: 540px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.32);
+}
+.snackbar-content {
+  flex: 1;
+}
+.snackbar-actions {
+  display: flex;
+  gap: 4px;
+}
+.snackbar-actions button {
+  background: none;
+  border: none;
+  color: var(--accent-default);
+  font-weight: 600;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  transition: background 120ms;
+}
+.snackbar-actions button:hover {
+  background: color-mix(in oklab, var(--bg-app) 12%, transparent);
+}
+
+/* ---------------------------------------------------------
+  14. Diff badge — for change-tracking UI.
+   Markup: <span class="diff diff-add">+2.4%</span>
+           <span class="diff diff-remove">-12</span>
+   --------------------------------------------------------- */
+.diff {
+  display: inline-flex;
+  align-items: center;
+  font-family: 'Geist Mono', monospace;
+  font-size: 11.5px;
+  font-weight: 600;
+  font-feature-settings: 'tnum' 1;
+  padding: 1px 5px;
+  border-radius: 3px;
+  letter-spacing: -0.01em;
+}
+.diff-add {
+  background: var(--gain-subtle);
+  color: var(--gain-text);
+}
+.diff-remove {
+  background: var(--loss-subtle);
+  color: var(--loss-text);
+}
+.diff-neutral {
+  background: var(--bg-canvas);
+  color: var(--text-secondary);
+}
+
+/* ---------------------------------------------------------
+  15. Tag input — multi-select chip input.
+   Markup: <div class="tag-input">
+             <span class="tag">whales</span>
+             <span class="tag">arbitrage</span>
+             <input type="text" placeholder="Add tag..." />
+           </div>
+   --------------------------------------------------------- */
+.tag-input {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 6px 8px;
+  min-height: 36px;
+  background: var(--bg-canvas);
+  border: 1px solid var(--border-default);
+  border-radius: 6px;
+  align-items: center;
+  transition: border-color 120ms;
+}
+.tag-input:focus-within {
+  border-color: var(--accent-default);
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--accent-default) 18%, transparent);
+}
+.tag-input .tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 4px 2px 8px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: 4px;
+  font-size: 11.5px;
+  color: var(--text-primary);
+  font-weight: 500;
+}
+.tag-input .tag-remove {
+  background: none;
+  border: none;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  padding: 2px;
+  border-radius: 3px;
+  width: 16px; height: 16px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px;
+  line-height: 1;
+  transition: background 120ms, color 120ms;
+}
+.tag-input .tag-remove:hover {
+  background: var(--bg-canvas);
+  color: var(--text-primary);
+}
+.tag-input input {
+  flex: 1;
+  min-width: 100px;
+  border: none;
+  background: transparent;
+  color: var(--text-primary);
+  font-size: 13px;
+  outline: none;
+  padding: 4px;
+}
+
+/* ---------------------------------------------------------
+  16. Confirmation inline — destructive action verify.
+   Markup: <div class="confirm-inline">
+             <span>Delete this strategy?</span>
+             <button class="btn-danger">Delete</button>
+             <button class="btn-ghost">Cancel</button>
+           </div>
+   --------------------------------------------------------- */
+.confirm-inline {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  background: var(--loss-subtle);
+  border: 1px solid color-mix(in oklab, var(--loss-text) 30%, transparent);
+  border-radius: 8px;
+  font-size: 12.5px;
+  color: var(--text-primary);
+  animation: confirm-shake 320ms ease-out;
+}
+.confirm-inline strong {
+  color: var(--loss-text);
+  font-weight: 600;
+}
+@keyframes confirm-shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-3px); }
+  40% { transform: translateX(3px); }
+  60% { transform: translateX(-2px); }
+  80% { transform: translateX(2px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .confirm-inline { animation: none !important; }
+}
+
+/* ---------------------------------------------------------
+  17. Live region (aria-live polish) — for announce updates.
+   Doesn't render visually; provides consistent a11y class.
+   --------------------------------------------------------- */
+.sr-only,
+.live-region {
+  position: absolute;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ---------------------------------------------------------
+  18. Connection meter — signal-strength style.
+   Markup: <div class="connection-meter" data-bars="3">
+             <span></span><span></span><span></span><span></span>
+           </div>
+   --------------------------------------------------------- */
+.connection-meter {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 14px;
+}
+.connection-meter span {
+  width: 3px;
+  background: var(--border-subtle);
+  border-radius: 1px;
+  transition: background 200ms;
+}
+.connection-meter span:nth-child(1) { height: 25%; }
+.connection-meter span:nth-child(2) { height: 50%; }
+.connection-meter span:nth-child(3) { height: 75%; }
+.connection-meter span:nth-child(4) { height: 100%; }
+
+.connection-meter[data-bars="1"] span:nth-child(-n+1),
+.connection-meter[data-bars="2"] span:nth-child(-n+2),
+.connection-meter[data-bars="3"] span:nth-child(-n+3),
+.connection-meter[data-bars="4"] span:nth-child(-n+4) {
+  background: var(--gain-text);
+}
+.connection-meter[data-bars="1"] span:nth-child(-n+1) { background: var(--loss-text); }
+.connection-meter[data-bars="2"] span:nth-child(-n+2) { background: var(--warning-text, #d97706); }
+
+/* ---------------------------------------------------------
+  19. Activity dot — used in nav for unread / live state.
+   Markup: <span class="activity-dot"></span>
+   --------------------------------------------------------- */
+.activity-dot {
+  position: relative;
+  display: inline-block;
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--accent-default);
+  vertical-align: middle;
+  flex-shrink: 0;
+}
+.activity-dot.live::after {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  border-radius: 50%;
+  background: var(--accent-default);
+  opacity: 0.4;
+  animation: activity-ping 1.6s ease-out infinite;
+}
+@keyframes activity-ping {
+  0% { transform: scale(0.6); opacity: 0.5; }
+  100% { transform: scale(2); opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .activity-dot.live::after { animation: none !important; }
+}
+.activity-dot.danger { background: var(--loss-text); }
+.activity-dot.warning { background: var(--warning-text, #d97706); }
+.activity-dot.success { background: var(--gain-text); }
+
+/* ---------------------------------------------------------
+  20. First-run hint — onboarding callout balloon.
+   Markup: <div class="hint-balloon hint-balloon-bottom">
+             <strong>Tip:</strong> Drag any block to start.
+             <button class="hint-dismiss">Got it</button>
+           </div>
+   --------------------------------------------------------- */
+.hint-balloon {
+  position: relative;
+  display: inline-flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 12px;
+  background: var(--accent-default);
+  color: var(--accent-fg, #fff);
+  border-radius: 8px;
+  font-size: 12.5px;
+  line-height: 1.45;
+  max-width: 280px;
+  box-shadow: 0 4px 12px color-mix(in oklab, var(--accent-default) 40%, transparent);
+}
+.hint-balloon strong {
+  font-weight: 600;
+}
+.hint-balloon::after {
+  content: '';
+  position: absolute;
+  width: 0; height: 0;
+  border: 6px solid transparent;
+}
+.hint-balloon-top::after {
+  bottom: 100%;
+  left: 24px;
+  border-bottom-color: var(--accent-default);
+}
+.hint-balloon-bottom::after {
+  top: 100%;
+  left: 24px;
+  border-top-color: var(--accent-default);
+}
+.hint-balloon-left::after {
+  right: 100%;
+  top: 50%;
+  transform: translateY(-50%);
+  border-right-color: var(--accent-default);
+}
+.hint-balloon-right::after {
+  left: 100%;
+  top: 50%;
+  transform: translateY(-50%);
+  border-left-color: var(--accent-default);
+}
+.hint-dismiss {
+  align-self: flex-start;
+  background: color-mix(in oklab, var(--accent-fg, #fff) 18%, transparent);
+  border: none;
+  color: var(--accent-fg, #fff);
+  padding: 3px 9px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  letter-spacing: 0.02em;
+  transition: background 120ms;
+}
+.hint-dismiss:hover {
+  background: color-mix(in oklab, var(--accent-fg, #fff) 28%, transparent);
+}

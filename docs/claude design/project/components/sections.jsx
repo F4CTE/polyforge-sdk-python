@@ -387,23 +387,22 @@ function Testimonials() {
   const [show] = useTweak('showTestimonials');
   if (!show) return null;
   return (
-    <section className="pf-section">
+    <section className="pf-section operators-section">
       <div className="container">
         <SectionHead
           eyebrow="05 · Operators"
           title="Built with the people who trade it."
           body="Private beta. Public feedback."
         />
-        <div className="t-grid">
+        <div className="op-grid">
           {TESTIMONIALS.map((t, i) => (
-            <figure key={t.who} className="t-card">
-              <div className="quote-mark">“</div>
-              <blockquote>{t.quote}</blockquote>
-              <figcaption>
-                <div className="t-avatar">{t.who.split(' ').map(s => s[0]).join('')}</div>
-                <div>
-                  <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-primary)' }}>{t.who}</div>
-                  <div style={{ fontSize: 11, color: 'var(--text-tertiary)' }}>{t.role}</div>
+            <figure key={t.who} className="op-card">
+              <blockquote className="op-quote">{t.quote}</blockquote>
+              <figcaption className="op-who">
+                <div className="op-avatar">{t.who.split(' ').map(s => s[0]).join('')}</div>
+                <div className="op-who-text">
+                  <span className="op-name">{t.who}</span>
+                  <span className="op-role">{t.role}</span>
                 </div>
               </figcaption>
             </figure>

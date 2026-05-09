@@ -1,0 +1,1088 @@
+/* =========================================================
+   refinements-v2.css — Final polish pass (May 2026)
+   Loaded AFTER refinements.css. Targets cross-page issues
+   spotted in the full sweep:
+     - tighter heading rhythm across admin/user/landing
+     - calmer interactive states (no jumpy translates)
+     - unified empty-state, scrollbar, and loading patterns
+     - sharper card edges, tighter table hover feedback
+     - better dense-row alignment for monetary numbers
+     - small accessibility/contrast improvements
+   No new tokens — works off existing CSS vars only.
+   ========================================================= */
+
+/* ---------------------------------------------------------
+   1. Numeric alignment — every monetary/numeric cell uses
+      tabular-nums + ss01 so numbers line up vertically across
+      tables. (Many places set tnum but not ss01.)
+   --------------------------------------------------------- */
+.adm-table .col-num,
+.adm-table .col-mono,
+.adm-table .col-id,
+.usr-table .col-num,
+.usr-table .col-mono,
+.usr-mono,
+.adm-mono,
+.metric-value,
+.usr-hero-equity,
+.usr-hero-stat-val,
+.adm-stat-value,
+.kpi-value {
+  font-feature-settings: "tnum", "ss01" !important;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------------------------------------------------------
+   2. Calmer hover lifts. Many pages have buttons that
+      translate on hover, which feels jumpy when stacked.
+      Keep the lift only on dedicated card-style links.
+   --------------------------------------------------------- */
+.adm-btn:hover,
+.usr-btn:hover,
+.btn:hover,
+button:not(.adm-card):not(.usr-card):hover {
+  transform: none !important;
+}
+/* Keep card hover lift on <a class="..."> wrappers around
+   strategy/market/preset cards — those are intentional. */
+
+/* ---------------------------------------------------------
+   3. Empty / placeholder states — give them a unified look.
+   --------------------------------------------------------- */
+.adm-empty,
+.usr-empty,
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 56px 24px;
+  text-align: center;
+  border: 1px dashed var(--border-subtle);
+  border-radius: var(--rf-radius-lg, 12px);
+  background: var(--bg-surface);
+  color: var(--text-tertiary);
+}
+.adm-empty-title,
+.usr-empty-title,
+.empty-state-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin: 12px 0 4px;
+}
+.adm-empty-sub,
+.usr-empty-sub,
+.empty-state-sub {
+  font-size: 12.5px;
+  color: var(--text-tertiary);
+  margin: 0 0 16px;
+  max-width: 360px;
+  line-height: 1.5;
+}
+
+/* ---------------------------------------------------------
+   4. Scrollbars — slimmer, themed (Webkit + Firefox).
+   --------------------------------------------------------- */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-default) transparent;
+}
+*::-webkit-scrollbar { width: 10px; height: 10px; }
+*::-webkit-scrollbar-track { background: transparent; }
+*::-webkit-scrollbar-thumb {
+  background: var(--border-default);
+  border-radius: 99px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+*::-webkit-scrollbar-thumb:hover {
+  background: var(--border-strong);
+  background-clip: padding-box;
+  border: 2px solid transparent;
+}
+
+/* ---------------------------------------------------------
+   5. Cards — tighten the inner content rhythm.
+   --------------------------------------------------------- */
+.adm-card,
+.usr-card,
+.card {
+  /* slightly tighter shadow so cards feel grounded */
+  box-shadow: 0 0 0 0 transparent;
+}
+.adm-card-head,
+.usr-card-head {
+  /* consistent header rhythm: title 13px, sub 12px tertiary */
+  border-bottom: 1px solid var(--border-subtle);
+}
+.adm-card-title,
+.usr-card-title {
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  letter-spacing: -0.005em;
+  color: var(--text-primary);
+}
+.adm-card-sub,
+.usr-card-sub {
+  font-size: 11.5px !important;
+  color: var(--text-tertiary);
+  font-weight: 400;
+}
+
+/* ---------------------------------------------------------
+   6. Pills/badges — calmer borders, sharper type rhythm.
+   --------------------------------------------------------- */
+.adm-pill,
+.usr-pill {
+  font-feature-settings: "tnum", "ss01";
+  letter-spacing: 0.04em !important;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+}
+.adm-pill svg,
+.usr-pill svg {
+  width: 11px; height: 11px;
+}
+
+/* ---------------------------------------------------------
+   7. Inputs — uniform default state across surfaces.
+   --------------------------------------------------------- */
+.adm-input,
+.usr-input,
+.adm-select,
+.usr-select,
+.adm-textarea,
+.usr-textarea {
+  background: var(--bg-app);
+  border: 1px solid var(--border-default);
+  color: var(--text-primary);
+  transition: border-color 120ms ease, background 120ms ease, box-shadow 120ms ease;
+}
+.adm-input:hover,
+.usr-input:hover,
+.adm-select:hover,
+.usr-select:hover {
+  border-color: var(--border-strong);
+}
+.adm-input:focus,
+.usr-input:focus,
+.adm-select:focus,
+.usr-select:focus,
+.adm-textarea:focus,
+.usr-textarea:focus {
+  outline: none;
+  border-color: var(--accent-default);
+  box-shadow: 0 0 0 3px var(--accent-subtle);
+}
+.adm-input::placeholder,
+.usr-input::placeholder,
+.adm-textarea::placeholder,
+.usr-textarea::placeholder {
+  color: var(--text-tertiary);
+}
+
+/* ---------------------------------------------------------
+   8. Sidebar tightening — uniform link rhythm + active state.
+   --------------------------------------------------------- */
+.usr-nav-link,
+.adm-nav-link {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 6px 10px;
+  margin: 1px 0;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  text-decoration: none;
+  transition: background 120ms ease, color 120ms ease;
+}
+.usr-nav-link svg,
+.adm-nav-link svg {
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
+  color: var(--text-tertiary);
+  transition: color 120ms ease;
+}
+.usr-nav-link:hover,
+.adm-nav-link:hover {
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+}
+.usr-nav-link:hover svg,
+.adm-nav-link:hover svg {
+  color: var(--text-secondary);
+}
+.usr-nav-link.is-active,
+.adm-nav-link.is-active,
+.usr-nav-item.is-active .usr-nav-link,
+.adm-nav-item.is-active .adm-nav-link {
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+  font-weight: 500;
+}
+.usr-nav-link.is-active svg,
+.adm-nav-link.is-active svg,
+.usr-nav-item.is-active .usr-nav-link svg,
+.adm-nav-item.is-active .adm-nav-link svg {
+  color: var(--accent-text);
+}
+
+/* ---------------------------------------------------------
+   9. Topbar — consistent height + breadcrumb tone.
+   --------------------------------------------------------- */
+.adm-topbar,
+.usr-topbar {
+  height: 52px !important;
+  border-bottom: 1px solid var(--border-subtle);
+}
+.adm-topbar-crumbs,
+.usr-topbar-crumbs {
+  font-size: 12px;
+  color: var(--text-tertiary);
+}
+.adm-topbar-crumbs > *:last-child,
+.usr-topbar-crumbs > *:last-child {
+  color: var(--text-secondary);
+}
+
+/* ---------------------------------------------------------
+   10. Page head — tighten gap between title and sub.
+   --------------------------------------------------------- */
+.adm-page-head,
+.usr-page-head {
+  margin-bottom: 24px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.adm-page-head-title-block,
+.usr-page-head-title-block {
+  min-width: 0;
+}
+.adm-page-head-actions,
+.usr-page-head-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* ---------------------------------------------------------
+   11. Tab strips — uniform active underline (subtle).
+   --------------------------------------------------------- */
+.adm-tabs,
+.usr-tabs {
+  display: flex;
+  gap: 0;
+  border-bottom: 1px solid var(--border-subtle);
+  margin-bottom: 16px;
+}
+.adm-tab,
+.usr-tab {
+  position: relative;
+  padding: 10px 14px;
+  margin-bottom: -1px;
+  border-bottom: 1.5px solid transparent;
+  border-radius: 0;
+  font-size: 12.5px;
+  transition: color 120ms ease, border-color 120ms ease;
+}
+.adm-tab.is-active,
+.usr-tab.is-active {
+  color: var(--text-primary);
+  border-bottom-color: var(--accent-default);
+}
+
+/* ---------------------------------------------------------
+   12. Toast / alert callouts — softer fills.
+   --------------------------------------------------------- */
+.adm-callout,
+.usr-callout {
+  display: flex;
+  gap: 10px;
+  padding: 12px 14px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--text-secondary);
+}
+.adm-callout.is-info,
+.usr-callout.is-info {
+  background: var(--accent-subtle);
+  border-color: var(--accent-border);
+  color: var(--text-primary);
+}
+.adm-callout.is-warn,
+.usr-callout.is-warn {
+  background: var(--warning-subtle);
+  border-color: color-mix(in srgb, var(--warning) 30%, transparent);
+}
+.adm-callout.is-loss,
+.usr-callout.is-loss {
+  background: var(--loss-subtle);
+  border-color: color-mix(in srgb, var(--loss) 30%, transparent);
+}
+
+/* ---------------------------------------------------------
+   13. Segmented controls (chips group) — calmer state.
+   --------------------------------------------------------- */
+.adm-seg,
+.usr-seg {
+  display: inline-flex;
+  background: var(--bg-app);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  padding: 3px;
+  gap: 2px;
+}
+.adm-seg-btn,
+.usr-seg-btn {
+  appearance: none;
+  background: transparent;
+  border: 0;
+  padding: 5px 11px;
+  border-radius: 5px;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  transition: color 120ms ease, background 120ms ease;
+}
+.adm-seg-btn:hover,
+.usr-seg-btn:hover {
+  color: var(--text-secondary);
+}
+.adm-seg-btn.is-active,
+.usr-seg-btn.is-active {
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.18);
+}
+
+/* ---------------------------------------------------------
+   14. Tooltips — neutral, low-key.
+   --------------------------------------------------------- */
+[data-tip] {
+  position: relative;
+}
+[data-tip]:hover::after {
+  content: attr(data-tip);
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 5px 9px;
+  background: var(--bg-overlay);
+  border: 1px solid var(--border-default);
+  border-radius: 5px;
+  font-size: 11px;
+  color: var(--text-primary);
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 60;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.32);
+}
+
+/* ---------------------------------------------------------
+   15. Skeleton loaders — common pattern hookup.
+   --------------------------------------------------------- */
+.skeleton {
+  display: inline-block;
+  background: linear-gradient(
+    90deg,
+    var(--bg-elevated) 0%,
+    color-mix(in srgb, var(--bg-elevated) 70%, var(--text-tertiary) 8%) 50%,
+    var(--bg-elevated) 100%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.4s ease-in-out infinite;
+  border-radius: 4px;
+}
+@keyframes skeleton-shimmer {
+  0%   { background-position: 100% 0; }
+  100% { background-position: -100% 0; }
+}
+
+/* ---------------------------------------------------------
+   16. Selection states for tables — accent-tinted row.
+   --------------------------------------------------------- */
+.adm-table tbody tr.is-selected,
+.usr-table tbody tr.is-selected {
+  background: var(--accent-subtle) !important;
+  border-color: transparent;
+}
+.adm-table tbody tr.is-selected td,
+.usr-table tbody tr.is-selected td {
+  border-color: color-mix(in srgb, var(--accent-default) 22%, transparent) !important;
+}
+
+/* ---------------------------------------------------------
+   17. Image / avatar fallbacks — never break layout.
+   --------------------------------------------------------- */
+.adm-avatar,
+.usr-avatar {
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--accent-default) 18%, var(--bg-elevated)),
+    var(--bg-elevated)
+  );
+  color: var(--text-primary);
+}
+
+/* ---------------------------------------------------------
+   18. Footer in-app — thin separator only when present.
+   --------------------------------------------------------- */
+.adm-footer,
+.usr-footer {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  padding: 14px 24px;
+  border-top: 1px solid var(--border-subtle);
+}
+
+/* ---------------------------------------------------------
+   19. Long-form prose (docs/guides/legal) — nicer rhythm.
+   --------------------------------------------------------- */
+.docs-prose h2,
+.guide-prose h2,
+.legal-prose h2 {
+  margin-top: 2.4em;
+  margin-bottom: 0.6em;
+  font-size: 22px !important;
+  letter-spacing: -0.018em;
+}
+.docs-prose h3,
+.guide-prose h3,
+.legal-prose h3 {
+  margin-top: 1.8em;
+  margin-bottom: 0.5em;
+  font-size: 16px !important;
+  letter-spacing: -0.005em;
+}
+.docs-prose p,
+.guide-prose p,
+.legal-prose p {
+  font-size: 15px;
+  line-height: 1.65;
+  color: var(--text-secondary);
+}
+.docs-prose li,
+.guide-prose li,
+.legal-prose li {
+  line-height: 1.6;
+}
+.docs-prose code,
+.guide-prose code,
+.legal-prose code {
+  font-family: 'Geist Mono', monospace;
+  font-size: 0.86em;
+  padding: 1px 5px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: 4px;
+  color: var(--text-primary);
+}
+
+/* ---------------------------------------------------------
+   20. Print — clean hard-copy of any page.
+   --------------------------------------------------------- */
+@media print {
+  .adm-sidebar,
+  .usr-sidebar,
+  .adm-topbar,
+  .usr-topbar,
+  .tweaks-panel,
+  .pf-nav,
+  .pf-footer,
+  .footer,
+  [data-print="hide"] {
+    display: none !important;
+  }
+  body {
+    background: white !important;
+    color: black !important;
+  }
+  * {
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+}
+
+/* ---------------------------------------------------------
+   21. Dim text-disabled on light theme — was too light.
+   --------------------------------------------------------- */
+:root[data-theme="light"] {
+  --text-disabled: #C2C5D2;
+}
+
+/* ---------------------------------------------------------
+   22. Code blocks — subtler chrome on docs/guide pages.
+   --------------------------------------------------------- */
+pre,
+.code-frame pre {
+  background: var(--bg-app) !important;
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  padding: 14px 16px !important;
+  font-size: 12.5px;
+  line-height: 1.6;
+  overflow-x: auto;
+  color: var(--text-primary);
+}
+pre code {
+  background: transparent !important;
+  border: 0 !important;
+  padding: 0 !important;
+  font-size: inherit !important;
+  color: inherit !important;
+}
+
+/* ---------------------------------------------------------
+   23. Disabled state — uniform across buttons/inputs.
+   --------------------------------------------------------- */
+button:disabled,
+.adm-btn:disabled,
+.usr-btn:disabled,
+.btn:disabled,
+input:disabled,
+select:disabled,
+textarea:disabled {
+  opacity: 0.45 !important;
+  cursor: not-allowed !important;
+  pointer-events: none;
+}
+
+/* ---------------------------------------------------------
+   24. Tape / live ticker — subtler edge fade.
+   --------------------------------------------------------- */
+.tape, .live-tape {
+  border-top: 1px solid var(--border-subtle);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+/* ---------------------------------------------------------
+   25. Balance text on hero/section copy by default.
+   --------------------------------------------------------- */
+h1, h2, .t-hero, .h2,
+.adm-page-head h1,
+.usr-page-head h1 {
+  text-wrap: balance;
+}
+.hero-sub,
+.section-body {
+  text-wrap: pretty;
+}
+
+/* ---------------------------------------------------------
+   26. Image lazy/border helper — already used in some places.
+   --------------------------------------------------------- */
+.adm-img-bordered,
+.usr-img-bordered {
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--bg-elevated);
+}
+
+/* ---------------------------------------------------------
+   27. Better link affordance in body copy (docs/guides).
+   --------------------------------------------------------- */
+.docs-prose a:not(.btn):not(.adm-btn):not(.usr-btn),
+.guide-prose a:not(.btn):not(.adm-btn):not(.usr-btn),
+.legal-prose a:not(.btn):not(.adm-btn):not(.usr-btn) {
+  color: var(--accent-text);
+  text-decoration: none;
+  border-bottom: 1px solid color-mix(in srgb, var(--accent-default) 38%, transparent);
+  transition: border-color 120ms ease, color 120ms ease;
+}
+.docs-prose a:hover,
+.guide-prose a:hover,
+.legal-prose a:hover {
+  border-bottom-color: var(--accent-default);
+}
+
+/* =========================================================
+   v3 polish — May 2026 (cross-page sweep)
+   ========================================================= */
+
+/* ---------------------------------------------------------
+   v3.1 Topbar — keep contents in bounds at narrow widths.
+   The Builder, Strategy Detail, and a few other pages put
+   a lot in the topbar (search + clock + 4 buttons + icons).
+   At <1100 viewport we lose the search field; at <960 we
+   also lose the clock. The page-level title is always last
+   to drop. Prevents overflow into the page below.
+   --------------------------------------------------------- */
+.adm-topbar,
+.usr-topbar {
+  min-width: 0;
+  overflow: visible;
+}
+.adm-topbar-actions,
+.usr-topbar-actions {
+  min-width: 0;
+  flex-wrap: nowrap;
+  overflow: hidden;
+}
+@media (max-width: 1180px) {
+  .adm-topbar .adm-search,
+  .usr-topbar .usr-search,
+  .adm-topbar [class*="search"],
+  .usr-topbar [class*="search"] {
+    display: none !important;
+  }
+}
+@media (max-width: 980px) {
+  .adm-topbar [class*="utc"],
+  .usr-topbar [class*="utc"],
+  .adm-topbar-actions > div:not([class]),
+  .usr-topbar-actions > div:not([class]) {
+    /* clock-style bare divs in actions */
+    display: none !important;
+  }
+}
+
+/* ---------------------------------------------------------
+   v3.2 Long words / addresses break instead of overflowing.
+   Hash strings, emails, URLs in dense rows used to push
+   tables past their container.
+   --------------------------------------------------------- */
+.adm-table td,
+.usr-table td,
+.adm-card,
+.usr-card {
+  overflow-wrap: anywhere;
+  word-break: normal;
+}
+.adm-mono,
+.usr-mono,
+code,
+kbd {
+  overflow-wrap: anywhere;
+}
+
+/* ---------------------------------------------------------
+   v3.3 Sticky table headers — useful on long tables.
+   --------------------------------------------------------- */
+.adm-table thead th,
+.usr-table thead th {
+  position: sticky;
+  top: 0;
+  background: var(--bg-app);
+  z-index: 2;
+  box-shadow: 0 1px 0 var(--border-subtle);
+}
+/* Only stick when the table sits inside its own scroller. */
+.adm-table-wrap,
+.usr-table-wrap {
+  overflow: auto;
+  max-height: var(--table-max-h, none);
+  border-radius: var(--rf-radius-lg, 12px);
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-surface);
+}
+
+/* ---------------------------------------------------------
+   v3.4 Page title scale — uniform across both shells.
+   The .adm-page-head h1 / .usr-page-head h1 was sized
+   inconsistently (24-32px). Lock to 26px / -1.5% tracking.
+   --------------------------------------------------------- */
+.adm-page-head h1,
+.usr-page-head h1,
+.adm-page-title,
+.usr-page-title {
+  font-size: 26px !important;
+  font-weight: 600 !important;
+  letter-spacing: -0.015em !important;
+  line-height: 1.2 !important;
+  color: var(--text-primary);
+}
+.adm-page-head .adm-page-sub,
+.usr-page-head .usr-page-sub {
+  font-size: 13px;
+  color: var(--text-tertiary);
+  line-height: 1.55;
+  margin-top: 4px;
+  max-width: 720px;
+}
+
+/* ---------------------------------------------------------
+   v3.5 Section headings inside cards — unify rhythm.
+   --------------------------------------------------------- */
+.adm-section-title,
+.usr-section-title,
+.section-title,
+.adm-overline,
+.usr-overline {
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.08em !important;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+}
+
+/* ---------------------------------------------------------
+   v3.6 Sidebar group label — lighter / quieter.
+   --------------------------------------------------------- */
+.adm-nav-group-label,
+.usr-nav-group-label,
+.adm-sidebar [class*="group-label"],
+.usr-sidebar [class*="group-label"] {
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+  padding: 14px 10px 6px;
+}
+
+/* ---------------------------------------------------------
+   v3.7 Buttons — uniform height tiers + better focus.
+   --------------------------------------------------------- */
+.adm-btn,
+.usr-btn,
+.btn {
+  height: 32px;
+  padding: 0 12px;
+  border-radius: 7px;
+  font-size: 12.5px;
+  font-weight: 500;
+  letter-spacing: -0.005em;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  white-space: nowrap;
+  transition: background 120ms ease, border-color 120ms ease, color 120ms ease;
+}
+.adm-btn-sm,
+.usr-btn-sm,
+.btn-sm {
+  height: 26px;
+  padding: 0 10px;
+  font-size: 11.5px;
+  border-radius: 6px;
+}
+.adm-btn-lg,
+.usr-btn-lg,
+.btn-lg {
+  height: 40px;
+  padding: 0 16px;
+  font-size: 14px;
+  border-radius: 9px;
+}
+.adm-icon-btn,
+.usr-icon-btn {
+  width: 30px;
+  height: 30px;
+  border-radius: 7px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.adm-icon-btn svg,
+.usr-icon-btn svg {
+  width: 15px;
+  height: 15px;
+}
+
+/* ---------------------------------------------------------
+   v3.8 Focus ring — uniform across all interactives.
+   Visible only on keyboard focus.
+   --------------------------------------------------------- */
+*:focus-visible {
+  outline: 2px solid var(--accent-default);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+[role="button"]:focus-visible,
+[tabindex]:focus-visible {
+  outline-offset: 2px;
+}
+button:focus:not(:focus-visible),
+a:focus:not(:focus-visible),
+input:focus:not(:focus-visible),
+select:focus:not(:focus-visible),
+textarea:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* ---------------------------------------------------------
+   v3.9 Selection highlight — accent-tinted.
+   --------------------------------------------------------- */
+::selection {
+  background: color-mix(in srgb, var(--accent-default) 38%, transparent);
+  color: var(--text-primary);
+}
+
+/* ---------------------------------------------------------
+   v3.10 Table row hover — quieter.
+   --------------------------------------------------------- */
+.adm-table tbody tr:hover,
+.usr-table tbody tr:hover {
+  background: color-mix(in srgb, var(--bg-elevated) 70%, transparent);
+}
+
+/* ---------------------------------------------------------
+   v3.11 Table — first/last cell padding so content doesn't
+   touch container edges.
+   --------------------------------------------------------- */
+.adm-table th:first-child,
+.adm-table td:first-child,
+.usr-table th:first-child,
+.usr-table td:first-child {
+  padding-left: 16px;
+}
+.adm-table th:last-child,
+.adm-table td:last-child,
+.usr-table th:last-child,
+.usr-table td:last-child {
+  padding-right: 16px;
+}
+
+/* ---------------------------------------------------------
+   v3.12 Numeric column right-align — restore wherever
+   columns flagged .col-num.
+   --------------------------------------------------------- */
+.adm-table .col-num,
+.usr-table .col-num,
+.adm-table th.col-num,
+.usr-table th.col-num {
+  text-align: right;
+}
+
+/* ---------------------------------------------------------
+   v3.13 Pill — semantic color sets unified.
+   --------------------------------------------------------- */
+.adm-pill.is-gain,
+.usr-pill.is-gain,
+.adm-pill[data-tone="gain"],
+.usr-pill[data-tone="gain"] {
+  background: var(--gain-subtle);
+  color: var(--gain-text);
+  border: 1px solid color-mix(in srgb, var(--gain) 28%, transparent);
+}
+.adm-pill.is-loss,
+.usr-pill.is-loss,
+.adm-pill[data-tone="loss"],
+.usr-pill[data-tone="loss"] {
+  background: var(--loss-subtle);
+  color: var(--loss-text);
+  border: 1px solid color-mix(in srgb, var(--loss) 28%, transparent);
+}
+.adm-pill.is-warn,
+.usr-pill.is-warn,
+.adm-pill[data-tone="warn"],
+.usr-pill[data-tone="warn"] {
+  background: var(--warning-subtle);
+  color: var(--warning-text);
+  border: 1px solid color-mix(in srgb, var(--warning) 28%, transparent);
+}
+.adm-pill.is-info,
+.usr-pill.is-info,
+.adm-pill[data-tone="info"],
+.usr-pill[data-tone="info"] {
+  background: var(--accent-subtle);
+  color: var(--accent-text);
+  border: 1px solid color-mix(in srgb, var(--accent-default) 28%, transparent);
+}
+
+/* ---------------------------------------------------------
+   v3.14 Long search input in topbar — never balloon.
+   --------------------------------------------------------- */
+.adm-topbar .adm-search,
+.usr-topbar .usr-search,
+.adm-topbar input[type="search"],
+.usr-topbar input[type="search"] {
+  max-width: 320px;
+  min-width: 0;
+  flex: 0 1 280px;
+}
+
+/* ---------------------------------------------------------
+   v3.15 Modal / dialog — consistent chrome.
+   --------------------------------------------------------- */
+.adm-modal,
+.usr-modal {
+  background: var(--bg-overlay, var(--bg-elevated));
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  box-shadow: 0 24px 64px rgba(0,0,0,0.45), 0 1px 2px rgba(0,0,0,0.5);
+}
+.adm-modal-head,
+.usr-modal-head {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.adm-modal-body,
+.usr-modal-body {
+  padding: 16px 20px;
+}
+.adm-modal-foot,
+.usr-modal-foot {
+  padding: 12px 20px;
+  border-top: 1px solid var(--border-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+/* ---------------------------------------------------------
+   v3.16 List / data row dividers — always border-subtle.
+   Several places used border-default which is too loud.
+   --------------------------------------------------------- */
+.adm-list > li + li,
+.usr-list > li + li,
+.adm-stack > * + *,
+.usr-stack > * + * {
+  border-top-color: var(--border-subtle);
+}
+
+/* ---------------------------------------------------------
+   v3.17 Charts — soft baseline / gridline tone.
+   SVG charts in cards used a too-strong gridline color.
+   --------------------------------------------------------- */
+svg [stroke-dasharray],
+.adm-chart .gridline,
+.usr-chart .gridline {
+  stroke: var(--border-subtle);
+}
+
+/* ---------------------------------------------------------
+   v3.18 Inline keyboard combos — uniform <kbd> chrome.
+   --------------------------------------------------------- */
+kbd,
+.adm-kbd,
+.usr-kbd {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  font-family: 'Geist Mono', monospace;
+  font-size: 10.5px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  background: var(--bg-app);
+  border: 1px solid var(--border-default);
+  border-bottom-width: 2px;
+  border-radius: 4px;
+  vertical-align: middle;
+}
+
+/* ---------------------------------------------------------
+   v3.19 Dialog backdrop blur — a touch of polish.
+   --------------------------------------------------------- */
+.adm-scrim,
+.usr-scrim,
+.modal-scrim {
+  background: rgba(0,0,0,0.55);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+/* ---------------------------------------------------------
+   v3.20 Reduce visual weight of disabled inputs.
+   --------------------------------------------------------- */
+.adm-input:disabled,
+.usr-input:disabled,
+.adm-select:disabled,
+.usr-select:disabled,
+.adm-textarea:disabled,
+.usr-textarea:disabled {
+  background: var(--bg-app);
+  color: var(--text-tertiary);
+  border-color: var(--border-subtle);
+}
+
+/* ---------------------------------------------------------
+   v3.21 Pricing / plan grid — equal-height cards.
+   --------------------------------------------------------- */
+.pf-pricing-grid,
+.pricing-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 16px;
+  align-items: stretch;
+}
+.pf-pricing-grid > *,
+.pricing-grid > * {
+  height: 100%;
+}
+
+/* ---------------------------------------------------------
+   v3.22 Code snippet caption row.
+   --------------------------------------------------------- */
+.code-frame {
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  background: var(--bg-app);
+  overflow: hidden;
+}
+.code-frame .code-frame-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 12px;
+  font-size: 11.5px;
+  color: var(--text-tertiary);
+  background: var(--bg-elevated);
+  border-bottom: 1px solid var(--border-subtle);
+  font-family: 'Geist Mono', monospace;
+}
+.code-frame pre {
+  border: 0 !important;
+  border-radius: 0 !important;
+}
+
+/* ---------------------------------------------------------
+   v3.23 Long URL truncation in tables — show ellipsis,
+   keep tooltip on hover.
+   --------------------------------------------------------- */
+.adm-truncate,
+.usr-truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+}
+
+/* ---------------------------------------------------------
+   v3.24 Anchor target offset — when scrolling to in-page
+   anchors, stop below sticky topbar instead of under it.
+   --------------------------------------------------------- */
+:target {
+  scroll-margin-top: 80px;
+}
+
+/* ---------------------------------------------------------
+   v3.25 Body-level overscroll color match.
+   --------------------------------------------------------- */
+html, body {
+  background: var(--bg-app);
+}
+html {
+  overscroll-behavior: none;
+}

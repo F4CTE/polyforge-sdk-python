@@ -44,6 +44,26 @@ const DS_NAV = [
       { id: 'code',   num: '20', label: 'Implementation' },
     ],
   },
+  {
+    label: 'Extended',
+    items: [
+      { id: 'avatars',       num: '21', label: 'Avatars' },
+      { id: 'dropdowns',     num: '22', label: 'Dropdowns' },
+      { id: 'modal',         num: '23', label: 'Modal' },
+      { id: 'cmdk',          num: '24', label: 'Command palette' },
+      { id: 'breadcrumbs',   num: '25', label: 'Breadcrumbs' },
+      { id: 'pagination',    num: '26', label: 'Pagination' },
+      { id: 'progress',      num: '27', label: 'Progress' },
+    ],
+  },
+  {
+    label: 'Guidance',
+    items: [
+      { id: 'layout',        num: '28', label: 'Layout & grid' },
+      { id: 'font-features', num: '29', label: 'Font features' },
+      { id: 'a11y',          num: '30', label: 'Accessibility' },
+    ],
+  },
 ];
 
 /* ---- Color groups (dark theme primary; light values noted inline) ---- */

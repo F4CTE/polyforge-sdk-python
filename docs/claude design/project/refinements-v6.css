@@ -1,0 +1,704 @@
+/* =========================================================
+   refinements-v6.css — Polish pass 6 (May 2026)
+   Loaded AFTER refinements-v5.css.
+   Last-mile components and content patterns:
+     - pagination, sortable headers, filter chip bars
+     - blockquote, figure/figcaption, mark, fieldset
+     - dot-grid background, command-palette kbd row
+     - live timestamp, confirmation prompt, card stack
+     - tab pill alt, sidebar collapsed, value-update flash
+   ========================================================= */
+
+/* ---------------------------------------------------------
+   1. Pagination — uniform paged-list controls.
+   Markup: <nav class="pagination">…</nav>
+   --------------------------------------------------------- */
+.pagination {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+}
+.pagination a,
+.pagination button,
+.pagination span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 30px;
+  height: 30px;
+  padding: 0 8px;
+  border-radius: 6px;
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--text-secondary, #475569);
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background var(--dur-fast, 120ms) var(--ease-out-soft),
+              border-color var(--dur-fast, 120ms) var(--ease-out-soft),
+              color var(--dur-fast, 120ms) var(--ease-out-soft);
+}
+.pagination a:hover,
+.pagination button:hover {
+  background: var(--surface-1, #f8fafc);
+  color: var(--text-primary, #0f172a);
+}
+.pagination .is-active,
+.pagination [aria-current="page"] {
+  background: var(--accent-default, #2563eb);
+  color: #fff;
+  border-color: var(--accent-default, #2563eb);
+}
+.pagination .is-disabled,
+.pagination [aria-disabled="true"] {
+  opacity: 0.4;
+  pointer-events: none;
+}
+.pagination .ellipsis {
+  cursor: default;
+  color: var(--text-tertiary, #94a3b8);
+}
+
+/* ---------------------------------------------------------
+   2. Sortable column headers — caret affordance.
+   Markup: <th class="sortable" aria-sort="ascending">Name</th>
+   --------------------------------------------------------- */
+th.sortable,
+.adm-table th.sortable,
+.usr-table th.sortable {
+  cursor: pointer;
+  user-select: none;
+  position: relative;
+  padding-right: 22px !important;
+  transition: color var(--dur-fast, 120ms) var(--ease-out-soft);
+}
+th.sortable:hover {
+  color: var(--text-primary, #0f172a);
+}
+th.sortable::after {
+  content: "↕";
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 10px;
+  color: var(--text-tertiary, #94a3b8);
+  opacity: 0.5;
+  transition: opacity var(--dur-fast, 120ms) var(--ease-out-soft);
+}
+th.sortable:hover::after { opacity: 1; }
+th[aria-sort="ascending"]::after {
+  content: "↑";
+  color: var(--accent-default, #2563eb);
+  opacity: 1;
+}
+th[aria-sort="descending"]::after {
+  content: "↓";
+  color: var(--accent-default, #2563eb);
+  opacity: 1;
+}
+
+/* ---------------------------------------------------------
+   3. Filter chips bar — applied filters with clear-all.
+   Markup: <div class="filter-bar">…<button class="filter-clear">Clear all</button></div>
+   --------------------------------------------------------- */
+.filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 0;
+  font-size: 12px;
+}
+.filter-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 4px 4px 10px;
+  background: color-mix(in srgb, var(--accent-default, #2563eb) 12%, var(--surface-1, #1a1a1a));
+  border: 1px solid color-mix(in srgb, var(--accent-default, #2563eb) 22%, var(--border-subtle, #2a2a2a));
+  color: var(--text-primary, #e5e7eb);
+  border-radius: 6px;
+  font-size: 12px;
+  white-space: nowrap;
+  line-height: 1.2;
+}
+.filter-chip > button {
+  appearance: none;
+  background: transparent;
+  border: 0;
+  color: var(--text-tertiary, #94a3b8);
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+  padding: 0;
+  transition: color var(--dur-fast, 120ms), background var(--dur-fast, 120ms);
+}
+.filter-chip > button:hover {
+  color: var(--danger, #ef4444);
+  background: color-mix(in srgb, var(--danger, #ef4444) 14%, transparent);
+}
+.filter-bar > .filter-label {
+  color: var(--text-tertiary, #94a3b8);
+  margin-right: 4px;
+}
+.filter-bar .filter-clear {
+  margin-left: 4px;
+  background: none;
+  border: 0;
+  color: var(--text-tertiary, #64748b);
+  font-size: 12px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: color var(--dur-fast, 120ms), background var(--dur-fast, 120ms);
+}
+.filter-bar .filter-clear:hover {
+  color: var(--danger, #dc2626);
+  background: color-mix(in srgb, var(--danger, #ef4444) 8%, transparent);
+}
+
+/* ---------------------------------------------------------
+   4. Blockquote — clean rule on the left.
+   --------------------------------------------------------- */
+blockquote {
+  margin: 16px 0;
+  padding: 4px 0 4px 16px;
+  border-left: 3px solid var(--border-default, #cbd5e1);
+  color: var(--text-secondary, #475569);
+  font-style: normal;
+  text-wrap: pretty;
+}
+blockquote.is-quote::before {
+  content: "“";
+  display: block;
+  font-size: 32px;
+  line-height: 1;
+  color: var(--text-tertiary, #94a3b8);
+  margin-bottom: 4px;
+  font-family: Georgia, serif;
+}
+blockquote cite {
+  display: block;
+  margin-top: 8px;
+  font-size: 13px;
+  color: var(--text-tertiary, #94a3b8);
+  font-style: normal;
+}
+blockquote cite::before { content: "— "; }
+
+/* ---------------------------------------------------------
+   5. Figure + figcaption — image with caption.
+   --------------------------------------------------------- */
+figure {
+  margin: 24px 0;
+}
+figure img,
+figure video {
+  display: block;
+  width: 100%;
+  border-radius: 8px;
+  border: 1px solid var(--border-subtle, #e2e8f0);
+}
+figcaption {
+  margin-top: 8px;
+  font-size: 12px;
+  color: var(--text-tertiary, #94a3b8);
+  text-align: center;
+  text-wrap: balance;
+}
+
+/* ---------------------------------------------------------
+   6. <mark> highlight — search results / glossary terms.
+   --------------------------------------------------------- */
+mark,
+.mark {
+  background: color-mix(in srgb, var(--warning, #f59e0b) 22%, transparent);
+  color: inherit;
+  padding: 0 2px;
+  border-radius: 2px;
+}
+
+/* ---------------------------------------------------------
+   7. Fieldset / legend — group form controls.
+   --------------------------------------------------------- */
+fieldset {
+  border: 1px solid var(--border-subtle, #e2e8f0);
+  border-radius: 8px;
+  padding: 16px;
+  margin: 0 0 16px;
+}
+legend {
+  padding: 0 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary, #475569);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+/* ---------------------------------------------------------
+   8. Dot-grid background — for builder/canvas pages.
+   Add class .dot-grid to the canvas container.
+   --------------------------------------------------------- */
+.dot-grid {
+  background-image: radial-gradient(
+    circle,
+    var(--border-default, #cbd5e1) 1px,
+    transparent 1px
+  );
+  background-size: 16px 16px;
+  background-position: 0 0;
+}
+.dot-grid.dot-grid--dense {
+  background-size: 12px 12px;
+}
+.dot-grid.dot-grid--quiet {
+  background-image: radial-gradient(
+    circle,
+    var(--border-subtle, #e2e8f0) 1px,
+    transparent 1px
+  );
+}
+
+/* ---------------------------------------------------------
+   9. Live timestamp — "Updated 3s ago" inline pill.
+   Markup: <span class="live-stamp"><span class="status-dot status-dot--live"></span>Updated 3s ago</span>
+   --------------------------------------------------------- */
+.live-stamp {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text-tertiary, #64748b);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------------------------------------------------------
+   10. Confirmation prompt — destructive action warning row.
+   Markup: <div class="danger-zone">…</div>
+   --------------------------------------------------------- */
+.danger-zone {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 16px;
+  background: color-mix(in srgb, var(--danger, #ef4444) 4%, var(--surface-0, #fff));
+  border: 1px solid color-mix(in srgb, var(--danger, #ef4444) 24%, var(--border-subtle, #e2e8f0));
+  border-radius: 8px;
+}
+.danger-zone .danger-icon {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--danger, #ef4444) 16%, transparent);
+  color: var(--danger, #b91c1c);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+}
+.danger-zone .danger-icon::before { content: "!"; }
+.danger-zone .danger-body {
+  flex: 1;
+  min-width: 0;
+}
+.danger-zone .danger-title {
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--text-primary, #0f172a);
+  margin-bottom: 2px;
+}
+.danger-zone .danger-desc {
+  font-size: 12px;
+  color: var(--text-secondary, #475569);
+}
+
+/* ---------------------------------------------------------
+   11. Card stack — three-card layered effect.
+   Markup: <div class="card-stack"><div class="card">…</div></div>
+   --------------------------------------------------------- */
+.card-stack {
+  position: relative;
+}
+.card-stack::before,
+.card-stack::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: var(--surface-0, #fff);
+  border: 1px solid var(--border-subtle, #e2e8f0);
+  z-index: -1;
+}
+.card-stack::before {
+  transform: translate(4px, 4px);
+  opacity: 0.6;
+}
+.card-stack::after {
+  transform: translate(8px, 8px);
+  opacity: 0.3;
+}
+
+/* ---------------------------------------------------------
+   12. Tab pill style — segmented alt to underline tabs.
+   Markup: <div class="tab-pills">…<button class="tab-pill is-active">…</button></div>
+   --------------------------------------------------------- */
+.tab-pills {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 3px;
+  background: var(--surface-1, #f8fafc);
+  border: 1px solid var(--border-subtle, #e2e8f0);
+  border-radius: 8px;
+}
+.tab-pill {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  background: transparent;
+  border: 0;
+  border-radius: 6px;
+  font-size: 13px;
+  color: var(--text-secondary, #475569);
+  cursor: pointer;
+  transition: background var(--dur-fast, 120ms) var(--ease-out-soft),
+              color var(--dur-fast, 120ms) var(--ease-out-soft);
+}
+.tab-pill:hover {
+  color: var(--text-primary, #0f172a);
+}
+.tab-pill.is-active,
+.tab-pill[aria-selected="true"] {
+  background: color-mix(in srgb, var(--accent-default, #2563eb) 18%, var(--surface-2, #2a2a2a));
+  color: var(--text-primary, #f1f5f9);
+  font-weight: 500;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.25),
+              inset 0 0 0 1px color-mix(in srgb, var(--accent-default, #2563eb) 32%, transparent);
+}
+
+/* ---------------------------------------------------------
+   13. Sidebar collapsed mode — icon-only rail.
+   Add data-collapsed="true" on the sidebar element.
+   --------------------------------------------------------- */
+[data-collapsed="true"] {
+  width: 56px !important;
+}
+[data-collapsed="true"] .sidebar-label,
+[data-collapsed="true"] .nav-label,
+[data-collapsed="true"] .group-label,
+[data-collapsed="true"] .adm-sidebar-section-label,
+[data-collapsed="true"] .usr-sidebar-section-label {
+  display: none;
+}
+[data-collapsed="true"] a,
+[data-collapsed="true"] button {
+  justify-content: center !important;
+}
+[data-collapsed="true"] a > span:not(.icon):not([data-icon]),
+[data-collapsed="true"] button > span:not(.icon):not([data-icon]) {
+  display: none;
+}
+
+/* ---------------------------------------------------------
+   14. Value-update flash — when a number changes.
+   Add class .flash-up / .flash-down briefly via JS.
+   --------------------------------------------------------- */
+@keyframes flash-up-anim {
+  0%, 100% { background: transparent; }
+  20% { background: color-mix(in srgb, var(--success, #10b981) 25%, transparent); }
+}
+@keyframes flash-down-anim {
+  0%, 100% { background: transparent; }
+  20% { background: color-mix(in srgb, var(--danger, #ef4444) 25%, transparent); }
+}
+.flash-up {
+  animation: flash-up-anim 1s var(--ease-out-soft);
+  border-radius: 3px;
+}
+.flash-down {
+  animation: flash-down-anim 1s var(--ease-out-soft);
+  border-radius: 3px;
+}
+
+/* ---------------------------------------------------------
+   15. Command palette / shortcut row — small kbd hint.
+   Markup: <span class="cmd-hint">Press <kbd>⌘K</kbd> to search</span>
+   --------------------------------------------------------- */
+.cmd-hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text-tertiary, #94a3b8);
+}
+.cmd-hint kbd {
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 11px;
+  padding: 1px 5px;
+  border: 1px solid var(--border-default, #e2e8f0);
+  border-bottom-width: 2px;
+  border-radius: 4px;
+  background: var(--surface-0, #fff);
+  color: var(--text-secondary, #475569);
+}
+
+/* ---------------------------------------------------------
+   16. Color swatch chip — design-system / picker.
+   Markup: <span class="swatch" style="--c: #f1f5f9"></span>
+   --------------------------------------------------------- */
+.swatch {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  background: var(--c, #cbd5e1);
+  border: 1px solid color-mix(in srgb, var(--text-primary, #0f172a) 8%, transparent);
+  vertical-align: middle;
+  flex-shrink: 0;
+}
+.swatch.swatch--lg {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+}
+
+/* ---------------------------------------------------------
+   17. Inline note row — quiet info under a heading.
+   Markup: <p class="note-row">…</p>
+   --------------------------------------------------------- */
+.note-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--text-secondary, #475569);
+  padding: 10px 12px;
+  background: var(--surface-1, #f8fafc);
+  border-radius: 6px;
+}
+.note-row::before {
+  content: "ⓘ";
+  flex-shrink: 0;
+  color: var(--text-tertiary, #94a3b8);
+  font-size: 14px;
+  line-height: 1.3;
+}
+
+/* ---------------------------------------------------------
+   18. Hover preview popover — small detail card on hover.
+   Use group-hover: parent has .has-popover, child .popover.
+   --------------------------------------------------------- */
+.has-popover {
+  position: relative;
+}
+.has-popover > .popover {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%) translateY(-4px);
+  background: var(--surface-0, #fff);
+  border: 1px solid var(--border-subtle, #e2e8f0);
+  border-radius: 8px;
+  box-shadow: 0 10px 30px -10px rgba(15,23,42,0.18);
+  padding: 12px;
+  min-width: 220px;
+  max-width: 320px;
+  font-size: 12px;
+  color: var(--text-secondary, #475569);
+  opacity: 0;
+  pointer-events: none;
+  z-index: 50;
+  transition: opacity var(--dur-base, 180ms) var(--ease-out-soft),
+              transform var(--dur-base, 180ms) var(--ease-out-soft);
+}
+.has-popover:hover > .popover,
+.has-popover:focus-within > .popover {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+  pointer-events: auto;
+}
+
+/* ---------------------------------------------------------
+   19. Section anchor link — pilcrow on hover (docs/guides).
+   Markup: <h2 id="…">Heading <a href="#…" class="anchor">¶</a></h2>
+   --------------------------------------------------------- */
+h2 > a.anchor,
+h3 > a.anchor,
+h4 > a.anchor {
+  margin-left: 8px;
+  font-size: 0.7em;
+  color: var(--text-tertiary, #94a3b8);
+  text-decoration: none;
+  opacity: 0;
+  transition: opacity var(--dur-fast, 120ms) var(--ease-out-soft),
+              color var(--dur-fast, 120ms) var(--ease-out-soft);
+}
+h2:hover > a.anchor,
+h3:hover > a.anchor,
+h4:hover > a.anchor {
+  opacity: 1;
+}
+h2 > a.anchor:hover,
+h3 > a.anchor:hover,
+h4 > a.anchor:hover {
+  color: var(--accent-default, #2563eb);
+}
+
+/* ---------------------------------------------------------
+   20. Markdown table — uniform default for prose tables.
+   --------------------------------------------------------- */
+.prose table,
+.markdown table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 16px 0;
+  font-size: 13px;
+}
+.prose table th,
+.markdown table th {
+  text-align: left;
+  font-weight: 600;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-tertiary, #64748b);
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border-default, #cbd5e1);
+}
+.prose table td,
+.markdown table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border-subtle, #e2e8f0);
+  color: var(--text-secondary, #475569);
+}
+.prose table tr:last-child td,
+.markdown table tr:last-child td {
+  border-bottom: none;
+}
+
+/* ---------------------------------------------------------
+   21. Empty state — subtle dashed surface variant.
+   Markup: <div class="empty empty--soft">…</div>
+   --------------------------------------------------------- */
+.empty.empty--soft,
+.empty-state.empty--soft {
+  background: var(--surface-1, #f8fafc);
+  border: 1px dashed var(--border-default, #cbd5e1);
+  border-radius: 12px;
+  padding: 32px 16px;
+  text-align: center;
+}
+.empty.empty--soft .empty-glyph,
+.empty-state.empty--soft .empty-glyph {
+  width: 36px;
+  height: 36px;
+  margin: 0 auto 12px;
+  border-radius: 50%;
+  background: var(--surface-2, #f1f5f9);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-tertiary, #94a3b8);
+}
+.empty.empty--soft h3,
+.empty-state.empty--soft h3 {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary, #0f172a);
+  margin: 0 0 4px;
+}
+.empty.empty--soft p,
+.empty-state.empty--soft p {
+  font-size: 13px;
+  color: var(--text-secondary, #475569);
+  margin: 0 auto;
+  max-width: 38ch;
+  text-wrap: pretty;
+}
+
+/* ---------------------------------------------------------
+   22. Inline code in body copy — uniform.
+   --------------------------------------------------------- */
+:not(pre) > code {
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 0.88em;
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: var(--surface-1, #f8fafc);
+  color: var(--text-primary, #0f172a);
+  border: 1px solid var(--border-subtle, #e2e8f0);
+  white-space: nowrap;
+}
+
+/* ---------------------------------------------------------
+   23. Outside-tap dismiss layer — for floating menus.
+   Markup: <div class="dismiss-layer" aria-hidden="true"></div>
+   --------------------------------------------------------- */
+.dismiss-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  background: transparent;
+}
+
+/* ---------------------------------------------------------
+   24. Caret affordance for triggers — chevron-down.
+   Markup: <button class="has-caret">…</button>
+   --------------------------------------------------------- */
+.has-caret::after {
+  content: "";
+  display: inline-block;
+  margin-left: 6px;
+  width: 6px;
+  height: 6px;
+  border: 1.5px solid currentColor;
+  border-top: 0;
+  border-left: 0;
+  transform: rotate(45deg) translate(-1px, -1px);
+  opacity: 0.6;
+  vertical-align: middle;
+}
+
+/* ---------------------------------------------------------
+   25. Section hover halo — for marketing feature grids.
+   Add .feature-card .feature-card-hover gives a soft halo.
+   --------------------------------------------------------- */
+.feature-card,
+.feature-tile {
+  position: relative;
+  isolation: isolate;
+  transition: border-color var(--dur-base, 180ms) var(--ease-out-soft);
+}
+.feature-card::before,
+.feature-tile::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  background: radial-gradient(
+    400px circle at var(--mx, 50%) var(--my, 50%),
+    color-mix(in srgb, var(--accent-default, #2563eb) 14%, transparent),
+    transparent 40%
+  );
+  opacity: 0;
+  pointer-events: none;
+  z-index: -1;
+  transition: opacity var(--dur-base, 180ms) var(--ease-out-soft);
+}
+.feature-card:hover::before,
+.feature-tile:hover::before {
+  opacity: 1;
+}

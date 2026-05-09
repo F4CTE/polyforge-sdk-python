@@ -1,0 +1,446 @@
+/* =========================================================
+   refinements-v4.css — Polish pass 4 (May 2026)
+   Loaded AFTER refinements-v2.css (which contains v2+v3).
+   Targets micro-interactions and details not yet covered:
+     - motion / easing tokens
+     - status dots, live indicators
+     - signed-number coloring (+/-)
+     - currency symbol affordance
+     - sparkline / inline chart tone
+     - marketing hero type polish
+     - footer link rhythm
+     - sticky right rails
+     - mobile scaling guards
+     - reduce-motion support
+   ========================================================= */
+
+/* ---------------------------------------------------------
+   1. Motion tokens — single easing + duration vocabulary.
+   --------------------------------------------------------- */
+:root {
+  --ease-out-soft: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --ease-in-out-soft: cubic-bezier(0.65, 0, 0.35, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --dur-fast: 120ms;
+  --dur-base: 180ms;
+  --dur-slow: 280ms;
+}
+
+/* Apply default easing to common transition consumers
+   that didn't already declare one. */
+button,
+a.btn,
+.btn,
+.usr-btn,
+.adm-btn,
+.usr-card,
+.adm-card,
+.card,
+.usr-tab,
+.adm-tab,
+.usr-pill,
+.adm-pill,
+.usr-chip,
+.adm-chip,
+.usr-input,
+.adm-input,
+.usr-select,
+.adm-select {
+  transition-timing-function: var(--ease-out-soft);
+  transition-duration: var(--dur-base);
+}
+
+/* ---------------------------------------------------------
+   2. Reduced motion — honor user preference everywhere.
+   --------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ---------------------------------------------------------
+   3. Status dots — uniform "live" indicator with pulse.
+   Use: <span class="status-dot status-dot--live"></span>
+   --------------------------------------------------------- */
+.status-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--text-tertiary, #94a3b8);
+  vertical-align: middle;
+  position: relative;
+  flex-shrink: 0;
+}
+.status-dot--live,
+.status-dot.is-live,
+.status-dot--success {
+  background: var(--success, #10b981);
+}
+.status-dot--warn,
+.status-dot--warning {
+  background: var(--warning, #f59e0b);
+}
+.status-dot--error,
+.status-dot--danger {
+  background: var(--danger, #ef4444);
+}
+.status-dot--live::after,
+.status-dot.is-live::after {
+  content: "";
+  position: absolute;
+  inset: -3px;
+  border-radius: 50%;
+  border: 2px solid currentColor;
+  color: var(--success, #10b981);
+  opacity: 0.55;
+  animation: status-dot-pulse 1.6s var(--ease-in-out-soft) infinite;
+}
+@keyframes status-dot-pulse {
+  0% { transform: scale(0.7); opacity: 0.6; }
+  70% { transform: scale(1.4); opacity: 0; }
+  100% { transform: scale(1.4); opacity: 0; }
+}
+
+/* ---------------------------------------------------------
+   4. Signed number coloring — +1.2% green, -0.8% red.
+   Use: <span class="num-pos">+1.2%</span> / <span class="num-neg">-0.8%</span>
+   --------------------------------------------------------- */
+.num-pos,
+.num-up,
+.num-positive {
+  color: var(--success, #059669);
+  font-variant-numeric: tabular-nums;
+}
+.num-neg,
+.num-down,
+.num-negative {
+  color: var(--danger, #dc2626);
+  font-variant-numeric: tabular-nums;
+}
+.num-flat,
+.num-zero {
+  color: var(--text-tertiary, #94a3b8);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------------------------------------------------------
+   5. Currency symbol affordance — dim the symbol, weight the value.
+   Use: <span class="money"><span class="money-sym">$</span>1,250.00</span>
+   --------------------------------------------------------- */
+.money,
+.amount {
+  font-variant-numeric: tabular-nums;
+}
+.money-sym,
+.amount-sym {
+  color: var(--text-tertiary, #94a3b8);
+  margin-right: 1px;
+  font-weight: 400;
+}
+
+/* ---------------------------------------------------------
+   6. Sparkline / inline chart tone — calmer fills.
+   Inline SVG charts in cards used overly bright fills.
+   --------------------------------------------------------- */
+.sparkline path[fill],
+.sparkline-fill,
+svg.sparkline path[fill] {
+  opacity: 0.18;
+}
+.sparkline path[stroke],
+svg.sparkline path[stroke] {
+  stroke-width: 1.5;
+}
+
+/* ---------------------------------------------------------
+   7. Marketing hero — display type polish.
+   Tighten leading, balance, and letter-spacing on the
+   really big headlines; soften gradient mask edges.
+   --------------------------------------------------------- */
+.hero h1,
+.hero-title,
+section[class*="hero"] h1 {
+  letter-spacing: -0.02em;
+  line-height: 1.04;
+  text-wrap: balance;
+}
+.hero-eyebrow,
+.eyebrow,
+.section-eyebrow {
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-weight: 600;
+  color: var(--text-tertiary, #64748b);
+}
+
+/* ---------------------------------------------------------
+   8. Footer rhythm — uniform column spacing on marketing.
+   --------------------------------------------------------- */
+.site-footer .footer-cols,
+.site-footer .footer-grid {
+  gap: 48px;
+}
+.site-footer h4,
+.site-footer .footer-col h4 {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0;
+  margin-bottom: 16px;
+  color: var(--text-primary, #0f172a);
+}
+.site-footer ul,
+.site-footer .footer-col ul {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.site-footer a {
+  color: var(--text-secondary, #475569);
+  text-decoration: none;
+  font-size: 14px;
+  transition: color var(--dur-fast) var(--ease-out-soft);
+}
+.site-footer a:hover {
+  color: var(--text-primary, #0f172a);
+}
+
+/* ---------------------------------------------------------
+   9. Sticky right rail — detail pages with side panels.
+   --------------------------------------------------------- */
+.detail-rail,
+.right-rail,
+.usr-detail-rail,
+.adm-detail-rail {
+  position: sticky;
+  top: calc(var(--topbar-h, 56px) + 16px);
+  align-self: start;
+  max-height: calc(100vh - var(--topbar-h, 56px) - 32px);
+  overflow-y: auto;
+}
+
+/* ---------------------------------------------------------
+   10. Mobile scaling guard — prevent horizontal scroll
+   on narrow widths for everything except wide tables /
+   canvases that opt out via .allow-x.
+   --------------------------------------------------------- */
+html, body {
+  overflow-x: hidden;
+}
+.allow-x,
+.allow-x * {
+  overflow-x: auto;
+}
+@media (max-width: 720px) {
+  .adm-page-head h1,
+  .usr-page-head h1,
+  h1 { font-size: clamp(20px, 5vw, 28px); }
+  .hero h1, .hero-title { font-size: clamp(28px, 7vw, 44px); }
+}
+
+/* ---------------------------------------------------------
+   11. Inline editable hint — pencil affordance on hover
+   for .editable elements (used on profile/settings pages).
+   --------------------------------------------------------- */
+.editable {
+  position: relative;
+  cursor: text;
+  border-bottom: 1px dashed transparent;
+  transition: border-color var(--dur-fast) var(--ease-out-soft);
+}
+.editable:hover {
+  border-bottom-color: var(--border-default, #e2e8f0);
+}
+.editable::after {
+  content: "✎";
+  position: absolute;
+  right: -18px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 11px;
+  color: var(--text-tertiary, #94a3b8);
+  opacity: 0;
+  transition: opacity var(--dur-fast) var(--ease-out-soft);
+}
+.editable:hover::after {
+  opacity: 1;
+}
+
+/* ---------------------------------------------------------
+   12. Avatar fallback — neutral background, centered initial.
+   --------------------------------------------------------- */
+.avatar-fallback,
+.avatar.is-fallback {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--surface-2, #f1f5f9);
+  color: var(--text-secondary, #475569);
+  font-weight: 600;
+  font-size: 0.85em;
+  letter-spacing: 0.02em;
+  user-select: none;
+  flex-shrink: 0;
+}
+
+/* ---------------------------------------------------------
+   13. Kbd shortcut hint footer — small pill row at the
+   bottom of app pages showing common shortcuts.
+   Use: <div class="kbd-hints">…</div>
+   --------------------------------------------------------- */
+.kbd-hints {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  padding: 12px 16px;
+  font-size: 12px;
+  color: var(--text-tertiary, #94a3b8);
+  border-top: 1px solid var(--border-subtle, #e2e8f0);
+  background: var(--surface-1, #f8fafc);
+}
+.kbd-hints kbd {
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 11px;
+  padding: 1px 6px;
+  border: 1px solid var(--border-default, #e2e8f0);
+  border-bottom-width: 2px;
+  border-radius: 4px;
+  background: var(--surface-0, #fff);
+  color: var(--text-secondary, #475569);
+  margin: 0 4px;
+}
+
+/* ---------------------------------------------------------
+   14. Card surfaces — clear hierarchy of depth.
+   surface-0 = base bg, surface-1 = cards, surface-2 = elevated cards
+   --------------------------------------------------------- */
+.card-elevated,
+.usr-card.is-elevated,
+.adm-card.is-elevated {
+  background: var(--surface-0, #fff);
+  border: 1px solid var(--border-subtle, #e2e8f0);
+  box-shadow:
+    0 1px 0 rgba(15, 23, 42, 0.04),
+    0 4px 12px -2px rgba(15, 23, 42, 0.05);
+}
+.card-flat,
+.usr-card.is-flat,
+.adm-card.is-flat {
+  background: var(--surface-1, #f8fafc);
+  border: 1px solid var(--border-subtle, #e2e8f0);
+  box-shadow: none;
+}
+
+/* ---------------------------------------------------------
+   15. Dividers — quiet hr.
+   --------------------------------------------------------- */
+hr {
+  border: 0;
+  border-top: 1px solid var(--border-subtle, #e2e8f0);
+  margin: 24px 0;
+}
+hr.thick {
+  border-top-width: 2px;
+}
+hr.spacious {
+  margin: 40px 0;
+}
+
+/* ---------------------------------------------------------
+   16. Section eyebrow + section heading rhythm — marketing.
+   --------------------------------------------------------- */
+section .section-head,
+.section-head {
+  margin-bottom: 32px;
+}
+section .section-head h2,
+.section-head h2 {
+  margin: 6px 0 8px;
+  letter-spacing: -0.01em;
+  text-wrap: balance;
+}
+section .section-head p,
+.section-head p {
+  color: var(--text-secondary, #475569);
+  text-wrap: pretty;
+  max-width: 56ch;
+}
+
+/* ---------------------------------------------------------
+   17. List rows — uniform separator + hover.
+   --------------------------------------------------------- */
+.list-row + .list-row,
+.row + .row {
+  border-top: 1px solid var(--border-subtle, #e2e8f0);
+}
+.list-row,
+.row {
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  transition: background var(--dur-fast) var(--ease-out-soft);
+}
+.list-row:hover,
+.row.is-clickable:hover {
+  background: var(--surface-1, #f8fafc);
+}
+
+/* ---------------------------------------------------------
+   18. Image render-quality on retina/dpi-aware bitmap content.
+   --------------------------------------------------------- */
+img {
+  image-rendering: -webkit-optimize-contrast;
+}
+
+/* ---------------------------------------------------------
+   19. Detail page back-link — uniform chevron + hover.
+   --------------------------------------------------------- */
+.back-link,
+a.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--text-secondary, #475569);
+  font-size: 13px;
+  text-decoration: none;
+  margin-bottom: 12px;
+  transition: color var(--dur-fast) var(--ease-out-soft);
+}
+.back-link::before {
+  content: "←";
+  font-size: 14px;
+}
+.back-link:hover {
+  color: var(--text-primary, #0f172a);
+}
+
+/* ---------------------------------------------------------
+   20. Section header divider on long content pages.
+   Short caps-label sits over a quiet horizontal line.
+   --------------------------------------------------------- */
+.section-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 40px 0 16px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-tertiary, #94a3b8);
+}
+.section-divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--border-subtle, #e2e8f0);
+}

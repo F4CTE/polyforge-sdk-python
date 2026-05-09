@@ -1,0 +1,751 @@
+/* =========================================================
+   refinements-v11.css — Polish pass 11 (May 2026)
+   Loaded AFTER refinements-v10.css.
+   Focus: MOTION & MICRO-INTERACTIONS — hover reveals,
+   focus shimmer, scroll reveals, content transitions,
+   skeuomorphic affordances, page transitions, parallax,
+   and high-quality entrance animations.
+   ========================================================= */
+
+/* ---------------------------------------------------------
+   Variables
+   --------------------------------------------------------- */
+:root {
+  --motion-fast: 120ms;
+  --motion-base: 200ms;
+  --motion-slow: 320ms;
+  --motion-slower: 540ms;
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-anticipate: cubic-bezier(0.6, -0.28, 0.74, 0.05);
+}
+
+/* ---------------------------------------------------------
+   1. Reveal on mount — fade-up entrance.
+   Markup: <div class="reveal">...</div>
+           or with stagger: <div class="reveal-stagger"> children </div>
+   --------------------------------------------------------- */
+.reveal {
+  animation: reveal-up var(--motion-slow) var(--ease-out) both;
+}
+@keyframes reveal-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.reveal-fade {
+  animation: reveal-fade var(--motion-slow) ease-out both;
+}
+@keyframes reveal-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.reveal-scale {
+  animation: reveal-scale var(--motion-slow) var(--ease-out) both;
+}
+@keyframes reveal-scale {
+  from { opacity: 0; transform: scale(0.96); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+/* Stagger children — each element appears 50ms later */
+.reveal-stagger > * { opacity: 0; animation: reveal-up var(--motion-slow) var(--ease-out) both; }
+.reveal-stagger > *:nth-child(1) { animation-delay: 0ms; }
+.reveal-stagger > *:nth-child(2) { animation-delay: 50ms; }
+.reveal-stagger > *:nth-child(3) { animation-delay: 100ms; }
+.reveal-stagger > *:nth-child(4) { animation-delay: 150ms; }
+.reveal-stagger > *:nth-child(5) { animation-delay: 200ms; }
+.reveal-stagger > *:nth-child(6) { animation-delay: 250ms; }
+.reveal-stagger > *:nth-child(7) { animation-delay: 300ms; }
+.reveal-stagger > *:nth-child(8) { animation-delay: 350ms; }
+.reveal-stagger > *:nth-child(n+9) { animation-delay: 400ms; }
+
+/* On-scroll reveal — element starts hidden, JS toggles .is-visible */
+.reveal-on-scroll {
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity var(--motion-slow) var(--ease-out),
+              transform var(--motion-slow) var(--ease-out);
+  will-change: opacity, transform;
+}
+.reveal-on-scroll.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal,
+  .reveal-fade,
+  .reveal-scale,
+  .reveal-stagger > * {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+  .reveal-on-scroll {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
+
+/* ---------------------------------------------------------
+   2. Shimmer reveal — for hero text/highlights.
+   Markup: <span class="shimmer-text">PolyForge</span>
+   --------------------------------------------------------- */
+.shimmer-text {
+  background: linear-gradient(
+    90deg,
+    var(--text-primary) 0%,
+    var(--text-primary) 40%,
+    color-mix(in oklab, var(--accent-default) 80%, white) 50%,
+    var(--text-primary) 60%,
+    var(--text-primary) 100%
+  );
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: shimmer-sweep 3.6s ease-in-out infinite;
+}
+@keyframes shimmer-sweep {
+  0%, 30% { background-position: 200% 0; }
+  70%, 100% { background-position: -200% 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .shimmer-text {
+    animation: none !important;
+    background: var(--text-primary) !important;
+    -webkit-background-clip: initial !important;
+    background-clip: initial !important;
+    color: var(--text-primary) !important;
+  }
+}
+
+/* ---------------------------------------------------------
+   3. Hover lift — cards that visibly respond.
+   Markup: <div class="hover-lift">...</div>
+   --------------------------------------------------------- */
+.hover-lift {
+  transition: transform var(--motion-base) var(--ease-out),
+              box-shadow var(--motion-base) var(--ease-out),
+              border-color var(--motion-base) ease;
+  will-change: transform;
+}
+.hover-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+  border-color: var(--border-strong, var(--border-default));
+}
+.hover-lift:active {
+  transform: translateY(0);
+  transition-duration: 80ms;
+}
+
+/* Stronger lift variant */
+.hover-lift-md {
+  transition: transform var(--motion-base) var(--ease-out),
+              box-shadow var(--motion-base) var(--ease-out);
+}
+.hover-lift-md:hover {
+  transform: translateY(-4px) scale(1.005);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.28);
+}
+
+/* Hover inset — card brightens without moving */
+.hover-glow {
+  position: relative;
+  transition: border-color var(--motion-base) ease;
+}
+.hover-glow::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  background: radial-gradient(
+    600px circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
+    color-mix(in oklab, var(--accent-default) 22%, transparent),
+    transparent 40%
+  );
+  opacity: 0;
+  transition: opacity var(--motion-slow) ease;
+  pointer-events: none;
+  z-index: 0;
+}
+.hover-glow:hover::before { opacity: 1; }
+.hover-glow > * { position: relative; z-index: 1; }
+
+@media (prefers-reduced-motion: reduce) {
+  .hover-lift, .hover-lift-md, .hover-glow {
+    transition: none !important;
+  }
+  .hover-lift:hover, .hover-lift-md:hover {
+    transform: none !important;
+  }
+}
+
+/* ---------------------------------------------------------
+   4. Hover-reveal — content appears on hover.
+   Markup: <div class="hover-reveal-wrap">
+             <div class="hover-reveal-base">...</div>
+             <div class="hover-reveal-extra">...</div>
+           </div>
+   --------------------------------------------------------- */
+.hover-reveal-wrap {
+  position: relative;
+}
+.hover-reveal-extra {
+  opacity: 0;
+  transform: translateY(4px);
+  transition: opacity var(--motion-base) ease,
+              transform var(--motion-base) var(--ease-out);
+  pointer-events: none;
+}
+.hover-reveal-wrap:hover .hover-reveal-extra,
+.hover-reveal-wrap:focus-within .hover-reveal-extra {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+/* Action buttons that appear on table-row hover */
+.row-actions {
+  display: inline-flex;
+  gap: 4px;
+  opacity: 0;
+  transform: translateX(-4px);
+  transition: opacity 120ms ease, transform 160ms var(--ease-out);
+}
+tr:hover .row-actions,
+tr:focus-within .row-actions,
+.row:hover .row-actions {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hover-reveal-extra, .row-actions {
+    transition: opacity 0ms !important;
+    transform: none !important;
+  }
+}
+
+/* ---------------------------------------------------------
+   5. Pressable — tactile button press.
+   Markup: <button class="btn pressable">...</button>
+   --------------------------------------------------------- */
+.pressable {
+  transition: transform 80ms ease, box-shadow 120ms ease;
+  will-change: transform;
+}
+.pressable:active {
+  transform: scale(0.97);
+}
+
+/* ---------------------------------------------------------
+   6. Magnetic — buttons that shift toward the cursor.
+   Apply with JS: el.style.setProperty('--mag-x', x), etc.
+   Markup: <button class="magnetic">...</button>
+   --------------------------------------------------------- */
+.magnetic {
+  transform: translate(var(--mag-x, 0), var(--mag-y, 0));
+  transition: transform 240ms var(--ease-out);
+  will-change: transform;
+}
+
+/* ---------------------------------------------------------
+   7. Page transition — fade between routes.
+   Wrap page content in <div class="page-fade">...</div>
+   --------------------------------------------------------- */
+.page-fade {
+  animation: page-fade-in var(--motion-slow) var(--ease-out);
+}
+@keyframes page-fade-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Slide-in from right — for "next" pages */
+.page-slide-right {
+  animation: page-slide-right 320ms var(--ease-out) both;
+}
+@keyframes page-slide-right {
+  from { opacity: 0; transform: translateX(12px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page-fade, .page-slide-right { animation: none !important; }
+}
+
+/* ---------------------------------------------------------
+   8. Number transitions — animate count changes.
+   Markup: <span class="number-flip">$12,400</span>
+   When value updates, briefly applies a slide.
+   --------------------------------------------------------- */
+.number-flip {
+  display: inline-block;
+  font-variant-numeric: tabular-nums;
+}
+.number-flip.is-changing {
+  animation: number-flip 380ms ease;
+}
+@keyframes number-flip {
+  0% { transform: translateY(0); opacity: 1; }
+  40% { transform: translateY(-4px); opacity: 0; }
+  60% { transform: translateY(4px); opacity: 0; }
+  100% { transform: translateY(0); opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .number-flip.is-changing { animation: none !important; }
+}
+
+/* ---------------------------------------------------------
+   9. Spotlight on focus — highlight focused element.
+   Markup: <a class="spotlight-focus">...</a>
+   --------------------------------------------------------- */
+.spotlight-focus {
+  position: relative;
+  outline: none;
+}
+.spotlight-focus::after {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 8px;
+  background: color-mix(in oklab, var(--accent-default) 12%, transparent);
+  opacity: 0;
+  transition: opacity 160ms ease;
+  pointer-events: none;
+  z-index: -1;
+}
+.spotlight-focus:focus-visible::after {
+  opacity: 1;
+}
+
+/* ---------------------------------------------------------
+  10. Marquee — horizontal scrolling ticker.
+   Markup: <div class="marquee"><div class="marquee-track">items...</div></div>
+   --------------------------------------------------------- */
+.marquee {
+  overflow: hidden;
+  position: relative;
+  mask-image: linear-gradient(90deg, transparent, black 40px, black calc(100% - 40px), transparent);
+  -webkit-mask-image: linear-gradient(90deg, transparent, black 40px, black calc(100% - 40px), transparent);
+}
+.marquee-track {
+  display: inline-flex;
+  gap: 32px;
+  animation: marquee-scroll 28s linear infinite;
+  white-space: nowrap;
+  padding-right: 32px;
+}
+.marquee:hover .marquee-track { animation-play-state: paused; }
+@keyframes marquee-scroll {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .marquee-track { animation: none !important; }
+}
+
+/* ---------------------------------------------------------
+  11. Focus trail — subtle dot near cursor on hero CTA.
+   Markup: container has class="focus-trail"; updated via JS.
+   --------------------------------------------------------- */
+.focus-trail {
+  position: relative;
+  overflow: hidden;
+}
+.focus-trail::after {
+  content: '';
+  position: absolute;
+  width: 200px; height: 200px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    color-mix(in oklab, var(--accent-default) 24%, transparent),
+    transparent 60%
+  );
+  pointer-events: none;
+  left: var(--trail-x, -300px);
+  top: var(--trail-y, -300px);
+  transform: translate(-50%, -50%);
+  transition: opacity 240ms ease;
+  opacity: 0;
+}
+.focus-trail:hover::after { opacity: 1; }
+
+/* ---------------------------------------------------------
+  12. Tooltip pop — replaces jarring instant-show.
+   Markup: <span class="tooltip-pop" data-tooltip="...">...</span>
+   --------------------------------------------------------- */
+.tooltip-pop {
+  position: relative;
+}
+.tooltip-pop::before {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%) translateY(4px) scale(0.96);
+  background: var(--text-primary);
+  color: var(--bg-app);
+  padding: 5px 9px;
+  border-radius: 5px;
+  font-size: 11.5px;
+  font-weight: 500;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 120ms ease, transform 160ms var(--ease-out);
+  z-index: 50;
+}
+.tooltip-pop:hover::before,
+.tooltip-pop:focus-visible::before {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0) scale(1);
+}
+
+/* ---------------------------------------------------------
+  13. Card flip — front/back swap.
+   Markup: <div class="flip-card"><div class="flip-card-inner">
+             <div class="flip-front">...</div>
+             <div class="flip-back">...</div>
+           </div></div>
+   --------------------------------------------------------- */
+.flip-card {
+  perspective: 1000px;
+}
+.flip-card-inner {
+  position: relative;
+  transition: transform 540ms var(--ease-in-out);
+  transform-style: preserve-3d;
+}
+.flip-card:hover .flip-card-inner,
+.flip-card.is-flipped .flip-card-inner {
+  transform: rotateY(180deg);
+}
+.flip-front, .flip-back {
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+}
+.flip-back {
+  position: absolute;
+  inset: 0;
+  transform: rotateY(180deg);
+}
+@media (prefers-reduced-motion: reduce) {
+  .flip-card-inner { transition: none !important; transform: none !important; }
+}
+
+/* ---------------------------------------------------------
+  14. Scroll-progress bar — top-of-viewport indicator.
+   Markup: <div class="scroll-progress" style="width: 30%"></div>
+   Use JS to update width based on scrollY.
+   --------------------------------------------------------- */
+.scroll-progress {
+  position: fixed;
+  top: 0; left: 0;
+  height: 2px;
+  background: var(--accent-default);
+  z-index: 999;
+  transition: width 60ms linear;
+  box-shadow: 0 0 10px color-mix(in oklab, var(--accent-default) 60%, transparent);
+}
+
+/* ---------------------------------------------------------
+  15. Gradient border — animated colorful edge.
+   Markup: <div class="gradient-border">content</div>
+   --------------------------------------------------------- */
+.gradient-border {
+  position: relative;
+  border-radius: 10px;
+  background: var(--bg-elevated);
+  padding: 1px;
+  background-clip: padding-box;
+}
+.gradient-border::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: conic-gradient(
+    from 0deg,
+    var(--accent-default),
+    var(--gain-text),
+    var(--accent-default),
+    color-mix(in oklab, var(--accent-default) 50%, var(--loss-text)),
+    var(--accent-default)
+  );
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  animation: gradient-spin 4s linear infinite;
+}
+@keyframes gradient-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .gradient-border::before { animation: none !important; }
+}
+
+/* ---------------------------------------------------------
+  16. Type-out effect — text appears character-by-character.
+   Markup: <span class="type-out">text</span>
+   Width animates from 0 → 100% with a steps animation.
+   --------------------------------------------------------- */
+.type-out {
+  display: inline-block;
+  overflow: hidden;
+  white-space: nowrap;
+  vertical-align: bottom;
+  border-right: 2px solid var(--accent-default);
+  animation:
+    type-out 1.6s steps(28, end) both,
+    cursor-blink 600ms steps(2, end) infinite;
+}
+@keyframes type-out {
+  from { width: 0; }
+  to { width: 100%; }
+}
+@keyframes cursor-blink {
+  to { border-right-color: transparent; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .type-out {
+    animation: none !important;
+    width: 100% !important;
+    border-right-color: transparent !important;
+  }
+}
+
+/* ---------------------------------------------------------
+  17. Section divider — animated draw-in line.
+   Markup: <hr class="hr-draw" />
+   --------------------------------------------------------- */
+.hr-draw {
+  border: none;
+  height: 1px;
+  background: var(--border-subtle);
+  position: relative;
+  overflow: hidden;
+  margin: 24px 0;
+}
+.hr-draw::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: linear-gradient(90deg, transparent, var(--accent-default), transparent);
+  animation: hr-sweep 3s ease-in-out infinite;
+}
+@keyframes hr-sweep {
+  0% { transform: translateX(-100%); }
+  60%, 100% { transform: translateX(100%); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hr-draw::after { animation: none !important; }
+}
+
+/* ---------------------------------------------------------
+  18. Smart focus ring — only visible from keyboard.
+   Improves on default :focus by skipping click-induced rings.
+   Apply on focusable elements:
+     button, a, [role="button"], input, etc.
+   --------------------------------------------------------- */
+.focus-ring:focus { outline: none; }
+.focus-ring:focus-visible {
+  outline: 2px solid var(--accent-default);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* ---------------------------------------------------------
+  19. Drag handle indicator — for sortable lists.
+   Markup: <span class="drag-handle">⋮⋮</span>
+   --------------------------------------------------------- */
+.drag-handle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px; height: 16px;
+  color: var(--text-tertiary);
+  cursor: grab;
+  user-select: none;
+  border-radius: 3px;
+  transition: background 120ms, color 120ms;
+}
+.drag-handle:hover {
+  color: var(--text-primary);
+  background: var(--surface-hover);
+}
+.drag-handle:active { cursor: grabbing; }
+.drag-handle::before {
+  content: '⋮⋮';
+  font-size: 14px;
+  letter-spacing: -2px;
+  font-weight: 700;
+}
+.is-dragging {
+  opacity: 0.4;
+  transform: scale(0.99);
+  cursor: grabbing;
+}
+
+/* ---------------------------------------------------------
+  20. Ripple — material-style click feedback.
+   Markup: <button class="ripple">...</button>
+   Needs JS to inject .ripple-circle on click; CSS just styles it.
+   --------------------------------------------------------- */
+.ripple {
+  position: relative;
+  overflow: hidden;
+}
+.ripple-circle {
+  position: absolute;
+  border-radius: 50%;
+  background: color-mix(in oklab, var(--text-primary) 20%, transparent);
+  transform: scale(0);
+  animation: ripple-out 540ms var(--ease-out);
+  pointer-events: none;
+}
+@keyframes ripple-out {
+  to {
+    transform: scale(4);
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ripple-circle { animation: none !important; display: none; }
+}
+
+/* ---------------------------------------------------------
+  21. Smooth in-page anchor scroll — for TOC links.
+   --------------------------------------------------------- */
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+}
+
+/* ---------------------------------------------------------
+  22. Toast list enter/exit — when stacking
+   --------------------------------------------------------- */
+.toast.toast-enter {
+  animation: toast-enter 240ms var(--ease-out) both;
+}
+.toast.toast-exit {
+  animation: toast-exit 200ms var(--ease-in-out) both;
+}
+@keyframes toast-enter {
+  from { opacity: 0; transform: translateX(20px) scale(0.96); }
+  to { opacity: 1; transform: translateX(0) scale(1); }
+}
+@keyframes toast-exit {
+  from { opacity: 1; transform: translateX(0); }
+  to { opacity: 0; transform: translateX(20px) scale(0.96); }
+}
+
+/* ---------------------------------------------------------
+  23. Modal entry — replaces hard pop-in
+   --------------------------------------------------------- */
+.modal.is-open .modal-backdrop {
+  animation: modal-backdrop-in 220ms ease;
+}
+.modal.is-open .modal-content {
+  animation: modal-content-in 280ms var(--ease-out);
+}
+@keyframes modal-backdrop-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes modal-content-in {
+  from { opacity: 0; transform: translateY(8px) scale(0.97); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* ---------------------------------------------------------
+  24. Accordion slide — smooth height transitions
+   Use grid-row: auto / span N + max-height for clean expand.
+   Markup: <div class="accordion-item">
+             <button class="accordion-trigger" aria-expanded="false">...</button>
+             <div class="accordion-content">...</div>
+           </div>
+   --------------------------------------------------------- */
+.accordion-item + .accordion-item {
+  border-top: 1px solid var(--border-subtle);
+}
+.accordion-trigger {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  background: none;
+  border: none;
+  color: var(--text-primary);
+  font-size: 13px;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+  transition: background 120ms;
+}
+.accordion-trigger:hover { background: var(--surface-hover); }
+.accordion-trigger::after {
+  content: '';
+  width: 8px; height: 8px;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(45deg);
+  transition: transform 200ms var(--ease-out);
+  margin-right: 4px;
+  opacity: 0.6;
+}
+.accordion-trigger[aria-expanded="true"]::after {
+  transform: rotate(-135deg);
+}
+.accordion-content {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 280ms var(--ease-out);
+}
+.accordion-content > div {
+  overflow: hidden;
+  padding: 0 16px;
+}
+.accordion-trigger[aria-expanded="true"] + .accordion-content {
+  grid-template-rows: 1fr;
+}
+.accordion-trigger[aria-expanded="true"] + .accordion-content > div {
+  padding-bottom: 14px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .accordion-content, .accordion-trigger::after { transition: none !important; }
+}
+
+/* ---------------------------------------------------------
+  25. Long press — for mobile contextual actions.
+   .long-pressable provides feedback during press.
+   --------------------------------------------------------- */
+.long-pressable {
+  position: relative;
+  -webkit-tap-highlight-color: transparent;
+}
+.long-pressable::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: color-mix(in oklab, var(--accent-default) 12%, transparent);
+  opacity: 0;
+  transform: scale(0.6);
+  transition: opacity 160ms ease, transform 480ms ease;
+  pointer-events: none;
+}
+.long-pressable.is-pressing::after {
+  opacity: 1;
+  transform: scale(1);
+}
