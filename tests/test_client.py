@@ -7975,3 +7975,167 @@ class TestPublicUserProfileEndpoints:
         monkeypatch.setattr(client, "_get", fake_get)
         with pytest.raises(NotFoundError):
             client.get_user_badges_by_username("ghost")
+
+
+# ── Rewards Endpoint Coverage (POLA-3324) ────────────────────────────────────
+
+REWARDS_METHODS = (
+    "get_market_rewards_detail",
+    "get_user_sponsored_markets",
+    "get_rewards_sponsor_url",
+)
+
+
+class TestRewardsEndpointsPresence:
+    """Surface check: all 3 new rewards methods exist on both clients (POLA-3324)."""
+
+    def test_all_methods_present_on_sync_client(self):
+        for name in REWARDS_METHODS:
+            assert callable(getattr(PolyforgeClient, name, None)), name
+
+    def test_all_methods_present_on_async_client(self):
+        for name in REWARDS_METHODS:
+            assert callable(getattr(AsyncPolyforgeClient, name, None)), name
+
+
+class TestRewardsEndpointsPaths:
+    """Verify each new rewards method targets the correct controller path."""
+
+    def test_get_market_rewards_detail_path(self):
+        import inspect
+        src = inspect.getsource(PolyforgeClient.get_market_rewards_detail)
+        assert '"/api/v1/rewards/market/"' in src or '/api/v1/rewards/market/' in src
+
+    def test_get_user_sponsored_markets_path(self):
+        import inspect
+        src = inspect.getsource(PolyforgeClient.get_user_sponsored_markets)
+        assert '"/api/v1/rewards/user/sponsored-markets"' in src
+
+    def test_get_rewards_sponsor_url_path(self):
+        import inspect
+        src = inspect.getsource(PolyforgeClient.get_rewards_sponsor_url)
+        assert '"/api/v1/rewards/sponsor-url/"' in src or '/api/v1/rewards/sponsor-url/' in src
+
+
+class TestRewardsEndpointRoundtrips:
+    """Stub the HTTP layer and exercise each new rewards method."""
+
+    @staticmethod
+    def _client_with(handler):
+        transport = httpx.MockTransport(handler)
+        client = PolyforgeClient(api_key="test", api_url="http://localhost:9999")
+        client._client = httpx.Client(
+            base_url="http://localhost:9999",
+            headers={"Authorization": "Bearer test"},
+            transport=transport,
+        )
+        return client
+
+    def test_get_market_rewards_detail_returns_model(self):
+        def handler(request):
+            assert request.method == "GET"
+            assert request.url.path == "/api/v1/rewards/market/market-abc"
+            return httpx.Response(200, json={
+                "conditionId": "cond-1",
+                "ratePerDay": "100.0",
+                "totalRewards": "5000.0",
+                "remainingRewardAmount": "2500.0",
+                "maxSpread": "0.05",
+                "minSize": "10.0",
+                "startDate": "2026-01-01",
+                "endDate": "2026-12-31",
+            })
+
+        client = self._client_with(handler)
+        try:
+            result = client.get_market_rewards_detail("market-abc")
+            assert isinstance(result, RewardsMarketDetail)
+            assert result.condition_id == "cond-1"
+            assert result.rate_per_day == "100.0"
+            assert result.remaining_reward_amount == "2500.0"
+        finally:
+            client.close()
+
+    def test_get_market_rewards_detail_encodes_market_id(self):
+        captured = {}
+
+        def handler(request):
+            captured["raw_path"] = request.url.raw_path
+            return httpx.Response(200, json={
+                "conditionId": "", "ratePerDay": "", "totalRewards": "",
+                "remainingRewardAmount": "", "maxSpread": "", "minSize": "",
+                "startDate": "", "endDate": "",
+            })
+
+        client = self._client_with(handler)
+        try:
+            client.get_market_rewards_detail("market/with/slashes")
+            assert captured["raw_path"] == b"/api/v1/rewards/market/market%2Fwith%2Fslashes"
+        finally:
+            client.close()
+
+    def test_get_market_rewards_detail_returns_none_on_null(self):
+        def handler(request):
+            return httpx.Response(200, content=b"null",
+                                  headers={"Content-Type": "application/json"})
+
+        client = self._client_with(handler)
+        try:
+            result = client.get_market_rewards_detail("ghost-market")
+            assert result is None
+        finally:
+            client.close()
+
+    def test_get_user_sponsored_markets_returns_model(self):
+        def handler(request):
+            assert request.method == "GET"
+            assert request.url.path == "/api/v1/rewards/user/sponsored-markets"
+            return httpx.Response(200, json={"markets": [{"conditionId": "c1"}, {"conditionId": "c2"}]})
+
+        client = self._client_with(handler)
+        try:
+            result = client.get_user_sponsored_markets()
+            assert isinstance(result, UserSponsoredMarkets)
+            assert result.markets == [{"conditionId": "c1"}, {"conditionId": "c2"}]
+        finally:
+            client.close()
+
+    def test_get_user_sponsored_markets_empty(self):
+        def handler(request):
+            return httpx.Response(200, json={"markets": []})
+
+        client = self._client_with(handler)
+        try:
+            result = client.get_user_sponsored_markets()
+            assert isinstance(result, UserSponsoredMarkets)
+            assert result.markets == []
+        finally:
+            client.close()
+
+    def test_get_rewards_sponsor_url_returns_model(self):
+        def handler(request):
+            assert request.method == "GET"
+            assert request.url.path == "/api/v1/rewards/sponsor-url/market-xyz"
+            return httpx.Response(200, json={"url": "https://polymarket.com/sponsor/m-xyz"})
+
+        client = self._client_with(handler)
+        try:
+            result = client.get_rewards_sponsor_url("market-xyz")
+            assert isinstance(result, RewardsSponsorUrl)
+            assert result.url == "https://polymarket.com/sponsor/m-xyz"
+        finally:
+            client.close()
+
+    def test_get_rewards_sponsor_url_encodes_market_id(self):
+        captured = {}
+
+        def handler(request):
+            captured["raw_path"] = request.url.raw_path
+            return httpx.Response(200, json={"url": ""})
+
+        client = self._client_with(handler)
+        try:
+            client.get_rewards_sponsor_url("market/with/slashes")
+            assert captured["raw_path"] == b"/api/v1/rewards/sponsor-url/market%2Fwith%2Fslashes"
+        finally:
+            client.close()
