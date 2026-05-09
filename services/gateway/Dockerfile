@@ -19,7 +19,7 @@ FROM node:24-alpine AS user-app-builder
 
 WORKDIR /build
 
-RUN npm install -g pnpm@9.0.0
+RUN npm install -g pnpm@9.15.9
 
 # Install deps (only the packages needed for user-app)
 COPY package.json pnpm-workspace.yaml pnpm-lock.yaml turbo.json ./
@@ -44,7 +44,7 @@ FROM node:24-alpine AS admin-app-builder
 
 WORKDIR /build
 
-RUN npm install -g pnpm@9.0.0
+RUN npm install -g pnpm@9.15.9
 
 COPY package.json pnpm-workspace.yaml pnpm-lock.yaml turbo.json ./
 COPY apps/admin-app/package.json ./apps/admin-app/
@@ -70,7 +70,7 @@ FROM node:24-alpine AS landing-builder
 
 WORKDIR /build
 
-RUN npm install -g pnpm@9.0.0
+RUN npm install -g pnpm@9.15.9
 
 COPY package.json pnpm-workspace.yaml pnpm-lock.yaml turbo.json tsconfig.json ./
 COPY apps/landing/package.json ./apps/landing/

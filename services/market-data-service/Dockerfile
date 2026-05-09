@@ -3,7 +3,7 @@ FROM node:24-alpine AS builder
 
 WORKDIR /app
 
-RUN npm install -g pnpm@9.0.0 && \
+RUN npm install -g pnpm@9.15.9 && \
     npm install -g typescript@5.9.3
 
 # Workspace manifests
@@ -55,7 +55,7 @@ FROM node:24-alpine
 
 WORKDIR /app
 
-RUN npm install -g pnpm@9.0.0
+RUN npm install -g pnpm@9.15.9
 
 COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
 COPY packages/shared-db/package.json      ./packages/shared-db/

@@ -5,7 +5,7 @@ WORKDIR /app
 
 RUN apt-get update && apt-get install -y --no-install-recommends python3 make g++ && \
     rm -rf /var/lib/apt/lists/* && \
-    npm install -g pnpm@9.0.0 && \
+    npm install -g pnpm@9.15.9 && \
     npm install -g typescript@5.9.3
 
 COPY package.json pnpm-workspace.yaml pnpm-lock.yaml turbo.json tsconfig.json ./
@@ -53,7 +53,7 @@ FROM node:24-alpine
 
 WORKDIR /app
 
-RUN npm install -g pnpm@9.0.0
+RUN npm install -g pnpm@9.15.9
 
 COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
 COPY packages/shared-db/package.json             ./packages/shared-db/
