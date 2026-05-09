@@ -20,7 +20,7 @@ export class CreateAdminDto {
   @IsString()
   @MinLength(8)
   @MaxLength(100)
-  @Matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d])/, {
+  @Matches(/^(?=.{8,100}$)(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).*$/, {
     message:
       "password must contain at least one uppercase letter, one lowercase letter, one digit, and one special character",
   })

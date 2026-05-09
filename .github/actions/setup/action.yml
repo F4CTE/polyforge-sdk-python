@@ -25,19 +25,27 @@ runs:
       shell: bash
       run: |
         pnpm config set store-dir "$RUNNER_TEMP/pnpm-store" --location=project
-        mkdir -p "$(pnpm store path --silent)"
+        STORE="$(pnpm store path --silent)"
+        mkdir -p "$STORE"
+        echo "PNPM_STORE_PATH=$STORE" >> "$GITHUB_ENV"
 
     - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
       with:
         node-version: ${{ inputs.node-version }}
-        cache: pnpm
+
+    - uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684
+      with:
+        path: ${{ env.PNPM_STORE_PATH }}
+        key: ${{ runner.os }}-pnpm-store-${{ hashFiles('pnpm-lock.yaml') }}
+        restore-keys: |
+          ${{ runner.os }}-pnpm-store-
 
     - name: Install dependencies
       shell: bash
       run: |
         pnpm install --frozen-lockfile || {
           echo "::warning::pnpm install failed, clearing corrupted store and retrying..."
-          rm -rf "$(pnpm store path 2>/dev/null)"
+          rm -rf "$PNPM_STORE_PATH"/*
           pnpm install --frozen-lockfile
         }
 
@@ -59,4 +67,4 @@ runs:
 
     - name: Ensure pnpm cache store exists for post-cache
       shell: bash
-      run: mkdir -p "$(pnpm store path --silent)"
+      run: mkdir -p "$PNPM_STORE_PATH"

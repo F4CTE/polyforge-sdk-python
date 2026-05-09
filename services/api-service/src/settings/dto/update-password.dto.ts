@@ -9,7 +9,7 @@ export class UpdatePasswordDto {
   @IsString()
   @MinLength(8)
   @MaxLength(100)
-  @Matches(/(?=.*[A-Z])(?=.*[a-z])(?=.*\d)/, {
+  @Matches(/^(?=.{8,100}$)(?=.*[A-Z])(?=.*[a-z])(?=.*\d).*$/, {
     message:
       "Password must contain at least 1 uppercase, 1 lowercase, and 1 digit",
   })

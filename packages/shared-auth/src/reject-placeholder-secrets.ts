@@ -19,8 +19,14 @@ const PLACEHOLDER_PREFIXES = [
 const ALL_ZEROS_64 =
   "0000000000000000000000000000000000000000000000000000000000000000";
 
+const KNOWN_BAD_VALUES = new Set([
+  "a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2",
+  "b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3",
+]);
+
 function isPlaceholder(value: string): boolean {
   if (value === ALL_ZEROS_64) return true;
+  if (KNOWN_BAD_VALUES.has(value.trim().toLowerCase())) return true;
   return PLACEHOLDER_PREFIXES.some((prefix) => value.startsWith(prefix));
 }
 

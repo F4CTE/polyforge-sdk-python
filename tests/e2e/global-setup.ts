@@ -34,13 +34,17 @@ export default async function globalSetup() {
   try {
     const { execSync, execFileSync } = await import('child_process');
 
-    const REDIS_PASS = process.env.REDIS_PASSWORD ?? '53AoI9w0LIRVXT39Scyy5oNlNDplxABr';
+    const REDIS_PASS = process.env.REDIS_PASSWORD;
 
-    // Disable invite-only mode (SET to 'false' so the env-var fallback is overridden)
-    execFileSync('docker', [
-      'exec', 'polyforge-dev-redis-1',
-      'redis-cli', '-a', REDIS_PASS, 'SET', 'config:invite_only', 'false',
-    ], { stdio: 'ignore', timeout: 5000 });
+    if (REDIS_PASS) {
+      // Disable invite-only mode (SET to 'false' so the env-var fallback is overridden)
+      execFileSync('docker', [
+        'exec', 'polyforge-dev-redis-1',
+        'redis-cli', '-a', REDIS_PASS, 'SET', 'config:invite_only', 'false',
+      ], { stdio: 'ignore', timeout: 5000 });
+    } else {
+      console.warn('[E2E setup] REDIS_PASSWORD is not set; skipping Redis invite cleanup');
+    }
 
     // Approve ALL seed users — safety net in case the seed's updateMany didn't run
     // or the approved column was reset by a migration/rebuild.
@@ -52,16 +56,18 @@ export default async function globalSetup() {
     // Flush all throttle counters so E2E tests don't hit rate limits.
     // Keys use the format {<hash>:default}:hits and {<hash>:default}:blocked
     // as created by @nest-lab/throttler-storage-redis v1.x.
-    const throttleKeys = execFileSync('docker', [
-      'exec', 'polyforge-dev-redis-1',
-      'redis-cli', '-a', REDIS_PASS, '--scan', '--pattern', '*:default}:*',
-    ], { timeout: 5000 }).toString().trim().split('\n').filter(Boolean);
-
-    if (throttleKeys.length > 0) {
-      execFileSync('docker', [
+    if (REDIS_PASS) {
+      const throttleKeys = execFileSync('docker', [
         'exec', 'polyforge-dev-redis-1',
-        'redis-cli', '-a', REDIS_PASS, 'DEL', ...throttleKeys,
-      ], { stdio: 'ignore', timeout: 5000 });
+        'redis-cli', '-a', REDIS_PASS, '--scan', '--pattern', '*:default}:*',
+      ], { timeout: 5000 }).toString().trim().split('\n').filter(Boolean);
+
+      if (throttleKeys.length > 0) {
+        execFileSync('docker', [
+          'exec', 'polyforge-dev-redis-1',
+          'redis-cli', '-a', REDIS_PASS, 'DEL', ...throttleKeys,
+        ], { stdio: 'ignore', timeout: 5000 });
+      }
     }
   } catch {
     // Fallback: if Docker is not accessible, skip
