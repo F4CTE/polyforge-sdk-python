@@ -1781,6 +1781,7 @@ class CorrelationCategoriesReport:
 
 
 @dataclass
+@dataclass
 class JournalEntry:
     """A row in the journal page (orders annotated with a mood).
 
@@ -1828,6 +1829,7 @@ class SystemHealthAuthenticated:
     redis: dict[str, Any] | None = None
     queue_depth: int | None = None
     services: dict[str, Any] | None = None
+
 
 # ---------------------------------------------------------------------------
 # GDPR Personal Data Export
