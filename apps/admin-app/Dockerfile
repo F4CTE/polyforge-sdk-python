@@ -11,7 +11,8 @@ COPY packages/ui/package.json packages/ui/
 COPY packages/api-client/package.json packages/api-client/
 COPY apps/admin-app/package.json apps/admin-app/
 
-RUN pnpm install --frozen-lockfile
+RUN pnpm config set store-dir /tmp/pnpm-store && \
+    pnpm install --frozen-lockfile
 
 # Copy source
 COPY packages/ui/ packages/ui/

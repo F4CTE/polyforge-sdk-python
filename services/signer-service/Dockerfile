@@ -32,6 +32,7 @@ COPY packages/polyforge-crypto-native/package.json ./packages/polyforge-crypto-n
 COPY services/signer-service/package.json ./services/signer-service/
 
 RUN echo "shamefully-hoist=true" > .npmrc && \
+    pnpm config set store-dir /tmp/pnpm-store && \
     pnpm install \
     --filter @polyforge/shared-db \
     --filter @polyforge/shared-redis \
@@ -80,6 +81,7 @@ COPY packages/shared-auth/package.json    ./packages/shared-auth/
 COPY services/signer-service/package.json ./services/signer-service/
 
 RUN echo "shamefully-hoist=true" > .npmrc && \
+    pnpm config set store-dir /tmp/pnpm-store && \
     pnpm install --filter @polyforge/signer-service... --frozen-lockfile --prod --ignore-scripts
 
 COPY --from=builder /app/packages/shared-db/dist/        ./packages/shared-db/dist/

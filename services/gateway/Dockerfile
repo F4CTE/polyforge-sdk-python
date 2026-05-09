@@ -26,7 +26,8 @@ COPY package.json pnpm-workspace.yaml pnpm-lock.yaml turbo.json ./
 COPY apps/user-app/package.json ./apps/user-app/
 COPY packages/shared-types/package.json ./packages/shared-types/
 
-RUN pnpm install --filter @polyforge/user-app... --frozen-lockfile
+RUN pnpm config set store-dir /tmp/pnpm-store && \
+    pnpm install --filter @polyforge/user-app... --frozen-lockfile
 
 # Copy source
 COPY apps/user-app/       ./apps/user-app/
@@ -49,7 +50,8 @@ COPY package.json pnpm-workspace.yaml pnpm-lock.yaml turbo.json ./
 COPY apps/admin-app/package.json ./apps/admin-app/
 COPY packages/shared-types/package.json ./packages/shared-types/
 
-RUN pnpm install --filter @polyforge/admin-app... --frozen-lockfile
+RUN pnpm config set store-dir /tmp/pnpm-store && \
+    pnpm install --filter @polyforge/admin-app... --frozen-lockfile
 
 COPY apps/admin-app/        ./apps/admin-app/
 COPY packages/shared-types/ ./packages/shared-types/
@@ -74,7 +76,8 @@ COPY package.json pnpm-workspace.yaml pnpm-lock.yaml turbo.json tsconfig.json ./
 COPY apps/landing/package.json ./apps/landing/
 COPY packages/ui/package.json ./packages/ui/
 
-RUN pnpm install --filter @polyforge/landing... --frozen-lockfile
+RUN pnpm config set store-dir /tmp/pnpm-store && \
+    pnpm install --filter @polyforge/landing... --frozen-lockfile
 
 COPY apps/landing/ ./apps/landing/
 COPY packages/ui/  ./packages/ui/

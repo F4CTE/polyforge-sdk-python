@@ -18,6 +18,7 @@ COPY packages/logger/package.json                ./packages/logger/
 COPY services/admin-auth-service/package.json    ./services/admin-auth-service/
 
 RUN echo "shamefully-hoist=true" > .npmrc && \
+    pnpm config set store-dir /tmp/pnpm-store && \
     pnpm install \
     --filter @polyforge/shared-db \
     --filter @polyforge/shared-redis \
@@ -63,6 +64,7 @@ COPY packages/logger/package.json                ./packages/logger/
 COPY services/admin-auth-service/package.json    ./services/admin-auth-service/
 
 RUN echo "shamefully-hoist=true" > .npmrc && \
+    pnpm config set store-dir /tmp/pnpm-store && \
     pnpm install --filter @polyforge/admin-auth-service... --frozen-lockfile --prod --ignore-scripts
 
 COPY --from=builder /app/packages/shared-db/dist/          ./packages/shared-db/dist/

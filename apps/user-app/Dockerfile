@@ -12,7 +12,8 @@ COPY packages/api-client/package.json packages/api-client/
 COPY packages/shared-types/package.json packages/shared-types/
 COPY apps/user-app/package.json apps/user-app/
 
-RUN pnpm install --frozen-lockfile
+RUN pnpm config set store-dir /tmp/pnpm-store && \
+    pnpm install --frozen-lockfile
 
 # Copy source
 COPY packages/ui/ packages/ui/
