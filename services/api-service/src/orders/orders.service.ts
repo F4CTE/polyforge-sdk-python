@@ -24,7 +24,13 @@ import { PlaceOrderDto } from "./dto/place-order.dto";
 import { RedeemPositionDto } from "./dto/redeem-position.dto";
 import { RedeemPositionResponseDto } from "./dto/redeem-position-response.dto";
 import { randomUUID } from "crypto";
-import { OrderStatus, ResolutionStatus } from "@prisma/client";
+import {
+  OrderSide,
+  OrderType,
+  OrderStatus,
+  ResolutionStatus,
+  Prisma,
+} from "@prisma/client";
 
 export interface OrderQueryDto extends PaginationDto {
   status?: string;
@@ -33,6 +39,12 @@ export interface OrderQueryDto extends PaginationDto {
   from?: string;
   to?: string;
 }
+
+type CancelledOrderRow = {
+  id: string;
+  status: OrderStatus;
+  clobOrderId: string | null;
+};
 
 @Injectable()
 export class OrdersService {
@@ -422,48 +434,113 @@ export class OrdersService {
       });
     }
 
-    const cancelled: string[] = [];
-    const errors: Array<{ orderId: string; reason: string }> = [];
+    const requestedOrderIds = [...new Set(dto.orderIds)];
+    const cancellableStatuses = [
+      OrderStatus.PENDING,
+      OrderStatus.SUBMITTED,
+      OrderStatus.LIVE,
+    ];
+    const cancellableStatusSet = new Set<OrderStatus>(cancellableStatuses);
 
-    for (const orderId of dto.orderIds) {
-      try {
-        const order = await this.prisma.order.findUnique({
-          where: { id: orderId },
+    const preloadedOrders = await this.prisma.order.findMany({
+      where: { id: { in: requestedOrderIds } },
+      select: { id: true, status: true, clobOrderId: true, userId: true },
+    });
+    const preloadedById = new Map(
+      preloadedOrders.map((order) => [order.id, order]),
+    );
+    const cancellableOrderIds = preloadedOrders
+      .filter(
+        (order) =>
+          order.userId === userId && cancellableStatusSet.has(order.status),
+      )
+      .map((order) => order.id);
+
+    const transitionedOrders =
+      cancellableOrderIds.length > 0
+        ? await this.prisma.$queryRaw<CancelledOrderRow[]>(
+            Prisma.sql`
+              UPDATE "orders"
+              SET "status" = ${OrderStatus.CANCELLED}::"OrderStatus"
+              WHERE "id" IN (${Prisma.join(cancellableOrderIds)})
+                AND "userId" = ${userId}
+                AND "status" IN (${Prisma.join(
+                  cancellableStatuses.map(
+                    (status) => Prisma.sql`${status}::"OrderStatus"`,
+                  ),
+                )})
+              RETURNING "id", "status", "clobOrderId"
+            `,
+          )
+        : [];
+    const transitionedById = new Map(
+      transitionedOrders.map((order) => [order.id, order]),
+    );
+
+    const skippedCancellableIds = cancellableOrderIds.filter(
+      (orderId) => !transitionedById.has(orderId),
+    );
+
+    let skippedById = new Map<string, { id: string; status: OrderStatus }>();
+    try {
+      if (skippedCancellableIds.length > 0) {
+        const skippedOrders = await this.prisma.order.findMany({
+          where: { id: { in: skippedCancellableIds }, userId },
+          select: { id: true, status: true },
         });
+        skippedById = new Map(skippedOrders.map((order) => [order.id, order]));
+      }
+    } catch {
+      // skippedById stays empty Map on error; cancellations already persisted
+    }
 
-        if (!order) {
-          errors.push({ orderId, reason: "NOT_FOUND" });
-          continue;
-        }
-        if (order.userId !== userId) {
-          errors.push({ orderId, reason: "FORBIDDEN" });
-          continue;
-        }
-        if (!["PENDING", "SUBMITTED", "LIVE"].includes(order.status)) {
-          errors.push({ orderId, reason: `NOT_CANCELLABLE_${order.status}` });
-          continue;
-        }
+    const errorsById = new Map<string, string>();
 
-        await this.prisma.order.update({
-          where: { id: orderId },
-          data: { status: OrderStatus.CANCELLED },
-        });
-
-        if (order.clobOrderId) {
-          await this.redis.xadd("stream:cancellations", {
-            orderId,
-            clobOrderId: order.clobOrderId,
-            userId,
-          });
-        }
-
-        cancelled.push(orderId);
-      } catch {
-        errors.push({ orderId, reason: "INTERNAL_ERROR" });
+    for (const orderId of requestedOrderIds) {
+      const order = preloadedById.get(orderId);
+      if (!order) {
+        errorsById.set(orderId, "NOT_FOUND");
+      } else if (order.userId !== userId) {
+        errorsById.set(orderId, "FORBIDDEN");
+      } else if (!cancellableStatusSet.has(order.status)) {
+        errorsById.set(orderId, `NOT_CANCELLABLE_${order.status}`);
       }
     }
 
-    return { cancelled, errors };
+    for (const orderId of skippedCancellableIds) {
+      const order = skippedById.get(orderId);
+      if (order) {
+        errorsById.set(orderId, `NOT_CANCELLABLE_${order.status}`);
+      } else {
+        errorsById.set(orderId, "INTERNAL_ERROR");
+      }
+    }
+
+    for (const order of transitionedOrders) {
+      if (order.clobOrderId) {
+        try {
+          await this.redis.xadd("stream:cancellations", {
+            orderId: order.id,
+            clobOrderId: order.clobOrderId,
+            userId,
+          });
+        } catch {
+          errorsById.set(order.id, "INTERNAL_ERROR");
+        }
+      }
+    }
+
+    return {
+      cancelled: requestedOrderIds.filter(
+        (orderId) => transitionedById.has(orderId) && !errorsById.has(orderId),
+      ),
+      errors: requestedOrderIds
+        .filter((orderId) => errorsById.has(orderId))
+        .map((orderId) => ({
+          orderId,
+          reason: errorsById.get(orderId)!,
+        })),
+    };
   }
 
   async placeOrder(userId: string, dto: PlaceOrderDto) {
@@ -478,7 +555,7 @@ export class OrdersService {
       });
     }
     if ((user as any).country === "US" && (user as any).polymarketUsConnected) {
-      assertCurrentUsRailTermsAccepted(user as any);
+      assertCurrentUsRailTermsAccepted(user);
     }
 
     // 2a. Enforce max position size per order

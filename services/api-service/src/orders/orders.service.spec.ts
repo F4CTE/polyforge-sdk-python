@@ -97,8 +97,8 @@ describe("OrdersService", () => {
       capture: vi.fn(),
       identify: vi.fn(),
     } as unknown as PosthogService;
-    db.position.updateMany.mockResolvedValue({ count: 1 } as any);
-    db.order.updateMany.mockResolvedValue({ count: 1 } as any);
+    db.position.updateMany.mockResolvedValue({ count: 1 });
+    db.order.updateMany.mockResolvedValue({ count: 1 });
     db.order.findUnique.mockResolvedValue(
       makeOrder({ clobOrderId: null }) as any,
     );
@@ -121,7 +121,7 @@ describe("OrdersService", () => {
         { id: "market-uuid-1", title: "Test Market", category: "crypto" },
       ] as any);
 
-      const result = await service.list("user-uuid-1", makeOrderQuery() as any);
+      const result = await service.list("user-uuid-1", makeOrderQuery());
 
       expect(result.data).toHaveLength(1);
       expect(result.data[0]).toMatchObject({
@@ -138,7 +138,7 @@ describe("OrdersService", () => {
       db.order.findMany.mockResolvedValue([]);
       db.order.count.mockResolvedValue(0);
 
-      await service.list("user-uuid-99", makeOrderQuery() as any);
+      await service.list("user-uuid-99", makeOrderQuery());
 
       const whereArg = db.order.findMany.mock.calls[0][0]?.where;
       expect(whereArg).toHaveProperty("userId", "user-uuid-99");
@@ -148,10 +148,7 @@ describe("OrdersService", () => {
       db.order.findMany.mockResolvedValue([]);
       db.order.count.mockResolvedValue(0);
 
-      await service.list(
-        "user-uuid-1",
-        makeOrderQuery({ status: "FILLED" }) as any,
-      );
+      await service.list("user-uuid-1", makeOrderQuery({ status: "FILLED" }));
 
       const whereArg = db.order.findMany.mock.calls[0][0]?.where;
       expect(whereArg).toHaveProperty("status", "FILLED");
@@ -163,7 +160,7 @@ describe("OrdersService", () => {
 
       await service.list(
         "user-uuid-1",
-        makeOrderQuery({ strategyId: "strategy-abc" }) as any,
+        makeOrderQuery({ strategyId: "strategy-abc" }),
       );
 
       const whereArg = db.order.findMany.mock.calls[0][0]?.where;
@@ -176,7 +173,7 @@ describe("OrdersService", () => {
 
       await service.list(
         "user-uuid-1",
-        makeOrderQuery({ from: "2025-01-01T00:00:00.000Z" }) as any,
+        makeOrderQuery({ from: "2025-01-01T00:00:00.000Z" }),
       );
 
       const whereArg = db.order.findMany.mock.calls[0][0]?.where;
@@ -191,7 +188,7 @@ describe("OrdersService", () => {
 
       await service.list(
         "user-uuid-1",
-        makeOrderQuery({ to: "2025-12-31T23:59:59.000Z" }) as any,
+        makeOrderQuery({ to: "2025-12-31T23:59:59.000Z" }),
       );
 
       const whereArg = db.order.findMany.mock.calls[0][0]?.where;
@@ -209,7 +206,7 @@ describe("OrdersService", () => {
         makeOrderQuery({
           from: "2025-01-01T00:00:00.000Z",
           to: "2025-06-30T00:00:00.000Z",
-        }) as any,
+        }),
       );
 
       const whereArg = db.order.findMany.mock.calls[0][0]?.where;
@@ -221,7 +218,7 @@ describe("OrdersService", () => {
       db.order.findMany.mockResolvedValue([]);
       db.order.count.mockResolvedValue(0);
 
-      await service.list("user-uuid-1", makeOrderQuery() as any);
+      await service.list("user-uuid-1", makeOrderQuery());
 
       const whereArg = db.order.findMany.mock.calls[0][0]?.where;
       expect(whereArg).not.toHaveProperty("createdAt");
@@ -231,7 +228,7 @@ describe("OrdersService", () => {
       db.order.findMany.mockResolvedValue([]);
       db.order.count.mockResolvedValue(0);
 
-      await service.list("user-uuid-1", makeOrderQuery() as any);
+      await service.list("user-uuid-1", makeOrderQuery());
 
       expect(db.order.findMany).toHaveBeenCalledWith(
         expect.objectContaining({ orderBy: { createdAt: "desc" } }),
@@ -242,10 +239,7 @@ describe("OrdersService", () => {
       db.order.findMany.mockResolvedValue([]);
       db.order.count.mockResolvedValue(0);
 
-      await service.list(
-        "user-uuid-1",
-        makeOrderQuery({ page: 2, limit: 10 }) as any,
-      );
+      await service.list("user-uuid-1", makeOrderQuery({ page: 2, limit: 10 }));
 
       expect(db.order.findMany).toHaveBeenCalledWith(
         expect.objectContaining({ skip: 10, take: 10 }),
@@ -264,7 +258,7 @@ describe("OrdersService", () => {
 
       const result = await service.closePosition(
         "user-uuid-1",
-        makeClosePositionDto() as any,
+        makeClosePositionDto(),
       );
 
       expect(result.status).toBe("PENDING");
@@ -327,7 +321,7 @@ describe("OrdersService", () => {
       db.user.findUnique.mockResolvedValue(makeUser() as any);
       db.position.findFirst.mockResolvedValue(makePosition() as any);
 
-      await service.closePosition("user-uuid-1", makeClosePositionDto() as any);
+      await service.closePosition("user-uuid-1", makeClosePositionDto());
 
       expect(redis.xadd).toHaveBeenCalledWith(
         "stream:orders",
@@ -345,7 +339,7 @@ describe("OrdersService", () => {
       db.user.findUnique.mockResolvedValue(makeUser() as any);
       db.position.findFirst.mockResolvedValue(position as any);
 
-      await service.closePosition("user-uuid-1", makeClosePositionDto() as any);
+      await service.closePosition("user-uuid-1", makeClosePositionDto());
 
       const streamPayload = (redis.xadd as ReturnType<typeof vi.fn>).mock
         .calls[0][1];
@@ -358,7 +352,7 @@ describe("OrdersService", () => {
 
       await service.closePosition(
         "user-uuid-1",
-        makeClosePositionDto({ size: "25.00" }) as any,
+        makeClosePositionDto({ size: "25.00" }),
       );
 
       const streamPayload = (redis.xadd as ReturnType<typeof vi.fn>).mock
@@ -370,7 +364,7 @@ describe("OrdersService", () => {
       db.user.findUnique.mockResolvedValue(makeUser() as any);
       db.position.findFirst.mockResolvedValue(makePosition() as any);
 
-      await service.closePosition("user-uuid-1", makeClosePositionDto() as any);
+      await service.closePosition("user-uuid-1", makeClosePositionDto());
 
       expect(redis.xadd).toHaveBeenCalledWith(
         "stream:orders",
@@ -386,7 +380,7 @@ describe("OrdersService", () => {
       db.user.findUnique.mockResolvedValue(makeUser() as any);
       db.position.findFirst.mockResolvedValue(makePosition() as any);
 
-      await service.closePosition("user-uuid-1", makeClosePositionDto() as any);
+      await service.closePosition("user-uuid-1", makeClosePositionDto());
 
       expect(db.position.findFirst).toHaveBeenCalledWith({
         where: {
@@ -403,12 +397,12 @@ describe("OrdersService", () => {
 
       const result1 = await service.closePosition(
         "user-uuid-1",
-        makeClosePositionDto() as any,
+        makeClosePositionDto(),
       );
 
       const result2 = await service.closePosition(
         "user-uuid-1",
-        makeClosePositionDto() as any,
+        makeClosePositionDto(),
       );
 
       // intentIds are generated as UUIDs — both should be UUID-like strings
@@ -707,7 +701,7 @@ describe("OrdersService", () => {
     });
 
     it("throws ForbiddenException when cancelling another user's order", async () => {
-      db.order.updateMany.mockResolvedValue({ count: 0 } as any);
+      db.order.updateMany.mockResolvedValue({ count: 0 });
       db.order.findUnique.mockResolvedValue(
         makeOrder({ userId: "other-user" }) as any,
       );
@@ -718,7 +712,7 @@ describe("OrdersService", () => {
     });
 
     it("throws ConflictException for FILLED order", async () => {
-      db.order.updateMany.mockResolvedValue({ count: 0 } as any);
+      db.order.updateMany.mockResolvedValue({ count: 0 });
       db.order.findUnique.mockResolvedValue(
         makeOrder({ status: "FILLED" }) as any,
       );
@@ -729,7 +723,7 @@ describe("OrdersService", () => {
     });
 
     it("throws ConflictException for CANCELLED order", async () => {
-      db.order.updateMany.mockResolvedValue({ count: 0 } as any);
+      db.order.updateMany.mockResolvedValue({ count: 0 });
       db.order.findUnique.mockResolvedValue(
         makeOrder({ status: "CANCELLED" }) as any,
       );
@@ -792,6 +786,177 @@ describe("OrdersService", () => {
     });
   });
 
+  describe("cancelBulk", () => {
+    it("preloads requested orders and cancels them with one guarded update", async () => {
+      db.order.findMany.mockResolvedValueOnce([
+        makeOrder({
+          id: "order-uuid-1",
+          status: "PENDING",
+          clobOrderId: "clob-1",
+        }),
+        makeOrder({
+          id: "order-uuid-2",
+          status: "LIVE",
+          clobOrderId: null,
+        }),
+        makeOrder({
+          id: "order-uuid-3",
+          status: "FILLED",
+          clobOrderId: "clob-3",
+        }),
+      ] as any);
+      db.$queryRaw.mockResolvedValueOnce([
+        {
+          id: "order-uuid-1",
+          status: "CANCELLED",
+          clobOrderId: "clob-1",
+        },
+        {
+          id: "order-uuid-2",
+          status: "CANCELLED",
+          clobOrderId: null,
+        },
+      ]);
+
+      const result = await service.cancelBulk("user-uuid-1", {
+        orderIds: ["order-uuid-1", "order-uuid-2", "order-uuid-3"],
+      });
+
+      expect(result).toEqual({
+        cancelled: ["order-uuid-1", "order-uuid-2"],
+        errors: [
+          {
+            orderId: "order-uuid-3",
+            reason: "NOT_CANCELLABLE_FILLED",
+          },
+        ],
+      });
+      expect(db.order.findMany).toHaveBeenCalledWith({
+        where: {
+          id: { in: ["order-uuid-1", "order-uuid-2", "order-uuid-3"] },
+        },
+        select: { id: true, status: true, clobOrderId: true, userId: true },
+      });
+      expect(db.$queryRaw).toHaveBeenCalledOnce();
+      const rawUpdate = db.$queryRaw.mock.calls[0][0] as {
+        strings?: string[];
+      };
+      expect(rawUpdate.strings?.join(" ")).toContain('UPDATE "orders"');
+      expect(rawUpdate.strings?.join(" ")).toContain("RETURNING");
+      expect(db.order.findUnique).not.toHaveBeenCalled();
+      expect(db.order.update).not.toHaveBeenCalled();
+      expect(redis.xadd).toHaveBeenCalledOnce();
+      expect(redis.xadd).toHaveBeenCalledWith("stream:cancellations", {
+        orderId: "order-uuid-1",
+        clobOrderId: "clob-1",
+        userId: "user-uuid-1",
+      });
+    });
+
+    it("reports raced rows from the guarded update without publishing them", async () => {
+      db.order.findMany
+        .mockResolvedValueOnce([
+          makeOrder({
+            id: "order-uuid-1",
+            status: "PENDING",
+            clobOrderId: "clob-1",
+          }),
+          makeOrder({
+            id: "order-uuid-2",
+            status: "LIVE",
+            clobOrderId: "clob-2",
+          }),
+        ] as any)
+        .mockResolvedValueOnce([
+          makeOrder({
+            id: "order-uuid-2",
+            status: "MATCHED",
+            clobOrderId: "clob-2",
+          }),
+        ] as any);
+      db.$queryRaw.mockResolvedValueOnce([
+        {
+          id: "order-uuid-1",
+          status: "CANCELLED",
+          clobOrderId: "clob-1",
+        },
+      ]);
+
+      const result = await service.cancelBulk("user-uuid-1", {
+        orderIds: ["order-uuid-1", "order-uuid-2"],
+      });
+
+      expect(result).toEqual({
+        cancelled: ["order-uuid-1"],
+        errors: [
+          {
+            orderId: "order-uuid-2",
+            reason: "NOT_CANCELLABLE_MATCHED",
+          },
+        ],
+      });
+      expect(db.order.findMany).toHaveBeenNthCalledWith(2, {
+        where: { id: { in: ["order-uuid-2"] }, userId: "user-uuid-1" },
+        select: { id: true, status: true },
+      });
+      expect(redis.xadd).toHaveBeenCalledOnce();
+      expect(redis.xadd).not.toHaveBeenCalledWith(
+        "stream:cancellations",
+        expect.objectContaining({ orderId: "order-uuid-2" }),
+      );
+    });
+
+    it("does not issue per-order reads for missing scoped order ids", async () => {
+      db.order.findMany.mockResolvedValueOnce([]);
+
+      const result = await service.cancelBulk("user-uuid-1", {
+        orderIds: ["missing-1", "missing-2"],
+      });
+
+      expect(result).toEqual({
+        cancelled: [],
+        errors: [
+          { orderId: "missing-1", reason: "NOT_FOUND" },
+          { orderId: "missing-2", reason: "NOT_FOUND" },
+        ],
+      });
+      expect(db.$queryRaw).not.toHaveBeenCalled();
+      expect(db.order.findUnique).not.toHaveBeenCalled();
+      expect(db.order.findMany).toHaveBeenCalledOnce();
+    });
+
+    it("reports FORBIDDEN for out-of-scope order IDs", async () => {
+      db.order.findMany.mockResolvedValueOnce([
+        makeOrder({
+          id: "order-uuid-1",
+          status: "PENDING",
+          userId: "other-user-uuid",
+        }),
+        makeOrder({
+          id: "order-uuid-2",
+          status: "PENDING",
+        }),
+      ] as any);
+      db.$queryRaw.mockResolvedValueOnce([
+        {
+          id: "order-uuid-2",
+          status: "CANCELLED",
+          clobOrderId: null,
+        },
+      ]);
+
+      const result = await service.cancelBulk("user-uuid-1", {
+        orderIds: ["order-uuid-1", "order-uuid-2"],
+      });
+
+      expect(result).toEqual({
+        cancelled: ["order-uuid-2"],
+        errors: [{ orderId: "order-uuid-1", reason: "FORBIDDEN" }],
+      });
+      expect(db.$queryRaw).toHaveBeenCalledOnce();
+    });
+  });
+
   // ── redeemPosition ───────────────────────────────────────────────────────
 
   describe("redeemPosition", () => {
@@ -809,7 +974,7 @@ describe("OrdersService", () => {
 
       const result = await service.redeemPosition("user-uuid-1", {
         positionId: "position-uuid-1",
-      } as any);
+      });
 
       expect(result.status).toBe("REDEEMED");
       expect(result.positionId).toBe("position-uuid-1");
@@ -885,7 +1050,7 @@ describe("OrdersService", () => {
 
       await service.redeemPosition("user-uuid-1", {
         positionId: "position-uuid-1",
-      } as any);
+      });
 
       expect(redis.xadd).toHaveBeenCalledWith(
         "stream:redemptions",
@@ -904,7 +1069,7 @@ describe("OrdersService", () => {
 
       await service.redeemPosition("user-uuid-1", {
         positionId: "position-uuid-1",
-      } as any);
+      });
 
       expect(db.position.update).toHaveBeenCalledWith({
         where: { id: "position-uuid-1" },
@@ -919,7 +1084,7 @@ describe("OrdersService", () => {
 
       await service.redeemPosition("user-uuid-1", {
         marketId: "market-uuid-1",
-      } as any);
+      });
 
       expect(db.position.findFirst).toHaveBeenCalledWith({
         where: expect.objectContaining({
@@ -1009,7 +1174,7 @@ describe("OrdersService", () => {
 
       await service.list(
         "user-uuid-1",
-        makeOrderQuery({ status: "PENDING,FILLED" }) as any,
+        makeOrderQuery({ status: "PENDING,FILLED" }),
       );
 
       const whereArg = db.order.findMany.mock.calls[0][0]?.where;
@@ -1022,7 +1187,7 @@ describe("OrdersService", () => {
 
       await service.list(
         "user-uuid-1",
-        makeOrderQuery({ marketId: "market-xyz" }) as any,
+        makeOrderQuery({ marketId: "market-xyz" }),
       );
 
       const whereArg = db.order.findMany.mock.calls[0][0]?.where;
@@ -1033,7 +1198,7 @@ describe("OrdersService", () => {
       db.order.findMany.mockResolvedValue([]);
       db.order.count.mockResolvedValue(0);
 
-      await service.list("user-uuid-1", makeOrderQuery() as any);
+      await service.list("user-uuid-1", makeOrderQuery());
 
       // market.findMany should NOT be called since there are no marketIds
       expect(db.market.findMany).not.toHaveBeenCalled();
@@ -1043,9 +1208,9 @@ describe("OrdersService", () => {
       const orders = [makeOrder({ marketId: "unknown-market" })];
       db.order.findMany.mockResolvedValue(orders as any);
       db.order.count.mockResolvedValue(1);
-      db.market.findMany.mockResolvedValue([] as any);
+      db.market.findMany.mockResolvedValue([]);
 
-      const result = await service.list("user-uuid-1", makeOrderQuery() as any);
+      const result = await service.list("user-uuid-1", makeOrderQuery());
 
       expect(result.data[0].marketQuestion).toBeNull();
       expect(result.data[0].marketCategory).toBeNull();
