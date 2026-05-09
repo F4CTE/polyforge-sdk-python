@@ -95,24 +95,10 @@ class Token:
 
 @dataclass
 class Market:
-    """A prediction market.
-
-    Fields matching the platform response shape (parity with sdk-ts ``Market``
-    interface and sdk-rust ``Market`` struct):
-
-    - ``symbol``: **deprecated** — the platform does not return a top-level
-      ``symbol`` field.  Defaults to ``None``.  Kept for backward compat only.
-    - ``updated_at``: **deprecated** — the platform does not return
-      ``updatedAt`` at the market level.  Defaults to ``None``.
-    - ``description``: optional market description (platform never returns ``null``
-      but the field is optional in the OpenAPI schema).
-    - ``end_date``: ISO 8601 string, may be ``null`` for perpetual/ongoing markets.
-    - ``resolved``: whether the market has been resolved by the oracle.
-    """
+    """A prediction market."""
 
     id: str = ""
     title: str = ""
-    # Deprecated — kept in place for positional constructor compat
     symbol: str = ""
     category: str = ""
     tokens: list[Token] = field(default_factory=list)
@@ -121,11 +107,7 @@ class Market:
     change_24h: float = 0.0
     liquidity: float = 0.0
     created_at: str = ""
-    # Deprecated — kept in place for positional constructor compat
     updated_at: str = ""
-    description: str | None = None
-    end_date: str | None = None
-    resolved: bool = False
 
 
 # ---------------------------------------------------------------------------
@@ -594,20 +576,8 @@ class ArbitrageAlertSubscription:
 # Cross-Venue Arb Execution / Positions / Risk
 # ---------------------------------------------------------------------------
 #
-# Trading-impact surface: ``execute_arb`` and ``close_arb_position`` place
-# real orders on Polymarket and Kalshi. Both endpoints are rate-limited to
-# 5 requests per minute per user (HTTP 429 on exceed). ``close_arb_position``
-# uses sweep semantics: GTC orders priced at extreme tick boundaries
-# (0.001 SELL / 0.999 BUY) behave as market-order sweeps — slippage is
-# bounded only by venue depth, not by the on-paper price.
-#
-# ``match_id`` is UUID-validated server-side. Backend error codes
-# (``VENUES_NOT_CONNECTED``, ``MATCH_NOT_FOUND``, ``COMPARISON_UNAVAILABLE``,
-# ``SPREAD_TOO_LOW``, ``TOKEN_RESOLUTION_FAILED``, ``ARB_POSITION_NOT_FOUND``,
-# ``INVALID_STATUS``) are passed through verbatim via ``PolyforgeError.code``.
-#
 # These models describe the trading-impact-bearing arbitrage execution
-# surface (``POST /api/v1/arbitrage/execute``, the position lifecycle, and
+# surface (`POST /api/v1/arbitrage/execute`, the position lifecycle, and
 # the risk dashboards). Decimal columns from the Prisma backend serialize
 # as strings; we keep them as ``str`` so callers convert with full
 # precision instead of relying on float coercion.
@@ -633,19 +603,7 @@ class ArbExecutionLeg:
 
 @dataclass
 class ArbExecutionResult:
-    """Server response for ``POST /api/v1/arbitrage/execute``.
-
-    On success this opens a new :class:`ArbPosition` in ``OPEN`` state.
-    The position consists of two offsetting legs (buy on one venue, sell
-    on the other) and can later be exited only via a **full sweep-close**
-    using ``POST /api/v1/arbitrage/positions/:id/close``
-    (see :meth:`PolyforgeClient.close_arb_position`). Partial closes are
-    not supported for arbitrage positions.
-
-    Both legs carry optional ``intent_id`` and ``price`` fields; fill
-    confirmation may arrive asynchronously and is available on the full
-    :class:`ArbPosition` record after the orders execute.
-    """
+    """Server response for ``POST /api/v1/arbitrage/execute``."""
 
     arb_position_id: str = ""
     buy_leg: ArbExecutionLeg | None = None
@@ -656,16 +614,11 @@ class ArbExecutionResult:
 
 @dataclass
 class ArbPosition:
-    """A cross-venue arbitrage position (mirrors the Prisma ``ArbPosition`` row).
+    """A cross-venue arbitrage position.
 
-    Created via ``POST /api/v1/arbitrage/execute`` and closed via a **full
-    sweep-close** (``POST /api/v1/arbitrage/positions/:id/close``). The
-    lifecycle is tracked in ``status``: positions start in ``OPEN``,
-    transition through ``CLOSING`` during the sweep, and settle in
-    ``CLOSED`` or ``FAILED``.
-
-    Decimal columns (``buy_price``, ``buy_size``, P&L fields, etc.) arrive
-    as strings when the backend serializes Decimals through JSON.
+    Mirrors the Prisma ``ArbPosition`` row. Decimal columns
+    (``buy_price``, ``buy_size``, P&L fields, etc.) arrive as strings
+    when the backend serializes Decimals through JSON.
     """
 
     id: str = ""
@@ -702,12 +655,7 @@ class ArbPosition:
 
 @dataclass
 class ArbPositionsResponse:
-    """Paginated response for ``GET /api/v1/arbitrage/positions``.
-
-    Each :class:`ArbPosition` tracks the full arbitrage lifecycle
-    (``OPEN`` → ``CLOSING`` → ``CLOSED`` / ``FAILED``). Positions can only
-    be exited via a full sweep-close.
-    """
+    """Paginated response for ``GET /api/v1/arbitrage/positions``."""
 
     positions: list[ArbPosition] = field(default_factory=list)
     total: int = 0
@@ -715,24 +663,7 @@ class ArbPositionsResponse:
 
 @dataclass
 class ArbCloseResponse:
-    """Server response for ``POST /api/v1/arbitrage/positions/:id/close``.
-
-    Returned after a **full sweep-close** of a cross-venue arbitrage
-    position. Both legs (buy and sell) are reversed with market orders
-    placed on the respective venues. The close is always a complete
-    sweep — no partial close is supported for arbitrage positions.
-
-    ``status`` reflects the immediate outcome of the close request:
-
-    - ``CLOSING`` — both reversing market orders were accepted and are
-      being placed; closure completes asynchronously. Poll
-      :meth:`PolyforgeClient.get_arb_position` to wait for the terminal
-      status (``CLOSED`` or ``FAILED``).
-    - ``FAILED`` — one or both reverse orders could not be placed (e.g.
-      insufficient liquidity, venue connectivity issue). This is a
-      **terminal** outcome — the position remains in its prior state and
-      will not transition further without a new close request.
-    """
+    """Server response for ``POST /api/v1/arbitrage/positions/:id/close``."""
 
     status: str = ""
     position_id: str = ""
@@ -1161,10 +1092,8 @@ class StrategyEvent:
     The first event on a new stream always has ``type == "CONNECTED"``.
 
     Common event types:
-        CONNECTED, STRATEGY_STARTED, STRATEGY_STOPPED, STRATEGY_PAUSED,
-        STRATEGY_RESUMED, STRATEGY_ERROR,
-        ORDER_SUBMITTED, ORDER_PLACED, ORDER_PARTIAL, ORDER_FILLED,
-        ORDER_FAILED, ORDER_ERROR, ORDER_CANCELLED,
+        CONNECTED, STRATEGY_STARTED, STRATEGY_STOPPED, STRATEGY_ERROR,
+        ORDER_PLACED, ORDER_FILLED, ORDER_CANCELLED,
         BACKTEST_PROGRESS, BACKTEST_COMPLETED, BACKTEST_FAILED
     """
 
@@ -1172,48 +1101,6 @@ class StrategyEvent:
     strategy_id: str = ""
     data: dict[str, Any] | None = None
     timestamp: int = 0
-
-
-# Known strategy event types mirroring the platform SSE stream.
-StrategyEventType = Literal[
-    "CONNECTED",
-    "STRATEGY_STARTED",
-    "STRATEGY_STOPPED",
-    "STRATEGY_PAUSED",
-    "STRATEGY_RESUMED",
-    "STRATEGY_ERROR",
-    "ORDER_PLACED",
-    "ORDER_SUBMITTED",
-    "ORDER_FILLED",
-    "ORDER_PARTIAL",
-    "ORDER_CANCELLED",
-    "ORDER_FAILED",
-    "ORDER_ERROR",
-    "BACKTEST_PROGRESS",
-    "BACKTEST_COMPLETED",
-    "BACKTEST_FAILED",
-]
-
-KNOWN_STRATEGY_EVENTS: frozenset[str] = frozenset(
-    (
-        "CONNECTED",
-        "STRATEGY_STARTED",
-        "STRATEGY_STOPPED",
-        "STRATEGY_PAUSED",
-        "STRATEGY_RESUMED",
-        "STRATEGY_ERROR",
-        "ORDER_PLACED",
-        "ORDER_SUBMITTED",
-        "ORDER_FILLED",
-        "ORDER_PARTIAL",
-        "ORDER_CANCELLED",
-        "ORDER_FAILED",
-        "ORDER_ERROR",
-        "BACKTEST_PROGRESS",
-        "BACKTEST_COMPLETED",
-        "BACKTEST_FAILED",
-    )
-)
 
 
 # ---------------------------------------------------------------------------
@@ -1348,7 +1235,7 @@ class BulkCancelError:
 
 @dataclass
 class BulkCancelResult:
-    """Response from POST /api/v1/orders/bulk."""
+    """Response from DELETE /api/v1/orders/bulk."""
 
     cancelled: list[str] = field(default_factory=list)
     errors: list[BulkCancelError] = field(default_factory=list)
@@ -1762,39 +1649,6 @@ class CorrelationCategoriesReport:
 
 
 @dataclass
-class JournalEntry:
-    """A row in the journal page (orders annotated with a mood).
-
-    Mirrors the shape returned by ``GET /api/v1/journal``.
-    """
-
-    id: str = ""
-    market_id: str = ""
-    mood: str | None = None
-    note: str | None = None
-    side: str = ""
-    outcome: str = ""
-    price: str = ""
-    size: str = ""
-    status: str = ""
-    created_at: str = ""
-
-
-@dataclass
-class SystemHealthPublic:
-    """Public health response for GET /health (unauthenticated).
-
-    Returns only public status information; operational internals
-    (DB, Redis, queue depth, internal services) are not exposed.
-    """
-
-    status: str = ""
-    service: str | None = None
-    version: str | None = None
-    uptime: float | None = None
-
-
-@dataclass
 class SystemHealthAuthenticated:
     """Authenticated health/status response for GET /api/v1/status.
 
@@ -1809,34 +1663,3 @@ class SystemHealthAuthenticated:
     redis: dict[str, Any] | None = None
     queue_depth: int | None = None
     services: dict[str, Any] | None = None
-
-# ---------------------------------------------------------------------------
-# GDPR Personal Data Export
-# ---------------------------------------------------------------------------
-
-
-@dataclass
-class PersonalDataExportMeta:
-    """Metadata for a personal data export payload."""
-
-    max_records_per_collection: int = 1000
-    collections_truncated: dict[str, int] = field(default_factory=dict)
-
-
-@dataclass
-class PersonalDataExport:
-    """GDPR personal data export response from GET /api/v1/me/export.
-
-    Contains all user data across the platform grouped into sections.
-    Webhook URLs are redacted to hostname only.
-    """
-
-    generated_at: str = ""
-    format_version: str = ""
-    meta: PersonalDataExportMeta | None = None
-    account: dict[str, Any] = field(default_factory=dict)
-    settings: dict[str, Any] = field(default_factory=dict)
-    security: dict[str, Any] = field(default_factory=dict)
-    trading: dict[str, Any] = field(default_factory=dict)
-    communications: dict[str, Any] = field(default_factory=dict)
-    social: dict[str, Any] = field(default_factory=dict)

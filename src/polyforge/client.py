@@ -58,7 +58,6 @@ from polyforge.models import (
     CorrelationCategoriesReport,
     CrossVenueOpportunity,
     FeeMarketMatch,
-    JournalEntry,
     LeaderboardEntry,
     LpPosition,
     Market,
@@ -81,8 +80,6 @@ from polyforge.models import (
     OrderPreviewResponse,
     PaginatedResponse,
     PaperSummary,
-    PersonalDataExport,
-    PersonalDataExportMeta,
     PlaceOrderResponse,
     PlaceSmartOrderResponse,
     PolymarketActivity,
@@ -104,6 +101,7 @@ from polyforge.models import (
     RiskSettings,
     SentimentUserVote,
     SmartOrder,
+    SmartOrderChildOrder,
     SpreadInfo,
     SpreadSummary,
     Strategy,
@@ -112,7 +110,6 @@ from polyforge.models import (
     StrategyStatusResponse,
     StrategyTemplate,
     SystemHealthAuthenticated,
-    SystemHealthPublic,
     TickSizeInfo,
     Token,
     TopTraderEntry,
@@ -152,7 +149,6 @@ T = TypeVar("T")
 
 _FIELD_ALIASES: dict[str, dict[str, str]] = {
     "PriceHistoryEntry": {"time": "timestamp"},
-    "PersonalDataExport": {"_meta": "meta"},
 }
 
 _MODEL_REGISTRY: dict[str, type] = {
@@ -234,7 +230,6 @@ _MODEL_REGISTRY: dict[str, type] = {
     "TicketMessage": TicketMessage,
     "CorrelationCategoriesReport": CorrelationCategoriesReport,
     "FeeMarketMatch": FeeMarketMatch,
-    "JournalEntry": JournalEntry,
     "MarketAlert": MarketAlert,
     "MarketHistoryPoint": MarketHistoryPoint,
     "MarketSentimentReport": MarketSentimentReport,
@@ -244,8 +239,6 @@ _MODEL_REGISTRY: dict[str, type] = {
     "ReferralStats": ReferralStats,
     "SentimentUserVote": SentimentUserVote,
     "VenueFeeEstimate": VenueFeeEstimate,
-    "PersonalDataExportMeta": PersonalDataExportMeta,
-    "PersonalDataExport": PersonalDataExport,
 }
 
 
@@ -775,7 +768,7 @@ class PolyforgeClient:
             return None
         return resp.json()
 
-    def _post_json(
+    def _delete_json(
         self,
         path: str,
         *,
@@ -783,7 +776,7 @@ class PolyforgeClient:
         idempotency_key: str | None = None,
     ) -> Any:
         resp = self._client.request(
-            "POST",
+            "DELETE",
             path,
             json=json,
             headers=_idempotency_headers(idempotency_key),
@@ -799,20 +792,6 @@ class PolyforgeClient:
         return resp.text
 
     # -- Health --
-
-    def get_health(self) -> SystemHealthPublic:
-        """Get the public API health payload (unauthenticated).
-
-        Calls ``GET /health`` and returns only public status information.
-        No API key is required; operational internals are not exposed.
-
-        .. versionadded:: 1.0.0
-        """
-        request = self._client.build_request("GET", "/health")
-        request.headers.pop("Authorization", None)
-        resp = self._client.send(request)
-        _raise_for_status(resp)
-        return _parse(SystemHealthPublic, resp.json())
 
     def get_health_authenticated(self) -> SystemHealthAuthenticated:
         """Get authenticated health/status data with full operational metrics.
@@ -1272,7 +1251,7 @@ class PolyforgeClient:
 
         Args:
             strategy_id: Strategy to report.
-            reason: One of ``"SPAM"``, ``"INAPPROPRIATE"``, ``"MISLEADING"``, ``"OTHER"``.
+            reason: One of ``"SPAM"``, ``"HARMFUL"``, ``"MISLEADING"``, ``"OTHER"``.
             description: Optional additional detail.
         """
         body: dict[str, Any] = {"reason": reason}
@@ -1696,7 +1675,7 @@ class PolyforgeClient:
             raise ValueError("bulk_cancel_orders requires at least 1 order ID")
         if len(order_ids) > 3000:
             raise ValueError("bulk_cancel_orders accepts at most 3000 order IDs")
-        data = self._post_json(
+        data = self._delete_json(
             "/api/v1/orders/bulk",
             json={"orderIds": order_ids},
             idempotency_key=_new_idempotency_key(idempotency_key),
@@ -1714,26 +1693,7 @@ class PolyforgeClient:
         *,
         idempotency_key: str | None = None,
     ) -> PlaceOrderResponse:
-        """Close an open prediction-market position (partial or sweep).
-
-        When *size* is ``None`` (the default), this is a **sweep** — the
-        entire position is sold at market price via a market sell order.
-        When *size* is set to a number-string like ``"100"``, only that
-        portion is closed (partial close) and the remainder of the position
-        stays open.
-
-        **Sweep semantics**: GTC orders are priced at extreme tick
-        boundaries (0.001 SELL / 0.999 BUY) and behave as a
-        **market-equivalent sweep, not a resting limit order**. Slippage is
-        bounded only by venue depth at call time, not by the on-paper
-        price. The fill price is whatever the order book offers at the time
-        of execution.
-
-        For cross-venue arbitrage positions, use
-        :meth:`close_arb_position` instead — arbitrage closes are always
-        full sweeps that place reversing market orders on both venues
-        simultaneously; partial closes are not supported.
-        """
+        """Close an open position (sell all shares at market price)."""
         body: dict[str, Any] = {"tokenId": token_id}
         if size is not None:
             _validate_positive_numberish_param("size", size)
@@ -1940,12 +1900,6 @@ class PolyforgeClient:
     # middleware (see ``_post`` above), so a 4xx or 5xx surfaces immediately as
     # a typed ``PolyforgeError`` subclass with the backend ``code`` preserved.
     # Do NOT add retry wrappers around these methods at the SDK layer.
-    #
-    # Both endpoints are rate-limited to 5 requests per minute per user;
-    # exceeding the limit returns HTTP 429. ``close_arb_position`` uses sweep
-    # semantics: GTC orders priced at extreme tick boundaries (0.001 SELL /
-    # 0.999 BUY) behave as market-order sweeps — slippage is bounded only by
-    # venue depth, not by the on-paper price.
 
     def execute_arb(
         self,
@@ -1956,22 +1910,6 @@ class PolyforgeClient:
         idempotency_key: str | None = None,
     ) -> ArbExecutionResult:
         """Execute a cross-venue arbitrage trade (places real orders on both venues).
-
-        Opens a new :class:`ArbPosition` in ``OPEN`` state. The position
-        consists of two legs (buy on one venue, sell on the other). To exit
-        the position later, call :meth:`close_arb_position` which performs a
-        **full sweep-close** by placing reversing market orders on both
-        venues. There is no partial-close for arb positions — the only exit
-        path is a complete sweep.
-
-        ``idempotency_key`` is sent as the ``Idempotency-Key`` header and is
-        **required** by the backend for this endpoint. The key must be 8–128
-        characters. Reuse the same key for safe caller-managed retries of
-        the same intended execution; the backend guarantees at-most-once
-        semantics per key.
-
-        ``match_id`` must be a valid UUID (RFC 4122). The backend validates
-        this server-side and returns HTTP 400 for non-UUID input.
 
         Args:
             match_id: ``MarketMatch`` UUID identifying the cross-venue pair.
@@ -2013,12 +1951,6 @@ class PolyforgeClient:
     ) -> ArbPositionsResponse:
         """List the user's arbitrage positions with pagination.
 
-        Positions track the full cross-venue arbitrage lifecycle:
-        ``OPEN`` → ``CLOSING`` → ``CLOSED`` (or ``FAILED`` if a reverse
-        order cannot be placed on one or both venues). Use
-        :meth:`get_arb_position` to poll for status transitions after
-        calling :meth:`close_arb_position`.
-
         Args:
             status: Optional :class:`ArbPositionStatus` filter.
             limit: Page size (default 50, range 1..100).
@@ -2039,12 +1971,7 @@ class PolyforgeClient:
         return ArbPositionsResponse(positions=positions, total=int(data.get("total", 0)))
 
     def get_arb_position(self, position_id: str) -> ArbPosition:
-        """Fetch a single arbitrage position by UUID.
-
-        Poll this to confirm the final status after a sweep-close via
-        :meth:`close_arb_position`. The position transitions from
-        ``CLOSING`` → ``CLOSED`` (or ``FAILED``) asynchronously.
-        """
+        """Fetch a single arbitrage position by UUID."""
         data = self._get(f"/api/v1/arbitrage/positions/{_encode_path(position_id)}")
         return _parse(ArbPosition, data)
 
@@ -2054,30 +1981,7 @@ class PolyforgeClient:
         *,
         idempotency_key: str | None = None,
     ) -> ArbCloseResponse:
-        """Sweep-close an open cross-venue arbitrage position.
-
-        Places **real** reversing market orders on **both venues**
-        (Polymarket and Kalshi) to close the **entire** position at the
-        best available market prices. This is always a full sweep — there
-        is no partial-close for arbitrage positions.
-
-        The backend transitions the position through ``CLOSING`` →
-        ``CLOSED`` (or ``FAILED`` if a reverse order cannot be placed
-        on one or both venues). The returned
-        :class:`ArbCloseResponse` carries the non-terminal ``CLOSING``
-        status — closure completes asynchronously. Callers **must**
-        poll :meth:`get_arb_position` to confirm the final status
-        (``CLOSED`` or ``FAILED``) and read realised P&L from the full
-        :class:`ArbPosition` record.
-
-        ``idempotency_key`` is sent as the ``Idempotency-Key`` header and
-        is **required** by the backend for this endpoint. The key must be
-        8–128 characters. Reuse the same key for safe caller-managed
-        retries of the same intended close; the backend guarantees
-        at-most-once semantics per key.
-
-        Rate-limited to 5 requests per minute per user; exceeding the
-        limit returns HTTP 429.
+        """Close an open arbitrage position (places real reverse orders on both venues).
 
         Raises:
             PolyforgeError: surfaces backend error codes verbatim
@@ -3304,20 +3208,6 @@ class PolyforgeClient:
     def get_gas_settings(self) -> dict[str, Any]:
         return self._get("/api/v1/settings/gas")
 
-    def export_personal_data(self, format: str = "json") -> PersonalDataExport | str:
-        """Export personal data for GDPR compliance.
-
-        Args:
-            format: ``"json"`` (default) returns a :class:`PersonalDataExport` object.
-                    ``"csv"`` returns the raw CSV text.
-        """
-        if format not in ("json", "csv"):
-            raise ValueError(f"format must be 'json' or 'csv', got {format!r}")
-        if format == "csv":
-            return self._get_text("/api/v1/me/export", params={"format": "csv"})
-        raw = self._get("/api/v1/me/export")
-        return _parse(PersonalDataExport, raw)
-
     # -- Support Tickets --
 
     def list_tickets(
@@ -3754,11 +3644,13 @@ class PolyforgeClient:
         page: int = 1,
         limit: int = 20,
         mood: str | None = None,
-    ) -> PaginatedResponse[JournalEntry]:
+    ) -> PaginatedResponse[dict[str, Any]]:
         """List the user's order-journal entries.
 
-        Mirrors ``GET /api/v1/journal``. Each entry is an order annotated with
-        a mood and optional note, returned as a :class:`JournalEntry`.
+        Mirrors ``GET /api/v1/journal``. Each entry is a slim Order projection
+        ``{id, marketId, mood, note, side, outcome, price, size, status,
+        createdAt}`` and is returned as a dict for permissive forward
+        compatibility.
 
         Args:
             page: 1-based page index (default ``1``).
@@ -3773,9 +3665,8 @@ class PolyforgeClient:
             "/api/v1/journal",
             params={"page": page, "limit": limit, "mood": mood},
         )
-        parsed = [_parse(JournalEntry, item) for item in raw.get("data", [])]
         return PaginatedResponse(
-            data=parsed,
+            data=list(raw.get("data", [])),
             **_parse_pagination(raw),
         )
 
@@ -4196,7 +4087,7 @@ class AsyncPolyforgeClient:
             return None
         return resp.json()
 
-    async def _post_json(
+    async def _delete_json(
         self,
         path: str,
         *,
@@ -4204,7 +4095,7 @@ class AsyncPolyforgeClient:
         idempotency_key: str | None = None,
     ) -> Any:
         resp = await self._client.request(
-            "POST",
+            "DELETE",
             path,
             json=json,
             headers=_idempotency_headers(idempotency_key),
@@ -4220,20 +4111,6 @@ class AsyncPolyforgeClient:
         return resp.text
 
     # -- Health --
-
-    async def get_health(self) -> SystemHealthPublic:
-        """Get the public API health payload (unauthenticated).
-
-        Calls ``GET /health`` and returns only public status information.
-        No API key is required; operational internals are not exposed.
-
-        .. versionadded:: 1.0.0
-        """
-        request = self._client.build_request("GET", "/health")
-        request.headers.pop("Authorization", None)
-        resp = await self._client.send(request)
-        _raise_for_status(resp)
-        return _parse(SystemHealthPublic, resp.json())
 
     async def get_health_authenticated(self) -> SystemHealthAuthenticated:
         """Get authenticated health/status data with full operational metrics.
@@ -4675,7 +4552,7 @@ class AsyncPolyforgeClient:
 
         Args:
             strategy_id: Strategy to report.
-            reason: One of ``"SPAM"``, ``"INAPPROPRIATE"``, ``"MISLEADING"``, ``"OTHER"``.
+            reason: One of ``"SPAM"``, ``"HARMFUL"``, ``"MISLEADING"``, ``"OTHER"``.
             description: Optional additional detail.
         """
         body: dict[str, Any] = {"reason": reason}
@@ -5079,7 +4956,7 @@ class AsyncPolyforgeClient:
             raise ValueError("bulk_cancel_orders requires at least 1 order ID")
         if len(order_ids) > 3000:
             raise ValueError("bulk_cancel_orders accepts at most 3000 order IDs")
-        data = await self._post_json(
+        data = await self._delete_json(
             "/api/v1/orders/bulk",
             json={"orderIds": order_ids},
             idempotency_key=_new_idempotency_key(idempotency_key),
@@ -5097,10 +4974,7 @@ class AsyncPolyforgeClient:
         *,
         idempotency_key: str | None = None,
     ) -> PlaceOrderResponse:
-        """Close an open prediction-market position (partial or sweep).
-
-        See :meth:`PolyforgeClient.close_position` for sweep semantics.
-        """
+        """Close an open position (sell all shares at market price)."""
         body: dict[str, Any] = {"tokenId": token_id}
         if size is not None:
             _validate_positive_numberish_param("size", size)
@@ -5303,12 +5177,6 @@ class AsyncPolyforgeClient:
     # middleware (see ``_post`` above), so a 4xx or 5xx surfaces immediately as
     # a typed ``PolyforgeError`` subclass with the backend ``code`` preserved.
     # Do NOT add retry wrappers around these methods at the SDK layer.
-    #
-    # Both endpoints are rate-limited to 5 requests per minute per user;
-    # exceeding the limit returns HTTP 429. ``close_arb_position`` uses sweep
-    # semantics: GTC orders priced at extreme tick boundaries (0.001 SELL /
-    # 0.999 BUY) behave as market-order sweeps — slippage is bounded only by
-    # venue depth, not by the on-paper price.
 
     async def execute_arb(
         self,
@@ -5357,10 +5225,7 @@ class AsyncPolyforgeClient:
         return ArbPositionsResponse(positions=positions, total=int(data.get("total", 0)))
 
     async def get_arb_position(self, position_id: str) -> ArbPosition:
-        """Fetch a single arbitrage position by UUID.
-
-        See :meth:`PolyforgeClient.get_arb_position` for polling usage.
-        """
+        """Fetch a single arbitrage position by UUID."""
         data = await self._get(f"/api/v1/arbitrage/positions/{_encode_path(position_id)}")
         return _parse(ArbPosition, data)
 
@@ -5370,11 +5235,7 @@ class AsyncPolyforgeClient:
         *,
         idempotency_key: str | None = None,
     ) -> ArbCloseResponse:
-        """Sweep-close an open cross-venue arbitrage position.
-
-        See :meth:`PolyforgeClient.close_arb_position` for parameter
-        contract, rate-limit details, and sweep semantics.
-        """
+        """Close an open arbitrage position (places real reverse orders on both venues)."""
         data = await self._post(
             f"/api/v1/arbitrage/positions/{_encode_path(position_id)}/close",
             idempotency_key=_new_idempotency_key(idempotency_key),
@@ -6414,20 +6275,6 @@ class AsyncPolyforgeClient:
     async def get_gas_settings(self) -> dict[str, Any]:
         return await self._get("/api/v1/settings/gas")
 
-    async def export_personal_data(self, format: str = "json") -> PersonalDataExport | str:
-        """Export personal data for GDPR compliance.
-
-        Args:
-            format: ``"json"`` (default) returns a :class:`PersonalDataExport` object.
-                    ``"csv"`` returns the raw CSV text.
-        """
-        if format not in ("json", "csv"):
-            raise ValueError(f"format must be 'json' or 'csv', got {format!r}")
-        if format == "csv":
-            return await self._get_text("/api/v1/me/export", params={"format": "csv"})
-        raw = await self._get("/api/v1/me/export")
-        return _parse(PersonalDataExport, raw)
-
     # -- Support Tickets --
 
     async def list_tickets(
@@ -6772,7 +6619,7 @@ class AsyncPolyforgeClient:
         page: int = 1,
         limit: int = 20,
         mood: str | None = None,
-    ) -> PaginatedResponse[JournalEntry]:
+    ) -> PaginatedResponse[dict[str, Any]]:
         """Async variant of :meth:`PolyforgeClient.list_journal`."""
         if mood is not None:
             _validate_enum("mood", mood, _VALID_ORDER_MOODS)
@@ -6780,9 +6627,8 @@ class AsyncPolyforgeClient:
             "/api/v1/journal",
             params={"page": page, "limit": limit, "mood": mood},
         )
-        parsed = [_parse(JournalEntry, item) for item in raw.get("data", [])]
         return PaginatedResponse(
-            data=parsed,
+            data=list(raw.get("data", [])),
             **_parse_pagination(raw),
         )
 
