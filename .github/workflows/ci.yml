@@ -228,7 +228,7 @@ jobs:
 
             echo "=== 0. Reset local state ==="
             git reset --hard HEAD
-            git clean -fd
+            git clean -fd -e .paperclip
 
             echo "=== 1. Pull latest code ==="
             git fetch origin

@@ -112,6 +112,9 @@ services/gateway/certs/
 .swarm/
 agent-outputs/
 
+# Paperclip worktrees — managed by agent runtime, must never be tracked/cleaned
+.paperclip/
+
 # Windows crash dumps
 *.stackdump
 
