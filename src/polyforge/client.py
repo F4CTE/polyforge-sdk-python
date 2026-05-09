@@ -92,6 +92,8 @@ from polyforge.models import (
     PriceHistoryEntry,
     Rebate,
     RedeemPositionResponse,
+    RewardsMarketDetail,
+    RewardsSponsorUrl,
     MyReferralsResponse,
     ReferralInfo,
     ReferralStats,
@@ -113,6 +115,7 @@ from polyforge.models import (
     TraderScore,
     UserReward,
     UserRewardsTotal,
+    UserSponsoredMarkets,
     VenueComparison,
     VenueComparisonDetail,
     VenueFeeEstimate,
@@ -212,6 +215,9 @@ _MODEL_REGISTRY: dict[str, type] = {
     "RewardMarket": RewardMarket,
     "UserReward": UserReward,
     "UserRewardsTotal": UserRewardsTotal,
+    "RewardsMarketDetail": RewardsMarketDetail,
+    "UserSponsoredMarkets": UserSponsoredMarkets,
+    "RewardsSponsorUrl": RewardsSponsorUrl,
     "Rebate": Rebate,
     "UserProfile": UserProfile,
     "FollowResult": FollowResult,
@@ -2976,6 +2982,20 @@ class PolyforgeClient:
         data = self._get("/api/v1/rewards/rebates")
         rebates = data.get("rebates", []) if isinstance(data, dict) else []
         return [_parse(Rebate, item) for item in rebates]
+
+    def get_market_rewards_detail(self, market_id: str) -> RewardsMarketDetail | None:
+        data = self._get(f"/api/v1/rewards/market/{_encode_path(market_id)}")
+        if data is None:
+            return None
+        return _parse(RewardsMarketDetail, data)
+
+    def get_user_sponsored_markets(self) -> UserSponsoredMarkets:
+        data = self._get("/api/v1/rewards/user/sponsored-markets")
+        return _parse(UserSponsoredMarkets, data)
+
+    def get_rewards_sponsor_url(self, market_id: str) -> RewardsSponsorUrl:
+        data = self._get(f"/api/v1/rewards/sponsor-url/{_encode_path(market_id)}")
+        return _parse(RewardsSponsorUrl, data)
 
     # -- Profile --
 
@@ -6016,6 +6036,20 @@ class AsyncPolyforgeClient:
         data = await self._get("/api/v1/rewards/rebates")
         rebates = data.get("rebates", []) if isinstance(data, dict) else []
         return [_parse(Rebate, item) for item in rebates]
+
+    async def get_market_rewards_detail(self, market_id: str) -> RewardsMarketDetail | None:
+        data = await self._get(f"/api/v1/rewards/market/{_encode_path(market_id)}")
+        if data is None:
+            return None
+        return _parse(RewardsMarketDetail, data)
+
+    async def get_user_sponsored_markets(self) -> UserSponsoredMarkets:
+        data = await self._get("/api/v1/rewards/user/sponsored-markets")
+        return _parse(UserSponsoredMarkets, data)
+
+    async def get_rewards_sponsor_url(self, market_id: str) -> RewardsSponsorUrl:
+        data = await self._get(f"/api/v1/rewards/sponsor-url/{_encode_path(market_id)}")
+        return _parse(RewardsSponsorUrl, data)
 
     # -- Profile --
 

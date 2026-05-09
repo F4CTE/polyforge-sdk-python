@@ -47,6 +47,8 @@ from polyforge.models import (
     PriceHistoryEntry,
     Rebate,
     RedeemPositionResponse,
+    RewardsMarketDetail,
+    RewardsSponsorUrl,
     MyReferralsResponse,
     RewardMarket,
     Strategy,
@@ -55,6 +57,7 @@ from polyforge.models import (
     TraderScore,
     UserReward,
     UserRewardsTotal,
+    UserSponsoredMarkets,
     WatchlistItem,
     WebhookEvent,
     WebhookTestResult,
@@ -4443,6 +4446,56 @@ class TestRewardsModels:
         assert r.amount == "3.5"
         assert r.fees_paid == "10.0"
 
+    def test_rewards_market_detail_defaults(self):
+        rmd = RewardsMarketDetail()
+        assert rmd.condition_id == ""
+        assert rmd.rate_per_day == ""
+        assert rmd.total_rewards == ""
+        assert rmd.remaining_reward_amount == ""
+        assert rmd.max_spread == ""
+        assert rmd.min_size == ""
+        assert rmd.start_date == ""
+        assert rmd.end_date == ""
+
+    def test_parse_rewards_market_detail(self):
+        data = {
+            "conditionId": "0xabc",
+            "rate_per_day": "50.0",
+            "total_rewards": "1000.0",
+            "remaining_reward_amount": "500.0",
+            "max_spread": "0.02",
+            "min_size": "100",
+            "start_date": "2025-01-01",
+            "end_date": "2025-12-31",
+        }
+        rmd = _parse(RewardsMarketDetail, data)
+        assert rmd.condition_id == "0xabc"
+        assert rmd.rate_per_day == "50.0"
+        assert rmd.total_rewards == "1000.0"
+        assert rmd.remaining_reward_amount == "500.0"
+        assert rmd.max_spread == "0.02"
+        assert rmd.min_size == "100"
+        assert rmd.start_date == "2025-01-01"
+        assert rmd.end_date == "2025-12-31"
+
+    def test_user_sponsored_markets_defaults(self):
+        usm = UserSponsoredMarkets()
+        assert usm.markets == []
+
+    def test_parse_user_sponsored_markets(self):
+        data = {"markets": [{"id": "m1"}, {"id": "m2"}]}
+        usm = _parse(UserSponsoredMarkets, data)
+        assert len(usm.markets) == 2
+
+    def test_rewards_sponsor_url_defaults(self):
+        rsu = RewardsSponsorUrl()
+        assert rsu.url == ""
+
+    def test_parse_rewards_sponsor_url(self):
+        data = {"url": "https://polymarket.com/event/some-slug/rewards"}
+        rsu = _parse(RewardsSponsorUrl, data)
+        assert rsu.url == "https://polymarket.com/event/some-slug/rewards"
+
 
 class TestRewardsMethods:
     """Tests for Rewards API methods on sync and async clients."""
@@ -4455,6 +4508,9 @@ class TestRewardsMethods:
         "get_user_rewards_percentages",
         "get_user_rewards_per_market",
         "get_rebates",
+        "get_market_rewards_detail",
+        "get_user_sponsored_markets",
+        "get_rewards_sponsor_url",
     ]
 
     @pytest.mark.parametrize("method", REWARD_METHODS)
@@ -4487,6 +4543,9 @@ class TestRewardsMethods:
             "get_user_rewards_percentages": "/api/v1/rewards/user/percentages",
             "get_user_rewards_per_market": "/api/v1/rewards/user/markets",
             "get_rebates": "/api/v1/rewards/rebates",
+            "get_market_rewards_detail": "/api/v1/rewards/market/",
+            "get_user_sponsored_markets": "/api/v1/rewards/user/sponsored-markets",
+            "get_rewards_sponsor_url": "/api/v1/rewards/sponsor-url/",
         }
         for method_name, expected_path in path_map.items():
             source = inspect.getsource(getattr(PolyforgeClient, method_name))
@@ -4502,6 +4561,9 @@ class TestRewardsMethods:
             "get_user_rewards_percentages": "/api/v1/rewards/user/percentages",
             "get_user_rewards_per_market": "/api/v1/rewards/user/markets",
             "get_rebates": "/api/v1/rewards/rebates",
+            "get_market_rewards_detail": "/api/v1/rewards/market/",
+            "get_user_sponsored_markets": "/api/v1/rewards/user/sponsored-markets",
+            "get_rewards_sponsor_url": "/api/v1/rewards/sponsor-url/",
         }
         for method_name, expected_path in path_map.items():
             source = inspect.getsource(getattr(AsyncPolyforgeClient, method_name))
@@ -4512,6 +4574,49 @@ class TestRewardsMethods:
         for method_name in self.REWARD_METHODS:
             source = inspect.getsource(getattr(AsyncPolyforgeClient, method_name))
             assert "await" in source or "async" in source, f"async {method_name} not using await"
+
+    def test_get_market_rewards_detail_returns_detail(self):
+        from unittest.mock import MagicMock
+        client = PolyforgeClient(api_key="test-key")
+        client._get = MagicMock(return_value={
+            "conditionId": "0xabc",
+            "rate_per_day": "50.0",
+            "total_rewards": "1000.0",
+            "remaining_reward_amount": "500.0",
+            "max_spread": "0.02",
+            "min_size": "100",
+        })
+        result = client.get_market_rewards_detail(market_id="some-market")
+        assert result.condition_id == "0xabc"
+        assert result.rate_per_day == "50.0"
+        client._get.assert_called_once_with("/api/v1/rewards/market/some-market")
+        client.close()
+
+    def test_get_market_rewards_detail_returns_none_for_null(self):
+        from unittest.mock import MagicMock
+        client = PolyforgeClient(api_key="test-key")
+        client._get = MagicMock(return_value=None)
+        result = client.get_market_rewards_detail(market_id="unknown")
+        assert result is None
+        client.close()
+
+    def test_get_user_sponsored_markets_returns_data(self):
+        from unittest.mock import MagicMock
+        client = PolyforgeClient(api_key="test-key")
+        client._get = MagicMock(return_value={"markets": [{"id": "m1"}, {"id": "m2"}]})
+        result = client.get_user_sponsored_markets()
+        assert len(result.markets) == 2
+        client._get.assert_called_once_with("/api/v1/rewards/user/sponsored-markets")
+        client.close()
+
+    def test_get_rewards_sponsor_url_returns_url(self):
+        from unittest.mock import MagicMock
+        client = PolyforgeClient(api_key="test-key")
+        client._get = MagicMock(return_value={"url": "https://polymarket.com/event/test/rewards"})
+        result = client.get_rewards_sponsor_url(market_id="some-market")
+        assert result.url == "https://polymarket.com/event/test/rewards"
+        client._get.assert_called_once_with("/api/v1/rewards/sponsor-url/some-market")
+        client.close()
 
 
 class TestCrossVenueArbitrage:
@@ -7870,3 +7975,167 @@ class TestPublicUserProfileEndpoints:
         monkeypatch.setattr(client, "_get", fake_get)
         with pytest.raises(NotFoundError):
             client.get_user_badges_by_username("ghost")
+
+
+# ── Rewards Endpoint Coverage (POLA-3324) ────────────────────────────────────
+
+REWARDS_METHODS = (
+    "get_market_rewards_detail",
+    "get_user_sponsored_markets",
+    "get_rewards_sponsor_url",
+)
+
+
+class TestRewardsEndpointsPresence:
+    """Surface check: all 3 new rewards methods exist on both clients (POLA-3324)."""
+
+    def test_all_methods_present_on_sync_client(self):
+        for name in REWARDS_METHODS:
+            assert callable(getattr(PolyforgeClient, name, None)), name
+
+    def test_all_methods_present_on_async_client(self):
+        for name in REWARDS_METHODS:
+            assert callable(getattr(AsyncPolyforgeClient, name, None)), name
+
+
+class TestRewardsEndpointsPaths:
+    """Verify each new rewards method targets the correct controller path."""
+
+    def test_get_market_rewards_detail_path(self):
+        import inspect
+        src = inspect.getsource(PolyforgeClient.get_market_rewards_detail)
+        assert '"/api/v1/rewards/market/"' in src or '/api/v1/rewards/market/' in src
+
+    def test_get_user_sponsored_markets_path(self):
+        import inspect
+        src = inspect.getsource(PolyforgeClient.get_user_sponsored_markets)
+        assert '"/api/v1/rewards/user/sponsored-markets"' in src
+
+    def test_get_rewards_sponsor_url_path(self):
+        import inspect
+        src = inspect.getsource(PolyforgeClient.get_rewards_sponsor_url)
+        assert '"/api/v1/rewards/sponsor-url/"' in src or '/api/v1/rewards/sponsor-url/' in src
+
+
+class TestRewardsEndpointRoundtrips:
+    """Stub the HTTP layer and exercise each new rewards method."""
+
+    @staticmethod
+    def _client_with(handler):
+        transport = httpx.MockTransport(handler)
+        client = PolyforgeClient(api_key="test", api_url="http://localhost:9999")
+        client._client = httpx.Client(
+            base_url="http://localhost:9999",
+            headers={"Authorization": "Bearer test"},
+            transport=transport,
+        )
+        return client
+
+    def test_get_market_rewards_detail_returns_model(self):
+        def handler(request):
+            assert request.method == "GET"
+            assert request.url.path == "/api/v1/rewards/market/market-abc"
+            return httpx.Response(200, json={
+                "conditionId": "cond-1",
+                "ratePerDay": "100.0",
+                "totalRewards": "5000.0",
+                "remainingRewardAmount": "2500.0",
+                "maxSpread": "0.05",
+                "minSize": "10.0",
+                "startDate": "2026-01-01",
+                "endDate": "2026-12-31",
+            })
+
+        client = self._client_with(handler)
+        try:
+            result = client.get_market_rewards_detail("market-abc")
+            assert isinstance(result, RewardsMarketDetail)
+            assert result.condition_id == "cond-1"
+            assert result.rate_per_day == "100.0"
+            assert result.remaining_reward_amount == "2500.0"
+        finally:
+            client.close()
+
+    def test_get_market_rewards_detail_encodes_market_id(self):
+        captured = {}
+
+        def handler(request):
+            captured["raw_path"] = request.url.raw_path
+            return httpx.Response(200, json={
+                "conditionId": "", "ratePerDay": "", "totalRewards": "",
+                "remainingRewardAmount": "", "maxSpread": "", "minSize": "",
+                "startDate": "", "endDate": "",
+            })
+
+        client = self._client_with(handler)
+        try:
+            client.get_market_rewards_detail("market/with/slashes")
+            assert captured["raw_path"] == b"/api/v1/rewards/market/market%2Fwith%2Fslashes"
+        finally:
+            client.close()
+
+    def test_get_market_rewards_detail_returns_none_on_null(self):
+        def handler(request):
+            return httpx.Response(200, content=b"null",
+                                  headers={"Content-Type": "application/json"})
+
+        client = self._client_with(handler)
+        try:
+            result = client.get_market_rewards_detail("ghost-market")
+            assert result is None
+        finally:
+            client.close()
+
+    def test_get_user_sponsored_markets_returns_model(self):
+        def handler(request):
+            assert request.method == "GET"
+            assert request.url.path == "/api/v1/rewards/user/sponsored-markets"
+            return httpx.Response(200, json={"markets": [{"conditionId": "c1"}, {"conditionId": "c2"}]})
+
+        client = self._client_with(handler)
+        try:
+            result = client.get_user_sponsored_markets()
+            assert isinstance(result, UserSponsoredMarkets)
+            assert result.markets == [{"conditionId": "c1"}, {"conditionId": "c2"}]
+        finally:
+            client.close()
+
+    def test_get_user_sponsored_markets_empty(self):
+        def handler(request):
+            return httpx.Response(200, json={"markets": []})
+
+        client = self._client_with(handler)
+        try:
+            result = client.get_user_sponsored_markets()
+            assert isinstance(result, UserSponsoredMarkets)
+            assert result.markets == []
+        finally:
+            client.close()
+
+    def test_get_rewards_sponsor_url_returns_model(self):
+        def handler(request):
+            assert request.method == "GET"
+            assert request.url.path == "/api/v1/rewards/sponsor-url/market-xyz"
+            return httpx.Response(200, json={"url": "https://polymarket.com/sponsor/m-xyz"})
+
+        client = self._client_with(handler)
+        try:
+            result = client.get_rewards_sponsor_url("market-xyz")
+            assert isinstance(result, RewardsSponsorUrl)
+            assert result.url == "https://polymarket.com/sponsor/m-xyz"
+        finally:
+            client.close()
+
+    def test_get_rewards_sponsor_url_encodes_market_id(self):
+        captured = {}
+
+        def handler(request):
+            captured["raw_path"] = request.url.raw_path
+            return httpx.Response(200, json={"url": ""})
+
+        client = self._client_with(handler)
+        try:
+            client.get_rewards_sponsor_url("market/with/slashes")
+            assert captured["raw_path"] == b"/api/v1/rewards/sponsor-url/market%2Fwith%2Fslashes"
+        finally:
+            client.close()

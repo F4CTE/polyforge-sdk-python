@@ -65,6 +65,21 @@ via `_encode_path` to prevent path-traversal injection.
 Responses mirror the upstream controller's permissive shape (`Record<string,
 unknown>` → `dict[str, Any]`) intentionally — see parent issue for the rationale.
 
+**Rewards market-detail, sponsored-markets, and sponsor-url (POLA-3324)** —
+three new methods closing gaps surfaced by the weekly cross-SDK compatibility
+audit, available on both `PolyforgeClient` and `AsyncPolyforgeClient`:
+
+- `get_market_rewards_detail(market_id)` → `RewardsMarketDetail | None` —
+  `GET /api/v1/rewards/market/:marketId`. Returns `None` when the server
+  responds with `null` (market not found on the rewards programme).
+- `get_user_sponsored_markets()` → `UserSponsoredMarkets` —
+  `GET /api/v1/rewards/user/sponsored-markets`.
+- `get_rewards_sponsor_url(market_id)` → `RewardsSponsorUrl` —
+  `GET /api/v1/rewards/sponsor-url/:marketId`.
+
+All three already existed in the TypeScript SDK; this brings the Python SDK
+into parity.
+
 ### Added — Cross-Venue Arb Execute / Positions / Risk (POLA-1851)
 
 > ⚠️ **Trading-impact severity: HIGH.** `execute_arb` and `close_arb_position`
