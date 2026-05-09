@@ -47,6 +47,8 @@ from polyforge.models import (
     PriceHistoryEntry,
     Rebate,
     RedeemPositionResponse,
+    RewardsMarketDetail,
+    RewardsSponsorUrl,
     MyReferralsResponse,
     RewardMarket,
     Strategy,
@@ -55,6 +57,7 @@ from polyforge.models import (
     TraderScore,
     UserReward,
     UserRewardsTotal,
+    UserSponsoredMarkets,
     WatchlistItem,
     WebhookEvent,
     WebhookTestResult,
@@ -4443,6 +4446,56 @@ class TestRewardsModels:
         assert r.amount == "3.5"
         assert r.fees_paid == "10.0"
 
+    def test_rewards_market_detail_defaults(self):
+        rmd = RewardsMarketDetail()
+        assert rmd.condition_id == ""
+        assert rmd.rate_per_day == ""
+        assert rmd.total_rewards == ""
+        assert rmd.remaining_reward_amount == ""
+        assert rmd.max_spread == ""
+        assert rmd.min_size == ""
+        assert rmd.start_date == ""
+        assert rmd.end_date == ""
+
+    def test_parse_rewards_market_detail(self):
+        data = {
+            "conditionId": "0xabc",
+            "rate_per_day": "50.0",
+            "total_rewards": "1000.0",
+            "remaining_reward_amount": "500.0",
+            "max_spread": "0.02",
+            "min_size": "100",
+            "start_date": "2025-01-01",
+            "end_date": "2025-12-31",
+        }
+        rmd = _parse(RewardsMarketDetail, data)
+        assert rmd.condition_id == "0xabc"
+        assert rmd.rate_per_day == "50.0"
+        assert rmd.total_rewards == "1000.0"
+        assert rmd.remaining_reward_amount == "500.0"
+        assert rmd.max_spread == "0.02"
+        assert rmd.min_size == "100"
+        assert rmd.start_date == "2025-01-01"
+        assert rmd.end_date == "2025-12-31"
+
+    def test_user_sponsored_markets_defaults(self):
+        usm = UserSponsoredMarkets()
+        assert usm.markets == []
+
+    def test_parse_user_sponsored_markets(self):
+        data = {"markets": [{"id": "m1"}, {"id": "m2"}]}
+        usm = _parse(UserSponsoredMarkets, data)
+        assert len(usm.markets) == 2
+
+    def test_rewards_sponsor_url_defaults(self):
+        rsu = RewardsSponsorUrl()
+        assert rsu.url == ""
+
+    def test_parse_rewards_sponsor_url(self):
+        data = {"url": "https://polymarket.com/event/some-slug/rewards"}
+        rsu = _parse(RewardsSponsorUrl, data)
+        assert rsu.url == "https://polymarket.com/event/some-slug/rewards"
+
 
 class TestRewardsMethods:
     """Tests for Rewards API methods on sync and async clients."""
@@ -4455,6 +4508,9 @@ class TestRewardsMethods:
         "get_user_rewards_percentages",
         "get_user_rewards_per_market",
         "get_rebates",
+        "get_market_rewards_detail",
+        "get_user_sponsored_markets",
+        "get_rewards_sponsor_url",
     ]
 
     @pytest.mark.parametrize("method", REWARD_METHODS)
@@ -4487,6 +4543,9 @@ class TestRewardsMethods:
             "get_user_rewards_percentages": "/api/v1/rewards/user/percentages",
             "get_user_rewards_per_market": "/api/v1/rewards/user/markets",
             "get_rebates": "/api/v1/rewards/rebates",
+            "get_market_rewards_detail": "/api/v1/rewards/market/",
+            "get_user_sponsored_markets": "/api/v1/rewards/user/sponsored-markets",
+            "get_rewards_sponsor_url": "/api/v1/rewards/sponsor-url/",
         }
         for method_name, expected_path in path_map.items():
             source = inspect.getsource(getattr(PolyforgeClient, method_name))
@@ -4502,6 +4561,9 @@ class TestRewardsMethods:
             "get_user_rewards_percentages": "/api/v1/rewards/user/percentages",
             "get_user_rewards_per_market": "/api/v1/rewards/user/markets",
             "get_rebates": "/api/v1/rewards/rebates",
+            "get_market_rewards_detail": "/api/v1/rewards/market/",
+            "get_user_sponsored_markets": "/api/v1/rewards/user/sponsored-markets",
+            "get_rewards_sponsor_url": "/api/v1/rewards/sponsor-url/",
         }
         for method_name, expected_path in path_map.items():
             source = inspect.getsource(getattr(AsyncPolyforgeClient, method_name))
@@ -4512,6 +4574,49 @@ class TestRewardsMethods:
         for method_name in self.REWARD_METHODS:
             source = inspect.getsource(getattr(AsyncPolyforgeClient, method_name))
             assert "await" in source or "async" in source, f"async {method_name} not using await"
+
+    def test_get_market_rewards_detail_returns_detail(self):
+        from unittest.mock import MagicMock
+        client = PolyforgeClient(api_key="test-key")
+        client._get = MagicMock(return_value={
+            "conditionId": "0xabc",
+            "rate_per_day": "50.0",
+            "total_rewards": "1000.0",
+            "remaining_reward_amount": "500.0",
+            "max_spread": "0.02",
+            "min_size": "100",
+        })
+        result = client.get_market_rewards_detail(market_id="some-market")
+        assert result.condition_id == "0xabc"
+        assert result.rate_per_day == "50.0"
+        client._get.assert_called_once_with("/api/v1/rewards/market/some-market")
+        client.close()
+
+    def test_get_market_rewards_detail_returns_none_for_null(self):
+        from unittest.mock import MagicMock
+        client = PolyforgeClient(api_key="test-key")
+        client._get = MagicMock(return_value=None)
+        result = client.get_market_rewards_detail(market_id="unknown")
+        assert result is None
+        client.close()
+
+    def test_get_user_sponsored_markets_returns_data(self):
+        from unittest.mock import MagicMock
+        client = PolyforgeClient(api_key="test-key")
+        client._get = MagicMock(return_value={"markets": [{"id": "m1"}, {"id": "m2"}]})
+        result = client.get_user_sponsored_markets()
+        assert len(result.markets) == 2
+        client._get.assert_called_once_with("/api/v1/rewards/user/sponsored-markets")
+        client.close()
+
+    def test_get_rewards_sponsor_url_returns_url(self):
+        from unittest.mock import MagicMock
+        client = PolyforgeClient(api_key="test-key")
+        client._get = MagicMock(return_value={"url": "https://polymarket.com/event/test/rewards"})
+        result = client.get_rewards_sponsor_url(market_id="some-market")
+        assert result.url == "https://polymarket.com/event/test/rewards"
+        client._get.assert_called_once_with("/api/v1/rewards/sponsor-url/some-market")
+        client.close()
 
 
 class TestCrossVenueArbitrage:

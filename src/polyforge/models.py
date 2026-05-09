@@ -930,6 +930,28 @@ class Rebate:
     fees_paid: str = ""
 
 
+@dataclass
+class RewardsMarketDetail:
+    condition_id: str = ""
+    rate_per_day: str = ""
+    total_rewards: str = ""
+    remaining_reward_amount: str = ""
+    max_spread: str = ""
+    min_size: str = ""
+    start_date: str = ""
+    end_date: str = ""
+
+
+@dataclass
+class UserSponsoredMarkets:
+    markets: list = field(default_factory=list)
+
+
+@dataclass
+class RewardsSponsorUrl:
+    url: str = ""
+
+
 # ---------------------------------------------------------------------------
 # Conditional Orders
 # ---------------------------------------------------------------------------
