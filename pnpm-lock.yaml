@@ -9,7 +9,7 @@ overrides:
   effect: '>=3.20.0'
   picomatch: '>=4.0.4'
   path-to-regexp: '>=8.4.0'
-  hono: '>=4.12.14'
+  hono: '>=4.12.18'
   '@hono/node-server': '>=1.19.13'
   fast-uri: '>=3.1.2'
   fastify: '>=5.8.3'
@@ -2195,7 +2195,7 @@ packages:
     resolution: {integrity: sha512-n3GfHwwCvHCkGmOwKfxUPOlbfzuO64Sbc5XC4NGPIXxkuOnJrdgExdRKmHfF924r914WRJPT397GdqLvdYTeyQ==}
     engines: {node: '>=20'}
     peerDependencies:
-      hono: '>=4.12.14'
+      hono: '>=4.12.18'
 
   '@humanfs/core@0.19.2':
     resolution: {integrity: sha512-UhXNm+CFMWcbChXywFwkmhqjs3PRCmcSa/hfBgLIb7oQ5HNb1wS0icWsGtSAUNgefHeI+eBrA8I1fxmbHsGdvA==}
@@ -5783,8 +5783,8 @@ packages:
   help-me@5.0.0:
     resolution: {integrity: sha512-7xgomUX6ADmcYzFik0HzAxh/73YlKR9bmFzf51CZwR+b6YtzU2m0u49hQCqV6SvlqIqsaxovfwdvbnsw3b/zpg==}
 
-  hono@4.12.15:
-    resolution: {integrity: sha512-qM0jDhFEaCBb4TxoW7f53Qrpv9RBiayUHo0S52JudprkhvpjIrGoU1mnnr29Fvd1U335ZFPZQY1wlkqgfGXyLg==}
+  hono@4.12.18:
+    resolution: {integrity: sha512-RWzP96k/yv0PQfyXnWjs6zot20TqfpfsNXhOnev8d1InAxubW93L11/oNUc3tQqn2G0bSdAOBpX+2uDFHV7kdQ==}
     engines: {node: '>=16.9.0'}
 
   html-encoding-sniffer@6.0.0:
@@ -8086,9 +8086,9 @@ snapshots:
 
   '@hey-api/types@0.1.4': {}
 
-  '@hono/node-server@2.0.0(hono@4.12.15)':
+  '@hono/node-server@2.0.0(hono@4.12.18)':
     dependencies:
-      hono: 4.12.15
+      hono: 4.12.18
 
   '@humanfs/core@0.19.2':
     dependencies:
@@ -9498,13 +9498,13 @@ snapshots:
       '@electric-sql/pglite': 0.4.1
       '@electric-sql/pglite-socket': 0.1.1(@electric-sql/pglite@0.4.1)
       '@electric-sql/pglite-tools': 0.3.1(@electric-sql/pglite@0.4.1)
-      '@hono/node-server': 2.0.0(hono@4.12.15)
+      '@hono/node-server': 2.0.0(hono@4.12.18)
       '@prisma/get-platform': 7.2.0
       '@prisma/query-plan-executor': 7.2.0
       '@prisma/streams-local': 0.1.2
       foreground-child: 3.3.1
       get-port-please: 3.2.0
-      hono: 4.12.15
+      hono: 4.12.18
       http-status-codes: 2.3.0
       pathe: 2.0.3
       proper-lockfile: 4.1.2
@@ -11646,7 +11646,7 @@ snapshots:
 
   help-me@5.0.0: {}
 
-  hono@4.12.15: {}
+  hono@4.12.18: {}
 
   html-encoding-sniffer@6.0.0(@noble/hashes@2.0.1):
     dependencies:
