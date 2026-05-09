@@ -24,7 +24,7 @@ runs:
     - name: Configure isolated pnpm store
       shell: bash
       run: |
-        pnpm config set store-dir "$RUNNER_TEMP/pnpm-store"
+        pnpm config set store-dir "$RUNNER_TEMP/pnpm-store" --location=project
         mkdir -p "$(pnpm store path --silent)"
 
     - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
@@ -51,3 +51,7 @@ runs:
       if: inputs.build-packages == 'true'
       shell: bash
       run: pnpm turbo build --filter=./packages/*
+
+    - name: Ensure pnpm cache store exists for post-cache
+      shell: bash
+      run: mkdir -p "$(pnpm store path --silent)"
