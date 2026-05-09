@@ -109,6 +109,7 @@ from polyforge.models import (
     StrategyEvent,
     StrategyStatusResponse,
     StrategyTemplate,
+    SystemHealthAuthenticated,
     TickSizeInfo,
     Token,
     TopTraderEntry,
@@ -789,6 +790,18 @@ class PolyforgeClient:
         resp = self._client.get(path, params=_strip_none(params or {}))
         _raise_for_status(resp)
         return resp.text
+
+    # -- Health --
+
+    def get_health_authenticated(self) -> SystemHealthAuthenticated:
+        """Get authenticated health/status data with full operational metrics.
+
+        Calls ``GET /api/v1/status`` and returns database, Redis, queue,
+        and internal service health information that is not exposed on the
+        public ``/health`` endpoint.
+        """
+        data = self._get("/api/v1/status")
+        return _parse(SystemHealthAuthenticated, data)
 
     # -- Markets --
 
@@ -1816,6 +1829,11 @@ class PolyforgeClient:
         """Get a single market match by ID."""
         data = self._get(f"/api/v1/arbitrage/matches/{quote(match_id, safe='')}")
         return _parse(MarketMatch, data)
+
+    def sync_market_matches(self) -> MatchSyncResult:
+        """Trigger a manual cross-venue matching pass."""
+        data = self._post("/api/v1/arbitrage/matches/sync")
+        return _parse(MatchSyncResult, data)
 
     def get_spread_comparison(self) -> list[SpreadSummary]:
         """Get bid/ask spread comparison across all matched venues."""
@@ -4092,6 +4110,18 @@ class AsyncPolyforgeClient:
         _raise_for_status(resp)
         return resp.text
 
+    # -- Health --
+
+    async def get_health_authenticated(self) -> SystemHealthAuthenticated:
+        """Get authenticated health/status data with full operational metrics.
+
+        Calls ``GET /api/v1/status`` and returns database, Redis, queue,
+        and internal service health information that is not exposed on the
+        public ``/health`` endpoint.
+        """
+        data = await self._get("/api/v1/status")
+        return _parse(SystemHealthAuthenticated, data)
+
     # -- Markets --
 
     async def list_markets(
@@ -5076,6 +5106,11 @@ class AsyncPolyforgeClient:
         """Get a single market match by ID."""
         data = await self._get(f"/api/v1/arbitrage/matches/{quote(match_id, safe='')}")
         return _parse(MarketMatch, data)
+
+    async def sync_market_matches(self) -> MatchSyncResult:
+        """Trigger a manual cross-venue matching pass."""
+        data = await self._post("/api/v1/arbitrage/matches/sync")
+        return _parse(MatchSyncResult, data)
 
     async def get_spread_comparison(self) -> list[SpreadSummary]:
         """Get bid/ask spread comparison across all matched venues."""
