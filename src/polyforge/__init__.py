@@ -70,7 +70,6 @@ from polyforge.models import (
     Strategy,
     StrategyBlock,
     StrategyEvent,
-    StrategyExecMode,
     StrategyStatusResponse,
     StrategyTemplate,
     StrategyVisibility,
