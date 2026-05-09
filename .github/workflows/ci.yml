@@ -251,6 +251,9 @@ jobs:
             export REDIS_PASSWORD="${REDIS_PASSWORD:?REDIS_PASSWORD must be set in .env}"
 
             echo "=== 2. Install dependencies ==="
+            PNPM_STORE_DIR="$(mktemp -d)"
+            trap 'rm -rf "$PNPM_STORE_DIR"' EXIT
+            pnpm config set store-dir "$PNPM_STORE_DIR"
             NODE_ENV=development pnpm install --frozen-lockfile
 
             echo "=== 3. Generate Prisma clients ==="

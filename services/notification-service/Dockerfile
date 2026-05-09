@@ -3,7 +3,7 @@ FROM node:26-alpine@sha256:30f5a66e7265ef70aac56b4753ffa7905e54eca1084bc25503893
 
 WORKDIR /app
 
-RUN corepack enable && corepack prepare pnpm@9.0.0 --activate && \
+RUN npm install -g pnpm@9.0.0 && \
     npm install -g typescript@5.9.3
 
 COPY package.json pnpm-workspace.yaml pnpm-lock.yaml turbo.json tsconfig.json ./
@@ -50,7 +50,7 @@ FROM node:26-alpine@sha256:30f5a66e7265ef70aac56b4753ffa7905e54eca1084bc25503893
 
 WORKDIR /app
 
-RUN corepack enable && corepack prepare pnpm@9.0.0 --activate
+RUN npm install -g pnpm@9.0.0
 
 COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
 COPY packages/shared-db/package.json              ./packages/shared-db/

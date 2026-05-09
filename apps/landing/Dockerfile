@@ -4,7 +4,7 @@ WORKDIR /app
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY packages/ui/package.json packages/ui/
 COPY apps/landing/package.json apps/landing/
-RUN corepack enable && pnpm install --frozen-lockfile
+RUN npm install -g pnpm@9.0.0 && pnpm install --frozen-lockfile
 COPY tsconfig.json ./
 COPY packages/ui/ packages/ui/
 COPY apps/landing/ apps/landing/

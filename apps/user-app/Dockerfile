@@ -1,6 +1,6 @@
 # SECURITY: Pin to digest in production. Run: docker inspect --format='{{index .RepoDigests 0}}' node:24-alpine
 FROM node:26-alpine@sha256:30f5a66e7265ef70aac56b4753ffa7905e54eca1084bc25503893ad8e9273f05 AS builder
-RUN corepack enable
+RUN npm install -g pnpm@9.0.0
 WORKDIR /app
 
 # Copy workspace config

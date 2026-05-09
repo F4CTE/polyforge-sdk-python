@@ -21,6 +21,10 @@ runs:
         corepack enable --install-directory "$HOME/.corepack/bin"
         echo "$HOME/.corepack/bin" >> "$GITHUB_PATH"
 
+    - name: Configure isolated pnpm store
+      shell: bash
+      run: pnpm config set store-dir "$RUNNER_TEMP/pnpm-store"
+
     - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
       with:
         node-version: ${{ inputs.node-version }}
