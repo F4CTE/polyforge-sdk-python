@@ -722,14 +722,16 @@ class ArbCloseResponse:
     placed on the respective venues. The close is always a complete
     sweep — no partial close is supported for arbitrage positions.
 
-    ``status`` reflects the terminal outcome of the sweep:
+    ``status`` is the **non-terminal** response status:
 
-    - ``CLOSED`` — both reversing market orders were successfully placed.
+    - ``CLOSING`` — both reversing market orders were accepted and are
+      being placed; closure completes asynchronously.
     - ``FAILED`` — one or both reverse orders could not be placed (e.g.
       insufficient liquidity, venue connectivity issue).
 
-    Once closed, call :meth:`PolyforgeClient.get_arb_position` to fetch
-    the full position record including fill prices and realised P&L.
+    Callers **must** poll :meth:`PolyforgeClient.get_arb_position` to
+    confirm the final status (``CLOSED`` or ``FAILED``) and read
+    realised P&L from the full :class:`ArbPosition` record.
     """
 
     status: str = ""

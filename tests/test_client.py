@@ -5046,6 +5046,7 @@ class TestHealthEndpoint:
 
 
 
+
 class TestPositionPlatformContract:
     """Position model must match the platform contract (closes #143)."""
 

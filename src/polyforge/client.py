@@ -2046,11 +2046,12 @@ class PolyforgeClient:
 
         The backend transitions the position through ``CLOSING`` →
         ``CLOSED`` (or ``FAILED`` if a reverse order cannot be placed
-        on one or both venues). On success the returned
-        :class:`ArbCloseResponse` carries the terminal ``CLOSED`` status.
-        Once closed, realised P&L is available on the full
-        :class:`ArbPosition` record fetched via
-        :meth:`get_arb_position`.
+        on one or both venues). The returned
+        :class:`ArbCloseResponse` carries the non-terminal ``CLOSING``
+        status — closure completes asynchronously. Callers **must**
+        poll :meth:`get_arb_position` to confirm the final status
+        (``CLOSED`` or ``FAILED``) and read realised P&L from the full
+        :class:`ArbPosition` record.
 
         ``idempotency_key`` is sent as the ``Idempotency-Key`` header and
         is **required** by the backend for this endpoint. The key must be
