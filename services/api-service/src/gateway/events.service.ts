@@ -194,10 +194,22 @@ export class EventsService implements OnModuleInit, OnModuleDestroy {
       case "ORDER_FILLED":
       case "ORDER_PARTIAL":
       case "ORDER_CANCELLED":
-      case "ORDER_FAILED":
       case "ORDER_ERROR":
         if (userId) {
           this.gateway.pushOrderEvent(userId, type, { orderId, ...rest });
+        }
+        break;
+
+      case "ORDER_FAILED":
+        if (userId) {
+          const sanitizedReason = reason
+            ? reason.replace(/[\r\n]+/g, " ").slice(0, 500)
+            : undefined;
+          this.gateway.pushOrderEvent(userId, type, {
+            orderId,
+            reason: sanitizedReason,
+            ...rest,
+          });
         }
         break;
 
