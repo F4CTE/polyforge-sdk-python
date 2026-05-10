@@ -576,8 +576,20 @@ class ArbitrageAlertSubscription:
 # Cross-Venue Arb Execution / Positions / Risk
 # ---------------------------------------------------------------------------
 #
+# Trading-impact surface: ``execute_arb`` and ``close_arb_position`` place
+# real orders on Polymarket and Kalshi. Both endpoints are rate-limited to
+# 5 requests per minute per user (HTTP 429 on exceed). ``close_arb_position``
+# uses sweep semantics: GTC orders priced at extreme tick boundaries
+# (0.001 SELL / 0.999 BUY) behave as market-order sweeps — slippage is
+# bounded only by venue depth, not by the on-paper price.
+#
+# ``match_id`` is UUID-validated server-side. Backend error codes
+# (``VENUES_NOT_CONNECTED``, ``MATCH_NOT_FOUND``, ``COMPARISON_UNAVAILABLE``,
+# ``SPREAD_TOO_LOW``, ``TOKEN_RESOLUTION_FAILED``, ``ARB_POSITION_NOT_FOUND``,
+# ``INVALID_STATUS``) are passed through verbatim via ``PolyforgeError.code``.
+#
 # These models describe the trading-impact-bearing arbitrage execution
-# surface (`POST /api/v1/arbitrage/execute`, the position lifecycle, and
+# surface (``POST /api/v1/arbitrage/execute``, the position lifecycle, and
 # the risk dashboards). Decimal columns from the Prisma backend serialize
 # as strings; we keep them as ``str`` so callers convert with full
 # precision instead of relying on float coercion.
@@ -603,7 +615,19 @@ class ArbExecutionLeg:
 
 @dataclass
 class ArbExecutionResult:
-    """Server response for ``POST /api/v1/arbitrage/execute``."""
+    """Server response for ``POST /api/v1/arbitrage/execute``.
+
+    On success this opens a new :class:`ArbPosition` in ``OPEN`` state.
+    The position consists of two offsetting legs (buy on one venue, sell
+    on the other) and can later be exited only via a **full sweep-close**
+    using ``POST /api/v1/arbitrage/positions/:id/close``
+    (see :meth:`PolyforgeClient.close_arb_position`). Partial closes are
+    not supported for arbitrage positions.
+
+    Both legs carry optional ``intent_id`` and ``price`` fields; fill
+    confirmation may arrive asynchronously and is available on the full
+    :class:`ArbPosition` record after the orders execute.
+    """
 
     arb_position_id: str = ""
     buy_leg: ArbExecutionLeg | None = None
@@ -614,11 +638,16 @@ class ArbExecutionResult:
 
 @dataclass
 class ArbPosition:
-    """A cross-venue arbitrage position.
+    """A cross-venue arbitrage position (mirrors the Prisma ``ArbPosition`` row).
 
-    Mirrors the Prisma ``ArbPosition`` row. Decimal columns
-    (``buy_price``, ``buy_size``, P&L fields, etc.) arrive as strings
-    when the backend serializes Decimals through JSON.
+    Created via ``POST /api/v1/arbitrage/execute`` and closed via a **full
+    sweep-close** (``POST /api/v1/arbitrage/positions/:id/close``). The
+    lifecycle is tracked in ``status``: positions start in ``OPEN``,
+    transition through ``CLOSING`` during the sweep, and settle in
+    ``CLOSED`` or ``FAILED``.
+
+    Decimal columns (``buy_price``, ``buy_size``, P&L fields, etc.) arrive
+    as strings when the backend serializes Decimals through JSON.
     """
 
     id: str = ""
@@ -655,7 +684,12 @@ class ArbPosition:
 
 @dataclass
 class ArbPositionsResponse:
-    """Paginated response for ``GET /api/v1/arbitrage/positions``."""
+    """Paginated response for ``GET /api/v1/arbitrage/positions``.
+
+    Each :class:`ArbPosition` tracks the full arbitrage lifecycle
+    (``OPEN`` → ``CLOSING`` → ``CLOSED`` / ``FAILED``). Positions can only
+    be exited via a full sweep-close.
+    """
 
     positions: list[ArbPosition] = field(default_factory=list)
     total: int = 0
@@ -663,7 +697,22 @@ class ArbPositionsResponse:
 
 @dataclass
 class ArbCloseResponse:
-    """Server response for ``POST /api/v1/arbitrage/positions/:id/close``."""
+    """Server response for ``POST /api/v1/arbitrage/positions/:id/close``.
+
+    Returned after a **full sweep-close** of a cross-venue arbitrage
+    position. Both legs (buy and sell) are reversed with market orders
+    placed on the respective venues. The close is always a complete
+    sweep — no partial close is supported for arbitrage positions.
+
+    ``status`` reflects the terminal outcome of the sweep:
+
+    - ``CLOSED`` — both reversing market orders were successfully placed.
+    - ``FAILED`` — one or both reverse orders could not be placed (e.g.
+      insufficient liquidity, venue connectivity issue).
+
+    Once closed, call :meth:`PolyforgeClient.get_arb_position` to fetch
+    the full position record including fill prices and realised P&L.
+    """
 
     status: str = ""
     position_id: str = ""
