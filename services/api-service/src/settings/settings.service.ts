@@ -80,6 +80,386 @@ export class SettingsService {
     );
   }
 
+  async exportPersonalData(userId: string): Promise<Record<string, unknown>> {
+    const [
+      account,
+      notificationPreferences,
+      notificationHistory,
+      userLimits,
+      apiKeys,
+      loginHistory,
+      botConnections,
+      strategies,
+      orders,
+      positions,
+      paperOrders,
+      paperPositions,
+      backtests,
+      priceAlerts,
+      follows,
+      copyConfigs,
+      conditionalOrders,
+      smartOrders,
+      webhooks,
+      tickets,
+      journalEntries,
+      watchlistItems,
+      marketplaceListings,
+      marketplacePurchases,
+      arbitrageAlerts,
+      arbitragePositions,
+    ] = await Promise.all([
+      this.prisma.user.findUniqueOrThrow({
+        where: { id: userId },
+        select: {
+          id: true,
+          email: true,
+          username: true,
+          displayName: true,
+          bio: true,
+          avatarUrl: true,
+          twitterHandle: true,
+          showPnl: true,
+          showWinrate: true,
+          polymarketConnected: true,
+          polymarketAddress: true,
+          kalshiConnected: true,
+          kalshiUserId: true,
+          polymarketUsConnected: true,
+          country: true,
+          tosAcceptedAt: true,
+          emailVerified: true,
+          emailVerifiedAt: true,
+          approved: true,
+          approvedAt: true,
+          suspended: true,
+          createdAt: true,
+          lastSeen: true,
+        },
+      }),
+      this.prisma.notificationPreference.findUnique({ where: { userId } }),
+      this.prisma.notificationHistory.findMany({
+        where: { userId },
+        orderBy: { sentAt: "desc" },
+        take: 1000,
+      }),
+      this.prisma.userLimit.findUnique({ where: { userId } }),
+      this.prisma.apiKey.findMany({
+        where: { userId },
+        orderBy: { createdAt: "desc" },
+        take: 1000,
+        select: {
+          id: true,
+          name: true,
+          prefix: true,
+          scopes: true,
+          expiresAt: true,
+          lastUsedAt: true,
+          lastUsedIp: true,
+          revoked: true,
+          revokedAt: true,
+          createdAt: true,
+        },
+      }),
+      this.prisma.userLoginHistory.findMany({
+        where: { userId },
+        orderBy: { createdAt: "desc" },
+        take: 1000,
+        select: {
+          ip: true,
+          userAgent: true,
+          country: true,
+          success: true,
+          createdAt: true,
+        },
+      }),
+      this.prisma.botConnection.findMany({
+        where: { userId },
+        orderBy: { linkedAt: "desc" },
+        take: 1000,
+        select: {
+          id: true,
+          channel: true,
+          chatId: true,
+          linkedAt: true,
+          active: true,
+        },
+      }),
+      this.prisma.strategy.findMany({
+        where: { userId },
+        orderBy: { createdAt: "desc" },
+        take: 1000,
+      }),
+      this.prisma.order.findMany({
+        where: { userId },
+        orderBy: { createdAt: "desc" },
+        take: 1000,
+      }),
+      this.prisma.position.findMany({
+        where: { userId },
+        orderBy: { updatedAt: "desc" },
+        take: 1000,
+      }),
+      this.prisma.paperOrder.findMany({
+        where: { userId },
+        orderBy: { createdAt: "desc" },
+        take: 1000,
+      }),
+      this.prisma.paperPosition.findMany({
+        where: { userId },
+        orderBy: { updatedAt: "desc" },
+        take: 1000,
+      }),
+      this.prisma.backtestRun.findMany({
+        where: { userId },
+        orderBy: { createdAt: "desc" },
+        take: 1000,
+        include: { backtestOrders: { take: 1000 } },
+      }),
+      this.prisma.priceAlert.findMany({
+        where: { userId },
+        orderBy: { createdAt: "desc" },
+        take: 1000,
+      }),
+      this.prisma.follow.findMany({
+        where: { OR: [{ followerId: userId }, { followingId: userId }] },
+        orderBy: { createdAt: "desc" },
+        take: 1000,
+      }),
+      this.prisma.copyConfig.findMany({
+        where: { userId },
+        orderBy: { createdAt: "desc" },
+        take: 1000,
+        include: { trades: { take: 1000, orderBy: { createdAt: "desc" } } },
+      }),
+      this.prisma.conditionalOrder.findMany({
+        where: { userId },
+        orderBy: { createdAt: "desc" },
+        take: 1000,
+      }),
+      this.prisma.smartOrder.findMany({
+        where: { userId },
+        orderBy: { createdAt: "desc" },
+        take: 1000,
+      }),
+      this.prisma.webhook.findMany({
+        where: { userId },
+        orderBy: { createdAt: "desc" },
+        take: 1000,
+        select: {
+          id: true,
+          url: true,
+          events: true,
+          active: true,
+          createdAt: true,
+        },
+      }),
+      this.prisma.ticket.findMany({
+        where: { userId },
+        orderBy: { createdAt: "desc" },
+        take: 1000,
+        include: { messages: { take: 1000, orderBy: { createdAt: "asc" } } },
+      }),
+      this.prisma.journalEntry.findMany({
+        where: { userId },
+        orderBy: { createdAt: "desc" },
+        take: 1000,
+      }),
+      this.prisma.watchlistItem.findMany({
+        where: { userId },
+        orderBy: { createdAt: "desc" },
+        take: 1000,
+      }),
+      this.prisma.marketplaceListing.findMany({
+        where: { sellerId: userId },
+        orderBy: { createdAt: "desc" },
+        take: 1000,
+      }),
+      this.prisma.marketplacePurchase.findMany({
+        where: { buyerId: userId },
+        orderBy: { createdAt: "desc" },
+        take: 1000,
+      }),
+      this.prisma.arbitrageAlert.findMany({
+        where: { userId },
+        orderBy: { createdAt: "desc" },
+        take: 1000,
+      }),
+      this.prisma.arbPosition.findMany({
+        where: { userId },
+        orderBy: { createdAt: "desc" },
+        take: 1000,
+      }),
+    ]);
+
+    const collections: [string, unknown][] = [
+      ["notificationHistory", notificationHistory],
+      ["apiKeys", apiKeys],
+      ["loginHistory", loginHistory],
+      ["botConnections", botConnections],
+      ["strategies", strategies],
+      ["orders", orders],
+      ["positions", positions],
+      ["paperOrders", paperOrders],
+      ["paperPositions", paperPositions],
+      ["backtests", backtests],
+      ["priceAlerts", priceAlerts],
+      ["follows", follows],
+      ["copyConfigs", copyConfigs],
+      ["conditionalOrders", conditionalOrders],
+      ["smartOrders", smartOrders],
+      ["webhooks", webhooks],
+      ["tickets", tickets],
+      ["journalEntries", journalEntries],
+      ["watchlistItems", watchlistItems],
+      ["marketplaceListings", marketplaceListings],
+      ["marketplacePurchases", marketplacePurchases],
+      ["arbitrageAlerts", arbitrageAlerts],
+      ["arbitragePositions", arbitragePositions],
+    ];
+
+    const truncated: Record<string, number> = {};
+    for (const [name, value] of collections) {
+      if (Array.isArray(value) && value.length >= 1000) {
+        truncated[name] = value.length;
+      }
+    }
+
+    // Report truncation for nested included collections as well.
+    for (const bt of Array.isArray(backtests) ? backtests : []) {
+      const nested = (bt as Record<string, unknown>).backtestOrders;
+      if (Array.isArray(nested) && nested.length >= 1000) {
+        truncated["backtests.backtestOrders"] = nested.length;
+        break;
+      }
+    }
+    for (const cc of Array.isArray(copyConfigs) ? copyConfigs : []) {
+      const nested = (cc as Record<string, unknown>).trades;
+      if (Array.isArray(nested) && nested.length >= 1000) {
+        truncated["copyConfigs.trades"] = nested.length;
+        break;
+      }
+    }
+    for (const t of Array.isArray(tickets) ? tickets : []) {
+      const nested = (t as Record<string, unknown>).messages;
+      if (Array.isArray(nested) && nested.length >= 1000) {
+        truncated["tickets.messages"] = nested.length;
+        break;
+      }
+    }
+
+    return {
+      generatedAt: new Date().toISOString(),
+      formatVersion: "2026-05-privacy-export-v1",
+      _meta: {
+        maxRecordsPerCollection: 1000,
+        collectionsTruncated: truncated,
+      },
+      account,
+      settings: {
+        notificationPreferences,
+        userLimits,
+      },
+      security: {
+        apiKeys,
+        loginHistory,
+        botConnections,
+      },
+      trading: {
+        strategies,
+        orders,
+        positions,
+        paperOrders,
+        paperPositions,
+        backtests,
+        conditionalOrders,
+        smartOrders,
+        copyConfigs,
+        arbitrageAlerts,
+        arbitragePositions,
+      },
+      communications: {
+        notificationHistory,
+        tickets,
+        journalEntries,
+        webhooks: (webhooks ?? []).map((w) => ({
+          ...w,
+          url: this.redactUrl(w.url),
+        })),
+      },
+      social: {
+        follows,
+        priceAlerts,
+        watchlistItems,
+        marketplaceListings,
+        marketplacePurchases,
+      },
+    };
+  }
+
+  exportPersonalDataCsv(data: Record<string, unknown>): string {
+    const rows: string[][] = [["section", "index", "data_json"]];
+
+    for (const [section, value] of Object.entries(data)) {
+      if (section === "generatedAt" || section === "formatVersion") {
+        rows.push([section, "", JSON.stringify(value)]);
+        continue;
+      }
+
+      if (Array.isArray(value)) {
+        value.forEach((entry, index) => {
+          rows.push([section, String(index), JSON.stringify(entry)]);
+        });
+        continue;
+      }
+
+      if (value && typeof value === "object") {
+        const entries = Object.entries(value as Record<string, unknown>);
+        const containsNestedCollections = entries.some(([, nestedValue]) =>
+          Array.isArray(nestedValue),
+        );
+
+        if (!containsNestedCollections) {
+          rows.push([section, "", JSON.stringify(value)]);
+          continue;
+        }
+
+        for (const [nestedSection, nestedValue] of entries) {
+          const rowSection = `${section}.${nestedSection}`;
+          if (Array.isArray(nestedValue)) {
+            nestedValue.forEach((entry, index) => {
+              rows.push([rowSection, String(index), JSON.stringify(entry)]);
+            });
+          } else {
+            rows.push([rowSection, "", JSON.stringify(nestedValue)]);
+          }
+        }
+        continue;
+      }
+
+      rows.push([section, "", JSON.stringify(value)]);
+    }
+
+    return `${rows.map((row) => row.map((cell) => this.csvCell(cell)).join(",")).join("\n")}\n`;
+  }
+
+  private csvCell(value: string): string {
+    const escaped = value.replace(/"/g, '""');
+    if (/^[=+\-@]/.test(escaped)) {
+      return `"'${escaped}"`;
+    }
+    return `"${escaped}"`;
+  }
+
+  private redactUrl(raw: string): string {
+    try {
+      const u = new URL(raw);
+      return `${u.protocol}//${u.hostname}/[REDACTED]`;
+    } catch {
+      return "[REDACTED]";
+    }
+  }
+
   async updateNotifications(
     userId: string,
     dto: UpdateNotificationsDto,

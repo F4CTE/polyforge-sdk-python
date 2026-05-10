@@ -83,6 +83,103 @@ describe("SettingsService", () => {
     vi.restoreAllMocks();
   });
 
+  // ── exportPersonalData ───────────────────────────────────────────────────
+
+  describe("exportPersonalData", () => {
+    it("exports account data without credential or authenticator secrets", async () => {
+      db.user.findUniqueOrThrow.mockResolvedValue({
+        id: "user-uuid-1",
+        email: "alice@example.com",
+        username: "alice",
+      } as any);
+
+      const result = await service.exportPersonalData("user-uuid-1");
+
+      expect(result).toMatchObject({
+        formatVersion: "2026-05-privacy-export-v1",
+        account: {
+          id: "user-uuid-1",
+          email: "alice@example.com",
+          username: "alice",
+        },
+      });
+      expect(db.user.findUniqueOrThrow).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: "user-uuid-1" },
+          select: expect.not.objectContaining({
+            passwordHash: true,
+            totpSecret: true,
+            totpBackupCodes: true,
+          }),
+        }),
+      );
+    });
+
+    it("uses redacted selects for API keys, bot connections, and webhooks", async () => {
+      await service.exportPersonalData("user-uuid-1");
+
+      expect(db.apiKey.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { userId: "user-uuid-1" },
+          select: expect.not.objectContaining({ tokenHash: true }),
+        }),
+      );
+      expect(db.botConnection.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { userId: "user-uuid-1" },
+          select: expect.not.objectContaining({ tokenHash: true }),
+        }),
+      );
+      expect(db.webhook.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { userId: "user-uuid-1" },
+          select: expect.not.objectContaining({ secret: true }),
+        }),
+      );
+    });
+
+    it("includes redacted webhook records in communications.webhooks", async () => {
+      db.webhook.findMany.mockResolvedValue([
+        {
+          id: "wh-1",
+          url: "https://discord.com/api/webhooks/123/abc-token",
+          events: ["ORDER_FILLED"],
+          active: true,
+          createdAt: new Date("2026-05-01"),
+        },
+      ] as any);
+
+      const result = await service.exportPersonalData("user-uuid-1");
+
+      expect(result).toHaveProperty("communications");
+      expect(result.communications).toHaveProperty("webhooks");
+      const webhooks = (result.communications as any).webhooks;
+      expect(webhooks).toHaveLength(1);
+      expect(webhooks[0].url).toBe("https://discord.com/[REDACTED]");
+      expect(webhooks[0].id).toBe("wh-1");
+      expect(webhooks[0].events).toEqual(["ORDER_FILLED"]);
+      expect(webhooks[0]).not.toHaveProperty("secret");
+    });
+
+    it("serializes nested export data as quoted CSV JSON cells", () => {
+      const csv = service.exportPersonalDataCsv({
+        generatedAt: "2026-05-06T00:00:00.000Z",
+        account: { email: 'a"b@example.com' },
+        trading: {
+          orders: [{ id: "order-1", note: 'comma, quote " test' }],
+        },
+      });
+
+      expect(csv).toContain('"section","index","data_json"');
+      expect(csv).toContain(
+        '"account","","{""email"":""a\\""b@example.com""}"',
+      );
+      expect(csv).toContain(
+        '"trading.orders","0","{""id"":""order-1"",""note"":""comma, quote \\"" test""}"',
+      );
+    });
+  });
+
   // ── updateProfile ─────────────────────────────────────────────────────────
 
   describe("updateProfile", () => {

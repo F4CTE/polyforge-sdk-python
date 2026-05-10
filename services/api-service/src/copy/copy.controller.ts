@@ -18,6 +18,7 @@ import { CopyService } from "./copy.service";
 import { CreateCopyDto } from "./dto/create-copy.dto";
 import { UpdateCopyDto } from "./dto/update-copy.dto";
 import { JwtPayload } from "@polyforge/shared-types";
+import { GeoBlockGuard } from "../common/guards/geo.guard";
 
 @ApiTags("copy")
 @ApiBearerAuth("jwt")
@@ -27,6 +28,7 @@ export class CopyController {
   constructor(private readonly copy: CopyService) {}
 
   @Post()
+  @UseGuards(GeoBlockGuard)
   create(@CurrentUser() user: JwtPayload, @Body() dto: CreateCopyDto) {
     return this.copy.create(user.sub, dto);
   }
@@ -64,6 +66,7 @@ export class CopyController {
 
   @Post(":id/resume")
   @HttpCode(HttpStatus.OK)
+  @UseGuards(GeoBlockGuard)
   resume(
     @CurrentUser() user: JwtPayload,
     @Param("id", ParseUUIDPipe) id: string,

@@ -851,6 +851,10 @@ export function Component() {
       {/* Filter bar — hidden while showing comparison panel */}
       {!showComparison && (
         <div className="space-y-3">
+          <div className="rounded-pf border border-warning/30 bg-warning/10 px-4 py-3 text-body-sm text-secondary">
+            Past performance does not guarantee future results. Trading on prediction markets involves risk of loss.
+          </div>
+
           {/* Search */}
           <Input
             type="search"

@@ -19,6 +19,7 @@ import { LpService } from "./lp.service";
 import { ProvideLiquidityDto } from "./dto/provide-liquidity.dto";
 import { IdempotencyInterceptor } from "../common/interceptors/idempotency.interceptor";
 import { JwtPayload } from "@polyforge/shared-types";
+import { GeoBlockGuard } from "../common/guards/geo.guard";
 
 @ApiTags("lp")
 @ApiBearerAuth("jwt")
@@ -40,7 +41,7 @@ export class LpController {
     required: true,
     schema: { type: "string", minLength: 8, maxLength: 128 },
   })
-  @UseGuards(ApiKeyScopeGuard)
+  @UseGuards(ApiKeyScopeGuard, GeoBlockGuard)
   @UseInterceptors(IdempotencyInterceptor)
   @RequireScopes("TRADE")
   provideLiquidity(

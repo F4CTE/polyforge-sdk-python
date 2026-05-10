@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { INTERCEPTORS_METADATA } from "@nestjs/common/constants";
+import {
+  GUARDS_METADATA,
+  INTERCEPTORS_METADATA,
+} from "@nestjs/common/constants";
+import { GeoBlockGuard } from "../common/guards/geo.guard";
 import { IdempotencyInterceptor } from "../common/interceptors/idempotency.interceptor";
 import { LpController } from "./lp.controller";
 
@@ -26,5 +30,15 @@ function expectRequiredIdempotencyKey(method: object) {
 describe("LpController", () => {
   it("provideLiquidity requires Idempotency-Key", () => {
     expectRequiredIdempotencyKey(LpController.prototype.provideLiquidity);
+  });
+
+  it("provideLiquidity blocks geo-restricted users", () => {
+    const guards: unknown[] =
+      Reflect.getMetadata(
+        GUARDS_METADATA,
+        LpController.prototype.provideLiquidity,
+      ) ?? [];
+
+    expect(guards).toContain(GeoBlockGuard);
   });
 });

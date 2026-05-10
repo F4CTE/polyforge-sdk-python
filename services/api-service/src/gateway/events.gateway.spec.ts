@@ -32,12 +32,18 @@ function makeSocket(overrides: Partial<WebSocket> = {}): WebSocket {
 function makeRequest(
   query = "",
   cookie = "",
-  origin?: string,
+  originOrHeaders?: string | Record<string, string>,
+  remoteAddress = "203.0.113.9",
 ): IncomingMessage {
+  const extraHeaders =
+    typeof originOrHeaders === "string"
+      ? { origin: originOrHeaders }
+      : (originOrHeaders ?? {});
+
   return {
     url: `/ws${query}`,
-    headers: { cookie, ...(origin ? { origin } : {}) },
-    socket: { remoteAddress: "203.0.113.9" },
+    headers: { cookie, ...extraHeaders },
+    socket: { remoteAddress },
   } as unknown as IncomingMessage;
 }
 
@@ -296,6 +302,157 @@ describe("EventsGateway", () => {
       gateway.handleConnection(client, makeRequest());
 
       expect(client.terminate).toHaveBeenCalled();
+    });
+
+    it("rejects blocked geo headers from trusted proxy before verifying the JWT", () => {
+      const client = makeSocket();
+      const req = makeRequest(
+        "?token=valid-jwt",
+        "",
+        { "x-country-code": "FR" },
+        "172.17.0.2",
+      );
+
+      gateway.handleConnection(client, req);
+
+      expect(jwtService.verify).not.toHaveBeenCalled();
+      expect(client.close).toHaveBeenCalledWith(
+        4008,
+        "Service not available in your region",
+      );
+      expect(client.terminate).toHaveBeenCalled();
+    });
+
+    it("rejects blocked geo sub-region from trusted proxy", () => {
+      const client = makeSocket();
+      const req = makeRequest(
+        "?token=valid-jwt",
+        "",
+        { "x-country-code": "CA", "x-region-code": "ON" },
+        "10.0.0.1",
+      );
+
+      gateway.handleConnection(client, req);
+
+      expect(jwtService.verify).not.toHaveBeenCalled();
+      expect(client.close).toHaveBeenCalledWith(
+        4008,
+        "Service not available in your region",
+      );
+      expect(client.terminate).toHaveBeenCalled();
+    });
+
+    it("rejects missing geo headers in production before verifying the JWT", () => {
+      const previousNodeEnv = process.env.NODE_ENV;
+      process.env.NODE_ENV = "production";
+      try {
+        const client = makeSocket();
+
+        gateway.handleConnection(client, makeRequest("?token=valid-jwt"));
+
+        expect(jwtService.verify).not.toHaveBeenCalled();
+        expect(client.close).toHaveBeenCalledWith(
+          4008,
+          "Service not available in your region",
+        );
+        expect(client.terminate).toHaveBeenCalled();
+      } finally {
+        process.env.NODE_ENV = previousNodeEnv;
+      }
+    });
+
+    it("ignores client-supplied geo headers from non-proxy IP and allows in non-prod", () => {
+      const client = makeSocket();
+      const req = makeRequest("?token=valid-jwt", "", {
+        "x-country-code": "FR",
+      });
+
+      gateway.handleConnection(client, req);
+
+      expect(client.close).not.toHaveBeenCalledWith(4008, expect.any(String));
+    });
+
+    it("blocks when geo headers come from non-proxy IP in production", () => {
+      const previousNodeEnv = process.env.NODE_ENV;
+      process.env.NODE_ENV = "production";
+      try {
+        const client = makeSocket();
+        const req = makeRequest("?token=valid-jwt", "", {
+          "x-country-code": "CH",
+        });
+
+        gateway.handleConnection(client, req);
+
+        expect(client.close).toHaveBeenCalledWith(
+          4008,
+          "Service not available in your region",
+        );
+        expect(client.terminate).toHaveBeenCalled();
+      } finally {
+        process.env.NODE_ENV = previousNodeEnv;
+      }
+    });
+
+    it("trusts 172.16.0.0/12 (RFC 1918 private) but rejects public 172.x addresses", () => {
+      for (const addr of ["172.16.0.1", "172.31.255.254"]) {
+        const client = makeSocket();
+        const req = makeRequest(
+          "?token=valid-jwt",
+          "",
+          { "x-country-code": "FR" },
+          addr,
+        );
+        gateway.handleConnection(client, req);
+        expect(jwtService.verify).not.toHaveBeenCalled();
+        expect(client.close).toHaveBeenCalledWith(
+          4008,
+          "Service not available in your region",
+        );
+        vi.clearAllMocks();
+      }
+
+      for (const addr of ["172.15.255.254", "172.32.0.1"]) {
+        const client = makeSocket();
+        const req = makeRequest("?token=valid-jwt", "", {}, addr);
+        gateway.handleConnection(client, req);
+        expect(client.close).not.toHaveBeenCalledWith(
+          4008,
+          expect.any(String),
+        );
+        expect(jwtService.verify).toHaveBeenCalled();
+        vi.clearAllMocks();
+      }
+    });
+
+    it("normalises IPv4-mapped IPv6 private addresses (::ffff:10.x / ::ffff:172.16.x)", () => {
+      for (const addr of ["::ffff:10.0.0.1", "::ffff:172.16.0.1"]) {
+        const client = makeSocket();
+        const req = makeRequest(
+          "?token=valid-jwt",
+          "",
+          { "x-country-code": "FR" },
+          addr,
+        );
+        gateway.handleConnection(client, req);
+        expect(jwtService.verify).not.toHaveBeenCalled();
+        expect(client.close).toHaveBeenCalledWith(
+          4008,
+          "Service not available in your region",
+        );
+        vi.clearAllMocks();
+      }
+
+      for (const addr of ["::ffff:172.15.255.254", "::ffff:172.32.0.1"]) {
+        const client = makeSocket();
+        const req = makeRequest("?token=valid-jwt", "", {}, addr);
+        gateway.handleConnection(client, req);
+        expect(client.close).not.toHaveBeenCalledWith(
+          4008,
+          expect.any(String),
+        );
+        expect(jwtService.verify).toHaveBeenCalled();
+        vi.clearAllMocks();
+      }
     });
   });
 

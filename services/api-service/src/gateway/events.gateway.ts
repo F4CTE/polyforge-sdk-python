@@ -32,6 +32,10 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
     Set<string>
   >();
   private readonly whaleSubscriptions = new WeakSet<WebSocket>();
+  private readonly blockedRegions: Record<string, string[]> = {
+    CA: ["ON"],
+    UA: ["43", "14", "09"],
+  };
 
   @WebSocketServer()
   server!: Server;
@@ -44,6 +48,12 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
   handleConnection(client: WebSocket, request: IncomingMessage): void {
     if (!this.isAllowedOrigin(request)) {
       client.close(4003, "Origin not allowed");
+      client.terminate();
+      return;
+    }
+
+    if (this.isGeoBlocked(request)) {
+      client.close(4008, "Service not available in your region");
       client.terminate();
       return;
     }
@@ -95,6 +105,84 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
       client.close(4003, "Invalid token");
       client.terminate();
     }
+  }
+
+  private isGeoBlocked(request: IncomingMessage): boolean {
+    if (!this.fromTrustedProxy(request)) {
+      return process.env.NODE_ENV === "production";
+    }
+
+    const country = this.headerValue(request, "x-country-code")?.toUpperCase();
+    const region = this.headerValue(request, "x-region-code")?.toUpperCase();
+
+    if (!country) {
+      return process.env.NODE_ENV === "production";
+    }
+
+    const usRailEnabled =
+      this.config.get<string>("POLYMARKET_US_ENABLED") === "true";
+    const blockedCountries = this.csvConfig(
+      "GEO_BLOCKED_COUNTRIES",
+      "US,AU,BE,BY,BI,CF,CG,CU,DE,ET,FR,GB,IR,IQ,IT,KP,LB,LY,MM,NI,NL,RU,SO,SS,SD,SY,VE,YE,ZW,UM",
+    );
+    const closeOnlyCountries = this.csvConfig(
+      "GEO_CLOSE_ONLY_COUNTRIES",
+      "PL,SG,TH,TW",
+    );
+
+    if (blockedCountries.includes(country)) {
+      return !(country === "US" && usRailEnabled);
+    }
+
+    // Close-only countries may view live data but cannot open new
+    // positions (enforced at order-placement level, not WebSocket).
+    if (closeOnlyCountries.includes(country)) {
+      return false;
+    }
+
+    return Boolean(
+      region &&
+      this.blockedRegions[country] &&
+      this.blockedRegions[country].includes(region),
+    );
+  }
+
+  private fromTrustedProxy(request: IncomingMessage): boolean {
+    let remote = request.socket.remoteAddress ?? "";
+    // Normalise IPv4-mapped IPv6 addresses so that ::ffff:10.0.0.1 is
+    // evaluated against the same RFC 1918 rules as 10.0.0.1.
+    if (remote.startsWith("::ffff:") && remote.length > 7) {
+      remote = remote.slice(7);
+    }
+    if (
+      remote === "127.0.0.1" ||
+      remote === "::1"
+    )
+      return true;
+    if (remote.startsWith("10.") || remote.startsWith("192.168."))
+      return true;
+    if (remote.startsWith("172.")) {
+      const parts = remote.split(".");
+      if (parts.length < 2) return false;
+      const secondOctet = parseInt(parts[1], 10);
+      return !isNaN(secondOctet) && secondOctet >= 16 && secondOctet <= 31;
+    }
+    return false;
+  }
+
+  private csvConfig(key: string, fallback: string): string[] {
+    return (this.config.get<string>(key) ?? fallback)
+      .split(",")
+      .map((value) => value.trim().toUpperCase())
+      .filter(Boolean);
+  }
+
+  private headerValue(
+    request: IncomingMessage,
+    headerName: string,
+  ): string | undefined {
+    const value = request.headers[headerName];
+    return Array.isArray(value) ? value[0] : value;
   }
 
   handleDisconnect(client: WebSocket): void {

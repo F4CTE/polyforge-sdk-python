@@ -12,7 +12,7 @@ import { useAuthStore } from '../../stores/auth-store';
 
 /* ─── Types ──────────────────────────────────────────────────────────── */
 
-type Tab = 'profile' | 'notifications' | 'password' | '2fa' | 'apikeys' | 'gas' | 'risk' | 'webhooks' | 'sessions';
+type Tab = 'profile' | 'notifications' | 'password' | '2fa' | 'apikeys' | 'gas' | 'risk' | 'privacy' | 'webhooks' | 'sessions';
 
 interface ApiKey {
   id: string;
@@ -95,6 +95,7 @@ const TABS: { label: string; value: Tab; icon: React.ReactNode }[] = [
   { label: 'API Keys', value: 'apikeys', icon: <Key className="size-4" /> },
   { label: 'Gas Usage', value: 'gas', icon: <Fuel className="size-4" /> },
   { label: 'Risk', value: 'risk', icon: <ShieldAlert className="size-4" /> },
+  { label: 'Privacy', value: 'privacy', icon: <Download className="size-4" /> },
   { label: 'Webhooks', value: 'webhooks', icon: <Webhook className="size-4" /> },
   { label: 'Sessions', value: 'sessions', icon: <Monitor className="size-4" /> },
 ];
@@ -263,6 +264,7 @@ export function Component() {
   const [dlMaxOpenPositions, setDlMaxOpenPositions] = useState<string>('');
   const [dlLoading, setDlLoading] = useState(false);
   const [dlSaving, setDlSaving] = useState(false);
+  const [privacyExporting, setPrivacyExporting] = useState<'json' | 'csv' | null>(null);
 
   async function loadGasUsage() {
     setGasLoading(true);
@@ -811,6 +813,35 @@ export function Component() {
     a.download = filename;
     a.click();
     URL.revokeObjectURL(url);
+  }
+
+  async function downloadPersonalData(format: 'json' | 'csv') {
+    if (privacyExporting) return;
+    setPrivacyExporting(format);
+    try {
+      const res = await fetch(`/api/v1/me/export?format=${format}`, { credentials: 'include' });
+      if (!res.ok) {
+        toast.error('Failed to export data');
+        return;
+      }
+
+      const disposition = res.headers.get('Content-Disposition');
+      const match = disposition?.match(/filename="?([^"]+)"?/i);
+      const fallbackDate = new Date().toISOString().slice(0, 10);
+      const filename = match?.[1] ?? `polyforge-data-export-${fallbackDate}.${format}`;
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast.success(`${format.toUpperCase()} export started`);
+    } catch {
+      toast.error('Failed to export data');
+    } finally {
+      setPrivacyExporting(null);
+    }
   }
 
   function twoFaCopyAll(codes: string[]) {
@@ -1923,6 +1954,45 @@ export function Component() {
                 Save Risk Settings
               </Button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* ─── Privacy Tab ─── */}
+      {activeTab === 'privacy' && (
+        <div className="bg-elevated border border-default rounded-pf p-6 space-y-5">
+          <div className="flex items-start gap-3">
+            <div className="size-9 rounded-pf bg-accent/10 flex items-center justify-center shrink-0">
+              <Download className="size-4 text-accent-text" />
+            </div>
+            <div>
+              <h2 className="text-body-md font-semibold text-primary">Download My Data</h2>
+              <p className="text-body-sm text-secondary mt-1">
+                Export account, settings, security, trading, communication, and social records associated with your account.
+              </p>
+            </div>
+          </div>
+          <div className="flex flex-wrap gap-3">
+            <Button
+              type="button"
+              variant="default"
+              onClick={() => downloadPersonalData('json')}
+              disabled={privacyExporting !== null}
+              className="flex items-center gap-2"
+            >
+              {privacyExporting === 'json' ? <Loader2 className="size-4 animate-spin" /> : <Download className="size-4" />}
+              Download JSON
+            </Button>
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => downloadPersonalData('csv')}
+              disabled={privacyExporting !== null}
+              className="flex items-center gap-2"
+            >
+              {privacyExporting === 'csv' ? <Loader2 className="size-4 animate-spin" /> : <Download className="size-4" />}
+              Download CSV
+            </Button>
           </div>
         </div>
       )}

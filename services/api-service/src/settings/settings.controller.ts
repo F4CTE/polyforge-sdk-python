@@ -1,4 +1,14 @@
-import { Controller, Get, Patch, Post, Body, UseGuards } from "@nestjs/common";
+import {
+  Controller,
+  Get,
+  Patch,
+  Post,
+  Body,
+  Query,
+  Res,
+  UseGuards,
+  UseInterceptors,
+} from "@nestjs/common";
 import { ApiTags, ApiBearerAuth } from "@nestjs/swagger";
 import {
   JwtAuthGuard,
@@ -12,6 +22,8 @@ import { UpdatePasswordDto } from "./dto/update-password.dto";
 import { UpdateNotificationsDto } from "./dto/update-notifications.dto";
 import { UpdateRiskSettingsDto } from "./dto/update-risk-settings.dto";
 import { JwtPayload } from "@polyforge/shared-types";
+import type { FastifyReply } from "fastify";
+import { NoCacheInterceptor } from "../common/interceptors/no-cache.interceptor";
 
 @ApiTags("settings")
 @ApiBearerAuth("jwt")
@@ -85,5 +97,42 @@ export class SettingsController {
   @RequireScopes("WRITE")
   resetCircuitBreaker(@CurrentUser() user: JwtPayload) {
     return this.settings.resetCircuitBreaker(user.sub);
+  }
+}
+
+@ApiTags("settings")
+@ApiBearerAuth("jwt")
+@Controller("me")
+@UseGuards(JwtAuthGuard)
+export class MeController {
+  constructor(private readonly settings: SettingsService) {}
+
+  @Get("export")
+  @UseGuards(ApiKeyScopeGuard)
+  @RequireScopes("READ")
+  @UseInterceptors(NoCacheInterceptor)
+  async exportPersonalData(
+    @CurrentUser() user: JwtPayload,
+    @Query("format") format: string | undefined,
+    @Res({ passthrough: true }) res: FastifyReply,
+  ) {
+    const data = await this.settings.exportPersonalData(user.sub);
+    const timestamp = new Date().toISOString().slice(0, 10);
+
+    if (format?.toLowerCase() === "csv") {
+      res.header("Content-Type", "text/csv; charset=utf-8");
+      res.header(
+        "Content-Disposition",
+        `attachment; filename="polyforge-data-export-${timestamp}.csv"`,
+      );
+      return this.settings.exportPersonalDataCsv(data);
+    }
+
+    res.header("Content-Type", "application/json; charset=utf-8");
+    res.header(
+      "Content-Disposition",
+      `attachment; filename="polyforge-data-export-${timestamp}.json"`,
+    );
+    return data;
   }
 }

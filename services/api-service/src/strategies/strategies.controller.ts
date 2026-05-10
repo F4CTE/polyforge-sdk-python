@@ -40,6 +40,7 @@ import { ImportStrategyDto } from "./dto/import-strategy.dto";
 import { CreateFromDescriptionDto } from "./dto/create-from-description.dto";
 import { PaginationDto } from "../common/dto/pagination.dto";
 import { JwtPayload } from "@polyforge/shared-types";
+import { GeoBlockGuard } from "../common/guards/geo.guard";
 
 @ApiTags("strategies")
 @ApiBearerAuth("jwt")
@@ -208,7 +209,7 @@ export class StrategiesController {
   }
 
   @Post(":id/start")
-  @UseGuards(ApiKeyScopeGuard)
+  @UseGuards(ApiKeyScopeGuard, GeoBlockGuard)
   @RequireScopes("TRADE")
   start(
     @Param("id", ParseUUIDPipe) id: string,
@@ -239,7 +240,7 @@ export class StrategiesController {
   }
 
   @Post(":id/resume")
-  @UseGuards(ApiKeyScopeGuard)
+  @UseGuards(ApiKeyScopeGuard, GeoBlockGuard)
   @RequireScopes("TRADE")
   resume(
     @Param("id", ParseUUIDPipe) id: string,

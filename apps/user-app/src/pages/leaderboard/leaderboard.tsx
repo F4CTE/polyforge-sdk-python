@@ -225,6 +225,10 @@ export function Component() {
         </Select>
       </div>
 
+      <div className="rounded-pf border border-warning/30 bg-warning/10 px-4 py-3 text-body-sm text-secondary">
+        Past performance does not guarantee future results. Trading on prediction markets involves risk of loss.
+      </div>
+
       {/* Table */}
       <div data-testid="leaderboard-table" className="bg-elevated border border-default rounded-pf overflow-hidden">
         <div className="overflow-x-auto">
