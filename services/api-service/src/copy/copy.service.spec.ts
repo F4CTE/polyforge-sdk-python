@@ -3,10 +3,13 @@ import { CopyService } from "./copy.service";
 import { CopyEngineService } from "./copy-engine.service";
 import { Prisma, type CopyConfig } from "@prisma/client";
 
+const LOWER_TARGET_WALLET = "0x52908400098527886e0f7030069857d2e4169ee7";
+const CHECKSUM_TARGET_WALLET = "0x52908400098527886E0F7030069857D2E4169EE7";
+
 // ─── Mock PrismaService ─────────────────────────────────────────────────────
 
 function createMockPrisma() {
-  return {
+  const mock = {
     copyConfig: {
       findMany: vi.fn(),
       findUnique: vi.fn(),
@@ -21,7 +24,23 @@ function createMockPrisma() {
       create: vi.fn(),
       deleteMany: vi.fn(),
     },
+    $transaction: vi.fn((arg: any) => {
+      if (typeof arg === "function") {
+        const tx = {
+          copyConfig: {
+            create: mock.copyConfig.create,
+            delete: mock.copyConfig.delete,
+          },
+          copyTrade: {
+            deleteMany: mock.copyTrade.deleteMany,
+          },
+        };
+        return Promise.resolve(arg(tx));
+      }
+      return Promise.reject(new Error("unsupported"));
+    }),
   } as any;
+  return mock;
 }
 
 // ─── Mock RedisService ──────────────────────────────────────────────────────
@@ -56,28 +75,41 @@ describe("CopyService", () => {
   describe("create", () => {
     it("creates a copy config successfully", async () => {
       prisma.copyConfig.count.mockResolvedValue(0);
-      prisma.copyConfig.findUnique.mockResolvedValue(null);
+      prisma.copyConfig.findMany.mockResolvedValue([]);
       prisma.copyConfig.create.mockResolvedValue({
         id: "cfg-1",
         userId: "user-1",
-        targetWallet: "0xabc",
+        targetWallet: CHECKSUM_TARGET_WALLET,
         mode: "PERCENTAGE",
         status: "ACTIVE",
       });
 
       const result = await service.create("user-1", {
-        targetWallet: "0xabc",
+        targetWallet: LOWER_TARGET_WALLET,
       });
 
       expect(result.id).toBe("cfg-1");
-      expect(prisma.copyConfig.create).toHaveBeenCalled();
+      expect(prisma.copyConfig.count).toHaveBeenNthCalledWith(2, {
+        where: {
+          targetWallet: {
+            equals: CHECKSUM_TARGET_WALLET,
+            mode: "insensitive",
+          },
+          status: { in: ["ACTIVE", "PAUSED"] },
+        },
+      });
+      expect(prisma.copyConfig.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          targetWallet: CHECKSUM_TARGET_WALLET,
+        }),
+      });
     });
 
     it("rejects when max 10 active configs reached", async () => {
       prisma.copyConfig.count.mockResolvedValue(10);
 
       await expect(
-        service.create("user-1", { targetWallet: "0xabc" }),
+        service.create("user-1", { targetWallet: LOWER_TARGET_WALLET }),
       ).rejects.toThrow("Maximum of 10 active copy configs allowed");
     });
 
@@ -87,50 +119,135 @@ describe("CopyService", () => {
         .mockResolvedValueOnce(25);
 
       await expect(
-        service.create("user-1", { targetWallet: "0xabc" }),
+        service.create("user-1", { targetWallet: LOWER_TARGET_WALLET }),
       ).rejects.toMatchObject({
         response: {
           code: "TARGET_AT_CAPACITY",
         },
       });
-      expect(prisma.copyConfig.findUnique).not.toHaveBeenCalled();
+      expect(prisma.copyConfig.findMany).not.toHaveBeenCalled();
     });
 
     it("rejects duplicate wallet with non-stopped config", async () => {
       prisma.copyConfig.count.mockResolvedValue(1);
-      prisma.copyConfig.findUnique.mockResolvedValue({
-        id: "cfg-existing",
-        status: "ACTIVE",
-      });
+      prisma.copyConfig.findMany.mockResolvedValue([
+        {
+          id: "cfg-existing",
+          status: "ACTIVE",
+        },
+      ]);
 
       await expect(
-        service.create("user-1", { targetWallet: "0xabc" }),
+        service.create("user-1", { targetWallet: LOWER_TARGET_WALLET }),
       ).rejects.toThrow(
         "You already have an active copy config for this wallet",
       );
+      expect(prisma.copyConfig.findMany).toHaveBeenCalledWith({
+        where: {
+          userId: "user-1",
+          targetWallet: {
+            equals: CHECKSUM_TARGET_WALLET,
+            mode: "insensitive",
+          },
+        },
+      });
     });
 
-    it("allows re-creating a STOPPED config for same wallet", async () => {
+    it("allows re-creating a STOPPED config in a transaction", async () => {
       prisma.copyConfig.count.mockResolvedValue(0);
-      prisma.copyConfig.findUnique.mockResolvedValue({
-        id: "cfg-old",
-        status: "STOPPED",
-      });
+      prisma.copyConfig.findMany.mockResolvedValue([
+        {
+          id: "cfg-old",
+          status: "STOPPED",
+        },
+      ]);
       prisma.copyTrade.deleteMany.mockResolvedValue({ count: 0 });
       prisma.copyConfig.delete.mockResolvedValue({});
       prisma.copyConfig.create.mockResolvedValue({
         id: "cfg-new",
-        targetWallet: "0xabc",
+        targetWallet: CHECKSUM_TARGET_WALLET,
         status: "ACTIVE",
       });
 
       const result = await service.create("user-1", {
-        targetWallet: "0xabc",
+        targetWallet: LOWER_TARGET_WALLET,
       });
 
       expect(result.id).toBe("cfg-new");
+      expect(prisma.$transaction).toHaveBeenCalledOnce();
       expect(prisma.copyConfig.delete).toHaveBeenCalledWith({
         where: { id: "cfg-old" },
+      });
+    });
+
+    it("cleanup and recreate is atomic — create failure rolls back deletions", async () => {
+      prisma.copyConfig.count.mockResolvedValue(0);
+      prisma.copyConfig.findMany.mockResolvedValue([
+        { id: "cfg-old", status: "STOPPED" },
+      ]);
+      prisma.copyTrade.deleteMany.mockResolvedValue({ count: 0 });
+      prisma.copyConfig.delete.mockResolvedValue({});
+
+      // Simulate create failing inside the transaction
+      const createError = new Error("DB write failed");
+      prisma.$transaction.mockImplementationOnce(async (arg: any) => {
+        if (typeof arg === "function") {
+          const tx = {
+            copyConfig: {
+              create: vi.fn().mockRejectedValue(createError),
+              delete: prisma.copyConfig.delete,
+            },
+            copyTrade: {
+              deleteMany: prisma.copyTrade.deleteMany,
+            },
+          };
+          return arg(tx);
+        }
+        throw new Error("unsupported");
+      });
+
+      await expect(
+        service.create("user-1", {
+          targetWallet: LOWER_TARGET_WALLET,
+        }),
+      ).rejects.toThrow("DB write failed");
+
+      // Deletions were attempted (they would be rolled back by the real DB)
+      expect(prisma.copyTrade.deleteMany).toHaveBeenCalledWith({
+        where: { configId: "cfg-old" },
+      });
+      expect(prisma.copyConfig.delete).toHaveBeenCalledWith({
+        where: { id: "cfg-old" },
+      });
+    });
+
+    it("allows re-creating when multiple legacy STOPPED configs exist for same wallet", async () => {
+      prisma.copyConfig.count.mockResolvedValue(0);
+      prisma.copyConfig.findMany.mockResolvedValue([
+        { id: "cfg-old-lower", status: "STOPPED" },
+        { id: "cfg-old-upper", status: "STOPPED" },
+      ]);
+      prisma.copyTrade.deleteMany.mockResolvedValue({ count: 0 });
+      prisma.copyConfig.delete.mockResolvedValue({});
+      prisma.copyConfig.create.mockResolvedValue({
+        id: "cfg-new",
+        targetWallet: CHECKSUM_TARGET_WALLET,
+        status: "ACTIVE",
+      });
+
+      const result = await service.create("user-1", {
+        targetWallet: LOWER_TARGET_WALLET,
+      });
+
+      expect(result.id).toBe("cfg-new");
+      expect(prisma.$transaction).toHaveBeenCalledOnce();
+      expect(prisma.copyTrade.deleteMany).toHaveBeenCalledTimes(2);
+      expect(prisma.copyConfig.delete).toHaveBeenCalledTimes(2);
+      expect(prisma.copyConfig.delete).toHaveBeenCalledWith({
+        where: { id: "cfg-old-lower" },
+      });
+      expect(prisma.copyConfig.delete).toHaveBeenCalledWith({
+        where: { id: "cfg-old-upper" },
       });
     });
   });
@@ -451,17 +568,17 @@ describe("CopyService", () => {
   describe("create with optional fields", () => {
     it("passes sizeValue, maxExposure, maxDailyLoss, and priceOffset to create", async () => {
       prisma.copyConfig.count.mockResolvedValue(0);
-      prisma.copyConfig.findUnique.mockResolvedValue(null);
+      prisma.copyConfig.findMany.mockResolvedValue([]);
       prisma.copyConfig.create.mockResolvedValue({
         id: "cfg-1",
         userId: "user-1",
-        targetWallet: "0xabc",
+        targetWallet: CHECKSUM_TARGET_WALLET,
         mode: "FIXED",
         status: "ACTIVE",
       });
 
       await service.create("user-1", {
-        targetWallet: "0xabc",
+        targetWallet: LOWER_TARGET_WALLET,
         mode: "FIXED" as any,
         sizeValue: "100",
         maxExposure: "5000",
@@ -478,13 +595,15 @@ describe("CopyService", () => {
 
     it("rejects duplicate wallet with PAUSED config", async () => {
       prisma.copyConfig.count.mockResolvedValue(1);
-      prisma.copyConfig.findUnique.mockResolvedValue({
-        id: "cfg-existing",
-        status: "PAUSED",
-      });
+      prisma.copyConfig.findMany.mockResolvedValue([
+        {
+          id: "cfg-existing",
+          status: "PAUSED",
+        },
+      ]);
 
       await expect(
-        service.create("user-1", { targetWallet: "0xabc" }),
+        service.create("user-1", { targetWallet: LOWER_TARGET_WALLET }),
       ).rejects.toThrow(
         "You already have an active copy config for this wallet",
       );
@@ -700,7 +819,7 @@ describe("CopyEngineService", () => {
       prisma.copyConfig.findMany.mockResolvedValue([]);
 
       await engine.handleWhaleTrade({
-        walletAddress: "0xuntracked",
+        walletAddress: LOWER_TARGET_WALLET,
         marketId: "mkt-1",
         tokenId: "tok-1",
         side: "BUY",
@@ -715,7 +834,7 @@ describe("CopyEngineService", () => {
       const config = {
         id: "cfg-1",
         userId: "user-1",
-        targetWallet: "0xwhale",
+        targetWallet: CHECKSUM_TARGET_WALLET,
         mode: "PERCENTAGE",
         sizeValue: new Prisma.Decimal(10),
         maxExposure: new Prisma.Decimal(10000),
@@ -735,7 +854,7 @@ describe("CopyEngineService", () => {
       redis.xadd.mockResolvedValue("ok");
 
       await engine.handleWhaleTrade({
-        walletAddress: "0xwhale",
+        walletAddress: LOWER_TARGET_WALLET,
         marketId: "mkt-1",
         tokenId: "tok-1",
         side: "BUY",
@@ -802,7 +921,7 @@ describe("CopyEngineService", () => {
       const config = {
         id: "cfg-1",
         userId: "user-1",
-        targetWallet: "0xwhale",
+        targetWallet: CHECKSUM_TARGET_WALLET,
         mode: "PERCENTAGE",
         sizeValue: new Prisma.Decimal(10),
         maxExposure: new Prisma.Decimal(10000),
@@ -817,7 +936,7 @@ describe("CopyEngineService", () => {
       redis.xadd.mockResolvedValue("ok");
 
       await engine.handleWhaleTrade({
-        walletAddress: "0xwhale",
+        walletAddress: LOWER_TARGET_WALLET,
         marketId: "mkt-1",
         tokenId: "tok-1",
         side: "BUY",
@@ -847,7 +966,7 @@ describe("CopyEngineService", () => {
       const config1 = {
         id: "cfg-1",
         userId: "user-1",
-        targetWallet: "0xwhale",
+        targetWallet: CHECKSUM_TARGET_WALLET,
         mode: "FIXED",
         sizeValue: new Prisma.Decimal(100),
         maxExposure: new Prisma.Decimal(10000),
@@ -858,7 +977,7 @@ describe("CopyEngineService", () => {
       const config2 = {
         id: "cfg-2",
         userId: "user-2",
-        targetWallet: "0xwhale",
+        targetWallet: CHECKSUM_TARGET_WALLET,
         mode: "FIXED",
         sizeValue: new Prisma.Decimal(50),
         maxExposure: new Prisma.Decimal(10000),
@@ -882,7 +1001,7 @@ describe("CopyEngineService", () => {
       redis.xadd.mockResolvedValue("ok");
 
       await engine.handleWhaleTrade({
-        walletAddress: "0xwhale",
+        walletAddress: LOWER_TARGET_WALLET,
         marketId: "mkt-1",
         tokenId: "tok-1",
         side: "BUY",

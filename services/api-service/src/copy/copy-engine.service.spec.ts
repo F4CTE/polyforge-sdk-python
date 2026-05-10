@@ -2,6 +2,9 @@ import { describe, it, expect, beforeEach, vi } from "vitest";
 import { Prisma } from "@prisma/client";
 import { CopyEngineService } from "./copy-engine.service";
 
+const LOWER_TARGET_WALLET = "0x52908400098527886e0f7030069857d2e4169ee7";
+const CHECKSUM_TARGET_WALLET = "0x52908400098527886E0F7030069857D2E4169EE7";
+
 // ─── Mocks ──────────────────────────────────────────────────────────────────
 
 function createMockPrisma() {
@@ -111,7 +114,7 @@ describe("CopyEngineService", () => {
 
       await service.handleWhaleTrade({
         type: "WHALE_TRADE",
-        walletAddress: "0xabc",
+        walletAddress: LOWER_TARGET_WALLET,
       });
 
       expect(prisma.copyTrade.create).not.toHaveBeenCalled();
@@ -135,7 +138,7 @@ describe("CopyEngineService", () => {
 
       await service.handleWhaleTrade({
         type: "WHALE_TRADE",
-        walletAddress: "0xabc",
+        walletAddress: LOWER_TARGET_WALLET,
         notional: "1000",
         price: "0.5",
         marketId: "m1",
@@ -145,6 +148,15 @@ describe("CopyEngineService", () => {
       });
 
       expect(prisma.copyTrade.create).toHaveBeenCalledOnce();
+      expect(prisma.copyConfig.findMany).toHaveBeenCalledWith({
+        where: {
+          targetWallet: {
+            equals: CHECKSUM_TARGET_WALLET,
+            mode: "insensitive",
+          },
+          status: "ACTIVE",
+        },
+      });
     });
 
     it("emits COPY_TRADE_FAILED when processCopyForConfig throws", async () => {
@@ -163,7 +175,7 @@ describe("CopyEngineService", () => {
 
       await service.handleWhaleTrade({
         type: "WHALE_TRADE",
-        walletAddress: "0xabc",
+        walletAddress: LOWER_TARGET_WALLET,
         notional: "1000",
         price: "0.5",
         marketId: "m1",
@@ -216,7 +228,7 @@ describe("CopyEngineService", () => {
 
       await service.handleWhaleTrade({
         type: "WHALE_TRADE",
-        walletAddress: "0xabc",
+        walletAddress: LOWER_TARGET_WALLET,
         notional: "1000",
         price: "0.5",
         marketId: "m1",
@@ -243,7 +255,7 @@ describe("CopyEngineService", () => {
 
       await service.handleWhaleTrade({
         type: "WHALE_TRADE",
-        walletAddress: "0xabc",
+        walletAddress: LOWER_TARGET_WALLET,
         notional: "NaN",
         price: "0.5",
       });

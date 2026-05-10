@@ -11,6 +11,7 @@ import { Prisma } from "@prisma/client";
 import { paginate } from "../common/dto/pagination.dto";
 import { CreateCopyDto } from "./dto/create-copy.dto";
 import { UpdateCopyDto } from "./dto/update-copy.dto";
+import { checksumEthereumAddress } from "./wallet-address";
 
 const MAX_ACTIVE_CONFIGS = 10;
 const MAX_ACTIVE_CONFIGS_PER_TARGET = 25;
@@ -24,6 +25,8 @@ export class CopyService {
   // ─── Create ──────────────────────────────────────────────────────────────────
 
   async create(userId: string, dto: CreateCopyDto) {
+    const targetWallet = checksumEthereumAddress(dto.targetWallet);
+
     // Check active config limit
     const activeCount = await this.prisma.copyConfig.count({
       where: { userId, status: { in: ["ACTIVE", "PAUSED"] } },
@@ -37,7 +40,7 @@ export class CopyService {
 
     const targetSubscriberCount = await this.prisma.copyConfig.count({
       where: {
-        targetWallet: dto.targetWallet,
+        targetWallet: { equals: targetWallet, mode: "insensitive" },
         status: { in: ["ACTIVE", "PAUSED"] },
       },
     });
@@ -49,14 +52,16 @@ export class CopyService {
       });
     }
 
-    // Check duplicate wallet
-    const existing = await this.prisma.copyConfig.findUnique({
+    // Check duplicate wallet — use findMany to resolve all case-insensitive
+    // matches so legacy multi-case rows don't let a STOPPED row hide an ACTIVE one.
+    const existingConfigs = await this.prisma.copyConfig.findMany({
       where: {
-        userId_targetWallet: { userId, targetWallet: dto.targetWallet },
+        userId,
+        targetWallet: { equals: targetWallet, mode: "insensitive" },
       },
     });
 
-    if (existing && existing.status !== "STOPPED") {
+    if (existingConfigs.some((c) => c.status !== "STOPPED")) {
       throw new ConflictException(
         "You already have an active copy config for this wallet",
       );
@@ -64,7 +69,7 @@ export class CopyService {
 
     const data: Prisma.CopyConfigCreateInput = {
       user: { connect: { id: userId } },
-      targetWallet: dto.targetWallet,
+      targetWallet,
       mode: dto.mode ?? "PERCENTAGE",
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
       ...(dto.sizeValue && { sizeValue: new Prisma.Decimal(dto.sizeValue) }),
@@ -85,18 +90,36 @@ export class CopyService {
       }),
     };
 
-    // If there was a STOPPED config for the same wallet, delete it first
-    if (existing && existing.status === "STOPPED") {
-      await this.prisma.copyTrade.deleteMany({
-        where: { configId: existing.id },
+    // If there were STOPPED configs for the same wallet, delete them all
+    // and create the new config atomically in a transaction so that a
+    // failure in create doesn't leave the user with lost historical data.
+    const stoppedConfigs = existingConfigs.filter(
+      (c) => c.status === "STOPPED",
+    );
+
+    if (stoppedConfigs.length > 0) {
+      const config = await this.prisma.$transaction(async (tx) => {
+        for (const sc of stoppedConfigs) {
+          await tx.copyTrade.deleteMany({
+            where: { configId: sc.id },
+          });
+          await tx.copyConfig.delete({
+            where: { id: sc.id },
+          });
+        }
+        return tx.copyConfig.create({ data });
       });
-      await this.prisma.copyConfig.delete({ where: { id: existing.id } });
+
+      this.logger.log(
+        `Copy config created: ${config.id} for wallet ${targetWallet}`,
+      );
+      return config;
     }
 
     const config = await this.prisma.copyConfig.create({ data });
 
     this.logger.log(
-      `Copy config created: ${config.id} for wallet ${dto.targetWallet}`,
+      `Copy config created: ${config.id} for wallet ${targetWallet}`,
     );
     return config;
   }

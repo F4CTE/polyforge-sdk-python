@@ -32,6 +32,7 @@
     "@nestjs/throttler": "^6.4.0",
     "@nestjs/websockets": "^11.1.19",
     "@polyforge/logger": "workspace:*",
+    "@noble/hashes": "^1.8.0",
     "@polyforge/shared-auth": "workspace:*",
     "@polyforge/shared-db": "workspace:*",
     "@polyforge/shared-posthog": "workspace:^",

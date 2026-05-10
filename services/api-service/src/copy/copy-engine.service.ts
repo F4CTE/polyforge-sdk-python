@@ -18,6 +18,7 @@ import {
   OrderOutcome,
 } from "@prisma/client";
 import { isFiniteDecimal, safeDecimalToNumber } from "@polyforge/shared-types";
+import { tryChecksumEthereumAddress } from "./wallet-address";
 
 const STREAM = "stream:events";
 const ORDER_STREAM = "stream:orders";
@@ -140,13 +141,18 @@ export class CopyEngineService implements OnModuleInit, OnModuleDestroy {
   // ─── Handle Whale Trade ──────────────────────────────────────────────────────
 
   async handleWhaleTrade(event: Record<string, string>) {
-    const walletAddress = event.walletAddress;
+    const walletAddress = event.walletAddress
+      ? tryChecksumEthereumAddress(event.walletAddress)
+      : null;
     if (!walletAddress) return;
 
     // Find all ACTIVE copy configs targeting this wallet
+    // Use case-insensitive match to support legacy non-checksummed rows as well
+    // as checksummed writes. The functional index CopyConfig_targetWallet_lower_idx
+    // on lower(targetWallet) supports this query efficiently.
     const configs = await this.prisma.copyConfig.findMany({
       where: {
-        targetWallet: walletAddress,
+        targetWallet: { equals: walletAddress, mode: "insensitive" },
         status: "ACTIVE",
       },
     });
