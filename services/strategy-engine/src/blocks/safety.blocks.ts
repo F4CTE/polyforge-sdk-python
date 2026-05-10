@@ -86,6 +86,12 @@ export const StopIfExposureExceedsBlock: BlockEvaluator = {
         reason: "SAFETY STOP: invalid maxUsdc",
       };
     }
+    if (maxUsdc === 0) {
+      return {
+        fired: true,
+        reason: "no maxUsdc limit set",
+      };
+    }
     const exposure = await getUserExposure(ctx.userId, prisma);
     const passed = exposure < maxUsdc;
     return {

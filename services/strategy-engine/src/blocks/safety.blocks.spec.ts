@@ -274,6 +274,38 @@ describe("StopIfExposureExceedsBlock", () => {
     );
   });
 
+  it("fires when maxUsdc is 0 (no limit set)", async () => {
+    const prisma = makePrisma();
+    prisma.position.findMany.mockResolvedValue([
+      { size: "10", currentPrice: "0.5" }, // 5 USDC
+    ]);
+    const ctx = makeCtx();
+    const res = await StopIfExposureExceedsBlock.evaluate(
+      block("stop_if_exposure_exceeds", { maxUsdc: "0" }),
+      ctx,
+      makeRedis(),
+      prisma,
+    );
+    expect(res.fired).toBe(true);
+    expect(res.reason).toBe("no maxUsdc limit set");
+  });
+
+  it("fires when maxUsdc is not provided (defaults to 0)", async () => {
+    const prisma = makePrisma();
+    prisma.position.findMany.mockResolvedValue([
+      { size: "100", currentPrice: "0.5" }, // 50 USDC
+    ]);
+    const ctx = makeCtx();
+    const res = await StopIfExposureExceedsBlock.evaluate(
+      block("stop_if_exposure_exceeds", {}),
+      ctx,
+      makeRedis(),
+      prisma,
+    );
+    expect(res.fired).toBe(true);
+    expect(res.reason).toBe("no maxUsdc limit set");
+  });
+
   it("fails closed when maxUsdc is not finite", async () => {
     const res = await StopIfExposureExceedsBlock.evaluate(
       block("stop_if_exposure_exceeds", { maxUsdc: "Infinity" }),
