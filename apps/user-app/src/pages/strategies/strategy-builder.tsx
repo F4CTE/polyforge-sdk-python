@@ -1082,7 +1082,7 @@ export function Component() {
       fetch(`/api/v1/markets?search=${encodeURIComponent(marketSearch)}&limit=8`, { credentials: 'include' })
         .then(r => r.ok ? r.json() : null)
         .then(d => setMarketResults(d?.data ?? []))
-        .catch(() => {});
+        .catch(() => { /* typeahead search — don't toast transient failures */ });
     }, 300);
     return () => clearTimeout(t);
   }, [marketSearch]);
@@ -1104,7 +1104,7 @@ export function Component() {
     fetch(`/api/v1/markets/${marketId}`, { credentials: 'include' })
       .then(r => r.ok ? r.json() : null)
       .then(d => { if (d) setPinnedMarket({ id: d.id, title: d.title }); })
-      .catch(() => {});
+      .catch(() => { /* typeahead search — don't toast transient failures */ });
   }, [marketId]);
 
   const onSave = useCallback(async () => {

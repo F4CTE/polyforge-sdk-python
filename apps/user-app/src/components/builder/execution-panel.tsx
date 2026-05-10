@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { toast } from 'sonner';
+import { notifyApiError } from '@/lib/api-error';
 import {
   Play, Square, Pause, RotateCcw, ChevronUp, ChevronDown,
   FlaskConical, Radio, Loader2, AlertTriangle, XCircle,
@@ -120,6 +121,7 @@ export function ExecutionPanel({ strategyId, expanded, onToggle, activeTab, onTa
 
   // ─── Backtest polling ref ──────────────────────────────────────────
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const pollErrShown = useRef(false);
 
   // ─── Scan strategy blocks for market slots ─────────────────────────
   const nodes = useBuilderStore((s) => s.nodes);
@@ -155,7 +157,7 @@ export function ExecutionPanel({ strategyId, expanded, onToggle, activeTab, onTa
           setLive(prev => ({ ...prev, status: 'PAUSED' }));
         }
       })
-      .catch(() => {});
+      .catch(err => { notifyApiError(err, "load strategy status"); });
   }, [strategyId, activeTab]);
 
   // ─── WebSocket listener ────────────────────────────────────────────
@@ -303,10 +305,10 @@ export function ExecutionPanel({ strategyId, expanded, onToggle, activeTab, onTa
           } else {
             setBt(prev => ({ ...prev, progress: run.progress ?? prev.progress }));
           }
-        } catch {}
+        } catch { if (!pollErrShown.current) { notifyApiError(null, "polling"); pollErrShown.current = true; } }
       }, 3000);
     }
-    return () => { if (pollRef.current) clearInterval(pollRef.current); };
+    return () => { if (pollRef.current) clearInterval(pollRef.current); pollErrShown.current = false; };
   }, [bt.status, bt.runId]);
 
   // ─── Market search ─────────────────────────────────────────────────
@@ -318,7 +320,7 @@ export function ExecutionPanel({ strategyId, expanded, onToggle, activeTab, onTa
         const json = await res.json();
         setMarketResults(prev => ({ ...prev, [slot]: json.data ?? json ?? [] }));
       }
-    } catch {}
+    } catch { /* search is per-keystroke — don't toast transient failures */ }
   }
 
   // ─── Submit backtest ───────────────────────────────────────────────

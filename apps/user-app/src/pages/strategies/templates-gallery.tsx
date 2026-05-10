@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { Button, Input } from '@polyforge/ui';
 import { toast } from 'sonner';
+import { notifyApiError } from '@/lib/api-error';
 import { TemplateCard, type TemplateData, type TemplateCategory } from '../../components/templates/template-card';
 import { TemplatePreviewDialog, type TemplatePreviewData } from '../../components/templates/template-preview-dialog';
 
@@ -176,7 +177,7 @@ export function Component() {
         ];
         setPreviewTemplate((prev) => prev ? { ...prev, blocks } : null);
       })
-      .catch(() => {});
+      .catch(err => { notifyApiError(err, "load template blocks"); });
   }, []);
 
   const handleUseTemplate = useCallback(async (template: TemplateData) => {

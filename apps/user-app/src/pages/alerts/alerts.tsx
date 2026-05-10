@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Bell, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { notifyApiError } from '@/lib/api-error';
 import { Button, Input, Select, StatusBadge } from '@polyforge/ui';
 
 interface AlertToken {
@@ -183,7 +184,7 @@ export function Component() {
       fetch('/api/v1/alerts', { credentials: 'include' })
         .then(r => (r.ok ? r.json() : []))
         .then(setAlerts)
-        .catch(() => {});
+        .catch(err => { notifyApiError(err, "refresh"); });
     }
   }
 

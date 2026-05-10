@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef, memo } from 'react';
 import { Link, useNavigate } from 'react-router';
 import { toast } from 'sonner';
+import { notifyApiError } from '@/lib/api-error';
 import { Button, Input, Select, CardSkeleton, SkeletonLine, SkeletonCircle } from '@polyforge/ui';
 import {
   Search,
@@ -975,7 +976,7 @@ export function Component() {
       .then((data: MarketsResponse | null) => {
         if (data?.data) setTrendingMarkets(data.data);
       })
-      .catch(() => {})
+      .catch(err => { notifyApiError(err, "request"); })
       .finally(() => setTrendingLoading(false));
   }, []);
 
@@ -985,7 +986,7 @@ export function Component() {
       .then((items: Array<{ id: string }>) => {
         setWatchedIds(new Set(items.map((m: any) => m.id)));
       })
-      .catch(() => {});
+        .catch(err => { notifyApiError(err, "load watchlist"); });
   }, []);
 
   // Fetch markets with active rewards once on mount
@@ -996,7 +997,7 @@ export function Component() {
         const ids = new Set(items.map(i => i.marketId ?? i.conditionId));
         setRewardsMarketIds(ids);
       })
-      .catch(() => {});
+        .catch(err => { notifyApiError(err, "load rewards markets"); });
   }, []);
 
   // Batch-fetch sentiment for visible markets (first 20) after markets load
@@ -1051,7 +1052,7 @@ export function Component() {
         });
         setWatchedIds(prev => new Set([...prev, marketId]));
       }
-    } catch {} finally {
+    } catch { notifyApiError(null, "watchlist toggle"); } finally {
       setWatchlistLoading(prev => { const next = new Set(prev); next.delete(marketId); return next; });
     }
   };

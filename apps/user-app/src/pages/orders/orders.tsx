@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { toast } from 'sonner';
+import { notifyApiError } from '@/lib/api-error';
 import { Button, Input, Select, Textarea } from '@polyforge/ui';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import {
@@ -569,7 +570,7 @@ function CreateConditionalDialog({ onClose, onCreated }: { onClose: () => void; 
     fetch('/api/v1/portfolio', { credentials: 'include' })
       .then(r => r.ok ? r.json() : null)
       .then(data => { if (data?.positions) setPositions(data.positions); })
-      .catch(() => {});
+      .catch(err => { notifyApiError(err, 'load positions'); });
   }, []);
 
   async function handleSubmit(e: React.FormEvent) {

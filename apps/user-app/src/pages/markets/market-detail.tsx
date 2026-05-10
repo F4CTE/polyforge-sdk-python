@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router';
 import { toast } from 'sonner';
+import { notifyApiError } from '@/lib/api-error';
 import { Button, Input, Select } from '@polyforge/ui';
 import { MarketRewardsCard } from '@/components/rewards/market-rewards-card';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
@@ -446,7 +447,7 @@ export function Component() {
     fetch(`/api/v1/markets/${tokenId}/tick-size`, { credentials: 'include' })
       .then(r => r.ok ? r.json() : null)
       .then(data => { if (data?.tickSize != null) setTickSize(Number(data.tickSize)); })
-      .catch(() => {});
+        .catch(err => { notifyApiError(err, "load tick size"); });
   }, []);
 
   // When market loads, fetch chart + book + tick size
@@ -604,7 +605,7 @@ export function Component() {
         const data = await res.json();
         setMyOrders(data.data || data || []);
       }
-    } catch {} finally {
+    } catch { notifyApiError(null, "load orders"); } finally {
       setLoadingMyOrders(false);
     }
   }, [id]);
@@ -616,7 +617,7 @@ export function Component() {
     fetch('/api/v1/portfolio', { credentials: 'include' })
       .then(r => r.ok ? r.json() : null)
       .then(d => { if (d?.balance) setPortfolioBalance(parseFloat(d.balance)); })
-      .catch(() => {});
+        .catch(err => { notifyApiError(err, "load balance"); });
   }, []);
 
   // Load price alerts for this market
@@ -629,7 +630,7 @@ export function Component() {
         const data: { data: PriceAlert[] } = await r.json();
         setAlerts(data.data ?? []);
       }
-    } catch {} finally {
+    } catch { notifyApiError(null, "load alerts"); } finally {
       setLoadingAlerts(false);
     }
   }, [market?.id]);
@@ -842,7 +843,7 @@ export function Component() {
         setPendingCancelOrderId(null);
         loadMyOrders();
       }
-    } catch {}
+    } catch { notifyApiError(null, "cancel order"); }
     finally {
       setCancellingMyOrderId(null);
     }

@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { wsManager } from '@/lib/websocket';
 import { toast } from 'sonner';
+import { notifyApiError } from '@/lib/api-error';
 import { useThemeStore } from '@/stores/theme-store';
 import { useAuthStore, authedFetch } from '@/stores/auth-store';
 import { Button, Input, Select, CardSkeleton } from '@polyforge/ui';
@@ -719,7 +720,7 @@ export function Component() {
         setTaxData(res.data ?? []);
         setTaxSummary(res.summary ?? null);
       })
-      .catch(() => {})
+      .catch(err => { notifyApiError(err, "load tax report"); })
       .finally(() => { if (!cancelled) setLoadingTax(false); });
     return () => { cancelled = true; };
   }, [taxYear]);
@@ -981,7 +982,7 @@ export function Component() {
           setCircuitBreakerTrippedAt(data.circuitBreakerTrippedAt ?? null);
         }
       })
-      .catch(() => {});
+      .catch(err => { notifyApiError(err, "request"); });
   }, []);
 
   const [showResetConfirm, setShowResetConfirm] = useState(false);

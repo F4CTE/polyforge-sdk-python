@@ -46,6 +46,7 @@ import {
 } from 'lucide-react';
 import { wsManager } from '@/lib/websocket';
 import { toast } from 'sonner';
+import { notifyApiError } from '@/lib/api-error';
 import { Button, Input, Select, Textarea } from '@polyforge/ui';
 import { HealthDashboard } from '../../components/strategy/health-dashboard';
 
@@ -368,7 +369,7 @@ export function Component() {
                 if (latest?.createdAt) setLastOrderAt(latest.createdAt);
               }
             })
-            .catch(() => {});
+              .catch(err => { notifyApiError(err, 'load recent orders'); });
 
           // Fetch children if any
           if (s.childCount > 0) {
@@ -385,7 +386,7 @@ export function Component() {
               .then((parent) => {
                 if (parent) setParentStrategy({ id: parent.id, name: parent.name });
               })
-              .catch(() => {});
+            .catch(err => { notifyApiError(err, 'load parent strategy'); });
           }
         }
       })
@@ -399,7 +400,7 @@ export function Component() {
       fetch(`/api/v1/strategies/${strategy.id}/event-log?limit=50`, { credentials: 'include' })
         .then(r => r.ok ? r.json() : [])
         .then(d => setExecLog(Array.isArray(d) ? d : (d.data ?? [])))
-        .catch(() => {})
+        .catch(err => { notifyApiError(err, 'load event log'); })
         .finally(() => setLoadingLog(false));
     }
     if (detailTab === 'versions') {
@@ -410,7 +411,7 @@ export function Component() {
           const list: StrategyVersion[] = Array.isArray(d) ? d : (d.data ?? []);
           setVersions(list);
         })
-        .catch(() => {})
+        .catch(err => { notifyApiError(err, 'load strategy versions'); })
         .finally(() => setLoadingVersions(false));
     }
   }, [detailTab, strategy?.id]);
@@ -420,7 +421,7 @@ export function Component() {
     fetch(`/api/v1/portfolio/pnl?strategyId=${strategy.id}`, { credentials: 'include' })
       .then(r => r.ok ? r.json() : null)
       .then(data => { if (data) setStratPnl({ totalPnl: data.totalPnl, winRate: data.winRate }); })
-      .catch(() => {});
+      .catch(err => { notifyApiError(err, 'load strategy PnL'); });
   }, [strategy?.id]);
 
   const fetchExecutions = useCallback((page: number) => {
@@ -435,7 +436,7 @@ export function Component() {
           setExecutionsFetched(true);
         }
       })
-      .catch(() => {})
+        .catch(err => { notifyApiError(err, 'load executions'); })
       .finally(() => setExecutionsLoading(false));
   }, [strategy?.id]);
 
@@ -471,7 +472,7 @@ export function Component() {
           setLiveEvents(initial);
         }
       })
-      .catch(() => {});
+            .catch(err => { notifyApiError(err, 'load recent orders'); });
 
     // WebSocket: use wsManager listener pattern (same as market-detail.tsx)
     const handleWsMessage = (msg: { type: string; [key: string]: unknown }) => {
@@ -2101,7 +2102,7 @@ export function Component() {
                                           const list: StrategyVersion[] = Array.isArray(d) ? d : (d.data ?? []);
                                           setVersions(list);
                                         })
-                                        .catch(() => {})
+        .catch(err => { notifyApiError(err, 'load strategy versions'); })
                                         .finally(() => setLoadingVersions(false));
                                     } else {
                                       const err = await r.json().catch(() => ({}));
