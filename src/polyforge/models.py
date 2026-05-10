@@ -108,6 +108,9 @@ class Market:
     liquidity: float = 0.0
     created_at: str = ""
     updated_at: str = ""
+    description: str | None = None
+    end_date: str | None = None
+    resolved: bool | None = None
 
 
 # ---------------------------------------------------------------------------
@@ -588,7 +591,7 @@ ArbPositionStatus = Literal[
 ]
 
 # Venue identifiers mirror the server-side ``Venue`` enum.
-Venue = Literal["POLYMARKET", "KALSHI"]
+Venue = Literal["POLYMARKET", "KALSHI", "POLYMARKET_US"]
 
 
 @dataclass
@@ -1091,9 +1094,11 @@ class StrategyEvent:
     Events are emitted while a strategy is running (or backtesting).
     The first event on a new stream always has ``type == "CONNECTED"``.
 
-    Common event types:
-        CONNECTED, STRATEGY_STARTED, STRATEGY_STOPPED, STRATEGY_ERROR,
-        ORDER_PLACED, ORDER_FILLED, ORDER_CANCELLED,
+    All event types emitted by the platform:
+        CONNECTED, STRATEGY_STARTED, STRATEGY_STOPPED,
+        STRATEGY_PAUSED, STRATEGY_RESUMED, STRATEGY_ERROR,
+        ORDER_PLACED, ORDER_SUBMITTED, ORDER_FILLED, ORDER_PARTIAL,
+        ORDER_CANCELLED, ORDER_FAILED, ORDER_ERROR,
         BACKTEST_PROGRESS, BACKTEST_COMPLETED, BACKTEST_FAILED
     """
 
@@ -1101,6 +1106,28 @@ class StrategyEvent:
     strategy_id: str = ""
     data: dict[str, Any] | None = None
     timestamp: int = 0
+
+
+KNOWN_STRATEGY_EVENTS: frozenset[str] = frozenset(
+    {
+        "CONNECTED",
+        "STRATEGY_STARTED",
+        "STRATEGY_STOPPED",
+        "STRATEGY_PAUSED",
+        "STRATEGY_RESUMED",
+        "STRATEGY_ERROR",
+        "ORDER_PLACED",
+        "ORDER_SUBMITTED",
+        "ORDER_FILLED",
+        "ORDER_PARTIAL",
+        "ORDER_CANCELLED",
+        "ORDER_FAILED",
+        "ORDER_ERROR",
+        "BACKTEST_PROGRESS",
+        "BACKTEST_COMPLETED",
+        "BACKTEST_FAILED",
+    }
+)
 
 
 # ---------------------------------------------------------------------------

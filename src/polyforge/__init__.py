@@ -10,6 +10,7 @@ from polyforge.errors import (
     ServerError,
 )
 from polyforge.models import (
+    KNOWN_STRATEGY_EVENTS,
     ActionDefinition,
     ActionParameter,
     ActionsSchema,
@@ -132,6 +133,8 @@ __all__ = [
     "OrderStatus",
     "StrategyVisibility",
     "StrategyExecMode",
+    # Constants
+    "KNOWN_STRATEGY_EVENTS",
     # Models
     "AiQueryResponse",
     "Alert",

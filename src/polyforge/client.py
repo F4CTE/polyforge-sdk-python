@@ -137,6 +137,7 @@ from polyforge.models import (
     UserActivityEntry,
     UserProfileBadge,
     FollowedUser,
+    KNOWN_STRATEGY_EVENTS,
     NotificationSettings,
     EventNotificationPref,
     EventNotificationPreferences,
@@ -2243,8 +2244,11 @@ class PolyforgeClient:
                     # Validate expected fields before yielding
                     if not isinstance(payload.get("type"), str):
                         continue
+                    event_type = payload["type"]
+                    if event_type not in KNOWN_STRATEGY_EVENTS:
+                        _log.warning("Unknown strategy event type: %s", event_type)
                     yield StrategyEvent(
-                        type=payload["type"],
+                        type=event_type,
                         strategy_id=payload.get("strategyId", ""),
                         data=payload.get("data"),
                         timestamp=payload.get("timestamp", 0),
@@ -5451,8 +5455,11 @@ class AsyncPolyforgeClient:
                     # Validate expected fields before yielding
                     if not isinstance(payload.get("type"), str):
                         continue
+                    event_type = payload["type"]
+                    if event_type not in KNOWN_STRATEGY_EVENTS:
+                        _log.warning("Unknown strategy event type: %s", event_type)
                     yield StrategyEvent(
-                        type=payload["type"],
+                        type=event_type,
                         strategy_id=payload.get("strategyId", ""),
                         data=payload.get("data"),
                         timestamp=payload.get("timestamp", 0),

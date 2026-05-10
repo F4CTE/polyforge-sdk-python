@@ -523,6 +523,28 @@ class TestTokenModel:
         market = _parse(Market, raw)
         assert market.tokens == []
 
+    def test_market_parses_description_end_date_and_resolved(self):
+        """Platform returns description, endDate, and resolved on Market (#227)."""
+        raw = {
+            "id": "0xdef456",
+            "title": "Will it rain tomorrow?",
+            "description": "Resolves to YES if it rains > 1mm in NYC on 2026-01-15.",
+            "endDate": "2026-01-15T00:00:00.000Z",
+            "resolved": False,
+        }
+        market = _parse(Market, raw)
+        assert market.description == "Resolves to YES if it rains > 1mm in NYC on 2026-01-15."
+        assert market.end_date == "2026-01-15T00:00:00.000Z"
+        assert market.resolved is False
+
+    def test_market_description_end_date_resolved_default_to_none(self):
+        """Fields not in the payload should default to None."""
+        raw = {"id": "mkt-003", "title": "Basic market"}
+        market = _parse(Market, raw)
+        assert market.description is None
+        assert market.end_date is None
+        assert market.resolved is None
+
 
 class TestReprSecurity:
     """Test that __repr__ does not leak API key material."""
@@ -7225,6 +7247,8 @@ class TestArbValidators_POLA_1873:
         from polyforge import ArbPositionStatus, Venue
         assert "PENDING" in ArbPositionStatus.__args__
         assert "POLYMARKET" in Venue.__args__
+        assert "KALSHI" in Venue.__args__
+        assert "POLYMARKET_US" in Venue.__args__
 
     def test_limit_below_one_rejected(self):
         from polyforge.client import _validate_arb_limit
