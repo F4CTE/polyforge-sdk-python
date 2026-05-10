@@ -2114,6 +2114,27 @@ describe("StrategiesService", () => {
       });
     });
 
+    it("rejects MAX_POSITION_SIZE in safety section during import", async () => {
+      const importDto = {
+        polyforge: "1.0",
+        strategy: {
+          name: "Position in Safety",
+          blocks: {
+            safety: [{ type: "MAX_POSITION_SIZE", config: { maxUsdc: "100" } }],
+            conditions: [{ type: "PRICE_ABOVE", config: { threshold: "0.5" } }],
+          },
+        },
+      };
+      db.strategy.count.mockResolvedValue(0);
+
+      await expect(
+        service.importStrategy(importDto as any, "user-1"),
+      ).rejects.toMatchObject({
+        response: { code: "IMPORT_MAX_POSITION_SIZE_IN_SAFETY" },
+        status: 422,
+      });
+    });
+
     it("rejects import exceeding 100 total blocks", async () => {
       const triggers = Array.from({ length: 101 }, (_, i) => ({
         type: "PRICE_ABOVE",

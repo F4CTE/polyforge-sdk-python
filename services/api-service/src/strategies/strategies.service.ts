@@ -872,7 +872,6 @@ export class StrategiesService {
       // Safety (engine registry names)
       "DAILY_LOSS_LIMIT",
       "CONSECUTIVE_LOSS",
-      "MAX_POSITION_SIZE",
       "EXPOSURE_EXCEEDS",
       "LOSS_STREAK",
       "WIN_STREAK",
@@ -902,6 +901,7 @@ export class StrategiesService {
       "POSITION_OPEN",
       "NO_POSITION",
       "POSITION_SIZE_BELOW",
+      "MAX_POSITION_SIZE",
       "NO_RECENT_BET",
       "LIQUIDITY_ABOVE",
       "MIN_LIQUIDITY",
@@ -962,6 +962,25 @@ export class StrategiesService {
       }
     }
 
+    // Reject MAX_POSITION_SIZE in safety — the engine now only evaluates it
+    // as a condition (MaxPositionBlock).  The SAFETY_REGISTRY legacy alias
+    // preserves runtime backward compat for pre-existing persisted strategies.
+    if (Array.isArray(blocks.safety)) {
+      for (const block of blocks.safety) {
+        if (
+          block &&
+          typeof block.type === "string" &&
+          block.type.toUpperCase() === "MAX_POSITION_SIZE"
+        ) {
+          throw new UnprocessableEntityException({
+            code: "IMPORT_MAX_POSITION_SIZE_IN_SAFETY",
+            message:
+              "MAX_POSITION_SIZE must be placed in 'conditions', not 'safety'. Use EXPOSURE_EXCEEDS for a safety circuit breaker.",
+          });
+        }
+      }
+    }
+
     // Strip HTML from name/description
     const stripHtml = (str: string) => str.replace(/<[^>]*>/g, "");
     if (s.name) s.name = stripHtml(s.name);
@@ -996,9 +1015,9 @@ export class StrategiesService {
     dto: CreateFromDescriptionDto,
   ): Promise<Strategy> {
     const blockTypes = [
-      "Safety: DAILY_LOSS_LIMIT, CONSECUTIVE_LOSS, MAX_POSITION_SIZE, STOP_IF_DRAWDOWN, MAX_DAILY_BETS",
+      "Safety: DAILY_LOSS_LIMIT, CONSECUTIVE_LOSS, EXPOSURE_EXCEEDS, STOP_IF_DRAWDOWN, MAX_DAILY_BETS",
       "Triggers: PRICE_ABOVE, PRICE_BELOW, PRICE_CROSSES_UP, PRICE_CROSSES_DOWN, PRICE_IN_RANGE, SPREAD_ABOVE, TICK, WAIT, PAUSE_AFTER_FILL, PRICE_CHANGE_PCT, VOLUME_SPIKE, TIME_WINDOW",
-      "Conditions: POSITION_OPEN, NO_POSITION, POSITION_SIZE_BELOW, NO_RECENT_BET, LIQUIDITY_ABOVE, MIN_LIQUIDITY, MIN_PRICE, MAX_PRICE, MAX_SPREAD, SPREAD_BELOW, MARKET_OPEN, DAILY_LOSS_BELOW",
+      "Conditions: POSITION_OPEN, NO_POSITION, POSITION_SIZE_BELOW, MAX_POSITION_SIZE, NO_RECENT_BET, LIQUIDITY_ABOVE, MIN_LIQUIDITY, MIN_PRICE, MAX_PRICE, MAX_SPREAD, SPREAD_BELOW, MARKET_OPEN, DAILY_LOSS_BELOW",
       "Actions: BUY, SELL, BUY_YES, BUY_NO, SELL_YES, SELL_NO, CLOSE_POSITION, SET_STOP_LOSS, SET_TAKE_PROFIT, SCALE_IN, SCALE_OUT, CANCEL_ALL_ORDERS, NOTIFY, RUN_STRATEGY",
       "Logic: IF_THEN_ELSE, AND_GATE, OR_GATE, NOT_GATE, DELAY",
       "Calc: MATH, AGGREGATION, COMPARISON, ABS_ROUND",

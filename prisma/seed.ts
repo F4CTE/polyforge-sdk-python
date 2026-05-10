@@ -183,8 +183,8 @@ const momentumSafety = [
   },
   {
     id: 'safety_2',
-    type: 'MAX_POSITION_SIZE',
-    params: { maxSizeUsdc: '500' },
+    type: 'EXPOSURE_EXCEEDS',
+    params: { maxUsdc: '500' },
   },
 ];
 
@@ -1513,7 +1513,7 @@ async function main() {
       tickMs: 5000,
       blocks: JSON.stringify({
         triggers: [{ id: 't1', type: 'PRICE_CROSSES_UP', params: { threshold: '0.60' } }],
-        conditions: [{ id: 'c1', type: 'MAX_POSITION_SIZE', params: { maxSizeUsdc: '200' } }],
+        conditions: [{ id: 'c1', type: 'MAX_POSITION_SIZE', params: { maxUsdc: '200' } }],
         actions: [{ id: 'a1', type: 'BUY', params: { side: 'YES', size: '50', orderType: 'GTC' } }],
         safety: [{ id: 's1', type: 'DAILY_LOSS_LIMIT', params: { maxLossUsdc: '100' } }],
       }),
@@ -1597,13 +1597,13 @@ async function main() {
       blocks: JSON.stringify({
         triggers: [{ id: 't1', type: 'PRICE_CROSSES_UP', params: { threshold: '0.50' } }],
         conditions: [
-          { id: 'c1', type: 'MAX_POSITION_SIZE', params: { maxSizeUsdc: '500' } },
+          { id: 'c1', type: 'MAX_POSITION_SIZE', params: { maxUsdc: '500' } },
           { id: 'c2', type: 'MIN_LIQUIDITY', params: { minLiquidity: '5000' } },
         ],
         actions: [{ id: 'a1', type: 'BUY', params: { side: 'YES', size: '100', orderType: 'GTC' } }],
         safety: [
           { id: 's1', type: 'DAILY_LOSS_LIMIT', params: { maxLossUsdc: '250' } },
-          { id: 's2', type: 'MAX_POSITION_SIZE', params: { maxSizeUsdc: '500' } },
+          { id: 's2', type: 'EXPOSURE_EXCEEDS', params: { maxUsdc: '500' } },
         ],
       }),
       createdAt: daysAgo(20),

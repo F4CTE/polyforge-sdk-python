@@ -99,7 +99,7 @@ export const SAFETY_REGISTRY: Record<string, BlockEvaluator> = {
   stop_if_exposure_exceeds: StopIfExposureExceedsBlock,
   PAUSE_AFTER_FILL: PauseAfterFillBlock,
   pause_after_fill: PauseAfterFillBlock,
-  MAX_POSITION_SIZE: MaxOrdersTotalBlock,
+  MAX_POSITION_SIZE: MaxPositionBlock, // legacy alias — migrated to CONDITION_REGISTRY
   max_orders_total: MaxOrdersTotalBlock,
 };
 
