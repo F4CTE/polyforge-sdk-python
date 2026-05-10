@@ -102,7 +102,7 @@ jobs:
         run: |
           echo "==> Warming pull-through cache..."
           IMAGES=(
-            "node:24-alpine"
+            "node:26-alpine"
             "nginx:1.27-alpine"
             "redis:7-alpine"
             "postgres:16-alpine"

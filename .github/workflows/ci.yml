@@ -21,7 +21,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  NODE_VERSION: '24'
+  NODE_VERSION: '26'
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
   TURBO_CACHE_DIR: .turbo
   # Dummy URLs — prisma generate reads the schema only, never connects
@@ -386,7 +386,7 @@ jobs:
         run: |
           docker run --rm \
             -e DATABASE_URL="$DATABASE_URL" \
-            -v $(pwd)/prisma:/app/prisma -w /app node:24-slim \
+            -v $(pwd)/prisma:/app/prisma -w /app node:26-slim \
             sh -c "npm install prisma && npx prisma migrate deploy --schema prisma/schema.prisma"
 
       - name: Deploy to EC2
