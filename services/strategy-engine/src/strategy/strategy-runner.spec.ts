@@ -157,7 +157,6 @@ describe("StrategyRunner — lifecycle", () => {
 describe("StrategyRunner — stale data detection", () => {
   it("pauses and emits STRATEGY_PAUSED when price data is stale", async () => {
     const state = makeState();
-    state.getPriceAge.mockResolvedValue(6_000); // 6s > 5s threshold
     // Override mget to return null (no cached price = stale data)
     const redis = makeRedis({
       getClient: vi.fn().mockReturnValue({
@@ -190,23 +189,39 @@ describe("StrategyRunner — stale data detection", () => {
     );
   });
 
-  it("remains PAUSED on onPriceEvent when paused (tick short-circuits)", async () => {
-    // tick() returns early when status !== RUNNING, so a stale-paused runner
-    // cannot auto-resume via onPriceEvent — resume() must be called explicitly.
+  it("auto-resumes on price event when paused with stale_market_data and data is fresh", async () => {
+    // detectStaleData() reads from Redis mget, not state.getPriceAge.
+    // Drive mget to return a fresh timestamp so auto-resume fires.
+    const freshTimestamp = Date.now();
+    const redis = makeRedis({
+      getClient: vi.fn().mockReturnValue({
+        lrange: vi.fn().mockResolvedValue([]),
+        mget: vi
+          .fn()
+          .mockResolvedValue([
+            JSON.stringify({ price: 0.5, timestamp: freshTimestamp }),
+          ]),
+        incr: vi.fn().mockResolvedValue(1),
+        expire: vi.fn().mockResolvedValue(1),
+      }),
+    });
     const state = makeState();
     const onStatusChange = vi.fn().mockResolvedValue(undefined);
 
-    const runner = makeRunner({ execMode: "EVENT", state, onStatusChange });
+    const runner = makeRunner({
+      execMode: "EVENT",
+      state,
+      redis,
+      onStatusChange,
+      triggers: [{ id: "b1", type: "every_tick", params: { tokenId: "tok1" } }],
+    });
     runner.pause("stale_market_data:tok1");
 
-    state.getPriceAge.mockResolvedValue(0); // fresh data
     await runner.onPriceEvent("tok1", 0.5);
 
-    // tick() returned early — status unchanged
-    expect(runner.status).toBe("PAUSED");
-    // Explicit resume restores RUNNING
-    runner.resume();
+    // Auto-resume fired — data is fresh
     expect(runner.status).toBe("RUNNING");
+    expect(onStatusChange).toHaveBeenCalledWith("RUNNING");
   });
 
   it("does not evaluate when paused for non-stale reason", async () => {
@@ -520,6 +535,123 @@ describe("StrategyRunner — start() timer management", () => {
       runner.start();
       runner.stop();
     }).not.toThrow();
+  });
+});
+
+describe("StrategyRunner — stale check throttling", () => {
+  it("throttles detectStaleData calls during stale-paused ticks (prevents Redis mget fan-out)", async () => {
+    // Use controlled time so we can verify throttling behavior
+    let currentTime = 10_000;
+    const dateNowSpy = vi.spyOn(Date, "now").mockImplementation(() => currentTime);
+
+    const redis = makeRedis({
+      getClient: vi.fn().mockReturnValue({
+        lrange: vi.fn().mockResolvedValue([]),
+        // Return null = stale data
+        mget: vi.fn().mockResolvedValue([null]),
+        incr: vi.fn().mockResolvedValue(1),
+        expire: vi.fn().mockResolvedValue(1),
+      }),
+    });
+
+    const runner = makeRunner({
+      execMode: "EVENT",
+      redis,
+      triggers: [
+        { id: "b1", type: "every_tick", params: { tokenId: "tok1" } },
+      ],
+    });
+
+    const mgetSpy = redis.getClient().mget;
+
+    // First tick: fresh data check in evaluate() detects stale → pauses.
+    // mget is called once during evaluate()'s detectStaleData() at ~line 379.
+    await runner.onPriceEvent("tok1", 0.5);
+    expect(runner.status).toBe("PAUSED");
+    const mgetCallsAfterPause = mgetSpy.mock.calls.length;
+
+    // Second tick (immediate, same time): stale-paused block throttles —
+    // lastStaleCheckMs was set during the first tick's stale-paused block entry,
+    // so a rapid successive call should be gated.
+    // But note: on the first tick, the stale-paused block was NOT entered
+    // (status was RUNNING), so lastStaleCheckMs=0. The second tick enters the block,
+    // now - 0 > 5000 so it fires once. Let's advance past the check.
+    // Actually: first tick status=RUNNING → stale-paused block skipped.
+    // evaluate() called detectStaleData → paused.
+    // Second tick: status=PAUSED + stale reason → enters stale-paused block.
+    // lastStaleCheckMs=0, so now(10000) - 0 = 10000 > 5000 → fires.
+    // After this, lastStaleCheckMs=10000, backoff doubles to 10000.
+    await runner.onPriceEvent("tok1", 0.5);
+    const mgetCallsAfterSecondTick = mgetSpy.mock.calls.length;
+
+    // Third tick (immediate, same time): now throttled —
+    // now(10000) - lastStaleCheckMs(10000) = 0 < backoff(10000) → skipped
+    await runner.onPriceEvent("tok1", 0.5);
+    expect(mgetSpy.mock.calls.length).toBe(mgetCallsAfterSecondTick);
+
+    // Advance time by backoff (10s) + 1ms → should fire again
+    currentTime += 10_001;
+    await runner.onPriceEvent("tok1", 0.5);
+    expect(mgetSpy.mock.calls.length).toBe(mgetCallsAfterSecondTick + 1);
+
+    // Backoff should now be 20000
+    // Another immediate call → throttled
+    await runner.onPriceEvent("tok1", 0.5);
+    expect(mgetSpy.mock.calls.length).toBe(mgetCallsAfterSecondTick + 1);
+
+    dateNowSpy.mockRestore();
+  });
+
+  it("resets backoff to STALE_PRICE_MS when fresh data is detected and auto-resumes", async () => {
+    let currentTime = 10_000;
+    const dateNowSpy = vi.spyOn(Date, "now").mockImplementation(() => currentTime);
+
+    let mgetReturnsStale = true;
+    const mgetImpl = vi.fn().mockImplementation(() => {
+      if (mgetReturnsStale) {
+        return Promise.resolve([null]); // stale
+      }
+      return Promise.resolve([
+        JSON.stringify({ price: 0.6, timestamp: currentTime }),
+      ]); // fresh
+    });
+
+    const redis = makeRedis({
+      getClient: vi.fn().mockReturnValue({
+        lrange: vi.fn().mockResolvedValue([]),
+        mget: mgetImpl,
+        incr: vi.fn().mockResolvedValue(1),
+        expire: vi.fn().mockResolvedValue(1),
+      }),
+    });
+
+    const onStatusChange = vi.fn().mockResolvedValue(undefined);
+    const runner = makeRunner({
+      execMode: "EVENT",
+      redis,
+      onStatusChange,
+      triggers: [
+        { id: "b1", type: "every_tick", params: { tokenId: "tok1" } },
+      ],
+    });
+
+    // First tick: detect stale → pause
+    await runner.onPriceEvent("tok1", 0.5);
+    expect(runner.status).toBe("PAUSED");
+
+    // Second tick: stale-paused block fires, still stale → backoff doubles
+    await runner.onPriceEvent("tok1", 0.5);
+
+    // Advance past the doubled backoff, make data fresh
+    currentTime += 20_000;
+    mgetReturnsStale = false;
+
+    // Third tick: detects fresh → auto-resumes, backoff resets
+    await runner.onPriceEvent("tok1", 0.5);
+    expect(runner.status).toBe("RUNNING");
+    expect(onStatusChange).toHaveBeenCalledWith("RUNNING");
+
+    dateNowSpy.mockRestore();
   });
 });
 

@@ -29,6 +29,7 @@ const dailyExecKey = (strategyId: string): string => {
 
 const MIN_TICK_MS = 200;
 const STALE_PRICE_MS = 5_000;
+const MAX_STALE_CHECK_BACKOFF_MS = 60_000;
 
 export type StrategyRunnerStatus = "RUNNING" | "PAUSED" | "STOPPED";
 
@@ -62,6 +63,8 @@ export class StrategyRunner {
   private timer: NodeJS.Timeout | null = null;
   private pauseReason: string | null = null;
   private delayedActions: Map<string, NodeJS.Timeout> = new Map();
+  private lastStaleCheckMs = 0;
+  private staleCheckBackoffMs = STALE_PRICE_MS;
 
   /** Tracks child strategy IDs launched by RUN_STRATEGY action blocks */
   readonly childStrategies: Set<string> = new Set();
@@ -136,6 +139,8 @@ export class StrategyRunner {
   resume() {
     this.status = "RUNNING";
     this.pauseReason = null;
+    this.staleCheckBackoffMs = STALE_PRICE_MS;
+    this.lastStaleCheckMs = 0;
     this.logger.log("Resumed");
   }
 
@@ -169,6 +174,53 @@ export class StrategyRunner {
   // ─── Core evaluation pipeline ─────────────────────────────────────────────
 
   private async tick() {
+    // Auto-resume from stale-data pause when data is fresh again.
+    // Checked before the status guard so PAUSED runners can auto-recover
+    // after a WS reconnect repopulates the price cache.
+    //
+    // Throttled with exponential backoff: starts at STALE_PRICE_MS (5s),
+    // doubles on each consecutive stale check up to MAX_STALE_CHECK_BACKOFF_MS (60s).
+    // This prevents Redis mget fan-out from sustained tick intervals during
+    // prolonged feed outages.
+    if (
+      this.status === "PAUSED" &&
+      this.pauseReason?.startsWith("stale_market_data")
+    ) {
+      const now = Date.now();
+      if (now - this.lastStaleCheckMs < this.staleCheckBackoffMs) {
+        return;
+      }
+      this.lastStaleCheckMs = now;
+
+      try {
+        const stillStale = await this.detectStaleData();
+        if (!stillStale) {
+          // Re-check after the await — a concurrent stop() or overlapping
+          // tick may have changed status / pauseReason while we were waiting.
+          if (
+            this.status !== "PAUSED" ||
+            !this.pauseReason?.startsWith("stale_market_data")
+          ) {
+            return;
+          }
+          this.staleCheckBackoffMs = STALE_PRICE_MS;
+          this.resume();
+          await this.onStatusChange("RUNNING");
+          await this.emitStrategyEvent("STRATEGY_STARTED");
+        } else {
+          // Exponential backoff — double the interval on each consecutive stale read
+          this.staleCheckBackoffMs = Math.min(
+            this.staleCheckBackoffMs * 2,
+            MAX_STALE_CHECK_BACKOFF_MS,
+          );
+          return;
+        }
+      } catch (err) {
+        this.logger.error("Auto-resume from stale-data failed", err);
+        return;
+      }
+    }
+
     if (this.status !== "RUNNING") return;
 
     try {
@@ -348,16 +400,6 @@ export class StrategyRunner {
         );
       }
       return;
-    }
-
-    // Auto-resume from stale pause when data is fresh again
-    if (
-      this.status === "PAUSED" &&
-      this.pauseReason?.startsWith("stale_market_data")
-    ) {
-      this.resume();
-      await this.onStatusChange("RUNNING");
-      await this.emitStrategyEvent("STRATEGY_STARTED");
     }
 
     // 2. SAFETY — any failure stops the strategy

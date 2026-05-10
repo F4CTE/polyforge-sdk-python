@@ -167,6 +167,10 @@ export abstract class BaseVenueWsService {
       if (this.subscriptions.size > 0) {
         this.sendSubscriptions([...this.subscriptions]);
       }
+
+      this.emitter.emit("market-data.ws.connected", {
+        venueId: this.wsConfig.venueId,
+      });
     });
 
     this.ws.on("message", (raw: any) => {
@@ -208,6 +212,13 @@ export abstract class BaseVenueWsService {
       );
       this.clearTimers();
       this.scheduleReconnect();
+
+      if (!this.destroyed) {
+        this.emitter.emit("market-data.ws.disconnected", {
+          venueId: this.wsConfig.venueId,
+          tokenIds: [...this.subscriptions],
+        });
+      }
     });
 
     this.ws.on("error", (err: any) => {

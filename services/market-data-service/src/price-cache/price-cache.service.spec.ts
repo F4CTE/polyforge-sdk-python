@@ -14,6 +14,7 @@ function makeMocks() {
     zremrangebyrank: vi.fn().mockResolvedValue(0),
     expire: vi.fn().mockResolvedValue(1),
     zrange: vi.fn().mockResolvedValue([]),
+    del: vi.fn().mockResolvedValue(1),
   };
   const redis = {
     set: vi.fn().mockResolvedValue("OK"),
@@ -378,6 +379,120 @@ describe("PriceCacheService", () => {
         expect.any(String),
         5,
       );
+    });
+  });
+
+  // ── WS disconnect / reconnect handlers ───────────────────────────────────
+
+  describe("handleFeedDisconnected()", () => {
+    const makeEvent = (
+      overrides?: Partial<{ venueId: string; tokenIds: string[] }>,
+    ) => ({
+      venueId: "polymarket",
+      tokenIds: ["token-a", "token-b", "token-c"],
+      ...overrides,
+    });
+
+    const del = () => redis.getClient().del;
+
+    it("deletes all price and book cache keys for the disconnected tokens", async () => {
+      await svc.handleFeedDisconnected(makeEvent());
+
+      expect(del()).toHaveBeenCalledTimes(1);
+      // 3 tokens × 2 key types = 6 keys, all in one batch (batch size 200)
+      expect(del()).toHaveBeenCalledWith(
+        "cache:price:token-a",
+        "cache:price:token-b",
+        "cache:price:token-c",
+        "cache:book:token-a",
+        "cache:book:token-b",
+        "cache:book:token-c",
+      );
+    });
+
+    it("batches deletes when token count exceeds BATCH size", async () => {
+      const tokenIds = Array.from({ length: 250 }, (_, i) => `token-${i}`);
+      await svc.handleFeedDisconnected(makeEvent({ tokenIds }));
+
+      // 250 tokens × 2 = 500 keys, batch size 200 → 3 batches
+      expect(del()).toHaveBeenCalledTimes(3);
+      // First batch: 200 keys (all price keys: token-0 through token-199)
+      expect(del().mock.calls[0][0]).toBe("cache:price:token-0");
+      expect(del().mock.calls[0][199]).toBe("cache:price:token-199");
+      // Second batch: 200 keys (price:token-200..249 + book:token-0..149)
+      expect(del().mock.calls[1][0]).toBe("cache:price:token-200");
+      expect(del().mock.calls[1][50]).toBe("cache:book:token-0");
+      // Third batch: remaining 100 keys (book:token-150..249)
+      expect(del().mock.calls[2]).toHaveLength(100);
+      expect(del().mock.calls[2][0]).toBe("cache:book:token-150");
+    });
+
+    it("aborts remaining batches when venue reconnects mid-deletion", async () => {
+      const tokenIds = Array.from({ length: 500 }, (_, i) => `token-${i}`);
+
+      // After the first batch completes, simulate a reconnect
+      const delMock = del();
+      delMock.mockImplementationOnce(async () => {
+        // First batch succeeds — then reconnect fires
+        svc.handleFeedConnected({ venueId: "polymarket" });
+      });
+
+      await svc.handleFeedDisconnected(makeEvent({ tokenIds }));
+
+      // Only 1 batch made it through (200 keys = first batch)
+      // The reconnect should have aborted the remaining 2 batches
+      expect(delMock).toHaveBeenCalledTimes(1);
+    });
+
+    it("per-venue isolation: reconnect on venue B does not abort cleanup on venue A", async () => {
+      // Polymarket has many tokens → multiple batches
+      const polyTokens = Array.from({ length: 250 }, (_, i) => `poly-${i}`);
+
+      // Kalshi reconnects — should NOT affect polymarket's ongoing cleanup
+      svc.handleFeedConnected({ venueId: "kalshi" });
+
+      await svc.handleFeedDisconnected({
+        venueId: "polymarket",
+        tokenIds: polyTokens,
+      });
+
+      // All batches should complete (500 keys / 200 = 3 batches)
+      expect(del()).toHaveBeenCalledTimes(3);
+    });
+
+    it("does nothing when tokenIds array is empty", async () => {
+      await svc.handleFeedDisconnected(makeEvent({ tokenIds: [] }));
+
+      expect(del()).not.toHaveBeenCalled();
+    });
+
+    it("does not throw when del rejects", async () => {
+      del().mockRejectedValueOnce(new Error("Redis error"));
+
+      await expect(
+        svc.handleFeedDisconnected(makeEvent()),
+      ).resolves.toBeUndefined();
+    });
+  });
+
+  describe("handleFeedConnected()", () => {
+    it("increments the disconnect epoch to abort in-flight cleanup", async () => {
+      // Start a disconnect with 500 tokens (3 batches of 200+100)
+      const tokenIds = Array.from({ length: 500 }, (_, i) => `token-${i}`);
+
+      // Capture the first del call, then fire reconnect
+      const delMock = redis.getClient().del;
+      delMock.mockImplementationOnce(async () => {
+        svc.handleFeedConnected({ venueId: "polymarket" });
+      });
+
+      await svc.handleFeedDisconnected({
+        venueId: "polymarket",
+        tokenIds,
+      });
+
+      // Only the first batch should have executed
+      expect(delMock).toHaveBeenCalledTimes(1);
     });
   });
 });

@@ -38,6 +38,10 @@ export class PriceCacheService implements OnModuleDestroy {
   private readonly priceUpdateBuffer = new Map<string, number>();
   private priceFlushTimer: NodeJS.Timeout | null = null;
 
+  // Per-venue disconnect epoch — incremented on disconnect and reconnect
+  // so in-flight batch deletes can detect reconnects and abort early.
+  private readonly disconnectEpoch = new Map<string, number>();
+
   // Data gap detection: tracks last update per tokenId
   private readonly lastUpdateMs = new Map<string, number>();
   private readonly GAP_THRESHOLD_MS = 30_000; // 30s without update = gap
@@ -75,6 +79,66 @@ export class PriceCacheService implements OnModuleDestroy {
     this.bufferSnapshot(tokenId, price, timestamp);
 
     this.lastUpdateMs.set(tokenId, Date.now());
+  }
+
+  // Cache keys are NOT venue-prefixed because token IDs are venue-isolated
+  // by construction: Polymarket uses UUID asset_ids, Kalshi uses market
+  // ticker strings, and the disconnect event's tokenIds come from the
+  // per-venue subscription set, so there is no cross-venue key collision.
+
+  @OnEvent("market-data.ws.disconnected")
+  async handleFeedDisconnected(event: { venueId: string; tokenIds: string[] }) {
+    const { venueId, tokenIds } = event;
+    if (tokenIds.length === 0) return;
+
+    // Bump the disconnect epoch so any prior in-flight cleanup sees it
+    // and aborts. A subsequent reconnect bumps again (see handleFeedConnected).
+    const epoch = (this.disconnectEpoch.get(venueId) ?? 0) + 1;
+    this.disconnectEpoch.set(venueId, epoch);
+
+    this.logger.warn(
+      `${venueId} WS disconnected — expiring cached prices for ${tokenIds.length} tokens`,
+    );
+
+    const client = this.redis.getClient();
+    const priceKeys = tokenIds.map((id) => `cache:price:${id}`);
+    const bookKeys = tokenIds.map((id) => `cache:book:${id}`);
+
+    try {
+      const allKeys = [...priceKeys, ...bookKeys];
+      const BATCH = 200;
+      for (let i = 0; i < allKeys.length; i += BATCH) {
+        // If the venue reconnected while we were deleting, abort the
+        // remaining batches to avoid deleting freshly repopulated keys.
+        if (this.disconnectEpoch.get(venueId) !== epoch) {
+          this.logger.log(
+            `${venueId} WS reconnected during cache expiry — aborting remaining deletes (${allKeys.length - i} keys skipped)`,
+          );
+          return;
+        }
+        await client.del(...allKeys.slice(i, i + BATCH));
+      }
+      this.logger.log(
+        `Expired ${allKeys.length} cache keys for disconnected ${venueId} feed`,
+      );
+    } catch (err) {
+      this.logger.error(
+        `Failed to expire cached prices on ${venueId} WS disconnect`,
+        err,
+      );
+    }
+  }
+
+  @OnEvent("market-data.ws.connected")
+  handleFeedConnected(event: { venueId: string }) {
+    // Increment the epoch to abort any in-flight disconnect cleanup
+    // that may still be deleting cache keys from the prior disconnect.
+    const epoch = (this.disconnectEpoch.get(event.venueId) ?? 0) + 1;
+    this.disconnectEpoch.set(event.venueId, epoch);
+
+    this.logger.log(
+      `${event.venueId} WS reconnected — fresh prices will begin flowing`,
+    );
   }
 
   @OnEvent("market-data.book")
