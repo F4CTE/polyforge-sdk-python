@@ -5,7 +5,7 @@ import { ScheduleModule } from "@nestjs/schedule";
 import { ThrottlerModule, ThrottlerGuard } from "@nestjs/throttler";
 import { ThrottlerStorageRedisService } from "@nest-lab/throttler-storage-redis";
 import { APP_GUARD, APP_INTERCEPTOR } from "@nestjs/core";
-import { SharedDbModule } from "@polyforge/shared-db";
+import { SharedUserDbModule, SharedAdminDbModule } from "@polyforge/shared-db";
 import { RedisModule, RedisService } from "@polyforge/shared-redis";
 import { LoggerModule } from "@polyforge/logger";
 import { NoCacheInterceptor } from "./common/interceptors/no-cache.interceptor";
@@ -47,7 +47,8 @@ import { RevenueModule } from "./revenue/revenue.module";
       }),
     }),
     LoggerModule,
-    SharedDbModule,
+    SharedUserDbModule,
+    SharedAdminDbModule,
     RedisModule,
     AdminGuardModule,
     AuditModule,

@@ -4,12 +4,12 @@ import { RedisModule } from "@polyforge/shared-redis";
 import { CredentialsController } from "./credentials.controller";
 import { CredentialsService } from "./credentials.service";
 import { EncryptionModule } from "../encryption/encryption.module";
-import { SharedDbModule } from "@polyforge/shared-db";
+import { SharedUserDbModule } from "@polyforge/shared-db";
 import { InternalAuthGuard } from "../common/internal-auth.guard";
 
 @Module({
   imports: [
-    SharedDbModule,
+    SharedUserDbModule,
     EncryptionModule,
     JwtModule.register({}),
     RedisModule,

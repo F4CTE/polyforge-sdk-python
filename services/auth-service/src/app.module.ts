@@ -4,7 +4,7 @@ import { ConfigModule } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { ThrottlerStorageRedisService } from '@nest-lab/throttler-storage-redis';
-import { SharedDbModule } from '@polyforge/shared-db';
+import { SharedUserDbModule } from '@polyforge/shared-db';
 import { RedisModule, RedisService } from '@polyforge/shared-redis';
 import { SharedAuthModule } from '@polyforge/shared-auth';
 import { LoggerModule } from '@polyforge/logger';
@@ -37,7 +37,7 @@ import { throttleLimit } from './common/throttle-limit';
       }),
     }),
     LoggerModule,
-    SharedDbModule,
+    SharedUserDbModule,
     RedisModule,
     SharedAuthModule,
     PosthogModule,

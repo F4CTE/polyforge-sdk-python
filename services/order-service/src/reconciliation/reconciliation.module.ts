@@ -1,11 +1,11 @@
 import { Module } from "@nestjs/common";
-import { SharedDbModule } from "@polyforge/shared-db";
+import { SharedUserDbModule } from "@polyforge/shared-db";
 import { TradeReconcilerService } from "./trade-reconciler.service";
 import { ClobClientModule } from "../clob-client/clob-client.module";
 import { EventsModule } from "../events/events.module";
 
 @Module({
-  imports: [SharedDbModule, ClobClientModule, EventsModule],
+  imports: [SharedUserDbModule, ClobClientModule, EventsModule],
   providers: [TradeReconcilerService],
   exports: [TradeReconcilerService],
 })

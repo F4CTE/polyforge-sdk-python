@@ -8,7 +8,7 @@ import { ApiKeyThrottlerGuard } from "./common/api-key-throttler.guard";
 import { NoCacheInterceptor } from "./common/interceptors/no-cache.interceptor";
 import { SentryContextInterceptor } from "./common/interceptors/sentry-context.interceptor";
 import { JwtModule } from "@nestjs/jwt";
-import { SharedDbModule } from "@polyforge/shared-db";
+import { SharedUserDbModule } from "@polyforge/shared-db";
 import { RedisModule, RedisService } from "@polyforge/shared-redis";
 import { SharedAuthModule } from "@polyforge/shared-auth";
 import { LoggerModule } from "@polyforge/logger";
@@ -70,7 +70,7 @@ import { getApiRateLimit } from "./common/api-rate-limit";
     }),
     JwtModule.register({}),
     LoggerModule,
-    SharedDbModule,
+    SharedUserDbModule,
     RedisModule,
     SharedAuthModule,
     PosthogModule,

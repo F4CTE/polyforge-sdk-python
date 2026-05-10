@@ -3,7 +3,7 @@ import { SentryModule } from "@sentry/nestjs/setup";
 import { APP_GUARD } from "@nestjs/core";
 import { ThrottlerModule, ThrottlerGuard } from "@nestjs/throttler";
 import { ThrottlerStorageRedisService } from "@nest-lab/throttler-storage-redis";
-import { SharedDbModule } from "@polyforge/shared-db";
+import { SharedAdminDbModule } from "@polyforge/shared-db";
 import { RedisModule, RedisService } from "@polyforge/shared-redis";
 import { LoggerModule } from "@polyforge/logger";
 import { AuthModule } from "./auth/auth.module";
@@ -13,7 +13,7 @@ import { HealthController } from "./common/health.controller";
   imports: [
     SentryModule.forRoot(),
     LoggerModule,
-    SharedDbModule,
+    SharedAdminDbModule,
     RedisModule,
     ThrottlerModule.forRootAsync({
       imports: [RedisModule],

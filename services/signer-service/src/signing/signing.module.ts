@@ -1,6 +1,6 @@
 import { Module } from "@nestjs/common";
 import { JwtModule } from "@nestjs/jwt";
-import { SharedDbModule } from "@polyforge/shared-db";
+import { SharedUserDbModule } from "@polyforge/shared-db";
 import { SigningController } from "./signing.controller";
 import { InternalSigningController } from "./internal-signing.controller";
 import { SigningService } from "./signing.service";
@@ -15,7 +15,7 @@ import { InternalAuthGuard } from "../common/internal-auth.guard";
   imports: [
     CredentialsModule,
     EncryptionModule,
-    SharedDbModule,
+    SharedUserDbModule,
     JwtModule.register({}),
   ],
   controllers: [SigningController, InternalSigningController],

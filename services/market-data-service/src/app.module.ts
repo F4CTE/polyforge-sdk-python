@@ -5,7 +5,7 @@ import { ConfigModule } from "@nestjs/config";
 import { ThrottlerModule, ThrottlerGuard } from "@nestjs/throttler";
 import { ScheduleModule } from "@nestjs/schedule";
 import { EventEmitterModule } from "@nestjs/event-emitter";
-import { SharedDbModule } from "@polyforge/shared-db";
+import { SharedUserDbModule } from "@polyforge/shared-db";
 import { RedisModule } from "@polyforge/shared-redis";
 import { SharedAuthModule } from "@polyforge/shared-auth";
 import { LoggerModule } from "@polyforge/logger";
@@ -27,7 +27,7 @@ import { HealthController } from "./health/health.controller";
     ScheduleModule.forRoot(),
     EventEmitterModule.forRoot(),
     LoggerModule,
-    SharedDbModule,
+    SharedUserDbModule,
     RedisModule,
     SharedAuthModule,
     VenueDataModule,

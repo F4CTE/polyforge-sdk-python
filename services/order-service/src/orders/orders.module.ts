@@ -2,7 +2,7 @@ import { Module } from "@nestjs/common";
 import { JwtModule } from "@nestjs/jwt";
 import { OrdersController } from "./orders.controller";
 import { OrdersService } from "./orders.service";
-import { SharedDbModule } from "@polyforge/shared-db";
+import { SharedUserDbModule } from "@polyforge/shared-db";
 import { SignerClientModule } from "../signer-client/signer-client.module";
 import { ClobClientModule } from "../clob-client/clob-client.module";
 import { EventsModule } from "../events/events.module";
@@ -11,7 +11,7 @@ import { VenueModule } from "../venue/venue.module";
 
 @Module({
   imports: [
-    SharedDbModule,
+    SharedUserDbModule,
     SignerClientModule,
     ClobClientModule,
     EventsModule,

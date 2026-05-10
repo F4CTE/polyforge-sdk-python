@@ -7,7 +7,7 @@ import { ThrottlerModule, ThrottlerGuard } from "@nestjs/throttler";
 import { APP_FILTER, APP_GUARD } from "@nestjs/core";
 import { LoggerModule } from "@polyforge/logger";
 import { RedisModule } from "@polyforge/shared-redis";
-import { SharedDbModule } from "@polyforge/shared-db";
+import { SharedUserDbModule } from "@polyforge/shared-db";
 import { EventEmitterModule } from "@nestjs/event-emitter";
 import { ScheduleModule } from "@nestjs/schedule";
 import { OrdersModule } from "./orders/orders.module";
@@ -27,7 +27,7 @@ import { HeartbeatService } from "./heartbeat/heartbeat.service";
     ThrottlerModule.forRoot([{ ttl: 60000, limit: 100 }]),
     LoggerModule,
     RedisModule,
-    SharedDbModule,
+    SharedUserDbModule,
     EventEmitterModule.forRoot(),
     ScheduleModule.forRoot(),
     OrdersModule,

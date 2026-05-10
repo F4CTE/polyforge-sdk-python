@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { SharedAuthModule } from '@polyforge/shared-auth';
-import { SharedDbModule } from '@polyforge/shared-db';
+import { SharedUserDbModule } from '@polyforge/shared-db';
 import { RedisModule } from '@polyforge/shared-redis';
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
@@ -15,7 +15,7 @@ import { TotpModule } from '../totp/totp.module';
     SharedAuthModule,
     TotpModule,
     RedisModule,
-    SharedDbModule,
+    SharedUserDbModule,
   ],
   providers: [AuthService],
   controllers: [AuthController],
