@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   CreateTicketSchema,
   DecimalStringSchema,
+  OrderIntentSchema,
   OrderQuerySchema,
   PaginationSchema,
   PriceStringSchema,
@@ -73,5 +74,22 @@ describe("shared zod 4 schema compatibility", () => {
         tokenIds: Array.from({ length: 51 }, (_, index) => `token-${index}`),
       }).success,
     ).toBe(false);
+  });
+
+  it("accepts polymarket_us in OrderIntentSchema venue", () => {
+    const validIntent = {
+      intentId: "11111111-1111-4111-8111-111111111111",
+      userId: "22222222-2222-4222-8222-222222222222",
+      strategyId: null,
+      marketId: "0xabc123",
+      tokenId: "0xdef456",
+      side: "BUY",
+      outcome: "YES",
+      size: "100.00",
+      price: "0.55",
+      orderType: "GTC",
+      venue: "polymarket_us",
+    };
+    expect(OrderIntentSchema.safeParse(validIntent).success).toBe(true);
   });
 });
