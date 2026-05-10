@@ -1,6 +1,6 @@
-import { create } from 'zustand';
-import { identifyUser, resetAnalytics } from '../lib/analytics';
-import { setSentryUser, clearSentryUser } from '../lib/sentry';
+import { create } from "zustand";
+import { identifyUser, resetAnalytics } from "../lib/analytics";
+import { captureError, setSentryUser, clearSentryUser } from "../lib/sentry";
 
 interface User {
   id: string;
@@ -9,9 +9,9 @@ interface User {
   displayName?: string;
   avatarUrl?: string;
   bio?: string;
-  status: 'UNVERIFIED' | 'VERIFIED' | 'CONNECTED';
+  status: "UNVERIFIED" | "VERIFIED" | "CONNECTED";
   polymarketConnected: boolean;
-  polymarketRail?: 'global' | 'us';
+  polymarketRail?: "global" | "us";
   kalshiConnected: boolean;
   emailVerified: boolean;
   totpEnabled: boolean;
@@ -28,8 +28,18 @@ export interface AuthState {
   isVerified: () => boolean;
   isConnected: () => boolean;
   init: () => Promise<void>;
-  login: (body: { email: string; password: string; totpCode?: string }) => Promise<void>;
-  register: (body: { email: string; password: string; username: string; tosAccepted: boolean; inviteCode?: string }) => Promise<void>;
+  login: (body: {
+    email: string;
+    password: string;
+    totpCode?: string;
+  }) => Promise<void>;
+  register: (body: {
+    email: string;
+    password: string;
+    username: string;
+    tosAccepted: boolean;
+    inviteCode?: string;
+  }) => Promise<void>;
   logout: () => Promise<void>;
   patchUser: (partial: Partial<User>) => void;
   refreshToken: () => Promise<boolean>;
@@ -45,20 +55,28 @@ let refreshPromise: Promise<boolean> | null = null;
 async function refreshToken(): Promise<boolean> {
   // If already refreshing, wait for the existing refresh to complete
   if (isRefreshing) {
-    return refreshPromise || Promise.resolve(false);
+    // Propagate transport errors to all callers (don't convert to false
+    // which authedFetch would misinterpret as a server-rejected token).
+    return refreshPromise ?? Promise.resolve(false);
   }
 
   isRefreshing = true;
-  try {
-    refreshPromise = (async () => {
-      const res = await fetch('/auth/v1/refresh', {
-        method: 'POST',
-        credentials: 'include',
-      });
-      return res.ok;
-    })();
+  refreshPromise = (async () => {
+    const res = await fetch("/auth/v1/refresh", {
+      method: "POST",
+      credentials: "include",
+    });
+    return res.ok;
+  })();
 
+  try {
     return await refreshPromise;
+  } catch (err) {
+    console.error(
+      "Token refresh failed:",
+      err instanceof Error ? err.message : err,
+    );
+    throw err;
   } finally {
     isRefreshing = false;
     refreshPromise = null;
@@ -73,10 +91,20 @@ export async function authedFetch(
   url: string,
   options: RequestInit = {},
 ): Promise<Response> {
-  const response = await fetch(url, {
-    ...options,
-    credentials: options.credentials ?? 'include',
-  });
+  let response: Response;
+
+  try {
+    response = await fetch(url, {
+      ...options,
+      credentials: options.credentials ?? "include",
+    });
+  } catch (err) {
+    console.error(
+      "authedFetch failed:",
+      err instanceof Error ? err.message : err,
+    );
+    throw err;
+  }
 
   // If request succeeded or is not a 401, return as-is
   if (response.ok || response.status !== 401) {
@@ -84,18 +112,37 @@ export async function authedFetch(
   }
 
   // Token expired: attempt refresh once
-  const refreshed = await refreshToken();
+  let refreshed: boolean;
+  try {
+    refreshed = await refreshToken();
+  } catch (err) {
+    // Transport error during refresh — log and re-throw, don't force logout
+    console.error(
+      "Token refresh transport error:",
+      err instanceof Error ? err.message : err,
+    );
+    throw err;
+  }
+
   if (!refreshed) {
-    // Refresh failed, redirect to login
-    window.location.href = '/login';
+    // Server rejected the refresh token — force logout
+    window.location.href = "/login";
     return response;
   }
 
   // Retry the original request with refreshed token
-  return fetch(url, {
-    ...options,
-    credentials: options.credentials ?? 'include',
-  });
+  try {
+    return await fetch(url, {
+      ...options,
+      credentials: options.credentials ?? "include",
+    });
+  } catch (err) {
+    console.error(
+      "authedFetch retry failed:",
+      err instanceof Error ? err.message : err,
+    );
+    throw err;
+  }
 }
 
 export const useAuthStore = create<AuthState>((set, get) => ({
@@ -109,8 +156,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     try {
       const controller = new AbortController();
       setTimeout(() => controller.abort(), 3000);
-      let res = await fetch('/auth/v1/me', {
-        credentials: 'include',
+      let res = await fetch("/auth/v1/me", {
+        credentials: "include",
         signal: controller.signal,
       });
 
@@ -118,8 +165,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       if (res.status === 401) {
         const refreshed = await refreshToken();
         if (refreshed) {
-          res = await fetch('/auth/v1/me', {
-            credentials: 'include',
+          res = await fetch("/auth/v1/me", {
+            credentials: "include",
             signal: controller.signal,
           });
         }
@@ -133,16 +180,25 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       } else {
         set({ user: null, loading: false });
       }
-    } catch {
+    } catch (err) {
+      console.error(
+        "Auth init failed:",
+        err instanceof Error ? err.message : err,
+      );
+      if (!(err instanceof DOMException && err.name === "AbortError")) {
+        captureError(err instanceof Error ? err : new Error(String(err)), {
+          action: "auth:init",
+        });
+      }
       set({ user: null, loading: false });
     }
   },
 
   login: async (body) => {
-    const res = await fetch('/auth/v1/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
+    const res = await fetch("/auth/v1/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
       body: JSON.stringify(body),
     });
     if (!res.ok) {
@@ -156,10 +212,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   register: async (body) => {
-    const res = await fetch('/auth/v1/register', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
+    const res = await fetch("/auth/v1/register", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
       body: JSON.stringify(body),
     });
     if (!res.ok) {
@@ -169,7 +225,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     const data = await res.json();
     if (data.pending) {
       // Don't set user — they can't access anything yet
-      throw { code: 'ACCOUNT_PENDING', message: 'pending' };
+      throw { code: "ACCOUNT_PENDING", message: "pending" };
     }
     set({ user: data.user ?? data });
   },
@@ -179,13 +235,17 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       const controller = new AbortController();
       const timeoutId = window.setTimeout(() => controller.abort(), 10_000);
       try {
-        await fetch('/auth/v1/logout', {
-          method: 'POST',
-          credentials: 'include',
+        await fetch("/auth/v1/logout", {
+          method: "POST",
+          credentials: "include",
           signal: controller.signal,
         });
-      } catch {
+      } catch (err) {
         // Continue local logout even if the network request is slow or fails.
+        console.warn(
+          "Logout request failed (continuing local cleanup):",
+          err instanceof Error ? err.message : err,
+        );
       } finally {
         window.clearTimeout(timeoutId);
       }
@@ -193,12 +253,12 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       resetAnalytics();
       clearSentryUser();
       try {
-        localStorage.removeItem('access_token');
+        localStorage.removeItem("access_token");
       } catch {
         // ignore — defensive scrub of any residual token from prior versions
       }
       set({ user: null, loading: false });
-      window.location.assign('/login');
+      window.location.assign("/login");
     }
   },
 

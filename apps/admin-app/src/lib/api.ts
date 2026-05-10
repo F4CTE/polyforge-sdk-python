@@ -28,7 +28,7 @@ let refreshPromise: Promise<boolean> | null = null;
 
 async function refreshSession(): Promise<boolean> {
   if (isRefreshing && refreshPromise) {
-    return refreshPromise;
+    return refreshPromise.catch(() => false);
   }
   isRefreshing = true;
   refreshPromise = (async () => {
@@ -38,7 +38,8 @@ async function refreshSession(): Promise<boolean> {
         credentials: 'include',
       });
       return res.ok;
-    } catch {
+    } catch (err) {
+      console.error('Admin session refresh failed:', err instanceof Error ? err.message : err);
       return false;
     }
   })();

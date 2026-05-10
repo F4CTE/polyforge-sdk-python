@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { authApi } from '@/lib/api';
 import { identifyUser, resetAnalytics } from '@/lib/analytics';
-import { setSentryUser, clearSentryUser } from '@/lib/sentry';
+import { captureError, setSentryUser, clearSentryUser } from '@/lib/sentry';
 
 interface Admin {
   id: string;
@@ -38,7 +38,12 @@ export const useAdminAuthStore = create<AdminAuthState>((set) => ({
         isSuperAdmin: admin.role === 'SUPER_ADMIN',
       });
       setSentryUser(admin.id, admin.email);
-    } catch {
+    } catch (err) {
+      console.error('Admin auth init failed:', err instanceof Error ? err.message : err);
+      const status = (err as { status?: number }).status;
+      if (status !== 401) {
+        captureError(err instanceof Error ? err : new Error(String(err)), { action: 'admin-auth:init' });
+      }
       set({ admin: null, loading: false, isAuthenticated: false, isSuperAdmin: false });
     }
   },
@@ -57,8 +62,8 @@ export const useAdminAuthStore = create<AdminAuthState>((set) => ({
   logout: async () => {
     try {
       await authApi.logout();
-    } catch {
-      // ignore
+    } catch (err) {
+      console.warn('Admin logout request failed (continuing local cleanup):', err instanceof Error ? err.message : err);
     }
     resetAnalytics();
     clearSentryUser();

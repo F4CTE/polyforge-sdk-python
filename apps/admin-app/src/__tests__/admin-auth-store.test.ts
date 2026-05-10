@@ -16,6 +16,7 @@ vi.mock('../lib/analytics', () => ({
 }));
 
 vi.mock('../lib/sentry', () => ({
+  captureError: vi.fn(),
   setSentryUser: vi.fn(),
   clearSentryUser: vi.fn(),
 }));
