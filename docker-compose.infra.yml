@@ -701,7 +701,7 @@ services:
     restart: unless-stopped
 
   posthog:
-    image: posthog/posthog:latest
+    image: posthog/posthog@sha256:3e5005a084b9d2d166092a657fd5796d4402fbeafbca4d9e00956f913c2dd82b  # pinned digest — see STATUS.md PostHog Image Upgrade
     environment:
       DATABASE_URL: postgres://posthog:${POSTHOG_DB_PASSWORD:-posthog}@posthog-db:5432/posthog
       CLICKHOUSE_HOST: posthog-clickhouse
@@ -727,7 +727,7 @@ services:
     restart: unless-stopped
 
   posthog-worker:
-    image: posthog/posthog:latest
+    image: posthog/posthog@sha256:3e5005a084b9d2d166092a657fd5796d4402fbeafbca4d9e00956f913c2dd82b  # pinned digest — see STATUS.md PostHog Image Upgrade
     command: ./bin/docker-worker-celery --with-scheduler
     environment:
       DATABASE_URL: postgres://posthog:${POSTHOG_DB_PASSWORD:-posthog}@posthog-db:5432/posthog

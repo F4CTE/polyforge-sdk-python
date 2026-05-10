@@ -5,6 +5,34 @@
 
 ---
 
+## Operational Procedures
+
+### PostHog Image Upgrade
+
+PostHog image is pinned by digest to `posthog/posthog@sha256:3e5005a084b9d2d166092a657fd5796d4402fbeafbca4d9e00956f913c2dd82b` in `docker-compose.infra.yml` (last verified 2026-04-29 against lab runtime). The digest prevents supply-chain drift while matching the currently deployed image.
+
+To upgrade:
+
+1. Pull the latest `posthog/posthog:latest` on the lab:
+   ```bash
+   docker pull posthog/posthog:latest
+   ```
+2. Capture the new digest:
+   ```bash
+   docker inspect posthog/posthog:latest --format '{{index .RepoDigests 0}}'
+   ```
+3. Update both `posthog` and `posthog-worker` service `image:` lines in `docker-compose.infra.yml` with the captured digest.
+4. Deploy to lab:
+   ```bash
+   docker compose -f docker-compose.infra.yml up -d posthog posthog-worker
+   ```
+5. Verify event capture: log into PostHog at `http://polyforge-lab:8000` and check live events.
+6. Verify session replay: trigger a user session and confirm replays are recorded.
+7. Verify no schema migration errors in `docker compose logs posthog`.
+8. Merge the bump PR.
+
+---
+
 ## Next Up
 
 v6.15.1 browser-tested and shipped (2026-03-30). All 4 v6.15.0 features verified end-to-end. Admin app upgraded with Sentiment page, User Accuracy tab, and Platform Activity dashboard cards.
