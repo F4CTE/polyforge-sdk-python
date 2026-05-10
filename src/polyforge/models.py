@@ -588,7 +588,7 @@ ArbPositionStatus = Literal[
 ]
 
 # Venue identifiers mirror the server-side ``Venue`` enum.
-Venue = Literal["POLYMARKET", "KALSHI"]
+Venue = Literal["POLYMARKET", "POLYMARKET_US", "KALSHI"]
 
 
 @dataclass

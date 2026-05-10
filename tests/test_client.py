@@ -7225,6 +7225,8 @@ class TestArbValidators_POLA_1873:
         from polyforge import ArbPositionStatus, Venue
         assert "PENDING" in ArbPositionStatus.__args__
         assert "POLYMARKET" in Venue.__args__
+        assert "POLYMARKET_US" in Venue.__args__
+        assert "KALSHI" in Venue.__args__
 
     def test_limit_below_one_rejected(self):
         from polyforge.client import _validate_arb_limit
