@@ -131,7 +131,7 @@ docker info | grep -A5 "Registry Mirrors" || echo "    (daemon.json applied — 
 # ── 6. Warm up the cache with commonly used images ───────────────────────
 echo "==> Warming cache with common base images..."
 WARM_IMAGES=(
-  "node:24-alpine"
+  "node:26-alpine"
   "nginx:1.27-alpine"
   "redis:7-alpine"
   "postgres:16-alpine"

@@ -14,8 +14,8 @@
 
 # ─── Stage 1: user-app build ─────────────────────────────────────────────────
 
-# SECURITY: Pin to digest in production. Run: docker inspect --format='{{index .RepoDigests 0}}' node:24-alpine
-FROM node:24-alpine AS user-app-builder
+# SECURITY: Pin to digest in production. Run: docker inspect --format='{{index .RepoDigests 0}}' node:26-alpine
+FROM node:26-alpine@sha256:e71ac5e964b9201072425d59d2e876359efa25dc96bb1768cb73295728d6e4ea AS user-app-builder
 
 WORKDIR /build
 
@@ -39,8 +39,8 @@ RUN pnpm --filter @polyforge/shared-types run build && \
 
 # ─── Stage 2: admin-app build ────────────────────────────────────────────────
 
-# SECURITY: Pin to digest in production. Run: docker inspect --format='{{index .RepoDigests 0}}' node:24-alpine
-FROM node:24-alpine AS admin-app-builder
+# SECURITY: Pin to digest in production. Run: docker inspect --format='{{index .RepoDigests 0}}' node:26-alpine
+FROM node:26-alpine@sha256:e71ac5e964b9201072425d59d2e876359efa25dc96bb1768cb73295728d6e4ea AS admin-app-builder
 
 WORKDIR /build
 
@@ -65,8 +65,8 @@ RUN pnpm --filter @polyforge/shared-types run build && \
 # an out/ directory of pre-rendered HTML + _next/static/ assets. No Node.js
 # server is needed in production — nginx serves everything as static files.
 
-# SECURITY: Pin to digest in production. Run: docker inspect --format='{{index .RepoDigests 0}}' node:24-alpine
-FROM node:24-alpine AS landing-builder
+# SECURITY: Pin to digest in production. Run: docker inspect --format='{{index .RepoDigests 0}}' node:26-alpine
+FROM node:26-alpine@sha256:e71ac5e964b9201072425d59d2e876359efa25dc96bb1768cb73295728d6e4ea AS landing-builder
 
 WORKDIR /build
 

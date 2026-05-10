@@ -63,7 +63,7 @@ Create this file at the **root of the repository**.
     "@types/node":                         "25.6.0"
   },
   "engines": {
-    "node": ">=24.0.0 <25.0.0",
+    "node": ">=24.0.0 <27.0.0",
     "pnpm": ">=9.0.0"
   }
 }

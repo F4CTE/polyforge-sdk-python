@@ -1,5 +1,5 @@
-# SECURITY: Pin to digest in production. Run: docker inspect --format='{{index .RepoDigests 0}}' node:24-alpine
-FROM node:24-slim AS builder
+# SECURITY: Pin to digest in production. Run: docker inspect --format='{{index .RepoDigests 0}}' node:26-slim
+FROM node:26-slim@sha256:424cafd2a035ed2b2d74acc3142b68b426fb62a47742c80a75e7117db02d6b30 AS builder
 
 WORKDIR /app
 
@@ -18,7 +18,6 @@ COPY packages/logger/package.json                ./packages/logger/
 COPY services/admin-auth-service/package.json    ./services/admin-auth-service/
 
 RUN echo "shamefully-hoist=true" > .npmrc && \
-    pnpm config set store-dir /tmp/pnpm-store && \
     pnpm install \
     --filter @polyforge/shared-db \
     --filter @polyforge/shared-redis \
@@ -48,8 +47,8 @@ RUN DIRECT_DATABASE_URL=placeholder ADMIN_DIRECT_DATABASE_URL=placeholder \
     (cd services/admin-auth-service && /usr/local/bin/tsc -p tsconfig.build.json)
 
 # ── Runtime ──────────────────────────────────────────────────────────────────
-# SECURITY: Pin to digest in production. Run: docker inspect --format='{{index .RepoDigests 0}}' node:24-alpine
-FROM node:24-alpine
+# SECURITY: Pin to digest in production. Run: docker inspect --format='{{index .RepoDigests 0}}' node:26-alpine
+FROM node:26-alpine@sha256:e71ac5e964b9201072425d59d2e876359efa25dc96bb1768cb73295728d6e4ea
 
 WORKDIR /app
 
@@ -64,7 +63,6 @@ COPY packages/logger/package.json                ./packages/logger/
 COPY services/admin-auth-service/package.json    ./services/admin-auth-service/
 
 RUN echo "shamefully-hoist=true" > .npmrc && \
-    pnpm config set store-dir /tmp/pnpm-store && \
     pnpm install --filter @polyforge/admin-auth-service... --frozen-lockfile --prod --ignore-scripts
 
 COPY --from=builder /app/packages/shared-db/dist/          ./packages/shared-db/dist/

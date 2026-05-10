@@ -57,7 +57,7 @@ The signer-service uses `@polyforge/crypto-native` (NAPI-RS) exclusively. If the
 SECURITY: @polyforge/crypto-native NAPI addon is REQUIRED but not available
 ```
 
-The Docker build includes a dedicated Rust build stage (`rust:1-slim`) that compiles the NAPI addon. The signer-service runtime uses `node:24-slim` (Debian, not Alpine) for glibc compatibility.
+The Docker build includes a dedicated Rust build stage (`rust:1-slim`) that compiles the NAPI addon. The signer-service runtime uses `node:26-slim` (Debian, not Alpine) for glibc compatibility.
 
 ---
 

@@ -15,7 +15,7 @@
 Verify:
 
 ```bash
-node --version          # v24.x.x
+node --version          # v26.x.x
 pnpm --version          # 9.x.x
 docker compose version  # Docker Compose version v2.x.x
 ```

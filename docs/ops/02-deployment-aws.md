@@ -339,7 +339,7 @@ CHAIN_ID=137
 ```bash
 docker run --rm \
   -e DATABASE_URL="$DIRECT_DATABASE_URL" \
-  -v $(pwd)/prisma:/app/prisma -w /app node:24-alpine \
+  -v $(pwd)/prisma:/app/prisma -w /app node:26-alpine \
   sh -c "npm install prisma && npx prisma migrate deploy"
 ```
 
@@ -348,8 +348,8 @@ docker run --rm \
 > **IMPORTANT:** The `signer-service` and `strategy-engine` Dockerfiles include **Rust build stages**.
 > - `signer-service` compiles a NAPI-RS native addon (requires `rust:1-slim` base — ~5min build)
 > - `strategy-engine` compiles a WASM module (requires `rust:1-slim` + `wasm-pack` — ~5min build)
-> - `signer-service` runtime uses `node:24-slim` (Debian, not Alpine) for glibc compatibility
-> - All other services use `node:24-alpine`
+> - `signer-service` runtime uses `node:26-slim` (Debian, not Alpine) for glibc compatibility
+> - All other services use `node:26-alpine`
 
 ```bash
 ECR_BASE=$AWS_ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com
@@ -421,7 +421,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
-        with: { node-version: '24' }
+        with: { node-version: '26' }
       - run: npm ci
       - run: npm run typecheck
       - run: npm run generate:api
@@ -463,7 +463,7 @@ jobs:
         run: |
           docker run --rm \
             -e DATABASE_URL="${{ secrets.DIRECT_DATABASE_URL }}" \
-            -v $(pwd)/prisma:/app/prisma -w /app node:24-alpine \
+            -v $(pwd)/prisma:/app/prisma -w /app node:26-alpine \
             sh -c "npm install prisma && npx prisma migrate deploy"
 
       - name: Deploy to EC2

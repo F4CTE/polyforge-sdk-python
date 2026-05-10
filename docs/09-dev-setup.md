@@ -28,7 +28,7 @@
 | Docker Desktop | 4.x | https://docker.com/products/docker-desktop |
 
 ```bash
-node --version         # v24.x.x
+node --version         # v26.x.x
 pnpm --version         # 9.x.x
 docker compose version # Docker Compose version v2+
 ```

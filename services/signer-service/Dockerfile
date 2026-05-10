@@ -13,8 +13,8 @@ RUN cd packages/polyforge-crypto-native && \
     npx napi build --platform --release
 
 # ── TypeScript build stage ────────────────────────────────────────────────────
-# SECURITY: Pin to digest in production. Run: docker inspect --format='{{index .RepoDigests 0}}' node:24-alpine
-FROM node:24-alpine AS builder
+# SECURITY: Pin to digest in production. Run: docker inspect --format='{{index .RepoDigests 0}}' node:26-alpine
+FROM node:26-alpine@sha256:e71ac5e964b9201072425d59d2e876359efa25dc96bb1768cb73295728d6e4ea AS builder
 
 WORKDIR /app
 
@@ -66,7 +66,7 @@ RUN DIRECT_DATABASE_URL=placeholder ADMIN_DIRECT_DATABASE_URL=placeholder \
 # ── Runtime ──────────────────────────────────────────────────────────────────
 # SECURITY: Using Debian slim (not Alpine) because the Rust NAPI addon requires glibc.
 # The signer-service is the ONLY service that uses Debian — all others use Alpine.
-FROM node:24-slim
+FROM node:26-slim@sha256:424cafd2a035ed2b2d74acc3142b68b426fb62a47742c80a75e7117db02d6b30
 
 WORKDIR /app
 

@@ -472,7 +472,7 @@ services:
   # ─── Signer Service ────────────────────────────────────────────────────────
   # SECURITY: Most hardened service — handles private keys.
   # - Rust NAPI-RS addon for memory-safe encryption (Zeroize)
-  # - Uses node:24-slim runtime (Debian, not Alpine) for glibc compatibility with NAPI
+  # - Uses node:26-slim runtime (Debian, not Alpine) for glibc compatibility with NAPI
   # - Direct RDS connection (not PgBouncer) for credential operations
   # - read-only filesystem, tmpfs, no-new-privileges
   # - NO published ports — only reachable on signer-only network
