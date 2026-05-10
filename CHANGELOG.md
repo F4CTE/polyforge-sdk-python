@@ -126,6 +126,14 @@ preserved.
 
 All four public-profile lookups raise `NotFoundError` when the username is unknown. The `username` path segment is URL-encoded via the existing `_encode_path` helper.
 
+### Fixed
+
+**Endpoint path compatibility audit (POLA-3525, #222)** — verified all 25
+previously-reported endpoint path mismatches between `src/polyforge/client.py`
+(sync + async) and the PolyForge platform NestJS controllers are already
+resolved. No code changes required — the paths/methods were corrected in prior
+releases.
+
 ### Changed
 
 **Cross-SDK naming normalization (POLA-1913)** — renamed feed, referral, and
