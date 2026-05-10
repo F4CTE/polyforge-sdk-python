@@ -10,6 +10,7 @@ export type ConnectionState =
   | "reconnecting";
 
 type MessageListener = (msg: WsMessage) => void;
+export type WsConnectionState = ConnectionState;
 type ConnectionListener = (state: ConnectionState) => void;
 
 const STRATEGY_EVENT_TYPES = new Set([

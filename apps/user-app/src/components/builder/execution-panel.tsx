@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { toast } from 'sonner';
-import { notifyApiError } from '@/lib/api-error';
 import {
   Play, Square, Pause, RotateCcw, ChevronUp, ChevronDown,
   FlaskConical, Radio, Loader2, AlertTriangle, XCircle,
@@ -12,6 +11,7 @@ import { useBuilderStore } from '../../stores/builder-store';
 import { useExecutionStore } from '../../stores/execution-store';
 import { StrategyChartGrid } from '../charts/strategy-chart-grid';
 import { ConfirmDialog } from '../ui/confirm-dialog';
+import { formatApiError, notifyApiError, parseApiErrorResponse } from '../../lib/api-error';
 
 /* ─── Types ──────────────────────────────────────────────────────────── */
 
@@ -157,7 +157,10 @@ export function ExecutionPanel({ strategyId, expanded, onToggle, activeTab, onTa
           setLive(prev => ({ ...prev, status: 'PAUSED' }));
         }
       })
-      .catch(err => { notifyApiError(err, "load strategy status"); });
+      .catch((error) => notifyApiError(formatApiError({
+        fallbackMessage: 'Failed to load strategy status',
+        error,
+      })));
   }, [strategyId, activeTab]);
 
   // ─── WebSocket listener ────────────────────────────────────────────
@@ -305,7 +308,9 @@ export function ExecutionPanel({ strategyId, expanded, onToggle, activeTab, onTa
           } else {
             setBt(prev => ({ ...prev, progress: run.progress ?? prev.progress }));
           }
-        } catch { if (!pollErrShown.current) { notifyApiError(null, "polling"); pollErrShown.current = true; } }
+        } catch {
+          /* Polling is a fallback for missed WebSocket events; avoid a recurring toast every 3s. */
+        }
       }, 3000);
     }
     return () => { if (pollRef.current) clearInterval(pollRef.current); pollErrShown.current = false; };
@@ -319,8 +324,15 @@ export function ExecutionPanel({ strategyId, expanded, onToggle, activeTab, onTa
       if (res.ok) {
         const json = await res.json();
         setMarketResults(prev => ({ ...prev, [slot]: json.data ?? json ?? [] }));
+      } else {
+        notifyApiError(await parseApiErrorResponse(res, 'Failed to search markets'));
       }
-    } catch { /* search is per-keystroke — don't toast transient failures */ }
+    } catch (error) {
+      notifyApiError(formatApiError({
+        fallbackMessage: 'Failed to search markets',
+        error,
+      }));
+    }
   }
 
   // ─── Submit backtest ───────────────────────────────────────────────

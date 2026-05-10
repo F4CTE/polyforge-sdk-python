@@ -1,12 +1,12 @@
 import { useState, useEffect, useCallback } from 'react';
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import { toast } from 'sonner';
-import { notifyApiError } from '@/lib/api-error';
 import {
   Play, ChevronLeft, ChevronRight, History, X, AlertTriangle, XCircle, Loader2, Clock,
 } from 'lucide-react';
 import { Button, Input, Select } from '@polyforge/ui';
 import { useBetaUsage } from '@/hooks/use-beta-usage';
+import { formatApiError, notifyApiError, parseApiErrorResponse } from '@/lib/api-error';
 import { chartTooltipContentStyle, chartAxisTick } from '@polyforge/ui/lib/chart-styles';
 
 /* ─── Types ──────────────────────────────────────────────────────────── */
@@ -123,7 +123,10 @@ export function Component() {
     fetch('/api/v1/strategies?limit=100', { credentials: 'include' })
       .then(r => r.ok ? r.json() : null)
       .then(data => { if (data?.data) setStrategies(data.data); })
-      .catch(err => { notifyApiError(err, "load strategies"); });
+      .catch((error) => notifyApiError(formatApiError({
+        fallbackMessage: 'Failed to load strategies for backtest',
+        error,
+      })));
   }, []);
 
   // Load history when page changes (handles initial mount too)
@@ -175,7 +178,10 @@ export function Component() {
         uniqueSlots.forEach(s => { newBindings[s.slot] = ''; });
         setMarketBindings(newBindings);
       })
-      .catch(err => { notifyApiError(err, "load strategy slots"); });
+      .catch((error) => notifyApiError(formatApiError({
+        fallbackMessage: 'Failed to load strategy market bindings',
+        error,
+      })));
   }, [selectedStratId]);
 
   async function searchMarkets(slot: string, query: string) {
@@ -185,8 +191,15 @@ export function Component() {
       if (res.ok) {
         const json = await res.json();
         setMarketResults(prev => ({ ...prev, [slot]: json.data ?? json ?? [] }));
+      } else {
+        notifyApiError(await parseApiErrorResponse(res, 'Failed to search markets'));
       }
-    } catch { /* per-keystroke search — don't toast transient failures */ }
+    } catch (error) {
+      notifyApiError(formatApiError({
+        fallbackMessage: 'Failed to search markets',
+        error,
+      }));
+    }
   }
 
   const canSubmit = selectedStratId && dateStart && dateEnd && !submitting;

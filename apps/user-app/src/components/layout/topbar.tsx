@@ -9,6 +9,7 @@ import {
   Settings,
   LogOut,
   Keyboard,
+  WifiOff,
 } from "lucide-react";
 import { useAuthStore } from "@/stores/auth-store";
 import { useThemeStore } from "@/stores/theme-store";
@@ -36,6 +37,12 @@ function connectionLabel(state: ConnectionState): string {
   if (state === "connecting") return "Live updates connecting";
   if (state === "reconnecting") return "Live updates reconnecting";
   return "Live updates disconnected";
+}
+
+function connectionBadgeLabel(state: ConnectionState): string {
+  if (state === "reconnecting") return "Reconnecting";
+  if (state === "disconnected") return "Disconnected";
+  return connectionLabel(state);
 }
 
 export function Topbar() {
@@ -83,10 +90,23 @@ export function Topbar() {
 
   const displayName = user?.displayName ?? user?.username ?? "";
   const unread = unreadCount();
+  const connectionIsStale =
+    connectionState === "disconnected" || connectionState === "reconnecting";
 
   return (
     <header className="flex items-center h-12 px-4 border-b border-default bg-surface">
       <div className="flex-1" />
+
+      {connectionIsStale && (
+        <div
+          role="status"
+          aria-label={`${connectionLabel(connectionState)}. Data may be stale.`}
+          className="mr-2 flex items-center gap-1.5 rounded-sm border border-warning/40 bg-warning/10 px-2 py-1 text-label font-medium text-warning"
+        >
+          <WifiOff size={14} aria-hidden="true" />
+          <span>{connectionBadgeLabel(connectionState)}</span>
+        </div>
+      )}
 
       {/* Keyboard shortcuts button */}
       <button
