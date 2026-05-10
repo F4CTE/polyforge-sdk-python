@@ -22,6 +22,14 @@ export interface AdminJwtPayload {
   exp?: number;
 }
 
+export interface AdminProfile {
+  id: string;
+  email: string;
+  role: AdminRole;
+  displayName: string;
+  totpEnabled: boolean;
+}
+
 export interface InternalJwtPayload {
   sub?: string;
   iss?: string;

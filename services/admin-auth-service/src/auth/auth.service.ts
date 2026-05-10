@@ -388,6 +388,7 @@ export class AuthService implements OnModuleInit {
         email: admin.email,
         role: admin.role,
         displayName: admin.displayName,
+        totpEnabled: admin.totpEnabled,
       },
     };
   }
@@ -423,6 +424,7 @@ export class AuthService implements OnModuleInit {
         role: true,
         displayName: true,
         active: true,
+        totpEnabled: true,
       },
     });
 
@@ -438,6 +440,7 @@ export class AuthService implements OnModuleInit {
       email: admin.email,
       role: admin.role,
       displayName: admin.displayName,
+      totpEnabled: admin.totpEnabled,
     };
   }
 

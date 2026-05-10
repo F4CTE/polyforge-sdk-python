@@ -8,6 +8,7 @@ interface Admin {
   email: string;
   role: string;
   displayName: string;
+  totpEnabled: boolean;
 }
 
 interface AdminAuthState {

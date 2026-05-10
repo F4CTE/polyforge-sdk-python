@@ -37,10 +37,11 @@ model Admin {
   displayName   String    @db.VarChar(100)
   role          AdminRole
   active        Boolean   @default(true)
-  totpSecret    String?   @db.VarChar(255)
-  totpEnabled   Boolean   @default(false)
-  totpEnabledAt DateTime?
-  createdAt     DateTime  @default(now())
+  totpSecret      String?   @db.VarChar(255)
+  totpEnabled     Boolean   @default(false)
+  totpEnabledAt   DateTime?
+  totpBackupCodes String[]
+  createdAt       DateTime  @default(now())
   lastSeen      DateTime  @default(now())
 
   sessions  AdminSession[]

@@ -16,6 +16,7 @@ function makeAdmin(overrides: Record<string, unknown> = {}) {
     passwordHash: "$2b$12$hashed",
     role: "SUPER_ADMIN",
     active: true,
+    totpEnabled: false,
     createdAt: new Date("2024-01-01"),
     lastSeen: new Date("2024-06-01"),
     ...overrides,

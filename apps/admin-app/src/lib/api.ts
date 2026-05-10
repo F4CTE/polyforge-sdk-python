@@ -87,12 +87,12 @@ async function request<T>(url: string, options?: RequestInit): Promise<T> {
 
 export const authApi = {
   login: (body: { email: string; password: string; totpCode?: string }) =>
-    request<{ id: string; email: string; role: string; displayName: string }>(
+    request<{ id: string; email: string; role: string; displayName: string; totpEnabled: boolean }>(
       `${AUTH_BASE}/login`,
       { method: 'POST', body: JSON.stringify(body) },
     ),
   me: () =>
-    request<{ id: string; email: string; role: string; displayName: string }>(
+    request<{ id: string; email: string; role: string; displayName: string; totpEnabled: boolean }>(
       `${AUTH_BASE}/me`,
     ),
   logout: () => request<void>(`${AUTH_BASE}/logout`, { method: 'POST' }),
@@ -328,6 +328,7 @@ interface AdminData {
   displayName: string;
   role: string;
   active?: boolean;
+  totpEnabled?: boolean;
   lastSeen?: string;
   createdAt?: string;
   [key: string]: unknown;

@@ -62,6 +62,7 @@ describe("AdminAuthController", () => {
         email: "admin@polyforge.app",
         role: "SUPER_ADMIN",
         displayName: "Super Admin",
+        totpEnabled: false,
       };
       vi.mocked(authService.getMe).mockResolvedValue(admin as any);
       const req = makeReq("admin-jwt");

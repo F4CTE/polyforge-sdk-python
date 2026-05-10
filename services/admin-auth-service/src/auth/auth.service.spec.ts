@@ -16,6 +16,7 @@ interface AdminLike {
   totpEnabled: boolean;
   totpSecret: string | null;
   totpEnabledAt: Date | null;
+  totpBackupCodes: string[];
   createdAt: Date;
 }
 
@@ -41,6 +42,7 @@ async function adminFactory(
     totpEnabled: false,
     totpSecret: null,
     totpEnabledAt: null,
+    totpBackupCodes: [],
     createdAt: new Date(),
     ...overrides,
   };
@@ -444,6 +446,7 @@ describe("AdminAuthService", () => {
       expect(result.email).toBe(admin.email);
       expect(result.role).toBe(admin.role);
       expect(result.displayName).toBe(admin.displayName);
+      expect(result.totpEnabled).toBe(admin.totpEnabled);
     });
 
     it("throws UNAUTHORIZED (401) when JWT is invalid", async () => {
