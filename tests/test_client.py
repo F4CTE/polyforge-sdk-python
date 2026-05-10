@@ -4853,12 +4853,34 @@ class TestHealthEndpoint:
         client._get.assert_called_once_with("/api/v1/status")
         client.close()
 
-    def test_async_get_health_authenticated_is_coroutine(self):
-        import inspect
-        assert hasattr(AsyncPolyforgeClient, "get_health_authenticated"), \
-            "AsyncPolyforgeClient missing get_health_authenticated"
-        source = inspect.getsource(AsyncPolyforgeClient.get_health_authenticated)
-        assert "await" in source, "async get_health_authenticated not using await"
+    def test_async_get_health_authenticated(self):
+        import asyncio
+        from unittest.mock import AsyncMock
+        from polyforge.models import SystemHealthAuthenticated
+
+        async def _run():
+            client = AsyncPolyforgeClient(api_key="test-key")
+            client._get = AsyncMock(return_value={
+                "status": "operational",
+                "service": "api-service",
+                "version": "2.0.0",
+                "uptime": 3600.0,
+                "db": {"connections": 5, "status": "ok"},
+                "redis": {"memoryUsageMb": 128, "status": "ok"},
+                "queueDepth": 0,
+            })
+            result = await client.get_health_authenticated()
+            assert isinstance(result, SystemHealthAuthenticated)
+            assert result.status == "operational"
+            assert result.service == "api-service"
+            assert result.version == "2.0.0"
+            assert result.db == {"connections": 5, "status": "ok"}
+            assert result.redis == {"memoryUsageMb": 128, "status": "ok"}
+            assert result.queue_depth == 0
+            client._get.assert_awaited_once_with("/api/v1/status")
+            await client.close()
+
+        asyncio.run(_run())
 
 
 class TestPositionPlatformContract:
