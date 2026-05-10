@@ -149,6 +149,21 @@ describe("EventsConsumerService", () => {
       expect(notification.handle).not.toHaveBeenCalled();
     });
 
+    it("ignores NOTIFICATION event type to prevent self-amplification", async () => {
+      await simulateMessage([
+        "type",
+        "NOTIFICATION",
+        "userId",
+        "u1",
+        "title",
+        "Test",
+        "body",
+        "Test body",
+      ]);
+
+      expect(notification.handle).not.toHaveBeenCalled();
+    });
+
     it("acks a notification message only after the handler succeeds", async () => {
       const client = redis.getClient();
       client.xreadgroup

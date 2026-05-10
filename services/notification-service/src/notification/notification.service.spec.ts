@@ -69,6 +69,8 @@ function buildMockRedisClient() {
     del: vi.fn().mockResolvedValue(1),
     incrbyfloat: vi.fn().mockResolvedValue("0"),
     xadd: vi.fn().mockResolvedValue("1-0"),
+    set: vi.fn().mockResolvedValue("OK"),
+    eval: vi.fn().mockResolvedValue(1),
   };
 }
 
@@ -1156,18 +1158,194 @@ describe("NotificationService", () => {
     });
   });
 
-  // ─── Cache handling edge cases ────────────────────────────────────────────
+  // ─── In-app notification dedup (self-amplification guard) ────────────────
 
-  describe("loadPrefs — cache edge cases", () => {
-    it("falls through to DB when cached JSON is invalid", async () => {
+  describe("handle — in-app notification dedup", () => {
+    it("skips duplicate in-app notification with identical content within dedup window", async () => {
       const prefs = makePrefs({ notificationFreq: "IMMEDIATE" });
-      redis.get.mockImplementation(async (key: string) => {
-        if (key.startsWith("cache:notif-prefs:")) return "not-valid-json";
-        return null;
+      (prisma.notificationPreference.findUnique as any).mockResolvedValue(
+        prefs,
+      );
+      vi.spyOn(service, "dispatch").mockResolvedValue(undefined);
+
+      // First call: SET NX returns OK → xadd proceeds
+      // Second call: SET NX returns null (key already exists) → xadd skipped
+      redisClient.set
+        .mockResolvedValueOnce("OK")
+        .mockResolvedValueOnce(null);
+
+      await service.handle("ORDER_FILLED", {
+        userId: "user-1",
+        fillPrice: "0.80",
+        size: "100",
+      });
+
+      expect(redis.xadd).toHaveBeenCalledTimes(1);
+      expect(redis.xadd).toHaveBeenCalledWith(
+        "stream:events",
+        expect.objectContaining({
+          type: "NOTIFICATION",
+          userId: "user-1",
+        }),
+      );
+
+      // Second call with same content — same title+body → deduped
+      await service.handle("ORDER_FILLED", {
+        userId: "user-1",
+        fillPrice: "0.80",
+        size: "100",
+      });
+
+      // Still only 1 xadd call total
+      expect(redis.xadd).toHaveBeenCalledTimes(1);
+    });
+
+    it("allows in-app notification with different content for same eventType+userId", async () => {
+      const prefs = makePrefs({ notificationFreq: "IMMEDIATE" });
+      (prisma.notificationPreference.findUnique as any).mockResolvedValue(
+        prefs,
+      );
+      vi.spyOn(service, "dispatch").mockResolvedValue(undefined);
+
+      // Change template output per call so content differs
+      templates.build
+        .mockReturnValueOnce({
+          ...STUB_CONTENT,
+          body: "Fill 100 at $0.80",
+        })
+        .mockReturnValueOnce({
+          ...STUB_CONTENT,
+          body: "Fill 200 at $1.50",
+        });
+
+      redisClient.set
+        .mockResolvedValueOnce("OK")
+        .mockResolvedValueOnce("OK");
+
+      await service.handle("ORDER_FILLED", {
+        userId: "user-1",
+        fillPrice: "0.80",
+        size: "100",
+      });
+
+      expect(redis.xadd).toHaveBeenCalledTimes(1);
+
+      // Different content → different dedup key → both pass through
+      await service.handle("ORDER_FILLED", {
+        userId: "user-1",
+        fillPrice: "1.50",
+        size: "200",
+      });
+
+      expect(redis.xadd).toHaveBeenCalledTimes(2);
+    });
+
+    it("dedups by content hash in the Redis key", async () => {
+      const prefs = makePrefs({ notificationFreq: "IMMEDIATE" });
+      (prisma.notificationPreference.findUnique as any).mockResolvedValue(
+        prefs,
+      );
+      vi.spyOn(service, "dispatch").mockResolvedValue(undefined);
+
+      templates.build.mockReturnValue({
+        ...STUB_CONTENT,
+        title: "Order Filled",
+        body: "Your order was filled.",
+      });
+
+      redisClient.set.mockResolvedValueOnce("OK");
+
+      await service.handle("ORDER_FILLED", {
+        userId: "user-1",
+        fillPrice: "0.80",
+        size: "100",
+      });
+
+      expect(redisClient.set).toHaveBeenCalledWith(
+        expect.stringMatching(/^notif:inapp:ORDER_FILLED:user-1:/),
+        expect.stringMatching(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/),
+        "PX",
+        expect.any(Number),
+        "NX",
+      );
+
+      // Key should include a content hash suffix after user-1
+      const dedupKey: string = redisClient.set.mock.calls[0][0];
+      const parts = dedupKey.split(":");
+      expect(parts.length).toBeGreaterThanOrEqual(5);
+      // Last part is the content hash (alphanumeric)
+      expect(parts[parts.length - 1]).toMatch(/^[a-z0-9]+$/);
+    });
+
+    it("proceeds with in-app push when dedup SET fails with a Redis error", async () => {
+      const prefs = makePrefs({ notificationFreq: "IMMEDIATE" });
+      (prisma.notificationPreference.findUnique as any).mockResolvedValue(
+        prefs,
+      );
+      vi.spyOn(service, "dispatch").mockResolvedValue(undefined);
+
+      // SET throws an error (e.g. Redis connection lost)
+      redisClient.set.mockRejectedValueOnce(new Error("Redis connection lost"));
+
+      await service.handle("ORDER_FILLED", {
+        userId: "user-1",
+        fillPrice: "0.80",
+        size: "100",
+      });
+
+      // xadd should still be called despite SET failure
+      expect(redis.xadd).toHaveBeenCalledWith(
+        "stream:events",
+        expect.objectContaining({
+          type: "NOTIFICATION",
+          userId: "user-1",
+        }),
+      );
+    });
+
+    it("releases dedup key when xadd fails after successful SET", async () => {
+      const prefs = makePrefs({ notificationFreq: "IMMEDIATE" });
+      (prisma.notificationPreference.findUnique as any).mockResolvedValue(
+        prefs,
+      );
+      vi.spyOn(service, "dispatch").mockResolvedValue(undefined);
+
+      // SET succeeds
+      redisClient.set.mockResolvedValueOnce("OK");
+      // But xadd fails
+      redis.xadd.mockRejectedValueOnce(new Error("Stream write failed"));
+
+      await service.handle("ORDER_FILLED", {
+        userId: "user-1",
+        fillPrice: "0.80",
+        size: "100",
+      });
+
+      // Should have released the dedup key via Lua script (compare-and-delete)
+      expect(redisClient.eval).toHaveBeenCalledWith(
+        expect.stringContaining("GET"),
+        1,
+        expect.stringMatching(/^notif:inapp:ORDER_FILLED:user-1:/),
+        expect.any(String),
+      );
+    });
+
+    it("still dispatches external channels (email/telegram/discord) when in-app is deduped", async () => {
+      const prefs = makePrefs({
+        notificationFreq: "IMMEDIATE",
+        emailEnabled: true,
       });
       (prisma.notificationPreference.findUnique as any).mockResolvedValue(
         prefs,
       );
+      (prisma.user.findUnique as any).mockResolvedValue({
+        email: "user@example.com",
+      });
+      (prisma.notificationHistory.create as any).mockResolvedValue({});
+
+      // SET NX returns null → in-app skipped
+      redisClient.set.mockResolvedValueOnce(null);
+
       const dispatchSpy = vi
         .spyOn(service, "dispatch")
         .mockResolvedValue(undefined);
@@ -1178,9 +1356,73 @@ describe("NotificationService", () => {
         size: "100",
       });
 
-      // Should have fallen through to DB
-      expect(prisma.notificationPreference.findUnique).toHaveBeenCalled();
+      // In-app should NOT be pushed
+      expect(redis.xadd).not.toHaveBeenCalled();
+
+      // External dispatch should still be called
       expect(dispatchSpy).toHaveBeenCalledOnce();
+    });
+
+    it("does NOT dedup distinct events with identical rendered text", async () => {
+      const prefs = makePrefs({ notificationFreq: "IMMEDIATE" });
+      (prisma.notificationPreference.findUnique as any).mockResolvedValue(
+        prefs,
+      );
+      vi.spyOn(service, "dispatch").mockResolvedValue(undefined);
+
+      // Template produces identical title+body for both events
+      templates.build.mockReturnValue({
+        ...STUB_CONTENT,
+        title: "Order Filled",
+        body: "Your order was filled at $0.80.",
+      });
+
+      // Two events with different data but same rendered output
+      redisClient.set
+        .mockResolvedValueOnce("OK")
+        .mockResolvedValueOnce("OK");
+
+      await service.handle("ORDER_FILLED", {
+        userId: "user-1",
+        fillPrice: "0.80",
+        size: "100",
+        orderId: "order-AAA",
+      });
+
+      expect(redis.xadd).toHaveBeenCalledTimes(1);
+
+      // Different data (different orderId) — should NOT be deduped
+      await service.handle("ORDER_FILLED", {
+        userId: "user-1",
+        fillPrice: "0.80",
+        size: "100",
+        orderId: "order-BBB",
+      });
+
+      // Both should pass through because event data differs
+      expect(redis.xadd).toHaveBeenCalledTimes(2);
+    });
+
+    it("generates collision-resistant notifId with random component", async () => {
+      const prefs = makePrefs({ notificationFreq: "IMMEDIATE" });
+      (prisma.notificationPreference.findUnique as any).mockResolvedValue(
+        prefs,
+      );
+      vi.spyOn(service, "dispatch").mockResolvedValue(undefined);
+
+      redisClient.set.mockResolvedValueOnce("OK");
+
+      await service.handle("ORDER_FILLED", {
+        userId: "user-1",
+        fillPrice: "0.80",
+        size: "100",
+      });
+
+      // notifId should contain a UUID (random suffix)
+      const xaddCall = redis.xadd.mock.calls[0][1];
+      expect(xaddCall.id).toMatch(
+        /^ORDER_FILLED:user-1:\d+:[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/,
+      );
     });
   });
 });

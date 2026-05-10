@@ -52,6 +52,8 @@ function toNotifType(
       return "ARBITRAGE_OPPORTUNITY";
     case "ARBITRAGE_CROSS_VENUE":
       return "ARBITRAGE_CROSS_VENUE";
+    case "NOTIFICATION":
+      return null; // prevent self-amplification: do not re-process in-app notifications
     default:
       return null;
   }

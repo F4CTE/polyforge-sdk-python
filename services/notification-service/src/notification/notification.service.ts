@@ -1,3 +1,4 @@
+import crypto from "node:crypto";
 import { Injectable, Logger } from "@nestjs/common";
 import { PrismaService } from "@polyforge/shared-db";
 import { RedisService } from "@polyforge/shared-redis";
@@ -50,6 +51,34 @@ interface DispatchOptions {
 const PREFS_CACHE_KEY = (userId: string) => `cache:notif-prefs:${userId}`;
 const PREFS_TTL = 300;
 
+// Self-amplification guard: prevent the same notification content from looping
+// back through the stream consumer.  Dedup window is configurable via env.
+const IN_APP_DEDUP_MS = parsePositiveInt(
+  process.env.NOTIF_IN_APP_DEDUP_MS,
+  5000,
+);
+const DEDUP_KEY = (
+  eventType: string,
+  userId: string,
+  data: Record<string, string>,
+) => `notif:inapp:${eventType}:${userId}:${hashEventData(data)}`;
+
+function parsePositiveInt(value: string | undefined, fallback: number): number {
+  if (!value) return fallback;
+  const n = parseInt(value, 10);
+  return Number.isSafeInteger(n) && n > 0 ? n : fallback;
+}
+
+function hashEventData(data: Record<string, string>): string {
+  // Use a sorted, stable serialization so identical events produce the same hash
+  const canonical = Object.keys(data)
+    .sort()
+    .map((k) => `${k}=${data[k]}`)
+    .join("|");
+  const hash = crypto.createHash("sha256").update(canonical).digest("hex");
+  return hash.slice(0, 16);
+}
+
 function escapeHtml(value: unknown): string {
   return String(value ?? "")
     .replace(/&/g, "&amp;")
@@ -101,7 +130,7 @@ export class NotificationService {
     const content = this.templates.build(eventType, data);
 
     // In-app notification: always push to stream:events (no frequency gating)
-    await this.pushInApp(userId, content);
+    await this.pushInApp(userId, eventType, data, content);
 
     // Webhook dispatch: fire-and-forget to all matching webhooks
     this.webhookDispatcher.dispatch(userId, eventType, data).catch((err) => {
@@ -380,20 +409,63 @@ export class NotificationService {
 
   private async pushInApp(
     userId: string,
+    eventType: string,
+    data: Record<string, string>,
     content: ReturnType<TemplatesService["build"]>,
   ): Promise<void> {
+    // Dedup: prevent self-amplification — only one in-app notification per
+    // (eventType, userId, event-data) within the dedup window.
+    const dedupKey = DEDUP_KEY(eventType, userId, data);
+    // Use a unique lock value so we can verify ownership before deleting
+    const lockValue = crypto.randomUUID();
+    let dedupAcquired = false;
+
+    try {
+      const setResult = await this.redis
+        .getClient()
+        .set(dedupKey, lockValue, "PX", IN_APP_DEDUP_MS, "NX");
+      if (setResult !== "OK") {
+        this.logger.debug(
+          `Skipping in-app notification (dedup): ${eventType} user=${userId}`,
+        );
+        return;
+      }
+      dedupAcquired = true;
+    } catch (err: any) {
+      // SET failed (Redis connectivity issue) — do not block notification
+      this.logger.warn(
+        `Dedup SET failed for ${eventType} user=${userId}: ${err?.message}`,
+      );
+    }
+
+    const notifId = `${eventType}:${userId}:${Date.now()}:${crypto.randomUUID()}`;
     try {
       await this.redis.xadd("stream:events", {
         type: "NOTIFICATION",
         userId,
+        id: notifId,
         title: content.title,
         body: content.body,
         severity: content.severity,
         ts: String(Date.now()),
       });
     } catch (err: any) {
+      // Release dedup key so subsequent attempts are not suppressed
+      if (dedupAcquired) {
+        this.releaseDedupKey(dedupKey, lockValue);
+      }
       this.logger.error("Failed to push in-app notification", err?.message);
     }
+  }
+
+  private releaseDedupKey(key: string, expectedValue: string): void {
+    // Use a Lua script to only delete if the value still matches, avoiding
+    // race conditions where the key expired and another request re-acquired it.
+    const script = `if redis.call("GET", KEYS[1]) == ARGV[1] then return redis.call("DEL", KEYS[1]) else return 0 end`;
+    this.redis
+      .getClient()
+      .eval(script, 1, key, expectedValue)
+      .catch(() => {});
   }
 
   // ─── Helpers ──────────────────────────────────────────────────────────────
