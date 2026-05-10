@@ -205,7 +205,7 @@ export class NotificationService {
       if (!prefs) continue;
 
       const parsed = items
-        .map((i) => {
+        .map((i: string) => {
           try {
             return JSON.parse(i);
           } catch {
@@ -415,7 +415,7 @@ export class NotificationService {
     if (!prefs) return null;
 
     await this.redis.set(cacheKey, JSON.stringify(prefs), PREFS_TTL);
-    return prefs as unknown as DispatchOptions;
+    return prefs;
   }
 
   private async writeHistory(

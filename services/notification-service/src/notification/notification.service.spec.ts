@@ -101,7 +101,7 @@ describe("NotificationService", () => {
 
     templates.build.mockReturnValue(STUB_CONTENT);
     templates.toHtml.mockReturnValue("<html>stub</html>");
-    mail.send.mockResolvedValue(undefined as any);
+    mail.send.mockResolvedValue(undefined);
     telegram.send.mockResolvedValue(undefined);
     discord.send.mockResolvedValue(undefined);
 
