@@ -646,7 +646,10 @@ export function Component() {
       const id = orderId?.slice(0, 8);
       if (msg.type === 'ORDER_FILLED') toast.success(`Order filled${id ? ` · ${id}…` : ''}`);
       if (msg.type === 'ORDER_CANCELLED') toast.info('Order cancelled');
-      if (msg.type === 'ORDER_FAILED') toast.error('Order failed');
+      if (msg.type === 'ORDER_FAILED') {
+        const reason = msg.data?.reason as string | undefined;
+        toast.error(reason ? `Order failed: ${reason}` : 'Order failed');
+      }
     };
     wsManager.addListener(handler);
     return () => wsManager.removeListener(handler);
