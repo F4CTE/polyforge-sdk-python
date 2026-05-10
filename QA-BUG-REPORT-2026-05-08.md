@@ -1,39 +1,51 @@
 # QA Bug Report — POLA-2732 Error Handling Audit
 
-**Date**: 2026-05-08
+**Date**: 2026-05-08 (updated 2026-05-10)
 **Auditor**: Daedalus (QA/Verification)
 **Parent Issue**: POLA-2732
-**Status**: Investigation complete; implementation delegated to subtasks
+**Status**: Partial fix applied; remaining work delegated to subtasks
 
 ---
 
 ## 1. ORDER_FAILED shows no reason
 
-### Root Cause (Server)
+### Root Cause (Server) ✅ FIXED
 **File**: `services/api-service/src/gateway/events.service.ts:139,183`
+**Fixed in**: `6fa392849` (main, May 10)
 
-The `reason` field is destructured from the Redis event on line 139:
+Dedicated `case "ORDER_FAILED"` now includes `reason` with sanitization:
 ```ts
-const { type, strategyId, userId, orderId, tokenId, reason, ...rest } = event;
+case "ORDER_FAILED":
+  if (userId) {
+    const sanitizedReason = reason
+      ? reason.replace(/[\r\n]+/g, " ").slice(0, 500)
+      : undefined;
+    this.gateway.pushOrderEvent(userId, type, {
+      orderId,
+      reason: sanitizedReason,
+      ...rest,
+    });
+  }
+  break;
 ```
 
-But omitted from the `pushOrderEvent()` call for ORDER_FAILED/ORDER_ERROR cases (line 183):
-```ts
-this.gateway.pushOrderEvent(userId, type, { orderId, ...rest });
-// No `reason` field — only orderId and rest (which is just { ts })
-```
+### Root Cause (Frontend) ✅ FIXED
+**File**: `apps/user-app/src/pages/markets/market-detail.tsx:649`
+**Fixed on**: this branch (`POLA-2732`)
 
-Compare with STRATEGY_ERROR (line 171) which correctly forwards `{ reason }`.
-
-### Root Cause (Frontend)
-**File**: `apps/user-app/src/pages/markets/market-detail.tsx:645`
-
+Was:
 ```tsx
 if (msg.type === 'ORDER_FAILED') toast.error('Order failed');
 ```
-Hardcoded string — never reads `msg.data?.reason` or `msg.data?.error`.
+Now reads `msg.data?.reason` from the WS payload:
+```tsx
+if (msg.type === 'ORDER_FAILED') {
+  const reason = msg.data?.reason as string | undefined;
+  toast.error(reason ? `Order failed: ${reason}` : 'Order failed');
+}
+```
 
-### Schema Mismatch
+### Schema Mismatch ⚠️ OPEN
 - `packages/shared-schemas/src/stream-events.schema.ts:43` expects field `error`
 - `services/order-service/src/events/events.service.ts:66` emits field `reason`
 
@@ -92,17 +104,20 @@ Hardcoded string — never reads `msg.data?.reason` or `msg.data?.error`.
 
 ---
 
-## 4. WebSocket disconnect invisible
+## 4. WebSocket disconnect invisible ✅ FIXED
 
-### Root Cause
-**File**: `apps/user-app/src/lib/websocket.ts:112-121`
+### Root Cause — Fixed on main
+**File**: `apps/user-app/src/lib/websocket.ts`
+**Fixed by**: `3dc93d8a8` (main)
 
-`onclose` (lines 112-119) and `onerror` (line 121) perform reconnection but never call `this.emit()` — no registered listener is notified of disconnection.
+`WebSocketManager` now tracks `ConnectionState` (`disconnected` | `connecting` | `connected` | `reconnecting`) and exposes `addConnectionListener()` / `getConnectionState()` so consumers can react to connection changes. `setConnectionState()` emits to all registered `ConnectionListener` callbacks, called from `connect()`, `onopen`, `onclose`, and `destroy()`.
 
-### Misleading UI Indicators
+### Misleading UI Indicators ⚠️ OPEN
 - `topbar.tsx:103-105` — Fake static "Connected" indicator, always green
 - `whale-feed.tsx:174` — Sets `wsConnected=true` unconditionally on mount
 - `strategy-detail.tsx:480` — Sets `wsConnected=true` on AUTH_OK only, never to false
+
+These UI components should be updated to use `wsManager.addConnectionListener()` instead of hardcoded values. Tracked in subtask.
 
 ### Fix Delegated To
 [POLA-3288](POLA-3288)

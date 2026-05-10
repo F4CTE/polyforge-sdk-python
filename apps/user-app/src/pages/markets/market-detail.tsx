@@ -12,8 +12,6 @@ import {
   getOrCreatePendingIdempotencyKey,
   idempotencyHeaders,
 } from '@/lib/idempotency';
-import { formatApiError, notifyApiError, parseApiErrorResponse } from '@/lib/api-error';
-import { formatOrderEventToast } from '@/lib/order-events';
 import { safeHref } from '@/lib/url';
 import { useAuthStore } from '@/stores/auth-store';
 import {
@@ -448,10 +446,7 @@ export function Component() {
     fetch(`/api/v1/markets/${tokenId}/tick-size`, { credentials: 'include' })
       .then(r => r.ok ? r.json() : null)
       .then(data => { if (data?.tickSize != null) setTickSize(Number(data.tickSize)); })
-        .catch((error) => notifyApiError(formatApiError({
-          fallbackMessage: 'Failed to load tick size',
-          error,
-        })));
+      .catch(() => {});
   }, []);
 
   // When market loads, fetch chart + book + tick size
@@ -587,13 +582,10 @@ export function Component() {
         toast.success(`${condType === 'TAKE_PROFIT' ? 'Take Profit' : 'Stop Loss'} order created`);
         setShowConditional(false);
       } else {
-        notifyApiError(await parseApiErrorResponse(res, 'Failed to create conditional order'));
+        toast.error('Failed to create conditional order');
       }
-    } catch (error) {
-      notifyApiError(formatApiError({
-        fallbackMessage: 'Failed to create conditional order',
-        error,
-      }));
+    } catch {
+      toast.error('Failed to create conditional order');
     } finally {
       clearPendingIdempotencyKey(conditionalIdempotencyKeyRef);
       setCondSubmitting(false);
@@ -611,15 +603,8 @@ export function Component() {
       if (res.ok) {
         const data = await res.json();
         setMyOrders(data.data || data || []);
-      } else {
-        notifyApiError(await parseApiErrorResponse(res, 'Failed to load your open orders'));
       }
-    } catch (error) {
-      notifyApiError(formatApiError({
-        fallbackMessage: 'Failed to load your open orders',
-        error,
-      }));
-    } finally {
+    } catch {} finally {
       setLoadingMyOrders(false);
     }
   }, [id]);
@@ -631,10 +616,7 @@ export function Component() {
     fetch('/api/v1/portfolio', { credentials: 'include' })
       .then(r => r.ok ? r.json() : null)
       .then(d => { if (d?.balance) setPortfolioBalance(parseFloat(d.balance)); })
-      .catch((error) => notifyApiError(formatApiError({
-        fallbackMessage: 'Could not load portfolio balance for sizing',
-        error,
-      })));
+      .catch(() => {});
   }, []);
 
   // Load price alerts for this market
@@ -646,15 +628,8 @@ export function Component() {
       if (r.ok) {
         const data: { data: PriceAlert[] } = await r.json();
         setAlerts(data.data ?? []);
-      } else {
-        notifyApiError(await parseApiErrorResponse(r, 'Failed to load price alerts'));
       }
-    } catch (error) {
-      notifyApiError(formatApiError({
-        fallbackMessage: 'Failed to load price alerts',
-        error,
-      }));
-    } finally {
+    } catch {} finally {
       setLoadingAlerts(false);
     }
   }, [market?.id]);
@@ -667,10 +642,14 @@ export function Component() {
     const handler = (msg: { type: string; orderId?: string; data?: Record<string, unknown> }) => {
       if (!WebSocketManager.isOrderEvent(msg)) return;
       loadMyOrders();
-      const orderToast = formatOrderEventToast(msg);
-      if (orderToast?.kind === 'success') toast.success(orderToast.message);
-      if (orderToast?.kind === 'info') toast.info(orderToast.message);
-      if (orderToast?.kind === 'error') toast.error(orderToast.message);
+      const orderId = msg.orderId ?? (msg.data?.orderId as string | undefined);
+      const id = orderId?.slice(0, 8);
+      if (msg.type === 'ORDER_FILLED') toast.success(`Order filled${id ? ` · ${id}…` : ''}`);
+      if (msg.type === 'ORDER_CANCELLED') toast.info('Order cancelled');
+      if (msg.type === 'ORDER_FAILED') {
+        const reason = msg.data?.reason as string | undefined;
+        toast.error(reason ? `Order failed: ${reason}` : 'Order failed');
+      }
     };
     wsManager.addListener(handler);
     return () => wsManager.removeListener(handler);
@@ -838,25 +817,14 @@ export function Component() {
           orderType: isMarketOrder ? 'FOK' : 'GTC',
         }),
       });
-      if (!res.ok) {
-        const formatted = await parseApiErrorResponse(res, 'Order failed');
-        notifyApiError(formatted);
-        throw new Error(formatted.message);
-      }
       const data = await res.json();
+      if (!res.ok) throw new Error(data.message || 'Order failed');
       setTradeSuccess(`Order placed (${data.orderId.slice(0, 8)}...)`);
       setTradeAmount('');
       setPendingPlaceOrderConfirm(false);
       loadMyOrders();
     } catch (err: unknown) {
-      const formatted = formatApiError({
-        fallbackMessage: 'Order failed',
-        error: err,
-      });
-      setTradeError(formatted.message);
-      if (!(err instanceof Error && err.message === formatted.message)) {
-        notifyApiError(formatted);
-      }
+      setTradeError(err instanceof Error ? err.message : 'Order failed');
     } finally {
       clearPendingIdempotencyKey(placeOrderIdempotencyKeyRef);
       setPlacingOrder(false);
@@ -873,15 +841,9 @@ export function Component() {
       if (res.ok) {
         setPendingCancelOrderId(null);
         loadMyOrders();
-      } else {
-        notifyApiError(await parseApiErrorResponse(res, 'Failed to cancel order'));
       }
-    } catch (error) {
-      notifyApiError(formatApiError({
-        fallbackMessage: 'Failed to cancel order',
-        error,
-      }));
-    } finally {
+    } catch {}
+    finally {
       setCancellingMyOrderId(null);
     }
   };
