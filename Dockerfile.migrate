@@ -1,6 +1,6 @@
 # Dockerfile.migrate — User DB migrations (Prisma 7)
 
-FROM node:24-alpine@sha256:01743339035a5c3c11a373cd7c83aeab6ed1457b55da6a69e014a95ac4e4700b AS builder
+FROM node:26-alpine@sha256:e71ac5e964b9201072425d59d2e876359efa25dc96bb1768cb73295728d6e4ea AS builder
 WORKDIR /app
 
 COPY prisma/schema.prisma      ./prisma/schema.prisma
@@ -17,7 +17,7 @@ RUN DIRECT_DATABASE_URL=postgresql://ci:ci@localhost:5432/ci \
       --schema ./prisma/schema.prisma \
       --config ./prisma/prisma.config.ts
 
-FROM node:24-alpine@sha256:01743339035a5c3c11a373cd7c83aeab6ed1457b55da6a69e014a95ac4e4700b AS runner
+FROM node:26-alpine@sha256:e71ac5e964b9201072425d59d2e876359efa25dc96bb1768cb73295728d6e4ea AS runner
 WORKDIR /app
 
 # postgresql-client provides psql for post-migration SQL scripts
