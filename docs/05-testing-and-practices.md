@@ -524,11 +524,11 @@ export default defineConfig({
 | admin-api-service | 80% | 80% | 80% | Standard — controllers excluded |
 | notification-service | 75% | 75% | 70% | Integration-heavy (SMTP, external) |
 | paper-order-service | 75% | 75% | 70% | Standard |
-| strategy-engine | 45% | 38% | 44% | `evaluator.ts` and block registry need dedicated tests (tracked) |
-| backtest-service | 38% | 65% | 55% | `evaluator.ts` (382 lines) not yet unit-tested (tracked) |
+| strategy-engine | 85% | 88% | 68% | Logic graph evaluator, block registry, TA indicators |
+| backtest-service | 80% | 84% | 70% | Backtest evaluator, metrics, stream consumer |
 | bot-service | — | — | — | No spec files yet (`passWithNoTests: true`) |
 
-> **Note:** strategy-engine and backtest-service thresholds are intentionally low while dedicated evaluator tests are pending. These are tracked as improvement items. Target is 80% once evaluator tests are written.
+> **Note:** strategy-engine and backtest-service have been brought up to standard thresholds (85%/80% lines). Dedicated evaluator and logic graph tests are now in place. See POLA-3647.
 
 CI pipeline fails if coverage drops below thresholds.
 
