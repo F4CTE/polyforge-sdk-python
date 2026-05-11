@@ -265,7 +265,30 @@ jobs:
 
             echo "=== 5. Docker rebuild + clean restart (with TLS) ==="
             COMPOSE_PARALLEL_LIMIT=1 docker compose -f docker-compose.infra.yml -f docker-compose.ssl.yml build
-            docker compose -f docker-compose.infra.yml -f docker-compose.ssl.yml down --timeout 30
+            docker compose -f docker-compose.infra.yml -f docker-compose.ssl.yml down --remove-orphans --timeout 30
+            echo "  ensuring port 6379 is free..."
+            for i in $(seq 1 10); do
+              if command -v ss >/dev/null 2>&1; then
+                if ss -tlnp 'sport = :6379' 2>/dev/null | grep -q ':6379'; then
+                  :
+                else
+                  echo "  port 6379 free after ${i}s"
+                  break
+                fi
+              else
+                project_cid=$(docker ps -q --filter "name=polyforge-dev-redis" 2>/dev/null)
+                if [ -z "$project_cid" ]; then
+                  echo "  port 6379 appears free after ${i}s (no project redis container)"
+                  break
+                fi
+              fi
+              echo "  port 6379 still in use, attempt $i/10..."
+              project_cid=$(docker ps -q --filter "name=polyforge-dev-redis" 2>/dev/null)
+              if [ -n "$project_cid" ]; then
+                docker rm -f $project_cid 2>/dev/null || true
+              fi
+              sleep 1
+            done
             docker compose -f docker-compose.infra.yml -f docker-compose.ssl.yml up -d
 
             echo "=== 6. Wait for services ==="
