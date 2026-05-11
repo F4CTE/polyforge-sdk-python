@@ -267,18 +267,29 @@ jobs:
             COMPOSE_PARALLEL_LIMIT=1 docker compose -f docker-compose.infra.yml -f docker-compose.ssl.yml build
             docker compose -f docker-compose.infra.yml -f docker-compose.ssl.yml down --remove-orphans --timeout 30
             echo "  ensuring port 6379 is free..."
+            port_free=false
             for i in $(seq 1 10); do
               if command -v ss >/dev/null 2>&1; then
                 if ss -tlnp 'sport = :6379' 2>/dev/null | grep -q ':6379'; then
+                  if [ "${PIPESTATUS[0]}" -ne 0 ]; then
+                    echo "  ss probe failed (exit code ${PIPESTATUS[0]}) — aborting"
+                    exit 1
+                  fi
                   :
                 else
+                  if [ "${PIPESTATUS[0]}" -ne 0 ]; then
+                    echo "  ss probe failed (exit code ${PIPESTATUS[0]}) — aborting"
+                    exit 1
+                  fi
                   echo "  port 6379 free after ${i}s"
+                  port_free=true
                   break
                 fi
               else
                 project_cid=$(docker ps -q --filter "name=polyforge-dev-redis" 2>/dev/null)
                 if [ -z "$project_cid" ]; then
                   echo "  port 6379 appears free after ${i}s (no project redis container)"
+                  port_free=true
                   break
                 fi
               fi
@@ -289,6 +300,10 @@ jobs:
               fi
               sleep 1
             done
+            if [ "$port_free" != "true" ]; then
+              echo "  ERROR: port 6379 still in use after 10 attempts — aborting"
+              exit 1
+            fi
             docker compose -f docker-compose.infra.yml -f docker-compose.ssl.yml up -d
 
             echo "=== 6. Wait for services ==="
