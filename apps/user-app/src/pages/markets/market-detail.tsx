@@ -13,6 +13,7 @@ import {
   idempotencyHeaders,
 } from '@/lib/idempotency';
 import { formatApiError, notifyApiError, parseApiErrorResponse } from '@/lib/api-error';
+import { formatOrderEventToast } from '@/lib/order-events';
 import { safeHref } from '@/lib/url';
 import { useAuthStore } from '@/stores/auth-store';
 import {
@@ -666,14 +667,10 @@ export function Component() {
     const handler = (msg: { type: string; orderId?: string; data?: Record<string, unknown> }) => {
       if (!WebSocketManager.isOrderEvent(msg)) return;
       loadMyOrders();
-      const orderId = msg.orderId ?? (msg.data?.orderId as string | undefined);
-      const id = orderId?.slice(0, 8);
-      if (msg.type === 'ORDER_FILLED') toast.success(`Order filled${id ? ` · ${id}…` : ''}`);
-      if (msg.type === 'ORDER_CANCELLED') toast.info('Order cancelled');
-      if (msg.type === 'ORDER_FAILED') {
-        const reason = msg.data?.reason as string | undefined;
-        toast.error(reason ? `Order failed: ${reason}` : 'Order failed');
-      }
+      const orderToast = formatOrderEventToast(msg);
+      if (orderToast?.kind === 'success') toast.success(orderToast.message);
+      if (orderToast?.kind === 'info') toast.info(orderToast.message);
+      if (orderToast?.kind === 'error') toast.error(orderToast.message);
     };
     wsManager.addListener(handler);
     return () => wsManager.removeListener(handler);
