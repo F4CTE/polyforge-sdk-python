@@ -5443,6 +5443,13 @@ class TestSettingsMethods:
         assert isinstance(result, str)
         client.close()
 
+    def test_sync_export_personal_data_invalid_format(self):
+        import pytest
+        client = PolyforgeClient(api_key="test-key")
+        with pytest.raises(ValueError, match="format must be 'json' or 'csv'"):
+            client.export_personal_data(format="cvs")
+        client.close()
+
 
 class TestTicketMethods:
     """Tests for support tickets endpoints (sync + async)."""

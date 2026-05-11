@@ -3219,6 +3219,8 @@ class PolyforgeClient:
             format: ``"json"`` (default) returns a :class:`PersonalDataExport` object.
                     ``"csv"`` returns the raw CSV text.
         """
+        if format not in ("json", "csv"):
+            raise ValueError(f"format must be 'json' or 'csv', got {format!r}")
         if format == "csv":
             return self._get_text("/api/v1/me/export", params={"format": "csv"})
         raw = self._get("/api/v1/me/export")
@@ -6298,6 +6300,8 @@ class AsyncPolyforgeClient:
             format: ``"json"`` (default) returns a :class:`PersonalDataExport` object.
                     ``"csv"`` returns the raw CSV text.
         """
+        if format not in ("json", "csv"):
+            raise ValueError(f"format must be 'json' or 'csv', got {format!r}")
         if format == "csv":
             return await self._get_text("/api/v1/me/export", params={"format": "csv"})
         raw = await self._get("/api/v1/me/export")
