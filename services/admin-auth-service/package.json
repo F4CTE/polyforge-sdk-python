@@ -29,6 +29,7 @@
     "@polyforge/logger": "workspace:*",
     "@polyforge/shared-auth": "workspace:*",
     "@polyforge/shared-db": "workspace:*",
+    "@polyforge/shared-filters": "workspace:^",
     "@polyforge/shared-redis": "workspace:*",
     "@polyforge/shared-types": "workspace:*",
     "@sentry/nestjs": "^10.51.0",

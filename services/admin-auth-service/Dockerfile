@@ -13,6 +13,7 @@ COPY package.json pnpm-workspace.yaml pnpm-lock.yaml turbo.json tsconfig.json ./
 COPY packages/shared-db/package.json             ./packages/shared-db/
 COPY packages/shared-redis/package.json          ./packages/shared-redis/
 COPY packages/shared-auth/package.json           ./packages/shared-auth/
+COPY packages/shared-filters/package.json   ./packages/shared-filters/
 COPY packages/shared-types/package.json          ./packages/shared-types/
 COPY packages/logger/package.json                ./packages/logger/
 COPY services/admin-auth-service/package.json    ./services/admin-auth-service/
@@ -22,6 +23,7 @@ RUN echo "shamefully-hoist=true" > .npmrc && \
     --filter @polyforge/shared-db \
     --filter @polyforge/shared-redis \
     --filter @polyforge/shared-auth \
+    --filter @polyforge/shared-filters \
     --filter @polyforge/shared-types \
     --filter @polyforge/logger \
     --filter @polyforge/admin-auth-service... \
@@ -30,6 +32,7 @@ RUN echo "shamefully-hoist=true" > .npmrc && \
 COPY packages/shared-db/          ./packages/shared-db/
 COPY packages/shared-redis/       ./packages/shared-redis/
 COPY packages/shared-auth/        ./packages/shared-auth/
+COPY packages/shared-filters/ ./packages/shared-filters/
 COPY packages/shared-types/       ./packages/shared-types/
 COPY packages/logger/             ./packages/logger/
 COPY services/admin-auth-service/ ./services/admin-auth-service/
@@ -44,6 +47,7 @@ RUN DIRECT_DATABASE_URL=placeholder ADMIN_DIRECT_DATABASE_URL=placeholder \
     (cd packages/shared-redis  && /usr/local/bin/tsc -p tsconfig.json) && \
     (cd packages/logger        && /usr/local/bin/tsc -p tsconfig.json) && \
     (cd packages/shared-auth   && /usr/local/bin/tsc -p tsconfig.json) && \
+    (cd packages/shared-filters && /usr/local/bin/tsc -p tsconfig.json) && \
     (cd services/admin-auth-service && /usr/local/bin/tsc -p tsconfig.build.json)
 
 # ── Runtime ──────────────────────────────────────────────────────────────────
@@ -58,6 +62,7 @@ COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
 COPY packages/shared-db/package.json             ./packages/shared-db/
 COPY packages/shared-redis/package.json          ./packages/shared-redis/
 COPY packages/shared-auth/package.json           ./packages/shared-auth/
+COPY packages/shared-filters/package.json   ./packages/shared-filters/
 COPY packages/shared-types/package.json          ./packages/shared-types/
 COPY packages/logger/package.json                ./packages/logger/
 COPY services/admin-auth-service/package.json    ./services/admin-auth-service/
@@ -68,6 +73,7 @@ RUN echo "shamefully-hoist=true" > .npmrc && \
 COPY --from=builder /app/packages/shared-db/dist/          ./packages/shared-db/dist/
 COPY --from=builder /app/packages/shared-redis/dist/       ./packages/shared-redis/dist/
 COPY --from=builder /app/packages/shared-auth/dist/        ./packages/shared-auth/dist/
+COPY --from=builder /app/packages/shared-filters/dist/   ./packages/shared-filters/dist/
 COPY --from=builder /app/packages/shared-types/dist/       ./packages/shared-types/dist/
 COPY --from=builder /app/packages/logger/dist/             ./packages/logger/dist/
 COPY --from=builder /app/services/admin-auth-service/dist  ./services/admin-auth-service/dist

@@ -8,8 +8,12 @@ import {
 import { Logger, RequestMethod, ValidationPipe } from "@nestjs/common";
 import helmet from "@fastify/helmet";
 import { rejectPlaceholderSecrets } from "@polyforge/shared-auth";
+import {
+  bootstrapGracefulShutdown,
+  GlobalExceptionFilter,
+  PrismaExceptionFilter,
+} from "@polyforge/shared-filters";
 import { AppModule } from "./app.module";
-import { GlobalExceptionFilter } from "./common/filters/http-exception.filter";
 
 const PORT = parseInt(process.env.PORT ?? "3006", 10);
 const logger = new Logger("Bootstrap");
@@ -47,8 +51,10 @@ async function bootstrap() {
     },
   });
 
-  // R4-04: Global exception filter to strip stack traces in production
-  app.useGlobalFilters(new GlobalExceptionFilter());
+  app.useGlobalFilters(
+    new PrismaExceptionFilter(),
+    new GlobalExceptionFilter(),
+  );
 
   app.useGlobalPipes(
     new ValidationPipe({
@@ -62,20 +68,7 @@ async function bootstrap() {
     exclude: [{ path: "health", method: RequestMethod.GET }],
   });
 
-  // R4-07: Graceful shutdown with timeout
-  app.enableShutdownHooks();
-  process.on("SIGTERM", () => {
-    void (async () => {
-      logger.log("SIGTERM received, starting graceful shutdown...");
-      const forceTimeout = setTimeout(() => {
-        logger.warn("Graceful shutdown timed out, forcing exit");
-        process.exit(1);
-      }, 10_000);
-      await app.close();
-      clearTimeout(forceTimeout);
-      process.exit(0);
-    })();
-  });
+  bootstrapGracefulShutdown(app, logger);
 
   await app.listen(PORT, "0.0.0.0");
   logger.log(`strategy-engine listening on port ${PORT}`);

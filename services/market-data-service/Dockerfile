@@ -15,6 +15,7 @@ COPY packages/shared-redis/package.json   ./packages/shared-redis/
 COPY packages/logger/package.json         ./packages/logger/
 COPY packages/shared-types/package.json   ./packages/shared-types/
 COPY packages/shared-auth/package.json     ./packages/shared-auth/
+COPY packages/shared-filters/package.json   ./packages/shared-filters/
 COPY services/market-data-service/package.json ./services/market-data-service/
 
 RUN echo "shamefully-hoist=true" > .npmrc && \
@@ -24,6 +25,7 @@ RUN echo "shamefully-hoist=true" > .npmrc && \
     --filter @polyforge/shared-redis \
     --filter @polyforge/shared-types \
     --filter @polyforge/shared-auth \
+    --filter @polyforge/shared-filters \
     --filter @polyforge/logger \
     --filter @polyforge/market-data-service... \
     --frozen-lockfile
@@ -34,6 +36,7 @@ COPY packages/shared-redis/    ./packages/shared-redis/
 COPY packages/logger/          ./packages/logger/
 COPY packages/shared-types/    ./packages/shared-types/
 COPY packages/shared-auth/     ./packages/shared-auth/
+COPY packages/shared-filters/ ./packages/shared-filters/
 COPY services/market-data-service/ ./services/market-data-service/
 COPY prisma/                   ./prisma/
 
@@ -47,6 +50,7 @@ RUN DIRECT_DATABASE_URL=placeholder ADMIN_DIRECT_DATABASE_URL=placeholder \
     (cd packages/shared-redis  && /usr/local/bin/tsc -p tsconfig.json) && \
     (cd packages/logger        && /usr/local/bin/tsc -p tsconfig.json) && \
     (cd packages/shared-auth   && /usr/local/bin/tsc -p tsconfig.json) && \
+    (cd packages/shared-filters && /usr/local/bin/tsc -p tsconfig.json) && \
     (cd services/market-data-service && /usr/local/bin/tsc -p tsconfig.build.json)
 
 # ── Runtime ──────────────────────────────────────────────────────────────────
@@ -63,6 +67,7 @@ COPY packages/shared-redis/package.json   ./packages/shared-redis/
 COPY packages/logger/package.json         ./packages/logger/
 COPY packages/shared-types/package.json   ./packages/shared-types/
 COPY packages/shared-auth/package.json     ./packages/shared-auth/
+COPY packages/shared-filters/package.json   ./packages/shared-filters/
 COPY services/market-data-service/package.json ./services/market-data-service/
 
 RUN echo "shamefully-hoist=true" > .npmrc && \
@@ -74,6 +79,7 @@ COPY --from=builder /app/packages/shared-redis/dist/      ./packages/shared-redi
 COPY --from=builder /app/packages/logger/dist/            ./packages/logger/dist/
 COPY --from=builder /app/packages/shared-types/dist/      ./packages/shared-types/dist/
 COPY --from=builder /app/packages/shared-auth/dist/      ./packages/shared-auth/dist/
+COPY --from=builder /app/packages/shared-filters/dist/   ./packages/shared-filters/dist/
 COPY --from=builder /app/services/market-data-service/dist ./services/market-data-service/dist
 
 # Prisma client

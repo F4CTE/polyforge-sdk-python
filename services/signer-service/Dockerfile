@@ -28,6 +28,7 @@ COPY packages/shared-redis/package.json   ./packages/shared-redis/
 COPY packages/shared-types/package.json   ./packages/shared-types/
 COPY packages/logger/package.json         ./packages/logger/
 COPY packages/shared-auth/package.json    ./packages/shared-auth/
+COPY packages/shared-filters/package.json   ./packages/shared-filters/
 COPY packages/polyforge-crypto-native/package.json ./packages/polyforge-crypto-native/
 COPY services/signer-service/package.json ./services/signer-service/
 
@@ -39,6 +40,7 @@ RUN echo "shamefully-hoist=true" > .npmrc && \
     --filter @polyforge/shared-types \
     --filter @polyforge/logger \
     --filter @polyforge/shared-auth \
+    --filter @polyforge/shared-filters \
     --filter @polyforge/signer-service... \
     --frozen-lockfile
 
@@ -47,6 +49,7 @@ COPY packages/shared-redis/    ./packages/shared-redis/
 COPY packages/shared-types/    ./packages/shared-types/
 COPY packages/logger/          ./packages/logger/
 COPY packages/shared-auth/     ./packages/shared-auth/
+COPY packages/shared-filters/ ./packages/shared-filters/
 COPY packages/polyforge-crypto-native/index.js   ./packages/polyforge-crypto-native/
 COPY packages/polyforge-crypto-native/index.d.ts ./packages/polyforge-crypto-native/
 COPY services/signer-service/  ./services/signer-service/
@@ -61,6 +64,7 @@ RUN DIRECT_DATABASE_URL=placeholder ADMIN_DIRECT_DATABASE_URL=placeholder \
     (cd packages/shared-types  && /usr/local/bin/tsc -p tsconfig.json) && \
     (cd packages/logger        && /usr/local/bin/tsc -p tsconfig.json) && \
     (cd packages/shared-auth   && /usr/local/bin/tsc -p tsconfig.json) && \
+    (cd packages/shared-filters && /usr/local/bin/tsc -p tsconfig.json) && \
     (cd services/signer-service && /usr/local/bin/tsc -p tsconfig.build.json)
 
 # ── Runtime ──────────────────────────────────────────────────────────────────
@@ -78,6 +82,7 @@ COPY packages/shared-redis/package.json   ./packages/shared-redis/
 COPY packages/shared-types/package.json   ./packages/shared-types/
 COPY packages/logger/package.json         ./packages/logger/
 COPY packages/shared-auth/package.json    ./packages/shared-auth/
+COPY packages/shared-filters/package.json   ./packages/shared-filters/
 COPY services/signer-service/package.json ./services/signer-service/
 
 RUN echo "shamefully-hoist=true" > .npmrc && \
@@ -89,6 +94,7 @@ COPY --from=builder /app/packages/shared-redis/dist/     ./packages/shared-redis
 COPY --from=builder /app/packages/shared-types/dist/     ./packages/shared-types/dist/
 COPY --from=builder /app/packages/logger/dist/           ./packages/logger/dist/
 COPY --from=builder /app/packages/shared-auth/dist/      ./packages/shared-auth/dist/
+COPY --from=builder /app/packages/shared-filters/dist/   ./packages/shared-filters/dist/
 COPY --from=builder /app/services/signer-service/dist    ./services/signer-service/dist
 
 # SECURITY: Rust NAPI-RS crypto addon — mandatory for memory-safe key handling

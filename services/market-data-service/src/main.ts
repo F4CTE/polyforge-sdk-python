@@ -11,6 +11,11 @@ import {
   rejectPlaceholderSecrets,
   validateInternalJwtConfig,
 } from "@polyforge/shared-auth";
+import {
+  bootstrapGracefulShutdown,
+  GlobalExceptionFilter,
+  PrismaExceptionFilter,
+} from "@polyforge/shared-filters";
 import { AppModule } from "./app.module";
 
 const PORT = parseInt(process.env.PORT ?? "3005", 10);
@@ -72,11 +77,17 @@ async function bootstrap() {
       transform: true,
     }),
   );
+  app.useGlobalFilters(
+    new PrismaExceptionFilter(),
+    new GlobalExceptionFilter(),
+  );
 
   // Health check is at /health (no prefix)
   app.setGlobalPrefix("", {
     exclude: [{ path: "health", method: RequestMethod.GET }],
   });
+
+  bootstrapGracefulShutdown(app, logger);
 
   await app.listen(PORT, "0.0.0.0");
   logger.log(`market-data-service listening on port ${PORT}`);

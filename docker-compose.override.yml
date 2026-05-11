@@ -52,6 +52,7 @@ services:
       - ./packages/shared-redis/dist:/app/packages/shared-redis/dist:ro
       - ./packages/shared-auth/dist:/app/packages/shared-auth/dist:ro
       - ./packages/shared-types/dist:/app/packages/shared-types/dist:ro
+      - ./packages/shared-filters/dist:/app/packages/shared-filters/dist:ro
       - ./packages/logger/dist:/app/packages/logger/dist:ro
     command: ["node", "--watch", "dist/main.js"]
 
@@ -62,6 +63,7 @@ services:
       - ./packages/shared-redis/dist:/app/packages/shared-redis/dist:ro
       - ./packages/shared-auth/dist:/app/packages/shared-auth/dist:ro
       - ./packages/shared-types/dist:/app/packages/shared-types/dist:ro
+      - ./packages/shared-filters/dist:/app/packages/shared-filters/dist:ro
       - ./packages/logger/dist:/app/packages/logger/dist:ro
     command: ["node", "--watch", "dist/main.js"]
 
@@ -72,6 +74,7 @@ services:
       - ./packages/shared-redis/dist:/app/packages/shared-redis/dist:ro
       - ./packages/shared-auth/dist:/app/packages/shared-auth/dist:ro
       - ./packages/shared-types/dist:/app/packages/shared-types/dist:ro
+      - ./packages/shared-filters/dist:/app/packages/shared-filters/dist:ro
       - ./packages/logger/dist:/app/packages/logger/dist:ro
     command: ["node", "--watch", "dist/main.js"]
 
@@ -82,6 +85,7 @@ services:
       - ./packages/shared-redis/dist:/app/packages/shared-redis/dist:ro
       - ./packages/shared-auth/dist:/app/packages/shared-auth/dist:ro
       - ./packages/shared-types/dist:/app/packages/shared-types/dist:ro
+      - ./packages/shared-filters/dist:/app/packages/shared-filters/dist:ro
       - ./packages/logger/dist:/app/packages/logger/dist:ro
     command: ["node", "--watch", "dist/main.js"]
 
@@ -91,6 +95,7 @@ services:
       - ./packages/shared-db/dist:/app/packages/shared-db/dist:ro
       - ./packages/shared-redis/dist:/app/packages/shared-redis/dist:ro
       - ./packages/shared-types/dist:/app/packages/shared-types/dist:ro
+      - ./packages/shared-filters/dist:/app/packages/shared-filters/dist:ro
       - ./packages/logger/dist:/app/packages/logger/dist:ro
     command: ["node", "--watch", "dist/main.js"]
 
@@ -100,6 +105,7 @@ services:
       - ./packages/shared-db/dist:/app/packages/shared-db/dist:ro
       - ./packages/shared-redis/dist:/app/packages/shared-redis/dist:ro
       - ./packages/shared-types/dist:/app/packages/shared-types/dist:ro
+      - ./packages/shared-filters/dist:/app/packages/shared-filters/dist:ro
       - ./packages/logger/dist:/app/packages/logger/dist:ro
     command: ["node", "--watch", "dist/main.js"]
 
@@ -110,6 +116,7 @@ services:
       - ./packages/shared-redis/dist:/app/packages/shared-redis/dist:ro
       - ./packages/shared-auth/dist:/app/packages/shared-auth/dist:ro
       - ./packages/shared-types/dist:/app/packages/shared-types/dist:ro
+      - ./packages/shared-filters/dist:/app/packages/shared-filters/dist:ro
       - ./packages/logger/dist:/app/packages/logger/dist:ro
     command: ["node", "--watch", "dist/main.js"]
 
@@ -119,6 +126,7 @@ services:
       - ./packages/shared-db/dist:/app/packages/shared-db/dist:ro
       - ./packages/shared-redis/dist:/app/packages/shared-redis/dist:ro
       - ./packages/shared-types/dist:/app/packages/shared-types/dist:ro
+      - ./packages/shared-filters/dist:/app/packages/shared-filters/dist:ro
       - ./packages/logger/dist:/app/packages/logger/dist:ro
     command: ["node", "--watch", "dist/main.js"]
 
@@ -128,6 +136,7 @@ services:
       - ./packages/shared-db/dist:/app/packages/shared-db/dist:ro
       - ./packages/shared-redis/dist:/app/packages/shared-redis/dist:ro
       - ./packages/shared-types/dist:/app/packages/shared-types/dist:ro
+      - ./packages/shared-filters/dist:/app/packages/shared-filters/dist:ro
       - ./packages/logger/dist:/app/packages/logger/dist:ro
     command: ["node", "--watch", "dist/main.js"]
 
@@ -137,6 +146,7 @@ services:
       - ./packages/shared-db/dist:/app/packages/shared-db/dist:ro
       - ./packages/shared-redis/dist:/app/packages/shared-redis/dist:ro
       - ./packages/shared-types/dist:/app/packages/shared-types/dist:ro
+      - ./packages/shared-filters/dist:/app/packages/shared-filters/dist:ro
       - ./packages/logger/dist:/app/packages/logger/dist:ro
     command: ["node", "--watch", "dist/main.js"]
 
@@ -146,6 +156,7 @@ services:
       - ./packages/shared-db/dist:/app/packages/shared-db/dist:ro
       - ./packages/shared-redis/dist:/app/packages/shared-redis/dist:ro
       - ./packages/shared-types/dist:/app/packages/shared-types/dist:ro
+      - ./packages/shared-filters/dist:/app/packages/shared-filters/dist:ro
       - ./packages/logger/dist:/app/packages/logger/dist:ro
     command: ["node", "--watch", "dist/main.js"]
 
@@ -156,6 +167,7 @@ services:
       - ./packages/shared-redis/dist:/app/packages/shared-redis/dist:ro
       - ./packages/shared-auth/dist:/app/packages/shared-auth/dist:ro
       - ./packages/shared-types/dist:/app/packages/shared-types/dist:ro
+      - ./packages/shared-filters/dist:/app/packages/shared-filters/dist:ro
       - ./packages/logger/dist:/app/packages/logger/dist:ro
     command: ["node", "--watch", "dist/main.js"]
 

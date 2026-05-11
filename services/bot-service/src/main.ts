@@ -10,6 +10,11 @@ import { Logger } from "nestjs-pino";
 import helmet from "@fastify/helmet";
 import { AppModule } from "./app.module";
 import { rejectPlaceholderSecrets } from "@polyforge/shared-auth";
+import {
+  bootstrapGracefulShutdown,
+  GlobalExceptionFilter,
+  PrismaExceptionFilter,
+} from "@polyforge/shared-filters";
 
 const PORT = parseInt(process.env.PORT ?? "3011", 10);
 
@@ -77,12 +82,19 @@ async function bootstrap() {
       transform: true,
     }),
   );
+  app.useGlobalFilters(
+    new PrismaExceptionFilter(),
+    new GlobalExceptionFilter(),
+  );
   app.setGlobalPrefix("", {
     exclude: [{ path: "health", method: RequestMethod.GET }],
   });
 
+  const logger = app.get(Logger);
+  bootstrapGracefulShutdown(app, logger);
+
   await app.listen(PORT, "0.0.0.0");
-  app.get(Logger).log(`bot-service listening on port ${PORT}`);
+  logger.log(`bot-service listening on port ${PORT}`);
 }
 
 bootstrap().catch((err) => {

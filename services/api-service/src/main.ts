@@ -17,8 +17,11 @@ import compress from "@fastify/compress";
 import etag from "@fastify/etag";
 import helmet from "@fastify/helmet";
 import { AppModule } from "./app.module";
-import { GlobalExceptionFilter } from "./common/filters/http-exception.filter";
-import { PrismaExceptionFilter } from "@polyforge/shared-db";
+import {
+  bootstrapGracefulShutdown,
+  GlobalExceptionFilter,
+  PrismaExceptionFilter,
+} from "@polyforge/shared-filters";
 import {
   rejectPlaceholderSecrets,
   validateInternalJwtConfig,
@@ -120,8 +123,8 @@ async function bootstrap() {
   );
 
   app.useGlobalFilters(
-    new GlobalExceptionFilter(),
     new PrismaExceptionFilter(),
+    new GlobalExceptionFilter(),
   );
 
   // CORS
@@ -221,21 +224,8 @@ async function bootstrap() {
     });
   }
 
-  // R4-07: Graceful shutdown with timeout
-  app.enableShutdownHooks();
   const appLogger = app.get(Logger);
-  process.on("SIGTERM", () => {
-    void (async () => {
-      appLogger.log("SIGTERM received, starting graceful shutdown...");
-      const forceTimeout = setTimeout(() => {
-        appLogger.warn("Graceful shutdown timed out, forcing exit");
-        process.exit(1);
-      }, 10_000);
-      await app.close();
-      clearTimeout(forceTimeout);
-      process.exit(0);
-    })();
-  });
+  bootstrapGracefulShutdown(app, appLogger);
 
   await app.listen(PORT, "0.0.0.0");
   appLogger.log(`api-service listening on port ${PORT}`);

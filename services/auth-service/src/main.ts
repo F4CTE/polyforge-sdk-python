@@ -12,7 +12,6 @@ import compress from '@fastify/compress';
 import etag from '@fastify/etag';
 import helmet from '@fastify/helmet';
 import { AppModule } from './app.module';
-import { GlobalExceptionFilter } from './common/filters/http-exception.filter';
 import {
   rejectPlaceholderSecrets,
   rejectInsecureCookies,
@@ -20,7 +19,11 @@ import {
   validateSesSmtpConfig,
   createCorsOriginDelegate,
 } from '@polyforge/shared-auth';
-import { PrismaExceptionFilter } from '@polyforge/shared-db';
+import {
+  bootstrapGracefulShutdown,
+  GlobalExceptionFilter,
+  PrismaExceptionFilter,
+} from '@polyforge/shared-filters';
 
 const REQUIRED_ENV = [
   'USER_JWT_SECRET',
@@ -122,8 +125,8 @@ async function bootstrap() {
 
   // Global exception filter
   app.useGlobalFilters(
-    new GlobalExceptionFilter(),
     new PrismaExceptionFilter(),
+    new GlobalExceptionFilter(),
   );
 
   // CORS
@@ -144,21 +147,8 @@ async function bootstrap() {
     exclude: [{ path: 'health', method: RequestMethod.GET }],
   });
 
-  // R4-07: Graceful shutdown with timeout
-  app.enableShutdownHooks();
   const appLogger = app.get(Logger);
-  process.on('SIGTERM', () => {
-    void (async () => {
-      appLogger.log('SIGTERM received, starting graceful shutdown...');
-      const forceTimeout = setTimeout(() => {
-        appLogger.warn('Graceful shutdown timed out, forcing exit');
-        process.exit(1);
-      }, 10_000);
-      await app.close();
-      clearTimeout(forceTimeout);
-      process.exit(0);
-    })();
-  });
+  bootstrapGracefulShutdown(app, appLogger);
 
   const port = process.env.AUTH_SERVICE_PORT ?? 3001;
   await app.listen(port, '0.0.0.0');

@@ -12,6 +12,11 @@ import {
   rejectPlaceholderSecrets,
   validateSesSmtpConfig,
 } from "@polyforge/shared-auth";
+import {
+  bootstrapGracefulShutdown,
+  GlobalExceptionFilter,
+  PrismaExceptionFilter,
+} from "@polyforge/shared-filters";
 import { AppModule } from "./app.module";
 
 const PORT = parseInt(process.env.PORT ?? "3010", 10);
@@ -58,12 +63,19 @@ async function bootstrap() {
       transform: true,
     }),
   );
+  app.useGlobalFilters(
+    new PrismaExceptionFilter(),
+    new GlobalExceptionFilter(),
+  );
   app.setGlobalPrefix("", {
     exclude: [{ path: "health", method: RequestMethod.GET }],
   });
 
+  const logger = app.get(Logger);
+  bootstrapGracefulShutdown(app, logger);
+
   await app.listen(PORT, "0.0.0.0");
-  app.get(Logger).log(`notification-service listening on port ${PORT}`);
+  logger.log(`notification-service listening on port ${PORT}`);
 }
 
 bootstrap().catch((err) => {

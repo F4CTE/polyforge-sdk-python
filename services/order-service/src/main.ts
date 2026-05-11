@@ -8,6 +8,11 @@ import {
 import { Logger, RequestMethod, ValidationPipe } from "@nestjs/common";
 import helmet from "@fastify/helmet";
 import { rejectPlaceholderSecrets } from "@polyforge/shared-auth";
+import {
+  bootstrapGracefulShutdown,
+  GlobalExceptionFilter,
+  PrismaExceptionFilter,
+} from "@polyforge/shared-filters";
 import { AppModule } from "./app.module";
 
 const PORT = parseInt(process.env.PORT ?? "3007", 10);
@@ -62,10 +67,16 @@ async function bootstrap() {
       transform: true,
     }),
   );
+  app.useGlobalFilters(
+    new PrismaExceptionFilter(),
+    new GlobalExceptionFilter(),
+  );
 
   app.setGlobalPrefix("", {
     exclude: [{ path: "health", method: RequestMethod.GET }],
   });
+
+  bootstrapGracefulShutdown(app, logger);
 
   await app.listen(PORT, "0.0.0.0");
   logger.log(`order-service listening on port ${PORT}`);

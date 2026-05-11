@@ -164,6 +164,7 @@ jobs:
           test -d packages/shared-db/dist
           test -d packages/shared-redis/dist
           test -d packages/shared-auth/dist
+          test -d packages/shared-filters/dist
           test -d packages/logger/dist
           test -d packages/shared-schemas/dist
           echo "All build artifacts present"
