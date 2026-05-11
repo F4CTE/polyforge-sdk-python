@@ -200,7 +200,6 @@ __all__ = [
     "StrategyEvent",
     "StrategyStatusResponse",
     "StrategyTemplate",
-    "StrategyVisibility",
     "SupportTicket",
     "SystemHealthAuthenticated",
     "TickSizeInfo",
