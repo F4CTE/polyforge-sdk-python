@@ -97,6 +97,7 @@ surfaced by the weekly cross-SDK compatibility audit, available on both
 New typed model: `SystemHealthAuthenticated` (`status`, `service`, `version`,
 `uptime`, `db`, `redis`, `queue_depth`, `services`). `MatchSyncResult` now
 includes optional `created`/`updated` fields matching the TS/Rust SDKs.
+
 **GDPR personal data export (POLA-3611)** — one method closing a compliance gap
 surfaced by the weekly cross-SDK compatibility audit, available on both
 `PolyforgeClient` and `AsyncPolyforgeClient`:

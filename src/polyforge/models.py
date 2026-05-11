@@ -1663,6 +1663,7 @@ class SystemHealthAuthenticated:
     redis: dict[str, Any] | None = None
     queue_depth: int | None = None
     services: dict[str, Any] | None = None
+
 # ---------------------------------------------------------------------------
 # GDPR Personal Data Export
 # ---------------------------------------------------------------------------
