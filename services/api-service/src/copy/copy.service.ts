@@ -25,7 +25,7 @@ export class CopyService {
   // ─── Create ──────────────────────────────────────────────────────────────────
 
   async create(userId: string, dto: CreateCopyDto) {
-    const targetWallet = checksumEthereumAddress(dto.targetWallet);
+    const targetWallet = checksumEthereumAddress(dto.targetWallet).toLowerCase();
 
     // Self-copy guard — reject copying the user's own connected wallet to
     // prevent self-feedback loops and accidental circular mirroring.
@@ -39,7 +39,7 @@ export class CopyService {
     });
     if (user?.polymarketConnected && user.polymarketAddress) {
       const ownWallet = tryChecksumEthereumAddress(user.polymarketAddress);
-      if (ownWallet && ownWallet === targetWallet) {
+      if (ownWallet && ownWallet.toLowerCase() === targetWallet) {
         throw new BadRequestException(
           "Cannot create a copy config for your own wallet",
         );

@@ -1,9 +1,14 @@
 -- Backfill existing copy_configs.targetWallet values to a consistent canonical
--- form.  New writes are EIP-55 checksummed by copy.service.ts (PR #1318), but
--- legacy rows may contain arbitrary casing that breaks case-sensitive consumers
+-- form.  Both the backfill and CopyService.create() (via
+-- checksumEthereumAddress().toLowerCase()) now store lowercase, ensuring
+-- migrated and newly-written rows share the same canonical representation.
+-- Legacy rows may contain arbitrary casing that breaks case-sensitive consumers
 -- (analytics, leaderboards, direct DB queries).
 --
--- We use LOWER() instead of an EIP-55 pass (which requires keccak256) because:
+-- We canonicalize to LOWER() because CopyService.create() also stores
+-- lowercase (via checksumEthereumAddress().toLowerCase()), so migrated and
+-- newly-written rows share the same canonical form.  LOWER() is used here
+-- instead of EIP-55 (which requires keccak256) because:
 --   1. Pure SQL — no application dependency
 --   2. All lookups use {equals, mode:"insensitive"} which maps to LOWER() on
 --      the already-existing functional index CopyConfig_targetWallet_lower_idx
@@ -27,7 +32,6 @@ WITH
                 ORDER BY "createdAt" ASC, id ASC
             ) AS rn
         FROM "copy_configs"
-        WHERE "targetWallet" <> lower("targetWallet")
     ),
     duplicates AS (
         SELECT id FROM ranked WHERE rn > 1

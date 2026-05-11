@@ -82,7 +82,7 @@ describe("CopyService", () => {
       prisma.copyConfig.create.mockResolvedValue({
         id: "cfg-1",
         userId: "user-1",
-        targetWallet: CHECKSUM_TARGET_WALLET,
+        targetWallet: LOWER_TARGET_WALLET,
         mode: "PERCENTAGE",
         status: "ACTIVE",
       });
@@ -95,7 +95,7 @@ describe("CopyService", () => {
       expect(prisma.copyConfig.count).toHaveBeenNthCalledWith(2, {
         where: {
           targetWallet: {
-            equals: CHECKSUM_TARGET_WALLET,
+            equals: LOWER_TARGET_WALLET,
             mode: "insensitive",
           },
           status: { in: ["ACTIVE", "PAUSED"] },
@@ -103,7 +103,7 @@ describe("CopyService", () => {
       });
       expect(prisma.copyConfig.create).toHaveBeenCalledWith({
         data: expect.objectContaining({
-          targetWallet: CHECKSUM_TARGET_WALLET,
+          targetWallet: LOWER_TARGET_WALLET,
         }),
       });
     });
@@ -142,7 +142,7 @@ describe("CopyService", () => {
       prisma.copyConfig.create.mockResolvedValue({
         id: "cfg-1",
         userId: "user-1",
-        targetWallet: CHECKSUM_TARGET_WALLET,
+        targetWallet: LOWER_TARGET_WALLET,
         mode: "PERCENTAGE",
         status: "ACTIVE",
       });
@@ -164,7 +164,7 @@ describe("CopyService", () => {
       prisma.copyConfig.create.mockResolvedValue({
         id: "cfg-1",
         userId: "user-1",
-        targetWallet: CHECKSUM_TARGET_WALLET,
+        targetWallet: LOWER_TARGET_WALLET,
         mode: "PERCENTAGE",
         status: "ACTIVE",
       });
@@ -186,7 +186,7 @@ describe("CopyService", () => {
       prisma.copyConfig.create.mockResolvedValue({
         id: "cfg-1",
         userId: "user-1",
-        targetWallet: CHECKSUM_TARGET_WALLET,
+        targetWallet: LOWER_TARGET_WALLET,
         mode: "PERCENTAGE",
         status: "ACTIVE",
       });
@@ -231,7 +231,7 @@ describe("CopyService", () => {
         where: {
           userId: "user-1",
           targetWallet: {
-            equals: CHECKSUM_TARGET_WALLET,
+            equals: LOWER_TARGET_WALLET,
             mode: "insensitive",
           },
         },
@@ -250,7 +250,7 @@ describe("CopyService", () => {
       prisma.copyConfig.delete.mockResolvedValue({});
       prisma.copyConfig.create.mockResolvedValue({
         id: "cfg-new",
-        targetWallet: CHECKSUM_TARGET_WALLET,
+        targetWallet: LOWER_TARGET_WALLET,
         status: "ACTIVE",
       });
 
@@ -316,7 +316,7 @@ describe("CopyService", () => {
       prisma.copyConfig.delete.mockResolvedValue({});
       prisma.copyConfig.create.mockResolvedValue({
         id: "cfg-new",
-        targetWallet: CHECKSUM_TARGET_WALLET,
+        targetWallet: LOWER_TARGET_WALLET,
         status: "ACTIVE",
       });
 
@@ -657,7 +657,7 @@ describe("CopyService", () => {
       prisma.copyConfig.create.mockResolvedValue({
         id: "cfg-1",
         userId: "user-1",
-        targetWallet: CHECKSUM_TARGET_WALLET,
+        targetWallet: LOWER_TARGET_WALLET,
         mode: "FIXED",
         status: "ACTIVE",
       });
@@ -919,7 +919,7 @@ describe("CopyEngineService", () => {
       const config = {
         id: "cfg-1",
         userId: "user-1",
-        targetWallet: CHECKSUM_TARGET_WALLET,
+        targetWallet: LOWER_TARGET_WALLET,
         mode: "PERCENTAGE",
         sizeValue: new Prisma.Decimal(10),
         maxExposure: new Prisma.Decimal(10000),
@@ -1006,7 +1006,7 @@ describe("CopyEngineService", () => {
       const config = {
         id: "cfg-1",
         userId: "user-1",
-        targetWallet: CHECKSUM_TARGET_WALLET,
+        targetWallet: LOWER_TARGET_WALLET,
         mode: "PERCENTAGE",
         sizeValue: new Prisma.Decimal(10),
         maxExposure: new Prisma.Decimal(10000),
@@ -1051,7 +1051,7 @@ describe("CopyEngineService", () => {
       const config1 = {
         id: "cfg-1",
         userId: "user-1",
-        targetWallet: CHECKSUM_TARGET_WALLET,
+        targetWallet: LOWER_TARGET_WALLET,
         mode: "FIXED",
         sizeValue: new Prisma.Decimal(100),
         maxExposure: new Prisma.Decimal(10000),
@@ -1062,7 +1062,7 @@ describe("CopyEngineService", () => {
       const config2 = {
         id: "cfg-2",
         userId: "user-2",
-        targetWallet: CHECKSUM_TARGET_WALLET,
+        targetWallet: LOWER_TARGET_WALLET,
         mode: "FIXED",
         sizeValue: new Prisma.Decimal(50),
         maxExposure: new Prisma.Decimal(10000),
