@@ -11,7 +11,7 @@ import { Prisma } from "@prisma/client";
 import { paginate } from "../common/dto/pagination.dto";
 import { CreateCopyDto } from "./dto/create-copy.dto";
 import { UpdateCopyDto } from "./dto/update-copy.dto";
-import { checksumEthereumAddress } from "./wallet-address";
+import { checksumEthereumAddress, tryChecksumEthereumAddress } from "./wallet-address";
 
 const MAX_ACTIVE_CONFIGS = 10;
 const MAX_ACTIVE_CONFIGS_PER_TARGET = 25;
@@ -25,7 +25,26 @@ export class CopyService {
   // ─── Create ──────────────────────────────────────────────────────────────────
 
   async create(userId: string, dto: CreateCopyDto) {
-    const targetWallet = checksumEthereumAddress(dto.targetWallet);
+    const targetWallet = checksumEthereumAddress(dto.targetWallet).toLowerCase();
+
+    // Self-copy guard — reject copying the user's own connected wallet to
+    // prevent self-feedback loops and accidental circular mirroring.
+    // Only enforces when the user's Polymarket account is actively connected;
+    // stale addresses from disconnected accounts are ignored.
+    // Uses tryChecksumEthereumAddress for the stored polymarketAddress so that
+    // legacy or malformed profile data does not block unrelated copy creation.
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { polymarketConnected: true, polymarketAddress: true },
+    });
+    if (user?.polymarketConnected && user.polymarketAddress) {
+      const ownWallet = tryChecksumEthereumAddress(user.polymarketAddress);
+      if (ownWallet && ownWallet.toLowerCase() === targetWallet) {
+        throw new BadRequestException(
+          "Cannot create a copy config for your own wallet",
+        );
+      }
+    }
 
     // Check active config limit
     const activeCount = await this.prisma.copyConfig.count({
