@@ -16,7 +16,12 @@ export default tseslint.config(
     ],
   },
   eslint.configs.recommended,
-  ...tseslint.configs.recommendedTypeChecked,
+  // Apply typed-checked preset only to TypeScript source files (not .mjs).
+  // Must come before our custom rules so our downgrades/overrides win.
+  ...tseslint.configs.recommendedTypeChecked.map((c) => ({
+    ...c,
+    files: ['**/*.ts', '**/*.tsx', '**/*.mts', '**/*.cts'],
+  })),
   eslintPluginPrettierRecommended,
   {
     languageOptions: {

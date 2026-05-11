@@ -9,7 +9,7 @@
 #   MASTER_ENCRYPTION_KEY, TOTP_ENCRYPTION_KEY
 #   DB_PASSWORD, ADMIN_DB_PASSWORD, REDIS_PASSWORD
 #   POLY_BUILDER_API_KEY, POLY_BUILDER_SECRET, POLY_BUILDER_PASSPHRASE
-#   POSTHOG_SECRET_KEY
+#   POSTHOG_SECRET_KEY, POSTHOG_DB_PASSWORD
 #
 # Optional env vars (use placeholder/disabled defaults when not supplied):
 #   TELEGRAM_BOT_TOKEN, DISCORD_BOT_TOKEN
@@ -47,6 +47,17 @@ log() { echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] $*"; }
 : "${POLY_BUILDER_SECRET:?POLY_BUILDER_SECRET is required}"
 : "${POLY_BUILDER_PASSPHRASE:?POLY_BUILDER_PASSPHRASE is required}"
 : "${POSTHOG_SECRET_KEY:?POSTHOG_SECRET_KEY is required}"
+: "${POSTHOG_DB_PASSWORD:?POSTHOG_DB_PASSWORD is required}"
+
+# Escape special characters in POSTHOG_DB_PASSWORD for shell-safe double-quoted
+# .env assignment.  Order matters: backslash first (prevents re-escaping),
+# then the remaining characters that bash interprets inside double quotes.
+# Values produced by `openssl rand -hex` are already safe; this covers operator-
+# supplied passwords that may contain literal \, ", $, or `.
+POSTHOG_DB_PASSWORD_ESC="${POSTHOG_DB_PASSWORD//\\/\\\\}"
+POSTHOG_DB_PASSWORD_ESC="${POSTHOG_DB_PASSWORD_ESC//\"/\\\"}"
+POSTHOG_DB_PASSWORD_ESC="${POSTHOG_DB_PASSWORD_ESC//\$/\\\$}"
+POSTHOG_DB_PASSWORD_ESC="${POSTHOG_DB_PASSWORD_ESC//\`/\\\`}"
 
 log "All required secrets present — writing $ENV_FILE"
 
@@ -182,6 +193,7 @@ NEWS_RSS_FEEDS=https://feeds.reuters.com/reuters/topNews,https://rss.cnn.com/rss
 # ─────────────────────────────────────────────────────────────────────────────
 
 POSTHOG_SECRET_KEY=${POSTHOG_SECRET_KEY}
+POSTHOG_DB_PASSWORD="${POSTHOG_DB_PASSWORD_ESC}"
 
 # ─────────────────────────────────────────────────────────────────────────────
 # BOTS

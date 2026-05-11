@@ -631,12 +631,90 @@ services:
   #   2. Visit http://polyforge-lab:8000 and create the first user
   #   3. Copy the project API key into .env as POSTHOG_API_KEY
   #   4. Restart backend services to activate event capture
+  #
+  # Password migration (when upgrading from a pre-enforced-password deploy):
+  #   If your posthog-db-data volume was initialized with a hardcoded default
+  #   password, run the posthog-db-migrate helper before starting posthog:
+  #     docker compose -f docker-compose.infra.yml run --rm \
+  #       -e POSTHOG_DB_PASSWORD="$POSTHOG_DB_PASSWORD" \
+  #       posthog-db-migrate
+  #   This rotates the posthog user password to match the .env value.
+
+  posthog-db-migrate:
+    image: postgres:15-alpine
+    # Run as the postgres OS user so pg_ctl can start a server on the existing
+    # data directory (the official image entrypoint chowns the data directory to
+    # postgres:postgres).  Without this, the overridden entrypoint below runs as
+    # root and pg_ctl refuses to start.
+    user: postgres
+    entrypoint:
+      - sh
+      - -c
+      - |
+        set -e
+        MAX_WAIT=30
+        if [ -f /var/lib/postgresql/data/PG_VERSION ]; then
+          echo "Existing posthog-db-data volume detected — rotating password..."
+          # Only remove the stale pidfile if posthog-db is NOT already running.
+          # Use a TCP probe against the posthog-db service name rather than a
+          # Unix-socket probe that is invisible from this one-off migrate
+          # container.  Docker network DNS resolves posthog-db when the
+          # Compose project is up, so pg_isready can correctly detect a live
+          # server on the shared volume and avoid an unsafe pidfile deletion.
+          PG_HOST="/var/run/postgresql"
+          if ! pg_isready -U posthog -d posthog -h posthog-db -t 3 2>/dev/null; then
+            rm -f /var/lib/postgresql/data/postmaster.pid
+            pg_ctl -D /var/lib/postgresql/data -l /tmp/pg-migrate.log start
+            trap 'pg_ctl -D /var/lib/postgresql/data stop 2>/dev/null || true' EXIT
+          else
+            echo "PostgreSQL is already running — rotating password in-place"
+            PG_HOST="posthog-db"
+          fi
+          ATTEMPTS=0
+          until pg_isready -U posthog -d posthog -h "$PG_HOST" 2>/dev/null; do
+            sleep 0.5
+            ATTEMPTS=$((ATTEMPTS + 1))
+            if [ "$ATTEMPTS" -ge $((MAX_WAIT * 2)) ]; then
+              echo "ERROR: Postgres did not become ready within ${MAX_WAIT}s" >&2
+              exit 1
+            fi
+          done
+          # Rotate the application user password.  When posthog-db is already
+          # running we connect via TCP and authenticate with the password;
+          # temporary instances use Unix-socket peer auth (no password).
+          # Use psql :'var' quoting (PQescapeLiteral) so passwords containing
+          # single quotes or backslashes are safely encoded in the SQL literal.
+          if [ "$PG_HOST" = "posthog-db" ]; then
+            export PGPASSWORD="$POSTHOG_DB_PASSWORD"
+            if ! psql -U posthog -d posthog -h "$PG_HOST" -c "SELECT 1" 2>/dev/null; then
+              echo "Target password rejected — trying PostHog default for legacy volumes"
+              export PGPASSWORD="posthog"
+              if ! psql -U posthog -d posthog -h "$PG_HOST" -c "SELECT 1" 2>/dev/null; then
+                echo "ERROR: Cannot authenticate to running posthog-db (tried both target and legacy default password)" >&2
+                exit 1
+              fi
+            fi
+          fi
+          psql -U posthog -d posthog -h "$PG_HOST" -v pw="$${POSTHOG_DB_PASSWORD}" \
+            -c "ALTER USER posthog WITH PASSWORD :'pw';"
+          echo "Password rotated successfully."
+        else
+          echo "No existing posthog-db-data — first run, nothing to migrate."
+        fi
+    environment:
+      POSTHOG_DB_PASSWORD: ${POSTHOG_DB_PASSWORD:?POSTHOG_DB_PASSWORD must be set in .env}
+    volumes:
+      - posthog-db-data:/var/lib/postgresql/data
+    networks: [posthog]
 
   posthog-db:
+    depends_on:
+      posthog-db-migrate:
+        condition: service_completed_successfully
     image: postgres:15-alpine
     environment:
       POSTGRES_USER: posthog
-      POSTGRES_PASSWORD: ${POSTHOG_DB_PASSWORD:-posthog}
+      POSTGRES_PASSWORD: ${POSTHOG_DB_PASSWORD:?POSTHOG_DB_PASSWORD must be set in .env (use `openssl rand -hex 32`)}
       POSTGRES_DB: posthog
     volumes:
       - posthog-db-data:/var/lib/postgresql/data
@@ -702,8 +780,17 @@ services:
 
   posthog:
     image: posthog/posthog@sha256:3e5005a084b9d2d166092a657fd5796d4402fbeafbca4d9e00956f913c2dd82b  # pinned digest — see STATUS.md PostHog Image Upgrade
+    command: ["./bin/docker"]
+    entrypoint:
+      - sh
+      - -c
+      - |
+        ENCODED="$$(python3 -c "import sys,urllib.parse;sys.stdout.write(urllib.parse.quote(sys.argv[1],safe=''))" "$$POSTHOG_DB_PASSWORD")"
+        export DATABASE_URL="postgres://posthog:$${ENCODED}@posthog-db:5432/posthog"
+        exec /compose/entrypoint.sh "$$@"
+      - sh
     environment:
-      DATABASE_URL: postgres://posthog:${POSTHOG_DB_PASSWORD:-posthog}@posthog-db:5432/posthog
+      POSTHOG_DB_PASSWORD: ${POSTHOG_DB_PASSWORD:?POSTHOG_DB_PASSWORD must be set in .env (use `openssl rand -hex 32`)}
       CLICKHOUSE_HOST: posthog-clickhouse
       CLICKHOUSE_HTTP_URL: http://posthog-clickhouse:8123
       REDIS_URL: redis://posthog-redis:6379
@@ -728,9 +815,17 @@ services:
 
   posthog-worker:
     image: posthog/posthog@sha256:3e5005a084b9d2d166092a657fd5796d4402fbeafbca4d9e00956f913c2dd82b  # pinned digest — see STATUS.md PostHog Image Upgrade
-    command: ./bin/docker-worker-celery --with-scheduler
+    command: ["./bin/docker-worker-celery", "--with-scheduler"]
+    entrypoint:
+      - sh
+      - -c
+      - |
+        ENCODED="$$(python3 -c "import sys,urllib.parse;sys.stdout.write(urllib.parse.quote(sys.argv[1],safe=''))" "$$POSTHOG_DB_PASSWORD")"
+        export DATABASE_URL="postgres://posthog:$${ENCODED}@posthog-db:5432/posthog"
+        exec /compose/entrypoint.sh "$$@"
+      - sh
     environment:
-      DATABASE_URL: postgres://posthog:${POSTHOG_DB_PASSWORD:-posthog}@posthog-db:5432/posthog
+      POSTHOG_DB_PASSWORD: ${POSTHOG_DB_PASSWORD:?POSTHOG_DB_PASSWORD must be set in .env (use `openssl rand -hex 32`)}
       CLICKHOUSE_HOST: posthog-clickhouse
       CLICKHOUSE_HTTP_URL: http://posthog-clickhouse:8123
       REDIS_URL: redis://posthog-redis:6379
