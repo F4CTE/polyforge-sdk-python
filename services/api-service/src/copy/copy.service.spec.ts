@@ -11,7 +11,7 @@ const CHECKSUM_TARGET_WALLET = "0x52908400098527886E0F7030069857D2E4169EE7";
 function createMockPrisma() {
   const mock = {
     user: {
-      findUnique: vi.fn().mockResolvedValue({ polymarketAddress: null }),
+      findUnique: vi.fn().mockResolvedValue({ polymarketConnected: null, polymarketAddress: null }),
     },
     copyConfig: {
       findMany: vi.fn(),
@@ -118,6 +118,7 @@ describe("CopyService", () => {
 
     it("rejects self-copy when targetWallet matches user's own polymarketAddress", async () => {
       prisma.user.findUnique.mockResolvedValue({
+        polymarketConnected: true,
         polymarketAddress: CHECKSUM_TARGET_WALLET,
       });
 
@@ -133,7 +134,52 @@ describe("CopyService", () => {
 
     it("allows copy when user has a different polymarketAddress", async () => {
       prisma.user.findUnique.mockResolvedValue({
+        polymarketConnected: true,
         polymarketAddress: "0x1111111111111111111111111111111111111111",
+      });
+      prisma.copyConfig.count.mockResolvedValue(0);
+      prisma.copyConfig.findMany.mockResolvedValue([]);
+      prisma.copyConfig.create.mockResolvedValue({
+        id: "cfg-1",
+        userId: "user-1",
+        targetWallet: CHECKSUM_TARGET_WALLET,
+        mode: "PERCENTAGE",
+        status: "ACTIVE",
+      });
+
+      const result = await service.create("user-1", {
+        targetWallet: LOWER_TARGET_WALLET,
+      });
+
+      expect(result.id).toBe("cfg-1");
+    });
+
+    it("allows copy when user is disconnected (polymarketConnected is false) even with matching address", async () => {
+      prisma.user.findUnique.mockResolvedValue({
+        polymarketConnected: false,
+        polymarketAddress: CHECKSUM_TARGET_WALLET,
+      });
+      prisma.copyConfig.count.mockResolvedValue(0);
+      prisma.copyConfig.findMany.mockResolvedValue([]);
+      prisma.copyConfig.create.mockResolvedValue({
+        id: "cfg-1",
+        userId: "user-1",
+        targetWallet: CHECKSUM_TARGET_WALLET,
+        mode: "PERCENTAGE",
+        status: "ACTIVE",
+      });
+
+      const result = await service.create("user-1", {
+        targetWallet: LOWER_TARGET_WALLET,
+      });
+
+      expect(result.id).toBe("cfg-1");
+    });
+
+    it("allows copy when stored polymarketAddress is malformed (non-hex)", async () => {
+      prisma.user.findUnique.mockResolvedValue({
+        polymarketConnected: true,
+        polymarketAddress: "not-a-hex-address",
       });
       prisma.copyConfig.count.mockResolvedValue(0);
       prisma.copyConfig.findMany.mockResolvedValue([]);

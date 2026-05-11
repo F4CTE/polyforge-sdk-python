@@ -11,11 +11,34 @@
 --      lowering guarantees all rows for the same wallet share the same value
 --      and the unique constraint works correctly.
 --
--- The UNIQUE constraint will reject collisions only if a user already has two
--- rows whose targetWallet differ only in case — the service-level duplicate
--- check in copy.service.ts prevents new collisions, but a historical one could
--- block this migration.  If it fails with a unique-violation, manually merge
--- the duplicate rows before re-running.
+-- Step 1: Resolve case-colliding duplicates that would violate the unique
+-- constraint after lowercasing.  When a user has multiple rows whose
+-- targetWallet differs only in case, keep the oldest (by createdAt) and
+-- delete the others so the bulk UPDATE in step 2 can complete without a
+-- unique-violation error.
+
+WITH
+    ranked AS (
+        SELECT
+            id,
+            "userId",
+            row_number() OVER (
+                PARTITION BY "userId", lower("targetWallet")
+                ORDER BY "createdAt" ASC, id ASC
+            ) AS rn
+        FROM "copy_configs"
+        WHERE "targetWallet" <> lower("targetWallet")
+    ),
+    duplicates AS (
+        SELECT id FROM ranked WHERE rn > 1
+    )
+DELETE FROM "copy_configs"
+WHERE id IN (SELECT id FROM duplicates);
+
+-- Step 2: Normalize remaining rows to lowercase.
+--
+-- After step 1, no two rows for the same (userId, lower(targetWallet)) pair
+-- remain, so the bulk UPDATE cannot violate the @@unique constraint.
 
 UPDATE "copy_configs"
    SET "targetWallet" = lower("targetWallet")
