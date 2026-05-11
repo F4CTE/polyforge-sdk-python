@@ -132,7 +132,8 @@ describe('CredentialsService', () => {
             typeof value === 'object' &&
             Array.isArray((value as { privateKey?: unknown }).privateKey)
           ) {
-            forwardedPrivateKey = (value as { privateKey: number[] }).privateKey;
+            forwardedPrivateKey = (value as { privateKey: number[] })
+              .privateKey;
           }
           return originalStringify(value);
         });

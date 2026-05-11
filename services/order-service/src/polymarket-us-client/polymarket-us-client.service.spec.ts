@@ -71,7 +71,7 @@ describe("PolymarketUsClientService", () => {
     it("returns null when lastTradePx is absent", async () => {
       vi.spyOn((svc as any).readonlySdk.markets, "bbo").mockResolvedValue({
         marketSlug: "test-slug",
-      } as MarketBBO);
+      });
 
       const price = await svc.getPrice("test-slug");
       expect(price).toBeNull();

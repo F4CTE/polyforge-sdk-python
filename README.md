@@ -110,7 +110,7 @@ polyforge/
 │
 └── packages/
     ├── ui/                        # Shared shadcn/ui components + Tailwind theme
-    ├── api-client/                # Shared @hey-api/client-fetch generated client
+    ├── api-client/                # Shared API client (generated via @hey-api/openapi-ts)
     ├── shared-types/              # All TypeScript interfaces and enums
     ├── shared-schemas/            # Zod schemas (streams, WebSocket, orders)
     ├── shared-auth/               # JWT guards + internal service client

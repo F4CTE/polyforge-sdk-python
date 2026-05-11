@@ -1067,7 +1067,7 @@ api-service build:swagger     admin-api-service build:swagger
                ▼
      swagger.json  swagger-admin.json
                ↓
-     @hey-api/openapi-ts + @hey-api/client-fetch
+      @hey-api/openapi-ts (bundled @hey-api/client-fetch plugin)
                ↓
 packages/api-client generated user/admin clients
                ↓
@@ -1087,7 +1087,7 @@ See `03-openapi-codegen.md` for the full OpenAPI generation pipeline.
 | ORM | Prisma 7.5.0 (schema-first, type-safe) |
 | Validation | Zod (streams/internal) + class-validator (HTTP controllers) |
 | API documentation | @nestjs/swagger — OpenAPI 3.1 spec generated at build time |
-| API client generation | @hey-api/openapi-ts + @hey-api/client-fetch |
+| API client generation | @hey-api/openapi-ts (bundled @hey-api/client-fetch plugin) |
 | Redis client | ioredis |
 | Logging | pino + nestjs-pino |
 | Testing | Vitest + Supertest |

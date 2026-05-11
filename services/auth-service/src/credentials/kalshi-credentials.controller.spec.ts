@@ -23,12 +23,12 @@ describe('KalshiCredentialsController', () => {
 
   it('import delegates to kalshiCreds.import with userId', async () => {
     const dto = { userId: 'usr_abc123' };
-    await controller.import(user as any, dto);
+    await controller.import(user, dto);
     expect(service.import).toHaveBeenCalledWith(user.sub, dto);
   });
 
   it('delete delegates to kalshiCreds.delete', async () => {
-    await controller.delete(user as any);
+    await controller.delete(user);
     expect(service.delete).toHaveBeenCalledWith(user.sub);
   });
 });

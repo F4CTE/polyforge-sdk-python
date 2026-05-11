@@ -500,10 +500,10 @@ export class OrdersService {
     try {
       if (venue === "best") {
         const adapter = await this.venueRouter.resolveBest(intent.tokenId);
-        return adapter.venueId as VenueId;
+        return adapter.venueId;
       }
 
-      return this.venueRouter.resolve(venue).venueId as VenueId;
+      return this.venueRouter.resolve(venue).venueId;
     } catch {
       return venue;
     }
@@ -591,7 +591,7 @@ export class OrdersService {
       } as any,
     });
 
-    return hasAcceptedCurrentUsRailTerms(user as any);
+    return hasAcceptedCurrentUsRailTerms(user);
   }
 
   private mapClobStatus(clobStatus: string): string {

@@ -143,9 +143,9 @@ export class ApiKeysService {
     // Create the new key reusing create() logic
     const newKey = await this.create(userId, {
       name: `${oldKey.name} (rotated)`,
-      scopes: oldKey.scopes as string[],
+      scopes: oldKey.scopes,
       expiresAt: oldKey.expiresAt?.toISOString() ?? undefined,
-    } as CreateApiKeyDto);
+    });
 
     // Mark the old key as deprecated with a 24-hour grace period
     const deprecatedAt = new Date();

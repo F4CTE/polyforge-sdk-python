@@ -50,7 +50,7 @@ export class ReportsController {
       action: "REVIEW_REPORT",
       targetType: "report",
       targetId: id,
-      payload: { status: dto.status, adminNote: dto.adminNote } as any,
+      payload: { status: dto.status, adminNote: dto.adminNote },
       ip,
     });
     return result;

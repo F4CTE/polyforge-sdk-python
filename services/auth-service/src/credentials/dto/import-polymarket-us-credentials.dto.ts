@@ -35,8 +35,7 @@ export class ImportPolymarketUsCredentialsDto {
 
   @ApiProperty({
     example: true,
-    description:
-      'Explicit user acceptance of the current US-rail legal terms.',
+    description: 'Explicit user acceptance of the current US-rail legal terms.',
   })
   @IsBoolean()
   @Equals(true, { message: 'US-rail terms must be accepted' })

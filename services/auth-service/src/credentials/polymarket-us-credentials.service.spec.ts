@@ -66,7 +66,7 @@ describe('PolymarketUsCredentialsService', () => {
 
       await service.import(
         user.id,
-        acceptedDto as any,
+        acceptedDto,
         'US',
         '203.0.113.10',
         'Vitest UA',
@@ -97,7 +97,7 @@ describe('PolymarketUsCredentialsService', () => {
       db.user.update.mockResolvedValue(user as any);
       fetchSpy.mockResolvedValue({ ok: true });
 
-      await service.import(user.id, acceptedDto as any, undefined);
+      await service.import(user.id, acceptedDto, undefined);
 
       expect(db.user.update).toHaveBeenCalledWith(
         expect.objectContaining({

@@ -381,7 +381,7 @@ Next: deploy to AWS eu-west-2, then submit Polymarket Builders Program grant app
 - [x] Vite + React 19 setup for `admin-app`
 - [x] Next.js 15 App Router setup for `landing`
 - [x] `packages/ui/` — shared shadcn/ui component library with Polyforge theme
-- [x] `packages/api-client/` — `@hey-api/client-fetch` generated client (user + admin)
+- [x] `packages/api-client/` — Generated API client (fetch-based, bundled via `@hey-api/openapi-ts`)
 - [x] Tailwind CSS v4 with `@theme` directive for Polyforge design tokens
 - [x] React Router v7 routing for both SPAs
 

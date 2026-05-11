@@ -800,7 +800,7 @@ export class KalshiRestService {
 
   async createSubaccount(): Promise<{ subaccount_number: number }> {
     const res = await this.portfolioApi.createSubaccount();
-    return res.data as unknown as { subaccount_number: number };
+    return res.data;
   }
 
   async getSubaccountBalances(): Promise<
@@ -941,7 +941,7 @@ export class KalshiRestService {
 
   async getRfqCommunicationsId(): Promise<{ communications_id: string }> {
     const res = await this.communicationsApi.getCommunicationsID();
-    return res.data as unknown as { communications_id: string };
+    return res.data;
   }
 
   // ─── Combo / MVE markets ─────────────────────────────────────────────────

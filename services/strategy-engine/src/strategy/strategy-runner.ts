@@ -262,10 +262,9 @@ export class StrategyRunner {
         err.message.includes("Counter increment failed")
       ) {
         this.pause("counter_increment_failed");
-        await this.onStatusChange(
-          "PAUSED",
-          "counter_increment_failed",
-        ).catch(() => {});
+        await this.onStatusChange("PAUSED", "counter_increment_failed").catch(
+          () => {},
+        );
       }
     } finally {
       this.tickInFlight = false;

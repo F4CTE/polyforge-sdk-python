@@ -66,7 +66,7 @@ describe("NotificationsAdminService", () => {
         subject: "Hello!",
       };
 
-      const result = await service.broadcast(dto as any);
+      const result = await service.broadcast(dto);
 
       expect(result.queued).toBe(2);
       expect(result.channel).toBe("EMAIL");
@@ -85,7 +85,7 @@ describe("NotificationsAdminService", () => {
         templateId: "tpl-broadcast",
         subject: "Announcement",
       };
-      const result = await service.broadcast(dto as any);
+      const result = await service.broadcast(dto);
 
       expect(result.queued).toBe(3);
       expect(redis.xadd).toHaveBeenCalledTimes(3);
@@ -98,7 +98,7 @@ describe("NotificationsAdminService", () => {
         channel: "EMAIL",
         templateId: "tpl-1",
         subject: "x",
-      } as any);
+      });
 
       expect(prisma.user.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -115,7 +115,7 @@ describe("NotificationsAdminService", () => {
         subject: "Test",
       };
 
-      await service.broadcast(dto as any);
+      await service.broadcast(dto);
 
       expect(prisma.user.findMany).not.toHaveBeenCalled();
     });
@@ -129,7 +129,7 @@ describe("NotificationsAdminService", () => {
         metadata: { foo: "bar" },
       };
 
-      await service.broadcast(dto as any);
+      await service.broadcast(dto);
 
       expect(redis.xadd).toHaveBeenCalledWith(
         "stream:events",
@@ -153,7 +153,7 @@ describe("NotificationsAdminService", () => {
         metadata: { key: "value" },
       };
 
-      await service.broadcast(dto as any);
+      await service.broadcast(dto);
 
       const call = (redis.xadd as ReturnType<typeof vi.fn>).mock.calls[0][1];
       expect(call.metadata).toBe(JSON.stringify({ key: "value" }));
@@ -167,7 +167,7 @@ describe("NotificationsAdminService", () => {
         subject: "x",
       };
 
-      await service.broadcast(dto as any);
+      await service.broadcast(dto);
 
       const call = (redis.xadd as ReturnType<typeof vi.fn>).mock.calls[0][1];
       expect(call.metadata).toBe("{}");
@@ -180,7 +180,7 @@ describe("NotificationsAdminService", () => {
         channel: "PUSH",
         templateId: "x",
         subject: "y",
-      } as any);
+      });
 
       expect(result.queued).toBe(0);
     });
@@ -209,7 +209,7 @@ describe("NotificationsAdminService", () => {
         subject: "Legit",
       };
 
-      const result = await service.broadcast(dto as any);
+      const result = await service.broadcast(dto);
       expect(result.queued).toBe(5000);
     });
   });

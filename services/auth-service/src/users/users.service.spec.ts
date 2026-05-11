@@ -273,7 +273,7 @@ describe('UsersService', () => {
     it('marks the token used and sets emailVerified on the user', async () => {
       const token = rawToken();
       const record = emailVerificationFactory({ tokenHash: sha256(token) });
-      db.emailVerification.findUnique.mockResolvedValue(record as any);
+      db.emailVerification.findUnique.mockResolvedValue(record);
       db.$transaction.mockResolvedValue([]);
 
       await service.verifyEmail(token);
@@ -296,7 +296,7 @@ describe('UsersService', () => {
         tokenHash: sha256(token),
         usedAt: new Date(),
       });
-      db.emailVerification.findUnique.mockResolvedValue(record as any);
+      db.emailVerification.findUnique.mockResolvedValue(record);
 
       await expect(service.verifyEmail(token)).rejects.toMatchObject({
         response: { code: 'TOKEN_ALREADY_USED' },
@@ -310,7 +310,7 @@ describe('UsersService', () => {
         tokenHash: sha256(token),
         expiresAt: new Date(Date.now() - 1000), // 1s in the past
       });
-      db.emailVerification.findUnique.mockResolvedValue(record as any);
+      db.emailVerification.findUnique.mockResolvedValue(record);
 
       await expect(service.verifyEmail(token)).rejects.toMatchObject({
         response: { code: 'TOKEN_EXPIRED' },
@@ -361,7 +361,7 @@ describe('UsersService', () => {
     it('updates the password hash via transaction', async () => {
       const token = rawToken();
       const record = passwordResetTokenFactory({ tokenHash: sha256(token) });
-      db.passwordResetToken.findUnique.mockResolvedValue(record as any);
+      db.passwordResetToken.findUnique.mockResolvedValue(record);
       db.$transaction.mockResolvedValue([]);
 
       await service.resetPassword(token, 'NewPassw0rd!');
@@ -373,7 +373,7 @@ describe('UsersService', () => {
       const token = rawToken();
       const record = passwordResetTokenFactory({ tokenHash: sha256(token) });
       const callOrder: string[] = [];
-      db.passwordResetToken.findUnique.mockResolvedValue(record as any);
+      db.passwordResetToken.findUnique.mockResolvedValue(record);
       redis.set.mockImplementation(async () => {
         callOrder.push('pwchange');
       });
@@ -395,7 +395,7 @@ describe('UsersService', () => {
     it('does not consume the reset token or change password when stale-token invalidation fails', async () => {
       const token = rawToken();
       const record = passwordResetTokenFactory({ tokenHash: sha256(token) });
-      db.passwordResetToken.findUnique.mockResolvedValue(record as any);
+      db.passwordResetToken.findUnique.mockResolvedValue(record);
       redis.set.mockRejectedValue(new Error('redis down'));
 
       await expect(
@@ -408,7 +408,7 @@ describe('UsersService', () => {
     it('clears pwchange marker when the password transaction fails', async () => {
       const token = rawToken();
       const record = passwordResetTokenFactory({ tokenHash: sha256(token) });
-      db.passwordResetToken.findUnique.mockResolvedValue(record as any);
+      db.passwordResetToken.findUnique.mockResolvedValue(record);
       db.$transaction.mockRejectedValue(new Error('db write failure'));
       const delSpy = vi.spyOn(redis, 'del');
 
@@ -422,7 +422,7 @@ describe('UsersService', () => {
     it('revokes refresh tokens after the password transaction succeeds, and throws on revocation failure', async () => {
       const token = rawToken();
       const record = passwordResetTokenFactory({ tokenHash: sha256(token) });
-      db.passwordResetToken.findUnique.mockResolvedValue(record as any);
+      db.passwordResetToken.findUnique.mockResolvedValue(record);
       db.$transaction.mockResolvedValue([]);
       const callOrder: string[] = [];
       db.$transaction.mockImplementation(async () => {
@@ -430,7 +430,9 @@ describe('UsersService', () => {
         return [];
       });
       // Simulate refresh-token revocation failure via pipeline rejection.
-      redis._pipelineExec.mockRejectedValue(new Error('redis revocation failed'));
+      redis._pipelineExec.mockRejectedValue(
+        new Error('redis revocation failed'),
+      );
       redis._scanStream.on.mockImplementation(
         (event: string, cb: (...args: unknown[]) => unknown) => {
           if (event === 'data') cb([`refresh:${record.userId}:abc123`]);
@@ -451,7 +453,7 @@ describe('UsersService', () => {
     it('hashes the new password before storing', async () => {
       const token = rawToken();
       const record = passwordResetTokenFactory({ tokenHash: sha256(token) });
-      db.passwordResetToken.findUnique.mockResolvedValue(record as any);
+      db.passwordResetToken.findUnique.mockResolvedValue(record);
 
       (db.$transaction as any).mockImplementation(async (ops: any[]) => ops);
 
@@ -483,7 +485,7 @@ describe('UsersService', () => {
         tokenHash: sha256(token),
         usedAt: new Date(),
       });
-      db.passwordResetToken.findUnique.mockResolvedValue(record as any);
+      db.passwordResetToken.findUnique.mockResolvedValue(record);
 
       await expect(
         service.resetPassword(token, 'NewPassw0rd!'),
@@ -499,7 +501,7 @@ describe('UsersService', () => {
         tokenHash: sha256(token),
         expiresAt: new Date(Date.now() - 1000),
       });
-      db.passwordResetToken.findUnique.mockResolvedValue(record as any);
+      db.passwordResetToken.findUnique.mockResolvedValue(record);
 
       await expect(
         service.resetPassword(token, 'NewPassw0rd!'),
@@ -512,7 +514,7 @@ describe('UsersService', () => {
     it('revokes all refresh tokens after password reset (N-H1)', async () => {
       const token = rawToken();
       const record = passwordResetTokenFactory({ tokenHash: sha256(token) });
-      db.passwordResetToken.findUnique.mockResolvedValue(record as any);
+      db.passwordResetToken.findUnique.mockResolvedValue(record);
       db.$transaction.mockResolvedValue([]);
 
       // Simulate scanStream emitting keys then ending
@@ -539,7 +541,7 @@ describe('UsersService', () => {
     it('skips pipeline.exec when no refresh tokens exist', async () => {
       const token = rawToken();
       const record = passwordResetTokenFactory({ tokenHash: sha256(token) });
-      db.passwordResetToken.findUnique.mockResolvedValue(record as any);
+      db.passwordResetToken.findUnique.mockResolvedValue(record);
       db.$transaction.mockResolvedValue([]);
 
       // Simulate scanStream emitting no keys
@@ -559,7 +561,7 @@ describe('UsersService', () => {
     it('still updates the password hash when revoking tokens (N-H1)', async () => {
       const token = rawToken();
       const record = passwordResetTokenFactory({ tokenHash: sha256(token) });
-      db.passwordResetToken.findUnique.mockResolvedValue(record as any);
+      db.passwordResetToken.findUnique.mockResolvedValue(record);
       db.$transaction.mockResolvedValue([]);
 
       redis._scanStream.on.mockImplementation(

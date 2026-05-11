@@ -165,7 +165,7 @@ test("local database mutation scripts are guarded outside explicit local use", (
   assert.equal(allowed.status, 0, allowed.stderr);
 });
 
-test("service uuid runtime dependencies use one supported version line", () => {
+test("no service carries uuid as a phantom runtime dependency", () => {
   const services = [
     "services/api-service/package.json",
     "services/order-service/package.json",
@@ -177,9 +177,9 @@ test("service uuid runtime dependencies use one supported version line", () => {
     const manifest = readJson(serviceManifest);
 
     assert.equal(
-      manifest.dependencies.uuid,
-      "^14.0.0",
-      `${serviceManifest} must use the repo-wide uuid runtime range`,
+      manifest.dependencies?.uuid,
+      undefined,
+      `${serviceManifest} must not carry the removed uuid phantom dep`,
     );
     assert.equal(
       manifest.devDependencies?.["@types/uuid"],

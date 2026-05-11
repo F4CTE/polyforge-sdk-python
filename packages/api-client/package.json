@@ -11,7 +11,7 @@
     "./admin": "./src/generated/admin/index.ts"
   },
   "dependencies": {
-    "@hey-api/client-fetch": "^0.13.1"
+    "@hey-api/client-fetch": "0.13.1"
   },
   "devDependencies": {
     "typescript": "^6.0.3"

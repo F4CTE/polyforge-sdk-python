@@ -33,7 +33,7 @@ describe('ApiKeysController', () => {
   it('POST /api-keys delegates to service.create with correct userId and dto', async () => {
     const dto = { name: 'My Key', scopes: ['READ', 'TRADE'] };
 
-    await controller.create(user as any, dto as any);
+    await controller.create(user, dto as any);
 
     expect(apiKeysService.create).toHaveBeenCalledWith(user.sub, dto);
   });
@@ -41,14 +41,14 @@ describe('ApiKeysController', () => {
   it('POST /api-keys returns the service result including plaintext key', async () => {
     const dto = { name: 'My Key' };
 
-    const result = await controller.create(user as any, dto as any);
+    const result = await controller.create(user, dto);
 
     expect(result).toHaveProperty('key');
     expect(result).toHaveProperty('id');
   });
 
   it('GET /api-keys delegates to service.list with correct userId', async () => {
-    await controller.list(user as any);
+    await controller.list(user);
 
     expect(apiKeysService.list).toHaveBeenCalledWith(user.sub);
   });
@@ -56,7 +56,7 @@ describe('ApiKeysController', () => {
   it('DELETE /api-keys/:id delegates to service.revoke with correct id and userId', async () => {
     const keyId = '00000000-0000-4000-8000-000000000002';
 
-    await controller.revoke(user as any, keyId);
+    await controller.revoke(user, keyId);
 
     expect(apiKeysService.revoke).toHaveBeenCalledWith(keyId, user.sub);
   });

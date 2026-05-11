@@ -98,7 +98,7 @@ const nativeCrypto = (() => {
     if (
       err instanceof Error &&
       (err.message.includes("missing required AAD functions") ||
-       err.message.includes("UNSUPPORTED"))
+        err.message.includes("UNSUPPORTED"))
     ) {
       throw err;
     }

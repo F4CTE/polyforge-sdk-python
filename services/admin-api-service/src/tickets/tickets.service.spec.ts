@@ -417,7 +417,7 @@ describe("TicketsAdminService", () => {
 
       await service.update("ticket-1", "admin-1", {
         assignedTo: "admin-2",
-      } as any);
+      });
 
       const updateCall = prisma.ticket.update.mock.calls[0][0];
       expect(updateCall.data.assignedTo).toBe("admin-2");

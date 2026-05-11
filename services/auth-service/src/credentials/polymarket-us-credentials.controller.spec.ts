@@ -31,7 +31,7 @@ describe('PolymarketUsCredentialsController', () => {
   describe('import', () => {
     it('delegates to usCredentials.import with userId, dto, country code, and request metadata', async () => {
       await controller.import(
-        user as any,
+        user,
         validDto,
         'US',
         'Mozilla/5.0',
@@ -49,7 +49,7 @@ describe('PolymarketUsCredentialsController', () => {
 
     it('passes undefined country code when header is absent', async () => {
       await controller.import(
-        user as any,
+        user,
         validDto,
         undefined,
         undefined,
@@ -68,7 +68,7 @@ describe('PolymarketUsCredentialsController', () => {
 
   describe('delete', () => {
     it('delegates to usCredentials.delete with userId', async () => {
-      await controller.delete(user as any);
+      await controller.delete(user);
       expect(service.delete).toHaveBeenCalledWith(user.sub);
     });
   });

@@ -15,7 +15,7 @@ OpenAPI JSON inputs
   services/api-service/dist/swagger.json
   services/admin-api-service/dist/swagger-admin.json
           ↓
-@hey-api/openapi-ts + @hey-api/client-fetch
+@hey-api/openapi-ts with bundled @hey-api/client-fetch plugin
           ↓
 packages/api-client/src/generated/
   user/ and admin/ typed clients
@@ -34,10 +34,12 @@ client output, but it does not regenerate clients or diff generated files.
 |---|---|
 | `@nestjs/swagger` | Annotates controllers and DTOs; generates OpenAPI JSON at build time |
 | `@hey-api/openapi-ts` | Reads OpenAPI JSON and generates TypeScript types/SDK functions |
-| `@hey-api/client-fetch` | Runtime fetch client used by the React apps |
+| `@hey-api/client-fetch` (plugin) | Generates the runtime fetch client (bundled since `@hey-api/openapi-ts` v0.73) |
 
 Pin exact versions of `@hey-api/openapi-ts` and `@hey-api/client-fetch`; do not
-use `^` or `~` for these packages.
+use `^` or `~` for these packages. The `@hey-api/client-fetch` plugin is bundled
+with `@hey-api/openapi-ts` since v0.73, but the runtime package is still declared
+as a dependency of `packages/api-client`.
 
 ---
 

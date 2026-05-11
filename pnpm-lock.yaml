@@ -284,7 +284,7 @@ importers:
   packages/api-client:
     dependencies:
       '@hey-api/client-fetch':
-        specifier: ^0.13.1
+        specifier: 0.13.1
         version: 0.13.1(@hey-api/openapi-ts@0.97.1(magicast@0.5.2)(typescript@6.0.3))
     devDependencies:
       typescript:
@@ -664,9 +664,6 @@ importers:
         specifier: ^7.8.0
         version: 7.8.2
     devDependencies:
-      '@faker-js/faker':
-        specifier: ^10.3.0
-        version: 10.4.0
       '@nestjs/cli':
         specifier: ^11.0.21
         version: 11.0.21(@types/node@25.6.2)(prettier@3.8.3)
@@ -785,9 +782,6 @@ importers:
         specifier: ^7.8.0
         version: 7.8.2
     devDependencies:
-      '@faker-js/faker':
-        specifier: ^10.3.0
-        version: 10.4.0
       '@nestjs/cli':
         specifier: ^11.0.21
         version: 11.0.21(@types/node@25.6.2)(prettier@3.8.3)
@@ -941,16 +935,10 @@ importers:
       rxjs:
         specifier: ^7.8.0
         version: 7.8.2
-      uuid:
-        specifier: '>=14.0.0'
-        version: 14.0.0
       ws:
         specifier: ^8.18.3
         version: 8.20.0
     devDependencies:
-      '@faker-js/faker':
-        specifier: ^10.3.0
-        version: 10.4.0
       '@nestjs/cli':
         specifier: ^11.0.21
         version: 11.0.21(@types/node@25.6.2)(prettier@3.8.3)
@@ -1090,9 +1078,6 @@ importers:
         specifier: ^7.8.0
         version: 7.8.2
     devDependencies:
-      '@faker-js/faker':
-        specifier: ^10.3.0
-        version: 10.4.0
       '@nestjs/cli':
         specifier: ^11.0.21
         version: 11.0.21(@types/node@25.6.2)(prettier@3.8.3)
@@ -1580,9 +1565,6 @@ importers:
       rxjs:
         specifier: ^7.8.0
         version: 7.8.2
-      uuid:
-        specifier: '>=14.0.0'
-        version: 14.0.0
       ws:
         specifier: ^8.18.3
         version: 8.20.0
@@ -1771,9 +1753,6 @@ importers:
       rxjs:
         specifier: ^7.8.0
         version: 7.8.2
-      uuid:
-        specifier: '>=14.0.0'
-        version: 14.0.0
     devDependencies:
       '@nestjs/cli':
         specifier: ^11.0.21
@@ -1868,9 +1847,6 @@ importers:
       rxjs:
         specifier: ^7.8.0
         version: 7.8.2
-      uuid:
-        specifier: '>=14.0.0'
-        version: 14.0.0
     devDependencies:
       '@nestjs/cli':
         specifier: ^11.0.21
@@ -2172,10 +2148,6 @@ packages:
     peerDependenciesMeta:
       '@noble/hashes':
         optional: true
-
-  '@faker-js/faker@10.4.0':
-    resolution: {integrity: sha512-sDBWI3yLy8EcDzgobvJTWq1MJYzAkQdpjXuPukga9wXonhpMRvd1Izuo2Qgwey2OiEoRIBr35RMU9HJRoOHzpw==}
-    engines: {node: ^20.19.0 || ^22.13.0 || ^23.5.0 || >=24.0.0, npm: '>=10'}
 
   '@fastify/accept-negotiator@2.0.1':
     resolution: {integrity: sha512-/c/TW2bO/v9JeEgoD/g1G5GxGeCF1Hafdf79WPmUlgYiBXummY0oX3VVq4yFkKKVBKDNlaDUYoab7g38RpPqCQ==}
@@ -7474,10 +7446,6 @@ packages:
     resolution: {integrity: sha512-pMZTvIkT1d+TFGvDOqodOclx0QWkkgi6Tdoa8gC8ffGAAqz9pzPTZWAybbsHHoED/ztMtkv/VoYTYyShUn81hA==}
     engines: {node: '>= 0.4.0'}
 
-  uuid@14.0.0:
-    resolution: {integrity: sha512-Qo+uWgilfSmAhXCMav1uYFynlQO7fMFiMVZsQqZRMIXp0O7rR7qjkj+cPvBHLgBqi960QCoo/PH2/6ZtVqKvrg==}
-    hasBin: true
-
   v8-compile-cache-lib@3.0.1:
     resolution: {integrity: sha512-wa7YjyUGfNZngI/vtK0UHAN+lgDCxBPCylVXGp0zu59Fz5aiGtNXaq3DhIov063MorB+VfufLh3JlF2KdTK3xg==}
 
@@ -8099,8 +8067,6 @@ snapshots:
   '@exodus/bytes@1.15.0(@noble/hashes@1.8.0)':
     optionalDependencies:
       '@noble/hashes': 1.8.0
-
-  '@faker-js/faker@10.4.0': {}
 
   '@fastify/accept-negotiator@2.0.1': {}
 
@@ -13414,8 +13380,6 @@ snapshots:
   util-deprecate@1.0.2: {}
 
   utils-merge@1.0.1: {}
-
-  uuid@14.0.0: {}
 
   v8-compile-cache-lib@3.0.1: {}
 

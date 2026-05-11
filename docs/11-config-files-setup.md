@@ -653,20 +653,17 @@ model AuditLog {
 Create this file at the **root of the repository**.
 
 ```typescript
-import { defineConfig } from '@hey-api/openapi-ts';
-
-export default defineConfig({
+const config = {
   input:  'services/api-service/dist/swagger.json',
-  output: {
-    path:   'packages/api-client/src/generated/user',
-    format: 'prettier',
-  },
+  output: 'packages/api-client/src/generated/user',
   plugins: [
     { name: '@hey-api/typescript', enums: 'javascript' },
     { name: '@hey-api/sdk' },
-    { name: '@hey-api/client-fetch' },
+    { name: '@hey-api/client-fetch' },  // fetch client plugin (bundled since @hey-api/openapi-ts v0.73)
   ],
-});
+} satisfies import('@hey-api/openapi-ts').UserConfig;
+
+export default config;
 ```
 
 ---
@@ -676,23 +673,20 @@ export default defineConfig({
 Create this file at the **root of the repository**.
 
 ```typescript
-import { defineConfig } from '@hey-api/openapi-ts';
-
-export default defineConfig({
+const config = {
   input:  'services/admin-api-service/dist/swagger-admin.json',
-  output: {
-    path:   'packages/api-client/src/generated/admin',
-    format: 'prettier',
-  },
+  output: 'packages/api-client/src/generated/admin',
   plugins: [
     { name: '@hey-api/typescript', enums: 'javascript' },
     { name: '@hey-api/sdk' },
-    { name: '@hey-api/client-fetch' },
+    { name: '@hey-api/client-fetch' },  // fetch client plugin (bundled since @hey-api/openapi-ts v0.73)
   ],
-});
+} satisfies import('@hey-api/openapi-ts').UserConfig;
+
+export default config;
 ```
 
-> **Version pinning:** After installing, replace `0.x.y` in `package.json` with the exact installed version. Run `pnpm ls @hey-api/openapi-ts` to get it. Remove the `^` prefix.
+> **Version pinning:** After installing, replace `0.x.y` in `package.json` with the exact installed version. Run `pnpm ls @hey-api/openapi-ts` to get it. Remove the `^` prefix. No separate client package is required — the client runtime is bundled since v0.73.
 
 ---
 

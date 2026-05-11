@@ -300,9 +300,7 @@ describe("OrdersService", () => {
 
     it("passes expiration when provided in the intent", async () => {
       const expiration = Math.floor(Date.now() / 1000) + 3600;
-      const p = svc.processIntent(
-        makeIntent({ expiration, orderType: "GTD" }),
-      );
+      const p = svc.processIntent(makeIntent({ expiration, orderType: "GTD" }));
       await vi.runAllTimersAsync();
       await p;
 

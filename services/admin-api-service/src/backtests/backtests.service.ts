@@ -21,7 +21,7 @@ export class BacktestsService {
 
     const where: Prisma.BacktestRunWhereInput = {};
     if (userId) where.userId = userId;
-    if (status) where.status = status as any;
+    if (status) where.status = status;
 
     const [runs, total] = await Promise.all([
       this.prisma.backtestRun.findMany({

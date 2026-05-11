@@ -27,12 +27,12 @@ describe('CredentialsController', () => {
   });
 
   it('import delegates to credentialsService.import', async () => {
-    await controller.import(user as any, dto);
+    await controller.import(user, dto);
     expect(credentialsService.import).toHaveBeenCalledWith(user.sub, dto);
   });
 
   it('delete delegates to credentialsService.delete', async () => {
-    await controller.delete(user as any);
+    await controller.delete(user);
     expect(credentialsService.delete).toHaveBeenCalledWith(user.sub);
   });
 });

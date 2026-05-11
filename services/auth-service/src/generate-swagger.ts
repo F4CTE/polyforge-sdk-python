@@ -2,7 +2,7 @@
  * Standalone script — generates dist/swagger.auth.json without starting an HTTP server.
  * Run via: pnpm build:swagger
  *
- * This script is consumed by @hey-api/openapi-ts to generate the Angular API client.
+ * This script is consumed by @hey-api/openapi-ts to generate the fetch-based API client.
  */
 import 'reflect-metadata';
 import { NestFactory } from '@nestjs/core';

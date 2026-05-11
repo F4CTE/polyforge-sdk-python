@@ -142,7 +142,7 @@ export class KekRotationService {
       this.prisma.userCredential.count({ where: whereOld }),
       this.prisma.polymarketUsCredential.count({ where: whereOld }),
     ]);
-    let pending = userOld + polymarketUsOld;
+    const pending = userOld + polymarketUsOld;
 
     const [userLegacy, polymarketUsLegacy] = await Promise.all([
       this.countSameVersionLegacyUser(currentVersion),

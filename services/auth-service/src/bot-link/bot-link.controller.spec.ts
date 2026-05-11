@@ -23,7 +23,7 @@ describe('BotLinkController', () => {
   });
 
   it('generate delegates to botLinkService.generate with userId', async () => {
-    const result = await controller.generate(user as any);
+    const result = await controller.generate(user);
     expect(botLinkService.generate).toHaveBeenCalledWith(user.sub);
     expect(result).toMatchObject({ code: '123456', expiresInSeconds: 300 });
   });

@@ -139,7 +139,7 @@ describe('ApiKeysService', () => {
         }),
       );
 
-      await service.create(userId, { name: 'No scopes' } as any);
+      await service.create(userId, { name: 'No scopes' });
 
       const createCall = db.apiKey.create.mock.calls[0][0] as any;
       expect(createCall.data.scopes).toEqual([]);
@@ -159,7 +159,7 @@ describe('ApiKeysService', () => {
         }),
       );
 
-      await service.create(userId, { name: 'No expiry' } as any);
+      await service.create(userId, { name: 'No expiry' });
 
       const createCall = db.apiKey.create.mock.calls[0][0] as any;
       expect(createCall.data.expiresAt).toBeNull();
@@ -256,7 +256,7 @@ describe('ApiKeysService', () => {
     });
 
     it('queries with correct userId and orders by createdAt desc', async () => {
-      db.apiKey.findMany.mockResolvedValue([] as any);
+      db.apiKey.findMany.mockResolvedValue([]);
 
       await service.list('user-1');
 
@@ -266,7 +266,7 @@ describe('ApiKeysService', () => {
     });
 
     it('uses select to exclude tokenHash from query', async () => {
-      db.apiKey.findMany.mockResolvedValue([] as any);
+      db.apiKey.findMany.mockResolvedValue([]);
 
       await service.list('user-1');
 
@@ -470,7 +470,7 @@ describe('ApiKeysService', () => {
         { id: 'expired-1' },
         { id: 'expired-2' },
       ] as any);
-      db.apiKey.updateMany.mockResolvedValue({ count: 2 } as any);
+      db.apiKey.updateMany.mockResolvedValue({ count: 2 });
 
       const count = await service.revokeExpiredDeprecatedKeys();
 
@@ -485,7 +485,7 @@ describe('ApiKeysService', () => {
     });
 
     it('returns 0 when no deprecated keys have expired', async () => {
-      db.apiKey.findMany.mockResolvedValue([] as any);
+      db.apiKey.findMany.mockResolvedValue([]);
 
       const count = await service.revokeExpiredDeprecatedKeys();
 

@@ -201,7 +201,7 @@ export class KalshiAdapterService implements VenueAdapter {
         absSize > 0 ? (currentPrice - avgPrice) * absSize : 0;
 
       return {
-        venueId: "kalshi" as VenueId,
+        venueId: "kalshi",
         venueMarketId: p.ticker,
         venueOutcomeId: p.ticker,
         outcome,

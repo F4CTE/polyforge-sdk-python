@@ -349,13 +349,9 @@ describe("KekRotationService", () => {
 
     // Simulate a pre-AAD row imported under the current KEK:
     // generateDek without AAD → kekVersion=2, no row/field binding.
-    const { dek, encryptedDek, dekIv, kekVersion } =
-      svcV2.generateDek();
+    const { dek, encryptedDek, dekIv, kekVersion } = svcV2.generateDek();
     try {
-      const privateKey = svcV2.encryptField(
-        "0x" + "f".repeat(64),
-        dek,
-      );
+      const privateKey = svcV2.encryptField("0x" + "f".repeat(64), dek);
       const apiKey = svcV2.encryptField("api-key", dek);
       const apiSecret = svcV2.encryptField("api-secret", dek);
       const apiPassphrase = svcV2.encryptField("api-passphrase", dek);
@@ -401,13 +397,9 @@ describe("KekRotationService", () => {
       kekVersion: "2",
     });
 
-    const { dek, encryptedDek, dekIv, kekVersion } =
-      svcV2.generateDek();
+    const { dek, encryptedDek, dekIv, kekVersion } = svcV2.generateDek();
     try {
-      const secretKey = svcV2.encryptFieldBytes(
-        Buffer.alloc(32, 0xab),
-        dek,
-      );
+      const secretKey = svcV2.encryptFieldBytes(Buffer.alloc(32, 0xab), dek);
 
       const row = {
         userId: "user-us-legacy-current",
@@ -462,7 +454,10 @@ describe("KekRotationService", () => {
         kekVersion: "2",
       });
 
-      const legacyRowData = makeLegacyUserCredentialRow(svcV2, "user-legacy-same-v");
+      const legacyRowData = makeLegacyUserCredentialRow(
+        svcV2,
+        "user-legacy-same-v",
+      );
       const prisma = {
         userCredential: {
           findMany: vi.fn(async () => [legacyRowData]),
@@ -520,7 +515,10 @@ describe("KekRotationService", () => {
 
       // One row on old KEK version (counted by COUNT query)
       const oldVersionRow = makeLegacyUserCredentialRow(svcV1, "user-old-v");
-      const pmOldRow = makeLegacyPolymarketUsCredentialRow(svcV1, "user-pm-old-v");
+      const pmOldRow = makeLegacyPolymarketUsCredentialRow(
+        svcV1,
+        "user-pm-old-v",
+      );
 
       // One row on current KEK version but legacy (no AAD) — found by scan
       const sameVersionLegacyRow = makeLegacyUserCredentialRow(

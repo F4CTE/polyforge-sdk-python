@@ -95,7 +95,7 @@ The legacy frontend plan was superseded by the v3 React migration.
 
 - Vite + React 19 + React Router user app
 - Shared `packages/ui` components and Tailwind design tokens
-- Generated `@hey-api/client-fetch` API client
+- Generated API client (via `@hey-api/openapi-ts` with fetch plugin)
 - Auth, market browser, strategy builder, portfolio, orders, alerts, profile, settings, and social surfaces
 - Native WebSocket subscriptions for prices, strategy events, whales, and news signals
 

@@ -30,19 +30,19 @@ describe('TotpController', () => {
   });
 
   it('setup delegates to totpService.setup with userId', async () => {
-    const result = await controller.setup(user as any);
+    const result = await controller.setup(user);
     expect(totpService.setup).toHaveBeenCalledWith(user.sub);
     expect(result).toMatchObject({ secret: 'SECRET' });
   });
 
   it('confirm delegates to totpService.confirm', async () => {
-    const result = await controller.confirm(user as any, { code: '123456' });
+    const result = await controller.confirm(user, { code: '123456' });
     expect(totpService.confirm).toHaveBeenCalledWith(user.sub, '123456');
     expect(result).toMatchObject({ backupCodes: expect.any(Array) });
   });
 
   it('disable delegates to totpService.disable with password and totpCode', async () => {
-    const result = await controller.disable(user as any, {
+    const result = await controller.disable(user, {
       password: 'MyPass1!',
       totpCode: '123456',
     });
@@ -57,7 +57,7 @@ describe('TotpController', () => {
   });
 
   it('regenBackupCodes delegates to totpService.regenBackupCodes', async () => {
-    const result = await controller.regenBackupCodes(user as any);
+    const result = await controller.regenBackupCodes(user);
     expect(totpService.regenBackupCodes).toHaveBeenCalledWith(user.sub);
     expect(result).toMatchObject({ backupCodes: expect.any(Array) });
   });
