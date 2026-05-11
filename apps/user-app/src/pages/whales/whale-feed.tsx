@@ -7,6 +7,7 @@ import {
 import { Button, Input, Select, CardSkeleton, SkeletonLine, SkeletonBadge } from '@polyforge/ui';
 import { wsManager, type WsMessage } from '../../lib/websocket';
 import { useWhaleNotifications } from '../../hooks/use-whale-notifications';
+import { useWebSocketConnectionState } from '@/hooks/use-websocket-connection-state';
 import { authedFetch } from '../../stores/auth-store';
 
 /* ─── Types ──────────────────────────────────────────────────────────── */
@@ -118,7 +119,7 @@ export function Component() {
   const [walletSearch, setWalletSearch] = useState('');
   const [followingSet, setFollowingSet] = useState<Set<string>>(new Set());
   const [liveCount, setLiveCount] = useState(0);
-  const [wsConnected, setWsConnected] = useState(false);
+  const wsConnected = useWebSocketConnectionState();
   const [showNotifSettings, setShowNotifSettings] = useState(false);
   const { permission, config: notifConfig, supported: notifSupported, requestPermission, updateConfig } = useWhaleNotifications();
 
@@ -171,7 +172,6 @@ export function Component() {
   // WebSocket subscription for real-time whale trades
   useEffect(() => {
     wsManager.subscribeWhales();
-    setWsConnected(true);
 
     const listener = (msg: WsMessage) => {
       if (msg.type !== 'WHALE_TRADE') return;
@@ -207,7 +207,6 @@ export function Component() {
     return () => {
       wsManager.removeListener(listener);
       wsManager.unsubscribeWhales();
-      setWsConnected(false);
     };
   }, []);
 
@@ -238,7 +237,7 @@ export function Component() {
         <div className="flex items-center gap-3">
           <Fish className="size-6 text-accent-text" aria-hidden="true" />
           <h1 className="text-2xl font-semibold text-primary">Whale Tracker</h1>
-          {wsConnected && (
+          {wsConnected === 'connected' && (
             <span className="flex items-center gap-1.5 px-2 py-1 rounded-full text-caption font-medium bg-gain/10 text-gain border border-gain/20" aria-label="Live feed connected">
               <Radio className="size-3 animate-pulse" aria-hidden="true" />
               LIVE

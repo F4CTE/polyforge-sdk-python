@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate, Link } from 'react-router';
+import { useWebSocketConnectionState } from '@/hooks/use-websocket-connection-state';
 import {
   ArrowLeft,
   Play,
@@ -299,7 +300,7 @@ export function Component() {
   const [lastOrderAt, setLastOrderAt] = useState<string | null>(null);
   const [detailTab, setDetailTab] = useState<'overview' | 'log' | 'versions' | 'executions' | 'live' | 'health'>('overview');
   const [liveEvents, setLiveEvents] = useState<LiveEvent[]>([]);
-  const [wsConnected, setWsConnected] = useState(false);
+  const wsConnected = useWebSocketConnectionState();
   const [executions, setExecutions] = useState<StratExecution[]>([]);
   const [executionsLoading, setExecutionsLoading] = useState(false);
   const [executionsPage, setExecutionsPage] = useState(1);
@@ -479,7 +480,6 @@ export function Component() {
       const relevantTypes = new Set(['ORDER_PLACED', 'ORDER_FILLED', 'ORDER_REJECTED', 'STRATEGY_ERROR', 'AUTH_OK']);
       if (!relevantTypes.has(msg.type)) return;
       if (msg.type === 'AUTH_OK') {
-        setWsConnected(true);
         wsManager.subscribeStrategy(strategy.id);
         return;
       }
@@ -498,12 +498,10 @@ export function Component() {
     wsManager.addListener(handleWsMessage);
     wsManager.connect();
     wsManager.subscribeStrategy(strategy.id);
-    setWsConnected(true);
 
     return () => {
       wsManager.removeListener(handleWsMessage);
       wsManager.unsubscribeStrategy(strategy.id);
-      setWsConnected(false);
     };
   }, [detailTab, strategy?.id, strategy?.status]);
 
@@ -1703,7 +1701,7 @@ export function Component() {
               onClick={() => setDetailTab('live')}
               className="flex items-center gap-2"
             >
-              {detailTab === 'live' && wsConnected
+              {detailTab === 'live' && wsConnected === 'connected'
                 ? <span className="w-2 h-2 rounded-full bg-gain animate-pulse" />
                 : <Wifi className="size-3" />}
               Live
@@ -2137,7 +2135,7 @@ export function Component() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <span className="text-body-md font-semibold text-primary">Live Execution Feed</span>
-                  {wsConnected ? (
+                   {wsConnected === 'connected' ? (
                     <span className="flex items-center gap-2 text-label text-gain font-medium">
                       <span className="animate-pulse bg-gain rounded-full w-2 h-2" />
                       LIVE

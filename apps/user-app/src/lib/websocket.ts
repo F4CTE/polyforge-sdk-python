@@ -115,6 +115,7 @@ export class WebSocketManager {
     this.ws.onopen = () => {
       this.reconnectDelay = 1000;
       this.setConnectionState("connected");
+      this.emit({ type: "CONNECTION_STATE", state: "connected" });
       this.startPing();
     };
 
@@ -143,11 +144,17 @@ export class WebSocketManager {
       }
     };
 
-    this.ws.onclose = () => {
+    this.ws.onclose = (event: CloseEvent) => {
       this.stopPing();
       this.authenticated = false;
       if (!this.destroyed) {
         this.setConnectionState("reconnecting");
+        this.emit({
+          type: "CONNECTION_STATE",
+          state: "reconnecting",
+          code: event.code,
+          reason: event.reason || undefined,
+        });
         this.reconnectTimer = setTimeout(
           () => this.connect(),
           this.reconnectDelay,
@@ -155,10 +162,19 @@ export class WebSocketManager {
         this.reconnectDelay = Math.min(this.reconnectDelay * 2, 30_000);
       } else {
         this.setConnectionState("disconnected");
+        this.emit({
+          type: "CONNECTION_STATE",
+          state: "disconnected",
+          code: event.code,
+          reason: event.reason || undefined,
+        });
       }
     };
 
-    this.ws.onerror = () => this.ws?.close();
+    this.ws.onerror = () => {
+      console.warn("[ws] WebSocket error — closing connection");
+      this.ws?.close();
+    };
   }
 
   // ── Subscriptions ───────────────────────────────────────────────────
