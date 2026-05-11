@@ -601,9 +601,11 @@ export function Component() {
     };
 
     wsManager.addListener(handler);
+    wsManager.subscribePortfolioPnl();
 
     return () => {
       wsManager.removeListener(handler);
+      wsManager.unsubscribePortfolioPnl();
     };
   }, []);
 

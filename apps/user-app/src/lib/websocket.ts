@@ -49,6 +49,7 @@ export class WebSocketManager {
   private readonly subscribedTokens = new Set<string>();
   private readonly subscribedStrategies = new Set<string>();
   private subscribedWhales = false;
+  private subscribedPortfolioPnl = false;
   private readonly listeners = new Set<MessageListener>();
   private readonly connectionListeners = new Set<ConnectionListener>();
 
@@ -138,6 +139,9 @@ export class WebSocketManager {
           if (this.subscribedWhales) {
             this.send({ type: "SUBSCRIBE_WHALES" });
           }
+          if (this.subscribedPortfolioPnl) {
+            this.send({ type: "SUBSCRIBE_PORTFOLIO_PNL" });
+          }
         }
       } catch {
         /* ignore malformed messages */
@@ -218,6 +222,20 @@ export class WebSocketManager {
     this.subscribedWhales = false;
     if (this.ws?.readyState === WebSocket.OPEN) {
       this.send({ type: "UNSUBSCRIBE_WHALES" });
+    }
+  }
+
+  subscribePortfolioPnl(): void {
+    this.subscribedPortfolioPnl = true;
+    if (this.ws?.readyState === WebSocket.OPEN && this.authenticated) {
+      this.send({ type: "SUBSCRIBE_PORTFOLIO_PNL" });
+    }
+  }
+
+  unsubscribePortfolioPnl(): void {
+    this.subscribedPortfolioPnl = false;
+    if (this.ws?.readyState === WebSocket.OPEN) {
+      this.send({ type: "UNSUBSCRIBE_PORTFOLIO_PNL" });
     }
   }
 
