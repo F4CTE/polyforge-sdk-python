@@ -307,7 +307,7 @@ export function Component() {
               type="button"
               variant="ghost"
               onClick={() => handleStatusTab(value)}
-              className={`px-3 py-1 text-label rounded-md transition-colors ${
+              className={`px-3 py-1 text-label rounded-pf transition-colors ${
                 statusFilter === value
                   ? 'bg-accent/20 text-accent-text font-medium'
                   : 'text-tertiary hover:text-primary'

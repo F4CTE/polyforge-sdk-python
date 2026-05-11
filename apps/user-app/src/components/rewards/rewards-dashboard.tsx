@@ -149,7 +149,7 @@ export function RewardsDashboard() {
 
   if (!hasRewards && !hasRebates) {
     return (
-      <div className="bg-elevated border border-default rounded-xl p-6 text-center">
+      <div className="bg-elevated border border-default rounded-pf p-6 text-center">
         <Trophy className="mx-auto mb-3 text-tertiary opacity-60" size={32} />
         <p className="text-body-md font-medium text-primary mb-1">No rewards yet</p>
         <p className="text-label text-tertiary">
@@ -165,7 +165,7 @@ export function RewardsDashboard() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {totals && (
           <>
-            <div className="bg-elevated border border-default rounded-xl p-4 border-l-4 border-l-gain">
+            <div className="bg-elevated border border-default rounded-pf p-4 border-l-4 border-l-gain">
               <span className="text-label text-secondary uppercase tracking-wider flex items-center gap-1.5">
                 <Trophy className="size-3" />
                 Total Earned
@@ -174,7 +174,7 @@ export function RewardsDashboard() {
                 {formatUsd(totals.totalEarned)}
               </span>
             </div>
-            <div className="bg-elevated border border-default rounded-xl p-4 border-l-4 border-l-accent">
+            <div className="bg-elevated border border-default rounded-pf p-4 border-l-4 border-l-accent">
               <span className="text-label text-secondary uppercase tracking-wider flex items-center gap-1.5">
                 <TrendingUp className="size-3" />
                 Daily Earned
@@ -183,7 +183,7 @@ export function RewardsDashboard() {
                 {formatUsd(totals.dailyEarned)}
               </span>
             </div>
-            <div className="bg-elevated border border-default rounded-xl p-4 border-l-4 border-l-info">
+            <div className="bg-elevated border border-default rounded-pf p-4 border-l-4 border-l-info">
               <span className="text-label text-secondary uppercase tracking-wider flex items-center gap-1.5">
                 <Gift className="size-3" />
                 Pending
@@ -195,7 +195,7 @@ export function RewardsDashboard() {
           </>
         )}
         {rebates && (
-          <div className="bg-elevated border border-default rounded-xl p-4 border-l-4 border-l-variable">
+          <div className="bg-elevated border border-default rounded-pf p-4 border-l-4 border-l-variable">
             <span className="text-label text-secondary uppercase tracking-wider flex items-center gap-1.5">
               <Coins className="size-3" />
               Maker Rebates
@@ -210,7 +210,7 @@ export function RewardsDashboard() {
 
       {/* ─── Per-Market Rewards ─────────────────────────────────────── */}
       {perMarket.length > 0 && (
-        <div className="bg-elevated border border-default rounded-xl p-4">
+        <div className="bg-elevated border border-default rounded-pf p-4">
           <button
             type="button"
             onClick={() => setExpanded(!expanded)}
@@ -263,7 +263,7 @@ export function RewardsDashboard() {
 
       {/* ─── Rebates Detail ────────────────────────────────────────── */}
       {hasRebates && rebates.entries.length > 0 && (
-        <div className="bg-elevated border border-default rounded-xl p-4">
+        <div className="bg-elevated border border-default rounded-pf p-4">
           <button
             type="button"
             onClick={() => setShowRebates(!showRebates)}
@@ -315,7 +315,7 @@ export function RewardsDashboard() {
       )}
 
       {/* ─── Sponsored Markets ─────────────────────────────────────── */}
-      <div className="bg-elevated border border-default rounded-xl p-4">
+      <div className="bg-elevated border border-default rounded-pf p-4">
         <button
           type="button"
           onClick={() => setShowSponsored(!showSponsored)}

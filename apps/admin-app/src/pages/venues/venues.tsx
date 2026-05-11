@@ -68,7 +68,7 @@ function VenueBadge({ id }: { id: string }) {
   const isPoly = id.toLowerCase().includes('poly');
   return (
     <span
-      className={`flex items-center justify-center w-8 h-8 rounded-md text-body-sm font-semibold shrink-0 ${
+      className={`flex items-center justify-center w-8 h-8 rounded-pf text-body-sm font-semibold shrink-0 ${
         isPoly
           ? 'bg-accent/15 text-accent'
           : 'bg-warning/15 text-warning'

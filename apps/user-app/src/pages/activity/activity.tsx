@@ -171,7 +171,7 @@ export function Component() {
             key={t.value}
             type="button"
             onClick={() => setFilter(t.value)}
-            className={`px-3 py-1.5 rounded-md text-body-sm font-medium transition-colors ${
+            className={`px-3 py-1.5 rounded-pf text-body-sm font-medium transition-colors ${
               filter === t.value
                 ? 'bg-accent-subtle text-accent-text border border-accent-border'
                 : 'bg-surface text-secondary border border-subtle hover:text-primary hover:border-default'
@@ -191,7 +191,7 @@ export function Component() {
           ))}
         </div>
       ) : activities.length === 0 ? (
-        <div className="bg-elevated border border-default rounded-xl p-8 text-center">
+        <div className="bg-elevated border border-default rounded-pf p-8 text-center">
           <Activity className="mx-auto mb-3 text-tertiary opacity-60" size={32} />
           <p className="text-body-md font-medium text-primary mb-1">No activity found</p>
           <p className="text-label text-tertiary">
@@ -209,10 +209,10 @@ export function Component() {
             return (
               <div
                 key={item.id}
-                className="bg-elevated border border-default rounded-lg p-4 flex items-center gap-4 hover:bg-subtle transition-colors"
+                className="bg-elevated border border-default rounded-pf p-4 flex items-center gap-4 hover:bg-subtle transition-colors"
               >
                 {/* Icon */}
-                <div className={`flex-shrink-0 size-9 rounded-lg bg-surface flex items-center justify-center ${config.color}`}>
+                <div className={`flex-shrink-0 size-9 rounded-pf bg-surface flex items-center justify-center ${config.color}`}>
                   <Icon className="size-4" />
                 </div>
 

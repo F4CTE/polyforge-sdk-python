@@ -176,7 +176,7 @@ export function EndpointCard({ ep, lang, setLang, forceOpen }: EndpointCardProps
 
   return (
     <div
-      className={`border border-default border-l-[3px] ${METHOD_BORDER[ep.method]} rounded-pf overflow-hidden transition-all duration-panel ${isOpen ? '' : 'hover:border-strong'}`}
+      className={`border border-default border-l ${METHOD_BORDER[ep.method]} rounded-pf overflow-hidden transition-all duration-panel ${isOpen ? '' : 'hover:border-strong'}`}
     >
       <Button
         type="button"

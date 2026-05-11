@@ -882,7 +882,7 @@ function CanvasSearchBar({ open, onClose }: CanvasSearchBarProps) {
         onKeyDown={handleKeyDown}
         autoFocus
         aria-label="Search blocks on canvas"
-        className="w-48 bg-transparent text-body-sm text-primary placeholder:text-tertiary focus:outline-none"
+        className="w-48 bg-transparent text-body-sm text-primary placeholder:text-tertiary focus-visible:outline-none"
       />
       {query && matches.length > 0 && (
         <span className="text-caption text-tertiary whitespace-nowrap">
