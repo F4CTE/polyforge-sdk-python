@@ -7,6 +7,7 @@ import {
 import { PrismaService } from "@polyforge/shared-db";
 import { EncryptionService } from "../encryption/encryption.service";
 import { ImportCredentialsDto } from "./dto/import-credentials.dto";
+import { credentialDekAad, credentialFieldAad } from "./credential-aad";
 
 /**
  * Decrypted credentials with sensitive fields as Buffers (not strings).
@@ -113,7 +114,7 @@ export class CredentialsService {
 
     // Generate per-user DEK (always uses current KEK version)
     const { dek, encryptedDek, dekIv, kekVersion } =
-      this.encryption.generateDek();
+      this.encryption.generateDek({ aad: credentialDekAad(userId) });
 
     // Encrypt each field separately (fresh IV per field).
     // try/finally guarantees DEK is zeroed even if an encryptField call throws.
@@ -122,10 +123,18 @@ export class CredentialsService {
     let asEnc: ReturnType<typeof this.encryption.encryptField>;
     let apEnc: ReturnType<typeof this.encryption.encryptField>;
     try {
-      pkEnc = this.encryption.encryptFieldBytes(privateKeyBytes, dek);
-      akEnc = this.encryption.encryptField(apiKey, dek);
-      asEnc = this.encryption.encryptField(apiSecret, dek);
-      apEnc = this.encryption.encryptField(apiPassphrase, dek);
+      pkEnc = this.encryption.encryptFieldBytes(privateKeyBytes, dek, {
+        aad: credentialFieldAad(userId, "privateKey"),
+      });
+      akEnc = this.encryption.encryptField(apiKey, dek, {
+        aad: credentialFieldAad(userId, "apiKey"),
+      });
+      asEnc = this.encryption.encryptField(apiSecret, dek, {
+        aad: credentialFieldAad(userId, "apiSecret"),
+      });
+      apEnc = this.encryption.encryptField(apiPassphrase, dek, {
+        aad: credentialFieldAad(userId, "apiPassphrase"),
+      });
     } finally {
       // Zero out plaintext DEK from memory (best-effort in JS)
       dek.fill(0);
@@ -211,6 +220,7 @@ export class CredentialsService {
       row.encryptedDek,
       row.dekIv,
       row.kekVersion,
+      { aad: credentialDekAad(userId), allowLegacyNoAadFallback: true },
     );
 
     // try/finally guarantees DEK is zeroed even if a decryptField call throws.
@@ -221,24 +231,40 @@ export class CredentialsService {
           row.privateKeyIv,
           row.privateKeyTag,
           dek,
+          {
+            aad: credentialFieldAad(userId, "privateKey"),
+            allowLegacyNoAadFallback: true,
+          },
         ),
         apiKey: this.encryption.decryptField(
           row.apiKeyCt,
           row.apiKeyIv,
           row.apiKeyTag,
           dek,
+          {
+            aad: credentialFieldAad(userId, "apiKey"),
+            allowLegacyNoAadFallback: true,
+          },
         ),
         apiSecret: this.encryption.decryptField(
           row.apiSecretCt,
           row.apiSecretIv,
           row.apiSecretTag,
           dek,
+          {
+            aad: credentialFieldAad(userId, "apiSecret"),
+            allowLegacyNoAadFallback: true,
+          },
         ),
         apiPassphrase: this.encryption.decryptField(
           row.apiPassphraseCt,
           row.apiPassphraseIv,
           row.apiPassphraseTag,
           dek,
+          {
+            aad: credentialFieldAad(userId, "apiPassphrase"),
+            allowLegacyNoAadFallback: true,
+          },
         ),
         safeAddress: row.safeAddress,
         sigType: row.sigType,

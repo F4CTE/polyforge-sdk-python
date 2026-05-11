@@ -310,22 +310,32 @@ if (!nativeBinding) {
   throw new Error(`Failed to load native binding`)
 }
 
-const { configureKeks, generateDek, encryptAes256Gcm, encryptAes256GcmBytes, encryptAes256GcmBytesWithRawKey, encryptAes256GcmBytesWithConfiguredKek, decryptAes256Gcm, decryptAes256GcmBytes, decryptAes256GcmBytesWithRawKey, decryptAes256GcmBytesWithConfiguredKek, wrapDek, unwrapDek, wrapDekWithCurrentKek, decryptDekWithStoredKek, sha256Hash, hmacSha256Sign, hmacSha256Verify, randomBytesHex, keccak256, privateKeyToEthAddress, privateKeyHexBytesToEthAddress, signSecp256K1HexKey, signSecp256K1 } = nativeBinding
+const { configureKeks, generateDek, encryptAes256Gcm, encryptAes256GcmWithAad, encryptAes256GcmBytes, encryptAes256GcmBytesWithAad, encryptAes256GcmBytesWithRawKey, encryptAes256GcmBytesWithRawKeyAndAad, encryptAes256GcmBytesWithConfiguredKek, decryptAes256Gcm, decryptAes256GcmWithAad, decryptAes256GcmBytes, decryptAes256GcmBytesWithAad, decryptAes256GcmBytesWithRawKey, decryptAes256GcmBytesWithRawKeyAndAad, decryptAes256GcmBytesWithConfiguredKek, wrapDek, wrapDekWithAad, unwrapDek, unwrapDekWithAad, wrapDekWithCurrentKek, wrapDekWithCurrentKekAndAad, decryptDekWithStoredKek, unwrapDekWithAadRaw, sha256Hash, hmacSha256Sign, hmacSha256Verify, randomBytesHex, keccak256, privateKeyToEthAddress, privateKeyHexBytesToEthAddress, signSecp256K1HexKey, signSecp256K1 } = nativeBinding
 
 module.exports.configureKeks = configureKeks
 module.exports.generateDek = generateDek
 module.exports.encryptAes256Gcm = encryptAes256Gcm
+module.exports.encryptAes256GcmWithAad = encryptAes256GcmWithAad
 module.exports.encryptAes256GcmBytes = encryptAes256GcmBytes
+module.exports.encryptAes256GcmBytesWithAad = encryptAes256GcmBytesWithAad
 module.exports.encryptAes256GcmBytesWithRawKey = encryptAes256GcmBytesWithRawKey
+module.exports.encryptAes256GcmBytesWithRawKeyAndAad = encryptAes256GcmBytesWithRawKeyAndAad
 module.exports.encryptAes256GcmBytesWithConfiguredKek = encryptAes256GcmBytesWithConfiguredKek
 module.exports.decryptAes256Gcm = decryptAes256Gcm
+module.exports.decryptAes256GcmWithAad = decryptAes256GcmWithAad
 module.exports.decryptAes256GcmBytes = decryptAes256GcmBytes
+module.exports.decryptAes256GcmBytesWithAad = decryptAes256GcmBytesWithAad
 module.exports.decryptAes256GcmBytesWithRawKey = decryptAes256GcmBytesWithRawKey
+module.exports.decryptAes256GcmBytesWithRawKeyAndAad = decryptAes256GcmBytesWithRawKeyAndAad
 module.exports.decryptAes256GcmBytesWithConfiguredKek = decryptAes256GcmBytesWithConfiguredKek
 module.exports.wrapDek = wrapDek
+module.exports.wrapDekWithAad = wrapDekWithAad
 module.exports.unwrapDek = unwrapDek
+module.exports.unwrapDekWithAad = unwrapDekWithAad
 module.exports.wrapDekWithCurrentKek = wrapDekWithCurrentKek
+module.exports.wrapDekWithCurrentKekAndAad = wrapDekWithCurrentKekAndAad
 module.exports.decryptDekWithStoredKek = decryptDekWithStoredKek
+module.exports.unwrapDekWithAadRaw = unwrapDekWithAadRaw
 module.exports.sha256Hash = sha256Hash
 module.exports.hmacSha256Sign = hmacSha256Sign
 module.exports.hmacSha256Verify = hmacSha256Verify

@@ -2,6 +2,10 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import * as crypto from "crypto";
 import { NotFoundException } from "@nestjs/common";
 import { Ed25519SigningService } from "./ed25519-signing.service";
+import {
+  polymarketUsCredentialDekAad,
+  polymarketUsCredentialFieldAad,
+} from "../credentials/credential-aad";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -211,7 +215,21 @@ describe("Ed25519SigningService", () => {
       expect(genDekSpy).toHaveBeenCalledOnce();
     });
 
-    it("encrypts secretKey via encryptField with DEK (not encryptWithMasterKey)", async () => {
+    it("binds the wrapped DEK to Polymarket US row AAD", async () => {
+      const genDekSpy = vi.spyOn(encryption, "generateDek");
+      const { seedHex } = makeEd25519Seed();
+      await svc.importUsCredentials({
+        userId: TEST_UUID,
+        keyId: "key-aad",
+        secretKey: seedHex,
+      });
+
+      expect(genDekSpy).toHaveBeenCalledWith({
+        aad: polymarketUsCredentialDekAad(TEST_UUID),
+      });
+    });
+
+    it("encrypts secretKey via encryptFieldBytes with DEK", async () => {
       const encFieldSpy = vi.spyOn(encryption, "encryptFieldBytes");
       const { seedHex } = makeEd25519Seed();
       await svc.importUsCredentials({
@@ -221,13 +239,20 @@ describe("Ed25519SigningService", () => {
       });
 
       expect(encFieldSpy).toHaveBeenCalledOnce();
+      expect(encFieldSpy).toHaveBeenCalledWith(
+        expect.any(Buffer),
+        expect.any(Buffer),
+        {
+          aad: polymarketUsCredentialFieldAad(TEST_UUID, "secretKey"),
+        },
+      );
     });
 
     it("passes raw seed bytes to encryption without converting them through a JS string", async () => {
       const seedRaw = Buffer.from([
-        0x80, 0x81, 0xfe, 0xff, 0x00, 0x01, 0x7f, 0x42, 0x99, 0xaa, 0xbb,
-        0xcc, 0xdd, 0xee, 0x10, 0x20, 0x30, 0x40, 0x50, 0x60, 0x70, 0x71,
-        0x72, 0x73, 0x74, 0x75, 0x76, 0x77, 0x78, 0x79, 0x7a, 0x7b,
+        0x80, 0x81, 0xfe, 0xff, 0x00, 0x01, 0x7f, 0x42, 0x99, 0xaa, 0xbb, 0xcc,
+        0xdd, 0xee, 0x10, 0x20, 0x30, 0x40, 0x50, 0x60, 0x70, 0x71, 0x72, 0x73,
+        0x74, 0x75, 0x76, 0x77, 0x78, 0x79, 0x7a, 0x7b,
       ]);
       const encryptFieldBytes = encryption.encryptFieldBytes.bind(encryption);
       let capturedSeed: Buffer | undefined;
@@ -387,6 +412,39 @@ describe("Ed25519SigningService", () => {
       ).rejects.toThrow(NotFoundException);
     });
 
+    it("decrypts the stored DEK and secretKey with Polymarket US AAD", async () => {
+      const { seedHex } = makeEd25519Seed();
+      await svc.importUsCredentials({
+        userId: TEST_UUID,
+        keyId: "key-decrypt-aad",
+        secretKey: seedHex,
+      });
+
+      const decryptDekSpy = vi.spyOn(encryption, "decryptDek");
+      const decryptFieldSpy = vi.spyOn(encryption, "decryptFieldBytes");
+      await svc.signRequest(TEST_UUID, "GET", "/v1/markets");
+
+      expect(decryptDekSpy).toHaveBeenCalledWith(
+        expect.any(Uint8Array),
+        expect.any(Uint8Array),
+        1,
+        {
+          aad: polymarketUsCredentialDekAad(TEST_UUID),
+          allowLegacyNoAadFallback: true,
+        },
+      );
+      expect(decryptFieldSpy).toHaveBeenCalledWith(
+        expect.any(Uint8Array),
+        expect.any(Uint8Array),
+        expect.any(Uint8Array),
+        expect.any(Buffer),
+        {
+          aad: polymarketUsCredentialFieldAad(TEST_UUID, "secretKey"),
+          allowLegacyNoAadFallback: true,
+        },
+      );
+    });
+
     it("zeroes the decrypted secret key buffer after signing", async () => {
       const { seedHex } = makeEd25519Seed();
       await svc.importUsCredentials({
@@ -395,7 +453,7 @@ describe("Ed25519SigningService", () => {
         secretKey: seedHex,
       });
 
-      const decryptFieldSpy = vi.spyOn(encryption, "decryptField");
+      const decryptFieldSpy = vi.spyOn(encryption, "decryptFieldBytes");
       await svc.signRequest(TEST_UUID, "GET", "/v1/markets");
 
       const returnedBuf = decryptFieldSpy.mock.results[0]?.value as Buffer;
@@ -427,7 +485,7 @@ describe("Ed25519SigningService", () => {
 
       const badBuf = Buffer.alloc(16, 0xab);
       const decryptFieldSpy = vi
-        .spyOn(encryption, "decryptField")
+        .spyOn(encryption, "decryptFieldBytes")
         .mockReturnValueOnce(badBuf);
 
       await expect(

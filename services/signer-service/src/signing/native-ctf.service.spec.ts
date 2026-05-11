@@ -209,7 +209,7 @@ describe("NativeCtfService", () => {
       global.fetch = vi.fn().mockResolvedValue({
         ok: true,
         json: async () => ({ jsonrpc: "2.0", result: expectedHash, id: 1 }),
-      } as Response);
+      });
 
       const txHash = await svc.broadcastTransaction(
         "http://fake-rpc",
@@ -226,7 +226,7 @@ describe("NativeCtfService", () => {
           error: { message: "nonce too low" },
           id: 1,
         }),
-      } as Response);
+      });
 
       await expect(
         svc.broadcastTransaction("http://fake-rpc", Buffer.alloc(1)),
@@ -238,7 +238,7 @@ describe("NativeCtfService", () => {
         ok: false,
         status: 503,
         json: async () => ({}),
-      } as Response);
+      });
 
       await expect(
         svc.broadcastTransaction("http://fake-rpc", Buffer.alloc(1)),
@@ -251,7 +251,7 @@ describe("NativeCtfService", () => {
       global.fetch = vi.fn().mockResolvedValue({
         ok: true,
         json: async () => ({ jsonrpc: "2.0", result: "0x5", id: 1 }),
-      } as Response);
+      });
 
       const nonce = await svc.getTransactionCount(
         "http://fake-rpc",
@@ -270,7 +270,7 @@ describe("NativeCtfService", () => {
           result: "0x6FC23AC00", // 30 Gwei
           id: 1,
         }),
-      } as Response);
+      });
 
       const gasPrice = await svc.getGasPrice("http://fake-rpc");
       expect(gasPrice).toBe(30_000_000_000n);
@@ -288,7 +288,7 @@ describe("NativeCtfService", () => {
           result: "0x" + "cc".repeat(32),
           id: 1,
         }),
-      } as Response);
+      });
     });
 
     it("throws for unknown chainId", async () => {
@@ -387,7 +387,7 @@ describe("NativeCtfService", () => {
           result: "0x" + "dd".repeat(32),
           id: 1,
         }),
-      } as Response);
+      });
     });
 
     it("returns txHash on success", async () => {
@@ -455,7 +455,7 @@ describe("NativeCtfService", () => {
           result: "0x" + "ee".repeat(32),
           id: 1,
         }),
-      } as Response);
+      });
     });
 
     it("returns txHash on success", async () => {

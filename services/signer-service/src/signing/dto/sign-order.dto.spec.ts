@@ -85,7 +85,9 @@ describe("SignOrderDto orderType/expiration validation", () => {
 
     const errors = await validateDto({ orderType: "GTD" });
 
-    expect(JSON.stringify(errors.map((error) => error.constraints))).not.toMatch(
+    expect(
+      JSON.stringify(errors.map((error) => error.constraints)),
+    ).not.toMatch(
       /GTD|GTC|FOK|FAK|Unix epoch|expiration\s*=\s*0|undefined|now\+30s/i,
     );
   });

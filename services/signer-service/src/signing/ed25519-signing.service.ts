@@ -3,6 +3,10 @@ import * as crypto from "crypto";
 import { PrismaService } from "@polyforge/shared-db";
 import { EncryptionService } from "../encryption/encryption.service";
 import { ImportUsCredentialsDto } from "./dto/import-us-credentials.dto";
+import {
+  polymarketUsCredentialDekAad,
+  polymarketUsCredentialFieldAad,
+} from "../credentials/credential-aad";
 
 const ED25519_PKCS8_PREFIX = Buffer.from(
   "302e020100300506032b657004220420",
@@ -26,13 +30,17 @@ export class Ed25519SigningService {
 
   async importUsCredentials(dto: ImportUsCredentialsDto): Promise<void> {
     const { dek, encryptedDek, dekIv, kekVersion } =
-      this.encryption.generateDek();
+      this.encryption.generateDek({
+        aad: polymarketUsCredentialDekAad(dto.userId),
+      });
 
     let secretKeyEnc: ReturnType<typeof this.encryption.encryptFieldBytes>;
     try {
       const rawSeed = Buffer.from(dto.secretKey, "hex");
       try {
-        secretKeyEnc = this.encryption.encryptFieldBytes(rawSeed, dek);
+        secretKeyEnc = this.encryption.encryptFieldBytes(rawSeed, dek, {
+          aad: polymarketUsCredentialFieldAad(dto.userId, "secretKey"),
+        });
       } finally {
         rawSeed.fill(0);
       }
@@ -82,6 +90,10 @@ export class Ed25519SigningService {
       row.encryptedDek,
       row.dekIv,
       row.kekVersion,
+      {
+        aad: polymarketUsCredentialDekAad(userId),
+        allowLegacyNoAadFallback: true,
+      },
     );
 
     try {
@@ -90,6 +102,10 @@ export class Ed25519SigningService {
         row.secretKeyIv,
         row.secretKeyTag,
         dek,
+        {
+          aad: polymarketUsCredentialFieldAad(userId, "secretKey"),
+          allowLegacyNoAadFallback: true,
+        },
       );
       return { keyId: row.keyId, secretKey };
     } finally {

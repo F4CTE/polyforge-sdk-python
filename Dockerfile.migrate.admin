@@ -1,6 +1,6 @@
 # Dockerfile.migrate.admin — Admin DB migrations (Prisma 7)
 
-FROM node:26-alpine@sha256:e71ac5e964b9201072425d59d2e876359efa25dc96bb1768cb73295728d6e4ea AS builder
+FROM node:24-alpine@sha256:01743339035a5c3c11a373cd7c83aeab6ed1457b55da6a69e014a95ac4e4700b AS builder
 WORKDIR /app
 
 COPY prisma/schema.admin.prisma    ./prisma/schema.admin.prisma
@@ -17,7 +17,7 @@ RUN ADMIN_DIRECT_DATABASE_URL=postgresql://ci:ci@localhost:5432/ci_admin \
       --schema ./prisma/schema.admin.prisma \
       --config ./prisma/prisma.admin.config.ts
 
-FROM node:26-alpine@sha256:e71ac5e964b9201072425d59d2e876359efa25dc96bb1768cb73295728d6e4ea AS runner
+FROM node:24-alpine@sha256:01743339035a5c3c11a373cd7c83aeab6ed1457b55da6a69e014a95ac4e4700b AS runner
 WORKDIR /app
 
 RUN addgroup --system migrate && adduser --system --ingroup migrate migrate

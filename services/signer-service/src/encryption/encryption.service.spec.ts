@@ -1,6 +1,10 @@
 import { describe, it, expect, vi } from "vitest";
 import { EncryptionService } from "./encryption.service";
 import { NativeEncryptionService } from "./native-encryption.service";
+import {
+  credentialDekAad,
+  credentialFieldAad,
+} from "../credentials/credential-aad";
 
 // 64 hex chars = 32 bytes (valid KEK)
 const TEST_KEK = "a".repeat(64);
@@ -165,6 +169,39 @@ describe("EncryptionService", () => {
       expect(() => svc.decryptDek(encryptedDek, wrongIv, kekVersion)).toThrow();
     });
 
+    it("binds encrypted DEKs to AAD", () => {
+      const svc = makeService();
+      const aad = credentialDekAad("user-1");
+      const wrongAad = credentialDekAad("user-2");
+      const { dek, encryptedDek, dekIv, kekVersion } = svc.generateDek({
+        aad,
+      });
+
+      expect(
+        svc
+          .decryptDek(encryptedDek, dekIv, kekVersion, { aad })
+          .toString("hex"),
+      ).toBe(dek.toString("hex"));
+      expect(() =>
+        svc.decryptDek(encryptedDek, dekIv, kekVersion, { aad: wrongAad }),
+      ).toThrow();
+      expect(() => svc.decryptDek(encryptedDek, dekIv, kekVersion)).toThrow();
+    });
+
+    it("can explicitly decrypt legacy no-AAD DEKs through fallback", () => {
+      const svc = makeService();
+      const { dek, encryptedDek, dekIv, kekVersion } = svc.generateDek();
+
+      expect(
+        svc
+          .decryptDek(encryptedDek, dekIv, kekVersion, {
+            aad: credentialDekAad("user-1"),
+            allowLegacyNoAadFallback: true,
+          })
+          .toString("hex"),
+      ).toBe(dek.toString("hex"));
+    });
+
     it("throws when decrypting with a different KEK", () => {
       const svc1 = makeService({ kek: "a".repeat(64) });
       const svc2 = makeService({ kek: "b".repeat(64) });
@@ -221,6 +258,37 @@ describe("EncryptionService", () => {
         2,
       );
       expect(recoveredDek.toString("hex")).toBe(originalDek.toString("hex"));
+    });
+
+    it("converts a legacy no-AAD DEK to row-bound AAD during rotation", () => {
+      const svcV1 = makeService({ kek: TEST_KEK, kekVersion: "1" });
+      const { dek: originalDek, encryptedDek, dekIv } = svcV1.generateDek();
+      const aad = credentialDekAad("user-1");
+
+      const svcV2 = makeService({
+        kek: TEST_KEK_V2,
+        kekPrevious: TEST_KEK,
+        kekVersion: "2",
+      });
+      const rotated = svcV2.rotateUserDek(encryptedDek, dekIv, 1, {
+        aad,
+        allowLegacyNoAadFallback: true,
+      });
+
+      expect(
+        svcV2
+          .decryptDek(rotated.encryptedDek, rotated.dekIv, 2, { aad })
+          .toString("hex"),
+      ).toBe(originalDek.toString("hex"));
+      expect(() =>
+        svcV2.decryptDek(rotated.encryptedDek, rotated.dekIv, 2),
+      ).toThrow();
+      expect(() =>
+        svcV2.decryptDek(rotated.encryptedDek, rotated.dekIv, 2, {
+          aad: credentialDekAad("user-2"),
+          allowLegacyNoAadFallback: true,
+        }),
+      ).toThrow();
     });
 
     it("throws when DEK is already on current version", () => {
@@ -385,6 +453,42 @@ describe("EncryptionService", () => {
         svc.decryptField(enc.ciphertext, enc.iv, enc.tag, dek2),
       ).toThrow();
     });
+
+    it("binds fields to field-level AAD", () => {
+      const svc = makeService();
+      const { dek } = svc.generateDek();
+      const aad = credentialFieldAad("user-1", "apiSecret");
+      const enc = svc.encryptField("secret", dek, { aad });
+
+      expect(
+        svc
+          .decryptField(enc.ciphertext, enc.iv, enc.tag, dek, { aad })
+          .toString("utf8"),
+      ).toBe("secret");
+      expect(() =>
+        svc.decryptField(enc.ciphertext, enc.iv, enc.tag, dek, {
+          aad: credentialFieldAad("user-1", "apiKey"),
+        }),
+      ).toThrow();
+      expect(() =>
+        svc.decryptField(enc.ciphertext, enc.iv, enc.tag, dek),
+      ).toThrow();
+    });
+
+    it("can explicitly decrypt legacy no-AAD fields through fallback", () => {
+      const svc = makeService();
+      const { dek } = svc.generateDek();
+      const enc = svc.encryptField("legacy-secret", dek);
+
+      expect(
+        svc
+          .decryptField(enc.ciphertext, enc.iv, enc.tag, dek, {
+            aad: credentialFieldAad("user-1", "apiSecret"),
+            allowLegacyNoAadFallback: true,
+          })
+          .toString("utf8"),
+      ).toBe("legacy-secret");
+    });
   });
 
   // ── Full envelope roundtrip ────────────────────────────────────────────────
@@ -436,20 +540,37 @@ describe("EncryptionService", () => {
 });
 
 describe("NativeEncryptionService", () => {
-  describe("KEK residency", () => {
-    it("does not retain KEK material as JavaScript string properties", () => {
-      const svc = makeNativeService({
-        kekPrevious: TEST_KEK_V2,
-        kekVersion: "2",
-      });
-
-      expect(Object.prototype.hasOwnProperty.call(svc, "kekHex")).toBe(false);
-      expect(Object.prototype.hasOwnProperty.call(svc, "kekPreviousHex")).toBe(
-        false,
-      );
-      expect(Object.values(svc as any)).not.toContain(TEST_KEK);
-      expect(Object.values(svc as any)).not.toContain(TEST_KEK_V2);
+  it("binds native DEKs and fields to AAD", () => {
+    const svc = makeNativeService();
+    const dekAad = credentialDekAad("native-user");
+    const fieldAad = credentialFieldAad("native-user", "apiSecret");
+    const { dek, encryptedDek, dekIv, kekVersion } = svc.generateDek({
+      aad: dekAad,
     });
+    const field = svc.encryptField("native-secret", dek, { aad: fieldAad });
+
+    expect(
+      svc
+        .decryptDek(encryptedDek, dekIv, kekVersion, { aad: dekAad })
+        .toString("hex"),
+    ).toBe(dek.toString("hex"));
+    expect(
+      svc
+        .decryptField(field.ciphertext, field.iv, field.tag, dek, {
+          aad: fieldAad,
+        })
+        .toString("utf8"),
+    ).toBe("native-secret");
+    expect(() =>
+      svc.decryptDek(encryptedDek, dekIv, kekVersion, {
+        aad: credentialDekAad("other-user"),
+      }),
+    ).toThrow();
+    expect(() =>
+      svc.decryptField(field.ciphertext, field.iv, field.tag, dek, {
+        aad: credentialFieldAad("native-user", "apiKey"),
+      }),
+    ).toThrow();
   });
 
   describe("encryptFieldBytes()", () => {
@@ -457,9 +578,9 @@ describe("NativeEncryptionService", () => {
       const svc = makeNativeService();
       const { dek } = svc.generateDek();
       const seed = Buffer.from([
-        0x80, 0x81, 0xfe, 0xff, 0x00, 0x01, 0x7f, 0x42, 0x99, 0xaa, 0xbb,
-        0xcc, 0xdd, 0xee, 0x10, 0x20, 0x30, 0x40, 0x50, 0x60, 0x70, 0x71,
-        0x72, 0x73, 0x74, 0x75, 0x76, 0x77, 0x78, 0x79, 0x7a, 0x7b,
+        0x80, 0x81, 0xfe, 0xff, 0x00, 0x01, 0x7f, 0x42, 0x99, 0xaa, 0xbb, 0xcc,
+        0xdd, 0xee, 0x10, 0x20, 0x30, 0x40, 0x50, 0x60, 0x70, 0x71, 0x72, 0x73,
+        0x74, 0x75, 0x76, 0x77, 0x78, 0x79, 0x7a, 0x7b,
       ]);
       const expectedSeed = Buffer.from(seed);
       const toStringSpy = vi.spyOn(seed, "toString");

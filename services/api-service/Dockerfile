@@ -1,5 +1,5 @@
-# SECURITY: Pin to digest in production. Run: docker inspect --format='{{index .RepoDigests 0}}' node:26-alpine
-FROM node:26-slim@sha256:424cafd2a035ed2b2d74acc3142b68b426fb62a47742c80a75e7117db02d6b30 AS builder
+# SECURITY: Pinned to manifest-list digest (node:24-slim). Run: docker buildx imagetools inspect node:24-slim
+FROM node:24-slim@sha256:24dc26ef1e3c3690f27ebc4136c9c186c3133b25563ae4d7f0692e4d1fe5db0e AS builder
 
 WORKDIR /app
 
@@ -52,8 +52,8 @@ RUN DIRECT_DATABASE_URL=placeholder ADMIN_DIRECT_DATABASE_URL=placeholder \
     (cd services/api-service && /usr/local/bin/tsc -p tsconfig.build.json)
 
 # ── Runtime ──────────────────────────────────────────────────────────────────
-# SECURITY: Pin to digest in production. Run: docker inspect --format='{{index .RepoDigests 0}}' node:26-alpine
-FROM node:26-alpine@sha256:e71ac5e964b9201072425d59d2e876359efa25dc96bb1768cb73295728d6e4ea
+# SECURITY: Pinned to manifest-list digest (node:24-alpine). Run: docker buildx imagetools inspect node:24-alpine
+FROM node:24-alpine@sha256:d1b3b4da11eefd5941e7f0b9cf17783fc99d9c6fc34884a665f40a06dbdfc94f
 
 WORKDIR /app
 

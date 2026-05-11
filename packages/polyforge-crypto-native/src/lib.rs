@@ -1,15 +1,15 @@
+use aes_gcm::aead::{Aead, Payload};
+use aes_gcm::{Aes256Gcm, Key, KeyInit, Nonce};
+use hmac::{Hmac, Mac};
+use k256::ecdsa::{signature::hazmat::PrehashSigner, RecoveryId, SigningKey};
+use k256::FieldBytes;
 use napi::bindgen_prelude::*;
 use napi_derive::napi;
-use aes_gcm::{Aes256Gcm, Key, Nonce, KeyInit};
-use aes_gcm::aead::Aead;
-use sha2::{Sha256, Digest};
-use sha3::{Keccak256, Digest as Keccak256Digest};
-use hmac::{Hmac, Mac};
-use rand::TryRngCore;
 use rand::rngs::OsRng;
+use rand::TryRngCore;
+use sha2::{Digest, Sha256};
+use sha3::{Digest as Keccak256Digest, Keccak256};
 use zeroize::Zeroizing;
-use k256::ecdsa::{SigningKey, signature::hazmat::PrehashSigner, RecoveryId};
-use k256::FieldBytes;
 use std::sync::{Mutex, OnceLock};
 
 type HmacSha256 = Hmac<Sha256>;
@@ -76,24 +76,64 @@ pub fn generate_dek() -> Buffer {
 /// Key material is zeroized after use.
 #[napi]
 pub fn encrypt_aes256gcm(plaintext: String, key_hex: String) -> Result<String> {
-    encrypt_aes256gcm_bytes_inner(plaintext.as_bytes(), key_hex)
+    encrypt_aes256gcm_bytes_inner(plaintext.as_bytes(), key_hex, None)
+}
+
+/// Encrypt plaintext using AES-256-GCM with additional authenticated data.
+/// `aad_hex` is authenticated but not encrypted.
+#[napi]
+pub fn encrypt_aes256gcm_with_aad(
+    plaintext: String,
+    key_hex: String,
+    aad_hex: String,
+) -> Result<String> {
+    encrypt_aes256gcm_bytes_inner(plaintext.as_bytes(), key_hex, Some(aad_hex))
 }
 
 /// Encrypt arbitrary bytes using AES-256-GCM. Returns JSON { ciphertext, iv, tag } as hex.
 /// Key material is zeroized after use.
 #[napi]
 pub fn encrypt_aes256gcm_bytes(plaintext: Buffer, key_hex: String) -> Result<String> {
-    encrypt_aes256gcm_bytes_inner(plaintext.as_ref(), key_hex)
+    encrypt_aes256gcm_bytes_inner(plaintext.as_ref(), key_hex, None)
 }
 
-fn encrypt_aes256gcm_bytes_inner(plaintext: &[u8], key_hex: String) -> Result<String> {
+/// Encrypt arbitrary bytes using AES-256-GCM with additional authenticated data.
+/// `aad_hex` is authenticated but not encrypted.
+#[napi]
+pub fn encrypt_aes256gcm_bytes_with_aad(
+    plaintext: Buffer,
+    key_hex: String,
+    aad_hex: String,
+) -> Result<String> {
+    encrypt_aes256gcm_bytes_inner(plaintext.as_ref(), key_hex, Some(aad_hex))
+}
+
+fn decode_aad(aad_hex: Option<String>) -> Result<Zeroizing<Vec<u8>>> {
+    match aad_hex {
+        Some(hex) => {
+            Ok(Zeroizing::new(hex::decode(&hex).map_err(|e| {
+                Error::from_reason(format!("Invalid AAD hex: {}", e))
+            })?))
+        }
+        None => Ok(Zeroizing::new(Vec::new())),
+    }
+}
+
+fn encrypt_aes256gcm_bytes_inner(
+    plaintext: &[u8],
+    key_hex: String,
+    aad_hex: Option<String>,
+) -> Result<String> {
     let key_bytes = Zeroizing::new(
-        hex::decode(&key_hex).map_err(|e| Error::from_reason(format!("Invalid key hex: {}", e)))?
+        hex::decode(&key_hex).map_err(|e| Error::from_reason(format!("Invalid key hex: {}", e)))?,
     );
-    encrypt_aes256gcm_with_key_bytes_inner(plaintext, &key_bytes)
-}
-
-fn encrypt_aes256gcm_with_key_bytes_inner(plaintext: &[u8], key_bytes: &[u8]) -> Result<String> {
+    if key_bytes.len() != 32 {
+        return Err(Error::from_reason(format!(
+            "key must decode to exactly 32 bytes, got {}",
+            key_bytes.len()
+        )));
+    }
+    let aad_bytes = decode_aad(aad_hex)?;
     let key = Key::<Aes256Gcm>::from_slice(&key_bytes);
     let cipher = Aes256Gcm::new(key);
 
@@ -101,7 +141,14 @@ fn encrypt_aes256gcm_with_key_bytes_inner(plaintext: &[u8], key_bytes: &[u8]) ->
     OsRng.try_fill_bytes(&mut iv_bytes).expect("OS RNG failed");
     let nonce = Nonce::from_slice(&iv_bytes);
 
-    let ciphertext = cipher.encrypt(nonce, plaintext)
+    let ciphertext = cipher
+        .encrypt(
+            nonce,
+            Payload {
+                msg: plaintext,
+                aad: aad_bytes.as_ref(),
+            },
+        )
         .map_err(|e| Error::from_reason(format!("Encryption failed: {}", e)))?;
 
     let (ct, tag) = ciphertext.split_at(ciphertext.len() - 16);
@@ -110,7 +157,124 @@ fn encrypt_aes256gcm_with_key_bytes_inner(plaintext: &[u8], key_bytes: &[u8]) ->
         "ciphertext": hex::encode(ct),
         "iv": hex::encode(iv_bytes),
         "tag": hex::encode(tag)
-    }).to_string())
+    })
+    .to_string())
+}
+
+fn encrypt_aes256gcm_with_key_bytes_inner(plaintext: &[u8], key_bytes: &[u8]) -> Result<String> {
+    if key_bytes.len() != 32 {
+        return Err(Error::from_reason(format!(
+            "key must be exactly 32 bytes, got {}",
+            key_bytes.len()
+        )));
+    }
+    let key = Key::<Aes256Gcm>::from_slice(key_bytes);
+    let cipher = Aes256Gcm::new(key);
+
+    let mut iv_bytes = [0u8; 12];
+    OsRng.try_fill_bytes(&mut iv_bytes).expect("OS RNG failed");
+    let nonce = Nonce::from_slice(&iv_bytes);
+
+    let ciphertext = cipher
+        .encrypt(nonce, Payload { msg: plaintext, aad: b"" })
+        .map_err(|e| Error::from_reason(format!("Encryption failed: {}", e)))?;
+
+    let (ct, tag) = ciphertext.split_at(ciphertext.len() - 16);
+
+    Ok(serde_json::json!({
+        "ciphertext": hex::encode(ct),
+        "iv": hex::encode(iv_bytes),
+        "tag": hex::encode(tag)
+    })
+    .to_string())
+}
+
+fn encrypt_aes256gcm_with_raw_key_and_aad_inner(
+    plaintext: &[u8],
+    key_bytes: &[u8],
+    aad_hex: Option<String>,
+) -> Result<String> {
+    if key_bytes.len() != 32 {
+        return Err(Error::from_reason(format!(
+            "key must be exactly 32 bytes, got {}",
+            key_bytes.len()
+        )));
+    }
+    let aad_bytes = decode_aad(aad_hex)?;
+    let key = Key::<Aes256Gcm>::from_slice(key_bytes);
+    let cipher = Aes256Gcm::new(key);
+
+    let mut iv_bytes = [0u8; 12];
+    OsRng.try_fill_bytes(&mut iv_bytes).expect("OS RNG failed");
+    let nonce = Nonce::from_slice(&iv_bytes);
+
+    let ciphertext = cipher
+        .encrypt(
+            nonce,
+            Payload {
+                msg: plaintext,
+                aad: aad_bytes.as_ref(),
+            },
+        )
+        .map_err(|e| Error::from_reason(format!("Encryption failed: {}", e)))?;
+
+    let (ct, tag) = ciphertext.split_at(ciphertext.len() - 16);
+
+    Ok(serde_json::json!({
+        "ciphertext": hex::encode(ct),
+        "iv": hex::encode(iv_bytes),
+        "tag": hex::encode(tag)
+    })
+    .to_string())
+}
+
+fn decrypt_aes256gcm_with_raw_key_and_aad_inner(
+    ciphertext_hex: String,
+    iv_hex: String,
+    tag_hex: String,
+    key_bytes: &[u8],
+    aad_hex: Option<String>,
+) -> Result<Zeroizing<Vec<u8>>> {
+    if key_bytes.len() != 32 {
+        return Err(Error::from_reason(format!(
+            "key must be exactly 32 bytes, got {}",
+            key_bytes.len()
+        )));
+    }
+    let aad_bytes = decode_aad(aad_hex)?;
+    let key = Key::<Aes256Gcm>::from_slice(key_bytes);
+    let cipher = Aes256Gcm::new(key);
+
+    let iv = hex::decode(&iv_hex).map_err(|e| Error::from_reason(format!("Invalid IV: {}", e)))?;
+    if iv.len() != 12 {
+        return Err(Error::from_reason(format!(
+            "IV must be exactly 12 bytes for GCM, got {}",
+            iv.len()
+        )));
+    }
+    let nonce = Nonce::from_slice(&iv);
+
+    let ct = hex::decode(&ciphertext_hex)
+        .map_err(|e| Error::from_reason(format!("Invalid ciphertext: {}", e)))?;
+    let tag =
+        hex::decode(&tag_hex).map_err(|e| Error::from_reason(format!("Invalid tag: {}", e)))?;
+
+    let mut combined = ct;
+    combined.extend_from_slice(&tag);
+
+    let plaintext = Zeroizing::new(
+        cipher
+            .decrypt(
+                nonce,
+                Payload {
+                    msg: combined.as_ref(),
+                    aad: aad_bytes.as_ref(),
+                },
+            )
+            .map_err(|e| Error::from_reason(format!("Decryption failed: {}", e)))?,
+    );
+
+    Ok(plaintext)
 }
 
 /// Encrypt arbitrary bytes using a raw 32-byte key Buffer.
@@ -125,6 +289,18 @@ pub fn encrypt_aes256gcm_bytes_with_raw_key(plaintext: Buffer, key: Buffer) -> R
     encrypt_aes256gcm_with_key_bytes_inner(plaintext.as_ref(), key.as_ref())
 }
 
+/// Encrypt arbitrary bytes using a raw 32-byte key Buffer with additional authenticated data.
+/// AAD is authenticated but not encrypted.  The key stays as a raw Buffer
+/// through the NAPI boundary — no hex-string conversion in JavaScript.
+#[napi]
+pub fn encrypt_aes256gcm_bytes_with_raw_key_and_aad(
+    plaintext: Buffer,
+    key: Buffer,
+    aad_hex: String,
+) -> Result<String> {
+    encrypt_aes256gcm_with_raw_key_and_aad_inner(plaintext.as_ref(), key.as_ref(), Some(aad_hex))
+}
+
 /// Encrypt arbitrary bytes using the configured current KEK.
 #[napi]
 pub fn encrypt_aes256gcm_bytes_with_configured_kek(plaintext: Buffer) -> Result<String> {
@@ -137,8 +313,34 @@ pub fn encrypt_aes256gcm_bytes_with_configured_kek(plaintext: Buffer) -> Result<
 
 /// Decrypt AES-256-GCM ciphertext. Key material is zeroized after use.
 #[napi]
-pub fn decrypt_aes256gcm(ciphertext_hex: String, iv_hex: String, tag_hex: String, key_hex: String) -> Result<String> {
-    let mut plaintext = decrypt_aes256gcm_bytes_inner(ciphertext_hex, iv_hex, tag_hex, key_hex)?;
+pub fn decrypt_aes256gcm(
+    ciphertext_hex: String,
+    iv_hex: String,
+    tag_hex: String,
+    key_hex: String,
+) -> Result<String> {
+    let mut plaintext =
+        decrypt_aes256gcm_bytes_inner(ciphertext_hex, iv_hex, tag_hex, key_hex, None)?;
+    let result = String::from_utf8(plaintext.to_vec())
+        .map_err(|e| Error::from_reason(format!("Invalid UTF-8: {}", e)))?;
+
+    // Zeroize plaintext buffer
+    plaintext.iter_mut().for_each(|b| *b = 0);
+
+    Ok(result)
+}
+
+/// Decrypt AES-256-GCM ciphertext with additional authenticated data.
+#[napi]
+pub fn decrypt_aes256gcm_with_aad(
+    ciphertext_hex: String,
+    iv_hex: String,
+    tag_hex: String,
+    key_hex: String,
+    aad_hex: String,
+) -> Result<String> {
+    let mut plaintext =
+        decrypt_aes256gcm_bytes_inner(ciphertext_hex, iv_hex, tag_hex, key_hex, Some(aad_hex))?;
     let result = String::from_utf8(plaintext.to_vec())
         .map_err(|e| Error::from_reason(format!("Invalid UTF-8: {}", e)))?;
 
@@ -150,8 +352,14 @@ pub fn decrypt_aes256gcm(ciphertext_hex: String, iv_hex: String, tag_hex: String
 
 /// Decrypt AES-256-GCM ciphertext as arbitrary bytes. Key material is zeroized after use.
 #[napi]
-pub fn decrypt_aes256gcm_bytes(ciphertext_hex: String, iv_hex: String, tag_hex: String, key_hex: String) -> Result<Buffer> {
-    let mut plaintext = decrypt_aes256gcm_bytes_inner(ciphertext_hex, iv_hex, tag_hex, key_hex)?;
+pub fn decrypt_aes256gcm_bytes(
+    ciphertext_hex: String,
+    iv_hex: String,
+    tag_hex: String,
+    key_hex: String,
+) -> Result<Buffer> {
+    let mut plaintext =
+        decrypt_aes256gcm_bytes_inner(ciphertext_hex, iv_hex, tag_hex, key_hex, None)?;
     let result = Buffer::from(plaintext.to_vec());
 
     // Zeroize plaintext buffer
@@ -160,29 +368,108 @@ pub fn decrypt_aes256gcm_bytes(ciphertext_hex: String, iv_hex: String, tag_hex: 
     Ok(result)
 }
 
-fn decrypt_aes256gcm_bytes_inner(ciphertext_hex: String, iv_hex: String, tag_hex: String, key_hex: String) -> Result<Zeroizing<Vec<u8>>> {
-    let key_bytes = Zeroizing::new(
-        hex::decode(&key_hex).map_err(|e| Error::from_reason(format!("Invalid key: {}", e)))?
-    );
-    decrypt_aes256gcm_with_key_bytes_inner(ciphertext_hex, iv_hex, tag_hex, &key_bytes)
+/// Decrypt AES-256-GCM ciphertext as arbitrary bytes with additional authenticated data.
+#[napi]
+pub fn decrypt_aes256gcm_bytes_with_aad(
+    ciphertext_hex: String,
+    iv_hex: String,
+    tag_hex: String,
+    key_hex: String,
+    aad_hex: String,
+) -> Result<Buffer> {
+    let mut plaintext =
+        decrypt_aes256gcm_bytes_inner(ciphertext_hex, iv_hex, tag_hex, key_hex, Some(aad_hex))?;
+    let result = Buffer::from(plaintext.to_vec());
+
+    // Zeroize plaintext buffer
+    plaintext.iter_mut().for_each(|b| *b = 0);
+
+    Ok(result)
 }
 
-fn decrypt_aes256gcm_with_key_bytes_inner(ciphertext_hex: String, iv_hex: String, tag_hex: String, key_bytes: &[u8]) -> Result<Zeroizing<Vec<u8>>> {
+fn decrypt_aes256gcm_bytes_inner(
+    ciphertext_hex: String,
+    iv_hex: String,
+    tag_hex: String,
+    key_hex: String,
+    aad_hex: Option<String>,
+) -> Result<Zeroizing<Vec<u8>>> {
+    let key_bytes = Zeroizing::new(
+        hex::decode(&key_hex).map_err(|e| Error::from_reason(format!("Invalid key: {}", e)))?,
+    );
+    if key_bytes.len() != 32 {
+        return Err(Error::from_reason(format!(
+            "key must decode to exactly 32 bytes, got {}",
+            key_bytes.len()
+        )));
+    }
+    let aad_bytes = decode_aad(aad_hex)?;
     let key = Key::<Aes256Gcm>::from_slice(&key_bytes);
     let cipher = Aes256Gcm::new(key);
 
     let iv = hex::decode(&iv_hex).map_err(|e| Error::from_reason(format!("Invalid IV: {}", e)))?;
+    if iv.len() != 12 {
+        return Err(Error::from_reason(format!(
+            "IV must be exactly 12 bytes for GCM, got {}",
+            iv.len()
+        )));
+    }
     let nonce = Nonce::from_slice(&iv);
 
-    let ct = hex::decode(&ciphertext_hex).map_err(|e| Error::from_reason(format!("Invalid ciphertext: {}", e)))?;
-    let tag = hex::decode(&tag_hex).map_err(|e| Error::from_reason(format!("Invalid tag: {}", e)))?;
+    let ct = hex::decode(&ciphertext_hex)
+        .map_err(|e| Error::from_reason(format!("Invalid ciphertext: {}", e)))?;
+    let tag =
+        hex::decode(&tag_hex).map_err(|e| Error::from_reason(format!("Invalid tag: {}", e)))?;
 
     let mut combined = ct;
     combined.extend_from_slice(&tag);
 
     let plaintext = Zeroizing::new(
-        cipher.decrypt(nonce, combined.as_ref())
-            .map_err(|e| Error::from_reason(format!("Decryption failed: {}", e)))?
+        cipher
+            .decrypt(
+                nonce,
+                Payload {
+                    msg: combined.as_ref(),
+                    aad: aad_bytes.as_ref(),
+                },
+            )
+            .map_err(|e| Error::from_reason(format!("Decryption failed: {}", e)))?,
+    );
+
+    Ok(plaintext)
+}
+
+fn decrypt_aes256gcm_with_key_bytes_inner(ciphertext_hex: String, iv_hex: String, tag_hex: String, key_bytes: &[u8]) -> Result<Zeroizing<Vec<u8>>> {
+    if key_bytes.len() != 32 {
+        return Err(Error::from_reason(format!(
+            "key must be exactly 32 bytes, got {}",
+            key_bytes.len()
+        )));
+    }
+    let key = Key::<Aes256Gcm>::from_slice(key_bytes);
+    let cipher = Aes256Gcm::new(key);
+
+    let iv = hex::decode(&iv_hex).map_err(|e| Error::from_reason(format!("Invalid IV: {}", e)))?;
+    if iv.len() != 12 {
+        return Err(Error::from_reason(format!(
+            "IV must be exactly 12 bytes for GCM, got {}",
+            iv.len()
+        )));
+    }
+    let nonce = Nonce::from_slice(&iv);
+
+    let ct = hex::decode(&ciphertext_hex)
+        .map_err(|e| Error::from_reason(format!("Invalid ciphertext: {}", e)))?;
+    let tag =
+        hex::decode(&tag_hex).map_err(|e| Error::from_reason(format!("Invalid tag: {}", e)))?;
+
+    let mut combined = ct;
+    combined.extend_from_slice(&tag);
+
+    let plaintext = Zeroizing::new(
+        cipher
+            .decrypt(nonce, Payload { msg: combined.as_ref(), aad: b"" })
+            .map_err(|e| Error::from_reason(format!("Decryption failed: {}", e)))?,
     );
 
     Ok(plaintext)
@@ -198,6 +485,29 @@ pub fn decrypt_aes256gcm_bytes_with_raw_key(ciphertext_hex: String, iv_hex: Stri
         )));
     }
     let mut plaintext = decrypt_aes256gcm_with_key_bytes_inner(ciphertext_hex, iv_hex, tag_hex, key.as_ref())?;
+    let result = Buffer::from(plaintext.to_vec());
+    plaintext.iter_mut().for_each(|b| *b = 0);
+    Ok(result)
+}
+
+/// Decrypt AES-256-GCM ciphertext as bytes using a raw 32-byte key Buffer
+/// with additional authenticated data.  The key stays as a raw Buffer
+/// through the NAPI boundary — no hex-string conversion in JavaScript.
+#[napi]
+pub fn decrypt_aes256gcm_bytes_with_raw_key_and_aad(
+    ciphertext_hex: String,
+    iv_hex: String,
+    tag_hex: String,
+    key: Buffer,
+    aad_hex: String,
+) -> Result<Buffer> {
+    let mut plaintext = decrypt_aes256gcm_with_raw_key_and_aad_inner(
+        ciphertext_hex,
+        iv_hex,
+        tag_hex,
+        key.as_ref(),
+        Some(aad_hex),
+    )?;
     let result = Buffer::from(plaintext.to_vec());
     plaintext.iter_mut().for_each(|b| *b = 0);
     Ok(result)
@@ -222,15 +532,42 @@ pub fn wrap_dek(dek_hex: String, kek_hex: String) -> Result<String> {
     encrypt_aes256gcm(dek_hex, kek_hex)
 }
 
+/// Encrypt a DEK with a KEK and additional authenticated data.
+#[napi]
+pub fn wrap_dek_with_aad(dek_hex: String, kek_hex: String, aad_hex: String) -> Result<String> {
+    encrypt_aes256gcm_with_aad(dek_hex, kek_hex, aad_hex)
+}
+
 /// Decrypt a DEK with a KEK
 #[napi]
 pub fn unwrap_dek(wrapped_json: String, kek_hex: String) -> Result<String> {
     let parsed: serde_json::Value = serde_json::from_str(&wrapped_json)
         .map_err(|e| Error::from_reason(format!("Invalid JSON: {}", e)))?;
-    let ct = parsed["ciphertext"].as_str().unwrap_or_default().to_string();
+    let ct = parsed["ciphertext"]
+        .as_str()
+        .unwrap_or_default()
+        .to_string();
     let iv = parsed["iv"].as_str().unwrap_or_default().to_string();
     let tag = parsed["tag"].as_str().unwrap_or_default().to_string();
     decrypt_aes256gcm(ct, iv, tag, kek_hex)
+}
+
+/// Decrypt a DEK with a KEK and additional authenticated data.
+#[napi]
+pub fn unwrap_dek_with_aad(
+    wrapped_json: String,
+    kek_hex: String,
+    aad_hex: String,
+) -> Result<String> {
+    let parsed: serde_json::Value = serde_json::from_str(&wrapped_json)
+        .map_err(|e| Error::from_reason(format!("Invalid JSON: {}", e)))?;
+    let ct = parsed["ciphertext"]
+        .as_str()
+        .unwrap_or_default()
+        .to_string();
+    let iv = parsed["iv"].as_str().unwrap_or_default().to_string();
+    let tag = parsed["tag"].as_str().unwrap_or_default().to_string();
+    decrypt_aes256gcm_with_aad(ct, iv, tag, kek_hex, aad_hex)
 }
 
 /// Encrypt a raw DEK Buffer with the configured current KEK.
@@ -249,6 +586,27 @@ pub fn wrap_dek_with_current_kek(dek: Buffer) -> Result<String> {
     encrypt_aes256gcm_with_key_bytes_inner(dek.as_ref(), &guard.current)
 }
 
+/// Encrypt a raw DEK Buffer with the configured current KEK using additional
+/// authenticated data.  The DEK stays as a raw Buffer through the NAPI
+/// boundary — no hex-string conversion in JavaScript.
+#[napi]
+pub fn wrap_dek_with_current_kek_and_aad(
+    dek: Buffer,
+    aad_hex: String,
+) -> Result<String> {
+    if dek.len() != 32 {
+        return Err(Error::from_reason(format!(
+            "DEK must be exactly 32 bytes, got {}",
+            dek.len()
+        )));
+    }
+    let store = kek_store()?;
+    let guard = store
+        .lock()
+        .map_err(|_| Error::from_reason("KEK store lock poisoned"))?;
+    encrypt_aes256gcm_with_raw_key_and_aad_inner(dek.as_ref(), &guard.current, Some(aad_hex))
+}
+
 /// Decrypt a stored DEK using the configured current or previous KEK.
 #[napi]
 pub fn decrypt_dek_with_stored_kek(ciphertext_hex: String, iv_hex: String, tag_hex: String, use_previous: bool) -> Result<Buffer> {
@@ -265,6 +623,45 @@ pub fn decrypt_dek_with_stored_kek(ciphertext_hex: String, iv_hex: String, tag_h
         &guard.current
     };
     let mut plaintext = decrypt_aes256gcm_with_key_bytes_inner(ciphertext_hex, iv_hex, tag_hex, key)?;
+    let result = Buffer::from(plaintext.to_vec());
+    plaintext.iter_mut().for_each(|b| *b = 0);
+    Ok(result)
+}
+
+/// Decrypt a stored DEK using the configured current or previous KEK with
+/// additional authenticated data.  Returns raw DEK Buffer rather than a
+/// hex string so key material never enters the V8 heap as an immutable string.
+#[napi]
+pub fn unwrap_dek_with_aad_raw(
+    wrapped_json: String,
+    use_previous: bool,
+    aad_hex: String,
+) -> Result<Buffer> {
+    let parsed: serde_json::Value = serde_json::from_str(&wrapped_json)
+        .map_err(|e| Error::from_reason(format!("Invalid JSON: {}", e)))?;
+    let ct = parsed["ciphertext"]
+        .as_str()
+        .unwrap_or_default()
+        .to_string();
+    let iv = parsed["iv"].as_str().unwrap_or_default().to_string();
+    let tag = parsed["tag"].as_str().unwrap_or_default().to_string();
+
+    let store = kek_store()?;
+    let guard = store
+        .lock()
+        .map_err(|_| Error::from_reason("KEK store lock poisoned"))?;
+    let key = if use_previous {
+        guard
+            .previous
+            .as_ref()
+            .ok_or_else(|| Error::from_reason("Previous KEK is not configured"))?
+    } else {
+        &guard.current
+    };
+
+    let mut plaintext = decrypt_aes256gcm_with_raw_key_and_aad_inner(
+        ct, iv, tag, key, Some(aad_hex),
+    )?;
     let result = Buffer::from(plaintext.to_vec());
     plaintext.iter_mut().for_each(|b| *b = 0);
     Ok(result)
@@ -292,7 +689,8 @@ pub fn hmac_sha256_verify(message: String, secret: String, expected_hex: String)
     let mut mac = <HmacSha256 as Mac>::new_from_slice(secret.as_bytes())
         .map_err(|e| Error::from_reason(format!("HMAC init failed: {}", e)))?;
     mac.update(message.as_bytes());
-    let expected = hex::decode(&expected_hex).map_err(|e| Error::from_reason(format!("Invalid hex: {}", e)))?;
+    let expected = hex::decode(&expected_hex)
+        .map_err(|e| Error::from_reason(format!("Invalid hex: {}", e)))?;
     Ok(mac.verify_slice(&expected).is_ok())
 }
 
@@ -338,12 +736,13 @@ pub fn private_key_to_eth_address(private_key: Buffer) -> Result<Buffer> {
 /// decoding happens in Rust memory with zeroization on completion.
 #[napi]
 pub fn private_key_hex_bytes_to_eth_address(private_key_hex_bytes: Buffer) -> Result<Buffer> {
-    let hex_str = std::str::from_utf8(private_key_hex_bytes.as_ref())
-        .map_err(|e| Error::from_reason(format!("private_key_hex_bytes is not valid UTF-8: {e}")))?;
+    let hex_str = std::str::from_utf8(private_key_hex_bytes.as_ref()).map_err(|e| {
+        Error::from_reason(format!("private_key_hex_bytes is not valid UTF-8: {e}"))
+    })?;
     let hex_str = hex_str.trim_start_matches("0x").trim_start_matches("0X");
     let raw = Zeroizing::new(
         hex::decode(hex_str)
-            .map_err(|e| Error::from_reason(format!("invalid hex in private key: {e}")))?
+            .map_err(|e| Error::from_reason(format!("invalid hex in private key: {e}")))?,
     );
     private_key_bytes_to_eth_address_inner(&raw)
 }
@@ -364,12 +763,13 @@ pub fn sign_secp256k1_hex_key(private_key_hex_bytes: Buffer, digest: Buffer) -> 
             digest.len()
         )));
     }
-    let hex_str = std::str::from_utf8(private_key_hex_bytes.as_ref())
-        .map_err(|e| Error::from_reason(format!("private_key_hex_bytes is not valid UTF-8: {e}")))?;
+    let hex_str = std::str::from_utf8(private_key_hex_bytes.as_ref()).map_err(|e| {
+        Error::from_reason(format!("private_key_hex_bytes is not valid UTF-8: {e}"))
+    })?;
     let hex_str = hex_str.trim_start_matches("0x").trim_start_matches("0X");
     let raw_bytes = Zeroizing::new(
         hex::decode(hex_str)
-            .map_err(|e| Error::from_reason(format!("invalid hex in private key: {e}")))?
+            .map_err(|e| Error::from_reason(format!("invalid hex in private key: {e}")))?,
     );
     if raw_bytes.len() != 32 {
         return Err(Error::from_reason(format!(
@@ -412,9 +812,9 @@ fn private_key_bytes_to_eth_address_inner(raw_key: &[u8]) -> Result<Buffer> {
     }
 
     let pk_bytes: Zeroizing<[u8; 32]> = Zeroizing::new(
-        raw_key.try_into().map_err(|_| {
-            Error::from_reason("failed to copy private key bytes")
-        })?,
+        raw_key
+            .try_into()
+            .map_err(|_| Error::from_reason("failed to copy private key bytes"))?,
     );
 
     let signing_key = SigningKey::from_bytes(FieldBytes::from_slice(pk_bytes.as_ref()))
@@ -447,21 +847,19 @@ fn sign_secp256k1_raw(raw_key: &[u8], digest: &[u8]) -> Result<Buffer> {
     }
 
     // Copy key bytes into a Zeroizing wrapper so they are wiped on drop.
-    let pk_bytes: Zeroizing<[u8; 32]> = Zeroizing::new(
-        raw_key.try_into().map_err(|_| {
-            Error::from_reason(format!(
-                "raw_key must be exactly 32 bytes, got {}",
-                raw_key.len()
-            ))
-        })?,
-    );
+    let pk_bytes: Zeroizing<[u8; 32]> = Zeroizing::new(raw_key.try_into().map_err(|_| {
+        Error::from_reason(format!(
+            "raw_key must be exactly 32 bytes, got {}",
+            raw_key.len()
+        ))
+    })?);
 
     let signing_key = SigningKey::from_bytes(FieldBytes::from_slice(pk_bytes.as_ref()))
         .map_err(|e| Error::from_reason(format!("invalid private key: {e}")))?;
 
-    let digest_arr: &[u8; 32] = digest.try_into().map_err(|_| {
-        Error::from_reason("failed to convert digest to [u8; 32]")
-    })?;
+    let digest_arr: &[u8; 32] = digest
+        .try_into()
+        .map_err(|_| Error::from_reason("failed to convert digest to [u8; 32]"))?;
 
     let (sig, recovery_id): (k256::ecdsa::Signature, RecoveryId) = signing_key
         .sign_prehash(digest_arr)
@@ -469,8 +867,11 @@ fn sign_secp256k1_raw(raw_key: &[u8], digest: &[u8]) -> Result<Buffer> {
 
     // EIP-2 / BIP-146: enforce low-S to prevent signature malleability.
     let (sig, recovery_id) = match sig.normalize_s() {
-        Some(normalized) => (normalized, RecoveryId::from_byte(recovery_id.to_byte() ^ 1)
-            .expect("flipped recovery_id must be valid")),
+        Some(normalized) => (
+            normalized,
+            RecoveryId::from_byte(recovery_id.to_byte() ^ 1)
+                .expect("flipped recovery_id must be valid"),
+        ),
         None => (sig, recovery_id),
     };
 

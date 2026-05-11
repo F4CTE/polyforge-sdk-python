@@ -13,30 +13,72 @@ export declare function generateDek(): Buffer
  */
 export declare function encryptAes256Gcm(plaintext: string, keyHex: string): string
 /**
+ * Encrypt plaintext using AES-256-GCM with additional authenticated data.
+ * `aad_hex` is authenticated but not encrypted.
+ */
+export declare function encryptAes256GcmWithAad(plaintext: string, keyHex: string, aadHex: string): string
+/**
  * Encrypt arbitrary bytes using AES-256-GCM. Returns JSON { ciphertext, iv, tag } as hex.
  * Key material is zeroized after use.
  */
 export declare function encryptAes256GcmBytes(plaintext: Buffer, keyHex: string): string
+/**
+ * Encrypt arbitrary bytes using AES-256-GCM with additional authenticated data.
+ * `aad_hex` is authenticated but not encrypted.
+ */
+export declare function encryptAes256GcmBytesWithAad(plaintext: Buffer, keyHex: string, aadHex: string): string
 /** Encrypt arbitrary bytes using a raw 32-byte key Buffer. */
 export declare function encryptAes256GcmBytesWithRawKey(plaintext: Buffer, key: Buffer): string
+/**
+ * Encrypt arbitrary bytes using a raw 32-byte key Buffer with additional authenticated data.
+ * AAD is authenticated but not encrypted.  The key stays as a raw Buffer
+ * through the NAPI boundary — no hex-string conversion in JavaScript.
+ */
+export declare function encryptAes256GcmBytesWithRawKeyAndAad(plaintext: Buffer, key: Buffer, aadHex: string): string
 /** Encrypt arbitrary bytes using the configured current KEK. */
 export declare function encryptAes256GcmBytesWithConfiguredKek(plaintext: Buffer): string
 /** Decrypt AES-256-GCM ciphertext. Key material is zeroized after use. */
 export declare function decryptAes256Gcm(ciphertextHex: string, ivHex: string, tagHex: string, keyHex: string): string
+/** Decrypt AES-256-GCM ciphertext with additional authenticated data. */
+export declare function decryptAes256GcmWithAad(ciphertextHex: string, ivHex: string, tagHex: string, keyHex: string, aadHex: string): string
 /** Decrypt AES-256-GCM ciphertext as arbitrary bytes. Key material is zeroized after use. */
 export declare function decryptAes256GcmBytes(ciphertextHex: string, ivHex: string, tagHex: string, keyHex: string): Buffer
+/** Decrypt AES-256-GCM ciphertext as arbitrary bytes with additional authenticated data. */
+export declare function decryptAes256GcmBytesWithAad(ciphertextHex: string, ivHex: string, tagHex: string, keyHex: string, aadHex: string): Buffer
 /** Decrypt AES-256-GCM ciphertext as bytes using a raw 32-byte key Buffer. */
 export declare function decryptAes256GcmBytesWithRawKey(ciphertextHex: string, ivHex: string, tagHex: string, key: Buffer): Buffer
+/**
+ * Decrypt AES-256-GCM ciphertext as bytes using a raw 32-byte key Buffer
+ * with additional authenticated data.  The key stays as a raw Buffer
+ * through the NAPI boundary — no hex-string conversion in JavaScript.
+ */
+export declare function decryptAes256GcmBytesWithRawKeyAndAad(ciphertextHex: string, ivHex: string, tagHex: string, key: Buffer, aadHex: string): Buffer
 /** Decrypt AES-256-GCM ciphertext as bytes using the configured current KEK. */
 export declare function decryptAes256GcmBytesWithConfiguredKek(ciphertextHex: string, ivHex: string, tagHex: string): Buffer
 /** Encrypt a DEK with a KEK (envelope encryption layer) */
 export declare function wrapDek(dekHex: string, kekHex: string): string
+/** Encrypt a DEK with a KEK and additional authenticated data. */
+export declare function wrapDekWithAad(dekHex: string, kekHex: string, aadHex: string): string
 /** Decrypt a DEK with a KEK */
 export declare function unwrapDek(wrappedJson: string, kekHex: string): string
+/** Decrypt a DEK with a KEK and additional authenticated data. */
+export declare function unwrapDekWithAad(wrappedJson: string, kekHex: string, aadHex: string): string
 /** Encrypt a raw DEK Buffer with the configured current KEK. */
 export declare function wrapDekWithCurrentKek(dek: Buffer): string
+/**
+ * Encrypt a raw DEK Buffer with the configured current KEK using additional
+ * authenticated data.  The DEK stays as a raw Buffer through the NAPI
+ * boundary — no hex-string conversion in JavaScript.
+ */
+export declare function wrapDekWithCurrentKekAndAad(dek: Buffer, aadHex: string): string
 /** Decrypt a stored DEK using the configured current or previous KEK. */
 export declare function decryptDekWithStoredKek(ciphertextHex: string, ivHex: string, tagHex: string, usePrevious: boolean): Buffer
+/**
+ * Decrypt a stored DEK using the configured current or previous KEK with
+ * additional authenticated data.  Returns raw DEK Buffer rather than a
+ * hex string so key material never enters the V8 heap as an immutable string.
+ */
+export declare function unwrapDekWithAadRaw(wrappedJson: string, usePrevious: boolean, aadHex: string): Buffer
 export declare function sha256Hash(input: string): string
 export declare function hmacSha256Sign(message: string, secret: string): string
 export declare function hmacSha256Verify(message: string, secret: string, expectedHex: string): boolean

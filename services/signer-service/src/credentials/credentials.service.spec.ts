@@ -3,6 +3,7 @@ import { BadRequestException, NotFoundException } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { CredentialsService } from "./credentials.service";
 import { EncryptionService } from "../encryption/encryption.service";
+import { credentialDekAad, credentialFieldAad } from "./credential-aad";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -77,13 +78,19 @@ describe("CredentialsService", () => {
         privateKey,
       } as any);
 
-      expect(encryptFieldBytesSpy).toHaveBeenCalledWith(privateKey, expect.any(Buffer));
-      expect(encryptFieldSpy.mock.calls.map(([plaintext]) => plaintext)).not.toContain(
+      expect(encryptFieldBytesSpy).toHaveBeenCalledWith(
         privateKey,
+        expect.any(Buffer),
+        {
+          aad: credentialFieldAad("user-1", "privateKey"),
+        },
       );
-      expect(encryptFieldSpy.mock.calls.map(([plaintext]) => plaintext)).not.toContain(
-        VALID_PK,
-      );
+      expect(
+        encryptFieldSpy.mock.calls.map(([plaintext]) => plaintext),
+      ).not.toContain(privateKey);
+      expect(
+        encryptFieldSpy.mock.calls.map(([plaintext]) => plaintext),
+      ).not.toContain(VALID_PK);
       expect(privateKey.every((b) => b === 0)).toBe(true);
     });
 
@@ -93,7 +100,7 @@ describe("CredentialsService", () => {
       await svc.importCredentials({
         ...VALID_DTO,
         privateKey,
-      } as any);
+      });
 
       expect(privateKey.every((byte) => byte === 0)).toBe(true);
     });
@@ -172,6 +179,38 @@ describe("CredentialsService", () => {
       const { create } = prisma.userCredential.upsert.mock.calls[0][0];
       expect(create.encryptedDek).toBeInstanceOf(Uint8Array);
       expect(create.dekIv).toBeInstanceOf(Uint8Array);
+    });
+
+    it("binds the wrapped DEK to row AAD", async () => {
+      const genDekSpy = vi.spyOn(encryption, "generateDek");
+      await svc.importCredentials(VALID_DTO);
+
+      expect(genDekSpy).toHaveBeenCalledWith({
+        aad: credentialDekAad("user-1"),
+      });
+    });
+
+    it("binds every encrypted field to row and field AAD", async () => {
+      const encryptSpy = vi.spyOn(encryption, "encryptField");
+      const encryptBytesSpy = vi.spyOn(encryption, "encryptFieldBytes");
+      await svc.importCredentials(VALID_DTO);
+
+      expect(encryptBytesSpy).toHaveBeenCalledWith(
+        expect.any(Buffer),
+        expect.any(Buffer),
+        {
+          aad: credentialFieldAad("user-1", "privateKey"),
+        },
+      );
+      expect(encryptSpy).toHaveBeenCalledWith("ak-value", expect.any(Buffer), {
+        aad: credentialFieldAad("user-1", "apiKey"),
+      });
+      expect(encryptSpy).toHaveBeenCalledWith("as-value", expect.any(Buffer), {
+        aad: credentialFieldAad("user-1", "apiSecret"),
+      });
+      expect(encryptSpy).toHaveBeenCalledWith("ap-value", expect.any(Buffer), {
+        aad: credentialFieldAad("user-1", "apiPassphrase"),
+      });
     });
 
     it("stores different ciphertexts for different fields (unique IVs)", async () => {
@@ -349,6 +388,61 @@ describe("CredentialsService", () => {
 
       expect(a.apiKey.toString("utf8")).toBe("key-A");
       expect(b.apiKey.toString("utf8")).toBe("key-B");
+    });
+
+    it("rejects ciphertext tuple swaps between columns for new AAD-bound rows", async () => {
+      let storedRow: Record<string, unknown>;
+
+      prisma.userCredential.upsert.mockImplementation(
+        async ({ create }: any) => {
+          storedRow = create;
+          return create;
+        },
+      );
+      prisma.userCredential.findUnique.mockImplementation(
+        async () => storedRow!,
+      );
+
+      await svc.importCredentials(VALID_DTO);
+      const privateKeyTuple = {
+        ct: storedRow!.privateKeyCt,
+        iv: storedRow!.privateKeyIv,
+        tag: storedRow!.privateKeyTag,
+      };
+      storedRow!.privateKeyCt = storedRow!.apiKeyCt;
+      storedRow!.privateKeyIv = storedRow!.apiKeyIv;
+      storedRow!.privateKeyTag = storedRow!.apiKeyTag;
+      storedRow!.apiKeyCt = privateKeyTuple.ct;
+      storedRow!.apiKeyIv = privateKeyTuple.iv;
+      storedRow!.apiKeyTag = privateKeyTuple.tag;
+
+      await expect(svc.getDecryptedCredentials("user-1")).rejects.toThrow();
+    });
+
+    it("rejects ciphertext tuple swaps between users for new AAD-bound rows", async () => {
+      const rows: Record<string, Record<string, unknown>> = {};
+
+      prisma.userCredential.upsert.mockImplementation(
+        async ({ where, create }: any) => {
+          rows[where.userId] = create;
+          return create;
+        },
+      );
+      prisma.userCredential.findUnique.mockImplementation(
+        async ({ where }: any) => rows[where.userId] ?? null,
+      );
+
+      await svc.importCredentials({ ...VALID_DTO, userId: "user-A" });
+      await svc.importCredentials({
+        ...VALID_DTO,
+        userId: "user-B",
+        apiKey: "key-B",
+      });
+      rows["user-A"].privateKeyCt = rows["user-B"].privateKeyCt;
+      rows["user-A"].privateKeyIv = rows["user-B"].privateKeyIv;
+      rows["user-A"].privateKeyTag = rows["user-B"].privateKeyTag;
+
+      await expect(svc.getDecryptedCredentials("user-A")).rejects.toThrow();
     });
   });
 });
