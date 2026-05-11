@@ -80,6 +80,24 @@ audit, available on both `PolyforgeClient` and `AsyncPolyforgeClient`:
 All three already existed in the TypeScript SDK; this brings the Python SDK
 into parity.
 
+**Health and match-sync (POLA-3677, POLA-3323)** — two new methods closing gaps
+surfaced by the weekly cross-SDK compatibility audit, available on both
+`PolyforgeClient` and `AsyncPolyforgeClient`:
+
+- `get_health_authenticated()` → `SystemHealthAuthenticated` —
+  `GET /api/v1/status`. Returns authenticated health/status data with
+  operational metrics (database, Redis, queue depth, service health) not
+  exposed on the public `/health` endpoint. Matches `getHealthAuthenticated`
+  in sdk-ts.
+- `sync_market_matches()` → `MatchSyncResult` —
+  `POST /api/v1/arbitrage/matches/sync`. Triggers a manual cross-venue
+  matching pass. Matches `syncMarketMatches` in sdk-ts and
+  `sync_arbitrage_matches` in sdk-rust.
+
+New typed model: `SystemHealthAuthenticated` (`status`, `service`, `version`,
+`uptime`, `db`, `redis`, `queue_depth`, `services`). `MatchSyncResult` now
+includes optional `created`/`updated` fields matching the TS/Rust SDKs.
+
 ### Added — Cross-Venue Arb Execute / Positions / Risk (POLA-1851)
 
 > ⚠️ **Trading-impact severity: HIGH.** `execute_arb` and `close_arb_position`
