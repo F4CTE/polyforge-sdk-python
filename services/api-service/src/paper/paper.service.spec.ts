@@ -140,8 +140,8 @@ describe("PaperService", () => {
 
   describe("reset", () => {
     it("deletes all paper orders and positions for the user", async () => {
-      db.paperOrder.deleteMany.mockResolvedValue({ count: 5 } as any);
-      db.paperPosition.deleteMany.mockResolvedValue({ count: 3 } as any);
+      db.paperOrder.deleteMany.mockResolvedValue({ count: 5 });
+      db.paperPosition.deleteMany.mockResolvedValue({ count: 3 });
 
       const result = await service.reset("user-uuid-1");
 
@@ -149,8 +149,8 @@ describe("PaperService", () => {
     });
 
     it("calls deleteMany on both paperOrder and paperPosition with the userId", async () => {
-      db.paperOrder.deleteMany.mockResolvedValue({ count: 0 } as any);
-      db.paperPosition.deleteMany.mockResolvedValue({ count: 0 } as any);
+      db.paperOrder.deleteMany.mockResolvedValue({ count: 0 });
+      db.paperPosition.deleteMany.mockResolvedValue({ count: 0 });
 
       await service.reset("user-uuid-1");
 
@@ -175,8 +175,8 @@ describe("PaperService", () => {
     });
 
     it("returns { reset: true } even when there were no records to delete", async () => {
-      db.paperOrder.deleteMany.mockResolvedValue({ count: 0 } as any);
-      db.paperPosition.deleteMany.mockResolvedValue({ count: 0 } as any);
+      db.paperOrder.deleteMany.mockResolvedValue({ count: 0 });
+      db.paperPosition.deleteMany.mockResolvedValue({ count: 0 });
 
       const result = await service.reset("user-uuid-1");
 

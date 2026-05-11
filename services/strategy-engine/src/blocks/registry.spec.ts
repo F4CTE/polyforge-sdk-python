@@ -52,9 +52,7 @@ describe("Registry collision safety", () => {
     // MAX_POSITION_SIZE is an intentional legacy alias in SAFETY_REGISTRY
     // (backward compat) while the canonical entry is in CONDITION_REGISTRY
     const knownCollisions = new Set(["DAILY_LOSS_LIMIT", "MAX_POSITION_SIZE"]);
-    const unexpected = collisions.filter(
-      (c) => !knownCollisions.has(c.key),
-    );
+    const unexpected = collisions.filter((c) => !knownCollisions.has(c.key));
 
     expect(unexpected).toHaveLength(0);
   });

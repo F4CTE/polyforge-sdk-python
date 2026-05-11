@@ -293,7 +293,7 @@ describe("DiscoverService", () => {
         .mockResolvedValueOnce(snapshots as any); // count query
       (db.order.groupBy as any).mockResolvedValue(tradeCounts as any);
       db.user.findMany.mockResolvedValue(users as any);
-      db.position.findMany.mockResolvedValue([] as any);
+      db.position.findMany.mockResolvedValue([]);
 
       const result = await service.leaderboard(makeLeaderboardQuery());
 
@@ -311,7 +311,7 @@ describe("DiscoverService", () => {
       (db.pnlSnapshot.groupBy as any)
         .mockResolvedValueOnce([] as any)
         .mockResolvedValueOnce([] as any);
-      db.user.findMany.mockResolvedValue([] as any);
+      db.user.findMany.mockResolvedValue([]);
 
       // Just checking it completes without error with no period specified
       const result = await service.leaderboard({});
@@ -323,7 +323,7 @@ describe("DiscoverService", () => {
       (db.pnlSnapshot.groupBy as any)
         .mockResolvedValueOnce([] as any)
         .mockResolvedValueOnce([] as any);
-      db.user.findMany.mockResolvedValue([] as any);
+      db.user.findMany.mockResolvedValue([]);
 
       const result = await service.leaderboard(
         makeLeaderboardQuery({ period: "7d" }),
@@ -336,7 +336,7 @@ describe("DiscoverService", () => {
       (db.pnlSnapshot.groupBy as any)
         .mockResolvedValueOnce([] as any)
         .mockResolvedValueOnce([] as any);
-      db.user.findMany.mockResolvedValue([] as any);
+      db.user.findMany.mockResolvedValue([]);
 
       const result = await service.leaderboard(
         makeLeaderboardQuery({ period: "allTime" }),
@@ -349,7 +349,7 @@ describe("DiscoverService", () => {
       (db.pnlSnapshot.groupBy as any)
         .mockResolvedValueOnce([] as any)
         .mockResolvedValueOnce([] as any);
-      db.user.findMany.mockResolvedValue([] as any);
+      db.user.findMany.mockResolvedValue([]);
 
       // Should not throw even with limit=200 — the service caps it internally
       await expect(
@@ -369,8 +369,8 @@ describe("DiscoverService", () => {
         .mockResolvedValueOnce(snapshots as any)
         .mockResolvedValueOnce(snapshots as any);
       (db.order.groupBy as any).mockResolvedValue(tradeCounts as any);
-      db.user.findMany.mockResolvedValue([] as any); // no user record found
-      db.position.findMany.mockResolvedValue([] as any);
+      db.user.findMany.mockResolvedValue([]); // no user record found
+      db.position.findMany.mockResolvedValue([]);
 
       const result = await service.leaderboard(makeLeaderboardQuery());
 
@@ -399,7 +399,7 @@ describe("DiscoverService", () => {
         .mockResolvedValueOnce(snapshots as any);
       (db.order.groupBy as any).mockResolvedValue(tradeCounts as any);
       db.user.findMany.mockResolvedValue(users as any);
-      db.position.findMany.mockResolvedValue([] as any);
+      db.position.findMany.mockResolvedValue([]);
 
       const result = await service.leaderboard(makeLeaderboardQuery());
 
@@ -411,7 +411,7 @@ describe("DiscoverService", () => {
         .mockResolvedValueOnce([] as any)
         .mockResolvedValueOnce([] as any);
 
-      db.user.findMany.mockResolvedValue([] as any);
+      db.user.findMany.mockResolvedValue([]);
 
       const result = await service.leaderboard(makeLeaderboardQuery());
 
@@ -444,7 +444,7 @@ describe("DiscoverService", () => {
         .mockResolvedValueOnce(allSnapshots as any);
       (db.order.groupBy as any).mockResolvedValue(tradeCounts as any);
       db.user.findMany.mockResolvedValue(users as any);
-      db.position.findMany.mockResolvedValue([] as any);
+      db.position.findMany.mockResolvedValue([]);
 
       const result = await service.leaderboard(
         makeLeaderboardQuery({ page: 2, limit: 20 }),

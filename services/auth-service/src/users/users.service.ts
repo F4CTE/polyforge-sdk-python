@@ -199,20 +199,36 @@ export class UsersService {
       );
     }
 
+    // Mark the password change timestamp before mutating credentials so
+    // stale access tokens are fail-closed if Redis is unavailable. The
+    // marker auto-expires after 5 minutes; if the DB transaction below
+    // fails, the user can retry and the marker will correct itself.
+    await this.redis.set(
+      `pwchange:${record.userId}`,
+      Math.floor(Date.now() / 1000).toString(),
+      300,
+    );
+
     const passwordHash = await hashPassword(newPassword, 12);
 
-    await this.prisma.$transaction([
-      this.prisma.passwordResetToken.update({
-        where: { tokenHash },
-        data: { usedAt: new Date() },
-      }),
-      this.prisma.user.update({
-        where: { id: record.userId },
-        data: { passwordHash },
-      }),
-    ]);
+    try {
+      await this.prisma.$transaction([
+        this.prisma.passwordResetToken.update({
+          where: { tokenHash },
+          data: { usedAt: new Date() },
+        }),
+        this.prisma.user.update({
+          where: { id: record.userId },
+          data: { passwordHash },
+        }),
+      ]);
+    } catch (err) {
+      void this.redis.del(`pwchange:${record.userId}`).catch(() => {});
+      throw err;
+    }
 
-    // Revoke all refresh tokens for this user (same as password change flow)
+    // Revoke sessions only after the DB transaction succeeds so a
+    // failing password write does not orphan active sessions.
     await this.revokeAllRefreshTokens(record.userId);
 
     return record.userId;

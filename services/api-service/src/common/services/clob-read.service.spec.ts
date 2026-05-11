@@ -10,7 +10,11 @@ function makeService() {
   return new ClobReadService(config);
 }
 
-function mockFetchResponse(ok: boolean, json: unknown, status = ok ? 200 : 500) {
+function mockFetchResponse(
+  ok: boolean,
+  json: unknown,
+  status = ok ? 200 : 500,
+) {
   return {
     ok,
     status,
@@ -43,7 +47,9 @@ describe("ClobReadService", () => {
 
   it("falls back to 0.01 when tick-size lookup returns a non-ok response", async () => {
     const fetchMock = vi.mocked(fetch);
-    fetchMock.mockResolvedValue(mockFetchResponse(false, { error: "nope" }, 503));
+    fetchMock.mockResolvedValue(
+      mockFetchResponse(false, { error: "nope" }, 503),
+    );
     const service = makeService();
 
     await expect(service.getTickSize("token-1")).resolves.toBe("0.01");

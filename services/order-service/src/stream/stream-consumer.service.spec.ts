@@ -15,7 +15,7 @@ function createMockRedis() {
 
 function createMockOrders() {
   return {
-    processBatch: vi.fn().mockResolvedValue(undefined),
+    processBatch: vi.fn().mockResolvedValue({ processed: [], failed: [] }),
     processCancellation: vi.fn().mockResolvedValue(undefined),
   } as any;
 }
@@ -440,6 +440,110 @@ describe("StreamConsumerService (order-service)", () => {
           err,
         }),
         "Failed to parse order intent from Redis stream",
+      );
+    });
+
+    it("acks only successfully processed order messages when a batch is partially failed", async () => {
+      const client = redis.getClient();
+      client.xreadgroup.mockResolvedValueOnce([
+        [
+          "stream:orders",
+          [
+            [
+              "msg-1",
+              [
+                "intentId",
+                "i1",
+                "userId",
+                "u1",
+                "marketId",
+                "m1",
+                "tokenId",
+                "t1",
+                "side",
+                "BUY",
+                "outcome",
+                "YES",
+                "size",
+                "10",
+                "price",
+                "0.5",
+                "orderType",
+                "GTC",
+              ],
+            ],
+            [
+              "msg-2",
+              [
+                "intentId",
+                "i2",
+                "userId",
+                "u1",
+                "marketId",
+                "m1",
+                "tokenId",
+                "t1",
+                "side",
+                "BUY",
+                "outcome",
+                "YES",
+                "size",
+                "10",
+                "price",
+                "0.5",
+                "orderType",
+                "GTC",
+              ],
+            ],
+          ],
+        ],
+      ]);
+      orders.processBatch.mockImplementationOnce(async (intents: any[]) => ({
+        processed: [intents[0]],
+        failed: [{ intent: intents[1], error: new Error("dlq down") }],
+      }));
+
+      await (service as any).pollOnce();
+
+      expect(client.xack).toHaveBeenCalledWith(
+        "stream:orders",
+        "order-service",
+        "msg-1",
+      );
+      expect(client.xack).not.toHaveBeenCalledWith(
+        "stream:orders",
+        "order-service",
+        "msg-2",
+      );
+    });
+
+    it("throws on reclaimed entry processing failure so PEL reclaim skips XACK", async () => {
+      const client = redis.getClient();
+      orders.processBatch.mockImplementationOnce(async (intents: any[]) => ({
+        processed: [],
+        failed: [{ intent: intents[0], error: new Error("dlq down") }],
+      }));
+
+      await expect(
+        (service as any).processReclaimedEntry("pending-1", {
+          intentId: "i1",
+          userId: "u1",
+          marketId: "m1",
+          tokenId: "t1",
+          side: "BUY",
+          outcome: "YES",
+          size: "10",
+          price: "0.5",
+          orderType: "GTC",
+        }),
+      ).rejects.toThrow(
+        "Reclaimed order stream message pending-1 processing failed: Error: dlq down",
+      );
+
+      expect(client.xack).not.toHaveBeenCalledWith(
+        "stream:orders",
+        "order-service",
+        "pending-1",
       );
     });
   });

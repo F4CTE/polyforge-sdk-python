@@ -78,13 +78,9 @@ describe("TicketsService", () => {
     it("creates a ticket and first message in a transaction", async () => {
       const ticket = makeTicket();
       db.ticket.create.mockResolvedValue(ticket as any);
-      db.ticketMessage.create.mockResolvedValue(makeMessage() as any);
+      db.ticketMessage.create.mockResolvedValue(makeMessage());
 
-      const result = await service.create(
-        "user-1",
-        "alice",
-        makeCreateDto() as any,
-      );
+      const result = await service.create("user-1", "alice", makeCreateDto());
 
       expect(result).toEqual(ticket);
       expect(db.ticket.create).toHaveBeenCalledWith({
@@ -107,9 +103,9 @@ describe("TicketsService", () => {
 
     it("emits TICKET_CREATED event to stream:events", async () => {
       db.ticket.create.mockResolvedValue(makeTicket() as any);
-      db.ticketMessage.create.mockResolvedValue(makeMessage() as any);
+      db.ticketMessage.create.mockResolvedValue(makeMessage());
 
-      await service.create("user-1", "alice", makeCreateDto() as any);
+      await service.create("user-1", "alice", makeCreateDto());
 
       expect(redis.xadd).toHaveBeenCalledWith(
         "stream:events",
@@ -127,9 +123,9 @@ describe("TicketsService", () => {
       db.ticket.create.mockResolvedValue(
         makeTicket({ category: "GENERAL" }) as any,
       );
-      db.ticketMessage.create.mockResolvedValue(makeMessage() as any);
+      db.ticketMessage.create.mockResolvedValue(makeMessage());
 
-      await service.create("user-1", "alice", dto as any);
+      await service.create("user-1", "alice", dto);
 
       expect(db.ticket.create).toHaveBeenCalledWith({
         data: expect.objectContaining({ category: "GENERAL" }),
@@ -176,7 +172,7 @@ describe("TicketsService", () => {
     });
 
     it("includes latest message in the response", async () => {
-      db.ticket.findMany.mockResolvedValue([] as any);
+      db.ticket.findMany.mockResolvedValue([]);
       db.ticket.count.mockResolvedValue(0);
 
       await service.listMy("user-1", 1, 20);
@@ -247,14 +243,14 @@ describe("TicketsService", () => {
     it("creates a message and sets status to AWAITING_ADMIN", async () => {
       db.ticket.findUnique.mockResolvedValue(makeTicket() as any);
       const msg = makeMessage();
-      db.ticketMessage.create.mockResolvedValue(msg as any);
+      db.ticketMessage.create.mockResolvedValue(msg);
       db.ticket.update.mockResolvedValue(
         makeTicket({ status: "AWAITING_ADMIN" }) as any,
       );
 
       const result = await service.addMessage("ticket-1", "user-1", "alice", {
         body: "Still broken",
-      } as any);
+      });
 
       expect(result).toEqual(msg);
       expect(db.ticketMessage.create).toHaveBeenCalledWith({
@@ -310,12 +306,12 @@ describe("TicketsService", () => {
       db.ticket.findUnique.mockResolvedValue(
         makeTicket({ reminderSentAt: new Date() }) as any,
       );
-      db.ticketMessage.create.mockResolvedValue(makeMessage() as any);
+      db.ticketMessage.create.mockResolvedValue(makeMessage());
       db.ticket.update.mockResolvedValue({} as any);
 
       await service.addMessage("ticket-1", "user-1", "alice", {
         body: "reply",
-      } as any);
+      });
 
       expect(db.ticket.update).toHaveBeenCalledWith({
         where: { id: "ticket-1" },

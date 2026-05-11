@@ -29,7 +29,7 @@ describe("ArbitrageAlertService", () => {
           createdAt: new Date(),
         },
       ];
-      db.arbitrageAlert.findMany.mockResolvedValue(alerts as any);
+      db.arbitrageAlert.findMany.mockResolvedValue(alerts);
 
       const result = await service.list("u1");
 
@@ -60,7 +60,7 @@ describe("ArbitrageAlertService", () => {
         active: true,
         triggeredAt: null,
         createdAt: new Date(),
-      } as any);
+      });
 
       const result = await service.create("u1", { minSpreadPct: "5" });
 
@@ -84,7 +84,7 @@ describe("ArbitrageAlertService", () => {
         active: true,
         triggeredAt: null,
         createdAt: new Date(),
-      } as any);
+      });
 
       await service.create("u1", {
         minSpreadPct: "3",

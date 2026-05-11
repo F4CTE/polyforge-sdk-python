@@ -6,8 +6,10 @@ import { StrategiesController } from "./strategies.controller";
 describe("StrategiesController", () => {
   it("blocks strategy starts by geo", () => {
     const guards: unknown[] =
-      Reflect.getMetadata(GUARDS_METADATA, StrategiesController.prototype.start) ??
-      [];
+      Reflect.getMetadata(
+        GUARDS_METADATA,
+        StrategiesController.prototype.start,
+      ) ?? [];
 
     expect(guards).toContain(GeoBlockGuard);
   });

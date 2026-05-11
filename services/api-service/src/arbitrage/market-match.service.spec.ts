@@ -33,7 +33,7 @@ describe("MarketMatchService", () => {
     it("returns 0 when no markets on one venue", async () => {
       db.market.findMany
         .mockResolvedValueOnce([makeMarketRow()] as any)
-        .mockResolvedValueOnce([] as any);
+        .mockResolvedValueOnce([]);
       db.marketMatch.findMany.mockResolvedValue([]);
 
       const count = await service.runMatchingPass();
@@ -172,7 +172,7 @@ describe("MarketMatchService", () => {
     });
 
     it("filters by verified status", async () => {
-      db.marketMatch.findMany.mockResolvedValue([] as any);
+      db.marketMatch.findMany.mockResolvedValue([]);
       db.marketMatch.count.mockResolvedValue(0);
 
       await service.listMatches({ verified: true });
@@ -187,7 +187,7 @@ describe("MarketMatchService", () => {
 
   describe("getMatchesByMarketId", () => {
     it("searches both polymarketId and kalshiId", async () => {
-      db.marketMatch.findMany.mockResolvedValue([] as any);
+      db.marketMatch.findMany.mockResolvedValue([]);
 
       await service.getMatchesByMarketId("market-x");
 

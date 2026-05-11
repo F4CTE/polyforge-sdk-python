@@ -57,12 +57,7 @@ describe("RewardsService", () => {
     redis = makeRedis();
     dataApi = makeDataApi();
     clobRead = makeClobRead();
-    service = new RewardsService(
-      prisma,
-      redis,
-      dataApi as any,
-      clobRead as any,
-    );
+    service = new RewardsService(prisma, redis, dataApi, clobRead);
   });
 
   afterEach(() => {
@@ -96,12 +91,7 @@ describe("RewardsService", () => {
   describe("getUserRewards()", () => {
     it("returns empty when user has no wallet", async () => {
       prisma = makePrisma(null);
-      service = new RewardsService(
-        prisma,
-        redis,
-        dataApi as any,
-        clobRead as any,
-      );
+      service = new RewardsService(prisma, redis, dataApi, clobRead);
 
       const result = await service.getUserRewards("user-1");
       expect(result).toEqual({ rewards: [] });
@@ -120,12 +110,7 @@ describe("RewardsService", () => {
   describe("getRebates()", () => {
     it("returns empty when user has no wallet", async () => {
       prisma = makePrisma(null);
-      service = new RewardsService(
-        prisma,
-        redis,
-        dataApi as any,
-        clobRead as any,
-      );
+      service = new RewardsService(prisma, redis, dataApi, clobRead);
 
       const result = await service.getRebates("user-1");
       expect(result).toEqual({ rebates: [] });
@@ -183,12 +168,7 @@ describe("RewardsService", () => {
   describe("getUserSponsoredMarkets()", () => {
     it("returns empty when user has no wallet", async () => {
       prisma = makePrisma(null);
-      service = new RewardsService(
-        prisma,
-        redis,
-        dataApi as any,
-        clobRead as any,
-      );
+      service = new RewardsService(prisma, redis, dataApi, clobRead);
 
       const result = await service.getUserSponsoredMarkets("user-1");
       expect(result).toEqual({ markets: [] });

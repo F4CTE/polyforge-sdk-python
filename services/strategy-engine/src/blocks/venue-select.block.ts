@@ -113,7 +113,7 @@ async function lookupFeeBps(
 
   if (schedules.length === 0) return 200;
 
-  const rows: FeeRow[] = schedules as FeeRow[];
+  const rows: FeeRow[] = schedules;
 
   if (venue === "KALSHI") {
     const band = rows.find((s: FeeRow) => {

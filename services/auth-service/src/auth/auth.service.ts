@@ -440,27 +440,7 @@ export class AuthService {
   // ─── Reset password ───────────────────────────────────────────────────────────
 
   async resetPassword(dto: ResetPasswordDto) {
-    const userId = await this.usersService.resetPassword(
-      dto.token,
-      dto.newPassword,
-    );
-
-    // R5-02: Mark password change timestamp so JWT guard can reject stale tokens
-    if (userId) {
-      await this.redis
-        .set(
-          `pwchange:${userId}`,
-          Math.floor(Date.now() / 1000).toString(),
-          300,
-        )
-        .catch((err) => this.logger.error('Failed to set pwchange key', err));
-      await this.revokeAllRefreshTokens(userId).catch((err) =>
-        this.logger.error(
-          'Failed to revoke refresh tokens after password reset',
-          err,
-        ),
-      );
-    }
+    await this.usersService.resetPassword(dto.token, dto.newPassword);
 
     return { message: 'Password reset successfully' };
   }

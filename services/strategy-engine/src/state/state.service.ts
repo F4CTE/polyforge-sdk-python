@@ -42,6 +42,36 @@ redis.call("SET", KEYS[1], encoded, "EX", ttl)
 return encoded
 `;
 
+const DECREMENT_ORDER_COUNTERS_SCRIPT = `
+local raw = redis.call("GET", KEYS[1])
+local state = {}
+if raw then
+  local ok, parsed = pcall(cjson.decode, raw)
+  if ok and type(parsed) == "table" then
+    state = parsed
+  end
+end
+
+local count = tonumber(ARGV[1])
+state.betsToday = math.max(0, (tonumber(state.betsToday) or 0) - count)
+state.dailyPnl = tonumber(state.dailyPnl) or 0
+state.consecutiveLoss = tonumber(state.consecutiveLoss) or 0
+state.consecutiveWin = tonumber(state.consecutiveWin) or 0
+if type(state.tradedTokensToday) ~= "table" then
+  state.tradedTokensToday = {}
+end
+state.totalOrders = math.max(0, (tonumber(state.totalOrders) or 0) - count)
+
+local ttl = tonumber(ARGV[2]) or 1
+if ttl < 1 then
+  ttl = 1
+end
+
+local encoded = cjson.encode(state)
+redis.call("SET", KEYS[1], encoded, "EX", ttl)
+return encoded
+`;
+
 function midnightUtcTtl(): number {
   const now = new Date();
   const midnight = new Date(
@@ -106,6 +136,23 @@ export class StateService {
         this.key(strategyId),
         String(count),
         String(lastTradeAt),
+        String(midnightUtcTtl()),
+      )) as string;
+
+    return this.parseState(raw);
+  }
+
+  async decrementOrderCounters(
+    strategyId: string,
+    count: number,
+  ): Promise<StrategyState> {
+    const raw = (await this.redis
+      .getClient()
+      .eval(
+        DECREMENT_ORDER_COUNTERS_SCRIPT,
+        1,
+        this.key(strategyId),
+        String(count),
         String(midnightUtcTtl()),
       )) as string;
 

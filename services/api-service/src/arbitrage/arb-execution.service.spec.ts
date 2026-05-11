@@ -202,7 +202,7 @@ describe("ArbExecutionService", () => {
 
   describe("listPositions", () => {
     it("returns paginated positions", async () => {
-      db.arbPosition.findMany.mockResolvedValue([makeArbPosition()] as any);
+      db.arbPosition.findMany.mockResolvedValue([makeArbPosition()]);
       db.arbPosition.count.mockResolvedValue(1);
 
       const result = await service.listPositions("user-1", { limit: 10 });
@@ -212,7 +212,7 @@ describe("ArbExecutionService", () => {
     });
 
     it("filters by status", async () => {
-      db.arbPosition.findMany.mockResolvedValue([] as any);
+      db.arbPosition.findMany.mockResolvedValue([]);
       db.arbPosition.count.mockResolvedValue(0);
 
       await service.listPositions("user-1", {
@@ -229,7 +229,7 @@ describe("ArbExecutionService", () => {
 
   describe("getPosition", () => {
     it("returns position when found", async () => {
-      db.arbPosition.findFirst.mockResolvedValue(makeArbPosition() as any);
+      db.arbPosition.findFirst.mockResolvedValue(makeArbPosition());
 
       const result = await service.getPosition("user-1", "arb-1");
 
@@ -247,7 +247,7 @@ describe("ArbExecutionService", () => {
 
   describe("closePosition", () => {
     it("submits reverse orders and updates status to CLOSING", async () => {
-      db.arbPosition.findFirst.mockResolvedValue(makeArbPosition() as any);
+      db.arbPosition.findFirst.mockResolvedValue(makeArbPosition());
       db.arbPosition.update.mockResolvedValue({} as any);
 
       const result = await service.closePosition("user-1", "arb-1");
@@ -263,7 +263,7 @@ describe("ArbExecutionService", () => {
 
     it("throws when position not OPEN", async () => {
       db.arbPosition.findFirst.mockResolvedValue(
-        makeArbPosition({ status: ArbPositionStatus.PENDING }) as any,
+        makeArbPosition({ status: ArbPositionStatus.PENDING }),
       );
 
       await expect(service.closePosition("user-1", "arb-1")).rejects.toThrow(

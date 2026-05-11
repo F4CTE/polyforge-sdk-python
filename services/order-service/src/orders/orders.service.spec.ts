@@ -56,6 +56,10 @@ function makeMocks() {
 
   const redis = {
     xadd: vi.fn().mockResolvedValue("1234567890-0"),
+    set: vi.fn().mockResolvedValue("OK"),
+    getClient: vi.fn().mockReturnValue({
+      xlen: vi.fn().mockResolvedValue(1),
+    }),
   } as any;
 
   const signer = {
@@ -295,14 +299,15 @@ describe("OrdersService", () => {
     });
 
     it("passes expiration when provided in the intent", async () => {
+      const expiration = Math.floor(Date.now() / 1000) + 3600;
       const p = svc.processIntent(
-        makeIntent({ expiration: 1_700_000_000, orderType: "GTD" }),
+        makeIntent({ expiration, orderType: "GTD" }),
       );
       await vi.runAllTimersAsync();
       await p;
 
       const signerCall = signer.signOrder.mock.calls[0][0];
-      expect(signerCall.expiration).toBe(1_700_000_000);
+      expect(signerCall.expiration).toBe(expiration);
     });
 
     it("does not write to DLQ on success", async () => {
@@ -505,6 +510,24 @@ describe("OrdersService", () => {
       expect(payload.intentId).toBe("intent-dlq");
       expect(payload.userId).toBe("user-1");
     });
+
+    it("moves GTD orders to DLQ when they expire before the submission window", async () => {
+      await svc.processIntent(
+        makeIntent({
+          orderType: "GTD",
+          expiration: Math.floor(Date.now() / 1000) + 4,
+        }),
+      );
+
+      expect(prisma.order.create).not.toHaveBeenCalled();
+      expect(signer.signOrder).not.toHaveBeenCalled();
+      expect(redis.xadd).toHaveBeenCalledWith(
+        "stream:orders:dlq",
+        expect.objectContaining({
+          reason: "GTD_EXPIRED_BEFORE_SUBMISSION",
+        }),
+      );
+    });
   });
 
   // ── processIntent — US-rail terms gate ───────────────────────────────────
@@ -694,6 +717,29 @@ describe("OrdersService", () => {
       expect(events.emitOrderFailed).toHaveBeenCalledTimes(1);
       expect(events.emitOrderPlaced).toHaveBeenCalledTimes(1);
     });
+
+    it("reports intents whose DLQ write failed after retries are exhausted", async () => {
+      signer.signOrder.mockImplementation(async (req: any) => {
+        if (req.tokenId === "token-fail") throw new Error("always fail");
+        return SIGNED_ORDER;
+      });
+      redis.xadd.mockRejectedValue(new Error("Redis DLQ down"));
+
+      const intents = [
+        makeIntent({ intentId: "intent-fail", tokenId: "token-fail" }),
+        makeIntent({ intentId: "intent-ok", tokenId: "token-ok" }),
+      ];
+
+      const p = svc.processBatch(intents);
+      await vi.runAllTimersAsync();
+      const result = await p;
+
+      expect(result.processed).toEqual([intents[1]]);
+      expect(result.failed).toHaveLength(1);
+      expect(result.failed[0]).toMatchObject({ intent: intents[0] });
+      expect(result.failed[0].error).toBeInstanceOf(Error);
+      expect(events.emitOrderPlaced).toHaveBeenCalledTimes(1);
+    });
   });
 
   // ── closePosition ─────────────────────────────────────────────────────────
@@ -812,14 +858,14 @@ describe("OrdersService", () => {
   // ── DLQ redis failure ─────────────────────────────────────────────────────
 
   describe("moveToDlq() — redis.xadd failure (indirect)", () => {
-    it("swallows DLQ write errors without throwing", async () => {
+    it("surfaces DLQ write errors so Redis OOM is not silent", async () => {
       signer.signOrder.mockRejectedValue(new Error("sign fail"));
       redis.xadd.mockRejectedValue(new Error("Redis down"));
 
-      // Should not throw even when DLQ write fails
       const p = svc.processIntent(makeIntent());
+      const rejection = expect(p).rejects.toThrow("Redis down");
       await vi.runAllTimersAsync();
-      await expect(p).resolves.toBeUndefined();
+      await rejection;
     });
 
     it("logs DLQ write errors with a structured err field", async () => {
@@ -832,8 +878,9 @@ describe("OrdersService", () => {
       redis.xadd.mockRejectedValue(err);
 
       const p = svc.processIntent(makeIntent());
+      const rejection = expect(p).rejects.toThrow("Redis down");
       await vi.runAllTimersAsync();
-      await p;
+      await rejection;
 
       expect(errorSpy).toHaveBeenCalledWith(
         expect.objectContaining({

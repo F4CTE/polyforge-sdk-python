@@ -178,7 +178,7 @@ export class DiscoverService {
         this.prisma.position.findMany({
           where: {
             userId: { in: userIds },
-            resolutionStatus: "RESOLVED" as ResolutionStatus,
+            resolutionStatus: "RESOLVED",
           },
           select: { userId: true, realizedPnl: true },
         }),

@@ -5,9 +5,10 @@ import {
   CallHandler,
   BadRequestException,
   ConflictException,
+  Logger,
 } from "@nestjs/common";
 import { Observable, of, throwError } from "rxjs";
-import { tap, catchError } from "rxjs/operators";
+import { catchError, mergeMap } from "rxjs/operators";
 import { RedisService } from "@polyforge/shared-redis";
 
 const HEADER = "idempotency-key";
@@ -15,6 +16,8 @@ const TTL_SECONDS = 86_400; // 24h
 
 @Injectable()
 export class IdempotencyInterceptor implements NestInterceptor {
+  private readonly logger = new Logger(IdempotencyInterceptor.name);
+
   constructor(private readonly redis: RedisService) {}
 
   async intercept(
@@ -51,13 +54,29 @@ export class IdempotencyInterceptor implements NestInterceptor {
     }
 
     return next.handle().pipe(
-      tap((result) => {
-        void this.redis
-          .set(cacheKey, JSON.stringify(result), TTL_SECONDS)
-          .then(() => this.redis.getClient().del(lockKey));
+      mergeMap(async (result) => {
+        try {
+          await this.redis.set(cacheKey, JSON.stringify(result), TTL_SECONDS);
+          void this.redis
+            .getClient()
+            .del(lockKey)
+            .catch(() => {});
+        } catch (err) {
+          this.logger.error(
+            "Idempotency cache write failed — lock retained to prevent duplicate, result still returned",
+            err instanceof Error ? err.message : err,
+          );
+          // Lock is NOT released — it will expire naturally (30s PX).
+          // This prevents a concurrent request with the same key from being
+          // processed while no cached result exists.
+        }
+        return result;
       }),
       catchError((err) => {
-        void this.redis.getClient().del(lockKey);
+        void this.redis
+          .getClient()
+          .del(lockKey)
+          .catch(() => {});
         return throwError(() => err);
       }),
     );

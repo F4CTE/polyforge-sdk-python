@@ -21,7 +21,7 @@ describe("BatchService", () => {
       method: "GET",
       path: "/api/v1/markets",
       ...overrides,
-    } as BatchItemDto;
+    };
   }
 
   it("should execute items in parallel and return correlated results", async () => {

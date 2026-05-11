@@ -41,6 +41,8 @@ function createMockRedis() {
     }),
   };
   return {
+    set: vi.fn().mockResolvedValue(undefined),
+    del: vi.fn().mockResolvedValue(undefined),
     getClient: vi.fn().mockReturnValue({
       scanStream: vi.fn().mockReturnValue(scanStreamInstance),
       pipeline: vi
@@ -364,6 +366,85 @@ describe('UsersService', () => {
 
       await service.resetPassword(token, 'NewPassw0rd!');
 
+      expect(db.$transaction).toHaveBeenCalledOnce();
+    });
+
+    it('writes the stale-access-token marker before changing password state', async () => {
+      const token = rawToken();
+      const record = passwordResetTokenFactory({ tokenHash: sha256(token) });
+      const callOrder: string[] = [];
+      db.passwordResetToken.findUnique.mockResolvedValue(record as any);
+      redis.set.mockImplementation(async () => {
+        callOrder.push('pwchange');
+      });
+      db.$transaction.mockImplementation(async () => {
+        callOrder.push('transaction');
+        return [];
+      });
+
+      await service.resetPassword(token, 'NewPassw0rd!');
+
+      expect(redis.set).toHaveBeenCalledWith(
+        `pwchange:${record.userId}`,
+        expect.any(String),
+        300,
+      );
+      expect(callOrder).toEqual(['pwchange', 'transaction']);
+    });
+
+    it('does not consume the reset token or change password when stale-token invalidation fails', async () => {
+      const token = rawToken();
+      const record = passwordResetTokenFactory({ tokenHash: sha256(token) });
+      db.passwordResetToken.findUnique.mockResolvedValue(record as any);
+      redis.set.mockRejectedValue(new Error('redis down'));
+
+      await expect(
+        service.resetPassword(token, 'NewPassw0rd!'),
+      ).rejects.toThrow('redis down');
+
+      expect(db.$transaction).not.toHaveBeenCalled();
+    });
+
+    it('clears pwchange marker when the password transaction fails', async () => {
+      const token = rawToken();
+      const record = passwordResetTokenFactory({ tokenHash: sha256(token) });
+      db.passwordResetToken.findUnique.mockResolvedValue(record as any);
+      db.$transaction.mockRejectedValue(new Error('db write failure'));
+      const delSpy = vi.spyOn(redis, 'del');
+
+      await expect(
+        service.resetPassword(token, 'NewPassw0rd!'),
+      ).rejects.toThrow('db write failure');
+
+      expect(delSpy).toHaveBeenCalledWith(`pwchange:${record.userId}`);
+    });
+
+    it('revokes refresh tokens after the password transaction succeeds, and throws on revocation failure', async () => {
+      const token = rawToken();
+      const record = passwordResetTokenFactory({ tokenHash: sha256(token) });
+      db.passwordResetToken.findUnique.mockResolvedValue(record as any);
+      db.$transaction.mockResolvedValue([]);
+      const callOrder: string[] = [];
+      db.$transaction.mockImplementation(async () => {
+        callOrder.push('transaction');
+        return [];
+      });
+      // Simulate refresh-token revocation failure via pipeline rejection.
+      redis._pipelineExec.mockRejectedValue(new Error('redis revocation failed'));
+      redis._scanStream.on.mockImplementation(
+        (event: string, cb: (...args: unknown[]) => unknown) => {
+          if (event === 'data') cb([`refresh:${record.userId}:abc123`]);
+          if (event === 'end') cb();
+          return redis._scanStream;
+        },
+      );
+
+      await expect(
+        service.resetPassword(token, 'NewPassw0rd!'),
+      ).rejects.toThrow('redis revocation failed');
+
+      // Transaction must complete before revocation — password is changed
+      // even though session cleanup failed.
       expect(db.$transaction).toHaveBeenCalledOnce();
     });
 

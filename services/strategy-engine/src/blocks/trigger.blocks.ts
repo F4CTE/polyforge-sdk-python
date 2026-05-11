@@ -227,7 +227,7 @@ export const VolumeRateTickBlock: BlockEvaluator = {
     }
     const minRateNum = parseFiniteDecimal(minRate);
     if (minRateNum === null) return { fired: false, reason: "invalid minRate" };
-    const volume = bidSizes.reduce((s, size) => s + size!, 0);
+    const volume = bidSizes.reduce((s, size) => s + size, 0);
     const fired = volume >= minRateNum;
     return {
       fired,

@@ -6,6 +6,7 @@ import {
   UnprocessableEntityException,
   ConflictException,
   Logger,
+  ServiceUnavailableException,
 } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import {
@@ -311,7 +312,7 @@ export class StrategiesService {
 
       if (isUsRailStrategy) {
         try {
-          assertCurrentUsRailTermsAccepted(user as any);
+          assertCurrentUsRailTermsAccepted(user);
         } catch (err) {
           await this.prisma.strategy.update({
             where: { id },
@@ -388,12 +389,15 @@ export class StrategiesService {
     }
 
     const previousStatus = strategy.status;
-    // R4-01: Atomic check-and-update — only stop if the preflight status is still current.
-    const updated = await this.prisma.strategy.updateMany({
+
+    // Atomic DB status claim: acquire the IDLE transition before calling
+    // the engine so a concurrent status change cannot leave the engine
+    // stopped while the DB remains in RUNNING/PAPER.
+    const { count } = await this.prisma.strategy.updateMany({
       where: { id, userId, status: previousStatus },
       data: { status: StrategyStatus.IDLE },
     });
-    if (updated.count === 0) {
+    if (count === 0) {
       throw new ConflictException({
         code: "NOT_RUNNING",
         message: "Strategy is not in a running state",
@@ -406,36 +410,151 @@ export class StrategiesService {
         parentStrategyId: id,
         status: { in: [StrategyStatus.RUNNING, StrategyStatus.PAPER] },
       },
-      select: { id: true },
+      select: { id: true, status: true },
     });
+    const stoppedChildren: { id: string; previousStatus: StrategyStatus }[] =
+      [];
     for (const child of children) {
       try {
-        await this.client.delete(
+        const childRes = await this.client.delete(
           this.engineUrl,
           "strategy-engine",
           `/internal/strategies/${child.id}`,
         );
-      } catch {
-        this.logger.warn(`Failed to stop child strategy ${child.id}`);
+        if (
+          !childRes.ok &&
+          childRes.status !== 204 &&
+          childRes.status !== 404
+        ) {
+          throw new Error(`Child stop returned ${childRes.status}`);
+        }
+        if (childRes.status !== 404) {
+          stoppedChildren.push({
+            id: child.id,
+            previousStatus: child.status,
+          });
+        }
+      } catch (err) {
+        this.logger.warn(
+          `Failed to stop child strategy ${child.id}: ${
+            err instanceof Error ? err.message : String(err)
+          }`,
+        );
+        // Rollback parent + previously stopped children
+        await this.prisma.strategy.update({
+          where: { id },
+          data: { status: previousStatus },
+        });
+        // Restore child DB status BEFORE engine restart so the engine
+        // reads the correct paper/live mode (IDLE would default to LIVE).
+        await Promise.allSettled(
+          stoppedChildren.map((cls) =>
+            this.prisma.strategy.update({
+              where: { id: cls.id },
+              data: {
+                status: cls.previousStatus,
+                parentStrategyId: id,
+              },
+            }),
+          ),
+        );
+        const restartResults = await Promise.allSettled(
+          stoppedChildren.map((cls) =>
+            this.client.post(
+              this.engineUrl,
+              "strategy-engine",
+              `/internal/strategies/${cls.id}/start`,
+            ),
+          ),
+        );
+        for (let i = 0; i < stoppedChildren.length; i++) {
+          const cls = stoppedChildren[i];
+          const result = restartResults[i];
+          if (result.status === "rejected" || !result.value.ok) {
+            // Engine restart failed — roll back the DB restoration
+            await this.prisma.strategy
+              .update({
+                where: { id: cls.id },
+                data: {
+                  status: StrategyStatus.IDLE,
+                  parentStrategyId: null,
+                },
+              })
+              .catch(() => {});
+            this.logger.warn(
+              `Child restart rollback failed for ${cls.id}, DB restored to IDLE`,
+            );
+          }
+        }
+        throw new ServiceUnavailableException({
+          code: "ENGINE_CHILD_STOP_FAILED",
+          message: "Strategy engine did not confirm child stop",
+        });
       }
     }
 
-    let res: Response;
     try {
-      res = await this.client.delete(
+      const res = await this.client.delete(
         this.engineUrl,
         "strategy-engine",
         `/internal/strategies/${id}`,
       );
+      if (!res.ok && res.status !== 204 && res.status !== 404) {
+        throw new Error(`Engine stop returned ${res.status}`);
+      }
     } catch (err) {
+      // Rollback parent + children DB status on failure
       await this.prisma.strategy.update({
         where: { id },
         data: { status: previousStatus },
       });
-      throw err;
-    }
-    if (!res.ok && res.status !== 204) {
-      this.logger.warn(`Engine stop returned ${res.status} for ${id}`);
+      // Restore child DB status BEFORE engine restart so the engine
+      // reads the correct paper/live mode (IDLE would default to LIVE).
+      await Promise.allSettled(
+        stoppedChildren.map((cls) =>
+          this.prisma.strategy.update({
+            where: { id: cls.id },
+            data: {
+              status: cls.previousStatus,
+              parentStrategyId: id,
+            },
+          }),
+        ),
+      );
+      const restartResults = await Promise.allSettled(
+        stoppedChildren.map((cls) =>
+          this.client.post(
+            this.engineUrl,
+            "strategy-engine",
+            `/internal/strategies/${cls.id}/start`,
+          ),
+        ),
+      );
+      for (let i = 0; i < stoppedChildren.length; i++) {
+        const cls = stoppedChildren[i];
+        const result = restartResults[i];
+        if (result.status === "rejected" || !result.value.ok) {
+          // Engine restart failed — roll back the DB restoration
+          await this.prisma.strategy
+            .update({
+              where: { id: cls.id },
+              data: {
+                status: StrategyStatus.IDLE,
+                parentStrategyId: null,
+              },
+            })
+            .catch(() => {});
+          this.logger.warn(
+            `Child restart rollback failed for ${cls.id}, DB restored to IDLE`,
+          );
+        }
+      }
+      throw err instanceof ServiceUnavailableException
+        ? err
+        : new ServiceUnavailableException({
+            code: "ENGINE_STOP_FAILED",
+            message: "Strategy engine did not confirm stop",
+          });
     }
 
     this.posthog.capture(userId, "strategy_stopped", { strategyId: id });
@@ -1152,9 +1271,9 @@ export class StrategiesService {
     return this.create(userId, {
       name: parsed.name ?? "AI-Generated Strategy",
       description: parsed.description ?? dto.description,
-      execMode: (["TICK", "EVENT", "HYBRID"].includes(parsed.execMode ?? "")
+      execMode: ["TICK", "EVENT", "HYBRID"].includes(parsed.execMode ?? "")
         ? parsed.execMode
-        : "TICK") as string,
+        : "TICK",
       safety: parsed.safety ?? [],
       triggers: parsed.triggers ?? [],
       conditions: parsed.conditions ?? [],

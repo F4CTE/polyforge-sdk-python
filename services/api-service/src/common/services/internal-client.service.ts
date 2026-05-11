@@ -135,7 +135,7 @@ export class InternalClientService {
       method: "POST",
       headers: { Authorization: `Bearer ${token}` },
       signal: AbortSignal.timeout(10_000),
-    } as RequestInit);
+    });
   }
 
   async delete(
@@ -149,7 +149,7 @@ export class InternalClientService {
       method: "DELETE",
       headers: { Authorization: `Bearer ${token}` },
       signal: AbortSignal.timeout(10_000),
-    } as RequestInit);
+    });
   }
 
   async get(
@@ -162,7 +162,7 @@ export class InternalClientService {
     return this.fetchWithBreaker(baseUrl, audience, url, {
       headers: { Authorization: `Bearer ${token}` },
       signal: AbortSignal.timeout(10_000),
-    } as RequestInit);
+    });
   }
 
   private async fetchWithBreaker(

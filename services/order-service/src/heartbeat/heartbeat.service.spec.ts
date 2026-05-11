@@ -34,7 +34,15 @@ describe("HeartbeatService", () => {
     // Stub global fetch
     vi.stubGlobal(
       "fetch",
-      vi.fn().mockResolvedValue({ ok: true, json: async () => ({}) }),
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          POLY_API_KEY: "key",
+          POLY_SIGNATURE: "sig",
+          POLY_PASSPHRASE: "pass",
+          POLY_TIMESTAMP: "12345",
+        }),
+      }),
     );
   });
 
@@ -150,6 +158,22 @@ describe("HeartbeatService", () => {
     );
 
     await expect(svc.sendHeartbeats()).resolves.toBeUndefined();
+  });
+
+  it("does not send heartbeat with empty auth headers", async () => {
+    prisma.order.findMany.mockResolvedValue([
+      { clobOrderId: "clob-1", userId: "user-1" },
+    ]);
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({ ok: true, json: async () => ({}) }),
+    );
+
+    await svc.sendHeartbeats();
+
+    const calls = (fetch as ReturnType<typeof vi.fn>).mock.calls;
+    expect(calls).toHaveLength(1);
+    expect(String(calls[0][0])).toContain("/internal/l2-headers");
   });
 
   // ── Starts interval on module init ─────────────────────────────────────

@@ -63,7 +63,7 @@ describe("ArbRiskService", () => {
 
   describe("getDashboard", () => {
     it("returns zero-state when no positions exist", async () => {
-      db.arbPosition.findMany.mockResolvedValue([] as any);
+      db.arbPosition.findMany.mockResolvedValue([]);
 
       const result = await service.getDashboard("user-1");
 
@@ -122,7 +122,7 @@ describe("ArbRiskService", () => {
 
   describe("getSettlementRisks", () => {
     it("returns [] when no open positions", async () => {
-      db.arbPosition.findMany.mockResolvedValue([] as any);
+      db.arbPosition.findMany.mockResolvedValue([]);
 
       const result = await service.getSettlementRisks("user-1");
 
@@ -225,7 +225,7 @@ describe("ArbRiskService", () => {
 
   describe("refreshUnrealizedPnl", () => {
     it("returns 0 when no open positions", async () => {
-      db.arbPosition.findMany.mockResolvedValue([] as any);
+      db.arbPosition.findMany.mockResolvedValue([]);
 
       const result = await service.refreshUnrealizedPnl("user-1");
 

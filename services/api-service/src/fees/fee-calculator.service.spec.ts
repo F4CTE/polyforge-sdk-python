@@ -33,7 +33,7 @@ describe("FeeCalculatorService", () => {
     it("calculates taker fee for Polymarket using default schedule", async () => {
       db.venueFeeSchedule.findMany.mockResolvedValue([
         makeSchedule({ feeBps: 200, category: null }),
-      ] as any);
+      ]);
 
       const result = await service.estimateFee({
         venue: Venue.POLYMARKET,
@@ -54,7 +54,7 @@ describe("FeeCalculatorService", () => {
       db.venueFeeSchedule.findMany.mockResolvedValue([
         makeSchedule({ feeBps: 100, category: "politics" }),
         makeSchedule({ feeBps: 200, category: null }),
-      ] as any);
+      ]);
 
       const result = await service.estimateFee({
         venue: Venue.POLYMARKET,
@@ -72,7 +72,7 @@ describe("FeeCalculatorService", () => {
     it("falls back to default when category not found on Polymarket", async () => {
       db.venueFeeSchedule.findMany.mockResolvedValue([
         makeSchedule({ feeBps: 200, category: null }),
-      ] as any);
+      ]);
 
       const result = await service.estimateFee({
         venue: Venue.POLYMARKET,
@@ -106,7 +106,7 @@ describe("FeeCalculatorService", () => {
           minPrice: { toNumber: () => 0.5 },
           maxPrice: { toNumber: () => 0.75 },
         }),
-      ] as any);
+      ]);
 
       const result = await service.estimateFee({
         venue: Venue.KALSHI,
@@ -133,7 +133,7 @@ describe("FeeCalculatorService", () => {
           minPrice: { toNumber: () => 0.5 },
           maxPrice: { toNumber: () => 0.75 },
         }),
-      ] as any);
+      ]);
 
       const result = await service.estimateFee({
         venue: Venue.KALSHI,
@@ -150,7 +150,7 @@ describe("FeeCalculatorService", () => {
     it("calculates maker fee (0 bps for Polymarket)", async () => {
       db.venueFeeSchedule.findMany.mockResolvedValue([
         makeSchedule({ feeBps: 0, role: "maker" }),
-      ] as any);
+      ]);
 
       const result = await service.estimateFee({
         venue: Venue.POLYMARKET,
@@ -169,7 +169,7 @@ describe("FeeCalculatorService", () => {
     it("handles SELL side (fee reduces proceeds)", async () => {
       db.venueFeeSchedule.findMany.mockResolvedValue([
         makeSchedule({ feeBps: 200 }),
-      ] as any);
+      ]);
 
       const result = await service.estimateFee({
         venue: Venue.POLYMARKET,
@@ -205,7 +205,7 @@ describe("FeeCalculatorService", () => {
           minPrice: { toNumber: () => 0.01 },
           maxPrice: { toNumber: () => 0.1 },
         }),
-      ] as any);
+      ]);
 
       const result = await service.estimateFee({
         venue: Venue.KALSHI,
@@ -224,7 +224,7 @@ describe("FeeCalculatorService", () => {
     it("returns only Polymarket when Kalshi unavailable", async () => {
       db.venueFeeSchedule.findMany.mockResolvedValue([
         makeSchedule({ feeBps: 200 }),
-      ] as any);
+      ]);
 
       const result = await service.compareFees({
         price: 0.5,
@@ -240,7 +240,7 @@ describe("FeeCalculatorService", () => {
 
     it("recommends cheaper venue when both available", async () => {
       db.venueFeeSchedule.findMany
-        .mockResolvedValueOnce([makeSchedule({ feeBps: 200 })] as any)
+        .mockResolvedValueOnce([makeSchedule({ feeBps: 200 })])
         .mockResolvedValueOnce([
           makeSchedule({
             venue: Venue.KALSHI,
@@ -248,7 +248,7 @@ describe("FeeCalculatorService", () => {
             minPrice: { toNumber: () => 0.01 },
             maxPrice: { toNumber: () => 0.1 },
           }),
-        ] as any);
+        ]);
 
       const result = await service.compareFees({
         price: 0.05,
@@ -266,7 +266,7 @@ describe("FeeCalculatorService", () => {
       db.venueFeeSchedule.findMany
         .mockResolvedValueOnce([
           makeSchedule({ feeBps: 100, category: "politics" }),
-        ] as any)
+        ])
         .mockResolvedValueOnce([
           makeSchedule({
             venue: Venue.KALSHI,
@@ -274,7 +274,7 @@ describe("FeeCalculatorService", () => {
             minPrice: { toNumber: () => 0.25 },
             maxPrice: { toNumber: () => 0.5 },
           }),
-        ] as any);
+        ]);
 
       const result = await service.compareFees({
         price: 0.4,

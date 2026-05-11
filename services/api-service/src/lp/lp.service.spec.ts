@@ -127,7 +127,7 @@ describe("LpService", () => {
     db.order.create.mockResolvedValueOnce({ id: "buy-order-id" } as any);
     db.order.create.mockResolvedValueOnce({ id: "sell-order-id" } as any);
 
-    const result = await service.provideLiquidity("user-1", makeDto() as any);
+    const result = await service.provideLiquidity("user-1", makeDto());
 
     expect(db.order.create).toHaveBeenCalledTimes(2);
     expect(xaddFn).toHaveBeenCalledTimes(2);
@@ -143,7 +143,7 @@ describe("LpService", () => {
     db.market.findUnique.mockResolvedValue(makeMarket() as any);
     db.order.create.mockResolvedValue({ id: "order-id" } as any);
 
-    const result = await service.provideLiquidity("user-1", makeDto() as any);
+    const result = await service.provideLiquidity("user-1", makeDto());
 
     expect(result.targetSpread).toBe(0.02);
     // yesPrice = 0.50, spread = 0.02 => buy=0.49, sell=0.51
@@ -158,7 +158,7 @@ describe("LpService", () => {
 
     const result = await service.provideLiquidity(
       "user-1",
-      makeDto({ targetSpread: 0.1 }) as any,
+      makeDto({ targetSpread: 0.1 }),
     );
 
     expect(result.targetSpread).toBe(0.1);
@@ -180,7 +180,7 @@ describe("LpService", () => {
     );
     db.order.create.mockResolvedValue({ id: "order-id" } as any);
 
-    const result = await service.provideLiquidity("user-1", makeDto() as any);
+    const result = await service.provideLiquidity("user-1", makeDto());
 
     expect(result.buyQuote).toBeGreaterThanOrEqual(0.01);
   });
@@ -198,7 +198,7 @@ describe("LpService", () => {
     );
     db.order.create.mockResolvedValue({ id: "order-id" } as any);
 
-    const result = await service.provideLiquidity("user-1", makeDto() as any);
+    const result = await service.provideLiquidity("user-1", makeDto());
 
     expect(result.sellQuote).toBeLessThanOrEqual(0.99);
   });
@@ -208,7 +208,7 @@ describe("LpService", () => {
     db.market.findUnique.mockResolvedValue(makeMarket() as any);
     db.order.create.mockResolvedValue({ id: "order-id" } as any);
 
-    await service.provideLiquidity("user-1", makeDto() as any);
+    await service.provideLiquidity("user-1", makeDto());
 
     // First xadd call is the buy order
     const buyCall = xaddFn.mock.calls[0];

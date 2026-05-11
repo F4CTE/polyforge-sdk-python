@@ -160,10 +160,10 @@ export class StrategyRegistryService implements OnApplicationBootstrap {
             strategy.userId,
             strategy.execMode,
             strategy.tickMs ?? 1000,
-            wired.triggers as unknown as Block[],
-            wired.conditions as unknown as Block[],
-            wired.actions as unknown as Block[],
-            ((strategy.safety as Block[] | null) ?? []) as unknown as Block[],
+            wired.triggers,
+            wired.conditions,
+            wired.actions,
+            (strategy.safety as Block[] | null) ?? [],
             variables,
             this.redis,
             this.prisma,
@@ -247,10 +247,10 @@ export class StrategyRegistryService implements OnApplicationBootstrap {
       strategy.userId,
       strategy.execMode,
       strategy.tickMs ?? 1000,
-      wired.triggers as unknown as Block[],
-      wired.conditions as unknown as Block[],
-      wired.actions as unknown as Block[],
-      ((strategy.safety as Block[] | null) ?? []) as unknown as Block[],
+      wired.triggers,
+      wired.conditions,
+      wired.actions,
+      (strategy.safety as Block[] | null) ?? [],
       variables,
       this.redis,
       this.prisma,
@@ -268,6 +268,25 @@ export class StrategyRegistryService implements OnApplicationBootstrap {
         | number
         | undefined,
     );
+
+    // Re-establish parent-child linkage if this strategy is a child.
+    // Needed when restarting children during stop() rollback, where the
+    // generic start path is used and parentChildMap would otherwise be orphaned.
+    // Uses "managed" as the restart mode — restarted children were originally
+    // "managed" or "scoped" (both cascade-stopped by the parent), so defaulting
+    // to "managed" preserves the stop-cascade contract. "fire_and_forget"
+    // children are not cascade-stopped and should not appear in the restart path.
+    const parentId = (strategy as Record<string, unknown>).parentStrategyId as
+      | string
+      | null
+      | undefined;
+    if (parentId) {
+      this.parentChildMap.set(strategyId, parentId);
+      const parentRunner = this.runners.get(parentId);
+      if (parentRunner) {
+        parentRunner.addChild(strategyId, "managed");
+      }
+    }
 
     this.runners.set(strategyId, runner);
     runner.start();
@@ -492,10 +511,10 @@ export class StrategyRegistryService implements OnApplicationBootstrap {
       child.userId,
       child.execMode,
       child.tickMs ?? 1000,
-      wiredChild.triggers as unknown as Block[],
-      wiredChild.conditions as unknown as Block[],
-      wiredChild.actions as unknown as Block[],
-      ((child.safety as Block[] | null) ?? []) as unknown as Block[],
+      wiredChild.triggers,
+      wiredChild.conditions,
+      wiredChild.actions,
+      (child.safety as Block[] | null) ?? [],
       variables,
       this.redis,
       this.prisma,
@@ -585,33 +604,73 @@ export class StrategyRegistryService implements OnApplicationBootstrap {
     intents: OrderIntent[],
     stream: string,
   ): Promise<void> {
-    const strategyIds = new Set<string>();
+    const now = Date.now();
+
+    // Publish intents to Redis stream. Counters are incremented after
+    // successful publish per-intent so that lastTradeAt is only updated
+    // when intents actually land in the stream.
+    const errors: Error[] = [];
+    const succeededByStrategy = new Map<string, number>();
     for (const intent of intents) {
-      strategyIds.add(intent.strategyId);
-      await this.redis.xadd(stream, {
-        intentId: intent.intentId,
-        userId: intent.userId,
-        strategyId: intent.strategyId,
-        marketId: intent.marketId,
-        tokenId: intent.tokenId,
-        side: intent.side,
-        outcome: intent.outcome,
-        size: intent.size,
-        price: intent.price,
-        orderType: intent.orderType,
-        expiration: String(intent.expiration ?? 0),
-        ...(intent.venue ? { venue: intent.venue } : {}),
-        ...(intent.kalshiSubaccount != null
-          ? { kalshiSubaccount: String(intent.kalshiSubaccount) }
-          : {}),
-        ts: String(Date.now()),
-      });
+      try {
+        await this.redis.xadd(stream, {
+          intentId: intent.intentId,
+          userId: intent.userId,
+          strategyId: intent.strategyId,
+          marketId: intent.marketId,
+          tokenId: intent.tokenId,
+          side: intent.side,
+          outcome: intent.outcome,
+          size: intent.size,
+          price: intent.price,
+          orderType: intent.orderType,
+          expiration: String(intent.expiration ?? 0),
+          ...(intent.venue ? { venue: intent.venue } : {}),
+          ...(intent.kalshiSubaccount != null
+            ? { kalshiSubaccount: String(intent.kalshiSubaccount) }
+            : {}),
+          ts: String(now),
+        });
+        succeededByStrategy.set(
+          intent.strategyId,
+          (succeededByStrategy.get(intent.strategyId) ?? 0) + 1,
+        );
+      } catch (err) {
+        errors.push(err instanceof Error ? err : new Error(String(err)));
+      }
     }
 
-    for (const strategyId of strategyIds) {
-      const intentCount = intents.filter(
-        (intent) => intent.strategyId === strategyId,
-      ).length;
+    // Increment counters only for successfully published intents.
+    // Counter failure after publish is a consistency risk: the order is
+    // already in the stream but betsToday/totalOrders are stale, which
+    // gate max_bets_per_day and max_orders_total safety checks.
+    // Fail-closed: throw so the runner surfaces the accounting failure
+    // and can pause to prevent overtrading on subsequent ticks.
+    for (const [strategyId, intentCount] of succeededByStrategy) {
+      try {
+        await this.state.incrementOrderCounters(strategyId, intentCount, now);
+      } catch (counterErr) {
+        this.logger.error(
+          {
+            event: "ORDER_INTENTS_COUNTER_INCREMENT_FAILED",
+            strategyId,
+            intentCount,
+            error:
+              counterErr instanceof Error
+                ? counterErr.message
+                : String(counterErr),
+          },
+          `Counter increment failed after ${intentCount} intents published for strategy ${strategyId}`,
+        );
+        throw new Error(
+          `Counter increment failed after ${intentCount} intents published for strategy ${strategyId}: ${counterErr instanceof Error ? counterErr.message : String(counterErr)}`,
+          { cause: counterErr },
+        );
+      }
+    }
+
+    // Log successful publishes
+    for (const [strategyId, intentCount] of succeededByStrategy) {
       this.logger.log(
         {
           event: "ORDER_INTENTS_PUBLISHED",
@@ -631,6 +690,12 @@ export class StrategyRegistryService implements OnApplicationBootstrap {
           Stream: stream,
         },
       });
+    }
+
+    if (errors.length > 0) {
+      throw new Error(
+        `Failed to publish ${errors.length} of ${intents.length} order intents: ${errors.map((e) => e.message).join("; ")}`,
+      );
     }
   }
 

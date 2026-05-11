@@ -292,7 +292,7 @@ describe("CrossVenueArbitrageService", () => {
         makeMarket("kalshi-1", "0.50", "0.50"),
       ] as any);
       mgetFn.mockResolvedValue(Array(4).fill(null));
-      db.arbitrageSnapshot.createMany.mockResolvedValue({ count: 1 } as any);
+      db.arbitrageSnapshot.createMany.mockResolvedValue({ count: 1 });
 
       const count = await service.persistSnapshots();
 

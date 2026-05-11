@@ -11,6 +11,8 @@ describe("API global rate limit", () => {
   });
 
   it("keeps the development bucket outside CI", () => {
-    expect(getApiRateLimit({ CI: "false", NODE_ENV: "development" })).toBe(1200);
+    expect(getApiRateLimit({ CI: "false", NODE_ENV: "development" })).toBe(
+      1200,
+    );
   });
 });

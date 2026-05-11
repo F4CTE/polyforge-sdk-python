@@ -18,6 +18,7 @@ const MAX_BATCH_SIZE = 15;
 const MAX_ATTEMPTS = 3;
 const RETRY_BASE_MS = 1_000;
 const DLQ_STREAM = "stream:orders:dlq";
+const MIN_GTD_LEAD_SECONDS = 60;
 
 export interface OrderIntent {
   intentId: string;
@@ -48,6 +49,11 @@ export interface CancellationIntent {
   venueOrderId?: string;
 }
 
+export interface OrderBatchResult {
+  processed: OrderIntent[];
+  failed: Array<{ intent: OrderIntent; error: unknown }>;
+}
+
 @Injectable()
 export class OrdersService {
   private readonly logger = new Logger(OrdersService.name);
@@ -66,14 +72,32 @@ export class OrdersService {
    * Enforces MAX_BATCH_SIZE. Each intent is attempted up to MAX_ATTEMPTS
    * times with exponential backoff. Failed intents go to the DLQ.
    */
-  async processBatch(intents: OrderIntent[]): Promise<void> {
+  async processBatch(intents: OrderIntent[]): Promise<OrderBatchResult> {
     const batches = this.chunk(intents, MAX_BATCH_SIZE);
+    const result: OrderBatchResult = { processed: [], failed: [] };
 
     for (const batch of batches) {
-      await Promise.allSettled(
-        batch.map((intent) => this.processIntent(intent)),
+      const settled = await Promise.allSettled(
+        batch.map(async (intent) => {
+          await this.processIntent(intent);
+          return intent;
+        }),
       );
+
+      settled.forEach((entry, index) => {
+        if (entry.status === "fulfilled") {
+          result.processed.push(entry.value);
+          return;
+        }
+
+        result.failed.push({
+          intent: batch[index],
+          error: entry.reason,
+        });
+      });
     }
+
+    return result;
   }
 
   async processIntent(intent: OrderIntent, attempt = 1): Promise<void> {
@@ -84,15 +108,51 @@ export class OrdersService {
     const prismaVenue = this.toPrismaVenue(targetVenue);
     const strategyId = this.normalizeStrategyId(intent.strategyId);
 
-    // SECURITY: Idempotency guard — skip if this intent was already processed
+    // Idempotency guard — check first so redelivered already-processed
+    // intents (including GTD orders whose expiration window has passed)
+    // are skipped rather than misclassified into the DLQ.
     const existingOrder = await this.prisma.order.findFirst({
       where: { intentId: intent.intentId },
-      select: { id: true },
+      select: { id: true, status: true },
     });
     if (existingOrder) {
+      // A FAILED order from a prior processing attempt means the DLQ write
+      // that follows update-to-FAILED likely threw (line 399). The stream
+      // entry was left unacked for redelivery but the FAILED row would
+      // otherwise be treated as "already processed", causing the entry to
+      // be XACKed without ever reaching the DLQ. Retry DLQ persistence here.
+      if (existingOrder.status === OrderStatus.FAILED) {
+        const dlqSentinel = `dlq:written:${intent.intentId}`;
+        const alreadyWritten = await this.redis
+          .get(dlqSentinel)
+          .catch(() => null);
+        if (alreadyWritten) {
+          this.logger.warn(
+            `Intent ${intent.intentId} DLQ write succeeded on prior attempt — skipping duplicate`,
+          );
+        } else {
+          const errCode = `PREVIOUS_DLQ_WRITE_FAILED:${existingOrder.id}`;
+          try {
+            await this.moveToDlq(intent, errCode);
+          } catch {
+            throw new Error(
+              `Failed order ${existingOrder.id} DLQ write retry failed for intent ${intent.intentId}`,
+            );
+          }
+        }
+      } else {
+        this.logger.warn(
+          `Duplicate intent ${intent.intentId} — skipping (already processed as order ${existingOrder.id})`,
+        );
+      }
+      return;
+    }
+
+    if (this.isExpiredGtdIntent(intent)) {
       this.logger.warn(
-        `Duplicate intent ${intent.intentId} — skipping (already processed as order ${existingOrder.id})`,
+        `GTD intent ${intent.intentId} expired before submission window`,
       );
+      await this.moveToDlq(intent, "GTD_EXPIRED_BEFORE_SUBMISSION");
       return;
     }
 
@@ -561,6 +621,13 @@ export class OrdersService {
     }
   }
 
+  private isExpiredGtdIntent(intent: OrderIntent): boolean {
+    if (intent.orderType !== "GTD") return false;
+    if (intent.expiration == null) return true;
+    const nowSeconds = Math.floor(Date.now() / 1000);
+    return intent.expiration <= nowSeconds + MIN_GTD_LEAD_SECONDS;
+  }
+
   private async moveToDlq(intent: OrderIntent, reason: string): Promise<void> {
     try {
       await this.redis.xadd(DLQ_STREAM, {
@@ -570,10 +637,16 @@ export class OrdersService {
         failedAt: String(Date.now()),
         reason,
       });
-      const dlqDepth = await this.redis
-        .getClient()
-        .xlen(DLQ_STREAM)
-        .catch(() => undefined);
+      await this.redis
+        .set(`dlq:written:${intent.intentId}`, "1", 86400)
+        .catch(() => {
+          /* best-effort sentinel — non-fatal if write fails */
+        });
+      const dlqClient =
+        typeof this.redis.getClient === "function"
+          ? this.redis.getClient()
+          : undefined;
+      const dlqDepth = await dlqClient?.xlen(DLQ_STREAM).catch(() => undefined);
       logCloudWatchMetric(this.logger, {
         name: "OrderDlqDepth",
         value: dlqDepth ?? 1,
@@ -592,6 +665,7 @@ export class OrdersService {
         },
         "Failed to write order intent to DLQ",
       );
+      throw dlqErr;
     }
   }
 
@@ -612,9 +686,9 @@ export class OrdersService {
     this.logger.log(
       `Scheduling retry ${nextAttempt}/${MAX_ATTEMPTS} for intent ${intent.intentId} in ${delayMs}ms`,
     );
-    return new Promise<void>((resolve) => {
+    return new Promise<void>((resolve, reject) => {
       setTimeout(() => {
-        this.processIntent(intent, nextAttempt).then(resolve, resolve);
+        this.processIntent(intent, nextAttempt).then(resolve, reject);
       }, delayMs);
     });
   }

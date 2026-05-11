@@ -31,7 +31,6 @@ function createMockRedis() {
     getClient: vi.fn().mockReturnValue({
       xgroup: vi.fn().mockResolvedValue("OK"),
       eval: vi.fn().mockResolvedValue("100"),
-      incrbyfloat: vi.fn().mockResolvedValue("100"),
       expire: vi.fn().mockResolvedValue(1),
     }),
   } as any;
@@ -479,10 +478,10 @@ describe("CopyEngineService", () => {
         0.5,
       );
 
-      const calls = redis.getClient().incrbyfloat.mock.calls;
-      expect(calls.length).toBeGreaterThanOrEqual(1);
-      expect(calls[0][0]).toBe("copy:cfg1:daily_loss");
-      expect(calls[0][1]).toBe(-500);
+      const calls = redis.getClient().eval.mock.calls;
+      expect(calls.length).toBeGreaterThanOrEqual(2);
+      expect(calls[1][2]).toBe("copy:cfg1:daily_loss");
+      expect(calls[1][3]).toBe("-500");
       expect(prisma.copyTrade.create).not.toHaveBeenCalled();
     });
 
@@ -611,6 +610,49 @@ describe("CopyEngineService", () => {
         where: { id: "cfg1" },
         data: { totalCopied: { increment: 1 } },
       });
+    });
+
+    it("marks copy trade failed and rolls back reservation when order stream publish fails", async () => {
+      const config = {
+        id: "cfg1",
+        userId: "user1",
+        mode: "FIXED",
+        sizeValue: "100",
+        maxDailyLoss: "10000",
+        maxExposure: "50000",
+        priceOffset: "0",
+      };
+      const err = new Error("stream down");
+
+      redis.getClient().eval.mockResolvedValue("50");
+      redis.get.mockResolvedValue("0");
+      prisma.copyTrade.findMany.mockResolvedValue([]);
+      prisma.copyTrade.create.mockResolvedValue({ id: "trade-1" });
+      redis.xadd.mockRejectedValueOnce(err);
+
+      await expect(
+        service.processCopyForConfig(
+          config as any,
+          {
+            walletAddress: "0xabc",
+            marketId: "m1",
+            tokenId: "t1",
+            side: "BUY",
+            outcome: "YES",
+          },
+          1000,
+          0.5,
+        ),
+      ).rejects.toThrow("stream down");
+
+      expect(prisma.copyTrade.update).toHaveBeenCalledWith({
+        where: { id: "trade-1" },
+        data: { status: "FAILED" },
+      });
+      const calls = redis.getClient().eval.mock.calls;
+      expect(calls.at(-1)?.[3]).toBe("-500");
+      expect(redis.del).toHaveBeenCalledWith("copy:cfg1:exposure");
+      expect(prisma.copyConfig.update).not.toHaveBeenCalled();
     });
   });
 

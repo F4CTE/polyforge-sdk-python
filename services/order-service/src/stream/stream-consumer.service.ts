@@ -7,6 +7,7 @@ import {
 import { ConfigService } from "@nestjs/config";
 import {
   PelReclaimService,
+  reclaimPendingEntries,
   RedisService,
   StreamMonitorService,
 } from "@polyforge/shared-redis";
@@ -23,6 +24,7 @@ const CONSUMER = `order-service-${process.pid}`;
 const BLOCK_MS = 2_000; // block XREADGROUP for 2s
 const BATCH_COUNT = 50; // read up to 50 messages per poll
 const PEL_MIN_IDLE_MS = 30_000;
+const DEFAULT_PEL_MIN_IDLE_MS = 5 * 60_000;
 const DECIMAL_6_RE = /^(?:0|[1-9]\d*)(?:\.\d{1,6})?$/;
 
 function decimalToUnits(value: string): bigint | null {
@@ -73,12 +75,7 @@ export class StreamConsumerService implements OnModuleInit, OnModuleDestroy {
       consumer: CONSUMER,
       minIdleMs: PEL_MIN_IDLE_MS,
       handler: async (entry) => {
-        const intent = this.parseIntent(
-          this.fieldsToArray(entry.fields),
-          entry.id,
-        );
-        if (!intent) return;
-        await this.orders.processBatch([intent]);
+        await this.processReclaimedEntry(entry.id, entry.fields);
       },
     });
     this.pelReclaim.register({
@@ -91,6 +88,14 @@ export class StreamConsumerService implements OnModuleInit, OnModuleDestroy {
         await this.orders.processCancellation(intent);
       },
     });
+    try {
+      await this.reclaimPendingOnStartup();
+    } catch (err) {
+      this.logger.error(
+        "Startup PEL reclaim failed, continuing boot — periodic reclaim will retry",
+        err,
+      );
+    }
     this.running = true;
     this.loopPromise = this.consumeLoop();
   }
@@ -181,11 +186,22 @@ export class StreamConsumerService implements OnModuleInit, OnModuleDestroy {
     await Promise.allSettled(
       [...byUser.entries()].map(async ([, items]) => {
         const intents = items.map((i) => i.intent);
-        await this.orders.processBatch(intents);
+        const result = await this.orders.processBatch(intents);
+        const failedIntents = new Set(result.failed.map((i) => i.intent));
+        if (failedIntents.size > 0) {
+          this.logger.error(
+            `Leaving ${failedIntents.size} order stream message(s) unacked after processing failure`,
+          );
+        }
 
-        // ACK all messages for this user after batch attempt
-        const msgIds = items.map((i) => i.msgId);
-        await client.xack(STREAM, GROUP, ...msgIds);
+        // ACK only messages whose processing completed. DLQ write failures stay
+        // pending so Redis can redeliver/reclaim the original stream entry.
+        const msgIds = items
+          .filter((i) => !failedIntents.has(i.intent))
+          .map((i) => i.msgId);
+        if (msgIds.length > 0) {
+          await client.xack(STREAM, GROUP, ...msgIds);
+        }
       }),
     );
   }
@@ -221,6 +237,61 @@ export class StreamConsumerService implements OnModuleInit, OnModuleDestroy {
       await this.orders.processCancellation(intent);
       await client.xack(CANCELLATION_STREAM, GROUP, msgId);
     }
+  }
+
+  private async reclaimPendingOnStartup(): Promise<void> {
+    const minIdleMs =
+      this.config.get<number>("ORDER_STREAM_PEL_MIN_IDLE_MS") ??
+      DEFAULT_PEL_MIN_IDLE_MS;
+
+    let cursor = "0-0";
+    while (true) {
+      const result = await reclaimPendingEntries(
+        this.redis.getClient(),
+        STREAM,
+        GROUP,
+        CONSUMER,
+        minIdleMs,
+        BATCH_COUNT,
+        cursor,
+      );
+
+      for (const entry of result.entries) {
+        try {
+          await this.processReclaimedEntry(entry.id, entry.fields);
+        } catch (err) {
+          this.logger.error(
+            `Startup PEL reclaim failed for entry ${entry.id}, leaving in PEL for periodic retry`,
+            err,
+          );
+        }
+      }
+
+      cursor = result.nextCursor;
+      if (cursor === "0-0") break;
+    }
+  }
+
+  private async processReclaimedEntry(
+    msgId: string,
+    fields: Record<string, string>,
+  ): Promise<void> {
+    const client = this.redis.getClient();
+    const intent = this.parseIntent(this.fieldsToArray(fields), msgId);
+    if (!intent) {
+      await client.xack(STREAM, GROUP, msgId);
+      return;
+    }
+
+    const result = await this.orders.processBatch([intent]);
+    if (result.failed.length > 0) {
+      const errors = result.failed.map((f) => String(f.error)).join("; ");
+      throw new Error(
+        `Reclaimed order stream message ${msgId} processing failed: ${errors}`,
+      );
+    }
+
+    await client.xack(STREAM, GROUP, msgId);
   }
 
   // ─── Helpers ─────────────────────────────────────────────────────────────

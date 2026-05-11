@@ -86,7 +86,7 @@ describe("AlertsService", () => {
       db.priceAlert.count.mockResolvedValue(0);
       db.priceAlert.create.mockResolvedValue(alert as any);
 
-      const result = await service.create("user-uuid-1", dto as any);
+      const result = await service.create("user-uuid-1", dto);
 
       expect(result).toEqual(alert);
       expect(db.priceAlert.count).toHaveBeenCalledWith({
@@ -109,7 +109,7 @@ describe("AlertsService", () => {
       db.priceAlert.count.mockResolvedValue(5);
       db.priceAlert.create.mockResolvedValue(alert as any);
 
-      await service.create("user-uuid-1", dto as any);
+      await service.create("user-uuid-1", dto);
 
       expect(db.priceAlert.create).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -125,7 +125,7 @@ describe("AlertsService", () => {
         makeAlert({ persistent: true }) as any,
       );
 
-      await service.create("user-uuid-1", dto as any);
+      await service.create("user-uuid-1", dto);
 
       expect(db.priceAlert.create).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -289,8 +289,8 @@ describe("AlertsService", () => {
       });
       db.priceAlert.findMany.mockResolvedValue([alert] as any);
       mockMget.mockResolvedValue([JSON.stringify({ price: "0.60" })]);
-      db.priceAlert.updateMany.mockResolvedValue({ count: 1 } as any);
-      db.priceAlert.deleteMany.mockResolvedValue({ count: 1 } as any);
+      db.priceAlert.updateMany.mockResolvedValue({ count: 1 });
+      db.priceAlert.deleteMany.mockResolvedValue({ count: 1 });
 
       await service.checkAndFireAlerts();
 
@@ -313,8 +313,8 @@ describe("AlertsService", () => {
       });
       db.priceAlert.findMany.mockResolvedValue([alert] as any);
       mockMget.mockResolvedValue([JSON.stringify({ price: "0.70" })]);
-      db.priceAlert.updateMany.mockResolvedValue({ count: 1 } as any);
-      db.priceAlert.deleteMany.mockResolvedValue({ count: 1 } as any);
+      db.priceAlert.updateMany.mockResolvedValue({ count: 1 });
+      db.priceAlert.deleteMany.mockResolvedValue({ count: 1 });
 
       await service.checkAndFireAlerts();
 
@@ -369,8 +369,8 @@ describe("AlertsService", () => {
       });
       db.priceAlert.findMany.mockResolvedValue([alert] as any);
       mockMget.mockResolvedValue([JSON.stringify({ price: "0.60" })]);
-      db.priceAlert.updateMany.mockResolvedValue({ count: 1 } as any);
-      db.priceAlert.deleteMany.mockResolvedValue({ count: 1 } as any);
+      db.priceAlert.updateMany.mockResolvedValue({ count: 1 });
+      db.priceAlert.deleteMany.mockResolvedValue({ count: 1 });
 
       await service.checkAndFireAlerts();
 
@@ -394,8 +394,8 @@ describe("AlertsService", () => {
       });
       db.priceAlert.findMany.mockResolvedValue([alert1, alert2] as any);
       mockMget.mockResolvedValue([JSON.stringify({ price: "0.60" })]);
-      db.priceAlert.updateMany.mockResolvedValue({ count: 2 } as any);
-      db.priceAlert.deleteMany.mockResolvedValue({ count: 2 } as any);
+      db.priceAlert.updateMany.mockResolvedValue({ count: 2 });
+      db.priceAlert.deleteMany.mockResolvedValue({ count: 2 });
 
       await service.checkAndFireAlerts();
 
@@ -422,8 +422,8 @@ describe("AlertsService", () => {
       });
       db.priceAlert.findMany.mockResolvedValue([alert] as any);
       mockMget.mockResolvedValue([JSON.stringify({ price: "0.50" })]);
-      db.priceAlert.updateMany.mockResolvedValue({ count: 1 } as any);
-      db.priceAlert.deleteMany.mockResolvedValue({ count: 1 } as any);
+      db.priceAlert.updateMany.mockResolvedValue({ count: 1 });
+      db.priceAlert.deleteMany.mockResolvedValue({ count: 1 });
 
       await service.checkAndFireAlerts();
 
@@ -439,8 +439,8 @@ describe("AlertsService", () => {
       });
       db.priceAlert.findMany.mockResolvedValue([alert] as any);
       mockMget.mockResolvedValue([JSON.stringify({ price: "0.50" })]);
-      db.priceAlert.updateMany.mockResolvedValue({ count: 1 } as any);
-      db.priceAlert.deleteMany.mockResolvedValue({ count: 1 } as any);
+      db.priceAlert.updateMany.mockResolvedValue({ count: 1 });
+      db.priceAlert.deleteMany.mockResolvedValue({ count: 1 });
 
       await service.checkAndFireAlerts();
 
@@ -457,8 +457,8 @@ describe("AlertsService", () => {
       });
       db.priceAlert.findMany.mockResolvedValue([alert] as any);
       mockMget.mockResolvedValue([JSON.stringify({ price: "0.60" })]);
-      db.priceAlert.updateMany.mockResolvedValue({ count: 1 } as any);
-      db.priceAlert.deleteMany.mockResolvedValue({ count: 1 } as any);
+      db.priceAlert.updateMany.mockResolvedValue({ count: 1 });
+      db.priceAlert.deleteMany.mockResolvedValue({ count: 1 });
 
       await service.checkAndFireAlerts();
 

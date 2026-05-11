@@ -65,7 +65,7 @@ describe("ConditionalEvaluatorService", () => {
         triggerPrice: "0.75",
       });
       db.conditionalOrder.findMany.mockResolvedValue([order] as any);
-      db.conditionalOrder.updateMany.mockResolvedValue({ count: 1 } as any);
+      db.conditionalOrder.updateMany.mockResolvedValue({ count: 1 });
       mgetMock.mockResolvedValue(["0.80"]);
 
       await service.processOrders();
@@ -99,7 +99,7 @@ describe("ConditionalEvaluatorService", () => {
         triggerPrice: "0.30",
       });
       db.conditionalOrder.findMany.mockResolvedValue([order] as any);
-      db.conditionalOrder.updateMany.mockResolvedValue({ count: 1 } as any);
+      db.conditionalOrder.updateMany.mockResolvedValue({ count: 1 });
       mgetMock.mockResolvedValue(["0.25"]);
 
       await service.processOrders();
@@ -123,7 +123,7 @@ describe("ConditionalEvaluatorService", () => {
         triggerPrice: "0.40",
       });
       db.conditionalOrder.findMany.mockResolvedValue([order] as any);
-      db.conditionalOrder.updateMany.mockResolvedValue({ count: 1 } as any);
+      db.conditionalOrder.updateMany.mockResolvedValue({ count: 1 });
       mgetMock.mockResolvedValue(["0.35"]);
 
       await service.processOrders();
@@ -157,7 +157,7 @@ describe("ConditionalEvaluatorService", () => {
         triggerPrice: "0.60",
       });
       db.conditionalOrder.findMany.mockResolvedValue([order] as any);
-      db.conditionalOrder.updateMany.mockResolvedValue({ count: 1 } as any);
+      db.conditionalOrder.updateMany.mockResolvedValue({ count: 1 });
       mgetMock.mockResolvedValue(["0.65"]);
 
       await service.processOrders();
@@ -202,7 +202,7 @@ describe("ConditionalEvaluatorService", () => {
         peakPrice: "1.00",
       });
       db.conditionalOrder.findMany.mockResolvedValue([order] as any);
-      db.conditionalOrder.updateMany.mockResolvedValue({ count: 1 } as any);
+      db.conditionalOrder.updateMany.mockResolvedValue({ count: 1 });
       mgetMock.mockResolvedValue(["0.89"]); // 11% drop from 1.00
 
       await service.processOrders();
@@ -243,7 +243,7 @@ describe("ConditionalEvaluatorService", () => {
         triggerPrice: "0.50",
       });
       db.conditionalOrder.findMany.mockResolvedValue([order] as any);
-      db.conditionalOrder.updateMany.mockResolvedValue({ count: 1 } as any);
+      db.conditionalOrder.updateMany.mockResolvedValue({ count: 1 });
       mgetMock.mockResolvedValue(["0.45"]);
 
       await service.processOrders();
@@ -263,7 +263,7 @@ describe("ConditionalEvaluatorService", () => {
         triggerPrice: "0.70",
       });
       db.conditionalOrder.findMany.mockResolvedValue([order] as any);
-      db.conditionalOrder.updateMany.mockResolvedValue({ count: 1 } as any);
+      db.conditionalOrder.updateMany.mockResolvedValue({ count: 1 });
       mgetMock.mockResolvedValue(["0.75"]);
 
       await service.processOrders();
@@ -327,7 +327,7 @@ describe("ConditionalEvaluatorService", () => {
 
   describe("Expiration", () => {
     it("cancels expired orders", async () => {
-      db.conditionalOrder.updateMany.mockResolvedValue({ count: 1 } as any);
+      db.conditionalOrder.updateMany.mockResolvedValue({ count: 1 });
 
       await (service as any).checkExpiredOrders();
 
@@ -368,7 +368,7 @@ describe("ConditionalEvaluatorService", () => {
         size: "100.00",
       });
       db.conditionalOrder.findMany.mockResolvedValue([order] as any);
-      db.conditionalOrder.updateMany.mockResolvedValue({ count: 1 } as any);
+      db.conditionalOrder.updateMany.mockResolvedValue({ count: 1 });
       mgetMock.mockResolvedValue(["0.75"]);
 
       await service.processOrders();
@@ -392,7 +392,7 @@ describe("ConditionalEvaluatorService", () => {
         triggerPrice: "0.40",
       });
       db.conditionalOrder.findMany.mockResolvedValue([order] as any);
-      db.conditionalOrder.updateMany.mockResolvedValue({ count: 1 } as any);
+      db.conditionalOrder.updateMany.mockResolvedValue({ count: 1 });
       mgetMock.mockResolvedValue(["0.35"]);
 
       await service.processOrders();
@@ -414,7 +414,7 @@ describe("ConditionalEvaluatorService", () => {
         triggerPrice: "0.50",
       });
       db.conditionalOrder.findMany.mockResolvedValue([order] as any);
-      db.conditionalOrder.updateMany.mockResolvedValue({ count: 1 } as any);
+      db.conditionalOrder.updateMany.mockResolvedValue({ count: 1 });
       mgetMock.mockResolvedValue(["0.45"]);
 
       await service.processOrders();

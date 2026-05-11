@@ -1177,11 +1177,11 @@ describe("CopyEngineService", () => {
         0.5,
       );
 
-      // Should have rolled back the increment
-      const incrbyfloatCalls = redis.getClient().incrbyfloat.mock.calls;
-      expect(incrbyfloatCalls.length).toBeGreaterThanOrEqual(1);
-      expect(incrbyfloatCalls[0][0]).toBe("copy:cfg-1:daily_loss");
-      expect(incrbyfloatCalls[0][1]).toBeLessThan(0);
+      // Should have rolled back the script-based reservation
+      const evalCalls = redis.getClient().eval.mock.calls;
+      expect(evalCalls.length).toBeGreaterThanOrEqual(2);
+      expect(evalCalls[1][2]).toBe("copy:cfg-1:daily_loss");
+      expect(Number(evalCalls[1][3])).toBeLessThan(0);
       expect(prisma.copyTrade.create).not.toHaveBeenCalled();
     });
   });

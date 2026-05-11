@@ -152,6 +152,28 @@ describe("StrategyRunner — lifecycle", () => {
     await runner.onPriceEvent("tok1", 0.5);
     expect(state.get).toHaveBeenCalled();
   });
+
+  it("skips overlapping ticks while one evaluation is still running", async () => {
+    let release!: () => void;
+    const state = makeState();
+    state.get.mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          release = () => resolve({ ...DEFAULT_STATE });
+        }),
+    );
+    const runner = makeRunner({ execMode: "EVENT", state });
+
+    const first = runner.onPriceEvent("tok1", 0.5);
+    const second = runner.onPriceEvent("tok1", 0.5);
+    await second;
+    release();
+    await first;
+
+    // First tick evaluates (get called). Second tick coalesced to
+    // pendingTick; after first completes, pending follow-up fires.
+    expect(state.get).toHaveBeenCalledTimes(2);
+  });
 });
 
 describe("StrategyRunner — stale data detection", () => {
@@ -439,7 +461,7 @@ describe("StrategyRunner — ACTION execution + state update", () => {
     expect(intents[0].size).toBe("10");
   });
 
-  it("atomically increments state betsToday and totalOrders when intents are produced", async () => {
+  it("calls onIntents and does not call state.update when intents are produced", async () => {
     const state = makeState();
     const prisma = makePrisma();
     prisma.token.findUnique.mockResolvedValue({
@@ -450,12 +472,16 @@ describe("StrategyRunner — ACTION execution + state update", () => {
     const redis = makeRedis({
       getJson: vi.fn().mockResolvedValue({ price: 0.7 }),
     });
+    const onIntents = vi
+      .fn<(intents: OrderIntent[]) => Promise<void>>()
+      .mockResolvedValue(undefined);
 
     const runner = makeRunner({
       execMode: "EVENT",
       state,
       redis,
       prisma,
+      onIntents,
       actions: [
         {
           id: "a1",
@@ -467,12 +493,46 @@ describe("StrategyRunner — ACTION execution + state update", () => {
 
     await runner.onPriceEvent("tok-yes", 0.7);
 
-    expect(state.incrementOrderCounters).toHaveBeenCalledWith(
-      "strat-test",
-      1,
-      expect.any(Number),
-    );
+    expect(onIntents).toHaveBeenCalledOnce();
+    const intents: OrderIntent[] = onIntents.mock.calls[0][0];
+    expect(intents).toHaveLength(1);
     expect(state.update).not.toHaveBeenCalled();
+  });
+
+  it("does NOT increment order counters when onIntents rejects", async () => {
+    const state = makeState();
+    const prisma = makePrisma();
+    prisma.token.findUnique.mockResolvedValue({
+      id: "tok-yes",
+      marketId: "mkt-1",
+      outcome: "YES",
+    });
+    const redis = makeRedis({
+      getJson: vi.fn().mockResolvedValue({ price: 0.7 }),
+    });
+    const onIntents = vi
+      .fn<(intents: OrderIntent[]) => Promise<void>>()
+      .mockRejectedValue(new Error("publish failure"));
+
+    const runner = makeRunner({
+      execMode: "EVENT",
+      state,
+      redis,
+      prisma,
+      onIntents,
+      actions: [
+        {
+          id: "a1",
+          type: "buy_yes",
+          params: { tokenId: "tok-yes", size: "10" },
+        },
+      ],
+    });
+
+    await runner.onPriceEvent("tok-yes", 0.7);
+
+    expect(onIntents).toHaveBeenCalledOnce();
+    expect(state.incrementOrderCounters).not.toHaveBeenCalled();
   });
 
   it("does NOT call onIntents when actions produce no intents (skip_bet)", async () => {
@@ -542,7 +602,9 @@ describe("StrategyRunner — stale check throttling", () => {
   it("throttles detectStaleData calls during stale-paused ticks (prevents Redis mget fan-out)", async () => {
     // Use controlled time so we can verify throttling behavior
     let currentTime = 10_000;
-    const dateNowSpy = vi.spyOn(Date, "now").mockImplementation(() => currentTime);
+    const dateNowSpy = vi
+      .spyOn(Date, "now")
+      .mockImplementation(() => currentTime);
 
     const redis = makeRedis({
       getClient: vi.fn().mockReturnValue({
@@ -557,9 +619,7 @@ describe("StrategyRunner — stale check throttling", () => {
     const runner = makeRunner({
       execMode: "EVENT",
       redis,
-      triggers: [
-        { id: "b1", type: "every_tick", params: { tokenId: "tok1" } },
-      ],
+      triggers: [{ id: "b1", type: "every_tick", params: { tokenId: "tok1" } }],
     });
 
     const mgetSpy = redis.getClient().mget;
@@ -604,7 +664,9 @@ describe("StrategyRunner — stale check throttling", () => {
 
   it("resets backoff to STALE_PRICE_MS when fresh data is detected and auto-resumes", async () => {
     let currentTime = 10_000;
-    const dateNowSpy = vi.spyOn(Date, "now").mockImplementation(() => currentTime);
+    const dateNowSpy = vi
+      .spyOn(Date, "now")
+      .mockImplementation(() => currentTime);
 
     let mgetReturnsStale = true;
     const mgetImpl = vi.fn().mockImplementation(() => {
@@ -630,9 +692,7 @@ describe("StrategyRunner — stale check throttling", () => {
       execMode: "EVENT",
       redis,
       onStatusChange,
-      triggers: [
-        { id: "b1", type: "every_tick", params: { tokenId: "tok1" } },
-      ],
+      triggers: [{ id: "b1", type: "every_tick", params: { tokenId: "tok1" } }],
     });
 
     // First tick: detect stale → pause
@@ -967,6 +1027,39 @@ describe("StrategyRunner — child strategy management", () => {
     expect(runner.status).toBe("STOPPED");
     // Children set is still populated (cascade handled by registry)
     expect(runner.childStrategies.size).toBe(1);
+  });
+});
+
+describe("StrategyRunner — order intent publishing", () => {
+  it("does not increment strategy state when intent publish fails", async () => {
+    const state = makeState();
+    const prisma = makePrisma({
+      token: {
+        findUnique: vi
+          .fn()
+          .mockResolvedValue({ id: "tok-1", marketId: "m1", outcome: "YES" }),
+        findFirst: vi.fn().mockResolvedValue(null),
+      },
+    });
+    const onIntents = vi.fn().mockRejectedValue(new Error("stream down"));
+    const runner = makeRunner({
+      execMode: "EVENT",
+      state,
+      prisma,
+      actions: [
+        {
+          id: "a1",
+          type: "buy_yes",
+          params: { tokenId: "tok-1", size: "10" },
+        },
+      ],
+      onIntents,
+    });
+
+    await runner.onPriceEvent("tok-1", 0.5);
+
+    expect(onIntents).toHaveBeenCalledOnce();
+    expect(state.update).not.toHaveBeenCalled();
   });
 });
 

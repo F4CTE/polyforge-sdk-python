@@ -45,7 +45,7 @@ export class MarketsService implements OnModuleInit {
   async onModuleInit() {
     try {
       // Pre-warm Prisma connection pool + cache the default query
-      await this.list({ page: 1, limit: 25, sort: "volume" } as MarketQueryDto);
+      await this.list({ page: 1, limit: 25, sort: "volume" });
       this.logger.log("Markets cache pre-warmed (page 1, 25 items)");
     } catch {
       this.logger.warn("Markets cache pre-warm failed (non-fatal)");

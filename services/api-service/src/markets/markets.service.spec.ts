@@ -128,10 +128,10 @@ describe("MarketsService", () => {
       const markets = [makeMarket()];
       // First $queryRaw call = estimated count, second = data
       db.$queryRaw
-        .mockResolvedValueOnce([{ reltuples: 1 }] as any)
-        .mockResolvedValueOnce(markets as any);
+        .mockResolvedValueOnce([{ reltuples: 1 }])
+        .mockResolvedValueOnce(markets);
 
-      const result = await service.list(makeMarketQuery() as any);
+      const result = await service.list(makeMarketQuery());
 
       expect(result.data).toEqual(markets);
       expect(result.total).toBe(1);
@@ -139,11 +139,11 @@ describe("MarketsService", () => {
 
     it("returns an empty paginated result when there are no markets", async () => {
       db.$queryRaw
-        .mockResolvedValueOnce([{ reltuples: 0 }] as any)
-        .mockResolvedValueOnce([] as any);
+        .mockResolvedValueOnce([{ reltuples: 0 }])
+        .mockResolvedValueOnce([]);
       db.market.count.mockResolvedValue(0);
 
-      const result = await service.list(makeMarketQuery() as any);
+      const result = await service.list(makeMarketQuery());
 
       expect(result.data).toEqual([]);
       expect(result.total).toBe(0);
@@ -151,9 +151,9 @@ describe("MarketsService", () => {
 
     it("adds a search filter when search is provided", async () => {
       db.market.count.mockResolvedValue(0);
-      db.$queryRaw.mockResolvedValue([] as any);
+      db.$queryRaw.mockResolvedValue([]);
 
-      await service.list(makeMarketQuery({ search: "eth" }) as any);
+      await service.list(makeMarketQuery({ search: "eth" }));
 
       // search triggers market.count (exact) + $queryRaw (data)
       // The data call is the last $queryRaw call
@@ -164,9 +164,9 @@ describe("MarketsService", () => {
 
     it("adds category filter when category is provided", async () => {
       db.market.count.mockResolvedValue(0);
-      db.$queryRaw.mockResolvedValue([] as any);
+      db.$queryRaw.mockResolvedValue([]);
 
-      await service.list(makeMarketQuery({ category: "politics" }) as any);
+      await service.list(makeMarketQuery({ category: "politics" }));
 
       const calls = db.$queryRaw.mock.calls;
       const dataCall = calls[calls.length - 1];
@@ -175,9 +175,9 @@ describe("MarketsService", () => {
 
     it("adds closed filter when closed is provided", async () => {
       db.market.count.mockResolvedValue(0);
-      db.$queryRaw.mockResolvedValue([] as any);
+      db.$queryRaw.mockResolvedValue([]);
 
-      await service.list(makeMarketQuery({ closed: true }) as any);
+      await service.list(makeMarketQuery({ closed: true }));
 
       const calls = db.$queryRaw.mock.calls;
       const dataCall = calls[calls.length - 1];
@@ -186,11 +186,11 @@ describe("MarketsService", () => {
 
     it("does NOT add closed filter when closed is undefined", async () => {
       db.$queryRaw
-        .mockResolvedValueOnce([{ reltuples: 0 }] as any)
-        .mockResolvedValueOnce([] as any);
+        .mockResolvedValueOnce([{ reltuples: 0 }])
+        .mockResolvedValueOnce([]);
       db.market.count.mockResolvedValue(0);
 
-      await service.list(makeMarketQuery() as any);
+      await service.list(makeMarketQuery());
 
       const calls = db.$queryRaw.mock.calls;
       const dataCall = calls[calls.length - 1];
@@ -200,11 +200,11 @@ describe("MarketsService", () => {
 
     it("orders by volume24h desc by default", async () => {
       db.$queryRaw
-        .mockResolvedValueOnce([{ reltuples: 0 }] as any)
-        .mockResolvedValueOnce([] as any);
+        .mockResolvedValueOnce([{ reltuples: 0 }])
+        .mockResolvedValueOnce([]);
       db.market.count.mockResolvedValue(0);
 
-      await service.list(makeMarketQuery() as any);
+      await service.list(makeMarketQuery());
 
       const calls = db.$queryRaw.mock.calls;
       const dataCall = calls[calls.length - 1];
@@ -213,11 +213,11 @@ describe("MarketsService", () => {
 
     it("orders by endDate asc when sort is endDate", async () => {
       db.$queryRaw
-        .mockResolvedValueOnce([{ reltuples: 0 }] as any)
-        .mockResolvedValueOnce([] as any);
+        .mockResolvedValueOnce([{ reltuples: 0 }])
+        .mockResolvedValueOnce([]);
       db.market.count.mockResolvedValue(0);
 
-      await service.list(makeMarketQuery({ sort: "endDate" }) as any);
+      await service.list(makeMarketQuery({ sort: "endDate" }));
 
       const calls = db.$queryRaw.mock.calls;
       const dataCall = calls[calls.length - 1];
@@ -226,11 +226,11 @@ describe("MarketsService", () => {
 
     it("orders by firstSeenAt desc when sort is firstSeenAt", async () => {
       db.$queryRaw
-        .mockResolvedValueOnce([{ reltuples: 0 }] as any)
-        .mockResolvedValueOnce([] as any);
+        .mockResolvedValueOnce([{ reltuples: 0 }])
+        .mockResolvedValueOnce([]);
       db.market.count.mockResolvedValue(0);
 
-      await service.list(makeMarketQuery({ sort: "firstSeenAt" }) as any);
+      await service.list(makeMarketQuery({ sort: "firstSeenAt" }));
 
       const calls = db.$queryRaw.mock.calls;
       const dataCall = calls[calls.length - 1];
@@ -239,11 +239,11 @@ describe("MarketsService", () => {
 
     it("passes correct skip and take for page 3 limit 10", async () => {
       db.$queryRaw
-        .mockResolvedValueOnce([{ reltuples: 0 }] as any)
-        .mockResolvedValueOnce([] as any);
+        .mockResolvedValueOnce([{ reltuples: 0 }])
+        .mockResolvedValueOnce([]);
       db.market.count.mockResolvedValue(0);
 
-      await service.list(makeMarketQuery({ page: 3, limit: 10 }) as any);
+      await service.list(makeMarketQuery({ page: 3, limit: 10 }));
 
       // With Prisma.sql tagged template, limit and offset are in the `.values` array
       const calls = db.$queryRaw.mock.calls;
@@ -302,12 +302,12 @@ describe("MarketsService", () => {
           close: "0.55",
           volume: "1000",
         },
-      ] as any);
+      ]);
       db.dataGap.count.mockResolvedValue(0);
 
       const result = await service.priceHistory(
         "token-uuid-1",
-        makePriceHistoryQuery() as any,
+        makePriceHistoryQuery(),
       );
 
       expect(result.tokenId).toBe("token-uuid-1");
@@ -322,7 +322,7 @@ describe("MarketsService", () => {
 
       const result = await service.priceHistory(
         "token-uuid-1",
-        makePriceHistoryQuery() as any,
+        makePriceHistoryQuery(),
       );
 
       expect(result.hasGaps).toBe(true);
@@ -338,12 +338,12 @@ describe("MarketsService", () => {
           close: 0.55,
           volume: 1000,
         },
-      ] as any);
+      ]);
       db.dataGap.count.mockResolvedValue(0);
 
       const result = await service.priceHistory(
         "token-uuid-1",
-        makePriceHistoryQuery() as any,
+        makePriceHistoryQuery(),
       );
 
       const candle = result.data[0];
@@ -364,12 +364,12 @@ describe("MarketsService", () => {
           close: null,
           volume: null,
         },
-      ] as any);
+      ]);
       db.dataGap.count.mockResolvedValue(0);
 
       const result = await service.priceHistory(
         "token-uuid-1",
-        makePriceHistoryQuery() as any,
+        makePriceHistoryQuery(),
       );
 
       const candle = result.data[0];
@@ -378,12 +378,12 @@ describe("MarketsService", () => {
     });
 
     it("uses 1 minute bucket for 1m resolution", async () => {
-      db.$queryRaw.mockResolvedValue([] as any);
+      db.$queryRaw.mockResolvedValue([]);
       db.dataGap.count.mockResolvedValue(0);
 
       await service.priceHistory(
         "token-uuid-1",
-        makePriceHistoryQuery({ resolution: "1m" }) as any,
+        makePriceHistoryQuery({ resolution: "1m" }),
       );
 
       // The $queryRaw call should be made (we can't inspect template literal args directly,
@@ -392,19 +392,19 @@ describe("MarketsService", () => {
     });
 
     it("uses 1 day bucket for 1d resolution", async () => {
-      db.$queryRaw.mockResolvedValue([] as any);
+      db.$queryRaw.mockResolvedValue([]);
       db.dataGap.count.mockResolvedValue(0);
 
       await service.priceHistory(
         "token-uuid-1",
-        makePriceHistoryQuery({ resolution: "1d" }) as any,
+        makePriceHistoryQuery({ resolution: "1d" }),
       );
 
       expect(db.$queryRaw).toHaveBeenCalledOnce();
     });
 
     it("uses from/to when explicitly provided", async () => {
-      db.$queryRaw.mockResolvedValue([] as any);
+      db.$queryRaw.mockResolvedValue([]);
       db.dataGap.count.mockResolvedValue(0);
 
       await service.priceHistory(
@@ -412,7 +412,7 @@ describe("MarketsService", () => {
         makePriceHistoryQuery({
           from: "2025-01-01T00:00:00.000Z",
           to: "2025-01-31T23:59:59.000Z",
-        }) as any,
+        }),
       );
 
       expect(db.$queryRaw).toHaveBeenCalledOnce();
@@ -807,12 +807,12 @@ describe("MarketsService", () => {
       db.token.findMany.mockResolvedValue([
         makeToken({ id: "t-yes", outcome: "YES" }),
         makeToken({ id: "t-no", outcome: "NO" }),
-      ] as any);
+      ]);
       const ts = new Date("2026-01-01T12:00:00Z");
       db.$queryRaw.mockResolvedValue([
         { time: ts, tokenId: "t-yes", close: "0.65", volume: "500" },
         { time: ts, tokenId: "t-no", close: "0.35", volume: "300" },
-      ] as any);
+      ]);
 
       const result = await service.marketHistory("market-1", "7d");
 
@@ -826,7 +826,7 @@ describe("MarketsService", () => {
       db.token.findMany.mockResolvedValue([
         makeToken({ id: "t-yes", outcome: "Yes" }),
         makeToken({ id: "t-no", outcome: "No" }),
-      ] as any);
+      ]);
       db.$queryRaw.mockResolvedValue([
         {
           time: new Date("2026-01-01"),
@@ -834,7 +834,7 @@ describe("MarketsService", () => {
           close: "0.70",
           volume: "100",
         },
-      ] as any);
+      ]);
 
       const result = await service.marketHistory("market-1", "1d");
 
@@ -844,7 +844,7 @@ describe("MarketsService", () => {
     it("defaults null close/volume to 0", async () => {
       db.token.findMany.mockResolvedValue([
         makeToken({ id: "t1", outcome: "YES" }),
-      ] as any);
+      ]);
       db.$queryRaw.mockResolvedValue([
         {
           time: new Date("2026-01-01"),
@@ -852,7 +852,7 @@ describe("MarketsService", () => {
           close: null,
           volume: null,
         },
-      ] as any);
+      ]);
 
       const result = await service.marketHistory("market-1", "7d");
 
@@ -868,7 +868,7 @@ describe("MarketsService", () => {
       db.token.findMany.mockResolvedValue([
         makeToken({ id: "t-yes", outcome: "YES" }),
         makeToken({ id: "t-no", outcome: "NO" }),
-      ] as any);
+      ]);
       db.priceAlert.findMany.mockResolvedValue([
         makePriceAlert({
           id: "alert-1",
@@ -877,7 +877,7 @@ describe("MarketsService", () => {
           direction: "above",
           price: "0.75",
         }),
-      ] as any);
+      ]);
 
       const result = await service.listMarketAlerts("market-1", "user-1");
 
@@ -890,7 +890,7 @@ describe("MarketsService", () => {
     it("returns empty array when no alerts exist", async () => {
       db.token.findMany.mockResolvedValue([
         makeToken({ id: "t1", outcome: "YES" }),
-      ] as any);
+      ]);
       db.priceAlert.findMany.mockResolvedValue([]);
 
       const result = await service.listMarketAlerts("market-1", "user-1");
@@ -904,7 +904,7 @@ describe("MarketsService", () => {
   describe("createMarketAlert", () => {
     it("creates alert by resolving outcome to token", async () => {
       db.token.findFirst.mockResolvedValue(
-        makeToken({ id: "t-yes", marketId: "market-1", outcome: "YES" }) as any,
+        makeToken({ id: "t-yes", marketId: "market-1", outcome: "YES" }),
       );
       db.priceAlert.create.mockResolvedValue(
         makePriceAlert({
@@ -913,7 +913,7 @@ describe("MarketsService", () => {
           tokenId: "t-yes",
           direction: "above",
           price: 0.8,
-        }) as any,
+        }),
       );
 
       const result = await service.createMarketAlert("market-1", "user-1", {
@@ -953,11 +953,9 @@ describe("MarketsService", () => {
   describe("deleteMarketAlert", () => {
     it("deletes alert when owned by user", async () => {
       db.priceAlert.findUnique.mockResolvedValue(
-        makePriceAlert({ id: "alert-1", userId: "user-1" }) as any,
+        makePriceAlert({ id: "alert-1", userId: "user-1" }),
       );
-      db.priceAlert.delete.mockResolvedValue(
-        makePriceAlert({ id: "alert-1" }) as any,
-      );
+      db.priceAlert.delete.mockResolvedValue(makePriceAlert({ id: "alert-1" }));
 
       await service.deleteMarketAlert("alert-1", "user-1");
 
@@ -976,7 +974,7 @@ describe("MarketsService", () => {
 
     it("throws NotFoundException when alert belongs to a different user", async () => {
       db.priceAlert.findUnique.mockResolvedValue(
-        makePriceAlert({ id: "alert-1", userId: "other-user" }) as any,
+        makePriceAlert({ id: "alert-1", userId: "other-user" }),
       );
 
       await expect(
@@ -993,7 +991,7 @@ describe("MarketsService", () => {
         makeNewsSignal({ id: "s1", direction: "BUY", confidence: 80 }),
         makeNewsSignal({ id: "s2", direction: "BUY", confidence: 70 }),
         makeNewsSignal({ id: "s3", direction: "SELL", confidence: 60 }),
-      ] as any);
+      ]);
 
       const result = await service.getMarketSentiment("market-1");
 
@@ -1017,7 +1015,7 @@ describe("MarketsService", () => {
       db.newsSignal.findMany.mockResolvedValue([
         makeNewsSignal({ id: "s1", direction: "BUY", confidence: 90 }),
         makeNewsSignal({ id: "s2", direction: "BUY", confidence: 80 }),
-      ] as any);
+      ]);
 
       const result = await service.getMarketSentiment("market-1");
 

@@ -40,6 +40,8 @@ function makeStateMock(overrides: Record<string, unknown> = {}) {
     getPriceAge: vi.fn().mockResolvedValue(0),
     getPrice: vi.fn().mockResolvedValue(null),
     getBook: vi.fn().mockResolvedValue(null),
+    incrementOrderCounters: vi.fn().mockResolvedValue({}),
+    decrementOrderCounters: vi.fn().mockResolvedValue({}),
     ...overrides,
   } as any;
 }
@@ -70,6 +72,24 @@ function makeDbStrategy(
     actions: [],
     safety: [],
     canvas: null,
+    ...overrides,
+  };
+}
+
+import type { OrderIntent } from "../blocks/block.types";
+
+function buildIntent(overrides: Partial<OrderIntent> = {}): OrderIntent {
+  return {
+    intentId: "intent-1",
+    userId: "user-1",
+    strategyId: "strat-1",
+    marketId: "market-1",
+    tokenId: "token-1",
+    side: "BUY",
+    outcome: "YES",
+    size: "10",
+    price: "0.5",
+    orderType: "GTC",
     ...overrides,
   };
 }
@@ -191,6 +211,69 @@ describe("StrategyRegistryService — start()", () => {
     // start() should not throw
     await expect(svc.start("strat-1")).resolves.not.toThrow();
   });
+
+  it("restores parent-child linkage when strategy has parentStrategyId", async () => {
+    const child = makeDbStrategy({
+      id: "child-1",
+      status: StrategyStatus.RUNNING,
+    });
+    (child as Record<string, unknown>).parentStrategyId = "parent-1";
+    prisma.strategy.findUnique.mockResolvedValue(child);
+
+    await svc.start("child-1");
+
+    const map = (svc as any).parentChildMap as Map<string, string>;
+    expect(map.get("child-1")).toBe("parent-1");
+  });
+
+  it("adds child to parent runner when parent is also running", async () => {
+    // Start the parent first
+    const parent = makeDbStrategy({ id: "parent-1" });
+    prisma.strategy.findUnique.mockResolvedValue(parent);
+    await svc.start("parent-1");
+
+    // Now restart the child which references the running parent
+    const child = makeDbStrategy({
+      id: "child-1",
+      status: StrategyStatus.RUNNING,
+    });
+    (child as Record<string, unknown>).parentStrategyId = "parent-1";
+    prisma.strategy.findUnique.mockResolvedValue(child);
+
+    await svc.start("child-1");
+
+    const children = svc.getChildStrategies("parent-1");
+    expect(children).toContain("child-1");
+  });
+
+  it("restores child mode so parent cascade stop can find restarted children", async () => {
+    // Start the parent first
+    const parent = makeDbStrategy({ id: "parent-1" });
+    prisma.strategy.findUnique.mockResolvedValue(parent);
+    await svc.start("parent-1");
+
+    // Restart the child which references the running parent
+    const child = makeDbStrategy({
+      id: "child-1",
+      status: StrategyStatus.RUNNING,
+    });
+    (child as Record<string, unknown>).parentStrategyId = "parent-1";
+    prisma.strategy.findUnique.mockResolvedValue(child);
+
+    await svc.start("child-1");
+
+    // Verify the parent runner tracks both childStrategies AND childModes
+    const runners = (svc as any).runners as Map<
+      string,
+      {
+        childStrategies: Set<string>;
+        getChildMode(id: string): unknown;
+      }
+    >;
+    const parentRunner = runners.get("parent-1")!;
+    expect(parentRunner.childStrategies.has("child-1")).toBe(true);
+    expect(parentRunner.getChildMode("child-1")).toBe("managed");
+  });
 });
 
 describe("StrategyRegistryService — publishIntents()", () => {
@@ -247,6 +330,185 @@ describe("StrategyRegistryService — publishIntents()", () => {
         Stream: "stream:orders",
       }),
       "cloudwatch metric",
+    );
+  });
+
+  it("increments counters only after publishing to Redis", async () => {
+    const order: string[] = [];
+
+    state.incrementOrderCounters.mockImplementation(
+      async (strategyId: string) => {
+        order.push(`counter:${strategyId}`);
+        return {};
+      },
+    );
+    redis.xadd.mockImplementation(async () => {
+      order.push("xadd");
+      return "1-0";
+    });
+
+    await (svc as any).publishIntents(
+      [
+        {
+          intentId: "intent-1",
+          userId: "user-1",
+          strategyId: "strat-1",
+          marketId: "market-1",
+          tokenId: "token-1",
+          side: "BUY",
+          outcome: "YES",
+          size: "10",
+          price: "0.5",
+          orderType: "GTC",
+        },
+      ],
+      "stream:orders",
+    );
+
+    const counterIdx = order.indexOf("counter:strat-1");
+    const xaddIdx = order.indexOf("xadd");
+    expect(counterIdx).toBeGreaterThan(xaddIdx);
+  });
+
+  it("does NOT decrement counters when all intents publish successfully", async () => {
+    await (svc as any).publishIntents(
+      [
+        {
+          intentId: "intent-1",
+          userId: "user-1",
+          strategyId: "strat-1",
+          marketId: "market-1",
+          tokenId: "token-1",
+          side: "BUY",
+          outcome: "YES",
+          size: "10",
+          price: "0.5",
+          orderType: "GTC",
+        },
+      ],
+      "stream:orders",
+    );
+
+    expect(state.decrementOrderCounters).not.toHaveBeenCalled();
+  });
+
+  it("does NOT increment or decrement counters when all intents fail to publish", async () => {
+    redis.xadd.mockRejectedValue(new Error("redis down"));
+
+    await expect(
+      (svc as any).publishIntents(
+        [
+          {
+            intentId: "intent-1",
+            userId: "user-1",
+            strategyId: "strat-1",
+            marketId: "market-1",
+            tokenId: "token-1",
+            side: "BUY",
+            outcome: "YES",
+            size: "10",
+            price: "0.5",
+            orderType: "GTC",
+          },
+        ],
+        "stream:orders",
+      ),
+    ).rejects.toThrow("Failed to publish");
+
+    expect(state.incrementOrderCounters).not.toHaveBeenCalled();
+    expect(state.decrementOrderCounters).not.toHaveBeenCalled();
+  });
+
+  it("increments only succeeded count on partial publish failure", async () => {
+    let call = 0;
+    redis.xadd.mockImplementation(async () => {
+      call++;
+      if (call <= 2) return "ok";
+      throw new Error("publish failed");
+    });
+
+    await expect(
+      (svc as any).publishIntents(
+        [
+          buildIntent({ intentId: "i1", strategyId: "strat-1" }),
+          buildIntent({ intentId: "i2", strategyId: "strat-1" }),
+          buildIntent({ intentId: "i3", strategyId: "strat-1" }),
+          buildIntent({ intentId: "i4", strategyId: "strat-1" }),
+          buildIntent({ intentId: "i5", strategyId: "strat-1" }),
+        ],
+        "stream:orders",
+      ),
+    ).rejects.toThrow("Failed to publish");
+
+    // Only 2 succeeded — counters should reflect only those
+    expect(state.incrementOrderCounters).toHaveBeenCalledWith(
+      "strat-1",
+      2,
+      expect.any(Number),
+    );
+    expect(state.decrementOrderCounters).not.toHaveBeenCalled();
+  });
+
+  it("increments only succeeded intents per strategy on mixed failure", async () => {
+    let call = 0;
+    redis.xadd.mockImplementation(async () => {
+      call++;
+      if (call === 3 || call === 4) throw new Error("publish failed");
+      return "ok";
+    });
+
+    await expect(
+      (svc as any).publishIntents(
+        [
+          buildIntent({ intentId: "i1", strategyId: "strat-a" }),
+          buildIntent({ intentId: "i2", strategyId: "strat-a" }),
+          buildIntent({ intentId: "i3", strategyId: "strat-b" }),
+          buildIntent({ intentId: "i4", strategyId: "strat-b" }),
+        ],
+        "stream:orders",
+      ),
+    ).rejects.toThrow("Failed to publish");
+
+    // strat-a: both succeeded (calls 1,2)
+    expect(state.incrementOrderCounters).toHaveBeenCalledWith(
+      "strat-a",
+      2,
+      expect.any(Number),
+    );
+    // strat-b: both failed (calls 3,4), no increment
+    expect(state.incrementOrderCounters).not.toHaveBeenCalledWith(
+      "strat-b",
+      expect.any(Number),
+      expect.any(Number),
+    );
+    expect(state.decrementOrderCounters).not.toHaveBeenCalled();
+  });
+
+  it("logs error and throws when counter increment fails after publish", async () => {
+    const logSpy = vi
+      .spyOn((svc as any).logger, "error")
+      .mockImplementation(() => undefined);
+
+    redis.xadd.mockResolvedValue("1-0");
+    state.incrementOrderCounters.mockRejectedValue(
+      new Error("counter write failed"),
+    );
+
+    await expect(
+      (svc as any).publishIntents(
+        [buildIntent({ intentId: "i1", strategyId: "strat-1" })],
+        "stream:orders",
+      ),
+    ).rejects.toThrow("Counter increment failed after 1 intents published");
+
+    expect(logSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        event: "ORDER_INTENTS_COUNTER_INCREMENT_FAILED",
+        strategyId: "strat-1",
+        intentCount: 1,
+        error: "counter write failed",
+      }),
+      expect.stringContaining("Counter increment failed"),
     );
   });
 });

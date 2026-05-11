@@ -71,7 +71,7 @@ describe("BacktestsService", () => {
       db.backtestRun.findMany.mockResolvedValue(runs as any);
       db.backtestRun.count.mockResolvedValue(2);
 
-      const result = await service.list("user-uuid-1", makeQuery() as any);
+      const result = await service.list("user-uuid-1", makeQuery());
 
       // Service maps runs to add strategyName and remove strategy relation
       expect(result.data).toHaveLength(2);
@@ -91,10 +91,7 @@ describe("BacktestsService", () => {
       db.backtestRun.findMany.mockResolvedValue([]);
       db.backtestRun.count.mockResolvedValue(0);
 
-      await service.list(
-        "user-uuid-1",
-        makeQuery({ page: 3, limit: 10 }) as any,
-      );
+      await service.list("user-uuid-1", makeQuery({ page: 3, limit: 10 }));
 
       expect(db.backtestRun.findMany).toHaveBeenCalledWith(
         expect.objectContaining({ skip: 20, take: 10 }),
@@ -107,7 +104,7 @@ describe("BacktestsService", () => {
 
       await service.list(
         "user-uuid-1",
-        makeQuery({ strategyId: "strategy-abc" }) as any,
+        makeQuery({ strategyId: "strategy-abc" }),
       );
 
       expect(db.backtestRun.findMany).toHaveBeenCalledWith(
@@ -121,10 +118,7 @@ describe("BacktestsService", () => {
       db.backtestRun.findMany.mockResolvedValue([]);
       db.backtestRun.count.mockResolvedValue(0);
 
-      await service.list(
-        "user-uuid-1",
-        makeQuery({ status: "COMPLETED" }) as any,
-      );
+      await service.list("user-uuid-1", makeQuery({ status: "COMPLETED" }));
 
       expect(db.backtestRun.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -137,7 +131,7 @@ describe("BacktestsService", () => {
       db.backtestRun.findMany.mockResolvedValue([]);
       db.backtestRun.count.mockResolvedValue(0);
 
-      await service.list("user-uuid-1", makeQuery() as any);
+      await service.list("user-uuid-1", makeQuery());
 
       const whereArg = db.backtestRun.findMany.mock.calls[0][0]?.where;
       expect(whereArg).not.toHaveProperty("strategyId");
@@ -147,7 +141,7 @@ describe("BacktestsService", () => {
       db.backtestRun.findMany.mockResolvedValue([]);
       db.backtestRun.count.mockResolvedValue(0);
 
-      await service.list("user-uuid-1", makeQuery() as any);
+      await service.list("user-uuid-1", makeQuery());
 
       expect(db.backtestRun.findMany).toHaveBeenCalledWith(
         expect.objectContaining({ orderBy: { createdAt: "desc" } }),
@@ -158,7 +152,7 @@ describe("BacktestsService", () => {
       db.backtestRun.findMany.mockResolvedValue([]);
       db.backtestRun.count.mockResolvedValue(0);
 
-      await service.list("user-uuid-99", makeQuery() as any);
+      await service.list("user-uuid-99", makeQuery());
 
       const whereArg = db.backtestRun.findMany.mock.calls[0][0]?.where;
       expect(whereArg).toHaveProperty("userId", "user-uuid-99");
@@ -170,7 +164,7 @@ describe("BacktestsService", () => {
 
       const result = await service.list(
         "user-uuid-1",
-        makeQuery({ page: 1, limit: 20 }) as any,
+        makeQuery({ page: 1, limit: 20 }),
       );
 
       expect(result.totalPages).toBe(2);
@@ -184,7 +178,7 @@ describe("BacktestsService", () => {
     it("returns a stub result immediately when quickMode is true", async () => {
       const result = await service.create(
         "user-uuid-1",
-        makeCreateDto({ quickMode: true }) as any,
+        makeCreateDto({ quickMode: true }),
       );
 
       expect(result).toEqual({
@@ -197,10 +191,7 @@ describe("BacktestsService", () => {
     });
 
     it("does NOT persist or publish to Redis in quickMode", async () => {
-      await service.create(
-        "user-uuid-1",
-        makeCreateDto({ quickMode: true }) as any,
-      );
+      await service.create("user-uuid-1", makeCreateDto({ quickMode: true }));
 
       expect(db.backtestRun.create).not.toHaveBeenCalled();
       expect(redis.xadd).not.toHaveBeenCalled();
@@ -210,10 +201,7 @@ describe("BacktestsService", () => {
       const run = makeRun({ id: "run-uuid-new", status: "QUEUED" });
       db.backtestRun.create.mockResolvedValue(run as any);
 
-      const result = await service.create(
-        "user-uuid-1",
-        makeCreateDto() as any,
-      );
+      const result = await service.create("user-uuid-1", makeCreateDto());
 
       expect(result).toEqual({ runId: "run-uuid-new", status: "QUEUED" });
       expect(db.backtestRun.create).toHaveBeenCalledOnce();
@@ -231,7 +219,7 @@ describe("BacktestsService", () => {
       const run = makeRun();
       db.backtestRun.create.mockResolvedValue(run as any);
 
-      await service.create("user-uuid-1", makeCreateDto() as any);
+      await service.create("user-uuid-1", makeCreateDto());
 
       expect(db.backtestRun.create).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -249,7 +237,7 @@ describe("BacktestsService", () => {
 
       await service.create(
         "user-uuid-1",
-        makeCreateDto({ strategyId: undefined }) as any,
+        makeCreateDto({ strategyId: undefined }),
       );
 
       expect(db.backtestRun.create).toHaveBeenCalledWith(
@@ -269,7 +257,7 @@ describe("BacktestsService", () => {
 
       await service.create(
         "user-uuid-1",
-        makeCreateDto({ dateRangeStart: start, dateRangeEnd: end }) as any,
+        makeCreateDto({ dateRangeStart: start, dateRangeEnd: end }),
       );
 
       const dataArg = db.backtestRun.create.mock.calls[0][0]?.data;
@@ -287,7 +275,7 @@ describe("BacktestsService", () => {
         makeCreateDto({
           dateRangeStart: undefined,
           dateRangeEnd: undefined,
-        }) as any,
+        }),
       );
       const after = Date.now();
 
@@ -305,7 +293,7 @@ describe("BacktestsService", () => {
       const run = makeRun();
       db.backtestRun.create.mockResolvedValue(run as any);
 
-      await service.create("user-uuid-1", makeCreateDto() as any);
+      await service.create("user-uuid-1", makeCreateDto());
 
       const streamPayload = (redis.xadd as ReturnType<typeof vi.fn>).mock
         .calls[0][1];

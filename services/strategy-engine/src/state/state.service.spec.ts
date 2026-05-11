@@ -76,6 +76,17 @@ describe("StateService", () => {
       expect(ttl).toBeGreaterThan(0);
       expect(ttl).toBeLessThanOrEqual(86400);
     });
+
+    it("clamps TTL to at least one second at the midnight boundary", async () => {
+      vi.useFakeTimers();
+      try {
+        vi.setSystemTime(new Date("2026-05-06T23:59:59.999Z"));
+        await svc.set("strat-1", DEFAULT_STATE);
+        expect(redis.set.mock.calls[0][2]).toBe(1);
+      } finally {
+        vi.useRealTimers();
+      }
+    });
   });
 
   describe("update()", () => {
@@ -129,6 +140,91 @@ describe("StateService", () => {
         totalOrders: 7,
         lastTradeAt: 12345,
       });
+    });
+  });
+
+  describe("decrementOrderCounters()", () => {
+    it("decrements order counters with a single Redis script", async () => {
+      const redisClient = {
+        eval: vi.fn().mockResolvedValue(
+          JSON.stringify({
+            ...DEFAULT_STATE,
+            betsToday: 1,
+            totalOrders: 5,
+            lastTradeAt: 99999,
+          }),
+        ),
+      };
+      redis = makeRedisMock({
+        getClient: vi.fn().mockReturnValue(redisClient),
+      });
+      svc = new StateService(redis);
+
+      const updated = await svc.decrementOrderCounters("strat-1", 2);
+
+      expect(redisClient.eval).toHaveBeenCalledWith(
+        expect.stringContaining("redis.call"),
+        1,
+        "strategy:strat-1:state",
+        "2",
+        expect.any(String),
+      );
+      expect(updated).toMatchObject({
+        betsToday: 1,
+        totalOrders: 5,
+        lastTradeAt: 99999,
+      });
+    });
+
+    it("clamps counters to zero (no negative values)", async () => {
+      const redisClient = {
+        eval: vi.fn().mockResolvedValue(
+          JSON.stringify({
+            ...DEFAULT_STATE,
+            betsToday: 0,
+            totalOrders: 0,
+            lastTradeAt: 500,
+          }),
+        ),
+      };
+      redis = makeRedisMock({
+        getClient: vi.fn().mockReturnValue(redisClient),
+      });
+      svc = new StateService(redis);
+
+      const updated = await svc.decrementOrderCounters("strat-x", 5);
+
+      expect(redisClient.eval).toHaveBeenCalledWith(
+        expect.any(String),
+        1,
+        "strategy:strat-x:state",
+        "5",
+        expect.any(String),
+      );
+      expect(updated.betsToday).toBe(0);
+      expect(updated.totalOrders).toBe(0);
+    });
+
+    it("preserves lastTradeAt during decrement (does not overwrite with rollback timestamp)", async () => {
+      const priorLastTradeAt = 90000;
+      const redisClient = {
+        eval: vi.fn().mockResolvedValue(
+          JSON.stringify({
+            ...DEFAULT_STATE,
+            betsToday: 0,
+            totalOrders: 0,
+            lastTradeAt: priorLastTradeAt,
+          }),
+        ),
+      };
+      redis = makeRedisMock({
+        getClient: vi.fn().mockReturnValue(redisClient),
+      });
+      svc = new StateService(redis);
+
+      const updated = await svc.decrementOrderCounters("strat-p", 3);
+
+      expect(updated.lastTradeAt).toBe(priorLastTradeAt);
     });
   });
 

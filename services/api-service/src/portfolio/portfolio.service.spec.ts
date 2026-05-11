@@ -194,7 +194,7 @@ describe("PortfolioService", () => {
         { time: new Date("2025-01-01"), pnl: "50.00" },
         { time: new Date("2025-01-02"), pnl: "25.00" },
       ];
-      db.$queryRaw.mockResolvedValue(snapshots as any);
+      db.$queryRaw.mockResolvedValue(snapshots);
 
       const result = await service.getPnl("user-uuid-1", "30d");
 
@@ -205,7 +205,7 @@ describe("PortfolioService", () => {
 
     it("maps snapshot time and pnl to strings", async () => {
       const time = new Date("2025-01-01");
-      db.$queryRaw.mockResolvedValue([{ time, pnl: "10" }] as any);
+      db.$queryRaw.mockResolvedValue([{ time, pnl: "10" }]);
 
       const result = await service.getPnl("user-uuid-1", "30d");
 
@@ -214,7 +214,7 @@ describe("PortfolioService", () => {
     });
 
     it("handles null pnl in snapshot gracefully", async () => {
-      db.$queryRaw.mockResolvedValue([{ time: new Date(), pnl: null }] as any);
+      db.$queryRaw.mockResolvedValue([{ time: new Date(), pnl: null }]);
 
       const result = await service.getPnl("user-uuid-1", "30d");
 
@@ -223,7 +223,7 @@ describe("PortfolioService", () => {
     });
 
     it('returns empty snapshots and totalPnl "0.00" when no data', async () => {
-      db.$queryRaw.mockResolvedValue([] as any);
+      db.$queryRaw.mockResolvedValue([]);
 
       const result = await service.getPnl("user-uuid-1", "30d");
 
@@ -232,7 +232,7 @@ describe("PortfolioService", () => {
     });
 
     it("uses 7d period window", async () => {
-      db.$queryRaw.mockResolvedValue([] as any);
+      db.$queryRaw.mockResolvedValue([]);
 
       await service.getPnl("user-uuid-1", "7d");
 
@@ -240,7 +240,7 @@ describe("PortfolioService", () => {
     });
 
     it("uses 90d period window", async () => {
-      db.$queryRaw.mockResolvedValue([] as any);
+      db.$queryRaw.mockResolvedValue([]);
 
       await service.getPnl("user-uuid-1", "90d");
 
@@ -248,7 +248,7 @@ describe("PortfolioService", () => {
     });
 
     it("uses allTime period (epoch 0 start)", async () => {
-      db.$queryRaw.mockResolvedValue([] as any);
+      db.$queryRaw.mockResolvedValue([]);
 
       await service.getPnl("user-uuid-1", "allTime");
 
@@ -256,7 +256,7 @@ describe("PortfolioService", () => {
     });
 
     it("defaults to 30d window for unknown period values", async () => {
-      db.$queryRaw.mockResolvedValue([] as any);
+      db.$queryRaw.mockResolvedValue([]);
 
       await service.getPnl("user-uuid-1", "some-unknown-period");
 
@@ -264,7 +264,7 @@ describe("PortfolioService", () => {
     });
 
     it("queries with strategyId when provided", async () => {
-      db.$queryRaw.mockResolvedValue([] as any);
+      db.$queryRaw.mockResolvedValue([]);
 
       await service.getPnl("user-uuid-1", "30d", "strategy-uuid-1");
 
@@ -272,7 +272,7 @@ describe("PortfolioService", () => {
     });
 
     it("queries without strategyId when not provided", async () => {
-      db.$queryRaw.mockResolvedValue([] as any);
+      db.$queryRaw.mockResolvedValue([]);
 
       await service.getPnl("user-uuid-1", "30d");
 
@@ -297,7 +297,7 @@ describe("PortfolioService", () => {
         { time: new Date("2025-01-02"), pnl: "50.00" },
         { time: new Date("2025-01-03"), pnl: "10.00" },
       ];
-      db.$queryRaw.mockResolvedValue(snapshots as any);
+      db.$queryRaw.mockResolvedValue(snapshots);
 
       const result = await service.getPnl("user-uuid-1", "7d");
 

@@ -44,7 +44,7 @@ describe("WatchlistService", () => {
   describe("list", () => {
     it("returns mapped markets with watchlistId and addedAt", async () => {
       const items = [makeWatchlistItem()];
-      db.watchlistItem.findMany.mockResolvedValue(items as any);
+      db.watchlistItem.findMany.mockResolvedValue(items);
 
       const result = await service.list("user-1");
 
@@ -89,7 +89,7 @@ describe("WatchlistService", () => {
         marketId: "market-1",
         createdAt: new Date(),
       };
-      db.watchlistItem.upsert.mockResolvedValue(item as any);
+      db.watchlistItem.upsert.mockResolvedValue(item);
 
       const result = await service.add("user-1", "market-1");
 
@@ -158,7 +158,7 @@ describe("WatchlistService", () => {
 
   describe("remove", () => {
     it("deletes matching watchlist items for user and market", async () => {
-      db.watchlistItem.deleteMany.mockResolvedValue({ count: 1 } as any);
+      db.watchlistItem.deleteMany.mockResolvedValue({ count: 1 });
 
       await service.remove("user-1", "market-1");
 
@@ -168,7 +168,7 @@ describe("WatchlistService", () => {
     });
 
     it("does not throw when no items match", async () => {
-      db.watchlistItem.deleteMany.mockResolvedValue({ count: 0 } as any);
+      db.watchlistItem.deleteMany.mockResolvedValue({ count: 0 });
 
       await expect(
         service.remove("user-1", "nonexistent"),

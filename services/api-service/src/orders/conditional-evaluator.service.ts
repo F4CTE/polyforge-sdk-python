@@ -70,8 +70,8 @@ export class ConditionalEvaluatorService {
 
       // Evaluate trigger condition
       const shouldTrigger = this.shouldTrigger(
-        order.type as string,
-        order.side as string,
+        order.type,
+        order.side,
         currentPrice,
         triggerPrice,
       );

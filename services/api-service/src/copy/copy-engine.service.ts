@@ -212,20 +212,23 @@ export class CopyEngineService implements OnModuleInit, OnModuleDestroy {
 
     const dailyKey = `copy:${config.id}:daily_loss`;
     const client = this.redis.getClient();
-    const newLoss = await client.eval(
-      DAILY_LOSS_RESERVE_SCRIPT,
-      1,
-      dailyKey,
-      String(notional),
-      String(DAILY_LOSS_TTL_SECONDS),
-    );
+    const reserveDailyLoss = async (amount: number) =>
+      client.eval(
+        DAILY_LOSS_RESERVE_SCRIPT,
+        1,
+        dailyKey,
+        String(amount),
+        String(DAILY_LOSS_TTL_SECONDS),
+      );
+
+    const newLoss = await reserveDailyLoss(notional);
     const newLossAmount = safeDecimalToNumber(
       newLoss,
       Number.POSITIVE_INFINITY,
     );
     if (newLossAmount > maxDailyLoss) {
       // Rollback the increment
-      await client.incrbyfloat(dailyKey, -notional);
+      await reserveDailyLoss(-notional);
       this.logger.warn(`Config ${config.id} exceeded daily loss limit`);
       return;
     }
@@ -234,10 +237,12 @@ export class CopyEngineService implements OnModuleInit, OnModuleDestroy {
     const currentExposure = await this.getCurrentExposure(config.id);
     const maxExposure = safeDecimalToNumber(config.maxExposure, Number.NaN);
     if (!Number.isFinite(maxExposure) || maxExposure < 0) {
+      await reserveDailyLoss(-notional);
       this.logger.warn(`Config ${config.id} has invalid max exposure`);
       return;
     }
     if (currentExposure >= maxExposure) {
+      await reserveDailyLoss(-notional);
       this.logger.warn(
         `Config ${config.id} at max exposure (${currentExposure} >= ${maxExposure})`,
       );
@@ -251,12 +256,18 @@ export class CopyEngineService implements OnModuleInit, OnModuleDestroy {
       sourceSize,
     );
 
-    if (!Number.isFinite(copiedSize) || copiedSize <= 0) return;
+    if (!Number.isFinite(copiedSize) || copiedSize <= 0) {
+      await reserveDailyLoss(-notional);
+      return;
+    }
 
     // 4. Apply price offset
     const priceOffset = safeDecimalToNumber(config.priceOffset, 0);
     const copiedPrice = this.applyPriceOffset(sourcePrice, priceOffset);
-    if (!Number.isFinite(copiedPrice) || copiedPrice < 0) return;
+    if (!Number.isFinite(copiedPrice) || copiedPrice < 0) {
+      await reserveDailyLoss(-notional);
+      return;
+    }
 
     // 5. Create CopyTrade record
     const trade = await this.prisma.copyTrade.create({
@@ -280,23 +291,35 @@ export class CopyEngineService implements OnModuleInit, OnModuleDestroy {
       },
     });
 
-    // 6. Publish OrderIntent to stream:orders
     const intentId = randomUUID();
-    await this.redis.xadd(ORDER_STREAM, {
-      type: "ORDER_INTENT",
-      intentId,
-      userId: config.userId,
-      source: "copy-engine",
-      copyTradeId: trade.id,
-      marketId: event.marketId ?? "",
-      tokenId: event.tokenId ?? "",
-      side: event.side ?? "",
-      outcome: event.outcome ?? "",
-      size: copiedSize.toFixed(6),
-      price: copiedPrice.toFixed(6),
-      orderType: "GTC",
-      ts: String(Date.now()),
-    });
+    try {
+      // 6. Publish OrderIntent to stream:orders
+      await this.redis.xadd(ORDER_STREAM, {
+        type: "ORDER_INTENT",
+        intentId,
+        userId: config.userId,
+        source: "copy-engine",
+        copyTradeId: trade.id,
+        marketId: event.marketId ?? "",
+        tokenId: event.tokenId ?? "",
+        side: event.side ?? "",
+        outcome: event.outcome ?? "",
+        size: copiedSize.toFixed(6),
+        price: copiedPrice.toFixed(6),
+        orderType: "GTC",
+        ts: String(Date.now()),
+      });
+    } catch (err) {
+      await Promise.allSettled([
+        this.prisma.copyTrade.update({
+          where: { id: trade.id },
+          data: { status: "FAILED" },
+        }),
+        reserveDailyLoss(-notional),
+        this.redis.del(`copy:${config.id}:exposure`),
+      ]);
+      throw err;
+    }
 
     // 7. Update config stats
     await this.prisma.copyConfig.update({

@@ -7,6 +7,13 @@ import {
 import { ConfigService } from "@nestjs/config";
 import { PrismaService } from "@polyforge/shared-db";
 
+const REQUIRED_L2_HEADERS = [
+  "POLY_API_KEY",
+  "POLY_SIGNATURE",
+  "POLY_PASSPHRASE",
+  "POLY_TIMESTAMP",
+];
+
 @Injectable()
 export class HeartbeatService implements OnModuleInit, OnModuleDestroy {
   private interval: NodeJS.Timeout | null = null;
@@ -115,15 +122,25 @@ export class HeartbeatService implements OnModuleInit, OnModuleDestroy {
       });
 
       if (res.ok) {
-        return (await res.json()) as Record<string, string>;
+        const headers = (await res.json()) as Record<string, string>;
+        if (this.hasRequiredL2Headers(headers)) {
+          return headers;
+        }
+        throw new Error("signer returned incomplete L2 headers");
       }
+      throw new Error(`signer returned ${res.status}`);
     } catch (err: unknown) {
       this.logger.warn(
         `Failed to fetch L2 headers for user=${userId}: ${(err as Error).message}`,
       );
+      throw err;
     }
+  }
 
-    // Return empty headers as fallback (heartbeat will likely fail auth but won't crash)
-    return {};
+  private hasRequiredL2Headers(headers: Record<string, string>): boolean {
+    return REQUIRED_L2_HEADERS.every((name) => {
+      const value = headers[name];
+      return typeof value === "string" && value.length > 0;
+    });
   }
 }

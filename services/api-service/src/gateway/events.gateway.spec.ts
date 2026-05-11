@@ -415,10 +415,7 @@ describe("EventsGateway", () => {
         const client = makeSocket();
         const req = makeRequest("?token=valid-jwt", "", {}, addr);
         gateway.handleConnection(client, req);
-        expect(client.close).not.toHaveBeenCalledWith(
-          4008,
-          expect.any(String),
-        );
+        expect(client.close).not.toHaveBeenCalledWith(4008, expect.any(String));
         expect(jwtService.verify).toHaveBeenCalled();
         vi.clearAllMocks();
       }
@@ -446,10 +443,7 @@ describe("EventsGateway", () => {
         const client = makeSocket();
         const req = makeRequest("?token=valid-jwt", "", {}, addr);
         gateway.handleConnection(client, req);
-        expect(client.close).not.toHaveBeenCalledWith(
-          4008,
-          expect.any(String),
-        );
+        expect(client.close).not.toHaveBeenCalledWith(4008, expect.any(String));
         expect(jwtService.verify).toHaveBeenCalled();
         vi.clearAllMocks();
       }
@@ -531,6 +525,50 @@ describe("EventsGateway", () => {
 
       gateway.sendToUser("user-A", "EVENT", {});
       expect(closedSocket.send).not.toHaveBeenCalled();
+    });
+
+    it("prunes closed sockets from the user map", () => {
+      vi.mocked(jwtService.verify).mockReturnValue({
+        sub: "user-A",
+        email: "a@b.com",
+        username: "a",
+      });
+
+      const closedSocket = makeSocket({ readyState: 3 });
+      gateway.handleConnection(closedSocket, makeRequest("?token=t1"));
+      vi.mocked(closedSocket.send).mockClear();
+
+      gateway.sendToUser("user-A", "EVENT", {});
+      gateway.sendToUser("user-A", "EVENT", {});
+
+      expect(closedSocket.send).not.toHaveBeenCalled();
+      expect((gateway as any).userSockets.has("user-A")).toBe(false);
+    });
+
+    it("prunes all subscription maps when dropping a closed socket", () => {
+      vi.mocked(jwtService.verify).mockReturnValue({
+        sub: "user-A",
+        email: "a@b.com",
+        username: "a",
+      });
+
+      const closedSocket = makeSocket({ readyState: 3 });
+      gateway.handleConnection(closedSocket, makeRequest("?token=t1"));
+      vi.mocked(closedSocket.send).mockClear();
+
+      // Subscribe the socket to prices, strategies, and whales
+      (gateway as any).priceSubscriptions.get(closedSocket)?.add("token-1");
+      (gateway as any).strategySubscriptions.get(closedSocket)?.add("strat-1");
+      (gateway as any).whaleSubscriptions.add(closedSocket);
+
+      gateway.sendToUser("user-A", "EVENT", {});
+
+      // Verify all subscription maps are cleaned up
+      expect((gateway as any).priceSubscriptions.has(closedSocket)).toBe(false);
+      expect((gateway as any).strategySubscriptions.has(closedSocket)).toBe(
+        false,
+      );
+      expect((gateway as any).whaleSubscriptions.has(closedSocket)).toBe(false);
     });
   });
 

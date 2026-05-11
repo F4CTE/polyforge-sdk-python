@@ -110,7 +110,7 @@ describe("WebhooksService", () => {
         makeWebhook({ userId: "user-1" }),
         makeWebhook({ userId: "user-1" }),
       ];
-      db.webhook.findMany.mockResolvedValue(webhooks as any);
+      db.webhook.findMany.mockResolvedValue(webhooks);
 
       const result = await service.list("user-1");
 
@@ -134,8 +134,8 @@ describe("WebhooksService", () => {
   describe("remove", () => {
     it("deletes webhook when owned by the user", async () => {
       const webhook = makeWebhook({ userId: "user-1" });
-      db.webhook.findUnique.mockResolvedValue(webhook as any);
-      db.webhook.delete.mockResolvedValue(webhook as any);
+      db.webhook.findUnique.mockResolvedValue(webhook);
+      db.webhook.delete.mockResolvedValue(webhook);
 
       await service.remove(webhook.id, "user-1");
 
@@ -146,7 +146,7 @@ describe("WebhooksService", () => {
 
     it("throws ForbiddenException when user does not own the webhook", async () => {
       const webhook = makeWebhook({ userId: "user-2" });
-      db.webhook.findUnique.mockResolvedValue(webhook as any);
+      db.webhook.findUnique.mockResolvedValue(webhook);
 
       await expect(service.remove(webhook.id, "user-1")).rejects.toThrow(
         ForbiddenException,
@@ -167,7 +167,7 @@ describe("WebhooksService", () => {
   describe("test", () => {
     it("sends a test event to the webhook URL", async () => {
       const webhook = makeWebhook({ userId: "user-1" });
-      db.webhook.findUnique.mockResolvedValue(webhook as any);
+      db.webhook.findUnique.mockResolvedValue(webhook);
 
       const mockFetch = vi.fn().mockResolvedValue({ ok: true, status: 200 });
       vi.stubGlobal("fetch", mockFetch);
@@ -191,7 +191,7 @@ describe("WebhooksService", () => {
 
     it("throws ForbiddenException for webhook owned by another user", async () => {
       const webhook = makeWebhook({ userId: "user-2" });
-      db.webhook.findUnique.mockResolvedValue(webhook as any);
+      db.webhook.findUnique.mockResolvedValue(webhook);
 
       await expect(service.test(webhook.id, "user-1")).rejects.toThrow(
         ForbiddenException,
@@ -204,7 +204,7 @@ describe("WebhooksService", () => {
   describe("dispatch", () => {
     it("finds matching webhooks by event type and delivers payload", async () => {
       const webhook = makeWebhook({ events: ["ORDER_FILLED"], active: true });
-      db.webhook.findMany.mockResolvedValue([webhook] as any);
+      db.webhook.findMany.mockResolvedValue([webhook]);
 
       const mockFetch = vi.fn().mockResolvedValue({ ok: true, status: 200 });
       vi.stubGlobal("fetch", mockFetch);
@@ -232,7 +232,7 @@ describe("WebhooksService", () => {
 
     it("signs the payload with HMAC-SHA256", async () => {
       const webhook = makeWebhook({ secret: "test-secret-hex" });
-      db.webhook.findMany.mockResolvedValue([webhook] as any);
+      db.webhook.findMany.mockResolvedValue([webhook]);
 
       const mockFetch = vi.fn().mockResolvedValue({ ok: true, status: 200 });
       vi.stubGlobal("fetch", mockFetch);
@@ -257,7 +257,7 @@ describe("WebhooksService", () => {
 
     it("does not throw when delivery fails (fire-and-forget)", async () => {
       const webhook = makeWebhook({ events: ["ORDER_FILLED"], active: true });
-      db.webhook.findMany.mockResolvedValue([webhook] as any);
+      db.webhook.findMany.mockResolvedValue([webhook]);
 
       const mockFetch = vi.fn().mockRejectedValue(new Error("Network failure"));
       vi.stubGlobal("fetch", mockFetch);
@@ -275,7 +275,7 @@ describe("WebhooksService", () => {
         events: ["ORDER_FILLED"],
         active: true,
       });
-      db.webhook.findMany.mockResolvedValue([wh1, wh2] as any);
+      db.webhook.findMany.mockResolvedValue([wh1, wh2]);
 
       const mockFetch = vi.fn().mockResolvedValue({ ok: true, status: 200 });
       vi.stubGlobal("fetch", mockFetch);
@@ -295,7 +295,7 @@ describe("WebhooksService", () => {
         userId: "user-1",
         url: "http://example.com/hook",
       });
-      db.webhook.findUnique.mockResolvedValue(webhook as any);
+      db.webhook.findUnique.mockResolvedValue(webhook);
 
       const mockFetch = vi.fn();
       vi.stubGlobal("fetch", mockFetch);
@@ -312,7 +312,7 @@ describe("WebhooksService", () => {
         userId: "user-1",
         url: "https://localhost/hook",
       });
-      db.webhook.findUnique.mockResolvedValue(webhook as any);
+      db.webhook.findUnique.mockResolvedValue(webhook);
 
       const mockFetch = vi.fn();
       vi.stubGlobal("fetch", mockFetch);
@@ -329,7 +329,7 @@ describe("WebhooksService", () => {
         userId: "user-1",
         url: "https://10.0.0.1/hook",
       });
-      db.webhook.findUnique.mockResolvedValue(webhook as any);
+      db.webhook.findUnique.mockResolvedValue(webhook);
 
       const mockFetch = vi.fn();
       vi.stubGlobal("fetch", mockFetch);
@@ -345,7 +345,7 @@ describe("WebhooksService", () => {
         userId: "user-1",
         url: "https://172.16.0.1/hook",
       });
-      db.webhook.findUnique.mockResolvedValue(webhook as any);
+      db.webhook.findUnique.mockResolvedValue(webhook);
 
       const mockFetch = vi.fn();
       vi.stubGlobal("fetch", mockFetch);
@@ -361,7 +361,7 @@ describe("WebhooksService", () => {
         userId: "user-1",
         url: "https://192.168.1.1/hook",
       });
-      db.webhook.findUnique.mockResolvedValue(webhook as any);
+      db.webhook.findUnique.mockResolvedValue(webhook);
 
       const mockFetch = vi.fn();
       vi.stubGlobal("fetch", mockFetch);
@@ -377,7 +377,7 @@ describe("WebhooksService", () => {
         userId: "user-1",
         url: "https://127.0.0.1/hook",
       });
-      db.webhook.findUnique.mockResolvedValue(webhook as any);
+      db.webhook.findUnique.mockResolvedValue(webhook);
 
       const mockFetch = vi.fn();
       vi.stubGlobal("fetch", mockFetch);
@@ -393,7 +393,7 @@ describe("WebhooksService", () => {
         userId: "user-1",
         url: "https://169.254.169.254/hook",
       });
-      db.webhook.findUnique.mockResolvedValue(webhook as any);
+      db.webhook.findUnique.mockResolvedValue(webhook);
 
       const mockFetch = vi.fn();
       vi.stubGlobal("fetch", mockFetch);
@@ -409,7 +409,7 @@ describe("WebhooksService", () => {
         userId: "user-1",
         url: "https://metadata.google.internal/hook",
       });
-      db.webhook.findUnique.mockResolvedValue(webhook as any);
+      db.webhook.findUnique.mockResolvedValue(webhook);
 
       const mockFetch = vi.fn();
       vi.stubGlobal("fetch", mockFetch);
@@ -425,7 +425,7 @@ describe("WebhooksService", () => {
         userId: "user-1",
         url: "https://my-service.internal/hook",
       });
-      db.webhook.findUnique.mockResolvedValue(webhook as any);
+      db.webhook.findUnique.mockResolvedValue(webhook);
 
       const mockFetch = vi.fn();
       vi.stubGlobal("fetch", mockFetch);
@@ -441,7 +441,7 @@ describe("WebhooksService", () => {
         userId: "user-1",
         url: "https://my-service.local/hook",
       });
-      db.webhook.findUnique.mockResolvedValue(webhook as any);
+      db.webhook.findUnique.mockResolvedValue(webhook);
 
       const mockFetch = vi.fn();
       vi.stubGlobal("fetch", mockFetch);
@@ -457,7 +457,7 @@ describe("WebhooksService", () => {
         userId: "user-1",
         url: "https://100.64.0.1/hook",
       });
-      db.webhook.findUnique.mockResolvedValue(webhook as any);
+      db.webhook.findUnique.mockResolvedValue(webhook);
 
       const mockFetch = vi.fn();
       vi.stubGlobal("fetch", mockFetch);
@@ -473,7 +473,7 @@ describe("WebhooksService", () => {
         userId: "user-1",
         url: "not-a-url",
       });
-      db.webhook.findUnique.mockResolvedValue(webhook as any);
+      db.webhook.findUnique.mockResolvedValue(webhook);
 
       const mockFetch = vi.fn();
       vi.stubGlobal("fetch", mockFetch);
@@ -491,7 +491,7 @@ describe("WebhooksService", () => {
   describe("deliver retry logic via test method", () => {
     it("retries once on non-ok response", async () => {
       const webhook = makeWebhook({ userId: "user-1" });
-      db.webhook.findUnique.mockResolvedValue(webhook as any);
+      db.webhook.findUnique.mockResolvedValue(webhook);
 
       const mockFetch = vi
         .fn()
@@ -507,7 +507,7 @@ describe("WebhooksService", () => {
 
     it("returns failure when both attempts return non-ok", async () => {
       const webhook = makeWebhook({ userId: "user-1" });
-      db.webhook.findUnique.mockResolvedValue(webhook as any);
+      db.webhook.findUnique.mockResolvedValue(webhook);
 
       const mockFetch = vi.fn().mockResolvedValue({ ok: false, status: 503 });
       vi.stubGlobal("fetch", mockFetch);
@@ -521,7 +521,7 @@ describe("WebhooksService", () => {
 
     it("retries once on network error and succeeds", async () => {
       const webhook = makeWebhook({ userId: "user-1" });
-      db.webhook.findUnique.mockResolvedValue(webhook as any);
+      db.webhook.findUnique.mockResolvedValue(webhook);
 
       const mockFetch = vi
         .fn()
@@ -537,7 +537,7 @@ describe("WebhooksService", () => {
 
     it("returns error when both attempts throw network errors", async () => {
       const webhook = makeWebhook({ userId: "user-1" });
-      db.webhook.findUnique.mockResolvedValue(webhook as any);
+      db.webhook.findUnique.mockResolvedValue(webhook);
 
       const mockFetch = vi
         .fn()
@@ -553,7 +553,7 @@ describe("WebhooksService", () => {
 
     it("returns 'Network error' when retry throws a non-Error", async () => {
       const webhook = makeWebhook({ userId: "user-1" });
-      db.webhook.findUnique.mockResolvedValue(webhook as any);
+      db.webhook.findUnique.mockResolvedValue(webhook);
 
       const mockFetch = vi.fn().mockRejectedValue("some string error");
       vi.stubGlobal("fetch", mockFetch);
@@ -573,7 +573,7 @@ describe("WebhooksService", () => {
         userId: "user-1",
         url: "https://0.0.0.0/hook",
       });
-      db.webhook.findUnique.mockResolvedValue(webhook as any);
+      db.webhook.findUnique.mockResolvedValue(webhook);
 
       const mockFetch = vi.fn();
       vi.stubGlobal("fetch", mockFetch);
@@ -589,7 +589,7 @@ describe("WebhooksService", () => {
         userId: "user-1",
         url: "https://[::1]/hook",
       });
-      db.webhook.findUnique.mockResolvedValue(webhook as any);
+      db.webhook.findUnique.mockResolvedValue(webhook);
 
       const mockFetch = vi.fn();
       vi.stubGlobal("fetch", mockFetch);
@@ -609,7 +609,7 @@ describe("WebhooksService", () => {
         userId: "user-1",
         url: "https://[fe80::1]/hook",
       });
-      db.webhook.findUnique.mockResolvedValue(webhook as any);
+      db.webhook.findUnique.mockResolvedValue(webhook);
 
       const mockFetch = vi.fn().mockResolvedValue({ ok: true, status: 200 });
       vi.stubGlobal("fetch", mockFetch);
@@ -625,7 +625,7 @@ describe("WebhooksService", () => {
         userId: "user-1",
         url: "https://172.31.255.1/hook",
       });
-      db.webhook.findUnique.mockResolvedValue(webhook as any);
+      db.webhook.findUnique.mockResolvedValue(webhook);
 
       const mockFetch = vi.fn();
       vi.stubGlobal("fetch", mockFetch);
@@ -641,7 +641,7 @@ describe("WebhooksService", () => {
         userId: "user-1",
         url: "https://172.32.0.1/hook",
       });
-      db.webhook.findUnique.mockResolvedValue(webhook as any);
+      db.webhook.findUnique.mockResolvedValue(webhook);
 
       const mockFetch = vi.fn().mockResolvedValue({ ok: true, status: 200 });
       vi.stubGlobal("fetch", mockFetch);
@@ -657,7 +657,7 @@ describe("WebhooksService", () => {
         userId: "user-1",
         url: "https://100.127.0.1/hook",
       });
-      db.webhook.findUnique.mockResolvedValue(webhook as any);
+      db.webhook.findUnique.mockResolvedValue(webhook);
 
       const mockFetch = vi.fn();
       vi.stubGlobal("fetch", mockFetch);
@@ -673,7 +673,7 @@ describe("WebhooksService", () => {
         userId: "user-1",
         url: "https://api.example.com/webhook",
       });
-      db.webhook.findUnique.mockResolvedValue(webhook as any);
+      db.webhook.findUnique.mockResolvedValue(webhook);
 
       const mockFetch = vi.fn().mockResolvedValue({ ok: true, status: 200 });
       vi.stubGlobal("fetch", mockFetch);
@@ -705,7 +705,7 @@ describe("WebhooksService", () => {
         active: true,
         url: "https://example.com/hook",
       });
-      db.webhook.findMany.mockResolvedValue([webhook] as any);
+      db.webhook.findMany.mockResolvedValue([webhook]);
 
       // First attempt fails, retry also fails
       const mockFetch = vi.fn().mockRejectedValue(new Error("Network timeout"));

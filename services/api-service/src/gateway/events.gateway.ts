@@ -91,6 +91,7 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
       this.priceSubscriptions.set(client, new Set());
       this.strategySubscriptions.set(client, new Set());
       client.on("message", (raw) => this.handleClientMessage(client, raw));
+      client.once?.("close", () => this.handleDisconnect(client));
       client.on("error", (err) => {
         this.logger.warn(`WebSocket client error: ${err.message}`);
         this.handleDisconnect(client);
@@ -154,13 +155,8 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
     if (remote.startsWith("::ffff:") && remote.length > 7) {
       remote = remote.slice(7);
     }
-    if (
-      remote === "127.0.0.1" ||
-      remote === "::1"
-    )
-      return true;
-    if (remote.startsWith("10.") || remote.startsWith("192.168."))
-      return true;
+    if (remote === "127.0.0.1" || remote === "::1") return true;
+    if (remote.startsWith("10.") || remote.startsWith("192.168.")) return true;
     if (remote.startsWith("172.")) {
       const parts = remote.split(".");
       if (parts.length < 2) return false;
@@ -406,7 +402,16 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
           data,
           timestamp: Date.now(),
         });
+      } else {
+        this.socketUsers.delete(client);
+        sockets.delete(client);
+        this.priceSubscriptions.delete(client);
+        this.strategySubscriptions.delete(client);
+        this.whaleSubscriptions.delete(client);
       }
+    }
+    if (sockets.size === 0) {
+      this.userSockets.delete(userId);
     }
   }
 

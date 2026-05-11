@@ -65,6 +65,8 @@ export class StrategyRunner {
   private delayedActions: Map<string, NodeJS.Timeout> = new Map();
   private lastStaleCheckMs = 0;
   private staleCheckBackoffMs = STALE_PRICE_MS;
+  private tickInFlight = false;
+  private pendingTick = false;
 
   /** Tracks child strategy IDs launched by RUN_STRATEGY action blocks */
   readonly childStrategies: Set<string> = new Set();
@@ -222,7 +224,12 @@ export class StrategyRunner {
     }
 
     if (this.status !== "RUNNING") return;
+    if (this.tickInFlight) {
+      this.pendingTick = true;
+      return;
+    }
 
+    this.tickInFlight = true;
     try {
       // Enforce daily execution limit — auto-stop if exceeded
       const redisClient = this.redis.getClient();
@@ -247,6 +254,25 @@ export class StrategyRunner {
       await this.evaluate();
     } catch (err) {
       this.logger.error("Tick evaluation failed", err);
+      // Publish failures (including counter increment failures after
+      // successful publish) mean the strategy's accounting state is
+      // inconsistent — pause to prevent overtrading on subsequent ticks.
+      if (
+        err instanceof Error &&
+        err.message.includes("Counter increment failed")
+      ) {
+        this.pause("counter_increment_failed");
+        await this.onStatusChange(
+          "PAUSED",
+          "counter_increment_failed",
+        ).catch(() => {});
+      }
+    } finally {
+      this.tickInFlight = false;
+      if (this.pendingTick) {
+        this.pendingTick = false;
+        void this.tick();
+      }
     }
   }
 
@@ -371,11 +397,7 @@ export class StrategyRunner {
         const inputB = Number(resolvedBlock.params?.inputB ?? 0);
         const inputs = [inputA, inputB];
 
-        const result = evaluator.evaluate(
-          resolvedBlock as Record<string, unknown>,
-          inputs,
-          ctx,
-        );
+        const result = evaluator.evaluate(resolvedBlock, inputs, ctx);
 
         // Store the result in context variables so other blocks can reference it
         ctx.variables = ctx.variables ?? {};
@@ -412,7 +434,7 @@ export class StrategyRunner {
         params: resolveParams(block.params ?? {}, ctx.variables ?? {}),
       };
       const result = await evaluator.evaluate(
-        resolvedBlock as Record<string, unknown>,
+        resolvedBlock,
         ctx,
         this.redis,
         this.prisma,
@@ -442,7 +464,7 @@ export class StrategyRunner {
         params: resolveParams(block.params ?? {}, ctx.variables ?? {}),
       };
       const result = await evaluator.evaluate(
-        resolvedBlock as Record<string, unknown>,
+        resolvedBlock,
         ctx,
         this.redis,
         this.prisma,
@@ -464,7 +486,7 @@ export class StrategyRunner {
         params: resolveParams(block.params ?? {}, ctx.variables ?? {}),
       };
       const result = await evaluator.evaluate(
-        resolvedBlock as Record<string, unknown>,
+        resolvedBlock,
         ctx,
         this.redis,
         this.prisma,
@@ -498,7 +520,7 @@ export class StrategyRunner {
         params: resolveParams(block.params ?? {}, ctx.variables ?? {}),
       };
       const result = await evaluator.execute(
-        resolvedBlock as Record<string, unknown>,
+        resolvedBlock,
         ctx,
         this.redis,
         this.prisma,
@@ -554,12 +576,6 @@ export class StrategyRunner {
     }
 
     if (orderIntents.length > 0) {
-      await this.state.incrementOrderCounters(
-        this.strategyId,
-        orderIntents.length,
-        ctx.now,
-      );
-
       await this.onIntents(orderIntents);
     }
   }
