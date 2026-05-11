@@ -35,14 +35,11 @@ from polyforge.models import (
     SystemHealthAuthenticated,
     Token,
     MarketplaceListing,
-    MarketplaceSeller,
-    MarketplaceStrategy,
     Order,
     OrderBook,
     OrderBookLevel,
     OrderStatus,
     PaginatedResponse,
-    PlaceOrderResponse,
     Portfolio,
     PortfolioPnl,
     Position,
@@ -5297,6 +5294,7 @@ class TestSettingsMethods:
         "update_settings_password",
         "get_beta_usage",
         "get_gas_settings",
+        "export_personal_data",
     ]
 
     @pytest.mark.parametrize("method", SETTINGS_METHODS)
@@ -5318,6 +5316,7 @@ class TestSettingsMethods:
             "update_settings_password": "/api/v1/settings/password",
             "get_beta_usage": "/api/v1/settings/beta-usage",
             "get_gas_settings": "/api/v1/settings/gas",
+            "export_personal_data": "/api/v1/me/export",
         }
         for method_name, expected_path in path_map.items():
             source = inspect.getsource(getattr(PolyforgeClient, method_name))
@@ -5332,6 +5331,7 @@ class TestSettingsMethods:
             "update_settings_password": "/api/v1/settings/password",
             "get_beta_usage": "/api/v1/settings/beta-usage",
             "get_gas_settings": "/api/v1/settings/gas",
+            "export_personal_data": "/api/v1/me/export",
         }
         for method_name, expected_path in path_map.items():
             source = inspect.getsource(getattr(AsyncPolyforgeClient, method_name))
@@ -5406,6 +5406,41 @@ class TestSettingsMethods:
         result = client.get_gas_settings()
         client._get.assert_called_once_with("/api/v1/settings/gas")
         assert result["gasLevel"] == "standard"
+        client.close()
+
+    def test_sync_export_personal_data_json(self):
+        from unittest.mock import MagicMock
+        from polyforge.models import PersonalDataExport
+        client = PolyforgeClient(api_key="test-key")
+        client._get = MagicMock(return_value={
+            "generatedAt": "2026-05-11T00:00:00Z",
+            "formatVersion": "2026-05-privacy-export-v1",
+            "_meta": {"maxRecordsPerCollection": 1000, "collectionsTruncated": {}},
+            "account": {"username": "testuser"},
+            "settings": {},
+            "security": {},
+            "trading": {},
+            "communications": {},
+            "social": {},
+        })
+        result = client.export_personal_data()
+        client._get.assert_called_once_with("/api/v1/me/export")
+        assert isinstance(result, PersonalDataExport)
+        assert result.generated_at == "2026-05-11T00:00:00Z"
+        assert result.account == {"username": "testuser"}
+        assert result.meta is not None
+        assert result.meta.max_records_per_collection == 1000
+        client.close()
+
+    def test_sync_export_personal_data_csv(self):
+        from unittest.mock import MagicMock
+        client = PolyforgeClient(api_key="test-key")
+        client._get_text = MagicMock(return_value="section,index,data_json\n...")
+        result = client.export_personal_data(format="csv")
+        client._get_text.assert_called_once_with(
+            "/api/v1/me/export", params={"format": "csv"}
+        )
+        assert isinstance(result, str)
         client.close()
 
 
@@ -5561,7 +5596,7 @@ class TestNotificationPreferenceMethods:
 
     def test_sync_get_notification_preferences(self):
         from unittest.mock import MagicMock
-        from polyforge.models import EventNotificationPreferences, EventNotificationPref
+        from polyforge.models import EventNotificationPreferences
         client = PolyforgeClient(api_key="test-key")
         client._get = MagicMock(return_value={
             "preferences": [
