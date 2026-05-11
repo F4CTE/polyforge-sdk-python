@@ -671,11 +671,11 @@ services:
             PG_HOST="posthog-db"
           fi
           ATTEMPTS=0
-          until pg_isready -U posthog -d posthog -h "$PG_HOST" 2>/dev/null; do
+          until pg_isready -U posthog -d posthog -h "$$PG_HOST" 2>/dev/null; do
             sleep 0.5
-            ATTEMPTS=$((ATTEMPTS + 1))
-            if [ "$ATTEMPTS" -ge $((MAX_WAIT * 2)) ]; then
-              echo "ERROR: Postgres did not become ready within ${MAX_WAIT}s" >&2
+            ATTEMPTS=$$((ATTEMPTS + 1))
+            if [ "$$ATTEMPTS" -ge $$((MAX_WAIT * 2)) ]; then
+              echo "ERROR: Postgres did not become ready within $${MAX_WAIT}s" >&2
               exit 1
             fi
           done
@@ -684,19 +684,20 @@ services:
           # temporary instances use Unix-socket peer auth (no password).
           # Use psql :'var' quoting (PQescapeLiteral) so passwords containing
           # single quotes or backslashes are safely encoded in the SQL literal.
-          if [ "$PG_HOST" = "posthog-db" ]; then
-            export PGPASSWORD="$POSTHOG_DB_PASSWORD"
-            if ! psql -U posthog -d posthog -h "$PG_HOST" -c "SELECT 1" 2>/dev/null; then
+          if [ "$$PG_HOST" = "posthog-db" ]; then
+            export PGPASSWORD="$$POSTHOG_DB_PASSWORD"
+            if ! psql -U posthog -d posthog -h "$$PG_HOST" -c "SELECT 1" 2>/dev/null; then
               echo "Target password rejected — trying PostHog default for legacy volumes"
               export PGPASSWORD="posthog"
-              if ! psql -U posthog -d posthog -h "$PG_HOST" -c "SELECT 1" 2>/dev/null; then
+              if ! psql -U posthog -d posthog -h "$$PG_HOST" -c "SELECT 1" 2>/dev/null; then
                 echo "ERROR: Cannot authenticate to running posthog-db (tried both target and legacy default password)" >&2
                 exit 1
               fi
             fi
           fi
-          psql -U posthog -d posthog -h "$PG_HOST" -v pw="$${POSTHOG_DB_PASSWORD}" \
-            -c "ALTER USER posthog WITH PASSWORD :'pw';"
+          psql -U posthog -d posthog -h "$$PG_HOST" -v pw="$${POSTHOG_DB_PASSWORD}" <<'SQL'
+        ALTER USER posthog WITH PASSWORD :'pw';
+        SQL
           echo "Password rotated successfully."
         else
           echo "No existing posthog-db-data — first run, nothing to migrate."
@@ -787,7 +788,7 @@ services:
       - |
         ENCODED="$$(python3 -c "import sys,urllib.parse;sys.stdout.write(urllib.parse.quote(sys.argv[1],safe=''))" "$$POSTHOG_DB_PASSWORD")"
         export DATABASE_URL="postgres://posthog:$${ENCODED}@posthog-db:5432/posthog"
-        exec /compose/entrypoint.sh "$$@"
+        exec /usr/local/bin/docker-entrypoint.sh "$$@"
       - sh
     environment:
       POSTHOG_DB_PASSWORD: ${POSTHOG_DB_PASSWORD:?POSTHOG_DB_PASSWORD must be set in .env (use `openssl rand -hex 32`)}
@@ -822,7 +823,7 @@ services:
       - |
         ENCODED="$$(python3 -c "import sys,urllib.parse;sys.stdout.write(urllib.parse.quote(sys.argv[1],safe=''))" "$$POSTHOG_DB_PASSWORD")"
         export DATABASE_URL="postgres://posthog:$${ENCODED}@posthog-db:5432/posthog"
-        exec /compose/entrypoint.sh "$$@"
+        exec /usr/local/bin/docker-entrypoint.sh "$$@"
       - sh
     environment:
       POSTHOG_DB_PASSWORD: ${POSTHOG_DB_PASSWORD:?POSTHOG_DB_PASSWORD must be set in .env (use `openssl rand -hex 32`)}
