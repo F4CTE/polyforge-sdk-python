@@ -1189,11 +1189,24 @@ describe("StrategyRunner — logic graph evaluation", () => {
     expect(runner.status).toBe("RUNNING");
   });
 
-  it("evaluates IF_THEN_ELSE with a truthy condition", async () => {
+  it("IF_THEN_ELSE propagates via true-handle to downstream block", async () => {
     const state = makeState();
+    const prisma = makePrisma();
+    prisma.token.findUnique.mockResolvedValue({
+      id: "tok1",
+      marketId: "mkt-1",
+      outcome: "YES",
+    });
+    const redis = makeRedis({
+      getJson: vi.fn().mockResolvedValue({ price: 0.5 }),
+    });
+    const onIntents = vi.fn().mockResolvedValue(undefined);
     const runner = makeRunner({
       execMode: "EVENT",
       state,
+      redis,
+      prisma,
+      onIntents,
       logicBlocks: [
         { id: "if-1", type: "IF_THEN_ELSE", condition: "1 > 0" },
         { id: "or-1", type: "OR_GATE" },
@@ -1201,10 +1214,58 @@ describe("StrategyRunner — logic graph evaluation", () => {
       logicConnections: [
         { source: "if-1", sourceHandle: "true", target: "or-1" },
       ],
+      actions: [
+        {
+          id: "act-1",
+          type: "buy_yes",
+          params: { tokenId: "tok1", size: "$__logic_or-1", price: "0.5" },
+        },
+      ],
     });
 
     await runner.onPriceEvent("tok1", 0.5);
-    expect(state.get).toHaveBeenCalled();
+    // __logic_or-1 = 1 → size resolves to 1 → action fires
+    expect(onIntents).toHaveBeenCalled();
+    expect(runner.status).toBe("RUNNING");
+  });
+
+  it("IF_THEN_ELSE falsy condition blocks true-handle propagation", async () => {
+    const state = makeState();
+    const prisma = makePrisma();
+    prisma.token.findUnique.mockResolvedValue({
+      id: "tok1",
+      marketId: "mkt-1",
+      outcome: "YES",
+    });
+    const redis = makeRedis({
+      getJson: vi.fn().mockResolvedValue({ price: 0.5 }),
+    });
+    const onIntents = vi.fn().mockResolvedValue(undefined);
+    const runner = makeRunner({
+      execMode: "EVENT",
+      state,
+      redis,
+      prisma,
+      onIntents,
+      logicBlocks: [
+        { id: "if-1", type: "IF_THEN_ELSE", condition: "1 < 0" },
+        { id: "or-1", type: "OR_GATE" },
+      ],
+      logicConnections: [
+        { source: "if-1", sourceHandle: "true", target: "or-1" },
+      ],
+      actions: [
+        {
+          id: "act-1",
+          type: "buy_yes",
+          params: { tokenId: "tok1", size: "$__logic_or-1", price: "0.5" },
+        },
+      ],
+    });
+
+    await runner.onPriceEvent("tok1", 0.5);
+    // __logic_or-1 = 0 → size resolves to 0 → action throws → onIntents is not called
+    expect(onIntents).not.toHaveBeenCalled();
     expect(runner.status).toBe("RUNNING");
   });
 
@@ -1239,33 +1300,49 @@ describe("StrategyRunner — logic graph evaluation", () => {
     expect(runner.status).toBe("RUNNING");
   });
 
-  it("skips logic blocks not found in the block list", async () => {
-    const state = makeState();
-    const runner = makeRunner({
-      execMode: "EVENT",
-      state,
-      logicBlocks: [{ id: "and-1", type: "AND_GATE" }],
-      logicConnections: [{ source: "nonexistent", target: "and-1" }],
-    });
-
-    await runner.onPriceEvent("tok1", 0.5);
-    expect(state.get).toHaveBeenCalled();
-    expect(runner.status).toBe("RUNNING");
-  });
-
-  it("evaluates DELAY block with seconds > 0", async () => {
+  it("skips connections referencing nonexistent blocks gracefully", async () => {
     const state = makeState();
     const runner = makeRunner({
       execMode: "EVENT",
       state,
       logicBlocks: [
-        { id: "delay-1", type: "DELAY", seconds: 1 },
+        { id: "and-1", type: "AND_GATE" },
         { id: "or-1", type: "OR_GATE" },
       ],
-      logicConnections: [{ source: "delay-1", target: "or-1" }],
+      logicConnections: [
+        // and-1 → or-1: valid connection (both blocks exist)
+        { source: "and-1", target: "or-1" },
+        // ghost-1 → ghost-2: both nonexistent — silently ignored by topo sort
+        { source: "ghost-1", target: "ghost-2" },
+      ],
     });
 
     await runner.onPriceEvent("tok1", 0.5);
+    // and-1 (indegree 0) → or-1 (indegree 1) both evaluated;
+    // ghost references are harmless
+    expect(state.get).toHaveBeenCalled();
+    expect(runner.status).toBe("RUNNING");
+  });
+
+  it("schedules DELAY block when upstream input is truthy", async () => {
+    const state = makeState();
+    const runner = makeRunner({
+      execMode: "EVENT",
+      state,
+      logicBlocks: [
+        { id: "not-1", type: "NOT_GATE" },
+        { id: "delay-1", type: "DELAY", params: { seconds: 1 } },
+        { id: "or-1", type: "OR_GATE" },
+      ],
+      logicConnections: [
+        { source: "not-1", target: "delay-1" },
+        { source: "delay-1", target: "or-1" },
+      ],
+    });
+
+    await runner.onPriceEvent("tok1", 0.5);
+    // NOT_GATE with no inputs → value=true → feeds DELAY
+    // DELAY with params.seconds=1 and truthy input → scheduleDelayedAction exercised
     expect(state.get).toHaveBeenCalled();
     expect(runner.status).toBe("RUNNING");
   });
