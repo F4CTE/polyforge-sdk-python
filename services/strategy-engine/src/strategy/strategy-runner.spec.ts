@@ -1162,9 +1162,7 @@ describe("StrategyRunner — logic graph evaluation", () => {
     const runner = makeRunner({
       execMode: "EVENT",
       state,
-      logicBlocks: [
-        { id: "and-1", type: "AND_GATE" },
-      ],
+      logicBlocks: [{ id: "and-1", type: "AND_GATE" }],
       logicConnections: [],
     });
 
@@ -1183,9 +1181,7 @@ describe("StrategyRunner — logic graph evaluation", () => {
         { id: "or-1", type: "OR_GATE" },
         { id: "or-2", type: "OR_GATE" },
       ],
-      logicConnections: [
-        { source: "or-1", target: "or-2" },
-      ],
+      logicConnections: [{ source: "or-1", target: "or-2" }],
     });
 
     await runner.onPriceEvent("tok1", 0.5);
@@ -1221,9 +1217,7 @@ describe("StrategyRunner — logic graph evaluation", () => {
         { id: "not-1", type: "NOT_GATE" },
         { id: "or-1", type: "OR_GATE" },
       ],
-      logicConnections: [
-        { source: "not-1", target: "or-1" },
-      ],
+      logicConnections: [{ source: "not-1", target: "or-1" }],
     });
 
     await runner.onPriceEvent("tok1", 0.5);
@@ -1236,9 +1230,7 @@ describe("StrategyRunner — logic graph evaluation", () => {
     const runner = makeRunner({
       execMode: "EVENT",
       state,
-      logicBlocks: [
-        { id: "unknown-1", type: "NONEXISTENT" },
-      ],
+      logicBlocks: [{ id: "unknown-1", type: "NONEXISTENT" }],
       logicConnections: [],
     });
 
@@ -1252,12 +1244,8 @@ describe("StrategyRunner — logic graph evaluation", () => {
     const runner = makeRunner({
       execMode: "EVENT",
       state,
-      logicBlocks: [
-        { id: "and-1", type: "AND_GATE" },
-      ],
-      logicConnections: [
-        { source: "nonexistent", target: "and-1" },
-      ],
+      logicBlocks: [{ id: "and-1", type: "AND_GATE" }],
+      logicConnections: [{ source: "nonexistent", target: "and-1" }],
     });
 
     await runner.onPriceEvent("tok1", 0.5);
@@ -1274,9 +1262,7 @@ describe("StrategyRunner — logic graph evaluation", () => {
         { id: "delay-1", type: "DELAY", seconds: 1 },
         { id: "or-1", type: "OR_GATE" },
       ],
-      logicConnections: [
-        { source: "delay-1", target: "or-1" },
-      ],
+      logicConnections: [{ source: "delay-1", target: "or-1" }],
     });
 
     await runner.onPriceEvent("tok1", 0.5);
@@ -1318,9 +1304,7 @@ describe("StrategyRunner — detectStaleData edge cases", () => {
       execMode: "EVENT",
       state,
       redis,
-      triggers: [
-        { id: "t1", type: "every_tick", params: { tokenId: "tok1" } },
-      ],
+      triggers: [{ id: "t1", type: "every_tick", params: { tokenId: "tok1" } }],
     });
 
     await runner.onPriceEvent("tok1", 0.5);

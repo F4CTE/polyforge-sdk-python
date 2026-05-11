@@ -18,7 +18,7 @@ describe("BETA_LIMITS config", () => {
   });
 
   it("uses defaults when no env vars are set", async () => {
-    const { BETA_LIMITS } = await import("./beta-limits.config");
+    const { BETA_LIMITS } = await import("./beta-limits.config.js");
     expect(BETA_LIMITS.maxConcurrentBacktests).toBe(1);
     expect(BETA_LIMITS.maxBacktestHistoryDays).toBe(90);
   });
@@ -27,7 +27,7 @@ describe("BETA_LIMITS config", () => {
     process.env.BETA_MAX_CONCURRENT_BACKTESTS = "5";
     process.env.BETA_MAX_BACKTEST_HISTORY_DAYS = "180";
 
-    const { BETA_LIMITS } = await import("./beta-limits.config");
+    const { BETA_LIMITS } = await import("./beta-limits.config.js");
     expect(BETA_LIMITS.maxConcurrentBacktests).toBe(5);
     expect(BETA_LIMITS.maxBacktestHistoryDays).toBe(180);
   });
@@ -36,7 +36,7 @@ describe("BETA_LIMITS config", () => {
     process.env.BETA_MAX_CONCURRENT_BACKTESTS = "";
     process.env.BETA_MAX_BACKTEST_HISTORY_DAYS = "";
 
-    const { BETA_LIMITS } = await import("./beta-limits.config");
+    const { BETA_LIMITS } = await import("./beta-limits.config.js");
     expect(BETA_LIMITS.maxConcurrentBacktests).toBe(1);
     expect(BETA_LIMITS.maxBacktestHistoryDays).toBe(90);
   });
@@ -45,7 +45,7 @@ describe("BETA_LIMITS config", () => {
     process.env.BETA_MAX_CONCURRENT_BACKTESTS = "not-a-number";
     process.env.BETA_MAX_BACKTEST_HISTORY_DAYS = "twelve";
 
-    const { BETA_LIMITS } = await import("./beta-limits.config");
+    const { BETA_LIMITS } = await import("./beta-limits.config.js");
     expect(BETA_LIMITS.maxConcurrentBacktests).toBe(1);
     expect(BETA_LIMITS.maxBacktestHistoryDays).toBe(90);
   });

@@ -341,8 +341,8 @@ export class BacktestService {
     return {
       runId,
       tokenId: fill.tokenId,
-      side: fill.side as any,
-      outcome: fill.outcome as any,
+      side: fill.side,
+      outcome: fill.outcome,
       size: new Prisma.Decimal(fill.size.toFixed(6)),
       price: new Prisma.Decimal(fill.price.toFixed(6)),
       fillPrice: new Prisma.Decimal(fill.price.toFixed(6)),
