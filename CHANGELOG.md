@@ -97,6 +97,17 @@ surfaced by the weekly cross-SDK compatibility audit, available on both
 New typed model: `SystemHealthAuthenticated` (`status`, `service`, `version`,
 `uptime`, `db`, `redis`, `queue_depth`, `services`). `MatchSyncResult` now
 includes optional `created`/`updated` fields matching the TS/Rust SDKs.
+**GDPR personal data export (POLA-3611)** — one method closing a compliance gap
+surfaced by the weekly cross-SDK compatibility audit, available on both
+`PolyforgeClient` and `AsyncPolyforgeClient`:
+
+- `export_personal_data(format="json")` → `PersonalDataExport` | `str` —
+  `GET /api/v1/me/export`. Supports `"json"` (default, returns typed model)
+  and `"csv"` (returns raw text). The `PersonalDataExport` model includes
+  sections for account, settings, security, trading, communications, and
+  social data with webhook URLs redacted to hostname only.
+
+New typed models: `PersonalDataExportMeta`, `PersonalDataExport`.
 
 ### Added — Cross-Venue Arb Execute / Positions / Risk (POLA-1851)
 
