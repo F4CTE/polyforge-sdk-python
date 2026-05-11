@@ -1663,3 +1663,34 @@ class SystemHealthAuthenticated:
     redis: dict[str, Any] | None = None
     queue_depth: int | None = None
     services: dict[str, Any] | None = None
+
+# ---------------------------------------------------------------------------
+# GDPR Personal Data Export
+# ---------------------------------------------------------------------------
+
+
+@dataclass
+class PersonalDataExportMeta:
+    """Metadata for a personal data export payload."""
+
+    max_records_per_collection: int = 1000
+    collections_truncated: dict[str, int] = field(default_factory=dict)
+
+
+@dataclass
+class PersonalDataExport:
+    """GDPR personal data export response from GET /api/v1/me/export.
+
+    Contains all user data across the platform grouped into sections.
+    Webhook URLs are redacted to hostname only.
+    """
+
+    generated_at: str = ""
+    format_version: str = ""
+    meta: PersonalDataExportMeta | None = None
+    account: dict[str, Any] = field(default_factory=dict)
+    settings: dict[str, Any] = field(default_factory=dict)
+    security: dict[str, Any] = field(default_factory=dict)
+    trading: dict[str, Any] = field(default_factory=dict)
+    communications: dict[str, Any] = field(default_factory=dict)
+    social: dict[str, Any] = field(default_factory=dict)
