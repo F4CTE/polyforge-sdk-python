@@ -2135,7 +2135,7 @@ export function Component() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <span className="text-body-md font-semibold text-primary">Live Execution Feed</span>
-                   {wsConnected === 'connected' && isActive(status) ? (
+                  {wsConnected === 'connected' && isActive(status) ? (
                     <span className="flex items-center gap-2 text-label text-gain font-medium">
                       <span className="animate-pulse bg-gain rounded-full w-2 h-2" />
                       LIVE
