@@ -5450,6 +5450,64 @@ class TestSettingsMethods:
             client.export_personal_data(format="cvs")
         client.close()
 
+    def test_async_export_personal_data_json(self):
+        import asyncio
+        from unittest.mock import AsyncMock
+        from polyforge.models import PersonalDataExport
+
+        async def _run():
+            client = AsyncPolyforgeClient(api_key="test-key")
+            client._get = AsyncMock(return_value={
+                "generatedAt": "2026-05-11T00:00:00Z",
+                "formatVersion": "v1",
+                "_meta": {"maxRecordsPerCollection": 1000, "collectionsTruncated": {}},
+                "account": {"username": "asyncuser"},
+                "settings": {},
+                "security": {},
+                "trading": {},
+                "communications": {},
+                "social": {},
+            })
+            result = await client.export_personal_data()
+            client._get.assert_called_once_with("/api/v1/me/export")
+            assert isinstance(result, PersonalDataExport)
+            assert result.generated_at == "2026-05-11T00:00:00Z"
+            assert result.account == {"username": "asyncuser"}
+            assert result.meta is not None
+            assert result.meta.max_records_per_collection == 1000
+            await client.close()
+
+        asyncio.run(_run())
+
+    def test_async_export_personal_data_csv(self):
+        import asyncio
+        from unittest.mock import AsyncMock
+
+        async def _run():
+            client = AsyncPolyforgeClient(api_key="test-key")
+            client._get_text = AsyncMock(return_value="section,index,data_json\naccount,0,...")
+            result = await client.export_personal_data(format="csv")
+            client._get_text.assert_called_once_with(
+                "/api/v1/me/export", params={"format": "csv"}
+            )
+            assert isinstance(result, str)
+            assert result.startswith("section,")
+            await client.close()
+
+        asyncio.run(_run())
+
+    def test_async_export_personal_data_invalid_format(self):
+        import asyncio
+        import pytest
+
+        async def _run():
+            client = AsyncPolyforgeClient(api_key="test-key")
+            with pytest.raises(ValueError, match="format must be 'json' or 'csv'"):
+                await client.export_personal_data(format="cvs")
+            await client.close()
+
+        asyncio.run(_run())
+
 
 class TestTicketMethods:
     """Tests for support tickets endpoints (sync + async)."""
