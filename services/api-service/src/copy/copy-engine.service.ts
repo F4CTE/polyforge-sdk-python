@@ -285,13 +285,13 @@ export class CopyEngineService implements OnModuleInit, OnModuleDestroy {
         tokenId: event.tokenId ?? "",
         side: event.side as OrderSide,
         outcome: event.outcome as OrderOutcome,
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
+
         sourceSize: new Prisma.Decimal(sourceSize),
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
+
         sourcePrice: new Prisma.Decimal(sourcePrice),
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
+
         copiedSize: new Prisma.Decimal(copiedSize),
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
+
         copiedPrice: new Prisma.Decimal(copiedPrice),
         status: "PENDING",
       },
