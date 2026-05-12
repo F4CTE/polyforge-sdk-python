@@ -112,7 +112,7 @@ asyncio.run(main())
 
 **`StrategyEvent` fields:** `type: str` · `strategy_id: str` · `data: dict | None` · `timestamp: int` (Unix ms)
 
-**Common event types:** `CONNECTED` · `STRATEGY_STARTED` · `STRATEGY_STOPPED` · `STRATEGY_ERROR` · `ORDER_PLACED` · `ORDER_FILLED` · `ORDER_CANCELLED` · `BACKTEST_PROGRESS` · `BACKTEST_COMPLETED` · `BACKTEST_FAILED`
+**Common event types:** `CONNECTED` · `STRATEGY_STARTED` · `STRATEGY_STOPPED` · `STRATEGY_PAUSED` · `STRATEGY_RESUMED` · `STRATEGY_ERROR` · `ORDER_SUBMITTED` · `ORDER_PLACED` · `ORDER_PARTIAL` · `ORDER_FILLED` · `ORDER_FAILED` · `ORDER_ERROR` · `ORDER_CANCELLED` · `BACKTEST_PROGRESS` · `BACKTEST_COMPLETED` · `BACKTEST_FAILED`
 
 ### Portfolio & Orders
 

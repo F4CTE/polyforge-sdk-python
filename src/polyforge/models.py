@@ -1110,8 +1110,10 @@ class StrategyEvent:
     The first event on a new stream always has ``type == "CONNECTED"``.
 
     Common event types:
-        CONNECTED, STRATEGY_STARTED, STRATEGY_STOPPED, STRATEGY_ERROR,
-        ORDER_PLACED, ORDER_FILLED, ORDER_CANCELLED,
+        CONNECTED, STRATEGY_STARTED, STRATEGY_STOPPED, STRATEGY_PAUSED,
+        STRATEGY_RESUMED, STRATEGY_ERROR,
+        ORDER_SUBMITTED, ORDER_PLACED, ORDER_PARTIAL, ORDER_FILLED,
+        ORDER_FAILED, ORDER_ERROR, ORDER_CANCELLED,
         BACKTEST_PROGRESS, BACKTEST_COMPLETED, BACKTEST_FAILED
     """
 
@@ -1119,6 +1121,48 @@ class StrategyEvent:
     strategy_id: str = ""
     data: dict[str, Any] | None = None
     timestamp: int = 0
+
+
+# Known strategy event types mirroring the platform SSE stream.
+StrategyEventType = Literal[
+    "CONNECTED",
+    "STRATEGY_STARTED",
+    "STRATEGY_STOPPED",
+    "STRATEGY_PAUSED",
+    "STRATEGY_RESUMED",
+    "STRATEGY_ERROR",
+    "ORDER_PLACED",
+    "ORDER_SUBMITTED",
+    "ORDER_FILLED",
+    "ORDER_PARTIAL",
+    "ORDER_CANCELLED",
+    "ORDER_FAILED",
+    "ORDER_ERROR",
+    "BACKTEST_PROGRESS",
+    "BACKTEST_COMPLETED",
+    "BACKTEST_FAILED",
+]
+
+KNOWN_STRATEGY_EVENTS: frozenset[str] = frozenset(
+    (
+        "CONNECTED",
+        "STRATEGY_STARTED",
+        "STRATEGY_STOPPED",
+        "STRATEGY_PAUSED",
+        "STRATEGY_RESUMED",
+        "STRATEGY_ERROR",
+        "ORDER_PLACED",
+        "ORDER_SUBMITTED",
+        "ORDER_FILLED",
+        "ORDER_PARTIAL",
+        "ORDER_CANCELLED",
+        "ORDER_FAILED",
+        "ORDER_ERROR",
+        "BACKTEST_PROGRESS",
+        "BACKTEST_COMPLETED",
+        "BACKTEST_FAILED",
+    )
+)
 
 
 # ---------------------------------------------------------------------------
@@ -1681,3 +1725,34 @@ class SystemHealthAuthenticated:
     redis: dict[str, Any] | None = None
     queue_depth: int | None = None
     services: dict[str, Any] | None = None
+
+# ---------------------------------------------------------------------------
+# GDPR Personal Data Export
+# ---------------------------------------------------------------------------
+
+
+@dataclass
+class PersonalDataExportMeta:
+    """Metadata for a personal data export payload."""
+
+    max_records_per_collection: int = 1000
+    collections_truncated: dict[str, int] = field(default_factory=dict)
+
+
+@dataclass
+class PersonalDataExport:
+    """GDPR personal data export response from GET /api/v1/me/export.
+
+    Contains all user data across the platform grouped into sections.
+    Webhook URLs are redacted to hostname only.
+    """
+
+    generated_at: str = ""
+    format_version: str = ""
+    meta: PersonalDataExportMeta | None = None
+    account: dict[str, Any] = field(default_factory=dict)
+    settings: dict[str, Any] = field(default_factory=dict)
+    security: dict[str, Any] = field(default_factory=dict)
+    trading: dict[str, Any] = field(default_factory=dict)
+    communications: dict[str, Any] = field(default_factory=dict)
+    social: dict[str, Any] = field(default_factory=dict)
