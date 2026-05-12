@@ -130,10 +130,10 @@ asyncio.run(main())
 |--------|-------------|
 | `get_cross_venue_opportunities(min_spread)` | List cross-venue Polymarket/Kalshi opportunities |
 | `get_cross_venue_comparison(match_id)` | Compare prices for a matched cross-venue market |
-| `execute_arb(match_id, size, max_slippage_pct)` | Execute a real cross-venue arbitrage trade; validates UUID `match_id`, `size` 1..10000, and optional slippage 0..5 |
+| `execute_arb(match_id, size, max_slippage_pct, idempotency_key=…)` | Execute a real cross-venue arbitrage trade; validates UUID `match_id`, `size` 1..10000, and optional slippage 0..5. Backend **requires** `idempotency_key` (8–128 chars). |
 | `list_arb_positions(status, limit, offset)` | List arbitrage positions; validates status and `limit` 1..100 |
-| `get_arb_position(position_id)` | Fetch one arbitrage position |
-| `close_arb_position(position_id)` | Close an open arbitrage position with real reverse orders |
+| `get_arb_position(position_id)` | Fetch one arbitrage position; poll to confirm final status after a sweep-close |
+| `close_arb_position(position_id, idempotency_key=…)` | **Sweep-close** an open arb position with real reverse market orders on both venues. Returns non-terminal `CLOSING` status — closure completes async. Backend **requires** `idempotency_key` (8–128 chars). |
 | `get_arb_risk_dashboard()` | Get aggregate arbitrage exposure and P&L |
 | `get_arb_settlement_risks()` | List settlement-date and resolution-criteria risks |
 | `refresh_arb_pnl()` | Recompute unrealized arbitrage P&L |
@@ -143,6 +143,12 @@ asyncio.run(main())
 Trading write methods automatically send an `Idempotency-Key` header accepted
 by the PolyForge API. Pass your own `idempotency_key` when retrying the same
 logical mutation so the platform can deduplicate the retry:
+
+> **Arb execute/close:** the backend **requires** an `idempotency_key` header
+> for both `execute_arb` and `close_arb_position`. The SDK auto-generates a key
+> when omitted, but explicit caller-managed keys (8–128 characters) are
+> recommended for production use so retries of the same intended mutation are
+> safe.
 
 ```python
 with PolyforgeClient(api_key="pk_live_...") as client:
