@@ -1,4 +1,5 @@
 import { Injectable, Logger, Optional } from "@nestjs/common";
+import { randomUUID } from "crypto";
 import {
   keccak256,
   signSecp256K1HexKey,
@@ -433,19 +434,37 @@ export class NativeCtfService {
   // ─── CTF nonce serialization ────────────────────────────────────────────────
 
   /**
-   * Execute a CTF transaction body under a per-EOA distributed mutex.
+   * Lua script for atomic lock release.
    *
-   * The lock serializes the nonce-fetch → sign → broadcast pipeline per EOA
-   * so that concurrent CTF operations for the same address do not race on
-   * the transaction count.
+   * Compares the lock value to the caller's token and only deletes the key
+   * when they match — prevents a delayed or TTL-expired unlock from removing
+   * a lock that has already been acquired by another request.
+   */
+  private static readonly UNLOCK_SCRIPT = `
+    if redis.call("GET", KEYS[1]) == ARGV[1] then
+      return redis.call("DEL", KEYS[1])
+    else
+      return 0
+    end
+  `;
+
+  /**
+   * Execute a CTF transaction body under a per-EOA, per-chain distributed mutex.
+   *
+   * The lock serializes the nonce-fetch → sign → broadcast pipeline per
+   * {@code (chainId, eoaAddress)} so that concurrent CTF operations for the same
+   * address on the same chain do not race on the transaction count.  Operations
+   * for the same EOA on different chains proceed independently.
    *
    * @param rpcUrl     - JSON-RPC endpoint for nonce / gas price / broadcast.
-   * @param eoaAddress - Lowercase 0x-prefixed EOA address (lock key).
+   * @param chainId    - Chain identifier (scoped into the lock key).
+   * @param eoaAddress - Lowercase 0x-prefixed EOA address.
    * @param body       - Callback that receives a fresh nonce and gas price
    *                     while the lock is held.
    */
   private async withCtfTransactionLock<T>(
     rpcUrl: string,
+    chainId: number,
     eoaAddress: string,
     body: (nonce: number, gasPrice: bigint) => Promise<T>,
   ): Promise<T> {
@@ -457,8 +476,8 @@ export class NativeCtfService {
       return body(nonce, gasPrice);
     }
 
-    const lockKey = `ctf:tx:lock:${eoaAddress}`;
-    await this.acquireCtfLock(lockKey);
+    const lockKey = `ctf:tx:lock:${chainId}:${eoaAddress}`;
+    const lockToken = await this.acquireCtfLock(lockKey);
 
     try {
       const [nonce, gasPrice] = await Promise.all([
@@ -467,29 +486,56 @@ export class NativeCtfService {
       ]);
       return await body(nonce, gasPrice);
     } finally {
-      await this.releaseCtfLock(lockKey);
+      await this.releaseCtfLock(lockKey, lockToken);
     }
   }
 
   /**
-   * Acquire a Redis-backed per-EOA lock with exponential backoff.
+   * Acquire a Redis-backed distributed mutex with exponential backoff.
+   *
+   * Each {@code SET NX PX} attempt is bounded by a short timeout so that a
+   * stalled / reconnecting Redis connection cannot cause the caller to hang
+   * past the overall {@code maxWaitMs} deadline.
+   *
+   * @returns A unique lock token that must be presented to release the lock.
    *
    * Max wait: 60 s.  Backoff: 100 ms → 200 ms → 400 ms → … → 5 s cap.
    * Lock TTL: 30 s (auto-released if the process crashes mid-flight).
    */
-  private async acquireCtfLock(key: string): Promise<void> {
+  private async acquireCtfLock(key: string): Promise<string> {
     const client = this.redis!.getClient();
+    const lockToken = randomUUID();
     const maxWaitMs = 60_000;
     const deadline = Date.now() + maxWaitMs;
     let delayMs = 100;
 
     while (Date.now() < deadline) {
-      const acquired =
-        (await client.set(key, "1", "PX", 30_000, "NX")) === "OK";
-      if (acquired) {
-        this.logger.debug(`Acquired CTF nonce lock: ${key}`);
-        return;
+      const remaining = deadline - Date.now();
+      if (remaining <= 0) break;
+
+      // Bound each SET attempt so a stalled connection cannot push us past
+      // the overall deadline.  Cap per-attempt at 3 s to keep the loop
+      // responsive while still tolerating brief network jitter.
+      const attemptTimeout = Math.min(remaining, 3_000);
+
+      try {
+        const acquired = await Promise.race([
+          client.set(key, lockToken, "PX", 30_000, "NX"),
+          new Promise<string | null>((_, reject) =>
+            setTimeout(
+              () => reject(new Error("SET attempt timed out")),
+              attemptTimeout,
+            ),
+          ),
+        ]);
+        if (acquired === "OK") {
+          this.logger.debug(`Acquired CTF nonce lock: ${key}`);
+          return lockToken;
+        }
+      } catch {
+        // Timeout or transient network error — backoff and retry.
       }
+
       await new Promise((r) => setTimeout(r, delayMs));
       delayMs = Math.min(delayMs * 2, 5_000);
     }
@@ -497,9 +543,20 @@ export class NativeCtfService {
     throw new Error(`Timed out waiting for CTF transaction lock for EOA`);
   }
 
-  private async releaseCtfLock(key: string): Promise<void> {
-    await this.redis!.getClient()
-      .del(key)
+  /**
+   * Release the Redis lock — only if the caller still owns it.
+   *
+   * Uses a Lua script to atomically compare the stored token with the
+   * caller's token before deleting, preventing a delayed {@code DEL} or
+   * a TTL-expired unlock from removing another request's lock.
+   */
+  private async releaseCtfLock(
+    key: string,
+    lockToken: string,
+  ): Promise<void> {
+    await this.redis!
+      .getClient()
+      .eval(NativeCtfService.UNLOCK_SCRIPT, 1, key, lockToken)
       .catch(() => {});
     this.logger.debug(`Released CTF nonce lock: ${key}`);
   }
@@ -543,6 +600,7 @@ export class NativeCtfService {
 
     return this.withCtfTransactionLock(
       rpcUrl,
+      chainId,
       eoaAddress,
       async (nonce, gasPrice) => {
         const rawTx = this.signTransaction(creds, chainId, {
@@ -601,6 +659,7 @@ export class NativeCtfService {
 
     return this.withCtfTransactionLock(
       rpcUrl,
+      chainId,
       eoaAddress,
       async (nonce, gasPrice) => {
         const rawTx = this.signTransaction(creds, chainId, {
@@ -659,6 +718,7 @@ export class NativeCtfService {
 
     return this.withCtfTransactionLock(
       rpcUrl,
+      chainId,
       eoaAddress,
       async (nonce, gasPrice) => {
         const rawTx = this.signTransaction(creds, chainId, {

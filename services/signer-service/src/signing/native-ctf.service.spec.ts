@@ -31,7 +31,7 @@ const ZERO_BYTES32 = "0x" + "00".repeat(32);
 
 /** Create a mock Redis client and RedisService for lock tests. */
 function makeMockRedis() {
-  const locks = new Set<string>();
+  const locks = new Map<string, string>();
   const client = {
     set: vi
       .fn()
@@ -39,7 +39,7 @@ function makeMockRedis() {
         async (_key: string, _value: string, ...args: string[]) => {
           if (args[0] === "PX" && args.includes("NX")) {
             if (locks.has(_key)) return null;
-            locks.add(_key);
+            locks.set(_key, _value);
             return "OK";
           }
           return "OK";
@@ -49,6 +49,22 @@ function makeMockRedis() {
       locks.delete(key);
       return 1;
     }),
+    eval: vi
+      .fn()
+      .mockImplementation(
+        async (
+          _script: string,
+          _numKeys: number,
+          key: string,
+          token: string,
+        ) => {
+          if (locks.get(key) === token) {
+            locks.delete(key);
+            return 1;
+          }
+          return 0;
+        },
+      ),
   };
 
   const redisService = { getClient: () => client } as unknown as RedisService;
@@ -543,7 +559,7 @@ describe("NativeCtfService", () => {
   // ── Per-EOA nonce serialization ──────────────────────────────────────────
 
   describe("CTF nonce serialization (per-EOA lock)", () => {
-    it("uses a per-EOA lock key containing the lowercase address", async () => {
+    it("scopes the lock key by chain and EOA address", async () => {
       const { redisService, client } = makeMockRedis();
       const svcWithRedis = new NativeCtfService(redisService);
 
@@ -585,11 +601,12 @@ describe("NativeCtfService", () => {
 
       expect(setCalls.length).toBe(1);
       const lockKey = setCalls[0][0];
-      expect(lockKey).toMatch(/^ctf:tx:lock:0x[0-9a-f]{40}$/);
+      expect(lockKey).toMatch(/^ctf:tx:lock:\d+:0x[0-9a-f]{40}$/);
+      expect(lockKey).toContain("137");
       expect(lockKey).toContain("0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266");
     });
 
-    it("releases the lock after a successful operation", async () => {
+    it("releases the lock via eval after a successful operation", async () => {
       const { redisService, client } = makeMockRedis();
       const svcWithRedis = new NativeCtfService(redisService);
 
@@ -620,10 +637,10 @@ describe("NativeCtfService", () => {
       });
       zeroCredentials(creds);
 
-      expect(client.del).toHaveBeenCalled();
+      expect(client.eval).toHaveBeenCalled();
     });
 
-    it("releases the lock even when the body throws", async () => {
+    it("releases the lock via eval even when the body throws", async () => {
       const { redisService, client } = makeMockRedis();
       const svcWithRedis = new NativeCtfService(redisService);
 
@@ -657,12 +674,12 @@ describe("NativeCtfService", () => {
       ).rejects.toThrow("HTTP 503");
       zeroCredentials(creds);
 
-      expect(client.del).toHaveBeenCalled();
+      expect(client.eval).toHaveBeenCalled();
     });
 
     it("serializes concurrent calls for the same EOA", async () => {
       const resolveOrder: string[] = [];
-      let delCount = 0;
+      let evalCount = 0;
 
       const { redisService, client } = makeMockRedis();
 
@@ -695,9 +712,9 @@ describe("NativeCtfService", () => {
         },
       );
 
-      client.del.mockImplementation(async () => {
-        delCount++;
-        if (delCount === 1) {
+      client.eval.mockImplementation(async () => {
+        evalCount++;
+        if (evalCount === 1) {
           // First lock released by first caller's finally block
           resolveOrder.push("released-1");
           releaseGate?.();
@@ -756,6 +773,145 @@ describe("NativeCtfService", () => {
       expect(resolveOrder).toEqual(["acquired-1", "released-1", "acquired-2"]);
     });
 
+    it("does not delete another request's lock when ownership token differs", async () => {
+      const { redisService, client, locks } = makeMockRedis();
+
+      const svcWithRedis = new NativeCtfService(redisService);
+
+      // Capture the lock key and token set by the caller
+      let capturedKey = "";
+      let capturedToken = "";
+
+      client.set.mockImplementation(
+        async (key: string, value: string, ...args: string[]) => {
+          if (args[0] === "PX" && args.includes("NX")) {
+            if (!locks.has(key)) {
+              locks.set(key, value);
+              capturedKey = key;
+              capturedToken = value;
+              return "OK";
+            }
+            return null;
+          }
+          return "OK";
+        },
+      );
+
+      // Simulate another worker stealing the lock before this worker's finally runs
+      client.eval.mockImplementation(
+        async (
+          _script: string,
+          _numKeys: number,
+          key: string,
+          token: string,
+        ) => {
+          // Before the first eval, replace the lock value to simulate
+          // another request that acquired the key after TTL expiry
+          if (key === capturedKey && token === capturedToken) {
+            locks.set(key, "OTHER_WORKER_TOKEN");
+          }
+          // Now check ownership — this worker's token no longer matches
+          if (locks.get(key) === token) {
+            locks.delete(key);
+            return 1;
+          }
+          return 0;
+        },
+      );
+
+      global.fetch = vi
+        .fn()
+        .mockImplementation(async (_url: string, init: RequestInit) => {
+          const body = JSON.parse(init.body as string) as Record<
+            string,
+            unknown
+          >;
+          if ((body.method as string) === "eth_sendRawTransaction") {
+            return {
+              ok: true,
+              json: async () => ({ result: "0x" + "aa".repeat(32) }),
+            } as Response;
+          }
+          return {
+            ok: true,
+            json: async () => ({ result: "0x1" }),
+          } as Response;
+        });
+
+      const creds = makeTestCreds();
+      await svcWithRedis.redeemPosition(creds, 137, "http://fake-rpc", {
+        conditionId: CONDITION_ID,
+        indexSets: [1n],
+      });
+      zeroCredentials(creds);
+
+      // eval was called but the lock key still holds the OTHER_WORKER_TOKEN
+      // (the first worker's release did NOT delete the new owner's lock)
+      expect(locks.get(capturedKey)).toBe("OTHER_WORKER_TOKEN");
+    });
+
+    it("allows parallel calls for same EOA on different chains", async () => {
+      const { redisService, client } = makeMockRedis();
+      const svcWithRedis = new NativeCtfService(redisService);
+
+      const acquiredKeys: string[] = [];
+      client.set.mockImplementation(
+        async (key: string, value: string, ...args: string[]) => {
+          if (args[0] === "PX" && args.includes("NX")) {
+            acquiredKeys.push(key);
+            return "OK";
+          }
+          return "OK";
+        },
+      );
+
+      global.fetch = vi
+        .fn()
+        .mockImplementation(async (_url: string, init: RequestInit) => {
+          const body = JSON.parse(init.body as string) as Record<
+            string,
+            unknown
+          >;
+          if ((body.method as string) === "eth_sendRawTransaction") {
+            return {
+              ok: true,
+              json: async () => ({ result: "0x" + "dd".repeat(32) }),
+            } as Response;
+          }
+          return {
+            ok: true,
+            json: async () => ({ result: "0x1" }),
+          } as Response;
+        });
+
+      const creds1 = makeTestCreds();
+      const creds2 = makeTestCreds();
+
+      // Same EOA, different chains — both should proceed without blocking
+      const [r1, r2] = await Promise.all([
+        svcWithRedis.redeemPosition(creds1, 137, "http://fake-rpc", {
+          conditionId: CONDITION_ID,
+          indexSets: [1n],
+        }),
+        svcWithRedis.redeemPosition(creds2, 80002, "http://fake-rpc", {
+          conditionId: CONDITION_ID,
+          indexSets: [2n],
+        }),
+      ]);
+
+      zeroCredentials(creds1);
+      zeroCredentials(creds2);
+
+      expect(r1).toHaveProperty("txHash");
+      expect(r2).toHaveProperty("txHash");
+
+      // Both should have acquired locks (different keys due to different chainIds)
+      expect(acquiredKeys.length).toBe(2);
+      expect(acquiredKeys[0]).not.toBe(acquiredKeys[1]);
+      expect(acquiredKeys[0]).toContain("137");
+      expect(acquiredKeys[1]).toContain("80002");
+    });
+
     it("allows parallel calls for different EOAs", async () => {
       const { redisService, client } = makeMockRedis();
       const svcWithRedis = new NativeCtfService(redisService);
@@ -784,6 +940,45 @@ describe("NativeCtfService", () => {
       const addr1 = svcWithRedis.getEoaAddress(creds1);
       const addr2 = svcWithRedis.getEoaAddress(creds2);
       expect(addr1).not.toBe(addr2);
+    });
+
+    it("does not exceed the 60 s deadline when a Redis SET call hangs indefinitely", async () => {
+      vi.useFakeTimers();
+
+      const { redisService, client } = makeMockRedis();
+
+      // SET never resolves — simulates a stalled / reconnecting Redis connection
+      // Each attempt is bounded by a 3 s Promise.race timeout, and the overall
+      // loop must exit after the 60 s deadline regardless.
+      client.set.mockReturnValue(new Promise(() => {}));
+
+      const svcWithRedis = new NativeCtfService(redisService);
+
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({ result: "0x1" }),
+      } as Response);
+
+      const creds = makeTestCreds();
+      let caught: Error | null = null;
+      const promise = svcWithRedis
+        .redeemPosition(creds, 137, "http://fake-rpc", {
+          conditionId: CONDITION_ID,
+          indexSets: [1n],
+        })
+        .catch((e: Error) => {
+          caught = e;
+        });
+
+      await vi.runAllTimersAsync();
+      await promise;
+      vi.useRealTimers();
+      zeroCredentials(creds);
+
+      expect(caught).not.toBeNull();
+      expect(caught!.message).toContain(
+        "Timed out waiting for CTF transaction lock for EOA",
+      );
     });
 
     it("times out after 60 s if the lock is never released", async () => {
