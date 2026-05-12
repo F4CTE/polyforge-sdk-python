@@ -156,6 +156,19 @@ preserved.
 
 All four public-profile lookups raise `NotFoundError` when the username is unknown. The `username` path segment is URL-encoded via the existing `_encode_path` helper.
 
+**sync_market_matches() and get_health_authenticated() (POLA-3678)** — two
+new methods closing cross-SDK compatibility gaps, available on both
+`PolyforgeClient` and `AsyncPolyforgeClient`:
+
+- `sync_market_matches()` → `MatchSyncResult` — `POST /api/v1/arbitrage/matches/sync`.
+  Triggers a manual cross-venue matching pass. Mirrors `syncMarketMatches()` in
+  the TypeScript SDK and `sync_arbitrage_matches()` in the Rust SDK.
+- `get_health_authenticated()` → `SystemHealthAuthenticated` — `GET /api/v1/status`.
+  Returns database, Redis, queue, and internal service health metrics that are
+  not exposed on the public `/health` endpoint.
+
+New dataclass: `SystemHealthAuthenticated` (re-exported from `polyforge`).
+
 ### Changed
 
 **Cross-SDK naming normalization (POLA-1913)** — renamed feed, referral, and
