@@ -473,7 +473,7 @@ describe("StrategyRunner — ACTION execution + state update", () => {
     expect(intents[0].size).toBe("10");
   });
 
-  it("atomically increments state counters when intents are produced", async () => {
+  it("calls onIntents and does not call state.update when intents are produced", async () => {
     const state = makeState();
     const prisma = makePrisma();
     prisma.token.findUnique.mockResolvedValue({
@@ -484,12 +484,16 @@ describe("StrategyRunner — ACTION execution + state update", () => {
     const redis = makeRedis({
       getJson: vi.fn().mockResolvedValue({ price: 0.7 }),
     });
+    const onIntents = vi
+      .fn<(intents: OrderIntent[]) => Promise<void>>()
+      .mockResolvedValue(undefined);
 
     const runner = makeRunner({
       execMode: "EVENT",
       state,
       redis,
       prisma,
+      onIntents,
       actions: [
         {
           id: "a1",
@@ -501,11 +505,9 @@ describe("StrategyRunner — ACTION execution + state update", () => {
 
     await runner.onPriceEvent("tok-yes", 0.7);
 
-    expect(state.incrementOrderCounters).toHaveBeenCalledWith(
-      "strat-test",
-      1,
-      expect.any(Number),
-    );
+    expect(onIntents).toHaveBeenCalledOnce();
+    const intents: OrderIntent[] = onIntents.mock.calls[0][0];
+    expect(intents).toHaveLength(1);
     expect(state.update).not.toHaveBeenCalled();
   });
 

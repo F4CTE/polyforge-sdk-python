@@ -604,33 +604,67 @@ export class StrategyRegistryService implements OnApplicationBootstrap {
     intents: OrderIntent[],
     stream: string,
   ): Promise<void> {
-    const strategyIds = new Set<string>();
+    const now = Date.now();
+    const errors: Error[] = [];
+    const succeededByStrategy = new Map<string, number>();
+
     for (const intent of intents) {
-      strategyIds.add(intent.strategyId);
-      await this.redis.xadd(stream, {
-        intentId: intent.intentId,
-        userId: intent.userId,
-        strategyId: intent.strategyId,
-        marketId: intent.marketId,
-        tokenId: intent.tokenId,
-        side: intent.side,
-        outcome: intent.outcome,
-        size: intent.size,
-        price: intent.price,
-        orderType: intent.orderType,
-        expiration: String(intent.expiration ?? 0),
-        ...(intent.venue ? { venue: intent.venue } : {}),
-        ...(intent.kalshiSubaccount != null
-          ? { kalshiSubaccount: String(intent.kalshiSubaccount) }
-          : {}),
-        ts: String(Date.now()),
-      });
+      try {
+        await this.redis.xadd(stream, {
+          intentId: intent.intentId,
+          userId: intent.userId,
+          strategyId: intent.strategyId,
+          marketId: intent.marketId,
+          tokenId: intent.tokenId,
+          side: intent.side,
+          outcome: intent.outcome,
+          size: intent.size,
+          price: intent.price,
+          orderType: intent.orderType,
+          expiration: String(intent.expiration ?? 0),
+          ...(intent.venue ? { venue: intent.venue } : {}),
+          ...(intent.kalshiSubaccount != null
+            ? { kalshiSubaccount: String(intent.kalshiSubaccount) }
+            : {}),
+          ts: String(now),
+        });
+        succeededByStrategy.set(
+          intent.strategyId,
+          (succeededByStrategy.get(intent.strategyId) ?? 0) + 1,
+        );
+      } catch (err) {
+        errors.push(err instanceof Error ? err : new Error(String(err)));
+      }
     }
 
-    for (const strategyId of strategyIds) {
-      const intentCount = intents.filter(
-        (intent) => intent.strategyId === strategyId,
-      ).length;
+    // Increment counters only for successfully published intents.
+    for (const [strategyId, intentCount] of succeededByStrategy) {
+      try {
+        await this.state.incrementOrderCounters(strategyId, intentCount, now);
+      } catch (counterErr) {
+        this.logger.error(
+          {
+            event: "ORDER_INTENTS_COUNTER_INCREMENT_FAILED",
+            strategyId,
+            intentCount,
+            error:
+              counterErr instanceof Error
+                ? counterErr.message
+                : String(counterErr),
+          },
+          `Counter increment failed after ${intentCount} intents published for strategy ${strategyId}`,
+        );
+        errors.push(
+          new Error(
+            `Counter increment failed after ${intentCount} intents published for strategy ${strategyId}`,
+            { cause: counterErr },
+          ),
+        );
+      }
+    }
+
+    // Log successful publishes
+    for (const [strategyId, intentCount] of succeededByStrategy) {
       this.logger.log(
         {
           event: "ORDER_INTENTS_PUBLISHED",
@@ -650,6 +684,12 @@ export class StrategyRegistryService implements OnApplicationBootstrap {
           Stream: stream,
         },
       });
+    }
+
+    if (errors.length > 0) {
+      throw new Error(
+        `Failed to publish ${errors.length} of ${intents.length} order intents: ${errors.map((e) => e.message).join("; ")}`,
+      );
     }
   }
 

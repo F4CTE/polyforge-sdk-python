@@ -375,16 +375,6 @@ export class StrategyRunner {
       return;
     }
 
-    // Auto-resume from stale pause when data is fresh again
-    if (
-      this.status === "PAUSED" &&
-      this.pauseReason?.startsWith("stale_market_data")
-    ) {
-      this.resume();
-      await this.onStatusChange("RUNNING");
-      await this.emitStrategyEvent("STRATEGY_STARTED");
-    }
-
     // 2. SAFETY — any failure stops the strategy
     for (const block of this.safety) {
       const evaluator = SAFETY_REGISTRY[block.type];
@@ -537,12 +527,6 @@ export class StrategyRunner {
     }
 
     if (orderIntents.length > 0) {
-      await this.state.incrementOrderCounters(
-        this.strategyId,
-        orderIntents.length,
-        ctx.now,
-      );
-
       await this.onIntents(orderIntents);
     }
   }
