@@ -291,6 +291,7 @@ export function StrategyCanvas() {
 
   const onCanvasKeyDown = useCallback(
     (event: React.KeyboardEvent) => {
+      // Escape always available for cancelling a connection, even from form controls
       if (event.key === "Escape") {
         if (connState.phase !== "idle") {
           event.preventDefault();
@@ -299,7 +300,27 @@ export function StrategyCanvas() {
         return;
       }
 
-      if (event.key === "h" || event.key === "H") {
+      // Find currently focused element — React Flow nodes have data-id
+      const el = document.activeElement as HTMLElement | null;
+
+      // Skip canvas keyboard wiring when focus is inside form controls.
+      // Must come before H/Enter/C shortcuts so typing "h" in an input,
+      // pressing Enter on a select, or using C in a textarea are not hijacked.
+      if (
+        el &&
+        (el.tagName === "INPUT" ||
+          el.tagName === "SELECT" ||
+          el.tagName === "TEXTAREA" ||
+          el.tagName === "BUTTON")
+      ) {
+        return;
+      }
+
+      // H key: cycle source/target handles (only when connection is active)
+      if (
+        (event.key === "h" || event.key === "H") &&
+        connState.phase !== "idle"
+      ) {
         event.preventDefault();
         if (connState.phase === "source_selected") {
           cycleSourceHandle();
@@ -309,20 +330,6 @@ export function StrategyCanvas() {
           cycleTargetHandle();
           return;
         }
-        return;
-      }
-
-      // Find currently focused element — React Flow nodes have data-id
-      const el = document.activeElement as HTMLElement | null;
-
-      // Skip canvas Enter handling when focus is inside form controls (inputs, selects, textareas)
-      if (
-        el &&
-        (el.tagName === "INPUT" ||
-          el.tagName === "SELECT" ||
-          el.tagName === "TEXTAREA" ||
-          el.tagName === "BUTTON")
-      ) {
         return;
       }
 

@@ -122,11 +122,69 @@ test.describe('Strategy Builder — Keyboard A11y', () => {
         const edgeCount = await edgesAfter.count();
         expect(edgeCount, 'Expected at least 1 edge after keyboard connection').toBeGreaterThanOrEqual(1);
 
-        // Verify the edge path has the correct source → target direction
-        const firstEdge = edgesAfter.first();
-        const edgePath = await firstEdge.locator('.react-flow__edge-path').getAttribute('d');
-        expect(edgePath, 'Edge should have a path definition').toBeTruthy();
-        expect(edgePath!.length, 'Edge path should be non-trivial').toBeGreaterThan(10);
+        // Verify handle-level correctness: extract edge source/target handle IDs
+        // from the React Flow internal zustand edge store.
+        const edgeHandles = await page.evaluate(() => {
+          // React Flow stores edges in an internal zustand store accessible
+          // through React fiber hooks on the ReactFlow wrapper component.
+          const flowRoot = document.querySelector('.react-flow');
+          if (!flowRoot) return null;
+          const fiberKey = Object.keys(flowRoot).find(
+            (k) => k.startsWith('__reactFiber$') || k.startsWith('__reactInternalInstance$'),
+          );
+          if (!fiberKey) return null;
+          // Walk the hooked subtree looking for a useSyncExternalStore snapshot
+          // that contains an edges array (React Flow's internal zustand store).
+          function walk(fiber: Record<string, unknown> | null, depth: number): ReturnType | null {
+            if (!fiber || depth > 80) return null;
+            let hook = fiber['memoizedState'] as Record<string, unknown> | null;
+            for (let j = 0; j < 60 && hook; j++) {
+              // useSyncExternalStore stores { value: T, getSnapshot: fn }
+              // or { value: T } in newer React versions.
+              const value = hook['value'] as Record<string, unknown> | undefined;
+              if (value && Array.isArray(value) && value.length > 0 && 'sourceHandle' in value[0]) {
+                return (value as Array<Record<string, unknown>>).map((e) => ({
+                  id: e['id'],
+                  source: e['source'],
+                  target: e['target'],
+                  sourceHandle: e['sourceHandle'] ?? null,
+                  targetHandle: e['targetHandle'] ?? null,
+                }));
+              }
+              // Also check tagged state: { store: zustandStore, edges: [...] }
+              if (hook['edges'] && Array.isArray(hook['edges']) && hook['edges'].length > 0 &&
+                  'sourceHandle' in (hook['edges'] as Array<unknown>)[0]) {
+                return (hook['edges'] as Array<Record<string, unknown>>).map((e) => ({
+                  id: e['id'],
+                  source: e['source'],
+                  target: e['target'],
+                  sourceHandle: e['sourceHandle'] ?? null,
+                  targetHandle: e['targetHandle'] ?? null,
+                }));
+              }
+              hook = hook['next'] as Record<string, unknown> | null;
+            }
+            return walk(fiber['child'] as Record<string, unknown> | null, depth + 1) ??
+                   walk(fiber['sibling'] as Record<string, unknown> | null, depth + 1);
+          }
+          type ReturnType = NonNullable<ReturnType<typeof walk>>;
+          return walk((flowRoot as Record<string, unknown>)[fiberKey] as Record<string, unknown> | null, 0);
+        });
+
+        if (edgeHandles && edgeHandles.length > 0) {
+          const first = edgeHandles[0];
+          // Block trigger node (Price Crosses Up) has no named source handle → null
+          expect(first.sourceHandle, 'Trigger block source handle should be null (default)').toBeNull();
+          // Block action node (Place Order) has no named target handle → null
+          expect(first.targetHandle, 'Action block target handle should be null (default)').toBeNull();
+        } else {
+          // Fallback: verify the edge path has sensible geometry, indicating the
+          // edge connects source → target nodes rather than being a detached stub.
+          const firstEdge = edgesAfter.first();
+          const edgePath = await firstEdge.locator('.react-flow__edge-path').getAttribute('d');
+          expect(edgePath, 'Edge should have a path definition').toBeTruthy();
+          expect(edgePath!.length, 'Edge path should be non-trivial').toBeGreaterThan(10);
+        }
     });
 
     test('@a11y @keyboard should announce connection states to screen readers', async ({ page }, testInfo) => {
