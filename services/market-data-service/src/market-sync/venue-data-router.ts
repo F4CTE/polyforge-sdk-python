@@ -55,7 +55,7 @@ export class VenueDataRouter {
    * Emits a unified `market-data.price` event with venueId attached.
    */
   onPriceUpdate(venueId: VenueId | string, event: RawPriceEvent): void {
-    if (!this.feeds.has(venueId as VenueId)) {
+    if (!this.feeds.has(venueId)) {
       this.logger.warn(
         `Received price update from unregistered venue '${venueId}' — ignoring`,
       );
@@ -63,7 +63,7 @@ export class VenueDataRouter {
     }
     const unified: UnifiedPriceEvent = {
       ...event,
-      venueId: venueId as VenueId,
+      venueId: venueId,
     };
     this.emitter.emit("market-data.price", unified);
   }

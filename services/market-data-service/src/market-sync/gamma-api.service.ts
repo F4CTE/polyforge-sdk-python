@@ -390,9 +390,7 @@ export class GammaApiService implements OnModuleInit {
     });
     if (!res.ok) throw new Error(`Gamma API returned ${res.status}`);
     const body = (await res.json()) as { data?: unknown[] } | unknown[];
-    const arr = Array.isArray(body)
-      ? body
-      : ((body as { data?: unknown[] }).data ?? []);
+    const arr = Array.isArray(body) ? body : (body.data ?? []);
     return arr as GammaMarket[];
   }
 
@@ -406,9 +404,7 @@ export class GammaApiService implements OnModuleInit {
     });
     if (!res.ok) throw new Error(`Gamma API returned ${res.status}`);
     const body = (await res.json()) as { data?: unknown[] } | unknown[];
-    const arr = Array.isArray(body)
-      ? body
-      : ((body as { data?: unknown[] }).data ?? []);
+    const arr = Array.isArray(body) ? body : (body.data ?? []);
     return arr as GammaMarket[];
   }
 
@@ -655,9 +651,7 @@ export class GammaApiService implements OnModuleInit {
 
     const body = (await res.json()) as { data?: unknown[] } | unknown[];
     // Real Polymarket returns a raw array; mock wraps in { data: [] }
-    const arr = Array.isArray(body)
-      ? body
-      : ((body as { data?: unknown[] }).data ?? []);
+    const arr = Array.isArray(body) ? body : (body.data ?? []);
     return arr as GammaMarket[];
   }
 
@@ -671,9 +665,7 @@ export class GammaApiService implements OnModuleInit {
     if (!res.ok) throw new Error(`Gamma events API returned ${res.status}`);
 
     const body = (await res.json()) as { data?: unknown[] } | unknown[];
-    const arr = Array.isArray(body)
-      ? body
-      : ((body as { data?: unknown[] }).data ?? []);
+    const arr = Array.isArray(body) ? body : (body.data ?? []);
     return arr as GammaEvent[];
   }
 

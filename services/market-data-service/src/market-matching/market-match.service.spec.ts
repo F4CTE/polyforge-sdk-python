@@ -101,7 +101,7 @@ describe("MarketMatchService", () => {
         },
       );
 
-      const result = service.scoreCandidate(poly as any, kalshi as any, 1.0);
+      const result = service.scoreCandidate(poly, kalshi, 1.0);
 
       expect(result.confidence).toBeGreaterThan(0.9);
       expect(result.polymarketId).toBe("p1");
@@ -116,7 +116,7 @@ describe("MarketMatchService", () => {
         category: "Finance",
       });
 
-      const result = service.scoreCandidate(poly as any, kalshi as any, 1.0);
+      const result = service.scoreCandidate(poly, kalshi, 1.0);
       expect(result.confidence).toBeLessThan(0.95);
     });
 
@@ -128,7 +128,7 @@ describe("MarketMatchService", () => {
         endDate: new Date("2027-01-01"),
       });
 
-      const result = service.scoreCandidate(poly as any, kalshi as any, 1.0);
+      const result = service.scoreCandidate(poly, kalshi, 1.0);
       expect(result.signals.endDateProximity).toBe(0);
     });
 
@@ -140,14 +140,14 @@ describe("MarketMatchService", () => {
         tokens: [{ outcome: "Above" }, { outcome: "Below" }],
       });
 
-      const result = service.scoreCandidate(poly as any, kalshi as any, 1.0);
+      const result = service.scoreCandidate(poly, kalshi, 1.0);
       expect(result.signals.outcomeMatch).toBe(0);
     });
 
     it("caps confidence at 1.0", () => {
       const poly = makeMarket("p1", Venue.POLYMARKET, "Test");
       const kalshi = makeMarket("k1", Venue.KALSHI, "Test");
-      const result = service.scoreCandidate(poly as any, kalshi as any, 1.0);
+      const result = service.scoreCandidate(poly, kalshi, 1.0);
       expect(result.confidence).toBeLessThanOrEqual(1);
     });
   });

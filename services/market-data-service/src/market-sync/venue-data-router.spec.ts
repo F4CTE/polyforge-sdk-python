@@ -95,7 +95,7 @@ describe("VenueDataRouter", () => {
       const spy = vi.fn();
       emitter.on("market-data.price", spy);
 
-      router.onPriceUpdate("unknown" as any, {
+      router.onPriceUpdate("unknown", {
         tokenId: "tok-3",
         price: 0.5,
         timestamp: 3000,

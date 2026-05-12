@@ -283,11 +283,18 @@ export class PriceCacheService implements OnModuleDestroy {
   ) {
     const client = this.redis.getClient();
     const k = `ta:prices:${tokenId}`;
-    const isNew = (await client.exists(k)) === 0;
-    await client.zadd(k, timestamp, `${timestamp}:${price}`);
-    await client.zremrangebyrank(k, 0, -(TA_MAX_WINDOW + 1));
-    if (isNew) {
-      await client.expire(k, TA_PRICE_TTL);
+    const pipeline = client.pipeline();
+    pipeline.zadd(k, timestamp, `${timestamp}:${price}`);
+    pipeline.zremrangebyrank(k, 0, -(TA_MAX_WINDOW + 1));
+    pipeline.expire(k, TA_PRICE_TTL);
+    const results = await pipeline.exec();
+    if (results) {
+      const cmdErr = results.find(([err]) => err !== null);
+      if (cmdErr) {
+        this.logger.warn(
+          `Redis pipeline error in writeTaPricePoint for ${tokenId}: ${cmdErr[0]?.message}`,
+        );
+      }
     }
   }
 
