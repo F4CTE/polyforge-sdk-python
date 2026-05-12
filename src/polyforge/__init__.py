@@ -106,6 +106,7 @@ from polyforge.models import (
     TicketMessage,
     CorrelationCategoriesReport,
     FeeMarketMatch,
+    JournalEntry,
     MarketAlert,
     MarketHistoryPoint,
     MarketSentimentReport,
@@ -228,6 +229,7 @@ __all__ = [
     # POLA-1857 misc utility models
     "CorrelationCategoriesReport",
     "FeeMarketMatch",
+    "JournalEntry",
     "MarketAlert",
     "MarketHistoryPoint",
     "MarketSentimentReport",

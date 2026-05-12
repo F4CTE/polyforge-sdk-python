@@ -30,6 +30,7 @@ from polyforge.models import (
     Alert,
     ConditionalOrder,
     CopyConfig,
+    JournalEntry,
     Market,
     MatchSyncResult,
     SystemHealthAuthenticated,
@@ -6676,7 +6677,9 @@ class TestMiscUtilityEndpointRoundtrips:
             res = client.list_journal(mood="CONFIDENT")
             qp = dict(captured["url"].params)
             assert qp["mood"] == "CONFIDENT"
-            assert res.data[0]["mood"] == "CONFIDENT"
+            assert isinstance(res.data[0], JournalEntry)
+            assert res.data[0].mood == "CONFIDENT"
+            assert res.data[0].id == "ord-1"
         finally:
             client.close()
 

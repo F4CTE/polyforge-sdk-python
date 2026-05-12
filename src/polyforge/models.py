@@ -1649,6 +1649,25 @@ class CorrelationCategoriesReport:
 
 
 @dataclass
+class JournalEntry:
+    """A row in the journal page (orders annotated with a mood).
+
+    Mirrors the shape returned by ``GET /api/v1/journal``.
+    """
+
+    id: str = ""
+    market_id: str = ""
+    mood: str | None = None
+    note: str | None = None
+    side: str = ""
+    outcome: str = ""
+    price: str = ""
+    size: str = ""
+    status: str = ""
+    created_at: str = ""
+
+
+@dataclass
 class SystemHealthAuthenticated:
     """Authenticated health/status response for GET /api/v1/status.
 
