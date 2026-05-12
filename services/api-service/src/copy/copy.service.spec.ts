@@ -11,7 +11,10 @@ const CHECKSUM_TARGET_WALLET = "0x52908400098527886E0F7030069857D2E4169EE7";
 function createMockPrisma() {
   const mock = {
     user: {
-      findUnique: vi.fn().mockResolvedValue({ polymarketConnected: null, polymarketAddress: null }),
+      findUnique: vi.fn().mockResolvedValue({
+        polymarketConnected: null,
+        polymarketAddress: null,
+      }),
     },
     copyConfig: {
       findMany: vi.fn(),
@@ -95,7 +98,7 @@ describe("CopyService", () => {
       expect(prisma.copyConfig.count).toHaveBeenNthCalledWith(2, {
         where: {
           targetWallet: {
-            equals: LOWER_TARGET_WALLET,
+            equals: CHECKSUM_TARGET_WALLET,
             mode: "insensitive",
           },
           status: { in: ["ACTIVE", "PAUSED"] },
@@ -103,7 +106,7 @@ describe("CopyService", () => {
       });
       expect(prisma.copyConfig.create).toHaveBeenCalledWith({
         data: expect.objectContaining({
-          targetWallet: LOWER_TARGET_WALLET,
+          targetWallet: CHECKSUM_TARGET_WALLET,
         }),
       });
     });
@@ -124,9 +127,7 @@ describe("CopyService", () => {
 
       await expect(
         service.create("user-1", { targetWallet: LOWER_TARGET_WALLET }),
-      ).rejects.toThrow(
-        "Cannot create a copy config for your own wallet",
-      );
+      ).rejects.toThrow("Cannot create a copy config for your own wallet");
 
       // Should not have reached the config checks
       expect(prisma.copyConfig.count).not.toHaveBeenCalled();
@@ -231,7 +232,7 @@ describe("CopyService", () => {
         where: {
           userId: "user-1",
           targetWallet: {
-            equals: LOWER_TARGET_WALLET,
+            equals: CHECKSUM_TARGET_WALLET,
             mode: "insensitive",
           },
         },

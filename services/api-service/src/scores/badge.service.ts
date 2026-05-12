@@ -2,6 +2,7 @@ import { Injectable, Logger } from "@nestjs/common";
 import { Cron } from "@nestjs/schedule";
 import { PrismaService } from "@polyforge/shared-db";
 import { RedisService, runOncePerCluster } from "@polyforge/shared-redis";
+import { tryChecksumEthereumAddress } from "../copy/wallet-address";
 
 // ─── Badge definitions ──────────────────────────────────────────────────────
 
@@ -144,15 +145,21 @@ export class BadgeService {
 
     // ── COPY_LEADER ──────────────────────────────────────────────────────────
     if (!has.has("COPY_LEADER")) {
-      // Count distinct users copying this user's wallet
+      // Count distinct users copying this user's wallet.
+      // Normalize to EIP-55 canonical form so the query matches both legacy
+      // lowercased rows and new checksummed writes.  Falls back to the raw
+      // stored value when checksumming fails (e.g. malformed legacy data).
       const user = await this.prisma.user.findUnique({
         where: { id: userId },
         select: { polymarketAddress: true },
       });
       if (user?.polymarketAddress) {
+        const wallet =
+          tryChecksumEthereumAddress(user.polymarketAddress) ??
+          user.polymarketAddress;
         const copierCount = await this.prisma.copyConfig.count({
           where: {
-            targetWallet: user.polymarketAddress,
+            targetWallet: { equals: wallet, mode: "insensitive" },
             status: { in: ["ACTIVE", "PAUSED"] },
           },
         });

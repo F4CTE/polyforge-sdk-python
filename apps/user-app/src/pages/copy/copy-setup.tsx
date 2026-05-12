@@ -247,7 +247,7 @@ export function Component() {
                         key={w.walletAddress}
                         onClick={() => setTargetWallet(w.walletAddress)}
                         className={`flex items-center gap-2 px-3 py-2 rounded-sm text-label font-mono border transition-colors ${
-                          targetWallet === w.walletAddress
+                          targetWallet.toLowerCase() === w.walletAddress.toLowerCase()
                             ? 'bg-accent/10 border-accent/30 text-accent-text'
                             : 'border-default text-secondary hover:border-strong hover:text-primary'
                         }`}

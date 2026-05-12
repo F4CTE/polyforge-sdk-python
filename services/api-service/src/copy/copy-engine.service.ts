@@ -200,6 +200,12 @@ export class CopyEngineService implements OnModuleInit, OnModuleDestroy {
     sourceSize: number,
     sourcePrice: number,
   ) {
+    // Normalize the wallet address to a consistent canonical form so that
+    // sourceWallet and stream-published targetWallet fields are always
+    // EIP-55 checksummed (or at least lowercase on failure).
+    const walletAddress =
+      tryChecksumEthereumAddress(event.walletAddress) ?? event.walletAddress;
+
     // 1. Check daily loss limit (H-02: use Redis atomic operations to prevent race condition)
     const notional = sourceSize * sourcePrice;
     if (!Number.isFinite(notional) || notional <= 0) return;
@@ -273,19 +279,19 @@ export class CopyEngineService implements OnModuleInit, OnModuleDestroy {
     const trade = await this.prisma.copyTrade.create({
       data: {
         configId: config.id,
-        sourceWallet: event.walletAddress,
+        sourceWallet: walletAddress,
         sourceTxHash: event.txHash ?? null,
         marketId: event.marketId ?? "",
         tokenId: event.tokenId ?? "",
         side: event.side as OrderSide,
         outcome: event.outcome as OrderOutcome,
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
+
         sourceSize: new Prisma.Decimal(sourceSize),
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
+
         sourcePrice: new Prisma.Decimal(sourcePrice),
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
+
         copiedSize: new Prisma.Decimal(copiedSize),
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
+
         copiedPrice: new Prisma.Decimal(copiedPrice),
         status: "PENDING",
       },
@@ -333,7 +339,7 @@ export class CopyEngineService implements OnModuleInit, OnModuleDestroy {
       userId: config.userId,
       configId: config.id,
       tradeId: trade.id,
-      targetWallet: event.walletAddress,
+      targetWallet: walletAddress,
       marketId: event.marketId ?? "",
       side: event.side ?? "",
       copiedSize: copiedSize.toFixed(6),
