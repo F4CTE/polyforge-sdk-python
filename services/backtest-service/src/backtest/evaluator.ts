@@ -16,7 +16,7 @@
  *            scale_in, scale_out, skip_bet
  */
 
-// ─── Inline TA functions (no cross-service dep needed for pure math) ──────────
+import { validateStopLossTakeProfitPct } from "@polyforge/shared-types";
 
 function _sma(prices: number[], period: number): number {
   if (prices.length < period || period <= 0) return NaN;
@@ -402,7 +402,10 @@ export function executeActions(
 
       case "set_stop_loss": {
         const tokenId = String(cfg.tokenId ?? "");
-        const stopPct = parseFloat(String(cfg.stopLossPct ?? 0.2));
+        const stopPct = validateStopLossTakeProfitPct(
+          cfg.stopLossPct ?? 0.2,
+          "set_stop_loss",
+        );
         const pos = positions.get(tokenId);
         if (pos) {
           state.stopLosses.set(tokenId, pos.avgPrice * (1 - stopPct));
@@ -412,7 +415,10 @@ export function executeActions(
 
       case "take_profit": {
         const tokenId = String(cfg.tokenId ?? "");
-        const targetPct = parseFloat(String(cfg.takeProfitPct ?? 0.5));
+        const targetPct = validateStopLossTakeProfitPct(
+          cfg.takeProfitPct ?? 0.5,
+          "take_profit",
+        );
         const pos = positions.get(tokenId);
         if (pos) {
           state.takeProfits.set(tokenId, pos.avgPrice * (1 + targetPct));
