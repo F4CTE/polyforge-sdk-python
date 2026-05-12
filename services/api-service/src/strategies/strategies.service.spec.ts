@@ -2243,6 +2243,69 @@ describe("StrategiesService", () => {
       expect(dataArg.name).toBe("alert('xss')Clean Name");
       expect(dataArg.description).toBe("Bold description");
     });
+
+    it("rejects import with invalid stop-loss pct (zero)", async () => {
+      const importDto = {
+        polyforge: "1.0",
+        strategy: {
+          name: "Bad Stop Loss",
+          blocks: {
+            actions: [{ type: "SET_STOP_LOSS", config: { pct: "0" } }],
+          },
+        },
+      };
+      db.strategy.count.mockResolvedValue(0);
+
+      await expect(
+        service.importStrategy(importDto as any, "user-1"),
+      ).rejects.toMatchObject({
+        response: { code: "INVALID_BLOCK_CONFIG" },
+        status: 400,
+      });
+      expect(db.strategy.create).not.toHaveBeenCalled();
+    });
+
+    it("rejects import with invalid take-profit pct (>=1)", async () => {
+      const importDto = {
+        polyforge: "1.0",
+        strategy: {
+          name: "Bad Take Profit",
+          blocks: {
+            actions: [{ type: "TAKE_PROFIT", config: { pct: "1.5" } }],
+          },
+        },
+      };
+      db.strategy.count.mockResolvedValue(0);
+
+      await expect(
+        service.importStrategy(importDto as any, "user-1"),
+      ).rejects.toMatchObject({
+        response: { code: "INVALID_BLOCK_CONFIG" },
+        status: 400,
+      });
+      expect(db.strategy.create).not.toHaveBeenCalled();
+    });
+
+    it("accepts import with valid stop-loss and take-profit pct", async () => {
+      const importDto = {
+        polyforge: "1.0",
+        strategy: {
+          name: "Valid Import",
+          blocks: {
+            actions: [
+              { type: "SET_STOP_LOSS", config: { pct: "0.1" } },
+              { type: "TAKE_PROFIT", config: { pct: "0.25" } },
+            ],
+          },
+        },
+      };
+      const created = makeStrategy({ name: "Valid Import" });
+      db.strategy.count.mockResolvedValue(0);
+      db.strategy.create.mockResolvedValue(created as any);
+
+      await service.importStrategy(importDto as any, "user-1");
+      expect(db.strategy.create).toHaveBeenCalledOnce();
+    });
   });
 
   // ── stop — conflict case ────────────────────────────────────────────────────

@@ -1,7 +1,13 @@
 import { BadRequestException } from "@nestjs/common";
 import { validateStopLossTakeProfitPct } from "@polyforge/shared-types";
 
-const PCT_VALIDATED_TYPES = new Set(["set_stop_loss", "take_profit"]);
+const PCT_VALIDATED_TYPES = new Set([
+  "set_stop_loss",
+  "take_profit",
+  "SET_STOP_LOSS",
+  "SET_TAKE_PROFIT",
+  "TAKE_PROFIT",
+]);
 
 export interface BlockLike {
   type: string;

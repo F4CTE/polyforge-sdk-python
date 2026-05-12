@@ -1123,6 +1123,9 @@ export class StrategiesService {
       }
     }
 
+    // Validate block config parameters (stop-loss / take-profit pct)
+    validateBlockConfigs(allBlocks);
+
     // Strip HTML from name/description
     const stripHtml = (str: string) => str.replace(/<[^>]*>/g, "");
     if (s.name) s.name = stripHtml(s.name);
