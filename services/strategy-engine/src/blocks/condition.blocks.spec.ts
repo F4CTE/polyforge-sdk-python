@@ -588,4 +588,59 @@ describe("TimeWindowBlock", () => {
     );
     expect(res.fired).toBe(true);
   });
+
+  it("passes late-night time within an overnight window", async () => {
+    const dt = new Date();
+    dt.setUTCHours(23, 30, 0, 0);
+    const ctx = makeCtx({}, dt.getTime());
+    const res = await TimeWindowBlock.evaluate(
+      block("time_window", {
+        startHH: "22",
+        startMM: "0",
+        endHH: "6",
+        endMM: "0",
+      }),
+      ctx,
+      makeRedis(),
+      makePrisma(),
+    );
+    expect(res.fired).toBe(true);
+    expect(res.reason).toMatch(/in \[22:00, 06:00\]: true/);
+  });
+
+  it("passes early-morning time within an overnight window", async () => {
+    const dt = new Date();
+    dt.setUTCHours(3, 0, 0, 0);
+    const ctx = makeCtx({}, dt.getTime());
+    const res = await TimeWindowBlock.evaluate(
+      block("time_window", {
+        startHH: "22",
+        startMM: "0",
+        endHH: "6",
+        endMM: "0",
+      }),
+      ctx,
+      makeRedis(),
+      makePrisma(),
+    );
+    expect(res.fired).toBe(true);
+  });
+
+  it("fails during daytime when outside an overnight window", async () => {
+    const dt = new Date();
+    dt.setUTCHours(14, 0, 0, 0);
+    const ctx = makeCtx({}, dt.getTime());
+    const res = await TimeWindowBlock.evaluate(
+      block("time_window", {
+        startHH: "22",
+        startMM: "0",
+        endHH: "6",
+        endMM: "0",
+      }),
+      ctx,
+      makeRedis(),
+      makePrisma(),
+    );
+    expect(res.fired).toBe(false);
+  });
 });

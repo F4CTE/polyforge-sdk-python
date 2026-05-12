@@ -187,7 +187,10 @@ export const TimeWindowBlock: BlockEvaluator = {
     const startMins = parseInt(startHH, 10) * 60 + parseInt(startMM, 10);
     const endMins = parseInt(endHH, 10) * 60 + parseInt(endMM, 10);
 
-    const fired = currentMins >= startMins && currentMins <= endMins;
+    const fired =
+      startMins <= endMins
+        ? currentMins >= startMins && currentMins <= endMins // same-day window
+        : currentMins >= startMins || currentMins <= endMins; // overnight (wraps midnight)
     const fmt = (h: number, m: number) =>
       `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
     return Promise.resolve({
