@@ -131,8 +131,9 @@ All four public-profile lookups raise `NotFoundError` when the username is unkno
 **Endpoint path compatibility audit (POLA-3525, #222)** — verified all 25
 previously-reported endpoint path mismatches between `src/polyforge/client.py`
 (sync + async) and the PolyForge platform NestJS controllers are already
-resolved. No code changes required — the paths/methods were corrected in prior
-releases.
+resolved. Paths/methods were corrected in prior releases. Restored
+`POLYMARKET_US` to the `Venue` Literal type (regression from being based off a
+pre-#230 merge-base).
 
 ### Changed
 
