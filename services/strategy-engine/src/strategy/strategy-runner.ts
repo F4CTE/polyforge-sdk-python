@@ -68,6 +68,9 @@ export class StrategyRunner {
   private tickInFlight = false;
   private pendingTick = false;
 
+  /** Throttles EVENT-mode ticks to prevent bursty in-order evaluation */
+  private lastTickMs = 0;
+
   /** Tracks child strategy IDs launched by RUN_STRATEGY action blocks */
   readonly childStrategies: Set<string> = new Set();
   /** Maps child strategy IDs to their sub-strategy mode */
@@ -229,6 +232,13 @@ export class StrategyRunner {
     }
 
     if (this.status !== "RUNNING") return;
+
+    // Throttle EVENT/HYBRID event-driven ticks to prevent bursty
+    // every_tick triggers from firing on every incoming price event.
+    const now = Date.now();
+    if (now - this.lastTickMs < MIN_TICK_MS) return;
+    this.lastTickMs = now;
+
     if (this.tickInFlight) {
       this.pendingTick = true;
       return;

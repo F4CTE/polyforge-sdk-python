@@ -1156,6 +1156,80 @@ describe("StrategyRunner — getPrimaryTokenId", () => {
   });
 });
 
+describe("StrategyRunner — EVENT-mode debounce (POLA-2082)", () => {
+  it("debounces rapid consecutive onPriceEvent calls in EVENT mode", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(0);
+
+    const state = makeState();
+    const runner = makeRunner({ execMode: "EVENT", state });
+
+    await runner.onPriceEvent("tok1", 0.5);
+    expect(state.get).toHaveBeenCalledTimes(1);
+
+    // Fire again at 100ms — within MIN_TICK_MS (200ms), should be throttled
+    vi.setSystemTime(100);
+    state.get.mockClear();
+    await runner.onPriceEvent("tok1", 0.55);
+    expect(state.get).not.toHaveBeenCalled();
+
+    // Fire at 250ms — past MIN_TICK_MS threshold, should fire
+    vi.setSystemTime(250);
+    await runner.onPriceEvent("tok1", 0.6);
+    expect(state.get).toHaveBeenCalledTimes(1);
+
+    vi.useRealTimers();
+  });
+
+  it("allows normally-spaced events through in EVENT mode", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(0);
+
+    const state = makeState();
+    const runner = makeRunner({ execMode: "EVENT", state });
+
+    await runner.onPriceEvent("tok1", 0.5);
+    expect(state.get).toHaveBeenCalledTimes(1);
+
+    state.get.mockClear();
+    vi.setSystemTime(300);
+    await runner.onPriceEvent("tok1", 0.6);
+    expect(state.get).toHaveBeenCalledTimes(1);
+
+    state.get.mockClear();
+    vi.setSystemTime(600);
+    await runner.onPriceEvent("tok1", 0.7);
+    expect(state.get).toHaveBeenCalledTimes(1);
+
+    vi.useRealTimers();
+  });
+
+  it("debounces HYBRID mode event-driven ticks", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(0);
+
+    const state = makeState();
+    const runner = makeRunner({ execMode: "HYBRID", state });
+
+    await runner.onPriceEvent("tok1", 0.5);
+    expect(state.get).toHaveBeenCalledTimes(1);
+
+    vi.setSystemTime(50);
+    state.get.mockClear();
+    await runner.onPriceEvent("tok1", 0.55);
+    expect(state.get).not.toHaveBeenCalled();
+
+    vi.useRealTimers();
+  });
+
+  it("does not interfere with TICK mode (onPriceEvent is a no-op)", async () => {
+    const state = makeState();
+    const runner = makeRunner({ execMode: "TICK", state });
+    await runner.onPriceEvent("tok1", 0.5);
+    expect(state.get).not.toHaveBeenCalled();
+  });
+});
+
 describe("StrategyRunner — logic graph evaluation", () => {
   it("evaluates a simple AND_GATE with no upstream inputs", async () => {
     const state = makeState();
