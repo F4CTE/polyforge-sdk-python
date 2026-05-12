@@ -1025,6 +1025,113 @@ describe("NativeCtfService", () => {
       );
     });
 
+    it("surfaces permanent Redis errors immediately instead of retrying", async () => {
+      const { redisService, client } = makeMockRedis();
+
+      const permanentErr = Object.assign(new Error("NOAUTH Authentication required."), {
+        name: "ReplyError",
+      });
+      client.set.mockRejectedValueOnce(permanentErr);
+
+      const svcWithRedis = new NativeCtfService(redisService);
+
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({ result: "0x1" }),
+      } as Response);
+
+      const creds = makeTestCreds();
+      await expect(
+        svcWithRedis.redeemPosition(creds, 137, "http://fake-rpc", {
+          conditionId: CONDITION_ID,
+          indexSets: [1n],
+        }),
+      ).rejects.toThrow("NOAUTH");
+      zeroCredentials(creds);
+
+      // Must not have retried — exactly one SET call
+      expect(client.set).toHaveBeenCalledTimes(1);
+    });
+
+    it("cleans up ghost lock when a timed-out SET later resolves via offline queue", async () => {
+      vi.useFakeTimers();
+
+      const { redisService, client } = makeMockRedis();
+
+      // First invocation: SET never resolves within the 3 s timeout,
+      // so the timeout wins the race.  The SET promise stays pending.
+      let resolveSetPromise: ((value: unknown) => void) | null = null;
+      const firstSetPromise = new Promise<string | null>((resolve) => {
+        resolveSetPromise = resolve;
+      });
+      client.set.mockReturnValueOnce(firstSetPromise);
+
+      // Second invocation (after backoff): succeeds normally.
+      client.set.mockResolvedValueOnce("OK");
+
+      const svcWithRedis = new NativeCtfService(redisService);
+
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({ result: "0x1" }),
+      } as Response);
+
+      const creds = makeTestCreds();
+      let caught: Error | null = null;
+      const promise = svcWithRedis
+        .redeemPosition(creds, 137, "http://fake-rpc", {
+          conditionId: CONDITION_ID,
+          indexSets: [1n],
+        })
+        .catch((e: Error) => {
+          caught = e;
+        });
+
+      // Advance time past the first attempt's 3 s timeout + backoff delay
+      await vi.advanceTimersByTimeAsync(3_500);
+      // Now let the ghost SET resolve (simulating offline-queue replay)
+      resolveSetPromise!("OK");
+      await vi.advanceTimersByTimeAsync(1_000);
+      await promise;
+      vi.useRealTimers();
+      zeroCredentials(creds);
+
+      // Operation should succeed (second attempt acquired)
+      expect(caught).toBeNull();
+      // The ghost lock cleanup should have called DEL
+      expect(client.del).toHaveBeenCalled();
+    });
+
+    it("logs a warning when EVAL fails during lock release", async () => {
+      const { redisService, client } = makeMockRedis();
+
+      client.eval.mockRejectedValueOnce(new Error("READONLY You can't write against a read only replica."));
+
+      const svcWithRedis = new NativeCtfService(redisService);
+
+      const loggerWarnSpy = vi.spyOn(
+        (svcWithRedis as unknown as { logger: { warn: typeof vi.fn } }).logger,
+        "warn",
+      );
+
+      global.fetch = vi.fn().mockImplementation(async (_url: string, init: RequestInit) => {
+        const body = JSON.parse(init.body as string) as Record<string, unknown>;
+        if ((body.method as string) === "eth_sendRawTransaction") {
+          return { ok: true, json: async () => ({ result: "0x" + "aa".repeat(32) }) } as Response;
+        }
+        return { ok: true, json: async () => ({ result: "0x1" }) } as Response;
+      });
+
+      const creds = makeTestCreds();
+      await svcWithRedis.redeemPosition(creds, 137, "http://fake-rpc", {
+        conditionId: CONDITION_ID,
+        indexSets: [1n],
+      });
+      zeroCredentials(creds);
+
+      expect(loggerWarnSpy).toHaveBeenCalled();
+    });
+
     it("does not use Redis lock when RedisService is not injected", async () => {
       const svc = new NativeCtfService(); // no Redis
 

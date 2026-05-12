@@ -497,6 +497,13 @@ export class NativeCtfService {
    * stalled / reconnecting Redis connection cannot cause the caller to hang
    * past the overall {@code maxWaitMs} deadline.
    *
+   * A unique lock token is generated per attempt.  If a timed-out SET later
+   * settles via ioredis offline-queue replay, the ghost lock is detected and
+   * cleaned up via {@code DEL} so it does not block subsequent requests.
+   *
+   * Permanent Redis errors (ReplyError — wrong args, NOAUTH, ACL, etc.)
+   * are surfaced immediately instead of being retried for 60 s.
+   *
    * @returns A unique lock token that must be presented to release the lock.
    *
    * Max wait: 60 s.  Backoff: 100 ms → 200 ms → 400 ms → … → 5 s cap.
@@ -504,7 +511,6 @@ export class NativeCtfService {
    */
   private async acquireCtfLock(key: string): Promise<string> {
     const client = this.redis!.getClient();
-    const lockToken = randomUUID();
     const maxWaitMs = 60_000;
     const deadline = Date.now() + maxWaitMs;
     let delayMs = 100;
@@ -513,27 +519,67 @@ export class NativeCtfService {
       const remaining = deadline - Date.now();
       if (remaining <= 0) break;
 
-      // Bound each SET attempt so a stalled connection cannot push us past
-      // the overall deadline.  Cap per-attempt at 3 s to keep the loop
-      // responsive while still tolerating brief network jitter.
       const attemptTimeout = Math.min(remaining, 3_000);
+      const attemptToken = randomUUID();
+      let raceWinner: "set" | "timeout" | null = null;
+      let raceTimeoutId: NodeJS.Timeout | null = null;
+
+      const timeoutPromise = new Promise<never>((_, reject) => {
+        raceTimeoutId = setTimeout(() => {
+          raceWinner = "timeout";
+          reject(new Error("SET attempt timed out"));
+        }, attemptTimeout);
+      });
+
+      const setPromise = client
+        .set(key, attemptToken, "PX", 30_000, "NX")
+        .then((result) => {
+          if (raceWinner === null) raceWinner = "set";
+          return result;
+        });
 
       try {
-        const acquired = await Promise.race([
-          client.set(key, lockToken, "PX", 30_000, "NX"),
-          new Promise<string | null>((_, reject) =>
-            setTimeout(
-              () => reject(new Error("SET attempt timed out")),
-              attemptTimeout,
-            ),
-          ),
-        ]);
+        const acquired = await Promise.race([setPromise, timeoutPromise]);
+
+        // SET resolved first — cancel the timeout timer.
+        if (raceTimeoutId) clearTimeout(raceTimeoutId);
+
         if (acquired === "OK") {
           this.logger.debug(`Acquired CTF nonce lock: ${key}`);
-          return lockToken;
+          return attemptToken;
         }
-      } catch {
-        // Timeout or transient network error — backoff and retry.
+      } catch (err: unknown) {
+        // Cancel the timeout so it doesn't fire later when the error came
+        // from the SET command itself (not the timeout).
+        if (raceTimeoutId) clearTimeout(raceTimeoutId);
+
+        // Surface permanent Redis errors immediately.
+        if (
+          err instanceof Error &&
+          (err.name === "ReplyError" ||
+            err.message?.includes("READONLY") ||
+            err.message?.includes("NOAUTH") ||
+            err.message?.includes("ERR") ||
+            err.message?.includes("WRONGTYPE"))
+        ) {
+          throw err;
+        }
+
+        // If the timeout won the race, the SET promise is still pending.
+        // When it eventually settles via ioredis offline-queue replay it
+        // may create a ghost lock.  Attach a handler to clean it up.
+        if (raceWinner === "timeout") {
+          setPromise.then((lateResult) => {
+            if (lateResult === "OK") {
+              this.logger.debug(
+                `Cleaning up ghost CTF nonce lock: ${key}`,
+              );
+              client.del(key).catch(() => {});
+            }
+          });
+        }
+
+        // Transient error — backoff and retry.
       }
 
       await new Promise((r) => setTimeout(r, delayMs));
@@ -554,11 +600,25 @@ export class NativeCtfService {
     key: string,
     lockToken: string,
   ): Promise<void> {
-    await this.redis!
-      .getClient()
-      .eval(NativeCtfService.UNLOCK_SCRIPT, 1, key, lockToken)
-      .catch(() => {});
-    this.logger.debug(`Released CTF nonce lock: ${key}`);
+    try {
+      const deleted = await this.redis!
+        .getClient()
+        .eval(NativeCtfService.UNLOCK_SCRIPT, 1, key, lockToken);
+
+      if (deleted === 1) {
+        this.logger.debug(`Released CTF nonce lock: ${key}`);
+      } else {
+        // Token mismatch — another request owns the lock or it expired.
+        this.logger.debug(
+          `CTF nonce lock release skipped (not owner): ${key}`,
+        );
+      }
+    } catch (err) {
+      this.logger.warn(
+        `Failed to release CTF nonce lock: ${key}`,
+        (err as Error)?.message,
+      );
+    }
   }
 
   // ─── CTF operations ─────────────────────────────────────────────────────────
