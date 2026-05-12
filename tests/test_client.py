@@ -4882,8 +4882,8 @@ class TestHealthEndpoint:
         assert isinstance(result, SystemHealthAuthenticated)
         assert result.status == "operational"
         assert result.service == "api-service"
-        assert result.db == {"connections": 5, "status": "ok"}
         assert result.queue_depth == 0
+        assert result.db == {"connections": 5, "status": "ok"}
         client._get.assert_called_once_with("/api/v1/status")
         client.close()
 
