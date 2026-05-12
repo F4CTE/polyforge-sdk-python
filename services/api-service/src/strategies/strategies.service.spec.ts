@@ -144,6 +144,21 @@ describe("StrategiesService", () => {
       identify: vi.fn(),
     } as unknown as PosthogService;
 
+    const betaLimits = {
+      getLimit: vi.fn().mockResolvedValue(3),
+      getAllLimits: vi.fn().mockResolvedValue({
+        maxActiveStrategies: 3,
+        maxConcurrentBacktests: 3,
+        maxBacktestHistoryDays: 90,
+        maxMonthlyVolumeUsdc: 5000,
+        maxPositionSizeUsdc: 500,
+        marketDataRateLimitPerMinute: 100,
+        maxMarketplaceListings: 2,
+        maxDailyStrategyExecutions: 500,
+      }),
+      setLimits: vi.fn().mockResolvedValue(undefined),
+    } as any;
+
     // Wire db into PrismaService shape (PrismaService extends PrismaClient)
     service = new StrategiesService(
       db as unknown as PrismaService,
@@ -151,6 +166,7 @@ describe("StrategiesService", () => {
       client,
       llm,
       posthog,
+      betaLimits,
     );
   });
 

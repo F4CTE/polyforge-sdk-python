@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { UnauthorizedException } from "@nestjs/common";
 import { SettingsService } from "./settings.service";
 import { createMockDb, MockDb } from "../../test/helpers/mock-db";
+import { BetaLimitsConfigService } from "@polyforge/shared-redis";
 import * as bcrypt from "bcrypt";
 
 // ─── Factories ────────────────────────────────────────────────────────────────
@@ -72,10 +73,37 @@ describe("SettingsService", () => {
     db = createMockDb();
     mockRedis = createMockRedis();
     mockConfig = createMockConfig();
+    const mockBetaLimits = {
+      getAllLimits: vi.fn().mockResolvedValue({
+        maxActiveStrategies: 3,
+        maxConcurrentBacktests: 1,
+        maxBacktestHistoryDays: 90,
+        maxMonthlyVolumeUsdc: 5000,
+        maxPositionSizeUsdc: 500,
+        marketDataRateLimitPerMinute: 100,
+        maxMarketplaceListings: 2,
+        maxDailyStrategyExecutions: 500,
+      }),
+      getLimit: vi.fn().mockImplementation((key: string) => {
+        const defaults: Record<string, number> = {
+          maxActiveStrategies: 3,
+          maxConcurrentBacktests: 1,
+          maxBacktestHistoryDays: 90,
+          maxMonthlyVolumeUsdc: 5000,
+          maxPositionSizeUsdc: 500,
+          marketDataRateLimitPerMinute: 100,
+          maxMarketplaceListings: 2,
+          maxDailyStrategyExecutions: 500,
+        };
+        return Promise.resolve(defaults[key] ?? 3);
+      }),
+      setLimits: vi.fn(),
+    } as unknown as BetaLimitsConfigService;
     service = new SettingsService(
       db as any,
       mockRedis as any,
       mockConfig as any,
+      mockBetaLimits,
     );
   });
 

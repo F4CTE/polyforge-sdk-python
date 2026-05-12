@@ -53,6 +53,25 @@ function makePrismaMock() {
   } as any;
 }
 
+function makeBetaLimitsMock() {
+  return {
+    getLimit: vi.fn().mockResolvedValue(3),
+    getAllLimits: vi.fn().mockResolvedValue({
+      maxActiveStrategies: 3,
+      maxConcurrentBacktests: 3,
+      maxBacktestHistoryDays: 90,
+      maxMonthlyVolumeUsdc: 5000,
+      maxPositionSizeUsdc: 500,
+      marketDataRateLimitPerMinute: 100,
+      maxMarketplaceListings: 2,
+      maxDailyStrategyExecutions: 500,
+    }),
+    setLimits: vi.fn().mockResolvedValue(undefined),
+  } as any;
+}
+
+const defaultBetaLimits = makeBetaLimitsMock();
+
 function makeMetricsMock(
   overrides: Partial<ReturnType<MetricsService["compute"]>> = {},
 ) {
@@ -91,7 +110,7 @@ describe("BacktestService — extractTokenIds", () => {
     const prisma = makePrismaMock();
     const redis = makeRedisMock();
     const metrics = makeMetricsMock();
-    const svc = new BacktestService(prisma, redis, metrics);
+    const svc = new BacktestService(prisma, redis, metrics, defaultBetaLimits);
 
     prisma.backtestRun.findUniqueOrThrow.mockResolvedValue(BASE_RUN);
     prisma.strategy.findUniqueOrThrow.mockResolvedValue(EMPTY_STRATEGY);
@@ -108,7 +127,7 @@ describe("BacktestService — extractTokenIds", () => {
     const prisma = makePrismaMock();
     const redis = makeRedisMock();
     const metrics = makeMetricsMock();
-    const svc = new BacktestService(prisma, redis, metrics);
+    const svc = new BacktestService(prisma, redis, metrics, defaultBetaLimits);
 
     prisma.backtestRun.findUniqueOrThrow.mockResolvedValue(BASE_RUN);
     prisma.strategy.findUniqueOrThrow.mockResolvedValue({
@@ -132,7 +151,7 @@ describe("BacktestService — extractTokenIds", () => {
     const prisma = makePrismaMock();
     const redis = makeRedisMock();
     const metrics = makeMetricsMock();
-    const svc = new BacktestService(prisma, redis, metrics);
+    const svc = new BacktestService(prisma, redis, metrics, defaultBetaLimits);
 
     prisma.backtestRun.findUniqueOrThrow.mockResolvedValue(BASE_RUN);
     prisma.strategy.findUniqueOrThrow.mockResolvedValue({
@@ -159,7 +178,7 @@ describe("BacktestService — applyFill", () => {
     const prisma = makePrismaMock();
     const redis = makeRedisMock();
     const metrics = makeMetricsMock();
-    svc = new BacktestService(prisma, redis, metrics) as any;
+    svc = new BacktestService(prisma, redis, metrics, defaultBetaLimits) as any;
   });
 
   it("BUY creates a new position with correct size and avgPrice", () => {
@@ -423,7 +442,7 @@ describe("BacktestService — finalize()", () => {
       maxDrawdown: 5,
       sharpeRatio: 1.2,
     });
-    const svc = new BacktestService(prisma, redis, metrics) as any;
+    const svc = new BacktestService(prisma, redis, metrics, defaultBetaLimits) as any;
 
     const fills: FillRecord[] = [
       { side: "SELL", pnl: 10, equityCurve: 10, simulatedAt: new Date() },
@@ -444,7 +463,7 @@ describe("BacktestService — finalize()", () => {
       maxDrawdown: 5,
       sharpeRatio: 1.2,
     });
-    const svc = new BacktestService(prisma, redis, metrics) as any;
+    const svc = new BacktestService(prisma, redis, metrics, defaultBetaLimits) as any;
 
     const fills: FillRecord[] = [
       { side: "SELL", pnl: 42, equityCurve: 42, simulatedAt: new Date() },
@@ -470,7 +489,7 @@ describe("BacktestService — finalize()", () => {
     const prisma = makePrismaMock();
     const redis = makeRedisMock();
     const metrics = makeMetricsMock();
-    const svc = new BacktestService(prisma, redis, metrics) as any;
+    const svc = new BacktestService(prisma, redis, metrics, defaultBetaLimits) as any;
 
     await svc.finalize("run-gaps", "user-1", [], true);
 
@@ -485,7 +504,7 @@ describe("BacktestService — finalize()", () => {
     const prisma = makePrismaMock();
     const redis = makeRedisMock();
     const metrics = makeMetricsMock();
-    const svc = new BacktestService(prisma, redis, metrics) as any;
+    const svc = new BacktestService(prisma, redis, metrics, defaultBetaLimits) as any;
 
     await svc.finalize("run-final", "user-1", [], false);
 
@@ -501,7 +520,7 @@ describe("BacktestService — finalize()", () => {
     const prisma = makePrismaMock();
     const redis = makeRedisMock();
     const metrics = makeMetricsMock();
-    const svc = new BacktestService(prisma, redis, metrics) as any;
+    const svc = new BacktestService(prisma, redis, metrics, defaultBetaLimits) as any;
 
     await svc.finalize("run-final", "user-1", [], false);
 
@@ -524,7 +543,7 @@ describe("BacktestService — finalize()", () => {
       maxDrawdown: 3.141592,
       sharpeRatio: 1.23456,
     });
-    const svc = new BacktestService(prisma, redis, metrics) as any;
+    const svc = new BacktestService(prisma, redis, metrics, defaultBetaLimits) as any;
 
     await svc.finalize("run-prec", "user-1", [], false);
 
@@ -540,7 +559,7 @@ describe("BacktestService — finalize()", () => {
     const prisma = makePrismaMock();
     const redis = makeRedisMock();
     const metrics = makeMetricsMock();
-    const svc = new BacktestService(prisma, redis, metrics) as any;
+    const svc = new BacktestService(prisma, redis, metrics, defaultBetaLimits) as any;
 
     const fills: FillRecord[] = Array.from({ length: 5 }, (_, i) => ({
       side: "SELL" as const,
@@ -564,7 +583,7 @@ describe("BacktestService — run() error handling", () => {
     const prisma = makePrismaMock();
     const redis = makeRedisMock();
     const metrics = makeMetricsMock();
-    const svc = new BacktestService(prisma, redis, metrics);
+    const svc = new BacktestService(prisma, redis, metrics, defaultBetaLimits);
 
     prisma.backtestRun.findUniqueOrThrow.mockRejectedValue(
       new Error("DB is down"),
@@ -583,7 +602,7 @@ describe("BacktestService — run() error handling", () => {
     const prisma = makePrismaMock();
     const redis = makeRedisMock();
     const metrics = makeMetricsMock();
-    const svc = new BacktestService(prisma, redis, metrics);
+    const svc = new BacktestService(prisma, redis, metrics, defaultBetaLimits);
 
     // Fail immediately after the first update to observe it
     prisma.backtestRun.findUniqueOrThrow.mockRejectedValue(new Error("stop"));
@@ -598,7 +617,7 @@ describe("BacktestService — run() error handling", () => {
     const prisma = makePrismaMock();
     const redis = makeRedisMock();
     const metrics = makeMetricsMock();
-    const svc = new BacktestService(prisma, redis, metrics);
+    const svc = new BacktestService(prisma, redis, metrics, defaultBetaLimits);
 
     prisma.backtestRun.findUniqueOrThrow.mockRejectedValue({});
 
@@ -615,7 +634,7 @@ describe("BacktestService — run() error handling", () => {
     const prisma = makePrismaMock();
     const redis = makeRedisMock();
     const metrics = makeMetricsMock();
-    const svc = new BacktestService(prisma, redis, metrics);
+    const svc = new BacktestService(prisma, redis, metrics, defaultBetaLimits);
 
     prisma.backtestRun.findUniqueOrThrow.mockResolvedValue(BASE_RUN);
     prisma.strategy.findUniqueOrThrow.mockResolvedValue({

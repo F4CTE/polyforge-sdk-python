@@ -1,8 +1,7 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { Cron, CronExpression } from "@nestjs/schedule";
-import { RedisService, runOncePerCluster } from "@polyforge/shared-redis";
+import { RedisService, runOncePerCluster, BetaLimitsConfigService } from "@polyforge/shared-redis";
 import { PrismaService } from "@polyforge/shared-db";
-import { BETA_LIMITS } from "../common/beta-limits.config";
 
 const SERVICES = [
   {
@@ -62,6 +61,7 @@ export class DashboardService {
   constructor(
     private readonly redis: RedisService,
     private readonly prisma: PrismaService,
+    private readonly betaLimits: BetaLimitsConfigService,
   ) {}
 
   @Cron("*/10 * * * * *") // every 10 seconds
@@ -369,14 +369,20 @@ export class DashboardService {
     });
     const userMap = new Map(users.map((u) => [u.id, u]));
 
+    const [maxActive, maxMonthly, maxListings] = await Promise.all([
+      this.betaLimits.getLimit("maxActiveStrategies"),
+      this.betaLimits.getLimit("maxMonthlyVolumeUsdc"),
+      this.betaLimits.getLimit("maxMarketplaceListings"),
+    ]);
+
     const strategyUsers = strategyCountsRaw.map((r) => ({
       userId: r.userId,
       username: userMap.get(r.userId)?.username ?? null,
       email: userMap.get(r.userId)?.email ?? null,
       activeStrategies: r._count.id,
-      limit: BETA_LIMITS.maxActiveStrategies,
-      pct: r._count.id / BETA_LIMITS.maxActiveStrategies,
-      atLimit: r._count.id >= BETA_LIMITS.maxActiveStrategies,
+      limit: maxActive,
+      pct: r._count.id / maxActive,
+      atLimit: r._count.id >= maxActive,
     }));
 
     const volumeUsers = volumeRaw.map((r) => {
@@ -386,9 +392,9 @@ export class DashboardService {
         username: userMap.get(r.userId)?.username ?? null,
         email: userMap.get(r.userId)?.email ?? null,
         monthlyVolumeUsdc: vol,
-        limit: BETA_LIMITS.maxMonthlyVolumeUsdc,
-        pct: vol / BETA_LIMITS.maxMonthlyVolumeUsdc,
-        atLimit: vol >= BETA_LIMITS.maxMonthlyVolumeUsdc,
+        limit: maxMonthly,
+        pct: vol / maxMonthly,
+        atLimit: vol >= maxMonthly,
       };
     });
 
@@ -402,8 +408,8 @@ export class DashboardService {
       userId: r.sellerId,
       username: userMap.get(r.sellerId)?.username ?? null,
       listings: r._count.id,
-      limit: BETA_LIMITS.maxMarketplaceListings,
-      atLimit: r._count.id >= BETA_LIMITS.maxMarketplaceListings,
+      limit: maxListings,
+      atLimit: r._count.id >= maxListings,
     }));
 
     // Summary counts
@@ -414,9 +420,11 @@ export class DashboardService {
       (u) => u.pct >= warningThreshold,
     ).length;
 
+    const limits = await this.betaLimits.getAllLimits();
+
     return {
       asOf: now.toISOString(),
-      limits: BETA_LIMITS,
+      limits,
       summary: {
         usersApproachingStrategyCap,
         usersApproachingVolumeCap,

@@ -45,6 +45,23 @@ function makeStateMock(overrides: Record<string, unknown> = {}) {
   } as any;
 }
 
+function makeBetaLimitsMock() {
+  return {
+    getLimit: vi.fn().mockResolvedValue(3),
+    getAllLimits: vi.fn().mockResolvedValue({
+      maxActiveStrategies: 3,
+      maxConcurrentBacktests: 1,
+      maxBacktestHistoryDays: 90,
+      maxMonthlyVolumeUsdc: 5000,
+      maxPositionSizeUsdc: 500,
+      marketDataRateLimitPerMinute: 100,
+      maxMarketplaceListings: 2,
+      maxDailyStrategyExecutions: 500,
+    }),
+    setLimits: vi.fn(),
+  } as any;
+}
+
 /** Minimal strategy DB record */
 function makeDbStrategy(
   overrides: Partial<{
@@ -105,7 +122,21 @@ describe("StrategyRegistryService — start()", () => {
     redis = makeRedisMock();
     prisma = makePrismaMock();
     state = makeStateMock();
-    svc = new StrategyRegistryService(prisma, redis, state);
+    const betaLimits = {
+      getLimit: vi.fn().mockResolvedValue(3),
+      getAllLimits: vi.fn().mockResolvedValue({
+        maxActiveStrategies: 3,
+        maxConcurrentBacktests: 1,
+        maxBacktestHistoryDays: 90,
+        maxMonthlyVolumeUsdc: 5000,
+        maxPositionSizeUsdc: 500,
+        marketDataRateLimitPerMinute: 100,
+        maxMarketplaceListings: 2,
+        maxDailyStrategyExecutions: 500,
+      }),
+      setLimits: vi.fn(),
+    } as any;
+    svc = new StrategyRegistryService(prisma, redis, state, betaLimits);
   });
 
   it("throws NotFoundException when strategy does not exist", async () => {
@@ -285,7 +316,21 @@ describe("StrategyRegistryService — publishIntents()", () => {
     redis = makeRedisMock();
     prisma = makePrismaMock();
     state = makeStateMock();
-    svc = new StrategyRegistryService(prisma, redis, state);
+    const betaLimits = {
+      getLimit: vi.fn().mockResolvedValue(3),
+      getAllLimits: vi.fn().mockResolvedValue({
+        maxActiveStrategies: 3,
+        maxConcurrentBacktests: 1,
+        maxBacktestHistoryDays: 90,
+        maxMonthlyVolumeUsdc: 5000,
+        maxPositionSizeUsdc: 500,
+        marketDataRateLimitPerMinute: 100,
+        maxMarketplaceListings: 2,
+        maxDailyStrategyExecutions: 500,
+      }),
+      setLimits: vi.fn(),
+    } as any;
+    svc = new StrategyRegistryService(prisma, redis, state, betaLimits);
   });
 
   it("logs the stream, strategyId, and intent count after publishing", async () => {
@@ -343,7 +388,21 @@ describe("StrategyRegistryService — stop()", () => {
     redis = makeRedisMock();
     prisma = makePrismaMock();
     state = makeStateMock();
-    svc = new StrategyRegistryService(prisma, redis, state);
+    const betaLimits = {
+      getLimit: vi.fn().mockResolvedValue(3),
+      getAllLimits: vi.fn().mockResolvedValue({
+        maxActiveStrategies: 3,
+        maxConcurrentBacktests: 1,
+        maxBacktestHistoryDays: 90,
+        maxMonthlyVolumeUsdc: 5000,
+        maxPositionSizeUsdc: 500,
+        marketDataRateLimitPerMinute: 100,
+        maxMarketplaceListings: 2,
+        maxDailyStrategyExecutions: 500,
+      }),
+      setLimits: vi.fn(),
+    } as any;
+    svc = new StrategyRegistryService(prisma, redis, state, betaLimits);
   });
 
   it("sets strategy status to IDLE", async () => {
@@ -406,7 +465,21 @@ describe("StrategyRegistryService — pause()", () => {
     redis = makeRedisMock();
     prisma = makePrismaMock();
     state = makeStateMock();
-    svc = new StrategyRegistryService(prisma, redis, state);
+    const betaLimits = {
+      getLimit: vi.fn().mockResolvedValue(3),
+      getAllLimits: vi.fn().mockResolvedValue({
+        maxActiveStrategies: 3,
+        maxConcurrentBacktests: 1,
+        maxBacktestHistoryDays: 90,
+        maxMonthlyVolumeUsdc: 5000,
+        maxPositionSizeUsdc: 500,
+        marketDataRateLimitPerMinute: 100,
+        maxMarketplaceListings: 2,
+        maxDailyStrategyExecutions: 500,
+      }),
+      setLimits: vi.fn(),
+    } as any;
+    svc = new StrategyRegistryService(prisma, redis, state, betaLimits);
   });
 
   it("throws NotFoundException when strategy is not running", async () => {
@@ -460,7 +533,21 @@ describe("StrategyRegistryService — resume()", () => {
     redis = makeRedisMock();
     prisma = makePrismaMock();
     state = makeStateMock();
-    svc = new StrategyRegistryService(prisma, redis, state);
+    const betaLimits = {
+      getLimit: vi.fn().mockResolvedValue(3),
+      getAllLimits: vi.fn().mockResolvedValue({
+        maxActiveStrategies: 3,
+        maxConcurrentBacktests: 1,
+        maxBacktestHistoryDays: 90,
+        maxMonthlyVolumeUsdc: 5000,
+        maxPositionSizeUsdc: 500,
+        marketDataRateLimitPerMinute: 100,
+        maxMarketplaceListings: 2,
+        maxDailyStrategyExecutions: 500,
+      }),
+      setLimits: vi.fn(),
+    } as any;
+    svc = new StrategyRegistryService(prisma, redis, state, betaLimits);
   });
 
   it("throws NotFoundException when strategy is not running", async () => {
@@ -547,7 +634,21 @@ describe("StrategyRegistryService — getStatus()", () => {
     redis = makeRedisMock();
     prisma = makePrismaMock();
     state = makeStateMock();
-    svc = new StrategyRegistryService(prisma, redis, state);
+    const betaLimits = {
+      getLimit: vi.fn().mockResolvedValue(3),
+      getAllLimits: vi.fn().mockResolvedValue({
+        maxActiveStrategies: 3,
+        maxConcurrentBacktests: 1,
+        maxBacktestHistoryDays: 90,
+        maxMonthlyVolumeUsdc: 5000,
+        maxPositionSizeUsdc: 500,
+        marketDataRateLimitPerMinute: 100,
+        maxMarketplaceListings: 2,
+        maxDailyStrategyExecutions: 500,
+      }),
+      setLimits: vi.fn(),
+    } as any;
+    svc = new StrategyRegistryService(prisma, redis, state, betaLimits);
   });
 
   it("returns null for a strategy that is not registered", () => {
@@ -586,7 +687,8 @@ describe("StrategyRegistryService — onPriceEvent()", () => {
     const redis = makeRedisMock();
     const prisma = makePrismaMock();
     const state = makeStateMock();
-    const svc = new StrategyRegistryService(prisma, redis, state);
+    const betaLimits = makeBetaLimitsMock();
+    const svc = new StrategyRegistryService(prisma, redis, state, betaLimits);
 
     const strategy = makeDbStrategy({ execMode: "EVENT" });
     prisma.strategy.findUnique.mockResolvedValue(strategy);
@@ -599,7 +701,8 @@ describe("StrategyRegistryService — onPriceEvent()", () => {
     const redis = makeRedisMock();
     const prisma = makePrismaMock();
     const state = makeStateMock();
-    const svc = new StrategyRegistryService(prisma, redis, state);
+    const betaLimits = makeBetaLimitsMock();
+    const svc = new StrategyRegistryService(prisma, redis, state, betaLimits);
 
     expect(() => svc.onPriceEvent("tok-1", 0.5)).not.toThrow();
   });
@@ -615,7 +718,21 @@ describe("StrategyRegistryService — onApplicationBootstrap()", () => {
     redis = makeRedisMock();
     prisma = makePrismaMock();
     state = makeStateMock();
-    svc = new StrategyRegistryService(prisma, redis, state);
+    const betaLimits = {
+      getLimit: vi.fn().mockResolvedValue(3),
+      getAllLimits: vi.fn().mockResolvedValue({
+        maxActiveStrategies: 3,
+        maxConcurrentBacktests: 1,
+        maxBacktestHistoryDays: 90,
+        maxMonthlyVolumeUsdc: 5000,
+        maxPositionSizeUsdc: 500,
+        marketDataRateLimitPerMinute: 100,
+        maxMarketplaceListings: 2,
+        maxDailyStrategyExecutions: 500,
+      }),
+      setLimits: vi.fn(),
+    } as any;
+    svc = new StrategyRegistryService(prisma, redis, state, betaLimits);
   });
 
   it("does nothing when no strategies are in RUNNING/PAPER state", async () => {
@@ -690,7 +807,21 @@ describe("StrategyRegistryService — concurrent start protection", () => {
     redis = makeRedisMock();
     prisma = makePrismaMock();
     state = makeStateMock();
-    svc = new StrategyRegistryService(prisma, redis, state);
+    const betaLimits = {
+      getLimit: vi.fn().mockResolvedValue(3),
+      getAllLimits: vi.fn().mockResolvedValue({
+        maxActiveStrategies: 3,
+        maxConcurrentBacktests: 1,
+        maxBacktestHistoryDays: 90,
+        maxMonthlyVolumeUsdc: 5000,
+        maxPositionSizeUsdc: 500,
+        marketDataRateLimitPerMinute: 100,
+        maxMarketplaceListings: 2,
+        maxDailyStrategyExecutions: 500,
+      }),
+      setLimits: vi.fn(),
+    } as any;
+    svc = new StrategyRegistryService(prisma, redis, state, betaLimits);
   });
 
   it("prevents starting the same strategy twice concurrently", async () => {
@@ -720,7 +851,8 @@ describe("StrategyRegistryService — getChildStrategies()", () => {
     const redis = makeRedisMock();
     const prisma = makePrismaMock();
     const state = makeStateMock();
-    const svc = new StrategyRegistryService(prisma, redis, state);
+    const betaLimits = makeBetaLimitsMock();
+    const svc = new StrategyRegistryService(prisma, redis, state, betaLimits);
 
     expect(svc.getChildStrategies("unknown")).toEqual([]);
   });
@@ -731,7 +863,8 @@ describe("StrategyRegistryService — hasCircularDependency()", () => {
     const redis = makeRedisMock();
     const prisma = makePrismaMock();
     const state = makeStateMock();
-    const svc = new StrategyRegistryService(prisma, redis, state);
+    const betaLimits = makeBetaLimitsMock();
+    const svc = new StrategyRegistryService(prisma, redis, state, betaLimits);
 
     // parentId === childId
     expect(svc.hasCircularDependency("A", "A")).toBe(true);

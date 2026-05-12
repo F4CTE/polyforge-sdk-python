@@ -20,10 +20,10 @@ import {
   ComboCollectionsQueryDto,
   ComboLookupDto,
 } from "./dto/sports-query.dto";
-import { BETA_LIMITS } from "../common/beta-limits.config";
+import { BETA_LIMITS_DEFAULTS } from "@polyforge/shared-redis";
 
 const SPORTS_THROTTLE = {
-  default: { ttl: 60000, limit: BETA_LIMITS.marketDataRateLimitPerMinute },
+  default: { ttl: 60000, limit: BETA_LIMITS_DEFAULTS.marketDataRateLimitPerMinute },
 };
 
 @ApiTags("sports")

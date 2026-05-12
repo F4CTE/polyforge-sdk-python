@@ -1,7 +1,7 @@
 import { Logger } from "@nestjs/common";
 import { StrategyStatus } from ".prisma/client";
 import { PrismaService } from "@polyforge/shared-db";
-import { RedisService } from "@polyforge/shared-redis";
+import { RedisService, BetaLimitsConfigService } from "@polyforge/shared-redis";
 import { StrategyVariable, SubStrategyMode } from "@polyforge/shared-types";
 import type { VenueId } from "@polyforge/shared-types";
 import { EvalContext, OrderIntent } from "../blocks/block.types";
@@ -16,7 +16,6 @@ import {
 import { resolveParams } from "../blocks/resolve-params";
 import { StateService } from "../state/state.service";
 import { safeEvaluate } from "../common/safe-evaluate";
-import { BETA_LIMITS } from "../common/beta-limits.config";
 import { sma, ema, macd, bollingerBands, atr } from "../ta/indicators";
 import { readPriceWindow } from "../ta/price-window";
 import { TickMutex } from "./tick-mutex";
@@ -91,6 +90,7 @@ export class StrategyRunner {
     private readonly safety: Block[],
     private readonly variables: StrategyVariable[],
     private readonly redis: RedisService,
+    private readonly betaLimits: BetaLimitsConfigService,
     private readonly prisma: PrismaService,
     private readonly state: StateService,
     private readonly onIntents: (intents: OrderIntent[]) => Promise<void>,
@@ -252,9 +252,10 @@ export class StrategyRunner {
         // New key: set TTL to 25 hours so it expires safely after UTC midnight
         await redisClient.expire(key, 90_000);
       }
-      if (count > BETA_LIMITS.maxDailyStrategyExecutions) {
+      const maxDaily = await this.betaLimits.getLimit("maxDailyStrategyExecutions");
+      if (count > maxDaily) {
         this.logger.warn(
-          `Strategy ${this.strategyId} hit daily execution limit (${BETA_LIMITS.maxDailyStrategyExecutions}) — pausing until midnight UTC`,
+          `Strategy ${this.strategyId} hit daily execution limit (${maxDaily}) — pausing until midnight UTC`,
         );
         this.pause("daily_execution_limit_reached");
         await this.onStatusChange(

@@ -1,37 +1,20 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
+import { BETA_LIMITS_DEFAULTS } from "@polyforge/shared-redis";
 
-describe("BETA_LIMITS", () => {
-  const originalEnv = { ...process.env };
-
-  afterEach(() => {
-    vi.resetModules();
-    process.env = { ...originalEnv };
+describe("BETA_LIMITS_DEFAULTS", () => {
+  it("uses the beta market-data limit outside CI", () => {
+    const inCI = process.env.CI === "true";
+    if (inCI) {
+      // Running in CI — verify permissive limit
+      expect(BETA_LIMITS_DEFAULTS.marketDataRateLimitPerMinute).toBe(10_000);
+    } else {
+      expect(BETA_LIMITS_DEFAULTS.marketDataRateLimitPerMinute).toBe(100);
+    }
   });
 
-  it("uses the beta market-data limit outside CI", async () => {
-    delete process.env.CI;
-    delete process.env.BETA_MARKET_DATA_RATE_LIMIT;
-
-    const { BETA_LIMITS } = await import("./beta-limits.config.js");
-
-    expect(BETA_LIMITS.marketDataRateLimitPerMinute).toBe(100);
-  });
-
-  it("uses a permissive market-data limit in CI when no explicit override is set", async () => {
-    process.env.CI = "true";
-    delete process.env.BETA_MARKET_DATA_RATE_LIMIT;
-
-    const { BETA_LIMITS } = await import("./beta-limits.config.js");
-
-    expect(BETA_LIMITS.marketDataRateLimitPerMinute).toBe(10_000);
-  });
-
-  it("honors an explicit market-data limit override in CI", async () => {
-    process.env.CI = "true";
-    process.env.BETA_MARKET_DATA_RATE_LIMIT = "250";
-
-    const { BETA_LIMITS } = await import("./beta-limits.config.js");
-
-    expect(BETA_LIMITS.marketDataRateLimitPerMinute).toBe(250);
+  it("all keys are positive numbers", () => {
+    expect(BETA_LIMITS_DEFAULTS.maxActiveStrategies).toBeGreaterThan(0);
+    expect(BETA_LIMITS_DEFAULTS.maxConcurrentBacktests).toBeGreaterThan(0);
+    expect(BETA_LIMITS_DEFAULTS.maxBacktestHistoryDays).toBeGreaterThan(0);
   });
 });

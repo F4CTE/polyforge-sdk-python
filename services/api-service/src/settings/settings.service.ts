@@ -14,7 +14,7 @@ import { UpdateNotificationsDto } from "./dto/update-notifications.dto";
 import { UpdateRiskSettingsDto } from "./dto/update-risk-settings.dto";
 import { UpdateEventNotificationsDto } from "./dto/update-event-notifications.dto";
 import { UpdateVenuePreferencesDto } from "./dto/update-venue-preferences.dto";
-import { BETA_LIMITS } from "../common/beta-limits.config";
+import { BetaLimitsConfigService } from "@polyforge/shared-redis";
 import { getMonthlyConfirmedVolume } from "../common/monthly-volume";
 import { PaginatedResponse, paginate } from "../common/dto/pagination.dto";
 
@@ -28,6 +28,7 @@ export class SettingsService {
     private readonly prisma: PrismaService,
     private readonly redis: RedisService,
     private readonly config: ConfigService,
+    private readonly betaLimits: BetaLimitsConfigService,
   ) {
     this.dailyLimitMatic = parseFloat(
       this.config.get<string>("GAS_DAILY_LIMIT_MATIC") ?? "0.5",
@@ -702,23 +703,37 @@ export class SettingsService {
       }),
     ]);
 
+    const [
+      maxActive,
+      maxMonthly,
+      maxPosition,
+      maxConcurrent,
+      maxListings,
+    ] = await Promise.all([
+      this.betaLimits.getLimit("maxActiveStrategies"),
+      this.betaLimits.getLimit("maxMonthlyVolumeUsdc"),
+      this.betaLimits.getLimit("maxPositionSizeUsdc"),
+      this.betaLimits.getLimit("maxConcurrentBacktests"),
+      this.betaLimits.getLimit("maxMarketplaceListings"),
+    ]);
+
     return {
       strategies: {
         used: activeStrategyCount,
-        limit: BETA_LIMITS.maxActiveStrategies,
+        limit: maxActive,
       },
       monthlyVolume: {
         usedUsdc: monthlyVolumeUsedUsdc,
-        limitUsdc: BETA_LIMITS.maxMonthlyVolumeUsdc,
+        limitUsdc: maxMonthly,
       },
-      positionSize: { maxUsdc: BETA_LIMITS.maxPositionSizeUsdc },
+      positionSize: { maxUsdc: maxPosition },
       backtests: {
         runningOrQueued: activeBacktestCount,
-        maxConcurrent: BETA_LIMITS.maxConcurrentBacktests,
+        maxConcurrent,
       },
       marketplaceListings: {
         used: activeListingCount,
-        limit: BETA_LIMITS.maxMarketplaceListings,
+        limit: maxListings,
       },
     };
   }

@@ -12,7 +12,7 @@ import {
   PaginationDto,
 } from "../common/dto/pagination.dto";
 import { CreateBacktestDto } from "./dto/create-backtest.dto";
-import { BETA_LIMITS } from "../common/beta-limits.config";
+import { BetaLimitsConfigService } from "@polyforge/shared-redis";
 
 export interface BacktestQueryDto extends PaginationDto {
   strategyId?: string;
@@ -24,6 +24,7 @@ export class BacktestsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly redis: RedisService,
+    private readonly betaLimits: BetaLimitsConfigService,
   ) {}
 
   async list(
@@ -76,11 +77,12 @@ export class BacktestsService {
     if (dto.dateRangeStart) {
       const start = new Date(dto.dateRangeStart);
       const maxStart = new Date();
-      maxStart.setDate(maxStart.getDate() - BETA_LIMITS.maxBacktestHistoryDays);
+      const maxHistory = await this.betaLimits.getLimit("maxBacktestHistoryDays");
+      maxStart.setDate(maxStart.getDate() - maxHistory);
       if (start < maxStart) {
         throw new UnprocessableEntityException({
           code: "BACKTEST_HISTORY_WINDOW_EXCEEDED",
-          message: `Beta limit: backtest history is limited to the last ${BETA_LIMITS.maxBacktestHistoryDays} days.`,
+          message: `Beta limit: backtest history is limited to the last ${maxHistory} days.`,
         });
       }
     }

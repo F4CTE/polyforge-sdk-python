@@ -17,7 +17,6 @@ function makeRedis(overrides: Record<string, unknown> = {}) {
         .mockResolvedValue([
           JSON.stringify({ price: 0.5, timestamp: Date.now() }),
         ]),
-      // Beta daily execution counter
       incr: vi.fn().mockResolvedValue(1),
       expire: vi.fn().mockResolvedValue(1),
       // Tick lock
@@ -26,6 +25,17 @@ function makeRedis(overrides: Record<string, unknown> = {}) {
     }),
     xadd: vi.fn().mockResolvedValue("1-0"),
     ...overrides,
+  } as any;
+}
+
+function makeBetaLimits(maxDailyExec: number = 500) {
+  return {
+    getLimit: vi.fn().mockResolvedValue(maxDailyExec),
+    getAllLimits: vi.fn().mockResolvedValue({
+      maxActiveStrategies: 3,
+      maxDailyStrategyExecutions: maxDailyExec,
+    }),
+    setLimits: vi.fn().mockResolvedValue(undefined),
   } as any;
 }
 
@@ -82,6 +92,7 @@ function makeRunner({
   safety = [] as any[],
   variables = [] as any[],
   redis = makeRedis(),
+  betaLimits = makeBetaLimits(),
   prisma = makePrisma(),
   state = makeState(),
   onIntents = vi
@@ -102,6 +113,7 @@ function makeRunner({
     safety,
     variables,
     redis,
+    betaLimits,
     prisma,
     state,
     onIntents,

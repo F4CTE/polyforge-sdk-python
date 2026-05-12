@@ -41,7 +41,12 @@ describe("DashboardService", () => {
   beforeEach(() => {
     redis = createMockRedis();
     prisma = createMockPrisma();
-    service = new DashboardService(redis, prisma);
+    const betaLimits = {
+      getLimit: vi.fn().mockResolvedValue(3),
+      getAllLimits: vi.fn().mockResolvedValue({}),
+      setLimits: vi.fn(),
+    } as any;
+    service = new DashboardService(redis, prisma, betaLimits);
   });
 
   afterEach(() => {

@@ -20,7 +20,7 @@ import {
 } from "class-validator";
 import { Type } from "class-transformer";
 import { KalshiReadService } from "./kalshi-read.service";
-import { BETA_LIMITS } from "../common/beta-limits.config";
+import { BETA_LIMITS_DEFAULTS } from "@polyforge/shared-redis";
 
 class ComboCollectionsQueryDto {
   @IsOptional()
@@ -54,7 +54,7 @@ class LookupTickerDto {
 }
 
 const COMBO_THROTTLE = {
-  default: { ttl: 60000, limit: BETA_LIMITS.marketDataRateLimitPerMinute },
+  default: { ttl: 60000, limit: BETA_LIMITS_DEFAULTS.marketDataRateLimitPerMinute },
 };
 
 @ApiTags("combo-markets")

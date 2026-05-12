@@ -9,7 +9,7 @@ import {
 import { StrategyStatus } from ".prisma/client";
 import { logCloudWatchMetric } from "@polyforge/logger";
 import { PrismaService } from "@polyforge/shared-db";
-import { RedisService } from "@polyforge/shared-redis";
+import { RedisService, BetaLimitsConfigService } from "@polyforge/shared-redis";
 import { SubStrategyMode, StrategyVariable } from "@polyforge/shared-types";
 import type { VenueId } from "@polyforge/shared-types";
 import {
@@ -107,6 +107,7 @@ export class StrategyRegistryService implements OnApplicationBootstrap {
     private readonly prisma: PrismaService,
     private readonly redis: RedisService,
     private readonly state: StateService,
+    private readonly betaLimits: BetaLimitsConfigService,
   ) {}
 
   // ─── Startup reconciliation ─────────────────────────────────────────────────
@@ -166,6 +167,7 @@ export class StrategyRegistryService implements OnApplicationBootstrap {
             (strategy.safety as Block[] | null) ?? [],
             variables,
             this.redis,
+            this.betaLimits,
             this.prisma,
             this.state,
             (intents) => this.publishIntents(intents, stream),
@@ -253,6 +255,7 @@ export class StrategyRegistryService implements OnApplicationBootstrap {
       (strategy.safety as Block[] | null) ?? [],
       variables,
       this.redis,
+      this.betaLimits,
       this.prisma,
       this.state,
       (intents) => this.publishIntents(intents, stream),
@@ -517,6 +520,7 @@ export class StrategyRegistryService implements OnApplicationBootstrap {
       (child.safety as Block[] | null) ?? [],
       variables,
       this.redis,
+      this.betaLimits,
       this.prisma,
       this.state,
       (intents) => this.publishIntents(intents, stream),

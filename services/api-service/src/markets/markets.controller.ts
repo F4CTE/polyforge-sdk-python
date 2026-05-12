@@ -29,11 +29,11 @@ import {
   MarketHistoryQueryDto,
   CreateMarketAlertDto,
 } from "./dto/market-query.dto";
-import { BETA_LIMITS } from "../common/beta-limits.config";
+import { BETA_LIMITS_DEFAULTS } from "@polyforge/shared-redis";
 
 // Market-data endpoints get a tighter per-user rate limit (beta: 100 req/min)
 const MARKET_DATA_THROTTLE = {
-  default: { ttl: 60000, limit: BETA_LIMITS.marketDataRateLimitPerMinute },
+  default: { ttl: 60000, limit: BETA_LIMITS_DEFAULTS.marketDataRateLimitPerMinute },
 };
 
 @ApiTags("markets")

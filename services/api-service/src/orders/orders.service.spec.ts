@@ -8,7 +8,7 @@ import {
 import { ConfigService } from "@nestjs/config";
 import { OrdersService } from "./orders.service";
 import { createMockDb, MockDb } from "../../test/helpers/mock-db";
-import { RedisService } from "@polyforge/shared-redis";
+import { RedisService, BetaLimitsConfigService } from "@polyforge/shared-redis";
 import { PosthogService } from "@polyforge/shared-posthog";
 import {
   OrderSideDto,
@@ -117,7 +117,25 @@ describe("OrdersService", () => {
     db.order.findUnique.mockResolvedValue(
       makeOrder({ clobOrderId: null }) as any,
     );
-    service = new OrdersService(db as any, redis, config, {} as any, posthog);
+    const betaLimits = {
+      getLimit: vi.fn().mockImplementation((key: string) => {
+        if (key === "maxMonthlyVolumeUsdc") return Promise.resolve(5000);
+        if (key === "maxPositionSizeUsdc") return Promise.resolve(500);
+        return Promise.resolve(3);
+      }),
+      getAllLimits: vi.fn().mockResolvedValue({
+        maxPositionSizeUsdc: 500,
+        maxMonthlyVolumeUsdc: 5000,
+        maxActiveStrategies: 3,
+        maxConcurrentBacktests: 1,
+        maxBacktestHistoryDays: 90,
+        marketDataRateLimitPerMinute: 100,
+        maxMarketplaceListings: 2,
+        maxDailyStrategyExecutions: 500,
+      }),
+      setLimits: vi.fn().mockResolvedValue(undefined),
+    } as unknown as BetaLimitsConfigService;
+    service = new OrdersService(db as any, redis, config, {} as any, posthog, betaLimits);
   });
 
   afterEach(() => {

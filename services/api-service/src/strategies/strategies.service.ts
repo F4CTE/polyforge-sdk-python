@@ -31,7 +31,7 @@ import { ImportStrategyDto } from "./dto/import-strategy.dto";
 import { CreateFromDescriptionDto } from "./dto/create-from-description.dto";
 import { PaginationDto } from "../common/dto/pagination.dto";
 import { LlmService } from "../news/llm.service";
-import { BETA_LIMITS } from "../common/beta-limits.config";
+import { BetaLimitsConfigService } from "@polyforge/shared-redis";
 import { assertCurrentUsRailTermsAccepted } from "../common/us-rail-terms";
 import { validateBlockConfigs } from "./validation/block-config.validator";
 
@@ -48,6 +48,7 @@ export class StrategiesService {
     private readonly client: InternalClientService,
     private readonly llm: LlmService,
     private readonly posthog: PosthogService,
+    private readonly betaLimits: BetaLimitsConfigService,
   ) {
     this.engineUrl = this.config.get<string>(
       "STRATEGY_ENGINE_URL",
@@ -82,10 +83,11 @@ export class StrategiesService {
     const count = await this.prisma.strategy.count({
       where: { userId, status: { not: StrategyStatus.ARCHIVED } },
     });
-    if (count >= BETA_LIMITS.maxActiveStrategies) {
+    const maxActive = await this.betaLimits.getLimit("maxActiveStrategies");
+    if (count >= maxActive) {
       throw new UnprocessableEntityException({
         code: "STRATEGY_LIMIT_REACHED",
-        message: `Beta limit: maximum ${BETA_LIMITS.maxActiveStrategies} active strategies allowed. Archive existing strategies to create new ones.`,
+        message: `Beta limit: maximum ${maxActive} active strategies allowed. Archive existing strategies to create new ones.`,
       });
     }
 
@@ -708,10 +710,11 @@ export class StrategiesService {
     const count = await this.prisma.strategy.count({
       where: { userId, status: { not: StrategyStatus.ARCHIVED } },
     });
-    if (count >= BETA_LIMITS.maxActiveStrategies) {
+    const maxActive = await this.betaLimits.getLimit("maxActiveStrategies");
+    if (count >= maxActive) {
       throw new UnprocessableEntityException({
         code: "STRATEGY_LIMIT_REACHED",
-        message: `Beta limit: maximum ${BETA_LIMITS.maxActiveStrategies} active strategies allowed. Archive existing strategies to create new ones.`,
+        message: `Beta limit: maximum ${maxActive} active strategies allowed. Archive existing strategies to create new ones.`,
       });
     }
 
@@ -973,10 +976,11 @@ export class StrategiesService {
     const count = await this.prisma.strategy.count({
       where: { userId, status: { not: StrategyStatus.ARCHIVED } },
     });
-    if (count >= BETA_LIMITS.maxActiveStrategies) {
+    const maxActive = await this.betaLimits.getLimit("maxActiveStrategies");
+    if (count >= maxActive) {
       throw new UnprocessableEntityException({
         code: "STRATEGY_LIMIT_REACHED",
-        message: `Beta limit: maximum ${BETA_LIMITS.maxActiveStrategies} active strategies allowed. Archive existing strategies to create new ones.`,
+        message: `Beta limit: maximum ${maxActive} active strategies allowed. Archive existing strategies to create new ones.`,
       });
     }
 

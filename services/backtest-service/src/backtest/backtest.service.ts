@@ -1,8 +1,7 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { PrismaService } from "@polyforge/shared-db";
-import { RedisService } from "@polyforge/shared-redis";
+import { RedisService, BetaLimitsConfigService } from "@polyforge/shared-redis";
 import { Prisma } from "@prisma/client";
-import { BETA_LIMITS } from "../common/beta-limits.config";
 import {
   Block,
   PriceState,
@@ -38,6 +37,7 @@ export class BacktestService {
     private readonly prisma: PrismaService,
     private readonly redis: RedisService,
     private readonly metrics: MetricsService,
+    private readonly betaLimits: BetaLimitsConfigService,
   ) {}
 
   // ─── Entry point ─────────────────────────────────────────────────────────
@@ -58,7 +58,8 @@ export class BacktestService {
           id: { not: runId },
         },
       });
-      if (runningCount >= BETA_LIMITS.maxConcurrentBacktests) {
+      const maxConcurrent = await this.betaLimits.getLimit("maxConcurrentBacktests");
+      if (runningCount >= maxConcurrent) {
         this.logger.log(
           `Backtest run ${runId} deferred — user ${run.userId} already has ${runningCount} running`,
         );
