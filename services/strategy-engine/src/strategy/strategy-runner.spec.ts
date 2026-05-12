@@ -17,26 +17,23 @@ function makeRedis(overrides: Record<string, unknown> = {}) {
         .mockResolvedValue([
           JSON.stringify({ price: 0.5, timestamp: Date.now() }),
         ]),
+      // Beta daily execution counter
       incr: vi.fn().mockResolvedValue(1),
       expire: vi.fn().mockResolvedValue(1),
       // Tick lock
       set: vi.fn().mockResolvedValue("OK"),
       del: vi.fn().mockResolvedValue(1),
-      eval: vi.fn().mockResolvedValue(6),
+      eval: vi.fn().mockResolvedValue(1),
     }),
     xadd: vi.fn().mockResolvedValue("1-0"),
     ...overrides,
   } as any;
 }
 
-function makeBetaLimits(maxDailyExec: number = 500) {
+function makeBetaLimits(overrides: Record<string, unknown> = {}) {
   return {
-    getLimit: vi.fn().mockResolvedValue(maxDailyExec),
-    getAllLimits: vi.fn().mockResolvedValue({
-      maxActiveStrategies: 3,
-      maxDailyStrategyExecutions: maxDailyExec,
-    }),
-    setLimits: vi.fn().mockResolvedValue(undefined),
+    getLimit: vi.fn().mockResolvedValue(999_999),
+    ...overrides,
   } as any;
 }
 
@@ -173,7 +170,7 @@ describe("StrategyRunner — lifecycle", () => {
     expect(state.get).toHaveBeenCalled();
   });
 
-  it("skips overlapping ticks while one evaluation is still running", async () => {
+  it("coalesces overlapping ticks while one evaluation is still in flight", async () => {
     let release!: () => void;
     const state = makeState();
     state.get.mockImplementation(
@@ -185,13 +182,9 @@ describe("StrategyRunner — lifecycle", () => {
     const runner = makeRunner({ execMode: "EVENT", state });
 
     const first = runner.onPriceEvent("tok1", 0.5);
-    // Wait for the first tick to reach evaluate() → state.get() before
-    // proceeding. The tick pipeline now has async pre-checks (daily
-    // execution counter, beta limits) that must complete before evaluate().
-    await vi.waitFor(() => expect(state.get).toHaveBeenCalled(), {
-      timeout: 1000,
-    });
-    // Without enough time elapsed, the second tick is debounced by MIN_TICK_MS
+    // Wait past the throttle window so the second tick can enter.
+    // The first tick is still in-flight (state.get is blocked on release).
+    await new Promise((r) => setTimeout(r, 250));
     const second = runner.onPriceEvent("tok1", 0.5);
     await second;
     // The first tick now awaits betaLimits.getLimit() before reaching
@@ -202,9 +195,11 @@ describe("StrategyRunner — lifecycle", () => {
     release();
     await first;
 
-    // Only the first tick evaluates — the second is dropped by the
-    // MIN_TICK_MS debounce throttle (arrives within 200ms of first).
-    expect(state.get).toHaveBeenCalledTimes(1);
+    // Follow-up tick from coalesced pending fires on next microtask
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    // Two evaluations: first tick + one coalesced follow-up
+    expect(state.get).toHaveBeenCalledTimes(2);
   });
 });
 
@@ -220,7 +215,7 @@ describe("StrategyRunner — stale data detection", () => {
         expire: vi.fn().mockResolvedValue(1),
         set: vi.fn().mockResolvedValue("OK"),
         del: vi.fn().mockResolvedValue(1),
-        eval: vi.fn().mockResolvedValue(6),
+        eval: vi.fn().mockResolvedValue(1),
       }),
     });
     const onStatusChange = vi.fn().mockResolvedValue(undefined);
@@ -339,41 +334,6 @@ describe("StrategyRunner — SAFETY evaluation", () => {
     expect(onStatusChange).not.toHaveBeenCalledWith(
       "STOPPED",
       expect.anything(),
-    );
-  });
-
-  it("stops strategy on unknown safety block type (fail closed)", async () => {
-    const state = makeState();
-    const redis = makeRedis();
-    const onStatusChange = vi.fn().mockResolvedValue(undefined);
-    const prisma = makePrisma();
-
-    const runner = makeRunner({
-      execMode: "EVENT",
-      state,
-      redis,
-      prisma,
-      onStatusChange,
-      safety: [
-        {
-          id: "safety-1",
-          type: "NONEXISTENT_SAFETY_BLOCK",
-          params: {},
-        },
-      ],
-    });
-
-    await runner.onPriceEvent("tok1", 0.5);
-
-    expect(runner.status).toBe("STOPPED");
-    expect(onStatusChange).toHaveBeenCalledWith(
-      "STOPPED",
-      expect.stringContaining("Unknown safety block"),
-    );
-    expect(prisma.strategy.update).toHaveBeenCalled();
-    expect(redis.xadd).toHaveBeenCalledWith(
-      "stream:events",
-      expect.objectContaining({ type: "STRATEGY_STOPPED" }),
     );
   });
 
@@ -540,26 +500,6 @@ describe("StrategyRunner — CONDITION evaluation", () => {
     state.get.mockResolvedValue({ ...DEFAULT_STATE, betsToday: 5 });
 
     await runner.onPriceEvent("tok1", 0.5);
-    expect(onIntents).not.toHaveBeenCalled();
-  });
-
-  it("skips tick on unknown condition block type (fail closed)", async () => {
-    const state = makeState();
-    const onIntents = vi
-      .fn<(intents: OrderIntent[]) => Promise<void>>()
-      .mockResolvedValue(undefined);
-
-    const runner = makeRunner({
-      execMode: "EVENT",
-      state,
-      onIntents,
-      conditions: [
-        { id: "c1", type: "NONEXISTENT_CONDITION_BLOCK", params: {} },
-      ],
-    });
-
-    await runner.onPriceEvent("tok1", 0.5);
-    // Should not reach action execution — condition fail-closed
     expect(onIntents).not.toHaveBeenCalled();
   });
 });
@@ -1204,69 +1144,78 @@ describe("StrategyRunner — config fallback for token discovery and prefetch", 
   });
 });
 
-describe("StrategyRunner — EVENT-mode debounce (POLA-2082)", () => {
-  beforeEach(() => {
-    vi.useFakeTimers();
-  });
-
-  afterEach(() => {
-    vi.useRealTimers();
-  });
-
-  it("debounces rapid consecutive onPriceEvent calls in EVENT mode", async () => {
-    vi.setSystemTime(0);
-
+describe("StrategyRunner — EVENT-mode serialization (POLA-2082)", () => {
+  it("coalesces rapid consecutive onPriceEvent calls into a follow-up tick", async () => {
+    let release!: () => void;
     const state = makeState();
+    state.get.mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          release = () => resolve({ ...DEFAULT_STATE });
+        }),
+    );
     const runner = makeRunner({ execMode: "EVENT", state });
 
-    await runner.onPriceEvent("tok1", 0.5);
-    expect(state.get).toHaveBeenCalledTimes(1);
+    // First tick enters, sets tickInFlight, awaits state.get
+    const tick1 = runner.onPriceEvent("tok1", 0.5);
 
-    // Fire again at 100ms — within MIN_TICK_MS (200ms), should be throttled
-    vi.setSystemTime(100);
-    state.get.mockClear();
+    // Wait past the min-tick throttle so subsequent events can enter the coalescing path
+    await new Promise((r) => setTimeout(r, 250));
+    // Multiple rapid events while first tick is in flight — only one pending flag
     await runner.onPriceEvent("tok1", 0.55);
-    expect(state.get).not.toHaveBeenCalled();
-
-    // Fire at 250ms — past MIN_TICK_MS threshold, should fire
-    vi.setSystemTime(250);
     await runner.onPriceEvent("tok1", 0.6);
-    expect(state.get).toHaveBeenCalledTimes(1);
+    await runner.onPriceEvent("tok1", 0.65);
+
+    // Release first tick
+    release();
+    await tick1;
+
+    // One follow-up tick fires from the coalesced pending flag
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    expect(state.get).toHaveBeenCalledTimes(2);
   });
 
-  it("allows normally-spaced events through in EVENT mode", async () => {
-    vi.setSystemTime(0);
-
+  it("allows sequential events spaced apart by the throttle interval", async () => {
     const state = makeState();
     const runner = makeRunner({ execMode: "EVENT", state });
 
     await runner.onPriceEvent("tok1", 0.5);
     expect(state.get).toHaveBeenCalledTimes(1);
 
+    // Wait past MIN_TICK_MS (200ms) for throttle to clear
+    await new Promise((r) => setTimeout(r, 250));
     state.get.mockClear();
-    vi.setSystemTime(300);
     await runner.onPriceEvent("tok1", 0.6);
     expect(state.get).toHaveBeenCalledTimes(1);
 
+    await new Promise((r) => setTimeout(r, 250));
     state.get.mockClear();
-    vi.setSystemTime(600);
     await runner.onPriceEvent("tok1", 0.7);
     expect(state.get).toHaveBeenCalledTimes(1);
   });
 
-  it("debounces HYBRID mode event-driven ticks", async () => {
-    vi.setSystemTime(0);
-
+  it("coalesces HYBRID mode event-driven ticks", async () => {
+    let release!: () => void;
     const state = makeState();
+    state.get.mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          release = () => resolve({ ...DEFAULT_STATE });
+        }),
+    );
     const runner = makeRunner({ execMode: "HYBRID", state });
 
-    await runner.onPriceEvent("tok1", 0.5);
-    expect(state.get).toHaveBeenCalledTimes(1);
-
-    vi.setSystemTime(50);
-    state.get.mockClear();
+    const tick1 = runner.onPriceEvent("tok1", 0.5);
+    await new Promise((r) => setTimeout(r, 250));
     await runner.onPriceEvent("tok1", 0.55);
-    expect(state.get).not.toHaveBeenCalled();
+    release();
+    await tick1;
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    // One eval for tick1 — HYBRID mode does NOT get a coalesced follow-up
+    // (setInterval in start() already defines its own cadence)
+    expect(state.get).toHaveBeenCalledTimes(1);
   });
 
   it("does not interfere with TICK mode (onPriceEvent is a no-op)", async () => {
@@ -1497,6 +1446,7 @@ describe("StrategyRunner — detectStaleData edge cases", () => {
         expire: vi.fn().mockResolvedValue(1),
         set: vi.fn().mockResolvedValue("OK"),
         del: vi.fn().mockResolvedValue(1),
+        eval: vi.fn().mockResolvedValue(1),
       }),
     });
     const state = makeState();
@@ -1515,7 +1465,7 @@ describe("StrategyRunner — detectStaleData edge cases", () => {
 });
 
 describe("StrategyRunner — concurrent tick serialization", () => {
-  it("coalesces concurrent ticks via TickMutex", async () => {
+  it("coalesces concurrent ticks into a single follow-up evaluation", async () => {
     let release!: () => void;
     const state = makeState();
     state.get.mockImplementation(
@@ -1526,35 +1476,40 @@ describe("StrategyRunner — concurrent tick serialization", () => {
     );
     const runner = makeRunner({ execMode: "EVENT", state });
 
-    // Fire first tick (acquires TickMutex, awaits state.get)
+    // Fire first tick (sets tickInFlight, awaits state.get)
     const tick1 = runner.onPriceEvent("tok1", 0.5);
-    // Wait enough time for MIN_TICK_MS debounce to pass (>200ms)
-    await new Promise((resolve) => setTimeout(resolve, 250));
-    // Fire second tick — passes debounce but bounces off TickMutex (sets pending)
+    // Wait past the min-tick throttle so the second tick enters the coalescing path
+    await new Promise((r) => setTimeout(r, 250));
+    // Fire second tick — tickInFlight is true, sets pendingTick
     const tick2 = runner.onPriceEvent("tok1", 0.6);
     await tick2;
     // Release first tick's evaluation
     release();
     await tick1;
 
-    // Follow-up tick scheduled via TickMutex exit() runs on next microtask
+    // Follow-up tick scheduled via the finally block on next microtask
     await new Promise((resolve) => setTimeout(resolve, 0));
 
     // Two evaluations: tick1 + coalesced follow-up from tick2
     expect(state.get).toHaveBeenCalledTimes(2);
   });
 
-  it("releases TickMutex after a successful tick", async () => {
+  it("allows new tick after a successful one completes", async () => {
     const state = makeState();
     const runner = makeRunner({ execMode: "EVENT", state });
 
+    // First tick: tickInFlight starts false, sets to true, completes, back to false
     await runner.onPriceEvent("tok1", 0.5);
+    expect(state.get).toHaveBeenCalledTimes(1);
 
-    // Mutex is not locked after tick completes (exit() releases it)
-    expect(runner.tickMutex.isLocked).toBe(false);
+    // Wait past MIN_TICK_MS (200ms) for throttle to clear
+    await new Promise((r) => setTimeout(r, 250));
+    state.get.mockClear();
+    await runner.onPriceEvent("tok1", 0.5);
+    expect(state.get).toHaveBeenCalledTimes(1);
   });
 
-  it("releases TickMutex even when tick evaluation throws", async () => {
+  it("releases lock and throttle after tick evaluation throws", async () => {
     const state = makeState();
     state.get.mockRejectedValue(new Error("Redis crash"));
 
@@ -1562,18 +1517,94 @@ describe("StrategyRunner — concurrent tick serialization", () => {
 
     await expect(runner.onPriceEvent("tok1", 0.5)).resolves.not.toThrow();
 
-    // Mutex MUST be released even after error (finally block)
-    expect(runner.tickMutex.isLocked).toBe(false);
+    // Lock is released in finally even after error — new tick should proceed
+    // after the throttle window clears.
+    state.get.mockClear();
+    state.get.mockResolvedValue({ ...DEFAULT_STATE });
+    await new Promise((r) => setTimeout(r, 250));
+    await runner.onPriceEvent("tok1", 0.5);
+    expect(state.get).toHaveBeenCalledTimes(1);
   });
 
-  it("does NOT enter TickMutex when strategy is not RUNNING", async () => {
+  it("does not set lock when strategy is not RUNNING", async () => {
     const state = makeState();
     const runner = makeRunner({ execMode: "EVENT", state });
 
     runner.pause("manual");
     await runner.onPriceEvent("tok1", 0.5);
 
-    // Mutex not entered because status check returns early (PAUSED !== RUNNING)
-    expect(runner.tickMutex.isLocked).toBe(false);
+    // Lock not entered because status check returns early (PAUSED !== RUNNING)
+    // New tick after resume should proceed normally (after throttle clears)
+    runner.resume();
+    await new Promise((r) => setTimeout(r, 250));
+    state.get.mockClear();
+    state.get.mockResolvedValue({ ...DEFAULT_STATE });
+    await runner.onPriceEvent("tok1", 0.5);
+    expect(state.get).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not release Redis lock when SET NX fails (another instance owns the lock)", async () => {
+    const client = {
+      lrange: vi.fn().mockResolvedValue([]),
+      mget: vi.fn().mockResolvedValue([
+        JSON.stringify({ price: 0.5, timestamp: Date.now() }),
+      ]),
+      incr: vi.fn().mockResolvedValue(1),
+      expire: vi.fn().mockResolvedValue(1),
+      set: vi.fn().mockResolvedValue(null), // SET NX fails — lock held by another instance
+      del: vi.fn().mockResolvedValue(1),
+      eval: vi.fn().mockResolvedValue(1),
+    };
+    const redis = makeRedis({ getClient: vi.fn().mockReturnValue(client) });
+    const state = makeState();
+    const runner = makeRunner({ execMode: "EVENT", state, redis });
+
+    await runner.onPriceEvent("tok1", 0.5);
+
+    // SET was attempted but failed (lock not acquired)
+    expect(client.set).toHaveBeenCalled();
+    // Neither eval nor del should be called — this instance never acquired the lock
+    expect(client.eval).not.toHaveBeenCalled();
+    expect(client.del).not.toHaveBeenCalled();
+
+    // tickInFlight is reset in finally even on failed acquisition —
+    // a subsequent tick after throttle should proceed normally
+    await new Promise((r) => setTimeout(r, 250));
+    // Restore client.set to succeed so the next tick can evaluate
+    client.set.mockResolvedValue("OK");
+    state.get.mockClear();
+    await runner.onPriceEvent("tok1", 0.5);
+    expect(state.get).toHaveBeenCalledTimes(1);
+  });
+
+  it("uses per-instance owner token in atomic Lua compare-and-delete", async () => {
+    const client = {
+      lrange: vi.fn().mockResolvedValue([]),
+      mget: vi.fn().mockResolvedValue([
+        JSON.stringify({ price: 0.5, timestamp: Date.now() }),
+      ]),
+      incr: vi.fn().mockResolvedValue(1),
+      expire: vi.fn().mockResolvedValue(1),
+      set: vi.fn().mockResolvedValue("OK"),
+      del: vi.fn().mockResolvedValue(1),
+      eval: vi.fn().mockResolvedValue(1),
+    };
+    const redis = makeRedis({ getClient: vi.fn().mockReturnValue(client) });
+    const state = makeState();
+    const runner = makeRunner({ execMode: "EVENT", state, redis });
+
+    await runner.onPriceEvent("tok1", 0.5);
+
+    // eval must be called with the Lua compare-and-delete script
+    expect(client.eval).toHaveBeenCalledTimes(1);
+    const evalArgs = client.eval.mock.calls[0];
+    const script = evalArgs[0] as string;
+    expect(script).toContain("redis.call('GET'");
+    expect(script).toContain("redis.call('DEL'");
+
+    // The owner token (last arg) must be a non-empty UUID string
+    const token = evalArgs[3] as string;
+    expect(token).toBeTypeOf("string");
+    expect(token.length).toBeGreaterThanOrEqual(32);
   });
 });

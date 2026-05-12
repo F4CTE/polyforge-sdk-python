@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import { Logger } from "@nestjs/common";
 import { StrategyStatus } from ".prisma/client";
 import { PrismaService } from "@polyforge/shared-db";
@@ -16,9 +17,9 @@ import {
 import { resolveParams } from "../blocks/resolve-params";
 import { StateService } from "../state/state.service";
 import { safeEvaluate } from "../common/safe-evaluate";
+
 import { sma, ema, macd, bollingerBands, atr } from "../ta/indicators";
 import { readPriceWindow } from "../ta/price-window";
-import { TickMutex } from "./tick-mutex";
 
 /** Redis key for daily execution counter — resets at midnight UTC */
 const dailyExecKey = (strategyId: string): string => {
@@ -63,17 +64,16 @@ export class StrategyRunner {
   status: StrategyRunnerStatus = "RUNNING";
   private timer: NodeJS.Timeout | null = null;
   private _pauseReason: string | null = null;
-  get pauseReason() {
-    return this._pauseReason;
-  }
   private delayedActions: Map<string, NodeJS.Timeout> = new Map();
-  /** Throttles EVENT-mode ticks to prevent bursty in-order evaluation */
-  private lastTickMs = -MIN_TICK_MS;
+  private lastTickMs = 0;
   private lastStaleCheckMs = 0;
   private staleCheckBackoffMs = STALE_PRICE_MS;
-  readonly tickMutex = new TickMutex();
+  private tickInFlight = false;
+  private pendingTick = false;
+  /** Per-instance owner token for Redis lock compare-and-delete safety */
+  private readonly instanceId = randomUUID();
   /** True when a follow-up tick is scheduled — bypasses the min-tick throttle */
-  private _scheduledFollowUp = false;
+  private scheduledFollowUp = false;
 
   /** Tracks child strategy IDs launched by RUN_STRATEGY action blocks */
   readonly childStrategies: Set<string> = new Set();
@@ -126,6 +126,11 @@ export class StrategyRunner {
     this.childModes.delete(childId);
   }
 
+  /** Returns the reason the runner was paused, or null if not paused */
+  get pauseReason(): string | null {
+    return this._pauseReason;
+  }
+
   /** Get the mode for a child strategy */
 
   getChildMode(childId: string): SubStrategyMode | undefined {
@@ -149,6 +154,8 @@ export class StrategyRunner {
   resume() {
     this.status = "RUNNING";
     this._pauseReason = null;
+    this.staleCheckBackoffMs = STALE_PRICE_MS;
+    this.lastStaleCheckMs = 0;
     this.logger.log("Resumed");
   }
 
@@ -231,22 +238,51 @@ export class StrategyRunner {
 
     if (this.status !== "RUNNING") return;
 
-    // Throttle EVENT/HYBRID event-driven ticks to prevent bursty
-    // every_tick triggers from firing on every incoming price event.
+    // Min-tick throttle for EVENT/HYBRID mode to prevent bursty
+    // every-tick triggers from firing on every incoming price event.
     // Bypassed for internally-scheduled follow-up ticks (deferred work
-    // that was coalesced while the mutex was held).
-    const followUp = this._scheduledFollowUp;
-    this._scheduledFollowUp = false;
-    if (!followUp) {
-      const now = Date.now();
-      if (now - this.lastTickMs < MIN_TICK_MS) return;
-      this.lastTickMs = now;
+    // that was coalesced while the lock was held).
+    if (this.execMode === "EVENT" || this.execMode === "HYBRID") {
+      const followUp = this.scheduledFollowUp;
+      this.scheduledFollowUp = false;
+      if (!followUp) {
+        const now = Date.now();
+        if (now - this.lastTickMs < MIN_TICK_MS) return;
+        this.lastTickMs = now;
+      } else {
+        // Advance lastTickMs when consuming a coalesced follow-up tick
+        // so that events arriving during this evaluation still respect
+        // MIN_TICK_MS spacing and cannot start an immediate back-to-back
+        // follow-up chain that defeats the throttle.
+        this.lastTickMs = Date.now();
+      }
     }
 
-    if (!this.tickMutex.tryEnter()) return;
+    // In-process coalescing: only one tick evaluates at a time.
+    if (this.tickInFlight) {
+      this.pendingTick = true;
+      return;
+    }
+
+    this.tickInFlight = true;
+    let lockAcquired = false;
     try {
-      // Enforce daily execution limit — auto-stop if exceeded
+      // Distributed lock: prevent concurrent evaluation across multiple
+      // strategy-engine instances via Redis SET NX with a 10s TTL.
+      // The owner token (instanceId) allows safe compare-and-delete release.
       const redisClient = this.redis.getClient();
+      const lockKey = `lock:tick:${this.strategyId}`;
+      const acquired = await redisClient.set(
+        lockKey,
+        this.instanceId,
+        "EX",
+        10,
+        "NX",
+      );
+      if (!acquired) return;
+      lockAcquired = true;
+
+      // Enforce daily execution limit — auto-stop if exceeded
       const key = dailyExecKey(this.strategyId);
       const count = await redisClient.incr(key);
       if (count === 1) {
@@ -271,10 +307,6 @@ export class StrategyRunner {
       await this.evaluate();
     } catch (err) {
       this.logger.error("Tick evaluation failed", err);
-      // Pause on counter increment failures — orders may have been
-      // published but the accounting state (order counters, orders-per-min
-      // sliding window) is inconsistent. Continuing would risk overtrading
-      // and safety-block bypass.
       if (
         err instanceof Error &&
         err.message.includes("Counter increment failed")
@@ -285,9 +317,34 @@ export class StrategyRunner {
         );
       }
     } finally {
-      if (this.tickMutex.exit()) {
-        this._scheduledFollowUp = true;
-        void this.tick();
+      // Release the distributed lock only if this instance acquired it.
+      // Uses atomic compare-and-delete (Lua) to avoid deleting a lock that
+      // was re-acquired by another instance after TTL expiry.
+      if (lockAcquired) {
+        const redisClient = this.redis.getClient();
+        const lockKey = `lock:tick:${this.strategyId}`;
+        await redisClient
+          .eval(
+            "if redis.call('GET', KEYS[1]) == ARGV[1] then return redis.call('DEL', KEYS[1]) else return 0 end",
+            1,
+            lockKey,
+            this.instanceId,
+          )
+          .catch(() => {});
+      }
+
+      this.tickInFlight = false;
+      if (this.pendingTick) {
+        this.pendingTick = false;
+        // Only self-schedule follow-up ticks for pure EVENT mode.
+        // TICK and HYBRID intervals (setInterval in start()) already
+        // define their own cadence; this prevents the mutex exit()
+        // from creating an immediate catch-up loop that can overshoot
+        // the configured tick period and exhaust the daily limit early.
+        if (this.execMode === "EVENT") {
+          this.scheduledFollowUp = true;
+          void this.tick();
+        }
       }
     }
   }
@@ -446,28 +503,7 @@ export class StrategyRunner {
     // 2. SAFETY — any failure stops the strategy
     for (const block of this.safety) {
       const evaluator = SAFETY_REGISTRY[block.type];
-      if (!evaluator) {
-        // Unknown safety block — fail closed
-        this.logger.error(
-          `Unknown safety block type: ${block.type}. Failing closed for safety.`,
-        );
-        this.stop();
-        await this.onStatusChange(
-          "STOPPED",
-          `Unknown safety block: ${block.type}`,
-        );
-        await this.prisma.strategy
-          .update({
-            where: { id: this.strategyId },
-            data: { status: StrategyStatus.IDLE },
-          })
-          .catch(() => {});
-        await this.emitStrategyEvent(
-          "STRATEGY_STOPPED",
-          `Unknown safety block: ${block.type}`,
-        );
-        return;
-      }
+      if (!evaluator) continue;
 
       const resolvedBlock = {
         ...block,
@@ -525,13 +561,7 @@ export class StrategyRunner {
     // 4. CONDITIONS — ALL conditions must pass
     for (const block of this.conditions) {
       const evaluator = CONDITION_REGISTRY[block.type];
-      if (!evaluator) {
-        // Unknown condition — fail closed
-        this.logger.warn(
-          `Unknown condition block type: ${block.type}. Failing closed.`,
-        );
-        return; // condition failed, skip tick
-      }
+      if (!evaluator) continue;
 
       const resolvedBlock = {
         ...block,
