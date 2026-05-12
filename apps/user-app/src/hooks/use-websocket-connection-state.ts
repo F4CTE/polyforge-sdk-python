@@ -6,7 +6,10 @@ export function useWebSocketConnectionState(): ConnectionState {
     wsManager.getConnectionState(),
   );
 
-  useEffect(() => wsManager.addConnectionListener(setConnectionState), []);
+  useEffect(() => {
+    const unsubscribe = wsManager.addConnectionListener(setConnectionState);
+    return unsubscribe;
+  }, []);
 
   return connectionState;
 }
