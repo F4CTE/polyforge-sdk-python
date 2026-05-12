@@ -36,10 +36,10 @@ export default defineConfig({
                 'src/**/*.controller.ts',  // thin HTTP adapters — service logic is fully tested
             ],
             thresholds: {
-                lines: 60,
-                functions: 58,
-                branches: 54, // lowered from 56 after ESLint cleanup (f3b9f36e) added explicit type guards; raise as service tests expand
-                statements: 60,
+                lines: 75,
+                functions: 75,
+                branches: 70,
+                statements: 75,
             },
         },
     },

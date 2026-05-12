@@ -20,10 +20,10 @@ export default defineConfig({
                 'src/common/**',        // health controller — trivial infrastructure
             ],
             thresholds: {
-                lines: 81,
-                functions: 74,
-                branches: 75,
-                statements: 81,
+                lines: 85,
+                functions: 80,
+                branches: 78,
+                statements: 85,
             },
         },
     },
