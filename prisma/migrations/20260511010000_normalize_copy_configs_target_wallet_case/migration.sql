@@ -59,6 +59,50 @@ UPDATE "copy_trades" ct
   FROM duplicate dup
  WHERE ct."configId" = dup.duplicate_id;
 
+-- Merge aggregate fields (totalCopied, totalPnl) from duplicate configs
+-- into the keeper before deletion.  Without this, config-level metrics
+-- are silently undercounted for users who had case-variant duplicates:
+-- trade history is preserved, but counters regress.  These counters are
+-- maintained incrementally in CopyEngineService and consumed by copy/AI
+-- dashboards and summaries.
+WITH
+    grouped_agg AS (
+        SELECT
+            id,
+            "userId",
+            lower("targetWallet") AS lower_wallet,
+            row_number() OVER (
+                PARTITION BY "userId", lower("targetWallet")
+                ORDER BY "createdAt" ASC, id ASC
+            ) AS rn
+        FROM "copy_configs"
+    ),
+    keeper_agg AS (
+        SELECT id, "userId", lower_wallet
+          FROM grouped_agg
+         WHERE rn = 1
+    ),
+    duplicate_agg AS (
+        SELECT g.id AS duplicate_id, k.id AS keeper_id
+          FROM grouped_agg g
+          JOIN keeper_agg k
+            ON k."userId" = g."userId"
+           AND k.lower_wallet = g.lower_wallet
+         WHERE g.rn > 1
+    )
+UPDATE "copy_configs" cc
+   SET "totalCopied" = cc."totalCopied" + COALESCE(agg.total_copied, 0),
+       "totalPnl"    = cc."totalPnl"    + COALESCE(agg.total_pnl, 0)
+  FROM (
+      SELECT dup.keeper_id,
+             SUM(dcfg."totalCopied")::int AS total_copied,
+             SUM(dcfg."totalPnl")         AS total_pnl
+        FROM duplicate_agg dup
+        JOIN "copy_configs" dcfg ON dcfg.id = dup.duplicate_id
+       GROUP BY dup.keeper_id
+  ) agg
+ WHERE cc.id = agg.keeper_id;
+
 -- Step 2: Delete duplicate configs (trades already reassigned, safe to
 -- cascade-remove any remaining child rows like copy-trade references).
 DELETE FROM "copy_configs"
