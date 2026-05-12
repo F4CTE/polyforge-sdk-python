@@ -603,8 +603,8 @@ services:
     volumes:
       - ./services/gateway/nginx.dev.conf:/etc/nginx/nginx.conf:ro
     ports:
-      - "80:80"
-      - "8080:8080"
+      - "80:80" # nosemgrep: docker-compose-port-no-loopback — public entry point
+      - "8080:8080" # nosemgrep: docker-compose-port-no-loopback — public entry point
     networks: [internal, admin-only]
     depends_on:
       - user-app
