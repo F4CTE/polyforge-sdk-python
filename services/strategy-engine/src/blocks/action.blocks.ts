@@ -256,8 +256,22 @@ export const ScaleOutAction: ActionEvaluator = {
   async execute(block, ctx, redis, prisma): Promise<ActionResult> {
     const params = (block["params"] as BlockParams) ?? {};
     const tokenId = String(params.tokenId ?? "");
-    const reduceBySize = String(params.reduceBySize ?? "0");
+    const reduceBySizeRaw = String(params.reduceBySize ?? "0");
     const orderType = toOrderType(params.orderType);
+
+    const position = await prisma.position.findUnique({
+      where: { userId_tokenId: { userId: ctx.userId, tokenId } },
+    });
+    const positionSize = parseFiniteDecimal(position?.size);
+    if (!position || positionSize === null || positionSize === 0)
+      return { intents: [] };
+
+    const reduceByParsed = parseFiniteDecimal(reduceBySizeRaw);
+    if (reduceByParsed === null || reduceByParsed <= 0)
+      return { intents: [] };
+
+    const reduceBySize = String(Math.min(reduceByParsed, positionSize));
+
     const resolved = await resolveMarket(tokenId, prisma);
     if (!resolved) return { intents: [] };
 
