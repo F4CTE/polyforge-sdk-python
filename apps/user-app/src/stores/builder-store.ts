@@ -175,8 +175,11 @@ export const useBuilderStore = create<BuilderState>((set, get) => ({
   setNodes: (nodes) => set({ nodes, dirty: true }),
 
   onNodesChange: (changes) => {
+    const hasRemovals = changes.some((c) => c.type === 'remove');
+    const state = get();
     set({
-      nodes: applyNodeChanges(changes, get().nodes) as Node<BlockNodeData>[],
+      ...(hasRemovals ? pushHistory(state.nodes, state) : {}),
+      nodes: applyNodeChanges(changes, state.nodes) as Node<BlockNodeData>[],
       dirty: true,
     });
   },

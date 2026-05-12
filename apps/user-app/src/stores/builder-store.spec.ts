@@ -428,3 +428,179 @@ describe('loadStrategy restores logic blocks', () => {
     expect(logicNodes[1].data.type).toBe('AND_GATE');
   });
 });
+
+// ─── Keyboard delete undo history ────────────────────────────────────────────
+
+describe('onNodesChange undo history', () => {
+  it('pushes history when nodes are removed via keyboard delete', () => {
+    useBuilderStore.getState().addVariable();
+    useBuilderStore.getState().addVariable();
+    const nodes = useBuilderStore.getState().nodes;
+    const nodeId = nodes[0].id;
+
+    const historyBefore = useBuilderStore.getState()._history.length;
+
+    useBuilderStore.getState().onNodesChange([{ type: 'remove', id: nodeId }]);
+
+    expect(useBuilderStore.getState()._history).toHaveLength(historyBefore + 1);
+  });
+
+  it('does not push history for non-removal changes (position, select)', () => {
+    useBuilderStore.getState().addVariable();
+    const nodeId = useBuilderStore.getState().nodes[0].id;
+    const historyBefore = useBuilderStore.getState()._history.length;
+
+    useBuilderStore.getState().onNodesChange([
+      { type: 'position', id: nodeId, position: { x: 100, y: 200 } },
+    ]);
+
+    expect(useBuilderStore.getState()._history).toHaveLength(historyBefore);
+  });
+
+  it('does not push history for select-only changes', () => {
+    useBuilderStore.getState().addVariable();
+    const nodeId = useBuilderStore.getState().nodes[0].id;
+    const historyBefore = useBuilderStore.getState()._history.length;
+
+    useBuilderStore.getState().onNodesChange([
+      { type: 'select', id: nodeId, selected: true },
+    ]);
+
+    expect(useBuilderStore.getState()._history).toHaveLength(historyBefore);
+  });
+
+  it('undo restores keyboard-deleted nodes', () => {
+    useBuilderStore.getState().addVariable();
+    const nodeId = useBuilderStore.getState().nodes[0].id;
+
+    expect(useBuilderStore.getState().nodes).toHaveLength(1);
+
+    useBuilderStore.getState().onNodesChange([{ type: 'remove', id: nodeId }]);
+
+    expect(useBuilderStore.getState().nodes).toHaveLength(0);
+
+    useBuilderStore.getState().undo();
+
+    expect(useBuilderStore.getState().nodes).toHaveLength(1);
+    expect(useBuilderStore.getState().nodes[0].id).toBe(nodeId);
+  });
+
+  it('redo restores the keyboard deletion after undo', () => {
+    useBuilderStore.getState().addVariable();
+    const nodeId = useBuilderStore.getState().nodes[0].id;
+
+    useBuilderStore.getState().onNodesChange([{ type: 'remove', id: nodeId }]);
+    expect(useBuilderStore.getState().nodes).toHaveLength(0);
+
+    useBuilderStore.getState().undo();
+    expect(useBuilderStore.getState().nodes).toHaveLength(1);
+
+    useBuilderStore.getState().redo();
+    expect(useBuilderStore.getState().nodes).toHaveLength(0);
+  });
+
+  it('clears future history after a new keyboard deletion', () => {
+    useBuilderStore.getState().addVariable();
+    useBuilderStore.getState().addVariable();
+    const [node1, node2] = useBuilderStore.getState().nodes;
+
+    // Delete first node
+    useBuilderStore.getState().onNodesChange([{ type: 'remove', id: node1.id }]);
+    // Delete second node
+    useBuilderStore.getState().onNodesChange([{ type: 'remove', id: node2.id }]);
+
+    // Undo once (restore node2)
+    useBuilderStore.getState().undo();
+    expect(useBuilderStore.getState().nodes).toHaveLength(1);
+    expect(useBuilderStore.getState()._future).toHaveLength(1);
+
+    // Delete the restored node again — future should clear
+    useBuilderStore.getState().onNodesChange([
+      { type: 'remove', id: useBuilderStore.getState().nodes[0].id },
+    ]);
+    expect(useBuilderStore.getState()._future).toHaveLength(0);
+  });
+});
+
+describe('onEdgesChange undo history', () => {
+  it('does not push history when edges are removed via keyboard delete', () => {
+    useBuilderStore.getState().addVariable();
+    const nodeId = useBuilderStore.getState().nodes[0].id;
+
+    useBuilderStore.setState({
+      edges: [
+        {
+          id: 'e1',
+          source: nodeId,
+          target: 'some-block',
+          type: 'smoothstep',
+          animated: true,
+        },
+      ],
+    });
+
+    const historyBefore = useBuilderStore.getState()._history.length;
+
+    useBuilderStore.getState().onEdgesChange([{ type: 'remove', id: 'e1' }]);
+
+    expect(useBuilderStore.getState()._history).toHaveLength(historyBefore);
+    expect(useBuilderStore.getState().edges).toHaveLength(0);
+  });
+
+  it('does not push history for select-only edge changes', () => {
+    useBuilderStore.getState().addVariable();
+    const nodeId = useBuilderStore.getState().nodes[0].id;
+
+    useBuilderStore.setState({
+      edges: [
+        {
+          id: 'e1',
+          source: nodeId,
+          target: 'some-block',
+          type: 'smoothstep',
+          animated: true,
+        },
+      ],
+    });
+
+    const historyBefore = useBuilderStore.getState()._history.length;
+
+    useBuilderStore.getState().onEdgesChange([
+      { type: 'select', id: 'e1', selected: true },
+    ]);
+
+    expect(useBuilderStore.getState()._history).toHaveLength(historyBefore);
+  });
+
+  it('does not clear future history when edges are removed', () => {
+    useBuilderStore.getState().addVariable();
+    const nodeId = useBuilderStore.getState().nodes[0].id;
+
+    // Set up some future history
+    useBuilderStore.getState().addVariable();
+    useBuilderStore.getState().addVariable();
+    const node2Id = useBuilderStore.getState().nodes[1].id;
+    useBuilderStore.getState().onNodesChange([{ type: 'remove', id: node2Id }]);
+    useBuilderStore.getState().undo();
+
+    const futureBefore = useBuilderStore.getState()._future.length;
+    expect(futureBefore).toBeGreaterThan(0);
+
+    useBuilderStore.setState({
+      edges: [
+        {
+          id: 'e1',
+          source: nodeId,
+          target: 'some-block',
+          type: 'smoothstep',
+          animated: true,
+        },
+      ],
+    });
+
+    useBuilderStore.getState().onEdgesChange([{ type: 'remove', id: 'e1' }]);
+
+    // Future should be preserved — edge deletions do not push history
+    expect(useBuilderStore.getState()._future).toHaveLength(futureBefore);
+  });
+});
