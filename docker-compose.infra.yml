@@ -203,8 +203,7 @@ services:
       context: .
       dockerfile: services/signer-service/Dockerfile
     environment:
-      # SECURITY: Signer uses direct DB connection (not pgbouncer) for credential operations
-      DATABASE_URL: postgresql://poly:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}@postgres:5432/polyforge
+      DATABASE_URL: postgresql://poly:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}@pgbouncer:5432/polyforge?pgbouncer=true&connection_limit=1
       DIRECT_DATABASE_URL: postgresql://poly:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}@postgres:5432/polyforge
       REDIS_URL: redis://:${REDIS_PASSWORD:?REDIS_PASSWORD is required}@redis:6379
       INTERNAL_JWT_SECRET: "${INTERNAL_JWT_SECRET:?INTERNAL_JWT_SECRET is required}"
@@ -221,11 +220,13 @@ services:
       GAS_SPONSOR_ENABLED: ${GAS_SPONSOR_ENABLED:-false}
       GAS_DAILY_LIMIT_MATIC: ${GAS_DAILY_LIMIT_MATIC:-0.5}
       GAS_ESTIMATE_MATIC: ${GAS_ESTIMATE_MATIC:-0.002}
+      PRISMA_POOL_SIZE: "5"
       PORT: "3012"
       NODE_ENV: ${NODE_ENV:?NODE_ENV must be set}
     networks: [internal, signer-only]
     depends_on:
       postgres: { condition: service_healthy }
+      pgbouncer: { condition: service_started }
     restart: unless-stopped
 
   # ─── STRATEGY ENGINE ─────────────────────────────────────────────────────
@@ -235,17 +236,19 @@ services:
       context: .
       dockerfile: services/strategy-engine/Dockerfile
     environment:
-      DATABASE_URL: postgresql://poly:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}@postgres:5432/polyforge
+      DATABASE_URL: postgresql://poly:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}@pgbouncer:5432/polyforge?pgbouncer=true&connection_limit=1
       DIRECT_DATABASE_URL: postgresql://poly:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}@postgres:5432/polyforge
       REDIS_URL: redis://:${REDIS_PASSWORD:?REDIS_PASSWORD is required}@redis:6379
       INTERNAL_JWT_SECRET: "${INTERNAL_JWT_SECRET:?INTERNAL_JWT_SECRET is required}"
       SENTRY_DSN: ${SENTRY_DSN:-}
+      PRISMA_POOL_SIZE: "15"
       PORT: "3006"
     ports:
       - "127.0.0.1:3006:3006"
     networks: [internal]
     depends_on:
       postgres: { condition: service_healthy }
+      pgbouncer: { condition: service_started }
       redis: { condition: service_healthy }
     restart: unless-stopped
 
@@ -256,7 +259,7 @@ services:
       context: .
       dockerfile: services/order-service/Dockerfile
     environment:
-      DATABASE_URL: postgresql://poly:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}@postgres:5432/polyforge
+      DATABASE_URL: postgresql://poly:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}@pgbouncer:5432/polyforge?pgbouncer=true&connection_limit=1
       DIRECT_DATABASE_URL: postgresql://poly:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}@postgres:5432/polyforge
       REDIS_URL: redis://:${REDIS_PASSWORD:?REDIS_PASSWORD is required}@redis:6379
       INTERNAL_JWT_SECRET: "${INTERNAL_JWT_SECRET:?INTERNAL_JWT_SECRET is required}"
@@ -266,12 +269,14 @@ services:
       POLYMARKET_US_ENABLED: ${POLYMARKET_US_ENABLED:-false}
       POLYMARKET_US_API_URL: ${POLYMARKET_US_API_URL:-https://api.polymarket.us}
       POLYMARKET_US_WS_URL: ${POLYMARKET_US_WS_URL:-wss://ws.polymarket.us}
+      PRISMA_POOL_SIZE: "15"
       PORT: "3007"
     ports:
       - "127.0.0.1:3007:3007"
     networks: [internal, signer-only]
     depends_on:
       postgres: { condition: service_healthy }
+      pgbouncer: { condition: service_started }
       redis: { condition: service_healthy }
       signer-service: { condition: service_started }
     restart: unless-stopped
@@ -283,7 +288,7 @@ services:
       context: .
       dockerfile: services/api-service/Dockerfile
     environment:
-      DATABASE_URL: postgresql://poly:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}@postgres:5432/polyforge
+      DATABASE_URL: postgresql://poly:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}@pgbouncer:5432/polyforge?pgbouncer=true&connection_limit=1
       DIRECT_DATABASE_URL: postgresql://poly:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}@postgres:5432/polyforge
       REDIS_URL: redis://:${REDIS_PASSWORD:?REDIS_PASSWORD is required}@redis:6379
       JWT_SECRET: "${USER_JWT_SECRET:?USER_JWT_SECRET is required}"
@@ -312,6 +317,7 @@ services:
     networks: [internal]
     depends_on:
       postgres: { condition: service_healthy }
+      pgbouncer: { condition: service_started }
       redis: { condition: service_healthy }
       migrate-user: { condition: service_completed_successfully }
     restart: unless-stopped
@@ -324,10 +330,11 @@ services:
       context: .
       dockerfile: services/paper-order-service/Dockerfile
     environment:
-      DATABASE_URL: postgresql://poly:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}@postgres:5432/polyforge
+      DATABASE_URL: postgresql://poly:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}@pgbouncer:5432/polyforge?pgbouncer=true&connection_limit=1
       DIRECT_DATABASE_URL: postgresql://poly:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}@postgres:5432/polyforge
       REDIS_URL: redis://:${REDIS_PASSWORD:?REDIS_PASSWORD is required}@redis:6379
       INTERNAL_JWT_SECRET: "${INTERNAL_JWT_SECRET:?INTERNAL_JWT_SECRET is required}"
+      PRISMA_POOL_SIZE: "5"
       PORT: "3008"
       NODE_ENV: ${NODE_ENV:?NODE_ENV must be set}
     ports:
@@ -335,6 +342,7 @@ services:
     networks: [internal]
     depends_on:
       postgres: { condition: service_healthy }
+      pgbouncer: { condition: service_started }
       redis: { condition: service_healthy }
       migrate-user: { condition: service_completed_successfully }
     restart: unless-stopped
@@ -346,10 +354,11 @@ services:
       context: .
       dockerfile: services/backtest-service/Dockerfile
     environment:
-      DATABASE_URL: postgresql://poly:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}@postgres:5432/polyforge
+      DATABASE_URL: postgresql://poly:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}@pgbouncer:5432/polyforge?pgbouncer=true&connection_limit=1
       DIRECT_DATABASE_URL: postgresql://poly:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}@postgres:5432/polyforge
       REDIS_URL: redis://:${REDIS_PASSWORD:?REDIS_PASSWORD is required}@redis:6379
       INTERNAL_JWT_SECRET: "${INTERNAL_JWT_SECRET:?INTERNAL_JWT_SECRET is required}"
+      PRISMA_POOL_SIZE: "5"
       PORT: "3009"
       NODE_ENV: ${NODE_ENV:?NODE_ENV must be set}
     ports:
@@ -357,6 +366,7 @@ services:
     networks: [internal]
     depends_on:
       postgres: { condition: service_healthy }
+      pgbouncer: { condition: service_started }
       redis: { condition: service_healthy }
       migrate-user: { condition: service_completed_successfully }
     restart: unless-stopped
@@ -369,7 +379,7 @@ services:
       context: .
       dockerfile: services/notification-service/Dockerfile
     environment:
-      DATABASE_URL: postgresql://poly:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}@postgres:5432/polyforge
+      DATABASE_URL: postgresql://poly:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}@pgbouncer:5432/polyforge?pgbouncer=true&connection_limit=1
       DIRECT_DATABASE_URL: postgresql://poly:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}@postgres:5432/polyforge
       REDIS_URL: redis://:${REDIS_PASSWORD:?REDIS_PASSWORD is required}@redis:6379
       EMAIL_DRIVER: ${EMAIL_DRIVER:-mailhog}
@@ -385,6 +395,7 @@ services:
       TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-dev-disabled}
       DISCORD_BOT_TOKEN: ${DISCORD_BOT_TOKEN:-dev-disabled}
       FRONTEND_URL: ${FRONTEND_URL:-http://localhost}
+      PRISMA_POOL_SIZE: "5"
       PORT: "3010"
       NODE_ENV: ${NODE_ENV:?NODE_ENV must be set}
     ports:
@@ -392,6 +403,7 @@ services:
     networks: [internal]
     depends_on:
       postgres: { condition: service_healthy }
+      pgbouncer: { condition: service_started }
       redis: { condition: service_healthy }
       migrate-user: { condition: service_completed_successfully }
       mailhog: { condition: service_started }
@@ -405,7 +417,7 @@ services:
       context: .
       dockerfile: services/bot-service/Dockerfile
     environment:
-      DATABASE_URL: postgresql://poly:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}@postgres:5432/polyforge
+      DATABASE_URL: postgresql://poly:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}@pgbouncer:5432/polyforge?pgbouncer=true&connection_limit=1
       DIRECT_DATABASE_URL: postgresql://poly:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}@postgres:5432/polyforge
       REDIS_URL: redis://:${REDIS_PASSWORD:?REDIS_PASSWORD is required}@redis:6379
       STRATEGY_ENGINE_URL: http://strategy-engine:3006
@@ -420,6 +432,7 @@ services:
       WHATSAPP_VERIFY_TOKEN: ${WHATSAPP_VERIFY_TOKEN:-}
       WHATSAPP_APP_SECRET: ${WHATSAPP_APP_SECRET:-}
       API_SERVICE_URL: http://api-service:3002
+      PRISMA_POOL_SIZE: "5"
       PORT: "3011"
       NODE_ENV: ${NODE_ENV:?NODE_ENV must be set}
     ports:
@@ -427,6 +440,7 @@ services:
     networks: [internal]
     depends_on:
       postgres: { condition: service_healthy }
+      pgbouncer: { condition: service_started }
       redis: { condition: service_healthy }
       migrate-user: { condition: service_completed_successfully }
     restart: unless-stopped
@@ -438,9 +452,9 @@ services:
       context: .
       dockerfile: services/admin-api-service/Dockerfile
     environment:
-      DATABASE_URL: postgresql://poly:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}@postgres:5432/polyforge
+      DATABASE_URL: postgresql://poly:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}@pgbouncer:5432/polyforge?pgbouncer=true&connection_limit=1
       DIRECT_DATABASE_URL: postgresql://poly:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}@postgres:5432/polyforge
-      ADMIN_DATABASE_URL: postgresql://poly_admin:${POSTGRES_ADMIN_PASSWORD:?POSTGRES_ADMIN_PASSWORD is required}@pgbouncer-admin:5432/polyforge_admin?connect_timeout=10
+      ADMIN_DATABASE_URL: postgresql://poly_admin:${POSTGRES_ADMIN_PASSWORD:?POSTGRES_ADMIN_PASSWORD is required}@pgbouncer-admin:5432/polyforge_admin?pgbouncer=true&connection_limit=1
       ADMIN_DIRECT_DATABASE_URL: postgresql://poly_admin:${POSTGRES_ADMIN_PASSWORD:?POSTGRES_ADMIN_PASSWORD is required}@postgres-admin:5432/polyforge_admin
       REDIS_URL: redis://:${REDIS_PASSWORD:?REDIS_PASSWORD is required}@redis:6379
       ADMIN_JWT_SECRET: "${ADMIN_JWT_SECRET:?ADMIN_JWT_SECRET is required}"
@@ -457,6 +471,7 @@ services:
       FRONTEND_URL: ${FRONTEND_URL:-http://localhost}
       ADMIN_CORS_ORIGINS: ${ADMIN_CORS_ORIGINS:-https://localhost:8443,https://polyforge-lab:8443}
       SENTRY_DSN: ${SENTRY_DSN:-}
+      PRISMA_POOL_SIZE: "5"
       PORT: "3004"
       NODE_ENV: ${NODE_ENV:?NODE_ENV must be set}
     ports:
@@ -464,6 +479,7 @@ services:
     networks: [internal, admin-only]
     depends_on:
       postgres: { condition: service_healthy }
+      pgbouncer: { condition: service_started }
       postgres-admin: { condition: service_healthy }
       pgbouncer-admin: { condition: service_started }
       redis: { condition: service_healthy }
@@ -481,7 +497,7 @@ services:
       context: .
       dockerfile: services/auth-service/Dockerfile
     environment:
-      DATABASE_URL: postgresql://poly:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}@postgres:5432/polyforge
+      DATABASE_URL: postgresql://poly:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}@pgbouncer:5432/polyforge?pgbouncer=true&connection_limit=1
       DIRECT_DATABASE_URL: postgresql://poly:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}@postgres:5432/polyforge
       REDIS_URL: redis://:${REDIS_PASSWORD:?REDIS_PASSWORD is required}@redis:6379
       USER_JWT_SECRET: "${USER_JWT_SECRET:?USER_JWT_SECRET is required}"
@@ -502,6 +518,7 @@ services:
       COOKIE_SECURE: ${COOKIE_SECURE:-false}
       CORS_ORIGINS: ${CORS_ORIGINS:-http://polyforge-lab,http://polyforge-lab:8080,https://polyforge-lab,https://polyforge-lab:8443,https://localhost}
       SENTRY_DSN: ${SENTRY_DSN:-}
+      PRISMA_POOL_SIZE: "5"
       AUTH_SERVICE_PORT: "3001"
       NODE_ENV: ${NODE_ENV:?NODE_ENV must be set}
       CI: "${CI:-false}"
@@ -512,6 +529,7 @@ services:
     networks: [internal]
     depends_on:
       postgres: { condition: service_healthy }
+      pgbouncer: { condition: service_started }
       redis: { condition: service_healthy }
       mailhog: { condition: service_started }
       migrate-user: { condition: service_completed_successfully }
@@ -524,9 +542,9 @@ services:
       context: .
       dockerfile: services/admin-auth-service/Dockerfile
     environment:
-      DATABASE_URL: postgresql://poly:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}@postgres:5432/polyforge
+      DATABASE_URL: postgresql://poly:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}@pgbouncer:5432/polyforge?pgbouncer=true&connection_limit=1
       DIRECT_DATABASE_URL: postgresql://poly:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}@postgres:5432/polyforge
-      ADMIN_DATABASE_URL: postgresql://poly_admin:${POSTGRES_ADMIN_PASSWORD:?POSTGRES_ADMIN_PASSWORD is required}@pgbouncer-admin:5432/polyforge_admin?connect_timeout=10
+      ADMIN_DATABASE_URL: postgresql://poly_admin:${POSTGRES_ADMIN_PASSWORD:?POSTGRES_ADMIN_PASSWORD is required}@pgbouncer-admin:5432/polyforge_admin?pgbouncer=true&connection_limit=1
       ADMIN_DIRECT_DATABASE_URL: postgresql://poly_admin:${POSTGRES_ADMIN_PASSWORD:?POSTGRES_ADMIN_PASSWORD is required}@postgres-admin:5432/polyforge_admin
       REDIS_URL: redis://:${REDIS_PASSWORD:?REDIS_PASSWORD is required}@redis:6379
       ADMIN_JWT_SECRET: "${ADMIN_JWT_SECRET:?ADMIN_JWT_SECRET is required}"
@@ -534,6 +552,7 @@ services:
       COOKIE_SECURE: ${COOKIE_SECURE:-false}
       CORS_ORIGINS: ${CORS_ORIGINS:-http://polyforge-lab,http://polyforge-lab:8080,https://polyforge-lab,https://polyforge-lab:8443,https://localhost}
       SENTRY_DSN: ${SENTRY_DSN:-}
+      PRISMA_POOL_SIZE: "3"
       ADMIN_AUTH_SERVICE_PORT: "3003"
       NODE_ENV: ${NODE_ENV:?NODE_ENV must be set}
       CI: "${CI:-false}"
@@ -542,6 +561,7 @@ services:
     networks: [internal, admin-only]
     depends_on:
       postgres: { condition: service_healthy }
+      pgbouncer: { condition: service_started }
       postgres-admin: { condition: service_healthy }
       pgbouncer-admin: { condition: service_started }
       redis: { condition: service_healthy }
@@ -604,7 +624,7 @@ services:
       context: .
       dockerfile: services/market-data-service/Dockerfile
     environment:
-      DATABASE_URL: postgresql://poly:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}@postgres:5432/polyforge
+      DATABASE_URL: postgresql://poly:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}@pgbouncer:5432/polyforge?pgbouncer=true&connection_limit=1
       DIRECT_DATABASE_URL: postgresql://poly:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}@postgres:5432/polyforge
       REDIS_URL: redis://:${REDIS_PASSWORD:?REDIS_PASSWORD is required}@redis:6379
       INTERNAL_JWT_SECRET: "${INTERNAL_JWT_SECRET:?INTERNAL_JWT_SECRET is required}"
@@ -613,12 +633,14 @@ services:
       CLOB_API_URL: ${CLOB_API_URL:-https://clob.polymarket.com}
       CLOB_WS_URL: wss://ws-subscriptions-clob.polymarket.com/ws/market
       GAMMA_API_URL: https://gamma-api.polymarket.com
+      PRISMA_POOL_SIZE: "15"
       PORT: "3005"
     ports:
       - "127.0.0.1:3005:3005"
     networks: [internal]
     depends_on:
       postgres: { condition: service_healthy }
+      pgbouncer: { condition: service_started }
       redis: { condition: service_healthy }
     restart: unless-stopped
 
