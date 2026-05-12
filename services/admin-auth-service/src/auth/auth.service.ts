@@ -24,6 +24,7 @@ import { AdminLoginDto } from "./dto/login.dto";
 
 const PENDING_TOTP_TTL = 300; // 5 minutes
 const ALGORITHM = "aes-256-gcm";
+const TOTP_REPLAY_WINDOW = 90; // covers adjacent valid TOTP steps
 
 @Injectable()
 export class AuthService implements OnModuleInit {
@@ -148,6 +149,21 @@ export class AuthService implements OnModuleInit {
       );
     }
 
+    // Check replay — the same TOTP code must not be used twice within its validity window
+    const consumed = await client.set(
+      `admin:totp:used:${adminId}:${code}`,
+      "1",
+      "EX",
+      TOTP_REPLAY_WINDOW,
+      "NX",
+    );
+    if (consumed !== "OK") {
+      throw new HttpException(
+        { code: "TOTP_INVALID", message: "TOTP code already used" },
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
     // Clear failure counter on successful confirmation
     await client.del(confirmFailKey).catch(() => {});
 
@@ -232,7 +248,13 @@ export class AuthService implements OnModuleInit {
     }
 
     // Re-authenticate: verify current TOTP code
-    const secret = this.decrypt(admin.totpSecret!);
+    if (!admin.totpSecret) {
+      throw new HttpException(
+        { code: "TOTP_NOT_ENABLED", message: "TOTP secret not found" },
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+    const secret = this.decrypt(admin.totpSecret);
     let totpValid = false;
     try {
       totpValid = verifySync({
@@ -246,6 +268,23 @@ export class AuthService implements OnModuleInit {
     if (!totpValid) {
       throw new HttpException(
         { code: "RE_AUTH_FAILED", message: "Invalid TOTP code" },
+        HttpStatus.UNAUTHORIZED,
+      );
+    }
+
+    // Check replay — the same TOTP code must not be used twice within its validity window
+    const consumed = await this.redis
+      .getClient()
+      .set(
+        `admin:totp:used:${adminId}:${totpCode}`,
+        "1",
+        "EX",
+        TOTP_REPLAY_WINDOW,
+        "NX",
+      );
+    if (consumed !== "OK") {
+      throw new HttpException(
+        { code: "RE_AUTH_FAILED", message: "TOTP code already used" },
         HttpStatus.UNAUTHORIZED,
       );
     }
@@ -333,7 +372,13 @@ export class AuthService implements OnModuleInit {
         );
       }
 
-      const secret = this.decrypt(admin.totpSecret!);
+      if (!admin.totpSecret) {
+        throw new HttpException(
+          { code: "TOTP_INVALID", message: "TOTP secret not found" },
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+      const secret = this.decrypt(admin.totpSecret);
       let totpValid = false;
       try {
         totpValid = verifySync({
@@ -347,6 +392,40 @@ export class AuthService implements OnModuleInit {
 
       if (!totpValid) {
         // Increment failure counter
+        const client = this.redis.getClient();
+        const newCount = await client.incr(totpLockKey);
+        if (newCount === 1) await client.expire(totpLockKey, 900);
+
+        throw new HttpException(
+          { code: "TOTP_INVALID", message: "Invalid 2FA code" },
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+
+      // Best-effort replay protection — fail open on Redis write errors
+      let consumed: string | null = "OK";
+      try {
+        consumed = await this.redis
+          .getClient()
+          .set(
+            `admin:totp:used:${admin.id}:${dto.totpCode}`,
+            "1",
+            "EX",
+            TOTP_REPLAY_WINDOW,
+            "NX",
+          );
+      } catch (error) {
+        this.logger.warn(
+          {
+            event: "TOTP_REPLAY_CHECK_FAILED",
+            adminId: admin.id,
+            error: String(error),
+          },
+          "Redis replay-key write failed during admin login",
+        );
+      }
+      if (consumed !== "OK") {
+        // Count replay attempts toward the per-account TOTP lockout
         const client = this.redis.getClient();
         const newCount = await client.incr(totpLockKey);
         if (newCount === 1) await client.expire(totpLockKey, 900);
