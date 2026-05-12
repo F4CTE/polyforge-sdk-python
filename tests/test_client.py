@@ -4682,14 +4682,33 @@ class TestCrossVenueArbitrage:
     def test_sync_sync_market_matches(self):
         from unittest.mock import MagicMock
         client = PolyforgeClient(api_key="test-key")
-        client._post = MagicMock(return_value={"matched": 12})
+        client._post = MagicMock(return_value={"matched": 12, "created": 3, "updated": 5})
         result = client.sync_market_matches()
         assert isinstance(result, MatchSyncResult)
         assert result.matched == 12
+        assert result.created == 3
+        assert result.updated == 5
         client._post.assert_called_once_with(
             "/api/v1/arbitrage/matches/sync",
         )
         client.close()
+
+    def test_async_sync_market_matches(self):
+        import asyncio
+        from unittest.mock import AsyncMock
+
+        async def _run():
+            client = AsyncPolyforgeClient(api_key="test-key")
+            client._post = AsyncMock(return_value={"matched": 8, "created": 2, "updated": 1})
+            result = await client.sync_market_matches()
+            assert isinstance(result, MatchSyncResult)
+            assert result.matched == 8
+            assert result.created == 2
+            assert result.updated == 1
+            client._post.assert_called_once_with("/api/v1/arbitrage/matches/sync")
+            await client.close()
+
+        asyncio.run(_run())
 
     def test_sync_get_spread_comparison(self):
         from unittest.mock import MagicMock
@@ -4863,16 +4882,34 @@ class TestHealthEndpoint:
         assert isinstance(result, SystemHealthAuthenticated)
         assert result.status == "operational"
         assert result.service == "api-service"
+        assert result.queue_depth == 0
         assert result.db == {"connections": 5, "status": "ok"}
         client._get.assert_called_once_with("/api/v1/status")
         client.close()
 
-    def test_async_get_health_authenticated_is_coroutine(self):
-        import inspect
-        assert hasattr(AsyncPolyforgeClient, "get_health_authenticated"), \
-            "AsyncPolyforgeClient missing get_health_authenticated"
-        source = inspect.getsource(AsyncPolyforgeClient.get_health_authenticated)
-        assert "await" in source, "async get_health_authenticated not using await"
+    def test_async_get_health_authenticated(self):
+        import asyncio
+        from unittest.mock import AsyncMock
+
+        async def _run():
+            client = AsyncPolyforgeClient(api_key="test-key")
+            client._get = AsyncMock(return_value={
+                "status": "operational",
+                "service": "api-service",
+                "version": "2.0.0",
+                "uptime": 3600.0,
+                "db": {"connections": 5, "status": "ok"},
+                "redis": {"memoryUsageMb": 128, "status": "ok"},
+                "queueDepth": 0,
+            })
+            result = await client.get_health_authenticated()
+            assert isinstance(result, SystemHealthAuthenticated)
+            assert result.status == "operational"
+            assert result.queue_depth == 0
+            client._get.assert_called_once_with("/api/v1/status")
+            await client.close()
+
+        asyncio.run(_run())
 
     def test_async_get_health_authenticated_behavioral(self):
         import asyncio
