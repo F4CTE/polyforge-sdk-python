@@ -6,7 +6,10 @@ import {
   OrderIntent,
 } from "./block.types";
 import { PrismaService } from "@polyforge/shared-db";
-import { parseFiniteDecimal } from "@polyforge/shared-types";
+import {
+  parseFiniteDecimal,
+  validateStopLossTakeProfitPct,
+} from "@polyforge/shared-types";
 
 type BlockParams = Record<string, string | number | undefined>;
 type OrderType = "GTC" | "FOK" | "GTD" | "FAK";
@@ -156,11 +159,9 @@ export const SetStopLossAction: ActionEvaluator = {
       return { intents: [] };
 
     const avgPrice = parseFiniteDecimal(position.avgPrice);
-    const pctNum = parseFiniteDecimal(pct);
-    const stopPrice =
-      avgPrice === null || pctNum === null
-        ? Number.NaN
-        : avgPrice * (1 - pctNum);
+    const pctNum = validateStopLossTakeProfitPct(pct, "set_stop_loss");
+
+    const stopPrice = avgPrice === null ? Number.NaN : avgPrice * (1 - pctNum);
     const resolved = await resolveMarket(tokenId, prisma);
     if (!resolved) return { intents: [] };
 
@@ -195,11 +196,9 @@ export const TakeProfitAction: ActionEvaluator = {
       return { intents: [] };
 
     const avgPrice = parseFiniteDecimal(position.avgPrice);
-    const pctNum = parseFiniteDecimal(pct);
-    const tpPrice =
-      avgPrice === null || pctNum === null
-        ? Number.NaN
-        : avgPrice * (1 + pctNum);
+    const pctNum = validateStopLossTakeProfitPct(pct, "take_profit");
+
+    const tpPrice = avgPrice === null ? Number.NaN : avgPrice * (1 + pctNum);
     const resolved = await resolveMarket(tokenId, prisma);
     if (!resolved) return { intents: [] };
 

@@ -33,6 +33,7 @@ import { PaginationDto } from "../common/dto/pagination.dto";
 import { LlmService } from "../news/llm.service";
 import { BETA_LIMITS } from "../common/beta-limits.config";
 import { assertCurrentUsRailTermsAccepted } from "../common/us-rail-terms";
+import { validateBlockConfigs } from "./validation/block-config.validator";
 
 const MAX_COMMENTS_PER_USER_PER_STRATEGY = 50;
 
@@ -86,6 +87,18 @@ export class StrategiesService {
         code: "STRATEGY_LIMIT_REACHED",
         message: `Beta limit: maximum ${BETA_LIMITS.maxActiveStrategies} active strategies allowed. Archive existing strategies to create new ones.`,
       });
+    }
+
+    // Validate block config parameters (stop-loss / take-profit pct)
+    for (const blocks of [
+      dto.triggers,
+      dto.conditions,
+      dto.actions,
+      dto.safety,
+      dto.logicBlocks,
+      dto.calcBlocks,
+    ]) {
+      if (blocks) validateBlockConfigs(blocks);
     }
 
     // Auto-assign US rail venue when user is a verified US participant with US credentials.
@@ -189,6 +202,16 @@ export class StrategiesService {
           message: "Cannot edit blocks while strategy is running",
         });
       }
+    }
+
+    // Validate block config parameters (stop-loss / take-profit pct)
+    for (const blocks of [
+      dto.triggers,
+      dto.conditions,
+      dto.actions,
+      dto.safety,
+    ]) {
+      if (blocks) validateBlockConfigs(blocks);
     }
 
     const data: Prisma.StrategyUpdateInput = {
@@ -1099,6 +1122,9 @@ export class StrategiesService {
         }
       }
     }
+
+    // Validate block config parameters (stop-loss / take-profit pct)
+    validateBlockConfigs(allBlocks);
 
     // Strip HTML from name/description
     const stripHtml = (str: string) => str.replace(/<[^>]*>/g, "");
