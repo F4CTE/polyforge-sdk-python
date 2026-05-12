@@ -58,6 +58,7 @@ from polyforge.models import (
     CorrelationCategoriesReport,
     CrossVenueOpportunity,
     FeeMarketMatch,
+    JournalEntry,
     LeaderboardEntry,
     LpPosition,
     Market,
@@ -232,6 +233,7 @@ _MODEL_REGISTRY: dict[str, type] = {
     "TicketMessage": TicketMessage,
     "CorrelationCategoriesReport": CorrelationCategoriesReport,
     "FeeMarketMatch": FeeMarketMatch,
+    "JournalEntry": JournalEntry,
     "MarketAlert": MarketAlert,
     "MarketHistoryPoint": MarketHistoryPoint,
     "MarketSentimentReport": MarketSentimentReport,
@@ -3737,13 +3739,11 @@ class PolyforgeClient:
         page: int = 1,
         limit: int = 20,
         mood: str | None = None,
-    ) -> PaginatedResponse[dict[str, Any]]:
+    ) -> PaginatedResponse[JournalEntry]:
         """List the user's order-journal entries.
 
-        Mirrors ``GET /api/v1/journal``. Each entry is a slim Order projection
-        ``{id, marketId, mood, note, side, outcome, price, size, status,
-        createdAt}`` and is returned as a dict for permissive forward
-        compatibility.
+        Mirrors ``GET /api/v1/journal``. Each entry is an order annotated with
+        a mood and optional note, returned as a :class:`JournalEntry`.
 
         Args:
             page: 1-based page index (default ``1``).
@@ -3758,8 +3758,9 @@ class PolyforgeClient:
             "/api/v1/journal",
             params={"page": page, "limit": limit, "mood": mood},
         )
+        parsed = [_parse(JournalEntry, item) for item in raw.get("data", [])]
         return PaginatedResponse(
-            data=list(raw.get("data", [])),
+            data=parsed,
             **_parse_pagination(raw),
         )
 
@@ -6742,7 +6743,7 @@ class AsyncPolyforgeClient:
         page: int = 1,
         limit: int = 20,
         mood: str | None = None,
-    ) -> PaginatedResponse[dict[str, Any]]:
+    ) -> PaginatedResponse[JournalEntry]:
         """Async variant of :meth:`PolyforgeClient.list_journal`."""
         if mood is not None:
             _validate_enum("mood", mood, _VALID_ORDER_MOODS)
@@ -6750,8 +6751,9 @@ class AsyncPolyforgeClient:
             "/api/v1/journal",
             params={"page": page, "limit": limit, "mood": mood},
         )
+        parsed = [_parse(JournalEntry, item) for item in raw.get("data", [])]
         return PaginatedResponse(
-            data=list(raw.get("data", [])),
+            data=parsed,
             **_parse_pagination(raw),
         )
 
