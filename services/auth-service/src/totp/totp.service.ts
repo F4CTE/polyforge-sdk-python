@@ -18,6 +18,7 @@ const BACKUP_CODE_COUNT = 10;
 const ALGORITHM = 'aes-256-gcm';
 const TOTP_FAIL_MAX = 5; // lock after 5 consecutive failures
 const TOTP_FAIL_WINDOW = 900; // 15-minute lockout window (seconds)
+const MAX_BCRYPT_COMPARISONS = 3; // cap bcrypt ops per verify() call to prevent CPU exhaustion
 const failKey = (userId: string) => `totp:fail:${userId}`;
 
 @Injectable()
@@ -108,14 +109,15 @@ export class TotpService {
       );
     }
 
-    // Generate 10 backup codes — 80-bit entropy (10 bytes), bcrypt-hashed at cost 10
-    // bcrypt makes offline cracking infeasible; 80-bit keyspace prevents brute-force
+    // Generate 10 backup codes — 80-bit entropy (10 bytes), SHA-256 hashed.
+    // 80-bit keyspace (2^80) is computationally infeasible to brute-force even
+    // with SHA-256, so bcrypt is unnecessary and enables CPU-exhaustion DoS.
     const backupCodes = Array.from(
       { length: BACKUP_CODE_COUNT },
       () => randomBytes(10).toString('hex').toUpperCase(), // 20-char hex, 2^80 combinations
     );
-    const backupCodeHashes = await Promise.all(
-      backupCodes.map((c) => bcrypt.hash(c, 10)),
+    const backupCodeHashes = backupCodes.map((c) =>
+      createHash('sha256').update(c).digest('hex'),
     );
 
     // Encrypt the TOTP secret for storage
@@ -220,12 +222,12 @@ export class TotpService {
       );
     }
 
-    // Generate a fresh set of backup codes — same entropy as original setup
+    // Generate a fresh set of backup codes — same entropy as original setup, SHA-256 hashed
     const backupCodes = Array.from({ length: BACKUP_CODE_COUNT }, () =>
       randomBytes(10).toString('hex').toUpperCase(),
     );
-    const backupCodeHashes = await Promise.all(
-      backupCodes.map((c) => bcrypt.hash(c, 10)),
+    const backupCodeHashes = backupCodes.map((c) =>
+      createHash('sha256').update(c).digest('hex'),
     );
 
     await this.prisma.user.update({
@@ -275,30 +277,53 @@ export class TotpService {
       // invalid code format — fall through to backup code check
     }
 
-    // Try backup codes — hybrid: bcrypt for new codes ($2b$ prefix), SHA-256 for legacy
+    // Try backup codes — hybrid: bcrypt for existing codes ($2b$ prefix), SHA-256 for new.
+    // New backup codes are 20 uppercase hex chars (10 bytes = 80-bit entropy) and use
+    // SHA-256 (fast, constant-time). Existing codes may still use bcrypt ($2b$ prefix).
     if (!valid) {
       const upperCode = code.toUpperCase();
       let matchIdx = -1;
-      for (let i = 0; i < user.totpBackupCodes.length; i++) {
-        const stored = user.totpBackupCodes[i];
-        if (stored.startsWith('$2')) {
-          // bcrypt hash (new format — 80-bit entropy, cost 10)
-          if (await bcrypt.compare(upperCode, stored)) {
-            matchIdx = i;
-            break;
-          }
-        } else {
-          // Legacy SHA-256 hash — constant-time comparison
-          const legacyHash = createHash('sha256')
-            .update(upperCode)
-            .digest('hex');
-          const inputBuf = Buffer.from(legacyHash, 'hex');
-          const storedBuf = Buffer.from(stored, 'hex');
-          if (
-            storedBuf.length === inputBuf.length &&
-            timingSafeEqual(storedBuf, inputBuf)
-          ) {
-            matchIdx = i;
+      // Skip the entire backup code loop for codes that cannot possibly be backup codes
+      // (e.g. 6-digit TOTP tokens). This prevents CPU-exhaustion attacks that would
+      // otherwise trigger up to 10 bcrypt comparisons per request for $2b$-hashed codes.
+      const couldBeBackupCode =
+        !/^\d{6}$/.test(upperCode) && upperCode.length >= 6;
+      if (couldBeBackupCode) {
+        let bcryptCount = 0;
+        for (let i = 0; i < user.totpBackupCodes.length; i++) {
+          const stored = user.totpBackupCodes[i];
+          if (stored.startsWith('$2')) {
+            bcryptCount++;
+            if (bcryptCount > MAX_BCRYPT_COMPARISONS) {
+              this.logger.warn(
+                {
+                  event: 'BCRYPT_LIMIT_HIT',
+                  userId,
+                  bcryptCount,
+                  totalBackupCodes: user.totpBackupCodes.length,
+                },
+                'Bcrypt comparison limit reached during backup code verification',
+              );
+              break;
+            }
+            // bcrypt hash (existing pre-2026-05 codes)
+            if (await bcrypt.compare(upperCode, stored)) {
+              matchIdx = i;
+              break;
+            }
+          } else {
+            // SHA-256 hash — constant-time comparison
+            const computedHash = createHash('sha256')
+              .update(upperCode)
+              .digest('hex');
+            const inputBuf = Buffer.from(computedHash, 'hex');
+            const storedBuf = Buffer.from(stored, 'hex');
+            if (
+              storedBuf.length === inputBuf.length &&
+              timingSafeEqual(storedBuf, inputBuf)
+            ) {
+              matchIdx = i;
+            }
           }
         }
       }
@@ -371,6 +396,6 @@ export class TotpService {
       authTagLength: 16,
     });
     decipher.setAuthTag(tag);
-    return decipher.update(ciphertext) + decipher.final('utf8');
+    return decipher.update(ciphertext).toString() + decipher.final('utf8');
   }
 }

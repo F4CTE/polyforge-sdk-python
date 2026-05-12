@@ -144,6 +144,21 @@ describe('TotpService', () => {
       expect(db.$transaction).toHaveBeenCalledOnce();
     });
 
+    it('stores SHA-256 hashed codes in DB, returns plain codes to caller', async () => {
+      mockedVerifySync.mockReturnValueOnce({ valid: true } as any);
+      redis.get.mockResolvedValue('JBSWY3DPEHPK3PXP');
+      (db.$transaction as any).mockResolvedValue([]);
+
+      const result = await service.confirm('user-id', '123456');
+      const updateCall = db.user.update.mock.calls[0][0];
+      const updateData = updateCall.data as any;
+
+      // Plain codes are plain hex — no $2b$ bcrypt prefix
+      expect(result.backupCodes[0]).not.toMatch(/^\$2b\$/);
+      // Stored hashes are SHA-256 hex (64 hex chars), not bcrypt
+      expect(updateData.totpBackupCodes[0]).toMatch(/^[0-9a-f]{64}$/);
+    });
+
     it('deletes the pending Redis key on success', async () => {
       mockedVerifySync.mockReturnValueOnce({ valid: true } as any);
       redis.get.mockResolvedValue('JBSWY3DPEHPK3PXP');
@@ -281,7 +296,7 @@ describe('TotpService', () => {
       });
     });
 
-    it('stores bcrypt-hashed codes in DB, returns plain codes to caller', async () => {
+    it('stores SHA-256 hashed codes in DB, returns plain codes to caller', async () => {
       const user = userFactory({ totpEnabled: true });
       db.user.findUniqueOrThrow.mockResolvedValue(user as any);
       db.user.update.mockResolvedValue(user as any);
@@ -292,8 +307,8 @@ describe('TotpService', () => {
 
       // Plain codes are plain hex — no $2b$ bcrypt prefix
       expect(result.backupCodes[0]).not.toMatch(/^\$2b\$/);
-      // Stored hashes are bcrypt — they start with $2b$
-      expect(storedHashes[0]).toMatch(/^\$2b\$/);
+      // Stored hashes are SHA-256 hex (64 hex chars)
+      expect(storedHashes[0]).toMatch(/^[0-9a-f]{64}$/);
     });
   });
 
@@ -440,6 +455,161 @@ describe('TotpService', () => {
       expect(db.user.update).toHaveBeenCalledWith({
         where: { id: user.id },
         data: { totpBackupCodes: ['other-hash'] },
+      });
+    });
+
+    it('verifies a SHA-256 hashed backup code (new format)', async () => {
+      redis._ioClient.get.mockResolvedValue(null);
+      const { createHash, randomBytes } = await import('crypto');
+      const code = randomBytes(10).toString('hex').toUpperCase();
+      const hash = createHash('sha256').update(code).digest('hex');
+
+      const encrypted = (service as any).encrypt('JBSWY3DPEHPK3PXP');
+
+      const user = {
+        ...userFactory({ totpEnabled: true }),
+        totpSecret: encrypted,
+        totpBackupCodes: [
+          hash,
+          createHash('sha256').update('OTHER').digest('hex'),
+        ],
+      };
+      db.user.findUnique.mockResolvedValue(user as any);
+      db.user.update.mockResolvedValue(user as any);
+
+      const result = await service.verify(user.id, code);
+      expect(result).toBe(true);
+      // The matched code should be burned from the array
+      expect(db.user.update).toHaveBeenCalledWith({
+        where: { id: user.id },
+        data: { totpBackupCodes: [user.totpBackupCodes[1]] },
+      });
+    });
+
+    it('verifies a bcrypt-hashed backup code (legacy format) and burns it', async () => {
+      redis._ioClient.get.mockResolvedValue(null);
+      const { createHash } = await import('crypto');
+      // Use a realistic backup code (not a 6-digit TOTP token to avoid the early-exit guard)
+      const code = 'ABCD-1234-EFGH';
+      const bcrypt = await import('bcrypt');
+      // Hash with the same cost that was used historically (10)
+      const bcryptHash = await bcrypt.hash(code, 10);
+
+      const encrypted = (service as any).encrypt('JBSWY3DPEHPK3PXP');
+
+      // Store one legacy bcrypt hash + one new SHA-256 hash
+      const otherHash = createHash('sha256').update('OTHER').digest('hex');
+      const user = {
+        ...userFactory({ totpEnabled: true }),
+        totpSecret: encrypted,
+        totpBackupCodes: [bcryptHash, otherHash],
+      };
+      db.user.findUnique.mockResolvedValue(user as any);
+      db.user.update.mockResolvedValue(user as any);
+
+      const result = await service.verify(user.id, code);
+      expect(result).toBe(true);
+      // The matched bcrypt-backed code at index 0 should be burned
+      expect(db.user.update).toHaveBeenCalledWith({
+        where: { id: user.id },
+        data: { totpBackupCodes: [otherHash] },
+      });
+    });
+
+    it('skips backup code loop for 6-digit TOTP-only codes', async () => {
+      redis._ioClient.get.mockResolvedValue(null);
+      // Use a bcrypt-hash as a stored backup code to verify bcrypt.compare is NOT called
+      const encrypted = (service as any).encrypt('JBSWY3DPEHPK3PXP');
+
+      const user = {
+        ...userFactory({ totpEnabled: true }),
+        totpSecret: encrypted,
+        // Store a $2b$ prefixed hash — if bcrypt.compare is called, the test
+        // would try to actually compute bcrypt and possibly fail or be slow
+        totpBackupCodes: ['$2b$10$invalidhashatleast22chars...'],
+      };
+      db.user.findUnique.mockResolvedValue(user as any);
+
+      // A 6-digit TOTP code should skip the backup code loop entirely
+      const result = await service.verify(user.id, '123456');
+      expect(result).toBe(false);
+      // bcrypt.compare should NOT have been called — the loop was skipped
+    });
+
+    it('caps bcrypt comparisons per verify call to prevent CPU exhaustion', async () => {
+      redis._ioClient.get.mockResolvedValue(null);
+      const warnSpy = vi
+        .spyOn((service as any).logger, 'warn')
+        .mockImplementation(() => undefined);
+
+      const encrypted = (service as any).encrypt('JBSWY3DPEHPK3PXP');
+
+      // Create 4 bcrypt-hashed codes (exceeds MAX_BCRYPT_COMPARISONS=3)
+      // Use cost 4 for test speed
+      const bcryptMod = await import('bcrypt');
+      const codes = ['BAK-111', 'BAK-222', 'BAK-333', 'BAK-444'];
+      const hashes = await Promise.all(codes.map((c) => bcryptMod.hash(c, 4)));
+
+      // Include a SHA-256 code at the end to verify mixed-format arrays work
+      const { createHash: ch } = await import('crypto');
+      const shaHash = ch('sha256').update('FFFFFFFFFFFFFFFFFFFF').digest('hex');
+
+      const user = {
+        ...userFactory({ totpEnabled: true }),
+        totpSecret: encrypted,
+        totpBackupCodes: [...hashes, shaHash],
+      };
+      db.user.findUnique.mockResolvedValue(user as any);
+
+      // Invalid code — should hit the bcrypt comparison limit
+      const result = await service.verify(user.id, 'DEFINITELY-NOT-A-MATCH');
+      expect(result).toBe(false);
+
+      // Warning should be logged when the bcrypt limit is hit
+      expect(warnSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          event: 'BCRYPT_LIMIT_HIT',
+          userId: user.id,
+          totalBackupCodes: 5,
+        }),
+        expect.any(String),
+      );
+    });
+
+    it('finds a valid bcrypt backup code within the comparison limit', async () => {
+      redis._ioClient.get.mockResolvedValue(null);
+      const warnSpy = vi
+        .spyOn((service as any).logger, 'warn')
+        .mockImplementation(() => undefined);
+
+      const encrypted = (service as any).encrypt('JBSWY3DPEHPK3PXP');
+
+      const bcryptMod = await import('bcrypt');
+      const codes = ['BAK-AAA', 'BAK-BBB', 'BAK-CCC', 'BAK-DDD'];
+      const hashes = await Promise.all(codes.map((c) => bcryptMod.hash(c, 4)));
+
+      const user = {
+        ...userFactory({ totpEnabled: true }),
+        totpSecret: encrypted,
+        totpBackupCodes: hashes,
+      };
+      db.user.findUnique.mockResolvedValue(user as any);
+      db.user.update.mockResolvedValue(user as any);
+
+      // Valid backup code at position 1 (within the 3-comparison limit)
+      const result = await service.verify(user.id, 'BAK-BBB');
+      expect(result).toBe(true);
+
+      // No bcrypt-limit warning should have been logged
+      expect(warnSpy).not.toHaveBeenCalledWith(
+        expect.objectContaining({ event: 'BCRYPT_LIMIT_HIT' }),
+        expect.any(String),
+      );
+
+      // The matched code (index 1) should be burned, leaving codes at indices 0, 2, 3
+      expect(db.user.update).toHaveBeenCalledWith({
+        where: { id: user.id },
+        data: { totpBackupCodes: [hashes[0], hashes[2], hashes[3]] },
       });
     });
   });
