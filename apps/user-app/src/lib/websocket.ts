@@ -49,6 +49,7 @@ export class WebSocketManager {
   private readonly subscribedTokens = new Set<string>();
   private readonly subscribedStrategies = new Set<string>();
   private subscribedWhales = false;
+  private subscribedPortfolioPnl = false;
   private readonly listeners = new Set<MessageListener>();
   private readonly connectionListeners = new Set<ConnectionListener>();
 
@@ -115,6 +116,7 @@ export class WebSocketManager {
     this.ws.onopen = () => {
       this.reconnectDelay = 1000;
       this.setConnectionState("connected");
+      this.emit({ type: "CONNECTION_STATE", state: "connected" });
       this.startPing();
     };
 
@@ -137,17 +139,26 @@ export class WebSocketManager {
           if (this.subscribedWhales) {
             this.send({ type: "SUBSCRIBE_WHALES" });
           }
+          if (this.subscribedPortfolioPnl) {
+            this.send({ type: "SUBSCRIBE_PORTFOLIO_PNL" });
+          }
         }
       } catch {
         /* ignore malformed messages */
       }
     };
 
-    this.ws.onclose = () => {
+    this.ws.onclose = (event: CloseEvent) => {
       this.stopPing();
       this.authenticated = false;
       if (!this.destroyed) {
         this.setConnectionState("reconnecting");
+        this.emit({
+          type: "CONNECTION_STATE",
+          state: "reconnecting",
+          code: event.code,
+          reason: event.reason || undefined,
+        });
         this.reconnectTimer = setTimeout(
           () => this.connect(),
           this.reconnectDelay,
@@ -155,10 +166,19 @@ export class WebSocketManager {
         this.reconnectDelay = Math.min(this.reconnectDelay * 2, 30_000);
       } else {
         this.setConnectionState("disconnected");
+        this.emit({
+          type: "CONNECTION_STATE",
+          state: "disconnected",
+          code: event.code,
+          reason: event.reason || undefined,
+        });
       }
     };
 
-    this.ws.onerror = () => this.ws?.close();
+    this.ws.onerror = () => {
+      console.warn("[ws] WebSocket error — closing connection");
+      this.ws?.close();
+    };
   }
 
   // ── Subscriptions ───────────────────────────────────────────────────
@@ -202,6 +222,20 @@ export class WebSocketManager {
     this.subscribedWhales = false;
     if (this.ws?.readyState === WebSocket.OPEN) {
       this.send({ type: "UNSUBSCRIBE_WHALES" });
+    }
+  }
+
+  subscribePortfolioPnl(): void {
+    this.subscribedPortfolioPnl = true;
+    if (this.ws?.readyState === WebSocket.OPEN && this.authenticated) {
+      this.send({ type: "SUBSCRIBE_PORTFOLIO_PNL" });
+    }
+  }
+
+  unsubscribePortfolioPnl(): void {
+    this.subscribedPortfolioPnl = false;
+    if (this.ws?.readyState === WebSocket.OPEN) {
+      this.send({ type: "UNSUBSCRIBE_PORTFOLIO_PNL" });
     }
   }
 

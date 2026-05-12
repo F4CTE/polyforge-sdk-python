@@ -19,6 +19,7 @@ import { useThemeStore } from '@/stores/theme-store';
 import { useAuthStore, authedFetch } from '@/stores/auth-store';
 import { Button, Input, Select, CardSkeleton } from '@polyforge/ui';
 import { useBetaUsage } from '@/hooks/use-beta-usage';
+import { useWebSocketConnectionState } from '@/hooks/use-websocket-connection-state';
 import { BetaUsageBar } from '@/components/beta-usage-bar';
 import { RewardsDashboard } from '@/components/rewards/rewards-dashboard';
 import {
@@ -563,7 +564,7 @@ export function Component() {
     dayPnlPct: number;
     unrealisedPnl: number;
   } | null>(null);
-  const [wsConnected, setWsConnected] = useState(false);
+  const wsConnected = useWebSocketConnectionState();
   // Flash state: set of positionIds whose price cell is flashing
   const [flashingPrices, setFlashingPrices] = useState<Record<string, 'up' | 'down' | null>>({});
   // Flash state for the header bar (direction determines animation class)
@@ -573,9 +574,6 @@ export function Component() {
 
   useEffect(() => {
     const handler = (msg: { type: string; [key: string]: unknown }) => {
-      if (msg.type === 'AUTH_OK') {
-        setWsConnected(true);
-      }
       if (msg.type === 'POSITION_PRICE_UPDATE') {
         const update = msg as unknown as PositionPriceUpdate;
         setLivePositionPrices(prev => ({ ...prev, [update.positionId]: update.currentPrice }));
@@ -602,21 +600,12 @@ export function Component() {
       }
     };
 
-    // Track WS connection state via close/open events indirectly
-    // wsManager emits AUTH_OK on open+auth — treat any message as connected
-    const connCheck = () => setWsConnected(
-      (wsManager as unknown as { ws?: { readyState: number } }).ws?.readyState === WebSocket.OPEN
-    );
-    const connInterval = setInterval(connCheck, 3000);
-    connCheck();
-
     wsManager.addListener(handler);
-    // Send a portfolio subscribe message in case the server supports it
-    (wsManager as unknown as { send?: (m: object) => void }).send?.({ type: 'SUBSCRIBE_PORTFOLIO_PNL' });
+    wsManager.subscribePortfolioPnl();
 
     return () => {
       wsManager.removeListener(handler);
-      clearInterval(connInterval);
+      wsManager.unsubscribePortfolioPnl();
     };
   }, []);
 
@@ -1064,8 +1053,8 @@ export function Component() {
         </div>
         <div className="flex items-center gap-3">
           {/* WS connection dot */}
-          <div className="flex items-center gap-1" title={wsConnected ? 'WebSocket connected — live prices active' : 'WebSocket offline'}>
-            {wsConnected ? (
+          <div className="flex items-center gap-1" title={wsConnected === 'connected' ? 'WebSocket connected — live prices active' : 'WebSocket offline'}>
+            {wsConnected === 'connected' ? (
               <span className="relative flex size-2">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-gain opacity-60" />
                 <span className="relative inline-flex rounded-full size-2 bg-gain" />
@@ -1073,8 +1062,8 @@ export function Component() {
             ) : (
               <span className="inline-flex rounded-full size-2 bg-tertiary" />
             )}
-            <span className={`text-caption font-medium ${wsConnected ? 'text-gain' : 'text-tertiary'}`}>
-              {wsConnected ? 'Live' : 'Offline'}
+            <span className={`text-caption font-medium ${wsConnected === 'connected' ? 'text-gain' : 'text-tertiary'}`}>
+              {wsConnected === 'connected' ? 'Live' : 'Offline'}
             </span>
           </div>
           <Button
@@ -1152,7 +1141,7 @@ export function Component() {
           >
             {/* Connection indicator */}
             <div className="flex items-center gap-2 shrink-0">
-              {wsConnected ? (
+              {wsConnected === 'connected' ? (
                 <>
                   <span className="relative flex size-2">
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-gain opacity-60" />

@@ -104,11 +104,11 @@ if (msg.type === 'ORDER_FAILED') {
 
 ---
 
-## 4. WebSocket disconnect invisible ⚠️ PENDING
+## 4. WebSocket disconnect invisible ✅ FIXED
 
-### Root Cause — Pending (in PR #1282)
+### Root Cause — Fixed on main
 **File**: `apps/user-app/src/lib/websocket.ts`
-**Pending in**: `3dc93d8a8` (PR [#1282](https://github.com/F4CTE/PolyForge/pull/1282), open/unmerged)
+**Fixed by**: `3dc93d8a8` (main)
 
 `WebSocketManager` now tracks `ConnectionState` (`disconnected` | `connecting` | `connected` | `reconnecting`) and exposes `addConnectionListener()` / `getConnectionState()` so consumers can react to connection changes. `setConnectionState()` emits to all registered `ConnectionListener` callbacks, called from `connect()`, `onopen`, `onclose`, and `destroy()`.
 
