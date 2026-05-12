@@ -26,7 +26,7 @@
     "@polyforge/shared-db": "workspace:*",
     "@polyforge/shared-filters": "workspace:^",
     "@polyforge/shared-redis": "workspace:*",
-    "@sentry/nestjs": "^10.51.0",
+    "@sentry/nestjs": "^10.53.1",
     "class-transformer": "^0.5.0",
     "class-validator": "^0.15.1",
     "fastify": "^5.8.2",

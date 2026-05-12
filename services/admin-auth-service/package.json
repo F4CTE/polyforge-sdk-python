@@ -32,7 +32,7 @@
     "@polyforge/shared-filters": "workspace:^",
     "@polyforge/shared-redis": "workspace:*",
     "@polyforge/shared-types": "workspace:*",
-    "@sentry/nestjs": "^10.51.0",
+    "@sentry/nestjs": "^10.53.1",
     "bcrypt": "^6.0.0",
     "class-transformer": "^0.5.0",
     "class-validator": "^0.15.1",
