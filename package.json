@@ -54,7 +54,7 @@
       "picomatch": ">=4.0.4",
       "path-to-regexp": ">=8.4.0",
       "hono": ">=4.12.18",
-      "@hono/node-server": ">=1.19.13",
+      "@hono/node-server": "^1.19.13",
       "fast-uri": ">=3.1.2",
       "fastify": ">=5.8.3",
       "@angular-devkit/core>ajv": ">=8.18.0",
