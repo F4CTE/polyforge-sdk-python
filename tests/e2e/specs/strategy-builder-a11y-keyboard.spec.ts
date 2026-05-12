@@ -362,6 +362,10 @@ test.describe('Strategy Builder — Keyboard A11y', () => {
         await builder.addBlock('Place Order');
         await expect(builder.blockCards()).toHaveCount(2, { timeout: 5_000 });
 
+        // Count edges before drag to verify the drag creates a new edge
+        const edgesBefore = page.locator('.react-flow__edge');
+        const edgeCountBefore = await edgesBefore.count();
+
         // Mouse drag connection (pre-existing flow)
         const sourceHandles = page.locator('.react-flow__handle--source');
         const targetHandles = page.locator('.react-flow__handle--target');
@@ -377,9 +381,13 @@ test.describe('Strategy Builder — Keyboard A11y', () => {
             }
         }
 
-        // Verify edges exist (either from this drag or from a prior test interaction)
-        // The key assertion: mouse drag still works as a connection mechanism
-        const edges = page.locator('.react-flow__edge');
-        await expect(edges.first()).toBeVisible({ timeout: 5_000 });
+        // Verify mouse drag created at least one new edge (regression guard)
+        const edgesAfter = page.locator('.react-flow__edge');
+        const edgeCountAfter = await edgesAfter.count();
+        expect(
+            edgeCountAfter,
+            'Mouse drag should create a new edge on the canvas',
+        ).toBeGreaterThan(edgeCountBefore);
+        await expect(edgesAfter.first()).toBeVisible({ timeout: 5_000 });
     });
 });

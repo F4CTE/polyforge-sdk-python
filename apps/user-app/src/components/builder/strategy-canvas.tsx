@@ -47,10 +47,14 @@ function nodeHasTargetHandle(node: AnyNode): boolean {
   if (node.type === "logicNode") return true;
   if (node.type === "calcNode") return true;
   if (node.type === "blockNode") {
-    const section = (node.data as BlockNodeData).section;
-    return (
-      section === "conditions" || section === "actions" || section === "safety"
-    );
+    const data = node.data as BlockNodeData;
+    if (data.section === "conditions" || data.section === "actions")
+      return true;
+    // Safety blocks are only keyboard-connectable when they expose at least
+    // one wireable field. Blocks without wireable fields (e.g. stop-loss
+    // variants that accept no data input) should not appear as targets.
+    if (data.section === "safety")
+      return data.fields.some((f) => f.wireable);
   }
   return false;
 }
