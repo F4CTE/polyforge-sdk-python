@@ -1084,6 +1084,48 @@ class CopyTrade:
 # Strategy Execution Events (SSE)
 # ---------------------------------------------------------------------------
 
+
+class StrategyEventType:
+    """Constants for strategy execution event names emitted by the platform SSE stream.
+
+    These match the event types returned by ``GET /api/v1/strategies/{id}/events``.
+
+    Usage::
+
+        for event in client.watch_strategy("strat-uuid"):
+            if event.type == StrategyEventType.ORDER_FILLED:
+                print("Order filled!", event.data)
+
+    Event categories:
+
+    * **Connection**: ``CONNECTED``
+    * **Strategy lifecycle**: ``STRATEGY_STARTED``, ``STRATEGY_PAUSED``,
+      ``STRATEGY_RESUMED``, ``STRATEGY_STOPPED``, ``STRATEGY_ERROR``
+    * **Order lifecycle**: ``ORDER_SUBMITTED``, ``ORDER_PLACED``,
+      ``ORDER_PARTIAL``, ``ORDER_FILLED``, ``ORDER_CANCELLED``,
+      ``ORDER_FAILED``, ``ORDER_ERROR``
+    * **Backtest**: ``BACKTEST_PROGRESS``, ``BACKTEST_COMPLETED``,
+      ``BACKTEST_FAILED``
+    """
+
+    CONNECTED = "CONNECTED"
+    STRATEGY_STARTED = "STRATEGY_STARTED"
+    STRATEGY_PAUSED = "STRATEGY_PAUSED"
+    STRATEGY_RESUMED = "STRATEGY_RESUMED"
+    STRATEGY_STOPPED = "STRATEGY_STOPPED"
+    STRATEGY_ERROR = "STRATEGY_ERROR"
+    ORDER_SUBMITTED = "ORDER_SUBMITTED"
+    ORDER_PLACED = "ORDER_PLACED"
+    ORDER_PARTIAL = "ORDER_PARTIAL"
+    ORDER_FILLED = "ORDER_FILLED"
+    ORDER_CANCELLED = "ORDER_CANCELLED"
+    ORDER_FAILED = "ORDER_FAILED"
+    ORDER_ERROR = "ORDER_ERROR"
+    BACKTEST_PROGRESS = "BACKTEST_PROGRESS"
+    BACKTEST_COMPLETED = "BACKTEST_COMPLETED"
+    BACKTEST_FAILED = "BACKTEST_FAILED"
+
+
 @dataclass
 class StrategyEvent:
     """A single event from the strategy execution SSE stream.
@@ -1091,9 +1133,16 @@ class StrategyEvent:
     Events are emitted while a strategy is running (or backtesting).
     The first event on a new stream always has ``type == "CONNECTED"``.
 
-    Common event types:
-        CONNECTED, STRATEGY_STARTED, STRATEGY_STOPPED, STRATEGY_ERROR,
-        ORDER_PLACED, ORDER_FILLED, ORDER_CANCELLED,
+    Use :class:`StrategyEventType` constants for type-safe comparisons::
+
+        if event.type == StrategyEventType.ORDER_FILLED:
+            ...
+
+    All supported event types:
+        CONNECTED, STRATEGY_STARTED, STRATEGY_PAUSED, STRATEGY_RESUMED,
+        STRATEGY_STOPPED, STRATEGY_ERROR,
+        ORDER_SUBMITTED, ORDER_PLACED, ORDER_PARTIAL, ORDER_FILLED,
+        ORDER_CANCELLED, ORDER_FAILED, ORDER_ERROR,
         BACKTEST_PROGRESS, BACKTEST_COMPLETED, BACKTEST_FAILED
     """
 

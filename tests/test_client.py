@@ -61,6 +61,7 @@ from polyforge.models import (
     UserRewardsTotal,
     UserSponsoredMarkets,
     WatchlistItem,
+    StrategyEventType,
     WebhookEvent,
     WebhookTestResult,
     WhaleTrade,
@@ -738,6 +739,63 @@ class TestPlatformContractCompliance:
         assert not hasattr(WebhookEvent, "STRATEGY_STOPPED"), "STRATEGY_STOPPED is a phantom event"
         assert not hasattr(WebhookEvent, "BACKTEST_FAILED"), "BACKTEST_FAILED is a phantom event"
         assert not hasattr(WebhookEvent, "BACKTEST_COMPLETED"), "BACKTEST_COMPLETED is phantom (correct name is BACKTEST_COMPLETE)"
+
+    def test_strategy_event_type_values_match_platform(self):
+        """StrategyEventType must include all 16 events emitted by the platform SSE stream (#229)."""
+        platform_events = {
+            "CONNECTED",
+            "STRATEGY_STARTED", "STRATEGY_PAUSED", "STRATEGY_RESUMED",
+            "STRATEGY_STOPPED", "STRATEGY_ERROR",
+            "ORDER_SUBMITTED", "ORDER_PLACED", "ORDER_PARTIAL",
+            "ORDER_FILLED", "ORDER_CANCELLED", "ORDER_FAILED", "ORDER_ERROR",
+            "BACKTEST_PROGRESS", "BACKTEST_COMPLETED", "BACKTEST_FAILED",
+        }
+        sdk_events = {
+            StrategyEventType.CONNECTED,
+            StrategyEventType.STRATEGY_STARTED,
+            StrategyEventType.STRATEGY_PAUSED,
+            StrategyEventType.STRATEGY_RESUMED,
+            StrategyEventType.STRATEGY_STOPPED,
+            StrategyEventType.STRATEGY_ERROR,
+            StrategyEventType.ORDER_SUBMITTED,
+            StrategyEventType.ORDER_PLACED,
+            StrategyEventType.ORDER_PARTIAL,
+            StrategyEventType.ORDER_FILLED,
+            StrategyEventType.ORDER_CANCELLED,
+            StrategyEventType.ORDER_FAILED,
+            StrategyEventType.ORDER_ERROR,
+            StrategyEventType.BACKTEST_PROGRESS,
+            StrategyEventType.BACKTEST_COMPLETED,
+            StrategyEventType.BACKTEST_FAILED,
+        }
+        assert sdk_events == platform_events, (
+            f"SDK events {sdk_events - platform_events} don't match platform events {platform_events - sdk_events}"
+        )
+        for event in sdk_events:
+            assert "." not in event, f"StrategyEventType {event} uses dot.notation"
+            assert event == event.upper(), f"StrategyEventType {event} is not SCREAMING_SNAKE_CASE"
+
+    def test_strategy_event_type_no_phantom_events(self):
+        """StrategyEventType must not define events that don't exist in the platform SSE stream (#229)."""
+        # These are webhook-only events, not SSE events
+        assert not hasattr(StrategyEventType, "WHALE_TRADE"), "WHALE_TRADE is a phantom SSE event"
+        assert not hasattr(StrategyEventType, "NEWS_SIGNAL"), "NEWS_SIGNAL is a phantom SSE event"
+        assert not hasattr(StrategyEventType, "DAILY_LOSS_LIMIT"), "DAILY_LOSS_LIMIT is a phantom SSE event"
+        assert not hasattr(StrategyEventType, "MARKET_RESOLVED"), "MARKET_RESOLVED is a phantom SSE event"
+        assert not hasattr(StrategyEventType, "PRICE_ALERT"), "PRICE_ALERT is a phantom SSE event"
+        # These are webhook names that differ from SSE names
+        assert not hasattr(StrategyEventType, "BACKTEST_COMPLETE"), (
+            "BACKTEST_COMPLETE is phantom (SSE uses BACKTEST_COMPLETED)"
+        )
+
+    def test_strategy_event_type_exactly_sixteen_events(self):
+        """StrategyEventType must define exactly 16 event type constants (#229)."""
+        all_attributes = [a for a in dir(StrategyEventType) if not a.startswith("_")]
+        # Exclude Python-internal attributes (methods, etc.)
+        constants = [a for a in all_attributes if isinstance(getattr(StrategyEventType, a), str)]
+        assert len(constants) == 16, (
+            f"Expected 16 event type constants, got {len(constants)}: {constants}"
+        )
 
     def test_ai_query_body_uses_query_field(self):
         """ai_query() must send { query } not { question } (#89)."""

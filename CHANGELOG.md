@@ -80,6 +80,16 @@ audit, available on both `PolyforgeClient` and `AsyncPolyforgeClient`:
 All three already existed in the TypeScript SDK; this brings the Python SDK
 into parity.
 
+**StrategyEventType constants (POLA-3458)** — ``StrategyEventType`` class with
+16 string constants covering all events emitted by the platform SSE stream
+(``GET /api/v1/strategies/{id}/events``). Previously only documented as a
+docstring comment; users can now write type-safe comparisons like
+``event.type == StrategyEventType.ORDER_FILLED``. The new constants cover the
+6 previously-undocumented event types (``STRATEGY_PAUSED``,
+``STRATEGY_RESUMED``, ``ORDER_SUBMITTED``, ``ORDER_PARTIAL``, ``ORDER_FAILED``,
+``ORDER_ERROR``) alongside the 10 already documented. Exported from
+``polyforge`` as ``StrategyEventType``.
+
 ### Added — Cross-Venue Arb Execute / Positions / Risk (POLA-1851)
 
 > ⚠️ **Trading-impact severity: HIGH.** `execute_arb` and `close_arb_position`
