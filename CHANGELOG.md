@@ -90,6 +90,36 @@ docstring comment; users can now write type-safe comparisons like
 ``ORDER_ERROR``) alongside the 10 already documented. Exported from
 ``polyforge`` as ``StrategyEventType``.
 
+**Health and match-sync (POLA-3677, POLA-3323)** — two new methods closing gaps
+surfaced by the weekly cross-SDK compatibility audit, available on both
+`PolyforgeClient` and `AsyncPolyforgeClient`:
+
+- `get_health_authenticated()` → `SystemHealthAuthenticated` —
+  `GET /api/v1/status`. Returns authenticated health/status data with
+  operational metrics (database, Redis, queue depth, service health) not
+  exposed on the public `/health` endpoint. Matches `getHealthAuthenticated`
+  in sdk-ts.
+- `sync_market_matches()` → `MatchSyncResult` —
+  `POST /api/v1/arbitrage/matches/sync`. Triggers a manual cross-venue
+  matching pass. Matches `syncMarketMatches` in sdk-ts and
+  `sync_arbitrage_matches` in sdk-rust.
+
+New typed model: `SystemHealthAuthenticated` (`status`, `service`, `version`,
+`uptime`, `db`, `redis`, `queue_depth`, `services`). `MatchSyncResult` now
+includes optional `created`/`updated` fields matching the TS/Rust SDKs.
+
+**GDPR personal data export (POLA-3611)** — one method closing a compliance gap
+surfaced by the weekly cross-SDK compatibility audit, available on both
+`PolyforgeClient` and `AsyncPolyforgeClient`:
+
+- `export_personal_data(format="json")` → `PersonalDataExport` | `str` —
+  `GET /api/v1/me/export`. Supports `"json"` (default, returns typed model)
+  and `"csv"` (returns raw text). The `PersonalDataExport` model includes
+  sections for account, settings, security, trading, communications, and
+  social data with webhook URLs redacted to hostname only.
+
+New typed models: `PersonalDataExportMeta`, `PersonalDataExport`.
+
 ### Added — Cross-Venue Arb Execute / Positions / Risk (POLA-1851)
 
 > ⚠️ **Trading-impact severity: HIGH.** `execute_arb` and `close_arb_position`
@@ -135,6 +165,19 @@ preserved.
 - `get_my_following(*, page=None, limit=None)` → `PaginatedResponse[FollowedUser]` — authenticated users only.
 
 All four public-profile lookups raise `NotFoundError` when the username is unknown. The `username` path segment is URL-encoded via the existing `_encode_path` helper.
+
+**sync_market_matches() and get_health_authenticated() (POLA-3678)** — two
+new methods closing cross-SDK compatibility gaps, available on both
+`PolyforgeClient` and `AsyncPolyforgeClient`:
+
+- `sync_market_matches()` → `MatchSyncResult` — `POST /api/v1/arbitrage/matches/sync`.
+  Triggers a manual cross-venue matching pass. Mirrors `syncMarketMatches()` in
+  the TypeScript SDK and `sync_arbitrage_matches()` in the Rust SDK.
+- `get_health_authenticated()` → `SystemHealthAuthenticated` — `GET /api/v1/status`.
+  Returns database, Redis, queue, and internal service health metrics that are
+  not exposed on the public `/health` endpoint.
+
+New dataclass: `SystemHealthAuthenticated` (re-exported from `polyforge`).
 
 ### Changed
 
