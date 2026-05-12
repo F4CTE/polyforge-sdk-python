@@ -157,10 +157,9 @@ export const SetStopLossAction: ActionEvaluator = {
 
     const avgPrice = parseFiniteDecimal(position.avgPrice);
     const pctNum = parseFiniteDecimal(pct);
-    const stopPrice =
-      avgPrice === null || pctNum === null
-        ? Number.NaN
-        : avgPrice * (1 - pctNum);
+    if (pctNum === null || pctNum <= 0 || pctNum >= 1) return { intents: [] };
+
+    const stopPrice = avgPrice === null ? Number.NaN : avgPrice * (1 - pctNum);
     const resolved = await resolveMarket(tokenId, prisma);
     if (!resolved) return { intents: [] };
 
@@ -196,10 +195,9 @@ export const TakeProfitAction: ActionEvaluator = {
 
     const avgPrice = parseFiniteDecimal(position.avgPrice);
     const pctNum = parseFiniteDecimal(pct);
-    const tpPrice =
-      avgPrice === null || pctNum === null
-        ? Number.NaN
-        : avgPrice * (1 + pctNum);
+    if (pctNum === null || pctNum <= 0 || pctNum >= 1) return { intents: [] };
+
+    const tpPrice = avgPrice === null ? Number.NaN : avgPrice * (1 + pctNum);
     const resolved = await resolveMarket(tokenId, prisma);
     if (!resolved) return { intents: [] };
 

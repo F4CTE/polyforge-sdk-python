@@ -228,6 +228,42 @@ describe("SetStopLossAction", () => {
     );
     expect(parseFloat(intents[0].price)).toBeCloseTo(0.72, 2); // 0.80 * 0.9
   });
+
+  it("returns empty intents for negative pct", async () => {
+    const prisma = makePrisma();
+    prisma.position.findUnique.mockResolvedValue({ size: "100", avgPrice: "0.60" });
+    const { intents } = await SetStopLossAction.execute(
+      block("set_stop_loss", { tokenId: "tok-yes", pct: "-0.1" }),
+      makeCtx(),
+      makeRedis(),
+      prisma,
+    );
+    expect(intents).toHaveLength(0);
+  });
+
+  it("returns empty intents for zero pct", async () => {
+    const prisma = makePrisma();
+    prisma.position.findUnique.mockResolvedValue({ size: "100", avgPrice: "0.60" });
+    const { intents } = await SetStopLossAction.execute(
+      block("set_stop_loss", { tokenId: "tok-yes", pct: "0" }),
+      makeCtx(),
+      makeRedis(),
+      prisma,
+    );
+    expect(intents).toHaveLength(0);
+  });
+
+  it("returns empty intents for pct >= 1", async () => {
+    const prisma = makePrisma();
+    prisma.position.findUnique.mockResolvedValue({ size: "100", avgPrice: "0.60" });
+    const { intents } = await SetStopLossAction.execute(
+      block("set_stop_loss", { tokenId: "tok-yes", pct: "1.0" }),
+      makeCtx(),
+      makeRedis(),
+      prisma,
+    );
+    expect(intents).toHaveLength(0);
+  });
 });
 
 describe("TakeProfitAction", () => {
@@ -274,6 +310,42 @@ describe("TakeProfitAction", () => {
       makeCtx(),
       makeRedis(),
       makePrisma(),
+    );
+    expect(intents).toHaveLength(0);
+  });
+
+  it("returns empty intents for negative pct", async () => {
+    const prisma = makePrisma();
+    prisma.position.findUnique.mockResolvedValue({ size: "100", avgPrice: "0.60" });
+    const { intents } = await TakeProfitAction.execute(
+      block("take_profit", { tokenId: "tok-yes", pct: "-0.1" }),
+      makeCtx(),
+      makeRedis(),
+      prisma,
+    );
+    expect(intents).toHaveLength(0);
+  });
+
+  it("returns empty intents for zero pct", async () => {
+    const prisma = makePrisma();
+    prisma.position.findUnique.mockResolvedValue({ size: "100", avgPrice: "0.60" });
+    const { intents } = await TakeProfitAction.execute(
+      block("take_profit", { tokenId: "tok-yes", pct: "0" }),
+      makeCtx(),
+      makeRedis(),
+      prisma,
+    );
+    expect(intents).toHaveLength(0);
+  });
+
+  it("returns empty intents for pct >= 1", async () => {
+    const prisma = makePrisma();
+    prisma.position.findUnique.mockResolvedValue({ size: "100", avgPrice: "0.60" });
+    const { intents } = await TakeProfitAction.execute(
+      block("take_profit", { tokenId: "tok-yes", pct: "1.0" }),
+      makeCtx(),
+      makeRedis(),
+      prisma,
     );
     expect(intents).toHaveLength(0);
   });
