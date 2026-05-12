@@ -71,6 +71,15 @@ describe('Safety evaluators', () => {
     expect(result.safety_passed).toBe(false);
     expect(result.safety_reason).toContain('Exposure');
   });
+
+  it('should fail closed on unknown safety block types', () => {
+    const safety = [makeBlock('UNKNOWN_SAFETY_TYPE', {})];
+    const ctx = makeContext();
+    const result = evaluateTick(safety, [], [], [], ctx);
+
+    expect(result.safety_passed).toBe(false);
+    expect(result.safety_reason).toContain('Unknown safety block type');
+  });
 });
 
 // ─── Trigger Tests ──────────────────────────────────────
@@ -216,6 +225,15 @@ describe('Condition evaluators', () => {
     const conditions = [makeBlock('MAX_POSITION', { maxPositions: 3 })];
     const triggers = [makeBlock('EVERY_TICK')];
     const ctx = makeContext({ open_positions: 3 });
+    const result = evaluateTick([], triggers, conditions, [], ctx);
+
+    expect(result.conditions_met).toBe(false);
+  });
+
+  it('should fail closed on unknown condition block types', () => {
+    const conditions = [makeBlock('UNKNOWN_CONDITION_TYPE', {})];
+    const triggers = [makeBlock('EVERY_TICK')];
+    const ctx = makeContext({});
     const result = evaluateTick([], triggers, conditions, [], ctx);
 
     expect(result.conditions_met).toBe(false);

@@ -169,6 +169,9 @@ export function checkSafety(
         if (maxExposure > 0 && totalExposure >= maxExposure) return false;
         break;
       }
+      default:
+        // Unknown safety block — fail closed
+        return false;
     }
   }
   return true;
@@ -293,6 +296,9 @@ export function checkTriggers(
         }
         break;
       }
+      default:
+        // Unknown trigger — fail closed (don't fire)
+        break;
     }
   }
   return false;
@@ -356,6 +362,9 @@ export function checkConditions(
         // Simplified: block if we've traded this token today (tracked via lastTradeAt)
         break;
       }
+      default:
+        // Unknown condition — fail closed
+        return false;
     }
   }
   return true;
@@ -468,6 +477,9 @@ export function executeActions(
 
       case "cancel_all_orders":
         // No-op in backtest (no pending orders)
+        break;
+      default:
+        // Unknown action — silently skip
         break;
     }
   }

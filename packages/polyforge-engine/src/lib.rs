@@ -90,7 +90,7 @@ fn check_safety(blocks: &[Block], ctx: &EvalContext) -> (bool, Option<String>) {
                     return (false, Some(format!("Drawdown exceeds limit")));
                 }
             }
-            _ => {} // Unknown safety block — skip
+            _ => { return (false, Some(format!("Unknown safety block type: {}", block.block_type))); }
         }
     }
     (true, None)
@@ -162,7 +162,7 @@ fn check_conditions(blocks: &[Block], ctx: &EvalContext) -> bool {
                 let limit = resolve_f64(&block.config, "limit", ctx);
                 limit <= 0.0 || ctx.daily_pnl > -limit
             }
-            _ => true, // Unknown condition — pass
+            _ => false, // Unknown condition — fail closed
         }
     })
 }

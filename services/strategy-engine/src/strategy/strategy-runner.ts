@@ -427,7 +427,22 @@ export class StrategyRunner {
     // 2. SAFETY — any failure stops the strategy
     for (const block of this.safety) {
       const evaluator = SAFETY_REGISTRY[block.type];
-      if (!evaluator) continue;
+      if (!evaluator) {
+        // Unknown safety block — fail closed
+        this.logger.error(
+          `Unknown safety block type: ${block.type}. Failing closed for safety.`,
+        );
+        this.stop();
+        await this.onStatusChange("STOPPED", `Unknown safety block: ${block.type}`);
+        await this.prisma.strategy
+          .update({
+            where: { id: this.strategyId },
+            data: { status: StrategyStatus.IDLE },
+          })
+          .catch(() => {});
+        await this.emitStrategyEvent("STRATEGY_STOPPED", `Unknown safety block: ${block.type}`);
+        return;
+      }
 
       const resolvedBlock = {
         ...block,
@@ -479,7 +494,13 @@ export class StrategyRunner {
     // 4. CONDITIONS — ALL conditions must pass
     for (const block of this.conditions) {
       const evaluator = CONDITION_REGISTRY[block.type];
-      if (!evaluator) continue;
+      if (!evaluator) {
+        // Unknown condition — fail closed
+        this.logger.warn(
+          `Unknown condition block type: ${block.type}. Failing closed.`,
+        );
+        return; // condition failed, skip tick
+      }
 
       const resolvedBlock = {
         ...block,

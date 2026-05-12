@@ -196,6 +196,12 @@ describe("checkSafety", () => {
     ];
     expect(checkSafety(blocks, state, new Map(), new Map())).toBe(false);
   });
+
+  it("returns false for unknown safety block type (fail closed)", () => {
+    const state = createSimState();
+    const blocks: Block[] = [{ type: "unknown_safety_block" }];
+    expect(checkSafety(blocks, state, new Map(), new Map())).toBe(false);
+  });
 });
 
 // ─── checkTriggers ───────────────────────────────────────────────────────────
@@ -375,6 +381,11 @@ describe("checkTriggers", () => {
       { type: "price_above", config: { tokenId: "tok-a", threshold: 0.5 } },
     ];
     expect(checkTriggers(blocks, prices)).toBe(false);
+  });
+
+  it("returns false for unknown trigger block type (fail closed)", () => {
+    const blocks: Block[] = [{ type: "unknown_trigger_type" }];
+    expect(checkTriggers(blocks, new Map())).toBe(false);
   });
 });
 
@@ -616,6 +627,14 @@ describe("checkConditions", () => {
       { type: "max_bets_per_day", config: { maxBets: 20 } }, // passes
       { type: "max_bets_per_day", config: { maxBets: 5 } }, // fails
     ];
+    expect(
+      checkConditions(blocks, state, new Map(), new Map(), Date.now()),
+    ).toBe(false);
+  });
+
+  it("returns false for unknown condition block type (fail closed)", () => {
+    const state = createSimState();
+    const blocks: Block[] = [{ type: "unknown_condition_type" }];
     expect(
       checkConditions(blocks, state, new Map(), new Map(), Date.now()),
     ).toBe(false);
@@ -867,6 +886,13 @@ describe("executeActions", () => {
     expect(fills).toHaveLength(2);
     expect(fills[0].tokenId).toBe("tok-a");
     expect(fills[1].tokenId).toBe("tok-b");
+  });
+
+  it("returns empty fills for unknown action block type (graceful skip)", () => {
+    const state = createSimState();
+    const blocks: Block[] = [{ type: "unknown_action_type" }];
+    const fills = executeActions(blocks, new Map(), new Map(), state);
+    expect(fills).toEqual([]);
   });
 });
 
