@@ -165,7 +165,7 @@ test.describe('Strategy Builder — Keyboard A11y', () => {
         // Verify connecting announcement
         const wiringMsg = await announcer.textContent();
         expect(wiringMsg).toContain('Wiring from');
-        expect(wiringMsg).toContain('in progress');
+        expect(wiringMsg).toContain('handle');
 
         // Complete connection
         await page.keyboard.press('Tab');
