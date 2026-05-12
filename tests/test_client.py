@@ -4846,24 +4846,6 @@ class TestCrossVenueArbitrage:
             source = inspect.getsource(getattr(AsyncPolyforgeClient, method_name))
             assert "await" in source, f"async {method_name} not using await"
 
-    def test_async_sync_market_matches_behavioral(self):
-        import asyncio
-        from unittest.mock import AsyncMock
-
-        async def run():
-            client = AsyncPolyforgeClient(api_key="test-key")
-            client._post = AsyncMock(return_value={"matched": 12, "created": 3, "updated": 1})
-            result = await client.sync_market_matches()
-            assert isinstance(result, MatchSyncResult)
-            assert result.matched == 12
-            assert result.created == 3
-            assert result.updated == 1
-            client._post.assert_called_once_with("/api/v1/arbitrage/matches/sync")
-            await client.close()
-
-        asyncio.run(run())
-
-
 class TestHealthEndpoint:
     """Tests for the authenticated health-check endpoint."""
 
@@ -4912,97 +4894,10 @@ class TestHealthEndpoint:
 
         asyncio.run(_run())
 
-    def test_async_get_health_authenticated_behavioral(self):
-        import asyncio
-        from unittest.mock import AsyncMock
-
-        async def run():
-            client = AsyncPolyforgeClient(api_key="test-key")
-            client._get = AsyncMock(return_value={
-                "status": "operational",
-                "service": "api-service",
-                "version": "2.0.0",
-                "uptime": 3600.0,
-                "db": {"connections": 5, "status": "ok"},
-                "redis": {"memoryUsageMb": 128, "status": "ok"},
-                "queueDepth": 0,
-            })
-            result = await client.get_health_authenticated()
-            assert isinstance(result, SystemHealthAuthenticated)
-            assert result.status == "operational"
-            assert result.service == "api-service"
-            assert result.db == {"connections": 5, "status": "ok"}
-            client._get.assert_called_once_with("/api/v1/status")
-            await client.close()
-
-        asyncio.run(run())
-
     def test_new_models_exported_from_package_root(self):
         from polyforge import SystemHealthAuthenticated as SHA, MatchSyncResult as MSR  # noqa: F811
         assert SHA is SystemHealthAuthenticated
         assert MSR is MatchSyncResult
-
-
-class TestHealthEndpoint:
-    """Tests for the authenticated health-check endpoint."""
-
-    def test_sync_get_health_authenticated(self):
-        from unittest.mock import MagicMock
-        client = PolyforgeClient(api_key="test-key")
-        client._get = MagicMock(return_value={
-            "status": "operational",
-            "service": "api-service",
-            "version": "2.0.0",
-            "uptime": 3600.0,
-            "db": {"connections": 5, "status": "ok"},
-            "redis": {"memoryUsageMb": 128, "status": "ok"},
-            "queueDepth": 0,
-        })
-        result = client.get_health_authenticated()
-        assert isinstance(result, SystemHealthAuthenticated)
-        assert result.status == "operational"
-        assert result.service == "api-service"
-        assert result.db == {"connections": 5, "status": "ok"}
-        client._get.assert_called_once_with("/api/v1/status")
-        client.close()
-
-    def test_async_get_health_authenticated_is_coroutine(self):
-        import inspect
-        assert hasattr(AsyncPolyforgeClient, "get_health_authenticated"), \
-            "AsyncPolyforgeClient missing get_health_authenticated"
-        source = inspect.getsource(AsyncPolyforgeClient.get_health_authenticated)
-        assert "await" in source, "async get_health_authenticated not using await"
-
-
-class TestHealthEndpoint:
-    """Tests for the authenticated health-check endpoint."""
-
-    def test_sync_get_health_authenticated(self):
-        from unittest.mock import MagicMock
-        client = PolyforgeClient(api_key="test-key")
-        client._get = MagicMock(return_value={
-            "status": "operational",
-            "service": "api-service",
-            "version": "2.0.0",
-            "uptime": 3600.0,
-            "db": {"connections": 5, "status": "ok"},
-            "redis": {"memoryUsageMb": 128, "status": "ok"},
-            "queueDepth": 0,
-        })
-        result = client.get_health_authenticated()
-        assert isinstance(result, SystemHealthAuthenticated)
-        assert result.status == "operational"
-        assert result.service == "api-service"
-        assert result.db == {"connections": 5, "status": "ok"}
-        client._get.assert_called_once_with("/api/v1/status")
-        client.close()
-
-    def test_async_get_health_authenticated_is_coroutine(self):
-        import inspect
-        assert hasattr(AsyncPolyforgeClient, "get_health_authenticated"), \
-            "AsyncPolyforgeClient missing get_health_authenticated"
-        source = inspect.getsource(AsyncPolyforgeClient.get_health_authenticated)
-        assert "await" in source, "async get_health_authenticated not using await"
 
 
 class TestPositionPlatformContract:
@@ -7341,6 +7236,29 @@ class TestMiscUtilityEndpointsAsync:
             ("GET", "/api/v1/fees/schedules"),
             ("POST", "/api/v1/markets/combo/lookup"),
         ]
+
+    def test_async_list_journal_roundtrip_typed(self):
+        import asyncio
+
+        async def _run():
+            client = self._async_client_with(
+                lambda req: httpx.Response(200, json={
+                    "data": [{"id": "ord-1", "mood": "DISCIPLINED", "note": "plan"}],
+                    "total": 1, "page": 1, "limit": 20,
+                    "totalPages": 1, "hasNext": False,
+                })
+            )
+            try:
+                res = await client.list_journal(mood="DISCIPLINED")
+                assert res.total == 1
+                assert isinstance(res.data[0], JournalEntry)
+                assert res.data[0].mood == "DISCIPLINED"
+                assert res.data[0].id == "ord-1"
+                assert res.data[0].note == "plan"
+            finally:
+                await client.close()
+
+        asyncio.run(_run())
 
 # Cross-Venue Arb Execution / Positions / Risk (POLA-1851)
 # ---------------------------------------------------------------------------
