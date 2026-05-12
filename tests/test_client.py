@@ -30,6 +30,7 @@ from polyforge.models import (
     Alert,
     ConditionalOrder,
     CopyConfig,
+    KNOWN_STRATEGY_EVENTS,
     JournalEntry,
     Market,
     MatchSyncResult,
@@ -52,6 +53,8 @@ from polyforge.models import (
     MyReferralsResponse,
     RewardMarket,
     Strategy,
+    StrategyEvent,
+    StrategyEventType,
     StrategyExecMode,
     StrategyVisibility,
     TraderScore,
@@ -370,6 +373,51 @@ class TestModelParsing:
         market = _parse(Market, api_response)
         assert market.title == "Will BTC reach $100K by June?"
         assert market.id == "0xabc"
+
+    def test_market_parses_description_enddate_resolved_from_api_response(self):
+        """_parse must map description, endDate, resolved from platform JSON (#227)."""
+        api_response = {
+            "id": "mkt-001",
+            "title": "Will ETH flip BTC?",
+            "category": "Crypto",
+            "price": 0.42,
+            "description": "Market predicts whether Ethereum flips Bitcoin in market cap",
+            "endDate": "2026-12-31T23:59:59Z",
+            "resolved": False,
+        }
+        market = _parse(Market, api_response)
+        assert market.description == "Market predicts whether Ethereum flips Bitcoin in market cap"
+        assert market.end_date == "2026-12-31T23:59:59Z"
+        assert market.resolved is False
+
+    def test_market_parses_resolved_true_from_api_response(self):
+        """resolved=true from the platform must be parsed as True."""
+        api_response = {
+            "id": "mkt-resolved",
+            "title": "Resolved market",
+            "category": "Politics",
+            "resolved": True,
+        }
+        market = _parse(Market, api_response)
+        assert market.resolved is True
+
+    def test_market_handles_null_enddate(self):
+        """endDate=null (perpetual/ongoing markets) must map to end_date=None."""
+        api_response = {
+            "id": "mkt-perpetual",
+            "title": "Perpetual market",
+            "category": "Crypto",
+            "endDate": None,
+        }
+        market = _parse(Market, api_response)
+        assert market.end_date is None
+
+    def test_market_defaults_for_new_fields(self):
+        """Market() should default description=None, end_date=None, resolved=False."""
+        market = Market()
+        assert market.description is None
+        assert market.end_date is None
+        assert market.resolved is False
 
     def test_strategy_model_instantiation(self):
         """Should instantiate Strategy model."""
@@ -736,6 +784,80 @@ class TestPlatformContractCompliance:
         assert not hasattr(WebhookEvent, "STRATEGY_STOPPED"), "STRATEGY_STOPPED is a phantom event"
         assert not hasattr(WebhookEvent, "BACKTEST_FAILED"), "BACKTEST_FAILED is a phantom event"
         assert not hasattr(WebhookEvent, "BACKTEST_COMPLETED"), "BACKTEST_COMPLETED is phantom (correct name is BACKTEST_COMPLETE)"
+
+    def test_known_strategy_events_contains_all_documented_types(self):
+        """KNOWN_STRATEGY_EVENTS must contain all 16 documented strategy event types (#229)."""
+        expected = {
+            "CONNECTED",
+            "STRATEGY_STARTED",
+            "STRATEGY_STOPPED",
+            "STRATEGY_PAUSED",
+            "STRATEGY_RESUMED",
+            "STRATEGY_ERROR",
+            "ORDER_PLACED",
+            "ORDER_SUBMITTED",
+            "ORDER_FILLED",
+            "ORDER_PARTIAL",
+            "ORDER_CANCELLED",
+            "ORDER_FAILED",
+            "ORDER_ERROR",
+            "BACKTEST_PROGRESS",
+            "BACKTEST_COMPLETED",
+            "BACKTEST_FAILED",
+        }
+        assert KNOWN_STRATEGY_EVENTS == expected, (
+            f"KNOWN_STRATEGY_EVENTS missing: {expected - KNOWN_STRATEGY_EVENTS}, "
+            f"extra: {KNOWN_STRATEGY_EVENTS - expected}"
+        )
+
+    def test_strategy_event_type_is_literal(self):
+        """StrategyEventType must be a Literal type alias for type-checking (#229)."""
+        from typing import get_args, get_origin, Literal as Lit
+
+        origin = get_origin(StrategyEventType)
+        assert origin is Lit, f"StrategyEventType origin is {origin}, expected Literal"
+
+        args = set(get_args(StrategyEventType))
+        expected = {
+            "CONNECTED",
+            "STRATEGY_STARTED",
+            "STRATEGY_STOPPED",
+            "STRATEGY_PAUSED",
+            "STRATEGY_RESUMED",
+            "STRATEGY_ERROR",
+            "ORDER_PLACED",
+            "ORDER_SUBMITTED",
+            "ORDER_FILLED",
+            "ORDER_PARTIAL",
+            "ORDER_CANCELLED",
+            "ORDER_FAILED",
+            "ORDER_ERROR",
+            "BACKTEST_PROGRESS",
+            "BACKTEST_COMPLETED",
+            "BACKTEST_FAILED",
+        }
+        assert args == expected, (
+            f"StrategyEventType args missing: {expected - args}, "
+            f"extra: {args - expected}"
+        )
+
+    def test_strategy_event_importable(self):
+        """StrategyEvent dataclass must be importable with correct field types (#229)."""
+        from dataclasses import fields
+
+        event = StrategyEvent(
+            type="STRATEGY_STARTED",
+            strategy_id="strat-123",
+            data={"key": "value"},
+            timestamp=1715000000000,
+        )
+        assert event.type == "STRATEGY_STARTED"
+        assert event.strategy_id == "strat-123"
+        assert event.data == {"key": "value"}
+        assert event.timestamp == 1715000000000
+
+        field_names = {f.name for f in fields(StrategyEvent)}
+        assert field_names == {"type", "strategy_id", "data", "timestamp"}
 
     def test_ai_query_body_uses_query_field(self):
         """ai_query() must send { query } not { question } (#89)."""

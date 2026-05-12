@@ -95,10 +95,24 @@ class Token:
 
 @dataclass
 class Market:
-    """A prediction market."""
+    """A prediction market.
+
+    Fields matching the platform response shape (parity with sdk-ts ``Market``
+    interface and sdk-rust ``Market`` struct):
+
+    - ``symbol``: **deprecated** — the platform does not return a top-level
+      ``symbol`` field.  Defaults to ``None``.  Kept for backward compat only.
+    - ``updated_at``: **deprecated** — the platform does not return
+      ``updatedAt`` at the market level.  Defaults to ``None``.
+    - ``description``: optional market description (platform never returns ``null``
+      but the field is optional in the OpenAPI schema).
+    - ``end_date``: ISO 8601 string, may be ``null`` for perpetual/ongoing markets.
+    - ``resolved``: whether the market has been resolved by the oracle.
+    """
 
     id: str = ""
     title: str = ""
+    # Deprecated — kept in place for positional constructor compat
     symbol: str = ""
     category: str = ""
     tokens: list[Token] = field(default_factory=list)
@@ -107,7 +121,11 @@ class Market:
     change_24h: float = 0.0
     liquidity: float = 0.0
     created_at: str = ""
+    # Deprecated — kept in place for positional constructor compat
     updated_at: str = ""
+    description: str | None = None
+    end_date: str | None = None
+    resolved: bool = False
 
 
 # ---------------------------------------------------------------------------
@@ -1092,8 +1110,10 @@ class StrategyEvent:
     The first event on a new stream always has ``type == "CONNECTED"``.
 
     Common event types:
-        CONNECTED, STRATEGY_STARTED, STRATEGY_STOPPED, STRATEGY_ERROR,
-        ORDER_PLACED, ORDER_FILLED, ORDER_CANCELLED,
+        CONNECTED, STRATEGY_STARTED, STRATEGY_STOPPED, STRATEGY_PAUSED,
+        STRATEGY_RESUMED, STRATEGY_ERROR,
+        ORDER_SUBMITTED, ORDER_PLACED, ORDER_PARTIAL, ORDER_FILLED,
+        ORDER_FAILED, ORDER_ERROR, ORDER_CANCELLED,
         BACKTEST_PROGRESS, BACKTEST_COMPLETED, BACKTEST_FAILED
     """
 
@@ -1101,6 +1121,48 @@ class StrategyEvent:
     strategy_id: str = ""
     data: dict[str, Any] | None = None
     timestamp: int = 0
+
+
+# Known strategy event types mirroring the platform SSE stream.
+StrategyEventType = Literal[
+    "CONNECTED",
+    "STRATEGY_STARTED",
+    "STRATEGY_STOPPED",
+    "STRATEGY_PAUSED",
+    "STRATEGY_RESUMED",
+    "STRATEGY_ERROR",
+    "ORDER_PLACED",
+    "ORDER_SUBMITTED",
+    "ORDER_FILLED",
+    "ORDER_PARTIAL",
+    "ORDER_CANCELLED",
+    "ORDER_FAILED",
+    "ORDER_ERROR",
+    "BACKTEST_PROGRESS",
+    "BACKTEST_COMPLETED",
+    "BACKTEST_FAILED",
+]
+
+KNOWN_STRATEGY_EVENTS: frozenset[str] = frozenset(
+    (
+        "CONNECTED",
+        "STRATEGY_STARTED",
+        "STRATEGY_STOPPED",
+        "STRATEGY_PAUSED",
+        "STRATEGY_RESUMED",
+        "STRATEGY_ERROR",
+        "ORDER_PLACED",
+        "ORDER_SUBMITTED",
+        "ORDER_FILLED",
+        "ORDER_PARTIAL",
+        "ORDER_CANCELLED",
+        "ORDER_FAILED",
+        "ORDER_ERROR",
+        "BACKTEST_PROGRESS",
+        "BACKTEST_COMPLETED",
+        "BACKTEST_FAILED",
+    )
+)
 
 
 # ---------------------------------------------------------------------------
