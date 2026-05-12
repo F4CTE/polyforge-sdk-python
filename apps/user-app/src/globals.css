@@ -48,6 +48,21 @@
   border-radius: var(--radius-pf);
 }
 
+/* Keyboard focus indicator for nodes (overrides vendor's subtle box-shadow) */
+.react-flow__node:focus-visible > div {
+  outline: 2px solid var(--accent-default);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent-default) 30%, transparent);
+  border-radius: var(--radius-pf);
+}
+
+/* Edge focus indicator enhancement */
+.react-flow__edge:focus-visible .react-flow__edge-path {
+  stroke: var(--accent-default) !important;
+  stroke-width: 3 !important;
+  filter: drop-shadow(0 0 3px var(--accent-default));
+}
+
 /* ─── Minimap polish ─────────────────────────────────────────────────────── */
 .react-flow__minimap {
   border-radius: var(--radius-pf) !important;
@@ -159,6 +174,20 @@
 /* Handle border picks up --node-color */
 .builder-handle {
   border-color: var(--node-color) !important;
+}
+
+/* Focus indicator for keyboard-navigable handles */
+.builder-handle:focus-visible {
+  outline: 2px solid var(--accent-default) !important;
+  outline-offset: 3px !important;
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent-default) 30%, transparent) !important;
+}
+
+/* Make handles visibly glow during connection drag — mouse users */
+.react-flow__handle.connectingfrom,
+.react-flow__handle.connectionindicator {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent-default) 40%, transparent);
+  transform: scale(1.4);
 }
 
 /* Dual-handle positioning for 2-input nodes */
