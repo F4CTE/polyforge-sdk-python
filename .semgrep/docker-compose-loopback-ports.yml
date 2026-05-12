@@ -1,0 +1,25 @@
+rules:
+  - id: docker-compose-port-no-loopback
+    patterns:
+      - pattern-regex: '^\s+-\s+"\d+:\d+"$'
+    message: >
+      Port published without loopback (127.0.0.1) binding. In dev Compose
+      files, every published port must be bound to 127.0.0.1 unless the
+      service is a public entry point (e.g. the gateway on 80/8080). Unbound
+      ports expose internal services directly to the network, bypassing the
+      gateway's CSP, rate limiting, and security headers.
+      See https://github.com/F4CTE/PolyForge/issues/1310
+    languages: [generic]
+    severity: WARNING
+    paths:
+      include:
+        - "docker-compose.infra.yml"
+    metadata:
+      cwe:
+        - "CWE-668: Exposure of Resource to Wrong Sphere"
+      references:
+        - https://github.com/F4CTE/PolyForge/issues/1310
+        - https://github.com/F4CTE/PolyForge/issues/557
+      category: security
+      technology:
+        - docker
