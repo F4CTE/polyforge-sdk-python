@@ -1699,7 +1699,26 @@ class PolyforgeClient:
         *,
         idempotency_key: str | None = None,
     ) -> PlaceOrderResponse:
-        """Close an open position (sell all shares at market price)."""
+        """Close an open prediction-market position (partial or sweep).
+
+        When *size* is ``None`` (the default), this is a **sweep** — the
+        entire position is sold at market price via a market sell order.
+        When *size* is set to a number-string like ``"100"``, only that
+        portion is closed (partial close) and the remainder of the position
+        stays open.
+
+        **Sweep semantics**: GTC orders are priced at extreme tick
+        boundaries (0.001 SELL / 0.999 BUY) and behave as a
+        **market-equivalent sweep, not a resting limit order**. Slippage is
+        bounded only by venue depth at call time, not by the on-paper
+        price. The fill price is whatever the order book offers at the time
+        of execution.
+
+        For cross-venue arbitrage positions, use
+        :meth:`close_arb_position` instead — arbitrage closes are always
+        full sweeps that place reversing market orders on both venues
+        simultaneously; partial closes are not supported.
+        """
         body: dict[str, Any] = {"tokenId": token_id}
         if size is not None:
             _validate_positive_numberish_param("size", size)
@@ -1906,6 +1925,12 @@ class PolyforgeClient:
     # middleware (see ``_post`` above), so a 4xx or 5xx surfaces immediately as
     # a typed ``PolyforgeError`` subclass with the backend ``code`` preserved.
     # Do NOT add retry wrappers around these methods at the SDK layer.
+    #
+    # Both endpoints are rate-limited to 5 requests per minute per user;
+    # exceeding the limit returns HTTP 429. ``close_arb_position`` uses sweep
+    # semantics: GTC orders priced at extreme tick boundaries (0.001 SELL /
+    # 0.999 BUY) behave as market-order sweeps — slippage is bounded only by
+    # venue depth, not by the on-paper price.
 
     def execute_arb(
         self,
@@ -1916,6 +1941,22 @@ class PolyforgeClient:
         idempotency_key: str | None = None,
     ) -> ArbExecutionResult:
         """Execute a cross-venue arbitrage trade (places real orders on both venues).
+
+        Opens a new :class:`ArbPosition` in ``OPEN`` state. The position
+        consists of two legs (buy on one venue, sell on the other). To exit
+        the position later, call :meth:`close_arb_position` which performs a
+        **full sweep-close** by placing reversing market orders on both
+        venues. There is no partial-close for arb positions — the only exit
+        path is a complete sweep.
+
+        ``idempotency_key`` is sent as the ``Idempotency-Key`` header and is
+        **required** by the backend for this endpoint. The key must be 8–128
+        characters. Reuse the same key for safe caller-managed retries of
+        the same intended execution; the backend guarantees at-most-once
+        semantics per key.
+
+        ``match_id`` must be a valid UUID (RFC 4122). The backend validates
+        this server-side and returns HTTP 400 for non-UUID input.
 
         Args:
             match_id: ``MarketMatch`` UUID identifying the cross-venue pair.
@@ -1957,6 +1998,12 @@ class PolyforgeClient:
     ) -> ArbPositionsResponse:
         """List the user's arbitrage positions with pagination.
 
+        Positions track the full cross-venue arbitrage lifecycle:
+        ``OPEN`` → ``CLOSING`` → ``CLOSED`` (or ``FAILED`` if a reverse
+        order cannot be placed on one or both venues). Use
+        :meth:`get_arb_position` to poll for status transitions after
+        calling :meth:`close_arb_position`.
+
         Args:
             status: Optional :class:`ArbPositionStatus` filter.
             limit: Page size (default 50, range 1..100).
@@ -1977,7 +2024,12 @@ class PolyforgeClient:
         return ArbPositionsResponse(positions=positions, total=int(data.get("total", 0)))
 
     def get_arb_position(self, position_id: str) -> ArbPosition:
-        """Fetch a single arbitrage position by UUID."""
+        """Fetch a single arbitrage position by UUID.
+
+        Poll this to confirm the final status after a sweep-close via
+        :meth:`close_arb_position`. The position transitions from
+        ``CLOSING`` → ``CLOSED`` (or ``FAILED``) asynchronously.
+        """
         data = self._get(f"/api/v1/arbitrage/positions/{_encode_path(position_id)}")
         return _parse(ArbPosition, data)
 
@@ -1987,7 +2039,30 @@ class PolyforgeClient:
         *,
         idempotency_key: str | None = None,
     ) -> ArbCloseResponse:
-        """Close an open arbitrage position (places real reverse orders on both venues).
+        """Sweep-close an open cross-venue arbitrage position.
+
+        Places **real** reversing market orders on **both venues**
+        (Polymarket and Kalshi) to close the **entire** position at the
+        best available market prices. This is always a full sweep — there
+        is no partial-close for arbitrage positions.
+
+        The backend transitions the position through ``CLOSING`` →
+        ``CLOSED`` (or ``FAILED`` if a reverse order cannot be placed
+        on one or both venues). The returned
+        :class:`ArbCloseResponse` carries the non-terminal ``CLOSING``
+        status — closure completes asynchronously. Callers **must**
+        poll :meth:`get_arb_position` to confirm the final status
+        (``CLOSED`` or ``FAILED``) and read realised P&L from the full
+        :class:`ArbPosition` record.
+
+        ``idempotency_key`` is sent as the ``Idempotency-Key`` header and
+        is **required** by the backend for this endpoint. The key must be
+        8–128 characters. Reuse the same key for safe caller-managed
+        retries of the same intended close; the backend guarantees
+        at-most-once semantics per key.
+
+        Rate-limited to 5 requests per minute per user; exceeding the
+        limit returns HTTP 429.
 
         Raises:
             PolyforgeError: surfaces backend error codes verbatim
@@ -4993,7 +5068,10 @@ class AsyncPolyforgeClient:
         *,
         idempotency_key: str | None = None,
     ) -> PlaceOrderResponse:
-        """Close an open position (sell all shares at market price)."""
+        """Close an open prediction-market position (partial or sweep).
+
+        See :meth:`PolyforgeClient.close_position` for sweep semantics.
+        """
         body: dict[str, Any] = {"tokenId": token_id}
         if size is not None:
             _validate_positive_numberish_param("size", size)
@@ -5196,6 +5274,12 @@ class AsyncPolyforgeClient:
     # middleware (see ``_post`` above), so a 4xx or 5xx surfaces immediately as
     # a typed ``PolyforgeError`` subclass with the backend ``code`` preserved.
     # Do NOT add retry wrappers around these methods at the SDK layer.
+    #
+    # Both endpoints are rate-limited to 5 requests per minute per user;
+    # exceeding the limit returns HTTP 429. ``close_arb_position`` uses sweep
+    # semantics: GTC orders priced at extreme tick boundaries (0.001 SELL /
+    # 0.999 BUY) behave as market-order sweeps — slippage is bounded only by
+    # venue depth, not by the on-paper price.
 
     async def execute_arb(
         self,
@@ -5244,7 +5328,10 @@ class AsyncPolyforgeClient:
         return ArbPositionsResponse(positions=positions, total=int(data.get("total", 0)))
 
     async def get_arb_position(self, position_id: str) -> ArbPosition:
-        """Fetch a single arbitrage position by UUID."""
+        """Fetch a single arbitrage position by UUID.
+
+        See :meth:`PolyforgeClient.get_arb_position` for polling usage.
+        """
         data = await self._get(f"/api/v1/arbitrage/positions/{_encode_path(position_id)}")
         return _parse(ArbPosition, data)
 
@@ -5254,7 +5341,11 @@ class AsyncPolyforgeClient:
         *,
         idempotency_key: str | None = None,
     ) -> ArbCloseResponse:
-        """Close an open arbitrage position (places real reverse orders on both venues)."""
+        """Sweep-close an open cross-venue arbitrage position.
+
+        See :meth:`PolyforgeClient.close_arb_position` for parameter
+        contract, rate-limit details, and sweep semantics.
+        """
         data = await self._post(
             f"/api/v1/arbitrage/positions/{_encode_path(position_id)}/close",
             idempotency_key=_new_idempotency_key(idempotency_key),

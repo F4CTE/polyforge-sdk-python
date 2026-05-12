@@ -172,6 +172,28 @@ New dataclass: `SystemHealthAuthenticated` (re-exported from `polyforge`).
 
 ### Changed
 
+**Arb close-sweep semantics documented (POLA-1957)** — updated docstrings across
+``ArbCloseResponse``, ``close_arb_position()``, ``execute_arb()``,
+``get_arb_position()``, and ``list_arb_positions()`` to match the hardened
+backend contract:
+
+- ``ArbCloseResponse.status`` is now documented as **non-terminal** — ``CLOSING``
+  means orders were accepted but completion is asynchronous. Callers must poll
+  ``get_arb_position()`` to confirm the final ``CLOSED`` or ``FAILED`` status.
+- ``execute_arb()`` docstring now documents the required ``idempotency_key``
+  header (8–128 characters, at-most-once semantics), UUID validation on
+  ``match_id``, the 5 req/min rate limit, and the full sweep-close lifecycle
+  (``OPEN`` → ``CLOSING`` → ``CLOSED`` / ``FAILED``) via
+  ``close_arb_position()``.
+- ``close_arb_position()`` docstring now documents the non-terminal ``CLOSING``
+  response, required ``idempotency_key``, 5 req/min rate limit, and required
+  polling pattern.
+- ``list_arb_positions()`` docstring now documents the full position lifecycle.
+- ``get_arb_position()`` docstring now references its use as the polling
+  endpoint after a sweep-close.
+- **README** arbitrage table updated with sweep-close semantics, required
+  idempotency-key, and async polling guidance.
+
 **Cross-SDK naming normalization (POLA-1913)** — renamed feed, referral, and
 public-profile badge surfaces to match the MCP and Rust SDK naming:
 
