@@ -957,7 +957,7 @@ describe("NativeCtfService", () => {
       global.fetch = vi.fn().mockResolvedValue({
         ok: true,
         json: async () => ({ result: "0x1" }),
-      } as Response);
+      });
 
       const creds = makeTestCreds();
       let caught: Error | null = null;
@@ -994,7 +994,7 @@ describe("NativeCtfService", () => {
       global.fetch = vi.fn().mockResolvedValue({
         ok: true,
         json: async () => ({ result: "0x1" }),
-      } as Response);
+      });
 
       const creds = makeTestCreds();
 
@@ -1028,9 +1028,12 @@ describe("NativeCtfService", () => {
     it("surfaces permanent Redis errors immediately instead of retrying", async () => {
       const { redisService, client } = makeMockRedis();
 
-      const permanentErr = Object.assign(new Error("NOAUTH Authentication required."), {
-        name: "ReplyError",
-      });
+      const permanentErr = Object.assign(
+        new Error("NOAUTH Authentication required."),
+        {
+          name: "ReplyError",
+        },
+      );
       client.set.mockRejectedValueOnce(permanentErr);
 
       const svcWithRedis = new NativeCtfService(redisService);
@@ -1038,7 +1041,7 @@ describe("NativeCtfService", () => {
       global.fetch = vi.fn().mockResolvedValue({
         ok: true,
         json: async () => ({ result: "0x1" }),
-      } as Response);
+      });
 
       const creds = makeTestCreds();
       await expect(
@@ -1060,7 +1063,7 @@ describe("NativeCtfService", () => {
 
       // First invocation: SET never resolves within the 3 s timeout,
       // so the timeout wins the race.  The SET promise stays pending.
-      let resolveSetPromise: ((value: unknown) => void) | null = null;
+      let resolveSetPromise: ((value: string | null) => void) | null = null;
       const firstSetPromise = new Promise<string | null>((resolve) => {
         resolveSetPromise = resolve;
       });
@@ -1074,7 +1077,7 @@ describe("NativeCtfService", () => {
       global.fetch = vi.fn().mockResolvedValue({
         ok: true,
         json: async () => ({ result: "0x1" }),
-      } as Response);
+      });
 
       const creds = makeTestCreds();
       let caught: Error | null = null;
@@ -1105,7 +1108,9 @@ describe("NativeCtfService", () => {
     it("logs a warning when EVAL fails during lock release", async () => {
       const { redisService, client } = makeMockRedis();
 
-      client.eval.mockRejectedValueOnce(new Error("READONLY You can't write against a read only replica."));
+      client.eval.mockRejectedValueOnce(
+        new Error("READONLY You can't write against a read only replica."),
+      );
 
       const svcWithRedis = new NativeCtfService(redisService);
 
@@ -1114,13 +1119,24 @@ describe("NativeCtfService", () => {
         "warn",
       );
 
-      global.fetch = vi.fn().mockImplementation(async (_url: string, init: RequestInit) => {
-        const body = JSON.parse(init.body as string) as Record<string, unknown>;
-        if ((body.method as string) === "eth_sendRawTransaction") {
-          return { ok: true, json: async () => ({ result: "0x" + "aa".repeat(32) }) } as Response;
-        }
-        return { ok: true, json: async () => ({ result: "0x1" }) } as Response;
-      });
+      global.fetch = vi
+        .fn()
+        .mockImplementation(async (_url: string, init: RequestInit) => {
+          const body = JSON.parse(init.body as string) as Record<
+            string,
+            unknown
+          >;
+          if ((body.method as string) === "eth_sendRawTransaction") {
+            return {
+              ok: true,
+              json: async () => ({ result: "0x" + "aa".repeat(32) }),
+            } as Response;
+          }
+          return {
+            ok: true,
+            json: async () => ({ result: "0x1" }),
+          } as Response;
+        });
 
       const creds = makeTestCreds();
       await svcWithRedis.redeemPosition(creds, 137, "http://fake-rpc", {

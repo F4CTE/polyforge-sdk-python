@@ -533,7 +533,7 @@ export class NativeCtfService {
 
       const setPromise = client
         .set(key, attemptToken, "PX", 30_000, "NX")
-        .then((result) => {
+        .then((result: string | null) => {
           if (raceWinner === null) raceWinner = "set";
           return result;
         });
@@ -569,11 +569,9 @@ export class NativeCtfService {
         // When it eventually settles via ioredis offline-queue replay it
         // may create a ghost lock.  Attach a handler to clean it up.
         if (raceWinner === "timeout") {
-          setPromise.then((lateResult) => {
+          void setPromise.then((lateResult: string | null) => {
             if (lateResult === "OK") {
-              this.logger.debug(
-                `Cleaning up ghost CTF nonce lock: ${key}`,
-              );
+              this.logger.debug(`Cleaning up ghost CTF nonce lock: ${key}`);
               client.del(key).catch(() => {});
             }
           });
@@ -596,22 +594,20 @@ export class NativeCtfService {
    * caller's token before deleting, preventing a delayed {@code DEL} or
    * a TTL-expired unlock from removing another request's lock.
    */
-  private async releaseCtfLock(
-    key: string,
-    lockToken: string,
-  ): Promise<void> {
+  private async releaseCtfLock(key: string, lockToken: string): Promise<void> {
     try {
-      const deleted = await this.redis!
-        .getClient()
-        .eval(NativeCtfService.UNLOCK_SCRIPT, 1, key, lockToken);
+      const deleted = await this.redis!.getClient().eval(
+        NativeCtfService.UNLOCK_SCRIPT,
+        1,
+        key,
+        lockToken,
+      );
 
       if (deleted === 1) {
         this.logger.debug(`Released CTF nonce lock: ${key}`);
       } else {
         // Token mismatch — another request owns the lock or it expired.
-        this.logger.debug(
-          `CTF nonce lock release skipped (not owner): ${key}`,
-        );
+        this.logger.debug(`CTF nonce lock release skipped (not owner): ${key}`);
       }
     } catch (err) {
       this.logger.warn(
