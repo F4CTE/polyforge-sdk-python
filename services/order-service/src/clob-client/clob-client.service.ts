@@ -2,7 +2,6 @@ import { Injectable, Logger } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import type {
   Chain as PolymarketChain,
-  ClobClient as PolymarketClobClient,
   OrderBookSummary,
   OpenOrder,
   Trade,
@@ -14,8 +13,25 @@ import type {
   TickSize,
 } from "@polymarket/clob-client" with { "resolution-mode": "import" };
 
+export interface ClobClientLike {
+  readonly host: string;
+  getOrderBook(tokenID: string): Promise<OrderBookSummary>;
+  getSpread(tokenID: string): Promise<{ spread: string }>;
+  getMidpoint(tokenID: string): Promise<{ mid: string }>;
+  getTickSize(tokenID: string): Promise<TickSize>;
+  getFeeRateBps(tokenID: string): Promise<number>;
+  getLastTradePrice(tokenID: string): Promise<{ price: string }>;
+  getServerTime(): Promise<number>;
+  getMarket(conditionID: string): Promise<Record<string, unknown>>;
+  getPricesHistory(params: {
+    market: string;
+    interval?: string;
+    fidelity?: number;
+  }): Promise<MarketPrice[]>;
+}
+
 type PolymarketClobClientModule = {
-  ClobClient: new (...args: any[]) => PolymarketClobClient;
+  ClobClient: new (host: string, chain: PolymarketChain) => ClobClientLike;
   Chain: {
     readonly POLYGON: PolymarketChain;
     readonly AMOY: PolymarketChain;
@@ -113,7 +129,7 @@ const RETRY_DELAYS_MS = [500, 1000, 2000];
 export class ClobClientService {
   private readonly logger = new Logger(ClobClientService.name);
   private readonly clobUrl: string;
-  readonly sdk: PolymarketClobClient;
+  readonly sdk: ClobClientLike;
 
   constructor(private readonly config: ConfigService) {
     this.clobUrl = this.config.getOrThrow<string>("CLOB_API_URL");
@@ -179,7 +195,8 @@ export class ClobClientService {
   }
 
   async getClobMarketInfo(conditionId: string): Promise<ClobMarketInfo> {
-    return this.sdk.getMarket(conditionId);
+    const info: Record<string, unknown> = await this.sdk.getMarket(conditionId);
+    return info as unknown as ClobMarketInfo;
   }
 
   async getPricesHistory(
@@ -189,7 +206,7 @@ export class ClobClientService {
   ): Promise<{ history: Array<{ t: number; p: string }> }> {
     const prices: MarketPrice[] = await this.sdk.getPricesHistory({
       market: tokenId,
-      ...(interval ? { interval: interval as any } : {}),
+      ...(interval ? { interval } : {}),
       ...(fidelity !== undefined ? { fidelity } : {}),
     });
     return { history: prices.map((mp) => ({ t: mp.t, p: String(mp.p) })) };

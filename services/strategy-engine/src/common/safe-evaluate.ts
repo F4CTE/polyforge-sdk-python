@@ -1,5 +1,15 @@
-// eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-unsafe-assignment
-const { create, all } = require("mathjs");
+type MathJsModule = {
+  create: (
+    factories: unknown,
+    config?: Record<string, unknown>,
+  ) => {
+    parse: (expression: string) => unknown;
+  };
+  all: unknown;
+};
+
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const { create, all } = require("mathjs") as MathJsModule;
 
 /**
  * Restricted mathjs instance — primary security layer.
