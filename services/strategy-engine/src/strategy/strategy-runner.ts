@@ -64,7 +64,7 @@ export class StrategyRunner {
   private delayedActions: Map<string, NodeJS.Timeout> = new Map();
 
   /** Throttles EVENT-mode ticks to prevent bursty in-order evaluation */
-	private lastTickMs = -MIN_TICK_MS;
+  private lastTickMs = -MIN_TICK_MS;
 
   /** Tracks child strategy IDs launched by RUN_STRATEGY action blocks */
   readonly childStrategies: Set<string> = new Set();

@@ -1290,6 +1290,9 @@ describe("StrategyRunner — detectStaleData edge cases", () => {
 
 describe("StrategyRunner — concurrent tick serialization", () => {
   it("bounces second concurrent tick when lock is already held", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(1_000_000);
+
     let setCalls = 0;
     const state = makeState();
 
@@ -1314,8 +1317,11 @@ describe("StrategyRunner — concurrent tick serialization", () => {
 
     const runner = makeRunner({ execMode: "EVENT", state, redis });
 
-    // Fire two concurrent tick calls
+    // Fire two concurrent tick calls with a time gap > MIN_TICK_MS so
+    // the min-tick debounce lets the second through, but the Redis lock bounces it.
     const tick1 = runner.onPriceEvent("tok1", 0.5);
+    // Advance time past MIN_TICK_MS (200ms) so tick2 is not debounced
+    vi.setSystemTime(1_000_200);
     const tick2 = runner.onPriceEvent("tok1", 0.6);
 
     await Promise.all([tick1, tick2]);
@@ -1325,6 +1331,8 @@ describe("StrategyRunner — concurrent tick serialization", () => {
     expect(setCalls).toBe(2);
     // incr is only called once (only the first tick proceeds past the lock)
     expect(redisClient.incr).toHaveBeenCalledTimes(1);
+
+    vi.useRealTimers();
   });
 
   it("releases the lock after a successful tick", async () => {
