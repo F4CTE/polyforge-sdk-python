@@ -373,6 +373,51 @@ class TestModelParsing:
         assert market.title == "Will BTC reach $100K by June?"
         assert market.id == "0xabc"
 
+    def test_market_parses_description_enddate_resolved_from_api_response(self):
+        """_parse must map description, endDate, resolved from platform JSON (#227)."""
+        api_response = {
+            "id": "mkt-001",
+            "title": "Will ETH flip BTC?",
+            "category": "Crypto",
+            "price": 0.42,
+            "description": "Market predicts whether Ethereum flips Bitcoin in market cap",
+            "endDate": "2026-12-31T23:59:59Z",
+            "resolved": False,
+        }
+        market = _parse(Market, api_response)
+        assert market.description == "Market predicts whether Ethereum flips Bitcoin in market cap"
+        assert market.end_date == "2026-12-31T23:59:59Z"
+        assert market.resolved is False
+
+    def test_market_parses_resolved_true_from_api_response(self):
+        """resolved=true from the platform must be parsed as True."""
+        api_response = {
+            "id": "mkt-resolved",
+            "title": "Resolved market",
+            "category": "Politics",
+            "resolved": True,
+        }
+        market = _parse(Market, api_response)
+        assert market.resolved is True
+
+    def test_market_handles_null_enddate(self):
+        """endDate=null (perpetual/ongoing markets) must map to end_date=None."""
+        api_response = {
+            "id": "mkt-perpetual",
+            "title": "Perpetual market",
+            "category": "Crypto",
+            "endDate": None,
+        }
+        market = _parse(Market, api_response)
+        assert market.end_date is None
+
+    def test_market_defaults_for_new_fields(self):
+        """Market() should default description=None, end_date=None, resolved=False."""
+        market = Market()
+        assert market.description is None
+        assert market.end_date is None
+        assert market.resolved is False
+
     def test_strategy_model_instantiation(self):
         """Should instantiate Strategy model."""
         strategy = Strategy(
