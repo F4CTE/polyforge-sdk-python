@@ -10,7 +10,7 @@ available on both `PolyforgeClient` and `AsyncPolyforgeClient`:
 
 - `get_accuracy_overview()` → `AccuracyScore` (root `GET /accuracy`, companion to `get_accuracy()` which targets `/accuracy/me`)
 - `get_feed(*, page, limit, min_size, market_id, wallet_address, side)` → `PaginatedResponse[dict[str, Any]]` — global whale-activity feed
-- `list_journal(*, page, limit, mood)` → `PaginatedResponse[dict[str, Any]]` — order-journal entries with optional mood filter
+- `list_journal(*, page, limit, mood)` → `PaginatedResponse[JournalEntry]` — order-journal entries parsed into a typed :class:`JournalEntry` dataclass
 - `list_notifications(*, page, limit)` → `PaginatedResponse[dict[str, Any]]` — delivered notifications (distinct from notification *settings*)
 - `get_my_referrals()` → `MyReferralsResponse` — referral code, link, stats
 - `preview_fees(*, token_id, side, size, price, order_type)` → `OrderPreviewResponse` — cross-venue fee comparison
