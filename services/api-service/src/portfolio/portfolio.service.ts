@@ -76,27 +76,57 @@ export class PortfolioService {
     };
   }
 
-  async exportCsv(userId: string): Promise<string> {
-    const positions = await this.prisma.position.findMany({
-      where: { userId },
-      orderBy: { updatedAt: "desc" },
-    });
-
+  async exportCsv(
+    userId: string,
+  ): Promise<{ csv: string; truncated: boolean }> {
+    const BATCH_SIZE = 1000;
+    const MAX_EXPORT_ROWS = 10_000;
     const header =
       "Market ID,Outcome,Size,Avg Price,Unrealized P&L,Realized P&L,Status,Updated\n";
-    const rows = positions.map((p) =>
-      [
-        `"${p.marketId}"`,
-        p.outcome ?? "",
-        p.size != null ? String(p.size) : "",
-        p.avgPrice != null ? String(p.avgPrice) : "",
-        p.unrealizedPnl != null ? String(p.unrealizedPnl) : "",
-        p.realizedPnl != null ? String(p.realizedPnl) : "",
-        p.resolutionStatus ?? "",
-        p.updatedAt.toISOString(),
-      ].join(","),
-    );
-    return header + rows.join("\n");
+    const rows: string[] = [];
+    let cursor: { updatedAt: Date; id: string } | undefined;
+    let truncated = false;
+
+    while (true) {
+      const batch = await this.prisma.position.findMany({
+        where: { userId },
+        orderBy: [{ updatedAt: "desc" }, { id: "desc" }],
+        take: BATCH_SIZE,
+        ...(cursor
+          ? { cursor: { updatedAt: cursor.updatedAt, id: cursor.id }, skip: 1 }
+          : {}),
+      });
+
+      if (batch.length === 0) break;
+
+      for (const p of batch) {
+        if (rows.length >= MAX_EXPORT_ROWS) {
+          truncated = true;
+          break;
+        }
+        rows.push(
+          [
+            `"${p.marketId}"`,
+            p.outcome ?? "",
+            p.size != null ? String(p.size) : "",
+            p.avgPrice != null ? String(p.avgPrice) : "",
+            p.unrealizedPnl != null ? String(p.unrealizedPnl) : "",
+            p.realizedPnl != null ? String(p.realizedPnl) : "",
+            p.resolutionStatus ?? "",
+            p.updatedAt.toISOString(),
+          ].join(","),
+        );
+      }
+
+      if (truncated) break;
+
+      const last = batch[batch.length - 1];
+      cursor = { updatedAt: last.updatedAt, id: last.id };
+
+      if (batch.length < BATCH_SIZE) break;
+    }
+
+    return { csv: header + rows.join("\n"), truncated };
   }
 
   async getPnl(

@@ -61,9 +61,12 @@ export class PortfolioController {
 
   @Get("export/csv")
   async exportCsv(@CurrentUser() user: JwtPayload, @Res() res: Response) {
-    const csv = await this.portfolio.exportCsv(user.sub);
+    const { csv, truncated } = await this.portfolio.exportCsv(user.sub);
     res.header("Content-Type", "text/csv");
     res.header("Content-Disposition", 'attachment; filename="portfolio.csv"');
+    if (truncated) {
+      res.header("X-Export-Truncated", "true");
+    }
     res.send(csv);
   }
 

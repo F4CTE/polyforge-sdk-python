@@ -247,9 +247,12 @@ export class OrdersController {
   @UseGuards(ApiKeyScopeGuard)
   @RequireScopes("READ")
   async exportCsv(@CurrentUser() user: JwtPayload, @Res() res: Response) {
-    const csv = await this.orders.exportCsv(user.sub);
+    const { csv, truncated } = await this.orders.exportCsv(user.sub);
     res.header("Content-Type", "text/csv");
     res.header("Content-Disposition", 'attachment; filename="orders.csv"');
+    if (truncated) {
+      res.header("X-Export-Truncated", "true");
+    }
     res.send(csv);
   }
 }

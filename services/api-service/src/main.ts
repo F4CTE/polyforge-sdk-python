@@ -136,6 +136,7 @@ async function bootstrap() {
     }),
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
+    exposedHeaders: ["X-Export-Truncated"],
     credentials: true,
   });
 

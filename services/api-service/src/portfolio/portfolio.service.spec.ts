@@ -312,11 +312,12 @@ describe("PortfolioService", () => {
     it("returns CSV header with correct column names", async () => {
       db.position.findMany.mockResolvedValue([]);
 
-      const csv = await service.exportCsv("user-uuid-1");
+      const { csv, truncated } = await service.exportCsv("user-uuid-1");
 
       expect(csv).toContain(
         "Market ID,Outcome,Size,Avg Price,Unrealized P&L,Realized P&L,Status,Updated",
       );
+      expect(truncated).toBe(false);
     });
 
     it("returns CSV rows for positions", async () => {
@@ -334,7 +335,7 @@ describe("PortfolioService", () => {
         },
       ] as any);
 
-      const csv = await service.exportCsv("user-uuid-1");
+      const { csv, truncated } = await service.exportCsv("user-uuid-1");
 
       expect(csv).toContain('"mkt-1"');
       expect(csv).toContain("YES");
@@ -342,6 +343,7 @@ describe("PortfolioService", () => {
       expect(csv).toContain("0.60");
       expect(csv).toContain("UNRESOLVED");
       expect(csv).toContain(updatedAt.toISOString());
+      expect(truncated).toBe(false);
     });
 
     it("handles null fields gracefully in CSV", async () => {
@@ -359,7 +361,7 @@ describe("PortfolioService", () => {
         },
       ] as any);
 
-      const csv = await service.exportCsv("user-uuid-1");
+      const { csv } = await service.exportCsv("user-uuid-1");
 
       // Should not throw, should produce empty string for null fields
       expect(csv).toContain('"mkt-1"');
@@ -391,21 +393,87 @@ describe("PortfolioService", () => {
         },
       ] as any);
 
-      const csv = await service.exportCsv("user-uuid-1");
+      const { csv } = await service.exportCsv("user-uuid-1");
 
       const lines = csv.trim().split("\n");
       expect(lines).toHaveLength(3); // header + 2 rows
     });
 
-    it("queries positions ordered by updatedAt desc", async () => {
+    it("queries positions ordered by updatedAt desc in batches", async () => {
       db.position.findMany.mockResolvedValue([]);
 
       await service.exportCsv("user-uuid-1");
 
       expect(db.position.findMany).toHaveBeenCalledWith({
         where: { userId: "user-uuid-1" },
-        orderBy: { updatedAt: "desc" },
+        orderBy: [{ updatedAt: "desc" }, { id: "desc" }],
+        take: 1000,
       });
+    });
+
+    it("iterates through multiple batches", async () => {
+      const updatedAt = new Date("2025-06-01T12:00:00.000Z");
+      db.position.findMany
+        .mockResolvedValueOnce(
+          Array.from({ length: 1000 }, (_, i) => ({
+            id: `pos-${i}`,
+            marketId: `mkt-${i}`,
+            outcome: "YES",
+            size: "100",
+            avgPrice: "0.60",
+            unrealizedPnl: "5.00",
+            realizedPnl: "10.00",
+            resolutionStatus: "UNRESOLVED",
+            updatedAt,
+          })) as any,
+        )
+        .mockResolvedValueOnce(
+          Array.from({ length: 300 }, (_, i) => ({
+            id: `pos-${1000 + i}`,
+            marketId: `mkt-${1000 + i}`,
+            outcome: "NO",
+            size: "50",
+            avgPrice: "0.40",
+            unrealizedPnl: "0",
+            realizedPnl: "25.00",
+            resolutionStatus: "RESOLVED",
+            updatedAt,
+          })) as any,
+        );
+
+      const { csv, truncated } = await service.exportCsv("user-uuid-1");
+
+      const lines = csv.trim().split("\n");
+      expect(lines).toHaveLength(1301); // header + 1300 rows
+      expect(truncated).toBe(false);
+      expect(db.position.findMany).toHaveBeenCalledTimes(2);
+    });
+
+    it("caps export at MAX_EXPORT_ROWS and sets truncated", async () => {
+      const updatedAt = new Date("2025-06-01T12:00:00.000Z");
+      const batches = Array.from({ length: 11 }, (_, batchIdx) =>
+        Array.from({ length: 1000 }, (_, i) => ({
+          id: `pos-${batchIdx * 1000 + i}`,
+          marketId: `mkt-${batchIdx * 1000 + i}`,
+          outcome: "YES",
+          size: "100",
+          avgPrice: "0.60",
+          unrealizedPnl: "5.00",
+          realizedPnl: "10.00",
+          resolutionStatus: "UNRESOLVED",
+          updatedAt,
+        })),
+      );
+
+      for (const batch of batches) {
+        db.position.findMany.mockResolvedValueOnce(batch as any);
+      }
+
+      const { csv, truncated } = await service.exportCsv("user-uuid-1");
+
+      const lines = csv.trim().split("\n");
+      expect(lines).toHaveLength(10001); // header + 10000 rows
+      expect(truncated).toBe(true);
     });
   });
 

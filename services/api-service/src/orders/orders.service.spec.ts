@@ -1187,7 +1187,7 @@ describe("OrdersService", () => {
         }),
       ] as any);
 
-      const csv = await service.exportCsv("user-uuid-1");
+      const { csv, truncated } = await service.exportCsv("user-uuid-1");
 
       expect(csv).toContain(
         "Market ID,Side,Outcome,Size,Price,Type,Status,Fill Price,Date",
@@ -1197,16 +1197,18 @@ describe("OrdersService", () => {
       expect(csv).toContain("100.00");
       expect(csv).toContain("0.65");
       expect(csv).toContain("0.64");
+      expect(truncated).toBe(false);
     });
 
     it("returns only header when user has no orders", async () => {
       db.order.findMany.mockResolvedValue([]);
 
-      const csv = await service.exportCsv("user-uuid-1");
+      const { csv, truncated } = await service.exportCsv("user-uuid-1");
 
       expect(csv).toBe(
         "Market ID,Side,Outcome,Size,Price,Type,Status,Fill Price,Date\n",
       );
+      expect(truncated).toBe(false);
     });
 
     it("handles null fillPrice gracefully", async () => {
@@ -1220,22 +1222,78 @@ describe("OrdersService", () => {
         }),
       ] as any);
 
-      const csv = await service.exportCsv("user-uuid-1");
+      const { csv } = await service.exportCsv("user-uuid-1");
 
       // Should not throw and should handle nulls
       expect(csv).toBeDefined();
       expect(csv.split("\n").length).toBeGreaterThanOrEqual(2);
     });
 
-    it("queries orders for the correct user", async () => {
+    it("queries orders for the correct user in batches", async () => {
       db.order.findMany.mockResolvedValue([]);
 
       await service.exportCsv("user-xyz");
 
       expect(db.order.findMany).toHaveBeenCalledWith({
         where: { userId: "user-xyz" },
-        orderBy: { createdAt: "desc" },
+        orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+        take: 1000,
       });
+    });
+
+    it("iterates through multiple batches", async () => {
+      db.order.findMany
+        .mockResolvedValueOnce(
+          Array.from({ length: 1000 }, (_, i) =>
+            makeOrder({
+              id: `order-${i}`,
+              createdAt: new Date(
+                `2025-01-01T00:00:00.${String(i).padStart(3, "0")}Z`,
+              ),
+            }),
+          ) as any,
+        )
+        .mockResolvedValueOnce(
+          Array.from({ length: 500 }, (_, i) =>
+            makeOrder({
+              id: `order-${1000 + i}`,
+              createdAt: new Date(
+                `2025-01-01T00:00:01.${String(i).padStart(3, "0")}Z`,
+              ),
+            }),
+          ) as any,
+        );
+
+      const { csv, truncated } = await service.exportCsv("user-uuid-1");
+
+      const lines = csv.trim().split("\n");
+      expect(lines).toHaveLength(1501); // header + 1500 rows
+      expect(truncated).toBe(false);
+      expect(db.order.findMany).toHaveBeenCalledTimes(2);
+    });
+
+    it("caps export at MAX_EXPORT_ROWS and sets truncated", async () => {
+      // 11 batches of 1000 = 11,000 > 10,000 cap
+      const batches = Array.from({ length: 11 }, (_, batchIdx) =>
+        Array.from({ length: 1000 }, (_, i) =>
+          makeOrder({
+            id: `order-${batchIdx * 1000 + i}`,
+            createdAt: new Date(
+              `2025-01-01T00:00:${String(batchIdx).padStart(2, "0")}.${String(i).padStart(3, "0")}Z`,
+            ),
+          }),
+        ),
+      );
+
+      for (const batch of batches) {
+        db.order.findMany.mockResolvedValueOnce(batch as any);
+      }
+
+      const { csv, truncated } = await service.exportCsv("user-uuid-1");
+
+      const lines = csv.trim().split("\n");
+      expect(lines).toHaveLength(10001); // header + 10000 rows
+      expect(truncated).toBe(true);
     });
   });
 

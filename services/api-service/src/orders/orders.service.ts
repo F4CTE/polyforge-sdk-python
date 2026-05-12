@@ -638,28 +638,58 @@ export class OrdersService {
     return { orderId, intentId, status: "PENDING" };
   }
 
-  async exportCsv(userId: string): Promise<string> {
-    const orders = await this.prisma.order.findMany({
-      where: { userId },
-      orderBy: { createdAt: "desc" },
-    });
-
+  async exportCsv(
+    userId: string,
+  ): Promise<{ csv: string; truncated: boolean }> {
+    const BATCH_SIZE = 1000;
+    const MAX_EXPORT_ROWS = 10_000;
     const header =
       "Market ID,Side,Outcome,Size,Price,Type,Status,Fill Price,Date\n";
-    const rows = orders.map((o) =>
-      [
-        `"${o.marketId}"`,
-        o.side,
-        o.outcome ?? "",
-        o.size != null ? String(o.size) : "",
-        o.price != null ? String(o.price) : "",
-        o.orderType,
-        o.status,
-        o.fillPrice != null ? String(o.fillPrice) : "",
-        o.createdAt.toISOString(),
-      ].join(","),
-    );
-    return header + rows.join("\n");
+    const rows: string[] = [];
+    let cursor: { createdAt: Date; id: string } | undefined;
+    let truncated = false;
+
+    while (true) {
+      const batch = await this.prisma.order.findMany({
+        where: { userId },
+        orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+        take: BATCH_SIZE,
+        ...(cursor
+          ? { cursor: { createdAt: cursor.createdAt, id: cursor.id }, skip: 1 }
+          : {}),
+      });
+
+      if (batch.length === 0) break;
+
+      for (const o of batch) {
+        if (rows.length >= MAX_EXPORT_ROWS) {
+          truncated = true;
+          break;
+        }
+        rows.push(
+          [
+            `"${o.marketId}"`,
+            o.side,
+            o.outcome ?? "",
+            o.size != null ? String(o.size) : "",
+            o.price != null ? String(o.price) : "",
+            o.orderType,
+            o.status,
+            o.fillPrice != null ? String(o.fillPrice) : "",
+            o.createdAt.toISOString(),
+          ].join(","),
+        );
+      }
+
+      if (truncated) break;
+
+      const last = batch[batch.length - 1];
+      cursor = { createdAt: last.createdAt, id: last.id };
+
+      if (batch.length < BATCH_SIZE) break;
+    }
+
+    return { csv: header + rows.join("\n"), truncated };
   }
 
   async updateJournal(
