@@ -1255,7 +1255,7 @@ class PolyforgeClient:
 
         Args:
             strategy_id: Strategy to report.
-            reason: One of ``"SPAM"``, ``"HARMFUL"``, ``"MISLEADING"``, ``"OTHER"``.
+            reason: One of ``"SPAM"``, ``"INAPPROPRIATE"``, ``"MISLEADING"``, ``"OTHER"``.
             description: Optional additional detail.
         """
         body: dict[str, Any] = {"reason": reason}
@@ -4570,7 +4570,7 @@ class AsyncPolyforgeClient:
 
         Args:
             strategy_id: Strategy to report.
-            reason: One of ``"SPAM"``, ``"HARMFUL"``, ``"MISLEADING"``, ``"OTHER"``.
+            reason: One of ``"SPAM"``, ``"INAPPROPRIATE"``, ``"MISLEADING"``, ``"OTHER"``.
             description: Optional additional detail.
         """
         body: dict[str, Any] = {"reason": reason}
