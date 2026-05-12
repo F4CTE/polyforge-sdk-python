@@ -4,6 +4,7 @@ import {
   DecryptedCredentials,
   zeroCredentials,
 } from "../credentials/credentials.service";
+import { RedisService } from "@polyforge/shared-redis";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -27,6 +28,33 @@ function makeTestCreds(
 
 const CONDITION_ID = "0x" + "ab".repeat(32);
 const ZERO_BYTES32 = "0x" + "00".repeat(32);
+
+/** Create a mock Redis client and RedisService for lock tests. */
+function makeMockRedis() {
+  const locks = new Set<string>();
+  const client = {
+    set: vi
+      .fn()
+      .mockImplementation(
+        async (_key: string, _value: string, ...args: string[]) => {
+          if (args[0] === "PX" && args.includes("NX")) {
+            if (locks.has(_key)) return null;
+            locks.add(_key);
+            return "OK";
+          }
+          return "OK";
+        },
+      ),
+    del: vi.fn().mockImplementation(async (key: string) => {
+      locks.delete(key);
+      return 1;
+    }),
+  };
+
+  const redisService = { getClient: () => client } as unknown as RedisService;
+
+  return { client, redisService, locks };
+}
 
 // ─── Suite ────────────────────────────────────────────────────────────────────
 
@@ -509,6 +537,329 @@ describe("NativeCtfService", () => {
       const pkHex = Buffer.from(TEST_PRIVATE_KEY_HEX, "utf8").toString("hex");
       expect(utf8Calls.some((h) => h === pkHex)).toBe(false);
       zeroCredentials(creds);
+    });
+  });
+
+  // ── Per-EOA nonce serialization ──────────────────────────────────────────
+
+  describe("CTF nonce serialization (per-EOA lock)", () => {
+    it("uses a per-EOA lock key containing the lowercase address", async () => {
+      const { redisService, client } = makeMockRedis();
+      const svcWithRedis = new NativeCtfService(redisService);
+
+      global.fetch = vi
+        .fn()
+        .mockImplementation(async (_url: string, init: RequestInit) => {
+          const body = JSON.parse(init.body as string) as Record<
+            string,
+            unknown
+          >;
+          if ((body.method as string) === "eth_sendRawTransaction") {
+            return {
+              ok: true,
+              json: async () => ({ result: "0x" + "aa".repeat(32) }),
+            } as Response;
+          }
+          if ((body.method as string) === "eth_getTransactionCount") {
+            return {
+              ok: true,
+              json: async () => ({ result: "0x1" }),
+            } as Response;
+          }
+          return {
+            ok: true,
+            json: async () => ({ result: "0x6FC23AC00" }),
+          } as Response;
+        });
+
+      const creds = makeTestCreds();
+      await svcWithRedis.redeemPosition(creds, 137, "http://fake-rpc", {
+        conditionId: CONDITION_ID,
+        indexSets: [1n],
+      });
+      zeroCredentials(creds);
+
+      const setCalls = client.set.mock.calls.filter(
+        (c: unknown[]) => c.length >= 5 && c[2] === "PX" && c[4] === "NX",
+      ) as [string, string, ...string[]][];
+
+      expect(setCalls.length).toBe(1);
+      const lockKey = setCalls[0][0];
+      expect(lockKey).toMatch(/^ctf:tx:lock:0x[0-9a-f]{40}$/);
+      expect(lockKey).toContain("0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266");
+    });
+
+    it("releases the lock after a successful operation", async () => {
+      const { redisService, client } = makeMockRedis();
+      const svcWithRedis = new NativeCtfService(redisService);
+
+      global.fetch = vi
+        .fn()
+        .mockImplementation(async (_url: string, init: RequestInit) => {
+          const body = JSON.parse(init.body as string) as Record<
+            string,
+            unknown
+          >;
+          if ((body.method as string) === "eth_sendRawTransaction") {
+            return {
+              ok: true,
+              json: async () => ({ result: "0x" + "bb".repeat(32) }),
+            } as Response;
+          }
+          return {
+            ok: true,
+            json: async () => ({ result: "0x1" }),
+          } as Response;
+        });
+
+      const creds = makeTestCreds();
+      await svcWithRedis.splitPosition(creds, 137, "http://fake-rpc", {
+        conditionId: CONDITION_ID,
+        partition: [1n, 2n],
+        amount: 1_000_000n,
+      });
+      zeroCredentials(creds);
+
+      expect(client.del).toHaveBeenCalled();
+    });
+
+    it("releases the lock even when the body throws", async () => {
+      const { redisService, client } = makeMockRedis();
+      const svcWithRedis = new NativeCtfService(redisService);
+
+      global.fetch = vi
+        .fn()
+        .mockImplementation(async (_url: string, init: RequestInit) => {
+          const body = JSON.parse(init.body as string) as Record<
+            string,
+            unknown
+          >;
+          if ((body.method as string) === "eth_sendRawTransaction") {
+            return {
+              ok: false,
+              status: 503,
+              json: async () => ({}),
+            } as Response;
+          }
+          return {
+            ok: true,
+            json: async () => ({ result: "0x1" }),
+          } as Response;
+        });
+
+      const creds = makeTestCreds();
+      await expect(
+        svcWithRedis.mergePosition(creds, 137, "http://fake-rpc", {
+          conditionId: CONDITION_ID,
+          partition: [1n, 2n],
+          amount: 1_000_000n,
+        }),
+      ).rejects.toThrow("HTTP 503");
+      zeroCredentials(creds);
+
+      expect(client.del).toHaveBeenCalled();
+    });
+
+    it("serializes concurrent calls for the same EOA", async () => {
+      const resolveOrder: string[] = [];
+      let delCount = 0;
+
+      const { redisService, client } = makeMockRedis();
+
+      // Override set to gate: first caller acquires, second retries
+      let firstAcquired = false;
+      let secondResolved = false;
+      let releaseGate: (() => void) | null = null;
+      const releasePromise = new Promise<void>((r) => {
+        releaseGate = r;
+      });
+
+      client.set.mockImplementation(
+        async (_key: string, _value: string, ...args: string[]) => {
+          if (args[0] === "PX" && args.includes("NX")) {
+            if (!firstAcquired) {
+              firstAcquired = true;
+              resolveOrder.push("acquired-1");
+              return "OK";
+            }
+            if (!secondResolved) {
+              // Second caller still retrying — block until first releases
+              await releasePromise;
+              secondResolved = true;
+              resolveOrder.push("acquired-2");
+              return "OK";
+            }
+            return "OK";
+          }
+          return "OK";
+        },
+      );
+
+      client.del.mockImplementation(async () => {
+        delCount++;
+        if (delCount === 1) {
+          // First lock released by first caller's finally block
+          resolveOrder.push("released-1");
+          releaseGate?.();
+        }
+        return 1;
+      });
+
+      const svcWithRedis = new NativeCtfService(redisService);
+
+      // Mock: all RPC calls succeed
+      global.fetch = vi
+        .fn()
+        .mockImplementation(async (_url: string, init: RequestInit) => {
+          const body = JSON.parse(init.body as string) as Record<
+            string,
+            unknown
+          >;
+          if ((body.method as string) === "eth_sendRawTransaction") {
+            return {
+              ok: true,
+              json: async () => ({ result: "0x" + "cc".repeat(32) }),
+            } as Response;
+          }
+          if ((body.method as string) === "eth_getTransactionCount") {
+            return {
+              ok: true,
+              json: async () => ({ result: "0x2" }),
+            } as Response;
+          }
+          return {
+            ok: true,
+            json: async () => ({ result: "0x6FC23AC00" }),
+          } as Response;
+        });
+
+      const c1 = makeTestCreds();
+      const c2 = makeTestCreds();
+
+      const [r1, r2] = await Promise.all([
+        svcWithRedis.redeemPosition(c1, 137, "http://fake-rpc", {
+          conditionId: CONDITION_ID,
+          indexSets: [1n],
+        }),
+        svcWithRedis.redeemPosition(c2, 137, "http://fake-rpc", {
+          conditionId: CONDITION_ID,
+          indexSets: [2n],
+        }),
+      ]);
+
+      zeroCredentials(c1);
+      zeroCredentials(c2);
+
+      expect(r1).toHaveProperty("txHash");
+      expect(r2).toHaveProperty("txHash");
+      // The first caller must acquire before the second
+      expect(resolveOrder).toEqual(["acquired-1", "released-1", "acquired-2"]);
+    });
+
+    it("allows parallel calls for different EOAs", async () => {
+      const { redisService, client } = makeMockRedis();
+      const svcWithRedis = new NativeCtfService(redisService);
+
+      const setKeys: string[] = [];
+      client.set.mockImplementation(
+        async (key: string, _value: string, ...args: string[]) => {
+          if (args[0] === "PX" && args.includes("NX")) {
+            setKeys.push(key);
+            return "OK";
+          }
+          return "OK";
+        },
+      );
+
+      // Use two different keys to simulate different EOAs
+      const creds1 = makeTestCreds();
+      const creds2 = makeTestCreds({
+        privateKey: Buffer.from(
+          "0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d",
+          "utf8",
+        ),
+      });
+
+      // Verify they have different addresses
+      const addr1 = svcWithRedis.getEoaAddress(creds1);
+      const addr2 = svcWithRedis.getEoaAddress(creds2);
+      expect(addr1).not.toBe(addr2);
+    });
+
+    it("times out after 60 s if the lock is never released", async () => {
+      vi.useFakeTimers();
+
+      const { redisService, client } = makeMockRedis();
+
+      // Never succeed at acquiring
+      client.set.mockResolvedValue(null);
+
+      const svcWithRedis = new NativeCtfService(redisService);
+
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({ result: "0x1" }),
+      } as Response);
+
+      const creds = makeTestCreds();
+
+      // Attach a rejection handler BEFORE running timers so the promise
+      // rejection is handled synchronously within the fake-timer flush,
+      // preventing vitest from flagging it as an unhandled rejection.
+      let caught: Error | null = null;
+      const promise = svcWithRedis
+        .redeemPosition(creds, 137, "http://fake-rpc", {
+          conditionId: CONDITION_ID,
+          indexSets: [1n],
+        })
+        .catch((e: Error) => {
+          caught = e;
+        });
+
+      // Run all timers iteratively to exhaust the exponential-backoff loop
+      await vi.runAllTimersAsync();
+
+      // Flush the microtask queue so .catch fires
+      await promise;
+      vi.useRealTimers();
+      zeroCredentials(creds);
+
+      expect(caught).not.toBeNull();
+      expect(caught!.message).toContain(
+        "Timed out waiting for CTF transaction lock for EOA",
+      );
+    });
+
+    it("does not use Redis lock when RedisService is not injected", async () => {
+      const svc = new NativeCtfService(); // no Redis
+
+      global.fetch = vi
+        .fn()
+        .mockImplementation(async (_url: string, init: RequestInit) => {
+          const body = JSON.parse(init.body as string) as Record<
+            string,
+            unknown
+          >;
+          if ((body.method as string) === "eth_sendRawTransaction") {
+            return {
+              ok: true,
+              json: async () => ({ result: "0x" + "aa".repeat(32) }),
+            } as Response;
+          }
+          return {
+            ok: true,
+            json: async () => ({ result: "0x1" }),
+          } as Response;
+        });
+
+      const creds = makeTestCreds();
+      const result = await svc.redeemPosition(creds, 137, "http://fake-rpc", {
+        conditionId: CONDITION_ID,
+        indexSets: [1n],
+      });
+      zeroCredentials(creds);
+
+      expect(result).toHaveProperty("txHash");
     });
   });
 

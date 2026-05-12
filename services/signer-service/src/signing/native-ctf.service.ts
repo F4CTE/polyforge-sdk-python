@@ -1,9 +1,10 @@
-import { Injectable, Logger } from "@nestjs/common";
+import { Injectable, Logger, Optional } from "@nestjs/common";
 import {
   keccak256,
   signSecp256K1HexKey,
   privateKeyHexBytesToEthAddress,
 } from "@polyforge/crypto-native";
+import { RedisService } from "@polyforge/shared-redis";
 import { DecryptedCredentials } from "../credentials/credentials.service";
 
 // ─── Contract addresses ───────────────────────────────────────────────────────
@@ -268,6 +269,8 @@ function rlpSignedTx(
 export class NativeCtfService {
   private readonly logger = new Logger(NativeCtfService.name);
 
+  constructor(@Optional() private readonly redis?: RedisService) {}
+
   /** Derive EOA address from credentials — delegates to Rust. */
   getEoaAddress(creds: DecryptedCredentials): string {
     const addrBytes = privateKeyHexBytesToEthAddress(creds.privateKey);
@@ -427,6 +430,80 @@ export class NativeCtfService {
     return BigInt(body.result ?? "0x0");
   }
 
+  // ─── CTF nonce serialization ────────────────────────────────────────────────
+
+  /**
+   * Execute a CTF transaction body under a per-EOA distributed mutex.
+   *
+   * The lock serializes the nonce-fetch → sign → broadcast pipeline per EOA
+   * so that concurrent CTF operations for the same address do not race on
+   * the transaction count.
+   *
+   * @param rpcUrl     - JSON-RPC endpoint for nonce / gas price / broadcast.
+   * @param eoaAddress - Lowercase 0x-prefixed EOA address (lock key).
+   * @param body       - Callback that receives a fresh nonce and gas price
+   *                     while the lock is held.
+   */
+  private async withCtfTransactionLock<T>(
+    rpcUrl: string,
+    eoaAddress: string,
+    body: (nonce: number, gasPrice: bigint) => Promise<T>,
+  ): Promise<T> {
+    if (!this.redis) {
+      const [nonce, gasPrice] = await Promise.all([
+        this.getTransactionCount(rpcUrl, eoaAddress),
+        this.getGasPrice(rpcUrl),
+      ]);
+      return body(nonce, gasPrice);
+    }
+
+    const lockKey = `ctf:tx:lock:${eoaAddress}`;
+    await this.acquireCtfLock(lockKey);
+
+    try {
+      const [nonce, gasPrice] = await Promise.all([
+        this.getTransactionCount(rpcUrl, eoaAddress),
+        this.getGasPrice(rpcUrl),
+      ]);
+      return await body(nonce, gasPrice);
+    } finally {
+      await this.releaseCtfLock(lockKey);
+    }
+  }
+
+  /**
+   * Acquire a Redis-backed per-EOA lock with exponential backoff.
+   *
+   * Max wait: 60 s.  Backoff: 100 ms → 200 ms → 400 ms → … → 5 s cap.
+   * Lock TTL: 30 s (auto-released if the process crashes mid-flight).
+   */
+  private async acquireCtfLock(key: string): Promise<void> {
+    const client = this.redis!.getClient();
+    const maxWaitMs = 60_000;
+    const deadline = Date.now() + maxWaitMs;
+    let delayMs = 100;
+
+    while (Date.now() < deadline) {
+      const acquired =
+        (await client.set(key, "1", "PX", 30_000, "NX")) === "OK";
+      if (acquired) {
+        this.logger.debug(`Acquired CTF nonce lock: ${key}`);
+        return;
+      }
+      await new Promise((r) => setTimeout(r, delayMs));
+      delayMs = Math.min(delayMs * 2, 5_000);
+    }
+
+    throw new Error(`Timed out waiting for CTF transaction lock for EOA`);
+  }
+
+  private async releaseCtfLock(key: string): Promise<void> {
+    await this.redis!.getClient()
+      .del(key)
+      .catch(() => {});
+    this.logger.debug(`Released CTF nonce lock: ${key}`);
+  }
+
   // ─── CTF operations ─────────────────────────────────────────────────────────
 
   /**
@@ -463,25 +540,27 @@ export class NativeCtfService {
     );
 
     const eoaAddress = this.getEoaAddress(creds);
-    const [nonce, gasPrice] = await Promise.all([
-      this.getTransactionCount(rpcUrl, eoaAddress),
-      this.getGasPrice(rpcUrl),
-    ]);
 
-    const rawTx = this.signTransaction(creds, chainId, {
-      to: ctfAddress,
-      data: calldata,
-      nonce,
-      gasPrice,
-      gasLimit: 300_000n,
-      value: 0n,
-    });
+    return this.withCtfTransactionLock(
+      rpcUrl,
+      eoaAddress,
+      async (nonce, gasPrice) => {
+        const rawTx = this.signTransaction(creds, chainId, {
+          to: ctfAddress,
+          data: calldata,
+          nonce,
+          gasPrice,
+          gasLimit: 300_000n,
+          value: 0n,
+        });
 
-    const txHash = await this.broadcastTransaction(rpcUrl, rawTx);
-    this.logger.log(
-      `CTF redeemPositions broadcast: conditionId=${params.conditionId} txHash=${txHash}`,
+        const txHash = await this.broadcastTransaction(rpcUrl, rawTx);
+        this.logger.log(
+          `CTF redeemPositions broadcast: conditionId=${params.conditionId} txHash=${txHash}`,
+        );
+        return { txHash };
+      },
     );
-    return { txHash };
   }
 
   /**
@@ -519,25 +598,27 @@ export class NativeCtfService {
     );
 
     const eoaAddress = this.getEoaAddress(creds);
-    const [nonce, gasPrice] = await Promise.all([
-      this.getTransactionCount(rpcUrl, eoaAddress),
-      this.getGasPrice(rpcUrl),
-    ]);
 
-    const rawTx = this.signTransaction(creds, chainId, {
-      to: ctfAddress,
-      data: calldata,
-      nonce,
-      gasPrice,
-      gasLimit: 250_000n,
-      value: 0n,
-    });
+    return this.withCtfTransactionLock(
+      rpcUrl,
+      eoaAddress,
+      async (nonce, gasPrice) => {
+        const rawTx = this.signTransaction(creds, chainId, {
+          to: ctfAddress,
+          data: calldata,
+          nonce,
+          gasPrice,
+          gasLimit: 250_000n,
+          value: 0n,
+        });
 
-    const txHash = await this.broadcastTransaction(rpcUrl, rawTx);
-    this.logger.log(
-      `CTF splitPosition broadcast: conditionId=${params.conditionId} amount=${params.amount} txHash=${txHash}`,
+        const txHash = await this.broadcastTransaction(rpcUrl, rawTx);
+        this.logger.log(
+          `CTF splitPosition broadcast: conditionId=${params.conditionId} amount=${params.amount} txHash=${txHash}`,
+        );
+        return { txHash };
+      },
     );
-    return { txHash };
   }
 
   /**
@@ -575,24 +656,26 @@ export class NativeCtfService {
     );
 
     const eoaAddress = this.getEoaAddress(creds);
-    const [nonce, gasPrice] = await Promise.all([
-      this.getTransactionCount(rpcUrl, eoaAddress),
-      this.getGasPrice(rpcUrl),
-    ]);
 
-    const rawTx = this.signTransaction(creds, chainId, {
-      to: ctfAddress,
-      data: calldata,
-      nonce,
-      gasPrice,
-      gasLimit: 250_000n,
-      value: 0n,
-    });
+    return this.withCtfTransactionLock(
+      rpcUrl,
+      eoaAddress,
+      async (nonce, gasPrice) => {
+        const rawTx = this.signTransaction(creds, chainId, {
+          to: ctfAddress,
+          data: calldata,
+          nonce,
+          gasPrice,
+          gasLimit: 250_000n,
+          value: 0n,
+        });
 
-    const txHash = await this.broadcastTransaction(rpcUrl, rawTx);
-    this.logger.log(
-      `CTF mergePositions broadcast: conditionId=${params.conditionId} amount=${params.amount} txHash=${txHash}`,
+        const txHash = await this.broadcastTransaction(rpcUrl, rawTx);
+        this.logger.log(
+          `CTF mergePositions broadcast: conditionId=${params.conditionId} amount=${params.amount} txHash=${txHash}`,
+        );
+        return { txHash };
+      },
     );
-    return { txHash };
   }
 }
