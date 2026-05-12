@@ -97,6 +97,20 @@ jobs:
       - name: Check for H2C smuggling patterns
         run: bash scripts/check-nginx-h2c.sh
 
+  # ── 1a-3. Docker Compose security (parallel) ───────────────────────────────
+  docker-compose-security:
+    name: Docker Compose loopback check
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: [self-hosted, linux]
+    timeout-minutes: 2
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          persist-credentials: false
+
+      - name: Check for non-loopback port bindings
+        run: bash scripts/check-docker-compose-loopback.sh
+
   # ── 1b. Typecheck (parallel) ────────────────────────────────────────────
   typecheck:
     name: Typecheck
@@ -142,7 +156,7 @@ jobs:
     name: Build
     if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on: [self-hosted, linux]
-    needs: [secret-scan, lint, typecheck, test, nginx-security]
+    needs: [secret-scan, lint, typecheck, test, nginx-security, docker-compose-security]
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
