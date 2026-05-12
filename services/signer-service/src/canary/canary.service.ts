@@ -43,6 +43,18 @@ export class CanaryService implements OnModuleInit {
   }
 
   private async ensureCanaryCredentials() {
+    // FK on user_credentials.userId -> users.id requires a matching user row.
+    // Create a synthetic canary user (marked deleted so it never appears in
+    // application queries) before storing the canary credential.
+    await this.prisma.$executeRawUnsafe(
+      `INSERT INTO "users" ("id", "email", "username", "passwordHash", "deleted", "createdAt", "lastSeen") VALUES ($1, $2, $3, $4, $5, NOW(), NOW()) ON CONFLICT ("id") DO NOTHING`,
+      CANARY_USER_ID,
+      "canary@polyforge.internal",
+      "canary_signer",
+      "",
+      true,
+    );
+
     const existing = await this.prisma.userCredential.findUnique({
       where: { userId: CANARY_USER_ID },
     });

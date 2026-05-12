@@ -627,7 +627,32 @@ export class AuthService {
       }),
     ]);
 
-    // 5. GDPR right-to-erasure: anonymize PII fields
+    // 5. Purge sensitive credential rows — cascading FKs ensure referential
+    // integrity, but explicit deletion gives defense-in-depth for soft-delete flow.
+    const purgeResults = await Promise.allSettled([
+      this.prisma.userCredential.deleteMany({ where: { userId } }),
+      this.prisma.kalshiCredential.deleteMany({ where: { userId } }),
+      this.prisma.polymarketUsCredential.deleteMany({ where: { userId } }),
+    ]);
+
+    const purgeFailures = purgeResults.filter(
+      (r): r is PromiseRejectedResult => r.status === 'rejected',
+    );
+    if (purgeFailures.length > 0) {
+      this.logger.error(
+        `Credential purge failures during account deletion for user ${userId}: ${purgeFailures.length} of 3 tables failed`,
+        purgeFailures.map((f) => f.reason),
+      );
+      throw new HttpException(
+        {
+          code: 'ACCOUNT_ERASURE_FAILED',
+          message: 'Failed to purge account credentials — please retry',
+        },
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+
+    // 6. GDPR right-to-erasure: anonymize PII fields
     const anonId = randomUUID().replace(/-/g, '').slice(0, 12);
     await this.prisma.user.update({
       where: { id: userId },
@@ -654,7 +679,7 @@ export class AuthService {
       },
     });
 
-    // 6. Emit domain event for downstream service purging
+    // 7. Emit domain event for downstream service purging
     this.redis
       .getClient()
       .xadd(

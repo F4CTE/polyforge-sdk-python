@@ -118,6 +118,15 @@ describe('AuthService', () => {
       user: {
         update: vi.fn().mockResolvedValue({}),
       },
+      userCredential: {
+        deleteMany: vi.fn().mockResolvedValue({ count: 0 }),
+      },
+      kalshiCredential: {
+        deleteMany: vi.fn().mockResolvedValue({ count: 0 }),
+      },
+      polymarketUsCredential: {
+        deleteMany: vi.fn().mockResolvedValue({ count: 0 }),
+      },
     } as unknown as PrismaService;
 
     service = new AuthService(
@@ -938,6 +947,17 @@ describe('AuthService', () => {
 
       await service.deleteAccount(user.id, PASSWORD);
 
+      // Credential tables are purged before anonymization
+      expect(prisma.userCredential.deleteMany).toHaveBeenCalledWith({
+        where: { userId: user.id },
+      });
+      expect(prisma.kalshiCredential.deleteMany).toHaveBeenCalledWith({
+        where: { userId: user.id },
+      });
+      expect(prisma.polymarketUsCredential.deleteMany).toHaveBeenCalledWith({
+        where: { userId: user.id },
+      });
+
       const updateCall = vi.mocked(prisma.user.update).mock.calls[0][0];
       expect(updateCall.where).toEqual({ id: user.id });
       expect(updateCall.data.email).toMatch(/^deleted-[a-f0-9]+@anon\.local$/);
@@ -1010,12 +1030,39 @@ describe('AuthService', () => {
 
       await expect(service.deleteAccount(user.id, 'wrong')).rejects.toThrow();
       expect(prisma.user.update).not.toHaveBeenCalled();
+      expect(prisma.userCredential.deleteMany).not.toHaveBeenCalled();
+      expect(prisma.kalshiCredential.deleteMany).not.toHaveBeenCalled();
+      expect(prisma.polymarketUsCredential.deleteMany).not.toHaveBeenCalled();
     });
 
     it('throws when user not found or already deleted', async () => {
       vi.mocked(usersService.findById).mockResolvedValue(null);
 
       await expect(service.deleteAccount('nope', PASSWORD)).rejects.toThrow();
+      expect(prisma.user.update).not.toHaveBeenCalled();
+      expect(prisma.userCredential.deleteMany).not.toHaveBeenCalled();
+      expect(prisma.kalshiCredential.deleteMany).not.toHaveBeenCalled();
+      expect(prisma.polymarketUsCredential.deleteMany).not.toHaveBeenCalled();
+    });
+
+    it('throws ACCOUNT_ERASURE_FAILED when credential purge fails', async () => {
+      const user = userFactory();
+      vi.mocked(usersService.findById).mockResolvedValue(user as any);
+      vi.mocked(usersService.validatePassword).mockResolvedValue(true);
+
+      vi.mocked(prisma.userCredential.deleteMany).mockRejectedValueOnce(
+        new Error('DB connection lost'),
+      );
+
+      await expect(
+        service.deleteAccount(user.id, PASSWORD),
+      ).rejects.toMatchObject({
+        response: {
+          code: 'ACCOUNT_ERASURE_FAILED',
+          message: 'Failed to purge account credentials — please retry',
+        },
+      });
+
       expect(prisma.user.update).not.toHaveBeenCalled();
     });
   });

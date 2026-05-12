@@ -14,7 +14,7 @@ generator client {
 }
 
 datasource db {
-  provider  = "postgresql"
+  provider = "postgresql"
 }
 
 // ─────────────────────────────────────────────
@@ -175,80 +175,85 @@ enum Venue {
 // ─────────────────────────────────────────────
 
 model User {
-  id                  String    @id @default(uuid())
-  email               String    @unique @db.VarChar(255)
-  passwordHash        String    @db.VarChar(255)
-  username            String    @unique @db.VarChar(30)
-  displayName         String?   @db.VarChar(50)
-  bio                 String?   @db.VarChar(500)
-  avatarUrl           String?
-  twitterHandle       String?   @db.VarChar(50)
-  showPnl             Boolean   @default(false)
-  showWinrate         Boolean   @default(false)
-  totpSecret          String?   @db.VarChar(255)
-  totpEnabled         Boolean   @default(false)
-  totpBackupCodes     String[]
-  totpEnabledAt       DateTime?
-  polymarketConnected Boolean   @default(false)
-  polymarketSigType   Int?      @db.SmallInt
-  polymarketAddress   String?   @db.VarChar(42)
-  kalshiConnected     Boolean   @default(false) @map("kalshi_connected")
-  kalshiUserId        String?   @db.VarChar(255) @map("kalshi_user_id")
-  polymarketUsConnected Boolean @default(false) @map("polymarket_us_connected")
-  country             String?   @db.VarChar(2)
-  usRailTermsAcceptedAt DateTime? @map("us_rail_terms_accepted_at")
-  usRailTermsVersion String?   @db.VarChar(64) @map("us_rail_terms_version")
-  usRailTermsAcceptedIp String? @db.VarChar(45) @map("us_rail_terms_accepted_ip")
-  usRailTermsAcceptedUserAgent String? @db.VarChar(512) @map("us_rail_terms_accepted_user_agent")
-  venuePreferences    Json?     @db.JsonB @map("venue_preferences")
-  tosAcceptedAt       DateTime?
-  emailVerified       Boolean   @default(false)
-  emailVerifiedAt     DateTime?
-  approved            Boolean   @default(false)
-  approvedAt          DateTime?
-  approvedBy          String?   @db.VarChar(255)  // admin ID who approved
-  suspended           Boolean   @default(false)
-  suspendedReason     String?
-  deleted             Boolean   @default(false)
-  deletedAt           DateTime?
-  createdAt           DateTime  @default(now())
-  lastSeen            DateTime  @default(now())
+  id                           String    @id @default(uuid())
+  email                        String    @unique @db.VarChar(255)
+  passwordHash                 String    @db.VarChar(255)
+  username                     String    @unique @db.VarChar(30)
+  displayName                  String?   @db.VarChar(50)
+  bio                          String?   @db.VarChar(500)
+  avatarUrl                    String?
+  twitterHandle                String?   @db.VarChar(50)
+  showPnl                      Boolean   @default(false)
+  showWinrate                  Boolean   @default(false)
+  totpSecret                   String?   @db.VarChar(255)
+  totpEnabled                  Boolean   @default(false)
+  totpBackupCodes              String[]
+  totpEnabledAt                DateTime?
+  polymarketConnected          Boolean   @default(false)
+  polymarketSigType            Int?      @db.SmallInt
+  polymarketAddress            String?   @db.VarChar(42)
+  kalshiConnected              Boolean   @default(false) @map("kalshi_connected")
+  kalshiUserId                 String?   @map("kalshi_user_id") @db.VarChar(255)
+  polymarketUsConnected        Boolean   @default(false) @map("polymarket_us_connected")
+  country                      String?   @db.VarChar(2)
+  usRailTermsAcceptedAt        DateTime? @map("us_rail_terms_accepted_at")
+  usRailTermsVersion           String?   @map("us_rail_terms_version") @db.VarChar(64)
+  usRailTermsAcceptedIp        String?   @map("us_rail_terms_accepted_ip") @db.VarChar(45)
+  usRailTermsAcceptedUserAgent String?   @map("us_rail_terms_accepted_user_agent") @db.VarChar(512)
+  venuePreferences             Json?     @map("venue_preferences") @db.JsonB
+  tosAcceptedAt                DateTime?
+  emailVerified                Boolean   @default(false)
+  emailVerifiedAt              DateTime?
+  approved                     Boolean   @default(false)
+  approvedAt                   DateTime?
+  approvedBy                   String?   @db.VarChar(255) // admin ID who approved
+  suspended                    Boolean   @default(false)
+  suspendedReason              String?
+  deleted                      Boolean   @default(false)
+  deletedAt                    DateTime?
+  createdAt                    DateTime  @default(now())
+  lastSeen                     DateTime  @default(now())
 
-  strategies          Strategy[]
-  orders              Order[]
-  positions           Position[]
-  paperOrders         PaperOrder[]
-  paperPositions      PaperPosition[]
-  backtestRuns        BacktestRun[]
-  strategyLikes       StrategyLike[]
-  strategyComments    StrategyComment[]
-  strategyForks       StrategyFork[]         @relation("ForkBy")
-  reports             Report[]
-  followers           Follow[]               @relation("Following")
-  following           Follow[]               @relation("Follower")
-  priceAlerts         PriceAlert[]
-  notificationPrefs   NotificationPreference?
-  notificationHistory NotificationHistory[]
-  loginHistory        UserLoginHistory[]
-  limits              UserLimit?
-  botConnections      BotConnection[]
-  apiKeys             ApiKey[]
-  emailVerifications  EmailVerification[]
-  passwordResetTokens PasswordResetToken[]
-  tickets             Ticket[]
-  whaleFollows         WhaleFollow[]
-  whaleAlertFilter     WhaleAlertFilter?
-  copyConfigs          CopyConfig[]
-  conditionalOrders    ConditionalOrder[]
-  traderScore          TraderScore?
-  badges               TraderBadge[]
-  webhooks             Webhook[]
-  smartOrders          SmartOrder[]
-  marketplaceListings  MarketplaceListing[]    @relation("SellerListings")
-  marketplacePurchases MarketplacePurchase[]   @relation("BuyerPurchases")
-  watchlistItems       WatchlistItem[]
-  arbitrageAlerts      ArbitrageAlert[]
-  arbPositions         ArbPosition[]
+  strategies             Strategy[]
+  orders                 Order[]
+  positions              Position[]
+  paperOrders            PaperOrder[]
+  paperPositions         PaperPosition[]
+  backtestRuns           BacktestRun[]
+  strategyLikes          StrategyLike[]
+  strategyComments       StrategyComment[]
+  strategyForks          StrategyFork[]          @relation("ForkBy")
+  reports                Report[]
+  followers              Follow[]                @relation("Following")
+  following              Follow[]                @relation("Follower")
+  priceAlerts            PriceAlert[]
+  notificationPrefs      NotificationPreference?
+  notificationHistory    NotificationHistory[]
+  loginHistory           UserLoginHistory[]
+  limits                 UserLimit?
+  botConnections         BotConnection[]
+  apiKeys                ApiKey[]
+  emailVerifications     EmailVerification[]
+  passwordResetTokens    PasswordResetToken[]
+  tickets                Ticket[]
+  whaleFollows           WhaleFollow[]
+  whaleAlertFilter       WhaleAlertFilter?
+  copyConfigs            CopyConfig[]
+  conditionalOrders      ConditionalOrder[]
+  traderScore            TraderScore?
+  badges                 TraderBadge[]
+  webhooks               Webhook[]
+  smartOrders            SmartOrder[]
+  marketplaceListings    MarketplaceListing[]    @relation("SellerListings")
+  marketplacePurchases   MarketplacePurchase[]   @relation("BuyerPurchases")
+  watchlistItems         WatchlistItem[]
+  arbitrageAlerts        ArbitrageAlert[]
+  arbPositions           ArbPosition[]
+  userCredential         UserCredential?
+  kalshiCredential       KalshiCredential?
+  polymarketUsCredential PolymarketUsCredential?
+  eventLogs              EventLog[]
+  journalEntries         JournalEntry[]
 
   @@map("users")
 }
@@ -275,6 +280,8 @@ model UserCredential {
   sigType          Int      @db.SmallInt
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("user_credentials")
 }
@@ -338,18 +345,18 @@ model BotConnection {
 }
 
 model ApiKey {
-  id          String        @id @default(uuid())
-  userId      String
-  name        String        @db.VarChar(100)
-  prefix      String        @db.VarChar(12)
-  tokenHash   String        @unique
-  scopes      ApiKeyScope[]
-  expiresAt   DateTime?
-  lastUsedAt  DateTime?
-  lastUsedIp  String?       @db.VarChar(45)
-  revoked     Boolean       @default(false)
-  revokedAt   DateTime?
-  createdAt   DateTime      @default(now())
+  id         String        @id @default(uuid())
+  userId     String
+  name       String        @db.VarChar(100)
+  prefix     String        @db.VarChar(12)
+  tokenHash  String        @unique
+  scopes     ApiKeyScope[]
+  expiresAt  DateTime?
+  lastUsedAt DateTime?
+  lastUsedIp String?       @db.VarChar(45)
+  revoked    Boolean       @default(false)
+  revokedAt  DateTime?
+  createdAt  DateTime      @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -363,7 +370,7 @@ model Follow {
   followingId String
   createdAt   DateTime @default(now())
 
-  follower  User @relation("Follower",  fields: [followerId],  references: [id], onDelete: Cascade)
+  follower  User @relation("Follower", fields: [followerId], references: [id], onDelete: Cascade)
   following User @relation("Following", fields: [followingId], references: [id], onDelete: Cascade)
 
   @@id([followerId, followingId])
@@ -371,19 +378,19 @@ model Follow {
 }
 
 model UserLimit {
-  userId                String   @id
-  maxRunningStrategies  Int      @default(5)
-  maxOrdersPerDay       Int      @default(500)
-  maxOrderSizeUsdc      Decimal  @default(1000) @db.Decimal(20, 6)
-  maxBacktestRunsPerDay Int      @default(10)
-  circuitBreakerErrors  Int      @default(5)
+  userId                  String    @id
+  maxRunningStrategies    Int       @default(5)
+  maxOrdersPerDay         Int       @default(500)
+  maxOrderSizeUsdc        Decimal   @default(1000) @db.Decimal(20, 6)
+  maxBacktestRunsPerDay   Int       @default(10)
+  circuitBreakerErrors    Int       @default(5)
   // Drawdown circuit breaker
-  drawdownEnabled         Boolean  @default(false)
-  drawdownLookbackHours   Int      @default(24)
-  drawdownThresholdPct    Decimal  @default(0.1000) @db.Decimal(5, 4)
-  circuitBreakerTripped   Boolean  @default(false)
+  drawdownEnabled         Boolean   @default(false)
+  drawdownLookbackHours   Int       @default(24)
+  drawdownThresholdPct    Decimal   @default(0.1000) @db.Decimal(5, 4)
+  circuitBreakerTripped   Boolean   @default(false)
   circuitBreakerTrippedAt DateTime?
-  updatedAt             DateTime @updatedAt
+  updatedAt               DateTime  @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -468,14 +475,14 @@ model Strategy {
   createdAt        DateTime           @default(now())
   updatedAt        DateTime           @updatedAt
 
-  user          User                    @relation(fields: [userId],       references: [id], onDelete: Cascade)
-  market        Market?                 @relation(fields: [marketId], references: [id], onDelete: SetNull)
-  parent        Strategy?               @relation("SubStrategies", fields: [parentStrategyId], references: [id], onDelete: Cascade)
-  children      Strategy[]              @relation("SubStrategies")
-  forkedFrom    Strategy?               @relation("Forks",   fields: [forkedFromId], references: [id], onDelete: Cascade)
-  forks         Strategy[]              @relation("Forks")
-  orders        Order[]
-  paperOrders   PaperOrder[]
+  user               User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  market             Market?                 @relation(fields: [marketId], references: [id], onDelete: SetNull)
+  parent             Strategy?               @relation("SubStrategies", fields: [parentStrategyId], references: [id], onDelete: Cascade)
+  children           Strategy[]              @relation("SubStrategies")
+  forkedFrom         Strategy?               @relation("Forks", fields: [forkedFromId], references: [id], onDelete: Cascade)
+  forks              Strategy[]              @relation("Forks")
+  orders             Order[]
+  paperOrders        PaperOrder[]
   backtestRuns       BacktestRun[]
   likes              StrategyLike[]
   comments           StrategyComment[]
@@ -514,7 +521,7 @@ model StrategyLike {
   strategyId String
   createdAt  DateTime @default(now())
 
-  user     User     @relation(fields: [userId],     references: [id], onDelete: Cascade)
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   strategy Strategy @relation(fields: [strategyId], references: [id], onDelete: Cascade)
 
   @@id([userId, strategyId])
@@ -522,18 +529,18 @@ model StrategyLike {
 }
 
 model StrategyComment {
-  id         String    @id @default(uuid())
+  id         String   @id @default(uuid())
   strategyId String
   userId     String
   parentId   String?
   content    String
-  deleted    Boolean   @default(false)
-  createdAt  DateTime  @default(now())
-  updatedAt  DateTime  @updatedAt
+  deleted    Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
-  strategy Strategy         @relation(fields: [strategyId], references: [id], onDelete: Cascade)
-  user     User             @relation(fields: [userId],     references: [id], onDelete: Cascade)
-  parent   StrategyComment? @relation("Replies", fields: [parentId], references: [id], onDelete: Cascade)
+  strategy Strategy          @relation(fields: [strategyId], references: [id], onDelete: Cascade)
+  user     User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  parent   StrategyComment?  @relation("Replies", fields: [parentId], references: [id], onDelete: Cascade)
   replies  StrategyComment[] @relation("Replies")
 
   @@index([strategyId, createdAt])
@@ -547,7 +554,7 @@ model StrategyFork {
   forkedById String
   createdAt  DateTime @default(now())
 
-  forkedBy User @relation("ForkBy", fields: [forkedById], references: [id])
+  forkedBy User @relation("ForkBy", fields: [forkedById], references: [id], onDelete: Cascade)
 
   @@map("strategy_forks")
 }
@@ -581,36 +588,37 @@ model StrategyEvent {
 }
 
 model Order {
-  id            String       @id @default(uuid())
-  intentId      String       @unique
-  venue         Venue        @default(POLYMARKET)
-  clobOrderId   String?      @db.VarChar(255)
-  venueOrderId  String?      @db.VarChar(255)
-  clobStatus    String?      @db.VarChar(20)
-  userId        String
-  strategyId    String?
-  smartOrderId  String?
-  marketId      String       @db.VarChar(255)
-  tokenId       String       @db.VarChar(255)
-  side          OrderSide
-  outcome       OrderOutcome
-  size          Decimal      @db.Decimal(20, 6)
-  price         Decimal      @db.Decimal(10, 6)
-  orderType     OrderType
-  status        OrderStatus  @default(PENDING)
-  fillSize      Decimal?     @db.Decimal(20, 6)
-  fillPrice     Decimal?     @db.Decimal(10, 6)
-  fee           Decimal?     @db.Decimal(20, 6)
-  errorMessage  String?
-  mood          String?      @db.VarChar(12)
-  note          String?      @db.Text
-  placedAt      DateTime?
-  filledAt      DateTime?
-  createdAt     DateTime     @default(now())
+  id           String       @id @default(uuid())
+  intentId     String       @unique
+  venue        Venue        @default(POLYMARKET)
+  clobOrderId  String?      @db.VarChar(255)
+  venueOrderId String?      @db.VarChar(255)
+  clobStatus   String?      @db.VarChar(20)
+  userId       String
+  strategyId   String?
+  smartOrderId String?
+  marketId     String       @db.VarChar(255)
+  tokenId      String       @db.VarChar(255)
+  side         OrderSide
+  outcome      OrderOutcome
+  size         Decimal      @db.Decimal(20, 6)
+  price        Decimal      @db.Decimal(10, 6)
+  orderType    OrderType
+  status       OrderStatus  @default(PENDING)
+  fillSize     Decimal?     @db.Decimal(20, 6)
+  fillPrice    Decimal?     @db.Decimal(10, 6)
+  fee          Decimal?     @db.Decimal(20, 6)
+  errorMessage String?
+  mood         String?      @db.VarChar(12)
+  note         String?      @db.Text
+  placedAt     DateTime?
+  filledAt     DateTime?
+  createdAt    DateTime     @default(now())
 
-  user       User        @relation(fields: [userId],       references: [id], onDelete: Cascade)
-  strategy   Strategy?   @relation(fields: [strategyId],   references: [id], onDelete: SetNull)
-  smartOrder SmartOrder? @relation(fields: [smartOrderId], references: [id], onDelete: SetNull)
+  user           User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  strategy       Strategy?      @relation(fields: [strategyId], references: [id], onDelete: SetNull)
+  smartOrder     SmartOrder?    @relation(fields: [smartOrderId], references: [id], onDelete: SetNull)
+  journalEntries JournalEntry[]
 
   @@index([userId])
   @@index([userId, status])
@@ -627,44 +635,44 @@ model Order {
 // ─── Smart Order Execution ────────────────────────────────────────────────────
 
 enum SmartOrderType {
-  TWAP    // Time-Weighted Average Price — split into N equal slices over T minutes
-  DCA     // Dollar-Cost Averaging — recurring buy every X minutes
+  TWAP // Time-Weighted Average Price — split into N equal slices over T minutes
+  DCA // Dollar-Cost Averaging — recurring buy every X minutes
   BRACKET // Entry + take-profit + stop-loss linked bundle
-  OCO     // One-Cancels-Other — two orders; filling one cancels the other
+  OCO // One-Cancels-Other — two orders; filling one cancels the other
 }
 
 enum SmartOrderStatus {
-  PENDING    // Created, not yet started
-  ACTIVE     // Executing slices / waiting for triggers
-  COMPLETED  // All legs filled or goal reached
-  CANCELLED  // User cancelled or one OCO leg cancelled the other
-  FAILED     // Unrecoverable execution error
+  PENDING // Created, not yet started
+  ACTIVE // Executing slices / waiting for triggers
+  COMPLETED // All legs filled or goal reached
+  CANCELLED // User cancelled or one OCO leg cancelled the other
+  FAILED // Unrecoverable execution error
 }
 
 model SmartOrder {
-  id        String           @id @default(uuid())
-  userId    String
-  type      SmartOrderType
-  status    SmartOrderStatus @default(PENDING)
-  marketId  String           @db.VarChar(255)
-  tokenId   String           @db.VarChar(255)
-  outcome   OrderOutcome
-  side      OrderSide
+  id            String           @id @default(uuid())
+  userId        String
+  type          SmartOrderType
+  status        SmartOrderStatus @default(PENDING)
+  marketId      String           @db.VarChar(255)
+  tokenId       String           @db.VarChar(255)
+  outcome       OrderOutcome
+  side          OrderSide
   // Total size in USDC (for TWAP/DCA) or per-leg size (for BRACKET/OCO)
-  totalSize Decimal          @db.Decimal(20, 6)
+  totalSize     Decimal          @db.Decimal(20, 6)
   // Type-specific config stored as JSON
-  config    Json
+  config        Json
   // Progress tracking
-  slicesFilled  Int     @default(0)
-  slicesTotal   Int     @default(1)
-  totalFilled   Decimal @default(0) @db.Decimal(20, 6)
-  avgFillPrice  Decimal @default(0) @db.Decimal(10, 6)
+  slicesFilled  Int              @default(0)
+  slicesTotal   Int              @default(1)
+  totalFilled   Decimal          @default(0) @db.Decimal(20, 6)
+  avgFillPrice  Decimal          @default(0) @db.Decimal(10, 6)
   // Schedule
   nextExecuteAt DateTime?
   completedAt   DateTime?
   errorMessage  String?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
 
   user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
   orders Order[]
@@ -718,7 +726,7 @@ model PaperOrder {
   fillPrice  Decimal?     @db.Decimal(10, 6)
   createdAt  DateTime     @default(now())
 
-  user     User      @relation(fields: [userId],     references: [id], onDelete: Cascade)
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   strategy Strategy? @relation(fields: [strategyId], references: [id], onDelete: SetNull)
 
   @@index([userId])
@@ -764,7 +772,7 @@ model BacktestRun {
   createdAt      DateTime  @default(now())
   completedAt    DateTime?
 
-  user           User            @relation(fields: [userId],     references: [id], onDelete: Cascade)
+  user           User            @relation(fields: [userId], references: [id], onDelete: Cascade)
   strategy       Strategy        @relation(fields: [strategyId], references: [id], onDelete: Cascade)
   backtestOrders BacktestOrder[]
 
@@ -782,7 +790,7 @@ model Report {
   reason      ReportReason
   description String?
   status      ReportStatus @default(PENDING)
-  reviewedBy  String?      // Admin UUID — from admin DB, no FK constraint (cross-DB)
+  reviewedBy  String? // Admin UUID — from admin DB, no FK constraint (cross-DB)
   reviewedAt  DateTime?
   createdAt   DateTime     @default(now())
 
@@ -828,7 +836,7 @@ model DataGap {
 // ─────────────────────────────────────────────
 
 model Event {
-  id          String    @id @db.VarChar(255)  // Polymarket event ID
+  id          String    @id @db.VarChar(255) // Polymarket event ID
   slug        String    @unique @db.VarChar(255)
   title       String
   description String?
@@ -845,7 +853,7 @@ model Event {
 }
 
 model Market {
-  id            String    @id @db.VarChar(255)  // venue-specific market ID
+  id            String    @id @db.VarChar(255) // venue-specific market ID
   venue         Venue     @default(POLYMARKET)
   slug          String    @unique @db.VarChar(255)
   title         String
@@ -882,9 +890,9 @@ model Market {
 }
 
 model Token {
-  id        String  @id @db.VarChar(255)  // Polymarket token ID
+  id        String  @id @db.VarChar(255) // Polymarket token ID
   marketId  String  @db.VarChar(255)
-  outcome   String  @db.VarChar(100)      // YES, NO, or named outcomes
+  outcome   String  @db.VarChar(100) // YES, NO, or named outcomes
   price     Decimal @default(0) @db.Decimal(10, 6)
   liquidity Decimal @default(0) @db.Decimal(20, 6)
 
@@ -939,7 +947,7 @@ model BacktestOrder {
   price       Decimal      @db.Decimal(10, 6)
   fillPrice   Decimal?     @db.Decimal(10, 6)
   pnl         Decimal?     @db.Decimal(20, 6)
-  equityCurve Decimal      @db.Decimal(20, 6)  // cumulative P&L at this point
+  equityCurve Decimal      @db.Decimal(20, 6) // cumulative P&L at this point
   simulatedAt DateTime
 
   run BacktestRun @relation(fields: [runId], references: [id], onDelete: Cascade)
@@ -953,18 +961,18 @@ model BacktestOrder {
 // ─────────────────────────────────────────────
 
 model Ticket {
-  id             String          @id @default(uuid())
+  id             String         @id @default(uuid())
   userId         String
-  subject        String          @db.VarChar(255)
-  category       TicketCategory  @default(GENERAL)
-  status         TicketStatus    @default(OPEN)
-  priority       TicketPriority  @default(MEDIUM)
-  assignedTo     String?         // Admin UUID — from admin DB, no FK constraint (cross-DB)
-  closedBy       String?         // Admin UUID
+  subject        String         @db.VarChar(255)
+  category       TicketCategory @default(GENERAL)
+  status         TicketStatus   @default(OPEN)
+  priority       TicketPriority @default(MEDIUM)
+  assignedTo     String? // Admin UUID — from admin DB, no FK constraint (cross-DB)
+  closedBy       String? // Admin UUID
   closedAt       DateTime?
   reminderSentAt DateTime?
-  createdAt      DateTime        @default(now())
-  updatedAt      DateTime        @updatedAt
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
 
   user     User            @relation(fields: [userId], references: [id], onDelete: Cascade)
   messages TicketMessage[]
@@ -979,7 +987,7 @@ model Ticket {
 model TicketMessage {
   id         String   @id @default(uuid())
   ticketId   String
-  senderId   String   // userId for users, adminId for admins
+  senderId   String // userId for users, adminId for admins
   senderName String   @db.VarChar(100)
   isAdmin    Boolean  @default(false)
   body       String
@@ -1000,8 +1008,10 @@ model EventLog {
   eventType String   @db.VarChar(50)
   userId    String?
   payload   Json
-  source    String   @db.VarChar(50)   // which service emitted this
+  source    String   @db.VarChar(50) // which service emitted this
   createdAt DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
 
   @@index([userId])
   @@index([eventType])
@@ -1011,19 +1021,19 @@ model EventLog {
 
 // ─── WHALE TRACKING ────────────────────────────
 model WhaleAlert {
-  id            String   @id @default(uuid())
-  walletAddress String   @db.VarChar(255)
+  id            String       @id @default(uuid())
+  walletAddress String       @db.VarChar(255)
   marketId      String
-  tokenId       String   @db.VarChar(255)
+  tokenId       String       @db.VarChar(255)
   side          OrderSide
   outcome       OrderOutcome
-  size          Decimal  @db.Decimal(20, 6)
-  price         Decimal  @db.Decimal(10, 6)
-  notional      Decimal  @db.Decimal(20, 6)
-  txHash        String?  @db.VarChar(255)
-  detectedAt    DateTime @default(now())
+  size          Decimal      @db.Decimal(20, 6)
+  price         Decimal      @db.Decimal(10, 6)
+  notional      Decimal      @db.Decimal(20, 6)
+  txHash        String?      @db.VarChar(255)
+  detectedAt    DateTime     @default(now())
 
-  market        Market   @relation(fields: [marketId], references: [id], onDelete: Cascade)
+  market Market @relation(fields: [marketId], references: [id], onDelete: Cascade)
 
   @@index([walletAddress])
   @@index([marketId])
@@ -1037,7 +1047,7 @@ model WhaleFollow {
   walletAddress String   @db.VarChar(255)
   createdAt     DateTime @default(now())
 
-  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, walletAddress])
   @@index([walletAddress])
@@ -1056,13 +1066,13 @@ enum WhaleClassification {
 
 model WhaleProfile {
   walletAddress   String              @id @db.VarChar(255)
-  totalVolume     Decimal             @db.Decimal(20, 6) @default(0)
-  totalPnl        Decimal             @db.Decimal(20, 6) @default(0)
+  totalVolume     Decimal             @default(0) @db.Decimal(20, 6)
+  totalPnl        Decimal             @default(0) @db.Decimal(20, 6)
   tradeCount      Int                 @default(0)
   winCount        Int                 @default(0) @map("win_count")
-  winRate         Decimal             @db.Decimal(5, 2) @default(0)
-  sharpeRatio     Decimal             @db.Decimal(8, 4) @default(0) @map("sharpe_ratio")
-  smartMoneyScore Decimal             @db.Decimal(8, 2) @default(0) @map("smart_money_score")
+  winRate         Decimal             @default(0) @db.Decimal(5, 2)
+  sharpeRatio     Decimal             @default(0) @map("sharpe_ratio") @db.Decimal(8, 4)
+  smartMoneyScore Decimal             @default(0) @map("smart_money_score") @db.Decimal(8, 2)
   classification  WhaleClassification @default(UNKNOWN)
   label           String?             @db.VarChar(100)
   lastTradeAt     DateTime?
@@ -1091,9 +1101,9 @@ model WhaleAlertFilter {
 
 // ─── COPY TRADING ──────────────────────────────
 enum CopyMode {
-  PERCENTAGE    // Copy X% of source trade size
-  FIXED         // Copy fixed $ amount
-  MIRROR        // Exact same size as source
+  PERCENTAGE // Copy X% of source trade size
+  FIXED // Copy fixed $ amount
+  MIRROR // Exact same size as source
 
   @@map("copy_mode")
 }
@@ -1108,23 +1118,23 @@ enum CopyStatus {
 }
 
 model CopyConfig {
-  id              String     @id @default(uuid())
-  userId          String
-  targetWallet    String     @db.VarChar(255)
-  mode            CopyMode   @default(PERCENTAGE)
-  sizeValue       Decimal    @db.Decimal(20, 6) @default(10) // % or $ depending on mode
-  maxExposure     Decimal    @db.Decimal(20, 6) @default(500)
-  maxDailyLoss    Decimal    @db.Decimal(20, 6) @default(100)
-  priceOffset     Decimal    @db.Decimal(10, 6) @default(0) // +/- % from source price
-  status          CopyStatus @default(ACTIVE)
-  totalPnl        Decimal    @db.Decimal(20, 6) @default(0)
-  totalCopied     Int        @default(0)
-  createdAt       DateTime   @default(now())
-  updatedAt       DateTime   @updatedAt
-  stoppedAt       DateTime?
+  id           String     @id @default(uuid())
+  userId       String
+  targetWallet String     @db.VarChar(255)
+  mode         CopyMode   @default(PERCENTAGE)
+  sizeValue    Decimal    @default(10) @db.Decimal(20, 6) // % or $ depending on mode
+  maxExposure  Decimal    @default(500) @db.Decimal(20, 6)
+  maxDailyLoss Decimal    @default(100) @db.Decimal(20, 6)
+  priceOffset  Decimal    @default(0) @db.Decimal(10, 6) // +/- % from source price
+  status       CopyStatus @default(ACTIVE)
+  totalPnl     Decimal    @default(0) @db.Decimal(20, 6)
+  totalCopied  Int        @default(0)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  stoppedAt    DateTime?
 
-  user            User       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  trades          CopyTrade[]
+  user   User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  trades CopyTrade[]
 
   @@unique([userId, targetWallet])
   @@index([userId])
@@ -1134,24 +1144,24 @@ model CopyConfig {
 }
 
 model CopyTrade {
-  id              String    @id @default(uuid())
-  configId        String
-  sourceWallet    String    @db.VarChar(255)
-  sourceTxHash    String?   @db.VarChar(255)
-  marketId        String
-  tokenId         String    @db.VarChar(255)
-  side            OrderSide
-  outcome         OrderOutcome
-  sourceSize      Decimal   @db.Decimal(20, 6)
-  sourcePrice     Decimal   @db.Decimal(10, 6)
-  copiedSize      Decimal   @db.Decimal(20, 6)
-  copiedPrice     Decimal?  @db.Decimal(10, 6)
-  status          String    @default("PENDING") @db.VarChar(50)
-  orderId         String?
-  pnl             Decimal?  @db.Decimal(20, 6)
-  createdAt       DateTime  @default(now())
+  id           String       @id @default(uuid())
+  configId     String
+  sourceWallet String       @db.VarChar(255)
+  sourceTxHash String?      @db.VarChar(255)
+  marketId     String
+  tokenId      String       @db.VarChar(255)
+  side         OrderSide
+  outcome      OrderOutcome
+  sourceSize   Decimal      @db.Decimal(20, 6)
+  sourcePrice  Decimal      @db.Decimal(10, 6)
+  copiedSize   Decimal      @db.Decimal(20, 6)
+  copiedPrice  Decimal?     @db.Decimal(10, 6)
+  status       String       @default("PENDING") @db.VarChar(50)
+  orderId      String?
+  pnl          Decimal?     @db.Decimal(20, 6)
+  createdAt    DateTime     @default(now())
 
-  config          CopyConfig @relation(fields: [configId], references: [id], onDelete: Cascade)
+  config CopyConfig @relation(fields: [configId], references: [id], onDelete: Cascade)
 
   @@index([configId])
   @@index([configId, status])
@@ -1162,26 +1172,26 @@ model CopyTrade {
 // ─── CONDITIONAL ORDERS ──────────────────────────
 
 model ConditionalOrder {
-  id              String                 @id @default(uuid())
-  userId          String
-  marketId        String
-  tokenId         String                 @db.VarChar(255)
-  type            ConditionalOrderType
-  side            OrderSide
-  outcome         OrderOutcome
-  size            Decimal                @db.Decimal(20, 6)
-  triggerPrice    Decimal                @db.Decimal(10, 6)
-  limitPrice      Decimal?               @db.Decimal(10, 6)
-  trailingPct     Decimal?               @db.Decimal(5, 2)
-  peakPrice       Decimal?               @db.Decimal(10, 6)
-  status          ConditionalOrderStatus @default(PENDING)
-  triggeredAt     DateTime?
-  orderId         String?
-  expiresAt       DateTime?
-  createdAt       DateTime               @default(now())
+  id           String                 @id @default(uuid())
+  userId       String
+  marketId     String
+  tokenId      String                 @db.VarChar(255)
+  type         ConditionalOrderType
+  side         OrderSide
+  outcome      OrderOutcome
+  size         Decimal                @db.Decimal(20, 6)
+  triggerPrice Decimal                @db.Decimal(10, 6)
+  limitPrice   Decimal?               @db.Decimal(10, 6)
+  trailingPct  Decimal?               @db.Decimal(5, 2)
+  peakPrice    Decimal?               @db.Decimal(10, 6)
+  status       ConditionalOrderStatus @default(PENDING)
+  triggeredAt  DateTime?
+  orderId      String?
+  expiresAt    DateTime?
+  createdAt    DateTime               @default(now())
 
-  user            User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  market          Market                 @relation(fields: [marketId], references: [id], onDelete: SetNull)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  market Market @relation(fields: [marketId], references: [id], onDelete: SetNull)
 
   @@index([userId, status])
   @@index([tokenId, status])
@@ -1209,7 +1219,7 @@ model NewsArticle {
   publishedAt DateTime
   ingestedAt  DateTime      @default(now())
 
-  signals     NewsSignal[]
+  signals NewsSignal[]
 
   @@unique([url])
   @@index([publishedAt(sort: Desc)])
@@ -1218,17 +1228,17 @@ model NewsArticle {
 }
 
 model NewsSignal {
-  id          String        @id @default(uuid())
-  articleId   String
-  marketId    String
-  direction   String        @db.VarChar(10) // BUY or SELL
-  outcome     String        @db.VarChar(10) // YES or NO
-  confidence  Int           // 1-100
-  reasoning   String?       @db.Text
-  createdAt   DateTime      @default(now())
+  id         String   @id @default(uuid())
+  articleId  String
+  marketId   String
+  direction  String   @db.VarChar(10) // BUY or SELL
+  outcome    String   @db.VarChar(10) // YES or NO
+  confidence Int // 1-100
+  reasoning  String?  @db.Text
+  createdAt  DateTime @default(now())
 
-  article     NewsArticle   @relation(fields: [articleId], references: [id], onDelete: Cascade)
-  market      Market        @relation(fields: [marketId], references: [id], onDelete: Cascade)
+  article NewsArticle @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  market  Market      @relation(fields: [marketId], references: [id], onDelete: Cascade)
 
   @@index([marketId])
   @@index([confidence(sort: Desc)])
@@ -1239,32 +1249,32 @@ model NewsSignal {
 // ─── TRADER SCORES & BADGES ──────────────────────────
 
 model TraderScore {
-  id            String   @id @default(uuid())
-  userId        String   @unique
-  score         Int      @default(0) // 0-100
-  winRate       Decimal  @db.Decimal(5,2) @default(0)
-  sharpeRatio   Decimal  @db.Decimal(10,4) @default(0)
-  avgReturn     Decimal  @db.Decimal(10,4) @default(0)
-  totalTrades   Int      @default(0)
-  profitFactor  Decimal  @db.Decimal(10,4) @default(0)
-  maxDrawdown   Decimal  @db.Decimal(10,4) @default(0)
-  consistency   Decimal  @db.Decimal(5,2) @default(0) // % of profitable months
-  updatedAt     DateTime @updatedAt
+  id           String   @id @default(uuid())
+  userId       String   @unique
+  score        Int      @default(0) // 0-100
+  winRate      Decimal  @default(0) @db.Decimal(5, 2)
+  sharpeRatio  Decimal  @default(0) @db.Decimal(10, 4)
+  avgReturn    Decimal  @default(0) @db.Decimal(10, 4)
+  totalTrades  Int      @default(0)
+  profitFactor Decimal  @default(0) @db.Decimal(10, 4)
+  maxDrawdown  Decimal  @default(0) @db.Decimal(10, 4)
+  consistency  Decimal  @default(0) @db.Decimal(5, 2) // % of profitable months
+  updatedAt    DateTime @updatedAt
 
-  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([score(sort: Desc)])
   @@map("trader_scores")
 }
 
 model TraderBadge {
-  id        String   @id @default(uuid())
-  userId    String
-  type      String   @db.VarChar(50) // e.g. "WHALE_HUNTER", "CONSISTENT_WINNER", "TOP_10"
-  name      String   @db.VarChar(100)
-  earnedAt  DateTime @default(now())
+  id       String   @id @default(uuid())
+  userId   String
+  type     String   @db.VarChar(50) // e.g. "WHALE_HUNTER", "CONSISTENT_WINNER", "TOP_10"
+  name     String   @db.VarChar(100)
+  earnedAt DateTime @default(now())
 
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, type])
   @@index([userId])
@@ -1282,7 +1292,7 @@ model Webhook {
   active    Boolean  @default(true)
   createdAt DateTime @default(now())
 
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@map("webhooks")
@@ -1291,34 +1301,34 @@ model Webhook {
 // ─── Strategy Marketplace ─────────────────────────────────────────────────────
 
 enum ListingStatus {
-  DRAFT      // Not yet visible to buyers
-  ACTIVE     // Listed and purchaseable
-  PAUSED     // Temporarily hidden by creator
-  DELISTED   // Permanently removed
+  DRAFT // Not yet visible to buyers
+  ACTIVE // Listed and purchaseable
+  PAUSED // Temporarily hidden by creator
+  DELISTED // Permanently removed
 }
 
 model MarketplaceListing {
-  id          String        @id @default(uuid())
-  strategyId  String        @unique
-  sellerId    String
-  title       String        @db.VarChar(255)
-  description String?
-  priceUsdc   Decimal       @db.Decimal(20, 6)
-  status      ListingStatus @default(DRAFT)
-  forkCount   Int           @default(0)
+  id             String        @id @default(uuid())
+  strategyId     String        @unique
+  sellerId       String
+  title          String        @db.VarChar(255)
+  description    String?
+  priceUsdc      Decimal       @db.Decimal(20, 6)
+  status         ListingStatus @default(DRAFT)
+  forkCount      Int           @default(0)
   // Platform takes a fee on each sale (default 20%)
-  platformFeePct Decimal    @default(0.20) @db.Decimal(5, 4)
-  tags        String[]
+  platformFeePct Decimal       @default(0.20) @db.Decimal(5, 4)
+  tags           String[]
   // Aggregate stats
-  purchaseCount Int         @default(0)
-  totalRevenue  Decimal     @default(0) @db.Decimal(20, 6)
-  avgRating     Decimal?    @db.Decimal(3, 2)
-  ratingCount   Int         @default(0)
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
+  purchaseCount  Int           @default(0)
+  totalRevenue   Decimal       @default(0) @db.Decimal(20, 6)
+  avgRating      Decimal?      @db.Decimal(3, 2)
+  ratingCount    Int           @default(0)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
 
-  strategy  Strategy             @relation(fields: [strategyId], references: [id], onDelete: Cascade)
-  seller    User                 @relation("SellerListings", fields: [sellerId], references: [id], onDelete: Cascade)
+  strategy  Strategy              @relation(fields: [strategyId], references: [id], onDelete: Cascade)
+  seller    User                  @relation("SellerListings", fields: [sellerId], references: [id], onDelete: Cascade)
   purchases MarketplacePurchase[]
 
   @@index([sellerId, status])
@@ -1327,17 +1337,17 @@ model MarketplaceListing {
 }
 
 model MarketplacePurchase {
-  id          String   @id @default(uuid())
-  listingId   String
-  buyerId     String
+  id               String   @id @default(uuid())
+  listingId        String
+  buyerId          String
   // The forked strategy the buyer received
   forkedStrategyId String?
-  priceUsdc   Decimal  @db.Decimal(20, 6)
-  platformFee Decimal  @db.Decimal(20, 6)
-  sellerNet   Decimal  @db.Decimal(20, 6)
-  rating      Int?     // 1–5 stars, set after purchase
-  review      String?
-  createdAt   DateTime @default(now())
+  priceUsdc        Decimal  @db.Decimal(20, 6)
+  platformFee      Decimal  @db.Decimal(20, 6)
+  sellerNet        Decimal  @db.Decimal(20, 6)
+  rating           Int? // 1–5 stars, set after purchase
+  review           String?
+  createdAt        DateTime @default(now())
 
   listing MarketplaceListing @relation(fields: [listingId], references: [id], onDelete: Cascade)
   buyer   User               @relation("BuyerPurchases", fields: [buyerId], references: [id], onDelete: Cascade)
@@ -1354,7 +1364,7 @@ model WatchlistItem {
   marketId  String   @db.VarChar(255)
   createdAt DateTime @default(now())
 
-  user   User   @relation(fields: [userId],   references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   market Market @relation(fields: [marketId], references: [id], onDelete: Cascade)
 
   @@unique([userId, marketId])
@@ -1367,14 +1377,14 @@ model WatchlistItem {
 // ─────────────────────────────────────────────
 
 model MarketMatch {
-  id              String   @id @default(uuid())
-  polymarketId    String   @db.VarChar(255)
-  kalshiId        String   @db.VarChar(255)
-  confidence      Decimal  @db.Decimal(5, 4)
-  matchMethod     String   @db.VarChar(50)
-  verified        Boolean  @default(false)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  id           String   @id @default(uuid())
+  polymarketId String   @db.VarChar(255)
+  kalshiId     String   @db.VarChar(255)
+  confidence   Decimal  @db.Decimal(5, 4)
+  matchMethod  String   @db.VarChar(50)
+  verified     Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   @@unique([polymarketId, kalshiId])
   @@index([polymarketId])
@@ -1384,42 +1394,46 @@ model MarketMatch {
 
 // Accessible ONLY by signer-service — RSA keys for Kalshi JWT auth
 model KalshiCredential {
-  userId         String   @id
-  privateKeyCt   Bytes
-  privateKeyIv   Bytes
-  privateKeyTag  Bytes
-  keyId          String   @db.VarChar(255)
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  userId        String   @id
+  privateKeyCt  Bytes
+  privateKeyIv  Bytes
+  privateKeyTag Bytes
+  keyId         String   @db.VarChar(255)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("kalshi_credentials")
 }
 
 // Accessible ONLY by signer-service — Ed25519 keys for Polymarket US API auth
 model PolymarketUsCredential {
-  userId         String   @id
-  encryptedDek   Bytes
-  dekIv          Bytes
-  kekVersion     Int      @default(1) @db.SmallInt
-  secretKeyCt    Bytes
-  secretKeyIv    Bytes
-  secretKeyTag   Bytes
-  keyId          String   @db.VarChar(255)
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  userId       String   @id
+  encryptedDek Bytes
+  dekIv        Bytes
+  kekVersion   Int      @default(1) @db.SmallInt
+  secretKeyCt  Bytes
+  secretKeyIv  Bytes
+  secretKeyTag Bytes
+  keyId        String   @db.VarChar(255)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("polymarket_us_credentials")
 }
 
 model ArbitrageSnapshot {
-  id          String   @id @default(uuid())
-  matchId     String   @db.VarChar(255)
-  spreadPct   Decimal  @db.Decimal(8, 4)
-  direction   String   @db.VarChar(30)
-  polyYes     Decimal  @db.Decimal(10, 6)
-  kalshiYes   Decimal  @db.Decimal(10, 6)
-  confidence  Decimal  @db.Decimal(5, 4)
-  scannedAt   DateTime @default(now())
+  id         String   @id @default(uuid())
+  matchId    String   @db.VarChar(255)
+  spreadPct  Decimal  @db.Decimal(8, 4)
+  direction  String   @db.VarChar(30)
+  polyYes    Decimal  @db.Decimal(10, 6)
+  kalshiYes  Decimal  @db.Decimal(10, 6)
+  confidence Decimal  @db.Decimal(5, 4)
+  scannedAt  DateTime @default(now())
 
   @@index([matchId])
   @@index([scannedAt])
@@ -1427,13 +1441,13 @@ model ArbitrageSnapshot {
 }
 
 model ArbitrageAlert {
-  id            String    @id @default(uuid())
-  userId        String
-  minSpreadPct  Decimal   @db.Decimal(8, 4)
-  marketId      String?   @db.VarChar(255)
-  active        Boolean   @default(true)
-  triggeredAt   DateTime?
-  createdAt     DateTime  @default(now())
+  id           String    @id @default(uuid())
+  userId       String
+  minSpreadPct Decimal   @db.Decimal(8, 4)
+  marketId     String?   @db.VarChar(255)
+  active       Boolean   @default(true)
+  triggeredAt  DateTime?
+  createdAt    DateTime  @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -1442,48 +1456,48 @@ model ArbitrageAlert {
 }
 
 enum ArbPositionStatus {
-  PENDING    // Execution requested, orders not yet placed
-  PARTIAL    // One leg filled, other pending
-  OPEN       // Both legs filled — active arb position
-  CLOSING    // Close orders submitted
-  CLOSED     // Both sides settled / exited
-  FAILED     // One or both legs failed
+  PENDING // Execution requested, orders not yet placed
+  PARTIAL // One leg filled, other pending
+  OPEN // Both legs filled — active arb position
+  CLOSING // Close orders submitted
+  CLOSED // Both sides settled / exited
+  FAILED // One or both legs failed
 }
 
 model ArbPosition {
-  id              String             @id @default(uuid())
-  userId          String
-  matchId         String             @db.VarChar(255)
-  status          ArbPositionStatus  @default(PENDING)
+  id      String            @id @default(uuid())
+  userId  String
+  matchId String            @db.VarChar(255)
+  status  ArbPositionStatus @default(PENDING)
 
   // Buy-side leg
-  buyVenue        Venue
-  buyOrderId      String?            @db.VarChar(255)
-  buyTokenId      String             @db.VarChar(255)
-  buyPrice        Decimal            @db.Decimal(10, 6)
-  buySize         Decimal            @db.Decimal(20, 6)
-  buyFillPrice    Decimal?           @db.Decimal(10, 6)
-  buyFillSize     Decimal?           @db.Decimal(20, 6)
+  buyVenue     Venue
+  buyOrderId   String?  @db.VarChar(255)
+  buyTokenId   String   @db.VarChar(255)
+  buyPrice     Decimal  @db.Decimal(10, 6)
+  buySize      Decimal  @db.Decimal(20, 6)
+  buyFillPrice Decimal? @db.Decimal(10, 6)
+  buyFillSize  Decimal? @db.Decimal(20, 6)
 
   // Sell-side leg
-  sellVenue       Venue
-  sellOrderId     String?            @db.VarChar(255)
-  sellTokenId     String             @db.VarChar(255)
-  sellPrice       Decimal            @db.Decimal(10, 6)
-  sellSize        Decimal            @db.Decimal(20, 6)
-  sellFillPrice   Decimal?           @db.Decimal(10, 6)
-  sellFillSize    Decimal?           @db.Decimal(20, 6)
+  sellVenue     Venue
+  sellOrderId   String?  @db.VarChar(255)
+  sellTokenId   String   @db.VarChar(255)
+  sellPrice     Decimal  @db.Decimal(10, 6)
+  sellSize      Decimal  @db.Decimal(20, 6)
+  sellFillPrice Decimal? @db.Decimal(10, 6)
+  sellFillSize  Decimal? @db.Decimal(20, 6)
 
   // P&L tracking
-  entrySpreadPct  Decimal            @db.Decimal(8, 4)
-  currentSpreadPct Decimal?          @db.Decimal(8, 4)
-  realizedPnl     Decimal?           @db.Decimal(20, 6)
-  unrealizedPnl   Decimal?           @db.Decimal(20, 6)
+  entrySpreadPct   Decimal  @db.Decimal(8, 4)
+  currentSpreadPct Decimal? @db.Decimal(8, 4)
+  realizedPnl      Decimal? @db.Decimal(20, 6)
+  unrealizedPnl    Decimal? @db.Decimal(20, 6)
 
-  openedAt        DateTime?
-  closedAt        DateTime?
-  createdAt       DateTime           @default(now())
-  updatedAt       DateTime           @updatedAt
+  openedAt  DateTime?
+  closedAt  DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -1530,6 +1544,9 @@ model JournalEntry {
   mood        String   @default("neutral") @db.VarChar(12)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([userId, createdAt])
