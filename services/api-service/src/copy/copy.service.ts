@@ -91,7 +91,7 @@ export class CopyService {
 
     const data: Prisma.CopyConfigCreateInput = {
       user: { connect: { id: userId } },
-      targetWallet,
+      targetWallet: targetWallet.toLowerCase(),
       mode: dto.mode ?? "PERCENTAGE",
 
       ...(dto.sizeValue && { sizeValue: new Prisma.Decimal(dto.sizeValue) }),

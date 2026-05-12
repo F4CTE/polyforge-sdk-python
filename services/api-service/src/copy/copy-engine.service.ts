@@ -204,7 +204,8 @@ export class CopyEngineService implements OnModuleInit, OnModuleDestroy {
     // sourceWallet and stream-published targetWallet fields are always
     // EIP-55 checksummed (or at least lowercase on failure).
     const walletAddress =
-      tryChecksumEthereumAddress(event.walletAddress) ?? event.walletAddress;
+      tryChecksumEthereumAddress(event.walletAddress) ??
+      event.walletAddress;
 
     // 1. Check daily loss limit (H-02: use Redis atomic operations to prevent race condition)
     const notional = sourceSize * sourcePrice;
@@ -285,13 +286,13 @@ export class CopyEngineService implements OnModuleInit, OnModuleDestroy {
         tokenId: event.tokenId ?? "",
         side: event.side as OrderSide,
         outcome: event.outcome as OrderOutcome,
-
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
         sourceSize: new Prisma.Decimal(sourceSize),
-
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
         sourcePrice: new Prisma.Decimal(sourcePrice),
-
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
         copiedSize: new Prisma.Decimal(copiedSize),
-
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
         copiedPrice: new Prisma.Decimal(copiedPrice),
         status: "PENDING",
       },
