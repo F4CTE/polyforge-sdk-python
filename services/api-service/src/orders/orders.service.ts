@@ -392,11 +392,24 @@ export class OrdersService {
       status: string;
     }> = [];
 
-    for (const orderDto of dto.orders) {
-      const token = await this.prisma.token.findUniqueOrThrow({
-        where: { id: orderDto.tokenId },
-        include: { market: true },
+    const requestedTokenIds = [...new Set(dto.orders.map((o) => o.tokenId))];
+    const preloadedTokens = await this.prisma.token.findMany({
+      where: { id: { in: requestedTokenIds } },
+      include: { market: true },
+    });
+    const preloadedTokenById = new Map(preloadedTokens.map((t) => [t.id, t]));
+    const missingTokenIds = requestedTokenIds.filter(
+      (id) => !preloadedTokenById.has(id),
+    );
+    if (missingTokenIds.length > 0) {
+      throw new NotFoundException({
+        code: "TOKEN_NOT_FOUND",
+        message: `Token not found: ${missingTokenIds[0]}`,
       });
+    }
+
+    for (const orderDto of dto.orders) {
+      const token = preloadedTokenById.get(orderDto.tokenId)!;
 
       const intentId = randomUUID();
       const orderId = randomUUID();
