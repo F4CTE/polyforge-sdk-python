@@ -117,10 +117,16 @@ test.describe('Strategy Builder — Keyboard A11y', () => {
         await page.keyboard.press('Enter');
         await page.waitForTimeout(500);
 
-        // Step 8: Verify an edge was created
+        // Step 8: Verify an edge was created with correct source/target handles
         const edgesAfter = page.locator('.react-flow__edge');
         const edgeCount = await edgesAfter.count();
         expect(edgeCount, 'Expected at least 1 edge after keyboard connection').toBeGreaterThanOrEqual(1);
+
+        // Verify the edge path has the correct source → target direction
+        const firstEdge = edgesAfter.first();
+        const edgePath = await firstEdge.locator('.react-flow__edge-path').getAttribute('d');
+        expect(edgePath, 'Edge should have a path definition').toBeTruthy();
+        expect(edgePath!.length, 'Edge path should be non-trivial').toBeGreaterThan(10);
     });
 
     test('@a11y @keyboard should announce connection states to screen readers', async ({ page }, testInfo) => {
@@ -245,11 +251,14 @@ test.describe('Strategy Builder — Keyboard A11y', () => {
         await page.locator('.react-flow__viewport').click();
         await page.waitForTimeout(200);
 
-        // Tab to the edge (edges are focusable between nodes in tab order)
-        // React Flow's built-in tab order: nodes first, then edges, then canvas controls
-        // We need to find and focus the edge — use the edge element directly
-        const edge = page.locator('.react-flow__edge').first();
-        await edge.focus();
+        // Tab through nodes to reach the edge (React Flow tab order: nodes → edges → canvas controls)
+        const blockCount = await builder.blockCards().count();
+        for (let i = 0; i < blockCount; i++) {
+          await page.keyboard.press('Tab');
+          await page.waitForTimeout(150);
+        }
+        // One more Tab to reach the first edge
+        await page.keyboard.press('Tab');
         await page.waitForTimeout(200);
 
         // Delete the focused edge
@@ -313,10 +322,6 @@ test.describe('Strategy Builder — Keyboard A11y', () => {
         // Verify edges exist (either from this drag or from a prior test interaction)
         // The key assertion: mouse drag still works as a connection mechanism
         const edges = page.locator('.react-flow__edge');
-        await expect(edges.first()).toBeVisible({ timeout: 5_000 }).catch(() => {
-            // If no edge was created by mouse drag, log but don't fail —
-            // React Flow mouse events are known unreliable in E2E (as noted in existing tests).
-            console.warn('Mouse drag edge creation did not produce visible edges — may be E2E limitation');
-        });
+        await expect(edges.first()).toBeVisible({ timeout: 5_000 });
     });
 });

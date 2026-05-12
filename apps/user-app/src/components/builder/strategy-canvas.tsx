@@ -1,4 +1,4 @@
-import { useCallback, useRef, useMemo, useState, useEffect } from 'react';
+import { useCallback, useRef, useMemo, useState, useEffect } from "react";
 import {
   ReactFlow,
   Background,
@@ -8,7 +8,7 @@ import {
   useReactFlow,
   type Node,
   type Connection,
-} from '@xyflow/react';
+} from "@xyflow/react";
 // Styles imported in globals.css (before our overrides)
 
 import { BlockNode } from "./nodes/block-node";
@@ -28,81 +28,130 @@ import { BLOCK_DEFS, type BlockSection } from "./block-definitions";
 
 // ─── Keyboard connection: handle detection ──────────────────────────────────
 
-type AnyNode = Node<BlockNodeData | LogicNodeData | CalcNodeData | Record<string, unknown>>;
+type AnyNode = Node<
+  BlockNodeData | LogicNodeData | CalcNodeData | Record<string, unknown>
+>;
 
 function nodeHasSourceHandle(node: AnyNode): boolean {
-  if (node.type === 'variableNode') return true;
-  if (node.type === 'logicNode') return true;
-  if (node.type === 'calcNode') return true;
-  if (node.type === 'blockNode') {
+  if (node.type === "variableNode") return true;
+  if (node.type === "logicNode") return true;
+  if (node.type === "calcNode") return true;
+  if (node.type === "blockNode") {
     const section = (node.data as BlockNodeData).section;
-    return section === 'triggers' || section === 'conditions';
+    return section === "triggers" || section === "conditions";
   }
   return false;
 }
 
 function nodeHasTargetHandle(node: AnyNode): boolean {
-  if (node.type === 'logicNode') return true;
-  if (node.type === 'calcNode') return true;
-  if (node.type === 'blockNode') {
+  if (node.type === "logicNode") return true;
+  if (node.type === "calcNode") return true;
+  if (node.type === "blockNode") {
     const section = (node.data as BlockNodeData).section;
-    return section === 'conditions' || section === 'actions';
+    return (
+      section === "conditions" || section === "actions" || section === "safety"
+    );
   }
   return false;
 }
 
 function getNodeLabel(node: AnyNode): string {
   const data = node.data as Record<string, unknown>;
-  return String(data.variableName ?? data.label ?? node.type ?? 'Node');
+  return String(data.variableName ?? data.label ?? node.type ?? "Node");
 }
 
-function getDefaultSourceHandleId(node: AnyNode): string | null {
-  if (node.type === 'variableNode') return null; // no explicit id
-  if (node.type === 'blockNode') return null; // no explicit id
-  if (node.type === 'logicNode') {
+function getAvailableSourceHandles(node: AnyNode): string[] {
+  if (node.type === "variableNode") return [placeNullHandle];
+  if (node.type === "blockNode") return [placeNullHandle];
+  if (node.type === "logicNode") {
     const data = node.data as LogicNodeData;
-    if (data.outputs && data.outputs.length > 1) return 'true-out';
-    return 'output';
+    if (data.outputs && data.outputs.length > 1)
+      return ["true-out", "false-out"];
+    return ["output"];
   }
-  if (node.type === 'calcNode') return 'output';
-  return null;
+  if (node.type === "calcNode") return ["output"];
+  return [];
 }
 
-function getDefaultTargetHandleId(node: AnyNode): string | null {
-  if (node.type === 'blockNode') return null; // no explicit id
-  if (node.type === 'logicNode') return 'input';
-  if (node.type === 'calcNode') {
-    const data = node.data as CalcNodeData;
-    const type = data.type as string;
-    if (type === 'MATH' || type === 'COMPARISON') return 'input-a';
-    return 'input';
+function getAvailableTargetHandles(node: AnyNode): string[] {
+  if (node.type === "logicNode") {
+    const data = node.data as LogicNodeData;
+    const inputCount = getLogicInputCount(data.type);
+    if (inputCount === 2) return ["input-a", "input-b"];
+    return ["input"];
   }
-  return null;
+  if (node.type === "calcNode") {
+    const data = node.data as CalcNodeData;
+    const type = data.type;
+    if (type === "MATH" || type === "COMPARISON") return ["input-a", "input-b"];
+    return ["input"];
+  }
+  if (node.type === "blockNode") {
+    const data = node.data as BlockNodeData;
+    const wireableKeys = data.fields
+      .filter((f) => f.wireable)
+      .map((f) => f.key);
+    if (wireableKeys.length > 0) return wireableKeys;
+    return [placeNullHandle];
+  }
+  return [];
+}
+
+const placeNullHandle = "__null__";
+
+function resolveHandleId(handleId: string | null): string | null {
+  if (handleId === placeNullHandle) return null;
+  return handleId;
+}
+
+function handleLabel(handleId: string | null): string {
+  if (handleId === null || handleId === placeNullHandle) return "default";
+  return handleId;
+}
+
+function getLogicInputCount(type: string): number {
+  if (type === "AND_GATE" || type === "OR_GATE") return 2;
+  return 1;
 }
 
 // ─── Connection state machine ───────────────────────────────────────────────
 
 type ConnState =
-  | { phase: 'idle' }
-  | { phase: 'source_selected'; sourceNodeId: string; sourceLabel: string }
-  | { phase: 'connecting'; sourceNodeId: string; sourceLabel: string }
-  | { phase: 'connected'; sourceLabel: string; targetLabel: string };
+  | { phase: "idle" }
+  | {
+      phase: "source_selected";
+      sourceNodeId: string;
+      sourceLabel: string;
+      sourceHandleId: string;
+    }
+  | {
+      phase: "connecting";
+      sourceNodeId: string;
+      sourceLabel: string;
+      sourceHandleId: string;
+      targetHandleId: string;
+    }
+  | { phase: "connected"; sourceLabel: string; targetLabel: string };
 
-const CONN_ANNOUNCEMENTS: Record<ConnState['phase'], (s: ConnState) => string> = {
-  idle: () => 'Canvas ready. Navigate between nodes with Tab or arrow keys. Press Enter on a source node to begin a connection.',
-  source_selected: (s) => {
-    const ss = s as { sourceLabel: string };
-    return `Source selected: ${ss.sourceLabel}. Press C to start wiring. Press Escape to cancel.`;
-  },
-  connecting: (s) => {
-    const ss = s as { sourceLabel: string };
-    return `Wiring from ${ss.sourceLabel} in progress. Navigate to target node and press Enter to connect. Press Escape to cancel.`;
-  },
-  connected: (s) => {
-    const ss = s as { sourceLabel: string; targetLabel: string };
-    return `Connected ${ss.sourceLabel} to ${ss.targetLabel}.`;
-  },
-};
+const CONN_ANNOUNCEMENTS: Record<ConnState["phase"], (s: ConnState) => string> =
+  {
+    idle: () =>
+      "Canvas ready. Navigate between nodes with Tab or arrow keys. Press Enter on a source node to begin a connection.",
+    source_selected: (s) => {
+      const ss = s as { sourceLabel: string; sourceHandleId: string };
+      const h = handleLabel(ss.sourceHandleId);
+      return `Source selected: ${ss.sourceLabel} (${h} handle). Press H to cycle handles. Press C to start wiring. Press Escape to cancel.`;
+    },
+    connecting: (s) => {
+      const ss = s as { sourceLabel: string; targetHandleId: string };
+      const th = handleLabel(ss.targetHandleId);
+      return `Wiring from ${ss.sourceLabel} to ${th} handle. Press H to cycle target handles. Press Enter to connect. Press Escape to cancel.`;
+    },
+    connected: (s) => {
+      const ss = s as { sourceLabel: string; targetLabel: string };
+      return `Connected ${ss.sourceLabel} to ${ss.targetLabel}.`;
+    },
+  };
 
 // ─── Node types registry ─────────────────────────────────────────────────────
 
@@ -191,17 +240,17 @@ export function StrategyCanvas() {
 
   // ─── Keyboard connection state ────────────────────────────────────────────
 
-  const [connState, setConnState] = useState<ConnState>({ phase: 'idle' });
-  const [statusMsg, setStatusMsg] = useState('');
+  const [connState, setConnState] = useState<ConnState>({ phase: "idle" });
+  const [statusMsg, setStatusMsg] = useState("");
   const statusTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     const msg = CONN_ANNOUNCEMENTS[connState.phase](connState);
     setStatusMsg(msg);
 
-    if (connState.phase === 'connected') {
+    if (connState.phase === "connected") {
       statusTimer.current = setTimeout(() => {
-        setConnState({ phase: 'idle' });
+        setConnState({ phase: "idle" });
       }, 2000);
     }
 
@@ -211,73 +260,147 @@ export function StrategyCanvas() {
   }, [connState]);
 
   const resetConnection = useCallback(() => {
-    setConnState({ phase: 'idle' });
+    setConnState({ phase: "idle" });
   }, []);
+
+  const cycleSourceHandle = useCallback(() => {
+    if (connState.phase !== "source_selected") return;
+    const sourceNode = reactFlow.getNode(connState.sourceNodeId);
+    if (!sourceNode) return;
+    const handles = getAvailableSourceHandles(sourceNode);
+    if (handles.length <= 1) return;
+    const currentIdx = handles.indexOf(connState.sourceHandleId);
+    const nextIdx = (currentIdx + 1) % handles.length;
+    setConnState({ ...connState, sourceHandleId: handles[nextIdx] });
+  }, [connState, reactFlow]);
+
+  const cycleTargetHandle = useCallback(() => {
+    if (connState.phase !== "connecting") return;
+    const el = document.activeElement as HTMLElement | null;
+    const nodeEl = el?.closest("[data-id]") as HTMLElement | null;
+    const nodeId = nodeEl?.getAttribute("data-id");
+    if (!nodeId) return;
+    const node = reactFlow.getNode(nodeId);
+    if (!node || !nodeHasTargetHandle(node)) return;
+    const handles = getAvailableTargetHandles(node);
+    if (handles.length <= 1) return;
+    const currentIdx = handles.indexOf(connState.targetHandleId);
+    const nextIdx = (currentIdx + 1) % handles.length;
+    setConnState({ ...connState, targetHandleId: handles[nextIdx] });
+  }, [connState, reactFlow]);
 
   const onCanvasKeyDown = useCallback(
     (event: React.KeyboardEvent) => {
-      if (event.key === 'Escape') {
+      if (event.key === "Escape") {
+        if (connState.phase !== "idle") {
+          event.preventDefault();
+          setConnState({ phase: "idle" });
+        }
+        return;
+      }
+
+      if (event.key === "h" || event.key === "H") {
         event.preventDefault();
-        setConnState({ phase: 'idle' });
+        if (connState.phase === "source_selected") {
+          cycleSourceHandle();
+          return;
+        }
+        if (connState.phase === "connecting") {
+          cycleTargetHandle();
+          return;
+        }
         return;
       }
 
       // Find currently focused element — React Flow nodes have data-id
       const el = document.activeElement as HTMLElement | null;
-      const nodeEl = el?.closest('[data-id]') as HTMLElement | null;
-      const nodeId = nodeEl?.getAttribute('data-id');
+
+      // Skip canvas Enter handling when focus is inside form controls (inputs, selects, textareas)
+      if (
+        el &&
+        (el.tagName === "INPUT" ||
+          el.tagName === "SELECT" ||
+          el.tagName === "TEXTAREA" ||
+          el.tagName === "BUTTON")
+      ) {
+        return;
+      }
+
+      const nodeEl = el?.closest("[data-id]") as HTMLElement | null;
+      const nodeId = nodeEl?.getAttribute("data-id");
       const node = nodeId ? reactFlow.getNode(nodeId) : null;
 
       if (!node) return;
 
-      if (event.key === 'Enter') {
+      if (event.key === "Enter") {
         event.preventDefault();
 
-        if (connState.phase === 'source_selected') {
-          setConnState({ phase: 'connecting', sourceNodeId: connState.sourceNodeId, sourceLabel: connState.sourceLabel });
+        if (connState.phase === "source_selected") {
+          setConnState({
+            phase: "connecting",
+            sourceNodeId: connState.sourceNodeId,
+            sourceLabel: connState.sourceLabel,
+            sourceHandleId: connState.sourceHandleId,
+            targetHandleId: placeNullHandle,
+          });
           return;
         }
 
-        if (connState.phase === 'connecting') {
+        if (connState.phase === "connecting") {
           // Commit connection
           const sourceNode = reactFlow.getNode(connState.sourceNodeId);
           if (!sourceNode || !nodeHasSourceHandle(sourceNode)) return;
           if (!nodeHasTargetHandle(node)) return;
 
+          const targetHandles = getAvailableTargetHandles(node);
+          const targetHandle =
+            connState.targetHandleId !== placeNullHandle &&
+            targetHandles.includes(connState.targetHandleId)
+              ? connState.targetHandleId
+              : (targetHandles[0] ?? placeNullHandle);
+
           const connection: Connection = {
             source: connState.sourceNodeId,
-            sourceHandle: getDefaultSourceHandleId(sourceNode),
+            sourceHandle: resolveHandleId(connState.sourceHandleId),
             target: node.id,
-            targetHandle: getDefaultTargetHandleId(node),
+            targetHandle: resolveHandleId(targetHandle),
           };
 
           onConnect(connection);
           setConnState({
-            phase: 'connected',
+            phase: "connected",
             sourceLabel: connState.sourceLabel,
             targetLabel: getNodeLabel(node),
           });
           return;
         }
 
-        if (connState.phase === 'idle' && nodeHasSourceHandle(node)) {
+        if (connState.phase === "idle" && nodeHasSourceHandle(node)) {
+          const handles = getAvailableSourceHandles(node);
           setConnState({
-            phase: 'source_selected',
+            phase: "source_selected",
             sourceNodeId: node.id,
             sourceLabel: getNodeLabel(node),
+            sourceHandleId: handles[0] ?? placeNullHandle,
           });
           return;
         }
       }
 
-      if (event.key === 'c' || event.key === 'C') {
-        if (connState.phase === 'source_selected') {
+      if (event.key === "c" || event.key === "C") {
+        if (connState.phase === "source_selected") {
           event.preventDefault();
-          setConnState({ phase: 'connecting', sourceNodeId: connState.sourceNodeId, sourceLabel: connState.sourceLabel });
+          setConnState({
+            phase: "connecting",
+            sourceNodeId: connState.sourceNodeId,
+            sourceLabel: connState.sourceLabel,
+            sourceHandleId: connState.sourceHandleId,
+            targetHandleId: placeNullHandle,
+          });
         }
       }
     },
-    [connState, reactFlow, onConnect, resetConnection],
+    [connState, reactFlow, onConnect, cycleSourceHandle, cycleTargetHandle],
   );
 
   // ─── Empty state ──────────────────────────────────────────────────────
@@ -302,20 +425,20 @@ export function StrategyCanvas() {
       </div>
 
       {/* Visual keyboard hint banner */}
-      {connState.phase !== 'idle' && (
-        <div
-          aria-live="polite"
-          className="absolute top-3 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2 px-4 py-2 rounded-lg bg-elevated border border-default shadow-lg text-body-sm text-secondary"
-        >
+      {connState.phase !== "idle" && (
+        <div className="absolute top-3 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2 px-4 py-2 rounded-lg bg-elevated border border-default shadow-lg text-body-sm text-secondary">
           <span className="text-info font-mono">
-            {connState.phase === 'source_selected' && '⏎'}
-            {connState.phase === 'connecting' && '🔗'}
-            {connState.phase === 'connected' && '✓'}
+            {connState.phase === "source_selected" && "⏎"}
+            {connState.phase === "connecting" && "🔗"}
+            {connState.phase === "connected" && "✓"}
           </span>
           <span>
-            {connState.phase === 'source_selected' && `Source: ${connState.sourceLabel} — press C to start wiring`}
-            {connState.phase === 'connecting' && `Wiring from ${connState.sourceLabel} — navigate & press Enter`}
-            {connState.phase === 'connected' && `Connected ${connState.sourceLabel} → ${connState.targetLabel}`}
+            {connState.phase === "source_selected" &&
+              `Source: ${connState.sourceLabel} (${handleLabel(connState.sourceHandleId)}) — press C to start wiring, H to cycle handle`}
+            {connState.phase === "connecting" &&
+              `Wiring from ${connState.sourceLabel} (${handleLabel(connState.sourceHandleId)}) to ${handleLabel(connState.targetHandleId)} — navigate & press Enter, H to cycle target handle`}
+            {connState.phase === "connected" &&
+              `Connected ${connState.sourceLabel} → ${connState.targetLabel}`}
           </span>
           <button
             onClick={resetConnection}
@@ -338,7 +461,7 @@ export function StrategyCanvas() {
         nodeTypes={nodeTypes}
         fitView={nodes.length > 0}
         fitViewOptions={{ padding: 0.2 }}
-        deleteKeyCode={['Backspace', 'Delete']}
+        deleteKeyCode={["Backspace", "Delete"]}
         nodesFocusable
         edgesFocusable
         selectNodesOnDrag={false}
