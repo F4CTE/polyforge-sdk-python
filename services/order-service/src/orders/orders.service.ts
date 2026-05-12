@@ -19,6 +19,9 @@ const MAX_ATTEMPTS = 3;
 const RETRY_BASE_MS = 1_000;
 const DLQ_STREAM = "stream:orders:dlq";
 const MIN_GTD_LEAD_SECONDS = 60;
+const CLAIM_TIMEOUT_MS = 30_000;
+const CLOB_ACCEPTED_PREFIX = "clob:accepted:";
+const CLOB_ACCEPTED_TTL_SECONDS = 86_400;
 
 export interface OrderIntent {
   intentId: string;
@@ -26,6 +29,7 @@ export interface OrderIntent {
   userId: string;
   strategyId?: string;
   copyTradeId?: string;
+  smartOrderId?: string;
   marketId: string;
   tokenId: string;
   side: "BUY" | "SELL";
@@ -102,7 +106,8 @@ export class OrdersService {
 
   async processIntent(intent: OrderIntent, attempt = 1): Promise<void> {
     const startedAt = Date.now();
-    const orderId = intent.orderId ?? randomUUID();
+    let orderId = intent.orderId ?? randomUUID();
+    let skipDbCreate = false;
     const requestedVenue = intent.venue ?? "polymarket";
     const targetVenue = await this.resolveTargetVenue(intent);
     const prismaVenue = this.toPrismaVenue(targetVenue);
@@ -113,11 +118,17 @@ export class OrdersService {
     // are skipped rather than misclassified into the DLQ.
     const existingOrder = await this.prisma.order.findFirst({
       where: { intentId: intent.intentId },
-      select: { id: true, status: true },
+      select: {
+        id: true,
+        status: true,
+        clobOrderId: true,
+        venueOrderId: true,
+        updatedAt: true,
+      },
     });
     if (existingOrder) {
       // A FAILED order from a prior processing attempt means the DLQ write
-      // that follows update-to-FAILED likely threw (line 399). The stream
+      // that follows update-to-FAILED likely threw. The stream
       // entry was left unacked for redelivery but the FAILED row would
       // otherwise be treated as "already processed", causing the entry to
       // be XACKed without ever reaching the DLQ. Retry DLQ persistence here.
@@ -140,12 +151,126 @@ export class OrdersService {
             );
           }
         }
-      } else {
-        this.logger.warn(
-          `Duplicate intent ${intent.intentId} — skipping (already processed as order ${existingOrder.id})`,
-        );
+        return;
       }
-      return;
+
+      if (existingOrder.status === OrderStatus.SUBMITTED) {
+        // SUBMITTED with no venue ids and claim expired → stale claim, reclaim
+        const hasNoVenueIds =
+          !existingOrder.clobOrderId && !existingOrder.venueOrderId;
+        const claimAge =
+          Date.now() - new Date(existingOrder.updatedAt).getTime();
+        if (hasNoVenueIds && claimAge > CLAIM_TIMEOUT_MS) {
+          // Check CLOB-accepted sentinel before re-submitting. If the
+          // original processor submitted to CLOB successfully but crashed
+          // before persisting to DB, the sentinel prevents a duplicate.
+          const clobAcceptedKey = `${CLOB_ACCEPTED_PREFIX}${intent.intentId}`;
+          const clobAcceptedVenueOrderId = await this.redis
+            .get(clobAcceptedKey)
+            .catch(() => null);
+
+          if (clobAcceptedVenueOrderId) {
+            this.logger.warn(
+              `Order ${existingOrder.id} already accepted by venue (sentinel found: ${clobAcceptedVenueOrderId}) — updating DB without re-submitting`,
+            );
+            // Persist the known venue order id and mark as SUBMITTED so
+            // downstream monitoring can reconcile the true CLOB status.
+            await this.prisma.order
+              .update({
+                where: { id: existingOrder.id },
+                data: {
+                  clobOrderId: clobAcceptedVenueOrderId,
+                  venueOrderId: clobAcceptedVenueOrderId,
+                },
+              })
+              .catch((err) => {
+                this.logger.error(
+                  {
+                    event: "CLOB_ACCEPTED_SENTINEL_DB_UPDATE_FAILED",
+                    orderId: existingOrder.id,
+                    venueOrderId: clobAcceptedVenueOrderId,
+                    intentId: intent.intentId,
+                    err,
+                  },
+                  "Failed to persist venue order id from sentinel",
+                );
+              });
+            await this.redis.del(clobAcceptedKey).catch(() => {});
+            return;
+          }
+
+          this.logger.warn(
+            `Order ${existingOrder.id} has stale SUBMITTED claim (${claimAge}ms, no venue ids) — reclaiming to PENDING`,
+          );
+          await this.releaseOrderClaim(existingOrder.id);
+          orderId = existingOrder.id;
+          skipDbCreate = true;
+          // Fall through to GTD / numeric / terms validations then CLOB submit
+        } else if (!hasNoVenueIds) {
+          // SUBMITTED with venue ids → already submitted, terminal
+          this.logger.warn(
+            `Duplicate intent ${intent.intentId} — skipping (already submitted as order ${existingOrder.id})`,
+          );
+          return;
+        } else {
+          // SUBMITTED with no venue ids but claim not yet stale → still processing
+          this.logger.warn(
+            `Order ${existingOrder.id} SUBMITTED claim still fresh (${claimAge}ms) — not reclaiming`,
+          );
+          return;
+        }
+      } else if (existingOrder.status === OrderStatus.PENDING) {
+        // PENDING: DB record exists but CLOB submission may have completed
+        // (e.g. crash after venue accepted but before claim persisted).
+        // Check the CLOB-accepted sentinel to avoid double-submission.
+        const clobAcceptedKey = `${CLOB_ACCEPTED_PREFIX}${intent.intentId}`;
+        const clobAcceptedVenueOrderId = await this.redis
+          .get(clobAcceptedKey)
+          .catch(() => null);
+
+        if (clobAcceptedVenueOrderId) {
+          this.logger.warn(
+            `Order ${existingOrder.id} already accepted by venue (sentinel found: ${clobAcceptedVenueOrderId}) — updating DB without re-submitting`,
+          );
+          await this.prisma.order
+            .update({
+              where: { id: existingOrder.id },
+              data: {
+                clobOrderId: clobAcceptedVenueOrderId,
+                venueOrderId: clobAcceptedVenueOrderId,
+                status: OrderStatus.SUBMITTED,
+              },
+            })
+            .catch((err) => {
+              this.logger.error(
+                {
+                  event: "CLOB_ACCEPTED_SENTINEL_DB_UPDATE_FAILED",
+                  orderId: existingOrder.id,
+                  venueOrderId: clobAcceptedVenueOrderId,
+                  intentId: intent.intentId,
+                  err,
+                },
+                "Failed to persist venue order id from sentinel (PENDING path)",
+              );
+            });
+          await this.redis.del(clobAcceptedKey).catch(() => {});
+          return;
+        }
+
+        this.logger.warn(
+          `Order ${existingOrder.id} exists in PENDING — retrying CLOB submission for intent ${intent.intentId}`,
+        );
+        orderId = existingOrder.id;
+        skipDbCreate = true;
+        // Fall through to GTD / numeric / terms validations then CLOB submit
+      } else {
+        // Terminal state (LIVE, MATCHED, CANCELLED, etc.) —
+        // already fully processed, nothing to do.
+        this.logger.warn(
+          `Duplicate intent ${intent.intentId} — skipping (already processed as order ${existingOrder.id} with status ${existingOrder.status})`,
+        );
+        return;
+      }
     }
 
     if (this.isExpiredGtdIntent(intent)) {
@@ -196,53 +321,63 @@ export class OrdersService {
     }
 
     // Create DB record in PENDING state
-    try {
-      await this.prisma.order.create({
-        data: {
-          id: orderId,
-          intentId: intent.intentId,
-          venue: prismaVenue,
-          userId: intent.userId,
-          strategyId,
-          marketId: intent.marketId,
-          tokenId: intent.tokenId,
-          side: intent.side,
-          outcome: intent.outcome as OrderOutcome,
-          size: intent.size,
-          price: intent.price,
-          orderType: intent.orderType,
-          status: OrderStatus.PENDING,
-        },
-      });
-    } catch (err: any) {
-      // Handle unique constraint violation (P2002) for intentId
-      if (err?.code === "P2002") {
-        this.logger.warn(
-          `Duplicate intent ${intent.intentId} — skipping (unique constraint)`,
+    if (!skipDbCreate) {
+      try {
+        await this.prisma.order.create({
+          data: {
+            id: orderId,
+            intentId: intent.intentId,
+            venue: prismaVenue,
+            userId: intent.userId,
+            strategyId,
+            smartOrderId: intent.smartOrderId,
+            marketId: intent.marketId,
+            tokenId: intent.tokenId,
+            side: intent.side,
+            outcome: intent.outcome as OrderOutcome,
+            size: intent.size,
+            price: intent.price,
+            orderType: intent.orderType,
+            status: OrderStatus.PENDING,
+          },
+        });
+      } catch (err: any) {
+        // Handle unique constraint violation (P2002) for intentId
+        if (err?.code === "P2002") {
+          this.logger.warn(
+            `Duplicate intent ${intent.intentId} — skipping (unique constraint)`,
+          );
+          return;
+        }
+        this.logger.error(
+          {
+            event: "ORDER_CREATE_FAILED",
+            intentId: intent.intentId,
+            userId: intent.userId,
+            err,
+          },
+          "Failed to create order record",
         );
+        await this.moveToDlq(intent, "DB_CREATE_FAILED");
         return;
       }
-      this.logger.error(
-        {
-          event: "ORDER_CREATE_FAILED",
-          intentId: intent.intentId,
-          userId: intent.userId,
-          err,
-        },
-        "Failed to create order record",
+    }
+
+    // ── Phase 1: Atomic claim + venue submission ───────────────────────────
+    // Claim prevents concurrent processors from double-submitting the same order.
+    const claimed = await this.claimOrder(orderId);
+    if (!claimed) {
+      this.logger.warn(
+        `Order ${orderId} could not be claimed — likely already claimed by another processor`,
       );
-      await this.moveToDlq(intent, "DB_CREATE_FAILED");
       return;
     }
 
-    try {
-      let venueOrderId: string;
-      let venueStatus: string;
+    let venueOrderId: string;
+    let venueStatus: string;
 
+    try {
       if (this.venueRouter) {
-        // ── Venue-routed path ─────────────────────────────────────────────────
-        // For Polymarket, pre-sign and pass auth context. For other venues
-        // (e.g. Kalshi), the adapter handles its own auth via authContext.
         const venue = targetVenue === "best" ? requestedVenue : targetVenue;
         let authContext: Record<string, unknown> = {};
 
@@ -264,7 +399,6 @@ export class OrdersService {
             builderHeaders: signed.builderHeaders,
           };
         } else if (venue === "polymarket_us") {
-          // Phase 2 (POLA-957) adds GET /internal/v1/credentials/:userId/us to signer-service.
           const usCreds = await this.signer.getPolymarketUsCredentials(
             intent.userId,
           );
@@ -291,7 +425,6 @@ export class OrdersService {
         venueOrderId = resp.venueOrderId;
         venueStatus = resp.status;
       } else {
-        // ── Legacy CLOB path (backward compat, no VenueRouter injected) ───────
         const { order, builderHeaders } = await this.signer.signOrder({
           userId: intent.userId,
           requestId: orderId,
@@ -311,10 +444,78 @@ export class OrdersService {
         venueOrderId = clobResponse.orderID;
         venueStatus = clobResponse.status;
       }
+    } catch (err) {
+      // Phase 1 failure: venue rejected or unreachable — release claim and retry
+      const errMsg = err instanceof Error ? err.message : String(err);
+      this.logger.warn(
+        {
+          event: "ORDER_ATTEMPT_FAILED",
+          attempt,
+          maxAttempts: MAX_ATTEMPTS,
+          intentId: intent.intentId,
+          strategyId: intent.strategyId,
+          userId: intent.userId,
+          err,
+        },
+        "Order attempt failed (phase 1: sign/venue)",
+      );
 
-      const filledAt = this.isFilledStatus(venueStatus) ? new Date() : null;
+      await this.releaseOrderClaim(orderId);
 
-      // Single DB update: PENDING → final status (consolidates 2 updates into 1)
+      if (attempt < MAX_ATTEMPTS) {
+        const delay = RETRY_BASE_MS * Math.pow(2, attempt - 1);
+        return this.scheduleRetry(intent, attempt + 1, delay);
+      }
+
+      await this.prisma.order
+        .update({
+          where: { id: orderId },
+          data: { status: OrderStatus.FAILED },
+        })
+        .catch((updateErr) => {
+          this.logger.error(
+            {
+              event: "ORDER_FAILED_STATUS_UPDATE_FAILED",
+              orderId,
+              intentId: intent.intentId,
+              err: updateErr,
+            },
+            "Failed to mark order as failed",
+          );
+        });
+
+      await this.events.emitOrderFailed(intent.userId, orderId, errMsg);
+      await this.moveToDlq(intent, errMsg);
+      return;
+    }
+
+    // ── Phase 1.5: Venue accepted sentinel ─────────────────────────────────
+    // Write a durable sentinel BEFORE any DB persistence so that if the
+    // process crashes or persistence fails after venue accepted, a subsequent
+    // stale-claim recovery does NOT re-submit the same order to the venue.
+    const clobAcceptedKey = `${CLOB_ACCEPTED_PREFIX}${intent.intentId}`;
+    await this.redis
+      .set(clobAcceptedKey, venueOrderId, CLOB_ACCEPTED_TTL_SECONDS)
+      .catch((redisErr) => {
+        this.logger.error(
+          {
+            event: "CLOB_ACCEPTED_SENTINEL_FAILED",
+            orderId,
+            venueOrderId,
+            intentId: intent.intentId,
+            err: redisErr,
+          },
+          "Failed to write CLOB-accepted sentinel — stale-claim recovery may re-submit",
+        );
+      });
+
+    // ── Phase 2: Venue accepted — persist result + emit events ─────────────
+    // DO NOT re-submit to venue on failure here; the venue already has the order.
+    // Retry only DB persistence and events.
+    const finalStatus = this.mapClobStatus(venueStatus) as OrderStatus;
+    const filledAt = this.isFilledStatus(venueStatus) ? new Date() : null;
+
+    try {
       await this.prisma.order.update({
         where: { id: orderId },
         data: {
@@ -322,7 +523,7 @@ export class OrdersService {
           venueOrderId,
           venue: prismaVenue,
           clobStatus: venueStatus,
-          status: this.mapClobStatus(venueStatus) as OrderStatus,
+          status: finalStatus,
           placedAt: new Date(),
           ...(filledAt
             ? {
@@ -383,46 +584,72 @@ export class OrdersService {
           strategyId: intent.strategyId,
         },
       });
+
+      // Clean up the CLOB-accepted sentinel now that persistence succeeded.
+      // Non-fatal if it fails — TTL will eventually expire it.
+      await this.redis.del(clobAcceptedKey).catch(() => {});
     } catch (err) {
+      // Phase 2 failure: venue accepted but persistence/events failed.
+      // Retry DB update + events (not venue submission).
       const errMsg = err instanceof Error ? err.message : String(err);
       this.logger.warn(
         {
-          event: "ORDER_ATTEMPT_FAILED",
-          attempt,
-          maxAttempts: MAX_ATTEMPTS,
+          event: "ORDER_PERSISTENCE_FAILED",
+          orderId,
+          venueOrderId,
           intentId: intent.intentId,
-          strategyId: intent.strategyId,
-          userId: intent.userId,
           err,
         },
-        "Order attempt failed",
+        "Order placed at venue but persistence/events failed — retrying",
       );
 
       if (attempt < MAX_ATTEMPTS) {
         const delay = RETRY_BASE_MS * Math.pow(2, attempt - 1);
-        return this.scheduleRetry(intent, attempt + 1, delay);
+        const retryIntent: OrderIntent = {
+          ...intent,
+          orderId,
+        };
+        return new Promise<void>((resolve, reject) => {
+          setTimeout(() => {
+            this.retryPersistence(
+              retryIntent,
+              venueOrderId,
+              venueStatus,
+              prismaVenue,
+              targetVenue,
+              startedAt,
+              attempt + 1,
+            ).then(resolve, reject);
+          }, delay);
+        });
       }
 
-      // All retries exhausted
+      // All persistence retries exhausted — keep the venue order id in DB
       await this.prisma.order
         .update({
           where: { id: orderId },
-          data: { status: OrderStatus.FAILED },
+          data: {
+            clobOrderId: venueOrderId,
+            venueOrderId,
+            clobStatus: venueStatus,
+            status: finalStatus,
+            placedAt: new Date(),
+          },
         })
         .catch((updateErr) => {
           this.logger.error(
             {
-              event: "ORDER_FAILED_STATUS_UPDATE_FAILED",
+              event: "ORDER_FINAL_PERSISTENCE_FAILED",
               orderId,
+              venueOrderId,
               intentId: intent.intentId,
               err: updateErr,
             },
-            "Failed to mark order as failed",
+            "Critical: unable to persist venue order id after all retries",
           );
         });
 
       await this.events.emitOrderFailed(intent.userId, orderId, errMsg);
-      await this.moveToDlq(intent, errMsg);
     }
   }
 
@@ -486,6 +713,165 @@ export class OrdersService {
     };
 
     await this.processIntent(intent);
+  }
+
+  // ─── Claim / Release Helpers ────────────────────────────────────────────
+
+  /**
+   * Atomically claim an order row from PENDING → SUBMITTED, only when
+   * no venue ids have been stored yet. Returns true if this processor
+   * won the claim.
+   */
+  private async claimOrder(orderId: string): Promise<boolean> {
+    const result = await this.prisma.order.updateMany({
+      where: {
+        id: orderId,
+        status: OrderStatus.PENDING,
+        clobOrderId: null,
+        venueOrderId: null,
+      },
+      data: { status: OrderStatus.SUBMITTED },
+    });
+    return result.count === 1;
+  }
+
+  /**
+   * Release a SUBMITTED claim back to PENDING. Only resets rows where
+   * no venue ids have been stored (i.e. the claim was never fulfilled).
+   */
+  private async releaseOrderClaim(orderId: string): Promise<void> {
+    await this.prisma.order.updateMany({
+      where: {
+        id: orderId,
+        status: OrderStatus.SUBMITTED,
+        clobOrderId: null,
+        venueOrderId: null,
+      },
+      data: { status: OrderStatus.PENDING },
+    });
+  }
+
+  /**
+   * Retry DB persistence + events after venue already accepted the order.
+   * Never re-submits to the venue. Attempts up to MAX_ATTEMPTS.
+   */
+  private async retryPersistence(
+    intent: OrderIntent,
+    venueOrderId: string,
+    venueStatus: string,
+    prismaVenue: "POLYMARKET" | "POLYMARKET_US" | "KALSHI",
+    targetVenue: string,
+    startedAt: number,
+    attempt: number,
+  ): Promise<void> {
+    const orderId = intent.orderId!;
+    const finalStatus = this.mapClobStatus(venueStatus) as OrderStatus;
+    const filledAt = this.isFilledStatus(venueStatus) ? new Date() : null;
+
+    try {
+      await this.prisma.order.update({
+        where: { id: orderId },
+        data: {
+          clobOrderId: venueOrderId,
+          venueOrderId,
+          venue: prismaVenue,
+          clobStatus: venueStatus,
+          status: finalStatus,
+          placedAt: new Date(),
+          ...(filledAt
+            ? {
+                fillPrice: intent.price,
+                fillSize: intent.size,
+                fee: "0",
+                filledAt,
+              }
+            : {}),
+        },
+      });
+
+      if (intent.copyTradeId) {
+        await this.prisma.copyTrade.update({
+          where: { id: intent.copyTradeId },
+          data: { orderId },
+        });
+      }
+
+      await this.events.emitOrderPlaced(
+        intent.userId,
+        orderId,
+        intent.intentId,
+      );
+      if (this.isFilledStatus(venueStatus)) {
+        await this.events.emitOrderFilled(
+          intent.userId,
+          orderId,
+          intent.price,
+          intent.size,
+          "0",
+          intent.copyTradeId,
+        );
+      }
+      this.logger.log(
+        {
+          event: "ORDER_PLACED",
+          orderId,
+          venueOrderId,
+          intentId: intent.intentId,
+          strategyId: intent.strategyId,
+          userId: intent.userId,
+          venue: targetVenue,
+        },
+        "Order placed (after persistence retry)",
+      );
+      logCloudWatchMetric(this.logger, {
+        name: "OrderLatencyMs",
+        value: Date.now() - startedAt,
+        unit: "Milliseconds",
+        dimensions: { Service: "order-service", Venue: targetVenue },
+        properties: {
+          orderId,
+          intentId: intent.intentId,
+          strategyId: intent.strategyId,
+        },
+      });
+
+      await this.redis
+        .del(`${CLOB_ACCEPTED_PREFIX}${intent.intentId}`)
+        .catch(() => {});
+    } catch (err) {
+      const errMsg = err instanceof Error ? err.message : String(err);
+      if (attempt < MAX_ATTEMPTS) {
+        const delay = RETRY_BASE_MS * Math.pow(2, attempt - 1);
+        this.logger.warn(
+          `Retrying persistence for order ${orderId} (attempt ${attempt}/${MAX_ATTEMPTS}) in ${delay}ms`,
+        );
+        return new Promise<void>((resolve, reject) => {
+          setTimeout(() => {
+            this.retryPersistence(
+              intent,
+              venueOrderId,
+              venueStatus,
+              prismaVenue,
+              targetVenue,
+              startedAt,
+              attempt + 1,
+            ).then(resolve, reject);
+          }, delay);
+        });
+      }
+
+      this.logger.error(
+        {
+          event: "ORDER_PERSISTENCE_EXHAUSTED",
+          orderId,
+          venueOrderId,
+          intentId: intent.intentId,
+          err,
+        },
+        "All persistence retries exhausted after venue accepted",
+      );
+      await this.events.emitOrderFailed(intent.userId, orderId, errMsg);
+    }
   }
 
   // ─── Helpers ─────────────────────────────────────────────────────────────

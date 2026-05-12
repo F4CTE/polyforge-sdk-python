@@ -275,7 +275,7 @@ describe("SmartOrderService", () => {
       expect(calls[1][1]).toMatchObject({ ocoLeg: "LEG_B" });
     });
 
-    it("BRACKET creates 3 child order records", async () => {
+    it("BRACKET publishes 3 intents to stream with orderId", async () => {
       db.user.findUnique.mockResolvedValue(makeUser() as any);
       db.token.findUnique.mockResolvedValue({
         id: "token-uuid-1",
@@ -284,12 +284,17 @@ describe("SmartOrderService", () => {
       db.smartOrder.create.mockResolvedValue(
         makeSmartOrder({ type: "BRACKET", slicesTotal: 3 }) as any,
       );
-      db.order.create.mockResolvedValue({} as any);
       db.smartOrder.update.mockResolvedValue({} as any);
 
       await service.create("user-uuid-1", makeBracketDto() as any);
 
-      expect(db.order.create).toHaveBeenCalledTimes(3);
+      expect(db.order.create).not.toHaveBeenCalled();
+      expect(redis.xadd).toHaveBeenCalledTimes(3);
+      const calls = (redis.xadd as ReturnType<typeof vi.fn>).mock.calls;
+      for (const call of calls) {
+        expect(call[1].orderId).toBeTypeOf("string");
+        expect(call[1].intentId).toBeTypeOf("string");
+      }
     });
 
     it("BRACKET sets smartOrder status to ACTIVE", async () => {
@@ -479,20 +484,21 @@ describe("SmartOrderService", () => {
         config: { slices: 5, intervalMinutes: 10, limitPrice: null },
       });
       db.smartOrder.findMany.mockResolvedValue([smart] as any);
-      db.order.create.mockResolvedValue({} as any);
       db.smartOrder.update.mockResolvedValue({} as any);
 
       await service.executeSlices();
 
-      expect(redis.xadd).toHaveBeenCalledWith(
-        "stream:orders",
-        expect.objectContaining({
-          userId: "user-uuid-1",
-          tokenId: "token-uuid-1",
-          side: "BUY",
-          orderType: "FOK", // no limitPrice => FOK
-        }),
-      );
+      expect(db.order.create).not.toHaveBeenCalled();
+      const callArgs = (redis.xadd as ReturnType<typeof vi.fn>).mock.calls[0];
+      expect(callArgs[0]).toBe("stream:orders");
+      expect(callArgs[1]).toMatchObject({
+        userId: "user-uuid-1",
+        tokenId: "token-uuid-1",
+        side: "BUY",
+        orderType: "FOK", // no limitPrice => FOK
+      });
+      expect(callArgs[1].orderId).toBeTypeOf("string");
+      expect(callArgs[1].intentId).toBeTypeOf("string");
     });
 
     it("marks smart order as COMPLETED when last slice is filled", async () => {
@@ -570,26 +576,27 @@ describe("SmartOrderService", () => {
       expect(db.order.create).not.toHaveBeenCalled();
     });
 
-    it("creates child order record with correct smartOrderId", async () => {
+    it("publishes slice to stream:orders with orderId (no duplicate DB create)", async () => {
       const smart = makeSmartOrder({
         slicesFilled: 0,
         slicesTotal: 5,
         config: { slices: 5, intervalMinutes: 10, limitPrice: null },
       });
       db.smartOrder.findMany.mockResolvedValue([smart] as any);
-      db.order.create.mockResolvedValue({} as any);
       db.smartOrder.update.mockResolvedValue({} as any);
 
       await service.executeSlices();
 
-      expect(db.order.create).toHaveBeenCalledWith(
+      expect(db.order.create).not.toHaveBeenCalled();
+      expect(redis.xadd).toHaveBeenCalledWith(
+        "stream:orders",
         expect.objectContaining({
-          data: expect.objectContaining({
-            smartOrderId: "smart-uuid-1",
-            status: "PENDING",
-          }),
+          orderType: "FOK",
         }),
       );
+      const call = (redis.xadd as ReturnType<typeof vi.fn>).mock.calls[0];
+      expect(call[1].orderId).toBeTypeOf("string");
+      expect(call[1].intentId).toBeTypeOf("string");
     });
 
     it("calculates correct slice size as totalSize / slicesTotal", async () => {
@@ -630,6 +637,83 @@ describe("SmartOrderService", () => {
         where: { id: "smart-uuid-1" },
         data: expect.objectContaining({ status: "FAILED" }),
       });
+    });
+  });
+
+  // ── xadd failure handling ──────────────────────────────────────────────
+
+  describe("xadd failure handling", () => {
+    it("throws when BRACKET legs publish fails and marks smart order FAILED", async () => {
+      db.user.findUnique.mockResolvedValue(makeUser() as any);
+      db.token.findUnique.mockResolvedValue({
+        id: "token-uuid-1",
+        marketId: "market-uuid-1",
+      } as any);
+      db.smartOrder.create.mockResolvedValue(
+        makeSmartOrder({ type: "BRACKET", slicesTotal: 3 }) as any,
+      );
+      db.smartOrder.update.mockResolvedValue({} as any);
+      (redis.xadd as ReturnType<typeof vi.fn>).mockRejectedValue(
+        new Error("Redis down"),
+      );
+
+      await expect(
+        service.create("user-uuid-1", makeBracketDto() as any),
+      ).rejects.toThrow(Error);
+
+      // Smart order should be marked FAILED
+      expect(db.smartOrder.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({ status: "FAILED" }),
+        }),
+      );
+    });
+
+    it("throws when OCO legs publish fails and marks smart order FAILED", async () => {
+      db.user.findUnique.mockResolvedValue(makeUser() as any);
+      db.token.findUnique.mockResolvedValue({
+        id: "token-uuid-1",
+        marketId: "market-uuid-1",
+      } as any);
+      db.smartOrder.create.mockResolvedValue(
+        makeSmartOrder({ type: "OCO", slicesTotal: 2 }) as any,
+      );
+      db.smartOrder.update.mockResolvedValue({} as any);
+      (redis.xadd as ReturnType<typeof vi.fn>).mockRejectedValue(
+        new Error("Redis down"),
+      );
+
+      await expect(
+        service.create("user-uuid-1", makeOcoDto() as any),
+      ).rejects.toThrow(Error);
+
+      expect(db.smartOrder.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({ status: "FAILED" }),
+        }),
+      );
+    });
+
+    it("throws when TWAP slice publish fails", async () => {
+      const smart = makeSmartOrder({
+        slicesFilled: 0,
+        slicesTotal: 5,
+        config: { slices: 5, intervalMinutes: 10, limitPrice: null },
+      });
+      db.smartOrder.findMany.mockResolvedValue([smart] as any);
+      db.smartOrder.update.mockResolvedValue({} as any);
+      (redis.xadd as ReturnType<typeof vi.fn>).mockRejectedValue(
+        new Error("Redis OOM"),
+      );
+
+      // executeSlices catches errors internally per-slice
+      await service.executeSlices();
+
+      // Smart order should NOT be marked COMPLETED since xadd failed
+      const completedCalls = (
+        db.smartOrder.update as ReturnType<typeof vi.fn>
+      ).mock.calls.filter(([args]: any[]) => args.data?.status === "COMPLETED");
+      expect(completedCalls).toHaveLength(0);
     });
   });
 });

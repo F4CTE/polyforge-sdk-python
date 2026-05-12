@@ -9,10 +9,15 @@ export type OrderOutcome = (typeof OrderOutcome)[keyof typeof OrderOutcome];
 
 export const OrderStatus = {
     PENDING: 'PENDING',
+    SUBMITTED: 'SUBMITTED',
+    LIVE: 'LIVE',
     MATCHED: 'MATCHED',
     FILLED: 'FILLED',
+    CONFIRMED: 'CONFIRMED',
     PARTIALLY_FILLED: 'PARTIALLY_FILLED',
     CANCELLED: 'CANCELLED',
+    DELAYED: 'DELAYED',
+    MINED: 'MINED',
     FAILED: 'FAILED',
 } as const;
 export type OrderStatus = (typeof OrderStatus)[keyof typeof OrderStatus];

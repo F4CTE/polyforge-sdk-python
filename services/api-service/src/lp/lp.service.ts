@@ -7,12 +7,6 @@ import { PrismaService } from "@polyforge/shared-db";
 import { RedisService } from "@polyforge/shared-redis";
 import { randomUUID } from "crypto";
 import { ProvideLiquidityDto } from "./dto/provide-liquidity.dto";
-import {
-  OrderSide,
-  OrderType,
-  OrderStatus,
-  OrderOutcome,
-} from "@prisma/client";
 
 @Injectable()
 export class LpService {
@@ -68,39 +62,33 @@ export class LpService {
 
     // Place YES bid (buy YES at below-market price)
     const buyIntentId = randomUUID();
+    const buyOrderId = randomUUID();
     const buySize = String(Math.max(1, Math.floor(halfAmount / buyPrice)));
-    await this.redis.xadd("stream:orders", {
-      intentId: buyIntentId,
-      userId,
-      strategyId: "",
-      marketId: dto.marketId,
-      tokenId: yesToken.id,
-      side: "BUY",
-      outcome: "YES",
-      size: buySize,
-      price: String(buyPrice),
-      orderType: "GTC",
-      ts: String(Date.now()),
-    });
-
-    const buyOrder = await this.prisma.order.create({
-      data: {
+    try {
+      await this.redis.xadd("stream:orders", {
         intentId: buyIntentId,
+        orderId: buyOrderId,
         userId,
-        strategyId: null,
+        strategyId: "",
         marketId: dto.marketId,
         tokenId: yesToken.id,
-        side: OrderSide.BUY,
-        outcome: OrderOutcome.YES,
+        side: "BUY",
+        outcome: "YES",
         size: buySize,
         price: String(buyPrice),
-        orderType: OrderType.GTC,
-        status: OrderStatus.PENDING,
-      },
-    });
+        orderType: "GTC",
+        ts: String(Date.now()),
+      });
+    } catch {
+      throw new UnprocessableEntityException({
+        code: "LIQUIDITY_PUBLISH_FAILED",
+        message: "Failed to publish buy order to order stream",
+      });
+    }
 
     // Place YES ask (sell YES at above-market price)
     const sellIntentId = randomUUID();
+    const sellOrderId = randomUUID();
     const noToken = market.tokens.find(
       (t) => t.outcome?.toUpperCase() === "NO",
     );
@@ -108,35 +96,27 @@ export class LpService {
     const sellSize = String(
       Math.max(1, Math.floor(halfAmount / (1 - sellPrice))),
     );
-    await this.redis.xadd("stream:orders", {
-      intentId: sellIntentId,
-      userId,
-      strategyId: "",
-      marketId: dto.marketId,
-      tokenId: sellTokenId,
-      side: "SELL",
-      outcome: "YES",
-      size: sellSize,
-      price: String(sellPrice),
-      orderType: "GTC",
-      ts: String(Date.now()),
-    });
-
-    const sellOrder = await this.prisma.order.create({
-      data: {
+    try {
+      await this.redis.xadd("stream:orders", {
         intentId: sellIntentId,
+        orderId: sellOrderId,
         userId,
-        strategyId: null,
+        strategyId: "",
         marketId: dto.marketId,
         tokenId: sellTokenId,
-        side: OrderSide.SELL,
-        outcome: OrderOutcome.YES,
+        side: "SELL",
+        outcome: "YES",
         size: sellSize,
         price: String(sellPrice),
-        orderType: OrderType.GTC,
-        status: OrderStatus.PENDING,
-      },
-    });
+        orderType: "GTC",
+        ts: String(Date.now()),
+      });
+    } catch {
+      throw new UnprocessableEntityException({
+        code: "LIQUIDITY_PUBLISH_FAILED",
+        message: "Failed to publish sell order to order stream",
+      });
+    }
 
     return {
       id: randomUUID(),
@@ -146,8 +126,8 @@ export class LpService {
       currentPrice: yesPrice,
       buyQuote: buyPrice,
       sellQuote: sellPrice,
-      buyOrderId: buyOrder.id,
-      sellOrderId: sellOrder.id,
+      buyOrderId,
+      sellOrderId,
       status: "PENDING",
     };
   }

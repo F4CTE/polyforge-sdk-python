@@ -8,6 +8,10 @@ import type { VenueAdapter, VenueOrderResponse } from "@polyforge/shared-types";
 import { OrdersService, type OrderIntent } from "../orders/orders.service";
 import { VenueRouter } from "./venue-router";
 
+vi.mock("@polyforge/logger", () => ({
+  logCloudWatchMetric: vi.fn(),
+}));
+
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 function makePolyAdapter(): VenueAdapter & {
@@ -75,10 +79,16 @@ function makeMocks(polyAdapter: VenueAdapter, kalshiAdapter?: VenueAdapter) {
       findFirst: vi.fn().mockResolvedValue(null),
       create: vi.fn().mockResolvedValue({}),
       update: vi.fn().mockResolvedValue({}),
+      updateMany: vi.fn().mockResolvedValue({ count: 1 }),
     },
   } as any;
 
-  const redis = { xadd: vi.fn().mockResolvedValue("0-0") } as any;
+  const redis = {
+    xadd: vi.fn().mockResolvedValue("0-0"),
+    set: vi.fn().mockResolvedValue(undefined),
+    get: vi.fn().mockResolvedValue(null),
+    del: vi.fn().mockResolvedValue(undefined),
+  } as any;
   const signer = { signOrder: vi.fn().mockResolvedValue(SIGNED_ORDER) } as any;
   const clob = {
     submitOrder: vi

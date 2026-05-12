@@ -12,9 +12,6 @@ import {
   type SmartOrder,
   SmartOrderType,
   SmartOrderStatus,
-  OrderSide,
-  OrderOutcome,
-  OrderType,
   OrderStatus,
 } from "@prisma/client";
 import { PrismaService } from "@polyforge/shared-db";
@@ -256,8 +253,10 @@ export class SmartOrderService {
       : 0;
 
     const intentId = randomUUID();
+    const orderId = randomUUID();
     const intent: Record<string, string> = {
       intentId,
+      orderId,
       userId: smart.userId,
       strategyId: "",
       marketId: smart.marketId,
@@ -269,21 +268,11 @@ export class SmartOrderService {
       orderType: limitPrice > 0 ? "GTC" : "FOK",
     };
 
-    await this.redis.xadd(STREAM_ORDERS, intent);
-    await this.prisma.order.create({
-      data: {
-        intentId,
-        userId: smart.userId,
-        smartOrderId: smart.id,
-        marketId: smart.marketId,
-        tokenId: smart.tokenId,
-        side: smart.side,
-        outcome: smart.outcome,
-        size: sliceSize.toFixed(6),
-        price: limitPrice > 0 ? limitPrice.toFixed(6) : "0",
-        orderType: limitPrice > 0 ? OrderType.GTC : OrderType.FOK,
-        status: OrderStatus.PENDING,
-      },
+    await this.redis.xadd(STREAM_ORDERS, intent).catch((err: unknown) => {
+      this.logger.error(
+        `Failed to publish TWAP/DCA slice ${intentId} to order stream: ${(err as Error).message}`,
+      );
+      throw err;
     });
 
     const nextFilled = smart.slicesFilled + 1;
@@ -321,36 +310,34 @@ export class SmartOrderService {
       },
     ];
 
-    for (const leg of legs) {
-      const intentId = randomUUID();
-      await this.redis.xadd(STREAM_ORDERS, {
-        intentId,
-        userId,
-        strategyId: "",
-        marketId,
-        tokenId: dto.tokenId,
-        side: leg.side,
-        outcome: dto.outcome,
-        size: String(dto.totalSize),
-        price: leg.price.toFixed(6),
-        orderType: leg.label === "ENTRY" ? "GTC" : "GTC",
-        bracketLeg: leg.label,
-      });
-      await this.prisma.order.create({
-        data: {
+    try {
+      for (const leg of legs) {
+        const intentId = randomUUID();
+        const orderId = randomUUID();
+        await this.redis.xadd(STREAM_ORDERS, {
           intentId,
+          orderId,
           userId,
-          smartOrderId,
+          strategyId: "",
           marketId,
           tokenId: dto.tokenId,
-          side: leg.side as OrderSide,
+          side: leg.side,
           outcome: dto.outcome,
           size: String(dto.totalSize),
           price: leg.price.toFixed(6),
-          orderType: OrderType.GTC,
-          status: OrderStatus.PENDING,
-        },
+          orderType: leg.label === "ENTRY" ? "GTC" : "GTC",
+          bracketLeg: leg.label,
+        });
+      }
+    } catch (err) {
+      this.logger.error(
+        `Failed to publish BRACKET legs for smart order ${smartOrderId}: ${(err as Error).message}`,
+      );
+      await this.prisma.smartOrder.update({
+        where: { id: smartOrderId },
+        data: { status: SmartOrderStatus.FAILED, completedAt: new Date() },
       });
+      throw err;
     }
 
     await this.prisma.smartOrder.update({
@@ -365,40 +352,38 @@ export class SmartOrderService {
     marketId: string,
     dto: PlaceSmartOrderDto,
   ) {
-    for (const [price, leg] of [
-      [dto.priceA!, "LEG_A"],
-      [dto.priceB!, "LEG_B"],
-    ] as const) {
-      const intentId = randomUUID();
-      await this.redis.xadd(STREAM_ORDERS, {
-        intentId,
-        userId,
-        strategyId: "",
-        marketId,
-        tokenId: dto.tokenId,
-        side: dto.side,
-        outcome: dto.outcome,
-        size: String(dto.totalSize),
-        price: price.toFixed(6),
-        orderType: "GTC",
-        ocoLeg: leg,
-        smartOrderId,
-      });
-      await this.prisma.order.create({
-        data: {
+    try {
+      for (const [price, leg] of [
+        [dto.priceA!, "LEG_A"],
+        [dto.priceB!, "LEG_B"],
+      ] as const) {
+        const intentId = randomUUID();
+        const orderId = randomUUID();
+        await this.redis.xadd(STREAM_ORDERS, {
           intentId,
+          orderId,
           userId,
-          smartOrderId,
+          strategyId: "",
           marketId,
           tokenId: dto.tokenId,
           side: dto.side,
           outcome: dto.outcome,
           size: String(dto.totalSize),
           price: price.toFixed(6),
-          orderType: OrderType.GTC,
-          status: OrderStatus.PENDING,
-        },
+          orderType: "GTC",
+          ocoLeg: leg,
+          smartOrderId,
+        });
+      }
+    } catch (err) {
+      this.logger.error(
+        `Failed to publish OCO legs for smart order ${smartOrderId}: ${(err as Error).message}`,
+      );
+      await this.prisma.smartOrder.update({
+        where: { id: smartOrderId },
+        data: { status: SmartOrderStatus.FAILED, completedAt: new Date() },
       });
+      throw err;
     }
 
     await this.prisma.smartOrder.update({

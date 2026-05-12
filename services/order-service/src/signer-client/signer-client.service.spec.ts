@@ -4,6 +4,41 @@ import { JwtService } from "@nestjs/jwt";
 import { ConfigService } from "@nestjs/config";
 import { SignerClientService } from "./signer-client.service";
 
+vi.mock("@polyforge/logger", () => ({
+  logCloudWatchMetric: vi.fn(
+    (
+      logger: { log: (...args: any[]) => any },
+      input: {
+        name: string;
+        value: number;
+        unit?: string;
+        dimensions?: Record<string, string>;
+        properties?: Record<string, unknown>;
+      },
+    ) => {
+      const dimensions = input.dimensions ?? {};
+      logger.log(
+        {
+          _aws: {
+            Timestamp: Date.now(),
+            CloudWatchMetrics: [
+              {
+                Namespace: "Polyforge",
+                Dimensions: [Object.keys(dimensions)],
+                Metrics: [{ Name: input.name, Unit: input.unit ?? "Count" }],
+              },
+            ],
+          },
+          ...dimensions,
+          ...(input.properties ?? {}),
+          [input.name]: input.value,
+        },
+        "cloudwatch metric",
+      );
+    },
+  ),
+}));
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function makeConfig(

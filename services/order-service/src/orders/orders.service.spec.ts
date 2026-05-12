@@ -2,6 +2,10 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { CURRENT_US_RAIL_TERMS_VERSION } from "@polyforge/shared-types";
 import { OrdersService, OrderIntent } from "./orders.service";
 
+vi.mock("@polyforge/logger", () => ({
+  logCloudWatchMetric: vi.fn(),
+}));
+
 // ─── Factories ────────────────────────────────────────────────────────────────
 
 function makeIntent(overrides: Partial<OrderIntent> = {}): OrderIntent {
@@ -41,6 +45,7 @@ function makeMocks() {
       findUnique: vi.fn().mockResolvedValue(null),
       create: vi.fn().mockResolvedValue({}),
       update: vi.fn().mockResolvedValue({}),
+      updateMany: vi.fn().mockResolvedValue({ count: 1 }), // claim/release
     },
     copyTrade: {
       update: vi.fn().mockResolvedValue({}),
@@ -57,6 +62,8 @@ function makeMocks() {
   const redis = {
     xadd: vi.fn().mockResolvedValue("1234567890-0"),
     set: vi.fn().mockResolvedValue("OK"),
+    get: vi.fn().mockResolvedValue(null),
+    del: vi.fn().mockResolvedValue(undefined),
     getClient: vi.fn().mockReturnValue({
       xlen: vi.fn().mockResolvedValue(1),
     }),
@@ -378,6 +385,78 @@ describe("OrdersService", () => {
     });
   });
 
+  // ── processIntent — idempotency guard ────────────────────────────────────
+
+  describe("processIntent() — idempotency guard", () => {
+    it("retries CLOB submission when an existing PENDING order is found", async () => {
+      prisma.order.findFirst.mockResolvedValue({
+        id: "existing-order-id",
+        status: "PENDING",
+        clobOrderId: null,
+      });
+
+      const p = svc.processIntent(makeIntent());
+      await vi.runAllTimersAsync();
+      await p;
+
+      // Must reuse existing order ID
+      expect(prisma.order.create).not.toHaveBeenCalled();
+      expect(signer.signOrder).toHaveBeenCalled();
+      expect(clob.submitOrder).toHaveBeenCalled();
+      // Must update the existing order after CLOB submission
+      expect(prisma.order.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: "existing-order-id" },
+        }),
+      );
+    });
+
+    it("skips processing when existing order is in terminal state SUBMITTED", async () => {
+      prisma.order.findFirst.mockResolvedValue({
+        id: "already-submitted",
+        status: "SUBMITTED",
+        clobOrderId: "clob-xyz",
+        venueOrderId: "clob-xyz",
+        updatedAt: new Date(),
+      });
+
+      const p = svc.processIntent(makeIntent());
+      await vi.runAllTimersAsync();
+      await p;
+
+      expect(prisma.order.create).not.toHaveBeenCalled();
+      expect(signer.signOrder).not.toHaveBeenCalled();
+      expect(clob.submitOrder).not.toHaveBeenCalled();
+    });
+
+    it("skips processing when existing order is in terminal state LIVE", async () => {
+      prisma.order.findFirst.mockResolvedValue({
+        id: "already-live",
+        status: "LIVE",
+        clobOrderId: "clob-live",
+      });
+
+      const p = svc.processIntent(makeIntent());
+      await vi.runAllTimersAsync();
+      await p;
+
+      expect(prisma.order.create).not.toHaveBeenCalled();
+      expect(signer.signOrder).not.toHaveBeenCalled();
+      expect(clob.submitOrder).not.toHaveBeenCalled();
+    });
+
+    it("proceeds normally when no existing order is found (first attempt)", async () => {
+      // Default mock already returns null for findFirst
+      const p = svc.processIntent(makeIntent());
+      await vi.runAllTimersAsync();
+      await p;
+
+      expect(prisma.order.create).toHaveBeenCalled();
+      expect(signer.signOrder).toHaveBeenCalled();
+      expect(clob.submitOrder).toHaveBeenCalled();
+    });
+  });
+
   describe("processIntent() — numeric validation", () => {
     it("moves invalid numeric intents to the DLQ before signing", async () => {
       const p = svc.processIntent(makeIntent({ size: "", price: "0.6" }));
@@ -406,6 +485,18 @@ describe("OrdersService", () => {
         .mockRejectedValueOnce(err)
         .mockResolvedValue(SIGNED_ORDER);
 
+      // On retry, findFirst must return the PENDING order that was created
+      // on the first attempt (after claim release puts it back to PENDING)
+      prisma.order.findFirst
+        .mockResolvedValueOnce(null) // first call: no existing order
+        .mockResolvedValueOnce({
+          id: expect.any(String),
+          status: "PENDING",
+          clobOrderId: null,
+          venueOrderId: null,
+          updatedAt: new Date(),
+        }); // retry: find existing PENDING
+
       const p = svc.processIntent(makeIntent());
       await vi.runAllTimersAsync();
       await p;
@@ -419,7 +510,7 @@ describe("OrdersService", () => {
           intentId: "intent-1",
           err,
         }),
-        "Order attempt failed",
+        "Order attempt failed (phase 1: sign/venue)",
       );
     });
 
@@ -428,6 +519,24 @@ describe("OrdersService", () => {
         .mockRejectedValueOnce(new Error("fail-1"))
         .mockRejectedValueOnce(new Error("fail-2"))
         .mockResolvedValue(SIGNED_ORDER);
+
+      // On retries, findFirst must return the PENDING order
+      prisma.order.findFirst
+        .mockResolvedValueOnce(null) // first attempt
+        .mockResolvedValueOnce({
+          id: "order-retry",
+          status: "PENDING",
+          clobOrderId: null,
+          venueOrderId: null,
+          updatedAt: new Date(),
+        }) // retry 1
+        .mockResolvedValueOnce({
+          id: "order-retry",
+          status: "PENDING",
+          clobOrderId: null,
+          venueOrderId: null,
+          updatedAt: new Date(),
+        }); // retry 2
 
       const p = svc.processIntent(makeIntent());
       await vi.runAllTimersAsync();
@@ -439,6 +548,24 @@ describe("OrdersService", () => {
 
     it("sends to DLQ after 3 failed attempts", async () => {
       signer.signOrder.mockRejectedValue(new Error("permanent failure"));
+
+      // On each retry, findFirst returns PENDING order
+      prisma.order.findFirst
+        .mockResolvedValueOnce(null)
+        .mockResolvedValueOnce({
+          id: "order-dlq",
+          status: "PENDING",
+          clobOrderId: null,
+          venueOrderId: null,
+          updatedAt: new Date(),
+        })
+        .mockResolvedValueOnce({
+          id: "order-dlq",
+          status: "PENDING",
+          clobOrderId: null,
+          venueOrderId: null,
+          updatedAt: new Date(),
+        });
 
       const p = svc.processIntent(makeIntent());
       await vi.runAllTimersAsync();
@@ -456,6 +583,23 @@ describe("OrdersService", () => {
     it("emits ORDER_FAILED event after exhausting all retries", async () => {
       signer.signOrder.mockRejectedValue(new Error("sign error"));
 
+      prisma.order.findFirst
+        .mockResolvedValueOnce(null)
+        .mockResolvedValueOnce({
+          id: "order-fail",
+          status: "PENDING",
+          clobOrderId: null,
+          venueOrderId: null,
+          updatedAt: new Date(),
+        })
+        .mockResolvedValueOnce({
+          id: "order-fail",
+          status: "PENDING",
+          clobOrderId: null,
+          venueOrderId: null,
+          updatedAt: new Date(),
+        });
+
       const p = svc.processIntent(makeIntent());
       await vi.runAllTimersAsync();
       await p;
@@ -470,6 +614,23 @@ describe("OrdersService", () => {
 
     it("updates order status to FAILED after DLQ", async () => {
       clob.submitOrder.mockRejectedValue(new Error("clob down"));
+
+      prisma.order.findFirst
+        .mockResolvedValueOnce(null)
+        .mockResolvedValueOnce({
+          id: "order-clob-fail",
+          status: "PENDING",
+          clobOrderId: null,
+          venueOrderId: null,
+          updatedAt: new Date(),
+        })
+        .mockResolvedValueOnce({
+          id: "order-clob-fail",
+          status: "PENDING",
+          clobOrderId: null,
+          venueOrderId: null,
+          updatedAt: new Date(),
+        });
 
       const p = svc.processIntent(makeIntent());
       await vi.runAllTimersAsync();
@@ -486,6 +647,17 @@ describe("OrdersService", () => {
         .mockRejectedValueOnce(new Error("clob overloaded"))
         .mockResolvedValue(CLOB_LIVE);
 
+      // On retry, findFirst returns existing PENDING order
+      prisma.order.findFirst
+        .mockResolvedValueOnce(null) // first attempt
+        .mockResolvedValueOnce({
+          id: "order-retry",
+          status: "PENDING",
+          clobOrderId: null,
+          venueOrderId: null,
+          updatedAt: new Date(),
+        }); // retry
+
       const p = svc.processIntent(makeIntent());
       await vi.runAllTimersAsync();
       await p;
@@ -496,6 +668,23 @@ describe("OrdersService", () => {
 
     it("DLQ entry contains intent metadata", async () => {
       signer.signOrder.mockRejectedValue(new Error("fail"));
+
+      prisma.order.findFirst
+        .mockResolvedValueOnce(null)
+        .mockResolvedValueOnce({
+          id: "order-dlq-meta",
+          status: "PENDING",
+          clobOrderId: null,
+          venueOrderId: null,
+          updatedAt: new Date(),
+        })
+        .mockResolvedValueOnce({
+          id: "order-dlq-meta",
+          status: "PENDING",
+          clobOrderId: null,
+          venueOrderId: null,
+          updatedAt: new Date(),
+        });
 
       const p = svc.processIntent(makeIntent({ intentId: "intent-dlq" }));
       await vi.runAllTimersAsync();
@@ -702,6 +891,20 @@ describe("OrdersService", () => {
         if (req.tokenId === "token-fail") throw new Error("always fail");
         return SIGNED_ORDER;
       });
+      // On retries of the failing intent, findFirst returns PENDING order
+      prisma.order.findFirst.mockImplementation(async (args: any) => {
+        if (args.where?.intentId === "intent-0") {
+          // First call is null, subsequent are PENDING (after retries)
+          return {
+            id: "order-fail-0",
+            status: "PENDING",
+            clobOrderId: null,
+            venueOrderId: null,
+            updatedAt: new Date(),
+          };
+        }
+        return null;
+      });
 
       const intents = [
         makeIntent({ intentId: "intent-0", tokenId: "token-fail" }),
@@ -722,6 +925,19 @@ describe("OrdersService", () => {
         return SIGNED_ORDER;
       });
       redis.xadd.mockRejectedValue(new Error("Redis DLQ down"));
+      // On retries of the failing intent, findFirst returns PENDING order
+      prisma.order.findFirst.mockImplementation(async (args: any) => {
+        if (args.where?.intentId === "intent-fail") {
+          return {
+            id: "order-fail-x",
+            status: "PENDING",
+            clobOrderId: null,
+            venueOrderId: null,
+            updatedAt: new Date(),
+          };
+        }
+        return null;
+      });
 
       const intents = [
         makeIntent({ intentId: "intent-fail", tokenId: "token-fail" }),
@@ -860,6 +1076,23 @@ describe("OrdersService", () => {
       signer.signOrder.mockRejectedValue(new Error("sign fail"));
       redis.xadd.mockRejectedValue(new Error("Redis down"));
 
+      prisma.order.findFirst
+        .mockResolvedValueOnce(null)
+        .mockResolvedValueOnce({
+          id: "order-oom",
+          status: "PENDING",
+          clobOrderId: null,
+          venueOrderId: null,
+          updatedAt: new Date(),
+        })
+        .mockResolvedValueOnce({
+          id: "order-oom",
+          status: "PENDING",
+          clobOrderId: null,
+          venueOrderId: null,
+          updatedAt: new Date(),
+        });
+
       const p = svc.processIntent(makeIntent());
       const rejection = expect(p).rejects.toThrow("Redis down");
       await vi.runAllTimersAsync();
@@ -874,6 +1107,23 @@ describe("OrdersService", () => {
       err.stack = "Error: Redis down\n    at moveToDlq (orders.ts:42:7)";
       signer.signOrder.mockRejectedValue(new Error("sign fail"));
       redis.xadd.mockRejectedValue(err);
+
+      prisma.order.findFirst
+        .mockResolvedValueOnce(null)
+        .mockResolvedValueOnce({
+          id: "order-log",
+          status: "PENDING",
+          clobOrderId: null,
+          venueOrderId: null,
+          updatedAt: new Date(),
+        })
+        .mockResolvedValueOnce({
+          id: "order-log",
+          status: "PENDING",
+          clobOrderId: null,
+          venueOrderId: null,
+          updatedAt: new Date(),
+        });
 
       const p = svc.processIntent(makeIntent());
       const rejection = expect(p).rejects.toThrow("Redis down");
@@ -984,6 +1234,371 @@ describe("OrdersService", () => {
           data: expect.objectContaining({ status: "CANCELLED" }),
         }),
       );
+    });
+  });
+
+  // ── Atomic claim / release ─────────────────────────────────────────────
+
+  describe("processIntent() — atomic claim", () => {
+    it("claims the order (PENDING → SUBMITTED) before calling signer", async () => {
+      const p = svc.processIntent(makeIntent());
+      await vi.runAllTimersAsync();
+      await p;
+
+      expect(prisma.order.updateMany).toHaveBeenCalledWith({
+        where: {
+          id: expect.any(String),
+          status: "PENDING",
+          clobOrderId: null,
+          venueOrderId: null,
+        },
+        data: { status: "SUBMITTED" },
+      });
+      expect(signer.signOrder).toHaveBeenCalled();
+    });
+
+    it("skips submission when claim fails (another processor already claimed)", async () => {
+      prisma.order.updateMany.mockResolvedValueOnce({ count: 0 });
+
+      const p = svc.processIntent(makeIntent());
+      await vi.runAllTimersAsync();
+      await p;
+
+      expect(signer.signOrder).not.toHaveBeenCalled();
+      expect(clob.submitOrder).not.toHaveBeenCalled();
+    });
+
+    it("releases claim on signer failure and retries", async () => {
+      const err = new Error("signer timeout");
+      err.stack =
+        "Error: signer timeout\n    at processIntent (orders.ts:42:7)";
+      signer.signOrder
+        .mockRejectedValueOnce(err)
+        .mockResolvedValue(SIGNED_ORDER);
+
+      const p = svc.processIntent(makeIntent());
+      await vi.runAllTimersAsync();
+      await p;
+
+      // Claim was released after first failure
+      expect(prisma.order.updateMany).toHaveBeenCalledWith({
+        where: {
+          id: expect.any(String),
+          status: "SUBMITTED",
+          clobOrderId: null,
+          venueOrderId: null,
+        },
+        data: { status: "PENDING" },
+      });
+      // Order was re-claimed on retry
+      expect(prisma.order.updateMany).toHaveBeenCalledTimes(3); // claim, release, re-claim
+      expect(signer.signOrder).toHaveBeenCalledTimes(2);
+      expect(events.emitOrderPlaced).toHaveBeenCalledOnce();
+    });
+
+    it("releases claim on CLOB failure and retries", async () => {
+      clob.submitOrder
+        .mockRejectedValueOnce(new Error("clob timeout"))
+        .mockResolvedValue(CLOB_LIVE);
+
+      const p = svc.processIntent(makeIntent());
+      await vi.runAllTimersAsync();
+      await p;
+
+      expect(prisma.order.updateMany).toHaveBeenCalledTimes(3); // claim, release, re-claim
+      expect(clob.submitOrder).toHaveBeenCalledTimes(2);
+      expect(events.emitOrderPlaced).toHaveBeenCalledOnce();
+    });
+  });
+
+  // ── Post-venue failure (DO NOT re-submit) ──────────────────────────────
+
+  describe("processIntent() — post-venue failure", () => {
+    it("retries DB persistence only after venue accepts (no re-submit to CLOB)", async () => {
+      // First attempt: CLOB succeeds, DB update fails
+      clob.submitOrder.mockResolvedValueOnce(CLOB_LIVE);
+      prisma.order.update.mockRejectedValueOnce(new Error("DB write timeout"));
+
+      const p = svc.processIntent(makeIntent());
+      await vi.runAllTimersAsync();
+      await p;
+
+      // CLOB was called only once (no re-submit)
+      expect(clob.submitOrder).toHaveBeenCalledTimes(1);
+      // order.update was called twice (failed first, succeeded on retry)
+      expect(prisma.order.update).toHaveBeenCalledTimes(2);
+      // Events were emitted after successful persistence retry
+      expect(events.emitOrderPlaced).toHaveBeenCalledOnce();
+    });
+
+    it("retries DB persistence after venue accepts (max attempts, then best-effort)", async () => {
+      clob.submitOrder.mockResolvedValue(CLOB_LIVE);
+      prisma.order.update.mockRejectedValue(new Error("DB permanently down"));
+
+      const p = svc.processIntent(makeIntent());
+      await vi.runAllTimersAsync();
+      await p;
+
+      // CLOB called only once
+      expect(clob.submitOrder).toHaveBeenCalledTimes(1);
+      // Final best-effort update was attempted
+      const finalUpdateCalls = prisma.order.update.mock.calls.filter(
+        ([args]: any[]) => args.data?.clobOrderId === "clob-123",
+      );
+      expect(finalUpdateCalls.length).toBeGreaterThanOrEqual(1);
+      // emitOrderFailed was called after persistence exhausted
+      expect(events.emitOrderFailed).toHaveBeenCalledOnce();
+    });
+
+    it("does NOT release claim after venue accepts (venue ids are preserved)", async () => {
+      clob.submitOrder.mockResolvedValue(CLOB_LIVE);
+      prisma.order.update.mockRejectedValue(new Error("transient DB fail"));
+
+      const p = svc.processIntent(makeIntent());
+      await vi.runAllTimersAsync();
+      await p;
+
+      // No release call after venue acceptance (claim release only in pre-venue path)
+      // UpdateMany calls with SUBMITTED→PENDING would indicate a claim release
+      const releaseCalls = prisma.order.updateMany.mock.calls.filter(
+        ([args]: any[]) => args.data?.status === "PENDING",
+      );
+      // Only the claim call, no release after venue success
+      expect(releaseCalls.length).toBe(0);
+    });
+  });
+
+  // ── Stale claim recovery ───────────────────────────────────────────────
+
+  describe("processIntent() — stale SUBMITTED claim recovery", () => {
+    it("reclaims a SUBMITTED order with expired claim and no venue ids", async () => {
+      prisma.order.findFirst.mockResolvedValue({
+        id: "stale-order",
+        status: "SUBMITTED",
+        clobOrderId: null,
+        venueOrderId: null,
+        updatedAt: new Date(Date.now() - 60_000), // 60s ago, claim expired
+      });
+
+      const p = svc.processIntent(makeIntent());
+      await vi.runAllTimersAsync();
+      await p;
+
+      // Released the stale claim back to PENDING
+      expect(prisma.order.updateMany).toHaveBeenCalledWith({
+        where: {
+          id: "stale-order",
+          status: "SUBMITTED",
+          clobOrderId: null,
+          venueOrderId: null,
+        },
+        data: { status: "PENDING" },
+      });
+      // Proceeded to CLOB submission
+      expect(signer.signOrder).toHaveBeenCalled();
+      expect(clob.submitOrder).toHaveBeenCalled();
+    });
+
+    it("skips a SUBMITTED order with fresh claim (still processing)", async () => {
+      prisma.order.findFirst.mockResolvedValue({
+        id: "fresh-order",
+        status: "SUBMITTED",
+        clobOrderId: null,
+        venueOrderId: null,
+        updatedAt: new Date(Date.now() - 5_000), // 5s ago, claim still fresh
+      });
+
+      const p = svc.processIntent(makeIntent());
+      await vi.runAllTimersAsync();
+      await p;
+
+      // Did NOT release claim
+      expect(prisma.order.updateMany).not.toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: "fresh-order" },
+          data: { status: "PENDING" },
+        }),
+      );
+      // Did NOT proceed to CLOB submission
+      expect(signer.signOrder).not.toHaveBeenCalled();
+      expect(clob.submitOrder).not.toHaveBeenCalled();
+    });
+
+    it("skips a SUBMITTED order with venue ids (already submitted)", async () => {
+      prisma.order.findFirst.mockResolvedValue({
+        id: "submitted-order",
+        status: "SUBMITTED",
+        clobOrderId: "clob-xyz",
+        venueOrderId: null,
+        updatedAt: new Date(Date.now() - 60_000),
+      });
+
+      const p = svc.processIntent(makeIntent());
+      await vi.runAllTimersAsync();
+      await p;
+
+      expect(signer.signOrder).not.toHaveBeenCalled();
+      expect(clob.submitOrder).not.toHaveBeenCalled();
+    });
+  });
+
+  // ── Stale claim recovery + CLOB-accepted sentinel ──────────────────────
+
+  describe("processIntent() — CLOB-accepted sentinel prevents double-submit", () => {
+    it("skips re-submission for stale SUBMITTED claim when sentinel exists", async () => {
+      prisma.order.findFirst.mockResolvedValue({
+        id: "stale-order",
+        status: "SUBMITTED",
+        clobOrderId: null,
+        venueOrderId: null,
+        updatedAt: new Date(Date.now() - 60_000),
+      });
+      // Sentinel shows CLOB already accepted this intent
+      redis.get.mockResolvedValue("clob-sentinel-123");
+
+      const p = svc.processIntent(makeIntent());
+      await vi.runAllTimersAsync();
+      await p;
+
+      // Did NOT release claim or re-submit to CLOB
+      expect(prisma.order.updateMany).not.toHaveBeenCalledWith(
+        expect.objectContaining({ data: { status: "PENDING" } }),
+      );
+      expect(signer.signOrder).not.toHaveBeenCalled();
+      expect(clob.submitOrder).not.toHaveBeenCalled();
+
+      // Persisted the venue order id from the sentinel
+      expect(prisma.order.update).toHaveBeenCalledWith({
+        where: { id: "stale-order" },
+        data: {
+          clobOrderId: "clob-sentinel-123",
+          venueOrderId: "clob-sentinel-123",
+        },
+      });
+
+      // Cleaned up the sentinel
+      expect(redis.del).toHaveBeenCalledWith("clob:accepted:intent-1");
+    });
+
+    it("skips re-submission for PENDING order when sentinel exists", async () => {
+      prisma.order.findFirst.mockResolvedValue({
+        id: "pending-order",
+        status: "PENDING",
+        clobOrderId: null,
+        venueOrderId: null,
+        updatedAt: new Date(),
+      });
+      redis.get.mockResolvedValue("clob-sentinel-456");
+
+      const p = svc.processIntent(makeIntent());
+      await vi.runAllTimersAsync();
+      await p;
+
+      expect(signer.signOrder).not.toHaveBeenCalled();
+      expect(clob.submitOrder).not.toHaveBeenCalled();
+
+      // Persisted venue order id + set status to SUBMITTED
+      expect(prisma.order.update).toHaveBeenCalledWith({
+        where: { id: "pending-order" },
+        data: {
+          clobOrderId: "clob-sentinel-456",
+          venueOrderId: "clob-sentinel-456",
+          status: "SUBMITTED",
+        },
+      });
+
+      expect(redis.del).toHaveBeenCalledWith("clob:accepted:intent-1");
+    });
+
+    it("still reclaims stale SUBMITTED claim when sentinel is absent", async () => {
+      prisma.order.findFirst.mockResolvedValue({
+        id: "stale-order",
+        status: "SUBMITTED",
+        clobOrderId: null,
+        venueOrderId: null,
+        updatedAt: new Date(Date.now() - 60_000),
+      });
+      redis.get.mockResolvedValue(null); // No sentinel — safe to reclaim
+
+      const p = svc.processIntent(makeIntent());
+      await vi.runAllTimersAsync();
+      await p;
+
+      // Released the stale claim back to PENDING
+      expect(prisma.order.updateMany).toHaveBeenCalledWith({
+        where: {
+          id: "stale-order",
+          status: "SUBMITTED",
+          clobOrderId: null,
+          venueOrderId: null,
+        },
+        data: { status: "PENDING" },
+      });
+      // Proceeded to CLOB submission
+      expect(signer.signOrder).toHaveBeenCalled();
+      expect(clob.submitOrder).toHaveBeenCalled();
+    });
+
+    it("writes CLOB-accepted sentinel after successful venue submission", async () => {
+      // Normal happy path — no existing order
+      prisma.order.findFirst.mockResolvedValue(null);
+
+      const p = svc.processIntent(makeIntent());
+      await vi.runAllTimersAsync();
+      await p;
+
+      expect(redis.set).toHaveBeenCalledWith(
+        "clob:accepted:intent-1",
+        "clob-123", // from CLOB_LIVE mock
+        86400,
+      );
+    });
+  });
+
+  // ── Concurrent duplicate processing (claim prevents double-submit) ─────
+
+  describe("processIntent() — concurrent duplicate protection", () => {
+    it("second concurrent processor skips when claim already taken", async () => {
+      // Simulate first processor winning the claim
+      let claimAttempted = false;
+      prisma.order.updateMany.mockImplementation((args: any) => {
+        if (!claimAttempted) {
+          claimAttempted = true;
+          return Promise.resolve({ count: 1 });
+        }
+        return Promise.resolve({ count: 0 });
+      });
+
+      // Second processor's findFirst sees the PENDING order from first
+      let findFirstCallCount = 0;
+      prisma.order.findFirst.mockImplementation(() => {
+        findFirstCallCount++;
+        if (findFirstCallCount === 1) return Promise.resolve(null);
+        // Second call: processor 2 sees the PENDING order (first hasn't claimed yet)
+        return Promise.resolve({
+          id: "order-claimed",
+          status: "SUBMITTED",
+          clobOrderId: null,
+          venueOrderId: null,
+          updatedAt: new Date(),
+        });
+      });
+
+      const intents = [
+        makeIntent({ intentId: "same-intent" }),
+        makeIntent({ intentId: "same-intent" }),
+      ];
+
+      // Run two intents with the same intentId concurrently
+      const results = await Promise.allSettled([
+        svc.processIntent(intents[0]),
+        svc.processIntent(intents[1]),
+      ]);
+
+      // Both should resolve (second skips after fresh claim detected)
+      expect(results.every((r) => r.status === "fulfilled")).toBe(true);
+      // Only one submission to CLOB
+      expect(clob.submitOrder).toHaveBeenCalledTimes(1);
     });
   });
 });
