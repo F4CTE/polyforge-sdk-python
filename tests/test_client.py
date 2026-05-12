@@ -370,6 +370,51 @@ class TestModelParsing:
         assert market.title == "Will BTC reach $100K by June?"
         assert market.id == "0xabc"
 
+    def test_market_parses_description_enddate_resolved_from_api_response(self):
+        """_parse must map description, endDate, resolved from platform JSON (#227)."""
+        api_response = {
+            "id": "mkt-001",
+            "title": "Will ETH flip BTC?",
+            "category": "Crypto",
+            "price": 0.42,
+            "description": "Market predicts whether Ethereum flips Bitcoin in market cap",
+            "endDate": "2026-12-31T23:59:59Z",
+            "resolved": False,
+        }
+        market = _parse(Market, api_response)
+        assert market.description == "Market predicts whether Ethereum flips Bitcoin in market cap"
+        assert market.end_date == "2026-12-31T23:59:59Z"
+        assert market.resolved is False
+
+    def test_market_parses_resolved_true_from_api_response(self):
+        """resolved=true from the platform must be parsed as True."""
+        api_response = {
+            "id": "mkt-resolved",
+            "title": "Resolved market",
+            "category": "Politics",
+            "resolved": True,
+        }
+        market = _parse(Market, api_response)
+        assert market.resolved is True
+
+    def test_market_handles_null_enddate(self):
+        """endDate=null (perpetual/ongoing markets) must map to end_date=None."""
+        api_response = {
+            "id": "mkt-perpetual",
+            "title": "Perpetual market",
+            "category": "Crypto",
+            "endDate": None,
+        }
+        market = _parse(Market, api_response)
+        assert market.end_date is None
+
+    def test_market_defaults_for_new_fields(self):
+        """Market() should default description=None, end_date=None, resolved=False."""
+        market = Market()
+        assert market.description is None
+        assert market.end_date is None
+        assert market.resolved is False
+
     def test_strategy_model_instantiation(self):
         """Should instantiate Strategy model."""
         strategy = Strategy(
@@ -4710,6 +4755,7 @@ class TestCrossVenueArbitrage:
 
         asyncio.run(_run())
 
+
     def test_sync_get_spread_comparison(self):
         from unittest.mock import MagicMock
         client = PolyforgeClient(api_key="test-key")
@@ -4940,6 +4986,37 @@ class TestHealthEndpoint:
         from polyforge import SystemHealthAuthenticated as SHA, MatchSyncResult as MSR  # noqa: F811
         assert SHA is SystemHealthAuthenticated
         assert MSR is MatchSyncResult
+
+
+class TestHealthEndpoint:
+    """Tests for the authenticated health-check endpoint."""
+
+    def test_sync_get_health_authenticated(self):
+        from unittest.mock import MagicMock
+        client = PolyforgeClient(api_key="test-key")
+        client._get = MagicMock(return_value={
+            "status": "operational",
+            "service": "api-service",
+            "version": "2.0.0",
+            "uptime": 3600.0,
+            "db": {"connections": 5, "status": "ok"},
+            "redis": {"memoryUsageMb": 128, "status": "ok"},
+            "queueDepth": 0,
+        })
+        result = client.get_health_authenticated()
+        assert isinstance(result, SystemHealthAuthenticated)
+        assert result.status == "operational"
+        assert result.service == "api-service"
+        assert result.db == {"connections": 5, "status": "ok"}
+        client._get.assert_called_once_with("/api/v1/status")
+        client.close()
+
+    def test_async_get_health_authenticated_is_coroutine(self):
+        import inspect
+        assert hasattr(AsyncPolyforgeClient, "get_health_authenticated"), \
+            "AsyncPolyforgeClient missing get_health_authenticated"
+        source = inspect.getsource(AsyncPolyforgeClient.get_health_authenticated)
+        assert "await" in source, "async get_health_authenticated not using await"
 
 
 class TestHealthEndpoint:
