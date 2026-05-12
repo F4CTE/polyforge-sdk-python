@@ -12,7 +12,7 @@
   },
   "dependencies": {
     "@polyforge/ui": "workspace:*",
-    "@sentry/nextjs": "^10.53.0",
+    "@sentry/nextjs": "^10.53.1",
     "geist": "^1.7.0",
     "lucide-react": "^1.14.0",
     "next": "^16.2.6",
