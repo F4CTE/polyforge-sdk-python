@@ -81,6 +81,8 @@ from polyforge.models import (
     OrderPreviewResponse,
     PaginatedResponse,
     PaperSummary,
+    PersonalDataExport,
+    PersonalDataExportMeta,
     PlaceOrderResponse,
     PlaceSmartOrderResponse,
     PolymarketActivity,
@@ -102,7 +104,6 @@ from polyforge.models import (
     RiskSettings,
     SentimentUserVote,
     SmartOrder,
-    SmartOrderChildOrder,
     SpreadInfo,
     SpreadSummary,
     Strategy,
@@ -150,6 +151,7 @@ T = TypeVar("T")
 
 _FIELD_ALIASES: dict[str, dict[str, str]] = {
     "PriceHistoryEntry": {"time": "timestamp"},
+    "PersonalDataExport": {"_meta": "meta"},
 }
 
 _MODEL_REGISTRY: dict[str, type] = {
@@ -241,6 +243,8 @@ _MODEL_REGISTRY: dict[str, type] = {
     "ReferralStats": ReferralStats,
     "SentimentUserVote": SentimentUserVote,
     "VenueFeeEstimate": VenueFeeEstimate,
+    "PersonalDataExportMeta": PersonalDataExportMeta,
+    "PersonalDataExport": PersonalDataExport,
 }
 
 
@@ -1253,7 +1257,7 @@ class PolyforgeClient:
 
         Args:
             strategy_id: Strategy to report.
-            reason: One of ``"SPAM"``, ``"HARMFUL"``, ``"MISLEADING"``, ``"OTHER"``.
+            reason: One of ``"SPAM"``, ``"INAPPROPRIATE"``, ``"MISLEADING"``, ``"OTHER"``.
             description: Optional additional detail.
         """
         body: dict[str, Any] = {"reason": reason}
@@ -3210,6 +3214,20 @@ class PolyforgeClient:
     def get_gas_settings(self) -> dict[str, Any]:
         return self._get("/api/v1/settings/gas")
 
+    def export_personal_data(self, format: str = "json") -> PersonalDataExport | str:
+        """Export personal data for GDPR compliance.
+
+        Args:
+            format: ``"json"`` (default) returns a :class:`PersonalDataExport` object.
+                    ``"csv"`` returns the raw CSV text.
+        """
+        if format not in ("json", "csv"):
+            raise ValueError(f"format must be 'json' or 'csv', got {format!r}")
+        if format == "csv":
+            return self._get_text("/api/v1/me/export", params={"format": "csv"})
+        raw = self._get("/api/v1/me/export")
+        return _parse(PersonalDataExport, raw)
+
     # -- Support Tickets --
 
     def list_tickets(
@@ -4553,7 +4571,7 @@ class AsyncPolyforgeClient:
 
         Args:
             strategy_id: Strategy to report.
-            reason: One of ``"SPAM"``, ``"HARMFUL"``, ``"MISLEADING"``, ``"OTHER"``.
+            reason: One of ``"SPAM"``, ``"INAPPROPRIATE"``, ``"MISLEADING"``, ``"OTHER"``.
             description: Optional additional detail.
         """
         body: dict[str, Any] = {"reason": reason}
@@ -6275,6 +6293,20 @@ class AsyncPolyforgeClient:
 
     async def get_gas_settings(self) -> dict[str, Any]:
         return await self._get("/api/v1/settings/gas")
+
+    async def export_personal_data(self, format: str = "json") -> PersonalDataExport | str:
+        """Export personal data for GDPR compliance.
+
+        Args:
+            format: ``"json"`` (default) returns a :class:`PersonalDataExport` object.
+                    ``"csv"`` returns the raw CSV text.
+        """
+        if format not in ("json", "csv"):
+            raise ValueError(f"format must be 'json' or 'csv', got {format!r}")
+        if format == "csv":
+            return await self._get_text("/api/v1/me/export", params={"format": "csv"})
+        raw = await self._get("/api/v1/me/export")
+        return _parse(PersonalDataExport, raw)
 
     # -- Support Tickets --
 

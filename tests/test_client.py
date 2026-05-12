@@ -36,14 +36,11 @@ from polyforge.models import (
     SystemHealthAuthenticated,
     Token,
     MarketplaceListing,
-    MarketplaceSeller,
-    MarketplaceStrategy,
     Order,
     OrderBook,
     OrderBookLevel,
     OrderStatus,
     PaginatedResponse,
-    PlaceOrderResponse,
     Portfolio,
     PortfolioPnl,
     Position,
@@ -4686,14 +4683,33 @@ class TestCrossVenueArbitrage:
     def test_sync_sync_market_matches(self):
         from unittest.mock import MagicMock
         client = PolyforgeClient(api_key="test-key")
-        client._post = MagicMock(return_value={"matched": 12})
+        client._post = MagicMock(return_value={"matched": 12, "created": 3, "updated": 5})
         result = client.sync_market_matches()
         assert isinstance(result, MatchSyncResult)
         assert result.matched == 12
+        assert result.created == 3
+        assert result.updated == 5
         client._post.assert_called_once_with(
             "/api/v1/arbitrage/matches/sync",
         )
         client.close()
+
+    def test_async_sync_market_matches(self):
+        import asyncio
+        from unittest.mock import AsyncMock
+
+        async def _run():
+            client = AsyncPolyforgeClient(api_key="test-key")
+            client._post = AsyncMock(return_value={"matched": 8, "created": 2, "updated": 1})
+            result = await client.sync_market_matches()
+            assert isinstance(result, MatchSyncResult)
+            assert result.matched == 8
+            assert result.created == 2
+            assert result.updated == 1
+            client._post.assert_called_once_with("/api/v1/arbitrage/matches/sync")
+            await client.close()
+
+        asyncio.run(_run())
 
     def test_sync_get_spread_comparison(self):
         from unittest.mock import MagicMock
@@ -4829,6 +4845,133 @@ class TestCrossVenueArbitrage:
             assert hasattr(AsyncPolyforgeClient, method_name), f"AsyncPolyforgeClient missing {method_name}"
             source = inspect.getsource(getattr(AsyncPolyforgeClient, method_name))
             assert "await" in source, f"async {method_name} not using await"
+
+    def test_async_sync_market_matches_behavioral(self):
+        import asyncio
+        from unittest.mock import AsyncMock
+
+        async def run():
+            client = AsyncPolyforgeClient(api_key="test-key")
+            client._post = AsyncMock(return_value={"matched": 12, "created": 3, "updated": 1})
+            result = await client.sync_market_matches()
+            assert isinstance(result, MatchSyncResult)
+            assert result.matched == 12
+            assert result.created == 3
+            assert result.updated == 1
+            client._post.assert_called_once_with("/api/v1/arbitrage/matches/sync")
+            await client.close()
+
+        asyncio.run(run())
+
+
+class TestHealthEndpoint:
+    """Tests for the authenticated health-check endpoint."""
+
+    def test_sync_get_health_authenticated(self):
+        from unittest.mock import MagicMock
+        client = PolyforgeClient(api_key="test-key")
+        client._get = MagicMock(return_value={
+            "status": "operational",
+            "service": "api-service",
+            "version": "2.0.0",
+            "uptime": 3600.0,
+            "db": {"connections": 5, "status": "ok"},
+            "redis": {"memoryUsageMb": 128, "status": "ok"},
+            "queueDepth": 0,
+        })
+        result = client.get_health_authenticated()
+        assert isinstance(result, SystemHealthAuthenticated)
+        assert result.status == "operational"
+        assert result.service == "api-service"
+        assert result.queue_depth == 0
+        assert result.db == {"connections": 5, "status": "ok"}
+        client._get.assert_called_once_with("/api/v1/status")
+        client.close()
+
+    def test_async_get_health_authenticated(self):
+        import asyncio
+        from unittest.mock import AsyncMock
+
+        async def _run():
+            client = AsyncPolyforgeClient(api_key="test-key")
+            client._get = AsyncMock(return_value={
+                "status": "operational",
+                "service": "api-service",
+                "version": "2.0.0",
+                "uptime": 3600.0,
+                "db": {"connections": 5, "status": "ok"},
+                "redis": {"memoryUsageMb": 128, "status": "ok"},
+                "queueDepth": 0,
+            })
+            result = await client.get_health_authenticated()
+            assert isinstance(result, SystemHealthAuthenticated)
+            assert result.status == "operational"
+            assert result.queue_depth == 0
+            client._get.assert_called_once_with("/api/v1/status")
+            await client.close()
+
+        asyncio.run(_run())
+
+    def test_async_get_health_authenticated_behavioral(self):
+        import asyncio
+        from unittest.mock import AsyncMock
+
+        async def run():
+            client = AsyncPolyforgeClient(api_key="test-key")
+            client._get = AsyncMock(return_value={
+                "status": "operational",
+                "service": "api-service",
+                "version": "2.0.0",
+                "uptime": 3600.0,
+                "db": {"connections": 5, "status": "ok"},
+                "redis": {"memoryUsageMb": 128, "status": "ok"},
+                "queueDepth": 0,
+            })
+            result = await client.get_health_authenticated()
+            assert isinstance(result, SystemHealthAuthenticated)
+            assert result.status == "operational"
+            assert result.service == "api-service"
+            assert result.db == {"connections": 5, "status": "ok"}
+            client._get.assert_called_once_with("/api/v1/status")
+            await client.close()
+
+        asyncio.run(run())
+
+    def test_new_models_exported_from_package_root(self):
+        from polyforge import SystemHealthAuthenticated as SHA, MatchSyncResult as MSR  # noqa: F811
+        assert SHA is SystemHealthAuthenticated
+        assert MSR is MatchSyncResult
+
+
+class TestHealthEndpoint:
+    """Tests for the authenticated health-check endpoint."""
+
+    def test_sync_get_health_authenticated(self):
+        from unittest.mock import MagicMock
+        client = PolyforgeClient(api_key="test-key")
+        client._get = MagicMock(return_value={
+            "status": "operational",
+            "service": "api-service",
+            "version": "2.0.0",
+            "uptime": 3600.0,
+            "db": {"connections": 5, "status": "ok"},
+            "redis": {"memoryUsageMb": 128, "status": "ok"},
+            "queueDepth": 0,
+        })
+        result = client.get_health_authenticated()
+        assert isinstance(result, SystemHealthAuthenticated)
+        assert result.status == "operational"
+        assert result.service == "api-service"
+        assert result.db == {"connections": 5, "status": "ok"}
+        client._get.assert_called_once_with("/api/v1/status")
+        client.close()
+
+    def test_async_get_health_authenticated_is_coroutine(self):
+        import inspect
+        assert hasattr(AsyncPolyforgeClient, "get_health_authenticated"), \
+            "AsyncPolyforgeClient missing get_health_authenticated"
+        source = inspect.getsource(AsyncPolyforgeClient.get_health_authenticated)
+        assert "await" in source, "async get_health_authenticated not using await"
 
 
 class TestHealthEndpoint:
@@ -5251,6 +5394,7 @@ class TestSettingsMethods:
         "update_settings_password",
         "get_beta_usage",
         "get_gas_settings",
+        "export_personal_data",
     ]
 
     @pytest.mark.parametrize("method", SETTINGS_METHODS)
@@ -5272,6 +5416,7 @@ class TestSettingsMethods:
             "update_settings_password": "/api/v1/settings/password",
             "get_beta_usage": "/api/v1/settings/beta-usage",
             "get_gas_settings": "/api/v1/settings/gas",
+            "export_personal_data": "/api/v1/me/export",
         }
         for method_name, expected_path in path_map.items():
             source = inspect.getsource(getattr(PolyforgeClient, method_name))
@@ -5286,6 +5431,7 @@ class TestSettingsMethods:
             "update_settings_password": "/api/v1/settings/password",
             "get_beta_usage": "/api/v1/settings/beta-usage",
             "get_gas_settings": "/api/v1/settings/gas",
+            "export_personal_data": "/api/v1/me/export",
         }
         for method_name, expected_path in path_map.items():
             source = inspect.getsource(getattr(AsyncPolyforgeClient, method_name))
@@ -5361,6 +5507,106 @@ class TestSettingsMethods:
         client._get.assert_called_once_with("/api/v1/settings/gas")
         assert result["gasLevel"] == "standard"
         client.close()
+
+    def test_sync_export_personal_data_json(self):
+        from unittest.mock import MagicMock
+        from polyforge.models import PersonalDataExport
+        client = PolyforgeClient(api_key="test-key")
+        client._get = MagicMock(return_value={
+            "generatedAt": "2026-05-11T00:00:00Z",
+            "formatVersion": "2026-05-privacy-export-v1",
+            "_meta": {"maxRecordsPerCollection": 1000, "collectionsTruncated": {}},
+            "account": {"username": "testuser"},
+            "settings": {},
+            "security": {},
+            "trading": {},
+            "communications": {},
+            "social": {},
+        })
+        result = client.export_personal_data()
+        client._get.assert_called_once_with("/api/v1/me/export")
+        assert isinstance(result, PersonalDataExport)
+        assert result.generated_at == "2026-05-11T00:00:00Z"
+        assert result.account == {"username": "testuser"}
+        assert result.meta is not None
+        assert result.meta.max_records_per_collection == 1000
+        client.close()
+
+    def test_sync_export_personal_data_csv(self):
+        from unittest.mock import MagicMock
+        client = PolyforgeClient(api_key="test-key")
+        client._get_text = MagicMock(return_value="section,index,data_json\n...")
+        result = client.export_personal_data(format="csv")
+        client._get_text.assert_called_once_with(
+            "/api/v1/me/export", params={"format": "csv"}
+        )
+        assert isinstance(result, str)
+        client.close()
+
+    def test_sync_export_personal_data_invalid_format(self):
+        import pytest
+        client = PolyforgeClient(api_key="test-key")
+        with pytest.raises(ValueError, match="format must be 'json' or 'csv'"):
+            client.export_personal_data(format="cvs")
+        client.close()
+
+    def test_async_export_personal_data_json(self):
+        import asyncio
+        from unittest.mock import AsyncMock
+        from polyforge.models import PersonalDataExport
+
+        async def _run():
+            client = AsyncPolyforgeClient(api_key="test-key")
+            client._get = AsyncMock(return_value={
+                "generatedAt": "2026-05-11T00:00:00Z",
+                "formatVersion": "v1",
+                "_meta": {"maxRecordsPerCollection": 1000, "collectionsTruncated": {}},
+                "account": {"username": "asyncuser"},
+                "settings": {},
+                "security": {},
+                "trading": {},
+                "communications": {},
+                "social": {},
+            })
+            result = await client.export_personal_data()
+            client._get.assert_called_once_with("/api/v1/me/export")
+            assert isinstance(result, PersonalDataExport)
+            assert result.generated_at == "2026-05-11T00:00:00Z"
+            assert result.account == {"username": "asyncuser"}
+            assert result.meta is not None
+            assert result.meta.max_records_per_collection == 1000
+            await client.close()
+
+        asyncio.run(_run())
+
+    def test_async_export_personal_data_csv(self):
+        import asyncio
+        from unittest.mock import AsyncMock
+
+        async def _run():
+            client = AsyncPolyforgeClient(api_key="test-key")
+            client._get_text = AsyncMock(return_value="section,index,data_json\naccount,0,...")
+            result = await client.export_personal_data(format="csv")
+            client._get_text.assert_called_once_with(
+                "/api/v1/me/export", params={"format": "csv"}
+            )
+            assert isinstance(result, str)
+            assert result.startswith("section,")
+            await client.close()
+
+        asyncio.run(_run())
+
+    def test_async_export_personal_data_invalid_format(self):
+        import asyncio
+        import pytest
+
+        async def _run():
+            client = AsyncPolyforgeClient(api_key="test-key")
+            with pytest.raises(ValueError, match="format must be 'json' or 'csv'"):
+                await client.export_personal_data(format="cvs")
+            await client.close()
+
+        asyncio.run(_run())
 
 
 class TestTicketMethods:
@@ -5515,7 +5761,7 @@ class TestNotificationPreferenceMethods:
 
     def test_sync_get_notification_preferences(self):
         from unittest.mock import MagicMock
-        from polyforge.models import EventNotificationPreferences, EventNotificationPref
+        from polyforge.models import EventNotificationPreferences
         client = PolyforgeClient(api_key="test-key")
         client._get = MagicMock(return_value={
             "preferences": [
