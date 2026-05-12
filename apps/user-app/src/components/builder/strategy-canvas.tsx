@@ -1,4 +1,4 @@
-import { useCallback, useRef, useMemo } from 'react';
+import { useCallback, useRef, useMemo } from "react";
 import {
   ReactFlow,
   Background,
@@ -6,21 +6,23 @@ import {
   MiniMap,
   BackgroundVariant,
   useReactFlow,
-} from '@xyflow/react';
+} from "@xyflow/react";
 // Styles imported in globals.css (before our overrides)
 
-import { BlockNode } from './nodes/block-node';
-import { VariableNode } from './nodes/variable-node';
-import { LogicNode } from './nodes/logic-node';
-import { CalcNode } from './nodes/calc-node';
-import { useBuilderStore, type BlockNodeData, type LogicNodeData, type CalcNodeData } from '../../stores/builder-store';
-import { useExecutionStore } from '../../stores/execution-store';
-import { useThemeStore } from '../../stores/theme-store';
-import { ArrowLeftRight } from 'lucide-react';
+import { BlockNode } from "./nodes/block-node";
+import { VariableNode } from "./nodes/variable-node";
+import { LogicNode } from "./nodes/logic-node";
+import { CalcNode } from "./nodes/calc-node";
 import {
-  BLOCK_DEFS,
-  type BlockSection,
-} from './block-definitions';
+  useBuilderStore,
+  type BlockNodeData,
+  type LogicNodeData,
+  type CalcNodeData,
+} from "../../stores/builder-store";
+import { useExecutionStore } from "../../stores/execution-store";
+import { useThemeStore } from "../../stores/theme-store";
+import { ArrowLeftRight } from "lucide-react";
+import { BLOCK_DEFS, type BlockSection } from "./block-definitions";
 
 // ─── Node types registry ─────────────────────────────────────────────────────
 
@@ -55,9 +57,10 @@ export function StrategyCanvas() {
       ...e,
       style: {
         ...e.style,
-        stroke: 'color-mix(in srgb, var(--accent-default) 75%, transparent)',
+        stroke: "color-mix(in srgb, var(--accent-default) 75%, transparent)",
         strokeWidth: 2,
-        filter: 'drop-shadow(0 0 4px color-mix(in srgb, var(--accent-default) 45%, transparent))',
+        filter:
+          "drop-shadow(0 0 4px color-mix(in srgb, var(--accent-default) 45%, transparent))",
       },
     }));
   }, [edges, isExecuting]);
@@ -66,14 +69,14 @@ export function StrategyCanvas() {
 
   const onDragOver = useCallback((event: React.DragEvent) => {
     event.preventDefault();
-    event.dataTransfer.dropEffect = 'move';
+    event.dataTransfer.dropEffect = "move";
   }, []);
 
   const onDrop = useCallback(
     (event: React.DragEvent) => {
       event.preventDefault();
 
-      const raw = event.dataTransfer.getData('application/reactflow');
+      const raw = event.dataTransfer.getData("application/reactflow");
       if (!raw) return;
 
       let parsed: { type: string; section: BlockSection };
@@ -85,9 +88,7 @@ export function StrategyCanvas() {
 
       const sectionDefs = BLOCK_DEFS[parsed.section];
       if (!sectionDefs) return;
-      const def = sectionDefs.find(
-        (d) => d.type === parsed.type,
-      );
+      const def = sectionDefs.find((d) => d.type === parsed.type);
       if (!def) return;
 
       // screenToFlowPosition takes client coordinates directly in v12
@@ -113,9 +114,13 @@ export function StrategyCanvas() {
   const isEmpty = nodes.length === 0;
 
   return (
-    <div ref={reactFlowWrapper} className="w-full h-full relative" aria-label="Strategy canvas editor">
+    <div
+      ref={reactFlowWrapper}
+      className="w-full h-full relative"
+      aria-label="Strategy canvas editor"
+    >
       <ReactFlow
-        colorMode={isDark ? 'dark' : 'light'}
+        colorMode={isDark ? "dark" : "light"}
         nodes={nodes}
         edges={displayEdges}
         onNodesChange={onNodesChange}
@@ -126,39 +131,35 @@ export function StrategyCanvas() {
         nodeTypes={nodeTypes}
         fitView={nodes.length > 0}
         fitViewOptions={{ padding: 0.2 }}
-        deleteKeyCode={['Backspace', 'Delete']}
+        deleteKeyCode={["Backspace", "Delete"]}
         snapToGrid
         snapGrid={[20, 20]}
         minZoom={0.1}
         maxZoom={2}
         defaultEdgeOptions={{
-          type: 'smoothstep',
+          type: "smoothstep",
           animated: true,
         }}
         proOptions={{ hideAttribution: true }}
+        edgesFocusable
         className="strategy-builder-flow"
       >
-        <Background
-          variant={BackgroundVariant.Dots}
-          gap={20}
-          size={1}
-        />
-        <Controls
-          position="bottom-left"
-          showInteractive={false}
-        />
+        <Background variant={BackgroundVariant.Dots} gap={20} size={1} />
+        <Controls position="bottom-left" showInteractive={false} />
         <MiniMap
           position="bottom-right"
           className="!w-[180px] !h-[120px]"
-          maskColor={isDark
-            ? 'color-mix(in srgb, var(--bg-app) 60%, transparent)'
-            : 'color-mix(in srgb, var(--bg-app) 60%, transparent)'}
+          maskColor={
+            isDark
+              ? "color-mix(in srgb, var(--bg-app) 60%, transparent)"
+              : "color-mix(in srgb, var(--bg-app) 60%, transparent)"
+          }
           nodeColor={(node) => {
-            if (node.type === 'variableNode') return 'var(--chart-category-2)';
-            if (node.type === 'logicNode') return 'var(--info)';
-            if (node.type === 'calcNode') return 'var(--gain)';
+            if (node.type === "variableNode") return "var(--chart-category-2)";
+            if (node.type === "logicNode") return "var(--info)";
+            if (node.type === "calcNode") return "var(--gain)";
             const data = node.data as BlockNodeData;
-            return data?.color ?? 'var(--accent-text)';
+            return data?.color ?? "var(--accent-text)";
           }}
           nodeStrokeWidth={2}
           nodeStrokeColor="transparent"
@@ -172,7 +173,11 @@ export function StrategyCanvas() {
         <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none z-10">
           <div className="flex flex-col items-center gap-3 text-center">
             <div className="w-16 h-16 rounded-full bg-surface border border-default flex items-center justify-center">
-              <ArrowLeftRight className="size-8 text-tertiary opacity-50" strokeWidth={1.5} aria-hidden="true" />
+              <ArrowLeftRight
+                className="size-8 text-tertiary opacity-50"
+                strokeWidth={1.5}
+                aria-hidden="true"
+              />
             </div>
             <p className="text-body-sm text-secondary font-medium">
               Drag a block from the panel to get started
