@@ -95,11 +95,25 @@ class Token:
 
 @dataclass
 class Market:
-    """A prediction market."""
+    """A prediction market.
+
+    Fields matching the platform response shape (parity with sdk-ts ``Market``
+    interface and sdk-rust ``Market`` struct):
+
+    - ``symbol``: **deprecated** — the platform does not return a top-level
+      ``symbol`` field.  Defaults to ``None``.  Kept for backward compat only.
+    - ``updated_at``: **deprecated** — the platform does not return
+      ``updatedAt`` at the market level.  Defaults to ``None``.
+    - ``description``: optional market description (platform never returns ``null``
+      but the field is optional in the OpenAPI schema).
+    - ``end_date``: ISO 8601 string, may be ``null`` for perpetual/ongoing markets.
+    - ``resolved``: whether the market has been resolved by the oracle.
+    """
 
     id: str = ""
     title: str = ""
-    symbol: str = ""
+    # Deprecated — kept in place for positional constructor compat
+    symbol: str | None = None
     category: str = ""
     tokens: list[Token] = field(default_factory=list)
     price: float = 0.0
@@ -107,7 +121,11 @@ class Market:
     change_24h: float = 0.0
     liquidity: float = 0.0
     created_at: str = ""
-    updated_at: str = ""
+    # Deprecated — kept in place for positional constructor compat
+    updated_at: str | None = None
+    description: str | None = None
+    end_date: str | None = None
+    resolved: bool = False
 
 
 # ---------------------------------------------------------------------------
