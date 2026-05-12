@@ -160,45 +160,27 @@ describe("StrategyRunner — lifecycle", () => {
     expect(state.get).toHaveBeenCalled();
   });
 
-  it("skips second concurrent tick when lock is already held", async () => {
-    vi.useFakeTimers();
-    vi.setSystemTime(1_000_000);
-
-    let setCalls = 0;
+  it("skips overlapping ticks while one evaluation is still running", async () => {
+    let release!: () => void;
     const state = makeState();
+    state.get.mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          release = () => resolve({ ...DEFAULT_STATE });
+        }),
+    );
+    const runner = makeRunner({ execMode: "EVENT", state });
 
-    // First SET NX succeeds (lock acquired), second returns null (already held)
-    const redisClient = {
-      incr: vi.fn().mockResolvedValue(1),
-      expire: vi.fn().mockResolvedValue(1),
-      set: vi.fn().mockImplementation(() => {
-        setCalls++;
-        if (setCalls === 1) return Promise.resolve("OK");
-        return Promise.resolve(null);
-      }),
-      del: vi.fn().mockResolvedValue(1),
-      mget: vi
-        .fn()
-        .mockResolvedValue([
-          JSON.stringify({ price: 0.5, timestamp: Date.now() }),
-        ]),
-    };
+    const first = runner.onPriceEvent("tok1", 0.5);
+    // Without enough time elapsed, the second tick is debounced by MIN_TICK_MS
+    const second = runner.onPriceEvent("tok1", 0.5);
+    await second;
+    release();
+    await first;
 
-    const redis = makeRedis({ getClient: vi.fn().mockReturnValue(redisClient) });
-    const runner = makeRunner({ execMode: "EVENT", state, redis });
-
-    const tick1 = runner.onPriceEvent("tok1", 0.5);
-    // Advance past 200ms (MIN_TICK_MS) so tick2 passes the debounce but bounces off the lock
-    vi.setSystemTime(1_000_200);
-    const tick2 = runner.onPriceEvent("tok1", 0.6);
-
-    await Promise.all([tick1, tick2]);
-
-    // Both resolve without throwing
-    // incr is only called once (only the first tick proceeds past the lock)
-    expect(redisClient.incr).toHaveBeenCalledTimes(1);
-
-    vi.useRealTimers();
+    // Only the first tick evaluates — the second is dropped by the
+    // MIN_TICK_MS debounce throttle (arrives within 200ms of first).
+    expect(state.get).toHaveBeenCalledTimes(1);
   });
 });
 
@@ -239,9 +221,9 @@ describe("StrategyRunner — stale data detection", () => {
     );
   });
 
-  it("remains PAUSED on onPriceEvent when paused (tick short-circuits)", async () => {
-    // tick() returns early when status !== RUNNING, so a stale-paused runner
-    // cannot auto-resume via onPriceEvent — resume() must be called explicitly.
+  it("auto-resumes from stale_market_data pause when price data is fresh", async () => {
+    // When paused with stale_market_data, tick() checks freshness and
+    // auto-resumes if data is no longer stale.
     const state = makeState();
     const onStatusChange = vi.fn().mockResolvedValue(undefined);
 
@@ -251,10 +233,7 @@ describe("StrategyRunner — stale data detection", () => {
     state.getPriceAge.mockResolvedValue(0); // fresh data
     await runner.onPriceEvent("tok1", 0.5);
 
-    // tick() returned early — status unchanged
-    expect(runner.status).toBe("PAUSED");
-    // Explicit resume restores RUNNING
-    runner.resume();
+    // Auto-resumed because data is fresh again
     expect(runner.status).toBe("RUNNING");
   });
 
@@ -1289,111 +1268,65 @@ describe("StrategyRunner — detectStaleData edge cases", () => {
 });
 
 describe("StrategyRunner — concurrent tick serialization", () => {
-  it("bounces second concurrent tick when lock is already held", async () => {
-    vi.useFakeTimers();
-    vi.setSystemTime(1_000_000);
-
-    let setCalls = 0;
+  it("coalesces concurrent ticks via TickMutex", async () => {
+    let release!: () => void;
     const state = makeState();
+    state.get.mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          release = () => resolve({ ...DEFAULT_STATE });
+        }),
+    );
+    const runner = makeRunner({ execMode: "EVENT", state });
 
-    // First SET NX succeeds (lock acquired), second returns null (already held)
-    const redisClient = {
-      set: vi.fn().mockImplementation(() => {
-        setCalls++;
-        if (setCalls === 1) return Promise.resolve("OK");
-        return Promise.resolve(null);
-      }),
-      incr: vi.fn().mockResolvedValue(1),
-      expire: vi.fn().mockResolvedValue(1),
-      del: vi.fn().mockResolvedValue(1),
-      mget: vi
-        .fn()
-        .mockResolvedValue([
-          JSON.stringify({ price: 0.5, timestamp: Date.now() }),
-        ]),
-    };
-
-    const redis = makeRedis({ getClient: vi.fn().mockReturnValue(redisClient) });
-
-    const runner = makeRunner({ execMode: "EVENT", state, redis });
-
-    // Fire two concurrent tick calls with a time gap > MIN_TICK_MS so
-    // the min-tick debounce lets the second through, but the Redis lock bounces it.
+    // Fire first tick (acquires TickMutex, awaits state.get)
     const tick1 = runner.onPriceEvent("tok1", 0.5);
-    // Advance time past MIN_TICK_MS (200ms) so tick2 is not debounced
-    vi.setSystemTime(1_000_200);
+    // Wait enough time for MIN_TICK_MS debounce to pass (>200ms)
+    await new Promise((resolve) => setTimeout(resolve, 250));
+    // Fire second tick — passes debounce but bounces off TickMutex (sets pending)
     const tick2 = runner.onPriceEvent("tok1", 0.6);
+    await tick2;
+    // Release first tick's evaluation
+    release();
+    await tick1;
 
-    await Promise.all([tick1, tick2]);
+    // Follow-up tick scheduled via TickMutex exit() runs on next microtask
+    await new Promise((resolve) => setTimeout(resolve, 0));
 
-    // Both should resolve without throwing
-    // The second call bounces early (returns without full evaluation) because lock was held
-    expect(setCalls).toBe(2);
-    // incr is only called once (only the first tick proceeds past the lock)
-    expect(redisClient.incr).toHaveBeenCalledTimes(1);
-
-    vi.useRealTimers();
+    // Two evaluations: tick1 + coalesced follow-up from tick2
+    expect(state.get).toHaveBeenCalledTimes(2);
   });
 
-  it("releases the lock after a successful tick", async () => {
+  it("releases TickMutex after a successful tick", async () => {
     const state = makeState();
-    const redisClient = {
-      set: vi.fn().mockResolvedValue("OK"),
-      incr: vi.fn().mockResolvedValue(1),
-      expire: vi.fn().mockResolvedValue(1),
-      del: vi.fn().mockResolvedValue(1),
-      mget: vi
-        .fn()
-        .mockResolvedValue([
-          JSON.stringify({ price: 0.5, timestamp: Date.now() }),
-        ]),
-    };
-
-    const redis = makeRedis({ getClient: vi.fn().mockReturnValue(redisClient) });
-    const runner = makeRunner({ execMode: "EVENT", state, redis });
+    const runner = makeRunner({ execMode: "EVENT", state });
 
     await runner.onPriceEvent("tok1", 0.5);
 
-    // Lock key should be deleted after tick completes
-    expect(redisClient.del).toHaveBeenCalledWith("strategy:strat-test:tick:lock");
+    // Mutex is not locked after tick completes (exit() releases it)
+    expect(runner.tickMutex.isLocked).toBe(false);
   });
 
-  it("releases the lock even when tick evaluation throws", async () => {
+  it("releases TickMutex even when tick evaluation throws", async () => {
     const state = makeState();
     state.get.mockRejectedValue(new Error("Redis crash"));
 
-    const redisClient = {
-      set: vi.fn().mockResolvedValue("OK"),
-      incr: vi.fn().mockResolvedValue(1),
-      expire: vi.fn().mockResolvedValue(1),
-      del: vi.fn().mockResolvedValue(1),
-    };
-
-    const redis = makeRedis({ getClient: vi.fn().mockReturnValue(redisClient) });
-    const runner = makeRunner({ execMode: "EVENT", state, redis });
+    const runner = makeRunner({ execMode: "EVENT", state });
 
     await expect(runner.onPriceEvent("tok1", 0.5)).resolves.not.toThrow();
 
-    // Lock key MUST be released even after error (finally block)
-    expect(redisClient.del).toHaveBeenCalledWith("strategy:strat-test:tick:lock");
+    // Mutex MUST be released even after error (finally block)
+    expect(runner.tickMutex.isLocked).toBe(false);
   });
 
-  it("does NOT acquire tick lock when strategy is not RUNNING", async () => {
+  it("does NOT enter TickMutex when strategy is not RUNNING", async () => {
     const state = makeState();
-    const redisClient = {
-      set: vi.fn(),
-      incr: vi.fn(),
-      expire: vi.fn(),
-      del: vi.fn(),
-    };
-
-    const redis = makeRedis({ getClient: vi.fn().mockReturnValue(redisClient) });
-    const runner = makeRunner({ execMode: "EVENT", state, redis });
+    const runner = makeRunner({ execMode: "EVENT", state });
 
     runner.pause("manual");
     await runner.onPriceEvent("tok1", 0.5);
 
-    // No lock attempt because status check returns early (PAUSED !== RUNNING)
-    expect(redisClient.set).not.toHaveBeenCalled();
+    // Mutex not entered because status check returns early (PAUSED !== RUNNING)
+    expect(runner.tickMutex.isLocked).toBe(false);
   });
 });
