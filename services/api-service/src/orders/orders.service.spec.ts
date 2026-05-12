@@ -81,14 +81,24 @@ describe("OrdersService", () => {
   let db: MockDb;
   let redis: RedisService;
   let config: ConfigService;
+  let pipelineExec: ReturnType<typeof vi.fn>;
+  let pipelineXadd: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
     db = createMockDb();
+    pipelineExec = vi.fn().mockResolvedValue([]);
+    pipelineXadd = vi.fn();
     redis = {
       xadd: vi.fn().mockResolvedValue("stream-entry-id"),
       get: vi.fn().mockResolvedValue(null),
       set: vi.fn().mockResolvedValue(undefined),
       del: vi.fn().mockResolvedValue(undefined),
+      getClient: vi.fn().mockReturnValue({
+        pipeline: vi.fn().mockReturnValue({
+          xadd: pipelineXadd,
+          exec: pipelineExec,
+        }),
+      }),
     } as unknown as RedisService;
     config = {
       get: vi.fn().mockReturnValue(undefined),
@@ -845,12 +855,18 @@ describe("OrdersService", () => {
       expect(rawUpdate.strings?.join(" ")).toContain("RETURNING");
       expect(db.order.findUnique).not.toHaveBeenCalled();
       expect(db.order.update).not.toHaveBeenCalled();
-      expect(redis.xadd).toHaveBeenCalledOnce();
-      expect(redis.xadd).toHaveBeenCalledWith("stream:cancellations", {
-        orderId: "order-uuid-1",
-        clobOrderId: "clob-1",
-        userId: "user-uuid-1",
-      });
+      expect(redis.xadd).not.toHaveBeenCalled();
+      expect(pipelineXadd).toHaveBeenCalledOnce();
+      expect(pipelineXadd).toHaveBeenCalledWith(
+        "stream:cancellations",
+        "*",
+        "orderId",
+        "order-uuid-1",
+        "clobOrderId",
+        "clob-1",
+        "userId",
+        "user-uuid-1",
+      );
     });
 
     it("reports raced rows from the guarded update without publishing them", async () => {
@@ -899,10 +915,27 @@ describe("OrdersService", () => {
         where: { id: { in: ["order-uuid-2"] }, userId: "user-uuid-1" },
         select: { id: true, status: true },
       });
-      expect(redis.xadd).toHaveBeenCalledOnce();
-      expect(redis.xadd).not.toHaveBeenCalledWith(
+      expect(redis.xadd).not.toHaveBeenCalled();
+      expect(pipelineXadd).toHaveBeenCalledOnce();
+      expect(pipelineXadd).toHaveBeenCalledWith(
         "stream:cancellations",
-        expect.objectContaining({ orderId: "order-uuid-2" }),
+        "*",
+        "orderId",
+        "order-uuid-1",
+        "clobOrderId",
+        "clob-1",
+        "userId",
+        "user-uuid-1",
+      );
+      expect(pipelineXadd).not.toHaveBeenCalledWith(
+        "stream:cancellations",
+        "*",
+        "orderId",
+        "order-uuid-2",
+        "clobOrderId",
+        expect.anything(),
+        "userId",
+        expect.anything(),
       );
     });
 
@@ -954,6 +987,47 @@ describe("OrdersService", () => {
         errors: [{ orderId: "order-uuid-1", reason: "FORBIDDEN" }],
       });
       expect(db.$queryRaw).toHaveBeenCalledOnce();
+    });
+
+    it("reports INTERNAL_ERROR for all xadd orders when pipeline exec fails", async () => {
+      db.order.findMany.mockResolvedValueOnce([
+        makeOrder({
+          id: "order-uuid-1",
+          status: "PENDING",
+          clobOrderId: "clob-1",
+        }),
+        makeOrder({
+          id: "order-uuid-2",
+          status: "LIVE",
+          clobOrderId: "clob-2",
+        }),
+      ] as any);
+      db.$queryRaw.mockResolvedValueOnce([
+        {
+          id: "order-uuid-1",
+          status: "CANCELLED",
+          clobOrderId: "clob-1",
+        },
+        {
+          id: "order-uuid-2",
+          status: "CANCELLED",
+          clobOrderId: "clob-2",
+        },
+      ]);
+      pipelineExec.mockRejectedValueOnce(new Error("Redis connection lost"));
+
+      const result = await service.cancelBulk("user-uuid-1", {
+        orderIds: ["order-uuid-1", "order-uuid-2"],
+      });
+
+      expect(result).toEqual({
+        cancelled: [],
+        errors: [
+          { orderId: "order-uuid-1", reason: "INTERNAL_ERROR" },
+          { orderId: "order-uuid-2", reason: "INTERNAL_ERROR" },
+        ],
+      });
+      expect(pipelineXadd).toHaveBeenCalledTimes(2);
     });
   });
 

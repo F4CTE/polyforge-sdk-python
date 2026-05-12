@@ -516,15 +516,33 @@ export class OrdersService {
       }
     }
 
-    for (const order of transitionedOrders) {
-      if (order.clobOrderId) {
-        try {
-          await this.redis.xadd("stream:cancellations", {
-            orderId: order.id,
-            clobOrderId: order.clobOrderId,
-            userId,
-          });
-        } catch {
+    const xaddOrders = transitionedOrders.filter((o) => o.clobOrderId);
+    if (xaddOrders.length > 0) {
+      const pipeline = this.redis.getClient().pipeline();
+      for (const order of xaddOrders) {
+        pipeline.xadd(
+          "stream:cancellations",
+          "*",
+          "orderId",
+          order.id,
+          "clobOrderId",
+          order.clobOrderId!,
+          "userId",
+          userId,
+        );
+      }
+      try {
+        const results = await pipeline.exec();
+        if (results) {
+          for (let i = 0; i < results.length; i++) {
+            const [err] = results[i];
+            if (err) {
+              errorsById.set(xaddOrders[i].id, "INTERNAL_ERROR");
+            }
+          }
+        }
+      } catch {
+        for (const order of xaddOrders) {
           errorsById.set(order.id, "INTERNAL_ERROR");
         }
       }
