@@ -15,8 +15,9 @@ export default defineConfig({
                 'src/**/*.dto.ts',
                 'src/health/**',
                 'src/stream/**',
+                'src/instrument.ts',              // Sentry init — side-effect only
             ],
-            thresholds: { lines: 38, functions: 65, branches: 55, statements: 38 },
+            thresholds: { lines: 80, functions: 84, branches: 70, statements: 80 },
         },
     },
 });

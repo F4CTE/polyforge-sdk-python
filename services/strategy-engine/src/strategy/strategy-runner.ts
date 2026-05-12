@@ -61,7 +61,7 @@ export class StrategyRunner {
   private readonly logger: Logger;
   status: StrategyRunnerStatus = "RUNNING";
   private timer: NodeJS.Timeout | null = null;
-  private pauseReason: string | null = null;
+  private _pauseReason: string | null = null;
   private delayedActions: Map<string, NodeJS.Timeout> = new Map();
   private lastStaleCheckMs = 0;
   private staleCheckBackoffMs = STALE_PRICE_MS;
@@ -118,6 +118,11 @@ export class StrategyRunner {
     this.childModes.delete(childId);
   }
 
+  /** Returns the reason the runner was paused, or null if not paused */
+  get pauseReason(): string | null {
+    return this._pauseReason;
+  }
+
   /** Get the mode for a child strategy */
 
   getChildMode(childId: string): SubStrategyMode | undefined {
@@ -134,13 +139,13 @@ export class StrategyRunner {
 
   pause(reason = "manual") {
     this.status = "PAUSED";
-    this.pauseReason = reason;
+    this._pauseReason = reason;
     this.logger.log(`Paused: ${reason}`);
   }
 
   resume() {
     this.status = "RUNNING";
-    this.pauseReason = null;
+    this._pauseReason = null;
     this.staleCheckBackoffMs = STALE_PRICE_MS;
     this.lastStaleCheckMs = 0;
     this.logger.log("Resumed");
@@ -186,7 +191,7 @@ export class StrategyRunner {
     // prolonged feed outages.
     if (
       this.status === "PAUSED" &&
-      this.pauseReason?.startsWith("stale_market_data")
+      this._pauseReason?.startsWith("stale_market_data")
     ) {
       const now = Date.now();
       if (now - this.lastStaleCheckMs < this.staleCheckBackoffMs) {

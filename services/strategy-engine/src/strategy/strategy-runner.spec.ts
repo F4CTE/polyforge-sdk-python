@@ -85,6 +85,8 @@ function makeRunner({
     .fn<(intents: OrderIntent[]) => Promise<void>>()
     .mockResolvedValue(undefined),
   onStatusChange = vi.fn().mockResolvedValue(undefined),
+  logicBlocks = [] as any[],
+  logicConnections = [] as any[],
 } = {}) {
   return new StrategyRunner(
     "strat-test",
@@ -101,6 +103,8 @@ function makeRunner({
     state,
     onIntents,
     onStatusChange,
+    logicBlocks,
+    logicConnections,
   );
 }
 
@@ -1149,5 +1153,240 @@ describe("StrategyRunner — getPrimaryTokenId", () => {
 
     await runner.onPriceEvent("tok-primary", 0.5);
     expect(state.getPrice).toHaveBeenCalledWith("tok-primary");
+  });
+});
+
+describe("StrategyRunner — logic graph evaluation", () => {
+  it("evaluates a simple AND_GATE with no upstream inputs", async () => {
+    const state = makeState();
+    const runner = makeRunner({
+      execMode: "EVENT",
+      state,
+      logicBlocks: [{ id: "and-1", type: "AND_GATE" }],
+      logicConnections: [],
+    });
+
+    await runner.onPriceEvent("tok1", 0.5);
+    // evaluateLogicGraph runs without crashing
+    expect(state.get).toHaveBeenCalled();
+    expect(runner.status).toBe("RUNNING");
+  });
+
+  it("evaluates two OR_GATE blocks connected sequentially", async () => {
+    const state = makeState();
+    const runner = makeRunner({
+      execMode: "EVENT",
+      state,
+      logicBlocks: [
+        { id: "or-1", type: "OR_GATE" },
+        { id: "or-2", type: "OR_GATE" },
+      ],
+      logicConnections: [{ source: "or-1", target: "or-2" }],
+    });
+
+    await runner.onPriceEvent("tok1", 0.5);
+    expect(state.get).toHaveBeenCalled();
+    expect(runner.status).toBe("RUNNING");
+  });
+
+  it("IF_THEN_ELSE propagates via true-handle to downstream block", async () => {
+    const state = makeState();
+    const prisma = makePrisma();
+    prisma.token.findUnique.mockResolvedValue({
+      id: "tok1",
+      marketId: "mkt-1",
+      outcome: "YES",
+    });
+    const redis = makeRedis({
+      getJson: vi.fn().mockResolvedValue({ price: 0.5 }),
+    });
+    const onIntents = vi.fn().mockResolvedValue(undefined);
+    const runner = makeRunner({
+      execMode: "EVENT",
+      state,
+      redis,
+      prisma,
+      onIntents,
+      logicBlocks: [
+        { id: "if-1", type: "IF_THEN_ELSE", condition: "1 > 0" },
+        { id: "or-1", type: "OR_GATE" },
+      ],
+      logicConnections: [
+        { source: "if-1", sourceHandle: "true", target: "or-1" },
+      ],
+      actions: [
+        {
+          id: "act-1",
+          type: "buy_yes",
+          params: { tokenId: "tok1", size: "$__logic_or-1", price: "0.5" },
+        },
+      ],
+    });
+
+    await runner.onPriceEvent("tok1", 0.5);
+    // __logic_or-1 = 1 → size resolves to 1 → action fires
+    expect(onIntents).toHaveBeenCalled();
+    expect(runner.status).toBe("RUNNING");
+  });
+
+  it("IF_THEN_ELSE falsy condition blocks true-handle propagation", async () => {
+    const state = makeState();
+    const prisma = makePrisma();
+    prisma.token.findUnique.mockResolvedValue({
+      id: "tok1",
+      marketId: "mkt-1",
+      outcome: "YES",
+    });
+    const redis = makeRedis({
+      getJson: vi.fn().mockResolvedValue({ price: 0.5 }),
+    });
+    const onIntents = vi.fn().mockResolvedValue(undefined);
+    const runner = makeRunner({
+      execMode: "EVENT",
+      state,
+      redis,
+      prisma,
+      onIntents,
+      logicBlocks: [
+        { id: "if-1", type: "IF_THEN_ELSE", condition: "1 < 0" },
+        { id: "or-1", type: "OR_GATE" },
+      ],
+      logicConnections: [
+        { source: "if-1", sourceHandle: "true", target: "or-1" },
+      ],
+      actions: [
+        {
+          id: "act-1",
+          type: "buy_yes",
+          params: { tokenId: "tok1", size: "$__logic_or-1", price: "0.5" },
+        },
+      ],
+    });
+
+    await runner.onPriceEvent("tok1", 0.5);
+    // __logic_or-1 = 0 → size resolves to 0 → action throws → onIntents is not called
+    expect(onIntents).not.toHaveBeenCalled();
+    expect(runner.status).toBe("RUNNING");
+  });
+
+  it("evaluates NOT_GATE in a logic graph", async () => {
+    const state = makeState();
+    const runner = makeRunner({
+      execMode: "EVENT",
+      state,
+      logicBlocks: [
+        { id: "not-1", type: "NOT_GATE" },
+        { id: "or-1", type: "OR_GATE" },
+      ],
+      logicConnections: [{ source: "not-1", target: "or-1" }],
+    });
+
+    await runner.onPriceEvent("tok1", 0.5);
+    expect(state.get).toHaveBeenCalled();
+    expect(runner.status).toBe("RUNNING");
+  });
+
+  it("skips logic blocks with unknown types gracefully", async () => {
+    const state = makeState();
+    const runner = makeRunner({
+      execMode: "EVENT",
+      state,
+      logicBlocks: [{ id: "unknown-1", type: "NONEXISTENT" }],
+      logicConnections: [],
+    });
+
+    await runner.onPriceEvent("tok1", 0.5);
+    expect(state.get).toHaveBeenCalled();
+    expect(runner.status).toBe("RUNNING");
+  });
+
+  it("skips connections referencing nonexistent blocks gracefully", async () => {
+    const state = makeState();
+    const runner = makeRunner({
+      execMode: "EVENT",
+      state,
+      logicBlocks: [
+        { id: "and-1", type: "AND_GATE" },
+        { id: "or-1", type: "OR_GATE" },
+      ],
+      logicConnections: [
+        // and-1 → or-1: valid connection (both blocks exist)
+        { source: "and-1", target: "or-1" },
+        // ghost-1 → ghost-2: both nonexistent — silently ignored by topo sort
+        { source: "ghost-1", target: "ghost-2" },
+      ],
+    });
+
+    await runner.onPriceEvent("tok1", 0.5);
+    // and-1 (indegree 0) → or-1 (indegree 1) both evaluated;
+    // ghost references are harmless
+    expect(state.get).toHaveBeenCalled();
+    expect(runner.status).toBe("RUNNING");
+  });
+
+  it("schedules DELAY block when upstream input is truthy", async () => {
+    const state = makeState();
+    const runner = makeRunner({
+      execMode: "EVENT",
+      state,
+      logicBlocks: [
+        { id: "not-1", type: "NOT_GATE" },
+        { id: "delay-1", type: "DELAY", params: { seconds: 1 } },
+        { id: "or-1", type: "OR_GATE" },
+      ],
+      logicConnections: [
+        { source: "not-1", target: "delay-1" },
+        { source: "delay-1", target: "or-1" },
+      ],
+    });
+
+    await runner.onPriceEvent("tok1", 0.5);
+    // NOT_GATE with no inputs → value=true → feeds DELAY
+    // DELAY with params.seconds=1 and truthy input → scheduleDelayedAction exercised
+    expect(state.get).toHaveBeenCalled();
+    expect(runner.status).toBe("RUNNING");
+  });
+
+  it("evaluates logic graph with no connections (standalone blocks)", async () => {
+    const state = makeState();
+    const runner = makeRunner({
+      execMode: "EVENT",
+      state,
+      logicBlocks: [
+        { id: "and-1", type: "AND_GATE" },
+        { id: "or-1", type: "OR_GATE" },
+        { id: "not-1", type: "NOT_GATE" },
+        { id: "if-1", type: "IF_THEN_ELSE", condition: "1 > 0" },
+      ],
+      logicConnections: [],
+    });
+
+    await runner.onPriceEvent("tok1", 0.5);
+    expect(state.get).toHaveBeenCalled();
+  });
+});
+
+describe("StrategyRunner — detectStaleData edge cases", () => {
+  it("returns stale token when mget returns invalid JSON", async () => {
+    const redis = makeRedis({
+      getClient: vi.fn().mockReturnValue({
+        lrange: vi.fn().mockResolvedValue([]),
+        mget: vi.fn().mockResolvedValue(["not-valid-json"]),
+        incr: vi.fn().mockResolvedValue(1),
+        expire: vi.fn().mockResolvedValue(1),
+      }),
+    });
+    const state = makeState();
+    const runner = makeRunner({
+      execMode: "EVENT",
+      state,
+      redis,
+      triggers: [{ id: "t1", type: "every_tick", params: { tokenId: "tok1" } }],
+    });
+
+    await runner.onPriceEvent("tok1", 0.5);
+    // Invalid JSON in mget triggers catch block → treated as stale
+    expect(runner.status).toBe("PAUSED");
+    expect(runner.pauseReason).toBe("stale_market_data:tok1");
   });
 });

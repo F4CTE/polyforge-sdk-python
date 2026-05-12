@@ -28,10 +28,10 @@ export default defineConfig({
                 'src/strategy/strategy-registry.service.ts', // event loop — integration test
             ],
             thresholds: {
-                lines: 45,
-                functions: 38,
-                branches: 44,
-                statements: 45,
+                lines: 85,
+                functions: 88,
+                branches: 68,
+                statements: 85,
             },
         },
     },

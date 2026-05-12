@@ -16,7 +16,7 @@ function makeFill(
 /** Build a sequence of fills on distinct calendar days for Sharpe calculations */
 function makeDailyFills(equities: number[]): FillRecord[] {
   return equities.map((eq, i) => ({
-    side: i % 2 === 0 ? "BUY" : ("SELL" as "BUY" | "SELL"),
+    side: i % 2 === 0 ? "BUY" : "SELL",
     pnl: i % 2 === 0 ? 0 : eq - (equities[i - 1] ?? 0),
     equityCurve: eq,
     simulatedAt: new Date(
