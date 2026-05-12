@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { StrategyRunner } from "./strategy-runner";
 import type { OrderIntent } from "../blocks/block.types";
 
@@ -158,6 +158,9 @@ describe("StrategyRunner — lifecycle", () => {
   });
 
   it("skips overlapping ticks while one evaluation is still running", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(0);
+
     let release!: () => void;
     const state = makeState();
     state.get.mockImplementation(
@@ -169,14 +172,25 @@ describe("StrategyRunner — lifecycle", () => {
     const runner = makeRunner({ execMode: "EVENT", state });
 
     const first = runner.onPriceEvent("tok1", 0.5);
+    // Advance past MIN_TICK_MS (200ms) so the second tick passes debounce
+    vi.setSystemTime(250);
     const second = runner.onPriceEvent("tok1", 0.5);
     await second;
+    // Advance past lastTickMs + MIN_TICK_MS so the pending follow-up
+    // tick passes debounce after the first evaluation completes
+    vi.setSystemTime(500);
     release();
     await first;
 
-    // First tick evaluates (get called). Second tick coalesced to
-    // pendingTick; after first completes, pending follow-up fires.
-    expect(state.get).toHaveBeenCalledTimes(2);
+    // Pending tick is fire-and-forget; wait for its microtasks to settle
+    await vi.waitFor(
+      () => {
+        expect(state.get).toHaveBeenCalledTimes(2);
+      },
+      { timeout: 1000 },
+    );
+
+    vi.useRealTimers();
   });
 });
 
@@ -1157,8 +1171,15 @@ describe("StrategyRunner — getPrimaryTokenId", () => {
 });
 
 describe("StrategyRunner — EVENT-mode debounce (POLA-2082)", () => {
-  it("debounces rapid consecutive onPriceEvent calls in EVENT mode", async () => {
+  beforeEach(() => {
     vi.useFakeTimers();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it("debounces rapid consecutive onPriceEvent calls in EVENT mode", async () => {
     vi.setSystemTime(0);
 
     const state = makeState();
@@ -1177,12 +1198,9 @@ describe("StrategyRunner — EVENT-mode debounce (POLA-2082)", () => {
     vi.setSystemTime(250);
     await runner.onPriceEvent("tok1", 0.6);
     expect(state.get).toHaveBeenCalledTimes(1);
-
-    vi.useRealTimers();
   });
 
   it("allows normally-spaced events through in EVENT mode", async () => {
-    vi.useFakeTimers();
     vi.setSystemTime(0);
 
     const state = makeState();
@@ -1200,12 +1218,9 @@ describe("StrategyRunner — EVENT-mode debounce (POLA-2082)", () => {
     vi.setSystemTime(600);
     await runner.onPriceEvent("tok1", 0.7);
     expect(state.get).toHaveBeenCalledTimes(1);
-
-    vi.useRealTimers();
   });
 
   it("debounces HYBRID mode event-driven ticks", async () => {
-    vi.useFakeTimers();
     vi.setSystemTime(0);
 
     const state = makeState();
@@ -1218,8 +1233,6 @@ describe("StrategyRunner — EVENT-mode debounce (POLA-2082)", () => {
     state.get.mockClear();
     await runner.onPriceEvent("tok1", 0.55);
     expect(state.get).not.toHaveBeenCalled();
-
-    vi.useRealTimers();
   });
 
   it("does not interfere with TICK mode (onPriceEvent is a no-op)", async () => {

@@ -69,7 +69,7 @@ export class StrategyRunner {
   private pendingTick = false;
 
   /** Throttles EVENT-mode ticks to prevent bursty in-order evaluation */
-  private lastTickMs = 0;
+	private lastTickMs = -MIN_TICK_MS;
 
   /** Tracks child strategy IDs launched by RUN_STRATEGY action blocks */
   readonly childStrategies: Set<string> = new Set();

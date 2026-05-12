@@ -1,6 +1,8 @@
 import { defineConfig } from 'vitest/config';
 import path from 'path';
 
+const isCI = !!process.env.CI;
+
 export default defineConfig({
     resolve: {
         alias: {
@@ -11,6 +13,8 @@ export default defineConfig({
         globals: true,
         environment: 'node',
         include: ['src/**/*.spec.ts'],
+        fileParallelism: !isCI,
+        pool: 'forks',
         coverage: {
             provider: 'v8',
             reporter: ['text', 'lcov', 'json-summary'],
