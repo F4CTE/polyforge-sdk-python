@@ -90,21 +90,64 @@ describe("StateService", () => {
   });
 
   describe("update()", () => {
-    it("merges a partial patch into the existing state", async () => {
-      redis.get.mockResolvedValue(
-        JSON.stringify({ ...DEFAULT_STATE, betsToday: 2, dailyPnl: -3 }),
-      );
+    it("atomically merges a partial patch into the existing state via Lua script", async () => {
+      const mergedState = {
+        ...DEFAULT_STATE,
+        betsToday: 5,
+        dailyPnl: -3,
+      };
+      const redisClient = {
+        eval: vi.fn().mockResolvedValue(JSON.stringify(mergedState)),
+      };
+      redis = makeRedisMock({
+        getClient: vi.fn().mockReturnValue(redisClient),
+      });
+      svc = new StateService(redis);
+
       const updated = await svc.update("strat-1", { betsToday: 5 });
       expect(updated.betsToday).toBe(5);
-      expect(updated.dailyPnl).toBe(-3); // unchanged
+      expect(updated.dailyPnl).toBe(-3); // from mock response
     });
 
-    it("calls set() with the merged state", async () => {
-      redis.get.mockResolvedValue(JSON.stringify(DEFAULT_STATE));
+    it("passes patch as JSON and TTL to the atomic Lua script", async () => {
+      const redisClient = {
+        eval: vi
+          .fn()
+          .mockResolvedValue(JSON.stringify({ ...DEFAULT_STATE, totalOrders: 10 })),
+      };
+      redis = makeRedisMock({
+        getClient: vi.fn().mockReturnValue(redisClient),
+      });
+      svc = new StateService(redis);
+
       await svc.update("strat-1", { totalOrders: 10 });
-      expect(redis.set).toHaveBeenCalled();
-      const stored = JSON.parse(redis.set.mock.calls[0][1]);
-      expect(stored.totalOrders).toBe(10);
+
+      expect(redisClient.eval).toHaveBeenCalledWith(
+        expect.stringContaining("redis.call"),
+        1,
+        "strategy:strat-1:state",
+        expect.stringContaining("totalOrders"),
+        expect.any(String),
+      );
+      const patchArg = redisClient.eval.mock.calls[0][3];
+      const parsedPatch = JSON.parse(patchArg);
+      expect(parsedPatch.totalOrders).toBe(10);
+    });
+
+    it("handles patch on missing key (returns defaults merged with patch)", async () => {
+      const redisClient = {
+        eval: vi
+          .fn()
+          .mockResolvedValue(JSON.stringify({ ...DEFAULT_STATE, betsToday: 1 })),
+      };
+      redis = makeRedisMock({
+        getClient: vi.fn().mockReturnValue(redisClient),
+      });
+      svc = new StateService(redis);
+
+      const updated = await svc.update("strat-new", { betsToday: 1 });
+      expect(updated.betsToday).toBe(1);
+      expect(updated.totalOrders).toBe(0); // defaults filled
     });
   });
 
@@ -140,91 +183,6 @@ describe("StateService", () => {
         totalOrders: 7,
         lastTradeAt: 12345,
       });
-    });
-  });
-
-  describe("decrementOrderCounters()", () => {
-    it("decrements order counters with a single Redis script", async () => {
-      const redisClient = {
-        eval: vi.fn().mockResolvedValue(
-          JSON.stringify({
-            ...DEFAULT_STATE,
-            betsToday: 1,
-            totalOrders: 5,
-            lastTradeAt: 99999,
-          }),
-        ),
-      };
-      redis = makeRedisMock({
-        getClient: vi.fn().mockReturnValue(redisClient),
-      });
-      svc = new StateService(redis);
-
-      const updated = await svc.decrementOrderCounters("strat-1", 2);
-
-      expect(redisClient.eval).toHaveBeenCalledWith(
-        expect.stringContaining("redis.call"),
-        1,
-        "strategy:strat-1:state",
-        "2",
-        expect.any(String),
-      );
-      expect(updated).toMatchObject({
-        betsToday: 1,
-        totalOrders: 5,
-        lastTradeAt: 99999,
-      });
-    });
-
-    it("clamps counters to zero (no negative values)", async () => {
-      const redisClient = {
-        eval: vi.fn().mockResolvedValue(
-          JSON.stringify({
-            ...DEFAULT_STATE,
-            betsToday: 0,
-            totalOrders: 0,
-            lastTradeAt: 500,
-          }),
-        ),
-      };
-      redis = makeRedisMock({
-        getClient: vi.fn().mockReturnValue(redisClient),
-      });
-      svc = new StateService(redis);
-
-      const updated = await svc.decrementOrderCounters("strat-x", 5);
-
-      expect(redisClient.eval).toHaveBeenCalledWith(
-        expect.any(String),
-        1,
-        "strategy:strat-x:state",
-        "5",
-        expect.any(String),
-      );
-      expect(updated.betsToday).toBe(0);
-      expect(updated.totalOrders).toBe(0);
-    });
-
-    it("preserves lastTradeAt during decrement (does not overwrite with rollback timestamp)", async () => {
-      const priorLastTradeAt = 90000;
-      const redisClient = {
-        eval: vi.fn().mockResolvedValue(
-          JSON.stringify({
-            ...DEFAULT_STATE,
-            betsToday: 0,
-            totalOrders: 0,
-            lastTradeAt: priorLastTradeAt,
-          }),
-        ),
-      };
-      redis = makeRedisMock({
-        getClient: vi.fn().mockReturnValue(redisClient),
-      });
-      svc = new StateService(redis);
-
-      const updated = await svc.decrementOrderCounters("strat-p", 3);
-
-      expect(updated.lastTradeAt).toBe(priorLastTradeAt);
     });
   });
 

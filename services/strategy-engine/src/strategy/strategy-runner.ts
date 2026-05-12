@@ -29,7 +29,6 @@ const dailyExecKey = (strategyId: string): string => {
 
 const MIN_TICK_MS = 200;
 const STALE_PRICE_MS = 5_000;
-const MAX_STALE_CHECK_BACKOFF_MS = 60_000;
 
 export type StrategyRunnerStatus = "RUNNING" | "PAUSED" | "STOPPED";
 
@@ -61,12 +60,8 @@ export class StrategyRunner {
   private readonly logger: Logger;
   status: StrategyRunnerStatus = "RUNNING";
   private timer: NodeJS.Timeout | null = null;
-  private _pauseReason: string | null = null;
+  pauseReason: string | null = null;
   private delayedActions: Map<string, NodeJS.Timeout> = new Map();
-  private lastStaleCheckMs = 0;
-  private staleCheckBackoffMs = STALE_PRICE_MS;
-  private tickInFlight = false;
-  private pendingTick = false;
 
   /** Throttles EVENT-mode ticks to prevent bursty in-order evaluation */
 	private lastTickMs = -MIN_TICK_MS;
@@ -121,11 +116,6 @@ export class StrategyRunner {
     this.childModes.delete(childId);
   }
 
-  /** Returns the reason the runner was paused, or null if not paused */
-  get pauseReason(): string | null {
-    return this._pauseReason;
-  }
-
   /** Get the mode for a child strategy */
 
   getChildMode(childId: string): SubStrategyMode | undefined {
@@ -142,15 +132,13 @@ export class StrategyRunner {
 
   pause(reason = "manual") {
     this.status = "PAUSED";
-    this._pauseReason = reason;
+    this.pauseReason = reason;
     this.logger.log(`Paused: ${reason}`);
   }
 
   resume() {
     this.status = "RUNNING";
-    this._pauseReason = null;
-    this.staleCheckBackoffMs = STALE_PRICE_MS;
-    this.lastStaleCheckMs = 0;
+    this.pauseReason = null;
     this.logger.log("Resumed");
   }
 
@@ -183,54 +171,11 @@ export class StrategyRunner {
 
   // ─── Core evaluation pipeline ─────────────────────────────────────────────
 
+  private tickLockKey(): string {
+    return `strategy:${this.strategyId}:tick:lock`;
+  }
+
   private async tick() {
-    // Auto-resume from stale-data pause when data is fresh again.
-    // Checked before the status guard so PAUSED runners can auto-recover
-    // after a WS reconnect repopulates the price cache.
-    //
-    // Throttled with exponential backoff: starts at STALE_PRICE_MS (5s),
-    // doubles on each consecutive stale check up to MAX_STALE_CHECK_BACKOFF_MS (60s).
-    // This prevents Redis mget fan-out from sustained tick intervals during
-    // prolonged feed outages.
-    if (
-      this.status === "PAUSED" &&
-      this._pauseReason?.startsWith("stale_market_data")
-    ) {
-      const now = Date.now();
-      if (now - this.lastStaleCheckMs < this.staleCheckBackoffMs) {
-        return;
-      }
-      this.lastStaleCheckMs = now;
-
-      try {
-        const stillStale = await this.detectStaleData();
-        if (!stillStale) {
-          // Re-check after the await — a concurrent stop() or overlapping
-          // tick may have changed status / pauseReason while we were waiting.
-          if (
-            this.status !== "PAUSED" ||
-            !this.pauseReason?.startsWith("stale_market_data")
-          ) {
-            return;
-          }
-          this.staleCheckBackoffMs = STALE_PRICE_MS;
-          this.resume();
-          await this.onStatusChange("RUNNING");
-          await this.emitStrategyEvent("STRATEGY_STARTED");
-        } else {
-          // Exponential backoff — double the interval on each consecutive stale read
-          this.staleCheckBackoffMs = Math.min(
-            this.staleCheckBackoffMs * 2,
-            MAX_STALE_CHECK_BACKOFF_MS,
-          );
-          return;
-        }
-      } catch (err) {
-        this.logger.error("Auto-resume from stale-data failed", err);
-        return;
-      }
-    }
-
     if (this.status !== "RUNNING") return;
 
     // Throttle EVENT/HYBRID event-driven ticks to prevent bursty
@@ -239,15 +184,19 @@ export class StrategyRunner {
     if (now - this.lastTickMs < MIN_TICK_MS) return;
     this.lastTickMs = now;
 
-    if (this.tickInFlight) {
-      this.pendingTick = true;
-      return;
-    }
+    // Serialize concurrent ticks per strategy — at most one tick at a time
+    const redisClient = this.redis.getClient();
+    const acquired = await redisClient.set(
+      this.tickLockKey(),
+      "1",
+      "EX",
+      30,
+      "NX",
+    );
+    if (!acquired) return;
 
-    this.tickInFlight = true;
     try {
       // Enforce daily execution limit — auto-stop if exceeded
-      const redisClient = this.redis.getClient();
       const key = dailyExecKey(this.strategyId);
       const count = await redisClient.incr(key);
       if (count === 1) {
@@ -269,24 +218,8 @@ export class StrategyRunner {
       await this.evaluate();
     } catch (err) {
       this.logger.error("Tick evaluation failed", err);
-      // Publish failures (including counter increment failures after
-      // successful publish) mean the strategy's accounting state is
-      // inconsistent — pause to prevent overtrading on subsequent ticks.
-      if (
-        err instanceof Error &&
-        err.message.includes("Counter increment failed")
-      ) {
-        this.pause("counter_increment_failed");
-        await this.onStatusChange("PAUSED", "counter_increment_failed").catch(
-          () => {},
-        );
-      }
     } finally {
-      this.tickInFlight = false;
-      if (this.pendingTick) {
-        this.pendingTick = false;
-        void this.tick();
-      }
+      await redisClient.del(this.tickLockKey()).catch(() => {});
     }
   }
 
@@ -411,7 +344,11 @@ export class StrategyRunner {
         const inputB = Number(resolvedBlock.params?.inputB ?? 0);
         const inputs = [inputA, inputB];
 
-        const result = evaluator.evaluate(resolvedBlock, inputs, ctx);
+        const result = evaluator.evaluate(
+          resolvedBlock as Record<string, unknown>,
+          inputs,
+          ctx,
+        );
 
         // Store the result in context variables so other blocks can reference it
         ctx.variables = ctx.variables ?? {};
@@ -438,6 +375,16 @@ export class StrategyRunner {
       return;
     }
 
+    // Auto-resume from stale pause when data is fresh again
+    if (
+      this.status === "PAUSED" &&
+      this.pauseReason?.startsWith("stale_market_data")
+    ) {
+      this.resume();
+      await this.onStatusChange("RUNNING");
+      await this.emitStrategyEvent("STRATEGY_STARTED");
+    }
+
     // 2. SAFETY — any failure stops the strategy
     for (const block of this.safety) {
       const evaluator = SAFETY_REGISTRY[block.type];
@@ -448,7 +395,7 @@ export class StrategyRunner {
         params: resolveParams(block.params ?? {}, ctx.variables ?? {}),
       };
       const result = await evaluator.evaluate(
-        resolvedBlock,
+        resolvedBlock as Record<string, unknown>,
         ctx,
         this.redis,
         this.prisma,
@@ -478,7 +425,7 @@ export class StrategyRunner {
         params: resolveParams(block.params ?? {}, ctx.variables ?? {}),
       };
       const result = await evaluator.evaluate(
-        resolvedBlock,
+        resolvedBlock as Record<string, unknown>,
         ctx,
         this.redis,
         this.prisma,
@@ -534,7 +481,7 @@ export class StrategyRunner {
         params: resolveParams(block.params ?? {}, ctx.variables ?? {}),
       };
       const result = await evaluator.execute(
-        resolvedBlock,
+        resolvedBlock as Record<string, unknown>,
         ctx,
         this.redis,
         this.prisma,
@@ -590,6 +537,12 @@ export class StrategyRunner {
     }
 
     if (orderIntents.length > 0) {
+      await this.state.incrementOrderCounters(
+        this.strategyId,
+        orderIntents.length,
+        ctx.now,
+      );
+
       await this.onIntents(orderIntents);
     }
   }
@@ -670,7 +623,11 @@ export class StrategyRunner {
         params: resolveParams(block.params ?? {}, ctx.variables ?? {}),
       };
 
-      const result = evaluator.evaluate(resolvedBlock, inputs, ctx);
+      const result = evaluator.evaluate(
+        resolvedBlock as Record<string, unknown>,
+        inputs,
+        ctx,
+      );
       results.set(blockId, result);
 
       // Handle DELAY blocks: schedule delayed execution

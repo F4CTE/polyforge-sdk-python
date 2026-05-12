@@ -604,73 +604,33 @@ export class StrategyRegistryService implements OnApplicationBootstrap {
     intents: OrderIntent[],
     stream: string,
   ): Promise<void> {
-    const now = Date.now();
-
-    // Publish intents to Redis stream. Counters are incremented after
-    // successful publish per-intent so that lastTradeAt is only updated
-    // when intents actually land in the stream.
-    const errors: Error[] = [];
-    const succeededByStrategy = new Map<string, number>();
+    const strategyIds = new Set<string>();
     for (const intent of intents) {
-      try {
-        await this.redis.xadd(stream, {
-          intentId: intent.intentId,
-          userId: intent.userId,
-          strategyId: intent.strategyId,
-          marketId: intent.marketId,
-          tokenId: intent.tokenId,
-          side: intent.side,
-          outcome: intent.outcome,
-          size: intent.size,
-          price: intent.price,
-          orderType: intent.orderType,
-          expiration: String(intent.expiration ?? 0),
-          ...(intent.venue ? { venue: intent.venue } : {}),
-          ...(intent.kalshiSubaccount != null
-            ? { kalshiSubaccount: String(intent.kalshiSubaccount) }
-            : {}),
-          ts: String(now),
-        });
-        succeededByStrategy.set(
-          intent.strategyId,
-          (succeededByStrategy.get(intent.strategyId) ?? 0) + 1,
-        );
-      } catch (err) {
-        errors.push(err instanceof Error ? err : new Error(String(err)));
-      }
+      strategyIds.add(intent.strategyId);
+      await this.redis.xadd(stream, {
+        intentId: intent.intentId,
+        userId: intent.userId,
+        strategyId: intent.strategyId,
+        marketId: intent.marketId,
+        tokenId: intent.tokenId,
+        side: intent.side,
+        outcome: intent.outcome,
+        size: intent.size,
+        price: intent.price,
+        orderType: intent.orderType,
+        expiration: String(intent.expiration ?? 0),
+        ...(intent.venue ? { venue: intent.venue } : {}),
+        ...(intent.kalshiSubaccount != null
+          ? { kalshiSubaccount: String(intent.kalshiSubaccount) }
+          : {}),
+        ts: String(Date.now()),
+      });
     }
 
-    // Increment counters only for successfully published intents.
-    // Counter failure after publish is a consistency risk: the order is
-    // already in the stream but betsToday/totalOrders are stale, which
-    // gate max_bets_per_day and max_orders_total safety checks.
-    // Fail-closed: throw so the runner surfaces the accounting failure
-    // and can pause to prevent overtrading on subsequent ticks.
-    for (const [strategyId, intentCount] of succeededByStrategy) {
-      try {
-        await this.state.incrementOrderCounters(strategyId, intentCount, now);
-      } catch (counterErr) {
-        this.logger.error(
-          {
-            event: "ORDER_INTENTS_COUNTER_INCREMENT_FAILED",
-            strategyId,
-            intentCount,
-            error:
-              counterErr instanceof Error
-                ? counterErr.message
-                : String(counterErr),
-          },
-          `Counter increment failed after ${intentCount} intents published for strategy ${strategyId}`,
-        );
-        throw new Error(
-          `Counter increment failed after ${intentCount} intents published for strategy ${strategyId}: ${counterErr instanceof Error ? counterErr.message : String(counterErr)}`,
-          { cause: counterErr },
-        );
-      }
-    }
-
-    // Log successful publishes
-    for (const [strategyId, intentCount] of succeededByStrategy) {
+    for (const strategyId of strategyIds) {
+      const intentCount = intents.filter(
+        (intent) => intent.strategyId === strategyId,
+      ).length;
       this.logger.log(
         {
           event: "ORDER_INTENTS_PUBLISHED",
@@ -690,12 +650,6 @@ export class StrategyRegistryService implements OnApplicationBootstrap {
           Stream: stream,
         },
       });
-    }
-
-    if (errors.length > 0) {
-      throw new Error(
-        `Failed to publish ${errors.length} of ${intents.length} order intents: ${errors.map((e) => e.message).join("; ")}`,
-      );
     }
   }
 
