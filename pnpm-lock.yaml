@@ -98,8 +98,8 @@ importers:
         specifier: ^1.14.0
         version: 1.14.0(react@19.2.6)
       posthog-js:
-        specifier: ^1.372.10
-        version: 1.372.10
+        specifier: ^1.373.3
+        version: 1.373.3
       react:
         specifier: ^19.2.6
         version: 19.2.6
@@ -171,8 +171,8 @@ importers:
         specifier: ^16.2.6
         version: 16.2.6(@babel/core@7.29.0)(@opentelemetry/api@1.9.1)(@playwright/test@1.60.0)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
       posthog-js:
-        specifier: ^1.372.10
-        version: 1.372.10
+        specifier: ^1.373.3
+        version: 1.373.3
       react:
         specifier: ^19.2.6
         version: 19.2.6
@@ -223,8 +223,8 @@ importers:
         specifier: ^1.14.0
         version: 1.14.0(react@19.2.6)
       posthog-js:
-        specifier: ^1.372.10
-        version: 1.372.10
+        specifier: ^1.373.3
+        version: 1.373.3
       react:
         specifier: ^19.2.6
         version: 19.2.6
@@ -3658,17 +3658,17 @@ packages:
     resolution: {integrity: sha512-beKC4KPc9dYyFV9wFhKiGoA16q5xWz4PjkYcnEs3BzpsOKjGQGRlZQ7KQD4HQKUd3HC5RLQT0lqWHrFyaI+2fQ==}
     engines: {node: '>=20.10'}
 
-  '@posthog/core@1.28.4':
-    resolution: {integrity: sha512-wmtUYHYqA3zIAKDKvYWRNWAQsWOIBwxV08e+bWzVy0wQQzpaS/LzzRupXWRMRrLOk+1x3JKFxbqA3n0QGvpqsQ==}
-
   '@posthog/core@1.28.7':
     resolution: {integrity: sha512-JmV2wN5sE7u2JWxwNNw6CBrPu5xDzIAMWR9zKBar8Pk/8TRrvbFPlXehap8xOtDslfnilY+/urpHeVHpbXMo4w==}
 
-  '@posthog/types@1.372.10':
-    resolution: {integrity: sha512-KuT3vLu3LSFsNWCwasS4gqjH/ysAyIUcB/aJSmKyNhDd/85hAznHRz1eSSl0sMvtsDTYiQIq0I0ybduVbrpPew==}
+  '@posthog/core@1.29.0':
+    resolution: {integrity: sha512-tkTO1vnbSR8HdBM6MFieQX5SbeupA1LXGYHQARtFpFLF3kXr1V4S75eec49MBYPRQnYczSICWS7akL0M75K3Ag==}
 
   '@posthog/types@1.373.2':
     resolution: {integrity: sha512-6o0AARB7OakxsrQiVeMow/m1QPnsI0Cdm7g0o5mNjVSLH/sU1MuTqckNQDLzImv++MzW0+Gyvq44cgwt3wP/Pw==}
+
+  '@posthog/types@1.373.3':
+    resolution: {integrity: sha512-nuHXMtielw/oJTh3GIYGNHKiexE5sqQuhPISVAf9Nj8dnPJDaYr26iY9qnv1aRo0VFLmubCrFISg7vwEfmFitQ==}
 
   '@prisma/adapter-pg@7.8.0':
     resolution: {integrity: sha512-ygb3UkerK3v8MDpXVgCISdRNDozpxh6+JVJgiIGbSr5KBgz10LLf5ejUskPGoXlsIjxsOu6nuy1JVQr2EKGSlg==}
@@ -6748,8 +6748,8 @@ packages:
     resolution: {integrity: sha512-Jtc2612XINuBjIl/QTWsV5UvE8UHuNblcO3vVADSrKsrc6RqGX6lOW1cEo3CM2v0XG4Nat8nI+YM7/f26VxXLw==}
     engines: {node: '>=12'}
 
-  posthog-js@1.372.10:
-    resolution: {integrity: sha512-ZQslIenDM8UpwKhmeeEnJ+t2nXr8mOIjCG+Ej3DCJnTBk9NX9Sr5RMuwHeGG8UJitwvtGOADyiY7DignOXaZwg==}
+  posthog-js@1.373.3:
+    resolution: {integrity: sha512-Met+IC9Gtyn7UlxBckasSx8318dmV2E2hGgwjnkQergEFLkh+Ib2QE6oxuVhh8EAfYChdhxIuy+tl3MqoNejPQ==}
 
   posthog-node@5.33.7:
     resolution: {integrity: sha512-jxDLWJ6eMk93cAaZYeTHSGyHAIH2wPPm9EFOnoJb/GfJfjqIZe89NvSDqOYOqclTkImW3M/Js92yZVo1TKpYXA==}
@@ -6820,8 +6820,8 @@ packages:
   proper-lockfile@4.1.2:
     resolution: {integrity: sha512-TjNPblN4BwAWMXU8s9AEz4JmQxnD1NNL7bNOY/AKUzyamc379FWASUhc/K1pL2noVb+XmZKLL68cjzLsiOAMaA==}
 
-  protobufjs@7.5.7:
-    resolution: {integrity: sha512-NGnrxS/nLKUo5nkbVQxlC71sB4hdfImdYIbFeSCidxtwATx0AHRPcANSLd0q5Bb2BkoSWo2iisQhGg5/r+ihbA==}
+  protobufjs@7.5.8:
+    resolution: {integrity: sha512-dvpCIeLPbXZS/Ete7yLaO7RenOdken2NHKykBXbsaGxZT0UTltcarBciw+A78SRQs9iMAAVpsYA+l8b1hTePIA==}
     engines: {node: '>=12.0.0'}
 
   proxy-from-env@1.1.0:
@@ -9481,7 +9481,7 @@ snapshots:
       '@opentelemetry/sdk-logs': 0.208.0(@opentelemetry/api@1.9.1)
       '@opentelemetry/sdk-metrics': 2.2.0(@opentelemetry/api@1.9.1)
       '@opentelemetry/sdk-trace-base': 2.2.0(@opentelemetry/api@1.9.1)
-      protobufjs: 7.5.7
+      protobufjs: 7.5.8
 
   '@opentelemetry/redis-common@0.38.3': {}
 
@@ -9597,17 +9597,17 @@ snapshots:
       - utf-8-validate
       - zod
 
-  '@posthog/core@1.28.4':
-    dependencies:
-      '@posthog/types': 1.372.10
-
   '@posthog/core@1.28.7':
     dependencies:
       '@posthog/types': 1.373.2
 
-  '@posthog/types@1.372.10': {}
+  '@posthog/core@1.29.0':
+    dependencies:
+      '@posthog/types': 1.373.3
 
   '@posthog/types@1.373.2': {}
+
+  '@posthog/types@1.373.3': {}
 
   '@prisma/adapter-pg@7.8.0':
     dependencies:
@@ -12659,15 +12659,15 @@ snapshots:
 
   postgres@3.4.7: {}
 
-  posthog-js@1.372.10:
+  posthog-js@1.373.3:
     dependencies:
       '@opentelemetry/api': 1.9.1
       '@opentelemetry/api-logs': 0.208.0
       '@opentelemetry/exporter-logs-otlp-http': 0.208.0(@opentelemetry/api@1.9.1)
       '@opentelemetry/resources': 2.7.1(@opentelemetry/api@1.9.1)
       '@opentelemetry/sdk-logs': 0.208.0(@opentelemetry/api@1.9.1)
-      '@posthog/core': 1.28.4
-      '@posthog/types': 1.372.10
+      '@posthog/core': 1.29.0
+      '@posthog/types': 1.373.3
       core-js: 3.49.0
       dompurify: 3.4.2
       fflate: 0.4.8
@@ -12738,7 +12738,7 @@ snapshots:
       retry: 0.12.0
       signal-exit: 3.0.7
 
-  protobufjs@7.5.7:
+  protobufjs@7.5.8:
     dependencies:
       '@protobufjs/aspromise': 1.1.2
       '@protobufjs/base64': 1.1.2
