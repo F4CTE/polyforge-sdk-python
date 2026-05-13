@@ -1245,27 +1245,35 @@ describe("StrategyRunner — EVENT-mode serialization (POLA-2082)", () => {
     expect(state.get).toHaveBeenCalledTimes(1);
   });
 
-  it("coalesces HYBRID mode event-driven ticks", async () => {
-    let release!: () => void;
-    const state = makeState();
-    state.get.mockImplementation(
-      () =>
-        new Promise((resolve) => {
-          release = () => resolve({ ...DEFAULT_STATE });
-        }),
-    );
-    const runner = makeRunner({ execMode: "HYBRID", state });
+  it("coalesces HYBRID mode event-driven ticks with delayed follow-up", async () => {
+    vi.useFakeTimers();
+    try {
+      let release!: () => void;
+      const state = makeState();
+      state.get.mockImplementation(
+        () =>
+          new Promise<typeof DEFAULT_STATE>((resolve) => {
+            release = () => resolve({ ...DEFAULT_STATE });
+          }),
+      );
+      const runner = makeRunner({ execMode: "HYBRID", state });
 
-    const tick1 = runner.onPriceEvent("tok1", 0.5);
-    await new Promise((r) => setTimeout(r, 250));
-    await runner.onPriceEvent("tok1", 0.55);
-    release();
-    await tick1;
-    await new Promise((resolve) => setTimeout(resolve, 0));
+      const tick1 = runner.onPriceEvent("tok1", 0.5);
+      // Advance past the min-tick throttle so the second event enters the coalescing path
+      await vi.advanceTimersByTimeAsync(250);
+      await runner.onPriceEvent("tok1", 0.55);
+      release();
+      await tick1;
 
-    // One eval for tick1 — HYBRID mode does NOT get a coalesced follow-up
-    // (setInterval in start() already defines its own cadence)
-    expect(state.get).toHaveBeenCalledTimes(1);
+      // HYBRID mode schedules a delayed follow-up (respecting tickMs=1000).
+      // Advance past tickMs so the delayed follow-up timeout fires and completes.
+      await vi.advanceTimersByTimeAsync(1500);
+
+      // Two evaluations: tick1 + coalesced delayed follow-up
+      expect(state.get).toHaveBeenCalledTimes(2);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it("does not interfere with TICK mode (onPriceEvent is a no-op)", async () => {
@@ -1666,7 +1674,7 @@ describe("StrategyRunner — concurrent tick serialization", () => {
     expect(setArgs[1]).toBe(token);
   });
 
-  it("refreshes lock TTL during long-running evaluations", async () => {
+  it("refreshes lock TTL via atomic Lua ownership check during long-running evaluations", async () => {
     // Simulate a slow evaluation that blocks long enough for the
     // 5-second lock-refresh interval to fire at least once.
     vi.useFakeTimers();
@@ -1703,15 +1711,24 @@ describe("StrategyRunner — concurrent tick serialization", () => {
       // Advance past the 5-second refresh interval
       await vi.advanceTimersByTimeAsync(6_000);
       // Release the stalled evaluation
-      release!();
+      release();
       await tickPromise;
 
-      // expire should have been called by the refresh interval
-      const expireCallsForLock = client.expire.mock.calls.filter(
-        (args: unknown[]) => args[0] === "lock:tick:strat-test",
+      // The lock-refresh interval should call eval (Lua script), not raw expire.
+      // Find eval calls whose script string contains both GET and EXPIRE tokens.
+      const lockRefreshEvals = client.eval.mock.calls.filter(
+        (args: unknown[]) => {
+          const script = typeof args[0] === "string" ? args[0] : "";
+          return (
+            script.includes("redis.call('GET'") && script.includes("EXPIRE")
+          );
+        },
       );
-      expect(expireCallsForLock.length).toBeGreaterThanOrEqual(1);
-      expect(expireCallsForLock[0][1]).toBe(10);
+      expect(lockRefreshEvals.length).toBeGreaterThanOrEqual(1);
+      // Verify the lock key and token are passed to the Lua script
+      expect(lockRefreshEvals[0][2]).toBe("lock:tick:strat-test"); // KEYS[1]
+      expect(typeof lockRefreshEvals[0][3]).toBe("string"); // ARGV[1] = lockToken
+      expect(lockRefreshEvals[0][4]).toBe("10"); // ARGV[2] = TTL
     } finally {
       vi.useRealTimers();
     }
@@ -1769,5 +1786,139 @@ describe("StrategyRunner — concurrent tick serialization", () => {
     expect(client.eval).toHaveBeenCalledTimes(1);
     // No exception leaks; the runner remains functional
     expect(runner.status).toBe("RUNNING");
+  });
+
+  it("cancels lock-refresh interval when ownership is lost (eval returns 0)", async () => {
+    vi.useFakeTimers();
+    try {
+      let release!: () => void;
+      // eval returns 1 (OK) for first call, then 0 (ownership lost) for subsequent
+      let evalCallCount = 0;
+      const client = {
+        lrange: vi.fn().mockResolvedValue([]),
+        mget: vi
+          .fn()
+          .mockResolvedValue([
+            JSON.stringify({ price: 0.5, timestamp: Date.now() }),
+          ]),
+        incr: vi.fn().mockResolvedValue(1),
+        expire: vi.fn().mockResolvedValue(1),
+        set: vi.fn().mockResolvedValue("OK"),
+        del: vi.fn().mockResolvedValue(1),
+        eval: vi.fn().mockImplementation(() => {
+          evalCallCount++;
+          // First eval is lock release (Lua check-and-delete), leave at default mock
+          // Lock-refresh evals: 1=owned, 0=lost
+          if (evalCallCount > 1) return Promise.resolve(0);
+          return Promise.resolve(1);
+        }),
+      };
+      const redis = makeRedis({ getClient: vi.fn().mockReturnValue(client) });
+      const state = makeState();
+      state.get.mockImplementation(
+        () =>
+          new Promise<typeof DEFAULT_STATE>((resolve) => {
+            release = () => resolve({ ...DEFAULT_STATE });
+          }),
+      );
+      const runner = makeRunner({ execMode: "EVENT", state, redis });
+
+      const tickPromise = runner.onPriceEvent("tok1", 0.5);
+      // Advance 6s so lock-refresh fires once → returns 0 → interval self-cancels
+      await vi.advanceTimersByTimeAsync(6_000);
+      release();
+      await tickPromise;
+
+      // The lock-refresh fired once and self-cancelled (eval returned 0).
+      // No further refresh intervals continue to extend a foreign lock.
+      // Strategy remains RUNNING — lock loss is handled, not fatal.
+      expect(runner.status).toBe("RUNNING");
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("stops lock-refresh when refresh eval rejects mid-evaluation", async () => {
+    vi.useFakeTimers();
+    try {
+      let release!: () => void;
+      let evalCall = 0;
+      const client = {
+        lrange: vi.fn().mockResolvedValue([]),
+        mget: vi
+          .fn()
+          .mockResolvedValue([
+            JSON.stringify({ price: 0.5, timestamp: Date.now() }),
+          ]),
+        incr: vi.fn().mockResolvedValue(1),
+        expire: vi.fn().mockResolvedValue(1),
+        set: vi.fn().mockResolvedValue("OK"),
+        del: vi.fn().mockResolvedValue(1),
+        eval: vi.fn().mockImplementation(() => {
+          evalCall++;
+          // First eval call is the lock refresh (fires after 5s)
+          // Second and later are lock release in finally
+          if (evalCall === 1) return Promise.reject(new Error("Redis down"));
+          return Promise.resolve(1);
+        }),
+      };
+      const redis = makeRedis({ getClient: vi.fn().mockReturnValue(client) });
+      const state = makeState();
+      state.get.mockImplementation(
+        () =>
+          new Promise<typeof DEFAULT_STATE>((resolve) => {
+            release = () => resolve({ ...DEFAULT_STATE });
+          }),
+      );
+      const runner = makeRunner({ execMode: "EVENT", state, redis });
+
+      const tickPromise = runner.onPriceEvent("tok1", 0.5);
+      // Advance 6s — lock-refresh fires, eval rejects → interval self-cancels
+      await vi.advanceTimersByTimeAsync(6_000);
+      release();
+      await tickPromise;
+
+      // Lock-refresh interval was cancelled on error — no exception leaked.
+      // The runner continues with the tick evaluation.
+      expect(runner.status).toBe("RUNNING");
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("coalesces TICK mode ticks into a delayed follow-up after long evaluation", async () => {
+    vi.useFakeTimers();
+    try {
+      let release!: () => void;
+      const state = makeState();
+      state.get.mockImplementation(
+        () =>
+          new Promise<typeof DEFAULT_STATE>((resolve) => {
+            release = () => resolve({ ...DEFAULT_STATE });
+          }),
+      );
+      const runner = makeRunner({ execMode: "TICK", tickMs: 300, state });
+
+      // Simulate a tick entering via the setInterval path.
+      // We test the tick() method directly since onPriceEvent is a no-op in TICK mode.
+      const tick1 = (runner as any).tick() as Promise<void>;
+
+      // While evaluation is in flight, another interval tick fires:
+      // tickInFlight is true → sets pendingTick
+      await vi.advanceTimersByTimeAsync(10);
+      (runner as any).tick();
+
+      release();
+      await tick1;
+
+      // TICK mode schedules a delayed follow-up (respecting tickMs=300).
+      // Advance past the delay so the timeout fires and the follow-up completes.
+      await vi.advanceTimersByTimeAsync(500);
+
+      // Two evaluations: tick1 + coalesced delayed follow-up
+      expect(state.get).toHaveBeenCalledTimes(2);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });

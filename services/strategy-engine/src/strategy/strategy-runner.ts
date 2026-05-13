@@ -73,6 +73,9 @@ export class StrategyRunner {
   /** True when a follow-up tick is scheduled — bypasses the min-tick throttle */
   private scheduledFollowUp = false;
 
+  /** Delayed follow-up timeout for TICK/HYBRID modes — cleared on stop() */
+  private followUpTimer: NodeJS.Timeout | null = null;
+
   /** Tracks child strategy IDs launched by RUN_STRATEGY action blocks */
   readonly childStrategies: Set<string> = new Set();
   /** Maps child strategy IDs to their sub-strategy mode */
@@ -168,6 +171,11 @@ export class StrategyRunner {
       clearTimeout(timer);
     }
     this.delayedActions.clear();
+    // Clear the follow-up timer for TICK/HYBRID coalesced ticks
+    if (this.followUpTimer) {
+      clearTimeout(this.followUpTimer);
+      this.followUpTimer = null;
+    }
     // Note: cascade stop of managed/scoped children is handled by StrategyRegistryService
     if (this.childStrategies.size > 0) {
       this.logger.log(
@@ -285,10 +293,33 @@ export class StrategyRunner {
       lockAcquired = true;
 
       // Periodically refresh the lock TTL during long-running evaluations.
-      // Without this, a tick that exceeds 10s would lose the lock mid-flight
-      // and another instance could acquire it, causing concurrent evaluation.
+      // Uses an atomic Lua check-and-extend script that verifies this runner
+      // still owns the lock (GET == lockToken) before extending the TTL.
+      // - If ownership is lost (key expired or re-acquired by another instance),
+      //   the interval self-cancels and stops extending the foreign lock.
+      // - If Redis is unreachable during refresh, the interval self-cancels
+      //   rather than silently continuing without protection.
       lockRefresh = setInterval(() => {
-        redisClient.expire(lockKey, 10).catch(() => {});
+        redisClient
+          .eval(
+            "if redis.call('GET', KEYS[1]) == ARGV[1] then return redis.call('EXPIRE', KEYS[1], tonumber(ARGV[2])) else return 0 end",
+            1,
+            lockKey,
+            lockToken,
+            "10",
+          )
+          .then((result) => {
+            if (result !== 1 && lockRefresh) {
+              clearInterval(lockRefresh);
+              lockRefresh = null;
+            }
+          })
+          .catch(() => {
+            if (lockRefresh) {
+              clearInterval(lockRefresh);
+              lockRefresh = null;
+            }
+          });
       }, 5_000);
 
       // Enforce daily execution limit — auto-stop if exceeded
@@ -357,14 +388,26 @@ export class StrategyRunner {
       this.tickInFlight = false;
       if (this.pendingTick) {
         this.pendingTick = false;
-        // Only self-schedule follow-up ticks for pure EVENT mode.
-        // TICK and HYBRID intervals (setInterval in start()) already
-        // define their own cadence; this prevents the mutex exit()
-        // from creating an immediate catch-up loop that can overshoot
-        // the configured tick period and exhaust the daily limit early.
+        // Fire a coalesced follow-up tick after release.
+        // This catches ticks/events that arrived while the in-flight
+        // evaluation was running (they set pendingTick and returned).
+        //
+        // - EVENT mode: immediate self-schedule, bypassing min-tick throttle
+        //   via scheduledFollowUp flag (price-driven; real-time matters).
+        // - TICK/HYBRID mode: delayed follow-up that respects the configured
+        //   tick cadence. Without this delay, a long evaluation that overlaps
+        //   with multiple interval ticks would trigger an immediate catch-up
+        //   chain that can overshoot the tick period and exhaust the daily
+        //   execution limit early.
         if (this.execMode === "EVENT") {
           this.scheduledFollowUp = true;
           void this.tick();
+        } else {
+          const delay = Math.max(this.tickMs, MIN_TICK_MS);
+          this.followUpTimer = setTimeout(() => {
+            this.followUpTimer = null;
+            void this.tick();
+          }, delay);
         }
       }
     }
