@@ -376,26 +376,26 @@ def _raise_for_status(response: httpx.Response) -> None:
     except Exception:
         body = {}
 
-    message = body.get("message") or body.get("error") or response.reason_phrase or "Unknown error"
-    code = body.get("code", "")
-    request_id = body.get("requestId", "")
-    suggestion = body.get("suggestion") or None
+    message: str = body.get("message") or body.get("error") or response.reason_phrase or "Unknown error"
+    code: str = body.get("code") or ""
+    request_id: str = body.get("requestId") or ""
+    suggestion: str | None = body.get("suggestion") or None
 
-    kwargs = dict(status_code=response.status_code, code=code, request_id=request_id, suggestion=suggestion)
+    status_code = response.status_code
 
-    match response.status_code:
+    match status_code:
         case 401:
-            raise AuthenticationError(message, **kwargs)
+            raise AuthenticationError(message, status_code=status_code, code=code, request_id=request_id, suggestion=suggestion)
         case 403:
-            raise PermissionError(message, **kwargs)
+            raise PermissionError(message, status_code=status_code, code=code, request_id=request_id, suggestion=suggestion)
         case 404:
-            raise NotFoundError(message, **kwargs)
+            raise NotFoundError(message, status_code=status_code, code=code, request_id=request_id, suggestion=suggestion)
         case 429:
-            raise RateLimitError(message, **kwargs)
+            raise RateLimitError(message, status_code=status_code, code=code, request_id=request_id, suggestion=suggestion)
         case sc if sc >= 500:
-            raise ServerError(message, **kwargs)
+            raise ServerError(message, status_code=status_code, code=code, request_id=request_id, suggestion=suggestion)
         case _:
-            raise PolyforgeError(message, **kwargs)
+            raise PolyforgeError(message, status_code=status_code, code=code, request_id=request_id, suggestion=suggestion)
 
 
 def _strip_none(params: dict[str, Any]) -> dict[str, Any]:
@@ -666,7 +666,7 @@ def _resolve_and_validate_ips(hostname: str) -> list[str]:
 
     validated: list[str] = []
     for _family, _, _, _, sockaddr in addrinfos:
-        ip_str = sockaddr[0]
+        ip_str: str = sockaddr[0]  # type: ignore[assignment]  # IPv4 sockaddr is (str, int), IPv6 is (str, int, int, int)
         try:
             addr = ipaddress.ip_address(ip_str)
         except ValueError:
