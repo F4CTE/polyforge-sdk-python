@@ -114,6 +114,8 @@ from polyforge.models import (
     Token,
     TopTraderEntry,
     TraderScore,
+    UpdateUserPreferencesParams,
+    UserPreferences,
     UserReward,
     UserRewardsTotal,
     UserSponsoredMarkets,
@@ -3327,6 +3329,51 @@ class PolyforgeClient:
             self._patch("/api/v1/users/me/venue-preferences", json=body),
         )
 
+    def get_my_preferences(self) -> UserPreferences:
+        """Get the authenticated user's venue/platform preferences.
+
+        Calls ``GET /api/v1/users/me/venue-preferences``.
+
+        Returns:
+            The user's current :class:`UserPreferences`.
+        """
+        return _parse(
+            UserPreferences,
+            self._get("/api/v1/users/me/venue-preferences"),
+        )
+
+    def update_my_preferences(
+        self,
+        *,
+        default_venue: str | None = None,
+        enabled_venues: list[str] | None = None,
+        single_platform_mode: bool | None = None,
+    ) -> UserPreferences:
+        """Update the authenticated user's venue/platform preferences.
+
+        Calls ``PATCH /api/v1/users/me/venue-preferences``. Only supplied
+        fields are changed (JSON Merge Patch semantics).
+
+        Args:
+            default_venue: Default trading venue (e.g. ``"polymarket"``).
+            enabled_venues: List of enabled venues.
+            single_platform_mode: Whether single-platform mode is active.
+
+        Returns:
+            The updated :class:`UserPreferences`.
+        """
+        body: dict[str, Any] = {}
+        if default_venue is not None:
+            body["defaultVenue"] = default_venue
+        if enabled_venues is not None:
+            body["enabledVenues"] = enabled_venues
+        if single_platform_mode is not None:
+            body["singlePlatformMode"] = single_platform_mode
+        return _parse(
+            UserPreferences,
+            self._patch("/api/v1/users/me/venue-preferences", json=body),
+        )
+
     # -- Sports Markets --
 
     def list_sports_categories(self) -> list[dict[str, Any]]:
@@ -6391,6 +6438,39 @@ class AsyncPolyforgeClient:
             body["singlePlatformMode"] = single_platform_mode
         return _parse(
             VenuePreferences,
+            await self._patch("/api/v1/users/me/venue-preferences", json=body),
+        )
+
+    async def get_my_preferences(self) -> UserPreferences:
+        """Get the authenticated user's venue/platform preferences.
+
+        See sync :meth:`get_my_preferences` for details.
+        """
+        return _parse(
+            UserPreferences,
+            await self._get("/api/v1/users/me/venue-preferences"),
+        )
+
+    async def update_my_preferences(
+        self,
+        *,
+        default_venue: str | None = None,
+        enabled_venues: list[str] | None = None,
+        single_platform_mode: bool | None = None,
+    ) -> UserPreferences:
+        """Update the authenticated user's venue/platform preferences.
+
+        See sync :meth:`update_my_preferences` for details.
+        """
+        body: dict[str, Any] = {}
+        if default_venue is not None:
+            body["defaultVenue"] = default_venue
+        if enabled_venues is not None:
+            body["enabledVenues"] = enabled_venues
+        if single_platform_mode is not None:
+            body["singlePlatformMode"] = single_platform_mode
+        return _parse(
+            UserPreferences,
             await self._patch("/api/v1/users/me/venue-preferences", json=body),
         )
 

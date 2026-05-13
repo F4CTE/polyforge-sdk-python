@@ -1663,3 +1663,34 @@ class SystemHealthAuthenticated:
     redis: dict[str, Any] | None = None
     queue_depth: int | None = None
     services: dict[str, Any] | None = None
+
+
+# ---------------------------------------------------------------------------
+# User preferences (venue/platform)
+# ---------------------------------------------------------------------------
+
+
+@dataclass
+class UserPreferences:
+    """Venue/platform preferences for the authenticated user.
+
+    Returned by ``GET /api/v1/users/me/venue-preferences``.
+    """
+
+    default_venue: str | None = None
+    enabled_venues: list[str] | None = None
+    single_platform_mode: bool | None = None
+    extra: dict[str, Any] = field(default_factory=dict)
+
+
+@dataclass
+class UpdateUserPreferencesParams:
+    """Parameters for updating venue/platform preferences.
+
+    Only supplied fields are changed (JSON Merge Patch semantics via
+    ``PATCH /api/v1/users/me/venue-preferences``).
+    """
+
+    default_venue: str | None = None
+    enabled_venues: list[str] | None = None
+    single_platform_mode: bool | None = None
