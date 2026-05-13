@@ -799,15 +799,17 @@ class PolyforgeClient:
         return resp.text
 
     def _get_no_auth(self, path: str) -> Any:
-        req = self._client.build_request("GET", path)
-        # Set to empty string rather than popping — an absent header
-        # allows httpx NetRCAuth (trust_env=True) to inject ~/.netrc
-        # credentials via setdefault().  An explicit empty string blocks
-        # env-based auth resolution.
-        req.headers["authorization"] = ""
-        resp = self._client.send(req)
-        _raise_for_status(resp)
-        return resp.json()
+        # Use a fresh client with trust_env=False to guarantee no
+        # Authorization header is sent and no env-based credentials
+        # (~/.netrc, HTTP_PROXY auth, etc.) are injected.
+        with httpx.Client(
+            base_url=self._api_url,
+            trust_env=False,
+            timeout=self._client.timeout,
+        ) as client:
+            resp = client.get(path)
+            _raise_for_status(resp)
+            return resp.json()
 
     # -- Health --
 
@@ -4227,15 +4229,17 @@ class AsyncPolyforgeClient:
         return resp.text
 
     async def _get_no_auth(self, path: str) -> Any:
-        req = self._client.build_request("GET", path)
-        # Set to empty string rather than popping — an absent header
-        # allows httpx NetRCAuth (trust_env=True) to inject ~/.netrc
-        # credentials via setdefault().  An explicit empty string blocks
-        # env-based auth resolution.
-        req.headers["authorization"] = ""
-        resp = await self._client.send(req)
-        _raise_for_status(resp)
-        return resp.json()
+        # Use a fresh client with trust_env=False to guarantee no
+        # Authorization header is sent and no env-based credentials
+        # (~/.netrc, HTTP_PROXY auth, etc.) are injected.
+        async with httpx.AsyncClient(
+            base_url=self._api_url,
+            trust_env=False,
+            timeout=self._client.timeout,
+        ) as client:
+            resp = await client.get(path)
+            _raise_for_status(resp)
+            return resp.json()
 
     # -- Health --
 

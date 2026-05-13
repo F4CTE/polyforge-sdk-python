@@ -5060,39 +5060,46 @@ class TestPublicHealthEndpoint:
         from polyforge import SystemHealthPublic as SHP
         assert SHP is SystemHealthPublic
 
-    def test_get_no_auth_sends_empty_auth_header_to_block_netrc_injection(self):
-        """_get_no_auth must set Authorization to '' (not absent).
+    def test_get_no_auth_uses_trust_env_false_client(self):
+        """_get_no_auth must use a trust_env=False client with no Authorization header.
 
-        When trust_env=True (httpx default), NetRCAuth uses
-        headers.setdefault() to inject ~/.netrc credentials for the
-        target host.  An absent Authorization header allows that
-        injection; an explicit empty string blocks it.
+        A fresh httpx.Client(trust_env=False) guarantees:
+        - No Authorization header is sent at all
+        - ~/.netrc and other env-based credentials are never injected
         """
-        from unittest.mock import MagicMock
+        from unittest.mock import MagicMock, patch
 
         client = PolyforgeClient(api_key="test-key")
-        captured = []
+        captured_kwargs = {}
 
-        def fake_send(req):
-            captured.append(req)
-            resp = MagicMock()
-            resp.status_code = 200
-            resp.json.return_value = {"status": "operational"}
-            return resp
+        class FakeClient:
+            def __init__(self, **kwargs):
+                captured_kwargs.update(kwargs)
+                self._mock_resp = MagicMock()
+                self._mock_resp.status_code = 200
+                self._mock_resp.json.return_value = {"status": "operational"}
 
-        client._client.send = fake_send
-        client._get_no_auth("/health")
+            def __enter__(self):
+                return self
 
-        assert len(captured) == 1
-        sent = captured[0]
-        assert "authorization" in sent.headers, (
-            "authorization header must be present (empty) not absent — "
-            "an absent header allows netrc credential injection"
+            def __exit__(self, *args):
+                pass
+
+            def get(self, path):
+                # Record what headers this client would have sent
+                captured_kwargs["_path"] = path
+                return self._mock_resp
+
+        with patch("polyforge.client.httpx.Client", FakeClient):
+            client._get_no_auth("/health")
+
+        assert captured_kwargs.get("trust_env") is False, (
+            "must set trust_env=False to block env-based credential injection"
         )
-        assert sent.headers["authorization"] == "", (
-            "authorization header must be empty string to block "
-            "httpx NetRCAuth setdefault()"
+        assert "authorization" not in captured_kwargs, (
+            "client must not carry any Authorization header"
         )
+        assert captured_kwargs.get("_path") == "/health"
         client.close()
 
 
