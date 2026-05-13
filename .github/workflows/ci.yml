@@ -29,7 +29,6 @@ jobs:
 
       - name: Type check
         run: pip install pyright && pyright src/
-        continue-on-error: true
 
       - name: Test
         run: |
