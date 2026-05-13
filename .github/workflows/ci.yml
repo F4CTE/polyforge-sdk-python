@@ -28,7 +28,7 @@ jobs:
         run: pip install -e ".[dev]" || pip install -e .
 
       - name: Type check
-        run: pip install pyright && pyright src/
+        run: pip install pyright && pyright --level error src/ tests/
 
       - name: Test
         run: |
