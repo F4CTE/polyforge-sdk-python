@@ -15,9 +15,8 @@ export class BetaLimitsConfigService {
 
   async getAllLimits(): Promise<BetaLimits> {
     try {
-      const stored = await this.redis.getJson<Partial<BetaLimits>>(
-        BETA_LIMITS_KEY,
-      );
+      const stored =
+        await this.redis.getJson<Partial<BetaLimits>>(BETA_LIMITS_KEY);
       if (stored) {
         return { ...BETA_LIMITS_DEFAULTS, ...stored };
       }
@@ -36,14 +35,13 @@ export class BetaLimitsConfigService {
       const val = await this.redis.get(fieldKey);
       if (val !== null) {
         const parsed = Number(val);
-        if (!Number.isNaN(parsed)) return parsed as BetaLimits[K];
+        if (!Number.isNaN(parsed)) return parsed;
       }
       // Fall back to the JSON blob (legacy / full sync)
-      const stored = await this.redis.getJson<Partial<BetaLimits>>(
-        BETA_LIMITS_KEY,
-      );
+      const stored =
+        await this.redis.getJson<Partial<BetaLimits>>(BETA_LIMITS_KEY);
       if (stored && stored[key] !== undefined) {
-        return stored[key] as BetaLimits[K];
+        return stored[key];
       }
     } catch (err) {
       this.logger.warn(
@@ -54,9 +52,7 @@ export class BetaLimitsConfigService {
     return BETA_LIMITS_DEFAULTS[key];
   }
 
-  async setLimits(
-    updates: Partial<BetaLimits>,
-  ): Promise<BetaLimits> {
+  async setLimits(updates: Partial<BetaLimits>): Promise<BetaLimits> {
     const current = await this.getAllLimits();
     const merged = { ...current, ...updates };
 

@@ -14,6 +14,9 @@ import {
 import { ApiTags, ApiOperation, ApiBearerAuth } from "@nestjs/swagger";
 import { isEmail } from "class-validator";
 import { AdminJwtGuard } from "../common/guard/admin-jwt.guard";
+import { RolesGuard } from "../common/guard/roles.guard";
+import { Roles } from "../common/decorators/roles.decorator";
+import { AdminRole } from "@polyforge/shared-types";
 import { InvitesService } from "../invites/invites.service";
 import { AdminMailService } from "../mail/mail.service";
 import { WaitlistAdminService } from "./waitlist.service";
@@ -30,7 +33,8 @@ class ParseEmailParamPipe implements PipeTransform<string, string> {
 
 @ApiTags("waitlist")
 @ApiBearerAuth()
-@UseGuards(AdminJwtGuard)
+@UseGuards(AdminJwtGuard, RolesGuard)
+@Roles(AdminRole.SUPER_ADMIN, AdminRole.ADMIN)
 @Controller("waitlist")
 export class WaitlistAdminController {
   constructor(

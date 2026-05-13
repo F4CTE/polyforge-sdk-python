@@ -61,6 +61,8 @@ export class StrategiesController {
   }
 
   @Post(":id/force-stop")
+  @UseGuards(RolesGuard)
+  @Roles(AdminRole.SUPER_ADMIN, AdminRole.ADMIN)
   async forceStop(
     @Param("id", ParseUUIDPipe) id: string,
     @CurrentAdmin() admin: AdminJwtPayload,
@@ -78,6 +80,8 @@ export class StrategiesController {
   }
 
   @Patch(":id/unpublish")
+  @UseGuards(RolesGuard)
+  @Roles(AdminRole.SUPER_ADMIN, AdminRole.ADMIN)
   async unpublish(
     @Param("id", ParseUUIDPipe) id: string,
     @CurrentAdmin() admin: AdminJwtPayload,

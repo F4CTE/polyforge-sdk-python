@@ -16,9 +16,7 @@ export {
   PelReclaimService,
   type PelReclaimTarget,
 } from "./pel-reclaim.service";
-export {
-  BetaLimitsConfigService,
-} from "./beta-limits-config.service";
+export { BetaLimitsConfigService } from "./beta-limits-config.service";
 export {
   type BetaLimits,
   BETA_LIMITS_DEFAULTS,

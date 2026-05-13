@@ -187,6 +187,11 @@ describe("StrategyRunner — lifecycle", () => {
     // Without enough time elapsed, the second tick is debounced by MIN_TICK_MS
     const second = runner.onPriceEvent("tok1", 0.5);
     await second;
+    // The first tick now awaits betaLimits.getLimit() before reaching
+    // evaluate() → state.get(), adding an extra microtask cycle. Yield
+    // to the event loop so the mock implementation sets `release`
+    // before we call it.
+    await new Promise((r) => setTimeout(r, 0));
     release();
     await first;
 

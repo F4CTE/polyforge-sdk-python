@@ -2,6 +2,9 @@ import { Controller, Get, Patch, Body, UseGuards } from "@nestjs/common";
 import { ApiTags, ApiOperation, ApiBearerAuth } from "@nestjs/swagger";
 import { IsBoolean, IsOptional, IsInt, Min } from "class-validator";
 import { AdminJwtGuard } from "../common/guard/admin-jwt.guard";
+import { RolesGuard } from "../common/guard/roles.guard";
+import { Roles } from "../common/decorators/roles.decorator";
+import { AdminRole } from "@polyforge/shared-types";
 import { ConfigFlagsService } from "./config-flags.service";
 import { BetaLimitsConfigService, type BetaLimits } from "@polyforge/shared-redis";
 
@@ -23,7 +26,8 @@ class UpdateBetaLimitsDto {
 
 @ApiTags("config")
 @ApiBearerAuth()
-@UseGuards(AdminJwtGuard)
+@UseGuards(AdminJwtGuard, RolesGuard)
+@Roles(AdminRole.SUPER_ADMIN)
 @Controller("config")
 export class ConfigFlagsController {
   constructor(

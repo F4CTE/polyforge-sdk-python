@@ -6,7 +6,17 @@ import { BetaLimitsConfigService } from "./beta-limits-config.service";
 
 @Global()
 @Module({
-  providers: [RedisService, StreamMonitorService, PelReclaimService, BetaLimitsConfigService],
-  exports: [RedisService, StreamMonitorService, PelReclaimService, BetaLimitsConfigService],
+  providers: [
+    RedisService,
+    StreamMonitorService,
+    PelReclaimService,
+    BetaLimitsConfigService,
+  ],
+  exports: [
+    RedisService,
+    StreamMonitorService,
+    PelReclaimService,
+    BetaLimitsConfigService,
+  ],
 })
 export class RedisModule {}

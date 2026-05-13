@@ -2319,7 +2319,7 @@ describe("StrategiesService", () => {
       db.strategy.count.mockResolvedValue(0);
       db.strategy.create.mockResolvedValue(created as any);
 
-      await service.importStrategy(importDto as any, "user-1");
+      await service.importStrategy(importDto, "user-1");
       expect(db.strategy.create).toHaveBeenCalledOnce();
     });
   });
