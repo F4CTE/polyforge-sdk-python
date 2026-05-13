@@ -216,7 +216,6 @@ __all__ = [
     "TraderScore",
     "UserPreferences",
     "UserProfile",
-    "FollowResult",
     "UserReward",
     "UserRewardsTotal",
     "UserSponsoredMarkets",
