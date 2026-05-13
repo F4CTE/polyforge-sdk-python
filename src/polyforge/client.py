@@ -141,6 +141,7 @@ from polyforge.models import (
     EventNotificationPref,
     EventNotificationPreferences,
     VenuePreferences,
+    UserPreferences,
     SupportTicket,
     TicketMessage,
 )
@@ -226,6 +227,7 @@ _MODEL_REGISTRY: dict[str, type] = {
     "EventNotificationPref": EventNotificationPref,
     "EventNotificationPreferences": EventNotificationPreferences,
     "VenuePreferences": VenuePreferences,
+    "UserPreferences": UserPreferences,
     "SupportTicket": SupportTicket,
     "TicketMessage": TicketMessage,
     "CorrelationCategoriesReport": CorrelationCategoriesReport,
@@ -3327,6 +3329,57 @@ class PolyforgeClient:
             self._patch("/api/v1/users/me/venue-preferences", json=body),
         )
 
+    # -- User Preferences (cross-SDK compat — POLA-4239) --
+
+    def get_my_preferences(self) -> "UserPreferences":
+        """Get the authenticated user's venue/platform preferences.
+
+        Cross-SDK alias for :meth:`get_venue_preferences` matching the
+        TypeScript ``getMyPreferences`` and Rust ``get_my_preferences``
+        method names.
+
+        Returns:
+            The current user preferences.
+        """
+        return _parse(
+            UserPreferences,
+            self._get("/api/v1/users/me/venue-preferences"),
+        )
+
+    def update_my_preferences(
+        self,
+        *,
+        default_venue: str | None = None,
+        enabled_venues: list[str] | None = None,
+        single_platform_mode: bool | None = None,
+    ) -> "UserPreferences":
+        """Update the authenticated user's venue/platform preferences.
+
+        Cross-SDK alias for :meth:`update_venue_preferences` matching the
+        TypeScript ``updateMyPreferences`` and Rust
+        ``update_my_preferences`` method names.  Only supplied fields are
+        changed (JSON Merge Patch semantics via HTTP PATCH).
+
+        Args:
+            default_venue: Preferred default venue slug (e.g. ``"polymarket"``).
+            enabled_venues: List of enabled venue slugs.
+            single_platform_mode: Whether to use single-platform mode.
+
+        Returns:
+            The updated user preferences.
+        """
+        body: dict[str, Any] = {}
+        if default_venue is not None:
+            body["defaultVenue"] = default_venue
+        if enabled_venues is not None:
+            body["enabledVenues"] = enabled_venues
+        if single_platform_mode is not None:
+            body["singlePlatformMode"] = single_platform_mode
+        return _parse(
+            UserPreferences,
+            self._patch("/api/v1/users/me/venue-preferences", json=body),
+        )
+
     # -- Sports Markets --
 
     def list_sports_categories(self) -> list[dict[str, Any]]:
@@ -6391,6 +6444,57 @@ class AsyncPolyforgeClient:
             body["singlePlatformMode"] = single_platform_mode
         return _parse(
             VenuePreferences,
+            await self._patch("/api/v1/users/me/venue-preferences", json=body),
+        )
+
+    # -- User Preferences (cross-SDK compat — POLA-4239) --
+
+    async def get_my_preferences(self) -> "UserPreferences":
+        """Get the authenticated user's venue/platform preferences.
+
+        Cross-SDK alias for :meth:`get_venue_preferences` matching the
+        TypeScript ``getMyPreferences`` and Rust ``get_my_preferences``
+        method names.
+
+        Returns:
+            The current user preferences.
+        """
+        return _parse(
+            UserPreferences,
+            await self._get("/api/v1/users/me/venue-preferences"),
+        )
+
+    async def update_my_preferences(
+        self,
+        *,
+        default_venue: str | None = None,
+        enabled_venues: list[str] | None = None,
+        single_platform_mode: bool | None = None,
+    ) -> "UserPreferences":
+        """Update the authenticated user's venue/platform preferences.
+
+        Cross-SDK alias for :meth:`update_venue_preferences` matching the
+        TypeScript ``updateMyPreferences`` and Rust
+        ``update_my_preferences`` method names.  Only supplied fields are
+        changed (JSON Merge Patch semantics via HTTP PATCH).
+
+        Args:
+            default_venue: Preferred default venue slug (e.g. ``"polymarket"``).
+            enabled_venues: List of enabled venue slugs.
+            single_platform_mode: Whether to use single-platform mode.
+
+        Returns:
+            The updated user preferences.
+        """
+        body: dict[str, Any] = {}
+        if default_venue is not None:
+            body["defaultVenue"] = default_venue
+        if enabled_venues is not None:
+            body["enabledVenues"] = enabled_venues
+        if single_platform_mode is not None:
+            body["singlePlatformMode"] = single_platform_mode
+        return _parse(
+            UserPreferences,
             await self._patch("/api/v1/users/me/venue-preferences", json=body),
         )
 

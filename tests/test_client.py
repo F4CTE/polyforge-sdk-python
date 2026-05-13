@@ -5556,6 +5556,8 @@ class TestVenuePreferenceMethods:
     VENUE_METHODS = [
         "get_venue_preferences",
         "update_venue_preferences",
+        "get_my_preferences",
+        "update_my_preferences",
     ]
 
     @pytest.mark.parametrize("method", VENUE_METHODS)
@@ -5613,6 +5615,53 @@ class TestVenuePreferenceMethods:
         assert result.single_platform_mode is True
         client.close()
 
+    # -- get_my_preferences / update_my_preferences (POLA-4239) --
+
+    def test_sync_get_my_preferences(self):
+        from unittest.mock import MagicMock
+        from polyforge.models import UserPreferences
+        client = PolyforgeClient(api_key="test-key")
+        client._get = MagicMock(return_value={
+            "defaultVenue": "polymarket",
+            "enabledVenues": ["polymarket", "kalshi"],
+            "singlePlatformMode": False,
+        })
+        result = client.get_my_preferences()
+        assert isinstance(result, UserPreferences)
+        assert result.default_venue == "polymarket"
+        assert "kalshi" in result.enabled_venues
+        client._get.assert_called_once_with("/api/v1/users/me/venue-preferences")
+        client.close()
+
+    def test_sync_update_my_preferences(self):
+        from unittest.mock import MagicMock
+        from polyforge.models import UserPreferences
+        client = PolyforgeClient(api_key="test-key")
+        client._patch = MagicMock(return_value={
+            "defaultVenue": "kalshi",
+            "enabledVenues": ["kalshi"],
+            "singlePlatformMode": True,
+        })
+        result = client.update_my_preferences(default_venue="kalshi", single_platform_mode=True)
+        client._patch.assert_called_once_with(
+            "/api/v1/users/me/venue-preferences",
+            json={"defaultVenue": "kalshi", "singlePlatformMode": True},
+        )
+        assert isinstance(result, UserPreferences)
+        assert result.single_platform_mode is True
+        client.close()
+
+    def test_update_my_preferences_omits_none_fields(self):
+        from unittest.mock import MagicMock
+        client = PolyforgeClient(api_key="test-key")
+        client._patch = MagicMock(return_value={})
+        client.update_my_preferences(default_venue="polymarket")
+        call_kwargs = client._patch.call_args
+        assert call_kwargs[1]["json"] == {"defaultVenue": "polymarket"}
+        assert "enabledVenues" not in call_kwargs[1]["json"]
+        assert "singlePlatformMode" not in call_kwargs[1]["json"]
+        client.close()
+
 
 class TestUserManagementModels:
     """Tests for new user management models."""
@@ -5654,6 +5703,28 @@ class TestUserManagementModels:
         assert v.default_venue == ""
         assert v.enabled_venues == []
         assert v.single_platform_mode is False
+
+    def test_user_preferences_defaults(self):
+        from polyforge.models import UserPreferences
+        u = UserPreferences()
+        assert u.default_venue == ""
+        assert u.enabled_venues == []
+        assert u.single_platform_mode is False
+
+    def test_update_user_preferences_params_defaults(self):
+        from polyforge.models import UpdateUserPreferencesParams
+        p = UpdateUserPreferencesParams()
+        assert p.default_venue is None
+        assert p.enabled_venues is None
+        assert p.single_platform_mode is None
+
+    def test_user_preferences_aliases_venue_preferences(self):
+        from polyforge.models import UserPreferences, VenuePreferences
+        u = UserPreferences(default_venue="pm", enabled_venues=["pm"], single_platform_mode=True)
+        v = VenuePreferences(default_venue="pm", enabled_venues=["pm"], single_platform_mode=True)
+        assert u.default_venue == v.default_venue
+        assert u.enabled_venues == v.enabled_venues
+        assert u.single_platform_mode == v.single_platform_mode
 
     def test_support_ticket_defaults(self):
         from polyforge.models import SupportTicket

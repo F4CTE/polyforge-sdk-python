@@ -1449,6 +1449,38 @@ class VenuePreferences:
 
 
 # ---------------------------------------------------------------------------
+# User Preferences (cross-SDK compat — POLA-4239)
+# ---------------------------------------------------------------------------
+
+
+@dataclass
+class UserPreferences:
+    """The authenticated user's venue/platform preferences.
+
+    Cross-SDK alias for ``VenuePreferences`` matching the TypeScript
+    ``UserPreferences`` and Rust ``UserPreferences`` type names.
+    """
+
+    default_venue: str = ""
+    enabled_venues: list[str] = field(default_factory=list)
+    single_platform_mode: bool = False
+
+
+@dataclass
+class UpdateUserPreferencesParams:
+    """Parameters for updating venue/platform preferences.
+
+    Only supplied fields are changed (JSON Merge Patch semantics).
+    Cross-SDK compatibility type matching the TypeScript
+    ``UpdateUserPreferencesParams`` and the Rust equivalent.
+    """
+
+    default_venue: str | None = None
+    enabled_venues: list[str] | None = None
+    single_platform_mode: bool | None = None
+
+
+# ---------------------------------------------------------------------------
 # Support Tickets
 # ---------------------------------------------------------------------------
 
