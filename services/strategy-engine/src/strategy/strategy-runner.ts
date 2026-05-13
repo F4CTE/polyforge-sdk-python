@@ -76,6 +76,11 @@ export class StrategyRunner {
   /** Delayed follow-up timeout for TICK/HYBRID modes — cleared on stop() */
   private followUpTimer: NodeJS.Timeout | null = null;
 
+  /** Set true by the lock-refresh handler when ownership is lost mid-tick.
+   *  evaluate() checks this before emitting order intents to prevent
+   *  duplicate orders if another instance re-acquires the lock. */
+  private tickOwnershipLost = false;
+
   /** Tracks child strategy IDs launched by RUN_STRATEGY action blocks */
   readonly childStrategies: Set<string> = new Set();
   /** Maps child strategy IDs to their sub-strategy mode */
@@ -271,6 +276,7 @@ export class StrategyRunner {
     }
 
     this.tickInFlight = true;
+    this.tickOwnershipLost = false;
     let lockAcquired = false;
     let lockRefresh: NodeJS.Timeout | null = null;
     const lockToken = randomUUID();
@@ -308,10 +314,11 @@ export class StrategyRunner {
             lockToken,
             "10",
           )
-          .then((result) => {
+          .then((result: number) => {
             if (result !== 1 && lockRefresh) {
               clearInterval(lockRefresh);
               lockRefresh = null;
+              this.tickOwnershipLost = true;
             }
           })
           .catch(() => {
@@ -712,6 +719,19 @@ export class StrategyRunner {
       (i) =>
         i.marketId !== "__run_strategy__" && i.tokenId !== "__cancel_all__",
     );
+
+    // Abort tick if lock ownership was lost mid-evaluation.
+    // The lock-refresh handler (setInterval in tick()) sets tickOwnershipLost
+    // when the Lua GET==lockToken check returns non-1 — meaning the key
+    // expired or was re-acquired by another instance. Continuing through
+    // evaluate() after ownership loss can emit duplicate order intents and
+    // launch duplicate sub-strategies across instances.
+    if (this.tickOwnershipLost) {
+      this.logger.warn(
+        `Tick ownership lost for ${this.strategyId} — discarding ${orderIntents.length} order intent(s) and ${runStrategyIntents.length} sub-strategy launch(es)`,
+      );
+      return;
+    }
 
     // Handle sub-strategy launches
     for (const intent of runStrategyIntents) {
