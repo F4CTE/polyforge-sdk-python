@@ -10,7 +10,8 @@ available on both `PolyforgeClient` and `AsyncPolyforgeClient`:
 
 - `get_accuracy_overview()` → `AccuracyScore` (root `GET /accuracy`, companion to `get_accuracy()` which targets `/accuracy/me`)
 - `get_feed(*, page, limit, min_size, market_id, wallet_address, side)` → `PaginatedResponse[dict[str, Any]]` — global whale-activity feed
-- `list_journal(*, page, limit, mood)` → `PaginatedResponse[dict[str, Any]]` — order-journal entries with optional mood filter
+- `list_journal(*, page, limit, mood)` → `PaginatedResponse[JournalEntry]` — order-journal entries with optional mood filter
+- `JournalEntry` dataclass — typed journal-row model with `id`, `market_id`, `mood`, `note`, `side`, `outcome`, `price`, `size`, `status`, `created_at`
 - `list_notifications(*, page, limit)` → `PaginatedResponse[dict[str, Any]]` — delivered notifications (distinct from notification *settings*)
 - `get_my_referrals()` → `MyReferralsResponse` — referral code, link, stats
 - `preview_fees(*, token_id, side, size, price, order_type)` → `OrderPreviewResponse` — cross-venue fee comparison
@@ -80,6 +81,36 @@ audit, available on both `PolyforgeClient` and `AsyncPolyforgeClient`:
 All three already existed in the TypeScript SDK; this brings the Python SDK
 into parity.
 
+**Health and match-sync (POLA-3677, POLA-3323)** — two new methods closing gaps
+surfaced by the weekly cross-SDK compatibility audit, available on both
+`PolyforgeClient` and `AsyncPolyforgeClient`:
+
+- `get_health_authenticated()` → `SystemHealthAuthenticated` —
+  `GET /api/v1/status`. Returns authenticated health/status data with
+  operational metrics (database, Redis, queue depth, service health) not
+  exposed on the public `/health` endpoint. Matches `getHealthAuthenticated`
+  in sdk-ts.
+- `sync_market_matches()` → `MatchSyncResult` —
+  `POST /api/v1/arbitrage/matches/sync`. Triggers a manual cross-venue
+  matching pass. Matches `syncMarketMatches` in sdk-ts and
+  `sync_arbitrage_matches` in sdk-rust.
+
+New typed model: `SystemHealthAuthenticated` (`status`, `service`, `version`,
+`uptime`, `db`, `redis`, `queue_depth`, `services`). `MatchSyncResult` now
+includes optional `created`/`updated` fields matching the TS/Rust SDKs.
+
+**GDPR personal data export (POLA-3611)** — one method closing a compliance gap
+surfaced by the weekly cross-SDK compatibility audit, available on both
+`PolyforgeClient` and `AsyncPolyforgeClient`:
+
+- `export_personal_data(format="json")` → `PersonalDataExport` | `str` —
+  `GET /api/v1/me/export`. Supports `"json"` (default, returns typed model)
+  and `"csv"` (returns raw text). The `PersonalDataExport` model includes
+  sections for account, settings, security, trading, communications, and
+  social data with webhook URLs redacted to hostname only.
+
+New typed models: `PersonalDataExportMeta`, `PersonalDataExport`.
+
 ### Added — Cross-Venue Arb Execute / Positions / Risk (POLA-1851)
 
 > ⚠️ **Trading-impact severity: HIGH.** `execute_arb` and `close_arb_position`
@@ -126,7 +157,42 @@ preserved.
 
 All four public-profile lookups raise `NotFoundError` when the username is unknown. The `username` path segment is URL-encoded via the existing `_encode_path` helper.
 
+**sync_market_matches() and get_health_authenticated() (POLA-3678)** — two
+new methods closing cross-SDK compatibility gaps, available on both
+`PolyforgeClient` and `AsyncPolyforgeClient`:
+
+- `sync_market_matches()` → `MatchSyncResult` — `POST /api/v1/arbitrage/matches/sync`.
+  Triggers a manual cross-venue matching pass. Mirrors `syncMarketMatches()` in
+  the TypeScript SDK and `sync_arbitrage_matches()` in the Rust SDK.
+- `get_health_authenticated()` → `SystemHealthAuthenticated` — `GET /api/v1/status`.
+  Returns database, Redis, queue, and internal service health metrics that are
+  not exposed on the public `/health` endpoint.
+
+New dataclass: `SystemHealthAuthenticated` (re-exported from `polyforge`).
+
 ### Changed
+
+**Arb close-sweep semantics documented (POLA-1957)** — updated docstrings across
+``ArbCloseResponse``, ``close_arb_position()``, ``execute_arb()``,
+``get_arb_position()``, and ``list_arb_positions()`` to match the hardened
+backend contract:
+
+- ``ArbCloseResponse.status`` is now documented as **non-terminal** — ``CLOSING``
+  means orders were accepted but completion is asynchronous. Callers must poll
+  ``get_arb_position()`` to confirm the final ``CLOSED`` or ``FAILED`` status.
+- ``execute_arb()`` docstring now documents the required ``idempotency_key``
+  header (8–128 characters, at-most-once semantics), UUID validation on
+  ``match_id``, the 5 req/min rate limit, and the full sweep-close lifecycle
+  (``OPEN`` → ``CLOSING`` → ``CLOSED`` / ``FAILED``) via
+  ``close_arb_position()``.
+- ``close_arb_position()`` docstring now documents the non-terminal ``CLOSING``
+  response, required ``idempotency_key``, 5 req/min rate limit, and required
+  polling pattern.
+- ``list_arb_positions()`` docstring now documents the full position lifecycle.
+- ``get_arb_position()`` docstring now references its use as the polling
+  endpoint after a sweep-close.
+- **README** arbitrage table updated with sweep-close semantics, required
+  idempotency-key, and async polling guidance.
 
 **Cross-SDK naming normalization (POLA-1913)** — renamed feed, referral, and
 public-profile badge surfaces to match the MCP and Rust SDK naming:

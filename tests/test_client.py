@@ -30,19 +30,18 @@ from polyforge.models import (
     Alert,
     ConditionalOrder,
     CopyConfig,
+    KNOWN_STRATEGY_EVENTS,
+    JournalEntry,
     Market,
     MatchSyncResult,
     SystemHealthAuthenticated,
     Token,
     MarketplaceListing,
-    MarketplaceSeller,
-    MarketplaceStrategy,
     Order,
     OrderBook,
     OrderBookLevel,
     OrderStatus,
     PaginatedResponse,
-    PlaceOrderResponse,
     Portfolio,
     PortfolioPnl,
     Position,
@@ -54,6 +53,8 @@ from polyforge.models import (
     MyReferralsResponse,
     RewardMarket,
     Strategy,
+    StrategyEvent,
+    StrategyEventType,
     StrategyExecMode,
     StrategyVisibility,
     TraderScore,
@@ -372,6 +373,51 @@ class TestModelParsing:
         market = _parse(Market, api_response)
         assert market.title == "Will BTC reach $100K by June?"
         assert market.id == "0xabc"
+
+    def test_market_parses_description_enddate_resolved_from_api_response(self):
+        """_parse must map description, endDate, resolved from platform JSON (#227)."""
+        api_response = {
+            "id": "mkt-001",
+            "title": "Will ETH flip BTC?",
+            "category": "Crypto",
+            "price": 0.42,
+            "description": "Market predicts whether Ethereum flips Bitcoin in market cap",
+            "endDate": "2026-12-31T23:59:59Z",
+            "resolved": False,
+        }
+        market = _parse(Market, api_response)
+        assert market.description == "Market predicts whether Ethereum flips Bitcoin in market cap"
+        assert market.end_date == "2026-12-31T23:59:59Z"
+        assert market.resolved is False
+
+    def test_market_parses_resolved_true_from_api_response(self):
+        """resolved=true from the platform must be parsed as True."""
+        api_response = {
+            "id": "mkt-resolved",
+            "title": "Resolved market",
+            "category": "Politics",
+            "resolved": True,
+        }
+        market = _parse(Market, api_response)
+        assert market.resolved is True
+
+    def test_market_handles_null_enddate(self):
+        """endDate=null (perpetual/ongoing markets) must map to end_date=None."""
+        api_response = {
+            "id": "mkt-perpetual",
+            "title": "Perpetual market",
+            "category": "Crypto",
+            "endDate": None,
+        }
+        market = _parse(Market, api_response)
+        assert market.end_date is None
+
+    def test_market_defaults_for_new_fields(self):
+        """Market() should default description=None, end_date=None, resolved=False."""
+        market = Market()
+        assert market.description is None
+        assert market.end_date is None
+        assert market.resolved is False
 
     def test_strategy_model_instantiation(self):
         """Should instantiate Strategy model."""
@@ -738,6 +784,80 @@ class TestPlatformContractCompliance:
         assert not hasattr(WebhookEvent, "STRATEGY_STOPPED"), "STRATEGY_STOPPED is a phantom event"
         assert not hasattr(WebhookEvent, "BACKTEST_FAILED"), "BACKTEST_FAILED is a phantom event"
         assert not hasattr(WebhookEvent, "BACKTEST_COMPLETED"), "BACKTEST_COMPLETED is phantom (correct name is BACKTEST_COMPLETE)"
+
+    def test_known_strategy_events_contains_all_documented_types(self):
+        """KNOWN_STRATEGY_EVENTS must contain all 16 documented strategy event types (#229)."""
+        expected = {
+            "CONNECTED",
+            "STRATEGY_STARTED",
+            "STRATEGY_STOPPED",
+            "STRATEGY_PAUSED",
+            "STRATEGY_RESUMED",
+            "STRATEGY_ERROR",
+            "ORDER_PLACED",
+            "ORDER_SUBMITTED",
+            "ORDER_FILLED",
+            "ORDER_PARTIAL",
+            "ORDER_CANCELLED",
+            "ORDER_FAILED",
+            "ORDER_ERROR",
+            "BACKTEST_PROGRESS",
+            "BACKTEST_COMPLETED",
+            "BACKTEST_FAILED",
+        }
+        assert KNOWN_STRATEGY_EVENTS == expected, (
+            f"KNOWN_STRATEGY_EVENTS missing: {expected - KNOWN_STRATEGY_EVENTS}, "
+            f"extra: {KNOWN_STRATEGY_EVENTS - expected}"
+        )
+
+    def test_strategy_event_type_is_literal(self):
+        """StrategyEventType must be a Literal type alias for type-checking (#229)."""
+        from typing import get_args, get_origin, Literal as Lit
+
+        origin = get_origin(StrategyEventType)
+        assert origin is Lit, f"StrategyEventType origin is {origin}, expected Literal"
+
+        args = set(get_args(StrategyEventType))
+        expected = {
+            "CONNECTED",
+            "STRATEGY_STARTED",
+            "STRATEGY_STOPPED",
+            "STRATEGY_PAUSED",
+            "STRATEGY_RESUMED",
+            "STRATEGY_ERROR",
+            "ORDER_PLACED",
+            "ORDER_SUBMITTED",
+            "ORDER_FILLED",
+            "ORDER_PARTIAL",
+            "ORDER_CANCELLED",
+            "ORDER_FAILED",
+            "ORDER_ERROR",
+            "BACKTEST_PROGRESS",
+            "BACKTEST_COMPLETED",
+            "BACKTEST_FAILED",
+        }
+        assert args == expected, (
+            f"StrategyEventType args missing: {expected - args}, "
+            f"extra: {args - expected}"
+        )
+
+    def test_strategy_event_importable(self):
+        """StrategyEvent dataclass must be importable with correct field types (#229)."""
+        from dataclasses import fields
+
+        event = StrategyEvent(
+            type="STRATEGY_STARTED",
+            strategy_id="strat-123",
+            data={"key": "value"},
+            timestamp=1715000000000,
+        )
+        assert event.type == "STRATEGY_STARTED"
+        assert event.strategy_id == "strat-123"
+        assert event.data == {"key": "value"}
+        assert event.timestamp == 1715000000000
+
+        field_names = {f.name for f in fields(StrategyEvent)}
+        assert field_names == {"type", "strategy_id", "data", "timestamp"}
 
     def test_ai_query_body_uses_query_field(self):
         """ai_query() must send { query } not { question } (#89)."""
@@ -4685,14 +4805,33 @@ class TestCrossVenueArbitrage:
     def test_sync_sync_market_matches(self):
         from unittest.mock import MagicMock
         client = PolyforgeClient(api_key="test-key")
-        client._post = MagicMock(return_value={"matched": 12})
+        client._post = MagicMock(return_value={"matched": 12, "created": 3, "updated": 5})
         result = client.sync_market_matches()
         assert isinstance(result, MatchSyncResult)
         assert result.matched == 12
+        assert result.created == 3
+        assert result.updated == 5
         client._post.assert_called_once_with(
             "/api/v1/arbitrage/matches/sync",
         )
         client.close()
+
+    def test_async_sync_market_matches(self):
+        import asyncio
+        from unittest.mock import AsyncMock
+
+        async def _run():
+            client = AsyncPolyforgeClient(api_key="test-key")
+            client._post = AsyncMock(return_value={"matched": 8, "created": 2, "updated": 1})
+            result = await client.sync_market_matches()
+            assert isinstance(result, MatchSyncResult)
+            assert result.matched == 8
+            assert result.created == 2
+            assert result.updated == 1
+            client._post.assert_called_once_with("/api/v1/arbitrage/matches/sync")
+            await client.close()
+
+        asyncio.run(_run())
 
     def test_sync_get_spread_comparison(self):
         from unittest.mock import MagicMock
@@ -4828,6 +4967,60 @@ class TestCrossVenueArbitrage:
             assert hasattr(AsyncPolyforgeClient, method_name), f"AsyncPolyforgeClient missing {method_name}"
             source = inspect.getsource(getattr(AsyncPolyforgeClient, method_name))
             assert "await" in source, f"async {method_name} not using await"
+
+class TestHealthEndpoint:
+    """Tests for the authenticated health-check endpoint."""
+
+    def test_sync_get_health_authenticated(self):
+        from unittest.mock import MagicMock
+        client = PolyforgeClient(api_key="test-key")
+        client._get = MagicMock(return_value={
+            "status": "operational",
+            "service": "api-service",
+            "version": "2.0.0",
+            "uptime": 3600.0,
+            "db": {"connections": 5, "status": "ok"},
+            "redis": {"memoryUsageMb": 128, "status": "ok"},
+            "queueDepth": 0,
+        })
+        result = client.get_health_authenticated()
+        assert isinstance(result, SystemHealthAuthenticated)
+        assert result.status == "operational"
+        assert result.service == "api-service"
+        assert result.queue_depth == 0
+        assert result.db == {"connections": 5, "status": "ok"}
+        client._get.assert_called_once_with("/api/v1/status")
+        client.close()
+
+    def test_async_get_health_authenticated(self):
+        import asyncio
+        from unittest.mock import AsyncMock
+
+        async def _run():
+            client = AsyncPolyforgeClient(api_key="test-key")
+            client._get = AsyncMock(return_value={
+                "status": "operational",
+                "service": "api-service",
+                "version": "2.0.0",
+                "uptime": 3600.0,
+                "db": {"connections": 5, "status": "ok"},
+                "redis": {"memoryUsageMb": 128, "status": "ok"},
+                "queueDepth": 0,
+            })
+            result = await client.get_health_authenticated()
+            assert isinstance(result, SystemHealthAuthenticated)
+            assert result.status == "operational"
+            assert result.queue_depth == 0
+            client._get.assert_called_once_with("/api/v1/status")
+            await client.close()
+
+        asyncio.run(_run())
+
+    def test_new_models_exported_from_package_root(self):
+        from polyforge import SystemHealthAuthenticated as SHA, MatchSyncResult as MSR  # noqa: F811
+        assert SHA is SystemHealthAuthenticated
+        assert MSR is MatchSyncResult
+
 
 
 class TestHealthEndpoint:
@@ -5250,6 +5443,7 @@ class TestSettingsMethods:
         "update_settings_password",
         "get_beta_usage",
         "get_gas_settings",
+        "export_personal_data",
     ]
 
     @pytest.mark.parametrize("method", SETTINGS_METHODS)
@@ -5271,6 +5465,7 @@ class TestSettingsMethods:
             "update_settings_password": "/api/v1/settings/password",
             "get_beta_usage": "/api/v1/settings/beta-usage",
             "get_gas_settings": "/api/v1/settings/gas",
+            "export_personal_data": "/api/v1/me/export",
         }
         for method_name, expected_path in path_map.items():
             source = inspect.getsource(getattr(PolyforgeClient, method_name))
@@ -5285,6 +5480,7 @@ class TestSettingsMethods:
             "update_settings_password": "/api/v1/settings/password",
             "get_beta_usage": "/api/v1/settings/beta-usage",
             "get_gas_settings": "/api/v1/settings/gas",
+            "export_personal_data": "/api/v1/me/export",
         }
         for method_name, expected_path in path_map.items():
             source = inspect.getsource(getattr(AsyncPolyforgeClient, method_name))
@@ -5360,6 +5556,106 @@ class TestSettingsMethods:
         client._get.assert_called_once_with("/api/v1/settings/gas")
         assert result["gasLevel"] == "standard"
         client.close()
+
+    def test_sync_export_personal_data_json(self):
+        from unittest.mock import MagicMock
+        from polyforge.models import PersonalDataExport
+        client = PolyforgeClient(api_key="test-key")
+        client._get = MagicMock(return_value={
+            "generatedAt": "2026-05-11T00:00:00Z",
+            "formatVersion": "2026-05-privacy-export-v1",
+            "_meta": {"maxRecordsPerCollection": 1000, "collectionsTruncated": {}},
+            "account": {"username": "testuser"},
+            "settings": {},
+            "security": {},
+            "trading": {},
+            "communications": {},
+            "social": {},
+        })
+        result = client.export_personal_data()
+        client._get.assert_called_once_with("/api/v1/me/export")
+        assert isinstance(result, PersonalDataExport)
+        assert result.generated_at == "2026-05-11T00:00:00Z"
+        assert result.account == {"username": "testuser"}
+        assert result.meta is not None
+        assert result.meta.max_records_per_collection == 1000
+        client.close()
+
+    def test_sync_export_personal_data_csv(self):
+        from unittest.mock import MagicMock
+        client = PolyforgeClient(api_key="test-key")
+        client._get_text = MagicMock(return_value="section,index,data_json\n...")
+        result = client.export_personal_data(format="csv")
+        client._get_text.assert_called_once_with(
+            "/api/v1/me/export", params={"format": "csv"}
+        )
+        assert isinstance(result, str)
+        client.close()
+
+    def test_sync_export_personal_data_invalid_format(self):
+        import pytest
+        client = PolyforgeClient(api_key="test-key")
+        with pytest.raises(ValueError, match="format must be 'json' or 'csv'"):
+            client.export_personal_data(format="cvs")
+        client.close()
+
+    def test_async_export_personal_data_json(self):
+        import asyncio
+        from unittest.mock import AsyncMock
+        from polyforge.models import PersonalDataExport
+
+        async def _run():
+            client = AsyncPolyforgeClient(api_key="test-key")
+            client._get = AsyncMock(return_value={
+                "generatedAt": "2026-05-11T00:00:00Z",
+                "formatVersion": "v1",
+                "_meta": {"maxRecordsPerCollection": 1000, "collectionsTruncated": {}},
+                "account": {"username": "asyncuser"},
+                "settings": {},
+                "security": {},
+                "trading": {},
+                "communications": {},
+                "social": {},
+            })
+            result = await client.export_personal_data()
+            client._get.assert_called_once_with("/api/v1/me/export")
+            assert isinstance(result, PersonalDataExport)
+            assert result.generated_at == "2026-05-11T00:00:00Z"
+            assert result.account == {"username": "asyncuser"}
+            assert result.meta is not None
+            assert result.meta.max_records_per_collection == 1000
+            await client.close()
+
+        asyncio.run(_run())
+
+    def test_async_export_personal_data_csv(self):
+        import asyncio
+        from unittest.mock import AsyncMock
+
+        async def _run():
+            client = AsyncPolyforgeClient(api_key="test-key")
+            client._get_text = AsyncMock(return_value="section,index,data_json\naccount,0,...")
+            result = await client.export_personal_data(format="csv")
+            client._get_text.assert_called_once_with(
+                "/api/v1/me/export", params={"format": "csv"}
+            )
+            assert isinstance(result, str)
+            assert result.startswith("section,")
+            await client.close()
+
+        asyncio.run(_run())
+
+    def test_async_export_personal_data_invalid_format(self):
+        import asyncio
+        import pytest
+
+        async def _run():
+            client = AsyncPolyforgeClient(api_key="test-key")
+            with pytest.raises(ValueError, match="format must be 'json' or 'csv'"):
+                await client.export_personal_data(format="cvs")
+            await client.close()
+
+        asyncio.run(_run())
 
 
 class TestTicketMethods:
@@ -5514,7 +5810,7 @@ class TestNotificationPreferenceMethods:
 
     def test_sync_get_notification_preferences(self):
         from unittest.mock import MagicMock
-        from polyforge.models import EventNotificationPreferences, EventNotificationPref
+        from polyforge.models import EventNotificationPreferences
         client = PolyforgeClient(api_key="test-key")
         client._get = MagicMock(return_value={
             "preferences": [
@@ -6747,7 +7043,9 @@ class TestMiscUtilityEndpointRoundtrips:
             res = client.list_journal(mood="CONFIDENT")
             qp = dict(captured["url"].params)
             assert qp["mood"] == "CONFIDENT"
-            assert res.data[0]["mood"] == "CONFIDENT"
+            assert isinstance(res.data[0], JournalEntry)
+            assert res.data[0].mood == "CONFIDENT"
+            assert res.data[0].id == "ord-1"
         finally:
             client.close()
 
@@ -7163,6 +7461,29 @@ class TestMiscUtilityEndpointsAsync:
             ("GET", "/api/v1/fees/schedules"),
             ("POST", "/api/v1/markets/combo/lookup"),
         ]
+
+    def test_async_list_journal_roundtrip_typed(self):
+        import asyncio
+
+        async def _run():
+            client = self._async_client_with(
+                lambda req: httpx.Response(200, json={
+                    "data": [{"id": "ord-1", "mood": "DISCIPLINED", "note": "plan"}],
+                    "total": 1, "page": 1, "limit": 20,
+                    "totalPages": 1, "hasNext": False,
+                })
+            )
+            try:
+                res = await client.list_journal(mood="DISCIPLINED")
+                assert res.total == 1
+                assert isinstance(res.data[0], JournalEntry)
+                assert res.data[0].mood == "DISCIPLINED"
+                assert res.data[0].id == "ord-1"
+                assert res.data[0].note == "plan"
+            finally:
+                await client.close()
+
+        asyncio.run(_run())
 
 # Cross-Venue Arb Execution / Positions / Risk (POLA-1851)
 # ---------------------------------------------------------------------------
