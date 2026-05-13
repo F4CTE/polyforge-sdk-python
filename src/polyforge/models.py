@@ -1580,6 +1580,9 @@ class VenuePreferences:
     single_platform_mode: bool = False
 
 
+UserPreferences = VenuePreferences
+
+
 # ---------------------------------------------------------------------------
 # Support Tickets
 # ---------------------------------------------------------------------------
