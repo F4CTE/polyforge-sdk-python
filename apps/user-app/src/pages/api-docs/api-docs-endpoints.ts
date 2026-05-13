@@ -346,7 +346,7 @@ export const BACKTESTS: EndpointDef[] = [
     summary: 'Run a backtest',
     description: 'Starts a historical replay of a strategy. Results stream back over WebSocket as BACKTEST_PROGRESS events.',
     requestFields: [
-      { name: 'strategyId', type: 'string', required: true,  description: 'Strategy to backtest' },
+      { name: 'strategyId', type: 'string', required: false, description: 'Strategy to backtest (optional; if omitted, uses strategy blocks from the request)' },
       { name: 'from',       type: 'ISO8601', required: true,  description: 'Backtest start date' },
       { name: 'to',         type: 'ISO8601', required: false, description: 'Backtest end date (default: now)' },
     ],
