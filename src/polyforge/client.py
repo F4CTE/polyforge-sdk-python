@@ -1056,6 +1056,7 @@ class PolyforgeClient:
         tags: list[str] | None = None,
         variables: list[dict[str, Any]] | None = None,
         canvas: dict[str, Any] | None = None,
+        kalshi_subaccount: int | None = None,
     ) -> Strategy:
         """Create a new strategy.
 
@@ -1075,6 +1076,7 @@ class PolyforgeClient:
             tags: Strategy tags.
             variables: Strategy variable definitions.
             canvas: Canvas layout metadata.
+            kalshi_subaccount: Kalshi subaccount integer (0-99) for P&L attribution.
         """
         body: dict[str, Any] = {"name": name}
         if description is not None:
@@ -1105,6 +1107,8 @@ class PolyforgeClient:
             body["variables"] = variables
         if canvas is not None:
             body["canvas"] = canvas
+        if kalshi_subaccount is not None:
+            body["kalshiSubaccount"] = kalshi_subaccount
         return _parse(Strategy, self._post("/api/v1/strategies", json=body))
 
     def create_strategy_from_description(self, description: str, market_id: str | None = None) -> Strategy:
@@ -1149,6 +1153,7 @@ class PolyforgeClient:
         variables: list[dict[str, Any]] | None = None,
         canvas: dict[str, Any] | None = None,
         market_slots: list[dict[str, Any]] | None = None,
+        kalshi_subaccount: int | None = None,
     ) -> Strategy:
         body: dict[str, Any] = {}
         if name is not None:
@@ -1183,6 +1188,8 @@ class PolyforgeClient:
             body["canvas"] = canvas
         if market_slots is not None:
             body["marketSlots"] = market_slots
+        if kalshi_subaccount is not None:
+            body["kalshiSubaccount"] = kalshi_subaccount
         return _parse(Strategy, self._patch(f"/api/v1/strategies/{_encode_path(strategy_id)}", json=body))
 
     def delete_strategy(self, strategy_id: str) -> None:
@@ -4375,6 +4382,7 @@ class AsyncPolyforgeClient:
         tags: list[str] | None = None,
         variables: list[dict[str, Any]] | None = None,
         canvas: dict[str, Any] | None = None,
+        kalshi_subaccount: int | None = None,
     ) -> Strategy:
         """Create a new strategy (async version). See sync ``create_strategy`` for details."""
         body: dict[str, Any] = {"name": name}
@@ -4406,6 +4414,8 @@ class AsyncPolyforgeClient:
             body["variables"] = variables
         if canvas is not None:
             body["canvas"] = canvas
+        if kalshi_subaccount is not None:
+            body["kalshiSubaccount"] = kalshi_subaccount
         return _parse(Strategy, await self._post("/api/v1/strategies", json=body))
 
     async def create_strategy_from_description(self, description: str, market_id: str | None = None) -> Strategy:
@@ -4450,6 +4460,7 @@ class AsyncPolyforgeClient:
         variables: list[dict[str, Any]] | None = None,
         canvas: dict[str, Any] | None = None,
         market_slots: list[dict[str, Any]] | None = None,
+        kalshi_subaccount: int | None = None,
     ) -> Strategy:
         body: dict[str, Any] = {}
         if name is not None:
@@ -4484,6 +4495,8 @@ class AsyncPolyforgeClient:
             body["canvas"] = canvas
         if market_slots is not None:
             body["marketSlots"] = market_slots
+        if kalshi_subaccount is not None:
+            body["kalshiSubaccount"] = kalshi_subaccount
         return _parse(Strategy, await self._patch(f"/api/v1/strategies/{_encode_path(strategy_id)}", json=body))
 
     async def delete_strategy(self, strategy_id: str) -> None:
