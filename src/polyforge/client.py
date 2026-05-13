@@ -805,8 +805,8 @@ class PolyforgeClient:
         # environment, then strip credentials. Using trust_env=False on a
         # fresh client would suppress proxy/CA config alongside NetRCAuth.
         req = self._client.build_request("GET", path)
-        del req.headers["authorization"]
-        resp = self._client.send(req)
+        req.headers.pop("authorization", None)
+        resp = self._client.send(req, auth=None)
         _raise_for_status(resp)
         return resp.json()
 
@@ -4232,8 +4232,8 @@ class AsyncPolyforgeClient:
         # environment, then strip credentials. Using trust_env=False on a
         # fresh client would suppress proxy/CA config alongside NetRCAuth.
         req = self._client.build_request("GET", path)
-        del req.headers["authorization"]
-        resp = await self._client.send(req)
+        req.headers.pop("authorization", None)
+        resp = await self._client.send(req, auth=None)
         _raise_for_status(resp)
         return resp.json()
 
