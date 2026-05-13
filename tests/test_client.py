@@ -5188,8 +5188,8 @@ class TestPublicHealthEndpoint:
         """_get_no_auth must reuse self._client so proxy/CA env is preserved.
 
         Using build_request() on the existing client inherits proxy and CA
-        settings. The Authorization header is set to empty to block auth
-        without discarding the rest of the env configuration.
+        settings. The Authorization header is deleted so no auth header
+        is sent without discarding the rest of the env configuration.
         """
         client = PolyforgeClient(api_key="test-key")
         original_send = client._client.send
@@ -5209,9 +5209,9 @@ class TestPublicHealthEndpoint:
             assert result == {"status": "ok"}
             assert captured_req["method"] == "GET"
             assert captured_req["url"].endswith("/health")
-            auth_val = captured_req.get("headers", {}).get("authorization", "missing")
-            assert auth_val == "", \
-                f"Expected empty Authorization, got {auth_val!r}"
+            headers_lower = {k.lower(): v for k, v in captured_req.get("headers", {}).items()}
+            assert "authorization" not in headers_lower, \
+                f"Authorization header must be absent, got {captured_req['headers']!r}"
         finally:
             client._client.send = original_send
             client.close()
@@ -5232,9 +5232,8 @@ class TestPublicHealthEndpoint:
         client._client.send = _fake_send
         try:
             client._get_no_auth("/health")
-            auth_val = stripped_headers.get("authorization", "")
-            assert auth_val == "", \
-                f"Expected empty Authorization, got {auth_val!r}"
+            assert "authorization" not in stripped_headers, \
+                f"Authorization header must be absent, got headers={stripped_headers!r}"
         finally:
             client._client.send = original_send
             client.close()
