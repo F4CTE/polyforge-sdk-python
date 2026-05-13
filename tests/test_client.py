@@ -6001,6 +6001,29 @@ class TestTradingCopyNumericValidation:
         assert client._patch.call_args.kwargs["json"]["priceOffset"] == -0.5
         client.close()
 
+    def test_update_copy_config_rejects_unknown_kwargs(self):
+        client = PolyforgeClient(api_key="test")
+        with pytest.raises(ValueError, match="Unknown copy config field"):
+            client.update_copy_config("copy-1", unknownField="value")
+        client.close()
+
+    def test_update_copy_config_rejects_mixed_known_and_unknown(self):
+        client = PolyforgeClient(api_key="test")
+        with pytest.raises(ValueError, match="Unknown copy config field"):
+            client.update_copy_config("copy-1", mode="FIXED", badKey=123)
+        client.close()
+
+    def test_async_update_copy_config_rejects_unknown_kwargs(self):
+        import asyncio
+
+        async def _run():
+            client = AsyncPolyforgeClient(api_key="test")
+            with pytest.raises(ValueError, match="Unknown copy config field"):
+                await client.update_copy_config("copy-1", foo="bar")
+            await client.close()
+
+        asyncio.run(_run())
+
     def test_async_batch_orders_rejects_infinite_order_price(self):
         import asyncio
 

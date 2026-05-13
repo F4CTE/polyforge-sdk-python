@@ -560,6 +560,25 @@ def _validate_batch_order(order: dict[str, Any]) -> None:
         _validate_positive_numberish_param("price", order["price"])
 
 
+_COPY_CONFIG_UPDATE_FIELDS: frozenset[str] = frozenset({
+    "mode",
+    "sizeValue",
+    "maxExposure",
+    "maxDailyLoss",
+    "priceOffset",
+})
+
+
+def _validate_copy_config_update_fields(kwargs: dict[str, Any]) -> None:
+    unknown = set(kwargs) - _COPY_CONFIG_UPDATE_FIELDS
+    if unknown:
+        names = ", ".join(sorted(unknown))
+        raise ValueError(
+            f"Unknown copy config field(s): {names}. "
+            f"Allowed fields are: {', '.join(sorted(_COPY_CONFIG_UPDATE_FIELDS))}."
+        )
+
+
 def _validate_copy_config_numeric_fields(fields: dict[str, Any]) -> None:
     for name in ("sizeValue", "maxExposure", "maxDailyLoss"):
         if name in fields and fields[name] is not None:
@@ -2764,6 +2783,7 @@ class PolyforgeClient:
         Returns:
             The updated :class:`CopyConfig`.
         """
+        _validate_copy_config_update_fields(kwargs)
         _validate_copy_config_numeric_fields(kwargs)
         return _parse(
             CopyConfig,
@@ -5860,6 +5880,7 @@ class AsyncPolyforgeClient:
 
     async def update_copy_config(self, copy_id: str, **kwargs: Any) -> CopyConfig:
         """Update an existing copy-trading configuration."""
+        _validate_copy_config_update_fields(kwargs)
         _validate_copy_config_numeric_fields(kwargs)
         return _parse(
             CopyConfig,
