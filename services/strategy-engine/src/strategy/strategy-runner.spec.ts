@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { StrategyRunner } from "./strategy-runner";
 import type { OrderIntent } from "../blocks/block.types";
 
@@ -1596,9 +1596,11 @@ describe("StrategyRunner — concurrent tick serialization", () => {
   it("does not release Redis lock when SET NX fails (another instance owns the lock)", async () => {
     const client = {
       lrange: vi.fn().mockResolvedValue([]),
-      mget: vi.fn().mockResolvedValue([
-        JSON.stringify({ price: 0.5, timestamp: Date.now() }),
-      ]),
+      mget: vi
+        .fn()
+        .mockResolvedValue([
+          JSON.stringify({ price: 0.5, timestamp: Date.now() }),
+        ]),
       incr: vi.fn().mockResolvedValue(1),
       expire: vi.fn().mockResolvedValue(1),
       set: vi.fn().mockResolvedValue(null), // SET NX fails — lock held by another instance
@@ -1630,9 +1632,11 @@ describe("StrategyRunner — concurrent tick serialization", () => {
   it("uses per-instance owner token in atomic Lua compare-and-delete", async () => {
     const client = {
       lrange: vi.fn().mockResolvedValue([]),
-      mget: vi.fn().mockResolvedValue([
-        JSON.stringify({ price: 0.5, timestamp: Date.now() }),
-      ]),
+      mget: vi
+        .fn()
+        .mockResolvedValue([
+          JSON.stringify({ price: 0.5, timestamp: Date.now() }),
+        ]),
       incr: vi.fn().mockResolvedValue(1),
       expire: vi.fn().mockResolvedValue(1),
       set: vi.fn().mockResolvedValue("OK"),
