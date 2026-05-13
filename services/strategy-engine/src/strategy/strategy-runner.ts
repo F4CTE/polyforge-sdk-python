@@ -70,8 +70,6 @@ export class StrategyRunner {
   private staleCheckBackoffMs = STALE_PRICE_MS;
   private tickInFlight = false;
   private pendingTick = false;
-  /** Per-instance owner token for Redis lock compare-and-delete safety */
-  private readonly instanceId = randomUUID();
   /** True when a follow-up tick is scheduled — bypasses the min-tick throttle */
   private scheduledFollowUp = false;
 
@@ -266,21 +264,32 @@ export class StrategyRunner {
 
     this.tickInFlight = true;
     let lockAcquired = false;
+    let lockRefresh: NodeJS.Timeout | null = null;
+    const lockToken = randomUUID();
     try {
       // Distributed lock: prevent concurrent evaluation across multiple
       // strategy-engine instances via Redis SET NX with a 10s TTL.
-      // The owner token (instanceId) allows safe compare-and-delete release.
+      // A per-acquisition token (lockToken) prevents stale unlocks: if a
+      // tick overruns the TTL and a subsequent tick reacquires the lock,
+      // the older tick's finally block can no longer match and delete it.
       const redisClient = this.redis.getClient();
       const lockKey = `lock:tick:${this.strategyId}`;
       const acquired = await redisClient.set(
         lockKey,
-        this.instanceId,
+        lockToken,
         "EX",
         10,
         "NX",
       );
       if (!acquired) return;
       lockAcquired = true;
+
+      // Periodically refresh the lock TTL during long-running evaluations.
+      // Without this, a tick that exceeds 10s would lose the lock mid-flight
+      // and another instance could acquire it, causing concurrent evaluation.
+      lockRefresh = setInterval(() => {
+        redisClient.expire(lockKey, 10).catch(() => {});
+      }, 5_000);
 
       // Enforce daily execution limit — auto-stop if exceeded
       const key = dailyExecKey(this.strategyId);
@@ -317,20 +326,32 @@ export class StrategyRunner {
         );
       }
     } finally {
+      // Stop the lock-refresh interval.
+      if (lockRefresh) clearInterval(lockRefresh);
+
       // Release the distributed lock only if this instance acquired it.
       // Uses atomic compare-and-delete (Lua) to avoid deleting a lock that
       // was re-acquired by another instance after TTL expiry.
       if (lockAcquired) {
         const redisClient = this.redis.getClient();
         const lockKey = `lock:tick:${this.strategyId}`;
-        await redisClient
-          .eval(
+        try {
+          const result = await redisClient.eval(
             "if redis.call('GET', KEYS[1]) == ARGV[1] then return redis.call('DEL', KEYS[1]) else return 0 end",
             1,
             lockKey,
-            this.instanceId,
-          )
-          .catch(() => {});
+            lockToken,
+          );
+          if (result !== 1) {
+            this.logger.warn(
+              `Lock release for ${this.strategyId} did not delete the key (already expired or taken by another instance)`,
+            );
+          }
+        } catch (err) {
+          this.logger.warn(
+            `Failed to release lock for ${this.strategyId}: ${String(err)} — lock will expire naturally in 10s`,
+          );
+        }
       }
 
       this.tickInFlight = false;

@@ -1629,7 +1629,7 @@ describe("StrategyRunner — concurrent tick serialization", () => {
     expect(state.get).toHaveBeenCalledTimes(1);
   });
 
-  it("uses per-instance owner token in atomic Lua compare-and-delete", async () => {
+  it("uses per-acquisition lock token in atomic Lua compare-and-delete", async () => {
     const client = {
       lrange: vi.fn().mockResolvedValue([]),
       mget: vi
@@ -1656,9 +1656,118 @@ describe("StrategyRunner — concurrent tick serialization", () => {
     expect(script).toContain("redis.call('GET'");
     expect(script).toContain("redis.call('DEL'");
 
-    // The owner token (last arg) must be a non-empty UUID string
+    // The lock token (last arg) must be a per-acquisition UUID string
     const token = evalArgs[3] as string;
     expect(token).toBeTypeOf("string");
     expect(token.length).toBeGreaterThanOrEqual(32);
+
+    // SET must use the same per-acquisition token (not a runner-level constant)
+    const setArgs = client.set.mock.calls[0];
+    expect(setArgs[1]).toBe(token);
+  });
+
+  it("refreshes lock TTL during long-running evaluations", async () => {
+    // Simulate a slow evaluation that blocks long enough for the
+    // 5-second lock-refresh interval to fire at least once.
+    vi.useFakeTimers();
+    try {
+      let release!: () => void;
+      const client = {
+        lrange: vi.fn().mockResolvedValue([]),
+        mget: vi
+          .fn()
+          .mockResolvedValue([
+            JSON.stringify({ price: 0.5, timestamp: Date.now() }),
+          ]),
+        incr: vi.fn().mockResolvedValue(1),
+        expire: vi.fn().mockResolvedValue(1),
+        set: vi.fn().mockResolvedValue("OK"),
+        del: vi.fn().mockResolvedValue(1),
+        eval: vi.fn().mockResolvedValue(1),
+      };
+      const redis = makeRedis({ getClient: vi.fn().mockReturnValue(client) });
+      const state = makeState();
+      // Stall evaluate() so the lock-refresh interval fires while the lock is held
+      state.get.mockImplementation(
+        () =>
+          new Promise<typeof DEFAULT_STATE>((resolve) => {
+            release = () => resolve({ ...DEFAULT_STATE });
+          }),
+      );
+      const runner = makeRunner({ execMode: "EVENT", state, redis });
+
+      // Fire tick — it acquires the lock, sets up the 5s refresh interval,
+      // then blocks on state.get()
+      const tickPromise = runner.onPriceEvent("tok1", 0.5);
+
+      // Advance past the 5-second refresh interval
+      await vi.advanceTimersByTimeAsync(6_000);
+      // Release the stalled evaluation
+      release!();
+      await tickPromise;
+
+      // expire should have been called by the refresh interval
+      const expireCallsForLock = client.expire.mock.calls.filter(
+        (args: unknown[]) => args[0] === "lock:tick:strat-test",
+      );
+      expect(expireCallsForLock.length).toBeGreaterThanOrEqual(1);
+      expect(expireCallsForLock[0][1]).toBe(10);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("warns when lock release eval returns non-1 (key already expired or re-acquired)", async () => {
+    const client = {
+      lrange: vi.fn().mockResolvedValue([]),
+      mget: vi
+        .fn()
+        .mockResolvedValue([
+          JSON.stringify({ price: 0.5, timestamp: Date.now() }),
+        ]),
+      incr: vi.fn().mockResolvedValue(1),
+      expire: vi.fn().mockResolvedValue(1),
+      set: vi.fn().mockResolvedValue("OK"),
+      del: vi.fn().mockResolvedValue(1),
+      eval: vi.fn().mockResolvedValue(0), // lock already expired
+    };
+    const redis = makeRedis({ getClient: vi.fn().mockReturnValue(client) });
+    const state = makeState();
+    const runner = makeRunner({ execMode: "EVENT", state, redis });
+
+    await runner.onPriceEvent("tok1", 0.5);
+
+    // Eval was called — lock was not deleted because it had already expired
+    expect(client.eval).toHaveBeenCalledTimes(1);
+    // eval.mockResolvedValue(0) simulates a non-1 return, which should
+    // produce a warn-level log about the lock already being expired.
+    // No exception should leak — the runner must remain available.
+    expect(runner.status).toBe("RUNNING");
+  });
+
+  it("warns when lock release eval throws (Redis transient error)", async () => {
+    const client = {
+      lrange: vi.fn().mockResolvedValue([]),
+      mget: vi
+        .fn()
+        .mockResolvedValue([
+          JSON.stringify({ price: 0.5, timestamp: Date.now() }),
+        ]),
+      incr: vi.fn().mockResolvedValue(1),
+      expire: vi.fn().mockResolvedValue(1),
+      set: vi.fn().mockResolvedValue("OK"),
+      del: vi.fn().mockResolvedValue(1),
+      eval: vi.fn().mockRejectedValue(new Error("Redis connection lost")),
+    };
+    const redis = makeRedis({ getClient: vi.fn().mockReturnValue(client) });
+    const state = makeState();
+    const runner = makeRunner({ execMode: "EVENT", state, redis });
+
+    await expect(runner.onPriceEvent("tok1", 0.5)).resolves.not.toThrow();
+
+    // Eval was attempted and failed — lock will expire naturally
+    expect(client.eval).toHaveBeenCalledTimes(1);
+    // No exception leaks; the runner remains functional
+    expect(runner.status).toBe("RUNNING");
   });
 });
