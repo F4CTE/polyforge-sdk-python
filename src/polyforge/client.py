@@ -2177,19 +2177,19 @@ class PolyforgeClient:
         idempotency_key: str | None = None,
     ) -> PlaceSmartOrderResponse:
         """Place an advanced smart order (TWAP, DCA, BRACKET, or OCO)."""
-        _validate_financial_param("total_size", total_size)
+        _validate_order_size(total_size)
         if limit_price is not None:
-            _validate_financial_param("limit_price", limit_price)
+            _validate_order_price(limit_price)
         if entry_price is not None:
-            _validate_financial_param("entry_price", entry_price)
+            _validate_order_price(entry_price)
         if take_profit_price is not None:
-            _validate_financial_param("take_profit_price", take_profit_price)
+            _validate_order_price(take_profit_price)
         if stop_loss_price is not None:
-            _validate_financial_param("stop_loss_price", stop_loss_price)
+            _validate_order_price(stop_loss_price)
         if price_a is not None:
-            _validate_financial_param("price_a", price_a)
+            _validate_order_price(price_a)
         if price_b is not None:
-            _validate_financial_param("price_b", price_b)
+            _validate_order_price(price_b)
         body: dict[str, Any] = {
             "type": type,
             "tokenId": token_id,
@@ -5664,19 +5664,19 @@ class AsyncPolyforgeClient:
         idempotency_key: str | None = None,
     ) -> PlaceSmartOrderResponse:
         """Place an advanced smart order (TWAP, DCA, BRACKET, or OCO)."""
-        _validate_financial_param("total_size", total_size)
+        _validate_order_size(total_size)
         if limit_price is not None:
-            _validate_financial_param("limit_price", limit_price)
+            _validate_order_price(limit_price)
         if entry_price is not None:
-            _validate_financial_param("entry_price", entry_price)
+            _validate_order_price(entry_price)
         if take_profit_price is not None:
-            _validate_financial_param("take_profit_price", take_profit_price)
+            _validate_order_price(take_profit_price)
         if stop_loss_price is not None:
-            _validate_financial_param("stop_loss_price", stop_loss_price)
+            _validate_order_price(stop_loss_price)
         if price_a is not None:
-            _validate_financial_param("price_a", price_a)
+            _validate_order_price(price_a)
         if price_b is not None:
-            _validate_financial_param("price_b", price_b)
+            _validate_order_price(price_b)
         body: dict[str, Any] = {
             "type": type,
             "tokenId": token_id,

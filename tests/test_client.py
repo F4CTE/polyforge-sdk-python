@@ -942,7 +942,7 @@ class TestPlaceOrderValidation:
 
     def test_place_smart_order_rejects_inf_total_size(self):
         client = PolyforgeClient(api_key="test-key")
-        with pytest.raises(ValueError, match="must not be Infinity"):
+        with pytest.raises(ValueError, match="size must be a finite number"):
             client.place_smart_order(
                 type="TWAP",
                 token_id="tok",
@@ -954,7 +954,7 @@ class TestPlaceOrderValidation:
 
     def test_place_smart_order_rejects_nan_limit_price(self):
         client = PolyforgeClient(api_key="test-key")
-        with pytest.raises(ValueError, match="must not be NaN"):
+        with pytest.raises(ValueError, match="price must be a finite number"):
             client.place_smart_order(
                 type="TWAP",
                 token_id="tok",
@@ -962,6 +962,69 @@ class TestPlaceOrderValidation:
                 outcome="YES",
                 total_size=10.0,
                 limit_price=float("nan"),
+            )
+        client.close()
+
+    def test_place_smart_order_rejects_price_below_range(self):
+        client = PolyforgeClient(api_key="test-key")
+        with pytest.raises(ValueError, match="price must be between 0.001 and 0.999"):
+            client.place_smart_order(
+                type="TWAP",
+                token_id="tok",
+                side="BUY",
+                outcome="YES",
+                total_size=10.0,
+                entry_price=0.0001,
+            )
+        client.close()
+
+    def test_place_smart_order_rejects_price_above_range(self):
+        client = PolyforgeClient(api_key="test-key")
+        with pytest.raises(ValueError, match="price must be between 0.001 and 0.999"):
+            client.place_smart_order(
+                type="TWAP",
+                token_id="tok",
+                side="BUY",
+                outcome="YES",
+                total_size=10.0,
+                limit_price=1.0,
+            )
+        client.close()
+
+    def test_place_smart_order_rejects_size_below_minimum(self):
+        client = PolyforgeClient(api_key="test-key")
+        with pytest.raises(ValueError, match="size must be at least 1"):
+            client.place_smart_order(
+                type="TWAP",
+                token_id="tok",
+                side="BUY",
+                outcome="YES",
+                total_size=0.5,
+            )
+        client.close()
+
+    def test_place_smart_order_rejects_size_zero(self):
+        client = PolyforgeClient(api_key="test-key")
+        with pytest.raises(ValueError, match="size must be at least 1"):
+            client.place_smart_order(
+                type="TWAP",
+                token_id="tok",
+                side="BUY",
+                outcome="YES",
+                total_size=0,
+            )
+        client.close()
+
+    def test_place_smart_order_rejects_negative_price(self):
+        client = PolyforgeClient(api_key="test-key")
+        with pytest.raises(ValueError, match="price must be between 0.001 and 0.999"):
+            client.place_smart_order(
+                type="TWAP",
+                token_id="tok",
+                side="BUY",
+                outcome="YES",
+                total_size=10.0,
+                take_profit_price=-0.5,
             )
         client.close()
 
@@ -1007,11 +1070,12 @@ class TestAsyncPlaceOrderValidation:
         assert '"amount"' in source or "'amount'" in source
 
     def test_async_place_smart_order_calls_validate(self):
-        """Async place_smart_order must call _validate_financial_param for total_size."""
+        """Async place_smart_order must call _validate_order_size and _validate_order_price."""
         import inspect
 
         source = inspect.getsource(AsyncPolyforgeClient.place_smart_order)
-        assert '_validate_financial_param("total_size"' in source
+        assert "_validate_order_size(" in source
+        assert "_validate_order_price(" in source
 
     def test_async_provide_liquidity_calls_validate(self):
         """Async provide_liquidity must call _validate_financial_param for amount_usdc (#26)."""
