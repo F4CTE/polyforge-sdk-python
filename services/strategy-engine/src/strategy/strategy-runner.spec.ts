@@ -184,6 +184,12 @@ describe("StrategyRunner — lifecycle", () => {
     const runner = makeRunner({ execMode: "EVENT", state });
 
     const first = runner.onPriceEvent("tok1", 0.5);
+    // Wait for the first tick to reach evaluate() → state.get() before
+    // proceeding. The tick pipeline now has async pre-checks (daily
+    // execution counter, beta limits) that must complete before evaluate().
+    await vi.waitFor(() => expect(state.get).toHaveBeenCalled(), {
+      timeout: 1000,
+    });
     // Without enough time elapsed, the second tick is debounced by MIN_TICK_MS
     const second = runner.onPriceEvent("tok1", 0.5);
     await second;

@@ -38,7 +38,7 @@ export const MinLiquidityBlock: BlockEvaluator = {
   },
 };
 
-// max_position — passes if current position value < maxUsdc
+// max_position — passes if current position value + pending orders < maxUsdc
 export const MaxPositionBlock: BlockEvaluator = {
   async evaluate(block, ctx, redis, prisma): Promise<BlockResult> {
     const params = (block["params"] as BlockParams) ?? {};
@@ -50,17 +50,45 @@ export const MaxPositionBlock: BlockEvaluator = {
     const position = await prisma.position.findUnique({
       where: { userId_tokenId: { userId: ctx.userId, tokenId } },
     });
-    if (!position) return { fired: true, reason: "no existing position" };
 
-    const size = parseFiniteDecimal(position.size);
-    const currentPrice = parseFiniteDecimal(position.currentPrice);
-    if (size === null) return invalidNumeric("position size", position.size);
-    if (currentPrice === null)
-      return invalidNumeric("position currentPrice", position.currentPrice);
+    let totalValue = 0;
 
-    const value = size * currentPrice;
-    const fired = value < max;
-    return { fired, reason: `position $${value.toFixed(2)} < max $${max}` };
+    if (position) {
+      const size = parseFiniteDecimal(position.size);
+      const currentPrice = parseFiniteDecimal(position.currentPrice);
+      if (size === null) return invalidNumeric("position size", position.size);
+      if (currentPrice === null)
+        return invalidNumeric("position currentPrice", position.currentPrice);
+      totalValue = size * currentPrice;
+    }
+
+    const pendingOrders = await prisma.order.findMany({
+      where: {
+        userId: ctx.userId,
+        tokenId,
+        side: "BUY",
+        status: { in: ["PENDING", "SUBMITTED", "LIVE"] },
+      },
+      select: { size: true, price: true },
+    });
+    const pendingValue = pendingOrders.reduce((sum, o) => {
+      const size = parseFiniteDecimal(o.size);
+      const price = parseFiniteDecimal(o.price);
+      if (size === null || price === null) return Number.POSITIVE_INFINITY;
+      return sum + size * price;
+    }, 0);
+
+    totalValue += pendingValue;
+
+    if (!position && pendingOrders.length === 0) {
+      return { fired: true, reason: "no existing position" };
+    }
+
+    const fired = totalValue < max;
+    return {
+      fired,
+      reason: `position $${totalValue.toFixed(2)} < max $${max}`,
+    };
   },
 };
 
@@ -153,7 +181,7 @@ export const NoReentryBlock: BlockEvaluator = {
   },
 };
 
-// no_existing_position — passes if no open position on this token
+// no_existing_position — passes if no open position or pending orders on this token
 export const NoExistingPositionBlock: BlockEvaluator = {
   async evaluate(block, ctx, _redis, prisma): Promise<BlockResult> {
     const params = (block["params"] as BlockParams) ?? {};
@@ -167,10 +195,23 @@ export const NoExistingPositionBlock: BlockEvaluator = {
     if (size === null) return invalidNumeric("position size", position?.size);
 
     const hasPosition = !!position && size > 0;
-    return {
-      fired: !hasPosition,
-      reason: hasPosition ? `existing position on ${tokenId}` : "no position",
-    };
+    if (hasPosition) {
+      return { fired: false, reason: `existing position on ${tokenId}` };
+    }
+
+    const pendingOrders = await prisma.order.findMany({
+      where: {
+        userId: ctx.userId,
+        tokenId,
+        status: { in: ["PENDING", "SUBMITTED", "LIVE"] },
+      },
+      select: { id: true },
+    });
+    if (pendingOrders.length > 0) {
+      return { fired: false, reason: `pending order on ${tokenId}` };
+    }
+
+    return { fired: true, reason: "no position" };
   },
 };
 

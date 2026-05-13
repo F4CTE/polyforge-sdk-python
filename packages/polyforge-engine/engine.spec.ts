@@ -13,6 +13,7 @@ function makeContext(overrides: Partial<EvalContext> = {}): EvalContext {
     daily_pnl: 0,
     total_exposure: 1000,
     open_positions: 0,
+    pending_orders: 0,
     consecutive_losses: 0,
     orders_today: 0,
     variables: {},
@@ -237,6 +238,44 @@ describe('Condition evaluators', () => {
     const result = evaluateTick([], triggers, conditions, [], ctx);
 
     expect(result.conditions_met).toBe(false);
+  });
+
+  it('should include pending orders in max position check', () => {
+    const conditions = [makeBlock('MAX_POSITION', { maxPositions: 3 })];
+    const triggers = [makeBlock('EVERY_TICK')];
+    const ctx = makeContext({ open_positions: 1, pending_orders: 2 });
+    const result = evaluateTick([], triggers, conditions, [], ctx);
+
+    // 1 + 2 = 3, not < 3
+    expect(result.conditions_met).toBe(false);
+  });
+
+  it('should pass max position when open + pending < limit', () => {
+    const conditions = [makeBlock('MAX_POSITION', { maxPositions: 3 })];
+    const triggers = [makeBlock('EVERY_TICK')];
+    const ctx = makeContext({ open_positions: 1, pending_orders: 1 });
+    const result = evaluateTick([], triggers, conditions, [], ctx);
+
+    // 1 + 1 = 2 < 3
+    expect(result.conditions_met).toBe(true);
+  });
+
+  it('should fail NO_EXISTING_POSITION when pending orders exist', () => {
+    const conditions = [makeBlock('NO_EXISTING_POSITION')];
+    const triggers = [makeBlock('EVERY_TICK')];
+    const ctx = makeContext({ open_positions: 0, pending_orders: 1 });
+    const result = evaluateTick([], triggers, conditions, [], ctx);
+
+    expect(result.conditions_met).toBe(false);
+  });
+
+  it('should pass NO_EXISTING_POSITION when no open or pending', () => {
+    const conditions = [makeBlock('NO_EXISTING_POSITION')];
+    const triggers = [makeBlock('EVERY_TICK')];
+    const ctx = makeContext({ open_positions: 0, pending_orders: 0 });
+    const result = evaluateTick([], triggers, conditions, [], ctx);
+
+    expect(result.conditions_met).toBe(true);
   });
 });
 

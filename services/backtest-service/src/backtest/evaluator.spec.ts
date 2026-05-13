@@ -6,6 +6,7 @@ import {
   checkConditions,
   executeActions,
   checkAutoExits,
+  clearPendingOrders,
   Block,
   PriceState,
   SimState,
@@ -53,6 +54,23 @@ describe("createSimState", () => {
     expect(state.lastTradeAt).toBe(0);
     expect(state.stopLosses.size).toBe(0);
     expect(state.takeProfits.size).toBe(0);
+    expect(state.pendingOrders.size).toBe(0);
+  });
+});
+
+// ─── clearPendingOrders ─────────────────────────────────────────────────────
+
+describe("clearPendingOrders", () => {
+  it("clears all pending orders from state", () => {
+    const state = createSimState();
+    state.pendingOrders.set("tok-a", [
+      { size: 10, price: 0.5, tokenId: "tok-a" },
+    ]);
+    state.pendingOrders.set("tok-b", [
+      { size: 20, price: 0.6, tokenId: "tok-b" },
+    ]);
+    clearPendingOrders(state);
+    expect(state.pendingOrders.size).toBe(0);
   });
 });
 
@@ -176,6 +194,34 @@ describe("checkSafety", () => {
         { type: "stop_if_exposure_exceeds", config: { maxExposureUsdc: 0 } },
       ];
       expect(checkSafety(blocks, state, new Map(), positions)).toBe(true);
+    });
+
+    it("includes pending orders in total exposure and fails when limit reached", () => {
+      const state = createSimState();
+      state.pendingOrders.set("tok-a", [
+        { size: 20, price: 0.5, tokenId: "tok-a" },
+        { size: 10, price: 1.0, tokenId: "tok-a" },
+      ]);
+      // positions = 50*0.2 = 10, pending = 20*0.5 + 10*1.0 = 20, total = 30
+      const positions = makePositions({
+        "tok-a": { size: 50, avgPrice: 0.2 },
+      });
+      const blocks: Block[] = [
+        { type: "stop_if_exposure_exceeds", config: { maxExposureUsdc: 30 } },
+      ];
+      expect(checkSafety(blocks, state, new Map(), positions)).toBe(false);
+    });
+
+    it("includes pending orders alone when no positions exist", () => {
+      const state = createSimState();
+      state.pendingOrders.set("tok-a", [
+        { size: 100, price: 0.5, tokenId: "tok-a" },
+      ]);
+      // pending only = 50
+      const blocks: Block[] = [
+        { type: "stop_if_exposure_exceeds", config: { maxExposureUsdc: 50 } },
+      ];
+      expect(checkSafety(blocks, state, new Map(), new Map())).toBe(false);
     });
   });
 
@@ -547,6 +593,43 @@ describe("checkConditions", () => {
         checkConditions(blocks, state, new Map(), new Map(), Date.now()),
       ).toBe(true);
     });
+
+    it("includes pending orders in max_position and fails when limit reached", () => {
+      const state = createSimState();
+      state.pendingOrders.set("tok-a", [
+        { size: 30, price: 0.5, tokenId: "tok-a" },
+      ]);
+      // position = 20*0.5 = 10, pending = 30*0.5 = 15, total = 25 >= 20
+      const positions = makePositions({
+        "tok-a": { size: 20, avgPrice: 0.5 },
+      });
+      const blocks: Block[] = [
+        {
+          type: "max_position",
+          config: { tokenId: "tok-a", maxPositionUsdc: 20 },
+        },
+      ];
+      expect(
+        checkConditions(blocks, state, new Map(), positions, Date.now()),
+      ).toBe(false);
+    });
+
+    it("treats pending orders alone as max_position exposure", () => {
+      const state = createSimState();
+      state.pendingOrders.set("tok-a", [
+        { size: 100, price: 0.5, tokenId: "tok-a" },
+      ]);
+      // pending only = 50 >= 50
+      const blocks: Block[] = [
+        {
+          type: "max_position",
+          config: { tokenId: "tok-a", maxPositionUsdc: 50 },
+        },
+      ];
+      expect(
+        checkConditions(blocks, state, new Map(), new Map(), Date.now()),
+      ).toBe(false);
+    });
   });
 
   describe("cooldown_after_trade", () => {
@@ -608,6 +691,32 @@ describe("checkConditions", () => {
         checkConditions(blocks, state, new Map(), new Map(), Date.now()),
       ).toBe(true);
     });
+
+    it("returns false when pending orders exist for the token", () => {
+      const state = createSimState();
+      state.pendingOrders.set("tok-a", [
+        { size: 10, price: 0.5, tokenId: "tok-a" },
+      ]);
+      const blocks: Block[] = [
+        { type: "no_existing_position", config: { tokenId: "tok-a" } },
+      ];
+      expect(
+        checkConditions(blocks, state, new Map(), new Map(), Date.now()),
+      ).toBe(false);
+    });
+
+    it("returns true when pending orders exist for a different token", () => {
+      const state = createSimState();
+      state.pendingOrders.set("tok-b", [
+        { size: 10, price: 0.5, tokenId: "tok-b" },
+      ]);
+      const blocks: Block[] = [
+        { type: "no_existing_position", config: { tokenId: "tok-a" } },
+      ];
+      expect(
+        checkConditions(blocks, state, new Map(), new Map(), Date.now()),
+      ).toBe(true);
+    });
   });
 
   describe("no_reentry", () => {
@@ -662,7 +771,7 @@ describe("executeActions", () => {
   });
 
   describe("buy_yes / buy_no", () => {
-    it("creates a BUY fill with outcome YES for buy_yes", () => {
+    it("creates a BUY fill with outcome YES for buy_yes and tracks pending order", () => {
       const state = createSimState();
       const prices = makePrices({ "tok-a": { price: 0.5 } });
       const blocks: Block[] = [
@@ -675,6 +784,10 @@ describe("executeActions", () => {
       expect(fills[0].price).toBe(0.5);
       expect(fills[0].size).toBe(20); // 10 / 0.5
       expect(fills[0].tokenId).toBe("tok-a");
+      // Verify pending order was tracked
+      expect(state.pendingOrders.has("tok-a")).toBe(true);
+      expect(state.pendingOrders.get("tok-a")![0].size).toBe(20);
+      expect(state.pendingOrders.get("tok-a")![0].price).toBe(0.5);
     });
 
     it("creates a BUY fill with outcome NO for buy_no", () => {
@@ -795,7 +908,7 @@ describe("executeActions", () => {
   });
 
   describe("scale_in", () => {
-    it("creates a BUY fill when position and price exist", () => {
+    it("creates a BUY fill when position and price exist and tracks pending order", () => {
       const state = createSimState();
       const prices = makePrices({ "tok-a": { price: 0.5 } });
       const positions = makePositions({
@@ -809,6 +922,9 @@ describe("executeActions", () => {
       expect(fills[0].side).toBe("BUY");
       expect(fills[0].type).toBe("scale_in");
       expect(fills[0].size).toBe(20); // 10 / 0.5
+      // Verify pending order was tracked
+      expect(state.pendingOrders.has("tok-a")).toBe(true);
+      expect(state.pendingOrders.get("tok-a")![0].size).toBe(20);
     });
 
     it("skips when no position exists", () => {
@@ -864,11 +980,15 @@ describe("executeActions", () => {
   });
 
   describe("cancel_all_orders", () => {
-    it("produces no fills (no-op in backtest)", () => {
+    it("produces no fills and clears pending orders", () => {
       const state = createSimState();
+      state.pendingOrders.set("tok-a", [
+        { size: 10, price: 0.5, tokenId: "tok-a" },
+      ]);
       const blocks: Block[] = [{ type: "cancel_all_orders" }];
       const fills = executeActions(blocks, new Map(), new Map(), state);
       expect(fills).toHaveLength(0);
+      expect(state.pendingOrders.size).toBe(0);
     });
   });
 

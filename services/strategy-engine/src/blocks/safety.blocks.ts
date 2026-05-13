@@ -4,7 +4,7 @@ import { parseFiniteDecimal } from "@polyforge/shared-types";
 
 type BlockParams = Record<string, string | number | undefined>;
 
-/** Shared helper: get total USDC exposure for user */
+/** Shared helper: get total USDC exposure for user including pending orders */
 async function getUserExposure(
   userId: string,
   prisma: PrismaService,
@@ -13,12 +13,29 @@ async function getUserExposure(
     where: { userId },
     select: { size: true, currentPrice: true },
   });
-  return positions.reduce((sum, p) => {
+  const positionExposure = positions.reduce((sum, p) => {
     const size = parseFiniteDecimal(p.size);
     const currentPrice = parseFiniteDecimal(p.currentPrice);
     if (size === null || currentPrice === null) return Number.POSITIVE_INFINITY;
     return sum + size * currentPrice;
   }, 0);
+
+  const pendingOrders = await prisma.order.findMany({
+    where: {
+      userId,
+      side: "BUY",
+      status: { in: ["PENDING", "SUBMITTED", "LIVE"] },
+    },
+    select: { size: true, price: true },
+  });
+  const orderExposure = pendingOrders.reduce((sum, o) => {
+    const size = parseFiniteDecimal(o.size);
+    const price = parseFiniteDecimal(o.price);
+    if (size === null || price === null) return Number.POSITIVE_INFINITY;
+    return sum + size * price;
+  }, 0);
+
+  return positionExposure + orderExposure;
 }
 
 // ─── SAFETY: stop_if_daily_loss ───────────────────────────────────────────────

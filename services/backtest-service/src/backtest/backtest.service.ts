@@ -12,6 +12,7 @@ import {
   checkConditions,
   executeActions,
   checkAutoExits,
+  clearPendingOrders,
   SimFill,
 } from "./evaluator";
 import { MetricsService, FillRecord } from "./metrics.service";
@@ -174,6 +175,11 @@ export class BacktestService {
           fillRecs.push(rec);
           pending.push(this.toOrderInput(runId, fill, rec));
         }
+
+        // Clear pending orders from previous tick — fills were already
+        // applied to positions via applyFill(), so retaining them would
+        // double-count exposure in safety/condition checks below.
+        clearPendingOrders(state);
 
         // Safety halt check
         if (!checkSafety(safety, state, prices, positions)) {

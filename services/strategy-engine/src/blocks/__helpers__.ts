@@ -94,6 +94,9 @@ export type MockPrismaService = {
     findMany: ReturnType<typeof vi.fn>;
     findUnique: ReturnType<typeof vi.fn>;
   };
+  order: {
+    findMany: ReturnType<typeof vi.fn>;
+  };
   token: {
     findUnique: ReturnType<typeof vi.fn>;
     findFirst: ReturnType<typeof vi.fn>;
@@ -118,6 +121,9 @@ export function makePrisma(
     position: {
       findMany: vi.fn().mockResolvedValue([]),
       findUnique: vi.fn().mockResolvedValue(null),
+    },
+    order: {
+      findMany: vi.fn().mockResolvedValue([]),
     },
     token: {
       findUnique: vi.fn().mockResolvedValue(null),

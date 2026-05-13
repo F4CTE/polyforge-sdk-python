@@ -106,11 +106,18 @@ export interface SimState {
   lastTradeAt: number;
   stopLosses: Map<string, number>; // tokenId → stop-loss price
   takeProfits: Map<string, number>; // tokenId → take-profit price
+  pendingOrders: Map<string, SimPendingOrder[]>; // tokenId → pending orders
 }
 
 export interface SimPosition {
   size: number;
   avgPrice: number;
+}
+
+export interface SimPendingOrder {
+  size: number;
+  price: number;
+  tokenId: string;
 }
 
 export interface SimFill {
@@ -131,7 +138,12 @@ export function createSimState(): SimState {
     lastTradeAt: 0,
     stopLosses: new Map(),
     takeProfits: new Map(),
+    pendingOrders: new Map(),
   };
+}
+
+export function clearPendingOrders(state: SimState): void {
+  state.pendingOrders.clear();
 }
 
 // ─── Safety ──────────────────────────────────────────────────────────────────
@@ -165,6 +177,11 @@ export function checkSafety(
         let totalExposure = 0;
         for (const [, pos] of positions) {
           totalExposure += pos.size * pos.avgPrice;
+        }
+        for (const [, orders] of state.pendingOrders) {
+          for (const o of orders) {
+            totalExposure += o.size * o.price;
+          }
         }
         if (maxExposure > 0 && totalExposure >= maxExposure) return false;
         break;
@@ -338,9 +355,15 @@ export function checkConditions(
       case "max_position": {
         const tokenId = String(cfg.tokenId ?? "");
         const maxUsdc = parseFloat(String(cfg.maxPositionUsdc ?? 0));
+        let totalValue = 0;
         const pos = positions.get(tokenId);
-        if (pos && maxUsdc > 0 && pos.size * pos.avgPrice >= maxUsdc)
-          return false;
+        if (pos) {
+          totalValue += pos.size * pos.avgPrice;
+        }
+        for (const o of state.pendingOrders.get(tokenId) ?? []) {
+          totalValue += o.size * o.price;
+        }
+        if (maxUsdc > 0 && totalValue >= maxUsdc) return false;
         break;
       }
       case "cooldown_after_trade": {
@@ -356,6 +379,8 @@ export function checkConditions(
       case "no_existing_position": {
         const tokenId = String(cfg.tokenId ?? "");
         if (positions.has(tokenId)) return false;
+        const pending = state.pendingOrders.get(tokenId);
+        if (pending && pending.length > 0) return false;
         break;
       }
       case "no_reentry": {
@@ -406,6 +431,10 @@ export function executeActions(
           tokenId,
           type: block.type,
         });
+        // Track as pending for exposure checks on subsequent ticks
+        const pending = state.pendingOrders.get(tokenId) ?? [];
+        pending.push({ size, price: fillPrice, tokenId });
+        state.pendingOrders.set(tokenId, pending);
         break;
       }
 
@@ -453,6 +482,10 @@ export function executeActions(
           tokenId,
           type: "scale_in",
         });
+        // Track as pending for exposure checks on subsequent ticks
+        const pending = state.pendingOrders.get(tokenId) ?? [];
+        pending.push({ size, price: fillPrice, tokenId });
+        state.pendingOrders.set(tokenId, pending);
         break;
       }
 
@@ -475,9 +508,15 @@ export function executeActions(
         break;
       }
 
-      case "cancel_all_orders":
-        // No-op in backtest (no pending orders)
+      case "cancel_all_orders": {
+        const tokenId = String(cfg.tokenId ?? "");
+        if (tokenId) {
+          state.pendingOrders.delete(tokenId);
+        } else {
+          state.pendingOrders.clear();
+        }
         break;
+      }
       default:
         // Unknown action — silently skip
         break;
