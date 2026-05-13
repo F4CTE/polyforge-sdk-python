@@ -377,8 +377,8 @@ def _raise_for_status(response: httpx.Response) -> None:
         body = {}
 
     message: str = body.get("message", "") or body.get("error", "") or response.reason_phrase or "Unknown error"
-    code: str = body.get("code", "")
-    request_id: str = body.get("requestId", "")
+    code: str = str(body.get("code") or "")
+    request_id: str = str(body.get("requestId") or "")
     suggestion: str | None = body.get("suggestion") or None
 
     kwargs: dict[str, Any] = dict(status_code=response.status_code, code=code, request_id=request_id, suggestion=suggestion)
