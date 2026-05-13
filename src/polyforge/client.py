@@ -111,8 +111,8 @@ from polyforge.models import (
     StrategyEvent,
     StrategyStatusResponse,
     StrategyTemplate,
-    SystemHealthAuthenticated,
     SystemHealthPublic,
+    SystemHealthAuthenticated,
     TickSizeInfo,
     Token,
     TopTraderEntry,
@@ -315,7 +315,9 @@ def _parse(cls: type[T], data: dict[str, Any]) -> T:
     kwargs: dict[str, Any] = {}
 
     for f in fields(cls):  # type: ignore[arg-type]
-        raw = aliased.get(f.name) or snake_data.get(f.name)
+        raw = aliased.get(f.name)
+        if raw is None:
+            raw = snake_data.get(f.name)
         if raw is None:
             continue
 
@@ -798,21 +800,27 @@ class PolyforgeClient:
         _raise_for_status(resp)
         return resp.text
 
+    def _get_no_auth(self, path: str) -> Any:
+        # Build a request from the existing client so we inherit proxy/CA
+        # environment, then strip credentials. Using trust_env=False on a
+        # fresh client would suppress proxy/CA config alongside NetRCAuth.
+        req = self._client.build_request("GET", path)
+        req.headers["authorization"] = ""
+        resp = self._client.send(req)
+        _raise_for_status(resp)
+        return resp.json()
+
     # -- Health --
 
     def get_health(self) -> SystemHealthPublic:
-        """Get the public API health payload (unauthenticated).
+        """Get the public API health payload.
 
-        Calls ``GET /health`` and returns only public status information.
-        No API key is required; operational internals are not exposed.
-
-        .. versionadded:: 1.0.0
+        Calls ``GET /health`` (unauthenticated) and returns public status
+        information. Operational internals (DB, Redis, queue, services)
+        are not exposed on this endpoint.
         """
-        request = self._client.build_request("GET", "/health")
-        request.headers.pop("Authorization", None)
-        resp = self._client.send(request)
-        _raise_for_status(resp)
-        return _parse(SystemHealthPublic, resp.json())
+        data = self._get_no_auth("/health")
+        return _parse(SystemHealthPublic, data)
 
     def get_health_authenticated(self) -> SystemHealthAuthenticated:
         """Get authenticated health/status data with full operational metrics.
@@ -4219,21 +4227,27 @@ class AsyncPolyforgeClient:
         _raise_for_status(resp)
         return resp.text
 
+    async def _get_no_auth(self, path: str) -> Any:
+        # Build a request from the existing client so we inherit proxy/CA
+        # environment, then strip credentials. Using trust_env=False on a
+        # fresh client would suppress proxy/CA config alongside NetRCAuth.
+        req = self._client.build_request("GET", path)
+        req.headers["authorization"] = ""
+        resp = await self._client.send(req)
+        _raise_for_status(resp)
+        return resp.json()
+
     # -- Health --
 
     async def get_health(self) -> SystemHealthPublic:
-        """Get the public API health payload (unauthenticated).
+        """Get the public API health payload.
 
-        Calls ``GET /health`` and returns only public status information.
-        No API key is required; operational internals are not exposed.
-
-        .. versionadded:: 1.0.0
+        Calls ``GET /health`` (unauthenticated) and returns public status
+        information. Operational internals (DB, Redis, queue, services)
+        are not exposed on this endpoint.
         """
-        request = self._client.build_request("GET", "/health")
-        request.headers.pop("Authorization", None)
-        resp = await self._client.send(request)
-        _raise_for_status(resp)
-        return _parse(SystemHealthPublic, resp.json())
+        data = await self._get_no_auth("/health")
+        return _parse(SystemHealthPublic, data)
 
     async def get_health_authenticated(self) -> SystemHealthAuthenticated:
         """Get authenticated health/status data with full operational metrics.

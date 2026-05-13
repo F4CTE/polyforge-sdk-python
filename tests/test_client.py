@@ -34,8 +34,8 @@ from polyforge.models import (
     JournalEntry,
     Market,
     MatchSyncResult,
-    SystemHealthAuthenticated,
     SystemHealthPublic,
+    SystemHealthAuthenticated,
     Token,
     MarketplaceListing,
     Order,
@@ -4817,6 +4817,7 @@ class TestCrossVenueArbitrage:
         )
         client.close()
 
+
     def test_async_sync_market_matches(self):
         import asyncio
         from unittest.mock import AsyncMock
@@ -5023,61 +5024,142 @@ class TestHealthEndpoint:
         assert MSR is MatchSyncResult
 
 
+class TestPublicHealthEndpoint:
+    """Tests for the unauthenticated public health-check endpoint (POLA-4153)."""
+
     def test_sync_get_health(self):
         from unittest.mock import MagicMock
         client = PolyforgeClient(api_key="test-key")
-        client._client.send = MagicMock()
-        client._client.send.return_value.status_code = 200
-        client._client.send.return_value.is_success = True
-        client._client.send.return_value.json.return_value = {
-            "status": "ok",
+        client._get_no_auth = MagicMock(return_value={
+            "status": "operational",
             "service": "api-service",
-            "version": "1.0.0",
+            "version": "2.0.0",
             "uptime": 3600.0,
-        }
-        # Also mock build_request to return a mock request with headers
-        mock_request = MagicMock()
-        mock_request.headers = {"Authorization": "Bearer test-key"}
-        client._client.build_request = MagicMock(return_value=mock_request)
-
+        })
         result = client.get_health()
         assert isinstance(result, SystemHealthPublic)
-        assert result.status == "ok"
+        assert result.status == "operational"
         assert result.service == "api-service"
-        assert result.version == "1.0.0"
+        assert result.version == "2.0.0"
         assert result.uptime == 3600.0
-        client._client.build_request.assert_called_once_with("GET", "/health")
-        # Verify Authorization was stripped from the request headers
-        assert "Authorization" not in mock_request.headers
+        assert not hasattr(result, "db")
+        assert not hasattr(result, "redis")
+        assert not hasattr(result, "queue_depth")
+        assert not hasattr(result, "services")
+        client._get_no_auth.assert_called_once_with("/health")
         client.close()
 
-    def test_sync_get_health_no_optional_fields(self):
-        from unittest.mock import MagicMock
+    def test_async_get_health(self):
+        import asyncio
+        from unittest.mock import AsyncMock
+
+        async def _run():
+            client = AsyncPolyforgeClient(api_key="test-key")
+            client._get_no_auth = AsyncMock(return_value={
+                "status": "operational",
+                "service": "api-service",
+                "version": "2.0.0",
+                "uptime": 3600.0,
+            })
+            result = await client.get_health()
+            assert isinstance(result, SystemHealthPublic)
+            assert result.status == "operational"
+            assert result.service == "api-service"
+            assert result.version == "2.0.0"
+            assert result.uptime == 3600.0
+            assert not hasattr(result, "db")
+            assert not hasattr(result, "redis")
+            assert not hasattr(result, "queue_depth")
+            assert not hasattr(result, "services")
+            client._get_no_auth.assert_called_once_with("/health")
+            await client.close()
+
+        asyncio.run(_run())
+
+    def test_new_public_model_exported_from_package_root(self):
+        from polyforge import SystemHealthPublic as SHP
+        assert SHP is SystemHealthPublic
+
+    def test_get_no_auth_reuses_client_env(self):
+        """_get_no_auth must reuse self._client so proxy/CA env is preserved.
+
+        Using build_request() on the existing client inherits proxy and CA
+        settings. The Authorization header is set to empty to block auth
+        without discarding the rest of the env configuration.
+        """
         client = PolyforgeClient(api_key="test-key")
-        client._client.send = MagicMock()
-        client._client.send.return_value.status_code = 200
-        client._client.send.return_value.is_success = True
-        client._client.send.return_value.json.return_value = {
-            "status": "ok",
-        }
-        mock_request = MagicMock()
-        mock_request.headers = {"Authorization": "Bearer test-key"}
-        client._client.build_request = MagicMock(return_value=mock_request)
+        original_send = client._client.send
 
+        captured_req = {}
+        def _fake_send(req, **kw):
+            captured_req["method"] = req.method
+            captured_req["url"] = str(req.url)
+            captured_req["headers"] = dict(req.headers)
+            r = httpx.Response(200, json={"status": "ok"})
+            r.request = req
+            return r
+
+        client._client.send = _fake_send
+        try:
+            result = client._get_no_auth("/health")
+            assert result == {"status": "ok"}
+            assert captured_req["method"] == "GET"
+            assert captured_req["url"].endswith("/health")
+            auth_val = captured_req.get("headers", {}).get("authorization", "missing")
+            assert auth_val == "", \
+                f"Expected empty Authorization, got {auth_val!r}"
+        finally:
+            client._client.send = original_send
+            client.close()
+
+    def test_get_no_auth_strips_auth_header(self):
+        """_get_no_auth must strip Authorization even when client headers have it."""
+        client = PolyforgeClient(api_key="test-key")
+        assert "authorization" in {k.lower() for k in client._client.headers}
+        original_send = client._client.send
+        stripped_headers = {}
+
+        def _fake_send(req, **kw):
+            stripped_headers.update({k.lower(): v for k, v in req.headers.items()})
+            r = httpx.Response(200, json={"status": "ok"})
+            r.request = req
+            return r
+
+        client._client.send = _fake_send
+        try:
+            client._get_no_auth("/health")
+            auth_val = stripped_headers.get("authorization", "")
+            assert auth_val == "", \
+                f"Expected empty Authorization, got {auth_val!r}"
+        finally:
+            client._client.send = original_send
+            client.close()
+
+    def test_get_health_preserves_zero_uptime(self):
+        """Zero uptime must be preserved, not dropped by falsy-or parsing."""
+        client = PolyforgeClient(api_key="test-key")
+        client._get_no_auth = lambda _path: {
+            "status": "starting",
+            "service": "api-service",
+            "version": "2.0.0",
+            "uptime": 0.0,
+        }
         result = client.get_health()
-        assert isinstance(result, SystemHealthPublic)
-        assert result.status == "ok"
-        assert result.service is None
-        assert result.version is None
-        assert result.uptime is None
+        assert result.uptime == 0.0, \
+            f"Zero uptime should be preserved, got {result.uptime!r}"
         client.close()
 
-    def test_async_get_health_is_coroutine(self):
-        import inspect
-        assert hasattr(AsyncPolyforgeClient, "get_health"), \
-            "AsyncPolyforgeClient missing get_health"
-        source = inspect.getsource(AsyncPolyforgeClient.get_health)
-        assert "await" in source, "async get_health not using await"
+    def test_get_health_preserves_int_zero_uptime(self):
+        """Integer zero uptime must be preserved, not dropped by falsy-or parsing."""
+        client = PolyforgeClient(api_key="test-key")
+        client._get_no_auth = lambda _path: {
+            "status": "starting",
+            "uptime": 0,
+        }
+        result = client.get_health()
+        assert result.uptime == 0, \
+            f"Integer zero uptime should be preserved, got {result.uptime!r}"
+        client.close()
 
 
 class TestPositionPlatformContract:

@@ -1782,10 +1782,10 @@ class JournalEntry:
 
 @dataclass
 class SystemHealthPublic:
-    """Public health response for GET /health (unauthenticated).
+    """Public health/status response for GET /health (unauthenticated).
 
-    Returns only public status information; operational internals
-    (DB, Redis, queue depth, internal services) are not exposed.
+    Returns only public-facing status fields. Operational internals
+    (DB, Redis, queue, services) are not exposed on this endpoint.
     """
 
     status: str = ""
