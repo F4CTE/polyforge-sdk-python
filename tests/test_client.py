@@ -35,6 +35,7 @@ from polyforge.models import (
     Market,
     MatchSyncResult,
     SystemHealthAuthenticated,
+    SystemHealthPublic,
     Token,
     MarketplaceListing,
     Order,
@@ -5021,6 +5022,62 @@ class TestHealthEndpoint:
         assert SHA is SystemHealthAuthenticated
         assert MSR is MatchSyncResult
 
+
+    def test_sync_get_health(self):
+        from unittest.mock import MagicMock
+        client = PolyforgeClient(api_key="test-key")
+        client._client.send = MagicMock()
+        client._client.send.return_value.status_code = 200
+        client._client.send.return_value.is_success = True
+        client._client.send.return_value.json.return_value = {
+            "status": "ok",
+            "service": "api-service",
+            "version": "1.0.0",
+            "uptime": 3600.0,
+        }
+        # Also mock build_request to return a mock request with headers
+        mock_request = MagicMock()
+        mock_request.headers = {"Authorization": "Bearer test-key"}
+        client._client.build_request = MagicMock(return_value=mock_request)
+
+        result = client.get_health()
+        assert isinstance(result, SystemHealthPublic)
+        assert result.status == "ok"
+        assert result.service == "api-service"
+        assert result.version == "1.0.0"
+        assert result.uptime == 3600.0
+        client._client.build_request.assert_called_once_with("GET", "/health")
+        # Verify Authorization was stripped from the request headers
+        assert "Authorization" not in mock_request.headers
+        client.close()
+
+    def test_sync_get_health_no_optional_fields(self):
+        from unittest.mock import MagicMock
+        client = PolyforgeClient(api_key="test-key")
+        client._client.send = MagicMock()
+        client._client.send.return_value.status_code = 200
+        client._client.send.return_value.is_success = True
+        client._client.send.return_value.json.return_value = {
+            "status": "ok",
+        }
+        mock_request = MagicMock()
+        mock_request.headers = {"Authorization": "Bearer test-key"}
+        client._client.build_request = MagicMock(return_value=mock_request)
+
+        result = client.get_health()
+        assert isinstance(result, SystemHealthPublic)
+        assert result.status == "ok"
+        assert result.service is None
+        assert result.version is None
+        assert result.uptime is None
+        client.close()
+
+    def test_async_get_health_is_coroutine(self):
+        import inspect
+        assert hasattr(AsyncPolyforgeClient, "get_health"), \
+            "AsyncPolyforgeClient missing get_health"
+        source = inspect.getsource(AsyncPolyforgeClient.get_health)
+        assert "await" in source, "async get_health not using await"
 
 
 class TestPositionPlatformContract:

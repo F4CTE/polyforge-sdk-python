@@ -112,6 +112,7 @@ from polyforge.models import (
     StrategyStatusResponse,
     StrategyTemplate,
     SystemHealthAuthenticated,
+    SystemHealthPublic,
     TickSizeInfo,
     Token,
     TopTraderEntry,
@@ -798,6 +799,20 @@ class PolyforgeClient:
         return resp.text
 
     # -- Health --
+
+    def get_health(self) -> SystemHealthPublic:
+        """Get the public API health payload (unauthenticated).
+
+        Calls ``GET /health`` and returns only public status information.
+        No API key is required; operational internals are not exposed.
+
+        .. versionadded:: 1.0.0
+        """
+        request = self._client.build_request("GET", "/health")
+        request.headers.pop("Authorization", None)
+        resp = self._client.send(request)
+        _raise_for_status(resp)
+        return _parse(SystemHealthPublic, resp.json())
 
     def get_health_authenticated(self) -> SystemHealthAuthenticated:
         """Get authenticated health/status data with full operational metrics.
@@ -4205,6 +4220,20 @@ class AsyncPolyforgeClient:
         return resp.text
 
     # -- Health --
+
+    async def get_health(self) -> SystemHealthPublic:
+        """Get the public API health payload (unauthenticated).
+
+        Calls ``GET /health`` and returns only public status information.
+        No API key is required; operational internals are not exposed.
+
+        .. versionadded:: 1.0.0
+        """
+        request = self._client.build_request("GET", "/health")
+        request.headers.pop("Authorization", None)
+        resp = await self._client.send(request)
+        _raise_for_status(resp)
+        return _parse(SystemHealthPublic, resp.json())
 
     async def get_health_authenticated(self) -> SystemHealthAuthenticated:
         """Get authenticated health/status data with full operational metrics.
