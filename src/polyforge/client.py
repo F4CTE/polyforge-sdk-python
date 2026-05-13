@@ -1112,6 +1112,7 @@ class PolyforgeClient:
         safety: list[dict[str, Any]] | None = None,
         logic_blocks: list[dict[str, Any]] | None = None,
         calc_blocks: list[dict[str, Any]] | None = None,
+        kalshi_subaccount: str | None = None,
         tags: list[str] | None = None,
         variables: list[dict[str, Any]] | None = None,
         canvas: dict[str, Any] | None = None,
@@ -1131,6 +1132,7 @@ class PolyforgeClient:
             safety: Safety block definitions.
             logic_blocks: Logic block definitions.
             calc_blocks: Calc block definitions.
+            kalshi_subaccount: Kalshi subaccount identifier for P&L attribution.
             tags: Strategy tags.
             variables: Strategy variable definitions.
             canvas: Canvas layout metadata.
@@ -1158,6 +1160,8 @@ class PolyforgeClient:
             body["logicBlocks"] = logic_blocks
         if calc_blocks is not None:
             body["calcBlocks"] = calc_blocks
+        if kalshi_subaccount is not None:
+            body["kalshiSubaccount"] = kalshi_subaccount
         if tags is not None:
             body["tags"] = tags
         if variables is not None:
@@ -1208,6 +1212,7 @@ class PolyforgeClient:
         variables: list[dict[str, Any]] | None = None,
         canvas: dict[str, Any] | None = None,
         market_slots: list[dict[str, Any]] | None = None,
+        kalshi_subaccount: str | None = None,
     ) -> Strategy:
         body: dict[str, Any] = {}
         if name is not None:
@@ -1242,6 +1247,8 @@ class PolyforgeClient:
             body["canvas"] = canvas
         if market_slots is not None:
             body["marketSlots"] = market_slots
+        if kalshi_subaccount is not None:
+            body["kalshiSubaccount"] = kalshi_subaccount
         return _parse(Strategy, self._patch(f"/api/v1/strategies/{_encode_path(strategy_id)}", json=body))
 
     def delete_strategy(self, strategy_id: str) -> None:
@@ -4677,6 +4684,7 @@ class AsyncPolyforgeClient:
         safety: list[dict[str, Any]] | None = None,
         logic_blocks: list[dict[str, Any]] | None = None,
         calc_blocks: list[dict[str, Any]] | None = None,
+        kalshi_subaccount: str | None = None,
         tags: list[str] | None = None,
         variables: list[dict[str, Any]] | None = None,
         canvas: dict[str, Any] | None = None,
@@ -4705,6 +4713,8 @@ class AsyncPolyforgeClient:
             body["logicBlocks"] = logic_blocks
         if calc_blocks is not None:
             body["calcBlocks"] = calc_blocks
+        if kalshi_subaccount is not None:
+            body["kalshiSubaccount"] = kalshi_subaccount
         if tags is not None:
             body["tags"] = tags
         if variables is not None:
@@ -4755,6 +4765,7 @@ class AsyncPolyforgeClient:
         variables: list[dict[str, Any]] | None = None,
         canvas: dict[str, Any] | None = None,
         market_slots: list[dict[str, Any]] | None = None,
+        kalshi_subaccount: str | None = None,
     ) -> Strategy:
         body: dict[str, Any] = {}
         if name is not None:
@@ -4789,6 +4800,8 @@ class AsyncPolyforgeClient:
             body["canvas"] = canvas
         if market_slots is not None:
             body["marketSlots"] = market_slots
+        if kalshi_subaccount is not None:
+            body["kalshiSubaccount"] = kalshi_subaccount
         return _parse(Strategy, await self._patch(f"/api/v1/strategies/{_encode_path(strategy_id)}", json=body))
 
     async def delete_strategy(self, strategy_id: str) -> None:
