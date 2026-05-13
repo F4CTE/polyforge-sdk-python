@@ -372,30 +372,30 @@ def _raise_for_status(response: httpx.Response) -> None:
         return
 
     try:
-        body = response.json()
+        body: dict[str, Any] = response.json()
     except Exception:
         body = {}
 
-    message: str = body.get("message") or body.get("error") or response.reason_phrase or "Unknown error"
-    code: str = body.get("code") or ""
-    request_id: str = body.get("requestId") or ""
+    message: str = body.get("message", "") or body.get("error", "") or response.reason_phrase or "Unknown error"
+    code: str = body.get("code", "")
+    request_id: str = body.get("requestId", "")
     suggestion: str | None = body.get("suggestion") or None
 
-    status_code = response.status_code
+    kwargs: dict[str, Any] = dict(status_code=response.status_code, code=code, request_id=request_id, suggestion=suggestion)
 
-    match status_code:
+    match response.status_code:
         case 401:
-            raise AuthenticationError(message, status_code=status_code, code=code, request_id=request_id, suggestion=suggestion)
+            raise AuthenticationError(message, **kwargs)
         case 403:
-            raise PermissionError(message, status_code=status_code, code=code, request_id=request_id, suggestion=suggestion)
+            raise PermissionError(message, **kwargs)
         case 404:
-            raise NotFoundError(message, status_code=status_code, code=code, request_id=request_id, suggestion=suggestion)
+            raise NotFoundError(message, **kwargs)
         case 429:
-            raise RateLimitError(message, status_code=status_code, code=code, request_id=request_id, suggestion=suggestion)
+            raise RateLimitError(message, **kwargs)
         case sc if sc >= 500:
-            raise ServerError(message, status_code=status_code, code=code, request_id=request_id, suggestion=suggestion)
+            raise ServerError(message, **kwargs)
         case _:
-            raise PolyforgeError(message, status_code=status_code, code=code, request_id=request_id, suggestion=suggestion)
+            raise PolyforgeError(message, **kwargs)
 
 
 def _strip_none(params: dict[str, Any]) -> dict[str, Any]:
@@ -666,7 +666,7 @@ def _resolve_and_validate_ips(hostname: str) -> list[str]:
 
     validated: list[str] = []
     for _family, _, _, _, sockaddr in addrinfos:
-        ip_str: str = sockaddr[0]  # type: ignore[assignment]  # IPv4 sockaddr is (str, int), IPv6 is (str, int, int, int)
+        ip_str = str(sockaddr[0])
         try:
             addr = ipaddress.ip_address(ip_str)
         except ValueError:
