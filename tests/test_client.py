@@ -6301,6 +6301,77 @@ class TestTradingCopyNumericValidation:
 
         asyncio.run(_run())
 
+    def test_update_copy_config_filters_unknown_kwargs(self):
+        """update_copy_config silently drops keys not in the allowed set."""
+        from unittest.mock import MagicMock
+
+        client = PolyforgeClient(api_key="test")
+        client._patch = MagicMock(return_value={
+            "id": "copy-1",
+            "userId": "user-1",
+            "targetWallet": "0x0000000000000000000000000000000000000001",
+            "mode": "PERCENTAGE",
+            "sizeValue": "10",
+            "maxExposure": "500",
+            "maxDailyLoss": "100",
+            "priceOffset": "-0.5",
+            "status": "ACTIVE",
+            "totalCopied": 0,
+            "totalPnl": "0",
+            "createdAt": "2026-04-29T00:00:00Z",
+            "updatedAt": "2026-04-29T00:00:00Z",
+        })
+        client.update_copy_config(
+            "copy-1",
+            mode="FIXED",
+            sizeValue=100,
+            badKey="should-be-dropped",
+            anotherBad=42,
+        )
+        sent = client._patch.call_args.kwargs["json"]
+        assert "mode" in sent
+        assert "sizeValue" in sent
+        assert "badKey" not in sent
+        assert "anotherBad" not in sent
+        client.close()
+
+    def test_update_copy_config_allows_all_known_fields(self):
+        from unittest.mock import MagicMock
+
+        client = PolyforgeClient(api_key="test")
+        client._patch = MagicMock(return_value={
+            "id": "copy-1",
+            "userId": "user-1",
+            "targetWallet": "0x0000000000000000000000000000000000000001",
+            "mode": "PERCENTAGE",
+            "sizeValue": "10",
+            "maxExposure": "500",
+            "maxDailyLoss": "100",
+            "priceOffset": "-0.5",
+            "status": "ACTIVE",
+            "totalCopied": 0,
+            "totalPnl": "0",
+            "createdAt": "2026-04-29T00:00:00Z",
+            "updatedAt": "2026-04-29T00:00:00Z",
+        })
+        client.update_copy_config(
+            "copy-1",
+            mode="PERCENTAGE",
+            sizeValue=10,
+            maxExposure=500,
+            maxDailyLoss=100,
+            priceOffset=-0.5,
+        )
+        sent = client._patch.call_args.kwargs["json"]
+        assert sent == {
+            "mode": "PERCENTAGE",
+            "sizeValue": 10,
+            "maxExposure": 500,
+            "maxDailyLoss": 100,
+            "priceOffset": -0.5,
+        }
+        client.close()
+
 
 # ── POLA-1847: 9 sports markets endpoints ────────────────────────────────────
 
