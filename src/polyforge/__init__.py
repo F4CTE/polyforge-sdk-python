@@ -107,6 +107,7 @@ from polyforge.models import (
     VenueComparison,
     VenueComparisonDetail,
     VenuePreferences,
+    UserPreferences,  # cross-SDK alias
     SupportTicket,
     TicketMessage,
     CorrelationCategoriesReport,
@@ -226,6 +227,7 @@ __all__ = [
     "VenueComparison",
     "VenueComparisonDetail",
     "VenuePreferences",
+    "UserPreferences",  # cross-SDK alias
     "WatchlistItem",
     "Webhook",
     "WebhookTestResult",

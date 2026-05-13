@@ -1561,6 +1561,10 @@ class VenuePreferences:
     single_platform_mode: bool = False
 
 
+UserPreferences = VenuePreferences
+"""Alias for cross-SDK compatibility (TS: UserPreferences, Rust: UserPreferences)."""
+
+
 # ---------------------------------------------------------------------------
 # Support Tickets
 # ---------------------------------------------------------------------------
