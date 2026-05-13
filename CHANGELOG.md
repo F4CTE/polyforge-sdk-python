@@ -4,6 +4,19 @@
 
 ### Added
 
+**get_my_preferences / update_my_preferences (POLA-4329)** — cross-SDK
+naming aliases for the existing venue preferences methods, matching the
+`getMyPreferences` / `updateMyPreferences` naming in the TypeScript and
+Rust SDKs:
+
+- `get_my_preferences()` → `VenuePreferences` — delegates to `get_venue_preferences()`
+- `update_my_preferences(*, default_venue, enabled_venues, single_platform_mode)` → `VenuePreferences` — delegates to `update_venue_preferences()`
+- `UserPreferences` type alias for `VenuePreferences`
+
+Available on both `PolyforgeClient` and `AsyncPolyforgeClient`.
+
+### Added (prior)
+
 **Misc public utility endpoints (POLA-1857)** — eighteen endpoint methods
 filling gaps surfaced by the weekly SDK + MCP compatibility audit. All are
 available on both `PolyforgeClient` and `AsyncPolyforgeClient`:

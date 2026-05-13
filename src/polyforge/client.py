@@ -3422,6 +3422,24 @@ class PolyforgeClient:
             self._patch("/api/v1/users/me/venue-preferences", json=body),
         )
 
+    def get_my_preferences(self) -> VenuePreferences:
+        """Alias for :meth:`get_venue_preferences` kept for cross-SDK naming parity."""
+        return self.get_venue_preferences()
+
+    def update_my_preferences(
+        self,
+        *,
+        default_venue: str | None = None,
+        enabled_venues: list[str] | None = None,
+        single_platform_mode: bool | None = None,
+    ) -> VenuePreferences:
+        """Alias for :meth:`update_venue_preferences` kept for cross-SDK naming parity."""
+        return self.update_venue_preferences(
+            default_venue=default_venue,
+            enabled_venues=enabled_venues,
+            single_platform_mode=single_platform_mode,
+        )
+
     # -- Sports Markets --
 
     def list_sports_categories(self) -> list[dict[str, Any]]:
@@ -6516,6 +6534,24 @@ class AsyncPolyforgeClient:
         return _parse(
             VenuePreferences,
             await self._patch("/api/v1/users/me/venue-preferences", json=body),
+        )
+
+    async def get_my_preferences(self) -> VenuePreferences:
+        """Alias for :meth:`get_venue_preferences` kept for cross-SDK naming parity."""
+        return await self.get_venue_preferences()
+
+    async def update_my_preferences(
+        self,
+        *,
+        default_venue: str | None = None,
+        enabled_venues: list[str] | None = None,
+        single_platform_mode: bool | None = None,
+    ) -> VenuePreferences:
+        """Alias for :meth:`update_venue_preferences` kept for cross-SDK naming parity."""
+        return await self.update_venue_preferences(
+            default_venue=default_venue,
+            enabled_venues=enabled_venues,
+            single_platform_mode=single_platform_mode,
         )
 
     # -- Sports Markets --

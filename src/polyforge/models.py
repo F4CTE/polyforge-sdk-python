@@ -1561,6 +1561,10 @@ class VenuePreferences:
     single_platform_mode: bool = False
 
 
+UserPreferences = VenuePreferences
+"""Alias for :class:`VenuePreferences` kept for cross-SDK naming parity."""
+
+
 # ---------------------------------------------------------------------------
 # Support Tickets
 # ---------------------------------------------------------------------------
