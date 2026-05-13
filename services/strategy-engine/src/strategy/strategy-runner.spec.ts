@@ -377,6 +377,37 @@ describe("StrategyRunner — SAFETY evaluation", () => {
       expect.objectContaining({ type: "STRATEGY_STOPPED" }),
     );
   });
+
+  it("fails closed (stops strategy) on unknown safety block type", async () => {
+    const state = makeState();
+    const redis = makeRedis();
+    const prisma = makePrisma();
+    const onStatusChange = vi.fn().mockResolvedValue(undefined);
+
+    const runner = makeRunner({
+      execMode: "EVENT",
+      state,
+      redis,
+      prisma,
+      onStatusChange,
+      safety: [{ id: "unk", type: "NO_SUCH_SAFETY_BLOCK" }],
+    });
+
+    await runner.onPriceEvent("tok1", 0.5);
+
+    expect(runner.status).toBe("STOPPED");
+    expect(onStatusChange).toHaveBeenCalledWith(
+      "STOPPED",
+      expect.stringContaining("safety_block_type_missing:NO_SUCH_SAFETY_BLOCK"),
+    );
+    expect(prisma.strategy.update).toHaveBeenCalledWith(
+      expect.objectContaining({ data: { status: "IDLE" } }),
+    );
+    expect(redis.xadd).toHaveBeenCalledWith(
+      "stream:events",
+      expect.objectContaining({ type: "STRATEGY_STOPPED" }),
+    );
+  });
 });
 
 describe("StrategyRunner — TRIGGER evaluation", () => {
@@ -498,6 +529,25 @@ describe("StrategyRunner — CONDITION evaluation", () => {
     });
 
     state.get.mockResolvedValue({ ...DEFAULT_STATE, betsToday: 5 });
+
+    await runner.onPriceEvent("tok1", 0.5);
+    expect(onIntents).not.toHaveBeenCalled();
+  });
+
+  it("fails closed (skips actions) on unknown condition block type", async () => {
+    const state = makeState();
+    const onIntents = vi
+      .fn<(intents: OrderIntent[]) => Promise<void>>()
+      .mockResolvedValue(undefined);
+
+    const runner = makeRunner({
+      execMode: "EVENT",
+      state,
+      onIntents,
+      conditions: [{ id: "unk", type: "NO_SUCH_CONDITION_BLOCK" }],
+    });
+
+    state.get.mockResolvedValue({ ...DEFAULT_STATE });
 
     await runner.onPriceEvent("tok1", 0.5);
     expect(onIntents).not.toHaveBeenCalled();
