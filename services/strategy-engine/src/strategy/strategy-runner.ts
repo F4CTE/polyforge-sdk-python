@@ -277,6 +277,13 @@ export class StrategyRunner {
 
     this.tickInFlight = true;
     this.tickOwnershipLost = false;
+    // Cancel any pending delayed follow-up timer now that a real
+    // evaluation is starting. Prevents stale catch-up ticks that
+    // were scheduled by a previous tick's pendingTick handler.
+    if (this.followUpTimer) {
+      clearTimeout(this.followUpTimer);
+      this.followUpTimer = null;
+    }
     let lockAcquired = false;
     let lockRefresh: NodeJS.Timeout | null = null;
     const lockToken = randomUUID();
@@ -314,7 +321,7 @@ export class StrategyRunner {
             lockToken,
             "10",
           )
-          .then((result: number) => {
+          .then((result) => {
             if (result !== 1 && lockRefresh) {
               clearInterval(lockRefresh);
               lockRefresh = null;
@@ -326,6 +333,7 @@ export class StrategyRunner {
               clearInterval(lockRefresh);
               lockRefresh = null;
             }
+            this.tickOwnershipLost = true;
           });
       }, 5_000);
 
@@ -367,6 +375,12 @@ export class StrategyRunner {
       // Stop the lock-refresh interval.
       if (lockRefresh) clearInterval(lockRefresh);
 
+      // Release the local in-flight gate before the Redis unlock eval
+      // so that a slow or hung unlock does not prevent subsequent ticks
+      // from queueing up. The distributed lock still serializes
+      // cross-instance access.
+      this.tickInFlight = false;
+
       // Release the distributed lock only if this instance acquired it.
       // Uses atomic compare-and-delete (Lua) to avoid deleting a lock that
       // was re-acquired by another instance after TTL expiry.
@@ -391,8 +405,6 @@ export class StrategyRunner {
           );
         }
       }
-
-      this.tickInFlight = false;
       if (this.pendingTick) {
         this.pendingTick = false;
         // Fire a coalesced follow-up tick after release.
