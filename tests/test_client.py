@@ -5060,6 +5060,41 @@ class TestPublicHealthEndpoint:
         from polyforge import SystemHealthPublic as SHP
         assert SHP is SystemHealthPublic
 
+    def test_get_no_auth_sends_empty_auth_header_to_block_netrc_injection(self):
+        """_get_no_auth must set Authorization to '' (not absent).
+
+        When trust_env=True (httpx default), NetRCAuth uses
+        headers.setdefault() to inject ~/.netrc credentials for the
+        target host.  An absent Authorization header allows that
+        injection; an explicit empty string blocks it.
+        """
+        from unittest.mock import MagicMock
+
+        client = PolyforgeClient(api_key="test-key")
+        captured = []
+
+        def fake_send(req):
+            captured.append(req)
+            resp = MagicMock()
+            resp.status_code = 200
+            resp.json.return_value = {"status": "operational"}
+            return resp
+
+        client._client.send = fake_send
+        client._get_no_auth("/health")
+
+        assert len(captured) == 1
+        sent = captured[0]
+        assert "authorization" in sent.headers, (
+            "authorization header must be present (empty) not absent — "
+            "an absent header allows netrc credential injection"
+        )
+        assert sent.headers["authorization"] == "", (
+            "authorization header must be empty string to block "
+            "httpx NetRCAuth setdefault()"
+        )
+        client.close()
+
 
 class TestPositionPlatformContract:
     """Position model must match the platform contract (closes #143)."""

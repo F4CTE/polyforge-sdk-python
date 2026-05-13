@@ -800,7 +800,11 @@ class PolyforgeClient:
 
     def _get_no_auth(self, path: str) -> Any:
         req = self._client.build_request("GET", path)
-        req.headers.pop("authorization", None)
+        # Set to empty string rather than popping — an absent header
+        # allows httpx NetRCAuth (trust_env=True) to inject ~/.netrc
+        # credentials via setdefault().  An explicit empty string blocks
+        # env-based auth resolution.
+        req.headers["authorization"] = ""
         resp = self._client.send(req)
         _raise_for_status(resp)
         return resp.json()
@@ -4224,7 +4228,11 @@ class AsyncPolyforgeClient:
 
     async def _get_no_auth(self, path: str) -> Any:
         req = self._client.build_request("GET", path)
-        req.headers.pop("authorization", None)
+        # Set to empty string rather than popping — an absent header
+        # allows httpx NetRCAuth (trust_env=True) to inject ~/.netrc
+        # credentials via setdefault().  An explicit empty string blocks
+        # env-based auth resolution.
+        req.headers["authorization"] = ""
         resp = await self._client.send(req)
         _raise_for_status(resp)
         return resp.json()
