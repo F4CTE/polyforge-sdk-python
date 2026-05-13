@@ -988,6 +988,21 @@ class TestPlatformContractCompliance:
         assert '"mode"' in source or "'mode'" in source, "start_strategy() must send 'mode' field"
         assert "paperMode" not in source, "start_strategy() must not send obsolete 'paperMode' field"
 
+    def test_strategy_exec_mode_exported_from_package(self):
+        """StrategyExecMode must be importable from the polyforge package root (#262)."""
+        from polyforge import StrategyExecMode
+        assert StrategyExecMode is not None
+
+    def test_support_ticket_exported_from_package(self):
+        """SupportTicket must be importable from the polyforge package root (#262)."""
+        from polyforge import SupportTicket
+        assert SupportTicket is not None
+
+    def test_user_preferences_exported_from_package(self):
+        """UserPreferences must be importable from the polyforge package root (#262)."""
+        from polyforge import UserPreferences
+        assert UserPreferences is not None
+
 
 class TestFinancialParamValidation:
     """Test _validate_financial_param rejects dangerous values (#88)."""
