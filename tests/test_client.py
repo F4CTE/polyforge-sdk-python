@@ -12,6 +12,7 @@ from polyforge.client import (
     _raise_for_status,
     _validate_enum,
     _validate_financial_param,
+    _validate_marketplace_listing_fields,
     _validate_webhook_url,
     _is_ip_blocked,
     _resolve_and_validate_ips,
@@ -795,6 +796,42 @@ class TestFinancialParamValidation:
 
     def test_accepts_positive_int(self):
         _validate_financial_param("size", 10)  # should not raise
+
+
+class TestMarketplaceListingFieldValidation:
+    """Test _validate_marketplace_listing_fields rejects dangerous priceUsdc values."""
+
+    def test_rejects_negative_price(self):
+        with pytest.raises(ValueError, match="must be positive"):
+            _validate_marketplace_listing_fields({"priceUsdc": -10.0})
+
+    def test_rejects_zero_price(self):
+        with pytest.raises(ValueError, match="must be positive"):
+            _validate_marketplace_listing_fields({"priceUsdc": 0})
+
+    def test_rejects_nan_price(self):
+        with pytest.raises(ValueError, match="must not be NaN"):
+            _validate_marketplace_listing_fields({"priceUsdc": float("nan")})
+
+    def test_rejects_infinity_price(self):
+        with pytest.raises(ValueError, match="must not be Infinity"):
+            _validate_marketplace_listing_fields({"priceUsdc": float("inf")})
+
+    def test_rejects_non_number_price(self):
+        with pytest.raises(TypeError, match="must be a number"):
+            _validate_marketplace_listing_fields({"priceUsdc": "not-a-number"})
+
+    def test_accepts_positive_price(self):
+        _validate_marketplace_listing_fields({"priceUsdc": 9.99})  # should not raise
+
+    def test_accepts_price_string(self):
+        _validate_marketplace_listing_fields({"priceUsdc": "10.5"})  # should not raise
+
+    def test_accepts_no_price_field(self):
+        _validate_marketplace_listing_fields({})  # should not raise
+
+    def test_accepts_title_only(self):
+        _validate_marketplace_listing_fields({"title": "New Title"})  # should not raise
 
 
 class TestEnumValidation:
@@ -3271,6 +3308,80 @@ class TestMarketplaceSellerCrud:
         assert "/api/v1/marketplace/" in source
         assert "_patch" in source
         assert "_encode_path" in source
+
+    def test_sync_update_marketplace_listing_validates(self):
+        import inspect
+        source = inspect.getsource(PolyforgeClient.update_marketplace_listing)
+        assert "_validate_marketplace_listing_fields" in source
+
+    def test_async_update_marketplace_listing_validates(self):
+        import inspect
+        source = inspect.getsource(AsyncPolyforgeClient.update_marketplace_listing)
+        assert "_validate_marketplace_listing_fields" in source
+
+    def test_update_marketplace_listing_filters_unknown_kwargs(self):
+        """update_marketplace_listing silently drops keys not in the allowed set."""
+        from unittest.mock import MagicMock
+
+        client = PolyforgeClient(api_key="test")
+        client._patch = MagicMock(return_value={
+            "id": "ml-1",
+            "strategyId": "strat-1",
+            "sellerId": "seller-1",
+            "title": "My Listing",
+            "priceUsdc": "9.99",
+            "status": "DRAFT",
+            "purchaseCount": 0,
+            "forkCount": 0,
+            "ratingCount": 0,
+            "tags": [],
+            "createdAt": "2026-05-01T00:00:00Z",
+        })
+        client.update_marketplace_listing(
+            "ml-1",
+            title="New Title",
+            priceUsdc=9.99,
+            badKey="should-be-dropped",
+            anotherBad=42,
+        )
+        sent = client._patch.call_args.kwargs["json"]
+        assert "title" in sent
+        assert "priceUsdc" in sent
+        assert "badKey" not in sent
+        assert "anotherBad" not in sent
+        client.close()
+
+    def test_update_marketplace_listing_allows_all_known_fields(self):
+        from unittest.mock import MagicMock
+
+        client = PolyforgeClient(api_key="test")
+        client._patch = MagicMock(return_value={
+            "id": "ml-1",
+            "strategyId": "strat-1",
+            "sellerId": "seller-1",
+            "title": "My Listing",
+            "description": "Updated desc",
+            "priceUsdc": "9.99",
+            "status": "DRAFT",
+            "purchaseCount": 0,
+            "forkCount": 0,
+            "ratingCount": 0,
+            "tags": [],
+            "createdAt": "2026-05-01T00:00:00Z",
+        })
+        client.update_marketplace_listing(
+            "ml-1",
+            title="New Title",
+            priceUsdc="14.99",
+            description="A new description",
+        )
+        sent = client._patch.call_args.kwargs["json"]
+        assert sent == {
+            "title": "New Title",
+            "priceUsdc": "14.99",
+            "description": "A new description",
+        }
+        client.close()
 
     # -- rate_marketplace_listing --
 

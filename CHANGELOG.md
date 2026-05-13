@@ -141,6 +141,13 @@ The deprecated sync and async method aliases remain callable for one minor
 release and emit `DeprecationWarning`; deprecated referral type names remain
 importable for the same window.
 
+### Fixed
+
+- `update_marketplace_listing` now filters unknown keyword arguments before
+  PATCH, forwarding only known fields (`title`, `priceUsdc`, `description`).
+  Unknown keys are silently dropped, matching the platform's strict schema
+  validation. Previously arbitrary kwargs were forwarded without validation.
+
 ## [2.0.0] — 2026-04-16
 
 ### Added

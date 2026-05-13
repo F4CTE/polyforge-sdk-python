@@ -568,6 +568,24 @@ def _validate_copy_config_numeric_fields(fields: dict[str, Any]) -> None:
         _validate_finite_numberish_param("priceOffset", fields["priceOffset"])
 
 
+_KNOWN_MARKETPLACE_LISTING_UPDATE_FIELDS: frozenset[str] = frozenset(
+    {
+        "title",
+        "priceUsdc",
+        "description",
+    }
+)
+
+
+def _validate_marketplace_listing_fields(fields: dict[str, Any]) -> None:
+    """Reject invalid marketplace listing field values before PATCH.
+
+    Validates ``priceUsdc`` as a positive number (string or float).
+    """
+    if "priceUsdc" in fields and fields["priceUsdc"] is not None:
+        _validate_positive_numberish_param("priceUsdc", fields["priceUsdc"])
+
+
 _BLOCKED_HOSTNAMES: set[str] = {
     "localhost",
     "metadata.google.internal",
@@ -2152,19 +2170,22 @@ class PolyforgeClient:
     def update_marketplace_listing(self, listing_id: str, **kwargs: Any) -> MarketplaceListing:
         """Update an existing marketplace listing.
 
-        Pass API field names as keyword arguments (e.g. ``price=9.99``,
-        ``description="Updated desc"``).
+        Pass API field names as keyword arguments (e.g. ``priceUsdc=9.99``,
+        ``title="Updated Title"``).
 
         Args:
             listing_id: The listing ID to update.
-            **kwargs: Fields to update (passed directly to the API).
+            **kwargs: Fields to update. Only known fields are forwarded;
+                unknown keys are silently dropped.
 
         Returns:
             The updated :class:`MarketplaceListing`.
         """
+        body = {k: v for k, v in kwargs.items() if k in _KNOWN_MARKETPLACE_LISTING_UPDATE_FIELDS}
+        _validate_marketplace_listing_fields(body)
         return _parse(
             MarketplaceListing,
-            self._patch(f"/api/v1/marketplace/{_encode_path(listing_id)}", json=kwargs),
+            self._patch(f"/api/v1/marketplace/{_encode_path(listing_id)}", json=body),
         )
 
     def rate_marketplace_listing(
@@ -5389,10 +5410,21 @@ class AsyncPolyforgeClient:
         return _parse(MarketplaceListing, await self._post("/api/v1/marketplace", json=body))
 
     async def update_marketplace_listing(self, listing_id: str, **kwargs: Any) -> MarketplaceListing:
-        """Update an existing marketplace listing."""
+        """Update an existing marketplace listing.
+
+        Args:
+            listing_id: The listing ID to update.
+            **kwargs: Fields to update. Only known fields are forwarded;
+                unknown keys are silently dropped.
+
+        Returns:
+            The updated :class:`MarketplaceListing`.
+        """
+        body = {k: v for k, v in kwargs.items() if k in _KNOWN_MARKETPLACE_LISTING_UPDATE_FIELDS}
+        _validate_marketplace_listing_fields(body)
         return _parse(
             MarketplaceListing,
-            await self._patch(f"/api/v1/marketplace/{_encode_path(listing_id)}", json=kwargs),
+            await self._patch(f"/api/v1/marketplace/{_encode_path(listing_id)}", json=body),
         )
 
     async def rate_marketplace_listing(
