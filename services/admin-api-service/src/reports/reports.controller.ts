@@ -23,7 +23,7 @@ import {
 import { AdminJwtPayload, AdminRole } from "@polyforge/shared-types";
 
 @UseGuards(AdminJwtGuard, RolesGuard)
-@Roles(AdminRole.SUPER_ADMIN, AdminRole.ADMIN)
+@Roles(AdminRole.SUPER_ADMIN, AdminRole.ADMIN, AdminRole.SUPPORT)
 @Controller("reports")
 export class ReportsController {
   constructor(
