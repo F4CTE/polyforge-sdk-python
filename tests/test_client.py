@@ -34,6 +34,7 @@ from polyforge.models import (
     JournalEntry,
     Market,
     MatchSyncResult,
+    SystemHealthPublic,
     SystemHealthAuthenticated,
     Token,
     MarketplaceListing,
@@ -5023,7 +5024,41 @@ class TestHealthEndpoint:
         assert MSR is MatchSyncResult
 
 
+class TestPublicHealthEndpoint:
+    """Tests for the unauthenticated public health-check endpoint (POLA-4153)."""
 
+    def test_sync_get_health(self):
+        from unittest.mock import MagicMock
+        client = PolyforgeClient(api_key="test-key")
+        client._get_no_auth = MagicMock(return_value={
+            "status": "operational",
+            "service": "api-service",
+            "version": "2.0.0",
+            "uptime": 3600.0,
+        })
+        result = client.get_health()
+        assert isinstance(result, SystemHealthPublic)
+        assert result.status == "operational"
+        assert result.service == "api-service"
+        assert result.version == "2.0.0"
+        assert result.uptime == 3600.0
+        assert not hasattr(result, "db")
+        assert not hasattr(result, "redis")
+        assert not hasattr(result, "queue_depth")
+        assert not hasattr(result, "services")
+        client._get_no_auth.assert_called_once_with("/health")
+        client.close()
+
+    def test_async_get_health_is_coroutine(self):
+        import inspect
+        assert hasattr(AsyncPolyforgeClient, "get_health"), \
+            "AsyncPolyforgeClient missing get_health"
+        source = inspect.getsource(AsyncPolyforgeClient.get_health)
+        assert "await" in source, "async get_health not using await"
+
+    def test_new_public_model_exported_from_package_root(self):
+        from polyforge import SystemHealthPublic as SHP
+        assert SHP is SystemHealthPublic
 
 
 class TestPositionPlatformContract:

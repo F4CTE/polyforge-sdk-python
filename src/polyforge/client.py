@@ -111,6 +111,7 @@ from polyforge.models import (
     StrategyEvent,
     StrategyStatusResponse,
     StrategyTemplate,
+    SystemHealthPublic,
     SystemHealthAuthenticated,
     TickSizeInfo,
     Token,
@@ -797,7 +798,24 @@ class PolyforgeClient:
         _raise_for_status(resp)
         return resp.text
 
+    def _get_no_auth(self, path: str) -> Any:
+        req = self._client.build_request("GET", path)
+        req.headers.pop("authorization", None)
+        resp = self._client.send(req)
+        _raise_for_status(resp)
+        return resp.json()
+
     # -- Health --
+
+    def get_health(self) -> SystemHealthPublic:
+        """Get the public API health payload.
+
+        Calls ``GET /health`` (unauthenticated) and returns public status
+        information. Operational internals (DB, Redis, queue, services)
+        are not exposed on this endpoint.
+        """
+        data = self._get_no_auth("/health")
+        return _parse(SystemHealthPublic, data)
 
     def get_health_authenticated(self) -> SystemHealthAuthenticated:
         """Get authenticated health/status data with full operational metrics.
@@ -4204,7 +4222,24 @@ class AsyncPolyforgeClient:
         _raise_for_status(resp)
         return resp.text
 
+    async def _get_no_auth(self, path: str) -> Any:
+        req = self._client.build_request("GET", path)
+        req.headers.pop("authorization", None)
+        resp = await self._client.send(req)
+        _raise_for_status(resp)
+        return resp.json()
+
     # -- Health --
+
+    async def get_health(self) -> SystemHealthPublic:
+        """Get the public API health payload.
+
+        Calls ``GET /health`` (unauthenticated) and returns public status
+        information. Operational internals (DB, Redis, queue, services)
+        are not exposed on this endpoint.
+        """
+        data = await self._get_no_auth("/health")
+        return _parse(SystemHealthPublic, data)
 
     async def get_health_authenticated(self) -> SystemHealthAuthenticated:
         """Get authenticated health/status data with full operational metrics.

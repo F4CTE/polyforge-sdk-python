@@ -1781,6 +1781,20 @@ class JournalEntry:
 
 
 @dataclass
+class SystemHealthPublic:
+    """Public health/status response for GET /health (unauthenticated).
+
+    Returns only public-facing status fields. Operational internals
+    (DB, Redis, queue, services) are not exposed on this endpoint.
+    """
+
+    status: str = ""
+    service: str | None = None
+    version: str | None = None
+    uptime: float | None = None
+
+
+@dataclass
 class SystemHealthAuthenticated:
     """Authenticated health/status response for GET /api/v1/status.
 

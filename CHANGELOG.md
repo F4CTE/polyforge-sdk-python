@@ -99,6 +99,21 @@ New typed model: `SystemHealthAuthenticated` (`status`, `service`, `version`,
 `uptime`, `db`, `redis`, `queue_depth`, `services`). `MatchSyncResult` now
 includes optional `created`/`updated` fields matching the TS/Rust SDKs.
 
+**Unauthenticated public health (POLA-4153)** — one method closing a gap
+surfaced by the weekly cross-SDK compatibility audit, available on both
+`PolyforgeClient` and `AsyncPolyforgeClient`:
+
+- `get_health()` → `SystemHealthPublic` —
+  `GET /health` (root-level, unauthenticated). Returns public status
+  information only (status, service, version, uptime). Operational
+  internals (DB, Redis, queue, services) are not exposed on this
+  endpoint. Matches `getHealth()` in sdk-ts and `get_health()` in sdk-rust.
+
+New typed model: `SystemHealthPublic` (`status`, `service`, `version`,
+`uptime`). The internal `_get_no_auth()` helper strips the `Authorization`
+header before sending the request, making the health probe callable even
+without a configured API key.
+
 **GDPR personal data export (POLA-3611)** — one method closing a compliance gap
 surfaced by the weekly cross-SDK compatibility audit, available on both
 `PolyforgeClient` and `AsyncPolyforgeClient`:
