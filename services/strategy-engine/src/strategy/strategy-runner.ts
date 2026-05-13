@@ -403,6 +403,7 @@ export class StrategyRunner {
           this.scheduledFollowUp = true;
           void this.tick();
         } else {
+          if (this.followUpTimer) clearTimeout(this.followUpTimer);
           const delay = Math.max(this.tickMs, MIN_TICK_MS);
           this.followUpTimer = setTimeout(() => {
             this.followUpTimer = null;
