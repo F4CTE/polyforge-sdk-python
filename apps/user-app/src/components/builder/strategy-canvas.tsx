@@ -478,7 +478,6 @@ export function StrategyCanvas() {
         deleteKeyCode={["Backspace", "Delete"]}
         nodesFocusable
         edgesFocusable
-        selectNodesOnDrag={false}
         snapToGrid
         snapGrid={[20, 20]}
         minZoom={0.1}
