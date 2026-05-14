@@ -1089,6 +1089,24 @@ class TestPlaceOrderValidation:
             )
         client.close()
 
+    def test_place_smart_order_rejects_fractional_slices(self):
+        client = PolyforgeClient(api_key="test-key")
+        with pytest.raises(TypeError, match="slices must be an integer"):
+            client.place_smart_order(
+                type="TWAP", token_id="tok", side="BUY",
+                outcome="YES", total_size=10.0, slices=2.5, interval_minutes=10,
+            )
+        client.close()
+
+    def test_place_smart_order_rejects_fractional_interval_minutes(self):
+        client = PolyforgeClient(api_key="test-key")
+        with pytest.raises(TypeError, match="interval_minutes must be an integer"):
+            client.place_smart_order(
+                type="TWAP", token_id="tok", side="BUY",
+                outcome="YES", total_size=10.0, slices=5, interval_minutes=1.5,
+            )
+        client.close()
+
     def test_place_smart_order_rejects_total_size_below_1(self):
         client = PolyforgeClient(api_key="test-key")
         with pytest.raises(ValueError, match="total_size must be at least 1"):
@@ -1257,7 +1275,9 @@ class TestAsyncPlaceOrderValidation:
         assert "stop_loss_price is required for BRACKET orders" in source
         assert "price_a is required for OCO orders" in source
         assert "price_b is required for OCO orders" in source
+        assert "slices must be an integer" in source
         assert "slices must be between 2 and 100" in source
+        assert "interval_minutes must be an integer" in source
         assert "interval_minutes must be between 1 and 10080" in source
         assert '_validate_financial_param("total_size"' in source
         assert "total_size must be at least 1" in source

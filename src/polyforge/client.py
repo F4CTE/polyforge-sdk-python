@@ -2149,10 +2149,14 @@ class PolyforgeClient:
         if type in ("TWAP", "DCA"):
             if slices is None:
                 raise ValueError("slices is required for TWAP/DCA orders")
+            if not isinstance(slices, int) or isinstance(slices, bool):
+                raise TypeError("slices must be an integer")
             if slices < 2 or slices > 100:
                 raise ValueError(f"slices must be between 2 and 100, got {slices}")
             if interval_minutes is None:
                 raise ValueError("interval_minutes is required for TWAP/DCA orders")
+            if not isinstance(interval_minutes, int) or isinstance(interval_minutes, bool):
+                raise TypeError("interval_minutes must be an integer")
             if interval_minutes < 1 or interval_minutes > 10080:
                 raise ValueError(f"interval_minutes must be between 1 and 10080, got {interval_minutes}")
         elif type == "BRACKET":
@@ -5467,10 +5471,14 @@ class AsyncPolyforgeClient:
         if type in ("TWAP", "DCA"):
             if slices is None:
                 raise ValueError("slices is required for TWAP/DCA orders")
+            if not isinstance(slices, int) or isinstance(slices, bool):
+                raise TypeError("slices must be an integer")
             if slices < 2 or slices > 100:
                 raise ValueError(f"slices must be between 2 and 100, got {slices}")
             if interval_minutes is None:
                 raise ValueError("interval_minutes is required for TWAP/DCA orders")
+            if not isinstance(interval_minutes, int) or isinstance(interval_minutes, bool):
+                raise TypeError("interval_minutes must be an integer")
             if interval_minutes < 1 or interval_minutes > 10080:
                 raise ValueError(f"interval_minutes must be between 1 and 10080, got {interval_minutes}")
         elif type == "BRACKET":
