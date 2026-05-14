@@ -1235,7 +1235,7 @@ class BulkCancelError:
 
 @dataclass
 class BulkCancelResult:
-    """Response from DELETE /api/v1/orders/bulk."""
+    """Response from POST /api/v1/orders/bulk."""
 
     cancelled: list[str] = field(default_factory=list)
     errors: list[BulkCancelError] = field(default_factory=list)
