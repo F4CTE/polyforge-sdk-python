@@ -445,6 +445,83 @@ class TestModelParsing:
         from polyforge import SupportTicket  # noqa: F401
         assert SupportTicket is not None
 
+    def test_market_parses_resolved_string_true(self):
+        """_parse must coerce \"true\" string to True for boolean fields."""
+        api_response = {
+            "id": "mkt-str-bool",
+            "title": "String bool test",
+            "category": "Crypto",
+            "resolved": "true",
+        }
+        market = _parse(Market, api_response)
+        assert market.resolved is True
+
+    def test_market_parses_resolved_string_false(self):
+        """_parse must coerce \"false\" string to False for boolean fields."""
+        api_response = {
+            "id": "mkt-str-bool",
+            "title": "String bool test",
+            "category": "Crypto",
+            "resolved": "false",
+        }
+        market = _parse(Market, api_response)
+        assert market.resolved is False
+
+    def test_market_parses_resolved_numeric_one(self):
+        """_parse must coerce numeric 1 to True for boolean fields."""
+        api_response = {
+            "id": "mkt-num-bool",
+            "title": "Numeric bool test",
+            "category": "Crypto",
+            "resolved": 1,
+        }
+        market = _parse(Market, api_response)
+        assert market.resolved is True
+
+    def test_market_parses_resolved_numeric_zero(self):
+        """_parse must coerce numeric 0 to False for boolean fields."""
+        api_response = {
+            "id": "mkt-num-bool",
+            "title": "Numeric bool test",
+            "category": "Crypto",
+            "resolved": 0,
+        }
+        market = _parse(Market, api_response)
+        assert market.resolved is False
+
+    def test_market_parses_rejects_unrecognized_bool_string(self):
+        """_parse must reject unrecognized boolean strings like \"on\"."""
+        api_response = {
+            "id": "mkt-bad-str",
+            "title": "Bad bool string",
+            "category": "Crypto",
+            "resolved": "on",
+        }
+        with pytest.raises(ValueError, match="Unrecognized boolean string"):
+            _parse(Market, api_response)
+
+    def test_market_parses_rejects_out_of_range_numeric_bool(self):
+        """_parse must reject numeric bool values other than 0/1 (e.g. 2)."""
+        api_response = {
+            "id": "mkt-bad-num",
+            "title": "Bad numeric bool",
+            "category": "Crypto",
+            "resolved": 2,
+        }
+        with pytest.raises(ValueError, match="Numeric value out of range"):
+            _parse(Market, api_response)
+
+    def test_market_parses_rejects_negative_numeric_bool(self):
+        """_parse must reject negative numeric bool values like -1."""
+        api_response = {
+            "id": "mkt-neg-num",
+            "title": "Negative bool",
+            "category": "Crypto",
+            "resolved": -1,
+        }
+        with pytest.raises(ValueError, match="Numeric value out of range"):
+            _parse(Market, api_response)
+
     def test_strategy_model_instantiation(self):
         """Should instantiate Strategy model."""
         strategy = Strategy(

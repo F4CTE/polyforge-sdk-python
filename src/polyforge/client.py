@@ -351,7 +351,13 @@ def _parse(cls: type[T], data: dict[str, Any]) -> T:
                     f"Unrecognized boolean string for {f.name}: {raw!r}"
                 )
         elif hint is bool and isinstance(raw, (int, float)):
-            kwargs[f.name] = bool(raw)
+            if raw in (0, 1):
+                kwargs[f.name] = bool(raw)
+            else:
+                raise ValueError(
+                    f"Numeric value out of range for boolean field "
+                    f"{f.name}: {raw!r}"
+                )
         else:
             kwargs[f.name] = raw
 
