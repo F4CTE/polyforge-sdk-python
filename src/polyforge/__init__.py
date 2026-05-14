@@ -208,7 +208,6 @@ __all__ = [
     "StrategyEventType",
     "StrategyStatusResponse",
     "StrategyTemplate",
-    "StrategyVisibility",
     "SupportTicket",
     "SystemHealthAuthenticated",
     "SystemHealthPublic",
