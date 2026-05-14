@@ -885,6 +885,87 @@ class TestPlaceOrderValidation:
             )
         client.close()
 
+    def test_place_smart_order_rejects_invalid_type(self):
+        client = PolyforgeClient(api_key="test-key")
+        with pytest.raises(ValueError, match="type must be one of"):
+            client.place_smart_order(
+                type="INVALID", token_id="tok", side="BUY",
+                outcome="YES", total_size=10.0,
+            )
+        client.close()
+
+    def test_place_smart_order_rejects_invalid_side(self):
+        client = PolyforgeClient(api_key="test-key")
+        with pytest.raises(ValueError, match="side must be one of"):
+            client.place_smart_order(
+                type="TWAP", token_id="tok", side="INVALID",
+                outcome="YES", total_size=10.0,
+            )
+        client.close()
+
+    def test_place_smart_order_rejects_invalid_outcome(self):
+        client = PolyforgeClient(api_key="test-key")
+        with pytest.raises(ValueError, match="outcome must be one of"):
+            client.place_smart_order(
+                type="TWAP", token_id="tok", side="BUY",
+                outcome="INVALID", total_size=10.0,
+            )
+        client.close()
+
+    def test_place_smart_order_rejects_non_int_slices(self):
+        client = PolyforgeClient(api_key="test-key")
+        with pytest.raises(TypeError, match="slices must be an integer"):
+            client.place_smart_order(
+                type="TWAP", token_id="tok", side="BUY",
+                outcome="YES", total_size=10.0, slices=1.5,
+            )
+        client.close()
+
+    def test_place_smart_order_rejects_zero_slices(self):
+        client = PolyforgeClient(api_key="test-key")
+        with pytest.raises(ValueError, match="slices must be positive"):
+            client.place_smart_order(
+                type="TWAP", token_id="tok", side="BUY",
+                outcome="YES", total_size=10.0, slices=0,
+            )
+        client.close()
+
+    def test_place_smart_order_rejects_negative_slices(self):
+        client = PolyforgeClient(api_key="test-key")
+        with pytest.raises(ValueError, match="slices must be positive"):
+            client.place_smart_order(
+                type="TWAP", token_id="tok", side="BUY",
+                outcome="YES", total_size=10.0, slices=-1,
+            )
+        client.close()
+
+    def test_place_smart_order_rejects_non_int_interval_minutes(self):
+        client = PolyforgeClient(api_key="test-key")
+        with pytest.raises(TypeError, match="interval_minutes must be an integer"):
+            client.place_smart_order(
+                type="TWAP", token_id="tok", side="BUY",
+                outcome="YES", total_size=10.0, interval_minutes=1.5,
+            )
+        client.close()
+
+    def test_place_smart_order_rejects_zero_interval_minutes(self):
+        client = PolyforgeClient(api_key="test-key")
+        with pytest.raises(ValueError, match="interval_minutes must be positive"):
+            client.place_smart_order(
+                type="TWAP", token_id="tok", side="BUY",
+                outcome="YES", total_size=10.0, interval_minutes=0,
+            )
+        client.close()
+
+    def test_place_smart_order_rejects_negative_interval_minutes(self):
+        client = PolyforgeClient(api_key="test-key")
+        with pytest.raises(ValueError, match="interval_minutes must be positive"):
+            client.place_smart_order(
+                type="TWAP", token_id="tok", side="BUY",
+                outcome="YES", total_size=10.0, interval_minutes=-1,
+            )
+        client.close()
+
     def test_provide_liquidity_rejects_negative_amount(self):
         client = PolyforgeClient(api_key="test-key")
         with pytest.raises(ValueError, match="must be positive"):
@@ -925,10 +1006,15 @@ class TestAsyncPlaceOrderValidation:
         assert '"amount"' in source or "'amount'" in source
 
     def test_async_place_smart_order_calls_validate(self):
-        """Async place_smart_order must call _validate_financial_param for total_size."""
+        """Async place_smart_order must call _validate_enum for type/side/outcome and _validate_positive_int."""
         import inspect
         source = inspect.getsource(AsyncPolyforgeClient.place_smart_order)
         assert '_validate_financial_param("total_size"' in source
+        assert '_validate_enum("type", type, _VALID_SMART_ORDER_TYPES)' in source
+        assert '_validate_enum("side", side, _VALID_SIDES)' in source
+        assert '_validate_enum("outcome", outcome, _VALID_OUTCOMES)' in source
+        assert '_validate_positive_int("slices", slices)' in source
+        assert '_validate_positive_int("interval_minutes", interval_minutes)' in source
 
     def test_async_provide_liquidity_calls_validate(self):
         """Async provide_liquidity must call _validate_financial_param for amount_usdc (#26)."""

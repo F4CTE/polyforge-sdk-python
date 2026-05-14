@@ -415,6 +415,7 @@ _VALID_MODES = frozenset({"live", "paper"})
 _VALID_SIDES = frozenset({"BUY", "SELL"})
 _VALID_OUTCOMES = frozenset({"YES", "NO"})
 _VALID_ORDER_TYPES = frozenset({"GTC", "GTD", "FOK", "FAK", "POST_ONLY"})
+_VALID_SMART_ORDER_TYPES = frozenset({"TWAP", "DCA", "BRACKET", "OCO"})
 _VALID_SPORTS_SORTS = frozenset({"volume", "closing_soon", "newest"})
 _VALID_SPORTS_EVENT_STATUSES = frozenset(
     {"SCHEDULED", "PREGAME", "LIVE", "HALFTIME", "FINAL"}
@@ -442,6 +443,19 @@ def _validate_financial_param(name: str, value: float) -> None:
     if math.isinf(value):
         raise ValueError(f"{name} must not be Infinity")
     if value <= 0:
+        raise ValueError(f"{name} must be positive, got {value}")
+
+
+def _validate_positive_int(name: str, value: int) -> None:
+    """Reject non-integer, zero, or negative values for positive-integer parameters.
+
+    Raises:
+        TypeError: if *value* is not an int (or is a bool).
+        ValueError: if *value* is less than 1.
+    """
+    if not isinstance(value, int) or isinstance(value, bool):
+        raise TypeError(f"{name} must be an integer, got {type(value).__name__}")
+    if value < 1:
         raise ValueError(f"{name} must be positive, got {value}")
 
 
@@ -2029,7 +2043,14 @@ class PolyforgeClient:
         idempotency_key: str | None = None,
     ) -> PlaceSmartOrderResponse:
         """Place an advanced smart order (TWAP, DCA, BRACKET, or OCO)."""
+        _validate_enum("type", type, _VALID_SMART_ORDER_TYPES)
+        _validate_enum("side", side, _VALID_SIDES)
+        _validate_enum("outcome", outcome, _VALID_OUTCOMES)
         _validate_financial_param("total_size", total_size)
+        if slices is not None:
+            _validate_positive_int("slices", slices)
+        if interval_minutes is not None:
+            _validate_positive_int("interval_minutes", interval_minutes)
         if limit_price is not None:
             _validate_financial_param("limit_price", limit_price)
         if entry_price is not None:
@@ -5278,7 +5299,14 @@ class AsyncPolyforgeClient:
         idempotency_key: str | None = None,
     ) -> PlaceSmartOrderResponse:
         """Place an advanced smart order (TWAP, DCA, BRACKET, or OCO)."""
+        _validate_enum("type", type, _VALID_SMART_ORDER_TYPES)
+        _validate_enum("side", side, _VALID_SIDES)
+        _validate_enum("outcome", outcome, _VALID_OUTCOMES)
         _validate_financial_param("total_size", total_size)
+        if slices is not None:
+            _validate_positive_int("slices", slices)
+        if interval_minutes is not None:
+            _validate_positive_int("interval_minutes", interval_minutes)
         if limit_price is not None:
             _validate_financial_param("limit_price", limit_price)
         if entry_price is not None:
