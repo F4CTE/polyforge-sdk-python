@@ -247,6 +247,7 @@ model User {
   marketplaceListings    MarketplaceListing[]    @relation("SellerListings")
   marketplacePurchases   MarketplacePurchase[]   @relation("BuyerPurchases")
   watchlistItems         WatchlistItem[]
+  sentimentVotes         MarketSentimentVote[]
   arbitrageAlerts        ArbitrageAlert[]
   arbPositions           ArbPosition[]
   userCredential         UserCredential?
@@ -876,6 +877,7 @@ model Market {
   conditionalOrders ConditionalOrder[]
   newsSignals       NewsSignal[]
   watchlistItems    WatchlistItem[]
+  sentimentVotes    MarketSentimentVote[]
   strategies        Strategy[]
 
   @@index([venue])
@@ -1371,6 +1373,23 @@ model WatchlistItem {
   @@unique([userId, marketId])
   @@index([userId])
   @@map("watchlist_items")
+}
+
+model MarketSentimentVote {
+  id         String   @id @default(uuid())
+  userId     String
+  marketId   String   @db.VarChar(255)
+  direction  String   @db.VarChar(10) // BUY or SELL
+  confidence Int      // 1-100
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  user   User   @relation(fields: [userId],   references: [id], onDelete: Cascade)
+  market Market @relation(fields: [marketId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, marketId])
+  @@index([marketId])
+  @@map("market_sentiment_votes")
 }
 
 // ─────────────────────────────────────────────

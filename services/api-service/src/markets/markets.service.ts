@@ -13,6 +13,7 @@ import {
   MarketQueryDto,
   PriceHistoryQueryDto,
   ClobPriceHistoryQueryDto,
+  VoteMarketSentimentDto,
 } from "./dto/market-query.dto";
 import { ClobReadService } from "../common/services/clob-read.service";
 
@@ -107,7 +108,7 @@ export class MarketsService implements OnModuleInit {
 
     // Single raw SQL query — Prisma ORM adds ~5-15s overhead on resource-limited hosts
     // Validate sort parameter against whitelist to prevent SQL injection
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
+
     const orderCol = Prisma.raw(
       (this.allowedSortColumns.get(sort ?? "volume") ||
         this.allowedSortColumns.get("volume"))!,
@@ -118,31 +119,26 @@ export class MarketsService implements OnModuleInit {
     if (search) {
       const pattern = `%${search}%`;
       conditions.push(
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-call
         Prisma.sql`(m.title ILIKE ${pattern} OR m."seriesSlug" ILIKE ${pattern})`,
       );
     }
     if (category) {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-call
       conditions.push(Prisma.sql`LOWER(m.category) = LOWER(${category})`);
     }
     if (closed !== undefined) {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-call
       conditions.push(Prisma.sql`m.closed = ${closed}`);
     }
 
     // Prisma namespace resolution issue — these calls are safe
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+
     let whereClause: Prisma.Sql = Prisma.empty;
     if (conditions.length > 0) {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
       const joined = Prisma.join(conditions, " AND ");
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
+
       whereClause = Prisma.sql`WHERE ${joined}`;
     }
 
     const rows: Record<string, unknown>[] = await this.prisma.$queryRaw(
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-call
       Prisma.sql`
       SELECT
         m.id, m.slug, m.title, m.description, m.category, m.image,
@@ -644,24 +640,81 @@ export class MarketsService implements OnModuleInit {
     totalVotes: number;
     userVote: { direction: string; confidence: number } | null;
   }> {
-    const signals = await this.prisma.newsSignal.findMany({
-      where: {
-        marketId,
-        createdAt: { gte: new Date(Date.now() - 30 * 86400_000) },
-      },
-      select: { direction: true, confidence: true },
-    });
+    const [buyCount, sellCount, userVoteRecord] = await Promise.all([
+      this.prisma.marketSentimentVote.count({
+        where: { marketId, direction: "BUY" },
+      }),
+      this.prisma.marketSentimentVote.count({
+        where: { marketId, direction: "SELL" },
+      }),
+      userId
+        ? this.prisma.marketSentimentVote.findUnique({
+            where: { userId_marketId: { userId, marketId } },
+            select: { direction: true, confidence: true },
+          })
+        : Promise.resolve(null),
+    ]);
 
-    const buys = signals.filter((s) => s.direction === "BUY");
-    const sells = signals.filter((s) => s.direction === "SELL");
-    const total = signals.length || 1;
+    const total = buyCount + sellCount || 1;
 
     return {
-      yesPercent: Math.round((buys.length / total) * 100),
-      noPercent: Math.round((sells.length / total) * 100),
-      totalVotes: signals.length,
-      userVote: null,
+      yesPercent: Math.round((buyCount / total) * 100),
+      noPercent: Math.round((sellCount / total) * 100),
+      totalVotes: buyCount + sellCount,
+      userVote: userVoteRecord
+        ? {
+            direction: userVoteRecord.direction === "BUY" ? "YES" : "NO",
+            confidence: userVoteRecord.confidence,
+          }
+        : null,
     };
+  }
+
+  async voteMarketSentiment(
+    marketId: string,
+    userId: string,
+    dto: VoteMarketSentimentDto,
+  ): Promise<{
+    yesPercent: number;
+    noPercent: number;
+    totalVotes: number;
+    userVote: { direction: string; confidence: number };
+  }> {
+    const market = await this.prisma.market.findUnique({
+      where: { id: marketId },
+      select: { id: true },
+    });
+    if (!market) {
+      throw new NotFoundException({
+        code: "MARKET_NOT_FOUND",
+        message: "Market not found",
+      });
+    }
+
+    const dbDirection = dto.direction === "YES" ? "BUY" : "SELL";
+
+    await this.prisma.marketSentimentVote.upsert({
+      where: {
+        userId_marketId: { userId, marketId },
+      },
+      create: {
+        userId,
+        marketId,
+        direction: dbDirection,
+        confidence: dto.confidence,
+      },
+      update: {
+        direction: dbDirection,
+        confidence: dto.confidence,
+      },
+    });
+
+    return this.getMarketSentiment(marketId, userId) as Promise<{
+      yesPercent: number;
+      noPercent: number;
+      totalVotes: number;
+      userVote: { direction: string; confidence: number };
+    }>;
   }
 
   async search(query: {

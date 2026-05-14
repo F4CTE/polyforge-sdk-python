@@ -28,12 +28,16 @@ import {
   ClobPriceHistoryQueryDto,
   MarketHistoryQueryDto,
   CreateMarketAlertDto,
+  VoteMarketSentimentDto,
 } from "./dto/market-query.dto";
 import { BETA_LIMITS_DEFAULTS } from "@polyforge/shared-redis";
 
 // Market-data endpoints get a tighter per-user rate limit (beta: 100 req/min)
 const MARKET_DATA_THROTTLE = {
-  default: { ttl: 60000, limit: BETA_LIMITS_DEFAULTS.marketDataRateLimitPerMinute },
+  default: {
+    ttl: 60000,
+    limit: BETA_LIMITS_DEFAULTS.marketDataRateLimitPerMinute,
+  },
 };
 
 @ApiTags("markets")
@@ -108,11 +112,14 @@ export class MarketsController {
 
   @Post(":marketId/sentiment")
   @HttpCode(HttpStatus.OK)
+  @UseGuards(ApiKeyScopeGuard)
+  @RequireScopes("WRITE")
   voteMarketSentiment(
     @Param("marketId") marketId: string,
     @CurrentUser() user: JwtPayload,
+    @Body() dto: VoteMarketSentimentDto,
   ) {
-    return this.markets.getMarketSentiment(marketId, user.sub);
+    return this.markets.voteMarketSentiment(marketId, user.sub, dto);
   }
 
   @Get(":tokenId/price-history")

@@ -96,6 +96,17 @@ export class MarketHistoryQueryDto {
   period?: string = "7d";
 }
 
+export class VoteMarketSentimentDto {
+  @IsIn(["YES", "NO"])
+  direction!: string;
+
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @Max(100)
+  confidence!: number;
+}
+
 export class CreateMarketAlertDto {
   @IsIn(["YES", "NO", "Yes", "No"])
   outcome!: string;
