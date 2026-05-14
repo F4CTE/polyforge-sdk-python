@@ -4229,7 +4229,6 @@ class AsyncPolyforgeClient:
 
     # -- Health --
 
-<<<<<<< HEAD
     async def get_health(self) -> SystemHealthPublic:
         """Get the public API health payload (unauthenticated).
 
@@ -4244,8 +4243,6 @@ class AsyncPolyforgeClient:
         _raise_for_status(resp)
         return _parse(SystemHealthPublic, resp.json())
 
-=======
->>>>>>> de5d708 (feat(sdk-python): add sync_market_matches() and get_health_authenticated() for cross-SDK compat)
     async def get_health_authenticated(self) -> SystemHealthAuthenticated:
         """Get authenticated health/status data with full operational metrics.
 
