@@ -15,8 +15,8 @@
     "@sentry/nestjs": "^10.53.1"
   },
   "devDependencies": {
-    "@nestjs/common": "^11.1.19",
-    "@nestjs/core": "^11.1.19",
+    "@nestjs/common": "^11.1.20",
+    "@nestjs/core": "^11.1.20",
     "@types/node": "^25.7.0",
     "fastify": "^5.8.2",
     "typescript": "^6.0.3",

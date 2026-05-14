@@ -14,10 +14,10 @@
   },
   "dependencies": {
     "@fastify/helmet": "^13.0.2",
-    "@nestjs/common": "^11.1.19",
+    "@nestjs/common": "^11.1.20",
     "@nestjs/config": "^4.0.4",
-    "@nestjs/core": "^11.1.19",
-    "@nestjs/platform-fastify": "^11.1.19",
+    "@nestjs/core": "^11.1.20",
+    "@nestjs/platform-fastify": "^11.1.20",
     "@nestjs/throttler": "^6.5.0",
     "@polyforge/logger": "workspace:*",
     "@polyforge/shared-auth": "workspace:^",
@@ -36,7 +36,7 @@
   "devDependencies": {
     "@nestjs/cli": "^11.0.21",
     "@nestjs/schematics": "^11.1.0",
-    "@nestjs/testing": "^11.1.19",
+    "@nestjs/testing": "^11.1.20",
     "@types/node": "^25.7.0",
     "@vitest/coverage-v8": "^4.1.6",
     "typescript": "^6.0.3",
