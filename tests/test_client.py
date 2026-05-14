@@ -420,6 +420,31 @@ class TestModelParsing:
         assert market.end_date is None
         assert market.resolved is False
 
+    def test_market_symbol_is_optional_with_default_none(self):
+        """symbol field is deprecated — default should be None not empty string."""
+        market = Market()
+        assert market.symbol is None
+
+    def test_market_updated_at_is_optional_with_default_none(self):
+        """updated_at field is deprecated — default should be None not empty string."""
+        market = Market()
+        assert market.updated_at is None
+
+    def test_market_import_available_from_package_root(self):
+        """Market must be importable from polyforge (not just polyforge.models)."""
+        from polyforge import Market as RootMarket  # noqa: F811
+        assert RootMarket is Market
+
+    def test_strategy_exec_mode_import_available_from_package_root(self):
+        """StrategyExecMode must be importable from polyforge package root."""
+        from polyforge import StrategyExecMode as RootExecMode  # noqa: F811
+        assert RootExecMode is StrategyExecMode
+
+    def test_support_ticket_import_available_from_package_root(self):
+        """SupportTicket must be importable from polyforge package root."""
+        from polyforge import SupportTicket  # noqa: F401
+        assert SupportTicket is not None
+
     def test_strategy_model_instantiation(self):
         """Should instantiate Strategy model."""
         strategy = Strategy(

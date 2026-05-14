@@ -113,7 +113,7 @@ class Market:
     id: str = ""
     title: str = ""
     # Deprecated — kept in place for positional constructor compat
-    symbol: str = ""
+    symbol: str | None = None
     category: str = ""
     tokens: list[Token] = field(default_factory=list)
     price: float = 0.0
@@ -122,7 +122,7 @@ class Market:
     liquidity: float = 0.0
     created_at: str = ""
     # Deprecated — kept in place for positional constructor compat
-    updated_at: str = ""
+    updated_at: str | None = None
     description: str | None = None
     end_date: str | None = None
     resolved: bool = False
