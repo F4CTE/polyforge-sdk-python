@@ -8643,3 +8643,21 @@ class TestRewardsEndpointRoundtrips:
             assert captured["raw_path"] == b"/api/v1/rewards/sponsor-url/market%2Fwith%2Fslashes"
         finally:
             client.close()
+
+
+class TestRootExports:
+    """Verify every name listed in polyforge.__all__ is accessible at the package root."""
+
+    def test_root_export_smoke(self):
+        import polyforge
+
+        missing = []
+        for name in polyforge.__all__:
+            try:
+                getattr(polyforge, name)
+            except AttributeError:
+                missing.append(name)
+
+        assert not missing, (
+            f"Names in __all__ but not accessible as polyforge.<name>: {', '.join(missing)}"
+        )
