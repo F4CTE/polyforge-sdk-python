@@ -6945,6 +6945,38 @@ class TestMiscUtilityEnumValidation:
         finally:
             client.close()
 
+    def test_accuracy_leaderboard_invalid_period_rejected(self):
+        client = PolyforgeClient(api_key="test")
+        try:
+            with pytest.raises(ValueError, match="period"):
+                client.get_accuracy_leaderboard(period="1d")
+        finally:
+            client.close()
+
+    def test_accuracy_leaderboard_negative_offset_rejected(self):
+        client = PolyforgeClient(api_key="test")
+        try:
+            with pytest.raises(ValueError, match="offset must be >= 0"):
+                client.get_accuracy_leaderboard(offset=-5)
+        finally:
+            client.close()
+
+    def test_accuracy_leaderboard_non_aligned_offset_rejected(self):
+        client = PolyforgeClient(api_key="test")
+        try:
+            with pytest.raises(ValueError, match="must be a multiple of limit"):
+                client.get_accuracy_leaderboard(offset=7, limit=10)
+        finally:
+            client.close()
+
+    def test_accuracy_leaderboard_non_positive_limit_with_offset_rejected(self):
+        client = PolyforgeClient(api_key="test")
+        try:
+            with pytest.raises(ValueError, match="limit must be >= 1"):
+                client.get_accuracy_leaderboard(offset=0, limit=0)
+        finally:
+            client.close()
+
 
 class TestMiscUtilityEndpointRoundtrips:
     """Stub the HTTP layer with httpx.MockTransport and exercise each method."""
@@ -7530,6 +7562,58 @@ class TestMiscUtilityEndpointsAsync:
                 assert result.total == 1
                 assert result.data[0].rank == 1
                 assert result.data[0].pnl == "500.00"
+            finally:
+                await client.close()
+
+        asyncio.run(_run())
+
+    def test_async_accuracy_leaderboard_invalid_period_rejected(self):
+        import asyncio
+
+        async def _run():
+            client = AsyncPolyforgeClient(api_key="test")
+            try:
+                with pytest.raises(ValueError, match="period"):
+                    await client.get_accuracy_leaderboard(period="1d")
+            finally:
+                await client.close()
+
+        asyncio.run(_run())
+
+    def test_async_accuracy_leaderboard_negative_offset_rejected(self):
+        import asyncio
+
+        async def _run():
+            client = AsyncPolyforgeClient(api_key="test")
+            try:
+                with pytest.raises(ValueError, match="offset must be >= 0"):
+                    await client.get_accuracy_leaderboard(offset=-5)
+            finally:
+                await client.close()
+
+        asyncio.run(_run())
+
+    def test_async_accuracy_leaderboard_non_aligned_offset_rejected(self):
+        import asyncio
+
+        async def _run():
+            client = AsyncPolyforgeClient(api_key="test")
+            try:
+                with pytest.raises(ValueError, match="must be a multiple of limit"):
+                    await client.get_accuracy_leaderboard(offset=7, limit=10)
+            finally:
+                await client.close()
+
+        asyncio.run(_run())
+
+    def test_async_accuracy_leaderboard_non_positive_limit_with_offset_rejected(self):
+        import asyncio
+
+        async def _run():
+            client = AsyncPolyforgeClient(api_key="test")
+            try:
+                with pytest.raises(ValueError, match="limit must be >= 1"):
+                    await client.get_accuracy_leaderboard(offset=0, limit=0)
             finally:
                 await client.close()
 
