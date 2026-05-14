@@ -289,7 +289,10 @@ export function StrategyCanvas() {
     const handles = getAvailableTargetHandles(node);
     if (handles.length <= 1) return;
     const currentIdx = handles.indexOf(connState.targetHandleId);
-    const nextIdx = (currentIdx + 1) % handles.length;
+    // When current is the placeholder __null__ (not in handles), it
+    // represents the default handle (= first real handle). Skip to the
+    // second handle so one H press goes from default to input-b, not input-a.
+    const nextIdx = currentIdx === -1 ? 1 : (currentIdx + 1) % handles.length;
     setConnState({ ...connState, targetHandleId: handles[nextIdx] });
   }, [connState, reactFlow]);
 
