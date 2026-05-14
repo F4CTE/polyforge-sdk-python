@@ -433,27 +433,36 @@ export class StrategyRunner {
       }
       if (this.pendingTick) {
         this.pendingTick = false;
-        // Fire a coalesced follow-up tick after release.
-        // This catches ticks/events that arrived while the in-flight
-        // evaluation was running (they set pendingTick and returned).
-        //
-        // - EVENT mode: immediate self-schedule, bypassing min-tick throttle
-        //   via scheduledFollowUp flag (price-driven; real-time matters).
-        // - TICK/HYBRID mode: delayed follow-up that respects the configured
-        //   tick cadence. Without this delay, a long evaluation that overlaps
-        //   with multiple interval ticks would trigger an immediate catch-up
-        //   chain that can overshoot the tick period and exhaust the daily
-        //   execution limit early.
-        if (this.execMode === "EVENT") {
-          this.scheduledFollowUp = true;
-          void this.tick();
-        } else {
-          if (this.followUpTimer) clearTimeout(this.followUpTimer);
-          const delay = Math.max(this.tickMs, MIN_TICK_MS);
-          this.followUpTimer = setTimeout(() => {
-            this.followUpTimer = null;
+        // Only schedule a coalesced follow-up when the lock was actually
+        // acquired and evaluation completed.  Scheduling an immediate
+        // EVENT follow-up on a failed lock acquisition would bypass the
+        // min-tick throttle under contention, causing high-frequency
+        // retry spins against Redis (SET NX → miss → immediate retry).
+        if (lockAcquired) {
+          // Fire a coalesced follow-up tick after release.
+          // This catches ticks/events that arrived while the in-flight
+          // evaluation was running (they set pendingTick and returned).
+          //
+          // - EVENT mode: immediate self-schedule, bypassing min-tick
+          //   throttle via scheduledFollowUp flag (price-driven; real-time
+          //   matters).
+          // - TICK/HYBRID mode: delayed follow-up that respects the
+          //   configured tick cadence. Without this delay, a long
+          //   evaluation that overlaps with multiple interval ticks
+          //   would trigger an immediate catch-up chain that can
+          //   overshoot the tick period and exhaust the daily execution
+          //   limit early.
+          if (this.execMode === "EVENT") {
+            this.scheduledFollowUp = true;
             void this.tick();
-          }, delay);
+          } else {
+            if (this.followUpTimer) clearTimeout(this.followUpTimer);
+            const delay = Math.max(this.tickMs, MIN_TICK_MS);
+            this.followUpTimer = setTimeout(() => {
+              this.followUpTimer = null;
+              void this.tick();
+            }, delay);
+          }
         }
       }
     }
