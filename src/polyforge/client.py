@@ -453,6 +453,23 @@ def _validate_financial_param(name: str, value: float) -> None:
         raise ValueError(f"{name} must be positive, got {value}")
 
 
+def _validate_price_param(name: str, value: float) -> None:
+    """Reject NaN, Infinity, and values outside [0.001, 0.999] for price parameters.
+
+    Raises:
+        TypeError: if *value* is not a real number (int or float).
+        ValueError: if *value* is NaN, infinite, or outside the allowed range.
+    """
+    if not isinstance(value, (int, float)):
+        raise TypeError(f"{name} must be a number, got {type(value).__name__}")
+    if math.isnan(value):
+        raise ValueError(f"{name} must not be NaN")
+    if math.isinf(value):
+        raise ValueError(f"{name} must not be Infinity")
+    if value < 0.001 or value > 0.999:
+        raise ValueError(f"{name} must be between 0.001 and 0.999, got {value}")
+
+
 def _numberish_to_float(name: str, value: Any) -> float:
     try:
         return float(value)
@@ -2129,23 +2146,42 @@ class PolyforgeClient:
         _validate_enum("type", type, _VALID_SMART_ORDER_TYPES)
         _validate_enum("side", side, _VALID_SIDES)
         _validate_enum("outcome", outcome, _VALID_OUTCOMES)
-        if slices is not None and (slices < 2 or slices > 100):
-            raise ValueError(f"slices must be between 2 and 100, got {slices}")
-        if interval_minutes is not None and (interval_minutes < 1 or interval_minutes > 10080):
-            raise ValueError(f"interval_minutes must be between 1 and 10080, got {interval_minutes}")
+        if type in ("TWAP", "DCA"):
+            if slices is None:
+                raise ValueError("slices is required for TWAP/DCA orders")
+            if slices < 2 or slices > 100:
+                raise ValueError(f"slices must be between 2 and 100, got {slices}")
+            if interval_minutes is None:
+                raise ValueError("interval_minutes is required for TWAP/DCA orders")
+            if interval_minutes < 1 or interval_minutes > 10080:
+                raise ValueError(f"interval_minutes must be between 1 and 10080, got {interval_minutes}")
+        elif type == "BRACKET":
+            if entry_price is None:
+                raise ValueError("entry_price is required for BRACKET orders")
+            if take_profit_price is None:
+                raise ValueError("take_profit_price is required for BRACKET orders")
+            if stop_loss_price is None:
+                raise ValueError("stop_loss_price is required for BRACKET orders")
+        elif type == "OCO":
+            if price_a is None:
+                raise ValueError("price_a is required for OCO orders")
+            if price_b is None:
+                raise ValueError("price_b is required for OCO orders")
         _validate_financial_param("total_size", total_size)
+        if total_size < 1:
+            raise ValueError(f"total_size must be at least 1, got {total_size}")
         if limit_price is not None:
-            _validate_financial_param("limit_price", limit_price)
+            _validate_price_param("limit_price", limit_price)
         if entry_price is not None:
-            _validate_financial_param("entry_price", entry_price)
+            _validate_price_param("entry_price", entry_price)
         if take_profit_price is not None:
-            _validate_financial_param("take_profit_price", take_profit_price)
+            _validate_price_param("take_profit_price", take_profit_price)
         if stop_loss_price is not None:
-            _validate_financial_param("stop_loss_price", stop_loss_price)
+            _validate_price_param("stop_loss_price", stop_loss_price)
         if price_a is not None:
-            _validate_financial_param("price_a", price_a)
+            _validate_price_param("price_a", price_a)
         if price_b is not None:
-            _validate_financial_param("price_b", price_b)
+            _validate_price_param("price_b", price_b)
         body: dict[str, Any] = {
             "type": type,
             "tokenId": token_id,
@@ -5428,23 +5464,42 @@ class AsyncPolyforgeClient:
         _validate_enum("type", type, _VALID_SMART_ORDER_TYPES)
         _validate_enum("side", side, _VALID_SIDES)
         _validate_enum("outcome", outcome, _VALID_OUTCOMES)
-        if slices is not None and (slices < 2 or slices > 100):
-            raise ValueError(f"slices must be between 2 and 100, got {slices}")
-        if interval_minutes is not None and (interval_minutes < 1 or interval_minutes > 10080):
-            raise ValueError(f"interval_minutes must be between 1 and 10080, got {interval_minutes}")
+        if type in ("TWAP", "DCA"):
+            if slices is None:
+                raise ValueError("slices is required for TWAP/DCA orders")
+            if slices < 2 or slices > 100:
+                raise ValueError(f"slices must be between 2 and 100, got {slices}")
+            if interval_minutes is None:
+                raise ValueError("interval_minutes is required for TWAP/DCA orders")
+            if interval_minutes < 1 or interval_minutes > 10080:
+                raise ValueError(f"interval_minutes must be between 1 and 10080, got {interval_minutes}")
+        elif type == "BRACKET":
+            if entry_price is None:
+                raise ValueError("entry_price is required for BRACKET orders")
+            if take_profit_price is None:
+                raise ValueError("take_profit_price is required for BRACKET orders")
+            if stop_loss_price is None:
+                raise ValueError("stop_loss_price is required for BRACKET orders")
+        elif type == "OCO":
+            if price_a is None:
+                raise ValueError("price_a is required for OCO orders")
+            if price_b is None:
+                raise ValueError("price_b is required for OCO orders")
         _validate_financial_param("total_size", total_size)
+        if total_size < 1:
+            raise ValueError(f"total_size must be at least 1, got {total_size}")
         if limit_price is not None:
-            _validate_financial_param("limit_price", limit_price)
+            _validate_price_param("limit_price", limit_price)
         if entry_price is not None:
-            _validate_financial_param("entry_price", entry_price)
+            _validate_price_param("entry_price", entry_price)
         if take_profit_price is not None:
-            _validate_financial_param("take_profit_price", take_profit_price)
+            _validate_price_param("take_profit_price", take_profit_price)
         if stop_loss_price is not None:
-            _validate_financial_param("stop_loss_price", stop_loss_price)
+            _validate_price_param("stop_loss_price", stop_loss_price)
         if price_a is not None:
-            _validate_financial_param("price_a", price_a)
+            _validate_price_param("price_a", price_a)
         if price_b is not None:
-            _validate_financial_param("price_b", price_b)
+            _validate_price_param("price_b", price_b)
         body: dict[str, Any] = {
             "type": type,
             "tokenId": token_id,
