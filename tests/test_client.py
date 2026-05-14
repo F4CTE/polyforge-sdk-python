@@ -2759,7 +2759,7 @@ class TestAlertCrud:
 
         source = inspect.getsource(PolyforgeClient.delete_alert)
         assert "/api/v1/alerts/" in source
-        assert "_delete" in source
+        assert "_delete(" in source
         assert "_encode_path" in source
 
     # -- Async client: create_alert / delete_alert --
@@ -2786,7 +2786,7 @@ class TestAlertCrud:
 
         source = inspect.getsource(AsyncPolyforgeClient.delete_alert)
         assert "/api/v1/alerts/" in source
-        assert "_delete" in source
+        assert "_delete(" in source
 
     # -- Regression: price must be sent as string (#162 / POLA-332) --
 
@@ -2925,7 +2925,7 @@ class TestConditionalOrders:
 
         source = inspect.getsource(PolyforgeClient.cancel_conditional_order)
         assert "/api/v1/orders/conditional/" in source
-        assert "_delete" in source
+        assert "_delete(" in source
         assert "_encode_path" in source
 
     def test_async_cancel_conditional_order_exists(self):
@@ -3642,13 +3642,13 @@ class TestWhaleLeaderboardAlertFilterActions:
         import inspect
         source = inspect.getsource(PolyforgeClient.delete_whale_alert_filter)
         assert "/api/v1/whales/alerts/filter" in source
-        assert "_delete" in source
+        assert "_delete(" in source
 
     def test_async_delete_whale_alert_filter_path(self):
         import inspect
         source = inspect.getsource(AsyncPolyforgeClient.delete_whale_alert_filter)
         assert "/api/v1/whales/alerts/filter" in source
-        assert "_delete" in source
+        assert "_delete(" in source
 
     # -- get_actions --
 
@@ -3960,14 +3960,14 @@ class TestCopyTradingCrud:
         import inspect
         source = inspect.getsource(PolyforgeClient.delete_copy_config)
         assert "/api/v1/copy/" in source
-        assert "_delete" in source
+        assert "_delete(" in source
         assert "_encode_path" in source
 
     def test_async_delete_copy_config_path(self):
         import inspect
         source = inspect.getsource(AsyncPolyforgeClient.delete_copy_config)
         assert "/api/v1/copy/" in source
-        assert "_delete" in source
+        assert "_delete(" in source
 
     # -- get_copy_trades --
 
@@ -4122,7 +4122,7 @@ class TestApiKeyManagement:
     def test_revoke_api_key_uses_delete_method(self):
         import inspect
         source = inspect.getsource(PolyforgeClient.revoke_api_key)
-        assert "_delete" in source
+        assert "_delete(" in source
         assert "/api/v1/api-keys/" in source
 
 
@@ -4337,6 +4337,60 @@ class TestBulkOrderEndpoints:
         import inspect
         source = inspect.getsource(PolyforgeClient.bulk_cancel_orders)
         assert '"orderIds"' in source
+
+    def test_bulk_cancel_orders_sends_post_with_json_body(self):
+        """bulk_cancel_orders must send POST with Content-Type: application/json
+        and a JSON body — uses Client.request('POST', path, json=...) via _post_json."""
+        captured = {}
+
+        def handler(request):
+            captured["method"] = request.method
+            captured["content_type"] = request.headers.get("content-type", "")
+            captured["body"] = request.content
+            return httpx.Response(200, json={"cancelled": [], "errors": []})
+
+        transport = httpx.MockTransport(handler)
+        client = PolyforgeClient(api_key="test", api_url="http://localhost:9999")
+        client._client = httpx.Client(
+            base_url="http://localhost:9999",
+            headers={"Authorization": "Bearer test"},
+            transport=transport,
+        )
+        try:
+            client.bulk_cancel_orders(["ord-1", "ord-2"])
+            assert captured["method"] == "POST"
+            assert "application/json" in captured["content_type"]
+            body = json.loads(captured["body"])
+            assert body == {"orderIds": ["ord-1", "ord-2"]}
+        finally:
+            client.close()
+
+    def test_delete_method_without_body_uses_plain_delete(self):
+        """DELETE without json body must use Client.delete() — no Content-Type
+        header, no request body. Regression for Codex P1: _delete must NOT always
+        pass json=json to Client.request()."""
+        captured = {}
+
+        def handler(request):
+            captured["method"] = request.method
+            captured["content_type"] = request.headers.get("content-type", "")
+            captured["has_body"] = bool(request.content)
+            return httpx.Response(200, json={"orderId": "ord-1", "intentId": "int-1", "status": "CANCELLED"})
+
+        transport = httpx.MockTransport(handler)
+        client = PolyforgeClient(api_key="test", api_url="http://localhost:9999")
+        client._client = httpx.Client(
+            base_url="http://localhost:9999",
+            headers={"Authorization": "Bearer test"},
+            transport=transport,
+        )
+        try:
+            client.cancel_order("ord-1")
+            assert captured["method"] == "DELETE"
+            assert "application/json" not in captured["content_type"]
+            assert not captured["has_body"]
+        finally:
+            client.close()
 
     def test_batch_orders_validates_minimum(self):
         client = PolyforgeClient(api_key="test")
