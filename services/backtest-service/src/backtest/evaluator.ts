@@ -196,22 +196,69 @@ export function checkSafety(
 
 // ─── Triggers ────────────────────────────────────────────────────────────────
 
+/**
+ * Compute the maximum price-history lookback required by TA triggers.
+ * Non-TA triggers and triggers without a period config return 0.
+ */
+export function computeMaxLookback(triggers: Block[]): number {
+  let max = 0;
+  for (const block of triggers) {
+    const cfg = block.config ?? {};
+    switch (block.type) {
+      case "ma_crossover": {
+        const fastPeriod = parseInt(String(cfg.fastPeriod ?? 10), 10);
+        const slowPeriod = parseInt(String(cfg.slowPeriod ?? 20), 10);
+        const period = Math.max(
+          isNaN(fastPeriod) ? 0 : fastPeriod,
+          isNaN(slowPeriod) ? 0 : slowPeriod,
+        );
+        if (period > 0) max = Math.max(max, period + 1);
+        break;
+      }
+      case "macd_crossover": {
+        const slow = parseInt(String(cfg.slowPeriod ?? 26), 10);
+        if (!isNaN(slow)) max = Math.max(max, slow + 1);
+        break;
+      }
+      case "bollinger_bands": {
+        const period = parseInt(String(cfg.period ?? 20), 10);
+        if (!isNaN(period)) max = Math.max(max, period);
+        break;
+      }
+      case "rsi_threshold_tick": {
+        const period = parseInt(String(cfg.period ?? 14), 10);
+        if (!isNaN(period)) max = Math.max(max, period + 1);
+        break;
+      }
+    }
+  }
+  return max;
+}
+
 export function checkTriggers(
   triggers: Block[],
   prices: Map<string, PriceState>,
   priceHistory: Map<string, number[]> = new Map(),
+  currentTokenId?: string,
 ): boolean {
   if (triggers.length === 0) return true;
 
   for (const block of triggers) {
+    // every_tick always fires regardless of current token
+    if (block.type === "every_tick") return true;
+
     const cfg = block.config ?? {};
     const tokenId = String(cfg.tokenId ?? "");
+
+    // Gate non-every_tick triggers to the token updated by the current tick.
+    // Without this, a token-A trigger can fire repeatedly on token-B ticks
+    // because token-A's price/history hasn't changed.
+    if (currentTokenId && tokenId && tokenId !== currentTokenId) continue;
+
     const ps = prices.get(tokenId);
     const hist = priceHistory.get(tokenId) ?? [];
 
     switch (block.type) {
-      case "every_tick":
-        return true;
 
       case "price_above": {
         const threshold = parseFloat(String(cfg.threshold ?? 0));

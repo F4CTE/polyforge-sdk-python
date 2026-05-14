@@ -13,6 +13,7 @@ import {
   executeActions,
   checkAutoExits,
   clearPendingOrders,
+  computeMaxLookback,
   SimFill,
 } from "./evaluator";
 import { MetricsService, FillRecord } from "./metrics.service";
@@ -59,7 +60,9 @@ export class BacktestService {
           id: { not: runId },
         },
       });
-      const maxConcurrent = await this.betaLimits.getLimit("maxConcurrentBacktests");
+      const maxConcurrent = await this.betaLimits.getLimit(
+        "maxConcurrentBacktests",
+      );
       if (runningCount >= maxConcurrent) {
         this.logger.log(
           `Backtest run ${runId} deferred — user ${run.userId} already has ${runningCount} running`,
@@ -131,8 +134,13 @@ export class BacktestService {
       const state = createSimState();
       const positions = new Map<string, SimPosition>();
       const prices = new Map<string, PriceState>();
+      const priceHistory = new Map<string, number[]>();
       const fillRecs: FillRecord[] = [];
       const pending: Prisma.BacktestOrderCreateManyInput[] = [];
+
+      // Compute the maximum lookback window needed by any TA trigger so we
+      // can cap per-token priceHistory arrays and avoid unbounded growth.
+      const maxLookback = computeMaxLookback(triggers);
 
       let cumulativePnl = 0;
       let currentDay = "";
@@ -160,6 +168,18 @@ export class BacktestService {
           timestamp: nowMs,
         };
         prices.set(tokenId, ps);
+
+        // Accumulate rolling price history for TA triggers (only when
+        // TA triggers are configured, so non-TA backtests keep zero overhead)
+        if (maxLookback > 0) {
+          const hist = priceHistory.get(tokenId) ?? [];
+          hist.push(Number(tick.close));
+          // Cap history to the maximum lookback required by configured TA triggers
+          if (hist.length > maxLookback) {
+            hist.splice(0, hist.length - maxLookback);
+          }
+          priceHistory.set(tokenId, hist);
+        }
 
         // Auto-exits (stop-loss / take-profit)
         const autoFills = checkAutoExits(state, prices, positions);
@@ -190,7 +210,7 @@ export class BacktestService {
         }
 
         // Trigger + condition gates
-        if (!checkTriggers(triggers, prices)) continue;
+        if (!checkTriggers(triggers, prices, priceHistory, tokenId)) continue;
         if (!checkConditions(conditions, state, prices, positions, nowMs))
           continue;
 
