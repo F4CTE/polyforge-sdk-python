@@ -6332,6 +6332,7 @@ class TestTradingCopyNumericValidation:
         )
         client._post.assert_called_once()
         assert client._post.call_args.kwargs["json"]["priceOffset"] == "-0.5"
+
         client.close()
 
     def test_create_copy_config_sends_numeric_fields_as_strings(self):
