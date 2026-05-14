@@ -176,10 +176,11 @@ type, slices, and intervalMinutes, mirroring `class-validator` bounds in
 
 - **enum validation**: `type` must be one of `{"TWAP", "DCA", "BRACKET", "OCO"}`,
   enforced via `_validate_enum` in both sync and async clients.
-- **slices range**: must be an integer in `[2, 100]`, enforced via
-  `_validate_smart_order_slices`.
+- **slices range**: must be an integer in `[2, 100]`, enforced via inline
+  `isinstance` check and range guard in both sync and async clients.
 - **interval_minutes range**: must be an integer in `[1, 10080]` (1 minute to
-  7 days), enforced via `_validate_smart_order_interval_minutes`.
+  7 days), enforced via inline `isinstance` check and range guard in both
+  sync and async clients.
 
 Each guard rejects bad input before any network call, matching the cross-SDK
 validation contracts exposed by the TypeScript SDK.
