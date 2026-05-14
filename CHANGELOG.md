@@ -80,6 +80,24 @@ audit, available on both `PolyforgeClient` and `AsyncPolyforgeClient`:
 All three already existed in the TypeScript SDK; this brings the Python SDK
 into parity.
 
+**Market-match CRUD (POLA-4814)** — three admin-only write methods closing a
+feature-parity gap with the TypeScript and Rust SDKs, available on both
+`PolyforgeClient` and `AsyncPolyforgeClient`:
+
+- `create_market_match(*, polymarket_id, kalshi_id)` → `MarketMatch`
+  — `POST /api/v1/arbitrage/matches` (admin). Creates a manual cross-venue
+  market pair matching a Polymarket market to a Kalshi market.
+- `verify_market_match(match_id)` → `MarketMatch`
+  — `POST /api/v1/arbitrage/matches/:id/verify` (admin). Marks a match as
+  human-verified so it surfaces in consumer-facing arbitrage tooling.
+- `delete_market_match(match_id)` → `None`
+  — `DELETE /api/v1/arbitrage/matches/:id` (admin). Removes a cross-venue
+  match pair so it no longer appears in spreads, comparisons, or opportunity
+  listings.
+
+The `sync_market_matches()` method (`POST /api/v1/arbitrage/matches/sync`) was
+added in a prior release. New typed model: `CreateMarketMatchParams`.
+
 ### Added — Cross-Venue Arb Execute / Positions / Risk (POLA-1851)
 
 > ⚠️ **Trading-impact severity: HIGH.** `execute_arb` and `close_arb_position`

@@ -493,6 +493,14 @@ class MarketMatch:
 
 
 @dataclass
+class CreateMarketMatchParams:
+    """Parameters for creating a new cross-venue market match."""
+
+    polymarket_id: str = ""
+    kalshi_id: str = ""
+
+
+@dataclass
 class VenuePriceInfo:
     """Bid/ask info for a single venue in a spread comparison."""
 

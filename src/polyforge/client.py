@@ -1835,6 +1835,21 @@ class PolyforgeClient:
         data = self._post("/api/v1/arbitrage/matches/sync")
         return _parse(MatchSyncResult, data)
 
+    def create_market_match(self, *, polymarket_id: str, kalshi_id: str) -> MarketMatch:
+        """Create a new cross-venue market match."""
+        body: dict[str, str] = {"polymarketId": polymarket_id, "kalshiId": kalshi_id}
+        data = self._post("/api/v1/arbitrage/matches", json=body)
+        return _parse(MarketMatch, data)
+
+    def verify_market_match(self, match_id: str) -> MarketMatch:
+        """Verify a cross-venue market match."""
+        data = self._post(f"/api/v1/arbitrage/matches/{quote(match_id, safe='')}/verify")
+        return _parse(MarketMatch, data)
+
+    def delete_market_match(self, match_id: str) -> None:
+        """Delete a cross-venue market match."""
+        self._delete(f"/api/v1/arbitrage/matches/{quote(match_id, safe='')}")
+
     def get_spread_comparison(self) -> list[SpreadSummary]:
         """Get bid/ask spread comparison across all matched venues."""
         data = self._get("/api/v1/arbitrage/spread")
@@ -5111,6 +5126,21 @@ class AsyncPolyforgeClient:
         """Trigger a manual cross-venue matching pass."""
         data = await self._post("/api/v1/arbitrage/matches/sync")
         return _parse(MatchSyncResult, data)
+
+    async def create_market_match(self, *, polymarket_id: str, kalshi_id: str) -> MarketMatch:
+        """Create a new cross-venue market match."""
+        body: dict[str, str] = {"polymarketId": polymarket_id, "kalshiId": kalshi_id}
+        data = await self._post("/api/v1/arbitrage/matches", json=body)
+        return _parse(MarketMatch, data)
+
+    async def verify_market_match(self, match_id: str) -> MarketMatch:
+        """Verify a cross-venue market match."""
+        data = await self._post(f"/api/v1/arbitrage/matches/{quote(match_id, safe='')}/verify")
+        return _parse(MarketMatch, data)
+
+    async def delete_market_match(self, match_id: str) -> None:
+        """Delete a cross-venue market match."""
+        await self._delete(f"/api/v1/arbitrage/matches/{quote(match_id, safe='')}")
 
     async def get_spread_comparison(self) -> list[SpreadSummary]:
         """Get bid/ask spread comparison across all matched venues."""
