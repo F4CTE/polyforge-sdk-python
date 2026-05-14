@@ -26,6 +26,7 @@ from polyforge.errors import (
     ServerError,
 )
 from polyforge.models import (
+    AccuracyLeaderboardEntry,
     AccuracyScore,
     AiQueryResponse,
     Alert,
@@ -152,6 +153,7 @@ _FIELD_ALIASES: dict[str, dict[str, str]] = {
 }
 
 _MODEL_REGISTRY: dict[str, type] = {
+    "AccuracyLeaderboardEntry": AccuracyLeaderboardEntry,
     "Market": Market,
     "Token": Token,
     "Strategy": Strategy,
@@ -3570,6 +3572,47 @@ class PolyforgeClient:
             by_category=by_category,
         )
 
+    def get_accuracy_leaderboard(
+        self,
+        *,
+        period: str | None = None,
+        limit: int | None = None,
+        page: int | None = None,
+        offset: int | None = None,
+    ) -> PaginatedResponse[AccuracyLeaderboardEntry]:
+        """Fetch the accuracy-focused leaderboard view.
+
+        Calls ``GET /api/v1/accuracy/leaderboard`` and returns a paginated response
+        of :class:`AccuracyLeaderboardEntry` items with user profile data
+        alongside P&L and win-rate metrics.
+
+        Args:
+            period: Time period — ``"7d"``, ``"30d"``, or ``"allTime"``.
+            limit: Maximum entries (1–100, default 20 server-side).
+            page: Platform-native page number.
+            offset: Zero-based row offset (converted to page when ``page`` is
+                not supplied).
+        """
+        params: dict[str, Any] = {}
+        if period is not None:
+            params["period"] = period
+        if limit is not None:
+            params["limit"] = limit
+        if offset is not None and page is None:
+            params["page"] = (offset // (limit or 20)) + 1
+        elif page is not None:
+            params["page"] = page
+        raw = self._get("/api/v1/accuracy/leaderboard", params=_strip_none(params))
+        items = raw if isinstance(raw, list) else raw.get("data", [])
+        return PaginatedResponse(
+            data=[_parse(AccuracyLeaderboardEntry, e) for e in items],
+            total=raw.get("total", 0) if isinstance(raw, dict) else len(items),
+            page=raw.get("page", 1) if isinstance(raw, dict) else 1,
+            limit=raw.get("limit", len(items)) if isinstance(raw, dict) else len(items),
+            has_next=raw.get("hasNext", False) if isinstance(raw, dict) else False,
+            total_pages=raw.get("totalPages", 0) if isinstance(raw, dict) else 0,
+        )
+
     def get_feed(
         self,
         *,
@@ -6557,6 +6600,35 @@ class AsyncPolyforgeClient:
             win_rate=data.get("winRate", ""),
             calibration=calibration,
             by_category=by_category,
+        )
+
+    async def get_accuracy_leaderboard(
+        self,
+        *,
+        period: str | None = None,
+        limit: int | None = None,
+        page: int | None = None,
+        offset: int | None = None,
+    ) -> PaginatedResponse[AccuracyLeaderboardEntry]:
+        """Async variant of :meth:`PolyforgeClient.get_accuracy_leaderboard`."""
+        params: dict[str, Any] = {}
+        if period is not None:
+            params["period"] = period
+        if limit is not None:
+            params["limit"] = limit
+        if offset is not None and page is None:
+            params["page"] = (offset // (limit or 20)) + 1
+        elif page is not None:
+            params["page"] = page
+        raw = await self._get("/api/v1/accuracy/leaderboard", params=_strip_none(params))
+        items = raw if isinstance(raw, list) else raw.get("data", [])
+        return PaginatedResponse(
+            data=[_parse(AccuracyLeaderboardEntry, e) for e in items],
+            total=raw.get("total", 0) if isinstance(raw, dict) else len(items),
+            page=raw.get("page", 1) if isinstance(raw, dict) else 1,
+            limit=raw.get("limit", len(items)) if isinstance(raw, dict) else len(items),
+            has_next=raw.get("hasNext", False) if isinstance(raw, dict) else False,
+            total_pages=raw.get("totalPages", 0) if isinstance(raw, dict) else 0,
         )
 
     async def get_feed(

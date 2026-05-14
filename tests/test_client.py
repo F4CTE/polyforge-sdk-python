@@ -2786,6 +2786,32 @@ class TestDiscoveryAndRanking:
         source = inspect.getsource(AsyncPolyforgeClient.get_leaderboard)
         assert "/api/v1/leaderboard" in source
 
+    # -- get_accuracy_leaderboard --
+
+    def test_sync_get_accuracy_leaderboard_exists(self):
+        assert hasattr(PolyforgeClient, "get_accuracy_leaderboard")
+
+    def test_async_get_accuracy_leaderboard_exists(self):
+        assert hasattr(AsyncPolyforgeClient, "get_accuracy_leaderboard")
+
+    def test_sync_get_accuracy_leaderboard_params(self):
+        import inspect
+        sig = inspect.signature(PolyforgeClient.get_accuracy_leaderboard)
+        params = set(sig.parameters.keys())
+        for name in ("period", "limit", "page", "offset"):
+            assert name in params, f"Missing param: {name}"
+
+    def test_sync_get_accuracy_leaderboard_path(self):
+        import inspect
+        source = inspect.getsource(PolyforgeClient.get_accuracy_leaderboard)
+        assert "/api/v1/accuracy/leaderboard" in source
+        assert "_get" in source
+
+    def test_async_get_accuracy_leaderboard_path(self):
+        import inspect
+        source = inspect.getsource(AsyncPolyforgeClient.get_accuracy_leaderboard)
+        assert "/api/v1/accuracy/leaderboard" in source
+
 
 class TestPaperTrading:
     """Tests for get_paper_summary and reset_paper_account."""
@@ -6385,6 +6411,7 @@ class TestMiscUtilityEndpointsPresence:
     """Surface check: all 18 misc utility methods exist on both clients."""
 
     METHODS = (
+        "get_accuracy_leaderboard",
         "get_accuracy_overview",
         "get_feed",
         "list_journal",
@@ -6429,6 +6456,9 @@ class TestMiscUtilityEndpointPaths:
 
     def test_get_accuracy_overview_path(self):
         assert '"/api/v1/accuracy"' in self._src(PolyforgeClient.get_accuracy_overview)
+
+    def test_get_accuracy_leaderboard_path(self):
+        assert '"/api/v1/accuracy/leaderboard"' in self._src(PolyforgeClient.get_accuracy_leaderboard)
 
     def test_get_feed_path(self):
         assert '"/api/v1/feed"' in self._src(PolyforgeClient.get_feed)
@@ -6629,6 +6659,61 @@ class TestMiscUtilityEndpointRoundtrips:
             assert score.correct_predictions == 9
             assert score.calibration[0].count == 4
             assert score.by_category["Politics"].brier_score == 0.18
+        finally:
+            client.close()
+
+    def test_get_accuracy_leaderboard_parses_payload(self):
+        def handler(request):
+            assert request.url.path == "/api/v1/accuracy/leaderboard"
+            assert request.url.params.get("period") == "30d"
+            assert request.url.params.get("limit") == "25"
+            return httpx.Response(200, json={
+                "data": [
+                    {
+                        "rank": 51,
+                        "userId": "u1",
+                        "username": "alice",
+                        "displayName": None,
+                        "avatarUrl": None,
+                        "pnl": "12.50",
+                        "winRate": "55.0",
+                        "tradeCount": 10,
+                    },
+                ],
+                "total": 75,
+                "page": 1,
+                "limit": 25,
+                "totalPages": 3,
+                "hasNext": True,
+            })
+        client = self._client_with(handler)
+        try:
+            page = client.get_accuracy_leaderboard(period="30d", limit=25)
+            assert len(page.data) == 1
+            entry = page.data[0]
+            assert entry.rank == 51
+            assert entry.user_id == "u1"
+            assert entry.username == "alice"
+            assert entry.display_name is None
+            assert entry.pnl == "12.50"
+            assert entry.win_rate == "55.0"
+            assert entry.trade_count == 10
+            assert page.total == 75
+            assert page.limit == 25
+            assert page.total_pages == 3
+            assert page.has_next is True
+        finally:
+            client.close()
+
+    def test_get_accuracy_leaderboard_offset_to_page_conversion(self):
+        def handler(request):
+            return httpx.Response(200, json={
+                "data": [], "total": 0, "page": 3, "limit": 20,
+                "totalPages": 0, "hasNext": False,
+            })
+        client = self._client_with(handler)
+        try:
+            client.get_accuracy_leaderboard(offset=50, limit=20)
         finally:
             client.close()
 

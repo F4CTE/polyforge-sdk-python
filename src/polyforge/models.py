@@ -1014,6 +1014,24 @@ class LeaderboardEntry:
     period: str = ""
 
 
+@dataclass
+class AccuracyLeaderboardEntry:
+    """A single entry in the accuracy leaderboard (``GET /api/v1/accuracy/leaderboard``).
+
+    Mirrors the TS SDK ``AccuracyLeaderboardEntry`` type.  P&L and win-rate
+    arrive as decimal strings to preserve precision (#34).
+    """
+
+    rank: int = 0
+    user_id: str = ""
+    username: str = ""
+    display_name: str | None = None
+    avatar_url: str | None = None
+    pnl: str = ""
+    win_rate: str = ""
+    trade_count: int = 0
+
+
 # ---------------------------------------------------------------------------
 # Whale Intelligence
 # ---------------------------------------------------------------------------
