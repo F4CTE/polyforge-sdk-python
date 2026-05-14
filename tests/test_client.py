@@ -6916,6 +6916,66 @@ class TestMiscUtilityEnumValidation:
         finally:
             client.close()
 
+    def test_vote_market_sentiment_rejects_invalid_direction(self):
+        client = PolyforgeClient(api_key="test")
+        try:
+            with pytest.raises(ValueError, match="direction"):
+                client.vote_market_sentiment(
+                    "m1", direction="HOLD", confidence=50,
+                )
+        finally:
+            client.close()
+
+    def test_vote_market_sentiment_rejects_bool_confidence(self):
+        client = PolyforgeClient(api_key="test")
+        try:
+            with pytest.raises(TypeError, match="number"):
+                client.vote_market_sentiment(
+                    "m1", direction="BUY", confidence=True,
+                )
+        finally:
+            client.close()
+
+    def test_vote_market_sentiment_rejects_nan_confidence(self):
+        client = PolyforgeClient(api_key="test")
+        try:
+            with pytest.raises(ValueError, match="NaN"):
+                client.vote_market_sentiment(
+                    "m1", direction="BUY", confidence=float("nan"),
+                )
+        finally:
+            client.close()
+
+    def test_vote_market_sentiment_rejects_inf_confidence(self):
+        client = PolyforgeClient(api_key="test")
+        try:
+            with pytest.raises(ValueError, match="Infinity"):
+                client.vote_market_sentiment(
+                    "m1", direction="BUY", confidence=float("inf"),
+                )
+        finally:
+            client.close()
+
+    def test_vote_market_sentiment_rejects_negative_confidence(self):
+        client = PolyforgeClient(api_key="test")
+        try:
+            with pytest.raises(ValueError, match="non-negative"):
+                client.vote_market_sentiment(
+                    "m1", direction="BUY", confidence=-1,
+                )
+        finally:
+            client.close()
+
+    def test_vote_market_sentiment_rejects_confidence_above_100(self):
+        client = PolyforgeClient(api_key="test")
+        try:
+            with pytest.raises(ValueError, match="exceed 100"):
+                client.vote_market_sentiment(
+                    "m1", direction="SELL", confidence=101,
+                )
+        finally:
+            client.close()
+
 
 class TestMiscUtilityEndpointRoundtrips:
     """Stub the HTTP layer with httpx.MockTransport and exercise each method."""

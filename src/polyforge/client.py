@@ -3983,7 +3983,7 @@ class PolyforgeClient:
             confidence: Confidence level (0-100).
         """
         _validate_enum("direction", direction, _VALID_SENTIMENT_DIRECTIONS)
-        if not isinstance(confidence, (int, float)):
+        if isinstance(confidence, bool) or not isinstance(confidence, (int, float)):
             raise TypeError(
                 f"confidence must be a number, got {type(confidence).__name__}"
             )
@@ -3993,6 +3993,8 @@ class PolyforgeClient:
             raise ValueError("confidence must not be Infinity")
         if confidence < 0:
             raise ValueError(f"confidence must be non-negative, got {confidence}")
+        if confidence > 100:
+            raise ValueError(f"confidence must not exceed 100, got {confidence}")
         body: dict[str, Any] = {"direction": direction, "confidence": confidence}
         return _parse(
             MarketSentimentReport,
@@ -6947,7 +6949,7 @@ class AsyncPolyforgeClient:
     ) -> MarketSentimentReport:
         """Async variant of :meth:`PolyforgeClient.vote_market_sentiment`."""
         _validate_enum("direction", direction, _VALID_SENTIMENT_DIRECTIONS)
-        if not isinstance(confidence, (int, float)):
+        if isinstance(confidence, bool) or not isinstance(confidence, (int, float)):
             raise TypeError(
                 f"confidence must be a number, got {type(confidence).__name__}"
             )
@@ -6957,6 +6959,8 @@ class AsyncPolyforgeClient:
             raise ValueError("confidence must not be Infinity")
         if confidence < 0:
             raise ValueError(f"confidence must be non-negative, got {confidence}")
+        if confidence > 100:
+            raise ValueError(f"confidence must not exceed 100, got {confidence}")
         body: dict[str, Any] = {"direction": direction, "confidence": confidence}
         return _parse(
             MarketSentimentReport,

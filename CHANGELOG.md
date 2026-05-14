@@ -215,7 +215,8 @@ importable for the same window.
 signature now requires `direction` (``BUY`` | ``SELL``) and ``confidence``
 (0-100) as keyword arguments, mirroring the TS SDK's ``VoteMarketSentimentParams``
 contract. Client-side validation rejects invalid directions, non-numeric
-confidence, NaN, Infinity, and negative values.
+confidence, booleans (``True``/``False``), NaN, Infinity, negative values, and
+values above 100.
 
 ## [2.0.0] — 2026-04-16
 
