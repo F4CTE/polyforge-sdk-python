@@ -6323,6 +6323,78 @@ class TestTradingCopyNumericValidation:
         assert client._patch.call_args.kwargs["json"]["priceOffset"] == -0.5
         client.close()
 
+    def test_update_copy_config_rejects_unknown_kwargs(self):
+        client = PolyforgeClient(api_key="test")
+        with pytest.raises(TypeError, match="unexpected keyword"):
+            client.update_copy_config("copy-1", typoField=5)
+        client.close()
+
+    def test_update_copy_config_accepts_camelcase_kwargs(self):
+        import warnings
+        from unittest.mock import MagicMock
+
+        client = PolyforgeClient(api_key="test")
+        client._patch = MagicMock(return_value={
+            "id": "copy-1",
+            "userId": "user-1",
+            "targetWallet": "0x0000000000000000000000000000000000000001",
+            "mode": "PERCENTAGE",
+            "sizeValue": "100",
+            "maxExposure": "500",
+            "maxDailyLoss": "50",
+            "priceOffset": "0",
+            "status": "ACTIVE",
+            "totalCopied": 0,
+            "totalPnl": "0",
+            "createdAt": "2026-04-29T00:00:00Z",
+            "updatedAt": "2026-04-29T00:00:00Z",
+        })
+
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            client.update_copy_config("copy-1", sizeValue=100, maxExposure=500)
+            assert len(w) == 1
+            assert issubclass(w[0].category, DeprecationWarning)
+            assert "camelCase" in str(w[0].message)
+
+        json_body = client._patch.call_args.kwargs["json"]
+        assert json_body["sizeValue"] == 100
+        assert json_body["maxExposure"] == 500
+        client.close()
+
+    def test_update_copy_config_camelcase_overrides_snake_case(self):
+        import warnings
+        from unittest.mock import MagicMock
+
+        client = PolyforgeClient(api_key="test")
+        client._patch = MagicMock(return_value={
+            "id": "copy-1",
+            "userId": "user-1",
+            "targetWallet": "0x0000000000000000000000000000000000000001",
+            "mode": "PERCENTAGE",
+            "sizeValue": "200",
+            "maxExposure": "500",
+            "maxDailyLoss": "50",
+            "priceOffset": "0",
+            "status": "ACTIVE",
+            "totalCopied": 0,
+            "totalPnl": "0",
+            "createdAt": "2026-04-29T00:00:00Z",
+            "updatedAt": "2026-04-29T00:00:00Z",
+        })
+
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            client.update_copy_config(
+                "copy-1",
+                size_value=100,    # snake_case → body["sizeValue"] = 100
+                sizeValue=200,     # camelCase → overrides to 200
+            )
+
+        json_body = client._patch.call_args.kwargs["json"]
+        assert json_body["sizeValue"] == 200
+        client.close()
+
     def test_async_batch_orders_rejects_infinite_order_price(self):
         import asyncio
 

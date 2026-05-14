@@ -575,6 +575,11 @@ def _validate_copy_config_numeric_fields(fields: dict[str, Any]) -> None:
         _validate_finite_numberish_param("priceOffset", fields["priceOffset"])
 
 
+_COPY_CONFIG_KNOWN_KWARGS: frozenset[str] = frozenset({
+    "mode", "sizeValue", "maxExposure", "maxDailyLoss", "priceOffset",
+})
+
+
 _BLOCKED_HOSTNAMES: set[str] = {
     "localhost",
     "metadata.google.internal",
@@ -2856,8 +2861,14 @@ class PolyforgeClient:
         max_exposure: float | None = None,
         max_daily_loss: float | None = None,
         price_offset: float | None = None,
+        **kwargs: Any,
     ) -> CopyConfig:
         """Update an existing copy-trading configuration.
+
+        Prefer the keyword-only ``snake_case`` parameters for new code.
+        The ``camelCase`` keyword arguments (``sizeValue``, ``maxExposure``,
+        ``maxDailyLoss``, ``priceOffset``) are still accepted for backward
+        compatibility but will emit a :exc:`DeprecationWarning`.
 
         Args:
             copy_id: The copy config ID to update.
@@ -2869,6 +2880,9 @@ class PolyforgeClient:
 
         Returns:
             The updated :class:`CopyConfig`.
+
+        Raises:
+            TypeError: If unknown keyword arguments are passed.
         """
         body: dict[str, Any] = {}
         if mode is not None:
@@ -2881,6 +2895,24 @@ class PolyforgeClient:
             body["maxDailyLoss"] = max_daily_loss
         if price_offset is not None:
             body["priceOffset"] = price_offset
+
+        if kwargs:
+            unknown = {k for k in kwargs if k not in _COPY_CONFIG_KNOWN_KWARGS}
+            if unknown:
+                raise TypeError(
+                    f"update_copy_config got unexpected keyword arguments: "
+                    f"{', '.join(sorted(unknown))}"
+                )
+            body.update(kwargs)
+            import warnings
+            warnings.warn(
+                "Passing camelCase keyword arguments to update_copy_config is "
+                "deprecated. Use snake_case parameters (e.g. size_value, "
+                "max_exposure) instead.",
+                DeprecationWarning,
+                stacklevel=3,
+            )
+
         _validate_copy_config_numeric_fields(body)
         return _parse(
             CopyConfig,
@@ -6027,8 +6059,18 @@ class AsyncPolyforgeClient:
         max_exposure: float | None = None,
         max_daily_loss: float | None = None,
         price_offset: float | None = None,
+        **kwargs: Any,
     ) -> CopyConfig:
-        """Update an existing copy-trading configuration."""
+        """Update an existing copy-trading configuration.
+
+        Prefer the keyword-only ``snake_case`` parameters for new code.
+        The ``camelCase`` keyword arguments (``sizeValue``, ``maxExposure``,
+        ``maxDailyLoss``, ``priceOffset``) are still accepted for backward
+        compatibility but will emit a :exc:`DeprecationWarning`.
+
+        Raises:
+            TypeError: If unknown keyword arguments are passed.
+        """
         body: dict[str, Any] = {}
         if mode is not None:
             body["mode"] = mode
@@ -6040,6 +6082,24 @@ class AsyncPolyforgeClient:
             body["maxDailyLoss"] = max_daily_loss
         if price_offset is not None:
             body["priceOffset"] = price_offset
+
+        if kwargs:
+            unknown = {k for k in kwargs if k not in _COPY_CONFIG_KNOWN_KWARGS}
+            if unknown:
+                raise TypeError(
+                    f"update_copy_config got unexpected keyword arguments: "
+                    f"{', '.join(sorted(unknown))}"
+                )
+            body.update(kwargs)
+            import warnings
+            warnings.warn(
+                "Passing camelCase keyword arguments to update_copy_config is "
+                "deprecated. Use snake_case parameters (e.g. size_value, "
+                "max_exposure) instead.",
+                DeprecationWarning,
+                stacklevel=3,
+            )
+
         _validate_copy_config_numeric_fields(body)
         return _parse(
             CopyConfig,
