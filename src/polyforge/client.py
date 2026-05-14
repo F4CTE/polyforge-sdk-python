@@ -3052,12 +3052,12 @@ class PolyforgeClient:
             _validate_enum("period", period, _VALID_ACCURACY_LEADERBOARD_PERIODS)
             q["period"] = period
         if limit is not None:
+            if limit < 1:
+                raise ValueError(f"limit must be >= 1, got {limit}")
             q["limit"] = limit
         if offset is not None and page is None:
             if offset < 0:
                 raise ValueError(f"offset must be >= 0, got {offset}")
-            if limit is not None and limit < 1:
-                raise ValueError(f"limit must be >= 1, got {limit}")
             resolved_limit = limit or 20
             if offset % resolved_limit != 0:
                 raise ValueError(
@@ -6209,12 +6209,12 @@ class AsyncPolyforgeClient:
             _validate_enum("period", period, _VALID_ACCURACY_LEADERBOARD_PERIODS)
             q["period"] = period
         if limit is not None:
+            if limit < 1:
+                raise ValueError(f"limit must be >= 1, got {limit}")
             q["limit"] = limit
         if offset is not None and page is None:
             if offset < 0:
                 raise ValueError(f"offset must be >= 0, got {offset}")
-            if limit is not None and limit < 1:
-                raise ValueError(f"limit must be >= 1, got {limit}")
             resolved_limit = limit or 20
             if offset % resolved_limit != 0:
                 raise ValueError(

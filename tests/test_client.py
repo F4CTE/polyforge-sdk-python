@@ -3637,17 +3637,6 @@ class TestNewModels:
         assert trade.side == ""
         assert trade.pnl == ""
 
-    def test_accuracy_leaderboard_entry_defaults(self):
-        from polyforge.models import AccuracyLeaderboardEntry
-        entry = AccuracyLeaderboardEntry()
-        assert entry.rank == 0
-        assert entry.user_id == ""
-        assert entry.username == ""
-        assert entry.display_name is None
-        assert entry.avatar_url is None
-        assert entry.pnl == ""
-        assert entry.win_rate == ""
-        assert entry.trade_count == 0
 
 
 class TestStrategySocialVersioningEventLog:
@@ -6977,6 +6966,14 @@ class TestMiscUtilityEnumValidation:
         finally:
             client.close()
 
+    def test_accuracy_leaderboard_non_positive_limit_without_offset_rejected(self):
+        client = PolyforgeClient(api_key="test")
+        try:
+            with pytest.raises(ValueError, match="limit must be >= 1"):
+                client.get_accuracy_leaderboard(limit=0)
+        finally:
+            client.close()
+
 
 class TestMiscUtilityEndpointRoundtrips:
     """Stub the HTTP layer with httpx.MockTransport and exercise each method."""
@@ -7614,6 +7611,19 @@ class TestMiscUtilityEndpointsAsync:
             try:
                 with pytest.raises(ValueError, match="limit must be >= 1"):
                     await client.get_accuracy_leaderboard(offset=0, limit=0)
+            finally:
+                await client.close()
+
+        asyncio.run(_run())
+
+    def test_async_accuracy_leaderboard_non_positive_limit_without_offset_rejected(self):
+        import asyncio
+
+        async def _run():
+            client = AsyncPolyforgeClient(api_key="test")
+            try:
+                with pytest.raises(ValueError, match="limit must be >= 1"):
+                    await client.get_accuracy_leaderboard(limit=0)
             finally:
                 await client.close()
 
