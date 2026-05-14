@@ -347,9 +347,8 @@ export function StrategyCanvas() {
       if (!node) return;
 
       if (event.key === "Enter") {
-        event.preventDefault();
-
         if (connState.phase === "source_selected") {
+          event.preventDefault();
           setConnState({
             phase: "connecting",
             sourceNodeId: connState.sourceNodeId,
@@ -366,6 +365,7 @@ export function StrategyCanvas() {
           if (!sourceNode || !nodeHasSourceHandle(sourceNode)) return;
           if (!nodeHasTargetHandle(node)) return;
 
+          event.preventDefault();
           const targetHandles = getAvailableTargetHandles(node);
           const targetHandle =
             connState.targetHandleId !== placeNullHandle &&
@@ -390,6 +390,7 @@ export function StrategyCanvas() {
         }
 
         if (connState.phase === "idle" && nodeHasSourceHandle(node)) {
+          event.preventDefault();
           const handles = getAvailableSourceHandles(node);
           setConnState({
             phase: "source_selected",
