@@ -1899,9 +1899,11 @@ describe("StrategyRunner — concurrent tick serialization", () => {
         lrange: vi.fn().mockResolvedValue([]),
         mget: vi
           .fn()
-          .mockResolvedValue([
-            JSON.stringify({ price: 0.5, timestamp: Date.now() }),
-          ]),
+          .mockImplementation(() =>
+            Promise.resolve([
+              JSON.stringify({ price: 0.5, timestamp: Date.now() }),
+            ]),
+          ),
         incr: vi.fn().mockResolvedValue(1),
         expire: vi.fn().mockResolvedValue(1),
         set: vi.fn().mockResolvedValue("OK"),
@@ -1918,7 +1920,19 @@ describe("StrategyRunner — concurrent tick serialization", () => {
           return Promise.resolve(1);
         }),
       };
-      const redis = makeRedis({ getClient: vi.fn().mockReturnValue(client) });
+      const redis = makeRedis({
+        getClient: vi.fn().mockReturnValue(client),
+        getJson: vi.fn().mockResolvedValue({ price: 0.7 }),
+      });
+      const prisma = makePrisma();
+      prisma.token.findUnique.mockResolvedValue({
+        id: "tok-yes",
+        marketId: "mkt-1",
+        outcome: "YES",
+      });
+      const onIntents = vi
+        .fn<(intents: OrderIntent[]) => Promise<void>>()
+        .mockResolvedValue(undefined);
       const state = makeState();
 
       // Stall evaluate() so the lock refresh fires while Tick A holds the lock.
@@ -1930,10 +1944,23 @@ describe("StrategyRunner — concurrent tick serialization", () => {
           }),
       );
 
-      const runner = makeRunner({ execMode: "EVENT", state, redis });
+      const runner = makeRunner({
+        execMode: "EVENT",
+        state,
+        redis,
+        prisma,
+        onIntents,
+        actions: [
+          {
+            id: "a1",
+            type: "buy_yes",
+            params: { tokenId: "tok-yes", size: "10" },
+          },
+        ],
+      });
 
       // -- Tick A --
-      const tickAPromise = runner.onPriceEvent("tok1", 0.5);
+      const tickAPromise = runner.onPriceEvent("tok-yes", 0.7);
       // Advance past the 5s lock-refresh interval so Tick A's refresh
       // callback fires but stays pending (deferred eval).
       await vi.advanceTimersByTimeAsync(6_000);
@@ -1941,6 +1968,9 @@ describe("StrategyRunner — concurrent tick serialization", () => {
       // Release Tick A's evaluate() so it finishes and releases tickInFlight.
       releaseEvaluate();
       await tickAPromise;
+
+      // Tick A should have emitted its intent.
+      expect(onIntents).toHaveBeenCalledTimes(1);
 
       // Advance past the min-tick throttle so Tick B is not rejected.
       await vi.advanceTimersByTimeAsync(250);
@@ -1958,7 +1988,7 @@ describe("StrategyRunner — concurrent tick serialization", () => {
           }),
       );
 
-      const tickBPromise = runner.onPriceEvent("tok1", 0.5);
+      const tickBPromise = runner.onPriceEvent("tok-yes", 0.7);
       // Advance a tiny bit so Tick B enters evaluate() and is blocked.
       await vi.advanceTimersByTimeAsync(10);
 
@@ -1974,10 +2004,18 @@ describe("StrategyRunner — concurrent tick serialization", () => {
       releaseEvaluateB();
       await tickBPromise;
 
-      // OnIntents should have been called twice (once per tick).
-      // If the stale callback incorrectly aborted Tick B, the intents
-      // callback would only fire for Tick A.
-      expect(state.get).toHaveBeenCalledTimes(2);
+      // Both ticks should have emitted their intents.  If the stale
+      // callback incorrectly aborted Tick B, onIntents would only be
+      // called once (from Tick A).
+      expect(onIntents).toHaveBeenCalledTimes(2);
+      // Verify both calls produced the expected buy_yes intent.
+      for (let i = 0; i < 2; i++) {
+        const intents: OrderIntent[] = onIntents.mock.calls[i][0];
+        expect(intents).toHaveLength(1);
+        expect(intents[0].side).toBe("BUY");
+        expect(intents[0].outcome).toBe("YES");
+        expect(intents[0].size).toBe("10");
+      }
     } finally {
       vi.useRealTimers();
     }

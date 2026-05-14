@@ -785,8 +785,20 @@ export class StrategyRunner {
       return;
     }
 
-    // Handle sub-strategy launches
+    // Handle sub-strategy launches.
+    // Re-check lock ownership before every onRunStrategy() call: a long
+    // sub-strategy launch can outlive the Redis lock-refresh interval.
+    // If the activeLockToken was cleared mid-loop by a stale callback or
+    // ownership-loss event, continuing to launch additional sub-strategies
+    // would violate the cross-instance mutual-exclusion guarantee.
     for (const intent of runStrategyIntents) {
+      if (this.activeLockToken === null) {
+        this.logger.warn(
+          `Tick ownership lost for ${this.strategyId} during sub-strategy launch loop — ${runStrategyIntents.length - runStrategyIntents.indexOf(intent)} remaining launch(es) discarded`,
+        );
+        break;
+      }
+
       const childStrategyId = intent.tokenId;
       const mode = intent.size as SubStrategyMode;
 
@@ -819,6 +831,16 @@ export class StrategyRunner {
           this.logger.error(
             `Failed to launch sub-strategy ${childStrategyId}: ${String(err)}`,
           );
+          continue;
+        }
+        // Ownership may have been lost during the awaited launch call.
+        // Stop launching further sub-strategies to preserve the
+        // cross-instance mutual-exclusion guarantee.
+        if (this.activeLockToken === null) {
+          this.logger.warn(
+            `Tick ownership lost for ${this.strategyId} after launching ${childStrategyId} — discarding remaining sub-strategy launches`,
+          );
+          break;
         }
       }
     }
