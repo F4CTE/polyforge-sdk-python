@@ -3,11 +3,17 @@ set -euo pipefail
 
 # Detect port bindings in docker-compose.infra.yml that are not bound
 # to loopback (127.0.0.1) and are not suppressed with nosemgrep.
+# Covers double-quoted, single-quoted, and unquoted short-syntax forms.
 #
 # Safe:   - "127.0.0.1:3000:3000"
+# Safe:   - '127.0.0.1:5432:5432'
 # Safe:   - "80:80" # nosemgrep: docker-compose-port-no-loopback ...
 # Unsafe: - "3000:3000"
+# Unsafe: - '3000:3000'
+# Unsafe: - 3000:3000
 # Unsafe: - "0.0.0.0:3000:3000"
+# Unsafe: - "3000:3000/tcp"
+# Unsafe: - "9090-9091:8080-8081"
 #
 # See https://github.com/F4CTE/PolyForge/issues/1310
 
@@ -19,9 +25,9 @@ if [ ! -f "$TARGET_FILE" ]; then
   exit 0
 fi
 
-# Match port-publish lines: leading whitespace, hyphen, quoted string with a colon
-# Exclude lines already bound to 127.0.0.1
-# Exclude lines suppressed with nosemgrep
+# Match port-publish lines: leading whitespace, hyphen, optional quote
+# (double, single, or none), followed by a non-loopback port spec.
+# Exclude lines suppressed with nosemgrep.
 while IFS= read -r line_num; do
   # line_num is output from grep -n
   lineno=$(echo "$line_num" | cut -d: -f1)
@@ -30,8 +36,7 @@ while IFS= read -r line_num; do
   echo "::error file=${TARGET_FILE},line=${lineno}::Port published without 127.0.0.1 loopback binding. Add '127.0.0.1:' prefix or suppress with '# nosemgrep: docker-compose-port-no-loopback' if this is a public entry point. See https://github.com/F4CTE/PolyForge/issues/1310"
   EXIT_CODE=1
 done < <(
-  grep -n '^\s\+-\s\+"' "$TARGET_FILE" \
-    | grep -v '127\.0\.0\.1:' \
+  grep -nP '^\s+-\s+["\x27]?(?!127\.0\.0\.1)[a-zA-Z0-9.\-]+:\d' "$TARGET_FILE" \
     | grep -v 'nosemgrep' \
     | cut -d: -f1
 )

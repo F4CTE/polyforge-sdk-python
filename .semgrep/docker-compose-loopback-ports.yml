@@ -1,7 +1,7 @@
 rules:
   - id: docker-compose-port-no-loopback
     patterns:
-      - pattern-regex: '^\s+-\s+"(?!127\.0\.0\.1)[^"]*:\d[^"]*"'
+      - pattern-regex: '^\s+-\s+["'']?(?!127\.0\.0\.1)[a-zA-Z0-9\.\-]+:\d'
     message: >
       Port published without loopback (127.0.0.1) binding. In dev Compose
       files, every published port must be bound to 127.0.0.1 unless the
