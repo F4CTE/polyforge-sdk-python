@@ -4,8 +4,9 @@ rules:
       - pattern-either:
           # Short syntax with explicit host:container[/proto] mapping
           - pattern-regex: '^\s+-\s+["'']?(?!127\.0\.0\.1)[a-zA-Z0-9\.\-]+:\d+'
-          # Hostless short syntax (no host prefix — binds to 0.0.0.0)
-          - pattern-regex: '^\s+-\s+["'']?\d+(?:/\w+)?["'']?\s*(?:#.*)?$'
+          # Hostless short syntax (no host prefix — binds to 0.0.0.0); handles
+          # single ports (3000), ranges (9090-9091), and optional protocols
+          - pattern-regex: '^\s+-\s+["'']?\d+(?:-\d+)?(?:/\w+)?["'']?\s*(?:#.*)?$'
     message: >
       Port published without loopback (127.0.0.1) binding. In dev Compose
       files, every published port must be bound to 127.0.0.1 unless the

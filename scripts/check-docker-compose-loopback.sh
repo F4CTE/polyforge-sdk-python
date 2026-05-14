@@ -17,6 +17,8 @@ set -euo pipefail
 # Unsafe: - "9090-9091:8080-8081"
 # Unsafe: - "3000"              (hostless — binds to 0.0.0.0)
 # Unsafe: - 3000               (hostless — binds to 0.0.0.0)
+# Unsafe: - "9090-9091"         (hostless range — binds to 0.0.0.0)
+# Unsafe: - 9090-9091           (hostless range — binds to 0.0.0.0)
 #
 # See https://github.com/F4CTE/PolyForge/issues/1310
 
@@ -42,8 +44,9 @@ done < <(
   {
     # Short syntax with explicit host:port or host:container[/proto]
     grep -nP '^\s+-\s+["\x27]?(?!127\.0\.0\.1)[a-zA-Z0-9.\-]+:\d' "$TARGET_FILE"
-    # Hostless short syntax (no host prefix — binds to 0.0.0.0)
-    grep -nP '^\s+-\s+["\x27]?\d+(/\w+)?["\x27]?\s*(?:#.*)?$' "$TARGET_FILE"
+    # Hostless short syntax (no host prefix — binds to 0.0.0.0); handles
+    # single ports (3000) and ranges (9090-9091)
+    grep -nP '^\s+-\s+["\x27]?\d+(-\d+)?(/\w+)?["\x27]?\s*(?:#.*)?$' "$TARGET_FILE"
   } \
     | grep -v '# nosemgrep: docker-compose-port-no-loopback' \
     | cut -d: -f1
