@@ -7177,9 +7177,14 @@ class TestMiscUtilityEndpointRoundtrips:
 
         def handler(request):
             captured["method"] = request.method
+            captured["raw_path"] = request.url.raw_path
+            try:
+                captured["body"] = json.loads(request.content)
+            except Exception:
+                captured["body"] = request.content
             return httpx.Response(200, json={
                 "yesPercent": 60, "noPercent": 40, "totalVotes": 5,
-                "userVote": {"direction": "BUY", "confidence": 0.8},
+                "userVote": {"direction": "BUY", "confidence": 85},
             })
         client = self._client_with(handler)
         try:
@@ -7188,9 +7193,14 @@ class TestMiscUtilityEndpointRoundtrips:
             assert report.user_vote is not None
             assert report.user_vote.direction == "BUY"
 
-            voted = client.vote_market_sentiment("m1")
+            voted = client.vote_market_sentiment(
+                "m1", direction="BUY", confidence=85,
+            )
             assert captured["method"] == "POST"
+            assert captured["body"] == {"direction": "BUY", "confidence": 85}
             assert voted.total_votes == 5
+            assert voted.user_vote is not None
+            assert voted.user_vote.confidence == 85
         finally:
             client.close()
 
