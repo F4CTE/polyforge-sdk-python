@@ -1099,6 +1099,7 @@ class TestPlaceOrderValidation:
             client.place_smart_order(
                 type="TWAP", token_id="tok", side="BUY",
                 outcome="YES", total_size=float("inf"),
+                slices=5, interval_minutes=10,
             )
         client.close()
 
@@ -1107,7 +1108,8 @@ class TestPlaceOrderValidation:
         with pytest.raises(ValueError, match="must not be NaN"):
             client.place_smart_order(
                 type="TWAP", token_id="tok", side="BUY",
-                outcome="YES", total_size=10.0, limit_price=float("nan"),
+                outcome="YES", total_size=10.0,
+                slices=5, interval_minutes=10, limit_price=float("nan"),
             )
         client.close()
 
@@ -1143,7 +1145,7 @@ class TestPlaceOrderValidation:
         with pytest.raises(ValueError, match="slices must be between 2 and 100"):
             client.place_smart_order(
                 type="TWAP", token_id="tok", side="BUY",
-                outcome="YES", total_size=10.0, slices=1,
+                outcome="YES", total_size=10.0, slices=1, interval_minutes=10,
             )
         client.close()
 
@@ -1152,7 +1154,7 @@ class TestPlaceOrderValidation:
         with pytest.raises(ValueError, match="slices must be between 2 and 100"):
             client.place_smart_order(
                 type="TWAP", token_id="tok", side="BUY",
-                outcome="YES", total_size=10.0, slices=101,
+                outcome="YES", total_size=10.0, slices=101, interval_minutes=10,
             )
         client.close()
 
@@ -1161,7 +1163,7 @@ class TestPlaceOrderValidation:
         with pytest.raises(ValueError, match="slices must be between 2 and 100"):
             client.place_smart_order(
                 type="TWAP", token_id="tok", side="BUY",
-                outcome="YES", total_size=10.0, slices=-1,
+                outcome="YES", total_size=10.0, slices=-1, interval_minutes=10,
             )
         client.close()
 
@@ -1170,7 +1172,7 @@ class TestPlaceOrderValidation:
         with pytest.raises(ValueError, match="interval_minutes must be between 1 and 10080"):
             client.place_smart_order(
                 type="TWAP", token_id="tok", side="BUY",
-                outcome="YES", total_size=10.0, interval_minutes=0,
+                outcome="YES", total_size=10.0, slices=2, interval_minutes=0,
             )
         client.close()
 
@@ -1179,7 +1181,7 @@ class TestPlaceOrderValidation:
         with pytest.raises(ValueError, match="interval_minutes must be between 1 and 10080"):
             client.place_smart_order(
                 type="TWAP", token_id="tok", side="BUY",
-                outcome="YES", total_size=10.0, interval_minutes=10081,
+                outcome="YES", total_size=10.0, slices=2, interval_minutes=10081,
             )
         client.close()
 
@@ -1188,7 +1190,121 @@ class TestPlaceOrderValidation:
         with pytest.raises(ValueError, match="interval_minutes must be between 1 and 10080"):
             client.place_smart_order(
                 type="TWAP", token_id="tok", side="BUY",
-                outcome="YES", total_size=10.0, interval_minutes=-5,
+                outcome="YES", total_size=10.0, slices=2, interval_minutes=-5,
+            )
+        client.close()
+
+    def test_place_smart_order_rejects_total_size_below_1(self):
+        client = PolyforgeClient(api_key="test-key")
+        with pytest.raises(ValueError, match="total_size must be at least 1"):
+            client.place_smart_order(
+                type="TWAP", token_id="tok", side="BUY",
+                outcome="YES", total_size=0.5, slices=5, interval_minutes=10,
+            )
+        client.close()
+
+    def test_place_smart_order_rejects_total_size_negative(self):
+        client = PolyforgeClient(api_key="test-key")
+        with pytest.raises(ValueError, match="must be positive"):
+            client.place_smart_order(
+                type="TWAP", token_id="tok", side="BUY",
+                outcome="YES", total_size=-1.0, slices=5, interval_minutes=10,
+            )
+        client.close()
+
+    def test_place_smart_order_rejects_limit_price_below_range(self):
+        client = PolyforgeClient(api_key="test-key")
+        with pytest.raises(ValueError, match="must be between 0.001 and 0.999"):
+            client.place_smart_order(
+                type="TWAP", token_id="tok", side="BUY",
+                outcome="YES", total_size=10.0, slices=5, interval_minutes=10,
+                limit_price=0.0,
+            )
+        client.close()
+
+    def test_place_smart_order_rejects_limit_price_above_range(self):
+        client = PolyforgeClient(api_key="test-key")
+        with pytest.raises(ValueError, match="must be between 0.001 and 0.999"):
+            client.place_smart_order(
+                type="TWAP", token_id="tok", side="BUY",
+                outcome="YES", total_size=10.0, slices=5, interval_minutes=10,
+                limit_price=1.0,
+            )
+        client.close()
+
+    def test_place_smart_order_rejects_price_negative(self):
+        client = PolyforgeClient(api_key="test-key")
+        with pytest.raises(ValueError, match="must be between 0.001 and 0.999"):
+            client.place_smart_order(
+                type="BRACKET", token_id="tok", side="BUY",
+                outcome="YES", total_size=10.0,
+                entry_price=0.5, take_profit_price=0.8, stop_loss_price=-0.1,
+            )
+        client.close()
+
+    def test_place_smart_order_twap_requires_slices(self):
+        client = PolyforgeClient(api_key="test-key")
+        with pytest.raises(ValueError, match="slices is required for TWAP/DCA orders"):
+            client.place_smart_order(
+                type="TWAP", token_id="tok", side="BUY",
+                outcome="YES", total_size=10.0, interval_minutes=10,
+            )
+        client.close()
+
+    def test_place_smart_order_twap_requires_interval_minutes(self):
+        client = PolyforgeClient(api_key="test-key")
+        with pytest.raises(ValueError, match="interval_minutes is required for TWAP/DCA orders"):
+            client.place_smart_order(
+                type="TWAP", token_id="tok", side="BUY",
+                outcome="YES", total_size=10.0, slices=5,
+            )
+        client.close()
+
+    def test_place_smart_order_bracket_requires_entry_price(self):
+        client = PolyforgeClient(api_key="test-key")
+        with pytest.raises(ValueError, match="entry_price is required for BRACKET orders"):
+            client.place_smart_order(
+                type="BRACKET", token_id="tok", side="BUY",
+                outcome="YES", total_size=10.0,
+                take_profit_price=0.8, stop_loss_price=0.2,
+            )
+        client.close()
+
+    def test_place_smart_order_bracket_requires_take_profit_price(self):
+        client = PolyforgeClient(api_key="test-key")
+        with pytest.raises(ValueError, match="take_profit_price is required for BRACKET orders"):
+            client.place_smart_order(
+                type="BRACKET", token_id="tok", side="BUY",
+                outcome="YES", total_size=10.0,
+                entry_price=0.5, stop_loss_price=0.2,
+            )
+        client.close()
+
+    def test_place_smart_order_bracket_requires_stop_loss_price(self):
+        client = PolyforgeClient(api_key="test-key")
+        with pytest.raises(ValueError, match="stop_loss_price is required for BRACKET orders"):
+            client.place_smart_order(
+                type="BRACKET", token_id="tok", side="BUY",
+                outcome="YES", total_size=10.0,
+                entry_price=0.5, take_profit_price=0.8,
+            )
+        client.close()
+
+    def test_place_smart_order_oco_requires_price_a(self):
+        client = PolyforgeClient(api_key="test-key")
+        with pytest.raises(ValueError, match="price_a is required for OCO orders"):
+            client.place_smart_order(
+                type="OCO", token_id="tok", side="BUY",
+                outcome="YES", total_size=10.0, price_b=0.5,
+            )
+        client.close()
+
+    def test_place_smart_order_oco_requires_price_b(self):
+        client = PolyforgeClient(api_key="test-key")
+        with pytest.raises(ValueError, match="price_b is required for OCO orders"):
+            client.place_smart_order(
+                type="OCO", token_id="tok", side="BUY",
+                outcome="YES", total_size=10.0, price_a=0.5,
             )
         client.close()
 
@@ -1233,15 +1349,29 @@ class TestAsyncPlaceOrderValidation:
 
     def test_async_place_smart_order_calls_validate(self):
         """Async place_smart_order must call validation helpers for type, side, outcome,
-        slices, interval_minutes, and total_size."""
+        slices, interval_minutes, total_size, price params, and per-type required fields."""
         import inspect
         source = inspect.getsource(AsyncPolyforgeClient.place_smart_order)
         assert '_validate_enum("type"' in source
         assert '_validate_enum("side"' in source
         assert '_validate_enum("outcome"' in source
+        assert "slices is required for TWAP/DCA orders" in source
+        assert "interval_minutes is required for TWAP/DCA orders" in source
+        assert "entry_price is required for BRACKET orders" in source
+        assert "take_profit_price is required for BRACKET orders" in source
+        assert "stop_loss_price is required for BRACKET orders" in source
+        assert "price_a is required for OCO orders" in source
+        assert "price_b is required for OCO orders" in source
         assert "slices must be between 2 and 100" in source
         assert "interval_minutes must be between 1 and 10080" in source
         assert '_validate_financial_param("total_size"' in source
+        assert "total_size must be at least 1" in source
+        assert '_validate_price_param("limit_price"' in source
+        assert '_validate_price_param("entry_price"' in source
+        assert '_validate_price_param("take_profit_price"' in source
+        assert '_validate_price_param("stop_loss_price"' in source
+        assert '_validate_price_param("price_a"' in source
+        assert '_validate_price_param("price_b"' in source
 
     def test_async_provide_liquidity_calls_validate(self):
         """Async provide_liquidity must call _validate_financial_param for amount_usdc (#26)."""
@@ -8642,7 +8772,7 @@ class TestIdempotencyKeyHeaders:
             ("_post", {"positionId": "pos-1", "intentId": "int-1", "status": "REDEEMED"}, lambda c: c.redeem_position(position_id="pos-1")),
             ("_post", place_order_payload, lambda c: c.split_position("tok", 1)),
             ("_post", place_order_payload, lambda c: c.merge_positions("tok", 1)),
-            ("_post", smart_payload, lambda c: c.place_smart_order(type="TWAP", token_id="tok", side="BUY", outcome="YES", total_size=1.0)),
+            ("_post", smart_payload, lambda c: c.place_smart_order(type="TWAP", token_id="tok", side="BUY", outcome="YES", total_size=1.0, slices=2, interval_minutes=1)),
             ("_delete", {}, lambda c: c.cancel_smart_order("smart-1")),
             ("_post", conditional_payload, lambda c: c.create_conditional_order("m-1", "tok", "STOP_LOSS", "SELL", "YES", 1.0, 0.4)),
             ("_delete", None, lambda c: c.cancel_conditional_order("co-1")),
@@ -8710,7 +8840,7 @@ class TestIdempotencyKeyHeaders:
                 ("_post", {"positionId": "pos-1", "intentId": "int-1", "status": "REDEEMED"}, lambda c: c.redeem_position(position_id="pos-1")),
                 ("_post", place_order_payload, lambda c: c.split_position("tok", 1)),
                 ("_post", place_order_payload, lambda c: c.merge_positions("tok", 1)),
-                ("_post", smart_payload, lambda c: c.place_smart_order(type="TWAP", token_id="tok", side="BUY", outcome="YES", total_size=1.0)),
+                ("_post", smart_payload, lambda c: c.place_smart_order(type="TWAP", token_id="tok", side="BUY", outcome="YES", total_size=1.0, slices=2, interval_minutes=1)),
                 ("_delete", {}, lambda c: c.cancel_smart_order("smart-1")),
                 ("_post", conditional_payload, lambda c: c.create_conditional_order("m-1", "tok", "STOP_LOSS", "SELL", "YES", 1.0, 0.4)),
                 ("_delete", None, lambda c: c.cancel_conditional_order("co-1")),
