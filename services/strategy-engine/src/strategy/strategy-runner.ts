@@ -401,12 +401,6 @@ export class StrategyRunner {
         this.activeLockToken = null;
       }
 
-      // Release the local in-flight gate before the Redis unlock eval
-      // so that a slow or hung unlock does not prevent subsequent ticks
-      // from queueing up. The distributed lock still serializes
-      // cross-instance access.
-      this.tickInFlight = false;
-
       // Release the distributed lock only if this instance acquired it.
       // Uses atomic compare-and-delete (Lua) to avoid deleting a lock that
       // was re-acquired by another instance after TTL expiry.
@@ -431,6 +425,15 @@ export class StrategyRunner {
           );
         }
       }
+
+      // Release the local in-flight gate after the Redis unlock completes.
+      // Holding tickInFlight until the distributed lock is released prevents
+      // a second tick() from entering while the first tick still owns the
+      // Redis lock.  If a tick fails SET NX inside a window where tickInFlight
+      // was already cleared, its finally branch could consume pendingTick
+      // without scheduling a follow-up, dropping price events that arrived
+      // during the slow unlock (EVENT-mode coalescing gap).
+      this.tickInFlight = false;
       if (this.pendingTick) {
         this.pendingTick = false;
         // Only schedule a coalesced follow-up when the lock was actually
