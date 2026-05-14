@@ -1,13 +1,54 @@
 rules:
   - id: docker-compose-port-no-loopback
     patterns:
-      - pattern-regex: '^\s+-\s+["'']?(?!127\.0\.0\.1)[a-zA-Z0-9\.\-]+:\d'
+      - pattern-either:
+          # Short syntax with explicit host:container[/proto] mapping
+          - pattern-regex: '^\s+-\s+["'']?(?!127\.0\.0\.1)[a-zA-Z0-9\.\-]+:\d+'
+          # Hostless short syntax (no host prefix — binds to 0.0.0.0)
+          - pattern-regex: '^\s+-\s+["'']?\d+(?:/\w+)?["'']?\s*(?:#.*)?$'
     message: >
       Port published without loopback (127.0.0.1) binding. In dev Compose
       files, every published port must be bound to 127.0.0.1 unless the
       service is a public entry point (e.g. the gateway on 80/8080). Unbound
       ports expose internal services directly to the network, bypassing the
       gateway's CSP, rate limiting, and security headers.
+      Use short syntax `"127.0.0.1:<port>:<port>"` or long syntax with
+      `host_ip: 127.0.0.1`. Suppress false positives with
+      `# nosemgrep: docker-compose-port-no-loopback`.
+      See https://github.com/F4CTE/PolyForge/issues/1310
+    languages: [generic]
+    severity: WARNING
+    paths:
+      include:
+        - "docker-compose.infra.yml"
+    metadata:
+      cwe:
+        - "CWE-668: Exposure of Resource to Wrong Sphere"
+      references:
+        - https://github.com/F4CTE/PolyForge/issues/1310
+        - https://github.com/F4CTE/PolyForge/issues/557
+      category: security
+      technology:
+        - docker
+
+  - id: docker-compose-port-no-loopback-long-syntax
+    patterns:
+      - pattern: |
+          ...
+          - target: $TARG
+            published: $PUB
+          ...
+      - pattern-not: |
+          ...
+          - target: $TARG
+            published: $PUB
+            host_ip: 127.0.0.1
+          ...
+    message: >
+      Docker Compose long-syntax port mapping without loopback binding. The
+      `published` port is exposed on all interfaces because `host_ip` is
+      missing or not set to `127.0.0.1`. Add `host_ip: 127.0.0.1` or use
+      short syntax `"127.0.0.1:<port>:<port>"`.
       See https://github.com/F4CTE/PolyForge/issues/1310
     languages: [generic]
     severity: WARNING
