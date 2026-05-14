@@ -907,6 +907,11 @@ test.describe("Strategy Builder — Full Workflow Coverage", () => {
   // ─── A11y & Keyboard Tests ─────────────────────────────────────────────────
 
   test.describe("Strategy Builder — A11y & Keyboard", () => {
+    test.skip(
+      process.env.E2E_SKIP_SLOW_A11Y === "true" || process.env.E2E_SKIP_SLOW_A11Y === "1",
+      "A11y/keyboard coverage is too slow for the main deploy gate; run this block locally or in a focused a11y workflow.",
+    );
+
     // ── Accessibility Attribute Tests ──────────────────────────────────────
 
     test("@a11y @keyboard should have aria-required on strategy name input", async ({
