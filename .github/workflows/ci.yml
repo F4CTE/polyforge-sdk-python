@@ -358,12 +358,12 @@ jobs:
         run: rm -rf ~/PolyForge/tests/e2e/test-results/
 
       # ── E2E Shards (parallel within same job) ─────────────────────────
-      # All 5 shards run concurrently as background processes. Keeping them
+      # All shards run concurrently as background processes. Keeping them
       # inside the single deploy-and-e2e job preserves the concurrency group
       # lock so no other PR can deploy while E2E is running. The self-hosted
       # runner (Ryzen 9 9950X, 32GB RAM) handles 5 Playwright workers well.
       # The script exits on the first failed shard and terminates siblings.
-      - name: Run E2E shards 1-5 in parallel
+      - name: Run E2E shards in parallel
         timeout-minutes: 40
         run: |
           cd ~/PolyForge/tests/e2e

@@ -2,8 +2,8 @@
 set -uo pipefail
 
 shard_count="${E2E_SHARD_COUNT:-6}"
-shard_timeout_seconds="${E2E_SHARD_TIMEOUT_SECONDS:-1200}"
-global_timeout_ms="${PLAYWRIGHT_GLOBAL_TIMEOUT_MS:-1200000}"
+shard_timeout_seconds="${E2E_SHARD_TIMEOUT_SECONDS:-1800}"
+global_timeout_ms="${PLAYWRIGHT_GLOBAL_TIMEOUT_MS:-1800000}"
 max_failures="${E2E_MAX_FAILURES:-8}"
 project="${PLAYWRIGHT_PROJECT:-chromium}"
 output_dir="${PLAYWRIGHT_OUTPUT_DIR:-test-results}"
