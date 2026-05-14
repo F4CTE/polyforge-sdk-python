@@ -6001,6 +6001,57 @@ class TestTradingCopyNumericValidation:
         assert client._patch.call_args.kwargs["json"]["priceOffset"] == -0.5
         client.close()
 
+    def test_update_copy_config_filters_unknown_kwargs(self):
+        from unittest.mock import MagicMock
+
+        client = PolyforgeClient(api_key="test")
+        client._patch = MagicMock(return_value={
+            "id": "copy-1",
+            "userId": "user-1",
+            "targetWallet": "0x0000000000000000000000000000000000000001",
+            "mode": "FIXED",
+            "sizeValue": "50",
+            "maxExposure": "500",
+            "maxDailyLoss": "100",
+            "priceOffset": "0",
+            "status": "ACTIVE",
+            "totalCopied": 0,
+            "totalPnl": "0",
+            "createdAt": "2026-04-29T00:00:00Z",
+            "updatedAt": "2026-04-29T00:00:00Z",
+        })
+        client.update_copy_config("copy-1", mode="FIXED", sizeValue=50, unknownKey="should-be-dropped")
+        client._patch.assert_called_once()
+        body = client._patch.call_args.kwargs["json"]
+        assert body == {"mode": "FIXED", "sizeValue": 50}
+        assert "unknownKey" not in body
+        client.close()
+
+    def test_update_copy_config_filters_all_unknown_kwargs(self):
+        from unittest.mock import MagicMock
+
+        client = PolyforgeClient(api_key="test")
+        client._patch = MagicMock(return_value={
+            "id": "copy-1",
+            "userId": "user-1",
+            "targetWallet": "0x0000000000000000000000000000000000000001",
+            "mode": "PERCENTAGE",
+            "sizeValue": "10",
+            "maxExposure": "500",
+            "maxDailyLoss": "100",
+            "priceOffset": "0",
+            "status": "ACTIVE",
+            "totalCopied": 0,
+            "totalPnl": "0",
+            "createdAt": "2026-04-29T00:00:00Z",
+            "updatedAt": "2026-04-29T00:00:00Z",
+        })
+        client.update_copy_config("copy-1", foo="bar", baz=42, extra="nope")
+        client._patch.assert_called_once()
+        body = client._patch.call_args.kwargs["json"]
+        assert body == {}
+        client.close()
+
     def test_async_batch_orders_rejects_infinite_order_price(self):
         import asyncio
 
