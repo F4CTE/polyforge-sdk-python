@@ -720,7 +720,9 @@ describe("StrategyRunner — error handling", () => {
     const onIntents = vi
       .fn<(intents: OrderIntent[]) => Promise<void>>()
       .mockRejectedValue(
-        new Error("Counter increment failed after 1 intents published for strategy strat-test"),
+        new Error(
+          "Counter increment failed after 1 intents published for strategy strat-test",
+        ),
       );
     const onStatusChange = vi.fn().mockResolvedValue(undefined);
 
@@ -1881,6 +1883,101 @@ describe("StrategyRunner — concurrent tick serialization", () => {
       // Lock-refresh interval was cancelled on error — no exception leaked.
       // The runner continues with the tick evaluation.
       expect(runner.status).toBe("RUNNING");
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("does not discard valid intents when a stale lock-refresh callback resolves after a new tick has started", async () => {
+    vi.useFakeTimers();
+    try {
+      // evalCall tracks every eval invocation.  We defer the first
+      // lock-refresh eval so it remains pending across tick boundaries.
+      let evalCall = 0;
+      let resolveStaleRefresh!: (value: unknown) => void;
+      const client = {
+        lrange: vi.fn().mockResolvedValue([]),
+        mget: vi
+          .fn()
+          .mockResolvedValue([
+            JSON.stringify({ price: 0.5, timestamp: Date.now() }),
+          ]),
+        incr: vi.fn().mockResolvedValue(1),
+        expire: vi.fn().mockResolvedValue(1),
+        set: vi.fn().mockResolvedValue("OK"),
+        del: vi.fn().mockResolvedValue(1),
+        eval: vi.fn().mockImplementation(() => {
+          evalCall++;
+          if (evalCall === 1) {
+            // Tick A's lock-refresh — keep pending until Tick B has started.
+            return new Promise((resolve) => {
+              resolveStaleRefresh = resolve;
+            });
+          }
+          // All other calls (lock release, Tick B's lock refresh, etc.)
+          return Promise.resolve(1);
+        }),
+      };
+      const redis = makeRedis({ getClient: vi.fn().mockReturnValue(client) });
+      const state = makeState();
+
+      // Stall evaluate() so the lock refresh fires while Tick A holds the lock.
+      let releaseEvaluate!: () => void;
+      state.get.mockImplementation(
+        () =>
+          new Promise<typeof DEFAULT_STATE>((resolve) => {
+            releaseEvaluate = () => resolve({ ...DEFAULT_STATE });
+          }),
+      );
+
+      const runner = makeRunner({ execMode: "EVENT", state, redis });
+
+      // -- Tick A --
+      const tickAPromise = runner.onPriceEvent("tok1", 0.5);
+      // Advance past the 5s lock-refresh interval so Tick A's refresh
+      // callback fires but stays pending (deferred eval).
+      await vi.advanceTimersByTimeAsync(6_000);
+
+      // Release Tick A's evaluate() so it finishes and releases tickInFlight.
+      releaseEvaluate();
+      await tickAPromise;
+
+      // Advance past the min-tick throttle so Tick B is not rejected.
+      await vi.advanceTimersByTimeAsync(250);
+
+      // Tick A has completed.  Its lock-refresh eval is still pending
+      // (resolveStaleRefresh has not been called).  tickInFlight is false.
+      //
+      // -- Tick B --
+      // Re-stall evaluate() for Tick B so we can inspect the outcome.
+      let releaseEvaluateB!: () => void;
+      state.get.mockImplementation(
+        () =>
+          new Promise<typeof DEFAULT_STATE>((resolve) => {
+            releaseEvaluateB = () => resolve({ ...DEFAULT_STATE });
+          }),
+      );
+
+      const tickBPromise = runner.onPriceEvent("tok1", 0.5);
+      // Advance a tiny bit so Tick B enters evaluate() and is blocked.
+      await vi.advanceTimersByTimeAsync(10);
+
+      // Resolve Tick A's stale refresh now that Tick B is in-flight.
+      // If the code does not guard with `activeLockToken !== lockToken`,
+      // this would clear the activeLockToken and cause Tick B to discard
+      // its valid intents.
+      resolveStaleRefresh(0);
+      await vi.advanceTimersByTimeAsync(10);
+
+      // Release Tick B's evaluate() so it can reach the ownership check
+      // and (if not wrongly aborted) emit intents.
+      releaseEvaluateB();
+      await tickBPromise;
+
+      // OnIntents should have been called twice (once per tick).
+      // If the stale callback incorrectly aborted Tick B, the intents
+      // callback would only fire for Tick A.
+      expect(state.get).toHaveBeenCalledTimes(2);
     } finally {
       vi.useRealTimers();
     }

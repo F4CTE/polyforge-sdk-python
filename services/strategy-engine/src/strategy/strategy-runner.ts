@@ -76,10 +76,17 @@ export class StrategyRunner {
   /** Delayed follow-up timeout for TICK/HYBRID modes — cleared on stop() */
   private followUpTimer: NodeJS.Timeout | null = null;
 
-  /** Set true by the lock-refresh handler when ownership is lost mid-tick.
-   *  evaluate() checks this before emitting order intents to prevent
-   *  duplicate orders if another instance re-acquires the lock. */
-  private tickOwnershipLost = false;
+  /** Tracks the active lock token for the currently in-flight tick.
+   *  Set to the per-acquisition `randomUUID()` after lock acquisition.
+   *  Cleared to `null` by the lock-refresh handler when ownership is lost
+   *  mid-tick.  `evaluate()` checks this before emitting order intents to
+   *  prevent duplicate orders if another instance re-acquires the lock.
+   *
+   *  Scope is per-tick: a stale refresh callback from a prior tick is
+   *  ignored because its captured `lockToken` no longer matches.  This
+   *  prevents a late rejection / ownership-loss from incorrectly aborting
+   *  a newer valid tick. */
+  private activeLockToken: string | null = null;
 
   /** Tracks child strategy IDs launched by RUN_STRATEGY action blocks */
   readonly childStrategies: Set<string> = new Set();
@@ -276,7 +283,6 @@ export class StrategyRunner {
     }
 
     this.tickInFlight = true;
-    this.tickOwnershipLost = false;
     // Cancel any pending delayed follow-up timer now that a real
     // evaluation is starting. Prevents stale catch-up ticks that
     // were scheduled by a previous tick's pendingTick handler.
@@ -304,6 +310,7 @@ export class StrategyRunner {
       );
       if (!acquired) return;
       lockAcquired = true;
+      this.activeLockToken = lockToken;
 
       // Periodically refresh the lock TTL during long-running evaluations.
       // Uses an atomic Lua check-and-extend script that verifies this runner
@@ -322,18 +329,24 @@ export class StrategyRunner {
             "10",
           )
           .then((result) => {
+            // Ignore if this callback is from a previous tick whose lock
+            // token no longer matches the active acquisition.
+            if (this.activeLockToken !== lockToken) return;
             if (result !== 1 && lockRefresh) {
               clearInterval(lockRefresh);
               lockRefresh = null;
-              this.tickOwnershipLost = true;
+              this.activeLockToken = null;
             }
           })
           .catch(() => {
+            // Ignore if this callback is from a previous tick whose lock
+            // token no longer matches the active acquisition.
+            if (this.activeLockToken !== lockToken) return;
             if (lockRefresh) {
               clearInterval(lockRefresh);
               lockRefresh = null;
             }
-            this.tickOwnershipLost = true;
+            this.activeLockToken = null;
           });
       }, 5_000);
 
@@ -733,12 +746,12 @@ export class StrategyRunner {
     );
 
     // Abort tick if lock ownership was lost mid-evaluation.
-    // The lock-refresh handler (setInterval in tick()) sets tickOwnershipLost
+    // The lock-refresh handler (setInterval in tick()) clears activeLockToken
     // when the Lua GET==lockToken check returns non-1 — meaning the key
     // expired or was re-acquired by another instance. Continuing through
     // evaluate() after ownership loss can emit duplicate order intents and
     // launch duplicate sub-strategies across instances.
-    if (this.tickOwnershipLost) {
+    if (this.activeLockToken === null) {
       this.logger.warn(
         `Tick ownership lost for ${this.strategyId} — discarding ${orderIntents.length} order intent(s) and ${runStrategyIntents.length} sub-strategy launch(es)`,
       );
