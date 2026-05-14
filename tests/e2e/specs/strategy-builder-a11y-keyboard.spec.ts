@@ -135,7 +135,8 @@ test.describe('Strategy Builder — Keyboard A11y', () => {
           if (!fiberKey) return null;
           // Walk the hooked subtree looking for a useSyncExternalStore snapshot
           // that contains an edges array (React Flow's internal zustand store).
-          function walk(fiber: Record<string, unknown> | null, depth: number): ReturnType | null {
+          type EdgeHandleSnapshot = Array<{ id: unknown; source: unknown; target: unknown; sourceHandle: unknown; targetHandle: unknown }>;
+          function walk(fiber: Record<string, unknown> | null, depth: number): EdgeHandleSnapshot | null {
             if (!fiber || depth > 80) return null;
             let hook = fiber['memoizedState'] as Record<string, unknown> | null;
             for (let j = 0; j < 60 && hook; j++) {
@@ -167,7 +168,6 @@ test.describe('Strategy Builder — Keyboard A11y', () => {
             return walk(fiber['child'] as Record<string, unknown> | null, depth + 1) ??
                    walk(fiber['sibling'] as Record<string, unknown> | null, depth + 1);
           }
-          type ReturnType = NonNullable<ReturnType<typeof walk>>;
           return walk((flowRoot as Record<string, unknown>)[fiberKey] as Record<string, unknown> | null, 0);
         });
 
@@ -405,7 +405,8 @@ test.describe('Strategy Builder — Keyboard A11y', () => {
             (k) => k.startsWith('__reactFiber$') || k.startsWith('__reactInternalInstance$'),
           );
           if (!fiberKey) return null;
-          function walk(fiber: Record<string, unknown> | null, depth: number): ReturnType | null {
+          type EdgeHandleSnapshot = Array<{ id: unknown; source: unknown; target: unknown; sourceHandle: unknown; targetHandle: unknown }>;
+          function walk(fiber: Record<string, unknown> | null, depth: number): EdgeHandleSnapshot | null {
             if (!fiber || depth > 80) return null;
             let hook = fiber['memoizedState'] as Record<string, unknown> | null;
             for (let j = 0; j < 60 && hook; j++) {
@@ -434,7 +435,6 @@ test.describe('Strategy Builder — Keyboard A11y', () => {
             return walk(fiber['child'] as Record<string, unknown> | null, depth + 1) ??
                    walk(fiber['sibling'] as Record<string, unknown> | null, depth + 1);
           }
-          type ReturnType = NonNullable<ReturnType<typeof walk>>;
           return walk((flowRoot as Record<string, unknown>)[fiberKey] as Record<string, unknown> | null, 0);
         });
 
@@ -501,7 +501,8 @@ test.describe('Strategy Builder — Keyboard A11y', () => {
             (k) => k.startsWith('__reactFiber$') || k.startsWith('__reactInternalInstance$'),
           );
           if (!fiberKey) return null;
-          function walk(fiber: Record<string, unknown> | null, depth: number): ReturnType | null {
+          type EdgeHandleSnapshot = Array<{ id: unknown; source: unknown; target: unknown; sourceHandle: unknown; targetHandle: unknown }>;
+          function walk(fiber: Record<string, unknown> | null, depth: number): EdgeHandleSnapshot | null {
             if (!fiber || depth > 80) return null;
             let hook = fiber['memoizedState'] as Record<string, unknown> | null;
             for (let j = 0; j < 60 && hook; j++) {
@@ -530,7 +531,6 @@ test.describe('Strategy Builder — Keyboard A11y', () => {
             return walk(fiber['child'] as Record<string, unknown> | null, depth + 1) ??
                    walk(fiber['sibling'] as Record<string, unknown> | null, depth + 1);
           }
-          type ReturnType = NonNullable<ReturnType<typeof walk>>;
           return walk((flowRoot as Record<string, unknown>)[fiberKey] as Record<string, unknown> | null, 0);
         });
 
@@ -592,7 +592,8 @@ test.describe('Strategy Builder — Keyboard A11y', () => {
             (k) => k.startsWith('__reactFiber$') || k.startsWith('__reactInternalInstance$'),
           );
           if (!fiberKey) return null;
-          function walk(fiber: Record<string, unknown> | null, depth: number): ReturnType | null {
+          type EdgeHandleSnapshot = Array<{ id: unknown; source: unknown; target: unknown; sourceHandle: unknown; targetHandle: unknown }>;
+          function walk(fiber: Record<string, unknown> | null, depth: number): EdgeHandleSnapshot | null {
             if (!fiber || depth > 80) return null;
             let hook = fiber['memoizedState'] as Record<string, unknown> | null;
             for (let j = 0; j < 60 && hook; j++) {
@@ -621,7 +622,6 @@ test.describe('Strategy Builder — Keyboard A11y', () => {
             return walk(fiber['child'] as Record<string, unknown> | null, depth + 1) ??
                    walk(fiber['sibling'] as Record<string, unknown> | null, depth + 1);
           }
-          type ReturnType = NonNullable<ReturnType<typeof walk>>;
           return walk((flowRoot as Record<string, unknown>)[fiberKey] as Record<string, unknown> | null, 0);
         });
 
