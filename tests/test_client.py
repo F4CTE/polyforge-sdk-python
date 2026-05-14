@@ -4796,17 +4796,51 @@ class TestCrossVenueArbitrage:
         client._get.assert_called_once_with("/api/v1/arbitrage/matches/market/p1")
         client.close()
 
-    def test_admin_only_match_mutations_are_not_public_client_methods(self):
-        admin_only_methods = [
-            "create_match",
-            "verify_match",
-            "delete_match",
-            "sync_matches",
-        ]
+    def test_sync_create_market_match(self):
+        from unittest.mock import MagicMock
+        client = PolyforgeClient(api_key="test-key")
+        client._post = MagicMock(return_value={
+            "id": "m1", "polymarketId": "p1", "kalshiId": "k1",
+            "confidence": 0.92, "matchMethod": "manual",
+            "verified": False, "createdAt": "2026-04-24T00:00:00Z",
+            "updatedAt": "2026-04-24T00:00:00Z",
+        })
+        result = client.create_market_match(polymarket_id="p1", kalshi_id="k1")
+        assert result.id == "m1"
+        assert result.polymarket_id == "p1"
+        assert result.kalshi_id == "k1"
+        client._post.assert_called_once_with(
+            "/api/v1/arbitrage/matches",
+            json={"polymarketId": "p1", "kalshiId": "k1"},
+        )
+        client.close()
 
-        for method_name in admin_only_methods:
-            assert not hasattr(PolyforgeClient, method_name)
-            assert not hasattr(AsyncPolyforgeClient, method_name)
+    def test_sync_verify_market_match(self):
+        from unittest.mock import MagicMock
+        client = PolyforgeClient(api_key="test-key")
+        client._post = MagicMock(return_value={
+            "id": "m1", "polymarketId": "p1", "kalshiId": "k1",
+            "confidence": 0.92, "matchMethod": "manual",
+            "verified": True, "createdAt": "2026-04-24T00:00:00Z",
+            "updatedAt": "2026-04-24T00:00:00Z",
+        })
+        result = client.verify_market_match("m1")
+        assert result.verified is True
+        client._post.assert_called_once_with(
+            "/api/v1/arbitrage/matches/m1/verify",
+        )
+        client.close()
+
+    def test_sync_delete_market_match(self):
+        from unittest.mock import MagicMock
+        client = PolyforgeClient(api_key="test-key")
+        client._delete = MagicMock(return_value=None)
+        result = client.delete_market_match("m1")
+        assert result is None
+        client._delete.assert_called_once_with(
+            "/api/v1/arbitrage/matches/m1",
+        )
+        client.close()
 
     def test_async_cross_venue_methods_exist(self):
         import inspect
@@ -4823,6 +4857,9 @@ class TestCrossVenueArbitrage:
             "delete_arbitrage_alert",
             "get_cross_venue_comparison",
             "get_matches_by_market",
+            "create_market_match",
+            "verify_market_match",
+            "delete_market_match",
         ]
         for method_name in methods:
             assert hasattr(AsyncPolyforgeClient, method_name), f"AsyncPolyforgeClient missing {method_name}"

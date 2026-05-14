@@ -1893,6 +1893,21 @@ class PolyforgeClient:
         data = self._get(f"/api/v1/arbitrage/matches/market/{_encode_path(market_id)}")
         return [_parse(MarketMatch, o) for o in data]
 
+    def create_market_match(self, *, polymarket_id: str, kalshi_id: str) -> MarketMatch:
+        """Manually match two markets across venues (admin-only)."""
+        body: dict[str, Any] = {"polymarketId": polymarket_id, "kalshiId": kalshi_id}
+        data = self._post("/api/v1/arbitrage/matches", json=body)
+        return _parse(MarketMatch, data)
+
+    def verify_market_match(self, match_id: str) -> MarketMatch:
+        """Verify/confirm a matched market pair (admin-only)."""
+        data = self._post(f"/api/v1/arbitrage/matches/{_encode_path(match_id)}/verify")
+        return _parse(MarketMatch, data)
+
+    def delete_market_match(self, match_id: str) -> None:
+        """Remove a market match / unmatch (admin-only)."""
+        self._delete(f"/api/v1/arbitrage/matches/{_encode_path(match_id)}")
+
     # -- Cross-Venue Arb Execution / Positions / Risk --
     #
     # SAFETY: ``execute_arb`` and ``close_arb_position`` place real orders on
@@ -5169,6 +5184,21 @@ class AsyncPolyforgeClient:
         """Get all matches for a specific market (either venue)."""
         data = await self._get(f"/api/v1/arbitrage/matches/market/{_encode_path(market_id)}")
         return [_parse(MarketMatch, o) for o in data]
+
+    async def create_market_match(self, *, polymarket_id: str, kalshi_id: str) -> MarketMatch:
+        """Manually match two markets across venues (admin-only)."""
+        body: dict[str, Any] = {"polymarketId": polymarket_id, "kalshiId": kalshi_id}
+        data = await self._post("/api/v1/arbitrage/matches", json=body)
+        return _parse(MarketMatch, data)
+
+    async def verify_market_match(self, match_id: str) -> MarketMatch:
+        """Verify/confirm a matched market pair (admin-only)."""
+        data = await self._post(f"/api/v1/arbitrage/matches/{_encode_path(match_id)}/verify")
+        return _parse(MarketMatch, data)
+
+    async def delete_market_match(self, match_id: str) -> None:
+        """Remove a market match / unmatch (admin-only)."""
+        await self._delete(f"/api/v1/arbitrage/matches/{_encode_path(match_id)}")
 
     # -- Cross-Venue Arb Execution / Positions / Risk --
     #
