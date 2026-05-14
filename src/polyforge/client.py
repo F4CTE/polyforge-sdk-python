@@ -575,6 +575,8 @@ def _validate_copy_config_numeric_fields(fields: dict[str, Any]) -> None:
         _validate_finite_numberish_param("priceOffset", fields["priceOffset"])
 
 
+_UNSET: Any = object()
+
 _COPY_CONFIG_KNOWN_KWARGS: frozenset[str] = frozenset({
     "mode", "sizeValue", "maxExposure", "maxDailyLoss", "priceOffset",
 })
@@ -2856,11 +2858,11 @@ class PolyforgeClient:
         self,
         copy_id: str,
         *,
-        mode: str | None = None,
-        size_value: float | None = None,
-        max_exposure: float | None = None,
-        max_daily_loss: float | None = None,
-        price_offset: float | None = None,
+        mode: str | None = _UNSET,
+        size_value: float | None = _UNSET,
+        max_exposure: float | None = _UNSET,
+        max_daily_loss: float | None = _UNSET,
+        price_offset: float | None = _UNSET,
         **kwargs: Any,
     ) -> CopyConfig:
         """Update an existing copy-trading configuration.
@@ -2869,6 +2871,9 @@ class PolyforgeClient:
         The ``camelCase`` keyword arguments (``sizeValue``, ``maxExposure``,
         ``maxDailyLoss``, ``priceOffset``) are still accepted for backward
         compatibility but will emit a :exc:`DeprecationWarning`.
+
+        Explicit ``None`` values are sent to the server as JSON ``null``
+        (useful for clearing optional fields such as ``maxDailyLoss``).
 
         Args:
             copy_id: The copy config ID to update.
@@ -2885,15 +2890,15 @@ class PolyforgeClient:
             TypeError: If unknown keyword arguments are passed.
         """
         body: dict[str, Any] = {}
-        if mode is not None:
+        if mode is not _UNSET:
             body["mode"] = mode
-        if size_value is not None:
+        if size_value is not _UNSET:
             body["sizeValue"] = size_value
-        if max_exposure is not None:
+        if max_exposure is not _UNSET:
             body["maxExposure"] = max_exposure
-        if max_daily_loss is not None:
+        if max_daily_loss is not _UNSET:
             body["maxDailyLoss"] = max_daily_loss
-        if price_offset is not None:
+        if price_offset is not _UNSET:
             body["priceOffset"] = price_offset
 
         if kwargs:
@@ -6054,11 +6059,11 @@ class AsyncPolyforgeClient:
         self,
         copy_id: str,
         *,
-        mode: str | None = None,
-        size_value: float | None = None,
-        max_exposure: float | None = None,
-        max_daily_loss: float | None = None,
-        price_offset: float | None = None,
+        mode: str | None = _UNSET,
+        size_value: float | None = _UNSET,
+        max_exposure: float | None = _UNSET,
+        max_daily_loss: float | None = _UNSET,
+        price_offset: float | None = _UNSET,
         **kwargs: Any,
     ) -> CopyConfig:
         """Update an existing copy-trading configuration.
@@ -6068,19 +6073,22 @@ class AsyncPolyforgeClient:
         ``maxDailyLoss``, ``priceOffset``) are still accepted for backward
         compatibility but will emit a :exc:`DeprecationWarning`.
 
+        Explicit ``None`` values are sent to the server as JSON ``null``
+        (useful for clearing optional fields such as ``maxDailyLoss``).
+
         Raises:
             TypeError: If unknown keyword arguments are passed.
         """
         body: dict[str, Any] = {}
-        if mode is not None:
+        if mode is not _UNSET:
             body["mode"] = mode
-        if size_value is not None:
+        if size_value is not _UNSET:
             body["sizeValue"] = size_value
-        if max_exposure is not None:
+        if max_exposure is not _UNSET:
             body["maxExposure"] = max_exposure
-        if max_daily_loss is not None:
+        if max_daily_loss is not _UNSET:
             body["maxDailyLoss"] = max_daily_loss
-        if price_offset is not None:
+        if price_offset is not _UNSET:
             body["priceOffset"] = price_offset
 
         if kwargs:

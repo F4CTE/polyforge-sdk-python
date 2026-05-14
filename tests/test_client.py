@@ -6395,6 +6395,61 @@ class TestTradingCopyNumericValidation:
         assert json_body["sizeValue"] == 200
         client.close()
 
+    def test_update_copy_config_explicit_none_sends_null(self):
+        from unittest.mock import MagicMock
+
+        client = PolyforgeClient(api_key="test")
+        client._patch = MagicMock(return_value={
+            "id": "copy-1",
+            "userId": "user-1",
+            "targetWallet": "0x0000000000000000000000000000000000000001",
+            "mode": "MIRROR",
+            "sizeValue": "10",
+            "maxExposure": "0",
+            "maxDailyLoss": None,
+            "priceOffset": None,
+            "status": "ACTIVE",
+            "totalCopied": 0,
+            "totalPnl": "0",
+            "createdAt": "2026-04-29T00:00:00Z",
+            "updatedAt": "2026-04-29T00:00:00Z",
+        })
+
+        client.update_copy_config("copy-1", max_daily_loss=None, price_offset=None)
+        json_body = client._patch.call_args.kwargs["json"]
+        assert json_body["maxDailyLoss"] is None
+        assert json_body["priceOffset"] is None
+        client.close()
+
+    def test_update_copy_config_omits_unset_params(self):
+        from unittest.mock import MagicMock
+
+        client = PolyforgeClient(api_key="test")
+        client._patch = MagicMock(return_value={
+            "id": "copy-1",
+            "userId": "user-1",
+            "targetWallet": "0x0000000000000000000000000000000000000001",
+            "mode": "FIXED",
+            "sizeValue": "100",
+            "maxExposure": "500",
+            "maxDailyLoss": "50",
+            "priceOffset": "0",
+            "status": "ACTIVE",
+            "totalCopied": 0,
+            "totalPnl": "0",
+            "createdAt": "2026-04-29T00:00:00Z",
+            "updatedAt": "2026-04-29T00:00:00Z",
+        })
+
+        client.update_copy_config("copy-1", mode="FIXED")
+        json_body = client._patch.call_args.kwargs["json"]
+        assert "mode" in json_body
+        assert "sizeValue" not in json_body
+        assert "maxExposure" not in json_body
+        assert "maxDailyLoss" not in json_body
+        assert "priceOffset" not in json_body
+        client.close()
+
     def test_async_batch_orders_rejects_infinite_order_price(self):
         import asyncio
 
@@ -6426,6 +6481,71 @@ class TestTradingCopyNumericValidation:
                 )
             with pytest.raises(ValueError, match="Infinity"):
                 await client.update_copy_config("copy-1", price_offset="Infinity")
+            await client.close()
+
+        asyncio.run(_run())
+
+    def test_async_update_copy_config_explicit_none_sends_null(self):
+        import asyncio
+        from unittest.mock import AsyncMock
+
+        async def _run():
+            client = AsyncPolyforgeClient(api_key="test")
+            client._patch = AsyncMock(return_value={
+                "id": "copy-1",
+                "userId": "user-1",
+                "targetWallet": "0x0000000000000000000000000000000000000001",
+                "mode": "MIRROR",
+                "sizeValue": "10",
+                "maxExposure": "0",
+                "maxDailyLoss": None,
+                "priceOffset": None,
+                "status": "ACTIVE",
+                "totalCopied": 0,
+                "totalPnl": "0",
+                "createdAt": "2026-04-29T00:00:00Z",
+                "updatedAt": "2026-04-29T00:00:00Z",
+            })
+
+            await client.update_copy_config(
+                "copy-1", max_daily_loss=None, price_offset=None,
+            )
+            json_body = client._patch.call_args.kwargs["json"]
+            assert json_body["maxDailyLoss"] is None
+            assert json_body["priceOffset"] is None
+            await client.close()
+
+        asyncio.run(_run())
+
+    def test_async_update_copy_config_omits_unset_params(self):
+        import asyncio
+        from unittest.mock import AsyncMock
+
+        async def _run():
+            client = AsyncPolyforgeClient(api_key="test")
+            client._patch = AsyncMock(return_value={
+                "id": "copy-1",
+                "userId": "user-1",
+                "targetWallet": "0x0000000000000000000000000000000000000001",
+                "mode": "FIXED",
+                "sizeValue": "100",
+                "maxExposure": "500",
+                "maxDailyLoss": "50",
+                "priceOffset": "0",
+                "status": "ACTIVE",
+                "totalCopied": 0,
+                "totalPnl": "0",
+                "createdAt": "2026-04-29T00:00:00Z",
+                "updatedAt": "2026-04-29T00:00:00Z",
+            })
+
+            await client.update_copy_config("copy-1", mode="FIXED")
+            json_body = client._patch.call_args.kwargs["json"]
+            assert "mode" in json_body
+            assert "sizeValue" not in json_body
+            assert "maxExposure" not in json_body
+            assert "maxDailyLoss" not in json_body
+            assert "priceOffset" not in json_body
             await client.close()
 
         asyncio.run(_run())
