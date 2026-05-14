@@ -5699,8 +5699,8 @@ class TestPublicHealthEndpoint:
         assert "await" in source, "async get_health_authenticated not using await"
 
 
-class TestHealthEndpoint:
-    """Tests for the authenticated health-check endpoint."""
+class TestHealthEndpointAuthCoroutine:
+    """Tests for the authenticated health-check coroutine signature."""
 
     def test_sync_get_health_authenticated(self):
         from unittest.mock import MagicMock
