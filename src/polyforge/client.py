@@ -110,6 +110,7 @@ from polyforge.models import (
     StrategyStatusResponse,
     StrategyTemplate,
     SystemHealthAuthenticated,
+    SystemHealthPublic,
     TickSizeInfo,
     Token,
     TopTraderEntry,
@@ -791,7 +792,35 @@ class PolyforgeClient:
         _raise_for_status(resp)
         return resp.text
 
+    def _get_no_auth(self, path: str) -> Any:
+        """GET without an Authorization header — for public endpoints.
+
+        The ``Authorization`` client-level default header is explicitly
+        suppressed so this helper can safely call unauthenticated
+        endpoints such as ``GET /health``.
+        """
+        resp = self._client.get(
+            path,
+            headers={"Authorization": "", "Content-Type": "application/json"},
+        )
+        _raise_for_status(resp)
+        return resp.json()
+
     # -- Health --
+
+    def get_health(self) -> SystemHealthPublic:
+        """Unauthenticated health probe — safe for load-balancers and k8s.
+
+        Calls ``GET /health`` without an ``Authorization`` header.
+        Returns a lightweight :class:`~polyforge.models.SystemHealthPublic`
+        with basic service status information.
+
+        This is the public counterpart to
+        :meth:`~polyforge.client.PolyforgeClient.get_health_authenticated`,
+        which calls ``GET /api/v1/status`` and requires a valid API key.
+        """
+        data = self._get_no_auth("/health")
+        return _parse(SystemHealthPublic, data)
 
     def get_health_authenticated(self) -> SystemHealthAuthenticated:
         """Get authenticated health/status data with full operational metrics.
@@ -4110,7 +4139,35 @@ class AsyncPolyforgeClient:
         _raise_for_status(resp)
         return resp.text
 
+    async def _get_no_auth(self, path: str) -> Any:
+        """GET without an Authorization header — for public endpoints.
+
+        The ``Authorization`` client-level default header is explicitly
+        suppressed so this helper can safely call unauthenticated
+        endpoints such as ``GET /health``.
+        """
+        resp = await self._client.get(
+            path,
+            headers={"Authorization": "", "Content-Type": "application/json"},
+        )
+        _raise_for_status(resp)
+        return resp.json()
+
     # -- Health --
+
+    async def get_health(self) -> SystemHealthPublic:
+        """Unauthenticated health probe — safe for load-balancers and k8s.
+
+        Calls ``GET /health`` without an ``Authorization`` header.
+        Returns a lightweight :class:`~polyforge.models.SystemHealthPublic`
+        with basic service status information.
+
+        This is the public counterpart to
+        :meth:`~polyforge.client.AsyncPolyforgeClient.get_health_authenticated`,
+        which calls ``GET /api/v1/status`` and requires a valid API key.
+        """
+        data = await self._get_no_auth("/health")
+        return _parse(SystemHealthPublic, data)
 
     async def get_health_authenticated(self) -> SystemHealthAuthenticated:
         """Get authenticated health/status data with full operational metrics.

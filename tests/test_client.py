@@ -33,6 +33,7 @@ from polyforge.models import (
     Market,
     MatchSyncResult,
     SystemHealthAuthenticated,
+    SystemHealthPublic,
     Token,
     MarketplaceListing,
     MarketplaceSeller,
@@ -4859,6 +4860,42 @@ class TestHealthEndpoint:
             "AsyncPolyforgeClient missing get_health_authenticated"
         source = inspect.getsource(AsyncPolyforgeClient.get_health_authenticated)
         assert "await" in source, "async get_health_authenticated not using await"
+
+    def test_sync_get_health(self):
+        """get_health() should call GET /health and return SystemHealthPublic."""
+        from unittest.mock import MagicMock
+        client = PolyforgeClient(api_key="test-key")
+        client._get_no_auth = MagicMock(return_value={
+            "status": "healthy",
+            "service": "api-service",
+            "version": "2.0.0",
+            "uptime": 3600.0,
+        })
+        result = client.get_health()
+        assert isinstance(result, SystemHealthPublic)
+        assert result.status == "healthy"
+        assert result.service == "api-service"
+        assert result.version == "2.0.0"
+        assert result.uptime == 3600.0
+        client._get_no_auth.assert_called_once_with("/health")
+        client.close()
+
+    def test_async_get_health_uses_correct_path(self):
+        """Async get_health() must use _get_no_auth with the /health path."""
+        import inspect
+        assert hasattr(AsyncPolyforgeClient, "get_health"), \
+            "AsyncPolyforgeClient missing get_health"
+        source = inspect.getsource(AsyncPolyforgeClient.get_health)
+        assert "await" in source, "async get_health not using await"
+        assert "/health" in source, "async get_health not using /health path"
+        assert "_get_no_auth" in source, "async get_health not using _get_no_auth"
+
+    def test_sync_get_health_no_auth_header(self):
+        """get_health() must not send Authorization header (public endpoint)."""
+        import inspect
+        source = inspect.getsource(PolyforgeClient.get_health)
+        assert "_get_no_auth" in source, "sync get_health not using _get_no_auth"
+        assert "/health" in source, "sync get_health not using /health path"
 
 
 class TestPositionPlatformContract:

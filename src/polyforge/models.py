@@ -1649,6 +1649,21 @@ class CorrelationCategoriesReport:
 
 
 @dataclass
+class SystemHealthPublic:
+    """Public health response for the unauthenticated GET /health endpoint.
+
+    Mirrors the platform's public health-check response. This endpoint does
+    not require authentication and is safe for load-balancer probes, k8s
+    liveness/readiness checks, and uptime monitors.
+    """
+
+    status: str = ""
+    service: str | None = None
+    version: str | None = None
+    uptime: float | None = None
+
+
+@dataclass
 class SystemHealthAuthenticated:
     """Authenticated health/status response for GET /api/v1/status.
 
