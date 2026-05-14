@@ -4948,11 +4948,76 @@ class TestCrossVenueArbitrage:
             assert not hasattr(PolyforgeClient, method_name)
             assert not hasattr(AsyncPolyforgeClient, method_name)
 
+    def test_sync_create_market_match(self):
+        from unittest.mock import MagicMock
+        client = PolyforgeClient(api_key="test-key")
+        client._post = MagicMock(return_value={
+            "id": "m1", "polymarketId": "p1", "kalshiId": "k1",
+            "confidence": 0.95, "matchMethod": "manual",
+            "verified": False, "createdAt": "2026-04-24T00:00:00Z",
+            "updatedAt": "2026-04-24T00:00:00Z",
+        })
+        result = client.create_market_match(polymarket_id="p1", kalshi_id="k1")
+        assert result.id == "m1"
+        assert result.polymarket_id == "p1"
+        assert result.kalshi_id == "k1"
+        client._post.assert_called_once_with(
+            "/api/v1/arbitrage/matches",
+            json={"polymarketId": "p1", "kalshiId": "k1"},
+        )
+        client.close()
+
+    def test_sync_create_market_match_signature(self):
+        import inspect
+        sig = inspect.signature(PolyforgeClient.create_market_match)
+        param_names = set(sig.parameters.keys())
+        assert "polymarket_id" in param_names
+        assert "kalshi_id" in param_names
+
+    def test_sync_verify_market_match(self):
+        from unittest.mock import MagicMock
+        client = PolyforgeClient(api_key="test-key")
+        client._post = MagicMock(return_value={
+            "id": "m1", "polymarketId": "p1", "kalshiId": "k1",
+            "confidence": 0.95, "matchMethod": "manual",
+            "verified": True, "createdAt": "2026-04-24T00:00:00Z",
+            "updatedAt": "2026-04-24T00:00:00Z",
+        })
+        result = client.verify_market_match("m1")
+        assert result.id == "m1"
+        assert result.verified is True
+        client._post.assert_called_once_with("/api/v1/arbitrage/matches/m1/verify")
+        client.close()
+
+    def test_sync_verify_market_match_signature(self):
+        import inspect
+        sig = inspect.signature(PolyforgeClient.verify_market_match)
+        param_names = set(sig.parameters.keys())
+        assert "match_id" in param_names
+
+    def test_sync_delete_market_match(self):
+        from unittest.mock import MagicMock
+        client = PolyforgeClient(api_key="test-key")
+        client._delete = MagicMock(return_value=None)
+        result = client.delete_market_match("m1")
+        assert result is None
+        client._delete.assert_called_once_with("/api/v1/arbitrage/matches/m1")
+        client.close()
+
+    def test_sync_delete_market_match_signature(self):
+        import inspect
+        sig = inspect.signature(PolyforgeClient.delete_market_match)
+        param_names = set(sig.parameters.keys())
+        assert "match_id" in param_names
+
     def test_async_cross_venue_methods_exist(self):
         import inspect
         methods = [
             "get_cross_venue_opportunities",
             "get_cross_venue_opportunities_for_market",
+            "create_market_match",
+            "verify_market_match",
+            "delete_market_match",
             "get_market_matches",
             "get_market_match",
             "sync_market_matches",
