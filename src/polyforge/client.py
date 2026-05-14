@@ -568,6 +568,15 @@ def _validate_copy_config_numeric_fields(fields: dict[str, Any]) -> None:
         _validate_finite_numberish_param("priceOffset", fields["priceOffset"])
 
 
+_VALID_COPY_CONFIG_UPDATE_FIELDS: frozenset[str] = frozenset({
+    "mode",
+    "sizeValue",
+    "maxExposure",
+    "maxDailyLoss",
+    "priceOffset",
+})
+
+
 _BLOCKED_HOSTNAMES: set[str] = {
     "localhost",
     "metadata.google.internal",
@@ -2759,15 +2768,18 @@ class PolyforgeClient:
 
         Args:
             copy_id: The copy config ID to update.
-            **kwargs: Fields to update (passed directly to the API).
+            **kwargs: Fields to update (unknown keys are silently dropped).
 
         Returns:
             The updated :class:`CopyConfig`.
         """
-        _validate_copy_config_numeric_fields(kwargs)
+        body = _strip_none(
+            {k: v for k, v in kwargs.items() if k in _VALID_COPY_CONFIG_UPDATE_FIELDS}
+        )
+        _validate_copy_config_numeric_fields(body)
         return _parse(
             CopyConfig,
-            self._patch(f"/api/v1/copy/{_encode_path(copy_id)}", json=kwargs),
+            self._patch(f"/api/v1/copy/{_encode_path(copy_id)}", json=body),
         )
 
     def pause_copy_config(self, copy_id: str) -> CopyConfig:
@@ -5860,10 +5872,13 @@ class AsyncPolyforgeClient:
 
     async def update_copy_config(self, copy_id: str, **kwargs: Any) -> CopyConfig:
         """Update an existing copy-trading configuration."""
-        _validate_copy_config_numeric_fields(kwargs)
+        body = _strip_none(
+            {k: v for k, v in kwargs.items() if k in _VALID_COPY_CONFIG_UPDATE_FIELDS}
+        )
+        _validate_copy_config_numeric_fields(body)
         return _parse(
             CopyConfig,
-            await self._patch(f"/api/v1/copy/{_encode_path(copy_id)}", json=kwargs),
+            await self._patch(f"/api/v1/copy/{_encode_path(copy_id)}", json=body),
         )
 
     async def pause_copy_config(self, copy_id: str) -> CopyConfig:
