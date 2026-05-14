@@ -108,6 +108,7 @@ describe("EventsGateway", () => {
 
       expect(jwtService.verify).toHaveBeenCalledWith("valid-jwt", {
         secret: "test-secret-32-chars-minimum-ok!",
+        algorithms: ["HS256"],
       });
       expect(client.send).toHaveBeenCalledWith(
         expect.stringContaining('"type":"AUTH_OK"'),
@@ -132,6 +133,7 @@ describe("EventsGateway", () => {
 
       expect(jwtService.verify).toHaveBeenCalledWith("valid-jwt", {
         secret: "test-secret-32-chars-minimum-ok!",
+        algorithms: ["HS256"],
       });
       expect(client.send).toHaveBeenCalledWith(
         expect.stringContaining('"type":"AUTH_OK"'),
@@ -164,6 +166,7 @@ describe("EventsGateway", () => {
 
       expect(jwtService.verify).toHaveBeenCalledWith("cookie-jwt", {
         secret: "test-secret-32-chars-minimum-ok!",
+        algorithms: ["HS256"],
       });
       expect(client.send).toHaveBeenCalledWith(
         expect.stringContaining('"type":"AUTH_OK"'),
@@ -188,6 +191,7 @@ describe("EventsGateway", () => {
 
       expect(jwtService.verify).toHaveBeenCalledWith("cookie-jwt", {
         secret: "test-secret-32-chars-minimum-ok!",
+        algorithms: ["HS256"],
       });
       expect(warnSpy).not.toHaveBeenCalled();
     });
@@ -210,6 +214,7 @@ describe("EventsGateway", () => {
 
       expect(jwtService.verify).toHaveBeenCalledWith("legacy-secret-token", {
         secret: "test-secret-32-chars-minimum-ok!",
+        algorithms: ["HS256"],
       });
       expect(warnSpy).toHaveBeenCalledWith(
         "Deprecated WebSocket query token used from 203.0.113.9",
