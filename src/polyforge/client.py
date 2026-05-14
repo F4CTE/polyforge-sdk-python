@@ -571,8 +571,10 @@ def _validate_copy_config_numeric_fields(fields: dict[str, Any]) -> None:
     for name in ("sizeValue", "maxExposure", "maxDailyLoss"):
         if name in fields and fields[name] is not None:
             _validate_positive_numberish_param(name, fields[name])
+            fields[name] = str(fields[name])
     if "priceOffset" in fields and fields["priceOffset"] is not None:
         _validate_finite_numberish_param("priceOffset", fields["priceOffset"])
+        fields["priceOffset"] = str(fields["priceOffset"])
 
 
 _BLOCKED_HOSTNAMES: set[str] = {

@@ -6331,7 +6331,74 @@ class TestTradingCopyNumericValidation:
             price_offset=-0.5,
         )
         client._post.assert_called_once()
-        assert client._post.call_args.kwargs["json"]["priceOffset"] == -0.5
+        assert client._post.call_args.kwargs["json"]["priceOffset"] == "-0.5"
+        client.close()
+
+    def test_create_copy_config_sends_numeric_fields_as_strings(self):
+        from unittest.mock import MagicMock
+
+        client = PolyforgeClient(api_key="test")
+        client._post = MagicMock(return_value={
+            "id": "copy-1",
+            "userId": "user-1",
+            "targetWallet": "0x0000000000000000000000000000000000000001",
+            "mode": "PERCENTAGE",
+            "sizeValue": "10",
+            "maxExposure": "500",
+            "maxDailyLoss": "100",
+            "priceOffset": "-0.5",
+            "status": "ACTIVE",
+            "totalCopied": 0,
+            "totalPnl": "0",
+            "createdAt": "2026-04-29T00:00:00Z",
+            "updatedAt": "2026-04-29T00:00:00Z",
+        })
+        client.create_copy_config(
+            "0x0000000000000000000000000000000000000001",
+            mode="PERCENTAGE",
+            size_value=10.0,
+            max_exposure=500,
+            max_daily_loss=100.0,
+            price_offset=-0.5,
+        )
+        json_body = client._post.call_args.kwargs["json"]
+        assert json_body["sizeValue"] == "10.0"
+        assert json_body["maxExposure"] == "500"
+        assert json_body["maxDailyLoss"] == "100.0"
+        assert json_body["priceOffset"] == "-0.5"
+        client.close()
+
+    def test_update_copy_config_sends_numeric_fields_as_strings(self):
+        from unittest.mock import MagicMock
+
+        client = PolyforgeClient(api_key="test")
+        client._patch = MagicMock(return_value={
+            "id": "copy-1",
+            "userId": "user-1",
+            "targetWallet": "0x0000000000000000000000000000000000000001",
+            "mode": "PERCENTAGE",
+            "sizeValue": "10",
+            "maxExposure": "500",
+            "maxDailyLoss": "100",
+            "priceOffset": "-0.5",
+            "status": "ACTIVE",
+            "totalCopied": 0,
+            "totalPnl": "0",
+            "createdAt": "2026-04-29T00:00:00Z",
+            "updatedAt": "2026-04-29T00:00:00Z",
+        })
+        client.update_copy_config(
+            "copy-1",
+            sizeValue=10.0,
+            maxExposure=500,
+            maxDailyLoss=100.0,
+            priceOffset=-0.5,
+        )
+        json_body = client._patch.call_args.kwargs["json"]
+        assert json_body["sizeValue"] == "10.0"
+        assert json_body["maxExposure"] == "500"
+        assert json_body["maxDailyLoss"] == "100.0"
+        assert json_body["priceOffset"] == "-0.5"
         client.close()
 
     def test_update_copy_config_rejects_invalid_numeric_kwargs(self):
@@ -6361,7 +6428,7 @@ class TestTradingCopyNumericValidation:
         })
         client.update_copy_config("copy-1", priceOffset=-0.5)
         client._patch.assert_called_once()
-        assert client._patch.call_args.kwargs["json"]["priceOffset"] == -0.5
+        assert client._patch.call_args.kwargs["json"]["priceOffset"] == "-0.5"
         client.close()
 
     def test_async_batch_orders_rejects_infinite_order_price(self):
