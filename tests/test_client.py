@@ -5613,6 +5613,55 @@ class TestVenuePreferenceMethods:
         assert result.single_platform_mode is True
         client.close()
 
+    def test_get_my_preferences_delegation(self):
+        """get_my_preferences delegates to get_venue_preferences."""
+        from unittest.mock import MagicMock
+        from polyforge.models import VenuePreferences
+        client = PolyforgeClient(api_key="test-key")
+        client._get = MagicMock(return_value={
+            "defaultVenue": "polymarket",
+            "enabledVenues": ["polymarket"],
+            "singlePlatformMode": False,
+        })
+        result = client.get_my_preferences()
+        client._get.assert_called_once_with("/api/v1/users/me/venue-preferences")
+        assert isinstance(result, VenuePreferences)
+        assert result.default_venue == "polymarket"
+        client.close()
+
+    def test_update_my_preferences_delegation(self):
+        """update_my_preferences delegates to update_venue_preferences."""
+        from unittest.mock import MagicMock
+        from polyforge.models import VenuePreferences
+        client = PolyforgeClient(api_key="test-key")
+        client._patch = MagicMock(return_value={
+            "defaultVenue": "kalshi",
+            "enabledVenues": ["kalshi"],
+            "singlePlatformMode": True,
+        })
+        result = client.update_my_preferences(
+            default_venue="kalshi", single_platform_mode=True
+        )
+        client._patch.assert_called_once_with(
+            "/api/v1/users/me/venue-preferences",
+            json={"defaultVenue": "kalshi", "singlePlatformMode": True},
+        )
+        assert isinstance(result, VenuePreferences)
+        assert result.single_platform_mode is True
+        client.close()
+
+    def test_my_preferences_sync_methods_exist(self):
+        assert hasattr(PolyforgeClient, "get_my_preferences")
+        assert callable(getattr(PolyforgeClient, "get_my_preferences"))
+        assert hasattr(PolyforgeClient, "update_my_preferences")
+        assert callable(getattr(PolyforgeClient, "update_my_preferences"))
+
+    def test_my_preferences_async_methods_exist(self):
+        assert hasattr(AsyncPolyforgeClient, "get_my_preferences")
+        assert callable(getattr(AsyncPolyforgeClient, "get_my_preferences"))
+        assert hasattr(AsyncPolyforgeClient, "update_my_preferences")
+        assert callable(getattr(AsyncPolyforgeClient, "update_my_preferences"))
+
 
 class TestUserManagementModels:
     """Tests for new user management models."""
