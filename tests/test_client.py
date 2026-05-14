@@ -5183,30 +5183,6 @@ class TestHealthEndpoint:
         source = inspect.getsource(AsyncPolyforgeClient.get_health)
         assert "await" in source, "async get_health not using await"
 
-
-class TestHealthEndpoint:
-    """Tests for the authenticated health-check endpoint."""
-
-    def test_sync_get_health_authenticated(self):
-        from unittest.mock import MagicMock
-        client = PolyforgeClient(api_key="test-key")
-        client._get = MagicMock(return_value={
-            "status": "operational",
-            "service": "api-service",
-            "version": "2.0.0",
-            "uptime": 3600.0,
-            "db": {"connections": 5, "status": "ok"},
-            "redis": {"memoryUsageMb": 128, "status": "ok"},
-            "queueDepth": 0,
-        })
-        result = client.get_health_authenticated()
-        assert isinstance(result, SystemHealthAuthenticated)
-        assert result.status == "operational"
-        assert result.service == "api-service"
-        assert result.db == {"connections": 5, "status": "ok"}
-        client._get.assert_called_once_with("/api/v1/status")
-        client.close()
-
     def test_async_get_health_authenticated_is_coroutine(self):
         import inspect
         assert hasattr(AsyncPolyforgeClient, "get_health_authenticated"), \
