@@ -1111,6 +1111,87 @@ class TestPlaceOrderValidation:
             )
         client.close()
 
+    def test_place_smart_order_rejects_invalid_type(self):
+        client = PolyforgeClient(api_key="test-key")
+        with pytest.raises(ValueError, match="must be one of"):
+            client.place_smart_order(
+                type="INVALID", token_id="tok", side="BUY",
+                outcome="YES", total_size=10.0,
+            )
+        client.close()
+
+    def test_place_smart_order_rejects_invalid_side(self):
+        client = PolyforgeClient(api_key="test-key")
+        with pytest.raises(ValueError, match="must be one of"):
+            client.place_smart_order(
+                type="TWAP", token_id="tok", side="HOLD",
+                outcome="YES", total_size=10.0,
+            )
+        client.close()
+
+    def test_place_smart_order_rejects_invalid_outcome(self):
+        client = PolyforgeClient(api_key="test-key")
+        with pytest.raises(ValueError, match="must be one of"):
+            client.place_smart_order(
+                type="TWAP", token_id="tok", side="BUY",
+                outcome="MAYBE", total_size=10.0,
+            )
+        client.close()
+
+    def test_place_smart_order_rejects_invalid_slices_below_range(self):
+        client = PolyforgeClient(api_key="test-key")
+        with pytest.raises(ValueError, match="slices must be between 2 and 100"):
+            client.place_smart_order(
+                type="TWAP", token_id="tok", side="BUY",
+                outcome="YES", total_size=10.0, slices=1,
+            )
+        client.close()
+
+    def test_place_smart_order_rejects_invalid_slices_above_range(self):
+        client = PolyforgeClient(api_key="test-key")
+        with pytest.raises(ValueError, match="slices must be between 2 and 100"):
+            client.place_smart_order(
+                type="TWAP", token_id="tok", side="BUY",
+                outcome="YES", total_size=10.0, slices=101,
+            )
+        client.close()
+
+    def test_place_smart_order_rejects_invalid_slices_negative(self):
+        client = PolyforgeClient(api_key="test-key")
+        with pytest.raises(ValueError, match="slices must be between 2 and 100"):
+            client.place_smart_order(
+                type="TWAP", token_id="tok", side="BUY",
+                outcome="YES", total_size=10.0, slices=-1,
+            )
+        client.close()
+
+    def test_place_smart_order_rejects_invalid_interval_minutes_below_range(self):
+        client = PolyforgeClient(api_key="test-key")
+        with pytest.raises(ValueError, match="interval_minutes must be between 1 and 10080"):
+            client.place_smart_order(
+                type="TWAP", token_id="tok", side="BUY",
+                outcome="YES", total_size=10.0, interval_minutes=0,
+            )
+        client.close()
+
+    def test_place_smart_order_rejects_invalid_interval_minutes_above_range(self):
+        client = PolyforgeClient(api_key="test-key")
+        with pytest.raises(ValueError, match="interval_minutes must be between 1 and 10080"):
+            client.place_smart_order(
+                type="TWAP", token_id="tok", side="BUY",
+                outcome="YES", total_size=10.0, interval_minutes=10081,
+            )
+        client.close()
+
+    def test_place_smart_order_rejects_invalid_interval_minutes_negative(self):
+        client = PolyforgeClient(api_key="test-key")
+        with pytest.raises(ValueError, match="interval_minutes must be between 1 and 10080"):
+            client.place_smart_order(
+                type="TWAP", token_id="tok", side="BUY",
+                outcome="YES", total_size=10.0, interval_minutes=-5,
+            )
+        client.close()
+
     def test_provide_liquidity_rejects_negative_amount(self):
         client = PolyforgeClient(api_key="test-key")
         with pytest.raises(ValueError, match="must be positive"):
@@ -1151,9 +1232,15 @@ class TestAsyncPlaceOrderValidation:
         assert '"amount"' in source or "'amount'" in source
 
     def test_async_place_smart_order_calls_validate(self):
-        """Async place_smart_order must call _validate_financial_param for total_size."""
+        """Async place_smart_order must call validation helpers for type, side, outcome,
+        slices, interval_minutes, and total_size."""
         import inspect
         source = inspect.getsource(AsyncPolyforgeClient.place_smart_order)
+        assert '_validate_enum("type"' in source
+        assert '_validate_enum("side"' in source
+        assert '_validate_enum("outcome"' in source
+        assert "slices must be between 2 and 100" in source
+        assert "interval_minutes must be between 1 and 10080" in source
         assert '_validate_financial_param("total_size"' in source
 
     def test_async_provide_liquidity_calls_validate(self):

@@ -442,6 +442,7 @@ _VALID_MODES = frozenset({"live", "paper"})
 _VALID_SIDES = frozenset({"BUY", "SELL"})
 _VALID_OUTCOMES = frozenset({"YES", "NO"})
 _VALID_ORDER_TYPES = frozenset({"GTC", "GTD", "FOK", "FAK", "POST_ONLY"})
+_VALID_SMART_ORDER_TYPES = frozenset({"TWAP", "DCA", "BRACKET", "OCO"})
 _VALID_SPORTS_SORTS = frozenset({"volume", "closing_soon", "newest"})
 _VALID_SPORTS_EVENT_STATUSES = frozenset(
     {"SCHEDULED", "PREGAME", "LIVE", "HALFTIME", "FINAL"}
@@ -2186,6 +2187,13 @@ class PolyforgeClient:
         idempotency_key: str | None = None,
     ) -> PlaceSmartOrderResponse:
         """Place an advanced smart order (TWAP, DCA, BRACKET, or OCO)."""
+        _validate_enum("type", type, _VALID_SMART_ORDER_TYPES)
+        _validate_enum("side", side, _VALID_SIDES)
+        _validate_enum("outcome", outcome, _VALID_OUTCOMES)
+        if slices is not None and (slices < 2 or slices > 100):
+            raise ValueError(f"slices must be between 2 and 100, got {slices}")
+        if interval_minutes is not None and (interval_minutes < 1 or interval_minutes > 10080):
+            raise ValueError(f"interval_minutes must be between 1 and 10080, got {interval_minutes}")
         _validate_financial_param("total_size", total_size)
         if limit_price is not None:
             _validate_financial_param("limit_price", limit_price)
@@ -5659,6 +5667,13 @@ class AsyncPolyforgeClient:
         idempotency_key: str | None = None,
     ) -> PlaceSmartOrderResponse:
         """Place an advanced smart order (TWAP, DCA, BRACKET, or OCO)."""
+        _validate_enum("type", type, _VALID_SMART_ORDER_TYPES)
+        _validate_enum("side", side, _VALID_SIDES)
+        _validate_enum("outcome", outcome, _VALID_OUTCOMES)
+        if slices is not None and (slices < 2 or slices > 100):
+            raise ValueError(f"slices must be between 2 and 100, got {slices}")
+        if interval_minutes is not None and (interval_minutes < 1 or interval_minutes > 10080):
+            raise ValueError(f"interval_minutes must be between 1 and 10080, got {interval_minutes}")
         _validate_financial_param("total_size", total_size)
         if limit_price is not None:
             _validate_financial_param("limit_price", limit_price)
