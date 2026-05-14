@@ -2949,6 +2949,8 @@ class PolyforgeClient:
         if limit is not None:
             q["limit"] = limit
         if offset is not None and page is None:
+            if limit is not None and limit < 1:
+                raise ValueError(f"limit must be >= 1, got {limit}")
             resolved_limit = limit or 20
             q["page"] = (offset // resolved_limit) + 1
         elif page is not None:
@@ -6054,6 +6056,8 @@ class AsyncPolyforgeClient:
         if limit is not None:
             q["limit"] = limit
         if offset is not None and page is None:
+            if limit is not None and limit < 1:
+                raise ValueError(f"limit must be >= 1, got {limit}")
             resolved_limit = limit or 20
             q["page"] = (offset // resolved_limit) + 1
         elif page is not None:
