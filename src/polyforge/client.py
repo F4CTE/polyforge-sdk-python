@@ -2847,23 +2847,44 @@ class PolyforgeClient:
         data = self._get(f"/api/v1/copy/{_encode_path(copy_id)}")
         return _parse(CopyConfig, data)
 
-    def update_copy_config(self, copy_id: str, **kwargs: Any) -> CopyConfig:
+    def update_copy_config(
+        self,
+        copy_id: str,
+        *,
+        mode: str | None = None,
+        size_value: float | None = None,
+        max_exposure: float | None = None,
+        max_daily_loss: float | None = None,
+        price_offset: float | None = None,
+    ) -> CopyConfig:
         """Update an existing copy-trading configuration.
-
-        Pass API field names as keyword arguments (e.g. ``mode="FIXED"``,
-        ``sizeValue=100``).
 
         Args:
             copy_id: The copy config ID to update.
-            **kwargs: Fields to update (passed directly to the API).
+            mode: Copy mode (``"PERCENTAGE"``, ``"FIXED"``, or ``"MIRROR"``).
+            size_value: Trade size value (percentage or fixed USDC amount).
+            max_exposure: Maximum USDC exposure per copied wallet.
+            max_daily_loss: Maximum daily loss limit in USDC.
+            price_offset: Price offset applied to copied orders.
 
         Returns:
             The updated :class:`CopyConfig`.
         """
-        _validate_copy_config_numeric_fields(kwargs)
+        body: dict[str, Any] = {}
+        if mode is not None:
+            body["mode"] = mode
+        if size_value is not None:
+            body["sizeValue"] = size_value
+        if max_exposure is not None:
+            body["maxExposure"] = max_exposure
+        if max_daily_loss is not None:
+            body["maxDailyLoss"] = max_daily_loss
+        if price_offset is not None:
+            body["priceOffset"] = price_offset
+        _validate_copy_config_numeric_fields(body)
         return _parse(
             CopyConfig,
-            self._patch(f"/api/v1/copy/{_encode_path(copy_id)}", json=kwargs),
+            self._patch(f"/api/v1/copy/{_encode_path(copy_id)}", json=body),
         )
 
     def pause_copy_config(self, copy_id: str) -> CopyConfig:
@@ -5997,12 +6018,32 @@ class AsyncPolyforgeClient:
         data = await self._get(f"/api/v1/copy/{_encode_path(copy_id)}")
         return _parse(CopyConfig, data)
 
-    async def update_copy_config(self, copy_id: str, **kwargs: Any) -> CopyConfig:
+    async def update_copy_config(
+        self,
+        copy_id: str,
+        *,
+        mode: str | None = None,
+        size_value: float | None = None,
+        max_exposure: float | None = None,
+        max_daily_loss: float | None = None,
+        price_offset: float | None = None,
+    ) -> CopyConfig:
         """Update an existing copy-trading configuration."""
-        _validate_copy_config_numeric_fields(kwargs)
+        body: dict[str, Any] = {}
+        if mode is not None:
+            body["mode"] = mode
+        if size_value is not None:
+            body["sizeValue"] = size_value
+        if max_exposure is not None:
+            body["maxExposure"] = max_exposure
+        if max_daily_loss is not None:
+            body["maxDailyLoss"] = max_daily_loss
+        if price_offset is not None:
+            body["priceOffset"] = price_offset
+        _validate_copy_config_numeric_fields(body)
         return _parse(
             CopyConfig,
-            await self._patch(f"/api/v1/copy/{_encode_path(copy_id)}", json=kwargs),
+            await self._patch(f"/api/v1/copy/{_encode_path(copy_id)}", json=body),
         )
 
     async def pause_copy_config(self, copy_id: str) -> CopyConfig:

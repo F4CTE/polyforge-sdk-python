@@ -6296,7 +6296,7 @@ class TestTradingCopyNumericValidation:
     def test_update_copy_config_rejects_invalid_numeric_kwargs(self):
         client = PolyforgeClient(api_key="test")
         with pytest.raises(ValueError, match="Infinity"):
-            client.update_copy_config("copy-1", maxExposure="Infinity")
+            client.update_copy_config("copy-1", max_exposure="Infinity")
         client.close()
 
     def test_update_copy_config_allows_negative_price_offset(self):
@@ -6318,7 +6318,7 @@ class TestTradingCopyNumericValidation:
             "createdAt": "2026-04-29T00:00:00Z",
             "updatedAt": "2026-04-29T00:00:00Z",
         })
-        client.update_copy_config("copy-1", priceOffset=-0.5)
+        client.update_copy_config("copy-1", price_offset=-0.5)
         client._patch.assert_called_once()
         assert client._patch.call_args.kwargs["json"]["priceOffset"] == -0.5
         client.close()
@@ -6353,7 +6353,7 @@ class TestTradingCopyNumericValidation:
                     max_daily_loss=0,
                 )
             with pytest.raises(ValueError, match="Infinity"):
-                await client.update_copy_config("copy-1", priceOffset="Infinity")
+                await client.update_copy_config("copy-1", price_offset="Infinity")
             await client.close()
 
         asyncio.run(_run())
