@@ -53,8 +53,7 @@ function nodeHasTargetHandle(node: AnyNode): boolean {
     // Safety blocks are only keyboard-connectable when they expose at least
     // one wireable field. Blocks without wireable fields (e.g. stop-loss
     // variants that accept no data input) should not appear as targets.
-    if (data.section === "safety")
-      return data.fields.some((f) => f.wireable);
+    if (data.section === "safety") return data.fields.some((f) => f.wireable);
   }
   return false;
 }
