@@ -3516,6 +3516,18 @@ class TestNewModels:
         assert trade.side == ""
         assert trade.pnl == ""
 
+    def test_accuracy_leaderboard_entry_defaults(self):
+        from polyforge.models import AccuracyLeaderboardEntry
+        entry = AccuracyLeaderboardEntry()
+        assert entry.rank == 0
+        assert entry.user_id == ""
+        assert entry.username == ""
+        assert entry.display_name is None
+        assert entry.avatar_url is None
+        assert entry.pnl == ""
+        assert entry.win_rate == ""
+        assert entry.trade_count == 0
+
 
 class TestStrategySocialVersioningEventLog:
     """Tests for strategy social, versioning, event-log methods (#124)."""
@@ -4238,6 +4250,7 @@ class TestNewModels:
 
     def test_new_models_exported_from_package(self):
         from polyforge import (
+            AccuracyLeaderboardEntry,
             Badge,
             BatchOrderItem,
             BatchOrderResult,
@@ -4255,6 +4268,7 @@ class TestNewModels:
             TopTraderEntry,
         )
         assert all(m is not None for m in [
+            AccuracyLeaderboardEntry,
             Badge, BatchOrderItem, BatchOrderResult, BulkCancelError, BulkCancelResult,
             ClobBook, ClobPriceHistory, MidpointInfo, NewsArticle,
             PolymarketActivity, PolymarketEarningsEntry, PolymarketPortfolioEntry,
@@ -4314,6 +4328,18 @@ class TestNewModels:
         assert entry.username == "trader1"
         assert entry.display_name == "Trader One"
         assert entry.total_trades == 250
+
+    def test_accuracy_leaderboard_entry_defaults(self):
+        from polyforge.models import AccuracyLeaderboardEntry
+        entry = AccuracyLeaderboardEntry()
+        assert entry.rank == 0
+        assert entry.user_id == ""
+        assert entry.username == ""
+        assert entry.display_name is None
+        assert entry.avatar_url is None
+        assert entry.pnl == ""
+        assert entry.win_rate == ""
+        assert entry.trade_count == 0
 
 
 class TestRedeemPosition:
@@ -6430,6 +6456,9 @@ class TestMiscUtilityEndpointPaths:
     def test_get_accuracy_overview_path(self):
         assert '"/api/v1/accuracy"' in self._src(PolyforgeClient.get_accuracy_overview)
 
+    def test_get_accuracy_leaderboard_path(self):
+        assert '"/api/v1/accuracy/leaderboard"' in self._src(PolyforgeClient.get_accuracy_leaderboard)
+
     def test_get_feed_path(self):
         assert '"/api/v1/feed"' in self._src(PolyforgeClient.get_feed)
 
@@ -6982,6 +7011,43 @@ class TestMiscUtilityEndpointRoundtrips:
         finally:
             client.close()
 
+    def test_get_accuracy_leaderboard_parses_payload(self):
+        def handler(request):
+            assert request.url.path == "/api/v1/accuracy/leaderboard"
+            return httpx.Response(200, json={
+                "data": [
+                    {
+                        "rank": 1, "userId": "user-1", "username": "trader1",
+                        "displayName": "Trader One", "avatarUrl": "https://img/1.png",
+                        "pnl": "1500.42", "winRate": "0.85", "tradeCount": 340,
+                    },
+                    {
+                        "rank": 2, "userId": "user-2", "username": "trader2",
+                        "displayName": None, "avatarUrl": None,
+                        "pnl": "890.10", "winRate": "0.72", "tradeCount": 150,
+                    },
+                ],
+                "total": 2, "page": 1, "limit": 20,
+                "totalPages": 1, "hasNext": False,
+            })
+        client = self._client_with(handler)
+        try:
+            result = client.get_accuracy_leaderboard()
+            assert result.total == 2
+            assert len(result.data) == 2
+            assert result.data[0].rank == 1
+            assert result.data[0].user_id == "user-1"
+            assert result.data[0].username == "trader1"
+            assert result.data[0].display_name == "Trader One"
+            assert result.data[0].avatar_url == "https://img/1.png"
+            assert result.data[0].pnl == "1500.42"
+            assert result.data[0].win_rate == "0.85"
+            assert result.data[0].trade_count == 340
+            assert result.data[1].display_name is None
+            assert result.data[1].avatar_url is None
+        finally:
+            client.close()
+
 
 class TestMiscUtilityEndpointsAsync:
     """Smoke-check that the async client mirrors the sync surface end-to-end."""
@@ -7092,6 +7158,35 @@ class TestMiscUtilityEndpointsAsync:
             ("GET", "/api/v1/fees/schedules"),
             ("POST", "/api/v1/markets/combo/lookup"),
         ]
+
+    def test_async_get_accuracy_leaderboard_parses_payload(self):
+        import asyncio
+
+        def handler(request):
+            assert request.url.path == "/api/v1/accuracy/leaderboard"
+            return httpx.Response(200, json={
+                "data": [
+                    {
+                        "rank": 1, "userId": "u1", "username": "t1",
+                        "displayName": "T1", "avatarUrl": None,
+                        "pnl": "500.00", "winRate": "0.75", "tradeCount": 100,
+                    },
+                ],
+                "total": 1, "page": 1, "limit": 20,
+                "totalPages": 1, "hasNext": False,
+            })
+
+        async def _run():
+            client = self._async_client_with(handler)
+            try:
+                result = await client.get_accuracy_leaderboard(period="7d", limit=10)
+                assert result.total == 1
+                assert result.data[0].rank == 1
+                assert result.data[0].pnl == "500.00"
+            finally:
+                await client.close()
+
+        asyncio.run(_run())
 
 # Cross-Venue Arb Execution / Positions / Risk (POLA-1851)
 # ---------------------------------------------------------------------------
