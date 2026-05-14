@@ -426,6 +426,7 @@ _VALID_ORDER_MOODS = frozenset(
     {"CONFIDENT", "UNCERTAIN", "FOMO", "DISCIPLINED", "REVENGE"}
 )
 _VALID_COMBO_LEG_OUTCOMES = frozenset({"yes", "no"})
+_VALID_SMART_ORDER_TYPES = frozenset({"TWAP", "DCA", "BRACKET", "OCO"})
 
 
 def _validate_financial_param(name: str, value: float) -> None:
@@ -491,6 +492,34 @@ def _validate_arb_slippage(value: float) -> None:
     if value < 0 or value > 5:
         raise ValueError(
             f"max_slippage_pct must be between 0 and 5, got {value}"
+        )
+
+
+def _validate_smart_order_slices(value: int) -> None:
+    """Reject slices outside the server-enforced 2..100 range.
+
+    Mirrors ``class-validator`` bounds in ``PlaceSmartOrderDto`` so the SDK
+    rejects bad inputs before any real-money order ever hits the wire.
+    """
+    if not isinstance(value, int) or isinstance(value, bool):
+        raise TypeError(f"slices must be an integer, got {type(value).__name__}")
+    if value < 2 or value > 100:
+        raise ValueError(f"slices must be between 2 and 100, got {value}")
+
+
+def _validate_smart_order_interval_minutes(value: int) -> None:
+    """Reject interval_minutes outside the server-enforced 1..10080 range.
+
+    Mirrors ``class-validator`` bounds in ``PlaceSmartOrderDto`` so the SDK
+    rejects bad inputs before any real-money order ever hits the wire.
+    """
+    if not isinstance(value, int) or isinstance(value, bool):
+        raise TypeError(
+            f"interval_minutes must be an integer, got {type(value).__name__}"
+        )
+    if value < 1 or value > 10080:
+        raise ValueError(
+            f"interval_minutes must be between 1 and 10080, got {value}"
         )
 
 
@@ -2029,7 +2058,12 @@ class PolyforgeClient:
         idempotency_key: str | None = None,
     ) -> PlaceSmartOrderResponse:
         """Place an advanced smart order (TWAP, DCA, BRACKET, or OCO)."""
+        _validate_enum("type", type, _VALID_SMART_ORDER_TYPES)
         _validate_financial_param("total_size", total_size)
+        if slices is not None:
+            _validate_smart_order_slices(slices)
+        if interval_minutes is not None:
+            _validate_smart_order_interval_minutes(interval_minutes)
         if limit_price is not None:
             _validate_financial_param("limit_price", limit_price)
         if entry_price is not None:
@@ -5278,7 +5312,12 @@ class AsyncPolyforgeClient:
         idempotency_key: str | None = None,
     ) -> PlaceSmartOrderResponse:
         """Place an advanced smart order (TWAP, DCA, BRACKET, or OCO)."""
+        _validate_enum("type", type, _VALID_SMART_ORDER_TYPES)
         _validate_financial_param("total_size", total_size)
+        if slices is not None:
+            _validate_smart_order_slices(slices)
+        if interval_minutes is not None:
+            _validate_smart_order_interval_minutes(interval_minutes)
         if limit_price is not None:
             _validate_financial_param("limit_price", limit_price)
         if entry_price is not None:

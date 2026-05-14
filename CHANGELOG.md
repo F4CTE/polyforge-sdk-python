@@ -126,6 +126,20 @@ preserved.
 
 All four public-profile lookups raise `NotFoundError` when the username is unknown. The `username` path segment is URL-encoded via the existing `_encode_path` helper.
 
+**Smart order validation (POLA-4991)** — client-side guard for `place_smart_order`
+type, slices, and intervalMinutes, mirroring `class-validator` bounds in
+`PlaceSmartOrderDto` on the platform:
+
+- **enum validation**: `type` must be one of `{"TWAP", "DCA", "BRACKET", "OCO"}`,
+  enforced via `_validate_enum` in both sync and async clients.
+- **slices range**: must be an integer in `[2, 100]`, enforced via
+  `_validate_smart_order_slices`.
+- **interval_minutes range**: must be an integer in `[1, 10080]` (1 minute to
+  7 days), enforced via `_validate_smart_order_interval_minutes`.
+
+Each guard rejects bad input before any network call, matching the cross-SDK
+validation contracts exposed by the TypeScript SDK.
+
 ### Changed
 
 **Cross-SDK naming normalization (POLA-1913)** — renamed feed, referral, and
