@@ -1,5 +1,14 @@
 import { CalcBlockEvaluator, CalcBlockResult } from "./block.types";
 
+/** Maximum absolute exponent for Math.pow to prevent overflow / DoS */
+const MAX_POW_EXPONENT = 1000;
+
+/** Maximum absolute base for Math.pow to prevent overflow / DoS */
+const MAX_POW_BASE = 1e12;
+
+/** Maximum decimal places for round/toFixed to prevent overflow */
+const MAX_DECIMALS = 15;
+
 /** Extract a string param from a block, checking direct field and params object */
 function strParam(
   block: Record<string, unknown>,
@@ -57,9 +66,14 @@ export const MathBlockEvaluator: CalcBlockEvaluator = {
       case "modulo":
         value = b === 0 ? NaN : a % b;
         break;
-      case "power":
-        value = Math.pow(a, b);
+      case "power": {
+        const bounded =
+          Math.abs(a) > MAX_POW_BASE || Math.abs(b) > MAX_POW_EXPONENT
+            ? NaN
+            : Math.pow(a, b);
+        value = Number.isFinite(bounded) ? bounded : NaN;
         break;
+      }
       case "min":
         value = Math.min(a, b);
         break;
@@ -168,9 +182,11 @@ export const AbsRoundBlockEvaluator: CalcBlockEvaluator = {
         value = Math.abs(input);
         break;
       case "round":
-        if (decimals > 0) {
+        if (decimals > 0 && decimals <= MAX_DECIMALS) {
           const factor = Math.pow(10, decimals);
           value = Math.round(input * factor) / factor;
+        } else if (decimals > MAX_DECIMALS) {
+          value = NaN;
         } else {
           value = Math.round(input);
         }
@@ -182,8 +198,12 @@ export const AbsRoundBlockEvaluator: CalcBlockEvaluator = {
         value = Math.ceil(input);
         break;
       case "toFixed": {
-        const factor = Math.pow(10, decimals);
-        value = Math.round(input * factor) / factor;
+        if (decimals > MAX_DECIMALS) {
+          value = NaN;
+        } else {
+          const factor = Math.pow(10, decimals);
+          value = Math.round(input * factor) / factor;
+        }
         break;
       }
       default:
