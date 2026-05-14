@@ -431,6 +431,7 @@ _VALID_SPORTS_EVENT_STATUSES = frozenset(
 _VALID_MARKET_ALERT_OUTCOMES = frozenset({"YES", "NO", "Yes", "No"})
 _VALID_MARKET_ALERT_CONDITIONS = frozenset({"above", "below"})
 _VALID_MARKET_HISTORY_PERIODS = frozenset({"1d", "7d", "30d", "90d"})
+_VALID_ACCURACY_LEADERBOARD_PERIODS = frozenset({"7d", "30d", "allTime"})
 _VALID_ORDER_MOODS = frozenset(
     {"CONFIDENT", "UNCERTAIN", "FOMO", "DISCIPLINED", "REVENGE"}
 )
@@ -3038,8 +3039,9 @@ class PolyforgeClient:
                 when *limit* is ``None``).
 
         Raises:
-            ValueError: If *limit* < 1, *offset* < 0, or *offset* is not
-                a multiple of the resolved page size.
+            ValueError: If *period* is not one of ``"7d"``, ``"30d"``,
+                ``"allTime"``; if *limit* < 1; if *offset* < 0; or if
+                *offset* is not a multiple of the resolved page size.
 
         Returns:
             A :class:`PaginatedResponse` of :class:`AccuracyLeaderboardEntry`
@@ -3047,6 +3049,7 @@ class PolyforgeClient:
         """
         q: dict[str, Any] = {}
         if period is not None:
+            _validate_enum("period", period, _VALID_ACCURACY_LEADERBOARD_PERIODS)
             q["period"] = period
         if limit is not None:
             q["limit"] = limit
@@ -6203,6 +6206,7 @@ class AsyncPolyforgeClient:
         """
         q: dict[str, Any] = {}
         if period is not None:
+            _validate_enum("period", period, _VALID_ACCURACY_LEADERBOARD_PERIODS)
             q["period"] = period
         if limit is not None:
             q["limit"] = limit
