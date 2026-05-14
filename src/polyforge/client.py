@@ -2853,6 +2853,9 @@ class PolyforgeClient:
         if price_offset is not None:
             body["priceOffset"] = price_offset
         _validate_copy_config_numeric_fields(body)
+        for key in ("sizeValue", "maxExposure", "maxDailyLoss", "priceOffset"):
+            if key in body and body[key] is not None:
+                body[key] = str(body[key])
         return _parse(CopyConfig, self._post("/api/v1/copy", json=body))
 
     def get_copy_config(self, copy_id: str) -> CopyConfig:
@@ -2881,6 +2884,9 @@ class PolyforgeClient:
             The updated :class:`CopyConfig`.
         """
         _validate_copy_config_numeric_fields(kwargs)
+        for key in ("sizeValue", "maxExposure", "maxDailyLoss", "priceOffset"):
+            if key in kwargs and kwargs[key] is not None:
+                kwargs[key] = str(kwargs[key])
         return _parse(
             CopyConfig,
             self._patch(f"/api/v1/copy/{_encode_path(copy_id)}", json=kwargs),
@@ -6016,6 +6022,9 @@ class AsyncPolyforgeClient:
         if price_offset is not None:
             body["priceOffset"] = price_offset
         _validate_copy_config_numeric_fields(body)
+        for key in ("sizeValue", "maxExposure", "maxDailyLoss", "priceOffset"):
+            if key in body and body[key] is not None:
+                body[key] = str(body[key])
         return _parse(CopyConfig, await self._post("/api/v1/copy", json=body))
 
     async def get_copy_config(self, copy_id: str) -> CopyConfig:
@@ -6026,6 +6035,9 @@ class AsyncPolyforgeClient:
     async def update_copy_config(self, copy_id: str, **kwargs: Any) -> CopyConfig:
         """Update an existing copy-trading configuration."""
         _validate_copy_config_numeric_fields(kwargs)
+        for key in ("sizeValue", "maxExposure", "maxDailyLoss", "priceOffset"):
+            if key in kwargs and kwargs[key] is not None:
+                kwargs[key] = str(kwargs[key])
         return _parse(
             CopyConfig,
             await self._patch(f"/api/v1/copy/{_encode_path(copy_id)}", json=kwargs),
