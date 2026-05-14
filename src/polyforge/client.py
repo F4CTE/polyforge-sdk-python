@@ -3033,7 +3033,13 @@ class PolyforgeClient:
             limit: Page size (1--100, default server-side).
             page: 1-based page number.
             offset: Zero-based row offset. When supplied without ``page``
-                the client converts it to the equivalent page.
+                the client converts it to the equivalent page. Must be
+                non-negative and a multiple of *limit* (defaults to 20
+                when *limit* is ``None``).
+
+        Raises:
+            ValueError: If *limit* < 1, *offset* < 0, or *offset* is not
+                a multiple of the resolved page size.
 
         Returns:
             A :class:`PaginatedResponse` of :class:`AccuracyLeaderboardEntry`
@@ -3045,9 +3051,15 @@ class PolyforgeClient:
         if limit is not None:
             q["limit"] = limit
         if offset is not None and page is None:
+            if offset < 0:
+                raise ValueError(f"offset must be >= 0, got {offset}")
             if limit is not None and limit < 1:
                 raise ValueError(f"limit must be >= 1, got {limit}")
             resolved_limit = limit or 20
+            if offset % resolved_limit != 0:
+                raise ValueError(
+                    f"offset ({offset}) must be a multiple of limit ({resolved_limit})"
+                )
             q["page"] = (offset // resolved_limit) + 1
         elif page is not None:
             q["page"] = page
@@ -6195,9 +6207,15 @@ class AsyncPolyforgeClient:
         if limit is not None:
             q["limit"] = limit
         if offset is not None and page is None:
+            if offset < 0:
+                raise ValueError(f"offset must be >= 0, got {offset}")
             if limit is not None and limit < 1:
                 raise ValueError(f"limit must be >= 1, got {limit}")
             resolved_limit = limit or 20
+            if offset % resolved_limit != 0:
+                raise ValueError(
+                    f"offset ({offset}) must be a multiple of limit ({resolved_limit})"
+                )
             q["page"] = (offset // resolved_limit) + 1
         elif page is not None:
             q["page"] = page
