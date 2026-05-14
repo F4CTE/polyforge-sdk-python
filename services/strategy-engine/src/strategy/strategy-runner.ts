@@ -385,8 +385,21 @@ export class StrategyRunner {
         );
       }
     } finally {
-      // Stop the lock-refresh interval.
-      if (lockRefresh) clearInterval(lockRefresh);
+      // Stop the lock-refresh interval and nullify the handle so any
+      // already-queued Promise callbacks from this tick's interval catch
+      // the nulled reference and cannot mutate activeLockToken during
+      // a subsequent tick.
+      if (lockRefresh) {
+        clearInterval(lockRefresh);
+        lockRefresh = null;
+      }
+
+      // Release the lock token so stale refresh callbacks from a prior
+      // tick can never match and spuriously clear the active token during
+      // a later evaluation.
+      if (this.activeLockToken === lockToken) {
+        this.activeLockToken = null;
+      }
 
       // Release the local in-flight gate before the Redis unlock eval
       // so that a slow or hung unlock does not prevent subsequent ticks
@@ -681,7 +694,12 @@ export class StrategyRunner {
       // Fail closed: unknown / unregistered condition block types must
       // abort the tick. Skipping an unknown condition could allow actions
       // to fire when a condition type is missing or unsupported.
-      if (!evaluator) return;
+      if (!evaluator) {
+        this.logger.warn(
+          `Unknown condition block type: ${block.type}. Failing closed.`,
+        );
+        return;
+      }
 
       const resolvedBlock = {
         ...block,
@@ -794,6 +812,17 @@ export class StrategyRunner {
           );
         }
       }
+    }
+
+    // Re-check lock ownership after sub-strategy launches — those await
+    // onRunStrategy() calls may have taken long enough for ownership to
+    // flip mid-tick.  Emitting orders after ownership loss reintroduces
+    // the duplicate-side-effect race the lock is meant to prevent.
+    if (this.activeLockToken === null) {
+      this.logger.warn(
+        `Tick ownership lost for ${this.strategyId} before emitting ${orderIntents.length} order intent(s) — discarding`,
+      );
+      return;
     }
 
     if (orderIntents.length > 0) {
