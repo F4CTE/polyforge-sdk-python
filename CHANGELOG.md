@@ -207,6 +207,10 @@ The deprecated sync and async method aliases remain callable for one minor
 release and emit `DeprecationWarning`; deprecated referral type names remain
 importable for the same window.
 
+### Fixed
+
+- **`bulk_cancel_orders()`**: switch from `DELETE` with JSON body to `POST /api/v1/orders/bulk` — `DELETE` requests with bodies are silently stripped by proxies (nginx, Cloudflare, AWS ALB), causing the `orderIds` payload to never reach the platform (fixes #247)
+
 ## [2.0.0] — 2026-04-16
 
 ### Added

@@ -775,24 +775,6 @@ class PolyforgeClient:
             return None
         return resp.json()
 
-    def _delete_json(
-        self,
-        path: str,
-        *,
-        json: dict[str, Any],
-        idempotency_key: str | None = None,
-    ) -> Any:
-        resp = self._client.request(
-            "DELETE",
-            path,
-            json=json,
-            headers=_idempotency_headers(idempotency_key),
-        )
-        _raise_for_status(resp)
-        if resp.status_code == 204:
-            return None
-        return resp.json()
-
     def _get_text(self, path: str, *, params: dict[str, Any] | None = None) -> str:
         resp = self._client.get(path, params=_strip_none(params or {}))
         _raise_for_status(resp)
@@ -1696,7 +1678,7 @@ class PolyforgeClient:
             raise ValueError("bulk_cancel_orders requires at least 1 order ID")
         if len(order_ids) > 3000:
             raise ValueError("bulk_cancel_orders accepts at most 3000 order IDs")
-        data = self._delete_json(
+        data = self._post(
             "/api/v1/orders/bulk",
             json={"orderIds": order_ids},
             idempotency_key=_new_idempotency_key(idempotency_key),
@@ -4196,24 +4178,6 @@ class AsyncPolyforgeClient:
             return None
         return resp.json()
 
-    async def _delete_json(
-        self,
-        path: str,
-        *,
-        json: dict[str, Any],
-        idempotency_key: str | None = None,
-    ) -> Any:
-        resp = await self._client.request(
-            "DELETE",
-            path,
-            json=json,
-            headers=_idempotency_headers(idempotency_key),
-        )
-        _raise_for_status(resp)
-        if resp.status_code == 204:
-            return None
-        return resp.json()
-
     async def _get_text(self, path: str, *, params: dict[str, Any] | None = None) -> str:
         resp = await self._client.get(path, params=_strip_none(params or {}))
         _raise_for_status(resp)
@@ -5079,7 +5043,7 @@ class AsyncPolyforgeClient:
             raise ValueError("bulk_cancel_orders requires at least 1 order ID")
         if len(order_ids) > 3000:
             raise ValueError("bulk_cancel_orders accepts at most 3000 order IDs")
-        data = await self._delete_json(
+        data = await self._post(
             "/api/v1/orders/bulk",
             json={"orderIds": order_ids},
             idempotency_key=_new_idempotency_key(idempotency_key),

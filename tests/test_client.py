@@ -3938,10 +3938,10 @@ class TestBulkOrderEndpoints:
         source = inspect.getsource(PolyforgeClient.bulk_cancel_orders)
         assert "/api/v1/orders/bulk" in source
 
-    def test_bulk_cancel_orders_uses_delete_json(self):
+    def test_bulk_cancel_orders_uses_post(self):
         import inspect
         source = inspect.getsource(PolyforgeClient.bulk_cancel_orders)
-        assert "_delete_json" in source
+        assert "_post" in source
 
     def test_bulk_cancel_orders_sends_order_ids_key(self):
         import inspect
@@ -7665,7 +7665,7 @@ class TestIdempotencyKeyHeaders:
             ("_post", {"results": []}, lambda c: c.batch_orders([{
                 "tokenId": "tok", "side": "BUY", "outcome": "YES", "size": 1.0, "price": 0.5,
             }])),
-            ("_delete_json", {"cancelled": [], "errors": []}, lambda c: c.bulk_cancel_orders(["ord-1"])),
+            ("_post", {"cancelled": [], "errors": []}, lambda c: c.bulk_cancel_orders(["ord-1"])),
             ("_post", place_order_payload, lambda c: c.close_position("tok")),
             ("_post", {"positionId": "pos-1", "intentId": "int-1", "status": "REDEEMED"}, lambda c: c.redeem_position(position_id="pos-1")),
             ("_post", place_order_payload, lambda c: c.split_position("tok", 1)),
@@ -7733,7 +7733,7 @@ class TestIdempotencyKeyHeaders:
                 ("_post", {"results": []}, lambda c: c.batch_orders([{
                     "tokenId": "tok", "side": "BUY", "outcome": "YES", "size": 1.0, "price": 0.5,
                 }])),
-                ("_delete_json", {"cancelled": [], "errors": []}, lambda c: c.bulk_cancel_orders(["ord-1"])),
+                ("_post", {"cancelled": [], "errors": []}, lambda c: c.bulk_cancel_orders(["ord-1"])),
                 ("_post", place_order_payload, lambda c: c.close_position("tok")),
                 ("_post", {"positionId": "pos-1", "intentId": "int-1", "status": "REDEEMED"}, lambda c: c.redeem_position(position_id="pos-1")),
                 ("_post", place_order_payload, lambda c: c.split_position("tok", 1)),
