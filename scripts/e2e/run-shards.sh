@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
 set -uo pipefail
 
-shard_count="${E2E_SHARD_COUNT:-5}"
-shard_timeout_seconds="${E2E_SHARD_TIMEOUT_SECONDS:-2100}"
-global_timeout_ms="${PLAYWRIGHT_GLOBAL_TIMEOUT_MS:-2100000}"
+shard_count="${E2E_SHARD_COUNT:-6}"
+shard_timeout_seconds="${E2E_SHARD_TIMEOUT_SECONDS:-1200}"
+global_timeout_ms="${PLAYWRIGHT_GLOBAL_TIMEOUT_MS:-1200000}"
+max_failures="${E2E_MAX_FAILURES:-8}"
 project="${PLAYWRIGHT_PROJECT:-chromium}"
 output_dir="${PLAYWRIGHT_OUTPUT_DIR:-test-results}"
 
@@ -34,6 +35,7 @@ run_shard() {
       --reporter=list \
       --shard="${shard}/${shard_count}" \
       --output="${output_dir}/shard-${shard}" \
+      --max-failures="$max_failures" \
       --global-timeout="$global_timeout_ms"
 }
 
