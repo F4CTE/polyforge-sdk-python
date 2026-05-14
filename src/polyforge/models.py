@@ -162,7 +162,6 @@ class Strategy:
     safety: list[StrategyBlock] = field(default_factory=list)
     logic_blocks: list[dict[str, Any]] = field(default_factory=list)
     calc_blocks: list[dict[str, Any]] = field(default_factory=list)
-    kalshi_subaccount: str | None = None
     # Strategy metadata (#31)
     visibility: str = "PRIVATE"
     exec_mode: str = "TICK"
@@ -175,6 +174,7 @@ class Strategy:
     blocks: list[StrategyBlock] = field(default_factory=list)
     created_at: str = ""
     updated_at: str = ""
+    kalshi_subaccount: str | None = None
 
 
 @dataclass
