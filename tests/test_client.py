@@ -4910,25 +4910,17 @@ class TestCrossVenueArbitrage:
     def test_sync_sync_market_matches(self):
         from unittest.mock import MagicMock
         client = PolyforgeClient(api_key="test-key")
-<<<<<<< HEAD
         client._post = MagicMock(return_value={"matched": 12, "created": 3, "updated": 5})
         result = client.sync_market_matches()
         assert isinstance(result, MatchSyncResult)
         assert result.matched == 12
         assert result.created == 3
         assert result.updated == 5
-=======
-        client._post = MagicMock(return_value={"matched": 12})
-        result = client.sync_market_matches()
-        assert isinstance(result, MatchSyncResult)
-        assert result.matched == 12
->>>>>>> de5d708 (feat(sdk-python): add sync_market_matches() and get_health_authenticated() for cross-SDK compat)
         client._post.assert_called_once_with(
             "/api/v1/arbitrage/matches/sync",
         )
         client.close()
 
-<<<<<<< HEAD
     def test_async_sync_market_matches(self):
         import asyncio
         from unittest.mock import AsyncMock
@@ -4946,8 +4938,6 @@ class TestCrossVenueArbitrage:
 
         asyncio.run(_run())
 
-=======
->>>>>>> de5d708 (feat(sdk-python): add sync_market_matches() and get_health_authenticated() for cross-SDK compat)
     def test_sync_get_spread_comparison(self):
         from unittest.mock import MagicMock
         client = PolyforgeClient(api_key="test-key")
@@ -9080,3 +9070,21 @@ class TestPersonalDataExportModelParsing:
         from polyforge import PersonalDataExport, PersonalDataExportMeta
         assert PersonalDataExport is not None
         assert PersonalDataExportMeta is not None
+
+
+class TestRootExports:
+    """Verify every name listed in polyforge.__all__ is accessible at the package root."""
+
+    def test_root_export_smoke(self):
+        import polyforge
+
+        missing = []
+        for name in polyforge.__all__:
+            try:
+                getattr(polyforge, name)
+            except AttributeError:
+                missing.append(name)
+
+        assert not missing, (
+            f"Names in __all__ but not accessible as polyforge.<name>: {', '.join(missing)}"
+        )
