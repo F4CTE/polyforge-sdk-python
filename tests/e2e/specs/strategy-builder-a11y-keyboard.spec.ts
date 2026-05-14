@@ -350,6 +350,288 @@ test.describe('Strategy Builder — Keyboard A11y', () => {
         expect(countAfter).toBeLessThan(countBefore);
     });
 
+    test('@a11y @keyboard should wire multi-source-handle logic node cycling to false-out', async ({ page }, testInfo) => {
+        testInfo.setTimeout(60_000);
+
+        // IF_THEN_ELSE (Logic section) has two source handles: true-out, false-out.
+        // Verify H cycling to false-out and assert the created edge has the correct sourceHandle.
+        // Add source first so forward Tab goes IF_THEN_ELSE → Place Order.
+        await builder.selectSection('Logic');
+        await builder.addBlock('If / Then / Else');
+        await expect(builder.blockCards().first()).toBeVisible({ timeout: 5_000 });
+
+        await builder.selectSection('Actions');
+        await builder.addBlock('Place Order');
+        await expect(builder.blockCards()).toHaveCount(2, { timeout: 5_000 });
+
+        await page.locator('.react-flow__viewport').click();
+        await page.waitForTimeout(200);
+
+        // Tab to IF_THEN_ELSE (1st in DOM order)
+        await page.keyboard.press('Tab');
+        await page.waitForTimeout(200);
+
+        // Select IF_THEN_ELSE as source (default handle: true-out)
+        await page.keyboard.press('Enter');
+        await page.waitForTimeout(200);
+        await expect(page.locator('text=/Source:.*If \\/ Then \\/ Else.*true-out/')).toBeVisible({ timeout: 3_000 });
+
+        // Cycle source handle from true-out → false-out
+        await page.keyboard.press('h');
+        await page.waitForTimeout(200);
+        await expect(page.locator('text=/Source:.*If \\/ Then \\/ Else.*false-out/')).toBeVisible({ timeout: 3_000 });
+
+        // Start wiring with C
+        await page.keyboard.press('c');
+        await page.waitForTimeout(200);
+        await expect(page.locator('text=/Wiring from.*If \\/ Then \\/ Else.*false-out/')).toBeVisible({ timeout: 3_000 });
+
+        // Tab forward to Place Order (2nd in DOM order)
+        await page.keyboard.press('Tab');
+        await page.waitForTimeout(300);
+
+        // Connect
+        await page.keyboard.press('Enter');
+        await page.waitForTimeout(500);
+
+        // Verify edge was created with false-out as sourceHandle
+        const edgesAfter = page.locator('.react-flow__edge');
+        await expect(edgesAfter.first()).toBeVisible({ timeout: 5_000 });
+
+        const edgeHandles = await page.evaluate(() => {
+          const flowRoot = document.querySelector('.react-flow');
+          if (!flowRoot) return null;
+          const fiberKey = Object.keys(flowRoot).find(
+            (k) => k.startsWith('__reactFiber$') || k.startsWith('__reactInternalInstance$'),
+          );
+          if (!fiberKey) return null;
+          function walk(fiber: Record<string, unknown> | null, depth: number): ReturnType | null {
+            if (!fiber || depth > 80) return null;
+            let hook = fiber['memoizedState'] as Record<string, unknown> | null;
+            for (let j = 0; j < 60 && hook; j++) {
+              const value = hook['value'] as Record<string, unknown> | undefined;
+              if (value && Array.isArray(value) && value.length > 0 && 'sourceHandle' in value[0]) {
+                return (value as Array<Record<string, unknown>>).map((e) => ({
+                  id: e['id'],
+                  source: e['source'],
+                  target: e['target'],
+                  sourceHandle: e['sourceHandle'] ?? null,
+                  targetHandle: e['targetHandle'] ?? null,
+                }));
+              }
+              if (hook['edges'] && Array.isArray(hook['edges']) && hook['edges'].length > 0 &&
+                  'sourceHandle' in (hook['edges'] as Array<unknown>)[0]) {
+                return (hook['edges'] as Array<Record<string, unknown>>).map((e) => ({
+                  id: e['id'],
+                  source: e['source'],
+                  target: e['target'],
+                  sourceHandle: e['sourceHandle'] ?? null,
+                  targetHandle: e['targetHandle'] ?? null,
+                }));
+              }
+              hook = hook['next'] as Record<string, unknown> | null;
+            }
+            return walk(fiber['child'] as Record<string, unknown> | null, depth + 1) ??
+                   walk(fiber['sibling'] as Record<string, unknown> | null, depth + 1);
+          }
+          type ReturnType = NonNullable<ReturnType<typeof walk>>;
+          return walk((flowRoot as Record<string, unknown>)[fiberKey] as Record<string, unknown> | null, 0);
+        });
+
+        expect(edgeHandles, 'Edge extraction should return handle data').toBeTruthy();
+        expect(edgeHandles!.length, 'Expected 1 edge').toBeGreaterThanOrEqual(1);
+        const first = edgeHandles![0];
+        expect(first.sourceHandle, 'Source handle should be false-out after H cycling').toBe('false-out');
+        expect(first.targetHandle, 'Target handle for action block should be null (default)').toBeNull();
+    });
+
+    test('@a11y @keyboard should cycle two-input target handle on AND gate and verify targetHandle', async ({ page }, testInfo) => {
+        testInfo.setTimeout(60_000);
+
+        // AND_GATE (Logic section) has two target handles: input-a, input-b.
+        // Verify H cycling in connecting mode and assert the created edge has the correct targetHandle.
+        await builder.selectSection('Triggers');
+        await builder.addBlock('Price Crosses Up');
+        await expect(builder.blockCards().first()).toBeVisible({ timeout: 5_000 });
+
+        await builder.selectSection('Logic');
+        await builder.addBlock('AND');
+        await expect(builder.blockCards()).toHaveCount(2, { timeout: 5_000 });
+
+        await page.locator('.react-flow__viewport').click();
+        await page.waitForTimeout(200);
+
+        // Tab to Price Crosses Up (1st in DOM, triggers added first)
+        await page.keyboard.press('Tab');
+        await page.waitForTimeout(200);
+
+        // Select as source
+        await page.keyboard.press('Enter');
+        await page.waitForTimeout(200);
+        await expect(page.locator('text=/Source:.*Price Crosses Up.*default/')).toBeVisible({ timeout: 3_000 });
+
+        // Start wiring
+        await page.keyboard.press('c');
+        await page.waitForTimeout(200);
+        await expect(page.locator('text=/Wiring from.*Price Crosses Up.*default/')).toBeVisible({ timeout: 3_000 });
+
+        // Tab to AND gate (2nd in DOM, logic added second — default target handle: input-a)
+        await page.keyboard.press('Tab');
+        await page.waitForTimeout(300);
+
+        // Verify the banner shows the default target handle (input-a)
+        await expect(page.locator('text=/Wiring from.*Price Crosses Up/')).toBeVisible({ timeout: 3_000 });
+
+        // Cycle target handle from input-a → input-b
+        await page.keyboard.press('h');
+        await page.waitForTimeout(200);
+
+        // Connect
+        await page.keyboard.press('Enter');
+        await page.waitForTimeout(500);
+
+        // Verify edge was created with input-b as targetHandle
+        const edgesAfter = page.locator('.react-flow__edge');
+        await expect(edgesAfter.first()).toBeVisible({ timeout: 5_000 });
+
+        const edgeHandles = await page.evaluate(() => {
+          const flowRoot = document.querySelector('.react-flow');
+          if (!flowRoot) return null;
+          const fiberKey = Object.keys(flowRoot).find(
+            (k) => k.startsWith('__reactFiber$') || k.startsWith('__reactInternalInstance$'),
+          );
+          if (!fiberKey) return null;
+          function walk(fiber: Record<string, unknown> | null, depth: number): ReturnType | null {
+            if (!fiber || depth > 80) return null;
+            let hook = fiber['memoizedState'] as Record<string, unknown> | null;
+            for (let j = 0; j < 60 && hook; j++) {
+              const value = hook['value'] as Record<string, unknown> | undefined;
+              if (value && Array.isArray(value) && value.length > 0 && 'sourceHandle' in value[0]) {
+                return (value as Array<Record<string, unknown>>).map((e) => ({
+                  id: e['id'],
+                  source: e['source'],
+                  target: e['target'],
+                  sourceHandle: e['sourceHandle'] ?? null,
+                  targetHandle: e['targetHandle'] ?? null,
+                }));
+              }
+              if (hook['edges'] && Array.isArray(hook['edges']) && hook['edges'].length > 0 &&
+                  'sourceHandle' in (hook['edges'] as Array<unknown>)[0]) {
+                return (hook['edges'] as Array<Record<string, unknown>>).map((e) => ({
+                  id: e['id'],
+                  source: e['source'],
+                  target: e['target'],
+                  sourceHandle: e['sourceHandle'] ?? null,
+                  targetHandle: e['targetHandle'] ?? null,
+                }));
+              }
+              hook = hook['next'] as Record<string, unknown> | null;
+            }
+            return walk(fiber['child'] as Record<string, unknown> | null, depth + 1) ??
+                   walk(fiber['sibling'] as Record<string, unknown> | null, depth + 1);
+          }
+          type ReturnType = NonNullable<ReturnType<typeof walk>>;
+          return walk((flowRoot as Record<string, unknown>)[fiberKey] as Record<string, unknown> | null, 0);
+        });
+
+        expect(edgeHandles, 'Edge extraction should return handle data').toBeTruthy();
+        expect(edgeHandles!.length, 'Expected 1 edge').toBeGreaterThanOrEqual(1);
+        const first = edgeHandles![0];
+        expect(first.sourceHandle, 'Trigger block source handle should be null (default)').toBeNull();
+        expect(first.targetHandle, 'Target handle should be input-b after H cycling').toBe('input-b');
+    });
+
+    test('@a11y @keyboard should wire to safety block wireable field handle', async ({ page }, testInfo) => {
+        testInfo.setTimeout(60_000);
+
+        // Stop on Daily Loss (Safety section) has one wireable field: maxLossUsdc.
+        // Verify keyboard wiring connects to the correct field-level target handle.
+        await builder.selectSection('Triggers');
+        await builder.addBlock('Price Crosses Up');
+        await expect(builder.blockCards().first()).toBeVisible({ timeout: 5_000 });
+
+        await builder.selectSection('Safety');
+        await builder.addBlock('Stop on Daily Loss');
+        await expect(builder.blockCards()).toHaveCount(2, { timeout: 5_000 });
+
+        await page.locator('.react-flow__viewport').click();
+        await page.waitForTimeout(200);
+
+        // Tab to Price Crosses Up (1st in DOM, triggers added first)
+        await page.keyboard.press('Tab');
+        await page.waitForTimeout(200);
+
+        // Select as source
+        await page.keyboard.press('Enter');
+        await page.waitForTimeout(200);
+        await expect(page.locator('text=/Source:.*Price Crosses Up.*default/')).toBeVisible({ timeout: 3_000 });
+
+        // Start wiring
+        await page.keyboard.press('c');
+        await page.waitForTimeout(200);
+
+        // Tab to Stop on Daily Loss (2nd in DOM, safety added second)
+        await page.keyboard.press('Tab');
+        await page.waitForTimeout(300);
+
+        // Verify the banner shows connecting to the wireable field
+        await expect(page.locator('text=/Wiring from.*Price Crosses Up/')).toBeVisible({ timeout: 3_000 });
+
+        // Connect
+        await page.keyboard.press('Enter');
+        await page.waitForTimeout(500);
+
+        // Verify edge was created with the wireable field as targetHandle
+        const edgesAfter = page.locator('.react-flow__edge');
+        await expect(edgesAfter.first()).toBeVisible({ timeout: 5_000 });
+
+        const edgeHandles = await page.evaluate(() => {
+          const flowRoot = document.querySelector('.react-flow');
+          if (!flowRoot) return null;
+          const fiberKey = Object.keys(flowRoot).find(
+            (k) => k.startsWith('__reactFiber$') || k.startsWith('__reactInternalInstance$'),
+          );
+          if (!fiberKey) return null;
+          function walk(fiber: Record<string, unknown> | null, depth: number): ReturnType | null {
+            if (!fiber || depth > 80) return null;
+            let hook = fiber['memoizedState'] as Record<string, unknown> | null;
+            for (let j = 0; j < 60 && hook; j++) {
+              const value = hook['value'] as Record<string, unknown> | undefined;
+              if (value && Array.isArray(value) && value.length > 0 && 'sourceHandle' in value[0]) {
+                return (value as Array<Record<string, unknown>>).map((e) => ({
+                  id: e['id'],
+                  source: e['source'],
+                  target: e['target'],
+                  sourceHandle: e['sourceHandle'] ?? null,
+                  targetHandle: e['targetHandle'] ?? null,
+                }));
+              }
+              if (hook['edges'] && Array.isArray(hook['edges']) && hook['edges'].length > 0 &&
+                  'sourceHandle' in (hook['edges'] as Array<unknown>)[0]) {
+                return (hook['edges'] as Array<Record<string, unknown>>).map((e) => ({
+                  id: e['id'],
+                  source: e['source'],
+                  target: e['target'],
+                  sourceHandle: e['sourceHandle'] ?? null,
+                  targetHandle: e['targetHandle'] ?? null,
+                }));
+              }
+              hook = hook['next'] as Record<string, unknown> | null;
+            }
+            return walk(fiber['child'] as Record<string, unknown> | null, depth + 1) ??
+                   walk(fiber['sibling'] as Record<string, unknown> | null, depth + 1);
+          }
+          type ReturnType = NonNullable<ReturnType<typeof walk>>;
+          return walk((flowRoot as Record<string, unknown>)[fiberKey] as Record<string, unknown> | null, 0);
+        });
+
+        expect(edgeHandles, 'Edge extraction should return handle data').toBeTruthy();
+        expect(edgeHandles!.length, 'Expected 1 edge').toBeGreaterThanOrEqual(1);
+        const first = edgeHandles![0];
+        expect(first.sourceHandle, 'Trigger block source handle should be null (default)').toBeNull();
+        expect(first.targetHandle, 'Target handle should be the wireable field key').toBe('maxLossUsdc');
+    });
+
     test('@a11y @keyboard mouse drag connection should still work', async ({ page }, testInfo) => {
         testInfo.setTimeout(60_000);
 
