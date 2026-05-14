@@ -923,7 +923,7 @@ class TestPlaceOrderValidation:
 
     def test_place_smart_order_rejects_zero_slices(self):
         client = PolyforgeClient(api_key="test-key")
-        with pytest.raises(ValueError, match="slices must be positive"):
+        with pytest.raises(ValueError, match="slices must be at least 2"):
             client.place_smart_order(
                 type="TWAP", token_id="tok", side="BUY",
                 outcome="YES", total_size=10.0, slices=0,
@@ -932,10 +932,28 @@ class TestPlaceOrderValidation:
 
     def test_place_smart_order_rejects_negative_slices(self):
         client = PolyforgeClient(api_key="test-key")
-        with pytest.raises(ValueError, match="slices must be positive"):
+        with pytest.raises(ValueError, match="slices must be at least 2"):
             client.place_smart_order(
                 type="TWAP", token_id="tok", side="BUY",
                 outcome="YES", total_size=10.0, slices=-1,
+            )
+        client.close()
+
+    def test_place_smart_order_rejects_slices_one(self):
+        client = PolyforgeClient(api_key="test-key")
+        with pytest.raises(ValueError, match="slices must be at least 2"):
+            client.place_smart_order(
+                type="TWAP", token_id="tok", side="BUY",
+                outcome="YES", total_size=10.0, slices=1,
+            )
+        client.close()
+
+    def test_place_smart_order_rejects_slices_over_max(self):
+        client = PolyforgeClient(api_key="test-key")
+        with pytest.raises(ValueError, match="slices must be at most 100"):
+            client.place_smart_order(
+                type="TWAP", token_id="tok", side="BUY",
+                outcome="YES", total_size=10.0, slices=101,
             )
         client.close()
 
@@ -950,7 +968,7 @@ class TestPlaceOrderValidation:
 
     def test_place_smart_order_rejects_zero_interval_minutes(self):
         client = PolyforgeClient(api_key="test-key")
-        with pytest.raises(ValueError, match="interval_minutes must be positive"):
+        with pytest.raises(ValueError, match="interval_minutes must be at least 1"):
             client.place_smart_order(
                 type="TWAP", token_id="tok", side="BUY",
                 outcome="YES", total_size=10.0, interval_minutes=0,
@@ -959,10 +977,19 @@ class TestPlaceOrderValidation:
 
     def test_place_smart_order_rejects_negative_interval_minutes(self):
         client = PolyforgeClient(api_key="test-key")
-        with pytest.raises(ValueError, match="interval_minutes must be positive"):
+        with pytest.raises(ValueError, match="interval_minutes must be at least 1"):
             client.place_smart_order(
                 type="TWAP", token_id="tok", side="BUY",
                 outcome="YES", total_size=10.0, interval_minutes=-1,
+            )
+        client.close()
+
+    def test_place_smart_order_rejects_interval_minutes_over_max(self):
+        client = PolyforgeClient(api_key="test-key")
+        with pytest.raises(ValueError, match="interval_minutes must be at most 10080"):
+            client.place_smart_order(
+                type="TWAP", token_id="tok", side="BUY",
+                outcome="YES", total_size=10.0, interval_minutes=10081,
             )
         client.close()
 
@@ -1013,8 +1040,8 @@ class TestAsyncPlaceOrderValidation:
         assert '_validate_enum("type", type, _VALID_SMART_ORDER_TYPES)' in source
         assert '_validate_enum("side", side, _VALID_SIDES)' in source
         assert '_validate_enum("outcome", outcome, _VALID_OUTCOMES)' in source
-        assert '_validate_positive_int("slices", slices)' in source
-        assert '_validate_positive_int("interval_minutes", interval_minutes)' in source
+        assert '_validate_positive_int("slices", slices, min_value=2, max_value=100)' in source
+        assert '_validate_positive_int("interval_minutes", interval_minutes, max_value=10080)' in source
 
     def test_async_provide_liquidity_calls_validate(self):
         """Async provide_liquidity must call _validate_financial_param for amount_usdc (#26)."""

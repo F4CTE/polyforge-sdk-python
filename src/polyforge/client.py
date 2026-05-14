@@ -446,17 +446,35 @@ def _validate_financial_param(name: str, value: float) -> None:
         raise ValueError(f"{name} must be positive, got {value}")
 
 
-def _validate_positive_int(name: str, value: int) -> None:
+def _validate_positive_int(
+    name: str,
+    value: int,
+    *,
+    min_value: int = 1,
+    max_value: int | None = None,
+) -> None:
     """Reject non-integer, zero, or negative values for positive-integer parameters.
+
+    Args:
+        name: Parameter name for error messages.
+        value: Value to validate.
+        min_value: Minimum accepted value (default 1).
+        max_value: Maximum accepted value (default None = no upper bound).
 
     Raises:
         TypeError: if *value* is not an int (or is a bool).
-        ValueError: if *value* is less than 1.
+        ValueError: if *value* is outside [*min_value*, *max_value*].
     """
     if not isinstance(value, int) or isinstance(value, bool):
         raise TypeError(f"{name} must be an integer, got {type(value).__name__}")
-    if value < 1:
-        raise ValueError(f"{name} must be positive, got {value}")
+    if value < min_value:
+        raise ValueError(
+            f"{name} must be at least {min_value}, got {value}"
+        )
+    if max_value is not None and value > max_value:
+        raise ValueError(
+            f"{name} must be at most {max_value}, got {value}"
+        )
 
 
 def _numberish_to_float(name: str, value: Any) -> float:
@@ -2048,9 +2066,9 @@ class PolyforgeClient:
         _validate_enum("outcome", outcome, _VALID_OUTCOMES)
         _validate_financial_param("total_size", total_size)
         if slices is not None:
-            _validate_positive_int("slices", slices)
+            _validate_positive_int("slices", slices, min_value=2, max_value=100)
         if interval_minutes is not None:
-            _validate_positive_int("interval_minutes", interval_minutes)
+            _validate_positive_int("interval_minutes", interval_minutes, max_value=10080)
         if limit_price is not None:
             _validate_financial_param("limit_price", limit_price)
         if entry_price is not None:
@@ -5304,9 +5322,9 @@ class AsyncPolyforgeClient:
         _validate_enum("outcome", outcome, _VALID_OUTCOMES)
         _validate_financial_param("total_size", total_size)
         if slices is not None:
-            _validate_positive_int("slices", slices)
+            _validate_positive_int("slices", slices, min_value=2, max_value=100)
         if interval_minutes is not None:
-            _validate_positive_int("interval_minutes", interval_minutes)
+            _validate_positive_int("interval_minutes", interval_minutes, max_value=10080)
         if limit_price is not None:
             _validate_financial_param("limit_price", limit_price)
         if entry_price is not None:
