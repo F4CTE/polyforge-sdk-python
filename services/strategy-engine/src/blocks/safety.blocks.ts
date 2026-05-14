@@ -65,8 +65,10 @@ export const StopIfOrdersPerMinBlock: BlockEvaluator = {
     const params = (block["params"] as BlockParams) ?? {};
     const maxOrders = parseInt(String(params.maxOrders ?? "60"), 10);
     const windowKey = `strategy:${ctx.strategyId}:orders:min`;
-    const count = await redis.get(windowKey);
-    const current = parseInt(count ?? "0", 10);
+    const cutoff = ctx.now - 60_000;
+    await redis.getClient().zremrangebyscore(windowKey, "-inf", String(cutoff));
+    const count = await redis.getClient().zcard(windowKey);
+    const current = typeof count === "number" ? count : 0;
     const passed = current < maxOrders;
     return {
       fired: passed,

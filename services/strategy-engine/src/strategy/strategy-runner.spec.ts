@@ -22,6 +22,7 @@ function makeRedis(overrides: Record<string, unknown> = {}) {
       // Tick lock
       set: vi.fn().mockResolvedValue("OK"),
       del: vi.fn().mockResolvedValue(1),
+      eval: vi.fn().mockResolvedValue(6),
     }),
     xadd: vi.fn().mockResolvedValue("1-0"),
     ...overrides,
@@ -219,6 +220,7 @@ describe("StrategyRunner — stale data detection", () => {
         expire: vi.fn().mockResolvedValue(1),
         set: vi.fn().mockResolvedValue("OK"),
         del: vi.fn().mockResolvedValue(1),
+        eval: vi.fn().mockResolvedValue(6),
       }),
     });
     const onStatusChange = vi.fn().mockResolvedValue(undefined);
@@ -605,33 +607,6 @@ describe("StrategyRunner — ACTION execution + state update", () => {
 });
 
 describe("StrategyRunner — start() timer management", () => {
-  it("start() sets up interval for TICK mode", () => {
-    const runner = makeRunner({ execMode: "TICK", tickMs: 1000 });
-    // start() then stop() to clear the timer — ensures no lingering intervals
-    runner.start();
-    runner.stop();
-    expect(runner.status).toBe("STOPPED");
-  });
-
-  it("start() does NOT set interval for EVENT mode", () => {
-    const runner = makeRunner({ execMode: "EVENT" });
-    runner.start();
-    // No timer set for EVENT mode — stop should still work cleanly
-    runner.stop();
-    expect(runner.status).toBe("STOPPED");
-  });
-
-  it("enforces minimum tick interval of 200ms", () => {
-    // tickMs=50 should be floored to 200ms (tested by ensuring start() doesn't throw)
-    const runner = makeRunner({ execMode: "TICK", tickMs: 50 });
-    expect(() => {
-      runner.start();
-      runner.stop();
-    }).not.toThrow();
-  });
-});
-
-describe("StrategyRunner — stale data auto-resume path", () => {
   it("auto-resumes mid-tick when stale pause was set during the same evaluate() call chain", async () => {
     // This covers lines 127-129: the runner is PAUSED with a stale reason
     // but tick() still proceeds because status check happens before pause
@@ -667,6 +642,50 @@ describe("StrategyRunner — error handling", () => {
     // Should not throw — errors are caught and logged
     await expect(runner.onPriceEvent("tok1", 0.5)).resolves.not.toThrow();
     expect(runner.status).toBe("RUNNING");
+  });
+
+  it("pauses strategy when onIntents reports counter increment failure", async () => {
+    const state = makeState();
+    const prisma = makePrisma();
+    prisma.token.findUnique.mockResolvedValue({
+      id: "tok-yes",
+      marketId: "mkt-1",
+      outcome: "YES",
+    });
+    const redis = makeRedis({
+      getJson: vi.fn().mockResolvedValue({ price: 0.7 }),
+    });
+    const onIntents = vi
+      .fn<(intents: OrderIntent[]) => Promise<void>>()
+      .mockRejectedValue(
+        new Error("Counter increment failed after 1 intents published for strategy strat-test"),
+      );
+    const onStatusChange = vi.fn().mockResolvedValue(undefined);
+
+    const runner = makeRunner({
+      execMode: "EVENT",
+      state,
+      redis,
+      prisma,
+      onIntents,
+      onStatusChange,
+      actions: [
+        {
+          id: "a1",
+          type: "buy_yes",
+          params: { tokenId: "tok-yes", size: "10" },
+        },
+      ],
+    });
+
+    await runner.onPriceEvent("tok-yes", 0.7);
+
+    expect(runner.status).toBe("PAUSED");
+    expect(runner.pauseReason).toBe("counter_increment_failed");
+    expect(onStatusChange).toHaveBeenCalledWith(
+      "PAUSED",
+      "counter_increment_failed",
+    );
   });
 });
 

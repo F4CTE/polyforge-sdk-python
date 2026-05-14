@@ -268,6 +268,19 @@ export class StrategyRunner {
       await this.evaluate();
     } catch (err) {
       this.logger.error("Tick evaluation failed", err);
+      // Pause on counter increment failures — orders may have been
+      // published but the accounting state (order counters, orders-per-min
+      // sliding window) is inconsistent. Continuing would risk overtrading
+      // and safety-block bypass.
+      if (
+        err instanceof Error &&
+        err.message.includes("Counter increment failed")
+      ) {
+        this.pause("counter_increment_failed");
+        await this.onStatusChange("PAUSED", "counter_increment_failed").catch(
+          () => {},
+        );
+      }
     } finally {
       if (this.tickMutex.exit()) {
         this._scheduledFollowUp = true;

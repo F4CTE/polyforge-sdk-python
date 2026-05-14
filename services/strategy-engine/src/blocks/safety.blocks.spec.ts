@@ -106,7 +106,8 @@ describe("StopIfDailyLossBlock", () => {
 
 describe("StopIfOrdersPerMinBlock", () => {
   it("fires when order rate is below limit", async () => {
-    const redis = makeRedis({ get: vi.fn().mockResolvedValue("5") });
+    const redis = makeRedis();
+    (redis.getClient() as any).zcard = vi.fn().mockResolvedValue(5);
     const ctx = makeCtx();
     const res = await StopIfOrdersPerMinBlock.evaluate(
       block("stop_if_orders_per_min", { maxOrders: "10" }),
@@ -118,7 +119,8 @@ describe("StopIfOrdersPerMinBlock", () => {
   });
 
   it("does NOT fire when order rate meets or exceeds limit", async () => {
-    const redis = makeRedis({ get: vi.fn().mockResolvedValue("10") });
+    const redis = makeRedis();
+    (redis.getClient() as any).zcard = vi.fn().mockResolvedValue(10);
     const ctx = makeCtx();
     const res = await StopIfOrdersPerMinBlock.evaluate(
       block("stop_if_orders_per_min", { maxOrders: "10" }),
@@ -130,8 +132,9 @@ describe("StopIfOrdersPerMinBlock", () => {
     expect(res.reason).toMatch(/SAFETY STOP/);
   });
 
-  it("treats null redis value as 0 orders", async () => {
-    const redis = makeRedis({ get: vi.fn().mockResolvedValue(null) });
+  it("treats non-numeric zcard return as 0 orders", async () => {
+    const redis = makeRedis();
+    (redis.getClient() as any).zcard = vi.fn().mockResolvedValue(null);
     const ctx = makeCtx();
     const res = await StopIfOrdersPerMinBlock.evaluate(
       block("stop_if_orders_per_min", { maxOrders: "1" }),
@@ -143,8 +146,12 @@ describe("StopIfOrdersPerMinBlock", () => {
   });
 
   it("uses correct Redis key with strategyId", async () => {
-    const get = vi.fn().mockResolvedValue("0");
-    const redis = makeRedis({ get });
+    const redis = makeRedis();
+    const zcard = vi.fn().mockResolvedValue(0);
+    const zremrangebyscore = vi.fn().mockResolvedValue(0);
+    const client = redis.getClient() as any;
+    client.zcard = zcard;
+    client.zremrangebyscore = zremrangebyscore;
     const ctx = makeCtx();
     await StopIfOrdersPerMinBlock.evaluate(
       block("stop_if_orders_per_min", { maxOrders: "60" }),
@@ -152,11 +159,17 @@ describe("StopIfOrdersPerMinBlock", () => {
       redis,
       makePrisma(),
     );
-    expect(get).toHaveBeenCalledWith(`strategy:${ctx.strategyId}:orders:min`);
+    expect(zremrangebyscore).toHaveBeenCalledWith(
+      `strategy:${ctx.strategyId}:orders:min`,
+      "-inf",
+      expect.any(String),
+    );
+    expect(zcard).toHaveBeenCalledWith(`strategy:${ctx.strategyId}:orders:min`);
   });
 
   it("defaults maxOrders to 60 when not provided", async () => {
-    const redis = makeRedis({ get: vi.fn().mockResolvedValue("59") });
+    const redis = makeRedis();
+    (redis.getClient() as any).zcard = vi.fn().mockResolvedValue(59);
     const ctx = makeCtx();
     const res = await StopIfOrdersPerMinBlock.evaluate(
       block("stop_if_orders_per_min", {}),

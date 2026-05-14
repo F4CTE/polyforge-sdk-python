@@ -67,6 +67,8 @@ export function makeRedis(
   const client = {
     lrange: vi.fn().mockResolvedValue([]),
     zrange: vi.fn().mockResolvedValue([]),
+    zcard: vi.fn().mockResolvedValue(0),
+    zremrangebyscore: vi.fn().mockResolvedValue(0),
   };
 
   return {
