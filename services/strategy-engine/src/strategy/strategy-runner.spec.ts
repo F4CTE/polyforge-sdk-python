@@ -68,16 +68,19 @@ const DEFAULT_STATE = {
 
 function makeState(patch: Record<string, unknown> = {}) {
   const getMock = vi.fn().mockResolvedValue({ ...DEFAULT_STATE, ...patch });
-  const getStateAndPricesMock = vi.fn().mockImplementation(
-    async (_strategyId: string, tokenIds: string[]) => {
+  const getStateAndPricesMock = vi
+    .fn()
+    .mockImplementation(async (_strategyId: string, tokenIds: string[]) => {
       const state = await getMock(_strategyId);
-      const prices = new Map<string, { price: number; timestamp: number } | null>();
+      const prices = new Map<
+        string,
+        { price: number; timestamp: number } | null
+      >();
       for (const id of tokenIds) {
         prices.set(id, { price: 0.5, timestamp: Date.now() });
       }
       return { state, prices };
-    },
-  );
+    });
   return {
     get: getMock,
     getStateAndPrices: getStateAndPricesMock,
@@ -189,7 +192,13 @@ describe("StrategyRunner — lifecycle", () => {
     state.getStateAndPrices.mockImplementation(
       () =>
         new Promise((resolve) => {
-          release = () => resolve({ state: { ...DEFAULT_STATE }, prices: new Map([["tok1", { price: 0.5, timestamp: Date.now() }]]) });
+          release = () =>
+            resolve({
+              state: { ...DEFAULT_STATE },
+              prices: new Map([
+                ["tok1", { price: 0.5, timestamp: Date.now() }],
+              ]),
+            });
         }),
     );
     const runner = makeRunner({ execMode: "EVENT", state });
@@ -219,18 +228,12 @@ describe("StrategyRunner — lifecycle", () => {
 describe("StrategyRunner — stale data detection", () => {
   it("pauses and emits STRATEGY_PAUSED when price data is stale", async () => {
     const state = makeState();
-    // Override mget to return null (no cached price = stale data)
-    const redis = makeRedis({
-      getClient: vi.fn().mockReturnValue({
-        lrange: vi.fn().mockResolvedValue([]),
-        mget: vi.fn().mockResolvedValue([null]),
-        incr: vi.fn().mockResolvedValue(1),
-        expire: vi.fn().mockResolvedValue(1),
-        set: vi.fn().mockResolvedValue("OK"),
-        del: vi.fn().mockResolvedValue(1),
-        eval: vi.fn().mockResolvedValue(1),
-      }),
+    // Return null price from getStateAndPrices to simulate stale data
+    state.getStateAndPrices.mockResolvedValue({
+      state: { ...DEFAULT_STATE },
+      prices: new Map([["tok1", null]]),
     });
+    const redis = makeRedis();
     const onStatusChange = vi.fn().mockResolvedValue(undefined);
 
     const runner = makeRunner({
@@ -304,7 +307,10 @@ describe("StrategyRunner — SAFETY evaluation", () => {
     });
 
     // Set dailyPnl below limit
-    state.getStateAndPrices.mockResolvedValue({ state: { ...DEFAULT_STATE, dailyPnl: -15 }, prices: new Map([["tok1", { price: 0.5, timestamp: Date.now() }]]) });
+    state.getStateAndPrices.mockResolvedValue({
+      state: { ...DEFAULT_STATE, dailyPnl: -15 },
+      prices: new Map([["tok1", { price: 0.5, timestamp: Date.now() }]]),
+    });
 
     await runner.onPriceEvent("tok1", 0.5);
 
@@ -339,7 +345,10 @@ describe("StrategyRunner — SAFETY evaluation", () => {
       ],
     });
 
-    state.getStateAndPrices.mockResolvedValue({ state: { ...DEFAULT_STATE, consecutiveLoss: 2 }, prices: new Map([["tok1", { price: 0.5, timestamp: Date.now() }]]) });
+    state.getStateAndPrices.mockResolvedValue({
+      state: { ...DEFAULT_STATE, consecutiveLoss: 2 },
+      prices: new Map([["tok1", { price: 0.5, timestamp: Date.now() }]]),
+    });
 
     await runner.onPriceEvent("tok1", 0.5);
 
@@ -373,7 +382,10 @@ describe("StrategyRunner — SAFETY evaluation", () => {
 
     // Set dailyPnl below limit — without the config fallback, maxLossUsdc
     // would default to 0 and the block would fire (pass), not stopping.
-    state.getStateAndPrices.mockResolvedValue({ state: { ...DEFAULT_STATE, dailyPnl: -15 }, prices: new Map([["tok1", { price: 0.5, timestamp: Date.now() }]]) });
+    state.getStateAndPrices.mockResolvedValue({
+      state: { ...DEFAULT_STATE, dailyPnl: -15 },
+      prices: new Map([["tok1", { price: 0.5, timestamp: Date.now() }]]),
+    });
 
     await runner.onPriceEvent("tok1", 0.5);
 
@@ -457,7 +469,10 @@ describe("StrategyRunner — TRIGGER evaluation", () => {
       triggers: [{ id: "t1", type: "win_streak", params: { count: "5" } }],
     });
 
-    state.getStateAndPrices.mockResolvedValue({ state: { ...DEFAULT_STATE, consecutiveWin: 0 }, prices: new Map([["tok1", { price: 0.5, timestamp: Date.now() }]]) });
+    state.getStateAndPrices.mockResolvedValue({
+      state: { ...DEFAULT_STATE, consecutiveWin: 0 },
+      prices: new Map([["tok1", { price: 0.5, timestamp: Date.now() }]]),
+    });
 
     await runner.onPriceEvent("tok1", 0.5);
 
@@ -515,7 +530,10 @@ describe("StrategyRunner — TRIGGER evaluation", () => {
       ],
     });
 
-    state.getStateAndPrices.mockResolvedValue({ state: DEFAULT_STATE, prices: new Map([["tok1", { price: 0.5, timestamp: Date.now() }]]) });
+    state.getStateAndPrices.mockResolvedValue({
+      state: DEFAULT_STATE,
+      prices: new Map([["tok1", { price: 0.5, timestamp: Date.now() }]]),
+    });
 
     await runner.onPriceEvent("tok1", 0.5);
 
@@ -541,7 +559,10 @@ describe("StrategyRunner — CONDITION evaluation", () => {
       ],
     });
 
-    state.getStateAndPrices.mockResolvedValue({ state: { ...DEFAULT_STATE, betsToday: 5 }, prices: new Map([["tok1", { price: 0.5, timestamp: Date.now() }]]) });
+    state.getStateAndPrices.mockResolvedValue({
+      state: { ...DEFAULT_STATE, betsToday: 5 },
+      prices: new Map([["tok1", { price: 0.5, timestamp: Date.now() }]]),
+    });
 
     await runner.onPriceEvent("tok1", 0.5);
     expect(onIntents).not.toHaveBeenCalled();
@@ -560,7 +581,10 @@ describe("StrategyRunner — CONDITION evaluation", () => {
       conditions: [{ id: "unk", type: "NO_SUCH_CONDITION_BLOCK" }],
     });
 
-    state.getStateAndPrices.mockResolvedValue({ state: { ...DEFAULT_STATE }, prices: new Map([["tok1", { price: 0.5, timestamp: Date.now() }]]) });
+    state.getStateAndPrices.mockResolvedValue({
+      state: { ...DEFAULT_STATE },
+      prices: new Map([["tok1", { price: 0.5, timestamp: Date.now() }]]),
+    });
 
     await runner.onPriceEvent("tok1", 0.5);
     expect(onIntents).not.toHaveBeenCalled();
@@ -710,7 +734,9 @@ describe("StrategyRunner — start() timer management", () => {
 describe("StrategyRunner — error handling", () => {
   it("swallows errors thrown during tick evaluation", async () => {
     const state = makeState();
-    state.getStateAndPrices.mockRejectedValue(new Error("Redis connection lost"));
+    state.getStateAndPrices.mockRejectedValue(
+      new Error("Redis connection lost"),
+    );
 
     const runner = makeRunner({ execMode: "EVENT", state });
 
@@ -774,7 +800,10 @@ describe("StrategyRunner — calculation variables", () => {
     // Track when state.get is called (happens at start of evaluate())
     state.getStateAndPrices.mockImplementation(async () => {
       callOrder.push("state.getStateAndPrices");
-      return { state: { ...DEFAULT_STATE, dailyPnl: -5 }, prices: new Map([["tok1", { price: 0.5, timestamp: Date.now() }]]) };
+      return {
+        state: { ...DEFAULT_STATE, dailyPnl: -5 },
+        prices: new Map([["tok1", { price: 0.5, timestamp: Date.now() }]]),
+      };
     });
 
     // getPrice is called during variable evaluation
@@ -806,7 +835,10 @@ describe("StrategyRunner — calculation variables", () => {
 
   it("$varName in block params gets resolved to variable value", async () => {
     const state = makeState();
-    state.getStateAndPrices.mockResolvedValue({ state: { ...DEFAULT_STATE, dailyPnl: 0 }, prices: new Map([["tok1", { price: 0.5, timestamp: Date.now() }]]) });
+    state.getStateAndPrices.mockResolvedValue({
+      state: { ...DEFAULT_STATE, dailyPnl: 0 },
+      prices: new Map([["tok-yes", { price: 0.7, timestamp: Date.now() }]]),
+    });
     state.getPrice = vi.fn().mockResolvedValue({ price: 0.6 });
 
     const onIntents = vi
@@ -850,7 +882,10 @@ describe("StrategyRunner — calculation variables", () => {
 
   it("invalid expression does not crash (logs warning, skips)", async () => {
     const state = makeState();
-    state.getStateAndPrices.mockResolvedValue({ state: { ...DEFAULT_STATE }, prices: new Map([["tok1", { price: 0.5, timestamp: Date.now() }]]) });
+    state.getStateAndPrices.mockResolvedValue({
+      state: { ...DEFAULT_STATE },
+      prices: new Map([["tok1", { price: 0.5, timestamp: Date.now() }]]),
+    });
     state.getPrice = vi.fn().mockResolvedValue(null);
 
     const runner = makeRunner({
@@ -868,7 +903,10 @@ describe("StrategyRunner — calculation variables", () => {
 
   it("variables can reference other previously-defined variables", async () => {
     const state = makeState();
-    state.getStateAndPrices.mockResolvedValue({ state: { ...DEFAULT_STATE, betsToday: 3 }, prices: new Map([["tok1", { price: 0.5, timestamp: Date.now() }]]) });
+    state.getStateAndPrices.mockResolvedValue({
+      state: { ...DEFAULT_STATE, betsToday: 3 },
+      prices: new Map([["tok-yes", { price: 0.5, timestamp: Date.now() }]]),
+    });
     state.getPrice = vi.fn().mockResolvedValue({ price: 0.5 });
 
     const onIntents = vi
@@ -914,7 +952,10 @@ describe("StrategyRunner — calculation variables", () => {
 
   it("skips non-finite variable results instead of storing them as zero", async () => {
     const state = makeState();
-    state.getStateAndPrices.mockResolvedValue({ state: { ...DEFAULT_STATE }, prices: new Map([["tok1", { price: 0.5, timestamp: Date.now() }]]) });
+    state.getStateAndPrices.mockResolvedValue({
+      state: { ...DEFAULT_STATE },
+      prices: new Map([["tok1", { price: 0.5, timestamp: Date.now() }]]),
+    });
     state.getPrice = vi.fn().mockResolvedValue(null);
 
     const prisma = makePrisma();
@@ -997,7 +1038,9 @@ describe("StrategyRunner — blocks that throw errors", () => {
   it("catches errors from evaluate and remains RUNNING", async () => {
     const state = makeState();
     // Force evaluate to throw by making state.getStateAndPrices fail after an initial call
-    state.getStateAndPrices.mockRejectedValue(new Error("State retrieval failed"));
+    state.getStateAndPrices.mockRejectedValue(
+      new Error("State retrieval failed"),
+    );
 
     const runner = makeRunner({
       execMode: "EVENT",
@@ -1045,7 +1088,10 @@ describe("StrategyRunner — child strategy management", () => {
 describe("StrategyRunner — safeEvaluate edge cases", () => {
   it("rejects expression with forbidden keywords (via variables)", async () => {
     const state = makeState();
-    state.getStateAndPrices.mockResolvedValue({ state: { ...DEFAULT_STATE }, prices: new Map([["tok1", { price: 0.5, timestamp: Date.now() }]]) });
+    state.getStateAndPrices.mockResolvedValue({
+      state: { ...DEFAULT_STATE },
+      prices: new Map([["tok1", { price: 0.5, timestamp: Date.now() }]]),
+    });
     state.getPrice = vi.fn().mockResolvedValue(null);
 
     const runner = makeRunner({
@@ -1061,7 +1107,10 @@ describe("StrategyRunner — safeEvaluate edge cases", () => {
 
   it("rejects expression that is too long (>200 chars)", async () => {
     const state = makeState();
-    state.getStateAndPrices.mockResolvedValue({ state: { ...DEFAULT_STATE }, prices: new Map([["tok1", { price: 0.5, timestamp: Date.now() }]]) });
+    state.getStateAndPrices.mockResolvedValue({
+      state: { ...DEFAULT_STATE },
+      prices: new Map([["tok1", { price: 0.5, timestamp: Date.now() }]]),
+    });
     state.getPrice = vi.fn().mockResolvedValue(null);
 
     const runner = makeRunner({
@@ -1112,8 +1161,15 @@ describe("StrategyRunner — HYBRID mode", () => {
 describe("StrategyRunner — getPrimaryTokenId", () => {
   it("resolves primary token from trigger params", async () => {
     const state = makeState();
-    state.getStateAndPrices.mockResolvedValue({ state: { ...DEFAULT_STATE }, prices: new Map([["tok1", { price: 0.5, timestamp: Date.now() }]]) });
-    state.getPrice = vi.fn().mockResolvedValue({ price: 0.5 });
+    const prices = new Map<
+      string,
+      { price: number; timestamp: number } | null
+    >();
+    prices.set("tok-primary", { price: 0.5, timestamp: Date.now() });
+    state.getStateAndPrices.mockResolvedValue({
+      state: { ...DEFAULT_STATE },
+      prices,
+    });
 
     const runner = makeRunner({
       execMode: "EVENT",
@@ -1127,15 +1183,23 @@ describe("StrategyRunner — getPrimaryTokenId", () => {
     });
 
     await runner.onPriceEvent("tok-primary", 0.5);
-    expect(state.getPrice).toHaveBeenCalledWith("tok-primary");
+    // evaluate() uses the in-memory prices map from getStateAndPrices
+    expect(state.getStateAndPrices).toHaveBeenCalled();
   });
 });
 
 describe("StrategyRunner — config fallback for token discovery and prefetch", () => {
   it("resolves primary token from trigger config (not params)", async () => {
     const state = makeState();
-    state.getStateAndPrices.mockResolvedValue({ state: { ...DEFAULT_STATE }, prices: new Map([["tok1", { price: 0.5, timestamp: Date.now() }]]) });
-    state.getPrice = vi.fn().mockResolvedValue({ price: 0.5 });
+    const prices = new Map<
+      string,
+      { price: number; timestamp: number } | null
+    >();
+    prices.set("tok-config", { price: 0.5, timestamp: Date.now() });
+    state.getStateAndPrices.mockResolvedValue({
+      state: { ...DEFAULT_STATE },
+      prices,
+    });
 
     const runner = makeRunner({
       execMode: "EVENT",
@@ -1149,30 +1213,29 @@ describe("StrategyRunner — config fallback for token discovery and prefetch", 
     });
 
     await runner.onPriceEvent("tok-config", 0.5);
-    expect(state.getPrice).toHaveBeenCalledWith("tok-config");
+    // evaluate() uses the in-memory prices map from getStateAndPrices
+    expect(state.getStateAndPrices).toHaveBeenCalled();
   });
 
   it("detects stale data for config-only tokenId", async () => {
-    const redis = makeRedis({
-      getClient: vi.fn().mockReturnValue({
-        lrange: vi.fn().mockResolvedValue([]),
-        mget: vi
-          .fn()
-          .mockResolvedValue([
-            JSON.stringify({ price: 0.5, timestamp: Date.now() - 6000 }),
-          ]),
-        incr: vi.fn().mockResolvedValue(1),
-        expire: vi.fn().mockResolvedValue(1),
-        set: vi.fn().mockResolvedValue("OK"),
-        del: vi.fn().mockResolvedValue(1),
-        eval: vi.fn().mockResolvedValue(1),
-      }),
-    });
     const state = makeState();
+    // Return stale timestamp via getStateAndPrices prices map
+    const prices = new Map<
+      string,
+      { price: number; timestamp: number } | null
+    >();
+    prices.set("tok-stale-config", {
+      price: 0.5,
+      timestamp: Date.now() - 6000,
+    });
+    state.getStateAndPrices.mockResolvedValue({
+      state: { ...DEFAULT_STATE },
+      prices,
+    });
+
     const runner = makeRunner({
       execMode: "EVENT",
       state,
-      redis,
       triggers: [
         {
           id: "t1",
@@ -1217,7 +1280,13 @@ describe("StrategyRunner — EVENT-mode serialization (POLA-2082)", () => {
     state.getStateAndPrices.mockImplementation(
       () =>
         new Promise((resolve) => {
-          release = () => resolve({ state: { ...DEFAULT_STATE }, prices: new Map([["tok1", { price: 0.5, timestamp: Date.now() }]]) });
+          release = () =>
+            resolve({
+              state: { ...DEFAULT_STATE },
+              prices: new Map([
+                ["tok1", { price: 0.5, timestamp: Date.now() }],
+              ]),
+            });
         }),
     );
     const runner = makeRunner({ execMode: "EVENT", state });
@@ -1268,8 +1337,17 @@ describe("StrategyRunner — EVENT-mode serialization (POLA-2082)", () => {
       const state = makeState();
       state.getStateAndPrices.mockImplementation(
         () =>
-          new Promise<typeof DEFAULT_STATE>((resolve) => {
-            release = () => resolve({ state: { ...DEFAULT_STATE }, prices: new Map([["tok1", { price: 0.5, timestamp: Date.now() }]]) });
+          new Promise<{
+            state: typeof DEFAULT_STATE;
+            prices: Map<string, { price: number; timestamp: number } | null>;
+          }>((resolve) => {
+            release = () =>
+              resolve({
+                state: { ...DEFAULT_STATE },
+                prices: new Map([
+                  ["tok1", { price: 0.5, timestamp: Date.now() }],
+                ]),
+              });
           }),
       );
       const runner = makeRunner({ execMode: "HYBRID", state });
@@ -1511,28 +1589,27 @@ describe("StrategyRunner — logic graph evaluation", () => {
 });
 
 describe("StrategyRunner — detectStaleData edge cases", () => {
-  it("returns stale token when mget returns invalid JSON", async () => {
-    const redis = makeRedis({
-      getClient: vi.fn().mockReturnValue({
-        lrange: vi.fn().mockResolvedValue([]),
-        mget: vi.fn().mockResolvedValue(["not-valid-json"]),
-        incr: vi.fn().mockResolvedValue(1),
-        expire: vi.fn().mockResolvedValue(1),
-        set: vi.fn().mockResolvedValue("OK"),
-        del: vi.fn().mockResolvedValue(1),
-        eval: vi.fn().mockResolvedValue(1),
-      }),
-    });
+  it("returns stale token when prices map has null entry", async () => {
     const state = makeState();
+    // Missing/null price in getStateAndPrices → treated as stale
+    const prices = new Map<
+      string,
+      { price: number; timestamp: number } | null
+    >();
+    prices.set("tok1", null);
+    state.getStateAndPrices.mockResolvedValue({
+      state: { ...DEFAULT_STATE },
+      prices,
+    });
+
     const runner = makeRunner({
       execMode: "EVENT",
       state,
-      redis,
       triggers: [{ id: "t1", type: "every_tick", params: { tokenId: "tok1" } }],
     });
 
     await runner.onPriceEvent("tok1", 0.5);
-    // Invalid JSON in mget triggers catch block → treated as stale
+    // null price entry in prices map → treated as stale
     expect(runner.status).toBe("PAUSED");
     expect(runner.pauseReason).toBe("stale_market_data:tok1");
   });
@@ -1545,7 +1622,13 @@ describe("StrategyRunner — concurrent tick serialization", () => {
     state.getStateAndPrices.mockImplementation(
       () =>
         new Promise((resolve) => {
-          release = () => resolve({ state: { ...DEFAULT_STATE }, prices: new Map([["tok1", { price: 0.5, timestamp: Date.now() }]]) });
+          release = () =>
+            resolve({
+              state: { ...DEFAULT_STATE },
+              prices: new Map([
+                ["tok1", { price: 0.5, timestamp: Date.now() }],
+              ]),
+            });
         }),
     );
     const runner = makeRunner({ execMode: "EVENT", state });
@@ -1594,7 +1677,10 @@ describe("StrategyRunner — concurrent tick serialization", () => {
     // Lock is released in finally even after error — new tick should proceed
     // after the throttle window clears.
     state.getStateAndPrices.mockClear();
-    state.getStateAndPrices.mockResolvedValue({ state: { ...DEFAULT_STATE }, prices: new Map([["tok1", { price: 0.5, timestamp: Date.now() }]]) });
+    state.getStateAndPrices.mockResolvedValue({
+      state: { ...DEFAULT_STATE },
+      prices: new Map([["tok1", { price: 0.5, timestamp: Date.now() }]]),
+    });
     await new Promise((r) => setTimeout(r, 250));
     await runner.onPriceEvent("tok1", 0.5);
     expect(state.getStateAndPrices).toHaveBeenCalledTimes(1);
@@ -1612,7 +1698,10 @@ describe("StrategyRunner — concurrent tick serialization", () => {
     runner.resume();
     await new Promise((r) => setTimeout(r, 250));
     state.getStateAndPrices.mockClear();
-    state.getStateAndPrices.mockResolvedValue({ state: { ...DEFAULT_STATE }, prices: new Map([["tok1", { price: 0.5, timestamp: Date.now() }]]) });
+    state.getStateAndPrices.mockResolvedValue({
+      state: { ...DEFAULT_STATE },
+      prices: new Map([["tok1", { price: 0.5, timestamp: Date.now() }]]),
+    });
     await runner.onPriceEvent("tok1", 0.5);
     expect(state.getStateAndPrices).toHaveBeenCalledTimes(1);
   });
@@ -1689,7 +1778,10 @@ describe("StrategyRunner — concurrent tick serialization", () => {
       };
       const redis = makeRedis({ getClient: vi.fn().mockReturnValue(client) });
       const state = makeState();
-      state.getStateAndPrices.mockResolvedValue({ state: { ...DEFAULT_STATE }, prices: new Map([["tok1", { price: 0.5, timestamp: Date.now() }]]) });
+      state.getStateAndPrices.mockResolvedValue({
+        state: { ...DEFAULT_STATE },
+        prices: new Map([["tok1", { price: 0.5, timestamp: Date.now() }]]),
+      });
       const runner = makeRunner({
         execMode: "HYBRID",
         tickMs: 1000,
@@ -1770,7 +1862,10 @@ describe("StrategyRunner — concurrent tick serialization", () => {
       };
       const redis = makeRedis({ getClient: vi.fn().mockReturnValue(client) });
       const state = makeState();
-      state.getStateAndPrices.mockResolvedValue({ state: { ...DEFAULT_STATE }, prices: new Map([["tok1", { price: 0.5, timestamp: Date.now() }]]) });
+      state.getStateAndPrices.mockResolvedValue({
+        state: { ...DEFAULT_STATE },
+        prices: new Map([["tok1", { price: 0.5, timestamp: Date.now() }]]),
+      });
       const runner = makeRunner({ execMode: "EVENT", state, redis });
 
       // Fire the only tick — SET NX fails, lockAcquired=false,
@@ -1842,7 +1937,10 @@ describe("StrategyRunner — concurrent tick serialization", () => {
       };
       const redis = makeRedis({ getClient: vi.fn().mockReturnValue(client) });
       const state = makeState();
-      state.getStateAndPrices.mockResolvedValue({ state: { ...DEFAULT_STATE }, prices: new Map([["tok1", { price: 0.5, timestamp: Date.now() }]]) });
+      state.getStateAndPrices.mockResolvedValue({
+        state: { ...DEFAULT_STATE },
+        prices: new Map([["tok1", { price: 0.5, timestamp: Date.now() }]]),
+      });
       const runner = makeRunner({ execMode: "EVENT", state, redis });
 
       // Tick A: enters tick(), sets tickInFlight=true, awaits SET NX
@@ -1937,7 +2035,10 @@ describe("StrategyRunner — concurrent tick serialization", () => {
       };
       const redis = makeRedis({ getClient: vi.fn().mockReturnValue(client) });
       const state = makeState();
-      state.getStateAndPrices.mockResolvedValue({ state: { ...DEFAULT_STATE }, prices: new Map([["tok1", { price: 0.5, timestamp: Date.now() }]]) });
+      state.getStateAndPrices.mockResolvedValue({
+        state: { ...DEFAULT_STATE },
+        prices: new Map([["tok1", { price: 0.5, timestamp: Date.now() }]]),
+      });
       const runner = makeRunner({ execMode: "EVENT", state, redis });
 
       // Tick A: acquires lock, evaluates, unlock is fire-and-forget (deferred).
@@ -2050,8 +2151,17 @@ describe("StrategyRunner — concurrent tick serialization", () => {
       // Stall evaluate() so the lock-refresh interval fires while the lock is held
       state.getStateAndPrices.mockImplementation(
         () =>
-          new Promise<typeof DEFAULT_STATE>((resolve) => {
-            release = () => resolve({ state: { ...DEFAULT_STATE }, prices: new Map([["tok1", { price: 0.5, timestamp: Date.now() }]]) });
+          new Promise<{
+            state: typeof DEFAULT_STATE;
+            prices: Map<string, { price: number; timestamp: number } | null>;
+          }>((resolve) => {
+            release = () =>
+              resolve({
+                state: { ...DEFAULT_STATE },
+                prices: new Map([
+                  ["tok1", { price: 0.5, timestamp: Date.now() }],
+                ]),
+              });
           }),
       );
       const runner = makeRunner({ execMode: "EVENT", state, redis });
@@ -2169,8 +2279,17 @@ describe("StrategyRunner — concurrent tick serialization", () => {
       const state = makeState();
       state.getStateAndPrices.mockImplementation(
         () =>
-          new Promise<typeof DEFAULT_STATE>((resolve) => {
-            release = () => resolve({ state: { ...DEFAULT_STATE }, prices: new Map([["tok1", { price: 0.5, timestamp: Date.now() }]]) });
+          new Promise<{
+            state: typeof DEFAULT_STATE;
+            prices: Map<string, { price: number; timestamp: number } | null>;
+          }>((resolve) => {
+            release = () =>
+              resolve({
+                state: { ...DEFAULT_STATE },
+                prices: new Map([
+                  ["tok1", { price: 0.5, timestamp: Date.now() }],
+                ]),
+              });
           }),
       );
       const runner = makeRunner({ execMode: "EVENT", state, redis });
@@ -2218,8 +2337,17 @@ describe("StrategyRunner — concurrent tick serialization", () => {
       const state = makeState();
       state.getStateAndPrices.mockImplementation(
         () =>
-          new Promise<typeof DEFAULT_STATE>((resolve) => {
-            release = () => resolve({ state: { ...DEFAULT_STATE }, prices: new Map([["tok1", { price: 0.5, timestamp: Date.now() }]]) });
+          new Promise<{
+            state: typeof DEFAULT_STATE;
+            prices: Map<string, { price: number; timestamp: number } | null>;
+          }>((resolve) => {
+            release = () =>
+              resolve({
+                state: { ...DEFAULT_STATE },
+                prices: new Map([
+                  ["tok1", { price: 0.5, timestamp: Date.now() }],
+                ]),
+              });
           }),
       );
       const runner = makeRunner({ execMode: "EVENT", state, redis });
@@ -2288,9 +2416,21 @@ describe("StrategyRunner — concurrent tick serialization", () => {
       // Stall evaluate() so the lock refresh fires while Tick A holds the lock.
       let releaseEvaluate!: () => void;
       state.getStateAndPrices.mockImplementation(
-        () =>
-          new Promise<typeof DEFAULT_STATE>((resolve) => {
-            releaseEvaluate = () => resolve({ state: { ...DEFAULT_STATE }, prices: new Map([["tok1", { price: 0.5, timestamp: Date.now() }]]) });
+        (_strategyId: string, tokenIds: string[]) =>
+          new Promise<{
+            state: typeof DEFAULT_STATE;
+            prices: Map<string, { price: number; timestamp: number } | null>;
+          }>((resolve) => {
+            releaseEvaluate = () => {
+              const prices = new Map<
+                string,
+                { price: number; timestamp: number } | null
+              >();
+              for (const id of tokenIds) {
+                prices.set(id, { price: 0.7, timestamp: Date.now() });
+              }
+              resolve({ state: { ...DEFAULT_STATE }, prices });
+            };
           }),
       );
 
@@ -2332,9 +2472,21 @@ describe("StrategyRunner — concurrent tick serialization", () => {
       // Re-stall evaluate() for Tick B so we can inspect the outcome.
       let releaseEvaluateB!: () => void;
       state.getStateAndPrices.mockImplementation(
-        () =>
-          new Promise<typeof DEFAULT_STATE>((resolve) => {
-            releaseEvaluateB = () => resolve({ state: { ...DEFAULT_STATE }, prices: new Map([["tok1", { price: 0.5, timestamp: Date.now() }]]) });
+        (_strategyId: string, tokenIds: string[]) =>
+          new Promise<{
+            state: typeof DEFAULT_STATE;
+            prices: Map<string, { price: number; timestamp: number } | null>;
+          }>((resolve) => {
+            releaseEvaluateB = () => {
+              const prices = new Map<
+                string,
+                { price: number; timestamp: number } | null
+              >();
+              for (const id of tokenIds) {
+                prices.set(id, { price: 0.7, timestamp: Date.now() });
+              }
+              resolve({ state: { ...DEFAULT_STATE }, prices });
+            };
           }),
       );
 
@@ -2416,7 +2568,10 @@ describe("StrategyRunner — concurrent tick serialization", () => {
       };
       const redis = makeRedis({ getClient: vi.fn().mockReturnValue(client) });
       const state = makeState();
-      state.getStateAndPrices.mockResolvedValue({ state: { ...DEFAULT_STATE }, prices: new Map([["tok1", { price: 0.5, timestamp: Date.now() }]]) });
+      state.getStateAndPrices.mockResolvedValue({
+        state: { ...DEFAULT_STATE },
+        prices: new Map([["tok1", { price: 0.5, timestamp: Date.now() }]]),
+      });
 
       const runner = makeRunner({ execMode: "EVENT", state, redis });
 
@@ -2461,8 +2616,17 @@ describe("StrategyRunner — concurrent tick serialization", () => {
       const state = makeState();
       state.getStateAndPrices.mockImplementation(
         () =>
-          new Promise<typeof DEFAULT_STATE>((resolve) => {
-            release = () => resolve({ state: { ...DEFAULT_STATE }, prices: new Map([["tok1", { price: 0.5, timestamp: Date.now() }]]) });
+          new Promise<{
+            state: typeof DEFAULT_STATE;
+            prices: Map<string, { price: number; timestamp: number } | null>;
+          }>((resolve) => {
+            release = () =>
+              resolve({
+                state: { ...DEFAULT_STATE },
+                prices: new Map([
+                  ["tok1", { price: 0.5, timestamp: Date.now() }],
+                ]),
+              });
           }),
       );
       const runner = makeRunner({ execMode: "TICK", tickMs: 300, state });

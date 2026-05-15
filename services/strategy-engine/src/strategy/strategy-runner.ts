@@ -488,11 +488,13 @@ export class StrategyRunner {
           // coalesced events would be silently dropped: no retry fires
           // and no fresh price event is guaranteed to arrive.
           this.scheduledFollowUp = true;
-          void this.pendingRedisUnlock.finally(() => {
-            if (this.status === "RUNNING") {
-              void this.tick();
-            }
-          }).catch(() => {});
+          void this.pendingRedisUnlock
+            .finally(() => {
+              if (this.status === "RUNNING") {
+                void this.tick();
+              }
+            })
+            .catch(() => {});
         }
       } else if (!lockAcquired && this.status === "RUNNING") {
         // Lock acquisition failed without any pending coalesced tick.
@@ -518,11 +520,13 @@ export class StrategyRunner {
           // evaluation is not blocked by lastTickMs having been advanced
           // by the failed tick itself.
           this.scheduledFollowUp = true;
-          void this.pendingRedisUnlock.finally(() => {
-            if (this.status === "RUNNING") {
-              void this.tick();
-            }
-          }).catch(() => {});
+          void this.pendingRedisUnlock
+            .finally(() => {
+              if (this.status === "RUNNING") {
+                void this.tick();
+              }
+            })
+            .catch(() => {});
         } else if (this.execMode === "HYBRID" && this.followUpTimer === null) {
           this.scheduledFollowUp = true;
           this.followUpTimer = setTimeout(() => {
