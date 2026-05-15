@@ -72,28 +72,23 @@ in_ports && (/^  [a-zA-Z]/ || /^[a-zA-Z]/) {
 }
 
 # ── Long-syntax entry detection (MUST come before short-syntax) ────────
-# These checks run first so that `- target: 80` / `- published: 80`
-# lines are handled as long-syntax blocks, not misidentified as
-# short-syntax host:port mappings.
-
-# Entry: target-first (common case)
-in_ports && /^[[:space:]]+- target:/ && !in_block {
+# Matches any Docker Compose long-syntax port mapping key (name, target,
+# published, host_ip, protocol, mode, app_protocol).  Runs first so that
+# long-syntax blocks are never misidentified as short-syntax host:port
+# strings.  The entry line itself is inspected for target, published,
+# and host_ip keys so that single-line or first-key entries are tracked
+# correctly.
+in_ports && /^[[:space:]]+- (name|target|published|host_ip|protocol|mode|app_protocol):/ && !in_block {
   in_block = 1
   entry_lineno = NR
-  saw_target = 1
-  saw_published = 0
-  has_host_ip = 0
-  suppressed = ($0 ~ /# nosemgrep: docker-compose-port-no-loopback/)
-  next
-}
-
-# Entry: published-first (unusual but valid order)
-in_ports && /^[[:space:]]+- published:/ && !in_block {
-  in_block = 1
-  entry_lineno = NR
-  saw_target = 0
-  saw_published = 1
-  has_host_ip = 0
+  saw_target = ($0 ~ / target:/)
+  saw_published = ($0 ~ / published:/)
+  # Inspect only the non-comment portion of the entry line when checking
+  # host_ip so that inline comments like `# host_ip: 127.0.0.1` are not
+  # confused for a real binding.
+  noncomment = $0
+  sub(/[[:space:]]*#.*$/, "", noncomment)
+  has_host_ip = (noncomment ~ /host_ip:[[:space:]]*["'\'']?(127\.0\.0\.1|::1)["'\'']?/)
   suppressed = ($0 ~ /# nosemgrep: docker-compose-port-no-loopback/)
   next
 }
@@ -124,21 +119,14 @@ in_block {
     }
 
     # Re-process this line in case it starts a new port block
-    if (in_ports && $0 ~ /^[[:space:]]+- target:/) {
+    if (in_ports && $0 ~ /^[[:space:]]+- (name|target|published|host_ip|protocol|mode|app_protocol):/) {
       in_block = 1
       entry_lineno = NR
-      saw_target = 1
-      saw_published = 0
-      has_host_ip = 0
-      suppressed = ($0 ~ /# nosemgrep: docker-compose-port-no-loopback/)
-      next
-    }
-    if (in_ports && $0 ~ /^[[:space:]]+- published:/) {
-      in_block = 1
-      entry_lineno = NR
-      saw_target = 0
-      saw_published = 1
-      has_host_ip = 0
+      saw_target = ($0 ~ / target:/)
+      saw_published = ($0 ~ / published:/)
+      noncomment = $0
+      sub(/[[:space:]]*#.*$/, "", noncomment)
+      has_host_ip = (noncomment ~ /host_ip:[[:space:]]*["'\'']?(127\.0\.0\.1|::1)["'\'']?/)
       suppressed = ($0 ~ /# nosemgrep: docker-compose-port-no-loopback/)
       next
     }
@@ -156,17 +144,19 @@ in_block {
     if ($0 ~ /^[[:space:]]+published:/) {
       saw_published = 1
     }
-    # Match loopback host_ip (127.0.0.1 / ::1) with optional single/double quotes,
-    # but NOT inside comments
-    if ($0 !~ /^[[:space:]]*#/ && $0 ~ /host_ip:[[:space:]]*["'\'']?(127\.0\.0\.1|::1)["'\'']?/) {
+    # Match loopback host_ip (127.0.0.1 / ::1) with optional single/double quotes.
+    # Anchored to line-start so that comments, inline comments, and typos
+    # (e.g. xhost_ip:) do not satisfy the guard.
+    if ($0 ~ /^[[:space:]]+host_ip:[[:space:]]*["'\'']?(127\.0\.0\.1|::1)["'\'']?/) {
       has_host_ip = 1
     }
   }
 }
 
 # ── Short-syntax detection (inside ports: only, after long-syntax) ─────
-# Runs after long-syntax entry rules, so `- target:` / `- published:`
-# lines are already claimed by the long-syntax state machine.
+# Runs after long-syntax entry rules, so long-syntax port mapping keys
+# (name, target, published, host_ip, protocol, mode, app_protocol) are
+# already claimed by the long-syntax state machine.
 in_ports && /^[[:space:]]+-[[:space:]]+/ && !in_block {
   # Skip suppressed lines
   if ($0 ~ /# nosemgrep: docker-compose-port-no-loopback/) { next }
