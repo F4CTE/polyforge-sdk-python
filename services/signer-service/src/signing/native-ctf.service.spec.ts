@@ -1261,6 +1261,70 @@ describe("NativeCtfService", () => {
       expect(client.eval).toHaveBeenCalledTimes(1);
     });
 
+    it("surfaces permanent Redis error from late SET rejection instead of degrading to 60 s timeout", async () => {
+      vi.useFakeTimers();
+
+      const { redisService, client } = makeMockRedis();
+
+      // First SET hangs until explicitly rejected — simulates ioredis
+      // offline-queue where a queued SET eventually fails with a
+      // permanent error (e.g., NOAUTH after reconnecting with wrong
+      // credentials) after the local timeout has already won.
+      let rejectSetPromise!: (reason: Error) => void;
+      const firstSetPromise = new Promise<string | null>((_resolve, reject) => {
+        rejectSetPromise = reject;
+      });
+      client.set.mockReturnValueOnce(firstSetPromise);
+
+      const svcWithRedis = new NativeCtfService(redisService);
+
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({ result: "0x1" }),
+      });
+
+      const permanentErr = Object.assign(
+        new Error("NOAUTH Authentication required."),
+        { name: "ReplyError" },
+      );
+
+      const creds = makeTestCreds();
+      let caught: Error | null = null;
+      const promise = svcWithRedis
+        .redeemPosition(creds, 137, "http://fake-rpc", {
+          conditionId: CONDITION_ID,
+          indexSets: [1n],
+        })
+        .catch((e: Error) => {
+          caught = e;
+        });
+
+      // Advance past the first attempt's 3 s timeout so the catch block
+      // registers the ghost-cleanup chain, but not past the 100 ms
+      // backoff sleep — the late SET rejection must fire before the
+      // retry loop enters its next iteration.
+      await vi.advanceTimersByTimeAsync(3_050);
+
+      // Reject the late SET with a permanent Redis error while the
+      // backoff sleep is still in progress.
+      rejectSetPromise(permanentErr);
+
+      // Advance through the remaining backoff.  The microtask from
+      // the `.catch()` fires, classifies the error as permanent, and
+      // sets `permanentError`.  When the backoff sleep expires, the
+      // retry loop reads `permanentError` and throws.
+      await vi.advanceTimersByTimeAsync(1_000);
+      await promise;
+      vi.useRealTimers();
+      zeroCredentials(creds);
+
+      // Permanent error must be surfaced, not silently swallowed.
+      expect(caught).not.toBeNull();
+      expect(caught!.message).toContain("NOAUTH");
+      // Only one SET call — no retry after permanent error surfaced.
+      expect(client.set).toHaveBeenCalledTimes(1);
+    });
+
     it("does not use Redis lock when RedisService is not injected", async () => {
       const svc = new NativeCtfService(); // no Redis
 

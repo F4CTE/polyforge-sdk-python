@@ -449,6 +449,27 @@ export class NativeCtfService {
   `;
 
   /**
+   * Classify a Redis error message as permanently unrecoverable.
+   *
+   * Permanent errors (NOAUTH, WRONGPASS, NOPERM, WRONGTYPE, READONLY,
+   * wrong-number-of-arguments, syntax error) indicate a configuration or
+   * code defect that retries cannot fix.  Transient errors (LOADING, BUSY,
+   * TRYAGAIN during cluster failover, connection errors) are retried with
+   * backoff.
+   */
+  private static isPermanentRedisError(message: string): boolean {
+    return (
+      message.includes("NOAUTH") ||
+      message.includes("WRONGPASS") ||
+      message.includes("NOPERM") ||
+      message.includes("WRONGTYPE") ||
+      message.includes("READONLY") ||
+      /wrong number of arguments/i.test(message) ||
+      /syntax error/i.test(message)
+    );
+  }
+
+  /**
    * Execute a CTF transaction body under a per-EOA, per-chain distributed mutex.
    *
    * The lock serializes the nonce-fetch → sign → broadcast pipeline per
@@ -517,8 +538,10 @@ export class NativeCtfService {
     const maxWaitMs = 60_000;
     const deadline = Date.now() + maxWaitMs;
     let delayMs = 100;
+    let permanentError: Error | null = null;
 
     while (Date.now() < deadline) {
+      if (permanentError) throw permanentError;
       const remaining = deadline - Date.now();
       if (remaining <= 0) break;
 
@@ -559,19 +582,11 @@ export class NativeCtfService {
         // Surface only permanently unrecoverable Redis errors immediately.
         // Transient ReplyError states (LOADING, BUSY, TRYAGAIN during
         // cluster failover) are retried with backoff.
-        if (err instanceof Error) {
-          const msg = err.message ?? "";
-          const isPermanent =
-            msg.includes("NOAUTH") ||
-            msg.includes("WRONGPASS") ||
-            msg.includes("NOPERM") ||
-            msg.includes("WRONGTYPE") ||
-            msg.includes("READONLY") ||
-            /wrong number of arguments/i.test(msg) ||
-            /syntax error/i.test(msg);
-          if (isPermanent) {
-            throw err;
-          }
+        if (
+          err instanceof Error &&
+          NativeCtfService.isPermanentRedisError(err.message ?? "")
+        ) {
+          throw err;
         }
 
         // If the timeout won the race, the SET promise is still pending.
@@ -598,16 +613,31 @@ export class NativeCtfService {
                   });
               }
             })
-            .catch(() => {
-              // The late SET rejected after the timeout raced ahead —
-              // expected when the Redis connection drops or the command
-              // is cancelled during ioredis offline-queue replay.
-              // Nothing to clean up (no ghost lock was created).
+            .catch((lateErr: unknown) => {
+              // The late SET rejected after the timeout raced ahead.
+              // Most rejections are expected — ioredis offline-queue
+              // replay after a dropped connection.  But distinguish
+              // permanent Redis errors that should be surfaced so the
+              // caller doesn't hit the generic 60 s timeout.
+              if (
+                lateErr instanceof Error &&
+                NativeCtfService.isPermanentRedisError(
+                  lateErr.message ?? "",
+                )
+              ) {
+                this.logger.error(
+                  `Late SET rejected with permanent Redis error: ${key}`,
+                  lateErr.message,
+                );
+                permanentError = lateErr;
+              }
             });
         }
 
         // Transient error — backoff and retry.
       }
+
+      if (permanentError) throw permanentError;
 
       const sleepRemaining = deadline - Date.now();
       if (sleepRemaining <= 0) break;
