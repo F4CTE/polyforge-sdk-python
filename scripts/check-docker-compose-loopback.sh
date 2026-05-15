@@ -4,8 +4,9 @@ set -euo pipefail
 # Detect port bindings in docker-compose.infra.yml that are not bound
 # to loopback (127.0.0.1 / ::1) and are not suppressed with nosemgrep.
 # Covers short-syntax (double-quoted, single-quoted, unquoted, hostless,
-# IPv4 and IPv6), long-syntax (target:/ published:), and flow-style
-# (ports: [...] inline sequences) forms.
+# IPv4 and IPv6), long-syntax (target:/ published:), flow-style
+# (ports: [...] sequences including inline YAML maps { target: ... }),
+# and ports: keys with YAML anchors (&) and aliases (*).
 #
 # Short-syntax examples:
 # Safe:   - "127.0.0.1:3000:3000"
@@ -43,10 +44,16 @@ set -euo pipefail
 # Safe:   ports: ["127.0.0.1:3000:3000"]
 # Safe:   ports: ["[::1]:3000:3000"]
 # Safe:   ports: ["3000:3000"] # nosemgrep: docker-compose-port-no-loopback
+# Safe:   ports: [{ target: 80, published: 80, host_ip: 127.0.0.1 }]
 # Unsafe: ports: ["3000:3000"]
 # Unsafe: ports: [3000]
 # Unsafe: ports: ["0.0.0.0:3000:3000"]
 # Unsafe: ports: ["3000:3000", "8080:8080"]
+# Unsafe: ports: [{ target: 80, published: 80 }]
+#
+# ports: key variants:
+# Safe:   ports: &app_ports   (anchor — entries follow on next lines)
+# Unsafe: ports: *app_ports  (alias — cannot be verified statically)
 #
 # See https://github.com/F4CTE/PolyForge/issues/1310
 
@@ -179,8 +186,39 @@ in_flow {
   next
 }
 
+function process_flow_inline_map(map) {
+  # Check an inline YAML map { key: value, ... } within a flow-style
+  # ports sequence for loopback host_ip binding.
+  # Handles quoted keys ("host_ip":, 'host_ip':) and variable
+  # substitution values ($VAR, ${VAR}) in target/published.
+  if (map ~ /["'\'']?host_ip["'\'']?:[[:space:]]*["'\'']?(127\.0\.0\.1|\[::1\]|::1)["'\'']?([^0-9a-f.:]|$)/) return
+  # No loopback — flag if target and published are present
+  _target_match = map ~ /["'\'']?target["'\'']?:[[:space:]]*["'\'']?[0-9$]/
+  _published_match = map ~ /["'\'']?published["'\'']?:[[:space:]]*["'\'']?[0-9$]/
+  if (_target_match && _published_match) {
+    printf "::error file=%s,line=%d::Flow-style inline long-syntax port mapping without loopback binding. Add host_ip: 127.0.0.1 or suppress with # nosemgrep: docker-compose-port-no-loopback(-flow-style). See https://github.com/F4CTE/PolyForge/issues/1310\n", file, flow_lineno
+    exit_code = 1
+  }
+}
+
 function process_flow_entries(buf) {
-  n = split(buf, entries, ",")
+  # Pre-extract inline YAML maps ({ ... }) from the buffer before
+  # comma-splitting because inline maps contain internal commas that
+  # would otherwise fragment them across entries.  Extracted maps are
+  # checked for loopback host_ip; the remaining buffer is processed
+  # as comma-separated string entries.
+  tmp = buf
+  while (match(tmp, /\{[^{}]*\}/)) {
+    inline_map = substr(tmp, RSTART, RLENGTH)
+    tmp = substr(tmp, 1, RSTART-1) "," substr(tmp, RSTART+RLENGTH)
+    process_flow_inline_map(inline_map)
+  }
+  # Clean up doubled/trailing/leading commas left by inline-map replacement
+  gsub(/,,+/, ",", tmp)
+  gsub(/^,/, "", tmp)
+  gsub(/,$/, "", tmp)
+
+  n = split(tmp, entries, ",")
   for (i = 1; i <= n; i++) {
     val = entries[i]
     gsub(/^[[:space:]]+/, "", val)
@@ -191,11 +229,6 @@ function process_flow_entries(buf) {
     qval = val
     sub(/^"/, "", qval); sub(/"$/, "", qval)
     sub(/^\047/, "", qval); sub(/\047$/, "", qval)
-
-    # Skip inline YAML maps: { target: ... }
-    if (qval ~ /^\{.*\}$/) continue
-    # Skip partial braces from comma-split inline maps
-    if (qval ~ /\{/ && qval !~ /\}/) continue
 
     # Variable reference without a colon (e.g. "${APP_PORT}") — cannot
     # verify loopback binding statically.  Flag rather than silently skip.
@@ -246,11 +279,18 @@ function process_flow_entries(buf) {
 # ── ports: section tracking ────────────────────────────────────────────
 
 # Enter a ports: section (at any indentation under a service).
-# Match "ports:" followed by end-of-line or a comment so that keys
-# like "expose_ports:" are not misidentified as port lists.
-/^[[:space:]]+ports:[[:space:]]*($|#)/ {
+# Match "ports:" followed by end-of-line, a comment, a YAML anchor (&),
+# or a YAML alias (*) so that keys like "expose_ports:" are not
+# misidentified as port lists.
+# YAML aliases (ports: *name) cannot be statically verified, so they
+# are flagged unless suppressed with nosemgrep.
+/^[[:space:]]+ports:[[:space:]]*($|#|&|\*)/ {
   ports_indent = leadingspaces($0)
   in_ports = 1
+  if ($0 ~ /ports:[[:space:]]*\*/ && $0 !~ /# nosemgrep:.*docker-compose-port-no-loopback(-long-syntax|-flow-style)?/) {
+    printf "::error file=%s,line=%d::ports: uses YAML alias — cannot verify loopback binding. Inline the port mapping or suppress with # nosemgrep: docker-compose-port-no-loopback(-long-syntax|-flow-style). See https://github.com/F4CTE/PolyForge/issues/1310\n", file, NR
+    exit_code = 1
+  }
   next
 }
 
