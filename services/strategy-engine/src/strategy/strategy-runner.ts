@@ -476,10 +476,7 @@ export class StrategyRunner {
             void this.tick();
           }, RETRY_BACKOFF_MS);
         }
-      } else if (
-        !lockAcquired &&
-        this.status === "RUNNING"
-      ) {
+      } else if (!lockAcquired && this.status === "RUNNING") {
         // Lock acquisition failed without any pending coalesced tick.
         //
         // HYBRID mode schedules a 200 ms retry so the strategy can
@@ -503,15 +500,12 @@ export class StrategyRunner {
           // evaluation is not blocked by lastTickMs having been advanced
           // by the failed tick itself.
           this.scheduledFollowUp = true;
-          this.pendingRedisUnlock.finally(() => {
+          void this.pendingRedisUnlock.finally(() => {
             if (this.status === "RUNNING") {
               void this.tick();
             }
           });
-        } else if (
-          this.execMode === "HYBRID" &&
-          this.followUpTimer === null
-        ) {
+        } else if (this.execMode === "HYBRID" && this.followUpTimer === null) {
           this.scheduledFollowUp = true;
           this.followUpTimer = setTimeout(() => {
             this.followUpTimer = null;
