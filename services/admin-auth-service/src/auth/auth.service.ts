@@ -23,8 +23,8 @@ import {
 import { AdminLoginDto } from "./dto/login.dto";
 
 const PENDING_TOTP_TTL = 300; // 5 minutes
-const ALGORITHM = "aes-256-gcm";
 const TOTP_REPLAY_WINDOW = 90; // covers adjacent valid TOTP steps
+const ALGORITHM = "aes-256-gcm";
 
 @Injectable()
 export class AuthService implements OnModuleInit {
@@ -149,15 +149,31 @@ export class AuthService implements OnModuleInit {
       );
     }
 
-    // Check replay — the same TOTP code must not be used twice within its validity window
-    const consumed = await client.set(
-      `admin:totp:used:${adminId}:${code}`,
-      "1",
-      "EX",
-      TOTP_REPLAY_WINDOW,
-      "NX",
-    );
-    if (consumed !== "OK") {
+    // Replay protection — fail closed on Redis write errors
+    let consumedConfirm: string | null;
+    try {
+      consumedConfirm = await client.set(
+        `admin:totp:used:${adminId}:${code}`,
+        "1",
+        "EX",
+        TOTP_REPLAY_WINDOW,
+        "NX",
+      );
+    } catch (error) {
+      this.logger.error(
+        {
+          event: "TOTP_REPLAY_CHECK_FAILED",
+          adminId,
+          error: String(error),
+        },
+        "Redis replay-key write failed during TOTP confirm",
+      );
+      throw new HttpException(
+        { code: "TOTP_SETUP_FAILED", message: "Unable to complete 2FA setup. Please try again." },
+        HttpStatus.SERVICE_UNAVAILABLE,
+      );
+    }
+    if (consumedConfirm !== "OK") {
       throw new HttpException(
         { code: "TOTP_INVALID", message: "TOTP code already used" },
         HttpStatus.BAD_REQUEST,
@@ -272,16 +288,32 @@ export class AuthService implements OnModuleInit {
       );
     }
 
-    // Check replay — the same TOTP code must not be used twice within its validity window
-    const consumed = await this.redis
-      .getClient()
-      .set(
-        `admin:totp:used:${adminId}:${totpCode}`,
-        "1",
-        "EX",
-        TOTP_REPLAY_WINDOW,
-        "NX",
+    // Replay protection — fail closed on Redis write errors
+    let consumed: string | null;
+    try {
+      consumed = await this.redis
+        .getClient()
+        .set(
+          `admin:totp:used:${adminId}:${totpCode}`,
+          "1",
+          "EX",
+          TOTP_REPLAY_WINDOW,
+          "NX",
+        );
+    } catch (err) {
+      this.logger.error(
+        {
+          event: "TOTP_REPLAY_CHECK_FAILED",
+          adminId,
+          error: String(err),
+        },
+        "Redis replay-key write failed during admin 2FA disable",
       );
+      throw new HttpException(
+        { code: "TOTP_DISABLE_FAILED", message: "Unable to disable 2FA. Please try again." },
+        HttpStatus.SERVICE_UNAVAILABLE,
+      );
+    }
     if (consumed !== "OK") {
       throw new HttpException(
         { code: "RE_AUTH_FAILED", message: "TOTP code already used" },
@@ -402,8 +434,8 @@ export class AuthService implements OnModuleInit {
         );
       }
 
-      // Best-effort replay protection — fail open on Redis write errors
-      let consumed: string | null = "OK";
+      // Replay protection — fail closed on Redis write errors
+      let consumed: string | null;
       try {
         consumed = await this.redis
           .getClient()
@@ -415,13 +447,17 @@ export class AuthService implements OnModuleInit {
             "NX",
           );
       } catch (error) {
-        this.logger.warn(
+        this.logger.error(
           {
             event: "TOTP_REPLAY_CHECK_FAILED",
             adminId: admin.id,
             error: String(error),
           },
           "Redis replay-key write failed during admin login",
+        );
+        throw new HttpException(
+          { code: "TOTP_VERIFY_FAILED", message: "Unable to verify 2FA code. Please try again." },
+          HttpStatus.SERVICE_UNAVAILABLE,
         );
       }
       if (consumed !== "OK") {

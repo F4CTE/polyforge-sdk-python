@@ -111,15 +111,28 @@ export class TotpService {
       );
     }
 
-    // Check replay — the same TOTP code must not be used twice within its validity window
-    const client = this.redis.getClient();
-    const consumed = await client.set(
-      usedKey(userId, code),
-      '1',
-      'EX',
-      TOTP_REPLAY_WINDOW,
-      'NX',
-    );
+    // Replay protection — fail closed on Redis write errors
+    let consumed: string | null;
+    try {
+      consumed = await this.redis
+        .getClient()
+        .set(
+          usedKey(userId, code),
+          '1',
+          'EX',
+          TOTP_REPLAY_WINDOW,
+          'NX',
+        );
+    } catch (err) {
+      this.logger.error(
+        { event: 'TOTP_REPLAY_CHECK_FAILED', userId, error: String(err) },
+        'Redis replay-key write failed during TOTP confirm',
+      );
+      throw new HttpException(
+        { code: 'TOTP_SETUP_FAILED', message: 'Unable to complete 2FA setup. Please try again.' },
+        HttpStatus.SERVICE_UNAVAILABLE,
+      );
+    }
     if (consumed !== 'OK') {
       throw new HttpException(
         { code: 'TOTP_INVALID', message: 'TOTP code already used' },
@@ -212,15 +225,28 @@ export class TotpService {
       );
     }
 
-    // Check replay — the same TOTP code must not be used twice within its validity window
-    const client = this.redis.getClient();
-    const consumed = await client.set(
-      usedKey(userId, totpCode),
-      '1',
-      'EX',
-      TOTP_REPLAY_WINDOW,
-      'NX',
-    );
+    // Replay protection — fail closed on Redis write errors
+    let consumed: string | null;
+    try {
+      consumed = await this.redis
+        .getClient()
+        .set(
+          usedKey(userId, totpCode),
+          '1',
+          'EX',
+          TOTP_REPLAY_WINDOW,
+          'NX',
+        );
+    } catch (err) {
+      this.logger.error(
+        { event: 'TOTP_REPLAY_CHECK_FAILED', userId, error: String(err) },
+        'Redis replay-key write failed during TOTP disable',
+      );
+      throw new HttpException(
+        { code: 'TOTP_DISABLE_FAILED', message: 'Unable to disable 2FA. Please try again.' },
+        HttpStatus.SERVICE_UNAVAILABLE,
+      );
+    }
     if (consumed !== 'OK') {
       throw new HttpException(
         { code: 'INVALID_TOTP', message: 'TOTP code already used' },
@@ -305,26 +331,37 @@ export class TotpService {
     const secret = this.decrypt(user.totpSecret);
     let valid = false;
     try {
-      if (verifySync({ token: code, secret, strategy: 'totp' }).valid) {
+      if (verifySync({ token: code, secret, strategy: 'totp' }).valid)
         valid = true;
-      }
     } catch {
       // invalid code format — fall through to backup code check
     }
 
     if (valid) {
-      const consumed = await client.set(
-        usedKey(userId, code),
-        '1',
-        'EX',
-        TOTP_REPLAY_WINDOW,
-        'NX',
-      );
+      // Replay protection — fail closed on Redis write errors
+      let consumed: string | null;
+      try {
+        consumed = await client.set(
+          usedKey(userId, code),
+          '1',
+          'EX',
+          TOTP_REPLAY_WINDOW,
+          'NX',
+        );
+      } catch (err) {
+        this.logger.error(
+          { event: 'TOTP_REPLAY_CHECK_FAILED', userId, error: String(err) },
+          'Redis replay-key write failed during TOTP verify',
+        );
+        throw new HttpException(
+          { code: 'TOTP_VERIFY_FAILED', message: 'Unable to verify 2FA code. Please try again.' },
+          HttpStatus.SERVICE_UNAVAILABLE,
+        );
+      }
       if (consumed !== 'OK') {
         // Count replay attempts toward the per-account TOTP lockout
         const newCount = await client.incr(failKey(userId));
-        if (newCount === 1)
-          await client.expire(failKey(userId), TOTP_FAIL_WINDOW);
+        if (newCount === 1) await client.expire(failKey(userId), TOTP_FAIL_WINDOW);
         return false;
       }
     }

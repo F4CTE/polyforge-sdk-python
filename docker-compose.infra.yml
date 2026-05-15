@@ -471,6 +471,7 @@ services:
       FRONTEND_URL: ${FRONTEND_URL:-http://localhost}
       ADMIN_CORS_ORIGINS: ${ADMIN_CORS_ORIGINS:-https://localhost:8443,https://polyforge-lab:8443}
       SENTRY_DSN: ${SENTRY_DSN:-}
+      PRISMA_ADMIN_POOL_SIZE: "3"
       PRISMA_POOL_SIZE: "5"
       PORT: "3004"
       NODE_ENV: ${NODE_ENV:?NODE_ENV must be set}
@@ -552,6 +553,7 @@ services:
       COOKIE_SECURE: ${COOKIE_SECURE:-false}
       CORS_ORIGINS: ${CORS_ORIGINS:-http://polyforge-lab,http://polyforge-lab:8080,https://polyforge-lab,https://polyforge-lab:8443,https://localhost}
       SENTRY_DSN: ${SENTRY_DSN:-}
+      PRISMA_ADMIN_POOL_SIZE: "3"
       PRISMA_POOL_SIZE: "3"
       ADMIN_AUTH_SERVICE_PORT: "3003"
       NODE_ENV: ${NODE_ENV:?NODE_ENV must be set}
