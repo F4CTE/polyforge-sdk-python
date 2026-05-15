@@ -1711,16 +1711,24 @@ describe("StrategyRunner — concurrent tick serialization", () => {
     }
   });
 
-  it("schedules a bounded retry when SET NX fails in lone EVENT tick without pendingTick (POLA-5103 regression)", async () => {
+  it("skips lock-miss retry for already-handled EVENT tick (POLA-5142)", async () => {
     vi.useFakeTimers();
     try {
       // Single EVENT-mode tick: SET NX fails because another instance
       // holds the lock.  No concurrent event arrives, so pendingTick
       // remains false through the finally block.
-      // The finally block must schedule a bounded retry (200ms backoff)
-      // — without it, a stale/contended Redis lock drops the only
-      // evaluation trigger and the strategy remains idle until a fresh
-      // market event arrives.
+      //
+      // In a multi-instance deployment where every instance receives the
+      // same price event, the instance that won the lock is already
+      // evaluating the event.  Retrying here would cause the losing
+      // instance to re-evaluate the same data after the winner releases
+      // the lock, producing duplicate order intents and sub-strategy
+      // launches that defeat the mutex.
+      //
+      // The losing instance must NOT schedule a retry — instead it relies
+      // on the next external price event to trigger a fresh evaluation.
+      // The interval timer (HYBRID/TICK mode) or the pendingTick coalescing
+      // path still provide retry coverage for legitimate lock misses.
       let setCallCount = 0;
       const client = {
         lrange: vi.fn().mockResolvedValue([]),
@@ -1733,12 +1741,8 @@ describe("StrategyRunner — concurrent tick serialization", () => {
         expire: vi.fn().mockResolvedValue(1),
         set: vi.fn().mockImplementation(() => {
           setCallCount++;
-          if (setCallCount === 1) {
-            // First SET NX: lock held by another instance
-            return Promise.resolve(null);
-          }
-          // Retry SET NX: succeed
-          return Promise.resolve("OK");
+          // SET NX: lock held by another instance
+          return Promise.resolve(null);
         }),
         del: vi.fn().mockResolvedValue(1),
         eval: vi.fn().mockResolvedValue(1),
@@ -1753,21 +1757,25 @@ describe("StrategyRunner — concurrent tick serialization", () => {
       const tickPromise = runner.onPriceEvent("tok1", 0.5);
       await tickPromise;
 
-      // No evaluation yet — lock was not acquired.
+      // No evaluation — lock was not acquired.
       expect(state.get).not.toHaveBeenCalled();
 
-      // A retry timer should be scheduled (200ms backoff).
-      // Advance past the retry backoff so the timeout fires.
-      await vi.advanceTimersByTimeAsync(250);
+      // Advance well past the 200ms retry backoff window.
+      // No retry should have been scheduled — the winning instance
+      // handles the event.
+      await vi.advanceTimersByTimeAsync(500);
 
-      // The retry tick now re-acquires the lock (SET NX succeeds),
-      // passes the throttle gate (because scheduledFollowUp was set),
-      // and evaluates.
+      // Still no evaluation — the losing instance is silent.
+      expect(state.get).not.toHaveBeenCalled();
+
+      // SET should have been called exactly once (the original lock miss).
+      expect(client.set).toHaveBeenCalledTimes(1);
+
+      // tickInFlight should be reset so the next real event can proceed.
+      // Fire a fresh price event — this one should succeed.
+      client.set.mockResolvedValue("OK");
+      await runner.onPriceEvent("tok2", 0.55);
       expect(state.get).toHaveBeenCalledTimes(1);
-
-      // SET should have been called exactly twice: once for the
-      // original miss, once for the successful retry.
-      expect(client.set).toHaveBeenCalledTimes(2);
     } finally {
       vi.useRealTimers();
     }
