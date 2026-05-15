@@ -8,6 +8,7 @@ import {
   UseGuards,
   HttpCode,
   HttpStatus,
+  NotFoundException,
 } from "@nestjs/common";
 import { ApiTags, ApiBearerAuth } from "@nestjs/swagger";
 import { Throttle } from "@nestjs/throttler";
@@ -73,8 +74,17 @@ export class SportsController {
   }
 
   @Get("combos/:collectionTicker")
-  getComboCollection(@Param("collectionTicker") collectionTicker: string) {
-    return this.sports.listComboCollections({ page: 1, limit: 1 });
+  async getComboCollection(
+    @Param("collectionTicker") collectionTicker: string,
+  ) {
+    const collection = await this.sports.getComboCollection(collectionTicker);
+    if (!collection) {
+      throw new NotFoundException({
+        message: "Combo collection not found",
+        collectionTicker,
+      });
+    }
+    return collection;
   }
 
   @Post("combos/lookup")

@@ -1,4 +1,4 @@
-import { Injectable, Logger } from "@nestjs/common";
+import { Injectable, Logger, HttpException, HttpStatus } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { PrismaService } from "@polyforge/shared-db";
 import { RedisService } from "@polyforge/shared-redis";
@@ -336,6 +336,47 @@ export class SportsService {
     } catch (err) {
       this.logger.warn(`Live data proxy error: ${err}`);
       return { liveData: null };
+    }
+  }
+
+  async getComboCollection(collectionTicker: string): Promise<unknown | null> {
+    const cacheKey = `cache:sports:combos:${collectionTicker}`;
+    const cached = await this.redis.get(cacheKey);
+    if (cached) {
+      try {
+        return JSON.parse(cached);
+      } catch {
+        // no-op
+      }
+    }
+
+    try {
+      const res = await fetch(
+        `${this.orderServiceUrl}/internal/kalshi/sports/combos/${encodeURIComponent(collectionTicker)}`,
+        { signal: AbortSignal.timeout(10_000) },
+      );
+
+      if (!res.ok) {
+        this.logger.warn(`Combo collection proxy returned ${res.status}`);
+        if (res.status === 404) {
+          return null;
+        }
+        throw new HttpException(
+          "Upstream service error",
+          HttpStatus.BAD_GATEWAY,
+        );
+      }
+
+      const data = await res.json();
+      await this.redis.set(cacheKey, JSON.stringify(data), 60);
+      return data;
+    } catch (err) {
+      if (err instanceof HttpException) throw err;
+      this.logger.warn(`Combo collection proxy error: ${err}`);
+      throw new HttpException(
+        "Upstream service unavailable",
+        HttpStatus.BAD_GATEWAY,
+      );
     }
   }
 
