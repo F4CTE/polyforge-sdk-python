@@ -2254,22 +2254,20 @@ describe("StrategyRunner — concurrent tick serialization", () => {
     }
   });
 
-  it("releases tickInFlight before Redis unlock so events during slow unlock evaluate promptly (POLA-5150)", async () => {
+  it("retries EVENT-mode tick after pending Redis unlock completes so no event is silently dropped (POLA-5150)", async () => {
     vi.useFakeTimers();
     try {
-      // Start at 300ms so the min-tick throttle (MIN_TICK_MS=200)
-      // is clear on the first tick.
       vi.setSystemTime(300);
 
-      // Arrange: Redis eval for unlock is deferred so the unlock happens
-      // asynchronously, but tickInFlight is released immediately in the
-      // finally block so the tick-processing pipeline is not blocked
-      // on Redis latency.
+      // Defer the Redis unlock eval so the unlock promise stays
+      // pending — this creates the race window where tickInFlight is
+      // false but the Redis lock key still exists.
       let resolveUnlock!: (value: number) => void;
       let evalCallCount = 0;
-      const p = new Promise<number>((resolve) => {
+      const unlockPromise = new Promise<number>((resolve) => {
         resolveUnlock = resolve;
       });
+      let setCallCount = 0;
       const client = {
         lrange: vi.fn().mockResolvedValue([]),
         mget: vi
@@ -2279,53 +2277,60 @@ describe("StrategyRunner — concurrent tick serialization", () => {
           ]),
         incr: vi.fn().mockResolvedValue(1),
         expire: vi.fn().mockResolvedValue(1),
-        set: vi.fn().mockResolvedValue("OK"),
+        set: vi.fn().mockImplementation(() => {
+          setCallCount++;
+          // Call 1: Tick A acquires the lock → OK
+          // Call 2: Tick B's initial SET NX → null (key still held)
+          // Call 3: Tick B's retry after unlock completes → OK
+          if (setCallCount === 2) return Promise.resolve(null);
+          return Promise.resolve("OK");
+        }),
         del: vi.fn().mockResolvedValue(1),
         eval: vi.fn().mockImplementation((..._args: unknown[]) => {
           evalCallCount++;
-          // The first eval is the lock-refresh interval (never fires
-          // with fake timers), but to be safe treat the unlock eval
-          // call (any eval after the first) as the deferred unlock.
           if (evalCallCount === 1) {
-            return p;
+            // Tick A's unlock — deferred so the key outlives
+            // tickInFlight release and forces SET NX failure.
+            return unlockPromise;
           }
+          // Tick B's retry unlock (after the retry succeeds)
           return Promise.resolve(1);
         }),
       };
       const redis = makeRedis({ getClient: vi.fn().mockReturnValue(client) });
       const state = makeState();
-
       state.get.mockResolvedValue({ ...DEFAULT_STATE });
 
       const runner = makeRunner({ execMode: "EVENT", state, redis });
 
-      // Tick A: acquires lock, evaluates, enters finally — tickInFlight
-      // is released immediately (before Redis unlock), then the unlock
-      // eval fires asynchronously (fire-and-forget).
+      // Tick A: acquires lock, evaluates, enters finally —
+      // tickInFlight is released immediately and the unlock eval
+      // is fire-and-forget (still pending).
       const tickAPromise = runner.onPriceEvent("tok1", 0.5);
-
-      // Let async work (state.get, etc.) complete.
       await vi.advanceTimersByTimeAsync(0);
 
-      // Tick A has completed evaluation and released tickInFlight.
-      // state.get was called exactly once by Tick A's evaluate().
+      // Tick A completed its evaluation.
       expect(state.get).toHaveBeenCalledTimes(1);
 
-      // Advance past the min-tick throttle (200ms).
+      // Advance past the min-tick throttle.
       vi.setSystemTime(550);
       await vi.advanceTimersByTimeAsync(0);
 
-      // Tick B: price event arrives. tickInFlight is already false,
-      // so Tick B can enter the pipeline immediately — no need to
-      // wait for the slow Redis unlock.
+      // Tick B: price event arrives. tickInFlight is false,
+      // but SET NX returns null because the lock key still exists.
+      // pendingRedisUnlock is non-null → chains a retry on unlock.
       await runner.onPriceEvent("tok1", 0.55);
 
-      // Tick B should have evaluated immediately because tickInFlight
-      // is no longer held up by the deferred Redis unlock.
+      // Tick B did NOT evaluate — SET NX failed.
+      expect(state.get).toHaveBeenCalledTimes(1);
+
+      // Resolve the deferred unlock → the chained retry fires.
+      resolveUnlock(1);
+      await vi.advanceTimersByTimeAsync(0);
+
+      // Tick B's retry acquired the lock and evaluated.
       expect(state.get).toHaveBeenCalledTimes(2);
 
-      // Resolve the deferred unlock so the test can clean up.
-      resolveUnlock(1);
       await tickAPromise;
     } finally {
       vi.useRealTimers();

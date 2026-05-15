@@ -88,6 +88,15 @@ export class StrategyRunner {
    *  a newer valid tick. */
   private activeLockToken: string | null = null;
 
+  /** Pending Redis unlock promise from the most recent tick.
+   *  Set in the finally block when a tick acquired the lock and the
+   *  fire-and-forget unlock is in flight.  Cleared to null on completion.
+   *
+   *  EVENT-mode lock-miss paths check this so they know whether a failed
+   *  SET NX is because our own unlock hasn't completed yet (race window)
+   *  vs. another instance holding the lock (multi-instance dedup). */
+  private pendingRedisUnlock: Promise<unknown> | null = null;
+
   /** Tracks child strategy IDs launched by RUN_STRATEGY action blocks */
   readonly childStrategies: Set<string> = new Set();
   /** Maps child strategy IDs to their sub-strategy mode */
@@ -469,21 +478,40 @@ export class StrategyRunner {
         }
       } else if (
         !lockAcquired &&
-        this.status === "RUNNING" &&
-        this.execMode === "HYBRID"
+        this.status === "RUNNING"
       ) {
         // Lock acquisition failed without any pending coalesced tick.
-        // Skip this retry for EVENT mode: in a multi-instance deployment
-        // where every instance receives the same price event, the instance
-        // that won the lock is already evaluating the event.  Retrying
-        // here would cause the losing instance to re-evaluate the same
-        // data after the winner releases the lock, producing duplicate
-        // order intents and sub-strategy launches that defeat the mutex.
         //
-        // HYBRID mode is kept because the interval timer still provides
-        // natural retry cadence, so the extra backoff merely narrows the
-        // gap between lock-miss and the next scheduled interval tick.
-        if (this.followUpTimer === null) {
+        // HYBRID mode schedules a 200 ms retry so the strategy can
+        // re-evaluate before the next interval tick fires.
+        //
+        // EVENT mode is deliberately NOT given a blanket retry: in a
+        // multi-instance deployment where every instance receives the
+        // same price event, the instance that won the lock is already
+        // evaluating the event.  A losing-instance retry would
+        // re-evaluate the same data after the winner releases the lock,
+        // producing duplicate order intents and sub-strategy launches.
+        //
+        // However, the early tickInFlight release before the Redis
+        // unlock creates a local race window: tickInFlight is false, a
+        // new EVENT tick enters, but SET NX fails because the previous
+        // tick's lock key hasn't been deleted yet.  In that case our own
+        // pendingRedisUnlock is non-null and we MUST retry once the
+        // unlock completes — otherwise the event is silently dropped.
+        if (this.pendingRedisUnlock) {
+          // Bypass the min-tick throttle when the retry fires so the
+          // evaluation is not blocked by lastTickMs having been advanced
+          // by the failed tick itself.
+          this.scheduledFollowUp = true;
+          this.pendingRedisUnlock.finally(() => {
+            if (this.status === "RUNNING") {
+              void this.tick();
+            }
+          });
+        } else if (
+          this.execMode === "HYBRID" &&
+          this.followUpTimer === null
+        ) {
           this.scheduledFollowUp = true;
           this.followUpTimer = setTimeout(() => {
             this.followUpTimer = null;
@@ -496,16 +524,22 @@ export class StrategyRunner {
       // the tick-processing pipeline on Redis unlock latency.  The lock
       // carries a 10s TTL and self-expires if this no-await call fails
       // or is delayed.
+      //
+      // The pending promise is exposed so EVENT-mode lock-miss paths can
+      // distinguish a failed SET NX caused by our own unfinished unlock
+      // (race window — must retry) from a failed SET NX caused by another
+      // instance holding the lock (multi-instance dedup — must not retry).
       if (lockAcquired) {
         const redisClient = this.redis.getClient();
         const lockKey = `lock:tick:${this.strategyId}`;
-        redisClient
-          .eval(
-            "if redis.call('GET', KEYS[1]) == ARGV[1] then return redis.call('DEL', KEYS[1]) else return 0 end",
-            1,
-            lockKey,
-            lockToken,
-          )
+        const unlockPromise = redisClient.eval(
+          "if redis.call('GET', KEYS[1]) == ARGV[1] then return redis.call('DEL', KEYS[1]) else return 0 end",
+          1,
+          lockKey,
+          lockToken,
+        );
+        this.pendingRedisUnlock = unlockPromise;
+        unlockPromise
           .then((result) => {
             if (result !== 1) {
               this.logger.warn(
@@ -517,6 +551,9 @@ export class StrategyRunner {
             this.logger.warn(
               `Failed to release lock for ${this.strategyId}: ${String(err)} — lock will expire naturally in 10s`,
             );
+          })
+          .finally(() => {
+            this.pendingRedisUnlock = null;
           });
       }
     }
