@@ -1214,10 +1214,9 @@ describe("StrategyRunner — config fallback for token discovery and prefetch", 
 
     await runner.onPriceEvent("tok-config", 0.5);
     // evaluate() uses the in-memory prices map from getStateAndPrices
-    expect(state.getStateAndPrices).toHaveBeenCalledWith(
-      "strat-test",
-      ["tok-config"],
-    );
+    expect(state.getStateAndPrices).toHaveBeenCalledWith("strat-test", [
+      "tok-config",
+    ]);
   });
 
   it("detects stale data for config-only tokenId", async () => {
