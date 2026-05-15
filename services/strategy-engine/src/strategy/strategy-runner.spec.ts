@@ -2021,6 +2021,98 @@ describe("StrategyRunner — concurrent tick serialization", () => {
     }
   });
 
+  it("coalesces an EVENT-mode event arriving during async Redis unlock into a follow-up tick (POLA-5088 regression)", async () => {
+    // Scenario: Tick A finishes evaluate(), enters finally block, and starts the
+    // Redis lock-release eval (async).  While that eval is pending, a new EVENT
+    // price event arrives.  Because the fix holds tickInFlight until AFTER the
+    // unlock completes, Tick B sees tickInFlight=true, sets pendingTick, and
+    // a coalesced follow-up is scheduled once unlock resolves.
+    //
+    // Before the fix (tickInFlight=false before unlock), Tick B could enter,
+    // fail SET NX, consume pendingTick without scheduling a follow-up, and
+    // silently drop the price event.
+
+    // Use fake timers to suppress the 5s lock-refresh setInterval
+    vi.useFakeTimers();
+    try {
+      let resolveUnlock!: (value: unknown) => void;
+      let evalCallCount = 0;
+
+      const client = {
+        lrange: vi.fn().mockResolvedValue([]),
+        mget: vi
+          .fn()
+          .mockResolvedValue([
+            JSON.stringify({ price: 0.5, timestamp: Date.now() }),
+          ]),
+        incr: vi.fn().mockResolvedValue(1),
+        expire: vi.fn().mockResolvedValue(1),
+        set: vi.fn().mockResolvedValue("OK"),
+        del: vi.fn().mockResolvedValue(1),
+        eval: vi.fn().mockImplementation(() => {
+          evalCallCount++;
+          // The first eval is the lock-release Lua DEL script in finally.
+          // Defer it so the unlock is "in progress".
+          if (evalCallCount === 1) {
+            return new Promise((resolve) => {
+              resolveUnlock = resolve;
+            });
+          }
+          // Subsequent evals (e.g., lock-release for follow-up tick) resolve immediately.
+          return Promise.resolve(1);
+        }),
+      };
+      const redis = makeRedis({ getClient: vi.fn().mockReturnValue(client) });
+      const state = makeState();
+
+      // Fast evaluate(): resolve state instantly so the tick reaches the
+      // finally block and hits the deferred unlock eval without any lock
+      // refresh firing in between.
+      state.get.mockResolvedValue({ ...DEFAULT_STATE });
+
+      const runner = makeRunner({ execMode: "EVENT", state, redis });
+
+      // Tick A: enters ticket(), acquires lock, evaluates, starts unlock eval (deferred).
+      const tickAPromise = runner.onPriceEvent("tok1", 0.5);
+
+      // Advance a tiny bit so the microtask schedule runs through evaluate()
+      // into the finally block, hitting the deferred eval.
+      await vi.advanceTimersByTimeAsync(10);
+
+      // Assert: unlock eval has been called (tick A is now blocking on unlock).
+      expect(evalCallCount).toBe(1);
+      // tickInFlight is still true at this point (unlock hasn't released it yet).
+      // state.get was called exactly once by Tick A's evaluate().
+      expect(state.get).toHaveBeenCalledTimes(1);
+
+      // Advance past the min-tick throttle (200ms) so Tick B is not
+      // silently dropped by the burst guard.
+      await vi.advanceTimersByTimeAsync(250);
+
+      // Tick B: price event arrives while unlock is still pending.
+      // tickInFlight is true → sets pendingTick and returns immediately.
+      const tickBPromise = runner.onPriceEvent("tok1", 0.55);
+      await tickBPromise;
+
+      // Tick B should NOT have triggered a new evaluation yet.
+      expect(state.get).toHaveBeenCalledTimes(1);
+
+      // Now resolve the unlock eval — Tick A's finally block resumes.
+      resolveUnlock(1);
+      await tickAPromise;
+
+      // The finally block now sees tickInFlight=false (just released),
+      // pendingTick=true, lockAcquired=true — EVENT mode schedules an
+      // immediate coalesced follow-up via scheduledFollowUp.
+      await vi.advanceTimersByTimeAsync(10);
+
+      // Follow-up tick should have evaluated → state.get called a second time.
+      expect(state.get).toHaveBeenCalledTimes(2);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it("coalesces TICK mode ticks into a delayed follow-up after long evaluation", async () => {
     vi.useFakeTimers();
     try {
