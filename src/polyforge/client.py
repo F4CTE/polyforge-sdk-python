@@ -3328,6 +3328,9 @@ class PolyforgeClient:
         Args:
             format: ``"json"`` (default) returns a :class:`PersonalDataExport` object.
                     ``"csv"`` returns the raw CSV text.
+
+        Raises:
+            ValueError: If *format* is not ``"json"`` or ``"csv"``.
         """
         if format not in ("json", "csv"):
             raise ValueError(f"format must be 'json' or 'csv', got {format!r}")
@@ -6438,6 +6441,9 @@ class AsyncPolyforgeClient:
         Args:
             format: ``"json"`` (default) returns a :class:`PersonalDataExport` object.
                     ``"csv"`` returns the raw CSV text.
+
+        Raises:
+            ValueError: If *format* is not ``"json"`` or ``"csv"``.
         """
         if format not in ("json", "csv"):
             raise ValueError(f"format must be 'json' or 'csv', got {format!r}")
