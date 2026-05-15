@@ -84,6 +84,7 @@ export class EventsConsumerService implements OnModuleInit, OnModuleDestroy {
         const event = entry.fields;
         const notifType = toNotifType(event.type ?? "", event);
         if (notifType) {
+          event._streamEntryId = entry.id;
           await this.notification.handle(notifType, event);
         }
       },
@@ -140,6 +141,7 @@ export class EventsConsumerService implements OnModuleInit, OnModuleDestroy {
             }
 
             try {
+              event._streamEntryId = id;
               await this.notification.handle(notifType, event);
               await client.xack(STREAM, GROUP, id);
             } catch (err) {

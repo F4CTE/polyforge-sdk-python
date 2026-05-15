@@ -95,6 +95,206 @@ describe('UsersService', () => {
     });
   });
 
+  // ── findByEmailCanonical ───────────────────────────────────────────────────
+
+  describe('findByEmailCanonical', () => {
+    it('returns the indexed hit immediately when input email matches exactly', async () => {
+      const user = userFactory({ email: 'alice@example.com' });
+      db.user.findUnique.mockResolvedValue(user as any);
+
+      const result = await service.findByEmailCanonical('alice@example.com');
+
+      expect(result).toEqual(user);
+      expect(db.user.findUnique).toHaveBeenCalledWith({
+        where: { email: 'alice@example.com' },
+      });
+      expect(db.user.findMany).not.toHaveBeenCalled();
+    });
+
+    it('returns canonical hit immediately when stored email is already normalized', async () => {
+      const user = userFactory({ email: 'alice@example.com' });
+      db.user.findUnique.mockResolvedValue(user as any);
+      // Input has whitespace and case differences → collision scan runs
+      db.user.findMany.mockResolvedValue([user as any]);
+
+      const result = await service.findByEmailCanonical(' Alice@Example.COM ');
+
+      expect(result).toEqual(user);
+      expect(db.user.findUnique).toHaveBeenCalledWith({
+        where: { email: 'alice@example.com' },
+      });
+      // Collision scan runs because input differs from normalized form
+      expect(db.user.findMany).toHaveBeenCalled();
+    });
+
+    it('falls back to case-insensitive search when indexed lookup misses', async () => {
+      const user = userFactory({ email: 'Alice@Example.COM' });
+      db.user.findUnique.mockResolvedValue(null);
+      db.user.findMany.mockResolvedValue([user as any]);
+      db.user.update.mockResolvedValue({} as any);
+
+      const result = await service.findByEmailCanonical('alice@example.com');
+
+      expect(result).toEqual(user);
+      expect(db.user.findMany).toHaveBeenCalledWith({
+        where: { email: { equals: 'alice@example.com', mode: 'insensitive' } },
+      });
+      expect(db.user.update).toHaveBeenCalledWith({
+        where: { id: user.id },
+        data: { email: 'alice@example.com' },
+      });
+    });
+
+    it('returns null when neither indexed nor insensitive lookup finds a match', async () => {
+      db.user.findUnique.mockResolvedValue(null);
+      db.user.findMany.mockResolvedValue([]);
+
+      const result = await service.findByEmailCanonical('ghost@example.com');
+
+      expect(result).toBeNull();
+    });
+
+    it('does not attempt normalization when the insensitive match is already lowercase', async () => {
+      const user = userFactory({ email: 'alice@example.com' });
+      db.user.findUnique.mockResolvedValue(null);
+      db.user.findMany.mockResolvedValue([user as any]);
+
+      const result = await service.findByEmailCanonical('alice@example.com');
+
+      expect(result).toEqual(user);
+      expect(db.user.update).not.toHaveBeenCalled();
+    });
+
+    it('skips a soft-deleted canonical hit and returns an active case-variant account', async () => {
+      const deleted = userFactory({
+        id: 'id-del',
+        email: 'alice@example.com',
+        deleted: true,
+      });
+      const active = userFactory({ id: 'id-act', email: 'ALICE@example.com' });
+      db.user.findUnique.mockResolvedValue(deleted as any);
+      db.user.findMany.mockResolvedValue([deleted as any, active as any]);
+
+      const result = await service.findByEmailCanonical('alice@example.com');
+
+      expect(result).toEqual(active);
+      expect(db.user.findMany).toHaveBeenCalled();
+      expect(db.user.update).not.toHaveBeenCalled();
+    });
+
+    it('does not auto-normalize when a soft-deleted row already owns the canonical email', async () => {
+      const deleted = userFactory({
+        id: 'id-del',
+        email: 'alice@example.com',
+        deleted: true,
+      });
+      const active = userFactory({ id: 'id-act', email: 'Alice@example.com' });
+      db.user.findUnique.mockResolvedValue(deleted as any);
+      db.user.findMany.mockResolvedValue([deleted as any, active as any]);
+
+      const result = await service.findByEmailCanonical('alice@example.com');
+
+      expect(result).toEqual(active);
+      expect(db.user.update).not.toHaveBeenCalled();
+    });
+
+    it('returns null when only a soft-deleted account matches and no active alternative exists', async () => {
+      const deleted = userFactory({
+        id: 'id-del',
+        email: 'alice@example.com',
+        deleted: true,
+      });
+      db.user.findUnique.mockResolvedValue(deleted as any);
+      db.user.findMany.mockResolvedValue([deleted as any]);
+
+      const result = await service.findByEmailCanonical('alice@example.com');
+
+      expect(result).toBeNull();
+    });
+
+    it('filters deleted rows from collision results and returns the exact match', async () => {
+      const exact = userFactory({ id: 'id-match', email: 'alice@example.com' });
+      const deleted = userFactory({
+        id: 'id-del',
+        email: 'ALICE@example.com',
+        deleted: true,
+      });
+      db.user.findUnique.mockResolvedValue(null);
+      db.user.findMany.mockResolvedValue([deleted as any, exact as any]);
+
+      const result = await service.findByEmailCanonical('alice@example.com');
+
+      expect(result).toEqual(exact);
+      expect(db.user.update).not.toHaveBeenCalled();
+    });
+
+    it('returns the exact match and skips normalization when case-colliding accounts exist', async () => {
+      const exact = userFactory({ id: 'id-match', email: 'alice@example.com' });
+      const other = userFactory({ id: 'id-other', email: 'ALICE@example.com' });
+      db.user.findUnique.mockResolvedValue(null);
+      db.user.findMany.mockResolvedValue([other as any, exact as any]);
+
+      const result = await service.findByEmailCanonical('alice@example.com');
+
+      expect(result).toEqual(exact);
+      expect(db.user.update).not.toHaveBeenCalled();
+    });
+
+    it('returns the exact case match when findUnique hits but a case-colliding account exists', async () => {
+      const lowercase = userFactory({
+        id: 'id-low',
+        email: 'alice@example.com',
+      });
+      const mixed = userFactory({ id: 'id-mix', email: 'Alice@Example.com' });
+      // findUnique on normalized email finds the lowercase account,
+      // but the input was mixed-case — the collision scan must
+      // detect the mixed-case sibling and return it.
+      // The collision-path return refetches by exact.id to get the
+      // full user row (not just the { id, email, deleted } select).
+      db.user.findUnique.mockImplementation(
+        ((args: any) => {
+          if (args?.where?.id) return Promise.resolve(mixed as any);
+          return Promise.resolve(lowercase as any);
+        }) as any,
+      );
+      db.user.findMany.mockResolvedValue([lowercase as any, mixed as any]);
+
+      const result = await service.findByEmailCanonical('Alice@Example.com');
+
+      expect(result).toEqual(mixed);
+      expect(db.user.findMany).toHaveBeenCalled();
+    });
+
+    it('returns null when findUnique hits but no exact match exists among case-colliding accounts', async () => {
+      const lowercase = userFactory({
+        id: 'id-low',
+        email: 'alice@example.com',
+      });
+      const other = userFactory({ id: 'id-other', email: 'ALICE@example.com' });
+      db.user.findUnique.mockResolvedValue(lowercase as any);
+      db.user.findMany.mockResolvedValue([lowercase as any, other as any]);
+
+      const result = await service.findByEmailCanonical('alice@example.com');
+
+      // Input matches the normalized email but normalize('alice@example.com') === 'alice@example.com'
+      // so the input-equals-normalized check at line 59 is false → no collision scan needed,
+      // and the canonical hit is returned.
+      expect(result).toEqual(lowercase);
+      expect(db.user.findMany).not.toHaveBeenCalled();
+    });
+
+    it('returns null when case-colliding accounts exist and no exact match is present', async () => {
+      const a = userFactory({ id: 'id-a', email: 'Alice@Example.com' });
+      const b = userFactory({ id: 'id-b', email: 'ALICE@EXAMPLE.COM' });
+      db.user.findUnique.mockResolvedValue(null);
+      db.user.findMany.mockResolvedValue([a as any, b as any]);
+
+      const result = await service.findByEmailCanonical('alice@example.com');
+
+      expect(result).toBeNull();
+    });
+  });
+
   // ── findById ─────────────────────────────────────────────────────────────
 
   describe('findById', () => {
@@ -117,7 +317,8 @@ describe('UsersService', () => {
   describe('create', () => {
     it('creates a user and returns the record', async () => {
       const user = userFactory();
-      db.user.findUnique.mockResolvedValue(null); // no duplicate
+      db.user.findFirst.mockResolvedValue(null); // email check → findFirst
+      db.user.findUnique.mockResolvedValue(null); // username check
       db.user.create.mockResolvedValue(user as any);
 
       const result = await service.create({
@@ -132,6 +333,7 @@ describe('UsersService', () => {
 
     it('hashes the password before storing', async () => {
       const user = userFactory();
+      db.user.findFirst.mockResolvedValue(null);
       db.user.findUnique.mockResolvedValue(null);
       db.user.create.mockResolvedValue(user as any);
 
@@ -149,8 +351,7 @@ describe('UsersService', () => {
 
     it('throws EMAIL_TAKEN (409) when email already exists', async () => {
       const existing = userFactory();
-      // First findUnique (email check) returns a user
-      db.user.findUnique.mockResolvedValueOnce(existing as any);
+      db.user.findFirst.mockResolvedValueOnce(existing as any);
 
       await expect(
         service.create({
@@ -166,10 +367,8 @@ describe('UsersService', () => {
 
     it('throws USERNAME_TAKEN (409) when username already exists', async () => {
       const existing = userFactory();
-      // Email check → null, username check → existing
-      db.user.findUnique
-        .mockResolvedValueOnce(null)
-        .mockResolvedValueOnce(existing as any);
+      db.user.findFirst.mockResolvedValueOnce(null);
+      db.user.findUnique.mockResolvedValueOnce(existing as any);
 
       await expect(
         service.create({

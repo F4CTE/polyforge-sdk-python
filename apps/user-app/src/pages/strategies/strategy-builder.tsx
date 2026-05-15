@@ -896,7 +896,7 @@ function CanvasSearchBar({ open, onClose }: CanvasSearchBarProps) {
         type="button"
         onClick={() => { setHighlightedBlockId(null); onClose(); }}
         aria-label="Close search"
-        className="p-0.5 rounded hover:bg-overlay text-tertiary hover:text-primary transition-colors"
+        className="p-0.5 rounded-sm hover:bg-overlay text-tertiary hover:text-primary transition-colors"
       >
         <X className="size-3" />
       </button>
@@ -1289,9 +1289,9 @@ export function Component() {
                 <div className="flex items-center gap-2">
                   <span className="text-body-md font-semibold text-primary group-hover:text-accent-text transition-colors">{t.name}</span>
                   {t.trigger && (
-                    <span className="text-caption px-2 py-1 rounded bg-surface-elevated border border-default text-tertiary">{t.trigger}</span>
+                    <span className="text-caption px-2 py-1 rounded-sm bg-surface-elevated border border-default text-tertiary">{t.trigger}</span>
                   )}
-                  <span className={`text-caption px-2 py-1 rounded border ${
+                  <span className={`text-caption px-2 py-1 rounded-sm border ${
                     t.difficulty === 'Beginner' ? 'bg-gain/10 border-gain/30 text-gain' :
                     t.difficulty === 'Intermediate' ? 'bg-warning/10 border-warning/30 text-warning' :
                     'bg-loss/10 border-loss/30 text-loss'
@@ -1693,21 +1693,21 @@ export function Component() {
                 <div className="grid grid-cols-2 gap-2 text-label">
                   <div className="bg-surface rounded-pf p-2">
                     <span className="text-secondary block">P&L</span>
-                    <span className={`font-mono font-semibold ${parseFloat(String(quickResult.totalPnl ?? '0')) >= 0 ? 'text-gain' : 'text-loss'}`}>
+                    <span className={`font-mono tabular-nums font-semibold ${parseFloat(String(quickResult.totalPnl ?? '0')) >= 0 ? 'text-gain' : 'text-loss'}`}>
                       {parseFloat(String(quickResult.totalPnl ?? '0')) >= 0 ? '+' : ''}{String(quickResult.totalPnl)}
                     </span>
                   </div>
                   <div className="bg-surface rounded-pf p-2">
                     <span className="text-secondary block">Win Rate</span>
-                    <span className="font-mono font-semibold text-primary">{String(quickResult.winRate)}%</span>
+                    <span className="font-mono tabular-nums font-semibold text-primary">{String(quickResult.winRate)}%</span>
                   </div>
                   <div className="bg-surface rounded-pf p-2">
                     <span className="text-secondary block">Orders</span>
-                    <span className="font-mono font-semibold text-primary">{String(quickResult.totalOrders)}</span>
+                    <span className="font-mono tabular-nums font-semibold text-primary">{String(quickResult.totalOrders)}</span>
                   </div>
                   <div className="bg-surface rounded-pf p-2">
                     <span className="text-secondary block">Filled</span>
-                    <span className="font-mono font-semibold text-primary">{String(quickResult.filledOrders)}</span>
+                    <span className="font-mono tabular-nums font-semibold text-primary">{String(quickResult.filledOrders)}</span>
                   </div>
                 </div>
               </div>
@@ -1727,7 +1727,7 @@ export function Component() {
                 >
                   <Target className="size-4 text-accent-text" aria-hidden="true" />
                   Pinned Market
-                  {pinnedMarket && <span className="ml-auto text-caption bg-accent-subtle text-accent-text px-2 py-1 rounded-full truncate max-w-[90px]">{pinnedMarket.title.slice(0, 20)}{pinnedMarket.title.length > 20 ? '…' : ''}</span>}
+                  {pinnedMarket && <span className="ml-auto text-caption bg-accent-subtle text-accent-text px-2 py-1 rounded-full truncate max-w-24">{pinnedMarket.title.slice(0, 20)}{pinnedMarket.title.length > 20 ? '…' : ''}</span>}
                 </Button>
                 {marketPickerOpen && (
                   <div className="px-2 pb-2 space-y-2">

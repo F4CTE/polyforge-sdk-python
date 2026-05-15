@@ -1,27 +1,18 @@
-type MathJsModule = {
-  create: (
-    factories: unknown,
-    config?: Record<string, unknown>,
-  ) => {
-    import: (
-      functions: Record<string, (...args: unknown[]) => unknown>,
-      options: { override: boolean },
-    ) => void;
-    parse: (expression: string) => unknown;
-  };
-  all: unknown;
+import type { MathJsInstance, FactoryFunctionMap } from "mathjs" with {
+  "resolution-mode": "import",
 };
 
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const { create, all } = require("mathjs") as MathJsModule;
+interface MathJsModule {
+  create: (factories: FactoryFunctionMap) => MathJsInstance;
+  all: FactoryFunctionMap;
+}
 
-/** Maximum absolute exponent value for pow() and ^ operator */
+/* eslint-disable @typescript-eslint/no-require-imports */
+const mathjsModule = require("mathjs") as MathJsModule;
+/* eslint-enable @typescript-eslint/no-require-imports */
+
 const MAX_EXPONENT = 1000;
-
-/** Maximum absolute base value for pow() and ^ operator */
 const MAX_POW_BASE = 1e12;
-
-/** Maximum input for exp() before overflow to Infinity (~709 → 8.2e307) */
 const MAX_EXP_INPUT = 709;
 
 /**
@@ -33,7 +24,7 @@ const MAX_EXP_INPUT = 709;
  * pow() and exp() are overridden with bounded versions to prevent
  * CPU exhaustion and Infinity results from unreasonably large arguments.
  */
-const limitedMath = create(all);
+const limitedMath: MathJsInstance = mathjsModule.create(mathjsModule.all);
 
 limitedMath.import(
   {

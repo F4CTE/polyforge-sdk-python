@@ -123,7 +123,7 @@ test("CI includes a secret-scanning gate and a matching pre-commit hook", () => 
   );
   assert.ok(
     jobBlock(workflow, "build").includes(
-      "needs: [secret-scan, lint, typecheck, test, nginx-security, docker-compose-security]",
+      "needs: [secret-scan, semgrep, lint, typecheck, test, nginx-security, docker-compose-security]",
     ),
   );
   assert.ok(

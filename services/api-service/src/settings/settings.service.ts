@@ -703,19 +703,14 @@ export class SettingsService {
       }),
     ]);
 
-    const [
-      maxActive,
-      maxMonthly,
-      maxPosition,
-      maxConcurrent,
-      maxListings,
-    ] = await Promise.all([
-      this.betaLimits.getLimit("maxActiveStrategies"),
-      this.betaLimits.getLimit("maxMonthlyVolumeUsdc"),
-      this.betaLimits.getLimit("maxPositionSizeUsdc"),
-      this.betaLimits.getLimit("maxConcurrentBacktests"),
-      this.betaLimits.getLimit("maxMarketplaceListings"),
-    ]);
+    const [maxActive, maxMonthly, maxPosition, maxConcurrent, maxListings] =
+      await Promise.all([
+        this.betaLimits.getLimit("maxActiveStrategies"),
+        this.betaLimits.getLimit("maxMonthlyVolumeUsdc"),
+        this.betaLimits.getLimit("maxPositionSizeUsdc"),
+        this.betaLimits.getLimit("maxConcurrentBacktests"),
+        this.betaLimits.getLimit("maxMarketplaceListings"),
+      ]);
 
     return {
       strategies: {

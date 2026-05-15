@@ -285,7 +285,7 @@ export function Component() {
                         className="sr-only"
                       />
                       <span className="font-semibold">{t.outcome.toUpperCase()}</span>
-                      <span className="text-label font-mono opacity-70">
+                      <span className="text-label font-mono tabular-nums opacity-70">
                         {(parseFloat(t.price) * 100).toFixed(0)}¢
                       </span>
                     </label>
@@ -320,7 +320,7 @@ export function Component() {
                   step="0.01"
                   value={price}
                   onChange={e => setPrice(e.target.value)}
-                  className="w-full bg-elevated border border-default rounded-sm px-3 py-2 text-body-md text-primary font-mono focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent/50"
+                  className="w-full bg-elevated border border-default rounded-sm px-3 py-2 text-body-md text-primary font-mono tabular-nums focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent/50"
                 />
               </div>
             </div>
@@ -331,7 +331,7 @@ export function Component() {
                 type="checkbox"
                 checked={persistent}
                 onChange={e => setPersistent(e.target.checked)}
-                className="w-4 h-4 rounded border-default accent-accent"
+                className="w-4 h-4 rounded-xs border-default accent-accent"
               />
               <span className="text-body-sm text-secondary">Keep alerting after trigger</span>
             </label>
@@ -395,7 +395,7 @@ export function Component() {
                     </p>
                     <p className="text-label text-tertiary mt-1">
                       {alert.direction === 'above' ? 'Rises above' : 'Falls below'}{' '}
-                      <span className="font-mono font-semibold text-primary">{priceCents}</span>
+                      <span className="font-mono tabular-nums font-semibold text-primary">{priceCents}</span>
                       {' · '}{created}
                     </p>
                   </div>
@@ -403,16 +403,16 @@ export function Component() {
                   {/* Badges */}
                   <div className="flex items-center gap-2 shrink-0">
                     {alert.triggered ? (
-                      <span className="text-caption px-2 py-1 rounded border border-warning/30 bg-warning/10 text-warning font-semibold">
+                      <span className="text-caption px-2 py-1 rounded-sm border border-warning/30 bg-warning/10 text-warning font-semibold">
                         Triggered
                       </span>
                     ) : (
-                      <span className="text-caption px-2 py-1 rounded border border-accent/30 bg-accent/10 text-accent-text font-semibold">
+                      <span className="text-caption px-2 py-1 rounded-sm border border-accent/30 bg-accent/10 text-accent-text font-semibold">
                         Active
                       </span>
                     )}
                     {alert.persistent && (
-                      <span className="text-caption px-2 py-1 rounded border border-default bg-elevated text-tertiary font-medium">
+                      <span className="text-caption px-2 py-1 rounded-sm border border-default bg-elevated text-tertiary font-medium">
                         Persistent
                       </span>
                     )}

@@ -1,6 +1,9 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { ConfigService } from "@nestjs/config";
-import { ClobClientService } from "../clob-client/clob-client.service";
+import {
+  ClobClientService,
+  PriceHistoryInterval,
+} from "../clob-client/clob-client.service";
 import { PolymarketAdapter } from "./polymarket-adapter";
 import type { VenueOrderRequest } from "@polyforge/shared-types";
 
@@ -131,9 +134,64 @@ describe("PolymarketAdapter", () => {
         history: [{ t: 1_700_000_000, p: "0.50" }],
       });
       const candles = await adapter.getPriceHistory("tok-1", "1h");
+      expect(clob.getPricesHistory).toHaveBeenCalledWith(
+        "tok-1",
+        PriceHistoryInterval.ONE_HOUR,
+        undefined,
+      );
       expect(candles).toHaveLength(1);
       expect(candles[0].bucket).toBeDefined();
       expect(candles[0].close).toBe("0.50");
+    });
+
+    it("maps 1m resolution to max interval with 1 min fidelity", async () => {
+      vi.spyOn(clob, "getPricesHistory").mockResolvedValue({ history: [] });
+      await adapter.getPriceHistory("tok-1", "1m");
+      expect(clob.getPricesHistory).toHaveBeenCalledWith(
+        "tok-1",
+        PriceHistoryInterval.MAX,
+        1,
+      );
+    });
+
+    it("maps 5m resolution to max interval with 5 min fidelity", async () => {
+      vi.spyOn(clob, "getPricesHistory").mockResolvedValue({ history: [] });
+      await adapter.getPriceHistory("tok-1", "5m");
+      expect(clob.getPricesHistory).toHaveBeenCalledWith(
+        "tok-1",
+        PriceHistoryInterval.MAX,
+        5,
+      );
+    });
+
+    it("maps 15m resolution to max interval with 15 min fidelity", async () => {
+      vi.spyOn(clob, "getPricesHistory").mockResolvedValue({ history: [] });
+      await adapter.getPriceHistory("tok-1", "15m");
+      expect(clob.getPricesHistory).toHaveBeenCalledWith(
+        "tok-1",
+        PriceHistoryInterval.MAX,
+        15,
+      );
+    });
+
+    it("maps 1h resolution to 1h interval without fidelity", async () => {
+      vi.spyOn(clob, "getPricesHistory").mockResolvedValue({ history: [] });
+      await adapter.getPriceHistory("tok-1", "1h");
+      expect(clob.getPricesHistory).toHaveBeenCalledWith(
+        "tok-1",
+        PriceHistoryInterval.ONE_HOUR,
+        undefined,
+      );
+    });
+
+    it("maps 1d resolution to 1d interval without fidelity", async () => {
+      vi.spyOn(clob, "getPricesHistory").mockResolvedValue({ history: [] });
+      await adapter.getPriceHistory("tok-1", "1d");
+      expect(clob.getPricesHistory).toHaveBeenCalledWith(
+        "tok-1",
+        PriceHistoryInterval.ONE_DAY,
+        undefined,
+      );
     });
   });
 

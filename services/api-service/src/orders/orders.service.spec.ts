@@ -135,7 +135,14 @@ describe("OrdersService", () => {
       }),
       setLimits: vi.fn().mockResolvedValue(undefined),
     } as unknown as BetaLimitsConfigService;
-    service = new OrdersService(db as any, redis, config, {} as any, posthog, betaLimits);
+    service = new OrdersService(
+      db as any,
+      redis,
+      config,
+      {} as any,
+      posthog,
+      betaLimits,
+    );
   });
 
   afterEach(() => {

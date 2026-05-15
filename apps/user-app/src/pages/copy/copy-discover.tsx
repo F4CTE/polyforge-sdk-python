@@ -180,16 +180,16 @@ function CopyDiscoverSkeleton() {
       <div className="flex items-center gap-3">
         <SkeletonCircle />
         <div className="flex-1 space-y-2">
-          <SkeletonLine h="h-4" w="w-[55%]" />
-          <SkeletonLine w="w-[35%]" />
+          <SkeletonLine h="h-4" w="w-7/12" />
+          <SkeletonLine w="w-2/6" />
         </div>
         <SkeletonBadge w="w-10" />
       </div>
-      <SkeletonLine w="w-[40%]" />
+      <SkeletonLine w="w-2/5" />
       <div className="flex gap-3">
-        <SkeletonLine h="h-4" w="w-[30%]" />
-        <SkeletonLine h="h-4" w="w-[25%]" />
-        <SkeletonLine h="h-4" w="w-[20%]" />
+        <SkeletonLine h="h-4" w="w-2/6" />
+        <SkeletonLine h="h-4" w="w-1/4" />
+        <SkeletonLine h="h-4" w="w-1/5" />
       </div>
       <div className="flex gap-2 pt-1">
         <SkeletonLine h="h-8" className="rounded-pf" />
@@ -210,8 +210,8 @@ function ComparisonSkeleton({ count }: { count: number }) {
         {Array.from({ length: count }).map((_, i) => (
           <div key={i} className="flex flex-col items-center gap-2">
             <div className="size-12 rounded-full bg-overlay" />
-            <div className="h-4 bg-overlay rounded w-20" />
-            <div className="h-3 bg-overlay rounded w-14" />
+            <div className="h-4 bg-overlay rounded-sm w-20" />
+            <div className="h-3 bg-overlay rounded-sm w-14" />
           </div>
         ))}
       </div>
@@ -219,9 +219,9 @@ function ComparisonSkeleton({ count }: { count: number }) {
       {[1, 2, 3, 4, 5, 6, 7, 8].map((r) => (
         <div key={r} className="grid gap-4 border-t border-subtle pt-3"
           style={{ gridTemplateColumns: `180px repeat(${count}, 1fr)` }}>
-          <div className="h-4 bg-overlay rounded w-28" />
+          <div className="h-4 bg-overlay rounded-sm w-28" />
           {Array.from({ length: count }).map((_, i) => (
-            <div key={i} className="h-4 bg-overlay rounded w-16 mx-auto" />
+            <div key={i} className="h-4 bg-overlay rounded-sm w-16 mx-auto" />
           ))}
         </div>
       ))}
@@ -235,7 +235,7 @@ function MiniSparkline({ data }: { data: number[] }) {
   const W = 48;
   const H = 24;
   if (!data || data.length < 2) {
-    return <div className="w-12 h-6 bg-overlay rounded" />;
+    return <div className="w-12 h-6 bg-overlay rounded-sm" />;
   }
   const path = buildSparklinePath(data, W, H);
   const isUp = data[data.length - 1] >= data[0];
@@ -405,7 +405,7 @@ function ComparisonPanel({ data, loading, onBack }: ComparisonPanelProps) {
                   return (
                     <div key={t.userId} className="flex items-center justify-center">
                       <span
-                        className={`text-body-md font-mono font-semibold px-2 py-1 rounded ${
+                        className={`text-body-md font-mono tabular-nums font-semibold px-2 py-1 rounded-sm ${
                           isBest
                             ? 'bg-gain/10 text-gain'
                             : isWorst
@@ -466,7 +466,7 @@ function ComparisonPanel({ data, loading, onBack }: ComparisonPanelProps) {
                     className="flex items-center gap-2 bg-overlay rounded-pf px-3 py-2"
                   >
                     <span
-                      className={`text-caption font-semibold px-2 py-1 rounded shrink-0 ${
+                      className={`text-caption font-semibold px-2 py-1 rounded-sm shrink-0 ${
                         trade.result === 'win'
                           ? 'bg-gain-subtle text-gain'
                           : 'bg-loss-subtle text-loss'
@@ -474,11 +474,11 @@ function ComparisonPanel({ data, loading, onBack }: ComparisonPanelProps) {
                     >
                       {trade.result === 'win' ? 'WIN' : 'LOSS'}
                     </span>
-                    <span className="text-label text-secondary truncate flex-1 max-w-[120px]">
+                    <span className="text-label text-secondary truncate flex-1 max-w-30">
                       {trade.marketTitle}
                     </span>
                     <span
-                      className={`text-label font-mono shrink-0 ${
+                      className={`text-label font-mono tabular-nums shrink-0 ${
                         pnlIsPositive(trade.pnl) ? 'text-gain' : 'text-loss'
                       }`}
                     >
@@ -558,7 +558,7 @@ function TraderCardItem({
       {compareMode && (
         <div className="absolute top-3 left-3 z-10">
           <div
-            className={`size-5 rounded border-2 flex items-center justify-center transition-colors ${
+            className={`size-5 rounded-xs border-2 flex items-center justify-center transition-colors ${
               isSelected
                 ? 'bg-accent border-accent'
                 : 'bg-overlay border-strong'
@@ -602,7 +602,7 @@ function TraderCardItem({
         <div className="flex items-center gap-2">
           <TrendingUp className="size-4 text-tertiary" aria-hidden="true" />
           <span className="text-label text-secondary">Edge Score</span>
-          <span className={`text-label font-mono font-semibold ${scoreColor(trader.score)}`}>
+          <span className={`text-label font-mono tabular-nums font-semibold ${scoreColor(trader.score)}`}>
             {trader.score}
           </span>
         </div>
@@ -612,19 +612,19 @@ function TraderCardItem({
       <div className="flex items-center gap-4 text-label">
         <span className="flex flex-col gap-1">
           <span className="text-tertiary">P&amp;L</span>
-          <span className={`font-mono font-semibold ${positive ? 'text-gain' : 'text-loss'}`}>
+          <span className={`font-mono tabular-nums font-semibold ${positive ? 'text-gain' : 'text-loss'}`}>
             {trader.pnl}
           </span>
         </span>
         <span className="text-strong">|</span>
         <span className="flex flex-col gap-1">
           <span className="text-tertiary">Win Rate</span>
-          <span className="font-mono text-primary">{trader.winRate}</span>
+          <span className="font-mono tabular-nums text-primary">{trader.winRate}</span>
         </span>
         <span className="text-strong">|</span>
         <span className="flex flex-col gap-1">
           <span className="text-tertiary">Trades</span>
-          <span className="font-mono text-primary">{trader.tradeCount}</span>
+          <span className="font-mono tabular-nums text-primary">{trader.tradeCount}</span>
         </span>
       </div>
 
@@ -988,7 +988,7 @@ export function Component() {
           >
             <ChevronLeft className="size-4" />
           </Button>
-          <span className="text-body-sm font-mono text-secondary" aria-live="polite">
+          <span className="text-body-sm font-mono tabular-nums text-secondary" aria-live="polite">
             Page {page} of {totalPages}
           </span>
           <Button

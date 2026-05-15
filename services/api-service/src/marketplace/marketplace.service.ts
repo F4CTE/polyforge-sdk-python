@@ -151,7 +151,9 @@ export class MarketplaceService {
         status: { notIn: ["DELISTED"] },
       },
     });
-    const maxListings = await this.betaLimits.getLimit("maxMarketplaceListings");
+    const maxListings = await this.betaLimits.getLimit(
+      "maxMarketplaceListings",
+    );
     if (listingCount >= maxListings) {
       throw new UnprocessableEntityException({
         code: "MARKETPLACE_LISTING_LIMIT_REACHED",

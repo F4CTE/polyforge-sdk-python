@@ -6,18 +6,18 @@ import {
 } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
 import { ConfigService } from "@nestjs/config";
+import { RedisService } from "@polyforge/shared-redis";
 import { FastifyRequest } from "fastify";
 
 @Injectable()
 export class InternalAuthGuard implements CanActivate {
-  private readonly seenJtis = new Set<string>();
-
   constructor(
     private readonly jwt: JwtService,
     private readonly config: ConfigService,
+    private readonly redis: RedisService,
   ) {}
 
-  canActivate(ctx: ExecutionContext): boolean {
+  async canActivate(ctx: ExecutionContext): Promise<boolean> {
     const req = ctx.switchToHttp().getRequest<FastifyRequest>();
     const auth = req.headers["authorization"];
 
@@ -40,14 +40,15 @@ export class InternalAuthGuard implements CanActivate {
     }
 
     const jti = typeof payload.jti === "string" ? payload.jti : undefined;
-    if (!jti || this.seenJtis.has(jti)) {
+    if (!jti) {
       throw new UnauthorizedException("Token already used or missing jti");
     }
-    this.seenJtis.add(jti);
 
-    if (this.seenJtis.size > 1000) {
-      const [first] = this.seenJtis;
-      if (first !== undefined) this.seenJtis.delete(first);
+    const set = await this.redis
+      .getClient()
+      .set(`strategy-engine:jti:${jti}`, "1", "EX", 60, "NX");
+    if (set === null) {
+      throw new UnauthorizedException("Token already used or missing jti");
     }
 
     return true;

@@ -426,19 +426,19 @@ function HeatmapGrid({ data }: { data: DailyHeatmapEntry[] }) {
       {/* Summary row */}
       {data.length > 0 && (
         <div className="flex flex-wrap gap-x-4 gap-y-1 mt-3 text-label">
-          <span className="text-gain"><span className="font-mono">{profitDays}</span> profit day{profitDays !== 1 ? 's' : ''}</span>
+          <span className="text-gain"><span className="font-mono tabular-nums">{profitDays}</span> profit day{profitDays !== 1 ? 's' : ''}</span>
           <span className="text-tertiary">|</span>
-          <span className="text-loss"><span className="font-mono">{lossDays}</span> loss day{lossDays !== 1 ? 's' : ''}</span>
+          <span className="text-loss"><span className="font-mono tabular-nums">{lossDays}</span> loss day{lossDays !== 1 ? 's' : ''}</span>
           {hasBest && (
             <>
               <span className="text-tertiary">|</span>
-              <span className="text-gain">Best: <span className="font-mono">+${bestDay.toFixed(2)}</span></span>
+              <span className="text-gain">Best: <span className="font-mono tabular-nums">+${bestDay.toFixed(2)}</span></span>
             </>
           )}
           {hasWorst && (
             <>
               <span className="text-tertiary">|</span>
-              <span className="text-loss">Worst: <span className="font-mono">-${Math.abs(worstDay).toFixed(2)}</span></span>
+              <span className="text-loss">Worst: <span className="font-mono tabular-nums">-${Math.abs(worstDay).toFixed(2)}</span></span>
             </>
           )}
         </div>
@@ -1166,7 +1166,7 @@ export function Component() {
               <span className="text-label text-secondary">Total P&L</span>
               <span
                 key={pnlFlashKey}
-                className={`text-body-md font-mono font-semibold px-1 rounded-sm ${colorClass(totalPnlNum)} ${
+                className={`text-body-md font-mono tabular-nums font-semibold px-1 rounded-sm ${colorClass(totalPnlNum)} ${
                   pnlFlashing
                     ? pnlFlashDir === 'gain'
                       ? 'animate-value-flash-gain'
@@ -1177,7 +1177,7 @@ export function Component() {
                 {fmtPnl(totalPnlNum)}
               </span>
               {totalPnlPctNum != null && (
-                <span className={`text-label font-mono ${colorClass(totalPnlPctNum)}`}>
+                <span className={`text-label font-mono tabular-nums ${colorClass(totalPnlPctNum)}`}>
                   {fmtPct(totalPnlPctNum)}
                 </span>
               )}
@@ -1191,11 +1191,11 @@ export function Component() {
                 <span className="w-px h-4 bg-default shrink-0 hidden sm:block" />
                 <div className="flex items-baseline gap-2 shrink-0">
                   <span className="text-label text-secondary">Today</span>
-                  <span className={`text-body-md font-mono font-semibold ${colorClass(dayPnlNum)}`}>
+                  <span className={`text-body-md font-mono tabular-nums font-semibold ${colorClass(dayPnlNum)}`}>
                     {fmtPnl(dayPnlNum)}
                   </span>
                   {dayPnlPctNum != null && (
-                    <span className={`text-label font-mono ${colorClass(dayPnlPctNum)}`}>
+                    <span className={`text-label font-mono tabular-nums ${colorClass(dayPnlPctNum)}`}>
                       {fmtPct(dayPnlPctNum)}
                     </span>
                   )}
@@ -1208,7 +1208,7 @@ export function Component() {
             {/* Unrealised P&L */}
             <div className="flex items-baseline gap-2 shrink-0">
               <span className="text-label text-secondary">Unrealised</span>
-              <span className={`text-body-md font-mono font-semibold ${colorClass(unrealisedNum)}`}>
+              <span className={`text-body-md font-mono tabular-nums font-semibold ${colorClass(unrealisedNum)}`}>
                 {fmtPnl(unrealisedNum)}
               </span>
             </div>
@@ -1245,19 +1245,19 @@ export function Component() {
               <>
                 <div className={`bg-elevated border border-default rounded-pf p-4 border-l-4 ${pnlBorderColor(portfolio.totalUnrealizedPnl)}`}>
                   <span className="text-label text-secondary uppercase tracking-wider">Unrealized P&L</span>
-                  <span data-testid="stat-pnl" className={`block mt-1 text-xl font-mono font-semibold ${pnlColor(portfolio.totalUnrealizedPnl)}`}>
+                  <span data-testid="stat-pnl" className={`block mt-1 text-xl font-mono tabular-nums font-semibold ${pnlColor(portfolio.totalUnrealizedPnl)}`}>
                     {formatPnl(portfolio.totalUnrealizedPnl)}
                   </span>
                 </div>
                 <div className={`bg-elevated border border-default rounded-pf p-4 border-l-4 ${pnlBorderColor(portfolio.totalRealizedPnl)}`}>
                   <span className="text-label text-secondary uppercase tracking-wider">Realized P&L</span>
-                  <span data-testid="stat-return" className={`block mt-1 text-xl font-mono font-semibold ${pnlColor(portfolio.totalRealizedPnl)}`}>
+                  <span data-testid="stat-return" className={`block mt-1 text-xl font-mono tabular-nums font-semibold ${pnlColor(portfolio.totalRealizedPnl)}`}>
                     {formatPnl(portfolio.totalRealizedPnl)}
                   </span>
                 </div>
                 <div className="bg-elevated border border-default rounded-pf p-4 border-l-4 border-l-accent">
                   <span className="text-label text-secondary uppercase tracking-wider">Win Rate</span>
-                  <span data-testid="stat-win-rate" className="block mt-1 text-xl font-mono font-semibold text-accent-text">
+                  <span data-testid="stat-win-rate" className="block mt-1 text-xl font-mono tabular-nums font-semibold text-accent-text">
                     {parseFloat(pnl?.winRate ?? '0') === 0 && (portfolio?.positions ?? []).length > 0
                       ? '—'
                       : winRatePct(pnl?.winRate ?? '0')}
@@ -1268,7 +1268,7 @@ export function Component() {
                 </div>
                 <div className="bg-elevated border border-default rounded-pf p-4 border-l-4 border-l-primary">
                   <span className="text-label text-secondary uppercase tracking-wider">Open Positions</span>
-                  <span className="block mt-1 text-xl font-mono font-semibold text-primary">
+                  <span className="block mt-1 text-xl font-mono tabular-nums font-semibold text-primary">
                     {portfolio.positions.length}
                   </span>
                 </div>
@@ -1330,28 +1330,28 @@ export function Component() {
                 {/* Net Realized Gain/Loss */}
                 <div className={`bg-surface border border-default rounded-pf p-3 border-l-4 ${taxSummary.netGain >= 0 ? 'border-l-gain' : 'border-l-loss'}`}>
                   <span className="text-caption text-secondary uppercase tracking-wider block mb-1">Net Realized Gain/Loss</span>
-                  <span className={`text-lg font-mono font-semibold ${taxSummary.netGain >= 0 ? 'text-gain' : 'text-loss'}`}>
+                  <span className={`text-lg font-mono tabular-nums font-semibold ${taxSummary.netGain >= 0 ? 'text-gain' : 'text-loss'}`}>
                     {taxSummary.netGain >= 0 ? '+' : ''}{taxSummary.netGain.toFixed(2)} USDC
                   </span>
                 </div>
                 {/* Short-term Gains */}
                 <div className="bg-surface border border-default rounded-pf p-3">
                   <span className="text-caption text-secondary uppercase tracking-wider block mb-1">Short-term Gains</span>
-                  <span className={`text-lg font-mono font-semibold ${taxSummary.shortTermGain >= 0 ? 'text-gain' : 'text-loss'}`}>
+                  <span className={`text-lg font-mono tabular-nums font-semibold ${taxSummary.shortTermGain >= 0 ? 'text-gain' : 'text-loss'}`}>
                     {taxSummary.shortTermGain >= 0 ? '+' : ''}{taxSummary.shortTermGain.toFixed(2)} USDC
                   </span>
                 </div>
                 {/* Long-term Gains */}
                 <div className="bg-surface border border-default rounded-pf p-3">
                   <span className="text-caption text-secondary uppercase tracking-wider block mb-1">Long-term Gains</span>
-                  <span className={`text-lg font-mono font-semibold ${taxSummary.longTermGain >= 0 ? 'text-gain' : 'text-loss'}`}>
+                  <span className={`text-lg font-mono tabular-nums font-semibold ${taxSummary.longTermGain >= 0 ? 'text-gain' : 'text-loss'}`}>
                     {taxSummary.longTermGain >= 0 ? '+' : ''}{taxSummary.longTermGain.toFixed(2)} USDC
                   </span>
                 </div>
                 {/* Total Trades */}
                 <div className="bg-surface border border-default rounded-pf p-3">
                   <span className="text-caption text-secondary uppercase tracking-wider block mb-1">Total Trades</span>
-                  <span className="text-lg font-mono font-semibold text-primary">{taxSummary.tradeCount}</span>
+                  <span className="text-lg font-mono tabular-nums font-semibold text-primary">{taxSummary.tradeCount}</span>
                 </div>
               </div>
             ) : !loadingTax && (
@@ -1385,7 +1385,7 @@ export function Component() {
                           <tr key={entry.id} className="border-b border-subtle last:border-0 hover:bg-overlay/50 transition-colors">
                             <td className="px-3 py-2 font-mono text-secondary whitespace-nowrap">{entry.closeDate}</td>
                             <td className="px-3 py-2 text-primary max-w-col-md truncate" title={entry.marketQuestion}>{entry.marketQuestion}</td>
-                            <td className={`px-3 py-2 text-right font-mono font-medium whitespace-nowrap ${entry.realizedGain >= 0 ? 'text-gain' : 'text-loss'}`}>
+                            <td className={`px-3 py-2 text-right font-mono tabular-nums font-medium whitespace-nowrap ${entry.realizedGain >= 0 ? 'text-gain' : 'text-loss'}`}>
                               {entry.realizedGain >= 0 ? '+' : ''}{entry.realizedGain.toFixed(2)}
                             </td>
                             <td className="px-3 py-2 text-center">
@@ -1656,10 +1656,10 @@ export function Component() {
 
                       {/* Earned / target */}
                       <div className="mb-2">
-                        <span className={`text-2xl font-mono font-semibold ${earned >= 0 ? 'text-gain' : 'text-loss'}`}>
+                        <span className={`text-2xl font-mono tabular-nums font-semibold ${earned >= 0 ? 'text-gain' : 'text-loss'}`}>
                           {earned >= 0 ? '+' : ''}{earned.toFixed(2)}
                         </span>
-                        <span className="text-body-sm text-tertiary font-mono ml-1">
+                        <span className="text-body-sm text-tertiary font-mono tabular-nums ml-1">
                           earned of ${activeGoal.targetAmount.toFixed(2)} target
                         </span>
                       </div>
@@ -1680,13 +1680,13 @@ export function Component() {
                           <span className="text-tertiary">{daysRemaining} day{daysRemaining !== 1 ? 's' : ''} remaining</span>
                         )}
                         {!isAchieved && dailyRunRate !== null && !isExpired && (
-                          <span className={`font-mono ${dailyRunRate > 0 ? 'text-secondary' : 'text-gain'}`}>
+                          <span className={`font-mono tabular-nums ${dailyRunRate > 0 ? 'text-secondary' : 'text-gain'}`}>
                             {dailyRunRate > 0
                               ? `Need $${dailyRunRate.toFixed(2)}/day to hit target`
                               : 'On track — no daily minimum needed'}
                           </span>
                         )}
-                        <span className={`font-mono font-semibold ${onTrack ? 'text-gain' : 'text-warning'}`}>
+                        <span className={`font-mono tabular-nums font-semibold ${onTrack ? 'text-gain' : 'text-warning'}`}>
                           {progress.toFixed(1)}%
                         </span>
                       </div>
@@ -1746,19 +1746,19 @@ export function Component() {
               <div className="grid grid-cols-3 gap-4 mb-5">
                 <div className="text-center">
                   <p className="text-caption text-tertiary uppercase tracking-wider mb-1">Total P&L</p>
-                  <p className={`text-lg font-mono font-semibold ${pnlColor(pnl?.totalPnl ?? '0')}`}>
+                  <p className={`text-lg font-mono tabular-nums font-semibold ${pnlColor(pnl?.totalPnl ?? '0')}`}>
                     {formatPnl(pnl?.totalPnl ?? '0')}
                   </p>
                 </div>
                 <div className="text-center border-x border-subtle">
                   <p className="text-caption text-tertiary uppercase tracking-wider mb-1">Win Rate</p>
-                  <p className="text-lg font-mono font-semibold text-accent-text">
+                  <p className="text-lg font-mono tabular-nums font-semibold text-accent-text">
                     {winRatePct(pnl?.winRate ?? '0')}
                   </p>
                 </div>
                 <div className="text-center">
                   <p className="text-caption text-tertiary uppercase tracking-wider mb-1">Edge Score</p>
-                  <p className="text-lg font-mono font-semibold text-primary">
+                  <p className="text-lg font-mono tabular-nums font-semibold text-primary">
                     {edgeScore != null ? edgeScore : '—'}
                   </p>
                 </div>
@@ -1843,7 +1843,7 @@ export function Component() {
                 ) : (
                   <>
                     {/* Large P&L number */}
-                    <p className={`text-3xl font-mono font-semibold mb-3 ${totalPnl >= 0 ? 'text-gain' : 'text-loss'}`}>
+                    <p className={`text-3xl font-mono tabular-nums font-semibold mb-3 ${totalPnl >= 0 ? 'text-gain' : 'text-loss'}`}>
                       {totalPnl >= 0 ? '+' : ''}{totalPnl.toFixed(2)} USDC
                     </p>
 
@@ -2021,12 +2021,12 @@ export function Component() {
                               <div className="flex items-center gap-1 mt-1 flex-wrap">
                                 <CategoryBadge category={(pos as any).marketCategory} />
                                 {hasRule && rule.stopLoss != null && (
-                                  <span className="inline-flex items-center px-2 py-1 rounded-sm text-caption font-mono font-medium bg-loss/10 text-loss border border-loss/20">
+                                  <span className="inline-flex items-center px-2 py-1 rounded-sm text-caption font-mono tabular-nums font-medium bg-loss/10 text-loss border border-loss/20">
                                     SL: {rule.stopLoss.toFixed(2)}
                                   </span>
                                 )}
                                 {hasRule && rule.takeProfit != null && (
-                                  <span className="inline-flex items-center px-2 py-1 rounded-sm text-caption font-mono font-medium bg-gain/10 text-gain border border-gain/20">
+                                  <span className="inline-flex items-center px-2 py-1 rounded-sm text-caption font-mono tabular-nums font-medium bg-gain/10 text-gain border border-gain/20">
                                     TP: {rule.takeProfit.toFixed(2)}
                                   </span>
                                 )}
@@ -2039,13 +2039,13 @@ export function Component() {
                                 {pos.side}
                               </span>
                             </td>
-                            <td className="px-4 py-3 text-right font-mono text-primary">
+                            <td className="px-4 py-3 text-right font-mono tabular-nums text-primary">
                               {parseFloat(pos.size).toLocaleString()}
                             </td>
-                            <td className="px-4 py-3 text-right font-mono text-primary">
+                            <td className="px-4 py-3 text-right font-mono tabular-nums text-primary">
                               {parseFloat(pos.avgEntryPrice).toFixed(3)}
                             </td>
-                            <td className="px-4 py-3 text-right font-mono">
+                            <td className="px-4 py-3 text-right font-mono tabular-nums">
                               {(() => {
                                 const livePrice = livePositionPrices[pos.id];
                                 const staticPrice = pos.currentPrice && parseFloat(pos.currentPrice) > 0
@@ -2061,7 +2061,7 @@ export function Component() {
                                 if (livePrice != null && flash != null) {
                                   const isUp = flash === 'up';
                                   return (
-                                    <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-sm text-label font-mono font-medium ${
+                                    <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-sm text-label font-mono tabular-nums font-medium ${
                                       isUp
                                         ? 'text-gain animate-value-flash-gain'
                                         : 'text-loss animate-value-flash-loss'
@@ -2078,7 +2078,7 @@ export function Component() {
                                   const prevStatic = staticPrice ?? livePrice;
                                   const isUp = livePrice >= prevStatic;
                                   return (
-                                    <span className={`inline-flex items-center gap-1 text-label font-mono font-medium ${
+                                    <span className={`inline-flex items-center gap-1 text-label font-mono tabular-nums font-medium ${
                                       isUp ? 'text-gain' : 'text-loss'
                                     }`}>
                                       {isUp
@@ -2092,7 +2092,7 @@ export function Component() {
                                 return <span className="text-accent-text">${displayPrice.toFixed(3)}</span>;
                               })()}
                             </td>
-                            <td className={`px-4 py-3 text-right font-mono ${pnlColor(pos.unrealizedPnl)}`}>
+                            <td className={`px-4 py-3 text-right font-mono tabular-nums ${pnlColor(pos.unrealizedPnl)}`}>
                               {formatPnl(pos.unrealizedPnl)}
                             </td>
                             <td className="px-4 py-3 text-right">
@@ -2211,12 +2211,12 @@ export function Component() {
                                                 value={acSlPrice[pos.id] ?? ''}
                                                 onChange={e => { e.stopPropagation(); setAcSlPrice(prev => ({ ...prev, [pos.id]: e.target.value })); }}
                                                 onClick={e => e.stopPropagation()}
-                                                className="w-28 font-mono"
+                                                className="w-28 font-mono tabular-nums"
                                               />
                                               <span className="text-label text-tertiary">(0.01 – 0.99)</span>
                                             </div>
                                             {currentPrice > 0 && (
-                                              <p className="text-label text-tertiary">Current price: <span className="font-mono text-accent-text">{currentPrice.toFixed(3)}</span></p>
+                                              <p className="text-label text-tertiary">Current price: <span className="font-mono tabular-nums text-accent-text">{currentPrice.toFixed(3)}</span></p>
                                             )}
                                           </div>
                                         )}
@@ -2250,12 +2250,12 @@ export function Component() {
                                                 value={acTpPrice[pos.id] ?? ''}
                                                 onChange={e => { e.stopPropagation(); setAcTpPrice(prev => ({ ...prev, [pos.id]: e.target.value })); }}
                                                 onClick={e => e.stopPropagation()}
-                                                className="w-28 font-mono"
+                                                className="w-28 font-mono tabular-nums"
                                               />
                                               <span className="text-label text-tertiary">(0.01 – 0.99)</span>
                                             </div>
                                             {currentPrice > 0 && (
-                                              <p className="text-label text-tertiary">Current price: <span className="font-mono text-accent-text">{currentPrice.toFixed(3)}</span></p>
+                                              <p className="text-label text-tertiary">Current price: <span className="font-mono tabular-nums text-accent-text">{currentPrice.toFixed(3)}</span></p>
                                             )}
                                           </div>
                                         )}
@@ -2296,7 +2296,7 @@ export function Component() {
                                               value={acQuantity[pos.id] ?? ''}
                                               onChange={e => { e.stopPropagation(); setAcQuantity(prev => ({ ...prev, [pos.id]: e.target.value })); }}
                                               onClick={e => e.stopPropagation()}
-                                              className="w-28 font-mono"
+                                              className="w-28 font-mono tabular-nums"
                                             />
                                           )}
                                         </div>
@@ -2355,7 +2355,7 @@ export function Component() {
                                     {/* P&L prominent display */}
                                     <div className="flex flex-col">
                                       <span className="text-caption text-tertiary uppercase tracking-wider mb-1">Unrealized P&L</span>
-                                      <span className={`text-2xl font-mono font-semibold ${pnlNum >= 0 ? 'text-gain' : 'text-loss'}`}>
+                                      <span className={`text-2xl font-mono tabular-nums font-semibold ${pnlNum >= 0 ? 'text-gain' : 'text-loss'}`}>
                                         {formatPnl(pos.unrealizedPnl)}
                                       </span>
                                       <span className="text-caption text-tertiary mt-1 italic">Unrealized P&L updates are estimated</span>
@@ -2365,11 +2365,11 @@ export function Component() {
                                     <div className="flex flex-wrap gap-4 text-label">
                                       <div>
                                         <p className="text-tertiary mb-1">Entry Price</p>
-                                        <p className="font-mono text-primary">{entryPrice.toFixed(3)}</p>
+                                        <p className="font-mono tabular-nums text-primary">{entryPrice.toFixed(3)}</p>
                                       </div>
                                       <div>
                                         <p className="text-tertiary mb-1">Current Price</p>
-                                        <p className="font-mono text-accent-text">
+                                        <p className="font-mono tabular-nums text-accent-text">
                                           {currentPrice > 0 ? currentPrice.toFixed(3) : '—'}
                                         </p>
                                       </div>
@@ -2383,11 +2383,11 @@ export function Component() {
                                       )}
                                       <div>
                                         <p className="text-tertiary mb-1">Max Gain</p>
-                                        <p className="font-mono text-gain">+${maxGain}</p>
+                                        <p className="font-mono tabular-nums text-gain">+${maxGain}</p>
                                       </div>
                                       <div>
                                         <p className="text-tertiary mb-1">Max Loss</p>
-                                        <p className="font-mono text-loss">-${maxLoss}</p>
+                                        <p className="font-mono tabular-nums text-loss">-${maxLoss}</p>
                                       </div>
                                     </div>
                                   </div>
@@ -2430,7 +2430,7 @@ export function Component() {
                           <tr key={i} className="border-b border-subtle last:border-0">
                             <td className="px-4 py-3 text-primary text-label">{pos.market?.title ?? pos.marketTitle ?? pos.marketId}</td>
                             <td className="px-4 py-3 text-right text-label font-mono text-secondary">{pos.outcome ?? '-'}</td>
-                            <td className={`px-4 py-3 text-right text-label font-mono font-semibold ${isWin ? 'text-gain' : 'text-loss'}`}>
+                            <td className={`px-4 py-3 text-right text-label font-mono tabular-nums font-semibold ${isWin ? 'text-gain' : 'text-loss'}`}>
                               {isWin ? '+' : ''}{pnl.toFixed(2)}
                             </td>
                           </tr>
@@ -2450,13 +2450,13 @@ export function Component() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <p className="text-label text-tertiary mb-1">Realized P&L</p>
-                  <span className={`text-xl font-mono font-semibold ${pnlColor(portfolio.totalRealizedPnl)}`}>
+                  <span className={`text-xl font-mono tabular-nums font-semibold ${pnlColor(portfolio.totalRealizedPnl)}`}>
                     {formatPnl(portfolio.totalRealizedPnl)}
                   </span>
                 </div>
                 <div>
                   <p className="text-label text-tertiary mb-1">Unrealized P&L</p>
-                  <span className={`text-xl font-mono font-semibold ${pnlColor(portfolio.totalUnrealizedPnl)}`}>
+                  <span className={`text-xl font-mono tabular-nums font-semibold ${pnlColor(portfolio.totalUnrealizedPnl)}`}>
                     {formatPnl(portfolio.totalUnrealizedPnl)}
                   </span>
                 </div>
@@ -2492,7 +2492,7 @@ export function Component() {
               const { name, value } = payload[0].payload;
               const pct = ((value / totalAllocation) * 100).toFixed(1);
               return (
-                <div className="bg-surface border border-default rounded-pf px-3 py-2 text-label font-mono shadow-pf">
+                <div className="bg-surface border border-default rounded-pf px-3 py-2 text-label font-mono tabular-nums shadow-pf">
                   <p className="text-primary font-medium">{name}</p>
                   <p className="text-secondary">${value.toLocaleString(undefined, { maximumFractionDigits: 2 })} ({pct}%)</p>
                 </div>
@@ -2545,10 +2545,10 @@ export function Component() {
                           {/* dynamic-color: intentional — color is runtime chart palette value */}
                           <span className="size-3 rounded-full shrink-0" style={{ backgroundColor: color }} />
                           <span className="flex-1 text-body-md text-primary capitalize truncate">{entry.name}</span>
-                          <span className="text-label font-mono text-secondary shrink-0">
+                          <span className="text-label font-mono tabular-nums text-secondary shrink-0">
                             ${entry.value.toLocaleString(undefined, { maximumFractionDigits: 2 })}
                           </span>
-                          <span className="text-label font-mono text-tertiary w-12 text-right shrink-0">{pct}%</span>
+                          <span className="text-label font-mono tabular-nums text-tertiary w-12 text-right shrink-0">{pct}%</span>
                         </div>
                       );
                     })}
@@ -2605,15 +2605,15 @@ export function Component() {
                                 </span>
                               </td>
                               <td className="py-2 pr-3 text-secondary font-mono">{pos.outcome ?? '—'}</td>
-                              <td className="py-2 pr-3 text-right font-mono text-primary">
+                              <td className="py-2 pr-3 text-right font-mono tabular-nums text-primary">
                                 {parseFloat(pos.size).toLocaleString(undefined, { maximumFractionDigits: 2 })}
                               </td>
-                              <td className="py-2 pr-3 text-right font-mono text-accent-text">
+                              <td className="py-2 pr-3 text-right font-mono tabular-nums text-accent-text">
                                 {pos.currentPrice && parseFloat(pos.currentPrice) > 0
                                   ? `$${parseFloat(pos.currentPrice).toFixed(3)}`
                                   : <span className="text-tertiary">—</span>}
                               </td>
-                              <td className={`py-2 text-right font-mono font-medium ${pnlColor(pos.unrealizedPnl)}`}>
+                              <td className={`py-2 text-right font-mono tabular-nums font-medium ${pnlColor(pos.unrealizedPnl)}`}>
                                 {formatPnl(pos.unrealizedPnl)}
                               </td>
                             </tr>
@@ -2702,7 +2702,7 @@ export function Component() {
                           <span className="ml-1 text-tertiary cursor-help" title={item.tooltip}>ⓘ</span>
                         )}
                       </p>
-                      <div className="text-lg font-mono font-semibold leading-tight">{item.value}</div>
+                      <div className="text-lg font-mono tabular-nums font-semibold leading-tight">{item.value}</div>
                     </div>
                   ))}
                 </div>
@@ -2833,7 +2833,7 @@ export function Component() {
                         High concentration in{' '}
                         <span className="font-semibold capitalize">{c.category}</span>{' '}
                         <span className="font-semibold">{c.outcome}</span>{' '}
-                        (<span className="font-mono">{pct}%</span> of portfolio)
+                        (<span className="font-mono tabular-nums">{pct}%</span> of portfolio)
                       </p>
                     </div>
                   );
@@ -2902,12 +2902,12 @@ export function Component() {
                               className={`${bgClass} rounded-pf border border-subtle h-14 relative p-2 cursor-default transition-opacity hover:opacity-80`}
                             >
                               {/* Dollar value */}
-                              <p className="text-primary font-mono text-label leading-tight">{formatCellValue(cell.totalValue)}</p>
+                              <p className="text-primary font-mono tabular-nums text-label leading-tight">{formatCellValue(cell.totalValue)}</p>
                               {/* Position count */}
                               <p className="text-tertiary text-caption leading-tight mt-1">{cell.positionCount} pos</p>
                               {/* P&L badge bottom-right */}
                               <span
-                                className={`absolute bottom-1 right-2 text-caption font-mono font-semibold ${
+                                className={`absolute bottom-1 right-2 text-caption font-mono tabular-nums font-semibold ${
                                   cell.pnl > 0 ? 'text-gain' : cell.pnl < 0 ? 'text-loss' : 'text-tertiary'
                                 }`}
                               >
@@ -2939,7 +2939,7 @@ export function Component() {
                               style={{ width: `${(colTotal / maxColTotal) * 100}%` }}
                             />
                           </div>
-                          <p className="text-caption text-tertiary font-mono text-center">
+                          <p className="text-caption text-tertiary font-mono tabular-nums text-center">
                             {colTotal > 0 ? `${pct.toFixed(1)}%` : '—'}
                           </p>
                         </div>
@@ -3083,9 +3083,9 @@ export function Component() {
                         {/* Current → Target bar */}
                         <div className="mt-3">
                           <div className="flex items-center justify-between text-label text-secondary mb-1">
-                            <span>Current: <span className="font-mono font-semibold text-primary">{s.currentPct}%</span></span>
+                            <span>Current: <span className="font-mono tabular-nums font-semibold text-primary">{s.currentPct}%</span></span>
                             <span className="text-tertiary">→</span>
-                            <span>Target: <span className="font-mono font-semibold text-primary">{s.targetPct}%</span></span>
+                            <span>Target: <span className="font-mono tabular-nums font-semibold text-primary">{s.targetPct}%</span></span>
                           </div>
                           <CurrentTargetBar currentPct={s.currentPct} targetPct={s.targetPct} />
                         </div>
@@ -3136,7 +3136,7 @@ export function Component() {
                       <div key={category}>
                         <div className="flex items-center justify-between mb-1">
                           <span className="text-body-md text-primary capitalize">{category}</span>
-                          <span className="text-label text-tertiary font-mono">
+                          <span className="text-label text-tertiary font-mono tabular-nums">
                             {exposure.toLocaleString(undefined, { maximumFractionDigits: 0 })} shares &middot; {count} position{count !== 1 ? 's' : ''}
                           </span>
                         </div>
@@ -3186,7 +3186,7 @@ export function Component() {
                           </div>
                         </div>
                         <div className="text-right shrink-0">
-                          <span className={`text-label font-mono font-medium ${pnlColor(String(m.pnl))}`}>
+                          <span className={`text-label font-mono tabular-nums font-medium ${pnlColor(String(m.pnl))}`}>
                             {formatPnl(String(m.pnl))}
                           </span>
                           <p className="text-caption text-tertiary">{m.count} position{m.count !== 1 ? 's' : ''}</p>
@@ -3217,17 +3217,17 @@ export function Component() {
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div className="bg-elevated border border-default rounded-pf p-4">
                   <span className="text-label text-secondary uppercase tracking-wider">Paper P&L</span>
-                  <span className={`block mt-1 text-xl font-mono font-semibold ${pnlColor(paper.pnl)}`}>
+                  <span className={`block mt-1 text-xl font-mono tabular-nums font-semibold ${pnlColor(paper.pnl)}`}>
                     {formatPnl(paper.pnl)}
                   </span>
                 </div>
                 <div className="bg-elevated border border-default rounded-pf p-4">
                   <span className="text-label text-secondary uppercase tracking-wider">Positions</span>
-                  <span className="block mt-1 text-xl font-mono font-semibold text-primary">{paper.positions.length}</span>
+                  <span className="block mt-1 text-xl font-mono tabular-nums font-semibold text-primary">{paper.positions.length}</span>
                 </div>
                 <div className="bg-elevated border border-default rounded-pf p-4">
                   <span className="text-label text-secondary uppercase tracking-wider">Total Orders</span>
-                  <span className="block mt-1 text-xl font-mono font-semibold text-primary">{paper.orderCount}</span>
+                  <span className="block mt-1 text-xl font-mono tabular-nums font-semibold text-primary">{paper.orderCount}</span>
                 </div>
                 <div className="bg-elevated border border-default rounded-pf p-4 flex items-end justify-end">
                   <Button
@@ -3297,10 +3297,10 @@ export function Component() {
                                 {pos.side}
                               </span>
                             </td>
-                            <td className="px-4 py-3 text-right font-mono text-primary">
+                            <td className="px-4 py-3 text-right font-mono tabular-nums text-primary">
                               {parseFloat(pos.size).toLocaleString()}
                             </td>
-                            <td className={`px-4 py-3 text-right font-mono ${pnlColor(pos.unrealizedPnl)}`}>
+                            <td className={`px-4 py-3 text-right font-mono tabular-nums ${pnlColor(pos.unrealizedPnl)}`}>
                               {formatPnl(pos.unrealizedPnl)}
                             </td>
                           </tr>

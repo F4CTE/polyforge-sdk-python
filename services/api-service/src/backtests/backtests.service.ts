@@ -77,7 +77,9 @@ export class BacktestsService {
     if (dto.dateRangeStart) {
       const start = new Date(dto.dateRangeStart);
       const maxStart = new Date();
-      const maxHistory = await this.betaLimits.getLimit("maxBacktestHistoryDays");
+      const maxHistory = await this.betaLimits.getLimit(
+        "maxBacktestHistoryDays",
+      );
       maxStart.setDate(maxStart.getDate() - maxHistory);
       if (start < maxStart) {
         throw new UnprocessableEntityException({
