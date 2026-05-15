@@ -499,7 +499,8 @@ export class NativeCtfService {
    *
    * A unique lock token is generated per attempt.  If a timed-out SET later
    * settles via ioredis offline-queue replay, the ghost lock is detected and
-   * cleaned up via {@code DEL} so it does not block subsequent requests.
+   * cleaned up via the same token-checked Lua unlock so a delayed cleanup
+   * cannot delete a newer owner's lock.
    *
    * Permanent Redis errors (ReplyError — wrong args, NOAUTH, ACL, etc.)
    * are surfaced immediately instead of being retried for 60 s.
@@ -554,12 +555,14 @@ export class NativeCtfService {
         if (raceTimeoutId) clearTimeout(raceTimeoutId);
 
         // Surface permanent Redis errors immediately.
+        // `err.name === "ReplyError"` covers Redis command errors
+        // (wrong args, syntax, etc.).  Additional explicit checks guard
+        // against errors surfaced under a different Error subclass.
         if (
           err instanceof Error &&
           (err.name === "ReplyError" ||
             err.message?.includes("READONLY") ||
             err.message?.includes("NOAUTH") ||
-            err.message?.includes("ERR") ||
             err.message?.includes("WRONGTYPE"))
         ) {
           throw err;
@@ -580,7 +583,12 @@ export class NativeCtfService {
                   key,
                   attemptToken,
                 )
-                .catch(() => {});
+                .catch((cleanupErr: unknown) => {
+                  this.logger.error(
+                    `Failed to clean up ghost CTF nonce lock: ${key}`,
+                    (cleanupErr as Error)?.message,
+                  );
+                });
             }
           });
         }
@@ -618,7 +626,7 @@ export class NativeCtfService {
         this.logger.debug(`CTF nonce lock release skipped (not owner): ${key}`);
       }
     } catch (err) {
-      this.logger.warn(
+      this.logger.error(
         `Failed to release CTF nonce lock: ${key}`,
         (err as Error)?.message,
       );

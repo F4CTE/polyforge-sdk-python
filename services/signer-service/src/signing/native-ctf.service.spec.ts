@@ -1165,7 +1165,7 @@ describe("NativeCtfService", () => {
       expect(client.eval).toHaveBeenCalled();
     });
 
-    it("logs a warning when EVAL fails during lock release", async () => {
+    it("logs an error when EVAL fails during lock release", async () => {
       const { redisService, client } = makeMockRedis();
 
       client.eval.mockRejectedValueOnce(
@@ -1174,9 +1174,9 @@ describe("NativeCtfService", () => {
 
       const svcWithRedis = new NativeCtfService(redisService);
 
-      const loggerWarnSpy = vi.spyOn(
-        (svcWithRedis as unknown as { logger: { warn: typeof vi.fn } }).logger,
-        "warn",
+      const loggerErrorSpy = vi.spyOn(
+        (svcWithRedis as unknown as { logger: { error: typeof vi.fn } }).logger,
+        "error",
       );
 
       global.fetch = vi
@@ -1205,7 +1205,7 @@ describe("NativeCtfService", () => {
       });
       zeroCredentials(creds);
 
-      expect(loggerWarnSpy).toHaveBeenCalled();
+      expect(loggerErrorSpy).toHaveBeenCalled();
     });
 
     it("does not use Redis lock when RedisService is not injected", async () => {
