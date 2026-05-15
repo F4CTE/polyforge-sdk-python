@@ -1152,6 +1152,7 @@ describe("StrategyRunner — config fallback for token discovery and prefetch", 
         expire: vi.fn().mockResolvedValue(1),
         set: vi.fn().mockResolvedValue("OK"),
         del: vi.fn().mockResolvedValue(1),
+        eval: vi.fn().mockResolvedValue(1),
       }),
     });
     const state = makeState();
