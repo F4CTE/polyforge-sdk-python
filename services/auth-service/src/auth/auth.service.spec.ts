@@ -48,6 +48,8 @@ describe('AuthService', () => {
     usersService = {
       create: vi.fn(),
       findByEmail: vi.fn(),
+      findByEmailInsensitive: vi.fn(),
+      findByEmailCanonical: vi.fn(),
       findById: vi.fn(),
       validatePassword: vi.fn(),
       rehashIfNeeded: vi.fn().mockResolvedValue(undefined),
@@ -341,7 +343,9 @@ describe('AuthService', () => {
   describe('login', () => {
     it('returns a JWT and user profile on valid credentials', async () => {
       const user = userFactory({ totpEnabled: false });
-      vi.mocked(usersService.findByEmail).mockResolvedValue(user as any);
+      vi.mocked(usersService.findByEmailCanonical).mockResolvedValue(
+        user as any,
+      );
       vi.mocked(usersService.validatePassword).mockResolvedValue(true);
 
       const result = await service.login(makeLoginDto());
@@ -355,7 +359,7 @@ describe('AuthService', () => {
       const warnSpy = vi
         .spyOn((service as any).logger, 'warn')
         .mockImplementation(() => undefined);
-      vi.mocked(usersService.findByEmail).mockResolvedValue(null);
+      vi.mocked(usersService.findByEmailCanonical).mockResolvedValue(null);
 
       await expect(service.login(makeLoginDto() as any)).rejects.toMatchObject({
         response: { code: 'INVALID_CREDENTIALS' },
@@ -376,7 +380,9 @@ describe('AuthService', () => {
       const warnSpy = vi
         .spyOn((service as any).logger, 'warn')
         .mockImplementation(() => undefined);
-      vi.mocked(usersService.findByEmail).mockResolvedValue(user as any);
+      vi.mocked(usersService.findByEmailCanonical).mockResolvedValue(
+        user as any,
+      );
 
       await expect(service.login(makeLoginDto() as any)).rejects.toMatchObject({
         response: { code: 'INVALID_CREDENTIALS' },
@@ -385,7 +391,6 @@ describe('AuthService', () => {
       expect(warnSpy).toHaveBeenCalledWith(
         expect.objectContaining({
           event: 'LOGIN_FAILED',
-          userId: user.id,
           ip: 'unknown',
           reason: 'unknown_or_deleted_user',
         }),
@@ -393,9 +398,28 @@ describe('AuthService', () => {
       );
     });
 
+    it('does NOT create Redis keys for unknown email (spray-safe — no per-email key growth)', async () => {
+      const incr = vi.fn().mockResolvedValue(1);
+      vi.mocked(usersService.findByEmailCanonical).mockResolvedValue(null);
+      vi.mocked(redis.getClient).mockReturnValue({
+        incr,
+        expire: vi.fn().mockResolvedValue(1),
+        xadd: vi.fn().mockResolvedValue('stream-id'),
+      } as any);
+
+      await expect(service.login(makeLoginDto() as any)).rejects.toMatchObject({
+        response: { code: 'INVALID_CREDENTIALS' },
+        status: HttpStatus.BAD_REQUEST,
+      });
+
+      expect(incr).not.toHaveBeenCalled();
+    });
+
     it('throws ACCOUNT_SUSPENDED (403) when user is suspended', async () => {
       const user = userFactory({ suspended: true });
-      vi.mocked(usersService.findByEmail).mockResolvedValue(user as any);
+      vi.mocked(usersService.findByEmailCanonical).mockResolvedValue(
+        user as any,
+      );
 
       await expect(service.login(makeLoginDto() as any)).rejects.toMatchObject({
         response: { code: 'ACCOUNT_SUSPENDED' },
@@ -403,27 +427,76 @@ describe('AuthService', () => {
       });
     });
 
-    it('logs account lockouts with the fail count', async () => {
-      const user = userFactory({ suspended: false });
-      const warnSpy = vi
-        .spyOn((service as any).logger, 'warn')
-        .mockImplementation(() => undefined);
-      vi.mocked(usersService.findByEmail).mockResolvedValue(user as any);
+    it('rejects unknown email with INVALID_CREDENTIALS regardless of Redis state (spray-safe)', async () => {
+      vi.mocked(usersService.findByEmailCanonical).mockResolvedValue(null);
+      // Redis state is irrelevant — unknown accounts never read lockout keys
       vi.mocked(redis.get).mockResolvedValue('10');
 
-      await expect(service.login(makeLoginDto() as any)).rejects.toMatchObject({
+      await expect(
+        service.login(makeLoginDto({ email: 'alice@example.com' }) as any),
+      ).rejects.toMatchObject({
+        response: { code: 'INVALID_CREDENTIALS' },
+        status: HttpStatus.BAD_REQUEST,
+      });
+    });
+
+    it('does NOT write Redis keys for unknown email (prevents keyspace growth via spray)', async () => {
+      vi.mocked(usersService.findByEmailCanonical).mockResolvedValue(null);
+      vi.mocked(redis.get).mockResolvedValue('0');
+      const client = {
+        incr: vi.fn().mockResolvedValue(1),
+        expire: vi.fn().mockResolvedValue(1),
+      };
+      vi.mocked(redis.getClient).mockReturnValue(client as any);
+
+      await expect(
+        service.login(makeLoginDto({ email: 'unknown@example.com' }) as any),
+      ).rejects.toMatchObject({
+        response: { code: 'INVALID_CREDENTIALS' },
+        status: HttpStatus.BAD_REQUEST,
+      });
+
+      expect(client.incr).not.toHaveBeenCalled();
+      expect(client.expire).not.toHaveBeenCalled();
+    });
+
+    it('rejects login when the per-user lockout counter reaches the limit', async () => {
+      const user = userFactory({ email: 'alice@example.com' });
+      vi.mocked(usersService.findByEmailCanonical).mockResolvedValue(
+        user as any,
+      );
+      vi.mocked(redis.get).mockImplementation((key: string) =>
+        key === `login:fail:user:${user.id}`
+          ? Promise.resolve('10')
+          : Promise.resolve(null),
+      );
+
+      await expect(
+        service.login(makeLoginDto({ email: 'alice@example.com' }) as any),
+      ).rejects.toMatchObject({
         response: { code: 'ACCOUNT_LOCKED' },
         status: HttpStatus.TOO_MANY_REQUESTS,
       });
-      expect(warnSpy).toHaveBeenCalledWith(
-        expect.objectContaining({
-          event: 'LOGIN_LOCKED',
-          userId: user.id,
-          ip: 'unknown',
-          failCount: 10,
-        }),
-        'User login locked',
+    });
+
+    it('clears per-user lockout counter on successful login', async () => {
+      const user = userFactory({
+        email: 'alice@example.com',
+        totpEnabled: false,
+      });
+      vi.mocked(usersService.findByEmailCanonical).mockResolvedValue(
+        user as any,
       );
+      vi.mocked(usersService.validatePassword).mockResolvedValue(true);
+      vi.mocked(redis.get).mockImplementation((key: string) =>
+        key === `login:fail:user:${user.id}`
+          ? Promise.resolve('9')
+          : Promise.resolve(null),
+      );
+
+      await service.login(makeLoginDto({ email: 'alice@example.com' }));
+
+      expect(redis.del).toHaveBeenCalledWith(`login:fail:user:${user.id}`);
     });
 
     it('throws INVALID_CREDENTIALS (400) on wrong password', async () => {
@@ -431,7 +504,9 @@ describe('AuthService', () => {
       const warnSpy = vi
         .spyOn((service as any).logger, 'warn')
         .mockImplementation(() => undefined);
-      vi.mocked(usersService.findByEmail).mockResolvedValue(user as any);
+      vi.mocked(usersService.findByEmailCanonical).mockResolvedValue(
+        user as any,
+      );
       vi.mocked(usersService.validatePassword).mockResolvedValue(false);
 
       await expect(service.login(makeLoginDto() as any)).rejects.toMatchObject({
@@ -449,9 +524,94 @@ describe('AuthService', () => {
       );
     });
 
+    it('enforces email-hash lockout counter alongside per-user counter', async () => {
+      const user = userFactory({ email: 'alice@example.com' });
+      vi.mocked(usersService.findByEmailCanonical).mockResolvedValue(
+        user as any,
+      );
+      vi.mocked(redis.get).mockImplementation((key: string) => {
+        // Email-hash counter at limit, per-user counter clean
+        if (
+          key ===
+          'login:fail:ff8d9819fc0e12bf0d24892e45987e249a28dce836a85cad60e28eaaa8c6d976'
+        ) {
+          return Promise.resolve('10');
+        }
+        return Promise.resolve(null);
+      });
+
+      await expect(
+        service.login(makeLoginDto({ email: 'alice@example.com' }) as any),
+      ).rejects.toMatchObject({
+        response: { code: 'ACCOUNT_LOCKED' },
+        status: HttpStatus.TOO_MANY_REQUESTS,
+      });
+    });
+
+    it('enforces both counters — blocks login when email-hash is at limit even if per-user is clean', async () => {
+      const user = userFactory({
+        email: 'alice@example.com',
+        suspended: false,
+        totpEnabled: false,
+      });
+      vi.mocked(usersService.findByEmailCanonical).mockResolvedValue(
+        user as any,
+      );
+      vi.mocked(usersService.validatePassword).mockResolvedValue(true);
+      vi.mocked(redis.get).mockImplementation((key: string) =>
+        key ===
+        'login:fail:ff8d9819fc0e12bf0d24892e45987e249a28dce836a85cad60e28eaaa8c6d976'
+          ? Promise.resolve('10')
+          : Promise.resolve(null),
+      );
+
+      await expect(
+        service.login(makeLoginDto({ email: ' Alice@Example.COM ' }) as any),
+      ).rejects.toMatchObject({
+        response: { code: 'ACCOUNT_LOCKED' },
+        status: HttpStatus.TOO_MANY_REQUESTS,
+      });
+    });
+
+    it('increments the normalized email failure counter on wrong password', async () => {
+      const user = userFactory({
+        email: 'alice@example.com',
+        suspended: false,
+      });
+      const incr = vi.fn().mockResolvedValue(1);
+      const expire = vi.fn().mockResolvedValue(1);
+      vi.mocked(usersService.findByEmailCanonical).mockResolvedValue(
+        user as any,
+      );
+      vi.mocked(usersService.validatePassword).mockResolvedValue(false);
+      vi.mocked(redis.getClient).mockReturnValue({
+        incr,
+        expire,
+        xadd: vi.fn().mockResolvedValue('stream-id'),
+      } as any);
+
+      await expect(
+        service.login(makeLoginDto({ email: ' Alice@Example.COM ' }) as any),
+      ).rejects.toMatchObject({
+        response: { code: 'INVALID_CREDENTIALS' },
+        status: HttpStatus.BAD_REQUEST,
+      });
+      expect(incr).toHaveBeenCalledWith(
+        'login:fail:ff8d9819fc0e12bf0d24892e45987e249a28dce836a85cad60e28eaaa8c6d976',
+      );
+      expect(incr).toHaveBeenCalledWith(`login:fail:user:${user.id}`);
+      expect(expire).toHaveBeenCalledWith(
+        'login:fail:ff8d9819fc0e12bf0d24892e45987e249a28dce836a85cad60e28eaaa8c6d976',
+        900,
+      );
+      expect(expire).toHaveBeenCalledWith(`login:fail:user:${user.id}`, 900);
+    });
+
     it('throws TOTP_REQUIRED (400) when 2FA is enabled but no code provided', async () => {
       const user = userFactory({ totpEnabled: true });
-      vi.mocked(usersService.findByEmail).mockResolvedValue(user as any);
+      vi.mocked(usersService.findByEmailCanonical).mockResolvedValue(
+        user as any,
+      );
       vi.mocked(usersService.validatePassword).mockResolvedValue(true);
 
       await expect(service.login(makeLoginDto() as any)).rejects.toMatchObject({
@@ -460,9 +620,34 @@ describe('AuthService', () => {
       });
     });
 
+    it('does NOT increment lockout counter on TOTP_REQUIRED (2FA challenge)', async () => {
+      const user = userFactory({
+        email: 'alice@example.com',
+        totpEnabled: true,
+      });
+      const incr = vi.fn().mockResolvedValue(1);
+      vi.mocked(usersService.findByEmailCanonical).mockResolvedValue(
+        user as any,
+      );
+      vi.mocked(usersService.validatePassword).mockResolvedValue(true);
+      vi.mocked(redis.getClient).mockReturnValue({
+        incr,
+        expire: vi.fn().mockResolvedValue(1),
+        xadd: vi.fn().mockResolvedValue('stream-id'),
+      } as any);
+
+      await expect(service.login(makeLoginDto() as any)).rejects.toMatchObject({
+        response: { code: 'TOTP_REQUIRED' },
+        status: HttpStatus.BAD_REQUEST,
+      });
+      expect(incr).not.toHaveBeenCalled();
+    });
+
     it('sets requiresTotp=true when totpEnabled', async () => {
       const user = userFactory({ totpEnabled: true });
-      vi.mocked(usersService.findByEmail).mockResolvedValue(user as any);
+      vi.mocked(usersService.findByEmailCanonical).mockResolvedValue(
+        user as any,
+      );
       vi.mocked(usersService.validatePassword).mockResolvedValue(true);
       vi.mocked(totpService.verify).mockResolvedValue(true);
 
@@ -476,7 +661,9 @@ describe('AuthService', () => {
       const warnSpy = vi
         .spyOn((service as any).logger, 'warn')
         .mockImplementation(() => undefined);
-      vi.mocked(usersService.findByEmail).mockResolvedValue(user as any);
+      vi.mocked(usersService.findByEmailCanonical).mockResolvedValue(
+        user as any,
+      );
       vi.mocked(usersService.validatePassword).mockResolvedValue(true);
       vi.mocked(totpService.verify).mockResolvedValue(false);
 
@@ -497,9 +684,46 @@ describe('AuthService', () => {
       );
     });
 
+    it('increments the normalized email failure counter when the 2FA code is wrong', async () => {
+      const user = userFactory({
+        email: 'alice@example.com',
+        totpEnabled: true,
+      });
+      const incr = vi.fn().mockResolvedValue(2);
+      const expire = vi.fn().mockResolvedValue(1);
+      vi.mocked(usersService.findByEmailCanonical).mockResolvedValue(
+        user as any,
+      );
+      vi.mocked(usersService.validatePassword).mockResolvedValue(true);
+      vi.mocked(totpService.verify).mockResolvedValue(false);
+      vi.mocked(redis.getClient).mockReturnValue({
+        incr,
+        expire,
+        xadd: vi.fn().mockResolvedValue('stream-id'),
+      } as any);
+
+      await expect(
+        service.login(
+          makeLoginDto({
+            email: ' Alice@Example.COM ',
+            totpCode: '999999',
+          }) as any,
+        ),
+      ).rejects.toMatchObject({
+        response: { code: 'TOTP_INVALID' },
+        status: HttpStatus.BAD_REQUEST,
+      });
+      expect(incr).toHaveBeenCalledWith(
+        'login:fail:ff8d9819fc0e12bf0d24892e45987e249a28dce836a85cad60e28eaaa8c6d976',
+      );
+      expect(incr).toHaveBeenCalledWith(`login:fail:user:${user.id}`);
+    });
+
     it('never exposes passwordHash in the response', async () => {
       const user = userFactory();
-      vi.mocked(usersService.findByEmail).mockResolvedValue(user as any);
+      vi.mocked(usersService.findByEmailCanonical).mockResolvedValue(
+        user as any,
+      );
       vi.mocked(usersService.validatePassword).mockResolvedValue(true);
 
       const result = await service.login(makeLoginDto());
@@ -508,7 +732,9 @@ describe('AuthService', () => {
 
     it('does not throw when rehashIfNeeded fails (fire-and-forget catch)', async () => {
       const user = userFactory({ totpEnabled: false });
-      vi.mocked(usersService.findByEmail).mockResolvedValue(user as any);
+      vi.mocked(usersService.findByEmailCanonical).mockResolvedValue(
+        user as any,
+      );
       vi.mocked(usersService.validatePassword).mockResolvedValue(true);
       vi.mocked(usersService.rehashIfNeeded).mockRejectedValue(
         new Error('db error'),
@@ -522,7 +748,9 @@ describe('AuthService', () => {
         emailVerified: true,
         polymarketConnected: false,
       });
-      vi.mocked(usersService.findByEmail).mockResolvedValue(user as any);
+      vi.mocked(usersService.findByEmailCanonical).mockResolvedValue(
+        user as any,
+      );
       vi.mocked(usersService.validatePassword).mockResolvedValue(true);
 
       const result = await service.login(makeLoginDto());
@@ -533,7 +761,9 @@ describe('AuthService', () => {
 
     it('emits LOGIN event to Redis stream after successful login (N-M6)', async () => {
       const user = userFactory({ totpEnabled: false });
-      vi.mocked(usersService.findByEmail).mockResolvedValue(user as any);
+      vi.mocked(usersService.findByEmailCanonical).mockResolvedValue(
+        user as any,
+      );
       vi.mocked(usersService.validatePassword).mockResolvedValue(true);
 
       const xaddMock = redis.getClient().xadd;
@@ -559,7 +789,9 @@ describe('AuthService', () => {
 
     it('does not fail login when Redis xadd throws (fire-and-forget) (N-M6)', async () => {
       const user = userFactory({ totpEnabled: false });
-      vi.mocked(usersService.findByEmail).mockResolvedValue(user as any);
+      vi.mocked(usersService.findByEmailCanonical).mockResolvedValue(
+        user as any,
+      );
       vi.mocked(usersService.validatePassword).mockResolvedValue(true);
       (redis.getClient().xadd as any).mockRejectedValue(
         new Error('Redis down'),
@@ -572,7 +804,9 @@ describe('AuthService', () => {
 
     it('uses "unknown" as IP when ip is not provided (N-M6)', async () => {
       const user = userFactory({ totpEnabled: false });
-      vi.mocked(usersService.findByEmail).mockResolvedValue(user as any);
+      vi.mocked(usersService.findByEmailCanonical).mockResolvedValue(
+        user as any,
+      );
       vi.mocked(usersService.validatePassword).mockResolvedValue(true);
 
       const xaddMock = redis.getClient().xadd;
@@ -799,14 +1033,16 @@ describe('AuthService', () => {
   describe('forgotPassword', () => {
     it('returns a generic message when user exists (no enumeration)', async () => {
       const user = userFactory();
-      vi.mocked(usersService.findByEmail).mockResolvedValue(user as any);
+      vi.mocked(usersService.findByEmailCanonical).mockResolvedValue(
+        user as any,
+      );
 
       const result = await service.forgotPassword({ email: user.email });
       expect(result.message).toBeTruthy();
     });
 
     it('returns the same message when user does NOT exist (prevents enumeration)', async () => {
-      vi.mocked(usersService.findByEmail).mockResolvedValue(null);
+      vi.mocked(usersService.findByEmailCanonical).mockResolvedValue(null);
 
       const result = await service.forgotPassword({
         email: 'ghost@example.com',
@@ -816,7 +1052,9 @@ describe('AuthService', () => {
 
     it('triggers a password reset email when user exists', async () => {
       const user = userFactory({ deleted: false });
-      vi.mocked(usersService.findByEmail).mockResolvedValue(user as any);
+      vi.mocked(usersService.findByEmailCanonical).mockResolvedValue(
+        user as any,
+      );
 
       await service.forgotPassword({ email: user.email });
 
@@ -829,7 +1067,9 @@ describe('AuthService', () => {
 
     it('does NOT trigger an email for deleted users', async () => {
       const user = userFactory({ deleted: true });
-      vi.mocked(usersService.findByEmail).mockResolvedValue(user as any);
+      vi.mocked(usersService.findByEmailCanonical).mockResolvedValue(
+        user as any,
+      );
 
       await service.forgotPassword({ email: user.email });
 
@@ -839,7 +1079,9 @@ describe('AuthService', () => {
 
     it('does not throw when the reset email fails (fire-and-forget catch)', async () => {
       const user = userFactory({ deleted: false });
-      vi.mocked(usersService.findByEmail).mockResolvedValue(user as any);
+      vi.mocked(usersService.findByEmailCanonical).mockResolvedValue(
+        user as any,
+      );
       vi.mocked(usersService.createPasswordResetToken).mockRejectedValue(
         new Error('db error'),
       );

@@ -609,10 +609,7 @@ export class OrdersService {
     );
     const maxMonthly = await this.betaLimits.getLimit("maxMonthlyVolumeUsdc");
     if (currentMonthlyVolume + orderSize > maxMonthly) {
-      const remaining = Math.max(
-        0,
-        maxMonthly - currentMonthlyVolume,
-      );
+      const remaining = Math.max(0, maxMonthly - currentMonthlyVolume);
       throw new UnprocessableEntityException({
         code: "MONTHLY_VOLUME_EXCEEDED",
         message: `Beta limit: monthly trade volume cap of $${maxMonthly} USDC reached. Remaining this month: $${remaining.toFixed(2)}.`,

@@ -180,7 +180,13 @@ function CanvasNode({ top, left, cat, title, detail }: NodeProps) {
   return (
     <div
       className="absolute bg-surface border border-default rounded-lg p-2 shadow-elevation-2"
-      style={{ top, left, width: 140, borderLeftWidth: 2, borderLeftColor: color }}
+      style={{
+        top,
+        left,
+        width: 140,
+        borderLeftWidth: 2,
+        borderLeftColor: color,
+      }}
     >
       <div
         className="font-mono text-caption tracking-widest uppercase"
@@ -369,7 +375,12 @@ export function Hero() {
             <div className="flex gap-3 items-center flex-wrap">
               <a
                 href="/register"
-                onClick={() => ph?.capture('cta_clicked', { label: 'start_free', location: 'hero' })}
+                onClick={() =>
+                  ph?.capture("cta_clicked", {
+                    label: "start_free",
+                    location: "hero",
+                  })
+                }
                 className="inline-flex items-center gap-1.5 h-10 px-5 rounded-lg bg-accent text-white font-semibold text-sm hover:bg-accent-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-text transition-colors duration-micro"
               >
                 start free
@@ -377,7 +388,12 @@ export function Hero() {
               </a>
               <a
                 href="/api-docs"
-                onClick={() => ph?.capture('cta_clicked', { label: 'read_docs', location: 'hero' })}
+                onClick={() =>
+                  ph?.capture("cta_clicked", {
+                    label: "read_docs",
+                    location: "hero",
+                  })
+                }
                 className="inline-flex items-center h-10 px-5 rounded-lg bg-transparent text-primary border border-default font-medium text-sm hover:bg-elevated focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-text transition-colors duration-micro"
               >
                 read the docs

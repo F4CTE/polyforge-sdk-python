@@ -46,7 +46,9 @@ function WhaleFeed() {
           </div>
           <div className="min-w-0">
             <div className="font-mono text-xs text-primary">{w.wallet}</div>
-            <div className="text-caption text-tertiary truncate">{w.market}</div>
+            <div className="text-caption text-tertiary truncate">
+              {w.market}
+            </div>
           </div>
           <span
             className="inline-flex px-2 py-0.5 rounded text-caption font-mono font-medium w-fit"
@@ -112,8 +114,7 @@ export function WhaleSection() {
               trades with{" "}
               <strong className="text-primary font-medium">Fixed</strong>,{" "}
               <strong className="text-primary font-medium">Proportional</strong>
-              , or{" "}
-              <strong className="text-primary font-medium">Kelly</strong>{" "}
+              , or <strong className="text-primary font-medium">Kelly</strong>{" "}
               sizing. Alerts hit Telegram, Discord, or webhook before they hit
               X.
             </p>

@@ -493,14 +493,14 @@ export const BLOCK_DEFS: Record<BlockSection, BlockDef[]> = {
     {
       type: 'set_stop_loss',
       label: 'Set Stop Loss',
-      description: 'Close position if loss exceeds percentage.',
-      fields: [{ key: 'pct', label: 'Stop Loss (%)', type: 'number', placeholder: '10' }],
+      description: 'Close position if loss exceeds decimal ratio.',
+      fields: [{ key: 'pct', label: 'Stop Loss', type: 'number', placeholder: '0.10' }],
     },
     {
       type: 'set_take_profit',
       label: 'Set Take Profit',
-      description: 'Close position if profit reaches percentage.',
-      fields: [{ key: 'pct', label: 'Take Profit (%)', type: 'number', placeholder: '20' }],
+      description: 'Close position if profit reaches decimal ratio.',
+      fields: [{ key: 'pct', label: 'Take Profit', type: 'number', placeholder: '0.20' }],
     },
     {
       type: 'notify',

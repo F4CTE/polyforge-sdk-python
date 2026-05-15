@@ -575,7 +575,15 @@ export class StrategyRunner {
   }
 
   private async evaluate() {
-    const stateData = await this.state.get(this.strategyId);
+    // 0. Fetch strategy state + all referenced price caches in a single
+    //    Redis pipeline.  This eliminates the old double-read where
+    //    state.get() and detectStaleData() each fetched prices separately.
+    const tokenIds = this.getReferencedTokenIds();
+    const { state: stateData, prices } = await this.state.getStateAndPrices(
+      this.strategyId,
+      tokenIds,
+    );
+
     const ctx: EvalContext = {
       strategyId: this.strategyId,
       userId: this.userId,
@@ -587,7 +595,24 @@ export class StrategyRunner {
         : {}),
     };
 
-    // 0. Evaluate user-defined calculation variables
+    // 0.1 Check stale data — pause if any subscribed token's price is stale.
+    //     Moved before expensive variable / TA evaluation so we bail early
+    //     when market data is not fresh.
+    const staleToken = this.detectStaleFromPrices(tokenIds, prices);
+    if (staleToken) {
+      if (this.status === "RUNNING") {
+        this.pause(`stale_market_data:${staleToken}`);
+        await this.onStatusChange("PAUSED", `stale_market_data:${staleToken}`);
+        await this.emitStrategyEvent(
+          "STRATEGY_PAUSED",
+          `stale_market_data:${staleToken}`,
+        );
+      }
+      return;
+    }
+
+    // 0.2 Evaluate user-defined calculation variables.
+    //     Uses the pre-fetched price cache instead of a separate Redis call.
     const variables: Record<string, number> = {};
     if (this.variables.length > 0) {
       const scope: Record<string, number> = {
@@ -598,10 +623,9 @@ export class StrategyRunner {
         totalOrders: stateData.totalOrders,
       };
 
-      // Try to resolve currentPrice from the first trigger/action tokenId
-      const primaryTokenId = this.getPrimaryTokenId();
+      const primaryTokenId = tokenIds[0];
       if (primaryTokenId) {
-        const priceData = await this.state.getPrice(primaryTokenId);
+        const priceData = prices.get(primaryTokenId) ?? null;
         scope.currentPrice = priceData?.price ?? 0;
       }
 
@@ -709,20 +733,6 @@ export class StrategyRunner {
             : 0;
         }
       }
-    }
-
-    // 1. Check stale data — pause if any subscribed token's price is stale
-    const staleToken = await this.detectStaleData();
-    if (staleToken) {
-      if (this.status === "RUNNING") {
-        this.pause(`stale_market_data:${staleToken}`);
-        await this.onStatusChange("PAUSED", `stale_market_data:${staleToken}`);
-        await this.emitStrategyEvent(
-          "STRATEGY_PAUSED",
-          `stale_market_data:${staleToken}`,
-        );
-      }
-      return;
     }
 
     // 2. SAFETY — any failure stops the strategy
@@ -1095,16 +1105,45 @@ export class StrategyRunner {
     return this._cachedTokenIds;
   }
 
-  /** Returns the first tokenId found in triggers or actions (for variable scope). */
-  private getPrimaryTokenId(): string | null {
-    return this.getReferencedTokenIds()[0] ?? null;
+  /**
+   * Check staleness using price data already fetched in-memory (from
+   * getStateAndPrices pipeline).  Avoids a second Redis round-trip.
+   */
+  private detectStaleFromPrices(
+    tokenIds: string[],
+    prices: Map<string, { price: number; timestamp: number } | null>,
+  ): string | null {
+    const now = Date.now();
+    for (const id of tokenIds) {
+      const raw = prices.get(id);
+      if (!raw) return id;
+      if (now - raw.timestamp > STALE_PRICE_MS) return id;
+    }
+    return null;
   }
 
+  /**
+   * Fallback staleness check used by the auto-resume path in tick().
+   * Uses a single GET when there is only one token (no unnecessary MGET
+   * overhead for the common single-token strategy).
+   */
   private async detectStaleData(): Promise<string | null> {
     const tokenIds = this.getReferencedTokenIds();
     if (tokenIds.length === 0) return null;
 
-    // Batch fetch all price ages in one MGET
+    if (tokenIds.length === 1) {
+      const key = `cache:price:${tokenIds[0]}`;
+      try {
+        const raw = await this.redis.getClient().get(key);
+        if (!raw) return tokenIds[0];
+        const { timestamp } = JSON.parse(raw) as { timestamp: number };
+        if (Date.now() - timestamp > STALE_PRICE_MS) return tokenIds[0];
+        return null;
+      } catch {
+        return tokenIds[0];
+      }
+    }
+
     const keys = tokenIds.map((id) => `cache:price:${id}`);
     const values = await this.redis.getClient().mget(...keys);
     const now = Date.now();

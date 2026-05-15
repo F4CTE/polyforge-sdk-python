@@ -21,7 +21,7 @@ interface UseInViewAnimationOptions {
  * No external library required — uses the native IntersectionObserver API.
  */
 export function useInViewAnimation<T extends Element = HTMLDivElement>(
-  options: UseInViewAnimationOptions = {}
+  options: UseInViewAnimationOptions = {},
 ) {
   const { threshold = 0.15, rootMargin = "0px", once = true } = options;
   const ref = useRef<T>(null);
@@ -40,7 +40,7 @@ export function useInViewAnimation<T extends Element = HTMLDivElement>(
           setInView(false);
         }
       },
-      { threshold, rootMargin }
+      { threshold, rootMargin },
     );
 
     observer.observe(el);

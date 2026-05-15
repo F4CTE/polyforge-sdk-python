@@ -211,8 +211,8 @@ function MarketCardSkeleton() {
       <div className="flex items-start gap-3">
         <SkeletonCircle size="w-12 h-12" rounded="rounded-pf" />
         <div className="flex-1 space-y-2">
-          <SkeletonLine h="h-4" w="w-[85%]" />
-          <SkeletonLine w="w-[50%]" />
+          <SkeletonLine h="h-4" w="w-5/6" />
+          <SkeletonLine w="w-1/2" />
         </div>
       </div>
       <SkeletonLine h="h-2" className="rounded-full" />
@@ -348,7 +348,7 @@ const MarketCard = memo(function MarketCard({
                   style={{ width: `${tokenPercent(token)}%` }}
                 />
               </div>
-              <span className="w-8 text-right font-mono text-tertiary">{tokenPercent(token)}%</span>
+              <span className="w-8 text-right font-mono tabular-nums text-tertiary">{tokenPercent(token)}%</span>
             </div>
           ))}
           {market.tokens.length > 4 && (
@@ -384,12 +384,12 @@ const MarketCard = memo(function MarketCard({
 function TrendingCardSkeleton() {
   return (
     <CardSkeleton>
-      <SkeletonLine h="h-4" w="w-[90%]" />
-      <SkeletonLine w="w-[55%]" />
-      <SkeletonLine h="h-8" w="w-[40%]" />
+      <SkeletonLine h="h-4" w="w-11/12" />
+      <SkeletonLine w="w-7/12" />
+      <SkeletonLine h="h-8" w="w-2/5" />
       <div className="flex items-center justify-between">
-        <SkeletonLine h="h-5" w="w-[30%]" />
-        <SkeletonLine h="h-5" w="w-[25%]" />
+        <SkeletonLine h="h-5" w="w-2/6" />
+        <SkeletonLine h="h-5" w="w-1/4" />
       </div>
     </CardSkeleton>
   );
@@ -429,7 +429,7 @@ function TrendingCard({ market }: { market: Market }) {
           <TrendingUp className="size-3" aria-hidden="true" />
           {formatVolume(market.volume24h)} vol
         </span>
-        <span className={`inline-flex items-center gap-1 text-label font-mono ${closingSoon ? 'text-loss' : 'text-secondary'}`}>
+        <span className={`inline-flex items-center gap-1 text-label font-mono tabular-nums ${closingSoon ? 'text-loss' : 'text-secondary'}`}>
           <Clock className="size-3" aria-hidden="true" />
           {closing}
         </span>
@@ -692,7 +692,7 @@ function AdvancedSearchModal({
                 </div>
               </div>
               {(filters.minYesPrice !== undefined || filters.maxYesPrice !== undefined) && (
-                <p className="text-label text-accent-text font-mono">
+                <p className="text-label text-accent-text font-mono tabular-nums">
                   {filters.minYesPrice ?? '0.01'} — {filters.maxYesPrice ?? '0.99'}
                 </p>
               )}
@@ -769,7 +769,7 @@ function AdvancedSearchModal({
             </div>
 
             {/* Sort */}
-            <div className="flex-1 min-w-[220px]">
+            <div className="flex-1 min-w-56">
               <p className="text-label font-medium text-secondary uppercase tracking-wide mb-2">Sort By</p>
               <div className="flex flex-wrap gap-2">
                 {ADVANCED_SORT_OPTIONS.map((opt) => (
@@ -872,7 +872,7 @@ function AdvancedSearchModal({
                         </div>
                         <div className="shrink-0 text-right">
                           {yesP !== null ? (
-                            <span className="text-body-md font-mono font-semibold text-accent-text">{yesP}¢</span>
+                            <span className="text-body-md font-mono tabular-nums font-semibold text-accent-text">{yesP}¢</span>
                           ) : (
                             <span className="text-body-sm text-tertiary">—</span>
                           )}
@@ -1395,7 +1395,7 @@ export function Component() {
           >
             <ChevronLeft className="size-4" />
           </Button>
-          <span className="text-body-sm font-mono text-secondary" aria-live="polite">
+          <span className="text-body-sm font-mono tabular-nums text-secondary" aria-live="polite">
             Page {page} of {totalPages}
           </span>
           <Button

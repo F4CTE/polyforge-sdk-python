@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
+    "prebuild": "node scripts/patch-next.mjs",
     "dev": "next dev -p 3000",
     "build": "next build",
     "lint": "eslint \"app/**/*.{ts,tsx}\" *.ts --fix",

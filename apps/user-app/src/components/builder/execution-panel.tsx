@@ -486,12 +486,12 @@ export function ExecutionPanel({ strategyId, expanded, onToggle, activeTab, onTa
 
           {/* Mini status in header */}
           {!expanded && bt.status === 'RUNNING' && (
-            <span className="text-label font-mono text-accent-text">
+            <span className="text-label font-mono tabular-nums text-accent-text">
               Backtest {bt.progress}%
             </span>
           )}
           {!expanded && bt.status === 'COMPLETED' && (
-            <span className={`text-label font-mono ${pnlColor(bt.totalPnl)}`}>
+            <span className={`text-label font-mono tabular-nums ${pnlColor(bt.totalPnl)}`}>
               P&L: {pnlSign(bt.totalPnl)}
             </span>
           )}
@@ -566,7 +566,7 @@ export function ExecutionPanel({ strategyId, expanded, onToggle, activeTab, onTa
           </div>
           <div className="flex items-center justify-between gap-3">
             <span className="text-secondary">Market bindings</span>
-            <span className="font-mono text-primary">
+            <span className="font-mono tabular-nums text-primary">
               {Object.values(marketBindings).filter(Boolean).length} active
             </span>
           </div>
@@ -607,7 +607,7 @@ function BacktestTab({
       <div className="space-y-3 pt-1">
         {/* Form row */}
         <div className="flex items-end gap-3 flex-wrap">
-          <div className="flex-1 min-w-[140px]">
+          <div className="flex-1 min-w-36">
             <label htmlFor="ep-start-date" className="text-caption text-secondary uppercase tracking-wider mb-1 block">Start Date</label>
             <input
               id="ep-start-date"
@@ -619,7 +619,7 @@ function BacktestTab({
               className="w-full h-8 px-3 rounded-sm bg-surface border border-default text-label text-primary focus-visible:outline-none focus-visible:border-accent/50"
             />
           </div>
-          <div className="flex-1 min-w-[140px]">
+          <div className="flex-1 min-w-36">
             <label htmlFor="ep-end-date" className="text-caption text-secondary uppercase tracking-wider mb-1 block">End Date</label>
             <input
               id="ep-end-date"
@@ -669,7 +669,7 @@ function BacktestTab({
               {bt.status === 'QUEUED' ? 'Waiting in queue...' : 'Running backtest...'}
             </span>
           </div>
-          <span className="text-label font-mono text-accent-text">{bt.progress}%</span>
+          <span className="text-label font-mono tabular-nums text-accent-text">{bt.progress}%</span>
         </div>
         <div className="h-2 bg-surface rounded-full overflow-hidden" role="progressbar" aria-valuenow={bt.progress} aria-valuemin={0} aria-valuemax={100} aria-label="Backtest progress">
           <div
@@ -935,7 +935,7 @@ function LiveTab({
       {live.recentTrades.length > 0 && (
         <div>
           <span className="text-caption text-secondary uppercase tracking-wider mb-2 block">Recent Trades</span>
-          <div className="bg-surface rounded-sm overflow-hidden max-h-[120px] overflow-y-auto">
+          <div className="bg-surface rounded-sm overflow-hidden max-h-30 overflow-y-auto">
             <table className="w-full text-label" aria-label="Trade history">
               <caption className="sr-only">Trade history</caption>
               <thead>
@@ -950,15 +950,15 @@ function LiveTab({
               <tbody className="divide-y divide-subtle">
                 {live.recentTrades.slice(0, 10).map((t, i) => (
                   <tr key={i} className="text-primary">
-                    <td className="px-2 py-1 font-mono text-tertiary">
+                    <td className="px-2 py-1 font-mono tabular-nums text-tertiary">
                       {new Date(t.time).toLocaleTimeString()}
                     </td>
                     <td className={`px-2 py-1 font-medium ${t.side === 'BUY' ? 'text-gain' : 'text-loss'}`}>
                       {t.side}
                     </td>
-                    <td className="px-2 py-1 text-right font-mono">{t.price}</td>
-                    <td className="px-2 py-1 text-right font-mono">{t.amount}</td>
-                    <td className={`px-2 py-1 text-right font-mono ${pnlColor(t.pnl)}`}>{pnlSign(t.pnl)}</td>
+                    <td className="px-2 py-1 text-right font-mono tabular-nums">{t.price}</td>
+                    <td className="px-2 py-1 text-right font-mono tabular-nums">{t.amount}</td>
+                    <td className={`px-2 py-1 text-right font-mono tabular-nums ${pnlColor(t.pnl)}`}>{pnlSign(t.pnl)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -978,7 +978,7 @@ function MetricCard({ label, value, color, icon }: { label: string; value: strin
   return (
     <div className="bg-surface rounded-sm p-2">
       <span className="text-caption text-tertiary flex items-center gap-1">{icon}{label}</span>
-      <span className={`text-body-md font-mono font-semibold ${color} block mt-1`}>{value}</span>
+      <span className={`text-body-md font-mono tabular-nums font-semibold ${color} block mt-1`}>{value}</span>
     </div>
   );
 }
@@ -1003,7 +1003,7 @@ function MarketBindingsSection({
       </span>
       <div className="flex flex-wrap gap-2">
         {marketSlots.map(slot => (
-          <div key={slot.slot} className="flex-1 min-w-[200px] relative">
+          <div key={slot.slot} className="flex-1 min-w-48 relative">
             <label htmlFor={`ep-market-${slot.slot}`} className="text-caption text-tertiary mb-1 block">{slot.label || slot.slot}</label>
             <input
               id={`ep-market-${slot.slot}`}

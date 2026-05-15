@@ -90,7 +90,7 @@ interface BuilderState {
   // Builder actions
   addNode: (blockDef: BlockDef, section: BlockSection, position?: { x: number; y: number }) => void;
   removeNode: (nodeId: string) => void;
-  updateNodeConfig: (nodeId: string, key: string, value: string) => void;
+  updateNodeConfig: (nodeId: string, key: string, value: string, opts?: { skipHistory?: boolean }) => void;
 
   // Variable actions
   addVariable: () => void;
@@ -320,10 +320,11 @@ export const useBuilderStore = create<BuilderState>((set, get) => ({
     });
   },
 
-  updateNodeConfig: (nodeId, key, value) => {
+  updateNodeConfig: (nodeId, key, value, opts) => {
     const s = get();
+    const skipHistory = opts?.skipHistory ?? false;
     set({
-      ...pushHistory(s.nodes, s),
+      ...(skipHistory ? {} : pushHistory(s.nodes, s)),
       nodes: s.nodes.map((n) =>
         n.id === nodeId
           ? {
@@ -335,7 +336,7 @@ export const useBuilderStore = create<BuilderState>((set, get) => ({
             }
           : n,
       ) as Node<BlockNodeData>[],
-      dirty: true,
+      ...(skipHistory ? {} : { dirty: true }),
     });
   },
 

@@ -56,8 +56,7 @@ export default function PrivacyPage() {
             Privacy Policy
           </h1>
           <p className="text-label text-tertiary mt-2 mb-10">
-            Effective date: {LAST_UPDATED} &middot; Last updated:{" "}
-            {LAST_UPDATED}
+            Effective date: {LAST_UPDATED} &middot; Last updated: {LAST_UPDATED}
           </p>
 
           {/* 1 */}
@@ -131,11 +130,11 @@ export default function PrivacyPage() {
             </SubSection>
             <SubSection title="4.2 Usage and Behavioural Data">
               <p>
-                Server-side log data (IP address, timestamps, HTTP
-                method/path, response codes, user-agent), session tokens in
-                encrypted cookies, feature usage events, and error/crash
-                reports. This data is collected via server-side logs and does
-                not include third-party analytics trackers.
+                Server-side log data (IP address, timestamps, HTTP method/path,
+                response codes, user-agent), session tokens in encrypted
+                cookies, feature usage events, and error/crash reports. This
+                data is collected via server-side logs and does not include
+                third-party analytics trackers.
               </p>
             </SubSection>
             <SubSection title="4.3 Trading Strategy Data">
@@ -257,12 +256,12 @@ export default function PrivacyPage() {
           <Section title="7. How We Use Your Data">
             <ul className="list-disc list-inside space-y-2 pl-1">
               <li>
-                Create and maintain your account, authenticate you, and
-                maintain your session.
+                Create and maintain your account, authenticate you, and maintain
+                your session.
               </li>
               <li>
-                Build, store, and execute your trading strategies; submit
-                orders to Polymarket on your behalf.
+                Build, store, and execute your trading strategies; submit orders
+                to Polymarket on your behalf.
               </li>
               <li>
                 Process subscription payments via Stripe; manage plan changes
@@ -443,12 +442,12 @@ export default function PrivacyPage() {
           {/* 12 */}
           <Section title="12. Security Measures">
             <p>
-              All data transmitted over HTTPS/TLS 1.3. API credentials
-              encrypted at rest using AES-256-GCM within an isolated Rust/WASM
-              signer module. Passwords hashed with bcrypt (cost factor &ge; 12).
+              All data transmitted over HTTPS/TLS 1.3. API credentials encrypted
+              at rest using AES-256-GCM within an isolated Rust/WASM signer
+              module. Passwords hashed with bcrypt (cost factor &ge; 12).
               Session tokens in HttpOnly, Secure, SameSite=Strict cookies.
-              Database encrypted at rest. Role-based access controls.
-              Dependency and vulnerability scanning.
+              Database encrypted at rest. Role-based access controls. Dependency
+              and vulnerability scanning.
             </p>
             <p>
               If we experience a breach likely to result in high risk to your

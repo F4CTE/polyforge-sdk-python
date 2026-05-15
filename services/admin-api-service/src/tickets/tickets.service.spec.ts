@@ -287,7 +287,7 @@ describe("TicketsAdminService", () => {
       expect(redis.xadd).toHaveBeenCalledWith(
         "stream:events",
         expect.objectContaining({
-          event_type: "TICKET_REPLY",
+          type: "TICKET_REPLY",
           userId: "user-1",
           ticketId: "ticket-1",
           adminName: "Support Agent",
@@ -383,7 +383,7 @@ describe("TicketsAdminService", () => {
       expect(redis.xadd).toHaveBeenCalledWith(
         "stream:events",
         expect.objectContaining({
-          event_type: "TICKET_CLOSED",
+          type: "TICKET_CLOSED",
           userId: "user-1",
           ticketId: "ticket-1",
         }),

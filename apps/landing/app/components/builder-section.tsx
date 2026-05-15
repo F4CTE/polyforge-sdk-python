@@ -74,11 +74,41 @@ function BuilderCanvas() {
         />
       </svg>
 
-      <CanvasNode top={44} left={24} cat="trigger" title="price_above_tick" detail="YES ≥ 0.65" />
-      <CanvasNode top={154} left={24} cat="trigger" title="volume_rate_tick" detail="vol > 10k/24h" />
-      <CanvasNode top={110} left={310} cat="condition" title="max_position" detail="$500 · 5% port" />
-      <CanvasNode top={40} left={580} cat="action" title="buy_yes" detail="GTC · Kelly" />
-      <CanvasNode top={190} left={580} cat="action" title="set_stop_loss" detail="−8% trailing" />
+      <CanvasNode
+        top={44}
+        left={24}
+        cat="trigger"
+        title="price_above_tick"
+        detail="YES ≥ 0.65"
+      />
+      <CanvasNode
+        top={154}
+        left={24}
+        cat="trigger"
+        title="volume_rate_tick"
+        detail="vol > 10k/24h"
+      />
+      <CanvasNode
+        top={110}
+        left={310}
+        cat="condition"
+        title="max_position"
+        detail="$500 · 5% port"
+      />
+      <CanvasNode
+        top={40}
+        left={580}
+        cat="action"
+        title="buy_yes"
+        detail="GTC · Kelly"
+      />
+      <CanvasNode
+        top={190}
+        left={580}
+        cat="action"
+        title="set_stop_loss"
+        detail="−8% trailing"
+      />
 
       <div className="absolute bottom-2.5 left-4 right-4 flex justify-between items-center font-mono text-caption text-tertiary">
         <span>blocks: 5 · edges: 4 · tick 200ms</span>

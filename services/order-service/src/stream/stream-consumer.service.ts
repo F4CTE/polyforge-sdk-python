@@ -11,6 +11,7 @@ import {
   RedisService,
   StreamMonitorService,
 } from "@polyforge/shared-redis";
+import { StreamOrderIntentSchema } from "@polyforge/shared-schemas";
 import {
   CancellationIntent,
   OrdersService,
@@ -301,6 +302,20 @@ export class StreamConsumerService implements OnModuleInit, OnModuleDestroy {
     try {
       for (let i = 0; i < fields.length; i += 2) {
         obj[fields[i]] = fields[i + 1];
+      }
+
+      const schemaResult = StreamOrderIntentSchema.safeParse(obj);
+      if (!schemaResult.success) {
+        this.logger.warn(
+          {
+            event: "ORDER_INTENT_SCHEMA_MISMATCH",
+            stream: STREAM,
+            msgId,
+            issues: schemaResult.error.issues,
+            fields: obj,
+          },
+          "Order intent failed shared-schema validation",
+        );
       }
 
       if (!obj["intentId"] || !obj["userId"]) {
