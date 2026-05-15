@@ -475,6 +475,24 @@ export class StrategyRunner {
             this.followUpTimer = null;
             void this.tick();
           }, RETRY_BACKOFF_MS);
+        } else if (this.pendingRedisUnlock) {
+          // EVENT mode: one or more price events were coalesced
+          // (pendingTick) while this tick's SET NX was awaiting a
+          // Redis response, and lock acquisition failed because our
+          // own previous tick's Redis unlock is still pending.
+          //
+          // This is the same local-race-window scenario handled below
+          // for the no-pendingTick case (POLA-5150), but it is missed
+          // when pendingTick was true because the pendingTick flag
+          // gates the lower retry branch.  Without this clause the
+          // coalesced events would be silently dropped: no retry fires
+          // and no fresh price event is guaranteed to arrive.
+          this.scheduledFollowUp = true;
+          void this.pendingRedisUnlock.finally(() => {
+            if (this.status === "RUNNING") {
+              void this.tick();
+            }
+          });
         }
       } else if (!lockAcquired && this.status === "RUNNING") {
         // Lock acquisition failed without any pending coalesced tick.
