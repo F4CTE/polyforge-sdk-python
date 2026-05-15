@@ -42,10 +42,10 @@ export class PolymarketAdapter implements VenueAdapter {
 
   constructor(private readonly clob: ClobClientService) {}
 
-  async getMarkets(_params: MarketQueryParams): Promise<UnifiedMarket[]> {
+  getMarkets(_params: MarketQueryParams): Promise<UnifiedMarket[]> {
     // Market data ingestion for Polymarket uses the Gamma API pipeline, not
     // the CLOB client — this will be wired in Phase 3 via VenueDataRouter.
-    return [];
+    return Promise.resolve([]);
   }
 
   async getOrderBook(outcomeId: string): Promise<OrderBook> {
@@ -135,9 +135,9 @@ export class PolymarketAdapter implements VenueAdapter {
     await this.clob.cancelAll(apiKey);
   }
 
-  async getPositions(_userId: string): Promise<VenuePosition[]> {
+  getPositions(_userId: string): Promise<VenuePosition[]> {
     // Positions are tracked in the PolyForge DB, not fetched from the CLOB API.
-    return [];
+    return Promise.resolve([]);
   }
 
   async getOrderHistory(

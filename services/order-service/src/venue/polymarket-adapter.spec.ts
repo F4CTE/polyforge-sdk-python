@@ -16,15 +16,6 @@ function makeConfig(url = "http://clob:3099"): ConfigService {
   } as any;
 }
 
-function makeFetchOk(body: unknown) {
-  return vi.fn().mockResolvedValue({
-    ok: true,
-    status: 200,
-    json: vi.fn().mockResolvedValue(body),
-    text: vi.fn().mockResolvedValue(JSON.stringify(body)),
-  });
-}
-
 // ─── Suite ───────────────────────────────────────────────────────────────────
 
 describe("PolymarketAdapter", () => {
