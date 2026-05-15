@@ -541,7 +541,9 @@ export class NativeCtfService {
     let permanentError: Error | null = null;
 
     while (Date.now() < deadline) {
-      if (permanentError) throw permanentError;
+      if (permanentError) {
+        throw permanentError as Error;
+      }
       const remaining = deadline - Date.now();
       if (remaining <= 0) break;
 
@@ -599,12 +601,7 @@ export class NativeCtfService {
               if (lateResult === "OK") {
                 this.logger.debug(`Cleaning up ghost CTF nonce lock: ${key}`);
                 client
-                  .eval(
-                    NativeCtfService.UNLOCK_SCRIPT,
-                    1,
-                    key,
-                    attemptToken,
-                  )
+                  .eval(NativeCtfService.UNLOCK_SCRIPT, 1, key, attemptToken)
                   .catch((cleanupErr: unknown) => {
                     this.logger.error(
                       `Failed to clean up ghost CTF nonce lock: ${key}`,
@@ -621,9 +618,7 @@ export class NativeCtfService {
               // caller doesn't hit the generic 60 s timeout.
               if (
                 lateErr instanceof Error &&
-                NativeCtfService.isPermanentRedisError(
-                  lateErr.message ?? "",
-                )
+                NativeCtfService.isPermanentRedisError(lateErr.message ?? "")
               ) {
                 this.logger.error(
                   `Late SET rejected with permanent Redis error: ${key}`,
@@ -637,11 +632,15 @@ export class NativeCtfService {
         // Transient error — backoff and retry.
       }
 
-      if (permanentError) throw permanentError;
+      if (permanentError) {
+        throw permanentError as Error;
+      }
 
       const sleepRemaining = deadline - Date.now();
       if (sleepRemaining <= 0) break;
-      await new Promise((r) => setTimeout(r, Math.min(delayMs, sleepRemaining)));
+      await new Promise((r) =>
+        setTimeout(r, Math.min(delayMs, sleepRemaining)),
+      );
       delayMs = Math.min(delayMs * 2, 5_000);
     }
 
