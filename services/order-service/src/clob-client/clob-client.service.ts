@@ -13,7 +13,7 @@ import type {
   TickSize,
 } from "@polymarket/clob-client" with { "resolution-mode": "import" };
 
-export type ClobInterval = "max" | "1h" | "4h" | "1d" | "1w";
+export type ClobInterval = "max" | "1d" | "1w" | "6h" | "1h";
 
 export interface ClobClientLike {
   readonly host: string;
