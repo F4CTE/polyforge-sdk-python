@@ -14,11 +14,7 @@ import type {
   PriceCandle,
   CandleResolution,
 } from "@polyforge/shared-types";
-import {
-  ClobClientService,
-  PriceHistoryInterval,
-} from "../clob-client/clob-client.service";
-import type { PriceHistoryIntervalType } from "../clob-client/clob-client.service";
+import { ClobClientService } from "../clob-client/clob-client.service";
 
 interface PolymarketAuthContext {
   order: Record<string, unknown>;
@@ -29,15 +25,12 @@ interface PolymarketCancelContext {
   apiKey: string;
 }
 
-const RESOLUTION_TO_PARAMS: Record<
-  CandleResolution,
-  { interval: PriceHistoryIntervalType; fidelity?: number }
-> = {
-  "1m": { interval: PriceHistoryInterval.MAX, fidelity: 1 },
-  "5m": { interval: PriceHistoryInterval.MAX, fidelity: 5 },
-  "15m": { interval: PriceHistoryInterval.MAX, fidelity: 15 },
-  "1h": { interval: PriceHistoryInterval.ONE_HOUR },
-  "1d": { interval: PriceHistoryInterval.ONE_DAY },
+const RESOLUTION_TO_INTERVAL: Record<CandleResolution, string> = {
+  "1m": "1",
+  "5m": "5",
+  "15m": "15",
+  "1h": "60",
+  "1d": "1440",
 };
 
 @Injectable()
@@ -97,12 +90,8 @@ export class PolymarketAdapter implements VenueAdapter {
     outcomeId: string,
     resolution: CandleResolution,
   ): Promise<PriceCandle[]> {
-    const params = RESOLUTION_TO_PARAMS[resolution];
-    const result = await this.clob.getPricesHistory(
-      outcomeId,
-      params.interval,
-      params.fidelity,
-    );
+    const interval = RESOLUTION_TO_INTERVAL[resolution];
+    const result = await this.clob.getPricesHistory(outcomeId, interval);
     return result.history.map((point) => ({
       bucket: new Date(point.t * 1000).toISOString(),
       open: point.p,

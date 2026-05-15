@@ -11,7 +11,6 @@ import type {
   BuilderTrade,
   HeartbeatResponse,
   TickSize,
-  PriceHistoryInterval as PriceHistoryIntervalType,
 } from "@polymarket/clob-client" with { "resolution-mode": "import" };
 
 export interface ClobClientLike {
@@ -26,23 +25,16 @@ export interface ClobClientLike {
   getMarket(conditionID: string): Promise<Record<string, unknown>>;
   getPricesHistory(params: {
     market: string;
-    interval?: PriceHistoryIntervalType;
+    interval?: string;
     fidelity?: number;
   }): Promise<MarketPrice[]>;
 }
 
 type PolymarketClobClientModule = {
-  ClobClient: new (host: string, chain: PolymarketChain) => ClobClientLike;
+  ClobClient: new (...args: any[]) => ClobClientLike;
   Chain: {
     readonly POLYGON: PolymarketChain;
     readonly AMOY: PolymarketChain;
-  };
-  PriceHistoryInterval: {
-    readonly MAX: PriceHistoryIntervalType;
-    readonly ONE_WEEK: PriceHistoryIntervalType;
-    readonly ONE_DAY: PriceHistoryIntervalType;
-    readonly SIX_HOURS: PriceHistoryIntervalType;
-    readonly ONE_HOUR: PriceHistoryIntervalType;
   };
 };
 
@@ -50,18 +42,12 @@ type PolymarketClobClientModule = {
 const polymarketClobClient =
   require("@polymarket/clob-client") as PolymarketClobClientModule;
 /* eslint-enable @typescript-eslint/no-require-imports */
-const { ClobClient, Chain, PriceHistoryInterval } = polymarketClobClient;
+const { ClobClient, Chain } = polymarketClobClient;
 
 // ─── Re-export SDK types for downstream consumers ───────────────────────────
 
 export type { OrderBookSummary, OpenOrder, Trade, MarketPrice, TickSize };
 export type { BuilderTrade, HeartbeatResponse, OrderScoring, OrdersScoring };
-export type { PriceHistoryIntervalType };
-
-// PriceHistoryInterval is exported as a runtime enum so downstream code can
-// use the typed enum members (e.g. PriceHistoryInterval.MAX) instead of
-// string-literals-with-assertions.
-export { PriceHistoryInterval };
 
 // ─── Legacy interfaces kept for backward compatibility ──────────────────────
 
@@ -209,13 +195,12 @@ export class ClobClientService {
   }
 
   async getClobMarketInfo(conditionId: string): Promise<ClobMarketInfo> {
-    const info: Record<string, unknown> = await this.sdk.getMarket(conditionId);
-    return info as unknown as ClobMarketInfo;
+    return this.sdk.getMarket(conditionId) as Promise<ClobMarketInfo>;
   }
 
   async getPricesHistory(
     tokenId: string,
-    interval?: PriceHistoryIntervalType,
+    interval?: string,
     fidelity?: number,
   ): Promise<{ history: Array<{ t: number; p: string }> }> {
     const prices: MarketPrice[] = await this.sdk.getPricesHistory({
@@ -313,7 +298,7 @@ export class ClobClientService {
 
   async getBatchPricesHistory(
     tokenIds: string[],
-    interval?: PriceHistoryIntervalType,
+    interval?: string,
     fidelity?: number,
   ): Promise<Record<string, Array<{ t: number; p: string }>>> {
     return this.withRetry(() =>

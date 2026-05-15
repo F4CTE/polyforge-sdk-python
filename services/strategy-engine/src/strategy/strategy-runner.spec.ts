@@ -207,7 +207,8 @@ describe("StrategyRunner — lifecycle", () => {
     state.getStateAndPrices.mockImplementation(
       () =>
         new Promise((resolve) => {
-          release = () => resolve({ state: { ...DEFAULT_STATE }, prices: new Map() });
+          release = () =>
+            resolve({ state: { ...DEFAULT_STATE }, prices: new Map() });
         }),
     );
     const runner = makeRunner({ execMode: "EVENT", state });
@@ -782,7 +783,9 @@ describe("StrategyRunner — error handling", () => {
     const onIntents = vi
       .fn<(intents: OrderIntent[]) => Promise<void>>()
       .mockRejectedValue(
-        new Error("Counter increment failed after 1 intents published for strategy strat-test"),
+        new Error(
+          "Counter increment failed after 1 intents published for strategy strat-test",
+        ),
       );
     const onStatusChange = vi.fn().mockResolvedValue(undefined);
 
@@ -1603,7 +1606,8 @@ describe("StrategyRunner — concurrent tick serialization", () => {
     state.getStateAndPrices.mockImplementation(
       () =>
         new Promise((resolve) => {
-          release = () => resolve({ state: { ...DEFAULT_STATE }, prices: new Map() });
+          release = () =>
+            resolve({ state: { ...DEFAULT_STATE }, prices: new Map() });
         }),
     );
     const runner = makeRunner({ execMode: "EVENT", state });
