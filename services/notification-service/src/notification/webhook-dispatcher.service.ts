@@ -7,7 +7,8 @@ import { PrismaService } from "@polyforge/shared-db";
 /**
  * Dispatches webhook events to registered user webhook URLs.
  * Called by NotificationService when events are processed.
- * Fire-and-forget with 5s timeout, single retry on failure.
+ * Runs all webhook deliveries concurrently with 5s timeout each, single retry on failure.
+ * Awaits completion so callers can sequence delivery markers after webhook fanout.
  */
 @Injectable()
 export class WebhookDispatcherService {
@@ -17,7 +18,7 @@ export class WebhookDispatcherService {
 
   /**
    * Dispatch an event to all matching webhooks for a user.
-   * Non-blocking — errors are logged, never thrown to caller.
+   * Awaits all deliveries — errors are logged, never thrown to caller.
    */
   async dispatch(
     userId: string,
@@ -49,11 +50,10 @@ export class WebhookDispatcherService {
       data,
     };
 
-    for (const wh of webhooks) {
-      this.deliverWithRetry(wh.id, wh.url, wh.secret, payload).catch(() => {
-        // Already logged inside deliverWithRetry
-      });
-    }
+    const deliveries = webhooks.map((wh) =>
+      this.deliverWithRetry(wh.id, wh.url, wh.secret, payload),
+    );
+    await Promise.allSettled(deliveries);
   }
 
   /**

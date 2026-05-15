@@ -57,7 +57,7 @@ const IN_APP_DEDUP_MS = parsePositiveInt(
   process.env.NOTIF_IN_APP_DEDUP_MS,
   5000,
 );
-const DEDUP_KEY = (
+const IN_APP_DEDUP_KEY = (
   eventType: string,
   userId: string,
   data: Record<string, string>,
@@ -77,6 +77,55 @@ function hashEventData(data: Record<string, string>): string {
     .join("|");
   const hash = crypto.createHash("sha256").update(canonical).digest("hex");
   return hash.slice(0, 16);
+}
+
+// Delivery deduplication — prevents duplicate sends on stream replays / PEL reclaim.
+// Lock TTL is short (2 min) so a crash during fanout does not permanently burn the key.
+// After successful fanout, the TTL is extended to the full dedup window.
+//
+// Lock vs delivered marker: each handler generates a unique owner token (UUID) and
+// acquires the lock with SET NX.  The renewal EVAL script checks ownership before
+// extending TTL.  The finalizer conditionally transitions the key to "delivered"
+// only if the owner token still matches — preventing a stale handler from
+// overwriting a lock acquired by another reclaim handler.
+//
+// When a PEL reclaim handler sees a non-null, non-"delivered" value it throws
+// so the reclaim service does NOT ACK the entry — the original handler may still
+// succeed.  When it sees the delivered marker it returns normally — the entry can
+// be safely ACKed because delivery was already completed.
+const DEDUP_KEY_PREFIX = "notif-dedup";
+const DEDUP_DELIVERED_VALUE = "delivered";
+const DEDUP_LOCK_TTL = 120; // 2 minutes — generous enough for fanout, short enough for crash recovery
+const DEDUP_TTL = 86400; // 24 hours — covers any replay window
+
+/**
+ * Build a stable idempotency key from event type, user, and payload identity.
+ * Uses SHA-256 of canonical JSON with sorted keys so replayed stream entries
+ * produce the same key.  JSON.stringify delimits values with quotes, preventing
+ * ambiguity when field values contain `=` or `&`.
+ *
+ * The caller is expected to include `_streamEntryId` (the Redis stream entry
+ * ID) in `data` so that identical payloads from distinct stream entries
+ * produce different keys, preventing false-positive dedup under bursty traffic.
+ */
+function makeIdempotencyKey(
+  eventType: string,
+  userId: string,
+  data: Record<string, string>,
+): string {
+  const sorted = Object.keys(data)
+    .sort()
+    .reduce<Record<string, string>>((acc, k) => {
+      acc[k] = data[k];
+      return acc;
+    }, {});
+  const stablePayload = JSON.stringify(sorted);
+  const hash = crypto
+    .createHash("sha256")
+    .update(stablePayload)
+    .digest("hex")
+    .slice(0, 16);
+  return `${DEDUP_KEY_PREFIX}:${eventType}:${userId}:${hash}`;
 }
 
 function escapeHtml(value: unknown): string {
@@ -126,27 +175,146 @@ export class NotificationService {
       if (threshold > 0 && fillUsdc < threshold) return;
     }
 
-    // Build notification content
-    const content = this.templates.build(eventType, data);
+    // Dedup: atomically acquire a delivery lock so concurrent handlers
+    // (normal XREADGROUP + PEL reclaim) cannot both fan out the same event.
+    // SET NX EX is atomic — only one caller ever sees "OK".
+    //
+    // Each handler generates a unique owner token (UUID) so lock renewal and
+    // finalization can verify true ownership.  A reclaim handler treats any
+    // non-null, non-"delivered" value as an in-flight lock and throws to
+    // prevent premature PEL ACK.
+    const dedupKey = makeIdempotencyKey(eventType, userId, data);
+    const ownerToken = crypto.randomUUID();
+    let acquired = await this.redis
+      .getClient()
+      .set(dedupKey, ownerToken, "EX", DEDUP_LOCK_TTL, "NX");
+    if (acquired !== "OK") {
+      // The key exists — check whether it is in-flight lock, completed
+      // delivery, or expired.  Only an explicit "delivered" marker means
+      // the notification was already sent and it is safe to return success
+      // (allowing the caller to ACK the stream entry).  A missing/expired
+      // key means the lock from a crashed handler expired; retry acquisition
+      // instead of silently returning and losing the notification.
+      // Any non-null, non-"delivered" value (including a UUID owner token)
+      // means another handler holds the lock — throw so reclaim does not ACK.
+      const currentValue = await this.redis.getClient().get(dedupKey);
+      if (currentValue === DEDUP_DELIVERED_VALUE) {
+        this.logger.debug(
+          `Duplicate notification skipped: ${eventType} for user ${userId}`,
+        );
+        return;
+      }
+      if (currentValue !== null) {
+        throw new Error(
+          `In-flight delivery lock held for ${eventType} user=${userId}`,
+        );
+      }
+      // Key expired — retry acquisition
+      acquired = await this.redis
+        .getClient()
+        .set(dedupKey, ownerToken, "EX", DEDUP_LOCK_TTL, "NX");
+      if (acquired !== "OK") {
+        throw new Error(
+          `Delivery lock held for ${eventType} user=${userId} after retry`,
+        );
+      }
+      // Re-acquired — fall through to fanout
+    }
 
-    // In-app notification: always push to stream:events (no frequency gating)
-    await this.pushInApp(userId, eventType, data, content);
+    // Periodically renew the lock TTL while fanout is in progress.
+    // Downstream channels (email, telegram) include retry loops that
+    // can extend delivery beyond DEDUP_LOCK_TTL when providers are slow.
+    //
+    // Renewal uses a Lua script that only extends the TTL when the key
+    // value still matches the owner token, preventing a stale handler
+    // from renewing a lock acquired by another reclaim handler.
+    const lockRenewalMs = Math.ceil((DEDUP_LOCK_TTL / 3) * 1000);
+    const RENEW_LOCK_SCRIPT =
+      'if redis.call("GET", KEYS[1]) == ARGV[1] then return redis.call("EXPIRE", KEYS[1], ARGV[2]) else return 0 end';
+    const lockRenewal = setInterval(() => {
+      this.redis
+        .getClient()
+        .eval(
+          RENEW_LOCK_SCRIPT,
+          1,
+          dedupKey,
+          ownerToken,
+          String(DEDUP_LOCK_TTL),
+        )
+        .catch(() => {});
+    }, lockRenewalMs);
 
-    // Webhook dispatch: fire-and-forget to all matching webhooks
-    this.webhookDispatcher.dispatch(userId, eventType, data).catch((err) => {
+    try {
+      // Build notification content
+      const content = this.templates.build(eventType, data);
+
+      // In-app notification: always push to stream:events (no frequency gating)
+      await this.pushInApp(userId, eventType, data, content);
+
+      // Webhook dispatch: fire-and-forget so the stream consumer does
+      // NOT block on external HTTP calls.  Each webhook carries a 5s
+      // timeout with single retry; dispatch resolves even on failure.
+      // Webhooks are best-effort — if this handler crashes before they
+      // complete, the dedup marker prevents replay and the webhooks are
+      // lost.  This tradeoff keeps stream ACK bounded while ensuring
+      // primary channels (email/telegram/discord) are guaranteed.
+      this.webhookDispatcher
+        .dispatch(userId, eventType, data)
+        .catch((err: unknown) => {
+          this.logger.warn(
+            `Webhook dispatch background task failed for ${eventType} user=${userId}: ${String((err as Error)?.message ?? err)}`,
+          );
+        });
+
+      // Determine delivery mode
+      const freq = String(prefs.notificationFreq ?? "IMMEDIATE");
+
+      if (freq === "IMMEDIATE") {
+        await this.dispatch(userId, prefs, eventType, data, content);
+      } else {
+        // HOURLY / DAILY: push to digest queue in Redis
+        await this.enqueueDigest(userId, freq, eventType, data, content);
+      }
+    } finally {
+      clearInterval(lockRenewal);
+    }
+
+    // Transition the dedup marker from owner token to "delivered" so
+    // subsequent handlers (incl. PEL reclaim) can distinguish a completed
+    // delivery from an in-flight lock.
+    //
+    // Use a Lua script that only sets "delivered" if the key still holds
+    // the owner token.  If the lock was taken over by another handler
+    // (e.g. after this process stalled past DEDUP_LOCK_TTL), the script
+    // returns 0 and we skip the write — the notification was already
+    // delivered and the other handler owns the dedup lifecycle.
+    //
+    // Catch Redis errors: the notification was already sent; throwing would
+    // cause the stream consumer to retry without the marker and deliver a
+    // guaranteed duplicate.  The lock expires in DEDUP_LOCK_TTL seconds as
+    // an acceptable fallback.
+    const FINALIZE_SCRIPT =
+      'if redis.call("GET", KEYS[1]) == ARGV[1] then return redis.call("SET", KEYS[1], ARGV[2], "EX", ARGV[3]) else return 0 end';
+    try {
+      const finalized = await this.redis
+        .getClient()
+        .eval(
+          FINALIZE_SCRIPT,
+          1,
+          dedupKey,
+          ownerToken,
+          DEDUP_DELIVERED_VALUE,
+          String(DEDUP_TTL),
+        );
+      if (finalized === 0) {
+        this.logger.warn(
+          `Dedup marker not finalized for ${eventType} user=${userId}: lock overwritten`,
+        );
+      }
+    } catch (err: any) {
       this.logger.warn(
-        `Webhook dispatch failed for ${eventType}: ${err?.message}`,
+        `Dedup marker finalization failed for ${eventType} user=${userId}: ${err?.message}`,
       );
-    });
-
-    // Determine delivery mode
-    const freq = String(prefs.notificationFreq ?? "IMMEDIATE");
-
-    if (freq === "IMMEDIATE") {
-      await this.dispatch(userId, prefs, eventType, data, content);
-    } else {
-      // HOURLY / DAILY: push to digest queue in Redis
-      await this.enqueueDigest(userId, freq, eventType, data, content);
     }
   }
 
@@ -415,7 +583,7 @@ export class NotificationService {
   ): Promise<void> {
     // Dedup: prevent self-amplification — only one in-app notification per
     // (eventType, userId, event-data) within the dedup window.
-    const dedupKey = DEDUP_KEY(eventType, userId, data);
+    const dedupKey = IN_APP_DEDUP_KEY(eventType, userId, data);
     // Use a unique lock value so we can verify ownership before deleting
     const lockValue = crypto.randomUUID();
     let dedupAcquired = false;
