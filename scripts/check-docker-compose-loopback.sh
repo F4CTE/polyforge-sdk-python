@@ -102,7 +102,7 @@ in_ports && /^[[:space:]]+- (name|target|published|host_ip|protocol|mode|app_pro
   # confused for a real binding.
   noncomment = $0
   sub(/[[:space:]]*#.*$/, "", noncomment)
-  has_host_ip = (noncomment ~ /host_ip:[[:space:]]*["'\'']?(127\.0\.0\.1|\[::1\]|::1)["'\'']?/)
+  has_host_ip = (noncomment ~ /host_ip:[[:space:]]*["'\'']?(127\.0\.0\.1|\[::1\]|::1)["'\'']?([^0-9a-f.:]|$)/)
   suppressed = ($0 ~ /# nosemgrep: docker-compose-port-no-loopback(-long-syntax)?/)
   next
 }
@@ -137,7 +137,7 @@ in_block {
       saw_published = ($0 ~ / published:/)
       noncomment = $0
       sub(/[[:space:]]*#.*$/, "", noncomment)
-      has_host_ip = (noncomment ~ /host_ip:[[:space:]]*["'\'']?(127\.0\.0\.1|\[::1\]|::1)["'\'']?/)
+      has_host_ip = (noncomment ~ /host_ip:[[:space:]]*["'\'']?(127\.0\.0\.1|\[::1\]|::1)["'\'']?([^0-9a-f.:]|$)/)
       suppressed = ($0 ~ /# nosemgrep: docker-compose-port-no-loopback(-long-syntax)?/)
       next
     }
@@ -158,7 +158,7 @@ in_block {
     # Match loopback host_ip (127.0.0.1 / ::1) with optional single/double quotes.
     # Anchored to line-start so that comments, inline comments, and typos
     # (e.g. xhost_ip:) do not satisfy the guard.
-    if ($0 ~ /^[[:space:]]+host_ip:[[:space:]]*["'\'']?(127\.0\.0\.1|\[::1\]|::1)["'\'']?/) {
+    if ($0 ~ /^[[:space:]]+host_ip:[[:space:]]*["'\'']?(127\.0\.0\.1|\[::1\]|::1)["'\'']?([^0-9a-f.:]|$)/) {
       has_host_ip = 1
     }
   }
@@ -220,7 +220,7 @@ in_ports && /^[[:space:]]+-[[:space:]]+/ && !in_block {
   # for loopback host_ip.
   if (val ~ /^\{.*\}$/) {
     # Check for loopback host_ip (IPv4 or IPv6) inside the inline map
-    if (val ~ /host_ip:[[:space:]]*["'\'']?(127\.0\.0\.1|\[::1\]|::1)["'\'']?/) { next }
+    if (val ~ /host_ip:[[:space:]]*["'\'']?(127\.0\.0\.1|\[::1\]|::1)["'\'']?([^0-9a-f.:]|$)/) { next }
     # No loopback host_ip in inline map — flag if target and published exist
     if (val ~ /target:[[:space:]]*(\\?["'\''])?[0-9]/ && val ~ /published:[[:space:]]*(\\?["'\''])?[0-9]/) {
       printf "::error file=%s,line=%d::Inline long-syntax port mapping without loopback binding. Add host_ip: 127.0.0.1 or suppress with # nosemgrep: docker-compose-port-no-loopback(-long-syntax). See https://github.com/F4CTE/PolyForge/issues/1310\n", file, NR
