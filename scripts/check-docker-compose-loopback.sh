@@ -197,6 +197,14 @@ function process_flow_entries(buf) {
     # Skip partial braces from comma-split inline maps
     if (qval ~ /\{/ && qval !~ /\}/) continue
 
+    # Variable reference without a colon (e.g. "${APP_PORT}") — cannot
+    # verify loopback binding statically.  Flag rather than silently skip.
+    if (qval ~ /^\$/) {
+      printf "::error file=%s,line=%d::Flow-style port uses variable substitution that cannot be verified for loopback binding. Use a static port binding or suppress with # nosemgrep: docker-compose-port-no-loopback(-flow-style). See https://github.com/F4CTE/PolyForge/issues/1310\n", file, flow_lineno
+      exit_code = 1
+      continue
+    }
+
     # Strip optional protocol suffix
     sub(/\/[a-zA-Z]+$/, "", qval)
 
@@ -409,10 +417,16 @@ in_ports && /^[[:space:]]+-[[:space:]]+/ && !in_block {
   # spurious errors.  Detect the inline map wrapper and inspect it directly
   # for loopback host_ip.
   if (val ~ /^\{.*\}$/) {
-    # Check for loopback host_ip (IPv4 or IPv6) inside the inline map
-    if (val ~ /host_ip:[[:space:]]*["'\'']?(127\.0\.0\.1|\[::1\]|::1)["'\'']?([^0-9a-f.:]|$)/) { next }
-    # No loopback host_ip in inline map — flag if target and published exist
-    if (val ~ /target:[[:space:]]*(\\?["'\''])?[0-9]/ && val ~ /published:[[:space:]]*(\\?["'\''])?[0-9]/) {
+    # Check for loopback host_ip (IPv4 or IPv6) inside the inline map.
+    # Handles both unquoted keys (host_ip: 127.0.0.1) and quoted keys
+    # ("host_ip": "127.0.0.1", 'host_ip': '127.0.0.1').
+    if (val ~ /["'\'']?host_ip["'\'']?:[[:space:]]*["'\'']?(127\.0\.0\.1|\[::1\]|::1)["'\'']?([^0-9a-f.:]|$)/) { next }
+    # No loopback host_ip in inline map — flag if target and published exist.
+    # Also handles quoted keys ("target": , 'target':) and variable
+    # substitution values ($VAR, ${VAR}) that would otherwise silently bypass.
+    _target_match = val ~ /["'\'']?target["'\'']?:[[:space:]]*["'\'']?[0-9$]/
+    _published_match = val ~ /["'\'']?published["'\'']?:[[:space:]]*["'\'']?[0-9$]/
+    if (_target_match && _published_match) {
       printf "::error file=%s,line=%d::Inline long-syntax port mapping without loopback binding. Add host_ip: 127.0.0.1 or suppress with # nosemgrep: docker-compose-port-no-loopback(-long-syntax). See https://github.com/F4CTE/PolyForge/issues/1310\n", file, NR
       exit_code = 1
     }
