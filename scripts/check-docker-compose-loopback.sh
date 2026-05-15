@@ -109,10 +109,13 @@ in_ports && /^[[:space:]]+- (name|target|published|host_ip|protocol|mode|app_pro
 
 in_block {
   cur_indent = leadingspaces($0)
-  # Exit block when we encounter a new port entry ("- " at any depth),
-  # a blank line, or a non-blank line whose indent is at or above the
-  # block entry indent (service-level key, service name, or top-level key).
-  if ($0 ~ /^[[:space:]]+- / || cur_indent <= port_lead) {
+  # Exit block when we encounter a new port entry ("- " at any depth)
+  # or a non-blank line whose indent is at or above the block entry
+  # indent (service-level key, service name, or top-level key).
+  # Blank and whitespace-only lines are ignored inside the block:
+  # they do not exit the block and cannot cause a premature false
+  # positive on entries whose host_ip appears after spacing.
+  if ($0 ~ /^[[:space:]]+- / || ($0 !~ /^[[:space:]]*$/ && cur_indent <= port_lead)) {
     if (saw_target && saw_published && !has_host_ip && !suppressed) {
       printf "::error file=%s,line=%d::Long-syntax port mapping without loopback binding. Add host_ip: 127.0.0.1 or suppress with # nosemgrep: docker-compose-port-no-loopback(-long-syntax). See https://github.com/F4CTE/PolyForge/issues/1310\n", file, entry_lineno
       exit_code = 1
@@ -188,6 +191,10 @@ in_ports && /^[[:space:]]+-[[:space:]]+/ && !in_block {
   if ($0 ~ /# nosemgrep: docker-compose-port-no-loopback(-long-syntax)?/) { prev_nosemgrep = 0; next }
   if (prev_nosemgrep) { prev_nosemgrep = 0; next }
 
+  # Save indentation before modifying $0 so that anchor entries
+  # (- &name) can use it as port_lead for the block content handler.
+  entry_indent = leadingspaces($0)
+
   # Capture the raw value after the leading "- "
   # Strip optional quotes (double or single) and trailing whitespace / comment
   gsub(/^[[:space:]]*-[[:space:]]+/, "")
@@ -199,6 +206,10 @@ in_ports && /^[[:space:]]+-[[:space:]]+/ && !in_block {
   val = raw
   sub(/^"/, "", val); sub(/"$/, "", val)
   sub(/^\047/, "", val); sub(/\047$/, "", val)
+  # Normalize whitespace left after quote removal (quoted inline maps
+  # like - "{ target: 80, ... }" have a space between the quote and the
+  # brace that would otherwise defeat the ^\{.*\}$ anchor below).
+  gsub(/^[[:space:]]+/, "", val); gsub(/[[:space:]]+$/, "", val)
 
   # Remove optional protocol suffix (e.g. /tcp, /udp)
   sub(/\/[a-zA-Z]+$/, "", val)
@@ -232,11 +243,39 @@ in_ports && /^[[:space:]]+-[[:space:]]+/ && !in_block {
   # Forms: HOST:CONTAINER, HOST:CONTAINER/PROTO, HOST:HOSTPORT:CONTAINERPORT
   if (val ~ /^\[/) {
     closing = index(val, "]")
-    if (closing == 0) { next }
+    if (closing == 0) {
+      printf "::warning file=%s,line=%d::Malformed IPv6 port entry (missing closing bracket) — could not check loopback binding.\n", file, NR
+      next
+    }
     host = substr(val, 1, closing)
   } else {
     parts_count = split(val, parts, ":")
-    if (parts_count < 2) { next }
+    if (parts_count < 2) {
+      # YAML anchor definition (e.g. - &name).  Treat the subsequent
+      # indented lines as long-syntax block content so that target:,
+      # published:, and host_ip: keys are tracked.
+      if (val ~ /^&/) {
+        in_block = 1
+        port_lead = entry_indent
+        entry_lineno = NR
+        saw_target = 0
+        saw_published = 0
+        has_host_ip = 0
+        suppressed = ($0 ~ /# nosemgrep: docker-compose-port-no-loopback(-long-syntax)?/)
+        next
+      }
+      # YAML alias (e.g. - *name).  The referenced mapping cannot be
+      # verified, so warn rather than silently skipping.
+      if (val ~ /^\*/) {
+        printf "::warning file=%s,line=%d::YAML alias port entry cannot be verified for loopback binding. Inline the port mapping or suppress with # nosemgrep: docker-compose-port-no-loopback(-long-syntax).\n", file, NR
+        next
+      }
+      # Any other unrecognised single-value entry — warn.
+      if (val !~ /^~?$/) {
+        printf "::warning file=%s,line=%d::Unrecognised port entry could not be checked for loopback binding. Add an explicit host_ip or suppress with # nosemgrep: docker-compose-port-no-loopback(-long-syntax).\n", file, NR
+      }
+      next
+    }
     host = parts[1]
 
     # Unbracketed IPv6 (host empty due to leading ::).  Compose accepts
