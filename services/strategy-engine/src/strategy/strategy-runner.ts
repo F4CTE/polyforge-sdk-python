@@ -481,6 +481,30 @@ export class StrategyRunner {
             void this.tick();
           }, RETRY_BACKOFF_MS);
         }
+      } else if (
+        !lockAcquired &&
+        this.status === "RUNNING" &&
+        (this.execMode === "EVENT" || this.execMode === "HYBRID")
+      ) {
+        // Lock acquisition failed without any pending coalesced tick.
+        // In EVENT/HYBRID mode there is no setInterval retry — a stale
+        // or contended Redis lock can drop the only evaluation trigger
+        // if no later price event arrives.  Schedule a bounded retry so
+        // the strategy does not become permanently idle after a
+        // transient lock miss.  TICK mode is excluded because the
+        // interval timer provides natural retry cadence.
+        //
+        // Set scheduledFollowUp so the retry bypasses the min-tick
+        // throttle.  Without this, the retry advances lastTickMs and
+        // the next real price event would be throttled if it arrives
+        // within MIN_TICK_MS of the failed retry attempt.
+        if (this.followUpTimer === null) {
+          this.scheduledFollowUp = true;
+          this.followUpTimer = setTimeout(() => {
+            this.followUpTimer = null;
+            void this.tick();
+          }, 200);
+        }
       }
     }
   }
