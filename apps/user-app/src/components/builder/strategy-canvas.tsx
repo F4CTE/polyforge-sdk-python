@@ -60,9 +60,7 @@ function nodeHasTargetHandle(node: AnyNode): boolean {
 
 function getNodeLabel(node: AnyNode): string {
   const data = node.data as Record<string, unknown>;
-  return String(
-    data.variableName || data.label || node.type || "Node",
-  );
+  return String(data.variableName || data.label || node.type || "Node");
 }
 
 function getAvailableSourceHandles(node: AnyNode): string[] {
@@ -331,7 +329,8 @@ export function StrategyCanvas() {
       // H key: cycle source/target handles (only when connection is active)
       if (
         (event.key === "h" || event.key === "H") &&
-        connState.phase !== "idle"
+        (connState.phase === "source_selected" ||
+          connState.phase === "connecting")
       ) {
         event.preventDefault();
         if (connState.phase === "source_selected") {
