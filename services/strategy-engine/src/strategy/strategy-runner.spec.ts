@@ -2104,7 +2104,7 @@ describe("StrategyRunner — concurrent tick serialization", () => {
     }
   });
 
-  it("schedules EVENT-mode crash-recovery retry when pendingTick was set and lock miss has no pending Redis unlock (POLA-5150)", async () => {
+  it("does NOT schedule EVENT-mode crash-recovery retry when pendingTick was set and lock miss has no pending Redis unlock (POLA-5150)", async () => {
     vi.useFakeTimers();
     try {
       vi.setSystemTime(300);
@@ -2113,9 +2113,14 @@ describe("StrategyRunner — concurrent tick serialization", () => {
       // pendingTick before the finally block runs.  SET NX resolves to
       // null (another instance holds the lock) and pendingRedisUnlock is
       // null (this instance never acquired the lock, so it has no
-      // pending unlock).  The finally block must schedule a TTL+jitter
-      // crash-recovery retry instead of silently dropping the pending
-      // events.
+      // pending unlock).
+      //
+      // In a multi-instance deployment where every instance receives the
+      // same price event, the winning instance already processes the
+      // coalesced events.  A losing-instance crash-recovery retry would
+      // re-evaluate already-processed state and produce duplicate order
+      // intents / sub-strategy launches.  The losing instance must NOT
+      // schedule a retry.
       let resolveSetNx!: (value: unknown) => void;
       let setCallCount = 0;
       const client = {
@@ -2136,7 +2141,7 @@ describe("StrategyRunner — concurrent tick serialization", () => {
               resolveSetNx = resolve;
             });
           }
-          // Crash-recovery retry SET NX — succeed.
+          // Should NOT be called a second time — no retry is scheduled.
           return Promise.resolve("OK");
         }),
         del: vi.fn().mockResolvedValue(1),
@@ -2170,29 +2175,31 @@ describe("StrategyRunner — concurrent tick serialization", () => {
       await vi.advanceTimersByTimeAsync(0);
       await tickAPromise;
 
-      // No evaluation — SET NX failed and the crash-recovery retry
-      // fires after the lock TTL + grace period (10s + 1-2s jitter).
+      // No evaluation — SET NX failed and no crash-recovery retry is
+      // scheduled.  The winning instance handles the events.
       expect(state.getStateAndPrices).not.toHaveBeenCalled();
 
-      // Advance past the lock TTL + maximum grace jitter.
+      // Advance past the lock TTL + maximum grace jitter (15s).
       await vi.advanceTimersByTimeAsync(15_000);
 
-      // Crash-recovery retry fired, acquired the lock, and evaluated.
-      expect(state.getStateAndPrices).toHaveBeenCalledTimes(1);
+      // Still no evaluation — no retry was scheduled.
+      expect(state.getStateAndPrices).not.toHaveBeenCalled();
+      // SET was only called once (the original lock miss).
+      expect(client.set).toHaveBeenCalledTimes(1);
     } finally {
       vi.useRealTimers();
     }
   });
 
-  it("sets scheduledFollowUp when EVENT-mode crash-recovery retry fires, not when scheduled (POLA-5150)", async () => {
+  it("does NOT schedule a follow-up retry in EVENT mode when lock miss has no pending Redis unlock (POLA-5150)", async () => {
     vi.useFakeTimers();
     try {
       vi.setSystemTime(300);
 
-      // Set up Path 1: Tick A awaits SET NX (deferred), Tick B arrives
+      // Set up: Tick A awaits SET NX (deferred), Tick B arrives
       // and sets pendingTick=true, SET NX resolves null (lock held by
-      // another instance).  The finally block schedules a crash-recovery
-      // retry at 10-12s.
+      // another instance).  The finally block must NOT schedule a
+      // crash-recovery retry — the winning instance processes the events.
       let resolveSetNx!: (value: unknown) => void;
       let setCallCount = 0;
       const client = {
@@ -2207,12 +2214,10 @@ describe("StrategyRunner — concurrent tick serialization", () => {
         set: vi.fn().mockImplementation(() => {
           setCallCount++;
           if (setCallCount === 1) {
-            // Tick A's SET NX — deferred so Tick B can set pendingTick.
             return new Promise((resolve) => {
               resolveSetNx = resolve;
             });
           }
-          // Crash-recovery retry SET NX — succeed.
           return Promise.resolve("OK");
         }),
         del: vi.fn().mockResolvedValue(1),
@@ -2238,33 +2243,30 @@ describe("StrategyRunner — concurrent tick serialization", () => {
       await runner.onPriceEvent("tok1", 0.51);
 
       // Resolve SET NX as null — lock held by another instance.
-      // Crash-recovery retry is scheduled at this point.
+      // No crash-recovery retry is scheduled.
       resolveSetNx(null);
       await vi.advanceTimersByTimeAsync(0);
       await tickAPromise;
 
-      // No evaluation yet — SET NX failed, crash-recovery retry pending.
+      // No evaluation yet — SET NX failed, no retry scheduled.
       expect(state.getStateAndPrices).not.toHaveBeenCalled();
 
       // Fire a new price event at t=560 (10 ms after lastTickMs=550).
-      // Without the fix, scheduledFollowUp was set at scheduling time
-      // (t=550) and this event would bypass the min-tick throttle.
-      // With the fix, scheduledFollowUp is set in the retry callback
-      // (t≈11550-12550), so this event must respect the throttle.
+      // scheduledFollowUp was never set, so this event must respect the
+      // min-tick throttle (560-550=10 < 200ms MIN_TICK_MS).
       vi.setSystemTime(560);
       await vi.advanceTimersByTimeAsync(0);
       await runner.onPriceEvent("tok1", 0.52);
 
-      // Throttle blocked: 560-550=10 < 200ms MIN_TICK_MS, and
-      // scheduledFollowUp was not yet set.
+      // Throttle blocked: still within MIN_TICK_MS window.
       expect(state.getStateAndPrices).not.toHaveBeenCalled();
 
-      // Advance past the crash-recovery retry (10s + 1-2s jitter cap).
-      // The retry fires, sets scheduledFollowUp in its callback,
-      // bypasses the throttle, acquires the lock, and evaluates.
-      await vi.advanceTimersByTimeAsync(15_000);
+      // Fire another event past the throttle window.
+      vi.setSystemTime(800);
+      await vi.advanceTimersByTimeAsync(0);
+      await runner.onPriceEvent("tok1", 0.53);
 
-      // Crash-recovery retry fired, acquired the lock, and evaluated.
+      // This event should pass the throttle and evaluate.
       expect(state.getStateAndPrices).toHaveBeenCalledTimes(1);
     } finally {
       vi.useRealTimers();

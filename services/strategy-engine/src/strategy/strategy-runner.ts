@@ -497,30 +497,18 @@ export class StrategyRunner {
               }
             })
             .catch(() => {});
-        } else if (this.execMode === "EVENT" && this.followUpTimer === null) {
-          // EVENT mode, lock acquisition failed, no coalesced events
-          // pending on our own Redis unlock (pendingRedisUnlock is
-          // null, so the lock is held by another instance).
-          //
-          // Schedule a crash-recovery retry after the lock TTL expires
-          // to guard against the lock holder crashing mid-evaluation.
-          // Without this, the coalesced pendingTick events would be
-          // permanently dropped when the holder fails before completing
-          // — leaving the strategy stale until a new external price
-          // event arrives.
-          //
-          // scheduledFollowUp is set inside the callback so the flag is
-          // only true when the retry actually fires — an intermediate
-          // price event that arrives between scheduling and firing must
-          // still respect the min-tick throttle.
-          const LOCK_TTL_MS = 10_000;
-          const CRASH_GRACE_MS = 1_000 + Math.floor(Math.random() * 1_000);
-          this.followUpTimer = setTimeout(() => {
-            this.followUpTimer = null;
-            this.scheduledFollowUp = true;
-            void this.tick();
-          }, LOCK_TTL_MS + CRASH_GRACE_MS);
         }
+        // EVENT mode, lock acquisition failed, no coalesced events
+        // pending on our own Redis unlock (pendingRedisUnlock is
+        // null, so the lock is held by another instance).
+        //
+        // Do NOT schedule a crash-recovery retry.  In a multi-instance
+        // deployment where every instance receives the same price
+        // event, the winning instance evaluates the latest state and
+        // processes coalesced events.  A losing-instance retry after
+        // lock TTL would re-evaluate already-processed state and
+        // produce duplicate order intents / sub-strategy launches and
+        // double-increment execution counters.
       } else if (!lockAcquired && this.status === "RUNNING") {
         // Lock acquisition failed without any pending coalesced tick.
         //
