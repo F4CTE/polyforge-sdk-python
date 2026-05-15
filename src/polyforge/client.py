@@ -733,12 +733,14 @@ class PolyforgeClient:
         if parsed.scheme != "https" and parsed.hostname not in ("localhost", "127.0.0.1"):
             raise ValueError("Non-localhost API URLs must use HTTPS")
 
+        from polyforge import __version__ as _v
+
         self._client = httpx.Client(
             base_url=self._api_url,
             headers={
                 "Authorization": f"Bearer {api_key}",
                 "Content-Type": "application/json",
-                "User-Agent": "polyforge-python/1.0.0",
+                "User-Agent": f"polyforge-python/{_v}",
             },
             timeout=timeout,
             verify=True,
@@ -4163,12 +4165,14 @@ class AsyncPolyforgeClient:
         if parsed.scheme != "https" and parsed.hostname not in ("localhost", "127.0.0.1"):
             raise ValueError("Non-localhost API URLs must use HTTPS")
 
+        from polyforge import __version__ as _v
+
         self._client = httpx.AsyncClient(
             base_url=self._api_url,
             headers={
                 "Authorization": f"Bearer {api_key}",
                 "Content-Type": "application/json",
-                "User-Agent": "polyforge-python/1.0.0",
+                "User-Agent": f"polyforge-python/{_v}",
             },
             timeout=timeout,
             verify=True,
