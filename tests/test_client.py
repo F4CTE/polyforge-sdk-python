@@ -6537,8 +6537,8 @@ class TestTradingCopyNumericValidation:
             assert "camelCase" in str(w[0].message)
 
         json_body = client._patch.call_args.kwargs["json"]
-        assert json_body["sizeValue"] == 100
-        assert json_body["maxExposure"] == 500
+        assert json_body["sizeValue"] == "100"
+        assert json_body["maxExposure"] == "500"
         client.close()
 
     def test_update_copy_config_camelcase_overrides_snake_case(self):
@@ -6566,12 +6566,12 @@ class TestTradingCopyNumericValidation:
             warnings.simplefilter("always")
             client.update_copy_config(
                 "copy-1",
-                size_value=100,    # snake_case → body["sizeValue"] = 100
-                sizeValue=200,     # camelCase → overrides to 200
+                size_value=100,    # snake_case → body["sizeValue"] = "100"
+                sizeValue=200,     # camelCase → overrides to "200"
             )
 
         json_body = client._patch.call_args.kwargs["json"]
-        assert json_body["sizeValue"] == 200
+        assert json_body["sizeValue"] == "200"
         client.close()
 
     def test_update_copy_config_explicit_none_sends_null(self):
