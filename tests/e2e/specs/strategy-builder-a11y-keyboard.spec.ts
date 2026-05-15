@@ -122,54 +122,11 @@ test.describe('Strategy Builder — Keyboard A11y', () => {
         const edgeCount = await edgesAfter.count();
         expect(edgeCount, 'Expected at least 1 edge after keyboard connection').toBeGreaterThanOrEqual(1);
 
-        // Verify handle-level correctness: extract edge source/target handle IDs
-        // from the React Flow internal zustand edge store.
-        const edgeHandles = await page.evaluate(() => {
-          // React Flow stores edges in an internal zustand store accessible
-          // through React fiber hooks on the ReactFlow wrapper component.
-          const flowRoot = document.querySelector('.react-flow');
-          if (!flowRoot) return null;
-          const fiberKey = Object.keys(flowRoot).find(
-            (k) => k.startsWith('__reactFiber$') || k.startsWith('__reactInternalInstance$'),
-          );
-          if (!fiberKey) return null;
-          // Walk the hooked subtree looking for a useSyncExternalStore snapshot
-          // that contains an edges array (React Flow's internal zustand store).
-          type EdgeHandleSnapshot = Array<{ id: unknown; source: unknown; target: unknown; sourceHandle: unknown; targetHandle: unknown }>;
-          function walk(fiber: Record<string, unknown> | null, depth: number): EdgeHandleSnapshot | null {
-            if (!fiber || depth > 80) return null;
-            let hook = fiber['memoizedState'] as Record<string, unknown> | null;
-            for (let j = 0; j < 60 && hook; j++) {
-              // useSyncExternalStore stores { value: T, getSnapshot: fn }
-              // or { value: T } in newer React versions.
-              const value = hook['value'] as Record<string, unknown> | undefined;
-              if (value && Array.isArray(value) && value.length > 0 && 'sourceHandle' in value[0]) {
-                return (value as Array<Record<string, unknown>>).map((e) => ({
-                  id: e['id'],
-                  source: e['source'],
-                  target: e['target'],
-                  sourceHandle: e['sourceHandle'] ?? null,
-                  targetHandle: e['targetHandle'] ?? null,
-                }));
-              }
-              // Also check tagged state: { store: zustandStore, edges: [...] }
-              if (hook['edges'] && Array.isArray(hook['edges']) && hook['edges'].length > 0 &&
-                  'sourceHandle' in (hook['edges'] as Array<unknown>)[0]) {
-                return (hook['edges'] as Array<Record<string, unknown>>).map((e) => ({
-                  id: e['id'],
-                  source: e['source'],
-                  target: e['target'],
-                  sourceHandle: e['sourceHandle'] ?? null,
-                  targetHandle: e['targetHandle'] ?? null,
-                }));
-              }
-              hook = hook['next'] as Record<string, unknown> | null;
-            }
-            return walk(fiber['child'] as Record<string, unknown> | null, depth + 1) ??
-                   walk(fiber['sibling'] as Record<string, unknown> | null, depth + 1);
-          }
-          return walk((flowRoot as Record<string, unknown>)[fiberKey] as Record<string, unknown> | null, 0);
-        });
+        // Verify handle-level correctness: read edge data from the stable
+        // window helper exposed by StrategyCanvas.
+        const edgeHandles = await page.evaluate(
+          () => (window as unknown as { __polyforgeGetEdges?: () => Array<{ id: string; source: string; target: string; sourceHandle: string | null; targetHandle: string | null }> }).__polyforgeGetEdges?.() ?? null,
+        );
 
         if (edgeHandles && edgeHandles.length > 0) {
           const first = edgeHandles[0];
@@ -398,45 +355,9 @@ test.describe('Strategy Builder — Keyboard A11y', () => {
         const edgesAfter = page.locator('.react-flow__edge');
         await expect(edgesAfter.first()).toBeVisible({ timeout: 5_000 });
 
-        const edgeHandles = await page.evaluate(() => {
-          const flowRoot = document.querySelector('.react-flow');
-          if (!flowRoot) return null;
-          const fiberKey = Object.keys(flowRoot).find(
-            (k) => k.startsWith('__reactFiber$') || k.startsWith('__reactInternalInstance$'),
-          );
-          if (!fiberKey) return null;
-          type EdgeHandleSnapshot = Array<{ id: unknown; source: unknown; target: unknown; sourceHandle: unknown; targetHandle: unknown }>;
-          function walk(fiber: Record<string, unknown> | null, depth: number): EdgeHandleSnapshot | null {
-            if (!fiber || depth > 80) return null;
-            let hook = fiber['memoizedState'] as Record<string, unknown> | null;
-            for (let j = 0; j < 60 && hook; j++) {
-              const value = hook['value'] as Record<string, unknown> | undefined;
-              if (value && Array.isArray(value) && value.length > 0 && 'sourceHandle' in value[0]) {
-                return (value as Array<Record<string, unknown>>).map((e) => ({
-                  id: e['id'],
-                  source: e['source'],
-                  target: e['target'],
-                  sourceHandle: e['sourceHandle'] ?? null,
-                  targetHandle: e['targetHandle'] ?? null,
-                }));
-              }
-              if (hook['edges'] && Array.isArray(hook['edges']) && hook['edges'].length > 0 &&
-                  'sourceHandle' in (hook['edges'] as Array<unknown>)[0]) {
-                return (hook['edges'] as Array<Record<string, unknown>>).map((e) => ({
-                  id: e['id'],
-                  source: e['source'],
-                  target: e['target'],
-                  sourceHandle: e['sourceHandle'] ?? null,
-                  targetHandle: e['targetHandle'] ?? null,
-                }));
-              }
-              hook = hook['next'] as Record<string, unknown> | null;
-            }
-            return walk(fiber['child'] as Record<string, unknown> | null, depth + 1) ??
-                   walk(fiber['sibling'] as Record<string, unknown> | null, depth + 1);
-          }
-          return walk((flowRoot as Record<string, unknown>)[fiberKey] as Record<string, unknown> | null, 0);
-        });
+        const edgeHandles = await page.evaluate(
+          () => (window as unknown as { __polyforgeGetEdges?: () => Array<{ id: string; source: string; target: string; sourceHandle: string | null; targetHandle: string | null }> }).__polyforgeGetEdges?.() ?? null,
+        );
 
         expect(edgeHandles, 'Edge extraction should return handle data').toBeTruthy();
         expect(edgeHandles!.length, 'Expected 1 edge').toBeGreaterThanOrEqual(1);
@@ -494,45 +415,9 @@ test.describe('Strategy Builder — Keyboard A11y', () => {
         const edgesAfter = page.locator('.react-flow__edge');
         await expect(edgesAfter.first()).toBeVisible({ timeout: 5_000 });
 
-        const edgeHandles = await page.evaluate(() => {
-          const flowRoot = document.querySelector('.react-flow');
-          if (!flowRoot) return null;
-          const fiberKey = Object.keys(flowRoot).find(
-            (k) => k.startsWith('__reactFiber$') || k.startsWith('__reactInternalInstance$'),
-          );
-          if (!fiberKey) return null;
-          type EdgeHandleSnapshot = Array<{ id: unknown; source: unknown; target: unknown; sourceHandle: unknown; targetHandle: unknown }>;
-          function walk(fiber: Record<string, unknown> | null, depth: number): EdgeHandleSnapshot | null {
-            if (!fiber || depth > 80) return null;
-            let hook = fiber['memoizedState'] as Record<string, unknown> | null;
-            for (let j = 0; j < 60 && hook; j++) {
-              const value = hook['value'] as Record<string, unknown> | undefined;
-              if (value && Array.isArray(value) && value.length > 0 && 'sourceHandle' in value[0]) {
-                return (value as Array<Record<string, unknown>>).map((e) => ({
-                  id: e['id'],
-                  source: e['source'],
-                  target: e['target'],
-                  sourceHandle: e['sourceHandle'] ?? null,
-                  targetHandle: e['targetHandle'] ?? null,
-                }));
-              }
-              if (hook['edges'] && Array.isArray(hook['edges']) && hook['edges'].length > 0 &&
-                  'sourceHandle' in (hook['edges'] as Array<unknown>)[0]) {
-                return (hook['edges'] as Array<Record<string, unknown>>).map((e) => ({
-                  id: e['id'],
-                  source: e['source'],
-                  target: e['target'],
-                  sourceHandle: e['sourceHandle'] ?? null,
-                  targetHandle: e['targetHandle'] ?? null,
-                }));
-              }
-              hook = hook['next'] as Record<string, unknown> | null;
-            }
-            return walk(fiber['child'] as Record<string, unknown> | null, depth + 1) ??
-                   walk(fiber['sibling'] as Record<string, unknown> | null, depth + 1);
-          }
-          return walk((flowRoot as Record<string, unknown>)[fiberKey] as Record<string, unknown> | null, 0);
-        });
+        const edgeHandles = await page.evaluate(
+          () => (window as unknown as { __polyforgeGetEdges?: () => Array<{ id: string; source: string; target: string; sourceHandle: string | null; targetHandle: string | null }> }).__polyforgeGetEdges?.() ?? null,
+        );
 
         expect(edgeHandles, 'Edge extraction should return handle data').toBeTruthy();
         expect(edgeHandles!.length, 'Expected 1 edge').toBeGreaterThanOrEqual(1);
@@ -585,45 +470,9 @@ test.describe('Strategy Builder — Keyboard A11y', () => {
         const edgesAfter = page.locator('.react-flow__edge');
         await expect(edgesAfter.first()).toBeVisible({ timeout: 5_000 });
 
-        const edgeHandles = await page.evaluate(() => {
-          const flowRoot = document.querySelector('.react-flow');
-          if (!flowRoot) return null;
-          const fiberKey = Object.keys(flowRoot).find(
-            (k) => k.startsWith('__reactFiber$') || k.startsWith('__reactInternalInstance$'),
-          );
-          if (!fiberKey) return null;
-          type EdgeHandleSnapshot = Array<{ id: unknown; source: unknown; target: unknown; sourceHandle: unknown; targetHandle: unknown }>;
-          function walk(fiber: Record<string, unknown> | null, depth: number): EdgeHandleSnapshot | null {
-            if (!fiber || depth > 80) return null;
-            let hook = fiber['memoizedState'] as Record<string, unknown> | null;
-            for (let j = 0; j < 60 && hook; j++) {
-              const value = hook['value'] as Record<string, unknown> | undefined;
-              if (value && Array.isArray(value) && value.length > 0 && 'sourceHandle' in value[0]) {
-                return (value as Array<Record<string, unknown>>).map((e) => ({
-                  id: e['id'],
-                  source: e['source'],
-                  target: e['target'],
-                  sourceHandle: e['sourceHandle'] ?? null,
-                  targetHandle: e['targetHandle'] ?? null,
-                }));
-              }
-              if (hook['edges'] && Array.isArray(hook['edges']) && hook['edges'].length > 0 &&
-                  'sourceHandle' in (hook['edges'] as Array<unknown>)[0]) {
-                return (hook['edges'] as Array<Record<string, unknown>>).map((e) => ({
-                  id: e['id'],
-                  source: e['source'],
-                  target: e['target'],
-                  sourceHandle: e['sourceHandle'] ?? null,
-                  targetHandle: e['targetHandle'] ?? null,
-                }));
-              }
-              hook = hook['next'] as Record<string, unknown> | null;
-            }
-            return walk(fiber['child'] as Record<string, unknown> | null, depth + 1) ??
-                   walk(fiber['sibling'] as Record<string, unknown> | null, depth + 1);
-          }
-          return walk((flowRoot as Record<string, unknown>)[fiberKey] as Record<string, unknown> | null, 0);
-        });
+        const edgeHandles = await page.evaluate(
+          () => (window as unknown as { __polyforgeGetEdges?: () => Array<{ id: string; source: string; target: string; sourceHandle: string | null; targetHandle: string | null }> }).__polyforgeGetEdges?.() ?? null,
+        );
 
         expect(edgeHandles, 'Edge extraction should return handle data').toBeTruthy();
         expect(edgeHandles!.length, 'Expected 1 edge').toBeGreaterThanOrEqual(1);

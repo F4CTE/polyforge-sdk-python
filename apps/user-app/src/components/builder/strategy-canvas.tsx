@@ -60,7 +60,9 @@ function nodeHasTargetHandle(node: AnyNode): boolean {
 
 function getNodeLabel(node: AnyNode): string {
   const data = node.data as Record<string, unknown>;
-  return String(data.variableName ?? data.label ?? node.type ?? "Node");
+  return String(
+    data.variableName || data.label || node.type || "Node",
+  );
 }
 
 function getAvailableSourceHandles(node: AnyNode): string[] {
@@ -245,22 +247,26 @@ export function StrategyCanvas() {
 
   const [connState, setConnState] = useState<ConnState>({ phase: "idle" });
   const [statusMsg, setStatusMsg] = useState("");
-  const statusTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     const msg = CONN_ANNOUNCEMENTS[connState.phase](connState);
     setStatusMsg(msg);
-
-    if (connState.phase === "connected") {
-      statusTimer.current = setTimeout(() => {
-        setConnState({ phase: "idle" });
-      }, 2000);
-    }
-
-    return () => {
-      if (statusTimer.current) clearTimeout(statusTimer.current);
-    };
   }, [connState]);
+
+  // Expose edge data for E2E tests to verify handle-level correctness.
+  useEffect(() => {
+    (window as unknown as Record<string, unknown>).__polyforgeGetEdges = () =>
+      edges.map((e) => ({
+        id: e.id,
+        source: e.source,
+        target: e.target,
+        sourceHandle: e.sourceHandle ?? null,
+        targetHandle: e.targetHandle ?? null,
+      }));
+    return () => {
+      delete (window as unknown as Record<string, unknown>).__polyforgeGetEdges;
+    };
+  }, [edges]);
 
   const resetConnection = useCallback(() => {
     setConnState({ phase: "idle" });
@@ -388,7 +394,10 @@ export function StrategyCanvas() {
           return;
         }
 
-        if (connState.phase === "idle" && nodeHasSourceHandle(node)) {
+        if (
+          (connState.phase === "idle" || connState.phase === "connected") &&
+          nodeHasSourceHandle(node)
+        ) {
           event.preventDefault();
           const handles = getAvailableSourceHandles(node);
           setConnState({
