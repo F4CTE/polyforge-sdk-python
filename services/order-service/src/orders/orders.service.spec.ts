@@ -338,6 +338,7 @@ describe("OrdersService", () => {
         expect.objectContaining({
           reason: "INVALID_ORDER_NUMERIC",
         }),
+        10_000,
       );
     });
 
@@ -353,6 +354,7 @@ describe("OrdersService", () => {
         expect.objectContaining({
           reason: "INVALID_ORDER_NUMERIC",
         }),
+        10_000,
       );
     });
   });
@@ -371,6 +373,7 @@ describe("OrdersService", () => {
       expect(redis.xadd).toHaveBeenCalledWith(
         "stream:orders:dlq",
         expect.objectContaining({ reason: "DB_CREATE_FAILED" }),
+        10_000,
       );
     });
 
@@ -468,6 +471,7 @@ describe("OrdersService", () => {
       expect(redis.xadd).toHaveBeenCalledWith(
         "stream:orders:dlq",
         expect.objectContaining({ reason: "INVALID_NUMERIC_ORDER_INTENT" }),
+        10_000,
       );
     });
   });
@@ -577,6 +581,7 @@ describe("OrdersService", () => {
         expect.objectContaining({
           reason: expect.stringContaining("permanent failure"),
         }),
+        10_000,
       );
     });
 
@@ -713,6 +718,7 @@ describe("OrdersService", () => {
         expect.objectContaining({
           reason: "GTD_EXPIRED_BEFORE_SUBMISSION",
         }),
+        10_000,
       );
     });
   });
@@ -737,6 +743,7 @@ describe("OrdersService", () => {
       expect(redis.xadd).toHaveBeenCalledWith(
         "stream:orders:dlq",
         expect.objectContaining({ reason: "US_RAIL_TERMS_REQUIRED" }),
+        10_000,
       );
     });
 
@@ -757,6 +764,7 @@ describe("OrdersService", () => {
       expect(redis.xadd).toHaveBeenCalledWith(
         "stream:orders:dlq",
         expect.objectContaining({ reason: "US_RAIL_TERMS_REQUIRED" }),
+        10_000,
       );
     });
 
@@ -787,6 +795,7 @@ describe("OrdersService", () => {
       expect(redis.xadd).toHaveBeenCalledWith(
         "stream:orders:dlq",
         expect.objectContaining({ reason: "US_RAIL_TERMS_REQUIRED" }),
+        10_000,
       );
     });
 
@@ -812,6 +821,7 @@ describe("OrdersService", () => {
       expect(redis.xadd).toHaveBeenCalledWith(
         "stream:orders:dlq",
         expect.objectContaining({ reason: "US_RAIL_TERMS_REQUIRED" }),
+        10_000,
       );
     });
 

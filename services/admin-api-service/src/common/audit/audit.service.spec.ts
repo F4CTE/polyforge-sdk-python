@@ -43,6 +43,7 @@ describe("AuditService", () => {
         data: {
           adminId: "admin-1",
           action: "USER_SUSPEND",
+          status: "success",
           targetType: "User",
           targetId: "user-42",
           payload: { reason: "TOS breach" },
@@ -78,7 +79,7 @@ describe("AuditService", () => {
       expect(call.data.ip).toBe("10.0.0.1");
     });
 
-    it("truncates IP to 64 characters", async () => {
+    it("truncates IP to match audit_logs.ip column max (VARCHAR 45)", async () => {
       const longIp = "x".repeat(128);
 
       await service.log({
@@ -89,7 +90,7 @@ describe("AuditService", () => {
       });
 
       const call = adminDb.auditLog.create.mock.calls[0][0];
-      expect(call.data.ip.length).toBeLessThanOrEqual(64);
+      expect(call.data.ip.length).toBe(45);
     });
 
     it("preserves a valid IPv4 address unchanged", async () => {
@@ -150,6 +151,145 @@ describe("AuditService", () => {
           payload: {},
         }),
       ).resolves.toBeUndefined();
+    });
+
+    it("defaults status to 'success' when not provided", async () => {
+      await service.log({
+        adminId: "admin-1",
+        action: "ACTION",
+        targetType: "User",
+        ip: "1.2.3.4",
+      });
+
+      const call = adminDb.auditLog.create.mock.calls[0][0];
+      expect(call.data.status).toBe("success");
+    });
+
+    it("uses explicit status when provided", async () => {
+      await service.log({
+        adminId: "admin-1",
+        action: "ACTION",
+        targetType: "User",
+        ip: "1.2.3.4",
+        status: "attempt",
+      });
+
+      const call = adminDb.auditLog.create.mock.calls[0][0];
+      expect(call.data.status).toBe("attempt");
+    });
+
+    it("supports status='failure' for recording failed operations", async () => {
+      await service.log({
+        adminId: "admin-1",
+        action: "ACTION",
+        targetType: "User",
+        ip: "1.2.3.4",
+        status: "failure",
+      });
+
+      const call = adminDb.auditLog.create.mock.calls[0][0];
+      expect(call.data.status).toBe("failure");
+    });
+  });
+
+  // ── logSafe ─────────────────────────────────────────────────────────────
+
+  describe("logSafe", () => {
+    it("delegates to log and resolves on success", async () => {
+      await service.logSafe({
+        adminId: "admin-1",
+        action: "ACTION",
+        targetType: "User",
+        ip: "1.2.3.4",
+        status: "success",
+      });
+
+      expect(adminDb.auditLog.create).toHaveBeenCalledTimes(1);
+      expect(adminDb.auditLog.create).toHaveBeenCalledWith({
+        data: {
+          adminId: "admin-1",
+          action: "ACTION",
+          status: "success",
+          targetType: "User",
+          targetId: undefined,
+          payload: undefined,
+          ip: "1.2.3.4",
+        },
+      });
+    });
+
+    it("catches errors and does not propagate (best-effort)", async () => {
+      const consoleSpy = vi
+        .spyOn(console, "error")
+        .mockImplementation(() => {});
+
+      adminDb.auditLog.create.mockRejectedValueOnce(
+        new Error("connection refused"),
+      );
+
+      // Should not throw
+      const result = await service.logSafe({
+        adminId: "admin-1",
+        action: "ACTION",
+        targetType: "User",
+        ip: "1.2.3.4",
+        status: "success",
+      });
+
+      expect(result).toBeUndefined();
+      expect(consoleSpy).toHaveBeenCalledTimes(1);
+      expect(consoleSpy.mock.calls[0][0]).toContain(
+        "[AuditService] logSafe failed",
+      );
+      expect(consoleSpy.mock.calls[0][0]).toContain("connection refused");
+
+      consoleSpy.mockRestore();
+    });
+
+    it("handles non-Error rejection values gracefully", async () => {
+      const consoleSpy = vi
+        .spyOn(console, "error")
+        .mockImplementation(() => {});
+
+      adminDb.auditLog.create.mockRejectedValueOnce("boom");
+
+      await expect(
+        service.logSafe({
+          adminId: "admin-1",
+          action: "ACTION",
+          targetType: "User",
+          ip: "1.2.3.4",
+        }),
+      ).resolves.toBeUndefined();
+
+      expect(consoleSpy).toHaveBeenCalledTimes(1);
+      expect(consoleSpy.mock.calls[0][0]).toContain("boom");
+
+      consoleSpy.mockRestore();
+    });
+
+    it("passes all params through to log including optional fields", async () => {
+      await service.logSafe({
+        adminId: "admin-1",
+        action: "INVITE_SEND",
+        targetType: "waitlist",
+        targetId: "user@example.com",
+        payload: { code: "ABC123" },
+        ip: "10.0.0.1",
+        status: "success",
+      });
+
+      expect(adminDb.auditLog.create).toHaveBeenCalledWith({
+        data: {
+          adminId: "admin-1",
+          action: "INVITE_SEND",
+          status: "success",
+          targetType: "waitlist",
+          targetId: "user@example.com",
+          payload: { code: "ABC123" },
+          ip: "10.0.0.1",
+        },
+      });
     });
   });
 });

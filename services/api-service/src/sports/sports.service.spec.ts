@@ -286,6 +286,56 @@ describe("SportsService", () => {
     });
   });
 
+  describe("getComboCollection", () => {
+    it("returns combo collection from cache", async () => {
+      const cached = {
+        collectionTicker: "NBA-COMBO",
+        title: "NBA Player Props",
+        marketCount: 5,
+      };
+      (redis.get as any).mockResolvedValueOnce(JSON.stringify(cached));
+
+      const result = await service.getComboCollection("NBA-COMBO");
+      expect(result).toEqual(cached);
+    });
+
+    it("returns null when upstream returns 404", async () => {
+      const originalFetch = globalThis.fetch;
+      globalThis.fetch = vi
+        .fn()
+        .mockResolvedValueOnce(new Response(null, { status: 404 }));
+
+      const result = await service.getComboCollection("NBA-COMBO");
+      expect(result).toBeNull();
+
+      globalThis.fetch = originalFetch;
+    });
+
+    it("throws Bad Gateway when upstream returns 5xx", async () => {
+      const originalFetch = globalThis.fetch;
+      globalThis.fetch = vi
+        .fn()
+        .mockResolvedValueOnce(new Response(null, { status: 502 }));
+
+      await expect(service.getComboCollection("NBA-COMBO")).rejects.toThrow(
+        "Upstream service error",
+      );
+
+      globalThis.fetch = originalFetch;
+    });
+
+    it("throws Bad Gateway on fetch error", async () => {
+      const originalFetch = globalThis.fetch;
+      globalThis.fetch = vi.fn().mockRejectedValueOnce(new Error("timeout"));
+
+      await expect(service.getComboCollection("NBA-COMBO")).rejects.toThrow(
+        "Upstream service unavailable",
+      );
+
+      globalThis.fetch = originalFetch;
+    });
+  });
+
   describe("lookupComboTicker", () => {
     it("returns null on proxy failure", async () => {
       const originalFetch = globalThis.fetch;

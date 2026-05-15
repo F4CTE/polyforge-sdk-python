@@ -68,10 +68,7 @@ function BracketOrderMock() {
 
 export function SmartExecutionSection() {
   return (
-    <section
-      className="py-20 md:py-28 border-t border-subtle"
-      id="execution"
-    >
+    <section className="py-20 md:py-28 border-t border-subtle" id="execution">
       <div className="max-w-container-landing mx-auto px-6">
         <div className="grid grid-cols-1 lg:grid-cols-2 items-start gap-10 lg:gap-[72px]">
           <div>

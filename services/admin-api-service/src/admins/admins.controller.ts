@@ -42,15 +42,27 @@ export class AdminsController {
     @CurrentAdmin() admin: AdminJwtPayload,
     @AdminIp() ip: string,
   ) {
-    const created = await this.admins.create(dto);
     await this.audit.log({
+      adminId: admin.sub,
+      action: "CREATE_ADMIN",
+      targetType: "admin",
+      payload: { email: dto.email, role: dto.role },
+      ip,
+      status: "attempt",
+    });
+
+    const created = await this.admins.create(dto);
+
+    await this.audit.logSafe({
       adminId: admin.sub,
       action: "CREATE_ADMIN",
       targetType: "admin",
       targetId: created.id,
       payload: { email: dto.email, role: dto.role },
       ip,
+      status: "success",
     });
+
     return created;
   }
 
@@ -61,15 +73,18 @@ export class AdminsController {
     @CurrentAdmin() admin: AdminJwtPayload,
     @AdminIp() ip: string,
   ) {
-    const updated = await this.admins.update(id, admin.sub, dto);
-    await this.audit.log({
+    const auditMeta = {
       adminId: admin.sub,
       action: "UPDATE_ADMIN",
       targetType: "admin",
       targetId: id,
       payload: { role: dto.role, active: dto.active },
       ip,
-    });
+    } as const;
+
+    await this.audit.log({ ...auditMeta, status: "attempt" });
+    const updated = await this.admins.update(id, admin.sub, dto);
+    await this.audit.logSafe({ ...auditMeta, status: "success" });
     return updated;
   }
 
@@ -79,14 +94,17 @@ export class AdminsController {
     @CurrentAdmin() admin: AdminJwtPayload,
     @AdminIp() ip: string,
   ) {
-    const result = await this.admins.deactivate(id, admin.sub);
-    await this.audit.log({
+    const auditMeta = {
       adminId: admin.sub,
       action: "DEACTIVATE_ADMIN",
       targetType: "admin",
       targetId: id,
       ip,
-    });
+    } as const;
+
+    await this.audit.log({ ...auditMeta, status: "attempt" });
+    const result = await this.admins.deactivate(id, admin.sub);
+    await this.audit.logSafe({ ...auditMeta, status: "success" });
     return result;
   }
 }

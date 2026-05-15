@@ -4,9 +4,17 @@ import { IsBoolean, IsOptional, IsInt, Min } from "class-validator";
 import { AdminJwtGuard } from "../common/guard/admin-jwt.guard";
 import { RolesGuard } from "../common/guard/roles.guard";
 import { Roles } from "../common/decorators/roles.decorator";
-import { AdminRole } from "@polyforge/shared-types";
+import { AdminJwtPayload, AdminRole } from "@polyforge/shared-types";
+import { AuditService } from "../common/audit/audit.service";
+import {
+  CurrentAdmin,
+  AdminIp,
+} from "../common/decorators/current-admin.decorator";
 import { ConfigFlagsService } from "./config-flags.service";
-import { BetaLimitsConfigService, type BetaLimits } from "@polyforge/shared-redis";
+import {
+  BetaLimitsConfigService,
+  type BetaLimits,
+} from "@polyforge/shared-redis";
 
 class SetInviteOnlyDto {
   @IsBoolean()
@@ -33,6 +41,7 @@ export class ConfigFlagsController {
   constructor(
     private readonly flags: ConfigFlagsService,
     private readonly betaLimits: BetaLimitsConfigService,
+    private readonly audit: AuditService,
   ) {}
 
   @Get()
@@ -43,8 +52,23 @@ export class ConfigFlagsController {
 
   @Patch("invite-only")
   @ApiOperation({ summary: "Toggle invite-only registration mode" })
-  setInviteOnly(@Body() dto: SetInviteOnlyDto) {
-    return this.flags.setInviteOnly(dto.enabled);
+  async setInviteOnly(
+    @Body() dto: SetInviteOnlyDto,
+    @CurrentAdmin() admin: AdminJwtPayload,
+    @AdminIp() ip: string,
+  ) {
+    const auditMeta = {
+      adminId: admin.sub,
+      action: "TOGGLE_INVITE_ONLY",
+      targetType: "config",
+      payload: { enabled: dto.enabled },
+      ip,
+    } as const;
+
+    await this.audit.log({ ...auditMeta, status: "attempt" });
+    const result = await this.flags.setInviteOnly(dto.enabled);
+    await this.audit.logSafe({ ...auditMeta, status: "success" });
+    return result;
   }
 
   @Get("beta-limits")
@@ -54,14 +78,31 @@ export class ConfigFlagsController {
   }
 
   @Patch("beta-limits")
-  @ApiOperation({ summary: "Update beta limits (partial update, Redis-backed)" })
-  setBetaLimits(@Body() dto: UpdateBetaLimitsDto): Promise<BetaLimits> {
+  @ApiOperation({
+    summary: "Update beta limits (partial update, Redis-backed)",
+  })
+  async setBetaLimits(
+    @Body() dto: UpdateBetaLimitsDto,
+    @CurrentAdmin() admin: AdminJwtPayload,
+    @AdminIp() ip: string,
+  ): Promise<BetaLimits> {
     const updates: Partial<BetaLimits> = {};
     for (const [key, value] of Object.entries(dto)) {
       if (value !== undefined) {
         (updates as Record<string, number>)[key] = value;
       }
     }
-    return this.betaLimits.setLimits(updates);
+    const auditMeta = {
+      adminId: admin.sub,
+      action: "UPDATE_BETA_LIMITS",
+      targetType: "config",
+      payload: updates as Record<string, unknown>,
+      ip,
+    } as const;
+
+    await this.audit.log({ ...auditMeta, status: "attempt" });
+    const result = await this.betaLimits.setLimits(updates);
+    await this.audit.logSafe({ ...auditMeta, status: "success" });
+    return result;
   }
 }

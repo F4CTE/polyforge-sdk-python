@@ -11,12 +11,35 @@ function makeRedis(overrides: Record<string, unknown> = {}) {
     del: vi.fn().mockResolvedValue(1),
     getJson: vi.fn().mockResolvedValue(null),
     getClient: vi.fn().mockReturnValue({
+      get: vi
+        .fn()
+        .mockResolvedValue(
+          JSON.stringify({ price: 0.5, timestamp: Date.now() }),
+        ),
       lrange: vi.fn().mockResolvedValue([]),
       mget: vi
         .fn()
         .mockResolvedValue([
           JSON.stringify({ price: 0.5, timestamp: Date.now() }),
         ]),
+      pipeline: vi.fn().mockReturnValue({
+        get: vi.fn(),
+        exec: vi.fn().mockResolvedValue([
+          [
+            null,
+            JSON.stringify({
+              betsToday: 0,
+              dailyPnl: 0,
+              consecutiveLoss: 0,
+              consecutiveWin: 0,
+              lastTradeAt: 0,
+              tradedTokensToday: [],
+              totalOrders: 0,
+            }),
+          ],
+        ]),
+      }),
+      // Beta daily execution counter
       incr: vi.fn().mockResolvedValue(1),
       expire: vi.fn().mockResolvedValue(1),
       // Tick lock
@@ -160,56 +183,54 @@ describe("StrategyRunner — lifecycle", () => {
     const state = makeState();
     const runner = makeRunner({ execMode: "TICK", state });
     await runner.onPriceEvent("tok1", 0.5);
-    // evaluate() calls state.get() — should not be called
-    expect(state.get).not.toHaveBeenCalled();
+    // evaluate() calls state.getStateAndPrices() — should not be called
+    expect(state.getStateAndPrices).not.toHaveBeenCalled();
   });
 
   it("onPriceEvent() evaluates when execMode is EVENT", async () => {
     const state = makeState();
     const runner = makeRunner({ execMode: "EVENT", state });
     await runner.onPriceEvent("tok1", 0.5);
-    expect(state.get).toHaveBeenCalled();
+    expect(state.getStateAndPrices).toHaveBeenCalled();
   });
 
   it("onPriceEvent() evaluates when execMode is HYBRID", async () => {
     const state = makeState();
     const runner = makeRunner({ execMode: "HYBRID", state });
     await runner.onPriceEvent("tok1", 0.5);
-    expect(state.get).toHaveBeenCalled();
+    expect(state.getStateAndPrices).toHaveBeenCalled();
   });
 
   it("skips overlapping ticks while one evaluation is still running", async () => {
     let release!: () => void;
     const state = makeState();
-    state.get.mockImplementation(
+    state.getStateAndPrices.mockImplementation(
       () =>
         new Promise((resolve) => {
-          release = () => resolve({ ...DEFAULT_STATE });
+          release = () => resolve({ state: { ...DEFAULT_STATE }, prices: new Map() });
         }),
     );
     const runner = makeRunner({ execMode: "EVENT", state });
 
     const first = runner.onPriceEvent("tok1", 0.5);
-    // Wait for the first tick to reach evaluate() → state.get() before
-    // proceeding. The tick pipeline now has async pre-checks (daily
+    // Wait for the first tick to reach evaluate() → state.getStateAndPrices()
+    // before proceeding. The tick pipeline now has async pre-checks (daily
     // execution counter, beta limits) that must complete before evaluate().
-    await vi.waitFor(() => expect(state.get).toHaveBeenCalled(), {
+    await vi.waitFor(() => expect(state.getStateAndPrices).toHaveBeenCalled(), {
       timeout: 1000,
     });
     // Without enough time elapsed, the second tick is debounced by MIN_TICK_MS
     const second = runner.onPriceEvent("tok1", 0.5);
     await second;
-    // The first tick now awaits betaLimits.getLimit() before reaching
-    // evaluate() → state.get(), adding an extra microtask cycle. Yield
-    // to the event loop so the mock implementation sets `release`
-    // before we call it.
-    await new Promise((r) => setTimeout(r, 0));
+    // Yield to let the first tick's microtasks (incr → expire → getLimit → evaluate)
+    // reach getStateAndPrices before we release it.
+    await Promise.resolve();
     release();
     await first;
 
     // Only the first tick evaluates — the second is dropped by the
     // MIN_TICK_MS debounce throttle (arrives within 200ms of first).
-    expect(state.get).toHaveBeenCalledTimes(1);
+    expect(state.getStateAndPrices).toHaveBeenCalledTimes(1);
   });
 });
 
@@ -273,8 +294,8 @@ describe("StrategyRunner — stale data detection", () => {
     runner.pause("manual");
 
     await runner.onPriceEvent("tok1", 0.5);
-    // state.get is only called inside evaluate(), which should be skipped
-    expect(state.get).not.toHaveBeenCalled();
+    // state.getStateAndPrices is only called inside evaluate(), which should be skipped
+    expect(state.getStateAndPrices).not.toHaveBeenCalled();
   });
 });
 
@@ -301,7 +322,10 @@ describe("StrategyRunner — SAFETY evaluation", () => {
     });
 
     // Set dailyPnl below limit
-    state.get.mockResolvedValue({ ...DEFAULT_STATE, dailyPnl: -15 });
+    state.getStateAndPrices.mockResolvedValue({
+      state: { ...DEFAULT_STATE, dailyPnl: -15 },
+      prices: new Map(),
+    });
 
     await runner.onPriceEvent("tok1", 0.5);
 
@@ -336,7 +360,10 @@ describe("StrategyRunner — SAFETY evaluation", () => {
       ],
     });
 
-    state.get.mockResolvedValue({ ...DEFAULT_STATE, consecutiveLoss: 2 });
+    state.getStateAndPrices.mockResolvedValue({
+      state: { ...DEFAULT_STATE, consecutiveLoss: 2 },
+      prices: new Map(),
+    });
 
     await runner.onPriceEvent("tok1", 0.5);
 
@@ -445,7 +472,7 @@ describe("StrategyRunner — TRIGGER evaluation", () => {
     await runner.onPriceEvent("tok1", 0.5);
     // No actions, so onIntents should NOT be called, but we can verify
     // the evaluation did not short-circuit after triggers
-    expect(state.get).toHaveBeenCalled();
+    expect(state.getStateAndPrices).toHaveBeenCalled();
   });
 
   it("skips tick when no trigger fires", async () => {
@@ -462,7 +489,10 @@ describe("StrategyRunner — TRIGGER evaluation", () => {
       triggers: [{ id: "t1", type: "win_streak", params: { count: "5" } }],
     });
 
-    state.get.mockResolvedValue({ ...DEFAULT_STATE, consecutiveWin: 0 });
+    state.getStateAndPrices.mockResolvedValue({
+      state: { ...DEFAULT_STATE, consecutiveWin: 0 },
+      prices: new Map(),
+    });
 
     await runner.onPriceEvent("tok1", 0.5);
 
@@ -486,15 +516,15 @@ describe("StrategyRunner — TRIGGER evaluation", () => {
     });
 
     await runner.onPriceEvent("tok1", 0.5);
-    // evaluate proceeded (state.get was called)
-    expect(state.get).toHaveBeenCalled();
+    // evaluate proceeded (state.getStateAndPrices was called)
+    expect(state.getStateAndPrices).toHaveBeenCalled();
   });
 
   it("proceeds with no triggers (empty trigger list = always fire)", async () => {
     const state = makeState();
     const runner = makeRunner({ execMode: "EVENT", state, triggers: [] });
     await runner.onPriceEvent("tok1", 0.5);
-    expect(state.get).toHaveBeenCalled();
+    expect(state.getStateAndPrices).toHaveBeenCalled();
   });
 
   it("resolves trigger block params from config fallback", async () => {
@@ -551,7 +581,10 @@ describe("StrategyRunner — CONDITION evaluation", () => {
       ],
     });
 
-    state.get.mockResolvedValue({ ...DEFAULT_STATE, betsToday: 5 });
+    state.getStateAndPrices.mockResolvedValue({
+      state: { ...DEFAULT_STATE, betsToday: 5 },
+      prices: new Map(),
+    });
 
     await runner.onPriceEvent("tok1", 0.5);
     expect(onIntents).not.toHaveBeenCalled();
@@ -590,6 +623,11 @@ describe("StrategyRunner — ACTION execution + state update", () => {
     const redis = makeRedis({
       getJson: vi.fn().mockResolvedValue({ price: 0.7 }),
     });
+    state.getStateAndPrices.mockResolvedValue({
+      state: { ...DEFAULT_STATE },
+      prices: new Map([["tok-yes", { price: 0.7, timestamp: Date.now() }]]),
+    });
+
     const onIntents = vi
       .fn<(intents: OrderIntent[]) => Promise<void>>()
       .mockResolvedValue(undefined);
@@ -629,6 +667,11 @@ describe("StrategyRunner — ACTION execution + state update", () => {
     const redis = makeRedis({
       getJson: vi.fn().mockResolvedValue({ price: 0.7 }),
     });
+    state.getStateAndPrices.mockResolvedValue({
+      state: { ...DEFAULT_STATE },
+      prices: new Map([["tok-yes", { price: 0.7, timestamp: Date.now() }]]),
+    });
+
     const onIntents = vi
       .fn<(intents: OrderIntent[]) => Promise<void>>()
       .mockResolvedValue(undefined);
@@ -721,7 +764,9 @@ describe("StrategyRunner — start() timer management", () => {
 describe("StrategyRunner — error handling", () => {
   it("swallows errors thrown during tick evaluation", async () => {
     const state = makeState();
-    state.get.mockRejectedValue(new Error("Redis connection lost"));
+    state.getStateAndPrices.mockRejectedValue(
+      new Error("Redis connection lost"),
+    );
 
     const runner = makeRunner({ execMode: "EVENT", state });
 
@@ -732,15 +777,17 @@ describe("StrategyRunner — error handling", () => {
 
   it("pauses strategy when onIntents reports counter increment failure", async () => {
     const state = makeState();
+    state.getStateAndPrices.mockResolvedValue({
+      state: { ...DEFAULT_STATE },
+      prices: new Map([["tok-yes", { price: 0.7, timestamp: Date.now() }]]),
+    });
     const prisma = makePrisma();
     prisma.token.findUnique.mockResolvedValue({
       id: "tok-yes",
       marketId: "mkt-1",
       outcome: "YES",
     });
-    const redis = makeRedis({
-      getJson: vi.fn().mockResolvedValue({ price: 0.7 }),
-    });
+    const redis = makeRedis();
     const onIntents = vi
       .fn<(intents: OrderIntent[]) => Promise<void>>()
       .mockRejectedValue(
@@ -780,10 +827,10 @@ describe("StrategyRunner — calculation variables", () => {
     const state = makeState();
     const callOrder: string[] = [];
 
-    // Track when state.get is called (happens at start of evaluate())
-    state.get.mockImplementation(async () => {
-      callOrder.push("state.get");
-      return { ...DEFAULT_STATE, dailyPnl: -5 };
+    // Track when state.getStateAndPrices is called (happens at start of evaluate())
+    state.getStateAndPrices.mockImplementation(async () => {
+      callOrder.push("state.getStateAndPrices");
+      return { state: { ...DEFAULT_STATE, dailyPnl: -5 }, prices: new Map() };
     });
 
     // getPrice is called during variable evaluation
@@ -808,15 +855,17 @@ describe("StrategyRunner — calculation variables", () => {
 
     await runner.onPriceEvent("tok1", 0.6);
 
-    // state.get is called first, then getPrice during variable eval,
+    // state.getStateAndPrices is called first, then getPrice during variable eval,
     // all before safety blocks run
-    expect(callOrder[0]).toBe("state.get");
+    expect(callOrder[0]).toBe("state.getStateAndPrices");
   });
 
   it("$varName in block params gets resolved to variable value", async () => {
     const state = makeState();
-    state.get.mockResolvedValue({ ...DEFAULT_STATE, dailyPnl: 0 });
-    state.getPrice = vi.fn().mockResolvedValue({ price: 0.6 });
+    state.getStateAndPrices.mockResolvedValue({
+      state: { ...DEFAULT_STATE, dailyPnl: 0 },
+      prices: new Map([["tok-yes", { price: 0.7, timestamp: Date.now() }]]),
+    });
 
     const onIntents = vi
       .fn<(intents: OrderIntent[]) => Promise<void>>()
@@ -859,7 +908,10 @@ describe("StrategyRunner — calculation variables", () => {
 
   it("invalid expression does not crash (logs warning, skips)", async () => {
     const state = makeState();
-    state.get.mockResolvedValue({ ...DEFAULT_STATE });
+    state.getStateAndPrices.mockResolvedValue({
+      state: { ...DEFAULT_STATE },
+      prices: new Map(),
+    });
     state.getPrice = vi.fn().mockResolvedValue(null);
 
     const runner = makeRunner({
@@ -877,8 +929,10 @@ describe("StrategyRunner — calculation variables", () => {
 
   it("variables can reference other previously-defined variables", async () => {
     const state = makeState();
-    state.get.mockResolvedValue({ ...DEFAULT_STATE, betsToday: 3 });
-    state.getPrice = vi.fn().mockResolvedValue({ price: 0.5 });
+    state.getStateAndPrices.mockResolvedValue({
+      state: { ...DEFAULT_STATE, betsToday: 3 },
+      prices: new Map([["tok-yes", { price: 0.5, timestamp: Date.now() }]]),
+    });
 
     const onIntents = vi
       .fn<(intents: OrderIntent[]) => Promise<void>>()
@@ -923,7 +977,10 @@ describe("StrategyRunner — calculation variables", () => {
 
   it("skips non-finite variable results instead of storing them as zero", async () => {
     const state = makeState();
-    state.get.mockResolvedValue({ ...DEFAULT_STATE });
+    state.getStateAndPrices.mockResolvedValue({
+      state: { ...DEFAULT_STATE },
+      prices: new Map(),
+    });
     state.getPrice = vi.fn().mockResolvedValue(null);
 
     const prisma = makePrisma();
@@ -973,7 +1030,7 @@ describe("StrategyRunner — calculation variables", () => {
     });
 
     await expect(runner.onPriceEvent("tok1", 0.5)).resolves.not.toThrow();
-    expect(state.get).toHaveBeenCalled();
+    expect(state.getStateAndPrices).toHaveBeenCalled();
   });
 });
 
@@ -1005,8 +1062,10 @@ describe("StrategyRunner — empty strategy (no blocks)", () => {
 describe("StrategyRunner — blocks that throw errors", () => {
   it("catches errors from evaluate and remains RUNNING", async () => {
     const state = makeState();
-    // Force evaluate to throw by making state.get fail after an initial call
-    state.get.mockRejectedValue(new Error("State retrieval failed"));
+    // Force evaluate to throw by making state.getStateAndPrices fail after an initial call
+    state.getStateAndPrices.mockRejectedValue(
+      new Error("State retrieval failed"),
+    );
 
     const runner = makeRunner({
       execMode: "EVENT",
@@ -1054,7 +1113,10 @@ describe("StrategyRunner — child strategy management", () => {
 describe("StrategyRunner — safeEvaluate edge cases", () => {
   it("rejects expression with forbidden keywords (via variables)", async () => {
     const state = makeState();
-    state.get.mockResolvedValue({ ...DEFAULT_STATE });
+    state.getStateAndPrices.mockResolvedValue({
+      state: { ...DEFAULT_STATE },
+      prices: new Map(),
+    });
     state.getPrice = vi.fn().mockResolvedValue(null);
 
     const runner = makeRunner({
@@ -1070,7 +1132,10 @@ describe("StrategyRunner — safeEvaluate edge cases", () => {
 
   it("rejects expression that is too long (>200 chars)", async () => {
     const state = makeState();
-    state.get.mockResolvedValue({ ...DEFAULT_STATE });
+    state.getStateAndPrices.mockResolvedValue({
+      state: { ...DEFAULT_STATE },
+      prices: new Map(),
+    });
     state.getPrice = vi.fn().mockResolvedValue(null);
 
     const runner = makeRunner({
@@ -1118,11 +1183,13 @@ describe("StrategyRunner — HYBRID mode", () => {
   });
 });
 
-describe("StrategyRunner — getPrimaryTokenId", () => {
-  it("resolves primary token from trigger params", async () => {
+describe("StrategyRunner — token resolution for variables", () => {
+  it("resolves currentPrice from the first referenced token in getStateAndPrices pipeline", async () => {
     const state = makeState();
-    state.get.mockResolvedValue({ ...DEFAULT_STATE });
-    state.getPrice = vi.fn().mockResolvedValue({ price: 0.5 });
+    state.getStateAndPrices.mockResolvedValue({
+      state: { ...DEFAULT_STATE },
+      prices: new Map([["tok-primary", { price: 0.5, timestamp: Date.now() }]]),
+    });
 
     const runner = makeRunner({
       execMode: "EVENT",
@@ -1136,7 +1203,9 @@ describe("StrategyRunner — getPrimaryTokenId", () => {
     });
 
     await runner.onPriceEvent("tok-primary", 0.5);
-    expect(state.getPrice).toHaveBeenCalledWith("tok-primary");
+    expect(state.getStateAndPrices).toHaveBeenCalledWith("strat-test", [
+      "tok-primary",
+    ]);
   });
 });
 
@@ -1242,18 +1311,18 @@ describe("StrategyRunner — EVENT-mode debounce (POLA-2082)", () => {
     const runner = makeRunner({ execMode: "EVENT", state });
 
     await runner.onPriceEvent("tok1", 0.5);
-    expect(state.get).toHaveBeenCalledTimes(1);
+    expect(state.getStateAndPrices).toHaveBeenCalledTimes(1);
 
     // Fire again at 100ms — within MIN_TICK_MS (200ms), should be throttled
     vi.setSystemTime(100);
-    state.get.mockClear();
+    state.getStateAndPrices.mockClear();
     await runner.onPriceEvent("tok1", 0.55);
-    expect(state.get).not.toHaveBeenCalled();
+    expect(state.getStateAndPrices).not.toHaveBeenCalled();
 
     // Fire at 250ms — past MIN_TICK_MS threshold, should fire
     vi.setSystemTime(250);
     await runner.onPriceEvent("tok1", 0.6);
-    expect(state.get).toHaveBeenCalledTimes(1);
+    expect(state.getStateAndPrices).toHaveBeenCalledTimes(1);
   });
 
   it("allows normally-spaced events through in EVENT mode", async () => {
@@ -1263,17 +1332,17 @@ describe("StrategyRunner — EVENT-mode debounce (POLA-2082)", () => {
     const runner = makeRunner({ execMode: "EVENT", state });
 
     await runner.onPriceEvent("tok1", 0.5);
-    expect(state.get).toHaveBeenCalledTimes(1);
+    expect(state.getStateAndPrices).toHaveBeenCalledTimes(1);
 
-    state.get.mockClear();
+    state.getStateAndPrices.mockClear();
     vi.setSystemTime(300);
     await runner.onPriceEvent("tok1", 0.6);
-    expect(state.get).toHaveBeenCalledTimes(1);
+    expect(state.getStateAndPrices).toHaveBeenCalledTimes(1);
 
-    state.get.mockClear();
+    state.getStateAndPrices.mockClear();
     vi.setSystemTime(600);
     await runner.onPriceEvent("tok1", 0.7);
-    expect(state.get).toHaveBeenCalledTimes(1);
+    expect(state.getStateAndPrices).toHaveBeenCalledTimes(1);
   });
 
   it("debounces HYBRID mode event-driven ticks", async () => {
@@ -1283,19 +1352,19 @@ describe("StrategyRunner — EVENT-mode debounce (POLA-2082)", () => {
     const runner = makeRunner({ execMode: "HYBRID", state });
 
     await runner.onPriceEvent("tok1", 0.5);
-    expect(state.get).toHaveBeenCalledTimes(1);
+    expect(state.getStateAndPrices).toHaveBeenCalledTimes(1);
 
     vi.setSystemTime(50);
-    state.get.mockClear();
+    state.getStateAndPrices.mockClear();
     await runner.onPriceEvent("tok1", 0.55);
-    expect(state.get).not.toHaveBeenCalled();
+    expect(state.getStateAndPrices).not.toHaveBeenCalled();
   });
 
   it("does not interfere with TICK mode (onPriceEvent is a no-op)", async () => {
     const state = makeState();
     const runner = makeRunner({ execMode: "TICK", state });
     await runner.onPriceEvent("tok1", 0.5);
-    expect(state.get).not.toHaveBeenCalled();
+    expect(state.getStateAndPrices).not.toHaveBeenCalled();
   });
 });
 
@@ -1311,7 +1380,7 @@ describe("StrategyRunner — logic graph evaluation", () => {
 
     await runner.onPriceEvent("tok1", 0.5);
     // evaluateLogicGraph runs without crashing
-    expect(state.get).toHaveBeenCalled();
+    expect(state.getStateAndPrices).toHaveBeenCalled();
     expect(runner.status).toBe("RUNNING");
   });
 
@@ -1328,12 +1397,16 @@ describe("StrategyRunner — logic graph evaluation", () => {
     });
 
     await runner.onPriceEvent("tok1", 0.5);
-    expect(state.get).toHaveBeenCalled();
+    expect(state.getStateAndPrices).toHaveBeenCalled();
     expect(runner.status).toBe("RUNNING");
   });
 
   it("IF_THEN_ELSE propagates via true-handle to downstream block", async () => {
     const state = makeState();
+    state.getStateAndPrices.mockResolvedValue({
+      state: { ...DEFAULT_STATE },
+      prices: new Map([["tok1", { price: 0.5, timestamp: Date.now() }]]),
+    });
     const prisma = makePrisma();
     prisma.token.findUnique.mockResolvedValue({
       id: "tok1",
@@ -1374,6 +1447,10 @@ describe("StrategyRunner — logic graph evaluation", () => {
 
   it("IF_THEN_ELSE falsy condition blocks true-handle propagation", async () => {
     const state = makeState();
+    state.getStateAndPrices.mockResolvedValue({
+      state: { ...DEFAULT_STATE },
+      prices: new Map([["tok1", { price: 0.5, timestamp: Date.now() }]]),
+    });
     const prisma = makePrisma();
     prisma.token.findUnique.mockResolvedValue({
       id: "tok1",
@@ -1425,7 +1502,7 @@ describe("StrategyRunner — logic graph evaluation", () => {
     });
 
     await runner.onPriceEvent("tok1", 0.5);
-    expect(state.get).toHaveBeenCalled();
+    expect(state.getStateAndPrices).toHaveBeenCalled();
     expect(runner.status).toBe("RUNNING");
   });
 
@@ -1439,7 +1516,7 @@ describe("StrategyRunner — logic graph evaluation", () => {
     });
 
     await runner.onPriceEvent("tok1", 0.5);
-    expect(state.get).toHaveBeenCalled();
+    expect(state.getStateAndPrices).toHaveBeenCalled();
     expect(runner.status).toBe("RUNNING");
   });
 
@@ -1463,7 +1540,7 @@ describe("StrategyRunner — logic graph evaluation", () => {
     await runner.onPriceEvent("tok1", 0.5);
     // and-1 (indegree 0) → or-1 (indegree 1) both evaluated;
     // ghost references are harmless
-    expect(state.get).toHaveBeenCalled();
+    expect(state.getStateAndPrices).toHaveBeenCalled();
     expect(runner.status).toBe("RUNNING");
   });
 
@@ -1486,7 +1563,7 @@ describe("StrategyRunner — logic graph evaluation", () => {
     await runner.onPriceEvent("tok1", 0.5);
     // NOT_GATE with no inputs → value=true → feeds DELAY
     // DELAY with params.seconds=1 and truthy input → scheduleDelayedAction exercised
-    expect(state.get).toHaveBeenCalled();
+    expect(state.getStateAndPrices).toHaveBeenCalled();
     expect(runner.status).toBe("RUNNING");
   });
 
@@ -1505,7 +1582,7 @@ describe("StrategyRunner — logic graph evaluation", () => {
     });
 
     await runner.onPriceEvent("tok1", 0.5);
-    expect(state.get).toHaveBeenCalled();
+    expect(state.getStateAndPrices).toHaveBeenCalled();
   });
 });
 
@@ -1540,15 +1617,15 @@ describe("StrategyRunner — concurrent tick serialization", () => {
   it("coalesces concurrent ticks via TickMutex", async () => {
     let release!: () => void;
     const state = makeState();
-    state.get.mockImplementation(
+    state.getStateAndPrices.mockImplementation(
       () =>
         new Promise((resolve) => {
-          release = () => resolve({ ...DEFAULT_STATE });
+          release = () => resolve({ state: { ...DEFAULT_STATE }, prices: new Map() });
         }),
     );
     const runner = makeRunner({ execMode: "EVENT", state });
 
-    // Fire first tick (acquires TickMutex, awaits state.get)
+    // Fire first tick (acquires TickMutex, awaits state.getStateAndPrices)
     const tick1 = runner.onPriceEvent("tok1", 0.5);
     // Wait enough time for MIN_TICK_MS debounce to pass (>200ms)
     await new Promise((resolve) => setTimeout(resolve, 250));
@@ -1563,7 +1640,7 @@ describe("StrategyRunner — concurrent tick serialization", () => {
     await new Promise((resolve) => setTimeout(resolve, 0));
 
     // Two evaluations: tick1 + coalesced follow-up from tick2
-    expect(state.get).toHaveBeenCalledTimes(2);
+    expect(state.getStateAndPrices).toHaveBeenCalledTimes(2);
   });
 
   it("releases TickMutex after a successful tick", async () => {
@@ -1578,7 +1655,7 @@ describe("StrategyRunner — concurrent tick serialization", () => {
 
   it("releases TickMutex even when tick evaluation throws", async () => {
     const state = makeState();
-    state.get.mockRejectedValue(new Error("Redis crash"));
+    state.getStateAndPrices.mockRejectedValue(new Error("Redis crash"));
 
     const runner = makeRunner({ execMode: "EVENT", state });
 

@@ -44,11 +44,11 @@ export class TicketsService {
 
     // Emit event for admin notification
     await this.redis.xadd("stream:events", {
-      event_type: "TICKET_CREATED",
+      type: "TICKET_CREATED",
       userId,
       ticketId: ticket.id,
       subject: ticket.subject,
-      timestamp: String(Date.now()),
+      ts: String(Date.now()),
     });
 
     return ticket;

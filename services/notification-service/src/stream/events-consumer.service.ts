@@ -9,6 +9,7 @@ import {
   RedisService,
   StreamMonitorService,
 } from "@polyforge/shared-redis";
+import { StreamEventSchema } from "@polyforge/shared-schemas";
 import { NotificationService } from "../notification/notification.service";
 
 const STREAM = "stream:events";
@@ -138,6 +139,21 @@ export class EventsConsumerService implements OnModuleInit, OnModuleDestroy {
             if (!notifType) {
               await client.xack(STREAM, GROUP, id);
               continue;
+            }
+
+            // Soft schema validation — log mismatches but don't drop messages
+            const schemaResult = StreamEventSchema.safeParse(event);
+            if (!schemaResult.success) {
+              this.logger.warn(
+                {
+                  event: "STREAM_EVENT_SCHEMA_MISMATCH",
+                  stream: STREAM,
+                  msgId: id,
+                  type: event.type,
+                  issues: schemaResult.error.issues,
+                },
+                "Stream event failed shared-schema validation",
+              );
             }
 
             try {

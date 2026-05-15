@@ -132,10 +132,7 @@ function CategoryPnlCard() {
             <div
               className="absolute top-0 bottom-0 rounded-full"
               style={{
-                left:
-                  tone === "loss"
-                    ? `${50 - Math.abs(pct) / 2}%`
-                    : "50%",
+                left: tone === "loss" ? `${50 - Math.abs(pct) / 2}%` : "50%",
                 width: `${Math.abs(pct) / 2}%`,
                 background: `var(--${tone})`,
                 opacity: 0.8,

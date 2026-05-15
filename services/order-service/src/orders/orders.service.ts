@@ -1016,13 +1016,17 @@ export class OrdersService {
 
   private async moveToDlq(intent: OrderIntent, reason: string): Promise<void> {
     try {
-      await this.redis.xadd(DLQ_STREAM, {
-        ...Object.fromEntries(
-          Object.entries(intent).map(([k, v]) => [k, String(v ?? "")]),
-        ),
-        failedAt: String(Date.now()),
-        reason,
-      });
+      await this.redis.xadd(
+        DLQ_STREAM,
+        {
+          ...Object.fromEntries(
+            Object.entries(intent).map(([k, v]) => [k, String(v ?? "")]),
+          ),
+          failedAt: String(Date.now()),
+          reason,
+        },
+        10_000,
+      );
       await this.redis
         .set(`dlq:written:${intent.intentId}`, "1", 86400)
         .catch(() => {
