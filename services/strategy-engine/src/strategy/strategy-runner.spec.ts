@@ -432,10 +432,11 @@ describe("StrategyRunner — SAFETY evaluation", () => {
 
     // Set dailyPnl below limit — without the config fallback, maxLossUsdc
     // would default to 0 and the block would fire (pass), not stopping.
-    state.get.mockResolvedValue({ ...DEFAULT_STATE, dailyPnl: -15 });
+    // The runner reads state via getStateAndPrices (not state.get), so we mock
+    // the batched pipeline with a fresh-priced token to pass stale detection.
     state.getStateAndPrices.mockResolvedValue({
       state: { ...DEFAULT_STATE, dailyPnl: -15 },
-      prices: new Map(),
+      prices: new Map([["tok1", { price: 0.5, timestamp: Date.now() }]]),
     });
 
     await runner.onPriceEvent("tok1", 0.5);
@@ -550,7 +551,8 @@ describe("StrategyRunner — TRIGGER evaluation", () => {
       ],
     });
 
-    state.get.mockResolvedValue(DEFAULT_STATE);
+    // Runner reads state via getStateAndPrices; include a fresh price to
+    // pass stale data detection and reach trigger evaluation.
     state.getStateAndPrices.mockResolvedValue({
       state: { ...DEFAULT_STATE },
       prices: new Map([["tok1", { price: 0.5, timestamp: Date.now() }]]),
@@ -559,7 +561,7 @@ describe("StrategyRunner — TRIGGER evaluation", () => {
     await runner.onPriceEvent("tok1", 0.5);
 
     // Trigger should fire because price 0.5 > 0.4 threshold via config fallback.
-    // Works with both old evaluate() (calls state.get) and new (calls getStateAndPrices).
+    // The runner uses getStateAndPrices (not state.get) for the batched pipeline.
     expect(state.getStateAndPrices).toHaveBeenCalled();
   });
 });
@@ -1212,8 +1214,6 @@ describe("StrategyRunner — token resolution for variables", () => {
 describe("StrategyRunner — config fallback for token discovery and prefetch", () => {
   it("resolves primary token from trigger config (not params)", async () => {
     const state = makeState();
-    state.get.mockResolvedValue({ ...DEFAULT_STATE });
-    state.getPrice = vi.fn().mockResolvedValue({ price: 0.5 });
     state.getStateAndPrices.mockResolvedValue({
       state: { ...DEFAULT_STATE },
       prices: new Map([["tok-config", { price: 0.5, timestamp: Date.now() }]]),
@@ -1231,11 +1231,11 @@ describe("StrategyRunner — config fallback for token discovery and prefetch", 
     });
 
     await runner.onPriceEvent("tok-config", 0.5);
-    // Works with both old evaluate() (calls state.getPrice) and new (calls getStateAndPrices).
-    expect(state.getStateAndPrices).toHaveBeenCalledWith(
-      "strat-test",
-      ["tok-config"],
-    );
+    // Token "tok-config" discovered from config fallback via mergedParams,
+    // fed into the batched getStateAndPrices pipeline for variable eval.
+    expect(state.getStateAndPrices).toHaveBeenCalledWith("strat-test", [
+      "tok-config",
+    ]);
   });
 
   it("detects stale data for config-only tokenId", async () => {

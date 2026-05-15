@@ -87,6 +87,28 @@ test("all user-facing service DATABASE_URL entries route through pgbouncer", () 
   }
 });
 
+/**
+ * Check that a service block has `pgbouncer` listed in its depends_on stanza,
+ * not just matching the host substring in DATABASE_URL.
+ */
+function hasDependsOnPgbouncer(block) {
+  const lines = block.split("\n");
+  let inDependsOn = false;
+  for (const line of lines) {
+    if (/^\s{4}depends_on:/.test(line)) {
+      inDependsOn = true;
+      continue;
+    }
+    if (inDependsOn && /^\s{6}pgbouncer:/.test(line)) {
+      return true;
+    }
+    if (inDependsOn && /^\s{4}[a-z]/.test(line)) {
+      inDependsOn = false;
+    }
+  }
+  return false;
+}
+
 test("all services depending on pgbouncer have depends_on: pgbouncer", () => {
   for (const svc of USER_FACING_SERVICES) {
     const block = serviceBlock(yaml, svc);
@@ -97,7 +119,7 @@ test("all services depending on pgbouncer have depends_on: pgbouncer", () => {
 
     if (url.includes("@pgbouncer:")) {
       assert.ok(
-        block.includes("pgbouncer:"),
+        hasDependsOnPgbouncer(block),
         `${svc} routes DATABASE_URL through pgbouncer but lacks depends_on: pgbouncer`,
       );
     }
