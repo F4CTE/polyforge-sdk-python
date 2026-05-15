@@ -16,7 +16,7 @@ interface HttpRequest {
   headers: Record<string, string | string[] | undefined>;
   ip?: string;
   user?: JwtPayload;
-  apiKeyMeta?: { keyId: string; scopes: string[] };
+  apiKeyMeta?: { keyId: string; userId: string; scopes: string[] };
 }
 
 // ── JWT verification cache (in-memory, 5s TTL with LRU eviction) ────────────
@@ -29,6 +29,7 @@ const JWT_CACHE_TTL = 5_000; // 5 seconds (reduced from 30s for security)
 const MAX_CACHE_SIZE = 10_000;
 const SUSPENDED_USER_KEY = (userId: string) => `suspended:${userId}`;
 const PASSWORD_CHANGED_KEY = (userId: string) => `pwchange:${userId}`;
+const JWT_OWNER_TTL = 120; // seconds — must exceed the throttler window
 
 function getCachedJwtUser(token: string): JwtPayload | null {
   const cached = JWT_CACHE.get(token);
@@ -94,6 +95,7 @@ export class JwtAuthGuard extends AuthGuard("jwt") {
       if (cachedUser) {
         await this.assertJwtUserActive(cachedUser, token);
         request.user = cachedUser;
+        this.cacheJwtOwner(token, cachedUser.sub);
         return true;
       }
     }
@@ -109,22 +111,27 @@ export class JwtAuthGuard extends AuthGuard("jwt") {
       });
 
       if (!apiKey) {
+        this.deleteApiKeyOwnerCache(tokenHash);
         throw new UnauthorizedException("Invalid API key");
       }
 
       if (apiKey.revoked) {
+        this.deleteApiKeyOwnerCache(tokenHash);
         throw new UnauthorizedException("API key has been revoked");
       }
 
       if (apiKey.expiresAt && apiKey.expiresAt < new Date()) {
+        this.deleteApiKeyOwnerCache(tokenHash);
         throw new UnauthorizedException("API key has expired");
       }
 
       if (apiKey.user.suspended) {
+        this.deleteApiKeyOwnerCache(tokenHash);
         throw new UnauthorizedException("Account is suspended");
       }
 
       if (apiKey.user.deleted) {
+        this.deleteApiKeyOwnerCache(tokenHash);
         throw new UnauthorizedException("Account not found");
       }
 
@@ -138,8 +145,22 @@ export class JwtAuthGuard extends AuthGuard("jwt") {
       // Attach API key metadata for scope checks
       request.apiKeyMeta = {
         keyId: apiKey.id,
+        userId: apiKey.user.id,
         scopes: apiKey.scopes,
       };
+
+      // Cache API-key → user ownership in Redis so the global
+      // ApiKeyThrottlerGuard (which runs before this guard) can
+      // resolve the owning user on subsequent requests and apply
+      // per-user rate limits across all of a user's API keys.
+      if (this.redis) {
+        const ownerKey = `apikey:owner:${tokenHash}`;
+        this.redis.set(ownerKey, apiKey.user.id, 120).catch((err: unknown) => {
+          this.logger.warn("Failed to cache API-key owner in Redis", {
+            error: err instanceof Error ? err.message : String(err),
+          });
+        });
+      }
 
       // Fire-and-forget: update lastUsedAt and lastUsedIp
       const rawForwardedFor = request.headers?.["x-forwarded-for"];
@@ -178,9 +199,27 @@ export class JwtAuthGuard extends AuthGuard("jwt") {
       await this.assertJwtUserActive(request.user, token);
 
       setCachedJwtUser(token, request.user);
+      this.cacheJwtOwner(token, request.user.sub);
     }
 
     return result;
+  }
+
+  /**
+   * Cache the JWT token→user ownership mapping in Redis so the global
+   * ApiKeyThrottlerGuard (which runs before this guard) can resolve the
+   * owning user on subsequent requests and apply per-user rate limits.
+   */
+  private cacheJwtOwner(token: string, sub?: string): void {
+    if (!this.redis || !sub) return;
+    const tokenHash = createHash("sha256").update(token).digest("hex");
+    this.redis
+      .set(`jwt:owner:${tokenHash}`, sub, JWT_OWNER_TTL)
+      .catch((err: unknown) => {
+        this.logger.warn("Failed to cache JWT owner in Redis", {
+          error: err instanceof Error ? err.message : String(err),
+        });
+      });
   }
 
   handleRequest<TUser = JwtPayload>(err: unknown, user: TUser): TUser {
@@ -205,14 +244,28 @@ export class JwtAuthGuard extends AuthGuard("jwt") {
       ]);
 
       if (pwChanged) {
-        if (token) JWT_CACHE.delete(token);
+        if (token) {
+          JWT_CACHE.delete(token);
+          // Delete the Redis owner-cache entry for this specific token
+          // so the global throttler guard stops attributing this user's
+          // rate-limit budget to the replayed token (P2 — stale owner
+          // cache after revocation).  Deletion is per-token, not
+          // per-user, so a legitimate new JWT obtained after password
+          // change is not penalised.
+          const tokenHash = createHash("sha256").update(token).digest("hex");
+          this.redis.del(`jwt:owner:${tokenHash}`).catch(() => {});
+        }
         throw new UnauthorizedException(
           "Password was changed — please re-authenticate",
         );
       }
 
       if (suspended) {
-        if (token) JWT_CACHE.delete(token);
+        if (token) {
+          JWT_CACHE.delete(token);
+          const tokenHash = createHash("sha256").update(token).digest("hex");
+          this.redis.del(`jwt:owner:${tokenHash}`).catch(() => {});
+        }
         throw new UnauthorizedException("Account is suspended");
       }
     }
@@ -223,13 +276,30 @@ export class JwtAuthGuard extends AuthGuard("jwt") {
     });
 
     if (!dbUser || dbUser.deleted) {
-      if (token) JWT_CACHE.delete(token);
+      if (token) {
+        JWT_CACHE.delete(token);
+        this.deleteJwtOwnerCacheImpl(token);
+      }
       throw new UnauthorizedException("Account not found");
     }
 
     if (dbUser.suspended) {
-      if (token) JWT_CACHE.delete(token);
+      if (token) {
+        JWT_CACHE.delete(token);
+        this.deleteJwtOwnerCacheImpl(token);
+      }
       throw new UnauthorizedException("Account is suspended");
     }
+  }
+
+  private deleteApiKeyOwnerCache(tokenHash: string): void {
+    if (!this.redis) return;
+    this.redis.del(`apikey:owner:${tokenHash}`).catch(() => {});
+  }
+
+  private deleteJwtOwnerCacheImpl(token: string): void {
+    if (!this.redis) return;
+    const tokenHash = createHash("sha256").update(token).digest("hex");
+    this.redis.del(`jwt:owner:${tokenHash}`).catch(() => {});
   }
 }

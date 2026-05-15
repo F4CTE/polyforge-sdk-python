@@ -3,10 +3,11 @@ import { APP_FILTER, APP_GUARD } from "@nestjs/core";
 import { SentryModule, SentryGlobalFilter } from "@sentry/nestjs/setup";
 import { ConfigModule } from "@nestjs/config";
 import { ThrottlerModule, ThrottlerGuard } from "@nestjs/throttler";
+import { ThrottlerStorageRedisService } from "@nest-lab/throttler-storage-redis";
 import { ScheduleModule } from "@nestjs/schedule";
 import { EventEmitterModule } from "@nestjs/event-emitter";
 import { SharedUserDbModule } from "@polyforge/shared-db";
-import { RedisModule } from "@polyforge/shared-redis";
+import { RedisModule, RedisService } from "@polyforge/shared-redis";
 import { SharedAuthModule } from "@polyforge/shared-auth";
 import { LoggerModule } from "@polyforge/logger";
 import { PolymarketWsService } from "./market-sync/polymarket-ws.service";
@@ -23,7 +24,14 @@ import { HealthController } from "./health/health.controller";
   imports: [
     SentryModule.forRoot(),
     ConfigModule.forRoot({ isGlobal: true }),
-    ThrottlerModule.forRoot([{ ttl: 60000, limit: 300 }]),
+    ThrottlerModule.forRootAsync({
+      imports: [RedisModule],
+      inject: [RedisService],
+      useFactory: (redis: RedisService) => ({
+        throttlers: [{ ttl: 60000, limit: 300 }],
+        storage: new ThrottlerStorageRedisService(redis.getClient()),
+      }),
+    }),
     ScheduleModule.forRoot(),
     EventEmitterModule.forRoot(),
     LoggerModule,

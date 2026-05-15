@@ -23,7 +23,10 @@ import {
 import { BETA_LIMITS_DEFAULTS } from "@polyforge/shared-redis";
 
 const SPORTS_THROTTLE = {
-  default: { ttl: 60000, limit: BETA_LIMITS_DEFAULTS.marketDataRateLimitPerMinute },
+  default: {
+    ttl: 60000,
+    limit: BETA_LIMITS_DEFAULTS.marketDataRateLimitPerMinute,
+  },
 };
 
 @ApiTags("sports")

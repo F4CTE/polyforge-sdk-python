@@ -57,7 +57,7 @@ describe("JwtAuthGuard", () => {
       findUnique: ReturnType<typeof vi.fn>;
     };
   };
-  let redis: { get: ReturnType<typeof vi.fn> };
+  let redis: { get: ReturnType<typeof vi.fn>; set: ReturnType<typeof vi.fn> };
 
   beforeEach(async () => {
     vi.resetModules();
@@ -77,7 +77,11 @@ describe("JwtAuthGuard", () => {
         }),
       },
     };
-    redis = { get: vi.fn().mockResolvedValue(null) };
+    redis = {
+      get: vi.fn().mockResolvedValue(null),
+      set: vi.fn().mockResolvedValue(undefined),
+      del: vi.fn().mockResolvedValue(undefined),
+    };
     guard = new JwtAuthGuard(prisma as any, redis as any);
   });
 
@@ -122,6 +126,7 @@ describe("JwtAuthGuard", () => {
       expect(request.user).not.toHaveProperty("email");
       expect(request.apiKeyMeta).toEqual({
         keyId: "key-1",
+        userId: "user-1",
         scopes: ["read"],
       });
     });
@@ -171,6 +176,85 @@ describe("JwtAuthGuard", () => {
         UnauthorizedException,
       );
     });
+
+    // Redis owner-cache cleanup on API-key rejection paths
+    it("deletes Redis owner cache when API key is revoked", async () => {
+      prisma.apiKey.findUnique.mockResolvedValue({
+        id: "key-1",
+        revoked: true,
+        user: { suspended: false, deleted: false },
+      });
+      const { ctx } = makeContext({ authorization: "Bearer pf_revoked" });
+      await expect(guard.canActivate(ctx)).rejects.toThrow(
+        UnauthorizedException,
+      );
+      expect(redis.del).toHaveBeenCalledWith(
+        expect.stringContaining("apikey:owner:"),
+      );
+    });
+
+    it("deletes Redis owner cache when API key is expired", async () => {
+      prisma.apiKey.findUnique.mockResolvedValue({
+        id: "key-1",
+        revoked: false,
+        expiresAt: new Date("2020-01-01"),
+        user: { suspended: false, deleted: false },
+      });
+      const { ctx } = makeContext({ authorization: "Bearer pf_expired" });
+      await expect(guard.canActivate(ctx)).rejects.toThrow(
+        UnauthorizedException,
+      );
+      expect(redis.del).toHaveBeenCalledWith(
+        expect.stringContaining("apikey:owner:"),
+      );
+    });
+
+    it("deletes Redis owner cache when user is suspended", async () => {
+      prisma.apiKey.findUnique.mockResolvedValue({
+        id: "key-1",
+        revoked: false,
+        expiresAt: null,
+        user: { suspended: true, deleted: false },
+      });
+      const { ctx } = makeContext({ authorization: "Bearer pf_suspended" });
+      await expect(guard.canActivate(ctx)).rejects.toThrow(
+        UnauthorizedException,
+      );
+      expect(redis.del).toHaveBeenCalledWith(
+        expect.stringContaining("apikey:owner:"),
+      );
+    });
+
+    it("deletes Redis owner cache when user is deleted", async () => {
+      prisma.apiKey.findUnique.mockResolvedValue({
+        id: "key-1",
+        revoked: false,
+        expiresAt: null,
+        user: { suspended: false, deleted: true },
+      });
+      const { ctx } = makeContext({ authorization: "Bearer pf_deleted" });
+      await expect(guard.canActivate(ctx)).rejects.toThrow(
+        UnauthorizedException,
+      );
+      expect(redis.del).toHaveBeenCalledWith(
+        expect.stringContaining("apikey:owner:"),
+      );
+    });
+
+    it("skips Redis owner-cache deletion when Redis is unavailable on rejection", async () => {
+      const guardNoRedis = new JwtAuthGuard(prisma as any);
+      prisma.apiKey.findUnique.mockResolvedValue({
+        id: "key-1",
+        revoked: true,
+        user: { suspended: false, deleted: false },
+      });
+      const { ctx } = makeContext({ authorization: "Bearer pf_revoked" });
+      await expect(guardNoRedis.canActivate(ctx)).rejects.toThrow(
+        UnauthorizedException,
+      );
+      // redis.del should NOT have been called — guard was created without Redis
+      expect(redis.del).not.toHaveBeenCalled();
+    });
   });
 
   describe("JWT cache invalidation", () => {
@@ -214,6 +298,68 @@ describe("JwtAuthGuard", () => {
       );
     });
 
+    it("deletes Redis JWT owner cache when DB user is suspended", async () => {
+      // Redis pwChange/suspended check passes (no marker)
+      redis.get.mockResolvedValue(null);
+      // DB check finds suspended user
+      prisma.user.findUnique.mockResolvedValue({
+        suspended: true,
+        deleted: false,
+      });
+
+      const { ctx, request } = makeContext({
+        authorization: "Bearer jwt-token-suspended",
+      });
+      request.user = { sub: "user-1", username: "test" };
+
+      await expect(guard.canActivate(ctx)).rejects.toThrow(
+        "Account is suspended",
+      );
+
+      expect(redis.del).toHaveBeenCalledWith(
+        expect.stringContaining("jwt:owner:"),
+      );
+    });
+
+    it("deletes Redis JWT owner cache when DB user is deleted", async () => {
+      redis.get.mockResolvedValue(null);
+      prisma.user.findUnique.mockResolvedValue({
+        suspended: false,
+        deleted: true,
+      });
+
+      const { ctx, request } = makeContext({
+        authorization: "Bearer jwt-token-deleted",
+      });
+      request.user = { sub: "user-1", username: "test" };
+
+      await expect(guard.canActivate(ctx)).rejects.toThrow("Account not found");
+
+      expect(redis.del).toHaveBeenCalledWith(
+        expect.stringContaining("jwt:owner:"),
+      );
+    });
+
+    it("skips Redis JWT owner-cache deletion when Redis is unavailable on DB rejection", async () => {
+      const guardNoRedis = new JwtAuthGuard(prisma as any);
+      prisma.user.findUnique.mockResolvedValue({
+        suspended: true,
+        deleted: false,
+      });
+
+      const { ctx, request } = makeContext({
+        authorization: "Bearer jwt-token-noredis",
+      });
+      request.user = { sub: "user-1", username: "test" };
+
+      await expect(guardNoRedis.canActivate(ctx)).rejects.toThrow(
+        "Account is suspended",
+      );
+
+      // redis.del should NOT have been called — guard was created without Redis
+      expect(redis.del).not.toHaveBeenCalled();
+    });
+
     it("rejects a cached JWT when the suspended-user marker exists in Redis", async () => {
       const { ctx, request } = makeContext({
         authorization: "Bearer cached-jwt-token",
@@ -232,6 +378,39 @@ describe("JwtAuthGuard", () => {
       await expect(guard.canActivate(cachedCtx)).rejects.toThrow(
         "Account is suspended",
       );
+    });
+  });
+
+  describe("JWT owner Redis cache for ApiKeyThrottlerGuard", () => {
+    it("caches JWT token→user mapping in Redis after successful verification", async () => {
+      const { ctx, request } = makeContext({
+        authorization: "Bearer jwt.verified.token",
+      });
+      request.user = { sub: "user-1", username: "test" };
+
+      await guard.canActivate(ctx);
+
+      // Redis set should be called with the JWT owner key
+      expect(redis.set).toHaveBeenCalled();
+      const calls = redis.set.mock.calls;
+      const ownerCall = calls.find(
+        (c: any[]) => typeof c[0] === "string" && c[0].startsWith("jwt:owner:"),
+      );
+      expect(ownerCall).toBeDefined();
+      expect(ownerCall[1]).toBe("user-1");
+      expect(ownerCall[2]).toBe(120);
+    });
+
+    it("skips Redis cache write when Redis is not available", async () => {
+      const guardNoRedis = new JwtAuthGuard(prisma as any);
+      const { ctx, request } = makeContext({
+        authorization: "Bearer jwt.verified.token",
+      });
+      request.user = { sub: "user-1", username: "test" };
+
+      await expect(guardNoRedis.canActivate(ctx)).resolves.toBe(true);
+      // redis.set was not called on the original mock
+      expect(redis.set).not.toHaveBeenCalled();
     });
   });
 

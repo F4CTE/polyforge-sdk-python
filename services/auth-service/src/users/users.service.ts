@@ -1,4 +1,4 @@
-import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
+import { Injectable, HttpException, HttpStatus, Logger } from '@nestjs/common';
 import { PrismaService } from '@polyforge/shared-db';
 import { RedisService } from '@polyforge/shared-redis';
 import { PosthogService } from '@polyforge/shared-posthog';
@@ -8,6 +8,8 @@ import { randomBytes, createHash } from 'crypto';
 
 @Injectable()
 export class UsersService {
+  private readonly logger = new Logger(UsersService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly redis: RedisService,
@@ -18,6 +20,91 @@ export class UsersService {
 
   async findByEmail(email: string) {
     return this.prisma.user.findUnique({ where: { email } });
+  }
+
+  async findByEmailInsensitive(email: string) {
+    return this.prisma.user.findFirst({
+      where: { email: { equals: email, mode: 'insensitive' } },
+    });
+  }
+
+  /**
+   * Deterministic indexed canonical lookup: normalizes the input, hits the
+   * unique index on email first, and falls back to a case-insensitive scan
+   * only for legacy accounts that the migration could not safely normalize.
+   * When exactly one legacy account is found, its stored email is
+   * transparently normalized so subsequent lookups use the index.
+   *
+   * Case-colliding legacy emails (two accounts differing only in case) are
+   * handled safely: the lookup returns the exact case-sensitive match with
+   * the input if one exists, otherwise null.
+   *
+   * Soft-deleted rows at the canonical email are skipped; the insensitive
+   * fallback searches for a non-deleted alternative. Manual remediation is
+   * required for colliding accounts.
+   */
+  async findByEmailCanonical(email: string) {
+    const normalized = email.trim().toLowerCase();
+    const user = await this.prisma.user.findUnique({
+      where: { email: normalized },
+    });
+
+    // When a canonical hit exists and the input differs from the
+    // normalized form (e.g. "Alice@Example.com" → "alice@example.com"),
+    // verify there are no case-colliding legacy accounts.  Without
+    // this check a user logging in with mixed-case input could be
+    // mapped to a different row whose email happens to match the
+    // normalized form.
+    if (user && !user.deleted && user.email === normalized) {
+      if (email !== normalized) {
+        const colliding = await this.prisma.user.findMany({
+          where: { email: { equals: normalized, mode: 'insensitive' } },
+          select: { id: true, email: true, deleted: true },
+        });
+        const activeColliding = colliding.filter(
+          (m) => !m.deleted && m.id !== user.id,
+        );
+        if (activeColliding.length > 0) {
+          const exact = colliding.find((m) => m.email === email && !m.deleted);
+          if (exact) {
+            return this.prisma.user.findUnique({ where: { id: exact.id } });
+          }
+          return null;
+        }
+      }
+      return user;
+    }
+
+    const matches = await this.prisma.user.findMany({
+      where: { email: { equals: normalized, mode: 'insensitive' } },
+    });
+
+    const active = matches.filter((m) => !m.deleted);
+
+    if (active.length === 0) return null;
+
+    if (active.length === 1) {
+      const legacy = active[0];
+      if (legacy.email !== normalized) {
+        const deletedWithCanonical = matches.find(
+          (m) => m.deleted && m.email === normalized,
+        );
+        if (!deletedWithCanonical) {
+          this.prisma.user
+            .update({ where: { id: legacy.id }, data: { email: normalized } })
+            .catch(() => {});
+        }
+      }
+      return legacy;
+    }
+
+    this.logger.warn(
+      `Email collision detected for normalized "${normalized}": ${active.length} active accounts. ` +
+        'None will be auto-normalized. Manual remediation required.',
+    );
+
+    const exact = active.find((m) => m.email === email);
+    return exact ?? null;
   }
 
   async findByUsername(username: string) {
@@ -36,7 +123,9 @@ export class UsersService {
     username: string;
     approved?: boolean;
   }) {
-    const existingEmail = await this.findByEmail(data.email);
+    const normalizedEmail = data.email.trim().toLowerCase();
+
+    const existingEmail = await this.findByEmailInsensitive(normalizedEmail);
     if (existingEmail) {
       throw new HttpException(
         { code: 'EMAIL_TAKEN', message: 'Email is already registered' },
@@ -56,7 +145,7 @@ export class UsersService {
 
     const user = await this.prisma.user.create({
       data: {
-        email: data.email,
+        email: normalizedEmail,
         passwordHash,
         username: data.username,
         tosAcceptedAt: new Date(),

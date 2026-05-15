@@ -182,9 +182,7 @@ describe('TotpService', () => {
       redis.get.mockResolvedValue('JBSWY3DPEHPK3PXP');
       redis._ioClient.set.mockResolvedValue(null); // already consumed
 
-      await expect(
-        service.confirm('user-id', '123456'),
-      ).rejects.toMatchObject({
+      await expect(service.confirm('user-id', '123456')).rejects.toMatchObject({
         response: { code: 'TOTP_INVALID' },
         status: HttpStatus.BAD_REQUEST,
       });

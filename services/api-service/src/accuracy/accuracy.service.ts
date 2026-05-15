@@ -171,7 +171,12 @@ export class AccuracyService {
     if (userIds.length > 0) {
       const users = await this.prisma.user.findMany({
         where: { id: { in: userIds } },
-        select: { id: true, username: true, displayName: true, avatarUrl: true },
+        select: {
+          id: true,
+          username: true,
+          displayName: true,
+          avatarUrl: true,
+        },
       });
       userMap = new Map(users.map((u) => [u.id, u]));
     }
@@ -184,9 +189,8 @@ export class AccuracyService {
         displayName: userMap.get(userId)?.displayName ?? null,
         avatarUrl: userMap.get(userId)?.avatarUrl ?? null,
         pnl: String(stats.pnl),
-        winRate: stats.total > 0
-          ? ((stats.wins / stats.total) * 100).toFixed(1)
-          : "0",
+        winRate:
+          stats.total > 0 ? ((stats.wins / stats.total) * 100).toFixed(1) : "0",
         tradeCount: stats.total,
       }))
       .sort((a, b) => parseFloat(b.winRate) - parseFloat(a.winRate));

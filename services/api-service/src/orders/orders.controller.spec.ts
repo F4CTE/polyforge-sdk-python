@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { afterEach, describe, it, expect, vi } from "vitest";
 import { INTERCEPTORS_METADATA } from "@nestjs/common/constants";
 import { IdempotencyInterceptor } from "../common/interceptors/idempotency.interceptor";
 import { OrdersController } from "./orders.controller";
@@ -54,6 +54,11 @@ describe("OrdersController — bulk cancel routing", () => {
 });
 
 describe("OrdersController — @Throttle decorator coverage", () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+    vi.resetModules();
+  });
+
   it("redeemPosition has @Throttle with limit and ttl matching sibling endpoints", () => {
     const method = OrdersController.prototype.redeemPosition;
 
@@ -131,5 +136,22 @@ describe("OrdersController — @Throttle decorator coverage", () => {
     );
     expect(Array.isArray(interceptors)).toBe(true);
     expect(interceptors as unknown[]).toContain(IdempotencyInterceptor);
+  });
+
+  it("placeBatch throttle matches single-order endpoint limit (guard weights by batch size)", async () => {
+    vi.stubEnv("NODE_ENV", "production");
+    vi.resetModules();
+    const { OrdersController: LoadedOrdersController } =
+      await import("./orders.controller.js");
+    const method = LoadedOrdersController.prototype.placeBatch;
+
+    const limit: unknown = Reflect.getMetadata(
+      `${THROTTLER_LIMIT}default`,
+      method,
+    );
+    const ttl: unknown = Reflect.getMetadata(`${THROTTLER_TTL}default`, method);
+
+    expect(limit).toBe(30);
+    expect(ttl).toBe(60000);
   });
 });

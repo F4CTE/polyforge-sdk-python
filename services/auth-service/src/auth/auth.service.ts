@@ -20,6 +20,17 @@ const INVITE_KEY = (code: string) => `invite:${code.toUpperCase()}`;
 const REFRESH_TTL_SECONDS = 7 * 24 * 60 * 60; // 7 days
 // R5-02: 15m — balances security with UX (silent refresh should handle rotation transparently)
 const ACCESS_TOKEN_EXPIRY = '15m';
+const LOGIN_FAILURE_LIMIT = 10;
+const LOGIN_FAILURE_TTL_SECONDS = 15 * 60;
+
+const LOGIN_FAILURE_KEY = (email: string) => {
+  const normalized = email.trim().toLowerCase();
+  const digest = createHash('sha256').update(normalized).digest('hex');
+  return `login:fail:${digest}`;
+};
+
+/** Per-user lockout key so case-colliding legacy accounts do not share a counter. */
+const USER_LOGIN_FAILURE_KEY = (userId: string) => `login:fail:user:${userId}`;
 
 /** Redis key for a single refresh token: refresh:{userId}:{sha256(token)} */
 const REFRESH_KEY = (userId: string, tokenHash: string) =>
@@ -181,13 +192,20 @@ export class AuthService {
   // ─── Login ────────────────────────────────────────────────────────────────────
 
   async login(dto: LoginDto & { ip?: string; userAgent?: string }) {
-    const user = await this.usersService.findByEmail(dto.email);
+    const lockKey = LOGIN_FAILURE_KEY(dto.email);
+
+    const user = await this.usersService.findByEmailCanonical(dto.email);
 
     if (!user || user.deleted) {
+      // Do NOT create per-email Redis keys for unknown/deleted emails —
+      // credential-spray traffic would otherwise create one 15-minute key per
+      // user-supplied email, allowing unbounded keyspace growth.  The
+      // HTTP-layer throttler guard handles spray protection for unknown
+      // accounts; per-user lockout is applied only after deterministic
+      // identity resolution below.
       this.logger.warn(
         {
           event: 'LOGIN_FAILED',
-          ...(user ? { userId: user.id } : {}),
           ip: dto.ip ?? 'unknown',
           reason: 'unknown_or_deleted_user',
         },
@@ -220,37 +238,22 @@ export class AuthService {
       );
     }
 
-    // SECURITY: Per-account lockout after 10 failed attempts (15-minute window)
-    const lockKey = `login:fail:${user.id}`;
-    const failCount = parseInt((await this.redis.get(lockKey)) ?? '0', 10);
-    if (failCount >= 10) {
-      this.logger.warn(
-        {
-          event: 'LOGIN_LOCKED',
-          userId: user.id,
-          ip: dto.ip ?? 'unknown',
-          failCount,
-        },
-        'User login locked',
-      );
-      throw new HttpException(
-        {
-          code: 'ACCOUNT_LOCKED',
-          message: 'Too many failed attempts. Try again in 15 minutes.',
-        },
-        HttpStatus.TOO_MANY_REQUESTS,
-      );
-    }
+    // Enforce both the email-hash counter (pre-user-resolution) and the
+    // per-user counter (post-user-resolution).  The email-hash counter
+    // catches credential-spray patterns before user identity is resolved
+    // for the current request; the per-user counter isolates case-colliding
+    // legacy accounts.
+    await this.assertLoginNotLocked(lockKey);
+    const userLockKey = USER_LOGIN_FAILURE_KEY(user.id);
+    await this.assertLoginNotLocked(userLockKey);
 
     const isValid = await this.usersService.validatePassword(
       user,
       dto.password,
     );
     if (!isValid) {
-      // Increment per-account failure counter
-      const client = this.redis.getClient();
-      const newCount = await client.incr(lockKey);
-      if (newCount === 1) await client.expire(lockKey, 900); // 15-minute window
+      await this.recordLoginFailure(lockKey);
+      await this.recordLoginFailure(userLockKey);
 
       // R5-05: Record failed login attempt
       this.prisma.userLoginHistory
@@ -301,6 +304,8 @@ export class AuthService {
           },
           'User TOTP verification failed',
         );
+        await this.recordLoginFailure(lockKey);
+        await this.recordLoginFailure(userLockKey);
         throw new HttpException(
           { code: 'TOTP_INVALID', message: 'Invalid 2FA code' },
           HttpStatus.BAD_REQUEST,
@@ -326,8 +331,9 @@ export class AuthService {
       .catch(() => {}); // Fire and forget — don't fail login if history write fails
 
     // Record login event for audit trail
-    // Clear login lockout counter on success
+    // Clear both lockout counters on success
     await this.redis.del(lockKey).catch(() => {});
+    await this.redis.del(userLockKey).catch(() => {});
 
     // SECURITY: Do not log email (PII) — userId is sufficient for audit correlation
     this.logger.log(
@@ -373,6 +379,27 @@ export class AuthService {
       },
       requiresTotp: user.totpEnabled,
     };
+  }
+
+  private async assertLoginNotLocked(lockKey: string): Promise<void> {
+    const failCount = parseInt((await this.redis.get(lockKey)) ?? '0', 10);
+    if (failCount >= LOGIN_FAILURE_LIMIT) {
+      throw new HttpException(
+        {
+          code: 'ACCOUNT_LOCKED',
+          message: 'Too many failed attempts. Try again in 15 minutes.',
+        },
+        HttpStatus.TOO_MANY_REQUESTS,
+      );
+    }
+  }
+
+  private async recordLoginFailure(lockKey: string): Promise<void> {
+    const client = this.redis.getClient();
+    const newCount = await client.incr(lockKey);
+    if (newCount === 1) {
+      await client.expire(lockKey, LOGIN_FAILURE_TTL_SECONDS);
+    }
   }
 
   // ─── Me ───────────────────────────────────────────────────────────────────────
@@ -423,7 +450,7 @@ export class AuthService {
 
   async forgotPassword(dto: ForgotPasswordDto) {
     // Always return 200 — prevents email enumeration
-    const user = await this.usersService.findByEmail(dto.email);
+    const user = await this.usersService.findByEmailCanonical(dto.email);
     if (user && !user.deleted) {
       this.usersService
         .createPasswordResetToken(user.id)
@@ -555,7 +582,7 @@ export class AuthService {
 
   async resendVerification(dto: ResendVerificationDto) {
     // Always return 200 — prevents email enumeration
-    const user = await this.usersService.findByEmail(dto.email);
+    const user = await this.usersService.findByEmailCanonical(dto.email);
     if (user && !user.deleted && !user.emailVerified) {
       this.usersService
         .createEmailVerificationToken(user.id)

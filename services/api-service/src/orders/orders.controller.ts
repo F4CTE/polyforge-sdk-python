@@ -182,7 +182,7 @@ export class OrdersController {
   @Post("batch")
   @Throttle({
     default: {
-      limit: process.env.NODE_ENV === "production" ? 10 : 10000,
+      limit: process.env.NODE_ENV === "production" ? 30 : 10000,
       ttl: 60000,
     },
   })
