@@ -68,8 +68,27 @@ done < <(
 # that are missing host_ip: 127.0.0.1. Uses awk to handle the multi-line
 # YAML structure with order-agnostic detection.
 long_syntax_errors=$(awk -v file="$TARGET_FILE" '
-# Entry: target-first (common case)
-/^[[:space:]]+- target:/ && !in_block {
+# Track whether we are inside a services.*.ports: section so the
+# long-syntax detector only triggers on Compose port entries, not on
+# unrelated list-of-map items (e.g. labels or custom metadata) that
+# happen to use target: or published: key names.
+# Indentation: services (0), service-name (2), ports: (4), entries (6).
+
+# Detect entering a ports: section under a service (indent = 4 spaces).
+/^    ports:/ {
+  in_ports = 1
+  next
+}
+
+# Exit ports: section on a service-level key (indent = 2 spaces followed
+# by a word char, e.g. "  image:", "  networks:", "  restart:").
+# Also exit on a dedented service name or top-level section.
+in_ports && (/^  [a-zA-Z]/ || /^[a-zA-Z]/) {
+  in_ports = 0
+}
+
+# Entry: target-first (common case) — only inside a ports: section
+in_ports && /^[[:space:]]+- target:/ && !in_block {
   in_block = 1
   entry_lineno = NR
   saw_target = 1
@@ -79,8 +98,8 @@ long_syntax_errors=$(awk -v file="$TARGET_FILE" '
   next
 }
 
-# Entry: published-first (unusual but valid order)
-/^[[:space:]]+- published:/ && !in_block {
+# Entry: published-first (unusual but valid order) — only inside a ports: section
+in_ports && /^[[:space:]]+- published:/ && !in_block {
   in_block = 1
   entry_lineno = NR
   saw_target = 0
@@ -112,7 +131,7 @@ in_block {
     in_block = 0
 
     # Re-process this line in case it starts a new port block
-    if ($0 ~ /^[[:space:]]+- target:/) {
+    if (in_ports && $0 ~ /^[[:space:]]+- target:/) {
       in_block = 1
       entry_lineno = NR
       saw_target = 1
@@ -121,7 +140,7 @@ in_block {
       suppressed = ($0 ~ /# nosemgrep: docker-compose-port-no-loopback/)
       next
     }
-    if ($0 ~ /^[[:space:]]+- published:/) {
+    if (in_ports && $0 ~ /^[[:space:]]+- published:/) {
       in_block = 1
       entry_lineno = NR
       saw_target = 0
