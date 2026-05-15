@@ -2,13 +2,13 @@ import type { MathJsInstance, FactoryFunctionMap } from "mathjs" with {
   "resolution-mode": "import",
 };
 
-interface MathJsModule {
+interface MathJsRequireType {
   create: (factories: FactoryFunctionMap) => MathJsInstance;
   all: FactoryFunctionMap;
 }
 
 /* eslint-disable @typescript-eslint/no-require-imports */
-const mathjsModule = require("mathjs") as MathJsModule;
+const { create, all } = require("mathjs") as MathJsRequireType;
 /* eslint-enable @typescript-eslint/no-require-imports */
 
 const MAX_EXPONENT = 1000;
@@ -24,7 +24,7 @@ const MAX_EXP_INPUT = 709;
  * pow() and exp() are overridden with bounded versions to prevent
  * CPU exhaustion and Infinity results from unreasonably large arguments.
  */
-const limitedMath: MathJsInstance = mathjsModule.create(mathjsModule.all);
+const limitedMath: MathJsInstance = create(all);
 
 limitedMath.import(
   {

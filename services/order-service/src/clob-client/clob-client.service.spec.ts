@@ -1,10 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { ConfigService } from "@nestjs/config";
-import {
-  ClobClientService,
-  type ClobClientLike,
-  PriceHistoryInterval,
-} from "./clob-client.service";
+import { ClobClientService, type ClobClientLike } from "./clob-client.service";
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const { ClobClient } = require("@polymarket/clob-client");
@@ -213,14 +209,10 @@ describe("ClobClientService", () => {
         { t: 123, p: 0.55 },
         { t: 456, p: 0.6 },
       ]);
-      const result = await svc.getPricesHistory(
-        "tok-yes",
-        PriceHistoryInterval.ONE_HOUR,
-        60,
-      );
+      const result = await svc.getPricesHistory("tok-yes", "1h", 60);
       expect(svc.sdk.getPricesHistory).toHaveBeenCalledWith({
         market: "tok-yes",
-        interval: PriceHistoryInterval.ONE_HOUR,
+        interval: "1h",
         fidelity: 60,
       });
       expect(result.history).toHaveLength(2);
@@ -507,11 +499,7 @@ describe("ClobClientService", () => {
         ok: true,
         json: vi.fn().mockResolvedValue({ "tok-1": [{ t: 1, p: "0.5" }] }),
       });
-      const result = await svc.getBatchPricesHistory(
-        ["tok-1"],
-        PriceHistoryInterval.ONE_HOUR,
-        30,
-      );
+      const result = await svc.getBatchPricesHistory(["tok-1"], "1h", 30);
       expect(fetchSpy.mock.calls[0][0]).toBe(
         "http://clob:3099/batch-prices-history",
       );

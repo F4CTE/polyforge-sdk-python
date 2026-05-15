@@ -192,22 +192,22 @@ describe("StrategyRunner — lifecycle", () => {
     state.getStateAndPrices.mockImplementation(
       () =>
         new Promise((resolve) => {
-          release = () =>
-            resolve({
-              state: { ...DEFAULT_STATE },
-              prices: new Map([
-                ["tok1", { price: 0.5, timestamp: Date.now() }],
-              ]),
-            });
-        }),
-    );
-    const runner = makeRunner({ execMode: "EVENT", state });
+           release = () =>
+             resolve({
+               state: { ...DEFAULT_STATE },
+               prices: new Map([
+                 ["tok1", { price: 0.5, timestamp: Date.now() }],
+               ]),
+             });
+         }),
+     );
+     const runner = makeRunner({ execMode: "EVENT", state });
 
-    const first = runner.onPriceEvent("tok1", 0.5);
-    // Wait past the throttle window so the second tick can enter.
-    // The first tick is still in-flight (state.getStateAndPrices is blocked on release).
-    await new Promise((r) => setTimeout(r, 250));
-    const second = runner.onPriceEvent("tok1", 0.5);
+     const first = runner.onPriceEvent("tok1", 0.5);
+     // Wait past the throttle window so the second tick can enter.
+     // The first tick is still in-flight (state.getStateAndPrices is blocked on release).
+     await new Promise((r) => setTimeout(r, 250));
+     const second = runner.onPriceEvent("tok1", 0.5);
     await second;
     // The first tick now awaits betaLimits.getLimit() before reaching
     // evaluate() → state.getStateAndPrices(), adding an extra microtask cycle. Yield
@@ -535,15 +535,17 @@ describe("StrategyRunner — TRIGGER evaluation", () => {
     // Runner reads state via getStateAndPrices; include a fresh price to
     // pass stale data detection and reach trigger evaluation.
     state.getStateAndPrices.mockResolvedValue({
-      state: DEFAULT_STATE,
-      prices: new Map([["tok1", { price: 0.5, timestamp: Date.now() }]]),
+      state: { ...DEFAULT_STATE },
+      prices: new Map([["tok1", { price: 0.55, timestamp: Date.now() }]]),
     });
 
     await runner.onPriceEvent("tok1", 0.5);
 
-    // Trigger should fire because price 0.5 > 0.4 threshold via config fallback.
-    // The runner uses getStateAndPrices (not state.get) for the batched pipeline.
-    expect(state.getStateAndPrices).toHaveBeenCalled();
+    // Trigger should fire because price 0.55 > 0.4 threshold via config fallback.
+    // The batched getStateAndPrices call confirms stale check passed and evaluation proceeded.
+    expect(state.getStateAndPrices).toHaveBeenCalledWith("strat-test", [
+      "tok1",
+    ]);
   });
 });
 
