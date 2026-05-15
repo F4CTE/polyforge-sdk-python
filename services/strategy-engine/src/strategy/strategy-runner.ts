@@ -469,11 +469,11 @@ export class StrategyRunner {
           // coalesced pending events.  A losing-instance retry here
           // would re-evaluate the same latest state and produce
           // duplicate order intents / sub-strategy launches.
-          this.scheduledFollowUp = true;
           if (this.followUpTimer) clearTimeout(this.followUpTimer);
           const RETRY_BACKOFF_MS = 200;
           this.followUpTimer = setTimeout(() => {
             this.followUpTimer = null;
+            this.scheduledFollowUp = true;
             void this.tick();
           }, RETRY_BACKOFF_MS);
         } else if (this.pendingRedisUnlock) {
@@ -488,11 +488,11 @@ export class StrategyRunner {
           // gates the lower retry branch.  Without this clause the
           // coalesced events would be silently dropped: no retry fires
           // and no fresh price event is guaranteed to arrive.
-          this.scheduledFollowUp = true;
           if (this.followUpTimer) clearTimeout(this.followUpTimer);
           void this.pendingRedisUnlock
             .finally(() => {
               if (this.status === "RUNNING") {
+                this.scheduledFollowUp = true;
                 void this.tick();
               }
             })
@@ -508,11 +508,16 @@ export class StrategyRunner {
           // permanently dropped when the holder fails before completing
           // — leaving the strategy stale until a new external price
           // event arrives.
+          //
+          // scheduledFollowUp is set inside the callback so the flag is
+          // only true when the retry actually fires — an intermediate
+          // price event that arrives between scheduling and firing must
+          // still respect the min-tick throttle.
           const LOCK_TTL_MS = 10_000;
           const CRASH_GRACE_MS = 1_000 + Math.floor(Math.random() * 1_000);
-          this.scheduledFollowUp = true;
           this.followUpTimer = setTimeout(() => {
             this.followUpTimer = null;
+            this.scheduledFollowUp = true;
             void this.tick();
           }, LOCK_TTL_MS + CRASH_GRACE_MS);
         }
@@ -522,12 +527,12 @@ export class StrategyRunner {
         // HYBRID mode schedules a 200 ms retry so the strategy can
         // re-evaluate before the next interval tick fires.
         //
-        // EVENT mode avoids a short-interval retry: in a multi-instance
-        // deployment where every instance receives the same price event,
-        // the instance that won the lock is already evaluating it.  A
-        // quick retry would re-evaluate the same data after the winner
-        // releases the lock, producing duplicate order intents and
-        // sub-strategy launches.
+        // EVENT mode is deliberately NOT given a blanket retry: in a
+        // multi-instance deployment where every instance receives the
+        // same price event, the instance that won the lock is already
+        // evaluating the event.  A losing-instance retry would
+        // re-evaluate the same data after the winner releases the lock,
+        // producing duplicate order intents and sub-strategy launches.
         //
         // However, the early tickInFlight release before the Redis
         // unlock creates a local race window: tickInFlight is false, a
@@ -535,51 +540,25 @@ export class StrategyRunner {
         // tick's lock key hasn't been deleted yet.  In that case our own
         // pendingRedisUnlock is non-null and we MUST retry once the
         // unlock completes — otherwise the event is silently dropped.
-        //
-        // EVENT mode also schedules a crash-recovery retry after the
-        // lock TTL expires to guard against the lock holder crashing
-        // mid-evaluation.  Without this, all losing instances would
-        // permanently drop the event when the holder fails before
-        // completing — leaving the strategy stale until a new external
-        // price event arrives.  The retry fires after 10s (lock TTL)
-        // plus a 1-2s grace period so:
-        //  - If the holder crashed: TTL expires, retry acquires the
-        //    lock and evaluates the event.
-        //  - If the holder completed normally: lock is released,
-        //    retry acquires it, and the daily-execution counter plus
-        //    post-evaluation state changes make re-evaluation safe.
         if (this.pendingRedisUnlock) {
           // Bypass the min-tick throttle when the retry fires so the
           // evaluation is not blocked by lastTickMs having been advanced
           // by the failed tick itself.
-          this.scheduledFollowUp = true;
           if (this.followUpTimer) clearTimeout(this.followUpTimer);
           void this.pendingRedisUnlock
             .finally(() => {
               if (this.status === "RUNNING") {
+                this.scheduledFollowUp = true;
                 void this.tick();
               }
             })
             .catch(() => {});
         } else if (this.execMode === "HYBRID" && this.followUpTimer === null) {
-          this.scheduledFollowUp = true;
           this.followUpTimer = setTimeout(() => {
             this.followUpTimer = null;
+            this.scheduledFollowUp = true;
             void this.tick();
           }, 200);
-        } else if (this.execMode === "EVENT" && this.followUpTimer === null) {
-          // Crash-recovery retry: another instance holds the lock
-          // (pendingRedisUnlock is null, so this is not a local race).
-          // Wait for the lock TTL to expire, then re-attempt evaluation.
-          // Uses jitter to avoid thundering-herd on multi-instance crash
-          // detection.
-          const LOCK_TTL_MS = 10_000;
-          const CRASH_GRACE_MS = 1_000 + Math.floor(Math.random() * 1_000);
-          this.scheduledFollowUp = true;
-          this.followUpTimer = setTimeout(() => {
-            this.followUpTimer = null;
-            void this.tick();
-          }, LOCK_TTL_MS + CRASH_GRACE_MS);
         }
       }
 
