@@ -2092,6 +2092,86 @@ describe("StrategyRunner — concurrent tick serialization", () => {
     }
   });
 
+  it("schedules EVENT-mode crash-recovery retry when pendingTick was set and lock miss has no pending Redis unlock (POLA-5150)", async () => {
+    vi.useFakeTimers();
+    try {
+      vi.setSystemTime(300);
+
+      // Defer the first SET NX so another price event can arrive and set
+      // pendingTick before the finally block runs.  SET NX resolves to
+      // null (another instance holds the lock) and pendingRedisUnlock is
+      // null (this instance never acquired the lock, so it has no
+      // pending unlock).  The finally block must schedule a TTL+jitter
+      // crash-recovery retry instead of silently dropping the pending
+      // events.
+      let resolveSetNx!: (value: unknown) => void;
+      let setCallCount = 0;
+      const client = {
+        lrange: vi.fn().mockResolvedValue([]),
+        mget: vi
+          .fn()
+          .mockResolvedValue([
+            JSON.stringify({ price: 0.5, timestamp: Date.now() }),
+          ]),
+        incr: vi.fn().mockResolvedValue(1),
+        expire: vi.fn().mockResolvedValue(1),
+        set: vi.fn().mockImplementation(() => {
+          setCallCount++;
+          if (setCallCount === 1) {
+            // Tick A's SET NX — deferred so Tick B can arrive and set
+            // pendingTick during the window.
+            return new Promise((resolve) => {
+              resolveSetNx = resolve;
+            });
+          }
+          // Crash-recovery retry SET NX — succeed.
+          return Promise.resolve("OK");
+        }),
+        del: vi.fn().mockResolvedValue(1),
+        eval: vi.fn().mockResolvedValue(1),
+      };
+      const redis = makeRedis({ getClient: vi.fn().mockReturnValue(client) });
+      const state = makeState();
+      state.getStateAndPrices.mockResolvedValue({
+        state: { ...DEFAULT_STATE },
+        prices: new Map([["tok1", { price: 0.5, timestamp: Date.now() }]]),
+      });
+      const runner = makeRunner({ execMode: "EVENT", state, redis });
+
+      // Tick A: enters tick(), sets tickInFlight=true, awaits SET NX.
+      const tickAPromise = runner.onPriceEvent("tok1", 0.5);
+      await vi.advanceTimersByTimeAsync(1);
+
+      // Advance past the min-tick throttle so Tick B can enter.
+      vi.setSystemTime(550);
+      await vi.advanceTimersByTimeAsync(0);
+
+      // Tick B: tickInFlight is true → sets pendingTick=true and returns.
+      await runner.onPriceEvent("tok1", 0.51);
+
+      // Neither tick has evaluated yet.
+      expect(state.getStateAndPrices).not.toHaveBeenCalled();
+
+      // Resolve SET NX as null — lock held by another instance.
+      // pendingRedisUnlock stays null because no lock was acquired.
+      resolveSetNx(null);
+      await vi.advanceTimersByTimeAsync(0);
+      await tickAPromise;
+
+      // No evaluation — SET NX failed and the crash-recovery retry
+      // fires after the lock TTL + grace period (10s + 1-2s jitter).
+      expect(state.getStateAndPrices).not.toHaveBeenCalled();
+
+      // Advance past the lock TTL + maximum grace jitter.
+      await vi.advanceTimersByTimeAsync(15_000);
+
+      // Crash-recovery retry fired, acquired the lock, and evaluated.
+      expect(state.getStateAndPrices).toHaveBeenCalledTimes(1);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it("uses per-acquisition lock token in atomic Lua compare-and-delete", async () => {
     const client = {
       lrange: vi.fn().mockResolvedValue([]),

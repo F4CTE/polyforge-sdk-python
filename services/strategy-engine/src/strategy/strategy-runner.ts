@@ -495,6 +495,24 @@ export class StrategyRunner {
               }
             })
             .catch(() => {});
+        } else if (this.execMode === "EVENT" && this.followUpTimer === null) {
+          // EVENT mode, lock acquisition failed, no coalesced events
+          // pending on our own Redis unlock (pendingRedisUnlock is
+          // null, so the lock is held by another instance).
+          //
+          // Schedule a crash-recovery retry after the lock TTL expires
+          // to guard against the lock holder crashing mid-evaluation.
+          // Without this, the coalesced pendingTick events would be
+          // permanently dropped when the holder fails before completing
+          // — leaving the strategy stale until a new external price
+          // event arrives.
+          const LOCK_TTL_MS = 10_000;
+          const CRASH_GRACE_MS = 1_000 + Math.floor(Math.random() * 1_000);
+          this.scheduledFollowUp = true;
+          this.followUpTimer = setTimeout(() => {
+            this.followUpTimer = null;
+            void this.tick();
+          }, LOCK_TTL_MS + CRASH_GRACE_MS);
         }
       } else if (!lockAcquired && this.status === "RUNNING") {
         // Lock acquisition failed without any pending coalesced tick.
