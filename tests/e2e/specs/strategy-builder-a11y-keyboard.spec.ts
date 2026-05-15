@@ -79,7 +79,7 @@ test.describe('Strategy Builder — Keyboard A11y', () => {
         await expect(builder.blockCards().first()).toBeVisible({ timeout: 5_000 });
 
         await builder.selectSection('Actions');
-        await builder.addBlock('Place Order');
+        await builder.addBlock('Buy YES');
         await expect(builder.blockCards()).toHaveCount(2, { timeout: 5_000 });
 
         // Verify no edges exist before keyboard connection
@@ -175,7 +175,7 @@ test.describe('Strategy Builder — Keyboard A11y', () => {
           const first = edgeHandles[0];
           // Block trigger node (Price Crosses Up) has no named source handle → null
           expect(first.sourceHandle, 'Trigger block source handle should be null (default)').toBeNull();
-          // Block action node (Place Order) has no named target handle → null
+          // Block action node (Buy YES) has no named target handle → null
           expect(first.targetHandle, 'Action block target handle should be null (default)').toBeNull();
         } else {
           // Fallback: verify the edge path has sensible geometry, indicating the
@@ -195,7 +195,7 @@ test.describe('Strategy Builder — Keyboard A11y', () => {
         await expect(builder.blockCards().first()).toBeVisible({ timeout: 5_000 });
 
         await builder.selectSection('Actions');
-        await builder.addBlock('Place Order');
+        await builder.addBlock('Buy YES');
         await expect(builder.blockCards()).toHaveCount(2, { timeout: 5_000 });
 
         await page.locator('.react-flow__viewport').click();
@@ -234,7 +234,7 @@ test.describe('Strategy Builder — Keyboard A11y', () => {
         // Verify connected announcement
         const connectedMsg = await announcer.textContent();
         expect(connectedMsg).toContain('Connected');
-        expect(connectedMsg).toContain('Place Order');
+        expect(connectedMsg).toContain('Buy YES');
     });
 
     test('@a11y @keyboard should cancel connection with Escape key', async ({ page }, testInfo) => {
@@ -245,7 +245,7 @@ test.describe('Strategy Builder — Keyboard A11y', () => {
         await expect(builder.blockCards().first()).toBeVisible({ timeout: 5_000 });
 
         await builder.selectSection('Actions');
-        await builder.addBlock('Place Order');
+        await builder.addBlock('Buy YES');
         await expect(builder.blockCards()).toHaveCount(2, { timeout: 5_000 });
 
         // Select source node
@@ -281,7 +281,7 @@ test.describe('Strategy Builder — Keyboard A11y', () => {
         await expect(builder.blockCards().first()).toBeVisible({ timeout: 5_000 });
 
         await builder.selectSection('Actions');
-        await builder.addBlock('Place Order');
+        await builder.addBlock('Buy YES');
         await expect(builder.blockCards()).toHaveCount(2, { timeout: 5_000 });
 
         // Keyboard connection: select source → wire → target → commit
@@ -355,13 +355,13 @@ test.describe('Strategy Builder — Keyboard A11y', () => {
 
         // IF_THEN_ELSE (Logic section) has two source handles: true-out, false-out.
         // Verify H cycling to false-out and assert the created edge has the correct sourceHandle.
-        // Add source first so forward Tab goes IF_THEN_ELSE → Place Order.
+        // Add source first so forward Tab goes IF_THEN_ELSE → Buy YES.
         await builder.selectSection('Logic');
         await builder.addBlock('If / Then / Else');
         await expect(builder.blockCards().first()).toBeVisible({ timeout: 5_000 });
 
         await builder.selectSection('Actions');
-        await builder.addBlock('Place Order');
+        await builder.addBlock('Buy YES');
         await expect(builder.blockCards()).toHaveCount(2, { timeout: 5_000 });
 
         await page.locator('.react-flow__viewport').click();
@@ -386,7 +386,7 @@ test.describe('Strategy Builder — Keyboard A11y', () => {
         await page.waitForTimeout(200);
         await expect(page.locator('text=/Wiring from.*If \\/ Then \\/ Else.*false-out/')).toBeVisible({ timeout: 3_000 });
 
-        // Tab forward to Place Order (2nd in DOM order)
+        // Tab forward to Buy YES (2nd in DOM order)
         await page.keyboard.press('Tab');
         await page.waitForTimeout(300);
 
@@ -641,7 +641,7 @@ test.describe('Strategy Builder — Keyboard A11y', () => {
         await expect(builder.blockCards().first()).toBeVisible({ timeout: 5_000 });
 
         await builder.selectSection('Actions');
-        await builder.addBlock('Place Order');
+        await builder.addBlock('Buy YES');
         await expect(builder.blockCards()).toHaveCount(2, { timeout: 5_000 });
 
         // Count edges before drag to verify the drag creates a new edge
