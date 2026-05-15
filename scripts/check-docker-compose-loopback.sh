@@ -91,7 +91,7 @@ in_ports && !in_block {
 # strings.  The entry line itself is inspected for target, published,
 # and host_ip keys so that single-line or first-key entries are tracked
 # correctly.
-in_ports && /^[[:space:]]+- (name|target|published|host_ip|protocol|mode|app_protocol):/ && !in_block {
+in_ports && /^[[:space:]]+- +(name|target|published|host_ip|protocol|mode|app_protocol):/ && !in_block {
   in_block = 1
   port_lead = leadingspaces($0)
   entry_lineno = NR
@@ -146,7 +146,7 @@ in_block {
     }
 
     # Re-process this line in case it starts a new port block
-    if (in_ports && $0 ~ /^[[:space:]]+- (name|target|published|host_ip|protocol|mode|app_protocol):/) {
+    if (in_ports && $0 ~ /^[[:space:]]+- +(name|target|published|host_ip|protocol|mode|app_protocol):/) {
       in_block = 1
       port_lead = cur_indent
       entry_lineno = NR
