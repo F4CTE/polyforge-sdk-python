@@ -7699,7 +7699,7 @@ class TestMiscUtilityEndpointRoundtrips:
             assert report.user_vote is not None
             assert report.user_vote.direction == "BUY"
 
-            voted = client.vote_market_sentiment("m1")
+            voted = client.vote_market_sentiment("m1", direction="BUY", confidence=80)
             assert captured["method"] == "POST"
             assert voted.total_votes == 5
         finally:

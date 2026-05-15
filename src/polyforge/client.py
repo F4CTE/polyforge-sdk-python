@@ -381,21 +381,19 @@ def _raise_for_status(response: httpx.Response) -> None:
     request_id: str = str(body.get("requestId") or "")
     suggestion: str | None = body.get("suggestion") or None
 
-    kwargs: dict[str, Any] = dict(status_code=response.status_code, code=code, request_id=request_id, suggestion=suggestion)
-
     match response.status_code:
         case 401:
-            raise AuthenticationError(message, **kwargs)
+            raise AuthenticationError(message, status_code=response.status_code, code=code, request_id=request_id, suggestion=suggestion)
         case 403:
-            raise PermissionError(message, **kwargs)
+            raise PermissionError(message, status_code=response.status_code, code=code, request_id=request_id, suggestion=suggestion)
         case 404:
-            raise NotFoundError(message, **kwargs)
+            raise NotFoundError(message, status_code=response.status_code, code=code, request_id=request_id, suggestion=suggestion)
         case 429:
-            raise RateLimitError(message, **kwargs)
+            raise RateLimitError(message, status_code=response.status_code, code=code, request_id=request_id, suggestion=suggestion)
         case sc if sc >= 500:
-            raise ServerError(message, **kwargs)
+            raise ServerError(message, status_code=response.status_code, code=code, request_id=request_id, suggestion=suggestion)
         case _:
-            raise PolyforgeError(message, **kwargs)
+            raise PolyforgeError(message, status_code=response.status_code, code=code, request_id=request_id, suggestion=suggestion)
 
 
 def _strip_none(params: dict[str, Any]) -> dict[str, Any]:
@@ -666,7 +664,7 @@ def _resolve_and_validate_ips(hostname: str) -> list[str]:
 
     validated: list[str] = []
     for _family, _, _, _, sockaddr in addrinfos:
-        ip_str = str(sockaddr[0])
+        ip_str: str = sockaddr[0]  # type: ignore[assignment]  # sockaddr[0] is str for hostname resolution
         try:
             addr = ipaddress.ip_address(ip_str)
         except ValueError:
@@ -4071,7 +4069,13 @@ class PolyforgeClient:
             self._get(f"/api/v1/markets/{_encode_path(market_id)}/sentiment"),
         )
 
-    def vote_market_sentiment(self, market_id: str) -> MarketSentimentReport:
+    def vote_market_sentiment(
+        self,
+        market_id: str,
+        *,
+        direction: str,
+        confidence: int,
+    ) -> MarketSentimentReport:
         """Submit (or refresh) the current user's sentiment for a market.
 
         Mirrors ``POST /api/v1/markets/:marketId/sentiment``. The controller
@@ -4079,7 +4083,10 @@ class PolyforgeClient:
         """
         return _parse(
             MarketSentimentReport,
-            self._post(f"/api/v1/markets/{_encode_path(market_id)}/sentiment"),
+            self._post(
+                f"/api/v1/markets/{_encode_path(market_id)}/sentiment",
+                json={"direction": direction, "confidence": confidence},
+            ),
         )
 
     def update_order_journal(
@@ -7097,13 +7104,18 @@ class AsyncPolyforgeClient:
         )
 
     async def vote_market_sentiment(
-        self, market_id: str
+        self,
+        market_id: str,
+        *,
+        direction: str,
+        confidence: int,
     ) -> MarketSentimentReport:
         """Async variant of :meth:`PolyforgeClient.vote_market_sentiment`."""
         return _parse(
             MarketSentimentReport,
             await self._post(
-                f"/api/v1/markets/{_encode_path(market_id)}/sentiment"
+                f"/api/v1/markets/{_encode_path(market_id)}/sentiment",
+                json={"direction": direction, "confidence": confidence},
             ),
         )
 
