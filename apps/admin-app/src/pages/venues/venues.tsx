@@ -58,7 +58,7 @@ function WsStatusBadge({ status }: { status: VenueHealth['wsStatus'] }) {
 
 function CapabilityBadge({ label }: { label: string }) {
   return (
-    <span className="inline-flex items-center px-2 py-0.5 rounded text-caption font-medium bg-elevated border border-default text-secondary">
+    <span className="inline-flex items-center px-2 py-0.5 rounded-sm text-caption font-medium bg-elevated border border-default text-secondary">
       {label}
     </span>
   );

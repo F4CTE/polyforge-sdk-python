@@ -241,7 +241,7 @@ export function Component() {
                 {/* Amount & Time */}
                 <div className="flex-shrink-0 text-right">
                   {item.amount && (
-                    <span className="block font-mono text-body-sm text-primary">
+                    <span className="block font-mono tabular-nums text-body-sm text-primary">
                       {formatAmount(item.amount)}
                     </span>
                   )}

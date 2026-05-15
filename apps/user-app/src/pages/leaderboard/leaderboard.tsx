@@ -250,7 +250,7 @@ export function Component() {
                 Array.from({ length: 10 }, (_, i) => (
                   <tr key={i}>
                     {Array.from({ length: 7 }, (_, j) => (
-                      <td key={j} className="px-4 py-3"><div className="h-3 bg-overlay rounded animate-pulse" /></td>
+                      <td key={j} className="px-4 py-3"><div className="h-3 bg-overlay rounded-sm animate-pulse" /></td>
                     ))}
                   </tr>
                 ))
@@ -272,7 +272,7 @@ export function Component() {
                         {rankMedal(entry.rank) !== null ? (
                           <span className="text-lg"><span className="sr-only">{entry.rank}</span>{rankMedal(entry.rank)}</span>
                         ) : (
-                          <span className="font-mono text-label">{entry.rank}</span>
+                          <span className="font-mono tabular-nums text-label">{entry.rank}</span>
                         )}
                       </div>
                     </td>
@@ -296,7 +296,7 @@ export function Component() {
                       <Link
                         to={`/copy/new?address=${encodeURIComponent(entry.username)}`}
                         title="Copy trade this trader"
-                        className="shrink-0 text-caption px-2 py-1 rounded border border-accent/30 bg-accent-subtle text-accent-text hover:bg-accent/20 transition-colors font-medium"
+                        className="shrink-0 text-caption px-2 py-1 rounded-sm border border-accent/30 bg-accent-subtle text-accent-text hover:bg-accent/20 transition-colors font-medium"
                       >
                         Copy Trade
                       </Link>
@@ -304,7 +304,7 @@ export function Component() {
                     </td>
                     <td data-testid="trader-score" className="px-4 py-3 text-right hidden sm:table-cell">
                       {entry.score != null ? (
-                        <span className={`inline-flex items-center gap-1 px-2 py-1 rounded text-label font-mono font-semibold ${
+                        <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-sm text-label font-mono tabular-nums font-semibold ${
                           entry.score >= 80 ? 'text-gain bg-gain/10' :
                           entry.score >= 60 ? 'text-accent-text bg-accent/10' :
                           entry.score >= 40 ? 'text-warning bg-warning/10' :
@@ -317,10 +317,10 @@ export function Component() {
                         <span className="text-label text-tertiary">&mdash;</span>
                       )}
                     </td>
-                    <td data-testid="trader-pnl" className={`px-4 py-3 text-right font-mono ${pnlColor(entry.pnl)}`}>
+                    <td data-testid="trader-pnl" className={`px-4 py-3 text-right font-mono tabular-nums ${pnlColor(entry.pnl)}`}>
                       {pnlSign(entry.pnl)}
                     </td>
-                    <td className="px-4 py-3 text-right font-mono text-secondary hidden sm:table-cell">
+                    <td className="px-4 py-3 text-right font-mono tabular-nums text-secondary hidden sm:table-cell">
                       {entry.winRate}%
                     </td>
                     <td className="px-4 py-3 text-right hidden sm:table-cell">
@@ -332,7 +332,7 @@ export function Component() {
                         <span className="text-label text-tertiary">&mdash;</span>
                       )}
                     </td>
-                    <td className="px-4 py-3 text-right font-mono text-secondary">
+                    <td className="px-4 py-3 text-right font-mono tabular-nums text-secondary">
                       {entry.tradeCount}
                     </td>
                   </tr>
@@ -357,7 +357,7 @@ export function Component() {
           >
             <ChevronLeft className="size-4" />
           </Button>
-          <span data-testid="page-indicator" className="text-body-sm font-mono text-secondary" aria-live="polite">{page} / {totalPages}</span>
+          <span data-testid="page-indicator" className="text-body-sm font-mono tabular-nums text-secondary" aria-live="polite">{page} / {totalPages}</span>
           <Button
             type="button"
             variant="ghost"

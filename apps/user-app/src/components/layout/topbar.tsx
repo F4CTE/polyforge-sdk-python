@@ -112,7 +112,7 @@ export function Topbar() {
       <button
         type="button"
         onClick={() => window.dispatchEvent(new CustomEvent("open-shortcuts"))}
-        className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-sm text-secondary hover:bg-elevated hover:text-primary active:bg-surface transition-colors focus-visible:outline-none focus-visible:shadow-focus-ring"
+        className="min-h-11 min-w-11 flex items-center justify-center rounded-sm text-secondary hover:bg-elevated hover:text-primary active:bg-surface transition-colors focus-visible:outline-none focus-visible:shadow-focus-ring"
         aria-label="Keyboard shortcuts"
         title="Keyboard shortcuts (?)"
       >
@@ -124,7 +124,7 @@ export function Topbar() {
         type="button"
         data-tour="theme-toggle"
         onClick={toggleTheme}
-        className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-sm text-secondary hover:bg-elevated hover:text-primary active:bg-surface transition-colors focus-visible:outline-none focus-visible:shadow-focus-ring"
+        className="min-h-11 min-w-11 flex items-center justify-center rounded-sm text-secondary hover:bg-elevated hover:text-primary active:bg-surface transition-colors focus-visible:outline-none focus-visible:shadow-focus-ring"
         aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
       >
         {isDark ? <Sun size={18} /> : <Moon size={18} />}
@@ -135,7 +135,7 @@ export function Topbar() {
         <button
           type="button"
           onClick={() => setNotifOpen((v) => !v)}
-          className="relative min-h-[44px] min-w-[44px] flex items-center justify-center rounded-sm text-secondary hover:bg-elevated hover:text-primary active:bg-surface transition-colors focus-visible:outline-none focus-visible:shadow-focus-ring"
+          className="relative min-h-11 min-w-11 flex items-center justify-center rounded-sm text-secondary hover:bg-elevated hover:text-primary active:bg-surface transition-colors focus-visible:outline-none focus-visible:shadow-focus-ring"
           aria-label="Notifications"
           aria-expanded={notifOpen}
           aria-haspopup="dialog"
@@ -143,7 +143,7 @@ export function Topbar() {
           <Bell size={18} />
           {unread > 0 && (
             <span
-              className="absolute top-1 right-1 flex items-center justify-center min-w-[16px] h-4 px-1 text-caption font-semibold text-primary bg-loss rounded-full"
+              className="absolute top-1 right-1 flex items-center justify-center min-w-4 h-4 px-1 text-caption font-semibold text-primary bg-loss rounded-full"
               aria-label={`${unread} unread notifications`}
             >
               {unread > 9 ? "9+" : unread}

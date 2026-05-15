@@ -273,9 +273,9 @@ function formatDepthSize(v: number): string {
 function DetailSkeleton() {
   return (
     <div className="animate-pulse space-y-6">
-      <div className="h-7 bg-overlay rounded w-[60%]" />
-      <div className="h-4 bg-overlay rounded w-[40%]" />
-      <div className="h-4 bg-overlay rounded w-[80%]" />
+      <div className="h-7 bg-overlay rounded-sm w-3/5" />
+      <div className="h-4 bg-overlay rounded-sm w-2/5" />
+      <div className="h-4 bg-overlay rounded-sm w-4/5" />
     </div>
   );
 }
@@ -971,7 +971,7 @@ export function Component() {
               <div className="flex gap-2">
                 <div className="flex flex-col items-center px-4 py-2 rounded-pf bg-gain/10 border border-gain/20">
                   <span className="text-caption uppercase tracking-wide text-gain/70">YES</span>
-                  <span className="text-lg font-mono font-semibold text-gain">
+                  <span className="text-lg font-mono tabular-nums font-semibold text-gain">
                     {yesPrice ?? '\u2014'}
                   </span>
                   <div className="flex gap-1 mt-1">
@@ -980,7 +980,7 @@ export function Component() {
                       variant="ghost"
                       onClick={() => openConditional('TAKE_PROFIT', 'YES')}
                       aria-label="Set take profit for YES"
-                      className="px-2 py-1 rounded text-caption font-medium bg-gain/20 text-gain hover:bg-gain/30 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50"
+                      className="px-2 py-1 rounded-sm text-caption font-medium bg-gain/20 text-gain hover:bg-gain/30 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50"
                     >
                       TP
                     </Button>
@@ -989,7 +989,7 @@ export function Component() {
                       variant="ghost"
                       onClick={() => openConditional('STOP_LOSS', 'YES')}
                       aria-label="Set stop loss for YES"
-                      className="px-2 py-1 rounded text-caption font-medium bg-loss/20 text-loss hover:bg-loss/30 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50"
+                      className="px-2 py-1 rounded-sm text-caption font-medium bg-loss/20 text-loss hover:bg-loss/30 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50"
                     >
                       SL
                     </Button>
@@ -997,7 +997,7 @@ export function Component() {
                 </div>
                 <div className="flex flex-col items-center px-4 py-2 rounded-pf bg-loss/10 border border-loss/20">
                   <span className="text-caption uppercase tracking-wide text-loss/70">NO</span>
-                  <span className="text-lg font-mono font-semibold text-loss">
+                  <span className="text-lg font-mono tabular-nums font-semibold text-loss">
                     {noPrice ?? '\u2014'}
                   </span>
                   <div className="flex gap-1 mt-1">
@@ -1006,7 +1006,7 @@ export function Component() {
                       variant="ghost"
                       onClick={() => openConditional('TAKE_PROFIT', 'NO')}
                       aria-label="Set take profit for NO"
-                      className="px-2 py-1 rounded text-caption font-medium bg-gain/20 text-gain hover:bg-gain/30 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50"
+                      className="px-2 py-1 rounded-sm text-caption font-medium bg-gain/20 text-gain hover:bg-gain/30 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50"
                     >
                       TP
                     </Button>
@@ -1015,7 +1015,7 @@ export function Component() {
                       variant="ghost"
                       onClick={() => openConditional('STOP_LOSS', 'NO')}
                       aria-label="Set stop loss for NO"
-                      className="px-2 py-1 rounded text-caption font-medium bg-loss/20 text-loss hover:bg-loss/30 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50"
+                      className="px-2 py-1 rounded-sm text-caption font-medium bg-loss/20 text-loss hover:bg-loss/30 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50"
                     >
                       SL
                     </Button>
@@ -1045,7 +1045,7 @@ export function Component() {
                   {stat.icon}
                   <span className="text-label text-tertiary">{stat.label}</span>
                 </div>
-                <span className="text-body-md font-mono font-medium text-primary">{stat.value}</span>
+                <span className="text-body-md font-mono tabular-nums font-medium text-primary">{stat.value}</span>
               </div>
             ))}
           </div>
@@ -1057,12 +1057,12 @@ export function Component() {
               <div className="flex items-center gap-3">
                 <span className="text-body-md font-medium text-primary">Price History</span>
                 {yesPrice && (
-                  <span className="px-2 py-1 rounded-full bg-gain/10 border border-gain/20 text-label font-mono text-gain">
+                  <span className="px-2 py-1 rounded-full bg-gain/10 border border-gain/20 text-label font-mono tabular-nums text-gain">
                     YES {yesPrice}
                   </span>
                 )}
                 {noPrice && (
-                  <span className="px-2 py-1 rounded-full bg-loss/10 border border-loss/20 text-label font-mono text-loss">
+                  <span className="px-2 py-1 rounded-full bg-loss/10 border border-loss/20 text-label font-mono tabular-nums text-loss">
                     NO {noPrice}
                   </span>
                 )}
@@ -1140,7 +1140,7 @@ export function Component() {
                         const no = payload.find((p) => p.dataKey === 'noPrice')?.value as number | undefined;
                         const vol = payload.find((p) => p.dataKey === 'volume')?.value as number | undefined;
                         return (
-                          <div className="bg-surface border border-default rounded px-3 py-2 text-label">
+                          <div className="bg-surface border border-default rounded-pf px-3 py-2 text-label">
                             <p className="text-secondary mb-1">{label}</p>
                             {yes !== undefined && <p className="text-accent-text">YES: {Math.round(yes * 100)}¢</p>}
                             {no !== undefined && <p className="text-tertiary">NO: {Math.round(no * 100)}¢</p>}
@@ -1287,7 +1287,7 @@ export function Component() {
                 <span className="text-body-md font-medium text-primary">Order Book</span>
                 <div className="flex items-center gap-2">
                   {orderBook && (
-                    <span className="font-mono text-label text-tertiary">
+                    <span className="font-mono tabular-nums text-label text-tertiary">
                       spread {orderBook.spread}
                     </span>
                   )}
@@ -1328,7 +1328,7 @@ export function Component() {
                       const yesToken = (market?.tokens ?? []).find((t) => t.outcome === 'YES');
                       if (yesToken) loadBook(yesToken.id);
                     }}
-                    className="p-1 rounded text-tertiary hover:text-primary hover:bg-overlay transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50"
+                    className="p-1 rounded-sm text-tertiary hover:text-primary hover:bg-overlay transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50"
                     aria-label="Refresh order book"
                     title="Refresh book"
                   >
@@ -1361,7 +1361,7 @@ export function Component() {
               {loadingBook ? (
                 <div className="space-y-2">
                   {Array.from({ length: 5 }, (_, i) => (
-                    <div key={i} className="h-6 bg-overlay rounded animate-pulse" />
+                    <div key={i} className="h-6 bg-overlay rounded-sm animate-pulse" />
                   ))}
                 </div>
               ) : orderBook ? (
@@ -1379,15 +1379,15 @@ export function Component() {
                               className="absolute inset-y-0 right-0 rounded-sm"
                               style={{ width: `${bookDepth(orderBook.asks.slice(0, 8), arr.length - 1 - idx)}%`, backgroundColor: depthColor(bookDepth(orderBook.asks.slice(0, 8), arr.length - 1 - idx), 'ask') }}
                             />
-                            <span className="relative font-mono text-loss w-16">{ask.price}</span>
-                            <span className="relative font-mono text-tertiary ml-auto">{ask.size}</span>
+                            <span className="relative font-mono tabular-nums text-loss w-16">{ask.price}</span>
+                            <span className="relative font-mono tabular-nums text-tertiary ml-auto">{ask.size}</span>
                           </div>
                         ))}
                     </div>
 
                     {/* Midpoint */}
                     <div className="flex items-center gap-2 px-2 py-2 border-y border-subtle my-1">
-                      <span className="font-mono text-body-md text-primary font-medium">{orderBook.midpoint}</span>
+                      <span className="font-mono tabular-nums text-body-md text-primary font-medium">{orderBook.midpoint}</span>
                       <span className="text-label text-tertiary">mid</span>
                     </div>
 
@@ -1399,8 +1399,8 @@ export function Component() {
                             className="absolute inset-y-0 right-0 rounded-sm"
                             style={{ width: `${bookDepth(orderBook.bids.slice(0, 8), idx)}%`, backgroundColor: depthColor(bookDepth(orderBook.bids.slice(0, 8), idx), 'bid') }}
                           />
-                          <span className="relative font-mono text-gain w-16">{bid.price}</span>
-                          <span className="relative font-mono text-tertiary ml-auto">{bid.size}</span>
+                           <span className="relative font-mono tabular-nums text-gain w-16">{bid.price}</span>
+                           <span className="relative font-mono tabular-nums text-tertiary ml-auto">{bid.size}</span>
                         </div>
                       ))}
                     </div>
@@ -1464,8 +1464,8 @@ export function Component() {
                                   ? (bestAskPrice - bestBidPrice).toFixed(4)
                                   : null;
                                 return (
-                                  <div className="bg-surface border border-default rounded px-3 py-2 text-label shadow-elevation-2">
-                                    <p className="text-secondary mb-1 font-mono">
+                                  <div className="bg-surface border border-default rounded-pf px-3 py-2 text-label shadow-elevation-2">
+                                    <p className="text-secondary mb-1 font-mono tabular-nums">
                                       Price: {d.price.toFixed(4)}
                                     </p>
                                     {d.bidCumSize !== null && (
@@ -1633,7 +1633,7 @@ export function Component() {
                   onChange={(e) => setTradePrice(e.target.value)}
                   disabled={isMarketOrder}
                   placeholder="0.65"
-                  className="w-full h-11 px-3 rounded-pf bg-surface border border-default text-body-sm font-mono text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:border-accent/50 disabled:opacity-40"
+                  className="w-full h-11 px-3 rounded-pf bg-surface border border-default text-body-sm font-mono tabular-nums text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:border-accent/50 disabled:opacity-40"
                 />
               </div>
 
@@ -1643,7 +1643,7 @@ export function Component() {
                   type="checkbox"
                   checked={isMarketOrder}
                   onChange={(e) => setIsMarketOrder(e.target.checked)}
-                  className="rounded border-default bg-surface text-accent focus-visible:ring-accent/30"
+                  className="rounded-xs border-default bg-surface text-accent focus-visible:ring-accent/30"
                 />
                 <span className="text-label text-secondary">Market Order</span>
               </label>
@@ -1676,7 +1676,7 @@ export function Component() {
                     }}
                     className="flex-1 h-2 rounded-full bg-default accent-accent"
                   />
-                  <span className="text-label font-mono text-accent-text w-8 text-right">{kellyConfidence}%</span>
+                  <span className="text-label font-mono tabular-nums text-accent-text w-8 text-right">{kellyConfidence}%</span>
                 </div>
                 <p className="text-caption text-tertiary mt-1">
                   Drag to set your confidence &rarr; Kelly suggests a size
@@ -1694,7 +1694,7 @@ export function Component() {
                     value={tradeAmount}
                     onChange={(e) => setTradeAmount(e.target.value)}
                     placeholder="10"
-                    className="w-full h-11 px-3 pr-14 rounded-pf bg-surface border border-default text-body-sm font-mono text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:border-accent/50"
+                    className="w-full h-11 px-3 pr-14 rounded-pf bg-surface border border-default text-body-sm font-mono tabular-nums text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:border-accent/50"
                   />
                   <span className="absolute right-3 top-1/2 -translate-y-1/2 text-label text-tertiary">USDC</span>
                 </div>
@@ -1705,23 +1705,23 @@ export function Component() {
                 <div className="mt-3 space-y-1 bg-surface rounded-sm p-3 border border-subtle">
                   <div className="flex justify-between text-label">
                     <span className="text-tertiary">Est. Shares</span>
-                    <span className="font-mono text-primary">{estShares.toFixed(2)}</span>
+                    <span className="font-mono tabular-nums text-primary">{estShares.toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between text-label">
                     <span className="text-tertiary">Cost</span>
-                    <span className="font-mono text-primary">${estCost.toFixed(2)}</span>
+                    <span className="font-mono tabular-nums text-primary">${estCost.toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between text-label">
                     <span className="text-tertiary">Est. Fee ({(feeRate * 100).toFixed(0)}%)</span>
-                    <span className="font-mono text-secondary">${(estCost * feeRate).toFixed(2)}</span>
+                    <span className="font-mono tabular-nums text-secondary">${(estCost * feeRate).toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between text-label border-t border-subtle pt-1">
                     <span className="text-tertiary">Total Cost</span>
-                    <span className="font-mono text-primary">${(estCost * (1 + feeRate)).toFixed(2)}</span>
+                    <span className="font-mono tabular-nums text-primary">${(estCost * (1 + feeRate)).toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between text-label">
                     <span className="text-tertiary">Potential Payout</span>
-                    <span className="font-mono text-gain">${estPayout.toFixed(2)}</span>
+                    <span className="font-mono tabular-nums text-gain">${estPayout.toFixed(2)}</span>
                   </div>
                 </div>
               )}
@@ -1729,7 +1729,7 @@ export function Component() {
               {/* Tick size info */}
               {tickSize !== null && (
                 <div className="mt-2 flex items-center gap-2 text-caption text-tertiary">
-                  <span>Tick size: <span className="font-mono text-secondary">{tickSize}</span></span>
+                  <span>Tick size: <span className="font-mono tabular-nums text-secondary">{tickSize}</span></span>
                   {!isMarketOrder && tradePrice && (parseFloat(tradePrice) * 100) % (tickSize * 100) !== 0 && (
                     <span className="text-loss text-caption">Price must be a multiple of {tickSize}</span>
                   )}
@@ -1741,7 +1741,7 @@ export function Component() {
                 type="button"
                 onClick={openPlaceOrderConfirmation}
                 disabled={placingOrder || !tradeAmount || parseFloat(tradeAmount || '0') <= 0 || (!isMarketOrder && (!tradePrice || parseFloat(tradePrice || '0') <= 0))}
-                className={`w-full mt-3 py-3 min-h-[44px] rounded-pf text-body-md font-semibold text-primary transition-opacity disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 ${
+                className={`w-full mt-3 py-3 min-h-11 rounded-pf text-body-md font-semibold text-primary transition-opacity disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 ${
                   tradeSide === 'BUY'
                     ? 'bg-accent hover:bg-accent-hover'
                     : 'bg-loss hover:bg-loss/90'
@@ -1764,7 +1764,7 @@ export function Component() {
                 {loadingMyOrders ? (
                   <div className="mt-2 space-y-1">
                     {Array.from({ length: 2 }, (_, i) => (
-                      <div key={i} className="h-6 bg-overlay rounded animate-pulse" />
+                      <div key={i} className="h-6 bg-overlay rounded-sm animate-pulse" />
                     ))}
                   </div>
                 ) : myOrders.length === 0 ? (
@@ -1783,7 +1783,7 @@ export function Component() {
                           <span className={`font-medium ${order.outcome === 'YES' ? 'text-gain' : 'text-loss'}`}>
                             {order.outcome}
                           </span>
-                          <span className="font-mono text-tertiary truncate">
+                          <span className="font-mono tabular-nums text-tertiary truncate">
                             {order.size}@{order.price}
                           </span>
                         </div>
@@ -1793,7 +1793,7 @@ export function Component() {
                           size="icon-sm"
                           onClick={() => openCancelOrderConfirmation(order.id)}
                           disabled={cancellingMyOrderId === order.id}
-                          className="shrink-0 p-1 rounded text-tertiary hover:text-loss transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50"
+                          className="shrink-0 p-1 rounded-sm text-tertiary hover:text-loss transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50"
                           title="Cancel order"
                           aria-label="Cancel order"
                         >
@@ -1864,7 +1864,7 @@ export function Component() {
                       value={lpSpread}
                       onChange={(e) => setLpSpread(e.target.value)}
                       placeholder="0.02"
-                      className="w-full h-9 px-3 rounded-pf bg-surface border border-default text-body-sm font-mono text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:border-accent/50"
+                      className="w-full h-9 px-3 rounded-pf bg-surface border border-default text-body-sm font-mono tabular-nums text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:border-accent/50"
                     />
                   </div>
 
@@ -1881,7 +1881,7 @@ export function Component() {
                       value={lpSize}
                       onChange={(e) => setLpSize(e.target.value)}
                       placeholder="10"
-                      className="w-full h-9 px-3 rounded-pf bg-surface border border-default text-body-sm font-mono text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:border-accent/50"
+                      className="w-full h-9 px-3 rounded-pf bg-surface border border-default text-body-sm font-mono tabular-nums text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:border-accent/50"
                     />
                   </div>
 
@@ -2025,7 +2025,7 @@ export function Component() {
                         <div>
                           <div className="flex items-center justify-between text-label mb-1">
                             <span className="text-secondary font-medium">How confident?</span>
-                            <span className="font-mono text-accent-text">{confidence}% confident</span>
+                            <span className="font-mono tabular-nums text-accent-text">{confidence}% confident</span>
                           </div>
                           <input
                             type="range"
@@ -2134,7 +2134,7 @@ export function Component() {
                   <div>
                     <div className="flex items-center justify-between mb-2">
                       <p className="text-label font-medium text-secondary">Threshold</p>
-                      <span className="font-mono text-label text-accent-text">{alertThreshold.toFixed(2)}</span>
+                      <span className="font-mono tabular-nums text-label text-accent-text">{alertThreshold.toFixed(2)}</span>
                     </div>
                     <input
                       type="range"
@@ -2237,7 +2237,7 @@ export function Component() {
                             className={`size-2 rounded-full shrink-0 ${alert.outcome === 'YES' ? 'bg-gain' : 'bg-loss'}`}
                             aria-hidden="true"
                           />
-                          <span className="font-mono text-primary truncate">
+                          <span className="font-mono tabular-nums text-primary truncate">
                             {alert.outcome} {alert.condition} {alert.threshold.toFixed(2)}
                           </span>
                           {alert.triggered && (
@@ -2267,7 +2267,7 @@ export function Component() {
                               toast.error('Failed to remove alert');
                             }
                           }}
-                          className="shrink-0 p-1 rounded text-tertiary hover:text-loss transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50"
+                          className="shrink-0 p-1 rounded-sm text-tertiary hover:text-loss transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50"
                         >
                           <Trash2 className="size-3" />
                         </Button>
@@ -2322,8 +2322,8 @@ export function Component() {
                   <div key={i} className="flex items-center gap-3 px-6 py-3 animate-pulse">
                     <div className="size-2 rounded-full bg-overlay shrink-0" />
                     <div className="flex-1 space-y-2">
-                      <div className="h-3 bg-overlay rounded w-[80%]" />
-                      <div className="h-3 bg-overlay rounded w-[50%]" />
+                      <div className="h-3 bg-overlay rounded-sm w-4/5" />
+                      <div className="h-3 bg-overlay rounded-sm w-1/2" />
                     </div>
                   </div>
                 ))}
@@ -2396,7 +2396,7 @@ export function Component() {
                     size="icon"
                     onClick={() => setShowConditional(false)}
                     aria-label="Close dialog"
-                    className="p-1 rounded text-tertiary hover:text-primary transition-colors"
+                    className="p-1 rounded-sm text-tertiary hover:text-primary transition-colors"
                   >
                     <X className="size-4" />
                   </Button>
@@ -2467,7 +2467,7 @@ export function Component() {
                     size="icon"
                     onClick={() => setShowRunStrategy(false)}
                     aria-label="Close dialog"
-                    className="p-1 rounded text-tertiary hover:text-primary transition-colors"
+                    className="p-1 rounded-sm text-tertiary hover:text-primary transition-colors"
                   >
                     <X className="size-4" />
                   </Button>
@@ -2543,11 +2543,11 @@ export function Component() {
               </div>
               <div className="mt-1 flex justify-between gap-3">
                 <span className="text-secondary">Amount</span>
-                <span className="font-mono text-primary">${estCost.toFixed(2)}</span>
+                <span className="font-mono tabular-nums text-primary">${estCost.toFixed(2)}</span>
               </div>
               <div className="mt-1 flex justify-between gap-3">
                 <span className="text-secondary">Price</span>
-                <span className="font-mono text-primary">{estPrice.toFixed(3)}</span>
+                <span className="font-mono tabular-nums text-primary">{estPrice.toFixed(3)}</span>
               </div>
             </div>
           </ConfirmDialog>
@@ -2570,11 +2570,11 @@ export function Component() {
                 </div>
                 <div className="mt-1 flex justify-between gap-3">
                   <span className="text-secondary">Size</span>
-                  <span className="font-mono text-primary">{pendingCancelOrder.size}</span>
+                  <span className="font-mono tabular-nums text-primary">{pendingCancelOrder.size}</span>
                 </div>
                 <div className="mt-1 flex justify-between gap-3">
                   <span className="text-secondary">Price</span>
-                  <span className="font-mono text-primary">{pendingCancelOrder.price}</span>
+                  <span className="font-mono tabular-nums text-primary">{pendingCancelOrder.price}</span>
                 </div>
               </div>
             )}

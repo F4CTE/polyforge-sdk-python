@@ -1245,8 +1245,8 @@ export function Component() {
               {Array.from({ length: 6 }).map((_, i) => (
                 <div key={i} className="flex items-center justify-between py-3 animate-pulse">
                   <div className="space-y-2">
-                    <div className="h-4 w-32 rounded bg-overlay" />
-                    <div className="h-3 w-52 rounded bg-overlay/60" />
+                    <div className="h-4 w-32 rounded-sm bg-overlay" />
+                    <div className="h-3 w-52 rounded-sm bg-overlay/60" />
                   </div>
                   <div className="flex gap-2">
                     <div className="h-6 w-14 rounded-full bg-overlay" />
@@ -1483,7 +1483,7 @@ export function Component() {
                 </div>
                 <div className="grid grid-cols-2 gap-2">
                   {twoFaBackupCodes.map(code => (
-                    <span key={code} className="font-mono text-body-md bg-surface px-3 py-2 rounded border border-default text-center text-primary">
+                    <span key={code} className="font-mono text-body-md bg-surface px-3 py-2 rounded-sm border border-default text-center text-primary">
                       {code}
                     </span>
                   ))}
@@ -1558,7 +1558,7 @@ export function Component() {
                     </p>
                     <div className="grid grid-cols-2 gap-2">
                       {twoFaRegenCodes.map(code => (
-                        <span key={code} className="font-mono text-body-md bg-surface px-3 py-2 rounded border border-default text-center text-primary">
+                        <span key={code} className="font-mono text-body-md bg-surface px-3 py-2 rounded-sm border border-default text-center text-primary">
                           {code}
                         </span>
                       ))}
@@ -1664,7 +1664,7 @@ export function Component() {
           {gasLoading ? (
             <div className="space-y-3">
               {[1, 2, 3].map(i => (
-                <div key={i} className="h-12 bg-overlay rounded animate-pulse" />
+                <div key={i} className="h-12 bg-overlay rounded-sm animate-pulse" />
               ))}
             </div>
           ) : gasUsage ? (
@@ -1672,19 +1672,19 @@ export function Component() {
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div className="bg-surface rounded-pf p-4 border border-subtle">
                   <span className="text-label text-secondary uppercase tracking-wider">Today's Usage</span>
-                  <span className="block mt-1 text-lg font-mono font-semibold text-primary">
+                  <span className="block mt-1 text-lg font-mono tabular-nums font-semibold text-primary">
                     {gasUsage.todayUsage.toFixed(4)} MATIC
                   </span>
                 </div>
                 <div className="bg-surface rounded-pf p-4 border border-subtle">
                   <span className="text-label text-secondary uppercase tracking-wider">Daily Limit</span>
-                  <span className="block mt-1 text-lg font-mono font-semibold text-primary">
+                  <span className="block mt-1 text-lg font-mono tabular-nums font-semibold text-primary">
                     {gasUsage.dailyLimit.toFixed(4)} MATIC
                   </span>
                 </div>
                 <div className="bg-surface rounded-pf p-4 border border-subtle">
                   <span className="text-label text-secondary uppercase tracking-wider">Remaining</span>
-                  <span className={`block mt-1 text-lg font-mono font-semibold ${gasUsage.remaining > 0.1 ? 'text-gain' : 'text-loss'}`}>
+                  <span className={`block mt-1 text-lg font-mono tabular-nums font-semibold ${gasUsage.remaining > 0.1 ? 'text-gain' : 'text-loss'}`}>
                     {gasUsage.remaining.toFixed(4)} MATIC
                   </span>
                 </div>
@@ -1815,7 +1815,7 @@ export function Component() {
             {/* Threshold */}
             <div>
               <label htmlFor="settings-threshold" className="text-label text-secondary mb-2 block">
-                Loss Threshold: <span className="font-mono text-loss">{drawdownThresholdPct}%</span>
+                Loss Threshold: <span className="font-mono tabular-nums text-loss">{drawdownThresholdPct}%</span>
               </label>
               <input
                 id="settings-threshold"
@@ -2026,7 +2026,7 @@ export function Component() {
                           if (e.target.checked) next.add(scope.value); else next.delete(scope.value);
                           return next;
                         })}
-                        className="mt-1 rounded border-default shrink-0"
+                        className="mt-1 rounded-xs border-default shrink-0"
                       />
                       <div>
                         <span className={`text-label font-medium block ${scopeBadgeClass(scope.value).split(' ')[1]}`}>{scope.label}</span>
@@ -2042,7 +2042,7 @@ export function Component() {
             </div>
             <div>
               <label htmlFor="settings-key-expiration" className="text-label text-secondary mb-2 block">Expiration (optional)</label>
-              <Input id="settings-key-expiration" type="date" lang="en" value={newKeyExpiration} onChange={e => setNewKeyExpiration(e.target.value)} className="w-full max-w-[220px]" />
+              <Input id="settings-key-expiration" type="date" lang="en" value={newKeyExpiration} onChange={e => setNewKeyExpiration(e.target.value)} className="w-full max-w-56" />
             </div>
             <Button type="button" variant="default" onClick={createApiKey} disabled={apiKeysCreating || !newKeyName.trim() || newKeyScopes.size === 0} className="flex items-center gap-2">
               {apiKeysCreating ? <Loader2 className="size-4 animate-spin" /> : <Key className="size-4" />}
@@ -2100,7 +2100,7 @@ export function Component() {
             {apiKeysLoading ? (
               <div className="space-y-2">
                 {[1, 2, 3].map(i => (
-                  <div key={i} className="h-14 bg-overlay rounded animate-pulse" />
+                  <div key={i} className="h-14 bg-overlay rounded-sm animate-pulse" />
                 ))}
               </div>
             ) : apiKeys.length === 0 ? (
@@ -2150,20 +2150,20 @@ export function Component() {
                           <td className="py-3 pr-4">
                             <div className="flex flex-wrap gap-1">
                               {key.scopes.map(scope => (
-                                <span key={scope} className={`text-caption px-2 py-1 rounded font-medium ${scopeBadgeClass(scope)}`}>
+                                <span key={scope} className={`text-caption px-2 py-1 rounded-sm font-medium ${scopeBadgeClass(scope)}`}>
                                   {scope}
                                 </span>
                               ))}
                             </div>
                           </td>
-                          <td className="py-3 pr-4 font-mono text-caption text-tertiary whitespace-nowrap">{formatDate(key.createdAt)}</td>
+                          <td className="py-3 pr-4 font-mono tabular-nums text-caption text-tertiary whitespace-nowrap">{formatDate(key.createdAt)}</td>
                           <td className="py-3 pr-4 text-label text-tertiary whitespace-nowrap">
                             <div>{daysAgo(key.lastUsedAt)}</div>
                             {typeof key.usageCount === 'number' && (
                               <div className="text-caption text-tertiary">{key.usageCount.toLocaleString()} requests</div>
                             )}
                           </td>
-                          <td className="py-3 pr-4 font-mono text-label text-tertiary hidden sm:table-cell whitespace-nowrap">
+                          <td className="py-3 pr-4 font-mono tabular-nums text-label text-tertiary hidden sm:table-cell whitespace-nowrap">
                             {key.expiresAt ? (
                               <span className={new Date(key.expiresAt) < new Date() ? 'text-loss' : ''}>
                                 {formatDate(key.expiresAt)}
@@ -2172,9 +2172,9 @@ export function Component() {
                           </td>
                           <td className="py-3 pr-4">
                             {key.revoked || key.active === false ? (
-                              <span className="text-caption px-2 py-1 rounded font-medium bg-loss/10 text-loss">Revoked</span>
+                              <span className="text-caption px-2 py-1 rounded-sm font-medium bg-loss/10 text-loss">Revoked</span>
                             ) : (
-                              <span className="text-caption px-2 py-1 rounded font-medium bg-gain/10 text-gain">Active</span>
+                              <span className="text-caption px-2 py-1 rounded-sm font-medium bg-gain/10 text-gain">Active</span>
                             )}
                           </td>
                           <td className="py-3">
@@ -2315,14 +2315,14 @@ export function Component() {
                             {wh.url.length > 50 ? `${wh.url.slice(0, 47)}…` : wh.url}
                           </div>
                           <div className="flex items-center gap-2 mt-1">
-                            <span className="text-caption px-2 py-1 rounded font-medium bg-overlay text-secondary border border-default">
+                            <span className="text-caption px-2 py-1 rounded-sm font-medium bg-overlay text-secondary border border-default">
                               {wh.events.length} event{wh.events.length !== 1 ? 's' : ''}
                             </span>
-                            <span className={`text-caption px-2 py-1 rounded font-medium ${wh.active ? 'bg-gain/10 text-gain' : 'bg-overlay text-tertiary'}`}>
+                            <span className={`text-caption px-2 py-1 rounded-sm font-medium ${wh.active ? 'bg-gain/10 text-gain' : 'bg-overlay text-tertiary'}`}>
                               {wh.active ? 'Active' : 'Inactive'}
                             </span>
                             {wh.failureCount > 0 && (
-                              <span className="text-caption px-2 py-1 rounded font-medium bg-loss/10 text-loss">
+                              <span className="text-caption px-2 py-1 rounded-sm font-medium bg-loss/10 text-loss">
                                 {wh.failureCount} failure{wh.failureCount !== 1 ? 's' : ''}
                               </span>
                             )}
@@ -2341,7 +2341,7 @@ export function Component() {
                             <History className="size-4" />
                             Deliveries
                             {recentFailures > 0 && (
-                              <span className="absolute -top-2 -right-2 flex items-center justify-center min-w-[16px] h-4 px-1 rounded-full bg-loss text-primary text-caption font-semibold leading-none">
+                              <span className="absolute -top-2 -right-2 flex items-center justify-center min-w-4 h-4 px-1 rounded-full bg-loss text-primary text-caption font-semibold leading-none">
                                 {recentFailures}
                               </span>
                             )}
@@ -2392,7 +2392,7 @@ export function Component() {
                             /* Skeleton rows */
                             <div className="p-3 space-y-2">
                               {[1, 2, 3, 4, 5].map(i => (
-                                <div key={i} className="h-8 rounded bg-overlay animate-pulse" />
+                                <div key={i} className="h-8 rounded-sm bg-overlay animate-pulse" />
                               ))}
                             </div>
                           ) : whDeliveries.length === 0 ? (
@@ -2426,12 +2426,12 @@ export function Component() {
                                             {relativeTime(del.attemptedAt)}
                                           </td>
                                           <td className="px-4 py-2">
-                                            <span className="px-2 py-1 rounded font-mono bg-overlay text-secondary border border-default">
+                                            <span className="px-2 py-1 rounded-sm font-mono bg-overlay text-secondary border border-default">
                                               {del.event}
                                             </span>
                                           </td>
                                           <td className="px-4 py-2">
-                                            <span className={`px-2 py-1 rounded font-medium ${statusClass}`}>
+                                            <span className={`px-2 py-1 rounded-sm font-medium ${statusClass}`}>
                                               {del.statusCode ?? 'Failed'}
                                             </span>
                                           </td>
@@ -2470,7 +2470,7 @@ export function Component() {
                                         {isDelExpanded && (
                                           <tr key={`${del.id}-preview`}>
                                             <td colSpan={5} className="px-4 pb-3 pt-1">
-                                              <pre className="bg-overlay text-secondary text-label font-mono p-3 rounded overflow-x-auto max-h-48 whitespace-pre-wrap break-all">
+                                              <pre className="bg-overlay text-secondary text-label font-mono p-3 rounded-sm overflow-x-auto max-h-48 whitespace-pre-wrap break-all">
                                                 <span className="text-tertiary">-- Request Body --{'\n'}</span>
                                                 {(() => { try { return JSON.stringify(JSON.parse(del.requestBody), null, 2); } catch { return del.requestBody; } })()}
                                                 {del.responseBody != null && (
@@ -2540,9 +2540,9 @@ export function Component() {
                   <div key={i} className="flex items-start gap-3 py-3 animate-pulse">
                     <div className="size-9 rounded-pf bg-overlay shrink-0" />
                     <div className="flex-1 space-y-2">
-                      <div className="h-4 bg-overlay rounded w-40" />
-                      <div className="h-3 bg-overlay rounded w-28" />
-                      <div className="h-3 bg-overlay rounded w-24" />
+                      <div className="h-4 bg-overlay rounded-sm w-40" />
+                      <div className="h-3 bg-overlay rounded-sm w-28" />
+                      <div className="h-3 bg-overlay rounded-sm w-24" />
                     </div>
                   </div>
                 ))}

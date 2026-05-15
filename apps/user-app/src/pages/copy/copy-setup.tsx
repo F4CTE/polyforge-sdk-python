@@ -348,7 +348,7 @@ export function Component() {
                         aria-label="Copy percentage of whale trade size"
                         className="flex-1 h-2 rounded-full bg-default accent-accent"
                       />
-                      <span className="text-body-md font-mono text-accent-text w-12 text-right">{sizePercent}%</span>
+                      <span className="text-body-md font-mono tabular-nums text-accent-text w-12 text-right">{sizePercent}%</span>
                     </div>
                     <p className="text-caption text-tertiary mt-1">
                       Copy {sizePercent}% of each whale trade size
@@ -372,7 +372,7 @@ export function Component() {
                         min={0}
                         value={sizeValue}
                         onChange={(e) => setSizeValue(Number(e.target.value))}
-                        className="w-32 px-3 py-2 rounded-sm text-body-md bg-surface text-primary border border-default focus-visible:border-accent/50 focus-visible:outline-none font-mono"
+                        className="w-32 px-3 py-2 rounded-sm text-body-md bg-surface text-primary border border-default focus-visible:border-accent/50 focus-visible:outline-none font-mono tabular-nums"
                       />
                       <span className="text-body-sm text-secondary">
                         {mode === 'PERCENTAGE' ? '%' : 'USD'}
@@ -393,7 +393,7 @@ export function Component() {
                     value={maxPerTrade}
                     onChange={(e) => setMaxPerTrade(parseInt(e.target.value) || 0)}
                     placeholder="500"
-                    className="w-full h-10 px-3 rounded-pf bg-surface border border-default text-body-sm font-mono text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:border-accent/50"
+                    className="w-full h-10 px-3 rounded-pf bg-surface border border-default text-body-sm font-mono tabular-nums text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:border-accent/50"
                   />
                   <p className="text-caption text-tertiary mt-1">Never copy more than this per single trade</p>
                 </div>
@@ -427,7 +427,7 @@ export function Component() {
                     min={0}
                     value={maxExposure}
                     onChange={(e) => setMaxExposure(Number(e.target.value))}
-                    className="w-32 px-3 py-2 rounded-sm text-body-md bg-surface text-primary border border-default focus-visible:border-accent/50 focus-visible:outline-none font-mono"
+                    className="w-32 px-3 py-2 rounded-sm text-body-md bg-surface text-primary border border-default focus-visible:border-accent/50 focus-visible:outline-none font-mono tabular-nums"
                   />
                   <span className="text-body-sm text-secondary">USD</span>
                 </div>
@@ -453,7 +453,7 @@ export function Component() {
                     min={0}
                     value={maxDailyLoss}
                     onChange={(e) => setMaxDailyLoss(Number(e.target.value))}
-                    className="w-32 px-3 py-2 rounded-sm text-body-md bg-surface text-primary border border-default focus-visible:border-accent/50 focus-visible:outline-none font-mono"
+                    className="w-32 px-3 py-2 rounded-sm text-body-md bg-surface text-primary border border-default focus-visible:border-accent/50 focus-visible:outline-none font-mono tabular-nums"
                   />
                   <span className="text-body-sm text-secondary">USD</span>
                 </div>
@@ -481,7 +481,7 @@ export function Component() {
                     step={0.1}
                     value={priceOffset}
                     onChange={(e) => setPriceOffset(Number(e.target.value))}
-                    className="w-32 px-3 py-2 rounded-sm text-body-md bg-surface text-primary border border-default focus-visible:border-accent/50 focus-visible:outline-none font-mono"
+                    className="w-32 px-3 py-2 rounded-sm text-body-md bg-surface text-primary border border-default focus-visible:border-accent/50 focus-visible:outline-none font-mono tabular-nums"
                   />
                   <span className="text-body-sm text-secondary">%</span>
                 </div>
@@ -511,7 +511,7 @@ export function Component() {
               <div className="py-2 border-b border-subtle">
                 <div className="flex items-center justify-between">
                   <span className="text-label text-secondary">Trade Size</span>
-                  <span className="text-body-md font-mono text-primary">{sizeLabel()}</span>
+                  <span className="text-body-md font-mono tabular-nums text-primary">{sizeLabel()}</span>
                 </div>
                 {validationErrors.size && (
                   <p className="text-label text-loss mt-1">{validationErrors.size}</p>
@@ -519,15 +519,15 @@ export function Component() {
               </div>
               <div className="flex items-center justify-between py-2 border-b border-subtle">
                 <span className="text-label text-secondary">Max Exposure</span>
-                <span className="text-body-md font-mono text-primary">${maxExposure.toLocaleString()}</span>
+                <span className="text-body-md font-mono tabular-nums text-primary">${maxExposure.toLocaleString()}</span>
               </div>
               <div className="flex items-center justify-between py-2 border-b border-subtle">
                 <span className="text-label text-secondary">Max Daily Loss</span>
-                <span className="text-body-md font-mono text-primary">${maxDailyLoss.toLocaleString()}</span>
+                <span className="text-body-md font-mono tabular-nums text-primary">${maxDailyLoss.toLocaleString()}</span>
               </div>
               <div className="flex items-center justify-between py-2">
                 <span className="text-label text-secondary">Price Offset</span>
-                <span className="text-body-md font-mono text-primary">{priceOffset > 0 ? '+' : ''}{priceOffset}%</span>
+                <span className="text-body-md font-mono tabular-nums text-primary">{priceOffset > 0 ? '+' : ''}{priceOffset}%</span>
               </div>
             </div>
           </>

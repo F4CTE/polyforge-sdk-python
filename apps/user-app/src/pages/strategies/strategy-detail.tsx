@@ -893,8 +893,8 @@ export function Component() {
       {/* Loading */}
       {loading && (
         <div className="animate-pulse space-y-4">
-          <div className="h-7 bg-overlay rounded w-[40%]" />
-          <div className="h-4 bg-overlay rounded w-[60%]" />
+          <div className="h-7 bg-overlay rounded-sm w-2/5" />
+          <div className="h-4 bg-overlay rounded-sm w-3/5" />
         </div>
       )}
 
@@ -1139,7 +1139,7 @@ export function Component() {
                       value={listPrice}
                       onChange={(e) => setListPrice(e.target.value)}
                       placeholder="0"
-                      className="w-full h-9 px-3 rounded-pf bg-surface border border-default text-body-md font-mono text-primary focus-visible:outline-none focus-visible:border-accent/50"
+                      className="w-full h-9 px-3 rounded-pf bg-surface border border-default text-body-md font-mono tabular-nums text-primary focus-visible:outline-none focus-visible:border-accent/50"
                     />
                     <p className="text-caption text-tertiary mt-1">0 = Free</p>
                   </div>
@@ -1260,7 +1260,7 @@ export function Component() {
                     {stratPnl && parseFloat(stratPnl.winRate) > 0 && (
                       <div className="text-center">
                         <p className="text-caption text-tertiary">Win Rate</p>
-                        <p className="text-label font-mono font-semibold text-accent-text">
+                        <p className="text-label font-mono tabular-nums font-semibold text-accent-text">
                           {(parseFloat(stratPnl.winRate) * 100).toFixed(0)}%
                         </p>
                       </div>
@@ -1268,7 +1268,7 @@ export function Component() {
                     {(strategy.totalPnl ?? null) !== null && (
                       <div className="text-center">
                         <p className="text-caption text-tertiary">P&amp;L</p>
-                        <p className={`text-label font-mono font-semibold ${(strategy.totalPnl ?? 0) >= 0 ? 'text-gain' : 'text-loss'}`}>
+                        <p className={`text-label font-mono tabular-nums font-semibold ${(strategy.totalPnl ?? 0) >= 0 ? 'text-gain' : 'text-loss'}`}>
                           {formatPnl(strategy.totalPnl ?? 0)}
                         </p>
                       </div>
@@ -1276,7 +1276,7 @@ export function Component() {
                     {recentOrderCount !== null && (
                       <div className="text-center">
                         <p className="text-caption text-tertiary">Trades</p>
-                        <p className="text-label font-mono font-semibold text-primary">{recentOrderCount}</p>
+                        <p className="text-label font-mono tabular-nums font-semibold text-primary">{recentOrderCount}</p>
                       </div>
                     )}
                   </div>
@@ -1388,7 +1388,7 @@ export function Component() {
                           placeholder="e.g. 50"
                           min="0"
                           step="any"
-                          className="w-full h-9 px-3 rounded-pf bg-elevated border border-default text-body-sm font-mono text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:border-warning/50"
+                          className="w-full h-9 px-3 rounded-pf bg-elevated border border-default text-body-sm font-mono tabular-nums text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:border-warning/50"
                         />
                       </div>
                     )}
@@ -1402,7 +1402,7 @@ export function Component() {
                             type="checkbox"
                             checked={alertEmail}
                             onChange={(e) => setAlertEmail(e.target.checked)}
-                            className="w-4 h-4 accent-warning rounded"
+                            className="w-4 h-4 accent-warning rounded-xs"
                           />
                           <Mail className="size-4 text-secondary" />
                           <span className="text-label text-secondary">Email</span>
@@ -1412,7 +1412,7 @@ export function Component() {
                             type="checkbox"
                             checked={alertPush}
                             onChange={(e) => setAlertPush(e.target.checked)}
-                            className="w-4 h-4 accent-warning rounded"
+                            className="w-4 h-4 accent-warning rounded-xs"
                           />
                           <Bell className="size-4 text-secondary" />
                           <span className="text-label text-secondary">Push</span>
@@ -1481,7 +1481,7 @@ export function Component() {
                           {ALERT_TYPE_LABELS[alert.type]}
                         </span>
                         {alert.type !== 'strategy_offline' && (
-                          <span className="ml-2 text-label font-mono text-secondary">{alert.threshold}</span>
+                          <span className="ml-2 text-label font-mono tabular-nums text-secondary">{alert.threshold}</span>
                         )}
                       </div>
 
@@ -1570,14 +1570,14 @@ export function Component() {
             <div className="flex items-center gap-3 flex-wrap">
               <div className="flex items-center gap-2 px-3 py-2 rounded-pf bg-elevated border border-default">
                 <span className="text-label text-tertiary">Strategy P&L</span>
-                <span className={`text-body-md font-mono font-semibold ${parseFloat(stratPnl.totalPnl) >= 0 ? 'text-gain' : 'text-loss'}`}>
+                <span className={`text-body-md font-mono tabular-nums font-semibold ${parseFloat(stratPnl.totalPnl) >= 0 ? 'text-gain' : 'text-loss'}`}>
                   {parseFloat(stratPnl.totalPnl) >= 0 ? '+' : ''}${parseFloat(stratPnl.totalPnl).toFixed(2)}
                 </span>
               </div>
               {parseFloat(stratPnl.winRate) > 0 && (
                 <div className="flex items-center gap-2 px-3 py-2 rounded-pf bg-elevated border border-default">
                   <span className="text-label text-tertiary">Win Rate</span>
-                  <span className="text-body-md font-mono font-semibold text-accent-text">
+                  <span className="text-body-md font-mono tabular-nums font-semibold text-accent-text">
                     {(parseFloat(stratPnl.winRate) * 100).toFixed(1)}%
                   </span>
                 </div>
@@ -1635,24 +1635,24 @@ export function Component() {
             {pnl !== null && (
               <div className="bg-elevated border border-default rounded-pf p-4">
                 <span className="text-label text-tertiary block mb-1">Total P&L</span>
-                <span className={`font-mono text-xl font-semibold ${pnl >= 0 ? 'text-gain' : 'text-loss'}`}>
+                <span className={`font-mono tabular-nums text-xl font-semibold ${pnl >= 0 ? 'text-gain' : 'text-loss'}`}>
                   {formatPnl(pnl)}
                 </span>
               </div>
             )}
             <div className="bg-elevated border border-default rounded-pf p-4">
               <span className="text-label text-tertiary block mb-1">Blocks</span>
-              <span className="font-mono text-xl font-semibold text-primary">{totalBlocks}</span>
+              <span className="font-mono tabular-nums text-xl font-semibold text-primary">{totalBlocks}</span>
             </div>
             <div className="bg-elevated border border-default rounded-pf p-4">
               <span className="text-label text-tertiary block mb-1">Recent Orders</span>
-              <span className="font-mono text-xl font-semibold text-primary">
+              <span className="font-mono tabular-nums text-xl font-semibold text-primary">
                 {recentOrderCount !== null ? recentOrderCount : '—'}
               </span>
             </div>
             <div className="bg-elevated border border-default rounded-pf p-4">
               <span className="text-label text-tertiary block mb-1">Last Order</span>
-              <span className="font-mono text-body-md font-semibold text-primary">
+              <span className="font-mono tabular-nums text-body-md font-semibold text-primary">
                 {lastOrderAt ? new Date(lastOrderAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '—'}
               </span>
             </div>
@@ -1785,7 +1785,7 @@ export function Component() {
                   <div className="space-y-2">
                     {liveLog.map((entry, i) => (
                       <div key={i} className="flex items-start gap-2 text-label">
-                        <span className="font-mono text-tertiary shrink-0 w-16">
+                        <span className="font-mono tabular-nums text-tertiary shrink-0 w-16">
                           {formatTime(entry.time)}
                         </span>
                         <span className={`w-2 h-2 rounded-full mt-2 shrink-0 ${LOG_DOT_COLORS[entry.severity]}`} />
@@ -1842,13 +1842,13 @@ export function Component() {
                 <div className="space-y-2">
                   {Array.from({ length: 5 }).map((_, i) => (
                     <div key={i} className="flex items-center gap-3 px-3 py-3 rounded-pf bg-surface border border-subtle">
-                      <div className="h-3 bg-overlay rounded animate-pulse w-24" />
-                      <div className="h-3 bg-overlay rounded animate-pulse w-12" />
-                      <div className="h-3 bg-overlay rounded animate-pulse w-10" />
-                      <div className="h-3 bg-overlay rounded animate-pulse w-16" />
-                      <div className="h-3 bg-overlay rounded animate-pulse w-16" />
-                      <div className="h-3 bg-overlay rounded animate-pulse w-16" />
-                      <div className="h-3 bg-overlay rounded animate-pulse w-20 ml-auto" />
+                      <div className="h-3 bg-overlay rounded-sm animate-pulse w-24" />
+                      <div className="h-3 bg-overlay rounded-sm animate-pulse w-12" />
+                      <div className="h-3 bg-overlay rounded-sm animate-pulse w-10" />
+                      <div className="h-3 bg-overlay rounded-sm animate-pulse w-16" />
+                      <div className="h-3 bg-overlay rounded-sm animate-pulse w-16" />
+                      <div className="h-3 bg-overlay rounded-sm animate-pulse w-16" />
+                      <div className="h-3 bg-overlay rounded-sm animate-pulse w-20 ml-auto" />
                     </div>
                   ))}
                 </div>
@@ -1884,7 +1884,7 @@ export function Component() {
                             'bg-overlay text-tertiary';
                           return (
                             <tr key={ex.id} className="hover:bg-surface/50 transition-colors">
-                              <td className="px-3 py-3 font-mono text-secondary whitespace-nowrap">
+                              <td className="px-3 py-3 font-mono tabular-nums text-secondary whitespace-nowrap">
                                 {new Date(ex.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                               </td>
                               <td className="px-3 py-3">
@@ -1893,9 +1893,9 @@ export function Component() {
                                 </span>
                               </td>
                               <td className="px-3 py-3 text-primary font-mono">{ex.outcome}</td>
-                              <td className="px-3 py-3 text-right font-mono text-primary">{ex.size}</td>
-                              <td className="px-3 py-3 text-right font-mono text-primary">{ex.price}</td>
-                              <td className="px-3 py-3 text-right font-mono text-secondary">
+                              <td className="px-3 py-3 text-right font-mono tabular-nums text-primary">{ex.size}</td>
+                              <td className="px-3 py-3 text-right font-mono tabular-nums text-primary">{ex.price}</td>
+                              <td className="px-3 py-3 text-right font-mono tabular-nums text-secondary">
                                 {ex.fillSize ?? '—'}
                                 {ex.fillPrice ? ` @ ${ex.fillPrice}` : ''}
                               </td>
@@ -1967,10 +1967,10 @@ export function Component() {
                       <div className="flex-1 space-y-2 pb-1">
                         <div className="flex items-center gap-3">
                           <div className="h-5 w-10 bg-overlay rounded-sm" />
-                          <div className="h-3 w-24 bg-overlay rounded" />
-                          <div className="h-3 w-16 bg-overlay rounded ml-auto" />
+                          <div className="h-3 w-24 bg-overlay rounded-sm" />
+                          <div className="h-3 w-16 bg-overlay rounded-sm ml-auto" />
                         </div>
-                        <div className="h-3 w-40 bg-overlay rounded" />
+                        <div className="h-3 w-40 bg-overlay rounded-sm" />
                         <div className="flex gap-2">
                           <div className="h-4 w-14 bg-overlay rounded-full" />
                           <div className="h-4 w-14 bg-overlay rounded-full" />
@@ -2012,7 +2012,7 @@ export function Component() {
                         <div className="flex flex-col items-center shrink-0 pt-1" aria-hidden="true">
                           <span className={`size-3 rounded-full border-2 ${isCurrent ? 'border-accent-text bg-accent-text' : 'border-strong bg-surface'}`} />
                           {idx < versions.length - 1 && (
-                            <span className="w-px flex-1 min-h-[2rem] bg-subtle mt-1" />
+                            <span className="w-px flex-1 min-h-8 bg-subtle mt-1" />
                           )}
                         </div>
 
@@ -2196,7 +2196,7 @@ export function Component() {
                           ) : (
                             <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-label text-secondary">
                               {ev.data.marketQuestion && (
-                                <span className="truncate max-w-[200px] text-tertiary" title={ev.data.marketQuestion}>
+                                <span className="truncate max-w-48 text-tertiary" title={ev.data.marketQuestion}>
                                   {ev.data.marketQuestion}
                                 </span>
                               )}
@@ -2209,12 +2209,12 @@ export function Component() {
                                 <span className="font-mono text-primary">{ev.data.outcome}</span>
                               )}
                               {ev.data.size !== undefined && (
-                                <span className="font-mono">sz {ev.data.size}</span>
+                                <span className="font-mono tabular-nums">sz {ev.data.size}</span>
                               )}
                               {ev.data.fillPrice !== undefined ? (
-                                <span className="font-mono">fill @ {ev.data.fillPrice}</span>
+                                <span className="font-mono tabular-nums">fill @ {ev.data.fillPrice}</span>
                               ) : ev.data.price !== undefined ? (
-                                <span className="font-mono">@ {ev.data.price}</span>
+                                <span className="font-mono tabular-nums">@ {ev.data.price}</span>
                               ) : null}
                             </div>
                           )}
@@ -2393,8 +2393,8 @@ function ReviewsSection({ listingId }: { listingId: string }) {
       {state.total > 0 && (
         <div className="flex flex-col sm:flex-row gap-6">
           {/* Average */}
-          <div className="flex flex-col items-center justify-center min-w-[100px]">
-            <span className="text-4xl font-semibold text-primary font-mono">
+          <div className="flex flex-col items-center justify-center min-w-28">
+            <span className="text-4xl font-semibold text-primary font-mono tabular-nums">
               {avgRating.toFixed(1)}
             </span>
             <StarRow rating={Math.round(avgRating)} />
@@ -2479,9 +2479,9 @@ function ReviewsSection({ listingId }: { listingId: string }) {
             <div key={i} className="flex gap-3 animate-pulse">
               <div className="size-8 rounded-full bg-overlay shrink-0" />
               <div className="flex-1 space-y-2">
-                <div className="h-3 bg-overlay rounded w-[30%]" />
-                <div className="h-3 bg-overlay rounded w-[80%]" />
-                <div className="h-3 bg-overlay rounded w-[60%]" />
+                <div className="h-3 bg-overlay rounded-sm w-2/6" />
+                <div className="h-3 bg-overlay rounded-sm w-4/5" />
+                <div className="h-3 bg-overlay rounded-sm w-3/5" />
               </div>
             </div>
           ))}
@@ -2555,7 +2555,7 @@ function ReviewsSection({ listingId }: { listingId: string }) {
           >
             <ChevronLeft className="size-4" />
           </Button>
-          <span className="text-body-sm font-mono text-secondary">
+          <span className="text-body-sm font-mono tabular-nums text-secondary">
             Page {state.page} of {state.totalPages}
           </span>
           <Button
