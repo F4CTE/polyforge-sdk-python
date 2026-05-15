@@ -7078,6 +7078,18 @@ class TestMiscUtilityEnumValidation:
         finally:
             client.close()
 
+    def test_vote_market_sentiment_rejects_huge_int_confidence(self):
+        """math.isnan/isinf on huge ints raises OverflowError — range check
+        must fire first to avoid a low-level exception."""
+        client = PolyforgeClient(api_key="test")
+        try:
+            with pytest.raises(ValueError, match="exceed 100"):
+                client.vote_market_sentiment(
+                    "m1", direction="BUY", confidence=10**400,
+                )
+        finally:
+            client.close()
+
 
 class TestMiscUtilityEndpointRoundtrips:
     """Stub the HTTP layer with httpx.MockTransport and exercise each method."""

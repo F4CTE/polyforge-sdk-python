@@ -4005,10 +4005,11 @@ class PolyforgeClient:
             raise TypeError(
                 f"confidence must be a number, got {type(confidence).__name__}"
             )
-        if math.isnan(confidence):
-            raise ValueError("confidence must not be NaN")
-        if math.isinf(confidence):
-            raise ValueError("confidence must not be Infinity")
+        if isinstance(confidence, float):
+            if math.isnan(confidence):
+                raise ValueError("confidence must not be NaN")
+            if math.isinf(confidence):
+                raise ValueError("confidence must not be Infinity")
         if confidence < 0:
             raise ValueError(f"confidence must be non-negative, got {confidence}")
         if confidence > 100:
@@ -6971,10 +6972,11 @@ class AsyncPolyforgeClient:
             raise TypeError(
                 f"confidence must be a number, got {type(confidence).__name__}"
             )
-        if math.isnan(confidence):
-            raise ValueError("confidence must not be NaN")
-        if math.isinf(confidence):
-            raise ValueError("confidence must not be Infinity")
+        if isinstance(confidence, float):
+            if math.isnan(confidence):
+                raise ValueError("confidence must not be NaN")
+            if math.isinf(confidence):
+                raise ValueError("confidence must not be Infinity")
         if confidence < 0:
             raise ValueError(f"confidence must be non-negative, got {confidence}")
         if confidence > 100:
