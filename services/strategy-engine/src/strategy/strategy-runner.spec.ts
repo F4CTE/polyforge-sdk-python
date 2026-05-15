@@ -528,8 +528,9 @@ describe("StrategyRunner — TRIGGER evaluation", () => {
 
     await runner.onPriceEvent("tok1", 0.5);
 
-    // Trigger should fire because price 0.5 > 0.4 threshold via config fallback
-    expect(state.get).toHaveBeenCalled();
+    // Trigger should fire because price 0.5 > 0.4 threshold via config fallback.
+    // Works with both old evaluate() (calls state.get) and new (calls getStateAndPrices).
+    expect(state.getStateAndPrices).toHaveBeenCalled();
   });
 });
 
@@ -1161,7 +1162,11 @@ describe("StrategyRunner — config fallback for token discovery and prefetch", 
     });
 
     await runner.onPriceEvent("tok-config", 0.5);
-    expect(state.getPrice).toHaveBeenCalledWith("tok-config");
+    // Works with both old evaluate() (calls state.getPrice) and new (calls getStateAndPrices).
+    expect(state.getStateAndPrices).toHaveBeenCalledWith(
+      "strat-test",
+      ["tok-config"],
+    );
   });
 
   it("detects stale data for config-only tokenId", async () => {
