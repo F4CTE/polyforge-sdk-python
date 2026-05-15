@@ -103,7 +103,24 @@ in_ports && /^[[:space:]]+- (name|target|published|host_ip|protocol|mode|app_pro
   noncomment = $0
   sub(/[[:space:]]*#.*$/, "", noncomment)
   has_host_ip = (noncomment ~ /host_ip:[[:space:]]*["'\'']?(127\.0\.0\.1|\[::1\]|::1)["'\'']?([^0-9a-f.:]|$)/)
-  suppressed = ($0 ~ /# nosemgrep: docker-compose-port-no-loopback(-long-syntax)?/)
+  suppressed = (prev_nosemgrep || $0 ~ /# nosemgrep:.*docker-compose-port-no-loopback(-long-syntax)?/)
+  prev_nosemgrep = 0
+  next
+}
+
+# Long-syntax via bare dash: `-` followed by indented target:/published: keys.
+# Docker Compose accepts `-` on its own line with target/published/etc. indented
+# underneath.  These would otherwise be silently skipped by the short-syntax
+# parser because there is no port value on the dash line.
+in_ports && /^[[:space:]]+-[[:space:]]*$/ && !in_block {
+  in_block = 1
+  port_lead = leadingspaces($0)
+  entry_lineno = NR
+  saw_target = 0
+  saw_published = 0
+  has_host_ip = 0
+  suppressed = (prev_nosemgrep || $0 ~ /# nosemgrep:.*docker-compose-port-no-loopback(-long-syntax)?/)
+  prev_nosemgrep = 0
   next
 }
 
@@ -138,7 +155,7 @@ in_block {
       noncomment = $0
       sub(/[[:space:]]*#.*$/, "", noncomment)
       has_host_ip = (noncomment ~ /host_ip:[[:space:]]*["'\'']?(127\.0\.0\.1|\[::1\]|::1)["'\'']?([^0-9a-f.:]|$)/)
-      suppressed = ($0 ~ /# nosemgrep: docker-compose-port-no-loopback(-long-syntax)?/)
+      suppressed = ($0 ~ /# nosemgrep:.*docker-compose-port-no-loopback(-long-syntax)?/)
       next
     }
   }
@@ -146,7 +163,7 @@ in_block {
   # Content processing for the current block (only reached when we
   # are still in_block — i.e., the line is deeper than the entry).
   if (in_block) {
-    if ($0 ~ /# nosemgrep: docker-compose-port-no-loopback(-long-syntax)?/) {
+    if ($0 ~ /# nosemgrep:.*docker-compose-port-no-loopback(-long-syntax)?/) {
       suppressed = 1
     }
     if ($0 ~ /^[[:space:]]+target:/) {
@@ -170,7 +187,7 @@ in_block {
 # here for the short-syntax path.  Long-syntax entries are already
 # consumed by the state machine above.
 in_ports && !in_block {
-  if ($0 ~ /^[[:space:]]*#[[:space:]]*nosemgrep:[[:space:]]*docker-compose-port-no-loopback(-long-syntax)?/) {
+  if ($0 ~ /^[[:space:]]*#[[:space:]]*nosemgrep:.*docker-compose-port-no-loopback(-long-syntax)?/) {
     prev_nosemgrep = 1
     next
   }
@@ -188,7 +205,7 @@ in_ports && !in_block {
 # already claimed by the long-syntax state machine.
 in_ports && /^[[:space:]]+-[[:space:]]+/ && !in_block {
   # Skip suppressed lines (same-line or preceding-line nosemgrep)
-  if ($0 ~ /# nosemgrep: docker-compose-port-no-loopback(-long-syntax)?/) { prev_nosemgrep = 0; next }
+  if ($0 ~ /# nosemgrep:.*docker-compose-port-no-loopback(-long-syntax)?/) { prev_nosemgrep = 0; next }
   if (prev_nosemgrep) { prev_nosemgrep = 0; next }
 
   # Save indentation before modifying $0 so that anchor entries
@@ -262,7 +279,7 @@ in_ports && /^[[:space:]]+-[[:space:]]+/ && !in_block {
         saw_target = 0
         saw_published = 0
         has_host_ip = 0
-        suppressed = ($0 ~ /# nosemgrep: docker-compose-port-no-loopback(-long-syntax)?/)
+        suppressed = ($0 ~ /# nosemgrep:.*docker-compose-port-no-loopback(-long-syntax)?/)
         next
       }
       # YAML alias (e.g. - *name).  The referenced mapping cannot be
