@@ -589,8 +589,10 @@ def _validate_copy_config_numeric_fields(fields: dict[str, Any]) -> None:
     for name in ("sizeValue", "maxExposure", "maxDailyLoss"):
         if name in fields and fields[name] is not None:
             _validate_positive_numberish_param(name, fields[name])
+            fields[name] = str(fields[name])
     if "priceOffset" in fields and fields["priceOffset"] is not None:
         _validate_finite_numberish_param("priceOffset", fields["priceOffset"])
+        fields["priceOffset"] = str(fields["priceOffset"])
 
 
 _UNSET: Any = object()
@@ -2858,6 +2860,9 @@ class PolyforgeClient:
         if price_offset is not None:
             body["priceOffset"] = price_offset
         _validate_copy_config_numeric_fields(body)
+        for key in ("sizeValue", "maxExposure", "maxDailyLoss", "priceOffset"):
+            if key in body and body[key] is not None:
+                body[key] = str(body[key])
         return _parse(CopyConfig, self._post("/api/v1/copy", json=body))
 
     def get_copy_config(self, copy_id: str) -> CopyConfig:
@@ -6069,6 +6074,9 @@ class AsyncPolyforgeClient:
         if price_offset is not None:
             body["priceOffset"] = price_offset
         _validate_copy_config_numeric_fields(body)
+        for key in ("sizeValue", "maxExposure", "maxDailyLoss", "priceOffset"):
+            if key in body and body[key] is not None:
+                body[key] = str(body[key])
         return _parse(CopyConfig, await self._post("/api/v1/copy", json=body))
 
     async def get_copy_config(self, copy_id: str) -> CopyConfig:

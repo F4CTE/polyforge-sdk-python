@@ -5183,6 +5183,13 @@ class TestHealthEndpoint:
         source = inspect.getsource(AsyncPolyforgeClient.get_health)
         assert "await" in source, "async get_health not using await"
 
+    def test_async_get_health_authenticated_is_coroutine(self):
+        import inspect
+        assert hasattr(AsyncPolyforgeClient, "get_health_authenticated"), \
+            "AsyncPolyforgeClient missing get_health_authenticated"
+        source = inspect.getsource(AsyncPolyforgeClient.get_health_authenticated)
+        assert "await" in source, "async get_health_authenticated not using await"
+
 
 class TestPositionPlatformContract:
     """Position model must match the platform contract (closes #143)."""
@@ -6394,7 +6401,75 @@ class TestTradingCopyNumericValidation:
             price_offset=-0.5,
         )
         client._post.assert_called_once()
-        assert client._post.call_args.kwargs["json"]["priceOffset"] == -0.5
+        assert client._post.call_args.kwargs["json"]["priceOffset"] == "-0.5"
+
+        client.close()
+
+    def test_create_copy_config_sends_numeric_fields_as_strings(self):
+        from unittest.mock import MagicMock
+
+        client = PolyforgeClient(api_key="test")
+        client._post = MagicMock(return_value={
+            "id": "copy-1",
+            "userId": "user-1",
+            "targetWallet": "0x0000000000000000000000000000000000000001",
+            "mode": "PERCENTAGE",
+            "sizeValue": "10",
+            "maxExposure": "500",
+            "maxDailyLoss": "100",
+            "priceOffset": "-0.5",
+            "status": "ACTIVE",
+            "totalCopied": 0,
+            "totalPnl": "0",
+            "createdAt": "2026-04-29T00:00:00Z",
+            "updatedAt": "2026-04-29T00:00:00Z",
+        })
+        client.create_copy_config(
+            "0x0000000000000000000000000000000000000001",
+            mode="PERCENTAGE",
+            size_value=10.0,
+            max_exposure=500,
+            max_daily_loss=100.0,
+            price_offset=-0.5,
+        )
+        json_body = client._post.call_args.kwargs["json"]
+        assert json_body["sizeValue"] == "10.0"
+        assert json_body["maxExposure"] == "500"
+        assert json_body["maxDailyLoss"] == "100.0"
+        assert json_body["priceOffset"] == "-0.5"
+        client.close()
+
+    def test_update_copy_config_sends_numeric_fields_as_strings(self):
+        from unittest.mock import MagicMock
+
+        client = PolyforgeClient(api_key="test")
+        client._patch = MagicMock(return_value={
+            "id": "copy-1",
+            "userId": "user-1",
+            "targetWallet": "0x0000000000000000000000000000000000000001",
+            "mode": "PERCENTAGE",
+            "sizeValue": "10",
+            "maxExposure": "500",
+            "maxDailyLoss": "100",
+            "priceOffset": "-0.5",
+            "status": "ACTIVE",
+            "totalCopied": 0,
+            "totalPnl": "0",
+            "createdAt": "2026-04-29T00:00:00Z",
+            "updatedAt": "2026-04-29T00:00:00Z",
+        })
+        client.update_copy_config(
+            "copy-1",
+            sizeValue=10.0,
+            maxExposure=500,
+            maxDailyLoss=100.0,
+            priceOffset=-0.5,
+        )
+        json_body = client._patch.call_args.kwargs["json"]
+        assert json_body["sizeValue"] == "10.0"
+        assert json_body["maxExposure"] == "500"
+        assert json_body["maxDailyLoss"] == "100.0"
+        assert json_body["priceOffset"] == "-0.5"
         client.close()
 
     def test_update_copy_config_rejects_invalid_numeric_kwargs(self):
@@ -6424,7 +6499,7 @@ class TestTradingCopyNumericValidation:
         })
         client.update_copy_config("copy-1", price_offset=-0.5)
         client._patch.assert_called_once()
-        assert client._patch.call_args.kwargs["json"]["priceOffset"] == -0.5
+        assert client._patch.call_args.kwargs["json"]["priceOffset"] == "-0.5"
         client.close()
 
     def test_update_copy_config_rejects_unknown_kwargs(self):
@@ -6462,8 +6537,8 @@ class TestTradingCopyNumericValidation:
             assert "camelCase" in str(w[0].message)
 
         json_body = client._patch.call_args.kwargs["json"]
-        assert json_body["sizeValue"] == 100
-        assert json_body["maxExposure"] == 500
+        assert json_body["sizeValue"] == "100"
+        assert json_body["maxExposure"] == "500"
         client.close()
 
     def test_update_copy_config_camelcase_overrides_snake_case(self):
@@ -6491,12 +6566,12 @@ class TestTradingCopyNumericValidation:
             warnings.simplefilter("always")
             client.update_copy_config(
                 "copy-1",
-                size_value=100,    # snake_case → body["sizeValue"] = 100
-                sizeValue=200,     # camelCase → overrides to 200
+                size_value=100,    # snake_case → body["sizeValue"] = "100"
+                sizeValue=200,     # camelCase → overrides to "200"
             )
 
         json_body = client._patch.call_args.kwargs["json"]
-        assert json_body["sizeValue"] == 200
+        assert json_body["sizeValue"] == "200"
         client.close()
 
     def test_update_copy_config_explicit_none_sends_null(self):
@@ -9163,3 +9238,21 @@ class TestPersonalDataExportModelParsing:
         from polyforge import PersonalDataExport, PersonalDataExportMeta
         assert PersonalDataExport is not None
         assert PersonalDataExportMeta is not None
+
+
+class TestRootExports:
+    """Verify every name listed in polyforge.__all__ is accessible at the package root."""
+
+    def test_root_export_smoke(self):
+        import polyforge
+
+        missing = []
+        for name in polyforge.__all__:
+            try:
+                getattr(polyforge, name)
+            except AttributeError:
+                missing.append(name)
+
+        assert not missing, (
+            f"Names in __all__ but not accessible as polyforge.<name>: {', '.join(missing)}"
+        )
