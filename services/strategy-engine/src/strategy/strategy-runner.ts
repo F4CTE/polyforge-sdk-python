@@ -550,8 +550,9 @@ export class StrategyRunner {
           lockKey,
           lockToken,
         );
-        this.pendingRedisUnlock = unlockPromise;
-        unlockPromise
+        const thisUnlock = unlockPromise;
+        this.pendingRedisUnlock = thisUnlock;
+        thisUnlock
           .then((result) => {
             if (result !== 1) {
               this.logger.warn(
@@ -565,7 +566,9 @@ export class StrategyRunner {
             );
           })
           .finally(() => {
-            this.pendingRedisUnlock = null;
+            if (this.pendingRedisUnlock === thisUnlock) {
+              this.pendingRedisUnlock = null;
+            }
           });
       }
     }
