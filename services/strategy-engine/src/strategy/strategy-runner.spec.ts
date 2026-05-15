@@ -1639,13 +1639,15 @@ describe("StrategyRunner — concurrent tick serialization", () => {
     expect(state.get).toHaveBeenCalledTimes(1);
   });
 
-  it("schedules a delayed retry when SET NX fails and pendingTick was set by a concurrent event (POLA-5095 regression)", async () => {
+  it("schedules a delayed retry when SET NX fails and pendingTick was set by a concurrent event — HYBRID mode (POLA-5095 regression)", async () => {
     vi.useFakeTimers();
     try {
-      // First event: SET NX fails (another instance owns the lock).
+      // First tick: SET NX fails (another instance owns the lock).
       // While the SET NX await is pending, a second event arrives,
       // sees tickInFlight=true, and sets pendingTick.
-      // The finally block must NOT drop the pending event.
+      // HYBRID mode must still schedule a delayed retry — the interval
+      // timer provides natural cadence, but the backoff narrows the gap
+      // between the lock-miss and the next scheduled interval tick.
       let resolveSetNx!: (value: unknown) => void;
       let setCallCount = 0;
       const client = {
@@ -1674,7 +1676,7 @@ describe("StrategyRunner — concurrent tick serialization", () => {
       const redis = makeRedis({ getClient: vi.fn().mockReturnValue(client) });
       const state = makeState();
       state.get.mockResolvedValue({ ...DEFAULT_STATE });
-      const runner = makeRunner({ execMode: "EVENT", state, redis });
+      const runner = makeRunner({ execMode: "HYBRID", tickMs: 1000, state, redis });
 
       // Tick A: enters tick(), passes throttle, sets tickInFlight=true, awaits SET NX
       const tickA = runner.onPriceEvent("tok1", 0.5);
@@ -1773,6 +1775,90 @@ describe("StrategyRunner — concurrent tick serialization", () => {
 
       // tickInFlight should be reset so the next real event can proceed.
       // Fire a fresh price event — this one should succeed.
+      client.set.mockResolvedValue("OK");
+      await runner.onPriceEvent("tok2", 0.55);
+      expect(state.get).toHaveBeenCalledTimes(1);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("skips lock-miss retry for EVENT-mode pendingTick coalescing (POLA-5142)", async () => {
+    vi.useFakeTimers();
+    try {
+      // First EVENT-mode tick: SET NX is pending.
+      // While awaiting SET NX, a concurrent price event arrives,
+      // sees tickInFlight=true, and sets pendingTick.
+      //
+      // In a multi-instance deployment where every instance receives
+      // the same price events, the winning instance's finally block
+      // already processes the coalesced pending events after unlock.
+      // The losing instance's finally block must NOT schedule a 200ms
+      // retry — that would re-evaluate the same latest state and
+      // produce duplicate order intents / sub-strategy launches.
+      let resolveSetNx!: (value: unknown) => void;
+      let setCallCount = 0;
+      const client = {
+        lrange: vi.fn().mockResolvedValue([]),
+        mget: vi
+          .fn()
+          .mockResolvedValue([
+            JSON.stringify({ price: 0.5, timestamp: Date.now() }),
+          ]),
+        incr: vi.fn().mockResolvedValue(1),
+        expire: vi.fn().mockResolvedValue(1),
+        set: vi.fn().mockImplementation(() => {
+          setCallCount++;
+          if (setCallCount === 1) {
+            // First SET NX: defer resolution to simulate contention window
+            return new Promise((resolve) => {
+              resolveSetNx = resolve;
+            });
+          }
+          // Subsequent SET NX (if any retry fires): succeed
+          return Promise.resolve("OK");
+        }),
+        del: vi.fn().mockResolvedValue(1),
+        eval: vi.fn().mockResolvedValue(1),
+      };
+      const redis = makeRedis({ getClient: vi.fn().mockReturnValue(client) });
+      const state = makeState();
+      state.get.mockResolvedValue({ ...DEFAULT_STATE });
+      const runner = makeRunner({ execMode: "EVENT", state, redis });
+
+      // Tick A: enters tick(), sets tickInFlight=true, awaits SET NX
+      const tickA = runner.onPriceEvent("tok1", 0.5);
+
+      // Let Tick A reach the SET NX await.
+      await vi.advanceTimersByTimeAsync(1);
+
+      // Advance past the 200ms min-tick throttle so Tick B can pass.
+      await vi.advanceTimersByTimeAsync(250);
+
+      // Tick B arrives while Tick A is still awaiting SET NX.
+      // tickInFlight is true → sets pendingTick=true and returns.
+      const tickB = runner.onPriceEvent("tok1", 0.51);
+      await tickB;
+
+      // Neither tick has evaluated yet.
+      expect(state.get).not.toHaveBeenCalled();
+
+      // Resolve SET NX as failure (null = lock held by another instance).
+      resolveSetNx(null);
+      await tickA;
+
+      // tickInFlight=false, pendingTick was consumed by the finally block.
+      // lockAcquired=false, execMode=EVENT — should NOT schedule a retry.
+      // Advance well past the 200ms retry backoff window.
+      await vi.advanceTimersByTimeAsync(500);
+
+      // Still no evaluation — the losing instance must stay silent.
+      expect(state.get).not.toHaveBeenCalled();
+
+      // SET should have been called exactly once (the original lock miss).
+      expect(client.set).toHaveBeenCalledTimes(1);
+
+      // tickInFlight is reset — a fresh price event must proceed normally.
       client.set.mockResolvedValue("OK");
       await runner.onPriceEvent("tok2", 0.55);
       expect(state.get).toHaveBeenCalledTimes(1);

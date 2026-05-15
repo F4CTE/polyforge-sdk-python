@@ -464,7 +464,7 @@ export class StrategyRunner {
               void this.tick();
             }, delay);
           }
-        } else {
+        } else if (this.execMode !== "EVENT") {
           // Lock acquisition failed (SET NX returned null), but one or
           // more ticks/events arrived while this attempt was waiting.
           // Schedule a delayed retry instead of silently dropping the
@@ -474,6 +474,13 @@ export class StrategyRunner {
           // temporarily stale (e.g. TTL still active after a crash of
           // the previous holder and no new price event arrives to
           // trigger a natural re-evaluation).
+          //
+          // EVENT mode is excluded: in a multi-instance deployment
+          // where every instance receives the same price event, the
+          // winning instance's finally block already processes the
+          // coalesced pending events.  A losing-instance retry here
+          // would re-evaluate the same latest state and produce
+          // duplicate order intents / sub-strategy launches.
           if (this.followUpTimer) clearTimeout(this.followUpTimer);
           const RETRY_BACKOFF_MS = 200;
           this.followUpTimer = setTimeout(() => {
