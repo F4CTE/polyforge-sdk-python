@@ -433,9 +433,11 @@ describe("StrategyRunner — SAFETY evaluation", () => {
 
     // Set dailyPnl below limit — without the config fallback, maxLossUsdc
     // would default to 0 and the block would fire (pass), not stopping.
+    // The runner reads state via getStateAndPrices (not state.get), so we mock
+    // the batched pipeline with a fresh-priced token to pass stale detection.
     state.getStateAndPrices.mockResolvedValue({
       state: { ...DEFAULT_STATE, dailyPnl: -15 },
-      prices: new Map(),
+      prices: new Map([["tok1", { price: 0.5, timestamp: Date.now() }]]),
     });
 
     await runner.onPriceEvent("tok1", 0.5);
@@ -550,6 +552,8 @@ describe("StrategyRunner — TRIGGER evaluation", () => {
       ],
     });
 
+    // Runner reads state via getStateAndPrices; include a fresh price to
+    // pass stale data detection and reach trigger evaluation.
     state.getStateAndPrices.mockResolvedValue({
       state: { ...DEFAULT_STATE },
       prices: new Map([["tok1", { price: 0.55, timestamp: Date.now() }]]),
@@ -1232,7 +1236,8 @@ describe("StrategyRunner — config fallback for token discovery and prefetch", 
     });
 
     await runner.onPriceEvent("tok-config", 0.5);
-    // Token discovered from config fallback via mergedParams → batched fetch
+    // Token "tok-config" discovered from config fallback via mergedParams,
+    // fed into the batched getStateAndPrices pipeline for variable eval.
     expect(state.getStateAndPrices).toHaveBeenCalledWith("strat-test", [
       "tok-config",
     ]);

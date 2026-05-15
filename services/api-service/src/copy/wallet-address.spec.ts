@@ -5,80 +5,80 @@ import {
 } from "./wallet-address";
 
 const LOWER_ADDRESS = "0x52908400098527886e0f7030069857d2e4169ee7";
-const EXPECTED_CHECKSUM = checksumEthereumAddress(LOWER_ADDRESS);
+const EXPECTED_CHECKSUM = "0x52908400098527886E0F7030069857D2E4169EE7";
 
 describe("checksumEthereumAddress", () => {
-  it("accepts all-lowercase address and returns EIP-55 checksummed form", () => {
-    const result = checksumEthereumAddress(LOWER_ADDRESS);
+  it("accepts all-lowercase address and returns EIP-55 checksummed form", async () => {
+    const result = await checksumEthereumAddress(LOWER_ADDRESS);
     expect(result).toBe(EXPECTED_CHECKSUM);
     expect(result).not.toBe(LOWER_ADDRESS);
   });
 
-  it("accepts all-uppercase address and returns EIP-55 checksummed form", () => {
+  it("accepts all-uppercase address and returns EIP-55 checksummed form", async () => {
     const upper = "0x" + LOWER_ADDRESS.slice(2).toUpperCase();
-    const result = checksumEthereumAddress(upper);
+    const result = await checksumEthereumAddress(upper);
     expect(result).toBe(EXPECTED_CHECKSUM);
   });
 
-  it("accepts correctly checksummed mixed-case address unchanged", () => {
-    const result = checksumEthereumAddress(EXPECTED_CHECKSUM);
+  it("accepts correctly checksummed mixed-case address unchanged", async () => {
+    const result = await checksumEthereumAddress(EXPECTED_CHECKSUM);
     expect(result).toBe(EXPECTED_CHECKSUM);
   });
 
-  it("rejects mixed-case address with invalid checksum", () => {
+  it("rejects mixed-case address with invalid checksum", async () => {
     const badChecksum = LOWER_ADDRESS.replace(
       "e0f7030069857d2e4169ee7",
       "E0f7030069857d2e4169ee7",
     );
-    expect(() => checksumEthereumAddress(badChecksum)).toThrow(
+    await expect(checksumEthereumAddress(badChecksum)).rejects.toThrow(
       "Invalid Ethereum address checksum",
     );
   });
 
-  it("rejects address with wrong length", () => {
-    expect(() =>
+  it("rejects address with wrong length", async () => {
+    await expect(
       checksumEthereumAddress("0x52908400098527886e0f7030069857d2e4169ee"),
-    ).toThrow("Invalid Ethereum address");
+    ).rejects.toThrow("Invalid Ethereum address");
   });
 
-  it("rejects address without 0x prefix", () => {
-    expect(() =>
+  it("rejects address without 0x prefix", async () => {
+    await expect(
       checksumEthereumAddress("52908400098527886E0F7030069857D2E4169EE7"),
-    ).toThrow("Invalid Ethereum address");
+    ).rejects.toThrow("Invalid Ethereum address");
   });
 
-  it("rejects address with non-hex characters", () => {
-    expect(() =>
+  it("rejects address with non-hex characters", async () => {
+    await expect(
       checksumEthereumAddress("0xZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ"),
-    ).toThrow("Invalid Ethereum address");
+    ).rejects.toThrow("Invalid Ethereum address");
   });
 
-  it("returns EIP-55 form for another known address", () => {
+  it("returns EIP-55 form for another known address", async () => {
     const lower = "0xfb6916095ca1df60bb79ce92ce3ea74c37c5d359";
-    const result = checksumEthereumAddress(lower);
+    const result = await checksumEthereumAddress(lower);
     expect(result).toBe("0xfB6916095ca1df60bB79Ce92cE3Ea74c37c5d359");
   });
 });
 
 describe("tryChecksumEthereumAddress", () => {
-  it("returns normalized address for valid lowercase input", () => {
-    const result = tryChecksumEthereumAddress(LOWER_ADDRESS);
+  it("returns normalized address for valid lowercase input", async () => {
+    const result = await tryChecksumEthereumAddress(LOWER_ADDRESS);
     expect(result).toBe(EXPECTED_CHECKSUM);
   });
 
-  it("returns null for invalid checksum address", () => {
+  it("returns null for invalid checksum address", async () => {
     const badChecksum = LOWER_ADDRESS.replace(
       "e0f7030069857d2e4169ee7",
       "E0f7030069857d2e4169ee7",
     );
-    expect(tryChecksumEthereumAddress(badChecksum)).toBeNull();
+    expect(await tryChecksumEthereumAddress(badChecksum)).toBeNull();
   });
 
-  it("returns null for invalid format", () => {
-    expect(tryChecksumEthereumAddress("not-an-address")).toBeNull();
+  it("returns null for invalid format", async () => {
+    expect(await tryChecksumEthereumAddress("not-an-address")).toBeNull();
   });
 
-  it("returns null for empty string", () => {
-    expect(tryChecksumEthereumAddress("")).toBeNull();
+  it("returns null for empty string", async () => {
+    expect(await tryChecksumEthereumAddress("")).toBeNull();
   });
 });
