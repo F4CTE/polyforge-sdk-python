@@ -1577,8 +1577,8 @@ async function main() {
         triggers: [{ id: 't1', type: 'EVERY_TICK', params: {} }],
         conditions: [{ id: 'c1', type: 'PRICE_IN_RANGE', params: { min: '0.10', max: '0.90' } }],
         actions: [
-          { id: 'a1', type: 'set_stop_loss', params: { pct: '10' } },
-          { id: 'a2', type: 'take_profit', params: { pct: '20' } },
+          { id: 'a1', type: 'set_stop_loss', params: { pct: '0.10' } },
+          { id: 'a2', type: 'take_profit', params: { pct: '0.20' } },
         ],
         safety: [
           { id: 's1', type: 'DAILY_LOSS_LIMIT', params: { maxLossUsdc: '100' } },

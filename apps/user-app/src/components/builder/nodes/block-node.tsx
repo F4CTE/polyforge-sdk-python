@@ -116,6 +116,30 @@ function BlockNodeInner({ id, data }: NodeProps<BlockNode>) {
     [id, removeNode],
   );
 
+  const isStopLossOrTakeProfit =
+    d.type === 'set_stop_loss' ||
+    d.type === 'set_take_profit' ||
+    d.type === 'stop_loss' ||
+    d.type === 'take_profit';
+
+  // Backward compat: legacy strategies store pct as integer percentages (e.g. "10" = 10%).
+  // Normalize to decimal ratio (e.g. "0.10") once on mount or config change.
+  useEffect(() => {
+    if (!isStopLossOrTakeProfit) return;
+    const raw = d.config['pct'];
+    if (!raw || raw.startsWith('$')) return;
+    const num = parseFloat(raw);
+    if (Number.isFinite(num) && num >= 1) {
+      const converted = num / 100;
+      // Only apply when conversion yields a valid decimal ratio (< 1).
+      // Values >= 100 would land at >= 1 and retrigger the effect, causing
+      // double conversion (e.g. "200" → "2" → "0.02").
+      if (converted < 1) {
+        updateNodeConfig(id, 'pct', String(converted), { skipHistory: true });
+      }
+    }
+  }, [d.config['pct'], isStopLossOrTakeProfit, id, updateNodeConfig]);
+
   const onFieldChange = useCallback(
     (key: string, value: string) => {
       updateNodeConfig(id, key, value);
@@ -379,6 +403,7 @@ function BlockNodeInner({ id, data }: NodeProps<BlockNode>) {
                         <input
                           type={field.type}
                           placeholder={field.placeholder}
+                          step={field.type === 'number' ? 'any' : undefined}
                           value={d.config[field.key] ?? ''}
                           onChange={(e) => onFieldChange(field.key, e.target.value)}
                           aria-label={field.label}
