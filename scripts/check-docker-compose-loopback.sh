@@ -9,6 +9,8 @@ set -euo pipefail
 # Short-syntax examples:
 # Safe:   - "127.0.0.1:3000:3000"
 # Safe:   - '127.0.0.1:5432:5432'
+# Safe:   - "[::1]:3000:3000"   (bracketed IPv6 loopback)
+# Safe:   - "::1:6000:6000"     (unbracketed IPv6 loopback)
 # Safe:   - "80:80" # nosemgrep: docker-compose-port-no-loopback ...
 # Unsafe: - "3000:3000"
 # Unsafe: - '3000:3000'
@@ -22,6 +24,8 @@ set -euo pipefail
 # Unsafe: - 9090-9091           (hostless range — binds to 0.0.0.0)
 # Unsafe: - "[::]:3000:3000"    (IPv6 all interfaces)
 # Unsafe: - "[2001:db8::1]:3000:3000" (IPv6 non-loopback)
+# Unsafe: - ":::3000:3000"      (unbracketed IPv6 all-interfaces :: — binds to 0.0.0.0)
+# Unsafe: - "[2001:db8::]:3000:3000"  (IPv6 non-loopback)
 #
 # Long-syntax examples:
 # Safe:   - target: 80
@@ -88,20 +92,15 @@ in_ports && /^[[:space:]]+- (name|target|published|host_ip|protocol|mode|app_pro
   # confused for a real binding.
   noncomment = $0
   sub(/[[:space:]]*#.*$/, "", noncomment)
-  has_host_ip = (noncomment ~ /host_ip:[[:space:]]*["'\'']?(127\.0\.0\.1|::1)["'\'']?/)
-  suppressed = ($0 ~ /# nosemgrep: docker-compose-port-no-loopback/)
+  has_host_ip = (noncomment ~ /host_ip:[[:space:]]*["'\'']?(127\.0\.0\.1|\[::1\]|::1)["'\'']?/)
+  suppressed = ($0 ~ /# nosemgrep: docker-compose-port-no-loopback(-long-syntax)?/)
   next
 }
 
 in_block {
-  # Exit the port block on: next list item, empty line, service-level
-  # key (4-space indent), or top-level / service-name key (0 or 2 spaces).
-  # IMPORTANT: exit must be checked BEFORE content processing so that a
-  # suppression comment on the next list item applies to the new block,
-  # not the current one.
   if ($0 ~ /^[[:space:]]+- / || $0 ~ /^[[:space:]]*$/ || $0 ~ /^    [a-zA-Z]/ || $0 ~ /^  [a-zA-Z]/ || $0 ~ /^[a-zA-Z]/) {
     if (saw_target && saw_published && !has_host_ip && !suppressed) {
-      printf "::error file=%s,line=%d::Long-syntax port mapping without loopback binding. Add host_ip: 127.0.0.1 or suppress with # nosemgrep: docker-compose-port-no-loopback. See https://github.com/F4CTE/PolyForge/issues/1310\n", file, entry_lineno
+      printf "::error file=%s,line=%d::Long-syntax port mapping without loopback binding. Add host_ip: 127.0.0.1 or suppress with # nosemgrep: docker-compose-port-no-loopback(-long-syntax). See https://github.com/F4CTE/PolyForge/issues/1310\n", file, entry_lineno
       exit_code = 1
     }
     in_block = 0
@@ -126,8 +125,8 @@ in_block {
       saw_published = ($0 ~ / published:/)
       noncomment = $0
       sub(/[[:space:]]*#.*$/, "", noncomment)
-      has_host_ip = (noncomment ~ /host_ip:[[:space:]]*["'\'']?(127\.0\.0\.1|::1)["'\'']?/)
-      suppressed = ($0 ~ /# nosemgrep: docker-compose-port-no-loopback/)
+      has_host_ip = (noncomment ~ /host_ip:[[:space:]]*["'\'']?(127\.0\.0\.1|\[::1\]|::1)["'\'']?/)
+      suppressed = ($0 ~ /# nosemgrep: docker-compose-port-no-loopback(-long-syntax)?/)
       next
     }
   }
@@ -135,7 +134,7 @@ in_block {
   # Content processing for the current block (only reached when we
   # are still in_block — i.e., the line is deeper than the entry).
   if (in_block) {
-    if ($0 ~ /# nosemgrep: docker-compose-port-no-loopback/) {
+    if ($0 ~ /# nosemgrep: docker-compose-port-no-loopback(-long-syntax)?/) {
       suppressed = 1
     }
     if ($0 ~ /^[[:space:]]+target:/) {
@@ -147,19 +146,19 @@ in_block {
     # Match loopback host_ip (127.0.0.1 / ::1) with optional single/double quotes.
     # Anchored to line-start so that comments, inline comments, and typos
     # (e.g. xhost_ip:) do not satisfy the guard.
-    if ($0 ~ /^[[:space:]]+host_ip:[[:space:]]*["'\'']?(127\.0\.0\.1|::1)["'\'']?/) {
+    if ($0 ~ /^[[:space:]]+host_ip:[[:space:]]*["'\'']?(127\.0\.0\.1|\[::1\]|::1)["'\'']?/) {
       has_host_ip = 1
     }
   }
 }
 
 # ── Preceding-line nosemgrep tracking ────────────────────────────
-# Semgrep allows # nosemgrep: docker-compose-port-no-loopback on the
+# Semgrep allows # nosemgrep: rule-id on the
 # immediately preceding line (not just on the same line).  Track that
 # here for the short-syntax path.  Long-syntax entries are already
 # consumed by the state machine above.
 in_ports && !in_block {
-  if ($0 ~ /^[[:space:]]*#[[:space:]]*nosemgrep:[[:space:]]*docker-compose-port-no-loopback/) {
+  if ($0 ~ /^[[:space:]]*#[[:space:]]*nosemgrep:[[:space:]]*docker-compose-port-no-loopback(-long-syntax)?/) {
     prev_nosemgrep = 1
     next
   }
@@ -177,7 +176,7 @@ in_ports && !in_block {
 # already claimed by the long-syntax state machine.
 in_ports && /^[[:space:]]+-[[:space:]]+/ && !in_block {
   # Skip suppressed lines (same-line or preceding-line nosemgrep)
-  if ($0 ~ /# nosemgrep: docker-compose-port-no-loopback/) { prev_nosemgrep = 0; next }
+  if ($0 ~ /# nosemgrep: docker-compose-port-no-loopback(-long-syntax)?/) { prev_nosemgrep = 0; next }
   if (prev_nosemgrep) { prev_nosemgrep = 0; next }
 
   # Capture the raw value after the leading "- "
@@ -195,9 +194,24 @@ in_ports && /^[[:space:]]+-[[:space:]]+/ && !in_block {
   # Remove optional protocol suffix (e.g. /tcp, /udp)
   sub(/\/[a-zA-Z]+$/, "", val)
 
+  # ---- Inline YAML map: - { target: 80, published: 80, host_ip: 127.0.0.1 } ----
+  # These would otherwise fall through to short-syntax parsing and produce
+  # spurious errors.  Detect the inline map wrapper and inspect it directly
+  # for loopback host_ip.
+  if (val ~ /^\{.*\}$/) {
+    # Check for loopback host_ip (IPv4 or IPv6) inside the inline map
+    if (val ~ /host_ip:[[:space:]]*["'\'']?(127\.0\.0\.1|\[::1\]|::1)["'\'']?/) { next }
+    # No loopback host_ip in inline map — flag if target and published exist
+    if (val ~ /target:[[:space:]]*[0-9]/ && val ~ /published:[[:space:]]*[0-9]/) {
+      printf "::error file=%s,line=%d::Inline long-syntax port mapping without loopback binding. Add host_ip: 127.0.0.1 or suppress with # nosemgrep: docker-compose-port-no-loopback(-long-syntax). See https://github.com/F4CTE/PolyForge/issues/1310\n", file, NR
+      exit_code = 1
+    }
+    next
+  }
+
   # ---- Hostless forms: single port or port range (binds to 0.0.0.0) ----
   if (val ~ /^[0-9]+(-[0-9]+)?$/) {
-    printf "::error file=%s,line=%d::Port published without 127.0.0.1 loopback binding (hostless). Add 127.0.0.1: prefix or suppress with # nosemgrep: docker-compose-port-no-loopback. See https://github.com/F4CTE/PolyForge/issues/1310\n", file, NR
+    printf "::error file=%s,line=%d::Port published without 127.0.0.1 loopback binding (hostless). Add 127.0.0.1: prefix or suppress with # nosemgrep: docker-compose-port-no-loopback(-long-syntax). See https://github.com/F4CTE/PolyForge/issues/1310\n", file, NR
     exit_code = 1
     next
   }
@@ -215,6 +229,16 @@ in_ports && /^[[:space:]]+-[[:space:]]+/ && !in_block {
     parts_count = split(val, parts, ":")
     if (parts_count < 2) { next }
     host = parts[1]
+
+    # Unbracketed IPv6 (host empty due to leading ::).  Compose accepts
+    # short syntax like "::1:6000:6000" (unbracketed IPv6 loopback).
+    # Reconstruct the host: for ::1:... with 4+ colon-separated parts
+    # the first three are the IPv6 address (two empty from :: plus the
+    # hex segment).  ::1 is loopback-safe; everything else (e.g. :::...
+    # for all-interfaces ::) is unsafe.
+    if (host == "" && parts_count >= 4) {
+      host = "::" parts[3]
+    }
   }
 
   # Detect IPv6 bracket notation: [::], [::1], [2001:db8::1], etc.
@@ -222,18 +246,19 @@ in_ports && /^[[:space:]]+-[[:space:]]+/ && !in_block {
 
   # Safe: IPv4 loopback
   if (host == "127.0.0.1") { next }
-  # Safe: IPv6 loopback in brackets
+  # Safe: IPv6 loopback (bracketed and unbracketed)
   if (is_ipv6 && host == "[::1]") { next }
+  if (host == "::1") { next }
 
   # Everything else is unsafe
-  printf "::error file=%s,line=%d::Port published without 127.0.0.1 loopback binding. Add 127.0.0.1: prefix or suppress with # nosemgrep: docker-compose-port-no-loopback. See https://github.com/F4CTE/PolyForge/issues/1310\n", file, NR
+  printf "::error file=%s,line=%d::Port published without 127.0.0.1 loopback binding. Add 127.0.0.1: prefix or suppress with # nosemgrep: docker-compose-port-no-loopback(-long-syntax). See https://github.com/F4CTE/PolyForge/issues/1310\n", file, NR
   exit_code = 1
   next
 }
 
 END {
   if (in_block && saw_target && saw_published && !has_host_ip && !suppressed) {
-    printf "::error file=%s,line=%d::Long-syntax port mapping without loopback binding. Add host_ip: 127.0.0.1 or suppress with # nosemgrep: docker-compose-port-no-loopback. See https://github.com/F4CTE/PolyForge/issues/1310\n", file, entry_lineno
+    printf "::error file=%s,line=%d::Long-syntax port mapping without loopback binding. Add host_ip: 127.0.0.1 or suppress with # nosemgrep: docker-compose-port-no-loopback(-long-syntax). See https://github.com/F4CTE/PolyForge/issues/1310\n", file, entry_lineno
     exit_code = 1
   }
   print exit_code
@@ -255,7 +280,7 @@ if [ "$EXIT_CODE" -eq 0 ]; then
 else
   echo ""
   echo "✗ Non-loopback ports detected — see errors above"
-  echo "  Fix: bind with '127.0.0.1:<port>:<port>' or add '# nosemgrep: docker-compose-port-no-loopback' for public entry points"
+  echo "  Fix: bind with '127.0.0.1:<port>:<port>' or add '# nosemgrep: docker-compose-port-no-loopback(-long-syntax)' for public entry points"
   echo "  Docs: https://github.com/F4CTE/PolyForge/issues/1310"
 fi
 
