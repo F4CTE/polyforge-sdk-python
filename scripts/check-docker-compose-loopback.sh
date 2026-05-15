@@ -222,7 +222,7 @@ in_ports && /^[[:space:]]+-[[:space:]]+/ && !in_block {
     # Check for loopback host_ip (IPv4 or IPv6) inside the inline map
     if (val ~ /host_ip:[[:space:]]*["'\'']?(127\.0\.0\.1|\[::1\]|::1)["'\'']?/) { next }
     # No loopback host_ip in inline map — flag if target and published exist
-    if (val ~ /target:[[:space:]]*[0-9]/ && val ~ /published:[[:space:]]*[0-9]/) {
+    if (val ~ /target:[[:space:]]*(\\?["'\''])?[0-9]/ && val ~ /published:[[:space:]]*(\\?["'\''])?[0-9]/) {
       printf "::error file=%s,line=%d::Inline long-syntax port mapping without loopback binding. Add host_ip: 127.0.0.1 or suppress with # nosemgrep: docker-compose-port-no-loopback(-long-syntax). See https://github.com/F4CTE/PolyForge/issues/1310\n", file, NR
       exit_code = 1
     }
@@ -244,7 +244,8 @@ in_ports && /^[[:space:]]+-[[:space:]]+/ && !in_block {
   if (val ~ /^\[/) {
     closing = index(val, "]")
     if (closing == 0) {
-      printf "::warning file=%s,line=%d::Malformed IPv6 port entry (missing closing bracket) — could not check loopback binding.\n", file, NR
+      printf "::error file=%s,line=%d::Malformed IPv6 port entry (missing closing bracket) — could not check loopback binding. Fix the bracket syntax or suppress with # nosemgrep: docker-compose-port-no-loopback(-long-syntax).\n", file, NR
+      exit_code = 1
       next
     }
     host = substr(val, 1, closing)
@@ -267,12 +268,14 @@ in_ports && /^[[:space:]]+-[[:space:]]+/ && !in_block {
       # YAML alias (e.g. - *name).  The referenced mapping cannot be
       # verified, so warn rather than silently skipping.
       if (val ~ /^\*/) {
-        printf "::warning file=%s,line=%d::YAML alias port entry cannot be verified for loopback binding. Inline the port mapping or suppress with # nosemgrep: docker-compose-port-no-loopback(-long-syntax).\n", file, NR
+        printf "::error file=%s,line=%d::YAML alias port entry cannot be verified for loopback binding. Inline the port mapping or suppress with # nosemgrep: docker-compose-port-no-loopback(-long-syntax).\n", file, NR
+        exit_code = 1
         next
       }
       # Any other unrecognised single-value entry — warn.
       if (val !~ /^~?$/) {
-        printf "::warning file=%s,line=%d::Unrecognised port entry could not be checked for loopback binding. Add an explicit host_ip or suppress with # nosemgrep: docker-compose-port-no-loopback(-long-syntax).\n", file, NR
+        printf "::error file=%s,line=%d::Unrecognised port entry could not be checked for loopback binding. Add an explicit host_ip or suppress with # nosemgrep: docker-compose-port-no-loopback(-long-syntax).\n", file, NR
+        exit_code = 1
       }
       next
     }
