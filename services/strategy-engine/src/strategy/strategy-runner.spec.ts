@@ -2351,9 +2351,10 @@ describe("StrategyRunner — concurrent tick serialization", () => {
         del: vi.fn().mockResolvedValue(1),
         eval: vi.fn().mockImplementation(() => {
           evalCallCount++;
-          // First eval is lock release (Lua check-and-delete), leave at default mock
-          // Lock-refresh evals: 1=owned, 0=lost
-          if (evalCallCount > 1) return Promise.resolve(0);
+          // First eval is the lock-refresh (fires after 5s) — return 0
+          // to simulate ownership lost, forcing the interval to self-cancel.
+          // Second eval is lock release (Lua check-and-delete) — return 1.
+          if (evalCallCount === 1) return Promise.resolve(0);
           return Promise.resolve(1);
         }),
       };

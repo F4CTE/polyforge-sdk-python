@@ -469,6 +469,7 @@ export class StrategyRunner {
           // coalesced pending events.  A losing-instance retry here
           // would re-evaluate the same latest state and produce
           // duplicate order intents / sub-strategy launches.
+          this.scheduledFollowUp = true;
           if (this.followUpTimer) clearTimeout(this.followUpTimer);
           const RETRY_BACKOFF_MS = 200;
           this.followUpTimer = setTimeout(() => {
@@ -488,6 +489,7 @@ export class StrategyRunner {
           // coalesced events would be silently dropped: no retry fires
           // and no fresh price event is guaranteed to arrive.
           this.scheduledFollowUp = true;
+          if (this.followUpTimer) clearTimeout(this.followUpTimer);
           void this.pendingRedisUnlock
             .finally(() => {
               if (this.status === "RUNNING") {
@@ -551,6 +553,7 @@ export class StrategyRunner {
           // evaluation is not blocked by lastTickMs having been advanced
           // by the failed tick itself.
           this.scheduledFollowUp = true;
+          if (this.followUpTimer) clearTimeout(this.followUpTimer);
           void this.pendingRedisUnlock
             .finally(() => {
               if (this.status === "RUNNING") {
