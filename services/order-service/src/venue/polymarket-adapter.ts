@@ -25,12 +25,15 @@ interface PolymarketCancelContext {
   apiKey: string;
 }
 
-const RESOLUTION_TO_INTERVAL: Record<CandleResolution, string> = {
-  "1m": "1",
-  "5m": "5",
-  "15m": "15",
-  "1h": "60",
-  "1d": "1440",
+const RESOLUTION_TO_PARAMS: Record<
+  CandleResolution,
+  { interval: string; fidelity?: number }
+> = {
+  "1m": { interval: "max", fidelity: 1 },
+  "5m": { interval: "max", fidelity: 5 },
+  "15m": { interval: "max", fidelity: 15 },
+  "1h": { interval: "1h" },
+  "1d": { interval: "1d" },
 };
 
 @Injectable()
@@ -90,8 +93,12 @@ export class PolymarketAdapter implements VenueAdapter {
     outcomeId: string,
     resolution: CandleResolution,
   ): Promise<PriceCandle[]> {
-    const interval = RESOLUTION_TO_INTERVAL[resolution];
-    const result = await this.clob.getPricesHistory(outcomeId, interval);
+    const params = RESOLUTION_TO_PARAMS[resolution];
+    const result = await this.clob.getPricesHistory(
+      outcomeId,
+      params.interval,
+      params.fidelity,
+    );
     return result.history.map((point) => ({
       bucket: new Date(point.t * 1000).toISOString(),
       open: point.p,
