@@ -596,6 +596,13 @@ def _validate_copy_config_numeric_fields(fields: dict[str, Any]) -> None:
         _validate_finite_numberish_param("priceOffset", fields["priceOffset"])
 
 
+_UNSET: Any = object()
+
+_COPY_CONFIG_KNOWN_KWARGS: frozenset[str] = frozenset({
+    "mode", "sizeValue", "maxExposure", "maxDailyLoss", "priceOffset",
+})
+
+
 _BLOCKED_HOSTNAMES: set[str] = {
     "localhost",
     "metadata.google.internal",
@@ -2868,23 +2875,74 @@ class PolyforgeClient:
         data = self._get(f"/api/v1/copy/{_encode_path(copy_id)}")
         return _parse(CopyConfig, data)
 
-    def update_copy_config(self, copy_id: str, **kwargs: Any) -> CopyConfig:
+    def update_copy_config(
+        self,
+        copy_id: str,
+        *,
+        mode: str | None = _UNSET,
+        size_value: float | None = _UNSET,
+        max_exposure: float | None = _UNSET,
+        max_daily_loss: float | None = _UNSET,
+        price_offset: float | None = _UNSET,
+        **kwargs: Any,
+    ) -> CopyConfig:
         """Update an existing copy-trading configuration.
 
-        Pass API field names as keyword arguments (e.g. ``mode="FIXED"``,
-        ``sizeValue=100``).
+        Prefer the keyword-only ``snake_case`` parameters for new code.
+        The ``camelCase`` keyword arguments (``sizeValue``, ``maxExposure``,
+        ``maxDailyLoss``, ``priceOffset``) are still accepted for backward
+        compatibility but will emit a :exc:`DeprecationWarning`.
+
+        Explicit ``None`` values are sent to the server as JSON ``null``
+        (useful for clearing optional fields such as ``maxDailyLoss``).
 
         Args:
             copy_id: The copy config ID to update.
-            **kwargs: Fields to update (passed directly to the API).
+            mode: Copy mode (``"PERCENTAGE"``, ``"FIXED"``, or ``"MIRROR"``).
+            size_value: Trade size value (percentage or fixed USDC amount).
+            max_exposure: Maximum USDC exposure per copied wallet.
+            max_daily_loss: Maximum daily loss limit in USDC.
+            price_offset: Price offset applied to copied orders.
 
         Returns:
             The updated :class:`CopyConfig`.
+
+        Raises:
+            TypeError: If unknown keyword arguments are passed.
         """
-        _validate_copy_config_numeric_fields(kwargs)
+        body: dict[str, Any] = {}
+        if mode is not _UNSET:
+            body["mode"] = mode
+        if size_value is not _UNSET:
+            body["sizeValue"] = size_value
+        if max_exposure is not _UNSET:
+            body["maxExposure"] = max_exposure
+        if max_daily_loss is not _UNSET:
+            body["maxDailyLoss"] = max_daily_loss
+        if price_offset is not _UNSET:
+            body["priceOffset"] = price_offset
+
+        if kwargs:
+            unknown = {k for k in kwargs if k not in _COPY_CONFIG_KNOWN_KWARGS}
+            if unknown:
+                raise TypeError(
+                    f"update_copy_config got unexpected keyword arguments: "
+                    f"{', '.join(sorted(unknown))}"
+                )
+            body.update(kwargs)
+            import warnings
+            warnings.warn(
+                "Passing camelCase keyword arguments to update_copy_config is "
+                "deprecated. Use snake_case parameters (e.g. size_value, "
+                "max_exposure) instead.",
+                DeprecationWarning,
+                stacklevel=3,
+            )
+
+        _validate_copy_config_numeric_fields(body)
         return _parse(
             CopyConfig,
-            self._patch(f"/api/v1/copy/{_encode_path(copy_id)}", json=kwargs),
+            self._patch(f"/api/v1/copy/{_encode_path(copy_id)}", json=body),
         )
 
     def pause_copy_config(self, copy_id: str) -> CopyConfig:
@@ -6083,12 +6141,63 @@ class AsyncPolyforgeClient:
         data = await self._get(f"/api/v1/copy/{_encode_path(copy_id)}")
         return _parse(CopyConfig, data)
 
-    async def update_copy_config(self, copy_id: str, **kwargs: Any) -> CopyConfig:
-        """Update an existing copy-trading configuration."""
-        _validate_copy_config_numeric_fields(kwargs)
+    async def update_copy_config(
+        self,
+        copy_id: str,
+        *,
+        mode: str | None = _UNSET,
+        size_value: float | None = _UNSET,
+        max_exposure: float | None = _UNSET,
+        max_daily_loss: float | None = _UNSET,
+        price_offset: float | None = _UNSET,
+        **kwargs: Any,
+    ) -> CopyConfig:
+        """Update an existing copy-trading configuration.
+
+        Prefer the keyword-only ``snake_case`` parameters for new code.
+        The ``camelCase`` keyword arguments (``sizeValue``, ``maxExposure``,
+        ``maxDailyLoss``, ``priceOffset``) are still accepted for backward
+        compatibility but will emit a :exc:`DeprecationWarning`.
+
+        Explicit ``None`` values are sent to the server as JSON ``null``
+        (useful for clearing optional fields such as ``maxDailyLoss``).
+
+        Raises:
+            TypeError: If unknown keyword arguments are passed.
+        """
+        body: dict[str, Any] = {}
+        if mode is not _UNSET:
+            body["mode"] = mode
+        if size_value is not _UNSET:
+            body["sizeValue"] = size_value
+        if max_exposure is not _UNSET:
+            body["maxExposure"] = max_exposure
+        if max_daily_loss is not _UNSET:
+            body["maxDailyLoss"] = max_daily_loss
+        if price_offset is not _UNSET:
+            body["priceOffset"] = price_offset
+
+        if kwargs:
+            unknown = {k for k in kwargs if k not in _COPY_CONFIG_KNOWN_KWARGS}
+            if unknown:
+                raise TypeError(
+                    f"update_copy_config got unexpected keyword arguments: "
+                    f"{', '.join(sorted(unknown))}"
+                )
+            body.update(kwargs)
+            import warnings
+            warnings.warn(
+                "Passing camelCase keyword arguments to update_copy_config is "
+                "deprecated. Use snake_case parameters (e.g. size_value, "
+                "max_exposure) instead.",
+                DeprecationWarning,
+                stacklevel=3,
+            )
+
+        _validate_copy_config_numeric_fields(body)
         return _parse(
             CopyConfig,
-            await self._patch(f"/api/v1/copy/{_encode_path(copy_id)}", json=kwargs),
+            await self._patch(f"/api/v1/copy/{_encode_path(copy_id)}", json=body),
         )
 
     async def pause_copy_config(self, copy_id: str) -> CopyConfig:
