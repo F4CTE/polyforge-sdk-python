@@ -17,12 +17,12 @@ export enum CopyModeDto {
   MIRROR = "MIRROR",
 }
 
-@ValidatorConstraint({ name: "isEthereumAddressChecksum", async: false })
+@ValidatorConstraint({ name: "isEthereumAddressChecksum", async: true })
 class IsEthereumAddressChecksum implements ValidatorConstraintInterface {
-  validate(value: string) {
+  async validate(value: string) {
     if (typeof value !== "string") return false;
     try {
-      checksumEthereumAddress(value);
+      await checksumEthereumAddress(value);
       return true;
     } catch {
       return false;
