@@ -51,28 +51,37 @@ fi
 # ── Combined short + long syntax detection (single awk pass) ────────────
 # All detection is scoped to services.*.ports: sections to avoid false
 # positives on unrelated keys (labels, metadata, etc.).
-# Indentation: services (0), service-name (2), ports: (4), entries (6).
+# Indentation is tracked dynamically: ports_indent = indent of the ports:
+# key; port_lead = indent of the "-" that starts a long-syntax entry.
 
 violations=$(awk -v file="$TARGET_FILE" '
+function leadingspaces(str) {
+  match(str, /^ */)
+  return RLENGTH
+}
+
 BEGIN { exit_code = 0; prev_nosemgrep = 0 }
 
 # ── ports: section tracking ────────────────────────────────────────────
 
-# Enter a ports: section (4-space indent under a service).
-/^    ports:/ {
+# Enter a ports: section (at any indentation under a service).
+# Match "ports:" followed by end-of-line or a comment so that keys
+# like "expose_ports:" are not misidentified as port lists.
+/^[[:space:]]+ports:[[:space:]]*($|#)/ {
+  ports_indent = leadingspaces($0)
   in_ports = 1
   next
 }
 
-# Exit ports: section on the next service-level key (4-space indent,
-# e.g. "    volumes:", "    image:", "    networks:"), on a service
-# name (2-space indent), or on a top-level key (0-space indent).
-# Do NOT exit inside a long-syntax port block (in_block guards this).
-in_ports && !in_block && /^    [a-zA-Z]/ {
-  if ($0 !~ /^    ports:/) { in_ports = 0 }
-}
-in_ports && (/^  [a-zA-Z]/ || /^[a-zA-Z]/) {
-  in_ports = 0
+# Exit ports: section on any non-blank, non-comment line at or above
+# the ports indent level.  Guarded by !in_block so we do not exit
+# while still scanning a long-syntax block; the block exit handler
+# checks ports exit itself.
+in_ports && !in_block {
+  cur = leadingspaces($0)
+  if ($0 !~ /^[[:space:]]*$/ && $0 !~ /^[[:space:]]*#/ && cur <= ports_indent && $0 !~ /^[[:space:]]+ports:/) {
+    in_ports = 0
+  }
 }
 
 # ── Long-syntax entry detection (MUST come before short-syntax) ────────
@@ -84,6 +93,7 @@ in_ports && (/^  [a-zA-Z]/ || /^[a-zA-Z]/) {
 # correctly.
 in_ports && /^[[:space:]]+- (name|target|published|host_ip|protocol|mode|app_protocol):/ && !in_block {
   in_block = 1
+  port_lead = leadingspaces($0)
   entry_lineno = NR
   saw_target = ($0 ~ / target:/)
   saw_published = ($0 ~ / published:/)
@@ -98,28 +108,27 @@ in_ports && /^[[:space:]]+- (name|target|published|host_ip|protocol|mode|app_pro
 }
 
 in_block {
-  if ($0 ~ /^[[:space:]]+- / || $0 ~ /^[[:space:]]*$/ || $0 ~ /^    [a-zA-Z]/ || $0 ~ /^  [a-zA-Z]/ || $0 ~ /^[a-zA-Z]/) {
+  cur_indent = leadingspaces($0)
+  # Exit block when we encounter a new port entry ("- " at any depth),
+  # a blank line, or a non-blank line whose indent is at or above the
+  # block entry indent (service-level key, service name, or top-level key).
+  if ($0 ~ /^[[:space:]]+- / || cur_indent <= port_lead) {
     if (saw_target && saw_published && !has_host_ip && !suppressed) {
       printf "::error file=%s,line=%d::Long-syntax port mapping without loopback binding. Add host_ip: 127.0.0.1 or suppress with # nosemgrep: docker-compose-port-no-loopback(-long-syntax). See https://github.com/F4CTE/PolyForge/issues/1310\n", file, entry_lineno
       exit_code = 1
     }
     in_block = 0
 
-    # If the line that exited the block is also a service-level key
-    # (4-space indent), exit the ports section as well.  This cannot
-    # be handled by the earlier ports-exit rule because at that point
-    # in_block was still 1 and !in_block was false.
-    if ($0 ~ /^    [a-zA-Z]/) {
-      if ($0 !~ /^    ports:/) { in_ports = 0 }
-    }
-    # Also exit ports on 2-space or 0-space keys (same rationale)
-    if ($0 ~ /^  [a-zA-Z]/ || $0 ~ /^[a-zA-Z]/) {
+    # If the line that exited the block is at or above ports indent
+    # (and is not blank / a comment), also exit the ports section.
+    if (cur_indent <= ports_indent && $0 !~ /^[[:space:]]*$/ && $0 !~ /^[[:space:]]*#/) {
       in_ports = 0
     }
 
     # Re-process this line in case it starts a new port block
     if (in_ports && $0 ~ /^[[:space:]]+- (name|target|published|host_ip|protocol|mode|app_protocol):/) {
       in_block = 1
+      port_lead = cur_indent
       entry_lineno = NR
       saw_target = ($0 ~ / target:/)
       saw_published = ($0 ~ / published:/)
