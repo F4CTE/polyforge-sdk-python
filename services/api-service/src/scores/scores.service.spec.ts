@@ -491,7 +491,7 @@ describe("BadgeService", () => {
       expect(awarded).toBe(1);
       expect(prisma.copyConfig.count).toHaveBeenCalledWith({
         where: {
-          targetWallet: "0xLeader",
+          targetWallet: { equals: "0xLeader", mode: "insensitive" },
           status: { in: ["ACTIVE", "PAUSED"] },
         },
       });

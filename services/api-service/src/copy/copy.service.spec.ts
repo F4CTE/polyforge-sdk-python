@@ -5,13 +5,17 @@ import { Prisma, type CopyConfig } from "@prisma/client";
 
 const LOWER_TARGET_WALLET = "0x52908400098527886e0f7030069857d2e4169ee7";
 const CHECKSUM_TARGET_WALLET = "0x52908400098527886E0F7030069857D2E4169EE7";
+const BAD_CHECKSUM_WALLET = "0x52908400098527886e0f7030069857d2e4169Ee7";
 
 // ─── Mock PrismaService ─────────────────────────────────────────────────────
 
 function createMockPrisma() {
   const mock = {
     user: {
-      findUnique: vi.fn().mockResolvedValue({ polymarketConnected: null, polymarketAddress: null }),
+      findUnique: vi.fn().mockResolvedValue({
+        polymarketConnected: null,
+        polymarketAddress: null,
+      }),
     },
     copyConfig: {
       findMany: vi.fn(),
@@ -95,7 +99,7 @@ describe("CopyService", () => {
       expect(prisma.copyConfig.count).toHaveBeenNthCalledWith(2, {
         where: {
           targetWallet: {
-            equals: LOWER_TARGET_WALLET,
+            equals: CHECKSUM_TARGET_WALLET,
             mode: "insensitive",
           },
           status: { in: ["ACTIVE", "PAUSED"] },
@@ -103,7 +107,7 @@ describe("CopyService", () => {
       });
       expect(prisma.copyConfig.create).toHaveBeenCalledWith({
         data: expect.objectContaining({
-          targetWallet: LOWER_TARGET_WALLET,
+          targetWallet: CHECKSUM_TARGET_WALLET,
         }),
       });
     });
@@ -116,6 +120,37 @@ describe("CopyService", () => {
       ).rejects.toThrow("Maximum of 10 active copy configs allowed");
     });
 
+    it("accepts already-checksummed mixed-case address", async () => {
+      prisma.copyConfig.count.mockResolvedValue(0);
+      prisma.copyConfig.findMany.mockResolvedValue([]);
+      prisma.copyConfig.create.mockResolvedValue({
+        id: "cfg-1",
+        userId: "user-1",
+        targetWallet: CHECKSUM_TARGET_WALLET,
+        mode: "PERCENTAGE",
+        status: "ACTIVE",
+      });
+
+      const result = await service.create("user-1", {
+        targetWallet: CHECKSUM_TARGET_WALLET,
+      });
+
+      expect(result.id).toBe("cfg-1");
+      expect(prisma.copyConfig.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          targetWallet: CHECKSUM_TARGET_WALLET,
+        }),
+      });
+    });
+
+    it("rejects mixed-case address with invalid EIP-55 checksum", async () => {
+      await expect(
+        service.create("user-1", { targetWallet: BAD_CHECKSUM_WALLET }),
+      ).rejects.toThrow("Invalid Ethereum address checksum");
+
+      expect(prisma.copyConfig.count).not.toHaveBeenCalled();
+    });
+
     it("rejects self-copy when targetWallet matches user's own polymarketAddress", async () => {
       prisma.user.findUnique.mockResolvedValue({
         polymarketConnected: true,
@@ -124,9 +159,7 @@ describe("CopyService", () => {
 
       await expect(
         service.create("user-1", { targetWallet: LOWER_TARGET_WALLET }),
-      ).rejects.toThrow(
-        "Cannot create a copy config for your own wallet",
-      );
+      ).rejects.toThrow("Cannot create a copy config for your own wallet");
 
       // Should not have reached the config checks
       expect(prisma.copyConfig.count).not.toHaveBeenCalled();
@@ -231,7 +264,7 @@ describe("CopyService", () => {
         where: {
           userId: "user-1",
           targetWallet: {
-            equals: LOWER_TARGET_WALLET,
+            equals: CHECKSUM_TARGET_WALLET,
             mode: "insensitive",
           },
         },

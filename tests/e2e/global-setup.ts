@@ -42,6 +42,28 @@ export default async function globalSetup() {
         'exec', 'polyforge-dev-redis-1',
         'redis-cli', '-a', REDIS_PASS, 'SET', 'config:invite_only', 'false',
       ], { stdio: 'ignore', timeout: 5000 });
+
+      // Set generous beta limits for E2E tests
+      execFileSync('docker', [
+        'exec', 'polyforge-dev-redis-1',
+        'redis-cli', '-a', REDIS_PASS, 'SET', 'config:beta_limits',
+        '{"maxActiveStrategies":50,"maxConcurrentBacktests":10,"maxBacktestHistoryDays":365,"maxMonthlyVolumeUsdc":1000000,"maxPositionSizeUsdc":50000,"marketDataRateLimitPerMinute":10000,"maxMarketplaceListings":20,"maxDailyStrategyExecutions":10000}',
+      ], { stdio: 'ignore', timeout: 5000 });
+
+      // Also set per-field keys for individual limit reads
+      execFileSync('docker', [
+        'exec', 'polyforge-dev-redis-1',
+        'redis-cli', '-a', REDIS_PASS,
+        'MSET',
+        'config:beta_limits:max_active_strategies', '50',
+        'config:beta_limits:max_concurrent_backtests', '10',
+        'config:beta_limits:max_backtest_history_days', '365',
+        'config:beta_limits:max_monthly_volume_usdc', '1000000',
+        'config:beta_limits:max_position_size_usdc', '50000',
+        'config:beta_limits:market_data_rate_limit_per_minute', '10000',
+        'config:beta_limits:max_marketplace_listings', '20',
+        'config:beta_limits:max_daily_strategy_executions', '10000',
+      ], { stdio: 'ignore', timeout: 5000 });
     } else {
       console.warn('[E2E setup] REDIS_PASSWORD is not set; skipping Redis invite cleanup');
     }

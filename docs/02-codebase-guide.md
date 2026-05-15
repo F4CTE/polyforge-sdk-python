@@ -669,6 +669,44 @@ npx prisma generate
 - Use `readonly` on config objects and injected services
 - Prefer `interface` over `type` for object shapes
 
+#### CJS/ESM Interop & `resolution-mode`
+
+TypeScript 6 with `module: "node16"` **requires** `"resolution-mode": "import"` on type-only imports of ESM packages from CJS files. Without it, `tsc` emits TS1541: *"Type-only import of an ECMAScript module from a CommonJS module must have a 'resolution-mode' attribute."*
+
+This feature is mandatory for CJS→ESM type imports, but it is **brittle** for certain export kinds. It has historically caused class/constructor types to silently resolve as `any` (notably `ClobClient` from `@polymarket/clob-client` and types from `@polymarket/order-utils`). Pure type exports (interfaces, type aliases, enums) usually resolve correctly.
+
+**Rule of thumb:**
+
+- **Interfaces / type aliases / enums from ESM packages** → use `import type` with `"resolution-mode": "import"` and verify with `tsc --noEmit` that they resolve to concrete types, not `any`.
+- **Class constructors from ESM packages** → do NOT import them as types. Instead, use the require + local interface pattern below.
+
+**When a type resolves as `any` with `resolution-mode`**, use the require + local interface pattern:
+
+```typescript
+import type { SomeType } from "some-esm-pkg" with { "resolution-mode": "import" };
+
+// Define a local interface capturing only the methods you actually use
+export interface SdkLike {
+  readonly host: string;
+  getOrderBook(tokenID: string): Promise<SomeType>;
+  // ...only the methods your service calls
+}
+
+// require() the CJS module with a type assertion
+type SdkModule = { SdkClient: new (...args: any[]) => SdkLike };
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const { SdkClient } = require("some-esm-pkg") as SdkModule;
+
+// Use the local interface as the field type
+@Injectable()
+export class MyService {
+  readonly sdk: SdkLike;
+  constructor() { this.sdk = new SdkClient(url); }
+}
+```
+
+This pattern keeps type safety at the module boundary even when the upstream package's ESM types are incompatible with `resolution-mode`. Known packages requiring this pattern: `@polymarket/clob-client`.
+
 ### NestJS Rules
 
 - All controllers have a corresponding service — **no business logic in controllers**

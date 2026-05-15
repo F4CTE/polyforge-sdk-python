@@ -118,7 +118,7 @@ describe("ArbitrageService", () => {
           ]),
         );
 
-      const opps = await service.detectForMatch(MATCH as any, 3);
+      const opps = await service.detectForMatch(MATCH, 3);
       expect(opps).toHaveLength(1);
       expect(opps[0].spreadPct).toBeGreaterThan(3);
       expect(opps[0].direction).toBe("BUY_POLYMARKET_SELL_KALSHI");
@@ -137,13 +137,13 @@ describe("ArbitrageService", () => {
           ]),
         );
 
-      const opps = await service.detectForMatch(MATCH as any, 3);
+      const opps = await service.detectForMatch(MATCH, 3);
       expect(opps).toHaveLength(0);
     });
 
     it("returns empty when market not found", async () => {
       prisma.market.findUnique.mockResolvedValue(null);
-      const opps = await service.detectForMatch(MATCH as any, 3);
+      const opps = await service.detectForMatch(MATCH, 3);
       expect(opps).toHaveLength(0);
     });
 
@@ -160,7 +160,7 @@ describe("ArbitrageService", () => {
           ]),
         );
 
-      const opps = await service.detectForMatch(MATCH as any, 3);
+      const opps = await service.detectForMatch(MATCH, 3);
       expect(opps).toHaveLength(1);
       expect(opps[0].outcome).toBe("YES");
     });
@@ -178,7 +178,7 @@ describe("ArbitrageService", () => {
           ]),
         );
 
-      const opps = await service.detectForMatch(MATCH as any, 3);
+      const opps = await service.detectForMatch(MATCH, 3);
       expect(opps[0].direction).toBe("BUY_KALSHI_SELL_POLYMARKET");
     });
   });

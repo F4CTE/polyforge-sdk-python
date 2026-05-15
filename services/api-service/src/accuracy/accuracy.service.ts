@@ -1,6 +1,24 @@
 import { Injectable } from "@nestjs/common";
 import { PrismaService } from "@polyforge/shared-db";
 import { ResolutionStatus } from "@prisma/client";
+import { paginate, PaginatedResponse } from "../common/dto/pagination.dto";
+
+export interface AccuracyLeaderboardEntry {
+  rank: number;
+  userId: string;
+  username: string;
+  displayName: string | null;
+  avatarUrl: string | null;
+  pnl: string;
+  winRate: string;
+  tradeCount: number;
+}
+
+export interface AccuracyLeaderboardQuery {
+  period?: string;
+  page?: number;
+  limit?: number;
+}
 
 @Injectable()
 export class AccuracyService {
@@ -100,5 +118,86 @@ export class AccuracyService {
       calibration,
       byCategory: byCategoryFormatted,
     };
+  }
+
+  async getLeaderboard(
+    query: AccuracyLeaderboardQuery,
+  ): Promise<PaginatedResponse<AccuracyLeaderboardEntry>> {
+    const page = query.page ?? 1;
+    const limit = Math.min(query.limit ?? 20, 100);
+
+    const period = query.period ?? "30d";
+    const since =
+      period === "7d"
+        ? new Date(Date.now() - 7 * 86400_000)
+        : period === "30d"
+          ? new Date(Date.now() - 30 * 86400_000)
+          : new Date(0);
+
+    const positions = await this.prisma.position.findMany({
+      where: {
+        resolutionStatus: ResolutionStatus.RESOLVED,
+        updatedAt: { gte: since },
+      },
+      select: {
+        userId: true,
+        realizedPnl: true,
+      },
+    });
+
+    const userStats: Record<
+      string,
+      { total: number; wins: number; pnl: number }
+    > = {};
+
+    for (const pos of positions) {
+      if (!userStats[pos.userId]) {
+        userStats[pos.userId] = { total: 0, wins: 0, pnl: 0 };
+      }
+      userStats[pos.userId].total++;
+      const parsedPnl = parseFloat(String(pos.realizedPnl ?? 0));
+      userStats[pos.userId].pnl += parsedPnl;
+      if (parsedPnl > 0) {
+        userStats[pos.userId].wins++;
+      }
+    }
+
+    const userIds = Object.keys(userStats);
+
+    let userMap = new Map<
+      string,
+      { username: string; displayName: string | null; avatarUrl: string | null }
+    >();
+    if (userIds.length > 0) {
+      const users = await this.prisma.user.findMany({
+        where: { id: { in: userIds } },
+        select: { id: true, username: true, displayName: true, avatarUrl: true },
+      });
+      userMap = new Map(users.map((u) => [u.id, u]));
+    }
+
+    const entries: AccuracyLeaderboardEntry[] = Object.entries(userStats)
+      .map(([userId, stats]) => ({
+        rank: 0,
+        userId,
+        username: userMap.get(userId)?.username ?? "",
+        displayName: userMap.get(userId)?.displayName ?? null,
+        avatarUrl: userMap.get(userId)?.avatarUrl ?? null,
+        pnl: String(stats.pnl),
+        winRate: stats.total > 0
+          ? ((stats.wins / stats.total) * 100).toFixed(1)
+          : "0",
+        tradeCount: stats.total,
+      }))
+      .sort((a, b) => parseFloat(b.winRate) - parseFloat(a.winRate));
+
+    const total = entries.length;
+    const start = (page - 1) * limit;
+    const pageEntries = entries.slice(start, start + limit);
+    pageEntries.forEach((entry, i) => {
+      entry.rank = start + i + 1;
+    });
+
+    return paginate(pageEntries, total, page, limit);
   }
 }

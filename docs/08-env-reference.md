@@ -163,7 +163,12 @@ All encryption keys are **required** — services will fail to start if unset. G
 
 ## Beta Limits
 
-These values are read from the environment at service startup.
+These env vars serve as defaults when Redis has no override. Use the admin
+config API to adjust limits at runtime without a restart:
+`PATCH /api/v1/config/beta-limits`.
+
+Per-field Redis keys: `config:beta_limits:<snake_case_field>`.
+Full blob: `config:beta_limits` (JSON).
 
 | Variable | Dev default | Description |
 |---|---|---|

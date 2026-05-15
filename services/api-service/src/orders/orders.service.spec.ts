@@ -8,8 +8,13 @@ import {
 import { ConfigService } from "@nestjs/config";
 import { OrdersService } from "./orders.service";
 import { createMockDb, MockDb } from "../../test/helpers/mock-db";
-import { RedisService } from "@polyforge/shared-redis";
+import { RedisService, BetaLimitsConfigService } from "@polyforge/shared-redis";
 import { PosthogService } from "@polyforge/shared-posthog";
+import {
+  OrderSideDto,
+  OrderOutcomeDto,
+  OrderTypeDto,
+} from "./dto/place-order.dto";
 
 // ─── Factories ────────────────────────────────────────────────────────────────
 
@@ -112,7 +117,25 @@ describe("OrdersService", () => {
     db.order.findUnique.mockResolvedValue(
       makeOrder({ clobOrderId: null }) as any,
     );
-    service = new OrdersService(db as any, redis, config, {} as any, posthog);
+    const betaLimits = {
+      getLimit: vi.fn().mockImplementation((key: string) => {
+        if (key === "maxMonthlyVolumeUsdc") return Promise.resolve(5000);
+        if (key === "maxPositionSizeUsdc") return Promise.resolve(500);
+        return Promise.resolve(3);
+      }),
+      getAllLimits: vi.fn().mockResolvedValue({
+        maxPositionSizeUsdc: 500,
+        maxMonthlyVolumeUsdc: 5000,
+        maxActiveStrategies: 3,
+        maxConcurrentBacktests: 1,
+        maxBacktestHistoryDays: 90,
+        marketDataRateLimitPerMinute: 100,
+        maxMarketplaceListings: 2,
+        maxDailyStrategyExecutions: 500,
+      }),
+      setLimits: vi.fn().mockResolvedValue(undefined),
+    } as unknown as BetaLimitsConfigService;
+    service = new OrdersService(db as any, redis, config, {} as any, posthog, betaLimits);
   });
 
   afterEach(() => {
@@ -695,6 +718,282 @@ describe("OrdersService", () => {
         response: { code: "MONTHLY_VOLUME_EXCEEDED" },
       });
       expect(db.order.aggregate).not.toHaveBeenCalled();
+    });
+  });
+
+  // ── placeBatch ────────────────────────────────────────────────────────────
+
+  describe("placeBatch", () => {
+    function makeBatchDto(
+      orders: Array<{
+        tokenId?: string;
+        side?: OrderSideDto;
+        outcome?: OrderOutcomeDto;
+        size?: number;
+        price?: number;
+        orderType?: OrderTypeDto;
+      }>,
+    ) {
+      return {
+        orders: orders.map((o) => ({
+          tokenId: o.tokenId ?? "token-uuid-1",
+          side: o.side ?? OrderSideDto.BUY,
+          outcome: o.outcome ?? OrderOutcomeDto.YES,
+          size: o.size ?? 50,
+          price: o.price ?? 0.6,
+          orderType: o.orderType ?? OrderTypeDto.GTC,
+        })),
+      };
+    }
+
+    function makeToken(overrides: Record<string, unknown> = {}) {
+      return {
+        id: "token-uuid-1",
+        marketId: "market-uuid-1",
+        market: { id: "market-uuid-1", closed: false },
+        ...overrides,
+      };
+    }
+
+    it("publishes all order intents and returns results array", async () => {
+      db.user.findUniqueOrThrow.mockResolvedValue(
+        makeUser({ polymarketConnected: true }) as any,
+      );
+      db.order.aggregate.mockResolvedValue({ _sum: { size: 0 } } as any);
+      db.token.findMany.mockResolvedValue([
+        makeToken({ id: "token-uuid-1" }),
+        makeToken({
+          id: "token-uuid-2",
+          marketId: "market-uuid-2",
+          market: { id: "market-uuid-2", closed: false },
+        }),
+      ] as any);
+
+      const result = await service.placeBatch(
+        "user-uuid-1",
+        makeBatchDto([
+          {
+            tokenId: "token-uuid-1",
+            side: OrderSideDto.BUY,
+            outcome: OrderOutcomeDto.YES,
+            size: 50,
+            price: 0.6,
+          },
+          {
+            tokenId: "token-uuid-2",
+            side: OrderSideDto.SELL,
+            outcome: OrderOutcomeDto.NO,
+            size: 25,
+            price: 0.4,
+          },
+        ]),
+      );
+
+      expect(result.results).toHaveLength(2);
+      expect(result.results[0]).toMatchObject({
+        orderId: expect.stringMatching(/^[0-9a-f-]{36}$/),
+        intentId: expect.stringMatching(/^[0-9a-f-]{36}$/),
+        status: "PENDING",
+      });
+      expect(result.results[1]).toMatchObject({
+        orderId: expect.stringMatching(/^[0-9a-f-]{36}$/),
+        intentId: expect.stringMatching(/^[0-9a-f-]{36}$/),
+        status: "PENDING",
+      });
+      expect(result.results[0].orderId).not.toBe(result.results[1].orderId);
+      expect(result.results[0].intentId).not.toBe(result.results[1].intentId);
+    });
+
+    it("pre-fetches tokens with a single findMany query", async () => {
+      db.user.findUniqueOrThrow.mockResolvedValue(
+        makeUser({ polymarketConnected: true }) as any,
+      );
+      db.order.aggregate.mockResolvedValue({ _sum: { size: 0 } } as any);
+      db.token.findMany.mockResolvedValue([
+        makeToken({ id: "token-a" }),
+        makeToken({ id: "token-b" }),
+        makeToken({ id: "token-c" }),
+      ] as any);
+
+      await service.placeBatch(
+        "user-uuid-1",
+        makeBatchDto([
+          { tokenId: "token-a" },
+          { tokenId: "token-b" },
+          { tokenId: "token-c" },
+        ]),
+      );
+
+      expect(db.token.findMany).toHaveBeenCalledTimes(1);
+      expect(db.token.findMany).toHaveBeenCalledWith({
+        where: { id: { in: ["token-a", "token-b", "token-c"] } },
+        include: { market: true },
+      });
+      expect(db.token.findUniqueOrThrow).not.toHaveBeenCalled();
+    });
+
+    it("deduplicates repeated token IDs into a single findMany where clause", async () => {
+      db.user.findUniqueOrThrow.mockResolvedValue(
+        makeUser({ polymarketConnected: true }) as any,
+      );
+      db.order.aggregate.mockResolvedValue({ _sum: { size: 0 } } as any);
+      db.token.findMany.mockResolvedValue([
+        makeToken({ id: "token-shared" }),
+      ] as any);
+
+      await service.placeBatch(
+        "user-uuid-1",
+        makeBatchDto([
+          { tokenId: "token-shared" },
+          { tokenId: "token-shared" },
+          { tokenId: "token-shared" },
+        ]),
+      );
+
+      expect(db.token.findMany).toHaveBeenCalledTimes(1);
+      expect(db.token.findMany).toHaveBeenCalledWith({
+        where: { id: { in: ["token-shared"] } },
+        include: { market: true },
+      });
+    });
+
+    it("publishes each order to stream:orders with correct fields", async () => {
+      db.user.findUniqueOrThrow.mockResolvedValue(
+        makeUser({ polymarketConnected: true }) as any,
+      );
+      db.order.aggregate.mockResolvedValue({ _sum: { size: 0 } } as any);
+      db.token.findMany.mockResolvedValue([
+        makeToken({ id: "token-uuid-1", marketId: "market-uuid-1" }),
+        makeToken({
+          id: "token-uuid-2",
+          marketId: "market-uuid-2",
+          market: { id: "market-uuid-2", closed: false },
+        }),
+      ] as any);
+
+      await service.placeBatch(
+        "user-uuid-1",
+        makeBatchDto([
+          {
+            tokenId: "token-uuid-1",
+            side: OrderSideDto.BUY,
+            outcome: OrderOutcomeDto.YES,
+            size: 100,
+            price: 0.55,
+            orderType: OrderTypeDto.GTC,
+          },
+          {
+            tokenId: "token-uuid-2",
+            side: OrderSideDto.SELL,
+            outcome: OrderOutcomeDto.NO,
+            size: 75,
+            price: 0.45,
+            orderType: OrderTypeDto.FOK,
+          },
+        ]),
+      );
+
+      expect(redis.xadd).toHaveBeenCalledTimes(2);
+      expect(redis.xadd).toHaveBeenNthCalledWith(
+        1,
+        "stream:orders",
+        expect.objectContaining({
+          userId: "user-uuid-1",
+          marketId: "market-uuid-1",
+          tokenId: "token-uuid-1",
+          side: "BUY",
+          outcome: "YES",
+          size: "100",
+          price: "0.55",
+          orderType: "GTC",
+        }),
+      );
+      expect(redis.xadd).toHaveBeenNthCalledWith(
+        2,
+        "stream:orders",
+        expect.objectContaining({
+          userId: "user-uuid-1",
+          marketId: "market-uuid-2",
+          tokenId: "token-uuid-2",
+          side: "SELL",
+          outcome: "NO",
+          size: "75",
+          price: "0.45",
+          orderType: "FOK",
+        }),
+      );
+    });
+
+    it("throws BATCH_LIMIT_EXCEEDED when more than 15 orders", async () => {
+      db.user.findUniqueOrThrow.mockResolvedValue(
+        makeUser({ polymarketConnected: true }) as any,
+      );
+
+      const tooManyOrders = Array.from({ length: 16 }, (_, i) => ({
+        tokenId: `token-${i}`,
+        side: "BUY" as const,
+        outcome: "YES" as const,
+        size: 1,
+        price: 0.01,
+      }));
+
+      await expect(
+        service.placeBatch("user-uuid-1", {
+          orders: tooManyOrders,
+        } as any),
+      ).rejects.toMatchObject({
+        response: { code: "BATCH_LIMIT_EXCEEDED" },
+      });
+    });
+
+    it("throws WALLET_NOT_CONNECTED when user is not connected", async () => {
+      db.user.findUniqueOrThrow.mockResolvedValue(
+        makeUser({ polymarketConnected: false }) as any,
+      );
+
+      await expect(
+        service.placeBatch("user-uuid-1", makeBatchDto([{}]) as any),
+      ).rejects.toMatchObject({
+        response: { code: "WALLET_NOT_CONNECTED" },
+      });
+    });
+
+    it("throws MONTHLY_VOLUME_EXCEEDED when batch total exceeds cap", async () => {
+      db.user.findUniqueOrThrow.mockResolvedValue(
+        makeUser({ polymarketConnected: true }) as any,
+      );
+      (redis.get as any).mockResolvedValue("4990");
+
+      await expect(
+        service.placeBatch(
+          "user-uuid-1",
+          makeBatchDto([{ size: 50 }, { size: 50 }]) as any,
+        ),
+      ).rejects.toMatchObject({
+        response: { code: "MONTHLY_VOLUME_EXCEEDED" },
+      });
+    });
+
+    it("throws TOKEN_NOT_FOUND when a requested token does not exist", async () => {
+      db.user.findUniqueOrThrow.mockResolvedValue(
+        makeUser({ polymarketConnected: true }) as any,
+      );
+      db.order.aggregate.mockResolvedValue({ _sum: { size: 0 } } as any);
+      db.token.findMany.mockResolvedValue([
+        makeToken({ id: "token-uuid-1" }),
+      ] as any);
+
+      await expect(
+        service.placeBatch(
+          "user-uuid-1",
+          makeBatchDto([
+            { tokenId: "token-uuid-1" },
+            { tokenId: "missing-token" },
+          ]) as any,
+        ),
+      ).rejects.toMatchObject({
+        response: { code: "TOKEN_NOT_FOUND" },
+      });
     });
   });
 

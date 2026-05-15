@@ -185,3 +185,140 @@ describe("AccuracyService", () => {
     expect(result.brierScore).toBeCloseTo(0.25, 4);
   });
 });
+
+// ─── Leaderboard ──────────────────────────────────────────────────────────────
+
+describe("AccuracyService.getLeaderboard", () => {
+  let service: AccuracyService;
+  let db: MockDb;
+
+  beforeEach(() => {
+    db = createMockDb();
+    service = new AccuracyService(db as any);
+  });
+
+  it("returns empty paginated response when no resolved positions exist", async () => {
+    db.position.findMany.mockResolvedValue([] as any);
+
+    const result = await service.getLeaderboard({ period: "30d" });
+
+    expect(result.data).toEqual([]);
+    expect(result.total).toBe(0);
+    expect(result.page).toBe(1);
+    expect(result.totalPages).toBe(0);
+    expect(result.hasNext).toBe(false);
+  });
+
+  it("ranks users by win-rate descending", async () => {
+    // user-1: 2 positions, both won (100%)
+    // user-2: 2 positions, 1 won (50%)
+    db.position.findMany.mockResolvedValue([
+      makePosition({ id: "p1", userId: "user-1", realizedPnl: "10.00" }),
+      makePosition({ id: "p2", userId: "user-1", realizedPnl: "5.00" }),
+      makePosition({ id: "p3", userId: "user-2", realizedPnl: "8.00" }),
+      makePosition({ id: "p4", userId: "user-2", realizedPnl: "-2.00" }),
+    ] as any);
+    db.user.findMany.mockResolvedValue([
+      { id: "user-1", username: "alice", displayName: "Alice", avatarUrl: null },
+      { id: "user-2", username: "bob", displayName: null, avatarUrl: "/bob.png" },
+    ] as any);
+
+    const result = await service.getLeaderboard({ period: "30d" });
+
+    expect(result.data.length).toBe(2);
+    expect(result.data[0].userId).toBe("user-1");
+    expect(result.data[0].winRate).toBe("100.0");
+    expect(result.data[0].rank).toBe(1);
+    expect(result.data[0].username).toBe("alice");
+    expect(result.data[0].displayName).toBe("Alice");
+    expect(result.data[1].userId).toBe("user-2");
+    expect(result.data[1].winRate).toBe("50.0");
+    expect(result.data[1].rank).toBe(2);
+    expect(result.data[1].avatarUrl).toBe("/bob.png");
+  });
+
+  it("includes pnl and tradeCount in each entry", async () => {
+    db.position.findMany.mockResolvedValue([
+      makePosition({ id: "p1", userId: "user-1", realizedPnl: "15.5" }),
+      makePosition({ id: "p2", userId: "user-1", realizedPnl: "-3.2" }),
+      makePosition({ id: "p3", userId: "user-1", realizedPnl: "7.0" }),
+    ] as any);
+    db.user.findMany.mockResolvedValue([
+      { id: "user-1", username: "trader", displayName: null, avatarUrl: null },
+    ] as any);
+
+    const result = await service.getLeaderboard({ period: "allTime" });
+
+    expect(result.data[0].pnl).toBe("19.3");
+    expect(result.data[0].tradeCount).toBe(3);
+    expect(result.data[0].winRate).toBe("66.7"); // 2 wins out of 3
+  });
+
+  it("respects page and limit pagination", async () => {
+    const positions = Array.from({ length: 25 }, (_, i) =>
+      makePosition({ id: `p${i}`, userId: `user-${i}`, realizedPnl: "10.00" }),
+    );
+    db.position.findMany.mockResolvedValue(positions as any);
+    db.user.findMany.mockResolvedValue(
+      positions.map((p) => ({
+        id: p.userId,
+        username: `user${p.userId}`,
+        displayName: null,
+        avatarUrl: null,
+      })) as any,
+    );
+
+    const result = await service.getLeaderboard({ period: "7d", page: 2, limit: 10 });
+
+    expect(result.page).toBe(2);
+    expect(result.limit).toBe(10);
+    expect(result.data.length).toBe(10);
+    expect(result.total).toBe(25);
+    expect(result.totalPages).toBe(3);
+    expect(result.hasNext).toBe(true);
+    expect(result.data[0].rank).toBe(11);
+  });
+
+  it("defaults to page=1 limit=20", async () => {
+    db.position.findMany.mockResolvedValue([] as any);
+
+    const result = await service.getLeaderboard({});
+
+    expect(result.page).toBe(1);
+    expect(result.limit).toBe(20);
+  });
+
+  it("caps limit at 100", async () => {
+    db.position.findMany.mockResolvedValue([] as any);
+
+    const result = await service.getLeaderboard({ limit: 200 });
+
+    expect(result.limit).toBe(100);
+  });
+
+  it("falls back to empty username when user profile is missing", async () => {
+    db.position.findMany.mockResolvedValue([
+      makePosition({ id: "p1", userId: "ghost", realizedPnl: "1.00" }),
+    ] as any);
+    db.user.findMany.mockResolvedValue([] as any);
+
+    const result = await service.getLeaderboard({ period: "30d" });
+
+    expect(result.data[0].username).toBe("");
+    expect(result.data[0].displayName).toBeNull();
+    expect(result.data[0].avatarUrl).toBeNull();
+  });
+
+  it("clamps winRate to 0 when user has no resolved positions after filtering", async () => {
+    db.position.findMany.mockResolvedValue([
+      makePosition({ id: "p1", userId: "u1", realizedPnl: "0.00" }),
+    ] as any);
+    db.user.findMany.mockResolvedValue([
+      { id: "u1", username: "zero", displayName: null, avatarUrl: null },
+    ] as any);
+
+    const result = await service.getLeaderboard({ period: "allTime" });
+
+    expect(result.data[0].winRate).toBe("0.0"); // 0 wins, 0 total handled by total>0 guard
+  });
+});

@@ -31,18 +31,18 @@ enum AdminRole {
 // ─────────────────────────────────────────────
 
 model Admin {
-  id            String    @id @default(uuid())
-  email         String    @unique @db.VarChar(255)
-  passwordHash  String    @db.VarChar(255)
-  displayName   String    @db.VarChar(100)
-  role          AdminRole
-  active        Boolean   @default(true)
+  id              String    @id @default(uuid())
+  email           String    @unique @db.VarChar(255)
+  passwordHash    String    @db.VarChar(255)
+  displayName     String    @db.VarChar(100)
+  role            AdminRole
+  active          Boolean   @default(true)
   totpSecret      String?   @db.VarChar(255)
   totpEnabled     Boolean   @default(false)
   totpEnabledAt   DateTime?
   totpBackupCodes String[]
   createdAt       DateTime  @default(now())
-  lastSeen      DateTime  @default(now())
+  lastSeen        DateTime  @default(now())
 
   sessions  AdminSession[]
   auditLogs AuditLog[]

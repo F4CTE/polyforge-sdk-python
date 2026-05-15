@@ -178,7 +178,21 @@ describe("StrategyRegistryService — circular dependency", () => {
     redis = makeRedisMock();
     prisma = makePrismaMock();
     state = makeStateMock();
-    svc = new StrategyRegistryService(prisma, redis, state);
+    const betaLimits = {
+      getLimit: vi.fn().mockResolvedValue(3),
+      getAllLimits: vi.fn().mockResolvedValue({
+        maxActiveStrategies: 3,
+        maxConcurrentBacktests: 1,
+        maxBacktestHistoryDays: 90,
+        maxMonthlyVolumeUsdc: 5000,
+        maxPositionSizeUsdc: 500,
+        marketDataRateLimitPerMinute: 100,
+        maxMarketplaceListings: 2,
+        maxDailyStrategyExecutions: 500,
+      }),
+      setLimits: vi.fn(),
+    } as any;
+    svc = new StrategyRegistryService(prisma, redis, state, betaLimits);
   });
 
   it("detects A -> B -> C -> A circular dependency", async () => {
@@ -241,7 +255,21 @@ describe("StrategyRegistryService — startAsChild()", () => {
     redis = makeRedisMock();
     prisma = makePrismaMock();
     state = makeStateMock();
-    svc = new StrategyRegistryService(prisma, redis, state);
+    const betaLimits = {
+      getLimit: vi.fn().mockResolvedValue(3),
+      getAllLimits: vi.fn().mockResolvedValue({
+        maxActiveStrategies: 3,
+        maxConcurrentBacktests: 1,
+        maxBacktestHistoryDays: 90,
+        maxMonthlyVolumeUsdc: 5000,
+        maxPositionSizeUsdc: 500,
+        marketDataRateLimitPerMinute: 100,
+        maxMarketplaceListings: 2,
+        maxDailyStrategyExecutions: 500,
+      }),
+      setLimits: vi.fn(),
+    } as any;
+    svc = new StrategyRegistryService(prisma, redis, state, betaLimits);
   });
 
   // Helper: add a fake runner to the registry without actually starting one
@@ -403,7 +431,21 @@ describe("StrategyRegistryService — max concurrent children", () => {
     redis = makeRedisMock();
     prisma = makePrismaMock();
     state = makeStateMock();
-    svc = new StrategyRegistryService(prisma, redis, state);
+    const betaLimits = {
+      getLimit: vi.fn().mockResolvedValue(3),
+      getAllLimits: vi.fn().mockResolvedValue({
+        maxActiveStrategies: 3,
+        maxConcurrentBacktests: 1,
+        maxBacktestHistoryDays: 90,
+        maxMonthlyVolumeUsdc: 5000,
+        maxPositionSizeUsdc: 500,
+        marketDataRateLimitPerMinute: 100,
+        maxMarketplaceListings: 2,
+        maxDailyStrategyExecutions: 500,
+      }),
+      setLimits: vi.fn(),
+    } as any;
+    svc = new StrategyRegistryService(prisma, redis, state, betaLimits);
   });
 
   it("rejects more than 10 concurrent sub-strategies per parent", async () => {

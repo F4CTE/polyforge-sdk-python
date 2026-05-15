@@ -25,6 +25,34 @@ function expectRequiredIdempotencyKey(method: object) {
   );
 }
 
+describe("OrdersController — bulk cancel routing", () => {
+  it("cancelBulk is decorated with DELETE method", () => {
+    const method: unknown = Reflect.getMetadata(
+      "method",
+      OrdersController.prototype.cancelBulk,
+    );
+    const path: unknown = Reflect.getMetadata(
+      "path",
+      OrdersController.prototype.cancelBulk,
+    );
+    expect(method).toBe(3); // RequestMethod.DELETE
+    expect(path).toBe("bulk");
+  });
+
+  it("cancelBulkPost is decorated with POST method and same path", () => {
+    const method: unknown = Reflect.getMetadata(
+      "method",
+      OrdersController.prototype.cancelBulkPost,
+    );
+    const path: unknown = Reflect.getMetadata(
+      "path",
+      OrdersController.prototype.cancelBulkPost,
+    );
+    expect(method).toBe(1); // RequestMethod.POST
+    expect(path).toBe("bulk");
+  });
+});
+
 describe("OrdersController — @Throttle decorator coverage", () => {
   it("redeemPosition has @Throttle with limit and ttl matching sibling endpoints", () => {
     const method = OrdersController.prototype.redeemPosition;

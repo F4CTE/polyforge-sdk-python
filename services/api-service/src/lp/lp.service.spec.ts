@@ -124,15 +124,14 @@ describe("LpService", () => {
   it("creates 2 orders (buy + sell) on happy path", async () => {
     db.user.findUnique.mockResolvedValue(makeUser() as any);
     db.market.findUnique.mockResolvedValue(makeMarket() as any);
-    db.order.create.mockResolvedValueOnce({ id: "buy-order-id" } as any);
-    db.order.create.mockResolvedValueOnce({ id: "sell-order-id" } as any);
 
     const result = await service.provideLiquidity("user-1", makeDto());
 
-    expect(db.order.create).toHaveBeenCalledTimes(2);
+    expect(db.order.create).not.toHaveBeenCalled();
     expect(xaddFn).toHaveBeenCalledTimes(2);
-    expect(result.buyOrderId).toBe("buy-order-id");
-    expect(result.sellOrderId).toBe("sell-order-id");
+    expect(result.buyOrderId).toBeTypeOf("string");
+    expect(result.sellOrderId).toBeTypeOf("string");
+    expect(result.buyOrderId).not.toBe(result.sellOrderId);
     expect(result.status).toBe("PENDING");
     expect(result.marketId).toBe("market-1");
     expect(result.amountDeployed).toBe(100);
@@ -206,7 +205,6 @@ describe("LpService", () => {
   it("sends correct data to Redis stream", async () => {
     db.user.findUnique.mockResolvedValue(makeUser() as any);
     db.market.findUnique.mockResolvedValue(makeMarket() as any);
-    db.order.create.mockResolvedValue({ id: "order-id" } as any);
 
     await service.provideLiquidity("user-1", makeDto());
 
@@ -219,6 +217,8 @@ describe("LpService", () => {
       side: "BUY",
       outcome: "YES",
     });
+    expect(buyCall[1].orderId).toBeTypeOf("string");
+    expect(buyCall[1].intentId).toBeTypeOf("string");
 
     // Second xadd call is the sell order
     const sellCall = xaddFn.mock.calls[1];
@@ -229,5 +229,37 @@ describe("LpService", () => {
       side: "SELL",
       outcome: "YES",
     });
+    expect(sellCall[1].orderId).toBeTypeOf("string");
+    expect(sellCall[1].intentId).toBeTypeOf("string");
+    expect(sellCall[1].orderId).not.toBe(buyCall[1].orderId);
+  });
+
+  it("throws UnprocessableEntityException when xadd fails for buy order", async () => {
+    db.user.findUnique.mockResolvedValue(makeUser() as any);
+    db.market.findUnique.mockResolvedValue(makeMarket() as any);
+    xaddFn.mockRejectedValueOnce(new Error("Redis connection lost"));
+
+    await expect(
+      service.provideLiquidity("user-1", makeDto() as any),
+    ).rejects.toMatchObject({
+      response: { code: "LIQUIDITY_PUBLISH_FAILED" },
+    });
+    // Only buy order was attempted (failed immediately)
+    expect(xaddFn).toHaveBeenCalledTimes(1);
+  });
+
+  it("throws UnprocessableEntityException when xadd fails for sell order", async () => {
+    db.user.findUnique.mockResolvedValue(makeUser() as any);
+    db.market.findUnique.mockResolvedValue(makeMarket() as any);
+    xaddFn
+      .mockResolvedValueOnce("stream-id") // buy succeeds
+      .mockRejectedValueOnce(new Error("Redis connection lost")); // sell fails
+
+    await expect(
+      service.provideLiquidity("user-1", makeDto() as any),
+    ).rejects.toMatchObject({
+      response: { code: "LIQUIDITY_PUBLISH_FAILED" },
+    });
+    expect(xaddFn).toHaveBeenCalledTimes(2);
   });
 });

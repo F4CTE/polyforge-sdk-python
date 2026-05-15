@@ -1203,6 +1203,7 @@ async function main() {
       status: 'CONFIRMED',
       fillSize: '100.000000',
       fillPrice: '0.480000',
+      intentId: 'seed-alice-order-1',
       createdAt: hoursAgo(36),
     },
   });
@@ -1232,6 +1233,7 @@ async function main() {
       status: 'CONFIRMED',
       fillSize: '25.000000',
       fillPrice: '0.522000',
+      intentId: 'seed-bob-order-1',
       createdAt: hoursAgo(6),
     },
   });
@@ -1575,8 +1577,8 @@ async function main() {
         triggers: [{ id: 't1', type: 'EVERY_TICK', params: {} }],
         conditions: [{ id: 'c1', type: 'PRICE_IN_RANGE', params: { min: '0.10', max: '0.90' } }],
         actions: [
-          { id: 'a1', type: 'SET_STOP_LOSS', params: { pct: '10' } },
-          { id: 'a2', type: 'TAKE_PROFIT', params: { pct: '20' } },
+          { id: 'a1', type: 'set_stop_loss', params: { pct: '10' } },
+          { id: 'a2', type: 'take_profit', params: { pct: '20' } },
         ],
         safety: [
           { id: 's1', type: 'DAILY_LOSS_LIMIT', params: { maxLossUsdc: '100' } },

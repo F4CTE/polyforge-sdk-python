@@ -26,6 +26,7 @@ pub struct EvalContext {
     pub daily_pnl: f64,
     pub total_exposure: f64,
     pub open_positions: u32,
+    pub pending_orders: u32,
     pub consecutive_losses: u32,
     pub orders_today: u32,
     pub variables: std::collections::HashMap<String, f64>,
@@ -90,7 +91,7 @@ fn check_safety(blocks: &[Block], ctx: &EvalContext) -> (bool, Option<String>) {
                     return (false, Some(format!("Drawdown exceeds limit")));
                 }
             }
-            _ => {} // Unknown safety block — skip
+            _ => { return (false, Some(format!("Unknown safety block type: {}", block.block_type))); }
         }
     }
     (true, None)
@@ -155,14 +156,14 @@ fn check_conditions(blocks: &[Block], ctx: &EvalContext) -> bool {
             }
             "MAX_POSITION" => {
                 let max = get_u32(&block.config, "maxPositions", 0);
-                max == 0 || ctx.open_positions < max
+                max == 0 || (ctx.open_positions + ctx.pending_orders) < max
             }
-            "NO_EXISTING_POSITION" => ctx.open_positions == 0,
+            "NO_EXISTING_POSITION" => ctx.open_positions == 0 && ctx.pending_orders == 0,
             "DAILY_LOSS_LIMIT" => {
                 let limit = resolve_f64(&block.config, "limit", ctx);
                 limit <= 0.0 || ctx.daily_pnl > -limit
             }
-            _ => true, // Unknown condition — pass
+            _ => false, // Unknown condition — fail closed
         }
     })
 }

@@ -38,6 +38,7 @@ describe("wasmEvaluator", () => {
     daily_pnl: 0,
     total_exposure: 0,
     open_positions: 0,
+    pending_orders: 0,
     consecutive_losses: 0,
     orders_today: 0,
     variables: {},

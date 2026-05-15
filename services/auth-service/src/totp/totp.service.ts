@@ -19,7 +19,9 @@ const ALGORITHM = 'aes-256-gcm';
 const TOTP_FAIL_MAX = 5; // lock after 5 consecutive failures
 const TOTP_FAIL_WINDOW = 900; // 15-minute lockout window (seconds)
 const MAX_BCRYPT_COMPARISONS = 3; // cap bcrypt ops per verify() call to prevent CPU exhaustion
+const TOTP_REPLAY_WINDOW = 90; // covers adjacent valid TOTP steps
 const failKey = (userId: string) => `totp:fail:${userId}`;
+const usedKey = (userId: string, code: string) => `totp:used:${userId}:${code}`;
 
 @Injectable()
 export class TotpService {
@@ -109,6 +111,22 @@ export class TotpService {
       );
     }
 
+    // Check replay — the same TOTP code must not be used twice within its validity window
+    const client = this.redis.getClient();
+    const consumed = await client.set(
+      usedKey(userId, code),
+      '1',
+      'EX',
+      TOTP_REPLAY_WINDOW,
+      'NX',
+    );
+    if (consumed !== 'OK') {
+      throw new HttpException(
+        { code: 'TOTP_INVALID', message: 'TOTP code already used' },
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
     // Generate 10 backup codes — 80-bit entropy (10 bytes), SHA-256 hashed.
     // 80-bit keyspace (2^80) is computationally infeasible to brute-force even
     // with SHA-256, so bcrypt is unnecessary and enables CPU-exhaustion DoS.
@@ -194,6 +212,22 @@ export class TotpService {
       );
     }
 
+    // Check replay — the same TOTP code must not be used twice within its validity window
+    const client = this.redis.getClient();
+    const consumed = await client.set(
+      usedKey(userId, totpCode),
+      '1',
+      'EX',
+      TOTP_REPLAY_WINDOW,
+      'NX',
+    );
+    if (consumed !== 'OK') {
+      throw new HttpException(
+        { code: 'INVALID_TOTP', message: 'TOTP code already used' },
+        HttpStatus.UNAUTHORIZED,
+      );
+    }
+
     await this.prisma.user.update({
       where: { id: userId },
       data: {
@@ -271,10 +305,28 @@ export class TotpService {
     const secret = this.decrypt(user.totpSecret);
     let valid = false;
     try {
-      if (verifySync({ token: code, secret, strategy: 'totp' }).valid)
+      if (verifySync({ token: code, secret, strategy: 'totp' }).valid) {
         valid = true;
+      }
     } catch {
       // invalid code format — fall through to backup code check
+    }
+
+    if (valid) {
+      const consumed = await client.set(
+        usedKey(userId, code),
+        '1',
+        'EX',
+        TOTP_REPLAY_WINDOW,
+        'NX',
+      );
+      if (consumed !== 'OK') {
+        // Count replay attempts toward the per-account TOTP lockout
+        const newCount = await client.incr(failKey(userId));
+        if (newCount === 1)
+          await client.expire(failKey(userId), TOTP_FAIL_WINDOW);
+        return false;
+      }
     }
 
     // Try backup codes — hybrid: bcrypt for existing codes ($2b$ prefix), SHA-256 for new.

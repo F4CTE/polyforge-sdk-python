@@ -17,3 +17,21 @@ export function safeDecimalToNumber(value: unknown, fallback?: number): number {
 export function parseFiniteDecimal(value: unknown): number | null {
   return isFiniteDecimal(value) ? Number(String(value).trim()) : null;
 }
+
+export function validateStopLossTakeProfitPct(
+  pct: unknown,
+  blockType: string,
+): number {
+  if (!isFiniteDecimal(pct)) {
+    throw new Error(
+      `Invalid ${blockType} pct: ${String(pct)} (must be a finite decimal)`,
+    );
+  }
+  const num = Number(String(pct).trim());
+  if (num <= 0 || num >= 1) {
+    throw new Error(
+      `Invalid ${blockType} pct: ${num} (must be > 0 and < 1, e.g. 0.1 for 10%)`,
+    );
+  }
+  return num;
+}

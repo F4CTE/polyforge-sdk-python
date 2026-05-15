@@ -1,18 +1,19 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { PrismaService } from "@polyforge/shared-db";
-import { RedisService } from "@polyforge/shared-redis";
+import { RedisService, BetaLimitsConfigService } from "@polyforge/shared-redis";
 import { Prisma } from "@prisma/client";
-import { BETA_LIMITS } from "../common/beta-limits.config";
 import {
   Block,
   PriceState,
   SimPosition,
   createSimState,
+  clearPendingOrders,
   checkSafety,
   checkTriggers,
   checkConditions,
   executeActions,
   checkAutoExits,
+  computeMaxLookback,
   SimFill,
 } from "./evaluator";
 import { MetricsService, FillRecord } from "./metrics.service";
@@ -38,6 +39,7 @@ export class BacktestService {
     private readonly prisma: PrismaService,
     private readonly redis: RedisService,
     private readonly metrics: MetricsService,
+    private readonly betaLimits: BetaLimitsConfigService,
   ) {}
 
   // ─── Entry point ─────────────────────────────────────────────────────────
@@ -58,7 +60,10 @@ export class BacktestService {
           id: { not: runId },
         },
       });
-      if (runningCount >= BETA_LIMITS.maxConcurrentBacktests) {
+      const maxConcurrent = await this.betaLimits.getLimit(
+        "maxConcurrentBacktests",
+      );
+      if (runningCount >= maxConcurrent) {
         this.logger.log(
           `Backtest run ${runId} deferred — user ${run.userId} already has ${runningCount} running`,
         );
@@ -129,8 +134,14 @@ export class BacktestService {
       const state = createSimState();
       const positions = new Map<string, SimPosition>();
       const prices = new Map<string, PriceState>();
+      const priceHistory = new Map<string, number[]>();
       const fillRecs: FillRecord[] = [];
       const pending: Prisma.BacktestOrderCreateManyInput[] = [];
+
+      // Compute the maximum TA lookback required by triggers, with a
+      // sensible floor for strategies that have no TA triggers configured
+      const computedLookback = computeMaxLookback(triggers);
+      const maxLookback = computedLookback > 0 ? computedLookback : 200;
 
       let cumulativePnl = 0;
       let currentDay = "";
@@ -159,6 +170,20 @@ export class BacktestService {
         };
         prices.set(tokenId, ps);
 
+        // Accumulate rolling price history for TA indicators
+        if (!priceHistory.has(tokenId)) {
+          priceHistory.set(tokenId, []);
+        }
+        const hist = priceHistory.get(tokenId)!;
+        hist.push(ps.price);
+        // Trim to configured lookback to prevent unbounded growth on long date ranges
+        if (hist.length > maxLookback) {
+          priceHistory.set(tokenId, hist.slice(-maxLookback));
+        }
+
+        // Clear stale pending orders from previous ticks before safety/conditions
+        clearPendingOrders(state);
+
         // Auto-exits (stop-loss / take-profit)
         const autoFills = checkAutoExits(state, prices, positions);
         for (const fill of autoFills) {
@@ -183,7 +208,7 @@ export class BacktestService {
         }
 
         // Trigger + condition gates
-        if (!checkTriggers(triggers, prices)) continue;
+        if (!checkTriggers(triggers, prices, priceHistory, tokenId)) continue;
         if (!checkConditions(conditions, state, prices, positions, nowMs))
           continue;
 
@@ -243,7 +268,9 @@ export class BacktestService {
   private extractTokenIds(blocks: Block[]): string[] {
     const ids = new Set<string>();
     for (const b of blocks) {
-      const tokenId = String((b.config ?? {}).tokenId ?? "").trim();
+      const tokenId = String(
+        b.params?.tokenId ?? b.config?.tokenId ?? "",
+      ).trim();
       if (tokenId) ids.add(tokenId);
     }
     return Array.from(ids);
@@ -287,18 +314,6 @@ export class BacktestService {
       const existing = positions.get(tokenId);
       if (existing) {
         const totalSize = existing.size + size;
-        if (totalSize <= 0) {
-          positions.delete(tokenId);
-          state.betsToday++;
-          state.totalOrders++;
-          state.lastTradeAt = simulatedAt.getTime();
-          return {
-            side,
-            pnl,
-            equityCurve,
-            simulatedAt,
-          };
-        }
         const avgPrice =
           (existing.avgPrice * existing.size + price * size) / totalSize;
         positions.set(tokenId, { size: totalSize, avgPrice });

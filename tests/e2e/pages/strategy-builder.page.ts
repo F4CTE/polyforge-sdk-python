@@ -125,8 +125,10 @@ export class StrategyBuilderPage {
             await showBtn.click();
             await expect(this.nameInput).toBeVisible({ timeout: 5_000 });
         }
-        // Block items are draggable divs inside the palette with the block label text
-        const block = this.page.locator('[draggable="true"]', { hasText: blockLabel });
+        const block = this.page
+            .getByRole('button', { name: new RegExp(`^Add ${blockLabel.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')} block$`) })
+            .or(this.page.locator('[draggable="true"]', { hasText: blockLabel }))
+            .first();
         await expect(block).toBeVisible({ timeout: 5_000 });
         await block.click();
     }

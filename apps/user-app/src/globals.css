@@ -48,11 +48,29 @@
   border-radius: var(--radius-pf);
 }
 
+/* Keyboard focus indicator for nodes (overrides vendor's subtle box-shadow) */
+.react-flow__node:focus-visible > div {
+  outline: 2px solid var(--accent-default);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px
+    color-mix(in srgb, var(--accent-default) 30%, transparent);
+  border-radius: var(--radius-pf);
+}
+
+/* Edge focus indicator enhancement */
+.react-flow__edge:focus-visible .react-flow__edge-path {
+  stroke: var(--accent-default) !important;
+  stroke-width: 3 !important;
+  filter: drop-shadow(0 0 3px var(--accent-default));
+}
+
 /* ─── Minimap polish ─────────────────────────────────────────────────────── */
 .react-flow__minimap {
   border-radius: var(--radius-pf) !important;
   border: 1px solid var(--border-subtle) !important;
-  box-shadow: 0 4px 24px color-mix(in srgb, black 25%, transparent), 0 0 0 1px color-mix(in srgb, white 4%, transparent) !important;
+  box-shadow:
+    0 4px 24px color-mix(in srgb, black 25%, transparent),
+    0 0 0 1px color-mix(in srgb, white 4%, transparent) !important;
   overflow: hidden !important;
   opacity: 0.85;
   transition: opacity var(--transition-duration-panel) ease;
@@ -65,7 +83,9 @@
 }
 [data-theme="light"] .react-flow__minimap {
   background: color-mix(in srgb, var(--bg-app) 85%, transparent) !important;
-  box-shadow: 0 4px 16px color-mix(in srgb, black 8%, transparent), 0 0 0 1px color-mix(in srgb, black 5%, transparent) !important;
+  box-shadow:
+    0 4px 16px color-mix(in srgb, black 8%, transparent),
+    0 0 0 1px color-mix(in srgb, black 5%, transparent) !important;
 }
 /* Minimap viewport mask (the draggable rectangle) */
 .react-flow__minimap-mask {
@@ -111,14 +131,33 @@
 
 /* ─── Auth background ────────────────────────────────────────────────── */
 .auth-bg-gradient {
-  background: radial-gradient(ellipse at 50% 0%, color-mix(in srgb, var(--accent-default) 10%, transparent) 0%, transparent 50%), radial-gradient(ellipse at 80% 100%, color-mix(in srgb, var(--accent-default) 5%, transparent) 0%, transparent 40%);
+  background:
+    radial-gradient(
+      ellipse at 50% 0%,
+      color-mix(in srgb, var(--accent-default) 10%, transparent) 0%,
+      transparent 50%
+    ),
+    radial-gradient(
+      ellipse at 80% 100%,
+      color-mix(in srgb, var(--accent-default) 5%, transparent) 0%,
+      transparent 40%
+    );
 }
 
 @keyframes float {
-  0%, 100% { transform: translateY(0) rotate(0deg); }
-  25% { transform: translateY(-15px) rotate(1deg); }
-  50% { transform: translateY(-8px) rotate(-1deg); }
-  75% { transform: translateY(-20px) rotate(0.5deg); }
+  0%,
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  25% {
+    transform: translateY(-15px) rotate(1deg);
+  }
+  50% {
+    transform: translateY(-8px) rotate(-1deg);
+  }
+  75% {
+    transform: translateY(-20px) rotate(0.5deg);
+  }
 }
 
 .auth-float {
@@ -159,6 +198,22 @@
 /* Handle border picks up --node-color */
 .builder-handle {
   border-color: var(--node-color) !important;
+}
+
+/* Focus indicator for keyboard-navigable handles */
+.builder-handle:focus-visible {
+  outline: 2px solid var(--accent-default) !important;
+  outline-offset: 3px !important;
+  box-shadow: 0 0 0 4px
+    color-mix(in srgb, var(--accent-default) 30%, transparent) !important;
+}
+
+/* Make handles visibly glow during connection drag — mouse users */
+.react-flow__handle.connectingfrom,
+.react-flow__handle.connectionindicator {
+  box-shadow: 0 0 0 3px
+    color-mix(in srgb, var(--accent-default) 40%, transparent);
+  transform: scale(1.4);
 }
 
 /* Dual-handle positioning for 2-input nodes */
@@ -205,17 +260,50 @@
 
 /* ─── Strategy canvas animations ─────────────────────────────────────── */
 @keyframes blockPulse {
-  0%, 100% { box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent-default) 18%, transparent), 0 0 8px color-mix(in srgb, var(--accent-default) 10%, transparent); }
-  50%       { box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent-default) 42%, transparent), 0 0 22px color-mix(in srgb, var(--accent-default) 22%, transparent); }
+  0%,
+  100% {
+    box-shadow:
+      0 0 0 1px color-mix(in srgb, var(--accent-default) 18%, transparent),
+      0 0 8px color-mix(in srgb, var(--accent-default) 10%, transparent);
+  }
+  50% {
+    box-shadow:
+      0 0 0 2px color-mix(in srgb, var(--accent-default) 42%, transparent),
+      0 0 22px color-mix(in srgb, var(--accent-default) 22%, transparent);
+  }
 }
 @keyframes blockFired {
-  0%   { box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent-default) 90%, transparent), 0 0 40px color-mix(in srgb, var(--accent-default) 55%, transparent); transform: scale(1.025); }
-  55%  { box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent-default) 50%, transparent), 0 0 18px color-mix(in srgb, var(--accent-default) 28%, transparent); transform: scale(1.005); }
-  100% { box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent-default) 18%, transparent), 0 0 8px color-mix(in srgb, var(--accent-default) 10%, transparent); transform: scale(1); }
+  0% {
+    box-shadow:
+      0 0 0 3px color-mix(in srgb, var(--accent-default) 90%, transparent),
+      0 0 40px color-mix(in srgb, var(--accent-default) 55%, transparent);
+    transform: scale(1.025);
+  }
+  55% {
+    box-shadow:
+      0 0 0 2px color-mix(in srgb, var(--accent-default) 50%, transparent),
+      0 0 18px color-mix(in srgb, var(--accent-default) 28%, transparent);
+    transform: scale(1.005);
+  }
+  100% {
+    box-shadow:
+      0 0 0 1px color-mix(in srgb, var(--accent-default) 18%, transparent),
+      0 0 8px color-mix(in srgb, var(--accent-default) 10%, transparent);
+    transform: scale(1);
+  }
 }
 @keyframes safetyPulse {
-  0%, 100% { box-shadow: 0 0 0 1px color-mix(in srgb, var(--loss) 15%, transparent), 0 0 6px color-mix(in srgb, var(--loss) 8%, transparent); }
-  50%       { box-shadow: 0 0 0 2px color-mix(in srgb, var(--loss) 35%, transparent), 0 0 16px color-mix(in srgb, var(--loss) 18%, transparent); }
+  0%,
+  100% {
+    box-shadow:
+      0 0 0 1px color-mix(in srgb, var(--loss) 15%, transparent),
+      0 0 6px color-mix(in srgb, var(--loss) 8%, transparent);
+  }
+  50% {
+    box-shadow:
+      0 0 0 2px color-mix(in srgb, var(--loss) 35%, transparent),
+      0 0 16px color-mix(in srgb, var(--loss) 18%, transparent);
+  }
 }
 
 /* ─── Correlation matrix ─────────────────────────────────────────────── */
@@ -233,7 +321,9 @@
 .tour-highlight {
   position: relative;
   z-index: 9999 !important;
-  box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent-default) 30%, transparent), 0 0 20px color-mix(in srgb, var(--accent-default) 10%, transparent) !important;
+  box-shadow:
+    0 0 0 4px color-mix(in srgb, var(--accent-default) 30%, transparent),
+    0 0 20px color-mix(in srgb, var(--accent-default) 10%, transparent) !important;
   border-radius: var(--radius-pf);
 }
 

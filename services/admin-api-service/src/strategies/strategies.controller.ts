@@ -22,7 +22,8 @@ import {
 } from "../common/decorators/current-admin.decorator";
 import { AdminJwtPayload, AdminRole } from "@polyforge/shared-types";
 
-@UseGuards(AdminJwtGuard)
+@UseGuards(AdminJwtGuard, RolesGuard)
+@Roles(AdminRole.SUPER_ADMIN, AdminRole.ADMIN)
 @Controller("strategies")
 export class StrategiesController {
   constructor(
@@ -42,7 +43,6 @@ export class StrategiesController {
   }
 
   @Post("templates")
-  @UseGuards(RolesGuard)
   @Roles(AdminRole.SUPER_ADMIN)
   async createTemplate(
     @Body("strategyId", ParseUUIDPipe) strategyId: string,
@@ -61,6 +61,8 @@ export class StrategiesController {
   }
 
   @Post(":id/force-stop")
+  @UseGuards(RolesGuard)
+  @Roles(AdminRole.SUPER_ADMIN, AdminRole.ADMIN)
   async forceStop(
     @Param("id", ParseUUIDPipe) id: string,
     @CurrentAdmin() admin: AdminJwtPayload,
@@ -78,6 +80,8 @@ export class StrategiesController {
   }
 
   @Patch(":id/unpublish")
+  @UseGuards(RolesGuard)
+  @Roles(AdminRole.SUPER_ADMIN, AdminRole.ADMIN)
   async unpublish(
     @Param("id", ParseUUIDPipe) id: string,
     @CurrentAdmin() admin: AdminJwtPayload,

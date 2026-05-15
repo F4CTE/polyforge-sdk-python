@@ -31,8 +31,9 @@ import { ImportStrategyDto } from "./dto/import-strategy.dto";
 import { CreateFromDescriptionDto } from "./dto/create-from-description.dto";
 import { PaginationDto } from "../common/dto/pagination.dto";
 import { LlmService } from "../news/llm.service";
-import { BETA_LIMITS } from "../common/beta-limits.config";
+import { BetaLimitsConfigService } from "@polyforge/shared-redis";
 import { assertCurrentUsRailTermsAccepted } from "../common/us-rail-terms";
+import { validateBlockConfigs } from "./validation/block-config.validator";
 
 const MAX_COMMENTS_PER_USER_PER_STRATEGY = 50;
 
@@ -47,6 +48,7 @@ export class StrategiesService {
     private readonly client: InternalClientService,
     private readonly llm: LlmService,
     private readonly posthog: PosthogService,
+    private readonly betaLimits: BetaLimitsConfigService,
   ) {
     this.engineUrl = this.config.get<string>(
       "STRATEGY_ENGINE_URL",
@@ -81,11 +83,24 @@ export class StrategiesService {
     const count = await this.prisma.strategy.count({
       where: { userId, status: { not: StrategyStatus.ARCHIVED } },
     });
-    if (count >= BETA_LIMITS.maxActiveStrategies) {
+    const maxActive = await this.betaLimits.getLimit("maxActiveStrategies");
+    if (count >= maxActive) {
       throw new UnprocessableEntityException({
         code: "STRATEGY_LIMIT_REACHED",
-        message: `Beta limit: maximum ${BETA_LIMITS.maxActiveStrategies} active strategies allowed. Archive existing strategies to create new ones.`,
+        message: `Beta limit: maximum ${maxActive} active strategies allowed. Archive existing strategies to create new ones.`,
       });
+    }
+
+    // Validate block config parameters (stop-loss / take-profit pct)
+    for (const blocks of [
+      dto.triggers,
+      dto.conditions,
+      dto.actions,
+      dto.safety,
+      dto.logicBlocks,
+      dto.calcBlocks,
+    ]) {
+      if (blocks) validateBlockConfigs(blocks);
     }
 
     // Auto-assign US rail venue when user is a verified US participant with US credentials.
@@ -189,6 +204,16 @@ export class StrategiesService {
           message: "Cannot edit blocks while strategy is running",
         });
       }
+    }
+
+    // Validate block config parameters (stop-loss / take-profit pct)
+    for (const blocks of [
+      dto.triggers,
+      dto.conditions,
+      dto.actions,
+      dto.safety,
+    ]) {
+      if (blocks) validateBlockConfigs(blocks);
     }
 
     const data: Prisma.StrategyUpdateInput = {
@@ -685,10 +710,11 @@ export class StrategiesService {
     const count = await this.prisma.strategy.count({
       where: { userId, status: { not: StrategyStatus.ARCHIVED } },
     });
-    if (count >= BETA_LIMITS.maxActiveStrategies) {
+    const maxActive = await this.betaLimits.getLimit("maxActiveStrategies");
+    if (count >= maxActive) {
       throw new UnprocessableEntityException({
         code: "STRATEGY_LIMIT_REACHED",
-        message: `Beta limit: maximum ${BETA_LIMITS.maxActiveStrategies} active strategies allowed. Archive existing strategies to create new ones.`,
+        message: `Beta limit: maximum ${maxActive} active strategies allowed. Archive existing strategies to create new ones.`,
       });
     }
 
@@ -950,10 +976,11 @@ export class StrategiesService {
     const count = await this.prisma.strategy.count({
       where: { userId, status: { not: StrategyStatus.ARCHIVED } },
     });
-    if (count >= BETA_LIMITS.maxActiveStrategies) {
+    const maxActive = await this.betaLimits.getLimit("maxActiveStrategies");
+    if (count >= maxActive) {
       throw new UnprocessableEntityException({
         code: "STRATEGY_LIMIT_REACHED",
-        message: `Beta limit: maximum ${BETA_LIMITS.maxActiveStrategies} active strategies allowed. Archive existing strategies to create new ones.`,
+        message: `Beta limit: maximum ${maxActive} active strategies allowed. Archive existing strategies to create new ones.`,
       });
     }
 
@@ -1099,6 +1126,9 @@ export class StrategiesService {
         }
       }
     }
+
+    // Validate block config parameters (stop-loss / take-profit pct)
+    validateBlockConfigs(allBlocks);
 
     // Strip HTML from name/description
     const stripHtml = (str: string) => str.replace(/<[^>]*>/g, "");

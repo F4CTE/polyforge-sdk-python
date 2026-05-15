@@ -108,7 +108,7 @@ describe("AdminAuthService", () => {
   });
 
   afterEach(() => {
-    vi.restoreAllMocks();
+    vi.clearAllMocks();
   });
 
   // ── login ─────────────────────────────────────────────────────────────────
@@ -246,6 +246,44 @@ describe("AdminAuthService", () => {
       });
     });
 
+    it("rejects a valid admin TOTP code that was already consumed in its validity window", async () => {
+      const admin = await adminFactory({
+        totpEnabled: true,
+        totpSecret: "encrypted:secret",
+      });
+      adminDb.admin.findUnique.mockResolvedValue(admin);
+      vi.spyOn(service as any, "decrypt").mockReturnValue("JBSWY3DPEHPK3PXP");
+
+      const redisClient = redis.getClient();
+      redisClient.set.mockResolvedValueOnce(null);
+
+      await expect(
+        service.login({
+          email: admin.email,
+          password: "Passw0rd!",
+          totpCode: "123456",
+        }),
+      ).rejects.toMatchObject({
+        response: { code: "TOTP_INVALID" },
+        status: HttpStatus.BAD_REQUEST,
+      });
+
+      expect(redisClient.set).toHaveBeenCalledWith(
+        `admin:totp:used:${admin.id}:123456`,
+        "1",
+        "EX",
+        90,
+        "NX",
+      );
+      expect(redisClient.incr).toHaveBeenCalledWith(
+        `admin:totp:fail:${admin.id}`,
+      );
+      expect(redisClient.expire).toHaveBeenCalledWith(
+        `admin:totp:fail:${admin.id}`,
+        900,
+      );
+    });
+
     it("never exposes passwordHash in the response", async () => {
       const admin = await adminFactory();
       adminDb.admin.findUnique.mockResolvedValue(admin);
@@ -324,6 +362,7 @@ describe("AdminAuthService", () => {
     it("enables TOTP and updates admin record on valid code", async () => {
       const adminId = fakeUuid();
       redis.get.mockResolvedValue("JBSWY3DPEHPK3PXP");
+      redis.getClient().set.mockResolvedValue("OK");
 
       const result = await service.confirmTotp(adminId, "123456");
 
@@ -336,6 +375,34 @@ describe("AdminAuthService", () => {
         }),
       });
       expect(redis.del).toHaveBeenCalledWith(`totp:pending:admin:${adminId}`);
+      expect(redis.getClient().set).toHaveBeenCalledWith(
+        `admin:totp:used:${adminId}:123456`,
+        "1",
+        "EX",
+        90,
+        "NX",
+      );
+    });
+
+    it("rejects a valid TOTP code that was already consumed (replay) during confirm", async () => {
+      redis.get.mockResolvedValue("JBSWY3DPEHPK3PXP");
+      redis.getClient().set.mockResolvedValue(null); // already consumed
+
+      await expect(
+        service.confirmTotp("admin-1", "123456"),
+      ).rejects.toMatchObject({
+        response: { code: "TOTP_INVALID" },
+        status: HttpStatus.BAD_REQUEST,
+      });
+
+      expect(redis.getClient().set).toHaveBeenCalledWith(
+        "admin:totp:used:admin-1:123456",
+        "1",
+        "EX",
+        90,
+        "NX",
+      );
+      expect(adminDb.admin.update).not.toHaveBeenCalled();
     });
 
     it("throws TOTP_SETUP_EXPIRED (400) when no pending secret exists", async () => {
@@ -377,6 +444,7 @@ describe("AdminAuthService", () => {
 
       // Mock the private decrypt method to return a valid secret
       vi.spyOn(service as any, "decrypt").mockReturnValue("JBSWY3DPEHPK3PXP");
+      redis.getClient().set.mockResolvedValue("OK");
 
       await service.disableTotp(
         admin.id,
@@ -390,8 +458,49 @@ describe("AdminAuthService", () => {
         data: expect.objectContaining({
           totpEnabled: false,
           totpSecret: null,
+          totpEnabledAt: null,
         }),
       });
+      expect(redis.getClient().set).toHaveBeenCalledWith(
+        `admin:totp:used:${admin.id}:123456`,
+        "1",
+        "EX",
+        90,
+        "NX",
+      );
+    });
+
+    it("rejects a valid TOTP code that was already consumed (replay) during disable", async () => {
+      const admin = await adminFactory({
+        totpEnabled: true,
+        totpSecret: "encrypted",
+      });
+      adminDb.admin.findUnique.mockResolvedValue(admin);
+      redis.get.mockResolvedValue("1"); // session is live
+
+      vi.spyOn(service as any, "decrypt").mockReturnValue("JBSWY3DPEHPK3PXP");
+      redis.getClient().set.mockResolvedValue(null); // already consumed
+
+      await expect(
+        service.disableTotp(
+          admin.id,
+          "test-session-id",
+          "Passw0rd!",
+          "123456",
+        ),
+      ).rejects.toMatchObject({
+        response: { code: "RE_AUTH_FAILED" },
+        status: HttpStatus.UNAUTHORIZED,
+      });
+
+      expect(redis.getClient().set).toHaveBeenCalledWith(
+        `admin:totp:used:${admin.id}:123456`,
+        "1",
+        "EX",
+        90,
+        "NX",
+      );
+      expect(adminDb.admin.update).not.toHaveBeenCalled();
     });
 
     it("throws ADMIN_NOT_FOUND (404) when admin does not exist", async () => {

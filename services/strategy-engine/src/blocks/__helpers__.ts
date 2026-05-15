@@ -67,6 +67,8 @@ export function makeRedis(
   const client = {
     lrange: vi.fn().mockResolvedValue([]),
     zrange: vi.fn().mockResolvedValue([]),
+    zcard: vi.fn().mockResolvedValue(0),
+    zremrangebyscore: vi.fn().mockResolvedValue(0),
   };
 
   return {
@@ -94,6 +96,9 @@ export type MockPrismaService = {
     findMany: ReturnType<typeof vi.fn>;
     findUnique: ReturnType<typeof vi.fn>;
   };
+  order: {
+    findMany: ReturnType<typeof vi.fn>;
+  };
   token: {
     findUnique: ReturnType<typeof vi.fn>;
     findFirst: ReturnType<typeof vi.fn>;
@@ -118,6 +123,9 @@ export function makePrisma(
     position: {
       findMany: vi.fn().mockResolvedValue([]),
       findUnique: vi.fn().mockResolvedValue(null),
+    },
+    order: {
+      findMany: vi.fn().mockResolvedValue([]),
     },
     token: {
       findUnique: vi.fn().mockResolvedValue(null),

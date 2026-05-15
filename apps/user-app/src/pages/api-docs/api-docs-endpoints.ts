@@ -346,7 +346,7 @@ export const BACKTESTS: EndpointDef[] = [
     summary: 'Run a backtest',
     description: 'Starts a historical replay of a strategy. Results stream back over WebSocket as BACKTEST_PROGRESS events.',
     requestFields: [
-      { name: 'strategyId', type: 'string', required: true,  description: 'Strategy to backtest' },
+      { name: 'strategyId', type: 'string', required: false, description: 'Strategy to backtest (optional; if omitted, uses strategy blocks from the request)' },
       { name: 'from',       type: 'ISO8601', required: true,  description: 'Backtest start date' },
       { name: 'to',         type: 'ISO8601', required: false, description: 'Backtest end date (default: now)' },
     ],
@@ -422,7 +422,7 @@ export const NEWS_SIGNALS: EndpointDef[] = [
     summary: 'AI news trading signals',
     description: 'Returns AI-generated trade signals from the real-time news pipeline. Each signal includes a confidence score, the matched market, and the suggested direction.',
     queryParams: [
-      { name: 'minConfidence', type: 'int',    description: 'Min confidence 0–100 (default: 60)' },
+      { name: 'minConfidence', type: 'int',    description: 'Min confidence 1–100 (default: 60)' },
       { name: 'limit',         type: 'int',    description: 'Results (default: 20)' },
     ],
     responseNote: 'Returns [{ headline, source, confidence, direction: BUY|SELL, marketId, tokenId, generatedAt }].',

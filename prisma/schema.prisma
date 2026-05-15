@@ -247,6 +247,7 @@ model User {
   marketplaceListings    MarketplaceListing[]    @relation("SellerListings")
   marketplacePurchases   MarketplacePurchase[]   @relation("BuyerPurchases")
   watchlistItems         WatchlistItem[]
+  sentimentVotes         MarketSentimentVote[]
   arbitrageAlerts        ArbitrageAlert[]
   arbPositions           ArbPosition[]
   userCredential         UserCredential?
@@ -358,7 +359,7 @@ model ApiKey {
   revokedAt  DateTime?
   createdAt  DateTime      @default(now())
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Restrict)
 
   @@index([userId])
   @@index([tokenHash])
@@ -475,14 +476,14 @@ model Strategy {
   createdAt        DateTime           @default(now())
   updatedAt        DateTime           @updatedAt
 
-  user               User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  market             Market?                 @relation(fields: [marketId], references: [id], onDelete: SetNull)
-  parent             Strategy?               @relation("SubStrategies", fields: [parentStrategyId], references: [id], onDelete: Cascade)
-  children           Strategy[]              @relation("SubStrategies")
-  forkedFrom         Strategy?               @relation("Forks", fields: [forkedFromId], references: [id], onDelete: Cascade)
-  forks              Strategy[]              @relation("Forks")
-  orders             Order[]
-  paperOrders        PaperOrder[]
+  user User @relation(fields: [userId], references: [id], onDelete: Restrict)
+  market        Market?                 @relation(fields: [marketId], references: [id], onDelete: SetNull)
+  parent        Strategy?               @relation("SubStrategies", fields: [parentStrategyId], references: [id], onDelete: Cascade)
+  children      Strategy[]              @relation("SubStrategies")
+  forkedFrom    Strategy?               @relation("Forks",   fields: [forkedFromId], references: [id], onDelete: Cascade)
+  forks         Strategy[]              @relation("Forks")
+  orders        Order[]
+  paperOrders   PaperOrder[]
   backtestRuns       BacktestRun[]
   likes              StrategyLike[]
   comments           StrategyComment[]
@@ -614,6 +615,7 @@ model Order {
   placedAt     DateTime?
   filledAt     DateTime?
   createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
 
   user           User           @relation(fields: [userId], references: [id], onDelete: Cascade)
   strategy       Strategy?      @relation(fields: [strategyId], references: [id], onDelete: SetNull)
@@ -711,20 +713,24 @@ model Position {
 }
 
 model PaperOrder {
-  id         String       @id @default(uuid())
-  userId     String
-  strategyId String?
-  marketId   String       @db.VarChar(255)
-  tokenId    String       @db.VarChar(255)
-  side       OrderSide
-  outcome    OrderOutcome
-  size       Decimal      @db.Decimal(20, 6)
-  price      Decimal      @db.Decimal(10, 6)
-  orderType  OrderType
-  status     OrderStatus  @default(CONFIRMED)
-  fillSize   Decimal?     @db.Decimal(20, 6)
-  fillPrice  Decimal?     @db.Decimal(10, 6)
-  createdAt  DateTime     @default(now())
+  id                  String       @id @default(uuid())
+  userId              String
+  strategyId          String?
+  marketId            String       @db.VarChar(255)
+  tokenId             String       @db.VarChar(255)
+  side                OrderSide
+  outcome             OrderOutcome
+  size                Decimal      @db.Decimal(20, 6)
+  price               Decimal      @db.Decimal(10, 6)
+  orderType           OrderType
+  status              OrderStatus  @default(CONFIRMED)
+  fillSize            Decimal?     @db.Decimal(20, 6)
+  fillPrice           Decimal?     @db.Decimal(10, 6)
+  intentId            String       @unique @db.VarChar(128)
+  fillCompletedAt     DateTime?
+  realizedPnl         Decimal      @default(0) @db.Decimal(20, 6)
+  redisEffectsApplied Boolean      @default(false)
+  createdAt           DateTime     @default(now())
 
   user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   strategy Strategy? @relation(fields: [strategyId], references: [id], onDelete: SetNull)
@@ -875,6 +881,7 @@ model Market {
   conditionalOrders ConditionalOrder[]
   newsSignals       NewsSignal[]
   watchlistItems    WatchlistItem[]
+  sentimentVotes    MarketSentimentVote[]
   strategies        Strategy[]
 
   @@index([venue])
@@ -1370,6 +1377,23 @@ model WatchlistItem {
   @@unique([userId, marketId])
   @@index([userId])
   @@map("watchlist_items")
+}
+
+model MarketSentimentVote {
+  id         String   @id @default(uuid())
+  userId     String
+  marketId   String   @db.VarChar(255)
+  direction  String   @db.VarChar(10) // BUY or SELL
+  confidence Int      // 1-100
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  user   User   @relation(fields: [userId],   references: [id], onDelete: Cascade)
+  market Market @relation(fields: [marketId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, marketId])
+  @@index([marketId])
+  @@map("market_sentiment_votes")
 }
 
 // ─────────────────────────────────────────────

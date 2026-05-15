@@ -207,6 +207,14 @@ export class OrdersController {
     return this.orders.cancelBulk(user.sub, dto);
   }
 
+  @Post("bulk")
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(ApiKeyScopeGuard)
+  @RequireScopes("TRADE")
+  cancelBulkPost(@CurrentUser() user: JwtPayload, @Body() dto: BulkCancelDto) {
+    return this.orders.cancelBulk(user.sub, dto);
+  }
+
   @Post("place")
   @UseGuards(JwtAuthGuard)
   @UseInterceptors(IdempotencyInterceptor)

@@ -7,7 +7,7 @@ import {
 import { PrismaService } from "@polyforge/shared-db";
 import { randomUUID } from "crypto";
 import { Prisma, StrategyStatus } from "@prisma/client";
-import { BETA_LIMITS } from "../common/beta-limits.config";
+import { BetaLimitsConfigService } from "@polyforge/shared-redis";
 
 export class CreateListingDto {
   strategyId!: string;
@@ -32,7 +32,10 @@ export class RateListingDto {
 
 @Injectable()
 export class MarketplaceService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly betaLimits: BetaLimitsConfigService,
+  ) {}
 
   // ── Browse ────────────────────────────────────────────────────────────────
 
@@ -148,10 +151,11 @@ export class MarketplaceService {
         status: { notIn: ["DELISTED"] },
       },
     });
-    if (listingCount >= BETA_LIMITS.maxMarketplaceListings) {
+    const maxListings = await this.betaLimits.getLimit("maxMarketplaceListings");
+    if (listingCount >= maxListings) {
       throw new UnprocessableEntityException({
         code: "MARKETPLACE_LISTING_LIMIT_REACHED",
-        message: `Beta limit: maximum ${BETA_LIMITS.maxMarketplaceListings} marketplace listings allowed. Delist an existing listing to publish a new one.`,
+        message: `Beta limit: maximum ${maxListings} marketplace listings allowed. Delist an existing listing to publish a new one.`,
       });
     }
 

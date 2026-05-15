@@ -6,7 +6,10 @@ import {
   OrderIntent,
 } from "./block.types";
 import { PrismaService } from "@polyforge/shared-db";
-import { parseFiniteDecimal } from "@polyforge/shared-types";
+import {
+  parseFiniteDecimal,
+  validateStopLossTakeProfitPct,
+} from "@polyforge/shared-types";
 
 type BlockParams = Record<string, string | number | undefined>;
 type OrderType = "GTC" | "FOK" | "GTD" | "FAK";
@@ -156,11 +159,9 @@ export const SetStopLossAction: ActionEvaluator = {
       return { intents: [] };
 
     const avgPrice = parseFiniteDecimal(position.avgPrice);
-    const pctNum = parseFiniteDecimal(pct);
-    const stopPrice =
-      avgPrice === null || pctNum === null
-        ? Number.NaN
-        : avgPrice * (1 - pctNum);
+    const pctNum = validateStopLossTakeProfitPct(pct, "set_stop_loss");
+
+    const stopPrice = avgPrice === null ? Number.NaN : avgPrice * (1 - pctNum);
     const resolved = await resolveMarket(tokenId, prisma);
     if (!resolved) return { intents: [] };
 
@@ -195,11 +196,9 @@ export const TakeProfitAction: ActionEvaluator = {
       return { intents: [] };
 
     const avgPrice = parseFiniteDecimal(position.avgPrice);
-    const pctNum = parseFiniteDecimal(pct);
-    const tpPrice =
-      avgPrice === null || pctNum === null
-        ? Number.NaN
-        : avgPrice * (1 + pctNum);
+    const pctNum = validateStopLossTakeProfitPct(pct, "take_profit");
+
+    const tpPrice = avgPrice === null ? Number.NaN : avgPrice * (1 + pctNum);
     const resolved = await resolveMarket(tokenId, prisma);
     if (!resolved) return { intents: [] };
 
@@ -257,8 +256,22 @@ export const ScaleOutAction: ActionEvaluator = {
   async execute(block, ctx, redis, prisma): Promise<ActionResult> {
     const params = (block["params"] as BlockParams) ?? {};
     const tokenId = String(params.tokenId ?? "");
-    const reduceBySize = String(params.reduceBySize ?? "0");
+    const reduceBySizeRaw = String(params.reduceBySize ?? "0");
     const orderType = toOrderType(params.orderType);
+
+    const position = await prisma.position.findUnique({
+      where: { userId_tokenId: { userId: ctx.userId, tokenId } },
+    });
+    const positionSize = parseFiniteDecimal(position?.size);
+    if (!position || positionSize === null || positionSize === 0)
+      return { intents: [] };
+
+    const reduceByParsed = parseFiniteDecimal(reduceBySizeRaw);
+    if (reduceByParsed === null || reduceByParsed <= 0)
+      return { intents: [] };
+
+    const reduceBySize = String(Math.min(reduceByParsed, positionSize));
+
     const resolved = await resolveMarket(tokenId, prisma);
     if (!resolved) return { intents: [] };
 

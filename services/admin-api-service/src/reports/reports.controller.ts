@@ -13,14 +13,17 @@ import {
 import { ReportsService } from "./reports.service";
 import { ReviewReportDto } from "./dto/review-report.dto";
 import { AdminJwtGuard } from "../common/guard/admin-jwt.guard";
+import { RolesGuard } from "../common/guard/roles.guard";
+import { Roles } from "../common/decorators/roles.decorator";
 import { AuditService } from "../common/audit/audit.service";
 import {
   CurrentAdmin,
   AdminIp,
 } from "../common/decorators/current-admin.decorator";
-import { AdminJwtPayload } from "@polyforge/shared-types";
+import { AdminJwtPayload, AdminRole } from "@polyforge/shared-types";
 
-@UseGuards(AdminJwtGuard)
+@UseGuards(AdminJwtGuard, RolesGuard)
+@Roles(AdminRole.SUPER_ADMIN, AdminRole.ADMIN, AdminRole.SUPPORT)
 @Controller("reports")
 export class ReportsController {
   constructor(

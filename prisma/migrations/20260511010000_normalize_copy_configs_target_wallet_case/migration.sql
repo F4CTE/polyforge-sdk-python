@@ -1,47 +1,128 @@
 -- Backfill existing copy_configs.targetWallet values to a consistent canonical
--- form.  Both the backfill and CopyService.create() (via
--- checksumEthereumAddress().toLowerCase()) now store lowercase, ensuring
--- migrated and newly-written rows share the same canonical representation.
+-- form.  The backfill normalizes legacy rows to lowercase while new writes from
+-- CopyService.create() store EIP-55 checksummed addresses (via
+-- checksumEthereumAddress()).  Mixed casing is safe in practice because all
+-- application-layer lookups use {equals, mode:"insensitive"} — both case forms
+-- match identically via the CopyConfig_targetWallet_lower_idx functional index.
+--
 -- Legacy rows may contain arbitrary casing that breaks case-sensitive consumers
 -- (analytics, leaderboards, direct DB queries).
 --
--- We canonicalize to LOWER() because CopyService.create() also stores
--- lowercase (via checksumEthereumAddress().toLowerCase()), so migrated and
--- newly-written rows share the same canonical form.  LOWER() is used here
--- instead of EIP-55 (which requires keccak256) because:
+-- We canonicalize to LOWER() (rather than EIP-55, which requires keccak256)
+-- because:
 --   1. Pure SQL — no application dependency
 --   2. All lookups use {equals, mode:"insensitive"} which maps to LOWER() on
 --      the already-existing functional index CopyConfig_targetWallet_lower_idx
 --   3. The Prisma @@unique([userId, targetWallet]) constraint is case-sensitive;
---      lowering guarantees all rows for the same wallet share the same value
+--      lowering guarantees legacy rows for the same wallet share the same value
 --      and the unique constraint works correctly.
---
+
 -- Step 1: Resolve case-colliding duplicates that would violate the unique
 -- constraint after lowercasing.  When a user has multiple rows whose
--- targetWallet differs only in case, keep the oldest (by createdAt) and
--- delete the others so the bulk UPDATE in step 2 can complete without a
--- unique-violation error.
+-- targetWallet differs only in case (e.g. 0xAbc... and 0xabc...), keep the
+-- oldest config (by createdAt) and reassign the newer duplicates' copy_trades
+-- to the keeper before deleting the duplicates.  This avoids data loss from
+-- the ON DELETE CASCADE on CopyTrade.config → CopyConfig.
+--
+-- CopyTrade.config uses onDelete: Cascade (prisma/schema.prisma:1154), so
+-- without this step, deleting duplicate config rows would also delete all
+-- associated trade history.
 
 WITH
-    ranked AS (
+    grouped AS (
         SELECT
             id,
             "userId",
+            lower("targetWallet") AS lower_wallet,
             row_number() OVER (
                 PARTITION BY "userId", lower("targetWallet")
                 ORDER BY "createdAt" ASC, id ASC
             ) AS rn
         FROM "copy_configs"
     ),
-    duplicates AS (
-        SELECT id FROM ranked WHERE rn > 1
+    keeper AS (
+        SELECT id, "userId", lower_wallet
+          FROM grouped
+         WHERE rn = 1
+    ),
+    duplicate AS (
+        SELECT g.id AS duplicate_id, k.id AS keeper_id
+          FROM grouped g
+          JOIN keeper k
+            ON k."userId" = g."userId"
+           AND k.lower_wallet = g.lower_wallet
+         WHERE g.rn > 1
     )
-DELETE FROM "copy_configs"
-WHERE id IN (SELECT id FROM duplicates);
+-- Reassign trades from duplicate configs to the keeper before deletion
+UPDATE "copy_trades" ct
+   SET "configId" = dup.keeper_id
+  FROM duplicate dup
+ WHERE ct."configId" = dup.duplicate_id;
 
--- Step 2: Normalize remaining rows to lowercase.
+-- Merge aggregate fields (totalCopied, totalPnl) from duplicate configs
+-- into the keeper before deletion.  Without this, config-level metrics
+-- are silently undercounted for users who had case-variant duplicates:
+-- trade history is preserved, but counters regress.  These counters are
+-- maintained incrementally in CopyEngineService and consumed by copy/AI
+-- dashboards and summaries.
+WITH
+    grouped_agg AS (
+        SELECT
+            id,
+            "userId",
+            lower("targetWallet") AS lower_wallet,
+            row_number() OVER (
+                PARTITION BY "userId", lower("targetWallet")
+                ORDER BY "createdAt" ASC, id ASC
+            ) AS rn
+        FROM "copy_configs"
+    ),
+    keeper_agg AS (
+        SELECT id, "userId", lower_wallet
+          FROM grouped_agg
+         WHERE rn = 1
+    ),
+    duplicate_agg AS (
+        SELECT g.id AS duplicate_id, k.id AS keeper_id
+          FROM grouped_agg g
+          JOIN keeper_agg k
+            ON k."userId" = g."userId"
+           AND k.lower_wallet = g.lower_wallet
+         WHERE g.rn > 1
+    )
+UPDATE "copy_configs" cc
+   SET "totalCopied" = cc."totalCopied" + COALESCE(agg.total_copied, 0),
+       "totalPnl"    = cc."totalPnl"    + COALESCE(agg.total_pnl, 0)
+  FROM (
+      SELECT dup.keeper_id,
+             SUM(dcfg."totalCopied")::int AS total_copied,
+             SUM(dcfg."totalPnl")         AS total_pnl
+        FROM duplicate_agg dup
+        JOIN "copy_configs" dcfg ON dcfg.id = dup.duplicate_id
+       GROUP BY dup.keeper_id
+  ) agg
+ WHERE cc.id = agg.keeper_id;
+
+-- Step 2: Delete duplicate configs (trades already reassigned, safe to
+-- cascade-remove any remaining child rows like copy-trade references).
+DELETE FROM "copy_configs"
+ WHERE id IN (
+     SELECT duplicate_id
+       FROM (
+           SELECT
+               id,
+               row_number() OVER (
+                   PARTITION BY "userId", lower("targetWallet")
+                   ORDER BY "createdAt" ASC, id ASC
+               ) AS rn
+             FROM "copy_configs"
+       ) ranked
+      WHERE rn > 1
+ );
+
+-- Step 3: Normalize remaining targetWallet values to lowercase.
 --
--- After step 1, no two rows for the same (userId, lower(targetWallet)) pair
+-- After steps 1–2, no two rows for the same (userId, lower(targetWallet)) pair
 -- remain, so the bulk UPDATE cannot violate the @@unique constraint.
 
 UPDATE "copy_configs"

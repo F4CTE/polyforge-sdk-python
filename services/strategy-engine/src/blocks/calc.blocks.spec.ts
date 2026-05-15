@@ -103,6 +103,82 @@ describe("MathBlockEvaluator", () => {
     expect(result.value).toBe(256);
   });
 
+  it("returns NaN for power with exponent exceeding MAX_POW_EXPONENT", () => {
+    const result = MathBlockEvaluator.evaluate(
+      { operation: "power" },
+      [2, 1001],
+      makeCtx(),
+    );
+    expect(result.value).toBeNaN();
+  });
+
+  it("returns NaN for power with negative exponent exceeding MAX_POW_EXPONENT", () => {
+    const result = MathBlockEvaluator.evaluate(
+      { operation: "power" },
+      [2, -1001],
+      makeCtx(),
+    );
+    expect(result.value).toBeNaN();
+  });
+
+  it("allows power with exponent at MAX_POW_EXPONENT boundary", () => {
+    const result = MathBlockEvaluator.evaluate(
+      { operation: "power" },
+      [2, 1000],
+      makeCtx(),
+    );
+    expect(Number.isFinite(result.value)).toBe(true);
+  });
+
+  it("returns NaN for power with base exceeding MAX_POW_BASE", () => {
+    const result = MathBlockEvaluator.evaluate(
+      { operation: "power" },
+      [1e13, 2],
+      makeCtx(),
+    );
+    expect(result.value).toBeNaN();
+  });
+
+  it("returns NaN for power with negative base exceeding MAX_POW_BASE", () => {
+    const result = MathBlockEvaluator.evaluate(
+      { operation: "power" },
+      [-1e13, 2],
+      makeCtx(),
+    );
+    expect(result.value).toBeNaN();
+  });
+
+  it("allows power with base at MAX_POW_BASE boundary", () => {
+    const result = MathBlockEvaluator.evaluate(
+      { operation: "power" },
+      [1e12, 2],
+      makeCtx(),
+    );
+    expect(result.value).toBe(1e24);
+  });
+
+  it("returns NaN for power with both operands at boundary (overflow to Infinity)", () => {
+    const result = MathBlockEvaluator.evaluate(
+      { operation: "power" },
+      [1e12, 1000],
+      makeCtx(),
+    );
+    expect(result.value).toBeNaN();
+  });
+
+  it("allows power with normal small base and exponent", () => {
+    const result = MathBlockEvaluator.evaluate(
+      { operation: "power" },
+      [5, 3],
+      makeCtx(),
+    );
+    expect(result.value).toBe(125);
+    expect(
+      MathBlockEvaluator.evaluate({ operation: "power" }, [0.5, 2], makeCtx())
+        .value,
+    ).toBe(0.25);
+  });
+
   it("computes min", () => {
     const result = MathBlockEvaluator.evaluate(
       { operation: "min" },
@@ -416,6 +492,33 @@ describe("AbsRoundBlockEvaluator", () => {
       makeCtx(),
     );
     expect(result.value).toBeNaN();
+  });
+
+  it("returns NaN for round with decimals exceeding MAX_DECIMALS", () => {
+    const result = AbsRoundBlockEvaluator.evaluate(
+      { function: "round", decimals: 16 },
+      [3.14159],
+      makeCtx(),
+    );
+    expect(result.value).toBeNaN();
+  });
+
+  it("returns NaN for toFixed with decimals exceeding MAX_DECIMALS", () => {
+    const result = AbsRoundBlockEvaluator.evaluate(
+      { function: "toFixed", decimals: 100 },
+      [3.14159],
+      makeCtx(),
+    );
+    expect(result.value).toBeNaN();
+  });
+
+  it("allows round with decimals at MAX_DECIMALS boundary", () => {
+    const result = AbsRoundBlockEvaluator.evaluate(
+      { function: "round", decimals: 15 },
+      [3.141592653589793],
+      makeCtx(),
+    );
+    expect(result.value).toBeCloseTo(3.141592653589793, 14);
   });
 });
 

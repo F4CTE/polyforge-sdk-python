@@ -106,7 +106,8 @@ describe("StopIfDailyLossBlock", () => {
 
 describe("StopIfOrdersPerMinBlock", () => {
   it("fires when order rate is below limit", async () => {
-    const redis = makeRedis({ get: vi.fn().mockResolvedValue("5") });
+    const redis = makeRedis();
+    (redis.getClient() as any).zcard = vi.fn().mockResolvedValue(5);
     const ctx = makeCtx();
     const res = await StopIfOrdersPerMinBlock.evaluate(
       block("stop_if_orders_per_min", { maxOrders: "10" }),
@@ -118,7 +119,8 @@ describe("StopIfOrdersPerMinBlock", () => {
   });
 
   it("does NOT fire when order rate meets or exceeds limit", async () => {
-    const redis = makeRedis({ get: vi.fn().mockResolvedValue("10") });
+    const redis = makeRedis();
+    (redis.getClient() as any).zcard = vi.fn().mockResolvedValue(10);
     const ctx = makeCtx();
     const res = await StopIfOrdersPerMinBlock.evaluate(
       block("stop_if_orders_per_min", { maxOrders: "10" }),
@@ -130,8 +132,9 @@ describe("StopIfOrdersPerMinBlock", () => {
     expect(res.reason).toMatch(/SAFETY STOP/);
   });
 
-  it("treats null redis value as 0 orders", async () => {
-    const redis = makeRedis({ get: vi.fn().mockResolvedValue(null) });
+  it("treats non-numeric zcard return as 0 orders", async () => {
+    const redis = makeRedis();
+    (redis.getClient() as any).zcard = vi.fn().mockResolvedValue(null);
     const ctx = makeCtx();
     const res = await StopIfOrdersPerMinBlock.evaluate(
       block("stop_if_orders_per_min", { maxOrders: "1" }),
@@ -143,8 +146,12 @@ describe("StopIfOrdersPerMinBlock", () => {
   });
 
   it("uses correct Redis key with strategyId", async () => {
-    const get = vi.fn().mockResolvedValue("0");
-    const redis = makeRedis({ get });
+    const redis = makeRedis();
+    const zcard = vi.fn().mockResolvedValue(0);
+    const zremrangebyscore = vi.fn().mockResolvedValue(0);
+    const client = redis.getClient() as any;
+    client.zcard = zcard;
+    client.zremrangebyscore = zremrangebyscore;
     const ctx = makeCtx();
     await StopIfOrdersPerMinBlock.evaluate(
       block("stop_if_orders_per_min", { maxOrders: "60" }),
@@ -152,11 +159,17 @@ describe("StopIfOrdersPerMinBlock", () => {
       redis,
       makePrisma(),
     );
-    expect(get).toHaveBeenCalledWith(`strategy:${ctx.strategyId}:orders:min`);
+    expect(zremrangebyscore).toHaveBeenCalledWith(
+      `strategy:${ctx.strategyId}:orders:min`,
+      "-inf",
+      expect.any(String),
+    );
+    expect(zcard).toHaveBeenCalledWith(`strategy:${ctx.strategyId}:orders:min`);
   });
 
   it("defaults maxOrders to 60 when not provided", async () => {
-    const redis = makeRedis({ get: vi.fn().mockResolvedValue("59") });
+    const redis = makeRedis();
+    (redis.getClient() as any).zcard = vi.fn().mockResolvedValue(59);
     const ctx = makeCtx();
     const res = await StopIfOrdersPerMinBlock.evaluate(
       block("stop_if_orders_per_min", {}),
@@ -260,7 +273,7 @@ describe("StopIfExposureExceedsBlock", () => {
     expect(res.fired).toBe(true);
   });
 
-  it("queries positions for the correct userId", async () => {
+  it("queries positions and orders for the correct userId", async () => {
     const prisma = makePrisma();
     const ctx = makeCtx();
     await StopIfExposureExceedsBlock.evaluate(
@@ -271,6 +284,15 @@ describe("StopIfExposureExceedsBlock", () => {
     );
     expect(prisma.position.findMany).toHaveBeenCalledWith(
       expect.objectContaining({ where: { userId: ctx.userId } }),
+    );
+    expect(prisma.order.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: {
+          userId: ctx.userId,
+          side: "BUY",
+          status: { in: ["PENDING", "SUBMITTED", "LIVE"] },
+        },
+      }),
     );
   });
 
@@ -316,6 +338,97 @@ describe("StopIfExposureExceedsBlock", () => {
 
     expect(res.fired).toBe(false);
     expect(res.reason).toMatch(/invalid maxUsdc/);
+  });
+
+  it("includes pending orders in total exposure", async () => {
+    const prisma = makePrisma();
+    prisma.position.findMany.mockResolvedValue([
+      { size: "10", currentPrice: "0.5" }, // 5 USDC
+    ]);
+    prisma.order.findMany.mockResolvedValue([
+      { size: "20", price: "0.3" }, // 6 USDC
+      { size: "30", price: "0.4" }, // 12 USDC
+    ]);
+    const ctx = makeCtx();
+    const res = await StopIfExposureExceedsBlock.evaluate(
+      block("stop_if_exposure_exceeds", { maxUsdc: "30" }),
+      ctx,
+      makeRedis(),
+      prisma,
+    );
+    // positions: 5 + orders: 6 + 12 = 23 < 30
+    expect(res.fired).toBe(true);
+    expect(res.reason).toMatch(/exposure \$23\.00/);
+  });
+
+  it("does NOT fire when positions + pending orders exceed limit", async () => {
+    const prisma = makePrisma();
+    prisma.position.findMany.mockResolvedValue([
+      { size: "10", currentPrice: "0.5" }, // 5 USDC
+    ]);
+    prisma.order.findMany.mockResolvedValue([
+      { size: "100", price: "0.5" }, // 50 USDC
+    ]);
+    const ctx = makeCtx();
+    const res = await StopIfExposureExceedsBlock.evaluate(
+      block("stop_if_exposure_exceeds", { maxUsdc: "50" }),
+      ctx,
+      makeRedis(),
+      prisma,
+    );
+    // positions: 5 + orders: 50 = 55 >= 50
+    expect(res.fired).toBe(false);
+    expect(res.reason).toMatch(/SAFETY STOP/);
+  });
+
+  it("fires when only pending orders exist (no positions)", async () => {
+    const prisma = makePrisma();
+    // no positions (default [])
+    prisma.order.findMany.mockResolvedValue([
+      { size: "10", price: "0.5" }, // 5 USDC
+    ]);
+    const ctx = makeCtx();
+    const res = await StopIfExposureExceedsBlock.evaluate(
+      block("stop_if_exposure_exceeds", { maxUsdc: "10" }),
+      ctx,
+      makeRedis(),
+      prisma,
+    );
+    expect(res.fired).toBe(true);
+  });
+
+  it("does NOT fire when pending orders alone exceed limit", async () => {
+    const prisma = makePrisma();
+    // no positions (default [])
+    prisma.order.findMany.mockResolvedValue([
+      { size: "200", price: "0.5" }, // 100 USDC
+    ]);
+    const ctx = makeCtx();
+    const res = await StopIfExposureExceedsBlock.evaluate(
+      block("stop_if_exposure_exceeds", { maxUsdc: "50" }),
+      ctx,
+      makeRedis(),
+      prisma,
+    );
+    // 100 >= 50
+    expect(res.fired).toBe(false);
+    expect(res.reason).toMatch(/SAFETY STOP/);
+  });
+
+  it("fails closed when a pending order has non-finite size", async () => {
+    const prisma = makePrisma();
+    prisma.position.findMany.mockResolvedValue([]);
+    prisma.order.findMany.mockResolvedValue([{ size: "NaN", price: "0.5" }]);
+    const ctx = makeCtx();
+    const res = await StopIfExposureExceedsBlock.evaluate(
+      block("stop_if_exposure_exceeds", { maxUsdc: "100" }),
+      ctx,
+      makeRedis(),
+      prisma,
+    );
+    // NaN size → orderExposure = POSITIVE_INFINITY → exposure >= 100 → stop
+    expect(res.fired).toBe(false);
+    expect(res.reason).toMatch(/SAFETY STOP/);
   });
 });
 

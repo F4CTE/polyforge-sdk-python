@@ -1,8 +1,12 @@
 import { Controller, Get, Query, UseGuards } from "@nestjs/common";
 import { RetentionService } from "./retention.service";
 import { AdminJwtGuard } from "../common/guard/admin-jwt.guard";
+import { RolesGuard } from "../common/guard/roles.guard";
+import { Roles } from "../common/decorators/roles.decorator";
+import { AdminRole } from "@polyforge/shared-types";
 
-@UseGuards(AdminJwtGuard)
+@UseGuards(AdminJwtGuard, RolesGuard)
+@Roles(AdminRole.SUPER_ADMIN, AdminRole.ADMIN)
 @Controller("admin/retention")
 export class RetentionController {
   constructor(private readonly retention: RetentionService) {}

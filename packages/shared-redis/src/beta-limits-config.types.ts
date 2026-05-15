@@ -1,7 +1,9 @@
 /**
  * Beta Guardrails — single source of truth for all per-user usage caps.
  *
- * Every value is env-configurable so limits can be adjusted without a deploy.
+ * These limits are now Redis-backed. The env vars serve as fallback defaults
+ * when Redis is unavailable or no override has been persisted.
+ *
  * Defaults match the agreed beta limits from POLA-32 / POLA-87.
  */
 export interface BetaLimits {
@@ -30,11 +32,7 @@ function envInt(key: string, defaultValue: number): number {
   return Number.isNaN(parsed) ? defaultValue : parsed;
 }
 
-function ciAwareLimit(defaultValue: number): number {
-  return process.env.CI === "true" ? 10_000 : defaultValue;
-}
-
-export const BETA_LIMITS: BetaLimits = {
+export const BETA_LIMITS_DEFAULTS: BetaLimits = {
   maxActiveStrategies: envInt("BETA_MAX_ACTIVE_STRATEGIES", 3),
   maxConcurrentBacktests: envInt("BETA_MAX_CONCURRENT_BACKTESTS", 1),
   maxBacktestHistoryDays: envInt("BETA_MAX_BACKTEST_HISTORY_DAYS", 90),
@@ -42,8 +40,26 @@ export const BETA_LIMITS: BetaLimits = {
   maxPositionSizeUsdc: envInt("BETA_MAX_POSITION_SIZE_USDC", 500),
   marketDataRateLimitPerMinute: envInt(
     "BETA_MARKET_DATA_RATE_LIMIT",
-    ciAwareLimit(100),
+    process.env.CI === "true" ? 10_000 : 100,
   ),
   maxMarketplaceListings: envInt("BETA_MAX_MARKETPLACE_LISTINGS", 2),
   maxDailyStrategyExecutions: envInt("BETA_MAX_DAILY_STRATEGY_EXECUTIONS", 500),
 };
+
+export const BETA_LIMITS_KEY = "config:beta_limits";
+
+/** Per-field Redis keys for individual limit reads (avoids full JSON parse on hot paths) */
+const FIELD_KEYS: Record<keyof BetaLimits, string> = {
+  maxActiveStrategies: `${BETA_LIMITS_KEY}:max_active_strategies`,
+  maxConcurrentBacktests: `${BETA_LIMITS_KEY}:max_concurrent_backtests`,
+  maxBacktestHistoryDays: `${BETA_LIMITS_KEY}:max_backtest_history_days`,
+  maxMonthlyVolumeUsdc: `${BETA_LIMITS_KEY}:max_monthly_volume_usdc`,
+  maxPositionSizeUsdc: `${BETA_LIMITS_KEY}:max_position_size_usdc`,
+  marketDataRateLimitPerMinute: `${BETA_LIMITS_KEY}:market_data_rate_limit_per_minute`,
+  maxMarketplaceListings: `${BETA_LIMITS_KEY}:max_marketplace_listings`,
+  maxDailyStrategyExecutions: `${BETA_LIMITS_KEY}:max_daily_strategy_executions`,
+};
+
+export function betaLimitFieldKey(field: keyof BetaLimits): string {
+  return FIELD_KEYS[field];
+}

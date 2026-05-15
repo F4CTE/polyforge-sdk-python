@@ -12,6 +12,7 @@ import {
 import { AdminJwtPayload, AdminRole } from "@polyforge/shared-types";
 
 @UseGuards(AdminJwtGuard, RolesGuard)
+@Roles(AdminRole.SUPER_ADMIN)
 @Controller("key-rotation")
 export class KeyRotationController {
   constructor(

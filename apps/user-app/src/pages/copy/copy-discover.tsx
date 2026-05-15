@@ -741,10 +741,10 @@ export function Component() {
 
   /* Determine which traders are already being copied */
   const copiedUserIds = new Set(copyConfigs.map((c) => c.userId).filter(Boolean));
-  const copiedWallets = new Set(copyConfigs.map((c) => c.targetWallet));
+  const copiedWallets = new Set(copyConfigs.map((c) => c.targetWallet.toLowerCase()));
 
   function isCopying(trader: TraderCard): boolean {
-    return copiedUserIds.has(trader.userId) || copiedWallets.has(trader.username);
+    return copiedUserIds.has(trader.userId) || copiedWallets.has(trader.username.toLowerCase());
   }
 
   /* ── Compare mode handlers ──────────────────────────────────────── */

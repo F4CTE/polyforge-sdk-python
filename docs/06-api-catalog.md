@@ -685,23 +685,47 @@ Get community sentiment votes for a market.
 
 **Response `200`:**
 ```json
-{ "marketId": "uuid", "yesVotes": 142, "noVotes": 58, "userVote": "YES" }
+{
+  "yesPercent": 71,
+  "noPercent": 29,
+  "totalVotes": 200,
+  "userVote": { "direction": "YES", "confidence": 85 }
+}
 ```
+
+`userVote` is `null` when the authenticated user has not voted.
 
 ---
 
 #### POST /api/v1/markets/:marketId/sentiment
 
-Cast a sentiment vote on a market.
+Cast a sentiment vote on a market. Requires WRITE scope.
 
-**Auth:** User JWT
+**Auth:** User JWT (API key with WRITE scope accepted)
 
 **Request:**
 ```json
-{ "vote": "YES" }
+{
+  "direction": "YES",
+  "confidence": 85
+}
 ```
 
-**Response `200`:** Updated sentiment object.
+- `direction`: `"YES"` or `"NO"`
+- `confidence`: integer 1–100
+
+**Response `200`:**
+```json
+{
+  "yesPercent": 71,
+  "noPercent": 29,
+  "totalVotes": 201,
+  "userVote": { "direction": "YES", "confidence": 85 }
+}
+```
+
+**Errors:**
+- `404` — `MARKET_NOT_FOUND` when the market does not exist
 
 ---
 

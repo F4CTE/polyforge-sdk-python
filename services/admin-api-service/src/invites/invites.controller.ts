@@ -11,16 +11,19 @@ import { ApiTags, ApiBearerAuth, ApiOperation } from "@nestjs/swagger";
 import { InvitesService } from "./invites.service";
 import { GenerateInvitesDto } from "./dto/generate-invites.dto";
 import { AdminJwtGuard } from "../common/guard/admin-jwt.guard";
+import { RolesGuard } from "../common/guard/roles.guard";
+import { Roles } from "../common/decorators/roles.decorator";
 import { AuditService } from "../common/audit/audit.service";
 import {
   CurrentAdmin,
   AdminIp,
 } from "../common/decorators/current-admin.decorator";
-import { AdminJwtPayload } from "@polyforge/shared-types";
+import { AdminJwtPayload, AdminRole } from "@polyforge/shared-types";
 
 @ApiTags("invites")
 @ApiBearerAuth()
-@UseGuards(AdminJwtGuard)
+@UseGuards(AdminJwtGuard, RolesGuard)
+@Roles(AdminRole.SUPER_ADMIN, AdminRole.ADMIN)
 @Controller("invites")
 export class InvitesController {
   constructor(

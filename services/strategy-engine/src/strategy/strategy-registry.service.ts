@@ -9,7 +9,7 @@ import {
 import { StrategyStatus } from ".prisma/client";
 import { logCloudWatchMetric } from "@polyforge/logger";
 import { PrismaService } from "@polyforge/shared-db";
-import { RedisService } from "@polyforge/shared-redis";
+import { RedisService, BetaLimitsConfigService } from "@polyforge/shared-redis";
 import { SubStrategyMode, StrategyVariable } from "@polyforge/shared-types";
 import type { VenueId } from "@polyforge/shared-types";
 import {
@@ -24,6 +24,27 @@ import { OrderIntent } from "../blocks/block.types";
 
 const ORDER_STREAM = "stream:orders";
 const PAPER_ORDER_STREAM = "stream:paper_orders";
+
+/** Lua script: atomic sorted-set sliding-window counter for orders-per-minute.
+ *  Uses ZREMRANGEBYSCORE + ZADD + ZCARD to produce a true rolling 60-second
+ *  window instead of an accumulator that only resets on idle gaps.
+ *  Members include a per-strategy INCR sequence to avoid ZADD collision when
+ *  two publishIntents calls land in the same millisecond. */
+const ORDERS_PER_MIN_COUNTER_SCRIPT = `
+local window_ms = tonumber(ARGV[3]) * 1000
+local cutoff = tonumber(ARGV[2]) - window_ms
+local count = tonumber(ARGV[1])
+local now = tonumber(ARGV[2])
+
+redis.call('ZREMRANGEBYSCORE', KEYS[1], '-inf', cutoff)
+for i = 1, count do
+    local seq = redis.call('INCR', KEYS[1] .. ':seq')
+    redis.call('ZADD', KEYS[1], now, tostring(now) .. ':' .. tostring(seq))
+end
+redis.call('EXPIRE', KEYS[1] .. ':seq', 1)
+redis.call('EXPIRE', KEYS[1], tonumber(ARGV[3]) * 2)
+return redis.call('ZCARD', KEYS[1])
+`;
 
 const STRATEGY_ALREADY_RUNNING_ERROR = {
   code: "STRATEGY_ALREADY_RUNNING",
@@ -107,6 +128,7 @@ export class StrategyRegistryService implements OnApplicationBootstrap {
     private readonly prisma: PrismaService,
     private readonly redis: RedisService,
     private readonly state: StateService,
+    private readonly betaLimits: BetaLimitsConfigService,
   ) {}
 
   // ─── Startup reconciliation ─────────────────────────────────────────────────
@@ -166,6 +188,7 @@ export class StrategyRegistryService implements OnApplicationBootstrap {
             (strategy.safety as Block[] | null) ?? [],
             variables,
             this.redis,
+            this.betaLimits,
             this.prisma,
             this.state,
             (intents) => this.publishIntents(intents, stream),
@@ -253,6 +276,7 @@ export class StrategyRegistryService implements OnApplicationBootstrap {
       (strategy.safety as Block[] | null) ?? [],
       variables,
       this.redis,
+      this.betaLimits,
       this.prisma,
       this.state,
       (intents) => this.publishIntents(intents, stream),
@@ -517,6 +541,7 @@ export class StrategyRegistryService implements OnApplicationBootstrap {
       (child.safety as Block[] | null) ?? [],
       variables,
       this.redis,
+      this.betaLimits,
       this.prisma,
       this.state,
       (intents) => this.publishIntents(intents, stream),
@@ -638,9 +663,21 @@ export class StrategyRegistryService implements OnApplicationBootstrap {
     }
 
     // Increment counters only for successfully published intents.
+    // Order counters: betsToday, totalOrders, lastTradeAt
+    // Orders-per-minute sliding-window: atomic INCRBY + EXPIRE, rolling 60s
     for (const [strategyId, intentCount] of succeededByStrategy) {
       try {
         await this.state.incrementOrderCounters(strategyId, intentCount, now);
+        await this.redis
+          .getClient()
+          .eval(
+            ORDERS_PER_MIN_COUNTER_SCRIPT,
+            1,
+            `strategy:${strategyId}:orders:min`,
+            String(intentCount),
+            String(now),
+            "60",
+          );
       } catch (counterErr) {
         this.logger.error(
           {

@@ -4,6 +4,13 @@
  * don't require a generated client on disk.
  */
 
+// Stub PrismaClient so that PrismaService (which extends it) can be loaded.
+export class PrismaClient {
+  protected $connect() { return Promise.resolve(); }
+  protected $disconnect() { return Promise.resolve(); }
+  static get dmmf() { return {}; }
+}
+
 export const StrategyStatus = {
     IDLE: 'IDLE',
     RUNNING: 'RUNNING',
@@ -45,10 +52,16 @@ export type ResolutionStatus = (typeof ResolutionStatus)[keyof typeof Resolution
 export type Strategy = Record<string, unknown>;
 export type InputJsonValue = string | number | boolean | null | Record<string, unknown> | unknown[];
 export const Prisma = {
-    // Placeholder — real Prisma namespace is complex; only the types used by
-    // the service under test need to exist here.
+    Decimal: class Decimal {
+      value: string;
+      constructor(value: string | number) { this.value = String(value); }
+      toFixed(precision: number) { return parseFloat(this.value).toFixed(precision); }
+      toString() { return this.value; }
+      valueOf() { return parseFloat(this.value); }
+    },
 } as const;
 export namespace Prisma {
+    export type Decimal = InstanceType<typeof Prisma.Decimal>;
     export type InputJsonValue = string | number | boolean | null | Record<string, unknown> | unknown[];
     export type StrategyWhereInput = Record<string, unknown>;
     export type StrategyUpdateInput = Record<string, unknown>;

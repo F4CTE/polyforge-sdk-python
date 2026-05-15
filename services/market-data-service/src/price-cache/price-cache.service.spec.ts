@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { Logger } from "@nestjs/common";
 import { PriceCacheService } from "./price-cache.service";
 import {
   PriceUpdateEvent,
@@ -9,13 +10,28 @@ import {
 
 function makeMocks() {
   const ioredisClient = {
-    exists: vi.fn().mockResolvedValue(0),
-    zadd: vi.fn().mockResolvedValue(1),
-    zremrangebyrank: vi.fn().mockResolvedValue(0),
-    expire: vi.fn().mockResolvedValue(1),
     zrange: vi.fn().mockResolvedValue([]),
     del: vi.fn().mockResolvedValue(1),
+    pipeline: vi.fn(),
   };
+
+  function freshPipelineMocks() {
+    const pipeline = {
+      zadd: vi.fn().mockReturnThis(),
+      zremrangebyrank: vi.fn().mockReturnThis(),
+      expire: vi.fn().mockReturnThis(),
+      exec: vi.fn().mockResolvedValue([
+        [null, 1],
+        [null, 0],
+        [null, 1],
+      ]),
+    };
+    ioredisClient.pipeline.mockReturnValue(pipeline);
+    return pipeline;
+  }
+
+  freshPipelineMocks();
+
   const redis = {
     set: vi.fn().mockResolvedValue("OK"),
     get: vi.fn().mockResolvedValue(null),
@@ -152,6 +168,114 @@ describe("PriceCacheService", () => {
       expect(prisma.priceSnapshot.createMany).toHaveBeenCalled();
       const call = prisma.priceSnapshot.createMany.mock.calls[0][0];
       expect(call.data).toHaveLength(2);
+    });
+  });
+
+  // ── writeTaPricePoint (via handlePriceUpdate) ─────────────────────────────
+
+  describe("writeTaPricePoint() pipeline", () => {
+    const priceEvent: PriceUpdateEvent = {
+      tokenId: "token-1",
+      price: 0.72,
+      timestamp: 1700000000,
+    };
+
+    it("uses a Redis pipeline for TA price window writes", async () => {
+      await svc.handlePriceUpdate(priceEvent);
+
+      const client = redis.getClient();
+      expect(client.pipeline).toHaveBeenCalled();
+    });
+
+    it("pipelines ZADD + ZREMRANGEBYRANK + EXPIRE as a single round-trip", async () => {
+      await svc.handlePriceUpdate(priceEvent);
+
+      const client = redis.getClient();
+      const pipeline = client.pipeline();
+
+      expect(pipeline.zadd).toHaveBeenCalledWith(
+        "ta:prices:token-1",
+        1700000000,
+        "1700000000:0.72",
+      );
+      expect(pipeline.zremrangebyrank).toHaveBeenCalledWith(
+        "ta:prices:token-1",
+        0,
+        -251,
+      );
+      expect(pipeline.expire).toHaveBeenCalledWith("ta:prices:token-1", 86_400);
+    });
+
+    it("always calls EXPIRE unconditionally (no EXISTS check)", async () => {
+      await svc.handlePriceUpdate(priceEvent);
+
+      const client = redis.getClient();
+      const pipeline = client.pipeline();
+
+      // EXISTS should never be called (removed)
+      expect(client.exists).toBeUndefined();
+      // EXPIRE is always called
+      expect(pipeline.expire).toHaveBeenCalled();
+    });
+
+    it("calls pipeline.exec() to flush the batch", async () => {
+      await svc.handlePriceUpdate(priceEvent);
+
+      const client = redis.getClient();
+      const pipeline = client.pipeline();
+
+      expect(pipeline.exec).toHaveBeenCalled();
+    });
+
+    it("logs a warning when a pipeline command returns an error", async () => {
+      const warnSpy = vi.spyOn(Logger.prototype, "warn");
+
+      const client = redis.getClient();
+      const pipeline = client.pipeline();
+      vi.mocked(pipeline.exec).mockResolvedValueOnce([
+        [null, 1],
+        [
+          new Error(
+            "WRONGTYPE Operation against a key holding the wrong kind of value",
+          ),
+          null,
+        ],
+        [null, 1],
+      ]);
+
+      await svc.handlePriceUpdate(priceEvent);
+
+      expect(warnSpy).toHaveBeenCalledWith(
+        expect.stringContaining("Redis pipeline error"),
+      );
+
+      warnSpy.mockRestore();
+    });
+
+    it("does not throw when pipeline.exec returns null", async () => {
+      const client = redis.getClient();
+      const pipeline = client.pipeline();
+      vi.mocked(pipeline.exec).mockResolvedValueOnce(null);
+
+      await expect(svc.handlePriceUpdate(priceEvent)).resolves.toBeUndefined();
+    });
+
+    it("does not log when all pipeline commands succeed", async () => {
+      const warnSpy = vi.spyOn(Logger.prototype, "warn");
+
+      const client = redis.getClient();
+      const pipeline = client.pipeline();
+      vi.mocked(pipeline.exec).mockResolvedValueOnce([
+        [null, 1],
+        [null, 0],
+        [null, 1],
+      ]);
+
+      await svc.handlePriceUpdate(priceEvent);
+
+      expect(warnSpy).not.toHaveBeenCalled();
+
+      warnSpy.mockRestore();
     });
   });
 

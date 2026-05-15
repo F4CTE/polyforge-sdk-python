@@ -372,16 +372,49 @@ jobs:
         run: rm -rf ~/PolyForge/tests/e2e/test-results/
 
       # ── E2E Shards (parallel within same job) ─────────────────────────
-      # All 5 shards run concurrently as background processes. Keeping them
+      # All shards run concurrently as background processes. Keeping them
       # inside the single deploy-and-e2e job preserves the concurrency group
       # lock so no other PR can deploy while E2E is running. The self-hosted
       # runner (Ryzen 9 9950X, 32GB RAM) handles 5 Playwright workers well.
       # The script exits on the first failed shard and terminates siblings.
-      - name: Run E2E shards 1-5 in parallel
+      - name: Run E2E shards in parallel
         timeout-minutes: 40
+        env:
+          E2E_SKIP_SLOW_A11Y: true
         run: |
           cd ~/PolyForge/tests/e2e
           ../../scripts/e2e/run-shards.sh
+
+  # ── 4a. E2E — A11y & Keyboard (focused) ───────────────────────────────
+  # Runs only the Strategy Builder a11y/keyboard block after the deploy
+  # gate passes.  Separated from the main shards so the deploy gate stays
+  # fast while preserving automated CI coverage for these assertions.
+  e2e-a11y:
+    name: E2E — A11y & Keyboard
+    if: github.ref == 'refs/heads/main'
+    runs-on: [self-hosted, linux]
+    needs: [deploy-and-e2e]
+    timeout-minutes: 30
+    steps:
+      - name: Kill stale Playwright / Chromium processes
+        run: |
+          pkill -u f4cte -f 'playwright test' 2>/dev/null || true
+          pkill -u f4cte -f 'chrome-headless-shell' 2>/dev/null || true
+          sleep 1
+
+      - name: Run A11y & Keyboard E2E tests
+        timeout-minutes: 25
+        env:
+          BASE_URL: https://localhost
+          CI: 'true'
+          E2E_SKIP_SLOW_A11Y: 'false'
+          PLAYWRIGHT_SKIP_GLOBAL_SETUP: 'true'
+        run: |
+          cd ~/PolyForge/tests/e2e
+          npx playwright test specs/strategy-builder-comprehensive.spec.ts \
+            --project=chromium \
+            --grep='@a11y|@keyboard' \
+            --reporter=list
 
   # ── 5. Deploy to AWS (Production) ──────────────────────────────────────
   deploy:

@@ -20,14 +20,17 @@ import { SuspendUserDto } from "./dto/suspend.dto";
 import { UpdateLimitsDto } from "./dto/update-limits.dto";
 import { RejectUserDto } from "./dto/reject-user.dto";
 import { AdminJwtGuard } from "../common/guard/admin-jwt.guard";
+import { RolesGuard } from "../common/guard/roles.guard";
+import { Roles } from "../common/decorators/roles.decorator";
 import { AuditService } from "../common/audit/audit.service";
 import {
   CurrentAdmin,
   AdminIp,
 } from "../common/decorators/current-admin.decorator";
-import { AdminJwtPayload } from "@polyforge/shared-types";
+import { AdminJwtPayload, AdminRole } from "@polyforge/shared-types";
 
-@UseGuards(AdminJwtGuard)
+@UseGuards(AdminJwtGuard, RolesGuard)
+@Roles(AdminRole.SUPER_ADMIN, AdminRole.ADMIN)
 @Controller("users")
 export class UsersController {
   constructor(

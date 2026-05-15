@@ -6,6 +6,7 @@ import {
 } from "@nestjs/common";
 import { MarketplaceService } from "./marketplace.service";
 import { createMockDb, MockDb } from "../../test/helpers/mock-db";
+import { BetaLimitsConfigService } from "@polyforge/shared-redis";
 
 // ─── Factories ────────────────────────────────────────────────────────────────
 
@@ -56,7 +57,14 @@ describe("MarketplaceService", () => {
 
   beforeEach(() => {
     db = createMockDb();
-    service = new MarketplaceService(db as any);
+    const betaLimits = {
+      getAllLimits: vi.fn().mockResolvedValue({
+        maxMarketplaceListings: 2,
+      }),
+      getLimit: vi.fn().mockResolvedValue(2),
+      setLimits: vi.fn(),
+    } as unknown as BetaLimitsConfigService;
+    service = new MarketplaceService(db as any, betaLimits);
   });
 
   // ── browse ────────────────────────────────────────────────────────────────

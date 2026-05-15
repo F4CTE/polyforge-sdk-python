@@ -1,5 +1,5 @@
 # ── Rust build stage: compile NAPI-RS crypto addon ────────────────────────────
-FROM rust:1-slim@sha256:81099830a1e1d244607b9a7a30f3ff6ecadc52134a933b4635faba24f52840c9 AS rust-builder
+FROM rust:1-slim@sha256:5021128d455987e7e7d6586bd7288fa876614821292614acbb761c21fc1ebb15 AS rust-builder
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     nodejs npm && rm -rf /var/lib/apt/lists/*

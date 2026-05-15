@@ -735,9 +735,9 @@ const AVAILABLE_ACTIONS: ActionsSchema = {
         {
           name: "strategyId",
           type: "string",
-          required: true,
+          required: false,
           in: "body",
-          description: "Strategy UUID",
+          description: "Strategy UUID (optional; if omitted, uses strategy blocks from the request body)",
         },
       ],
     },

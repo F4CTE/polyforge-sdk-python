@@ -68,6 +68,7 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
     try {
       const payload = this.jwt.verify<{ sub?: unknown }>(credential.token, {
         secret: this.config.get<string>("USER_JWT_SECRET"),
+        algorithms: ["HS256"],
       });
       const userId = payload.sub;
       if (typeof userId !== "string" || !userId) {

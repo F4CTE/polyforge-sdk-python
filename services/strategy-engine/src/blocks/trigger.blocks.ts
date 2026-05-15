@@ -160,7 +160,7 @@ export const PriceAboveTickBlock: BlockEvaluator = {
   async evaluate(block, _ctx, redis, _prisma): Promise<BlockResult> {
     const params = (block["params"] as BlockParams) ?? {};
     const tokenId = String(params.tokenId ?? "");
-    const threshold = String(params.price ?? "0");
+    const threshold = String(params.threshold ?? params.price ?? "0");
     const data = await redis.getJson<{ price: number }>(
       `cache:price:${tokenId}`,
     );
@@ -177,7 +177,7 @@ export const PriceBelowTickBlock: BlockEvaluator = {
   async evaluate(block, _ctx, redis, _prisma): Promise<BlockResult> {
     const params = (block["params"] as BlockParams) ?? {};
     const tokenId = String(params.tokenId ?? "");
-    const threshold = String(params.price ?? "0");
+    const threshold = String(params.threshold ?? params.price ?? "0");
     const data = await redis.getJson<{ price: number }>(
       `cache:price:${tokenId}`,
     );

@@ -1,52 +1,41 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import type { BetaLimits } from "@polyforge/shared-redis";
+import { BETA_LIMITS_DEFAULTS } from "@polyforge/shared-redis";
 
-describe("BETA_LIMITS config (envInt)", () => {
-  const ORIGINAL_ENV = process.env;
-
-  beforeEach(() => {
-    process.env = { ...ORIGINAL_ENV };
-    // Reset module cache so the config re-evaluates env vars
-    vi.resetModules();
+describe("BETA_LIMITS_DEFAULTS (envInt)", () => {
+  it("all limit keys exist and are positive numbers", () => {
+    const keys: (keyof BetaLimits)[] = [
+      "maxActiveStrategies",
+      "maxConcurrentBacktests",
+      "maxBacktestHistoryDays",
+      "maxMonthlyVolumeUsdc",
+      "maxPositionSizeUsdc",
+      "marketDataRateLimitPerMinute",
+      "maxMarketplaceListings",
+      "maxDailyStrategyExecutions",
+    ];
+    for (const key of keys) {
+      expect(BETA_LIMITS_DEFAULTS[key]).toBeGreaterThan(0);
+      expect(typeof BETA_LIMITS_DEFAULTS[key]).toBe("number");
+    }
   });
 
-  afterEach(() => {
-    process.env = ORIGINAL_ENV;
-    vi.resetModules();
+  it("uses known defaults matching the agreed beta limits", () => {
+    expect(BETA_LIMITS_DEFAULTS.maxActiveStrategies).toBe(3);
+    expect(BETA_LIMITS_DEFAULTS.maxConcurrentBacktests).toBe(1);
+    expect(BETA_LIMITS_DEFAULTS.maxBacktestHistoryDays).toBe(90);
+    expect(BETA_LIMITS_DEFAULTS.maxMonthlyVolumeUsdc).toBe(5000);
+    expect(BETA_LIMITS_DEFAULTS.maxPositionSizeUsdc).toBe(500);
+    expect(BETA_LIMITS_DEFAULTS.maxMarketplaceListings).toBe(2);
+    expect(BETA_LIMITS_DEFAULTS.maxDailyStrategyExecutions).toBe(500);
   });
 
-  it("uses default values when env vars are not set", async () => {
-    delete process.env.BETA_MAX_ACTIVE_STRATEGIES;
-    delete process.env.BETA_MAX_CONCURRENT_BACKTESTS;
-
-    const { BETA_LIMITS } = await import("./beta-limits.config.js");
-
-    expect(BETA_LIMITS.maxActiveStrategies).toBe(3);
-    expect(BETA_LIMITS.maxConcurrentBacktests).toBe(1);
-  });
-
-  it("parses integer env vars correctly", async () => {
-    process.env.BETA_MAX_ACTIVE_STRATEGIES = "10";
-    process.env.BETA_MAX_CONCURRENT_BACKTESTS = "5";
-
-    const { BETA_LIMITS } = await import("./beta-limits.config.js");
-
-    expect(BETA_LIMITS.maxActiveStrategies).toBe(10);
-    expect(BETA_LIMITS.maxConcurrentBacktests).toBe(5);
-  });
-
-  it("falls back to default when env var is empty string", async () => {
-    process.env.BETA_MAX_ACTIVE_STRATEGIES = "";
-
-    const { BETA_LIMITS } = await import("./beta-limits.config.js");
-
-    expect(BETA_LIMITS.maxActiveStrategies).toBe(3);
-  });
-
-  it("falls back to default when env var is non-numeric", async () => {
-    process.env.BETA_MAX_ACTIVE_STRATEGIES = "not-a-number";
-
-    const { BETA_LIMITS } = await import("./beta-limits.config.js");
-
-    expect(BETA_LIMITS.maxActiveStrategies).toBe(3);
+  it("exposes marketDataRateLimitPerMinute (100 outside CI, 10000 in CI)", () => {
+    const inCI = process.env.CI === "true";
+    if (inCI) {
+      expect(BETA_LIMITS_DEFAULTS.marketDataRateLimitPerMinute).toBe(10_000);
+    } else {
+      expect(BETA_LIMITS_DEFAULTS.marketDataRateLimitPerMinute).toBe(100);
+    }
   });
 });

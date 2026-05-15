@@ -17,6 +17,7 @@ const mockedVerifySync = vi.mocked(verifySync);
 function makeMockRedisClient() {
   return {
     get: vi.fn().mockResolvedValue(null),
+    set: vi.fn().mockResolvedValue('OK'),
     del: vi.fn().mockResolvedValue(1),
     incr: vi.fn().mockResolvedValue(1),
     expire: vi.fn().mockResolvedValue(1),
@@ -167,6 +168,36 @@ describe('TotpService', () => {
       await service.confirm('user-id', '123456');
 
       expect(redis.del).toHaveBeenCalledWith('totp:pending:user-id');
+      expect(redis._ioClient.set).toHaveBeenCalledWith(
+        'totp:used:user-id:123456',
+        '1',
+        'EX',
+        90,
+        'NX',
+      );
+    });
+
+    it('rejects a valid TOTP code that was already consumed (replay) during confirm', async () => {
+      mockedVerifySync.mockReturnValueOnce({ valid: true } as any);
+      redis.get.mockResolvedValue('JBSWY3DPEHPK3PXP');
+      redis._ioClient.set.mockResolvedValue(null); // already consumed
+
+      await expect(
+        service.confirm('user-id', '123456'),
+      ).rejects.toMatchObject({
+        response: { code: 'TOTP_INVALID' },
+        status: HttpStatus.BAD_REQUEST,
+      });
+
+      expect(redis._ioClient.set).toHaveBeenCalledWith(
+        'totp:used:user-id:123456',
+        '1',
+        'EX',
+        90,
+        'NX',
+      );
+      expect(db.$transaction).not.toHaveBeenCalled();
+      expect(redis.del).not.toHaveBeenCalledWith('totp:pending:user-id');
     });
   });
 
@@ -253,6 +284,7 @@ describe('TotpService', () => {
       } as any);
       db.user.findUniqueOrThrow.mockResolvedValue(user as any);
       db.user.update.mockResolvedValue(user as any);
+      redis._ioClient.set.mockResolvedValue('OK');
 
       await service.disable(user.id, 'correct_password', validCode);
 
@@ -265,6 +297,44 @@ describe('TotpService', () => {
           totpBackupCodes: [],
         },
       });
+      expect(redis._ioClient.set).toHaveBeenCalledWith(
+        `totp:used:${user.id}:${validCode}`,
+        '1',
+        'EX',
+        90,
+        'NX',
+      );
+    });
+
+    it('rejects a valid TOTP code that was already consumed (replay) during disable', async () => {
+      const bcrypt = await import('bcrypt');
+      const hash = await bcrypt.hash('correct_password', 10);
+      const secret = generateSecret({ length: 20 });
+      const validCode = generateSync({ secret, strategy: 'totp' });
+      const encrypted = (service as any).encrypt(secret);
+      const user = userFactory({
+        totpEnabled: true,
+        passwordHash: hash,
+        totpSecret: encrypted,
+      } as any);
+      db.user.findUniqueOrThrow.mockResolvedValue(user as any);
+      redis._ioClient.set.mockResolvedValue(null);
+
+      await expect(
+        service.disable(user.id, 'correct_password', validCode),
+      ).rejects.toMatchObject({
+        response: { code: 'INVALID_TOTP' },
+        status: HttpStatus.UNAUTHORIZED,
+      });
+
+      expect(redis._ioClient.set).toHaveBeenCalledWith(
+        `totp:used:${user.id}:${validCode}`,
+        '1',
+        'EX',
+        90,
+        'NX',
+      );
+      expect(db.user.update).not.toHaveBeenCalled();
     });
   });
 
@@ -430,6 +500,41 @@ describe('TotpService', () => {
           method: 'totp',
         }),
         'TOTP verification succeeded',
+      );
+    });
+
+    it('rejects a valid TOTP code that was already consumed in its validity window', async () => {
+      redis._ioClient.get.mockResolvedValue(null);
+      redis._ioClient.set.mockResolvedValue(null);
+
+      const secret = generateSecret({ length: 20 });
+      const validCode = generateSync({ secret, strategy: 'totp' });
+      const encrypted = (service as any).encrypt(secret);
+
+      const user = {
+        ...userFactory({ totpEnabled: true }),
+        totpSecret: encrypted,
+        totpBackupCodes: [],
+      };
+      db.user.findUnique.mockResolvedValue(user as any);
+
+      const result = await service.verify(user.id, validCode);
+
+      expect(result).toBe(false);
+      expect(redis._ioClient.set).toHaveBeenCalledWith(
+        `totp:used:${user.id}:${validCode}`,
+        '1',
+        'EX',
+        90,
+        'NX',
+      );
+      expect(redis._ioClient.del).not.toHaveBeenCalledWith(
+        `totp:fail:${user.id}`,
+      );
+      expect(redis._ioClient.incr).toHaveBeenCalledWith(`totp:fail:${user.id}`);
+      expect(redis._ioClient.expire).toHaveBeenCalledWith(
+        `totp:fail:${user.id}`,
+        900,
       );
     });
 

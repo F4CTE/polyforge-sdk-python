@@ -1,7 +1,7 @@
 import { Logger } from "@nestjs/common";
 import { StrategyStatus } from ".prisma/client";
 import { PrismaService } from "@polyforge/shared-db";
-import { RedisService } from "@polyforge/shared-redis";
+import { RedisService, BetaLimitsConfigService } from "@polyforge/shared-redis";
 import { StrategyVariable, SubStrategyMode } from "@polyforge/shared-types";
 import type { VenueId } from "@polyforge/shared-types";
 import { EvalContext, OrderIntent } from "../blocks/block.types";
@@ -16,9 +16,9 @@ import {
 import { resolveParams } from "../blocks/resolve-params";
 import { StateService } from "../state/state.service";
 import { safeEvaluate } from "../common/safe-evaluate";
-import { BETA_LIMITS } from "../common/beta-limits.config";
 import { sma, ema, macd, bollingerBands, atr } from "../ta/indicators";
 import { readPriceWindow } from "../ta/price-window";
+import { TickMutex } from "./tick-mutex";
 
 /** Redis key for daily execution counter — resets at midnight UTC */
 const dailyExecKey = (strategyId: string): string => {
@@ -29,6 +29,7 @@ const dailyExecKey = (strategyId: string): string => {
 
 const MIN_TICK_MS = 200;
 const STALE_PRICE_MS = 5_000;
+const MAX_STALE_CHECK_BACKOFF_MS = 60_000;
 
 export type StrategyRunnerStatus = "RUNNING" | "PAUSED" | "STOPPED";
 
@@ -36,6 +37,7 @@ export interface Block {
   id: string;
   type: string;
   params?: Record<string, unknown>;
+  config?: Record<string, unknown>;
 }
 
 export interface LogicBlock extends Block {
@@ -60,11 +62,18 @@ export class StrategyRunner {
   private readonly logger: Logger;
   status: StrategyRunnerStatus = "RUNNING";
   private timer: NodeJS.Timeout | null = null;
-  pauseReason: string | null = null;
+  private _pauseReason: string | null = null;
+  get pauseReason() {
+    return this._pauseReason;
+  }
   private delayedActions: Map<string, NodeJS.Timeout> = new Map();
-
   /** Throttles EVENT-mode ticks to prevent bursty in-order evaluation */
   private lastTickMs = -MIN_TICK_MS;
+  private lastStaleCheckMs = 0;
+  private staleCheckBackoffMs = STALE_PRICE_MS;
+  readonly tickMutex = new TickMutex();
+  /** True when a follow-up tick is scheduled — bypasses the min-tick throttle */
+  private _scheduledFollowUp = false;
 
   /** Tracks child strategy IDs launched by RUN_STRATEGY action blocks */
   readonly childStrategies: Set<string> = new Set();
@@ -82,6 +91,7 @@ export class StrategyRunner {
     private readonly safety: Block[],
     private readonly variables: StrategyVariable[],
     private readonly redis: RedisService,
+    private readonly betaLimits: BetaLimitsConfigService,
     private readonly prisma: PrismaService,
     private readonly state: StateService,
     private readonly onIntents: (intents: OrderIntent[]) => Promise<void>,
@@ -132,13 +142,13 @@ export class StrategyRunner {
 
   pause(reason = "manual") {
     this.status = "PAUSED";
-    this.pauseReason = reason;
+    this._pauseReason = reason;
     this.logger.log(`Paused: ${reason}`);
   }
 
   resume() {
     this.status = "RUNNING";
-    this.pauseReason = null;
+    this._pauseReason = null;
     this.logger.log("Resumed");
   }
 
@@ -171,41 +181,84 @@ export class StrategyRunner {
 
   // ─── Core evaluation pipeline ─────────────────────────────────────────────
 
-  private tickLockKey(): string {
-    return `strategy:${this.strategyId}:tick:lock`;
-  }
-
   private async tick() {
+    // Auto-resume from stale-data pause when data is fresh again.
+    // Checked before the status guard so PAUSED runners can auto-recover
+    // after a WS reconnect repopulates the price cache.
+    //
+    // Throttled with exponential backoff: starts at STALE_PRICE_MS (5s),
+    // doubles on each consecutive stale check up to MAX_STALE_CHECK_BACKOFF_MS (60s).
+    // This prevents Redis mget fan-out from sustained tick intervals during
+    // prolonged feed outages.
+    if (
+      this.status === "PAUSED" &&
+      this._pauseReason?.startsWith("stale_market_data")
+    ) {
+      const now = Date.now();
+      if (now - this.lastStaleCheckMs < this.staleCheckBackoffMs) {
+        return;
+      }
+      this.lastStaleCheckMs = now;
+
+      try {
+        const stillStale = await this.detectStaleData();
+        if (!stillStale) {
+          // Re-check after the await — a concurrent stop() or overlapping
+          // tick may have changed status / pauseReason while we were waiting.
+          if (
+            this.status !== "PAUSED" ||
+            !this.pauseReason?.startsWith("stale_market_data")
+          ) {
+            return;
+          }
+          this.staleCheckBackoffMs = STALE_PRICE_MS;
+          this.resume();
+          await this.onStatusChange("RUNNING");
+          await this.emitStrategyEvent("STRATEGY_STARTED");
+        } else {
+          // Exponential backoff — double the interval on each consecutive stale read
+          this.staleCheckBackoffMs = Math.min(
+            this.staleCheckBackoffMs * 2,
+            MAX_STALE_CHECK_BACKOFF_MS,
+          );
+          return;
+        }
+      } catch (err) {
+        this.logger.error("Auto-resume from stale-data failed", err);
+        return;
+      }
+    }
+
     if (this.status !== "RUNNING") return;
 
     // Throttle EVENT/HYBRID event-driven ticks to prevent bursty
     // every_tick triggers from firing on every incoming price event.
-    const now = Date.now();
-    if (now - this.lastTickMs < MIN_TICK_MS) return;
-    this.lastTickMs = now;
+    // Bypassed for internally-scheduled follow-up ticks (deferred work
+    // that was coalesced while the mutex was held).
+    const followUp = this._scheduledFollowUp;
+    this._scheduledFollowUp = false;
+    if (!followUp) {
+      const now = Date.now();
+      if (now - this.lastTickMs < MIN_TICK_MS) return;
+      this.lastTickMs = now;
+    }
 
-    // Serialize concurrent ticks per strategy — at most one tick at a time
-    const redisClient = this.redis.getClient();
-    const acquired = await redisClient.set(
-      this.tickLockKey(),
-      "1",
-      "EX",
-      30,
-      "NX",
-    );
-    if (!acquired) return;
-
+    if (!this.tickMutex.tryEnter()) return;
     try {
       // Enforce daily execution limit — auto-stop if exceeded
+      const redisClient = this.redis.getClient();
       const key = dailyExecKey(this.strategyId);
       const count = await redisClient.incr(key);
       if (count === 1) {
         // New key: set TTL to 25 hours so it expires safely after UTC midnight
         await redisClient.expire(key, 90_000);
       }
-      if (count > BETA_LIMITS.maxDailyStrategyExecutions) {
+      const maxDaily = await this.betaLimits.getLimit(
+        "maxDailyStrategyExecutions",
+      );
+      if (count > maxDaily) {
         this.logger.warn(
-          `Strategy ${this.strategyId} hit daily execution limit (${BETA_LIMITS.maxDailyStrategyExecutions}) — pausing until midnight UTC`,
+          `Strategy ${this.strategyId} hit daily execution limit (${maxDaily}) — pausing until midnight UTC`,
         );
         this.pause("daily_execution_limit_reached");
         await this.onStatusChange(
@@ -218,8 +271,24 @@ export class StrategyRunner {
       await this.evaluate();
     } catch (err) {
       this.logger.error("Tick evaluation failed", err);
+      // Pause on counter increment failures — orders may have been
+      // published but the accounting state (order counters, orders-per-min
+      // sliding window) is inconsistent. Continuing would risk overtrading
+      // and safety-block bypass.
+      if (
+        err instanceof Error &&
+        err.message.includes("Counter increment failed")
+      ) {
+        this.pause("counter_increment_failed");
+        await this.onStatusChange("PAUSED", "counter_increment_failed").catch(
+          () => {},
+        );
+      }
     } finally {
-      await redisClient.del(this.tickLockKey()).catch(() => {});
+      if (this.tickMutex.exit()) {
+        this._scheduledFollowUp = true;
+        void this.tick();
+      }
     }
   }
 
@@ -280,7 +349,7 @@ export class StrategyRunner {
       // Group by tokenId to batch price-window reads
       const priceCache = new Map<string, number[]>();
       for (const block of taBlocks) {
-        const p = block.params ?? {};
+        const p = StrategyRunner.mergedParams(block);
         const tokenId = typeof p.tokenId === "string" ? p.tokenId : "";
         if (!tokenId) continue;
 
@@ -336,7 +405,10 @@ export class StrategyRunner {
 
         const resolvedBlock = {
           ...block,
-          params: resolveParams(block.params ?? {}, ctx.variables ?? {}),
+          params: resolveParams(
+            { ...(block.config ?? {}), ...(block.params ?? {}) },
+            ctx.variables ?? {},
+          ),
         };
 
         // Gather numeric inputs from variables referenced in params
@@ -344,11 +416,7 @@ export class StrategyRunner {
         const inputB = Number(resolvedBlock.params?.inputB ?? 0);
         const inputs = [inputA, inputB];
 
-        const result = evaluator.evaluate(
-          resolvedBlock as Record<string, unknown>,
-          inputs,
-          ctx,
-        );
+        const result = evaluator.evaluate(resolvedBlock, inputs, ctx);
 
         // Store the result in context variables so other blocks can reference it
         ctx.variables = ctx.variables ?? {};
@@ -378,14 +446,38 @@ export class StrategyRunner {
     // 2. SAFETY — any failure stops the strategy
     for (const block of this.safety) {
       const evaluator = SAFETY_REGISTRY[block.type];
-      if (!evaluator) continue;
+      if (!evaluator) {
+        // Unknown safety block — fail closed
+        this.logger.error(
+          `Unknown safety block type: ${block.type}. Failing closed for safety.`,
+        );
+        this.stop();
+        await this.onStatusChange(
+          "STOPPED",
+          `Unknown safety block: ${block.type}`,
+        );
+        await this.prisma.strategy
+          .update({
+            where: { id: this.strategyId },
+            data: { status: StrategyStatus.IDLE },
+          })
+          .catch(() => {});
+        await this.emitStrategyEvent(
+          "STRATEGY_STOPPED",
+          `Unknown safety block: ${block.type}`,
+        );
+        return;
+      }
 
       const resolvedBlock = {
         ...block,
-        params: resolveParams(block.params ?? {}, ctx.variables ?? {}),
+        params: resolveParams(
+          { ...(block.config ?? {}), ...(block.params ?? {}) },
+          ctx.variables ?? {},
+        ),
       };
       const result = await evaluator.evaluate(
-        resolvedBlock as Record<string, unknown>,
+        resolvedBlock,
         ctx,
         this.redis,
         this.prisma,
@@ -412,10 +504,13 @@ export class StrategyRunner {
 
       const resolvedBlock = {
         ...block,
-        params: resolveParams(block.params ?? {}, ctx.variables ?? {}),
+        params: resolveParams(
+          { ...(block.config ?? {}), ...(block.params ?? {}) },
+          ctx.variables ?? {},
+        ),
       };
       const result = await evaluator.evaluate(
-        resolvedBlock as Record<string, unknown>,
+        resolvedBlock,
         ctx,
         this.redis,
         this.prisma,
@@ -430,11 +525,20 @@ export class StrategyRunner {
     // 4. CONDITIONS — ALL conditions must pass
     for (const block of this.conditions) {
       const evaluator = CONDITION_REGISTRY[block.type];
-      if (!evaluator) continue;
+      if (!evaluator) {
+        // Unknown condition — fail closed
+        this.logger.warn(
+          `Unknown condition block type: ${block.type}. Failing closed.`,
+        );
+        return; // condition failed, skip tick
+      }
 
       const resolvedBlock = {
         ...block,
-        params: resolveParams(block.params ?? {}, ctx.variables ?? {}),
+        params: resolveParams(
+          { ...(block.config ?? {}), ...(block.params ?? {}) },
+          ctx.variables ?? {},
+        ),
       };
       const result = await evaluator.evaluate(
         resolvedBlock,
@@ -468,10 +572,13 @@ export class StrategyRunner {
 
       const resolvedBlock = {
         ...block,
-        params: resolveParams(block.params ?? {}, ctx.variables ?? {}),
+        params: resolveParams(
+          { ...(block.config ?? {}), ...(block.params ?? {}) },
+          ctx.variables ?? {},
+        ),
       };
       const result = await evaluator.execute(
-        resolvedBlock as Record<string, unknown>,
+        resolvedBlock,
         ctx,
         this.redis,
         this.prisma,
@@ -607,11 +714,7 @@ export class StrategyRunner {
         params: resolveParams(block.params ?? {}, ctx.variables ?? {}),
       };
 
-      const result = evaluator.evaluate(
-        resolvedBlock as Record<string, unknown>,
-        inputs,
-        ctx,
-      );
+      const result = evaluator.evaluate(resolvedBlock, inputs, ctx);
       results.set(blockId, result);
 
       // Handle DELAY blocks: schedule delayed execution
@@ -643,6 +746,11 @@ export class StrategyRunner {
     this.delayedActions.set(blockId, timer);
   }
 
+  /** Merge config + params with params taking priority (consistent with evaluation phases). */
+  private static mergedParams(block: Block): Record<string, unknown> {
+    return { ...(block.config ?? {}), ...(block.params ?? {}) };
+  }
+
   /** Precomputed: all tokenIds referenced in triggers + actions */
   private _cachedTokenIds: string[] | null = null;
 
@@ -650,7 +758,7 @@ export class StrategyRunner {
     if (this._cachedTokenIds) return this._cachedTokenIds;
     const ids = new Set<string>();
     for (const block of [...this.triggers, ...this.actions]) {
-      const params = block.params;
+      const params = StrategyRunner.mergedParams(block);
       if (params?.tokenId && typeof params.tokenId === "string")
         ids.add(params.tokenId);
     }

@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { NotFoundException } from "@nestjs/common";
 import { BacktestsService } from "./backtests.service";
 import { createMockDb, MockDb } from "../../test/helpers/mock-db";
-import { RedisService } from "@polyforge/shared-redis";
+import { RedisService, BetaLimitsConfigService } from "@polyforge/shared-redis";
 
 // ─── Factories ────────────────────────────────────────────────────────────────
 
@@ -56,7 +56,12 @@ describe("BacktestsService", () => {
       set: vi.fn(),
       del: vi.fn(),
     } as unknown as RedisService;
-    service = new BacktestsService(db as any, redis);
+    const betaLimits = {
+      getAllLimits: vi.fn(),
+      getLimit: vi.fn(),
+      setLimits: vi.fn(),
+    } as unknown as BetaLimitsConfigService;
+    service = new BacktestsService(db as any, redis, betaLimits);
   });
 
   afterEach(() => {

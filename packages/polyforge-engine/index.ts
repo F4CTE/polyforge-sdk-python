@@ -15,6 +15,7 @@ export interface EvalContext {
   daily_pnl: number;
   total_exposure: number;
   open_positions: number;
+  pending_orders: number;
   consecutive_losses: number;
   orders_today: number;
   variables: Record<string, number>;

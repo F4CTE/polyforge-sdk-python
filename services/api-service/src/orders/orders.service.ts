@@ -6,7 +6,7 @@ import {
   BadRequestException,
   ConflictException,
 } from "@nestjs/common";
-import { BETA_LIMITS } from "../common/beta-limits.config";
+import { BetaLimitsConfigService } from "@polyforge/shared-redis";
 import { getMonthlyConfirmedVolume } from "../common/monthly-volume";
 import { ConfigService } from "@nestjs/config";
 import { JwtService } from "@nestjs/jwt";
@@ -54,6 +54,7 @@ export class OrdersService {
     private readonly config: ConfigService,
     private readonly jwtService: JwtService,
     private readonly posthog: PosthogService,
+    private readonly betaLimits: BetaLimitsConfigService,
   ) {}
 
   async list(
@@ -379,7 +380,8 @@ export class OrdersService {
       this.redis,
       userId,
     );
-    if (currentMonthlyVolume + totalSize > BETA_LIMITS.maxMonthlyVolumeUsdc) {
+    const maxMonthly = await this.betaLimits.getLimit("maxMonthlyVolumeUsdc");
+    if (currentMonthlyVolume + totalSize > maxMonthly) {
       throw new UnprocessableEntityException({
         code: "MONTHLY_VOLUME_EXCEEDED",
         message: `Beta limit: monthly trade volume cap exceeded by batch total.`,
@@ -392,11 +394,24 @@ export class OrdersService {
       status: string;
     }> = [];
 
-    for (const orderDto of dto.orders) {
-      const token = await this.prisma.token.findUniqueOrThrow({
-        where: { id: orderDto.tokenId },
-        include: { market: true },
+    const requestedTokenIds = [...new Set(dto.orders.map((o) => o.tokenId))];
+    const preloadedTokens = await this.prisma.token.findMany({
+      where: { id: { in: requestedTokenIds } },
+      include: { market: true },
+    });
+    const preloadedTokenById = new Map(preloadedTokens.map((t) => [t.id, t]));
+    const missingTokenIds = requestedTokenIds.filter(
+      (id) => !preloadedTokenById.has(id),
+    );
+    if (missingTokenIds.length > 0) {
+      throw new NotFoundException({
+        code: "TOKEN_NOT_FOUND",
+        message: `Token not found: ${missingTokenIds[0]}`,
       });
+    }
+
+    for (const orderDto of dto.orders) {
+      const token = preloadedTokenById.get(orderDto.tokenId)!;
 
       const intentId = randomUUID();
       const orderId = randomUUID();
@@ -578,10 +593,11 @@ export class OrdersService {
 
     // 2a. Enforce max position size per order
     const orderSize = Number(dto.size);
-    if (orderSize > BETA_LIMITS.maxPositionSizeUsdc) {
+    const maxPosition = await this.betaLimits.getLimit("maxPositionSizeUsdc");
+    if (orderSize > maxPosition) {
       throw new UnprocessableEntityException({
         code: "POSITION_SIZE_EXCEEDED",
-        message: `Beta limit: maximum position size is $${BETA_LIMITS.maxPositionSizeUsdc} USDC per order.`,
+        message: `Beta limit: maximum position size is $${maxPosition} USDC per order.`,
       });
     }
 
@@ -591,14 +607,15 @@ export class OrdersService {
       this.redis,
       userId,
     );
-    if (currentMonthlyVolume + orderSize > BETA_LIMITS.maxMonthlyVolumeUsdc) {
+    const maxMonthly = await this.betaLimits.getLimit("maxMonthlyVolumeUsdc");
+    if (currentMonthlyVolume + orderSize > maxMonthly) {
       const remaining = Math.max(
         0,
-        BETA_LIMITS.maxMonthlyVolumeUsdc - currentMonthlyVolume,
+        maxMonthly - currentMonthlyVolume,
       );
       throw new UnprocessableEntityException({
         code: "MONTHLY_VOLUME_EXCEEDED",
-        message: `Beta limit: monthly trade volume cap of $${BETA_LIMITS.maxMonthlyVolumeUsdc} USDC reached. Remaining this month: $${remaining.toFixed(2)}.`,
+        message: `Beta limit: monthly trade volume cap of $${maxMonthly} USDC reached. Remaining this month: $${remaining.toFixed(2)}.`,
       });
     }
 

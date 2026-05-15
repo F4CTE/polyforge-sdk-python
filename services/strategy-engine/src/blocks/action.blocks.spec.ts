@@ -228,6 +228,70 @@ describe("SetStopLossAction", () => {
     );
     expect(parseFloat(intents[0].price)).toBeCloseTo(0.72, 2); // 0.80 * 0.9
   });
+
+  it("throws for negative pct", async () => {
+    const prisma = makePrisma();
+    prisma.position.findUnique.mockResolvedValue({
+      size: "100",
+      avgPrice: "0.60",
+    });
+    await expect(
+      SetStopLossAction.execute(
+        block("set_stop_loss", { tokenId: "tok-yes", pct: "-0.1" }),
+        makeCtx(),
+        makeRedis(),
+        prisma,
+      ),
+    ).rejects.toThrow(/set_stop_loss pct/);
+  });
+
+  it("throws for zero pct", async () => {
+    const prisma = makePrisma();
+    prisma.position.findUnique.mockResolvedValue({
+      size: "100",
+      avgPrice: "0.60",
+    });
+    await expect(
+      SetStopLossAction.execute(
+        block("set_stop_loss", { tokenId: "tok-yes", pct: "0" }),
+        makeCtx(),
+        makeRedis(),
+        prisma,
+      ),
+    ).rejects.toThrow(/set_stop_loss pct/);
+  });
+
+  it("throws for pct >= 1", async () => {
+    const prisma = makePrisma();
+    prisma.position.findUnique.mockResolvedValue({
+      size: "100",
+      avgPrice: "0.60",
+    });
+    await expect(
+      SetStopLossAction.execute(
+        block("set_stop_loss", { tokenId: "tok-yes", pct: "1.0" }),
+        makeCtx(),
+        makeRedis(),
+        prisma,
+      ),
+    ).rejects.toThrow(/set_stop_loss pct/);
+  });
+
+  it("throws for non-numeric pct", async () => {
+    const prisma = makePrisma();
+    prisma.position.findUnique.mockResolvedValue({
+      size: "100",
+      avgPrice: "0.60",
+    });
+    await expect(
+      SetStopLossAction.execute(
+        block("set_stop_loss", { tokenId: "tok-yes", pct: "abc" }),
+        makeCtx(),
+        makeRedis(),
+        prisma,
+      ),
+    ).rejects.toThrow(/finite decimal/);
+  });
 });
 
 describe("TakeProfitAction", () => {
@@ -277,6 +341,70 @@ describe("TakeProfitAction", () => {
     );
     expect(intents).toHaveLength(0);
   });
+
+  it("throws for negative pct", async () => {
+    const prisma = makePrisma();
+    prisma.position.findUnique.mockResolvedValue({
+      size: "100",
+      avgPrice: "0.60",
+    });
+    await expect(
+      TakeProfitAction.execute(
+        block("take_profit", { tokenId: "tok-yes", pct: "-0.1" }),
+        makeCtx(),
+        makeRedis(),
+        prisma,
+      ),
+    ).rejects.toThrow(/take_profit pct/);
+  });
+
+  it("throws for zero pct", async () => {
+    const prisma = makePrisma();
+    prisma.position.findUnique.mockResolvedValue({
+      size: "100",
+      avgPrice: "0.60",
+    });
+    await expect(
+      TakeProfitAction.execute(
+        block("take_profit", { tokenId: "tok-yes", pct: "0" }),
+        makeCtx(),
+        makeRedis(),
+        prisma,
+      ),
+    ).rejects.toThrow(/take_profit pct/);
+  });
+
+  it("throws for pct >= 1", async () => {
+    const prisma = makePrisma();
+    prisma.position.findUnique.mockResolvedValue({
+      size: "100",
+      avgPrice: "0.60",
+    });
+    await expect(
+      TakeProfitAction.execute(
+        block("take_profit", { tokenId: "tok-yes", pct: "1.0" }),
+        makeCtx(),
+        makeRedis(),
+        prisma,
+      ),
+    ).rejects.toThrow(/take_profit pct/);
+  });
+
+  it("throws for non-numeric pct", async () => {
+    const prisma = makePrisma();
+    prisma.position.findUnique.mockResolvedValue({
+      size: "100",
+      avgPrice: "0.60",
+    });
+    await expect(
+      TakeProfitAction.execute(
+        block("take_profit", { tokenId: "tok-yes", pct: "abc" }),
+        makeCtx(),
+        makeRedis(),
+        prisma,
+      ),
+    ).rejects.toThrow(/finite decimal/);
+  });
 });
 
 describe("ScaleInAction", () => {
@@ -318,6 +446,7 @@ describe("ScaleInAction", () => {
 describe("ScaleOutAction", () => {
   it("produces a SELL order to reduce existing position", async () => {
     const prisma = makePrisma();
+    prisma.position.findUnique.mockResolvedValue({ size: "100" });
     prisma.token.findUnique.mockResolvedValue(TOKEN);
     const redis = makeRedis({
       getJson: vi.fn().mockResolvedValue({ price: 0.7 }),
@@ -340,12 +469,100 @@ describe("ScaleOutAction", () => {
     expect(intents[0].orderType).toBe("FOK");
   });
 
+  it("returns empty intents when no position exists", async () => {
+    const prisma = makePrisma(); // findUnique returns null
+    prisma.token.findUnique.mockResolvedValue(TOKEN);
+
+    const { intents } = await ScaleOutAction.execute(
+      block("scale_out", { tokenId: "tok-yes", reduceBySize: "10" }),
+      makeCtx(),
+      makeRedis(),
+      prisma,
+    );
+    expect(intents).toHaveLength(0);
+  });
+
+  it("returns empty intents when position size is 0", async () => {
+    const prisma = makePrisma();
+    prisma.position.findUnique.mockResolvedValue({ size: "0" });
+    prisma.token.findUnique.mockResolvedValue(TOKEN);
+
+    const { intents } = await ScaleOutAction.execute(
+      block("scale_out", { tokenId: "tok-yes", reduceBySize: "10" }),
+      makeCtx(),
+      makeRedis(),
+      prisma,
+    );
+    expect(intents).toHaveLength(0);
+  });
+
+  it("caps reduceBySize to position size when oversized", async () => {
+    const prisma = makePrisma();
+    prisma.position.findUnique.mockResolvedValue({ size: "50" });
+    prisma.token.findUnique.mockResolvedValue(TOKEN);
+    const redis = makeRedis({
+      getJson: vi.fn().mockResolvedValue({ price: 0.7 }),
+    });
+
+    const { intents } = await ScaleOutAction.execute(
+      block("scale_out", {
+        tokenId: "tok-yes",
+        reduceBySize: "100",
+        orderType: "GTC",
+      }),
+      makeCtx(),
+      redis,
+      prisma,
+    );
+
+    expect(intents).toHaveLength(1);
+    expect(intents[0].side).toBe("SELL");
+    expect(intents[0].size).toBe("50");
+  });
+
+  it("returns empty intents when reduceBySize is not a valid decimal", async () => {
+    const prisma = makePrisma();
+    prisma.position.findUnique.mockResolvedValue({ size: "100" });
+    prisma.token.findUnique.mockResolvedValue(TOKEN);
+
+    const { intents } = await ScaleOutAction.execute(
+      block("scale_out", {
+        tokenId: "tok-yes",
+        reduceBySize: "not-a-number",
+      }),
+      makeCtx(),
+      makeRedis(),
+      prisma,
+    );
+    expect(intents).toHaveLength(0);
+  });
+
+  it("returns empty intents when reduceBySize is 0 or negative", async () => {
+    const prisma = makePrisma();
+    prisma.position.findUnique.mockResolvedValue({ size: "100" });
+    prisma.token.findUnique.mockResolvedValue(TOKEN);
+
+    const { intents } = await ScaleOutAction.execute(
+      block("scale_out", {
+        tokenId: "tok-yes",
+        reduceBySize: "0",
+      }),
+      makeCtx(),
+      makeRedis(),
+      prisma,
+    );
+    expect(intents).toHaveLength(0);
+  });
+
   it("returns empty intents when token not found", async () => {
+    const prisma = makePrisma();
+    prisma.position.findUnique.mockResolvedValue({ size: "100" });
+
     const { intents } = await ScaleOutAction.execute(
       block("scale_out", { tokenId: "unknown", reduceBySize: "10" }),
       makeCtx(),
       makeRedis(),
-      makePrisma(),
+      prisma,
     );
     expect(intents).toHaveLength(0);
   });

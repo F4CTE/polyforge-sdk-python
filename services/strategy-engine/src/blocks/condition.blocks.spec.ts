@@ -177,6 +177,117 @@ describe("MaxPositionBlock", () => {
     expect(res.fired).toBe(false);
     expect(res.reason).toMatch(/invalid position currentPrice/);
   });
+
+  it("includes pending orders in position value", async () => {
+    const prisma = makePrisma();
+    prisma.position.findUnique.mockResolvedValue({
+      size: "50",
+      currentPrice: "0.4",
+    }); // 20 USDC
+    prisma.order.findMany.mockResolvedValue([
+      { size: "100", price: "0.3" }, // 30 USDC
+    ]);
+    const res = await MaxPositionBlock.evaluate(
+      block("max_position", { tokenId: "tok1", maxUsdc: "60" }),
+      makeCtx(),
+      makeRedis(),
+      prisma,
+    );
+    // 20 + 30 = 50 < 60
+    expect(res.fired).toBe(true);
+    expect(res.reason).toMatch(/position \$50\.00/);
+  });
+
+  it("fails when position + pending orders exceed max", async () => {
+    const prisma = makePrisma();
+    prisma.position.findUnique.mockResolvedValue({
+      size: "50",
+      currentPrice: "0.4",
+    }); // 20 USDC
+    prisma.order.findMany.mockResolvedValue([
+      { size: "200", price: "0.3" }, // 60 USDC
+    ]);
+    const res = await MaxPositionBlock.evaluate(
+      block("max_position", { tokenId: "tok1", maxUsdc: "60" }),
+      makeCtx(),
+      makeRedis(),
+      prisma,
+    );
+    // 20 + 60 = 80 >= 60
+    expect(res.fired).toBe(false);
+    expect(res.reason).toMatch(/position \$80\.00/);
+  });
+
+  it("treats pending orders alone as position exposure", async () => {
+    const prisma = makePrisma(); // findUnique returns null (no position)
+    prisma.order.findMany.mockResolvedValue([
+      { size: "100", price: "0.5" }, // 50 USDC
+    ]);
+    const res = await MaxPositionBlock.evaluate(
+      block("max_position", { tokenId: "tok1", maxUsdc: "100" }),
+      makeCtx(),
+      makeRedis(),
+      prisma,
+    );
+    // 0 + 50 < 100
+    expect(res.fired).toBe(true);
+    expect(res.reason).toMatch(/position \$50\.00/);
+  });
+
+  it("fails when pending orders alone exceed max", async () => {
+    const prisma = makePrisma(); // findUnique returns null (no position)
+    prisma.order.findMany.mockResolvedValue([
+      { size: "200", price: "0.5" }, // 100 USDC
+    ]);
+    const res = await MaxPositionBlock.evaluate(
+      block("max_position", { tokenId: "tok1", maxUsdc: "50" }),
+      makeCtx(),
+      makeRedis(),
+      prisma,
+    );
+    // 0 + 100 >= 50
+    expect(res.fired).toBe(false);
+    expect(res.reason).toMatch(/position \$100\.00/);
+  });
+
+  it("queries pending orders by userId, tokenId, and active status", async () => {
+    const prisma = makePrisma();
+    prisma.position.findUnique.mockResolvedValue({
+      size: "10",
+      currentPrice: "0.5",
+    });
+    const ctx = makeCtx();
+    await MaxPositionBlock.evaluate(
+      block("max_position", { tokenId: "tok-abc", maxUsdc: "500" }),
+      ctx,
+      makeRedis(),
+      prisma,
+    );
+    expect(prisma.order.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: {
+          userId: ctx.userId,
+          tokenId: "tok-abc",
+          side: "BUY",
+          status: { in: ["PENDING", "SUBMITTED", "LIVE"] },
+        },
+      }),
+    );
+  });
+
+  it("fails closed when a pending order has non-finite price", async () => {
+    const prisma = makePrisma();
+    prisma.position.findUnique.mockResolvedValue(null);
+    prisma.order.findMany.mockResolvedValue([{ size: "10", price: "NaN" }]);
+    const res = await MaxPositionBlock.evaluate(
+      block("max_position", { tokenId: "tok1", maxUsdc: "100" }),
+      makeCtx(),
+      makeRedis(),
+      prisma,
+    );
+    // NaN price → pendingValue = POSITIVE_INFINITY → fired = false
+    expect(res.fired).toBe(false);
+  });
 });
 
 describe("MaxBetsPerDayBlock", () => {
@@ -494,6 +605,65 @@ describe("NoExistingPositionBlock", () => {
     );
     expect(res.fired).toBe(false);
     expect(res.reason).toMatch(/invalid position size/);
+  });
+
+  it("fails when pending orders exist for the token", async () => {
+    const prisma = makePrisma(); // findUnique returns null (no position)
+    prisma.order.findMany.mockResolvedValue([{ id: "order-1" }]);
+    const res = await NoExistingPositionBlock.evaluate(
+      block("no_existing_position", { tokenId: "tok1" }),
+      makeCtx(),
+      makeRedis(),
+      prisma,
+    );
+    expect(res.fired).toBe(false);
+    expect(res.reason).toMatch(/pending order on tok1/);
+  });
+
+  it("passes when no pending orders and no position exist", async () => {
+    const prisma = makePrisma(); // all default mocks return null/[]
+    const res = await NoExistingPositionBlock.evaluate(
+      block("no_existing_position", { tokenId: "tok1" }),
+      makeCtx(),
+      makeRedis(),
+      prisma,
+    );
+    expect(res.fired).toBe(true);
+    expect(res.reason).toMatch(/no position/);
+  });
+
+  it("queries pending orders by userId, tokenId, and active status", async () => {
+    const prisma = makePrisma(); // findUnique returns null (no position)
+    const ctx = makeCtx();
+    await NoExistingPositionBlock.evaluate(
+      block("no_existing_position", { tokenId: "tok-abc" }),
+      ctx,
+      makeRedis(),
+      prisma,
+    );
+    expect(prisma.order.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: {
+          userId: ctx.userId,
+          tokenId: "tok-abc",
+          status: { in: ["PENDING", "SUBMITTED", "LIVE"] },
+        },
+      }),
+    );
+  });
+
+  it("fails when both position and pending orders exist", async () => {
+    const prisma = makePrisma();
+    prisma.position.findUnique.mockResolvedValue({ size: "50.0" });
+    prisma.order.findMany.mockResolvedValue([{ id: "order-1" }]);
+    const res = await NoExistingPositionBlock.evaluate(
+      block("no_existing_position", { tokenId: "tok1" }),
+      makeCtx(),
+      makeRedis(),
+      prisma,
+    );
+    // Position takes priority in the reason message
+    expect(res.fired).toBe(false);
   });
 });
 

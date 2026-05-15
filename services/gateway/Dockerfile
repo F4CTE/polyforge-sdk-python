@@ -88,7 +88,7 @@ RUN pnpm --filter @polyforge/landing build
 # ─── Stage 4: nginx runtime ──────────────────────────────────────────────────
 
 # SECURITY: Pin to digest in production. Run: docker inspect --format='{{index .RepoDigests 0}}' nginx:1.27-alpine
-FROM nginx:1.29-alpine@sha256:5616878291a2eed594aee8db4dade5878cf7edcb475e59193904b198d9b830de
+FROM nginx:1.31-alpine@sha256:f105e3f12187c58ddc3acd09bbe4b9e4a9ab1df855d3d0e511b641077b5e988e
 
 # Remove default nginx config
 RUN rm /etc/nginx/conf.d/default.conf

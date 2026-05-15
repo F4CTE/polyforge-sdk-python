@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import { mockDeep, DeepMockProxy } from "vitest-mock-extended";
 import { NotFoundException } from "@nestjs/common";
 import { MarketsService } from "./markets.service";
 import { createMockDb, MockDb } from "../../test/helpers/mock-db";
@@ -97,18 +98,13 @@ function sqlText(call: unknown[]): string {
 describe("MarketsService", () => {
   let service: MarketsService;
   let db: MockDb;
-  let redis: RedisService;
+  let redis: DeepMockProxy<RedisService>;
 
   beforeEach(() => {
     db = createMockDb();
-    redis = {
-      get: vi.fn().mockResolvedValue(null),
-      set: vi.fn().mockResolvedValue("OK"),
-      getClient: vi.fn().mockReturnValue({
-        get: vi.fn().mockResolvedValue(null),
-        set: vi.fn(),
-      }),
-    } as unknown as RedisService;
+    redis = mockDeep<RedisService>();
+    redis.get.mockResolvedValue(null);
+    redis.set.mockResolvedValue(undefined);
     const config = {
       get: vi.fn().mockReturnValue(undefined),
       getOrThrow: vi.fn().mockReturnValue("http://clob-api.test:3099"),
@@ -423,7 +419,7 @@ describe("MarketsService", () => {
 
   describe("orderBook", () => {
     it("returns empty order book when Redis cache is missing", async () => {
-      (redis.get as ReturnType<typeof vi.fn>).mockResolvedValue(null);
+      redis.get.mockResolvedValue(null);
 
       const result = await service.orderBook("token-uuid-1");
 
@@ -443,9 +439,7 @@ describe("MarketsService", () => {
         asks: [{ price: "0.65", size: "50" }],
         timestamp: 1700000000000,
       };
-      (redis.get as ReturnType<typeof vi.fn>).mockResolvedValue(
-        JSON.stringify(bookData),
-      );
+      redis.get.mockResolvedValue(JSON.stringify(bookData));
 
       const result = await service.orderBook("token-uuid-1");
 
@@ -460,9 +454,7 @@ describe("MarketsService", () => {
         asks: [{ price: "0.65", size: "50" }],
         timestamp: 1700000000000,
       };
-      (redis.get as ReturnType<typeof vi.fn>).mockResolvedValue(
-        JSON.stringify(bookData),
-      );
+      redis.get.mockResolvedValue(JSON.stringify(bookData));
 
       const result = await service.orderBook("token-uuid-1");
 
@@ -475,9 +467,7 @@ describe("MarketsService", () => {
         asks: [{ price: "0.70", size: "50" }],
         timestamp: 1700000000000,
       };
-      (redis.get as ReturnType<typeof vi.fn>).mockResolvedValue(
-        JSON.stringify(bookData),
-      );
+      redis.get.mockResolvedValue(JSON.stringify(bookData));
 
       const result = await service.orderBook("token-uuid-1");
 
@@ -490,9 +480,7 @@ describe("MarketsService", () => {
         asks: [{ price: "0.65", size: "50" }],
         timestamp: 1700000000000,
       };
-      (redis.get as ReturnType<typeof vi.fn>).mockResolvedValue(
-        JSON.stringify(bookData),
-      );
+      redis.get.mockResolvedValue(JSON.stringify(bookData));
 
       const result = await service.orderBook("token-uuid-1");
 
@@ -501,7 +489,7 @@ describe("MarketsService", () => {
     });
 
     it("reads from the correct Redis key", async () => {
-      (redis.get as ReturnType<typeof vi.fn>).mockResolvedValue(null);
+      redis.get.mockResolvedValue(null);
 
       await service.orderBook("token-uuid-abc");
 
@@ -986,12 +974,11 @@ describe("MarketsService", () => {
   // ── getMarketSentiment ────────────────────────────────────────────────
 
   describe("getMarketSentiment", () => {
-    it("returns vote percentages from news signals", async () => {
-      db.newsSignal.findMany.mockResolvedValue([
-        makeNewsSignal({ id: "s1", direction: "BUY", confidence: 80 }),
-        makeNewsSignal({ id: "s2", direction: "BUY", confidence: 70 }),
-        makeNewsSignal({ id: "s3", direction: "SELL", confidence: 60 }),
-      ]);
+    it("returns vote percentages from user sentiment votes", async () => {
+      db.marketSentimentVote.count
+        .mockResolvedValueOnce(2)
+        .mockResolvedValueOnce(1);
+      db.marketSentimentVote.findUnique.mockResolvedValue(null);
 
       const result = await service.getMarketSentiment("market-1");
 
@@ -1001,8 +988,11 @@ describe("MarketsService", () => {
       expect(result.userVote).toBeNull();
     });
 
-    it("returns zero percentages when no signals exist", async () => {
-      db.newsSignal.findMany.mockResolvedValue([]);
+    it("returns zero percentages when no votes exist", async () => {
+      db.marketSentimentVote.count
+        .mockResolvedValueOnce(0)
+        .mockResolvedValueOnce(0);
+      db.marketSentimentVote.findUnique.mockResolvedValue(null);
 
       const result = await service.getMarketSentiment("market-1");
 
@@ -1011,16 +1001,123 @@ describe("MarketsService", () => {
       expect(result.totalVotes).toBe(0);
     });
 
-    it("returns 100% yes when all signals are BUY", async () => {
-      db.newsSignal.findMany.mockResolvedValue([
-        makeNewsSignal({ id: "s1", direction: "BUY", confidence: 90 }),
-        makeNewsSignal({ id: "s2", direction: "BUY", confidence: 80 }),
-      ]);
+    it("returns 100% buy when all votes are BUY", async () => {
+      db.marketSentimentVote.count
+        .mockResolvedValueOnce(2)
+        .mockResolvedValueOnce(0);
+      db.marketSentimentVote.findUnique.mockResolvedValue(null);
 
       const result = await service.getMarketSentiment("market-1");
 
       expect(result.yesPercent).toBe(100);
       expect(result.noPercent).toBe(0);
+    });
+
+    it("includes the calling user's vote in the response", async () => {
+      db.marketSentimentVote.count
+        .mockResolvedValueOnce(1)
+        .mockResolvedValueOnce(1);
+      db.marketSentimentVote.findUnique.mockResolvedValue({
+        direction: "BUY",
+        confidence: 80,
+      } as any);
+
+      const result = await service.getMarketSentiment("market-1", "user-1");
+
+      expect(result.yesPercent).toBe(50);
+      expect(result.noPercent).toBe(50);
+      expect(result.userVote).toEqual({ direction: "YES", confidence: 80 });
+    });
+  });
+
+  // ── voteMarketSentiment ────────────────────────────────────────────────
+
+  describe("voteMarketSentiment", () => {
+    it("persists the vote and returns updated aggregates", async () => {
+      db.market.findUnique.mockResolvedValue({ id: "market-1" } as any);
+      db.marketSentimentVote.upsert.mockResolvedValue({} as any);
+      db.marketSentimentVote.count
+        .mockResolvedValueOnce(3)
+        .mockResolvedValueOnce(1);
+      db.marketSentimentVote.findUnique.mockResolvedValue({
+        direction: "BUY",
+        confidence: 85,
+      } as any);
+
+      const result = await service.voteMarketSentiment("market-1", "user-1", {
+        direction: "YES",
+        confidence: 85,
+      });
+
+      expect(db.marketSentimentVote.upsert).toHaveBeenCalledWith({
+        where: { userId_marketId: { userId: "user-1", marketId: "market-1" } },
+        create: {
+          userId: "user-1",
+          marketId: "market-1",
+          direction: "BUY",
+          confidence: 85,
+        },
+        update: { direction: "BUY", confidence: 85 },
+      });
+      expect(result.yesPercent).toBe(75);
+      expect(result.noPercent).toBe(25);
+      expect(result.totalVotes).toBe(4);
+      expect(result.userVote).toEqual({ direction: "YES", confidence: 85 });
+    });
+
+    it("reflects a SELL vote from the user", async () => {
+      db.market.findUnique.mockResolvedValue({ id: "market-1" } as any);
+      db.marketSentimentVote.upsert.mockResolvedValue({} as any);
+      db.marketSentimentVote.count
+        .mockResolvedValueOnce(1)
+        .mockResolvedValueOnce(1);
+      db.marketSentimentVote.findUnique.mockResolvedValue({
+        direction: "SELL",
+        confidence: 40,
+      } as any);
+
+      const result = await service.voteMarketSentiment("market-1", "user-2", {
+        direction: "NO",
+        confidence: 40,
+      });
+
+      expect(result.yesPercent).toBe(50);
+      expect(result.noPercent).toBe(50);
+      expect(result.totalVotes).toBe(2);
+      expect(result.userVote).toEqual({ direction: "NO", confidence: 40 });
+    });
+
+    it("works when no prior votes exist", async () => {
+      db.market.findUnique.mockResolvedValue({ id: "market-1" } as any);
+      db.marketSentimentVote.upsert.mockResolvedValue({} as any);
+      db.marketSentimentVote.count
+        .mockResolvedValueOnce(1)
+        .mockResolvedValueOnce(0);
+      db.marketSentimentVote.findUnique.mockResolvedValue({
+        direction: "BUY",
+        confidence: 99,
+      } as any);
+
+      const result = await service.voteMarketSentiment("market-1", "user-3", {
+        direction: "YES",
+        confidence: 99,
+      });
+
+      expect(result.yesPercent).toBe(100);
+      expect(result.noPercent).toBe(0);
+      expect(result.totalVotes).toBe(1);
+      expect(result.userVote).toEqual({ direction: "YES", confidence: 99 });
+    });
+
+    it("throws NotFoundException when market does not exist", async () => {
+      db.market.findUnique.mockResolvedValue(null);
+
+      await expect(
+        service.voteMarketSentiment("nonexistent", "user-1", {
+          direction: "YES",
+          confidence: 50,
+        }),
+      ).rejects.toThrow(NotFoundException);
     });
   });
 
