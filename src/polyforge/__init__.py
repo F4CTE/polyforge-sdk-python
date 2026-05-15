@@ -70,6 +70,7 @@ from polyforge.models import (
     Strategy,
     StrategyBlock,
     StrategyEvent,
+    StrategyExecMode,
     StrategyStatusResponse,
     StrategyTemplate,
     StrategyVisibility,
@@ -239,4 +240,4 @@ __all__ = [
     "VenueFeeEstimate",
 ]
 
-__version__ = "1.0.0"
+__version__ = "2.0.0"
