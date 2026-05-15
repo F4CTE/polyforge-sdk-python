@@ -283,13 +283,6 @@ export class StrategyRunner {
     }
 
     this.tickInFlight = true;
-    // Cancel any pending delayed follow-up timer now that a real
-    // evaluation is starting. Prevents stale catch-up ticks that
-    // were scheduled by a previous tick's pendingTick handler.
-    if (this.followUpTimer) {
-      clearTimeout(this.followUpTimer);
-      this.followUpTimer = null;
-    }
     let lockAcquired = false;
     let lockRefresh: NodeJS.Timeout | null = null;
     const lockToken = randomUUID();
@@ -310,6 +303,16 @@ export class StrategyRunner {
       );
       if (!acquired) return;
       lockAcquired = true;
+
+      // Cancel any pending delayed follow-up timer now that a real
+      // evaluation is starting.  Only cleared after SET NX succeeds:
+      // clearing before lock acquisition can drop the only scheduled
+      // retry when the lock is held by another instance, leaving the
+      // strategy idle until a fresh market event arrives.
+      if (this.followUpTimer) {
+        clearTimeout(this.followUpTimer);
+        this.followUpTimer = null;
+      }
       this.activeLockToken = lockToken;
 
       // Periodically refresh the lock TTL during long-running evaluations.
