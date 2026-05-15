@@ -274,6 +274,61 @@ test.describe("Strategy Builder — Keyboard A11y", () => {
     expect(idleMsg).toContain("Canvas ready");
   });
 
+  test("@a11y @keyboard should NOT cancel connection via Escape after commit (regression: connected phase does not swallow Escape)", async ({
+    page,
+  }, testInfo) => {
+    testInfo.setTimeout(60_000);
+
+    // Place two nodes and complete a keyboard connection so the phase
+    // becomes "connected".  Pressing Escape in the connected phase must
+    // not cancel the connection or hide the banner — only active wiring
+    // phases (source_selected / connecting) respond to Escape.
+    await builder.selectSection("Triggers");
+    await builder.addBlock("Price Crosses Up");
+    await expect(builder.blockCards().first()).toBeVisible({ timeout: 5_000 });
+
+    await builder.selectSection("Actions");
+    await builder.addBlock("Buy YES");
+    await expect(builder.blockCards()).toHaveCount(2, { timeout: 5_000 });
+
+    // Keyboard connection: select source → wire → target → commit
+    await page.locator(".react-flow__viewport").click();
+    await page.waitForTimeout(200);
+    await page.keyboard.press("Tab");
+    await page.waitForTimeout(200);
+    await page.keyboard.press("Enter");
+    await page.waitForTimeout(200);
+    await page.keyboard.press("c");
+    await page.waitForTimeout(200);
+    await page.keyboard.press("Tab");
+    await page.waitForTimeout(300);
+    await page.keyboard.press("Enter");
+    await page.waitForTimeout(500);
+
+    // Precondition: Connected banner visible and edge exists
+    const connectedBanner = page.locator(
+      "text=/^Connected .*Price Crosses Up.*Buy YES$/",
+    );
+    await expect(connectedBanner).toBeVisible({ timeout: 3_000 });
+
+    const edges = page.locator(".react-flow__edge");
+    const edgeCountBefore = await edges.count();
+    expect(edgeCountBefore).toBeGreaterThanOrEqual(1);
+
+    // Press Escape — must NOT dismiss the connected banner
+    await page.keyboard.press("Escape");
+    await page.waitForTimeout(300);
+
+    // Regression assertions: banner remains, edge not deleted
+    await expect(connectedBanner).toBeVisible({ timeout: 3_000 });
+
+    const edgeCountAfter = await edges.count();
+    expect(
+      edgeCountAfter,
+      "Edge count must be unchanged — Escape in connected phase must not delete the edge",
+    ).toBe(edgeCountBefore);
+  });
+
   test("@a11y @keyboard should delete an edge using keyboard", async ({
     page,
   }, testInfo) => {
