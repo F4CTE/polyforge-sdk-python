@@ -60,8 +60,38 @@ rules:
       loopback binding. Note: this rule fires on ALL long-syntax port
       mappings regardless of `host_ip`; suppress safe bindings with
       `# nosemgrep: docker-compose-port-no-loopback-long-syntax`.
-      The CI shell check accepts both `docker-compose-port-no-loopback`
-      and `docker-compose-port-no-loopback-long-syntax`.
+      The CI shell check accepts `docker-compose-port-no-loopback`,
+      `docker-compose-port-no-loopback-long-syntax`, and
+      `docker-compose-port-no-loopback-flow-style`.
+      See https://github.com/F4CTE/PolyForge/issues/1310
+    languages: [generic]
+    severity: WARNING
+    paths:
+      include:
+        - "docker-compose.infra.yml"
+    metadata:
+      cwe:
+        - "CWE-668: Exposure of Resource to Wrong Sphere"
+      references:
+        - https://github.com/F4CTE/PolyForge/issues/1310
+        - https://github.com/F4CTE/PolyForge/issues/557
+      category: security
+      technology:
+        - docker
+
+  - id: docker-compose-port-no-loopback-flow-style
+    patterns:
+      - pattern-regex: '^\s+ports:\s*\['
+    message: >
+      Docker Compose flow-style port sequence detected.  Flow-style
+      (e.g. `ports: ["3000:3000"]` or `ports: [3000]`) bypasses the
+      block-style loopback guard in the CI shell checker because the
+      shell checker operates on indented `- ` entries.  Rewrite as
+      block-style with an explicit loopback binding:
+      `- "127.0.0.1:<port>:<port>"`.  Suppress safe flow-style bindings
+      with `# nosemgrep: docker-compose-port-no-loopback-flow-style`.
+      The CI shell check also accepts
+      `docker-compose-port-no-loopback-flow-style` for suppression.
       See https://github.com/F4CTE/PolyForge/issues/1310
     languages: [generic]
     severity: WARNING

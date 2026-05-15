@@ -4,7 +4,8 @@ set -euo pipefail
 # Detect port bindings in docker-compose.infra.yml that are not bound
 # to loopback (127.0.0.1 / ::1) and are not suppressed with nosemgrep.
 # Covers short-syntax (double-quoted, single-quoted, unquoted, hostless,
-# IPv4 and IPv6) and long-syntax (target:/ published:) forms.
+# IPv4 and IPv6), long-syntax (target:/ published:), and flow-style
+# (ports: [...] inline sequences) forms.
 #
 # Short-syntax examples:
 # Safe:   - "127.0.0.1:3000:3000"
@@ -38,6 +39,15 @@ set -euo pipefail
 # Unsafe: - published: 80
 #           target: 80
 #
+# Flow-style examples:
+# Safe:   ports: ["127.0.0.1:3000:3000"]
+# Safe:   ports: ["[::1]:3000:3000"]
+# Safe:   ports: ["3000:3000"] # nosemgrep: docker-compose-port-no-loopback
+# Unsafe: ports: ["3000:3000"]
+# Unsafe: ports: [3000]
+# Unsafe: ports: ["0.0.0.0:3000:3000"]
+# Unsafe: ports: ["3000:3000", "8080:8080"]
+#
 # See https://github.com/F4CTE/PolyForge/issues/1310
 
 TARGET_FILE="docker-compose.infra.yml"
@@ -61,6 +71,169 @@ function leadingspaces(str) {
 }
 
 BEGIN { exit_code = 0; prev_nosemgrep = 0 }
+
+# ── Global preceding-line nosemgrep tracking ───────────────────────────
+# Nosemgrep comments outside ports: sections enable preceding-line
+# suppression for flow-style entries.  Inside ports: sections, the
+# block-style tracker (below) handles suppression independently.
+!in_ports && !in_flow && /^[[:space:]]*#[[:space:]]*nosemgrep:.*docker-compose-port-no-loopback(-long-syntax|-flow-style)?/ {
+  prev_nosemgrep = 1
+  next
+}
+
+# Clear prev_nosemgrep on any non-blank, non-comment, non-ports: line
+# so that a stale suppression does not leak to unrelated entries.
+!in_ports && !in_flow && prev_nosemgrep {
+  if ($0 !~ /^[[:space:]]*$/ && $0 !~ /^[[:space:]]*#/ && $0 !~ /^[[:space:]]+ports:[[:space:]]*\[/) {
+    prev_nosemgrep = 0
+  }
+}
+
+# ── Flow-style sequence detection ──────────────────────────────────────
+# YAML flow-style sequences like ports: ["3000:3000"] or multi-line
+# ports: [\n  "3000:3000"\n] are valid docker-compose syntax that would
+# bypass the block-style parser below.  Detect and process them first.
+# Both same-line (single-entry and comma-separated) and multi-line
+# (bracket on one line, entries on following lines) are handled.
+# Safe:   ports: ["127.0.0.1:3000:3000"]
+# Safe:   ports: ["[::1]:3000:3000"]
+# Safe:   ports: ["::1:6000:6000"]
+# Safe:   ports: ["3000:3000"] # nosemgrep: docker-compose-port-no-loopback
+# Unsafe: ports: ["3000:3000"]
+# Unsafe: ports: ["3000:3000", "8080:8080"]
+# Unsafe: ports: [3000]
+# Unsafe: ports: ["0.0.0.0:3000:3000"]
+
+/^[[:space:]]+ports:[[:space:]]*\[/ && !in_flow {
+  in_flow = 1
+  flow_lineno = NR
+  flow_suppressed = prev_nosemgrep
+  prev_nosemgrep = 0
+
+  # Extract content from the opening bracket onward
+  line = substr($0, index($0, "["))
+  # Check for same-line nosemgrep
+  if (line ~ /# nosemgrep:.*docker-compose-port-no-loopback(-long-syntax|-flow-style)?/) {
+    flow_suppressed = 1
+  }
+
+  # Strip leading [
+  sub(/^\[/, "", line)
+
+  # Does bracket close on this line?
+  # Strip trailing whitespace and comment first so that the closing ]
+  # is identified reliably — a ] inside a quoted IPv6 address
+  # (e.g. "[::1]:3000:3000") would NOT be the last character and is
+  # therefore left untouched.
+  sub(/[[:space:]]*#.*$/, "", line)
+  gsub(/[[:space:]]+$/, "", line)
+  if (line ~ /\]$/) {
+    sub(/\]$/, "", line)
+    if (!flow_suppressed) {
+      process_flow_entries(line)
+    }
+    in_flow = 0
+    next
+  }
+  # Closing bracket not at end of line — continue multi-line accumulation
+
+  # Multi-line flow: accumulate content until closing bracket
+  sub(/[[:space:]]*#.*$/, "", line)
+  gsub(/^[[:space:]]+/, "", line)
+  flow_buf = line
+  next
+}
+
+# Accumulate multi-line flow-style content until closing bracket
+in_flow {
+  # Check for nosemgrep on any line inside the flow section
+  if ($0 ~ /# nosemgrep:.*docker-compose-port-no-loopback(-long-syntax|-flow-style)?/) {
+    flow_suppressed = 1
+  }
+
+  # Strip comment and trailing whitespace for bracket detection.
+  # The closing ] must be the last non-whitespace, non-comment character
+  # on its line so that a ] inside a quoted value (e.g. "[::1]:...")
+  # is never mistaken for the flow-style closing bracket.
+  tmp = $0
+  sub(/[[:space:]]*#.*$/, "", tmp)
+  gsub(/[[:space:]]+$/, "", tmp)
+
+  if (tmp ~ /\]$/) {
+    # Closing bracket at end of line
+    sub(/\]$/, "", tmp)
+    gsub(/^[[:space:]]+/, "", tmp)
+    gsub(/[[:space:]]+$/, "", tmp)
+    flow_buf = flow_buf " " tmp
+    if (!flow_suppressed) {
+      process_flow_entries(flow_buf)
+    }
+    in_flow = 0
+    next
+  }
+
+  # Not a closing bracket line — continue accumulating
+  gsub(/^[[:space:]]+/, "", tmp)
+  gsub(/[[:space:]]+$/, "", tmp)
+  flow_buf = flow_buf " " tmp
+  next
+}
+
+function process_flow_entries(buf) {
+  n = split(buf, entries, ",")
+  for (i = 1; i <= n; i++) {
+    val = entries[i]
+    gsub(/^[[:space:]]+/, "", val)
+    gsub(/[[:space:]]+$/, "", val)
+    if (val == "") continue
+
+    # Strip surrounding quotes for analysis
+    qval = val
+    sub(/^"/, "", qval); sub(/"$/, "", qval)
+    sub(/^\047/, "", qval); sub(/\047$/, "", qval)
+
+    # Skip inline YAML maps: { target: ... }
+    if (qval ~ /^\{.*\}$/) continue
+    # Skip partial braces from comma-split inline maps
+    if (qval ~ /\{/ && qval !~ /\}/) continue
+
+    # Strip optional protocol suffix
+    sub(/\/[a-zA-Z]+$/, "", qval)
+
+    # Hostless form: bare number or port range (binds to 0.0.0.0)
+    if (qval ~ /^[0-9]+(-[0-9]+)?$/) {
+      printf "::error file=%s,line=%d::Flow-style port published without 127.0.0.1 loopback binding (hostless). Add 127.0.0.1: prefix or suppress with # nosemgrep: docker-compose-port-no-loopback. See https://github.com/F4CTE/PolyForge/issues/1310\n", file, flow_lineno
+      exit_code = 1
+      continue
+    }
+
+    # IPv6 with brackets (e.g. [::1]:3000:3000)
+    if (qval ~ /^\[/) {
+      closing = index(qval, "]")
+      if (closing == 0) continue
+      host = substr(qval, 1, closing)
+      if (host == "[::1]") continue
+      printf "::error file=%s,line=%d::Flow-style port published without 127.0.0.1 loopback binding. Add 127.0.0.1: prefix or suppress with # nosemgrep: docker-compose-port-no-loopback. See https://github.com/F4CTE/PolyForge/issues/1310\n", file, flow_lineno
+      exit_code = 1
+      continue
+    }
+
+    # Split on colon to extract host part
+    parts_count = split(qval, parts, ":")
+    if (parts_count < 2) continue
+    host = parts[1]
+
+    # Unbracketed IPv6 (e.g. ::1:6000:6000 — first part empty)
+    if (host == "" && parts_count >= 4) {
+      host = "::" parts[3]
+    }
+
+    if (host == "127.0.0.1" || host == "[::1]" || host == "::1") continue
+
+    printf "::error file=%s,line=%d::Flow-style port published without 127.0.0.1 loopback binding. Add 127.0.0.1: prefix or suppress with # nosemgrep: docker-compose-port-no-loopback. See https://github.com/F4CTE/PolyForge/issues/1310\n", file, flow_lineno
+    exit_code = 1
+  }
+}
 
 # ── ports: section tracking ────────────────────────────────────────────
 
@@ -103,7 +276,7 @@ in_ports && /^[[:space:]]+- +(name|target|published|host_ip|protocol|mode|app_pr
   noncomment = $0
   sub(/[[:space:]]*#.*$/, "", noncomment)
   has_host_ip = (noncomment ~ /host_ip:[[:space:]]*["'\'']?(127\.0\.0\.1|\[::1\]|::1)["'\'']?([^0-9a-f.:]|$)/)
-  suppressed = (prev_nosemgrep || $0 ~ /# nosemgrep:.*docker-compose-port-no-loopback(-long-syntax)?/)
+  suppressed = (prev_nosemgrep || $0 ~ /# nosemgrep:.*docker-compose-port-no-loopback(-long-syntax|-flow-style)?/)
   prev_nosemgrep = 0
   next
 }
@@ -119,7 +292,7 @@ in_ports && /^[[:space:]]+-[[:space:]]*$/ && !in_block {
   saw_target = 0
   saw_published = 0
   has_host_ip = 0
-  suppressed = (prev_nosemgrep || $0 ~ /# nosemgrep:.*docker-compose-port-no-loopback(-long-syntax)?/)
+  suppressed = (prev_nosemgrep || $0 ~ /# nosemgrep:.*docker-compose-port-no-loopback(-long-syntax|-flow-style)?/)
   prev_nosemgrep = 0
   next
 }
@@ -155,7 +328,7 @@ in_block {
       noncomment = $0
       sub(/[[:space:]]*#.*$/, "", noncomment)
       has_host_ip = (noncomment ~ /host_ip:[[:space:]]*["'\'']?(127\.0\.0\.1|\[::1\]|::1)["'\'']?([^0-9a-f.:]|$)/)
-      suppressed = ($0 ~ /# nosemgrep:.*docker-compose-port-no-loopback(-long-syntax)?/)
+      suppressed = ($0 ~ /# nosemgrep:.*docker-compose-port-no-loopback(-long-syntax|-flow-style)?/)
       next
     }
   }
@@ -163,7 +336,7 @@ in_block {
   # Content processing for the current block (only reached when we
   # are still in_block — i.e., the line is deeper than the entry).
   if (in_block) {
-    if ($0 ~ /# nosemgrep:.*docker-compose-port-no-loopback(-long-syntax)?/) {
+    if ($0 ~ /# nosemgrep:.*docker-compose-port-no-loopback(-long-syntax|-flow-style)?/) {
       suppressed = 1
     }
     if ($0 ~ /^[[:space:]]+target:/) {
@@ -187,7 +360,7 @@ in_block {
 # here for the short-syntax path.  Long-syntax entries are already
 # consumed by the state machine above.
 in_ports && !in_block {
-  if ($0 ~ /^[[:space:]]*#[[:space:]]*nosemgrep:.*docker-compose-port-no-loopback(-long-syntax)?/) {
+  if ($0 ~ /^[[:space:]]*#[[:space:]]*nosemgrep:.*docker-compose-port-no-loopback(-long-syntax|-flow-style)?/) {
     prev_nosemgrep = 1
     next
   }
@@ -205,7 +378,7 @@ in_ports && !in_block {
 # already claimed by the long-syntax state machine.
 in_ports && /^[[:space:]]+-[[:space:]]+/ && !in_block {
   # Skip suppressed lines (same-line or preceding-line nosemgrep)
-  if ($0 ~ /# nosemgrep:.*docker-compose-port-no-loopback(-long-syntax)?/) { prev_nosemgrep = 0; next }
+  if ($0 ~ /# nosemgrep:.*docker-compose-port-no-loopback(-long-syntax|-flow-style)?/) { prev_nosemgrep = 0; next }
   if (prev_nosemgrep) { prev_nosemgrep = 0; next }
 
   # Save indentation before modifying $0 so that anchor entries
@@ -279,7 +452,7 @@ in_ports && /^[[:space:]]+-[[:space:]]+/ && !in_block {
         saw_target = 0
         saw_published = 0
         has_host_ip = 0
-        suppressed = ($0 ~ /# nosemgrep:.*docker-compose-port-no-loopback(-long-syntax)?/)
+        suppressed = ($0 ~ /# nosemgrep:.*docker-compose-port-no-loopback(-long-syntax|-flow-style)?/)
         next
       }
       # YAML alias (e.g. - *name).  The referenced mapping cannot be
@@ -348,7 +521,7 @@ if [ "$EXIT_CODE" -eq 0 ]; then
 else
   echo ""
   echo "✗ Non-loopback ports detected — see errors above"
-  echo "  Fix: bind with '127.0.0.1:<port>:<port>' or add '# nosemgrep: docker-compose-port-no-loopback(-long-syntax)' for public entry points"
+  echo "  Fix: bind with '127.0.0.1:<port>:<port>' or add '# nosemgrep: docker-compose-port-no-loopback' (-long-syntax/-flow-style suffixes supported) for public entry points"
   echo "  Docs: https://github.com/F4CTE/PolyForge/issues/1310"
 fi
 
