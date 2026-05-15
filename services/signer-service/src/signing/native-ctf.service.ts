@@ -502,8 +502,10 @@ export class NativeCtfService {
    * cleaned up via the same token-checked Lua unlock so a delayed cleanup
    * cannot delete a newer owner's lock.
    *
-   * Permanent Redis errors (ReplyError — wrong args, NOAUTH, ACL, etc.)
-   * are surfaced immediately instead of being retried for 60 s.
+   * Only permanently unrecoverable Redis errors (NOAUTH, NOPERM,
+   * WRONGTYPE, wrong arity, syntax error) are surfaced immediately.
+   * Transient ReplyError states (LOADING, BUSY, TRYAGAIN during cluster
+   * failover) and connection errors are retried with backoff.
    *
    * @returns A unique lock token that must be presented to release the lock.
    *
@@ -554,18 +556,22 @@ export class NativeCtfService {
         // from the SET command itself (not the timeout).
         if (raceTimeoutId) clearTimeout(raceTimeoutId);
 
-        // Surface permanent Redis errors immediately.
-        // `err.name === "ReplyError"` covers Redis command errors
-        // (wrong args, syntax, etc.).  Additional explicit checks guard
-        // against errors surfaced under a different Error subclass.
-        if (
-          err instanceof Error &&
-          (err.name === "ReplyError" ||
-            err.message?.includes("READONLY") ||
-            err.message?.includes("NOAUTH") ||
-            err.message?.includes("WRONGTYPE"))
-        ) {
-          throw err;
+        // Surface only permanently unrecoverable Redis errors immediately.
+        // Transient ReplyError states (LOADING, BUSY, TRYAGAIN during
+        // cluster failover) are retried with backoff.
+        if (err instanceof Error) {
+          const msg = err.message ?? "";
+          const isPermanent =
+            msg.includes("NOAUTH") ||
+            msg.includes("WRONGPASS") ||
+            msg.includes("NOPERM") ||
+            msg.includes("WRONGTYPE") ||
+            msg.includes("READONLY") ||
+            /wrong number of arguments/i.test(msg) ||
+            /syntax error/i.test(msg);
+          if (isPermanent) {
+            throw err;
+          }
         }
 
         // If the timeout won the race, the SET promise is still pending.
@@ -603,7 +609,9 @@ export class NativeCtfService {
         // Transient error — backoff and retry.
       }
 
-      await new Promise((r) => setTimeout(r, delayMs));
+      const sleepRemaining = deadline - Date.now();
+      if (sleepRemaining <= 0) break;
+      await new Promise((r) => setTimeout(r, Math.min(delayMs, sleepRemaining)));
       delayMs = Math.min(delayMs * 2, 5_000);
     }
 
