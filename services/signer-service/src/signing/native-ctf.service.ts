@@ -567,12 +567,20 @@ export class NativeCtfService {
 
         // If the timeout won the race, the SET promise is still pending.
         // When it eventually settles via ioredis offline-queue replay it
-        // may create a ghost lock.  Attach a handler to clean it up.
+        // may create a ghost lock.  Clean it up with the same token-checked
+        // Lua unlock so a delayed cleanup cannot delete a newer owner's lock.
         if (raceWinner === "timeout") {
           void setPromise.then((lateResult: string | null) => {
             if (lateResult === "OK") {
               this.logger.debug(`Cleaning up ghost CTF nonce lock: ${key}`);
-              client.del(key).catch(() => {});
+              client
+                .eval(
+                  NativeCtfService.UNLOCK_SCRIPT,
+                  1,
+                  key,
+                  attemptToken,
+                )
+                .catch(() => {});
             }
           });
         }

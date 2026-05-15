@@ -1101,8 +1101,68 @@ describe("NativeCtfService", () => {
 
       // Operation should succeed (second attempt acquired)
       expect(caught).toBeNull();
-      // The ghost lock cleanup should have called DEL
-      expect(client.del).toHaveBeenCalled();
+      // The ghost lock cleanup should have called EVAL with the unlock script
+      expect(client.eval).toHaveBeenCalled();
+    });
+
+    it("ghost-lock cleanup with stale token does not delete a newer owner's lock", async () => {
+      vi.useFakeTimers();
+
+      const { redisService, client } = makeMockRedis();
+
+      // First SET hangs until explicitly resolved (simulates offline queue delay).
+      let resolveSetPromise: ((value: string | null) => void) | null = null;
+      const firstSetPromise = new Promise<string | null>((resolve) => {
+        resolveSetPromise = resolve;
+      });
+      client.set.mockReturnValueOnce(firstSetPromise);
+
+      // Second attempt succeeds normally.
+      client.set.mockResolvedValueOnce("OK");
+
+      // Ghost-cleanup EVAL returns 0 (token mismatch — another request now
+      // owns the lock). Normal release EVAL returns 1.
+      let evalCallCount = 0;
+      client.eval.mockImplementation(async () => {
+        evalCallCount++;
+        // First EVAL call is from ghost cleanup (stale token → mismatch).
+        return evalCallCount === 1 ? 0 : 1;
+      });
+
+      const svcWithRedis = new NativeCtfService(redisService);
+
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({ result: "0x1" }),
+      });
+
+      const creds = makeTestCreds();
+      let caught: Error | null = null;
+      const promise = svcWithRedis
+        .redeemPosition(creds, 137, "http://fake-rpc", {
+          conditionId: CONDITION_ID,
+          indexSets: [1n],
+        })
+        .catch((e: Error) => {
+          caught = e;
+        });
+
+      // Advance past the first attempt's 3 s timeout + backoff delay.
+      await vi.advanceTimersByTimeAsync(3_500);
+      // Now let the ghost SET resolve (simulating offline-queue replay).
+      resolveSetPromise!("OK");
+      await vi.advanceTimersByTimeAsync(1_000);
+      await promise;
+      vi.useRealTimers();
+      zeroCredentials(creds);
+
+      // Operation succeeds even though ghost cleanup could not delete the
+      // lock (wrong token) — proving the cleanup does not interfere with
+      // a newer owner's lock.
+      expect(caught).toBeNull();
+      // Ghost cleanup MUST use token-checked Lua unlock, not raw DEL.
+      expect(client.del).not.toHaveBeenCalled();
+      expect(client.eval).toHaveBeenCalled();
     });
 
     it("logs a warning when EVAL fails during lock release", async () => {
