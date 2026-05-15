@@ -133,9 +133,7 @@ export default function RootLayout({
         >
           Skip to main content
         </a>
-        <PostHogProvider>
-          {children}
-        </PostHogProvider>
+        <PostHogProvider>{children}</PostHogProvider>
         <Script
           defer
           data-domain="polyforge.app"
