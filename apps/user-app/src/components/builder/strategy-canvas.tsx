@@ -301,9 +301,13 @@ export function StrategyCanvas() {
 
   const onCanvasKeyDown = useCallback(
     (event: React.KeyboardEvent) => {
-      // Escape always available for cancelling a connection, even from form controls
+      // Escape cancels active wiring only (source_selected / connecting).
+      // The connected phase is display-only — do not swallow Escape outside active wiring.
       if (event.key === "Escape") {
-        if (connState.phase !== "idle") {
+        if (
+          connState.phase === "source_selected" ||
+          connState.phase === "connecting"
+        ) {
           event.preventDefault();
           setConnState({ phase: "idle" });
         }
