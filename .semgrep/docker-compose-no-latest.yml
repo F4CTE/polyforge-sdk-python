@@ -1,0 +1,94 @@
+rules:
+  - id: docker-compose-no-floating-latest-tag
+    patterns:
+      - pattern-regex: |-
+          ^\s+image:\s+(?:"(?:[^\s"]+/)*[^\s"@:#]+:latest"|'(?:[^\s']+/)*[^\s'@:#]+:latest'|(?:[^\s"'#]+/)*[^\s"'@:#]+:latest)(?:\s+#.*)?\s*$
+    message: >
+      Floating `:latest` tag detected in a Docker Compose file. Pinning to
+      `:latest` allows silent supply-chain drift on every `docker compose pull`.
+      Pin to a specific version tag (e.g. `posthog/posthog:1.221.0`) or,
+      preferably, a SHA256 digest (`posthog/posthog@sha256:...`).
+      See STATUS.md "PostHog Image Upgrade" for the upgrade procedure,
+      CONTRIBUTING.md "Pinned Images" for policy, and
+      https://github.com/F4CTE/PolyForge/issues/1312 for rationale.
+    languages: [generic]
+    severity: ERROR
+    paths:
+      include:
+        - "docker-compose*.yml"
+        - "docker-compose*.yaml"
+        - "compose*.yml"
+        - "compose*.yaml"
+    metadata:
+      cwe:
+        - "CWE-1357: Reliance on Insufficiently Trustworthy Component"
+        - "CWE-829: Inclusion of Functionality from Untrusted Control Sphere"
+      references:
+        - https://github.com/F4CTE/PolyForge/issues/1312
+        - https://github.com/F4CTE/PolyForge/issues/394
+      category: security
+      technology:
+        - docker
+
+  - id: docker-compose-unpinned-image
+    patterns:
+      - pattern-regex: |-
+          ^\s+image:\s+(?:"(?:[^\s"]+/)*[^\s"@:#]+"|'(?:[^\s']+/)*[^\s'@:#]+'|(?:[^\s"'#]+/)*[^\s"'@:#]+)(?:\s+#.*)?\s*$
+    message: >
+      Image without an explicit version tag or SHA256 digest detected.
+      Docker defaults untagged images to `:latest`, which allows silent
+      supply-chain drift on every `docker compose pull`.
+      Pin to a specific version tag (e.g. `posthog/posthog:1.221.0`) or,
+      preferably, a SHA256 digest (`posthog/posthog@sha256:...`).
+      See STATUS.md "PostHog Image Upgrade" for the upgrade procedure,
+      CONTRIBUTING.md "Pinned Images" for policy, and
+      https://github.com/F4CTE/PolyForge/issues/1312 for rationale.
+    languages: [generic]
+    severity: ERROR
+    paths:
+      include:
+        - "docker-compose*.yml"
+        - "docker-compose*.yaml"
+        - "compose*.yml"
+        - "compose*.yaml"
+    metadata:
+      cwe:
+        - "CWE-1357: Reliance on Insufficiently Trustworthy Component"
+      references:
+        - https://github.com/F4CTE/PolyForge/issues/1312
+      category: security
+      technology:
+        - docker
+
+  - id: docker-compose-shell-default-latest
+    patterns:
+      - pattern-regex: |-
+          ^\s+image:.*\$\{[A-Za-z_][A-Za-z0-9_]*:?-latest\}
+    message: >
+      Shell-style default value (`${VAR:-latest}` or `${VAR-latest}`)
+      detected in an image tag. If the environment variable is unset
+      (and also empty for `:-`), Docker Compose will resolve this to
+      the floating `:latest` tag, allowing silent supply-chain drift
+      on every `docker compose pull`.
+      Pin to a specific version tag (e.g. `posthog/posthog:1.221.0`) or,
+      preferably, a SHA256 digest (`posthog/posthog@sha256:...`).
+      See STATUS.md "PostHog Image Upgrade" for the upgrade procedure,
+      CONTRIBUTING.md "Pinned Images" for policy, and
+      https://github.com/F4CTE/PolyForge/issues/1312 for rationale.
+    languages: [generic]
+    severity: ERROR
+    paths:
+      include:
+        - "docker-compose*.yml"
+        - "docker-compose*.yaml"
+        - "compose*.yml"
+        - "compose*.yaml"
+    metadata:
+      cwe:
+        - "CWE-1357: Reliance on Insufficiently Trustworthy Component"
+        - "CWE-1104: Use of Unmaintained Third-Party Components"
+      references:
+        - https://github.com/F4CTE/PolyForge/issues/1312
+      category: security
+      technology:
+        - docker

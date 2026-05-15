@@ -97,6 +97,56 @@ jobs:
       - name: Check for H2C smuggling patterns
         run: bash scripts/check-nginx-h2c.sh
 
+  # ── 1a-3. Semgrep static analysis (parallel) ────────────────────────────
+  semgrep:
+    name: Semgrep scan
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065  # v5.6.0
+        with:
+          python-version: '3.12'
+
+      - name: Install semgrep
+        env:
+          SEMGREP_SHA256: 768166fe64a2bf75e1e9f007b75350b136d5e56d87fd322b9fcffe16797c6b21
+        run: |
+          set -euo pipefail
+          wheel_dir="$RUNNER_TEMP/semgrep-wheelhouse"
+          mkdir -p "$wheel_dir"
+
+          # Download all wheels using the committed hash-pinned requirements file.
+          # .semgrep/requirements-semgrep.txt pins every transitive dependency
+          # with pre-reviewed SHA256 hashes so that install verification does not
+          # trust hashes computed on-the-fly from the same download source.
+          # --only-binary=:all: prevents source-distribution builds, ensuring
+          # the same pre-reviewed binary wheels are always installed.
+          python3 -m pip download \
+            --no-cache-dir \
+            --only-binary=:all: \
+            --dest "$wheel_dir" \
+            -r .semgrep/requirements-semgrep.txt
+
+          # Quick sanity check: the top-level semgrep wheel matches its known hash.
+          semgrep_wheel=$(find "$wheel_dir" -maxdepth 1 -name 'semgrep-*.whl' -print -quit)
+          [ -n "$semgrep_wheel" ] || { echo "ERROR: no semgrep wheel found in $wheel_dir" >&2; exit 1; }
+          echo "${SEMGREP_SHA256}  $semgrep_wheel" | sha256sum -c -
+
+          python3 -m pip install \
+            --require-hashes \
+            --no-index \
+            --find-links "$wheel_dir" \
+            --no-cache-dir \
+            -r .semgrep/requirements-semgrep.txt
+
+      - name: Run semgrep
+        run: semgrep scan --config .semgrep/ --severity ERROR --error --no-secrets-validation --exclude '.semgrep/'
+
   # ── 1b. Typecheck (parallel) ────────────────────────────────────────────
   typecheck:
     name: Typecheck
@@ -142,7 +192,7 @@ jobs:
     name: Build
     if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on: [self-hosted, linux]
-    needs: [secret-scan, lint, typecheck, test, nginx-security]
+    needs: [secret-scan, semgrep, lint, typecheck, test, nginx-security]
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd

@@ -95,6 +95,23 @@ Types: `feat`, `fix`, `refactor`, `test`, `docs`, `chore`, `perf`, `security`
 - Use Prisma parameterized queries
 - See [SECURITY.md](SECURITY.md) for the full security policy
 
+### Pinned Images
+
+All container images in Docker Compose files must be pinned to prevent supply-chain drift:
+
+- **Pin by version tag** at minimum: `postgres:16-alpine`, not `postgres:latest`.
+- **Prefer SHA256 digests** for security-critical images: `posthog/posthog@sha256:...`
+  See the Dockerfiles (e.g. `Dockerfile.migrate`) for digest-pin examples.
+- **Never use `:latest`** in any `image:` line in `docker-compose*.yml`.
+  A semgrep rule (`.semgrep/docker-compose-no-latest.yml`) enforces this.
+- **Upgrade procedure**: See `STATUS.md` "PostHog Image Upgrade" for the
+  documented workflow (pull, capture digest, update compose file, deploy, verify).
+
+Rationale: floating tags allow silent supply-chain drift — two engineers
+running `docker compose up` on different days get different binaries.
+See [#1312](https://github.com/F4CTE/PolyForge/issues/1312) and
+[#394](https://github.com/F4CTE/PolyForge/issues/394) for prior incidents.
+
 ## Architecture Decisions
 
 Key architectural decisions are documented in `docs/01-architecture.md`. When making significant changes:
