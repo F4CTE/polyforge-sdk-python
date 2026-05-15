@@ -1639,6 +1639,81 @@ describe("StrategyRunner — concurrent tick serialization", () => {
     expect(state.get).toHaveBeenCalledTimes(1);
   });
 
+  it(
+    "schedules a delayed retry when SET NX fails and pendingTick was set by a concurrent event (POLA-5095 regression)",
+    async () => {
+      vi.useFakeTimers();
+      try {
+        // First event: SET NX fails (another instance owns the lock).
+        // While the SET NX await is pending, a second event arrives,
+        // sees tickInFlight=true, and sets pendingTick.
+        // The finally block must NOT drop the pending event.
+        let resolveSetNx!: (value: unknown) => void;
+        let setCallCount = 0;
+        const client = {
+          lrange: vi.fn().mockResolvedValue([]),
+          mget: vi
+            .fn()
+            .mockResolvedValue([
+              JSON.stringify({ price: 0.5, timestamp: Date.now() }),
+            ]),
+          incr: vi.fn().mockResolvedValue(1),
+          expire: vi.fn().mockResolvedValue(1),
+          set: vi.fn().mockImplementation(() => {
+            setCallCount++;
+            if (setCallCount === 1) {
+              // First SET NX: defer resolution to simulate contention window
+              return new Promise((resolve) => {
+                resolveSetNx = resolve;
+              });
+            }
+            // Subsequent SET NX: succeed (retry path)
+            return Promise.resolve("OK");
+          }),
+          del: vi.fn().mockResolvedValue(1),
+          eval: vi.fn().mockResolvedValue(1),
+        };
+        const redis = makeRedis({ getClient: vi.fn().mockReturnValue(client) });
+        const state = makeState();
+        state.get.mockResolvedValue({ ...DEFAULT_STATE });
+        const runner = makeRunner({ execMode: "EVENT", state, redis });
+
+        // Tick A: enters tick(), passes throttle, sets tickInFlight=true, awaits SET NX
+        const tickA = runner.onPriceEvent("tok1", 0.5);
+
+        // Let Tick A reach the SET NX await (microtask scheduling).
+        await vi.advanceTimersByTimeAsync(1);
+
+        // Advance past the 200ms min-tick throttle so Tick B can pass the
+        // throttle gate and reach the tickInFlight check.
+        await vi.advanceTimersByTimeAsync(250);
+
+        // Tick B arrives while Tick A is still awaiting SET NX.
+        // tickInFlight is true → sets pendingTick=true and returns.
+        const tickB = runner.onPriceEvent("tok1", 0.51);
+        await tickB;
+
+        // Neither tick has evaluated yet.
+        expect(state.get).not.toHaveBeenCalled();
+
+        // Now resolve SET NX as a failure (null = lock held by another instance)
+        resolveSetNx(null);
+        await tickA;
+
+        // After the finally block: tickInFlight=false, pendingTick was consumed.
+        // lockAcquired=false → a delayed retry should be scheduled (200ms backoff).
+        // Advance past the retry backoff so the follow-up timer fires.
+        await vi.advanceTimersByTimeAsync(250);
+
+        // The retry tick should have re-entered tick(), passed throttle,
+        // acquired the lock (SET NX now succeeds), and evaluated.
+        expect(state.get).toHaveBeenCalledTimes(1);
+      } finally {
+        vi.useRealTimers();
+      }
+    },
+  );
+
   it("uses per-acquisition lock token in atomic Lua compare-and-delete", async () => {
     const client = {
       lrange: vi.fn().mockResolvedValue([]),

@@ -436,11 +436,6 @@ export class StrategyRunner {
       this.tickInFlight = false;
       if (this.pendingTick) {
         this.pendingTick = false;
-        // Only schedule a coalesced follow-up when the lock was actually
-        // acquired and evaluation completed.  Scheduling an immediate
-        // EVENT follow-up on a failed lock acquisition would bypass the
-        // min-tick throttle under contention, causing high-frequency
-        // retry spins against Redis (SET NX → miss → immediate retry).
         if (lockAcquired) {
           // Fire a coalesced follow-up tick after release.
           // This catches ticks/events that arrived while the in-flight
@@ -466,6 +461,22 @@ export class StrategyRunner {
               void this.tick();
             }, delay);
           }
+        } else {
+          // Lock acquisition failed (SET NX returned null), but one or
+          // more ticks/events arrived while this attempt was waiting.
+          // Schedule a delayed retry instead of silently dropping the
+          // pending events.  A short backoff prevents retry storms
+          // under sustained contention while ensuring that safety /
+          // action side effects are not missed when the lock is
+          // temporarily stale (e.g. TTL still active after a crash of
+          // the previous holder and no new price event arrives to
+          // trigger a natural re-evaluation).
+          if (this.followUpTimer) clearTimeout(this.followUpTimer);
+          const RETRY_BACKOFF_MS = 200;
+          this.followUpTimer = setTimeout(() => {
+            this.followUpTimer = null;
+            void this.tick();
+          }, RETRY_BACKOFF_MS);
         }
       }
     }
