@@ -11,12 +11,13 @@ overrides:
   path-to-regexp: '>=8.4.0'
   hono: '>=4.12.18'
   '@hono/node-server': ^1.19.13
-  fast-uri: '>=3.1.2'
+  fast-uri: ^3.1.2
   fastify: '>=5.8.3'
   '@angular-devkit/core>ajv': '>=8.18.0'
   brace-expansion: '>=1.1.13'
   defu: '>=6.1.6'
   lodash: '>=4.18.1'
+  next: ^16.2.6
   uuid: '>=14.0.0'
   postcss: '>=8.5.10'
   react: ^19.2.6
@@ -4231,7 +4232,7 @@ packages:
     resolution: {integrity: sha512-pkwqrpAG//LtW5W1Odud0PLLT+rnjDjodUEbScULHVaZE6/Gt+WGBMZmtzpNM+UwhsN19/4PyO7ocLTx/IFrkQ==}
     engines: {node: '>=18'}
     peerDependencies:
-      next: ^13.2.0 || ^14.0 || ^15.0.0-rc.0 || ^16.0.0-0
+      next: ^16.2.6
 
   '@sentry/node-core@10.53.1':
     resolution: {integrity: sha512-iH7SMcM/7jPbN+t7+7ussQOiIqI4BMOGt4VYWlV71/z7k0pY+YPaSvlfVkNXfISiDzFAKv0ecCY3BmsLMu1xDQ==}
@@ -5786,7 +5787,7 @@ packages:
   geist@1.7.0:
     resolution: {integrity: sha512-ZaoiZwkSf0DwwB1ncdLKp+ggAldqxl5L1+SXaNIBGkPAqcu+xjVJLxlf3/S8vLt9UHx1xu5fz3lbzKCj5iOVdQ==}
     peerDependencies:
-      next: '>=13.2.0'
+      next: ^16.2.6
 
   generate-function@2.3.1:
     resolution: {integrity: sha512-eeB5GfMNeevm/GRYq20ShmsaGcmI81kIX2K9XQx5miC8KdHaC6Jm0qQ8ZNeGOi7wYB8OsdxKs+Y2oVuTFuVwKQ==}
