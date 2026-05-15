@@ -433,6 +433,10 @@ describe("StrategyRunner — SAFETY evaluation", () => {
     // Set dailyPnl below limit — without the config fallback, maxLossUsdc
     // would default to 0 and the block would fire (pass), not stopping.
     state.get.mockResolvedValue({ ...DEFAULT_STATE, dailyPnl: -15 });
+    state.getStateAndPrices.mockResolvedValue({
+      state: { ...DEFAULT_STATE, dailyPnl: -15 },
+      prices: new Map(),
+    });
 
     await runner.onPriceEvent("tok1", 0.5);
 
@@ -547,11 +551,16 @@ describe("StrategyRunner — TRIGGER evaluation", () => {
     });
 
     state.get.mockResolvedValue(DEFAULT_STATE);
+    state.getStateAndPrices.mockResolvedValue({
+      state: { ...DEFAULT_STATE },
+      prices: new Map([["tok1", { price: 0.5, timestamp: Date.now() }]]),
+    });
 
     await runner.onPriceEvent("tok1", 0.5);
 
-    // Trigger should fire because price 0.5 > 0.4 threshold via config fallback
-    expect(state.get).toHaveBeenCalled();
+    // Trigger should fire because price 0.5 > 0.4 threshold via config fallback.
+    // Works with both old evaluate() (calls state.get) and new (calls getStateAndPrices).
+    expect(state.getStateAndPrices).toHaveBeenCalled();
   });
 });
 
@@ -1205,6 +1214,10 @@ describe("StrategyRunner — config fallback for token discovery and prefetch", 
     const state = makeState();
     state.get.mockResolvedValue({ ...DEFAULT_STATE });
     state.getPrice = vi.fn().mockResolvedValue({ price: 0.5 });
+    state.getStateAndPrices.mockResolvedValue({
+      state: { ...DEFAULT_STATE },
+      prices: new Map([["tok-config", { price: 0.5, timestamp: Date.now() }]]),
+    });
 
     const runner = makeRunner({
       execMode: "EVENT",
@@ -1218,7 +1231,11 @@ describe("StrategyRunner — config fallback for token discovery and prefetch", 
     });
 
     await runner.onPriceEvent("tok-config", 0.5);
-    expect(state.getPrice).toHaveBeenCalledWith("tok-config");
+    // Works with both old evaluate() (calls state.getPrice) and new (calls getStateAndPrices).
+    expect(state.getStateAndPrices).toHaveBeenCalledWith(
+      "strat-test",
+      ["tok-config"],
+    );
   });
 
   it("detects stale data for config-only tokenId", async () => {
