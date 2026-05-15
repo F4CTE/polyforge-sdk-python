@@ -404,38 +404,17 @@ export class StrategyRunner {
         this.activeLockToken = null;
       }
 
-      // Release the distributed lock only if this instance acquired it.
-      // Uses atomic compare-and-delete (Lua) to avoid deleting a lock that
-      // was re-acquired by another instance after TTL expiry.
-      if (lockAcquired) {
-        const redisClient = this.redis.getClient();
-        const lockKey = `lock:tick:${this.strategyId}`;
-        try {
-          const result = await redisClient.eval(
-            "if redis.call('GET', KEYS[1]) == ARGV[1] then return redis.call('DEL', KEYS[1]) else return 0 end",
-            1,
-            lockKey,
-            lockToken,
-          );
-          if (result !== 1) {
-            this.logger.warn(
-              `Lock release for ${this.strategyId} did not delete the key (already expired or taken by another instance)`,
-            );
-          }
-        } catch (err) {
-          this.logger.warn(
-            `Failed to release lock for ${this.strategyId}: ${String(err)} — lock will expire naturally in 10s`,
-          );
-        }
-      }
-
-      // Release the local in-flight gate after the Redis unlock completes.
-      // Holding tickInFlight until the distributed lock is released prevents
-      // a second tick() from entering while the first tick still owns the
-      // Redis lock.  If a tick fails SET NX inside a window where tickInFlight
-      // was already cleared, its finally branch could consume pendingTick
-      // without scheduling a follow-up, dropping price events that arrived
-      // during the slow unlock (EVENT-mode coalescing gap).
+      // Release the local in-flight gate immediately — do NOT block on
+      // Redis unlock.  A slow or stuck Redis eval() would otherwise hold
+      // tickInFlight=true and stall all tick processing, turning a
+      // transient Redis hiccup into a full strategy outage.
+      //
+      // The Redis distributed lock has a 10s TTL and will expire
+      // naturally if the fire-and-forget unlock below fails.  Releasing
+      // tickInFlight early means a subsequent tick may race the unlock,
+      // but SET NX correctly handles that: if the lock TTL is still
+      // active, the new tick fails SET NX and retries via the normal
+      // pendingTick retry path.
       this.tickInFlight = false;
       if (this.pendingTick) {
         this.pendingTick = false;
@@ -511,6 +490,34 @@ export class StrategyRunner {
             void this.tick();
           }, 200);
         }
+      }
+
+      // Release the Redis distributed lock asynchronously — do NOT block
+      // the tick-processing pipeline on Redis unlock latency.  The lock
+      // carries a 10s TTL and self-expires if this no-await call fails
+      // or is delayed.
+      if (lockAcquired) {
+        const redisClient = this.redis.getClient();
+        const lockKey = `lock:tick:${this.strategyId}`;
+        redisClient
+          .eval(
+            "if redis.call('GET', KEYS[1]) == ARGV[1] then return redis.call('DEL', KEYS[1]) else return 0 end",
+            1,
+            lockKey,
+            lockToken,
+          )
+          .then((result) => {
+            if (result !== 1) {
+              this.logger.warn(
+                `Lock release for ${this.strategyId} did not delete the key (already expired or taken by another instance)`,
+              );
+            }
+          })
+          .catch((err) => {
+            this.logger.warn(
+              `Failed to release lock for ${this.strategyId}: ${String(err)} — lock will expire naturally in 10s`,
+            );
+          });
       }
     }
   }
