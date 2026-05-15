@@ -65,7 +65,7 @@ export class StrategyRunner {
   private timer: NodeJS.Timeout | null = null;
   private _pauseReason: string | null = null;
   private delayedActions: Map<string, NodeJS.Timeout> = new Map();
-  private lastTickMs = 0;
+  private lastTickMs = -MIN_TICK_MS;
   private lastStaleCheckMs = 0;
   private staleCheckBackoffMs = STALE_PRICE_MS;
   private tickInFlight = false;
